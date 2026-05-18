@@ -1099,6 +1099,9 @@ var
   ArtPadre, NombreAtb, IdVa, AvActual, AvNuevo: string;
   Avs: TArray<string>;
   Mapa: TDictionary<string, string>;
+  EditCtrl: TWinControl;
+  ScrPt: TPoint;
+  WidHint: Integer;
 begin
   if not PuedeEditar then
   begin
@@ -1131,7 +1134,18 @@ begin
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
 
-  if not SeleccionarAvConPaleta(NombreAtb, IdVa, Avs, AvActual, AvNuevo) then
+  // Posicion donde sale el "desplegable": justo debajo del editor.
+  ScrPt.X := -1; ScrPt.Y := -1;
+  WidHint := 120;
+  if Sender is TWinControl then
+  begin
+    EditCtrl := TWinControl(Sender);
+    ScrPt    := EditCtrl.ClientToScreen(Point(0, EditCtrl.Height));
+    WidHint  := EditCtrl.Width;
+  end;
+
+  if not SeleccionarAvConPaleta(IdVa, Avs, AvActual, AvNuevo,
+                                ScrPt.X, ScrPt.Y, WidHint) then
     Exit;
 
   RegistrarValorAtributo(Orden, AvNuevo);

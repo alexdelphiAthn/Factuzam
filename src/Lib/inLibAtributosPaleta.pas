@@ -143,15 +143,19 @@ procedure RellenarImageListPaleta(AImages: TCustomImageList;
 function PintarSwatchEnBitmap(ABmp: TBitmap; const AInfo: TInfoBasico;
                               ALado: Integer = 14): Boolean;
 
-// Muestra un selector modal con un TListBox owner-drawn que pinta el
-// cuadradito de paleta basica al lado de cada AV. Pensado para combos de
-// atributo donde TcxComboBox no permite owner-draw nativo. Si `AIdVa` es
-// vacio (o el AV no esta en la paleta) el item entra sin cuadradito.
-// Devuelve True si el usuario eligio un valor; False si cancelo.
-function SeleccionarAvConPaleta(const ATitulo, AIdVa: string;
+// Muestra un dropdown sin marco con un TListBox owner-drawn que pinta el
+// cuadradito de paleta basica al lado de cada AV. Pensado para imitar un
+// combo desde una celda de cxGrid: pasa AScreenLeft/AScreenTop = pos en
+// pantalla justo debajo del editor, y AWidthHint = ancho del editor (se
+// expande si los AVs no caben). Un click selecciona y cierra; Esc o click
+// fuera cancelan. Si AScreenLeft/Top son negativos, sale centrado.
+function SeleccionarAvConPaleta(const AIdVa: string;
                                 const AAvs: array of string;
                                 const AValorActual: string;
-                                out AValor: string): Boolean;
+                                out AValor: string;
+                                AScreenLeft: Integer = -1;
+                                AScreenTop: Integer = -1;
+                                AWidthHint: Integer = 120): Boolean;
 
 implementation
 
@@ -161,20 +165,30 @@ uses
 
 type
   // Form auxiliar (no en interface) usado solo por SeleccionarAvConPaleta.
+  // Se muestra como un dropdown sin marco: posicionado a las coordenadas
+  // recibidas (justo debajo del editor), ancho calculado segun el AV mas
+  // largo, alto = items * 22 con tope. Un click selecciona+cierra; Esc o
+  // click fuera cancelan.
   TfrmSelPalAvAux = class(TForm)
   private
     FListBox  : TListBox;
     FIdVa     : string;
     FAvs      : TArray<string>;
+    FShown    : Boolean;
     procedure ListBoxDrawItem(Control: TWinControl; Index: Integer;
                               ARect: TRect; State: TOwnerDrawState);
-    procedure ListBoxDblClick(Sender: TObject);
+    procedure ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
+                               Shift: TShiftState; X, Y: Integer);
     procedure ListBoxKeyDown(Sender: TObject;
                              var Key: Word; Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
-    constructor CreateConOpciones(const ATitulo, AIdVa: string;
+    constructor CreateConOpciones(const AIdVa: string;
                                   const AAvs: array of string;
-                                  const AValorActual: string);
+                                  const AValorActual: string;
+                                  AScreenLeft, AScreenTop, AWidthHint: Integer);
   end;
 
 var
@@ -593,63 +607,45 @@ end;
 
 { TfrmSelPalAvAux }
 
-constructor TfrmSelPalAvAux.CreateConOpciones(const ATitulo, AIdVa: string;
+constructor TfrmSelPalAvAux.CreateConOpciones(const AIdVa: string;
                                               const AAvs: array of string;
-                                              const AValorActual: string);
+                                              const AValorActual: string;
+                                              AScreenLeft, AScreenTop,
+                                              AWidthHint: Integer);
 const
-  ALTO_FILA  = 22;
-  ANCHO_BTN  = 80;
-  ALTO_PANEL = 40;
+  ALTO_FILA   = 22;
+  ANCHO_MIN   = 80;
+  ALTO_MAX    = 360;
+  EXTRA_W     = 32;  // swatch(12) + margenes + scrollbar margin
+  PADD_LISTB  = 4;   // border interno del listbox
 var
-  i, idxSel : Integer;
-  Panel     : TPanel;
-  BtnOK, BtnCancel : TButton;
+  i, idxSel, MaxTextW, W, H : Integer;
+  Bmp : TBitmap;
 begin
   inherited CreateNew(nil);
-  Caption     := ATitulo;
-  BorderStyle := bsDialog;
-  Position    := poScreenCenter;
-  ClientWidth := 260;
-  ClientHeight:= 340;
+  BorderStyle := bsNone;
+  Position    := poDesigned;
+  Caption     := '';
   KeyPreview  := True;
+  FShown      := False;
+  OnShow       := FormShow;
+  OnDeactivate := FormDeactivate;
+  OnKeyDown    := FormKeyDown;
 
   FIdVa := AIdVa;
   SetLength(FAvs, Length(AAvs));
   for i := 0 to High(AAvs) do
     FAvs[i] := AAvs[i];
 
-  Panel := TPanel.Create(Self);
-  Panel.Parent      := Self;
-  Panel.Align       := alBottom;
-  Panel.Height      := ALTO_PANEL;
-  Panel.BevelOuter  := bvNone;
-
-  BtnCancel := TButton.Create(Self);
-  BtnCancel.Parent      := Panel;
-  BtnCancel.Caption     := 'Cancelar';
-  BtnCancel.ModalResult := mrCancel;
-  BtnCancel.Cancel      := True;
-  BtnCancel.Width       := ANCHO_BTN;
-  BtnCancel.Top         := 8;
-  BtnCancel.Left        := ClientWidth - ANCHO_BTN - 8;
-
-  BtnOK := TButton.Create(Self);
-  BtnOK.Parent      := Panel;
-  BtnOK.Caption     := 'Aceptar';
-  BtnOK.ModalResult := mrOk;
-  BtnOK.Default     := True;
-  BtnOK.Width       := ANCHO_BTN;
-  BtnOK.Top         := 8;
-  BtnOK.Left        := BtnCancel.Left - ANCHO_BTN - 8;
-
   FListBox := TListBox.Create(Self);
-  FListBox.Parent     := Self;
-  FListBox.Align      := alClient;
-  FListBox.Style      := lbOwnerDrawFixed;
-  FListBox.ItemHeight := ALTO_FILA;
-  FListBox.OnDrawItem := ListBoxDrawItem;
-  FListBox.OnDblClick := ListBoxDblClick;
-  FListBox.OnKeyDown  := ListBoxKeyDown;
+  FListBox.Parent      := Self;
+  FListBox.Align       := alClient;
+  FListBox.Style       := lbOwnerDrawFixed;
+  FListBox.BorderStyle := bsSingle;
+  FListBox.ItemHeight  := ALTO_FILA;
+  FListBox.OnDrawItem  := ListBoxDrawItem;
+  FListBox.OnMouseDown := ListBoxMouseDown;
+  FListBox.OnKeyDown   := ListBoxKeyDown;
 
   idxSel := -1;
   for i := 0 to High(AAvs) do
@@ -663,6 +659,37 @@ begin
   if idxSel >= 0 then
     FListBox.ItemIndex := idxSel;
   ActiveControl := FListBox;
+
+  // Ancho segun el AV mas largo
+  MaxTextW := 0;
+  Bmp := TBitmap.Create;
+  try
+    Bmp.Canvas.Font.Assign(Self.Font);
+    for i := 0 to High(AAvs) do
+    begin
+      W := Bmp.Canvas.TextWidth(AAvs[i]);
+      if W > MaxTextW then MaxTextW := W;
+    end;
+  finally
+    Bmp.Free;
+  end;
+  W := MaxTextW + EXTRA_W;
+  if W < AWidthHint then W := AWidthHint;
+  if W < ANCHO_MIN  then W := ANCHO_MIN;
+  Width := W;
+
+  // Alto adaptado, con tope
+  H := Length(AAvs) * ALTO_FILA + PADD_LISTB;
+  if H > ALTO_MAX then H := ALTO_MAX;
+  Height := H;
+
+  if (AScreenLeft >= 0) and (AScreenTop >= 0) then
+  begin
+    Left := AScreenLeft;
+    Top  := AScreenTop;
+  end
+  else
+    Position := poScreenCenter;
 end;
 
 procedure TfrmSelPalAvAux.ListBoxDrawItem(Control: TWinControl; Index: Integer;
@@ -739,10 +766,18 @@ begin
     LB.Canvas.DrawFocusRect(ARect);
 end;
 
-procedure TfrmSelPalAvAux.ListBoxDblClick(Sender: TObject);
+procedure TfrmSelPalAvAux.ListBoxMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Idx: Integer;
 begin
-  if FListBox.ItemIndex >= 0 then
+  if Button <> mbLeft then Exit;
+  Idx := FListBox.ItemAtPos(System.Types.Point(X, Y), True);
+  if Idx >= 0 then
+  begin
+    FListBox.ItemIndex := Idx;
     ModalResult := mrOk;
+  end;
 end;
 
 procedure TfrmSelPalAvAux.ListBoxKeyDown(Sender: TObject; var Key: Word;
@@ -755,17 +790,43 @@ begin
   end;
 end;
 
-function SeleccionarAvConPaleta(const ATitulo, AIdVa: string;
+procedure TfrmSelPalAvAux.FormShow(Sender: TObject);
+begin
+  FShown := True;
+end;
+
+procedure TfrmSelPalAvAux.FormDeactivate(Sender: TObject);
+begin
+  // Click fuera del popup -> cancela (como un combo). Guardamos con FShown
+  // para que esto no dispare durante la creacion/animacion inicial.
+  if FShown and (ModalResult = mrNone) then
+    ModalResult := mrCancel;
+end;
+
+procedure TfrmSelPalAvAux.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+  begin
+    ModalResult := mrCancel;
+    Key := 0;
+  end;
+end;
+
+function SeleccionarAvConPaleta(const AIdVa: string;
                                 const AAvs: array of string;
                                 const AValorActual: string;
-                                out AValor: string): Boolean;
+                                out AValor: string;
+                                AScreenLeft, AScreenTop,
+                                AWidthHint: Integer): Boolean;
 var
   F : TfrmSelPalAvAux;
 begin
   AValor := '';
   Result := False;
   if Length(AAvs) = 0 then Exit;
-  F := TfrmSelPalAvAux.CreateConOpciones(ATitulo, AIdVa, AAvs, AValorActual);
+  F := TfrmSelPalAvAux.CreateConOpciones(AIdVa, AAvs, AValorActual,
+                                          AScreenLeft, AScreenTop, AWidthHint);
   try
     if F.ShowModal = mrOk then
     begin
