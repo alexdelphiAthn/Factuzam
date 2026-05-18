@@ -361,6 +361,10 @@ begin
        begin
          tvArticulosStock.Columns[i].ApplyBestFit;
        end;
+       // ApplyBestFit mide solo el texto. Las columnas que muestran un
+       // cuadradito de color (paleta basica) necesitan ANCHO_SWATCH_PX
+       // adicionales o el texto sale recortado.
+       GetOwnerForm<TfrmMtoArticulos>.EnsancharColumnasStockParaSwatch;
      end;
     //DataSet.AfterScroll := unqryStockArticulosAfterScroll;
     // Opcional: Si además quieres que las columnas se estiren para ocupar todo
