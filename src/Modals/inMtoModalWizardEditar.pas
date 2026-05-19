@@ -137,6 +137,14 @@ begin
     wzWizard.Align := alClient;
   except
   end;
+  // Ocultar botones que no usamos. Ya tienen Width=0 en el DFM por si
+  // Visible no existe en esta version de TJvWizardButton.
+  try
+    wzWizard.ButtonStart.Visible := False;
+    wzWizard.ButtonLast.Visible  := False;
+    wzWizard.ButtonHelp.Visible  := False;
+  except
+  end;
 end;
 
 procedure TfrmModalWizardEditar.FormShow(Sender: TObject);

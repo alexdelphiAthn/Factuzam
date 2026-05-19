@@ -15,10 +15,8 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
     Height = 600
     ButtonBarHeight = 52
     ButtonStart.Caption = ' '
-    ButtonStart.Visible = False
     ButtonStart.Width = 0
     ButtonLast.Caption = ' '
-    ButtonLast.Visible = False
     ButtonLast.Width = 0
     ButtonBack.Caption = '< &Anterior'
     ButtonBack.Width = 100
@@ -29,7 +27,6 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
     ButtonCancel.Caption = '&Cancelar'
     ButtonCancel.Width = 100
     ButtonHelp.Caption = ' '
-    ButtonHelp.Visible = False
     ButtonHelp.Width = 0
     ShowRouteMap = False
     OnFinishButtonClick = wzWizardFinishButtonClick
