@@ -401,17 +401,11 @@ var
   j: Integer;
   oDS: TDataSet;
 begin
+  // A) "Del informe": TfrxDBDataset.Fields es protected en esta version
+  //    de FastReport, asi que no es accesible desde fuera; aprovechamos
+  //    el unico camino disponible aqui — los Fields del TDataSet de
+  //    fondo si esta abierto. Si esta cerrado, el caller pasa a C/B.
   Result := False;
-  // A.1) FastReport permite filtrar campos por TfrxDBDataset.Fields
-  //      (TStrings). Si esta rellenada, son los que el diseñador expone.
-  if (oFrx.Fields <> nil) and (oFrx.Fields.Count > 0) then
-  begin
-    for j := 0 to oFrx.Fields.Count - 1 do
-      lstCampos.Items.Add.Text := oFrx.Fields[j];
-    Result := True;
-    Exit;
-  end;
-  // A.2) Si el TDataSet de fondo esta abierto, tirar de sus Fields.
   oDS := oFrx.DataSet;
   if (oDS <> nil) and oDS.Active and (oDS.FieldCount > 0) then
   begin
