@@ -651,6 +651,7 @@ var
   oWiz: TfrmModalWizardEditar;
   memStream: TMemoryStream;
   bAceptado: Boolean;
+  iRespuesta: Integer;
 begin
   inherited;
   Self.Hide;
@@ -659,73 +660,94 @@ begin
   // dejar siempre una consulta valida en el SQL.Text del TUniQuery
   // del data module (consulta de diseño). Si invocaramos
   // Preparar_consulta antes del wizard, el SQL.Text quedaria
-  // sobrescrito con la version runtime que necesita parametros
-  // (serie/nro/fechas) que el usuario quiza no ha rellenado al
-  // entrar a Editar, y el wizard no podria enumerar campos. La
-  // llamada a Preparar_consulta se hace despues, antes de abrir
-  // el diseñador, envuelta en try/except por la misma razon.
+  // sobrescrito con la version runtime que necesita parametros que
+  // el usuario quiza no ha rellenado al entrar a Editar.
 
   // AfterReportLoaded re-enlaza los datasets del informe via
-  // RebindReportDataSetsByDataModule. Lo hacemos antes de abrir el
-  // wizard para que el paso 2 del wizard pueda enumerar los
-  // TfrxDBDataset reales (cabecera + detalle) con sus campos.
+  // RebindReportDataSetsByDataModule. Lo necesitamos en ambas ramas
+  // (wizard y clasico) para que los TfrxDBDataset esten visibles.
   AfterReportLoaded;
 
-  // Wizard de 2 pasos: 1) elegir/crear formato + permiso, 2) ver
-  // datasets del informe y configurar guias. Al finalizar, sFormato y
-  // sScope quedan fijados, asi el guardado posterior del .frx desde el
-  // diseñador no tiene que volver a preguntar.
+  // Preguntamos al usuario si quiere entrar al wizard para añadir o
+  // editar campos extra (guias) de tablas / vistas externas. Si dice
+  // que no, vamos directos al flujo clasico de edicion (Consultar_
+  // Formularios + DesignReport). Cancelar sale sin abrir el diseñador.
+  iRespuesta := MessageDlg(
+    '¿Desea añadir o editar campos extra del informe ' +
+    'provenientes de otras tablas o vistas externas?',
+    mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+  if iRespuesta = mrCancel then
+  begin
+    Self.Show;
+    Exit;
+  end;
+
   bAceptado := False;
-  oWiz := TfrmModalWizardEditar.Create(Self);
-  try
-    oWiz.sInforme := Self.Name;
-    oWiz.FReport  := frxrprt1;
-    oWiz.ShowModal;
-    if oWiz.sFicha = 'S' then
-    begin
-      sElegido           := oWiz.sFormato;
-      FScopePerfilFijado := oWiz.sScope;
-      FFormatoFijado     := True;
-      bAceptado          := True;
 
-      // Cargar el .frx que corresponda al formato elegido. Si existe en
-      // fza_usuarios_perfiles cargamos el BLOB; si es nuevo partimos
-      // del .frx base (frxReportOrigen).
-      if oWiz.bExiste then
+  if iRespuesta = mrYes then
+  begin
+    // Flujo wizard: 1) elegir/crear formato + permiso, 2) configurar
+    // guias. Al finalizar, sFormato y sScope quedan fijados y el
+    // guardado posterior del .frx no vuelve a preguntar el nombre.
+    oWiz := TfrmModalWizardEditar.Create(Self);
+    try
+      oWiz.sInforme := Self.Name;
+      oWiz.FReport  := frxrprt1;
+      oWiz.ShowModal;
+      if oWiz.sFicha = 'S' then
       begin
-        unqryPerfiles.Close;
-        unqryPerfiles.Open;
-        memStream := TMemoryStream.Create;
-        try
-          if unqryPerfiles.Locate('VALUE_USUPER', sElegido, []) then
-          begin
-            TBlobField(unqryPerfiles.FieldByName(
-                                'VALUE_BLOB_USUPER')).SaveToStream(memStream);
-            memStream.Position := 0;
-            frxrprt1.LoadFromStream(memStream);
-          end
-          else
-            frxrprt1.AssignAll(frxReportOrigen);
-        finally
-          FreeAndNil(memStream);
-        end;
-      end
-      else
-        frxrprt1.AssignAll(frxReportOrigen);
+        sElegido           := oWiz.sFormato;
+        FScopePerfilFijado := oWiz.sScope;
+        FFormatoFijado     := True;
+        bAceptado          := True;
 
-      // Re-enlazar datasets despues de cargar/asignar el report (el
-      // LoadFromStream resetea Datasets de la version guardada).
-      AfterReportLoaded;
+        // Cargar el .frx del formato elegido. Si existe lo cargamos
+        // del BLOB; si es nuevo partimos del .frx base.
+        if oWiz.bExiste then
+        begin
+          unqryPerfiles.Close;
+          unqryPerfiles.Open;
+          memStream := TMemoryStream.Create;
+          try
+            if unqryPerfiles.Locate('VALUE_USUPER', sElegido, []) then
+            begin
+              TBlobField(unqryPerfiles.FieldByName(
+                                'VALUE_BLOB_USUPER')).SaveToStream(memStream);
+              memStream.Position := 0;
+              frxrprt1.LoadFromStream(memStream);
+            end
+            else
+              frxrprt1.AssignAll(frxReportOrigen);
+          finally
+            FreeAndNil(memStream);
+          end;
+        end
+        else
+          frxrprt1.AssignAll(frxReportOrigen);
+
+        // Re-enlazar datasets despues de cargar/asignar el report.
+        AfterReportLoaded;
+      end;
+    finally
+      FreeAndNil(oWiz);
     end;
-  finally
-    FreeAndNil(oWiz);
+  end
+  else  // iRespuesta = mrNo
+  begin
+    // Flujo clasico: elegir un formato existente (o usar el original)
+    // y abrir el diseñador. Las guias ya configuradas se aplican
+    // igualmente; lo unico que NO se hace es entrar al wizard de
+    // creacion/edicion de guias. Al guardar el .frx el modal de
+    // "Guardar Objeto Editado" sale como siempre.
+    Consultar_Formularios(True);
+    bAceptado := sElegido <> '';
   end;
 
   if bAceptado then
   begin
-    // En edicion abrimos TODAS las guias activas del informe / formato
-    // (no solo las referenciadas) para que aparezcan en el arbol de
-    // datasets del diseñador y el usuario pueda arrastrarlas al .frx.
+    // Abrimos las guias activas del informe / formato (asi el usuario
+    // las ve en el arbol de datasets del diseñador y los campos extra
+    // estan disponibles para arrastrar al .frx).
     AbrirGuiasRuntime(False);
     try
       frxrprt1.PrepareReport(True);
