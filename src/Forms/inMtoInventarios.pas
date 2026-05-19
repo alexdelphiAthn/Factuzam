@@ -1004,39 +1004,25 @@ end;
 procedure TfrmMtoInventarios.CargarAvsValidos(const ACodArt: string;
   AOrden: Integer; var AAvs: TArray<string>);
 var
-  Qry: TUniQuery;
+  Lookup : TArticulosAtributosLookup;
+  Vals   : TArray<TArticuloAtributoValor>;
+  i      : Integer;
 begin
+  // La consulta vive ahora en inLibArticulosAtributosLookup, que ordena
+  // por ORDEN_AV (S=10, M=20, L=30, ...). Antes ordenaba alfabetico, lo
+  // que mostraba L,M,S,XL,XXXL en el dropdown.
   SetLength(AAvs, 0);
   if Trim(ACodArt) = '' then Exit;
   if (AOrden < 1) or (AOrden > 5) then Exit;
-  Qry := TUniQuery.Create(nil);
+  Lookup := TArticulosAtributosLookup.Create(oConn);
   try
-    Qry.Connection := oConn;
-    Qry.SQL.Text :=
-        '  SELECT DISTINCT V.AV, V.ORDEN_AV ' +
-        '    FROM fza_atributos_valores V ' +
-        '    JOIN vi_atributos_nombres N ' +
-        '      ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
-        '    JOIN fza_atributos_sku REL ' +
-        '      ON V.ID_AV = REL.ID_AV_SA ' +
-        '    JOIN fza_articulos_skus S ' +
-        '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU ' +
-        '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
-        '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE ' +
-        '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN ' +
-        '   ORDER BY V.ORDEN_AV, V.AV';
-    Qry.ParamByName('PADRE').AsString  := ACodArt;
-    Qry.ParamByName('ORDEN').AsInteger := AOrden;
-    Qry.Open;
-    while not Qry.Eof do
-    begin
-      SetLength(AAvs, Length(AAvs) + 1);
-      AAvs[High(AAvs)] := Qry.FieldByName('AV').AsString;
-      Qry.Next;
-    end;
+    Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
   finally
-    FreeAndNil(Qry);
+    FreeAndNil(Lookup);
   end;
+  SetLength(AAvs, Length(Vals));
+  for i := 0 to High(Vals) do
+    AAvs[i] := Vals[i].Valor;
 end;
 
 procedure TfrmMtoInventarios.RegistrarValorAtributo(AOrden: Integer;
