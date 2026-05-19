@@ -492,11 +492,20 @@ var
   bAceptado: Boolean;
 begin
   inherited;
-  Preparar_consulta;
   Self.Hide;
 
+  // NO llamamos Preparar_consulta aqui — el convenio del proyecto es
+  // dejar siempre una consulta valida en el SQL.Text del TUniQuery
+  // del data module (consulta de diseño). Si invocaramos
+  // Preparar_consulta antes del wizard, el SQL.Text quedaria
+  // sobrescrito con la version runtime que necesita parametros
+  // (serie/nro/fechas) que el usuario quiza no ha rellenado al
+  // entrar a Editar, y el wizard no podria enumerar campos. La
+  // llamada a Preparar_consulta se hace despues, antes de abrir
+  // el diseñador, envuelta en try/except por la misma razon.
+
   // AfterReportLoaded re-enlaza los datasets del informe via
-  // RebindReportDataSetsByDataModule. Lo hacemos ANTES de abrir el
+  // RebindReportDataSetsByDataModule. Lo hacemos antes de abrir el
   // wizard para que el paso 2 del wizard pueda enumerar los
   // TfrxDBDataset reales (cabecera + detalle) con sus campos.
   AfterReportLoaded;
