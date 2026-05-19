@@ -775,6 +775,7 @@ begin
   unqryGuias.FieldByName('TABLA_INFGUI').AsString          := sTabla;
   unqryGuias.FieldByName('TIPO_INFGUI').AsString           := 'TABLA';
   unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString       := 'S';
+  unqryGuias.FieldByName('ORDEN_INFGUI').AsInteger         := 0;
   unqryGuias.Post;
 end;
 
