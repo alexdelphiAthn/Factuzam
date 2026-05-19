@@ -357,8 +357,13 @@ var
   j: Integer;
   oFrx: TfrxDBDataset;
   oDS: TDataSet;
+  qryTmp: TUniQuery;
+  sSqlOriginal: string;
+  bConseguido: Boolean;
 begin
   lstCampos.Items.BeginUpdate;
+  qryTmp := nil;
+  bConseguido := False;
   try
     lstCampos.Items.Clear;
     if (lstDatasets.ItemIndex < 0) or
@@ -367,25 +372,57 @@ begin
     if oFrx = nil then Exit;
     oDS := oFrx.DataSet;
     if oDS = nil then Exit;
-    // 1) Si el dataset esta abierto y tiene fields creados, los usamos
-    //    directamente (camino normal).
+
+    // 1) Camino feliz: el dataset esta abierto y ya tiene Fields.
     if oDS.Active and (oDS.FieldCount > 0) then
     begin
       for j := 0 to oDS.FieldCount - 1 do
         lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
       Exit;
     end;
-    // 2) Fallback: si el dataset esta cerrado o no tiene Fields runtime,
-    //    intentamos leer las FieldDefs (que vienen del .dfm). Asi
-    //    funciona aunque la query no se haya abierto todavia.
+
+    // 2) Si es TUniQuery (caso comun en Factuzam) y esta cerrado, abrimos
+    //    una query temporal que envuelve el SQL original en
+    //    "SELECT * FROM (<sql>) X WHERE 1=0" para inferir las columnas
+    //    sin tirar datos. Los parametros se setean a NULL.
+    if oDS is TUniQuery then
+    begin
+      sSqlOriginal := Trim(TUniQuery(oDS).SQL.Text);
+      // Algunos SQL acaban en ';', estorba dentro de un FROM (...).
+      while (Length(sSqlOriginal) > 0) and
+            (sSqlOriginal[Length(sSqlOriginal)] = ';') do
+        SetLength(sSqlOriginal, Length(sSqlOriginal) - 1);
+      if sSqlOriginal <> '' then
+      begin
+        try
+          qryTmp := TUniQuery.Create(nil);
+          qryTmp.Connection := oConn;
+          qryTmp.SQL.Text :=
+            'select * from (' + sSqlOriginal + ') X_FZA_GUIAS where 1=0';
+          for j := 0 to qryTmp.Params.Count - 1 do
+            qryTmp.Params[j].Clear;
+          qryTmp.Open;
+          for j := 0 to qryTmp.FieldCount - 1 do
+            lstCampos.Items.Add.Text := qryTmp.Fields[j].FieldName;
+          bConseguido := qryTmp.FieldCount > 0;
+        except
+          // SQL no envoltable (DDL, MERGE, etc.) o parametros que el
+          // motor rechaza. Caemos al siguiente fallback.
+        end;
+      end;
+    end;
+    if bConseguido then Exit;
+
+    // 3) Ultimo recurso: FieldDefs.Update (funciona si los campos son
+    //    persistentes del .dfm del data module).
     try
       oDS.FieldDefs.Update;
     except
-      // Si el dataset no soporta FieldDefs.Update sin abrir, ignoramos.
     end;
     for j := 0 to oDS.FieldDefs.Count - 1 do
       lstCampos.Items.Add.Text := oDS.FieldDefs[j].Name;
   finally
+    if qryTmp <> nil then FreeAndNil(qryTmp);
     lstCampos.Items.EndUpdate;
   end;
 end;
