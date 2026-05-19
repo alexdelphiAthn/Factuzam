@@ -29,6 +29,5 @@
 
 ALTER TABLE `fza_articulos_conjuntos_asign`
   ADD COLUMN IF NOT EXISTS `ORDEN_ACA` int(11) NOT NULL DEFAULT 0
-        COMMENT 'Orden del atributo dentro del SKU para este artículo. '
-                '0 = usar fza_variaciones_atributos.ORDEN_VA global.'
+        COMMENT 'Orden del atributo dentro del SKU para este artículo (0 = usar fza_variaciones_atributos.ORDEN_VA global).'
         AFTER `ID_VA_ACA`;
