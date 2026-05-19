@@ -138,9 +138,9 @@ begin
   unqryFormatos.Connection := oConn;
   unqryGuias.Connection    := oConn;
   edtOrigen.Text := sInforme;
-  // Textos del header del wizard: los seteamos en codigo para no
-  // depender de propiedades anidadas en el DFM que podrian variar
-  // entre versiones de TJvWizard.
+  // Textos del header del wizard y botones habilitados por pagina:
+  // los seteamos en codigo para no depender de propiedades anidadas
+  // en el DFM que podrian variar entre versiones de TJvWizard.
   try
     pgFormato.Header.Title.Text :=
       'Paso 1 de 2 — Formato a editar';
@@ -155,6 +155,13 @@ begin
   except
     // Si la version de TJvWizard difiere y estas propiedades no
     // existen, no es critico: el wizard sigue funcionando.
+  end;
+  try
+    // En paso 1 solo Siguiente y Cancelar; en paso 2 solo Anterior,
+    // Finalizar y Cancelar.
+    pgFormato.EnabledButtons := [bkNext, bkCancel];
+    pgGuias.EnabledButtons   := [bkBack, bkFinish, bkCancel];
+  except
   end;
   CargarFormatosExistentes;
   CargarScopes;

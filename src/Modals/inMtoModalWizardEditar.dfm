@@ -14,6 +14,25 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
     Width = 1100
     Height = 600
     Align = alClient
+    ButtonBarHeight = 52
+    ButtonStart.Caption = ' '
+    ButtonStart.Visible = False
+    ButtonStart.Width = 0
+    ButtonLast.Caption = ' '
+    ButtonLast.Visible = False
+    ButtonLast.Width = 0
+    ButtonBack.Caption = '< &Anterior'
+    ButtonBack.Width = 100
+    ButtonNext.Caption = '&Siguiente >'
+    ButtonNext.Width = 100
+    ButtonFinish.Caption = '&Finalizar'
+    ButtonFinish.Width = 100
+    ButtonCancel.Caption = '&Cancelar'
+    ButtonCancel.Width = 100
+    ButtonHelp.Caption = ' '
+    ButtonHelp.Visible = False
+    ButtonHelp.Width = 0
+    ShowRouteMap = False
     OnFinishButtonClick = wzWizardFinishButtonClick
     OnCancelButtonClick = wzWizardCancelButtonClick
     object pgFormato: TJvWizardInteriorPage
