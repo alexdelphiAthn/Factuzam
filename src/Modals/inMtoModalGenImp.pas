@@ -76,12 +76,6 @@ type
     function frxdsgnr1SaveReport(Report: TfrxReport; SaveAs: Boolean): Boolean;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure actSalirExecute(Sender: TObject);
-    // Fallback: si FastReport intenta resolver "Dataset.Campo" y no lo
-    // encuentra en su cache, lo resolvemos a mano buscando el TDataSet
-    // por UserName y leyendo el TField correspondiente. Asi una guia
-    // que añadio el campo via LEFT JOIN se resuelve aunque la cache
-    // del TfrxDBDataset no se haya refrescado.
-    procedure frxrprt1GetValue(const VarName: string; var Value: Variant);
   private
     sElegido:String;
     // Cuando el usuario entra por Editar, fijamos el nombre del formato
@@ -1033,64 +1027,6 @@ begin
   unqryPerfiles.ParamByName('Todos').AsString := oAll;
   unqryPerfiles.Open;
   FGuiasRuntime := TList.Create;
-  // Fallback para los campos añadidos por las guias: si FastReport
-  // intenta resolver "Lineas Facturas.CODIGO_FAM_ART" y su cache
-  // interna no lo tiene, este handler lo busca leyendo del TDataSet.
-  frxrprt1.OnGetValue := frxrprt1GetValue;
-end;
-
-procedure TfrmPrint.frxrprt1GetValue(const VarName: string;
-                                      var Value: Variant);
-var
-  iDot, i: Integer;
-  sDS, sField: string;
-  oFrx: TfrxDBDataset;
-  oDS: TDataSet;
-  fld: TField;
-begin
-  // VarName puede llegar como "Dataset.Campo" o como "Dataset"."Campo"
-  // (con comillas). Soportamos ambas.
-  iDot := Pos('.', VarName);
-  if iDot = 0 then Exit;
-  sDS    := VarName;
-  sField := '';
-  // Caso "DS"."CAMPO": el punto que separa esta entre " y ".
-  if (Length(VarName) > 0) and (VarName[1] = '"') then
-  begin
-    iDot := Pos('"."', VarName);
-    if iDot = 0 then Exit;
-    sDS    := Copy(VarName, 2, iDot - 2);
-    sField := Copy(VarName, iDot + 3, MaxInt);
-    if (sField <> '') and (sField[Length(sField)] = '"') then
-      SetLength(sField, Length(sField) - 1);
-  end
-  else
-  begin
-    sDS    := Copy(VarName, 1, iDot - 1);
-    sField := Copy(VarName, iDot + 1, MaxInt);
-    // Permitimos forma DS."CAMPO" (FastReport la usa).
-    if (Length(sField) >= 2) and (sField[1] = '"') and
-       (sField[Length(sField)] = '"') then
-      sField := Copy(sField, 2, Length(sField) - 2);
-  end;
-  sDS    := Trim(sDS);
-  sField := Trim(sField);
-  if (sDS = '') or (sField = '') then Exit;
-
-  for i := 0 to frxrprt1.Datasets.Count - 1 do
-  begin
-    if not (frxrprt1.Datasets[i].DataSet is TfrxDBDataset) then Continue;
-    oFrx := TfrxDBDataset(frxrprt1.Datasets[i].DataSet);
-    if not SameText(oFrx.UserName, sDS) then Continue;
-    oDS := oFrx.DataSet;
-    if (oDS = nil) and (oFrx.DataSource <> nil) then
-      oDS := oFrx.DataSource.DataSet;
-    if (oDS = nil) or not oDS.Active then Exit;
-    fld := oDS.FindField(sField);
-    if fld <> nil then
-      Value := fld.Value;
-    Exit;
-  end;
 end;
 
 function TfrmPrint.frxdsgnr1SaveReport(Report: TfrxReport;
