@@ -1716,13 +1716,6 @@ inherited frmPrintSesion: TfrmPrintSesion
     Top = 184
   end
   inherited unqryPerfiles: TUniQuery
-    SQL.Strings = (
-      'select *'
-      'from fza_usuarios_perfiles'
-      'where (KEY_USUPER = '#39'frmPrintSesion'#39')'
-      'and (USUARIO_GRUPO_USUPER = :Usuario OR'
-      '     USUARIO_GRUPO_USUPER = :Grupo   OR'
-      '     USUARIO_GRUPO_USUPER = :Todos)')
     Left = 224
     Top = 184
   end
