@@ -68,7 +68,7 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
         ' por '#39';'#39' (CODIGO_CLI_FAC '#8594' CODIGO_CLI).'#13#10'      '#8226' Formato = vac'#237 +
         'o '#8594' gu'#237'a global del informe;   relleno '#8594' solo para ese .frx co' +
         'ncreto.'
-      Properties.LineCount = 7
+      Properties.WordWrap = True
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 4210752
       Style.Font.Height = -13
@@ -165,24 +165,23 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
       OptionsData.Editing = True
       OptionsData.Inserting = True
       OptionsView.GroupByBox = False
-      OptionsView.HeaderAutoHeight = True
       OptionsView.Indicator = True
       Styles.Header = cxsHeader
       object tvGuiasCODIGO: TcxGridDBColumn
-        Caption = 'C'#243'digo'#13#10'(UserName en .frx)'
+        Caption = 'C'#243'digo (UserName .frx)'
         DataBinding.FieldName = 'CODIGO_INFGUI'
         Options.Sorting = False
-        Width = 150
+        Width = 170
       end
       object tvGuiasFORMATO: TcxGridDBColumn
-        Caption = 'Formato'#13#10'(vac'#237'o = global)'
+        Caption = 'Formato (vac. = global)'
         DataBinding.FieldName = 'FORMATO_INFGUI'
-        Width = 150
+        Width = 160
       end
       object tvGuiasMASTER_DS: TcxGridDBColumn
-        Caption = 'Dataset'#13#10'master'
+        Caption = 'Dataset master'
         DataBinding.FieldName = 'DATASET_MASTER_INFGUI'
-        Width = 130
+        Width = 140
       end
       object tvGuiasTIPO: TcxGridDBColumn
         Caption = 'Tipo'
@@ -195,26 +194,24 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
         Width = 80
       end
       object tvGuiasTABLA: TcxGridDBColumn
-        Caption = 'Tabla'#13#10'(si Tipo = TABLA)'
+        Caption = 'Tabla'
         DataBinding.FieldName = 'TABLA_INFGUI'
-        Width = 140
+        Width = 150
       end
       object tvGuiasSQL: TcxGridDBColumn
-        Caption = 'SQL libre'#13#10'(si Tipo = SQL)'
+        Caption = 'SQL libre'
         DataBinding.FieldName = 'SQL_INFGUI'
-        PropertiesClassName = 'TcxBlobEditProperties'
-        Properties.BlobPaintStyle = bpsText
-        Width = 170
+        Width = 180
       end
       object tvGuiasMASTER_FIELDS: TcxGridDBColumn
-        Caption = 'Master fields'#13#10'(en el master)'
+        Caption = 'Master fields'
         DataBinding.FieldName = 'MASTER_FIELDS_INFGUI'
-        Width = 150
+        Width = 160
       end
       object tvGuiasDETAIL_FIELDS: TcxGridDBColumn
-        Caption = 'Detail fields'#13#10'(en la gu'#237'a)'
+        Caption = 'Detail fields'
         DataBinding.FieldName = 'DETAIL_FIELDS_INFGUI'
-        Width = 150
+        Width = 160
       end
       object tvGuiasORDEN: TcxGridDBColumn
         Caption = 'Orden'
