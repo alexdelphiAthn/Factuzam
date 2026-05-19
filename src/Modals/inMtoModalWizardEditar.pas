@@ -132,6 +132,7 @@ type
     function CargarCamposAbriendoTemporal(qrySrc: TUniQuery): Boolean;
     function ExtraerTablaFromSql(const aSql: string): string;
     procedure RellenarParametrosDummy(qry: TUniQuery);
+    function ResolverDataSet(oFrx: TfrxDBDataset): TDataSet;
   public
     // El TfrmPrint rellena ANTES del ShowModal:
     sInforme: string;       // Self.Name del informe
@@ -367,7 +368,8 @@ var
   oDS: TDataSet;
 begin
   // Cascada: el usuario quiere que los campos salgan, en este orden:
-  //   A) Del informe (TfrxDBDataset.Fields o DataSet.Fields abierto).
+  //   A) Del informe (DataSet.Fields del TDataSet asociado al
+  //      TfrxDBDataset; resolvemos por DataSource si hace falta).
   //   C) Parseando el FROM del SQL del TUniQuery y consultando
   //      information_schema.COLUMNS de la vista origen.
   //   B) Como ultimo recurso: abrir una query temporal con dummies.
@@ -379,10 +381,10 @@ begin
     oFrx := TfrxDBDataset(lstDatasets.Items.Objects[lstDatasets.ItemIndex]);
     if oFrx = nil then Exit;
 
-    // A) Del informe.
+    // A) Del informe (resuelve DataSet via DataSource si hace falta).
     if CargarCamposDelInforme(oFrx) then Exit;
 
-    oDS := oFrx.DataSet;
+    oDS := ResolverDataSet(oFrx);
     if (oDS = nil) or not (oDS is TUniQuery) then Exit;
 
     // C) Parsear FROM y leer information_schema.
@@ -395,23 +397,70 @@ begin
   end;
 end;
 
+function TfrmModalWizardEditar.ResolverDataSet(
+                                  oFrx: TfrxDBDataset): TDataSet;
+begin
+  // TfrxDBDataset puede engancharse al TDataSet de dos formas:
+  //   * DataSet := tabla / consulta directamente.
+  //   * DataSource := TDataSource, que apunta al TDataSet.
+  // En Factuzam la convencion habitual es DataSource (asi enlaza
+  // fxdsPrintFac con dsFacPrint en UniDataFacturas.dfm). Aqui
+  // resolvemos ambos casos.
+  Result := oFrx.DataSet;
+  if (Result = nil) and (oFrx.DataSource <> nil) then
+    Result := oFrx.DataSource.DataSet;
+end;
+
 function TfrmModalWizardEditar.CargarCamposDelInforme(
                                   oFrx: TfrxDBDataset): Boolean;
 var
   j: Integer;
   oDS: TDataSet;
+  qry: TUniQuery;
+  bEraAbierto: Boolean;
+  vOriginales: array of Variant;
 begin
-  // A) "Del informe": TfrxDBDataset.Fields es protected en esta version
-  //    de FastReport, asi que no es accesible desde fuera; aprovechamos
-  //    el unico camino disponible aqui — los Fields del TDataSet de
-  //    fondo si esta abierto. Si esta cerrado, el caller pasa a C/B.
+  // A) "Del informe": leer Fields del TDataSet asociado al TfrxDBDataset.
+  //    Si esta cerrado lo abrimos NOSOTROS aqui — rellenando parametros
+  //    con dummies por tipo — leemos los nombres, lo cerramos y
+  //    restauramos los parametros originales para no romper la posterior
+  //    impresion/PDF/Excel. Solo si Open lanza excepcion damos por
+  //    fallido este nivel y caemos a C / B.
   Result := False;
-  oDS := oFrx.DataSet;
-  if (oDS <> nil) and oDS.Active and (oDS.FieldCount > 0) then
-  begin
+  oDS := ResolverDataSet(oFrx);
+  if oDS = nil then Exit;
+  qry := nil;
+  if oDS is TUniQuery then qry := TUniQuery(oDS);
+  bEraAbierto := oDS.Active;
+  try
+    if not bEraAbierto then
+    begin
+      if qry <> nil then
+      begin
+        SetLength(vOriginales, qry.Params.Count);
+        for j := 0 to qry.Params.Count - 1 do
+          vOriginales[j] := qry.Params[j].Value;
+        RellenarParametrosDummy(qry);
+      end;
+      try
+        oDS.Open;
+      except
+        Exit;  // -> el caller intenta C, luego B
+      end;
+    end;
     for j := 0 to oDS.FieldCount - 1 do
       lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
-    Result := True;
+    Result := oDS.FieldCount > 0;
+  finally
+    // Si nosotros lo abrimos, lo cerramos y restauramos parametros.
+    // Si ya venia abierto, no tocamos.
+    if (not bEraAbierto) and oDS.Active then
+    begin
+      oDS.Close;
+      if (qry <> nil) and (Length(vOriginales) > 0) then
+        for j := 0 to qry.Params.Count - 1 do
+          qry.Params[j].Value := vOriginales[j];
+    end;
   end;
 end;
 
