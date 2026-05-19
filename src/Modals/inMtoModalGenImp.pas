@@ -65,7 +65,6 @@ type
     ActionList1: TActionList;
     actSalir: TAction;
     frLocalizationController1: TfrLocalizationController;
-    btnGuias: TcxButton;
     unqryInformesGuias: TUniQuery;
     procedure btnImprimirClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
@@ -73,7 +72,6 @@ type
     procedure btnVistaPreliminarClick(Sender: TObject);
     procedure btnEditarClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
-    procedure btnGuiasClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     function frxdsgnr1SaveReport(Report: TfrxReport; SaveAs: Boolean): Boolean;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -99,6 +97,13 @@ type
     //                                (modo edicion del diseñador).
     procedure AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
     procedure CerrarGuiasRuntime;
+    // Lanza el modal de mantenimiento de guias para Self.Name y un
+    // formato concreto (vacio o 'Predeterminado' = global).
+    procedure EditarGuiasParaFormato(const aFormato: string);
+    // Al guardar un formato personalizado del .frx, clona en
+    // fza_informes_guias las guias globales referenciadas en el report
+    // para que queden tambien atadas a ese formato. Idempotente.
+    procedure ConsolidarGuiasParaFormato(const aFormato: string);
   end;
 
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
@@ -196,6 +201,15 @@ begin
 
   unqryInformesGuias.Close;
   unqryInformesGuias.ParamByName('INF').AsString := Self.Name;
+  // sElegido lleva el VALUE_USUPER del formato cargado en
+  // Consultar_Formularios. Si vale '' o 'Predeterminado' el usuario
+  // esta sobre el .frx base del informe, asi que pedimos solo las
+  // guias globales (FORMATO_INFGUI = ''). Para cualquier otro valor
+  // la condicion del SQL admite tambien las guias atadas a ese formato.
+  if (sElegido = '') or SameText(sElegido, 'Predeterminado') then
+    unqryInformesGuias.ParamByName('FMT').AsString := ''
+  else
+    unqryInformesGuias.ParamByName('FMT').AsString := sElegido;
   unqryInformesGuias.Open;
   if unqryInformesGuias.IsEmpty then
   begin
@@ -248,12 +262,16 @@ begin
       if bUsada then
       begin
         // 1) Localizar el frxDBDataset master por UserName.
+        //    frxrprt1.Datasets[i].DataSet es TfrxDataSet (la base);
+        //    nosotros necesitamos el TfrxDBDataset (envuelve un
+        //    TDataSet de Delphi y expone .DataSet).
         oDsMaster := nil;
         for i := 0 to frxrprt1.Datasets.Count - 1 do
-          if SameText(frxrprt1.Datasets[i].DataSet.UserName,
+          if (frxrprt1.Datasets[i].DataSet is TfrxDBDataset) and
+             SameText(frxrprt1.Datasets[i].DataSet.UserName,
                       sDatasetMaster) then
           begin
-            oDsMaster := frxrprt1.Datasets[i].DataSet;
+            oDsMaster := TfrxDBDataset(frxrprt1.Datasets[i].DataSet);
             Break;
           end;
         if (oDsMaster = nil) or (oDsMaster.DataSet = nil) then
@@ -323,8 +341,10 @@ begin
     if obj is TfrxDBDataset then
     begin
       // Quitar del report el item que apunta a este TfrxDBDataset.
+      // Comparamos como TfrxDataSet (clase base) para que el
+      // compilador no requiera un cast contravariante.
       for j := frxrprt1.Datasets.Count - 1 downto 0 do
-        if frxrprt1.Datasets[j].DataSet = TfrxDBDataset(obj) then
+        if frxrprt1.Datasets[j].DataSet = TfrxDataSet(obj) then
         begin
           frxrprt1.Datasets.Delete(j);
           Break;
@@ -335,13 +355,112 @@ begin
   FGuiasRuntime.Clear;
 end;
 
-procedure TfrmPrint.btnGuiasClick(Sender: TObject);
+procedure TfrmPrint.ConsolidarGuiasParaFormato(const aFormato: string);
+var
+  qrySrc, qryChk, qryIns: TUniQuery;
+  mem: TMemoryStream;
+  stl: TStringList;
+  sReport, sCodigo: string;
+begin
+  // Para 'Predeterminado' o vacio no hay nada que atar: las guias se
+  // quedan en su nivel global y los proximos Editar siguen viendolas.
+  if (aFormato = '') or SameText(aFormato, 'Predeterminado') then Exit;
+
+  // Serializa el .frx que acabamos de guardar para detectar referencias.
+  mem := TMemoryStream.Create;
+  stl := TStringList.Create;
+  try
+    frxrprt1.SaveToStream(mem);
+    mem.Position := 0;
+    stl.LoadFromStream(mem);
+    sReport := stl.Text;
+  finally
+    FreeAndNil(stl);
+    FreeAndNil(mem);
+  end;
+
+  qrySrc := TUniQuery.Create(nil);
+  qryChk := TUniQuery.Create(nil);
+  qryIns := TUniQuery.Create(nil);
+  try
+    qrySrc.Connection := oConn;
+    qrySrc.SQL.Text :=
+      'select CODIGO_INFGUI from fza_informes_guias ' +
+      ' where INFORME_INFGUI = :INF and FORMATO_INFGUI = ''''';
+    qrySrc.ParamByName('INF').AsString := Self.Name;
+    qrySrc.Open;
+
+    qryChk.Connection := oConn;
+    qryChk.SQL.Text :=
+      'select 1 from fza_informes_guias ' +
+      ' where INFORME_INFGUI = :INF ' +
+      '   and FORMATO_INFGUI = :FMT ' +
+      '   and CODIGO_INFGUI = :COD';
+
+    qryIns.Connection := oConn;
+    qryIns.SQL.Text :=
+      'insert into fza_informes_guias (' +
+      '  CODIGO_INFGUI, INFORME_INFGUI, FORMATO_INFGUI, ' +
+      '  DATASET_MASTER_INFGUI, TIPO_INFGUI, TABLA_INFGUI, ' +
+      '  SQL_INFGUI, MASTER_FIELDS_INFGUI, DETAIL_FIELDS_INFGUI, ' +
+      '  ORDEN_INFGUI, ESACTIVO_INFGUI, ' +
+      '  INSTANTE_ALTA, USUARIO_ALTA' +
+      ') select ' +
+      '  CODIGO_INFGUI, INFORME_INFGUI, :FMT, ' +
+      '  DATASET_MASTER_INFGUI, TIPO_INFGUI, TABLA_INFGUI, ' +
+      '  SQL_INFGUI, MASTER_FIELDS_INFGUI, DETAIL_FIELDS_INFGUI, ' +
+      '  ORDEN_INFGUI, ESACTIVO_INFGUI, ' +
+      '  now(), :USU ' +
+      ' from fza_informes_guias ' +
+      ' where INFORME_INFGUI = :INF ' +
+      '   and FORMATO_INFGUI = '''' ' +
+      '   and CODIGO_INFGUI = :COD';
+
+    while not qrySrc.Eof do
+    begin
+      sCodigo := qrySrc.FieldByName('CODIGO_INFGUI').AsString;
+      if (Pos('"' + sCodigo + '"',   sReport) > 0) or
+         (Pos('<' + sCodigo + '."',  sReport) > 0) or
+         (Pos('[' + sCodigo + '."',  sReport) > 0) then
+      begin
+        qryChk.Close;
+        qryChk.ParamByName('INF').AsString := Self.Name;
+        qryChk.ParamByName('FMT').AsString := aFormato;
+        qryChk.ParamByName('COD').AsString := sCodigo;
+        qryChk.Open;
+        if qryChk.IsEmpty then
+        begin
+          qryIns.ParamByName('FMT').AsString := aFormato;
+          qryIns.ParamByName('USU').AsString := oUser;
+          qryIns.ParamByName('INF').AsString := Self.Name;
+          qryIns.ParamByName('COD').AsString := sCodigo;
+          qryIns.Execute;
+        end;
+        qryChk.Close;
+      end;
+      qrySrc.Next;
+    end;
+  finally
+    FreeAndNil(qryIns);
+    FreeAndNil(qryChk);
+    FreeAndNil(qrySrc);
+  end;
+end;
+
+procedure TfrmPrint.EditarGuiasParaFormato(const aFormato: string);
 var
   oForm: TfrmModalInformesGuias;
 begin
   oForm := TfrmModalInformesGuias.Create(Self);
   try
     oForm.sInforme := Self.Name;
+    // Si el formato es 'Predeterminado' tratamos al usuario como si
+    // estuviera trabajando sobre el .frx base: las guias nuevas son
+    // globales por defecto. Para cualquier otro formato se atan a el.
+    if SameText(aFormato, 'Predeterminado') then
+      oForm.sFormatoSugerido := ''
+    else
+      oForm.sFormatoSugerido := aFormato;
     oForm.ShowModal;
   finally
     FreeAndNil(oForm);
@@ -362,10 +481,20 @@ begin
   Consultar_Formularios(True);
   if (sElegido <> '') then
   begin
+    // Antes de abrir el diseñador damos la oportunidad de revisar las
+    // guias del informe — atadas al formato concreto que el usuario
+    // acaba de elegir. El acceso al mantenimiento de guias se hace solo
+    // desde aqui: no hay boton "Guias" independiente porque las guias
+    // pasan a estar ligadas al formato editado.
+    if MessageDlg('¿Desea editar las guías de datos del informe ' +
+                  'antes de abrir el diseñador?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      EditarGuiasParaFormato(sElegido);
+
     AfterReportLoaded;
     // En edicion el usuario necesita ver todas las guias activas del
-    // informe en el arbol de datasets del diseñador, aunque el .frx
-    // todavia no las referencie. Por eso aSoloUsadasEnReport=False.
+    // informe (no solo las referenciadas) en el arbol de datasets del
+    // diseñador. Por eso aSoloUsadasEnReport=False.
     AbrirGuiasRuntime(False);
     try
       frxrprt1.PrepareReport(True);
@@ -722,6 +851,17 @@ begin
                                                       LoadFromStream(memStream);
         //https://forums.devart.com/viewtopic.php?t=19115
         unqryPerfiles.Post;
+        // Atar las guias referenciadas por este .frx al formato recien
+        // guardado: clona en fza_informes_guias las que existian como
+        // globales para que el formato quede autocontenido.
+        try
+          ConsolidarGuiasParaFormato(sDescripcion);
+        except
+          on E: Exception do
+            inLibLog.Log.LogError(
+              Format('Consolidacion de guias fallo para %s/%s: %s',
+                     [Self.Name, sDescripcion, E.Message]));
+        end;
         Result := True;
       end
       else

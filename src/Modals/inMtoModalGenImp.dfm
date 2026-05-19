@@ -31,7 +31,7 @@ inherited frmPrint: TfrmPrint
     end
     object btnImprimir: TcxButton
       Left = 0
-      Top = 121
+      Top = 120
       Width = 142
       Height = 25
       Caption = '&Imprimir'
@@ -75,15 +75,6 @@ inherited frmPrint: TfrmPrint
       Caption = 'E&xcel'
       TabOrder = 1
       OnClick = btnExcelClick
-    end
-    object btnGuias: TcxButton
-      Left = 0
-      Top = 96
-      Width = 142
-      Height = 25
-      Caption = '&Gu'#237'as'
-      TabOrder = 6
-      OnClick = btnGuiasClick
     end
   end
   object frxrprt1: TfrxReport
@@ -286,6 +277,8 @@ inherited frmPrint: TfrmPrint
       '  from fza_informes_guias'
       ' where INFORME_INFGUI = :INF'
       '   and ESACTIVO_INFGUI = '#39'S'#39
+      '   and (FORMATO_INFGUI = '#39#39
+      '        or FORMATO_INFGUI = :FMT)'
       ' order by ORDEN_INFGUI, CODIGO_INFGUI')
     Left = 112
     Top = 8
@@ -293,6 +286,11 @@ inherited frmPrint: TfrmPrint
       item
         DataType = ftUnknown
         Name = 'INF'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'FMT'
         Value = nil
       end>
   end

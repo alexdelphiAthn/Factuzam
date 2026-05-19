@@ -44,6 +44,7 @@ type
     unqryGuias: TUniQuery;
     dsGuias: TDataSource;
     tvGuiasCODIGO: TcxGridDBColumn;
+    tvGuiasFORMATO: TcxGridDBColumn;
     tvGuiasMASTER_DS: TcxGridDBColumn;
     tvGuiasTIPO: TcxGridDBColumn;
     tvGuiasTABLA: TcxGridDBColumn;
@@ -66,6 +67,11 @@ type
     // filtramos fza_informes_guias. Lo setea el invocador antes del
     // ShowModal.
     sInforme: string;
+    // Formato (VALUE_USUPER) actual del informe. Si esta relleno, las
+    // guias nuevas insertadas desde el grid se prerrellenan con este
+    // valor en FORMATO_INFGUI; si esta vacio la guia nueva queda como
+    // "global" al informe (FORMATO_INFGUI = '').
+    sFormatoSugerido: string;
   end;
 
 implementation
@@ -73,7 +79,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser;
+  UniDataConn, inLibUser, inLibGlobalVar;
 
 procedure TfrmModalInformesGuias.FormCreate(Sender: TObject);
 begin
@@ -88,7 +94,14 @@ begin
   unqryGuias.Close;
   unqryGuias.ParamByName('INF').AsString := sInforme;
   unqryGuias.Open;
-  lblInfo.Caption := Format('Guias activas para el informe "%s"', [sInforme]);
+  if sFormatoSugerido = '' then
+    lblInfo.Caption :=
+      Format('Guias del informe "%s" (formato sugerido: global)',
+             [sInforme])
+  else
+    lblInfo.Caption :=
+      Format('Guias del informe "%s" (formato sugerido: %s)',
+             [sInforme, sFormatoSugerido]);
 end;
 
 procedure TfrmModalInformesGuias.FormClose(Sender: TObject;
@@ -120,6 +133,11 @@ begin
     if DataSet.FieldByName('INFORME_INFGUI').IsNull or
        (DataSet.FieldByName('INFORME_INFGUI').AsString = '') then
       DataSet.FieldByName('INFORME_INFGUI').AsString := sInforme;
+    // Si el usuario abrio el modal estando sobre un formato concreto,
+    // las guias nuevas se atan a ese formato por defecto. Si quiere
+    // que sean globales basta con vaciar la celda FORMATO_INFGUI.
+    if DataSet.FieldByName('FORMATO_INFGUI').IsNull then
+      DataSet.FieldByName('FORMATO_INFGUI').AsString := sFormatoSugerido;
     if DataSet.FieldByName('ESACTIVO_INFGUI').IsNull or
        (DataSet.FieldByName('ESACTIVO_INFGUI').AsString = '') then
       DataSet.FieldByName('ESACTIVO_INFGUI').AsString := 'S';

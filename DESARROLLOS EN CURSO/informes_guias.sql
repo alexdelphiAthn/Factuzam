@@ -14,13 +14,23 @@ CREATE TABLE `fza_informes_guias` (
   -- Identificador logico de la guia. Se usa como UserName del
   -- TfrxDBDataset creado en runtime, asi que tiene que ser un
   -- identificador valido en FastReport (letras, digitos, _; comienza
-  -- por letra).
+  -- por letra). No es unico global: el mismo codigo puede reutilizarse
+  -- en distintos (INFORME_INFGUI, FORMATO_INFGUI).
   `CODIGO_INFGUI`           varchar(40)  NOT NULL,
 
   -- Self.Name del TfrmPrint para el que aplica esta guia. Ejemplo:
   -- 'frmPrintFac', 'frmPrintEtiqArt', 'frmPrintSesion'. Equivale al
   -- KEY_USUPER que usa fza_usuarios_perfiles para persistir layouts.
   `INFORME_INFGUI`          varchar(100) NOT NULL,
+
+  -- Formato concreto del .frx editado al que se cuelga la guia.
+  -- Coincide con VALUE_USUPER de fza_usuarios_perfiles (el nombre que
+  -- el usuario eligio al guardar el formato). Cadena vacia '' = guia
+  -- "global", aplica a todas las variantes del informe (incluyendo
+  -- 'Predeterminado'). Permite combinar:
+  --   * Guias transversales: FORMATO_INFGUI = ''
+  --   * Guias atadas al .frx editado: FORMATO_INFGUI = 'Factura A4 VIP'
+  `FORMATO_INFGUI`          varchar(200) NOT NULL DEFAULT '',
 
   -- UserName del TfrxDBDataset master del informe sobre el que se cuelga
   -- la guia. Ej. 'fxdsPrintFac', 'EtiquetasArt', 'Sesiones', 'Recibos'.
@@ -53,11 +63,11 @@ CREATE TABLE `fza_informes_guias` (
   `INSTANTE_MODIF`          datetime     DEFAULT NULL,
   `USUARIO_MODIF`           varchar(50)  DEFAULT NULL,
 
-  PRIMARY KEY (`CODIGO_INFGUI`)
+  PRIMARY KEY (`INFORME_INFGUI`,`FORMATO_INFGUI`,`CODIGO_INFGUI`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `fza_informes_guias`
-  ADD INDEX `IDX_INFGUI_INFORME` (`INFORME_INFGUI`);
+  ADD INDEX `IDX_INFGUI_INFORME` (`INFORME_INFGUI`,`FORMATO_INFGUI`);
 
 
 -- =====================================================================
