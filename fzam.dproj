@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -561,6 +561,7 @@
             <Form>frmModalSesionDuplicado</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
+        <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializar.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAltaRapida.pas">
             <Form>frmMtoModalAltaRapida</Form>
@@ -592,7 +593,6 @@
             <Form>frmFotoArticulo</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
-        <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas">
             <Form>frmMtoPruebaSesionGrid</Form>
         </DCCReference>
