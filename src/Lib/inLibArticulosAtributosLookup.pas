@@ -420,17 +420,23 @@ var
   Lst : TList<TArticuloAtributoValor>;
   V   : TArticuloAtributoValor;
 begin
-  // SELECT DISTINCT por av.* para no duplicar cuando un mismo AV aparece
-  // en varios SKUs del articulo. ORDER BY ORDEN_AV (numerico, definido
-  // en fza_atributos_valores: S=10, M=20, L=30...) con desempate
-  // alfabetico por AV para casos donde ORDEN_AV este a 0/NULL.
+  // GROUP BY av.AV (no DISTINCT por ID_AV) para deduplicar nombres
+  // repetidos en fza_atributos_valores. Caso real: dos AV distintos con
+  // 'NEGRO' como nombre — DISTINCT los conserva como filas separadas
+  // (IDs distintos), y el dropdown sale con 'NEGRO' por duplicado.
+  // Mismo patron que usa inMtoModalGenerarSKUs.
+  //   - MIN(ID_AV)   : ID canonico (el mas antiguo, normalmente el real).
+  //   - MIN(ORDEN_AV): orden mas bajo de los homonimos (S=10 manda sobre 0).
+  // ORDER BY ORDEN_AV (S=10, M=20, L=30, ...) con desempate alfabetico.
   Lst := TList<TArticuloAtributoValor>.Create;
   q := TUniQuery.Create(nil);
   try
     q.Connection := FConexion;
     q.SQL.Text :=
-      'SELECT DISTINCT av.ID_AV, av.AV, av.DESCRIPCION_AV, ' +
-      '       av.ORDEN_AV, av.ESACTIVO_AV ' +
+      'SELECT MIN(av.ID_AV) AS ID_AV, av.AV, ' +
+      '       MAX(av.DESCRIPCION_AV) AS DESCRIPCION_AV, ' +
+      '       MIN(av.ORDEN_AV) AS ORDEN_AV, ' +
+      '       MAX(av.ESACTIVO_AV) AS ESACTIVO_AV ' +
       '  FROM fza_atributos_valores av ' +
       '  JOIN vi_atributos_nombres N ON av.ID_VA_AV = N.ID_ATRIBUTO ' +
       '  JOIN fza_atributos_sku REL ON av.ID_AV = REL.ID_AV_SA ' +
@@ -439,7 +445,8 @@ begin
       '   AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
       ' WHERE N.CODIGO_ART_PADRE_ARTVIN = :padre ' +
       '   AND N.ORDEN_VISUAL_ATRIBUTO   = :orden ' +
-      ' ORDER BY av.ORDEN_AV, av.AV';
+      ' GROUP BY av.AV ' +
+      ' ORDER BY ORDEN_AV, av.AV';
     q.ParamByName('padre').AsString  := ACodigoArticulo;
     q.ParamByName('orden').AsInteger := AOrdenAtributo;
     q.Open;
