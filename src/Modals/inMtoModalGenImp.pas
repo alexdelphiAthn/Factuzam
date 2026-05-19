@@ -322,11 +322,17 @@ begin
         if FSqlOriginales.IndexOfObject(uniMaster) < 0 then
           FSqlOriginales.AddObject(uniMaster.SQL.Text, uniMaster);
 
-        sSqlActual := uniMaster.SQL.Text;
-        while (Length(sSqlActual) > 0) and
+        // Limpieza robusta: quitamos whitespace y ';' finales en
+        // bucle, asi cubrimos casos en que el SQL original termina con
+        // ';' + #13#10 / espacios (caso real de unqryLinFacPrint).
+        sSqlActual := TrimRight(uniMaster.SQL.Text);
+        while (sSqlActual <> '') and
               (sSqlActual[Length(sSqlActual)] = ';') do
+        begin
           SetLength(sSqlActual, Length(sSqlActual) - 1);
-        if Trim(sSqlActual) = '' then
+          sSqlActual := TrimRight(sSqlActual);
+        end;
+        if sSqlActual = '' then
         begin
           unqryInformesGuias.Next;
           Continue;

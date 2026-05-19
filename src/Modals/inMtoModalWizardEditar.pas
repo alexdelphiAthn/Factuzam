@@ -505,9 +505,12 @@ begin
   Result := False;
   qryTmp := nil;
   try
-    sSql := Trim(qrySrc.SQL.Text);
-    while (Length(sSql) > 0) and (sSql[Length(sSql)] = ';') do
+    sSql := TrimRight(qrySrc.SQL.Text);
+    while (sSql <> '') and (sSql[Length(sSql)] = ';') do
+    begin
       SetLength(sSql, Length(sSql) - 1);
+      sSql := TrimRight(sSql);
+    end;
     if sSql = '' then Exit;
     qryTmp := TUniQuery.Create(nil);
     qryTmp.Connection := oConn;
