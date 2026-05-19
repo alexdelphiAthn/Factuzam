@@ -150,6 +150,7 @@ type
     procedure btnAddLineaClick(Sender: TObject);
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
@@ -212,7 +213,8 @@ uses
   inLibUser,
   inLibComprasSesiones,
   inLibAtributosPaleta,
-  inMtoModalSelFamilia;
+  inMtoModalSelFamilia,
+  inMtoModalImpSesion;
 
 const
   fIdVaColor = 'CO';
@@ -588,6 +590,38 @@ begin
   end;
   Dmm.unqrySesionLin.Delete;
   if Assigned(FGestorTallas) then FGestorTallas.RecalcularMaxColumnas;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.btnImprimirClick(Sender: TObject);
+var
+  form     : TfrmPrintSesion;
+  sSerie   : string;
+  sNumero  : string;
+begin
+  inherited;
+  if Dmm.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay sesion activa que imprimir.');
+    Exit;
+  end;
+  // Persistir cualquier edicion pendiente para que el report vea los
+  // ultimos cambios (los TfrxDBDataset leen directamente de las vistas SQL).
+  if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+    Dmm.unqryTablaG.Post;
+  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+    Dmm.unqrySesionLin.Post;
+
+  sSerie  := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  form := TfrmPrintSesion.Create(Application);
+  try
+    form.dmSesion       := Dmm;
+    form.edtSerie.Text  := sSerie;
+    form.edtNumero.Text := sNumero;
+    form.ShowModal;
+  finally
+    FreeAndNil(form);
+  end;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.btnNuevoColorClick(Sender: TObject);
