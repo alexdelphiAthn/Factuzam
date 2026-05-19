@@ -423,6 +423,17 @@ begin
                 Format('Apertura del master enriquecido (%s) fallo: %s',
                        [sDatasetMaster, E.Message]));
           end;
+          // Equivalente programatico al "Update Fields" del diseñador
+          // FastReport. El .frx guarda en FieldAliases del TfrxDBDataset
+          // la lista estatica de campos conocidos al guardar; al
+          // recargar el informe, FastReport tira de esa lista y no ve
+          // los campos que añade el LEFT JOIN. Vaciarla obliga a leer
+          // los campos dinamicamente del TUniQuery enriquecido en el
+          // siguiente PrepareReport.
+          try
+            dsMaster.FieldAliases.Clear;
+          except
+          end;
           // FastReport cachea internamente los Fields de TfrxDBDataset:
           // al diseñar despues de un cambio de SQL los campos nuevos no
           // aparecen hasta pulsar "Update Fields". Forzamos el
@@ -802,6 +813,11 @@ begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     try
+      // Los demas botones (Imprimir/PDF/Excel/Editar) hacen
+      // PrepareReport(True) antes; Vista Preliminar tenia ShowReport
+      // pelado y FastReport reutilizaba la preparacion previa, sin
+      // los campos enriquecidos por las guias.
+      frxrprt1.PrepareReport(True);
       frxrprt1.ShowReport;
     finally
       CerrarGuiasRuntime;
