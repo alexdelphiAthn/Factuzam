@@ -81,10 +81,11 @@
             Visible = False
           end
           object tvMaestroORDEN_ACA: TcxGridDBColumn
-            Caption = 'Orden'
+            Caption = 'Orden (doble-click)'
             DataBinding.FieldName = 'ORDEN_ACA'
             HeaderAlignmentHorz = taRightJustify
-            Width = 80
+            Options.Editing = False
+            Width = 140
           end
         end
         object cxGrid1Level1: TcxGridLevel
