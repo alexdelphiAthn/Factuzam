@@ -423,6 +423,28 @@ begin
                 Format('Apertura del master enriquecido (%s) fallo: %s',
                        [sDatasetMaster, E.Message]));
           end;
+          // FastReport cachea internamente los Fields de TfrxDBDataset:
+          // al diseñar despues de un cambio de SQL los campos nuevos no
+          // aparecen hasta pulsar "Update Fields". Forzamos el
+          // reescaneo asignando nil + valor original al binding.
+          try
+            if dsMaster.DataSource <> nil then
+            begin
+              var dsOld := dsMaster.DataSource;
+              dsMaster.DataSource := nil;
+              dsMaster.DataSource := dsOld;
+            end
+            else if dsMaster.DataSet <> nil then
+            begin
+              var dOld := dsMaster.DataSet;
+              dsMaster.DataSet := nil;
+              dsMaster.DataSet := dOld;
+            end;
+          except
+            // Si la version de FastReport no acepta el truco, no es
+            // critico: solo significa que el usuario tendra que pulsar
+            // Update Fields manualmente.
+          end;
         finally
           FreeAndNil(setCamposMaster);
         end;
