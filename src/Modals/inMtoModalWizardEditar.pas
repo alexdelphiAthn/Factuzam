@@ -66,7 +66,16 @@ type
     lstDatasets: TcxListBox;
     lblCampos: TcxLabel;
     lstCampos: TcxCheckListBox;
+    lblTablas: TcxLabel;
+    lstTablas: TcxListBox;
+    lblCamposTabla: TcxLabel;
+    lstCamposTabla: TcxListBox;
+    pnlAddGuia: TPanel;
+    lblCodigoNuevo: TcxLabel;
+    edtCodigoNuevo: TcxTextEdit;
     btnAddGuia: TcxButton;
+    unqryTablas: TUniQuery;
+    unqryCamposTabla: TUniQuery;
     grdGuias: TcxGrid;
     tvGuias: TcxGridDBTableView;
     lvGuias: TcxGridLevel;
@@ -98,14 +107,19 @@ type
     procedure pgGuiasShow(Sender: TObject);
     procedure unqryGuiasBeforePost(DataSet: TDataSet);
     procedure lstDatasetsClick(Sender: TObject);
+    procedure lstTablasClick(Sender: TObject);
     procedure btnAddGuiaClick(Sender: TObject);
   private
     procedure CargarFormatosExistentes;
     procedure CargarScopes;
     procedure RellenarListDatasets;
     procedure RellenarListCampos;
+    procedure RellenarListTablas;
+    procedure RellenarListCamposTabla;
     procedure FiltrarGuiasPorDatasetSeleccionado;
     function DatasetMasterSeleccionado: string;
+    function TablaSeleccionada: string;
+    function CampoTablaSeleccionado: string;
     function CamposMarcadosCsv(const aSep: string = ';'): string;
     function NombreFinal: string;
     function EsFormatoNuevo: Boolean;
@@ -293,6 +307,10 @@ begin
   lblTituloGuias.Caption :=
     Format('Gu'#237'as ligadas al formato "%s"  ('#39'%s'#39')',
            [sFormato, sScope]);
+  // Aseguro conexion en los TUniQuery del wizard.
+  unqryGuias.Connection         := oConn;
+  unqryTablas.Connection        := oConn;
+  unqryCamposTabla.Connection   := oConn;
   // Abrir las guias filtradas por (informe, formato elegido) +
   // las globales del informe.
   unqryGuias.Close;
@@ -306,6 +324,9 @@ begin
     lstDatasets.ItemIndex := 0;
     lstDatasetsClick(lstDatasets);
   end;
+  // Cargar la lista de tablas y vistas del esquema. El click sobre
+  // una pinta sus columnas (con la PK marcada con '*').
+  RellenarListTablas;
 end;
 
 procedure TfrmModalWizardEditar.RellenarListDatasets;
@@ -345,9 +366,25 @@ begin
     oFrx := TfrxDBDataset(lstDatasets.Items.Objects[lstDatasets.ItemIndex]);
     if oFrx = nil then Exit;
     oDS := oFrx.DataSet;
-    if (oDS = nil) or (not oDS.Active) then Exit;
-    for j := 0 to oDS.FieldCount - 1 do
-      lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
+    if oDS = nil then Exit;
+    // 1) Si el dataset esta abierto y tiene fields creados, los usamos
+    //    directamente (camino normal).
+    if oDS.Active and (oDS.FieldCount > 0) then
+    begin
+      for j := 0 to oDS.FieldCount - 1 do
+        lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
+      Exit;
+    end;
+    // 2) Fallback: si el dataset esta cerrado o no tiene Fields runtime,
+    //    intentamos leer las FieldDefs (que vienen del .dfm). Asi
+    //    funciona aunque la query no se haya abierto todavia.
+    try
+      oDS.FieldDefs.Update;
+    except
+      // Si el dataset no soporta FieldDefs.Update sin abrir, ignoramos.
+    end;
+    for j := 0 to oDS.FieldDefs.Count - 1 do
+      lstCampos.Items.Add.Text := oDS.FieldDefs[j].Name;
   finally
     lstCampos.Items.EndUpdate;
   end;
@@ -357,6 +394,80 @@ procedure TfrmModalWizardEditar.lstDatasetsClick(Sender: TObject);
 begin
   RellenarListCampos;
   FiltrarGuiasPorDatasetSeleccionado;
+end;
+
+procedure TfrmModalWizardEditar.RellenarListTablas;
+begin
+  lstTablas.Items.BeginUpdate;
+  try
+    lstTablas.Items.Clear;
+    unqryTablas.Close;
+    unqryTablas.Open;
+    while not unqryTablas.Eof do
+    begin
+      lstTablas.Items.Add(unqryTablas.FieldByName('TABLE_NAME').AsString);
+      unqryTablas.Next;
+    end;
+    unqryTablas.Close;
+  finally
+    lstTablas.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmModalWizardEditar.RellenarListCamposTabla;
+var
+  sCol, sKey: string;
+begin
+  lstCamposTabla.Items.BeginUpdate;
+  try
+    lstCamposTabla.Items.Clear;
+    if TablaSeleccionada = '' then Exit;
+    unqryCamposTabla.Close;
+    unqryCamposTabla.ParamByName('TAB').AsString := TablaSeleccionada;
+    unqryCamposTabla.Open;
+    while not unqryCamposTabla.Eof do
+    begin
+      sCol := unqryCamposTabla.FieldByName('COLUMN_NAME').AsString;
+      sKey := unqryCamposTabla.FieldByName('COLUMN_KEY').AsString;
+      // PK marcada con '*' delante, asi salta a la vista.
+      if SameText(sKey, 'PRI') then
+        lstCamposTabla.Items.Add('* ' + sCol)
+      else
+        lstCamposTabla.Items.Add('  ' + sCol);
+      unqryCamposTabla.Next;
+    end;
+    unqryCamposTabla.Close;
+  finally
+    lstCamposTabla.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmModalWizardEditar.lstTablasClick(Sender: TObject);
+begin
+  RellenarListCamposTabla;
+end;
+
+function TfrmModalWizardEditar.TablaSeleccionada: string;
+begin
+  if (lstTablas.ItemIndex >= 0) and
+     (lstTablas.ItemIndex < lstTablas.Count) then
+    Result := lstTablas.Items[lstTablas.ItemIndex]
+  else
+    Result := '';
+end;
+
+function TfrmModalWizardEditar.CampoTablaSeleccionado: string;
+var
+  s: string;
+begin
+  Result := '';
+  if (lstCamposTabla.ItemIndex < 0) or
+     (lstCamposTabla.ItemIndex >= lstCamposTabla.Count) then Exit;
+  s := lstCamposTabla.Items[lstCamposTabla.ItemIndex];
+  // El prefijo '* ' / '  ' lo añadimos al pintar. Lo quitamos aqui.
+  if (Length(s) >= 2) and ((Copy(s, 1, 2) = '* ') or (Copy(s, 1, 2) = '  ')) then
+    Delete(s, 1, 2);
+  Result := Trim(s);
 end;
 
 procedure TfrmModalWizardEditar.FiltrarGuiasPorDatasetSeleccionado;
@@ -397,27 +508,59 @@ end;
 
 procedure TfrmModalWizardEditar.btnAddGuiaClick(Sender: TObject);
 var
-  sDS, sCampos: string;
+  sDS, sCampos, sTabla, sCampoTabla, sCodigo: string;
 begin
-  sDS := DatasetMasterSeleccionado;
+  sDS         := DatasetMasterSeleccionado;
+  sCampos     := CamposMarcadosCsv;
+  sTabla      := TablaSeleccionada;
+  sCampoTabla := CampoTablaSeleccionado;
+  sCodigo     := Trim(edtCodigoNuevo.Text);
+
   if sDS = '' then
   begin
-    ShowMessage('Selecciona el dataset master (cabecera o detalle) en la ' +
-                'lista de la izquierda antes de añadir una guía.');
+    ShowMessage('1) Selecciona el dataset master (cabecera o detalle) ' +
+                'en la lista de la izquierda.');
     Exit;
   end;
+  if sCampos = '' then
+  begin
+    ShowMessage('2) Marca al menos un campo del master ' +
+                '(Master fields).');
+    Exit;
+  end;
+  if sTabla = '' then
+  begin
+    ShowMessage('3) Selecciona la tabla o vista externa que quieres ligar.');
+    Exit;
+  end;
+  if sCampoTabla = '' then
+  begin
+    ShowMessage('4) Selecciona el campo de la tabla externa que se ' +
+                'cruza con el master (la PK aparece marcada con "*").');
+    Exit;
+  end;
+  if sCodigo = '' then
+  begin
+    ShowMessage('5) Escribe un código (UserName) para la guía. Sera lo ' +
+                'que escribirás en el .frx para referirte a ella.');
+    if edtCodigoNuevo.CanFocus then edtCodigoNuevo.SetFocus;
+    Exit;
+  end;
+
   if not unqryGuias.Active then unqryGuias.Open;
-  sCampos := CamposMarcadosCsv;
   unqryGuias.Append;
+  unqryGuias.FieldByName('CODIGO_INFGUI').AsString         := sCodigo;
   unqryGuias.FieldByName('INFORME_INFGUI').AsString        := sInforme;
   unqryGuias.FieldByName('FORMATO_INFGUI').AsString        := sFormato;
   unqryGuias.FieldByName('DATASET_MASTER_INFGUI').AsString := sDS;
-  if sCampos <> '' then
-    unqryGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString := sCampos;
-  unqryGuias.FieldByName('TIPO_INFGUI').AsString    := 'TABLA';
-  unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
-  // Foco al grid para que el usuario complete CODIGO + TABLA + DETAIL.
-  if grdGuias.CanFocus then grdGuias.SetFocus;
+  unqryGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString  := sCampos;
+  unqryGuias.FieldByName('DETAIL_FIELDS_INFGUI').AsString  := sCampoTabla;
+  unqryGuias.FieldByName('TABLA_INFGUI').AsString          := sTabla;
+  unqryGuias.FieldByName('TIPO_INFGUI').AsString           := 'TABLA';
+  unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString       := 'S';
+  unqryGuias.Post;
+
+  edtCodigoNuevo.Text := '';
 end;
 
 procedure TfrmModalWizardEditar.unqryGuiasBeforePost(DataSet: TDataSet);
