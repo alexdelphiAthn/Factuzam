@@ -31,7 +31,7 @@ inherited frmPrint: TfrmPrint
     end
     object btnImprimir: TcxButton
       Left = 0
-      Top = 120
+      Top = 121
       Width = 142
       Height = 25
       Caption = '&Imprimir'
@@ -75,6 +75,15 @@ inherited frmPrint: TfrmPrint
       Caption = 'E&xcel'
       TabOrder = 1
       OnClick = btnExcelClick
+    end
+    object btnGuias: TcxButton
+      Left = 0
+      Top = 96
+      Width = 142
+      Height = 25
+      Caption = '&Gu'#237'as'
+      TabOrder = 6
+      OnClick = btnGuiasClick
     end
   end
   object frxrprt1: TfrxReport
@@ -269,5 +278,22 @@ inherited frmPrint: TfrmPrint
     Language = 'Spanish'
     Left = 64
     Top = 184
+  end
+  object unqryInformesGuias: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select *'
+      '  from fza_informes_guias'
+      ' where INFORME_INFGUI = :INF'
+      '   and ESACTIVO_INFGUI = '#39'S'#39
+      ' order by ORDEN_INFGUI, CODIGO_INFGUI')
+    Left = 112
+    Top = 8
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'INF'
+        Value = nil
+      end>
   end
 end
