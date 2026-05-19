@@ -112,6 +112,18 @@ type
     // o para que el llamante sepa qué tiene resuelto.
     function ObtenerAtributosDeSku(const ACodigoSku: string)
                                           : TArray<TArticuloAtributoValor>;
+
+    // Valores de un atributo (orden visual 1..N) que el articulo YA TIENE
+    // referenciados en alguno de sus SKUs. A diferencia de
+    // ObtenerAtributos.Valores (que devuelve todas las opciones posibles
+    // del conjunto asignado), este metodo restringe a los AV que ya
+    // forman parte de algun SKU del articulo — util para dropdowns donde
+    // la linea editada debe cuadrar contra un SKU existente (caso tipico:
+    // celda Talla / Color en una linea de inventario / albaran).
+    // Ordenado por ORDEN_AV (con desempate alfabetico por AV).
+    function ObtenerAvsEnSkus(const ACodigoArticulo: string;
+                              AOrdenAtributo: Integer)
+                              : TArray<TArticuloAtributoValor>;
   end;
 
 implementation
@@ -389,6 +401,55 @@ begin
       V.Valor       := q.FieldByName('AV').AsString;
       V.Descripcion := q.FieldByName('DESCRIPCION_AV').AsString;
       V.Orden       := q.FieldByName('ORDEN_VA').AsInteger;
+      V.EsActivo    := q.FieldByName('ESACTIVO_AV').AsString = 'S';
+      Lst.Add(V);
+      q.Next;
+    end;
+    Result := Lst.ToArray;
+  finally
+    FreeAndNil(q);
+    FreeAndNil(Lst);
+  end;
+end;
+
+function TArticulosAtributosLookup.ObtenerAvsEnSkus(
+  const ACodigoArticulo: string; AOrdenAtributo: Integer)
+  : TArray<TArticuloAtributoValor>;
+var
+  q   : TUniQuery;
+  Lst : TList<TArticuloAtributoValor>;
+  V   : TArticuloAtributoValor;
+begin
+  // SELECT DISTINCT por av.* para no duplicar cuando un mismo AV aparece
+  // en varios SKUs del articulo. ORDER BY ORDEN_AV (numerico, definido
+  // en fza_atributos_valores: S=10, M=20, L=30...) con desempate
+  // alfabetico por AV para casos donde ORDEN_AV este a 0/NULL.
+  Lst := TList<TArticuloAtributoValor>.Create;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    q.SQL.Text :=
+      'SELECT DISTINCT av.ID_AV, av.AV, av.DESCRIPCION_AV, ' +
+      '       av.ORDEN_AV, av.ESACTIVO_AV ' +
+      '  FROM fza_atributos_valores av ' +
+      '  JOIN vi_atributos_nombres N ON av.ID_VA_AV = N.ID_ATRIBUTO ' +
+      '  JOIN fza_atributos_sku REL ON av.ID_AV = REL.ID_AV_SA ' +
+      '  JOIN fza_articulos_skus S ' +
+      '    ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU ' +
+      '   AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
+      ' WHERE N.CODIGO_ART_PADRE_ARTVIN = :padre ' +
+      '   AND N.ORDEN_VISUAL_ATRIBUTO   = :orden ' +
+      ' ORDER BY av.ORDEN_AV, av.AV';
+    q.ParamByName('padre').AsString  := ACodigoArticulo;
+    q.ParamByName('orden').AsInteger := AOrdenAtributo;
+    q.Open;
+    while not q.Eof do
+    begin
+      V := Default(TArticuloAtributoValor);
+      V.IdValor     := q.FieldByName('ID_AV').AsInteger;
+      V.Valor       := q.FieldByName('AV').AsString;
+      V.Descripcion := q.FieldByName('DESCRIPCION_AV').AsString;
+      V.Orden       := q.FieldByName('ORDEN_AV').AsInteger;
       V.EsActivo    := q.FieldByName('ESACTIVO_AV').AsString = 'S';
       Lst.Add(V);
       q.Next;
