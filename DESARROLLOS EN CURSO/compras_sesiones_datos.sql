@@ -39,9 +39,6 @@ INSERT INTO `fza_winforms`
   (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
    `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
 VALUES
-  ('ComprasSesiones', 'Sesiones de Compra', 'Sesiones1',
-   'inMtoComprasSesiones.TfrmMtoComprasSesiones', 'Ctrl+S',
-   'UniDataComprasSesiones.TdmComprasSesiones', 99),
   ('ComprasPlantillas', 'Plantillas de Compra', 'mnuComprasPlantillas',
    'inMtoComprasPlantillas.TfrmMtoComprasPlantillas', '',
    'UniDataComprasSesiones.TdmComprasSesiones', 1)
@@ -53,12 +50,10 @@ ON DUPLICATE KEY UPDATE
   `DATAMODULE_WINF`   = VALUES(`DATAMODULE_WINF`),
   `NUM_VENTANAS_WINF` = VALUES(`NUM_VENTANAS_WINF`);
 
--- Reasignar el atajo Ctrl+S de AtributosConjuntos a Ctrl+Alt+S para que
--- Sesiones de Compra pueda usar Ctrl+S sin colisión.
-UPDATE `fza_winforms`
-   SET `SHORTCUT_WINF` = 'Ctrl+Alt+S'
- WHERE `CALL_WINF` = 'AtributosConjuntos'
-   AND `SHORTCUT_WINF` = 'Ctrl+S';
+-- ComprasSesiones (Mto antiguo) ha sido desechado; el patron se mantiene
+-- en inMtoPruebaSesionGrid (CALL_WINF='PruebaSesionGrid', registrado en
+-- pruebas_sesiones/pruebas_sesiones.sql).
+DELETE FROM `fza_winforms` WHERE `CALL_WINF` = 'ComprasSesiones';
 
 -- ---------------------------------------------------------------------------
 -- 3. Etiquetas visibles del eje pivot (parametrizable por dominio)

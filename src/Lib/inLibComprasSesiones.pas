@@ -2,7 +2,12 @@
 
 {
   Unidad: inLibComprasSesiones
-  Lógica de UI para la matriz pivotada en el formulario inMtoComprasSesiones.
+  Logica auxiliar para Sesiones de Compra: resolucion de codigos de familia,
+  calculo de PVP propuesto (coste x margen / 100 - ajuste), etc.
+
+  El Mto que la usa actualmente es inMtoPruebaSesionGrid (patron grid
+  inline con tallas pivotadas). El antiguo inMtoComprasSesiones (matriz
+  separada) fue desechado; quedan los helpers utiles del lib.
 
   Inspirada en inLibArticulosVariaciones pero adaptada a la dimensionalidad
   multidocumento: cada línea de la sesión tiene su propia variación, sus
