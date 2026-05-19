@@ -1,4 +1,4 @@
-﻿inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
+inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   Caption = 'Generar SKUS'
   ClientHeight = 485
   ClientWidth = 732
@@ -81,11 +81,11 @@
             Visible = False
           end
           object tvMaestroORDEN_ACA: TcxGridDBColumn
-            Caption = 'Orden (doble-click)'
+            Caption = 'Orden'
             DataBinding.FieldName = 'ORDEN_ACA'
             HeaderAlignmentHorz = taRightJustify
             Options.Editing = False
-            Width = 140
+            Width = 130
           end
         end
         object cxGrid1Level1: TcxGridLevel
@@ -105,8 +105,8 @@
       object cxSplitter1: TcxSplitter
         Left = 1
         Top = 1
-        Width = 8
-        Height = 8
+        Width = 728
+        Height = 10
         HotZoneClassName = 'TcxMediaPlayer9Style'
         AlignSplitter = salTop
         Control = pnlBodyCab
@@ -114,14 +114,15 @@
       end
       object cxGrid2: TcxGrid
         Left = 1
-        Top = 9
+        Top = 11
         Width = 728
-        Height = 294
+        Height = 292
         Align = alClient
         TabOrder = 1
         ExplicitWidth = 726
-        ExplicitHeight = 286
+        ExplicitHeight = 284
         object tvDetalle: TcxGridDBTableView
+          OnCellDblClick = tvDetalleCellDblClick
           DataController.DataSource = dsDetalle
           OptionsView.GroupByBox = False
           object tvDetalleID_ATRIBUTO_AC: TcxGridDBColumn
@@ -151,9 +152,11 @@
             Visible = False
           end
           object tvDetalleORDEN_AV: TcxGridDBColumn
-            Caption = 'Orden'
+            Caption = 'Orden (doble click cambiar orden)'
             DataBinding.FieldName = 'ORDEN_AV'
             HeaderAlignmentHorz = taRightJustify
+            Options.Editing = False
+            Width = 299
           end
         end
         object cxGridLevel1: TcxGridLevel
@@ -167,8 +170,7 @@
     SQL.Strings = (
       'SELECT aca.CODIGO_ART_ACA, aca.ID_VA_ACA AS ID_ATB_VA,'
       '       va.ID_VAR_VA,'
-
-        '       COALESCE(va.NOMBRE_VA, aca.ID_VA_ACA) AS NOMBRE_ATRIBUTO,'
+      '       COALESCE(va.NOMBRE_VA, aca.ID_VA_ACA) AS NOMBRE_ATRIBUTO,'
       '       va.ORDEN_VA,'
       '       aca.ORDEN_ACA'
       '  FROM fza_articulos_conjuntos_asign aca'
@@ -176,7 +178,7 @@
       '    ON va.ID_ATB_VA = aca.ID_VA_ACA'
       '   AND va.ID_VAR_VA = :var'
       ' WHERE aca.CODIGO_ART_ACA = :art'
-
+      
         ' ORDER BY COALESCE(NULLIF(aca.ORDEN_ACA, 0), va.ORDEN_VA), va.OR' +
         'DEN_VA')
     Active = True
@@ -226,7 +228,7 @@
         DataType = ftWideString
         Name = 'ID_ATB_VA'
         ParamType = ptInput
-        Value = 'CO'
+        Value = nil
       end>
   end
   object dsMaestro: TDataSource

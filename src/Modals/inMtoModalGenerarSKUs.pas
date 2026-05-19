@@ -73,6 +73,9 @@ type
     procedure btnCancelarClick(Sender: TObject);
     procedure btnAddValueClick(Sender: TObject);
     procedure tvMaestroDblClick(Sender: TObject);
+    procedure tvDetalleCellDblClick(Sender: TcxCustomGridTableView;
+      ACellViewInfo: TcxGridTableDataCellViewInfo; AButton: TMouseButton;
+      AShift: TShiftState; var AHandled: Boolean);
   private
     FDimensiones: TObjectList<TDimensionSKU>;
     FCodigoArticulo: string;
@@ -212,6 +215,8 @@ begin
   unqryDetalle.FieldByName('ID_ATB_VA').ReadOnly := False;
   unqryDetalle.FieldByName('ID_AC').ReadOnly := False;
   unqryDetalle.FieldByName('NOMBRE_AC').ReadOnly := False;
+  if unqryDetalle.FindField('ORDEN_AV') <> nil then
+    unqryDetalle.FieldByName('ORDEN_AV').ReadOnly := False;
 end;
 
 procedure TfrmMtoModalGenerarSKUS.btnAceptarClick(Sender: TObject);
@@ -539,6 +544,90 @@ begin
     '  ORDEN_ACA     = VALUES(ORDEN_ACA), ' +
     '  USUARIO_MODIF = VALUES(USUARIO_MODIF)',
     [FCodigoArticulo, AIdAtributo, AOrden]);
+end;
+
+procedure TfrmMtoModalGenerarSKUS.tvDetalleCellDblClick(
+  Sender: TcxCustomGridTableView; ACellViewInfo: TcxGridTableDataCellViewInfo;
+  AButton: TMouseButton; AShift: TShiftState; var AHandled: Boolean);
+var
+  IdVal, OrdenActual, Orden: Integer;
+  NombreVal, OrdenStr, IdAtr, NombreConjunto: string;
+  qTemp: TUniQuery;
+begin
+  if not unqryDetalle.Active or unqryDetalle.IsEmpty then Exit;
+
+  // 1. Obtener los datos de la fila seleccionada
+  IdVal := unqryDetalle.FieldByName('ID_AC').AsInteger;
+  NombreVal := unqryDetalle.FieldByName('NOMBRE_AC').AsString;
+  OrdenActual := unqryDetalle.FieldByName('ORDEN_AV').AsInteger;
+  IdAtr := unqryDetalle.FieldByName('ID_ATB_VA').AsString; // Necesitamos saber de qué atributo es (Ej: 'CO')
+
+  if IdVal <= 0 then Exit;
+
+  // 2. Solicitar el nuevo orden al usuario
+  OrdenStr := Trim(InputBox('Cambiar orden del valor',
+    'Orden de "' + NombreVal + '" (número entero, los más bajos van primero y prevalence el orden del sistema):',
+    IntToStr(OrdenActual)));
+
+  if OrdenStr = '' then Exit;
+  Orden := StrToIntDef(OrdenStr, -1);
+
+  if Orden < 0 then
+  begin
+    ShowMessage('Por favor, introduce un número entero válido, (mayor o igual a 0).');
+    Exit;
+  end;
+
+  // 3. NUEVO: Comprobar si el valor pertenece a un sistema de atributos global
+  qTemp := TUniQuery.Create(nil);
+  try
+    qTemp.Connection := unqryDetalle.Connection;
+    qTemp.SQL.Text :=
+      'SELECT ac.NOMBRE_AC ' +
+      'FROM fza_articulos_conjuntos_asign aca ' +
+      'JOIN fza_atributos_conjuntos ac ON ac.ID_AC = aca.ID_AC_ACA ' +
+      'WHERE aca.CODIGO_ART_ACA = :Articulo ' +
+      '  AND aca.ID_VA_ACA = :Atributo';
+    qTemp.ParamByName('Articulo').AsString := FCodigoArticulo;
+    qTemp.ParamByName('Atributo').AsString := IdAtr;
+    qTemp.Open;
+
+    if not qTemp.IsEmpty then
+    begin
+      NombreConjunto := qTemp.FieldByName('NOMBRE_AC').AsString;
+
+      // Si tiene un nombre de conjunto, lanzamos la advertencia
+      if Trim(NombreConjunto) <> '' then
+      begin
+        if MessageDlg(
+          'Este valor proviene de un sistema de colores o atributos (' + NombreConjunto + ').' + sLineBreak + sLineBreak +
+          'ATENCIÓN: Este cambio implica un cambio que puede afectar a otros artículos que compartan este sistema.' + sLineBreak + sLineBreak +
+          '¿Desea continuar?',
+          mtWarning, [mbYes, mbNo], 0) <> mrYes then
+        begin
+          Exit; // Si el usuario pulsa "No", abortamos la operación silenciosamente
+        end;
+      end;
+    end;
+  finally
+    qTemp.Free;
+  end;
+
+  // 4. Actualizar AMBAS tablas en la base de datos
+  unqryDetalle.Connection.ExecSQL(
+    'UPDATE fza_atributos_valores ' +
+    'SET ORDEN_AV = :orden ' +
+    'WHERE ID_AV = :id', [Orden, IdVal]);
+
+  unqryDetalle.Connection.ExecSQL(
+    'UPDATE fza_atributos_conjuntos_det ' +
+    'SET ORDEN_ACD = :orden ' +
+    'WHERE ID_AV_ACD = :id', [Orden, IdVal]);
+
+  // 5. Actualizar el Dataset EN MEMORIA directamente.
+  unqryDetalle.Edit;
+  unqryDetalle.FieldByName('ORDEN_AV').AsInteger := Orden;
+  unqryDetalle.Post;
 end;
 
 procedure TfrmMtoModalGenerarSKUS.tvMaestroDblClick(Sender: TObject);

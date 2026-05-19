@@ -309,9 +309,9 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             Width = 136
             Height = 28
             Caption = 'Imprimir (apaisado)'
-            TabOrder = 4
-            LookAndFeel.NativeStyle = False
             LookAndFeel.Kind = lfFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 4
             OnClick = btnImprimirClick
           end
         end
