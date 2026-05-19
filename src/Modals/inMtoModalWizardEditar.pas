@@ -169,9 +169,10 @@ begin
   // Default de TcxCheckListBox.EditValueFormat es cvfInteger -> tope
   // 64 items (los estados van empaquetados como bits de un integer).
   // VI_FACTURAS_PRINT y otras vistas del proyecto tienen mas. Usamos
-  // cvfStatesString que serializa los estados como cadena de
-  // caracteres '0'/'1' sin limite.
-  lstCampos.EditValueFormat := cvfStatesString;
+  // cvfIndices, que serializa los indices marcados como string sin
+  // limite. CamposMarcadosCsv sigue leyendo Items[i].Checked, asi
+  // que el formato del EditValue es solo para almacenamiento interno.
+  lstCampos.EditValueFormat := cvfIndices;
   // Los botones Start/Last/Help quedan ocultos en cada pagina via
   // VisibleButtons (propiedad publicada de TJvWizardCustomPage).
   // TJvWizardNavigateButton no expone Visible.
