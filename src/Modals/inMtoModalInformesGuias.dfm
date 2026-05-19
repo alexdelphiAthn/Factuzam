@@ -63,6 +63,11 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
       object tvGuiasCODIGO: TcxGridDBColumn
         Caption = 'C'#243'digo (UserName)'
         DataBinding.FieldName = 'CODIGO_INFGUI'
+        Width = 130
+      end
+      object tvGuiasFORMATO: TcxGridDBColumn
+        Caption = 'Formato (vac'#237'o = global)'
+        DataBinding.FieldName = 'FORMATO_INFGUI'
         Width = 140
       end
       object tvGuiasMASTER_DS: TcxGridDBColumn
@@ -119,7 +124,7 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
       'select *'
       '  from fza_informes_guias'
       ' where INFORME_INFGUI = :INF'
-      ' order by ORDEN_INFGUI, CODIGO_INFGUI')
+      ' order by FORMATO_INFGUI, ORDEN_INFGUI, CODIGO_INFGUI')
     BeforePost = unqryGuiasBeforePost
     Left = 32
     Top = 96
