@@ -19,6 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
+  frxClass, frxDBSet,
   inLibUser, inMtoPrincipal;
 
 type
@@ -98,6 +99,24 @@ type
     // Stored procs auxiliares (validación, etc.)
     unstrdprcValidarSesion: TUniStoredProc;
 
+    // ------------------------------------------------------------------
+    // Impresion FastReport horizontal (prueba pruebas_sesiones/print)
+    // ------------------------------------------------------------------
+    // Vista cabecera enriquecida (empresa + proveedor + totales).
+    unqryCabSesionPrint:  TUniQuery;
+    dsCabSesionPrint:     TDataSource;
+    // Lineas con T01..T20 pivotadas desde fza_compras_sesiones_celdas.
+    unqryLinSesionPrint:  TUniQuery;
+    dsLinSesionPrint:     TDataSource;
+    // Guias (leyenda) de los sistemas de tallas usados en la sesion.
+    unqryGuiasSesionPrint: TUniQuery;
+    dsGuiasSesionPrint:    TDataSource;
+    // Datasets FastReport con UserName estable para que el report los
+    // resuelva por nombre via RebindReportDataSetsByDataModule.
+    fxdsCabSesion:   TfrxDBDataset;
+    fxdsLinSesion:   TfrxDBDataset;
+    fxdsGuiasSesion: TfrxDBDataset;
+
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
@@ -123,6 +142,10 @@ type
     procedure AplicarKitATodasFilas(const AIdKit: string;
                                     const ALineaID: Integer);
     procedure ReconstruirFilasLinea(const ALineaID: Integer);
+
+    // Abre las tres queries de impresion para una sesion concreta.
+    // Usado por TfrmPrintSesion.preparar_consulta.
+    procedure PrepararPrint(const ASerie, ANumero: string);
   end;
 
 
@@ -167,6 +190,9 @@ begin
   unqryArticuloExiste.Connection    := inLibGlobalVar.oConn;
   unstrdprcGetContadorSesion.Connection := inLibGlobalVar.oConn;
   unstrdprcValidarSesion.Connection := inLibGlobalVar.oConn;
+  unqryCabSesionPrint.Connection    := inLibGlobalVar.oConn;
+  unqryLinSesionPrint.Connection    := inLibGlobalVar.oConn;
+  unqryGuiasSesionPrint.Connection  := inLibGlobalVar.oConn;
   unqryProveedores.Open;
   unqryFamilias.Open;
   unqryVariaciones.Open;
@@ -580,6 +606,24 @@ begin
   //   - Borra filas que ya no aplican.
   //   - Inserta filas para valores nuevos del conjunto.
   //   - Borra celdas huérfanas.
+end;
+
+procedure TdmComprasSesiones.PrepararPrint(const ASerie, ANumero: string);
+begin
+  unqryCabSesionPrint.Close;
+  unqryCabSesionPrint.ParamByName('SERIE_SES').AsString  := ASerie;
+  unqryCabSesionPrint.ParamByName('NUMERO_SES').AsString := ANumero;
+  unqryCabSesionPrint.Open;
+
+  unqryLinSesionPrint.Close;
+  unqryLinSesionPrint.ParamByName('SERIE_SES').AsString  := ASerie;
+  unqryLinSesionPrint.ParamByName('NUMERO_SES').AsString := ANumero;
+  unqryLinSesionPrint.Open;
+
+  unqryGuiasSesionPrint.Close;
+  unqryGuiasSesionPrint.ParamByName('SERIE_SES').AsString  := ASerie;
+  unqryGuiasSesionPrint.ParamByName('NUMERO_SES').AsString := ANumero;
+  unqryGuiasSesionPrint.Open;
 end;
 
 end.

@@ -251,6 +251,9 @@
         <DCCReference Include="src\Modals\inMtoModalImpRecFac.pas">
             <Form>frmPrintRecFac</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpSesion.pas">
+            <Form>frmPrintSesion</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCliEti.pas">
             <Form>frmPrintCliEti</Form>
         </DCCReference>
