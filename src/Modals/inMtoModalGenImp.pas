@@ -78,6 +78,13 @@ type
     procedure actSalirExecute(Sender: TObject);
   private
     sElegido:String;
+    // Cuando el usuario entra por Editar, fijamos el nombre del formato
+    // al inicio del flujo (en btnEditarClick) en sElegido. Esta flag
+    // indica al frxdsgnr1SaveReport que NO debe presentar el modal de
+    // guardado: el nombre del formato ya esta decidido y el guardar va
+    // directo a fza_usuarios_perfiles con sElegido y FScopePerfilFijado.
+    FFormatoFijado: Boolean;
+    FScopePerfilFijado: string;
     // Componentes creados dinamicamente al abrir guias runtime. Se
     // liberan en CerrarGuiasRuntime / FormClose.
     FGuiasRuntime: TList;
@@ -117,7 +124,7 @@ implementation
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam,
   System.Generics.Collections, System.Rtti, inLibFotos,
-  inMtoModalInformesGuias, inLibLog;
+  inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog;
 
 {$R *.dfm}
 
@@ -479,39 +486,83 @@ begin
 end;
 
 procedure TfrmPrint.btnEditarClick(Sender: TObject);
+var
+  oWiz: TfrmModalWizardEditar;
+  memStream: TMemoryStream;
+  bAceptado: Boolean;
 begin
   inherited;
   Preparar_consulta;
   Self.Hide;
-  Consultar_Formularios(True);
-  if (sElegido <> '') then
+
+  // AfterReportLoaded re-enlaza los datasets del informe via
+  // RebindReportDataSetsByDataModule. Lo hacemos ANTES de abrir el
+  // wizard para que el paso 2 del wizard pueda enumerar los
+  // TfrxDBDataset reales (cabecera + detalle) con sus campos.
+  AfterReportLoaded;
+
+  // Wizard de 2 pasos: 1) elegir/crear formato + permiso, 2) ver
+  // datasets del informe y configurar guias. Al finalizar, sFormato y
+  // sScope quedan fijados, asi el guardado posterior del .frx desde el
+  // diseñador no tiene que volver a preguntar.
+  bAceptado := False;
+  oWiz := TfrmModalWizardEditar.Create(Self);
+  try
+    oWiz.sInforme := Self.Name;
+    oWiz.FReport  := frxrprt1;
+    oWiz.ShowModal;
+    if oWiz.sFicha = 'S' then
+    begin
+      sElegido           := oWiz.sFormato;
+      FScopePerfilFijado := oWiz.sScope;
+      FFormatoFijado     := True;
+      bAceptado          := True;
+
+      // Cargar el .frx que corresponda al formato elegido. Si existe en
+      // fza_usuarios_perfiles cargamos el BLOB; si es nuevo partimos
+      // del .frx base (frxReportOrigen).
+      if oWiz.bExiste then
+      begin
+        unqryPerfiles.Close;
+        unqryPerfiles.Open;
+        memStream := TMemoryStream.Create;
+        try
+          if unqryPerfiles.Locate('VALUE_USUPER', sElegido, []) then
+          begin
+            TBlobField(unqryPerfiles.FieldByName(
+                                'VALUE_BLOB_USUPER')).SaveToStream(memStream);
+            memStream.Position := 0;
+            frxrprt1.LoadFromStream(memStream);
+          end
+          else
+            frxrprt1.AssignAll(frxReportOrigen);
+        finally
+          FreeAndNil(memStream);
+        end;
+      end
+      else
+        frxrprt1.AssignAll(frxReportOrigen);
+
+      // Re-enlazar datasets despues de cargar/asignar el report (el
+      // LoadFromStream resetea Datasets de la version guardada).
+      AfterReportLoaded;
+    end;
+  finally
+    FreeAndNil(oWiz);
+  end;
+
+  if bAceptado then
   begin
-    // AfterReportLoaded re-enlaza los datasets via
-    // RebindReportDataSetsByDataModule. Lo invocamos AQUI (antes de la
-    // pregunta de guias) para que, si el usuario decide editar guias,
-    // el modal pueda enumerar los TfrxDBDataset reales del informe
-    // (cabecera y detalle) con sus campos.
-    AfterReportLoaded;
-
-    // Antes de abrir el diseñador damos la oportunidad de revisar las
-    // guias del informe — atadas al formato concreto que el usuario
-    // acaba de elegir. El acceso al mantenimiento de guias se hace solo
-    // desde aqui: no hay boton "Guias" independiente porque las guias
-    // pasan a estar ligadas al formato editado.
-    if MessageDlg('¿Desea editar las guías de datos del informe ' +
-                  'antes de abrir el diseñador?',
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      EditarGuiasParaFormato(sElegido, frxrprt1);
-
-    // En edicion el usuario necesita ver todas las guias activas del
-    // informe (no solo las referenciadas) en el arbol de datasets del
-    // diseñador. Por eso aSoloUsadasEnReport=False.
+    // En edicion abrimos TODAS las guias activas del informe / formato
+    // (no solo las referenciadas) para que aparezcan en el arbol de
+    // datasets del diseñador y el usuario pueda arrastrarlas al .frx.
     AbrirGuiasRuntime(False);
     try
       frxrprt1.PrepareReport(True);
       frxrprt1.DesignReport();
     finally
       CerrarGuiasRuntime;
+      FFormatoFijado := False;
     end;
   end;
   Self.Show;
@@ -815,19 +866,31 @@ var
 begin
   Result := False;
   bGuardar := False;
-  formulario := TfrmModalGenImpSave.Create(Application);
-  try
-    formulario.edtNombreOrigen.Text := Self.Name;
-    formulario.edtDescripcion.Text := sElegido;
-    formulario.ShowModal;
-    if (formulario.sFicha = 'S') then
-    begin
-      bGuardar := True;
-      sDescripcion := formulario.edtDescripcion.Text;
-      sPermisos := formulario.cbbPermisos.Text;
+  if FFormatoFijado then
+  begin
+    // El nombre y permiso del formato ya estan decididos por el wizard
+    // de btnEditarClick — no volvemos a preguntar al usuario.
+    bGuardar     := True;
+    sDescripcion := sElegido;
+    sPermisos    := FScopePerfilFijado;
+    if sPermisos = '' then sPermisos := oUser;
+  end
+  else
+  begin
+    formulario := TfrmModalGenImpSave.Create(Application);
+    try
+      formulario.edtNombreOrigen.Text := Self.Name;
+      formulario.edtDescripcion.Text := sElegido;
+      formulario.ShowModal;
+      if (formulario.sFicha = 'S') then
+      begin
+        bGuardar := True;
+        sDescripcion := formulario.edtDescripcion.Text;
+        sPermisos := formulario.cbbPermisos.Text;
+      end;
+    finally
+      FreeAndNil(formulario);
     end;
-  finally
-    FreeAndNil(formulario);
   end;
   if bGuardar then
   begin
@@ -837,7 +900,10 @@ begin
       memStream.Position:=0;
       if unqryPerfiles.Locate('VALUE_USUPER',sDescripcion, []) then
       begin
-        if ( Application.MessageBox( 'El informe ya existe. ' +
+        if FFormatoFijado then
+          // El wizard ya advirtio al usuario de que el formato existia.
+          unqryPerfiles.Edit
+        else if ( Application.MessageBox( 'El informe ya existe. ' +
                                     '¿Desea reemplazar el informe?',
                                     'Mensaje Advertencia',
                                     MB_YESNO ) = ID_YES ) then
