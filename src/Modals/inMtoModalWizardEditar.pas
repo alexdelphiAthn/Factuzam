@@ -336,11 +336,12 @@ begin
   // Pintar la lista de UserName del .frx. Al seleccionar uno se
   // pintan sus campos a la derecha y se filtran las guias del grid.
   RellenarListDatasets;
-  if lstDatasets.Count > 0 then
-  begin
-    lstDatasets.ItemIndex := 0;
-    lstDatasetsClick(lstDatasets);
-  end;
+  // Al abrir no preseleccionamos ningun dataset: el grid muestra
+  // TODAS las guias del informe (asi el usuario las ve aunque sean
+  // de masters distintos al primero). En cuanto haga click en un
+  // dataset, se aplica el filtro y se pintan sus campos.
+  lstDatasets.ItemIndex := -1;
+  FiltrarGuiasPorDatasetSeleccionado;
   // Cargar la lista de tablas y vistas del esquema. El click sobre
   // una pinta sus columnas (con la PK marcada con '*').
   RellenarListTablas;
