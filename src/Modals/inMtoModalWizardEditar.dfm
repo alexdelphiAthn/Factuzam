@@ -141,67 +141,91 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
             Transparent = True
           end
         end
-        object pnlAyudaGuias: TPanel
+        object pnlSelectorDS: TPanel
           Left = 0
           Top = 30
           Width = 1100
-          Height = 170
+          Height = 220
           Align = alTop
           BevelOuter = bvNone
           Color = 16380385
           ParentBackground = False
           TabOrder = 1
-          object lblAyudaGuias: TcxLabel
+          object lblDatasets: TcxLabel
             Left = 16
             Top = 8
-            Caption =
-              '   Una gu'#237'a a'#241'ade al informe un dataset auxiliar (estilo Master' +
-              'Source / MasterFields / DetailFields de UniDAC).'#13#10'   Cada fila:'#13#10 +
-              '      '#8226' C'#243'digo (UserName) = identificador que escribir'#225's en el' +
-              ' .frx, p.ej. ClienteFac.'#13#10'      '#8226' Tipo = TABLA o SQL.'#13#10'      '#8226 +
-              ' Dataset master = UserName de la cabecera/detalle (ver lista a' +
-              ' la derecha).'#13#10'      '#8226' Master / Detail fields = pares separad' +
-              'os por '#39';'#39' (CODIGO_CLI_FAC '#8594' CODIGO_CLI).'
-            Properties.WordWrap = True
+            Caption = '1. Dataset master del informe'
             Style.Font.Charset = DEFAULT_CHARSET
-            Style.Font.Color = 4210752
+            Style.Font.Color = 3618615
+            Style.Font.Height = -13
+            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            Transparent = True
+          end
+          object lstDatasets: TcxListBox
+            Left = 16
+            Top = 32
+            Width = 320
+            Height = 170
+            ItemHeight = 19
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clWindowText
             Style.Font.Height = -13
             Style.Font.Name = 'Segoe UI'
             Style.IsFontAssigned = True
-            Style.TransparentBorder = False
-            Transparent = True
-            Height = 154
-            Width = 600
+            TabOrder = 0
+            OnClick = lstDatasetsClick
           end
-          object mmoDatasets: TcxMemo
-            Left = 624
+          object lblCampos: TcxLabel
+            Left = 360
             Top = 8
-            Properties.ReadOnly = True
-            Properties.ScrollBars = ssVertical
-            Properties.WantReturns = False
-            Properties.WordWrap = False
+            Caption = '2. Campos del master a usar como Master fields'
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = 3618615
+            Style.Font.Height = -13
+            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            Transparent = True
+          end
+          object lstCampos: TcxCheckListBox
+            Left = 360
+            Top = 32
+            Width = 400
+            Height = 170
+            Items = <>
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
-            Style.Font.Height = -12
-            Style.Font.Name = 'Consolas'
+            Style.Font.Height = -13
+            Style.Font.Name = 'Segoe UI'
             Style.IsFontAssigned = True
-            TabOrder = 0
-            Height = 154
-            Width = 460
+            TabOrder = 1
+          end
+          object btnAddGuia: TcxButton
+            Left = 800
+            Top = 32
+            Width = 240
+            Height = 35
+            Caption = '+ A'#241'adir gu'#237'a con esta selecci'#243'n'
+            LookAndFeel.NativeStyle = False
+            LookAndFeel.SkinName = 'Office2019Colorful'
+            TabOrder = 2
+            OnClick = btnAddGuiaClick
           end
         end
         object grdGuias: TcxGrid
           Left = 0
-          Top = 200
+          Top = 250
           Width = 1100
-          Height = 271
+          Height = 221
           Align = alClient
           TabOrder = 2
           LookAndFeel.NativeStyle = False
           object tvGuias: TcxGridDBTableView
             Navigator.Buttons.CustomButtons = <>
             Navigator.Buttons.ConfirmDelete = True
-            Navigator.Buttons.Insert.Visible = True
+            Navigator.Buttons.Insert.Visible = False
             Navigator.Buttons.Delete.Visible = True
             Navigator.Buttons.Edit.Visible = True
             Navigator.Buttons.Post.Visible = True
@@ -216,7 +240,7 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
             OptionsData.Deleting = True
             OptionsData.DeletingConfirmation = True
             OptionsData.Editing = True
-            OptionsData.Inserting = True
+            OptionsData.Inserting = False
             OptionsView.GroupByBox = False
             OptionsView.Indicator = True
             Styles.Header = cxsHeader
@@ -224,12 +248,7 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
               Caption = 'C'#243'digo (UserName)'
               DataBinding.FieldName = 'CODIGO_INFGUI'
               Options.Sorting = False
-              Width = 160
-            end
-            object tvGuiasMASTER_DS: TcxGridDBColumn
-              Caption = 'Dataset master'
-              DataBinding.FieldName = 'DATASET_MASTER_INFGUI'
-              Width = 140
+              Width = 180
             end
             object tvGuiasTIPO: TcxGridDBColumn
               Caption = 'Tipo'
@@ -244,22 +263,22 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
             object tvGuiasTABLA: TcxGridDBColumn
               Caption = 'Tabla'
               DataBinding.FieldName = 'TABLA_INFGUI'
-              Width = 140
+              Width = 160
             end
             object tvGuiasSQL: TcxGridDBColumn
               Caption = 'SQL libre'
               DataBinding.FieldName = 'SQL_INFGUI'
-              Width = 170
+              Width = 180
             end
             object tvGuiasMASTER_FIELDS: TcxGridDBColumn
               Caption = 'Master fields'
               DataBinding.FieldName = 'MASTER_FIELDS_INFGUI'
-              Width = 150
+              Width = 180
             end
             object tvGuiasDETAIL_FIELDS: TcxGridDBColumn
               Caption = 'Detail fields'
               DataBinding.FieldName = 'DETAIL_FIELDS_INFGUI'
-              Width = 150
+              Width = 180
             end
             object tvGuiasORDEN: TcxGridDBColumn
               Caption = 'Orden'
