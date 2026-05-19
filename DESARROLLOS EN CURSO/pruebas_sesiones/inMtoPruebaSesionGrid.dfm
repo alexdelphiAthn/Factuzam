@@ -303,6 +303,17 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               'coste.'
             TabOrder = 3
           end
+          object btnImprimir: TcxButton
+            Left = 950
+            Top = 4
+            Width = 136
+            Height = 28
+            Caption = 'Imprimir (apaisado)'
+            TabOrder = 4
+            LookAndFeel.NativeStyle = False
+            LookAndFeel.Kind = lfFlat
+            OnClick = btnImprimirClick
+          end
         end
         object cxgrdLineas: TcxGrid
           Left = 0
