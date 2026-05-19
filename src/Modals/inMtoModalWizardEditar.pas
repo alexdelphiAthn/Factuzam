@@ -34,7 +34,7 @@ uses
   inMtoFrmBase, dxCore, dxSkinsForm, dxSkinsCore, dxSkinBlue,
   cxClasses, cxContainer, cxEdit, cxControls, cxLookAndFeels, cxLocalization,
   cxGraphics, cxLookAndFeelPainters, cxButtons, cxStyles, cxLabel, cxTextEdit,
-  cxDropDownEdit, cxMaskEdit, cxMemo,
+  cxDropDownEdit, cxMaskEdit, cxCustomListBox, cxListBox, cxCheckListBox,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, cxDBData, cxGridLevel, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridCustomView, cxGrid,
@@ -61,14 +61,16 @@ type
     pnlPaso2: TPanel;
     pnlInfoGuias: TPanel;
     lblTituloGuias: TcxLabel;
-    pnlAyudaGuias: TPanel;
-    lblAyudaGuias: TcxLabel;
-    mmoDatasets: TcxMemo;
+    pnlSelectorDS: TPanel;
+    lblDatasets: TcxLabel;
+    lstDatasets: TcxListBox;
+    lblCampos: TcxLabel;
+    lstCampos: TcxCheckListBox;
+    btnAddGuia: TcxButton;
     grdGuias: TcxGrid;
     tvGuias: TcxGridDBTableView;
     lvGuias: TcxGridLevel;
     tvGuiasCODIGO: TcxGridDBColumn;
-    tvGuiasMASTER_DS: TcxGridDBColumn;
     tvGuiasTIPO: TcxGridDBColumn;
     tvGuiasTABLA: TcxGridDBColumn;
     tvGuiasSQL: TcxGridDBColumn;
@@ -95,10 +97,16 @@ type
                                        var Stop: Boolean);
     procedure pgGuiasShow(Sender: TObject);
     procedure unqryGuiasBeforePost(DataSet: TDataSet);
+    procedure lstDatasetsClick(Sender: TObject);
+    procedure btnAddGuiaClick(Sender: TObject);
   private
     procedure CargarFormatosExistentes;
     procedure CargarScopes;
-    procedure RellenarMemoDatasets;
+    procedure RellenarListDatasets;
+    procedure RellenarListCampos;
+    procedure FiltrarGuiasPorDatasetSeleccionado;
+    function DatasetMasterSeleccionado: string;
+    function CamposMarcadosCsv(const aSep: string = ';'): string;
     function NombreFinal: string;
     function EsFormatoNuevo: Boolean;
   public
@@ -290,68 +298,126 @@ begin
   unqryGuias.Close;
   unqryGuias.ParamByName('INF').AsString := sInforme;
   unqryGuias.Open;
-  RellenarMemoDatasets;
+  // Pintar la lista de UserName del .frx. Al seleccionar uno se
+  // pintan sus campos a la derecha y se filtran las guias del grid.
+  RellenarListDatasets;
+  if lstDatasets.Count > 0 then
+  begin
+    lstDatasets.ItemIndex := 0;
+    lstDatasetsClick(lstDatasets);
+  end;
 end;
 
-procedure TfrmModalWizardEditar.RellenarMemoDatasets;
+procedure TfrmModalWizardEditar.RellenarListDatasets;
 var
-  i, j: Integer;
+  i: Integer;
   oFrx: TfrxDBDataset;
-  oDS: TDataSet;
-  sLine, sUserName: string;
+  sUserName: string;
 begin
-  mmoDatasets.Lines.BeginUpdate;
+  lstDatasets.Items.BeginUpdate;
   try
-    mmoDatasets.Lines.Clear;
-    if FReport = nil then
-    begin
-      mmoDatasets.Lines.Add('(El informe no se ha pasado al wizard: ' +
-                            'sin info de datasets.)');
-      Exit;
-    end;
-    mmoDatasets.Lines.Add(Format(
-      'Datasets disponibles en el informe %s', [sInforme]));
-    mmoDatasets.Lines.Add('');
-    if FReport.Datasets.Count = 0 then
-    begin
-      mmoDatasets.Lines.Add('(El informe no tiene datasets registrados.)');
-      Exit;
-    end;
+    lstDatasets.Items.Clear;
+    if FReport = nil then Exit;
     for i := 0 to FReport.Datasets.Count - 1 do
     begin
       if not (FReport.Datasets[i].DataSet is TfrxDBDataset) then Continue;
       oFrx := TfrxDBDataset(FReport.Datasets[i].DataSet);
       sUserName := oFrx.UserName;
-      if sUserName = '' then sUserName := '(sin UserName)';
-      mmoDatasets.Lines.Add('• ' + sUserName);
-      oDS := oFrx.DataSet;
-      if (oDS = nil) or (not oDS.Active) or (oDS.FieldCount = 0) then
-      begin
-        mmoDatasets.Lines.Add('    (sin campos disponibles)');
-        mmoDatasets.Lines.Add('');
-        Continue;
-      end;
-      sLine := '    ';
-      for j := 0 to oDS.FieldCount - 1 do
-      begin
-        if Length(sLine) + Length(oDS.Fields[j].FieldName) > 95 then
-        begin
-          mmoDatasets.Lines.Add(sLine);
-          sLine := '    ';
-        end;
-        if sLine <> '    ' then sLine := sLine + ', ';
-        sLine := sLine + oDS.Fields[j].FieldName;
-      end;
-      if sLine <> '    ' then
-        mmoDatasets.Lines.Add(sLine);
-      mmoDatasets.Lines.Add('');
+      if sUserName = '' then Continue;
+      lstDatasets.Items.AddObject(sUserName, oFrx);
     end;
-    mmoDatasets.Lines.Add(
-      'Tip: copia el UserName a "Dataset master" y los campos a ' +
-      '"Master fields" / "Detail fields" separados por '';''.');
   finally
-    mmoDatasets.Lines.EndUpdate;
+    lstDatasets.Items.EndUpdate;
   end;
+end;
+
+procedure TfrmModalWizardEditar.RellenarListCampos;
+var
+  j: Integer;
+  oFrx: TfrxDBDataset;
+  oDS: TDataSet;
+begin
+  lstCampos.Items.BeginUpdate;
+  try
+    lstCampos.Items.Clear;
+    if (lstDatasets.ItemIndex < 0) or
+       (lstDatasets.ItemIndex >= lstDatasets.Count) then Exit;
+    oFrx := TfrxDBDataset(lstDatasets.Items.Objects[lstDatasets.ItemIndex]);
+    if oFrx = nil then Exit;
+    oDS := oFrx.DataSet;
+    if (oDS = nil) or (not oDS.Active) then Exit;
+    for j := 0 to oDS.FieldCount - 1 do
+      lstCampos.Items.Add(oDS.Fields[j].FieldName);
+  finally
+    lstCampos.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmModalWizardEditar.lstDatasetsClick(Sender: TObject);
+begin
+  RellenarListCampos;
+  FiltrarGuiasPorDatasetSeleccionado;
+end;
+
+procedure TfrmModalWizardEditar.FiltrarGuiasPorDatasetSeleccionado;
+var
+  sDS: string;
+begin
+  sDS := DatasetMasterSeleccionado;
+  unqryGuias.Filtered := False;
+  if sDS = '' then
+    unqryGuias.Filter := ''
+  else
+    unqryGuias.Filter :=
+      'DATASET_MASTER_INFGUI = ' + QuotedStr(sDS);
+  unqryGuias.Filtered := sDS <> '';
+end;
+
+function TfrmModalWizardEditar.DatasetMasterSeleccionado: string;
+begin
+  if (lstDatasets.ItemIndex >= 0) and
+     (lstDatasets.ItemIndex < lstDatasets.Count) then
+    Result := lstDatasets.Items[lstDatasets.ItemIndex]
+  else
+    Result := '';
+end;
+
+function TfrmModalWizardEditar.CamposMarcadosCsv(const aSep: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 0 to lstCampos.Items.Count - 1 do
+    if lstCampos.States[i] = cbsChecked then
+    begin
+      if Result <> '' then Result := Result + aSep;
+      Result := Result + lstCampos.Items[i];
+    end;
+end;
+
+procedure TfrmModalWizardEditar.btnAddGuiaClick(Sender: TObject);
+var
+  sDS, sCampos: string;
+begin
+  sDS := DatasetMasterSeleccionado;
+  if sDS = '' then
+  begin
+    ShowMessage('Selecciona el dataset master (cabecera o detalle) en la ' +
+                'lista de la izquierda antes de añadir una guía.');
+    Exit;
+  end;
+  if not unqryGuias.Active then unqryGuias.Open;
+  sCampos := CamposMarcadosCsv;
+  unqryGuias.Append;
+  unqryGuias.FieldByName('INFORME_INFGUI').AsString        := sInforme;
+  unqryGuias.FieldByName('FORMATO_INFGUI').AsString        := sFormato;
+  unqryGuias.FieldByName('DATASET_MASTER_INFGUI').AsString := sDS;
+  if sCampos <> '' then
+    unqryGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString := sCampos;
+  unqryGuias.FieldByName('TIPO_INFGUI').AsString    := 'TABLA';
+  unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
+  // Foco al grid para que el usuario complete CODIGO + TABLA + DETAIL.
+  if grdGuias.CanFocus then grdGuias.SetFocus;
 end;
 
 procedure TfrmModalWizardEditar.unqryGuiasBeforePost(DataSet: TDataSet);
