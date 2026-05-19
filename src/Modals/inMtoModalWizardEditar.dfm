@@ -13,7 +13,6 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
     Top = 0
     Width = 1100
     Height = 600
-    Align = alClient
     ButtonBarHeight = 52
     ButtonStart.Caption = ' '
     ButtonStart.Visible = False
