@@ -57,6 +57,8 @@ uses
   inMtoModalGenImp in 'src\Modals\inMtoModalGenImp.pas' {frmPrint},
   inMtoModalGenImpEle in 'src\Modals\inMtoModalGenImpEle.pas' {frmMtoModalGenImpEle},
   inMtoModalGenImpSave in 'src\Modals\inMtoModalGenImpSave.pas' {frmModalGenImpSave},
+  inMtoModalInformesGuias in 'src\Modals\inMtoModalInformesGuias.pas' {frmModalInformesGuias},
+  inMtoModalWizardEditar in 'src\Modals\inMtoModalWizardEditar.pas' {frmModalWizardEditar},
   inMtoModalGenPass in 'src\Modals\inMtoModalGenPass.pas' {frmModalGenPass},
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
   inMtoModalImpRecFac in 'src\Modals\inMtoModalImpRecFac.pas' {frmPrintRecFac},

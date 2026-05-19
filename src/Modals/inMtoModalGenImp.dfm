@@ -270,4 +270,28 @@ inherited frmPrint: TfrmPrint
     Left = 64
     Top = 184
   end
+  object unqryInformesGuias: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select *'
+      '  from fza_informes_guias'
+      ' where INFORME_INFGUI = :INF'
+      '   and ESACTIVO_INFGUI = '#39'S'#39
+      '   and (FORMATO_INFGUI = '#39#39
+      '        or FORMATO_INFGUI = :FMT)'
+      ' order by ORDEN_INFGUI, CODIGO_INFGUI')
+    Left = 112
+    Top = 8
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'INF'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'FMT'
+        Value = nil
+      end>
+  end
 end
