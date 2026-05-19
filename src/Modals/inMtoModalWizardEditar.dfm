@@ -154,7 +154,7 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
           object lblDatasets: TcxLabel
             Left = 16
             Top = 8
-            Caption = '1. Dataset master del informe'
+            Caption = '1. Dataset master'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
             Style.Font.Height = -13
@@ -166,8 +166,8 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
           object lstDatasets: TcxListBox
             Left = 16
             Top = 32
-            Width = 320
-            Height = 170
+            Width = 200
+            Height = 178
             ItemHeight = 19
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
@@ -178,9 +178,9 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
             OnClick = lstDatasetsClick
           end
           object lblCampos: TcxLabel
-            Left = 360
+            Left = 232
             Top = 8
-            Caption = '2. Campos del master a usar como Master fields'
+            Caption = '2. Master fields (uno o varios)'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
             Style.Font.Height = -13
@@ -190,10 +190,10 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
             Transparent = True
           end
           object lstCampos: TcxCheckListBox
-            Left = 360
+            Left = 232
             Top = 32
-            Width = 400
-            Height = 170
+            Width = 240
+            Height = 178
             Items = <>
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
@@ -202,23 +202,103 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
             Style.IsFontAssigned = True
             TabOrder = 1
           end
-          object btnAddGuia: TcxButton
-            Left = 800
+          object lblTablas: TcxLabel
+            Left = 488
+            Top = 8
+            Caption = '3. Tabla o vista externa'
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = 3618615
+            Style.Font.Height = -13
+            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            Transparent = True
+          end
+          object lstTablas: TcxListBox
+            Left = 488
             Top = 32
             Width = 240
-            Height = 35
-            Caption = '+ A'#241'adir gu'#237'a con esta selecci'#243'n'
+            Height = 178
+            ItemHeight = 19
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clWindowText
+            Style.Font.Height = -13
+            Style.Font.Name = 'Segoe UI'
+            Style.IsFontAssigned = True
+            TabOrder = 2
+            OnClick = lstTablasClick
+          end
+          object lblCamposTabla: TcxLabel
+            Left = 744
+            Top = 8
+            Caption = '4. Campo de uni'#243'n (PK marcada con *)'
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = 3618615
+            Style.Font.Height = -13
+            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            Transparent = True
+          end
+          object lstCamposTabla: TcxListBox
+            Left = 744
+            Top = 32
+            Width = 340
+            Height = 178
+            ItemHeight = 19
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clWindowText
+            Style.Font.Height = -13
+            Style.Font.Name = 'Consolas'
+            Style.IsFontAssigned = True
+            TabOrder = 3
+          end
+        end
+        object pnlAddGuia: TPanel
+          Left = 0
+          Top = 250
+          Width = 1100
+          Height = 50
+          Align = alTop
+          BevelOuter = bvNone
+          Color = 16513252
+          ParentBackground = False
+          TabOrder = 2
+          object lblCodigoNuevo: TcxLabel
+            Left = 16
+            Top = 15
+            Caption = '5. C'#243'digo (UserName en el .frx)'
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = 3618615
+            Style.Font.Height = -13
+            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            Transparent = True
+          end
+          object edtCodigoNuevo: TcxTextEdit
+            Left = 264
+            Top = 12
+            TabOrder = 0
+            Width = 240
+          end
+          object btnAddGuia: TcxButton
+            Left = 528
+            Top = 9
+            Width = 300
+            Height = 31
+            Caption = '+ A'#241'adir gu'#237'a con esta configuraci'#243'n'
             LookAndFeel.NativeStyle = False
             LookAndFeel.SkinName = 'Office2019Colorful'
-            TabOrder = 2
+            TabOrder = 1
             OnClick = btnAddGuiaClick
           end
         end
         object grdGuias: TcxGrid
           Left = 0
-          Top = 250
+          Top = 300
           Width = 1100
-          Height = 221
+          Height = 171
           Align = alClient
           TabOrder = 2
           LookAndFeel.NativeStyle = False
@@ -362,6 +442,31 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
     DataSet = unqryGuias
     Left = 192
     Top = 504
+  end
+  object unqryTablas: TUniQuery
+    SQL.Strings = (
+      'select TABLE_NAME'
+      '  from information_schema.TABLES'
+      ' where TABLE_SCHEMA = database()'
+      ' order by TABLE_NAME')
+    Left = 432
+    Top = 504
+  end
+  object unqryCamposTabla: TUniQuery
+    SQL.Strings = (
+      'select COLUMN_NAME, COLUMN_KEY'
+      '  from information_schema.COLUMNS'
+      ' where TABLE_SCHEMA = database()'
+      '   and TABLE_NAME = :TAB'
+      ' order by ORDINAL_POSITION')
+    Left = 512
+    Top = 504
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'TAB'
+        Value = nil
+      end>
   end
   object ActionList1: TActionList
     Left = 272
