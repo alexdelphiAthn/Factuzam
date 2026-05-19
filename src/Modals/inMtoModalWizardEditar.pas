@@ -168,9 +168,10 @@ begin
   wzWizard.Align := alClient;
   // Default de TcxCheckListBox.EditValueFormat es cvfInteger -> tope
   // 64 items (los estados van empaquetados como bits de un integer).
-  // VI_FACTURAS_PRINT y otras vistas del proyecto tienen mas, asi que
-  // usamos el formato CSV que no tiene ese limite.
-  lstCampos.Properties.EditValueFormat := cvfCommaSeparatedString;
+  // VI_FACTURAS_PRINT y otras vistas del proyecto tienen mas. Usamos
+  // cvfStatesString que serializa los estados como cadena de
+  // caracteres '0'/'1' sin limite.
+  lstCampos.EditValueFormat := cvfStatesString;
   // Los botones Start/Last/Help quedan ocultos en cada pagina via
   // VisibleButtons (propiedad publicada de TJvWizardCustomPage).
   // TJvWizardNavigateButton no expone Visible.
@@ -705,7 +706,7 @@ var
 begin
   Result := '';
   for i := 0 to lstCampos.Items.Count - 1 do
-    if lstCampos.Items[i].State = cbsChecked then
+    if lstCampos.Items[i].Checked then
     begin
       if Result <> '' then Result := Result + aSep;
       Result := Result + lstCampos.Items[i].Text;
