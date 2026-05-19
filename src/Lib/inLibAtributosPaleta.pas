@@ -48,6 +48,14 @@ function ObtenerInfoBasico(const AIdVA: string;
                            const ACodigoATB: string;
                            out AInfo: TInfoBasico): Boolean;
 
+// Devuelve NOMBRE_ATB para (ID_VA_ATB, CODIGO_ATB) sin exigir hex valido.
+// A diferencia de ObtenerInfoBasico (que solo devuelve True si la entrada
+// tiene color parseable), este lookup sirve para autocomplete por nombre:
+// muchas paletas basicas tienen registros sin HEX_ATB pero CON NOMBRE_ATB
+// (codigos abreviados tipo 'NE' -> 'NEGRO' sin color asociado). Devuelve
+// '' si no existe el registro.
+function ObtenerNombreBasico(const AIdVa, ACodigoATB: string): string;
+
 // Convierte '#RRGGBB' o '#RGB' a TColor. Devuelve clNone si no parseable.
 function HexToColor(const AHex: string): TColor;
 
@@ -268,12 +276,19 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
+    // Cargamos TODAS las filas activas (con o sin hex). Antes se filtraba
+    // por HEX_ATB IS NOT NULL, pero eso dejaba fuera codigos cuya unica
+    // info util es NOMBRE_ATB (ej. 'NE' -> 'NEGRO' sin color asignado).
+    // El campo EsValido sigue indicando si hay color pintable; los
+    // consumidores que pintan swatches (PintarCeldaConCuadradoColor,
+    // PintarSwatchEnBitmap) siguen funcionando igual gracias al check
+    // de AInfo.EsValido. Los consumidores que solo necesitan el nombre
+    // (ObtenerNombreBasico para autocomplete) ahora si encuentran la
+    // entrada.
     q.SQL.Text :=
       'SELECT ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, HEX_ATB '     +
       '  FROM fza_atributos_basicos '                          +
-      ' WHERE ESACTIVO_ATB = ''S'' '                           +
-      '   AND HEX_ATB IS NOT NULL '                            +
-      '   AND HEX_ATB <> '''' ';
+      ' WHERE ESACTIVO_ATB = ''S'' ';
     q.Open;
     while not q.Eof do
     begin
@@ -282,11 +297,10 @@ begin
       Info.Color    := HexToColor(Info.HexColor);
       Info.Nombre   := q.FieldByName('NOMBRE_ATB').AsString;
       Info.EsValido := Info.Color <> clNone;
-      if Info.EsValido then
-        GCache.AddOrSetValue(
-          ClaveCache(q.FieldByName('ID_VA_ATB').AsString,
-                     q.FieldByName('CODIGO_ATB').AsString),
-          Info);
+      GCache.AddOrSetValue(
+        ClaveCache(q.FieldByName('ID_VA_ATB').AsString,
+                   q.FieldByName('CODIGO_ATB').AsString),
+        Info);
       q.Next;
     end;
     GCacheCargado := True;
@@ -313,6 +327,20 @@ begin
   if not GCacheCargado then Exit;
   if GCache.TryGetValue(ClaveCache(AIdVA, ACodigoATB), AInfo) then
     Result := AInfo.EsValido;
+end;
+
+function ObtenerNombreBasico(const AIdVa, ACodigoATB: string): string;
+var
+  Info : TInfoBasico;
+begin
+  // Devolvemos el NOMBRE_ATB aunque la entrada no tenga hex (EsValido=False).
+  // Misma cache que ObtenerInfoBasico — un solo SQL hit para ambos usos.
+  Result := '';
+  if (Trim(AIdVa) = '') or (Trim(ACodigoATB) = '') then Exit;
+  if not GCacheCargado then CargarCache;
+  if not GCacheCargado then Exit;
+  if GCache.TryGetValue(ClaveCache(AIdVa, ACodigoATB), Info) then
+    Result := Info.Nombre;
 end;
 
 function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
@@ -878,7 +906,7 @@ var
   Prefi          : string;
   iLen, i        : Integer;
   Av             : string;
-  Info           : TInfoBasico;
+  Nombre         : string;
   NombreUp       : string;
   CandCode       : string;
   CandNombre     : string;
@@ -892,7 +920,8 @@ begin
   //     Util cuando el codigo es la palabra ("BLANCO"="BLANCO") o cuando
   //     no hay paleta basica para ese ID_VA.
   // Match mas corto gana (mas especifico): "ROJ" -> "ROJO" en vez de
-  // "ROJOOSCURO".
+  // "ROJOOSCURO". Usamos ObtenerNombreBasico (no ObtenerInfoBasico) para
+  // que tambien funcione con codigos sin hex asociado (caso 'NE'->'NEGRO').
   Result   := False;
   AvCodigo := '';
   AvNombre := '';
@@ -908,17 +937,16 @@ begin
     for i := 0 to High(AAvs) do
     begin
       Av := AAvs[i];
-      Info := Default(TInfoBasico);
-      if not ObtenerInfoBasico(AIdVa, Av, Info) then Continue;
-      if Trim(Info.Nombre) = '' then Continue;
-      NombreUp := UpperCase(Trim(Info.Nombre));
+      Nombre := ObtenerNombreBasico(AIdVa, Av);
+      if Trim(Nombre) = '' then Continue;
+      NombreUp := UpperCase(Trim(Nombre));
       if Length(NombreUp) < iLen then Continue;
       if Copy(NombreUp, 1, iLen) = Prefi then
       begin
-        if (CandNombre = '') or (Length(Info.Nombre) < Length(CandNombre)) then
+        if (CandNombre = '') or (Length(Nombre) < Length(CandNombre)) then
         begin
           CandCode   := Av;
-          CandNombre := Info.Nombre;
+          CandNombre := Nombre;
         end;
       end;
     end;
@@ -944,10 +972,9 @@ begin
   if CandCode <> '' then
   begin
     AvCodigo := CandCode;
-    Info := Default(TInfoBasico);
-    if (Trim(AIdVa) <> '') and ObtenerInfoBasico(AIdVa, CandCode, Info) and
-       (Trim(Info.Nombre) <> '') then
-      AvNombre := Info.Nombre
+    Nombre := ObtenerNombreBasico(AIdVa, CandCode);
+    if Trim(Nombre) <> '' then
+      AvNombre := Nombre
     else
       AvNombre := CandCode;
     Result := True;
@@ -961,7 +988,7 @@ var
   TextoUp : string;
   i       : Integer;
   Av      : string;
-  Info    : TInfoBasico;
+  Nombre  : string;
 begin
   // Inversa de BuscarSugerenciaPorPrefijo. El editor muestra NOMBRE_ATB
   // tras un autocomplete; cuando el usuario commitea (Tab/Enter/click
@@ -984,9 +1011,8 @@ begin
   for i := 0 to High(AAvs) do
   begin
     Av := AAvs[i];
-    Info := Default(TInfoBasico);
-    if not ObtenerInfoBasico(AIdVa, Av, Info) then Continue;
-    if UpperCase(Trim(Info.Nombre)) = TextoUp then
+    Nombre := ObtenerNombreBasico(AIdVa, Av);
+    if (Nombre <> '') and (UpperCase(Trim(Nombre)) = TextoUp) then
     begin
       AvCodigo := Av;
       Exit(True);
