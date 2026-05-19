@@ -288,17 +288,17 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             Width = 170
             Height = 28
             Caption = 'Otro color (mismo art'#237'culo)'
-            TabOrder = 2
-            LookAndFeel.NativeStyle = False
-            LookAndFeel.Kind = lfFlat
             Colors.Default = 14346982
             Colors.Normal = 14346982
+            LookAndFeel.Kind = lfFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 2
             OnClick = btnNuevoColorClick
           end
           object lblHint: TcxLabel
             Left = 472
             Top = 7
-            Caption =
+            Caption = 
               'F3 sobre Familia abre el selector. PVP se propone al teclear el ' +
               'coste.'
             TabOrder = 3
@@ -325,9 +325,8 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
                 Kind = skSum
                 Column = dbcLinTotalTallas
               end>
-            OptionsBehavior.GoToNextCellOnEnter = True
             OptionsBehavior.FocusCellOnTab = True
-            OptionsBehavior.FocusCellOnCycle = True
+            OptionsBehavior.FocusFirstCellOnNewRecord = True
             OptionsView.Footer = True
             OptionsView.GroupByBox = False
             object dbcLinFamilia: TcxGridDBColumn
@@ -388,7 +387,6 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               Caption = 'Sistema tallas'
               DataBinding.FieldName = 'ID_AC_PIVOT_SESLIN'
               PropertiesClassName = 'TcxLookupComboBoxProperties'
-              Properties.DropDownAutoSize = False
               Properties.DropDownWidth = 380
               Properties.ImmediatePost = True
               Properties.KeyFieldNames = 'ID_AC'
@@ -408,7 +406,6 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
                   Width = 60
                   FieldName = 'ULTIMA'
                 end>
-              Properties.ListOptions.ShowHeader = True
               Properties.OnEditValueChanged = dbcLinTallasPropertiesEditValueChanged
               Width = 170
             end
