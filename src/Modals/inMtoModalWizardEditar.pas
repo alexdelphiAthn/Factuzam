@@ -123,6 +123,15 @@ type
     function CamposMarcadosCsv(const aSep: string = ';'): string;
     function NombreFinal: string;
     function EsFormatoNuevo: Boolean;
+    // Cascada A->C->B para resolver los campos de un master:
+    //  A: TfrxDBDataset.Fields o DataSet.Fields si esta abierto
+    //  C: parsear "FROM <vista>" del SQL y leer information_schema
+    //  B: abrir una query temporal con parametros dummy por tipo
+    function CargarCamposDelInforme(oFrx: TfrxDBDataset): Boolean;
+    function CargarCamposParseandoSql(const aSql: string): Boolean;
+    function CargarCamposAbriendoTemporal(qrySrc: TUniQuery): Boolean;
+    function ExtraerTablaFromSql(const aSql: string): string;
+    procedure RellenarParametrosDummy(qry: TUniQuery);
   public
     // El TfrmPrint rellena ANTES del ShowModal:
     sInforme: string;       // Self.Name del informe
@@ -354,77 +363,189 @@ end;
 
 procedure TfrmModalWizardEditar.RellenarListCampos;
 var
-  j: Integer;
   oFrx: TfrxDBDataset;
   oDS: TDataSet;
-  qryTmp: TUniQuery;
-  sSqlOriginal: string;
-  bConseguido: Boolean;
 begin
+  // Cascada: el usuario quiere que los campos salgan, en este orden:
+  //   A) Del informe (TfrxDBDataset.Fields o DataSet.Fields abierto).
+  //   C) Parseando el FROM del SQL del TUniQuery y consultando
+  //      information_schema.COLUMNS de la vista origen.
+  //   B) Como ultimo recurso: abrir una query temporal con dummies.
   lstCampos.Items.BeginUpdate;
-  qryTmp := nil;
-  bConseguido := False;
   try
     lstCampos.Items.Clear;
     if (lstDatasets.ItemIndex < 0) or
        (lstDatasets.ItemIndex >= lstDatasets.Count) then Exit;
     oFrx := TfrxDBDataset(lstDatasets.Items.Objects[lstDatasets.ItemIndex]);
     if oFrx = nil then Exit;
+
+    // A) Del informe.
+    if CargarCamposDelInforme(oFrx) then Exit;
+
     oDS := oFrx.DataSet;
-    if oDS = nil then Exit;
+    if (oDS = nil) or not (oDS is TUniQuery) then Exit;
 
-    // 1) Camino feliz: el dataset esta abierto y ya tiene Fields.
-    if oDS.Active and (oDS.FieldCount > 0) then
-    begin
-      for j := 0 to oDS.FieldCount - 1 do
-        lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
-      Exit;
-    end;
+    // C) Parsear FROM y leer information_schema.
+    if CargarCamposParseandoSql(TUniQuery(oDS).SQL.Text) then Exit;
 
-    // 2) Si es TUniQuery (caso comun en Factuzam) y esta cerrado, abrimos
-    //    una query temporal que envuelve el SQL original en
-    //    "SELECT * FROM (<sql>) X WHERE 1=0" para inferir las columnas
-    //    sin tirar datos. Los parametros se setean a NULL.
-    if oDS is TUniQuery then
-    begin
-      sSqlOriginal := Trim(TUniQuery(oDS).SQL.Text);
-      // Algunos SQL acaban en ';', estorba dentro de un FROM (...).
-      while (Length(sSqlOriginal) > 0) and
-            (sSqlOriginal[Length(sSqlOriginal)] = ';') do
-        SetLength(sSqlOriginal, Length(sSqlOriginal) - 1);
-      if sSqlOriginal <> '' then
-      begin
-        try
-          qryTmp := TUniQuery.Create(nil);
-          qryTmp.Connection := oConn;
-          qryTmp.SQL.Text :=
-            'select * from (' + sSqlOriginal + ') X_FZA_GUIAS where 1=0';
-          for j := 0 to qryTmp.Params.Count - 1 do
-            qryTmp.Params[j].Clear;
-          qryTmp.Open;
-          for j := 0 to qryTmp.FieldCount - 1 do
-            lstCampos.Items.Add.Text := qryTmp.Fields[j].FieldName;
-          bConseguido := qryTmp.FieldCount > 0;
-        except
-          // SQL no envoltable (DDL, MERGE, etc.) o parametros que el
-          // motor rechaza. Caemos al siguiente fallback.
-        end;
-      end;
-    end;
-    if bConseguido then Exit;
-
-    // 3) Ultimo recurso: FieldDefs.Update (funciona si los campos son
-    //    persistentes del .dfm del data module).
-    try
-      oDS.FieldDefs.Update;
-    except
-    end;
-    for j := 0 to oDS.FieldDefs.Count - 1 do
-      lstCampos.Items.Add.Text := oDS.FieldDefs[j].Name;
+    // B) Abrir query temporal con dummies.
+    CargarCamposAbriendoTemporal(TUniQuery(oDS));
   finally
-    if qryTmp <> nil then FreeAndNil(qryTmp);
     lstCampos.Items.EndUpdate;
   end;
+end;
+
+function TfrmModalWizardEditar.CargarCamposDelInforme(
+                                  oFrx: TfrxDBDataset): Boolean;
+var
+  j: Integer;
+  oDS: TDataSet;
+begin
+  Result := False;
+  // A.1) FastReport permite filtrar campos por TfrxDBDataset.Fields
+  //      (TStrings). Si esta rellenada, son los que el diseñador expone.
+  if (oFrx.Fields <> nil) and (oFrx.Fields.Count > 0) then
+  begin
+    for j := 0 to oFrx.Fields.Count - 1 do
+      lstCampos.Items.Add.Text := oFrx.Fields[j];
+    Result := True;
+    Exit;
+  end;
+  // A.2) Si el TDataSet de fondo esta abierto, tirar de sus Fields.
+  oDS := oFrx.DataSet;
+  if (oDS <> nil) and oDS.Active and (oDS.FieldCount > 0) then
+  begin
+    for j := 0 to oDS.FieldCount - 1 do
+      lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
+    Result := True;
+  end;
+end;
+
+function TfrmModalWizardEditar.CargarCamposParseandoSql(
+                                  const aSql: string): Boolean;
+var
+  sTabla: string;
+begin
+  Result := False;
+  sTabla := ExtraerTablaFromSql(aSql);
+  if sTabla = '' then Exit;
+  try
+    unqryCamposTabla.Close;
+    unqryCamposTabla.ParamByName('TAB').AsString := sTabla;
+    unqryCamposTabla.Open;
+    while not unqryCamposTabla.Eof do
+    begin
+      lstCampos.Items.Add.Text :=
+        unqryCamposTabla.FieldByName('COLUMN_NAME').AsString;
+      unqryCamposTabla.Next;
+    end;
+    Result := lstCampos.Items.Count > 0;
+  finally
+    unqryCamposTabla.Close;
+  end;
+end;
+
+function TfrmModalWizardEditar.CargarCamposAbriendoTemporal(
+                                  qrySrc: TUniQuery): Boolean;
+var
+  j: Integer;
+  qryTmp: TUniQuery;
+  sSql: string;
+begin
+  Result := False;
+  qryTmp := nil;
+  try
+    sSql := Trim(qrySrc.SQL.Text);
+    while (Length(sSql) > 0) and (sSql[Length(sSql)] = ';') do
+      SetLength(sSql, Length(sSql) - 1);
+    if sSql = '' then Exit;
+    qryTmp := TUniQuery.Create(nil);
+    qryTmp.Connection := oConn;
+    // Envoltorio para no traer filas reales aunque los parametros
+    // dummy hagan match.
+    qryTmp.SQL.Text :=
+      'select * from (' + sSql + ') X_FZA_GUIAS where 1=0';
+    RellenarParametrosDummy(qryTmp);
+    try
+      qryTmp.Open;
+      for j := 0 to qryTmp.FieldCount - 1 do
+        lstCampos.Items.Add.Text := qryTmp.Fields[j].FieldName;
+      Result := qryTmp.FieldCount > 0;
+    except
+    end;
+  finally
+    if qryTmp <> nil then FreeAndNil(qryTmp);
+  end;
+end;
+
+function TfrmModalWizardEditar.ExtraerTablaFromSql(
+                                  const aSql: string): string;
+var
+  sLow: string;
+  i, p, pStart, pEnd: Integer;
+  c: Char;
+begin
+  Result := '';
+  if Trim(aSql) = '' then Exit;
+  sLow := LowerCase(aSql);
+  // Buscar el primer "from" como token (con whitespace antes o BOL,
+  // y whitespace/'(' despues).
+  p := 0;
+  for i := 1 to Length(sLow) - 3 do
+    if (Copy(sLow, i, 4) = 'from') and
+       ((i = 1) or (sLow[i - 1] = ' ') or (sLow[i - 1] = #9) or
+        (sLow[i - 1] = #10) or (sLow[i - 1] = #13)) and
+       ((i + 4 > Length(sLow)) or (sLow[i + 4] = ' ') or
+        (sLow[i + 4] = #9) or (sLow[i + 4] = #10) or
+        (sLow[i + 4] = #13) or (sLow[i + 4] = '(')) then
+    begin
+      p := i;
+      Break;
+    end;
+  if p = 0 then Exit;
+  pStart := p + 4;
+  while (pStart <= Length(sLow)) and
+        ((sLow[pStart] = ' ') or (sLow[pStart] = #9) or
+         (sLow[pStart] = #10) or (sLow[pStart] = #13)) do
+    Inc(pStart);
+  if pStart > Length(sLow) then Exit;
+  // Si arranca con '(' es subquery — no podemos sacar la tabla aqui.
+  if sLow[pStart] = '(' then Exit;
+  pEnd := pStart;
+  while pEnd <= Length(sLow) do
+  begin
+    c := sLow[pEnd];
+    if ((c >= 'a') and (c <= 'z')) or ((c >= '0') and (c <= '9')) or
+       (c = '_') or (c = '`') or (c = '.') then
+      Inc(pEnd)
+    else
+      Break;
+  end;
+  Result := Copy(aSql, pStart, pEnd - pStart);
+  // schema.tabla -> tabla
+  i := LastDelimiter('.', Result);
+  if i > 0 then Result := Copy(Result, i + 1, MaxInt);
+  Result := StringReplace(Result, '`', '', [rfReplaceAll]);
+end;
+
+procedure TfrmModalWizardEditar.RellenarParametrosDummy(qry: TUniQuery);
+var
+  j: Integer;
+begin
+  for j := 0 to qry.Params.Count - 1 do
+    case qry.Params[j].DataType of
+      ftDate, ftDateTime, ftTime, ftTimeStamp:
+        qry.Params[j].AsDateTime := Date;
+      ftInteger, ftSmallint, ftWord, ftLargeint, ftAutoInc:
+        qry.Params[j].AsInteger := 0;
+      ftFloat, ftCurrency, ftBCD, ftFMTBcd:
+        qry.Params[j].AsFloat := 0;
+      ftString, ftWideString, ftFixedChar, ftFixedWideChar,
+        ftMemo, ftWideMemo:
+        qry.Params[j].AsString := '';
+    else
+      qry.Params[j].Clear;
+    end;
 end;
 
 procedure TfrmModalWizardEditar.lstDatasetsClick(Sender: TObject);
