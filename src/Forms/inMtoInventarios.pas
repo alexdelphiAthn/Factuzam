@@ -216,6 +216,19 @@ type
     // el color del AV actual; si no hay color, el boton vuelve a bkEllipsis.
     FBmpSwatchBoton: TBitmap;
 
+    // === AUTOCOMPLETE INLINE EN CELDAS SKU ===
+    // Cache de la lista de AVs validos para la celda SKU activa (la cargo
+    // en tvLineasInitEdit para no repetir el SELECT por cada keystroke).
+    // FSkuAcAvs    : AVs validos para (articulo padre, orden) actual.
+    // FSkuAcIdVa   : ID_VA del atributo activo (para buscar NOMBRE_ATB en paleta).
+    // FSkuAcPrevLen: largo del texto antes del ultimo cambio, para distinguir
+    //               escritura (largo crece -> proponer) de borrado (no proponer).
+    // FSkuAcGuard  : evita la recursion cuando el handler reasigna el Text.
+    FSkuAcAvs    : TArray<string>;
+    FSkuAcIdVa   : string;
+    FSkuAcPrevLen: Integer;
+    FSkuAcGuard  : Boolean;
+
     // === LÓGICA DINÁMICA SKUs (mismo patrón que inMtoCajaOpe) ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
     procedure RellenarAtributosDesdeSku(const Sku: string);
@@ -234,6 +247,12 @@ type
     // Handler OnEnter de un sigle-shot que abre el popup en cuanto el cursor
     // entra en la celda (sustituye a ForzarDespliegue para los TcxButtonEdit).
     procedure AbrirPopupSkuEnEntrada(Sender: TObject);
+    // OnChange (TcxButtonEditProperties) compartido por las 5 columnas SKU
+    // para autocompletar inline estilo Excel: si el usuario teclea un
+    // prefijo que casa con un AV de FSkuAcAvs, completa el resto y deja
+    // seleccionado lo que añade. La cache FSkuAcAvs/FSkuAcIdVa la
+    // (re)carga tvLineasInitEdit al entrar en la celda.
+    procedure SkuOnPropertiesChange(Sender: TObject);
 
     // === BUSQUEDA UNIFICADA DE ARTICULOS (codigo, SKU o codigo de barras) ===
     procedure ResolverInputArticulo(const AInput: string;
@@ -340,6 +359,10 @@ begin
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
   FBmpSwatchBoton := TBitmap.Create;
+  SetLength(FSkuAcAvs, 0);
+  FSkuAcIdVa    := '';
+  FSkuAcPrevLen := 0;
+  FSkuAcGuard   := False;
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
 end;
@@ -797,6 +820,21 @@ begin
     BE.OnEnter := AbrirPopupSkuEnEntrada
   else
     BE.OnEnter := nil;
+
+  // --- AUTOCOMPLETE INLINE ---
+  // Cacheamos AVs validos + IdVa de la celda y enganchamos OnChange para
+  // que SkuOnPropertiesChange pueda autocompletar prefijos. La cache se
+  // refresca en cada InitEdit (cambio de celda activa).
+  FSkuAcIdVa    := IdVa;
+  FSkuAcPrevLen := Length(BE.Text);
+  if dmmInventarios.cdsLineas.Active and
+     (not dmmInventarios.cdsLineas.IsEmpty) then
+    CargarAvsValidos(dmmInventarios.cdsLineas.FieldByName(
+                       'CODIGO_ART_INVLIN').AsString,
+                     AItem.Tag, FSkuAcAvs)
+  else
+    SetLength(FSkuAcAvs, 0);
+  BE.Properties.OnChange := SkuOnPropertiesChange;
 end;
 
 procedure TfrmMtoInventarios.tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
@@ -805,12 +843,24 @@ procedure TfrmMtoInventarios.tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
 var
   Combo: TcxComboBox;
 begin
+  if AItem = nil then Exit;
+  if (AItem.Tag < 1) or (AItem.Tag > 5) then Exit;
+
+  // Ctrl+Enter en una celda SKU (TcxButtonEdit) abre la paleta — atajo
+  // de teclado para no tener que clicar el boton [...].
+  if (Key = VK_RETURN) and (ssCtrl in Shift) and
+     (AEdit is TcxButtonEdit) then
+  begin
+    tvLineasSkuPropertiesButtonClick(AEdit, 0);
+    Key := 0;
+    Exit;
+  end;
+
   // Pulsar Enter en una columna de atributo (Color, Talla, ...) sin valor
   // seleccionado debe coger la primera opcion de la lista, igual que en
   // inMtoCajaOpe. Sin esto, el usuario que da Enter encadenado por las
   // celdas se queda con los atributos vacios y la linea no se puede grabar.
   if Key <> VK_RETURN then Exit;
-  if (AItem.Tag < 1) or (AItem.Tag > 5) then Exit;
   if not (AEdit is TcxComboBox) then Exit;
   Combo := TcxComboBox(AEdit);
   if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') and
@@ -1167,6 +1217,53 @@ begin
   BE.OnEnter := nil;
   // Convocamos directamente el handler. AButtonIndex = 0 (unico boton).
   tvLineasSkuPropertiesButtonClick(BE, 0);
+end;
+
+procedure TfrmMtoInventarios.SkuOnPropertiesChange(Sender: TObject);
+var
+  BE      : TcxCustomTextEdit;
+  Txt     : string;
+  AvMatch : string;
+  L       : Integer;
+begin
+  // Autocomplete inline estilo Excel para las celdas SKU. Reglas:
+  //   - Solo propone cuando el texto CRECE respecto al cambio anterior
+  //     (asi Backspace / Delete no re-rellenan lo que el usuario borra).
+  //   - Si encuentra un AV cuyo CODIGO_ATB o NOMBRE_ATB empieza por lo
+  //     tecleado, completa con el AV entero y deja seleccionada la parte
+  //     añadida. La siguiente pulsacion la sustituye (comportamiento
+  //     identico al autocomplete de un cxLookupComboBox).
+  //   - FSkuAcGuard evita la recursion: al reasignar BE.Text se vuelve a
+  //     disparar OnChange y entrariamos en bucle.
+  if FSkuAcGuard then Exit;
+  if not (Sender is TcxCustomTextEdit) then Exit;
+  BE  := TcxCustomTextEdit(Sender);
+  Txt := BE.Text;
+  L   := Length(Txt);
+
+  if L = 0 then begin FSkuAcPrevLen := 0; Exit; end;
+  if L <= FSkuAcPrevLen then begin FSkuAcPrevLen := L; Exit; end;
+  if Length(FSkuAcAvs) = 0 then begin FSkuAcPrevLen := L; Exit; end;
+
+  if not BuscarAvPorPrefijo(FSkuAcIdVa, Txt, FSkuAcAvs, AvMatch) then
+  begin
+    FSkuAcPrevLen := L;
+    Exit;
+  end;
+  if Length(AvMatch) <= L then begin FSkuAcPrevLen := L; Exit; end;
+
+  FSkuAcGuard := True;
+  try
+    BE.Text      := AvMatch;
+    BE.SelStart  := L;
+    BE.SelLength := Length(AvMatch) - L;
+  finally
+    FSkuAcGuard := False;
+  end;
+  // Guardamos la longitud REAL tecleada (no la autocompletada): asi un
+  // BackSpace que deje solo lo que el usuario escribio no entra en el
+  // bucle "L <= FSkuAcPrevLen -> skip" prematuro.
+  FSkuAcPrevLen := L;
 end;
 
 procedure TfrmMtoInventarios.tvLineasUnidadPropertiesButtonClick(
