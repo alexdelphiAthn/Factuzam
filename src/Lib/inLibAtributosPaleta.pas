@@ -157,16 +157,34 @@ function SeleccionarAvConPaleta(const AIdVa: string;
                                 AScreenTop: Integer = -1;
                                 AWidthHint: Integer = 120): Boolean;
 
-// Busca en AAvs el primer valor cuyo CODIGO_ATB o NOMBRE_ATB (via paleta
-// basica para AIdVa) empiece por APrefijo (case-insensitive). Devuelve
-// True y deja en AvMatch el CODIGO_ATB completo. Pensado para autocompletar
-// estilo Excel en celdas TcxButtonEdit que ya tienen la paleta como popup:
-// el usuario teclea unas letras, la celda propone el AV que casa.
-//   - Prioriza coincidencia por CODIGO_ATB sobre NOMBRE_ATB.
-//   - Devuelve False si APrefijo es vacio o no hay match.
-function BuscarAvPorPrefijo(const AIdVa, APrefijo: string;
-                            const AAvs: array of string;
-                            out AvMatch: string): Boolean;
+// Sugerencia para autocomplete inline en celdas TcxButtonEdit que ya
+// tienen la paleta como popup. El usuario teclea un prefijo y la celda
+// propone el AV que casa. Devuelve True con:
+//   AvCodigo : el CODIGO_ATB del AV (lo que finalmente queda en BBDD).
+//   AvNombre : el NOMBRE_ATB de la paleta basica (lo que se MUESTRA en
+//              el editor durante la edicion para que el usuario lea
+//              palabras, no abreviaturas). Si no hay paleta o nombre,
+//              AvNombre = AvCodigo.
+// Reglas:
+//   - Pasada 1: busca por NOMBRE_ATB (es lo que el usuario suele
+//     teclear). Match mas corto gana.
+//   - Pasada 2: si pasada 1 no encuentra, busca por CODIGO_ATB.
+//   - Devuelve False si APrefijo es vacio o si solo encuentra un match
+//     identico al prefijo (sin extension visible).
+function BuscarSugerenciaPorPrefijo(const AIdVa, APrefijo: string;
+                                    const AAvs: array of string;
+                                    out AvCodigo, AvNombre: string): Boolean;
+
+// Traduce el texto visible (display) al CODIGO_ATB que toca guardar en
+// la BBDD. Util para enganchar OnValidate de un editor que muestra el
+// NOMBRE_ATB tras un autocomplete: justo antes del commit traducimos
+// nombre -> codigo de forma transparente.
+// Busca primero por CODIGO_ATB exacto (case-insensitive) y luego por
+// NOMBRE_ATB exacto. Devuelve True con AvCodigo si encuentra; False
+// si ATexto no corresponde a ningun AV de la lista.
+function ResolverAvDesdeTexto(const AIdVa, ATexto: string;
+                              const AAvs: array of string;
+                              out AvCodigo: string): Boolean;
 
 implementation
 
@@ -853,64 +871,126 @@ begin
   end;
 end;
 
-function BuscarAvPorPrefijo(const AIdVa, APrefijo: string;
-                            const AAvs: array of string;
-                            out AvMatch: string): Boolean;
+function BuscarSugerenciaPorPrefijo(const AIdVa, APrefijo: string;
+                                    const AAvs: array of string;
+                                    out AvCodigo, AvNombre: string): Boolean;
 var
-  Prefi   : string;
-  iLen, i : Integer;
-  Av      : string;
-  Info    : TInfoBasico;
-  Nombre  : string;
-  Cand    : string;
+  Prefi          : string;
+  iLen, i        : Integer;
+  Av             : string;
+  Info           : TInfoBasico;
+  NombreUp       : string;
+  CandCode       : string;
+  CandNombre     : string;
 begin
-  // Dos pasadas: primero busca prefijo en CODIGO_ATB; si no encuentra,
-  // segunda pasada por NOMBRE_ATB. Asi el codigo (mas corto y normalizado)
-  // gana al nombre, que es habitualmente lo que el usuario teclea para
-  // identificar el AV rapido.
-  Result  := False;
-  AvMatch := '';
+  // Estrategia:
+  //   Pasada 1 — busca por NOMBRE_ATB de la paleta basica (es lo que el
+  //     usuario suele teclear: "NEGRO", "BLANCO", "ROJO" ...). Devolvemos
+  //     el AvCodigo subyacente para que el commit guarde el codigo
+  //     correcto. AvNombre es lo que mostraremos en el editor.
+  //   Pasada 2 — si pasada 1 no encuentra nada, busca por CODIGO_ATB.
+  //     Util cuando el codigo es la palabra ("BLANCO"="BLANCO") o cuando
+  //     no hay paleta basica para ese ID_VA.
+  // Match mas corto gana (mas especifico): "ROJ" -> "ROJO" en vez de
+  // "ROJOOSCURO".
+  Result   := False;
+  AvCodigo := '';
+  AvNombre := '';
   Prefi := UpperCase(Trim(APrefijo));
   iLen  := Length(Prefi);
   if iLen = 0 then Exit;
 
-  // Pasada 1: CODIGO_ATB
-  Cand := '';
+  // Pasada 1: NOMBRE_ATB de la paleta basica
+  if Trim(AIdVa) <> '' then
+  begin
+    CandCode   := '';
+    CandNombre := '';
+    for i := 0 to High(AAvs) do
+    begin
+      Av := AAvs[i];
+      Info := Default(TInfoBasico);
+      if not ObtenerInfoBasico(AIdVa, Av, Info) then Continue;
+      if Trim(Info.Nombre) = '' then Continue;
+      NombreUp := UpperCase(Trim(Info.Nombre));
+      if Length(NombreUp) < iLen then Continue;
+      if Copy(NombreUp, 1, iLen) = Prefi then
+      begin
+        if (CandNombre = '') or (Length(Info.Nombre) < Length(CandNombre)) then
+        begin
+          CandCode   := Av;
+          CandNombre := Info.Nombre;
+        end;
+      end;
+    end;
+    if CandCode <> '' then
+    begin
+      AvCodigo := CandCode;
+      AvNombre := CandNombre;
+      Exit(True);
+    end;
+  end;
+
+  // Pasada 2: CODIGO_ATB
+  CandCode := '';
   for i := 0 to High(AAvs) do
   begin
     Av := AAvs[i];
     if Length(Av) < iLen then Continue;
     if UpperCase(Copy(Av, 1, iLen)) = Prefi then
     begin
-      // Preferimos el match mas corto (mas especifico): si hay varios,
-      // suele significar que el usuario quiere "ROJ" -> "ROJO" no "ROJOOSCURO".
-      if (Cand = '') or (Length(Av) < Length(Cand)) then Cand := Av;
+      if (CandCode = '') or (Length(Av) < Length(CandCode)) then CandCode := Av;
     end;
   end;
-  if Cand <> '' then
+  if CandCode <> '' then
   begin
-    AvMatch := Cand;
-    Exit(True);
+    AvCodigo := CandCode;
+    Info := Default(TInfoBasico);
+    if (Trim(AIdVa) <> '') and ObtenerInfoBasico(AIdVa, CandCode, Info) and
+       (Trim(Info.Nombre) <> '') then
+      AvNombre := Info.Nombre
+    else
+      AvNombre := CandCode;
+    Result := True;
   end;
+end;
 
-  // Pasada 2: NOMBRE_ATB de la paleta basica
+function ResolverAvDesdeTexto(const AIdVa, ATexto: string;
+                              const AAvs: array of string;
+                              out AvCodigo: string): Boolean;
+var
+  TextoUp : string;
+  i       : Integer;
+  Av      : string;
+  Info    : TInfoBasico;
+begin
+  // Inversa de BuscarSugerenciaPorPrefijo. El editor muestra NOMBRE_ATB
+  // tras un autocomplete; cuando el usuario commitea (Tab/Enter/click
+  // fuera) necesitamos guardar el CODIGO_ATB.
+  Result   := False;
+  AvCodigo := '';
+  TextoUp  := UpperCase(Trim(ATexto));
+  if TextoUp = '' then Exit;
+
+  // 1) Match exacto por CODIGO_ATB (si el usuario tipeo directamente el codigo).
+  for i := 0 to High(AAvs) do
+    if UpperCase(AAvs[i]) = TextoUp then
+    begin
+      AvCodigo := AAvs[i];
+      Exit(True);
+    end;
+
+  // 2) Match exacto por NOMBRE_ATB (caso tipico tras autocomplete por nombre).
   if Trim(AIdVa) = '' then Exit;
   for i := 0 to High(AAvs) do
   begin
     Av := AAvs[i];
     Info := Default(TInfoBasico);
     if not ObtenerInfoBasico(AIdVa, Av, Info) then Continue;
-    Nombre := UpperCase(Trim(Info.Nombre));
-    if Length(Nombre) < iLen then Continue;
-    if Copy(Nombre, 1, iLen) = Prefi then
+    if UpperCase(Trim(Info.Nombre)) = TextoUp then
     begin
-      if (Cand = '') or (Length(Av) < Length(Cand)) then Cand := Av;
+      AvCodigo := Av;
+      Exit(True);
     end;
-  end;
-  if Cand <> '' then
-  begin
-    AvMatch := Cand;
-    Result  := True;
   end;
 end;
 
