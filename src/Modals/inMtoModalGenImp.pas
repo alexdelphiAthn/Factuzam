@@ -65,24 +65,40 @@ type
     ActionList1: TActionList;
     actSalir: TAction;
     frLocalizationController1: TfrLocalizationController;
+    btnGuias: TcxButton;
+    unqryInformesGuias: TUniQuery;
     procedure btnImprimirClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure btnPDFClick(Sender: TObject);
     procedure btnVistaPreliminarClick(Sender: TObject);
     procedure btnEditarClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
+    procedure btnGuiasClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     function frxdsgnr1SaveReport(Report: TfrxReport; SaveAs: Boolean): Boolean;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure actSalirExecute(Sender: TObject);
   private
     sElegido:String;
+    // Componentes creados dinamicamente al abrir guias runtime. Se
+    // liberan en CerrarGuiasRuntime / FormClose.
+    FGuiasRuntime: TList;
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
     procedure preparar_consulta; virtual; abstract;
     procedure AfterReportLoaded; virtual;
     procedure Consultar_Formularios(bForzarSeleccion: Boolean = False);
+    // Crea en runtime un dataset auxiliar por cada guia configurada en
+    // fza_informes_guias para Self.Name, enlazandolo MasterSource-style
+    // al frxDBDataset master y exponiendolo al frxrprt1.
+    //   aSoloUsadasEnReport = True : solo se abren las guias cuyo
+    //                                CODIGO_INFGUI aparece referenciado
+    //                                en el .frx (modo impresion).
+    //   aSoloUsadasEnReport = False: se abren todas las guias activas
+    //                                (modo edicion del diseñador).
+    procedure AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
+    procedure CerrarGuiasRuntime;
   end;
 
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
@@ -92,7 +108,8 @@ implementation
 
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam,
-  System.Generics.Collections, System.Rtti, inLibFotos;
+  System.Generics.Collections, System.Rtti, inLibFotos,
+  inMtoModalInformesGuias, inLibLog;
 
 {$R *.dfm}
 
@@ -157,6 +174,180 @@ begin
   SustituirFotosEnReport(frxrprt1);
 end;
 
+procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
+var
+  sCodigo, sDatasetMaster, sTipo, sTabla, sSql, sMaster, sDetail: string;
+  oDsMaster: TfrxDBDataset;
+  oUni: TUniQuery;
+  oDs:  TDataSource;
+  oFrx: TfrxDBDataset;
+  i: Integer;
+  bUsada: Boolean;
+  memReport: TMemoryStream;
+  oStrReport: TStringList;
+  sReport: string;
+begin
+  // Garantiza la lista; tambien permite llamar a CerrarGuiasRuntime sin
+  // estado previo.
+  if FGuiasRuntime = nil then
+    FGuiasRuntime := TList.Create
+  else
+    CerrarGuiasRuntime;
+
+  unqryInformesGuias.Close;
+  unqryInformesGuias.ParamByName('INF').AsString := Self.Name;
+  unqryInformesGuias.Open;
+  if unqryInformesGuias.IsEmpty then
+  begin
+    unqryInformesGuias.Close;
+    Exit;
+  end;
+
+  // En modo "solo usadas" serializamos el report a texto y buscamos las
+  // referencias por nombre de dataset. FastReport las escribe en forma
+  // de Dataset="<UserName>" para los componentes vinculados y como
+  // <UserName."Campo"> en los memos. Con un Pos sobre la cadena
+  // serializada cubrimos ambos casos.
+  sReport := '';
+  if aSoloUsadasEnReport then
+  begin
+    memReport := TMemoryStream.Create;
+    oStrReport := TStringList.Create;
+    try
+      frxrprt1.SaveToStream(memReport);
+      memReport.Position := 0;
+      oStrReport.LoadFromStream(memReport);
+      sReport := oStrReport.Text;
+    finally
+      FreeAndNil(oStrReport);
+      FreeAndNil(memReport);
+    end;
+  end;
+
+  unqryInformesGuias.First;
+  while not unqryInformesGuias.Eof do
+  begin
+    sCodigo        := unqryInformesGuias.FieldByName('CODIGO_INFGUI').AsString;
+    sDatasetMaster := unqryInformesGuias.FieldByName(
+                                      'DATASET_MASTER_INFGUI').AsString;
+    sTipo          := UpperCase(unqryInformesGuias.FieldByName(
+                                                 'TIPO_INFGUI').AsString);
+    sTabla         := unqryInformesGuias.FieldByName('TABLA_INFGUI').AsString;
+    sSql           := unqryInformesGuias.FieldByName('SQL_INFGUI').AsString;
+    sMaster        := unqryInformesGuias.FieldByName(
+                                      'MASTER_FIELDS_INFGUI').AsString;
+    sDetail        := unqryInformesGuias.FieldByName(
+                                      'DETAIL_FIELDS_INFGUI').AsString;
+    try
+      bUsada := True;
+      if aSoloUsadasEnReport then
+        bUsada := (Pos('"' + sCodigo + '"',   sReport) > 0) or
+                  (Pos('<' + sCodigo + '."',  sReport) > 0) or
+                  (Pos('[' + sCodigo + '."',  sReport) > 0);
+
+      if bUsada then
+      begin
+        // 1) Localizar el frxDBDataset master por UserName.
+        oDsMaster := nil;
+        for i := 0 to frxrprt1.Datasets.Count - 1 do
+          if SameText(frxrprt1.Datasets[i].DataSet.UserName,
+                      sDatasetMaster) then
+          begin
+            oDsMaster := frxrprt1.Datasets[i].DataSet;
+            Break;
+          end;
+        if (oDsMaster = nil) or (oDsMaster.DataSet = nil) then
+        begin
+          inLibLog.Log.LogWarning(Format(
+            'Guia %s ignorada: dataset master "%s" no encontrado en %s',
+            [sCodigo, sDatasetMaster, Self.Name]));
+          unqryInformesGuias.Next;
+          Continue;
+        end;
+
+        // 2) Crear los tres componentes encadenados.
+        oUni := TUniQuery.Create(Self);
+        oUni.Connection := oConn;
+        oDs := TDataSource.Create(Self);
+        oDs.DataSet := oDsMaster.DataSet;
+        oFrx := TfrxDBDataset.Create(Self);
+        oFrx.UserName := sCodigo;
+        oFrx.DataSet  := oUni;
+
+        // 3) Configurar SQL + master/detail.
+        if sTipo = 'SQL' then
+        begin
+          oUni.SQL.Text := sSql;
+          // Para SQL libre, los DETAIL_FIELDS llevan el nombre de los
+          // parametros que el master rellena en cada cursor.
+          oUni.MasterSource := oDs;
+          oUni.MasterFields := sMaster;
+          oUni.DetailFields := sDetail;
+        end
+        else
+        begin
+          oUni.SQL.Text := 'select * from ' + sTabla;
+          oUni.MasterSource := oDs;
+          oUni.MasterFields := sMaster;
+          oUni.DetailFields := sDetail;
+        end;
+
+        oUni.Open;
+
+        // 4) Registrar en el report y en la lista interna.
+        frxrprt1.Datasets.Add(oFrx);
+        FGuiasRuntime.Add(oFrx);
+        FGuiasRuntime.Add(oDs);
+        FGuiasRuntime.Add(oUni);
+      end;
+    except
+      on E: Exception do
+        inLibLog.Log.LogError(
+          Format('Guia %s fallo al abrir en %s: %s',
+                 [sCodigo, Self.Name, E.Message]));
+    end;
+    unqryInformesGuias.Next;
+  end;
+  unqryInformesGuias.Close;
+end;
+
+procedure TfrmPrint.CerrarGuiasRuntime;
+var
+  i, j: Integer;
+  obj: TObject;
+begin
+  if FGuiasRuntime = nil then Exit;
+  for i := FGuiasRuntime.Count - 1 downto 0 do
+  begin
+    obj := TObject(FGuiasRuntime[i]);
+    if obj is TfrxDBDataset then
+    begin
+      // Quitar del report el item que apunta a este TfrxDBDataset.
+      for j := frxrprt1.Datasets.Count - 1 downto 0 do
+        if frxrprt1.Datasets[j].DataSet = TfrxDBDataset(obj) then
+        begin
+          frxrprt1.Datasets.Delete(j);
+          Break;
+        end;
+    end;
+    obj.Free;
+  end;
+  FGuiasRuntime.Clear;
+end;
+
+procedure TfrmPrint.btnGuiasClick(Sender: TObject);
+var
+  oForm: TfrmModalInformesGuias;
+begin
+  oForm := TfrmModalInformesGuias.Create(Self);
+  try
+    oForm.sInforme := Self.Name;
+    oForm.ShowModal;
+  finally
+    FreeAndNil(oForm);
+  end;
+end;
+
 procedure TfrmPrint.actSalirExecute(Sender: TObject);
 begin
   inherited;
@@ -172,8 +363,16 @@ begin
   if (sElegido <> '') then
   begin
     AfterReportLoaded;
-    frxrprt1.PrepareReport(True);
-    frxrprt1.DesignReport();
+    // En edicion el usuario necesita ver todas las guias activas del
+    // informe en el arbol de datasets del diseñador, aunque el .frx
+    // todavia no las referencie. Por eso aSoloUsadasEnReport=False.
+    AbrirGuiasRuntime(False);
+    try
+      frxrprt1.PrepareReport(True);
+      frxrprt1.DesignReport();
+    finally
+      CerrarGuiasRuntime;
+    end;
   end;
   Self.Show;
 end;
@@ -187,9 +386,14 @@ begin
   if (sElegido <> '') then
   begin
     AfterReportLoaded;
-    frxrprt1.PrepareReport(True);
-    frxlsxprtExcel.DefaultPath := oAppParams.GetPath('appDirExcel');
-    frxrprt1.Export(frxlsxprtExcel);
+    AbrirGuiasRuntime(True);
+    try
+      frxrprt1.PrepareReport(True);
+      frxlsxprtExcel.DefaultPath := oAppParams.GetPath('appDirExcel');
+      frxrprt1.Export(frxlsxprtExcel);
+    finally
+      CerrarGuiasRuntime;
+    end;
   end;
   Self.Show;
 end;
@@ -202,8 +406,13 @@ begin
     if (sElegido <> '') then
   begin
     AfterReportLoaded;
-    frxrprt1.PrepareReport(True);
-    frxrprt1.Print;
+    AbrirGuiasRuntime(True);
+    try
+      frxrprt1.PrepareReport(True);
+      frxrprt1.Print;
+    finally
+      CerrarGuiasRuntime;
+    end;
   end;
   Self.Show;
 end;
@@ -221,9 +430,14 @@ begin
     if (sElegido <> '') then
   begin
     AfterReportLoaded;
-    frxrprt1.PrepareReport(True);
-    frxpdfxprtPedWeb.DefaultPath := oAppParams.GetPath('appDirPDF');
-    frxrprt1.Export(frxpdfxprtPedWeb);
+    AbrirGuiasRuntime(True);
+    try
+      frxrprt1.PrepareReport(True);
+      frxpdfxprtPedWeb.DefaultPath := oAppParams.GetPath('appDirPDF');
+      frxrprt1.Export(frxpdfxprtPedWeb);
+    finally
+      CerrarGuiasRuntime;
+    end;
   end;
   Self.Show;
 end;
@@ -236,7 +450,12 @@ begin
   if (sElegido <> '') then
   begin
     AfterReportLoaded;
-    frxrprt1.ShowReport;
+    AbrirGuiasRuntime(True);
+    try
+      frxrprt1.ShowReport;
+    finally
+      CerrarGuiasRuntime;
+    end;
   end;
   Self.Show;
 end;
@@ -430,6 +649,8 @@ begin
   inherited;
   Action := caHide;
   unqryPerfiles.Close;
+  CerrarGuiasRuntime;
+  FreeAndNil(FGuiasRuntime);
 end;
 
 procedure TfrmPrint.FormCreate(Sender: TObject);
@@ -441,6 +662,7 @@ begin
   unqryPerfiles.ParamByName('Grupo').AsString := oGroup;
   unqryPerfiles.ParamByName('Todos').AsString := oAll;
   unqryPerfiles.Open;
+  FGuiasRuntime := TList.Create;
 end;
 
 function TfrmPrint.frxdsgnr1SaveReport(Report: TfrxReport;
