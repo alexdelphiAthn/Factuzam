@@ -249,10 +249,19 @@ type
     procedure AbrirPopupSkuEnEntrada(Sender: TObject);
     // OnChange (TcxButtonEditProperties) compartido por las 5 columnas SKU
     // para autocompletar inline estilo Excel: si el usuario teclea un
-    // prefijo que casa con un AV de FSkuAcAvs, completa el resto y deja
-    // seleccionado lo que añade. La cache FSkuAcAvs/FSkuAcIdVa la
-    // (re)carga tvLineasInitEdit al entrar en la celda.
+    // prefijo que casa con el NOMBRE_ATB (o CODIGO_ATB) de algun AV de
+    // FSkuAcAvs, muestra el NOMBRE_ATB en el editor y deja seleccionada
+    // la parte añadida. La cache FSkuAcAvs/FSkuAcIdVa la (re)carga
+    // tvLineasInitEdit al entrar en la celda.
     procedure SkuOnPropertiesChange(Sender: TObject);
+    // OnValidate compartido por las 5 SKU. Como el OnChange propone el
+    // NOMBRE_ATB en el editor (mas legible), aqui traducimos nombre ->
+    // CODIGO_ATB justo antes del commit. Si el texto ya es un codigo o
+    // no resuelve a nada conocido, se deja como esta.
+    procedure SkuOnPropertiesValidate(Sender: TObject;
+                                      var DisplayValue: Variant;
+                                      var ErrorText: TCaption;
+                                      var Error: Boolean);
 
     // === BUSQUEDA UNIFICADA DE ARTICULOS (codigo, SKU o codigo de barras) ===
     procedure ResolverInputArticulo(const AInput: string;
@@ -822,11 +831,17 @@ begin
     BE.OnEnter := nil;
 
   // --- AUTOCOMPLETE INLINE ---
-  // Cacheamos AVs validos + IdVa de la celda y enganchamos OnChange para
-  // que SkuOnPropertiesChange pueda autocompletar prefijos. La cache se
-  // refresca en cada InitEdit (cambio de celda activa).
+  // Cacheamos AVs validos + IdVa de la celda y enganchamos:
+  //   OnChange   -> autocompleta inline mientras el usuario teclea
+  //                 (muestra el NOMBRE_ATB).
+  //   OnValidate -> al commitear traduce NOMBRE_ATB -> CODIGO_ATB para
+  //                 que la BBDD reciba el codigo, no el nombre.
+  // PrevLen = 0 (no Length(BE.Text)) — si la celda ya trae valor "NE"
+  // y el usuario teclea encima, el texto encoge antes de crecer y un
+  // PrevLen=2 tragaria el primer caracter. Asumimos que cualquier
+  // pulsacion en una sesion de edicion arranca desde "estado vacio".
   FSkuAcIdVa    := IdVa;
-  FSkuAcPrevLen := Length(BE.Text);
+  FSkuAcPrevLen := 0;
   if dmmInventarios.cdsLineas.Active and
      (not dmmInventarios.cdsLineas.IsEmpty) then
     CargarAvsValidos(dmmInventarios.cdsLineas.FieldByName(
@@ -834,7 +849,8 @@ begin
                      AItem.Tag, FSkuAcAvs)
   else
     SetLength(FSkuAcAvs, 0);
-  BE.Properties.OnChange := SkuOnPropertiesChange;
+  BE.Properties.OnChange   := SkuOnPropertiesChange;
+  BE.Properties.OnValidate := SkuOnPropertiesValidate;
 end;
 
 procedure TfrmMtoInventarios.tvLineasEditKeyDown(Sender: TcxCustomGridTableView;
@@ -1221,18 +1237,20 @@ end;
 
 procedure TfrmMtoInventarios.SkuOnPropertiesChange(Sender: TObject);
 var
-  BE      : TcxCustomTextEdit;
-  Txt     : string;
-  AvMatch : string;
-  L       : Integer;
+  BE       : TcxCustomTextEdit;
+  Txt      : string;
+  AvCodigo : string;
+  AvNombre : string;
+  L        : Integer;
 begin
   // Autocomplete inline estilo Excel para las celdas SKU. Reglas:
   //   - Solo propone cuando el texto CRECE respecto al cambio anterior
   //     (asi Backspace / Delete no re-rellenan lo que el usuario borra).
-  //   - Si encuentra un AV cuyo CODIGO_ATB o NOMBRE_ATB empieza por lo
-  //     tecleado, completa con el AV entero y deja seleccionada la parte
-  //     añadida. La siguiente pulsacion la sustituye (comportamiento
-  //     identico al autocomplete de un cxLookupComboBox).
+  //   - BuscarSugerenciaPorPrefijo prioriza NOMBRE_ATB de la paleta
+  //     basica ("NEGRO", "BLANCO", ...) sobre CODIGO_ATB ("NE", "BL")
+  //     porque el nombre es lo que el usuario suele teclear y leer.
+  //     SkuOnPropertiesValidate se encarga de traducir nombre -> codigo
+  //     en el momento del commit.
   //   - FSkuAcGuard evita la recursion: al reasignar BE.Text se vuelve a
   //     disparar OnChange y entrariamos en bucle.
   if FSkuAcGuard then Exit;
@@ -1245,25 +1263,49 @@ begin
   if L <= FSkuAcPrevLen then begin FSkuAcPrevLen := L; Exit; end;
   if Length(FSkuAcAvs) = 0 then begin FSkuAcPrevLen := L; Exit; end;
 
-  if not BuscarAvPorPrefijo(FSkuAcIdVa, Txt, FSkuAcAvs, AvMatch) then
+  if not BuscarSugerenciaPorPrefijo(FSkuAcIdVa, Txt, FSkuAcAvs,
+                                    AvCodigo, AvNombre) then
   begin
     FSkuAcPrevLen := L;
     Exit;
   end;
-  if Length(AvMatch) <= L then begin FSkuAcPrevLen := L; Exit; end;
+  if Length(AvNombre) <= L then begin FSkuAcPrevLen := L; Exit; end;
 
   FSkuAcGuard := True;
   try
-    BE.Text      := AvMatch;
+    BE.Text      := AvNombre;
     BE.SelStart  := L;
-    BE.SelLength := Length(AvMatch) - L;
+    BE.SelLength := Length(AvNombre) - L;
   finally
     FSkuAcGuard := False;
   end;
-  // Guardamos la longitud REAL tecleada (no la autocompletada): asi un
-  // BackSpace que deje solo lo que el usuario escribio no entra en el
-  // bucle "L <= FSkuAcPrevLen -> skip" prematuro.
   FSkuAcPrevLen := L;
+end;
+
+procedure TfrmMtoInventarios.SkuOnPropertiesValidate(Sender: TObject;
+                                                    var DisplayValue: Variant;
+                                                    var ErrorText: TCaption;
+                                                    var Error: Boolean);
+var
+  Texto : string;
+  Code  : string;
+begin
+  // Traduccion nombre -> codigo justo antes del commit. Si el editor
+  // muestra "NEGRO" (porque el autocomplete lo propuso) y el AV real es
+  // "NE", al commitear el dataset debe recibir "NE" para que las claves
+  // referenciales sigan apuntando al AV correcto.
+  if FSkuAcGuard then Exit;
+  if VarIsNull(DisplayValue) or VarIsClear(DisplayValue) then Exit;
+  Texto := Trim(VarToStr(DisplayValue));
+  if Texto = '' then Exit;
+  if Length(FSkuAcAvs) = 0 then Exit;
+
+  if ResolverAvDesdeTexto(FSkuAcIdVa, Texto, FSkuAcAvs, Code) then
+    if (Code <> '') and (UpperCase(Code) <> UpperCase(Texto)) then
+      DisplayValue := Code;
+  // Si no resuelve, dejamos el texto tal cual: el flujo posterior
+  // (RegistrarValorAtributo / re-render) lo tratara como un valor
+  // libre, igual que antes del autocomplete.
 end;
 
 procedure TfrmMtoInventarios.tvLineasUnidadPropertiesButtonClick(
