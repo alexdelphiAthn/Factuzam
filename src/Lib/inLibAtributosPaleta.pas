@@ -157,6 +157,17 @@ function SeleccionarAvConPaleta(const AIdVa: string;
                                 AScreenTop: Integer = -1;
                                 AWidthHint: Integer = 120): Boolean;
 
+// Busca en AAvs el primer valor cuyo CODIGO_ATB o NOMBRE_ATB (via paleta
+// basica para AIdVa) empiece por APrefijo (case-insensitive). Devuelve
+// True y deja en AvMatch el CODIGO_ATB completo. Pensado para autocompletar
+// estilo Excel en celdas TcxButtonEdit que ya tienen la paleta como popup:
+// el usuario teclea unas letras, la celda propone el AV que casa.
+//   - Prioriza coincidencia por CODIGO_ATB sobre NOMBRE_ATB.
+//   - Devuelve False si APrefijo es vacio o no hay match.
+function BuscarAvPorPrefijo(const AIdVa, APrefijo: string;
+                            const AAvs: array of string;
+                            out AvMatch: string): Boolean;
+
 implementation
 
 uses
@@ -839,6 +850,67 @@ begin
     end;
   finally
     F.Free;
+  end;
+end;
+
+function BuscarAvPorPrefijo(const AIdVa, APrefijo: string;
+                            const AAvs: array of string;
+                            out AvMatch: string): Boolean;
+var
+  Prefi   : string;
+  iLen, i : Integer;
+  Av      : string;
+  Info    : TInfoBasico;
+  Nombre  : string;
+  Cand    : string;
+begin
+  // Dos pasadas: primero busca prefijo en CODIGO_ATB; si no encuentra,
+  // segunda pasada por NOMBRE_ATB. Asi el codigo (mas corto y normalizado)
+  // gana al nombre, que es habitualmente lo que el usuario teclea para
+  // identificar el AV rapido.
+  Result  := False;
+  AvMatch := '';
+  Prefi := UpperCase(Trim(APrefijo));
+  iLen  := Length(Prefi);
+  if iLen = 0 then Exit;
+
+  // Pasada 1: CODIGO_ATB
+  Cand := '';
+  for i := 0 to High(AAvs) do
+  begin
+    Av := AAvs[i];
+    if Length(Av) < iLen then Continue;
+    if UpperCase(Copy(Av, 1, iLen)) = Prefi then
+    begin
+      // Preferimos el match mas corto (mas especifico): si hay varios,
+      // suele significar que el usuario quiere "ROJ" -> "ROJO" no "ROJOOSCURO".
+      if (Cand = '') or (Length(Av) < Length(Cand)) then Cand := Av;
+    end;
+  end;
+  if Cand <> '' then
+  begin
+    AvMatch := Cand;
+    Exit(True);
+  end;
+
+  // Pasada 2: NOMBRE_ATB de la paleta basica
+  if Trim(AIdVa) = '' then Exit;
+  for i := 0 to High(AAvs) do
+  begin
+    Av := AAvs[i];
+    Info := Default(TInfoBasico);
+    if not ObtenerInfoBasico(AIdVa, Av, Info) then Continue;
+    Nombre := UpperCase(Trim(Info.Nombre));
+    if Length(Nombre) < iLen then Continue;
+    if Copy(Nombre, 1, iLen) = Prefi then
+    begin
+      if (Cand = '') or (Length(Av) < Length(Cand)) then Cand := Av;
+    end;
+  end;
+  if Cand <> '' then
+  begin
+    AvMatch := Cand;
+    Result  := True;
   end;
 end;
 
