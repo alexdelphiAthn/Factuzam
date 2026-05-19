@@ -13,29 +13,10 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
     Top = 0
     Width = 1100
     Height = 600
-    HeaderImages.Height = 32
-    HeaderImages.Width = 32
-    WatermarkImage.Data = {0954506E67496D61676589504E470D0A1A0A0000000D49484452000000010000000108020000000000000000}
     Align = alClient
-    BorderStyle = bsNone
-    HeaderFont.Charset = DEFAULT_CHARSET
-    HeaderFont.Color = clWindowText
-    HeaderFont.Height = -17
-    HeaderFont.Name = 'Segoe UI Semibold'
-    HeaderFont.Style = [fsBold]
-    SubHeaderFont.Charset = DEFAULT_CHARSET
-    SubHeaderFont.Color = 6710886
-    SubHeaderFont.Height = -13
-    SubHeaderFont.Name = 'Segoe UI'
-    SubHeaderFont.Style = []
-    SelectedColorFrom = 16444393
-    SelectedColorTo = 14998263
     OnFinishButtonClick = wzWizardFinishButtonClick
     OnCancelButtonClick = wzWizardCancelButtonClick
     object pgFormato: TJvWizardInteriorPage
-      Header.Title.Text = 'Paso 1 de 2 '#8212' Formato a editar'
-      Header.Subtitle.Text = 'Elige un formato existente o crea uno nuevo. El nombre y el permiso quedan fijados durante toda la edici'#243'n.'
-      EnabledButtons = [bkBack, bkNext, bkCancel]
       OnNextButtonClick = pgFormatoNextButtonClick
       object pnlPaso1: TPanel
         Left = 0
@@ -118,9 +99,6 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
       end
     end
     object pgGuias: TJvWizardInteriorPage
-      Header.Title.Text = 'Paso 2 de 2 '#8212' Gu'#237'as de datos'
-      Header.Subtitle.Text = 'Consulta los datasets disponibles y añade gu'#237'as auxiliares al informe.'
-      EnabledButtons = [bkBack, bkFinish, bkCancel]
       OnShow = pgGuiasShow
       object pnlPaso2: TPanel
         Left = 0
