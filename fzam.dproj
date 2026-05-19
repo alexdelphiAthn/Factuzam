@@ -557,9 +557,6 @@
             <Form>dmComprasSesiones</Form>
             <DesignClass>TdmComprasSesiones</DesignClass>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
-            <Form>frmMtoComprasSesiones</Form>
-        </DCCReference>
         <DCCReference Include="src\Forms\inMtoComprasPlantillas.pas">
             <Form>frmMtoComprasPlantillas</Form>
         </DCCReference>
