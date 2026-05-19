@@ -130,6 +130,13 @@ begin
   sFormato := '';
   sScope   := '';
   bExiste  := False;
+  // Hacemos que el wizard ocupe todo el form en runtime, sin tocar el
+  // DFM (TJvWizard no expone Align como propiedad publicada en algunas
+  // versiones de JVCL, lo cual provocaba EReadError al cargar el form).
+  try
+    wzWizard.Align := alClient;
+  except
+  end;
 end;
 
 procedure TfrmModalWizardEditar.FormShow(Sender: TObject);
