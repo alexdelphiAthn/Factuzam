@@ -83,10 +83,7 @@
           object tvMaestroORDEN_ACA: TcxGridDBColumn
             Caption = 'Orden'
             DataBinding.FieldName = 'ORDEN_ACA'
-            PropertiesClassName = 'TcxSpinEditProperties'
-            Properties.MinValue = 0
             HeaderAlignmentHorz = taRightJustify
-            Options.Editing = True
             Width = 80
           end
         end
@@ -167,15 +164,17 @@
   object unqryMaestro: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT va.ID_ATB_VA, va.ID_VAR_VA,'
+      'SELECT aca.CODIGO_ART_ACA, aca.ID_VA_ACA AS ID_ATB_VA,'
+      '       va.ID_VAR_VA,'
 
-        '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, '
+        '       COALESCE(va.NOMBRE_VA, aca.ID_VA_ACA) AS NOMBRE_ATRIBUTO,'
       '       va.ORDEN_VA,'
       '       aca.ORDEN_ACA'
-      '  FROM fza_variaciones_atributos va'
-      '  LEFT JOIN fza_articulos_conjuntos_asign aca'
-      '    ON aca.CODIGO_ART_ACA = :art'
-      '   AND aca.ID_VA_ACA      = va.ID_ATB_VA'
+      '  FROM fza_articulos_conjuntos_asign aca'
+      '  JOIN fza_variaciones_atributos va'
+      '    ON va.ID_ATB_VA = aca.ID_VA_ACA'
+      '   AND va.ID_VAR_VA = :var'
+      ' WHERE aca.CODIGO_ART_ACA = :art'
 
         ' ORDER BY COALESCE(NULLIF(aca.ORDEN_ACA, 0), va.ORDEN_VA), va.OR' +
         'DEN_VA')
@@ -183,6 +182,12 @@
     Left = 600
     Top = 64
     ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'var'
+        ParamType = ptInput
+        Value = ''
+      end
       item
         DataType = ftWideString
         Name = 'art'
