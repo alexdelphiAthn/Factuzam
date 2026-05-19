@@ -35,6 +35,7 @@ uses
   cxClasses, cxContainer, cxEdit, cxControls, cxLookAndFeels, cxLocalization,
   cxGraphics, cxLookAndFeelPainters, cxButtons, cxStyles, cxLabel, cxTextEdit,
   cxDropDownEdit, cxMaskEdit, cxCustomListBox, cxListBox, cxCheckListBox,
+  cxCheckBox,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, cxDBData, cxGridLevel, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridCustomView, cxGrid,
