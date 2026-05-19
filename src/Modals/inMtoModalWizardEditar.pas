@@ -73,7 +73,6 @@ type
     lstCamposTabla: TcxListBox;
     pnlAddGuia: TPanel;
     lblCodigoNuevo: TcxLabel;
-    edtCodigoNuevo: TcxTextEdit;
     btnAddGuia: TcxButton;
     unqryTablas: TUniQuery;
     unqryCamposTabla: TUniQuery;
@@ -718,12 +717,21 @@ end;
 procedure TfrmModalWizardEditar.btnAddGuiaClick(Sender: TObject);
 var
   sDS, sCampos, sTabla, sCampoTabla, sCodigo: string;
+  function Sanitizar(const aStr: string): string;
+  var k: Integer;
+  begin
+    Result := '';
+    for k := 1 to Length(aStr) do
+      if (aStr[k] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+        Result := Result + aStr[k]
+      else
+        Result := Result + '_';
+  end;
 begin
   sDS         := DatasetMasterSeleccionado;
   sCampos     := CamposMarcadosCsv;
   sTabla      := TablaSeleccionada;
   sCampoTabla := CampoTablaSeleccionado;
-  sCodigo     := Trim(edtCodigoNuevo.Text);
 
   if sDS = '' then
   begin
@@ -748,13 +756,13 @@ begin
                 'cruza con el master (la PK aparece marcada con "*").');
     Exit;
   end;
-  if sCodigo = '' then
-  begin
-    ShowMessage('5) Escribe un código (UserName) para la guía. Sera lo ' +
-                'que escribirás en el .frx para referirte a ella.');
-    if edtCodigoNuevo.CanFocus then edtCodigoNuevo.SetFocus;
-    Exit;
-  end;
+
+  // El UserName en el .frx ES el del dataset master (no inventamos otro):
+  // las guias enriquecen el master via LEFT JOIN en runtime, y los nuevos
+  // campos quedan disponibles como [<DATASET_MASTER>."CAMPO"]. El
+  // CODIGO_INFGUI es un identificador interno unico por (informe,
+  // formato, master, tabla), se compone automaticamente.
+  sCodigo := Sanitizar(sDS) + '_' + Sanitizar(sTabla);
 
   if not unqryGuias.Active then unqryGuias.Open;
   unqryGuias.Append;
@@ -768,8 +776,6 @@ begin
   unqryGuias.FieldByName('TIPO_INFGUI').AsString           := 'TABLA';
   unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString       := 'S';
   unqryGuias.Post;
-
-  edtCodigoNuevo.Text := '';
 end;
 
 procedure TfrmModalWizardEditar.unqryGuiasBeforePost(DataSet: TDataSet);

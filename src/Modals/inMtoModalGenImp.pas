@@ -88,6 +88,11 @@ type
     // Componentes creados dinamicamente al abrir guias runtime. Se
     // liberan en CerrarGuiasRuntime / FormClose.
     FGuiasRuntime: TList;
+    // Por cada TUniQuery que modificamos al aplicar guias, guardamos el
+    // SQL.Text original aqui (objeto = TUniQuery, string = SQL previo)
+    // para poder restaurarlo en CerrarGuiasRuntime. Asi el data module
+    // queda igual que como vino tras el cierre del modal.
+    FSqlOriginales: TStringList;
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
@@ -190,32 +195,66 @@ begin
 end;
 
 procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
+
+  procedure CopiarParametros(src, dst: TUniQuery);
+  var
+    k: Integer;
+    pSrc: TUniParam;
+  begin
+    for k := 0 to dst.Params.Count - 1 do
+    begin
+      pSrc := src.Params.FindParam(dst.Params[k].Name);
+      if pSrc <> nil then
+        dst.Params[k].Value := pSrc.Value
+      else
+        dst.Params[k].Clear;
+    end;
+  end;
+
+  function SplitFields(const aStr: string): TArray<string>;
+  var
+    sl: TStringList;
+    k: Integer;
+  begin
+    sl := TStringList.Create;
+    try
+      sl.StrictDelimiter := True;
+      sl.Delimiter := ';';
+      sl.DelimitedText := aStr;
+      SetLength(Result, sl.Count);
+      for k := 0 to sl.Count - 1 do
+        Result[k] := Trim(sl[k]);
+    finally
+      FreeAndNil(sl);
+    end;
+  end;
+
 var
-  sCodigo, sDatasetMaster, sTipo, sTabla, sSql, sMaster, sDetail: string;
-  oDsMaster: TfrxDBDataset;
-  oUni: TUniQuery;
-  oDs:  TDataSource;
-  oFrx: TfrxDBDataset;
-  i: Integer;
-  bUsada: Boolean;
-  memReport: TMemoryStream;
-  oStrReport: TStringList;
-  sReport: string;
+  sDatasetMaster, sTabla, sMaster, sDetail: string;
+  dsMaster: TfrxDBDataset;
+  oDS: TDataSet;
+  uniMaster, qryColsExt, qryTmp: TUniQuery;
+  i, k, nPares, iSuf: Integer;
+  sSqlActual, sSqlNuevo, sCol, sAlias, sOn, sSelectExt: string;
+  setCamposMaster: TStringList;
+  arrMaster, arrDetail: TArray<string>;
 begin
-  // Garantiza la lista; tambien permite llamar a CerrarGuiasRuntime sin
-  // estado previo.
+  // Asegurar listas internas. CerrarGuiasRuntime tambien las gestiona.
   if FGuiasRuntime = nil then
     FGuiasRuntime := TList.Create
   else
     CerrarGuiasRuntime;
+  if FSqlOriginales = nil then
+    FSqlOriginales := TStringList.Create;
+
+  // El parametro aSoloUsadasEnReport queda como referencia historica:
+  // ahora cada guia enriquece el SQL del TUniQuery del master con un
+  // LEFT JOIN, asi que los campos extra son nativos del master en el
+  // .frx (`[<UserName>."CAMPO"]`) y no hay datasets paralelos que
+  // filtrar.
 
   unqryInformesGuias.Close;
   unqryInformesGuias.ParamByName('INF').AsString := Self.Name;
-  // sElegido lleva el VALUE_USUPER del formato cargado en
-  // Consultar_Formularios. Si vale '' o 'Predeterminado' el usuario
-  // esta sobre el .frx base del informe, asi que pedimos solo las
-  // guias globales (FORMATO_INFGUI = ''). Para cualquier otro valor
-  // la condicion del SQL admite tambien las guias atadas a ese formato.
   if (sElegido = '') or SameText(sElegido, 'Predeterminado') then
     unqryInformesGuias.ParamByName('FMT').AsString := ''
   else
@@ -227,142 +266,225 @@ begin
     Exit;
   end;
 
-  // En modo "solo usadas" serializamos el report a texto y buscamos las
-  // referencias por nombre de dataset. FastReport las escribe en forma
-  // de Dataset="<UserName>" para los componentes vinculados y como
-  // <UserName."Campo"> en los memos. Con un Pos sobre la cadena
-  // serializada cubrimos ambos casos.
-  sReport := '';
-  if aSoloUsadasEnReport then
-  begin
-    memReport := TMemoryStream.Create;
-    oStrReport := TStringList.Create;
-    try
-      frxrprt1.SaveToStream(memReport);
-      memReport.Position := 0;
-      oStrReport.LoadFromStream(memReport);
-      sReport := oStrReport.Text;
-    finally
-      FreeAndNil(oStrReport);
-      FreeAndNil(memReport);
-    end;
-  end;
+  qryColsExt := TUniQuery.Create(nil);
+  try
+    qryColsExt.Connection := oConn;
+    qryColsExt.SQL.Text :=
+      'select COLUMN_NAME from information_schema.COLUMNS ' +
+      ' where TABLE_SCHEMA = database() and TABLE_NAME = :TAB ' +
+      ' order by ORDINAL_POSITION';
 
-  unqryInformesGuias.First;
-  while not unqryInformesGuias.Eof do
-  begin
-    sCodigo        := unqryInformesGuias.FieldByName('CODIGO_INFGUI').AsString;
-    sDatasetMaster := unqryInformesGuias.FieldByName(
-                                      'DATASET_MASTER_INFGUI').AsString;
-    sTipo          := UpperCase(unqryInformesGuias.FieldByName(
-                                                 'TIPO_INFGUI').AsString);
-    sTabla         := unqryInformesGuias.FieldByName('TABLA_INFGUI').AsString;
-    sSql           := unqryInformesGuias.FieldByName('SQL_INFGUI').AsString;
-    sMaster        := unqryInformesGuias.FieldByName(
-                                      'MASTER_FIELDS_INFGUI').AsString;
-    sDetail        := unqryInformesGuias.FieldByName(
-                                      'DETAIL_FIELDS_INFGUI').AsString;
-    try
-      bUsada := True;
-      if aSoloUsadasEnReport then
-        bUsada := (Pos('"' + sCodigo + '"',   sReport) > 0) or
-                  (Pos('<' + sCodigo + '."',  sReport) > 0) or
-                  (Pos('[' + sCodigo + '."',  sReport) > 0);
-
-      if bUsada then
-      begin
-        // 1) Localizar el frxDBDataset master por UserName.
-        //    frxrprt1.Datasets[i].DataSet es TfrxDataSet (la base);
-        //    nosotros necesitamos el TfrxDBDataset (envuelve un
-        //    TDataSet de Delphi y expone .DataSet).
-        oDsMaster := nil;
+    unqryInformesGuias.First;
+    while not unqryInformesGuias.Eof do
+    begin
+      sDatasetMaster := unqryInformesGuias.FieldByName(
+                                       'DATASET_MASTER_INFGUI').AsString;
+      sTabla         := unqryInformesGuias.FieldByName(
+                                       'TABLA_INFGUI').AsString;
+      sMaster        := unqryInformesGuias.FieldByName(
+                                       'MASTER_FIELDS_INFGUI').AsString;
+      sDetail        := unqryInformesGuias.FieldByName(
+                                       'DETAIL_FIELDS_INFGUI').AsString;
+      try
+        // 1) Localizar el TfrxDBDataset por UserName y resolver
+        //    TDataSet (DataSet directo o via DataSource).
+        dsMaster := nil;
         for i := 0 to frxrprt1.Datasets.Count - 1 do
           if (frxrprt1.Datasets[i].DataSet is TfrxDBDataset) and
              SameText(frxrprt1.Datasets[i].DataSet.UserName,
                       sDatasetMaster) then
           begin
-            oDsMaster := TfrxDBDataset(frxrprt1.Datasets[i].DataSet);
+            dsMaster := TfrxDBDataset(frxrprt1.Datasets[i].DataSet);
             Break;
           end;
-        if (oDsMaster = nil) or (oDsMaster.DataSet = nil) then
+        if dsMaster = nil then
         begin
           inLibLog.Log.LogWarning(Format(
-            'Guia %s ignorada: dataset master "%s" no encontrado en %s',
-            [sCodigo, sDatasetMaster, Self.Name]));
+            'Guia ignorada: master "%s" no esta en el report de %s',
+            [sDatasetMaster, Self.Name]));
+          unqryInformesGuias.Next;
+          Continue;
+        end;
+        oDS := dsMaster.DataSet;
+        if (oDS = nil) and (dsMaster.DataSource <> nil) then
+          oDS := dsMaster.DataSource.DataSet;
+        if (oDS = nil) or not (oDS is TUniQuery) then
+        begin
+          inLibLog.Log.LogWarning(Format(
+            'Guia ignorada: master %s no es TUniQuery', [sDatasetMaster]));
+          unqryInformesGuias.Next;
+          Continue;
+        end;
+        uniMaster := TUniQuery(oDS);
+
+        // 2) Guardar SQL.Text original si es la primera vez que tocamos
+        //    este TUniQuery. CerrarGuiasRuntime lo restaurara.
+        if FSqlOriginales.IndexOfObject(uniMaster) < 0 then
+          FSqlOriginales.AddObject(uniMaster.SQL.Text, uniMaster);
+
+        sSqlActual := uniMaster.SQL.Text;
+        while (Length(sSqlActual) > 0) and
+              (sSqlActual[Length(sSqlActual)] = ';') do
+          SetLength(sSqlActual, Length(sSqlActual) - 1);
+        if Trim(sSqlActual) = '' then
+        begin
           unqryInformesGuias.Next;
           Continue;
         end;
 
-        // 2) Crear los tres componentes encadenados.
-        oUni := TUniQuery.Create(Self);
-        oUni.Connection := oConn;
-        oDs := TDataSource.Create(Self);
-        oDs.DataSet := oDsMaster.DataSet;
-        oFrx := TfrxDBDataset.Create(Self);
-        oFrx.UserName := sCodigo;
-        oFrx.DataSet  := oUni;
+        // 3) Inferir los campos ACTUALES del master (envoltorio
+        //    WHERE 1=0 con parametros copiados del original).
+        setCamposMaster := TStringList.Create;
+        setCamposMaster.CaseSensitive := False;
+        setCamposMaster.Sorted := True;
+        setCamposMaster.Duplicates := dupIgnore;
+        try
+          qryTmp := TUniQuery.Create(nil);
+          try
+            qryTmp.Connection := oConn;
+            qryTmp.SQL.Text :=
+              'select * from (' + sSqlActual + ') X_GUIAS where 1=0';
+            CopiarParametros(uniMaster, qryTmp);
+            qryTmp.Open;
+            for k := 0 to qryTmp.FieldCount - 1 do
+              setCamposMaster.Add(qryTmp.Fields[k].FieldName);
+            qryTmp.Close;
+          finally
+            FreeAndNil(qryTmp);
+          end;
 
-        // 3) Configurar SQL + master/detail.
-        if sTipo = 'SQL' then
-        begin
-          oUni.SQL.Text := sSql;
-          // Para SQL libre, los DETAIL_FIELDS llevan el nombre de los
-          // parametros que el master rellena en cada cursor.
-          oUni.MasterSource := oDs;
-          oUni.MasterFields := sMaster;
-          oUni.DetailFields := sDetail;
-        end
-        else
-        begin
-          oUni.SQL.Text := 'select * from ' + sTabla;
-          oUni.MasterSource := oDs;
-          oUni.MasterFields := sMaster;
-          oUni.DetailFields := sDetail;
+          // 4) Leer columnas de la tabla externa y resolver alias por
+          //    colision (CODIGO_ART -> CODIGO_ART1, CODIGO_ART2...).
+          sSelectExt := '';
+          qryColsExt.Close;
+          qryColsExt.ParamByName('TAB').AsString := sTabla;
+          qryColsExt.Open;
+          while not qryColsExt.Eof do
+          begin
+            sCol := qryColsExt.FieldByName('COLUMN_NAME').AsString;
+            sAlias := sCol;
+            if setCamposMaster.IndexOf(sAlias) >= 0 then
+            begin
+              iSuf := 1;
+              while setCamposMaster.IndexOf(sCol + IntToStr(iSuf)) >= 0 do
+                Inc(iSuf);
+              sAlias := sCol + IntToStr(iSuf);
+            end;
+            setCamposMaster.Add(sAlias);
+            if sSelectExt <> '' then sSelectExt := sSelectExt + ', ';
+            sSelectExt := sSelectExt +
+              'EXT_GUIA.' + sCol + ' AS ' + sAlias;
+            qryColsExt.Next;
+          end;
+          qryColsExt.Close;
+
+          // 5) Componer ON clause con master/detail fields.
+          arrMaster := SplitFields(sMaster);
+          arrDetail := SplitFields(sDetail);
+          nPares := Length(arrMaster);
+          if Length(arrDetail) < nPares then nPares := Length(arrDetail);
+          sOn := '';
+          for k := 0 to nPares - 1 do
+          begin
+            if (Trim(arrMaster[k]) = '') or (Trim(arrDetail[k]) = '') then
+              Continue;
+            if sOn <> '' then sOn := sOn + ' AND ';
+            sOn := sOn + 'EXT_GUIA.' + arrDetail[k] + ' = M_GUIA.' +
+                          arrMaster[k];
+          end;
+          if (sOn = '') or (sSelectExt = '') then
+          begin
+            unqryInformesGuias.Next;
+            Continue;
+          end;
+
+          // 6) Componer SQL enriquecido y aplicarlo. Los parametros se
+          //    mantienen porque solo cambia SQL.Text.
+          sSqlNuevo :=
+            'SELECT M_GUIA.*, ' + sSelectExt + ' ' +
+            'FROM (' + sSqlActual + ') M_GUIA ' +
+            'LEFT JOIN ' + sTabla + ' EXT_GUIA ON ' + sOn;
+          uniMaster.Close;
+          uniMaster.SQL.Text := sSqlNuevo;
+          // Reabrir el master con el SQL enriquecido para que el report
+          // disponga de los nuevos campos al iterar. Los parametros se
+          // mantienen porque solo cambia SQL.Text.
+          try
+            uniMaster.Open;
+          except
+            on E: Exception do
+              inLibLog.Log.LogError(
+                Format('Apertura del master enriquecido (%s) fallo: %s',
+                       [sDatasetMaster, E.Message]));
+          end;
+        finally
+          FreeAndNil(setCamposMaster);
         end;
-
-        oUni.Open;
-
-        // 4) Registrar en el report y en la lista interna.
-        frxrprt1.Datasets.Add(oFrx);
-        FGuiasRuntime.Add(oFrx);
-        FGuiasRuntime.Add(oDs);
-        FGuiasRuntime.Add(oUni);
+      except
+        on E: Exception do
+          inLibLog.Log.LogError(
+            Format('Guia (%s -> %s) fallo: %s',
+                   [sDatasetMaster, sTabla, E.Message]));
       end;
-    except
-      on E: Exception do
-        inLibLog.Log.LogError(
-          Format('Guia %s fallo al abrir en %s: %s',
-                 [sCodigo, Self.Name, E.Message]));
+      unqryInformesGuias.Next;
     end;
-    unqryInformesGuias.Next;
+  finally
+    FreeAndNil(qryColsExt);
   end;
   unqryInformesGuias.Close;
 end;
 
 procedure TfrmPrint.CerrarGuiasRuntime;
 var
-  i, j: Integer;
+  k, j: Integer;
   obj: TObject;
+  uniMaster: TUniQuery;
+  bEraAbierto: Boolean;
 begin
-  if FGuiasRuntime = nil then Exit;
-  for i := FGuiasRuntime.Count - 1 downto 0 do
+  // 1) Restaurar el SQL.Text original de los TUniQuery enriquecidos.
+  //    Conservamos abierto si lo estaba; si Open falla con el SQL
+  //    original (raro pero posible), logueamos y seguimos.
+  if FSqlOriginales <> nil then
   begin
-    obj := TObject(FGuiasRuntime[i]);
-    if obj is TfrxDBDataset then
+    for k := 0 to FSqlOriginales.Count - 1 do
     begin
-      // Quitar del report el item que apunta a este TfrxDBDataset.
-      // Comparamos como TfrxDataSet (clase base) para que el
-      // compilador no requiera un cast contravariante.
-      for j := frxrprt1.Datasets.Count - 1 downto 0 do
-        if frxrprt1.Datasets[j].DataSet = TfrxDataSet(obj) then
-        begin
-          frxrprt1.Datasets.Delete(j);
-          Break;
-        end;
+      uniMaster := TUniQuery(FSqlOriginales.Objects[k]);
+      if uniMaster = nil then Continue;
+      try
+        bEraAbierto := uniMaster.Active;
+        uniMaster.Close;
+        uniMaster.SQL.Text := FSqlOriginales[k];
+        if bEraAbierto then
+          uniMaster.Open;
+      except
+        on E: Exception do
+          inLibLog.Log.LogError(
+            'Restaurar SQL del master fallo: ' + E.Message);
+      end;
     end;
-    obj.Free;
+    FSqlOriginales.Clear;
   end;
-  FGuiasRuntime.Clear;
+
+  // 2) Limpiar componentes auxiliares que pudieran quedar de versiones
+  //    anteriores del runtime (datasets paralelos). En el modelo actual
+  //    FGuiasRuntime no se rellena, pero por defensa borramos lo que
+  //    haya.
+  if FGuiasRuntime <> nil then
+  begin
+    for k := FGuiasRuntime.Count - 1 downto 0 do
+    begin
+      obj := TObject(FGuiasRuntime[k]);
+      if obj is TfrxDBDataset then
+        for j := frxrprt1.Datasets.Count - 1 downto 0 do
+          if frxrprt1.Datasets[j].DataSet = TfrxDataSet(obj) then
+          begin
+            frxrprt1.Datasets.Delete(j);
+            Break;
+          end;
+      obj.Free;
+    end;
+    FGuiasRuntime.Clear;
+  end;
 end;
 
 procedure TfrmPrint.ConsolidarGuiasParaFormato(const aFormato: string);
@@ -851,6 +973,7 @@ begin
   unqryPerfiles.Close;
   CerrarGuiasRuntime;
   FreeAndNil(FGuiasRuntime);
+  FreeAndNil(FSqlOriginales);
 end;
 
 procedure TfrmPrint.FormCreate(Sender: TObject);
