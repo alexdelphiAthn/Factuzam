@@ -130,21 +130,13 @@ begin
   sFormato := '';
   sScope   := '';
   bExiste  := False;
-  // Hacemos que el wizard ocupe todo el form en runtime, sin tocar el
-  // DFM (TJvWizard no expone Align como propiedad publicada en algunas
-  // versiones de JVCL, lo cual provocaba EReadError al cargar el form).
-  try
-    wzWizard.Align := alClient;
-  except
-  end;
-  // Ocultar botones que no usamos. Ya tienen Width=0 en el DFM por si
-  // Visible no existe en esta version de TJvWizardButton.
-  try
-    wzWizard.ButtonStart.Visible := False;
-    wzWizard.ButtonLast.Visible  := False;
-    wzWizard.ButtonHelp.Visible  := False;
-  except
-  end;
+  // Hacemos que el wizard ocupe todo el form en runtime. TJvWizard
+  // hereda Align de TCustomControl pero no la publica, asi que la
+  // setamos en codigo (en DFM daria 'Property Align does not exist').
+  wzWizard.Align := alClient;
+  // Los botones Start/Last/Help quedan ocultos en cada pagina via
+  // VisibleButtons (propiedad publicada de TJvWizardCustomPage).
+  // TJvWizardNavigateButton no expone Visible.
 end;
 
 procedure TfrmModalWizardEditar.FormShow(Sender: TObject);
@@ -171,13 +163,13 @@ begin
     // Si la version de TJvWizard difiere y estas propiedades no
     // existen, no es critico: el wizard sigue funcionando.
   end;
-  try
-    // En paso 1 solo Siguiente y Cancelar; en paso 2 solo Anterior,
-    // Finalizar y Cancelar.
-    pgFormato.EnabledButtons := [bkNext, bkCancel];
-    pgGuias.EnabledButtons   := [bkBack, bkFinish, bkCancel];
-  except
-  end;
+  // Botones visibles y habilitados por pagina. VisibleButtons oculta
+  // los botones que no aparezcan en el set, por eso no hace falta
+  // tocar Visible en cada TJvWizardNavigateButton (no esta publicada).
+  pgFormato.VisibleButtons := [bkNext, bkCancel];
+  pgFormato.EnabledButtons := [bkNext, bkCancel];
+  pgGuias.VisibleButtons   := [bkBack, bkFinish, bkCancel];
+  pgGuias.EnabledButtons   := [bkBack, bkFinish, bkCancel];
   CargarFormatosExistentes;
   CargarScopes;
   cbbFormato.ItemIndex := 0;
