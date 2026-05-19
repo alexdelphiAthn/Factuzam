@@ -449,3 +449,141 @@ Estos puntos van al doc de producción si la variante se asciende:
    grid de líneas del Mto real (suma del documento).
 7. **Línea editable**: el spin de paso 10 en `LINEA_SESLIN` para
    intercalar es trasplantable tal cual al Mto real.
+
+---
+
+## Prueba 02 — Impresión horizontal (apaisado) con tallas pivotadas
+
+Sigue la prueba 01 (mismo Mto `inMtoPruebaSesionGrid`). Aporta un
+**informe FastReport apaisado** que cabe en A4 horizontal y pinta
+las cantidades de cada artículo a lo largo de **20 columnas de talla**
+(`T01..T20`, mismo `CANT_TALLAS_MAX` que el grid).
+
+Pieza heredada (sin reinventar): el modal genérico de impresión
+`TfrmPrint` (`src/Modals/inMtoModalGenImp.pas`). El descendiente
+nuevo es `TfrmPrintSesion`.
+
+### 15.1 SQL — vistas y abreviatura del sistema
+
+Fichero: `print_sesion_horizontal.sql`. Idempotente. Aporta:
+
+| Objeto                                  | Para qué                                                                                                                                        |
+|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `fza_atributos_conjuntos.NOMBRE_CORTO_AC` | Abreviatura del sistema de tallas para impresión (`CAB`, `SRA`, `EUR-H`, `EUR-M`, `LETR`…). NULL = la vista hace fallback con `LEFT(NOMBRE_AC, 8)`. |
+| `vi_compras_sesiones_cab_print`         | Cabecera enriquecida: empresa + proveedor + totales agregados (`TOTAL_UNIDADES_SES`, `TOTAL_LINEAS_SES`, `NUM_LINEAS_SES`).                       |
+| `vi_compras_sesiones_lin_print`         | Una fila = un artículo. Columnas `T01..T20` con cantidades pivotadas desde `fza_compras_sesiones_celdas`. Pivot vía `ROW_NUMBER() OVER (PARTITION BY ID_AC ORDER BY ORDEN_ACD)` sobre `fza_atributos_conjuntos_det`. |
+| `vi_compras_sesiones_guias_print`       | Una fila = un sistema. Columnas `T01..T20` con los **rótulos** (`AV` de `fza_atributos_valores`). El DM filtra por `ID_AC IN (sistemas usados en la sesión)`. |
+
+`UPDATE` inicial al final del script: rellena `NOMBRE_CORTO_AC` para
+los conjuntos demo (Tallas Ropa Hombre → `CAB`, Mujer → `SRA`, etc.).
+
+Si un conjunto tiene **>20 valores** las posiciones 21+ se descartan
+silenciosamente en las vistas — alineado con la validación
+`mtError + limpieza` que hace el form al elegir `ID_AC_PIVOT_SESLIN`.
+
+### 15.2 DataModule — datasets FastReport
+
+`UniDataComprasSesiones`:
+
+- `unqryCabSesionPrint` + `dsCabSesionPrint` + `fxdsCabSesion`
+  (`UserName='Sesiones'`).
+- `unqryLinSesionPrint` + `dsLinSesionPrint` + `fxdsLinSesion`
+  (`UserName='LineasSesiones'`, master-detail con cabecera).
+- `unqryGuiasSesionPrint` + `dsGuiasSesionPrint` + `fxdsGuiasSesion`
+  (`UserName='GuiasTallas'`).
+- Método `PrepararPrint(ASerie, ANumero)` que cierra y reabre las tres
+  queries con los parámetros adecuados. Lo invoca
+  `TfrmPrintSesion.preparar_consulta`.
+
+`UserName` se usa para que `RebindReportDataSetsByDataModule`
+(`inMtoModalGenImp`) re-ate los datasets del informe al DM activo
+después de cargar una plantilla del BLOB.
+
+### 15.3 Modal de impresión
+
+`src/Modals/inMtoModalImpSesion.pas` + `.dfm`.
+
+- `TfrmPrintSesion = class(TfrmPrint)`.
+- Controles propios: `edtSerie`, `edtNumero` (read-only).
+- Propiedad pública `dmSesion: TdmComprasSesiones` que se inyecta
+  desde el form que abre la impresión.
+- Override `preparar_consulta` → `dmSesion.PrepararPrint(...)`.
+- Override `AfterReportLoaded` → llama a `inherited` (sustituye fotos)
+  + `RebindReportDataSetsByDataModule(frxrprt1, dmSesion)`.
+
+### 15.4 Plantilla FastReport — diseño apaisado
+
+Página A4 landscape (297 × 210 mm), márgenes 10mm. Ancho útil
+≈ 1047 fr-px. Bandas:
+
+1. **`PageHeader1`** (~32 mm de alto, sale en cada página):
+   - Título "SESIÓN DE COMPRA".
+   - 3 columnas: datos empresa | datos proveedor | datos pedido
+     (Serie/Número, Fecha, Estado, Ref. Proveedor).
+   - Barra "GUÍAS DE TALLAS" (header de la banda siguiente).
+2. **`DataBandGuias`** (`dataset='GuiasTallas'`):
+   - 1 fila por sistema de tallas usado en la sesión.
+   - Columnas: `NOMBRE_CORTO_AC` (CAB, SRA, …) + `NOMBRE_AC` largo +
+     `T01..T20` con los rótulos (34, 36, 38…).
+3. **`HeaderLineas`** (cabecera de columnas):
+   - Cód. Art. | Modelo | Descripción | Color | **Sis.** | Cantidades
+     por talla T01..T20 | Uds. | Importe.
+4. **`DataBandLineas`** (`dataset='LineasSesiones'`):
+   - 1 fila por artículo. Las celdas vacías se muestran en blanco
+     (no `0`) — `[IIF(<...T01> > 0, FormatFloat('0', ...), '')]`.
+   - Columna **Sis.** = `NOMBRE_CORTO_AC` de la línea → el lector
+     mira hacia arriba en la banda de guías y sabe que `T03 SRA = 38`
+     mientras que `T03 EUR-M = 39`.
+5. **`PageFooter1`** (sale en cada página):
+   - "Pág. X / Y · fecha" + total unidades + total líneas.
+
+Coordenadas finas: cada talla **26.5 fr-px** de ancho (≈7mm), bloque
+T01..T20 ocupa 530 fr-px. Si el sistema usa menos de 20 valores, las
+columnas sobrantes salen vacías (la vista devuelve `0` y el `IIF` lo
+convierte en cadena vacía).
+
+### 15.5 Botón Imprimir en el Mto de prueba
+
+`inMtoPruebaSesionGrid`:
+
+- DFM: nuevo `TcxButton btnImprimir`, alineado a la derecha del panel
+  superior del grid.
+- PAS: `btnImprimirClick` posteea cualquier edición en curso (cabecera
+  o línea), instancia `TfrmPrintSesion.Create(Application)`, le pasa
+  `dmSesion := Dmm`, rellena `edtSerie`/`edtNumero` desde la sesión
+  activa, y abre `ShowModal`.
+
+Patrón idéntico al de `inMtoFacturasBase.btnImprimir*` para
+facturas/recibos (Owner=Application, `ShowModal`, `FreeAndNil` en
+`finally`).
+
+### 15.6 Ficheros de la prueba 02
+
+```
+DESARROLLOS EN CURSO/pruebas_sesiones/
+└── print_sesion_horizontal.sql       ← vistas + abreviaturas iniciales
+
+src/Modals/
+├── inMtoModalImpSesion.pas           ← TfrmPrintSesion (preparar_consulta)
+└── inMtoModalImpSesion.dfm           ← FastReport landscape + 20 columnas
+
+src/DataModules/UniDataComprasSesiones.{pas,dfm}
+                                       ← 3 queries print + 3 TfrxDBDataset
+                                         + método PrepararPrint
+```
+
+Registrado en `fzam.dpr` y `fzam.dproj`.
+
+### 15.7 Promoción al Mto real
+
+Cuando esta prueba estabilice, casi todo se mueve sin cambios:
+- El SQL (`NOMBRE_CORTO_AC` + 3 vistas) va al schema oficial
+  (`compras_sesiones.sql`).
+- El modal `TfrmPrintSesion` ya vive en `src/Modals/`.
+- Los 3 datasets + `PrepararPrint` ya están en `TdmComprasSesiones`.
+- El `inMtoComprasSesiones` solo necesita un `btnImprimir` análogo.
+
+A futuro, el mismo patrón se replica para Pedidos/Albaranes/Facturas
+de compra cuando tengan sus vistas `vi_<doc>_celdas` pivotadas — la
+plantilla `.fr3` con T01..T20 es reutilizable porque sólo cambia el
+nombre de los datasets (`UserName`).

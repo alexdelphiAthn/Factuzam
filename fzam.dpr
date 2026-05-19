@@ -60,6 +60,7 @@ uses
   inMtoModalGenPass in 'src\Modals\inMtoModalGenPass.pas' {frmModalGenPass},
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
   inMtoModalImpRecFac in 'src\Modals\inMtoModalImpRecFac.pas' {frmPrintRecFac},
+  inMtoModalImpSesion in 'src\Modals\inMtoModalImpSesion.pas' {frmPrintSesion},
   inMtoModalCliEti in 'src\Modals\inMtoModalCliEti.pas' {frmPrintCliEti},
   inMtoModalEtiqArt in 'src\Modals\inMtoModalEtiqArt.pas' {frmPrintEtiqArt},
   inMtoSplash in 'src\Core\inMtoSplash.pas' {frmSplash},

@@ -625,4 +625,116 @@ inherited dmComprasSesiones: TdmComprasSesiones
     Left = 536
     Top = 352
   end
+  object unqryCabSesionPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_compras_sesiones_cab_print'
+      'WHERE SERIE_SES = :SERIE_SES'
+      '  AND NUMERO_SES = :NUMERO_SES')
+    Left = 56
+    Top = 392
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
+  end
+  object dsCabSesionPrint: TDataSource
+    DataSet = unqryCabSesionPrint
+    Left = 56
+    Top = 432
+  end
+  object unqryLinSesionPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_compras_sesiones_lin_print'
+      'WHERE SERIE_SES = :SERIE_SES'
+      '  AND NUMERO_SES = :NUMERO_SES'
+      'ORDER BY LINEA_SES')
+    Left = 152
+    Top = 392
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
+  end
+  object dsLinSesionPrint: TDataSource
+    DataSet = unqryLinSesionPrint
+    Left = 152
+    Top = 432
+  end
+  object unqryGuiasSesionPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT g.* FROM vi_compras_sesiones_guias_print g'
+      'WHERE g.ID_AC IN ('
+      '  SELECT DISTINCT lin.ID_AC_PIVOT_SESLIN'
+      '    FROM fza_compras_sesiones_lineas lin'
+      '   WHERE lin.SERIE_SES_SESLIN = :SERIE_SES'
+      '     AND lin.NUMERO_SES_SESLIN = :NUMERO_SES'
+      '     AND lin.ID_AC_PIVOT_SESLIN IS NOT NULL'
+      ')'
+      'ORDER BY g.NOMBRE_CORTO_AC, g.ID_AC')
+    Left = 248
+    Top = 392
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
+  end
+  object dsGuiasSesionPrint: TDataSource
+    DataSet = unqryGuiasSesionPrint
+    Left = 248
+    Top = 432
+  end
+  object fxdsCabSesion: TfrxDBDataset
+    Description = 'Sesiones'
+    UserName = 'Sesiones'
+    CloseDataSource = False
+    DataSource = dsCabSesionPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 344
+    Top = 392
+  end
+  object fxdsLinSesion: TfrxDBDataset
+    Description = 'LineasSesiones'
+    UserName = 'LineasSesiones'
+    CloseDataSource = False
+    DataSource = dsLinSesionPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 344
+    Top = 432
+  end
+  object fxdsGuiasSesion: TfrxDBDataset
+    Description = 'GuiasTallas'
+    UserName = 'GuiasTallas'
+    CloseDataSource = False
+    DataSource = dsGuiasSesionPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 440
+    Top = 392
+  end
 end
