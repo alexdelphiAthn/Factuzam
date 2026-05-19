@@ -267,30 +267,24 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
           object lblCodigoNuevo: TcxLabel
             Left = 16
             Top = 15
-            Caption = '5. C'#243'digo (UserName en el .frx)'
+            Caption = '5. Los campos de la tabla externa se a'#241'aden al master (UserName se mantiene). Colisiones -> sufijo 1,2,...'
             Style.Font.Charset = DEFAULT_CHARSET
-            Style.Font.Color = 3618615
-            Style.Font.Height = -13
-            Style.Font.Name = 'Segoe UI Semibold'
-            Style.Font.Style = [fsBold]
+            Style.Font.Color = 4210752
+            Style.Font.Height = -12
+            Style.Font.Name = 'Segoe UI'
+            Style.Font.Style = [fsItalic]
             Style.IsFontAssigned = True
             Transparent = True
           end
-          object edtCodigoNuevo: TcxTextEdit
-            Left = 264
-            Top = 12
-            TabOrder = 0
-            Width = 240
-          end
           object btnAddGuia: TcxButton
-            Left = 528
+            Left = 760
             Top = 9
-            Width = 300
+            Width = 320
             Height = 31
             Caption = '+ A'#241'adir gu'#237'a con esta configuraci'#243'n'
             LookAndFeel.NativeStyle = False
             LookAndFeel.SkinName = 'Office2019Colorful'
-            TabOrder = 1
+            TabOrder = 0
             OnClick = btnAddGuiaClick
           end
         end
