@@ -20,8 +20,9 @@ unit inMtoComprasPlantillas;
      nueva (botón "Guardar como plantilla" en el form de sesiones; aquí
      sólo se mantiene la plantilla resultante).
    - Aplicar plantilla al crear sesión nueva: este formulario no aplica;
-     la aplicación se hace desde inMtoComprasSesiones invocando la
-     librería inLibComprasSesiones.AplicarPlantilla.
+     la aplicación se hace desde el Mto consumidor (inMtoPruebaSesionGrid
+     u otros que se construyan sobre el patron inLibGridTallasInline)
+     invocando inLibComprasSesiones.AplicarPlantilla cuando se integre.
 }
 
 interface
