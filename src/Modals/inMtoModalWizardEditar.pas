@@ -166,6 +166,11 @@ begin
   // hereda Align de TCustomControl pero no la publica, asi que la
   // setamos en codigo (en DFM daria 'Property Align does not exist').
   wzWizard.Align := alClient;
+  // Default de TcxCheckListBox.EditValueFormat es cvfInteger -> tope
+  // 64 items (los estados van empaquetados como bits de un integer).
+  // VI_FACTURAS_PRINT y otras vistas del proyecto tienen mas, asi que
+  // usamos el formato CSV que no tiene ese limite.
+  lstCampos.Properties.EditValueFormat := cvfCommaSeparatedString;
   // Los botones Start/Last/Help quedan ocultos en cada pagina via
   // VisibleButtons (propiedad publicada de TJvWizardCustomPage).
   // TJvWizardNavigateButton no expone Visible.
