@@ -1013,7 +1013,7 @@ begin
   try
     Qry.Connection := oConn;
     Qry.SQL.Text :=
-        '  SELECT DISTINCT V.AV ' +
+        '  SELECT DISTINCT V.AV, V.ORDEN_AV ' +
         '    FROM fza_atributos_valores V ' +
         '    JOIN vi_atributos_nombres N ' +
         '      ON V.ID_VA_AV = N.ID_ATRIBUTO ' +
@@ -1024,7 +1024,7 @@ begin
         '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
         '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE ' +
         '     AND N.ORDEN_VISUAL_ATRIBUTO   = :ORDEN ' +
-        '   ORDER BY V.AV';
+        '   ORDER BY V.ORDEN_AV, V.AV';
     Qry.ParamByName('PADRE').AsString  := ACodArt;
     Qry.ParamByName('ORDEN').AsInteger := AOrden;
     Qry.Open;
