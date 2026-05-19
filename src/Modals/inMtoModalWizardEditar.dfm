@@ -108,7 +108,7 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
       end
     end
     object pgGuias: TJvWizardInteriorPage
-      OnShow = pgGuiasShow
+      OnPage = pgGuiasShow
       object pnlPaso2: TPanel
         Left = 0
         Top = 0
