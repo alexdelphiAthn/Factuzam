@@ -60,6 +60,7 @@ type
     tvMaestroID_VA: TcxGridDBColumn;
     tvMaestroNOMBRE_ATRIBUTO: TcxGridDBColumn;
     tvMaestroORDEN_VA: TcxGridDBColumn;
+    tvMaestroORDEN_ACA: TcxGridDBColumn;
     tvDetalleID_ATRIBUTO_AC: TcxGridDBColumn;
     tvDetalleID_CONJUNTO_AC: TcxGridDBColumn;
     tvDetalleNOMBRE_AC: TcxGridDBColumn;
@@ -71,12 +72,17 @@ type
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
     procedure btnAddValueClick(Sender: TObject);
+    procedure unqryMaestroAfterPost(DataSet: TDataSet);
   private
     FDimensiones: TObjectList<TDimensionSKU>;
     FCodigoArticulo: string;
     FTipoVariacion: string;
+    FCargando: Boolean;
     procedure GenerarCombinaciones(Nivel: Integer;
                                    NombreSKU, IdsValores: string);
+    procedure GuardarOrdenAtributo(const AIdAtributo: string;
+                                   AOrden: Integer);
+    procedure RecargarMaestro;
   public
     // Método para llamar a esta pantalla desde el formulario principal
     class function Ejecutar(const ACodigoArticulo,
@@ -159,16 +165,8 @@ procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
   unqryMaestro.Connection := oConn;
   unqryDetalle.Connection := oConn;
-  unqryMaestro.Close;
-  unqryMaestro.SQL.Text :=
-    'SELECT va.ID_ATB_VA, ' +
-    '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, ' +
-    '       va.ORDEN_VA ' +
-    'FROM fza_variaciones_atributos va ' +
-    'WHERE va.ID_VAR_VA = :var ' +
-    'ORDER BY va.ORDEN_VA';
-  unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
-  unqryMaestro.Open;
+  unqryMaestro.AfterPost := unqryMaestroAfterPost;
+  RecargarMaestro;
   unqryDetalle.Close;
   unqryDetalle.SQL.Text :=
     'SELECT ID_ATB_VA, MAX(ID_AC) AS ID_AC, ' +
@@ -224,6 +222,10 @@ var
   BmMaestro: TBookmark;
   DimensionesSinValores: TStringList;
 begin
+  if tvMaestro.DataController.IsEditing then
+    tvMaestro.DataController.Post;
+  if unqryMaestro.State in [dsEdit, dsInsert] then
+    unqryMaestro.Post;
   if tvDetalle.DataController.IsEditing then
     tvDetalle.DataController.Post;
   if unqryDetalle.State in [dsEdit, dsInsert] then
@@ -452,6 +454,71 @@ begin
 
   unqryDetalle.FieldByName('ASIGNADO').AsInteger := 1; // Ya sale marcadito
   unqryDetalle.Post;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.RecargarMaestro;
+var
+  IdAtrPrevio: string;
+begin
+  IdAtrPrevio := '';
+  if unqryMaestro.Active and (not unqryMaestro.IsEmpty)
+     and (unqryMaestro.FindField('ID_ATB_VA') <> nil) then
+    IdAtrPrevio := unqryMaestro.FieldByName('ID_ATB_VA').AsString;
+  FCargando := True;
+  try
+    unqryMaestro.Close;
+    unqryMaestro.SQL.Text :=
+      'SELECT va.ID_ATB_VA, va.ID_VAR_VA, ' +
+      '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, ' +
+      '       va.ORDEN_VA, ' +
+      '       COALESCE(NULLIF(aca.ORDEN_ACA, 0), va.ORDEN_VA) ' +
+      '           AS ORDEN_ACA ' +
+      'FROM fza_variaciones_atributos va ' +
+      'LEFT JOIN fza_articulos_conjuntos_asign aca ' +
+      '  ON aca.CODIGO_ART_ACA = :art ' +
+      ' AND aca.ID_VA_ACA      = va.ID_ATB_VA ' +
+      'WHERE va.ID_VAR_VA = :var ' +
+      'ORDER BY ORDEN_ACA, va.ORDEN_VA';
+    unqryMaestro.CachedUpdates := True;
+    unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
+    unqryMaestro.ParamByName('art').AsString := FCodigoArticulo;
+    unqryMaestro.Open;
+    unqryMaestro.FieldByName('ORDEN_ACA').ReadOnly := False;
+  finally
+    FCargando := False;
+  end;
+  if (IdAtrPrevio <> '')
+     and unqryMaestro.Locate('ID_ATB_VA', IdAtrPrevio, []) then
+    ; // nos quedamos en el atributo que el usuario estaba editando
+end;
+
+procedure TfrmMtoModalGenerarSKUS.GuardarOrdenAtributo(
+  const AIdAtributo: string; AOrden: Integer);
+begin
+  unqryMaestro.Connection.ExecSQL(
+    'INSERT INTO fza_articulos_conjuntos_asign ' +
+    '  (CODIGO_ART_ACA, ID_AC_ACA, ID_VA_ACA, ORDEN_ACA, ' +
+    '   ESGENERACION_AUTO_ACA, INSTANTE_ALTA, USUARIO_ALTA, ' +
+    '   USUARIO_MODIF) ' +
+    'VALUES (:art, 0, :atr, :ord, ''S'', CURRENT_TIMESTAMP, ' +
+    '        ''SISTEMA'', ''SISTEMA'') ' +
+    'ON DUPLICATE KEY UPDATE ' +
+    '  ORDEN_ACA     = VALUES(ORDEN_ACA), ' +
+    '  USUARIO_MODIF = VALUES(USUARIO_MODIF)',
+    [FCodigoArticulo, AIdAtributo, AOrden]);
+end;
+
+procedure TfrmMtoModalGenerarSKUS.unqryMaestroAfterPost(DataSet: TDataSet);
+var
+  IdAtr: string;
+  Orden: Integer;
+begin
+  if FCargando then Exit;
+  IdAtr := DataSet.FieldByName('ID_ATB_VA').AsString;
+  Orden := DataSet.FieldByName('ORDEN_ACA').AsInteger;
+  if IdAtr = '' then Exit;
+  GuardarOrdenAtributo(IdAtr, Orden);
+  RecargarMaestro;
 end;
 
 constructor TDimensionSKU.Create;

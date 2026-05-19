@@ -80,6 +80,12 @@
             DataBinding.FieldName = 'ORDEN_VA'
             Visible = False
           end
+          object tvMaestroORDEN_ACA: TcxGridDBColumn
+            Caption = 'Orden'
+            DataBinding.FieldName = 'ORDEN_ACA'
+            HeaderAlignmentHorz = taRightJustify
+            Width = 80
+          end
         end
         object cxGrid1Level1: TcxGridLevel
           GridView = tvMaestro
@@ -158,15 +164,26 @@
   object unqryMaestro: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT va.ID_ATB_VA,  va.ID_VAR_VA,'
-      
+      'SELECT va.ID_ATB_VA, va.ID_VAR_VA,'
+
         '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, '
-      '       va.ORDEN_VA '
-      '    FROM fza_variaciones_atributos va '
-      '    ORDER BY va.ORDEN_VA')
+      '       va.ORDEN_VA,'
+      '       COALESCE(NULLIF(aca.ORDEN_ACA, 0), va.ORDEN_VA) AS ORDEN_ACA'
+      '  FROM fza_variaciones_atributos va'
+      '  LEFT JOIN fza_articulos_conjuntos_asign aca'
+      '    ON aca.CODIGO_ART_ACA = :art'
+      '   AND aca.ID_VA_ACA      = va.ID_ATB_VA'
+      ' ORDER BY ORDEN_ACA, va.ORDEN_VA')
     Active = True
     Left = 600
     Top = 64
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'art'
+        ParamType = ptInput
+        Value = ''
+      end>
   end
   object unqryDetalle: TUniQuery
     Connection = dmConn.conUni
