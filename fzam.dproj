@@ -245,6 +245,9 @@
         <DCCReference Include="src\Modals\inMtoModalInformesGuias.pas">
             <Form>frmModalInformesGuias</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalWizardEditar.pas">
+            <Form>frmModalWizardEditar</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalGenPass.pas">
             <Form>frmModalGenPass</Form>
         </DCCReference>
