@@ -98,8 +98,11 @@ type
     procedure AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
     procedure CerrarGuiasRuntime;
     // Lanza el modal de mantenimiento de guias para Self.Name y un
-    // formato concreto (vacio o 'Predeterminado' = global).
-    procedure EditarGuiasParaFormato(const aFormato: string);
+    // formato concreto (vacio o 'Predeterminado' = global). Si se pasa
+    // un report el modal muestra ademas la lista de datasets (cabecera y
+    // detalle) con sus campos como ayuda visual al rellenar las guias.
+    procedure EditarGuiasParaFormato(const aFormato: string;
+                                     aReport: TfrxReport = nil);
     // Al guardar un formato personalizado del .frx, clona en
     // fza_informes_guias las guias globales referenciadas en el report
     // para que queden tambien atadas a ese formato. Idempotente.
@@ -447,7 +450,8 @@ begin
   end;
 end;
 
-procedure TfrmPrint.EditarGuiasParaFormato(const aFormato: string);
+procedure TfrmPrint.EditarGuiasParaFormato(const aFormato: string;
+                                            aReport: TfrxReport = nil);
 var
   oForm: TfrmModalInformesGuias;
 begin
@@ -461,6 +465,7 @@ begin
       oForm.sFormatoSugerido := ''
     else
       oForm.sFormatoSugerido := aFormato;
+    oForm.FReport := aReport;
     oForm.ShowModal;
   finally
     FreeAndNil(oForm);
@@ -481,6 +486,13 @@ begin
   Consultar_Formularios(True);
   if (sElegido <> '') then
   begin
+    // AfterReportLoaded re-enlaza los datasets via
+    // RebindReportDataSetsByDataModule. Lo invocamos AQUI (antes de la
+    // pregunta de guias) para que, si el usuario decide editar guias,
+    // el modal pueda enumerar los TfrxDBDataset reales del informe
+    // (cabecera y detalle) con sus campos.
+    AfterReportLoaded;
+
     // Antes de abrir el diseñador damos la oportunidad de revisar las
     // guias del informe — atadas al formato concreto que el usuario
     // acaba de elegir. El acceso al mantenimiento de guias se hace solo
@@ -489,9 +501,8 @@ begin
     if MessageDlg('¿Desea editar las guías de datos del informe ' +
                   'antes de abrir el diseñador?',
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      EditarGuiasParaFormato(sElegido);
+      EditarGuiasParaFormato(sElegido, frxrprt1);
 
-    AfterReportLoaded;
     // En edicion el usuario necesita ver todas las guias activas del
     // informe (no solo las referenciadas) en el arbol de datasets del
     // diseñador. Por eso aSoloUsadasEnReport=False.
