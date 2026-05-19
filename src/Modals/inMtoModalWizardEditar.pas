@@ -347,7 +347,7 @@ begin
     oDS := oFrx.DataSet;
     if (oDS = nil) or (not oDS.Active) then Exit;
     for j := 0 to oDS.FieldCount - 1 do
-      lstCampos.Items.Add(oDS.Fields[j].FieldName);
+      lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
   finally
     lstCampos.Items.EndUpdate;
   end;
@@ -388,10 +388,10 @@ var
 begin
   Result := '';
   for i := 0 to lstCampos.Items.Count - 1 do
-    if lstCampos.States[i] = cbsChecked then
+    if lstCampos.Items[i].State = cbsChecked then
     begin
       if Result <> '' then Result := Result + aSep;
-      Result := Result + lstCampos.Items[i];
+      Result := Result + lstCampos.Items[i].Text;
     end;
 end;
 
