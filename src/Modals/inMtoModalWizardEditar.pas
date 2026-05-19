@@ -138,6 +138,24 @@ begin
   unqryFormatos.Connection := oConn;
   unqryGuias.Connection    := oConn;
   edtOrigen.Text := sInforme;
+  // Textos del header del wizard: los seteamos en codigo para no
+  // depender de propiedades anidadas en el DFM que podrian variar
+  // entre versiones de TJvWizard.
+  try
+    pgFormato.Header.Title.Text :=
+      'Paso 1 de 2 — Formato a editar';
+    pgFormato.Header.Subtitle.Text :=
+      'Elige un formato existente o crea uno nuevo. ' +
+      'El nombre y el permiso quedan fijados durante toda la edición.';
+    pgGuias.Header.Title.Text :=
+      'Paso 2 de 2 — Guías de datos';
+    pgGuias.Header.Subtitle.Text :=
+      'Consulta los datasets disponibles del informe y configura ' +
+      'las guías auxiliares que se ligarán al formato.';
+  except
+    // Si la version de TJvWizard difiere y estas propiedades no
+    // existen, no es critico: el wizard sigue funcionando.
+  end;
   CargarFormatosExistentes;
   CargarScopes;
   cbbFormato.ItemIndex := 0;
