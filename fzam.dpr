@@ -181,7 +181,6 @@ uses
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
   inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
-  inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},
   inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
   inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
