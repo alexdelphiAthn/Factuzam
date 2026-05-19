@@ -72,7 +72,7 @@ type
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
     procedure btnAddValueClick(Sender: TObject);
-    procedure unqryMaestroAfterPost(DataSet: TDataSet);
+    procedure tvMaestroDblClick(Sender: TObject);
   private
     FDimensiones: TObjectList<TDimensionSKU>;
     FCodigoArticulo: string;
@@ -166,7 +166,7 @@ procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
   unqryMaestro.Connection := oConn;
   unqryDetalle.Connection := oConn;
-  unqryMaestro.AfterPost := unqryMaestroAfterPost;
+  tvMaestro.OnDblClick := tvMaestroDblClick;
   RecargarMaestro;
   unqryDetalle.Close;
   unqryDetalle.SQL.Text :=
@@ -482,11 +482,9 @@ begin
       ' AND va.ID_VAR_VA = :var ' +
       'WHERE aca.CODIGO_ART_ACA = :art ' +
       'ORDER BY aca.ORDEN_ACA, va.ORDEN_VA';
-    unqryMaestro.CachedUpdates := True;
     unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
     unqryMaestro.ParamByName('art').AsString := FCodigoArticulo;
     unqryMaestro.Open;
-    unqryMaestro.FieldByName('ORDEN_ACA').ReadOnly := False;
   finally
     FCargando := False;
   end;
@@ -543,17 +541,27 @@ begin
     [FCodigoArticulo, AIdAtributo, AOrden]);
 end;
 
-procedure TfrmMtoModalGenerarSKUS.unqryMaestroAfterPost(DataSet: TDataSet);
+procedure TfrmMtoModalGenerarSKUS.tvMaestroDblClick(Sender: TObject);
 var
-  IdAtr: string;
-  Orden: Integer;
+  IdAtr, NombreAtr, OrdenStr: string;
+  Orden, OrdenActual: Integer;
 begin
-  if FCargando then Exit;
-  IdAtr := DataSet.FieldByName('ID_ATB_VA').AsString;
+  if not unqryMaestro.Active or unqryMaestro.IsEmpty then Exit;
+  IdAtr := unqryMaestro.FieldByName('ID_ATB_VA').AsString;
+  NombreAtr := unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
+  OrdenActual := unqryMaestro.FieldByName('ORDEN_ACA').AsInteger;
   if IdAtr = '' then Exit;
-  Orden := DataSet.FieldByName('ORDEN_ACA').AsInteger;
-  if Orden > 0 then
-    GuardarOrdenAtributo(IdAtr, Orden);
+  OrdenStr := Trim(InputBox('Cambiar orden',
+    'Orden de "' + NombreAtr + '" dentro del SKU (número entero, ' +
+    'los más bajos van primero):', IntToStr(OrdenActual)));
+  if OrdenStr = '' then Exit;
+  Orden := StrToIntDef(OrdenStr, -1);
+  if Orden <= 0 then
+  begin
+    ShowMessage('Introduce un número entero mayor que 0.');
+    Exit;
+  end;
+  GuardarOrdenAtributo(IdAtr, Orden);
   RecargarMaestro;
 end;
 
