@@ -83,6 +83,8 @@ type
     procedure GuardarOrdenAtributo(const AIdAtributo: string;
                                    AOrden: Integer);
     procedure RecargarMaestro;
+    procedure OrdenAcaGetText(Sender: TField; var Text: string;
+                              DisplayText: Boolean);
   public
     // Método para llamar a esta pantalla desde el formulario principal
     class function Ejecutar(const ACodigoArticulo,
@@ -471,19 +473,20 @@ begin
       'SELECT va.ID_ATB_VA, va.ID_VAR_VA, ' +
       '       COALESCE(va.NOMBRE_VA, va.ID_ATB_VA) AS NOMBRE_ATRIBUTO, ' +
       '       va.ORDEN_VA, ' +
-      '       COALESCE(NULLIF(aca.ORDEN_ACA, 0), va.ORDEN_VA) ' +
-      '           AS ORDEN_ACA ' +
+      '       aca.ORDEN_ACA ' +
       'FROM fza_variaciones_atributos va ' +
       'LEFT JOIN fza_articulos_conjuntos_asign aca ' +
       '  ON aca.CODIGO_ART_ACA = :art ' +
       ' AND aca.ID_VA_ACA      = va.ID_ATB_VA ' +
       'WHERE va.ID_VAR_VA = :var ' +
-      'ORDER BY ORDEN_ACA, va.ORDEN_VA';
+      'ORDER BY COALESCE(NULLIF(aca.ORDEN_ACA, 0), va.ORDEN_VA), ' +
+      '         va.ORDEN_VA';
     unqryMaestro.CachedUpdates := True;
     unqryMaestro.ParamByName('var').AsString := FTipoVariacion;
     unqryMaestro.ParamByName('art').AsString := FCodigoArticulo;
     unqryMaestro.Open;
     unqryMaestro.FieldByName('ORDEN_ACA').ReadOnly := False;
+    unqryMaestro.FieldByName('ORDEN_ACA').OnGetText := OrdenAcaGetText;
   finally
     FCargando := False;
   end;
@@ -512,13 +515,37 @@ procedure TfrmMtoModalGenerarSKUS.unqryMaestroAfterPost(DataSet: TDataSet);
 var
   IdAtr: string;
   Orden: Integer;
+  FldOrden: TField;
 begin
   if FCargando then Exit;
   IdAtr := DataSet.FieldByName('ID_ATB_VA').AsString;
-  Orden := DataSet.FieldByName('ORDEN_ACA').AsInteger;
   if IdAtr = '' then Exit;
-  GuardarOrdenAtributo(IdAtr, Orden);
+  FldOrden := DataSet.FieldByName('ORDEN_ACA');
+  if FldOrden.IsNull then
+    Orden := 0
+  else
+    Orden := FldOrden.AsInteger;
+  if Orden > 0 then
+    GuardarOrdenAtributo(IdAtr, Orden);
   RecargarMaestro;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.OrdenAcaGetText(Sender: TField;
+  var Text: string; DisplayText: Boolean);
+var
+  FldOrdenVa: TField;
+begin
+  // Si no hay override por artículo (NULL o 0) mostramos el orden global.
+  if Sender.IsNull or (Sender.AsInteger = 0) then
+  begin
+    FldOrdenVa := Sender.DataSet.FindField('ORDEN_VA');
+    if (FldOrdenVa <> nil) and (not FldOrdenVa.IsNull) then
+      Text := FldOrdenVa.AsString
+    else
+      Text := '';
+  end
+  else
+    Text := Sender.AsString;
 end;
 
 constructor TDimensionSKU.Create;
