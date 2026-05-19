@@ -425,13 +425,8 @@ begin
           end;
           // FastReport cachea internamente los Fields de TfrxDBDataset:
           // al diseñar despues de un cambio de SQL los campos nuevos no
-          // aparecen hasta pulsar "Update Fields". Lanzamos dos
-          // estrategias en cadena para evitar tener que pulsarlo:
-          //   1) Asignar nil + valor original al binding (DataSource /
-          //      DataSet) — fuerza a TfrxDBDataset a re-leer la lista
-          //      de campos del TDataSet.
-          //   2) Close+Open del propio TfrxDBDataset — equivale al
-          //      "Update Fields" del diseñador.
+          // aparecen hasta pulsar "Update Fields". Forzamos el
+          // reescaneo asignando nil + valor original al binding.
           try
             if dsMaster.DataSource <> nil then
             begin
@@ -446,11 +441,9 @@ begin
               dsMaster.DataSet := dOld;
             end;
           except
-          end;
-          try
-            dsMaster.Close;
-            dsMaster.Open;
-          except
+            // Si la version de FastReport no acepta el truco, no es
+            // critico: solo significa que el usuario tendra que pulsar
+            // Update Fields manualmente.
           end;
         finally
           FreeAndNil(setCamposMaster);
@@ -809,12 +802,6 @@ begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     try
-      // Sin un PrepareReport(True) explicito FastReport puede tirar de
-      // su cache de campos / paginas previa y no ver los campos que
-      // las guias acaban de añadir al master. El resto de botones
-      // (Imprimir, PDF, Excel, Editar) ya hacen PrepareReport antes;
-      // Vista Preliminar tenia ShowReport pelado.
-      frxrprt1.PrepareReport(True);
       frxrprt1.ShowReport;
     finally
       CerrarGuiasRuntime;
