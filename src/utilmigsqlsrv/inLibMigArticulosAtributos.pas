@@ -180,9 +180,17 @@ end;
 
 procedure MigrarArticulosColores(Eng: TMigEngine; var Stats: TMigStats);
 const
+  // Mismo criterio que SKUs/tarifas: si Descripcion es 'INDEFINIDO'
+  // o vacia, usar el codigo legacy (Color, p.ej. '0', '00').
   cSelectSrc =
     'SELECT ac.Articulo, ' +
-    '       ISNULL(c.Descripcion, ac.Color) AS DescColor ' +
+    '       CASE ' +
+    '         WHEN c.Descripcion IS NULL ' +
+    '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
+    '           OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
+    '         ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '       END AS DescColor ' +
     'FROM dbo.ocartcol ac ' +
     'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE LTRIM(RTRIM(ac.Articulo)) <> '''' ' +

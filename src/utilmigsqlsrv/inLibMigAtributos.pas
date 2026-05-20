@@ -277,7 +277,12 @@ begin
         qSrc.Next;
         Continue;
       end;
-      if sDesc = '' then sDesc := sCodOrigen;
+      // Si la Descripcion es vacia o el placeholder 'INDEFINIDO',
+      // usar el codigo legacy (ColorBasico, p.ej. '0', '00'). En el
+      // legacy '0' y '00' son colores reales — la convencion es
+      // consistente con SKUs/tarifas/articulos_colores.
+      if (sDesc = '') or (UpperCase(sDesc) = 'INDEFINIDO') then
+        sDesc := sCodOrigen;
 
       // El AV (valor visible) es la descripcion en mayusculas; lo
       // usamos como clave dentro de ID_VA='CO'. El CODIGO_ATB usa el
