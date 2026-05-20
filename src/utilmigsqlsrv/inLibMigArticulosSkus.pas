@@ -68,11 +68,18 @@ begin
   Result := (u = '') or (u = '0') or (u = 'UNI');
 end;
 
+// Formato siempre ARTICULO/COLOR/TALLA. Cuando color o talla vienen
+// vacios/sentinela usamos un placeholder para que toda linea tenga
+// los tres niveles. Asi inventario, SKU, codigos_barras y vistas
+// trabajan con cadenas homogeneas.
 function ConstruirCodigoUnidad(const sArt, sColor, sTalla: string): string;
+var sC, sT: string;
 begin
-  Result := sArt;
-  if not EsColorVacio(sColor) then Result := Result + '/' + sColor;
-  if not EsTallaVacia(sTalla) then Result := Result + '/' + sTalla;
+  sC := UpperCase(Trim(sColor));
+  if EsColorVacio(sC) then sC := '0';
+  sT := UpperCase(Trim(sTalla));
+  if EsTallaVacia(sT) then sT := 'UNI';
+  Result := sArt + '/' + sC + '/' + sT;
 end;
 
 function DeducirCodigoVar(const sColor, sTalla: string): string;

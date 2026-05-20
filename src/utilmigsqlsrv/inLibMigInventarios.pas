@@ -71,11 +71,16 @@ begin
   Result := (u = '') or (u = '0') or (u = 'UNI');
 end;
 
+// MISMO patron que inLibMigArticulosSkus: siempre ART/COL/TAL con
+// placeholders (0 para color, UNI para talla) cuando vienen vacios.
 function ConstruirCodigoUnidad(const sArt, sColor, sTalla: string): string;
+var sC, sT: string;
 begin
-  Result := sArt;
-  if not EsColorVacio(sColor) then Result := Result + '/' + sColor;
-  if not EsTallaVacia(sTalla) then Result := Result + '/' + sTalla;
+  sC := UpperCase(Trim(sColor));
+  if EsColorVacio(sC) then sC := '0';
+  sT := UpperCase(Trim(sTalla));
+  if EsTallaVacia(sT) then sT := 'UNI';
+  Result := sArt + '/' + sC + '/' + sT;
 end;
 
 // Inserta una cabecera de inventario si no existe ya. Devuelve True si
