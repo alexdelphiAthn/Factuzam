@@ -1422,14 +1422,45 @@ begin
        '¿Aplicar el inventario?',
        mtWarning, [mbYes, mbNo], 0) <> mrYes then Exit;
 
-  Screen.Cursor := crHourGlass;
+  // Fase 2: el regularizar se parte en 3 tramos. (1) validacion +
+  // ApplyUpdates aqui (main thread, toca grid de lineas). (2) SP en
+  // background (solo BBDD, otros tabs siguen interactivos). (3) recarga
+  // de grids en el callback main-thread.
   try
-    dmmInventarios.AplicarInventario;
-    ShowMessage('Inventario aplicado correctamente.');
-    pcDetail.ActivePage := tsMovsRegul;
-  finally
-    Screen.Cursor := crDefault;
+    dmmInventarios.PreAplicarValidaciones;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('No se puede aplicar el inventario:' + #13#10 + E.Message);
+      Exit;
+    end;
   end;
+
+  EjecutarEnBackground(
+    procedure
+    begin
+      dmmInventarios.EjecutarSPAplicar;
+    end,
+    procedure(ErrMsg: string)
+    begin
+      if ErrMsg <> '' then
+      begin
+        ShowMessage('Error al aplicar el inventario:' + #13#10 + ErrMsg);
+        Exit;
+      end;
+      try
+        dmmInventarios.RefrescarTrasAplicar;
+      except
+        on E: Exception do
+        begin
+          ShowMessage('El inventario se aplico, pero fallo el refresco:' +
+                      #13#10 + E.Message);
+          Exit;
+        end;
+      end;
+      ShowMessage('Inventario aplicado correctamente.');
+      pcDetail.ActivePage := tsMovsRegul;
+    end);
 end;
 
 procedure TfrmMtoInventarios.btnRecalcularDetalleClick(Sender: TObject);
