@@ -1777,16 +1777,18 @@ begin
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
+  // Codigo del articulo activo. Defensivo: la lista puede llegar aqui
+  // cerrada o vacia (p.ej. cuando el AbrirTablaPrincipalAsync esta
+  // todavia cargando, o si el DFM tiene Active=False). FindField evita
+  // el "Field not found" cuando el dataset no esta abierto.
+  FArticuloCargado := '';
   if dmmArticulos.unqryTablaG.Active
-     and (dmmArticulos.unqryTablaG.RecordCount > 0) then
-  begin
+     and (not dmmArticulos.unqryTablaG.IsEmpty)
+     and (dmmArticulos.unqryTablaG.FindField('CODIGO_ART_ART') <> nil) then
     FArticuloCargado :=
       dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-    FGestorProp.CargarPropiedades(FArticuloCargado);
-  end else
-    FArticuloCargado := '';
-  FGestorVar.CargarVariaciones(
-    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
+  FGestorProp.CargarPropiedades(FArticuloCargado);
+  FGestorVar.CargarVariaciones(FArticuloCargado);
   ActualizarVisibilidadVariaciones;
   ActualizarVisibilidadColumnaSku;
   // Carga el mapa de atributos para el articulo inicial -- OnAfterScrollArticulos
