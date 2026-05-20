@@ -109,6 +109,10 @@ de este branch ya las traen:
 |--------------|----------------------------------------------------|
 | Proveedores  | `DESARROLLOS EN CURSO/proveedores_nombre.sql`      |
 |              | (añade `fza_proveedores.NOMBRE_PRV varchar(200)`)  |
+| Clientes     | `DESARROLLOS EN CURSO/widen_codigo_cli.sql`        |
+|              | (amplía `CODIGO_CLI_*` de varchar(10) a varchar(20)|
+|              | en clientes, facturas, albaranes y pedidos —       |
+|              | origen guarda hasta 15 chars, no caben en 10)      |
 
 ## Filosofía de los mappers
 
