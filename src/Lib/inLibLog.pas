@@ -196,7 +196,7 @@ begin
   WriteToLogInternal('Versión de Windows: ' + GetWindowsVersion);
   WriteToLogInternal('Ruta del programa: ' + GetProgramPath);
   WriteToLogInternal('Carpeta de log: ' + GetLogFolder);
-  //WriteToLogInternal('Versión de fzam: '+ inlibGlobalVar.oVersion);
+  WriteToLogInternal('Version de fzam: ' + inLibGlobalVar.oVersion);
   WriteToLogInternal('-------------------------------');
 end;
 procedure TLog.LogInfo(const AMessage: string);

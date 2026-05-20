@@ -864,17 +864,14 @@ begin
   EjecutarEnBackground(
     procedure
     begin
-      // (a) Lista principal en thread
+      // Solo la lista principal en thread. Es rapido (~8 ms en
+      // vi_articulos). Probamos a meter AbrirDetalles aqui tambien
+      // pero los cxDBLookupComboBox (cbbFamilia y cia) se cuelgan al
+      // recibir notificacion de Active=True desde un thread aparte —
+      // DevExpress NO es thread-safe ni siquiera con TDataSource.Enabled
+      // = False.
       if not unqry.Active then
         unqry.Open;
-      // (b) Queries detalle/lookup del Mto en el MISMO thread. Cada Mto
-      // las declara via override de TdmBase.AbrirDetalles. Si el data
-      // module aun no las tiene definidas (default), no hace nada.
-      // Ojo: ninguna de las queries de AbrirDetalles puede tocar UI;
-      // solo BBDD (Open contra FConn). Y LogPerf solo escribe al
-      // archivo (no al cxMemo) — TLog.WriteToLog es thread-safe.
-      if Assigned(dmDat) then
-        dmDat.AbrirDetalles;
     end,
     procedure(ErrMsg: string)
     begin
@@ -895,15 +892,26 @@ begin
         // varios tabs en cadena. El error queda en el log.
         Exit;
       end;
-      // Revincular grid solo si lo soltamos antes (yaActiva = False).
+      // (a) Detalles en MAIN thread con overlay aun visible. Bloquea
+      // el main thread mientras corre (no podemos evitarlo: DevExpress
+      // no permite operaciones de dataset en thread sin colgarse), pero
+      // el usuario ve "Cargando datos..." y el overlay esta arriba;
+      // otros tabs siguieron interactivos hasta que entramos aqui.
+      if Assigned(dmDat) then
+        try
+          dmDat.AbrirDetalles;
+        except
+          on E: Exception do
+            inLibLog.Log.LogError(
+              '[AbrirDetalles] ' + Self.Name + ': ' + E.Message);
+        end;
+      // (b) Revincular grid solo si lo soltamos antes (yaActiva = False).
       // Si la query ya estaba activa al entrar, dsTablaG.DataSet sigue
       // apuntando al original y no tocamos.
       if (not yaActiva) and Assigned(dsTablaG) and Assigned(unqry) then
         dsTablaG.DataSet := unqry;
-      // Reactivar los TDataSource del DM que se desactivaron en
-      // AbrirDetalles para evitar notificaciones a controles DevExpress
-      // desde el thread. Aqui SI estamos en main thread, asi que los
-      // controles re-renderizan ya con los datos cargados.
+      // (c) Reactivar TDataSource del DM (los hayamos desactivado o no
+      // en AbrirDetalles) y disparar AfterScroll del stock.
       if Assigned(dmDat) then
         try
           dmDat.ReactivarControlesTrasAbrir;
