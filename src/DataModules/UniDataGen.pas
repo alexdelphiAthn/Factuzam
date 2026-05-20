@@ -46,6 +46,14 @@ type
     // para que cada pestaña use una conexion propia del pool en lugar de
     // la global `oConn` (asi dos tabs no se serializan a nivel de conexion).
     procedure ReasignarConexion(NewConn: TUniConnection);
+    // Abre las queries detalle/lookup propias del Mto. Default no hace
+    // nada; cada TdmXxx override para listar sus queries en el orden
+    // adecuado. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync DENTRO del
+    // thread tras abrir unqryTablaG, asi todas las queries se abren en
+    // background mientras la UI muestra el overlay y otros tabs siguen
+    // interactivos. Antes esto ocurria sincrono en DataModuleCreate (y
+    // congelaba la UI 21s en Articulos).
+    procedure AbrirDetalles; virtual;
   public
     FCurrentForm: TComponent;
     FoPerfilDic: TProfileDicc;
@@ -142,6 +150,11 @@ begin
       sql.Connection := NewConn;
     end;
   end;
+end;
+
+procedure TdmBase.AbrirDetalles;
+begin
+  // Default: nada. Los Mtos con queries detalle/lookup override este metodo.
 end;
 
 procedure TdmBase.ResetGridsProfile(sGrid, sForm, sPermisos: String);

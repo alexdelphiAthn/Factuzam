@@ -80,6 +80,13 @@ type
     procedure EliminarCosteSku(const aSku: string);
     procedure ExpandirEtiquetasPorStock(const aFldStock: string);
   public
+    // Override: abre las queries detalle y lookups del Mto de Articulos
+    // (tarifas, proveedores, lineas-factura, variaciones, skus, stock,
+    // movimientos, atributos basicos, ivas, familias). Lo invoca
+    // TfrmMtoGen.AbrirTablaPrincipalAsync DENTRO del thread del Open de
+    // unqryTablaG. Antes de este refactor los Opens vivian en
+    // DataModuleCreate y bloqueaban la UI 17-21 segundos al abrir el tab.
+    procedure AbrirDetalles; override;
     procedure GetCodigoAutoArticulo;
     function ArticuloTieneProvPrin(sArt:String):Boolean;
     procedure CopiarProveedoraArticulo(dtProveedores:TDataset);
@@ -470,6 +477,9 @@ end;
 procedure TdmArticulos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  // Solo asignamos Connection y MasterSource. Los Open se han movido a
+  // AbrirDetalles (que invoca TfrmMtoGen.AbrirTablaPrincipalAsync en thread)
+  // para no congelar la UI durante la creacion del data module.
   unqryFamiliaArticulos.Connection := oConn;
   unqryPerfiles.Connection := oConn;
   unqryTarifasArticulos.Connection := oConn;
@@ -483,6 +493,7 @@ begin
   unqryStockArticulos.Connection := oConn;
   unqryMovimientosArticulos.Connection := oConn;
   unqryDetallesAtributos.Connection := oConn;
+  unqryAtributosBasicosLookup.Connection := oConn;
 // unqryStockArticulos.MasterSource :=
 // (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
   unqryVariacionesArticulos.MasterSource :=
@@ -500,20 +511,55 @@ begin
   // El detalle de atributos sigue al SKU activo (master) para mostrar sólo
   // las filas del SKU posicionado en la rejilla superior.
   unqryDetallesAtributos.MasterSource := dsSkus;
-  unqryAtributosBasicosLookup.Connection := oConn;
-  unqryTiposIVA.Open;
-  unqryFamiliaArticulos.Open;
-  unqryTarifasArticulos.Open;
-  unqryProveedoresArticulos.Open;
-  unqryLinFacturasArticulos.Open;
-  unqryVariaciones.Open;
-  unqryVariacionesArticulos.Open;
-  unqrySkus.Open;
-  unqryStockArticulos.Open;
-  unqryMovimientosArticulos.Open;
-  unqryDetallesAtributos.Open;
-  unqryAtributosBasicosLookup.Open;
+end;
+
+procedure TdmArticulos.AbrirDetalles;
+const
+  TAG = 'Articulos.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var
+    swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG,
+          Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var
+  sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  // Lookups primero (sin master/detail) — los necesitan combos/lookups
+  // de la ficha del articulo.
+  AbrirConTiempo(unqryTiposIVA,             'unqryTiposIVA');
+  AbrirConTiempo(unqryFamiliaArticulos,     'unqryFamiliaArticulos');
+  AbrirConTiempo(unqryVariaciones,          'unqryVariaciones');
+  AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
+  // Detalle (con MasterSource = dsTablaG, abren con filtro vacio porque
+  // dsTablaG.DataSet aun no esta asignado).
+  AbrirConTiempo(unqryTarifasArticulos,     'unqryTarifasArticulos');
+  AbrirConTiempo(unqryProveedoresArticulos, 'unqryProveedoresArticulos');
+  AbrirConTiempo(unqryLinFacturasArticulos, 'unqryLinFacturasArticulos');
+  AbrirConTiempo(unqryVariacionesArticulos, 'unqryVariacionesArticulos');
+  AbrirConTiempo(unqrySkus,                 'unqrySkus');
+  AbrirConTiempo(unqryStockArticulos,       'unqryStockArticulos');
+  AbrirConTiempo(unqryMovimientosArticulos, 'unqryMovimientosArticulos');
+  AbrirConTiempo(unqryDetallesAtributos,    'unqryDetallesAtributos');
+  // QuitarEscribiblesVista necesita unqryTarifasArticulos abierto (ya
+  // garantizado por AbrirConTiempo arriba). Antes vivia al final de
+  // DataModuleCreate.
   QuitarEscribiblesVista;
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmArticulos.QuitarEscribiblesVista;
