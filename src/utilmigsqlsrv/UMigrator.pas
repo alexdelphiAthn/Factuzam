@@ -82,6 +82,7 @@ type
     PanelLog:          TPanel;
     lblLog:            TLabel;
     MemoLog:           TMemo;
+    SplitterProgreso:  TSplitter;
     PanelProgreso:     TPanel;
     lblProgreso:       TLabel;
     MemoProgreso:      TMemo;
