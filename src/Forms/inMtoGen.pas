@@ -858,8 +858,16 @@ begin
   EjecutarEnBackground(
     procedure
     begin
+      // (a) Lista principal en thread
       if not unqry.Active then
         unqry.Open;
+      // (b) Queries detalle/lookup del Mto en el MISMO thread. Cada Mto
+      // las declara via override de TdmBase.AbrirDetalles. Si el data
+      // module aun no las tiene definidas (default), no hace nada.
+      // Ojo: ninguna de las queries de AbrirDetalles puede tocar UI;
+      // solo BBDD (Open contra FConn).
+      if Assigned(dmDat) then
+        dmDat.AbrirDetalles;
     end,
     procedure(ErrMsg: string)
     begin

@@ -53,7 +53,7 @@ inherited dmArticulos: TdmArticulos
       'SELECT *  '
       '  FROM vi_articulos '
       '')
-    Active = True
+    Active = False
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     AfterDelete = unqryTablaGAfterDelete
@@ -146,7 +146,7 @@ inherited dmArticulos: TdmArticulos
       'from vi_articulos_tarifas')
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_ARTTAR'
-    Active = True
+    Active = False
     BeforePost = unqryTarifasArticulosBeforePost
     Left = 384
     Top = 16
@@ -213,7 +213,7 @@ inherited dmArticulos: TdmArticulos
     MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_ART'
-    Active = True
+    Active = False
     BeforePost = unqryProveedoresArticulosBeforePost
     Left = 504
     Top = 16
@@ -285,7 +285,7 @@ inherited dmArticulos: TdmArticulos
     MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_FACLIN'
-    Active = True
+    Active = False
     BeforePost = unqryPerfilesBeforePost
     Left = 656
     Top = 16
@@ -541,7 +541,7 @@ inherited dmArticulos: TdmArticulos
     SQL.Strings = (
       'select *'
       'from vi_variaciones')
-    Active = True
+    Active = False
     Left = 288
     Top = 176
   end
@@ -589,7 +589,7 @@ inherited dmArticulos: TdmArticulos
     MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
-    Active = True
+    Active = False
     BeforePost = unqryVariacionesArticulosBeforePost
     BeforeDelete = unqryVariacionesArticulosBeforeDelete
     Left = 144
@@ -642,7 +642,7 @@ inherited dmArticulos: TdmArticulos
     MasterSource = frmMtoArticulos.dsTablaG
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
-    Active = True
+    Active = False
     BeforePost = unqrySkusBeforePost
     BeforeDelete = unqrySkusBeforeDelete
     Left = 232
@@ -666,7 +666,7 @@ inherited dmArticulos: TdmArticulos
       'CALL '
       'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ(:CODIGO_ART_ART)')
     ReadOnly = True
-    Active = True
+    Active = False
     Left = 888
     Top = 176
     ParamData = <
@@ -691,7 +691,7 @@ inherited dmArticulos: TdmArticulos
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_MOV'
     ReadOnly = True
-    Active = True
+    Active = False
     Left = 744
     Top = 184
     ParamData = <
