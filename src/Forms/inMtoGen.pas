@@ -131,6 +131,11 @@ type
     // distinta del pool. Liberada en Destroy DESPUES del data module para
     // que los Close implicitos de las queries no queden colgando.
     FConn: TUniConnection;
+    // Overlay para Fase 2 (background): panel que cubre el Mto entero
+    // mientras corre una tarea en thread. Otros tabs siguen interactivos
+    // porque cada Mto vive embebido en su propio TcxTabSheet.
+    FOverlayOcupado: TPanel;
+    FTareasEnCurso: Integer;
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
@@ -142,6 +147,10 @@ type
     // especializados pueden override para variantes (p.ej. una replica
     // de solo-lectura), aunque por defecto basta el clon plano.
     function CrearConexionPropia: TUniConnection; virtual;
+    // Crea/oculta el overlay "Procesando..." sobre este Mto. Reentrante:
+    // varias llamadas a Bloquear=True solo muestran el overlay una vez,
+    // y solo se oculta cuando todas se compensan con un False.
+    procedure BloquearTabPorOcupado(Bloquear: Boolean);
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
@@ -171,6 +180,15 @@ type
     // movimientos...) lo sobreescriben para incluir tambien esos
     // DataSources, asi la foto sigue al cursor en cualquier pestaña.
     function DataSourcesParaFoto: TArray<TDataSource>; virtual;
+    // Ejecuta `AccionBG` en un thread aparte (TTask.Run del RTL). Mientras
+    // corre, este Mto queda bloqueado con overlay "Procesando...", pero
+    // los demas tabs siguen 100% interactivos. Al terminar (OK o
+    // excepcion) se invoca `AlTerminar` en el main thread: el parametro
+    // es '' si todo fue bien, o el mensaje de la excepcion si hubo fallo.
+    // OJO: `AccionBG` NO puede tocar la UI ni datasets vinculados a
+    // grids. Solo operaciones BBDD puras (ExecProc, ExecSQL, calculos).
+    procedure EjecutarEnBackground(AccionBG: TProc;
+                                   AlTerminar: TProc<string>);
   public
     destructor Destroy; override;
   end;
@@ -189,7 +207,8 @@ uses inMtoGenSearch,
      inLibLog,
      inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
-     inLibFotos, inMtoFotoArticulo;
+     inLibFotos, inMtoFotoArticulo,
+     System.Threading;     // TTask.Run para EjecutarEnBackground (Fase 2)
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -644,6 +663,92 @@ begin
       (tdmDataModule as TdmBase).ReasignarConexion(FConn);
   end;
   inherited;
+end;
+
+procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
+var
+  lblTexto: TLabel;
+begin
+  if Bloquear then
+  begin
+    Inc(FTareasEnCurso);
+    if FOverlayOcupado = nil then
+    begin
+      FOverlayOcupado := TPanel.Create(Self);
+      FOverlayOcupado.Parent := Self;
+      FOverlayOcupado.Align := alClient;
+      FOverlayOcupado.BevelOuter := bvNone;
+      FOverlayOcupado.Color := clBtnFace;
+      FOverlayOcupado.ParentBackground := False;
+      FOverlayOcupado.Caption := '';
+      lblTexto := TLabel.Create(FOverlayOcupado);
+      lblTexto.Parent := FOverlayOcupado;
+      lblTexto.Align := alClient;
+      lblTexto.Alignment := taCenter;
+      lblTexto.Layout := tlCenter;
+      lblTexto.Caption := 'Procesando en segundo plano, espera...';
+      lblTexto.Font.Style := [fsBold];
+      lblTexto.Font.Size := 12;
+    end;
+    FOverlayOcupado.BringToFront;
+    FOverlayOcupado.Visible := True;
+    Self.Cursor := crHourGlass;
+  end
+  else
+  begin
+    if FTareasEnCurso > 0 then
+      Dec(FTareasEnCurso);
+    if (FTareasEnCurso = 0) and Assigned(FOverlayOcupado) then
+    begin
+      FOverlayOcupado.Visible := False;
+      Self.Cursor := crDefault;
+    end;
+  end;
+end;
+
+procedure TfrmMtoGen.EjecutarEnBackground(AccionBG: TProc;
+                                          AlTerminar: TProc<string>);
+begin
+  if not Assigned(AccionBG) then
+    Exit;
+  BloquearTabPorOcupado(True);
+  TTask.Run(
+    procedure
+    var
+      LErrMsg: string;
+    begin
+      LErrMsg := '';
+      try
+        AccionBG();
+      except
+        on E: Exception do
+        begin
+          // Logueamos el error real (con tipo) y propagamos solo el
+          // mensaje al callback. Si necesitaramos el tipo de excepcion
+          // tendriamos que envolverlo en una clase wrapper; para el
+          // piloto basta con el mensaje.
+          inLibLog.Log.LogError('[EjecutarEnBackground] ' +
+            E.ClassName + ': ' + E.Message);
+          LErrMsg := E.Message;
+          if LErrMsg = '' then
+            LErrMsg := E.ClassName;
+        end;
+      end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          try
+            BloquearTabPorOcupado(False);
+            if Assigned(AlTerminar) then
+              AlTerminar(LErrMsg);
+          except
+            on E: Exception do
+              inLibLog.Log.LogError(
+                '[EjecutarEnBackground.AlTerminar] ' +
+                E.ClassName + ': ' + E.Message);
+          end;
+        end);
+    end);
 end;
 
 function TfrmMtoGen.CrearConexionPropia: TUniConnection;
