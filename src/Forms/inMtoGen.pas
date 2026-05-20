@@ -871,7 +871,8 @@ begin
       // las declara via override de TdmBase.AbrirDetalles. Si el data
       // module aun no las tiene definidas (default), no hace nada.
       // Ojo: ninguna de las queries de AbrirDetalles puede tocar UI;
-      // solo BBDD (Open contra FConn).
+      // solo BBDD (Open contra FConn). Y LogPerf solo escribe al
+      // archivo (no al cxMemo) — TLog.WriteToLog es thread-safe.
       if Assigned(dmDat) then
         dmDat.AbrirDetalles;
     end,
