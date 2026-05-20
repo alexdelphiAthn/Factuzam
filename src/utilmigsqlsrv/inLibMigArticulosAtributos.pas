@@ -50,8 +50,85 @@ procedure MigrarArticulosTallas(Eng: TMigEngine; var Stats: TMigStats);
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Generics.Collections,
   Data.DB, Uni;
+
+const
+  BATCH_SIZE = 5000;
+
+// =========================================================================
+//  Helpers locales: caches
+// =========================================================================
+
+procedure CargarMapaAV(Eng: TMigEngine; const sIdVa: string;
+                       Mapa: TDictionary<string, Integer>);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   :=
+      'SELECT AV, ID_AV FROM fza_atributos_valores ' +
+      'WHERE ID_VA_AV = :v';
+    q.ParamByName('v').AsString := sIdVa;
+    q.Open;
+    while not q.Eof do
+    begin
+      Mapa.AddOrSetValue(
+        UpperCase(Trim(q.FieldByName('AV').AsString)),
+        q.FieldByName('ID_AV').AsInteger);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+end;
+
+procedure CargarMapaATB(Eng: TMigEngine; const sIdVa: string;
+                        Mapa: TDictionary<string, Integer>);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   :=
+      'SELECT CODIGO_ATB, ID_ATB FROM fza_atributos_basicos ' +
+      'WHERE ID_VA_ATB = :v';
+    q.ParamByName('v').AsString := sIdVa;
+    q.Open;
+    while not q.Eof do
+    begin
+      Mapa.AddOrSetValue(
+        Trim(q.FieldByName('CODIGO_ATB').AsString),
+        q.FieldByName('ID_ATB').AsInteger);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+end;
+
+procedure CargarAsignacionesVistas(Eng: TMigEngine;
+                                    Conjunto: TDictionary<string,
+                                                           Boolean>);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   :=
+      'SELECT CONCAT(CODIGO_ART_AAB, ''|'', ID_AV_AAB) ' +
+      'FROM fza_articulos_atributos_basicos';
+    q.Open;
+    while not q.Eof do
+    begin
+      Conjunto.AddOrSetValue(q.Fields[0].AsString, True);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+end;
 
 // Inserta una fila en fza_articulos_atributos_basicos si no existe.
 // Devuelve True si insertó.
@@ -114,26 +191,40 @@ const
     'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
-  qSrc: TUniQuery;
-  bulk: TBulkInsert;
-  sArt, sDescColor, sAV, sCodAtb: string;
-  sFila, sAhora, sIdAtb, sUser:   string;
-  iIdAv, iIdAtb: Integer;
+  qSrc:                            TUniQuery;
+  bulk:                            TBulkInsert;
+  oAvMap, oAtbMap:                 TDictionary<string, Integer>;
+  oAsigVistas:                     TDictionary<string, Boolean>;
+  sArt, sDescColor, sAV, sCodAtb:  string;
+  sFila, sAhora, sIdAtb, sUser:    string;
+  sKey:                            string;
+  iIdAv, iIdAtb:                   Integer;
 begin
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
-  bulk := TBulkInsert.Create(Eng.ConDst,
-                              'fza_articulos_atributos_basicos',
-                              cCols, 5000);
+  Eng.Log('  cargando caches en memoria...');
+  oAvMap      := TDictionary<string, Integer>.Create;
+  oAtbMap     := TDictionary<string, Integer>.Create;
+  oAsigVistas := TDictionary<string, Boolean>.Create;
+  qSrc        := nil;
+  bulk        := nil;
   try
+    CargarMapaAV (Eng, 'CO', oAvMap);
+    CargarMapaATB(Eng, 'CO', oAtbMap);
+    CargarAsignacionesVistas(Eng, oAsigVistas);
+    Eng.Log('  cache: %d colores AV, %d basicos, %d asignaciones',
+            [oAvMap.Count, oAtbMap.Count, oAsigVistas.Count]);
+
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
+    qSrc   := NuevoQOrigen(Eng, cSelectSrc);
+    bulk   := TBulkInsert.Create(Eng.ConDst,
+                                  'fza_articulos_atributos_basicos',
+                                  cCols, BATCH_SIZE);
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartcol ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
-      // Cancelacion cooperativa cada 1000 filas
       if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
       begin
         Eng.Log('  Cancelacion detectada, saliendo del mapper...');
@@ -150,10 +241,8 @@ begin
         Continue;
       end;
 
-      sAV     := UpperCase(sDescColor);
-      sCodAtb := NormalizarCodigoAtb(sDescColor);
-      iIdAv   := BuscarIdAV(Eng, 'CO', sAV);
-      if iIdAv = 0 then
+      sAV := UpperCase(sDescColor);
+      if not oAvMap.TryGetValue(sAV, iIdAv) then
       begin
         Inc(Stats.Errores);
         Eng.Log('  ! color "%s" no esta en fza_atributos_valores ' +
@@ -161,17 +250,28 @@ begin
         qSrc.Next;
         Continue;
       end;
-      iIdAtb := BuscarIdATB(Eng, 'CO', sCodAtb);
-      if iIdAtb > 0 then
+
+      sCodAtb := NormalizarCodigoAtb(sDescColor);
+      if oAtbMap.TryGetValue(sCodAtb, iIdAtb) then
         sIdAtb := IntToStr(iIdAtb)
       else
         sIdAtb := 'NULL';
+
+      // Idempotencia: misma (CODIGO_ART, ID_AV) ya esta?
+      sKey := sArt + '|' + IntToStr(iIdAv);
+      if oAsigVistas.ContainsKey(sKey) then
+      begin
+        Inc(Stats.Saltadas);
+        qSrc.Next;
+        Continue;
+      end;
 
       sFila := Format('%s, %d, %s, %s, %s, %s, %s',
         [ValorOrNull(sArt), iIdAv, sIdAtb,
          sAhora, sAhora, sUser, sUser]);
       try
         bulk.Add(sFila);
+        oAsigVistas.AddOrSetValue(sKey, True);
         Inc(Stats.Insertadas);
       except
         on E: Exception do
@@ -188,6 +288,9 @@ begin
   finally
     bulk.Free;
     qSrc.Free;
+    oAsigVistas.Free;
+    oAtbMap.Free;
+    oAvMap.Free;
   end;
 end;
 
@@ -207,22 +310,34 @@ const
     'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
-  qSrc:  TUniQuery;
-  bulk:  TBulkInsert;
+  qSrc:                         TUniQuery;
+  bulk:                         TBulkInsert;
+  oAvMap, oAtbMap:              TDictionary<string, Integer>;
+  oAsigVistas:                  TDictionary<string, Boolean>;
   sArt, sTalla, sAV, sCodAtb:   string;
   sFila, sAhora, sIdAtb, sUser: string;
+  sKey:                         string;
   iIdAv, iIdAtb:                Integer;
 begin
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
-  // BulkInsert agrupa filas en bloques de 1000 y las suelta con un
-  // unico "INSERT IGNORE INTO ... VALUES (...), (...), ...". El
-  // IGNORE asume que el chequeo PK ya está y permite reejecutar.
-  bulk := TBulkInsert.Create(Eng.ConDst,
-                              'fza_articulos_atributos_basicos',
-                              cCols, 5000);
+  Eng.Log('  cargando caches en memoria...');
+  oAvMap      := TDictionary<string, Integer>.Create;
+  oAtbMap     := TDictionary<string, Integer>.Create;
+  oAsigVistas := TDictionary<string, Boolean>.Create;
+  qSrc        := nil;
+  bulk        := nil;
   try
+    CargarMapaAV (Eng, 'TAL', oAvMap);
+    CargarMapaATB(Eng, 'TAL', oAtbMap);
+    CargarAsignacionesVistas(Eng, oAsigVistas);
+    Eng.Log('  cache: %d tallas AV, %d basicos, %d asignaciones',
+            [oAvMap.Count, oAtbMap.Count, oAsigVistas.Count]);
+
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
+    qSrc   := NuevoQOrigen(Eng, cSelectSrc);
+    bulk   := TBulkInsert.Create(Eng.ConDst,
+                                  'fza_articulos_atributos_basicos',
+                                  cCols, BATCH_SIZE);
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocarttal ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
@@ -230,7 +345,6 @@ begin
     qSrc.Open;
     while not qSrc.Eof do
     begin
-      // Cancelacion cooperativa cada 1000 filas
       if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
       begin
         Eng.Log('  Cancelacion detectada, saliendo del mapper...');
@@ -247,10 +361,8 @@ begin
         Continue;
       end;
 
-      sAV     := UpperCase(sTalla);
-      sCodAtb := NormalizarCodigoAtb(sTalla);
-      iIdAv   := BuscarIdAV(Eng, 'TAL', sAV);
-      if iIdAv = 0 then
+      sAV := UpperCase(sTalla);
+      if not oAvMap.TryGetValue(sAV, iIdAv) then
       begin
         Inc(Stats.Errores);
         Eng.Log('  ! talla "%s" no esta en fza_atributos_valores ' +
@@ -258,17 +370,27 @@ begin
         qSrc.Next;
         Continue;
       end;
-      iIdAtb := BuscarIdATB(Eng, 'TAL', sCodAtb);
-      if iIdAtb > 0 then
+
+      sCodAtb := NormalizarCodigoAtb(sTalla);
+      if oAtbMap.TryGetValue(sCodAtb, iIdAtb) then
         sIdAtb := IntToStr(iIdAtb)
       else
         sIdAtb := 'NULL';
+
+      sKey := sArt + '|' + IntToStr(iIdAv);
+      if oAsigVistas.ContainsKey(sKey) then
+      begin
+        Inc(Stats.Saltadas);
+        qSrc.Next;
+        Continue;
+      end;
 
       sFila := Format('%s, %d, %s, %s, %s, %s, %s',
         [ValorOrNull(sArt), iIdAv, sIdAtb,
          sAhora, sAhora, sUser, sUser]);
       try
         bulk.Add(sFila);
+        oAsigVistas.AddOrSetValue(sKey, True);
         Inc(Stats.Insertadas);
       except
         on E: Exception do
@@ -281,11 +403,13 @@ begin
       end;
       qSrc.Next;
     end;
-    // Soltar lo que quede pendiente (< 1000)
     bulk.FlushPendiente;
   finally
     bulk.Free;
     qSrc.Free;
+    oAsigVistas.Free;
+    oAtbMap.Free;
+    oAvMap.Free;
   end;
 end;
 
