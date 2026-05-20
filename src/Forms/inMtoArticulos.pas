@@ -2892,12 +2892,22 @@ procedure TfrmMtoArticulos.tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
   var ADone: Boolean);
 var
   Info : TInfoBasico;
+  IdVa : string;
 begin
   if (AViewInfo = nil) or (FAtributosStock = nil) then Exit;
   if FAtributosStock.Count = 0 then Exit;
-  if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
-    if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
-      ADone := True;
+  // El handler se dispara en TODAS las celdas (almacen, tallas, total).
+  // Solo nos interesa pintar swatch en las columnas que mapean a un
+  // atributo del articulo (p.ej. Color), no en las de cantidad. El
+  // nombre de campo casa con NOMBRE_VA — clave en FAtributosStock —
+  // porque el SP de stock pivotado etiqueta la fila desglosada con ese
+  // mismo nombre. Las columnas pivote (S, M, 3, 5, ...) no estan en el
+  // diccionario, asi que no entran aqui.
+  if not FAtributosStock.TryGetValue(
+       UpperCase(Trim(GetItemFieldName(AViewInfo.Item))), IdVa) then Exit;
+  if not ObtenerInfoBasico(IdVa, AViewInfo.Text, Info) then Exit;
+  if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
+    ADone := True;
 end;
 
 procedure TfrmMtoArticulos.EnsancharColumnasStockParaSwatch;
@@ -2906,8 +2916,15 @@ var
 begin
   if (tvStock = nil) or (FAtributosStock = nil) then Exit;
   if FAtributosStock.Count = 0 then Exit;
+  // Solo ensanchamos las columnas que efectivamente van a pintar swatch
+  // (las que mapean a un atributo del articulo). Antes se llamaba a
+  // AjustarAnchoColumnaParaSwatch sobre todas las columnas; si una
+  // talla numerica casaba por coincidencia con un basico HEX, se
+  // ensanchaba en balde.
   for i := 0 to tvStock.ColumnCount - 1 do
-    AjustarAnchoColumnaParaSwatch(tvStock.Columns[i], FAtributosStock);
+    if FAtributosStock.ContainsKey(
+         UpperCase(Trim(GetItemFieldName(tvStock.Columns[i])))) then
+      AjustarAnchoColumnaParaSwatch(tvStock.Columns[i], FAtributosStock);
 end;
 
 procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
@@ -2916,10 +2933,13 @@ procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
   var AHintTextRect: TRect);
 var
   Info : TInfoBasico;
+  IdVa : string;
 begin
   if (ACellViewInfo = nil) or (FAtributosStock = nil) then Exit;
   if FAtributosStock.Count = 0 then Exit;
-  if BuscarInfoBasicoEnArticulo(ACellViewInfo.Text, FAtributosStock, Info) then
+  if not FAtributosStock.TryGetValue(
+       UpperCase(Trim(GetItemFieldName(ACellViewInfo.Item))), IdVa) then Exit;
+  if ObtenerInfoBasico(IdVa, ACellViewInfo.Text, Info) then
     AHintText := Info.Nombre;
 end;
 
