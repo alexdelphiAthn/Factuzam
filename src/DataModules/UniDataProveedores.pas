@@ -35,7 +35,11 @@ type
     { Private declarations }
   public
     procedure GetCodigoAutoProveedor;
+    // Override: ya no abre nada en el flujo inicial. Las dos queries
+    // detail (Articulos, LinFacturasArticulos) son lazy por sub-pestaña.
     procedure AbrirDetalles; override;
+    procedure AsegurarArticulosAbierta;
+    procedure AsegurarVentasAbierta;
   end;
 
 //var
@@ -84,9 +88,42 @@ var sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  AbrirConTiempo(unqryArticulos,            'unqryArticulos');
-  AbrirConTiempo(unqryLinFacturasArticulos, 'unqryLinFacturasArticulos');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  // Ambas queries son lazy. AbrirDetalles solo registra el TOTAL para
+  // mantener consistencia con los demas Mtos.
+  inLibLog.Log.LogPerf(TAG, 'TOTAL (todo lazy)', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmProveedores.AsegurarArticulosAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryArticulos.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryArticulos.Open;
+    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryArticulos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Proveedores.Lazy',
+        'unqryArticulos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
+end;
+
+procedure TdmProveedores.AsegurarVentasAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryLinFacturasArticulos.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryLinFacturasArticulos.Open;
+    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryLinFacturasArticulos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Proveedores.Lazy',
+        'unqryLinFacturasArticulos ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+  end;
 end;
 
 procedure TdmProveedores.GetCodigoAutoProveedor;

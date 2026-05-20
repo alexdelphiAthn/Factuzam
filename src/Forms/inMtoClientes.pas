@@ -419,6 +419,8 @@ type
     procedure txtNOMBRE_PAIS_CLIENTEPropertiesChange(Sender: TObject);
     procedure btnIrAArticuloPresClick(Sender: TObject);
     procedure cxButton4Click(Sender: TObject);
+    // Carga perezosa de sub-pestañas detail (Historia, Prestamos).
+    procedure PcPestanasChange(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -624,6 +626,19 @@ begin
   cbbPaises.Properties.ListSource := dmmClientes.dsPaises;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   Self.pkFieldName := 'CODIGO_CLI_CLI';
+  // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,
+  // que no usa query detail). Historia/Depositos se abren solo cuando
+  // el usuario activa su pestaña.
+  pcPestanas.OnChange := PcPestanasChange;
+end;
+
+procedure TfrmMtoClientes.PcPestanasChange(Sender: TObject);
+begin
+  if not Assigned(dmmClientes) then Exit;
+  if pcPestanas.ActivePage = tsHistoriaFacturacion then
+    dmmClientes.AsegurarHistoriaFacturacionAbierta
+  else if pcPestanas.ActivePage = tsPrestamos then
+    dmmClientes.AsegurarDepositosAbierta;
 end;
 
 procedure TfrmMtoClientes.cxButton4Click(Sender: TObject);
