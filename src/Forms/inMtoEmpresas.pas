@@ -294,6 +294,8 @@ type
   private
     procedure IncorporarCertificados;
     procedure IterateCheckedList(lst: TcxListView);
+    // Carga perezosa de sub-pestañas detail (Retenciones, Historia).
+    procedure PcPestanaChange(Sender: TObject);
   end;
 
 var
@@ -534,6 +536,21 @@ begin
                                            dmmEmpresas.dsFacturasLineasEmpresas;
   cbbPaises.Properties.ListSource := dmmEmpresas.dsPaises;
   Self.pkFieldName := 'CODIGO_EMP_EMP';
+  // Carga perezosa de sub-pestañas detail (default = tsMasDatos, que
+  // no usa query detail). Series/Retenciones/Historia se abren solo
+  // cuando el usuario activa su pestaña.
+  pcPestana.OnChange := PcPestanaChange;
+end;
+
+procedure TfrmMtoEmpresas.PcPestanaChange(Sender: TObject);
+begin
+  if not Assigned(dmmEmpresas) then Exit;
+  if pcPestana.ActivePage = tsRetenciones then
+    dmmEmpresas.AsegurarRetencionesAbierta
+  else if pcPestana.ActivePage = tsSeries then
+    dmmEmpresas.AsegurarSeriesAbierta
+  else if pcPestana.ActivePage = tsHistoriaFacturacion then
+    dmmEmpresas.AsegurarHistoriaFacturacionAbierta;
 end;
 
 procedure TfrmMtoEmpresas.dsTablaGStateChange(Sender: TObject);
