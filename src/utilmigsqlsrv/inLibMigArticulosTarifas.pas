@@ -63,6 +63,65 @@ begin
   end;
 end;
 
+// Para cada tarifa que aparezca en ocarttap, garantiza que existe
+// una fila en fza_tarifas con ESACTIVO_ARTTAR='S'. Sin esto, la vista
+// vi_articulos_tarifas (INNER JOIN a fza_tarifas) descarta los
+// registros cuya tarifa no esta declarada en el master.
+procedure AsegurarTarifasDestino(Eng: TMigEngine);
+const
+  cSelectTarifas =
+    'SELECT DISTINCT Tarifa FROM dbo.ocarttap ' +
+    'WHERE Tarifa IS NOT NULL';
+var
+  qSrc, qChk, qIns: TUniQuery;
+  iTarifa:          Integer;
+  sCodTar:          string;
+begin
+  qSrc := NuevoQOrigen(Eng, cSelectTarifas);
+  qChk := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  try
+    qChk.Connection := Eng.ConDst;
+    qChk.SQL.Text   :=
+      'SELECT 1 FROM fza_tarifas WHERE CODIGO_TAR_ARTTAR = :c';
+    qIns.Connection := Eng.ConDst;
+    qIns.SQL.Text   :=
+      'INSERT INTO fza_tarifas (' +
+        'CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, ORDEN_TAR, ' +
+        'NOMBRE_TAR_TAR, ESIMP_INCL_TAR, ESDEFAULT_TAR, ' +
+        'INSTANTE_ALTA, INSTANTE_MODIF, ' +
+        'USUARIO_ALTA, USUARIO_MODIF) ' +
+      'VALUES (:c, ''S'', :o, :n, ''S'', ''N'', ' +
+              ':INSTANTE_ALTA, :INSTANTE_MODIF, ' +
+              ':USUARIO_ALTA, :USUARIO_MODIF)';
+
+    qSrc.Open;
+    while not qSrc.Eof do
+    begin
+      iTarifa := qSrc.FieldByName('Tarifa').AsInteger;
+      sCodTar := MapearTarifa(iTarifa);
+      qChk.Close;
+      qChk.ParamByName('c').AsString := sCodTar;
+      qChk.Open;
+      if qChk.IsEmpty then
+      begin
+        qIns.ParamByName('c').AsString := sCodTar;
+        qIns.ParamByName('o').AsInteger := iTarifa;
+        qIns.ParamByName('n').AsString  :=
+          Format('Tarifa %d (legacy)', [iTarifa]);
+        RellenarAuditoria(qIns, Eng.Usuario);
+        qIns.ExecSQL;
+        Eng.Log('  + tarifa "%s" creada en fza_tarifas', [sCodTar]);
+      end;
+      qSrc.Next;
+    end;
+  finally
+    qIns.Free;
+    qChk.Free;
+    qSrc.Free;
+  end;
+end;
+
 function NumOrNull(fValor: Double): string;
 begin
   if IsZero(fValor) then
@@ -110,6 +169,10 @@ var
   fPorDto, fMargen:           Double;
   fFinal:                     Double;
 begin
+  // Sin esto la vista vi_articulos_tarifas (INNER JOIN a fza_tarifas)
+  // descarta las filas cuyo CODIGO_TAR_ARTTAR no existe en el master.
+  AsegurarTarifasDestino(Eng);
+
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_tarifas',
                               cCols, 5000);
