@@ -329,48 +329,65 @@ begin
 end;
 
 procedure TdmArticulos.unqryStockArticulosAfterScroll(DataSet: TDataSet);
+const
+  // Anchos fijos en pixels. Sustituyen al ApplyBestFit por columna que
+  // se ejecutaba en este AfterScroll cada vez que el usuario cambiaba de
+  // articulo. BestFit recorria todas las filas N veces (una por columna)
+  // y era uno de los sospechosos del gap silencioso de 5s al abrir
+  // Articulos. Si necesitas reajustar valores tipicos, edita estos const.
+  ANCHO_ALMACEN = 180;  // texto largo (nombre de almacen)
+  ANCHO_COLOR   =  90;  // texto + swatch de color, ya incluido el cuadrado
+  ANCHO_TOTAL   =  80;  // numerico de cierre de fila
+  ANCHO_TALLA   =  55;  // columnas dinamicas pivotadas (tallas, variantes)
 var
-  tvArticulosStock:TcxGridDBTableView;
-  i:Integer;
+  tvArticulosStock: TcxGridDBTableView;
+  col: TcxGridDBColumn;
+  nombre: string;
+  i: Integer;
 begin
   inherited;
   if DataSet.ControlsDisabled then Exit;
   if not DataSet.Active or DataSet.IsEmpty then Exit;
-//  DataSet.AfterScroll := nil;
   unqryStockArticulos.Close;
   unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString :=
                             unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString <> '' then
   begin
     unqryStockArticulos.Open;
-    tvArticulosStock :=  (GetOwnerForm<TfrmMtoArticulos>).tvStock;
+    tvArticulosStock := (GetOwnerForm<TfrmMtoArticulos>).tvStock;
     tvArticulosStock.BeginUpdate;
-     try
-     tvArticulosStock.ClearItems;
-     tvArticulosStock.DataController.CreateAllItems;
-
-    // 3. Aplicamos el BestFit a todas las columnas para que se ajusten al texto
-    // perfecto
-//     (GetOwnerForm<TfrmMtoArticulos>).tvStock.ApplyBestFit;
-     finally
+    try
+      tvArticulosStock.ClearItems;
+      tvArticulosStock.DataController.CreateAllItems;
+    finally
       tvArticulosStock.EndUpdate;
-     end;
-     if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
-     begin
-       for i := 0 to tvArticulosStock.ColumnCount - 1 do
-       begin
-         tvArticulosStock.Columns[i].ApplyBestFit;
-       end;
-       // ApplyBestFit mide solo el texto. Las columnas que muestran un
-       // cuadradito de color (paleta basica) necesitan ANCHO_SWATCH_PX
-       // adicionales o el texto sale recortado.
-       GetOwnerForm<TfrmMtoArticulos>.EnsancharColumnasStockParaSwatch;
-     end;
-    //DataSet.AfterScroll := unqryStockArticulosAfterScroll;
-    // Opcional: Si además quieres que las columnas se estiren para ocupar todo
-    // el ancho
-    // visual del grid y no quede espacio en blanco a la derecha:
-    // cxGrid1DBTableView1.OptionsView.ColumnAutoWidth := True;
+    end;
+    if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
+    begin
+      // Asignamos anchos fijos segun el nombre del campo. Las columnas
+      // especiales (Almacen, Color, Total) tienen su valor concreto;
+      // el resto (tallas / variantes que llegan dinamicamente del SP
+      // PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ) van con ANCHO_TALLA.
+      for i := 0 to tvArticulosStock.ColumnCount - 1 do
+      begin
+        col := tvArticulosStock.Columns[i] as TcxGridDBColumn;
+        nombre := col.DataBinding.FieldName;
+        if SameText(nombre, 'Almacen') then
+          col.Width := ANCHO_ALMACEN
+        else if SameText(nombre, 'Color') then
+          col.Width := ANCHO_COLOR
+        else if SameText(nombre, 'Total') then
+          col.Width := ANCHO_TOTAL
+        else
+          col.Width := ANCHO_TALLA;
+      end;
+      // Antes se llamaba a EnsancharColumnasStockParaSwatch para sumar
+      // ANCHO_SWATCH_PX a las columnas con cuadradito de color (post-
+      // proceso sobre los anchos calculados por ApplyBestFit). Como
+      // ahora ANCHO_COLOR ya incluye espacio para el swatch, no hace
+      // falta llamarlo. La funcion sigue viva por si la usas en otro
+      // sitio (la mantenemos como utilidad).
+    end;
   end;
 end;
 
