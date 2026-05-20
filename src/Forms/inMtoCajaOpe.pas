@@ -45,6 +45,14 @@ const
   // luego procesamos.
   WM_FINALIZAR_ATRIB_CAJA = WM_USER + 102;
   WM_AVANZAR_ATRIB_CAJA   = WM_USER + 103;
+  // Diferimos tambien la apertura del popup desde el OnEnter del
+  // TcxButtonEdit. Cuando WMAvanzarAtribCaja salta de Color a Talla,
+  // ShowEdit -> InitEdit -> OnEnter ocurren en cadena en el mismo
+  // callstack; el editor inplace de la talla aun no esta del todo
+  // colocado y ClientToScreen pide Handle -> Parent -> EInvalidOperation.
+  // Con PostMessage, OnEnter retorna, cxGrid termina de parentar, y solo
+  // entonces abrimos el popup.
+  WM_ABRIR_POPUP_AV       = WM_USER + 104;
 type
   TfrmMtoOpeCaja = class(TfrmBase)
     pnlUp: TPanel;
@@ -229,6 +237,8 @@ type
                                        message WM_FINALIZAR_ATRIB_CAJA;
     procedure WMAvanzarAtribCaja(var Msg: TMessage);
                                        message WM_AVANZAR_ATRIB_CAJA;
+    procedure WMAbrirPopupAv(var Msg: TMessage);
+                                       message WM_ABRIR_POPUP_AV;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -2727,10 +2737,31 @@ begin
   // OnEnter single-shot: cuando el usuario entra en una celda Color/Talla
   // vacia, disparamos el popup automaticamente (sustituye a la antigua
   // ForzarDespliegue que desplegaba el TcxComboBox).
+  //
+  // No abrimos el popup en linea: cuando WMAvanzarAtribCaja salta de Color
+  // a Talla, ShowEdit/InitEdit/OnEnter encadenan en el mismo callstack y
+  // el TcxButtonEdit recien creado para Talla aun no ha terminado de
+  // parentar; ClientToScreen dentro de tvLineasOpeAvButtonClick pediria
+  // Handle -> Parent -> EInvalidOperation. PostMessage hace que el handler
+  // retorne y cxGrid acabe la colocacion antes de abrir el popup.
   if not (Sender is TcxCustomEdit) then Exit;
   BE := TcxCustomEdit(Sender);
   BE.OnEnter := nil;
-  tvLineasOpeAvButtonClick(BE, 0);
+  PostMessage(Self.Handle, WM_ABRIR_POPUP_AV, 0, 0);
+end;
+
+procedure TfrmMtoOpeCaja.WMAbrirPopupAv(var Msg: TMessage);
+var
+  CurrentEdit: TcxCustomEdit;
+begin
+  // Disparado por AbrirPopupAvEnEntrada via PostMessage. Para entonces
+  // cxGrid ya termino de parentar el TcxButtonEdit, asi que podemos
+  // llamar al click handler con el editor actual.
+  if not tvLineasOpe.Controller.EditingController.IsEditing then Exit;
+  CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
+  if (CurrentEdit is TcxButtonEdit)
+     and (CurrentEdit.Tag >= 1) and (CurrentEdit.Tag <= 5) then
+    tvLineasOpeAvButtonClick(CurrentEdit, 0);
 end;
 
 procedure TfrmMtoOpeCaja.CargarAvsValidos(const ACodArt: string;
@@ -2922,13 +2953,30 @@ begin
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
 
+  // Posicion del popup justo debajo del editor. SeleccionarAvConPaleta
+  // acepta (-1, -1) para auto-centrar; lo usamos como fallback. cxGrid
+  // mantiene los TcxButtonEdit en un pool y a veces el editor inplace que
+  // recibimos en Sender (sea via OnButtonClick, OnEnter via
+  // AbrirPopupAvEnEntrada, o F3 via actBuscarEmpleadosExecute) llega sin
+  // Parent en la pasada — ClientToScreen pide Handle, Handle pide Parent
+  // y salta EInvalidOperation. Comprobamos HasParent y, por si hay carrera
+  // entre el check y la llamada, envolvemos en try/except.
   ScrPt.X := -1; ScrPt.Y := -1;
   WidHint := 120;
-  if Sender is TWinControl then
+  if (Sender is TWinControl) and TWinControl(Sender).HasParent then
   begin
     EditCtrl := TWinControl(Sender);
-    ScrPt    := EditCtrl.ClientToScreen(Point(0, EditCtrl.Height));
-    WidHint  := EditCtrl.Width;
+    try
+      ScrPt   := EditCtrl.ClientToScreen(Point(0, EditCtrl.Height));
+      WidHint := EditCtrl.Width;
+    except
+      on E: EInvalidOperation do
+      begin
+        ScrPt.X := -1;
+        ScrPt.Y := -1;
+        WidHint := 120;
+      end;
+    end;
   end;
 
   if not SeleccionarAvConPaleta(IdVa, Avs, AvActual, AvNuevo,
