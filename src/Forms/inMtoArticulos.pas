@@ -1998,11 +1998,16 @@ begin
   msAseguraSku := swTramo.ElapsedMilliseconds;
 
   swTramo := TStopwatch.StartNew;
-  dmmArticulos.unqrySkus.Refresh;
+  // Guard: las queries detail pueden estar todavia cerradas si el usuario
+  // cambia de articulo antes de que AbrirDetalles termine. Refresh sobre
+  // un dataset cerrado lanza EDatabaseError.
+  if dmmArticulos.unqrySkus.Active then
+    dmmArticulos.unqrySkus.Refresh;
   msRefSkus := swTramo.ElapsedMilliseconds;
 
   swTramo := TStopwatch.StartNew;
-  dmmArticulos.unqryVariacionesArticulos.Refresh;
+  if dmmArticulos.unqryVariacionesArticulos.Active then
+    dmmArticulos.unqryVariacionesArticulos.Refresh;
   msRefVarArt := swTramo.ElapsedMilliseconds;
 
   // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA ANTES de
