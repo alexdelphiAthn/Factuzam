@@ -172,6 +172,8 @@
         <DCCReference Include="inLibMigInventarios.pas"/>
         <DCCReference Include="inLibMigTallajes.pas"/>
         <DCCReference Include="inLibMigArticulosTallajes.pas"/>
+        <DCCReference Include="inLibMigArticulosProveedores.pas"/>
+        <DCCReference Include="inLibMigArticulosPropiedades.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
