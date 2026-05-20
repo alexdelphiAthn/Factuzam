@@ -124,12 +124,24 @@ type
     procedure btnSalirClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    // Conexion propia del Mto (Fase 1 multithreading). Se clona de `oConn`
+    // global al crear el data module y se reasigna a todas las queries/SPs
+    // via TdmBase.ReasignarConexion. Asi dos pestañas dejan de serializarse
+    // sobre la misma TUniConnection — cada una agarra una conexion fisica
+    // distinta del pool. Liberada en Destroy DESPUES del data module para
+    // que los Close implicitos de las queries no queden colgando.
+    FConn: TUniConnection;
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
 //                                        const sProfile: string;
 //                                        AList: TPerfilList);
-
+  protected
+    // Clona los params relevantes de `oConn` global y devuelve una nueva
+    // TUniConnection ya conectada (usa el pool de UniDAC). Los Mtos
+    // especializados pueden override para variantes (p.ej. una replica
+    // de solo-lectura), aunque por defecto basta el clon plano.
+    function CrearConexionPropia: TUniConnection; virtual;
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
@@ -319,18 +331,28 @@ begin
 end;
 
 procedure TfrmMtoGen.btnGrabarClick(Sender: TObject);
+var
+  ConnGrabar: TUniConnection;
 begin
   inherited;
   if tdmDataModule = nil then
     Exit;
+  // Si el Mto tiene conexion propia (Fase 1), la transaccion DEBE ir
+  // contra ella: las queries del data module ya apuntan a FConn via
+  // ReasignarConexion, asi que un StartTransaction sobre oConn no las
+  // cubriria y el commit/rollback no afectaria a los ApplyUpdates.
+  if Assigned(FConn) then
+    ConnGrabar := FConn
+  else
+    ConnGrabar := oDmConn.conUni;
   Screen.Cursor := crHourGlass;
   try
     try
-       if not oDmConn.conUni.InTransaction then
-         oDmConn.conUni.StartTransaction;
+       if not ConnGrabar.InTransaction then
+         ConnGrabar.StartTransaction;
       GrabarDatasets(tdmDataModule as TDataModule);
-      if oDmConn.conUni.InTransaction then
-        oDmConn.conUni.Commit;
+      if ConnGrabar.InTransaction then
+        ConnGrabar.Commit;
       ShowMessage('Datos guardados correctamente');
     except
       on E: EAbort do
@@ -339,13 +361,13 @@ begin
         // llama a Abort cuando el dataset no debe persistirse por la
         // vía estándar, p. ej. vistas en JOIN que se actualizan a mano).
         // Cerramos la transacción y salimos sin mensaje.
-        if oDmConn.conUni.InTransaction then
-          oDmConn.conUni.Rollback;
+        if ConnGrabar.InTransaction then
+          ConnGrabar.Rollback;
       end;
       on E: Exception do
       begin
-        if oDmConn.conUni.InTransaction then
-          oDmConn.conUni.Rollback;
+        if ConnGrabar.InTransaction then
+          ConnGrabar.Rollback;
         raise Exception.Create('Error al grabar: ' + E.Message);
       end;
     end;
@@ -600,8 +622,59 @@ begin
      (Self.Owner as TfrmMtoPrincipal).oFzaWinf.GetDataModuleName(Self.UnitName +
                                                           '.' + Self.ClassName);
   if (sNameModule <> '') then
+  begin
     tdmDataModule := CrearDataModule(sNameModule, Self);
+    // Conexion propia del Mto: la creamos si todavia no existe y la
+    // inyectamos en todas las queries/SPs del data module recien creado.
+    // El DataModule sigue arrancando con `oConn` en su DoCreate, lo cual
+    // es necesario para que el .dfm streaming no se queje; aqui hacemos
+    // el switch antes de cualquier Open real.
+    if FConn = nil then
+    try
+      FConn := CrearConexionPropia;
+    except
+      on E: Exception do
+      begin
+        inliblog.Log.LogError('No se pudo crear conexion propia para ' +
+          Self.Name + ': ' + E.Message + '. Se sigue usando oConn global.');
+        FConn := nil;
+      end;
+    end;
+    if Assigned(FConn) then
+      (tdmDataModule as TdmBase).ReasignarConexion(FConn);
+  end;
   inherited;
+end;
+
+function TfrmMtoGen.CrearConexionPropia: TUniConnection;
+begin
+  Result := TUniConnection.Create(Self);
+  try
+    Result.LoginPrompt := False;
+    Result.ProviderName := oConn.ProviderName;
+    Result.Server       := oConn.Server;
+    Result.Port         := oConn.Port;
+    Result.Database     := oConn.Database;
+    Result.Username     := oConn.Username;
+    Result.Password     := oConn.Password;
+    // Mismos ajustes que la conexion global (UniDataConn.connBeforeConnect).
+    // Con los mismos params, las conexiones fisicas salen del mismo pool.
+    Result.Pooling := True;
+    Result.PoolingOptions.ConnectionLifetime := 0;
+    Result.PoolingOptions.Validate := True;
+    Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
+    Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
+    Result.Options.LocalFailover    := True;
+    Result.Options.DisconnectedMode := True;
+    // Reusamos el handler de errores y el AfterConnect (timeout extendido)
+    // de la conexion global para mantener comportamiento consistente.
+    Result.OnError       := oConn.OnError;
+    Result.AfterConnect  := oConn.AfterConnect;
+    Result.Connect;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 procedure TfrmMtoGen.cxGrdDBTabPrinDblClick(Sender: TObject);
@@ -619,6 +692,20 @@ begin
     FreeAndNil(oPerfilDic);
   if (tdmDataModule <> nil) then
     FreeAndNil(tdmDataModule);
+  // Liberar la conexion propia DESPUES del data module: las queries del
+  // data module aun referencian FConn durante su destrucion para los Close
+  // implicitos. Si soltamos antes, AVs garantizados.
+  if Assigned(FConn) then
+  begin
+    try
+      if FConn.Connected then
+        FConn.Disconnect;
+    except
+      // Disconnect en pool no deberia fallar, pero si lo hace no queremos
+      // que el destructor lance.
+    end;
+    FreeAndNil(FConn);
+  end;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
   frmMtoGen := nil;

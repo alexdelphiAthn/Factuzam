@@ -41,6 +41,11 @@ type
   public
     property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
+    // Reasigna la conexion (TUniConnection) de todos los datasets/SQL del
+    // data module a `NewConn`. Lo usa TfrmMtoGen tras crear el data module
+    // para que cada pestaña use una conexion propia del pool en lugar de
+    // la global `oConn` (asi dos tabs no se serializan a nivel de conexion).
+    procedure ReasignarConexion(NewConn: TUniConnection);
   public
     FCurrentForm: TComponent;
     FoPerfilDic: TProfileDicc;
@@ -101,6 +106,35 @@ function TdmBase.HasOwnerForm: Boolean;
 begin
   Result := Assigned(FCurrentForm) and
             not (csDestroying in FCurrentForm.ComponentState);
+end;
+
+procedure TdmBase.ReasignarConexion(NewConn: TUniConnection);
+var
+  i: Integer;
+  Comp: TComponent;
+  ds: TCustomDADataSet;
+  sql: TCustomDASQL;
+begin
+  if NewConn = nil then
+    Exit;
+  for i := 0 to ComponentCount - 1 do
+  begin
+    Comp := Components[i];
+    // TUniQuery, TUniTable, TUniStoredProc heredan de TCustomDADataSet.
+    if Comp is TCustomDADataSet then
+    begin
+      ds := TCustomDADataSet(Comp);
+      if ds.Active then
+        ds.Close;
+      ds.Connection := NewConn;
+    end
+    // TUniSQL, TUniScript heredan de TCustomDASQL.
+    else if Comp is TCustomDASQL then
+    begin
+      sql := TCustomDASQL(Comp);
+      sql.Connection := NewConn;
+    end;
+  end;
 end;
 
 procedure TdmBase.ResetGridsProfile(sGrid, sForm, sPermisos: String);
