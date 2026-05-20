@@ -63,6 +63,13 @@ type
     // migracion desde cero sin restos.
     function ResetearMigracionAnterior(const sUsuario: string): Integer;
 
+    // Borra COMPLETAMENTE la BBDD destino con DROP DATABASE. El
+    // siguiente paso logico es volver a crearla con
+    // CrearBBDDDestino y cargar el esqueleto. Pensado para empezar
+    // de cero. Llamada destructiva — la UI debe pedir confirmacion
+    // doble antes de invocar.
+    procedure BorrarBBDDDestino(const sNombre: string);
+
     // Crea TUniConnection nuevas con los mismos parametros que
     // conSrv/conDst. Pensado para uso desde hilos de trabajo: cada
     // hilo necesita su propia conexion porque UniDAC no soporta uso
@@ -241,6 +248,40 @@ begin
   Result.Password     := conDst.Password;
   Result.LoginPrompt  := False;
   Result.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
+end;
+
+procedure TdmMig.BorrarBBDDDestino(const sNombre: string);
+var
+  i: Integer;
+  c: Char;
+begin
+  // Mismo validador que CrearBBDDDestino — protege contra inyeccion
+  // de identificador.
+  if (sNombre = '') or (Length(sNombre) > 64) then
+    raise Exception.Create('Nombre de BBDD invalido (vacio o > 64).');
+  for i := 1 to Length(sNombre) do
+  begin
+    c := sNombre[i];
+    if not ((c in ['a'..'z']) or (c in ['A'..'Z'])
+         or (c in ['0'..'9']) or (c = '_')) then
+      raise Exception.CreateFmt(
+        'Nombre de BBDD invalido (caracter "%s").', [c]);
+  end;
+
+  conDst.Close;
+  try
+    conDst.Database := 'mysql';  // BBDD de sistema, siempre existe
+    conDst.Open;
+    try
+      conDst.ExecSQL(Format('DROP DATABASE IF EXISTS `%s`', [sNombre]));
+    finally
+      conDst.Close;
+    end;
+  finally
+    // Dejamos el nombre original por si el usuario quiere
+    // recrearla a continuacion (no debe quedarse con 'mysql').
+    conDst.Database := sNombre;
+  end;
 end;
 
 function TdmMig.ResetearMigracionAnterior(
