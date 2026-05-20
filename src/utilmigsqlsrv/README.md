@@ -127,6 +127,10 @@ de este branch ya las traen:
 |              | (añade `CODIGO_PADRE_FAM` y su índice — para       |
 |              | preservar la jerarquía sección→familia del legacy: |
 |              | "1401" tiene como padre "14"). |
+| Inventarios  | `DESARROLLOS EN CURSO/widen_linea_invlin.sql`      |
+|              | (amplía `LINEA_INVLIN` de varchar(4) → varchar(8). |
+|              | Si un almacén legacy tiene >9999 SKUs en stock no  |
+|              | cabe en 4 chars). |
 
 ## Ejecución asíncrona y paralelismo
 
