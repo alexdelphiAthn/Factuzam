@@ -35,6 +35,7 @@ type
     { Private declarations }
   public
     procedure GetCodigoAutoProveedor;
+    procedure AbrirDetalles; override;
   end;
 
 //var
@@ -43,7 +44,7 @@ type
 implementation
 
 uses
-  inMtoProveedores, inLibGlobalVar;
+  inMtoProveedores, inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -54,11 +55,38 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmProveedores.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  // Solo Connection. Los .Open se han movido a AbrirDetalles.
   unstrdprcContador.Connection := oConn;
   unqryArticulos.Connection := oConn;
   unqryLinFacturasArticulos.Connection := oConn;
-  unqryArticulos.Open;
-  unqryLinFacturasArticulos.Open;
+end;
+
+procedure TdmProveedores.AbrirDetalles;
+const
+  TAG = 'Proveedores.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryArticulos,            'unqryArticulos');
+  AbrirConTiempo(unqryLinFacturasArticulos, 'unqryLinFacturasArticulos');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmProveedores.GetCodigoAutoProveedor;

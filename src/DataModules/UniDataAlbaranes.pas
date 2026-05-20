@@ -56,6 +56,10 @@ type
     procedure CopiarEmpresaaAlbaran(DataSet: TDataSet);
     procedure CopiarClienteaAlbaran(DataSet: TDataSet);
     procedure OpenTables;
+    // Override: abre las queries detalle del Mto de Albaranes tras
+    // unqryTablaG. Invocada desde TfrmMtoGen.AbrirTablaPrincipalAsync
+    // en el callback main thread. OpenTables delega aqui.
+    procedure AbrirDetalles; override;
 
     // Procedimientos de facturación: instalación idempotente.
     procedure InstalarProcedimientos;
@@ -85,7 +89,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb;
+  inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -122,13 +126,45 @@ end;
 
 procedure TdmAlbaranes.OpenTables;
 begin
+  // Delegar en AbrirDetalles para que el flujo (cronometro y logging)
+  // sea unico independientemente de quien lo invoque.
+  AbrirDetalles;
+end;
+
+procedure TdmAlbaranes.AbrirDetalles;
+const
+  TAG = 'Albaranes.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var
+    swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG,
+          Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var
+  sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
   // Antes de abrir queries aseguramos que el esquema y los procs están al día
   // (idempotente y barato): así las nuevas columnas de seguimiento de
   // facturación están disponibles para el data-binding del formulario.
   InstalarProcedimientos;
-  if not unqryAlbaranesLineas.Active then unqryAlbaranesLineas.Open;
-  if not unqryFacturas.Active        then unqryFacturas.Open;
-  if not unqryMovimientosAlb.Active  then unqryMovimientosAlb.Open;
+  AbrirConTiempo(unqryAlbaranesLineas, 'unqryAlbaranesLineas');
+  AbrirConTiempo(unqryFacturas,        'unqryFacturas');
+  AbrirConTiempo(unqryMovimientosAlb,  'unqryMovimientosAlb');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);

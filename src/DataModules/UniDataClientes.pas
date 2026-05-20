@@ -52,6 +52,11 @@ type
     procedure GetCodigoAutoCliente;
     procedure CrearDataSetEtiquetas(iNroEspaciosBlanco: Integer;
                                     sCodCli:String);
+    // Override: abre las queries detalle/lookup del Mto de Clientes
+    // tras unqryTablaG. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync
+    // en el callback main thread. Antes vivian al final de
+    // DataModuleCreate (sincronos durante FormCreate).
+    procedure AbrirDetalles; override;
   end;
 
 //var
@@ -60,7 +65,7 @@ type
 implementation
 
 uses
-  inMtoClientes, inLibGlobalVar, inLibtb;
+  inMtoClientes, inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -109,7 +114,9 @@ end;
 procedure TdmClientes.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-//  unstrdprcContador.Connection := oConn;
+  // Solo asignaciones de Connection y MasterSource. Los .Open se han
+  // movido a AbrirDetalles (callback main thread con overlay visible)
+  // para no congelar la UI durante la creacion del data module.
   unqryFormaPago.Connection := oConn;
   unqryPerfiles.Connection := oConn;
   unqryTarifas.Connection := oConn;
@@ -120,12 +127,41 @@ begin
   unqryFacturasClientes.MasterSource := LForm.dsTablaG;
   unqryFacturasLineasClientes.MasterSource := LForm.dsTablaG;
   unqryDepositos.MasterSource := LForm.dsTablaG;
-  unqryPaises.Open;
-  unqryFacturasClientes.Open;
-  unqryFacturasLineasClientes.Open;
-  unqryTarifas.Open;
-  unqryFormaPago.Open;
-  unqryDepositos.Open;
+end;
+
+procedure TdmClientes.AbrirDetalles;
+const
+  TAG = 'Clientes.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var
+    swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG,
+          Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var
+  sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryPaises,                  'unqryPaises');
+  AbrirConTiempo(unqryFormaPago,               'unqryFormaPago');
+  AbrirConTiempo(unqryTarifas,                 'unqryTarifas');
+  AbrirConTiempo(unqryFacturasClientes,        'unqryFacturasClientes');
+  AbrirConTiempo(unqryFacturasLineasClientes,  'unqryFacturasLineasClientes');
+  AbrirConTiempo(unqryDepositos,               'unqryDepositos');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmClientes.DataModuleDestroy(Sender: TObject);

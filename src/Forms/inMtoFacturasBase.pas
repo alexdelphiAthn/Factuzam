@@ -1213,7 +1213,10 @@ begin
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
-  dmmFacturas.OpenTables;
+  // OpenTables ya no se llama aqui: TfrmMtoGen.AbrirTablaPrincipalAsync
+  // (llamado desde inLibShowMto tras el EmbedForm) invoca
+  // dmmFacturas.AbrirDetalles en el callback main thread con overlay
+  // visible, lo que evita congelar la UI durante la apertura.
   // Cada descendiente apunta a su propia vista de BD: el filtrado por
   // TIPO_FAC vive en la vista, no en el form. Si el descendiente devuelve
   // una vista distinta a vi_facturas, recargamos unqryTablaG con la nueva

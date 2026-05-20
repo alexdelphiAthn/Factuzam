@@ -204,7 +204,9 @@ begin
   tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
-  dmmAlbaranes.OpenTables;
+  // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
+  // (callback main thread) via dmmAlbaranes.AbrirDetalles. Se quita aqui
+  // para no abrir las queries sincronamente durante el FormCreate.
 
   // Resaltar la columna ESFACTURADA_ALBLIN cuando exista (S/N).
   colFact := tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN');

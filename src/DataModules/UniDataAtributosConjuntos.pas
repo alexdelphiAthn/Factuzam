@@ -42,12 +42,13 @@ type
     { Private declarations }
   public
     { Public declarations }
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inMtoAtributosConjuntos, inLibGlobalVar;
+  inMtoAtributosConjuntos, inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -60,27 +61,48 @@ var
   LDsTablaG: TDataSource;
 begin
   inherited;
+  // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
   LDsTablaG := (GetOwnerForm<TfrmMtoAtributosConjuntos>).dsTablaG;
-
   unqryValoresLookup.Connection := oConn;
-  unqryValoresLookup.Open;
-
   unqryVariacionesLookup.Connection := oConn;
-  unqryVariacionesLookup.Open;
-
   unqryAtributosLookup.Connection := oConn;
-  unqryAtributosLookup.Open;
-
   unqryAtributosBasicosLookup.Connection := oConn;
-  unqryAtributosBasicosLookup.Open;
-
   unqryConjuntoDetalle.Connection := oConn;
   unqryConjuntoDetalle.MasterSource := LDsTablaG;
-  unqryConjuntoDetalle.Open;
-
   unqryArticulosConjunto.Connection := oConn;
   unqryArticulosConjunto.MasterSource := LDsTablaG;
-  unqryArticulosConjunto.Open;
+end;
+
+procedure TdmAtributosConjuntos.AbrirDetalles;
+const
+  TAG = 'AtributosConjuntos.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryValoresLookup,          'unqryValoresLookup');
+  AbrirConTiempo(unqryVariacionesLookup,      'unqryVariacionesLookup');
+  AbrirConTiempo(unqryAtributosLookup,        'unqryAtributosLookup');
+  AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
+  AbrirConTiempo(unqryConjuntoDetalle,        'unqryConjuntoDetalle');
+  AbrirConTiempo(unqryArticulosConjunto,      'unqryArticulosConjunto');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmAtributosConjuntos.unqryConjuntoDetalleAfterInsert(

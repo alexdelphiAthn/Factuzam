@@ -36,12 +36,13 @@ type
     { Private declarations }
   public
     { Public declarations }
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inMtoVariaciones, inLibGlobalVar;
+  inMtoVariaciones, inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -54,18 +55,42 @@ var
   LDsTablaG: TDataSource;
 begin
   inherited;
+  // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
   LDsTablaG := (GetOwnerForm<TfrmMtoVariaciones>).dsTablaG;
-
   unqryArticulosVariacion.Connection := oConn;
   unqryArticulosVariacion.MasterSource := LDsTablaG;
-  unqryArticulosVariacion.Open;
-
   unqryAtributosVariacion.Connection := oConn;
   unqryAtributosVariacion.MasterSource := LDsTablaG;
-  unqryAtributosVariacion.Open;
-
   unqrySkusArticulo.Connection := oConn;
-  unqrySkusArticulo.Open;
+end;
+
+procedure TdmVariaciones.AbrirDetalles;
+const
+  TAG = 'Variaciones.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryArticulosVariacion, 'unqryArticulosVariacion');
+  AbrirConTiempo(unqryAtributosVariacion, 'unqryAtributosVariacion');
+  AbrirConTiempo(unqrySkusArticulo,       'unqrySkusArticulo');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmVariaciones.unqryAtributosVariacionAfterInsert(DataSet: TDataSet);

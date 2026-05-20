@@ -77,6 +77,10 @@ type
     function ExistePedidoPrestaShop(const sIdPS: string): Boolean;
 
     procedure OpenTables;
+    // Override: abre las queries detalle del Mto de Pedidos tras
+    // unqryTablaG. Invocada desde TfrmMtoGen.AbrirTablaPrincipalAsync
+    // en el callback main thread. OpenTables delega aqui.
+    procedure AbrirDetalles; override;
   private
     FProcsInstalados: Boolean;
   end;
@@ -84,7 +88,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -127,9 +131,41 @@ end;
 
 procedure TdmPedidos.OpenTables;
 begin
-  if not unqryPedidosLineas.Active then unqryPedidosLineas.Open;
-  if not unqryAlbaranes.Active     then unqryAlbaranes.Open;
-  if not unqryMensajes.Active      then unqryMensajes.Open;
+  // Delegar en AbrirDetalles para que el flujo (cronometro y logging)
+  // sea unico independientemente de quien lo invoque.
+  AbrirDetalles;
+end;
+
+procedure TdmPedidos.AbrirDetalles;
+const
+  TAG = 'Pedidos.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var
+    swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG,
+          Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var
+  sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryPedidosLineas, 'unqryPedidosLineas');
+  AbrirConTiempo(unqryAlbaranes,     'unqryAlbaranes');
+  AbrirConTiempo(unqryMensajes,      'unqryMensajes');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmPedidos.unqryTablaGAfterInsert(DataSet: TDataSet);

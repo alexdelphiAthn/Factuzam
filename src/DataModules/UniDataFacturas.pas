@@ -115,6 +115,10 @@ public
                                     sEmpresa:string;
                                     dtFecha:TDateTime): string;
     procedure OpenTables;
+    // Override: abre las 12 queries detalle/lookup del Mto de Facturas
+    // tras unqryTablaG. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync en
+    // el callback main thread. OpenTables (API previa) delega aqui.
+    procedure AbrirDetalles; override;
 
     // Genera movimientos de salida de stock para todas las líneas de la
     // factura cargada (sólo se llama automáticamente en facturas
@@ -129,6 +133,8 @@ uses
   inMtoFacturasBase,
   inLibGlobalVar,
   inLibtb,
+  inLibLog,
+  System.Diagnostics,
   inLibFacturas;
 
 {$R *.dfm}
@@ -757,18 +763,50 @@ end;
 
 procedure TdmFacturas.OpenTables;
 begin
-  unqryIvasTipos.Open;
-  unqryLinFac.Open;
-  unqrySeries.Open;
-  unqryIvas.Open;
-  unqryFormaPago.Open;
-  unqryTarifas.Open;
-  unqryRecibos.Open;
-  unqryPaisesCli.Open;
-  unqryPaisesEmp.Open;
-  unqryConsolidacion.Open;
-  unqryErrores.Open;
-  unqryMovimientosFac.Open;
+  // Delegar en AbrirDetalles para que el flujo (cronometro y logging)
+  // sea unico independientemente de quien lo invoque.
+  AbrirDetalles;
+end;
+
+procedure TdmFacturas.AbrirDetalles;
+const
+  TAG = 'Facturas.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var
+    swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG,
+          Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var
+  sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryIvasTipos,      'unqryIvasTipos');
+  AbrirConTiempo(unqryLinFac,         'unqryLinFac');
+  AbrirConTiempo(unqrySeries,         'unqrySeries');
+  AbrirConTiempo(unqryIvas,           'unqryIvas');
+  AbrirConTiempo(unqryFormaPago,      'unqryFormaPago');
+  AbrirConTiempo(unqryTarifas,        'unqryTarifas');
+  AbrirConTiempo(unqryRecibos,        'unqryRecibos');
+  AbrirConTiempo(unqryPaisesCli,      'unqryPaisesCli');
+  AbrirConTiempo(unqryPaisesEmp,      'unqryPaisesEmp');
+  AbrirConTiempo(unqryConsolidacion,  'unqryConsolidacion');
+  AbrirConTiempo(unqryErrores,        'unqryErrores');
+  AbrirConTiempo(unqryMovimientosFac, 'unqryMovimientosFac');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmFacturas.DataModuleDestroy(Sender: TObject);
