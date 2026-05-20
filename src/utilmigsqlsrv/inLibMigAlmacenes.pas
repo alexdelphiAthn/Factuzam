@@ -100,9 +100,12 @@ begin
     begin
       Inc(Stats.Leidas);
       Eng.IncRow;
-      sCod := Format('E%d-A%d',
-        [qSrc.FieldByName('Empresa').AsInteger,
-         qSrc.FieldByName('Almacen').AsInteger]);
+      // Codigo de almacen: respetamos el valor original ('1', '2'...)
+      // tal cual lo guardaba el legacy. Si hay varias empresas con
+      // almacen N coincidente, la 2a y siguientes pasaran como saltos
+      // (CODIGO_ALM_ALM es PK global en destino). En ese caso revisar
+      // y desambiguar a mano.
+      sCod := IntToStr(qSrc.FieldByName('Almacen').AsInteger);
 
       qChk.Close;
       qChk.ParamByName('c').AsString := sCod;
@@ -121,8 +124,11 @@ begin
       qIns.ParamByName('CODIGO_ALM_ALM').AsString  := sCod;
       qIns.ParamByName('CODIGO_EMP_ALM').AsString  :=
         IntToStr(qSrc.FieldByName('Empresa').AsInteger);
-      qIns.ParamByName('ESACTIVO_ALM').AsString    :=
-        BoolSN(qSrc.FieldByName('Activo').AsString, 'S', 'N');
+      // Todos los almacenes migrados arrancan activos. El campo
+      // Activo del legacy usa 'A' (no 'S') y se interpretaria como
+      // baja; ademas el usuario quiere editarlos en destino partiendo
+      // de "habilitado".
+      qIns.ParamByName('ESACTIVO_ALM').AsString    := 'S';
       qIns.ParamByName('NOMBRE_ALM_ALM').AsString  :=
         Trim(qSrc.FieldByName('Nombre').AsString);
       qIns.ParamByName('ESFISICO_ALM').AsString    := 'S';
