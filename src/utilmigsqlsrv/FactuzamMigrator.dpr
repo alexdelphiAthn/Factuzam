@@ -20,7 +20,9 @@ uses
   inLibMigArticulosSkus in 'inLibMigArticulosSkus.pas',
   inLibMigInventarios in 'inLibMigInventarios.pas',
   inLibMigTallajes in 'inLibMigTallajes.pas',
-  inLibMigArticulosTallajes in 'inLibMigArticulosTallajes.pas';
+  inLibMigArticulosTallajes in 'inLibMigArticulosTallajes.pas',
+  inLibMigArticulosProveedores in 'inLibMigArticulosProveedores.pas',
+  inLibMigArticulosPropiedades in 'inLibMigArticulosPropiedades.pas';
 
 {$R *.res}
 

@@ -2,7 +2,7 @@ object FormMigrator: TFormMigrator
   Left = 0
   Top = 0
   Caption = 'Factuzam Migrator SQL Server'
-  ClientHeight = 720
+  ClientHeight = 820
   ClientWidth = 1024
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -417,6 +417,12 @@ object FormMigrator: TFormMigrator
       Top = 18
       Width = 992
       Height = 165
+      Align = alClient
+      AlignWithMargins = True
+      Margins.Left = 8
+      Margins.Top = 18
+      Margins.Right = 8
+      Margins.Bottom = 8
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
@@ -428,21 +434,33 @@ object FormMigrator: TFormMigrator
       TabOrder = 0
     end
   end
+  object SplitterProgreso: TSplitter
+    Left = 0
+    Top = 540
+    Width = 1024
+    Height = 6
+    Cursor = crVSplit
+    Align = alBottom
+    AutoSnap = False
+    MinSize = 50
+    ResizeStyle = rsUpdate
+  end
   object PanelProgreso: TPanel
     Left = 0
-    Top = 561
+    Top = 546
     Width = 1024
-    Height = 140
+    Height = 255
     Align = alBottom
     BevelOuter = bvNone
     Padding.Left = 8
     Padding.Right = 8
     Padding.Bottom = 4
     TabOrder = 4
+    Constraints.MinHeight = 50
     object lblProgreso: TLabel
       Left = 8
       Top = 0
-      Width = 200
+      Width = 250
       Height = 15
       Caption = 'Progreso (dominios activos):'
     end
@@ -450,7 +468,13 @@ object FormMigrator: TFormMigrator
       Left = 8
       Top = 18
       Width = 1008
-      Height = 118
+      Height = 233
+      Align = alClient
+      AlignWithMargins = True
+      Margins.Left = 8
+      Margins.Top = 18
+      Margins.Right = 8
+      Margins.Bottom = 4
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
@@ -464,7 +488,7 @@ object FormMigrator: TFormMigrator
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 701
+    Top = 801
     Width = 1024
     Height = 19
     Panels = <
