@@ -797,10 +797,18 @@ begin
     if sSQL = '' then
       Exit;
 
-    // Determinamos si es una consulta que espera filas
-    bIsSelect := (Pos('SELECT', UpperCase(sSQL)) = 1) or
-                 (Pos('CALL', UpperCase(sSQL)) = 1) or
-                 (Pos('SHOW', UpperCase(sSQL)) = 1);
+    // Determinamos si es una consulta que espera filas.
+    // EXPLAIN / DESCRIBE / DESC devuelven resultset igual que un SELECT, asi
+    // que los tratamos como tal para que el usuario pueda inspeccionar el plan
+    // de ejecucion desde el generador.
+    var sSQLUpper: String;
+    sSQLUpper := UpperCase(sSQL);
+    bIsSelect := (Pos('SELECT', sSQLUpper) = 1) or
+                 (Pos('CALL', sSQLUpper) = 1) or
+                 (Pos('SHOW', sSQLUpper) = 1) or
+                 (Pos('EXPLAIN ', sSQLUpper) = 1) or
+                 (Pos('DESCRIBE ', sSQLUpper) = 1) or
+                 (Pos('DESC ', sSQLUpper) = 1);
 
     if bIsSelect then
     begin
