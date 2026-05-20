@@ -17,27 +17,30 @@
 --   PARTE 2: gaps detectados al leer las consultas calientes una a una. 5 mas.
 -- =============================================================================
 
-DROP PROCEDURE IF EXISTS sp_add_index_if_not_exists;
-DELIMITER $$
-CREATE PROCEDURE sp_add_index_if_not_exists(
-  IN p_tabla VARCHAR(64),
-  IN p_indice VARCHAR(64),
-  IN p_columnas VARCHAR(1000)
-)
+-- Procedimiento: PRC_ADD_INDEX_IF_NOT_EXISTS
+DROP PROCEDURE IF EXISTS `PRC_ADD_INDEX_IF_NOT_EXISTS`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_ADD_INDEX_IF_NOT_EXISTS`(IN `p_tabla` VARCHAR(64),    /* Nombre de la tabla destino, sin backticks */
+    IN `p_indice` VARCHAR(64),       /* Nombre del indice a crear (convencion IDX_<SUF>_<col>) */
+    IN `p_columnas` VARCHAR(1000))   /* Lista de columnas entre backticks: '`COL1`, `COL2`' */
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-      FROM information_schema.statistics
-     WHERE table_schema = DATABASE()
-       AND table_name   = p_tabla
-       AND index_name   = p_indice
-  ) THEN
-    SET @ddl = CONCAT('ALTER TABLE `', p_tabla, '` ADD INDEX `', p_indice, '` (', p_columnas, ')');
-    PREPARE stmt FROM @ddl;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-  END IF;
-END$$
+    /* Crea un indice si no existe ya en la BBDD actual. Idempotente y
+       seguro de re-ejecutar. Pensado para migraciones de rendimiento. */
+    IF NOT EXISTS (
+        SELECT 1
+          FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name   = p_tabla
+           AND index_name   = p_indice
+    ) THEN
+        SET @ddl = CONCAT('ALTER TABLE `', p_tabla,
+                          '` ADD INDEX `', p_indice,
+                          '` (', p_columnas, ')');
+        PREPARE stmt FROM @ddl;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END ;;
 DELIMITER ;
 
 
@@ -52,7 +55,7 @@ DELIMITER ;
 --    vi_articulos_tarifas, inMtoArticulos.pas:1425, inMtoCajaOpe.pas:1565,
 --    UniDataInventarios.pas:989) hacian full-scan de la tabla de SKUs.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_articulos_skus',
   'IDX_SKU_ART_ACT',
   '`CODIGO_ART_SKU`, `ESACTIVO_SKU`'
@@ -66,7 +69,7 @@ CALL sp_add_index_if_not_exists(
 --    para sumar stock entre almacenes y la PK no puede atender ese filtro porque
 --    CODIGO_ALM_STK va primero -> full-scan de toda la tabla en cada venta.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_articulos_stockactual',
   'IDX_STK_UNIDAD',
   '`CODIGO_UNIDAD_STK`'
@@ -80,7 +83,7 @@ CALL sp_add_index_if_not_exists(
 --    no encuentra a CODIGO_PRV_AP como discriminante, lo que fuerza un full-scan.
 --    Casi siempre se filtra ademas por ESPROVEEDORPRINCIPAL_AP='S'.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_articulos_proveedores',
   'IDX_AP_ART_PRINC',
   '`CODIGO_ART_AP`, `ESPROVEEDORPRINCIPAL_AP`'
@@ -93,13 +96,13 @@ CALL sp_add_index_if_not_exists(
 --    por padre) o donde se usa un componente (busqueda por hijo) escaneaba la
 --    tabla entera. Con 20k articulos y kits, lista de materiales se vuelve lenta.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_articulos_vinculos',
   'IDX_ARTVIN_PADRE',
   '`CODIGO_ART_PADRE_ARTVIN`'
 );
 
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_articulos_vinculos',
   'IDX_ARTVIN_HIJO',
   '`CODIGO_ART_HIJO_ARTVIN`'
@@ -113,13 +116,13 @@ CALL sp_add_index_if_not_exists(
 --    los extractos de cliente filtran por CODIGO_CLI_REC. Con 4k facturas se
 --    generan en orden de 6k-20k recibos: ya merece la pena indexarlo.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_recibos',
   'IDX_REC_ESTADO_VENC',
   '`ESTADO_RECIBO_REC`, `FECHA_VENCIMIENTO_RECIBO_REC`'
 );
 
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_recibos',
   'IDX_REC_CLI',
   '`CODIGO_CLI_REC`'
@@ -132,7 +135,7 @@ CALL sp_add_index_if_not_exists(
 --    talla/color se ha vendido" iteran linea a linea sin indice; con ~10 lineas
 --    por factura y 4k facturas estamos en ~40k filas para escanear cada vez.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_facturas_lineas',
   'IDX_FACLIN_UNIDAD',
   '`CODIGO_UNIDAD_FACLIN`'
@@ -145,7 +148,7 @@ CALL sp_add_index_if_not_exists(
 --    detalle necesita resolver "que lineas de albaran originaron esta factura"
 --    y ese inverso no esta indexado.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_albaranes_lineas',
   'IDX_ALBLIN_FAC',
   '`SERIE_FAC_ALBLIN`, `NUMERO_FAC_ALBLIN`'
@@ -164,7 +167,7 @@ CALL sp_add_index_if_not_exists(
 --     CODIGO_ART_AP), no cubre busquedas por la referencia del proveedor.
 --     Resultado: full-scan de la tabla en cada lectura del TPV.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_articulos_proveedores',
   'IDX_AP_REF',
   '`REF_PROVEEDOR_AP`'
@@ -188,7 +191,7 @@ CALL sp_add_index_if_not_exists(
 --     del par (art, tar). Para 20.000 articulos esto se multiplica.
 --     El indice nuevo permite leer la primera fila directa.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_articulos_tarifas',
   'IDX_ARTTAR_BUSQ_VIGENTE',
   '`CODIGO_ART_ARTTAR`, `CODIGO_TAR_ARTTAR`, `ESACTIVO_ARTTAR`, `FECHA_DESDE_ARTTAR`'
@@ -208,7 +211,7 @@ CALL sp_add_index_if_not_exists(
 --     Sin indice = full-scan en cada creacion de factura/albaran/pedido/
 --     inventario. La tabla es pequena pero la consulta es muy frecuente.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_empresas_series',
   'IDX_EMPSER_EMP_TIPO_FECHA',
   '`CODIGO_EMP_EMPSER`, `TIPO_DOC_EMPSER`, `FECHA_DESDE_EMPSER`'
@@ -226,7 +229,7 @@ CALL sp_add_index_if_not_exists(
 --     Con potencialmente decenas de miles de movimientos historicos, esto
 --     hace full-scan filtrado.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_movimientos_almacen',
   'IDX_MOV_ART_ALM',
   '`CODIGO_ART_MOV`, `CODIGO_ALM_MOV`'
@@ -245,7 +248,7 @@ CALL sp_add_index_if_not_exists(
 --     pero no FECHA_CREACION_DEP, asi que para arqueos de rango de fechas
 --     ancho el plan acaba escaneando todos los depositos del contexto.
 -- -----------------------------------------------------------------------------
-CALL sp_add_index_if_not_exists(
+CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
   'fza_depositos_cliente',
   'IDX_DEP_OP_FECHA',
   '`CODIGO_EMP_DEP`, `CODIGO_ALM_DEP`, `CODIGO_CAJA_DEP`, `FECHA_CREACION_DEP`'
@@ -253,9 +256,10 @@ CALL sp_add_index_if_not_exists(
 
 
 -- -----------------------------------------------------------------------------
--- Limpieza del procedimiento auxiliar.
+-- El procedimiento `PRC_ADD_INDEX_IF_NOT_EXISTS` queda instalado en la BBDD
+-- como utility reutilizable en futuras migraciones de rendimiento, siguiendo
+-- la convencion del dump (los `PRC_` viven en el esquema).
 -- -----------------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS sp_add_index_if_not_exists;
 
 
 -- -----------------------------------------------------------------------------
