@@ -54,6 +54,11 @@ type
     // interactivos. Antes esto ocurria sincrono en DataModuleCreate (y
     // congelaba la UI 21s en Articulos).
     procedure AbrirDetalles; virtual;
+    // Reactiva los TDataSource y dispara cualquier AfterScroll que se
+    // hubiera suprimido durante AbrirDetalles. Se invoca en MAIN thread
+    // desde TfrmMtoGen.AbrirTablaPrincipalAsync. Cada Mto override para
+    // recorrer sus DataSource concretos.
+    procedure ReactivarControlesTrasAbrir; virtual;
   public
     FCurrentForm: TComponent;
     FoPerfilDic: TProfileDicc;
@@ -155,6 +160,11 @@ end;
 procedure TdmBase.AbrirDetalles;
 begin
   // Default: nada. Los Mtos con queries detalle/lookup override este metodo.
+end;
+
+procedure TdmBase.ReactivarControlesTrasAbrir;
+begin
+  // Default: nada.
 end;
 
 procedure TdmBase.ResetGridsProfile(sGrid, sForm, sPermisos: String);
