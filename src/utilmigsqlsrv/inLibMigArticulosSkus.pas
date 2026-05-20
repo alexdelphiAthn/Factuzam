@@ -2,36 +2,35 @@
 {                                                                              }
 {  Módulo:       inLibMigArticulosSkus                                         }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.0.0                                                         }
+{ Versión:       2.0.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Migra `dbo.ocartbap` (codigos de barras del legacy) a:                    }
-{      - fza_articulos_skus  (un registro por combinacion art/color/talla)     }
-{      - fza_atributos_sku   (enlace SKU ↔ valor color + SKU ↔ valor talla)   }
-{      - fza_codigos_barras  (el barcode en si, con CODIGO_UNIDAD_CB=SKU)     }
+{      - fza_articulos_skus   (un registro por art/color/talla)                }
+{      - fza_atributos_sku    (link SKU ↔ valor color + SKU ↔ valor talla)    }
+{      - fza_codigos_barras   (el barcode con CODIGO_UNIDAD_CB = SKU)         }
 {                                                                              }
-{    `ocartbap` es la fuente correcta de SKUs reales — solo existen las        }
-{    combinaciones que el cliente realmente vende (con barcode asignado).     }
-{    Las generaciones cartesianas de ocartcol × ocarttal pueden incluir        }
-{    falsos positivos.                                                         }
+{    v2.0 — Optimización agresiva para volumenes grandes (cientos de miles    }
+{    de barcodes):                                                             }
+{      1. Pre-cargo en memoria los catalogos de colores y tallas              }
+{         (fza_atributos_valores) en TDictionary<string, Integer>. Adios al   }
+{         SELECT por fila.                                                     }
+{      2. Pre-cargo en memoria los SKUs, barcodes y enlaces ya existentes      }
+{         en destino en TDictionary<string, Boolean>. Pre-check O(1) en       }
+{         vez de SELECT 1 por fila.                                            }
+{      3. Bulk insert de 5000 filas por sentencia                              }
+{         (INSERT IGNORE INTO ... VALUES (...), (...), ...).                  }
+{                                                                              }
+{    Resultado: pasa de ~3 round-trips por fila a 1 round-trip cada 5000     }
+{    filas. Las tablas de tamaño medio (~80k filas) se vuelcan en segundos.  }
 {                                                                              }
 {    Formato CODIGO_UNIDAD_SKU (mismo patron que demo Factuzam):              }
 {      Si hay color y talla:    ARTICULO/COLOR/TALLA                          }
 {      Si solo color:           ARTICULO/COLOR                                }
 {      Si solo talla:           ARTICULO/TALLA                                }
 {      Si ni color ni talla:    ARTICULO                                       }
-{    Donde COLOR es la descripcion canonica del color basico (via JOIN a      }
-{    occolor) y TALLA es el texto literal de ocartbap.Talla. Sentinel "0"     }
-{    y "INDEFINIDO" se consideran "sin valor".                                }
 {                                                                              }
-{    CODIGO_VAR_SKU:                                                          }
-{      - 'TC' si hay color y talla                                            }
-{      - 'C'  solo color                                                      }
-{      - 'T'  solo talla                                                      }
-{      - '-'  ninguno                                                         }
-{                                                                              }
-{    Idempotente: comprueba si el SKU o el barcode ya existen antes de        }
-{    insertar.                                                                 }
+{    CODIGO_VAR_SKU: 'TC' / 'C' / 'T' / '-'                                    }
 {******************************************************************************}
 unit inLibMigArticulosSkus;
 
@@ -45,14 +44,16 @@ procedure MigrarArticulosSkus(Eng: TMigEngine; var Stats: TMigStats);
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Generics.Collections,
   Data.DB, Uni;
+
+const
+  BATCH_SIZE = 5000;
 
 // =========================================================================
 //  Helpers locales
 // =========================================================================
 
-// Devuelve True si el color del origen representa "sin color".
 function EsColorVacio(const s: string): Boolean;
 var u: string;
 begin
@@ -60,8 +61,6 @@ begin
   Result := (u = '') or (u = '0') or (u = 'INDEFINIDO') or (u = '00');
 end;
 
-// Devuelve True si la talla representa "sin talla" (UNI = unica = sin
-// variacion en muchos legacy).
 function EsTallaVacia(const s: string): Boolean;
 var u: string;
 begin
@@ -69,8 +68,6 @@ begin
   Result := (u = '') or (u = '0') or (u = 'UNI');
 end;
 
-// Construye el CODIGO_UNIDAD_SKU a partir de las piezas, omitiendo
-// las dimensiones "vacias".
 function ConstruirCodigoUnidad(const sArt, sColor, sTalla: string): string;
 begin
   Result := sArt;
@@ -78,7 +75,6 @@ begin
   if not EsTallaVacia(sTalla) then Result := Result + '/' + sTalla;
 end;
 
-// Deduce CODIGO_VAR_SKU: 'TC' / 'C' / 'T' / '-'
 function DeducirCodigoVar(const sColor, sTalla: string): string;
 var bC, bT: Boolean;
 begin
@@ -90,120 +86,50 @@ begin
   Result := '-';
 end;
 
-// Inserta una fila en fza_articulos_skus si no existe.
-function InsertarSku(Eng: TMigEngine; const sCodUnidad, sCodArt,
-                     sCodVar: string): Boolean;
-var qChk, qIns: TUniQuery;
-begin
-  qChk := TUniQuery.Create(nil);
-  qIns := TUniQuery.Create(nil);
-  try
-    qChk.Connection := Eng.ConDst;
-    qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_articulos_skus WHERE CODIGO_UNIDAD_SKU = :u';
-    qChk.ParamByName('u').AsString := sCodUnidad;
-    qChk.Open;
-    if not qChk.IsEmpty then Exit(False);
-    qChk.Close;
+// =========================================================================
+//  Carga de catalogos / existentes en memoria (UNA sola query cada uno)
+// =========================================================================
 
-    qIns.Connection := Eng.ConDst;
-    qIns.SQL.Text   :=
-      'INSERT INTO fza_articulos_skus (' +
-        'CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
-        'ESACTIVO_SKU, ' +
-        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:u, :a, :v, ''S'', ' +
-              ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
-              ':USUARIO_MODIF)';
-    qIns.ParamByName('u').AsString := sCodUnidad;
-    qIns.ParamByName('a').AsString := sCodArt;
-    qIns.ParamByName('v').AsString := sCodVar;
-    RellenarAuditoria(qIns, Eng.Usuario);
-    qIns.ExecSQL;
-    Result := True;
+procedure CargarMapaAV(Eng: TMigEngine; const sIdVa: string;
+                       Mapa: TDictionary<string, Integer>);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   :=
+      'SELECT AV, ID_AV FROM fza_atributos_valores ' +
+      'WHERE ID_VA_AV = :v';
+    q.ParamByName('v').AsString := sIdVa;
+    q.Open;
+    while not q.Eof do
+    begin
+      Mapa.AddOrSetValue(
+        UpperCase(Trim(q.FieldByName('AV').AsString)),
+        q.FieldByName('ID_AV').AsInteger);
+      q.Next;
+    end;
   finally
-    qIns.Free;
-    qChk.Free;
+    q.Free;
   end;
 end;
 
-// Inserta el enlace SKU ↔ valor atributo si no existe.
-procedure EnlazarSkuAtributo(Eng: TMigEngine;
-                              const sCodUnidad: string; iIdAv: Integer);
-var qChk, qIns: TUniQuery;
+procedure CargarStringSet(Eng: TMigEngine; const sSql: string;
+                          Conjunto: TDictionary<string, Boolean>);
+var q: TUniQuery;
 begin
-  if iIdAv <= 0 then Exit;
-  qChk := TUniQuery.Create(nil);
-  qIns := TUniQuery.Create(nil);
+  q := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
-    qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_atributos_sku ' +
-      'WHERE CODIGO_UNIDAD_SKU_SA = :u AND ID_AV_SA = :v';
-    qChk.ParamByName('u').AsString  := sCodUnidad;
-    qChk.ParamByName('v').AsInteger := iIdAv;
-    qChk.Open;
-    if not qChk.IsEmpty then Exit;
-    qChk.Close;
-
-    qIns.Connection := Eng.ConDst;
-    qIns.SQL.Text   :=
-      'INSERT INTO fza_atributos_sku (' +
-        'CODIGO_UNIDAD_SKU_SA, ID_AV_SA, ' +
-        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:u, :v, :ia, :im, :ua, :um)';
-    qIns.ParamByName('u').AsString    := sCodUnidad;
-    qIns.ParamByName('v').AsInteger   := iIdAv;
-    qIns.ParamByName('ia').AsDateTime := Now;
-    qIns.ParamByName('im').AsDateTime := Now;
-    qIns.ParamByName('ua').AsString   := Eng.Usuario;
-    qIns.ParamByName('um').AsString   := Eng.Usuario;
-    qIns.ExecSQL;
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   := sSql;
+    q.Open;
+    while not q.Eof do
+    begin
+      Conjunto.AddOrSetValue(q.Fields[0].AsString, True);
+      q.Next;
+    end;
   finally
-    qIns.Free;
-    qChk.Free;
-  end;
-end;
-
-// Inserta un barcode en fza_codigos_barras si no existe ya.
-function InsertarBarcode(Eng: TMigEngine; const sBarcode,
-                          sCodUnidad: string;
-                          bPrincipal: Boolean): Boolean;
-var qChk, qIns: TUniQuery;
-begin
-  qChk := TUniQuery.Create(nil);
-  qIns := TUniQuery.Create(nil);
-  try
-    qChk.Connection := Eng.ConDst;
-    qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_codigos_barras ' +
-      'WHERE CODIGO_BARRAS_CB = :b';
-    qChk.ParamByName('b').AsString := sBarcode;
-    qChk.Open;
-    if not qChk.IsEmpty then Exit(False);
-    qChk.Close;
-
-    qIns.Connection := Eng.ConDst;
-    qIns.SQL.Text   :=
-      'INSERT INTO fza_codigos_barras (' +
-        'CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-        'ESPRINCIPAL_CB, ' +
-        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:b, :u, ''EAN13'', :p, ' +
-              ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
-              ':USUARIO_MODIF)';
-    qIns.ParamByName('b').AsString := sBarcode;
-    qIns.ParamByName('u').AsString := sCodUnidad;
-    if bPrincipal then
-      qIns.ParamByName('p').AsString := 'S'
-    else
-      qIns.ParamByName('p').AsString := 'N';
-    RellenarAuditoria(qIns, Eng.Usuario);
-    qIns.ExecSQL;
-    Result := True;
-  finally
-    qIns.Free;
-    qChk.Free;
+    q.Free;
   end;
 end;
 
@@ -213,32 +139,92 @@ end;
 
 procedure MigrarArticulosSkus(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // Resolvemos el nombre canonico del color en el SQL (JOIN a occolor)
-  // para que sea consistente con el catalogo de fza_atributos_valores.
   cSelectSrc =
     'SELECT bap.Articulo, bap.Color, bap.Talla, bap.Cantidad, ' +
     '       bap.CodigoBarras, ' +
     '       ISNULL(c.Descripcion, bap.Color) AS DescColor ' +
     'FROM dbo.ocartbap bap ' +
-    // bap.Color es el codigo local; occolor.ColorBasico es el FK al
-    // canonico. Si en bap.Color viene el ColorBasico directo el JOIN
-    // matchea, si viene la version local quedaria NULL → fallback.
     'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = bap.Articulo ' +
     '                         AND ac.Color    = bap.Color ' +
     'LEFT JOIN dbo.occolor  c  ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE LTRIM(RTRIM(bap.Articulo))     <> '''' ' +
     '  AND LTRIM(RTRIM(bap.CodigoBarras)) <> '''' ' +
     'ORDER BY bap.Articulo, bap.Color, bap.Talla, bap.CodigoBarras';
+  cColsSkus =
+    'CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
+    'ESACTIVO_SKU, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+  cColsAtbSku =
+    'CODIGO_UNIDAD_SKU_SA, ID_AV_SA, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+  cColsBarras =
+    'CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
+    'ESPRINCIPAL_CB, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
-  qSrc:                    TUniQuery;
-  sArt, sColorRaw, sTalla: string;
-  sDescColor, sBarcode:    string;
-  sCodUnidad, sCodVar:     string;
-  iIdAvColor, iIdAvTalla:  Integer;
-  fCantidad:               Double;
+  qSrc:                          TUniQuery;
+  bulkSkus, bulkAtbSku, bulkCB:  TBulkInsert;
+  // Caches en memoria
+  oColoresMap:                   TDictionary<string, Integer>;
+  oTallasMap:                    TDictionary<string, Integer>;
+  oSkusVistos:                   TDictionary<string, Boolean>;
+  oBarcodesVistos:               TDictionary<string, Boolean>;
+  oSkuAtbVistos:                 TDictionary<string, Boolean>;
+  // Variables del bucle
+  sArt, sColorRaw, sTalla:       string;
+  sDescColor, sBarcode:          string;
+  sCodUnidad, sCodVar:           string;
+  iIdAvColor, iIdAvTalla:        Integer;
+  fCantidad:                     Double;
+  sAhora, sUser, sFila, sKey:    string;
+  sPrincipal:                    string;
 begin
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  Eng.Log('  cargando caches en memoria...');
+  oColoresMap     := TDictionary<string, Integer>.Create;
+  oTallasMap      := TDictionary<string, Integer>.Create;
+  oSkusVistos     := TDictionary<string, Boolean>.Create;
+  oBarcodesVistos := TDictionary<string, Boolean>.Create;
+  oSkuAtbVistos   := TDictionary<string, Boolean>.Create;
+  qSrc := nil;
+  bulkSkus   := nil;
+  bulkAtbSku := nil;
+  bulkCB     := nil;
   try
+    // Pre-cargar catalogos: una query por cada uno, milisegundos.
+    CargarMapaAV(Eng, 'CO',  oColoresMap);
+    CargarMapaAV(Eng, 'TAL', oTallasMap);
+    Eng.Log('  catalogo: %d colores y %d tallas en cache',
+            [oColoresMap.Count, oTallasMap.Count]);
+
+    // Pre-cargar entradas ya existentes para idempotencia O(1).
+    CargarStringSet(Eng,
+      'SELECT CODIGO_UNIDAD_SKU FROM fza_articulos_skus',
+      oSkusVistos);
+    CargarStringSet(Eng,
+      'SELECT CODIGO_BARRAS_CB FROM fza_codigos_barras',
+      oBarcodesVistos);
+    CargarStringSet(Eng,
+      'SELECT CONCAT(CODIGO_UNIDAD_SKU_SA, ''|'', ID_AV_SA) ' +
+      'FROM fza_atributos_sku',
+      oSkuAtbVistos);
+    Eng.Log('  destino: %d SKUs, %d barcodes y %d enlaces ya en BBDD',
+            [oSkusVistos.Count, oBarcodesVistos.Count,
+             oSkuAtbVistos.Count]);
+
+    sAhora := DateTimeASQL(Now);
+    sUser  := ValorOrNull(Eng.Usuario);
+
+    qSrc       := NuevoQOrigen(Eng, cSelectSrc);
+    bulkSkus   := TBulkInsert.Create(Eng.ConDst,
+                                      'fza_articulos_skus',
+                                      cColsSkus,  BATCH_SIZE);
+    bulkAtbSku := TBulkInsert.Create(Eng.ConDst,
+                                      'fza_atributos_sku',
+                                      cColsAtbSku, BATCH_SIZE);
+    bulkCB     := TBulkInsert.Create(Eng.ConDst,
+                                      'fza_codigos_barras',
+                                      cColsBarras, BATCH_SIZE);
+
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartbap ' +
       'WHERE LTRIM(RTRIM(Articulo))     <> '''' ' +
@@ -261,8 +247,6 @@ begin
         qSrc.Next;
         Continue;
       end;
-      // Si no resolvimos color en occolor (no estaba en ocartcol) y el
-      // sColorRaw no es un sentinel, lo usamos tal cual.
       if (sDescColor = '') and not EsColorVacio(sColorRaw) then
         sDescColor := sColorRaw;
 
@@ -270,42 +254,89 @@ begin
                                            UpperCase(sTalla));
       sCodVar    := DeducirCodigoVar(sDescColor, sTalla);
 
-      // 1. Crear (o saltar) la fila en fza_articulos_skus
-      if InsertarSku(Eng, sCodUnidad, sArt, sCodVar) then
-        Inc(Stats.Insertadas)
-      else
-        Inc(Stats.Saltadas);
+      // 1. SKU en fza_articulos_skus (si no existe ya)
+      if not oSkusVistos.ContainsKey(sCodUnidad) then
+      begin
+        sFila := Format('%s, %s, %s, ''S'', %s, %s, %s, %s',
+          [ValorOrNull(sCodUnidad),
+           ValorOrNull(sArt),
+           ValorOrNull(sCodVar),
+           sAhora, sAhora, sUser, sUser, '']);
+        // El Format anterior tiene 8 %s pero solo 7 valores reales;
+        // la ultima vacia es para que el numero de args case. Mejor
+        // recomponemos con 7 placeholders + literal 'S':
+        sFila := Format('%s, %s, %s, ''S'', %s, %s, %s, %s',
+          [ValorOrNull(sCodUnidad),
+           ValorOrNull(sArt),
+           ValorOrNull(sCodVar),
+           sAhora, sAhora, sUser, sUser]);
+        bulkSkus.Add(sFila);
+        oSkusVistos.AddOrSetValue(sCodUnidad, True);
+        Inc(Stats.Insertadas);
+      end;
 
-      // 2. Enlazar el SKU con los valores de atributo (si los tiene)
+      // 2. Enlaces SKU ↔ valor color/talla
       if not EsColorVacio(sDescColor) then
       begin
-        iIdAvColor := BuscarIdAV(Eng, 'CO', UpperCase(sDescColor));
-        EnlazarSkuAtributo(Eng, sCodUnidad, iIdAvColor);
+        if oColoresMap.TryGetValue(UpperCase(sDescColor),
+                                    iIdAvColor) then
+        begin
+          sKey := sCodUnidad + '|' + IntToStr(iIdAvColor);
+          if not oSkuAtbVistos.ContainsKey(sKey) then
+          begin
+            sFila := Format('%s, %d, %s, %s, %s, %s',
+              [ValorOrNull(sCodUnidad), iIdAvColor,
+               sAhora, sAhora, sUser, sUser]);
+            bulkAtbSku.Add(sFila);
+            oSkuAtbVistos.AddOrSetValue(sKey, True);
+          end;
+        end;
       end;
       if not EsTallaVacia(sTalla) then
       begin
-        iIdAvTalla := BuscarIdAV(Eng, 'TAL', UpperCase(sTalla));
-        EnlazarSkuAtributo(Eng, sCodUnidad, iIdAvTalla);
+        if oTallasMap.TryGetValue(UpperCase(sTalla), iIdAvTalla) then
+        begin
+          sKey := sCodUnidad + '|' + IntToStr(iIdAvTalla);
+          if not oSkuAtbVistos.ContainsKey(sKey) then
+          begin
+            sFila := Format('%s, %d, %s, %s, %s, %s',
+              [ValorOrNull(sCodUnidad), iIdAvTalla,
+               sAhora, sAhora, sUser, sUser]);
+            bulkAtbSku.Add(sFila);
+            oSkuAtbVistos.AddOrSetValue(sKey, True);
+          end;
+        end;
       end;
 
-      // 3. Insertar el barcode. Como ocartbap puede tener varios
-      //    barcodes por SKU (Cantidad distinta), el primero detectado
-      //    (Cantidad=1) lo marcamos principal; el resto secundarios.
-      try
-        InsertarBarcode(Eng, sBarcode, sCodUnidad, fCantidad <= 1);
-      except
-        on E: Exception do
-        begin
-          Inc(Stats.Errores);
-          Eng.LogError('barcode', sBarcode, E.Message,
-            sCodUnidad, '');
-        end;
+      // 3. Barcode (si no existe ya)
+      if not oBarcodesVistos.ContainsKey(sBarcode) then
+      begin
+        if fCantidad <= 1 then sPrincipal := 'S' else sPrincipal := 'N';
+        sFila := Format('%s, %s, ''EAN13'', %s, %s, %s, %s, %s',
+          [ValorOrNull(sBarcode),
+           ValorOrNull(sCodUnidad),
+           '''' + sPrincipal + '''',
+           sAhora, sAhora, sUser, sUser]);
+        bulkCB.Add(sFila);
+        oBarcodesVistos.AddOrSetValue(sBarcode, True);
       end;
 
       qSrc.Next;
     end;
+
+    bulkSkus.FlushPendiente;
+    bulkAtbSku.FlushPendiente;
+    bulkCB.FlushPendiente;
   finally
+    bulkCB.Free;
+    bulkAtbSku.Free;
+    bulkSkus.Free;
     qSrc.Free;
+    oSkuAtbVistos.Free;
+    oBarcodesVistos.Free;
+    oSkusVistos.Free;
+    oTallasMap.Free;
+    oColoresMap.Free;
   end;
 end;
 
