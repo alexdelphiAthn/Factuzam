@@ -99,7 +99,10 @@ uses
   inLibMigEmpresas,
   inLibMigAlmacenes,
   inLibMigClientes,
-  inLibMigArticulos;
+  inLibMigFamilias,
+  inLibMigAtributos,
+  inLibMigArticulos,
+  inLibMigArticulosAtributos;
 
 // =========================================================================
 //  Lifecycle
@@ -158,9 +161,24 @@ begin
   FEngine.Registrar('clientes', 'Clientes',
     'dbo.occli → fza_clientes (requiere formas_pago)',
     MigrarClientes);
+  FEngine.Registrar('familias', 'Familias de artículo',
+    'dbo.ocartniv → fza_articulos_familias',
+    MigrarFamilias);
+  FEngine.Registrar('colores_maestros', 'Catálogo colores',
+    'dbo.occolor → fza_atributos_valores + fza_atributos_basicos (CO)',
+    MigrarColoresMaestros);
+  FEngine.Registrar('tallas_maestras', 'Catálogo tallas',
+    'DISTINCT dbo.ocarttal → fza_atributos_valores + basicos (TAL)',
+    MigrarTallasMaestras);
   FEngine.Registrar('articulos', 'Artículos',
-    'dbo.ocartp → fza_articulos',
+    'dbo.ocartp → fza_articulos (requiere familias)',
     MigrarArticulos);
+  FEngine.Registrar('articulos_colores', 'Colores por artículo',
+    'dbo.ocartcol → fza_articulos_atributos_basicos (CO)',
+    MigrarArticulosColores);
+  FEngine.Registrar('articulos_tallas', 'Tallas por artículo',
+    'dbo.ocarttal → fza_articulos_atributos_basicos (TAL)',
+    MigrarArticulosTallas);
 end;
 
 procedure TFormMigrator.RecargarListado;

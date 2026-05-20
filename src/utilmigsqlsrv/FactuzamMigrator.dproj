@@ -162,7 +162,10 @@
         <DCCReference Include="inLibMigEmpresas.pas"/>
         <DCCReference Include="inLibMigAlmacenes.pas"/>
         <DCCReference Include="inLibMigClientes.pas"/>
+        <DCCReference Include="inLibMigFamilias.pas"/>
+        <DCCReference Include="inLibMigAtributos.pas"/>
         <DCCReference Include="inLibMigArticulos.pas"/>
+        <DCCReference Include="inLibMigArticulosAtributos.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

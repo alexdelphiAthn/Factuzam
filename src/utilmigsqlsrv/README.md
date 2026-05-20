@@ -24,7 +24,13 @@ src/utilmigsqlsrv/
 ├── inLibMigEmpresas.pas           dbo.ocemp      → fza_empresas
 ├── inLibMigAlmacenes.pas          dbo.ocalm      → fza_almacenes
 ├── inLibMigClientes.pas           dbo.occli      → fza_clientes
-└── inLibMigArticulos.pas          dbo.ocartp     → fza_articulos
+├── inLibMigFamilias.pas           dbo.ocartniv   → fza_articulos_familias
+├── inLibMigAtributos.pas          dbo.occolor    → fza_atributos_valores + basicos
+│                                  DISTINCT(ocarttal.Talla) → idem para tallas
+├── inLibMigArticulos.pas          dbo.ocartp     → fza_articulos
+├── inLibMigArticulosAtributos.pas dbo.ocartcol   → fza_articulos_atributos_basicos
+│                                  dbo.ocarttal   → idem (asignaciones por art)
+└── resultados/                    CSVs de muestra exportados desde SSMS
 ```
 
 ## Cómo usarlo
@@ -84,7 +90,28 @@ El programa guarda los valores de las conexiones (sin contraseñas) en
   TipoEfecto (int). Usamos TipoEfecto como CODIGO_FP_CLI; debe existir
   previamente en `fza_formas_pago` (por eso "formas_pago" va antes
   que "clientes" en el listado).
-- **Familias de artículos**: no se migran todavía. Se copia el código
-  de familia del origen tal cual; si no existe en `fza_articulos_familias`
-  el INSERT seguirá funcionando porque no hay FK declarada, pero el
-  artículo quedará "huérfano" hasta que cree la familia.
+- **Familias de artículos**: se migran desde `ocartniv` con código
+  numérico padding 3 (001, 002...). En `inLibMigArticulos` el campo
+  `Familia` se copia tal cual del origen — si el origen guarda el código
+  como entero corto ('1', '2') tampoco va a cuadrar con la familia
+  migrada ('001'). Ejecuta primero `sample_export_ssms.sql` para ver
+  cómo es el campo `ocartp.Familia` real y ajustamos el formateo si
+  hace falta.
+- **Atributos (colores y tallas)**: el modelo destino es muy rico
+  (variación → ejes → valores → básicos canónicos). El migrador hace
+  la versión mínima:
+  - Asegura que existe la variación `TC` con sus ejes `CO` y `TAL`.
+  - Inserta en `fza_atributos_valores` el catálogo (un valor por color
+    o talla, ID_VA='CO'/'TAL', AV=texto en mayúsculas).
+  - Inserta en `fza_atributos_basicos` con el HEX (cuando viene en
+    `occolor.ColorPaleta`) y el nombre canónico.
+  - Después, las asignaciones por artículo (`ocartcol`, `ocarttal`) se
+    vuelcan a `fza_articulos_atributos_basicos`.
+- **No se migra todavía** `fza_articulos_conjuntos_asign` (qué set de
+  tallas/colores concreto usa cada artículo). Para que un artículo se
+  comporte como "tiene variaciones" en la UI basta con que
+  `fza_articulos.TIPO_VARIACION_ART` sea `'TC'`/`'T'`/`'C'`, cosa que
+  ya hace `inLibMigArticulos` a partir de `HayColores` y `HayTallas`.
+  El ajuste fino de qué conjunto concreto le toca a cada artículo
+  habrá que hacerlo manual o con un script aparte una vez aterrice
+  el dato.
