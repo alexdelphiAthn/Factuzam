@@ -106,6 +106,24 @@ Identico al original, palabra por palabra:
 | X-locks `FOR UPDATE` por movimiento      | Si                  | No (UPDATE en rango) |
 | Redundancia en `APLICAR` (mismo SKU en N lineas) | N recalculos completos | 1 recalculo |
 
+## Bug heredado corregido al paso
+
+`PRC_FZA_INVENTARIOS_APLICAR` declaraba `v_LINEA VARCHAR(4)`, pero la
+columna `fza_inventarios_lineas.LINEA_INVLIN` ya es `VARCHAR(8)` (formato
+`00000001`...) tras una ampliacion previa. El FETCH del cursor explotaba
+con `#22001 Data too long for column 'v_LINEA'` en cuanto el contador de
+linea pasaba de `9999`. La reescritura declara `v_LINEA VARCHAR(8)` para
+casar con la columna real.
+
+Nota: `fza_movimientos_almacen.LINEA_MOV` sigue declarado `VARCHAR(4)`
+(linea 5942 de `factuzam_original.sql`), y `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`
+inserta `p_LINEA_MOV` directamente. Con valores de linea > 4 caracteres el
+INSERT truncara (`sql_mode` permisivo) o fallara (`sql_mode` estricto).
+Resolver eso queda fuera del alcance de esta migracion: implicaria
+ampliar `LINEA_MOV` y revisar todos los `CONCAT('IV-', NRO, '-', LINEA,
+'S'/'E')` cuyo `LEFT(..., 20)` podria colisionar PKs si `NRO` y `LINEA`
+son largos.
+
 ## Idempotencia y rollback
 
 - Idempotente: solo recrea procedimientos con `DROP PROCEDURE IF EXISTS` +
