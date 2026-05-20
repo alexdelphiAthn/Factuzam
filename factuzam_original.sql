@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 20/05/2026 6:24:33
+-- Backup generado: 20/05/2026 7:36:52
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -41,7 +41,7 @@ CREATE TABLE `fza_albaranes` (
   `NOMBRE_PAI_EMPRESA_ALB` varchar(150) NULL DEFAULT 'España',
   `CODIGO_POSTAL_EMPRESA_ALB` varchar(15) NULL DEFAULT NULL,
   `GRUPO_ZONA_IVA_EMPRESA_ALB` varchar(10) NULL DEFAULT NULL,
-  `CODIGO_CLI_ALB` varchar(10) NULL DEFAULT NULL,
+  `CODIGO_CLI_ALB` varchar(20) NULL DEFAULT NULL,
   `RAZON_SOCIAL_CLIENTE_ALB` varchar(200) NULL DEFAULT NULL,
   `NIF_CLIENTE_ALB` varchar(50) NULL DEFAULT NULL,
   `MOVIL_CLIENTE_ALB` varchar(40) NULL DEFAULT NULL,
@@ -351,6 +351,7 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
 DROP TABLE IF EXISTS `fza_articulos_familias`;
 CREATE TABLE `fza_articulos_familias` (
   `CODIGO_FAM_FAM` varchar(20) NOT NULL,
+  `CODIGO_PADRE_FAM` varchar(20) NULL DEFAULT NULL,
   `ESACTIVO_FAM` varchar(1) NULL DEFAULT 'S',
   `ORDEN_FAM` int(11) NULL DEFAULT NULL,
   `ESDEFAULT_FAM` varchar(1) NULL DEFAULT NULL,
@@ -366,15 +367,16 @@ CREATE TABLE `fza_articulos_familias` (
   `PAD_ART_FAM` int(11) NOT NULL DEFAULT '5' COMMENT 'Numero de digitos del relleno cuando se autogenera codigo articulo desde familia',
   PRIMARY KEY (`CODIGO_FAM_FAM`)
 );
+ALTER TABLE `fza_articulos_familias` ADD INDEX `IDX_FAM_PADRE` (`CODIGO_PADRE_FAM`);
 
 -- Datos de fza_articulos_familias
-INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `CONTADOR_ART_FAM`, `ESCONTADOR_ART_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `PAD_ART_FAM`) VALUES
-  ('BOLSOS', 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 7, 'S', '2026-05-18 21:42:31', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
-  ('CALZADO', 'S', 2, 'N', NULL, 'Calzado Elegante', 'Calzado Todo tiempo', 0, 'S', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
-  ('COMPLEMENTOS', 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 2, 'S', '2026-05-18 22:01:06', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 3),
-  ('DEPORTIVO', 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 2, 'S', '2026-05-19 06:50:46', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 3),
-  ('OTR', 'S', 6, 'S', NULL, 'Otros articulos agrícolas', 'Otros articulos agrícolas', 0, 'N', '2026-05-12 18:38:02', '2022-11-02 16:06:31', 'Administrador', 'Administrador', 5),
-  ('ROPA', 'S', 1, 'N', NULL, 'Ropa de Vestir', 'Ropa de Vestir a la moda', 0, 'N', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Adminnistrador', 'Administrador', 5);
+INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `CODIGO_PADRE_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `CONTADOR_ART_FAM`, `ESCONTADOR_ART_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `PAD_ART_FAM`) VALUES
+  ('BOLSOS', NULL, 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 7, 'S', '2026-05-18 21:42:31', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
+  ('CALZADO', NULL, 'S', 2, 'N', NULL, 'Calzado Elegante', 'Calzado Todo tiempo', 0, 'S', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
+  ('COMPLEMENTOS', NULL, 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 2, 'S', '2026-05-18 22:01:06', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 3),
+  ('DEPORTIVO', NULL, 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 2, 'S', '2026-05-19 06:50:46', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 3),
+  ('OTR', NULL, 'S', 6, 'S', NULL, 'Otros articulos agrícolas', 'Otros articulos agrícolas', 0, 'N', '2026-05-12 18:38:02', '2022-11-02 16:06:31', 'Administrador', 'Administrador', 5),
+  ('ROPA', NULL, 'S', 1, 'N', NULL, 'Ropa de Vestir', 'Ropa de Vestir a la moda', 0, 'N', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Adminnistrador', 'Administrador', 5);
 -- 6 registros exportados
 
 
@@ -1924,7 +1926,7 @@ INSERT INTO `fza_caja_vales` (`CODIGO_VL`, `CODIGO_PADRE_VL`, `PIN_SEGURIDAD_VL`
 
 DROP TABLE IF EXISTS `fza_clientes`;
 CREATE TABLE `fza_clientes` (
-  `CODIGO_CLI_CLI` varchar(10) NOT NULL,
+  `CODIGO_CLI_CLI` varchar(20) NOT NULL,
   `ESACTIVO_CLI` varchar(1) NULL DEFAULT 'S',
   `ORDEN_CLI` int(11) NULL DEFAULT NULL,
   `RAZON_SOCIAL_CLI` varchar(200) NOT NULL,
@@ -2571,7 +2573,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 227, 3, 'S', 'S', '2026-05-20 05:52:42', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 230, 3, 'S', 'S', '2026-05-20 07:36:25', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -2769,7 +2771,7 @@ CREATE TABLE `fza_facturas` (
   `ESRETENCIONES_EMPRESA_FAC` varchar(1) NULL DEFAULT 'S' COMMENT 'S o N si la empresa aplica retenciones como autónomos',
   `GRUPO_ZONA_IVA_EMPRESA_FAC` varchar(10) NULL DEFAULT NULL,
   `ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC` varchar(1) NULL DEFAULT 'N',
-  `CODIGO_CLI_FAC` varchar(10) NULL DEFAULT NULL,
+  `CODIGO_CLI_FAC` varchar(20) NULL DEFAULT NULL,
   `RAZON_SOCIAL_CLIENTE_FAC` varchar(200) NULL DEFAULT NULL,
   `NIF_CLIENTE_FAC` varchar(50) NULL DEFAULT NULL,
   `MOVIL_CLIENTE_FAC` varchar(40) NULL DEFAULT NULL,
@@ -5207,8 +5209,180 @@ CALL PRC_ADD_INDEX_IF_NOT_EXISTS(
 --    tarifas) la cardinalidad post-filtro previo es baja, asi que el
 --    impacto es manejable; queda como mejora de segundo orden.
 -- -----------------------------------------------------------------------------
-', '2026-05-20 05:52:42', '2026-05-20 05:52:42', 'Administrador', 'Administrador');
--- 22 registros exportados
+', '2026-05-20 05:52:42', '2026-05-20 05:52:42', 'Administrador', 'Administrador'),
+  ('227', 'proveedores_nombre', '-- =============================================================================
+-- Anade columna NOMBRE_PRV a fza_proveedores
+-- =============================================================================
+-- La tabla destino solo tenia RAZON_SOCIAL_PRV. El ERP origen (Herreras,
+-- ocpro) guarda dos campos: Nombre (nombre corto / comercial) y
+-- RazonSocial (denominacion legal). Para no perder informacion en la
+-- migracion, anadimos NOMBRE_PRV en destino y dejamos que el migrador
+-- vuelque ambos campos.
+--
+-- Sigue la convencion del libro de estilo: sufijo de tabla (`PRV`) tras
+-- el nucleo del concepto. NOMBRE_PRV (no NOMBRE_PROVEEDOR_PRV: redundante
+-- — vease §3.3 de LIBRO_DE_ESTILO_BBDD.md).
+--
+-- Idempotente: se puede ejecutar varias veces. La columna se anade solo
+-- si no existe.
+-- =============================================================================
+
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_proveedores''
+     AND COLUMN_NAME  = ''NOMBRE_PRV''
+);
+
+SET @sSql := IF(@sExisteCol = 0,
+  ''ALTER TABLE fza_proveedores
+     ADD COLUMN NOMBRE_PRV varchar(200) NULL DEFAULT NULL
+     AFTER RAZON_SOCIAL_PRV'',
+  ''SELECT ''''NOMBRE_PRV ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-05-20 06:54:49', '2026-05-20 06:54:49', 'Administrador', 'Administrador'),
+  ('228', 'widen_codigo_cli', '-- =============================================================================
+-- Ampliar columnas CODIGO_CLI_* de varchar(10) a varchar(20)
+-- =============================================================================
+-- El ERP origen (Herreras, occli.Cliente) guarda codigos de cliente en
+-- varchar(15) — algunos llegan hasta 14-15 caracteres reales tras un
+-- LTRIM. El destino actual los declara varchar(10), lo que provoca al
+-- migrar:
+--
+--   EMySqlNetException #22001 ''Data too long for column CODIGO_CLI_CLI''
+--
+-- La columna PK (`fza_clientes.CODIGO_CLI_CLI`) y todas las FK logicas
+-- que la referencian (`fza_facturas.CODIGO_CLI_FAC`,
+--  `fza_albaranes.CODIGO_CLI_ALB`, `fza_pedidos.CODIGO_CLI_PED`) pasan
+-- a varchar(20), tamano estandar usado por el resto de codigos de la
+-- BBDD (CODIGO_ALM_ALM, CODIGO_PRV_PRV, etc.).
+--
+-- Idempotente: cada ALTER se hace solo si la columna actual mide
+-- menos de 20 caracteres.
+-- =============================================================================
+
+-- 1. fza_clientes.CODIGO_CLI_CLI (PK)
+SET @sLen := (
+  SELECT CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_clientes''
+     AND COLUMN_NAME  = ''CODIGO_CLI_CLI''
+);
+SET @sSql := IF(@sLen IS NOT NULL AND @sLen < 20,
+  ''ALTER TABLE fza_clientes
+     MODIFY COLUMN CODIGO_CLI_CLI varchar(20) NOT NULL'',
+  ''SELECT ''''CODIGO_CLI_CLI ya tiene >= 20, se omite'''' AS info'');
+PREPARE stmt FROM @sSql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 2. fza_facturas.CODIGO_CLI_FAC (FK logica)
+SET @sLen := (
+  SELECT CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas''
+     AND COLUMN_NAME  = ''CODIGO_CLI_FAC''
+);
+SET @sSql := IF(@sLen IS NOT NULL AND @sLen < 20,
+  ''ALTER TABLE fza_facturas
+     MODIFY COLUMN CODIGO_CLI_FAC varchar(20) NULL DEFAULT NULL'',
+  ''SELECT ''''CODIGO_CLI_FAC ya tiene >= 20, se omite'''' AS info'');
+PREPARE stmt FROM @sSql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 3. fza_albaranes.CODIGO_CLI_ALB (FK logica)
+SET @sLen := (
+  SELECT CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes''
+     AND COLUMN_NAME  = ''CODIGO_CLI_ALB''
+);
+SET @sSql := IF(@sLen IS NOT NULL AND @sLen < 20,
+  ''ALTER TABLE fza_albaranes
+     MODIFY COLUMN CODIGO_CLI_ALB varchar(20) NULL DEFAULT NULL'',
+  ''SELECT ''''CODIGO_CLI_ALB ya tiene >= 20, se omite'''' AS info'');
+PREPARE stmt FROM @sSql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 4. fza_pedidos.CODIGO_CLI_PED (FK logica)
+SET @sLen := (
+  SELECT CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_pedidos''
+     AND COLUMN_NAME  = ''CODIGO_CLI_PED''
+);
+SET @sSql := IF(@sLen IS NOT NULL AND @sLen < 20,
+  ''ALTER TABLE fza_pedidos
+     MODIFY COLUMN CODIGO_CLI_PED varchar(20) NULL DEFAULT NULL'',
+  ''SELECT ''''CODIGO_CLI_PED ya tiene >= 20, se omite'''' AS info'');
+PREPARE stmt FROM @sSql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+', '2026-05-20 07:05:18', '2026-05-20 07:05:18', 'Administrador', 'Administrador'),
+  ('229', 'familias_codigo_padre', '-- =============================================================================
+-- Anade columna CODIGO_PADRE_FAM a fza_articulos_familias
+-- =============================================================================
+-- El ERP legacy modela la jerarquia de familias en 2 niveles dentro de
+-- la tabla ocniv:
+--   - Nivel 2 = SECCION    (codigo de 2 chars: "01" SEÑORA, "14"
+--                            UNIFORME INMACULADA CONCEP., ...)
+--   - Nivel 4 = FAMILIA    (codigo de 4 chars: "1401" FALDA INMACULADA
+--                            CONCEP., "1403" JERSEY..., "0101" BLUSA...)
+--
+-- Los 2 primeros chars del codigo Nivel=4 son SIEMPRE el codigo de la
+-- seccion padre (Nivel=2). Para preservar esa jerarquia en destino
+-- anadimos CODIGO_PADRE_FAM, que apunta a la familia padre dentro de
+-- la propia tabla.
+--
+-- Convencion de nombre: CODIGO_PADRE_FAM (sin sufijo de tabla extra,
+-- ver §3.3 de LIBRO_DE_ESTILO_BBDD.md — el sufijo de la tabla es FAM
+-- y "PADRE" es el nucleo).
+--
+-- Idempotente: ALTER se ejecuta solo si la columna no existe.
+-- =============================================================================
+
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_articulos_familias''
+     AND COLUMN_NAME  = ''CODIGO_PADRE_FAM''
+);
+
+SET @sSql := IF(@sExisteCol = 0,
+  ''ALTER TABLE fza_articulos_familias
+     ADD COLUMN CODIGO_PADRE_FAM varchar(20) NULL DEFAULT NULL
+     AFTER CODIGO_FAM_FAM'',
+  ''SELECT ''''CODIGO_PADRE_FAM ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Indice para acelerar la navegacion padre → hijos
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_articulos_familias''
+     AND INDEX_NAME   = ''IDX_FAM_PADRE''
+);
+
+SET @sSqlIdx := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_articulos_familias
+     ADD INDEX IDX_FAM_PADRE (CODIGO_PADRE_FAM)'',
+  ''SELECT ''''IDX_FAM_PADRE ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSqlIdx;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-05-20 07:36:25', '2026-05-20 07:36:25', 'Administrador', 'Administrador');
+-- 25 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -6402,7 +6576,7 @@ CREATE TABLE `fza_pedidos` (
   `ESRETENCIONES_EMPRESA_PED` varchar(1) NULL DEFAULT 'N' COMMENT 'S o N si la empresa aplica retenciones como autónomos',
   `GRUPO_ZONA_IVA_EMPRESA_PED` varchar(10) NULL DEFAULT NULL,
   `ESREGIMENESPECIALAGRICOLA_EMPRESA_PED` varchar(1) NULL DEFAULT 'N',
-  `CODIGO_CLI_PED` varchar(10) NULL DEFAULT NULL,
+  `CODIGO_CLI_PED` varchar(20) NULL DEFAULT NULL,
   `NIF_CLIENTE_PED` varchar(50) NULL DEFAULT NULL,
   `EMAIL_CLIENTE_PED` varchar(200) NULL DEFAULT NULL,
   `REFERENCIAPS_PED` varchar(20) NULL DEFAULT NULL,
@@ -6701,6 +6875,7 @@ CREATE TABLE `fza_proveedores` (
   `ESACTIVO_PRV` varchar(1) NULL DEFAULT 'S',
   `ORDEN_PRV` int(11) NULL DEFAULT NULL,
   `RAZON_SOCIAL_PRV` varchar(200) NULL DEFAULT NULL,
+  `NOMBRE_PRV` varchar(200) NULL DEFAULT NULL,
   `NIF_PRV` varchar(50) NULL DEFAULT NULL,
   `MOVIL_PRV` varchar(40) NULL DEFAULT NULL,
   `EMAIL_PRV` varchar(200) NULL DEFAULT NULL,
@@ -6725,34 +6900,34 @@ CREATE TABLE `fza_proveedores` (
 ALTER TABLE `fza_proveedores` ADD INDEX `IDX_PROVEEDORES_LISTADO` (`CODIGO_PRV_PRV`, `RAZON_SOCIAL_PRV`);
 
 -- Datos de fza_proveedores
-INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `RAZON_SOCIAL_PRV`, `NIF_PRV`, `MOVIL_PRV`, `EMAIL_PRV`, `DIRECCION1_PRV`, `DIRECCION2_PRV`, `POBLACION_PRV`, `PROVINCIA_PRV`, `CODIGO_POSTAL_PRV`, `PAIS_PRV`, `OBSERVACIONES_PRV`, `REFERENCIA_PRV`, `CONTACTO_PRV`, `TELEFONO_CONTACTO_PRV`, `TELEFONO_PRV`, `IBAN_PRV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000', 'S', NULL, 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 12:05:44', '2024-10-06 20:26:38', 'Administrador', 'Administrador'),
-  ('010', 'S', NULL, 'RODRIGO ANTON', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-10 17:34:42', '2024-10-06 21:17:37', 'Administrador', 'Administrador'),
-  ('10', 'S', NULL, 'Gai pâturage', NULL, '38.76.98.06', NULL, 'Bat. B 3, rue des Alpes', NULL, 'Annecy', '', '74000', 'France', NULL, NULL, 'Eliane Noz', NULL, NULL, NULL, '2024-10-06 20:13:41', '2021-06-10 19:36:20', 'Administrador', 'Administrador'),
-  ('11', 'S', NULL, 'Escargots Nouveaux', NULL, '85.57.00.07', NULL, '22, rue H. Voiron', NULL, 'Montceau', '', '71300', 'France', NULL, NULL, 'Marie Delamare', NULL, NULL, NULL, '2021-06-10 19:36:25', '2021-06-10 19:36:25', 'Administrador', 'Administrador'),
-  ('12', 'S', NULL, 'Pasta Buttini s.r.l.', NULL, '(089) 6547665', NULL, 'Via dei Gelsomini, 153', NULL, 'Salerno', '', '84100', 'Italy', NULL, NULL, 'Giovanni Giudici', NULL, NULL, NULL, '2021-06-10 19:36:35', '2021-06-10 19:36:35', 'Administrador', 'Administrador'),
-  ('13', 'S', NULL, 'Ma Maison', NULL, '(514) 555-9022', NULL, '2960 Rue St. Laurent', NULL, 'Montréal', 'Québec', 'H1J 1C3', 'Canada', NULL, NULL, 'Jean-Guy Lauzon', NULL, NULL, NULL, '2021-06-10 19:36:46', '2021-06-10 19:36:46', 'Administrador', 'Administrador'),
-  ('14', 'S', NULL, 'Karkki Oy', NULL, '(953) 10956', NULL, 'Valtakatu 12', NULL, 'Lappeenranta', '', '53120', 'Finland', NULL, NULL, 'Anne Heikkonen', NULL, NULL, NULL, '2021-06-10 19:37:22', '2021-06-10 19:37:22', 'Administrador', 'Administrador'),
-  ('15', 'S', NULL, 'Leka Trading', NULL, '555-8787', NULL, '471 Serangoon Loop, Suite #402', NULL, 'Singapore', '', '0512', 'Singapore', NULL, NULL, 'Chandra Leka', NULL, NULL, NULL, '2021-06-10 19:37:28', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
-  ('16', 'S', NULL, 'Lyngbysild', NULL, '43844108', NULL, 'Lyngbysild Fiskebakken 10', NULL, 'Lyngby', '', '2800', 'Denmark', NULL, NULL, 'Niels Petersen', NULL, NULL, NULL, '2021-06-10 19:37:28', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
-  ('17', 'S', NULL, 'Zaanse Snoepfabriek', NULL, '(12345) 1212', NULL, 'Verkoop Rijnweg 22', NULL, 'Zaandam', '', '9999 ZZ', 'Netherlands', NULL, NULL, 'Dirk Luchte', NULL, NULL, NULL, '2021-06-10 19:37:28', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
-  ('18', 'S', NULL, 'Formaggi Fortini s.r.l.', NULL, '(0544) 60323', NULL, 'Viale Dante, 75', NULL, 'Ravenna', '', '48100', 'Italy', NULL, NULL, 'Elio Rossi', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('19', 'S', NULL, 'Norske Meierier', NULL, '(0)2-953010', NULL, 'Hatlevegen 5', NULL, 'Sandvika', '', '1320', 'Norway', NULL, NULL, 'Beate Vileid', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('20', 'S', NULL, 'Bigfoot Breweries', NULL, '(503) 555-9931', NULL, '3400 - 8th Avenue Suite 210', NULL, 'Bend', 'OR', '97101', 'USA', NULL, NULL, 'Cheryl Saylor', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('21', 'S', NULL, 'Svensk Sjöföda AB', NULL, '08-123 45 67', NULL, 'Brovallavägen 231', NULL, 'Stockholm', '', 'S-123 45', 'Sweden', NULL, NULL, 'Michael Björn', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('22', 'S', NULL, 'Aux joyeux ecclésiastiques', NULL, '(1) 03.83.00.68', NULL, '203, Rue des Francs-Bourgeois', NULL, 'Paris', '', '75004', 'France', NULL, NULL, 'Guylène Nodier', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('23', 'S', NULL, 'New England Seafood Cannery', NULL, '(617) 555-3267', NULL, 'Order Processing Dept. 2100 Paul Revere Blvd.', NULL, 'Boston', 'MA', '02134', 'USA', NULL, NULL, 'Robb Merchant', NULL, NULL, NULL, '2021-06-15 19:40:07', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('3', 'S', NULL, 'Exotic Liquids', NULL, '(171) 555-2222', NULL, '49 Gilbert St.', NULL, 'London', '', 'EC1 4SD', 'UK', NULL, NULL, 'Charlotte Cooper', NULL, NULL, NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
-  ('4', 'S', NULL, 'New Orleans Cajun Delights', NULL, '(100) 555-4822', NULL, 'P.O. Box 78934', NULL, 'New Orleans', 'LA', '70117', 'USA', NULL, NULL, 'Shelley Burke', NULL, NULL, NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
-  ('5', 'S', NULL, 'Tokyo Traders', NULL, '(03) 3555-5011', NULL, '9-8 Sekimai Musashino-shi', NULL, 'Tokyo', '', '100', 'Japan', NULL, NULL, 'Yoshi Nagase', NULL, NULL, NULL, '2021-06-10 19:31:17', '2021-06-10 19:31:17', 'Administrador', 'Administrador'),
-  ('6', 'S', NULL, 'Mayumis', NULL, '(06) 431-7877', NULL, '92 Setsuko Chuo-ku', NULL, 'Osaka', '', '545', 'Japan', NULL, NULL, 'Mayumi Ohno', NULL, NULL, NULL, '2021-06-10 19:33:41', '2021-06-10 19:33:41', 'Administrador', 'Administrador'),
-  ('7', 'S', NULL, 'Pavlova, Ltd.', NULL, '(03) 444-2343', NULL, '74 Rose St. Moonie Ponds', NULL, 'Melbourne', 'Victoria', '3058', 'Australia', NULL, NULL, 'Ian Devling', NULL, NULL, NULL, '2021-06-10 19:33:48', '2021-06-10 19:33:48', 'Administrador', 'Administrador'),
-  ('8', 'S', NULL, 'Cooperativa de Quesos Las Cabras', NULL, '(98) 598 76 54', NULL, 'Calle del Rosal 4', NULL, 'Oviedo', 'Asturias', '33007', 'Spain', NULL, NULL, 'Antonio del Valle Saavedra', NULL, NULL, NULL, '2021-06-10 19:34:56', '2021-06-10 19:34:56', 'Administrador', 'Administrador'),
-  ('9', 'S', NULL, 'Forêts dérables', NULL, '(514) 555-2955', NULL, '148 rue Chasseur', NULL, 'Ste-Hyacinthe', 'Québec', 'J2S 7S8', 'Canada', NULL, NULL, 'Chantal Goulet', NULL, NULL, NULL, '2021-06-10 19:36:14', '2021-06-10 19:36:14', 'Administrador', 'Administrador'),
-  ('ANGEL', 'S', NULL, 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-17 09:36:55', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
-  ('FER', 'S', NULL, 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
-  ('LAIBENSE', 'S', NULL, 'LA IBENSE JUGUETERA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-19 11:23:01', '2024-10-06 20:36:59', 'Administrador', 'Administrador'),
-  ('PEPI', 'S', NULL, 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
+INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `RAZON_SOCIAL_PRV`, `NOMBRE_PRV`, `NIF_PRV`, `MOVIL_PRV`, `EMAIL_PRV`, `DIRECCION1_PRV`, `DIRECCION2_PRV`, `POBLACION_PRV`, `PROVINCIA_PRV`, `CODIGO_POSTAL_PRV`, `PAIS_PRV`, `OBSERVACIONES_PRV`, `REFERENCIA_PRV`, `CONTACTO_PRV`, `TELEFONO_CONTACTO_PRV`, `TELEFONO_PRV`, `IBAN_PRV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('000', 'S', NULL, 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 12:05:44', '2024-10-06 20:26:38', 'Administrador', 'Administrador'),
+  ('010', 'S', NULL, 'RODRIGO ANTON', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-10 17:34:42', '2024-10-06 21:17:37', 'Administrador', 'Administrador'),
+  ('10', 'S', NULL, 'Gai pâturage', NULL, NULL, '38.76.98.06', NULL, 'Bat. B 3, rue des Alpes', NULL, 'Annecy', '', '74000', 'France', NULL, NULL, 'Eliane Noz', NULL, NULL, NULL, '2024-10-06 20:13:41', '2021-06-10 19:36:20', 'Administrador', 'Administrador'),
+  ('11', 'S', NULL, 'Escargots Nouveaux', NULL, NULL, '85.57.00.07', NULL, '22, rue H. Voiron', NULL, 'Montceau', '', '71300', 'France', NULL, NULL, 'Marie Delamare', NULL, NULL, NULL, '2021-06-10 19:36:25', '2021-06-10 19:36:25', 'Administrador', 'Administrador'),
+  ('12', 'S', NULL, 'Pasta Buttini s.r.l.', NULL, NULL, '(089) 6547665', NULL, 'Via dei Gelsomini, 153', NULL, 'Salerno', '', '84100', 'Italy', NULL, NULL, 'Giovanni Giudici', NULL, NULL, NULL, '2021-06-10 19:36:35', '2021-06-10 19:36:35', 'Administrador', 'Administrador'),
+  ('13', 'S', NULL, 'Ma Maison', NULL, NULL, '(514) 555-9022', NULL, '2960 Rue St. Laurent', NULL, 'Montréal', 'Québec', 'H1J 1C3', 'Canada', NULL, NULL, 'Jean-Guy Lauzon', NULL, NULL, NULL, '2021-06-10 19:36:46', '2021-06-10 19:36:46', 'Administrador', 'Administrador'),
+  ('14', 'S', NULL, 'Karkki Oy', NULL, NULL, '(953) 10956', NULL, 'Valtakatu 12', NULL, 'Lappeenranta', '', '53120', 'Finland', NULL, NULL, 'Anne Heikkonen', NULL, NULL, NULL, '2021-06-10 19:37:22', '2021-06-10 19:37:22', 'Administrador', 'Administrador'),
+  ('15', 'S', NULL, 'Leka Trading', NULL, NULL, '555-8787', NULL, '471 Serangoon Loop, Suite #402', NULL, 'Singapore', '', '0512', 'Singapore', NULL, NULL, 'Chandra Leka', NULL, NULL, NULL, '2021-06-10 19:37:28', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
+  ('16', 'S', NULL, 'Lyngbysild', NULL, NULL, '43844108', NULL, 'Lyngbysild Fiskebakken 10', NULL, 'Lyngby', '', '2800', 'Denmark', NULL, NULL, 'Niels Petersen', NULL, NULL, NULL, '2021-06-10 19:37:28', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
+  ('17', 'S', NULL, 'Zaanse Snoepfabriek', NULL, NULL, '(12345) 1212', NULL, 'Verkoop Rijnweg 22', NULL, 'Zaandam', '', '9999 ZZ', 'Netherlands', NULL, NULL, 'Dirk Luchte', NULL, NULL, NULL, '2021-06-10 19:37:28', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
+  ('18', 'S', NULL, 'Formaggi Fortini s.r.l.', NULL, NULL, '(0544) 60323', NULL, 'Viale Dante, 75', NULL, 'Ravenna', '', '48100', 'Italy', NULL, NULL, 'Elio Rossi', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('19', 'S', NULL, 'Norske Meierier', NULL, NULL, '(0)2-953010', NULL, 'Hatlevegen 5', NULL, 'Sandvika', '', '1320', 'Norway', NULL, NULL, 'Beate Vileid', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('20', 'S', NULL, 'Bigfoot Breweries', NULL, NULL, '(503) 555-9931', NULL, '3400 - 8th Avenue Suite 210', NULL, 'Bend', 'OR', '97101', 'USA', NULL, NULL, 'Cheryl Saylor', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('21', 'S', NULL, 'Svensk Sjöföda AB', NULL, NULL, '08-123 45 67', NULL, 'Brovallavägen 231', NULL, 'Stockholm', '', 'S-123 45', 'Sweden', NULL, NULL, 'Michael Björn', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('22', 'S', NULL, 'Aux joyeux ecclésiastiques', NULL, NULL, '(1) 03.83.00.68', NULL, '203, Rue des Francs-Bourgeois', NULL, 'Paris', '', '75004', 'France', NULL, NULL, 'Guylène Nodier', NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('23', 'S', NULL, 'New England Seafood Cannery', NULL, NULL, '(617) 555-3267', NULL, 'Order Processing Dept. 2100 Paul Revere Blvd.', NULL, 'Boston', 'MA', '02134', 'USA', NULL, NULL, 'Robb Merchant', NULL, NULL, NULL, '2021-06-15 19:40:07', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('3', 'S', NULL, 'Exotic Liquids', NULL, NULL, '(171) 555-2222', NULL, '49 Gilbert St.', NULL, 'London', '', 'EC1 4SD', 'UK', NULL, NULL, 'Charlotte Cooper', NULL, NULL, NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
+  ('4', 'S', NULL, 'New Orleans Cajun Delights', NULL, NULL, '(100) 555-4822', NULL, 'P.O. Box 78934', NULL, 'New Orleans', 'LA', '70117', 'USA', NULL, NULL, 'Shelley Burke', NULL, NULL, NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
+  ('5', 'S', NULL, 'Tokyo Traders', NULL, NULL, '(03) 3555-5011', NULL, '9-8 Sekimai Musashino-shi', NULL, 'Tokyo', '', '100', 'Japan', NULL, NULL, 'Yoshi Nagase', NULL, NULL, NULL, '2021-06-10 19:31:17', '2021-06-10 19:31:17', 'Administrador', 'Administrador'),
+  ('6', 'S', NULL, 'Mayumis', NULL, NULL, '(06) 431-7877', NULL, '92 Setsuko Chuo-ku', NULL, 'Osaka', '', '545', 'Japan', NULL, NULL, 'Mayumi Ohno', NULL, NULL, NULL, '2021-06-10 19:33:41', '2021-06-10 19:33:41', 'Administrador', 'Administrador'),
+  ('7', 'S', NULL, 'Pavlova, Ltd.', NULL, NULL, '(03) 444-2343', NULL, '74 Rose St. Moonie Ponds', NULL, 'Melbourne', 'Victoria', '3058', 'Australia', NULL, NULL, 'Ian Devling', NULL, NULL, NULL, '2021-06-10 19:33:48', '2021-06-10 19:33:48', 'Administrador', 'Administrador'),
+  ('8', 'S', NULL, 'Cooperativa de Quesos Las Cabras', NULL, NULL, '(98) 598 76 54', NULL, 'Calle del Rosal 4', NULL, 'Oviedo', 'Asturias', '33007', 'Spain', NULL, NULL, 'Antonio del Valle Saavedra', NULL, NULL, NULL, '2021-06-10 19:34:56', '2021-06-10 19:34:56', 'Administrador', 'Administrador'),
+  ('9', 'S', NULL, 'Forêts dérables', NULL, NULL, '(514) 555-2955', NULL, '148 rue Chasseur', NULL, 'Ste-Hyacinthe', 'Québec', 'J2S 7S8', 'Canada', NULL, NULL, 'Chantal Goulet', NULL, NULL, NULL, '2021-06-10 19:36:14', '2021-06-10 19:36:14', 'Administrador', 'Administrador'),
+  ('ANGEL', 'S', NULL, 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-17 09:36:55', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
+  ('FER', 'S', NULL, 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
+  ('LAIBENSE', 'S', NULL, 'LA IBENSE JUGUETERA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-19 11:23:01', '2024-10-06 20:36:59', 'Administrador', 'Administrador'),
+  ('PEPI', 'S', NULL, 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
 -- 27 registros exportados
 
 
@@ -6942,7 +7117,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-20 06:24:26', '2026-05-20 06:24:26', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-20 07:35:59', '2026-05-20 07:35:59', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -18763,4 +18938,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 20/05/2026 6:24:34
+-- Backup completado: 20/05/2026 7:36:57
