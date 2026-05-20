@@ -87,6 +87,10 @@ type
     // unqryTablaG. Antes de este refactor los Opens vivian en
     // DataModuleCreate y bloqueaban la UI 17-21 segundos al abrir el tab.
     procedure AbrirDetalles; override;
+    // En main thread tras AbrirDetalles: reactiva los TDataSource que
+    // se desactivaron durante el thread y dispara manualmente el
+    // AfterScroll del stock (que tambien se silencio).
+    procedure ReactivarControlesTrasAbrir; override;
     procedure GetCodigoAutoArticulo;
     function ArticuloTieneProvPrin(sArt:String):Boolean;
     procedure CopiarProveedoraArticulo(dtProveedores:TDataset);
@@ -517,6 +521,11 @@ procedure TdmArticulos.AbrirDetalles;
 const
   TAG = 'Articulos.AbrirDetalles';
 
+  procedure DesactivarDS(ds: TDataSource);
+  begin
+    if Assigned(ds) then ds.Enabled := False;
+  end;
+
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
   var
     swQ: TStopwatch;
@@ -539,27 +548,91 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  // Lookups primero (sin master/detail) — los necesitan combos/lookups
-  // de la ficha del articulo.
-  AbrirConTiempo(unqryTiposIVA,             'unqryTiposIVA');
-  AbrirConTiempo(unqryFamiliaArticulos,     'unqryFamiliaArticulos');
-  AbrirConTiempo(unqryVariaciones,          'unqryVariaciones');
+  // (1) Desactivar todos los TDataSource del DM antes de abrir las
+  // queries en el thread. Asi los controles UI (cxDBLookupComboBox
+  // ListSource = dsFamiliaArticulos / dsTiposIVA / etc., cxGrid via
+  // DataController.DataSource, etc.) NO se enteran del cambio Active
+  // desde un thread aparte — DevExpress NO es thread-safe y se cuelga
+  // al renderizar dropdowns desde un thread. ReactivarControlesTrasAbrir
+  // los restaura en main thread tras volver del callback.
+  DesactivarDS(dsFamiliaArticulos);
+  DesactivarDS(dsTarifasArticulos);
+  DesactivarDS(dsProveedoresArticulos);
+  DesactivarDS(dsLinFacturasArticulos);
+  DesactivarDS(dsProveedores);
+  DesactivarDS(dsTiposIVA);
+  DesactivarDS(dsTarifas);
+  DesactivarDS(dsVariaciones);
+  DesactivarDS(dsVariacionesArticulos);
+  DesactivarDS(dsSkus);
+  DesactivarDS(dsStockArticulos);
+  DesactivarDS(dsMovimientosArticulos);
+  DesactivarDS(dsAtributosBasicosLookup);
+  DesactivarDS(dsDetallesAtributos);
+  DesactivarDS(dsEtiquetasArt);
+
+  // (2) unqryStockArticulos.AfterScroll dispara
+  // unqryStockArticulosAfterScroll que toca el cxGrid tvArticulosStock
+  // (ClearItems, CreateAllItems, Width). En thread esto cuelga. Lo
+  // silenciamos temporalmente; lo dispararemos manualmente desde main
+  // thread en ReactivarControlesTrasAbrir.
+  unqryStockArticulos.AfterScroll := nil;
+
+  // (3) Abrir las queries en thread. El orden importa: master/detail
+  // primero los lookups simples; luego los detail (con MasterSource =
+  // dsTablaG, que abriran con filtro vacio o con el primer codigo del
+  // master segun el estado de dsTablaG.DataSet).
+  AbrirConTiempo(unqryTiposIVA,               'unqryTiposIVA');
+  AbrirConTiempo(unqryFamiliaArticulos,       'unqryFamiliaArticulos');
+  AbrirConTiempo(unqryVariaciones,            'unqryVariaciones');
   AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
-  // Detalle (con MasterSource = dsTablaG, abren con filtro vacio porque
-  // dsTablaG.DataSet aun no esta asignado).
-  AbrirConTiempo(unqryTarifasArticulos,     'unqryTarifasArticulos');
-  AbrirConTiempo(unqryProveedoresArticulos, 'unqryProveedoresArticulos');
-  AbrirConTiempo(unqryLinFacturasArticulos, 'unqryLinFacturasArticulos');
-  AbrirConTiempo(unqryVariacionesArticulos, 'unqryVariacionesArticulos');
-  AbrirConTiempo(unqrySkus,                 'unqrySkus');
-  AbrirConTiempo(unqryStockArticulos,       'unqryStockArticulos');
-  AbrirConTiempo(unqryMovimientosArticulos, 'unqryMovimientosArticulos');
-  AbrirConTiempo(unqryDetallesAtributos,    'unqryDetallesAtributos');
+  AbrirConTiempo(unqryTarifasArticulos,       'unqryTarifasArticulos');
+  AbrirConTiempo(unqryProveedoresArticulos,   'unqryProveedoresArticulos');
+  AbrirConTiempo(unqryLinFacturasArticulos,   'unqryLinFacturasArticulos');
+  AbrirConTiempo(unqryVariacionesArticulos,   'unqryVariacionesArticulos');
+  AbrirConTiempo(unqrySkus,                   'unqrySkus');
+  AbrirConTiempo(unqryStockArticulos,         'unqryStockArticulos');
+  AbrirConTiempo(unqryMovimientosArticulos,   'unqryMovimientosArticulos');
+  AbrirConTiempo(unqryDetallesAtributos,      'unqryDetallesAtributos');
   // QuitarEscribiblesVista necesita unqryTarifasArticulos abierto (ya
   // garantizado por AbrirConTiempo arriba). Antes vivia al final de
   // DataModuleCreate.
   QuitarEscribiblesVista;
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmArticulos.ReactivarControlesTrasAbrir;
+
+  procedure ActivarDS(ds: TDataSource);
+  begin
+    if Assigned(ds) then ds.Enabled := True;
+  end;
+
+begin
+  inherited;
+  // Reactivar TDataSource: aqui SI estamos en main thread, asi que
+  // los controles vinculados (cxDBLookupComboBox, cxGrid, ...) se
+  // enteran del Active=True ahora y renderizan correctamente.
+  ActivarDS(dsFamiliaArticulos);
+  ActivarDS(dsTarifasArticulos);
+  ActivarDS(dsProveedoresArticulos);
+  ActivarDS(dsLinFacturasArticulos);
+  ActivarDS(dsProveedores);
+  ActivarDS(dsTiposIVA);
+  ActivarDS(dsTarifas);
+  ActivarDS(dsVariaciones);
+  ActivarDS(dsVariacionesArticulos);
+  ActivarDS(dsSkus);
+  ActivarDS(dsStockArticulos);
+  ActivarDS(dsMovimientosArticulos);
+  ActivarDS(dsAtributosBasicosLookup);
+  ActivarDS(dsDetallesAtributos);
+  ActivarDS(dsEtiquetasArt);
+  // Restaurar el AfterScroll del stock y dispararlo manualmente para
+  // que tvArticulosStock se rellene con el stock del primer articulo.
+  unqryStockArticulos.AfterScroll := unqryStockArticulosAfterScroll;
+  if unqryStockArticulos.Active and (not unqryStockArticulos.IsEmpty) then
+    unqryStockArticulosAfterScroll(unqryStockArticulos);
 end;
 
 procedure TdmArticulos.QuitarEscribiblesVista;
