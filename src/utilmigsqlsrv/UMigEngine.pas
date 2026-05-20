@@ -129,6 +129,21 @@ type
 
 // Helpers compartidos por todos los mappers --------------------------------
 
+// Busca un valor en fza_atributos_valores por (ID_VA, AV). Devuelve
+// ID_AV o 0 si no existe. Usado para enlazar SKUs con sus colores y
+// tallas en fza_atributos_sku.
+function BuscarIdAV(Eng: TMigEngine; const sIdVa, sAv: string): Integer;
+
+// Busca un atributo basico canonico por (ID_VA_ATB, CODIGO_ATB).
+// Devuelve ID_ATB o 0.
+function BuscarIdATB(Eng: TMigEngine; const sIdVa,
+                     sCodAtb: string): Integer;
+
+// Convierte texto a codigo canonico mayusculas+_ (sin acentos ni
+// caracteres especiales). Usado para CODIGO_ATB y para el nombre de
+// la talla/color en el CODIGO_UNIDAD_SKU.
+function NormalizarCodigoAtb(const s: string): string;
+
 // Devuelve la cadena en mayúsculas y sin espacios laterales, o cadena vacía.
 function NormalizarCodigo(const s: string): string;
 
@@ -316,6 +331,65 @@ end;
 // =========================================================================
 //  Helpers
 // =========================================================================
+
+function BuscarIdAV(Eng: TMigEngine; const sIdVa, sAv: string): Integer;
+var qLook: TUniQuery;
+begin
+  qLook := TUniQuery.Create(nil);
+  try
+    qLook.Connection := Eng.ConDst;
+    qLook.SQL.Text   :=
+      'SELECT ID_AV FROM fza_atributos_valores ' +
+      'WHERE ID_VA_AV = :v AND AV = :av LIMIT 1';
+    qLook.ParamByName('v').AsString  := sIdVa;
+    qLook.ParamByName('av').AsString := sAv;
+    qLook.Open;
+    if qLook.IsEmpty then
+      Result := 0
+    else
+      Result := qLook.FieldByName('ID_AV').AsInteger;
+  finally
+    qLook.Free;
+  end;
+end;
+
+function BuscarIdATB(Eng: TMigEngine; const sIdVa,
+                     sCodAtb: string): Integer;
+var qLook: TUniQuery;
+begin
+  qLook := TUniQuery.Create(nil);
+  try
+    qLook.Connection := Eng.ConDst;
+    qLook.SQL.Text   :=
+      'SELECT ID_ATB FROM fza_atributos_basicos ' +
+      'WHERE ID_VA_ATB = :v AND CODIGO_ATB = :c LIMIT 1';
+    qLook.ParamByName('v').AsString := sIdVa;
+    qLook.ParamByName('c').AsString := sCodAtb;
+    qLook.Open;
+    if qLook.IsEmpty then
+      Result := 0
+    else
+      Result := qLook.FieldByName('ID_ATB').AsInteger;
+  finally
+    qLook.Free;
+  end;
+end;
+
+function NormalizarCodigoAtb(const s: string): string;
+var i: Integer; c: Char;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+  begin
+    c := s[i];
+    case c of
+      'A'..'Z', '0'..'9', '_': Result := Result + c;
+      'a'..'z':                Result := Result + UpCase(c);
+      ' ', '-', '/', '.':      Result := Result + '_';
+    end;
+  end;
+  if Result = '' then Result := 'X';
+end;
 
 function NormalizarCodigo(const s: string): string;
 begin

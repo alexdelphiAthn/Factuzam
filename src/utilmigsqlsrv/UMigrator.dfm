@@ -304,6 +304,36 @@ object FormMigrator: TFormMigrator
       TabOrder = 0
       Text = 'MIGRADOR'
     end
+    object lblNivelFam: TLabel
+      Left = 380
+      Top = 14
+      Width = 130
+      Height = 15
+      Caption = 'Nivel familias hoja:'
+    end
+    object edNivelFam: TEdit
+      Left = 520
+      Top = 11
+      Width = 40
+      Height = 23
+      TabOrder = 2
+      Text = '4'
+    end
+    object lblDigitosArt: TLabel
+      Left = 580
+      Top = 14
+      Width = 130
+      Height = 15
+      Caption = 'D'#237'gitos contador art.:'
+    end
+    object edDigitosArt: TEdit
+      Left = 720
+      Top = 11
+      Width = 40
+      Height = 23
+      TabOrder = 3
+      Text = '4'
+    end
     object GroupListado: TGroupBox
       Left = 8
       Top = 42

@@ -31,6 +31,11 @@ src/utilmigsqlsrv/
 ├── inLibMigArticulos.pas          dbo.ocartp     → fza_articulos
 ├── inLibMigArticulosAtributos.pas dbo.ocartcol   → fza_articulos_atributos_basicos
 │                                  dbo.ocarttal   → idem (asignaciones por art)
+├── inLibMigArticulosSkus.pas      dbo.ocartbap   → fza_articulos_skus +
+│                                                   fza_atributos_sku +
+│                                                   fza_codigos_barras
+├── inLibMigInventarios.pas        dbo.ocartacp   → fza_inventarios +
+│                                                   fza_inventarios_lineas
 └── resultados/                    CSVs de muestra exportados desde SSMS
 ```
 

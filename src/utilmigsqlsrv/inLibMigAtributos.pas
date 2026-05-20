@@ -213,9 +213,10 @@ begin
   end;
 end;
 
-// Convierte 'XX' (texto del color/talla origen) en un código apto para
-// CODIGO_ATB: mayúsculas, espacios → '_', sin caracteres raros.
-function NormalizarCodigoAtb(const s: string): string;
+// NormalizarCodigoAtb se ha movido a UMigEngine para reutilizarla.
+// Aqui se elimina la copia local — la firma esta exportada por el motor.
+{$IFDEF NUNCA_DEFINIDO}
+function NormalizarCodigoAtbLOCAL(const s: string): string;
 var i: Integer; c: Char;
 begin
   Result := '';
@@ -232,6 +233,7 @@ begin
   end;
   if Result = '' then Result := 'X';
 end;
+{$ENDIF}
 
 // =========================================================================
 //  Migrador COLORES MAESTROS
