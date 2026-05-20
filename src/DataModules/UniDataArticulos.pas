@@ -91,6 +91,12 @@ type
     // se desactivaron durante el thread y dispara manualmente el
     // AfterScroll del stock (que tambien se silencio).
     procedure ReactivarControlesTrasAbrir; override;
+    // Carga perezosa de tarifas. La vista vi_articulos_tarifas tarda
+    // ~6 segundos en abrir por culpa de subqueries DEPENDENT y un
+    // DERIVED full-scan. La quitamos de AbrirDetalles y la abrimos
+    // solo cuando el usuario hace click en la sub-pestaña Tarifas
+    // (ver TfrmMtoArticulos.PcDetailChange).
+    procedure AsegurarTarifasAbiertas;
     procedure GetCodigoAutoArticulo;
     function ArticuloTieneProvPrin(sArt:String):Boolean;
     procedure CopiarProveedoraArticulo(dtProveedores:TDataset);
@@ -557,7 +563,9 @@ begin
     AbrirConTiempo(unqryFamiliaArticulos,       'unqryFamiliaArticulos');
     AbrirConTiempo(unqryVariaciones,            'unqryVariaciones');
     AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
-    AbrirConTiempo(unqryTarifasArticulos,       'unqryTarifasArticulos');
+    // unqryTarifasArticulos NO se abre aqui: la vista tarda ~6s
+    // (subqueries DEPENDENT, ver EXPLAIN). Se abre solo cuando el
+    // usuario va a la pestaña tsTarifas, via AsegurarTarifasAbiertas.
     AbrirConTiempo(unqryProveedoresArticulos,   'unqryProveedoresArticulos');
     AbrirConTiempo(unqryLinFacturasArticulos,   'unqryLinFacturasArticulos');
     AbrirConTiempo(unqryVariacionesArticulos,   'unqryVariacionesArticulos');
@@ -568,10 +576,9 @@ begin
   finally
     unqryStockArticulos.AfterScroll := saveAfterScroll;
   end;
-  // QuitarEscribiblesVista necesita unqryTarifasArticulos abierto (ya
-  // garantizado por AbrirConTiempo arriba). Antes vivia al final de
-  // DataModuleCreate.
-  QuitarEscribiblesVista;
+  // QuitarEscribiblesVista necesita unqryTarifasArticulos abierto; ahora
+  // que la abrimos perezosamente, esa rutina se llama desde
+  // AsegurarTarifasAbiertas tras el primer Open.
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -581,6 +588,25 @@ begin
   // Ya no hay TDataSource desactivados ni AfterScroll silenciado:
   // AbrirDetalles corre en main thread y no necesita la proteccion
   // contra DevExpress non-thread-safe. Metodo vacio por compatibilidad.
+end;
+
+procedure TdmArticulos.AsegurarTarifasAbiertas;
+var
+  sw: TStopwatch;
+begin
+  if unqryTarifasArticulos.Active then Exit;
+  sw := TStopwatch.StartNew;
+  try
+    unqryTarifasArticulos.Open;
+    QuitarEscribiblesVista;
+    inLibLog.Log.LogPerf('Articulos.Lazy', 'unqryTarifasArticulos OK',
+      sw.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Articulos.Lazy',
+        'unqryTarifasArticulos ERROR=' + E.Message,
+        sw.ElapsedMilliseconds);
+  end;
 end;
 
 procedure TdmArticulos.QuitarEscribiblesVista;
