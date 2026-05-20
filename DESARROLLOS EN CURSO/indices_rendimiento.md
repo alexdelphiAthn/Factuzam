@@ -335,10 +335,15 @@ mejora de segundo orden cuando se revise la logica de vigencia.
 mysql -u <user> -p <database> < "DESARROLLOS EN CURSO/indices_rendimiento.sql"
 ```
 
-La migracion es **idempotente**: cada indice se crea con un procedimiento
-auxiliar (`sp_add_index_if_not_exists`) que consulta `information_schema`
-antes de ejecutar el `ALTER TABLE`. Si el indice ya existe lo deja igual, sin
-warnings ni errores. El procedimiento se elimina al final.
+La migracion es **idempotente**: cada indice se crea a traves del
+procedimiento `PRC_ADD_INDEX_IF_NOT_EXISTS`, que consulta
+`information_schema` antes de ejecutar el `ALTER TABLE`. Si el indice ya
+existe lo deja igual, sin warnings ni errores.
+
+El procedimiento se crea con el formato canonico del dump
+(`-- Procedimiento: ...`, `DELIMITER ;;`, `CREATE  PROCEDURE`, `END ;;`)
+y **queda instalado** en la BBDD junto a los demas `PRC_*`, listo para
+reutilizarse en futuras migraciones de rendimiento.
 
 ### 6.1 Verificacion
 
