@@ -441,8 +441,8 @@ begin
       '  WHERE CODIGO_EMP_EMI_VL      = :pEMPRESA                           ' +
       '    AND CODIGO_ALM_EMI_VL      = :pALMACEN                           ' +
       '    AND CODIGO_CAJA_EMI_VL     = :pCAJA                              ' +
-      '    AND DATE(FECHA_EMISION_VL) >= :pFDESDE                           ' +
-      '    AND DATE(FECHA_EMISION_VL) <= :pFHASTA                           ';
+      '    AND FECHA_EMISION_VL       >= :pFDESDE                           ' +
+      '    AND FECHA_EMISION_VL       <  DATE_ADD(:pFHASTA, INTERVAL 1 DAY) ';
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
@@ -465,8 +465,8 @@ begin
       '  WHERE CODIGO_EMP_RED_VL        = :pEMPRESA                         ' +
       '    AND CODIGO_ALM_RED_VL        = :pALMACEN                         ' +
       '    AND CODIGO_CAJA_RED_VL       = :pCAJA                            ' +
-      '    AND DATE(FECHA_REDENCION_VL) >= :pFDESDE                         ' +
-      '    AND DATE(FECHA_REDENCION_VL) <= :pFHASTA                         ';
+      '    AND FECHA_REDENCION_VL       >= :pFDESDE                         ' +
+      '    AND FECHA_REDENCION_VL       <  DATE_ADD(:pFHASTA, INTERVAL 1 DAY) ';
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
