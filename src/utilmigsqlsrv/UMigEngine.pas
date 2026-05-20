@@ -61,6 +61,7 @@ type
     FOnProgress:     TMigProgressProc;
     FUsuario:        string;
     FItems:          TObjectList<TMigItem>;
+    FItemsCompartidos: Boolean;  // True si FItems no nos pertenece
     FCurrentDominio:      string;
     FCurrentTotal:        Integer;
     FCurrentRow:          Integer;
@@ -70,6 +71,13 @@ type
     procedure DoProgress;
   public
     constructor Create(ConSrv, ConDst: TUniConnection);
+    // Constructor "clon" para hilos de trabajo. Reutiliza la lista de
+    // items y las callbacks del motor maestro (que vive en la UI),
+    // pero usa CONEXIONES propias — pensado para que cada hilo tenga
+    // su pareja origen/destino. Settings (Usuario, NivelFamilias,
+    // DigitosContador) se copian del maestro en este momento.
+    constructor CreateClone(ConSrv, ConDst: TUniConnection;
+                            Master: TMigEngine);
     destructor  Destroy; override;
 
     procedure Registrar(const sCodigo, sNombre, sDescripcion: string;
@@ -177,14 +185,33 @@ begin
   FConSrv              := ConSrv;
   FConDst              := ConDst;
   FItems               := TObjectList<TMigItem>.Create(True);
+  FItemsCompartidos    := False;
   FUsuario             := 'MIGRADOR';
-  FNivelFamiliasHoja   := 4;  // default Herreras
+  FNivelFamiliasHoja   := 4;
   FDigitosContadorArt  := 4;
+end;
+
+constructor TMigEngine.CreateClone(ConSrv, ConDst: TUniConnection;
+                                    Master: TMigEngine);
+begin
+  inherited Create;
+  FConSrv              := ConSrv;
+  FConDst              := ConDst;
+  // Compartimos la lista de items (registrada en el maestro). El
+  // flag evita que el destructor del clon libere objetos ajenos.
+  FItems               := Master.FItems;
+  FItemsCompartidos    := True;
+  FOnLog               := Master.FOnLog;
+  FOnProgress          := Master.FOnProgress;
+  FUsuario             := Master.FUsuario;
+  FNivelFamiliasHoja   := Master.FNivelFamiliasHoja;
+  FDigitosContadorArt  := Master.FDigitosContadorArt;
 end;
 
 destructor TMigEngine.Destroy;
 begin
-  FItems.Free;
+  if not FItemsCompartidos then
+    FItems.Free;
   inherited;
 end;
 

@@ -36,6 +36,11 @@ src/utilmigsqlsrv/
 │                                                   fza_codigos_barras
 ├── inLibMigInventarios.pas        dbo.ocartacp   → fza_inventarios +
 │                                                   fza_inventarios_lineas
+├── inLibMigTallajes.pas           dbo.ocgrptal + ocgrptalnor →
+│                                                  fza_atributos_conjuntos
+│                                                  + _det
+├── inLibMigArticulosTallajes.pas  ocartp.NroTallaje →
+│                                                fza_articulos_conjuntos_asign
 └── resultados/                    CSVs de muestra exportados desde SSMS
 ```
 
@@ -123,24 +128,51 @@ de este branch ya las traen:
 |              | preservar la jerarquía sección→familia del legacy: |
 |              | "1401" tiene como padre "14"). |
 
-## Ejecución asíncrona
+## Ejecución asíncrona y paralelismo
 
-La migración corre en un **hilo de trabajo OmniThreadLibrary**, no en
-el hilo de UI. Mientras corre:
-- La barra de progreso y el log se actualizan en tiempo real.
-- El botón "Ejecutar migraciones" cambia a "Cancelar". Al pulsarlo se
-  termina el dominio en curso y se sale del bucle.
-- El resto de botones (probar conexión, crear BBDD, cargar esqueleto)
-  se deshabilitan para evitar tocar las mismas `TUniConnection` a la
-  vez (UniDAC no soporta concurrencia en una misma conexión).
-- Al cerrar el form mientras se ejecuta, se solicita cancelación y se
-  espera hasta 5s al worker antes de destruir el motor.
+La migración corre en hilos de trabajo OmniThreadLibrary, no en el
+hilo de UI. Mientras corre:
+- El memo de progreso muestra una línea por dominio activo, con su
+  contador "X / Y (Z%)" actualizándose en tiempo real.
+- El botón "Ejecutar migraciones" cambia a "Cancelar". Al pulsarlo
+  se termina el dominio en curso y se sale del bucle.
+- Los botones de configuración (probar conexión, crear BBDD, cargar
+  esqueleto, limpiar demo) se deshabilitan para evitar tocar las
+  mismas `TUniConnection` que usan los workers.
 
-**No** hay paralelismo entre dominios todavía: los mappers se ejecutan
-en secuencia dentro del hilo de trabajo. Para correr varios a la vez
-habría que dar a cada worker su propio `TUniConnection` y resolver
-el DAG de dependencias (familias antes que artículos, IVAs antes que
-clientes, etc.). Es una iteración futura.
+### Paralelismo entre dominios
+
+Los dominios se agrupan en **waves** según sus dependencias. Dentro
+de una wave todos los dominios corren en **paralelo** (cada uno en su
+propio hilo, con su propia pareja `TUniConnection` origen/destino —
+UniDAC no soporta uso concurrente en una misma conexión). Las waves
+se procesan secuencialmente: la siguiente arranca cuando todos los
+workers de la actual han terminado.
+
+| Wave | Dominios | Depende de |
+|------|----------|------------|
+| 0 | formas_pago · ivas_grupos · ivas · empresas · proveedores · familias · colores_maestros · tallas_maestras | — |
+| 1 | almacenes · clientes · articulos · tallajes | Wave 0 |
+| 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
+| 3 | inventarios | Wave 2 |
+
+`Parallel.ForEach<string>(aDeWave).Execute(...)` levanta `N` workers
+(por defecto OmniThread elige según los núcleos disponibles) y los
+alimenta con los códigos de dominio de la wave. Cada worker:
+1. Clona `TUniConnection` origen + destino vía `dmMig.Clonar*`.
+2. Crea un `TMigEngine.CreateClone` que reutiliza la lista de items y
+   las callbacks del maestro pero con sus propias conexiones y
+   contadores.
+3. Llama `LocalEng.Ejecutar(codigo, Stats)` que lanza el mapper.
+4. Acumula stats vía `TInterlocked.Add` sobre contadores compartidos.
+5. Libera engine + conexiones al salir.
+
+Si un mapper revienta dentro de su transacción, el motor hace
+ROLLBACK del dominio (no de la wave), el contador de errores sube y
+los demás workers de la wave siguen su curso.
+
+Al cerrar el form mientras se ejecuta, se solicita cancelación y se
+espera hasta 5 s a que los workers terminen el dominio en curso.
 
 ## Filosofía de los mappers
 
