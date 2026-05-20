@@ -269,11 +269,20 @@ object FormMigrator: TFormMigrator
       object btnLimpiarDemo: TButton
         Left = 814
         Top = 18
-        Width = 180
+        Width = 90
         Height = 25
-        Caption = 'Limpiar datos demo'
+        Caption = 'Limpiar demo'
         TabOrder = 3
         OnClick = btnLimpiarDemoClick
+      end
+      object btnResetearMig: TButton
+        Left = 908
+        Top = 18
+        Width = 90
+        Height = 25
+        Caption = 'Reset migr.'
+        TabOrder = 4
+        OnClick = btnResetearMigClick
       end
     end
   end
