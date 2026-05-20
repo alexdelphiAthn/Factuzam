@@ -29,7 +29,8 @@ uses
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
-  System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos;
+  System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
+  System.Generics.Collections;
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
@@ -171,6 +172,13 @@ type
       AFocusedRecord: TcxCustomGridRecord;
       ANewItemRecordFocusingChanged: Boolean);
     procedure actGuardarLayoutExecute(Sender: TObject);
+    procedure tvLineasOpeCustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
+    procedure dbtvStockCustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
+    procedure FormDestroy(Sender: TObject);
   private
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
@@ -198,6 +206,15 @@ type
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
     procedure DsLineasDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoStock;
+    procedure tvLineasOpeAvButtonClick(Sender: TObject;
+                                       AButtonIndex: Integer);
+    procedure AbrirPopupAvEnEntrada(Sender: TObject);
+    procedure CargarAvsValidos(const ACodArt: string;
+                               AOrden: Integer;
+                               var AAvs: TArray<string>);
+    procedure RegistrarValorAtributo(AOrden: Integer;
+                                     const AvNuevo: string);
+    procedure FinalizarUltimoAtributo;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -218,6 +235,10 @@ type
     FActualizandoDepositos: Boolean;
   private
     FNumeroCajaActual: Integer;
+    // Bitmap reusable para pintar el cuadradito del color actual en el boton
+    // del editor de atributos (Color, Talla, ...). Se redimensiona a 14x14
+    // en cada InitEdit.
+    FBmpSwatchBoton: TBitmap;
     const MAX_CAJAS = 5;
   public
     procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
@@ -243,6 +264,7 @@ uses
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
+  inLibAtributosPaleta,
   inLibShowMto, inMtoPrincipal,
   System.StrUtils;
 
@@ -364,13 +386,14 @@ end;
 
 procedure TfrmMtoOpeCaja.ConsultarStock(const CodigoInput: string);
 var
-  View: TcxGridDBTableView;
-  I:Integer;
+  View   : TcxGridDBTableView;
+  I      : Integer;
+  Mapa   : TDictionary<string, string>;
 begin
+  if CodigoInput = '' then Exit;
   View := dbtvStock;
   View.BeginUpdate;
-  if (CodigoInput <> '') then
-  begin
+  try
     with DatosCaja.qryStock do
     begin
       Close;
@@ -390,15 +413,52 @@ begin
         end;
       end;
     end;
+  finally
     View.EndUpdate;
-    if DatosCaja.qryStock.Active and not DatosCaja.qryStock.IsEmpty then
-    begin
+  end;
+  if DatosCaja.qryStock.Active and not DatosCaja.qryStock.IsEmpty then
+  begin
+    View.BeginUpdate;
+    try
       try
         View.ApplyBestFit;
       except
       end;
+      // ApplyBestFit solo mide texto: si una celda lleva el cuadradito de
+      // paleta basica, ensanchamos la columna en ANCHO_SWATCH_PX para que el
+      // swatch no recorte el AV. Mismo helper que usa inMtoArticulos en su
+      // grid de stock. Lo agrupamos dentro del BeginUpdate para que el
+      // grid pinte una sola vez al final.
+      Mapa := ObtenerMapaAtributosGlobal;
+      if (Mapa <> nil) and (Mapa.Count > 0) then
+        for I := 0 to View.ColumnCount - 1 do
+          AjustarAnchoColumnaParaSwatch(View.Columns[I], Mapa);
+    finally
+      View.EndUpdate;
     end;
   end;
+end;
+
+procedure TfrmMtoOpeCaja.tvLineasOpeCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+begin
+  // Pinta el cuadradito de la paleta basica al lado del valor de atributo
+  // (Color = MALVA, Talla = 48, ...) en las celdas de las lineas de venta.
+  // Mismo helper que usa inMtoInventarios.
+  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+    ADone := True;
+end;
+
+procedure TfrmMtoOpeCaja.dbtvStockCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+begin
+  // El grid pivotado de stock muestra "CODART/COLOR" en la columna Codigo.
+  // PintarCeldaSwatchSiAplica detecta el segmento tras la "/" y pinta el
+  // cuadradito de la paleta basica.
+  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+    ADone := True;
 end;
 
 function TfrmMtoOpeCaja.ValidarSkuParaVenta(const SkuFinal: string): Boolean;
@@ -1168,11 +1228,20 @@ begin
       Col.Caption := '-';
       Col.Visible := False;
       Col.Width := 80;
-      Col.PropertiesClass := TcxComboBoxProperties;
-      with TcxComboBoxProperties(Col.Properties) do
+      // TcxButtonEdit con un boton bkEllipsis (que cambiamos a bkGlyph en
+      // InitEdit cuando el AV actual tiene swatch en la paleta basica). El
+      // click abre SeleccionarAvConPaleta — mismo patron que inMtoInventarios.
+      Col.PropertiesClass := TcxButtonEditProperties;
+      with TcxButtonEditProperties(Col.Properties) do
       begin
-        DropDownListStyle := lsFixedList;
-        OnEditValueChanged := OnAtributoChanged;
+        ReadOnly := True;
+        Buttons.Clear;
+        with Buttons.Add do
+        begin
+          Default := True;
+          Kind := bkEllipsis;
+        end;
+        OnButtonClick := tvLineasOpeAvButtonClick;
       end;
       Col.Index := IndiceBase + i;
     end;
@@ -1272,11 +1341,9 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1EditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
-  Combo: TcxComboBox;
   NumAtributos: Integer;
   PrimeraColAtributo: TcxGridDBColumn;
-  SkuNuevo, ValorActual: string;
-  EstabaInsertando: Boolean;
+  ValorActual: string;
 begin
   if (AItem = tvArticulo) and
      not (Key in [VK_RETURN, VK_ESCAPE, VK_UP, VK_DOWN, VK_TAB, VK_LEFT,
@@ -1396,111 +1463,10 @@ begin
        end;
     end;
   end;
-  if (AItem.Tag > 0) and (AEdit is TcxComboBox) then
-  begin
-    Combo := TcxComboBox(AEdit);
-    if (Combo.ItemIndex = -1) and (Trim(Combo.Text) = '') then
-    begin
-      if Combo.Properties.Items.Count > 0 then
-        Combo.ItemIndex := 0;
-    end;
-    // Si estaba desplegado, solo cerrarlo y salir
-    // El usuario tendrá que pulsar Enter de nuevo para confirmar
-    // NO: esto es exactamente el doble Enter que queremos evitar
-    // En cambio: cerrarlo y continuar SIN Exit
-    if Combo.DroppedDown then
-      Combo.DroppedDown := False;
-    Combo.PostEditValue;
-    if (VarIsNull(Combo.EditValue)) or
-       (Trim(VarToStr(Combo.EditValue)) = '') then
-    begin
-       Key := 0;
-       Exit;
-    end;
-    // HideEdit SOLO aquí, cuando el combo ya está cerrado y tiene valor
-    tvLineasOpe.Controller.EditingController.HideEdit(True);
-    // CAMBIO 5: Usar FNumAtributosActual en lugar de leer del dataset
-    NumAtributos := FNumAtributosActual;
-    if (AItem.Tag = NumAtributos) then
-    begin
-      if FProcesandoAtributo then
-      begin
-        Key := 0;
-        Exit;
-      end;
-      FProcesandoAtributo := True;
-      DatosCaja.cdsLineas.DisableControls;
-      try
-        EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
-        SkuNuevo := DatosCaja.GenerarSkuFinal(DatosCaja.cdsLineas.FieldByName(
-                                       'CODIGO_ART_FACLIN').AsString);
-        if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-          DatosCaja.cdsLineas.Edit;
-        DatosCaja.cdsLineas.FieldByName(
-                             'CODIGO_UNIDAD_FACLIN').AsString := SkuNuevo;
-
-        if EstabaInsertando and ConsolidarSiExiste(SkuNuevo) then
-        begin
-          if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-            DatosCaja.cdsLineas.Cancel;
-          if not DatosCaja.cdsLineas.IsEmpty then
-            if DatosCaja.cdsLineas.FieldByName(
-                       'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo then
-              DatosCaja.cdsLineas.Delete;
-          DatosCaja.cdsLineas.EnableControls;  // Antes del Append
-          DatosCaja.cdsLineas.Append;
-          tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-          tvLineasOpe.Controller.EditingController.ShowEdit;
-          Key := 0;
-          Exit;
-        end;
-
-        // Validación parametrizada del SKU compuesto por talla/color. Si el
-        // SKU no existe en fza_articulos_skus o no tiene stock (según
-        // parámetros), descartamos la línea y dejamos una nueva preparada.
-        if not ValidarSkuParaVenta(SkuNuevo) then
-        begin
-          if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-            DatosCaja.cdsLineas.Cancel;
-          if not DatosCaja.cdsLineas.IsEmpty
-             and (DatosCaja.cdsLineas.FieldByName(
-                          'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo) then
-            DatosCaja.cdsLineas.Delete;
-          DatosCaja.cdsLineas.EnableControls;
-          dbtvStock.ClearItems;
-          DatosCaja.cdsLineas.Append;
-          tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-          tvLineasOpe.Controller.EditingController.ShowEdit;
-          Key := 0;
-          Exit;
-        end;
-
-        RecalcularPrecioDesdeSku(SkuNuevo);
-        ConsultarStock(SkuNuevo);
-
-      finally
-        FProcesandoAtributo := False;
-        DatosCaja.cdsLineas.EnableControls;  // Restaurar siempre
-      end;
-      if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
-      begin
-        // El parámetro indica avanzar: Guardamos y preparamos nueva línea
-        if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-          DatosCaja.cdsLineas.Post;
-
-        DatosCaja.cdsLineas.Append;
-        tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-      end
-      else
-      begin
-        // El parámetro indica quedarse: Movemos el foco a la descripción
-        tvLineasOpe.Controller.FocusedColumn := tvDescripcion;
-      end;
-
-      tvLineasOpe.Controller.EditingController.ShowEdit;
-      Key := 0;
-    end; // Fin del if (AItem.Tag = NumAtributos)
-  end;
+  // Atributos dinamicos (Color, Talla, ...) ya no usan TcxComboBox: el
+  // popup SeleccionarAvConPaleta se abre desde OnButtonClick del TcxButtonEdit
+  // y la logica del ultimo atributo (validar SKU, consultar stock, avanzar
+  // foco) vive en FinalizarUltimoAtributo, invocado desde RegistrarValorAtributo.
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1FocusedRecordChanged(
@@ -1536,68 +1502,63 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
 var
-  Combo: TcxComboBox;
-  OrdenColumna: Integer;
-  ArticuloPadre: string;
+  BE        : TcxButtonEdit;
+  AvActual  : string;
+  NombreAtb : string;
+  IdVa      : string;
+  Mapa      : TDictionary<string, string>;
+  Info      : TInfoBasico;
+  Btn       : TcxEditButton;
 begin
+  // Columnas de atributo dinamico (Color, Talla, ...). Mismo patron que
+  // inMtoInventarios:
+  //   (1) Si el AV actual tiene color en la paleta basica, el boton muestra
+  //       un glyph con el cuadradito; si no, vuelve a bkEllipsis.
+  //   (2) Si la celda esta vacia, OnEnter dispara el popup automaticamente
+  //       (sustituye al antiguo Combo.DroppedDown via ForzarDespliegue).
   if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin
-    Combo := TcxComboBox(AEdit);
-    Combo.Tag := AItem.Tag;
-    Combo.Properties.OnEditValueChanged := OnAtributoChanged;
-    Combo.OnEnter := nil;
-    OrdenColumna := AItem.Tag;
-    if DatosCaja.cdsLineas.Active then
-      ArticuloPadre := DatosCaja.cdsLineas.FieldByName(
-                                       'CODIGO_ART_FACLIN').AsString
-    else
-      ArticuloPadre := '';
-    with TUniQuery.Create(nil) do
-    try
-      Connection := oConn;
-      SQL.Text :=
-          '  SELECT DISTINCT V.AV                         '+
-          '    FROM fza_atributos_valores V                          '+
-          '   INNER JOIN vi_atributos_nombres N                     '+
-          '      ON V.ID_VA_AV = N.ID_ATRIBUTO                      '+
-          '   INNER JOIN fza_atributos_sku REL                      '+
-          '      ON V.ID_AV = REL.ID_AV_SA                 '+
-          '   INNER JOIN fza_articulos_skus S                       '+
-          '      ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU      '+
-          '     AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN '+
-          '   WHERE N.CODIGO_ART_PADRE_ARTVIN = :PADRE               '+
-          '     AND N.ORDEN_VISUAL_ATRIBUTO = :ORDEN       '+
-          '   ORDER BY V.AV                                   ';
-      ParamByName('PADRE').AsString := ArticuloPadre;
-      ParamByName('ORDEN').AsInteger := OrdenColumna;
-      Open;
-      Combo.Properties.Items.BeginUpdate;
-      try
-        Combo.Properties.Items.Clear;
-        while not Eof do
-        begin
-          Combo.Properties.Items.Add(FieldByName('AV').AsString);
-          Next;
-        end;
-      finally
-        Combo.Properties.Items.EndUpdate;
-      end;
-    finally
-      Free;
-    end;
-    if Combo.Properties.Items.Count > 1 then
+    if AEdit is TcxButtonEdit then
     begin
-      var ValorActual := Sender.Controller.FocusedRecord.Values[AItem.Index];
-      if VarIsNull(ValorActual) or (Trim(VarToStr(ValorActual)) = '') then
+      BE := TcxButtonEdit(AEdit);
+      BE.Tag := AItem.Tag;
+      if BE.Properties.Buttons.Count > 0 then
       begin
-        // CAMBIO 8: ForzarDespliegue usa FInicializandoCombo para no disparar
-        // OnAtributoChanged al asignar ItemIndex := 0
-        Combo.OnEnter := ForzarDespliegue;
-        Combo.ItemIndex := 0;
-      end
-      else
-      begin
-        Combo.OnEnter := nil;
+        Btn := BE.Properties.Buttons[0];
+
+        AvActual  := '';
+        NombreAtb := '';
+        if DatosCaja.cdsLineas.Active
+           and (not DatosCaja.cdsLineas.IsEmpty) then
+        begin
+          AvActual  := DatosCaja.cdsLineas.FieldByName(
+                         'ATTR' + IntToStr(AItem.Tag) + '_VALOR').AsString;
+          NombreAtb := DatosCaja.cdsLineas.FieldByName(
+                         'ATTR' + IntToStr(AItem.Tag) + '_NOMBRE').AsString;
+        end;
+
+        IdVa := '';
+        Mapa := ObtenerMapaAtributosGlobal;
+        if Mapa <> nil then
+          Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
+
+        Info := Default(TInfoBasico);
+        if (IdVa <> '') and (Trim(AvActual) <> '') then
+          ObtenerInfoBasico(IdVa, AvActual, Info);
+
+        if Info.EsValido and
+           PintarSwatchEnBitmap(FBmpSwatchBoton, Info, 14) then
+        begin
+          Btn.Glyph.Assign(FBmpSwatchBoton);
+          Btn.Kind := bkGlyph;
+        end
+        else
+          Btn.Kind := bkEllipsis;
+
+        if Trim(AvActual) = '' then
+          BE.OnEnter := AbrirPopupAvEnEntrada
+        else
+          BE.OnEnter := nil;
       end;
     end;
   end;
@@ -1693,7 +1654,6 @@ var
   LCtrl: TWinControl;
   CodigoBuscado: string;
   CurrentEdit: TcxCustomEdit;
-  Combo: TcxComboBox;
 begin
   if tvLineasOpe.Controller.FocusedItem <> nil then
   if (tvLineasOpe.Controller.FocusedItem.Tag > 0) then
@@ -1707,15 +1667,13 @@ begin
     if tvLineasOpe.Controller.EditingController.IsEditing then
      begin
        CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
-       if (CurrentEdit is TcxComboBox) then
+       // F3 sobre una columna de atributo (Color, Talla, ...) abre el popup
+       // SeleccionarAvConPaleta directamente, equivalente al antiguo
+       // Combo.DroppedDown := True.
+       if (CurrentEdit is TcxButtonEdit) then
        begin
-         Combo := TcxComboBox(CurrentEdit);
-         if Combo.Properties.Items.Count > 1 then
-         begin
-           if not Combo.DroppedDown then
-             Combo.DroppedDown := True;
-           Exit;
-         end;
+         tvLineasOpeAvButtonClick(CurrentEdit, 0);
+         Exit;
        end;
     end;
   end;
@@ -2653,6 +2611,11 @@ begin
   Action := caFree;
 end;
 
+procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FBmpSwatchBoton);
+end;
+
 // Carga en imgFotoStock la foto a 300 px del articulo / SKU de la
 // linea activa. Lo invoca DsLineasDataChange al cambiar de registro.
 procedure TfrmMtoOpeCaja.RefrescarFotoStock;
@@ -2691,6 +2654,7 @@ end;
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
+  FBmpSwatchBoton := TBitmap.Create;
   DatosCaja := TdmCajaOpe.Create(Self);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
@@ -2732,27 +2696,249 @@ begin
   ActualizarFoco;
 end;
 
-// CAMBIO 10: ForzarDespliegue usa FInicializandoCombo para proteger
-// OnAtributoChanged
+// ForzarDespliegue queda como stub porque sigue en la declaracion privada;
+// el OnEnter de TcxButtonEdit ahora apunta a AbrirPopupAvEnEntrada que
+// abre el popup SeleccionarAvConPaleta directamente (mismo patron que
+// inMtoInventarios).
 procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
-var
-  Combo: TcxComboBox;
 begin
-  if Sender is TcxComboBox then
-  begin
-    Combo := TcxComboBox(Sender);
-    // Asignar ItemIndex protegido para que OnAtributoChanged no recalcule el
-    // precio
-    // con un SKU incompleto (todavía falta confirmar este atributo)
-    FInicializandoCombo := True;
-    try
-      Combo.ItemIndex := 0;
-    finally
-      FInicializandoCombo := False;
+  // Sin uso: el flujo de seleccion de atributos pasa por
+  // AbrirPopupAvEnEntrada + tvLineasOpeAvButtonClick.
+end;
+
+procedure TfrmMtoOpeCaja.AbrirPopupAvEnEntrada(Sender: TObject);
+var
+  BE: TcxCustomEdit;
+begin
+  // OnEnter single-shot: cuando el usuario entra en una celda Color/Talla
+  // vacia, disparamos el popup automaticamente (sustituye a la antigua
+  // ForzarDespliegue que desplegaba el TcxComboBox).
+  if not (Sender is TcxCustomEdit) then Exit;
+  BE := TcxCustomEdit(Sender);
+  BE.OnEnter := nil;
+  tvLineasOpeAvButtonClick(BE, 0);
+end;
+
+procedure TfrmMtoOpeCaja.CargarAvsValidos(const ACodArt: string;
+  AOrden: Integer; var AAvs: TArray<string>);
+var
+  Lookup : TArticulosAtributosLookup;
+  Vals   : TArray<TArticuloAtributoValor>;
+  i      : Integer;
+begin
+  // Devuelve los AV (BLANCO, MALVA, 42, 44, ...) que el articulo tiene
+  // referenciados en alguno de sus SKUs para la columna `AOrden`. Mismo
+  // metodo que usa inMtoInventarios: ordena por ORDEN_AV para que tallas
+  // S/M/L/XL salgan correctamente.
+  SetLength(AAvs, 0);
+  if Trim(ACodArt) = '' then Exit;
+  if (AOrden < 1) or (AOrden > 5) then Exit;
+  Lookup := TArticulosAtributosLookup.Create(oConn);
+  try
+    Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
+  finally
+    FreeAndNil(Lookup);
+  end;
+  SetLength(AAvs, Length(Vals));
+  for i := 0 to High(Vals) do
+    AAvs[i] := Vals[i].Valor;
+end;
+
+procedure TfrmMtoOpeCaja.RegistrarValorAtributo(AOrden: Integer;
+                                                 const AvNuevo: string);
+var
+  SkuNuevo: string;
+  NumAtributosRequeridos, NumSeparadores, i: Integer;
+begin
+  // Aplica el AV elegido por el usuario en el popup al campo ATTRn_VALOR
+  // y recalcula el SKU final (CODIGO_UNIDAD_FACLIN). Si el SKU queda
+  // completo, dispara el recalculo de precio. La finalizacion de la linea
+  // (validar SKU, consultar stock, avanzar foco) se hace fuera para no
+  // mover el foco con el editor todavia activo: ver tvLineasOpeAvButtonClick.
+  // Sustituye al antiguo OnAtributoChanged del TcxComboBox.
+  if (AOrden < 1) or (AOrden > 5) then Exit;
+  if not DatosCaja.cdsLineas.Active then Exit;
+  if DatosCaja.cdsLineas.IsEmpty then Exit;
+  if DatosCaja.cdsLineas.State = dsBrowse then
+    DatosCaja.cdsLineas.Edit;
+  if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
+
+  DatosCaja.cdsLineas.FieldByName(
+    'ATTR' + IntToStr(AOrden) + '_VALOR').AsString := AvNuevo;
+
+  SkuNuevo := DatosCaja.GenerarSkuFinal(
+                DatosCaja.cdsLineas.FieldByName(
+                  'CODIGO_ART_FACLIN').AsString);
+  if Trim(SkuNuevo) = '' then
+    SkuNuevo := DatosCaja.cdsLineas.FieldByName(
+                  'CODIGO_ART_FACLIN').AsString;
+  DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := SkuNuevo;
+
+  NumAtributosRequeridos := DatosCaja.cdsLineas.FieldByName(
+                              'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+  NumSeparadores := 0;
+  for i := 1 to Length(SkuNuevo) do
+    if SkuNuevo[i] = '/' then Inc(NumSeparadores);
+
+  if (NumAtributosRequeridos > 0)
+     and (NumSeparadores = NumAtributosRequeridos) then
+    RecalcularPrecioDesdeSku(SkuNuevo);
+end;
+
+procedure TfrmMtoOpeCaja.FinalizarUltimoAtributo;
+var
+  SkuNuevo : string;
+  EstabaInsertando : Boolean;
+begin
+  // Logica que antes vivia inline en cxGrid1DBTableView1EditKeyDown cuando
+  // se confirmaba el ultimo atributo de la linea. Encapsulada para poder
+  // invocarla desde RegistrarValorAtributo (button-click) sin duplicar
+  // codigo.
+  if FProcesandoAtributo then Exit;
+  if not DatosCaja.cdsLineas.Active then Exit;
+  if DatosCaja.cdsLineas.IsEmpty then Exit;
+
+  FProcesandoAtributo := True;
+  DatosCaja.cdsLineas.DisableControls;
+  try
+    EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
+    SkuNuevo := DatosCaja.cdsLineas.FieldByName(
+                                       'CODIGO_UNIDAD_FACLIN').AsString;
+
+    if EstabaInsertando and ConsolidarSiExiste(SkuNuevo) then
+    begin
+      if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+        DatosCaja.cdsLineas.Cancel;
+      if not DatosCaja.cdsLineas.IsEmpty then
+        if DatosCaja.cdsLineas.FieldByName(
+                   'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo then
+          DatosCaja.cdsLineas.Delete;
+      DatosCaja.cdsLineas.EnableControls;
+      DatosCaja.cdsLineas.Append;
+      tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+      tvLineasOpe.Controller.EditingController.ShowEdit;
+      Exit;
     end;
-    if not Combo.DroppedDown then
-      Combo.DroppedDown := True;
-    Combo.OnEnter := nil;
+
+    if not ValidarSkuParaVenta(SkuNuevo) then
+    begin
+      if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+        DatosCaja.cdsLineas.Cancel;
+      if not DatosCaja.cdsLineas.IsEmpty
+         and (DatosCaja.cdsLineas.FieldByName(
+                      'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo) then
+        DatosCaja.cdsLineas.Delete;
+      DatosCaja.cdsLineas.EnableControls;
+      dbtvStock.ClearItems;
+      DatosCaja.cdsLineas.Append;
+      tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+      tvLineasOpe.Controller.EditingController.ShowEdit;
+      Exit;
+    end;
+
+    ConsultarStock(SkuNuevo);
+  finally
+    FProcesandoAtributo := False;
+    DatosCaja.cdsLineas.EnableControls;
+  end;
+
+  if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
+  begin
+    if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+      DatosCaja.cdsLineas.Post;
+    DatosCaja.cdsLineas.Append;
+    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+  end
+  else
+    tvLineasOpe.Controller.FocusedColumn := tvDescripcion;
+
+  tvLineasOpe.Controller.EditingController.ShowEdit;
+end;
+
+procedure TfrmMtoOpeCaja.tvLineasOpeAvButtonClick(Sender: TObject;
+                                                   AButtonIndex: Integer);
+var
+  Col       : TcxGridColumn;
+  Orden     : Integer;
+  ArtPadre  : string;
+  AvActual  : string;
+  NombreAtb : string;
+  IdVa      : string;
+  AvNuevo   : string;
+  Avs       : TArray<string>;
+  Mapa      : TDictionary<string, string>;
+  EditCtrl  : TWinControl;
+  ScrPt     : TPoint;
+  WidHint   : Integer;
+begin
+  // Click en el boton de una columna de atributo (Color, Talla, ...): abre
+  // el popup SeleccionarAvConPaleta con cuadraditos de paleta. Mismo flujo
+  // que inMtoInventarios.tvLineasSkuPropertiesButtonClick.
+  Col := tvLineasOpe.Controller.FocusedColumn;
+  if Col = nil then Exit;
+  Orden := Col.Tag;
+  if (Orden < 1) or (Orden > 5) then Exit;
+  if not DatosCaja.cdsLineas.Active then Exit;
+  if DatosCaja.cdsLineas.IsEmpty then Exit;
+
+  ArtPadre  := DatosCaja.cdsLineas.FieldByName(
+                 'CODIGO_ART_FACLIN').AsString;
+  AvActual  := DatosCaja.cdsLineas.FieldByName(
+                 'ATTR' + IntToStr(Orden) + '_VALOR').AsString;
+  NombreAtb := DatosCaja.cdsLineas.FieldByName(
+                 'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
+
+  CargarAvsValidos(ArtPadre, Orden, Avs);
+  if Length(Avs) = 0 then
+  begin
+    ShowMessage('No hay valores definidos para este atributo.');
+    Exit;
+  end;
+
+  IdVa := '';
+  Mapa := ObtenerMapaAtributosGlobal;
+  if Mapa <> nil then
+    Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
+
+  ScrPt.X := -1; ScrPt.Y := -1;
+  WidHint := 120;
+  if Sender is TWinControl then
+  begin
+    EditCtrl := TWinControl(Sender);
+    ScrPt    := EditCtrl.ClientToScreen(Point(0, EditCtrl.Height));
+    WidHint  := EditCtrl.Width;
+  end;
+
+  if not SeleccionarAvConPaleta(IdVa, Avs, AvActual, AvNuevo,
+                                 ScrPt.X, ScrPt.Y, WidHint) then
+    Exit;
+
+  RegistrarValorAtributo(Orden, AvNuevo);
+
+  // Reflejamos el AV nuevo en el editor para que el usuario lo vea sin
+  // tener que esperar a que se reabra la celda.
+  if Sender is TcxCustomEdit then
+    TcxCustomEdit(Sender).EditValue := AvNuevo;
+
+  // Si era el ultimo atributo necesario, cerramos la linea: validamos SKU,
+  // consultamos stock y avanzamos foco a la siguiente fila/columna. Se hace
+  // aqui (no dentro de RegistrarValorAtributo) para que Cancel/Append no
+  // entren en conflicto con el editor que todavia esta visible.
+  if (Orden = FNumAtributosActual) and (FNumAtributosActual > 0) then
+    FinalizarUltimoAtributo
+  else
+  begin
+    // Hay mas atributos pendientes: avanzamos al siguiente para que el
+    // usuario no tenga que pulsar Tab manualmente. Si la siguiente columna
+    // esta vacia, InitEdit volvera a colgarle AbrirPopupAvEnEntrada y el
+    // popup saldra automaticamente.
+    var SigCol := ObtenerColumnaPorTag(Orden + 1);
+    if (SigCol <> nil) and SigCol.Visible then
+    begin
+      tvLineasOpe.Controller.EditingController.HideEdit(True);
+      tvLineasOpe.Controller.FocusedColumn := SigCol;
+      tvLineasOpe.Controller.EditingController.ShowEdit;
+    end;
   end;
 end;
 
