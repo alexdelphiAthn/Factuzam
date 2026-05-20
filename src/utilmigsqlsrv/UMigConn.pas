@@ -20,7 +20,7 @@ interface
 uses
   System.SysUtils, System.Classes,
   Data.DB,
-  Uni, UniProvider, MySQLUniProvider, SQLServerUniProvider;
+  Uni, UniScript, UniProvider, MySQLUniProvider, SQLServerUniProvider;
 
 type
   TdmMig = class(TDataModule)
