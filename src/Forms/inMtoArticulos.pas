@@ -2010,16 +2010,31 @@ begin
   msAseguraSku := swTramo.ElapsedMilliseconds;
 
   swTramo := TStopwatch.StartNew;
-  // Guard: las queries detail pueden estar todavia cerradas si el usuario
-  // cambia de articulo antes de que AbrirDetalles termine. Refresh sobre
-  // un dataset cerrado lanza EDatabaseError.
+  // Guard doble (Active + try/except): las queries detail pueden estar
+  // cerradas si el handler se dispara antes de que AbrirDetalles termine.
+  // El try/except cubre el caso raro de que cambien de estado entre el
+  // check y la llamada (p. ej. otro handler reentrante que las cierre,
+  // o internals de UniDAC al hacer Refresh con MasterSource transicional).
   if dmmArticulos.unqrySkus.Active then
-    dmmArticulos.unqrySkus.Refresh;
+    try
+      dmmArticulos.unqrySkus.Refresh;
+    except
+      on E: Exception do
+        inLibLog.Log.LogError(
+          '[Articulos.AfterScroll] unqrySkus.Refresh: ' + E.Message);
+    end;
   msRefSkus := swTramo.ElapsedMilliseconds;
 
   swTramo := TStopwatch.StartNew;
   if dmmArticulos.unqryVariacionesArticulos.Active then
-    dmmArticulos.unqryVariacionesArticulos.Refresh;
+    try
+      dmmArticulos.unqryVariacionesArticulos.Refresh;
+    except
+      on E: Exception do
+        inLibLog.Log.LogError(
+          '[Articulos.AfterScroll] unqryVariacionesArticulos.Refresh: ' +
+          E.Message);
+    end;
   msRefVarArt := swTramo.ElapsedMilliseconds;
 
   // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA ANTES de
