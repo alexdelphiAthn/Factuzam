@@ -55,6 +55,11 @@ type
     edDstUser:         TEdit;
     edDstPwd:          TEdit;
     btnProbarDst:      TButton;
+    PanelSetup:        TPanel;
+    GroupSetup:        TGroupBox;
+    btnDumpEsqueleto:  TButton;
+    btnCrearBBDD:      TButton;
+    btnCargarEsquema:  TButton;
     PanelCentro:       TPanel;
     lblUsuario:        TLabel;
     edUsuario:         TEdit;
@@ -75,6 +80,9 @@ type
     procedure btnMarcarTodasClick(Sender: TObject);
     procedure btnDesmarcarTodasClick(Sender: TObject);
     procedure chkSrcWinAuthClick(Sender: TObject);
+    procedure btnDumpEsqueletoClick(Sender: TObject);
+    procedure btnCrearBBDDClick(Sender: TObject);
+    procedure btnCargarEsquemaClick(Sender: TObject);
   private
     FEngine: TMigEngine;
     procedure Log(const sMsg: string);
@@ -95,6 +103,7 @@ implementation
 
 uses
   UMigConn,
+  inLibMigDumpEsqueleto,
   inLibMigFormasPago,
   inLibMigIvasGrupos,
   inLibMigIvas,
@@ -222,6 +231,139 @@ var i: Integer;
 begin
   for i := 0 to listMigs.Items.Count - 1 do
     listMigs.Checked[i] := False;
+end;
+
+// =========================================================================
+//  Acciones "Preparar destino"
+// =========================================================================
+
+procedure TFormMigrator.btnDumpEsqueletoClick(Sender: TObject);
+var
+  oSave:  TSaveDialog;
+  iCount: Integer;
+begin
+  if Trim(edDstBase.Text) = '' then
+  begin
+    ShowMessage('Rellena primero la BBDD ORIGEN del esqueleto en el ' +
+                'panel "Destino" (sera la BBDD viva de la que se extrae).');
+    Exit;
+  end;
+  oSave := TSaveDialog.Create(Self);
+  try
+    oSave.Title      := 'Guardar esqueleto Factuzam (.sql)';
+    oSave.Filter     := 'Scripts SQL (*.sql)|*.sql|Todos (*.*)|*.*';
+    oSave.DefaultExt := 'sql';
+    oSave.FileName   := Format('esqueleto_%s_%s.sql',
+      [edDstBase.Text, FormatDateTime('yyyymmdd_hhnn', Now)]);
+    if not oSave.Execute then Exit;
+
+    Screen.Cursor := crHourGlass;
+    try
+      dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text,
+                              edDstBase.Text, edDstUser.Text,
+                              edDstPwd.Text);
+      dmMig.conDst.Open;
+      Log('Extrayendo esqueleto de "' + edDstBase.Text + '" ...');
+      iCount := DumpEsqueleto(dmMig.conDst, oSave.FileName,
+                              procedure(const s: string)
+                              begin
+                                Log(s);
+                                Application.ProcessMessages;
+                              end);
+      Log(Format('Esqueleto guardado: %d objetos en %s',
+                 [iCount, oSave.FileName]));
+      ShowMessage(Format('Esqueleto generado (%d objetos):'#13#10'%s',
+                  [iCount, oSave.FileName]));
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  except
+    on E: Exception do
+    begin
+      Log('ERROR extrayendo esqueleto: ' + E.Message);
+      ShowMessage('Fallo extrayendo esqueleto:'#13#10 + E.Message);
+    end;
+  end;
+  oSave.Free;
+end;
+
+procedure TFormMigrator.btnCrearBBDDClick(Sender: TObject);
+begin
+  if Trim(edDstBase.Text) = '' then
+  begin
+    ShowMessage('Rellena el campo "Base de datos" del destino antes de ' +
+                'crearla.');
+    Exit;
+  end;
+  if MessageDlg(Format(
+       'Se va a crear la BBDD "%s" en %s:%s con charset utf8mb4 y ' +
+       'collation utf8mb4_spanish_ci.'#13#10'Si ya existe no se hace ' +
+       'nada. ¿Continuar?',
+       [edDstBase.Text, edDstHost.Text, edDstPort.Text]),
+       mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+
+  Screen.Cursor := crHourGlass;
+  try
+    dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text,
+                            edDstBase.Text, edDstUser.Text,
+                            edDstPwd.Text);
+    dmMig.CrearBBDDDestino(edDstBase.Text);
+    Log('BBDD "' + edDstBase.Text + '" creada (o ya existia).');
+    ShowMessage('BBDD "' + edDstBase.Text + '" lista. Ahora carga el ' +
+                'esqueleto.');
+  except
+    on E: Exception do
+    begin
+      Log('ERROR creando BBDD: ' + E.Message);
+      ShowMessage('Fallo creando BBDD:'#13#10 + E.Message);
+    end;
+  end;
+  Screen.Cursor := crDefault;
+end;
+
+procedure TFormMigrator.btnCargarEsquemaClick(Sender: TObject);
+var oOpen: TOpenDialog;
+begin
+  if Trim(edDstBase.Text) = '' then
+  begin
+    ShowMessage('Rellena el campo "Base de datos" del destino.');
+    Exit;
+  end;
+  oOpen := TOpenDialog.Create(Self);
+  try
+    oOpen.Title  := 'Cargar esqueleto Factuzam en ' + edDstBase.Text;
+    oOpen.Filter := 'Scripts SQL (*.sql)|*.sql|Todos (*.*)|*.*';
+    if not oOpen.Execute then Exit;
+
+    if MessageDlg(Format(
+         'Se va a cargar "%s" en la BBDD "%s".'#13#10 +
+         'Si la BBDD ya tiene tablas, el script puede pisarlas.'#13#10 +
+         '¿Continuar?',
+         [ExtractFileName(oOpen.FileName), edDstBase.Text]),
+         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+
+    Screen.Cursor := crHourGlass;
+    try
+      dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text,
+                              edDstBase.Text, edDstUser.Text,
+                              edDstPwd.Text);
+      Log('Cargando esqueleto desde ' + oOpen.FileName + ' ...');
+      dmMig.CargarEsquemaDestino(oOpen.FileName);
+      Log('Esqueleto cargado en "' + edDstBase.Text + '".');
+      ShowMessage('Esqueleto cargado correctamente.');
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  except
+    on E: Exception do
+    begin
+      Log('ERROR cargando esqueleto: ' + E.Message);
+      ShowMessage('Fallo cargando esqueleto:'#13#10 + E.Message);
+    end;
+  end;
+  oOpen.Free;
 end;
 
 procedure TFormMigrator.chkSrcWinAuthClick(Sender: TObject);

@@ -54,6 +54,50 @@ src/utilmigsqlsrv/
 El programa guarda los valores de las conexiones (sin contraseñas) en
 `%USERPROFILE%\Factuzam\migrator.ini`.
 
+## Preparar la BBDD destino desde cero
+
+El propio Migrator ofrece tres botones en la sección "Preparar BBDD
+destino" para no depender de `factuzam_original.sql` (que se queda
+obsoleto en cuanto el esquema cambia):
+
+1. **Extraer esqueleto de BBDD viva…** — conecta a la BBDD que indiques
+   en el panel "Destino" (típicamente la `factuzam` de desarrollo) y
+   genera un `.sql` con:
+   - `CREATE TABLE` de TODAS las tablas `fza_*` (vía `SHOW CREATE TABLE`
+     → refleja el estado real, incluidos índices, defaults, comentarios).
+   - `CREATE VIEW` de las vistas `vi_*`.
+   - `CREATE PROCEDURE` / `FUNCTION` de las rutinas almacenadas.
+   - **Datos de tablas SISTEMA solamente**: `fza_paises`, `fza_ivas_tipos`,
+     `fza_ivas_zonas`, `fza_winforms`, `fza_metadatos`,
+     `fza_generadorprocesos`, `fza_config_campos`. El resto (artículos,
+     clientes, facturas…) sale vacío porque lo rellena el migrador.
+
+2. **Crear BBDD destino (utf8mb4_spanish_ci)** — toma el nombre del
+   campo "Base de datos" del panel destino y ejecuta
+   `CREATE DATABASE IF NOT EXISTS … CHARACTER SET utf8mb4 COLLATE
+   utf8mb4_spanish_ci`. Conecta vía la BBDD de sistema `mysql` para
+   poder hacer el CREATE.
+
+3. **Cargar esqueleto en destino…** — file picker para elegir el `.sql`
+   generado en (1) y volcarlo a la BBDD destino. Usa `TUniScript` que
+   maneja sentencias múltiples, comentarios y `DELIMITER` (necesario
+   para procedures).
+
+Flujo típico para empezar una migración limpia:
+
+```
+1. Apunta "Destino" a tu factuzam de desarrollo.
+2. Click "Extraer esqueleto…" → guarda esqueleto_factuzam_AAAAMMDD.sql
+3. Cambia "Base de datos" a factuzam_herreras (o el nombre que quieras).
+4. Click "Crear BBDD destino"
+5. Click "Cargar esqueleto…" → eliges el fichero de (2)
+6. Marca las migraciones y dale a "Ejecutar".
+```
+
+Si se añade una nueva tabla seed al sistema, registrarla en
+`inLibMigDumpEsqueleto.pas → TablasSistema` para que el esqueleto
+también la incluya con datos.
+
 ## Cambios de esquema requeridos
 
 Algunos mappers necesitan columnas nuevas en el destino que no existían
