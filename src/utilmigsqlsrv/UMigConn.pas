@@ -78,7 +78,6 @@ begin
   conDst.Password    := sPwd;
   conDst.LoginPrompt := False;
   conDst.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-  conDst.SpecificOptions.Values['CharacterSet']     := 'utf8mb4';
 end;
 
 procedure TdmMig.ProbarOrigen;
