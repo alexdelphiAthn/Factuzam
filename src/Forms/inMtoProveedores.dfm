@@ -51,6 +51,11 @@
               DataBinding.FieldName = 'RAZON_SOCIAL_PRV'
               Width = 212
             end
+            object cxgrdbclmnGrdDBTabPrinNOMBRE_PROVEEDOR: TcxGridDBColumn
+              Caption = 'Nombre Comercial'
+              DataBinding.FieldName = 'NOMBRE_PRV'
+              Width = 180
+            end
             object cxgrdbclmnGrdDBTabPrinNIF_CLIENTE: TcxGridDBColumn
               Caption = 'Nif Cif'
               DataBinding.FieldName = 'NIF_PRV'
@@ -201,7 +206,7 @@
             DataBinding.DataField = 'RAZON_SOCIAL_PRV'
             DataBinding.DataSource = dsTablaG
             TabOrder = 3
-            Width = 497
+            Width = 300
           end
           object lblRazonSocial: TcxLabel
             Left = 224
@@ -212,6 +217,29 @@
             Margins.Bottom = 4
             Caption = 'Raz'#243'n Social Fiscal'
             TabOrder = 2
+            Transparent = True
+          end
+          object txtNOMBRE_PROVEEDOR: TcxDBTextEdit
+            Left = 540
+            Top = 31
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            DataBinding.DataField = 'NOMBRE_PRV'
+            DataBinding.DataSource = dsTablaG
+            TabOrder = 13
+            Width = 181
+          end
+          object lblNombreComercial: TcxLabel
+            Left = 540
+            Top = 7
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            Caption = 'Nombre Comercial'
+            TabOrder = 12
             Transparent = True
           end
           object cxdbtxtdtTELEFONO2: TcxDBTextEdit
