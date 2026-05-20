@@ -444,6 +444,10 @@ type
      procedure BuscarProveedores;
      procedure IncorporarTarifas;
      procedure IterateCheckedListArt(lst:TcxListView);
+     // Carga perezosa de la pestaña Tarifas: vi_articulos_tarifas tarda
+     // ~6s por subqueries DEPENDENT. La abrimos solo cuando el usuario
+     // pasa a tsTarifas (ver dmmArticulos.AsegurarTarifasAbiertas).
+     procedure PcDetailChange(Sender: TObject);
   private
     FGestorProp  : TGestorPropiedades;
     FArticuloCargado: string;
@@ -1775,6 +1779,10 @@ begin
   tvStock.DataController.DataSource := dmmArticulos.dsStockArticulos;
   pkFieldName := 'CODIGO_ART_ART';
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
+  // Carga perezosa de Tarifas: solo abrir unqryTarifasArticulos cuando
+  // el usuario pase a esa pestaña. Asi quitamos los ~6s de la
+  // apertura inicial del Mto.
+  pcDetail.OnChange := PcDetailChange;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
   // Codigo del articulo activo. Defensivo: la lista puede llegar aqui
@@ -2951,6 +2959,12 @@ begin
   if BuscarInfoBasicoEnArticulo(AViewInfo.Text, FAtributosStock, Info) then
     if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
       ADone := True;
+end;
+
+procedure TfrmMtoArticulos.PcDetailChange(Sender: TObject);
+begin
+  if (pcDetail.ActivePage = tsTarifas) and Assigned(dmmArticulos) then
+    dmmArticulos.AsegurarTarifasAbiertas;
 end;
 
 procedure TfrmMtoArticulos.EnsancharColumnasStockParaSwatch;
