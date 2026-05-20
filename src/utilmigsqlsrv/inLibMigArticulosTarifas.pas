@@ -163,20 +163,24 @@ begin
         fDto   := 0;
       end;
 
-      // 14 columnas en cCols: el literal 'S' va inline en el format
-      // y los otros 13 valores se sustituyen via %s.
+      // 14 columnas en cCols: el literal 'S' (ESACTIVO_ARTTAR) va
+      // inline en el format y los otros 13 valores via %s.
       sFila := Format(
-        '%s, %s, %s, ''S'', %s, %s, %s, %s, %s, %s, %s, %s, %s',
-        [ValorOrNull(sArt),
-         ValorOrNull(sCodUnidad),
-         ValorOrNull(sCodTar),
-         NumOrNull(fSalida),
-         NumOrNull(fFinal),
-         NumOrNull(fDto),
-         NumOrNull(fPorDto),
-         NumOrNull(fMargen),
-         '''' + FormatDateTime('yyyy-mm-dd', Now) + '''',
-         sAhora, sAhora, sUser, sUser]);
+        '%s, %s, %s, ''S'', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s',
+        [ValorOrNull(sArt),       // CODIGO_ART_ARTTAR
+         ValorOrNull(sCodUnidad), // CODIGO_UNIDAD_ARTTAR
+         ValorOrNull(sCodTar),    // CODIGO_TAR_ARTTAR
+                                  // 'S' literal -> ESACTIVO_ARTTAR
+         NumOrNull(fSalida),      // PRECIO_SALIDA_ARTTAR
+         NumOrNull(fFinal),       // PRECIO_FINAL_ARTTAR
+         NumOrNull(fDto),         // PRECIO_DTO_ARTTAR
+         NumOrNull(fPorDto),      // PORCENTAJE_DTO_ARTTAR
+         NumOrNull(fMargen),      // PORCENTAJE_MARGEN_ARTTAR
+         '''' + FormatDateTime('yyyy-mm-dd', Now) + '''', // FECHA_DESDE
+         sAhora,                  // INSTANTE_ALTA
+         sAhora,                  // INSTANTE_MODIF
+         sUser,                   // USUARIO_ALTA
+         sUser]);                 // USUARIO_MODIF
 
       try
         bulk.Add(sFila);

@@ -699,10 +699,14 @@ begin
   if FEjecutando then
   begin
     if Assigned(FCancel) then
-    begin
       FCancel.Signal;
-      Log('Cancelacion solicitada — terminando dominio actual...');
-    end;
+    // Tambien marcamos el flag interno del engine para que los
+    // mappers en mitad de un bucle largo (SKUs, articulos_atributos)
+    // lo vean y salgan sin esperar a terminar.
+    if Assigned(FEngine) then
+      FEngine.Cancelar;
+    Log('Cancelacion solicitada — los mappers en curso saldran ' +
+        'en el proximo punto seguro.');
     Exit;
   end;
 
@@ -815,6 +819,9 @@ begin
   SetLength(aCodigos, iLen);
 
   FCancel := CreateOmniCancellationToken;
+  // Resetear el flag de cancel del engine maestro por si quedo a 1
+  // de una corrida anterior cancelada.
+  FEngine.ResetCancel;
   MemoProgreso.Lines.Clear;
   FLineasProgreso.Clear;
 
