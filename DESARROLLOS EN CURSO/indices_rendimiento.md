@@ -1,13 +1,23 @@
 # Indices de rendimiento
 
-Migracion DDL que anade nueve indices sobre siete tablas para que el sistema
-responda con fluidez al volumen real esperado: **20.000 articulos** y
+Migracion DDL que anade **catorce indices** sobre **diez tablas** para que el
+sistema responda con fluidez al volumen real esperado: **20.000 articulos** y
 **4.000 facturas** (con sus correspondientes lineas, SKUs, stock por almacen,
 recibos y movimientos asociados).
 
 El dump de referencia `factuzam_original.sql` **no** se toca. El DDL nuevo
 vive aislado en `DESARROLLOS EN CURSO/indices_rendimiento.sql` y se aplica por
 el cauce habitual a la BBDD existente.
+
+La migracion se construyo en dos rondas:
+
+- **Parte 1: gaps estructurales.** Tablas sin indices secundarios y consultas
+  inversas obvias (las "tablas grandes que se filtran por una columna que la
+  PK no cubre").
+- **Parte 2: gaps detectados al leer cada consulta caliente.** Subconsultas
+  correlacionadas, joins de vistas, calculos de arqueo, busqueda unificada
+  del TPV. Estos son menos obvios pero estan en el camino caliente de la
+  aplicacion.
 
 ---
 
@@ -34,7 +44,7 @@ Indices que ya estaban cubiertos por la PK como prefijo (por ejemplo, filtrar
 
 ---
 
-## 2. Gaps cubiertos
+## 2. Gaps cubiertos — Parte 1 (estructurales)
 
 Cada bloque indica el escenario que dejaba de hacer full-scan al aplicar el
 indice. Sufijo de tabla segun §2 del libro de estilo de BBDD.
@@ -123,7 +133,116 @@ resolver "que lineas de albaran originaron esta factura" implicaba full-scan.
 
 ---
 
-## 3. Indices descartados (y por que)
+## 3. Gaps cubiertos — Parte 2 (lectura del codigo caliente)
+
+Aqui los indices NO se justifican por "tabla sin indices" sino por consultas
+concretas del codigo Delphi cuyo plan de ejecucion no encajaba con los
+indices existentes. Se incluyen referencias `file:line` para que la
+correlacion sea reproducible.
+
+### 3.1 `fza_articulos_proveedores` (sufijo `AP`) — busqueda en TPV
+
+`IDX_AP_REF (REF_PROVEEDOR_AP)`
+
+La vista `vi_caja_busqueda_unificada` (definida en BBDD) incluye una rama
+`MODELO_PROV` que filtra `ap.REF_PROVEEDOR_AP = :input` cada vez que en el
+TPV se teclea o escanea algo
+(`src/Lib/inLibArticulosValidador.pas:171,318`).
+No hay indice sobre esa columna y la PK es `(CODIGO_PRV_AP, CODIGO_ART_AP)`,
+asi que la lectura del TPV escaneaba **toda la tabla de articulos x
+proveedores en cada pulsacion**. Es probablemente el peor gap individual
+del sistema para el flujo de venta.
+
+Nota: este indice es independiente del `IDX_AP_ART_PRINC` de la Parte 1.
+Ese otro cubre la consulta inversa "que proveedores tiene este articulo";
+este nuevo cubre la consulta "que articulo le corresponde a esta
+referencia de proveedor".
+
+### 3.2 `fza_articulos_tarifas` (sufijo `ARTTAR`) — bloque tarifa
+
+`IDX_ARTTAR_BUSQ_VIGENTE (CODIGO_ART_ARTTAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, FECHA_DESDE_ARTTAR)`
+
+El modal "Anadir bloque de tarifa copiando precios de otra"
+(`src/Modals/inMtoModalAddBlockTarifa.pas:374-385`) construye una
+subconsulta correlacionada que se ejecuta **una vez por cada articulo**
+del SELECT externo:
+
+```sql
+(SELECT t.PRECIO_SALIDA_ARTTAR
+   FROM fza_articulos_tarifas t
+  WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART
+    AND t.CODIGO_TAR_ARTTAR = :tar_orig
+    AND t.ESACTIVO_ARTTAR   = 'S'
+  ORDER BY t.FECHA_DESDE_ARTTAR DESC LIMIT 1)
+```
+
+El indice existente `IDX_ART_TARIFAS_BUSQUEDA (art, tar)` cubre el WHERE
+basico pero no incluye `ESACTIVO_ARTTAR` ni `FECHA_DESDE_ARTTAR`, por lo
+que MariaDB tiene que ordenar las filas resultado en memoria por cada
+articulo. Con 20.000 articulos sobre los que iterar, este bloque es
+catastrofico sin el indice nuevo.
+
+### 3.3 `fza_empresas_series` (sufijo `EMPSER`) — serie por defecto
+
+`IDX_EMPSER_EMP_TIPO_FECHA (CODIGO_EMP_EMPSER, TIPO_DOC_EMPSER, FECHA_DESDE_EMPSER)`
+
+PK = `CODIGO_SERIE_EMPSER` (una sola columna). La obtencion de la serie
+por defecto vive en `src/DataModules/UniDataInventarios.pas:412-429` y
+funciones similares de facturas/albaranes/pedidos:
+
+```sql
+WHERE CODIGO_EMP_EMPSER = :emp
+  AND TIPO_DOC_EMPSER   = :tipo
+  AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= NOW())
+  AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= NOW())
+ORDER BY FECHA_DESDE_EMPSER DESC LIMIT 1
+```
+
+Tabla pequena (decenas de filas), pero la consulta se ejecuta en CADA
+creacion de documento. Sin indice = full-scan repetido. Con `(emp, tipo,
+fecha_desde)` la consulta lee solo las filas del par (empresa, tipo) y
+ordena unicamente esas.
+
+### 3.4 `fza_movimientos_almacen` (sufijo `MOV`) — movimientos de un articulo
+
+`IDX_MOV_ART_ALM (CODIGO_ART_MOV, CODIGO_ALM_MOV)`
+
+La tabla ya tiene seis indices, pero ninguno por `CODIGO_ART_MOV` (codigo
+del articulo padre). Solo se indexan `CODIGO_UNIDAD_MOV` (SKU concreto) y
+`CODIGO_ALM_MOV`. La pantalla de inventario en
+`src/DataModules/UniDataInventarios.pas:1213-1221` filtra por articulo
+padre + almacen para mostrar el historico de movimientos del articulo:
+
+```sql
+WHERE m.CODIGO_ART_MOV = :art AND m.CODIGO_ALM_MOV = :alm
+```
+
+Con el volumen historico esperado (muchos miles de movimientos),
+esto sin indice escanea por almacen entero. El indice compuesto resuelve
+la consulta exacta.
+
+### 3.5 `fza_depositos_cliente` (sufijo `DEP`) — arqueo por rango de fechas
+
+`IDX_DEP_OP_FECHA (CODIGO_EMP_DEP, CODIGO_ALM_DEP, CODIGO_CAJA_DEP, FECHA_CREACION_DEP)`
+
+El calculo del arqueo de caja (`src/Lib/inLibArqueo.pas:378-383`,
+`CalcularDepositos`) suma los prestamos del rango:
+
+```sql
+WHERE CODIGO_EMP_DEP  = :emp
+  AND CODIGO_ALM_DEP  = :alm
+  AND CODIGO_CAJA_DEP = :caja
+  AND FECHA_CREACION_DEP BETWEEN :desde AND :hasta
+```
+
+Los indices existentes `IDX_DEP_OP_ALTA` y `IDX_DEP_OP_CANCEL` cubren
+las 4-columnas (EMP, ALM, CAJA, NUMERO_OPERACION_xxx) pero ninguno
+termina en `FECHA_CREACION_DEP`. Para un arqueo de mes completo el plan
+acababa escaneando todos los depositos del contexto de caja.
+
+---
+
+## 4. Indices descartados (y por que)
 
 Para no inflar el indice y mantener su mantenimiento al minimo, se descartaron:
 
@@ -138,10 +257,79 @@ Para no inflar el indice y mantener su mantenimiento al minimo, se descartaron:
 - **`fza_codigos_barras` como UNIQUE**: requiere validar que no hay
   duplicados en datos reales antes de promover el indice a UNIQUE; queda
   como ticket aparte.
+- **`fza_caja_operaciones (FECHA_OPERACION_OPCAJA)` solo**: los listados
+  globales sin contexto son raros; los seis indices existentes cubren bien
+  el flujo cotidiano filtrando primero por (EMP, ALM, CAJA).
 
 ---
 
-## 4. Aplicacion
+## 5. Antipatrones de consulta detectados (NO se resuelven con indices)
+
+Al rastrear las consultas calientes aparecieron tres patrones que rompen
+el uso de los indices ya existentes. La correccion vive en `src/` (Delphi),
+no aqui (DDL), pero se documentan para no perderlos de vista.
+
+### 5.1 `DATE(FECHA_OPERACION_OPCAJA)` en consulta de operaciones
+
+**Archivo:** `src/DataModules/UniDataConsultaOpe.pas:144`
+
+```sql
+WHERE DATE(o.FECHA_OPERACION_OPCAJA) = :PFECHA
+  AND o.CODIGO_EMP_OPCAJA = :PEMP
+  ...
+```
+
+Aplicar `DATE()` a la columna **rompe** el uso de
+`IDX_OPCAJA_CTX_FECHA (EMP, ALM, CAJA, FECHA_OPERACION_OPCAJA)` porque la
+funcion envuelve la columna y MariaDB no puede usar el indice.
+
+**Curiosidad:** el dump ya prevee este caso. La tabla tiene la columna
+calculada `FECHA_OP_DIA_OPCAJA` con su indice `IDX_OPCAJA_DIA_CTX
+(FECHA_OP_DIA_OPCAJA, EMP, ALM, CAJA)`. La consulta deberia ser:
+
+```sql
+WHERE o.FECHA_OP_DIA_OPCAJA = :PFECHA
+  AND o.CODIGO_EMP_OPCAJA   = :PEMP
+  ...
+```
+
+**Accion sugerida:** refactor en `UniDataConsultaOpe.pas` para usar la
+columna ya indexada.
+
+### 5.2 `DATE(FECHA_EMISION_VL)` y `DATE(FECHA_REDENCION_VL)` en arqueo
+
+**Archivo:** `src/Lib/inLibArqueo.pas:444-445, 468-469`
+
+```sql
+WHERE CODIGO_EMP_EMI_VL = :emp
+  AND CODIGO_ALM_EMI_VL = :alm
+  AND CODIGO_CAJA_EMI_VL = :caja
+  AND DATE(FECHA_EMISION_VL) >= :pFDESDE
+  AND DATE(FECHA_EMISION_VL) <= :pFHASTA
+```
+
+Mismo antipatron. El filtro por contexto sigue usando `IDX_VALES_EMI_OP`
+(porque no esta envuelto en funcion), pero el rango de fechas se evalua
+fila a fila. Reescribir como comparacion directa:
+
+```sql
+AND FECHA_EMISION_VL >= :pFDESDE
+AND FECHA_EMISION_VL <  :pFHASTA + INTERVAL 1 DAY
+```
+
+### 5.3 `(FECHA IS NULL OR FECHA <= NOW())` en obtencion de vigentes
+
+**Archivos:** `src/DataModules/UniDataInventarios.pas:412-429`,
+`src/Lib/inLibFacturas.pas:1199-1213`, y similares.
+
+El OR sobre IS NULL limita el uso del indice compuesto cuando la fecha
+forma parte del compuesto. La cardinalidad post-filtro previo (empresa,
+tipo, articulo) es baja, asi que el impacto es manejable; queda como
+mejora de segundo orden cuando se revise la logica de vigencia.
+
+---
+
+## 6. Aplicacion
 
 ```sh
 mysql -u <user> -p <database> < "DESARROLLOS EN CURSO/indices_rendimiento.sql"
@@ -152,10 +340,10 @@ auxiliar (`sp_add_index_if_not_exists`) que consulta `information_schema`
 antes de ejecutar el `ALTER TABLE`. Si el indice ya existe lo deja igual, sin
 warnings ni errores. El procedimiento se elimina al final.
 
-### 4.1 Verificacion
+### 6.1 Verificacion
 
-Consulta de comprobacion al final del script (comentada). Devuelve los nueve
-indices nuevos con su tabla y columnas:
+Consulta de comprobacion al final del script (comentada). Devuelve los
+catorce indices nuevos con su tabla y columnas:
 
 ```sql
 SELECT TABLE_NAME, INDEX_NAME, GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX)
@@ -165,22 +353,30 @@ SELECT TABLE_NAME, INDEX_NAME, GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX)
      'IDX_SKU_ART_ACT','IDX_STK_UNIDAD','IDX_AP_ART_PRINC',
      'IDX_ARTVIN_PADRE','IDX_ARTVIN_HIJO',
      'IDX_REC_ESTADO_VENC','IDX_REC_CLI',
-     'IDX_FACLIN_UNIDAD','IDX_ALBLIN_FAC'
+     'IDX_FACLIN_UNIDAD','IDX_ALBLIN_FAC',
+     'IDX_AP_REF','IDX_ARTTAR_BUSQ_VIGENTE',
+     'IDX_EMPSER_EMP_TIPO_FECHA','IDX_MOV_ART_ALM','IDX_DEP_OP_FECHA'
    )
  GROUP BY TABLE_NAME, INDEX_NAME
  ORDER BY TABLE_NAME, INDEX_NAME;
 ```
 
-### 4.2 Coste en escritura
+### 6.2 Coste en escritura
 
-Los indices anadidos son ligeros (1-2 columnas pequenas: codigos cortos,
+Los indices anadidos son ligeros (1-4 columnas pequenas: codigos cortos,
 flags, fechas). El impacto en `INSERT`/`UPDATE` es despreciable comparado
 con la ganancia en lectura, dada la proporcion lectura/escritura tipica
 de un ERP (caja, listados, informes).
 
+El indice mas pesado es `IDX_ARTTAR_BUSQ_VIGENTE` con 4 columnas, pero la
+tabla `fza_articulos_tarifas` se escribe poco comparado con las tablas de
+operaciones.
+
 ---
 
-## 5. Resumen
+## 7. Resumen
+
+### 7.1 Parte 1: gaps estructurales
 
 | # | Tabla                      | Indice                  | Columnas                                            |
 |---|----------------------------|-------------------------|-----------------------------------------------------|
@@ -193,3 +389,21 @@ de un ERP (caja, listados, informes).
 | 7 | `fza_recibos`              | `IDX_REC_CLI`           | `(CODIGO_CLI_REC)`                                  |
 | 8 | `fza_facturas_lineas`      | `IDX_FACLIN_UNIDAD`     | `(CODIGO_UNIDAD_FACLIN)`                            |
 | 9 | `fza_albaranes_lineas`     | `IDX_ALBLIN_FAC`        | `(SERIE_FAC_ALBLIN, NUMERO_FAC_ALBLIN)`             |
+
+### 7.2 Parte 2: gaps detectados en consultas calientes
+
+| #  | Tabla                       | Indice                       | Columnas                                                                       |
+|----|-----------------------------|------------------------------|--------------------------------------------------------------------------------|
+| 10 | `fza_articulos_proveedores` | `IDX_AP_REF`                 | `(REF_PROVEEDOR_AP)`                                                           |
+| 11 | `fza_articulos_tarifas`     | `IDX_ARTTAR_BUSQ_VIGENTE`    | `(CODIGO_ART_ARTTAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, FECHA_DESDE_ARTTAR)`  |
+| 12 | `fza_empresas_series`       | `IDX_EMPSER_EMP_TIPO_FECHA`  | `(CODIGO_EMP_EMPSER, TIPO_DOC_EMPSER, FECHA_DESDE_EMPSER)`                     |
+| 13 | `fza_movimientos_almacen`   | `IDX_MOV_ART_ALM`            | `(CODIGO_ART_MOV, CODIGO_ALM_MOV)`                                             |
+| 14 | `fza_depositos_cliente`     | `IDX_DEP_OP_FECHA`           | `(CODIGO_EMP_DEP, CODIGO_ALM_DEP, CODIGO_CAJA_DEP, FECHA_CREACION_DEP)`        |
+
+### 7.3 Reescrituras pendientes en codigo Delphi (no DDL)
+
+| # | Archivo                                       | Patron a corregir                                            |
+|---|-----------------------------------------------|--------------------------------------------------------------|
+| A | `src/DataModules/UniDataConsultaOpe.pas:144`  | `DATE(FECHA_OPERACION_OPCAJA)` → `FECHA_OP_DIA_OPCAJA`       |
+| B | `src/Lib/inLibArqueo.pas:444-445, 468-469`    | `DATE(FECHA_EMISION_VL/REDENCION_VL)` → comparacion directa  |
+| C | `src/DataModules/UniDataInventarios.pas:412`  | `(FECHA IS NULL OR FECHA <= NOW())` → repensar logica vigencia |
