@@ -67,6 +67,10 @@ type
     FCurrentRow:          Integer;
     FNivelFamiliasHoja:   Integer;
     FDigitosContadorArt:  Integer;
+    // Flag de cancelacion atomico. Vive en el master engine; los
+    // clones reenvian Cancelar/IsCancelado a su master.
+    FCancelado:           Integer;
+    FMaster:              TMigEngine;
     procedure DoLog(const sMensaje: string);
     procedure DoProgress;
   public
@@ -79,6 +83,14 @@ type
     constructor CreateClone(ConSrv, ConDst: TUniConnection;
                             Master: TMigEngine);
     destructor  Destroy; override;
+
+    // Cancelacion: la UI marca FCancelado en el master; los clones
+    // reenvian a su master via FMaster. Los mappers chequean
+    // periodicamente con IsCancelado. ResetCancel limpia el flag al
+    // arrancar una nueva corrida.
+    procedure Cancelar;
+    procedure ResetCancel;
+    function  IsCancelado: Boolean;
 
     procedure Registrar(const sCodigo, sNombre, sDescripcion: string;
                         Proc: TMigProc);
@@ -247,6 +259,33 @@ begin
   FUsuario             := Master.FUsuario;
   FNivelFamiliasHoja   := Master.FNivelFamiliasHoja;
   FDigitosContadorArt  := Master.FDigitosContadorArt;
+  // Apuntamos al master para que Cancelar/IsCancelado lean su
+  // estado compartido.
+  FMaster              := Master;
+end;
+
+procedure TMigEngine.Cancelar;
+begin
+  if FMaster <> nil then
+    FMaster.Cancelar
+  else
+    TInterlocked.Exchange(FCancelado, 1);
+end;
+
+procedure TMigEngine.ResetCancel;
+begin
+  if FMaster <> nil then
+    FMaster.ResetCancel
+  else
+    TInterlocked.Exchange(FCancelado, 0);
+end;
+
+function TMigEngine.IsCancelado: Boolean;
+begin
+  if FMaster <> nil then
+    Result := FMaster.IsCancelado
+  else
+    Result := TInterlocked.CompareExchange(FCancelado, 0, 0) = 1;
 end;
 
 destructor TMigEngine.Destroy;

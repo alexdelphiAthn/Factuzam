@@ -123,7 +123,7 @@ begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   bulk := TBulkInsert.Create(Eng.ConDst,
                               'fza_articulos_atributos_basicos',
-                              cCols, 1000);
+                              cCols, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
@@ -133,6 +133,12 @@ begin
     qSrc.Open;
     while not qSrc.Eof do
     begin
+      // Cancelacion cooperativa cada 1000 filas
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada, saliendo del mapper...');
+        Break;
+      end;
       Inc(Stats.Leidas);
       Eng.IncRow;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
@@ -213,7 +219,7 @@ begin
   // IGNORE asume que el chequeo PK ya está y permite reejecutar.
   bulk := TBulkInsert.Create(Eng.ConDst,
                               'fza_articulos_atributos_basicos',
-                              cCols, 1000);
+                              cCols, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
@@ -224,6 +230,12 @@ begin
     qSrc.Open;
     while not qSrc.Eof do
     begin
+      // Cancelacion cooperativa cada 1000 filas
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada, saliendo del mapper...');
+        Break;
+      end;
       Inc(Stats.Leidas);
       Eng.IncRow;
       sArt   := Trim(qSrc.FieldByName('Articulo').AsString);
