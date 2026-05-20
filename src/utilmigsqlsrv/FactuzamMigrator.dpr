@@ -22,7 +22,8 @@ uses
   inLibMigTallajes in 'inLibMigTallajes.pas',
   inLibMigArticulosTallajes in 'inLibMigArticulosTallajes.pas',
   inLibMigArticulosProveedores in 'inLibMigArticulosProveedores.pas',
-  inLibMigArticulosPropiedades in 'inLibMigArticulosPropiedades.pas';
+  inLibMigArticulosPropiedades in 'inLibMigArticulosPropiedades.pas',
+  inLibMigArticulosTarifas in 'inLibMigArticulosTarifas.pas';
 
 {$R *.res}
 

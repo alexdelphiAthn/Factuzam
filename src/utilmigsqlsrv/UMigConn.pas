@@ -248,10 +248,11 @@ function TdmMig.ResetearMigracionAnterior(
 const
   // Orden INVERSO de dependencias (hijos primero, padres despues)
   // para que los DELETE no dejen huerfanos en otras tablas.
-  aTablas: array[0..22] of string = (
+  aTablas: array[0..24] of string = (
     'fza_inventarios_lineas',
     'fza_inventarios',
     'fza_codigos_barras',
+    'fza_articulos_tarifas',
     'fza_atributos_sku',
     'fza_articulos_skus',
     'fza_articulos_atributos_basicos',
