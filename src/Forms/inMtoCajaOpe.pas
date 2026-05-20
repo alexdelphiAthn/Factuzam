@@ -2792,11 +2792,17 @@ var
 begin
   // Logica que antes vivia inline en cxGrid1DBTableView1EditKeyDown cuando
   // se confirmaba el ultimo atributo de la linea. Encapsulada para poder
-  // invocarla desde RegistrarValorAtributo (button-click) sin duplicar
-  // codigo.
+  // invocarla desde tvLineasOpeAvButtonClick (popup) sin duplicar codigo.
   if FProcesandoAtributo then Exit;
   if not DatosCaja.cdsLineas.Active then Exit;
   if DatosCaja.cdsLineas.IsEmpty then Exit;
+
+  // Defensivo: aseguramos que no queda un inplace editor activo antes de
+  // empezar a hacer Cancel/Append. Los broadcasts del data link (sobre
+  // todo tras el ShowMessage de "no hay stock") intentarian refrescar el
+  // TcxButtonEdit y, si cxGrid ya lo desparento, salta EInvalidOperation.
+  if tvLineasOpe.Controller.EditingController.IsEditing then
+    tvLineasOpe.Controller.EditingController.HideEdit(True);
 
   FProcesandoAtributo := True;
   DatosCaja.cdsLineas.DisableControls;
@@ -2916,14 +2922,25 @@ begin
   RegistrarValorAtributo(Orden, AvNuevo);
 
   // Reflejamos el AV nuevo en el editor para que el usuario lo vea sin
-  // tener que esperar a que se reabra la celda.
-  if Sender is TcxCustomEdit then
+  // tener que esperar a que se reabra la celda. Solo si Sender sigue
+  // parentado: durante el modal SeleccionarAvConPaleta cxGrid puede
+  // haberle quitado el Parent al editor inplace (perdida de foco) y un
+  // EditValue := X sobre un control sin parent dispara EInvalidOperation
+  // 'no tiene ventana principal'.
+  if (Sender is TcxCustomEdit) and TWinControl(Sender).HasParent then
     TcxCustomEdit(Sender).EditValue := AvNuevo;
 
+  // Cerramos el editor inplace ANTES de tocar cdsLineas / cambiar foco. El
+  // codigo viejo (combo) hacia exactamente esto antes del bloque
+  // DisableControls/Cancel/Append; si lo omitimos, los DataChange que
+  // dispara EnableControls (y los ShowMessage de Validate que se intercalan)
+  // intentan refrescar el TcxButtonEdit que cxGrid ya desparento, y salta
+  // EInvalidOperation.
+  if tvLineasOpe.Controller.EditingController.IsEditing then
+    tvLineasOpe.Controller.EditingController.HideEdit(True);
+
   // Si era el ultimo atributo necesario, cerramos la linea: validamos SKU,
-  // consultamos stock y avanzamos foco a la siguiente fila/columna. Se hace
-  // aqui (no dentro de RegistrarValorAtributo) para que Cancel/Append no
-  // entren en conflicto con el editor que todavia esta visible.
+  // consultamos stock y avanzamos foco a la siguiente fila/columna.
   if (Orden = FNumAtributosActual) and (FNumAtributosActual > 0) then
     FinalizarUltimoAtributo
   else
@@ -2935,7 +2952,6 @@ begin
     var SigCol := ObtenerColumnaPorTag(Orden + 1);
     if (SigCol <> nil) and SigCol.Visible then
     begin
-      tvLineasOpe.Controller.EditingController.HideEdit(True);
       tvLineasOpe.Controller.FocusedColumn := SigCol;
       tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
