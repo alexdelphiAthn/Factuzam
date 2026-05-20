@@ -18,7 +18,9 @@ uses
   inLibMigArticulos in 'inLibMigArticulos.pas',
   inLibMigArticulosAtributos in 'inLibMigArticulosAtributos.pas',
   inLibMigArticulosSkus in 'inLibMigArticulosSkus.pas',
-  inLibMigInventarios in 'inLibMigInventarios.pas';
+  inLibMigInventarios in 'inLibMigInventarios.pas',
+  inLibMigTallajes in 'inLibMigTallajes.pas',
+  inLibMigArticulosTallajes in 'inLibMigArticulosTallajes.pas';
 
 {$R *.res}
 

@@ -421,25 +421,35 @@ object FormMigrator: TFormMigrator
   end
   object PanelProgreso: TPanel
     Left = 0
-    Top = 681
+    Top = 561
     Width = 1024
-    Height = 20
+    Height = 140
     Align = alBottom
     BevelOuter = bvNone
+    Padding.Left = 8
+    Padding.Right = 8
+    Padding.Bottom = 4
     TabOrder = 4
     object lblProgreso: TLabel
       Left = 8
-      Top = 2
-      Width = 250
+      Top = 0
+      Width = 200
       Height = 15
-      Caption = 'Inactivo'
+      Caption = 'Progreso (dominios activos):'
     end
-    object pbProgreso: TProgressBar
-      Left = 264
-      Top = 2
-      Width = 752
-      Height = 15
-      Smooth = True
+    object MemoProgreso: TMemo
+      Left = 8
+      Top = 18
+      Width = 1008
+      Height = 118
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Consolas'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      ScrollBars = ssVertical
       TabOrder = 0
     end
   end
