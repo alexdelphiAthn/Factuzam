@@ -63,7 +63,7 @@ const
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 var
   qSrc, qIns, qChk: TUniQuery;
-  sCod, sRazon: string;
+  sCod, sRazon, sRazonDst: string;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   qIns := TUniQuery.Create(nil);
@@ -73,7 +73,8 @@ begin
     qIns.SQL.Text   := cInsertDst;
     qChk.Connection := Eng.ConDst;
     qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_empresas WHERE CODIGO_EMP_EMP = :c';
+      'SELECT RAZON_SOCIAL_EMP FROM fza_empresas ' +
+      'WHERE CODIGO_EMP_EMP = :c';
 
     qSrc.Open;
     while not qSrc.Eof do
@@ -91,8 +92,12 @@ begin
       qChk.Open;
       if not qChk.IsEmpty then
       begin
+        sRazonDst := Trim(qChk.FieldByName('RAZON_SOCIAL_EMP').AsString);
         Inc(Stats.Saltadas);
-        Eng.Log('  - empresa "%s" ya existe, se omite', [sCod]);
+        Eng.LogSalto('empresa', sCod,
+          'PK ya existe (probable seed AGRICULTOR de ' +
+          'factuzam_original.sql), se conserva destino',
+          sRazon, sRazonDst);
         qChk.Close;
         qSrc.Next;
         Continue;

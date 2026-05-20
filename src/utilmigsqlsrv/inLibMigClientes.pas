@@ -92,7 +92,7 @@ const
 
 var
   qSrc, qIns, qChk: TUniQuery;
-  sCod, sRazon, sObs, sFP, sTar: string;
+  sCod, sRazon, sObs, sFP, sTar, sRazonDst: string;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   qIns := TUniQuery.Create(nil);
@@ -101,24 +101,30 @@ begin
     qIns.Connection := Eng.ConDst;
     qIns.SQL.Text   := cInsertDst;
     qChk.Connection := Eng.ConDst;
+    // En el chk traemos la RAZON_SOCIAL_CLI para poder enseñar en el
+    // log que dato hay en destino vs el del origen y ayudar a decidir
+    // si la colision es un duplicado real o ruido del seed demo.
     qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_clientes WHERE CODIGO_CLI_CLI = :c';
+      'SELECT RAZON_SOCIAL_CLI FROM fza_clientes ' +
+      'WHERE CODIGO_CLI_CLI = :c';
 
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
       sCod   := Trim(qSrc.FieldByName('Cliente').AsString);
-      if sCod = '' then
-      begin
-        Inc(Stats.Saltadas);
-        Eng.Log('  - cliente con codigo vacio, se omite');
-        qSrc.Next;
-        Continue;
-      end;
       sRazon := Trim(qSrc.FieldByName('RazonSocial').AsString);
       if sRazon = '' then
         sRazon := Trim(qSrc.FieldByName('Nombre').AsString);
+      if sCod = '' then
+      begin
+        Inc(Stats.Saltadas);
+        Eng.LogSalto('cliente', '<vacio>',
+          'codigo de cliente vacio en origen (registro descartado)',
+          sRazon);
+        qSrc.Next;
+        Continue;
+      end;
       if sRazon = '' then
         sRazon := sCod;
 
@@ -127,8 +133,11 @@ begin
       qChk.Open;
       if not qChk.IsEmpty then
       begin
+        sRazonDst := Trim(qChk.FieldByName('RAZON_SOCIAL_CLI').AsString);
         Inc(Stats.Saltadas);
-        Eng.Log('  - cliente "%s" ya existe, se omite', [sCod]);
+        Eng.LogSalto('cliente', sCod,
+          'PK ya existe en destino, se conserva destino',
+          sRazon, sRazonDst);
         qChk.Close;
         qSrc.Next;
         Continue;
@@ -203,8 +212,9 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error insertando cliente "%s": %s',
-                  [sCod, E.Message]);
+          Eng.LogError('cliente', sCod, E.Message, sRazon,
+            'si dice "Data too long for column CODIGO_CLI_*", ' +
+            'ejecuta DESARROLLOS EN CURSO/widen_codigo_cli.sql');
           raise;
         end;
       end;

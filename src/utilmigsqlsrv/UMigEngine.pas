@@ -74,6 +74,18 @@ type
     procedure Log(const sMensaje: string); overload;
     procedure Log(const sFormato: string;
                   const aArgs: array of const); overload;
+
+    // Helpers de log "rico": prefijo "  - SALTO" / "  ! ERROR" y formato
+    // consistente. sCodigo identifica el registro (PK), sMotivo
+    // resume el por que, sDescOrigen / sDescDestino aportan contexto
+    // para distinguir si lo que se conserva en destino es lo que se
+    // quería conservar o no.
+    procedure LogSalto(const sDominio, sCodigo, sMotivo: string;
+                       const sDescOrigen: string = '';
+                       const sDescDestino: string = '');
+    procedure LogError(const sDominio, sCodigo, sError: string;
+                       const sDescOrigen: string = '';
+                       const sPista: string = '');
   end;
 
 // Helpers compartidos por todos los mappers --------------------------------
@@ -135,6 +147,32 @@ procedure TMigEngine.Log(const sFormato: string;
                          const aArgs: array of const);
 begin
   DoLog(Format(sFormato, aArgs));
+end;
+
+procedure TMigEngine.LogSalto(const sDominio, sCodigo, sMotivo: string;
+                              const sDescOrigen: string = '';
+                              const sDescDestino: string = '');
+var s: string;
+begin
+  s := Format('  - SALTO %s "%s": %s', [sDominio, sCodigo, sMotivo]);
+  if sDescOrigen <> '' then
+    s := s + Format(' | ORIGEN="%s"', [sDescOrigen]);
+  if sDescDestino <> '' then
+    s := s + Format(' | DESTINO="%s"', [sDescDestino]);
+  DoLog(s);
+end;
+
+procedure TMigEngine.LogError(const sDominio, sCodigo, sError: string;
+                              const sDescOrigen: string = '';
+                              const sPista: string = '');
+var s: string;
+begin
+  s := Format('  ! ERROR %s "%s": %s', [sDominio, sCodigo, sError]);
+  if sDescOrigen <> '' then
+    s := s + Format(' | ORIGEN="%s"', [sDescOrigen]);
+  if sPista <> '' then
+    s := s + Format(' | PISTA: %s', [sPista]);
+  DoLog(s);
 end;
 
 procedure TMigEngine.Registrar(const sCodigo, sNombre, sDescripcion: string;

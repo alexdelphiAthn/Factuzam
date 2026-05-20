@@ -63,12 +63,12 @@ const
     'ORDER BY CASE WHEN Nivel = 4 THEN 0 ELSE 1 END, Codigo';
   cInsertDst =
     'INSERT INTO fza_articulos_familias (' +
-      'CODIGO_FAM_FAM, ESACTIVO_FAM, ORDEN_FAM, ESDEFAULT_FAM, ' +
-      'NOMBRE_FAM_FAM, DESCRIPCION_FAM, PAD_ART_FAM, ' +
+      'CODIGO_FAM_FAM, CODIGO_PADRE_FAM, ESACTIVO_FAM, ORDEN_FAM, ' +
+      'ESDEFAULT_FAM, NOMBRE_FAM_FAM, DESCRIPCION_FAM, PAD_ART_FAM, ' +
       'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES (' +
-      ':CODIGO_FAM_FAM, :ESACTIVO_FAM, :ORDEN_FAM, :ESDEFAULT_FAM, ' +
-      ':NOMBRE_FAM_FAM, :DESCRIPCION_FAM, :PAD_ART_FAM, ' +
+      ':CODIGO_FAM_FAM, :CODIGO_PADRE_FAM, :ESACTIVO_FAM, :ORDEN_FAM, ' +
+      ':ESDEFAULT_FAM, :NOMBRE_FAM_FAM, :DESCRIPCION_FAM, :PAD_ART_FAM, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 
   function DeducirActivo(const sEstado: string): string;
@@ -84,6 +84,8 @@ const
 var
   qSrc, qIns, qChk:   TUniQuery;
   sCod, sDescripcion: string;
+  sCodPadre:          string;
+  iNivel:             Integer;
   iOrden:             Integer;
   bPrimero:           Boolean;
 begin
@@ -104,6 +106,7 @@ begin
     begin
       Inc(Stats.Leidas);
       sCod         := Trim(qSrc.FieldByName('Codigo').AsString);
+      iNivel       := qSrc.FieldByName('Nivel').AsInteger;
       sDescripcion := Trim(qSrc.FieldByName('Descripcion').AsString);
       if sCod = '' then
       begin
@@ -113,6 +116,15 @@ begin
       end;
       if sDescripcion = '' then
         sDescripcion := 'Familia ' + sCod;
+
+      // Jerarquia: las familias Nivel=4 (4 chars) tienen como padre la
+      // seccion Nivel=2 cuyo codigo coincide con los 2 primeros chars
+      // de la familia. Ej: '1401' (FALDA INMACULADA) → padre '14'
+      // (UNIFORME INMACULADA CONCEP.).
+      if (iNivel = 4) and (Length(sCod) >= 4) then
+        sCodPadre := Copy(sCod, 1, 2)
+      else
+        sCodPadre := '';
 
       qChk.Close;
       qChk.ParamByName('c').AsString := sCod;
@@ -129,6 +141,10 @@ begin
       qChk.Close;
 
       qIns.ParamByName('CODIGO_FAM_FAM').AsString  := sCod;
+      if sCodPadre <> '' then
+        qIns.ParamByName('CODIGO_PADRE_FAM').AsString := sCodPadre
+      else
+        qIns.ParamByName('CODIGO_PADRE_FAM').Clear;
       qIns.ParamByName('ESACTIVO_FAM').AsString    :=
         DeducirActivo(qSrc.FieldByName('Estado').AsString);
       qIns.ParamByName('ORDEN_FAM').AsInteger      := iOrden;
