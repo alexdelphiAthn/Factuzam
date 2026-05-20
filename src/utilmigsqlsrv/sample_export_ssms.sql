@@ -83,7 +83,49 @@ PRINT '== Tallas/Colores (ocarttal, occolor) -- pequenas, sin TOP ==';
 SELECT * FROM dbo.ocarttal;
 SELECT * FROM dbo.occolor;
 
-PRINT '== Conteo de filas por tabla maestra ==';
+PRINT '== Familias (ocartniv) ==';
+SELECT *
+FROM dbo.ocartniv
+ORDER BY Nivel;
+
+PRINT '== Como guarda ocartp el campo Familia (top 30 por familia) ==';
+-- Necesitamos ver si Familia es un numero ("1", "2"...) que cuadre con
+-- ocartniv.Nivel o si es texto descriptivo distinto.
+SELECT TOP 30 Articulo, Familia, DescripcionCorta, DescripcionLarga
+FROM dbo.ocartp
+WHERE LTRIM(RTRIM(ISNULL(Familia, ''))) <> ''
+ORDER BY Articulo;
+
+PRINT '== Conteo de articulos por familia ==';
+SELECT TOP 20 Familia, COUNT(*) AS NumArticulos
+FROM dbo.ocartp
+GROUP BY Familia
+ORDER BY NumArticulos DESC;
+
+PRINT '== Articulos-Colores (ocartcol, top 30) ==';
+SELECT TOP 30
+       ac.Articulo, ac.Color, ac.ColorBasico, ac.Descripcion AS DescAC,
+       c.Descripcion AS DescColorBasico
+FROM dbo.ocartcol ac
+LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico
+ORDER BY ac.Articulo, ac.Color;
+
+PRINT '== Conteo ocartcol total ==';
+SELECT COUNT(*) AS TotalAsignacionesColor FROM dbo.ocartcol;
+
+PRINT '== Tallas DISTINCT (cuantas tallas unicas hay en todo el catalogo?) ==';
+SELECT COUNT(DISTINCT Talla) AS TallasUnicas
+FROM dbo.ocarttal
+WHERE LTRIM(RTRIM(Talla)) <> '';
+
+PRINT '== Top 30 tallas mas usadas ==';
+SELECT TOP 30 Talla, COUNT(*) AS NumArticulos
+FROM dbo.ocarttal
+WHERE LTRIM(RTRIM(Talla)) <> ''
+GROUP BY Talla
+ORDER BY NumArticulos DESC;
+
+PRINT '== Conteo de filas por tabla maestra y caracteristicas ==';
 SELECT 'ocemp'      AS Tabla, COUNT(*) AS Filas FROM dbo.ocemp
 UNION ALL SELECT 'ocalm',     COUNT(*) FROM dbo.ocalm
 UNION ALL SELECT 'occli',     COUNT(*) FROM dbo.occli
@@ -94,5 +136,9 @@ UNION ALL SELECT 'octiposiva',COUNT(*) FROM dbo.octiposiva
 UNION ALL SELECT 'octipefe',  COUNT(*) FROM dbo.octipefe
 UNION ALL SELECT 'octiptra',  COUNT(*) FROM dbo.octiptra
 UNION ALL SELECT 'ocdiv',     COUNT(*) FROM dbo.ocdiv
+UNION ALL SELECT 'ocartniv',  COUNT(*) FROM dbo.ocartniv
+UNION ALL SELECT 'occolor',   COUNT(*) FROM dbo.occolor
+UNION ALL SELECT 'ocartcol',  COUNT(*) FROM dbo.ocartcol
+UNION ALL SELECT 'ocarttal',  COUNT(*) FROM dbo.ocarttal
 ORDER BY Tabla;
 GO
