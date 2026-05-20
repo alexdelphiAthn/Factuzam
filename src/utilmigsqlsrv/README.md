@@ -24,7 +24,7 @@ src/utilmigsqlsrv/
 ├── inLibMigEmpresas.pas           dbo.ocemp      → fza_empresas
 ├── inLibMigAlmacenes.pas          dbo.ocalm      → fza_almacenes
 ├── inLibMigClientes.pas           dbo.occli      → fza_clientes
-├── inLibMigFamilias.pas           dbo.oclwgrupo  → fza_articulos_familias
+├── inLibMigFamilias.pas           dbo.ocniv      → fza_articulos_familias
 ├── inLibMigAtributos.pas          dbo.occolor    → fza_atributos_valores + basicos
 │                                  DISTINCT(ocarttal.Talla) → idem para tallas
 ├── inLibMigArticulos.pas          dbo.ocartp     → fza_articulos
@@ -90,12 +90,23 @@ El programa guarda los valores de las conexiones (sin contraseñas) en
   TipoEfecto (int). Usamos TipoEfecto como CODIGO_FP_CLI; debe existir
   previamente en `fza_formas_pago` (por eso "formas_pago" va antes
   que "clientes" en el listado).
-- **Familias de artículos**: se migran desde `dbo.oclwgrupo` (catálogo
-  con código `varchar(4)` tipo `0101`, `0308`...). El código se conserva
-  literal, de modo que `fza_articulos.CODIGO_FAM_ART` (que se rellena
-  desde `ocartp.Familia`) cuadra sin transformación. La tabla
-  `dbo.ocartniv` que originalmente parecía la fuente solo tiene 2 filas
-  (definiciones de niveles `SECCION`/`FAMILIA`) y no se utiliza.
+- **Familias de artículos**: se migran desde `dbo.ocniv` filtrando
+  `Nivel IN (2, 4)`. Origen tiene 194 filas; de ellas:
+  - 12 con Nivel=2 (SECCIONES: `SEÑORA`, `CABALLERO`...), código 2 chars.
+  - 181 con Nivel=4 (FAMILIAS: `BLUSA M/L`, `JERSEY SRA`...), código 4 chars.
+  - 1 con Nivel=1 (outlier, se descarta).
+
+  Las dos jerarquías van a la misma tabla destino (`fza_articulos_familias`)
+  porque el destino no modela explícitamente la relación
+  sección→familia. Las familias (Nivel=4) se insertan primero para que
+  la "default" sea una familia real, no una sección.
+
+  El código se conserva literal: `ocartp.Familia` ya guarda el código
+  de 4 chars, así que `CODIGO_FAM_ART` (que rellena `inLibMigArticulos`
+  desde ahí) cuadra sin transformación con `CODIGO_FAM_FAM` destino.
+
+  La columna `Estado` del origen marca `ESACTIVO_FAM='N'` solo cuando
+  vale `'B'` (baja); cualquier otro valor (NULL, vacío) se asume activo.
 - **Atributos (colores y tallas)**: el modelo destino es muy rico
   (variación → ejes → valores → básicos canónicos). El migrador hace
   la versión mínima:
