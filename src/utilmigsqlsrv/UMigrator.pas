@@ -22,7 +22,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.IniFiles, System.IOUtils,
+  System.Classes, System.IniFiles, System.IOUtils, System.Math,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.CheckLst, Vcl.ComCtrls, Vcl.Mask,
   UMigEngine;
@@ -72,6 +72,9 @@ type
     PanelLog:          TPanel;
     lblLog:            TLabel;
     MemoLog:           TMemo;
+    PanelProgreso:     TPanel;
+    lblProgreso:       TLabel;
+    pbProgreso:        TProgressBar;
     StatusBar:         TStatusBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -132,6 +135,26 @@ begin
                    begin
                      Log(s);
                    end;
+  FEngine.OnProgress :=
+    procedure(const sDominio: string; iRow, iTotal: Integer)
+    begin
+      if iTotal > 0 then
+      begin
+        pbProgreso.Max      := iTotal;
+        pbProgreso.Position := Min(iRow, iTotal);
+        lblProgreso.Caption := Format(
+          '%s: %d / %d  (%.0f%%)',
+          [sDominio, iRow, iTotal, iRow * 100.0 / iTotal]);
+      end
+      else
+      begin
+        pbProgreso.Max      := 1;
+        pbProgreso.Position := 0;
+        lblProgreso.Caption := Format(
+          '%s: %d / ?  (contando...)', [sDominio, iRow]);
+      end;
+      Application.ProcessMessages;
+    end;
   RegistrarMigraciones;
   RecargarListado;
   CargarConfig;

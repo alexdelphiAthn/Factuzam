@@ -101,10 +101,12 @@ begin
       'SELECT RAZON_SOCIAL_PRV FROM fza_proveedores ' +
       'WHERE CODIGO_PRV_PRV = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpro'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCod    := IntToStr(qSrc.FieldByName('Proveedor').AsInteger);
       sNombre := Trim(qSrc.FieldByName('Nombre').AsString);
       sRazon  := Trim(qSrc.FieldByName('RazonSocial').AsString);

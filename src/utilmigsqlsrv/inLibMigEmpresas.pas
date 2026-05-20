@@ -76,10 +76,12 @@ begin
       'SELECT RAZON_SOCIAL_EMP FROM fza_empresas ' +
       'WHERE CODIGO_EMP_EMP = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocemp'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCod   := IntToStr(qSrc.FieldByName('Empresa').AsInteger);
       sRazon := Trim(qSrc.FieldByName('RazonSocial').AsString);
       if sRazon = '' then
