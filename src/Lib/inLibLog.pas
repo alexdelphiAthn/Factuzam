@@ -224,25 +224,14 @@ begin
 end;
 
 procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
-var
-  Linea: string;
 begin
-  Linea := Format('[PERF:%s] %s | %d ms', [ATag, ADetalle, AElapsedMs]);
-  // (a) archivo de log general
-  WriteToLog('INFO: ' + Linea, ltInfo);
-  // (b) monitor SQL si esta vivo, para verlo en el mismo memo que el
-  // resto de queries. Acoplamiento explicito con la UI: no lo movemos
-  // mas abajo porque el objetivo de este metodo es justamente que las
-  // metricas salgan junto a las queries que se ejecutan.
-  if Assigned(oMemoSQL) then
-    try
-      oMemoSQL.Lines.Add('-- PERF -- ' +
-                         FormatDateTime('hh:nn:ss.zzz', Now) +
-                         '  ' + Linea);
-    except
-      // El memo puede estar siendo destruido o estar deshabilitado en
-      // release. No queremos que un fallo cosmetico tumbe el log.
-    end;
+  // Solo al archivo de log general — TLog.WriteToLog ya es thread-safe
+  // (mutex interno). NO tocamos oMemoSQL: es un TcxMemo de DevExpress
+  // y NO es thread-safe. Si necesitas ver las metricas junto al log
+  // SQL en debug, abre el archivo de log (fzam-YYYYMMDD.log) en paralelo.
+  WriteToLog(Format('INFO: [PERF:%s] %s | %d ms',
+                    [ATag, ADetalle, AElapsedMs]),
+             ltInfo);
 end;
 
 procedure TLog.EnableLogType(ALogType: TLogType);
