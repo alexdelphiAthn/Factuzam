@@ -180,24 +180,68 @@ end;
 
 procedure MigrarArticulosTarifas(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // En el legacy NO hay precios por SKU: ocarttap puede tener varias
-  // filas con el mismo Articulo+Tarifa para distintos Color, pero
-  // todas tienen el mismo precio. Agrupamos por (Articulo, Tarifa) y
-  // dejamos CODIGO_UNIDAD_ARTTAR vacio: la tarifa se asigna al
-  // articulo entero. Tomamos MAX() de los numericos para tener un
-  // valor estable cuando hay duplicados.
+  // En el legacy ocarttap tiene filas por (Articulo, Color, Tarifa).
+  // En la mayoria de articulos el precio es igual para todos los
+  // colores (precio "padre"), pero a veces los colores difieren mas
+  // de 0.10 EUR (p.ej. un color premium). Regla:
+  //   - spread (MAX-MIN) <= 0.10 -> una sola fila por (Articulo, Tarifa)
+  //     a nivel articulo (CODIGO_UNIDAD_ARTTAR = '').
+  //   - spread > 0.10            -> una fila por (Articulo, Tarifa, Color)
+  //     con CODIGO_UNIDAD_ARTTAR = 'ARTICULO/COLOR' (primer atributo).
+  //
+  // CODIGO_UNIDAD_ARTTAR = 'ART/COLOR' es soportado:
+  //   - fza_articulos_tarifas.CODIGO_UNIDAD_ARTTAR es varchar(50) sin
+  //     FK a fza_articulos_skus.
+  //   - vi_articulos_tarifas tolera valores que no matchean SKU
+  //     (LEFT JOIN), aparecen como 'ESPECIFICO_SKU' con
+  //     DESCRIPCION_SKU NULL.
   cSelectSrc =
-    'SELECT t.Articulo, ' +
-    '       t.Tarifa, ' +
+    'WITH spread AS ( ' +
+    '  SELECT Articulo, Tarifa, ' +
+    '         MIN(ISNULL(PrecioSalida, 0)) AS PrecioMin, ' +
+    '         MAX(ISNULL(PrecioSalida, 0)) AS PrecioMax ' +
+    '  FROM dbo.ocarttap WITH (NOLOCK) ' +
+    '  WHERE ISNULL(PrecioSalida, 0) > 0 ' +
+    '    AND LTRIM(RTRIM(Articulo)) <> '''' ' +
+    '  GROUP BY Articulo, Tarifa ' +
+    ') ' +
+    // Caso A: spread bajo -> precio unico por articulo (MAX)
+    'SELECT t.Articulo, t.Tarifa, ' +
+    '       '''' AS DescColor, ' +
     '       MAX(ISNULL(t.PrecioSalida, 0))  AS PrecioSalida, ' +
     '       MAX(ISNULL(t.PrecioRebaja, 0))  AS PrecioRebaja, ' +
     '       MAX(ISNULL(t.PorDtoRebaja, 0))  AS PorDtoRebaja, ' +
-    '       MAX(ISNULL(t.Margen, 0))        AS Margen ' +
-    'FROM dbo.ocarttap t ' +
-    'WHERE ISNULL(t.PrecioSalida, 0) > 0 ' +
+    '       MAX(ISNULL(t.Margen, 0))        AS Margen, ' +
+    '       ''ARTICULO'' AS Granularidad ' +
+    'FROM dbo.ocarttap t WITH (NOLOCK) ' +
+    'INNER JOIN spread p ON p.Articulo = t.Articulo ' +
+    '                    AND p.Tarifa  = t.Tarifa ' +
+    'WHERE (p.PrecioMax - p.PrecioMin) <= 0.10 ' +
+    '  AND ISNULL(t.PrecioSalida, 0) > 0 ' +
     '  AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
     'GROUP BY t.Articulo, t.Tarifa ' +
-    'ORDER BY t.Articulo, t.Tarifa';
+    'UNION ALL ' +
+    // Caso B: spread alto -> precio por color
+    'SELECT t.Articulo, t.Tarifa, ' +
+    '       ISNULL(c.Descripcion, t.Color) AS DescColor, ' +
+    '       MAX(ISNULL(t.PrecioSalida, 0))  AS PrecioSalida, ' +
+    '       MAX(ISNULL(t.PrecioRebaja, 0))  AS PrecioRebaja, ' +
+    '       MAX(ISNULL(t.PorDtoRebaja, 0))  AS PorDtoRebaja, ' +
+    '       MAX(ISNULL(t.Margen, 0))        AS Margen, ' +
+    '       ''COLOR'' AS Granularidad ' +
+    'FROM dbo.ocarttap t WITH (NOLOCK) ' +
+    'INNER JOIN spread p ON p.Articulo = t.Articulo ' +
+    '                    AND p.Tarifa  = t.Tarifa ' +
+    'LEFT JOIN dbo.ocartcol ac WITH (NOLOCK) ' +
+    '       ON ac.Articulo = t.Articulo AND ac.Color = t.Color ' +
+    'LEFT JOIN dbo.occolor c WITH (NOLOCK) ' +
+    '       ON c.ColorBasico = ac.ColorBasico ' +
+    'WHERE (p.PrecioMax - p.PrecioMin) > 0.10 ' +
+    '  AND ISNULL(t.PrecioSalida, 0) > 0 ' +
+    '  AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
+    'GROUP BY t.Articulo, t.Tarifa, t.Color, ' +
+    '         ISNULL(c.Descripcion, t.Color) ' +
+    'ORDER BY 1, 2, 3';
   cCols =
     'CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
     'ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
@@ -207,8 +251,8 @@ const
 var
   qSrc:                       TUniQuery;
   bulk:                       TBulkInsert;
-  sArt, sCodTar:              string;
-  sCodUnidad:                 string;
+  sArt, sCodTar, sGran:       string;
+  sCodUnidad, sDescColor:     string;
   sFila, sAhora, sUser:       string;
   iTarifa:                    Integer;
   fSalida, fRebaja, fDto:     Double;
@@ -225,14 +269,33 @@ begin
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
-    // Total = filas distintas (Articulo, Tarifa) tras el GROUP BY.
+    // Total = filas finales tras el UNION ALL (caso ARTICULO + caso
+    // COLOR). Para no replicar la query entera, calculamos:
+    //   total = N_articulos_uniformes + N_filas_articulocolor_spread
     Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM ( ' +
-      '  SELECT Articulo, Tarifa FROM dbo.ocarttap ' +
+      'WITH spread AS ( ' +
+      '  SELECT Articulo, Tarifa, ' +
+      '         MIN(ISNULL(PrecioSalida, 0)) AS PrecioMin, ' +
+      '         MAX(ISNULL(PrecioSalida, 0)) AS PrecioMax ' +
+      '  FROM dbo.ocarttap WITH (NOLOCK) ' +
       '  WHERE ISNULL(PrecioSalida, 0) > 0 ' +
       '    AND LTRIM(RTRIM(Articulo)) <> '''' ' +
       '  GROUP BY Articulo, Tarifa ' +
-      ') X'));
+      ') ' +
+      'SELECT ( ' +
+      '  SELECT COUNT(*) FROM spread WHERE (PrecioMax - PrecioMin) <= 0.10 ' +
+      ') + ( ' +
+      '  SELECT COUNT(*) FROM ( ' +
+      '    SELECT t.Articulo, t.Tarifa, t.Color ' +
+      '    FROM dbo.ocarttap t WITH (NOLOCK) ' +
+      '    INNER JOIN spread p ON p.Articulo = t.Articulo ' +
+      '                       AND p.Tarifa  = t.Tarifa ' +
+      '    WHERE (p.PrecioMax - p.PrecioMin) > 0.10 ' +
+      '      AND ISNULL(t.PrecioSalida, 0) > 0 ' +
+      '      AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
+      '    GROUP BY t.Articulo, t.Tarifa, t.Color ' +
+      '  ) Y ' +
+      ') AS N'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
@@ -240,6 +303,8 @@ begin
       Eng.IncRow;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       iTarifa    := qSrc.FieldByName('Tarifa').AsInteger;
+      sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
+      sGran      := Trim(qSrc.FieldByName('Granularidad').AsString);
       fSalida    := qSrc.FieldByName('PrecioSalida').AsFloat;
       fRebaja    := qSrc.FieldByName('PrecioRebaja').AsFloat;
       fPorDto    := qSrc.FieldByName('PorDtoRebaja').AsFloat;
@@ -253,9 +318,15 @@ begin
       end;
 
       sCodTar := MapearTarifa(iTarifa);
-      // En legacy no hay precios por SKU: la tarifa se asigna al
-      // articulo (CODIGO_UNIDAD_ARTTAR vacio).
-      sCodUnidad := '';
+      // Granularidad la define la query origen:
+      //   - ARTICULO: precio uniforme entre colores -> CODIGO_UNIDAD vacio
+      //   - COLOR   : spread > 0.10 -> CODIGO_UNIDAD = ART/COLOR (primer
+      //     atributo). Soportado por vi_articulos_tarifas (LEFT JOIN
+      //     tolera valor sin match en fza_articulos_skus).
+      if (sGran = 'COLOR') and (sDescColor <> '') then
+        sCodUnidad := sArt + '/' + UpperCase(sDescColor)
+      else
+        sCodUnidad := '';
 
       // Calcular PRECIO_FINAL y DTO.
       // - Si PrecioRebaja > 0 y < PrecioSalida → ese es el final.
@@ -298,7 +369,8 @@ begin
         begin
           Inc(Stats.Errores);
           Eng.LogError('art_tarifa', sArt, E.Message,
-            Format('tar=%s precio=%g', [sCodTar, fSalida]), '');
+            Format('tar=%s precio=%g gran=%s color=%s',
+                   [sCodTar, fSalida, sGran, sDescColor]), '');
           raise;
         end;
       end;
