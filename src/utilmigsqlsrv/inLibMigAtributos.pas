@@ -1,0 +1,359 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibMigAtributos                                             }
+{    Tipo:       Librería de migración (sin formulario)                        }
+{ Versión:       1.0.0                                                         }
+{                                                                              }
+{  Descripción:                                                                }
+{    Migra los CATÁLOGOS MAESTROS de colores y tallas del ERP "Herreras"      }
+{    hacia el modelo de atributos de Factuzam. No toca las asignaciones por    }
+{    artículo (de eso se encarga `inLibMigArticulosAtributos`).                }
+{                                                                              }
+{    Mapeo:                                                                    }
+{      `dbo.occolor`         (catálogo de colores) →                           }
+{          - fza_atributos_valores con ID_VA_AV = 'CO'                         }
+{          - fza_atributos_basicos con ID_VA_ATB = 'CO' (HEX en #RRGGBB)       }
+{                                                                              }
+{      SELECT DISTINCT Talla FROM dbo.ocarttal →                               }
+{          - fza_atributos_valores con ID_VA_AV = 'TAL'                        }
+{          - fza_atributos_basicos con ID_VA_ATB = 'TAL'                       }
+{                                                                              }
+{    Prerequisito: tiene que existir la variación 'TC' en `fza_variaciones`    }
+{    y los dos atributos ('CO','TAL') en `fza_variaciones_atributos`. Si no    }
+{    están, las creamos antes de empezar (idempotente).                        }
+{                                                                              }
+{    Idempotente: la combinación (ID_VA_AV, AV) es única, si existe se salta.  }
+{    El programador puede re-ejecutar con seguridad.                           }
+{******************************************************************************}
+unit inLibMigAtributos;
+
+interface
+
+uses
+  UMigEngine;
+
+// Migrador maestro: colores (dbo.occolor → fza_atributos_valores + basicos)
+procedure MigrarColoresMaestros(Eng: TMigEngine; var Stats: TMigStats);
+
+// Migrador maestro: tallas (DISTINCT de dbo.ocarttal → fza_atributos_valores)
+procedure MigrarTallasMaestras(Eng: TMigEngine; var Stats: TMigStats);
+
+implementation
+
+uses
+  System.SysUtils,
+  Data.DB, Uni;
+
+// =========================================================================
+//  Helpers comunes
+// =========================================================================
+
+// Convierte un entero RGB (R + G*256 + B*65536, formato Windows) a '#RRGGBB'.
+// Si el valor es 0 o NULL devuelve cadena vacía.
+function ColorIntAHex(iValor: Integer): string;
+var
+  iR, iG, iB: Integer;
+begin
+  if iValor <= 0 then Exit('');
+  iR := iValor and $FF;
+  iG := (iValor shr 8)  and $FF;
+  iB := (iValor shr 16) and $FF;
+  Result := Format('#%.2X%.2X%.2X', [iR, iG, iB]);
+end;
+
+// Asegura que existe la variación 'TC' y sus dos atributos.
+procedure AsegurarVariacionTC(Eng: TMigEngine);
+var qChk, qIns: TUniQuery;
+begin
+  qChk := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  try
+    qChk.Connection := Eng.ConDst;
+    qIns.Connection := Eng.ConDst;
+
+    // fza_variaciones: 'TC'
+    qChk.SQL.Text :=
+      'SELECT 1 FROM fza_variaciones WHERE CODIGO_VAR = ''TC''';
+    qChk.Open;
+    if qChk.IsEmpty then
+    begin
+      qIns.SQL.Text :=
+        'INSERT INTO fza_variaciones (' +
+          'CODIGO_VAR, NOMBRE_VAR, ESACTIVO_VAR, ORDEN_VAR, ' +
+          'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (''TC'', ''TALLAS Y COLORES'', ''S'', 1, ' +
+                ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
+                ':USUARIO_MODIF)';
+      RellenarAuditoria(qIns, Eng.Usuario);
+      qIns.ExecSQL;
+      Eng.Log('  + creada variacion TC');
+    end;
+    qChk.Close;
+
+    // fza_variaciones_atributos: ('TC','CO') y ('TC','TAL')
+    qChk.SQL.Text :=
+      'SELECT 1 FROM fza_variaciones_atributos ' +
+      'WHERE ID_VAR_VA = ''TC'' AND ID_ATB_VA = ''CO''';
+    qChk.Open;
+    if qChk.IsEmpty then
+    begin
+      qIns.SQL.Text :=
+        'INSERT INTO fza_variaciones_atributos (' +
+          'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
+        'VALUES (''TC'', ''CO'', ''Color'', 1, ''Paleta'')';
+      qIns.ExecSQL;
+      Eng.Log('  + creado eje variacion TC/CO');
+    end;
+    qChk.Close;
+
+    qChk.SQL.Text :=
+      'SELECT 1 FROM fza_variaciones_atributos ' +
+      'WHERE ID_VAR_VA = ''TC'' AND ID_ATB_VA = ''TAL''';
+    qChk.Open;
+    if qChk.IsEmpty then
+    begin
+      qIns.SQL.Text :=
+        'INSERT INTO fza_variaciones_atributos (' +
+          'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
+        'VALUES (''TC'', ''TAL'', ''Talla'', 2, ''Sistema de tallas'')';
+      qIns.ExecSQL;
+      Eng.Log('  + creado eje variacion TC/TAL');
+    end;
+    qChk.Close;
+  finally
+    qIns.Free;
+    qChk.Free;
+  end;
+end;
+
+// Inserta una fila en fza_atributos_valores si no existe la pareja
+// (ID_VA_AV, AV). Devuelve True si insertó, False si ya existía.
+function InsertarValorAtributo(Eng: TMigEngine; const sIdVa, sAv,
+                                sDescripcion: string; iOrden: Integer): Boolean;
+var qChk, qIns: TUniQuery;
+begin
+  qChk := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  try
+    qChk.Connection := Eng.ConDst;
+    qChk.SQL.Text   :=
+      'SELECT 1 FROM fza_atributos_valores ' +
+      'WHERE ID_VA_AV = :v AND AV = :av';
+    qChk.ParamByName('v').AsString  := sIdVa;
+    qChk.ParamByName('av').AsString := sAv;
+    qChk.Open;
+    if not qChk.IsEmpty then Exit(False);
+    qChk.Close;
+
+    qIns.Connection := Eng.ConDst;
+    qIns.SQL.Text   :=
+      'INSERT INTO fza_atributos_valores (' +
+        'ID_VA_AV, AV, ORDEN_AV, DESCRIPCION_AV, ESACTIVO_AV, ' +
+        'FACTOR_CONVERSION_AV, ' +
+        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'VALUES (:v, :av, :o, :d, ''S'', 1, ' +
+              ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
+              ':USUARIO_MODIF)';
+    qIns.ParamByName('v').AsString  := sIdVa;
+    qIns.ParamByName('av').AsString := sAv;
+    qIns.ParamByName('o').AsInteger := iOrden;
+    qIns.ParamByName('d').AsString  := sDescripcion;
+    RellenarAuditoria(qIns, Eng.Usuario);
+    qIns.ExecSQL;
+    Result := True;
+  finally
+    qIns.Free;
+    qChk.Free;
+  end;
+end;
+
+// Inserta una fila en fza_atributos_basicos si no existe la pareja
+// (ID_VA_ATB, CODIGO_ATB).
+procedure InsertarAtributoBasico(Eng: TMigEngine;
+                                  const sIdVa, sCodigo, sNombre,
+                                  sDescripcion, sHex: string; iOrden: Integer);
+var qChk, qIns: TUniQuery;
+begin
+  qChk := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  try
+    qChk.Connection := Eng.ConDst;
+    qChk.SQL.Text   :=
+      'SELECT 1 FROM fza_atributos_basicos ' +
+      'WHERE ID_VA_ATB = :v AND CODIGO_ATB = :c';
+    qChk.ParamByName('v').AsString := sIdVa;
+    qChk.ParamByName('c').AsString := sCodigo;
+    qChk.Open;
+    if not qChk.IsEmpty then Exit;
+    qChk.Close;
+
+    qIns.Connection := Eng.ConDst;
+    qIns.SQL.Text   :=
+      'INSERT INTO fza_atributos_basicos (' +
+        'ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, DESCRIPCION_ATB, HEX_ATB, ' +
+        'ORDEN_ATB, ESACTIVO_ATB, ' +
+        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'VALUES (:v, :c, :n, :d, :h, :o, ''S'', ' +
+              ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
+              ':USUARIO_MODIF)';
+    qIns.ParamByName('v').AsString := sIdVa;
+    qIns.ParamByName('c').AsString := sCodigo;
+    qIns.ParamByName('n').AsString := sNombre;
+    qIns.ParamByName('d').AsString := sDescripcion;
+    if sHex <> '' then
+      qIns.ParamByName('h').AsString := sHex
+    else
+      qIns.ParamByName('h').Clear;
+    qIns.ParamByName('o').AsInteger := iOrden;
+    RellenarAuditoria(qIns, Eng.Usuario);
+    qIns.ExecSQL;
+  finally
+    qIns.Free;
+    qChk.Free;
+  end;
+end;
+
+// Convierte 'XX' (texto del color/talla origen) en un código apto para
+// CODIGO_ATB: mayúsculas, espacios → '_', sin caracteres raros.
+function NormalizarCodigoAtb(const s: string): string;
+var i: Integer; c: Char;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+  begin
+    c := s[i];
+    case c of
+      'A'..'Z', '0'..'9', '_': Result := Result + c;
+      'a'..'z':                Result := Result + UpCase(c);
+      ' ', '-', '/', '.':      Result := Result + '_';
+    else
+      // resto fuera (acentos, comas, etc.)
+    end;
+  end;
+  if Result = '' then Result := 'X';
+end;
+
+// =========================================================================
+//  Migrador COLORES MAESTROS
+// =========================================================================
+
+procedure MigrarColoresMaestros(Eng: TMigEngine; var Stats: TMigStats);
+const
+  cSelectSrc =
+    'SELECT ColorBasico, Descripcion, ColorPaleta, Estado ' +
+    'FROM dbo.occolor ' +
+    'ORDER BY ColorBasico';
+var
+  qSrc:                       TUniQuery;
+  sCodOrigen, sCodAtb, sDesc: string;
+  sHex:                       string;
+  iColorRGB, iOrden:          Integer;
+  bInsertoValor:              Boolean;
+begin
+  AsegurarVariacionTC(Eng);
+
+  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  try
+    qSrc.Open;
+    iOrden := 10;
+    while not qSrc.Eof do
+    begin
+      Inc(Stats.Leidas);
+      sCodOrigen := Trim(qSrc.FieldByName('ColorBasico').AsString);
+      sDesc      := Trim(qSrc.FieldByName('Descripcion').AsString);
+      if qSrc.FieldByName('ColorPaleta').IsNull then
+        iColorRGB := 0
+      else
+        iColorRGB := qSrc.FieldByName('ColorPaleta').AsInteger;
+      sHex       := ColorIntAHex(iColorRGB);
+
+      if (sCodOrigen = '') and (sDesc = '') then
+      begin
+        Inc(Stats.Saltadas);
+        qSrc.Next;
+        Continue;
+      end;
+      if sDesc = '' then sDesc := sCodOrigen;
+
+      // El AV (valor visible) es la descripcion en mayusculas; lo
+      // usamos como clave dentro de ID_VA='CO'. El CODIGO_ATB usa el
+      // mismo pero normalizado.
+      sCodAtb := NormalizarCodigoAtb(sDesc);
+
+      bInsertoValor := InsertarValorAtributo(Eng, 'CO',
+                                              UpperCase(sDesc),
+                                              'Color ' + sDesc,
+                                              iOrden);
+      InsertarAtributoBasico(Eng, 'CO', sCodAtb, sDesc,
+                              'Color ' + sDesc + ' (legacy ' +
+                              sCodOrigen + ')', sHex, iOrden);
+      if bInsertoValor then
+      begin
+        Inc(Stats.Insertadas);
+        Inc(iOrden, 10);
+      end
+      else
+        Inc(Stats.Saltadas);
+      qSrc.Next;
+    end;
+  finally
+    qSrc.Free;
+  end;
+end;
+
+// =========================================================================
+//  Migrador TALLAS MAESTRAS (DISTINCT de ocarttal.Talla)
+// =========================================================================
+
+procedure MigrarTallasMaestras(Eng: TMigEngine; var Stats: TMigStats);
+const
+  cSelectSrc =
+    'SELECT DISTINCT Talla ' +
+    'FROM dbo.ocarttal ' +
+    'WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
+    'ORDER BY Talla';
+var
+  qSrc:           TUniQuery;
+  sTalla, sCodAtb: string;
+  iOrden:         Integer;
+  bInsertoValor:  Boolean;
+begin
+  AsegurarVariacionTC(Eng);
+
+  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  try
+    qSrc.Open;
+    iOrden := 10;
+    while not qSrc.Eof do
+    begin
+      Inc(Stats.Leidas);
+      sTalla := Trim(qSrc.FieldByName('Talla').AsString);
+      if sTalla = '' then
+      begin
+        Inc(Stats.Saltadas);
+        qSrc.Next;
+        Continue;
+      end;
+      sCodAtb := NormalizarCodigoAtb(sTalla);
+
+      bInsertoValor := InsertarValorAtributo(Eng, 'TAL',
+                                              UpperCase(sTalla),
+                                              'Talla ' + sTalla,
+                                              iOrden);
+      InsertarAtributoBasico(Eng, 'TAL', sCodAtb, sTalla,
+                              'Talla ' + sTalla, '', iOrden);
+      if bInsertoValor then
+      begin
+        Inc(Stats.Insertadas);
+        Inc(iOrden, 10);
+      end
+      else
+        Inc(Stats.Saltadas);
+      qSrc.Next;
+    end;
+  finally
+    qSrc.Free;
+  end;
+end;
+
+end.
