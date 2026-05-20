@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 20/05/2026 7:36:52
+-- Backup generado: 20/05/2026 9:13:44
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -2573,7 +2573,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 230, 3, 'S', 'S', '2026-05-20 07:36:25', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 231, 3, 'S', 'S', '2026-05-20 09:06:33', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -5381,8 +5381,42 @@ SET @sSqlIdx := IF(@sExisteIdx = 0,
 PREPARE stmt FROM @sSqlIdx;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-', '2026-05-20 07:36:25', '2026-05-20 07:36:25', 'Administrador', 'Administrador');
--- 25 registros exportados
+', '2026-05-20 07:36:25', '2026-05-20 07:36:25', 'Administrador', 'Administrador'),
+  ('230', 'widen_linea_invlin', '-- =============================================================================
+-- Ampliar fza_inventarios_lineas.LINEA_INVLIN a varchar(8)
+-- =============================================================================
+-- La columna esta declarada varchar(4) (rango ''0001''..''9999'') pero un
+-- inventario inicial migrado desde un legacy grande puede tener decenas
+-- de miles de lineas en el mismo (Empresa, Almacen). Al pasar la fila
+-- 10000 el migrador genera "10000" (5 chars) y el INSERT revienta con:
+--
+--   EMySqlNetException #22001 ''Data too long for column LINEA_INVLIN''
+--
+-- Ampliamos a varchar(8): cabe hasta 99 999 999 lineas por documento,
+-- mas que suficiente y sigue siendo compacto.
+--
+-- Idempotente: el ALTER solo se ejecuta si la columna actual mide < 8.
+-- =============================================================================
+
+SET @sLen := (
+  SELECT CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_inventarios_lineas''
+     AND COLUMN_NAME  = ''LINEA_INVLIN''
+);
+
+SET @sSql := IF(@sLen IS NOT NULL AND @sLen < 8,
+  ''ALTER TABLE fza_inventarios_lineas
+     MODIFY COLUMN LINEA_INVLIN varchar(8) NOT NULL
+       COMMENT ''''Secuencial de la línea (00000001, 00000002...)'''''',
+  ''SELECT ''''LINEA_INVLIN ya tiene >= 8, se omite'''' AS info'');
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-05-20 09:06:33', '2026-05-20 09:06:33', 'Administrador', 'Administrador');
+-- 26 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -5468,7 +5502,7 @@ CREATE TABLE `fza_inventarios_lineas` (
   `CODIGO_ALM_INVLIN` varchar(10) NOT NULL,
   `SERIE_INV_INVLIN` varchar(20) NOT NULL,
   `NUMERO_INV_INVLIN` varchar(20) NOT NULL,
-  `LINEA_INVLIN` varchar(4) NOT NULL COMMENT 'Secuencial de la línea (001, 002...)',
+  `LINEA_INVLIN` varchar(8) NOT NULL COMMENT 'Secuencial de la línea (00000001, 00000002...)',
   `CODIGO_ART_INVLIN` varchar(20) NOT NULL,
   `CODIGO_UNIDAD_INVLIN` varchar(50) NOT NULL COMMENT 'El SKU específico contado',
   `LOTE_INVLIN` varchar(50) NULL DEFAULT '',
@@ -7117,7 +7151,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-20 07:35:59', '2026-05-20 07:35:59', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-20 09:06:24', '2026-05-20 09:06:24', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -18938,4 +18972,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 20/05/2026 7:36:57
+-- Backup completado: 20/05/2026 9:13:48
