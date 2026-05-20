@@ -156,7 +156,15 @@ type
     // === ACCIONES SOBRE INVENTARIO ===
     function GetEstadoInventario: string;
     procedure RecalcularTeorico;
+    // Camino sincrono original. Tiene instrumentacion [PERF:Aplicar] y
+    // bloquea la UI hasta terminar. Util para llamadas batch o pruebas.
     procedure AplicarInventario;
+    // Camino partido en 3 para Fase 2 (background). El llamador (el form)
+    // ejecuta Pre y Refrescar en el main thread (tocan grids) y deja el
+    // SP en TfrmMtoGen.EjecutarEnBackground. Ver TfrmMtoInventarios.btnAplicarClick.
+    procedure PreAplicarValidaciones;
+    procedure EjecutarSPAplicar;
+    procedure RefrescarTrasAplicar;
     procedure EliminarRegularizacion;
 
     // === PROPIEDADES ===
@@ -175,7 +183,9 @@ implementation
 
 uses
   Vcl.Dialogs,          // MessageDlg para validación de SKU en BeforePost
+  System.Diagnostics,   // TStopwatch para instrumentacion de rendimiento
   inLibUser,            // Usuario logueado
+  inLibLog,             // Log.LogInfo para metricas
   inLibGlobalVar,
   UniDataConn;      // oConn
 
@@ -830,13 +840,16 @@ begin
   unqryTablaG.Refresh;
 end;
 
-procedure TdmInventarios.AplicarInventario;
+procedure TdmInventarios.PreAplicarValidaciones;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create(
       'Solo se puede aplicar un inventario en estado ABIERTO');
 
-  // Mismo Post defensivo que en RecalcularTeorico.
+  // Post defensivo + ApplyUpdates: vuelca cambios pendientes del cdsLineas
+  // (buffer cliente) a BBDD via el provider. Debe correr en main thread
+  // porque cdsLineas esta vinculado al grid tvLineas y Post/ApplyUpdates
+  // disparan eventos UI (cdsLineasAfterPost, repintado de filas, etc).
   if cdsLineas.Active then
   begin
     if cdsLineas.State in [dsInsert, dsEdit] then
@@ -860,7 +873,13 @@ begin
     raise Exception.Create(
       'No se puede aplicar un inventario sin líneas. Añade al menos una ' +
       'línea con diferencia de cantidad o de coste antes de regularizar.');
+end;
 
+procedure TdmInventarios.EjecutarSPAplicar;
+begin
+  // Solo el ExecProc. Es la pieza apta para background: no toca grids,
+  // solo BBDD a traves de unspAplicar (que apunta a FConn del Mto desde
+  // Fase 1). Mientras corre, otros tabs siguen interactivos.
   unspAplicar.Close;
   unspAplicar.ParamByName('p_EMPRESA').AsString := FCodigoEmpresa;
   unspAplicar.ParamByName('p_ALMACEN').AsString := FCodigoAlmacen;
@@ -868,11 +887,52 @@ begin
   unspAplicar.ParamByName('p_NRO').AsString     := FNumero;
   unspAplicar.ParamByName('p_USUARIO').AsString := FUsuario;
   unspAplicar.ExecProc;
+end;
 
-  // Refrescamos
+procedure TdmInventarios.RefrescarTrasAplicar;
+begin
+  // Recarga de queries vinculadas a grids (tvLineas, tvMovsRegul) y la
+  // lista principal. Debe correr en main thread.
   CargarLineasInventario;
   CargarMovimientosRegularizacion;
   unqryTablaG.Refresh;
+end;
+
+procedure TdmInventarios.AplicarInventario;
+var
+  swTotal, swTramo: TStopwatch;
+  msApply, msExecProc, msRecargas, msRefresh: Int64;
+begin
+  // [PERF:Aplicar] Camino sincrono instrumentado. Mide los 4 tramos para
+  // tener una base de comparacion con el camino background (Fase 2).
+  msApply    := 0;
+  msExecProc := 0;
+  msRecargas := 0;
+  msRefresh  := 0;
+  swTotal := TStopwatch.StartNew;
+
+  swTramo := TStopwatch.StartNew;
+  PreAplicarValidaciones;
+  msApply := swTramo.ElapsedMilliseconds;
+
+  swTramo := TStopwatch.StartNew;
+  EjecutarSPAplicar;
+  msExecProc := swTramo.ElapsedMilliseconds;
+
+  swTramo := TStopwatch.StartNew;
+  CargarLineasInventario;
+  CargarMovimientosRegularizacion;
+  msRecargas := swTramo.ElapsedMilliseconds;
+
+  swTramo := TStopwatch.StartNew;
+  unqryTablaG.Refresh;
+  msRefresh := swTramo.ElapsedMilliseconds;
+
+  inLibLog.Log.LogInfo(Format(
+    '[PERF:Aplicar] total=%d ms | ApplyUpdates=%d | ExecProc=%d | ' +
+    'Recargas=%d | Refresh=%d (emp=%s alm=%s ser=%s nro=%s)',
+    [swTotal.ElapsedMilliseconds, msApply, msExecProc, msRecargas, msRefresh,
+     FCodigoEmpresa, FCodigoAlmacen, FSerie, FNumero]));
 end;
 
 procedure TdmInventarios.EliminarRegularizacion;

@@ -48,7 +48,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList;
+  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList,
+  System.Threading;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -124,12 +125,39 @@ type
     procedure btnSalirClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    // Conexion propia del Mto (Fase 1 multithreading). Se clona de `oConn`
+    // global al crear el data module y se reasigna a todas las queries/SPs
+    // via TdmBase.ReasignarConexion. Asi dos pestañas dejan de serializarse
+    // sobre la misma TUniConnection — cada una agarra una conexion fisica
+    // distinta del pool. Liberada en Destroy DESPUES del data module para
+    // que los Close implicitos de las queries no queden colgando.
+    FConn: TUniConnection;
+    // Overlay para Fase 2 (background): panel que cubre el Mto entero
+    // mientras corre una tarea en thread. Otros tabs siguen interactivos
+    // porque cada Mto vive embebido en su propio TcxTabSheet.
+    FOverlayOcupado: TPanel;
+    FTareasEnCurso: Integer;
+    // Lista de ITask vivos para poder esperarlos en Destroy. Sin esto,
+    // cerrar un tab mientras un Open async sigue ejecutando provoca AV:
+    // el thread accederia a la TUniQuery / FConn ya liberadas. La lista
+    // se crea lazy en EjecutarEnBackground y se libera en Destroy
+    // despues del WaitForAll.
+    FTareasActivas: TList<ITask>;
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
 //                                        const sProfile: string;
 //                                        AList: TPerfilList);
-
+  protected
+    // Clona los params relevantes de `oConn` global y devuelve una nueva
+    // TUniConnection ya conectada (usa el pool de UniDAC). Los Mtos
+    // especializados pueden override para variantes (p.ej. una replica
+    // de solo-lectura), aunque por defecto basta el clon plano.
+    function CrearConexionPropia: TUniConnection; virtual;
+    // Crea/oculta el overlay "Procesando..." sobre este Mto. Reentrante:
+    // varias llamadas a Bloquear=True solo muestran el overlay una vez,
+    // y solo se oculta cuando todas se compensan con un False.
+    procedure BloquearTabPorOcupado(Bloquear: Boolean);
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
@@ -159,6 +187,24 @@ type
     // movimientos...) lo sobreescriben para incluir tambien esos
     // DataSources, asi la foto sigue al cursor en cualquier pestaña.
     function DataSourcesParaFoto: TArray<TDataSource>; virtual;
+    // Ejecuta `AccionBG` en un thread aparte (TTask.Run del RTL). Mientras
+    // corre, este Mto queda bloqueado con overlay "Procesando...", pero
+    // los demas tabs siguen 100% interactivos. Al terminar (OK o
+    // excepcion) se invoca `AlTerminar` en el main thread: el parametro
+    // es '' si todo fue bien, o el mensaje de la excepcion si hubo fallo.
+    // OJO: `AccionBG` NO puede tocar la UI ni datasets vinculados a
+    // grids. Solo operaciones BBDD puras (ExecProc, ExecSQL, calculos).
+    procedure EjecutarEnBackground(AccionBG: TProc;
+                                   AlTerminar: TProc<string>);
+    // Carga inicial de la lista principal (unqryTablaG) en thread. El
+    // grid se suelta del DataSource antes del Open y se revincula cuando
+    // termina, evitando que cxGrid acceda al dataset durante el fetch.
+    // Si la query ya esta activa o no hay data module, no hace nada.
+    procedure AbrirTablaPrincipalAsync;
+    // Variante sincrona (comportamiento clasico): bloquea hasta tener
+    // los datos. La usa ShowMto cuando se invoca con parametro de
+    // busqueda — BuscarTabla.Locate necesita la query activa al volver.
+    procedure AbrirTablaPrincipalSincrono;
   public
     destructor Destroy; override;
   end;
@@ -178,6 +224,7 @@ uses inMtoGenSearch,
      inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
      inLibFotos, inMtoFotoArticulo;
+     // System.Threading ya esta en el interface (para TList<ITask>).
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -319,18 +366,28 @@ begin
 end;
 
 procedure TfrmMtoGen.btnGrabarClick(Sender: TObject);
+var
+  ConnGrabar: TUniConnection;
 begin
   inherited;
   if tdmDataModule = nil then
     Exit;
+  // Si el Mto tiene conexion propia (Fase 1), la transaccion DEBE ir
+  // contra ella: las queries del data module ya apuntan a FConn via
+  // ReasignarConexion, asi que un StartTransaction sobre oConn no las
+  // cubriria y el commit/rollback no afectaria a los ApplyUpdates.
+  if Assigned(FConn) then
+    ConnGrabar := FConn
+  else
+    ConnGrabar := oDmConn.conUni;
   Screen.Cursor := crHourGlass;
   try
     try
-       if not oDmConn.conUni.InTransaction then
-         oDmConn.conUni.StartTransaction;
+       if not ConnGrabar.InTransaction then
+         ConnGrabar.StartTransaction;
       GrabarDatasets(tdmDataModule as TDataModule);
-      if oDmConn.conUni.InTransaction then
-        oDmConn.conUni.Commit;
+      if ConnGrabar.InTransaction then
+        ConnGrabar.Commit;
       ShowMessage('Datos guardados correctamente');
     except
       on E: EAbort do
@@ -339,13 +396,13 @@ begin
         // llama a Abort cuando el dataset no debe persistirse por la
         // vía estándar, p. ej. vistas en JOIN que se actualizan a mano).
         // Cerramos la transacción y salimos sin mensaje.
-        if oDmConn.conUni.InTransaction then
-          oDmConn.conUni.Rollback;
+        if ConnGrabar.InTransaction then
+          ConnGrabar.Rollback;
       end;
       on E: Exception do
       begin
-        if oDmConn.conUni.InTransaction then
-          oDmConn.conUni.Rollback;
+        if ConnGrabar.InTransaction then
+          ConnGrabar.Rollback;
         raise Exception.Create('Error al grabar: ' + E.Message);
       end;
     end;
@@ -600,8 +657,225 @@ begin
      (Self.Owner as TfrmMtoPrincipal).oFzaWinf.GetDataModuleName(Self.UnitName +
                                                           '.' + Self.ClassName);
   if (sNameModule <> '') then
+  begin
     tdmDataModule := CrearDataModule(sNameModule, Self);
+    // Conexion propia del Mto: la creamos si todavia no existe y la
+    // inyectamos en todas las queries/SPs del data module recien creado.
+    // El DataModule sigue arrancando con `oConn` en su DoCreate, lo cual
+    // es necesario para que el .dfm streaming no se queje; aqui hacemos
+    // el switch antes de cualquier Open real.
+    if FConn = nil then
+    try
+      FConn := CrearConexionPropia;
+    except
+      on E: Exception do
+      begin
+        inliblog.Log.LogError('No se pudo crear conexion propia para ' +
+          Self.Name + ': ' + E.Message + '. Se sigue usando oConn global.');
+        FConn := nil;
+      end;
+    end;
+    if Assigned(FConn) then
+      (tdmDataModule as TdmBase).ReasignarConexion(FConn);
+  end;
   inherited;
+end;
+
+procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
+var
+  lblTexto: TLabel;
+begin
+  if Bloquear then
+  begin
+    Inc(FTareasEnCurso);
+    if FOverlayOcupado = nil then
+    begin
+      FOverlayOcupado := TPanel.Create(Self);
+      FOverlayOcupado.Parent := Self;
+      FOverlayOcupado.Align := alClient;
+      FOverlayOcupado.BevelOuter := bvNone;
+      FOverlayOcupado.Color := clBtnFace;
+      FOverlayOcupado.ParentBackground := False;
+      FOverlayOcupado.Caption := '';
+      lblTexto := TLabel.Create(FOverlayOcupado);
+      lblTexto.Parent := FOverlayOcupado;
+      lblTexto.Align := alClient;
+      lblTexto.Alignment := taCenter;
+      lblTexto.Layout := tlCenter;
+      lblTexto.Caption := 'Procesando en segundo plano, espera...';
+      lblTexto.Font.Style := [fsBold];
+      lblTexto.Font.Size := 12;
+    end;
+    FOverlayOcupado.BringToFront;
+    FOverlayOcupado.Visible := True;
+    Self.Cursor := crHourGlass;
+  end
+  else
+  begin
+    if FTareasEnCurso > 0 then
+      Dec(FTareasEnCurso);
+    if (FTareasEnCurso = 0) and Assigned(FOverlayOcupado) then
+    begin
+      FOverlayOcupado.Visible := False;
+      Self.Cursor := crDefault;
+    end;
+  end;
+end;
+
+procedure TfrmMtoGen.EjecutarEnBackground(AccionBG: TProc;
+                                          AlTerminar: TProc<string>);
+var
+  LTask: ITask;
+begin
+  if not Assigned(AccionBG) then
+    Exit;
+  if FTareasActivas = nil then
+    FTareasActivas := TList<ITask>.Create;
+  BloquearTabPorOcupado(True);
+  LTask := TTask.Run(
+    procedure
+    var
+      LErrMsg: string;
+    begin
+      LErrMsg := '';
+      try
+        AccionBG();
+      except
+        on E: Exception do
+        begin
+          // Logueamos el error real (con tipo) y propagamos solo el
+          // mensaje al callback. Si necesitaramos el tipo de excepcion
+          // tendriamos que envolverlo en una clase wrapper; para el
+          // piloto basta con el mensaje.
+          inLibLog.Log.LogError('[EjecutarEnBackground] ' +
+            E.ClassName + ': ' + E.Message);
+          LErrMsg := E.Message;
+          if LErrMsg = '' then
+            LErrMsg := E.ClassName;
+        end;
+      end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          try
+            // Quitar esta tarea de la lista ANTES del callback (si el
+            // callback lanza otra task, no queremos contar esta vez).
+            // Si el form se esta destruyendo, FTareasActivas puede ser nil.
+            if Assigned(FTareasActivas) then
+              FTareasActivas.Remove(LTask);
+            // Tambien comprobamos csDestroying: si el form se cerro
+            // mientras la tarea corria, no hay UI que actualizar y los
+            // componentes (FOverlayOcupado, dsTablaG...) ya estan
+            // liberados.
+            if not (csDestroying in ComponentState) then
+            begin
+              BloquearTabPorOcupado(False);
+              if Assigned(AlTerminar) then
+                AlTerminar(LErrMsg);
+            end;
+          except
+            on E: Exception do
+              inLibLog.Log.LogError(
+                '[EjecutarEnBackground.AlTerminar] ' +
+                E.ClassName + ': ' + E.Message);
+          end;
+        end);
+    end);
+  FTareasActivas.Add(LTask);
+end;
+
+procedure TfrmMtoGen.AbrirTablaPrincipalAsync;
+var
+  dmDat: TdmBase;
+  unqry: TUniQuery;
+begin
+  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
+    Exit;
+  dmDat := TdmBase(tdmDataModule);
+  unqry := dmDat.unqryTablaG;
+  if (unqry = nil) or unqry.Active then
+    Exit;
+  // Soltamos el grid del DataSource. cxGrid mostrara "<No hay datos a
+  // mostrar>" durante el fetch (con el overlay encima). Sin esto, el
+  // grid intentaria leer del dataset desde el main thread mientras este
+  // se rellena en el thread — AVs intermitentes.
+  if Assigned(dsTablaG) then
+    dsTablaG.DataSet := nil;
+  EjecutarEnBackground(
+    procedure
+    begin
+      if not unqry.Active then
+        unqry.Open;
+    end,
+    procedure(ErrMsg: string)
+    begin
+      // El form puede haberse cerrado mientras carga (otro tab, btnSalir,
+      // cierre de app). En csDestroying los componentes ya pueden estar
+      // liberados; salir limpio sin tocar nada.
+      if csDestroying in ComponentState then
+        Exit;
+      if ErrMsg <> '' then
+      begin
+        inLibLog.Log.LogError('[CargaAsync] ' + Self.Name + ': ' + ErrMsg);
+        // No mostramos ShowMessage aqui — molesta si pasa al abrir
+        // varios tabs en cadena. El error queda en el log.
+        Exit;
+      end;
+      // Revincular grid: trigger del refresco automatico.
+      if Assigned(dsTablaG) and Assigned(unqry) then
+        dsTablaG.DataSet := unqry;
+    end);
+end;
+
+procedure TfrmMtoGen.AbrirTablaPrincipalSincrono;
+var
+  dmDat: TdmBase;
+  unqry: TUniQuery;
+begin
+  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
+    Exit;
+  dmDat := TdmBase(tdmDataModule);
+  unqry := dmDat.unqryTablaG;
+  if (unqry = nil) or unqry.Active then
+    Exit;
+  try
+    unqry.Open;
+  except
+    on E: Exception do
+      inLibLog.Log.LogError(
+        'Error al abrir tabla en ' + Self.Name + ': ' + E.Message);
+  end;
+end;
+
+function TfrmMtoGen.CrearConexionPropia: TUniConnection;
+begin
+  Result := TUniConnection.Create(Self);
+  try
+    Result.LoginPrompt := False;
+    Result.ProviderName := oConn.ProviderName;
+    Result.Server       := oConn.Server;
+    Result.Port         := oConn.Port;
+    Result.Database     := oConn.Database;
+    Result.Username     := oConn.Username;
+    Result.Password     := oConn.Password;
+    // Mismos ajustes que la conexion global (UniDataConn.connBeforeConnect).
+    // Con los mismos params, las conexiones fisicas salen del mismo pool.
+    Result.Pooling := True;
+    Result.PoolingOptions.ConnectionLifetime := 0;
+    Result.PoolingOptions.Validate := True;
+    Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
+    Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
+    Result.Options.LocalFailover    := True;
+    Result.Options.DisconnectedMode := True;
+    // Reusamos el handler de errores y el AfterConnect (timeout extendido)
+    // de la conexion global para mantener comportamiento consistente.
+    Result.OnError       := oConn.OnError;
+    Result.AfterConnect  := oConn.AfterConnect;
+    Result.Connect;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 procedure TfrmMtoGen.cxGrdDBTabPrinDblClick(Sender: TObject);
@@ -615,10 +889,40 @@ destructor TfrmMtoGen.Destroy;
 begin
   if Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
+  // ANTES de liberar nada relacionado con BBDD (data module, FConn),
+  // esperar a que terminen las tareas en background. Si quedaran tareas
+  // vivas accederian a TUniQuery / TUniConnection ya liberadas → AV.
+  // Timeout 5s: si MySQL no responde en 5s preferimos asumir tarea muerta
+  // antes que dejar la app colgada cerrando un tab.
+  if Assigned(FTareasActivas) then
+  begin
+    try
+      if FTareasActivas.Count > 0 then
+        TTask.WaitForAll(FTareasActivas.ToArray, 5000);
+    except
+      // WaitForAll puede lanzar si alguna tarea fallo — lo ignoramos
+      // porque solo queremos drenar, no propagar.
+    end;
+    FreeAndNil(FTareasActivas);
+  end;
   if (oPerfilDic <> nil) then
     FreeAndNil(oPerfilDic);
   if (tdmDataModule <> nil) then
     FreeAndNil(tdmDataModule);
+  // Liberar la conexion propia DESPUES del data module: las queries del
+  // data module aun referencian FConn durante su destrucion para los Close
+  // implicitos. Si soltamos antes, AVs garantizados.
+  if Assigned(FConn) then
+  begin
+    try
+      if FConn.Connected then
+        FConn.Disconnect;
+    except
+      // Disconnect en pool no deberia fallar, pero si lo hace no queremos
+      // que el destructor lance.
+    end;
+    FreeAndNil(FConn);
+  end;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
   frmMtoGen := nil;

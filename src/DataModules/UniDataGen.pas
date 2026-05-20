@@ -41,6 +41,11 @@ type
   public
     property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
+    // Reasigna la conexion (TUniConnection) de todos los datasets/SQL del
+    // data module a `NewConn`. Lo usa TfrmMtoGen tras crear el data module
+    // para que cada pestaña use una conexion propia del pool en lugar de
+    // la global `oConn` (asi dos tabs no se serializan a nivel de conexion).
+    procedure ReasignarConexion(NewConn: TUniConnection);
   public
     FCurrentForm: TComponent;
     FoPerfilDic: TProfileDicc;
@@ -101,6 +106,42 @@ function TdmBase.HasOwnerForm: Boolean;
 begin
   Result := Assigned(FCurrentForm) and
             not (csDestroying in FCurrentForm.ComponentState);
+end;
+
+procedure TdmBase.ReasignarConexion(NewConn: TUniConnection);
+var
+  i: Integer;
+  Comp: TComponent;
+  ds: TCustomDADataSet;
+  sql: TCustomDASQL;
+begin
+  if NewConn = nil then
+    Exit;
+  for i := 0 to ComponentCount - 1 do
+  begin
+    Comp := Components[i];
+    // TUniQuery, TUniTable, TUniStoredProc heredan de TCustomDADataSet.
+    if Comp is TCustomDADataSet then
+    begin
+      ds := TCustomDADataSet(Comp);
+      // Si el dataset YA esta activo, lo dejamos en paz. Muchos data
+      // modules (Empresas, Clientes, Atributos...) abren lookups en su
+      // DataModuleCreate contra `oConn` global; cerrarlos para reasignar
+      // los dejaria vacios y obligaria a re-fetchearlos. Solo redirigimos
+      // los datasets que aun no se han abierto — esos son los que nos
+      // interesa que vayan contra FConn (unqryTablaG, SPs como
+      // unspAplicar, queries on-demand que se abran mas tarde).
+      if not ds.Active then
+        ds.Connection := NewConn;
+    end
+    // TUniSQL, TUniScript heredan de TCustomDASQL. No tienen estado de
+    // "activo" — solo guardan SQL pendiente — asi que reasignar es seguro.
+    else if Comp is TCustomDASQL then
+    begin
+      sql := TCustomDASQL(Comp);
+      sql.Connection := NewConn;
+    end;
+  end;
 end;
 
 procedure TdmBase.ResetGridsProfile(sGrid, sForm, sPermisos: String);
