@@ -47,12 +47,21 @@ type
     // soportar multiples sentencias separadas por ;.
     procedure CargarEsquemaDestino(const sRutaFichero: string);
 
-    // Borra del destino los datos demo identificados por
-    // USUARIO_ALTA IN ('DEMO','Administrador') en las tablas de
-    // negocio principales (empresas, almacenes, clientes,
-    // proveedores, articulos y familias). NO toca tablas de sistema
-    // (paises, ivas_tipos, winforms...). Devuelve cuantas filas
-    // borro en total. Util tras cargar factuzam_original.sql.
+    // Borra del destino los datos demo del seed factuzam_original.sql
+    // de TODAS las tablas con datos en el dump (44 con audit + 6 sin
+    // audit). NO toca tablas de sistema (paises, ivas*, winforms,
+    // usuarios*, metadatos, config_campos, tipos_documentos,
+    // contadores, valores_defecto, generadorprocesos, informes_guias,
+    // ivas_zonas, variaciones_atributos).
+    //
+    // Filtro de usuario "demo" para las tablas con audit:
+    //   USUARIO_ALTA IN ('DEMO', 'Administrador', 'Sistema', 'SISTEMA',
+    //                    'Admin', 'ADMIN', 'SCRIPT_DEMO', 'SCRIPT_FIX',
+    //                    'FIX_SKU_STOCK', 'MIGRACION').
+    // Para las 6 tablas sin audit (stockactual, vinculos, etc.) se
+    // hace DELETE FROM completo, son derivadas o hijo de tablas demo.
+    //
+    // Devuelve cuantas filas borro en total.
     function LimpiarDatosDemoDestino: Integer;
 
     // Borra del destino TODO lo que haya creado una corrida previa
@@ -345,15 +354,82 @@ end;
 
 function TdmMig.LimpiarDatosDemoDestino: Integer;
 const
-  // Orden importante: hijos primero (FK logicas), padres despues.
-  // En cada tabla borramos solo lo que dejo el seed demo.
-  aTablas: array[0..5] of string = (
+  // Lista completa de usuarios "demo" detectados en
+  // factuzam_original.sql. Filtra solo lo creado por el seed; respeta
+  // datos migrados (USUARIO_ALTA = 'MIGRADOR' u otro custom).
+  cWhereDemo =
+    ' WHERE USUARIO_ALTA IN ( ' +
+    '  ''DEMO'', ''Administrador'', ''Sistema'', ''SISTEMA'', ' +
+    '  ''Admin'', ''ADMIN'', ''SCRIPT_DEMO'', ''SCRIPT_FIX'', ' +
+    '  ''FIX_SKU_STOCK'', ''MIGRACION'' ' +
+    ')';
+
+  // Tablas con USUARIO_ALTA: DELETE por filtro de usuario demo.
+  // Orden hijos -> padres para minimizar problemas de FK (aunque
+  // el esquema usa FKs LOGICAS, no fisicas).
+  aConAudit: array[0..43] of string = (
+    // Cadena de articulos (hijos primero)
+    'fza_codigos_barras',
+    'fza_atributos_sku',
+    'fza_articulos_atributos_basicos',
+    'fza_articulos_conjuntos_asign',
+    'fza_articulos_propiedades',
+    'fza_articulos_proveedores',
+    'fza_articulos_skus_costes',
+    'fza_articulos_skus',
+    'fza_articulos_tarifas',
+    'fza_articulos_fotos',
     'fza_articulos',
     'fza_articulos_familias',
+    // Catalogos atributos y propiedades
+    'fza_atributos_conjuntos_det',
+    'fza_atributos_conjuntos',
+    'fza_atributos_valores',
+    'fza_atributos_basicos',
+    'fza_propiedades_valores',
+    'fza_propiedades',
+    'fza_variaciones',
+    // Documentos comerciales (lineas antes que cabecera)
+    'fza_facturas_pagos',
+    'fza_facturas_lineas',
+    'fza_facturas',
+    'fza_albaranes_lineas',
+    'fza_albaranes',
+    'fza_pedidos_lineas',
+    'fza_pedidos',
+    'fza_compras_sesiones',
+    // Caja
+    'fza_caja_pagos',
+    'fza_caja_vales',
+    'fza_caja_operaciones',
+    'fza_caja_formas_pago',
+    // Stock / inventario / movimientos
+    'fza_movimientos_almacen',
+    'fza_inventarios_lineas',
+    'fza_inventarios',
+    // Resto
+    'fza_recibos',
+    'fza_depositos_cliente',
+    'fza_empresas_series',
+    'fza_empresas_retenciones',
     'fza_almacenes',
     'fza_clientes',
     'fza_proveedores',
+    'fza_formas_pago',
+    'fza_tarifas',
     'fza_empresas'
+  );
+
+  // Tablas sin USUARIO_ALTA: DELETE FROM completo. Son derivadas o
+  // hijo unicamente de tablas demo (al borrar el padre quedan
+  // huerfanas, asi que vaciarlas es lo correcto).
+  aSinAudit: array[0..5] of string = (
+    'fza_articulos_stockactual',
+    'fza_articulos_vinculos',
+    'fza_almacenes_cajas',
+    'fza_compras_sesiones_celdas',
+    'fza_compras_sesiones_lineas',
+    'fza_familias_atributos'
   );
 var
   i, iSub: Integer;
@@ -364,17 +440,29 @@ begin
   qDel := TUniQuery.Create(nil);
   try
     qDel.Connection := conDst;
-    for i := Low(aTablas) to High(aTablas) do
-    begin
-      qDel.SQL.Text := Format(
-        'DELETE FROM `%s` ' +
-        'WHERE USUARIO_ALTA IN (''DEMO'', ''Administrador'', ' +
-        '                       ''Sistema'', ''SISTEMA'')',
-        [aTablas[i]]);
+    // Desactivar checks FK temporalmente. Aunque el esquema no usa
+    // FKs fisicas, MariaDB es estricto con ciertos hooks/triggers.
+    qDel.SQL.Text := 'SET FOREIGN_KEY_CHECKS = 0';
+    qDel.ExecSQL;
+    try
+      for i := Low(aConAudit) to High(aConAudit) do
+      begin
+        qDel.SQL.Text := Format('DELETE FROM `%s`%s',
+          [aConAudit[i], cWhereDemo]);
+        qDel.ExecSQL;
+        iSub := qDel.RowsAffected;
+        if iSub > 0 then Inc(Result, iSub);
+      end;
+      for i := Low(aSinAudit) to High(aSinAudit) do
+      begin
+        qDel.SQL.Text := Format('DELETE FROM `%s`', [aSinAudit[i]]);
+        qDel.ExecSQL;
+        iSub := qDel.RowsAffected;
+        if iSub > 0 then Inc(Result, iSub);
+      end;
+    finally
+      qDel.SQL.Text := 'SET FOREIGN_KEY_CHECKS = 1';
       qDel.ExecSQL;
-      iSub := qDel.RowsAffected;
-      if iSub > 0 then
-        Inc(Result, iSub);
     end;
   finally
     qDel.Free;
