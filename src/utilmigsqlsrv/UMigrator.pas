@@ -64,6 +64,10 @@ type
     PanelCentro:       TPanel;
     lblUsuario:        TLabel;
     edUsuario:         TEdit;
+    lblNivelFam:       TLabel;
+    edNivelFam:        TEdit;
+    lblDigitosArt:     TLabel;
+    edDigitosArt:      TEdit;
     GroupListado:      TGroupBox;
     listMigs:          TCheckListBox;
     btnMarcarTodas:    TButton;
@@ -119,7 +123,9 @@ uses
   inLibMigFamilias,
   inLibMigAtributos,
   inLibMigArticulos,
-  inLibMigArticulosAtributos;
+  inLibMigArticulosAtributos,
+  inLibMigArticulosSkus,
+  inLibMigInventarios;
 
 // =========================================================================
 //  Lifecycle
@@ -219,6 +225,13 @@ begin
   FEngine.Registrar('articulos_tallas', 'Tallas por artículo',
     'dbo.ocarttal → fza_articulos_atributos_basicos (TAL)',
     MigrarArticulosTallas);
+  FEngine.Registrar('skus', 'SKUs y códigos de barras',
+    'dbo.ocartbap → fza_articulos_skus + fza_atributos_sku + ' +
+    'fza_codigos_barras',
+    MigrarArticulosSkus);
+  FEngine.Registrar('inventarios', 'Inventario inicial (stock)',
+    'dbo.ocartacp → fza_inventarios + fza_inventarios_lineas',
+    MigrarInventarios);
 end;
 
 procedure TFormMigrator.RecargarListado;
@@ -532,6 +545,8 @@ begin
   FEngine.Usuario := edUsuario.Text;
   if FEngine.Usuario = '' then
     FEngine.Usuario := 'MIGRADOR';
+  FEngine.NivelFamiliasHoja  := StrToIntDef(edNivelFam.Text, 4);
+  FEngine.DigitosContadorArt := StrToIntDef(edDigitosArt.Text, 4);
 
   try
     dmMig.conSrv.Open;
@@ -615,7 +630,12 @@ begin
     edDstPort.Text := oIni.ReadString('Destino', 'Port',   '3306');
     edDstBase.Text := oIni.ReadString('Destino', 'Base',   'factuzam');
     edDstUser.Text := oIni.ReadString('Destino', 'User',   'root');
-    edUsuario.Text := oIni.ReadString('General', 'Usuario', 'MIGRADOR');
+    edUsuario.Text    :=
+      oIni.ReadString ('General', 'Usuario', 'MIGRADOR');
+    edNivelFam.Text   :=
+      IntToStr(oIni.ReadInteger('General', 'NivelFamHoja', 4));
+    edDigitosArt.Text :=
+      IntToStr(oIni.ReadInteger('General', 'DigitosContadorArt', 4));
   finally
     oIni.Free;
   end;
@@ -635,7 +655,11 @@ begin
     oIni.WriteString('Destino', 'Port', edDstPort.Text);
     oIni.WriteString('Destino', 'Base', edDstBase.Text);
     oIni.WriteString('Destino', 'User', edDstUser.Text);
-    oIni.WriteString('General', 'Usuario', edUsuario.Text);
+    oIni.WriteString ('General', 'Usuario',            edUsuario.Text);
+    oIni.WriteInteger('General', 'NivelFamHoja',
+                      StrToIntDef(edNivelFam.Text,   4));
+    oIni.WriteInteger('General', 'DigitosContadorArt',
+                      StrToIntDef(edDigitosArt.Text, 4));
   finally
     oIni.Free;
   end;
