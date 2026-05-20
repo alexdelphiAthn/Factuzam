@@ -185,7 +185,7 @@ begin
   // 2. Asignar la temporada a cada articulo (bulk insert)
   qSrc := NuevoQOrigen(Eng, cSelectAsign);
   bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_propiedades',
-                              cColsAP, 1000);
+                              cColsAP, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
