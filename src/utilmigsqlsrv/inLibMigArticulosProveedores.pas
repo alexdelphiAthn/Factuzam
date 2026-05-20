@@ -39,29 +39,39 @@ uses
 procedure MigrarArticulosProveedores(Eng: TMigEngine;
                                       var Stats: TMigStats);
 const
-  // Enriquecemos con el ULTIMO precio de compra y su fecha:
-  // joinear ocalbproarp (lineas albaran proveedor) con ocalbpro
-  // (cabecera, que tiene Proveedor + Fecha), filtrar por proveedor
-  // del articulo y quedarnos con la fila mas reciente. OUTER APPLY
-  // permite hacer ese TOP 1 dependiente por cada articulo.
+  // Enriquecemos con el ULTIMO precio de compra y su fecha. ANTES
+  // usabamos OUTER APPLY con TOP 1 por articulo, pero eso obligaba a
+  // SQL Server a re-ejecutar el subquery por cada fila de ocartp
+  // (~52k veces). Bajo concurrencia de wave 2 esto hacia que
+  // qSrc.Open tardara varios minutos y el log mostrara 0/52348
+  // mientras tanto.
+  //
+  // Ahora precomputamos el TOP 1 con ROW_NUMBER() en un CTE: se
+  // calcula UNA sola vez agrupando por (Articulo, Proveedor) y
+  // luego LEFT JOIN con WHERE rn = 1. Mucho mas rapido y con
+  // WITH (NOLOCK) evitamos contencion con otras waves.
   cSelectSrc =
-    'SELECT a.Articulo, a.Proveedor, ISNULL(a.Modelo, '''') AS Modelo, ' +
-    '       ISNULL(uc.PrecioSIva, 0) AS PrecioUltCompra, ' +
-    '       uc.FechaCompra ' +
-    'FROM dbo.ocartp a ' +
-    'OUTER APPLY (' +
-    '  SELECT TOP 1 alp.PrecioSIva, alb.Fecha AS FechaCompra ' +
-    '  FROM dbo.ocalbproarp alp ' +
-    '  INNER JOIN dbo.ocalbpro alb ' +
+    'WITH cte_uc AS ( ' +
+    '  SELECT alp.Articulo, alb.Proveedor, alp.PrecioSIva, ' +
+    '         alb.Fecha, ' +
+    '         ROW_NUMBER() OVER ( ' +
+    '           PARTITION BY alp.Articulo, alb.Proveedor ' +
+    '           ORDER BY alb.Fecha DESC) AS rn ' +
+    '  FROM dbo.ocalbproarp alp WITH (NOLOCK) ' +
+    '  INNER JOIN dbo.ocalbpro alb WITH (NOLOCK) ' +
     '          ON alb.Empresa    = alp.Empresa ' +
     '         AND alb.Ejercicio  = alp.Ejercicio ' +
     '         AND alb.Serie      = alp.Serie ' +
     '         AND alb.NroAlbaran = alp.NroAlbaran ' +
-    '  WHERE alp.Articulo  = a.Articulo ' +
-    '    AND alb.Proveedor = a.Proveedor ' +
-    '    AND ISNULL(alp.PrecioSIva, 0) > 0 ' +
-    '  ORDER BY alb.Fecha DESC ' +
-    ') uc ' +
+    '  WHERE ISNULL(alp.PrecioSIva, 0) > 0 ' +
+    ') ' +
+    'SELECT a.Articulo, a.Proveedor, ISNULL(a.Modelo, '''') AS Modelo, ' +
+    '       ISNULL(uc.PrecioSIva, 0) AS PrecioUltCompra, ' +
+    '       uc.Fecha AS FechaCompra ' +
+    'FROM dbo.ocartp a WITH (NOLOCK) ' +
+    'LEFT JOIN cte_uc uc ON uc.Articulo  = a.Articulo ' +
+    '                   AND uc.Proveedor = a.Proveedor ' +
+    '                   AND uc.rn        = 1 ' +
     'WHERE a.Proveedor IS NOT NULL AND a.Proveedor > 0 ' +
     '  AND LTRIM(RTRIM(a.Articulo)) <> '''' ' +
     'ORDER BY a.Proveedor, a.Articulo';
@@ -85,7 +95,7 @@ begin
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
     Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM dbo.ocartp ' +
+      'SELECT COUNT(*) FROM dbo.ocartp WITH (NOLOCK) ' +
       'WHERE Proveedor IS NOT NULL AND Proveedor > 0 ' +
       '  AND LTRIM(RTRIM(Articulo)) <> '''''));
     qSrc.Open;
