@@ -13,6 +13,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   KeyPreview = True
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 22
@@ -383,6 +384,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
           OnCanFocusRecord = cxGrid1DBTableView1CanFocusRecord
+          OnCustomDrawCell = tvLineasOpeCustomDrawCell
           OnEditing = cxGrid1DBTableView1Editing
           OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
           OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
@@ -517,6 +519,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           OnExit = cxGrid1Exit
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
+            OnCustomDrawCell = dbtvStockCustomDrawCell
             OnEditKeyDown = cxGrid1DBTableView1EditKeyDown
             OnInitEdit = cxGrid1DBTableView1InitEdit
             DataController.DataSource = dsStock
