@@ -157,17 +157,42 @@ end;
 
 procedure MigrarArticulosSkus(Eng: TMigEngine; var Stats: TMigStats);
 const
+  // El origen son DOS fuentes UNIDAS:
+  //   - ocartbap: filas con barcode. Estas SI generan codigo de
+  //     barras en fza_codigos_barras ademas del SKU.
+  //   - ocartacp: filas con stock pero sin barcode. Generan SKU
+  //     vacio (sin entrada en fza_codigos_barras). Asi el
+  //     inventario nunca tiene CODIGO_UNIDAD huerfano.
+  // Cuando un (art, color, talla) aparece en ambas tablas, se elige
+  // la de ocartbap (que trae barcode). El UNION ALL las pone ambas
+  // ordenadas por CodigoBarras vacio al final.
   cSelectSrc =
-    'SELECT bap.Articulo, bap.Color, bap.Talla, bap.Cantidad, ' +
-    '       bap.CodigoBarras, ' +
-    '       ISNULL(c.Descripcion, bap.Color) AS DescColor ' +
-    'FROM dbo.ocartbap bap ' +
-    'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = bap.Articulo ' +
-    '                         AND ac.Color    = bap.Color ' +
-    'LEFT JOIN dbo.occolor  c  ON c.ColorBasico = ac.ColorBasico ' +
-    'WHERE LTRIM(RTRIM(bap.Articulo))     <> '''' ' +
-    '  AND LTRIM(RTRIM(bap.CodigoBarras)) <> '''' ' +
-    'ORDER BY bap.Articulo, bap.Color, bap.Talla, bap.CodigoBarras';
+    'SELECT * FROM (' +
+    '  SELECT bap.Articulo, bap.Color, bap.Talla, bap.Cantidad, ' +
+    '         bap.CodigoBarras, ' +
+    '         ISNULL(c.Descripcion, bap.Color) AS DescColor, ' +
+    '         1 AS FuentePrior ' +
+    '  FROM dbo.ocartbap bap ' +
+    '  LEFT JOIN dbo.ocartcol ac ' +
+    '         ON ac.Articulo = bap.Articulo ' +
+    '        AND ac.Color    = bap.Color ' +
+    '  LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
+    '  WHERE LTRIM(RTRIM(bap.Articulo))     <> '''' ' +
+    '    AND LTRIM(RTRIM(bap.CodigoBarras)) <> '''' ' +
+    '  UNION ALL ' +
+    '  SELECT acp.Articulo, acp.Color, acp.Talla, ' +
+    '         1 AS Cantidad, ' +
+    '         '''' AS CodigoBarras, ' +
+    '         ISNULL(c.Descripcion, acp.Color) AS DescColor, ' +
+    '         2 AS FuentePrior ' +
+    '  FROM dbo.ocartacp acp ' +
+    '  LEFT JOIN dbo.ocartcol ac ' +
+    '         ON ac.Articulo = acp.Articulo ' +
+    '        AND ac.Color    = acp.Color ' +
+    '  LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
+    '  WHERE LTRIM(RTRIM(acp.Articulo)) <> '''' ' +
+    ') X ' +
+    'ORDER BY Articulo, Color, Talla, FuentePrior, CodigoBarras';
   cColsSkus =
     'CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
     'ESACTIVO_SKU, ' +
@@ -244,9 +269,14 @@ begin
                                       cColsBarras, BATCH_SIZE);
 
     Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM dbo.ocartbap ' +
-      'WHERE LTRIM(RTRIM(Articulo))     <> '''' ' +
-      '  AND LTRIM(RTRIM(CodigoBarras)) <> '''''));
+      'SELECT COUNT(*) FROM ( ' +
+      '  SELECT 1 FROM dbo.ocartbap ' +
+      '  WHERE LTRIM(RTRIM(Articulo))     <> '''' ' +
+      '    AND LTRIM(RTRIM(CodigoBarras)) <> '''' ' +
+      '  UNION ALL ' +
+      '  SELECT 1 FROM dbo.ocartacp ' +
+      '  WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
+      ') X'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
