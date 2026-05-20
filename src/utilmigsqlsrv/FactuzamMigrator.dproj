@@ -157,9 +157,6 @@
         <DCCReference Include="UMigrator.pas">
             <Form>FormMigrator</Form>
         </DCCReference>
-        <DCCReference Include="inLibMigFormasPago.pas"/>
-        <DCCReference Include="inLibMigIvasGrupos.pas"/>
-        <DCCReference Include="inLibMigIvas.pas"/>
         <DCCReference Include="inLibMigEmpresas.pas"/>
         <DCCReference Include="inLibMigAlmacenes.pas"/>
         <DCCReference Include="inLibMigClientes.pas"/>
