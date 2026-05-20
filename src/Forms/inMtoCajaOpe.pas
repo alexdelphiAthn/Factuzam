@@ -35,6 +35,16 @@ uses
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
   WM_SALTAR_ATRIBUTO = WM_USER + 101;
+  // Diferimos FinalizarUltimoAtributo / avance de columna fuera del
+  // OnButtonClick del TcxButtonEdit. Si los ejecutamos en linea, cxGrid
+  // sigue manteniendo referencia al editor inplace que acaba de procesar
+  // el popup; cuando FinalizarUltimoAtributo lanza el ShowMessage de
+  // "no hay stock" y luego dispara DataChange via EnableControls/Append,
+  // el editor inplace se desparenta y salta EInvalidOperation. Con
+  // PostMessage el click handler retorna, cxGrid limpia su estado y
+  // luego procesamos.
+  WM_FINALIZAR_ATRIB_CAJA = WM_USER + 102;
+  WM_AVANZAR_ATRIB_CAJA   = WM_USER + 103;
 type
   TfrmMtoOpeCaja = class(TfrmBase)
     pnlUp: TPanel;
@@ -215,6 +225,10 @@ type
     procedure RegistrarValorAtributo(AOrden: Integer;
                                      const AvNuevo: string);
     procedure FinalizarUltimoAtributo;
+    procedure WMFinalizarAtribCaja(var Msg: TMessage);
+                                       message WM_FINALIZAR_ATRIB_CAJA;
+    procedure WMAvanzarAtribCaja(var Msg: TMessage);
+                                       message WM_AVANZAR_ATRIB_CAJA;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -2792,11 +2806,19 @@ var
 begin
   // Logica que antes vivia inline en cxGrid1DBTableView1EditKeyDown cuando
   // se confirmaba el ultimo atributo de la linea. Encapsulada para poder
-  // invocarla desde RegistrarValorAtributo (button-click) sin duplicar
-  // codigo.
+  // invocarla desde tvLineasOpeAvButtonClick (popup) sin duplicar codigo.
   if FProcesandoAtributo then Exit;
   if not DatosCaja.cdsLineas.Active then Exit;
   if DatosCaja.cdsLineas.IsEmpty then Exit;
+
+  // Defensivo: aseguramos que no queda un inplace editor activo antes de
+  // empezar a hacer Cancel/Append. Los broadcasts del data link (sobre
+  // todo tras el ShowMessage de "no hay stock") intentarian refrescar el
+  // TcxButtonEdit y, si cxGrid ya lo desparento, salta EInvalidOperation.
+  // HideEdit(False): no intentamos PostEditValue, los campos ya estan
+  // escritos por RegistrarValorAtributo.
+  if tvLineasOpe.Controller.EditingController.IsEditing then
+    tvLineasOpe.Controller.EditingController.HideEdit(False);
 
   FProcesandoAtributo := True;
   DatosCaja.cdsLineas.DisableControls;
@@ -2916,29 +2938,61 @@ begin
   RegistrarValorAtributo(Orden, AvNuevo);
 
   // Reflejamos el AV nuevo en el editor para que el usuario lo vea sin
-  // tener que esperar a que se reabra la celda.
-  if Sender is TcxCustomEdit then
-    TcxCustomEdit(Sender).EditValue := AvNuevo;
-
-  // Si era el ultimo atributo necesario, cerramos la linea: validamos SKU,
-  // consultamos stock y avanzamos foco a la siguiente fila/columna. Se hace
-  // aqui (no dentro de RegistrarValorAtributo) para que Cancel/Append no
-  // entren en conflicto con el editor que todavia esta visible.
-  if (Orden = FNumAtributosActual) and (FNumAtributosActual > 0) then
-    FinalizarUltimoAtributo
-  else
+  // tener que esperar a que se reabra la celda. Solo si Sender sigue
+  // parentado: durante el modal SeleccionarAvConPaleta cxGrid puede
+  // haberle quitado el Parent al editor inplace (perdida de foco) y un
+  // EditValue := X sobre un control sin parent dispara EInvalidOperation
+  // 'no tiene ventana principal'.
+  if (Sender is TcxCustomEdit) and TWinControl(Sender).HasParent then
   begin
-    // Hay mas atributos pendientes: avanzamos al siguiente para que el
-    // usuario no tenga que pulsar Tab manualmente. Si la siguiente columna
-    // esta vacia, InitEdit volvera a colgarle AbrirPopupAvEnEntrada y el
-    // popup saldra automaticamente.
-    var SigCol := ObtenerColumnaPorTag(Orden + 1);
-    if (SigCol <> nil) and SigCol.Visible then
-    begin
-      tvLineasOpe.Controller.EditingController.HideEdit(True);
-      tvLineasOpe.Controller.FocusedColumn := SigCol;
-      tvLineasOpe.Controller.EditingController.ShowEdit;
+    try
+      TcxCustomEdit(Sender).EditValue := AvNuevo;
+    except
+      on E: EInvalidOperation do
+        // Defensivo: si cxGrid desparenta el editor entre el HasParent
+        // de arriba y el set EditValue, seguimos sin pintar — el data
+        // link ya tiene el valor via RegistrarValorAtributo.
+        ;
     end;
+  end;
+
+  // Cerramos el editor inplace ANTES de tocar cdsLineas / cambiar foco. Usamos
+  // HideEdit(False) porque RegistrarValorAtributo ya escribio el campo: pedir
+  // PostEditValue (HideEdit(True)) sobre un editor que cxGrid pudo
+  // desparentar durante el popup vuelve a disparar EInvalidOperation.
+  if tvLineasOpe.Controller.EditingController.IsEditing then
+    tvLineasOpe.Controller.EditingController.HideEdit(False);
+
+  // Diferimos via PostMessage para soltar el callstack del OnButtonClick.
+  // Asi cxGrid termina de limpiar el editor inplace (que ya HideEdit'amos)
+  // antes de que FinalizarUltimoAtributo abra el ShowMessage de "no hay
+  // stock" o haga Cancel/Append. Si lo hacemos en linea, los DataChange
+  // del EnableControls/Append intentan refrescar el TcxButtonEdit que
+  // cxGrid todavia tiene en su pool con Parent = nil -> EInvalidOperation.
+  if (Orden = FNumAtributosActual) and (FNumAtributosActual > 0) then
+    PostMessage(Self.Handle, WM_FINALIZAR_ATRIB_CAJA, 0, 0)
+  else
+    PostMessage(Self.Handle, WM_AVANZAR_ATRIB_CAJA, Orden + 1, 0);
+end;
+
+procedure TfrmMtoOpeCaja.WMFinalizarAtribCaja(var Msg: TMessage);
+begin
+  // Ejecuta FinalizarUltimoAtributo fuera del callstack del OnButtonClick
+  // del TcxButtonEdit. Ver tvLineasOpeAvButtonClick para el motivo.
+  FinalizarUltimoAtributo;
+end;
+
+procedure TfrmMtoOpeCaja.WMAvanzarAtribCaja(var Msg: TMessage);
+var
+  SigCol : TcxGridDBColumn;
+begin
+  // Avanza el foco a la siguiente columna de atributo. Diferido por la
+  // misma razon que WMFinalizarAtribCaja.
+  SigCol := ObtenerColumnaPorTag(Msg.WParam);
+  if (SigCol <> nil) and SigCol.Visible then
+  begin
+    tvLineasOpe.Controller.FocusedColumn := SigCol;
+    tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
 end;
 
