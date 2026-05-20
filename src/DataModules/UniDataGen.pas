@@ -124,11 +124,18 @@ begin
     if Comp is TCustomDADataSet then
     begin
       ds := TCustomDADataSet(Comp);
-      if ds.Active then
-        ds.Close;
-      ds.Connection := NewConn;
+      // Si el dataset YA esta activo, lo dejamos en paz. Muchos data
+      // modules (Empresas, Clientes, Atributos...) abren lookups en su
+      // DataModuleCreate contra `oConn` global; cerrarlos para reasignar
+      // los dejaria vacios y obligaria a re-fetchearlos. Solo redirigimos
+      // los datasets que aun no se han abierto — esos son los que nos
+      // interesa que vayan contra FConn (unqryTablaG, SPs como
+      // unspAplicar, queries on-demand que se abran mas tarde).
+      if not ds.Active then
+        ds.Connection := NewConn;
     end
-    // TUniSQL, TUniScript heredan de TCustomDASQL.
+    // TUniSQL, TUniScript heredan de TCustomDASQL. No tienen estado de
+    // "activo" — solo guardan SQL pendiente — asi que reasignar es seguro.
     else if Comp is TCustomDASQL then
     begin
       sql := TCustomDASQL(Comp);

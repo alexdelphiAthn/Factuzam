@@ -131,6 +131,19 @@ begin
       (TargetForm.Parent as TcxTabSheet).PageControl.ActivePage :=
                                              (TargetForm.Parent as TcxTabSheet);
   end;
+  // Carga inicial de la lista principal:
+  // - Sin parametro de busqueda: async, asi el tab aparece de inmediato y
+  //   se rellena en background mientras la UI sigue respondiendo. El
+  //   resto de tabs siguen totalmente interactivos durante el fetch.
+  // - Con parametro de busqueda: sincrono, porque BuscarTabla.Locate
+  //   (mas abajo) necesita la query activa al volver.
+  if TargetForm is TfrmMtoGen then
+  begin
+    if ABusq = '' then
+      TfrmMtoGen(TargetForm).AbrirTablaPrincipalAsync
+    else
+      TfrmMtoGen(TargetForm).AbrirTablaPrincipalSincrono;
+  end;
   if (ABusq <> '') and (TargetForm is TfrmMtoGen) then
   begin
     frmGen := TfrmMtoGen(TargetForm);
@@ -184,7 +197,10 @@ begin
           if NewDM is TdmBase then
           begin
              TdmBase(NewDM).FCurrentForm := AOwnerForm;
-             // 1. Aseguramos conexión
+             // Asignamos el DataSet al DataSource del form. La query aun
+             // esta cerrada — el Open lo dispara ShowMto despues, sincrono
+             // o async segun haya parametro de busqueda. Mientras tanto el
+             // grid mostrara "<No hay datos a mostrar>" un instante.
              if Assigned(AOwnerForm.dsTablaG) then
                AOwnerForm.dsTablaG.DataSet := TdmBase(NewDM).unqryTablaG;
               if (GetPerfilValueDef(AOwnerForm.oPerfilDic,
@@ -195,17 +211,6 @@ begin
                                    TdmBase(NewDM).Name);
                 LoadSQLFromProfile(TdmBase(NewDM), TdmBase(NewDM).FoPerfilDic);
               end;
-
-             // 2. AHORA SÍ es seguro abrir.
-             // El objeto está creado y asignado.
-             try
-               if not TdmBase(NewDM).unqryTablaG.Active then
-                  TdmBase(NewDM).unqryTablaG.Open;
-             except
-               on E: Exception do
-                 inLibLog.Log.LogError(
-                   'Error al abrir tabla en ' + ADataUnit + ': ' + E.Message);
-             end;
           end;
 //          if NewDM is TdmBase then
 //             TdmBase(NewDM).FCurrentForm := AOwnerForm;
