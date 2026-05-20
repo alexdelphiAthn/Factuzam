@@ -21,7 +21,8 @@ unit UMigrator;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  Winapi.Windows, Winapi.Messages, Winapi.ActiveX,
+  System.SysUtils, System.Variants,
   System.Classes, System.IniFiles, System.IOUtils, System.Math,
   System.SyncObjs,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
@@ -785,9 +786,17 @@ begin
               LocalDst:   TUniConnection;
               LocalEng:   TMigEngine;
               LocalStats: TMigStats;
+              bComInit:   Boolean;
             begin
               sCodigo := t.Param['Codigo'].AsString;
               if t.CancellationToken.IsSignalled then Exit;
+              // UniDAC SQL Server usa OLE DB → COM. En el UI thread
+              // ya esta inicializado, pero los hilos de trabajo
+              // necesitan llamar CoInitialize. Sin esto:
+              //   EOLEDBError 800401F0h "CoInitialize has not been
+              //   called".
+              bComInit := Succeeded(CoInitializeEx(nil,
+                                                    COINIT_MULTITHREADED));
               LocalSrv := nil;
               LocalDst := nil;
               LocalEng := nil;
@@ -824,6 +833,7 @@ begin
                   if LocalSrv.Connected then LocalSrv.Close;
                   LocalSrv.Free;
                 end;
+                if bComInit then CoUninitialize;
               end;
             end)
             .SetParameter('Codigo', aDeWave[iTaskIdx])
