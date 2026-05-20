@@ -142,9 +142,6 @@ implementation
 uses
   UMigConn,
   inLibMigDumpEsqueleto,
-  inLibMigFormasPago,
-  inLibMigIvasGrupos,
-  inLibMigIvas,
   inLibMigEmpresas,
   inLibMigAlmacenes,
   inLibMigClientes,
@@ -265,17 +262,11 @@ end;
 procedure TFormMigrator.RegistrarMigraciones;
 begin
   // El ORDEN importa: el listado se ejecuta de arriba a abajo y las
-  // dependencias (clientes necesita formas_pago, articulos necesita
-  // familias, etc.) deben respetarse.
-  FEngine.Registrar('formas_pago', 'Formas de pago',
-    'dbo.octipefe → fza_formas_pago',
-    MigrarFormasPago);
-  FEngine.Registrar('ivas_grupos', 'Grupos de IVA',
-    'dbo.ocgrpiva → fza_ivas_grupos',
-    MigrarIvasGrupos);
-  FEngine.Registrar('ivas', 'Tipos de IVA (histórico)',
-    'dbo.octipiva → fza_ivas',
-    MigrarIvas);
+  // dependencias (articulos necesita familias, skus necesitan
+  // articulos, etc.) deben respetarse.
+  // NOTA: formas_pago, grupos de IVA y tipos de IVA NO se migran;
+  // los IVAs ya estan correctamente definidos en la BBDD demo y
+  // las formas de pago no son necesarias en este momento.
   FEngine.Registrar('empresas', 'Empresas',
     'dbo.ocemp → fza_empresas',
     MigrarEmpresas);
@@ -283,7 +274,7 @@ begin
     'dbo.ocalm → fza_almacenes (requiere empresas)',
     MigrarAlmacenes);
   FEngine.Registrar('clientes', 'Clientes',
-    'dbo.occli → fza_clientes (requiere formas_pago)',
+    'dbo.occli → fza_clientes',
     MigrarClientes);
   FEngine.Registrar('proveedores', 'Proveedores',
     'dbo.ocpro → fza_proveedores (requiere columna NOMBRE_PRV)',
@@ -830,7 +821,6 @@ end;
 // los dominios de la misma wave corren en paralelo entre si. Las
 // waves se procesan secuencialmente, no pasamos a la siguiente
 // hasta que termina la anterior. Asi respetamos:
-//   - formas_pago antes que clientes
 //   - empresas antes que almacenes
 //   - familias antes que articulos
 //   - tallas_maestras antes que tallajes y antes que articulos_tallas
@@ -838,10 +828,7 @@ end;
 //   - skus + almacenes antes que inventarios
 function WaveDeDominio(const sCodigo: string): Integer;
 begin
-  if (sCodigo = 'formas_pago')      or
-     (sCodigo = 'ivas_grupos')      or
-     (sCodigo = 'ivas')             or
-     (sCodigo = 'empresas')         or
+  if (sCodigo = 'empresas')         or
      (sCodigo = 'proveedores')      or
      (sCodigo = 'familias')         or
      (sCodigo = 'colores_maestros') or
@@ -885,18 +872,21 @@ begin
   MemoProgreso.Lines.Clear;
   FLineasProgreso.Clear;
 
-  // Lanzamos un hilo coordinador. Dentro de cada wave creamos N
-  // tasks (uno por dominio) que corren en paralelo. Esperamos a que
-  // terminen TODAS antes de pasar a la siguiente wave.
+  // Lanzamos un hilo coordinador. Dentro de cada wave creamos un task
+  // por dominio (todos a la vez) pero los gateamos con un semaforo de
+  // capacidad iMaxHilos. Esto da un POOL real: en cuanto un worker
+  // libera el semaforo, otro pendiente entra inmediatamente. Asi no
+  // se desperdicia tiempo esperando al hilo mas lento de cada lote.
   FTask := CreateTask(
     procedure(const task: IOmniTask)
     var
       iWave, iLoc, iTaskIdx:       Integer;
-      iIdxChunk, iChunkEnd, iChunkLen, iMaxHilos: Integer;
+      iMaxHilos:                   Integer;
       aDeWave:                     TArray<string>;
       aTasksWave:                  TArray<IOmniTaskControl>;
       iTotL, iTotI, iTotS, iTotE:  Integer;
       sWaveCsv:                    string;
+      semSlots:                    TSemaphore;
     begin
       iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
       iMaxHilos := task.Param['MaxHilos'].AsInteger;
@@ -928,18 +918,14 @@ begin
         FEngine.Log(Format('=== Wave %d (%d dominios): %s ===',
                            [iWave, Length(aDeWave), sWaveCsv]));
 
-        // Procesar la wave en chunks de iMaxHilos para respetar el
-        // limite configurado por el usuario. Cada chunk lanza N tasks
-        // en paralelo y espera a que terminen antes del siguiente.
-        iIdxChunk := 0;
-        while iIdxChunk <= High(aDeWave) do
-        begin
-          if task.CancellationToken.IsSignalled then Break;
-          iChunkEnd := iIdxChunk + iMaxHilos - 1;
-          if iChunkEnd > High(aDeWave) then iChunkEnd := High(aDeWave);
-          iChunkLen := iChunkEnd - iIdxChunk + 1;
-          SetLength(aTasksWave, iChunkLen);
-          for iTaskIdx := 0 to iChunkLen - 1 do
+        // Semaforo que limita a iMaxHilos workers ejecutando dentro
+        // del cuerpo a la vez. Lanzamos TODOS los tasks de la wave;
+        // cada uno se bloquea en Acquire hasta que haya hueco. Cuando
+        // un worker libera (Release), el siguiente pendiente entra.
+        semSlots := TSemaphore.Create(nil, iMaxHilos, iMaxHilos, '');
+        try
+          SetLength(aTasksWave, Length(aDeWave));
+          for iTaskIdx := 0 to High(aDeWave) do
           begin
             aTasksWave[iTaskIdx] := CreateTask(
             procedure(const t: IOmniTask)
@@ -950,9 +936,20 @@ begin
               LocalEng:   TMigEngine;
               LocalStats: TMigStats;
               bComInit:   Boolean;
+              bAdquirido: Boolean;
             begin
               sCodigo := t.Param['Codigo'].AsString;
+              bAdquirido := False;
               if t.CancellationToken.IsSignalled then Exit;
+              // Esperar slot del pool. Si se cancela antes de
+              // adquirir, salir sin trabajar.
+              if semSlots.WaitFor(INFINITE) <> wrSignaled then Exit;
+              bAdquirido := True;
+              if t.CancellationToken.IsSignalled then
+              begin
+                semSlots.Release;
+                Exit;
+              end;
               // UniDAC SQL Server usa OLE DB → COM. En el UI thread
               // ya esta inicializado, pero los hilos de trabajo
               // necesitan llamar CoInitialize. Sin esto:
@@ -997,20 +994,23 @@ begin
                   LocalSrv.Free;
                 end;
                 if bComInit then CoUninitialize;
+                if bAdquirido then semSlots.Release;
               end;
             end)
-            .SetParameter('Codigo', aDeWave[iIdxChunk + iTaskIdx])
+            .SetParameter('Codigo', aDeWave[iTaskIdx])
             .CancelWith(task.CancellationToken)
             .Unobserved
             .Run;
           end;
 
-          // Esperar a que terminen los workers de ESTE chunk
-          for iTaskIdx := 0 to iChunkLen - 1 do
+          // Esperar a que terminen TODOS los workers de la wave.
+          // El semaforo ya garantiza que como mucho iMaxHilos
+          // hayan estado activos simultaneamente.
+          for iTaskIdx := 0 to High(aTasksWave) do
             aTasksWave[iTaskIdx].WaitFor(INFINITE);
           SetLength(aTasksWave, 0);
-
-          iIdxChunk := iChunkEnd + 1;
+        finally
+          semSlots.Free;
         end;
       end;
 
