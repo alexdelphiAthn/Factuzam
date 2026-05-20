@@ -841,18 +841,24 @@ var
   dmDat: TdmBase;
   unqry: TUniQuery;
   sw: TStopwatch;
+  yaActiva: Boolean;
 begin
   if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
     Exit;
   dmDat := TdmBase(tdmDataModule);
   unqry := dmDat.unqryTablaG;
-  if (unqry = nil) or unqry.Active then
+  if unqry = nil then
     Exit;
-  // Soltamos el grid del DataSource. cxGrid mostrara "<No hay datos a
-  // mostrar>" durante el fetch (con el overlay encima). Sin esto, el
-  // grid intentaria leer del dataset desde el main thread mientras este
-  // se rellena en el thread — AVs intermitentes.
-  if Assigned(dsTablaG) then
+  // unqryTablaG puede llegar abierta por el DFM streaming (Active=True
+  // en su DFM, es lo habitual para que componentes del form puedan
+  // resolver el field 'CODIGO_ART_ART' en CrearTablaPrincipal). En ese
+  // caso saltamos su Open pero seguimos para abrir AbrirDetalles, que
+  // es donde realmente esta el grueso de la carga.
+  yaActiva := unqry.Active;
+  // Soltamos el grid del DataSource solo si vamos a (re)abrir. Si la
+  // query ya esta activa con datos, mantener el grid vinculado evita
+  // un parpadeo "<No hay datos a mostrar>" innecesario.
+  if (not yaActiva) and Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
   sw := TStopwatch.StartNew;
   EjecutarEnBackground(
@@ -888,8 +894,10 @@ begin
         // varios tabs en cadena. El error queda en el log.
         Exit;
       end;
-      // Revincular grid: trigger del refresco automatico.
-      if Assigned(dsTablaG) and Assigned(unqry) then
+      // Revincular grid solo si lo soltamos antes (yaActiva = False).
+      // Si la query ya estaba activa al entrar, dsTablaG.DataSet sigue
+      // apuntando al original y no tocamos.
+      if (not yaActiva) and Assigned(dsTablaG) and Assigned(unqry) then
         dsTablaG.DataSet := unqry;
     end);
 end;
