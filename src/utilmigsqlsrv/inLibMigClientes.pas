@@ -16,7 +16,7 @@
 {      Email                → EMAIL_CLI                                        }
 {      Direccion1/2         → DIRECCION1_CLI / DIRECCION2_CLI                  }
 {      Poblacion            → POBLACION_CLI                                    }
-{      Provincia            → PROVINCIA_CLI                                    }
+{      Provincia            → PROVINCIA_CLI (fallback: POBLACION_CLI si vacia) }
 {      CodPostal            → CODIGO_POSTAL_CLI                                }
 {      Pais                 → IGNORADO. Se fuerza CODIGO_PAI_CLI='ES'         }
 {                              y NOMBRE_PAI_CLI='España' para TODOS los       }
@@ -187,8 +187,15 @@ begin
         Trim(qSrc.FieldByName('Direccion2').AsString);
       qIns.ParamByName('POBLACION_CLI').AsString    :=
         Trim(qSrc.FieldByName('Poblacion').AsString);
+      // Si la provincia origen viene vacia, copiamos la poblacion.
+      // En el legacy de Herreras muchos clientes solo tienen
+      // Poblacion rellena y Provincia queda en blanco; en destino
+      // queremos ver al menos algo en la columna Provincia.
       qIns.ParamByName('PROVINCIA_CLI').AsString    :=
         Trim(qSrc.FieldByName('Provincia').AsString);
+      if qIns.ParamByName('PROVINCIA_CLI').AsString = '' then
+        qIns.ParamByName('PROVINCIA_CLI').AsString :=
+          Trim(qSrc.FieldByName('Poblacion').AsString);
       qIns.ParamByName('CODIGO_POSTAL_CLI').AsString :=
         Trim(qSrc.FieldByName('CodPostal').AsString);
       // Pais hardcoded a ES/España para todos los clientes migrados.
