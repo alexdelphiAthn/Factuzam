@@ -2,7 +2,7 @@ object FormMigrator: TFormMigrator
   Left = 0
   Top = 0
   Caption = 'Factuzam Migrator SQL Server'
-  ClientHeight = 900
+  ClientHeight = 930
   ClientWidth = 1024
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -223,7 +223,7 @@ object FormMigrator: TFormMigrator
     Left = 0
     Top = 200
     Width = 1024
-    Height = 60
+    Height = 90
     Align = alTop
     BevelOuter = bvNone
     Padding.Left = 8
@@ -235,7 +235,7 @@ object FormMigrator: TFormMigrator
       Left = 8
       Top = 4
       Width = 1008
-      Height = 52
+      Height = 82
       Align = alClient
       Caption = ' Preparar BBDD destino '
       TabOrder = 0
@@ -267,22 +267,37 @@ object FormMigrator: TFormMigrator
         OnClick = btnCargarEsquemaClick
       end
       object btnLimpiarDemo: TButton
-        Left = 814
-        Top = 18
-        Width = 90
+        Left = 16
+        Top = 48
+        Width = 200
         Height = 25
-        Caption = 'Limpiar demo'
+        Caption = 'Limpiar datos demo'
         TabOrder = 3
         OnClick = btnLimpiarDemoClick
       end
       object btnResetearMig: TButton
-        Left = 908
-        Top = 18
-        Width = 90
+        Left = 220
+        Top = 48
+        Width = 240
         Height = 25
-        Caption = 'Reset migr.'
+        Caption = 'Reset migracion (USUARIO_ALTA=MIGRADOR)'
         TabOrder = 4
         OnClick = btnResetearMigClick
+      end
+      object btnBorrarBBDD: TButton
+        Left = 464
+        Top = 48
+        Width = 220
+        Height = 25
+        Caption = 'Borrar BBDD destino (DROP)...'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clMaroon
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 5
+        OnClick = btnBorrarBBDDClick
       end
     end
   end

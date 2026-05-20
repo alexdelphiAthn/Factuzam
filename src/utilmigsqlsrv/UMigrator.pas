@@ -67,6 +67,7 @@ type
     btnCargarEsquema:  TButton;
     btnLimpiarDemo:    TButton;
     btnResetearMig:    TButton;
+    btnBorrarBBDD:     TButton;
     PanelCentro:       TPanel;
     lblUsuario:        TLabel;
     edUsuario:         TEdit;
@@ -106,6 +107,7 @@ type
     procedure btnCargarEsquemaClick(Sender: TObject);
     procedure btnLimpiarDemoClick(Sender: TObject);
     procedure btnResetearMigClick(Sender: TObject);
+    procedure btnBorrarBBDDClick(Sender: TObject);
   private
     FEngine:       TMigEngine;
     FTask:         IOmniTaskControl;
@@ -605,6 +607,60 @@ begin
   Screen.Cursor := crDefault;
 end;
 
+procedure TFormMigrator.btnBorrarBBDDClick(Sender: TObject);
+var
+  sBase, sConfirma: string;
+begin
+  sBase := Trim(edDstBase.Text);
+  if sBase = '' then
+  begin
+    ShowMessage('Rellena el campo "Base de datos" del destino.');
+    Exit;
+  end;
+
+  // Doble confirmacion: aviso fuerte y luego pedir que tecleen el
+  // nombre exacto de la BBDD para evitar borrados accidentales.
+  if MessageDlg(Format(
+       'ATENCION: se va a EJECUTAR DROP DATABASE sobre "%s" en el '#13#10 +
+       'servidor MariaDB "%s:%s".'#13#10#13#10 +
+       'Esto BORRA TODOS los datos y tablas de esa BBDD, no hay '#13#10 +
+       'vuelta atras. Asegurate de que es la BBDD correcta y de que '#13#10 +
+       'tienes copia de seguridad si la necesitas.'#13#10#13#10 +
+       '¿Seguro que quieres continuar?',
+       [sBase, edDstHost.Text, edDstPort.Text]),
+       mtWarning, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+
+  sConfirma := '';
+  if not InputQuery('Confirmar borrado de BBDD',
+       'Teclea el nombre EXACTO de la BBDD a borrar para confirmar:',
+       sConfirma) then
+    Exit;
+  if Trim(sConfirma) <> sBase then
+  begin
+    ShowMessage('Nombre no coincide. Operacion cancelada.');
+    Exit;
+  end;
+
+  Screen.Cursor := crHourGlass;
+  try
+    dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text,
+                            sBase, edDstUser.Text, edDstPwd.Text);
+    dmMig.BorrarBBDDDestino(sBase);
+    Log(Format('BBDD destino "%s" BORRADA (DROP DATABASE).', [sBase]));
+    ShowMessage(Format('BBDD "%s" borrada.'#13#10#13#10 +
+      'Ahora puedes crearla de nuevo con "Crear BBDD destino" '#13#10 +
+      'y cargar el esqueleto con "Cargar esqueleto destino".', [sBase]));
+  except
+    on E: Exception do
+    begin
+      Log('ERROR borrando BBDD: ' + E.Message);
+      ShowMessage('Fallo borrando BBDD:'#13#10 + E.Message);
+    end;
+  end;
+  Screen.Cursor := crDefault;
+end;
+
 procedure TFormMigrator.chkSrcWinAuthClick(Sender: TObject);
 begin
   edSrcUser.Enabled := not chkSrcWinAuth.Checked;
@@ -672,6 +728,7 @@ begin
     btnCargarEsquema.Enabled := False;
     btnLimpiarDemo.Enabled   := False;
     btnResetearMig.Enabled   := False;
+    btnBorrarBBDD.Enabled    := False;
     btnMarcarTodas.Enabled   := False;
     btnDesmarcarTodas.Enabled:= False;
     listMigs.Enabled         := False;
@@ -686,6 +743,7 @@ begin
     btnCargarEsquema.Enabled := True;
     btnLimpiarDemo.Enabled   := True;
     btnResetearMig.Enabled   := True;
+    btnBorrarBBDD.Enabled    := True;
     btnMarcarTodas.Enabled   := True;
     btnDesmarcarTodas.Enabled:= True;
     listMigs.Enabled         := True;
