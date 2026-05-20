@@ -448,15 +448,15 @@ type
      // ~6s por subqueries DEPENDENT. La abrimos solo cuando el usuario
      // pasa a tsTarifas (ver dmmArticulos.AsegurarTarifasAbiertas).
      procedure PcDetailChange(Sender: TObject);
-     // Stock: ultimo articulo para el que se cargo el grid pivotado.
-     // Asi AsegurarStockAlDia evita reejecutar el SP si el artículo
-     // no ha cambiado desde la ultima visita a la pestaña Stock.
-     FStockArticuloCargado: string;
      procedure AsegurarStockAlDia;
      procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
   private
     FGestorProp  : TGestorPropiedades;
     FArticuloCargado: string;
+    // Stock: ultimo articulo para el que se cargo el grid pivotado.
+    // Asi AsegurarStockAlDia evita reejecutar el SP si el articulo
+    // no ha cambiado desde la ultima visita a la pestaña Stock.
+    FStockArticuloCargado: string;
     FScrollProp  : TScrollBox;
     FBtnAddProp  : TcxButton;
     FGestorVar      : TGestorVariaciones;
