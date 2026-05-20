@@ -2,7 +2,7 @@ object FormMigrator: TFormMigrator
   Left = 0
   Top = 0
   Caption = 'Factuzam Migrator SQL Server'
-  ClientHeight = 820
+  ClientHeight = 900
   ClientWidth = 1024
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -425,6 +425,65 @@ object FormMigrator: TFormMigrator
       Margins.Bottom = 8
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Consolas'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      ScrollBars = ssVertical
+      TabOrder = 0
+    end
+  end
+  object SplitterErrores: TSplitter
+    Left = 0
+    Top = 460
+    Width = 1024
+    Height = 6
+    Cursor = crVSplit
+    Align = alBottom
+    AutoSnap = False
+    MinSize = 50
+    ResizeStyle = rsUpdate
+  end
+  object PanelErrores: TPanel
+    Left = 0
+    Top = 466
+    Width = 1024
+    Height = 80
+    Align = alBottom
+    BevelOuter = bvNone
+    Padding.Left = 8
+    Padding.Right = 8
+    Padding.Bottom = 4
+    TabOrder = 5
+    Constraints.MinHeight = 40
+    object lblErrores: TLabel
+      Left = 8
+      Top = 0
+      Width = 250
+      Height = 15
+      Caption = 'Errores y avisos (filtrado de los ! del log):'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clMaroon
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object MemoErrores: TMemo
+      Left = 8
+      Top = 18
+      Width = 1008
+      Height = 58
+      Align = alClient
+      AlignWithMargins = True
+      Margins.Left = 8
+      Margins.Top = 18
+      Margins.Right = 8
+      Margins.Bottom = 4
+      Color = 16775416
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clMaroon
       Font.Height = -12
       Font.Name = 'Consolas'
       Font.Style = []
