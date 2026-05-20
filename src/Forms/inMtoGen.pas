@@ -900,6 +900,18 @@ begin
       // apuntando al original y no tocamos.
       if (not yaActiva) and Assigned(dsTablaG) and Assigned(unqry) then
         dsTablaG.DataSet := unqry;
+      // Reactivar los TDataSource del DM que se desactivaron en
+      // AbrirDetalles para evitar notificaciones a controles DevExpress
+      // desde el thread. Aqui SI estamos en main thread, asi que los
+      // controles re-renderizan ya con los datos cargados.
+      if Assigned(dmDat) then
+        try
+          dmDat.ReactivarControlesTrasAbrir;
+        except
+          on E: Exception do
+            inLibLog.Log.LogError(
+              '[ReactivarControlesTrasAbrir] ' + Self.Name + ': ' + E.Message);
+        end;
     end);
 end;
 
