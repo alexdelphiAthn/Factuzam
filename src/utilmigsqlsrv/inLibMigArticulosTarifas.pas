@@ -43,7 +43,7 @@ procedure MigrarArticulosTarifas(Eng: TMigEngine; var Stats: TMigStats);
 implementation
 
 uses
-  System.SysUtils, System.Math,
+  System.SysUtils, System.Math, System.Generics.Collections,
   Data.DB, Uni;
 
 function EsColorVacio(const s: string): Boolean;
@@ -53,14 +53,120 @@ begin
   Result := (u = '') or (u = '0') or (u = 'INDEFINIDO') or (u = '00');
 end;
 
+// Mapa global Tarifa(int) -> CODIGO_TAR_ARTTAR(texto). Se rellena en
+// AsegurarTarifasDestino y se consulta en el bucle. Asi cada cliente
+// tiene su propio mapeo (PRUEBA, P.V.P., OTRA...) sin hardcodear.
+var
+  oMapaTarifas: TDictionary<Integer, string>;
+
+// Sanitiza la Descripcion del legacy para que sirva como
+// CODIGO_TAR_ARTTAR (mayusculas, sin espacios/puntos/comas).
+// 'P.V.P.' -> 'PVP', 'VENTA MAYOR' -> 'VENTAMAYOR'.
+function CodigoTarifaDesde(const sDescripcion: string;
+                            iTarifa: Integer): string;
+var
+  i: Integer;
+  c: Char;
+begin
+  Result := '';
+  for i := 1 to Length(sDescripcion) do
+  begin
+    c := sDescripcion[i];
+    case c of
+      'A'..'Z', '0'..'9', '_': Result := Result + c;
+      'a'..'z':                Result := Result + UpCase(c);
+      ' ', '-', '/':           Result := Result + '_';
+      // puntos, comas y otros se descartan ('P.V.P.' -> 'PVP')
+    end;
+  end;
+  if Result = '' then
+    Result := Format('TAR%d', [iTarifa]);
+end;
+
+// Lee `dbo.octar` (las tarifas reales del legacy) y por cada una
+// crea (si no existe) una fila en `fza_tarifas` usando su descripcion
+// como nombre y un codigo sanitizado como CODIGO_TAR_ARTTAR. Tambien
+// rellena oMapaTarifas[iTarifa] -> sCodigoCanonico para que el bucle
+// principal sepa que codigo usar al insertar precios.
+procedure AsegurarTarifasDestino(Eng: TMigEngine);
+const
+  cSelectOctar =
+    'SELECT Tarifa, Descripcion, IvaIncluido, Estado ' +
+    'FROM dbo.octar ' +
+    'ORDER BY Tarifa';
+var
+  qSrc, qChk, qIns:        TUniQuery;
+  iTarifa:                 Integer;
+  sDescripcion, sCodigo:   string;
+  sIvaIncl, sActivo:       string;
+  iOrden:                  Integer;
+begin
+  oMapaTarifas.Clear;
+  qSrc := NuevoQOrigen(Eng, cSelectOctar);
+  qChk := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  try
+    qChk.Connection := Eng.ConDst;
+    qChk.SQL.Text   :=
+      'SELECT 1 FROM fza_tarifas WHERE CODIGO_TAR_ARTTAR = :c';
+    qIns.Connection := Eng.ConDst;
+    qIns.SQL.Text   :=
+      'INSERT INTO fza_tarifas (' +
+        'CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, ORDEN_TAR, ' +
+        'NOMBRE_TAR_TAR, ESIMP_INCL_TAR, ESDEFAULT_TAR, ' +
+        'INSTANTE_ALTA, INSTANTE_MODIF, ' +
+        'USUARIO_ALTA, USUARIO_MODIF) ' +
+      'VALUES (:c, :a, :o, :n, :ii, ''N'', ' +
+              ':INSTANTE_ALTA, :INSTANTE_MODIF, ' +
+              ':USUARIO_ALTA, :USUARIO_MODIF)';
+
+    iOrden := 10;
+    qSrc.Open;
+    while not qSrc.Eof do
+    begin
+      iTarifa      := qSrc.FieldByName('Tarifa').AsInteger;
+      sDescripcion := Trim(qSrc.FieldByName('Descripcion').AsString);
+      sCodigo      := CodigoTarifaDesde(sDescripcion, iTarifa);
+      oMapaTarifas.AddOrSetValue(iTarifa, sCodigo);
+
+      qChk.Close;
+      qChk.ParamByName('c').AsString := sCodigo;
+      qChk.Open;
+      if qChk.IsEmpty then
+      begin
+        sIvaIncl := Trim(qSrc.FieldByName('IvaIncluido').AsString);
+        if (sIvaIncl = '') or (UpperCase(sIvaIncl) = 'S') then
+          sIvaIncl := 'S' else sIvaIncl := 'N';
+        sActivo := UpperCase(Trim(qSrc.FieldByName('Estado').AsString));
+        if sActivo = 'B' then sActivo := 'N' else sActivo := 'S';
+
+        qIns.ParamByName('c').AsString  := sCodigo;
+        qIns.ParamByName('a').AsString  := sActivo;
+        qIns.ParamByName('o').AsInteger := iOrden;
+        qIns.ParamByName('n').AsString  := sDescripcion;
+        qIns.ParamByName('ii').AsString := sIvaIncl;
+        RellenarAuditoria(qIns, Eng.Usuario);
+        qIns.ExecSQL;
+        Eng.Log('  + tarifa %d "%s" -> codigo "%s" creada',
+                [iTarifa, sDescripcion, sCodigo]);
+        Inc(iOrden, 10);
+      end;
+      qSrc.Next;
+    end;
+  finally
+    qIns.Free;
+    qChk.Free;
+    qSrc.Free;
+  end;
+end;
+
+// Lookup por Tarifa(int) -> codigo destino. Si no se encuentra
+// (raro: significaria que ocarttap referencia una Tarifa que no
+// esta en octar), devolvemos IntToStr(iTarifa) como fallback.
 function MapearTarifa(iTarifa: Integer): string;
 begin
-  case iTarifa of
-    1: Result := 'PVP';
-    2: Result := 'VENTAMAYOR';
-  else
-    Result := IntToStr(iTarifa);
-  end;
+  if not oMapaTarifas.TryGetValue(iTarifa, Result) then
+    Result := Format('TAR%d', [iTarifa]);
 end;
 
 function NumOrNull(fValor: Double): string;
@@ -110,9 +216,13 @@ var
   fPorDto, fMargen:           Double;
   fFinal:                     Double;
 begin
+  // Sin esto la vista vi_articulos_tarifas (INNER JOIN a fza_tarifas)
+  // descarta las filas cuyo CODIGO_TAR_ARTTAR no existe en el master.
+  AsegurarTarifasDestino(Eng);
+
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_tarifas',
-                              cCols, 1000);
+                              cCols, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
@@ -203,5 +313,10 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  oMapaTarifas := TDictionary<Integer, string>.Create;
+finalization
+  oMapaTarifas.Free;
 
 end.

@@ -59,7 +59,7 @@ end;
 procedure MigrarAlmacenes(Eng: TMigEngine; var Stats: TMigStats);
 const
   cSelectSrc =
-    'SELECT Empresa, Almacen, Nombre, Activo, ' +
+    'SELECT Empresa, Almacen, Nombre, Abreviatura, Activo, ' +
     '       Direccion1, Poblacion, Provincia, CodPostal, ' +
     '       Telefono1, Email, Cliente, ' +
     '       Auxiliar, Transito, Deposito, [Lock], Regulador ' +
@@ -100,12 +100,13 @@ begin
     begin
       Inc(Stats.Leidas);
       Eng.IncRow;
-      // Codigo de almacen: respetamos el valor original ('1', '2'...)
-      // tal cual lo guardaba el legacy. Si hay varias empresas con
-      // almacen N coincidente, la 2a y siguientes pasaran como saltos
-      // (CODIGO_ALM_ALM es PK global en destino). En ese caso revisar
-      // y desambiguar a mano.
-      sCod := IntToStr(qSrc.FieldByName('Almacen').AsInteger);
+      // CODIGO_ALM_ALM: usamos la Abreviatura del legacy (MARTA, MERE,
+      // LEMON, LABRADORES, TARAS, DEPOSITOS...) que es como el
+      // cliente identifica sus almacenes en la operativa. Si esta
+      // vacia, fallback al numero de Almacen como texto.
+      sCod := UpperCase(Trim(qSrc.FieldByName('Abreviatura').AsString));
+      if sCod = '' then
+        sCod := IntToStr(qSrc.FieldByName('Almacen').AsInteger);
 
       qChk.Close;
       qChk.ParamByName('c').AsString := sCod;
