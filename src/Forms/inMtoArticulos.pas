@@ -1961,6 +1961,18 @@ begin
   // ¡no hagas nada!
   if FArticuloCargado = CodArticulo then Exit;
 
+  // GUARD ANTI-CASCADA INCOMPLETA: si las queries detail aun no estan
+  // abiertas (AbrirDetalles del callback aun no se ha ejecutado, o el
+  // cxDBDataController de algun grid esta restaurando focus durante el
+  // arranque), salimos limpio. Sin esto, llamadas como
+  // AsegurarSkuArticuloSinVariaciones / unqrySkus.Refresh /
+  // ActualizarVisibilidadColumnaSku revientan con
+  // EDatabaseError: 'Cannot perform this operation on a closed dataset'.
+  if not Assigned(dmmArticulos)
+     or not dmmArticulos.unqrySkus.Active
+     or not dmmArticulos.unqryVariacionesArticulos.Active then
+    Exit;
+
   // Actualizamos nuestra memoria
   FArticuloCargado := CodArticulo;
 
