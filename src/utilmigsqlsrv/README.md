@@ -24,7 +24,7 @@ src/utilmigsqlsrv/
 ├── inLibMigEmpresas.pas           dbo.ocemp      → fza_empresas
 ├── inLibMigAlmacenes.pas          dbo.ocalm      → fza_almacenes
 ├── inLibMigClientes.pas           dbo.occli      → fza_clientes
-├── inLibMigFamilias.pas           dbo.ocartniv   → fza_articulos_familias
+├── inLibMigFamilias.pas           dbo.oclwgrupo  → fza_articulos_familias
 ├── inLibMigAtributos.pas          dbo.occolor    → fza_atributos_valores + basicos
 │                                  DISTINCT(ocarttal.Talla) → idem para tallas
 ├── inLibMigArticulos.pas          dbo.ocartp     → fza_articulos
@@ -90,13 +90,12 @@ El programa guarda los valores de las conexiones (sin contraseñas) en
   TipoEfecto (int). Usamos TipoEfecto como CODIGO_FP_CLI; debe existir
   previamente en `fza_formas_pago` (por eso "formas_pago" va antes
   que "clientes" en el listado).
-- **Familias de artículos**: se migran desde `ocartniv` con código
-  numérico padding 3 (001, 002...). En `inLibMigArticulos` el campo
-  `Familia` se copia tal cual del origen — si el origen guarda el código
-  como entero corto ('1', '2') tampoco va a cuadrar con la familia
-  migrada ('001'). Ejecuta primero `sample_export_ssms.sql` para ver
-  cómo es el campo `ocartp.Familia` real y ajustamos el formateo si
-  hace falta.
+- **Familias de artículos**: se migran desde `dbo.oclwgrupo` (catálogo
+  con código `varchar(4)` tipo `0101`, `0308`...). El código se conserva
+  literal, de modo que `fza_articulos.CODIGO_FAM_ART` (que se rellena
+  desde `ocartp.Familia`) cuadra sin transformación. La tabla
+  `dbo.ocartniv` que originalmente parecía la fuente solo tiene 2 filas
+  (definiciones de niveles `SECCION`/`FAMILIA`) y no se utiliza.
 - **Atributos (colores y tallas)**: el modelo destino es muy rico
   (variación → ejes → valores → básicos canónicos). El migrador hace
   la versión mínima:

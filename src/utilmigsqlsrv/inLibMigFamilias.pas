@@ -2,23 +2,28 @@
 {                                                                              }
 {  Módulo:       inLibMigFamilias                                              }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
-{    Migra `dbo.ocartniv` (SQL Server, "Niveles" usados como familias de       }
-{    artículo en el legacy) → `fza_articulos_familias`.                        }
+{    Migra `dbo.oclwgrupo` (SQL Server: catálogo de grupos/familias de         }
+{    artículo, con código de 4 caracteres tipo "0101", "0308"...) →            }
+{    `fza_articulos_familias`.                                                 }
+{                                                                              }
+{    NOTA: la primera versión apuntaba a `dbo.ocartniv` pero esa tabla solo    }
+{    define los NIVELES de la jerarquía (SECCION=2 chars, FAMILIA=4 chars),    }
+{    no las familias reales. Los códigos de familia que cita `ocartp.Familia`  }
+{    (formato 4 dígitos) viven en `oclwgrupo`.                                 }
 {                                                                              }
 {    Mapeo origen → destino:                                                   }
-{      Nivel       (int)         → CODIGO_FAM_FAM (texto, padding 3)           }
-{      Descripcion (varchar 15)  → DESCRIPCION_FAM                             }
-{      Nombre      (varchar 15)  → NOMBRE_FAM_FAM                              }
+{      Grupo       (varchar 4)   → CODIGO_FAM_FAM                              }
+{      Descripcion (varchar 60)  → NOMBRE_FAM_FAM y DESCRIPCION_FAM            }
 {      <constante>                → ESACTIVO_FAM    = 'S'                       }
 {      <fila inicial>             → ESDEFAULT_FAM   = 'S' (primera), 'N' resto }
 {      <orden lectura>            → ORDEN_FAM       = 10, 20, 30...            }
 {                                                                              }
-{    Genera el código de familia en formato 3 dígitos (001, 002...) para que   }
-{    encaje con el resto del esquema destino (que usa varchar(20) y suele      }
-{    valores cortos).                                                          }
+{    El código de familia se conserva tal cual ("0101" → "0101"), de modo      }
+{    que `fza_articulos.CODIGO_FAM_ART = ocartp.Familia` cuadra directamente   }
+{    sin transformación.                                                       }
 {                                                                              }
 {    Idempotente: si la familia ya existe (mismo CODIGO_FAM_FAM) se salta.    }
 {******************************************************************************}
@@ -40,9 +45,10 @@ uses
 procedure MigrarFamilias(Eng: TMigEngine; var Stats: TMigStats);
 const
   cSelectSrc =
-    'SELECT Nivel, Descripcion, Nombre ' +
-    'FROM dbo.ocartniv ' +
-    'ORDER BY Nivel';
+    'SELECT Grupo, Descripcion ' +
+    'FROM dbo.oclwgrupo ' +
+    'WHERE LTRIM(RTRIM(Grupo)) <> '''' ' +
+    'ORDER BY Grupo';
   cInsertDst =
     'INSERT INTO fza_articulos_familias (' +
       'CODIGO_FAM_FAM, ESACTIVO_FAM, ORDEN_FAM, ESDEFAULT_FAM, ' +
@@ -53,10 +59,10 @@ const
       ':NOMBRE_FAM_FAM, :DESCRIPCION_FAM, :PAD_ART_FAM, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 var
-  qSrc, qIns, qChk:    TUniQuery;
-  sCod, sNombre, sDsc: string;
-  iOrden, iNivel:      Integer;
-  bPrimero:            Boolean;
+  qSrc, qIns, qChk:  TUniQuery;
+  sCod, sDescripcion: string;
+  iOrden:             Integer;
+  bPrimero:           Boolean;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   qIns := TUniQuery.Create(nil);
@@ -66,8 +72,7 @@ begin
     qIns.SQL.Text   := cInsertDst;
     qChk.Connection := Eng.ConDst;
     qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_articulos_familias ' +
-      'WHERE CODIGO_FAM_FAM = :c';
+      'SELECT 1 FROM fza_articulos_familias WHERE CODIGO_FAM_FAM = :c';
 
     iOrden   := 10;
     bPrimero := True;
@@ -75,13 +80,16 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      iNivel  := qSrc.FieldByName('Nivel').AsInteger;
-      sCod    := Format('%.3d', [iNivel]);
-      sNombre := Trim(qSrc.FieldByName('Nombre').AsString);
-      sDsc    := Trim(qSrc.FieldByName('Descripcion').AsString);
-      if sNombre = '' then sNombre := sDsc;
-      if sNombre = '' then sNombre := 'Familia ' + sCod;
-      if sDsc    = '' then sDsc    := sNombre;
+      sCod         := Trim(qSrc.FieldByName('Grupo').AsString);
+      sDescripcion := Trim(qSrc.FieldByName('Descripcion').AsString);
+      if sCod = '' then
+      begin
+        Inc(Stats.Saltadas);
+        qSrc.Next;
+        Continue;
+      end;
+      if sDescripcion = '' then
+        sDescripcion := 'Familia ' + sCod;
 
       qChk.Close;
       qChk.ParamByName('c').AsString := sCod;
@@ -91,7 +99,7 @@ begin
         Inc(Stats.Saltadas);
         Eng.Log('  - familia "%s" ya existe, se omite', [sCod]);
         qChk.Close;
-        bPrimero := False;  // ya hay una familia, no marcamos default nueva
+        bPrimero := False;
         qSrc.Next;
         Continue;
       end;
@@ -105,8 +113,8 @@ begin
       else
         qIns.ParamByName('ESDEFAULT_FAM').AsString := 'N';
       bPrimero := False;
-      qIns.ParamByName('NOMBRE_FAM_FAM').AsString  := sNombre;
-      qIns.ParamByName('DESCRIPCION_FAM').AsString := sDsc;
+      qIns.ParamByName('NOMBRE_FAM_FAM').AsString  := sDescripcion;
+      qIns.ParamByName('DESCRIPCION_FAM').AsString := sDescripcion;
       qIns.ParamByName('PAD_ART_FAM').AsInteger    := 5;
       RellenarAuditoria(qIns, Eng.Usuario);
 
