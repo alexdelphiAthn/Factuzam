@@ -264,8 +264,8 @@ const
     'INNER JOIN spread s ON s.Articulo = pc.Articulo ' +
     '                    AND s.Tarifa  = pc.Tarifa ' +
     'WHERE s.NColores > 1 ' +
-    '  AND (s.PrecioMax - s.PrecioMin) > 0.10 ' +
-    'ORDER BY 1, 2, 3';
+    '  AND (s.PrecioMax - s.PrecioMin) > 0.10';
+  cOrden = ' ORDER BY 1, 2, 3';
   cCols =
     'CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
     'ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
@@ -287,39 +287,20 @@ begin
   // descarta las filas cuyo CODIGO_TAR_ARTTAR no existe en el master.
   AsegurarTarifasDestino(Eng);
 
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  qSrc := NuevoQOrigen(Eng, cSelectSrc + cOrden);
   bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_tarifas',
                               cCols, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
-    // Total = filas finales tras el UNION ALL (caso ARTICULO + caso
-    // COLOR). Para no replicar la query entera, calculamos:
-    //   total = N_articulos_uniformes + N_filas_articulocolor_spread
+    // Total = filas que realmente devuelve la query origen. Envolvemos
+    // el SELECT entero en COUNT(*) para que coincida 1:1 con las
+    // iteraciones del cursor. Antes contabamos via raw t.Color y eso
+    // sobreestimaba en casos en que varios codigos normalizan al mismo
+    // ColorNorm (~1% de diferencia), dejando el progreso colgado en
+    // 98% al terminar.
     Eng.SetTotal(Eng.ContarOrigen(
-      'WITH spread AS ( ' +
-      '  SELECT Articulo, Tarifa, ' +
-      '         MIN(ISNULL(PrecioSalida, 0)) AS PrecioMin, ' +
-      '         MAX(ISNULL(PrecioSalida, 0)) AS PrecioMax ' +
-      '  FROM dbo.ocarttap WITH (NOLOCK) ' +
-      '  WHERE ISNULL(PrecioSalida, 0) > 0 ' +
-      '    AND LTRIM(RTRIM(Articulo)) <> '''' ' +
-      '  GROUP BY Articulo, Tarifa ' +
-      ') ' +
-      'SELECT ( ' +
-      '  SELECT COUNT(*) FROM spread WHERE (PrecioMax - PrecioMin) <= 0.10 ' +
-      ') + ( ' +
-      '  SELECT COUNT(*) FROM ( ' +
-      '    SELECT t.Articulo, t.Tarifa, t.Color ' +
-      '    FROM dbo.ocarttap t WITH (NOLOCK) ' +
-      '    INNER JOIN spread p ON p.Articulo = t.Articulo ' +
-      '                       AND p.Tarifa  = t.Tarifa ' +
-      '    WHERE (p.PrecioMax - p.PrecioMin) > 0.10 ' +
-      '      AND ISNULL(t.PrecioSalida, 0) > 0 ' +
-      '      AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
-      '    GROUP BY t.Articulo, t.Tarifa, t.Color ' +
-      '  ) Y ' +
-      ') AS N'));
+      'SELECT COUNT(*) FROM (' + cSelectSrc + ') AS Q'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
