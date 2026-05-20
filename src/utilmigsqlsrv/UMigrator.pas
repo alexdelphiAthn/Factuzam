@@ -101,6 +101,7 @@ uses
   inLibMigEmpresas,
   inLibMigAlmacenes,
   inLibMigClientes,
+  inLibMigProveedores,
   inLibMigFamilias,
   inLibMigAtributos,
   inLibMigArticulos,
@@ -163,6 +164,9 @@ begin
   FEngine.Registrar('clientes', 'Clientes',
     'dbo.occli → fza_clientes (requiere formas_pago)',
     MigrarClientes);
+  FEngine.Registrar('proveedores', 'Proveedores',
+    'dbo.ocpro → fza_proveedores (requiere columna NOMBRE_PRV)',
+    MigrarProveedores);
   FEngine.Registrar('familias', 'Familias de artículo',
     'dbo.ocniv (Nivel 2+4) → fza_articulos_familias',
     MigrarFamilias);
