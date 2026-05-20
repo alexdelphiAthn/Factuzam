@@ -18,9 +18,6 @@ src/utilmigsqlsrv/
 ├── UMigConn.pas / .dfm            Data module con las dos TUniConnection
 ├── UMigEngine.pas                 Motor: registro, log, transacciones
 ├── UMigrator.pas / .dfm           Formulario principal (UI)
-├── inLibMigFormasPago.pas         dbo.octipefe   → fza_formas_pago
-├── inLibMigIvasGrupos.pas         dbo.ocgrpiva   → fza_ivas_grupos
-├── inLibMigIvas.pas               dbo.octipiva   → fza_ivas
 ├── inLibMigEmpresas.pas           dbo.ocemp      → fza_empresas
 ├── inLibMigAlmacenes.pas          dbo.ocalm      → fza_almacenes
 ├── inLibMigClientes.pas           dbo.occli      → fza_clientes

@@ -142,9 +142,6 @@ implementation
 uses
   UMigConn,
   inLibMigDumpEsqueleto,
-  inLibMigFormasPago,
-  inLibMigIvasGrupos,
-  inLibMigIvas,
   inLibMigEmpresas,
   inLibMigAlmacenes,
   inLibMigClientes,
@@ -265,17 +262,11 @@ end;
 procedure TFormMigrator.RegistrarMigraciones;
 begin
   // El ORDEN importa: el listado se ejecuta de arriba a abajo y las
-  // dependencias (clientes necesita formas_pago, articulos necesita
-  // familias, etc.) deben respetarse.
-  FEngine.Registrar('formas_pago', 'Formas de pago',
-    'dbo.octipefe → fza_formas_pago',
-    MigrarFormasPago);
-  FEngine.Registrar('ivas_grupos', 'Grupos de IVA',
-    'dbo.ocgrpiva → fza_ivas_grupos',
-    MigrarIvasGrupos);
-  FEngine.Registrar('ivas', 'Tipos de IVA (histórico)',
-    'dbo.octipiva → fza_ivas',
-    MigrarIvas);
+  // dependencias (articulos necesita familias, skus necesitan
+  // articulos, etc.) deben respetarse.
+  // NOTA: formas_pago, grupos de IVA y tipos de IVA NO se migran;
+  // los IVAs ya estan correctamente definidos en la BBDD demo y
+  // las formas de pago no son necesarias en este momento.
   FEngine.Registrar('empresas', 'Empresas',
     'dbo.ocemp → fza_empresas',
     MigrarEmpresas);
@@ -283,7 +274,7 @@ begin
     'dbo.ocalm → fza_almacenes (requiere empresas)',
     MigrarAlmacenes);
   FEngine.Registrar('clientes', 'Clientes',
-    'dbo.occli → fza_clientes (requiere formas_pago)',
+    'dbo.occli → fza_clientes',
     MigrarClientes);
   FEngine.Registrar('proveedores', 'Proveedores',
     'dbo.ocpro → fza_proveedores (requiere columna NOMBRE_PRV)',
@@ -830,7 +821,6 @@ end;
 // los dominios de la misma wave corren en paralelo entre si. Las
 // waves se procesan secuencialmente, no pasamos a la siguiente
 // hasta que termina la anterior. Asi respetamos:
-//   - formas_pago antes que clientes
 //   - empresas antes que almacenes
 //   - familias antes que articulos
 //   - tallas_maestras antes que tallajes y antes que articulos_tallas
@@ -838,10 +828,7 @@ end;
 //   - skus + almacenes antes que inventarios
 function WaveDeDominio(const sCodigo: string): Integer;
 begin
-  if (sCodigo = 'formas_pago')      or
-     (sCodigo = 'ivas_grupos')      or
-     (sCodigo = 'ivas')             or
-     (sCodigo = 'empresas')         or
+  if (sCodigo = 'empresas')         or
      (sCodigo = 'proveedores')      or
      (sCodigo = 'familias')         or
      (sCodigo = 'colores_maestros') or
