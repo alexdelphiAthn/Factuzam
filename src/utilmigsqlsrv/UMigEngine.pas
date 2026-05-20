@@ -167,7 +167,7 @@ type
     procedure Flush;
   public
     constructor Create(Con: TUniConnection; const sTabla,
-                       sColumnas: string; iBatchMax: Integer = 1000);
+                       sColumnas: string; iBatchMax: Integer = 5000);
     destructor  Destroy; override;
 
     // Anade una fila ya formateada (sin parentesis). Ej:
@@ -481,7 +481,7 @@ begin
   FTabla    := sTabla;
   FColumnas := sColumnas;
   FFilas    := TStringList.Create;
-  if iBatchMax <= 0 then iBatchMax := 1000;
+  if iBatchMax <= 0 then iBatchMax := 5000;
   FBatchMax := iBatchMax;
   FTotalIns := 0;
 end;

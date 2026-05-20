@@ -57,7 +57,7 @@ var
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_proveedores',
-                              cCols, 1000);
+                              cCols, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
