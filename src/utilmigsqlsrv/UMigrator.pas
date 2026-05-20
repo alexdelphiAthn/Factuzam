@@ -732,15 +732,17 @@ begin
   MemoProgreso.Lines.Clear;
   FLineasProgreso.Clear;
 
-  // Lanzamos un hilo "coordinador" que orquesta las waves. Dentro de
-  // cada wave usamos Parallel.ForEach para correr los dominios de esa
-  // wave en paralelo, cada uno con su propio par de conexiones.
+  // Lanzamos un hilo coordinador. Dentro de cada wave creamos N
+  // tasks (uno por dominio) que corren en paralelo. Esperamos a que
+  // terminen TODAS antes de pasar a la siguiente wave.
   FTask := CreateTask(
     procedure(const task: IOmniTask)
     var
-      iWave:        Integer;
-      aDeWave:      TArray<string>;
-      iTotL, iTotI, iTotS, iTotE: Integer;
+      iWave, iLoc, iTaskIdx:       Integer;
+      aDeWave:                     TArray<string>;
+      aTasksWave:                  TArray<IOmniTaskControl>;
+      iTotL, iTotI, iTotS, iTotE:  Integer;
+      sWaveCsv:                    string;
     begin
       iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
 
@@ -750,52 +752,54 @@ begin
 
         // Filtrar codigos de esta wave
         SetLength(aDeWave, 0);
-        for i := 0 to High(aCodigos) do
-          if WaveDeDominio(aCodigos[i]) = iWave then
+        for iLoc := 0 to High(aCodigos) do
+          if WaveDeDominio(aCodigos[iLoc]) = iWave then
           begin
             SetLength(aDeWave, Length(aDeWave) + 1);
-            aDeWave[High(aDeWave)] := aCodigos[i];
+            aDeWave[High(aDeWave)] := aCodigos[iLoc];
           end;
         if Length(aDeWave) = 0 then Continue;
 
-        TThread.Queue(nil,
-          procedure
-          var sCsv: string; k: Integer;
-          begin
-            sCsv := '';
-            for k := 0 to High(aDeWave) do
-            begin
-              if sCsv <> '' then sCsv := sCsv + ', ';
-              sCsv := sCsv + aDeWave[k];
-            end;
-            Log(Format('=== Wave %d arrancando en paralelo: %s ===',
-                       [iWave, sCsv]));
-          end);
+        // Mensaje de inicio de wave. FEngine.Log marshallea a UI via
+        // su OnLog (que ya hace TThread.Queue), asi evitamos otra
+        // capa de anonimos anidados.
+        sWaveCsv := '';
+        for iLoc := 0 to High(aDeWave) do
+        begin
+          if sWaveCsv <> '' then sWaveCsv := sWaveCsv + ', ';
+          sWaveCsv := sWaveCsv + aDeWave[iLoc];
+        end;
+        FEngine.Log(Format('=== Wave %d (%d dominios): %s ===',
+                           [iWave, Length(aDeWave), sWaveCsv]));
 
-        // Parallel.ForEach.Execute es sincrono por defecto: no
-        // continua hasta que TODOS los workers de esta wave terminan.
-        // Asi respetamos las dependencias entre waves.
-        Parallel.ForEach<string>(aDeWave)
-          .Execute(
-            procedure(const sCodigo: string)
+        // Lanzar un task por dominio de la wave. Codigo se pasa via
+        // SetParameter para evitar capturas problematicas.
+        SetLength(aTasksWave, Length(aDeWave));
+        for iTaskIdx := 0 to High(aDeWave) do
+        begin
+          aTasksWave[iTaskIdx] := CreateTask(
+            procedure(const t: IOmniTask)
             var
-              LocalSrv, LocalDst: TUniConnection;
-              LocalEng:           TMigEngine;
-              LocalStats:         TMigStats;
+              sCodigo:    string;
+              LocalSrv:   TUniConnection;
+              LocalDst:   TUniConnection;
+              LocalEng:   TMigEngine;
+              LocalStats: TMigStats;
             begin
-              if task.CancellationToken.IsSignalled then Exit;
-              LocalSrv := dmMig.ClonarConexionOrigen;
-              LocalDst := dmMig.ClonarConexionDestino;
+              sCodigo := t.Param['Codigo'].AsString;
+              if t.CancellationToken.IsSignalled then Exit;
+              LocalSrv := nil;
+              LocalDst := nil;
               LocalEng := nil;
               try
+                LocalSrv := dmMig.ClonarConexionOrigen;
+                LocalDst := dmMig.ClonarConexionDestino;
                 LocalSrv.Open;
                 LocalDst.Open;
                 LocalEng := TMigEngine.CreateClone(LocalSrv, LocalDst,
                                                      FEngine);
                 try
                   LocalEng.Ejecutar(sCodigo, LocalStats);
-                  // Acumular totales con TInterlocked.Add (Integer
-                  // shared entre tasks).
                   TInterlocked.Add(iTotL, LocalStats.Leidas);
                   TInterlocked.Add(iTotI, LocalStats.Insertadas);
                   TInterlocked.Add(iTotS, LocalStats.Saltadas);
@@ -804,33 +808,44 @@ begin
                   on E: Exception do
                   begin
                     TInterlocked.Increment(iTotE);
-                    TThread.Queue(nil,
-                      procedure
-                      var sMsg: string;
-                      begin
-                        sMsg := Format('FALLO TOTAL en %s: %s',
-                                       [sCodigo, E.Message]);
-                        Log(sMsg);
-                      end);
+                    FEngine.Log(Format('FALLO TOTAL en %s: %s',
+                                       [sCodigo, E.Message]));
                   end;
                 end;
               finally
-                LocalEng.Free;
-                if LocalDst.Connected then LocalDst.Close;
-                if LocalSrv.Connected then LocalSrv.Close;
-                LocalDst.Free;
-                LocalSrv.Free;
+                if Assigned(LocalEng) then LocalEng.Free;
+                if Assigned(LocalDst) then
+                begin
+                  if LocalDst.Connected then LocalDst.Close;
+                  LocalDst.Free;
+                end;
+                if Assigned(LocalSrv) then
+                begin
+                  if LocalSrv.Connected then LocalSrv.Close;
+                  LocalSrv.Free;
+                end;
               end;
-            end);
+            end)
+            .SetParameter('Codigo', aDeWave[iTaskIdx])
+            .CancelWith(task.CancellationToken)
+            .Unobserved
+            .Run;
+        end;
+
+        // Sincronizar: esperar a que terminen TODOS los workers de
+        // esta wave antes de pasar a la siguiente.
+        for iTaskIdx := 0 to High(aTasksWave) do
+          aTasksWave[iTaskIdx].WaitFor(INFINITE);
+        SetLength(aTasksWave, 0);
       end;
 
+      FEngine.Log('');
+      FEngine.Log(Format(
+        'TOTAL: %d leidas, %d insertadas, %d saltadas, %d errores.',
+        [iTotL, iTotI, iTotS, iTotE]));
       TThread.Queue(nil,
         procedure
         begin
-          Log('');
-          Log(Format(
-            'TOTAL: %d leidas, %d insertadas, %d saltadas, %d errores.',
-            [iTotL, iTotI, iTotS, iTotE]));
           SetEjecutando(False);
         end);
     end)
