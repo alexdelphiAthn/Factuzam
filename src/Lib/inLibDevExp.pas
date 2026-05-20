@@ -72,6 +72,7 @@ type
                        AOnUpdateTotal: TUpdateTotalEvent = nil);
   function GetDBDataController(
     AView: TcxCustomGridTableView): TcxGridDBDataController;
+  function GetItemFieldName(AItem: TcxCustomGridTableItem): string;
 
 implementation
 
