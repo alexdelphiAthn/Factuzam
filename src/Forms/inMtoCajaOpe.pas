@@ -418,18 +418,24 @@ begin
   end;
   if DatosCaja.qryStock.Active and not DatosCaja.qryStock.IsEmpty then
   begin
+    View.BeginUpdate;
     try
-      View.ApplyBestFit;
-    except
+      try
+        View.ApplyBestFit;
+      except
+      end;
+      // ApplyBestFit solo mide texto: si una celda lleva el cuadradito de
+      // paleta basica, ensanchamos la columna en ANCHO_SWATCH_PX para que el
+      // swatch no recorte el AV. Mismo helper que usa inMtoArticulos en su
+      // grid de stock. Lo agrupamos dentro del BeginUpdate para que el
+      // grid pinte una sola vez al final.
+      Mapa := ObtenerMapaAtributosGlobal;
+      if (Mapa <> nil) and (Mapa.Count > 0) then
+        for I := 0 to View.ColumnCount - 1 do
+          AjustarAnchoColumnaParaSwatch(View.Columns[I], Mapa);
+    finally
+      View.EndUpdate;
     end;
-    // ApplyBestFit solo mide texto: si una celda lleva el cuadradito de
-    // paleta basica, ensanchamos la columna en ANCHO_SWATCH_PX para que el
-    // swatch no recorte el AV. Mismo helper que usa inMtoArticulos en su
-    // grid de stock.
-    Mapa := ObtenerMapaAtributosGlobal;
-    if (Mapa <> nil) and (Mapa.Count > 0) then
-      for I := 0 to View.ColumnCount - 1 do
-        AjustarAnchoColumnaParaSwatch(View.Columns[I], Mapa);
   end;
 end;
 
