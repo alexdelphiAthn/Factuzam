@@ -116,6 +116,15 @@ object FormMigrator: TFormMigrator
         TabOrder = 5
         OnClick = btnProbarSrcClick
       end
+      object chkSrcWinAuth: TCheckBox
+        Left = 350
+        Top = 118
+        Width = 140
+        Height = 17
+        Caption = 'Auth. Windows'
+        TabOrder = 6
+        OnClick = chkSrcWinAuthClick
+      end
     end
     object PanelDestino: TGroupBox
       Left = 514
