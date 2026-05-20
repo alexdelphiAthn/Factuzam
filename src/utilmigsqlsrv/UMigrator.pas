@@ -74,6 +74,8 @@ type
     edNivelFam:        TEdit;
     lblDigitosArt:     TLabel;
     edDigitosArt:      TEdit;
+    lblHilos:          TLabel;
+    edHilos:           TEdit;
     GroupListado:      TGroupBox;
     listMigs:          TCheckListBox;
     btnMarcarTodas:    TButton;
@@ -832,12 +834,15 @@ begin
     procedure(const task: IOmniTask)
     var
       iWave, iLoc, iTaskIdx:       Integer;
+      iIdxChunk, iChunkEnd, iChunkLen, iMaxHilos: Integer;
       aDeWave:                     TArray<string>;
       aTasksWave:                  TArray<IOmniTaskControl>;
       iTotL, iTotI, iTotS, iTotE:  Integer;
       sWaveCsv:                    string;
     begin
       iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
+      iMaxHilos := task.Param['MaxHilos'].AsInteger;
+      if iMaxHilos < 1 then iMaxHilos := 1;
 
       for iWave := 0 to 3 do
       begin
@@ -865,12 +870,20 @@ begin
         FEngine.Log(Format('=== Wave %d (%d dominios): %s ===',
                            [iWave, Length(aDeWave), sWaveCsv]));
 
-        // Lanzar un task por dominio de la wave. Codigo se pasa via
-        // SetParameter para evitar capturas problematicas.
-        SetLength(aTasksWave, Length(aDeWave));
-        for iTaskIdx := 0 to High(aDeWave) do
+        // Procesar la wave en chunks de iMaxHilos para respetar el
+        // limite configurado por el usuario. Cada chunk lanza N tasks
+        // en paralelo y espera a que terminen antes del siguiente.
+        iIdxChunk := 0;
+        while iIdxChunk <= High(aDeWave) do
         begin
-          aTasksWave[iTaskIdx] := CreateTask(
+          if task.CancellationToken.IsSignalled then Break;
+          iChunkEnd := iIdxChunk + iMaxHilos - 1;
+          if iChunkEnd > High(aDeWave) then iChunkEnd := High(aDeWave);
+          iChunkLen := iChunkEnd - iIdxChunk + 1;
+          SetLength(aTasksWave, iChunkLen);
+          for iTaskIdx := 0 to iChunkLen - 1 do
+          begin
+            aTasksWave[iTaskIdx] := CreateTask(
             procedure(const t: IOmniTask)
             var
               sCodigo:    string;
@@ -928,17 +941,19 @@ begin
                 if bComInit then CoUninitialize;
               end;
             end)
-            .SetParameter('Codigo', aDeWave[iTaskIdx])
+            .SetParameter('Codigo', aDeWave[iIdxChunk + iTaskIdx])
             .CancelWith(task.CancellationToken)
             .Unobserved
             .Run;
-        end;
+          end;
 
-        // Sincronizar: esperar a que terminen TODOS los workers de
-        // esta wave antes de pasar a la siguiente.
-        for iTaskIdx := 0 to High(aTasksWave) do
-          aTasksWave[iTaskIdx].WaitFor(INFINITE);
-        SetLength(aTasksWave, 0);
+          // Esperar a que terminen los workers de ESTE chunk
+          for iTaskIdx := 0 to iChunkLen - 1 do
+            aTasksWave[iTaskIdx].WaitFor(INFINITE);
+          SetLength(aTasksWave, 0);
+
+          iIdxChunk := iChunkEnd + 1;
+        end;
       end;
 
       FEngine.Log('');
@@ -951,6 +966,7 @@ begin
           SetEjecutando(False);
         end);
     end)
+    .SetParameter('MaxHilos', StrToIntDef(edHilos.Text, 4))
     .CancelWith(FCancel)
     .Unobserved
     .Run;
@@ -1030,6 +1046,8 @@ begin
       IntToStr(oIni.ReadInteger('General', 'NivelFamHoja', 4));
     edDigitosArt.Text :=
       IntToStr(oIni.ReadInteger('General', 'DigitosContadorArt', 4));
+    edHilos.Text      :=
+      IntToStr(oIni.ReadInteger('General', 'MaxHilos', 4));
   finally
     oIni.Free;
   end;
@@ -1054,6 +1072,8 @@ begin
                       StrToIntDef(edNivelFam.Text,   4));
     oIni.WriteInteger('General', 'DigitosContadorArt',
                       StrToIntDef(edDigitosArt.Text, 4));
+    oIni.WriteInteger('General', 'MaxHilos',
+                      StrToIntDef(edHilos.Text, 4));
   finally
     oIni.Free;
   end;
