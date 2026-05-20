@@ -174,6 +174,23 @@ los demás workers de la wave siguen su curso.
 Al cerrar el form mientras se ejecuta, se solicita cancelación y se
 espera hasta 5 s a que los workers terminen el dominio en curso.
 
+## Log de errores
+
+Cada corrida del migrador escribe:
+
+- `MemoLog`           — todo el log secuencial (info + saltos + errores).
+- `MemoErrores`       — panel inferior rojo que solo recoge las líneas
+                        marcadas con `!` (errores y avisos),
+                        redimensionable con su splitter.
+- `migrator_errores_YYYYMMDD_HHMMSS.log` en
+  `%USERPROFILE%\Factuzam\` — fichero de texto con los mismos errores,
+  para revisar después.
+
+La ruta exacta del fichero se imprime en `MemoLog` al pulsar
+"Ejecutar migraciones". Cualquier `LogError` del engine, `! error`
+heredado de mappers antiguos o `FALLO TOTAL en X` cae a los tres
+sitios a la vez.
+
 ## Bulk insert en mappers pesados
 
 Para tablas grandes (`fza_articulos_atributos_basicos` con 266k+81k
