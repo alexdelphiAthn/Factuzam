@@ -30,13 +30,14 @@ type
     { Private declarations }
   public
     { Public declarations }
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inMtoGrupos, inLibGlobalVar;
+uses inMtoGrupos, inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {$R *.dfm}
 
@@ -47,7 +48,26 @@ begin
   inherited;
   unqryUsuariosGrupo.Connection := oConn;
   unqryTablaG.Connection := oConn;
-  unqryUsuariosGrupo.Open;
+  // unqryUsuariosGrupo.Open movido a AbrirDetalles.
+end;
+
+procedure TdmGrupos.AbrirDetalles;
+var
+  swQ: TStopwatch;
+begin
+  inherited;
+  if unqryUsuariosGrupo.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryUsuariosGrupo.Open;
+    inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
+      'unqryUsuariosGrupo OK', swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
+        'unqryUsuariosGrupo ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+  end;
 end;
 
 initialization

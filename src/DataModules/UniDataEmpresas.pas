@@ -55,12 +55,16 @@ type
     procedure GetCodigoAutoSerie;
 //    function GetLastCodeEmpresa:Integer;
 //    function GetZonaDefault:String;
+    // Override: abre las queries detalle/lookup del Mto de Empresas
+    // tras unqryTablaG. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync
+    // en el callback main thread.
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inLibtb, inLibGlobalVar, inMtoEmpresas;
+  inLibtb, inLibGlobalVar, inMtoEmpresas, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -239,6 +243,9 @@ end;
 procedure TdmEmpresas.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  // Solo asignaciones de Connection y MasterSource. Los .Open se han
+  // movido a AbrirDetalles (callback main thread con overlay visible)
+  // para no congelar la UI durante la creacion del data module.
   unqryRetenciones.Connection            := oConn;
   unqrySeries.Connection                 := oConn;
   unqryIvas.Connection                   := oConn;
@@ -251,12 +258,41 @@ begin
                                        (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqryRetenciones.MasterSource    :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqrySeries.MasterSource         :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
-  unqryPaises.Open;
-  unqryFacturasEmpresas.Open;
-  unqryFacturasLineasEmpresas.Open;
-  unqryIvas.Open;
-  unqryRetenciones.Open;
-  unqrySeries.Open;
+end;
+
+procedure TdmEmpresas.AbrirDetalles;
+const
+  TAG = 'Empresas.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var
+    swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG,
+          Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var
+  sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryPaises,                  'unqryPaises');
+  AbrirConTiempo(unqryIvas,                    'unqryIvas');
+  AbrirConTiempo(unqryFacturasEmpresas,        'unqryFacturasEmpresas');
+  AbrirConTiempo(unqryFacturasLineasEmpresas,  'unqryFacturasLineasEmpresas');
+  AbrirConTiempo(unqryRetenciones,             'unqryRetenciones');
+  AbrirConTiempo(unqrySeries,                  'unqrySeries');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmEmpresas.GetCodigoAutoEmpresa;

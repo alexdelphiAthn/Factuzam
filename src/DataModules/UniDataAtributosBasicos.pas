@@ -31,12 +31,13 @@ type
     { Private declarations }
   public
     { Public declarations }
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inMtoAtributosBasicos, inLibGlobalVar;
+  inMtoAtributosBasicos, inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -48,7 +49,26 @@ procedure TdmAtributosBasicos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryAtributosLookup.Connection := oConn;
-  unqryAtributosLookup.Open;
+  // unqryAtributosLookup.Open movido a AbrirDetalles.
+end;
+
+procedure TdmAtributosBasicos.AbrirDetalles;
+var
+  swQ: TStopwatch;
+begin
+  inherited;
+  if unqryAtributosLookup.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryAtributosLookup.Open;
+    inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
+      'unqryAtributosLookup OK', swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
+        'unqryAtributosLookup ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+  end;
 end;
 
 procedure TdmAtributosBasicos.unqryTablaGBeforePost(DataSet: TDataSet);
