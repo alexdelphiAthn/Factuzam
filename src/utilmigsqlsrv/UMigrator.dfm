@@ -266,6 +266,15 @@ object FormMigrator: TFormMigrator
         TabOrder = 2
         OnClick = btnCargarEsquemaClick
       end
+      object btnLimpiarDemo: TButton
+        Left = 814
+        Top = 18
+        Width = 180
+        Height = 25
+        Caption = 'Limpiar datos demo'
+        TabOrder = 3
+        OnClick = btnLimpiarDemoClick
+      end
     end
   end
   object PanelCentro: TPanel

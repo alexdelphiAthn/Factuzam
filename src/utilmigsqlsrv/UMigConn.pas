@@ -46,6 +46,14 @@ type
     // la BBDD destino actualmente configurada. Usa TUniScript para
     // soportar multiples sentencias separadas por ;.
     procedure CargarEsquemaDestino(const sRutaFichero: string);
+
+    // Borra del destino los datos demo identificados por
+    // USUARIO_ALTA IN ('DEMO','Administrador') en las tablas de
+    // negocio principales (empresas, almacenes, clientes,
+    // proveedores, articulos y familias). NO toca tablas de sistema
+    // (paises, ivas_tipos, winforms...). Devuelve cuantas filas
+    // borro en total. Util tras cargar factuzam_original.sql.
+    function LimpiarDatosDemoDestino: Integer;
   end;
 
 var
@@ -187,6 +195,42 @@ begin
     oScript.Execute;
   finally
     oScript.Free;
+  end;
+end;
+
+function TdmMig.LimpiarDatosDemoDestino: Integer;
+const
+  // Orden importante: hijos primero (FK logicas), padres despues.
+  // En cada tabla borramos solo lo que dejo el seed demo.
+  aTablas: array[0..5] of string = (
+    'fza_articulos',
+    'fza_articulos_familias',
+    'fza_almacenes',
+    'fza_clientes',
+    'fza_proveedores',
+    'fza_empresas'
+  );
+var
+  i, iSub: Integer;
+  qDel:    TUniQuery;
+begin
+  if not conDst.Connected then conDst.Open;
+  Result := 0;
+  qDel := TUniQuery.Create(nil);
+  try
+    qDel.Connection := conDst;
+    for i := Low(aTablas) to High(aTablas) do
+    begin
+      qDel.SQL.Text := Format(
+        'DELETE FROM `%s` ' +
+        'WHERE USUARIO_ALTA IN (''DEMO'', ''Administrador'', ' +
+        '                       ''Sistema'', ''SISTEMA'')',
+        [aTablas[i]]);
+      iSub := qDel.ExecSQL;
+      Inc(Result, iSub);
+    end;
+  finally
+    qDel.Free;
   end;
 end;
 
