@@ -1512,6 +1512,17 @@ begin
   if (AItem = tvArticulo) then
   begin
     tmrBusq.Enabled := False;
+    // Doble Enter en la columna Articulo: el TcxExtLookupComboBox tiene
+    // ImmediateDropDownWhenActivated=True, asi que cuando el usuario
+    // teclea el codigo el dropdown queda abierto. El primer Enter cierra
+    // el dropdown internamente (selecciona la fila resaltada) y se
+    // "consume" sin que PostEditValue dispare Validate; hace falta un
+    // segundo Enter para confirmar. Lo cerramos aqui explicitamente para
+    // que el flujo siga en el mismo handler: DroppedDown:=False, luego
+    // PostEditValue -> Validate -> avance de foco, todo en un solo Enter.
+    if (AEdit is TcxCustomDropDownEdit)
+       and TcxCustomDropDownEdit(AEdit).DroppedDown then
+      TcxCustomDropDownEdit(AEdit).DroppedDown := False;
     if AEdit is TcxCustomTextEdit then
       ValorActual := Trim(TcxCustomTextEdit(AEdit).Text)
     else
