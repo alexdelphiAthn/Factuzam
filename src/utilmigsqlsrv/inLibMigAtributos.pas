@@ -63,66 +63,45 @@ end;
 
 // Asegura que existe la variación 'TC' y sus dos atributos.
 procedure AsegurarVariacionTC(Eng: TMigEngine);
-var qChk, qIns: TUniQuery;
+var qIns: TUniQuery;
 begin
-  qChk := TUniQuery.Create(nil);
+  // Race-safe: INSERT IGNORE en lugar de SELECT+INSERT, porque
+  // wave 0 corre colores_maestros y tallas_maestras en paralelo y
+  // ambos llaman aqui. El patron check-then-insert da
+  // "Duplicate entry 'TC' for key PRIMARY" cuando los dos workers
+  // pasan el SELECT simultaneamente.
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
     qIns.Connection := Eng.ConDst;
 
     // fza_variaciones: 'TC'
-    qChk.SQL.Text :=
-      'SELECT 1 FROM fza_variaciones WHERE CODIGO_VAR = ''TC''';
-    qChk.Open;
-    if qChk.IsEmpty then
-    begin
-      qIns.SQL.Text :=
-        'INSERT INTO fza_variaciones (' +
-          'CODIGO_VAR, NOMBRE_VAR, ESACTIVO_VAR, ORDEN_VAR, ' +
-          'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (''TC'', ''TALLAS Y COLORES'', ''S'', 1, ' +
-                ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
-                ':USUARIO_MODIF)';
-      RellenarAuditoria(qIns, Eng.Usuario);
-      qIns.ExecSQL;
-      Eng.Log('  + creada variacion TC');
-    end;
-    qChk.Close;
+    qIns.SQL.Text :=
+      'INSERT IGNORE INTO fza_variaciones (' +
+        'CODIGO_VAR, NOMBRE_VAR, ESACTIVO_VAR, ORDEN_VAR, ' +
+        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'VALUES (''TC'', ''TALLAS Y COLORES'', ''S'', 1, ' +
+              ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
+              ':USUARIO_MODIF)';
+    RellenarAuditoria(qIns, Eng.Usuario);
+    qIns.ExecSQL;
+    if qIns.RowsAffected > 0 then Eng.Log('  + creada variacion TC');
 
     // fza_variaciones_atributos: ('TC','CO') y ('TC','TAL')
-    qChk.SQL.Text :=
-      'SELECT 1 FROM fza_variaciones_atributos ' +
-      'WHERE ID_VAR_VA = ''TC'' AND ID_ATB_VA = ''CO''';
-    qChk.Open;
-    if qChk.IsEmpty then
-    begin
-      qIns.SQL.Text :=
-        'INSERT INTO fza_variaciones_atributos (' +
-          'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
-        'VALUES (''TC'', ''CO'', ''Color'', 1, ''Paleta'')';
-      qIns.ExecSQL;
-      Eng.Log('  + creado eje variacion TC/CO');
-    end;
-    qChk.Close;
+    qIns.SQL.Text :=
+      'INSERT IGNORE INTO fza_variaciones_atributos (' +
+        'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
+      'VALUES (''TC'', ''CO'', ''Color'', 1, ''Paleta'')';
+    qIns.ExecSQL;
+    if qIns.RowsAffected > 0 then Eng.Log('  + creado eje variacion TC/CO');
 
-    qChk.SQL.Text :=
-      'SELECT 1 FROM fza_variaciones_atributos ' +
-      'WHERE ID_VAR_VA = ''TC'' AND ID_ATB_VA = ''TAL''';
-    qChk.Open;
-    if qChk.IsEmpty then
-    begin
-      qIns.SQL.Text :=
-        'INSERT INTO fza_variaciones_atributos (' +
-          'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
-        'VALUES (''TC'', ''TAL'', ''Talla'', 2, ''Sistema de tallas'')';
-      qIns.ExecSQL;
-      Eng.Log('  + creado eje variacion TC/TAL');
-    end;
-    qChk.Close;
+    qIns.SQL.Text :=
+      'INSERT IGNORE INTO fza_variaciones_atributos (' +
+        'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
+      'VALUES (''TC'', ''TAL'', ''Talla'', 2, ''Sistema de tallas'')';
+    qIns.ExecSQL;
+    if qIns.RowsAffected > 0 then Eng.Log('  + creado eje variacion TC/TAL');
   finally
     qIns.Free;
-    qChk.Free;
   end;
 end;
 
