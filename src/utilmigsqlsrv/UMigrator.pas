@@ -144,7 +144,9 @@ uses
   inLibMigArticulosSkus,
   inLibMigInventarios,
   inLibMigTallajes,
-  inLibMigArticulosTallajes;
+  inLibMigArticulosTallajes,
+  inLibMigArticulosProveedores,
+  inLibMigArticulosPropiedades;
 
 // =========================================================================
 //  Lifecycle
@@ -305,6 +307,15 @@ begin
   FEngine.Registrar('inventarios', 'Inventario inicial (stock)',
     'dbo.ocartacp → fza_inventarios + fza_inventarios_lineas',
     MigrarInventarios);
+  FEngine.Registrar('articulos_proveedores',
+    'Proveedor y modelo por artículo',
+    'ocartp.Proveedor + Modelo → fza_articulos_proveedores',
+    MigrarArticulosProveedores);
+  FEngine.Registrar('articulos_propiedades',
+    'Propiedad TEMPORADA por artículo',
+    'ocartp.Temporada → fza_propiedades + valores + ' +
+    'fza_articulos_propiedades',
+    MigrarArticulosPropiedades);
 end;
 
 procedure TFormMigrator.RecargarListado;
@@ -755,6 +766,8 @@ begin
   if (sCodigo = 'articulos_colores')        or
      (sCodigo = 'articulos_tallas')         or
      (sCodigo = 'articulos_tallajes_asign') or
+     (sCodigo = 'articulos_proveedores')    or
+     (sCodigo = 'articulos_propiedades')    or
      (sCodigo = 'skus')                     then Exit(2);
   if sCodigo = 'inventarios' then Exit(3);
   // Default: wave 0 (conservador, sin deps conocidas)
