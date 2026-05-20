@@ -141,16 +141,23 @@ end;
 procedure MigrarArticulosPropiedades(Eng: TMigEngine;
                                       var Stats: TMigStats);
 const
+  // Filtro Temporada LIKE '%[A-Z]%': SQL Server descarta valores que
+  // son SOLO digitos como "1", "38" (datos sucios o mezclados con
+  // tallas en el legacy). Las temporadas legitimas tipo PV25, OI24,
+  // P26, etc. siempre tienen al menos una letra. ISO digit-only
+  // strings se filtran.
   cSelectValores =
     'SELECT DISTINCT Temporada ' +
     'FROM dbo.ocartp ' +
     'WHERE LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
+    '  AND Temporada LIKE ''%[A-Za-z]%'' ' +
     'ORDER BY Temporada';
   cSelectAsign =
     'SELECT Articulo, Temporada ' +
     'FROM dbo.ocartp ' +
     'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
     '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
+    '  AND Temporada LIKE ''%[A-Za-z]%'' ' +
     'ORDER BY Articulo';
   cColsAP =
     'CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
@@ -192,7 +199,8 @@ begin
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartp ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
-      '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''''));
+      '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
+      '  AND Temporada LIKE ''%[A-Za-z]%'''));
     qSrc.Open;
     while not qSrc.Eof do
     begin

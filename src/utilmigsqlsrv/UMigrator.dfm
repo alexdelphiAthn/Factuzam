@@ -343,6 +343,21 @@ object FormMigrator: TFormMigrator
       TabOrder = 3
       Text = '4'
     end
+    object lblHilos: TLabel
+      Left = 780
+      Top = 14
+      Width = 100
+      Height = 15
+      Caption = 'Hilos paralelos:'
+    end
+    object edHilos: TEdit
+      Left = 890
+      Top = 11
+      Width = 40
+      Height = 23
+      TabOrder = 4
+      Text = '4'
+    end
     object GroupListado: TGroupBox
       Left = 8
       Top = 42

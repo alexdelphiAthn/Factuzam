@@ -182,6 +182,7 @@ const
   // WHERE UnidadesStock <> 0.
   cSelectSrc =
     'SELECT acp.Empresa, acp.Almacen, ' +
+    '       ISNULL(alm.Abreviatura, '''') AS AbreviaturaAlm, ' +
     '       acp.Articulo, acp.Color, acp.Talla, ' +
     '       acp.UnidadesStock, ' +
     '       ISNULL(acp.PrecioMedio, 0) AS PrecioMedio, ' +
@@ -189,6 +190,8 @@ const
     '       ISNULL(art.DescripcionLarga, ' +
     '              ISNULL(art.DescripcionCorta, '''')) AS DescArt ' +
     'FROM dbo.ocartacp acp ' +
+    'LEFT JOIN dbo.ocalm    alm ON alm.Empresa  = acp.Empresa ' +
+    '                          AND alm.Almacen  = acp.Almacen ' +
     'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = acp.Articulo ' +
     '                         AND ac.Color    = acp.Color ' +
     'LEFT JOIN dbo.occolor  c  ON c.ColorBasico = ac.ColorBasico ' +
@@ -246,7 +249,13 @@ begin
         fAcumDif  := 0;
         sNumero   := Format('MIG%.4d', [iAlm]);
         sEmp      := IntToStr(iEmp);
-        sAlm      := Format('E%d-A%d', [iEmp, iAlm]);
+        // CODIGO_ALM_INVLIN: misma convencion que inLibMigAlmacenes
+        // (Abreviatura del legacy en mayusculas), con fallback al
+        // numero. Asi las lineas referencian el almacen migrado
+        // correctamente.
+        sAlm := UpperCase(Trim(
+                  qSrc.FieldByName('AbreviaturaAlm').AsString));
+        if sAlm = '' then sAlm := IntToStr(iAlm);
         bCabecera := InsertarCabecera(Eng, sEmp, sAlm, 'IN', sNumero,
                                        0);
         // Si la cabecera ya existia, saltamos todo el bloque del
