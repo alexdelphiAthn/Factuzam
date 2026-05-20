@@ -16,16 +16,27 @@
 {      Email                → EMAIL_CLI                                        }
 {      Direccion1/2         → DIRECCION1_CLI / DIRECCION2_CLI                  }
 {      Poblacion            → POBLACION_CLI                                    }
-{      Provincia            → PROVINCIA_CLI                                    }
+{      Provincia            → PROVINCIA_CLI (fallback: POBLACION_CLI si vacia) }
 {      CodPostal            → CODIGO_POSTAL_CLI                                }
-{      Pais                 → NOMBRE_PAI_CLI (texto libre del origen)         }
+{      Pais                 → IGNORADO. Se fuerza CODIGO_PAI_CLI='ES'         }
+{                              y NOMBRE_PAI_CLI='España' para TODOS los       }
+{                              clientes migrados (el campo del legacy llega   }
+{                              inconsistente con tildes/may-min).             }
 {      PersonaContacto      → CONTACTO_CLI                                    }
 {      Estado               → ESACTIVO_CLI ('S' si =='S' o vacío, 'N' si =='B')}
 {      FormaPago + TipoEfecto → CODIGO_FP_CLI                                  }
-{      Tarifa               → TARIFA_ARTICULO_CLI                              }
+{      Tarifa               → IGNORADA. TARIFA_ARTICULO_CLI='PVP' para todos. }
 {      IBAN                 → IBAN_CLI                                         }
 {      Observacion          → OBSERVACIONES_CLI (text)                         }
 {      ReferenciaProveedor  → REFERENCIA_CLI                                  }
+{                                                                              }
+{    Defaults adicionales aplicados a TODOS los migrados:                     }
+{      ESRETENCIONES_CLI         = 'N'  (sin IRPF)                            }
+{      ESIVA_RECARGO_CLI         = 'N'                                        }
+{      ESIVA_EXENTO_CLI          = 'N'                                        }
+{      ESINTRACOMUNITARIO_CLI    = 'N'                                        }
+{      ESPERMITE_DEUDA_CLI       = 'S'  (permite venta a credito)             }
+{      TOTAL_LIMITE_CREDITO_CLI  = 10000                                      }
 {                                                                              }
 {    Idempotente: si el cliente ya existe se salta sin error.                  }
 {******************************************************************************}
@@ -53,7 +64,7 @@ const
     '       Direccion1, Direccion2, CodPostal, Poblacion, Provincia, ' +
     '       Pais, Telefono1, TelefonoMovil, Email, ' +
     '       PersonaContacto, ReferenciaProveedor, IBAN, ' +
-    '       Estado, FormaPago, TipoEfecto, Tarifa, ' +
+    '       Estado, FormaPago, TipoEfecto, ' +
     '       CAST(Observacion AS varchar(4000)) AS Observacion ' +
     'FROM dbo.occli ' +
     'ORDER BY Cliente';
@@ -62,21 +73,23 @@ const
       'CODIGO_CLI_CLI, ESACTIVO_CLI, RAZON_SOCIAL_CLI, NIF_CLI, ' +
       'MOVIL_CLI, TELEFONO_CLI, EMAIL_CLI, ' +
       'DIRECCION1_CLI, DIRECCION2_CLI, POBLACION_CLI, PROVINCIA_CLI, ' +
-      'CODIGO_POSTAL_CLI, NOMBRE_PAI_CLI, ' +
+      'CODIGO_POSTAL_CLI, CODIGO_PAI_CLI, NOMBRE_PAI_CLI, ' +
       'OBSERVACIONES_CLI, REFERENCIA_CLI, CONTACTO_CLI, ' +
       'IBAN_CLI, ESIVA_RECARGO_CLI, ESRETENCIONES_CLI, ' +
       'ESIVA_EXENTO_CLI, ESINTRACOMUNITARIO_CLI, ' +
       'CODIGO_FP_CLI, TARIFA_ARTICULO_CLI, ' +
+      'ESPERMITE_DEUDA_CLI, TOTAL_LIMITE_CREDITO_CLI, ' +
       'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES (' +
       ':CODIGO_CLI_CLI, :ESACTIVO_CLI, :RAZON_SOCIAL_CLI, :NIF_CLI, ' +
       ':MOVIL_CLI, :TELEFONO_CLI, :EMAIL_CLI, ' +
       ':DIRECCION1_CLI, :DIRECCION2_CLI, :POBLACION_CLI, :PROVINCIA_CLI, ' +
-      ':CODIGO_POSTAL_CLI, :NOMBRE_PAI_CLI, ' +
+      ':CODIGO_POSTAL_CLI, :CODIGO_PAI_CLI, :NOMBRE_PAI_CLI, ' +
       ':OBSERVACIONES_CLI, :REFERENCIA_CLI, :CONTACTO_CLI, ' +
       ':IBAN_CLI, :ESIVA_RECARGO_CLI, :ESRETENCIONES_CLI, ' +
       ':ESIVA_EXENTO_CLI, :ESINTRACOMUNITARIO_CLI, ' +
       ':CODIGO_FP_CLI, :TARIFA_ARTICULO_CLI, ' +
+      ':ESPERMITE_DEUDA_CLI, :TOTAL_LIMITE_CREDITO_CLI, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 
   function DeducirActivo(const sEstado: string): string;
@@ -92,7 +105,7 @@ const
 
 var
   qSrc, qIns, qChk: TUniQuery;
-  sCod, sRazon, sObs, sFP, sTar, sRazonDst: string;
+  sCod, sRazon, sObs, sFP, sRazonDst: string;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   qIns := TUniQuery.Create(nil);
@@ -153,10 +166,7 @@ begin
         sFP := ''
       else
         sFP := IntToStr(qSrc.FieldByName('TipoEfecto').AsInteger);
-      if qSrc.FieldByName('Tarifa').IsNull then
-        sTar := ''
-      else
-        sTar := IntToStr(qSrc.FieldByName('Tarifa').AsInteger);
+      // Tarifa del legacy se ignora — pondremos 'PVP' fija para todos.
       sObs := Trim(qSrc.FieldByName('Observacion').AsString);
 
       qIns.ParamByName('CODIGO_CLI_CLI').AsString := sCod;
@@ -177,12 +187,24 @@ begin
         Trim(qSrc.FieldByName('Direccion2').AsString);
       qIns.ParamByName('POBLACION_CLI').AsString    :=
         Trim(qSrc.FieldByName('Poblacion').AsString);
+      // Si la provincia origen viene vacia, copiamos la poblacion.
+      // En el legacy de Herreras muchos clientes solo tienen
+      // Poblacion rellena y Provincia queda en blanco; en destino
+      // queremos ver al menos algo en la columna Provincia.
       qIns.ParamByName('PROVINCIA_CLI').AsString    :=
         Trim(qSrc.FieldByName('Provincia').AsString);
+      if qIns.ParamByName('PROVINCIA_CLI').AsString = '' then
+        qIns.ParamByName('PROVINCIA_CLI').AsString :=
+          Trim(qSrc.FieldByName('Poblacion').AsString);
       qIns.ParamByName('CODIGO_POSTAL_CLI').AsString :=
         Trim(qSrc.FieldByName('CodPostal').AsString);
-      qIns.ParamByName('NOMBRE_PAI_CLI').AsString   :=
-        Trim(qSrc.FieldByName('Pais').AsString);
+      // Pais hardcoded a ES/España para todos los clientes migrados.
+      // El campo Pais del legacy se ignora (suele venir vacio o con
+      // texto inconsistente como "España" en mayusculas, minusculas,
+      // con tildes...). El usuario reasigna a mano si algun cliente
+      // es realmente extranjero.
+      qIns.ParamByName('CODIGO_PAI_CLI').AsString := 'ES';
+      qIns.ParamByName('NOMBRE_PAI_CLI').AsString := 'España';
       if sObs <> '' then
         qIns.ParamByName('OBSERVACIONES_CLI').AsString := sObs
       else
@@ -194,17 +216,22 @@ begin
       qIns.ParamByName('IBAN_CLI').AsString         :=
         Trim(qSrc.FieldByName('IBAN').AsString);
       qIns.ParamByName('ESIVA_RECARGO_CLI').AsString      := 'N';
-      qIns.ParamByName('ESRETENCIONES_CLI').AsString      := 'S';
+      // Sin retenciones / IRPF: el migrador no aplica retenciones a
+      // ningun cliente (lo decide el usuario despues si hace falta).
+      qIns.ParamByName('ESRETENCIONES_CLI').AsString      := 'N';
       qIns.ParamByName('ESIVA_EXENTO_CLI').AsString       := 'N';
       qIns.ParamByName('ESINTRACOMUNITARIO_CLI').AsString := 'N';
       if sFP <> '' then
         qIns.ParamByName('CODIGO_FP_CLI').AsString := sFP
       else
         qIns.ParamByName('CODIGO_FP_CLI').Clear;
-      if sTar <> '' then
-        qIns.ParamByName('TARIFA_ARTICULO_CLI').AsString := sTar
-      else
-        qIns.ParamByName('TARIFA_ARTICULO_CLI').Clear;
+      // Tarifa por defecto = PVP para todos los migrados.
+      // El campo Tarifa del legacy se ignora: el usuario lo ajusta a
+      // mano si algun cliente debe llevar tarifa diferente.
+      qIns.ParamByName('TARIFA_ARTICULO_CLI').AsString := 'PVP';
+      // Permite venta a credito con limite 10 000 para todos.
+      qIns.ParamByName('ESPERMITE_DEUDA_CLI').AsString  := 'S';
+      qIns.ParamByName('TOTAL_LIMITE_CREDITO_CLI').AsFloat := 10000;
       RellenarAuditoria(qIns, Eng.Usuario);
 
       try
