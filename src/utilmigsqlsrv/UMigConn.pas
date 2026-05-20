@@ -30,7 +30,7 @@ type
     prvMySQL:      TMySQLUniProvider;
   public
     procedure ConfigurarOrigen(const sHost, sPort, sBase, sUser,
-                               sPwd: string);
+                               sPwd: string; bWindowsAuth: Boolean = False);
     procedure ConfigurarDestino(const sHost, sPort, sBase, sUser,
                                 sPwd: string);
     procedure ProbarOrigen;
@@ -45,7 +45,8 @@ implementation
 {$R *.dfm}
 
 procedure TdmMig.ConfigurarOrigen(const sHost, sPort, sBase, sUser,
-                                  sPwd: string);
+                                  sPwd: string;
+                                  bWindowsAuth: Boolean = False);
 begin
   conSrv.Close;
   conSrv.ProviderName := 'SQL Server';
@@ -55,12 +56,25 @@ begin
   else
     conSrv.Port := 1433;
   conSrv.Database    := sBase;
-  conSrv.Username    := sUser;
-  conSrv.Password    := sPwd;
   conSrv.LoginPrompt := False;
   // OLE DB nativo cuando el cliente de SQL Server está instalado.
   // Si falla, UniDAC cae al protocolo TDS interno automáticamente.
   conSrv.SpecificOptions.Values['Provider'] := 'Auto';
+  if bWindowsAuth then
+  begin
+    // Autenticación Windows (Integrated Security): el proceso que
+    // ejecuta el migrator se identifica ante SQL Server con sus
+    // credenciales del SO. No se rellenan Username/Password.
+    conSrv.SpecificOptions.Values['Authentication'] := 'auWindows';
+    conSrv.Username := '';
+    conSrv.Password := '';
+  end
+  else
+  begin
+    conSrv.SpecificOptions.Values['Authentication'] := 'auServer';
+    conSrv.Username := sUser;
+    conSrv.Password := sPwd;
+  end;
 end;
 
 procedure TdmMig.ConfigurarDestino(const sHost, sPort, sBase, sUser,
@@ -78,7 +92,6 @@ begin
   conDst.Password    := sPwd;
   conDst.LoginPrompt := False;
   conDst.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-  conDst.SpecificOptions.Values['CharacterSet']     := 'utf8mb4';
 end;
 
 procedure TdmMig.ProbarOrigen;
