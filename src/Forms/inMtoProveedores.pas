@@ -178,6 +178,8 @@ type
     procedure dsTablaGStateChange(Sender: TObject);
   private
     { Private declarations }
+    // Carga perezosa de sub-pestañas detail (Articulos, Ventas).
+    procedure PcPestanasChange(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -310,6 +312,19 @@ begin
   tvLinFac.DataController.DataSource := dmmProveedores.dsLinFacturasArticulos;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   pkFieldName := 'CODIGO_PRV_PRV';
+  // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,
+  // que no usa query detail). Articulos/Ventas se abren solo cuando
+  // el usuario activa su pestaña.
+  pcPestanas.OnChange := PcPestanasChange;
+end;
+
+procedure TfrmMtoProveedores.PcPestanasChange(Sender: TObject);
+begin
+  if not Assigned(dmmProveedores) then Exit;
+  if pcPestanas.ActivePage = tsArticulos then
+    dmmProveedores.AsegurarArticulosAbierta
+  else if pcPestanas.ActivePage = tsVentas then
+    dmmProveedores.AsegurarVentasAbierta;
 end;
 
 procedure TfrmMtoProveedores.ResetForm;

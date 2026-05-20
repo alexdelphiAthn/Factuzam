@@ -516,6 +516,11 @@ type
   private
     procedure CheckConsolidacion;
     procedure AsignarControles;
+    // Carga perezosa de sub-pestañas detail. Cada pestaña se asegura de
+    // que su query este abierta solo cuando el usuario la activa, evitando
+    // refresh master/detail innecesario al cambiar de factura cuando la
+    // pestaña no esta visible.
+    procedure PcDetailChange(Sender: TObject);
   public
     dmmFacturas : TdmFacturas;
   end;
@@ -1213,6 +1218,9 @@ begin
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
+  // Carga perezosa de sub-pestañas detail (Recibos, Consolidacion,
+  // Errores, Movimientos). Solo se abren al activar su pestaña.
+  pcDetail.OnChange := PcDetailChange;
   // OpenTables ya no se llama aqui: TfrmMtoGen.AbrirTablaPrincipalAsync
   // (llamado desde inLibShowMto tras el EmbedForm) invoca
   // dmmFacturas.AbrirDetalles en el callback main thread con overlay
@@ -1791,6 +1799,22 @@ end;
 -REVISAR EL DATASET EN UNIDATAFACTURAS
 -REVISAR LOS PROCEDIMIENTOS ABONAR Y DUPLICAR
 -REVISAR EL AFTERINSERT PARA PONER UN VALOR POR DEFECTO*)
+
+procedure TfrmMtoFacturasBase.PcDetailChange(Sender: TObject);
+begin
+  if not Assigned(dmmFacturas) then Exit;
+  // Despachador: cada sub-pestaña detail tiene su query lazy. Solo se
+  // abre al activarse. Lineas (tsLineasFactura) se abre desde
+  // AbrirDetalles por ser la pestaña por defecto y la mas usada.
+  if pcDetail.ActivePage = tsRecibos then
+    dmmFacturas.AsegurarRecibosAbierta
+  else if pcDetail.ActivePage = tsVerifactu then
+    dmmFacturas.AsegurarConsolidacionAbierta
+  else if pcDetail.ActivePage = tsRegistro then
+    dmmFacturas.AsegurarErroresAbierta
+  else if pcDetail.ActivePage = tsMovimientosFac then
+    dmmFacturas.AsegurarMovimientosFacAbierta;
+end;
 
 initialization
   ForceReferenceToClass(TfrmMtoFacturasBase);
