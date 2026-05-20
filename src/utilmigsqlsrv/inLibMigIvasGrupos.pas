@@ -69,11 +69,13 @@ begin
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_ivas_grupos WHERE IVA_IVAGRP = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocgrpiva'));
     bPrimero := True;
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCodGrp := IntToStr(qSrc.FieldByName('Grupo').AsInteger);
 
       qChk.Close;

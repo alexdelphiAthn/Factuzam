@@ -254,11 +254,13 @@ begin
 
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.occolor'));
     qSrc.Open;
     iOrden := 10;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCodOrigen := Trim(qSrc.FieldByName('ColorBasico').AsString);
       sDesc      := Trim(qSrc.FieldByName('Descripcion').AsString);
       if qSrc.FieldByName('ColorPaleta').IsNull then
@@ -322,11 +324,15 @@ begin
 
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(DISTINCT Talla) FROM dbo.ocarttal ' +
+      'WHERE LTRIM(RTRIM(Talla)) <> '''''));
     qSrc.Open;
     iOrden := 10;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sTalla := Trim(qSrc.FieldByName('Talla').AsString);
       if sTalla = '' then
       begin

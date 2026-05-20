@@ -108,10 +108,12 @@ begin
       'SELECT RAZON_SOCIAL_CLI FROM fza_clientes ' +
       'WHERE CODIGO_CLI_CLI = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.occli'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCod   := Trim(qSrc.FieldByName('Cliente').AsString);
       sRazon := Trim(qSrc.FieldByName('RazonSocial').AsString);
       if sRazon = '' then

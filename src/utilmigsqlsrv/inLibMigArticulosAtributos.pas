@@ -185,10 +185,14 @@ var
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(*) FROM dbo.ocartcol ' +
+      'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
       if (sArt = '') or (sDescColor = '') then
@@ -252,10 +256,15 @@ var
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(*) FROM dbo.ocarttal ' +
+      'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
+      '  AND LTRIM(RTRIM(Talla))    <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sArt   := Trim(qSrc.FieldByName('Articulo').AsString);
       sTalla := Trim(qSrc.FieldByName('Talla').AsString);
       if (sArt = '') or (sTalla = '') then

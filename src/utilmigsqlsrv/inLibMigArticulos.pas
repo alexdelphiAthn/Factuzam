@@ -88,10 +88,12 @@ begin
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_articulos WHERE CODIGO_ART_ART = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocartp'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCod := Trim(qSrc.FieldByName('Articulo').AsString);
       if sCod = '' then
       begin
