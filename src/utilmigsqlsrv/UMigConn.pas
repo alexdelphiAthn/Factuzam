@@ -263,8 +263,10 @@ begin
         'WHERE USUARIO_ALTA IN (''DEMO'', ''Administrador'', ' +
         '                       ''Sistema'', ''SISTEMA'')',
         [aTablas[i]]);
-      iSub := qDel.ExecSQL;
-      Inc(Result, iSub);
+      qDel.ExecSQL;
+      iSub := qDel.RowsAffected;
+      if iSub > 0 then
+        Inc(Result, iSub);
     end;
   finally
     qDel.Free;
