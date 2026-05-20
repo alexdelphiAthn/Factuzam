@@ -77,10 +77,14 @@ begin
     qChk.Connection := Eng.ConDst;
     qChk.SQL.Text   := 'SELECT 1 FROM fza_ivas WHERE CODIGO_IVA = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(*) FROM (SELECT DISTINCT TipoIva, Fecha ' +
+      'FROM dbo.octipiva) X'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       iTipo   := qSrc.FieldByName('TipoIva').AsInteger;
       // El destino guarda histórico por tabla, no por fila. Para no perder
       // versiones, generamos CODIGO_IVA = TipoIva-AAAAMMDD.

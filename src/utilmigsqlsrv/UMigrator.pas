@@ -22,7 +22,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.IniFiles, System.IOUtils,
+  System.Classes, System.IniFiles, System.IOUtils, System.Math,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.CheckLst, Vcl.ComCtrls, Vcl.Mask,
   UMigEngine;
@@ -60,6 +60,7 @@ type
     btnDumpEsqueleto:  TButton;
     btnCrearBBDD:      TButton;
     btnCargarEsquema:  TButton;
+    btnLimpiarDemo:    TButton;
     PanelCentro:       TPanel;
     lblUsuario:        TLabel;
     edUsuario:         TEdit;
@@ -71,6 +72,9 @@ type
     PanelLog:          TPanel;
     lblLog:            TLabel;
     MemoLog:           TMemo;
+    PanelProgreso:     TPanel;
+    lblProgreso:       TLabel;
+    pbProgreso:        TProgressBar;
     StatusBar:         TStatusBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -83,6 +87,7 @@ type
     procedure btnDumpEsqueletoClick(Sender: TObject);
     procedure btnCrearBBDDClick(Sender: TObject);
     procedure btnCargarEsquemaClick(Sender: TObject);
+    procedure btnLimpiarDemoClick(Sender: TObject);
   private
     FEngine: TMigEngine;
     procedure Log(const sMsg: string);
@@ -130,6 +135,26 @@ begin
                    begin
                      Log(s);
                    end;
+  FEngine.OnProgress :=
+    procedure(const sDominio: string; iRow, iTotal: Integer)
+    begin
+      if iTotal > 0 then
+      begin
+        pbProgreso.Max      := iTotal;
+        pbProgreso.Position := Min(iRow, iTotal);
+        lblProgreso.Caption := Format(
+          '%s: %d / %d  (%.0f%%)',
+          [sDominio, iRow, iTotal, iRow * 100.0 / iTotal]);
+      end
+      else
+      begin
+        pbProgreso.Max      := 1;
+        pbProgreso.Position := 0;
+        lblProgreso.Caption := Format(
+          '%s: %d / ?  (contando...)', [sDominio, iRow]);
+      end;
+      Application.ProcessMessages;
+    end;
   RegistrarMigraciones;
   RecargarListado;
   CargarConfig;
@@ -323,7 +348,9 @@ begin
 end;
 
 procedure TFormMigrator.btnCargarEsquemaClick(Sender: TObject);
-var oOpen: TOpenDialog;
+var
+  oOpen: TOpenDialog;
+  sName: string;
 begin
   if Trim(edDstBase.Text) = '' then
   begin
@@ -335,6 +362,25 @@ begin
     oOpen.Title  := 'Cargar esqueleto Factuzam en ' + edDstBase.Text;
     oOpen.Filter := 'Scripts SQL (*.sql)|*.sql|Todos (*.*)|*.*';
     if not oOpen.Execute then Exit;
+
+    // Aviso si el usuario apunta a factuzam_original.sql: ese fichero
+    // es el dump COMPLETO con datos demo (clientes 293-321, proveedores
+    // Northwind, empresa AGRICULTOR, articulos demo...). NO es un
+    // esqueleto limpio — para eso esta el boton "Extraer esqueleto".
+    sName := LowerCase(ExtractFileName(oOpen.FileName));
+    if Pos('factuzam_original', sName) > 0 then
+      if MessageDlg(
+         'OJO: "factuzam_original.sql" es el dump DEMO completo, no '#13#10 +
+         'un esqueleto limpio. Incluye datos como empresa 1 = '#13#10 +
+         'AGRICULTOR, clientes 293-321, proveedores Northwind, etc. '#13#10 +
+         'que despues hacen colisionar al migrador.'#13#10#13#10 +
+         'Recomendado: cierra este dialogo, usa "Extraer esqueleto '#13#10 +
+         'de BBDD viva..." apuntando a tu Factuzam de desarrollo, '#13#10 +
+         'y carga ese .sql en su lugar. Si ya lo cargaste, pulsa '#13#10 +
+         'el boton "Limpiar datos demo" para borrar la basura.'#13#10#13#10 +
+         '¿Cargar igualmente?',
+         mtWarning, [mbYes, mbNo], 0) <> mrYes then
+        Exit;
 
     if MessageDlg(Format(
          'Se va a cargar "%s" en la BBDD "%s".'#13#10 +
@@ -364,6 +410,43 @@ begin
     end;
   end;
   oOpen.Free;
+end;
+
+procedure TFormMigrator.btnLimpiarDemoClick(Sender: TObject);
+var iBorradas: Integer;
+begin
+  if Trim(edDstBase.Text) = '' then
+  begin
+    ShowMessage('Rellena el campo "Base de datos" del destino.');
+    Exit;
+  end;
+  if MessageDlg(Format(
+       'Se van a BORRAR del destino "%s" todas las filas demo '#13#10 +
+       '(USUARIO_ALTA = DEMO / Administrador / SISTEMA) de:'#13#10 +
+       '  fza_empresas, fza_almacenes, fza_clientes,'#13#10 +
+       '  fza_proveedores, fza_articulos, fza_articulos_familias.'#13#10#13#10 +
+       'Las tablas de SISTEMA (paises, ivas_tipos, winforms...) '#13#10 +
+       'NO se tocan. ¿Continuar?', [edDstBase.Text]),
+       mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+
+  Screen.Cursor := crHourGlass;
+  try
+    dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text,
+                            edDstBase.Text, edDstUser.Text,
+                            edDstPwd.Text);
+    iBorradas := dmMig.LimpiarDatosDemoDestino;
+    Log(Format('Datos demo limpiados: %d filas borradas en total.',
+        [iBorradas]));
+    ShowMessage(Format('Borradas %d filas demo en total.', [iBorradas]));
+  except
+    on E: Exception do
+    begin
+      Log('ERROR limpiando demo: ' + E.Message);
+      ShowMessage('Fallo limpiando demo:'#13#10 + E.Message);
+    end;
+  end;
+  Screen.Cursor := crDefault;
 end;
 
 procedure TFormMigrator.chkSrcWinAuthClick(Sender: TObject);

@@ -113,6 +113,10 @@ de este branch ya las traen:
 |              | (amplía `CODIGO_CLI_*` de varchar(10) a varchar(20)|
 |              | en clientes, facturas, albaranes y pedidos —       |
 |              | origen guarda hasta 15 chars, no caben en 10)      |
+| Familias     | `DESARROLLOS EN CURSO/familias_codigo_padre.sql`   |
+|              | (añade `CODIGO_PADRE_FAM` y su índice — para       |
+|              | preservar la jerarquía sección→familia del legacy: |
+|              | "1401" tiene como padre "14"). |
 
 ## Filosofía de los mappers
 

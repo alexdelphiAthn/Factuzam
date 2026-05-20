@@ -68,11 +68,13 @@ begin
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_formas_pago WHERE CODIGO_FP_FP = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.octipefe'));
     qSrc.Open;
     iOrden := 100;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCodFP        := IntToStr(qSrc.FieldByName('TipoEfecto').AsInteger);
       sDescripcion  := Trim(qSrc.FieldByName('Descripcion').AsString);
 

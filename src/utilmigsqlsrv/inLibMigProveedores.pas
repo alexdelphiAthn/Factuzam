@@ -86,8 +86,9 @@ const
   end;
 
 var
-  qSrc, qIns, qChk:                TUniQuery;
-  sCod, sNombre, sRazon, sObs:     string;
+  qSrc, qIns, qChk:                  TUniQuery;
+  sCod, sNombre, sRazon, sObs:       string;
+  sRazonDst:                         string;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   qIns := TUniQuery.Create(nil);
@@ -97,12 +98,15 @@ begin
     qIns.SQL.Text   := cInsertDst;
     qChk.Connection := Eng.ConDst;
     qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_proveedores WHERE CODIGO_PRV_PRV = :c';
+      'SELECT RAZON_SOCIAL_PRV FROM fza_proveedores ' +
+      'WHERE CODIGO_PRV_PRV = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpro'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCod    := IntToStr(qSrc.FieldByName('Proveedor').AsInteger);
       sNombre := Trim(qSrc.FieldByName('Nombre').AsString);
       sRazon  := Trim(qSrc.FieldByName('RazonSocial').AsString);
@@ -115,8 +119,12 @@ begin
       qChk.Open;
       if not qChk.IsEmpty then
       begin
+        sRazonDst := Trim(qChk.FieldByName('RAZON_SOCIAL_PRV').AsString);
         Inc(Stats.Saltadas);
-        Eng.Log('  - proveedor "%s" ya existe, se omite', [sCod]);
+        Eng.LogSalto('proveedor', sCod,
+          'PK ya existe (cuidado: seed Northwind 3-23 colisiona con ' +
+          'codigos reales del legacy), se conserva destino',
+          sRazon, sRazonDst);
         qChk.Close;
         qSrc.Next;
         Continue;

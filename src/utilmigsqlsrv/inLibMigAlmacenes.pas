@@ -93,11 +93,13 @@ begin
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_almacenes WHERE CODIGO_ALM_ALM = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalm'));
     qSrc.Open;
     iOrden := 10;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCod := Format('E%d-A%d',
         [qSrc.FieldByName('Empresa').AsInteger,
          qSrc.FieldByName('Almacen').AsInteger]);

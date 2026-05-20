@@ -55,20 +55,20 @@ const
   // longitud descendente para que se inserten primero las familias
   // reales (4 chars) y la "primera leida" — la que marcamos como
   // ESDEFAULT_FAM='S' — sea una familia real, no una seccion.
-  cSelectSrc =
-    'SELECT Codigo, Nivel, Descripcion, Estado ' +
-    'FROM dbo.ocniv ' +
-    'WHERE Nivel IN (2, 4) ' +
-    '  AND LTRIM(RTRIM(Codigo)) <> '''' ' +
-    'ORDER BY CASE WHEN Nivel = 4 THEN 0 ELSE 1 END, Codigo';
+  // El filtro de niveles y el padding se construyen dinamicamente a
+  // partir de Eng.NivelFamiliasHoja (ver mas abajo). Esto permite que
+  // distintos clientes legacy con convenciones diferentes (Nivel=3,
+  // Nivel=5, etc.) se migren sin tocar codigo.
   cInsertDst =
     'INSERT INTO fza_articulos_familias (' +
-      'CODIGO_FAM_FAM, ESACTIVO_FAM, ORDEN_FAM, ESDEFAULT_FAM, ' +
-      'NOMBRE_FAM_FAM, DESCRIPCION_FAM, PAD_ART_FAM, ' +
+      'CODIGO_FAM_FAM, CODIGO_PADRE_FAM, ESACTIVO_FAM, ORDEN_FAM, ' +
+      'ESDEFAULT_FAM, NOMBRE_FAM_FAM, DESCRIPCION_FAM, PAD_ART_FAM, ' +
+      'CONTADOR_ART_FAM, ESCONTADOR_ART_FAM, ' +
       'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES (' +
-      ':CODIGO_FAM_FAM, :ESACTIVO_FAM, :ORDEN_FAM, :ESDEFAULT_FAM, ' +
-      ':NOMBRE_FAM_FAM, :DESCRIPCION_FAM, :PAD_ART_FAM, ' +
+      ':CODIGO_FAM_FAM, :CODIGO_PADRE_FAM, :ESACTIVO_FAM, :ORDEN_FAM, ' +
+      ':ESDEFAULT_FAM, :NOMBRE_FAM_FAM, :DESCRIPCION_FAM, :PAD_ART_FAM, ' +
+      ':CONTADOR_ART_FAM, :ESCONTADOR_ART_FAM, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 
   function DeducirActivo(const sEstado: string): string;
@@ -84,10 +84,29 @@ const
 var
   qSrc, qIns, qChk:   TUniQuery;
   sCod, sDescripcion: string;
+  sCodPadre:          string;
+  sSelectSrc:         string;
+  iNivel, iNivelHoja: Integer;
+  iLenHoja, iLenPadre:Integer;
   iOrden:             Integer;
   bPrimero:           Boolean;
 begin
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  iNivelHoja := Eng.NivelFamiliasHoja;  // default 4 (Herreras: "1401")
+  iLenHoja   := iNivelHoja;             // codigo Nivel=4 -> 4 chars
+  iLenPadre  := iNivelHoja - 2;         // Nivel=2 -> 2 chars (seccion)
+  if iLenPadre < 1 then iLenPadre := 1;
+  // Migramos los dos niveles: el "hoja" y su seccion padre. Si el
+  // legacy usa otra convencion, el setting NivelFamiliasHoja lo
+  // ajusta y aqui derivamos los dos niveles afectados.
+  sSelectSrc :=
+    Format('SELECT Codigo, Nivel, Descripcion, Estado ' +
+           'FROM dbo.ocniv ' +
+           'WHERE Nivel IN (%d, %d) ' +
+           '  AND LTRIM(RTRIM(Codigo)) <> '''' ' +
+           'ORDER BY CASE WHEN Nivel = %d THEN 0 ELSE 1 END, Codigo',
+           [iNivelHoja - 2, iNivelHoja, iNivelHoja]);
+
+  qSrc := NuevoQOrigen(Eng, sSelectSrc);
   qIns := TUniQuery.Create(nil);
   qChk := TUniQuery.Create(nil);
   try
@@ -97,13 +116,18 @@ begin
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_articulos_familias WHERE CODIGO_FAM_FAM = :c';
 
+    Eng.SetTotal(Eng.ContarOrigen(
+      Format('SELECT COUNT(*) FROM dbo.ocniv WHERE Nivel IN (%d, %d)',
+             [iNivelHoja - 2, iNivelHoja])));
     iOrden   := 10;
     bPrimero := True;
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
+      Eng.IncRow;
       sCod         := Trim(qSrc.FieldByName('Codigo').AsString);
+      iNivel       := qSrc.FieldByName('Nivel').AsInteger;
       sDescripcion := Trim(qSrc.FieldByName('Descripcion').AsString);
       if sCod = '' then
       begin
@@ -113,6 +137,15 @@ begin
       end;
       if sDescripcion = '' then
         sDescripcion := 'Familia ' + sCod;
+
+      // Jerarquia: las familias Nivel=hoja tienen como padre la
+      // seccion Nivel=hoja-2 cuyo codigo coincide con los primeros
+      // chars de la familia hoja. Ej (default hoja=4): '1401' (FALDA
+      // INMACULADA) tiene padre '14' (UNIFORME INMACULADA CONCEP.).
+      if (iNivel = iNivelHoja) and (Length(sCod) >= iLenHoja) then
+        sCodPadre := Copy(sCod, 1, iLenPadre)
+      else
+        sCodPadre := '';
 
       qChk.Close;
       qChk.ParamByName('c').AsString := sCod;
@@ -129,6 +162,10 @@ begin
       qChk.Close;
 
       qIns.ParamByName('CODIGO_FAM_FAM').AsString  := sCod;
+      if sCodPadre <> '' then
+        qIns.ParamByName('CODIGO_PADRE_FAM').AsString := sCodPadre
+      else
+        qIns.ParamByName('CODIGO_PADRE_FAM').Clear;
       qIns.ParamByName('ESACTIVO_FAM').AsString    :=
         DeducirActivo(qSrc.FieldByName('Estado').AsString);
       qIns.ParamByName('ORDEN_FAM').AsInteger      := iOrden;
@@ -139,7 +176,16 @@ begin
       bPrimero := False;
       qIns.ParamByName('NOMBRE_FAM_FAM').AsString  := sDescripcion;
       qIns.ParamByName('DESCRIPCION_FAM').AsString := sDescripcion;
-      qIns.ParamByName('PAD_ART_FAM').AsInteger    := 5;
+      qIns.ParamByName('PAD_ART_FAM').AsInteger    :=
+        Eng.DigitosContadorArt;
+      // Solo las familias del nivel "hoja" (parametrizado) crean
+      // articulos directos. Las secciones padre son agrupadores: el
+      // contador queda desactivado por defecto.
+      qIns.ParamByName('CONTADOR_ART_FAM').AsInteger := 0;
+      if iNivel = iNivelHoja then
+        qIns.ParamByName('ESCONTADOR_ART_FAM').AsString := 'S'
+      else
+        qIns.ParamByName('ESCONTADOR_ART_FAM').AsString := 'N';
       RellenarAuditoria(qIns, Eng.Usuario);
 
       try
