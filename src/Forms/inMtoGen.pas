@@ -821,9 +821,19 @@ begin
             // liberados.
             if not (csDestroying in ComponentState) then
             begin
-              BloquearTabPorOcupado(False);
-              if Assigned(AlTerminar) then
-                AlTerminar(LErrMsg);
+              // OJO: el overlay se quita DESPUES del callback. Asi el
+              // usuario no puede interactuar mientras AlTerminar
+              // ejecuta trabajo pesado (p. ej. AbrirDetalles abre 11
+              // queries detalle). Si lo quitamos antes, eventos del
+              // form (cambio de cursor, click en pestaña, ...) se
+              // disparan con queries aun cerradas -> "Cannot perform
+              // operation on closed dataset".
+              try
+                if Assigned(AlTerminar) then
+                  AlTerminar(LErrMsg);
+              finally
+                BloquearTabPorOcupado(False);
+              end;
             end;
           except
             on E: Exception do
