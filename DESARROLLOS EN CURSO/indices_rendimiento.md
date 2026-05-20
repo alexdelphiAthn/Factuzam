@@ -263,15 +263,18 @@ Para no inflar el indice y mantener su mantenimiento al minimo, se descartaron:
 
 ---
 
-## 5. Antipatrones de consulta detectados (NO se resuelven con indices)
+## 5. Antipatrones de consulta detectados
 
 Al rastrear las consultas calientes aparecieron tres patrones que rompen
-el uso de los indices ya existentes. La correccion vive en `src/` (Delphi),
-no aqui (DDL), pero se documentan para no perderlos de vista.
+el uso de los indices ya existentes. Dos se corrigen en esta misma rama
+tocando el codigo Delphi (5.1 y 5.2); el tercero queda como mejora de
+segundo orden (5.3).
 
-### 5.1 `DATE(FECHA_OPERACION_OPCAJA)` en consulta de operaciones
+### 5.1 `DATE(FECHA_OPERACION_OPCAJA)` en consulta de operaciones — CORREGIDO
 
 **Archivo:** `src/DataModules/UniDataConsultaOpe.pas:144`
+
+**Antes:**
 
 ```sql
 WHERE DATE(o.FECHA_OPERACION_OPCAJA) = :PFECHA
@@ -279,13 +282,11 @@ WHERE DATE(o.FECHA_OPERACION_OPCAJA) = :PFECHA
   ...
 ```
 
-Aplicar `DATE()` a la columna **rompe** el uso de
+Aplicar `DATE()` a la columna rompia el uso de
 `IDX_OPCAJA_CTX_FECHA (EMP, ALM, CAJA, FECHA_OPERACION_OPCAJA)` porque la
 funcion envuelve la columna y MariaDB no puede usar el indice.
 
-**Curiosidad:** el dump ya prevee este caso. La tabla tiene la columna
-calculada `FECHA_OP_DIA_OPCAJA` con su indice `IDX_OPCAJA_DIA_CTX
-(FECHA_OP_DIA_OPCAJA, EMP, ALM, CAJA)`. La consulta deberia ser:
+**Despues:**
 
 ```sql
 WHERE o.FECHA_OP_DIA_OPCAJA = :PFECHA
@@ -293,12 +294,15 @@ WHERE o.FECHA_OP_DIA_OPCAJA = :PFECHA
   ...
 ```
 
-**Accion sugerida:** refactor en `UniDataConsultaOpe.pas` para usar la
-columna ya indexada.
+El dump ya tenia la columna `FECHA_OP_DIA_OPCAJA` (tipo `date`) con su
+indice `IDX_OPCAJA_DIA_CTX (FECHA_OP_DIA_OPCAJA, EMP, ALM, CAJA)`. La
+consulta ahora usa exactamente ese indice como cobertura completa.
 
-### 5.2 `DATE(FECHA_EMISION_VL)` y `DATE(FECHA_REDENCION_VL)` en arqueo
+### 5.2 `DATE(FECHA_EMISION_VL)` y `DATE(FECHA_REDENCION_VL)` en arqueo — CORREGIDO
 
 **Archivo:** `src/Lib/inLibArqueo.pas:444-445, 468-469`
+
+**Antes:**
 
 ```sql
 WHERE CODIGO_EMP_EMI_VL = :emp
@@ -308,14 +312,30 @@ WHERE CODIGO_EMP_EMI_VL = :emp
   AND DATE(FECHA_EMISION_VL) <= :pFHASTA
 ```
 
-Mismo antipatron. El filtro por contexto sigue usando `IDX_VALES_EMI_OP`
-(porque no esta envuelto en funcion), pero el rango de fechas se evalua
-fila a fila. Reescribir como comparacion directa:
+**Despues** (half-open interval para preservar la semantica "incluye
+todo el dia final" incluso con `FECHA_EMISION_VL datetime`):
 
 ```sql
-AND FECHA_EMISION_VL >= :pFDESDE
-AND FECHA_EMISION_VL <  :pFHASTA + INTERVAL 1 DAY
+WHERE CODIGO_EMP_EMI_VL = :emp
+  AND CODIGO_ALM_EMI_VL = :alm
+  AND CODIGO_CAJA_EMI_VL = :caja
+  AND FECHA_EMISION_VL >= :pFDESDE
+  AND FECHA_EMISION_VL <  DATE_ADD(:pFHASTA, INTERVAL 1 DAY)
 ```
+
+Misma transformacion para `FECHA_REDENCION_VL` en la consulta de vales
+recogidos. Quitar `DATE()` permite al optimizador filtrar por el rango
+tras aplicar el prefijo del indice `IDX_VALES_EMI_OP` /
+`IDX_VALES_RED_OP` (contexto de caja), en lugar de evaluar la funcion
+fila a fila.
+
+**Nota sobre el cambio del `<=` por `<`:** la version anterior con
+`DATE(...) <= :pFHASTA` traducia, p.ej., `:pFHASTA = '2026-05-19'` en
+"incluye todos los vales del 19". Si simplemente se quita el `DATE()`
+y se mantiene el `<= :pFHASTA`, MariaDB compara contra `'2026-05-19
+00:00:00'` y se pierden todos los vales emitidos a lo largo del 19.
+`DATE_ADD(:pFHASTA, INTERVAL 1 DAY)` con `<` (estrictamente menor)
+preserva la semantica original sin envolver la columna en funcion.
 
 ### 5.3 `(FECHA IS NULL OR FECHA <= NOW())` en obtencion de vigentes
 
@@ -405,10 +425,10 @@ operaciones.
 | 13 | `fza_movimientos_almacen`   | `IDX_MOV_ART_ALM`            | `(CODIGO_ART_MOV, CODIGO_ALM_MOV)`                                             |
 | 14 | `fza_depositos_cliente`     | `IDX_DEP_OP_FECHA`           | `(CODIGO_EMP_DEP, CODIGO_ALM_DEP, CODIGO_CAJA_DEP, FECHA_CREACION_DEP)`        |
 
-### 7.3 Reescrituras pendientes en codigo Delphi (no DDL)
+### 7.3 Reescrituras en codigo Delphi
 
-| # | Archivo                                       | Patron a corregir                                            |
-|---|-----------------------------------------------|--------------------------------------------------------------|
-| A | `src/DataModules/UniDataConsultaOpe.pas:144`  | `DATE(FECHA_OPERACION_OPCAJA)` → `FECHA_OP_DIA_OPCAJA`       |
-| B | `src/Lib/inLibArqueo.pas:444-445, 468-469`    | `DATE(FECHA_EMISION_VL/REDENCION_VL)` → comparacion directa  |
-| C | `src/DataModules/UniDataInventarios.pas:412`  | `(FECHA IS NULL OR FECHA <= NOW())` → repensar logica vigencia |
+| # | Archivo                                       | Patron corregido                                                       | Estado    |
+|---|-----------------------------------------------|------------------------------------------------------------------------|-----------|
+| A | `src/DataModules/UniDataConsultaOpe.pas:144`  | `DATE(FECHA_OPERACION_OPCAJA)` → `FECHA_OP_DIA_OPCAJA`                 | hecho     |
+| B | `src/Lib/inLibArqueo.pas:444-445, 468-469`    | `DATE(FECHA_EMISION_VL/REDENCION_VL)` → `>= :desde AND < :hasta + 1 d` | hecho     |
+| C | `src/DataModules/UniDataInventarios.pas:412`  | `(FECHA IS NULL OR FECHA <= NOW())` → repensar logica vigencia         | pendiente |

@@ -141,7 +141,7 @@ begin
     '  LEFT JOIN fza_clientes cli '                                       +
     '    ON cli.CODIGO_CLI_CLI = COALESCE(f.CODIGO_CLI_FAC, '     +
     '                                     o.CODIGO_CLI_OPCAJA) '      +
-    ' WHERE DATE(o.FECHA_OPERACION_OPCAJA) = :PFECHA '                    +
+    ' WHERE o.FECHA_OP_DIA_OPCAJA = :PFECHA '                             +
     '   AND o.CODIGO_EMP_OPCAJA = :PEMP '                             +
     '   AND o.CODIGO_ALM_OPCAJA = :PALM '                             +
     '   AND o.CODIGO_CAJA_OPCAJA    = :PCAJA '                            +
