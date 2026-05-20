@@ -46,16 +46,14 @@ uses
 //  Helpers locales
 // =========================================================================
 
-// Filtro de "Temporada valida": acepta cualquier valor no-vacio salvo
-// cadenas de 1 caracter (que casi siempre son ruido — tallas sueltas
-// como 'S', 'M', 'L', '1', '2' que el legacy mete mal en este campo).
-// Valores legitimos suelen tener >= 2 caracteres: 'PV25', '2026',
-// 'OI24', 'PERM', '26', etc.
+// Filtro de "Temporada valida": acepta cualquier valor no-vacio tras
+// Trim. En este cliente la Temporada en ocartp es un codigo corto
+// numerico ('0', '1', '10', '11'...), asi que NO podemos exigir
+// longitud minima 2 ni presencia de letras — descartariamos
+// temporadas legitimas ('0' = permanente, '1' = primera, etc.).
 function EsTemporadaValida(const s: string): Boolean;
-var t: string;
 begin
-  t := Trim(s);
-  Result := Length(t) >= 2;
+  Result := Trim(s) <> '';
 end;
 
 procedure AsegurarPropiedadTemporada(Eng: TMigEngine);
@@ -154,9 +152,8 @@ procedure MigrarArticulosPropiedades(Eng: TMigEngine;
                                       var Stats: TMigStats);
 const
   // Filtro de Temporada valida en Pascal (EsTemporadaValida): acepta
-  // cualquier valor con >=2 caracteres no-vacios. Asi entran 'PV25',
-  // 'OI24', 'PERM', '2026', '26'... y solo descartamos sueltos de 1
-  // caracter ('S', '1', '2'...) que casi siempre son tallas mezcladas.
+  // cualquier valor no-vacio tras Trim. Los codigos cortos numericos
+  // del legacy ('0', '1', '10'...) tambien son Temporadas validas.
   // El SELECT/COUNT usa WITH (NOLOCK) por non-empty unicamente.
   cSelectValores =
     'SELECT DISTINCT Temporada ' +
