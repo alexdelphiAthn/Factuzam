@@ -272,8 +272,11 @@ begin
         UpperCase(Trim(qSrc.FieldByName('Talla').AsString)));
 
       try
+        // LINEA_INVLIN tras widen_linea_invlin.sql es varchar(8).
+        // Padding a 8 digitos para que el orden lexicografico
+        // coincida con el numerico (linea 9 < linea 10 < linea 100).
         InsertarLinea(Eng, sEmp, sAlm, 'IN', sNumero,
-                      Format('%.4d', [iLinea]),
+                      Format('%.8d', [iLinea]),
                       sArt, sCodUnidad, sDesc, fCantidad, fPrecio);
         Inc(Stats.Insertadas);
         fAcumDif := fAcumDif + fCantidad;
@@ -282,7 +285,7 @@ begin
         begin
           Inc(Stats.Errores);
           Eng.LogError('inventario_linea', sCodUnidad, E.Message,
-            Format('emp=%s alm=%s linea=%.4d cantidad=%g',
+            Format('emp=%s alm=%s linea=%.8d cantidad=%g',
                    [sEmp, sAlm, iLinea, fCantidad]),
             'la linea requiere que el almacen y el SKU ya esten ' +
             'migrados — corre antes Almacenes y SKUs');
