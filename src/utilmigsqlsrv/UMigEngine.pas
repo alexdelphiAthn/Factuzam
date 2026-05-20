@@ -137,6 +137,47 @@ type
 
 // Helpers compartidos por todos los mappers --------------------------------
 
+type
+  // Buffer para INSERT masivo. Acumula filas en memoria y las suelta
+  // contra el destino con una sola sentencia
+  // "INSERT IGNORE INTO X (cols) VALUES (...), (...), ..."
+  // cuando llega al tope o cuando se llama a Flush. El "IGNORE"
+  // hace que las filas duplicadas no aborten el batch — clave para
+  // idempotencia. Cada mapper pesado puede usar uno.
+  TBulkInsert = class
+  private
+    FCon:      TUniConnection;
+    FTabla:    string;
+    FColumnas: string;       // "col1, col2, col3"
+    FFilas:    TStringList;  // cada entrada = "(val1, val2, val3)"
+    FBatchMax: Integer;      // tamano de batch (default 1000)
+    FTotalIns: Integer;
+    procedure Flush;
+  public
+    constructor Create(Con: TUniConnection; const sTabla,
+                       sColumnas: string; iBatchMax: Integer = 1000);
+    destructor  Destroy; override;
+
+    // Anade una fila ya formateada (sin parentesis). Ej:
+    //   Add(QuotedStr('foo') + ', 123, NULL');
+    procedure Add(const sValores: string);
+
+    // Suelta lo que quede pendiente. Llamar al final del bucle.
+    procedure FlushPendiente;
+
+    property TotalInsertadas: Integer read FTotalIns;
+  end;
+
+// Escapa un string para usar dentro de un literal SQL ' ... '
+// segun MySQL/MariaDB.
+function EscaparSQL(const s: string): string;
+
+// Formato de literal SQL: NULL si esta vacia, 'cadena escapada' si no.
+function ValorOrNull(const s: string): string;
+
+// Formato YYYY-MM-DD HH:MM:SS para datetime.
+function DateTimeASQL(const dt: TDateTime): string;
+
 // Busca un valor en fza_atributos_valores por (ID_VA, AV). Devuelve
 // ID_AV o 0 si no existe. Usado para enlazar SKUs con sus colores y
 // tallas en fza_atributos_sku.
@@ -357,6 +398,118 @@ end;
 
 // =========================================================================
 //  Helpers
+// =========================================================================
+
+// =========================================================================
+//  TBulkInsert + helpers SQL
+// =========================================================================
+
+function EscaparSQL(const s: string): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+    case s[i] of
+      '''': Result := Result + '''''';
+      '\':  Result := Result + '\\';
+      #0:   Result := Result + '\0';
+      #10:  Result := Result + '\n';
+      #13:  Result := Result + '\r';
+      #26:  Result := Result + '\Z';
+    else
+      Result := Result + s[i];
+    end;
+end;
+
+function ValorOrNull(const s: string): string;
+begin
+  if s = '' then
+    Result := 'NULL'
+  else
+    Result := '''' + EscaparSQL(s) + '''';
+end;
+
+function DateTimeASQL(const dt: TDateTime): string;
+begin
+  Result := '''' + FormatDateTime('yyyy-mm-dd hh:nn:ss', dt) + '''';
+end;
+
+constructor TBulkInsert.Create(Con: TUniConnection; const sTabla,
+                                sColumnas: string; iBatchMax: Integer);
+begin
+  inherited Create;
+  FCon      := Con;
+  FTabla    := sTabla;
+  FColumnas := sColumnas;
+  FFilas    := TStringList.Create;
+  if iBatchMax <= 0 then iBatchMax := 1000;
+  FBatchMax := iBatchMax;
+  FTotalIns := 0;
+end;
+
+destructor TBulkInsert.Destroy;
+begin
+  // Si quedan filas pendientes, se vuelcan en el destructor para no
+  // perderlas. Si falla aqui no relanzamos — el destructor debe ser
+  // tolerante.
+  try
+    if FFilas.Count > 0 then Flush;
+  except
+    // ignoramos
+  end;
+  FFilas.Free;
+  inherited;
+end;
+
+procedure TBulkInsert.Add(const sValores: string);
+begin
+  FFilas.Add('(' + sValores + ')');
+  if FFilas.Count >= FBatchMax then
+    Flush;
+end;
+
+procedure TBulkInsert.FlushPendiente;
+begin
+  if FFilas.Count > 0 then Flush;
+end;
+
+procedure TBulkInsert.Flush;
+var
+  sSql:  string;
+  i:     Integer;
+  sb:    TStringBuilder;
+  iFils: Integer;
+begin
+  if FFilas.Count = 0 then Exit;
+  // Construimos la sentencia con TStringBuilder para no penalizar
+  // con concatenaciones de string en cada iteracion (batches de
+  // 1000 filas pueden ser miles de chars).
+  sb := TStringBuilder.Create(64 * FFilas.Count);
+  try
+    sb.Append('INSERT IGNORE INTO `');
+    sb.Append(FTabla);
+    sb.Append('` (');
+    sb.Append(FColumnas);
+    sb.Append(') VALUES ');
+    for i := 0 to FFilas.Count - 1 do
+    begin
+      if i > 0 then sb.Append(', ');
+      sb.Append(FFilas[i]);
+    end;
+    sSql := sb.ToString;
+  finally
+    sb.Free;
+  end;
+  iFils := FFilas.Count;
+  FFilas.Clear;
+  FCon.ExecSQL(sSql);
+  // RowsAffected con INSERT IGNORE puede ser menor que iFils si hay
+  // duplicados; nos quedamos con el total enviado para reporting.
+  Inc(FTotalIns, iFils);
+end;
+
+// =========================================================================
+//  Lookups
 // =========================================================================
 
 function BuscarIdAV(Eng: TMigEngine; const sIdVa, sAv: string): Integer;
