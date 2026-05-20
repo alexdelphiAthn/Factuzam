@@ -448,6 +448,12 @@ type
      // ~6s por subqueries DEPENDENT. La abrimos solo cuando el usuario
      // pasa a tsTarifas (ver dmmArticulos.AsegurarTarifasAbiertas).
      procedure PcDetailChange(Sender: TObject);
+     // Stock: ultimo articulo para el que se cargo el grid pivotado.
+     // Asi AsegurarStockAlDia evita reejecutar el SP si el artículo
+     // no ha cambiado desde la ultima visita a la pestaña Stock.
+     FStockArticuloCargado: string;
+     procedure AsegurarStockAlDia;
+     procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
   private
     FGestorProp  : TGestorPropiedades;
     FArticuloCargado: string;
@@ -1804,8 +1810,15 @@ begin
   // hasta que el usuario navegaba a otro registro.
   if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
     CargarMapaAtributosArticulo(FArticuloCargado, FAtributosStock);
-  if (FArticuloCargado <> '') and Assigned(dmmArticulos) then
+  // Stock lazy: solo refrescar si la pestaña Stock esta activa al
+  // abrir el Mto. Si no, AsegurarStockAlDia lo hara cuando el usuario
+  // la abra.
+  if (FArticuloCargado <> '') and Assigned(dmmArticulos)
+     and (pcDetail.ActivePage = cxTabSheet3) then
+  begin
     dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
+    FStockArticuloCargado := FArticuloCargado;
+  end;
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
@@ -2003,9 +2016,20 @@ begin
     msMapaAtr := swTramo.ElapsedMilliseconds;
   end;
 
+  // Stock perezoso: solo recargar el SP si la pestaña Stock esta
+  // visible. AsegurarStockAlDia ademas evita reejecutar si el articulo
+  // no ha cambiado.
   swTramo := TStopwatch.StartNew;
-  dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
+  if pcDetail.ActivePage = cxTabSheet3 then
+    AsegurarStockAlDia;
   msStockAS := swTramo.ElapsedMilliseconds;
+
+  // Tarifas perezoso: si la pestaña Tarifas NO esta visible, cerrar
+  // unqryTarifasArticulos. Asi el master/detail no dispara el refresh
+  // de ~2s (vi_articulos_tarifas con subqueries DEPENDENT). Cuando el
+  // usuario vuelva a Tarifas, PcDetailChange la reabre con el filtro
+  // del articulo actual.
+  CerrarSiNoVisible(dmmArticulos.unqryTarifasArticulos, tsTarifas);
 
   swTramo := TStopwatch.StartNew;
   ActualizarVisibilidadColumnaSku;
@@ -2973,8 +2997,45 @@ end;
 
 procedure TfrmMtoArticulos.PcDetailChange(Sender: TObject);
 begin
-  if (pcDetail.ActivePage = tsTarifas) and Assigned(dmmArticulos) then
-    dmmArticulos.AsegurarTarifasAbiertas;
+  if not Assigned(dmmArticulos) then Exit;
+  // Al entrar a Tarifas: abrir (lazy).
+  if pcDetail.ActivePage = tsTarifas then
+    dmmArticulos.AsegurarTarifasAbiertas
+  else
+    // Si saliendo de Tarifas, cerrar la query. Asi el siguiente cambio
+    // de articulo (master/detail) no dispara un refresh innecesario de
+    // ~2s sobre vi_articulos_tarifas. Reabrira cuando el usuario vuelva
+    // a la pestaña.
+    CerrarSiNoVisible(dmmArticulos.unqryTarifasArticulos, tsTarifas);
+
+  // Stock: si activan la pestaña, refrescar (solo si cambio el articulo).
+  if pcDetail.ActivePage = cxTabSheet3 then
+    AsegurarStockAlDia;
+end;
+
+procedure TfrmMtoArticulos.AsegurarStockAlDia;
+begin
+  if not Assigned(dmmArticulos) then Exit;
+  if FArticuloCargado = '' then Exit;
+  // Si el stock ya esta cargado para el articulo activo, nada que hacer.
+  if (FStockArticuloCargado = FArticuloCargado)
+     and dmmArticulos.unqryStockArticulos.Active then Exit;
+  // unqryStockArticulosAfterScroll cierra, recarga el SP y reconstruye
+  // las columnas dinamicas del cxGrid tvStock. Ya esta instrumentado
+  // con LogPerf ([PERF:Articulos.StockAfterScroll]).
+  dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
+  FStockArticuloCargado := FArticuloCargado;
+end;
+
+procedure TfrmMtoArticulos.CerrarSiNoVisible(qry: TUniQuery;
+  ActivaTarget: TcxTabSheet);
+begin
+  // Solo cerrar si la pestaña target NO esta visible. Util para queries
+  // master/detail que se reabren automaticamente al cambiar el master:
+  // mientras no se esta viendo, mejor cerrada para ahorrar el refresh.
+  if (qry = nil) or not qry.Active then Exit;
+  if pcDetail.ActivePage = ActivaTarget then Exit;
+  qry.Close;
 end;
 
 procedure TfrmMtoArticulos.EnsancharColumnasStockParaSwatch;
