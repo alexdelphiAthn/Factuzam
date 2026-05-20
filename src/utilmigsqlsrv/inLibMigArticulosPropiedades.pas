@@ -6,7 +6,10 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Crea la propiedad TEMPORADA y la asigna a cada articulo del legacy a    }
-{    partir de `ocartp.Temporada` (varchar(5)). Esquema destino:               }
+{    partir de `ocartp.Temporada` (codigo varchar(5), p.ej. '0', '1', '10'),  }
+{    haciendo LEFT JOIN a `dbo.octem` para obtener la etiqueta legible        }
+{    (`octem.Nombre`). Si el codigo no existe en octem, se usa el codigo raw }
+{    como fallback. Esquema destino:                                          }
 {                                                                              }
 {    1. fza_propiedades: una fila con                                          }
 {         CODIGO_PROP_ARTPROP = 'TEMPORADA'                                    }
@@ -14,8 +17,9 @@
 {         TIPO_VALOR_PROP    = 'LISTA' (los valores van en fza_propiedades_   }
 {                              valores y se referencian por ID)               }
 {                                                                              }
-{    2. fza_propiedades_valores: una fila por cada Temporada distinta de      }
-{       ocartp (DISTINCT). Ej: '2026P', '2026O', 'PERM', etc.                  }
+{    2. fza_propiedades_valores: una fila por cada octem.Nombre distinto       }
+{       referenciado por algun articulo. Ej: 'INDEFINIDA',                    }
+{       'PRIM-VER 2014', 'OTÑO-INVI 2006', etc.                                }
 {                                                                              }
 {    3. fza_articulos_propiedades: una fila por articulo con la temporada    }
 {       que tenia en el legacy, enlazada por ID_PV_ARTPROP al valor.          }
@@ -46,16 +50,14 @@ uses
 //  Helpers locales
 // =========================================================================
 
-// Filtro de "Temporada valida": acepta cualquier valor no-vacio salvo
-// cadenas de 1 caracter (que casi siempre son ruido — tallas sueltas
-// como 'S', 'M', 'L', '1', '2' que el legacy mete mal en este campo).
-// Valores legitimos suelen tener >= 2 caracteres: 'PV25', '2026',
-// 'OI24', 'PERM', '26', etc.
+// Filtro de "Temporada valida": acepta cualquier valor no-vacio tras
+// Trim. En este cliente la Temporada en ocartp es un codigo corto
+// numerico ('0', '1', '10', '11'...), asi que NO podemos exigir
+// longitud minima 2 ni presencia de letras — descartariamos
+// temporadas legitimas ('0' = permanente, '1' = primera, etc.).
 function EsTemporadaValida(const s: string): Boolean;
-var t: string;
 begin
-  t := Trim(s);
-  Result := Length(t) >= 2;
+  Result := Trim(s) <> '';
 end;
 
 procedure AsegurarPropiedadTemporada(Eng: TMigEngine);
@@ -153,22 +155,29 @@ end;
 procedure MigrarArticulosPropiedades(Eng: TMigEngine;
                                       var Stats: TMigStats);
 const
-  // Filtro de Temporada valida en Pascal (EsTemporadaValida): acepta
-  // cualquier valor con >=2 caracteres no-vacios. Asi entran 'PV25',
-  // 'OI24', 'PERM', '2026', '26'... y solo descartamos sueltos de 1
-  // caracter ('S', '1', '2'...) que casi siempre son tallas mezcladas.
-  // El SELECT/COUNT usa WITH (NOLOCK) por non-empty unicamente.
+  // En el legacy ocartp.Temporada es un codigo corto (0, 1, 10, 11...)
+  // que referencia a dbo.octem. dbo.octem.Nombre tiene la etiqueta
+  // legible ('INDEFINIDA', 'PRIM-VER 2014', 'OTÑO-INVI 2006'...). Como
+  // valor PV de la propiedad guardamos el Nombre (legible).
+  // Si el codigo de ocartp no existe en octem o el Nombre es vacio,
+  // usamos el codigo raw como fallback (no perdemos asignaciones).
+  cExprNombre =
+    'ISNULL(NULLIF(LTRIM(RTRIM(te.Nombre)), ''''), p.Temporada)';
   cSelectValores =
-    'SELECT DISTINCT Temporada ' +
-    'FROM dbo.ocartp WITH (NOLOCK) ' +
-    'WHERE LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
-    'ORDER BY Temporada';
+    'SELECT DISTINCT ' + cExprNombre + ' AS PV ' +
+    'FROM dbo.ocartp p WITH (NOLOCK) ' +
+    'LEFT JOIN dbo.octem te WITH (NOLOCK) ' +
+    '       ON te.Temporada = p.Temporada ' +
+    'WHERE LTRIM(RTRIM(ISNULL(p.Temporada, ''''))) <> '''' ' +
+    'ORDER BY PV';
   cSelectAsign =
-    'SELECT Articulo, Temporada ' +
-    'FROM dbo.ocartp WITH (NOLOCK) ' +
-    'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
-    '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
-    'ORDER BY Articulo';
+    'SELECT p.Articulo, ' + cExprNombre + ' AS PV ' +
+    'FROM dbo.ocartp p WITH (NOLOCK) ' +
+    'LEFT JOIN dbo.octem te WITH (NOLOCK) ' +
+    '       ON te.Temporada = p.Temporada ' +
+    'WHERE LTRIM(RTRIM(p.Articulo)) <> '''' ' +
+    '  AND LTRIM(RTRIM(ISNULL(p.Temporada, ''''))) <> '''' ' +
+    'ORDER BY p.Articulo';
   cColsAP =
     'CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
     'INSTANTE_ALTA, USUARIO_ALTA';
@@ -187,7 +196,7 @@ begin
     qVal.Open;
     while not qVal.Eof do
     begin
-      sTemp := Trim(qVal.FieldByName('Temporada').AsString);
+      sTemp := Trim(qVal.FieldByName('PV').AsString);
       if EsTemporadaValida(sTemp) then
       begin
         if InsertarValorPropiedad(Eng, sTemp) then
@@ -216,7 +225,7 @@ begin
       Inc(Stats.Leidas);
       Eng.IncRow;
       sArt  := Trim(qSrc.FieldByName('Articulo').AsString);
-      sTemp := Trim(qSrc.FieldByName('Temporada').AsString);
+      sTemp := Trim(qSrc.FieldByName('PV').AsString);
       if (sArt = '') or (not EsTemporadaValida(sTemp)) then
       begin
         Inc(Stats.Saltadas);
