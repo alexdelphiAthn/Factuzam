@@ -920,7 +920,12 @@ begin
     swStep := TStopwatch.StartNew;
     ActualizarColumnasDinamicas(CodigoPadre);
     msColumnas := swStep.ElapsedMilliseconds;
-    if (Trim(SkuDetectado) <> '') and (NumAtributos > 0) then
+    // Solo desglosamos atributos si SkuDetectado es un SKU real (distinto
+    // del padre). Si SkuDetectado == CodigoPadre estamos a la espera de
+    // que el usuario elija talla/color: la query no encontraria nada y
+    // gastariamos un round-trip a BBDD para nada.
+    if (Trim(SkuDetectado) <> '') and (NumAtributos > 0)
+       and (SkuDetectado <> CodigoPadre) then
     begin
        swStep := TStopwatch.StartNew;
        RellenarAtributosDesdeSku(SkuDetectado);
@@ -2028,20 +2033,27 @@ begin
     begin
       datosCaja.qryDefinicionArticulo.Connection := oConn;
       datosCaja.qryDefinicionArticulo.Close;
+      // ANTES: 4-way join sobre fza_articulos_skus -> fza_atributos_sku ->
+      //        fza_atributos_valores -> vi_atributos_nombres con DISTINCT.
+      //        Medido: 9.6 s en MariaDB con datos reales — el cuello del
+      //        flujo "Enter del codigo -> primer popup". La vista
+      //        vi_atributos_nombres por dentro hace un join + distinct
+      //        y al envolverla aqui en otro JOIN+DISTINCT, el optimizador
+      //        no la materializa.
+      // AHORA: lookup directo fza_articulos -> fza_variaciones_atributos
+      //        via TIPO_VARIACION_ART (que ya tiene indice). Es PK seek
+      //        sobre articulos y PK seek sobre variaciones_atributos.
+      //        Para un articulo con variacion TC, devuelve 2 filas
+      //        (Color, Talla). Para un articulo sin variacion, 0 filas.
       datosCaja.qryDefinicionArticulo.SQL.Text :=
-      'SELECT DISTINCT  '        +
-      '      N.NOMBRE_ATRIBUTO, '+
-      '      N.ORDEN_VISUAL_ATRIBUTO      '+
-      ' FROM fza_articulos_skus SKU '+
-      ' JOIN fza_atributos_sku AT '+
-      '   ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SKU_SA '+
-      ' JOIN fza_atributos_valores V '+
-      '   ON AT.ID_AV_SA = V.ID_AV'+
-      ' JOIN vi_atributos_nombres N '+
-      '   ON V.ID_VA_AV = N.ID_ATRIBUTO '+
-      'WHERE SKU.CODIGO_ART_SKU = :ARTICULO '+
-      'ORDER BY N.ORDEN_VISUAL_ATRIBUTO '+
-      'LIMIT 5';
+      'SELECT vat.NOMBRE_VA      AS NOMBRE_ATRIBUTO,    ' +
+      '       vat.ORDEN_VA       AS ORDEN_VISUAL_ATRIBUTO ' +
+      '  FROM fza_articulos a                            ' +
+      '  JOIN fza_variaciones_atributos vat              ' +
+      '    ON vat.ID_VAR_VA = a.TIPO_VARIACION_ART       ' +
+      ' WHERE a.CODIGO_ART_ART = :ARTICULO               ' +
+      ' ORDER BY vat.ORDEN_VA                            ' +
+      ' LIMIT 5';
       datosCaja.qryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
         ArticuloPadre;
       swQry := TStopwatch.StartNew;
