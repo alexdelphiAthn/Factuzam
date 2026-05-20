@@ -153,6 +153,7 @@
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="UMigEngine.pas"/>
+        <DCCReference Include="inLibMigDumpEsqueleto.pas"/>
         <DCCReference Include="UMigrator.pas">
             <Form>FormMigrator</Form>
         </DCCReference>
