@@ -13,6 +13,30 @@ object FormMigrator: TFormMigrator
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
+  object SplitterErrores: TSplitter
+    Left = 0
+    Top = 564
+    Width = 1024
+    Height = 6
+    Cursor = crVSplit
+    Align = alBottom
+    AutoSnap = False
+    MinSize = 50
+    ResizeStyle = rsUpdate
+    ExplicitTop = 460
+  end
+  object SplitterProgreso: TSplitter
+    Left = 0
+    Top = 570
+    Width = 1024
+    Height = 6
+    Cursor = crVSplit
+    Align = alBottom
+    AutoSnap = False
+    MinSize = 50
+    ResizeStyle = rsUpdate
+    ExplicitTop = 540
+  end
   object PanelTop: TPanel
     Left = 0
     Top = 0
@@ -25,6 +49,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 0
+    ExplicitWidth = 1022
     object PanelOrigen: TGroupBox
       Left = 8
       Top = 8
@@ -35,35 +60,35 @@ object FormMigrator: TFormMigrator
       object lblSrcHost: TLabel
         Left = 16
         Top = 28
-        Width = 80
+        Width = 82
         Height = 15
         Caption = 'Host / Servidor:'
       end
       object lblSrcPort: TLabel
         Left = 16
         Top = 58
-        Width = 30
+        Width = 38
         Height = 15
         Caption = 'Puerto:'
       end
       object lblSrcBase: TLabel
         Left = 16
         Top = 88
-        Width = 47
+        Width = 75
         Height = 15
         Caption = 'Base de datos:'
       end
       object lblSrcUser: TLabel
         Left = 16
         Top = 118
-        Width = 40
+        Width = 43
         Height = 15
         Caption = 'Usuario:'
       end
       object lblSrcPwd: TLabel
         Left = 16
         Top = 148
-        Width = 56
+        Width = 63
         Height = 15
         Caption = 'Contrase'#241'a:'
       end
@@ -73,7 +98,6 @@ object FormMigrator: TFormMigrator
         Width = 340
         Height = 23
         TabOrder = 0
-        Text = ''
       end
       object edSrcPort: TEdit
         Left = 130
@@ -89,7 +113,6 @@ object FormMigrator: TFormMigrator
         Width = 200
         Height = 23
         TabOrder = 2
-        Text = ''
       end
       object edSrcUser: TEdit
         Left = 130
@@ -136,35 +159,35 @@ object FormMigrator: TFormMigrator
       object lblDstHost: TLabel
         Left = 16
         Top = 28
-        Width = 80
+        Width = 82
         Height = 15
         Caption = 'Host / Servidor:'
       end
       object lblDstPort: TLabel
         Left = 16
         Top = 58
-        Width = 30
+        Width = 38
         Height = 15
         Caption = 'Puerto:'
       end
       object lblDstBase: TLabel
         Left = 16
         Top = 88
-        Width = 47
+        Width = 75
         Height = 15
         Caption = 'Base de datos:'
       end
       object lblDstUser: TLabel
         Left = 16
         Top = 118
-        Width = 40
+        Width = 43
         Height = 15
         Caption = 'Usuario:'
       end
       object lblDstPwd: TLabel
         Left = 16
         Top = 148
-        Width = 56
+        Width = 63
         Height = 15
         Caption = 'Contrase'#241'a:'
       end
@@ -231,6 +254,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 4
     TabOrder = 3
+    ExplicitWidth = 1022
     object GroupSetup: TGroupBox
       Left = 8
       Top = 4
@@ -239,6 +263,7 @@ object FormMigrator: TFormMigrator
       Align = alClient
       Caption = ' Preparar BBDD destino '
       TabOrder = 0
+      ExplicitWidth = 1006
       object btnDumpEsqueleto: TButton
         Left = 16
         Top = 18
@@ -303,22 +328,43 @@ object FormMigrator: TFormMigrator
   end
   object PanelCentro: TPanel
     Left = 0
-    Top = 260
+    Top = 290
     Width = 1024
     Height = 250
     Align = alTop
     BevelOuter = bvNone
     Padding.Left = 8
-    Padding.Top = 0
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 1
+    ExplicitWidth = 1022
     object lblUsuario: TLabel
       Left = 16
       Top = 14
-      Width = 130
+      Width = 119
       Height = 15
       Caption = 'Usuario para auditor'#237'a:'
+    end
+    object lblNivelFam: TLabel
+      Left = 380
+      Top = 14
+      Width = 100
+      Height = 15
+      Caption = 'Nivel familias hoja:'
+    end
+    object lblDigitosArt: TLabel
+      Left = 580
+      Top = 14
+      Width = 111
+      Height = 15
+      Caption = 'D'#237'gitos contador art.:'
+    end
+    object lblHilos: TLabel
+      Left = 780
+      Top = 14
+      Width = 80
+      Height = 15
+      Caption = 'Hilos paralelos:'
     end
     object edUsuario: TEdit
       Left = 160
@@ -328,13 +374,6 @@ object FormMigrator: TFormMigrator
       TabOrder = 0
       Text = 'MIGRADOR'
     end
-    object lblNivelFam: TLabel
-      Left = 380
-      Top = 14
-      Width = 130
-      Height = 15
-      Caption = 'Nivel familias hoja:'
-    end
     object edNivelFam: TEdit
       Left = 520
       Top = 11
@@ -343,13 +382,6 @@ object FormMigrator: TFormMigrator
       TabOrder = 2
       Text = '4'
     end
-    object lblDigitosArt: TLabel
-      Left = 580
-      Top = 14
-      Width = 130
-      Height = 15
-      Caption = 'D'#237'gitos contador art.:'
-    end
     object edDigitosArt: TEdit
       Left = 720
       Top = 11
@@ -357,13 +389,6 @@ object FormMigrator: TFormMigrator
       Height = 23
       TabOrder = 3
       Text = '4'
-    end
-    object lblHilos: TLabel
-      Left = 780
-      Top = 14
-      Width = 100
-      Height = 15
-      Caption = 'Hilos paralelos:'
     end
     object edHilos: TEdit
       Left = 890
@@ -385,7 +410,7 @@ object FormMigrator: TFormMigrator
         Top = 24
         Width = 800
         Height = 165
-        ItemHeight = 17
+        ItemHeight = 15
         TabOrder = 0
       end
       object btnMarcarTodas: TButton
@@ -425,34 +450,35 @@ object FormMigrator: TFormMigrator
   end
   object PanelLog: TPanel
     Left = 0
-    Top = 450
+    Top = 540
     Width = 1024
-    Height = 191
+    Height = 24
     Align = alClient
     BevelOuter = bvNone
     Padding.Left = 8
-    Padding.Top = 0
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 2
+    ExplicitWidth = 1022
+    ExplicitHeight = 16
     object lblLog: TLabel
       Left = 16
       Top = 0
-      Width = 17
+      Width = 23
       Height = 15
       Caption = 'Log:'
     end
     object MemoLog: TMemo
+      AlignWithMargins = True
       Left = 16
       Top = 18
       Width = 992
-      Height = 165
-      Align = alClient
-      AlignWithMargins = True
+      Height = 0
       Margins.Left = 8
       Margins.Top = 18
       Margins.Right = 8
       Margins.Bottom = 8
+      Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
@@ -462,35 +488,27 @@ object FormMigrator: TFormMigrator
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
+      ExplicitWidth = 990
     end
-  end
-  object SplitterErrores: TSplitter
-    Left = 0
-    Top = 460
-    Width = 1024
-    Height = 6
-    Cursor = crVSplit
-    Align = alBottom
-    AutoSnap = False
-    MinSize = 50
-    ResizeStyle = rsUpdate
   end
   object PanelErrores: TPanel
     Left = 0
-    Top = 466
+    Top = 576
     Width = 1024
     Height = 80
     Align = alBottom
     BevelOuter = bvNone
+    Constraints.MinHeight = 40
     Padding.Left = 8
     Padding.Right = 8
     Padding.Bottom = 4
     TabOrder = 5
-    Constraints.MinHeight = 40
+    ExplicitTop = 568
+    ExplicitWidth = 1022
     object lblErrores: TLabel
       Left = 8
       Top = 0
-      Width = 250
+      Width = 222
       Height = 15
       Caption = 'Errores y avisos (filtrado de los ! del log):'
       Font.Charset = DEFAULT_CHARSET
@@ -501,17 +519,17 @@ object FormMigrator: TFormMigrator
       ParentFont = False
     end
     object MemoErrores: TMemo
-      Left = 8
-      Top = 18
-      Width = 1008
-      Height = 58
-      Align = alClient
       AlignWithMargins = True
+      Left = 16
+      Top = 18
+      Width = 992
+      Height = 54
       Margins.Left = 8
       Margins.Top = 18
       Margins.Right = 8
       Margins.Bottom = 4
-      Color = 16775416
+      Align = alClient
+      Color = clGhostwhite
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clMaroon
       Font.Height = -12
@@ -521,49 +539,41 @@ object FormMigrator: TFormMigrator
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
+      ExplicitWidth = 990
     end
-  end
-  object SplitterProgreso: TSplitter
-    Left = 0
-    Top = 540
-    Width = 1024
-    Height = 6
-    Cursor = crVSplit
-    Align = alBottom
-    AutoSnap = False
-    MinSize = 50
-    ResizeStyle = rsUpdate
   end
   object PanelProgreso: TPanel
     Left = 0
-    Top = 546
+    Top = 656
     Width = 1024
     Height = 255
     Align = alBottom
     BevelOuter = bvNone
+    Constraints.MinHeight = 50
     Padding.Left = 8
     Padding.Right = 8
     Padding.Bottom = 4
     TabOrder = 4
-    Constraints.MinHeight = 50
+    ExplicitTop = 648
+    ExplicitWidth = 1022
     object lblProgreso: TLabel
       Left = 8
       Top = 0
-      Width = 250
+      Width = 151
       Height = 15
       Caption = 'Progreso (dominios activos):'
     end
     object MemoProgreso: TMemo
-      Left = 8
-      Top = 18
-      Width = 1008
-      Height = 233
-      Align = alClient
       AlignWithMargins = True
+      Left = 16
+      Top = 18
+      Width = 992
+      Height = 229
       Margins.Left = 8
       Margins.Top = 18
       Margins.Right = 8
       Margins.Bottom = 4
+      Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
@@ -573,16 +583,19 @@ object FormMigrator: TFormMigrator
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
+      ExplicitWidth = 990
     end
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 801
+    Top = 911
     Width = 1024
     Height = 19
     Panels = <
       item
         Width = 800
       end>
+    ExplicitTop = 903
+    ExplicitWidth = 1022
   end
 end
