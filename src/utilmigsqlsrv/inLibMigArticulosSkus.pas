@@ -54,11 +54,14 @@ const
 //  Helpers locales
 // =========================================================================
 
+// En el legacy '0' y '00' son colores REALES distintos (la BBDD legacy
+// no tiene articulos sin color). Solo la cadena vacia se considera
+// ausencia de color. La descripcion 'INDEFINIDO' se filtra en la
+// construccion del slot (no aqui): si la Descripcion es 'INDEFINIDO',
+// se usa el Color CODE como suffix (que sera '0', '00', etc.).
 function EsColorVacio(const s: string): Boolean;
-var u: string;
 begin
-  u := UpperCase(Trim(s));
-  Result := (u = '') or (u = '0') or (u = 'INDEFINIDO') or (u = '00');
+  Result := Trim(s) = '';
 end;
 
 function EsTallaVacia(const s: string): Boolean;
@@ -173,11 +176,21 @@ const
   // Cuando un (art, color, talla) aparece en ambas tablas, se elige
   // la de ocartbap (que trae barcode). El UNION ALL las pone ambas
   // ordenadas por CodigoBarras vacio al final.
+  // ColorSlot: si Descripcion es NULL/vacia/'INDEFINIDO', usar el
+  // codigo legacy del color (que en este ERP es '0', '00', etc. — son
+  // colores REALES, no placeholders). Si Descripcion es significativa
+  // ('ROJO', 'NEGRO'...) se usa como suffix del CODIGO_UNIDAD_SKU.
   cSelectSrc =
     'SELECT * FROM (' +
     '  SELECT bap.Articulo, bap.Color, bap.Talla, bap.Cantidad, ' +
     '         bap.CodigoBarras, ' +
-    '         ISNULL(c.Descripcion, bap.Color) AS DescColor, ' +
+    '         CASE ' +
+    '           WHEN c.Descripcion IS NULL ' +
+    '             OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
+    '             OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '             THEN UPPER(LTRIM(RTRIM(bap.Color))) ' +
+    '           ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         END AS ColorSlot, ' +
     '         1 AS FuentePrior ' +
     '  FROM dbo.ocartbap bap ' +
     '  LEFT JOIN dbo.ocartcol ac ' +
@@ -190,7 +203,13 @@ const
     '  SELECT acp.Articulo, acp.Color, acp.Talla, ' +
     '         1 AS Cantidad, ' +
     '         '''' AS CodigoBarras, ' +
-    '         ISNULL(c.Descripcion, acp.Color) AS DescColor, ' +
+    '         CASE ' +
+    '           WHEN c.Descripcion IS NULL ' +
+    '             OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
+    '             OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '             THEN UPPER(LTRIM(RTRIM(acp.Color))) ' +
+    '           ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         END AS ColorSlot, ' +
     '         2 AS FuentePrior ' +
     '  FROM dbo.ocartacp acp ' +
     '  LEFT JOIN dbo.ocartcol ac ' +
@@ -299,7 +318,9 @@ begin
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       sColorRaw  := Trim(qSrc.FieldByName('Color').AsString);
       sTalla     := Trim(qSrc.FieldByName('Talla').AsString);
-      sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
+      // ColorSlot ya viene normalizado desde SQL: Descripcion si es
+      // significativa, codigo legacy en otro caso.
+      sDescColor := Trim(qSrc.FieldByName('ColorSlot').AsString);
       sBarcode   := Trim(qSrc.FieldByName('CodigoBarras').AsString);
       fCantidad  := qSrc.FieldByName('Cantidad').AsFloat;
 
@@ -309,10 +330,10 @@ begin
         qSrc.Next;
         Continue;
       end;
-      if (sDescColor = '') and not EsColorVacio(sColorRaw) then
-        sDescColor := sColorRaw;
+      if (sDescColor = '') and (sColorRaw <> '') then
+        sDescColor := UpperCase(sColorRaw);
 
-      sCodUnidad := ConstruirCodigoUnidad(sArt, UpperCase(sDescColor),
+      sCodUnidad := ConstruirCodigoUnidad(sArt, sDescColor,
                                            UpperCase(sTalla));
       sCodVar    := DeducirCodigoVar(sDescColor, sTalla);
 

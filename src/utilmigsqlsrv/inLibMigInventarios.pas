@@ -57,11 +57,11 @@ uses
 //  Helpers locales
 // =========================================================================
 
+// '0' y '00' son colores REALES en el legacy (no placeholders).
+// 'INDEFINIDO' es Descripcion del color '0', se trata en la SQL.
 function EsColorVacio(const s: string): Boolean;
-var u: string;
 begin
-  u := UpperCase(Trim(s));
-  Result := (u = '') or (u = '0') or (u = 'INDEFINIDO') or (u = '00');
+  Result := Trim(s) = '';
 end;
 
 function EsTallaVacia(const s: string): Boolean;
@@ -191,7 +191,15 @@ const
     '       acp.Articulo, acp.Color, acp.Talla, ' +
     '       acp.UnidadesStock, ' +
     '       ISNULL(acp.PrecioMedio, 0) AS PrecioMedio, ' +
-    '       ISNULL(c.Descripcion, acp.Color) AS DescColor, ' +
+    // Mismo criterio que SKUs: si Descripcion es 'INDEFINIDO'/vacia,
+    // usar el codigo legacy ('0', '00'...) como slot de color.
+    '       CASE ' +
+    '         WHEN c.Descripcion IS NULL ' +
+    '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
+    '           OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(acp.Color))) ' +
+    '         ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '       END AS DescColor, ' +
     '       ISNULL(art.DescripcionLarga, ' +
     '              ISNULL(art.DescripcionCorta, '''')) AS DescArt ' +
     'FROM dbo.ocartacp acp ' +
