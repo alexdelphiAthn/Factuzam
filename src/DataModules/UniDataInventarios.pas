@@ -175,7 +175,9 @@ implementation
 
 uses
   Vcl.Dialogs,          // MessageDlg para validación de SKU en BeforePost
+  System.Diagnostics,   // TStopwatch para instrumentacion de rendimiento
   inLibUser,            // Usuario logueado
+  inLibLog,             // Log.LogInfo para metricas
   inLibGlobalVar,
   UniDataConn;      // oConn
 
@@ -831,12 +833,28 @@ begin
 end;
 
 procedure TdmInventarios.AplicarInventario;
+var
+  swTotal, swTramo: TStopwatch;
+  msApply, msExecProc, msRecargas, msRefresh: Int64;
 begin
+  // [PERF:Aplicar] Instrumentacion temporal para diagnosticar latencia del
+  // "Regularizar". Cuatro tramos: (1) ApplyUpdates al server, (2) SP
+  // PRC_FZA_INVENTARIOS_APLICAR, (3) recarga de lineas+movimientos y
+  // (4) refresh de la cabecera. Los tiempos se vuelcan al log para saber
+  // donde meter el threading.
+  msApply    := 0;
+  msExecProc := 0;
+  msRecargas := 0;
+  msRefresh  := 0;
+  swTotal := TStopwatch.StartNew;
+
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create(
       'Solo se puede aplicar un inventario en estado ABIERTO');
 
-  // Mismo Post defensivo que en RecalcularTeorico.
+  // (1) Post defensivo + ApplyUpdates: vuelca cambios pendientes del
+  // cdsLineas (cliente) a la BBDD via el provider.
+  swTramo := TStopwatch.StartNew;
   if cdsLineas.Active then
   begin
     if cdsLineas.State in [dsInsert, dsEdit] then
@@ -851,6 +869,7 @@ begin
     if cdsLineas.ChangeCount > 0 then
       cdsLineas.ApplyUpdates(0);
   end;
+  msApply := swTramo.ElapsedMilliseconds;
 
   // Salvaguarda: no aplicar un inventario sin líneas. Sin esto, la SP
   // PRC_FZA_INVENTARIOS_APLICAR cambia el estado a APLICADO sin generar
@@ -861,6 +880,8 @@ begin
       'No se puede aplicar un inventario sin líneas. Añade al menos una ' +
       'línea con diferencia de cantidad o de coste antes de regularizar.');
 
+  // (2) Ejecucion del Stored Procedure (todo el trabajo pesado server-side).
+  swTramo := TStopwatch.StartNew;
   unspAplicar.Close;
   unspAplicar.ParamByName('p_EMPRESA').AsString := FCodigoEmpresa;
   unspAplicar.ParamByName('p_ALMACEN').AsString := FCodigoAlmacen;
@@ -868,11 +889,24 @@ begin
   unspAplicar.ParamByName('p_NRO').AsString     := FNumero;
   unspAplicar.ParamByName('p_USUARIO').AsString := FUsuario;
   unspAplicar.ExecProc;
+  msExecProc := swTramo.ElapsedMilliseconds;
 
-  // Refrescamos
+  // (3) Recarga de lineas + movimientos generados.
+  swTramo := TStopwatch.StartNew;
   CargarLineasInventario;
   CargarMovimientosRegularizacion;
+  msRecargas := swTramo.ElapsedMilliseconds;
+
+  // (4) Refresh de la cabecera (cambia ESTADO ABIERTO -> APLICADO).
+  swTramo := TStopwatch.StartNew;
   unqryTablaG.Refresh;
+  msRefresh := swTramo.ElapsedMilliseconds;
+
+  inLibLog.Log.LogInfo(Format(
+    '[PERF:Aplicar] total=%d ms | ApplyUpdates=%d | ExecProc=%d | ' +
+    'Recargas=%d | Refresh=%d (emp=%s alm=%s ser=%s nro=%s)',
+    [swTotal.ElapsedMilliseconds, msApply, msExecProc, msRecargas, msRefresh,
+     FCodigoEmpresa, FCodigoAlmacen, FSerie, FNumero]));
 end;
 
 procedure TdmInventarios.EliminarRegularizacion;
