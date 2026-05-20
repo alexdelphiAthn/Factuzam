@@ -53,55 +53,6 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
-// =========================================================================
-//  Helpers
-// =========================================================================
-
-// Devuelve el ID_AV de la pareja (ID_VA, AV) o 0 si no existe.
-function BuscarIdAV(Eng: TMigEngine; const sIdVa, sAv: string): Integer;
-var qLook: TUniQuery;
-begin
-  qLook := TUniQuery.Create(nil);
-  try
-    qLook.Connection := Eng.ConDst;
-    qLook.SQL.Text   :=
-      'SELECT ID_AV FROM fza_atributos_valores ' +
-      'WHERE ID_VA_AV = :v AND AV = :av LIMIT 1';
-    qLook.ParamByName('v').AsString  := sIdVa;
-    qLook.ParamByName('av').AsString := sAv;
-    qLook.Open;
-    if qLook.IsEmpty then
-      Result := 0
-    else
-      Result := qLook.FieldByName('ID_AV').AsInteger;
-  finally
-    qLook.Free;
-  end;
-end;
-
-// Devuelve el ID_ATB del basico canonico (ID_VA_ATB, CODIGO_ATB) o 0 si
-// no existe. Para enriquecer fza_articulos_atributos_basicos.ID_ATB_AAB.
-function BuscarIdATB(Eng: TMigEngine; const sIdVa, sCodAtb: string): Integer;
-var qLook: TUniQuery;
-begin
-  qLook := TUniQuery.Create(nil);
-  try
-    qLook.Connection := Eng.ConDst;
-    qLook.SQL.Text   :=
-      'SELECT ID_ATB FROM fza_atributos_basicos ' +
-      'WHERE ID_VA_ATB = :v AND CODIGO_ATB = :c LIMIT 1';
-    qLook.ParamByName('v').AsString := sIdVa;
-    qLook.ParamByName('c').AsString := sCodAtb;
-    qLook.Open;
-    if qLook.IsEmpty then
-      Result := 0
-    else
-      Result := qLook.FieldByName('ID_ATB').AsInteger;
-  finally
-    qLook.Free;
-  end;
-end;
-
 // Inserta una fila en fza_articulos_atributos_basicos si no existe.
 // Devuelve True si insertó.
 function InsertarAsignacion(Eng: TMigEngine;
@@ -144,23 +95,6 @@ begin
     qIns.Free;
     qChk.Free;
   end;
-end;
-
-// Normaliza un texto a un codigo canonico (mayusculas, _ por espacios).
-function NormalizarCodigoAtb(const s: string): string;
-var i: Integer; c: Char;
-begin
-  Result := '';
-  for i := 1 to Length(s) do
-  begin
-    c := s[i];
-    case c of
-      'A'..'Z', '0'..'9', '_': Result := Result + c;
-      'a'..'z':                Result := Result + UpCase(c);
-      ' ', '-', '/', '.':      Result := Result + '_';
-    end;
-  end;
-  if Result = '' then Result := 'X';
 end;
 
 // =========================================================================

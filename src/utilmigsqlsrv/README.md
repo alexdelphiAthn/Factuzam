@@ -31,6 +31,11 @@ src/utilmigsqlsrv/
 ├── inLibMigArticulos.pas          dbo.ocartp     → fza_articulos
 ├── inLibMigArticulosAtributos.pas dbo.ocartcol   → fza_articulos_atributos_basicos
 │                                  dbo.ocarttal   → idem (asignaciones por art)
+├── inLibMigArticulosSkus.pas      dbo.ocartbap   → fza_articulos_skus +
+│                                                   fza_atributos_sku +
+│                                                   fza_codigos_barras
+├── inLibMigInventarios.pas        dbo.ocartacp   → fza_inventarios +
+│                                                   fza_inventarios_lineas
 └── resultados/                    CSVs de muestra exportados desde SSMS
 ```
 
@@ -117,6 +122,25 @@ de este branch ya las traen:
 |              | (añade `CODIGO_PADRE_FAM` y su índice — para       |
 |              | preservar la jerarquía sección→familia del legacy: |
 |              | "1401" tiene como padre "14"). |
+
+## Ejecución asíncrona
+
+La migración corre en un **hilo de trabajo OmniThreadLibrary**, no en
+el hilo de UI. Mientras corre:
+- La barra de progreso y el log se actualizan en tiempo real.
+- El botón "Ejecutar migraciones" cambia a "Cancelar". Al pulsarlo se
+  termina el dominio en curso y se sale del bucle.
+- El resto de botones (probar conexión, crear BBDD, cargar esqueleto)
+  se deshabilitan para evitar tocar las mismas `TUniConnection` a la
+  vez (UniDAC no soporta concurrencia en una misma conexión).
+- Al cerrar el form mientras se ejecuta, se solicita cancelación y se
+  espera hasta 5s al worker antes de destruir el motor.
+
+**No** hay paralelismo entre dominios todavía: los mappers se ejecutan
+en secuencia dentro del hilo de trabajo. Para correr varios a la vez
+habría que dar a cada worker su propio `TUniConnection` y resolver
+el DAG de dependencias (familias antes que artículos, IVAs antes que
+clientes, etc.). Es una iteración futura.
 
 ## Filosofía de los mappers
 
