@@ -168,6 +168,8 @@
         <DCCReference Include="inLibMigAtributos.pas"/>
         <DCCReference Include="inLibMigArticulos.pas"/>
         <DCCReference Include="inLibMigArticulosAtributos.pas"/>
+        <DCCReference Include="inLibMigArticulosSkus.pas"/>
+        <DCCReference Include="inLibMigInventarios.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
