@@ -66,6 +66,7 @@ type
     btnCrearBBDD:      TButton;
     btnCargarEsquema:  TButton;
     btnLimpiarDemo:    TButton;
+    btnResetearMig:    TButton;
     PanelCentro:       TPanel;
     lblUsuario:        TLabel;
     edUsuario:         TEdit;
@@ -97,6 +98,7 @@ type
     procedure btnCrearBBDDClick(Sender: TObject);
     procedure btnCargarEsquemaClick(Sender: TObject);
     procedure btnLimpiarDemoClick(Sender: TObject);
+    procedure btnResetearMigClick(Sender: TObject);
   private
     FEngine:       TMigEngine;
     FTask:         IOmniTaskControl;
@@ -533,6 +535,50 @@ begin
   Screen.Cursor := crDefault;
 end;
 
+procedure TFormMigrator.btnResetearMigClick(Sender: TObject);
+var
+  iBorradas: Integer;
+  sUser:     string;
+begin
+  if Trim(edDstBase.Text) = '' then
+  begin
+    ShowMessage('Rellena el campo "Base de datos" del destino.');
+    Exit;
+  end;
+  sUser := Trim(edUsuario.Text);
+  if sUser = '' then sUser := 'MIGRADOR';
+  if MessageDlg(Format(
+       'Se van a BORRAR del destino "%s" todas las filas que haya '#13#10 +
+       'creado una migracion previa (USUARIO_ALTA = "%s") en las '#13#10 +
+       '20 tablas que toca el migrador (inventarios, skus, articulos, '#13#10 +
+       'clientes, proveedores, almacenes, empresas, familias,...).'#13#10#13#10 +
+       'NO se tocan tablas de SISTEMA ni filas creadas por otros '#13#10 +
+       'usuarios (demo, Administrador, etc.).'#13#10#13#10 +
+       'Util para volver a ejecutar la migracion desde cero.'#13#10 +
+       '¿Continuar?', [edDstBase.Text, sUser]),
+       mtWarning, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+
+  Screen.Cursor := crHourGlass;
+  try
+    dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text,
+                            edDstBase.Text, edDstUser.Text,
+                            edDstPwd.Text);
+    iBorradas := dmMig.ResetearMigracionAnterior(sUser);
+    Log(Format('Migracion anterior reseteada: %d filas borradas ' +
+               '(USUARIO_ALTA=%s).', [iBorradas, sUser]));
+    ShowMessage(Format('Borradas %d filas de la migracion previa.',
+      [iBorradas]));
+  except
+    on E: Exception do
+    begin
+      Log('ERROR reseteando migracion: ' + E.Message);
+      ShowMessage('Fallo reseteando migracion:'#13#10 + E.Message);
+    end;
+  end;
+  Screen.Cursor := crDefault;
+end;
+
 procedure TFormMigrator.chkSrcWinAuthClick(Sender: TObject);
 begin
   edSrcUser.Enabled := not chkSrcWinAuth.Checked;
@@ -599,6 +645,7 @@ begin
     btnCrearBBDD.Enabled     := False;
     btnCargarEsquema.Enabled := False;
     btnLimpiarDemo.Enabled   := False;
+    btnResetearMig.Enabled   := False;
     btnMarcarTodas.Enabled   := False;
     btnDesmarcarTodas.Enabled:= False;
     listMigs.Enabled         := False;
@@ -612,6 +659,7 @@ begin
     btnCrearBBDD.Enabled     := True;
     btnCargarEsquema.Enabled := True;
     btnLimpiarDemo.Enabled   := True;
+    btnResetearMig.Enabled   := True;
     btnMarcarTodas.Enabled   := True;
     btnDesmarcarTodas.Enabled:= True;
     listMigs.Enabled         := True;

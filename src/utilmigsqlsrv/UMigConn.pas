@@ -55,6 +55,14 @@ type
     // borro en total. Util tras cargar factuzam_original.sql.
     function LimpiarDatosDemoDestino: Integer;
 
+    // Borra del destino TODO lo que haya creado una corrida previa
+    // del migrador, identificado por USUARIO_ALTA = sUsuario (por
+    // defecto 'MIGRADOR'). Procesa las tablas en orden inverso de
+    // dependencias (hijos primero) para evitar dejar huerfanos.
+    // Devuelve cuantas filas borro en total. Permite re-ejecutar la
+    // migracion desde cero sin restos.
+    function ResetearMigracionAnterior(const sUsuario: string): Integer;
+
     // Crea TUniConnection nuevas con los mismos parametros que
     // conSrv/conDst. Pensado para uso desde hilos de trabajo: cada
     // hilo necesita su propia conexion porque UniDAC no soporta uso
@@ -233,6 +241,60 @@ begin
   Result.Password     := conDst.Password;
   Result.LoginPrompt  := False;
   Result.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
+end;
+
+function TdmMig.ResetearMigracionAnterior(
+                                  const sUsuario: string): Integer;
+const
+  // Orden INVERSO de dependencias (hijos primero, padres despues)
+  // para que los DELETE no dejen huerfanos en otras tablas.
+  aTablas: array[0..19] of string = (
+    'fza_inventarios_lineas',
+    'fza_inventarios',
+    'fza_codigos_barras',
+    'fza_atributos_sku',
+    'fza_articulos_skus',
+    'fza_articulos_atributos_basicos',
+    'fza_articulos_conjuntos_asign',
+    'fza_atributos_conjuntos_det',
+    'fza_atributos_conjuntos',
+    'fza_articulos',
+    'fza_articulos_familias',
+    'fza_atributos_basicos',
+    'fza_atributos_valores',
+    'fza_clientes',
+    'fza_proveedores',
+    'fza_almacenes',
+    'fza_empresas',
+    'fza_formas_pago',
+    'fza_ivas',
+    'fza_ivas_grupos'
+  );
+var
+  i, iSub: Integer;
+  qDel:    TUniQuery;
+  sUser:   string;
+begin
+  sUser := Trim(sUsuario);
+  if sUser = '' then sUser := 'MIGRADOR';
+  if not conDst.Connected then conDst.Open;
+  Result := 0;
+  qDel := TUniQuery.Create(nil);
+  try
+    qDel.Connection := conDst;
+    for i := Low(aTablas) to High(aTablas) do
+    begin
+      qDel.SQL.Text := Format(
+        'DELETE FROM `%s` WHERE USUARIO_ALTA = :u', [aTablas[i]]);
+      qDel.ParamByName('u').AsString := sUser;
+      qDel.ExecSQL;
+      iSub := qDel.RowsAffected;
+      if iSub > 0 then
+        Inc(Result, iSub);
+    end;
+  finally
+    qDel.Free;
+  end;
 end;
 
 function TdmMig.LimpiarDatosDemoDestino: Integer;
