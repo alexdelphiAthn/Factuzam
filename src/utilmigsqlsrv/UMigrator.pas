@@ -23,10 +23,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.IniFiles, System.IOUtils, System.Math,
+  System.SyncObjs,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.CheckLst, Vcl.ComCtrls, Vcl.Mask,
   // OmniThreadLibrary para el hilo de trabajo de la migracion
   OtlCommon, OtlTask, OtlTaskControl, OtlParallel, OtlSync,
+  Data.DB, Uni,
   UMigEngine;
 
 type
@@ -80,7 +82,7 @@ type
     MemoLog:           TMemo;
     PanelProgreso:     TPanel;
     lblProgreso:       TLabel;
-    pbProgreso:        TProgressBar;
+    MemoProgreso:      TMemo;
     StatusBar:         TStatusBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -99,6 +101,9 @@ type
     FTask:         IOmniTaskControl;
     FCancel:       IOmniCancellationToken;
     FEjecutando:   Boolean;
+    // Mapa dominio → linea de progreso, accedido SOLO desde el UI
+    // thread (vive en el memo MemoProgreso).
+    FLineasProgreso: TStringList;
     procedure Log(const sMsg: string);
     procedure RegistrarMigraciones;
     procedure RecargarListado;
@@ -107,6 +112,8 @@ type
     function  RutaIni: string;
     procedure SetEjecutando(bValue: Boolean);
     procedure EjecutarMigracionesBackground;
+    procedure ActualizarProgreso(const sDominio: string;
+                                  iRow, iTotal: Integer);
   public
   end;
 
@@ -132,7 +139,9 @@ uses
   inLibMigArticulos,
   inLibMigArticulosAtributos,
   inLibMigArticulosSkus,
-  inLibMigInventarios;
+  inLibMigInventarios,
+  inLibMigTallajes,
+  inLibMigArticulosTallajes;
 
 // =========================================================================
 //  Lifecycle
@@ -166,23 +175,10 @@ begin
       TThread.Queue(nil,
         procedure
         begin
-          if iT > 0 then
-          begin
-            pbProgreso.Max      := iT;
-            pbProgreso.Position := Min(iR, iT);
-            lblProgreso.Caption := Format(
-              '%s: %d / %d  (%.0f%%)',
-              [sD, iR, iT, iR * 100.0 / iT]);
-          end
-          else
-          begin
-            pbProgreso.Max      := 1;
-            pbProgreso.Position := 0;
-            lblProgreso.Caption := Format(
-              '%s: %d / ?  (contando...)', [sD, iR]);
-          end;
+          ActualizarProgreso(sD, iR, iT);
         end);
     end;
+  FLineasProgreso := TStringList.Create;
   RegistrarMigraciones;
   RecargarListado;
   CargarConfig;
@@ -204,7 +200,44 @@ begin
   except
     // no podemos hacer nada en destroy, ignoramos
   end;
+  FLineasProgreso.Free;
   FEngine.Free;
+end;
+
+procedure TFormMigrator.ActualizarProgreso(const sDominio: string;
+                                            iRow, iTotal: Integer);
+var
+  i, iIdx: Integer;
+  sLinea, sPrefijo: string;
+begin
+  // Una linea por dominio activo en MemoProgreso. Si ya existe la
+  // entrada para sDominio la actualizamos; si es nueva la anadimos.
+  sPrefijo := Format('[%-22s]', [sDominio]);
+  if iTotal > 0 then
+    sLinea := Format('%s  %7d / %7d  (%5.1f%%)',
+      [sPrefijo, iRow, iTotal, iRow * 100.0 / iTotal])
+  else
+    sLinea := Format('%s  %7d / ?        (contando...)',
+      [sPrefijo, iRow]);
+
+  iIdx := -1;
+  for i := 0 to FLineasProgreso.Count - 1 do
+    if Copy(FLineasProgreso[i], 1, Length(sPrefijo)) = sPrefijo then
+    begin
+      iIdx := i;
+      Break;
+    end;
+  if iIdx >= 0 then
+    FLineasProgreso[iIdx] := sLinea
+  else
+    FLineasProgreso.Add(sLinea);
+
+  MemoProgreso.Lines.BeginUpdate;
+  try
+    MemoProgreso.Lines.Assign(FLineasProgreso);
+  finally
+    MemoProgreso.Lines.EndUpdate;
+  end;
 end;
 
 // =========================================================================
@@ -255,6 +288,13 @@ begin
   FEngine.Registrar('articulos_tallas', 'Tallas por artículo',
     'dbo.ocarttal → fza_articulos_atributos_basicos (TAL)',
     MigrarArticulosTallas);
+  FEngine.Registrar('tallajes', 'Sistemas de tallas (tallajes)',
+    'dbo.ocgrptal + ocgrptalnor → fza_atributos_conjuntos + det',
+    MigrarTallajes);
+  FEngine.Registrar('articulos_tallajes_asign',
+    'Asignar sistema de tallas a artículo',
+    'ocartp.NroTallaje → fza_articulos_conjuntos_asign',
+    MigrarArticulosTallajes);
   FEngine.Registrar('skus', 'SKUs y códigos de barras',
     'dbo.ocartbap → fza_articulos_skus + fza_atributos_sku + ' +
     'fza_codigos_barras',
@@ -640,73 +680,149 @@ begin
   EjecutarMigracionesBackground;
 end;
 
+// Tabla de dependencias entre dominios (DAG simplificado a waves):
+// los dominios de la misma wave corren en paralelo entre si. Las
+// waves se procesan secuencialmente, no pasamos a la siguiente
+// hasta que termina la anterior. Asi respetamos:
+//   - formas_pago antes que clientes
+//   - empresas antes que almacenes
+//   - familias antes que articulos
+//   - tallas_maestras antes que tallajes y antes que articulos_tallas
+//   - articulos antes que articulos_colores/tallas/skus
+//   - skus + almacenes antes que inventarios
+function WaveDeDominio(const sCodigo: string): Integer;
+begin
+  if (sCodigo = 'formas_pago')      or
+     (sCodigo = 'ivas_grupos')      or
+     (sCodigo = 'ivas')             or
+     (sCodigo = 'empresas')         or
+     (sCodigo = 'proveedores')      or
+     (sCodigo = 'familias')         or
+     (sCodigo = 'colores_maestros') or
+     (sCodigo = 'tallas_maestras') then Exit(0);
+  if (sCodigo = 'almacenes')   or
+     (sCodigo = 'clientes')    or
+     (sCodigo = 'articulos')   or
+     (sCodigo = 'tallajes')   then Exit(1);
+  if (sCodigo = 'articulos_colores')        or
+     (sCodigo = 'articulos_tallas')         or
+     (sCodigo = 'articulos_tallajes_asign') or
+     (sCodigo = 'skus')                     then Exit(2);
+  if sCodigo = 'inventarios' then Exit(3);
+  // Default: wave 0 (conservador, sin deps conocidas)
+  Result := 0;
+end;
+
 procedure TFormMigrator.EjecutarMigracionesBackground;
 var
-  aCodigos: TArray<string>;
-  aNombres: TArray<string>;
-  i, iLen:  Integer;
+  aCodigos:           TArray<string>;
+  i, iLen:            Integer;
 begin
-  // Snapshot de las migraciones marcadas (capturamos los codigos
-  // antes de lanzar el hilo, asi el listado puede deshabilitarse
-  // sin race).
+  // Snapshot de codigos marcados antes de lanzar el hilo.
   iLen := 0;
   SetLength(aCodigos, listMigs.Items.Count);
-  SetLength(aNombres, listMigs.Items.Count);
   for i := 0 to listMigs.Items.Count - 1 do
     if listMigs.Checked[i] then
     begin
       aCodigos[iLen] := FEngine.Items[i].Codigo;
-      aNombres[iLen] := FEngine.Items[i].Nombre;
       Inc(iLen);
     end;
   SetLength(aCodigos, iLen);
-  SetLength(aNombres, iLen);
 
   FCancel := CreateOmniCancellationToken;
+  MemoProgreso.Lines.Clear;
+  FLineasProgreso.Clear;
 
+  // Lanzamos un hilo "coordinador" que orquesta las waves. Dentro de
+  // cada wave usamos Parallel.ForEach para correr los dominios de esa
+  // wave en paralelo, cada uno con su propio par de conexiones.
   FTask := CreateTask(
     procedure(const task: IOmniTask)
     var
-      j:          Integer;
-      Stats:      TMigStats;
-      TotalStats: TMigStats;
-      sCodigo:    string;
-      sNombre:    string;
+      iWave:        Integer;
+      aDeWave:      TArray<string>;
+      iTotL, iTotI, iTotS, iTotE: Integer;
     begin
-      TotalStats := Default(TMigStats);
-      for j := 0 to High(aCodigos) do
+      iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
+
+      for iWave := 0 to 3 do
       begin
-        if task.CancellationToken.IsSignalled then
-        begin
-          TThread.Queue(nil,
-            procedure begin Log('--- CANCELADO por el usuario ---'); end);
-          Break;
-        end;
-        sCodigo := aCodigos[j];
-        sNombre := aNombres[j];
-        Stats   := Default(TMigStats);
-        try
-          FEngine.Ejecutar(sCodigo, Stats);
-          Inc(TotalStats.Leidas,     Stats.Leidas);
-          Inc(TotalStats.Insertadas, Stats.Insertadas);
-          Inc(TotalStats.Saltadas,   Stats.Saltadas);
-          Inc(TotalStats.Errores,    Stats.Errores);
-        except
-          on E: Exception do
+        if task.CancellationToken.IsSignalled then Break;
+
+        // Filtrar codigos de esta wave
+        SetLength(aDeWave, 0);
+        for i := 0 to High(aCodigos) do
+          if WaveDeDominio(aCodigos[i]) = iWave then
           begin
-            Inc(TotalStats.Errores);
-            // Loguear y seguir con las demas (no preguntamos en hilo
-            // de trabajo — la decision se toma al inicio).
-            TThread.Queue(nil,
-              procedure
-              var sMsg: string;
-              begin
-                sMsg := Format('FALLO TOTAL en %s: %s',
-                               [sCodigo, E.Message]);
-                Log(sMsg);
-              end);
+            SetLength(aDeWave, Length(aDeWave) + 1);
+            aDeWave[High(aDeWave)] := aCodigos[i];
           end;
-        end;
+        if Length(aDeWave) = 0 then Continue;
+
+        TThread.Queue(nil,
+          procedure
+          var sCsv: string; k: Integer;
+          begin
+            sCsv := '';
+            for k := 0 to High(aDeWave) do
+            begin
+              if sCsv <> '' then sCsv := sCsv + ', ';
+              sCsv := sCsv + aDeWave[k];
+            end;
+            Log(Format('=== Wave %d arrancando en paralelo: %s ===',
+                       [iWave, sCsv]));
+          end);
+
+        // Parallel.ForEach.Execute es sincrono por defecto: no
+        // continua hasta que TODOS los workers de esta wave terminan.
+        // Asi respetamos las dependencias entre waves.
+        Parallel.ForEach<string>(aDeWave)
+          .Execute(
+            procedure(const sCodigo: string)
+            var
+              LocalSrv, LocalDst: TUniConnection;
+              LocalEng:           TMigEngine;
+              LocalStats:         TMigStats;
+            begin
+              if task.CancellationToken.IsSignalled then Exit;
+              LocalSrv := dmMig.ClonarConexionOrigen;
+              LocalDst := dmMig.ClonarConexionDestino;
+              LocalEng := nil;
+              try
+                LocalSrv.Open;
+                LocalDst.Open;
+                LocalEng := TMigEngine.CreateClone(LocalSrv, LocalDst,
+                                                     FEngine);
+                try
+                  LocalEng.Ejecutar(sCodigo, LocalStats);
+                  // Acumular totales con TInterlocked.Add (Integer
+                  // shared entre tasks).
+                  TInterlocked.Add(iTotL, LocalStats.Leidas);
+                  TInterlocked.Add(iTotI, LocalStats.Insertadas);
+                  TInterlocked.Add(iTotS, LocalStats.Saltadas);
+                  TInterlocked.Add(iTotE, LocalStats.Errores);
+                except
+                  on E: Exception do
+                  begin
+                    TInterlocked.Increment(iTotE);
+                    TThread.Queue(nil,
+                      procedure
+                      var sMsg: string;
+                      begin
+                        sMsg := Format('FALLO TOTAL en %s: %s',
+                                       [sCodigo, E.Message]);
+                        Log(sMsg);
+                      end);
+                  end;
+                end;
+              finally
+                LocalEng.Free;
+                if LocalDst.Connected then LocalDst.Close;
+                if LocalSrv.Connected then LocalSrv.Close;
+                LocalDst.Free;
+                LocalSrv.Free;
+              end;
+            end);
       end;
 
       TThread.Queue(nil,
@@ -715,8 +831,7 @@ begin
           Log('');
           Log(Format(
             'TOTAL: %d leidas, %d insertadas, %d saltadas, %d errores.',
-            [TotalStats.Leidas, TotalStats.Insertadas,
-             TotalStats.Saltadas, TotalStats.Errores]));
+            [iTotL, iTotI, iTotS, iTotE]));
           SetEjecutando(False);
         end);
     end)

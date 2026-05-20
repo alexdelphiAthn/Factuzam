@@ -54,6 +54,13 @@ type
     // (paises, ivas_tipos, winforms...). Devuelve cuantas filas
     // borro en total. Util tras cargar factuzam_original.sql.
     function LimpiarDatosDemoDestino: Integer;
+
+    // Crea TUniConnection nuevas con los mismos parametros que
+    // conSrv/conDst. Pensado para uso desde hilos de trabajo: cada
+    // hilo necesita su propia conexion porque UniDAC no soporta uso
+    // concurrente. El llamante es duenio del objeto y debe liberarlo.
+    function ClonarConexionOrigen:  TUniConnection;
+    function ClonarConexionDestino: TUniConnection;
   end;
 
 var
@@ -198,6 +205,36 @@ begin
   end;
 end;
 
+function TdmMig.ClonarConexionOrigen: TUniConnection;
+var sAuth: string;
+begin
+  Result := TUniConnection.Create(nil);
+  Result.ProviderName := conSrv.ProviderName;
+  Result.Server       := conSrv.Server;
+  Result.Port         := conSrv.Port;
+  Result.Database     := conSrv.Database;
+  Result.Username     := conSrv.Username;
+  Result.Password     := conSrv.Password;
+  Result.LoginPrompt  := False;
+  // Preservar el modo de autenticacion (Windows / SQL).
+  sAuth := conSrv.SpecificOptions.Values['Authentication'];
+  if sAuth <> '' then
+    Result.SpecificOptions.Values['Authentication'] := sAuth;
+end;
+
+function TdmMig.ClonarConexionDestino: TUniConnection;
+begin
+  Result := TUniConnection.Create(nil);
+  Result.ProviderName := conDst.ProviderName;
+  Result.Server       := conDst.Server;
+  Result.Port         := conDst.Port;
+  Result.Database     := conDst.Database;
+  Result.Username     := conDst.Username;
+  Result.Password     := conDst.Password;
+  Result.LoginPrompt  := False;
+  Result.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
+end;
+
 function TdmMig.LimpiarDatosDemoDestino: Integer;
 const
   // Orden importante: hijos primero (FK logicas), padres despues.
@@ -226,8 +263,10 @@ begin
         'WHERE USUARIO_ALTA IN (''DEMO'', ''Administrador'', ' +
         '                       ''Sistema'', ''SISTEMA'')',
         [aTablas[i]]);
-      iSub := qDel.ExecSQL;
-      Inc(Result, iSub);
+      qDel.ExecSQL;
+      iSub := qDel.RowsAffected;
+      if iSub > 0 then
+        Inc(Result, iSub);
     end;
   finally
     qDel.Free;
