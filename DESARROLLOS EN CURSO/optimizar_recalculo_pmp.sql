@@ -327,7 +327,11 @@ BEGIN
     DECLARE v_FECHA_CABECERA DATETIME;
     DECLARE v_FECHA_DEFECTO  DATETIME;
 
-    DECLARE v_LINEA     VARCHAR(4);
+    /* fza_inventarios_lineas.LINEA_INVLIN es VARCHAR(8) (formato
+       '00000001'...). El SP original tenia VARCHAR(4) aqui, lo que
+       provocaba "#22001 Data too long for column 'v_LINEA'" en el FETCH
+       cuando el contador de linea pasaba de 9999. */
+    DECLARE v_LINEA     VARCHAR(8);
     DECLARE v_ARTICULO  VARCHAR(20);
     DECLARE v_SKU       VARCHAR(50);
     DECLARE v_TEORICA   DECIMAL(19,6);
