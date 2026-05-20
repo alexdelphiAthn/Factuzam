@@ -35,6 +35,17 @@ type
                                 sPwd: string);
     procedure ProbarOrigen;
     procedure ProbarDestino;
+
+    // Crea una BBDD vacia en el servidor destino con charset utf8mb4 y
+    // collation utf8mb4_spanish_ci. Idempotente: si ya existe no hace
+    // nada. Tras la llamada, conDst queda configurado con sNombre como
+    // Database (pero cerrado).
+    procedure CrearBBDDDestino(const sNombre: string);
+
+    // Carga el contenido completo de un .sql (esquema + datos seed) en
+    // la BBDD destino actualmente configurada. Usa TUniScript para
+    // soportar multiples sentencias separadas por ;.
+    procedure CargarEsquemaDestino(const sRutaFichero: string);
   end;
 
 var
@@ -107,6 +118,76 @@ procedure TdmMig.ProbarDestino;
 begin
   conDst.Open;
   conDst.ExecSQL('SELECT 1');
+end;
+
+// =========================================================================
+//  Crear BBDD destino vacia
+// =========================================================================
+
+procedure TdmMig.CrearBBDDDestino(const sNombre: string);
+var
+  i: Integer;
+  c: Char;
+  sDbAnterior: string;
+begin
+  // Validamos el nombre. Solo a-z, A-Z, 0-9, _ — sin backticks, sin
+  // espacios, sin acentos. Asi prevenimos inyeccion via identificador.
+  if (sNombre = '') or (Length(sNombre) > 64) then
+    raise Exception.Create('Nombre de BBDD invalido (vacio o > 64 chars).');
+  for i := 1 to Length(sNombre) do
+  begin
+    c := sNombre[i];
+    if not ((c in ['a'..'z']) or (c in ['A'..'Z'])
+         or (c in ['0'..'9']) or (c = '_')) then
+      raise Exception.CreateFmt(
+        'Nombre de BBDD invalido (caracter "%s"). ' +
+        'Solo a-z, A-Z, 0-9 y _.', [c]);
+  end;
+
+  sDbAnterior := conDst.Database;
+  conDst.Close;
+  try
+    // Conectamos a la BBDD de sistema "mysql" que siempre existe; con
+    // ese contexto podemos ejecutar CREATE DATABASE.
+    conDst.Database := 'mysql';
+    conDst.Open;
+    try
+      conDst.ExecSQL(Format(
+        'CREATE DATABASE IF NOT EXISTS `%s` ' +
+        'CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci',
+        [sNombre]));
+    finally
+      conDst.Close;
+    end;
+  finally
+    // Dejamos la conexion apuntando a la nueva BBDD para que el resto
+    // del programa (probar, cargar esquema, ejecutar migraciones)
+    // trabaje contra ella sin pasos extra.
+    conDst.Database := sNombre;
+  end;
+end;
+
+// =========================================================================
+//  Cargar un .sql en el destino
+// =========================================================================
+
+procedure TdmMig.CargarEsquemaDestino(const sRutaFichero: string);
+var
+  oScript: TUniScript;
+begin
+  if not FileExists(sRutaFichero) then
+    raise Exception.CreateFmt('No se encuentra el fichero "%s".',
+                              [sRutaFichero]);
+  if not conDst.Connected then
+    conDst.Open;
+  oScript := TUniScript.Create(nil);
+  try
+    oScript.Connection := conDst;
+    oScript.SQL.LoadFromFile(sRutaFichero);
+    oScript.Execute;
+  finally
+    oScript.Free;
+  end;
 end;
 
 end.

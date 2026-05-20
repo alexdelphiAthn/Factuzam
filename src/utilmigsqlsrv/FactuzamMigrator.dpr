@@ -4,6 +4,7 @@ uses
   Vcl.Forms,
   UMigConn in 'UMigConn.pas' {dmMig: TDataModule},
   UMigEngine in 'UMigEngine.pas',
+  inLibMigDumpEsqueleto in 'inLibMigDumpEsqueleto.pas',
   UMigrator in 'UMigrator.pas' {FormMigrator},
   inLibMigFormasPago in 'inLibMigFormasPago.pas',
   inLibMigIvasGrupos in 'inLibMigIvasGrupos.pas',
