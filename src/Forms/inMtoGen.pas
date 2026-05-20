@@ -48,7 +48,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList;
+  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList,
+  System.Threading;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -136,6 +137,12 @@ type
     // porque cada Mto vive embebido en su propio TcxTabSheet.
     FOverlayOcupado: TPanel;
     FTareasEnCurso: Integer;
+    // Lista de ITask vivos para poder esperarlos en Destroy. Sin esto,
+    // cerrar un tab mientras un Open async sigue ejecutando provoca AV:
+    // el thread accederia a la TUniQuery / FConn ya liberadas. La lista
+    // se crea lazy en EjecutarEnBackground y se libera en Destroy
+    // despues del WaitForAll.
+    FTareasActivas: TList<ITask>;
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
@@ -189,6 +196,15 @@ type
     // grids. Solo operaciones BBDD puras (ExecProc, ExecSQL, calculos).
     procedure EjecutarEnBackground(AccionBG: TProc;
                                    AlTerminar: TProc<string>);
+    // Carga inicial de la lista principal (unqryTablaG) en thread. El
+    // grid se suelta del DataSource antes del Open y se revincula cuando
+    // termina, evitando que cxGrid acceda al dataset durante el fetch.
+    // Si la query ya esta activa o no hay data module, no hace nada.
+    procedure AbrirTablaPrincipalAsync;
+    // Variante sincrona (comportamiento clasico): bloquea hasta tener
+    // los datos. La usa ShowMto cuando se invoca con parametro de
+    // busqueda — BuscarTabla.Locate necesita la query activa al volver.
+    procedure AbrirTablaPrincipalSincrono;
   public
     destructor Destroy; override;
   end;
@@ -207,8 +223,8 @@ uses inMtoGenSearch,
      inLibLog,
      inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
-     inLibFotos, inMtoFotoArticulo,
-     System.Threading;     // TTask.Run para EjecutarEnBackground (Fase 2)
+     inLibFotos, inMtoFotoArticulo;
+     // System.Threading ya esta en el interface (para TList<ITask>).
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
@@ -708,11 +724,15 @@ end;
 
 procedure TfrmMtoGen.EjecutarEnBackground(AccionBG: TProc;
                                           AlTerminar: TProc<string>);
+var
+  LTask: ITask;
 begin
   if not Assigned(AccionBG) then
     Exit;
+  if FTareasActivas = nil then
+    FTareasActivas := TList<ITask>.Create;
   BloquearTabPorOcupado(True);
-  TTask.Run(
+  LTask := TTask.Run(
     procedure
     var
       LErrMsg: string;
@@ -738,9 +758,21 @@ begin
         procedure
         begin
           try
-            BloquearTabPorOcupado(False);
-            if Assigned(AlTerminar) then
-              AlTerminar(LErrMsg);
+            // Quitar esta tarea de la lista ANTES del callback (si el
+            // callback lanza otra task, no queremos contar esta vez).
+            // Si el form se esta destruyendo, FTareasActivas puede ser nil.
+            if Assigned(FTareasActivas) then
+              FTareasActivas.Remove(LTask);
+            // Tambien comprobamos csDestroying: si el form se cerro
+            // mientras la tarea corria, no hay UI que actualizar y los
+            // componentes (FOverlayOcupado, dsTablaG...) ya estan
+            // liberados.
+            if not (csDestroying in ComponentState) then
+            begin
+              BloquearTabPorOcupado(False);
+              if Assigned(AlTerminar) then
+                AlTerminar(LErrMsg);
+            end;
           except
             on E: Exception do
               inLibLog.Log.LogError(
@@ -749,6 +781,70 @@ begin
           end;
         end);
     end);
+  FTareasActivas.Add(LTask);
+end;
+
+procedure TfrmMtoGen.AbrirTablaPrincipalAsync;
+var
+  dmDat: TdmBase;
+  unqry: TUniQuery;
+begin
+  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
+    Exit;
+  dmDat := TdmBase(tdmDataModule);
+  unqry := dmDat.unqryTablaG;
+  if (unqry = nil) or unqry.Active then
+    Exit;
+  // Soltamos el grid del DataSource. cxGrid mostrara "<No hay datos a
+  // mostrar>" durante el fetch (con el overlay encima). Sin esto, el
+  // grid intentaria leer del dataset desde el main thread mientras este
+  // se rellena en el thread — AVs intermitentes.
+  if Assigned(dsTablaG) then
+    dsTablaG.DataSet := nil;
+  EjecutarEnBackground(
+    procedure
+    begin
+      if not unqry.Active then
+        unqry.Open;
+    end,
+    procedure(ErrMsg: string)
+    begin
+      // El form puede haberse cerrado mientras carga (otro tab, btnSalir,
+      // cierre de app). En csDestroying los componentes ya pueden estar
+      // liberados; salir limpio sin tocar nada.
+      if csDestroying in ComponentState then
+        Exit;
+      if ErrMsg <> '' then
+      begin
+        inLibLog.Log.LogError('[CargaAsync] ' + Self.Name + ': ' + ErrMsg);
+        // No mostramos ShowMessage aqui — molesta si pasa al abrir
+        // varios tabs en cadena. El error queda en el log.
+        Exit;
+      end;
+      // Revincular grid: trigger del refresco automatico.
+      if Assigned(dsTablaG) and Assigned(unqry) then
+        dsTablaG.DataSet := unqry;
+    end);
+end;
+
+procedure TfrmMtoGen.AbrirTablaPrincipalSincrono;
+var
+  dmDat: TdmBase;
+  unqry: TUniQuery;
+begin
+  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
+    Exit;
+  dmDat := TdmBase(tdmDataModule);
+  unqry := dmDat.unqryTablaG;
+  if (unqry = nil) or unqry.Active then
+    Exit;
+  try
+    unqry.Open;
+  except
+    on E: Exception do
+      inLibLog.Log.LogError(
+        'Error al abrir tabla en ' + Self.Name + ': ' + E.Message);
+  end;
 end;
 
 function TfrmMtoGen.CrearConexionPropia: TUniConnection;
@@ -793,6 +889,22 @@ destructor TfrmMtoGen.Destroy;
 begin
   if Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
+  // ANTES de liberar nada relacionado con BBDD (data module, FConn),
+  // esperar a que terminen las tareas en background. Si quedaran tareas
+  // vivas accederian a TUniQuery / TUniConnection ya liberadas → AV.
+  // Timeout 5s: si MySQL no responde en 5s preferimos asumir tarea muerta
+  // antes que dejar la app colgada cerrando un tab.
+  if Assigned(FTareasActivas) then
+  begin
+    try
+      if FTareasActivas.Count > 0 then
+        TTask.WaitForAll(FTareasActivas.ToArray, 5000);
+    except
+      // WaitForAll puede lanzar si alguna tarea fallo — lo ignoramos
+      // porque solo queremos drenar, no propagar.
+    end;
+    FreeAndNil(FTareasActivas);
+  end;
   if (oPerfilDic <> nil) then
     FreeAndNil(oPerfilDic);
   if (tdmDataModule <> nil) then
