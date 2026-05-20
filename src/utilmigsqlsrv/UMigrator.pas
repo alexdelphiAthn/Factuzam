@@ -25,6 +25,8 @@ uses
   System.Classes, System.IniFiles, System.IOUtils, System.Math,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.CheckLst, Vcl.ComCtrls, Vcl.Mask,
+  // OmniThreadLibrary para el hilo de trabajo de la migracion
+  OtlCommon, OtlTask, OtlTaskControl, OtlParallel, OtlSync,
   UMigEngine;
 
 type
@@ -93,13 +95,18 @@ type
     procedure btnCargarEsquemaClick(Sender: TObject);
     procedure btnLimpiarDemoClick(Sender: TObject);
   private
-    FEngine: TMigEngine;
+    FEngine:       TMigEngine;
+    FTask:         IOmniTaskControl;
+    FCancel:       IOmniCancellationToken;
+    FEjecutando:   Boolean;
     procedure Log(const sMsg: string);
     procedure RegistrarMigraciones;
     procedure RecargarListado;
     procedure CargarConfig;
     procedure GuardarConfig;
     function  RutaIni: string;
+    procedure SetEjecutando(bValue: Boolean);
+    procedure EjecutarMigracionesBackground;
   public
   end;
 
@@ -136,30 +143,45 @@ begin
   Caption  := 'Factuzam Migrator SQL Server';
   Position := poScreenCenter;
 
-  FEngine       := TMigEngine.Create(dmMig.conSrv, dmMig.conDst);
-  FEngine.OnLog := procedure(const s: string)
-                   begin
-                     Log(s);
-                   end;
+  FEngine := TMigEngine.Create(dmMig.conSrv, dmMig.conDst);
+  // Las callbacks del engine pueden invocarse desde un hilo de trabajo
+  // (cuando la migracion corre en background). Pasamos al hilo de UI
+  // via TThread.Queue para evitar accesos concurrentes a los TControl.
+  FEngine.OnLog :=
+    procedure(const s: string)
+    var sCopy: string;
+    begin
+      sCopy := s;
+      TThread.Queue(nil,
+        procedure
+        begin
+          Log(sCopy);
+        end);
+    end;
   FEngine.OnProgress :=
     procedure(const sDominio: string; iRow, iTotal: Integer)
+    var sD: string; iR, iT: Integer;
     begin
-      if iTotal > 0 then
-      begin
-        pbProgreso.Max      := iTotal;
-        pbProgreso.Position := Min(iRow, iTotal);
-        lblProgreso.Caption := Format(
-          '%s: %d / %d  (%.0f%%)',
-          [sDominio, iRow, iTotal, iRow * 100.0 / iTotal]);
-      end
-      else
-      begin
-        pbProgreso.Max      := 1;
-        pbProgreso.Position := 0;
-        lblProgreso.Caption := Format(
-          '%s: %d / ?  (contando...)', [sDominio, iRow]);
-      end;
-      Application.ProcessMessages;
+      sD := sDominio; iR := iRow; iT := iTotal;
+      TThread.Queue(nil,
+        procedure
+        begin
+          if iT > 0 then
+          begin
+            pbProgreso.Max      := iT;
+            pbProgreso.Position := Min(iR, iT);
+            lblProgreso.Caption := Format(
+              '%s: %d / %d  (%.0f%%)',
+              [sD, iR, iT, iR * 100.0 / iT]);
+          end
+          else
+          begin
+            pbProgreso.Max      := 1;
+            pbProgreso.Position := 0;
+            lblProgreso.Caption := Format(
+              '%s: %d / ?  (contando...)', [sD, iR]);
+          end;
+        end);
     end;
   RegistrarMigraciones;
   RecargarListado;
@@ -169,6 +191,14 @@ end;
 
 procedure TFormMigrator.FormDestroy(Sender: TObject);
 begin
+  // Si hay una migracion corriendo, pedirle que pare y esperar un
+  // poco a que termine el dominio actual.
+  if Assigned(FCancel) then FCancel.Signal;
+  if Assigned(FTask) then
+  begin
+    FTask.Terminate(5000);  // espera hasta 5s al worker
+    FTask := nil;
+  end;
   try
     GuardarConfig;
   except
@@ -514,12 +544,56 @@ begin
   Screen.Cursor := crDefault;
 end;
 
+procedure TFormMigrator.SetEjecutando(bValue: Boolean);
+begin
+  FEjecutando := bValue;
+  if bValue then
+  begin
+    btnEjecutar.Caption := 'Cancelar';
+    // Bloquear otras acciones mientras corre la migracion. Solo
+    // dejamos el Cancelar (el propio boton Ejecutar).
+    btnProbarSrc.Enabled     := False;
+    btnProbarDst.Enabled     := False;
+    btnDumpEsqueleto.Enabled := False;
+    btnCrearBBDD.Enabled     := False;
+    btnCargarEsquema.Enabled := False;
+    btnLimpiarDemo.Enabled   := False;
+    btnMarcarTodas.Enabled   := False;
+    btnDesmarcarTodas.Enabled:= False;
+    listMigs.Enabled         := False;
+  end
+  else
+  begin
+    btnEjecutar.Caption := 'Ejecutar migraciones';
+    btnProbarSrc.Enabled     := True;
+    btnProbarDst.Enabled     := True;
+    btnDumpEsqueleto.Enabled := True;
+    btnCrearBBDD.Enabled     := True;
+    btnCargarEsquema.Enabled := True;
+    btnLimpiarDemo.Enabled   := True;
+    btnMarcarTodas.Enabled   := True;
+    btnDesmarcarTodas.Enabled:= True;
+    listMigs.Enabled         := True;
+    pbProgreso.Position      := 0;
+    lblProgreso.Caption      := 'Inactivo';
+  end;
+end;
+
 procedure TFormMigrator.btnEjecutarClick(Sender: TObject);
 var
-  i: Integer;
-  Stats, TotalStats: TMigStats;
-  iSeleccionadas: Integer;
+  i, iSeleccionadas: Integer;
 begin
+  // Si ya estamos ejecutando, este click es de "Cancelar"
+  if FEjecutando then
+  begin
+    if Assigned(FCancel) then
+    begin
+      FCancel.Signal;
+      Log('Cancelacion solicitada — terminando dominio actual...');
+    end;
+    Exit;
+  end;
+
   iSeleccionadas := 0;
   for i := 0 to listMigs.Items.Count - 1 do
     if listMigs.Checked[i] then Inc(iSeleccionadas);
@@ -535,8 +609,10 @@ begin
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
 
-  // Asegurarse de que las conexiones estan configuradas (por si no se
-  // pulsaron los botones de probar)
+  // Configuracion + apertura de conexiones SE HACE EN UI THREAD antes
+  // de lanzar el hilo de trabajo. UniDAC mueve la afinidad de la
+  // conexion al primer hilo que la usa, asi que en cuanto el worker
+  // empiece a hacer SELECT/INSERT el ownership pasa a el.
   dmMig.ConfigurarOrigen(edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
                          edSrcUser.Text, edSrcPwd.Text,
                          chkSrcWinAuth.Checked);
@@ -560,39 +636,93 @@ begin
     end;
   end;
 
-  Screen.Cursor := crHourGlass;
-  TotalStats := Default(TMigStats);
-  try
-    for i := 0 to listMigs.Items.Count - 1 do
+  SetEjecutando(True);
+  EjecutarMigracionesBackground;
+end;
+
+procedure TFormMigrator.EjecutarMigracionesBackground;
+var
+  aCodigos: TArray<string>;
+  aNombres: TArray<string>;
+  i, iLen:  Integer;
+begin
+  // Snapshot de las migraciones marcadas (capturamos los codigos
+  // antes de lanzar el hilo, asi el listado puede deshabilitarse
+  // sin race).
+  iLen := 0;
+  SetLength(aCodigos, listMigs.Items.Count);
+  SetLength(aNombres, listMigs.Items.Count);
+  for i := 0 to listMigs.Items.Count - 1 do
+    if listMigs.Checked[i] then
     begin
-      if not listMigs.Checked[i] then Continue;
-      Application.ProcessMessages;
-      Stats := Default(TMigStats);
-      try
-        FEngine.Ejecutar(FEngine.Items[i].Codigo, Stats);
-        Inc(TotalStats.Leidas,     Stats.Leidas);
-        Inc(TotalStats.Insertadas, Stats.Insertadas);
-        Inc(TotalStats.Saltadas,   Stats.Saltadas);
-      except
-        on E: Exception do
+      aCodigos[iLen] := FEngine.Items[i].Codigo;
+      aNombres[iLen] := FEngine.Items[i].Nombre;
+      Inc(iLen);
+    end;
+  SetLength(aCodigos, iLen);
+  SetLength(aNombres, iLen);
+
+  FCancel := CreateOmniCancellationToken;
+
+  FTask := CreateTask(
+    procedure(const task: IOmniTask)
+    var
+      j:          Integer;
+      Stats:      TMigStats;
+      TotalStats: TMigStats;
+      sCodigo:    string;
+      sNombre:    string;
+    begin
+      TotalStats := Default(TMigStats);
+      for j := 0 to High(aCodigos) do
+      begin
+        if task.CancellationToken.IsSignalled then
         begin
-          Inc(TotalStats.Errores, 1);
-          Log('FALLO TOTAL en ' + FEngine.Items[i].Codigo + ': ' + E.Message);
-          if MessageDlg('Fallo en migración "' + FEngine.Items[i].Nombre +
-                        '". ¿Continuar con las siguientes?',
-                        mtError, [mbYes, mbNo], 0) <> mrYes then
-            Break;
+          TThread.Queue(nil,
+            procedure begin Log('--- CANCELADO por el usuario ---'); end);
+          Break;
+        end;
+        sCodigo := aCodigos[j];
+        sNombre := aNombres[j];
+        Stats   := Default(TMigStats);
+        try
+          FEngine.Ejecutar(sCodigo, Stats);
+          Inc(TotalStats.Leidas,     Stats.Leidas);
+          Inc(TotalStats.Insertadas, Stats.Insertadas);
+          Inc(TotalStats.Saltadas,   Stats.Saltadas);
+          Inc(TotalStats.Errores,    Stats.Errores);
+        except
+          on E: Exception do
+          begin
+            Inc(TotalStats.Errores);
+            // Loguear y seguir con las demas (no preguntamos en hilo
+            // de trabajo — la decision se toma al inicio).
+            TThread.Queue(nil,
+              procedure
+              var sMsg: string;
+              begin
+                sMsg := Format('FALLO TOTAL en %s: %s',
+                               [sCodigo, E.Message]);
+                Log(sMsg);
+              end);
+          end;
         end;
       end;
-    end;
 
-    Log('');
-    Log(Format('TOTAL: %d leidas, %d insertadas, %d saltadas, %d errores.',
-        [TotalStats.Leidas, TotalStats.Insertadas, TotalStats.Saltadas,
-         TotalStats.Errores]));
-  finally
-    Screen.Cursor := crDefault;
-  end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          Log('');
+          Log(Format(
+            'TOTAL: %d leidas, %d insertadas, %d saltadas, %d errores.',
+            [TotalStats.Leidas, TotalStats.Insertadas,
+             TotalStats.Saltadas, TotalStats.Errores]));
+          SetEjecutando(False);
+        end);
+    end)
+    .CancelWith(FCancel)
+    .Unobserved
+    .Run;
 end;
 
 // =========================================================================
