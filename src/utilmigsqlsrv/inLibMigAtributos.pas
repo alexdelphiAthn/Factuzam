@@ -303,6 +303,46 @@ begin
   finally
     qSrc.Free;
   end;
+
+  // Segunda pasada: incluir CUALQUIER otro color que aparezca como
+  // texto en ocartcol u ocartbap pero que no haya sido resuelto a un
+  // canonico de occolor. Esto cubre fallbacks como "26", "16 VER",
+  // "BERENG" — codigos locales que el JOIN a occolor deja fuera.
+  // Sin esto, articulos_colores falla con
+  //   "color X no esta en fza_atributos_valores".
+  qSrc := NuevoQOrigen(Eng,
+    'SELECT DISTINCT UPPER(LTRIM(RTRIM( ' +
+    '    CASE WHEN c.Descripcion IS NOT NULL ' +
+    '    THEN c.Descripcion ELSE ac.Color END ' +
+    '  ))) AS DescColor ' +
+    'FROM dbo.ocartcol ac ' +
+    'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
+    'WHERE LTRIM(RTRIM(ISNULL(ac.Color, ''''))) <> '''' ' +
+    'UNION ' +
+    'SELECT DISTINCT UPPER(LTRIM(RTRIM(Color))) AS DescColor ' +
+    'FROM dbo.ocartbap ' +
+    'WHERE LTRIM(RTRIM(ISNULL(Color, ''''))) <> '''' ' +
+    'ORDER BY DescColor');
+  try
+    qSrc.Open;
+    while not qSrc.Eof do
+    begin
+      sDesc := Trim(qSrc.FieldByName('DescColor').AsString);
+      if sDesc <> '' then
+      begin
+        if InsertarValorAtributo(Eng, 'CO', sDesc,
+                                  'Color ' + sDesc + ' (uso local)',
+                                  iOrden) then
+        begin
+          Inc(Stats.Insertadas);
+          Inc(iOrden, 10);
+        end;
+      end;
+      qSrc.Next;
+    end;
+  finally
+    qSrc.Free;
+  end;
 end;
 
 // =========================================================================
@@ -311,11 +351,34 @@ end;
 
 procedure MigrarTallasMaestras(Eng: TMigEngine; var Stats: TMigStats);
 const
+  // UNION de DOS fuentes:
+  //   - ocarttal: tallas que algun articulo tiene asignadas
+  //   - ocgrptalnor: tallas que aparecen en la DEFINICION de algun
+  //     tallaje (puede haber tallas en el catalogo de tallajes que
+  //     ningun articulo use directamente, como las del tallaje CINTOS:
+  //     65/70/75/80/85... si ningun cinturon esta migrado todavia)
+  // Sin el UNION, las tallas "exoticas" no estarian en
+  // fza_atributos_valores y la migracion de tallajes y de
+  // articulos_tallas fallaria con "no esta en fza_atributos_valores".
   cSelectSrc =
-    'SELECT DISTINCT Talla ' +
-    'FROM dbo.ocarttal ' +
-    'WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
+    'SELECT DISTINCT Talla FROM (' +
+    '  SELECT Talla FROM dbo.ocarttal ' +
+    '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
+    '  UNION ' +
+    '  SELECT Talla FROM dbo.ocgrptalnor ' +
+    '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
+    ') X ' +
     'ORDER BY Talla';
+  cCount =
+    'SELECT COUNT(*) FROM (' +
+    '  SELECT DISTINCT Talla FROM (' +
+    '    SELECT Talla FROM dbo.ocarttal ' +
+    '     WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
+    '    UNION ' +
+    '    SELECT Talla FROM dbo.ocgrptalnor ' +
+    '     WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
+    '  ) X ' +
+    ') Y';
 var
   qSrc:           TUniQuery;
   sTalla, sCodAtb: string;
@@ -326,9 +389,7 @@ begin
 
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
-    Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(DISTINCT Talla) FROM dbo.ocarttal ' +
-      'WHERE LTRIM(RTRIM(Talla)) <> '''''));
+    Eng.SetTotal(Eng.ContarOrigen(cCount));
     qSrc.Open;
     iOrden := 10;
     while not qSrc.Eof do

@@ -86,6 +86,24 @@ begin
   Result := '-';
 end;
 
+// Deduce el tipo de codigo de barras a partir de su longitud:
+//   8  -> 'EAN8'   (codigos cortos, comunes en algunos legacy)
+//   12 -> 'UPC'    (formato USA)
+//   13 -> 'EAN13'  (el europeo estandar)
+//   14 -> 'ITF14'  (logistica)
+//   resto -> 'OTRO'
+function DeducirTipoBarcode(const sBarcode: string): string;
+begin
+  case Length(Trim(sBarcode)) of
+    8:  Result := 'EAN8';
+    12: Result := 'UPC';
+    13: Result := 'EAN13';
+    14: Result := 'ITF14';
+  else
+    Result := 'OTRO';
+  end;
+end;
+
 // =========================================================================
 //  Carga de catalogos / existentes en memoria (UNA sola query cada uno)
 // =========================================================================
@@ -232,6 +250,13 @@ begin
     qSrc.Open;
     while not qSrc.Eof do
     begin
+      // Chequeo de cancelacion cada 1000 filas para no impactar
+      // rendimiento (TInterlocked es barato pero acumula).
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada en SKUs, saliendo...');
+        Break;
+      end;
       Inc(Stats.Leidas);
       Eng.IncRow;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
@@ -308,13 +333,15 @@ begin
         end;
       end;
 
-      // 3. Barcode (si no existe ya)
+      // 3. Barcode (si no existe ya). Tipo deducido por longitud:
+      // EAN8, EAN13, UPC, ITF14 segun corresponda.
       if not oBarcodesVistos.ContainsKey(sBarcode) then
       begin
         if fCantidad <= 1 then sPrincipal := 'S' else sPrincipal := 'N';
-        sFila := Format('%s, %s, ''EAN13'', %s, %s, %s, %s, %s',
+        sFila := Format('%s, %s, %s, %s, %s, %s, %s, %s',
           [ValorOrNull(sBarcode),
            ValorOrNull(sCodUnidad),
+           ValorOrNull(DeducirTipoBarcode(sBarcode)),
            '''' + sPrincipal + '''',
            sAhora, sAhora, sUser, sUser]);
         bulkCB.Add(sFila);
