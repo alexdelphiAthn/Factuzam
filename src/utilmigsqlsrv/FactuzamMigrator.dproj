@@ -162,6 +162,7 @@
         <DCCReference Include="inLibMigEmpresas.pas"/>
         <DCCReference Include="inLibMigAlmacenes.pas"/>
         <DCCReference Include="inLibMigClientes.pas"/>
+        <DCCReference Include="inLibMigProveedores.pas"/>
         <DCCReference Include="inLibMigFamilias.pas"/>
         <DCCReference Include="inLibMigAtributos.pas"/>
         <DCCReference Include="inLibMigArticulos.pas"/>

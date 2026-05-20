@@ -11,6 +11,7 @@ uses
   inLibMigEmpresas in 'inLibMigEmpresas.pas',
   inLibMigAlmacenes in 'inLibMigAlmacenes.pas',
   inLibMigClientes in 'inLibMigClientes.pas',
+  inLibMigProveedores in 'inLibMigProveedores.pas',
   inLibMigFamilias in 'inLibMigFamilias.pas',
   inLibMigAtributos in 'inLibMigAtributos.pas',
   inLibMigArticulos in 'inLibMigArticulos.pas',

@@ -57,9 +57,11 @@ begin
     conSrv.Port := 1433;
   conSrv.Database    := sBase;
   conSrv.LoginPrompt := False;
-  // OLE DB nativo cuando el cliente de SQL Server está instalado.
-  // Si falla, UniDAC cae al protocolo TDS interno automáticamente.
-  conSrv.SpecificOptions.Values['Provider'] := 'Auto';
+  // Provider: dejamos el default de UniDAC (en general escoge OLE DB
+  // nativo si esta el cliente de SQL Server instalado, o protocolo TDS
+  // interno si no). Si tu version de UniDAC necesita uno concreto se
+  // puede fijar via SpecificOptions['Provider'] (ej 'MSOLEDBSQL',
+  // 'SNAC11', 'OLEDB', 'Direct'...).
   if bWindowsAuth then
   begin
     // Autenticación Windows (Integrated Security): el proceso que
