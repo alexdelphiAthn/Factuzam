@@ -448,15 +448,16 @@ type
      // ~6s por subqueries DEPENDENT. La abrimos solo cuando el usuario
      // pasa a tsTarifas (ver dmmArticulos.AsegurarTarifasAbiertas).
      procedure PcDetailChange(Sender: TObject);
+     // Stock: ultimo articulo para el que se cargo el grid pivotado.
+     // Asi AsegurarStockAlDia evita reejecutar el SP si el artículo
+     // no ha cambiado desde la ultima visita a la pestaña Stock.
+
      procedure AsegurarStockAlDia;
      procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
   private
+    FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
     FArticuloCargado: string;
-    // Stock: ultimo articulo para el que se cargo el grid pivotado.
-    // Asi AsegurarStockAlDia evita reejecutar el SP si el articulo
-    // no ha cambiado desde la ultima visita a la pestaña Stock.
-    FStockArticuloCargado: string;
     FScrollProp  : TScrollBox;
     FBtnAddProp  : TcxButton;
     FGestorVar      : TGestorVariaciones;
@@ -1937,7 +1938,10 @@ var
   msCargarProp, msCargarVar, msActVisVar, msAseguraSku,
   msRefSkus, msRefVarArt, msMapaAtr, msStockAS, msActVisCol: Int64;
 begin
-  if DataSet.ControlsDisabled then Exit;
+  if DataSet.ControlsDisabled then
+    Exit;
+  if dmmArticulos.unqrySkus.Active = False then
+    Exit;
   // 1. Si estamos creando un artículo nuevo, limpiamos la pantalla una sola vez
   // y salimos
   if DataSet.State = dsInsert then
@@ -1945,8 +1949,10 @@ begin
     if FArticuloCargado <> '' then
     begin
       FArticuloCargado := ''; // Marcamos como vacío
-      if Assigned(FGestorProp) then FGestorProp.CargarPropiedades('');
-      if Assigned(FGestorVar) then FGestorVar.CargarVariaciones('');
+      if Assigned(FGestorProp) then
+        FGestorProp.CargarPropiedades('');
+      if Assigned(FGestorVar) then
+        FGestorVar.CargarVariaciones('');
       ActualizarVisibilidadVariaciones;
     end;
     Exit;
@@ -1959,18 +1965,7 @@ begin
 
   // 3. EL ESCUDO: Si el artículo es exactamente el mismo que ya está dibujado,
   // ¡no hagas nada!
-  if FArticuloCargado = CodArticulo then Exit;
-
-  // GUARD ANTI-CASCADA INCOMPLETA: si las queries detail aun no estan
-  // abiertas (AbrirDetalles del callback aun no se ha ejecutado, o el
-  // cxDBDataController de algun grid esta restaurando focus durante el
-  // arranque), salimos limpio. Sin esto, llamadas como
-  // AsegurarSkuArticuloSinVariaciones / unqrySkus.Refresh /
-  // ActualizarVisibilidadColumnaSku revientan con
-  // EDatabaseError: 'Cannot perform this operation on a closed dataset'.
-  if not Assigned(dmmArticulos)
-     or not dmmArticulos.unqrySkus.Active
-     or not dmmArticulos.unqryVariacionesArticulos.Active then
+  if FArticuloCargado = CodArticulo then
     Exit;
 
   // Actualizamos nuestra memoria
@@ -1980,9 +1975,15 @@ begin
   // de los gaps de 5s que se ven al abrir/navegar Articulos. Cada
   // sub-tarea se mide independientemente y se vuelca al log+memo SQL.
   swTotal := TStopwatch.StartNew;
-  msCargarProp := 0; msCargarVar := 0; msActVisVar := 0;
-  msAseguraSku := 0; msRefSkus := 0; msRefVarArt := 0;
-  msMapaAtr := 0; msStockAS := 0; msActVisCol := 0;
+  msCargarProp := 0;
+  msCargarVar := 0;
+  msActVisVar := 0;
+  msAseguraSku := 0;
+  msRefSkus := 0;
+  msRefVarArt := 0;
+  msMapaAtr := 0;
+  msStockAS := 0;
+  msActVisCol := 0;
 
   // 4. Ahora sí, cargamos la interfaz visual de forma segura
   if Assigned(FGestorProp) then
@@ -2010,31 +2011,11 @@ begin
   msAseguraSku := swTramo.ElapsedMilliseconds;
 
   swTramo := TStopwatch.StartNew;
-  // Guard doble (Active + try/except): las queries detail pueden estar
-  // cerradas si el handler se dispara antes de que AbrirDetalles termine.
-  // El try/except cubre el caso raro de que cambien de estado entre el
-  // check y la llamada (p. ej. otro handler reentrante que las cierre,
-  // o internals de UniDAC al hacer Refresh con MasterSource transicional).
-  if dmmArticulos.unqrySkus.Active then
-    try
-      dmmArticulos.unqrySkus.Refresh;
-    except
-      on E: Exception do
-        inLibLog.Log.LogError(
-          '[Articulos.AfterScroll] unqrySkus.Refresh: ' + E.Message);
-    end;
+  dmmArticulos.unqrySkus.Refresh;
   msRefSkus := swTramo.ElapsedMilliseconds;
 
   swTramo := TStopwatch.StartNew;
-  if dmmArticulos.unqryVariacionesArticulos.Active then
-    try
-      dmmArticulos.unqryVariacionesArticulos.Refresh;
-    except
-      on E: Exception do
-        inLibLog.Log.LogError(
-          '[Articulos.AfterScroll] unqryVariacionesArticulos.Refresh: ' +
-          E.Message);
-    end;
+  dmmArticulos.unqryVariacionesArticulos.Refresh;
   msRefVarArt := swTramo.ElapsedMilliseconds;
 
   // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA ANTES de
