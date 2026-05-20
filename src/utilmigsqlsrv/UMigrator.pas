@@ -614,8 +614,7 @@ begin
     btnMarcarTodas.Enabled   := True;
     btnDesmarcarTodas.Enabled:= True;
     listMigs.Enabled         := True;
-    pbProgreso.Position      := 0;
-    lblProgreso.Caption      := 'Inactivo';
+    lblProgreso.Caption      := 'Progreso (dominios activos):';
   end;
 end;
 
