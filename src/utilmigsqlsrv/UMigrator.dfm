@@ -2,7 +2,7 @@ object FormMigrator: TFormMigrator
   Left = 0
   Top = 0
   Caption = 'Factuzam Migrator SQL Server'
-  ClientHeight = 660
+  ClientHeight = 720
   ClientWidth = 1024
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -219,9 +219,58 @@ object FormMigrator: TFormMigrator
       end
     end
   end
-  object PanelCentro: TPanel
+  object PanelSetup: TPanel
     Left = 0
     Top = 200
+    Width = 1024
+    Height = 60
+    Align = alTop
+    BevelOuter = bvNone
+    Padding.Left = 8
+    Padding.Top = 4
+    Padding.Right = 8
+    Padding.Bottom = 4
+    TabOrder = 3
+    object GroupSetup: TGroupBox
+      Left = 8
+      Top = 4
+      Width = 1008
+      Height = 52
+      Align = alClient
+      Caption = ' Preparar BBDD destino '
+      TabOrder = 0
+      object btnDumpEsqueleto: TButton
+        Left = 16
+        Top = 18
+        Width = 280
+        Height = 25
+        Caption = 'Extraer esqueleto de BBDD viva'#8230
+        TabOrder = 0
+        OnClick = btnDumpEsqueletoClick
+      end
+      object btnCrearBBDD: TButton
+        Left = 310
+        Top = 18
+        Width = 240
+        Height = 25
+        Caption = 'Crear BBDD destino (utf8mb4_spanish_ci)'
+        TabOrder = 1
+        OnClick = btnCrearBBDDClick
+      end
+      object btnCargarEsquema: TButton
+        Left = 564
+        Top = 18
+        Width = 240
+        Height = 25
+        Caption = 'Cargar esqueleto en destino'#8230
+        TabOrder = 2
+        OnClick = btnCargarEsquemaClick
+      end
+    end
+  end
+  object PanelCentro: TPanel
+    Left = 0
+    Top = 260
     Width = 1024
     Height = 250
     Align = alTop
