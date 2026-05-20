@@ -266,6 +266,15 @@ object FormMigrator: TFormMigrator
         TabOrder = 2
         OnClick = btnCargarEsquemaClick
       end
+      object btnLimpiarDemo: TButton
+        Left = 814
+        Top = 18
+        Width = 180
+        Height = 25
+        Caption = 'Limpiar datos demo'
+        TabOrder = 3
+        OnClick = btnLimpiarDemoClick
+      end
     end
   end
   object PanelCentro: TPanel
@@ -380,9 +389,33 @@ object FormMigrator: TFormMigrator
       TabOrder = 0
     end
   end
+  object PanelProgreso: TPanel
+    Left = 0
+    Top = 681
+    Width = 1024
+    Height = 20
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 4
+    object lblProgreso: TLabel
+      Left = 8
+      Top = 2
+      Width = 250
+      Height = 15
+      Caption = 'Inactivo'
+    end
+    object pbProgreso: TProgressBar
+      Left = 264
+      Top = 2
+      Width = 752
+      Height = 15
+      Smooth = True
+      TabOrder = 0
+    end
+  end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 641
+    Top = 701
     Width = 1024
     Height = 19
     Panels = <
