@@ -277,11 +277,11 @@ begin
 
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM ( ' +
-      '  SELECT 1 FROM dbo.ocartbap ' +
+      '  SELECT 1 AS N FROM dbo.ocartbap ' +
       '  WHERE LTRIM(RTRIM(Articulo))     <> '''' ' +
       '    AND LTRIM(RTRIM(CodigoBarras)) <> '''' ' +
       '  UNION ALL ' +
-      '  SELECT 1 FROM dbo.ocartacp ' +
+      '  SELECT 1 AS N FROM dbo.ocartacp ' +
       '  WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
       ') X'));
     qSrc.Open;
