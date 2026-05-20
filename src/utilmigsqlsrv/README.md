@@ -24,6 +24,7 @@ src/utilmigsqlsrv/
 ├── inLibMigEmpresas.pas           dbo.ocemp      → fza_empresas
 ├── inLibMigAlmacenes.pas          dbo.ocalm      → fza_almacenes
 ├── inLibMigClientes.pas           dbo.occli      → fza_clientes
+├── inLibMigProveedores.pas        dbo.ocpro      → fza_proveedores
 ├── inLibMigFamilias.pas           dbo.ocniv      → fza_articulos_familias
 ├── inLibMigAtributos.pas          dbo.occolor    → fza_atributos_valores + basicos
 │                                  DISTINCT(ocarttal.Talla) → idem para tallas
@@ -52,6 +53,18 @@ src/utilmigsqlsrv/
 
 El programa guarda los valores de las conexiones (sin contraseñas) en
 `%USERPROFILE%\Factuzam\migrator.ini`.
+
+## Cambios de esquema requeridos
+
+Algunos mappers necesitan columnas nuevas en el destino que no existían
+en la versión original. Para BBDD ya creadas hay que ejecutar antes el
+script correspondiente; las BBDD creadas desde `factuzam_original.sql`
+de este branch ya las traen:
+
+| Migración    | Script idempotente para BBDD existente             |
+|--------------|----------------------------------------------------|
+| Proveedores  | `DESARROLLOS EN CURSO/proveedores_nombre.sql`      |
+|              | (añade `fza_proveedores.NOMBRE_PRV varchar(200)`)  |
 
 ## Filosofía de los mappers
 
