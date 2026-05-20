@@ -147,7 +147,8 @@ uses
   inLibMigTallajes,
   inLibMigArticulosTallajes,
   inLibMigArticulosProveedores,
-  inLibMigArticulosPropiedades;
+  inLibMigArticulosPropiedades,
+  inLibMigArticulosTarifas;
 
 // =========================================================================
 //  Lifecycle
@@ -317,6 +318,10 @@ begin
     'ocartp.Temporada → fza_propiedades + valores + ' +
     'fza_articulos_propiedades',
     MigrarArticulosPropiedades);
+  FEngine.Registrar('articulos_tarifas',
+    'Precios PVP por artículo',
+    'dbo.ocarttap → fza_articulos_tarifas',
+    MigrarArticulosTarifas);
 end;
 
 procedure TFormMigrator.RecargarListado;
@@ -769,6 +774,7 @@ begin
      (sCodigo = 'articulos_tallajes_asign') or
      (sCodigo = 'articulos_proveedores')    or
      (sCodigo = 'articulos_propiedades')    or
+     (sCodigo = 'articulos_tarifas')        or
      (sCodigo = 'skus')                     then Exit(2);
   if sCodigo = 'inventarios' then Exit(3);
   // Default: wave 0 (conservador, sin deps conocidas)
