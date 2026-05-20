@@ -52,11 +52,12 @@ type
     procedure GetCodigoAutoCliente;
     procedure CrearDataSetEtiquetas(iNroEspaciosBlanco: Integer;
                                     sCodCli:String);
-    // Override: abre las queries detalle/lookup del Mto de Clientes
-    // tras unqryTablaG. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync
-    // en el callback main thread. Antes vivian al final de
-    // DataModuleCreate (sincronos durante FormCreate).
+    // Override: abre los lookups (Paises, FormaPago, Tarifas). Las
+    // queries de detail (FacturasClientes, FacturasLineasClientes,
+    // Depositos) son lazy: se abren al activar su sub-pestaña.
     procedure AbrirDetalles; override;
+    procedure AsegurarHistoriaFacturacionAbierta;
+    procedure AsegurarDepositosAbierta;
   end;
 
 //var
@@ -155,13 +156,49 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  AbrirConTiempo(unqryPaises,                  'unqryPaises');
-  AbrirConTiempo(unqryFormaPago,               'unqryFormaPago');
-  AbrirConTiempo(unqryTarifas,                 'unqryTarifas');
-  AbrirConTiempo(unqryFacturasClientes,        'unqryFacturasClientes');
-  AbrirConTiempo(unqryFacturasLineasClientes,  'unqryFacturasLineasClientes');
-  AbrirConTiempo(unqryDepositos,               'unqryDepositos');
+  // Solo lookups. Historia (FacturasClientes+Lineas) y Depositos son
+  // lazy: se abren al activar la pestaña Historia/Prestamos.
+  AbrirConTiempo(unqryPaises,    'unqryPaises');
+  AbrirConTiempo(unqryFormaPago, 'unqryFormaPago');
+  AbrirConTiempo(unqryTarifas,   'unqryTarifas');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmClientes.AsegurarHistoriaFacturacionAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryFacturasClientes.Active
+     and unqryFacturasLineasClientes.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    if not unqryFacturasClientes.Active then
+      unqryFacturasClientes.Open;
+    if not unqryFacturasLineasClientes.Active then
+      unqryFacturasLineasClientes.Open;
+    inLibLog.Log.LogPerf('Clientes.Lazy',
+      'unqryFacturasClientes+Lineas OK', swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Clientes.Lazy',
+        'unqryFacturasClientes+Lineas ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+  end;
+end;
+
+procedure TdmClientes.AsegurarDepositosAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryDepositos.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryDepositos.Open;
+    inLibLog.Log.LogPerf('Clientes.Lazy', 'unqryDepositos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Clientes.Lazy',
+        'unqryDepositos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
 end;
 
 procedure TdmClientes.DataModuleDestroy(Sender: TObject);

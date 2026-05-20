@@ -115,10 +115,17 @@ public
                                     sEmpresa:string;
                                     dtFecha:TDateTime): string;
     procedure OpenTables;
-    // Override: abre las 12 queries detalle/lookup del Mto de Facturas
-    // tras unqryTablaG. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync en
-    // el callback main thread. OpenTables (API previa) delega aqui.
+    // Override: abre las queries lookup + la query de la pestaña detail
+    // por defecto (LineasFactura). Las queries de las pestañas Recibos,
+    // Verifactu/Consolidacion, Registro/Errores y MovimientosFac son
+    // lazy: solo se abren al activarse esa pestaña (ver
+    // TfrmMtoFacturasBase.PcDetailChange).
     procedure AbrirDetalles; override;
+    // Carga perezosa de sub-pestañas detail de la ficha de factura.
+    procedure AsegurarRecibosAbierta;
+    procedure AsegurarConsolidacionAbierta;
+    procedure AsegurarErroresAbierta;
+    procedure AsegurarMovimientosFacAbierta;
 
     // Genera movimientos de salida de stock para todas las líneas de la
     // factura cargada (sólo se llama automáticamente en facturas
@@ -794,19 +801,82 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
+  // Lookups y pestaña por defecto. Las queries lazy (Recibos,
+  // Consolidacion, Errores, MovimientosFac) se abren al activar su
+  // sub-pestaña via AsegurarXxxAbierta.
   AbrirConTiempo(unqryIvasTipos,      'unqryIvasTipos');
   AbrirConTiempo(unqryLinFac,         'unqryLinFac');
   AbrirConTiempo(unqrySeries,         'unqrySeries');
   AbrirConTiempo(unqryIvas,           'unqryIvas');
   AbrirConTiempo(unqryFormaPago,      'unqryFormaPago');
   AbrirConTiempo(unqryTarifas,        'unqryTarifas');
-  AbrirConTiempo(unqryRecibos,        'unqryRecibos');
   AbrirConTiempo(unqryPaisesCli,      'unqryPaisesCli');
   AbrirConTiempo(unqryPaisesEmp,      'unqryPaisesEmp');
-  AbrirConTiempo(unqryConsolidacion,  'unqryConsolidacion');
-  AbrirConTiempo(unqryErrores,        'unqryErrores');
-  AbrirConTiempo(unqryMovimientosFac, 'unqryMovimientosFac');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmFacturas.AsegurarRecibosAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryRecibos.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryRecibos.Open;
+    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryRecibos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Facturas.Lazy',
+        'unqryRecibos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
+end;
+
+procedure TdmFacturas.AsegurarConsolidacionAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryConsolidacion.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryConsolidacion.Open;
+    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryConsolidacion OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Facturas.Lazy',
+        'unqryConsolidacion ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
+end;
+
+procedure TdmFacturas.AsegurarErroresAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryErrores.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryErrores.Open;
+    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryErrores OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Facturas.Lazy',
+        'unqryErrores ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
+end;
+
+procedure TdmFacturas.AsegurarMovimientosFacAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryMovimientosFac.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryMovimientosFac.Open;
+    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryMovimientosFac OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Facturas.Lazy',
+        'unqryMovimientosFac ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
 end;
 
 procedure TdmFacturas.DataModuleDestroy(Sender: TObject);

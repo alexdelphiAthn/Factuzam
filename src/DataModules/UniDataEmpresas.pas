@@ -55,10 +55,13 @@ type
     procedure GetCodigoAutoSerie;
 //    function GetLastCodeEmpresa:Integer;
 //    function GetZonaDefault:String;
-    // Override: abre las queries detalle/lookup del Mto de Empresas
-    // tras unqryTablaG. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync
-    // en el callback main thread.
+    // Override: abre los lookups (Paises, Ivas). Las queries de detail
+    // (Retenciones, Series, Historia/Facturacion) son lazy y se abren
+    // al activar su sub-pestaña.
     procedure AbrirDetalles; override;
+    procedure AsegurarRetencionesAbierta;
+    procedure AsegurarSeriesAbierta;
+    procedure AsegurarHistoriaFacturacionAbierta;
   end;
 
 implementation
@@ -286,13 +289,67 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  AbrirConTiempo(unqryPaises,                  'unqryPaises');
-  AbrirConTiempo(unqryIvas,                    'unqryIvas');
-  AbrirConTiempo(unqryFacturasEmpresas,        'unqryFacturasEmpresas');
-  AbrirConTiempo(unqryFacturasLineasEmpresas,  'unqryFacturasLineasEmpresas');
-  AbrirConTiempo(unqryRetenciones,             'unqryRetenciones');
-  AbrirConTiempo(unqrySeries,                  'unqrySeries');
+  // Solo lookups. Las queries de detail (Retenciones, Series,
+  // FacturasEmpresas, FacturasLineasEmpresas) son lazy: se abren al
+  // activar su pestaña via AsegurarXxxAbierta.
+  AbrirConTiempo(unqryPaises, 'unqryPaises');
+  AbrirConTiempo(unqryIvas,   'unqryIvas');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmEmpresas.AsegurarRetencionesAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryRetenciones.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryRetenciones.Open;
+    inLibLog.Log.LogPerf('Empresas.Lazy', 'unqryRetenciones OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Empresas.Lazy',
+        'unqryRetenciones ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
+end;
+
+procedure TdmEmpresas.AsegurarSeriesAbierta;
+var swQ: TStopwatch;
+begin
+  if unqrySeries.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqrySeries.Open;
+    inLibLog.Log.LogPerf('Empresas.Lazy', 'unqrySeries OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Empresas.Lazy',
+        'unqrySeries ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+  end;
+end;
+
+procedure TdmEmpresas.AsegurarHistoriaFacturacionAbierta;
+var swQ: TStopwatch;
+begin
+  // Las dos queries van en pareja: cabecera + lineas de facturas
+  // emitidas a la empresa.
+  if unqryFacturasEmpresas.Active
+     and unqryFacturasLineasEmpresas.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    if not unqryFacturasEmpresas.Active then
+      unqryFacturasEmpresas.Open;
+    if not unqryFacturasLineasEmpresas.Active then
+      unqryFacturasLineasEmpresas.Open;
+    inLibLog.Log.LogPerf('Empresas.Lazy',
+      'unqryFacturasEmpresas+Lineas OK', swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Empresas.Lazy',
+        'unqryFacturasEmpresas+Lineas ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+  end;
 end;
 
 procedure TdmEmpresas.GetCodigoAutoEmpresa;
