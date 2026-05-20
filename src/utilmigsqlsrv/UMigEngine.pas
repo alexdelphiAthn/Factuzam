@@ -226,7 +226,7 @@ procedure RellenarAuditoria(Q: TUniQuery; const sUsuario: string);
 implementation
 
 uses
-  System.StrUtils;
+  System.StrUtils, System.SyncObjs;
 
 // =========================================================================
 //  TMigEngine
