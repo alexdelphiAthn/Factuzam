@@ -46,6 +46,22 @@ uses
 //  Helpers locales
 // =========================================================================
 
+// True si la cadena contiene al menos una letra (a-z, A-Z). Usado para
+// filtrar Temporadas que en el legacy son solo digitos (datos sucios,
+// tallas mezcladas) — los valores legitimos PV25, OI24, P26 siempre
+// tienen al menos una letra.
+function TieneAlgunaLetra(const s: string): Boolean;
+var i: Integer; c: Char;
+begin
+  for i := 1 to Length(s) do
+  begin
+    c := s[i];
+    if ((c >= 'a') and (c <= 'z')) or ((c >= 'A') and (c <= 'Z')) then
+      Exit(True);
+  end;
+  Result := False;
+end;
+
 procedure AsegurarPropiedadTemporada(Eng: TMigEngine);
 var qChk, qIns: TUniQuery;
 begin
@@ -141,23 +157,23 @@ end;
 procedure MigrarArticulosPropiedades(Eng: TMigEngine;
                                       var Stats: TMigStats);
 const
-  // Filtro Temporada LIKE '%[A-Z]%': SQL Server descarta valores que
-  // son SOLO digitos como "1", "38" (datos sucios o mezclados con
-  // tallas en el legacy). Las temporadas legitimas tipo PV25, OI24,
-  // P26, etc. siempre tienen al menos una letra. ISO digit-only
-  // strings se filtran.
+  // NOTA: ANTES tenia LIKE '%[A-Za-z]%' aqui para descartar Temporadas
+  // que son solo digitos ("1", "38", mezclados con tallas). Pero el
+  // LIKE con character class no usa indice y bajo concurrencia de
+  // wave 2 hace que SQL Server bloquee el COUNT(*) varios minutos.
+  // Movemos el filtro alfabetico a Pascal (TieneAlguntaLetra) — el
+  // SELECT/COUNT consultan ocartp con WITH (NOLOCK) por non-empty
+  // y luego saltamos las filas digit-only en codigo.
   cSelectValores =
     'SELECT DISTINCT Temporada ' +
-    'FROM dbo.ocartp ' +
+    'FROM dbo.ocartp WITH (NOLOCK) ' +
     'WHERE LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
-    '  AND Temporada LIKE ''%[A-Za-z]%'' ' +
     'ORDER BY Temporada';
   cSelectAsign =
     'SELECT Articulo, Temporada ' +
-    'FROM dbo.ocartp ' +
+    'FROM dbo.ocartp WITH (NOLOCK) ' +
     'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
     '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
-    '  AND Temporada LIKE ''%[A-Za-z]%'' ' +
     'ORDER BY Articulo';
   cColsAP =
     'CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
@@ -178,7 +194,7 @@ begin
     while not qVal.Eof do
     begin
       sTemp := Trim(qVal.FieldByName('Temporada').AsString);
-      if sTemp <> '' then
+      if (sTemp <> '') and TieneAlgunaLetra(sTemp) then
       begin
         if InsertarValorPropiedad(Eng, sTemp) then
           Eng.Log('  + valor TEMPORADA "%s" creado', [sTemp]);
@@ -197,10 +213,9 @@ begin
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
     Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM dbo.ocartp ' +
+      'SELECT COUNT(*) FROM dbo.ocartp WITH (NOLOCK) ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
-      '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''' ' +
-      '  AND Temporada LIKE ''%[A-Za-z]%'''));
+      '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
@@ -208,7 +223,7 @@ begin
       Eng.IncRow;
       sArt  := Trim(qSrc.FieldByName('Articulo').AsString);
       sTemp := Trim(qSrc.FieldByName('Temporada').AsString);
-      if (sArt = '') or (sTemp = '') then
+      if (sArt = '') or (sTemp = '') or (not TieneAlgunaLetra(sTemp)) then
       begin
         Inc(Stats.Saltadas);
         qSrc.Next;

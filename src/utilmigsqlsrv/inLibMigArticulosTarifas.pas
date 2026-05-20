@@ -180,25 +180,24 @@ end;
 
 procedure MigrarArticulosTarifas(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // JOIN a occolor para resolver el nombre canonico del color
-  // (mismo formato que CODIGO_UNIDAD_SKU). Filtramos Serie='A' y
-  // PrecioSalida > 0 para descartar filas sin precio.
+  // En el legacy NO hay precios por SKU: ocarttap puede tener varias
+  // filas con el mismo Articulo+Tarifa para distintos Color, pero
+  // todas tienen el mismo precio. Agrupamos por (Articulo, Tarifa) y
+  // dejamos CODIGO_UNIDAD_ARTTAR vacio: la tarifa se asigna al
+  // articulo entero. Tomamos MAX() de los numericos para tener un
+  // valor estable cuando hay duplicados.
   cSelectSrc =
     'SELECT t.Articulo, ' +
-    '       t.Color, ' +
-    '       ISNULL(c.Descripcion, t.Color) AS DescColor, ' +
     '       t.Tarifa, ' +
-    '       ISNULL(t.PrecioSalida, 0)  AS PrecioSalida, ' +
-    '       ISNULL(t.PrecioRebaja, 0)  AS PrecioRebaja, ' +
-    '       ISNULL(t.PorDtoRebaja, 0)  AS PorDtoRebaja, ' +
-    '       ISNULL(t.Margen, 0)        AS Margen ' +
+    '       MAX(ISNULL(t.PrecioSalida, 0))  AS PrecioSalida, ' +
+    '       MAX(ISNULL(t.PrecioRebaja, 0))  AS PrecioRebaja, ' +
+    '       MAX(ISNULL(t.PorDtoRebaja, 0))  AS PorDtoRebaja, ' +
+    '       MAX(ISNULL(t.Margen, 0))        AS Margen ' +
     'FROM dbo.ocarttap t ' +
-    'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = t.Articulo ' +
-    '                         AND ac.Color    = t.Color ' +
-    'LEFT JOIN dbo.occolor  c  ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE ISNULL(t.PrecioSalida, 0) > 0 ' +
     '  AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
-    'ORDER BY t.Articulo, t.Tarifa, t.Color';
+    'GROUP BY t.Articulo, t.Tarifa ' +
+    'ORDER BY t.Articulo, t.Tarifa';
   cCols =
     'CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
     'ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
@@ -208,7 +207,7 @@ const
 var
   qSrc:                       TUniQuery;
   bulk:                       TBulkInsert;
-  sArt, sDescColor, sCodTar:  string;
+  sArt, sCodTar:              string;
   sCodUnidad:                 string;
   sFila, sAhora, sUser:       string;
   iTarifa:                    Integer;
@@ -226,17 +225,20 @@ begin
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
+    // Total = filas distintas (Articulo, Tarifa) tras el GROUP BY.
     Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM dbo.ocarttap ' +
-      'WHERE ISNULL(PrecioSalida, 0) > 0 ' +
-      '  AND LTRIM(RTRIM(Articulo)) <> '''''));
+      'SELECT COUNT(*) FROM ( ' +
+      '  SELECT Articulo, Tarifa FROM dbo.ocarttap ' +
+      '  WHERE ISNULL(PrecioSalida, 0) > 0 ' +
+      '    AND LTRIM(RTRIM(Articulo)) <> '''' ' +
+      '  GROUP BY Articulo, Tarifa ' +
+      ') X'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
       Eng.IncRow;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
-      sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
       iTarifa    := qSrc.FieldByName('Tarifa').AsInteger;
       fSalida    := qSrc.FieldByName('PrecioSalida').AsFloat;
       fRebaja    := qSrc.FieldByName('PrecioRebaja').AsFloat;
@@ -251,13 +253,9 @@ begin
       end;
 
       sCodTar := MapearTarifa(iTarifa);
-
-      // CODIGO_UNIDAD_ARTTAR: vacio si no hay color (precio del
-      // articulo entero), si hay color es ARTICULO/COLOR.
-      if EsColorVacio(sDescColor) then
-        sCodUnidad := ''
-      else
-        sCodUnidad := sArt + '/' + UpperCase(sDescColor);
+      // En legacy no hay precios por SKU: la tarifa se asigna al
+      // articulo (CODIGO_UNIDAD_ARTTAR vacio).
+      sCodUnidad := '';
 
       // Calcular PRECIO_FINAL y DTO.
       // - Si PrecioRebaja > 0 y < PrecioSalida → ese es el final.
@@ -300,8 +298,7 @@ begin
         begin
           Inc(Stats.Errores);
           Eng.LogError('art_tarifa', sArt, E.Message,
-            Format('tar=%s precio=%g color=%s',
-                   [sCodTar, fSalida, sDescColor]), '');
+            Format('tar=%s precio=%g', [sCodTar, fSalida]), '');
           raise;
         end;
       end;
