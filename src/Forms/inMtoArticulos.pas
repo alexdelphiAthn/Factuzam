@@ -512,6 +512,8 @@ uses
   inMtoModalEtiqArt,
   inLibEAN13,
   inLibAtributosPaleta,
+  inLibLog,             // Log.LogPerf para cronometros del AfterScroll
+  System.Diagnostics,   // TStopwatch
   inLibtb;
 
 {$R *.dfm}
@@ -1908,6 +1910,9 @@ end;
 procedure TfrmMtoArticulos.OnAfterScrollArticulos(DataSet: TDataSet);
 var
   CodArticulo: string;
+  swTotal, swTramo: TStopwatch;
+  msCargarProp, msCargarVar, msActVisVar, msAseguraSku,
+  msRefSkus, msRefVarArt, msMapaAtr, msStockAS, msActVisCol: Int64;
 begin
   if DataSet.ControlsDisabled then Exit;
   // 1. Si estamos creando un artículo nuevo, limpiamos la pantalla una sola vez
@@ -1936,27 +1941,73 @@ begin
   // Actualizamos nuestra memoria
   FArticuloCargado := CodArticulo;
 
+  // [PERF] Cronometros por tramo. Este handler es el sospechoso principal
+  // de los gaps de 5s que se ven al abrir/navegar Articulos. Cada
+  // sub-tarea se mide independientemente y se vuelca al log+memo SQL.
+  swTotal := TStopwatch.StartNew;
+  msCargarProp := 0; msCargarVar := 0; msActVisVar := 0;
+  msAseguraSku := 0; msRefSkus := 0; msRefVarArt := 0;
+  msMapaAtr := 0; msStockAS := 0; msActVisCol := 0;
+
   // 4. Ahora sí, cargamos la interfaz visual de forma segura
   if Assigned(FGestorProp) then
+  begin
+    swTramo := TStopwatch.StartNew;
     FGestorProp.CargarPropiedades(CodArticulo);
+    msCargarProp := swTramo.ElapsedMilliseconds;
+  end;
 
   if Assigned(FGestorVar) then
+  begin
+    swTramo := TStopwatch.StartNew;
     FGestorVar.CargarVariaciones(CodArticulo);
+    msCargarVar := swTramo.ElapsedMilliseconds;
+  end;
 
+  swTramo := TStopwatch.StartNew;
   ActualizarVisibilidadVariaciones;
+  msActVisVar := swTramo.ElapsedMilliseconds;
+
   // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
   // para que la rejilla SKUs y CB tenga al menos una fila editable
+  swTramo := TStopwatch.StartNew;
   AsegurarSkuArticuloSinVariaciones(CodArticulo);
+  msAseguraSku := swTramo.ElapsedMilliseconds;
+
+  swTramo := TStopwatch.StartNew;
   dmmArticulos.unqrySkus.Refresh;
+  msRefSkus := swTramo.ElapsedMilliseconds;
+
+  swTramo := TStopwatch.StartNew;
   dmmArticulos.unqryVariacionesArticulos.Refresh;
+  msRefVarArt := swTramo.ElapsedMilliseconds;
+
   // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA ANTES de
   // unqryStockArticulosAfterScroll: el bestfit que hace ese metodo necesita
   // saber qué columnas pintaran swatch para reservarles el ancho del
   // cuadradito.
   if FAtributosStock <> nil then
+  begin
+    swTramo := TStopwatch.StartNew;
     CargarMapaAtributosArticulo(CodArticulo, FAtributosStock);
+    msMapaAtr := swTramo.ElapsedMilliseconds;
+  end;
+
+  swTramo := TStopwatch.StartNew;
   dmmArticulos.unqryStockArticulosAfterScroll(DataSet);
+  msStockAS := swTramo.ElapsedMilliseconds;
+
+  swTramo := TStopwatch.StartNew;
   ActualizarVisibilidadColumnaSku;
+  msActVisCol := swTramo.ElapsedMilliseconds;
+
+  inLibLog.Log.LogPerf('Articulos.AfterScroll',
+    Format('art=%s | Prop=%d | Var=%d | ActVar=%d | Sku=%d | RefSkus=%d | ' +
+           'RefVarArt=%d | MapaAtr=%d | StockAS=%d | ActColSku=%d',
+           [CodArticulo, msCargarProp, msCargarVar, msActVisVar,
+            msAseguraSku, msRefSkus, msRefVarArt, msMapaAtr, msStockAS,
+            msActVisCol]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoArticulos.cxButton11Click(Sender: TObject);

@@ -104,6 +104,8 @@ implementation
 uses
   inMtoArticulos,
   inLibGlobalVar,
+  inLibLog,
+  System.Diagnostics,
   inLibtb;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -342,19 +344,27 @@ const
 var
   tvArticulosStock: TcxGridDBTableView;
   col: TcxGridDBColumn;
-  nombre: string;
+  nombre, sArt: string;
   i: Integer;
+  swTotal, swTramo: TStopwatch;
+  msSP, msRebuild, msAnchos: Int64;
 begin
   inherited;
   if DataSet.ControlsDisabled then Exit;
   if not DataSet.Active or DataSet.IsEmpty then Exit;
+  swTotal := TStopwatch.StartNew;
+  msSP := 0; msRebuild := 0; msAnchos := 0;
   unqryStockArticulos.Close;
-  unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-  if unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString <> '' then
+  sArt := unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString := sArt;
+  tvArticulosStock := (GetOwnerForm<TfrmMtoArticulos>).tvStock;
+  if sArt <> '' then
   begin
+    swTramo := TStopwatch.StartNew;
     unqryStockArticulos.Open;
-    tvArticulosStock := (GetOwnerForm<TfrmMtoArticulos>).tvStock;
+    msSP := swTramo.ElapsedMilliseconds;
+
+    swTramo := TStopwatch.StartNew;
     tvArticulosStock.BeginUpdate;
     try
       tvArticulosStock.ClearItems;
@@ -362,8 +372,11 @@ begin
     finally
       tvArticulosStock.EndUpdate;
     end;
+    msRebuild := swTramo.ElapsedMilliseconds;
+
     if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
     begin
+      swTramo := TStopwatch.StartNew;
       // Asignamos anchos fijos segun el nombre del campo. Las columnas
       // especiales (Almacen, Color, Total) tienen su valor concreto;
       // el resto (tallas / variantes que llegan dinamicamente del SP
@@ -381,6 +394,7 @@ begin
         else
           col.Width := ANCHO_TALLA;
       end;
+      msAnchos := swTramo.ElapsedMilliseconds;
       // Antes se llamaba a EnsancharColumnasStockParaSwatch para sumar
       // ANCHO_SWATCH_PX a las columnas con cuadradito de color (post-
       // proceso sobre los anchos calculados por ApplyBestFit). Como
@@ -389,6 +403,10 @@ begin
       // sitio (la mantenemos como utilidad).
     end;
   end;
+  inLibLog.Log.LogPerf('Articulos.StockAfterScroll',
+    Format('art=%s | SP=%d ms | RebuildItems=%d ms | Anchos=%d ms | cols=%d',
+           [sArt, msSP, msRebuild, msAnchos, tvArticulosStock.ColumnCount]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TdmArticulos.unqryTablaGAfterDelete(DataSet: TDataSet);

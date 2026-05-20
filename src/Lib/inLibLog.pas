@@ -52,6 +52,14 @@ type
     procedure LogWarning(const AMessage: string);
     procedure LogError(const AMessage: string);
     procedure LogSQL(const ASQL: string);
+    // Cronometro instrumentado. Escribe al log y, si el monitor SQL
+    // (oMemoSQL) esta visible, tambien suelta una linea ahi para que el
+    // usuario vea las metricas junto a las queries. Patron tipico:
+    //   sw := TStopwatch.StartNew;
+    //   ...trabajo...
+    //   Log.LogPerf('Articulos.AfterScroll', 'CargarPropiedades',
+    //               sw.ElapsedMilliseconds);
+    procedure LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
     procedure EnableLogType(ALogType: TLogType);
     procedure DisableLogType(ALogType: TLogType);
     function IsLogTypeEnabled(ALogType: TLogType): Boolean;
@@ -62,7 +70,7 @@ var
 implementation
 
 uses
-  System.DateUtils, inLibWin;
+  System.DateUtils, inLibWin, inLibGlobalVar;  // oMemoSQL para LogPerf
 
 { TLog }
 
@@ -213,6 +221,28 @@ begin
   SQLOneLine := StringReplace(ASQL, sLineBreak, ' ', [rfReplaceAll]);
   SQLOneLine := Trim(SQLOneLine);
   WriteToLog('SQL: ' + SQLOneLine, ltSQL);
+end;
+
+procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
+var
+  Linea: string;
+begin
+  Linea := Format('[PERF:%s] %s | %d ms', [ATag, ADetalle, AElapsedMs]);
+  // (a) archivo de log general
+  WriteToLog('INFO: ' + Linea, ltInfo);
+  // (b) monitor SQL si esta vivo, para verlo en el mismo memo que el
+  // resto de queries. Acoplamiento explicito con la UI: no lo movemos
+  // mas abajo porque el objetivo de este metodo es justamente que las
+  // metricas salgan junto a las queries que se ejecutan.
+  if Assigned(oMemoSQL) then
+    try
+      oMemoSQL.Lines.Add('-- PERF -- ' +
+                         FormatDateTime('hh:nn:ss.zzz', Now) +
+                         '  ' + Linea);
+    except
+      // El memo puede estar siendo destruido o estar deshabilitado en
+      // release. No queremos que un fallo cosmetico tumbe el log.
+    end;
 end;
 
 procedure TLog.EnableLogType(ALogType: TLogType);

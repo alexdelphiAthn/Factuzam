@@ -650,8 +650,12 @@ end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
 var
-  sNameModule:string;
+  sNameModule: string;
+  swTotal, swTramo: TStopwatch;
+  msCrearDM, msFConn, msReasignar: Int64;
 begin
+  swTotal := TStopwatch.StartNew;
+  msCrearDM := 0; msFConn := 0; msReasignar := 0;
   tdmDataModule := nil;
   sNameModule := '';
   if Self.Owner <> nil then
@@ -660,7 +664,9 @@ begin
                                                           '.' + Self.ClassName);
   if (sNameModule <> '') then
   begin
+    swTramo := TStopwatch.StartNew;
     tdmDataModule := CrearDataModule(sNameModule, Self);
+    msCrearDM := swTramo.ElapsedMilliseconds;
     // Conexion propia del Mto: la creamos si todavia no existe y la
     // inyectamos en todas las queries/SPs del data module recien creado.
     // El DataModule sigue arrancando con `oConn` en su DoCreate, lo cual
@@ -668,7 +674,9 @@ begin
     // el switch antes de cualquier Open real.
     if FConn = nil then
     try
+      swTramo := TStopwatch.StartNew;
       FConn := CrearConexionPropia;
+      msFConn := swTramo.ElapsedMilliseconds;
     except
       on E: Exception do
       begin
@@ -678,9 +686,17 @@ begin
       end;
     end;
     if Assigned(FConn) then
+    begin
+      swTramo := TStopwatch.StartNew;
       (tdmDataModule as TdmBase).ReasignarConexion(FConn);
+      msReasignar := swTramo.ElapsedMilliseconds;
+    end;
   end;
   inherited;
+  inLibLog.Log.LogPerf(Self.Name + '.CrearTablaPrincipal',
+    Format('CrearDM=%d ms | FConn.Connect=%d ms | ReasignarConexion=%d ms',
+           [msCrearDM, msFConn, msReasignar]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
@@ -853,14 +869,13 @@ begin
       if csDestroying in ComponentState then
         Exit;
       if ErrMsg = '' then
-        inLibLog.Log.LogInfo(Format(
-          '[PERF:Carga/async] %s | duracion=%d ms | OK',
-          [Self.Name, sw.ElapsedMilliseconds]))
+        inLibLog.Log.LogPerf('Carga/async', Self.Name + ' | OK',
+          sw.ElapsedMilliseconds)
       else
       begin
-        inLibLog.Log.LogError(Format(
-          '[PERF:Carga/async] %s | duracion=%d ms | error=%s',
-          [Self.Name, sw.ElapsedMilliseconds, ErrMsg]));
+        inLibLog.Log.LogPerf('Carga/async',
+          Self.Name + ' | error=' + ErrMsg,
+          sw.ElapsedMilliseconds);
         // No mostramos ShowMessage aqui — molesta si pasa al abrir
         // varios tabs en cadena. El error queda en el log.
         Exit;
@@ -894,14 +909,13 @@ begin
   try
     try
       unqry.Open;
-      inLibLog.Log.LogInfo(Format(
-        '[PERF:Carga/sync] %s | duracion=%d ms | OK',
-        [Self.Name, sw.ElapsedMilliseconds]));
+      inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
+        sw.ElapsedMilliseconds);
     except
       on E: Exception do
-        inLibLog.Log.LogError(Format(
-          '[PERF:Carga/sync] %s | duracion=%d ms | error=%s',
-          [Self.Name, sw.ElapsedMilliseconds, E.Message]));
+        inLibLog.Log.LogPerf('Carga/sync',
+          Self.Name + ' | error=' + E.Message,
+          sw.ElapsedMilliseconds);
     end;
   finally
     Screen.Cursor := CursorPrev;
@@ -1037,8 +1051,11 @@ end;
 
 procedure TfrmMtoGen.FormCreate(Sender: TObject);
 var
-  sModoBusq:String;
+  sModoBusq: String;
+  swTotal, swTramo: TStopwatch;
+  msProcesarPerfiles: Int64;
 begin
+  swTotal := TStopwatch.StartNew;
   inherited;
   Self.HandleNeeded; //da problemas
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
@@ -1046,7 +1063,9 @@ begin
   tsFichCab := nil;
   tsFichBut := nil;
   Self.Position  := poScreenCenter;
+  swTramo := TStopwatch.StartNew;
   ProcesarPerfiles;
+  msProcesarPerfiles := swTramo.ElapsedMilliseconds;
   sModoBusq := GetPerfilValueDef(oPerfilDic, 'oBusqGlobal', 'Database');
   if sModoBusq = 'DataBase' then
   begin
@@ -1058,6 +1077,9 @@ begin
     rbBBDD.Checked := false;
     rbGrid.Checked := true;
   end;
+  inLibLog.Log.LogPerf(Self.Name + '.FormCreate',
+    'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
