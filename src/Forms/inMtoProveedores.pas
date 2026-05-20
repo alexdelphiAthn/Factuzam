@@ -38,6 +38,7 @@ type
   TfrmMtoProveedores = class(TfrmMtoGen)
     cxgrdbclmnGrdDBTabPrinCODIGO_CLIENTE: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_CLIENTE: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinNOMBRE_PROVEEDOR: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinNIF_CLIENTE: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinMOVIL_CLIENTE: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinEMAIL_CLIENTE: TcxGridDBColumn;
@@ -55,6 +56,8 @@ type
     lblCodigo: TcxLabel;
     txtRAZONSOCIAL_PROVEEDOR: TcxDBTextEdit;
     lblRazonSocial: TcxLabel;
+    txtNOMBRE_PROVEEDOR: TcxDBTextEdit;
+    lblNombreComercial: TcxLabel;
     cxdbtxtdtTELEFONO2: TcxDBTextEdit;
     lblEmail: TcxLabel;
     cxdbtxtdtEMAIL: TcxDBTextEdit;
