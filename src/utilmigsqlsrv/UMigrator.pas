@@ -526,12 +526,21 @@ begin
     Exit;
   end;
   if MessageDlg(Format(
-       'Se van a BORRAR del destino "%s" todas las filas demo '#13#10 +
-       '(USUARIO_ALTA = DEMO / Administrador / SISTEMA) de:'#13#10 +
-       '  fza_empresas, fza_almacenes, fza_clientes,'#13#10 +
-       '  fza_proveedores, fza_articulos, fza_articulos_familias.'#13#10#13#10 +
-       'Las tablas de SISTEMA (paises, ivas_tipos, winforms...) '#13#10 +
-       'NO se tocan. ¿Continuar?', [edDstBase.Text]),
+       'Se van a BORRAR del destino "%s" todas las filas demo del'#13#10 +
+       'seed factuzam_original.sql en 50 tablas (articulos, SKUs,'#13#10 +
+       'tarifas, codigos_barras, atributos, propiedades, clientes,'#13#10 +
+       'proveedores, almacenes, empresas, inventarios, facturas,'#13#10 +
+       'pedidos, albaranes, recibos, caja, stock, movimientos...).'#13#10 +
+       #13#10 +
+       'Filtro: USUARIO_ALTA IN (DEMO, Administrador, Sistema,'#13#10 +
+       'SISTEMA, Admin, ADMIN, SCRIPT_DEMO, SCRIPT_FIX,'#13#10 +
+       'FIX_SKU_STOCK, MIGRACION).'#13#10 +
+       #13#10 +
+       'NO se tocan tablas de SISTEMA (paises, ivas*, winforms,'#13#10 +
+       'usuarios*, metadatos, contadores, tipos_documentos...).'#13#10 +
+       #13#10 +
+       'Util tras cargar factuzam_original.sql, ANTES de migrar.'#13#10 +
+       '¿Continuar?', [edDstBase.Text]),
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
 
