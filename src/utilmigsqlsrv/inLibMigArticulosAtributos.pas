@@ -103,8 +103,6 @@ end;
 
 procedure MigrarArticulosColores(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // Filtramos las parejas con texto vacio. ColorBasico tiene la
-  // descripcion canonica del color via JOIN con occolor.
   cSelectSrc =
     'SELECT ac.Articulo, ' +
     '       ISNULL(c.Descripcion, ac.Color) AS DescColor ' +
@@ -112,13 +110,23 @@ const
     'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE LTRIM(RTRIM(ac.Articulo)) <> '''' ' +
     'ORDER BY ac.Articulo, ac.Color';
+  cCols =
+    'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
   qSrc: TUniQuery;
+  bulk: TBulkInsert;
   sArt, sDescColor, sAV, sCodAtb: string;
+  sFila, sAhora, sIdAtb, sUser:   string;
   iIdAv, iIdAtb: Integer;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  bulk := TBulkInsert.Create(Eng.ConDst,
+                              'fza_articulos_atributos_basicos',
+                              cCols, 1000);
   try
+    sAhora := DateTimeASQL(Now);
+    sUser  := ValorOrNull(Eng.Usuario);
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartcol ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
@@ -148,25 +156,31 @@ begin
         Continue;
       end;
       iIdAtb := BuscarIdATB(Eng, 'CO', sCodAtb);
-      // iIdAtb=0 es valido: dejamos NULL en ID_ATB_AAB
+      if iIdAtb > 0 then
+        sIdAtb := IntToStr(iIdAtb)
+      else
+        sIdAtb := 'NULL';
 
+      sFila := Format('%s, %d, %s, %s, %s, %s, %s',
+        [ValorOrNull(sArt), iIdAv, sIdAtb,
+         sAhora, sAhora, sUser, sUser]);
       try
-        if InsertarAsignacion(Eng, sArt, iIdAv, iIdAtb, Eng.Usuario) then
-          Inc(Stats.Insertadas)
-        else
-          Inc(Stats.Saltadas);
+        bulk.Add(sFila);
+        Inc(Stats.Insertadas);
       except
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error asignando color "%s" a art "%s": %s',
+          Eng.Log('  ! error bulk color "%s" art "%s": %s',
                   [sAV, sArt, E.Message]);
           raise;
         end;
       end;
       qSrc.Next;
     end;
+    bulk.FlushPendiente;
   finally
+    bulk.Free;
     qSrc.Free;
   end;
 end;
@@ -183,13 +197,26 @@ const
     'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
     '  AND LTRIM(RTRIM(Talla))    <> '''' ' +
     'ORDER BY Articulo, Orden, Talla';
+  cCols =
+    'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
-  qSrc: TUniQuery;
-  sArt, sTalla, sAV, sCodAtb: string;
-  iIdAv, iIdAtb: Integer;
+  qSrc:  TUniQuery;
+  bulk:  TBulkInsert;
+  sArt, sTalla, sAV, sCodAtb:   string;
+  sFila, sAhora, sIdAtb, sUser: string;
+  iIdAv, iIdAtb:                Integer;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  // BulkInsert agrupa filas en bloques de 1000 y las suelta con un
+  // unico "INSERT IGNORE INTO ... VALUES (...), (...), ...". El
+  // IGNORE asume que el chequeo PK ya está y permite reejecutar.
+  bulk := TBulkInsert.Create(Eng.ConDst,
+                              'fza_articulos_atributos_basicos',
+                              cCols, 1000);
   try
+    sAhora := DateTimeASQL(Now);
+    sUser  := ValorOrNull(Eng.Usuario);
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocarttal ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
@@ -220,24 +247,32 @@ begin
         Continue;
       end;
       iIdAtb := BuscarIdATB(Eng, 'TAL', sCodAtb);
+      if iIdAtb > 0 then
+        sIdAtb := IntToStr(iIdAtb)
+      else
+        sIdAtb := 'NULL';
 
+      sFila := Format('%s, %d, %s, %s, %s, %s, %s',
+        [ValorOrNull(sArt), iIdAv, sIdAtb,
+         sAhora, sAhora, sUser, sUser]);
       try
-        if InsertarAsignacion(Eng, sArt, iIdAv, iIdAtb, Eng.Usuario) then
-          Inc(Stats.Insertadas)
-        else
-          Inc(Stats.Saltadas);
+        bulk.Add(sFila);
+        Inc(Stats.Insertadas);
       except
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error asignando talla "%s" a art "%s": %s',
+          Eng.Log('  ! error en bulk talla "%s" art "%s": %s',
                   [sAV, sArt, E.Message]);
           raise;
         end;
       end;
       qSrc.Next;
     end;
+    // Soltar lo que quede pendiente (< 1000)
+    bulk.FlushPendiente;
   finally
+    bulk.Free;
     qSrc.Free;
   end;
 end;

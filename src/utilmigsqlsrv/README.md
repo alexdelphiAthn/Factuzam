@@ -174,6 +174,23 @@ los demás workers de la wave siguen su curso.
 Al cerrar el form mientras se ejecuta, se solicita cancelación y se
 espera hasta 5 s a que los workers terminen el dominio en curso.
 
+## Bulk insert en mappers pesados
+
+Para tablas grandes (`fza_articulos_atributos_basicos` con 266k+81k
+filas de origen, futuros `fza_codigos_barras`, `fza_inventarios_lineas`,
+etc.) usamos `TBulkInsert` del motor: agrupa filas en bloques de 1000
+y las envía con UN `INSERT IGNORE INTO ... VALUES (...), (...), ...`
+por bloque. Reduce drasticamente las roundtrips a MariaDB.
+
+- `INSERT IGNORE` hace que las filas que choquen con la PK no
+  aborten el batch (idempotencia automática).
+- El buffer interno se vacía al llegar al `BatchMax` (default 1000)
+  o al llamar `FlushPendiente` al final del bucle. El destructor
+  también flush por seguridad.
+- Mappers actualmente con bulk: `articulos_colores`, `articulos_tallas`.
+- El resto de mappers (volúmenes < 50k filas) sigue con INSERT por
+  fila parametrizado, más simple y con feedback más fino.
+
 ## Filosofía de los mappers
 
 - Cada unidad `inLibMig<Dominio>.pas` exporta **una** función
