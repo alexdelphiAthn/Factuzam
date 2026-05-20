@@ -42,6 +42,7 @@ type
     edSrcUser:         TEdit;
     edSrcPwd:          TEdit;
     btnProbarSrc:      TButton;
+    chkSrcWinAuth:     TCheckBox;
     PanelDestino:      TGroupBox;
     lblDstHost:        TLabel;
     lblDstPort:        TLabel;
@@ -73,6 +74,7 @@ type
     procedure btnEjecutarClick(Sender: TObject);
     procedure btnMarcarTodasClick(Sender: TObject);
     procedure btnDesmarcarTodasClick(Sender: TObject);
+    procedure chkSrcWinAuthClick(Sender: TObject);
   private
     FEngine: TMigEngine;
     procedure Log(const sMsg: string);
@@ -218,12 +220,24 @@ begin
     listMigs.Checked[i] := False;
 end;
 
+procedure TFormMigrator.chkSrcWinAuthClick(Sender: TObject);
+begin
+  edSrcUser.Enabled := not chkSrcWinAuth.Checked;
+  edSrcPwd.Enabled  := not chkSrcWinAuth.Checked;
+  if chkSrcWinAuth.Checked then
+  begin
+    edSrcUser.Text := '';
+    edSrcPwd.Text  := '';
+  end;
+end;
+
 procedure TFormMigrator.btnProbarSrcClick(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
     dmMig.ConfigurarOrigen(edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
-                           edSrcUser.Text, edSrcPwd.Text);
+                           edSrcUser.Text, edSrcPwd.Text,
+                           chkSrcWinAuth.Checked);
     dmMig.ProbarOrigen;
     Log(Format('OK origen: %s:%s/%s',
       [edSrcHost.Text, edSrcPort.Text, edSrcBase.Text]));
@@ -282,7 +296,8 @@ begin
   // Asegurarse de que las conexiones estan configuradas (por si no se
   // pulsaron los botones de probar)
   dmMig.ConfigurarOrigen(edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
-                         edSrcUser.Text, edSrcPwd.Text);
+                         edSrcUser.Text, edSrcPwd.Text,
+                         chkSrcWinAuth.Checked);
   dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text, edDstBase.Text,
                           edDstUser.Text, edDstPwd.Text);
   FEngine.Usuario := edUsuario.Text;
@@ -361,10 +376,12 @@ begin
   if not TFile.Exists(RutaIni) then Exit;
   oIni := TIniFile.Create(RutaIni);
   try
-    edSrcHost.Text := oIni.ReadString('Origen',  'Host',   '');
-    edSrcPort.Text := oIni.ReadString('Origen',  'Port',   '1433');
-    edSrcBase.Text := oIni.ReadString('Origen',  'Base',   '');
-    edSrcUser.Text := oIni.ReadString('Origen',  'User',   'sa');
+    edSrcHost.Text         := oIni.ReadString('Origen',  'Host', '');
+    edSrcPort.Text         := oIni.ReadString('Origen',  'Port', '1433');
+    edSrcBase.Text         := oIni.ReadString('Origen',  'Base', '');
+    edSrcUser.Text         := oIni.ReadString('Origen',  'User', 'sa');
+    chkSrcWinAuth.Checked  := oIni.ReadBool  ('Origen',  'WinAuth', False);
+    chkSrcWinAuthClick(nil);  // refresca enabled de user/pwd
     edDstHost.Text := oIni.ReadString('Destino', 'Host',   '127.0.0.1');
     edDstPort.Text := oIni.ReadString('Destino', 'Port',   '3306');
     edDstBase.Text := oIni.ReadString('Destino', 'Base',   'factuzam');
@@ -380,10 +397,11 @@ var oIni: TIniFile;
 begin
   oIni := TIniFile.Create(RutaIni);
   try
-    oIni.WriteString('Origen',  'Host', edSrcHost.Text);
-    oIni.WriteString('Origen',  'Port', edSrcPort.Text);
-    oIni.WriteString('Origen',  'Base', edSrcBase.Text);
-    oIni.WriteString('Origen',  'User', edSrcUser.Text);
+    oIni.WriteString('Origen',  'Host',    edSrcHost.Text);
+    oIni.WriteString('Origen',  'Port',    edSrcPort.Text);
+    oIni.WriteString('Origen',  'Base',    edSrcBase.Text);
+    oIni.WriteString('Origen',  'User',    edSrcUser.Text);
+    oIni.WriteBool  ('Origen',  'WinAuth', chkSrcWinAuth.Checked);
     oIni.WriteString('Destino', 'Host', edDstHost.Text);
     oIni.WriteString('Destino', 'Port', edDstPort.Text);
     oIni.WriteString('Destino', 'Base', edDstBase.Text);
