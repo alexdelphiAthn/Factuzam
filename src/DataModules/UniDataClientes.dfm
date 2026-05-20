@@ -481,7 +481,7 @@
     MasterFields = 'CODIGO_CLI_CLI'
     DetailFields = 'CODIGO_CLI_DEP'
     ReadOnly = True
-    Active = True
+    Active = False
     Left = 152
     Top = 240
     ParamData = <

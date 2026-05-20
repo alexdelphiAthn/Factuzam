@@ -33,13 +33,14 @@ type
     { Private declarations }
   public
     procedure GetCodigoAutoIva;
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb, inLibGlobalVar;
+uses inLibtb, inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {$R *.dfm}
 
@@ -136,7 +137,26 @@ begin
   inherited;
   unstrdprcContador.Connection := oConn;;
   unqryZonasIVA.Connection := oConn;
-  unqryZonasIVA.Open;
+  // unqryZonasIVA.Open movido a AbrirDetalles.
+end;
+
+procedure TdmIvas.AbrirDetalles;
+var
+  swQ: TStopwatch;
+begin
+  inherited;
+  if unqryZonasIVA.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryZonasIVA.Open;
+    inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
+      'unqryZonasIVA OK', swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+      inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
+        'unqryZonasIVA ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+  end;
 end;
 
 function TdmIvas.ExisteGrupoZonaIVA(sCodigoGrupo: String): Boolean;

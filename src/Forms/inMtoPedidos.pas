@@ -207,7 +207,9 @@ begin
   tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
   tvAlbaranes.DataController.DataSource     := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource      := dmmPedidos.dsMensajes;
-  dmmPedidos.OpenTables;
+  // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
+  // (callback main thread) via dmmPedidos.AbrirDetalles. Se quita aqui
+  // para no abrir las queries sincronamente durante el FormCreate.
 
   colEnt  := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_ENTREGADA_PEDLIN');
   colPend := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PENDIENTE_PEDLIN');

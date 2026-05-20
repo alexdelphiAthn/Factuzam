@@ -36,12 +36,13 @@ type
   public
     procedure GetCodigoAutoFormasdePago;
     //procedure GetCodigoAutoRetencion;
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inMtoFormasdePago, inLibGlobalVar;
+  inMtoFormasdePago, inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -60,14 +61,41 @@ end;
 procedure TdmFormasdePago.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
   unstrdprcContador.Connection := oConn;
   unqryFacturas.Connection := oConn;
   unqryFacturasLineas.Connection := oConn;
   unqryFacturas.MasterSource := (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;
   unqryFacturasLineas.MasterSource :=
                                    (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;
-  unqryFacturas.Open;
-  unqryFacturasLineas.Open;
+end;
+
+procedure TdmFormasdePago.AbrirDetalles;
+const
+  TAG = 'FormasdePago.AbrirDetalles';
+
+  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
+  var swQ: TStopwatch;
+  begin
+    if qry.Active then Exit;
+    swQ := TStopwatch.StartNew;
+    try
+      qry.Open;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+    end;
+  end;
+
+var sw: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  AbrirConTiempo(unqryFacturas,       'unqryFacturas');
+  AbrirConTiempo(unqryFacturasLineas, 'unqryFacturasLineas');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmFormasdePago.GetCodigoAutoFormasdePago;
