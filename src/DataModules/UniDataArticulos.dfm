@@ -53,7 +53,7 @@ inherited dmArticulos: TdmArticulos
       'SELECT *  '
       '  FROM vi_articulos '
       '')
-    Active = False
+    Active = True
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     AfterDelete = unqryTablaGAfterDelete
