@@ -162,7 +162,7 @@ begin
     'dbo.occli → fza_clientes (requiere formas_pago)',
     MigrarClientes);
   FEngine.Registrar('familias', 'Familias de artículo',
-    'dbo.ocartniv → fza_articulos_familias',
+    'dbo.oclwgrupo → fza_articulos_familias',
     MigrarFamilias);
   FEngine.Registrar('colores_maestros', 'Catálogo colores',
     'dbo.occolor → fza_atributos_valores + fza_atributos_basicos (CO)',
