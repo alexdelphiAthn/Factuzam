@@ -46,20 +46,16 @@ uses
 //  Helpers locales
 // =========================================================================
 
-// True si la cadena contiene al menos una letra (a-z, A-Z). Usado para
-// filtrar Temporadas que en el legacy son solo digitos (datos sucios,
-// tallas mezcladas) — los valores legitimos PV25, OI24, P26 siempre
-// tienen al menos una letra.
-function TieneAlgunaLetra(const s: string): Boolean;
-var i: Integer; c: Char;
+// Filtro de "Temporada valida": acepta cualquier valor no-vacio salvo
+// cadenas de 1 caracter (que casi siempre son ruido — tallas sueltas
+// como 'S', 'M', 'L', '1', '2' que el legacy mete mal en este campo).
+// Valores legitimos suelen tener >= 2 caracteres: 'PV25', '2026',
+// 'OI24', 'PERM', '26', etc.
+function EsTemporadaValida(const s: string): Boolean;
+var t: string;
 begin
-  for i := 1 to Length(s) do
-  begin
-    c := s[i];
-    if ((c >= 'a') and (c <= 'z')) or ((c >= 'A') and (c <= 'Z')) then
-      Exit(True);
-  end;
-  Result := False;
+  t := Trim(s);
+  Result := Length(t) >= 2;
 end;
 
 procedure AsegurarPropiedadTemporada(Eng: TMigEngine);
@@ -157,13 +153,11 @@ end;
 procedure MigrarArticulosPropiedades(Eng: TMigEngine;
                                       var Stats: TMigStats);
 const
-  // NOTA: ANTES tenia LIKE '%[A-Za-z]%' aqui para descartar Temporadas
-  // que son solo digitos ("1", "38", mezclados con tallas). Pero el
-  // LIKE con character class no usa indice y bajo concurrencia de
-  // wave 2 hace que SQL Server bloquee el COUNT(*) varios minutos.
-  // Movemos el filtro alfabetico a Pascal (TieneAlguntaLetra) — el
-  // SELECT/COUNT consultan ocartp con WITH (NOLOCK) por non-empty
-  // y luego saltamos las filas digit-only en codigo.
+  // Filtro de Temporada valida en Pascal (EsTemporadaValida): acepta
+  // cualquier valor con >=2 caracteres no-vacios. Asi entran 'PV25',
+  // 'OI24', 'PERM', '2026', '26'... y solo descartamos sueltos de 1
+  // caracter ('S', '1', '2'...) que casi siempre son tallas mezcladas.
+  // El SELECT/COUNT usa WITH (NOLOCK) por non-empty unicamente.
   cSelectValores =
     'SELECT DISTINCT Temporada ' +
     'FROM dbo.ocartp WITH (NOLOCK) ' +
@@ -194,7 +188,7 @@ begin
     while not qVal.Eof do
     begin
       sTemp := Trim(qVal.FieldByName('Temporada').AsString);
-      if (sTemp <> '') and TieneAlgunaLetra(sTemp) then
+      if EsTemporadaValida(sTemp) then
       begin
         if InsertarValorPropiedad(Eng, sTemp) then
           Eng.Log('  + valor TEMPORADA "%s" creado', [sTemp]);
@@ -223,7 +217,7 @@ begin
       Eng.IncRow;
       sArt  := Trim(qSrc.FieldByName('Articulo').AsString);
       sTemp := Trim(qSrc.FieldByName('Temporada').AsString);
-      if (sArt = '') or (sTemp = '') or (not TieneAlgunaLetra(sTemp)) then
+      if (sArt = '') or (not EsTemporadaValida(sTemp)) then
       begin
         Inc(Stats.Saltadas);
         qSrc.Next;
