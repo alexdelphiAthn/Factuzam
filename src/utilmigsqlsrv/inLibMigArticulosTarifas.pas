@@ -196,7 +196,11 @@ const
   // con el SKU si existiera. El '0' es un color real (legacy),
   // pero los placeholders 'INDEFINIDO'/'00'/'' tambien se mapean
   // a '0' (igual que en SKUs).
-  cSelectSrc =
+  // Separamos el WITH (cCTE) del cuerpo (cBody) porque SQL Server NO
+  // admite un CTE dentro de un subquery — la query del cursor usa
+  // cCTE + cBody + cOrden, pero la del COUNT necesita poner el WITH
+  // FUERA y meter solo cBody en SELECT COUNT(*) FROM (...).
+  cCTE =
     'WITH norm AS ( ' +
     '  SELECT t.Articulo, t.Tarifa, ' +
     '         ISNULL(t.PrecioSalida, 0) AS PrecioSalida, ' +
@@ -238,7 +242,8 @@ const
     '         COUNT(*)          AS NColores ' +
     '  FROM por_color ' +
     '  GROUP BY Articulo, Tarifa ' +
-    ') ' +
+    ') ';
+  cBody =
     // Caso A: spread bajo o un solo color -> nivel articulo (MAX)
     'SELECT pc.Articulo, pc.Tarifa, ' +
     '       '''' AS DescColor, ' +
@@ -265,6 +270,7 @@ const
     '                    AND s.Tarifa  = pc.Tarifa ' +
     'WHERE s.NColores > 1 ' +
     '  AND (s.PrecioMax - s.PrecioMin) > 0.10';
+  cSelectSrc = cCTE + cBody;
   cOrden = ' ORDER BY 1, 2, 3';
   cCols =
     'CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
@@ -299,8 +305,11 @@ begin
     // sobreestimaba en casos en que varios codigos normalizan al mismo
     // ColorNorm (~1% de diferencia), dejando el progreso colgado en
     // 98% al terminar.
+    // SQL Server NO admite WITH dentro de un subquery, asi que el
+    // CTE queda fuera y solo el cuerpo (UNION ALL) va dentro del
+    // SELECT COUNT(*) FROM (...).
     Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM (' + cSelectSrc + ') AS Q'));
+      cCTE + 'SELECT COUNT(*) FROM (' + cBody + ') AS Q'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
