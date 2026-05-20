@@ -184,63 +184,87 @@ const
   // En la mayoria de articulos el precio es igual para todos los
   // colores (precio "padre"), pero a veces los colores difieren mas
   // de 0.10 EUR (p.ej. un color premium). Regla:
-  //   - spread (MAX-MIN) <= 0.10 -> una sola fila por (Articulo, Tarifa)
-  //     a nivel articulo (CODIGO_UNIDAD_ARTTAR = '').
-  //   - spread > 0.10            -> una fila por (Articulo, Tarifa, Color)
-  //     con CODIGO_UNIDAD_ARTTAR = 'ARTICULO/COLOR' (primer atributo).
+  //   - spread (MAX-MIN) <= 0.10 OR un solo color distinto
+  //     -> una sola fila por (Articulo, Tarifa) a nivel articulo
+  //     (CODIGO_UNIDAD_ARTTAR = '').
+  //   - spread > 0.10 con multiples colores -> una fila por
+  //     (Articulo, Tarifa, ColorNormalizado) con
+  //     CODIGO_UNIDAD_ARTTAR = 'ARTICULO/COLOR' (primer atributo).
   //
-  // CODIGO_UNIDAD_ARTTAR = 'ART/COLOR' es soportado:
-  //   - fza_articulos_tarifas.CODIGO_UNIDAD_ARTTAR es varchar(50) sin
-  //     FK a fza_articulos_skus.
-  //   - vi_articulos_tarifas tolera valores que no matchean SKU
-  //     (LEFT JOIN), aparecen como 'ESPECIFICO_SKU' con
-  //     DESCRIPCION_SKU NULL.
+  // ColorNormalizado: misma convencion que inLibMigArticulosSkus
+  // (slot de color del CODIGO_UNIDAD_SKU). Asi el sufijo coincide
+  // con el SKU si existiera. El '0' es un color real (legacy),
+  // pero los placeholders 'INDEFINIDO'/'00'/'' tambien se mapean
+  // a '0' (igual que en SKUs).
   cSelectSrc =
-    'WITH spread AS ( ' +
+    'WITH norm AS ( ' +
+    '  SELECT t.Articulo, t.Tarifa, ' +
+    '         ISNULL(t.PrecioSalida, 0) AS PrecioSalida, ' +
+    '         ISNULL(t.PrecioRebaja, 0) AS PrecioRebaja, ' +
+    '         ISNULL(t.PorDtoRebaja, 0) AS PorDtoRebaja, ' +
+    '         ISNULL(t.Margen, 0)       AS Margen, ' +
+    // En legacy '0' y '00' son colores REALES distintos. La ocgolor
+    // pone Descripcion = 'INDEFINIDO' para el codigo '0' (y a veces
+    // para '00'); en ese caso usamos el codigo legacy como suffix.
+    // Si Descripcion existe y no es 'INDEFINIDO', se usa como suffix.
+    '         CASE ' +
+    '           WHEN c.Descripcion IS NULL ' +
+    '             OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
+    '             OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '             THEN UPPER(LTRIM(RTRIM(t.Color))) ' +
+    '           ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         END AS ColorNorm ' +
+    '  FROM dbo.ocarttap t WITH (NOLOCK) ' +
+    '  LEFT JOIN dbo.ocartcol ac WITH (NOLOCK) ' +
+    '         ON ac.Articulo = t.Articulo AND ac.Color = t.Color ' +
+    '  LEFT JOIN dbo.occolor c WITH (NOLOCK) ' +
+    '         ON c.ColorBasico = ac.ColorBasico ' +
+    '  WHERE ISNULL(t.PrecioSalida, 0) > 0 ' +
+    '    AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
+    '), ' +
+    'por_color AS ( ' +
+    '  SELECT Articulo, Tarifa, ColorNorm, ' +
+    '         MAX(PrecioSalida) AS PrecioSalida, ' +
+    '         MAX(PrecioRebaja) AS PrecioRebaja, ' +
+    '         MAX(PorDtoRebaja) AS PorDtoRebaja, ' +
+    '         MAX(Margen)       AS Margen ' +
+    '  FROM norm ' +
+    '  GROUP BY Articulo, Tarifa, ColorNorm ' +
+    '), ' +
+    'spread AS ( ' +
     '  SELECT Articulo, Tarifa, ' +
-    '         MIN(ISNULL(PrecioSalida, 0)) AS PrecioMin, ' +
-    '         MAX(ISNULL(PrecioSalida, 0)) AS PrecioMax ' +
-    '  FROM dbo.ocarttap WITH (NOLOCK) ' +
-    '  WHERE ISNULL(PrecioSalida, 0) > 0 ' +
-    '    AND LTRIM(RTRIM(Articulo)) <> '''' ' +
+    '         MIN(PrecioSalida) AS PrecioMin, ' +
+    '         MAX(PrecioSalida) AS PrecioMax, ' +
+    '         COUNT(*)          AS NColores ' +
+    '  FROM por_color ' +
     '  GROUP BY Articulo, Tarifa ' +
     ') ' +
-    // Caso A: spread bajo -> precio unico por articulo (MAX)
-    'SELECT t.Articulo, t.Tarifa, ' +
+    // Caso A: spread bajo o un solo color -> nivel articulo (MAX)
+    'SELECT pc.Articulo, pc.Tarifa, ' +
     '       '''' AS DescColor, ' +
-    '       MAX(ISNULL(t.PrecioSalida, 0))  AS PrecioSalida, ' +
-    '       MAX(ISNULL(t.PrecioRebaja, 0))  AS PrecioRebaja, ' +
-    '       MAX(ISNULL(t.PorDtoRebaja, 0))  AS PorDtoRebaja, ' +
-    '       MAX(ISNULL(t.Margen, 0))        AS Margen, ' +
+    '       MAX(pc.PrecioSalida) AS PrecioSalida, ' +
+    '       MAX(pc.PrecioRebaja) AS PrecioRebaja, ' +
+    '       MAX(pc.PorDtoRebaja) AS PorDtoRebaja, ' +
+    '       MAX(pc.Margen)       AS Margen, ' +
     '       ''ARTICULO'' AS Granularidad ' +
-    'FROM dbo.ocarttap t WITH (NOLOCK) ' +
-    'INNER JOIN spread p ON p.Articulo = t.Articulo ' +
-    '                    AND p.Tarifa  = t.Tarifa ' +
-    'WHERE (p.PrecioMax - p.PrecioMin) <= 0.10 ' +
-    '  AND ISNULL(t.PrecioSalida, 0) > 0 ' +
-    '  AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
-    'GROUP BY t.Articulo, t.Tarifa ' +
+    'FROM por_color pc ' +
+    'INNER JOIN spread s ON s.Articulo = pc.Articulo ' +
+    '                    AND s.Tarifa  = pc.Tarifa ' +
+    'WHERE s.NColores <= 1 ' +
+    '   OR (s.PrecioMax - s.PrecioMin) <= 0.10 ' +
+    'GROUP BY pc.Articulo, pc.Tarifa ' +
     'UNION ALL ' +
-    // Caso B: spread alto -> precio por color
-    'SELECT t.Articulo, t.Tarifa, ' +
-    '       ISNULL(c.Descripcion, t.Color) AS DescColor, ' +
-    '       MAX(ISNULL(t.PrecioSalida, 0))  AS PrecioSalida, ' +
-    '       MAX(ISNULL(t.PrecioRebaja, 0))  AS PrecioRebaja, ' +
-    '       MAX(ISNULL(t.PorDtoRebaja, 0))  AS PorDtoRebaja, ' +
-    '       MAX(ISNULL(t.Margen, 0))        AS Margen, ' +
+    // Caso B: multiples colores y spread > 0.10 -> nivel color
+    'SELECT pc.Articulo, pc.Tarifa, ' +
+    '       pc.ColorNorm AS DescColor, ' +
+    '       pc.PrecioSalida, pc.PrecioRebaja, pc.PorDtoRebaja, ' +
+    '       pc.Margen, ' +
     '       ''COLOR'' AS Granularidad ' +
-    'FROM dbo.ocarttap t WITH (NOLOCK) ' +
-    'INNER JOIN spread p ON p.Articulo = t.Articulo ' +
-    '                    AND p.Tarifa  = t.Tarifa ' +
-    'LEFT JOIN dbo.ocartcol ac WITH (NOLOCK) ' +
-    '       ON ac.Articulo = t.Articulo AND ac.Color = t.Color ' +
-    'LEFT JOIN dbo.occolor c WITH (NOLOCK) ' +
-    '       ON c.ColorBasico = ac.ColorBasico ' +
-    'WHERE (p.PrecioMax - p.PrecioMin) > 0.10 ' +
-    '  AND ISNULL(t.PrecioSalida, 0) > 0 ' +
-    '  AND LTRIM(RTRIM(t.Articulo)) <> '''' ' +
-    'GROUP BY t.Articulo, t.Tarifa, t.Color, ' +
-    '         ISNULL(c.Descripcion, t.Color) ' +
+    'FROM por_color pc ' +
+    'INNER JOIN spread s ON s.Articulo = pc.Articulo ' +
+    '                    AND s.Tarifa  = pc.Tarifa ' +
+    'WHERE s.NColores > 1 ' +
+    '  AND (s.PrecioMax - s.PrecioMin) > 0.10 ' +
     'ORDER BY 1, 2, 3';
   cCols =
     'CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
