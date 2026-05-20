@@ -223,7 +223,9 @@ uses inMtoGenSearch,
      inLibLog,
      inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
-     inLibFotos, inMtoFotoArticulo;
+     inLibFotos, inMtoFotoArticulo,
+     System.Diagnostics,   // TStopwatch para cronometrar carga inicial
+     Vcl.ComCtrls;         // TProgressBar marquee en overlay de carga
      // System.Threading ya esta en el interface (para TList<ITask>).
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
@@ -684,6 +686,7 @@ end;
 procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
 var
   lblTexto: TLabel;
+  bar: TProgressBar;
 begin
   if Bloquear then
   begin
@@ -692,20 +695,53 @@ begin
     begin
       FOverlayOcupado := TPanel.Create(Self);
       FOverlayOcupado.Parent := Self;
-      FOverlayOcupado.Align := alClient;
+      // SetBounds + Anchors en vez de alClient: alClient compite con
+      // otros controles alineados del Mto (pcPantalla, pButtonRightBar...)
+      // y a veces el overlay quedaba con altura cero (no se veia nada).
+      // Cubrimos manualmente todo el form y nos anclamos a los 4 bordes
+      // para seguir el resize.
+      FOverlayOcupado.SetBounds(0, 0, Self.ClientWidth, Self.ClientHeight);
+      FOverlayOcupado.Anchors := [akLeft, akTop, akRight, akBottom];
       FOverlayOcupado.BevelOuter := bvNone;
-      FOverlayOcupado.Color := clBtnFace;
+      FOverlayOcupado.Color := $00F5E6CC;   // azul-crema claro, contrasta
       FOverlayOcupado.ParentBackground := False;
       FOverlayOcupado.Caption := '';
+
+      // Label y barra los posicionamos con SetBounds (no alClient) para
+      // que coexistan sin taparse — alClient en el label se comeria el
+      // espacio de la barra.
       lblTexto := TLabel.Create(FOverlayOcupado);
       lblTexto.Parent := FOverlayOcupado;
-      lblTexto.Align := alClient;
+      lblTexto.AutoSize := False;
+      lblTexto.SetBounds(0,
+                         (FOverlayOcupado.ClientHeight div 2) - 40,
+                         FOverlayOcupado.ClientWidth,
+                         30);
+      lblTexto.Anchors := [akLeft, akTop, akRight];
       lblTexto.Alignment := taCenter;
       lblTexto.Layout := tlCenter;
-      lblTexto.Caption := 'Procesando en segundo plano, espera...';
+      lblTexto.Caption := 'Cargando datos, espera por favor...';
       lblTexto.Font.Style := [fsBold];
-      lblTexto.Font.Size := 12;
+      lblTexto.Font.Size := 14;
+      lblTexto.Font.Color := clNavy;
+      lblTexto.Transparent := True;
+
+      // Barra "marquee": animacion continua sin necesitar %. La pinta
+      // el message pump del main thread, asi que solo se ve cuando hay
+      // pump corriendo (= camino async). Para el camino sincrono el
+      // cursor global Screen.Cursor = crHourGlass cubre el feedback.
+      bar := TProgressBar.Create(FOverlayOcupado);
+      bar.Parent := FOverlayOcupado;
+      bar.SetBounds((FOverlayOcupado.ClientWidth div 2) - 150,
+                    (FOverlayOcupado.ClientHeight div 2) + 5,
+                    300, 18);
+      bar.Anchors := [];
+      bar.Style := pbstMarquee;
+      bar.MarqueeInterval := 30;
     end;
+    // Asegurar que cubre el form aunque haya cambiado de tamaño desde
+    // la ultima vez.
+    FOverlayOcupado.SetBounds(0, 0, Self.ClientWidth, Self.ClientHeight);
     FOverlayOcupado.BringToFront;
     FOverlayOcupado.Visible := True;
     Self.Cursor := crHourGlass;
@@ -788,6 +824,7 @@ procedure TfrmMtoGen.AbrirTablaPrincipalAsync;
 var
   dmDat: TdmBase;
   unqry: TUniQuery;
+  sw: TStopwatch;
 begin
   if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
     Exit;
@@ -801,6 +838,7 @@ begin
   // se rellena en el thread — AVs intermitentes.
   if Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
+  sw := TStopwatch.StartNew;
   EjecutarEnBackground(
     procedure
     begin
@@ -814,9 +852,15 @@ begin
       // liberados; salir limpio sin tocar nada.
       if csDestroying in ComponentState then
         Exit;
-      if ErrMsg <> '' then
+      if ErrMsg = '' then
+        inLibLog.Log.LogInfo(Format(
+          '[PERF:Carga/async] %s | duracion=%d ms | OK',
+          [Self.Name, sw.ElapsedMilliseconds]))
+      else
       begin
-        inLibLog.Log.LogError('[CargaAsync] ' + Self.Name + ': ' + ErrMsg);
+        inLibLog.Log.LogError(Format(
+          '[PERF:Carga/async] %s | duracion=%d ms | error=%s',
+          [Self.Name, sw.ElapsedMilliseconds, ErrMsg]));
         // No mostramos ShowMessage aqui — molesta si pasa al abrir
         // varios tabs en cadena. El error queda en el log.
         Exit;
@@ -831,6 +875,8 @@ procedure TfrmMtoGen.AbrirTablaPrincipalSincrono;
 var
   dmDat: TdmBase;
   unqry: TUniQuery;
+  sw: TStopwatch;
+  CursorPrev: TCursor;
 begin
   if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
     Exit;
@@ -838,12 +884,27 @@ begin
   unqry := dmDat.unqryTablaG;
   if (unqry = nil) or unqry.Active then
     Exit;
+  // Modo sincrono: la UI esta congelada durante el Open. Forzamos cursor
+  // de reloj global (Screen.Cursor) para que el usuario sepa que la app
+  // esta ocupada — no muerta. Self.Cursor solo afecta cuando el raton
+  // esta sobre el form; Screen.Cursor lo cambia en toda la pantalla.
+  CursorPrev := Screen.Cursor;
+  Screen.Cursor := crHourGlass;
+  sw := TStopwatch.StartNew;
   try
-    unqry.Open;
-  except
-    on E: Exception do
-      inLibLog.Log.LogError(
-        'Error al abrir tabla en ' + Self.Name + ': ' + E.Message);
+    try
+      unqry.Open;
+      inLibLog.Log.LogInfo(Format(
+        '[PERF:Carga/sync] %s | duracion=%d ms | OK',
+        [Self.Name, sw.ElapsedMilliseconds]));
+    except
+      on E: Exception do
+        inLibLog.Log.LogError(Format(
+          '[PERF:Carga/sync] %s | duracion=%d ms | error=%s',
+          [Self.Name, sw.ElapsedMilliseconds, E.Message]));
+    end;
+  finally
+    Screen.Cursor := CursorPrev;
   end;
 end;
 
