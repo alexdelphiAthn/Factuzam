@@ -412,6 +412,16 @@ begin
 {$ENDIF}
   AplicarTema;
   CargarFondoLogo;
+  // pcPrincipal tiene Align=alClient en Panel1 y repinta su area cliente
+  // encima de cualquier hermano. Reparentamos imgFondoLogo al propio
+  // pcPrincipal: queda como hijo directo del PageControl (no en una
+  // TabSheet), asi se pinta sobre su area cliente cuando no hay pestanas
+  // y queda tapado automaticamente por el TcxTabSheet activo cuando si
+  // las hay (sin invadir zonas fuera del PageControl).
+  imgFondoLogo.Parent := pcPrincipal;
+  imgFondoLogo.Anchors := [akTop, akRight];
+  imgFondoLogo.Left := pcPrincipal.ClientWidth - imgFondoLogo.Width - 16;
+  imgFondoLogo.Top := 16;
   imgFondoLogo.BringToFront;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
