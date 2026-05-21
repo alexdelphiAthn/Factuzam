@@ -33,16 +33,16 @@ type
     dsLineas: TDataSource;
 
     // === CAMPOS CALCULADOS DE cdsLineas ===
-    cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasSERIE_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasNRO_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasLINEA_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TWideStringField;
-    cdsLineasLOTE_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TStringField;
+    cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TStringField;
+    cdsLineasSERIE_INVENTARIO_LINEA: TStringField;
+    cdsLineasNRO_INVENTARIO_LINEA: TStringField;
+    cdsLineasLINEA_INVENTARIO_LINEA: TStringField;
+    cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TStringField;
+    cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TStringField;
+    cdsLineasLOTE_INVENTARIO_LINEA: TStringField;
     cdsLineasFECHA_CADUCIDAD_INVENTARIO_LINEA: TDateField;
-    cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TStringField;
     cdsLineasCANTIDAD_TEORICA_INVENTARIO_LINEA: TFloatField;
     cdsLineasCANTIDAD_FISICA_INVENTARIO_LINEA: TFloatField;
     cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFloatField;
@@ -91,8 +91,8 @@ type
     unspAplicar: TUniStoredProc;               // PRC_FZA_INVENTARIOS_APLICAR
     unspEliminarRegul: TUniStoredProc;
     cdsLineasINSTANTE_ALTA: TDateTimeField;
-    cdsLineasUSUARIO_ALTA: TWideStringField;
-    cdsLineasUSUARIO_MODIF: TWideStringField;
+    cdsLineasUSUARIO_ALTA: TStringField;
+    cdsLineasUSUARIO_MODIF: TStringField;
     // PRC_FZA_INVENTARIOS_ELIMINAR_REGUL (nuevo)
     cdsLineasINSTANTE_MODIF: TDateTimeField;
 
