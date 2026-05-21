@@ -624,6 +624,12 @@ var
 begin
   inherited CreateNew(nil);
   BorderStyle := bsNone;
+  // pmAuto: ancla el popup al form activo (Caja / Inventarios) como
+  // PopupParent. Sin esto el ShowModal de un form sin borde reasigna el
+  // owner del HWND a Application.Handle y el form invocador (la Caja) se
+  // hunde detras del Principal mientras esta abierto el popup — solo se
+  // ve el desplegable de colores flotando sobre el menu principal.
+  PopupMode   := pmAuto;
   Position    := poDesigned;
   Caption     := '';
   KeyPreview  := True;
