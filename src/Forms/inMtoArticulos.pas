@@ -358,6 +358,18 @@ type
     tvLinFacPORCENTAJE_REE_FAC: TcxGridDBColumn;
     tvLinFacTOTAL_REE_FAC: TcxGridDBColumn;
     tvLinFacTOTAL_BASEI_IVAE_FAC: TcxGridDBColumn;
+    pnlFiltrosArt: TPanel;
+    btnToggleFiltrosArt: TcxButton;
+    pnlContFiltrosArt: TPanel;
+    lblFiltroEstadoArt: TcxLabel;
+    cbbFiltroEstadoArt: TcxComboBox;
+    chkFiltroConStockArt: TcxCheckBox;
+    lblFiltroTemporadaArt: TcxLabel;
+    ccbFiltroTemporadaArt: TcxCheckComboBox;
+    procedure btnToggleFiltrosArtClick(Sender: TObject);
+    procedure cbbFiltroEstadoArtPropertiesEditValueChanged(Sender: TObject);
+    procedure chkFiltroConStockArtPropertiesEditValueChanged(Sender: TObject);
+    procedure ccbFiltroTemporadaArtPropertiesCloseUp(Sender: TObject);
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
@@ -454,6 +466,17 @@ type
 
      procedure AsegurarStockAlDia;
      procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
+  private
+    // Filtros de carga del Mto Articulos. Definen el SQL de la lista
+    // principal (vi_articulos) y se reaplican en cada cambio. Se
+    // persisten por usuario en fza_usuarios_perfiles (claves
+    // oFiltroEstado, oFiltroConStock, oFiltroTemporadas).
+    FFiltrosArtCargando: Boolean;
+    procedure CargarTemporadasFiltro;
+    procedure LeerFiltrosPerfil;
+    procedure GuardarFiltroPerfil(const ASubKey, AValor: string);
+    function  ConstruirSqlArticulos: string;
+    procedure AplicarFiltrosArticulos;
   private
     FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
@@ -1792,6 +1815,13 @@ begin
   pcDetail.OnChange := PcDetailChange;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
+  // Filtros de carga (estado, stock, temporadas): poblar la lista de
+  // temporadas, leer las preferencias guardadas por usuario y aplicar
+  // el filtro reescribiendo el SQL de unqryTablaG antes de que el
+  // resto de la rutina lea FArticuloCargado / el primer registro.
+  CargarTemporadasFiltro;
+  LeerFiltrosPerfil;
+  AplicarFiltrosArticulos;
   // Codigo del articulo activo. Defensivo: la lista puede llegar aqui
   // cerrada o vacia (p.ej. cuando el AbrirTablaPrincipalAsync esta
   // todavia cargando, o si el DFM tiene Active=False). FindField evita
@@ -1820,6 +1850,230 @@ begin
     dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
     FStockArticuloCargado := FArticuloCargado;
   end;
+end;
+
+procedure TfrmMtoArticulos.CargarTemporadasFiltro;
+var
+  qry: TUniQuery;
+  item: TcxCheckComboBoxItem;
+begin
+  // Lista de temporadas activas para el filtro multi-seleccion. Se
+  // resuelve contra fza_propiedades_valores (las mismas que ofrece la
+  // ficha del articulo en la pestanya Propiedades para CODIGO_PROP_ARTPROP
+  // = 'TEMPORADA').
+  ccbFiltroTemporadaArt.Properties.Items.Clear;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT PV FROM fza_propiedades_valores ' +
+      ' WHERE ID_PROP_PV = ''TEMPORADA'' AND ESACTIVO_PV = ''S'' ' +
+      ' ORDER BY PV';
+    qry.Open;
+    while not qry.Eof do
+    begin
+      item := ccbFiltroTemporadaArt.Properties.Items.Add;
+      item.Description := qry.FieldByName('PV').AsString;
+      qry.Next;
+    end;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TfrmMtoArticulos.LeerFiltrosPerfil;
+var
+  sEstado, sStock, sTempCsv: string;
+  lst: TStringList;
+  i, idx: Integer;
+begin
+  // FFiltrosArtCargando bloquea el OnEditValueChanged de los controles
+  // mientras los inicializamos: sin esta guarda cada AsignacionCargaria
+  // disparara una reaplicacion del SQL (3 Closes/Opens en cadena al
+  // abrir el Mto).
+  FFiltrosArtCargando := True;
+  try
+    sEstado  := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroEstado',     'S'));
+    sStock   := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroConStock',   'N'));
+    sTempCsv := GetPerfilValueDef(oPerfilDic, 'oFiltroTemporadas', '');
+
+    if SameText(sEstado, 'T') then
+      cbbFiltroEstadoArt.ItemIndex := 0
+    else if SameText(sEstado, 'N') then
+      cbbFiltroEstadoArt.ItemIndex := 2
+    else
+      cbbFiltroEstadoArt.ItemIndex := 1; // 'S' o cualquier valor desconocido
+
+    chkFiltroConStockArt.Checked := SameText(sStock, 'S');
+
+    // Marcamos las temporadas previamente seleccionadas. Si una temporada
+    // guardada ya no existe (se desactivo en propiedades), simplemente se
+    // ignora — el filtro no la incluira en el IN.
+    lst := TStringList.Create;
+    try
+      lst.Delimiter := ';';
+      lst.StrictDelimiter := True;
+      lst.DelimitedText := sTempCsv;
+      for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
+      begin
+        idx := lst.IndexOf(
+                         ccbFiltroTemporadaArt.Properties.Items[i].Description);
+        if idx >= 0 then
+          ccbFiltroTemporadaArt.States[i] := cbsChecked
+        else
+          ccbFiltroTemporadaArt.States[i] := cbsUnchecked;
+      end;
+    finally
+      FreeAndNil(lst);
+    end;
+  finally
+    FFiltrosArtCargando := False;
+  end;
+end;
+
+procedure TfrmMtoArticulos.GuardarFiltroPerfil(const ASubKey, AValor: string);
+begin
+  if odmPerfiles = nil then Exit;
+  odmPerfiles.GrabarPerfil(oUser, Self.Name, ASubKey, AValor);
+end;
+
+function TfrmMtoArticulos.ConstruirSqlArticulos: string;
+var
+  sb: TStringBuilder;
+  sEstado, sTemp: string;
+  i, nTemp: Integer;
+begin
+  sb := TStringBuilder.Create;
+  try
+    sb.AppendLine('SELECT * FROM vi_articulos WHERE 1 = 1');
+
+    // Filtro estado: ItemIndex 0=Todos, 1=Solo activos, 2=Solo inactivos
+    case cbbFiltroEstadoArt.ItemIndex of
+      1: sEstado := 'S';
+      2: sEstado := 'N';
+    else
+      sEstado := '';
+    end;
+    if sEstado <> '' then
+      sb.AppendLine('  AND vi_articulos.ESACTIVO_ART = ' + QuotedStr(sEstado));
+
+    // Filtro stock: existencia > 0 en al menos un SKU/almacen
+    if chkFiltroConStockArt.Checked then
+      sb.AppendLine(
+        '  AND EXISTS (SELECT 1 FROM fza_articulos_skus sk ' +
+                      ' JOIN fza_articulos_stockactual stk ' +
+                      '   ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU ' +
+                      ' WHERE sk.CODIGO_ART_SKU = vi_articulos.CODIGO_ART_ART ' +
+                      '   AND stk.CANTIDAD_STK > 0)');
+
+    // Filtro temporadas: lista IN. Si no hay nada marcado no se aplica.
+    sTemp := '';
+    nTemp := 0;
+    for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
+      if ccbFiltroTemporadaArt.States[i] = cbsChecked then
+      begin
+        if sTemp <> '' then sTemp := sTemp + ', ';
+        sTemp := sTemp + QuotedStr(
+                         ccbFiltroTemporadaArt.Properties.Items[i].Description);
+        Inc(nTemp);
+      end;
+    if nTemp > 0 then
+      sb.AppendLine(
+        '  AND vi_articulos.TEMPORADA_ART IN (' + sTemp + ')');
+
+    sb.AppendLine('ORDER BY vi_articulos.ORDEN_ART');
+    Result := sb.ToString;
+  finally
+    FreeAndNil(sb);
+  end;
+end;
+
+procedure TfrmMtoArticulos.AplicarFiltrosArticulos;
+var
+  qry: TUniQuery;
+  sSql: string;
+begin
+  if not Assigned(dmmArticulos) then Exit;
+  qry := dmmArticulos.unqryTablaG;
+  if qry = nil then Exit;
+  sSql := ConstruirSqlArticulos;
+  if Trim(qry.SQL.Text) = Trim(sSql) then Exit;
+  qry.DisableControls;
+  try
+    qry.Close;
+    qry.SQL.Text := sSql;
+    qry.Open;
+  finally
+    qry.EnableControls;
+  end;
+end;
+
+procedure TfrmMtoArticulos.btnToggleFiltrosArtClick(Sender: TObject);
+const
+  ALTO_CABECERA = 22;
+  ALTO_CONTENIDO = 38;
+begin
+  // Persiana: arranca cerrada (Visible=False en el DFM) y al pulsar la
+  // cabecera alternamos visibilidad y altura del contenedor padre.
+  pnlContFiltrosArt.Visible := not pnlContFiltrosArt.Visible;
+  if pnlContFiltrosArt.Visible then
+  begin
+    pnlFiltrosArt.Height := ALTO_CABECERA + ALTO_CONTENIDO;
+    btnToggleFiltrosArt.Caption := #9660'  Filtros de carga';
+  end
+  else
+  begin
+    pnlFiltrosArt.Height := ALTO_CABECERA;
+    btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
+  end;
+end;
+
+procedure TfrmMtoArticulos.cbbFiltroEstadoArtPropertiesEditValueChanged(
+                                                              Sender: TObject);
+var
+  sVal: string;
+begin
+  if FFiltrosArtCargando then Exit;
+  case cbbFiltroEstadoArt.ItemIndex of
+    0: sVal := 'T';
+    2: sVal := 'N';
+  else
+    sVal := 'S';
+  end;
+  GuardarFiltroPerfil('oFiltroEstado', sVal);
+  AplicarFiltrosArticulos;
+end;
+
+procedure TfrmMtoArticulos.chkFiltroConStockArtPropertiesEditValueChanged(
+                                                              Sender: TObject);
+begin
+  if FFiltrosArtCargando then Exit;
+  if chkFiltroConStockArt.Checked then
+    GuardarFiltroPerfil('oFiltroConStock', 'S')
+  else
+    GuardarFiltroPerfil('oFiltroConStock', 'N');
+  AplicarFiltrosArticulos;
+end;
+
+procedure TfrmMtoArticulos.ccbFiltroTemporadaArtPropertiesCloseUp(
+                                                              Sender: TObject);
+var
+  i: Integer;
+  sCsv: string;
+begin
+  if FFiltrosArtCargando then Exit;
+  // Recogemos los descripciones marcados en formato CSV ';' (StrictDelimiter
+  // para no romper si una temporada futura contiene comas).
+  sCsv := '';
+  for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
+    if ccbFiltroTemporadaArt.States[i] = cbsChecked then
+    begin
+      if sCsv <> '' then sCsv := sCsv + ';';
+      sCsv := sCsv +
+                       ccbFiltroTemporadaArt.Properties.Items[i].Description;
+    end;
+  GuardarFiltroPerfil('oFiltroTemporadas', sCsv);
+  AplicarFiltrosArticulos;
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
