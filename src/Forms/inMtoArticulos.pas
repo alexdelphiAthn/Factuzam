@@ -1819,6 +1819,11 @@ begin
   // temporadas, leer las preferencias guardadas por usuario y aplicar
   // el filtro reescribiendo el SQL de unqryTablaG antes de que el
   // resto de la rutina lea FArticuloCargado / el primer registro.
+  // La persiana se deja desplegada en el .dfm para poder editarla en
+  // diseño; al arrancar el form la colapsamos.
+  pnlContFiltrosArt.Visible := False;
+  pnlFiltrosArt.Height := 22;
+  btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
   CargarTemporadasFiltro;
   LeerFiltrosPerfil;
   AplicarFiltrosArticulos;
