@@ -53,21 +53,24 @@ begin
 end;
 
 procedure TdmAtributosBasicos.AbrirDetalles;
-//var
-//  swQ: TStopwatch;
+var
+  swQ: TStopwatch;
 begin
   inherited;
   if unqryAtributosLookup.Active then Exit;
-//  swQ := TStopwatch.StartNew;
+  swQ := TStopwatch.StartNew;
   try
     unqryAtributosLookup.Open;
-//    inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
-//      'unqryAtributosLookup OK', swQ.ElapsedMilliseconds);
+    inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
+      'unqryAtributosLookup OK', swQ.ElapsedMilliseconds);
   except
-//    on E: Exception do
-//      inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
-//        'unqryAtributosLookup ERROR=' + E.Message,
-//        swQ.ElapsedMilliseconds);
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
+        'unqryAtributosLookup ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+      raise;
+    end;
   end;
 end;
 

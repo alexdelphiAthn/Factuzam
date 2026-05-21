@@ -404,12 +404,12 @@ begin
   jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis;
   jvStatusBar1.Panels[3].Text := oEmpresa + '\' + oAlmacen + '\' + oCaja;
   Self.Caption := oAppName + ' ' + oVersion;
+  // Visibilidad inicial del panel de monitor SQL: ya no la decide solo el
+  // {$IFDEF DEBUG}. AplicarModosDepuracion la sincronizará con los flags
+  // appModoDebug / appModoDebugSQL que acaba de cargar InicializarParametrosApp.
   pnlPPBottom.Visible := False;
   cxMemo1.Visible     := False;
-{$IFDEF DEBUG}
-  pnlPPBottom.Visible := True;
-  cxMemo1.Visible     := True;
-{$ENDIF}
+  inLibLog.AplicarModosDepuracion;
   AplicarTema;
   CargarFondoLogo;
   // pcPrincipal tiene Align=alClient en Panel1 y repinta su area cliente
