@@ -141,6 +141,7 @@ type
     dbcLinTotalTallas        : TcxGridDBColumn;
     dbcLinImporteTotal       : TcxGridDBColumn;
     dbcLinNumero             : TcxGridDBColumn;
+    btnImprimir: TcxButton;
 
     // ------------------------------------------------------------------
     // Eventos
@@ -303,6 +304,7 @@ begin
   begin
     FGestorTallas.RecalcularMaxColumnas;
     FGestorTallas.CargarCantidadesTodasLineas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
   end;
 end;
 
@@ -318,6 +320,7 @@ begin
   FGestorTallas.InvalidarCache;
   FGestorTallas.RecalcularMaxColumnas;
   FGestorTallas.CargarCantidadesTodasLineas;
+  FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.unqrySesionLinAfterPostHook(

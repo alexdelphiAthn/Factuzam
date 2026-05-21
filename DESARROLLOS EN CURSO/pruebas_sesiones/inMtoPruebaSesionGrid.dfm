@@ -303,17 +303,6 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
               'coste.'
             TabOrder = 3
           end
-          object btnImprimir: TcxButton
-            Left = 950
-            Top = 4
-            Width = 136
-            Height = 28
-            Caption = 'Imprimir (apaisado)'
-            LookAndFeel.Kind = lfFlat
-            LookAndFeel.NativeStyle = False
-            TabOrder = 4
-            OnClick = btnImprimirClick
-          end
         end
         object cxgrdLineas: TcxGrid
           Left = 0
@@ -507,6 +496,18 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
       inherited pnlDataSetName: TPanel
         StyleElements = [seFont, seClient, seBorder]
       end
+    end
+    object btnImprimir: TcxButton
+      Left = 0
+      Top = 308
+      Width = 137
+      Height = 69
+      Caption = 'Imprimir horizontal'
+      LookAndFeel.Kind = lfFlat
+      LookAndFeel.NativeStyle = False
+      TabOrder = 2
+      WordWrap = True
+      OnClick = btnImprimirClick
     end
   end
 end
