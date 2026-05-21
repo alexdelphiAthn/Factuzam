@@ -152,6 +152,7 @@ type
     dbcLinImporteTotal       : TcxGridDBColumn;
     dbcLinNumero             : TcxGridDBColumn;
     btnImprimir: TcxButton;
+    btnCrear: TcxButton;
 
     // ------------------------------------------------------------------
     // Eventos
@@ -162,6 +163,7 @@ type
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
     procedure btnFotoClick(Sender: TObject);
+    procedure btnCrearClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
@@ -225,6 +227,7 @@ uses
   inLibGlobalVar,
   inLibUser,
   inLibComprasSesiones,
+  inLibComprasSesionesMaterializar,
   inLibAtributosPaleta,
   inLibFotos,
   inMtoModalSelFamilia,
@@ -661,6 +664,66 @@ begin
     on E: Exception do
       ShowMessage('Error guardando foto: ' + E.Message);
   end;
+end;
+
+procedure TfrmMtoComprasSesiones.btnCrearClick(Sender: TObject);
+var
+  bOK    : Boolean;
+  sSerPed, sNumPed, sSerAlb, sNumAlb, sErr: string;
+begin
+  inherited;
+  // Lanza la materializacion: crea articulos / SKUs / barras /
+  // proveedor / tarifa / temporada y, si la cabecera marca albaran,
+  // tambien los movimientos de almacen (entradas TIPO_DOC='AC').
+  if Dmm.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay sesion activa.');
+    Exit;
+  end;
+  if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString = 'CERRADA' then
+  begin
+    ShowMessage('La sesion ya esta cerrada. No se puede materializar dos ' +
+                'veces.');
+    Exit;
+  end;
+  if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+    Dmm.unqryTablaG.Post;
+  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+    Dmm.unqrySesionLin.Post;
+
+  if MessageDlg('Se crearan los articulos / SKUs / codigos de barras / ' +
+                'tarifas / proveedor / fotos y, si procede, el albaran de ' +
+                'compra con sus movimientos de stock. ' + sLineBreak +
+                sLineBreak + 'Esta accion es IRREVERSIBLE. Continuar?',
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+
+  Screen.Cursor := crHourGlass;
+  try
+    bOK := MaterializarSesion(
+      Dmm,
+      Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S',
+      // Si la cabecera trae almacen, generamos albaran automaticamente
+      // aunque el flag ESGENERA_ALBARAN_SES no este marcado: el escenario
+      // del muestrario asume que se entra mercancia siempre.
+      (Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S')
+        or (Trim(Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString) <> ''),
+      oUser,
+      sSerPed, sNumPed, sSerAlb, sNumAlb, sErr);
+  finally
+    Screen.Cursor := crDefault;
+  end;
+
+  if bOK then
+  begin
+    if sSerAlb <> '' then
+      ShowMessage('Sesion materializada. Albaran: ' + sSerAlb + ' / ' + sNumAlb)
+    else
+      ShowMessage('Sesion materializada (sin albaran).');
+    // Refrescar la cabecera para que el estado nuevo (CERRADA) se vea.
+    Dmm.unqryTablaG.Refresh;
+  end
+  else
+    ShowMessage('No se pudo materializar la sesion:' + sLineBreak + sErr);
 end;
 
 procedure TfrmMtoComprasSesiones.btnImprimirClick(Sender: TObject);
