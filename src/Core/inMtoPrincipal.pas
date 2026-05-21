@@ -410,8 +410,7 @@ begin
   cxMemo1.Visible     := True;
 {$ENDIF}
   AplicarTema;
-  if not Application.Icon.Empty then
-    imgFondoLogo.Picture.Icon.Assign(Application.Icon);
+  imgFondoLogo.BringToFront;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
 end;
@@ -420,7 +419,7 @@ procedure TfrmMtoPrincipal.ActualizarFondoLogo;
 var
   bDebeVerse: Boolean;
 begin
-  bDebeVerse := (pcPrincipal.PageCount = 0) and (not Application.Icon.Empty);
+  bDebeVerse := (pcPrincipal.PageCount = 0);
   if (imgFondoLogo.Visible <> bDebeVerse) then
     imgFondoLogo.Visible := bDebeVerse;
 end;
