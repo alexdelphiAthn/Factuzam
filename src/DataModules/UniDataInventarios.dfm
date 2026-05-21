@@ -298,16 +298,10 @@ inherited dmInventarios: TdmInventarios
   end
   object unqryDefinicionArticulo: TUniQuery
     SQL.Strings = (
-      'SELECT DISTINCT N.NOMBRE_ATRIBUTO, N.ORDEN_VISUAL_ATRIBUTO'
-      'FROM fza_articulos_skus SKU'
-      'JOIN fza_atributos_sku AT'
-      '  ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SKU_SA'
-      'JOIN fza_atributos_valores V'
-      '  ON AT.ID_AV_SA = V.ID_AV'
-      'JOIN vi_atributos_nombres N'
-      '  ON V.ID_VA_AV = N.ID_ATRIBUTO'
-      'WHERE SKU.CODIGO_ART_SKU = :ARTICULO'
-      'ORDER BY N.ORDEN_VISUAL_ATRIBUTO LIMIT 5')
+      'SELECT DISTINCT NOMBRE_ATRIBUTO, ORDEN_VISUAL_ATRIBUTO'
+      '  FROM vi_atributos_nombres'
+      ' WHERE CODIGO_ART_PADRE_ARTVIN = :ARTICULO'
+      ' ORDER BY ORDEN_VISUAL_ATRIBUTO LIMIT 5')
     Left = 606
     Top = 110
     ParamData = <
