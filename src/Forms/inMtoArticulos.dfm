@@ -20,6 +20,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       Width = 1077
       Height = 671
       TabOrder = 1
+      Properties.ActivePage = tsLista
       ExplicitWidth = 1077
       ExplicitHeight = 671
       ClientRectBottom = 669
@@ -29,79 +30,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         ExplicitTop = 29
         ExplicitWidth = 1073
         ExplicitHeight = 640
-        object pnlFiltrosArt: TPanel
-          Left = 0
-          Top = 0
-          Width = 1073
-          Height = 60
-          Align = alTop
-          BevelOuter = bvNone
-          ParentBackground = False
-          TabOrder = 1
-          object btnToggleFiltrosArt: TcxButton
-            Left = 0
-            Top = 0
-            Width = 1073
-            Height = 22
-            Align = alTop
-            Caption = #9654'  Filtros de carga'
-            LookAndFeel.Kind = lfUltraFlat
-            LookAndFeel.NativeStyle = False
-            TabOrder = 0
-            OnClick = btnToggleFiltrosArtClick
-          end
-          object pnlContFiltrosArt: TPanel
-            Left = 0
-            Top = 22
-            Width = 1073
-            Height = 38
-            Align = alClient
-            BevelOuter = bvNone
-            ParentBackground = False
-            TabOrder = 1
-            object lblFiltroEstadoArt: TcxLabel
-              Left = 8
-              Top = 11
-              Caption = 'Estado:'
-              Transparent = True
-            end
-            object cbbFiltroEstadoArt: TcxComboBox
-              Left = 58
-              Top = 7
-              Properties.DropDownListStyle = lsFixedList
-              Properties.Items.Strings = (
-                'Todos'
-                'S'#243'lo activos'
-                'S'#243'lo inactivos')
-              Properties.OnEditValueChanged = cbbFiltroEstadoArtPropertiesEditValueChanged
-              TabOrder = 0
-              Text = 'S'#243'lo activos'
-              Width = 145
-            end
-            object chkFiltroConStockArt: TcxCheckBox
-              Left = 220
-              Top = 9
-              Caption = 'S'#243'lo con stock'
-              Properties.OnEditValueChanged = chkFiltroConStockArtPropertiesEditValueChanged
-              TabOrder = 1
-              Transparent = True
-              Width = 137
-            end
-            object lblFiltroTemporadaArt: TcxLabel
-              Left = 365
-              Top = 11
-              Caption = 'Temporadas:'
-              Transparent = True
-            end
-            object ccbFiltroTemporadaArt: TcxCheckComboBox
-              Left = 446
-              Top = 7
-              Properties.OnCloseUp = ccbFiltroTemporadaArtPropertiesCloseUp
-              TabOrder = 2
-              Width = 280
-            end
-          end
-        end
         inherited cxGrdPrincipal: TcxGrid
           Top = 60
           Width = 1073
@@ -151,6 +79,12 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               PropertiesClassName = 'TcxTextEditProperties'
               Width = 150
             end
+            object cxgrdbclmnGrdDBTabPrinNOMBRE_PRV: TcxGridDBColumn
+              Caption = 'Proveedor'
+              DataBinding.FieldName = 'NOMBRE_PRV'
+              PropertiesClassName = 'TcxTextEditProperties'
+              Width = 180
+            end
             object cxgrdbclmnGrdDBTabPrinTEMPORADA_ART: TcxGridDBColumn
               Caption = 'Temporada'
               DataBinding.FieldName = 'TEMPORADA_ART'
@@ -159,8 +93,85 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             end
           end
         end
+        object pnlFiltrosArt: TPanel
+          Left = 0
+          Top = 0
+          Width = 1073
+          Height = 60
+          Align = alTop
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 1
+          object btnToggleFiltrosArt: TcxButton
+            Left = 0
+            Top = 0
+            Width = 1073
+            Height = 22
+            Align = alTop
+            Caption = #9654'  Filtros de carga'
+            LookAndFeel.Kind = lfUltraFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 0
+            OnClick = btnToggleFiltrosArtClick
+          end
+          object pnlContFiltrosArt: TPanel
+            Left = 0
+            Top = 22
+            Width = 1073
+            Height = 38
+            Align = alClient
+            BevelOuter = bvNone
+            ParentBackground = False
+            TabOrder = 1
+            object lblFiltroEstadoArt: TcxLabel
+              Left = 32
+              Top = 8
+              Caption = 'Estado:'
+              TabOrder = 3
+              Transparent = True
+            end
+            object cbbFiltroEstadoArt: TcxComboBox
+              Left = 98
+              Top = 4
+              Properties.DropDownListStyle = lsFixedList
+              Properties.Items.Strings = (
+                'Todos'
+                'S'#243'lo activos'
+                'S'#243'lo inactivos')
+              Properties.OnEditValueChanged = cbbFiltroEstadoArtPropertiesEditValueChanged
+              TabOrder = 0
+              Text = 'S'#243'lo activos'
+              Width = 145
+            end
+            object chkFiltroConStockArt: TcxCheckBox
+              Left = 297
+              Top = 8
+              Caption = 'S'#243'lo con stock'
+              Properties.OnEditValueChanged = chkFiltroConStockArtPropertiesEditValueChanged
+              TabOrder = 1
+              Transparent = True
+            end
+            object lblFiltroTemporadaArt: TcxLabel
+              Left = 477
+              Top = 8
+              Caption = 'Temporadas:'
+              TabOrder = 4
+              Transparent = True
+            end
+            object ccbFiltroTemporadaArt: TcxCheckComboBox
+              Left = 605
+              Top = 4
+              Properties.Items = <>
+              Properties.OnCloseUp = ccbFiltroTemporadaArtPropertiesCloseUp
+              TabOrder = 2
+              Width = 280
+            end
+          end
+        end
       end
       inherited tsFicha: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
         ExplicitWidth = 1073
         ExplicitHeight = 640
         object pnlTopFicha: TPanel
@@ -660,18 +671,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlBotonesCB: TPanel
                 Left = 948
                 Top = 0
@@ -1229,10 +1232,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsProveedores: TcxTabSheet
               Caption = '&6_Proveedores'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -1402,10 +1401,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsLineasFactura: TcxTabSheet
               Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1930,10 +1925,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object cxTabSheet3: TcxTabSheet
               Caption = '&8_Stock'
               ImageIndex = 7
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrdStock: TcxGrid
                 Left = 0
                 Top = 0
@@ -2067,10 +2058,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object tsMovimientos: TcxTabSheet
               Caption = '&9_Movimientos'
               ImageIndex = 8
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0

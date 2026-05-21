@@ -173,6 +173,14 @@ type
     procedure ResetForm;  virtual;
     procedure AbrirPerfiles(bTabVisible:Boolean);
     procedure CargarPerfilesParticulares; virtual;
+    // Hook que cada Mto puede sobreescribir para añadir entradas extra al
+    // batch que sbGrabarGridClick volcara en fza_usuarios_perfiles (por
+    // ejemplo: filtros de carga del Mto, opciones particulares...). Recibe
+    // la lista de perfiles ya iniciada con KeyPerfil = Self.Name y
+    // UserGroup = sPermisos: solo hay que rellenar SubKey + Value y
+    // hacer Add. Por defecto no anyade nada.
+    procedure RecogerPerfilesParticulares(var oList: TPerfilList;
+                                          const sPermisos: string); virtual;
     // Resuelve los codigos ART y SKU del registro activo en `dsTablaG`.
     // Recorre la lista de alias habituales (CODIGO_ART_*, CODIGO_UNIDAD_*).
     // Los Mtos que necesiten otra fuente pueden sobreescribirlo (p.ej.
@@ -537,6 +545,12 @@ begin
 
         CollectSettingsColumnProfile(cxGrid, Self.Name, sPermisos, oList);
       end;
+
+    // 3. Perfiles particulares del Mto (hook para descendientes — por
+    // ejemplo TfrmMtoArticulos lo usa para grabar los filtros de carga
+    // de la pestanya Lista).
+    RecogerPerfilesParticulares(oList, sPermisos);
+
     oConn.StartTransaction;
     try
       odmPerfiles.GrabarPerfilesBatch(oList);
@@ -658,6 +672,14 @@ procedure TfrmMtoGen.CargarPerfilesParticulares;
 begin
   if (tdmDataModule <> nil) then
     GrabarPerfilDatam((tdmDataModule as TdmBase), Self.Owner);
+end;
+
+procedure TfrmMtoGen.RecogerPerfilesParticulares(var oList: TPerfilList;
+                                                 const sPermisos: string);
+begin
+  // Por defecto el Mto no anyade nada. Los descendientes (p.ej.
+  // TfrmMtoArticulos) sobreescriben este metodo para volcar entradas
+  // adicionales al batch del sbGrabarGridClick.
 end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
