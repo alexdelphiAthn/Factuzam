@@ -29,7 +29,7 @@ uses
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel, inLibArticulosPropiedades,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
-  dxBevel, cxDBNavigator, UniDataArticulos,
+  dxBevel, cxDBNavigator, UniDataArticulos, UniDataPerfiles,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, Vcl.DBCtrls, cxCheckComboBox, cxDBCheckComboBox,
@@ -468,15 +468,19 @@ type
      procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
   private
     // Filtros de carga del Mto Articulos. Definen el SQL de la lista
-    // principal (vi_articulos) y se reaplican en cada cambio. Se
-    // persisten por usuario en fza_usuarios_perfiles (claves
-    // oFiltroEstado, oFiltroConStock, oFiltroTemporadas).
+    // principal (vi_articulos) y se reaplican en cada cambio. Los
+    // valores activos solo se persisten en fza_usuarios_perfiles cuando
+    // el usuario pulsa "Grabar Grid" (sbGrabarGridClick), siguiendo el
+    // mismo patron que el resto de preferencias del Mto. Claves:
+    // oFiltroEstado, oFiltroConStock, oFiltroTemporadas.
     FFiltrosArtCargando: Boolean;
     procedure CargarTemporadasFiltro;
     procedure LeerFiltrosPerfil;
-    procedure GuardarFiltroPerfil(const ASubKey, AValor: string);
     function  ConstruirSqlArticulos: string;
     procedure AplicarFiltrosArticulos;
+  public
+    procedure RecogerPerfilesParticulares(var oList: TPerfilList;
+                                          const sPermisos: string); override;
   private
     FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
@@ -1936,10 +1940,51 @@ begin
   end;
 end;
 
-procedure TfrmMtoArticulos.GuardarFiltroPerfil(const ASubKey, AValor: string);
+procedure TfrmMtoArticulos.RecogerPerfilesParticulares(var oList: TPerfilList;
+                                                     const sPermisos: string);
+var
+  item: TPerfilItem;
+  i: Integer;
+  sEstado, sTemporadas: string;
 begin
-  if odmPerfiles = nil then Exit;
-  odmPerfiles.GrabarPerfil(oUser, Self.Name, ASubKey, AValor);
+  // Volcamos los filtros de carga al batch del sbGrabarGridClick, asi se
+  // graban junto con el resto de preferencias del Mto y respetan el
+  // ambito (sPermisos) elegido por el usuario en el dialogo de grabar.
+  if not Assigned(cbbFiltroEstadoArt) then Exit;
+
+  item.UserGroup := sPermisos;
+  item.KeyPerfil := Self.Name;
+
+  // Estado: T=Todos, S=Solo activos, N=Solo inactivos
+  case cbbFiltroEstadoArt.ItemIndex of
+    0: sEstado := 'T';
+    2: sEstado := 'N';
+  else
+    sEstado := 'S';
+  end;
+  item.SubKey := 'oFiltroEstado';
+  item.Value  := sEstado;
+  oList.Add(item);
+
+  item.SubKey := 'oFiltroConStock';
+  if chkFiltroConStockArt.Checked then
+    item.Value := 'S'
+  else
+    item.Value := 'N';
+  oList.Add(item);
+
+  // Temporadas: CSV con ';' como separador (StrictDelimiter al leer).
+  sTemporadas := '';
+  for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
+    if ccbFiltroTemporadaArt.States[i] = cbsChecked then
+    begin
+      if sTemporadas <> '' then sTemporadas := sTemporadas + ';';
+      sTemporadas := sTemporadas +
+                       ccbFiltroTemporadaArt.Properties.Items[i].Description;
+    end;
+  item.SubKey := 'oFiltroTemporadas';
+  item.Value  := sTemporadas;
+  oList.Add(item);
 end;
 
 function TfrmMtoArticulos.ConstruirSqlArticulos: string;
@@ -2035,17 +2080,12 @@ end;
 
 procedure TfrmMtoArticulos.cbbFiltroEstadoArtPropertiesEditValueChanged(
                                                               Sender: TObject);
-var
-  sVal: string;
 begin
+  // Aplicamos el filtro inmediatamente, pero NO persistimos: la grabacion
+  // a fza_usuarios_perfiles se hace explicitamente desde sbGrabarGridClick
+  // (mismo patron que el resto de ajustes del Mto: ancho de columnas,
+  // captions, etc.).
   if FFiltrosArtCargando then Exit;
-  case cbbFiltroEstadoArt.ItemIndex of
-    0: sVal := 'T';
-    2: sVal := 'N';
-  else
-    sVal := 'S';
-  end;
-  GuardarFiltroPerfil('oFiltroEstado', sVal);
   AplicarFiltrosArticulos;
 end;
 
@@ -2053,31 +2093,13 @@ procedure TfrmMtoArticulos.chkFiltroConStockArtPropertiesEditValueChanged(
                                                               Sender: TObject);
 begin
   if FFiltrosArtCargando then Exit;
-  if chkFiltroConStockArt.Checked then
-    GuardarFiltroPerfil('oFiltroConStock', 'S')
-  else
-    GuardarFiltroPerfil('oFiltroConStock', 'N');
   AplicarFiltrosArticulos;
 end;
 
 procedure TfrmMtoArticulos.ccbFiltroTemporadaArtPropertiesCloseUp(
                                                               Sender: TObject);
-var
-  i: Integer;
-  sCsv: string;
 begin
   if FFiltrosArtCargando then Exit;
-  // Recogemos los descripciones marcados en formato CSV ';' (StrictDelimiter
-  // para no romper si una temporada futura contiene comas).
-  sCsv := '';
-  for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
-    if ccbFiltroTemporadaArt.States[i] = cbsChecked then
-    begin
-      if sCsv <> '' then sCsv := sCsv + ';';
-      sCsv := sCsv +
-                       ccbFiltroTemporadaArt.Properties.Items[i].Description;
-    end;
-  GuardarFiltroPerfil('oFiltroTemporadas', sCsv);
   AplicarFiltrosArticulos;
 end;
 
