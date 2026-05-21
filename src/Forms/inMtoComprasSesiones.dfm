@@ -591,6 +591,20 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         StyleElements = [seFont, seClient, seBorder]
       end
     end
+    object btnCrear: TcxButton
+      Left = 0
+      Top = 230
+      Width = 137
+      Height = 69
+      Caption = 'Crear art'#237'culos y albar'#225'n'
+      Colors.Default = 9101247
+      Colors.Normal = 9101247
+      LookAndFeel.Kind = lfFlat
+      LookAndFeel.NativeStyle = False
+      TabOrder = 1
+      WordWrap = True
+      OnClick = btnCrearClick
+    end
     object btnImprimir: TcxButton
       Left = 0
       Top = 308
