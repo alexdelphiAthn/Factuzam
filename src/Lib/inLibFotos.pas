@@ -150,6 +150,41 @@ type
     /// el valor exacto de `CODIGO_UNIDAD_FOT`: cadena vacia para la
     /// foto del articulo, SKU completo, o prefijo de SKU.
     procedure Eliminar(const ACodArt, ACodUnidad: string);
+
+    /// Sesiones de compra: guarda una foto contra una linea de sesion
+    /// (el articulo todavia no esta en fza_articulos). Usa la misma
+    /// logica de 300/600/real (todos PNG) que `Guardar`, pero contra
+    /// `fza_compras_sesiones_fotos` y con prefijo de fichero
+    /// `ses_<SERIE>_<NUMERO>_<LINEA>_`. `ACodUnidad` = '' guarda foto
+    /// a nivel de la linea (articulo padre); != '' la asocia a un SKU
+    /// concreto o prefijo dentro del codigo tentativo.
+    function GuardarSesion(const ASerieSes, ANumeroSes: string;
+                           ALinea: Integer;
+                           const ACodArtTentativo, ACodUnidad,
+                                 AFicheroOrigen: string): TFotoInfo;
+
+    /// Resuelve la foto aplicable a una linea de sesion. Como `Resolver`
+    /// pero contra fza_compras_sesiones_fotos. Si ACodUnidad = '' busca
+    /// solo a nivel linea (articulo padre).
+    function ResolverSesion(const ASerieSes, ANumeroSes: string;
+                            ALinea: Integer;
+                            const ACodUnidad: string = ''): TFotoInfo;
+
+    /// Borra una foto de sesion (BBDD + ficheros 300/600/real).
+    procedure EliminarSesion(const ASerieSes, ANumeroSes: string;
+                             ALinea: Integer;
+                             const ACodUnidad: string);
+
+    /// Materializacion: para cada fila de fza_compras_sesiones_fotos
+    /// con (SERIE, NUMERO, LINEA) -> renombra los PNG quitando el
+    /// prefijo ses_<SERIE>_<NUMERO>_<LINEA>_ y poniendo
+    /// <ACodigoArt>_<NNN>, inserta en fza_articulos_fotos y borra la
+    /// fila de origen. Idempotente: si ya existe la fila destino
+    /// (mismo CODIGO_ART_FOT + CODIGO_UNIDAD_FOT), conserva el nombre
+    /// nuevo y borra ambos rastros del lado sesion.
+    procedure MigrarFotosSesion(const ASerieSes, ANumeroSes: string;
+                                ALinea: Integer;
+                                const ACodigoArt, AUsuario: string);
   end;
 
 /// Sustituye en el informe los TfrxPictureView llamados foto300/foto600/
@@ -1178,6 +1213,422 @@ begin
     FImage.Picture.Assign(png);
   finally
     FreeAndNil(png);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//   Fotos de sesion de compra (articulos todavia no materializados)
+// ---------------------------------------------------------------------------
+//
+// Pattern paralelo a Guardar/Resolver/Eliminar pero contra
+// fza_compras_sesiones_fotos. Mismos PNG en 300/600/real, mismo directorio
+// base appDirFotos. Diferencia: el nombre base lleva el prefijo
+// ses_<SERIE>_<NUMERO>_<LINEA>_ para que no colisione con los nombres
+// definitivos del articulo. Al materializar, MigrarFotosSesion renombra
+// los ficheros y persiste en fza_articulos_fotos.
+
+function ClaveNombreSesion(const ASerieSes, ANumeroSes: string;
+                            ALinea: Integer;
+                            const ACodUnidad: string): string;
+var
+  sSku: string;
+  i   : Integer;
+begin
+  // ses_<SERIE>_<NUMERO>_<LINEA>[ _<SKU sanitizado> ]
+  Result := 'ses_' + ASerieSes + '_' + ANumeroSes + '_' +
+            Format('%.4d', [ALinea]);
+  sSku := ACodUnidad;
+  if sSku <> '' then
+  begin
+    for i := 1 to Length(sSku) do
+      if not (sSku[i] in ['A'..'Z','a'..'z','0'..'9','-','_']) then
+        sSku[i] := '_';
+    Result := Result + '_' + sSku;
+  end;
+end;
+
+function TFotosArticulos.GuardarSesion(
+  const ASerieSes, ANumeroSes: string;
+  ALinea: Integer;
+  const ACodArtTentativo, ACodUnidad,
+        AFicheroOrigen: string): TFotoInfo;
+var
+  q              : TUniQuery;
+  sDirBase       : string;
+  sClave         : string;
+  sNombreNuevo   : string;
+  sExt           : string;
+  oGraphic       : TGraphic;
+  bExiste        : Boolean;
+  iIndice        : Integer;
+  sNombreAnterior: string;
+begin
+  Result.Clear;
+  if ASerieSes = '' then
+    raise Exception.Create('Foto de sesion: falta SERIE_SES.');
+  if ANumeroSes = '' then
+    raise Exception.Create('Foto de sesion: falta NUMERO_SES.');
+  if ALinea <= 0 then
+    raise Exception.Create('Foto de sesion: LINEA debe ser > 0.');
+  if not FileExists(AFicheroOrigen) then
+    raise Exception.Create('El fichero origen no existe: ' + AFicheroOrigen);
+
+  sDirBase := DirBase;
+  if sDirBase = '' then
+    raise Exception.Create('El parametro appDirFotos no esta configurado.');
+  ForceDirectories(sDirBase + cSubdir300);
+  ForceDirectories(sDirBase + cSubdir600);
+  ForceDirectories(sDirBase + cSubdirReal);
+
+  sClave := ClaveNombreSesion(ASerieSes, ANumeroSes, ALinea, ACodUnidad);
+  sExt := LowerCase(ExtractFileExt(AFicheroOrigen));
+  if Length(sExt) > 0 then sExt := Copy(sExt, 2, MaxInt);
+  if sExt = '' then sExt := 'png';
+
+  // Indice incremental: si ya hay foto para esta (sesion, linea, unidad),
+  // se borran los PNG anteriores y se sube el numero.
+  sNombreAnterior := '';
+  iIndice := 1;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text :=
+      'SELECT NOMBRE_FOT_CSF FROM fza_compras_sesiones_fotos ' +
+      ' WHERE SERIE_SES_CSF     = :s ' +
+      '   AND NUMERO_SES_CSF    = :n ' +
+      '   AND LINEA_CSF         = :l ' +
+      '   AND CODIGO_UNIDAD_CSF = :u';
+    q.ParamByName('s').AsString := ASerieSes;
+    q.ParamByName('n').AsString := ANumeroSes;
+    q.ParamByName('l').AsInteger := ALinea;
+    q.ParamByName('u').AsString := ACodUnidad;
+    q.Open;
+    bExiste := not q.Eof;
+    if bExiste then
+    begin
+      sNombreAnterior := q.FieldByName('NOMBRE_FOT_CSF').AsString;
+      iIndice         := ExtraerIndice(sNombreAnterior) + 1;
+      if iIndice < 1 then iIndice := 1;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+  sNombreNuevo := ComponerNombre(sClave, iIndice);
+
+  oGraphic := CargarGraficoDeFichero(AFicheroOrigen);
+  try
+    GuardarComoPng(oGraphic,
+                   SubdirDe(frReal) + sNombreNuevo + '.png');
+    GuardarRedimensionado(oGraphic,
+                          SubdirDe(frPx300) + sNombreNuevo + '.png',
+                          cLado300);
+    GuardarRedimensionado(oGraphic,
+                          SubdirDe(frPx600) + sNombreNuevo + '.png',
+                          cLado600);
+  finally
+    FreeAndNil(oGraphic);
+  end;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_compras_sesiones_fotos ' +
+      '  (SERIE_SES_CSF, NUMERO_SES_CSF, LINEA_CSF, CODIGO_UNIDAD_CSF, ' +
+      '   CODIGO_ART_TENTATIVO_CSF, NOMBRE_FOT_CSF, EXTENSION_ORIGEN_CSF, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (:s, :n, :l, :u, :a, :nom, :ext, NOW(), :usr, NOW(), :usr) ' +
+      'ON DUPLICATE KEY UPDATE ' +
+      '  CODIGO_ART_TENTATIVO_CSF = :a, ' +
+      '  NOMBRE_FOT_CSF           = :nom, ' +
+      '  EXTENSION_ORIGEN_CSF     = :ext, ' +
+      '  INSTANTE_MODIF           = NOW(), ' +
+      '  USUARIO_MODIF            = :usr';
+    q.ParamByName('s').AsString   := ASerieSes;
+    q.ParamByName('n').AsString   := ANumeroSes;
+    q.ParamByName('l').AsInteger  := ALinea;
+    q.ParamByName('u').AsString   := ACodUnidad;
+    q.ParamByName('a').AsString   := ACodArtTentativo;
+    q.ParamByName('nom').AsString := sNombreNuevo;
+    q.ParamByName('ext').AsString := sExt;
+    q.ParamByName('usr').AsString := inLibGlobalVar.oUser;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+
+  // Tras escribir la nueva, limpiar los PNG del nombre anterior.
+  if (sNombreAnterior <> '') and (sNombreAnterior <> sNombreNuevo) then
+    BorrarFicherosDeNombre(sNombreAnterior);
+
+  Result.Encontrada      := True;
+  Result.Origen          := foSku;
+  Result.CodigoArt       := ACodArtTentativo;
+  Result.CodigoSku       := ACodUnidad;
+  Result.ClaveResuelta   := ACodUnidad;
+  Result.NombreBase      := sNombreNuevo;
+  Result.ExtensionOrigen := sExt;
+end;
+
+function TFotosArticulos.ResolverSesion(
+  const ASerieSes, ANumeroSes: string;
+  ALinea: Integer;
+  const ACodUnidad: string = ''): TFotoInfo;
+var
+  q : TUniQuery;
+  prefijos: TArray<string>;
+  i : Integer;
+begin
+  Result.Clear;
+  if (ASerieSes = '') or (ANumeroSes = '') or (ALinea <= 0) then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+
+    // 1. Match exacto por SKU (o cadena vacia = padre)
+    q.SQL.Text :=
+      'SELECT * FROM fza_compras_sesiones_fotos ' +
+      ' WHERE SERIE_SES_CSF     = :s ' +
+      '   AND NUMERO_SES_CSF    = :n ' +
+      '   AND LINEA_CSF         = :l ' +
+      '   AND CODIGO_UNIDAD_CSF = :u';
+    q.ParamByName('s').AsString := ASerieSes;
+    q.ParamByName('n').AsString := ANumeroSes;
+    q.ParamByName('l').AsInteger := ALinea;
+    q.ParamByName('u').AsString := ACodUnidad;
+    q.Open;
+    if not q.Eof then
+    begin
+      Result.Encontrada    := True;
+      if ACodUnidad = '' then Result.Origen := foArticulo
+      else Result.Origen := foSku;
+      Result.CodigoArt     :=
+                       q.FieldByName('CODIGO_ART_TENTATIVO_CSF').AsString;
+      Result.CodigoSku     := ACodUnidad;
+      Result.ClaveResuelta := ACodUnidad;
+      Result.NombreBase    := q.FieldByName('NOMBRE_FOT_CSF').AsString;
+      Result.ExtensionOrigen :=
+                       q.FieldByName('EXTENSION_ORIGEN_CSF').AsString;
+      Exit;
+    end;
+    q.Close;
+
+    // 2. Fallback por prefijos (mismo esquema que Resolver). Solo si
+    //    nos pidieron un SKU concreto.
+    if ACodUnidad <> '' then
+    begin
+      prefijos := GenerarPrefijosSku(ACodUnidad);
+      for i := 0 to High(prefijos) do
+      begin
+        if prefijos[i] = ACodUnidad then Continue;
+        q.SQL.Text :=
+          'SELECT * FROM fza_compras_sesiones_fotos ' +
+          ' WHERE SERIE_SES_CSF     = :s ' +
+          '   AND NUMERO_SES_CSF    = :n ' +
+          '   AND LINEA_CSF         = :l ' +
+          '   AND CODIGO_UNIDAD_CSF = :u';
+        q.ParamByName('s').AsString  := ASerieSes;
+        q.ParamByName('n').AsString  := ANumeroSes;
+        q.ParamByName('l').AsInteger := ALinea;
+        q.ParamByName('u').AsString  := prefijos[i];
+        q.Open;
+        if not q.Eof then
+        begin
+          Result.Encontrada    := True;
+          Result.Origen        := foSkuPrefijo;
+          Result.CodigoArt     :=
+                       q.FieldByName('CODIGO_ART_TENTATIVO_CSF').AsString;
+          Result.CodigoSku     := ACodUnidad;
+          Result.ClaveResuelta := prefijos[i];
+          Result.NombreBase    := q.FieldByName('NOMBRE_FOT_CSF').AsString;
+          Result.ExtensionOrigen :=
+                       q.FieldByName('EXTENSION_ORIGEN_CSF').AsString;
+          Exit;
+        end;
+        q.Close;
+      end;
+    end;
+
+    // 3. Fallback a foto de la linea (CODIGO_UNIDAD_CSF = '')
+    if ACodUnidad <> '' then
+    begin
+      q.SQL.Text :=
+        'SELECT * FROM fza_compras_sesiones_fotos ' +
+        ' WHERE SERIE_SES_CSF     = :s ' +
+        '   AND NUMERO_SES_CSF    = :n ' +
+        '   AND LINEA_CSF         = :l ' +
+        '   AND CODIGO_UNIDAD_CSF = ''''';
+      q.ParamByName('s').AsString  := ASerieSes;
+      q.ParamByName('n').AsString  := ANumeroSes;
+      q.ParamByName('l').AsInteger := ALinea;
+      q.Open;
+      if not q.Eof then
+      begin
+        Result.Encontrada    := True;
+        Result.Origen        := foArticulo;
+        Result.CodigoArt     :=
+                       q.FieldByName('CODIGO_ART_TENTATIVO_CSF').AsString;
+        Result.CodigoSku     := ACodUnidad;
+        Result.ClaveResuelta := '';
+        Result.NombreBase    := q.FieldByName('NOMBRE_FOT_CSF').AsString;
+        Result.ExtensionOrigen :=
+                       q.FieldByName('EXTENSION_ORIGEN_CSF').AsString;
+      end;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TFotosArticulos.EliminarSesion(
+  const ASerieSes, ANumeroSes: string;
+  ALinea: Integer;
+  const ACodUnidad: string);
+var
+  q          : TUniQuery;
+  sNombreBase: string;
+begin
+  if (ASerieSes = '') or (ANumeroSes = '') or (ALinea <= 0) then Exit;
+  sNombreBase := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text :=
+      'SELECT NOMBRE_FOT_CSF FROM fza_compras_sesiones_fotos ' +
+      ' WHERE SERIE_SES_CSF     = :s ' +
+      '   AND NUMERO_SES_CSF    = :n ' +
+      '   AND LINEA_CSF         = :l ' +
+      '   AND CODIGO_UNIDAD_CSF = :u';
+    q.ParamByName('s').AsString  := ASerieSes;
+    q.ParamByName('n').AsString  := ANumeroSes;
+    q.ParamByName('l').AsInteger := ALinea;
+    q.ParamByName('u').AsString  := ACodUnidad;
+    q.Open;
+    if not q.Eof then
+      sNombreBase := q.FieldByName('NOMBRE_FOT_CSF').AsString;
+    q.Close;
+    if sNombreBase = '' then Exit;
+
+    q.SQL.Text :=
+      'DELETE FROM fza_compras_sesiones_fotos ' +
+      ' WHERE SERIE_SES_CSF     = :s ' +
+      '   AND NUMERO_SES_CSF    = :n ' +
+      '   AND LINEA_CSF         = :l ' +
+      '   AND CODIGO_UNIDAD_CSF = :u';
+    q.ParamByName('s').AsString  := ASerieSes;
+    q.ParamByName('n').AsString  := ANumeroSes;
+    q.ParamByName('l').AsInteger := ALinea;
+    q.ParamByName('u').AsString  := ACodUnidad;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+  BorrarFicherosDeNombre(sNombreBase);
+end;
+
+procedure TFotosArticulos.MigrarFotosSesion(
+  const ASerieSes, ANumeroSes: string;
+  ALinea: Integer;
+  const ACodigoArt, AUsuario: string);
+var
+  qSrc, qIns, qDel: TUniQuery;
+  sClave, sNombreNuevo, sNombreSrc, sExt, sCodUnidad: string;
+  iIndice: Integer;
+begin
+  if (ASerieSes = '') or (ANumeroSes = '') or (ALinea <= 0) then Exit;
+  if Trim(ACodigoArt) = '' then Exit;
+
+  qSrc := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  qDel := TUniQuery.Create(nil);
+  try
+    qSrc.Connection := oConn;
+    qIns.Connection := oConn;
+    qDel.Connection := oConn;
+
+    qSrc.SQL.Text :=
+      'SELECT * FROM fza_compras_sesiones_fotos ' +
+      ' WHERE SERIE_SES_CSF  = :s ' +
+      '   AND NUMERO_SES_CSF = :n ' +
+      '   AND LINEA_CSF      = :l';
+    qSrc.ParamByName('s').AsString  := ASerieSes;
+    qSrc.ParamByName('n').AsString  := ANumeroSes;
+    qSrc.ParamByName('l').AsInteger := ALinea;
+    qSrc.Open;
+
+    while not qSrc.Eof do
+    begin
+      sCodUnidad := qSrc.FieldByName('CODIGO_UNIDAD_CSF').AsString;
+      sNombreSrc := qSrc.FieldByName('NOMBRE_FOT_CSF').AsString;
+      sExt       := qSrc.FieldByName('EXTENSION_ORIGEN_CSF').AsString;
+      sClave     := ClaveNombre(ACodigoArt, sCodUnidad);
+
+      // Indice siguiente segun lo que ya haya en fza_articulos_fotos
+      // para no machacar fotos previas del mismo articulo+unidad.
+      iIndice := 1;
+      qIns.SQL.Text :=
+        'SELECT NOMBRE_FOT_FOT FROM fza_articulos_fotos ' +
+        ' WHERE CODIGO_ART_FOT    = :a ' +
+        '   AND CODIGO_UNIDAD_FOT = :u';
+      qIns.ParamByName('a').AsString := ACodigoArt;
+      qIns.ParamByName('u').AsString := sCodUnidad;
+      qIns.Open;
+      if not qIns.Eof then
+        iIndice := ExtraerIndice(qIns.FieldByName('NOMBRE_FOT_FOT').AsString) + 1;
+      qIns.Close;
+      if iIndice < 1 then iIndice := 1;
+      sNombreNuevo := ComponerNombre(sClave, iIndice);
+
+      // Renombrar los tres PNG (real, 600, 300) — si alguno no existe
+      // por lo que sea, no abortamos, solo seguimos.
+      if FileExists(SubdirDe(frReal) + sNombreSrc + '.png') then
+        RenameFile(SubdirDe(frReal) + sNombreSrc + '.png',
+                   SubdirDe(frReal) + sNombreNuevo + '.png');
+      if FileExists(SubdirDe(frPx600) + sNombreSrc + '.png') then
+        RenameFile(SubdirDe(frPx600) + sNombreSrc + '.png',
+                   SubdirDe(frPx600) + sNombreNuevo + '.png');
+      if FileExists(SubdirDe(frPx300) + sNombreSrc + '.png') then
+        RenameFile(SubdirDe(frPx300) + sNombreSrc + '.png',
+                   SubdirDe(frPx300) + sNombreNuevo + '.png');
+
+      // Upsert en fza_articulos_fotos
+      qIns.SQL.Text :=
+        'INSERT INTO fza_articulos_fotos ' +
+        '  (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT, ' +
+        '   EXTENSION_ORIGEN_FOT, INSTANTE_ALTA, USUARIO_ALTA, ' +
+        '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'VALUES (:a, :u, :nom, :ext, NOW(), :usr, NOW(), :usr) ' +
+        'ON DUPLICATE KEY UPDATE ' +
+        '  NOMBRE_FOT_FOT       = :nom, ' +
+        '  EXTENSION_ORIGEN_FOT = :ext, ' +
+        '  INSTANTE_MODIF       = NOW(), ' +
+        '  USUARIO_MODIF        = :usr';
+      qIns.ParamByName('a').AsString   := ACodigoArt;
+      qIns.ParamByName('u').AsString   := sCodUnidad;
+      qIns.ParamByName('nom').AsString := sNombreNuevo;
+      qIns.ParamByName('ext').AsString := sExt;
+      qIns.ParamByName('usr').AsString := AUsuario;
+      qIns.ExecSQL;
+
+      qSrc.Next;
+    end;
+    qSrc.Close;
+
+    // Borrar de un golpe todas las filas migradas
+    qDel.SQL.Text :=
+      'DELETE FROM fza_compras_sesiones_fotos ' +
+      ' WHERE SERIE_SES_CSF  = :s ' +
+      '   AND NUMERO_SES_CSF = :n ' +
+      '   AND LINEA_CSF      = :l';
+    qDel.ParamByName('s').AsString  := ASerieSes;
+    qDel.ParamByName('n').AsString  := ANumeroSes;
+    qDel.ParamByName('l').AsInteger := ALinea;
+    qDel.ExecSQL;
+  finally
+    FreeAndNil(qSrc);
+    FreeAndNil(qIns);
+    FreeAndNil(qDel);
   end;
 end;
 

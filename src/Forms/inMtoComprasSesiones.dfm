@@ -85,7 +85,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Align = alTop
           Caption = ' Cabecera '
           TabOrder = 0
-          Height = 160
+          Height = 200
           Width = 1096
           object lblSerie: TcxLabel
             Left = 12
@@ -118,19 +118,33 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 3
             Width = 70
           end
-          object lblEstado: TcxLabel
+          object lblFecha: TcxLabel
             Left = 316
             Top = 24
-            Caption = 'Estado'
+            Caption = 'Fecha'
             TabOrder = 4
           end
-          object txtEstado: TcxDBTextEdit
+          object dteFecha: TcxDBDateEdit
             Left = 380
+            Top = 22
+            DataBinding.DataField = 'FECHA_SES'
+            DataBinding.DataSource = dsTablaG
+            TabOrder = 5
+            Width = 120
+          end
+          object lblEstado: TcxLabel
+            Left = 520
+            Top = 24
+            Caption = 'Estado'
+            TabOrder = 18
+          end
+          object txtEstado: TcxDBTextEdit
+            Left = 580
             Top = 22
             DataBinding.DataField = 'ESTADO_SES'
             DataBinding.DataSource = dsTablaG
             Properties.ReadOnly = True
-            TabOrder = 5
+            TabOrder = 19
             Width = 100
           end
           object lblEmpresa: TcxLabel
@@ -185,15 +199,56 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 9
             Width = 280
           end
-          object lblTarifa: TcxLabel
+          object lblRefPrv: TcxLabel
             Left = 770
             Top = 67
-            Caption = 'Tarifa venta'
+            Caption = 'Ref. prov.'
             TabOrder = 10
           end
-          object cbbTarifa: TcxDBLookupComboBox
-            Left = 876
+          object txtRefPrv: TcxDBTextEdit
+            Left = 850
             Top = 65
+            DataBinding.DataField = 'REF_PRV_SES'
+            DataBinding.DataSource = dsTablaG
+            Properties.MaxLength = 100
+            TabOrder = 11
+            Width = 200
+          end
+          object lblAlmacen: TcxLabel
+            Left = 12
+            Top = 109
+            Caption = 'Almac'#233'n'
+            TabOrder = 20
+          end
+          object cbbAlmacen: TcxDBLookupComboBox
+            Left = 92
+            Top = 107
+            DataBinding.DataField = 'CODIGO_ALM_SES'
+            DataBinding.DataSource = dsTablaG
+            Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+            Properties.ListColumns = <
+              item
+                Caption = 'C'#243'digo'
+                Width = 60
+                FieldName = 'CODIGO_ALM_ALM'
+              end
+              item
+                Caption = 'Almac'#233'n'
+                FieldName = 'NOMBRE_ALM_ALM'
+              end>
+            Properties.ListOptions.ShowHeader = False
+            TabOrder = 21
+            Width = 200
+          end
+          object lblTarifa: TcxLabel
+            Left = 304
+            Top = 109
+            Caption = 'Tarifa venta'
+            TabOrder = 22
+          end
+          object cbbTarifa: TcxDBLookupComboBox
+            Left = 392
+            Top = 107
             DataBinding.DataField = 'CODIGO_TAR_SES'
             DataBinding.DataSource = dsTablaG
             Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
@@ -203,18 +258,39 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 FieldName = 'NOMBRE_TAR_TAR'
               end>
             Properties.ListOptions.ShowHeader = False
-            TabOrder = 11
-            Width = 174
+            TabOrder = 23
+            Width = 200
+          end
+          object lblTemporada: TcxLabel
+            Left = 612
+            Top = 109
+            Caption = 'Temporada'
+            TabOrder = 24
+          end
+          object cbbTemporada: TcxDBLookupComboBox
+            Left = 700
+            Top = 107
+            DataBinding.DataField = 'ID_PV_TEMPORADA_SES'
+            DataBinding.DataSource = dsTablaG
+            Properties.KeyFieldNames = 'ID_PV_ARTPROP'
+            Properties.ListColumns = <
+              item
+                Caption = 'Temporada'
+                FieldName = 'PV'
+              end>
+            Properties.ListOptions.ShowHeader = False
+            TabOrder = 25
+            Width = 220
           end
           object lblMargen: TcxLabel
             Left = 12
-            Top = 109
+            Top = 152
             Caption = 'Margen %'
             TabOrder = 12
           end
           object spnMargen: TcxDBSpinEdit
             Left = 102
-            Top = 107
+            Top = 150
             DataBinding.DataField = 'PORCENTAJE_MARGEN_SES'
             DataBinding.DataSource = dsTablaG
             Properties.ValueType = vtFloat
@@ -223,13 +299,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           end
           object lblMultiploRedondeo: TcxLabel
             Left = 200
-            Top = 109
+            Top = 152
             Caption = 'M'#250'lt. redondeo'
             TabOrder = 14
           end
           object spnMultiploRedondeo: TcxDBSpinEdit
             Left = 334
-            Top = 106
+            Top = 149
             DataBinding.DataField = 'MULTIPLO_REDONDEO_SES'
             DataBinding.DataSource = dsTablaG
             Properties.Increment = 0.050000000000000000
@@ -239,13 +315,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           end
           object lblAjusteFinal: TcxLabel
             Left = 430
-            Top = 109
+            Top = 152
             Caption = 'Ajuste final'
             TabOrder = 16
           end
           object spnAjusteFinal: TcxDBSpinEdit
             Left = 530
-            Top = 107
+            Top = 150
             DataBinding.DataField = 'AJUSTE_FINAL_SES'
             DataBinding.DataSource = dsTablaG
             Properties.Increment = 0.010000000000000000
@@ -258,7 +334,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
         object pnlLineasTop: TPanel
           Left = 0
-          Top = 160
+          Top = 200
           Width = 1096
           Height = 36
           Align = alTop
@@ -295,20 +371,36 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 2
             OnClick = btnNuevoColorClick
           end
-          object lblHint: TcxLabel
+          object btnFoto: TcxButton
             Left = 472
-            Top = 7
-            Caption = 
-              'F3 sobre Familia abre el selector. PVP se propone al teclear el ' +
-              'coste.'
+            Top = 5
+            Width = 120
+            Height = 28
+            Caption = '+ Foto'
+            LookAndFeel.Kind = lfFlat
+            LookAndFeel.NativeStyle = False
             TabOrder = 3
+            OnClick = btnFotoClick
+          end
+          object lblHint: TcxLabel
+            Left = 598
+            Top = 7
+            Caption =
+              'F3 sobre Familia. PVP se propone al teclear el coste.'
+            TabOrder = 4
+          end
+          object dlgFoto: TOpenDialog
+            Filter = 'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp'
+            Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+            Left = 920
+            Top = 8
           end
         end
         object cxgrdLineas: TcxGrid
           Left = 0
-          Top = 196
+          Top = 236
           Width = 1096
-          Height = 453
+          Height = 413
           Align = alClient
           TabOrder = 2
           OnEnter = cxgrdLineasEnter
