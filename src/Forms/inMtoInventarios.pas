@@ -298,6 +298,8 @@ uses
   inLibArticulosValidador,
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
+  inLibLog,
+  System.Diagnostics,
   inMtoPrincipal, inMtoModalAddBlockInventario;
 
 {$R *.dfm}
@@ -635,6 +637,9 @@ var
   Col: TcxGridDBColumn;
   NombresAtributos: TStringList;
   Estado: string;
+  swTotal, swQry, swPaint: TStopwatch;
+  msQry, msPaint: Int64;
+  NumNombres: Integer;
 
   procedure OcultarTodasLasColumnasSku;
   var
@@ -660,8 +665,18 @@ var
   end;
 
 begin
+  msQry   := 0;
+  msPaint := 0;
+  NumNombres := 0;
+  swTotal := TStopwatch.StartNew;
   // Optimización: si es el mismo padre, no repintamos
-  if SameText(ArticuloPadre, FUltimoArticuloPadre) then Exit;
+  if SameText(ArticuloPadre, FUltimoArticuloPadre) then
+  begin
+    inLibLog.Log.LogPerf('ActualizarColumnasDinamicas(memoizado)',
+      Format('articulo=%s', [ArticuloPadre]),
+      swTotal.ElapsedMilliseconds);
+    Exit;
+  end;
   FUltimoArticuloPadre := ArticuloPadre;
 
   // Guard: durante FormCreate puede llamarse antes de que dmmInventarios
@@ -707,6 +722,7 @@ begin
   try
     if (ArticuloPadre <> '') then
     begin
+      swQry := TStopwatch.StartNew;
       dmmInventarios.unqryDefinicionArticulo.Close;
       dmmInventarios.unqryDefinicionArticulo.SQL.Text :=
         'SELECT DISTINCT '                                             +
@@ -730,15 +746,18 @@ begin
           'NOMBRE_ATRIBUTO').AsString);
         dmmInventarios.unqryDefinicionArticulo.Next;
       end;
+      msQry := swQry.ElapsedMilliseconds;
     end;
 
     FNumAtributosActual := NombresAtributos.Count;
+    NumNombres := NombresAtributos.Count;
 
     if dmmInventarios.cdsLineas.Active and
        (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
       dmmInventarios.cdsLineas.FieldByName(
         'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger := NombresAtributos.Count;
 
+    swPaint := TStopwatch.StartNew;
     tvLineas.BeginUpdate;
     try
       for i := 1 to 5 do
@@ -763,9 +782,16 @@ begin
     finally
       tvLineas.EndUpdate;
     end;
+    msPaint := swPaint.ElapsedMilliseconds;
   finally
     FreeAndNil(NombresAtributos);
   end;
+
+  inLibLog.Log.LogPerf('ActualizarColumnasDinamicas',
+    Format('articulo=%s nNombres=%d | qryDefinicionArticulo=%d ' +
+           'BeginUpdate/EndUpdate=%d',
+           [ArticuloPadre, NumNombres, msQry, msPaint]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoInventarios.AsegurarDesempaquetadoAtributos;
@@ -830,15 +856,28 @@ var
   Valores : TArray<TArticuloAtributoValor>;
   V       : TArticuloAtributoValor;
   i       : Integer;
+  swTotal, swCreate, swObtener, swSet: TStopwatch;
+  msCreate, msObtener, msSet: Int64;
 begin
   // Carga los valores de cada atributo del SKU en las columnas ATTR1..ATTR5,
   // mapeadas por ORDEN_VISUAL_ATRIBUTO (= ORDEN_VA del atributo).
   if Sku = '' then Exit;
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
 
+  msCreate  := 0;
+  msObtener := 0;
+  msSet     := 0;
+  swTotal := TStopwatch.StartNew;
+
+  swCreate := TStopwatch.StartNew;
   Lookup := TArticulosAtributosLookup.Create(inLibGlobalVar.oConn);
+  msCreate := swCreate.ElapsedMilliseconds;
   try
+    swObtener := TStopwatch.StartNew;
     Valores := Lookup.ObtenerAtributosDeSku(Sku);
+    msObtener := swObtener.ElapsedMilliseconds;
+
+    swSet := TStopwatch.StartNew;
     for V in Valores do
     begin
       i := V.Orden;
@@ -847,9 +886,15 @@ begin
           i) + '_VALOR').AsString
                                                                        := V.Valor;
     end;
+    msSet := swSet.ElapsedMilliseconds;
   finally
     FreeAndNil(Lookup);
   end;
+
+  inLibLog.Log.LogPerf('RellenarAtributosDesdeSku',
+    Format('sku=%s nVals=%d | Create=%d ObtenerAtributosDeSku=%d SetFields=%d',
+           [Sku, Length(Valores), msCreate, msObtener, msSet]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 
@@ -1320,27 +1365,50 @@ var
   Codigo, Resolved: string;
   ErrText: TCaption;
   Err: Boolean;
+  swTotal, swDialog, swRellenar, swReflect, swFocus: TStopwatch;
+  msDialog, msRellenar, msReflect, msFocus: Int64;
 begin
+  msDialog   := 0;
+  msRellenar := 0;
+  msReflect  := 0;
+  msFocus    := 0;
+  swTotal := TStopwatch.StartNew;
+
+  swDialog := TStopwatch.StartNew;
   Codigo := BuscarArticuloDialog;
-  if Codigo = '' then Exit;
+  msDialog := swDialog.ElapsedMilliseconds;
+  if Codigo = '' then
+  begin
+    inLibLog.Log.LogPerf('UnidadButtonClick(cancelado)',
+      Format('BuscarArticuloDialog=%d', [msDialog]),
+      swTotal.ElapsedMilliseconds);
+    Exit;
+  end;
   Resolved := Codigo;
   Err := False;
   ErrText := '';
+
+  swRellenar := TStopwatch.StartNew;
   RellenarLineaDesdeBusqueda(Codigo, Resolved, Err, ErrText);
+  msRellenar := swRellenar.ElapsedMilliseconds;
+
   if Err then
   begin
     ShowMessage(ErrText);
     Exit;
   end;
   // Reflejamos el SKU resuelto en el editor en pantalla
+  swReflect := TStopwatch.StartNew;
   if Sender is TcxCustomEdit then
   begin
     Edit := TcxCustomEdit(Sender);
     Edit.EditValue := Resolved;
   end;
+  msReflect := swReflect.ElapsedMilliseconds;
   // Si el articulo tiene variaciones (NUM_ATRIBUTOS > 0), movemos el foco
   // al primer atributo dinamico para que el usuario pueda elegir
   // Color/Talla/... directamente.
+  swFocus := TStopwatch.StartNew;
   if (dmmInventarios.cdsLineas.FieldByName(
        'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger > 0) and
      Assigned(tvLineasSKU1) and tvLineasSKU1.Visible then
@@ -1349,6 +1417,13 @@ begin
     if tvLineas.Controller.EditingController <> nil then
       tvLineas.Controller.EditingController.ShowEdit;
   end;
+  msFocus := swFocus.ElapsedMilliseconds;
+
+  inLibLog.Log.LogPerf('UnidadButtonClick(total)',
+    Format('codigo=%s resolved=%s | BuscarDialog=%d RellenarLinea=%d ' +
+           'EditValue=%d FocusSKU1=%d',
+           [Codigo, Resolved, msDialog, msRellenar, msReflect, msFocus]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 function TfrmMtoInventarios.BuscarArticuloDialog: string;
@@ -1415,16 +1490,42 @@ var
   Encontrado: Boolean;
   CantTeo, PMPAct: Currency;
   NumAtr: Integer;
+  swTotal, swTramo: TStopwatch;
+  msResolver, msRellenarDatosArticulo, msSetFieldsCabecera, msActColsDin,
+  msSetFieldsSku, msRellenarDatosSku, msSetFieldsImporte,
+  msRellenarAtributos: Int64;
 begin
   AError := False;
   AErrorText := '';
 
+  // [PERF:RellenarLineaBusqueda] Cronometros por tramo. El usuario reporta
+  // ~10 s entre elegir un articulo con SKU y ver el color. Necesitamos saber
+  // si el coste vive en ResolverInputArticulo, en RellenarDatosArticulo,
+  // en la SQL de columnas dinamicas, en RellenarDatosSku o en
+  // RellenarAtributosDesdeSku. Cada Lookup arranca una conexion / ejecuta
+  // queries, asi que aqui se ve el reparto.
+  msResolver              := 0;
+  msRellenarDatosArticulo := 0;
+  msSetFieldsCabecera     := 0;
+  msActColsDin            := 0;
+  msSetFieldsSku          := 0;
+  msRellenarDatosSku      := 0;
+  msSetFieldsImporte      := 0;
+  msRellenarAtributos     := 0;
+  swTotal := TStopwatch.StartNew;
+
+  swTramo := TStopwatch.StartNew;
   ResolverInputArticulo(AInput, CodPadre, CodSku, Desc, TipoArt, Encontrado);
+  msResolver := swTramo.ElapsedMilliseconds;
+
   if not Encontrado then
   begin
     AError := True;
     AErrorText := 'No se ha encontrado ningún artículo con ese código, SKU o ' +
                   'código de barras';
+    inLibLog.Log.LogPerf('RellenarLineaDesdeBusqueda(NO ENCONTRADO)',
+      Format('input=%s | Resolver=%d', [AInput, msResolver]),
+      swTotal.ElapsedMilliseconds);
     Exit;
   end;
 
@@ -1443,24 +1544,37 @@ begin
     dmmInventarios.cdsLineas.Edit;
 
   // Conteo de atributos del articulo padre (para columnas dinamicas SKU1..5)
+  swTramo := TStopwatch.StartNew;
   dmmInventarios.RellenarDatosArticulo(CodPadre, Tmp, NumAtr, Tmp);
+  msRellenarDatosArticulo := swTramo.ElapsedMilliseconds;
 
+  swTramo := TStopwatch.StartNew;
   dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString          :=
     CodPadre;
   dmmInventarios.cdsLineas.FieldByName(
     'DESCRIPCION_ARTICULO_INVLIN').AsString := Desc;
   dmmInventarios.cdsLineas.FieldByName(
     'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger := NumAtr;
+  msSetFieldsCabecera := swTramo.ElapsedMilliseconds;
 
+  swTramo := TStopwatch.StartNew;
   ActualizarColumnasDinamicas(CodPadre);
+  msActColsDin := swTramo.ElapsedMilliseconds;
 
   if CodSku <> '' then
   begin
     // Match por SKU o codigo de barras: ya tenemos el SKU concreto
+    swTramo := TStopwatch.StartNew;
     dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
       CodSku;
     AResolvedValue := CodSku;
+    msSetFieldsSku := swTramo.ElapsedMilliseconds;
+
+    swTramo := TStopwatch.StartNew;
     dmmInventarios.RellenarDatosSku(CodSku, CantTeo, PMPAct);
+    msRellenarDatosSku := swTramo.ElapsedMilliseconds;
+
+    swTramo := TStopwatch.StartNew;
     dmmInventarios.cdsLineas.FieldByName(
       'CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
     dmmInventarios.cdsLineas.FieldByName(
@@ -1471,15 +1585,26 @@ begin
       'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
     dmmInventarios.cdsLineas.FieldByName(
       'FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+    msSetFieldsImporte := swTramo.ElapsedMilliseconds;
+
+    swTramo := TStopwatch.StartNew;
     RellenarAtributosDesdeSku(CodSku);
+    msRellenarAtributos := swTramo.ElapsedMilliseconds;
   end
   else if NumAtr = 0 then
   begin
     // Articulo sin variaciones: SKU = codigo articulo
+    swTramo := TStopwatch.StartNew;
     dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
       CodPadre;
     AResolvedValue := CodPadre;
+    msSetFieldsSku := swTramo.ElapsedMilliseconds;
+
+    swTramo := TStopwatch.StartNew;
     dmmInventarios.RellenarDatosSku(CodPadre, CantTeo, PMPAct);
+    msRellenarDatosSku := swTramo.ElapsedMilliseconds;
+
+    swTramo := TStopwatch.StartNew;
     dmmInventarios.cdsLineas.FieldByName(
       'CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
     dmmInventarios.cdsLineas.FieldByName(
@@ -1490,6 +1615,7 @@ begin
       'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
     dmmInventarios.cdsLineas.FieldByName(
       'FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+    msSetFieldsImporte := swTramo.ElapsedMilliseconds;
   end
   else
   begin
@@ -1497,10 +1623,23 @@ begin
     // articulo (sin atributos todavia) para que el usuario tenga referencia
     // visual de la linea. Cada vez que rellene un atributo, OnAtributoChanged
     // reconstruira el SKU concatenando los valores.
+    swTramo := TStopwatch.StartNew;
     dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
       CodPadre;
     AResolvedValue := CodPadre;
+    msSetFieldsSku := swTramo.ElapsedMilliseconds;
   end;
+
+  inLibLog.Log.LogPerf('RellenarLineaDesdeBusqueda',
+    Format('input=%s padre=%s sku=%s NumAtr=%d | Resolver=%d ' +
+           'RellenarDatosArticulo=%d SetFieldsCab=%d ActColsDin=%d ' +
+           'SetFieldsSku=%d RellenarDatosSku=%d SetFieldsImporte=%d ' +
+           'RellenarAtributos=%d',
+           [AInput, CodPadre, CodSku, NumAtr,
+            msResolver, msRellenarDatosArticulo, msSetFieldsCabecera,
+            msActColsDin, msSetFieldsSku, msRellenarDatosSku,
+            msSetFieldsImporte, msRellenarAtributos]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoInventarios.tvLineasUdsFisicasPropertiesValidate(
