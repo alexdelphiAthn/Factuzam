@@ -757,6 +757,14 @@ begin
   // Validamos antes de Post para dar un mensaje claro en lugar del cryptico
   // "Field value required" del TClientDataSet.
   if FDesempaquetando then Exit;
+  // Belt-and-suspenders: aunque ya forzamos Required:=False en
+  // DataModuleCreate y tras cada cdsLineas.Open, el cds puede recibir
+  // un poIncFieldProps reactivado por alguna llamada interna durante
+  // la edicion. Lo volvemos a apagar ahora mismo, justo antes del
+  // chequeo InternalCheck del TClientDataSet (que ocurre tras nuestra
+  // BeforePost). Solo TOCAMOS los campos del propio cds (DataSet).
+  for i := 0 to DataSet.FieldCount - 1 do
+    DataSet.Fields[i].Required := False;
   // Volcado del estado actual de los campos al log: si volvemos a ver
   // un EDBClient 'Field value required', el log nos dice exactamente
   // que campo iba vacio cuando el cds decidio rechazar el Post.
