@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 21/05/2026 8:02:46
+-- Backup generado: 21/05/2026 8:18:55
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -2575,7 +2575,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 238, 3, 'S', 'S', '2026-05-21 07:52:46', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 239, 3, 'S', 'S', '2026-05-21 08:18:49', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -7374,8 +7374,65 @@ ON DUPLICATE KEY UPDATE
   SHORTCUT_WINF     = VALUES(SHORTCUT_WINF),
   DATAMODULE_WINF   = VALUES(DATAMODULE_WINF),
   NUM_VENTANAS_WINF = VALUES(NUM_VENTANAS_WINF);
-', '2026-05-21 07:52:46', '2026-05-21 07:52:46', 'Administrador', 'Administrador');
--- 33 registros exportados
+', '2026-05-21 07:52:46', '2026-05-21 07:52:46', 'Administrador', 'Administrador'),
+  ('238', 'vi_articulos_nombre_proveedor', '-- =============================================================================
+-- vi_articulos: anadir NOMBRE_PRV (nombre comercial del proveedor principal)
+-- =============================================================================
+-- Tras anadir NOMBRE_PRV a fza_proveedores (ver proveedores_nombre.sql), la
+-- vista vi_articulos solo exponia RAZON_SOCIAL_PRV. Para que la lista del
+-- Mto de Articulos pueda mostrar tambien el nombre comercial del proveedor
+-- principal junto al codigo y la razon social, anadimos NOMBRE_PRV a la
+-- proyeccion (mismo LEFT JOIN, no se altera el plan de ejecucion).
+--
+-- Solo se modifica la proyeccion: se mantienen JOINs, ESPROVEEDORPRINCIPAL_AP
+-- = ''S'' y el ORDER BY originales.
+--
+-- Idempotente: CREATE OR REPLACE VIEW.
+-- =============================================================================
+
+CREATE OR REPLACE VIEW vi_articulos AS
+SELECT
+  art.CODIGO_ART_ART                            AS CODIGO_ART_ART,
+  art.ESACTIVO_ART                              AS ESACTIVO_ART,
+  art.ORDEN_ART                                 AS ORDEN_ART,
+  art.DESCRIPCION_ART                           AS DESCRIPCION_ART,
+  art.ESVARIACION_ART                           AS ESVARIACION_ART,
+  art.ESTRAZABLE_ART                            AS ESTRAZABLE_ART,
+  art.TIPO_ART                                  AS TIPO_ART,
+  art.TIPO_VARIACION_ART                        AS TIPO_VARIACION_ART,
+  art.CODIGO_FAM_ART                            AS CODIGO_FAM_ART,
+  fam.DESCRIPCION_FAM                           AS DESCRIPCION_FAM,
+  fam.NOMBRE_FAM_FAM                            AS NOMBRE_FAM_FAM,
+  art.TIPO_IVA_ART                              AS TIPO_IVA_ART,
+  iva.NOMBRE_TIPO_IVA_IVATIP                    AS NOMBRE_TIPO_IVA_IVATIP,
+  art.ESACTIVO_FIJO_ART                         AS ESACTIVO_FIJO_ART,
+  art.TIPO_CANTIDAD_ART                         AS TIPO_CANTIDAD_ART,
+  prv.RAZON_SOCIAL_PRV                          AS RAZON_SOCIAL_PRV,
+  prv.NOMBRE_PRV                                AS NOMBRE_PRV,
+  ap.REF_PROVEEDOR_AP                           AS REF_PROVEEDOR,
+  COALESCE(pv.PV, atemp.VALOR_LIBRE_ARTPROP)    AS TEMPORADA_ART,
+  art.INSTANTE_MODIF                            AS INSTANTE_MODIF,
+  art.INSTANTE_ALTA                             AS INSTANTE_ALTA,
+  art.USUARIO_ALTA                              AS USUARIO_ALTA,
+  art.USUARIO_MODIF                             AS USUARIO_MODIF
+FROM fza_articulos art
+  LEFT JOIN fza_articulos_familias fam
+    ON art.CODIGO_FAM_ART = fam.CODIGO_FAM_FAM
+  LEFT JOIN fza_articulos_proveedores ap
+    ON art.CODIGO_ART_ART       = ap.CODIGO_ART_AP
+   AND ap.ESPROVEEDORPRINCIPAL_AP = ''S''
+  LEFT JOIN fza_proveedores prv
+    ON ap.CODIGO_PRV_AP = prv.CODIGO_PRV_PRV
+  LEFT JOIN fza_ivas_tipos iva
+    ON art.TIPO_IVA_ART = iva.CODIGO_ABREVIATURA_IVA_IVATIP
+  LEFT JOIN fza_articulos_propiedades atemp
+    ON art.CODIGO_ART_ART          = atemp.CODIGO_ART_ART
+   AND atemp.CODIGO_PROP_ARTPROP   = ''TEMPORADA''
+  LEFT JOIN fza_propiedades_valores pv
+    ON atemp.ID_PV_ARTPROP = pv.ID_PV_ARTPROP
+ORDER BY art.ORDEN_ART;
+', '2026-05-21 08:18:49', '2026-05-21 08:18:49', 'Administrador', 'Administrador');
+-- 34 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -9110,7 +9167,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-21 08:02:38', '2026-05-21 08:02:38', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-21 08:18:42', '2026-05-21 08:18:42', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -16712,7 +16769,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_lineas` AS select `fza_albaranes_
 
 -- Vista: vi_articulos
 DROP VIEW IF EXISTS `vi_articulos`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos` AS select `art`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,`art`.`ESACTIVO_ART` AS `ESACTIVO_ART`,`art`.`ORDEN_ART` AS `ORDEN_ART`,`art`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`art`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`art`.`ESTRAZABLE_ART` AS `ESTRAZABLE_ART`,`art`.`TIPO_ART` AS `TIPO_ART`,`art`.`TIPO_VARIACION_ART` AS `TIPO_VARIACION_ART`,`art`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`fam`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`fam`.`NOMBRE_FAM_FAM` AS `NOMBRE_FAM_FAM`,`art`.`TIPO_IVA_ART` AS `TIPO_IVA_ART`,`iva`.`NOMBRE_TIPO_IVA_IVATIP` AS `NOMBRE_TIPO_IVA_IVATIP`,`art`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`art`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`ap`.`REF_PROVEEDOR_AP` AS `REF_PROVEEDOR`,coalesce(`pv`.`PV`,`atemp`.`VALOR_LIBRE_ARTPROP`) AS `TEMPORADA_ART`,`art`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`art`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`art`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`art`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((((((`fza_articulos` `art` left join `fza_articulos_familias` `fam` on(`art`.`CODIGO_FAM_ART` = `fam`.`CODIGO_FAM_FAM`)) left join `fza_articulos_proveedores` `ap` on(`art`.`CODIGO_ART_ART` = `ap`.`CODIGO_ART_AP` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `prv` on(`ap`.`CODIGO_PRV_AP` = `prv`.`CODIGO_PRV_PRV`)) left join `fza_ivas_tipos` `iva` on(`art`.`TIPO_IVA_ART` = `iva`.`CODIGO_ABREVIATURA_IVA_IVATIP`)) left join `fza_articulos_propiedades` `atemp` on(`art`.`CODIGO_ART_ART` = `atemp`.`CODIGO_ART_ART` and `atemp`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA')) left join `fza_propiedades_valores` `pv` on(`atemp`.`ID_PV_ARTPROP` = `pv`.`ID_PV_ARTPROP`)) order by `art`.`ORDEN_ART`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos` AS select `art`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,`art`.`ESACTIVO_ART` AS `ESACTIVO_ART`,`art`.`ORDEN_ART` AS `ORDEN_ART`,`art`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`art`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`art`.`ESTRAZABLE_ART` AS `ESTRAZABLE_ART`,`art`.`TIPO_ART` AS `TIPO_ART`,`art`.`TIPO_VARIACION_ART` AS `TIPO_VARIACION_ART`,`art`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`fam`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`fam`.`NOMBRE_FAM_FAM` AS `NOMBRE_FAM_FAM`,`art`.`TIPO_IVA_ART` AS `TIPO_IVA_ART`,`iva`.`NOMBRE_TIPO_IVA_IVATIP` AS `NOMBRE_TIPO_IVA_IVATIP`,`art`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`art`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`ap`.`REF_PROVEEDOR_AP` AS `REF_PROVEEDOR`,coalesce(`pv`.`PV`,`atemp`.`VALOR_LIBRE_ARTPROP`) AS `TEMPORADA_ART`,`art`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`art`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`art`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`art`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((((((`fza_articulos` `art` left join `fza_articulos_familias` `fam` on(`art`.`CODIGO_FAM_ART` = `fam`.`CODIGO_FAM_FAM`)) left join `fza_articulos_proveedores` `ap` on(`art`.`CODIGO_ART_ART` = `ap`.`CODIGO_ART_AP` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `prv` on(`ap`.`CODIGO_PRV_AP` = `prv`.`CODIGO_PRV_PRV`)) left join `fza_ivas_tipos` `iva` on(`art`.`TIPO_IVA_ART` = `iva`.`CODIGO_ABREVIATURA_IVA_IVATIP`)) left join `fza_articulos_propiedades` `atemp` on(`art`.`CODIGO_ART_ART` = `atemp`.`CODIGO_ART_ART` and `atemp`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA')) left join `fza_propiedades_valores` `pv` on(`atemp`.`ID_PV_ARTPROP` = `pv`.`ID_PV_ARTPROP`)) order by `art`.`ORDEN_ART`;
 
 -- Vista: vi_articulos_conjuntos_slots
 DROP VIEW IF EXISTS `vi_articulos_conjuntos_slots`;
@@ -21029,4 +21086,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 21/05/2026 8:02:50
+-- Backup completado: 21/05/2026 8:19:00
