@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 21/05/2026 8:18:55
+-- Backup generado: 21/05/2026 10:10:23
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -643,6 +643,7 @@ CREATE TABLE `fza_articulos_skus` (
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`CODIGO_UNIDAD_SKU`)
 );
+ALTER TABLE `fza_articulos_skus` ADD INDEX `idx_fza_articulos_skus_codart` (`CODIGO_ART_SKU`);
 ALTER TABLE `fza_articulos_skus` ADD INDEX `IDX_SKU_ART_ACT` (`CODIGO_ART_SKU`, `ESACTIVO_SKU`);
 
 -- Datos de fza_articulos_skus
@@ -1240,6 +1241,8 @@ CREATE TABLE `fza_atributos_sku` (
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`CODIGO_UNIDAD_SKU_SA`,`ID_AV_SA`)
 );
+ALTER TABLE `fza_atributos_sku` ADD INDEX `idx_fza_atributos_sku_idav` (`ID_AV_SA`);
+ALTER TABLE `fza_atributos_sku` ADD INDEX `idx_fza_atributos_sku_unidad` (`CODIGO_UNIDAD_SKU_SA`);
 ALTER TABLE `fza_atributos_sku` ADD INDEX `IDX_SA_UNIDAD` (`CODIGO_UNIDAD_SKU_SA`);
 ALTER TABLE `fza_atributos_sku` ADD INDEX `IDX_VALOR_SA` (`ID_AV_SA`);
 
@@ -1496,6 +1499,7 @@ CREATE TABLE `fza_atributos_valores` (
   PRIMARY KEY (`ID_AV`)
 );
 ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_AV_ATB` (`ID_ATB_AV`);
+ALTER TABLE `fza_atributos_valores` ADD INDEX `idx_fza_atributos_valores_idva` (`ID_VA_AV`);
 ALTER TABLE `fza_atributos_valores` ADD INDEX `IDX_VAR_AV` (`ID_VA_AV`);
 
 -- Datos de fza_atributos_valores
@@ -2575,7 +2579,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 239, 3, 'S', 'S', '2026-05-21 08:18:49', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 242, 3, 'S', 'S', '2026-05-21 10:10:16', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -7431,8 +7435,42 @@ FROM fza_articulos art
   LEFT JOIN fza_propiedades_valores pv
     ON atemp.ID_PV_ARTPROP = pv.ID_PV_ARTPROP
 ORDER BY art.ORDEN_ART;
-', '2026-05-21 08:18:49', '2026-05-21 08:18:49', 'Administrador', 'Administrador');
--- 34 registros exportados
+', '2026-05-21 08:18:49', '2026-05-21 08:18:49', 'Administrador', 'Administrador'),
+  ('239', NULL, '-- 1. El filtro principal (Extremadamente importante)
+-- Acelera el "WHERE SKU.CODIGO_ART_SKU = :ARTICULO"
+CREATE INDEX idx_fza_articulos_skus_codart 
+ON fza_articulos_skus(CODIGO_ART_SKU);
+
+-- 2. El cruce con la tabla de relación de atributos (JOIN 1)
+-- Acelera el "ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SKU_SA"
+CREATE INDEX idx_fza_atributos_sku_unidad 
+ON fza_atributos_sku(CODIGO_UNIDAD_SKU_SA);
+
+-- 3. El cruce hacia los valores (JOIN 2)
+CREATE INDEX idx_fza_atributos_sku_idav 
+ON fza_atributos_sku(ID_AV_SA);
+
+-- 4. Asegurar que fza_atributos_valores tiene índice de cruce hacia la vista
+CREATE INDEX idx_fza_atributos_valores_idva 
+ON fza_atributos_valores(ID_VA_AV);', '2026-05-21 10:02:54', '2026-05-21 10:02:54', 'Administrador', 'Administrador'),
+  ('240', NULL, 'explain select distinct
+  ask.CODIGO_ART_SKU as CODIGO_ART_PADRE_ARTVIN,
+  vat.ID_ATB_VA as ID_ATRIBUTO,
+  vat.NOMBRE_VA as NOMBRE_ATRIBUTO,
+  vat.ORDEN_VA as ORDEN_VISUAL_ATRIBUTO
+from
+  fza_articulos_skus ask
+  join fza_variaciones_atributos vat on (vat.ID_VAR_VA = ask.CODIGO_VAR_SKU)
+order by ask.CODIGO_ART_SKU, vat.ORDEN_VA;', '2026-05-21 10:07:40', '2026-05-21 10:07:40', 'Administrador', 'Administrador'),
+  ('241', NULL, 'ALTER VIEW vi_atributos_nombres AS 
+SELECT
+  ask.CODIGO_ART_SKU AS CODIGO_ART_PADRE_ARTVIN,
+  vat.ID_ATB_VA AS ID_ATRIBUTO,
+  vat.NOMBRE_VA AS NOMBRE_ATRIBUTO,
+  vat.ORDEN_VA AS ORDEN_VISUAL_ATRIBUTO
+FROM fza_articulos_skus ask
+JOIN fza_variaciones_atributos vat ON vat.ID_VAR_VA = ask.CODIGO_VAR_SKU;', '2026-05-21 10:10:16', '2026-05-21 10:10:16', 'Administrador', 'Administrador');
+-- 37 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -7892,59 +7930,61 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (194, 'vi_usuarios_perfiles', '2'),
   (195, 'vi_variaciones', '2'),
   (196, 'v_articulos_stock_barras', '2'),
-  (258, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
-  (259, 'PRC_ALB_CREAR_FACTURA_FIN', '3'),
-  (260, 'PRC_ALB_CREAR_FACTURA_INICIO', '3'),
-  (261, 'PRC_ALB_CREAR_FACTURA_LINEA', '3'),
-  (262, 'PRC_BUSQUEDA_ARTICULOS', '3'),
-  (263, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
-  (264, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
-  (265, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
-  (266, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
-  (267, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
-  (268, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
-  (269, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
-  (270, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
-  (271, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
-  (272, 'PRC_CREAR_ACTUALIZAR_TEST', '3'),
-  (273, 'PRC_CREAR_FACTURA_ABONO', '3'),
-  (274, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
-  (275, 'PRC_CREAR_METADATOS', '3'),
-  (276, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
-  (277, 'PRC_CREAR_TRASPASO', '3'),
-  (278, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
-  (279, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
-  (280, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
-  (281, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
-  (282, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
-  (283, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
-  (284, 'PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO', '3'),
-  (285, 'PRC_FZA_INVENTARIOS_APLICAR', '3'),
-  (286, 'PRC_FZA_INVENTARIOS_ELIMINAR_REGUL', '3'),
-  (287, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
-  (288, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (289, 'PRC_GETPERFILFORMULARIO', '3'),
-  (290, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (291, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (292, 'PRC_GET_CREAR_VALOR', '3'),
-  (293, 'PRC_GET_DATA_ARTICULO', '3'),
-  (294, 'PRC_GET_DATA_CLIENTE', '3'),
-  (295, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (296, 'PRC_GET_NEXT_CONT', '3'),
-  (297, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (298, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (299, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (300, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (301, 'PRC_PED_CREAR_ALBARAN_FIN', '3'),
-  (302, 'PRC_PED_CREAR_ALBARAN_INICIO', '3'),
-  (303, 'PRC_PED_CREAR_ALBARAN_LINEA', '3'),
-  (304, 'PRC_REALIZAR_TRASPASO', '3'),
-  (305, 'PRC_RECALCULAR_STOCK', '3'),
-  (306, 'PRC_SETPERFILFORMULARIO', '3'),
-  (307, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (308, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (258, 'PRC_ADD_INDEX_IF_NOT_EXISTS', '3'),
+  (259, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
+  (260, 'PRC_ALB_CREAR_FACTURA_FIN', '3'),
+  (261, 'PRC_ALB_CREAR_FACTURA_INICIO', '3'),
+  (262, 'PRC_ALB_CREAR_FACTURA_LINEA', '3'),
+  (263, 'PRC_BUSQUEDA_ARTICULOS', '3'),
+  (264, 'PRC_CALCULAR_FACTURA_NETOS', '3'),
+  (265, 'PRC_CREAR_ACTUALIZAR_ARTICULO', '3'),
+  (266, 'PRC_CREAR_ACTUALIZAR_ARTICULO_PROVEEDOR', '3'),
+  (267, 'PRC_CREAR_ACTUALIZAR_CLIENTE', '3'),
+  (268, 'PRC_CREAR_ACTUALIZAR_EMPRESA', '3'),
+  (269, 'PRC_CREAR_ACTUALIZAR_FAMILIA', '3'),
+  (270, 'PRC_CREAR_ACTUALIZAR_KEY', '3'),
+  (271, 'PRC_CREAR_ACTUALIZAR_PROVEEDOR', '3'),
+  (272, 'PRC_CREAR_ACTUALIZAR_TARIFA', '3'),
+  (273, 'PRC_CREAR_ACTUALIZAR_TEST', '3'),
+  (274, 'PRC_CREAR_FACTURA_ABONO', '3'),
+  (275, 'PRC_CREAR_FACTURA_DUPLICADA', '3'),
+  (276, 'PRC_CREAR_METADATOS', '3'),
+  (277, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
+  (278, 'PRC_CREAR_TRASPASO', '3'),
+  (279, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
+  (280, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
+  (281, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
+  (282, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
+  (283, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
+  (284, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
+  (285, 'PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO', '3'),
+  (286, 'PRC_FZA_INVENTARIOS_APLICAR', '3'),
+  (287, 'PRC_FZA_INVENTARIOS_ELIMINAR_REGUL', '3'),
+  (288, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
+  (289, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (290, 'PRC_GETPERFILFORMULARIO', '3'),
+  (291, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (292, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (293, 'PRC_GET_CREAR_VALOR', '3'),
+  (294, 'PRC_GET_DATA_ARTICULO', '3'),
+  (295, 'PRC_GET_DATA_CLIENTE', '3'),
+  (296, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (297, 'PRC_GET_NEXT_CONT', '3'),
+  (298, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (299, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (300, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (301, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (302, 'PRC_PED_CREAR_ALBARAN_FIN', '3'),
+  (303, 'PRC_PED_CREAR_ALBARAN_INICIO', '3'),
+  (304, 'PRC_PED_CREAR_ALBARAN_LINEA', '3'),
+  (305, 'PRC_REALIZAR_TRASPASO', '3'),
+  (306, 'PRC_RECALCULAR_STOCK', '3'),
+  (307, 'PRC_SETPERFILFORMULARIO', '3'),
+  (308, 'SP_RECALCULAR_PMP_LOTE_ALMACEN', '3'),
+  (309, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (310, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 208 registros exportados
+-- 210 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -9167,7 +9207,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-21 08:18:42', '2026-05-21 08:18:42', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-21 10:10:05', '2026-05-21 10:10:05', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -16825,7 +16865,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_art_busquedas` AS select `fza_articulos`.`C
 
 -- Vista: vi_atributos_nombres
 DROP VIEW IF EXISTS `vi_atributos_nombres`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_nombres` AS select distinct `ask`.`CODIGO_ART_SKU` AS `CODIGO_ART_PADRE_ARTVIN`,`vat`.`ID_ATB_VA` AS `ID_ATRIBUTO`,`vat`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`vat`.`ORDEN_VA` AS `ORDEN_VISUAL_ATRIBUTO` from (`fza_articulos_skus` `ask` join `fza_variaciones_atributos` `vat` on(`vat`.`ID_VAR_VA` = `ask`.`CODIGO_VAR_SKU`)) order by `ask`.`CODIGO_ART_SKU`,`vat`.`ORDEN_VA`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_nombres` AS select `ask`.`CODIGO_ART_SKU` AS `CODIGO_ART_PADRE_ARTVIN`,`vat`.`ID_ATB_VA` AS `ID_ATRIBUTO`,`vat`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`vat`.`ORDEN_VA` AS `ORDEN_VISUAL_ATRIBUTO` from (`fza_articulos_skus` `ask` join `fza_variaciones_atributos` `vat` on(`vat`.`ID_VAR_VA` = `ask`.`CODIGO_VAR_SKU`));
 
 -- Vista: vi_atributos_sku_basico
 DROP VIEW IF EXISTS `vi_atributos_sku_basico`;
@@ -21086,4 +21126,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 21/05/2026 8:19:00
+-- Backup completado: 21/05/2026 10:10:28
