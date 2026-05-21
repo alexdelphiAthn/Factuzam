@@ -722,21 +722,12 @@ begin
   try
     if (ArticuloPadre <> '') then
     begin
+      // OJO: no reasignamos SQL.Text aqui. La consulta vive en la DFM
+      // (vi_atributos_nombres directo) y reasignar el Text obliga al
+      // driver a re-preparar la query en cada llamada. Solo cambiamos
+      // el parametro y reabrimos.
       swQry := TStopwatch.StartNew;
       dmmInventarios.unqryDefinicionArticulo.Close;
-      dmmInventarios.unqryDefinicionArticulo.SQL.Text :=
-        'SELECT DISTINCT '                                             +
-        '       N.NOMBRE_ATRIBUTO, '                                   +
-        '       N.ORDEN_VISUAL_ATRIBUTO '                              +
-        '  FROM fza_articulos_skus SKU '                               +
-        '  JOIN fza_atributos_sku AT '                                 +
-        '    ON SKU.CODIGO_UNIDAD_SKU = AT.CODIGO_UNIDAD_SKU_SA '          +
-        '  JOIN fza_atributos_valores V '                              +
-        '    ON AT.ID_AV_SA = V.ID_AV '                       +
-        '  JOIN vi_atributos_nombres N '                               +
-        '    ON V.ID_VA_AV = N.ID_ATRIBUTO '                           +
-        ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO '                  +
-        ' ORDER BY N.ORDEN_VISUAL_ATRIBUTO LIMIT 5';
       dmmInventarios.unqryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
         ArticuloPadre;
       dmmInventarios.unqryDefinicionArticulo.Open;
@@ -1486,12 +1477,12 @@ procedure TfrmMtoInventarios.RellenarLineaDesdeBusqueda(const AInput: string;
                                                        var AError: Boolean;
                                                        var AErrorText: TCaption);
 var
-  CodPadre, CodSku, Desc, TipoArt, Tmp: string;
+  CodPadre, CodSku, Desc, TipoArt: string;
   Encontrado: Boolean;
   CantTeo, PMPAct: Currency;
   NumAtr: Integer;
   swTotal, swTramo: TStopwatch;
-  msResolver, msRellenarDatosArticulo, msSetFieldsCabecera, msActColsDin,
+  msResolver, msSetFieldsCabecera, msActColsDin,
   msSetFieldsSku, msRellenarDatosSku, msSetFieldsImporte,
   msRellenarAtributos: Int64;
 begin
@@ -1505,7 +1496,6 @@ begin
   // RellenarAtributosDesdeSku. Cada Lookup arranca una conexion / ejecuta
   // queries, asi que aqui se ve el reparto.
   msResolver              := 0;
-  msRellenarDatosArticulo := 0;
   msSetFieldsCabecera     := 0;
   msActColsDin            := 0;
   msSetFieldsSku          := 0;
@@ -1543,23 +1533,26 @@ begin
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
     dmmInventarios.cdsLineas.Edit;
 
-  // Conteo de atributos del articulo padre (para columnas dinamicas SKU1..5)
-  swTramo := TStopwatch.StartNew;
-  dmmInventarios.RellenarDatosArticulo(CodPadre, Tmp, NumAtr, Tmp);
-  msRellenarDatosArticulo := swTramo.ElapsedMilliseconds;
-
+  // Resolver ya nos dio Desc y TipoArt: NO volvemos a llamar a
+  // RellenarDatosArticulo (que abria unqryArticulo + unqryDefinicionArticulo)
+  // porque la SQL de vi_atributos_nombres es justo la que ActualizarColumnasDinamicas
+  // va a ejecutar a continuacion. Antes esa SQL se lanzaba dos veces para
+  // el mismo articulo y se comia 12 s (6+6).
   swTramo := TStopwatch.StartNew;
   dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString          :=
     CodPadre;
   dmmInventarios.cdsLineas.FieldByName(
     'DESCRIPCION_ARTICULO_INVLIN').AsString := Desc;
-  dmmInventarios.cdsLineas.FieldByName(
-    'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger := NumAtr;
   msSetFieldsCabecera := swTramo.ElapsedMilliseconds;
 
+  // ActualizarColumnasDinamicas hace el unico hit a vi_atributos_nombres,
+  // pinta los captions de SKU1..5 y, dentro, asigna FNumAtributosActual y
+  // NUM_ATRIBUTOS_REQ_INV_LINEA del cds. Usamos FNumAtributosActual como
+  // valor de NumAtr para la rama de SKU posterior.
   swTramo := TStopwatch.StartNew;
   ActualizarColumnasDinamicas(CodPadre);
   msActColsDin := swTramo.ElapsedMilliseconds;
+  NumAtr := FNumAtributosActual;
 
   if CodSku <> '' then
   begin
@@ -1632,11 +1625,11 @@ begin
 
   inLibLog.Log.LogPerf('RellenarLineaDesdeBusqueda',
     Format('input=%s padre=%s sku=%s NumAtr=%d | Resolver=%d ' +
-           'RellenarDatosArticulo=%d SetFieldsCab=%d ActColsDin=%d ' +
+           'SetFieldsCab=%d ActColsDin=%d ' +
            'SetFieldsSku=%d RellenarDatosSku=%d SetFieldsImporte=%d ' +
            'RellenarAtributos=%d',
            [AInput, CodPadre, CodSku, NumAtr,
-            msResolver, msRellenarDatosArticulo, msSetFieldsCabecera,
+            msResolver, msSetFieldsCabecera,
             msActColsDin, msSetFieldsSku, msRellenarDatosSku,
             msSetFieldsImporte, msRellenarAtributos]),
     swTotal.ElapsedMilliseconds);
