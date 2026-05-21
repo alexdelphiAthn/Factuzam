@@ -70,6 +70,8 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
             object cxGrdDBTabPrinIMPORTE_ENTREGADO_PAGO: TcxGridDBColumn
               Caption = 'Importe Entregado'
               DataBinding.FieldName = 'IMPORTE_ENTREGADO_PAGO'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 130
             end
             object cxGrdDBTabPrinIMPORTE_CAMBIO_PAGO: TcxGridDBColumn
