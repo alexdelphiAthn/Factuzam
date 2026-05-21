@@ -208,6 +208,7 @@ uses
   inMtoPruebaSesionGrid in 'DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas' {frmMtoPruebaSesionGrid};
 
 {$R *.res}
+{$R 'fondo.res' 'fondo.rc'}
 
 var
   frmLogon: TfrmLogon;
