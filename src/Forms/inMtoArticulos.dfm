@@ -33,7 +33,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           Left = 0
           Top = 0
           Width = 1073
-          Height = 22
+          Height = 60
           Align = alTop
           BevelOuter = bvNone
           ParentBackground = False
@@ -59,7 +59,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             BevelOuter = bvNone
             ParentBackground = False
             TabOrder = 1
-            Visible = False
             object lblFiltroEstadoArt: TcxLabel
               Left = 8
               Top = 11
@@ -104,12 +103,12 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           end
         end
         inherited cxGrdPrincipal: TcxGrid
-          Top = 22
+          Top = 60
           Width = 1073
-          Height = 618
-          ExplicitTop = 22
+          Height = 580
+          ExplicitTop = 60
           ExplicitWidth = 1073
-          ExplicitHeight = 618
+          ExplicitHeight = 580
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_ARTICULO: TcxGridDBColumn
               Caption = 'C'#243'digo Art'#237'culo'
