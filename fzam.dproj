@@ -596,6 +596,12 @@
         <DCCReference Include="src\Modals\inMtoModalSesionDuplicado.pas">
             <Form>frmModalSesionDuplicado</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalIncidencias.pas">
+            <Form>frmModalIncidencias</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalCrearAlbaranSesion.pas">
+            <Form>frmModalCrearAlbaranSesion</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializar.pas"/>
