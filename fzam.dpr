@@ -207,6 +207,8 @@ uses
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
   inMtoPruebaSesionGrid in 'DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas' {frmMtoPruebaSesionGrid};
 
+{$R *.res}
+
 var
   frmLogon: TfrmLogon;
   AutoLoginSuccessful: Boolean;
