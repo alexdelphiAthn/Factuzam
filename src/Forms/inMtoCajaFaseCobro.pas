@@ -31,7 +31,7 @@ uses
   // Acceso a Datos y Librerías Propias
   Uni, MemDS, VirtualTable,
   inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
-  inMtoCajaReferenciaPago, System.UITypes;
+  inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage;
 
 type
   TTipoImpresionTicket = (tiConTicket, tiSinTicket, tiTicketRegalo);
@@ -99,7 +99,6 @@ type
     dbmDescripcion: TcxGridDBColumn;
     // Panel Inferior (Totales finales)
     lblPendienteCobroAlt: TcxLabel;
-    lblTituloFzam: TcxLabel;
     lblDevolucionCambio: TcxLabel;
     styRepoCobro: TcxStyleRepository;
     styCobroLine: TcxStyle;
@@ -112,6 +111,7 @@ type
     actConTicket: TAction;
     actSinPrecios: TAction;
     actDepositoCliente: TAction;
+    cxImage1: TcxImage;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
