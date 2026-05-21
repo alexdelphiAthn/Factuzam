@@ -84,11 +84,11 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+//      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
-      on E: Exception do
-        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
+//      on E: Exception do
+//        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+//          swQ.ElapsedMilliseconds);
     end;
   end;
 
@@ -102,7 +102,7 @@ begin
   AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
   AbrirConTiempo(unqryConjuntoDetalle,        'unqryConjuntoDetalle');
   AbrirConTiempo(unqryArticulosConjunto,      'unqryArticulosConjunto');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+//  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmAtributosConjuntos.unqryConjuntoDetalleAfterInsert(

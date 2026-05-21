@@ -381,7 +381,7 @@ begin
     unqryStockArticulos.Open;
     msSP := swTramo.ElapsedMilliseconds;
 
-    swTramo := TStopwatch.StartNew;
+//    swTramo := TStopwatch.StartNew;
     tvArticulosStock.BeginUpdate;
     try
       tvArticulosStock.ClearItems;
@@ -389,11 +389,11 @@ begin
     finally
       tvArticulosStock.EndUpdate;
     end;
-    msRebuild := swTramo.ElapsedMilliseconds;
+//    msRebuild := swTramo.ElapsedMilliseconds;
 
     if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
     begin
-      swTramo := TStopwatch.StartNew;
+//      swTramo := TStopwatch.StartNew;
       // Asignamos anchos fijos segun el nombre del campo. Las columnas
       // especiales (Almacen, Color, Total) tienen su valor concreto;
       // el resto (tallas / variantes que llegan dinamicamente del SP
@@ -411,7 +411,7 @@ begin
         else
           col.Width := ANCHO_TALLA;
       end;
-      msAnchos := swTramo.ElapsedMilliseconds;
+//      msAnchos := swTramo.ElapsedMilliseconds;
       // Antes se llamaba a EnsancharColumnasStockParaSwatch para sumar
       // ANCHO_SWATCH_PX a las columnas con cuadradito de color (post-
       // proceso sobre los anchos calculados por ApplyBestFit). Como
@@ -420,10 +420,10 @@ begin
       // sitio (la mantenemos como utilidad).
     end;
   end;
-  inLibLog.Log.LogPerf('Articulos.StockAfterScroll',
-    Format('art=%s | SP=%d ms | RebuildItems=%d ms | Anchos=%d ms | cols=%d',
-           [sArt, msSP, msRebuild, msAnchos, tvArticulosStock.ColumnCount]),
-    swTotal.ElapsedMilliseconds);
+//  inLibLog.Log.LogPerf('Articulos.StockAfterScroll',
+//    Format('art=%s | SP=%d ms | RebuildItems=%d ms | Anchos=%d ms | cols=%d',
+//           [sArt, msSP, msRebuild, msAnchos, tvArticulosStock.ColumnCount]),
+//    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TdmArticulos.unqryTablaGAfterDelete(DataSet: TDataSet);
@@ -528,28 +528,28 @@ const
   TAG = 'Articulos.AbrirDetalles';
 
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
+//  var
+//    swQ: TStopwatch;
   begin
     if qry.Active then Exit;
-    swQ := TStopwatch.StartNew;
-    try
+//    swQ := TStopwatch.StartNew;
+//    try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-        inLibLog.Log.LogPerf(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-    end;
+//      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+//    except
+//      on E: Exception do
+//        inLibLog.Log.LogPerf(TAG,
+//          Nombre + ' ERROR=' + E.Message,
+//          swQ.ElapsedMilliseconds);
+//    end;
   end;
 
 var
-  sw: TStopwatch;
+//  sw: TStopwatch;
   saveAfterScroll: TDataSetNotifyEvent;
 begin
   inherited;
-  sw := TStopwatch.StartNew;
+//  sw := TStopwatch.StartNew;
   // unqryStockArticulos.AfterScroll dispara unqryStockArticulosAfterScroll
   // que ya se ha ejecutado durante CrearTablaPrincipal (linea 1798 de
   // inMtoArticulos.pas). Si lo dejamos activo aqui, al abrir
@@ -579,7 +579,7 @@ begin
   // QuitarEscribiblesVista necesita unqryTarifasArticulos abierto; ahora
   // que la abrimos perezosamente, esa rutina se llama desde
   // AsegurarTarifasAbiertas tras el primer Open.
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+//  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmArticulos.ReactivarControlesTrasAbrir;
@@ -591,22 +591,22 @@ begin
 end;
 
 procedure TdmArticulos.AsegurarTarifasAbiertas;
-var
-  sw: TStopwatch;
+//var
+//  sw: TStopwatch;
 begin
   if unqryTarifasArticulos.Active then Exit;
-  sw := TStopwatch.StartNew;
-  try
+//  sw := TStopwatch.StartNew;
+//  try
     unqryTarifasArticulos.Open;
     QuitarEscribiblesVista;
-    inLibLog.Log.LogPerf('Articulos.Lazy', 'unqryTarifasArticulos OK',
-      sw.ElapsedMilliseconds);
-  except
-    on E: Exception do
-      inLibLog.Log.LogPerf('Articulos.Lazy',
-        'unqryTarifasArticulos ERROR=' + E.Message,
-        sw.ElapsedMilliseconds);
-  end;
+//    inLibLog.Log.LogPerf('Articulos.Lazy', 'unqryTarifasArticulos OK',
+//      sw.ElapsedMilliseconds);
+//  except
+//    on E: Exception do
+//      inLibLog.Log.LogPerf('Articulos.Lazy',
+//        'unqryTarifasArticulos ERROR=' + E.Message,
+//        sw.ElapsedMilliseconds);
+//  end;
 end;
 
 procedure TdmArticulos.QuitarEscribiblesVista;

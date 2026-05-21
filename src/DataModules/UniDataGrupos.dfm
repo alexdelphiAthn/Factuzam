@@ -1,6 +1,6 @@
-﻿inherited dmGrupos: TdmGrupos
-  OldCreateOrder = True
+inherited dmGrupos: TdmGrupos
   Width = 360
+  PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (

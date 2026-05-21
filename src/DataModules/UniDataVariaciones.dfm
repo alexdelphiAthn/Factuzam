@@ -4,10 +4,13 @@ inherited dmVariaciones: TdmVariaciones
     SQLInsert.Strings = (
       'INSERT INTO `fza_variaciones`'
       
-        '  (`CODIGO_VAR`, `NOMBRE_VAR`, `ESACTIVO_VAR`, `ORDEN_VAR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
+        '  (`CODIGO_VAR`, `NOMBRE_VAR`, `ESACTIVO_VAR`, `ORDEN_VAR`, `INS' +
+        'TANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
       
-        '  (:`CODIGO_VAR`, :`NOMBRE_VAR`, :`ESACTIVO_VAR`, :`ORDEN_VAR`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
+        '  (:`CODIGO_VAR`, :`NOMBRE_VAR`, :`ESACTIVO_VAR`, :`ORDEN_VAR`, ' +
+        ':`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_' +
+        'MODIF`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_variaciones`'
       'WHERE'
@@ -16,8 +19,11 @@ inherited dmVariaciones: TdmVariaciones
       'UPDATE `fza_variaciones`'
       'SET'
       
-        '  `CODIGO_VAR` = :`CODIGO_VAR`, `NOMBRE_VAR` = :`NOMBRE_VAR`, `ESACTIVO_VAR` = :`ESACTIVO_VAR`, `ORDEN_VAR` = :`ORDEN_VAR`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `U' +
-        'SUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
+        '  `CODIGO_VAR` = :`CODIGO_VAR`, `NOMBRE_VAR` = :`NOMBRE_VAR`, `E' +
+        'SACTIVO_VAR` = :`ESACTIVO_VAR`, `ORDEN_VAR` = :`ORDEN_VAR`, `INS' +
+        'TANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_A' +
+        'LTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUA' +
+        'RIO_MODIF`'
       'WHERE'
       '  `CODIGO_VAR` = :`Old_CODIGO_VAR`')
     SQLLock.Strings = (
@@ -53,13 +59,13 @@ inherited dmVariaciones: TdmVariaciones
       ' ORDER BY a.ORDEN_ART, a.CODIGO_ART_ART')
     MasterFields = 'CODIGO_VAR'
     DetailFields = 'TIPO_VARIACION_ART'
-    Active = False
     Left = 200
     ParamData = <
       item
         DataType = ftWideString
         Name = 'CODIGO_VAR'
         ParamType = ptInput
+        Value = nil
       end>
   end
   object dsArticulosVariacion: TDataSource
@@ -106,7 +112,6 @@ inherited dmVariaciones: TdmVariaciones
       ' ORDER BY ORDEN_VA, ID_ATB_VA')
     MasterFields = 'CODIGO_VAR'
     DetailFields = 'ID_VAR_VA'
-    Active = False
     AfterInsert = unqryAtributosVariacionAfterInsert
     BeforePost = unqryAtributosVariacionBeforePost
     Left = 24
@@ -116,6 +121,7 @@ inherited dmVariaciones: TdmVariaciones
         DataType = ftWideString
         Name = 'CODIGO_VAR'
         ParamType = ptInput
+        Value = nil
       end>
   end
   object dsAtributosVariacion: TDataSource
@@ -133,13 +139,13 @@ inherited dmVariaciones: TdmVariaciones
     MasterSource = dsArticulosVariacion
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
-    Active = False
     Left = 376
     ParamData = <
       item
         DataType = ftWideString
         Name = 'CODIGO_ART_ART'
         ParamType = ptInput
+        Value = nil
       end>
   end
   object dsSkusArticulo: TDataSource

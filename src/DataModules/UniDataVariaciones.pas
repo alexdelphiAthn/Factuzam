@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataVariaciones                                            }
 {    Tipo:       Data Module                                                   }
@@ -69,28 +69,28 @@ const
   TAG = 'Variaciones.AbrirDetalles';
 
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var swQ: TStopwatch;
+//  var swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
-    swQ := TStopwatch.StartNew;
-    try
+//    if qry.Active then Exit;
+//    swQ := TStopwatch.StartNew;
+//    try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-    end;
+//      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+//    except
+//      on E: Exception do
+//        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+//          swQ.ElapsedMilliseconds);
+//    end;
   end;
 
-var sw: TStopwatch;
+//var sw: TStopwatch;
 begin
   inherited;
-  sw := TStopwatch.StartNew;
+//  sw := TStopwatch.StartNew;
   AbrirConTiempo(unqryArticulosVariacion, 'unqryArticulosVariacion');
   AbrirConTiempo(unqryAtributosVariacion, 'unqryAtributosVariacion');
   AbrirConTiempo(unqrySkusArticulo,       'unqrySkusArticulo');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+//  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmVariaciones.unqryAtributosVariacionAfterInsert(DataSet: TDataSet);

@@ -1,29 +1,25 @@
 inherited frmMtoOpeCaja: TfrmMtoOpeCaja
-  Left = 0
-  Top = 0
   Caption = 'Operaci'#243'n de Caja'
   ClientHeight = 429
   ClientWidth = 1364
-  Color = clBtnFace
   Font.Charset = ANSI_CHARSET
-  Font.Color = clWindowText
   Font.Height = -19
-  Font.Name = 'Lucida Sans'
-  Font.Style = []
-  KeyPreview = True
+  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
+  ExplicitWidth = 1380
+  ExplicitHeight = 468
   TextHeight = 22
-  object pnlUp: TPanel
+  object pnlUp: TPanel [0]
     Left = 0
     Top = 0
     Width = 1364
     Height = 89
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1366
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -36,7 +32,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Color = clNavy
       Style.Font.Height = -20
       Style.Font.Name = 'Arial Black'
+      Style.Font.Pitch = fpFixed
       Style.Font.Style = [fsBold]
+      Style.Font.Quality = fqClearTypeNatural
       Style.Shadow = True
       Style.IsFontAssigned = True
       Properties.LineOptions.Alignment = cxllaBottom
@@ -80,7 +78,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Color = clWindowText
       Style.Font.Height = -14
       Style.Font.Name = 'Lucida Sans'
+      Style.Font.Pitch = fpFixed
       Style.Font.Style = []
+      Style.Font.Quality = fqClearTypeNatural
       Style.IsFontAssigned = True
       Properties.LabelStyle = cxlsLowered
       TabOrder = 3
@@ -98,7 +98,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Color = clWindowText
       Style.Font.Height = -14
       Style.Font.Name = 'Lucida Sans'
+      Style.Font.Pitch = fpFixed
       Style.Font.Style = []
+      Style.Font.Quality = fqClearTypeNatural
       Style.IsFontAssigned = True
       Properties.LabelStyle = cxlsLowered
       TabOrder = 4
@@ -113,7 +115,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Color = clWindowText
       Style.Font.Height = -13
       Style.Font.Name = 'Lucida Sans'
+      Style.Font.Pitch = fpFixed
       Style.Font.Style = []
+      Style.Font.Quality = fqClearTypeNatural
       Style.IsFontAssigned = True
       TabOrder = 5
     end
@@ -144,7 +148,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Color = clNavy
       Style.Font.Height = -20
       Style.Font.Name = 'Arial Black'
+      Style.Font.Pitch = fpFixed
       Style.Font.Style = [fsBold]
+      Style.Font.Quality = fqClearTypeNatural
       Style.Shadow = True
       Style.IsFontAssigned = True
       Properties.LineOptions.Alignment = cxllaBottom
@@ -170,13 +176,14 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Width = 121
     end
   end
-  object pnlCli: TPanel
+  object pnlCli: TPanel [1]
     Left = 0
     Top = 89
     Width = 1364
     Height = 340
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 1366
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 241
@@ -184,6 +191,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 98
       Align = alBottom
       TabOrder = 1
+      ExplicitWidth = 1364
       object pnlTotal: TPanel
         Left = 878
         Top = 1
@@ -192,6 +200,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 0
+        ExplicitLeft = 880
         object lblTotal: TcxLabel
           Left = 0
           Top = 0
@@ -204,7 +213,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Style.Font.Color = clNavy
           Style.Font.Height = -50
           Style.Font.Name = 'Arial Black'
+          Style.Font.Pitch = fpFixed
           Style.Font.Style = [fsBold]
+          Style.Font.Quality = fqClearTypeNatural
           Style.Shadow = True
           Style.IsFontAssigned = True
           Properties.Alignment.Horz = taRightJustify
@@ -217,6 +228,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           TabOrder = 0
           Height = 96
           Width = 483
+          AnchorX = 483
         end
       end
       object pnlBotones: TPanel
@@ -227,6 +239,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitWidth = 879
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -241,7 +254,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnF12Click
         end
@@ -259,7 +274,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
         end
         object btnF8: TcxButton
@@ -276,7 +293,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
         end
         object btnF6: TcxButton
@@ -293,7 +312,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
         end
         object btnF61: TcxButton
@@ -310,7 +331,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
         end
         object btnF7: TcxButton
@@ -327,7 +350,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
         end
         object btnF5: TcxButton
@@ -344,7 +369,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnF5Click
         end
@@ -362,7 +389,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clBlue
           Font.Height = -27
           Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnF2Click
         end
@@ -441,7 +470,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Font.Color = clWindowText
         Font.Height = -19
         Font.Name = 'Lucida Sans'
+        Font.Pitch = fpFixed
         Font.Style = []
+        Font.Quality = fqClearTypeNatural
         ParentFont = False
         TabOrder = 0
         OnEnter = cxGrid1Enter
@@ -563,7 +594,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         object splFotoStock: TcxSplitter
           Left = 1232
           Top = 1
-          Width = 8
+          Width = 10
           Height = 114
           AlignSplitter = salRight
           Control = pnlFotoStock
@@ -578,7 +609,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Font.Color = clWindowText
           Font.Height = -19
           Font.Name = 'Lucida Sans'
+          Font.Pitch = fpFixed
           Font.Style = []
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           TabOrder = 0
           OnEnter = cxGrid1Enter
@@ -611,7 +644,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object splOpe: TcxSplitter
         Left = 1
         Top = 113
-        Width = 1360
+        Width = 10
         Height = 10
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
@@ -695,12 +728,13 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       '      AND ap.CODIGO_PROP_ARTPROP = '#39'TEMPORADA'#39
       'LEFT JOIN fza_propiedades_valores pv'
       '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'
-      'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA OR v.CODIGO_TAR_ARTTAR IS NUL' +
-        'L)'
-
+      
+        'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA OR v.CODIGO_TAR_ARTTAR IS N' +
+        'ULL)'
+      
         '  AND (v.FECHA_DESDE_ARTTAR IS NULL OR v.FECHA_DESDE_ARTTAR <= :' +
         'FECHA_TARIFA)'
-
+      
         '  AND (v.FECHA_HASTA_ARTTAR IS NULL OR v.FECHA_HASTA_ARTTAR >= :' +
         'FECHA_TARIFA)'
       '  AND v.CODIGO_ART_ART LIKE :TOKEN'
@@ -739,7 +773,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       OptionsBehavior.ColumnHeaderHints = False
       OptionsSelection.CellSelect = False
       OptionsView.GroupByBox = False
-      OptionsView.Header = True
       object dbtvBusqINPUT_BUSQUEDA: TcxGridDBColumn
         DataBinding.FieldName = 'INPUT_BUSQUEDA'
         PropertiesClassName = 'TcxTextEditProperties'

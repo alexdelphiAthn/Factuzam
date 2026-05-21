@@ -31,7 +31,7 @@ uses
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
-  System.Generics.Collections, System.Diagnostics;
+  System.Generics.Collections, System.Diagnostics, cxLocalization;
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
@@ -244,7 +244,7 @@ type
                                        message WM_AVANZAR_ATRIB_CAJA;
     procedure WMAbrirPopupAv(var Msg: TMessage);
                                        message WM_ABRIR_POPUP_AV;
-    procedure LogPerfCaja(const AContexto, ADetalles: string);
+//    procedure LogPerfCaja(const AContexto, ADetalles: string);
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -481,10 +481,10 @@ begin
       View.EndUpdate;
     end;
   end;
-  LogPerfCaja('CajaOpe.ConsultarStock',
-    Format('art=%s | SP=%d | Build=%d | Fit=%d | cols=%d | total=%d ms',
-           [CodigoInput, msSP, msBuild, msFit, View.ColumnCount,
-            sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.ConsultarStock',
+//    Format('art=%s | SP=%d | Build=%d | Fit=%d | cols=%d | total=%d ms',
+//           [CodigoInput, msSP, msBuild, msFit, View.ColumnCount,
+//            sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.tvLineasOpeCustomDrawCell(
@@ -511,23 +511,23 @@ begin
     ADone := True;
 end;
 
-procedure TfrmMtoOpeCaja.LogPerfCaja(const AContexto, ADetalles: string);
-begin
-  // Replica el formato '-- PERF -- HH:NN:SS.zzz [PERF:ctx] det' que ya se
-  // usa para articulos. Escribe directamente al cxMemo de SQL para que
-  // aparezca intercalado con las trazas de UniSQLMonitor, y al log si
-  // esta activo.
-  if Assigned(oMemoSQL) then
-    oMemoSQL.Lines.Add(
-      Format('-- PERF -- %s  [PERF:%s] %s',
-             [FormatDateTime('hh:nn:ss.zzz', Now), AContexto, ADetalles]));
-  try
-    inLibLog.Log.LogInfo(
-      Format('[PERF:%s] %s', [AContexto, ADetalles]));
-  except
-    // inLibLog puede no estar inicializado en sesiones cortas; no rompemos.
-  end;
-end;
+//procedure TfrmMtoOpeCaja.LogPerfCaja(const AContexto, ADetalles: string);
+//begin
+//  // Replica el formato '-- PERF -- HH:NN:SS.zzz [PERF:ctx] det' que ya se
+//  // usa para articulos. Escribe directamente al cxMemo de SQL para que
+//  // aparezca intercalado con las trazas de UniSQLMonitor, y al log si
+//  // esta activo.
+////  if Assigned(oMemoSQL) then
+////    oMemoSQL.Lines.Add(
+////      Format('-- PERF -- %s  [PERF:%s] %s',
+////             [FormatDateTime('hh:nn:ss.zzz', Now), AContexto, ADetalles]));
+////  try
+////    inLibLog.Log.LogInfo(
+////      Format('[PERF:%s] %s', [AContexto, ADetalles]));
+////  except
+////    // inLibLog puede no estar inicializado en sesiones cortas; no rompemos.
+////  end;
+//end;
 
 function TfrmMtoOpeCaja.ValidarSkuParaVenta(const SkuFinal: string): Boolean;
 var
@@ -975,9 +975,9 @@ begin
       EliminarLineaPorValidacion;
       DisplayValue := null;
       Error := False;
-      LogPerfCaja('CajaOpe.ArticuloValidate',
-        Format('art=%s | Rellenar=%d | -> EliminarLineaPorValidacion | total=%d ms',
-               [CodigoInput, msRellenar, sw.ElapsedMilliseconds]));
+//      LogPerfCaja('CajaOpe.ArticuloValidate',
+//        Format('art=%s | Rellenar=%d | -> EliminarLineaPorValidacion | total=%d ms',
+//               [CodigoInput, msRellenar, sw.ElapsedMilliseconds]));
       Abort;
     end;
     if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
@@ -997,10 +997,10 @@ begin
        DatosCaja.cdsLineas.Append;
        DisplayValue := null;
        Error := False;
-       LogPerfCaja('CajaOpe.ArticuloValidate',
-         Format('art=%s | Rellenar=%d | Consolidar=%d | -> consolidado | total=%d ms',
-                [CodigoInput, msRellenar, msConsolidar,
-                 sw.ElapsedMilliseconds]));
+//       LogPerfCaja('CajaOpe.ArticuloValidate',
+//         Format('art=%s | Rellenar=%d | Consolidar=%d | -> consolidado | total=%d ms',
+//                [CodigoInput, msRellenar, msConsolidar,
+//                 sw.ElapsedMilliseconds]));
        Abort;
     end;
     msConsolidar := swStep.ElapsedMilliseconds;
@@ -1036,19 +1036,19 @@ begin
        msAtribs := swStep.ElapsedMilliseconds;
     end;
     Error := False;
-    LogPerfCaja('CajaOpe.ArticuloValidate',
-      Format('art=%s | Rellenar=%d | Consolidar=%d | qryBusq=%d | Columnas=%d | Atribs=%d | total=%d ms',
-             [CodigoInput, msRellenar, msConsolidar, msBusq,
-              msColumnas, msAtribs, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.ArticuloValidate',
+//      Format('art=%s | Rellenar=%d | Consolidar=%d | qryBusq=%d | Columnas=%d | Atribs=%d | total=%d ms',
+//             [CodigoInput, msRellenar, msConsolidar, msBusq,
+//              msColumnas, msAtribs, sw.ElapsedMilliseconds]));
   end
   else
   begin
     msRellenar := swStep.ElapsedMilliseconds;
     Error := True;
     ErrorText := 'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
-    LogPerfCaja('CajaOpe.ArticuloValidate',
-      Format('art=%s | NO ENCONTRADO | Rellenar=%d | total=%d ms',
-             [CodigoInput, msRellenar, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.ArticuloValidate',
+//      Format('art=%s | NO ENCONTRADO | Rellenar=%d | total=%d ms',
+//             [CodigoInput, msRellenar, sw.ElapsedMilliseconds]));
   end;
 end;
 
@@ -1206,9 +1206,9 @@ begin
     msResolver := swStep.ElapsedMilliseconds;
     if not Resolucion.Encontrado then
     begin
-      LogPerfCaja('CajaOpe.RellenarArt',
-        Format('cod=%s | Resolver=%d | NO ENCONTRADO | total=%d ms',
-               [CodigoLimpio, msResolver, sw.ElapsedMilliseconds]));
+//      LogPerfCaja('CajaOpe.RellenarArt',
+//        Format('cod=%s | Resolver=%d | NO ENCONTRADO | total=%d ms',
+//               [CodigoLimpio, msResolver, sw.ElapsedMilliseconds]));
       Exit;
     end;
 
@@ -1297,10 +1297,10 @@ begin
     FreeAndNil(Validador);
     FreeAndNil(Resolver);
   end;
-  LogPerfCaja('CajaOpe.RellenarArt',
-    Format('cod=%s | Resolver=%d | Stock=%d | Precio=%d | ResolverDatos=%d | total=%d ms',
-           [CodigoLimpio, msResolver, msStock, msPrecio, msResolverDatos,
-            sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.RellenarArt',
+//    Format('cod=%s | Resolver=%d | Stock=%d | Precio=%d | ResolverDatos=%d | total=%d ms',
+//           [CodigoLimpio, msResolver, msStock, msPrecio, msResolverDatos,
+//            sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.repComboBoxPropertiesInitPopup(Sender: TObject);
@@ -1386,9 +1386,9 @@ begin
     msQry := swQry.ElapsedMilliseconds;
     if Length(Valores) = 0 then
     begin
-      LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',
-        Format('sku=%s | Qry=%d | sin valores | total=%d ms',
-               [Sku, msQry, sw.ElapsedMilliseconds]));
+//      LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',
+//        Format('sku=%s | Qry=%d | sin valores | total=%d ms',
+//               [Sku, msQry, sw.ElapsedMilliseconds]));
       Exit;
     end;
 
@@ -1406,9 +1406,9 @@ begin
   finally
     FreeAndNil(Lookup);
   end;
-  LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',
-    Format('sku=%s | Qry=%d | total=%d ms',
-           [Sku, msQry, sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',
+//    Format('sku=%s | Qry=%d | total=%d ms',
+//           [Sku, msQry, sw.ElapsedMilliseconds]));
 end;
 
 function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -2134,9 +2134,9 @@ begin
   Cacheado := SameText(ArticuloPadre, FUltimoArticuloPadre);
   if Cacheado then
   begin
-    LogPerfCaja('CajaOpe.ActualizarColumnas',
-      Format('art=%s | cache hit | total=%d ms',
-             [ArticuloPadre, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.ActualizarColumnas',
+//      Format('art=%s | cache hit | total=%d ms',
+//             [ArticuloPadre, sw.ElapsedMilliseconds]));
     Exit;
   end;
   FUltimoArticuloPadre := ArticuloPadre;
@@ -2223,9 +2223,9 @@ begin
   finally
     FreeAndNil(NombresAtributos);
   end;
-  LogPerfCaja('CajaOpe.ActualizarColumnas',
-    Format('art=%s | Qry=%d | UI=%d | total=%d ms',
-           [ArticuloPadre, msQry, msUI, sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.ActualizarColumnas',
+//    Format('art=%s | Qry=%d | UI=%d | total=%d ms',
+//           [ArticuloPadre, msQry, msUI, sw.ElapsedMilliseconds]));
 //  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
@@ -3029,8 +3029,8 @@ begin
   begin
     msTotal := FswArtAPopup.ElapsedMilliseconds;
     FswArtAPopup.Stop;
-    LogPerfCaja('CajaOpe.Art2Popup',
-      Format('total Enter->popup=%d ms', [msTotal]));
+//    LogPerfCaja('CajaOpe.Art2Popup',
+//      Format('total Enter->popup=%d ms', [msTotal]));
   end;
   if not tvLineasOpe.Controller.EditingController.IsEditing then Exit;
   CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
@@ -3226,9 +3226,9 @@ begin
   if Length(Avs) = 0 then
   begin
     ShowMessage('No hay valores definidos para este atributo.');
-    LogPerfCaja('CajaOpe.AvButtonClick',
-      Format('art=%s orden=%d | Avs=%d | sin valores | total=%d ms',
-             [ArtPadre, Orden, msAvs, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.AvButtonClick',
+//      Format('art=%s orden=%d | Avs=%d | sin valores | total=%d ms',
+//             [ArtPadre, Orden, msAvs, sw.ElapsedMilliseconds]));
     Exit;
   end;
 
@@ -3306,9 +3306,9 @@ begin
   else
     PostMessage(Self.Handle, WM_AVANZAR_ATRIB_CAJA, Orden + 1, 0);
 
-  LogPerfCaja('CajaOpe.AvButtonClick',
-    Format('art=%s orden=%d AvNuevo=%s | Avs=%d | total=%d ms',
-           [ArtPadre, Orden, AvNuevo, msAvs, sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.AvButtonClick',
+//    Format('art=%s orden=%d AvNuevo=%s | Avs=%d | total=%d ms',
+//           [ArtPadre, Orden, AvNuevo, msAvs, sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.WMFinalizarAtribCaja(var Msg: TMessage);
@@ -3332,9 +3332,9 @@ begin
     tvLineasOpe.Controller.FocusedColumn := SigCol;
     tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
-  LogPerfCaja('CajaOpe.AvanzarAtrib',
-    Format('tag=%d | total=%d ms',
-           [Integer(Msg.WParam), sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.AvanzarAtrib',
+//    Format('tag=%d | total=%d ms',
+//           [Integer(Msg.WParam), sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.GuardarLayoutCaja;

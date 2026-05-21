@@ -141,20 +141,20 @@ const
   TAG = 'Pedidos.AbrirDetalles';
 
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
+//  var
+//    swQ: TStopwatch;
   begin
     if qry.Active then Exit;
-    swQ := TStopwatch.StartNew;
-    try
+//    swQ := TStopwatch.StartNew;
+//    try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-        inLibLog.Log.LogPerf(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-    end;
+//      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+//    except
+//      on E: Exception do
+//        inLibLog.Log.LogPerf(TAG,
+//          Nombre + ' ERROR=' + E.Message,
+//          swQ.ElapsedMilliseconds);
+//    end;
   end;
 
 var
@@ -165,7 +165,7 @@ begin
   AbrirConTiempo(unqryPedidosLineas, 'unqryPedidosLineas');
   AbrirConTiempo(unqryAlbaranes,     'unqryAlbaranes');
   AbrirConTiempo(unqryMensajes,      'unqryMensajes');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+//  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmPedidos.unqryTablaGAfterInsert(DataSet: TDataSet);
