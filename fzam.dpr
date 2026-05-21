@@ -205,7 +205,7 @@ uses
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
-  inMtoPruebaSesionGrid in 'DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas' {frmMtoPruebaSesionGrid};
+  inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones};
 
 {$R *.res}
 {$R fondo.res}
