@@ -683,12 +683,10 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '  g.ID_AC,'
       '  g.NOMBRE_CORTO_AC,'
       '  g.NOMBRE_AC,'
-
-        '  g.T01, g.T02, g.T03, g.T04, g.T05, g.T06, g.T07, g.T08, g.T09,' +
-        ' g.T10,'
-
-        '  g.T11, g.T12, g.T13, g.T14, g.T15, g.T16, g.T17, g.T18, g.T19,' +
-        ' g.T20'
+      '  g.T01, g.T02, g.T03, g.T04, g.T05,'
+      '  g.T06, g.T07, g.T08, g.T09, g.T10,'
+      '  g.T11, g.T12, g.T13, g.T14, g.T15,'
+      '  g.T16, g.T17, g.T18, g.T19, g.T20'
       'FROM vi_compras_sesiones_guias_print g'
       'WHERE g.ID_AC IN ('
       '  SELECT lin.ID_AC_PIVOT_SESLIN'
