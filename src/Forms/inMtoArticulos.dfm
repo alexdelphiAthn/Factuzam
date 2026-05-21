@@ -29,11 +29,87 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         ExplicitTop = 29
         ExplicitWidth = 1073
         ExplicitHeight = 640
-        inherited cxGrdPrincipal: TcxGrid
+        object pnlFiltrosArt: TPanel
+          Left = 0
+          Top = 0
           Width = 1073
-          Height = 640
+          Height = 22
+          Align = alTop
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 1
+          object btnToggleFiltrosArt: TcxButton
+            Left = 0
+            Top = 0
+            Width = 1073
+            Height = 22
+            Align = alTop
+            Caption = #9654'  Filtros de carga'
+            LookAndFeel.Kind = lfUltraFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 0
+            OnClick = btnToggleFiltrosArtClick
+          end
+          object pnlContFiltrosArt: TPanel
+            Left = 0
+            Top = 22
+            Width = 1073
+            Height = 38
+            Align = alClient
+            BevelOuter = bvNone
+            ParentBackground = False
+            TabOrder = 1
+            Visible = False
+            object lblFiltroEstadoArt: TcxLabel
+              Left = 8
+              Top = 11
+              Caption = 'Estado:'
+              Transparent = True
+            end
+            object cbbFiltroEstadoArt: TcxComboBox
+              Left = 58
+              Top = 7
+              Properties.DropDownListStyle = lsFixedList
+              Properties.Items.Strings = (
+                'Todos'
+                'S'#243'lo activos'
+                'S'#243'lo inactivos')
+              Properties.OnEditValueChanged = cbbFiltroEstadoArtPropertiesEditValueChanged
+              TabOrder = 0
+              Text = 'S'#243'lo activos'
+              Width = 145
+            end
+            object chkFiltroConStockArt: TcxCheckBox
+              Left = 220
+              Top = 9
+              Caption = 'S'#243'lo con stock'
+              Properties.OnEditValueChanged = chkFiltroConStockArtPropertiesEditValueChanged
+              TabOrder = 1
+              Transparent = True
+              Width = 137
+            end
+            object lblFiltroTemporadaArt: TcxLabel
+              Left = 365
+              Top = 11
+              Caption = 'Temporadas:'
+              Transparent = True
+            end
+            object ccbFiltroTemporadaArt: TcxCheckComboBox
+              Left = 446
+              Top = 7
+              Properties.OnCloseUp = ccbFiltroTemporadaArtPropertiesCloseUp
+              TabOrder = 2
+              Width = 280
+            end
+          end
+        end
+        inherited cxGrdPrincipal: TcxGrid
+          Top = 22
+          Width = 1073
+          Height = 618
+          ExplicitTop = 22
           ExplicitWidth = 1073
-          ExplicitHeight = 640
+          ExplicitHeight = 618
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_ARTICULO: TcxGridDBColumn
               Caption = 'C'#243'digo Art'#237'culo'
