@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 20/05/2026 22:52:13
+-- Backup generado: 21/05/2026 8:02:46
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -2575,7 +2575,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 237, 3, 'S', 'S', '2026-05-20 22:52:05', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 238, 3, 'S', 'S', '2026-05-21 07:52:46', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -7340,8 +7340,42 @@ DELIMITER ;
 -- Si el articulo no tiene TIPO_VARIACION_ART (articulo simple sin atributos),
 -- v_id_atributo_pivot queda NULL y caemos al fallback de la query simple.
 -- Comportamiento identico al original.
-', '2026-05-20 22:52:05', '2026-05-20 22:52:05', 'Administrador', 'Administrador');
--- 32 registros exportados
+', '2026-05-20 22:52:05', '2026-05-20 22:52:05', 'Administrador', 'Administrador'),
+  ('237', 'registro_caja_formas_pago', '-- =============================================================================
+-- Registro de TfrmMtoCajaFormasPago en fza_winforms
+-- =============================================================================
+-- Anade la entrada que ShowMto resuelve al hacer click en
+-- ''Caja -> Formas de Pago Caja'' (Ctrl+Shift+Q). La pantalla mantiene la
+-- tabla fza_caja_formas_pago, que define los botones de la fase de cobro
+-- (F12): efectivo, tarjeta, divisa, cripto, bono... con sus flags de
+-- comportamiento (cajon, cambio, referencia obligatoria, comision, etc).
+--
+-- Se usa Ctrl+Shift+ para los items del menu Caja por convencion del
+-- proyecto. Q es libre (Ctrl+Q queda para FormasdePago de venta).
+--
+-- Idempotente: ON DUPLICATE KEY UPDATE refresca los campos clave.
+-- =============================================================================
+
+INSERT INTO fza_winforms
+  (CALL_WINF, CAPTION_WINF, MENUITEM_WINF, UNITF_WINF,
+   SHORTCUT_WINF, DATAMODULE_WINF, NUM_VENTANAS_WINF)
+VALUES
+  (''CajaFormasPago'',
+   ''Formas de Pago Caja'',
+   ''FormasdePagoCaja1'',
+   ''inMtoCajaFormasPago.TfrmMtoCajaFormasPago'',
+   ''Ctrl+Shift+Q'',
+   ''UniDataCajaFormasPago.TdmCajaFormasPago'',
+   5)
+ON DUPLICATE KEY UPDATE
+  CAPTION_WINF      = VALUES(CAPTION_WINF),
+  MENUITEM_WINF     = VALUES(MENUITEM_WINF),
+  UNITF_WINF        = VALUES(UNITF_WINF),
+  SHORTCUT_WINF     = VALUES(SHORTCUT_WINF),
+  DATAMODULE_WINF   = VALUES(DATAMODULE_WINF),
+  NUM_VENTANAS_WINF = VALUES(NUM_VENTANAS_WINF);
+', '2026-05-21 07:52:46', '2026-05-21 07:52:46', 'Administrador', 'Administrador');
+-- 33 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -9076,7 +9110,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-20 22:51:56', '2026-05-20 22:51:56', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-21 08:02:38', '2026-05-21 08:02:38', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -16626,6 +16660,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 5),
   ('AtributosBasicos', 'Atributos básicos', 'mnuAtributosBasicos', 'inMtoAtributosBasicos.TfrmMtoAtributosBasicos', 'Ctrl+Alt+B', 'UniDataAtributosBasicos.TdmAtributosBasicos', 5),
   ('AtributosConjuntos', 'Colecciones de Atributos', 'mnuAtributosConjuntos', 'inMtoAtributosConjuntos.TfrmMtoAtributosConjuntos', 'Ctrl+Alt+S', 'UniDataAtributosConjuntos.TdmAtributosConjuntos', 5),
+  ('CajaFormasPago', 'Formas de Pago Caja', 'FormasdePagoCaja1', 'inMtoCajaFormasPago.TfrmMtoCajaFormasPago', 'Ctrl+Shift+Q', 'UniDataCajaFormasPago.TdmCajaFormasPago', 5),
   ('CajaOperacionesHist', 'Histórico de Operaciones de Caja', 'mnuCajaOperacionesHist', 'inMtoCajaOperacionesHist.TfrmMtoCajaOperacionesHist', 'Ctrl+Shift+O', 'UniDataCajaOperacionesHist.TdmCajaOperacionesHist', 5),
   ('CajaPagosHist', 'Histórico de Pagos de Caja', 'mnuCajaPagosHist', 'inMtoCajaPagosHist.TfrmMtoCajaPagosHist', 'Ctrl+Shift+P', 'UniDataCajaPagosHist.TdmCajaPagosHist', 5),
   ('CajaValesHist', 'Histórico de Vales', 'mnuCajaValesHist', 'inMtoCajaValesHist.TfrmMtoCajaValesHist', 'Ctrl+Shift+V', 'UniDataCajaValesHist.TdmCajaValesHist', 5),
@@ -16656,7 +16691,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 5),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 5),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 5);
--- 36 registros exportados
+-- 37 registros exportados
 
 
 -- ========================================
@@ -20994,4 +21029,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 20/05/2026 22:52:20
+-- Backup completado: 21/05/2026 8:02:50

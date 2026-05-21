@@ -215,6 +215,8 @@ implementation
 
 {$R *.dfm}
 
+uses inLibGlobalVar;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 // =============================================================================
@@ -289,7 +291,8 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
-                           dteFechaDesde.Date, dteFechaHasta.Date, 'DEBUG');
+                           dteFechaDesde.Date, dteFechaHasta.Date,
+                           oNomImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;
