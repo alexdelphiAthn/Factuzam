@@ -101,6 +101,7 @@ type
     procedure mnuCajaPagosHistClick(Sender: TObject);
     procedure mnuCajaValesHistClick(Sender: TObject);
     procedure mnuCajaOperacionesHistClick(Sender: TObject);
+    procedure FormasdePagoCaja1Click(Sender: TObject);
     procedure mnuFacturasSimplifClick(Sender: TObject);
     procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
@@ -1054,6 +1055,12 @@ procedure TfrmMtoPrincipal.mnuCajaPagosHistClick(Sender: TObject);
 begin
   if (mnuCajaPagosHist.Visible) then
     ShowMto(Self, 'CajaPagosHist');
+end;
+
+procedure TfrmMtoPrincipal.FormasdePagoCaja1Click(Sender: TObject);
+begin
+  if (FormasdePagoCaja1.Visible) then
+    ShowMto(Self, 'CajaFormasPago');
 end;
 
 procedure TfrmMtoPrincipal.mnuCajaValesHistClick(Sender: TObject);
