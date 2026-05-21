@@ -5,9 +5,9 @@
   Logica auxiliar para Sesiones de Compra: resolucion de codigos de familia,
   calculo de PVP propuesto (coste x margen / 100 - ajuste), etc.
 
-  El Mto que la usa actualmente es inMtoPruebaSesionGrid (patron grid
-  inline con tallas pivotadas). El antiguo inMtoComprasSesiones (matriz
-  separada) fue desechado; quedan los helpers utiles del lib.
+  El Mto que la usa es inMtoComprasSesiones (patron grid inline con
+  tallas pivotadas). La variante previa con matriz separada fue
+  desechada; quedan los helpers utiles del lib.
 
   Inspirada en inLibArticulosVariaciones pero adaptada a la dimensionalidad
   multidocumento: cada línea de la sesión tiene su propia variación, sus
@@ -156,10 +156,63 @@ function ResolverCodigoFamilia(AConn: TUniConnection;
                                 const ACodigoTecleado, AUsuario: string;
                                 out ACodigoGenerado: string): Boolean;
 
+// ---------------------------------------------------------------------------
+// Reutilizacion de articulos ya existentes en una sesion (ACCION=REUSAR)
+// ---------------------------------------------------------------------------
+type
+  TResolverDuplicadoSesion = record
+    Encontrado          : Boolean;
+    Origen              : string;   // 'ART' = match CODIGO_ART_ART exacto,
+                                    // 'REF' = match REF_PROVEEDOR_AP del prv
+    CodigoArt           : string;
+    DescripcionArt      : string;
+    CodigoFam           : string;
+    NombreFam           : string;
+    IdAcPivot           : Integer;
+    IdVaPivot           : string;
+    IdAcFila            : Integer;
+    IdVaFila            : string;
+    TipoVariacion       : string;
+    EsVariacion         : Boolean;
+    EsTrazable          : Boolean;
+    TipoArt             : string;
+    TipoIva             : string;
+    TipoCantidad        : string;
+    UltimoCoste         : Double;
+    RefProveedor        : string;
+  end;
+
+// Busca un articulo existente que case con lo que el usuario teclea, por
+// dos vias:
+//   1. CODIGO_ART_ART exacto (cualquier proveedor)
+//   2. REF_PROVEEDOR_AP exacto en fza_articulos_proveedores para
+//      ACodigoProveedor (proveedor de la cabecera de la sesion)
+// La preferencia es CODIGO_ART > REF_PROVEEDOR. Si ACodigoProveedor esta
+// vacio, solo se intenta por CODIGO_ART.
+function ResolverDuplicadoSesion(AConn: TUniConnection;
+                                  const ACodigoBuscado,
+                                        ACodigoProveedor: string)
+                                  : TResolverDuplicadoSesion;
+
+// Aplica el resultado de ResolverDuplicadoSesion a la linea de sesion
+// activa (debe estar en dsEdit o dsInsert):
+//   - ACCION_DUPLICADO_SESLIN = 'REUSAR'
+//   - CODIGO_ART_REUSAR_SESLIN / CODIGO_ART_TENTATIVO_SESLIN = CodigoArt
+//   - DESCRIPCION_SESLIN, CODIGO_FAM_SESLIN, ID_AC_PIVOT_SESLIN,
+//     ID_VA_PIVOT_SESLIN, ID_AC_FILA_SESLIN, ID_VA_FILA_SESLIN,
+//     TIPO_LINEA_SESLIN, TIPO_ART_SESLIN, ESTRAZABLE_SESLIN,
+//     TIPO_IVA_SESLIN, TIPO_CANTIDAD_SESLIN, CODIGO_VAR_SESLIN,
+//     PRECIO_COMPRA_SESLIN (si hay UltimoCoste), REF_PRV_SESLIN
+//     (si el origen NO es REF y hay RefProveedor del proveedor de la
+//     cabecera).
+procedure AplicarDuplicadoEnLinea(ADM: TdmComprasSesiones;
+                                   const AResul: TResolverDuplicadoSesion);
+
 implementation
 
 uses
   System.Math,
+  System.StrUtils,
   inLibGlobalVar;
 
 const
@@ -1138,6 +1191,228 @@ begin
   finally
     FreeAndNil(q);
   end;
+end;
+
+// ---------------------------------------------------------------------------
+// Reutilizacion de articulos ya existentes (ACCION_DUPLICADO=REUSAR)
+// ---------------------------------------------------------------------------
+
+function ResolverDuplicadoSesion(AConn: TUniConnection;
+                                  const ACodigoBuscado,
+                                        ACodigoProveedor: string)
+                                  : TResolverDuplicadoSesion;
+var
+  q     : TUniQuery;
+  sCod  : string;
+  sPrv  : string;
+begin
+  // El registro empieza a cero (Encontrado=False).
+  Result := Default(TResolverDuplicadoSesion);
+  sCod := Trim(ACodigoBuscado);
+  sPrv := Trim(ACodigoProveedor);
+  if sCod = '' then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    // 1. Match exacto por CODIGO_ART_ART. Trae todos los campos que
+    //    necesitamos para inicializar la linea.
+    q.SQL.Text :=
+      'SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART, a.CODIGO_FAM_ART, ' +
+      '       a.TIPO_ART, a.TIPO_IVA_ART, a.TIPO_CANTIDAD_ART, ' +
+      '       a.ESVARIACION_ART, a.ESTRAZABLE_ART, ' +
+      '       a.TIPO_VARIACION_ART, ' +
+      '       f.NOMBRE_FAM_FAM, ' +
+      '       (SELECT aca.ID_AC_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA <> ''CO'' ' +
+      '          ORDER BY aca.ID_VA_ACA LIMIT 1) AS ID_AC_PIVOT, ' +
+      '       (SELECT aca.ID_VA_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA <> ''CO'' ' +
+      '          ORDER BY aca.ID_VA_ACA LIMIT 1) AS ID_VA_PIVOT, ' +
+      '       (SELECT aca.ID_AC_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA  = ''CO'' LIMIT 1) AS ID_AC_FILA, ' +
+      '       (SELECT aca.ID_VA_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA  = ''CO'' LIMIT 1) AS ID_VA_FILA, ' +
+      '       (SELECT ap.PRECIO_ULT_COMPRA_AP ' +
+      '          FROM fza_articulos_proveedores ap ' +
+      '         WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART ' +
+      '           AND (:prv = '''' OR ap.CODIGO_PRV_AP = :prv) ' +
+      '         ORDER BY (ap.CODIGO_PRV_AP = :prv) DESC, ' +
+      '                  ap.ESPROVEEDORPRINCIPAL_AP DESC LIMIT 1) ' +
+      '         AS PRECIO_ULT_COMPRA, ' +
+      '       (SELECT ap.REF_PROVEEDOR_AP ' +
+      '          FROM fza_articulos_proveedores ap ' +
+      '         WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART ' +
+      '           AND (:prv = '''' OR ap.CODIGO_PRV_AP = :prv) ' +
+      '         ORDER BY (ap.CODIGO_PRV_AP = :prv) DESC, ' +
+      '                  ap.ESPROVEEDORPRINCIPAL_AP DESC LIMIT 1) ' +
+      '         AS REF_PROVEEDOR ' +
+      '  FROM fza_articulos a ' +
+      '  LEFT JOIN fza_articulos_familias f ' +
+      '         ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART ' +
+      ' WHERE a.CODIGO_ART_ART = :art ' +
+      '   AND a.ESACTIVO_ART = ''S''';
+    q.ParamByName('art').AsString := sCod;
+    q.ParamByName('prv').AsString := sPrv;
+    q.Open;
+    if not q.IsEmpty then
+    begin
+      Result.Encontrado     := True;
+      Result.Origen         := 'ART';
+      Result.CodigoArt      := q.FieldByName('CODIGO_ART_ART').AsString;
+      Result.DescripcionArt := q.FieldByName('DESCRIPCION_ART').AsString;
+      Result.CodigoFam      := q.FieldByName('CODIGO_FAM_ART').AsString;
+      Result.NombreFam      := q.FieldByName('NOMBRE_FAM_FAM').AsString;
+      Result.IdAcPivot      := q.FieldByName('ID_AC_PIVOT').AsInteger;
+      Result.IdVaPivot      := q.FieldByName('ID_VA_PIVOT').AsString;
+      Result.IdAcFila       := q.FieldByName('ID_AC_FILA').AsInteger;
+      Result.IdVaFila       := q.FieldByName('ID_VA_FILA').AsString;
+      Result.TipoVariacion  := q.FieldByName('TIPO_VARIACION_ART').AsString;
+      Result.EsVariacion    :=
+                          q.FieldByName('ESVARIACION_ART').AsString = 'S';
+      Result.EsTrazable     :=
+                          q.FieldByName('ESTRAZABLE_ART').AsString = 'S';
+      Result.TipoArt        := q.FieldByName('TIPO_ART').AsString;
+      Result.TipoIva        := q.FieldByName('TIPO_IVA_ART').AsString;
+      Result.TipoCantidad   := q.FieldByName('TIPO_CANTIDAD_ART').AsString;
+      Result.UltimoCoste    := q.FieldByName('PRECIO_ULT_COMPRA').AsFloat;
+      Result.RefProveedor   := q.FieldByName('REF_PROVEEDOR').AsString;
+      Exit;
+    end;
+    q.Close;
+
+    if sPrv = '' then Exit;
+
+    // 2. Match por REF_PROVEEDOR_AP del proveedor de la cabecera. Si hay
+    //    multiples articulos con la misma referencia para el mismo
+    //    proveedor (no deberia, pero tampoco esta forzado por PK),
+    //    tomamos el principal o el primero por orden alfabetico.
+    q.SQL.Text :=
+      'SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART, a.CODIGO_FAM_ART, ' +
+      '       a.TIPO_ART, a.TIPO_IVA_ART, a.TIPO_CANTIDAD_ART, ' +
+      '       a.ESVARIACION_ART, a.ESTRAZABLE_ART, ' +
+      '       a.TIPO_VARIACION_ART, ' +
+      '       f.NOMBRE_FAM_FAM, ' +
+      '       ap.PRECIO_ULT_COMPRA_AP AS PRECIO_ULT_COMPRA, ' +
+      '       ap.REF_PROVEEDOR_AP    AS REF_PROVEEDOR, ' +
+      '       (SELECT aca.ID_AC_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA <> ''CO'' ' +
+      '          ORDER BY aca.ID_VA_ACA LIMIT 1) AS ID_AC_PIVOT, ' +
+      '       (SELECT aca.ID_VA_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA <> ''CO'' ' +
+      '          ORDER BY aca.ID_VA_ACA LIMIT 1) AS ID_VA_PIVOT, ' +
+      '       (SELECT aca.ID_AC_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA  = ''CO'' LIMIT 1) AS ID_AC_FILA, ' +
+      '       (SELECT aca.ID_VA_ACA FROM fza_articulos_conjuntos_asign aca ' +
+      '          WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART ' +
+      '            AND aca.ID_VA_ACA  = ''CO'' LIMIT 1) AS ID_VA_FILA ' +
+      '  FROM fza_articulos_proveedores ap ' +
+      '  JOIN fza_articulos a ON a.CODIGO_ART_ART = ap.CODIGO_ART_AP ' +
+      '                       AND a.ESACTIVO_ART = ''S'' ' +
+      '  LEFT JOIN fza_articulos_familias f ' +
+      '         ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART ' +
+      ' WHERE ap.CODIGO_PRV_AP    = :prv ' +
+      '   AND ap.REF_PROVEEDOR_AP = :ref ' +
+      ' ORDER BY ap.ESPROVEEDORPRINCIPAL_AP DESC, a.CODIGO_ART_ART ' +
+      ' LIMIT 1';
+    q.ParamByName('prv').AsString := sPrv;
+    q.ParamByName('ref').AsString := sCod;
+    q.Open;
+    if q.IsEmpty then Exit;
+
+    Result.Encontrado     := True;
+    Result.Origen         := 'REF';
+    Result.CodigoArt      := q.FieldByName('CODIGO_ART_ART').AsString;
+    Result.DescripcionArt := q.FieldByName('DESCRIPCION_ART').AsString;
+    Result.CodigoFam      := q.FieldByName('CODIGO_FAM_ART').AsString;
+    Result.NombreFam      := q.FieldByName('NOMBRE_FAM_FAM').AsString;
+    Result.IdAcPivot      := q.FieldByName('ID_AC_PIVOT').AsInteger;
+    Result.IdVaPivot      := q.FieldByName('ID_VA_PIVOT').AsString;
+    Result.IdAcFila       := q.FieldByName('ID_AC_FILA').AsInteger;
+    Result.IdVaFila       := q.FieldByName('ID_VA_FILA').AsString;
+    Result.TipoVariacion  := q.FieldByName('TIPO_VARIACION_ART').AsString;
+    Result.EsVariacion    :=
+                        q.FieldByName('ESVARIACION_ART').AsString = 'S';
+    Result.EsTrazable     :=
+                        q.FieldByName('ESTRAZABLE_ART').AsString = 'S';
+    Result.TipoArt        := q.FieldByName('TIPO_ART').AsString;
+    Result.TipoIva        := q.FieldByName('TIPO_IVA_ART').AsString;
+    Result.TipoCantidad   := q.FieldByName('TIPO_CANTIDAD_ART').AsString;
+    Result.UltimoCoste    := q.FieldByName('PRECIO_ULT_COMPRA').AsFloat;
+    Result.RefProveedor   := q.FieldByName('REF_PROVEEDOR').AsString;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure AplicarDuplicadoEnLinea(ADM: TdmComprasSesiones;
+                                   const AResul: TResolverDuplicadoSesion);
+var
+  ds: TDataSet;
+  sTipoLinea: string;
+begin
+  if not AResul.Encontrado then Exit;
+  if ADM = nil then Exit;
+  ds := ADM.unqrySesionLin;
+  if ds = nil then Exit;
+  if ds.IsEmpty then Exit;
+  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+
+  // Marca REUSAR + codigo del articulo a reutilizar.
+  ds.FieldByName('ACCION_DUPLICADO_SESLIN').AsString  := 'REUSAR';
+  ds.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString := AResul.CodigoArt;
+  ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := AResul.CodigoArt;
+
+  // Datos del articulo. No machacamos descripcion si el usuario ya
+  // tecleo algo (>0 caracteres distinto) — pero al ser REUSAR del
+  // mismo articulo, la descripcion oficial es la del maestro: la
+  // sobrescribimos siempre.
+  ds.FieldByName('DESCRIPCION_SESLIN').AsString := AResul.DescripcionArt;
+  if AResul.CodigoFam <> '' then
+    ds.FieldByName('CODIGO_FAM_SESLIN').AsString := AResul.CodigoFam;
+  if AResul.TipoArt <> '' then
+    ds.FieldByName('TIPO_ART_SESLIN').AsString := AResul.TipoArt;
+  if AResul.TipoIva <> '' then
+    ds.FieldByName('TIPO_IVA_SESLIN').AsString := AResul.TipoIva;
+  if AResul.TipoCantidad <> '' then
+    ds.FieldByName('TIPO_CANTIDAD_SESLIN').AsString := AResul.TipoCantidad;
+  if AResul.TipoVariacion <> '' then
+    ds.FieldByName('CODIGO_VAR_SESLIN').AsString := AResul.TipoVariacion;
+  ds.FieldByName('ESTRAZABLE_SESLIN').AsString :=
+                                 IfThen(AResul.EsTrazable, 'S', 'N');
+
+  // TIPO_LINEA segun ESVARIACION.
+  if AResul.EsVariacion then sTipoLinea := 'MATRIZ' else sTipoLinea := 'ESCALAR';
+  ds.FieldByName('TIPO_LINEA_SESLIN').AsString := sTipoLinea;
+
+  // Ejes de variacion (pivot=tallas, fila=color).
+  if AResul.IdAcPivot > 0 then
+    ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := AResul.IdAcPivot;
+  if AResul.IdVaPivot <> '' then
+    ds.FieldByName('ID_VA_PIVOT_SESLIN').AsString := AResul.IdVaPivot;
+  if AResul.IdAcFila > 0 then
+    ds.FieldByName('ID_AC_FILA_SESLIN').AsInteger := AResul.IdAcFila;
+  if AResul.IdVaFila <> '' then
+    ds.FieldByName('ID_VA_FILA_SESLIN').AsString := AResul.IdVaFila;
+
+  // Coste sugerido = ultimo precio de compra del proveedor (si hay).
+  if AResul.UltimoCoste > 0 then
+    ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat := AResul.UltimoCoste;
+
+  // Si el match vino por CODIGO_ART y conocemos la REF del proveedor
+  // de la cabecera, rellenamos REF_PRV_SESLIN para la traza.
+  // Si el match vino por REF, el campo ya lleva lo que el usuario
+  // tecleo (y coincide con lo que hay en la BBDD).
+  if (AResul.Origen = 'ART') and (AResul.RefProveedor <> '') and
+     (Trim(ds.FieldByName('REF_PRV_SESLIN').AsString) = '') then
+    ds.FieldByName('REF_PRV_SESLIN').AsString := AResul.RefProveedor;
 end;
 
 end.

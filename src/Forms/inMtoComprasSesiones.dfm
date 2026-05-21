@@ -1,5 +1,5 @@
-inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
-  Caption = 'Prueba 01 - Sesion grid plano (crear articulos)'
+inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
+  Caption = 'Crear art'#237'culos y un pedido o un albar'#225'n'
   ClientHeight = 720
   ClientWidth = 1240
   StyleElements = [seFont, seClient, seBorder]
@@ -346,6 +346,8 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             object dbcLinRefPrv: TcxGridDBColumn
               Caption = 'Modelo prov.'
               DataBinding.FieldName = 'REF_PRV_SESLIN'
+              PropertiesClassName = 'TcxTextEditProperties'
+              Properties.OnEditValueChanged = dbcLinRefPrvPropertiesEditValueChanged
               Width = 130
             end
             object dbcLinDescripcion: TcxGridDBColumn

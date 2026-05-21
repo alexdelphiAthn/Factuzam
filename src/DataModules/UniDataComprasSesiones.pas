@@ -100,7 +100,7 @@ type
     unstrdprcValidarSesion: TUniStoredProc;
 
     // ------------------------------------------------------------------
-    // Impresion FastReport horizontal (prueba pruebas_sesiones/print)
+    // Impresion FastReport horizontal (compras_sesiones, print)
     // ------------------------------------------------------------------
     // Vista cabecera enriquecida (empresa + proveedor + totales).
     unqryCabSesionPrint:  TUniQuery;
