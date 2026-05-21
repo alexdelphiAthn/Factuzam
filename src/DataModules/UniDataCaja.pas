@@ -1411,7 +1411,9 @@ begin
           QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
           NumLineaPago,
           CodigoFP, ImporteFP,
-          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency);
+          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency,
+          '', '', 1, 0,
+          DatosCobro.MemTablePagos.FieldByName('REFERENCIA').AsString);
       end;
       DatosCobro.MemTablePagos.Next;
     end;
