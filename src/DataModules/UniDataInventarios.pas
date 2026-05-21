@@ -183,7 +183,11 @@ type
 
     procedure CargarAlmacenesPorEmpresa(const ACodigoEmpresa: string);
     procedure CargarSeriesPorEmpresa(const ACodigoEmpresa: string);
-  private
+    // Recorre cdsLineas rellenando ATTR1..ATTR5_VALOR a partir de
+    // CODIGO_UNIDAD_INVLIN (SKU). Es idempotente: si FLineasDesempaquetadas
+    // ya esta a True, sale sin hacer nada. El form lo invoca via
+    // AsegurarDesempaquetadoAtributos cuando el toggle "Ver atributos en
+    // columnas" esta activo (con barra de progreso si hay >150 lineas).
     procedure DesempaquetarAtributosDesdeSku;
   end;
 
