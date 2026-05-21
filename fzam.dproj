@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -122,10 +122,16 @@
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Locale>3082</VerInfo_Locale>
         <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
+        <VerInfo_MinorVer>15</VerInfo_MinorVer>
+        <VerInfo_Release>26</VerInfo_Release>
+        <VerInfo_Build>521</VerInfo_Build>
+        <VerInfo_PreRelease>true</VerInfo_PreRelease>
+        <VerInfo_Keys>CompanyName=Alejandro Laorden Hidalgo;FileDescription=$(MSBuildProjectName);FileVersion=1.15.26.521;InternalName=Factuzam;LegalCopyright=All Rights Reserved;LegalTrademarks=Factuzam;OriginalFilename=fzam.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.15.26;Comments=Software retail para windows</VerInfo_Keys>
+        <AppEnableRuntimeThemes>false</AppEnableRuntimeThemes>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
