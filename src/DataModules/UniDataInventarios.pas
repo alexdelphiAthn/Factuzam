@@ -122,6 +122,10 @@ type
     function ObtenerSeriePorDefecto(const AEmpresa,
                                           ATipoDoc: string): string;
     procedure GetCodigoAutoInventario;
+    // Quita Required=True de todos los persistent fields de cdsLineas. La
+    // herencia via udspLineas + poIncFieldProps hacia que el cds rechazara
+    // el Post antes de cdsLineasBeforePost.
+    procedure ForzarRequiredFalseEnCdsLineas;
   public
     // === CONFIGURACIÓN ===
     procedure SetClavesActivas(const AEmpresa,
@@ -196,6 +200,7 @@ implementation
 uses
   Vcl.Dialogs,          // MessageDlg para validación de SKU en BeforePost
   System.Diagnostics,   // TStopwatch para instrumentacion de rendimiento
+  System.StrUtils,      // IfThen(Boolean, string, string) para snapshot
   inLibUser,            // Usuario logueado
   inLibLog,             // Log.LogInfo para metricas
   inLibGlobalVar,
@@ -237,6 +242,9 @@ begin
   unqryLineas.Open;
   if cdsLineas.Active then cdsLineas.Close;
   cdsLineas.Open;
+  // El Open vuelve a inicializar Required a partir del provider
+  // (poIncFieldProps default True). Lo deshacemos.
+  ForzarRequiredFalseEnCdsLineas;
 
   // Lineas recien cargadas: los ATTR1..ATTR5_VALOR aun no estan rellenos.
   // El form decide cuando llamar a DesempaquetarAtributosDesdeSku (solo si
@@ -364,7 +372,29 @@ begin
   if not unqryFamilias.Active   then unqryFamilias.Open;
   if not unqryProveedores.Active then unqryProveedores.Open;
 
+  // Desactivamos Required en todos los persistent fields de cdsLineas. Con
+  // poIncFieldProps a True (default de udspLineas), el TClientDataSet
+  // hereda Required=True desde el esquema NOT NULL de la BBDD y rechaza
+  // el Post con "Field value required" antes incluso de llegar a
+  // cdsLineasBeforePost (que es donde damos mensajes claros y rellenamos
+  // CODIGO_UNIDAD_INVLIN si llega vacio). NewRecord, BeforePost y la BBDD
+  // siguen siendo los responsables reales de la integridad — la BBDD
+  // rechazara cualquier INSERT NULL con un error 1048 que UniDataConn
+  // ya traduce a "Hay campos obligatorios sin rellenar".
+  ForzarRequiredFalseEnCdsLineas;
+
   FUsuario := oUser;
+end;
+
+procedure TdmInventarios.ForzarRequiredFalseEnCdsLineas;
+var
+  i: Integer;
+begin
+  if cdsLineas = nil then Exit;
+  for i := 0 to cdsLineas.FieldCount - 1 do
+    cdsLineas.Fields[i].Required := False;
+  for i := 0 to cdsLineas.FieldDefs.Count - 1 do
+    cdsLineas.FieldDefs[i].Required := False;
 end;
 
 procedure TdmInventarios.SetClavesActivas(const AEmpresa, AAlmacen, ASerie,
@@ -721,10 +751,30 @@ var
   CodArticulo, CodSku, Valor, SkuRebuilt: string;
   Atribs: array[0..4] of string;
   i, NumAtr: Integer;
+  Snapshot: string;
+  F: TField;
 begin
   // Validamos antes de Post para dar un mensaje claro en lugar del cryptico
   // "Field value required" del TClientDataSet.
   if FDesempaquetando then Exit;
+  // Volcado del estado actual de los campos al log: si volvemos a ver
+  // un EDBClient 'Field value required', el log nos dice exactamente
+  // que campo iba vacio cuando el cds decidio rechazar el Post.
+  Snapshot := '';
+  for i := 0 to DataSet.FieldCount - 1 do
+  begin
+    F := DataSet.Fields[i];
+    if Snapshot <> '' then Snapshot := Snapshot + ' | ';
+    if F.IsNull then
+      Snapshot := Snapshot + F.FieldName + '=<NULL>' +
+        IfThen(F.Required, '(REQ)', '')
+    else
+      Snapshot := Snapshot + F.FieldName + '=' + F.AsString +
+        IfThen(F.Required, '(REQ)', '');
+  end;
+  inLibLog.Log.LogInfo('[cdsLineasBeforePost] state=' +
+    IntToStr(Ord(DataSet.State)) + ' | ' + Snapshot);
+
   if Trim(DataSet.FieldByName('CODIGO_ART_INVLIN').AsString) = '' then
     raise Exception.Create(
       'No se puede grabar una linea sin articulo. Selecciona un articulo o '+
