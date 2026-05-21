@@ -284,9 +284,21 @@ var
   oDBCtrl: TcxGridDBDataController;
   oGrids: TList<TcxCustomGridTableView>;
 begin
+  // El dataset puede ser TUniQuery (mantenimientos normales) o
+  // TUniStoredProc (formularios de busqueda lanzados con un SP, p.ej.
+  // F3 en caja -> BuscarArticulo -> PRC_BUSQUEDA_ARTICULOS). Si es
+  // stored proc no hay tabla origen que mostrar: usamos el nombre del
+  // SP. Antes hacia 'as TUniQuery' a secas y reventaba con EInvalidCast.
   if (DsTablaG.Dataset <> nil) then
-    lblTablaOrigen.Caption :=
-                GetTableNameFromQuery((dsTablaG.Dataset as TUNIQuery).SQL.Text);
+  begin
+    if DsTablaG.Dataset is TUniQuery then
+      lblTablaOrigen.Caption :=
+        GetTableNameFromQuery(TUniQuery(DsTablaG.Dataset).SQL.Text)
+    else if DsTablaG.Dataset is TUniStoredProc then
+      lblTablaOrigen.Caption := TUniStoredProc(DsTablaG.Dataset).StoredProcName
+    else
+      lblTablaOrigen.Caption := '';
+  end;
   oGrids := TList<TcxCustomGridTableView>.Create;
   try
     for i := 0 to Self.ComponentCount - 1 do
