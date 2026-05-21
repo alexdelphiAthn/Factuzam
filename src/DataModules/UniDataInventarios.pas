@@ -115,6 +115,10 @@ type
     FNumero: string;
     FUsuario: string;
     FDesempaquetando: Boolean;
+    // Flag idempotente: True cuando ATTR1..ATTR5_VALOR ya estan rellenos
+    // a partir del SKU para las lineas actualmente cargadas en cdsLineas.
+    // Se resetea a False cada vez que CargarLineasInventario reabre cds.
+    FLineasDesempaquetadas: Boolean;
     function ObtenerSeriePorDefecto(const AEmpresa,
                                           ATipoDoc: string): string;
     procedure GetCodigoAutoInventario;
@@ -172,6 +176,10 @@ type
     property CodigoAlmacen: string read FCodigoAlmacen;
     property Serie: string read FSerie;
     property Numero: string read FNumero;
+    // True una vez que DesempaquetarAtributosDesdeSku ha rellenado los
+    // ATTR1..ATTR5_VALOR de las lineas actuales. El form consulta este
+    // flag para no relanzar el desempaquetado si ya esta hecho.
+    property LineasDesempaquetadas: Boolean read FLineasDesempaquetadas;
 
     procedure CargarAlmacenesPorEmpresa(const ACodigoEmpresa: string);
     procedure CargarSeriesPorEmpresa(const ACodigoEmpresa: string);
@@ -226,8 +234,11 @@ begin
   if cdsLineas.Active then cdsLineas.Close;
   cdsLineas.Open;
 
-  // Volcado instantaneo de los valores de atributos a partir del SKU
-  DesempaquetarAtributosDesdeSku;
+  // Lineas recien cargadas: los ATTR1..ATTR5_VALOR aun no estan rellenos.
+  // El form decide cuando llamar a DesempaquetarAtributosDesdeSku (solo si
+  // el usuario activa "Ver atributos en columnas") para no comerse N
+  // Edit/Post en cada apertura.
+  FLineasDesempaquetadas := False;
 end;
 
 procedure TdmInventarios.DesempaquetarAtributosDesdeSku;
@@ -235,10 +246,17 @@ var
   Sku, ValorAtr: string;
   Partes: TArray<string>;
   i: Integer;
+  Bm: TBookmark;
 begin
   if (not cdsLineas.Active) or cdsLineas.IsEmpty then
     Exit;
+  // Idempotente: si ya se desempaqueto para las lineas actualmente
+  // cargadas, no relanzar el bucle. Si CargarLineasInventario recarga
+  // las lineas, resetea FLineasDesempaquetadas y volvemos a entrar.
+  if FLineasDesempaquetadas then
+    Exit;
   FDesempaquetando := True;
+  Bm := cdsLineas.GetBookmark;
   cdsLineas.DisableControls;
   try
     cdsLineas.First;
@@ -273,7 +291,11 @@ begin
       cdsLineas.Next;
     end;
     cdsLineas.MergeChangeLog;
+    FLineasDesempaquetadas := True;
   finally
+    if cdsLineas.BookmarkValid(Bm) then
+      cdsLineas.GotoBookmark(Bm);
+    cdsLineas.FreeBookmark(Bm);
     cdsLineas.EnableControls;
     FDesempaquetando := False;
   end;
@@ -1321,7 +1343,13 @@ begin
       if Result > 0 then
       begin
         cdsLineas.ApplyUpdates(0);
-        DesempaquetarAtributosDesdeSku;
+        // Las lineas nuevas no tienen ATTR1..5_VALOR rellenos. Invalidamos
+        // el flag para que el form, si tiene el toggle "Ver atributos"
+        // activo, relance DesempaquetarAtributosDesdeSku (con su barra
+        // de progreso si toca) en el siguiente FocusedRecordChanged.
+        // Si el toggle esta off no perdemos nada: las columnas SKU1..5
+        // estan ocultas.
+        FLineasDesempaquetadas := False;
       end;
     finally
       cdsLineas.EnableControls;

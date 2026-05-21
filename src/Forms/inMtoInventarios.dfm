@@ -264,7 +264,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 Left = 0
                 Top = 0
                 Width = 1130
-                Height = 50
+                Height = 80
                 Align = alTop
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -335,6 +335,21 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Caption = 'Ir a Art'#237'culo'
                   TabOrder = 6
                   OnClick = btnIraArticuloClick
+                end
+                object chkVerColumnasAtributos: TcxCheckBox
+                  Left = 7
+                  Top = 50
+                  Caption = 'Ver atributos en columnas'
+                  ParentShowHint = False
+                  Properties.OnChange = chkVerColumnasAtributosPropertiesChange
+                  ShowHint = True
+                  Hint =
+                    'Activa la construcci'#243'n de las columnas SKU1..SKU5 con los nombr' +
+                    'es de atributo del art'#237'culo. Implica recorrer todas las l'#237'neas' +
+                    ' para desempaquetar el SKU. Si hay m'#225's de 150 l'#237'neas se muestra' +
+                    ' una barra de progreso.'
+                  TabOrder = 7
+                  Width = 230
                 end
               end
               object cxgrdLineas: TcxGrid
