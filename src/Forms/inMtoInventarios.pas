@@ -676,7 +676,14 @@ begin
   // ocultamos las columnas y nos saltamos la SQL pesada de definicion de
   // atributos. Es el corto-circuito principal: por defecto OFF, lo que
   // hace que abrir un inventario sea rapido.
-  if not FMostrarColumnasAtributos then
+  // Excepcion: si el cds esta en dsInsert o dsEdit, el usuario esta
+  // editando una linea concreta y necesita los selectores SKU1..5 aunque
+  // el toggle siga off. En ese caso construimos columnas pero sin lanzar
+  // el desempaquetado masivo (los ATTRn de las lineas previas se quedan
+  // sin rellenar; no se ven porque solo importa la fila editada).
+  if (not FMostrarColumnasAtributos) and
+     (not (dmmInventarios.cdsLineas.Active and
+           (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]))) then
   begin
     FNumAtributosActual := 0;
     OcultarTodasLasColumnasSku;
@@ -768,6 +775,11 @@ begin
   if dmmInventarios = nil then Exit;
   if not dmmInventarios.cdsLineas.Active then Exit;
   if dmmInventarios.cdsLineas.IsEmpty then Exit;
+  // No tocar el cds si esta en edicion: el bucle Edit/Post sobre cada
+  // linea corromperia el estado y haria saltar
+  // "EcxInvalidDataControllerOperation: RecordIndex out of range"
+  // en el tvLineas al siguiente Append/refocus.
+  if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then Exit;
   // El propio data module corto-circuita si ya esta hecho, pero filtramos
   // tambien aqui para no entrar en el overlay si no toca.
   if dmmInventarios.LineasDesempaquetadas then Exit;
@@ -1049,16 +1061,32 @@ begin
      (not dmmInventarios.cdsLineas.Active) or
      dmmInventarios.cdsLineas.IsEmpty then
     Exit;
-  // Si el toggle esta activo y aun no se ha desempaquetado para las
-  // lineas actuales (puede haber pasado un AfterScroll que recargo
-  // cdsLineas tras un cambio de cabecera), lo ejecutamos ahora antes
-  // de pintar las columnas con sus ATTR1..ATTR5_VALOR.
-  if FMostrarColumnasAtributos and
-     (not dmmInventarios.LineasDesempaquetadas) then
-    AsegurarDesempaquetadoAtributos;
+
   ArtPadre :=
     dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
-  ActualizarColumnasDinamicas(ArtPadre);
+
+  // PREVENCION DEL ERROR FATAL DEL CXGRID:
+  // DevExpress lanza "RecordIndex out of range" si modificamos la
+  // visibilidad de las columnas (BeginUpdate/EndUpdate sobre el view) o
+  // iteramos el dataset (First/Next) durante el OnFocusedRecordChanged,
+  // porque el grid esta calculando indices internos en ese instante.
+  // Posponemos las dos operaciones a la cola del main thread con
+  // TThread.ForceQueue para que se ejecuten justo cuando el grid ya ha
+  // terminado de cambiar de fila.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      // Salvaguarda por si el form se cierra antes de que el queue corra.
+      if (Self = nil) or (csDestroying in ComponentState) then Exit;
+      if (dmmInventarios = nil) or (not dmmInventarios.cdsLineas.Active) then
+        Exit;
+
+      if FMostrarColumnasAtributos and
+         (not dmmInventarios.LineasDesempaquetadas) then
+        AsegurarDesempaquetadoAtributos;
+
+      ActualizarColumnasDinamicas(ArtPadre);
+    end);
 end;
 
 
@@ -1605,28 +1633,31 @@ procedure TfrmMtoInventarios.btnAnadirLineaClick(Sender: TObject);
 begin
   if not PuedeEditar then Exit;
 
-  // Para editar atributos hace falta tener visibles las columnas SKU1..5.
-  // Si el toggle estaba off (modo "carga rapida"), lo activamos ahora.
-  // chkVerColumnasAtributosPropertiesChange se encarga del desempaquetado
-  // con barra de progreso si hay >150 lineas.
-  if (not FMostrarColumnasAtributos) and Assigned(chkVerColumnasAtributos) then
-    chkVerColumnasAtributos.Checked := True;
-
+  // 1. Resolver el estado actual de edicion ANTES de tocar variables o
+  // atributos. Si la linea actual es un placeholder sin articulo,
+  // cancelamos para no arrastrarla. Hacer esto primero deja el cds en
+  // estado browse, lo que vuelve seguro recorrerlo en el siguiente paso.
   if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
   begin
-    // Si la línea actual no tiene artículo, posteala dispara
-    // cdsLineasBeforePost
-    // y aborta con excepción. Como el usuario está pidiendo otra línea,
-    // descartamos el placeholder vacío en vez de fallar.
     if Trim(dmmInventarios.cdsLineas.FieldByName(
                                 'CODIGO_ART_INVLIN').AsString) = '' then
       dmmInventarios.cdsLineas.Cancel
     else
       dmmInventarios.cdsLineas.Post;
   end;
+
+  // 2. Ahora es seguro activar las columnas dinamicas. Esto puede disparar
+  // el desempaquetado y recorrer el dataset sin colisionar con un Insert
+  // pendiente (que dejaria el tvLineas con FocusedRecordIndex invalido y
+  // haria saltar EcxInvalidDataControllerOperation 'RecordIndex out of
+  // range' en el siguiente Append).
+  if (not FMostrarColumnasAtributos) and Assigned(chkVerColumnasAtributos) then
+    chkVerColumnasAtributos.Checked := True;
+
+  // 3. Anadir la nueva linea
   dmmInventarios.cdsLineas.Append;
 
-  // Foco en la columna unificada (SKU/Articulo)
+  // 4. Foco en la columna unificada (SKU/Articulo)
   tvLineas.Controller.FocusedColumn := tvLineasUNIDAD;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
