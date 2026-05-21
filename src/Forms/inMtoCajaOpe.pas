@@ -829,30 +829,58 @@ end;
 
 function TfrmMtoOpeCaja.BuscarArticulo: String;
 begin
-  var unstrdprcCon := TUniStoredProc.Create(nil);
+  // Popup de busqueda de articulos lanzado desde F3 en caja. Antes
+  // llamabamos a PRC_BUSQUEDA_ARTICULOS (TUniStoredProc); ahora atacamos
+  // vi_art_busquedas directamente como TUniQuery parametrizado por
+  // tarifa y fecha (mismo criterio de vigencia que el desplegable inline
+  // qryBusq). Anadimos columnas Temporada (vi LEFT JOIN
+  // fza_articulos_propiedades + fza_propiedades_valores con
+  // CODIGO_PROP_ARTPROP = 'TEMPORADA') y Proveedor (RAZON_SOCIAL_PROVEEDOR
+  // ya en la vista).
+  var unqryBusq := TUniQuery.Create(nil);
   try
-    unstrdprcCon.Connection := oConn;
-    unstrdprcCon.StoredProcName := 'PRC_BUSQUEDA_ARTICULOS';
-    unstrdprcCon.PrepareSQL;
+    unqryBusq.Connection := oConn;
+    unqryBusq.SQL.Text :=
+      'SELECT'                                                      + sLineBreak +
+      '    v.CODIGO_ART_ART,'                                       + sLineBreak +
+      '    v.DESCRIPCION_ART,'                                      + sLineBreak +
+      '    v.DESCRIPCION_FAM,'                                      + sLineBreak +
+      '    pv.PV                       AS TEMPORADA,'               + sLineBreak +
+      '    v.RAZON_SOCIAL_PROVEEDOR,'                               + sLineBreak +
+      '    v.CODIGO_TAR_ARTTAR,'                                    + sLineBreak +
+      '    v.NOMBRE_TAR_TAR,'                                       + sLineBreak +
+      '    v.PRECIO_FINAL_ARTTAR,'                                  + sLineBreak +
+      '    v.FECHA_DESDE_ARTTAR,'                                   + sLineBreak +
+      '    v.FECHA_HASTA_ARTTAR'                                    + sLineBreak +
+      'FROM vi_art_busquedas v'                                     + sLineBreak +
+      'LEFT JOIN fza_articulos_propiedades ap'                      + sLineBreak +
+      '       ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART'              + sLineBreak +
+      '      AND ap.CODIGO_PROP_ARTPROP = ''TEMPORADA'''            + sLineBreak +
+      'LEFT JOIN fza_propiedades_valores pv'                        + sLineBreak +
+      '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'               + sLineBreak +
+      'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA'                        + sLineBreak +
+      '       OR v.CODIGO_TAR_ARTTAR IS NULL)'                      + sLineBreak +
+      '  AND (v.FECHA_DESDE_ARTTAR IS NULL'                         + sLineBreak +
+      '       OR v.FECHA_DESDE_ARTTAR <= :FECHA_TARIFA)'            + sLineBreak +
+      '  AND (v.FECHA_HASTA_ARTTAR IS NULL'                         + sLineBreak +
+      '       OR v.FECHA_HASTA_ARTTAR >= :FECHA_TARIFA)'            + sLineBreak +
+      'ORDER BY v.CODIGO_ART_ART';
 
-    unstrdprcCon.ParamByName('p_tarifa').AsString :=
+    unqryBusq.ParamByName('TARIFA').AsString :=
                                               DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    unstrdprcCon.ParamByName('p_almacen').AsString  := FCodigoAlmacen;
-    unstrdprcCon.ParamByName('p_fecha').AsDate      := FFecha;
-    unstrdprcCon.ParamByName('p_token').AsString    := '';
-    unstrdprcCon.ParamByName('p_solostock').AsInteger :=
-                       Ord(oCajaParams.GetBool('vgerBusqArtStockOnly',  False));
-    unstrdprcCon.ParamByName('p_solotarifa').AsInteger :=
-                       Ord(oCajaParams.GetBool('vgerBusqArtTarifaOnly', False));
+    unqryBusq.ParamByName('FECHA_TARIFA').AsDate :=
+                                              DatosCaja.cdsCabecera.FieldByName(
+                                                       'FECHA_FAC').AsDateTime;
+
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
-                                       unstrdprcCon,
+                                       unqryBusq,
                                        'frmMtoArtFacSearch') then
-      Result := unstrdprcCon.FieldByName('CODIGO_ART_ART').AsString
+      Result := unqryBusq.FieldByName('CODIGO_ART_ART').AsString
     else
       Result := '';
   finally
-    FreeAndNil(unstrdprcCon);
+    FreeAndNil(unqryBusq);
   end;
 end;
 
