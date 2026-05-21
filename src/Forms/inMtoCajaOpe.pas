@@ -116,6 +116,8 @@ type
     dbtvBusqINPUT_BUSQUEDA: TcxGridDBColumn;
     dbtvBusqCODIGO_ARTICULO: TcxGridDBColumn;
     dbtvBusqDESCRIPCION_ARTICULO: TcxGridDBColumn;
+    dbtvBusqTEMPORADA: TcxGridDBColumn;
+    dbtvBusqPROVEEDOR: TcxGridDBColumn;
     edtrepArticulo: TcxEditRepository;
     repSoloTexto: TcxEditRepositoryTextItem;
     repComboBox: TcxEditRepositoryExtLookupComboBoxItem;
@@ -702,6 +704,7 @@ end;
 procedure TfrmMtoOpeCaja.tmrBusqTimer(Sender: TObject);
 var
   EditActivo: TcxCustomEdit;
+  TextEdit: TcxCustomTextEdit;
   TextoBusqueda: string;
 begin
   tmrBusq.Enabled := False;
@@ -717,20 +720,33 @@ begin
       EditActivo := tvLineasOpe.Controller.EditingController.Edit;
       if EditActivo <> nil then
       begin
+        // Cuando el timer dispara, el editor activo puede no ser el de
+        // tvArticulo (el usuario pudo moverse a otra celda durante los
+        // 500ms de debounce). Solo casteamos a TcxCustomTextEdit si el
+        // editor realmente lo es; en otro caso usamos EditingValue.
+        // Esto evita el EInvalidCast cuando el editor activo no es de
+        // tipo texto (p.ej. TcxButtonEdit de columnas de atributo).
         if EditActivo is TcxCustomTextEdit then
-           TextoBusqueda := TcxCustomTextEdit(EditActivo).Text
+        begin
+          TextEdit := TcxCustomTextEdit(EditActivo);
+          if TextEdit.SelLength > 0 then
+            TextoBusqueda := Copy(TextEdit.Text, 1, TextEdit.SelStart)
+          else
+            TextoBusqueda := TextEdit.Text;
+        end
         else
-           TextoBusqueda := VarToStr(EditActivo.EditingValue);
-        if TcxCustomTextEdit(EditActivo).SelLength > 0 then
-            TextoBusqueda := Copy(TcxCustomTextEdit(EditActivo).Text, 1,
-                                  TcxCustomTextEdit(EditActivo).SelStart)
-         else
-            TextoBusqueda := TcxCustomTextEdit(EditActivo).Text;
+          TextoBusqueda := VarToStr(EditActivo.EditingValue);
         TextoBusqueda := Trim(TextoBusqueda);
         if Length(TextoBusqueda) >= 1 then
         begin
           qryBusq.Connection := oConn;
           qryBusq.Close;
+          qryBusq.ParamByName('TARIFA').AsString :=
+                                              DatosCaja.cdsCabecera.FieldByName(
+                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+          qryBusq.ParamByName('FECHA_TARIFA').AsDate :=
+                                              DatosCaja.cdsCabecera.FieldByName(
+                                                       'FECHA_FAC').AsDateTime;
           qryBusq.ParamByName('TOKEN').AsString := '%' + TextoBusqueda + '%';
           qryBusq.Open;
           dbtvBusq.DataController.DataSource := dsBusq;
@@ -912,6 +928,12 @@ begin
        DisplayValue := CodigoPadre;
        qryBusq.Connection := oConn;
        if qryBusq.Active then qryBusq.Close;
+       qryBusq.ParamByName('TARIFA').AsString :=
+                                              DatosCaja.cdsCabecera.FieldByName(
+                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+       qryBusq.ParamByName('FECHA_TARIFA').AsDate :=
+                                              DatosCaja.cdsCabecera.FieldByName(
+                                                       'FECHA_FAC').AsDateTime;
        qryBusq.ParamByName('TOKEN').AsString := CodigoPadre;
        swStep := TStopwatch.StartNew;
        qryBusq.Open;
