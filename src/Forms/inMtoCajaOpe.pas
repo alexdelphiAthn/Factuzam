@@ -134,6 +134,8 @@ type
     actCargarCta: TAction;
     actGuardarLayout: TAction;
     actAbrirArticulos: TAction;
+    pnlTotal: TPanel;
+    pnlBotones: TPanel;
     procedure actAbrirArticulosExecute(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
