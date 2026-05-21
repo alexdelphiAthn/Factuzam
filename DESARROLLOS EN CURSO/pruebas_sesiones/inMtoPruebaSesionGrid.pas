@@ -303,6 +303,13 @@ begin
   begin
     FGestorTallas.RecalcularMaxColumnas;
     FGestorTallas.CargarCantidadesTodasLineas;
+    // RecalcularMaxColumnas resetea los captions a "Talla N" generico.
+    // Sin esta llamada, al abrir el form los rotulos se quedan asi hasta
+    // que el usuario navega a una linea — la primera con foco no dispara
+    // OnFocusedRecordChanged en algunos casos (master abierto antes de
+    // cablear el hook, detail vacio, etc.). Forzamos el repintado al
+    // sistema de la linea actual aqui.
+    FGestorTallas.ActualizarCaptionsLineaActiva;
   end;
 end;
 
@@ -318,6 +325,11 @@ begin
   FGestorTallas.InvalidarCache;
   FGestorTallas.RecalcularMaxColumnas;
   FGestorTallas.CargarCantidadesTodasLineas;
+  // Igual que en CrearTablaPrincipal: RecalcularMaxColumnas deja los
+  // captions en "Talla N"; al navegar a otra sesion en el master el
+  // OnFocusedRecordChanged del detail no siempre se dispara, asi que
+  // refrescamos los rotulos al sistema de la linea activa.
+  FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
 procedure TfrmMtoPruebaSesionGrid.unqrySesionLinAfterPostHook(
