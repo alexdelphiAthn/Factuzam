@@ -373,6 +373,13 @@
         <DCCReference Include="src\Forms\inMtoCajaFaseCobro.pas">
             <Form>frmMtoCajaFaseCobro</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaFormasPago.pas">
+            <Form>frmMtoCajaFormasPago</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaFormasPago.pas">
+            <Form>dmCajaFormasPago</Form>
+            <DesignClass>TdmCajaFormasPago</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibDefaultValues.pas"/>
         <DCCReference Include="src\Lib\inLibGenBusq.pas"/>
         <DCCReference Include="src\Forms\inMtoAlmacenes.pas">
