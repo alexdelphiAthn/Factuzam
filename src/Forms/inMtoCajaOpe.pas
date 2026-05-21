@@ -23,7 +23,8 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, dxCoreGraphics, cxTextEdit,
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
-  dxScrollbarAnnotations, Data.DB, cxDBData, cxClasses, cxGridCustomTableView,
+  dxScrollbarAnnotations, Data.DB, Data.FmtBcd, Data.SqlTimSt, cxDBData,
+  cxClasses, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridLevel, cxGridCustomView, cxGrid,
   Vcl.StdCtrls, cxButtons, Datasnap.DBClient, Datasnap.Provider, UniDataCaja,
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
@@ -828,15 +829,40 @@ begin
 end;
 
 function TfrmMtoOpeCaja.BuscarArticulo: String;
+  // Helper: ajusta DisplayLabel y, si procede, DisplayFormat de un campo.
+  // El cast depende del TField concreto (TFloatField / TFMTBCDField /
+  // TDateField / TSQLTimeStampField segun como UniDAC mapea la columna).
+  procedure ConfigCampo(F: TField; const ALabel, AFormat: string);
+  begin
+    if F = nil then Exit;
+    if ALabel <> '' then
+      F.DisplayLabel := ALabel;
+    if AFormat = '' then Exit;
+    if F is TFloatField then
+      TFloatField(F).DisplayFormat := AFormat
+    else if F is TBCDField then
+      TBCDField(F).DisplayFormat := AFormat
+    else if F is TFMTBCDField then
+      TFMTBCDField(F).DisplayFormat := AFormat
+    else if F is TDateField then
+      TDateField(F).DisplayFormat := AFormat
+    else if F is TDateTimeField then
+      TDateTimeField(F).DisplayFormat := AFormat
+    else if F is TSQLTimeStampField then
+      TSQLTimeStampField(F).DisplayFormat := AFormat;
+  end;
 begin
   // Popup de busqueda de articulos lanzado desde F3 en caja. Antes
   // llamabamos a PRC_BUSQUEDA_ARTICULOS (TUniStoredProc); ahora atacamos
   // vi_art_busquedas directamente como TUniQuery parametrizado por
   // tarifa y fecha (mismo criterio de vigencia que el desplegable inline
-  // qryBusq). Anadimos columnas Temporada (vi LEFT JOIN
+  // qryBusq). Anadimos columnas Temporada (LEFT JOIN
   // fza_articulos_propiedades + fza_propiedades_valores con
   // CODIGO_PROP_ARTPROP = 'TEMPORADA') y Proveedor (RAZON_SOCIAL_PROVEEDOR
-  // ya en la vista).
+  // ya en la vista). Configuramos DisplayLabel/DisplayFormat por campo
+  // para que la grilla salga legible aunque no haya layout guardado en
+  // fza_usuarios_perfiles para frmMtoArtFacSearch; si hay layout,
+  // PonerAnchosTitulos lo sobrepone (vease inLibDevExp).
   var unqryBusq := TUniQuery.Create(nil);
   try
     unqryBusq.Connection := oConn;
@@ -872,6 +898,32 @@ begin
     unqryBusq.ParamByName('FECHA_TARIFA').AsDate :=
                                               DatosCaja.cdsCabecera.FieldByName(
                                                        'FECHA_FAC').AsDateTime;
+
+    // Abrimos aqui (en vez de dejar que lo haga EjecutarBusqueda) para
+    // tener acceso a los TField y poder fijar DisplayLabel / DisplayFormat
+    // antes de que cxGrdDBTabPrin.DataController.CreateAllItems cree las
+    // columnas en TfrmMtoSearch.CrearTablaPrincipal.
+    unqryBusq.Open;
+    ConfigCampo(unqryBusq.FindField('CODIGO_ART_ART'),
+                'Código',                '');
+    ConfigCampo(unqryBusq.FindField('DESCRIPCION_ART'),
+                'Descripción',           '');
+    ConfigCampo(unqryBusq.FindField('DESCRIPCION_FAM'),
+                'Familia',               '');
+    ConfigCampo(unqryBusq.FindField('TEMPORADA'),
+                'Temporada',             '');
+    ConfigCampo(unqryBusq.FindField('RAZON_SOCIAL_PROVEEDOR'),
+                'Proveedor',             '');
+    ConfigCampo(unqryBusq.FindField('CODIGO_TAR_ARTTAR'),
+                'Tarifa',                '');
+    ConfigCampo(unqryBusq.FindField('NOMBRE_TAR_TAR'),
+                'Nombre tarifa',         '');
+    ConfigCampo(unqryBusq.FindField('PRECIO_FINAL_ARTTAR'),
+                'Precio',                '#,##0.00 €');
+    ConfigCampo(unqryBusq.FindField('FECHA_DESDE_ARTTAR'),
+                'Desde',                 'dd/mm/yyyy');
+    ConfigCampo(unqryBusq.FindField('FECHA_HASTA_ARTTAR'),
+                'Hasta',                 'dd/mm/yyyy');
 
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
                                        unqryBusq,
