@@ -554,6 +554,21 @@ inherited dmComprasSesiones: TdmComprasSesiones
     Left = 248
     Top = 408
   end
+  object unqryTemporadas: TUniQuery
+    SQL.Strings = (
+      'SELECT ID_PV_ARTPROP, PV'
+      '  FROM fza_propiedades_valores'
+      ' WHERE ID_PROP_PV = '#39'TEMPORADA'#39
+      '   AND ESACTIVO_PV = '#39'S'#39
+      ' ORDER BY PV')
+    Left = 344
+    Top = 352
+  end
+  object dsTemporadas: TDataSource
+    DataSet = unqryTemporadas
+    Left = 344
+    Top = 408
+  end
   object unqryEmpresaSeries: TUniQuery
     SQL.Strings = (
       'SELECT EMPSER, SUBTIPO_EMPSER, CODIGO_ALM_EMPSER'

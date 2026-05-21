@@ -12,7 +12,7 @@
 {    Modal de impresion HORIZONTAL (apaisado) de una sesion de compra.         }
 {    Hereda del modal generico de impresion (TfrmPrint). Las tallas viven      }
 {    en columnas T01..T20 — el limite coincide con CANT_TALLAS_MAX del         }
-{    form de prueba inMtoPruebaSesionGrid.                                     }
+{    Mto consumidor inMtoComprasSesiones.                                      }
 {                                                                              }
 {    Datos: tres TfrxDBDataset montados en TdmComprasSesiones                  }
 {      - Sesiones      : cabecera enriquecida (empresa + proveedor + totales)  }
@@ -20,7 +20,7 @@
 {      - GuiasTallas   : leyenda con T01..T20 rotulos por sistema usado        }
 {                                                                              }
 {    Documentado en                                                            }
-{    DESARROLLOS EN CURSO/pruebas_sesiones/pruebas_sesiones.md (§15).          }
+{    DESARROLLOS EN CURSO/compras_sesiones.md (impresion horizontal).          }
 {******************************************************************************}
 unit inMtoModalImpSesion;
 

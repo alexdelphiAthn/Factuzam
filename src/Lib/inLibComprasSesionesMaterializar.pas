@@ -63,7 +63,8 @@ implementation
 uses
   inLibGlobalVar,
   inLibEAN13,
-  inLibComprasSesiones;
+  inLibComprasSesiones,
+  inLibFotos;
 
 // ---------------------------------------------------------------------------
 // Generación local de EAN13
@@ -399,6 +400,73 @@ begin
   end;
 end;
 
+// Inserta la temporada de cabecera en fza_articulos_propiedades. Si la
+// sesion no trae ID_PV_TEMPORADA_SES no hace nada. INSERT IGNORE para
+// que reusos (ACCION=REUSAR) que ya tienen TEMPORADA distinta no se
+// pisen.
+procedure InsertarTemporadaCabecera(AConn: TUniConnection;
+                                     const ACodigoArt, AUsuario: string;
+                                     AIdPvTemporada: Integer);
+var
+  q: TUniQuery;
+begin
+  if AIdPvTemporada <= 0 then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT IGNORE INTO fza_articulos_propiedades ' +
+      '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
+      '   VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA) ' +
+      'VALUES (:art, ''TEMPORADA'', :pv, NULL, NOW(), :u)';
+    q.ParamByName('art').AsString := ACodigoArt;
+    q.ParamByName('pv').AsInteger := AIdPvTemporada;
+    q.ParamByName('u').AsString   := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Crea (o actualiza) la fila de fza_articulos_tarifas para la tarifa de
+// venta sugerida en la cabecera de la sesion, usando PRECIO_VENTA_SESLIN
+// de la linea como PRECIO_FINAL_ARTTAR. No crea precios por SKU; usa el
+// patron "padre" (CODIGO_UNIDAD_ARTTAR='') que el resto del sistema
+// hereda al SKU si no hay override.
+procedure UpsertArticuloTarifa(AConn: TUniConnection;
+                               const ACodigoArt, ACodigoTar,
+                                     AUsuario: string;
+                               APrecioVenta: Double);
+var
+  q: TUniQuery;
+begin
+  if (Trim(ACodigoTar) = '') or (APrecioVenta <= 0) then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_articulos_tarifas ' +
+      '  (CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
+      '   ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
+      '   FECHA_DESDE_ARTTAR, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (:art, '''', :tar, ''S'', :pre, :pre, CURDATE(), ' +
+      '        NOW(), :u, NOW(), :u) ' +
+      'ON DUPLICATE KEY UPDATE ' +
+      '  PRECIO_SALIDA_ARTTAR = :pre, ' +
+      '  PRECIO_FINAL_ARTTAR  = :pre, ' +
+      '  ESACTIVO_ARTTAR      = ''S'', ' +
+      '  INSTANTE_MODIF       = NOW(), USUARIO_MODIF = :u';
+    q.ParamByName('art').AsString := ACodigoArt;
+    q.ParamByName('tar').AsString := ACodigoTar;
+    q.ParamByName('pre').AsFloat  := APrecioVenta;
+    q.ParamByName('u').AsString   := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -409,15 +477,18 @@ function MaterializarSesion(ADM: TdmComprasSesiones;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
                                 AMsgError: string): Boolean;
 var
-  conn      : TUniConnection;
+  conn       : TUniConnection;
   sSerieSes, sNumSes, sPrefijoEAN: string;
-  sCodigoPrv: string;
-  qLin      : TUniQuery;
-  sError    : string;
-  sCodigoArt: string;
-  iLin      : Integer;
-  rPrecio   : Double;
-  bTxOwned  : Boolean;
+  sCodigoPrv : string;
+  sCodigoTar : string;
+  iIdPvTemporada: Integer;
+  qLin       : TUniQuery;
+  sError     : string;
+  sCodigoArt : string;
+  iLin       : Integer;
+  rPrecio    : Double;
+  rPrecioVta : Double;
+  bTxOwned   : Boolean;
 begin
   Result    := False;
   ASeriePed := ''; ANumPed := '';
@@ -432,10 +503,15 @@ begin
   end;
 
   conn := inLibGlobalVar.oConn;
-  sSerieSes   := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-  sNumSes     := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  sCodigoPrv  := ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString;
-  sPrefijoEAN := ADM.unqryTablaG.FieldByName('PREFIJO_EAN_SES').AsString;
+  sSerieSes      := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumSes        := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  sCodigoPrv     := ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString;
+  sPrefijoEAN    := ADM.unqryTablaG.FieldByName('PREFIJO_EAN_SES').AsString;
+  sCodigoTar     := ADM.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString;
+  iIdPvTemporada := 0;
+  if not ADM.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').IsNull then
+    iIdPvTemporada :=
+      ADM.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').AsInteger;
 
   bTxOwned := not conn.InTransaction;
   if bTxOwned then conn.StartTransaction;
@@ -486,10 +562,31 @@ begin
                                  sCodigoArt,
                                  AUsuario);
 
+        // Temporada de cabecera -> propiedad TEMPORADA del articulo.
+        // Aplica tanto a articulos nuevos como a REUSAR (INSERT IGNORE
+        // respeta el valor preexistente si ya hay fila).
+        InsertarTemporadaCabecera(conn, sCodigoArt, AUsuario,
+                                  iIdPvTemporada);
+
         if qLin.FieldByName('TIPO_LINEA_SESLIN').AsString <> 'SERVICIO' then
+        begin
           UpsertArticuloProveedor(conn, sCodigoArt, sCodigoPrv,
             qLin.FieldByName('REF_PRV_SESLIN').AsString,
             AUsuario, rPrecio);
+
+          // Tarifa de venta de cabecera con el PRECIO_VENTA_SESLIN de la
+          // linea. UPSERT — si ya existe la rifa para este articulo, se
+          // actualiza el precio final con el sugerido por la sesion.
+          rPrecioVta := qLin.FieldByName('PRECIO_VENTA_SESLIN').AsFloat;
+          UpsertArticuloTarifa(conn, sCodigoArt, sCodigoTar,
+            AUsuario, rPrecioVta);
+        end;
+
+        // Migrar fotos tomadas en muestrario (fza_compras_sesiones_fotos)
+        // a fza_articulos_fotos con el codigo final del articulo. Renombra
+        // los PNG 300/600/real y borra el rastro de sesion.
+        inLibFotos.oFotos.MigrarFotosSesion(sSerieSes, sNumSes, iLin,
+                                            sCodigoArt, AUsuario);
 
         qLin.Next;
       end;
