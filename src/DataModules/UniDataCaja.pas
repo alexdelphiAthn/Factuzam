@@ -2241,6 +2241,7 @@ begin
     '  SERIE_FAC_ABONO_FAC, NUMERO_FAC_ABONO_FAC,' +
     '  CODIGO_ALM_FAC, CODIGO_CAJA_FAC,' +
     '  CODIGO_CAJERO_FAC, NUMERO_OPERACION_FAC,' +
+    '  ESCREARARTICULOS_FAC, ESDESCRIPCIONES_AMP_FAC, ESFECHADEENTREGA_FAC,' +
     '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
     'VALUES (' +
     '  :SERIE, :NRO, :FECHA,' +
@@ -2272,6 +2273,7 @@ begin
     '  NULLIF(:SERIEABO, ''''), NULLIF(:NROABO, ''''),' +
     '  NULLIF(:ALM,  ''''), NULLIF(:CAJA,  ''''),' +
     '  NULLIF(:CAJERO, ''''), NULLIF(:NUMOP, ''''),' +
+    '  ''N'', ''N'', ''N'',' +
     '  :USUARIO, :USUARIO, NOW())';
 
   // — identificación —
