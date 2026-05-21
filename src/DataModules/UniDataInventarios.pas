@@ -456,6 +456,17 @@ end;
 
 procedure TdmInventarios.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
+  // Validacion explicita: la serie es parte de la PK de las lineas y
+  // varchar(20) NOT NULL en BBDD. Si llega vacia (porque la empresa no
+  // tiene una serie por defecto en fza_empresas_series para tipo IN),
+  // la cabecera se grabaria con SERIE_INV='' y las lineas heredarian
+  // ese vacio, que despues hace reventar el TClientDataSet en Post con
+  // un cryptico "Field value required" desde DSBase / MidasLib.
+  if Trim(DataSet.FieldByName('SERIE_INV').AsString) = '' then
+    raise Exception.Create(
+      'No se puede grabar el inventario sin una serie. Selecciona una ' +
+      'serie en la cabecera (campo SERIE), o configura una serie por ' +
+      'defecto de tipo IN para la empresa en fza_empresas_series.');
   // Forzamos campos de auditoría
   if DataSet.State = dsInsert then
   begin
@@ -782,6 +793,28 @@ begin
   end;
   inLibLog.Log.LogInfo('[cdsLineasBeforePost] state=' +
     IntToStr(Ord(DataSet.State)) + ' | ' + Snapshot);
+
+  // Las 4 PK del inventario (empresa, almacen, serie, numero) son
+  // varchar NOT NULL. DSBase / MidasLib trata el string vacio como
+  // "valor requerido faltante" y revienta el Post con un
+  // EDBClient 'Field value required' generico antes incluso de mandar
+  // nada a la BBDD. Cazamos cada caso aqui con un mensaje claro.
+  if Trim(DataSet.FieldByName('CODIGO_EMP_INVLIN').AsString) = '' then
+    raise Exception.Create(
+      'La cabecera del inventario no tiene empresa. Selecciona una ' +
+      'empresa antes de anadir lineas.');
+  if Trim(DataSet.FieldByName('CODIGO_ALM_INVLIN').AsString) = '' then
+    raise Exception.Create(
+      'La cabecera del inventario no tiene almacen. Selecciona un ' +
+      'almacen antes de anadir lineas.');
+  if Trim(DataSet.FieldByName('SERIE_INV_INVLIN').AsString) = '' then
+    raise Exception.Create(
+      'La cabecera del inventario no tiene serie. Vuelve a la pestana ' +
+      'Cabecera, selecciona una serie y vuelve a intentar grabar la linea.');
+  if Trim(DataSet.FieldByName('NUMERO_INV_INVLIN').AsString) = '' then
+    raise Exception.Create(
+      'La cabecera del inventario no tiene numero. Graba primero la ' +
+      'cabecera para que el sistema asigne el numero.');
 
   if Trim(DataSet.FieldByName('CODIGO_ART_INVLIN').AsString) = '' then
     raise Exception.Create(
