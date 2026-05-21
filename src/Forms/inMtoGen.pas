@@ -685,11 +685,11 @@ end;
 procedure TfrmMtoGen.CrearTablaPrincipal;
 var
   sNameModule: string;
-//  swTotal, swTramo: TStopwatch;
-//  msCrearDM, msFConn, msReasignar: Int64;
+  swTotal, swTramo: TStopwatch;
+  msCrearDM, msFConn, msReasignar: Int64;
 begin
-//  swTotal := TStopwatch.StartNew;
-//  msCrearDM := 0; msFConn := 0; msReasignar := 0;
+  swTotal := TStopwatch.StartNew;
+  msCrearDM := 0; msFConn := 0; msReasignar := 0;
   tdmDataModule := nil;
   sNameModule := '';
   if Self.Owner <> nil then
@@ -698,9 +698,9 @@ begin
                                                           '.' + Self.ClassName);
   if (sNameModule <> '') then
   begin
-//    swTramo := TStopwatch.StartNew;
+    swTramo := TStopwatch.StartNew;
     tdmDataModule := CrearDataModule(sNameModule, Self);
-//    msCrearDM := swTramo.ElapsedMilliseconds;
+    msCrearDM := swTramo.ElapsedMilliseconds;
     // Conexion propia del Mto: la creamos si todavia no existe y la
     // inyectamos en todas las queries/SPs del data module recien creado.
     // El DataModule sigue arrancando con `oConn` en su DoCreate, lo cual
@@ -708,29 +708,29 @@ begin
     // el switch antes de cualquier Open real.
     if FConn = nil then
     try
-//      swTramo := TStopwatch.StartNew;
+      swTramo := TStopwatch.StartNew;
       FConn := CrearConexionPropia;
-//      msFConn := swTramo.ElapsedMilliseconds;
+      msFConn := swTramo.ElapsedMilliseconds;
     except
       on E: Exception do
       begin
-//        inliblog.Log.LogError('No se pudo crear conexion propia para ' +
-//          Self.Name + ': ' + E.Message + '. Se sigue usando oConn global.');
+        inliblog.Log.LogError('No se pudo crear conexion propia para ' +
+          Self.Name + ': ' + E.Message + '. Se sigue usando oConn global.');
         FConn := nil;
       end;
     end;
     if Assigned(FConn) then
     begin
-//      swTramo := TStopwatch.StartNew;
+      swTramo := TStopwatch.StartNew;
       (tdmDataModule as TdmBase).ReasignarConexion(FConn);
-//      msReasignar := swTramo.ElapsedMilliseconds;
+      msReasignar := swTramo.ElapsedMilliseconds;
     end;
   end;
   inherited;
-//  inLibLog.Log.LogPerf(Self.Name + '.CrearTablaPrincipal',
-//    Format('CrearDM=%d ms | FConn.Connect=%d ms | ReasignarConexion=%d ms',
-//           [msCrearDM, msFConn, msReasignar]),
-//    swTotal.ElapsedMilliseconds);
+  inLibLog.Log.LogPerf(Self.Name + '.CrearTablaPrincipal',
+    Format('CrearDM=%d ms | FConn.Connect=%d ms | ReasignarConexion=%d ms',
+           [msCrearDM, msFConn, msReasignar]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
@@ -884,7 +884,7 @@ procedure TfrmMtoGen.AbrirTablaPrincipalAsync;
 var
   dmDat: TdmBase;
   unqry: TUniQuery;
-//  sw: TStopwatch;
+  sw: TStopwatch;
   yaActiva: Boolean;
 begin
   if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
@@ -904,7 +904,7 @@ begin
   // un parpadeo "<No hay datos a mostrar>" innecesario.
   if (not yaActiva) and Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
-//  sw := TStopwatch.StartNew;
+  sw := TStopwatch.StartNew;
   EjecutarEnBackground(
     procedure
     begin
@@ -925,13 +925,13 @@ begin
       if csDestroying in ComponentState then
         Exit;
       if ErrMsg = '' then
-//        inLibLog.Log.LogPerf('Carga/async', Self.Name + ' | OK',
-//          sw.ElapsedMilliseconds)
+        inLibLog.Log.LogPerf('Carga/async', Self.Name + ' | OK',
+          sw.ElapsedMilliseconds)
       else
       begin
-//        inLibLog.Log.LogPerf('Carga/async',
-//          Self.Name + ' | error=' + ErrMsg,
-//          sw.ElapsedMilliseconds);
+        inLibLog.Log.LogPerf('Carga/async',
+          Self.Name + ' | error=' + ErrMsg,
+          sw.ElapsedMilliseconds);
         // No mostramos ShowMessage aqui — molesta si pasa al abrir
         // varios tabs en cadena. El error queda en el log.
         Exit;
@@ -971,7 +971,7 @@ procedure TfrmMtoGen.AbrirTablaPrincipalSincrono;
 var
   dmDat: TdmBase;
   unqry: TUniQuery;
-//  sw: TStopwatch;
+  sw: TStopwatch;
   CursorPrev: TCursor;
 begin
   if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
@@ -986,18 +986,21 @@ begin
   // esta sobre el form; Screen.Cursor lo cambia en toda la pantalla.
   CursorPrev := Screen.Cursor;
   Screen.Cursor := crHourGlass;
-//  sw := TStopwatch.StartNew;
+  sw := TStopwatch.StartNew;
   try
-//    try
+    try
       unqry.Open;
-//      inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
-//        sw.ElapsedMilliseconds);
-//    except
-//      on E: Exception do
-//        inLibLog.Log.LogPerf('Carga/sync',
-//          Self.Name + ' | error=' + E.Message,
-//          sw.ElapsedMilliseconds);
-//    end;
+      inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
+        sw.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf('Carga/sync',
+          Self.Name + ' | error=' + E.Message,
+          sw.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
   finally
     Screen.Cursor := CursorPrev;
   end;
@@ -1158,9 +1161,9 @@ begin
     rbBBDD.Checked := false;
     rbGrid.Checked := true;
   end;
-//  inLibLog.Log.LogPerf(Self.Name + '.FormCreate',
-//    'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
-//    swTotal.ElapsedMilliseconds);
+  inLibLog.Log.LogPerf(Self.Name + '.FormCreate',
+    'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;

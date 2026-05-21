@@ -98,7 +98,7 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils, inLibAppParam, Vcl.Printers,
+  StrUtils, inLibAppParam, inLibLog, Vcl.Printers,
             // TdxSkinController, GetRegisteredSkins
   FileCtrl, inLibPathTokens;               // SelectDirectory
 
@@ -506,6 +506,11 @@ begin
          (sUsuarioGrupo = oAll) then
       begin
         oAppParams.Recargar(oUser, oGroup);
+
+        // ── Aplicar modos de depuración al vuelo ─────────────────────
+        // Si el usuario acaba de tocar appModoDebug / appModoDebugSQL,
+        // surte efecto sin necesidad de reiniciar.
+        inLibLog.AplicarModosDepuracion;
 
         // ── Aplicar tema al vuelo si cambió ──────────────────────────
         var TemaNuevo := oAppParams.GetString('appTema');
