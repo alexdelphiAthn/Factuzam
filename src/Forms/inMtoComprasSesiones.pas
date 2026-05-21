@@ -42,7 +42,8 @@ unit inMtoComprasSesiones;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.StrUtils,
+  System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, System.UITypes, System.Actions,
   Vcl.ActnList, System.Generics.Collections,
@@ -231,7 +232,9 @@ uses
   inLibAtributosPaleta,
   inLibFotos,
   inMtoModalSelFamilia,
-  inMtoModalImpSesion;
+  inMtoModalImpSesion,
+  inMtoModalIncidencias,
+  inMtoModalCrearAlbaranSesion;
 
 const
   fIdVaColor = 'CO';
@@ -670,11 +673,19 @@ procedure TfrmMtoComprasSesiones.btnCrearClick(Sender: TObject);
 var
   bOK    : Boolean;
   sSerPed, sNumPed, sSerAlb, sNumAlb, sErr: string;
+  incidencias : TStringList;
+  frmInc      : TfrmModalIncidencias;
+  frmSet      : TfrmModalCrearAlbaranSesion;
+  iIdPvTemp   : Integer;
 begin
   inherited;
-  // Lanza la materializacion: crea articulos / SKUs / barras /
-  // proveedor / tarifa / temporada y, si la cabecera marca albaran,
-  // tambien los movimientos de almacen (entradas TIPO_DOC='AC').
+  // Flujo:
+  //   1. Postear cualquier edicion en curso.
+  //   2. ValidarSesionDetallado: si hay incidencias, mostrar modal con la
+  //      lista y abortar.
+  //   3. Modal de settings (serie / fecha / almacen / tarifa / temporada
+  //      / flags). Si Salir, abortar.
+  //   4. MaterializarSesion con los settings elegidos.
   if Dmm.unqryTablaG.IsEmpty then
   begin
     ShowMessage('No hay sesion activa.');
@@ -691,22 +702,78 @@ begin
   if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
     Dmm.unqrySesionLin.Post;
 
-  if MessageDlg('Se crearan los articulos / SKUs / codigos de barras / ' +
-                'tarifas / proveedor / fotos y, si procede, el albaran de ' +
-                'compra con sus movimientos de stock. ' + sLineBreak +
-                sLineBreak + 'Esta accion es IRREVERSIBLE. Continuar?',
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+  // ---- 2. Validador detallado ----
+  incidencias := TStringList.Create;
+  try
+    if not ValidarSesionDetallado(Dmm, incidencias) then
+    begin
+      frmInc := TfrmModalIncidencias.Create(Self);
+      try
+        frmInc.SetIncidencias(
+          'Hay incidencias que impiden materializar la sesion:', incidencias);
+        frmInc.ShowModal;
+      finally
+        // FormClose pone Action := caFree, no liberamos a mano.
+      end;
+      Exit;
+    end;
+  finally
+    FreeAndNil(incidencias);
+  end;
 
+  // ---- 3. Modal de settings ----
+  iIdPvTemp := 0;
+  if not Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').IsNull then
+    iIdPvTemp :=
+      Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').AsInteger;
+
+  frmSet := TfrmModalCrearAlbaranSesion.Create(Self);
+  try
+    frmSet.ConfigurarLookups(Dmm.dsAlmacenes, Dmm.dsTarifas,
+                              Dmm.dsTemporadas);
+    frmSet.SetDefecto(
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+      Date,
+      Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString,
+      Dmm.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString,
+      iIdPvTemp,
+      Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S',
+      // Por defecto generamos albaran si la cabecera trae almacen
+      // (escenario tipico de muestrarios).
+      (Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S')
+        or (Trim(Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString)
+            <> ''));
+    frmSet.ShowModal;
+    if not frmSet.Confirmado then Exit;
+
+    // Aplicar a la cabecera los settings elegidos para que la
+    // materializacion los vea: serie/fecha del albaran (la propia
+    // sesion en este modelo simplificado), almacen, tarifa, temporada,
+    // flags.
+    Dmm.unqryTablaG.Edit;
+    Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString := frmSet.Almacen;
+    Dmm.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString := frmSet.Tarifa;
+    if frmSet.Temporada > 0 then
+      Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').AsInteger :=
+                                                          frmSet.Temporada
+    else
+      Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').Clear;
+    Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString :=
+                            IfThen(frmSet.GenPedido, 'S', 'N');
+    Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString :=
+                            IfThen(frmSet.GenAlbaran, 'S', 'N');
+    Dmm.unqryTablaG.Post;
+  finally
+    // FormClose libera el modal
+  end;
+
+  // ---- 4. Materializar ----
   Screen.Cursor := crHourGlass;
   try
     bOK := MaterializarSesion(
       Dmm,
       Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S',
-      // Si la cabecera trae almacen, generamos albaran automaticamente
-      // aunque el flag ESGENERA_ALBARAN_SES no este marcado: el escenario
-      // del muestrario asume que se entra mercancia siempre.
-      (Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S')
-        or (Trim(Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString) <> ''),
+      Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S',
       oUser,
       sSerPed, sNumPed, sSerAlb, sNumAlb, sErr);
   finally
@@ -719,11 +786,23 @@ begin
       ShowMessage('Sesion materializada. Albaran: ' + sSerAlb + ' / ' + sNumAlb)
     else
       ShowMessage('Sesion materializada (sin albaran).');
-    // Refrescar la cabecera para que el estado nuevo (CERRADA) se vea.
     Dmm.unqryTablaG.Refresh;
   end
   else
-    ShowMessage('No se pudo materializar la sesion:' + sLineBreak + sErr);
+  begin
+    // Mostrar el error de materializacion tambien en modal de
+    // incidencias para que se vea bien aunque sea largo.
+    incidencias := TStringList.Create;
+    try
+      incidencias.Add('[MATERIALIZAR] ' + sErr);
+      frmInc := TfrmModalIncidencias.Create(Self);
+      frmInc.SetIncidencias(
+        'No se pudo materializar la sesion:', incidencias);
+      frmInc.ShowModal;
+    finally
+      FreeAndNil(incidencias);
+    end;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.btnImprimirClick(Sender: TObject);
