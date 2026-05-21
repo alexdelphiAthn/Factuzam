@@ -376,7 +376,24 @@ begin
   begin
     ChequearDuplicado(sTecla, bExiste, sDescr);
     if bExiste then
-      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'S'
+    begin
+      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'S';
+      // Si la linea no tiene accion resuelta, marcamos REUSAR por
+      // defecto apuntando al articulo existente. Esto es lo que el
+      // usuario espera en el flujo de muestrarios: tecleo el codigo
+      // (o la ref. proveedor) de un articulo que ya tengo y meto
+      // nuevo color + cantidades sin tener que arbitrar duplicados.
+      // Si el usuario hubiera querido RENOMBRAR, la accion ya estaria
+      // puesta por el flujo correspondiente y respetamos su eleccion.
+      if Trim(unqrySesionLin.FieldByName(
+                  'ACCION_DUPLICADO_SESLIN').AsString) = '' then
+      begin
+        unqrySesionLin.FieldByName('ACCION_DUPLICADO_SESLIN').AsString :=
+                                                                    'REUSAR';
+        unqrySesionLin.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString :=
+                                                                       sTecla;
+      end;
+    end
     else
       unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
   end;
