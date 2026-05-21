@@ -121,6 +121,7 @@ type
     LookAndFeelController1: TcxLookAndFeelController;
     Panel1: TPanel;
     pcPrincipal: TcxPageControl;
+    imgFondoLogo: TImage;
     pnlPPBottom: TPanel;
     cxMemo1: TcxMemo;
     jvMnMenuPrin: TJvMainMenu;
@@ -196,6 +197,7 @@ type
     // procedure AppException(Sender: TObject; E: Exception);
     function CopiaSeguridad: Boolean;
     function ContieneDDL(const ASQL: string): Boolean;
+    procedure ActualizarFondoLogo;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -342,6 +344,7 @@ begin
   EstadoTeclas := Trim(EstadoTeclas);
   if jvStatusBar1.Panels[0].Text <> EstadoTeclas then
     jvStatusBar1.Panels[0].Text := EstadoTeclas;
+  ActualizarFondoLogo;
 end;
 
 
@@ -407,7 +410,19 @@ begin
   cxMemo1.Visible     := True;
 {$ENDIF}
   AplicarTema;
+  if not Application.Icon.Empty then
+    imgFondoLogo.Picture.Icon.Assign(Application.Icon);
+  ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
+end;
+
+procedure TfrmMtoPrincipal.ActualizarFondoLogo;
+var
+  bDebeVerse: Boolean;
+begin
+  bDebeVerse := (pcPrincipal.PageCount = 0) and (not Application.Icon.Empty);
+  if (imgFondoLogo.Visible <> bDebeVerse) then
+    imgFondoLogo.Visible := bDebeVerse;
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
@@ -1095,6 +1110,7 @@ procedure TfrmMtoPrincipal.pcPrincipalChange(Sender: TObject);
 var
   ts: TcxTabSheet;
 begin
+  ActualizarFondoLogo;
   if pcPrincipal.ActivePageIndex < 0 then
   begin
     if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then

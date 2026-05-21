@@ -43,6 +43,18 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       ClientRectRight = 1122
       ClientRectTop = 2
     end
+    object imgFondoLogo: TImage
+      Left = 980
+      Top = 16
+      Width = 128
+      Height = 128
+      Anchors = [akTop, akRight]
+      Center = True
+      Proportional = True
+      Stretch = True
+      Transparent = True
+      Visible = False
+    end
     object pnlPPBottom: TPanel
       Left = 0
       Top = 459
