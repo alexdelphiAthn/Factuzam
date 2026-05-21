@@ -64,7 +64,8 @@ uses
   inLibGlobalVar,
   inLibEAN13,
   inLibComprasSesiones,
-  inLibFotos;
+  inLibFotos,
+  inLibtb;
 
 // ---------------------------------------------------------------------------
 // Generación local de EAN13
@@ -467,6 +468,210 @@ begin
   end;
 end;
 
+// Resuelve el CODIGO_UNIDAD_SKU para un articulo + ID_AV pivot
+// (talla) y opcional ID_AV fila (color), en el orden estandar
+// fza_articulos_skus + fza_atributos_sku. Devuelve '' si no se
+// encuentra (puede pasar para articulos REUSAR cuyo SKU no existe
+// todavia con ese par de atributos: en ese caso el llamante puede
+// crearlo o saltarse el movimiento).
+function ResolverCodigoSku(AConn: TUniConnection;
+                            const ACodigoArt: string;
+                            AIdAvPivot, AIdAvFila: Integer): string;
+var
+  q: TUniQuery;
+begin
+  Result := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    // SKU que tenga las 1 o 2 ID_AVs requeridas. Si solo nos pasan
+    // pivot (sin fila) el SKU candidato es el que tenga el pivot y
+    // ningun otro AV adicional.
+    if AIdAvFila > 0 then
+      q.SQL.Text :=
+        'SELECT sk.CODIGO_UNIDAD_SKU ' +
+        '  FROM fza_articulos_skus sk ' +
+        ' WHERE sk.CODIGO_ART_SKU = :art ' +
+        '   AND sk.ESACTIVO_SKU = ''S'' ' +
+        '   AND EXISTS (SELECT 1 FROM fza_atributos_sku sa ' +
+        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU ' +
+        '                  AND sa.ID_AV_SA = :pivot) ' +
+        '   AND EXISTS (SELECT 1 FROM fza_atributos_sku sa ' +
+        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU ' +
+        '                  AND sa.ID_AV_SA = :fila) ' +
+        ' LIMIT 1'
+    else
+      q.SQL.Text :=
+        'SELECT sk.CODIGO_UNIDAD_SKU ' +
+        '  FROM fza_articulos_skus sk ' +
+        ' WHERE sk.CODIGO_ART_SKU = :art ' +
+        '   AND sk.ESACTIVO_SKU = ''S'' ' +
+        '   AND EXISTS (SELECT 1 FROM fza_atributos_sku sa ' +
+        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU ' +
+        '                  AND sa.ID_AV_SA = :pivot) ' +
+        ' LIMIT 1';
+    q.ParamByName('art').AsString  := ACodigoArt;
+    q.ParamByName('pivot').AsInteger := AIdAvPivot;
+    if AIdAvFila > 0 then
+      q.ParamByName('fila').AsInteger := AIdAvFila;
+    q.Open;
+    if not q.IsEmpty then
+      Result := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Genera movimientos de entrada en almacen (TIPO_DOC_MOV='AC',
+// TIPO_MOV='E') por cada (linea, fila, pivot) con cantidad > 0 de la
+// sesion. Una sola pasada SQL que itera celdas y resuelve SKU/articulo
+// linea a linea. La cabecera de cada movimiento queda apuntando a la
+// propia sesion (SERIE_SES/NUMERO_SES) como SERIE_DOC_MOV/NUMERO_DOC_MOV
+// — todavia no tenemos cabecera de albaran de compra como entidad
+// separada (fza_albaranes_compra esta pendiente).
+procedure GenerarMovimientosAlbaran(AConn: TUniConnection;
+                                     ADM: TdmComprasSesiones;
+                                     const ASerieSes, ANumSes,
+                                           AUsuario: string);
+var
+  qC : TUniQuery;
+  sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
+  sCodigoEmp, sDescripcion, sNumeroMov, sLinea: string;
+  iIdAvPivot, iIdAvFila, iLinea: Integer;
+  rCantidad, rCoste, rTotal: Double;
+begin
+  sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+  sCodigoEmp    := ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+  if sCodigoAlmCab = '' then
+    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
+                           'para generar el albaran.');
+
+  qC := TUniQuery.Create(nil);
+  try
+    qC.Connection := AConn;
+    // Por linea + fila + pivot. Resolvemos articulo y los datos
+    // basicos en la propia consulta — el SKU se busca despues con
+    // ResolverCodigoSku ya que depende de fza_atributos_sku.
+    qC.SQL.Text :=
+      'SELECT C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
+      '       C.CANTIDAD_SESCEL, ' +
+      '       IFNULL(NULLIF(C.CODIGO_ALM_SESCEL,''''), :alm_cab) AS ALM_EFE, ' +
+      '       L.CODIGO_ART_TENTATIVO_SESLIN, L.CODIGO_ART_REUSAR_SESLIN, ' +
+      '       L.ACCION_DUPLICADO_SESLIN, L.DESCRIPCION_SESLIN, ' +
+      '       L.PRECIO_COMPRA_SESLIN, L.TIPO_LINEA_SESLIN, ' +
+      '       L.ID_VA_FILA_SESLIN ' +
+      '  FROM fza_compras_sesiones_celdas C ' +
+      '  JOIN fza_compras_sesiones_lineas L ' +
+      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
+      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
+      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
+      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
+      '   AND C.NUMERO_SES_SESCEL = :n ' +
+      '   AND C.CANTIDAD_SESCEL   > 0 ' +
+      ' ORDER BY C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL';
+    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
+    qC.ParamByName('s').AsString := ASerieSes;
+    qC.ParamByName('n').AsString := ANumSes;
+    qC.Open;
+
+    while not qC.Eof do
+    begin
+      iLinea     := qC.FieldByName('LINEA_SES_SESCEL').AsInteger;
+      iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
+      rCantidad  := qC.FieldByName('CANTIDAD_SESCEL').AsFloat;
+      sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
+      sDescripcion := qC.FieldByName('DESCRIPCION_SESLIN').AsString;
+      rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+      rTotal     := rCantidad * rCoste;
+
+      if qC.FieldByName('ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
+        sCodigoArt := qC.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
+      else
+        sCodigoArt := qC.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
+
+      // Lineas SERVICIO no llevan SKU ni movimiento.
+      if qC.FieldByName('TIPO_LINEA_SESLIN').AsString = 'SERVICIO' then
+      begin
+        qC.Next;
+        Continue;
+      end;
+
+      // Solo MATRIZ tiene ID_VA_FILA (color). Para ESCALAR la fila
+      // viene vacia y SKU se busca solo por pivot.
+      iIdAvFila := 0;
+      if not qC.FieldByName('ID_VA_FILA_SESLIN').IsNull then
+        iIdAvFila :=
+                StrToIntDef(qC.FieldByName('ID_VA_FILA_SESLIN').AsString, 0);
+
+      sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
+      if sCodigoSku = '' then
+      begin
+        // El SKU no existe — no podemos mover stock contra el. Saltamos
+        // (no es fatal: puede pasar con REUSAR a articulo sin ese AV).
+        qC.Next;
+        Continue;
+      end;
+
+      // Numero de movimiento via contador 'MV' (mismo que albaranes
+      // de venta y resto del sistema).
+      sNumeroMov := inLibtb.ObtenerSiguienteContador('MV');
+      sLinea     := Format('%.4d', [iLinea]);
+
+      with TUniStoredProc.Create(nil) do
+      try
+        Connection := AConn;
+        StoredProcName := 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT';
+        Params.Clear;
+        Params.CreateParam(ftString, 'p_NUMERO_MOV',                ptInput);
+        Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',              ptInput);
+        Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',             ptInput);
+        Params.CreateParam(ftString, 'p_NRO_DOC_MOV',               ptInput);
+        Params.CreateParam(ftString, 'p_LINEA_MOV',                 ptInput);
+        Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',        ptInput);
+        Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',        ptInput);
+        Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
+        Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',         ptInput);
+        Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV',       ptInput);
+        Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',              ptInput);
+        Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',          ptInput);
+        Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',           ptInput);
+        Params.CreateParam(ftString, 'p_USUARIO',                   ptInput);
+        Params.CreateParam(ftString, 'p_ALMACEN_DOC',               ptInput);
+        Params.CreateParam(ftString, 'p_NUMOP_DOC',                 ptInput);
+        Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV',       ptInput);
+        Params.CreateParam(ftString, 'p_CODCLIENTE',                ptInput);
+        Params.CreateParam(ftString, 'p_CODARTICULO',               ptInput);
+        ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
+        ParamByName('p_TIPO_DOC_MOV').AsString        := 'AC';
+        ParamByName('p_SERIE_DOC_MOV').AsString       := ASerieSes;
+        ParamByName('p_NRO_DOC_MOV').AsString         := ANumSes;
+        ParamByName('p_LINEA_MOV').AsString           := sLinea;
+        ParamByName('p_CODIGO_EMPRESA_MOV').AsString  := sCodigoEmp;
+        ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sCodigoAlm;
+        ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
+        ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sCodigoSku;
+        ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'E';
+        ParamByName('p_CANTIDAD_MOV').AsFloat         := rCantidad;
+        ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := rCoste;
+        ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := rTotal;
+        ParamByName('p_USUARIO').AsString             := AUsuario;
+        ParamByName('p_ALMACEN_DOC').AsString         := sCodigoAlm;
+        ParamByName('p_NUMOP_DOC').AsString           := '';
+        ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := '';
+        ParamByName('p_CODCLIENTE').AsString          := '';
+        ParamByName('p_CODARTICULO').AsString         := sCodigoArt;
+        ExecProc;
+      finally
+        Free;
+      end;
+
+      qC.Next;
+    end;
+  finally
+    FreeAndNil(qC);
+  end;
+end;
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -630,23 +835,14 @@ begin
     end;
     if AESGeneraAlbaran then
     begin
-      // Iterar por almacén:
-      //   qAlm.SQL.Text :=
-      //     'SELECT DISTINCT IF(CODIGO_ALM_SESCEL='''', ' +
-      //     '         (SELECT CODIGO_ALM_SES FROM fza_compras_sesiones ' +
-      //     '            WHERE SERIE_SES=:s AND NUMERO_SES=:n), ' +
-      //     '         CODIGO_ALM_SESCEL) AS ALM ' +
-      //     '  FROM fza_compras_sesiones_celdas ' +
-      //     ' WHERE SERIE_SES_SESCEL=:s AND NUMERO_SES_SESCEL=:n ' +
-      //     '   AND CANTIDAD_SESCEL > 0';
-      //   while not qAlm.Eof do begin
-      //      sAlm := qAlm.FieldByName('ALM').AsString;
-      //      // crear cabecera albarán con CODIGO_ALM_ALBC = sAlm
-      //      // insertar líneas filtrando por ese almacén
-      //      // movimientos de stock en sAlm
-      //      qAlm.Next;
-      //   end;
-      // ASerieAlb := primero; ANumAlb := primero;
+      // Por ahora no hay cabecera fza_albaranes_compra; los movimientos
+      // se generan apuntando a la propia sesion como documento
+      // (SERIE_DOC_MOV=SERIE_SES, NUMERO_DOC_MOV=NUMERO_SES,
+      // TIPO_DOC_MOV='AC'). Cuando exista la cabecera de albaran de
+      // compra, se creara primero y los movimientos pasaran a ella.
+      GenerarMovimientosAlbaran(conn, ADM, sSerieSes, sNumSes, AUsuario);
+      ASerieAlb := sSerieSes;
+      ANumAlb   := sNumSes;
     end;
 
     // Cerrar la sesión
