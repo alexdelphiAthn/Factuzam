@@ -1343,6 +1343,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object FormasdePagoCaja1: TMenuItem
         Caption = 'Formas de Pago Caja'
+        ShortCut = 24657
+        OnClick = FormasdePagoCaja1Click
       end
       object mnuDepositosCliente: TMenuItem
         Caption = 'Dep'#243'sitos de Clientes'
