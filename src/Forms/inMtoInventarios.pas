@@ -676,7 +676,14 @@ begin
   // ocultamos las columnas y nos saltamos la SQL pesada de definicion de
   // atributos. Es el corto-circuito principal: por defecto OFF, lo que
   // hace que abrir un inventario sea rapido.
-  if not FMostrarColumnasAtributos then
+  // Excepcion: si el cds esta en dsInsert o dsEdit, el usuario esta
+  // editando una linea concreta y necesita los selectores SKU1..5 aunque
+  // el toggle siga off. En ese caso construimos columnas pero sin lanzar
+  // el desempaquetado masivo (los ATTRn de las lineas previas se quedan
+  // sin rellenar; no se ven porque solo importa la fila editada).
+  if (not FMostrarColumnasAtributos) and
+     (not (dmmInventarios.cdsLineas.Active and
+           (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]))) then
   begin
     FNumAtributosActual := 0;
     OcultarTodasLasColumnasSku;
@@ -768,6 +775,11 @@ begin
   if dmmInventarios = nil then Exit;
   if not dmmInventarios.cdsLineas.Active then Exit;
   if dmmInventarios.cdsLineas.IsEmpty then Exit;
+  // No tocar el cds si esta en edicion: el bucle Edit/Post sobre cada
+  // linea corromperia el estado y haria saltar
+  // "EcxInvalidDataControllerOperation: RecordIndex out of range"
+  // en el tvLineas al siguiente Append/refocus.
+  if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then Exit;
   // El propio data module corto-circuita si ya esta hecho, pero filtramos
   // tambien aqui para no entrar en el overlay si no toca.
   if dmmInventarios.LineasDesempaquetadas then Exit;
@@ -1605,12 +1617,14 @@ procedure TfrmMtoInventarios.btnAnadirLineaClick(Sender: TObject);
 begin
   if not PuedeEditar then Exit;
 
-  // Para editar atributos hace falta tener visibles las columnas SKU1..5.
-  // Si el toggle estaba off (modo "carga rapida"), lo activamos ahora.
-  // chkVerColumnasAtributosPropertiesChange se encarga del desempaquetado
-  // con barra de progreso si hay >150 lineas.
-  if (not FMostrarColumnasAtributos) and Assigned(chkVerColumnasAtributos) then
-    chkVerColumnasAtributos.Checked := True;
+  // NO activamos el toggle aqui: hacerlo dispararia
+  // chkVerColumnasAtributosPropertiesChange -> AsegurarDesempaquetadoAtributos
+  // -> cdsLineas.Edit/Post sobre todas las lineas, lo que deja el tvLineas
+  // con FocusedRecordIndex invalidado y revienta el siguiente Append con
+  // "EcxInvalidDataControllerOperation: RecordIndex out of range".
+  // ActualizarColumnasDinamicas detecta que el cds esta en dsInsert y
+  // construye las columnas SKU1..5 igualmente, asi que el usuario puede
+  // editar atributos sin tocar el toggle.
 
   if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
   begin
