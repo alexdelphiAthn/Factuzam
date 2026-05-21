@@ -490,7 +490,11 @@ silenciosamente en las vistas — alineado con la validación
 - `unqryLinSesionPrint` + `dsLinSesionPrint` + `fxdsLinSesion`
   (`UserName='LineasSesiones'`, master-detail con cabecera).
 - `unqryGuiasSesionPrint` + `dsGuiasSesionPrint` + `fxdsGuiasSesion`
-  (`UserName='GuiasTallas'`).
+  (`UserName='GuiasTallas'`). Usa `SELECT DISTINCT` con las columnas
+  visibles (`ID_AC`, `NOMBRE_CORTO_AC`, `NOMBRE_AC`, `T01..T20`) para
+  colapsar guías idénticas: si dos líneas de la sesión apuntan a
+  `ID_AC` distintos pero el sistema imprime los mismos rótulos, sale
+  una sola fila en la leyenda.
 - Método `PrepararPrint(ASerie, ANumero)` que cierra y reabre las tres
   queries con los parámetros adecuados. Lo invoca
   `TfrmPrintSesion.preparar_consulta`.
