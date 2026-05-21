@@ -88,39 +88,39 @@ inherited dmInventarios: TdmInventarios
     OnNewRecord = cdsLineasNewRecord
     Left = 282
     Top = 22
-    object cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TStringField
       FieldName = 'CODIGO_EMP_INVLIN'
       Size = 10
     end
-    object cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TStringField
       FieldName = 'CODIGO_ALM_INVLIN'
       Size = 10
     end
-    object cdsLineasSERIE_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasSERIE_INVENTARIO_LINEA: TStringField
       FieldName = 'SERIE_INV_INVLIN'
     end
-    object cdsLineasNRO_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasNRO_INVENTARIO_LINEA: TStringField
       FieldName = 'NUMERO_INV_INVLIN'
     end
-    object cdsLineasLINEA_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasLINEA_INVENTARIO_LINEA: TStringField
       FieldName = 'LINEA_INVLIN'
       Size = 4
     end
-    object cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TStringField
       FieldName = 'CODIGO_ART_INVLIN'
     end
-    object cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TStringField
       FieldName = 'CODIGO_UNIDAD_INVLIN'
       Size = 50
     end
-    object cdsLineasLOTE_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasLOTE_INVENTARIO_LINEA: TStringField
       FieldName = 'LOTE_INVLIN'
       Size = 50
     end
     object cdsLineasFECHA_CADUCIDAD_INVENTARIO_LINEA: TDateField
       FieldName = 'FECHA_CADUCIDAD_INVLIN'
     end
-    object cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TWideStringField
+    object cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TStringField
       FieldName = 'DESCRIPCION_ARTICULO_INVLIN'
       Size = 200
     end
@@ -215,11 +215,11 @@ inherited dmInventarios: TdmInventarios
     object cdsLineasINSTANTE_ALTA: TDateTimeField
       FieldName = 'INSTANTE_ALTA'
     end
-    object cdsLineasUSUARIO_ALTA: TWideStringField
+    object cdsLineasUSUARIO_ALTA: TStringField
       FieldName = 'USUARIO_ALTA'
       Size = 50
     end
-    object cdsLineasUSUARIO_MODIF: TWideStringField
+    object cdsLineasUSUARIO_MODIF: TStringField
       FieldName = 'USUARIO_MODIF'
       Size = 50
     end
