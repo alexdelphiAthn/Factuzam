@@ -88,7 +88,12 @@ var
   cCheck  : Char;
 begin
   sPref := APrefijo;
-  if sPref = '' then sPref := '841';      // prefijo por defecto
+  // Default '21' = GS1 in-store / uso interno (no se compra). NUNCA
+  // usar '84x' aqui: son prefijos GS1 oficiales (Grecia y demas
+  // empresas titulares) y emitirlos sin licencia es una infraccion.
+  // Si la empresa tiene su propio prefijo GS1, ponerlo en
+  // PREFIJO_EAN_SES de la cabecera de la sesion.
+  if sPref = '' then sPref := '21';
   iLenSeq := 12 - Length(sPref);
   if iLenSeq <= 0 then
     raise Exception.Create('PREFIJO_EAN_SES demasiado largo: ' + sPref);
@@ -247,24 +252,146 @@ begin
   end;
 end;
 
+// Devuelve el ID_AV asociado al color de la linea. Prioridad:
+//   1. fza_atributos_valores via CODIGO_ATB_COLOR_SESLIN (la paleta basica).
+//   2. fza_atributos_valores con AV = COLOR_TEXTO_SESLIN exacto.
+//   3. Si no existe, crea un fza_atributos_valores nuevo (ID_VA_AV='CO').
+// Devuelve 0 si no hay informacion de color en la linea.
+function ResolverIdAvColorLinea(AConn: TUniConnection;
+                                 const AColorTexto, ACodigoAtbColor,
+                                       AUsuario: string;
+                                 out AValor: string): Integer;
+var
+  q : TUniQuery;
+  s : string;
+begin
+  Result := 0;
+  AValor := '';
+  if (Trim(AColorTexto) = '') and (Trim(ACodigoAtbColor) = '') then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+
+    // 1. CODIGO_ATB → ID_ATB → ID_AV
+    if Trim(ACodigoAtbColor) <> '' then
+    begin
+      q.SQL.Text :=
+        'SELECT AV.ID_AV, AV.AV ' +
+        '  FROM fza_atributos_valores AV ' +
+        '  JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = AV.ID_ATB_AV ' +
+        ' WHERE AV.ID_VA_AV = ''CO'' ' +
+        '   AND ATB.CODIGO_ATB = :cod ' +
+        ' ORDER BY AV.ID_AV LIMIT 1';
+      q.ParamByName('cod').AsString := ACodigoAtbColor;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        Result := q.FieldByName('ID_AV').AsInteger;
+        AValor := q.FieldByName('AV').AsString;
+        Exit;
+      end;
+      q.Close;
+    end;
+
+    // 2. Texto exacto
+    if Trim(AColorTexto) <> '' then
+    begin
+      s := Trim(AColorTexto);
+      q.SQL.Text :=
+        'SELECT ID_AV, AV FROM fza_atributos_valores ' +
+        ' WHERE ID_VA_AV = ''CO'' AND AV = :v LIMIT 1';
+      q.ParamByName('v').AsString := s;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        Result := q.FieldByName('ID_AV').AsInteger;
+        AValor := q.FieldByName('AV').AsString;
+        Exit;
+      end;
+      q.Close;
+    end;
+
+    // 3. Crear un fza_atributos_valores nuevo. Usamos el CODIGO_ATB
+    //    como valor (consistente con la paleta basica) si lo hay; si no,
+    //    el texto libre tal cual.
+    if Trim(ACodigoAtbColor) <> '' then s := ACodigoAtbColor
+    else                                   s := Trim(AColorTexto);
+    q.SQL.Text :=
+      'INSERT INTO fza_atributos_valores ' +
+      '  (ID_VA_AV, AV, ID_ATB_AV, ESACTIVO_AV, ORDEN_AV, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (''CO'', :v, ' +
+      '        (SELECT ID_ATB FROM fza_atributos_basicos ' +
+      '          WHERE CODIGO_ATB = :cod AND ID_VA_ATB = ''CO'' LIMIT 1), ' +
+      '        ''S'', 0, NOW(), :u, NOW(), :u)';
+    q.ParamByName('v').AsString   := s;
+    q.ParamByName('cod').AsString := ACodigoAtbColor;
+    q.ParamByName('u').AsString   := AUsuario;
+    q.ExecSQL;
+
+    q.SQL.Text :=
+      'SELECT ID_AV FROM fza_atributos_valores ' +
+      ' WHERE ID_VA_AV = ''CO'' AND AV = :v ORDER BY ID_AV DESC LIMIT 1';
+    q.ParamByName('v').AsString := s;
+    q.Open;
+    if not q.IsEmpty then
+    begin
+      Result := q.FieldByName('ID_AV').AsInteger;
+      AValor := s;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 procedure InsertarSkusYBarras(AConn: TUniConnection;
                               const ASerieSes, ANumSes, ACodigoArt,
                                     AUsuario, APrefijoEAN: string;
                               ALinea: Integer);
 var
-  qC, qIns, qBar: TUniQuery;
+  qC, qIns, qBar, qLin: TUniQuery;
   sCodigoSKU : string;
   sEAN13     : string;
   sValPivot, sValFila: string;
   iAvPivot, iAvFila: Integer;
+  sColorTexto, sCodigoAtbColor, sValColor: string;
+  iAvColor: Integer;
 begin
   qC   := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   qBar := TUniQuery.Create(nil);
+  qLin := TUniQuery.Create(nil);
   try
     qC.Connection   := AConn;
     qIns.Connection := AConn;
     qBar.Connection := AConn;
+    qLin.Connection := AConn;
+
+    // Cargar color denormalizado de la linea (COLOR_TEXTO_SESLIN /
+    // CODIGO_ATB_COLOR_SESLIN). El grid de la sesion no usa la tabla
+    // fza_compras_sesiones_lineas_filas_atr para el color: lo guarda
+    // plano en la linea. Si no hay color, iAvColor queda en 0 y los
+    // SKUs salen sin color (escenario sin matriz color).
+    qLin.SQL.Text :=
+      'SELECT COLOR_TEXTO_SESLIN, CODIGO_ATB_COLOR_SESLIN ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s ' +
+      '   AND NUMERO_SES_SESLIN = :n ' +
+      '   AND LINEA_SESLIN = :l';
+    qLin.ParamByName('s').AsString  := ASerieSes;
+    qLin.ParamByName('n').AsString  := ANumSes;
+    qLin.ParamByName('l').AsInteger := ALinea;
+    qLin.Open;
+    sColorTexto     := '';
+    sCodigoAtbColor := '';
+    if not qLin.IsEmpty then
+    begin
+      sColorTexto     := qLin.FieldByName('COLOR_TEXTO_SESLIN').AsString;
+      sCodigoAtbColor := qLin.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString;
+    end;
+    qLin.Close;
+    iAvColor := ResolverIdAvColorLinea(AConn, sColorTexto, sCodigoAtbColor,
+                                        AUsuario, sValColor);
 
     // Una fila por SKU único (linea, fila, pivot) sumando cantidades
     // de todos los almacenes. El SKU y su EAN13 son a nivel de artículo,
@@ -306,6 +433,14 @@ begin
       sValFila  := qC.FieldByName('VAL_FILA').AsString;
       iAvPivot  := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
       iAvFila   := qC.FieldByName('ID_AV_FILA').AsInteger;
+
+      // Fallback al color denormalizado de la linea cuando no hay
+      // fila formal en _filas_atr (caso del grid plano de muestrarios).
+      if (iAvFila = 0) and (iAvColor > 0) then
+      begin
+        iAvFila  := iAvColor;
+        sValFila := sValColor;
+      end;
 
       if sValFila = '' then
         sCodigoSKU := ACodigoArt + '/' + sValPivot
@@ -377,24 +512,43 @@ procedure UpsertArticuloProveedor(AConn: TUniConnection;
                                   APrecio: Double);
 var
   q: TUniQuery;
+  bHayPrincipal: Boolean;
+  sEsPrincipal: string;
 begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
+    // 1. Si el articulo ya tiene OTRO proveedor marcado como principal,
+    //    el nuevo no se lo roba: se inserta con ESPRINCIPAL='N'. Si la
+    //    fila ya existe (mismo prv+art) el flag no se toca en el UPDATE.
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_articulos_proveedores ' +
+      ' WHERE CODIGO_ART_AP = :art ' +
+      '   AND CODIGO_PRV_AP <> :prv ' +
+      '   AND ESPROVEEDORPRINCIPAL_AP = ''S''';
+    q.ParamByName('art').AsString := ACodigoArt;
+    q.ParamByName('prv').AsString := ACodigoPrv;
+    q.Open;
+    bHayPrincipal := q.FieldByName('N').AsInteger > 0;
+    q.Close;
+    if bHayPrincipal then sEsPrincipal := 'N' else sEsPrincipal := 'S';
+
     q.SQL.Text :=
       'INSERT INTO fza_articulos_proveedores ' +
       '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, ' +
       '   PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (:prv, :art, :ref, :pre, NOW(), ''S'', NOW(), :u, NOW(), :u) ' +
+      'VALUES (:prv, :art, :ref, :pre, NOW(), :prin, NOW(), :u, NOW(), :u) ' +
       'ON DUPLICATE KEY UPDATE ' +
       '  PRECIO_ULT_COMPRA_AP = :pre, FECHA_VALIDEZ_AP = NOW(), ' +
       '  REF_PROVEEDOR_AP = :ref, INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
-    q.ParamByName('prv').AsString := ACodigoPrv;
-    q.ParamByName('art').AsString := ACodigoArt;
-    q.ParamByName('ref').AsString := ARefPrv;
-    q.ParamByName('pre').AsFloat  := APrecio;
-    q.ParamByName('u').AsString   := AUsuario;
+    q.ParamByName('prv').AsString  := ACodigoPrv;
+    q.ParamByName('art').AsString  := ACodigoArt;
+    q.ParamByName('ref').AsString  := ARefPrv;
+    q.ParamByName('pre').AsFloat   := APrecio;
+    q.ParamByName('prin').AsString := sEsPrincipal;
+    q.ParamByName('u').AsString    := AUsuario;
     q.ExecSQL;
   finally
     FreeAndNil(q);
