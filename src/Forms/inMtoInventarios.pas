@@ -1769,8 +1769,25 @@ end;
 // ============================================================================
 
 procedure TfrmMtoInventarios.btnAnadirLineaClick(Sender: TObject);
+var
+  Estado: string;
 begin
-  if not PuedeEditar then Exit;
+  // Diagnostico: si por algun motivo no se puede editar (cabecera no
+  // ABIERTO, dsTablaG vacio, etc.) el botón quedaba en exit silencioso y
+  // el usuario veia "no pasa nada al pulsar". Damos feedback explicito.
+  if not PuedeEditar then
+  begin
+    Estado := EstadoActual;
+    if Estado = '' then
+      ShowMessage('No hay ningún inventario seleccionado todavía. ' +
+                  'Crea uno o selecciónalo en la lista antes de añadir ' +
+                  'líneas.')
+    else
+      ShowMessage(Format('No se pueden añadir líneas: el inventario ' +
+                         'está en estado "%s" (solo se pueden editar ' +
+                         'inventarios ABIERTOS).', [Estado]));
+    Exit;
+  end;
 
   // 1. Resolver el estado actual de edicion ANTES de tocar variables o
   // atributos. Si la linea actual es un placeholder sin articulo,
