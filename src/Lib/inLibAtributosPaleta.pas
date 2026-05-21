@@ -623,13 +623,27 @@ var
   Bmp : TBitmap;
 begin
   inherited CreateNew(nil);
+
+  // Anclar explicitamente el popup al form activo (Caja / Inventarios)
+  // como PopupParent. Sin esto el ShowModal de un form sin borde reasigna
+  // el owner del HWND a Application.Handle y, al cerrarse (clic en una
+  // opcion o FormDeactivate por clic fuera), la VCL devuelve el foco al
+  // Application.MainForm trayendo el Principal al frente y hundiendo la
+  // cadena Caja -> CajaMenu detras. Visualmente desaparece la Caja y solo
+  // queda el desplegable de colores sobre el menu principal.
+  //
+  // pmExplicit con PopupParent capturado en el constructor es mas fiable
+  // que pmAuto porque congela el padre al instante en que se invoca, no
+  // al mostrar el modal (cuando la activacion podria haber bailado).
+  if Screen.ActiveForm <> nil then
+  begin
+    Self.PopupParent := Screen.ActiveForm;
+    Self.PopupMode   := pmExplicit;
+  end
+  else
+    Self.PopupMode := pmAuto;
+
   BorderStyle := bsNone;
-  // pmAuto: ancla el popup al form activo (Caja / Inventarios) como
-  // PopupParent. Sin esto el ShowModal de un form sin borde reasigna el
-  // owner del HWND a Application.Handle y el form invocador (la Caja) se
-  // hunde detras del Principal mientras esta abierto el popup — solo se
-  // ve el desplegable de colores flotando sobre el menu principal.
-  PopupMode   := pmAuto;
   Position    := poDesigned;
   Caption     := '';
   KeyPreview  := True;
