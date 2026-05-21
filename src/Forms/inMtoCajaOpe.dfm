@@ -117,6 +117,58 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.IsFontAssigned = True
       TabOrder = 5
     end
+    object btnCodigoEmpleado: TcxButtonEdit
+      Left = 127
+      Top = 30
+      Properties.AutoSelect = False
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
+      Properties.OnButtonClick = btnCodigoEmpleadoPropertiesButtonClick
+      Properties.OnValidate = btnCodigoEmpleadoPropertiesValidate
+      TabOrder = 6
+      OnExit = btnCodigoEmpleadoExit
+      Width = 121
+    end
+    object lblCliente: TcxLabel
+      Left = 463
+      Top = 27
+      AutoSize = False
+      Caption = 'Cliente'
+      ParentFont = False
+      Style.BorderStyle = ebsNone
+      Style.Edges = []
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clNavy
+      Style.Font.Height = -20
+      Style.Font.Name = 'Arial Black'
+      Style.Font.Style = [fsBold]
+      Style.Shadow = True
+      Style.IsFontAssigned = True
+      Properties.LineOptions.Alignment = cxllaBottom
+      Properties.LineOptions.Visible = True
+      Properties.Orientation = cxoRight
+      Properties.WordWrap = True
+      TabOrder = 7
+      Height = 36
+      Width = 85
+    end
+    object btnCodigoCliente: TcxButtonEdit
+      Left = 554
+      Top = 30
+      Properties.AutoSelect = False
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
+      Properties.OnValidate = btnCodigoClientePropertiesValidate
+      TabOrder = 8
+      OnExit = btnCodigoClienteExit
+      Width = 121
+    end
   end
   object pnlCli: TPanel
     Left = 0
@@ -124,7 +176,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Width = 1364
     Height = 340
     Align = alClient
-    TabOrder = 3
+    TabOrder = 1
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 241
@@ -132,230 +184,244 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 98
       Align = alBottom
       TabOrder = 1
-      DesignSize = (
-        1362
-        98)
-      object btnF12: TcxButton
-        Left = 10
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F12'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 1
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-        OnClick = btnF12Click
-      end
-      object btnF3: TcxButton
-        Left = 117
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F3'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 2
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-      end
-      object btnF6: TcxButton
-        Left = 331
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F6'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 4
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-      end
-      object btnF5: TcxButton
-        Left = 645
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F5'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 6
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-        OnClick = btnF5Click
-      end
-      object btnF7: TcxButton
-        Left = 542
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F7'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 5
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-      end
-      object lblCobro: TcxLabel
-        Left = 31
-        Top = 71
-        Caption = 'Cobro'
-        TabOrder = 7
-        Transparent = True
-      end
-      object lblBuscar: TcxLabel
-        Left = 136
-        Top = 71
-        Caption = 'Buscar'
-        TabOrder = 8
-        Transparent = True
-      end
-      object lblTextoTarifa: TcxLabel
-        Left = 354
-        Top = 71
-        Caption = 'Tarifa'
-        TabOrder = 10
-        Transparent = True
-      end
-      object lblIndIVA: TcxLabel
-        Left = 555
-        Top = 71
-        Caption = 'Ind. IVA'
-        TabOrder = 11
-        Transparent = True
-      end
-      object lblOtro: TcxLabel
-        Left = 673
-        Top = 71
-        Caption = 'Otro'
-        TabOrder = 12
-        Transparent = True
-      end
-      object lblTotal: TcxLabel
-        Left = 874
-        Top = 4
-        Anchors = [akTop, akRight]
-        AutoSize = False
-        Caption = 'Total 0,00 '#8364
-        ParentFont = False
-        Style.BorderStyle = ebsOffice11
-        Style.Font.Charset = DEFAULT_CHARSET
-        Style.Font.Color = clNavy
-        Style.Font.Height = -50
-        Style.Font.Name = 'Arial Black'
-        Style.Font.Style = [fsBold]
-        Style.Shadow = True
-        Style.IsFontAssigned = True
-        Properties.Alignment.Horz = taRightJustify
-        Properties.LabelEffect = cxleFun
-        Properties.LabelStyle = cxlsLowered
-        Properties.LineOptions.Alignment = cxllaTop
-        Properties.LineOptions.Visible = True
-        Properties.Orientation = cxoRight
-        Properties.WordWrap = True
+      object pnlTotal: TPanel
+        Left = 878
+        Top = 1
+        Width = 483
+        Height = 96
+        Align = alRight
+        BevelOuter = bvNone
         TabOrder = 0
-        Height = 80
-        Width = 423
-        AnchorX = 1297
+        object lblTotal: TcxLabel
+          Left = 0
+          Top = 0
+          Align = alClient
+          AutoSize = False
+          Caption = 'Total 0,00 '#8364
+          ParentFont = False
+          Style.BorderStyle = ebsOffice11
+          Style.Font.Charset = DEFAULT_CHARSET
+          Style.Font.Color = clNavy
+          Style.Font.Height = -50
+          Style.Font.Name = 'Arial Black'
+          Style.Font.Style = [fsBold]
+          Style.Shadow = True
+          Style.IsFontAssigned = True
+          Properties.Alignment.Horz = taRightJustify
+          Properties.LabelEffect = cxleFun
+          Properties.LabelStyle = cxlsLowered
+          Properties.LineOptions.Alignment = cxllaTop
+          Properties.LineOptions.Visible = True
+          Properties.Orientation = cxoRight
+          Properties.WordWrap = True
+          TabOrder = 0
+          Height = 96
+          Width = 483
+        end
       end
-      object btnF8: TcxButton
-        Left = 224
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F8'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 3
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-      end
-      object lblEliminar: TcxLabel
-        Left = 235
-        Top = 71
-        Caption = 'Eliminar'
-        TabOrder = 9
-        Transparent = True
-      end
-      object btnF61: TcxButton
-        Left = 437
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F4'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 13
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-      end
-      object lblBusqTick: TcxLabel
-        Left = 452
-        Top = 71
-        Caption = 'B'#250'sq Tick'
-        TabOrder = 14
-        Transparent = True
-      end
-      object btnF2: TcxButton
-        Left = 763
-        Top = 6
-        Width = 103
-        Height = 57
-        Caption = 'F2'
-        Colors.Default = clBlue
-        Colors.Normal = clBlue
-        Colors.NormalText = clNavy
-        TabOrder = 15
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -27
-        Font.Name = 'Segoe UI Black'
-        Font.Style = [fsUnderline]
-        ParentFont = False
-        OnClick = btnF2Click
-      end
-      object lblCargarCta: TcxLabel
-        Left = 763
-        Top = 69
-        Caption = 'Cargar cta.'
-        TabOrder = 16
-        Transparent = True
+      object pnlBotones: TPanel
+        Left = 1
+        Top = 1
+        Width = 877
+        Height = 96
+        Align = alClient
+        BevelOuter = bvNone
+        TabOrder = 1
+        object btnF12: TcxButton
+          Left = 10
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F12'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 0
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+          OnClick = btnF12Click
+        end
+        object btnF3: TcxButton
+          Left = 117
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F3'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 1
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+        end
+        object btnF8: TcxButton
+          Left = 224
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F8'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 2
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+        end
+        object btnF6: TcxButton
+          Left = 331
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F6'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 3
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+        end
+        object btnF61: TcxButton
+          Left = 437
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F4'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 4
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+        end
+        object btnF7: TcxButton
+          Left = 542
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F7'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 5
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+        end
+        object btnF5: TcxButton
+          Left = 645
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F5'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 6
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+          OnClick = btnF5Click
+        end
+        object btnF2: TcxButton
+          Left = 763
+          Top = 6
+          Width = 103
+          Height = 57
+          Caption = 'F2'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          TabOrder = 7
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Style = [fsUnderline]
+          ParentFont = False
+          OnClick = btnF2Click
+        end
+        object lblCobro: TcxLabel
+          Left = 31
+          Top = 71
+          Caption = 'Cobro'
+          TabOrder = 8
+          Transparent = True
+        end
+        object lblBuscar: TcxLabel
+          Left = 136
+          Top = 71
+          Caption = 'Buscar'
+          TabOrder = 9
+          Transparent = True
+        end
+        object lblEliminar: TcxLabel
+          Left = 235
+          Top = 71
+          Caption = 'Eliminar'
+          TabOrder = 10
+          Transparent = True
+        end
+        object lblTextoTarifa: TcxLabel
+          Left = 354
+          Top = 71
+          Caption = 'Tarifa'
+          TabOrder = 11
+          Transparent = True
+        end
+        object lblBusqTick: TcxLabel
+          Left = 452
+          Top = 71
+          Caption = 'B'#250'sq Tick'
+          TabOrder = 12
+          Transparent = True
+        end
+        object lblIndIVA: TcxLabel
+          Left = 555
+          Top = 71
+          Caption = 'Ind. IVA'
+          TabOrder = 13
+          Transparent = True
+        end
+        object lblOtro: TcxLabel
+          Left = 673
+          Top = 71
+          Caption = 'Otro'
+          TabOrder = 14
+          Transparent = True
+        end
+        object lblCargarCta: TcxLabel
+          Left = 763
+          Top = 71
+          Caption = 'Cargar cta.'
+          TabOrder = 15
+          Transparent = True
+        end
       end
     end
     object pnlAccionesDer: TPanel
@@ -552,58 +618,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         AutoSnap = True
       end
     end
-  end
-  object lblCliente: TcxLabel
-    Left = 463
-    Top = 27
-    AutoSize = False
-    Caption = 'Cliente'
-    ParentFont = False
-    Style.BorderStyle = ebsNone
-    Style.Edges = []
-    Style.Font.Charset = DEFAULT_CHARSET
-    Style.Font.Color = clNavy
-    Style.Font.Height = -20
-    Style.Font.Name = 'Arial Black'
-    Style.Font.Style = [fsBold]
-    Style.Shadow = True
-    Style.IsFontAssigned = True
-    Properties.LineOptions.Alignment = cxllaBottom
-    Properties.LineOptions.Visible = True
-    Properties.Orientation = cxoRight
-    Properties.WordWrap = True
-    TabOrder = 1
-    Height = 36
-    Width = 85
-  end
-  object btnCodigoCliente: TcxButtonEdit
-    Left = 554
-    Top = 30
-    Properties.AutoSelect = False
-    Properties.Buttons = <
-      item
-        Default = True
-        Kind = bkEllipsis
-      end>
-    Properties.OnValidate = btnCodigoClientePropertiesValidate
-    TabOrder = 2
-    OnExit = btnCodigoClienteExit
-    Width = 121
-  end
-  object btnCodigoEmpleado: TcxButtonEdit
-    Left = 127
-    Top = 30
-    Properties.AutoSelect = False
-    Properties.Buttons = <
-      item
-        Default = True
-        Kind = bkEllipsis
-      end>
-    Properties.OnButtonClick = btnCodigoEmpleadoPropertiesButtonClick
-    Properties.OnValidate = btnCodigoEmpleadoPropertiesValidate
-    TabOrder = 4
-    OnExit = btnCodigoEmpleadoExit
-    Width = 121
   end
   object tmrReloj: TTimer
     OnTimer = Timer1Timer
