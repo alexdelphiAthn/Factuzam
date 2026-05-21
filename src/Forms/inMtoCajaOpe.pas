@@ -535,6 +535,8 @@ var
   Cantidad: Double;
   MensajeStock: string;
   SkuLimpio: string;
+  bChkStockOnly: Boolean;
+  bAvisarSinStock: Boolean;
 begin
   Result := True;
   SkuLimpio := Trim(SkuFinal);
@@ -569,7 +571,15 @@ begin
     end;
   end;
 
-  if oCajaParams.GetBool('vgerChkStockOnly', False) then
+  // vgerChkStockOnly bloquea la venta sin stock. vgerAvisoStockWarning,
+  // cuando trae texto, sirve como aviso informativo aunque no se bloquee:
+  // basta con que cualquiera de los dos esté activo para tener que mirar
+  // el stock del SKU.
+  bChkStockOnly   := oCajaParams.GetBool('vgerChkStockOnly', False);
+  MensajeStock    := Trim(oCajaParams.GetString('vgerAvisoStockWarning', ''));
+  bAvisarSinStock := MensajeStock <> '';
+
+  if bChkStockOnly or bAvisarSinStock then
   begin
     qry := TUniQuery.Create(nil);
     try
@@ -596,11 +606,15 @@ begin
       Cantidad := qry.FieldByName('QTY').AsFloat;
       if Cantidad <= 0 then
       begin
-        MensajeStock := oCajaParams.GetString('vgerAvisoStockWarning',
-          'Artículo sin stock. Compruebe stock en almacén.');
-        ShowMessage(MensajeStock);
-        Result := False;
-        Exit;
+        if bAvisarSinStock then
+          ShowMessage(MensajeStock)
+        else if bChkStockOnly then
+          ShowMessage('Artículo sin stock. Compruebe stock en almacén.');
+        if bChkStockOnly then
+        begin
+          Result := False;
+          Exit;
+        end;
       end;
     finally
       FreeAndNil(qry);
