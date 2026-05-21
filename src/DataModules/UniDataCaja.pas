@@ -1680,6 +1680,7 @@ begin
     '  TIPO_OPERACION_OPCAJA,' +
     '  IMPORTE_TOTAL_OPCAJA,' +
     '  FECHA_OPERACION_OPCAJA,' +
+    '  FECHA_OP_DIA_OPCAJA,' +
     '  CODIGO_EMPLEADO_OPCAJA,' +
     '  NUMERO_FAC_OPCAJA,' +
     '  SERIE_FAC_OPCAJA,' +
@@ -1702,6 +1703,7 @@ begin
     '  :TIPOOP,' +
     '  :IMPORTE,' +
     '  NOW(),' +
+    '  CURRENT_DATE,' +
     '  :EMPLEADO,' +
     '  NULLIF(:NROFAC,    ''''),' +
     '  NULLIF(:SERIEFAC,  ''''),' +
