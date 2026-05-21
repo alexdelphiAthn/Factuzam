@@ -669,19 +669,42 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   end
   object qryBusq: TUniQuery
     SQL.Strings = (
-      'SELECT '
-      '    CODIGO_ART_ART as INPUT_BUSQUEDA,'
-      
-        '    CODIGO_ART_ART AS CODIGO_PADRE,   -- El valor real que guard' +
-        'aremos'
-      '    DESCRIPCION_ART'
-      'FROM vi_articulos_list'
-      'WHERE CODIGO_ART_ART LIKE :TOKEN'
-      'ORDER BY CODIGO_ART_ART'
+      'SELECT'
+      '    v.CODIGO_ART_ART AS INPUT_BUSQUEDA,'
+      '    v.CODIGO_ART_ART AS CODIGO_PADRE,'
+      '    v.DESCRIPCION_ART,'
+      '    v.RAZON_SOCIAL_PROVEEDOR,'
+      '    pv.PV AS TEMPORADA'
+      'FROM vi_art_busquedas v'
+      'LEFT JOIN fza_articulos_propiedades ap'
+      '       ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART'
+      '      AND ap.CODIGO_PROP_ARTPROP = '#39'TEMPORADA'#39
+      'LEFT JOIN fza_propiedades_valores pv'
+      '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'
+      'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA OR v.CODIGO_TAR_ARTTAR IS NUL' +
+        'L)'
+
+        '  AND (v.FECHA_DESDE_ARTTAR IS NULL OR v.FECHA_DESDE_ARTTAR <= :' +
+        'FECHA_TARIFA)'
+
+        '  AND (v.FECHA_HASTA_ARTTAR IS NULL OR v.FECHA_HASTA_ARTTAR >= :' +
+        'FECHA_TARIFA)'
+      '  AND v.CODIGO_ART_ART LIKE :TOKEN'
+      'ORDER BY v.CODIGO_ART_ART'
       'LIMIT 20')
     Left = 80
     Top = 256
     ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'TARIFA'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'FECHA_TARIFA'
+        Value = nil
+      end
       item
         DataType = ftUnknown
         Name = 'TOKEN'
@@ -702,7 +725,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       OptionsBehavior.ColumnHeaderHints = False
       OptionsSelection.CellSelect = False
       OptionsView.GroupByBox = False
-      OptionsView.Header = False
+      OptionsView.Header = True
       object dbtvBusqINPUT_BUSQUEDA: TcxGridDBColumn
         DataBinding.FieldName = 'INPUT_BUSQUEDA'
         PropertiesClassName = 'TcxTextEditProperties'
@@ -721,10 +744,20 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Options.Grouping = False
       end
       object dbtvBusqCODIGO_ARTICULO: TcxGridDBColumn
+        Caption = 'Art'#237'culo'
         DataBinding.FieldName = 'CODIGO_PADRE'
       end
       object dbtvBusqDESCRIPCION_ARTICULO: TcxGridDBColumn
+        Caption = 'Descripci'#243'n'
         DataBinding.FieldName = 'DESCRIPCION_ART'
+      end
+      object dbtvBusqTEMPORADA: TcxGridDBColumn
+        Caption = 'Temporada'
+        DataBinding.FieldName = 'TEMPORADA'
+      end
+      object dbtvBusqPROVEEDOR: TcxGridDBColumn
+        Caption = 'Proveedor'
+        DataBinding.FieldName = 'RAZON_SOCIAL_PROVEEDOR'
       end
     end
   end
