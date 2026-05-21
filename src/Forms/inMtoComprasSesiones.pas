@@ -95,14 +95,22 @@ type
     txtSerie                 : TcxDBTextEdit;
     lblNumero                : TcxLabel;
     txtNumero                : TcxDBTextEdit;
+    lblFecha                 : TcxLabel;
+    dteFecha                 : TcxDBDateEdit;
     lblEstado                : TcxLabel;
     txtEstado                : TcxDBTextEdit;
     lblEmpresa               : TcxLabel;
     cbbEmpresa               : TcxDBLookupComboBox;
     lblProveedor             : TcxLabel;
     cbbProveedor             : TcxDBLookupComboBox;
+    lblRefPrv                : TcxLabel;
+    txtRefPrv                : TcxDBTextEdit;
+    lblAlmacen               : TcxLabel;
+    cbbAlmacen               : TcxDBLookupComboBox;
     lblTarifa                : TcxLabel;
     cbbTarifa                : TcxDBLookupComboBox;
+    lblTemporada             : TcxLabel;
+    cbbTemporada             : TcxDBLookupComboBox;
     lblMargen                : TcxLabel;
     spnMargen                : TcxDBSpinEdit;
     lblMultiploRedondeo      : TcxLabel;
@@ -117,6 +125,8 @@ type
     btnAddLinea              : TcxButton;
     btnDelLinea              : TcxButton;
     btnNuevoColor            : TcxButton;
+    btnFoto                  : TcxButton;
+    dlgFoto                  : TOpenDialog;
     lblHint                  : TcxLabel;
 
     // ------------------------------------------------------------------
@@ -151,6 +161,7 @@ type
     procedure btnAddLineaClick(Sender: TObject);
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
+    procedure btnFotoClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
@@ -215,6 +226,7 @@ uses
   inLibUser,
   inLibComprasSesiones,
   inLibAtributosPaleta,
+  inLibFotos,
   inMtoModalSelFamilia,
   inMtoModalImpSesion;
 
@@ -273,7 +285,9 @@ begin
 
   cbbEmpresa.Properties.ListSource   := Dmm.dsEmpresas;
   cbbProveedor.Properties.ListSource := Dmm.dsProveedores;
+  cbbAlmacen.Properties.ListSource   := Dmm.dsAlmacenes;
   cbbTarifa.Properties.ListSource    := Dmm.dsTarifas;
+  cbbTemporada.Properties.ListSource := Dmm.dsTemporadas;
 
   TcxLookupComboBoxProperties(dbcLinTallas.Properties).ListSource :=
                                                     FDsConjuntosTallas;
@@ -594,6 +608,59 @@ begin
   end;
   Dmm.unqrySesionLin.Delete;
   if Assigned(FGestorTallas) then FGestorTallas.RecalcularMaxColumnas;
+end;
+
+procedure TfrmMtoComprasSesiones.btnFotoClick(Sender: TObject);
+var
+  sSerie, sNumero, sCodArt: string;
+  iLinea: Integer;
+  info  : TFotoInfo;
+begin
+  inherited;
+  // Sube una foto y la asocia a la linea activa de la sesion (a nivel
+  // articulo padre — CODIGO_UNIDAD = ''). Las fotos por SKU concreto se
+  // gestionan via Ctrl+Alt+F + frmFotoArticulo (no implementado aun en
+  // modo sesion). Al materializar, MigrarFotosSesion las pasa a
+  // fza_articulos_fotos.
+  if Dmm.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay sesion activa.');
+    Exit;
+  end;
+  if Dmm.unqrySesionLin.IsEmpty then
+  begin
+    ShowMessage('Selecciona o crea una linea antes de asignar foto.');
+    Exit;
+  end;
+  if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+    Dmm.unqryTablaG.Post;
+  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+    Dmm.unqrySesionLin.Post;
+
+  sSerie  := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  iLinea  := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+  sCodArt := Dmm.unqrySesionLin.FieldByName(
+                                  'CODIGO_ART_TENTATIVO_SESLIN').AsString;
+
+  if not Assigned(dlgFoto) then
+    dlgFoto := TOpenDialog.Create(Self);
+  dlgFoto.Filter := 'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|' +
+                    '*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp';
+  dlgFoto.Options := dlgFoto.Options + [ofFileMustExist];
+  if not dlgFoto.Execute then Exit;
+
+  try
+    info := inLibFotos.oFotos.GuardarSesion(sSerie, sNumero, iLinea,
+                                            sCodArt, '', dlgFoto.FileName);
+    if info.Encontrada then
+      ShowMessage('Foto asignada a la linea ' + IntToStr(iLinea) + '.')
+    else
+      ShowMessage('No se pudo asignar la foto.');
+  except
+    on E: Exception do
+      ShowMessage('Error guardando foto: ' + E.Message);
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.btnImprimirClick(Sender: TObject);

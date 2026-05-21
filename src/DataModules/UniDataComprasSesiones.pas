@@ -86,6 +86,10 @@ type
     dsTarifas: TDataSource;
     unqryEmpresas: TUniQuery;
     dsEmpresas: TDataSource;
+    // Lookup de temporadas (fza_propiedades_valores con ID_PROP_PV='TEMPORADA').
+    // Una por sesion; se propaga a fza_articulos_propiedades al materializar.
+    unqryTemporadas: TUniQuery;
+    dsTemporadas: TDataSource;
     // Lookup de series de la empresa actual para TIPO_DOC='SE'
     unqryEmpresaSeries: TUniQuery;
     dsEmpresaSeries: TDataSource;
@@ -186,6 +190,7 @@ begin
   unqryAlmacenes.Connection         := inLibGlobalVar.oConn;
   unqryTarifas.Connection           := inLibGlobalVar.oConn;
   unqryEmpresas.Connection          := inLibGlobalVar.oConn;
+  unqryTemporadas.Connection        := inLibGlobalVar.oConn;
   unqryEmpresaSeries.Connection     := inLibGlobalVar.oConn;
   unqryArticuloExiste.Connection    := inLibGlobalVar.oConn;
   unstrdprcGetContadorSesion.Connection := inLibGlobalVar.oConn;
@@ -205,6 +210,7 @@ begin
   unqryAlmacenes.Open;
   unqryTarifas.Open;
   unqryEmpresas.Open;
+  unqryTemporadas.Open;
 end;
 
 procedure TdmComprasSesiones.unqryTablaGAfterInsert(DataSet: TDataSet);
