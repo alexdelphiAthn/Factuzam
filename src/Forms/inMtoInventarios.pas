@@ -139,6 +139,7 @@ type
     btnIraArticuloMov: TcxButton;
     ActionList1: TActionList;
     actIraArticulo: TAction;
+    chkVerColumnasAtributos: TcxCheckBox;
 
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);
@@ -205,12 +206,23 @@ type
     procedure btnIraArticuloClick(Sender: TObject);
     procedure btnIraArticuloMovClick(Sender: TObject);
     procedure actIraArticuloExecute(Sender: TObject);
+    procedure chkVerColumnasAtributosPropertiesChange(Sender: TObject);
 
   private
     FNumAtributosActual: Integer;
     FUltimoArticuloPadre: string;
     FProcesandoAtributo: Boolean;
     FInicializandoCombo: Boolean;
+    // Setting on/off para construir las columnas dinamicas de atributos.
+    // Por defecto OFF: abrir un inventario solo pinta el grid base, sin
+    // ejecutar la SQL de definicion de atributos ni el desempaquetado
+    // SKU->ATTR1..ATTR5 (que requiere un Edit/Post por linea). El usuario
+    // lo activa con chkVerColumnasAtributos cuando quiere editar.
+    FMostrarColumnasAtributos: Boolean;
+    // Umbral a partir del cual el desempaquetado merece un progressbar.
+    // Por debajo, el cdsLineas con DisableControls va lo bastante rapido
+    // como para no necesitar feedback visual.
+    FUmbralProgresoDesempaquetado: Integer;
     // Bitmap reutilizable para pintar el cuadradito de color en el glyph
     // del boton [...] de las columnas SKU. Se repinta en cada InitEdit con
     // el color del AV actual; si no hay color, el boton vuelve a bkEllipsis.
@@ -220,6 +232,11 @@ type
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
     procedure RellenarAtributosDesdeSku(const Sku: string);
     function ObtenerColumnaSkuPorTag(NumColumn: Integer): TcxGridDBColumn;
+    // Asegura que cdsLineas tiene los ATTR1..ATTR5_VALOR rellenados
+    // (idempotente: no hace nada si ya estan, ver dmm.LineasDesempaquetadas).
+    // Si hay mas de FUmbralProgresoDesempaquetado lineas, muestra el overlay
+    // de progreso heredado de TfrmMtoGen mientras corre el bucle.
+    procedure AsegurarDesempaquetadoAtributos;
 //    procedure ConstruirSkuDesdeAtributos;
 
     // === SELECTOR DE AV CON CUADRADITO DE PALETA ===
@@ -339,7 +356,20 @@ begin
   FUltimoArticuloPadre := '';
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
+  // Por defecto OFF: la apertura de un inventario solo lee las lineas, sin
+  // ejecutar la SQL de definicion de atributos ni el bucle de Edit/Post
+  // sobre cada linea que rellena ATTR1..5_VALOR. El usuario lo activa con
+  // chkVerColumnasAtributos cuando va a editar.
+  FMostrarColumnasAtributos := False;
+  // 150 lineas es el umbral empirico: por debajo el desempaquetado va
+  // imperceptible aunque haga un Edit/Post por linea (DisableControls
+  // suprime el repintado del grid). Por encima, el usuario nota la
+  // espera, asi que mostramos el overlay con progressbar marquee.
+  FUmbralProgresoDesempaquetado := 150;
   FBmpSwatchBoton := TBitmap.Create;
+  // El TcxCheckBox arranca unchecked desde el DFM, alineado con
+  // FMostrarColumnasAtributos := False. No tocamos .Checked aqui para
+  // no disparar chkVerColumnasAtributosPropertiesChange en el create.
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
 end;
@@ -529,6 +559,15 @@ begin
   if dmmInventarios.cdsLineas.Active and
      not dmmInventarios.cdsLineas.IsEmpty then
   begin
+    // CargarLineasInventario ha reseteado LineasDesempaquetadas. Si el
+    // usuario tiene el toggle activo, hay que volver a desempaquetar
+    // antes de pintar las columnas (con barra de progreso si >150 lineas).
+    if FMostrarColumnasAtributos and
+       (not dmmInventarios.LineasDesempaquetadas) then
+      AsegurarDesempaquetadoAtributos;
+    // FUltimoArticuloPadre puede coincidir con el de la cabecera anterior;
+    // lo limpiamos para forzar la reconstruccion de captions/SQL.
+    FUltimoArticuloPadre := '';
     ActualizarColumnasDinamicas(dmmInventarios.cdsLineas.FieldByName(
                                                  'CODIGO_ART_INVLIN').AsString);
   end;
@@ -595,6 +634,31 @@ var
   i: Integer;
   Col: TcxGridDBColumn;
   NombresAtributos: TStringList;
+  Estado: string;
+
+  procedure OcultarTodasLasColumnasSku;
+  var
+    j: Integer;
+    C: TcxGridDBColumn;
+  begin
+    if not Assigned(tvLineas) then Exit;
+    tvLineas.BeginUpdate;
+    try
+      for j := 1 to 5 do
+      begin
+        C := ObtenerColumnaSkuPorTag(j);
+        if C <> nil then
+        begin
+          C.Visible := False;
+          C.Options.Editing := False;
+          C.Caption := '-';
+        end;
+      end;
+    finally
+      tvLineas.EndUpdate;
+    end;
+  end;
+
 begin
   // Optimización: si es el mismo padre, no repintamos
   if SameText(ArticuloPadre, FUltimoArticuloPadre) then Exit;
@@ -604,24 +668,31 @@ begin
   // esté asignado, o tras FormDestroy. En ese caso solo ocultamos columnas.
   if dmmInventarios = nil then
   begin
-    if Assigned(tvLineas) then
-    begin
-      tvLineas.BeginUpdate;
-      try
-        for i := 1 to 5 do
-        begin
-          Col := ObtenerColumnaSkuPorTag(i);
-          if Col <> nil then
-          begin
-            Col.Visible := False;
-            Col.Options.Editing := False;
-            Col.Caption := '-';
-          end;
-        end;
-      finally
-        tvLineas.EndUpdate;
-      end;
-    end;
+    OcultarTodasLasColumnasSku;
+    Exit;
+  end;
+
+  // Toggle "Ver atributos en columnas". Si el usuario no lo ha activado,
+  // ocultamos las columnas y nos saltamos la SQL pesada de definicion de
+  // atributos. Es el corto-circuito principal: por defecto OFF, lo que
+  // hace que abrir un inventario sea rapido.
+  if not FMostrarColumnasAtributos then
+  begin
+    FNumAtributosActual := 0;
+    OcultarTodasLasColumnasSku;
+    Exit;
+  end;
+
+  // Si el inventario no esta ABIERTO no se puede editar, asi que las
+  // columnas dinamicas de atributos no aportan nada (CODIGO_UNIDAD_INVLIN
+  // ya muestra el SKU completo en su propia columna). Saltamos la consulta
+  // SQL pesada a fza_articulos_skus + fza_atributos_sku + vi_atributos_nombres
+  // y nos limitamos a esconderlas, que es lo que hace lenta la apertura.
+  Estado := dmmInventarios.GetEstadoInventario;
+  if (Estado <> '') and (Estado <> 'ABIERTO') then
+  begin
+    FNumAtributosActual := 0;
+    OcultarTodasLasColumnasSku;
     Exit;
   end;
 
@@ -688,6 +759,57 @@ begin
   finally
     FreeAndNil(NombresAtributos);
   end;
+end;
+
+procedure TfrmMtoInventarios.AsegurarDesempaquetadoAtributos;
+var
+  HayMuchasLineas: Boolean;
+begin
+  if dmmInventarios = nil then Exit;
+  if not dmmInventarios.cdsLineas.Active then Exit;
+  if dmmInventarios.cdsLineas.IsEmpty then Exit;
+  // El propio data module corto-circuita si ya esta hecho, pero filtramos
+  // tambien aqui para no entrar en el overlay si no toca.
+  if dmmInventarios.LineasDesempaquetadas then Exit;
+
+  HayMuchasLineas :=
+    dmmInventarios.cdsLineas.RecordCount > FUmbralProgresoDesempaquetado;
+
+  if HayMuchasLineas then
+    BloquearTabPorOcupado(True);
+  try
+    dmmInventarios.DesempaquetarAtributosDesdeSku;
+  finally
+    if HayMuchasLineas then
+      BloquearTabPorOcupado(False);
+  end;
+end;
+
+procedure TfrmMtoInventarios.chkVerColumnasAtributosPropertiesChange(
+  Sender: TObject);
+var
+  CodArt: string;
+begin
+  // Sincroniza el flag interno con el estado de la checkbox y refresca
+  // las columnas. Si se acaba de activar, antes desempaqueta SKU->ATTR
+  // (con barra de progreso si hay mas de FUmbralProgresoDesempaquetado
+  // lineas). Si se desactiva, ocultamos sin tocar la BBDD.
+  if csLoading in ComponentState then Exit;
+  FMostrarColumnasAtributos := chkVerColumnasAtributos.Checked;
+
+  if FMostrarColumnasAtributos then
+    AsegurarDesempaquetadoAtributos;
+
+  // Forzar el rebuild ignorando la memoizacion FUltimoArticuloPadre.
+  FUltimoArticuloPadre := '';
+
+  CodArt := '';
+  if (dmmInventarios <> nil) and
+     dmmInventarios.cdsLineas.Active and
+     not dmmInventarios.cdsLineas.IsEmpty then
+    CodArt :=
+      dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
+  ActualizarColumnasDinamicas(CodArt);
 end;
 
 procedure TfrmMtoInventarios.RellenarAtributosDesdeSku(const Sku: string);
@@ -927,6 +1049,13 @@ begin
      (not dmmInventarios.cdsLineas.Active) or
      dmmInventarios.cdsLineas.IsEmpty then
     Exit;
+  // Si el toggle esta activo y aun no se ha desempaquetado para las
+  // lineas actuales (puede haber pasado un AfterScroll que recargo
+  // cdsLineas tras un cambio de cabecera), lo ejecutamos ahora antes
+  // de pintar las columnas con sus ATTR1..ATTR5_VALOR.
+  if FMostrarColumnasAtributos and
+     (not dmmInventarios.LineasDesempaquetadas) then
+    AsegurarDesempaquetadoAtributos;
   ArtPadre :=
     dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
   ActualizarColumnasDinamicas(ArtPadre);
@@ -1475,6 +1604,13 @@ end;
 procedure TfrmMtoInventarios.btnAnadirLineaClick(Sender: TObject);
 begin
   if not PuedeEditar then Exit;
+
+  // Para editar atributos hace falta tener visibles las columnas SKU1..5.
+  // Si el toggle estaba off (modo "carga rapida"), lo activamos ahora.
+  // chkVerColumnasAtributosPropertiesChange se encarga del desempaquetado
+  // con barra de progreso si hay >150 lineas.
+  if (not FMostrarColumnasAtributos) and Assigned(chkVerColumnasAtributos) then
+    chkVerColumnasAtributos.Checked := True;
 
   if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
   begin
