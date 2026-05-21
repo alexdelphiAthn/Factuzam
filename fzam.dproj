@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -80,6 +80,10 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
+        <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;dxFlowChartRS26;DBXDb2Driver;vclactnband;dxBarRS26;vclFireDAC;dxFireDACEMFRS26;FireDACADSDriver;dxRichEditCoreRS26;dxPSdxSpreadSheetLnkRS26;FireDACMSSQLDriver;vcltouch;vcldb;dxPSTeeChartRS26;dxGDIPlusRS26;dxPSdxFCLnkRS26;vclib;dxCloudServiceLibraryRS26;office2K;dxPSLnksRS26;FireDACDBXDriver;cxGridRS26;dxPsPrVwAdvRS26;dxPDFViewerRS26;vclx;dxPScxTLLnkRS26;RESTBackendComponents;VCLRESTComponents;vclie;bindengine;CloudService;dxmdsRS26;FireDACMySQLDriver;dxdborRS26;DataSnapClient;bindcompdbx;DBXSybaseASEDriver;IndyIPServer;cxPivotGridRS26;IndySystem;cxTreeListdxBarPopupMenuRS26;dsnapcon;cxTreeListRS26;dxPScxPivotGridLnkRS26;cxSchedulerRibbonStyleEventEditorRS26;dxPSCoreRS26;FireDACMSAccDriver;FireDACInfxDriver;fmxFireDAC;vclimg;dxSpreadSheetRS26;dxBarExtItemsRS26;dxPSdxGaugeControlLnkRS26;emshosting;DBXOdbcDriver;FireDACTDataDriver;dxdbtrRS26;dxRichEditControlCoreRS26;soaprtl;DbxCommonDriver;dxFlowChartAdvancedCustomizeFormRS26;dxDockingRS26;xmlrtl;DataSnapNativeClient;soapmidas;fmxobj;cxLibraryRS26;rtl;emsserverresource;DbxClientDriver;DBXSybaseASADriver;dxPScxSchedulerLnkRS26;dxSpreadSheetConditionalFormattingDialogsRS26;appanalytics;dxRibbonCustomizationFormRS26;cxSchedulerGridRS26;IndyIPClient;bindcompvcl;dxFlowChartLayoutsRS26;TeeUI;dxADOEMFRS26;VclSmp;FireDACODBCDriver;dxRibbonRS26;DataSnapIndy10ServerTransport;dxPScxCommonRS26;dxRichEditDocumentModelRS26;DataSnapProviderClient;FireDACMongoDBDriver;dxFlowChartDesignerRS26;dxGanttControlRS26;dxPScxGridLnkRS26;dxSpreadSheetCoreRS26;DataSnapServerMidas;RESTComponents;DBXInterBaseDriver;dxPScxExtCommonRS26;emsclientfiredac;DataSnapFireDAC;DBXMSSQLDriver;dxRichEditControlRS26;DatasnapConnectorsFreePascal;dxGaugeControlRS26;dxorgcRS26;dxPScxVGridLnkRS26;bindcompfmx;DBXOracleDriver;dxOrgChartAdvancedCustomizeFormRS26;inetdb;dxBarDBNavRS26;emsedge;fmx;fmxdae;FireDACIBDriver;dxServerModeRS26;dxWizardControlRS26;dxTabbedMDIRS26;dxEMFRS26;dbexpress;IndyCore;dxComnRS26;dsnap;DataSnapCommon;emsclient;FireDACCommon;cxGridEMFRS26;DataSnapConnectors;cxSchedulerTreeBrowserRS26;soapserver;cxPivotGridOLAPRS26;cxVerticalGridRS26;dxtrmdRS26;FireDACOracleDriver;DBXMySQLDriver;cxSchedulerRS26;cxSchedulerWebServiceStorageRS26;dxPSdxLCLnkRS26;DBXFirebirdDriver;FireDACCommonODBC;FireDACCommonDriver;inet;dxSpellCheckerRS26;IndyIPCommon;dxSpreadSheetCoreConditionalFormattingDialogsRS26;vcl;dxPSdxDBOCLnkRS26;FireDACDb2Driver;dxSpreadSheetReportDesignerRS26;dxPScxPCProdRS26;dxNavBarRS26;dxCoreRS26;cxExportRS26;TeeDB;FireDAC;dxPSPrVwRibbonRS26;FireDACSqliteDriver;ibmonitor;FireDACPgDriver;FireDACASADriver;dxPSRichEditControlLnkRS26;cxPivotGridChartRS26;dxPSDBTeeChartRS26;ibxpress;Tee;DataSnapServer;ibxbindings;dxPSdxDBTVLnkRS26;vclwinx;FireDACDSDriver;dxTileControlRS26;dxSkinsCoreRS26;CustomIPTransport;vcldsnap;SynEditDR;bindcomp;dxPSdxOCLnkRS26;DBXInformixDriver;dbxcds;adortl;dxBarExtDBItemsRS26;dsnapxml;dbrtl;IndyProtocols;inetdbxpress;dxPSdxPDFViewerLnkRS26;fmxase;$(DCC_UsePackage)</DCC_UsePackage>
@@ -89,6 +93,10 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
+        <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -107,11 +115,17 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_Define>FullDebugMode;LogMemoryLeakDetailToFile;$(DCC_Define)</DCC_Define>
         <Debugger_RunParams>Herreras.ini</Debugger_RunParams>
+        <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
+        <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
+        <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -123,7 +137,7 @@
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1034</VerInfo_Locale>
-        <Icon_MainIcon>fzam_Icon1.ico</Icon_MainIcon>
+        <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
         <VerInfo_Build>1</VerInfo_Build>
         <VerInfo_Special>true</VerInfo_Special>
         <VerInfo_Private>true</VerInfo_Private>
@@ -133,11 +147,13 @@
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1034</VerInfo_Locale>
-        <Icon_MainIcon>fzam_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
         <VerInfo_Build>1</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.1;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;SpecialBuild=;PrivateBuild=</VerInfo_Keys>
         <VerInfo_Special>true</VerInfo_Special>
         <VerInfo_Private>true</VerInfo_Private>
+        <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -668,6 +684,48 @@
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>fzam.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Debug" Class="UWP_DelphiLogo150">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets\</RemoteDir>
+                        <RemoteName>Logo150x150.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets\</RemoteDir>
+                        <RemoteName>Logo150x150.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150">
+                    <Platform Name="Win64">
+                        <RemoteDir>Assets\</RemoteDir>
+                        <RemoteName>Logo150x150.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Debug" Class="UWP_DelphiLogo44">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets\</RemoteDir>
+                        <RemoteName>Logo44x44.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets\</RemoteDir>
+                        <RemoteName>Logo44x44.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44">
+                    <Platform Name="Win64">
+                        <RemoteDir>Assets\</RemoteDir>
+                        <RemoteName>Logo44x44.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
