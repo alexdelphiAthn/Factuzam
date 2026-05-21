@@ -419,37 +419,35 @@ end;
 
 // El Picture.Data del .dfm trae un envoltorio TdxSmartImage que el TImage
 // de VCL no sabe deserializar (queda vacio al cargar el form). Cargamos
-// 'fondo.png' desde disco en runtime probando rutas candidatas relativas
-// al .exe (Debug queda en Win32\Debug, Release al lado de los assets).
+// fondo.png desde un recurso RCDATA incrustado en el .exe (ver fondo.rc
+// + directiva $R en fzam.dpr) para no depender de archivos en disco.
 procedure TfrmMtoPrincipal.CargarFondoLogo;
-const
-  CRutas: array[0..3] of string = (
-    'fondo.png',
-    '..\..\fondo.png',
-    'logo_art\icon-256.png',
-    '..\..\logo_art\icon-256.png'
-  );
 var
-  sBase, sRuta: string;
-  i: Integer;
+  rs: TResourceStream;
+  png: TPngImage;
 begin
-  sBase := inLibDir.DirApp;
-  for i := 0 to High(CRutas) do
+  if FindResource(HInstance, 'FONDO', RT_RCDATA) = 0 then
   begin
-    sRuta := sBase + CRutas[i];
-    if FileExists(sRuta) then
-    begin
-      try
-        imgFondoLogo.Picture.LoadFromFile(sRuta);
-        Exit;
-      except
-        on E: Exception do
-          inLibLog.Log.LogWarning('No se pudo cargar fondo ' + sRuta +
-                                  ': ' + E.Message);
-      end;
-    end;
+    inLibLog.Log.LogWarning('Recurso FONDO no encontrado en el .exe.');
+    Exit;
   end;
-  inLibLog.Log.LogWarning('No se encontro imagen de fondo (fondo.png).');
+  try
+    rs := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
+    try
+      png := TPngImage.Create;
+      try
+        png.LoadFromStream(rs);
+        imgFondoLogo.Picture.Assign(png);
+      finally
+        png.Free;
+      end;
+    finally
+      rs.Free;
+    end;
+  except
+    on E: Exception do
+      inLibLog.Log.LogWarning('Error cargando recurso FONDO: ' + E.Message);
+  end;
 end;
 
 procedure TfrmMtoPrincipal.ActualizarFondoLogo;
