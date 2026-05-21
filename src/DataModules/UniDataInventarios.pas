@@ -605,32 +605,51 @@ end;
 procedure TdmInventarios.RellenarDatosArticulo(const ACodigoArticulo: string;
   out ADescripcion: string; out ANumAtributos: Integer;
   out ATipoArticulo: string);
+var
+  swTotal, swQry1, swQry2: TStopwatch;
+  msArt, msDef: Int64;
 begin
   ADescripcion  := '';
   ANumAtributos := 0;
   ATipoArticulo := 'ESTANDAR';
+  msArt := 0;
+  msDef := 0;
+  swTotal := TStopwatch.StartNew;
 
+  swQry1 := TStopwatch.StartNew;
   unqryArticulo.Close;
   unqryArticulo.ParamByName('CODIGO').AsString := ACodigoArticulo;
   unqryArticulo.Open;
+  msArt := swQry1.ElapsedMilliseconds;
 
   if not unqryArticulo.IsEmpty then
   begin
     ADescripcion  := unqryArticulo.FieldByName('DESCRIPCION_ART').AsString;
     ATipoArticulo := unqryArticulo.FieldByName('TIPO_ART').AsString;
     // Conteo de atributos del artículo padre
+    swQry2 := TStopwatch.StartNew;
     unqryDefinicionArticulo.Close;
     unqryDefinicionArticulo.ParamByName('ARTICULO').AsString := ACodigoArticulo;
     unqryDefinicionArticulo.Open;
     ANumAtributos := unqryDefinicionArticulo.RecordCount;
+    msDef := swQry2.ElapsedMilliseconds;
   end;
+
+  inLibLog.Log.LogPerf('RellenarDatosArticulo',
+    Format('articulo=%s NumAtr=%d | unqryArticulo=%d ' +
+           'unqryDefinicionArticulo=%d',
+           [ACodigoArticulo, ANumAtributos, msArt, msDef]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TdmInventarios.RellenarDatosSku(const ASku: string;
   out ACantidadTeorica: Currency; out APMPActual: Currency);
+var
+  swTotal: TStopwatch;
 begin
   ACantidadTeorica := 0;
   APMPActual       := 0;
+  swTotal := TStopwatch.StartNew;
 
   unqryStockActual.Close;
   unqryStockActual.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
@@ -642,6 +661,11 @@ begin
     ACantidadTeorica := unqryStockActual.FieldByName('CANTIDAD_STK').AsCurrency;
     APMPActual := unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
   end;
+
+  inLibLog.Log.LogPerf('RellenarDatosSku',
+    Format('sku=%s almacen=%s teo=%.2f pmp=%.4f',
+           [ASku, FCodigoAlmacen, ACantidadTeorica, APMPActual]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TdmInventarios.cdsLineasNewRecord(DataSet: TDataSet);
