@@ -59,7 +59,7 @@ type
     //   ...trabajo...
     //   Log.LogPerf('Articulos.AfterScroll', 'CargarPropiedades',
     //               sw.ElapsedMilliseconds);
-    procedure LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
+//    procedure LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
     procedure EnableLogType(ALogType: TLogType);
     procedure DisableLogType(ALogType: TLogType);
     function IsLogTypeEnabled(ALogType: TLogType): Boolean;
@@ -223,16 +223,16 @@ begin
   WriteToLog('SQL: ' + SQLOneLine, ltSQL);
 end;
 
-procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
-begin
-  // Solo al archivo de log general — TLog.WriteToLog ya es thread-safe
-  // (mutex interno). NO tocamos oMemoSQL: es un TcxMemo de DevExpress
-  // y NO es thread-safe. Si necesitas ver las metricas junto al log
-  // SQL en debug, abre el archivo de log (fzam-YYYYMMDD.log) en paralelo.
-  WriteToLog(Format('INFO: [PERF:%s] %s | %d ms',
-                    [ATag, ADetalle, AElapsedMs]),
-             ltInfo);
-end;
+//procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
+//begin
+//  // Solo al archivo de log general — TLog.WriteToLog ya es thread-safe
+//  // (mutex interno). NO tocamos oMemoSQL: es un TcxMemo de DevExpress
+//  // y NO es thread-safe. Si necesitas ver las metricas junto al log
+//  // SQL en debug, abre el archivo de log (fzam-YYYYMMDD.log) en paralelo.
+//  WriteToLog(Format('INFO: [PERF:%s] %s | %d ms',
+//                    [ATag, ADetalle, AElapsedMs]),
+//             ltInfo);
+//end;
 
 procedure TLog.EnableLogType(ALogType: TLogType);
 begin

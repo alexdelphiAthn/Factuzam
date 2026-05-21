@@ -2215,9 +2215,9 @@ end;
 procedure TfrmMtoArticulos.OnAfterScrollArticulos(DataSet: TDataSet);
 var
   CodArticulo: string;
-  swTotal, swTramo: TStopwatch;
-  msCargarProp, msCargarVar, msActVisVar, msAseguraSku,
-  msRefSkus, msRefVarArt, msMapaAtr, msStockAS, msActVisCol: Int64;
+//  swTotal, swTramo: TStopwatch;
+//  msCargarProp, msCargarVar, msActVisVar, msAseguraSku,
+//  msRefSkus, msRefVarArt, msMapaAtr, msStockAS, msActVisCol: Int64;
 begin
   if DataSet.ControlsDisabled then
     Exit;
@@ -2255,49 +2255,49 @@ begin
   // [PERF] Cronometros por tramo. Este handler es el sospechoso principal
   // de los gaps de 5s que se ven al abrir/navegar Articulos. Cada
   // sub-tarea se mide independientemente y se vuelca al log+memo SQL.
-  swTotal := TStopwatch.StartNew;
-  msCargarProp := 0;
-  msCargarVar := 0;
-  msActVisVar := 0;
-  msAseguraSku := 0;
-  msRefSkus := 0;
-  msRefVarArt := 0;
-  msMapaAtr := 0;
-  msStockAS := 0;
-  msActVisCol := 0;
+//  swTotal := TStopwatch.StartNew;
+//  msCargarProp := 0;
+//  msCargarVar := 0;
+//  msActVisVar := 0;
+//  msAseguraSku := 0;
+//  msRefSkus := 0;
+//  msRefVarArt := 0;
+//  msMapaAtr := 0;
+//  msStockAS := 0;
+//  msActVisCol := 0;
 
   // 4. Ahora sí, cargamos la interfaz visual de forma segura
   if Assigned(FGestorProp) then
   begin
-    swTramo := TStopwatch.StartNew;
+//    swTramo := TStopwatch.StartNew;
     FGestorProp.CargarPropiedades(CodArticulo);
-    msCargarProp := swTramo.ElapsedMilliseconds;
+//    msCargarProp := swTramo.ElapsedMilliseconds;
   end;
 
   if Assigned(FGestorVar) then
   begin
-    swTramo := TStopwatch.StartNew;
+//    swTramo := TStopwatch.StartNew;
     FGestorVar.CargarVariaciones(CodArticulo);
-    msCargarVar := swTramo.ElapsedMilliseconds;
+//    msCargarVar := swTramo.ElapsedMilliseconds;
   end;
 
-  swTramo := TStopwatch.StartNew;
+//  swTramo := TStopwatch.StartNew;
   ActualizarVisibilidadVariaciones;
-  msActVisVar := swTramo.ElapsedMilliseconds;
+//  msActVisVar := swTramo.ElapsedMilliseconds;
 
   // Si el artículo no tiene variaciones, garantizamos un SKU = código artículo
   // para que la rejilla SKUs y CB tenga al menos una fila editable
-  swTramo := TStopwatch.StartNew;
+//  swTramo := TStopwatch.StartNew;
   AsegurarSkuArticuloSinVariaciones(CodArticulo);
-  msAseguraSku := swTramo.ElapsedMilliseconds;
+//  msAseguraSku := swTramo.ElapsedMilliseconds;
 
-  swTramo := TStopwatch.StartNew;
+//  swTramo := TStopwatch.StartNew;
   dmmArticulos.unqrySkus.Refresh;
-  msRefSkus := swTramo.ElapsedMilliseconds;
+//  msRefSkus := swTramo.ElapsedMilliseconds;
 
-  swTramo := TStopwatch.StartNew;
+//  swTramo := TStopwatch.StartNew;
   dmmArticulos.unqryVariacionesArticulos.Refresh;
-  msRefVarArt := swTramo.ElapsedMilliseconds;
+//  msRefVarArt := swTramo.ElapsedMilliseconds;
 
   // Refrescamos el mapa NOMBRE_ATRIBUTO -> ID_VA ANTES de
   // unqryStockArticulosAfterScroll: el bestfit que hace ese metodo necesita
@@ -2305,18 +2305,18 @@ begin
   // cuadradito.
   if FAtributosStock <> nil then
   begin
-    swTramo := TStopwatch.StartNew;
+//    swTramo := TStopwatch.StartNew;
     CargarMapaAtributosArticulo(CodArticulo, FAtributosStock);
-    msMapaAtr := swTramo.ElapsedMilliseconds;
+//    msMapaAtr := swTramo.ElapsedMilliseconds;
   end;
 
   // Stock perezoso: solo recargar el SP si la pestaña Stock esta
   // visible. AsegurarStockAlDia ademas evita reejecutar si el articulo
   // no ha cambiado.
-  swTramo := TStopwatch.StartNew;
+//  swTramo := TStopwatch.StartNew;
   if pcDetail.ActivePage = cxTabSheet3 then
     AsegurarStockAlDia;
-  msStockAS := swTramo.ElapsedMilliseconds;
+//  msStockAS := swTramo.ElapsedMilliseconds;
 
   // Tarifas perezoso: si la pestaña Tarifas NO esta visible, cerrar
   // unqryTarifasArticulos. Asi el master/detail no dispara el refresh
@@ -2325,17 +2325,17 @@ begin
   // del articulo actual.
   CerrarSiNoVisible(dmmArticulos.unqryTarifasArticulos, tsTarifas);
 
-  swTramo := TStopwatch.StartNew;
+//  swTramo := TStopwatch.StartNew;
   ActualizarVisibilidadColumnaSku;
-  msActVisCol := swTramo.ElapsedMilliseconds;
+//  msActVisCol := swTramo.ElapsedMilliseconds;
 
-  inLibLog.Log.LogPerf('Articulos.AfterScroll',
-    Format('art=%s | Prop=%d | Var=%d | ActVar=%d | Sku=%d | RefSkus=%d | ' +
-           'RefVarArt=%d | MapaAtr=%d | StockAS=%d | ActColSku=%d',
-           [CodArticulo, msCargarProp, msCargarVar, msActVisVar,
-            msAseguraSku, msRefSkus, msRefVarArt, msMapaAtr, msStockAS,
-            msActVisCol]),
-    swTotal.ElapsedMilliseconds);
+//  inLibLog.Log.LogPerf('Articulos.AfterScroll',
+//    Format('art=%s | Prop=%d | Var=%d | ActVar=%d | Sku=%d | RefSkus=%d | ' +
+//           'RefVarArt=%d | MapaAtr=%d | StockAS=%d | ActColSku=%d',
+//           [CodArticulo, msCargarProp, msCargarVar, msActVisVar,
+//            msAseguraSku, msRefSkus, msRefVarArt, msMapaAtr, msStockAS,
+//            msActVisCol]),
+//    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoArticulos.cxButton11Click(Sender: TObject);

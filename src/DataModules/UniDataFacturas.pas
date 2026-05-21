@@ -780,20 +780,20 @@ const
   TAG = 'Facturas.AbrirDetalles';
 
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
+//  var
+//    swQ: TStopwatch;
   begin
     if qry.Active then Exit;
-    swQ := TStopwatch.StartNew;
-    try
+//    swQ := TStopwatch.StartNew;
+//    try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-        inLibLog.Log.LogPerf(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-    end;
+//      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+//    except
+//      on E: Exception do
+//        inLibLog.Log.LogPerf(TAG,
+//          Nombre + ' ERROR=' + E.Message,
+//          swQ.ElapsedMilliseconds);
+//    end;
   end;
 
 var
@@ -812,71 +812,71 @@ begin
   AbrirConTiempo(unqryTarifas,        'unqryTarifas');
   AbrirConTiempo(unqryPaisesCli,      'unqryPaisesCli');
   AbrirConTiempo(unqryPaisesEmp,      'unqryPaisesEmp');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+//  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmFacturas.AsegurarRecibosAbierta;
-var swQ: TStopwatch;
+//var swQ: TStopwatch;
 begin
   if unqryRecibos.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
+//  swQ := TStopwatch.StartNew;
+//  try
     unqryRecibos.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryRecibos OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-      inLibLog.Log.LogPerf('Facturas.Lazy',
-        'unqryRecibos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-  end;
+//    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryRecibos OK',
+//      swQ.ElapsedMilliseconds);
+//  except
+//    on E: Exception do
+//      inLibLog.Log.LogPerf('Facturas.Lazy',
+//        'unqryRecibos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+//  end;
 end;
 
 procedure TdmFacturas.AsegurarConsolidacionAbierta;
-var swQ: TStopwatch;
+//var swQ: TStopwatch;
 begin
   if unqryConsolidacion.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
+//  swQ := TStopwatch.StartNew;
+//  try
     unqryConsolidacion.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryConsolidacion OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-      inLibLog.Log.LogPerf('Facturas.Lazy',
-        'unqryConsolidacion ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-  end;
+//    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryConsolidacion OK',
+//      swQ.ElapsedMilliseconds);
+//  except
+//    on E: Exception do
+//      inLibLog.Log.LogPerf('Facturas.Lazy',
+//        'unqryConsolidacion ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+//  end;
 end;
 
 procedure TdmFacturas.AsegurarErroresAbierta;
-var swQ: TStopwatch;
+//var swQ: TStopwatch;
 begin
   if unqryErrores.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
+//  swQ := TStopwatch.StartNew;
+//  try
     unqryErrores.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryErrores OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-      inLibLog.Log.LogPerf('Facturas.Lazy',
-        'unqryErrores ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-  end;
+//    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryErrores OK',
+//      swQ.ElapsedMilliseconds);
+//  except
+//    on E: Exception do
+//      inLibLog.Log.LogPerf('Facturas.Lazy',
+//        'unqryErrores ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+//  end;
 end;
 
 procedure TdmFacturas.AsegurarMovimientosFacAbierta;
-var swQ: TStopwatch;
+//var swQ: TStopwatch;
 begin
   if unqryMovimientosFac.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
+//  swQ := TStopwatch.StartNew;
+//  try
     unqryMovimientosFac.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryMovimientosFac OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-      inLibLog.Log.LogPerf('Facturas.Lazy',
-        'unqryMovimientosFac ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-  end;
+//    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryMovimientosFac OK',
+//      swQ.ElapsedMilliseconds);
+//  except
+//    on E: Exception do
+//      inLibLog.Log.LogPerf('Facturas.Lazy',
+//        'unqryMovimientosFac ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+//  end;
 end;
 
 procedure TdmFacturas.DataModuleDestroy(Sender: TObject);

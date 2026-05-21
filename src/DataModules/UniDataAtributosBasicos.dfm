@@ -9,7 +9,9 @@ inherited dmAtributosBasicos: TdmAtributosBasicos
       '   `INSTANTE_MODIF`, `INSTANTE_ALTA`,'
       '   `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
-      '  (:`ID_VA_ATB`, :`CODIGO_ATB`, :`NOMBRE_ATB`, :`DESCRIPCION_ATB`,'
+      
+        '  (:`ID_VA_ATB`, :`CODIGO_ATB`, :`NOMBRE_ATB`, :`DESCRIPCION_ATB' +
+        '`,'
       '   :`HEX_ATB`, :`VALOR_NUM_ATB`, :`UNIDAD_ATB`,'
       '   :`ORDEN_ATB`, :`ESACTIVO_ATB`,'
       '   :`INSTANTE_MODIF`, :`INSTANTE_ALTA`,'
@@ -52,7 +54,6 @@ inherited dmAtributosBasicos: TdmAtributosBasicos
       'ORDER BY ID_VA_ATB, ORDEN_ATB, NOMBRE_ATB'
       '')
     Active = True
-    BeforePost = unqryTablaGBeforePost
     Left = 24
   end
   object unqryAtributosLookup: TUniQuery

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataGrupos                                                 }
 {    Tipo:       Data Module                                                   }
@@ -52,22 +52,22 @@ begin
 end;
 
 procedure TdmGrupos.AbrirDetalles;
-var
-  swQ: TStopwatch;
+//var
+//  swQ: TStopwatch;
 begin
   inherited;
   if unqryUsuariosGrupo.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
+//  swQ := TStopwatch.StartNew;
+//  try
     unqryUsuariosGrupo.Open;
-    inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
-      'unqryUsuariosGrupo OK', swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-      inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
-        'unqryUsuariosGrupo ERROR=' + E.Message,
-        swQ.ElapsedMilliseconds);
-  end;
+//    inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
+//      'unqryUsuariosGrupo OK', swQ.ElapsedMilliseconds);
+//  except
+//    on E: Exception do
+//      inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
+//        'unqryUsuariosGrupo ERROR=' + E.Message,
+//        swQ.ElapsedMilliseconds);
+//  end;
 end;
 
 initialization

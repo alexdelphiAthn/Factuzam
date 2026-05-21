@@ -53,7 +53,7 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       '   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)'
       'VALUES'
       '  (:ID_AC_ACD, :ID_AV_ACD, :ORDEN_ACD, :ID_ATB_ACD,'
-
+      
         '   :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODI' +
         'F)')
     SQLDelete.Strings = (
@@ -73,7 +73,7 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       '  AND ID_AV_ACD = :Old_ID_AV_ACD')
     SQLLock.Strings = (
       'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD,'
-
+      
         '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
         'F'
       '  FROM fza_atributos_conjuntos_det'
@@ -82,7 +82,7 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
       ' FOR UPDATE')
     SQLRefresh.Strings = (
       'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD,'
-
+      
         '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
         'F'
       '  FROM fza_atributos_conjuntos_det'
@@ -93,7 +93,7 @@ inherited dmAtributosConjuntos: TdmAtributosConjuntos
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD,'
-
+      
         '       INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODI' +
         'F'
       '  FROM fza_atributos_conjuntos_det'
