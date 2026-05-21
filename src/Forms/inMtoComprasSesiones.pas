@@ -1,16 +1,17 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Modulo:       inMtoPruebaSesionGrid                                         }
+{  Modulo:       inMtoComprasSesiones                                          }
 {    Tipo:       Formulario (Mto)                                              }
-{ Version:       0.2.0                                                         }
-{   Fecha:       18/05/2026                                                    }
+{ Version:       1.0.0                                                         }
+{   Fecha:       21/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Prueba 01 de la serie pruebas_sesiones: variante simplificada del Mto de  }
-{    sesiones de compra con edicion INLINE de cantidades por talla.            }
+{    Sesion de compra: crear articulos en lote y un pedido o un albaran        }
+{    contra un proveedor. Variante grid plano con edicion INLINE de            }
+{    cantidades por talla.                                                     }
 {                                                                              }
 {      - Cabecera: Empresa, Proveedor, Tarifa venta, Margen,                   }
 {        Multiplo redondeo, Ajuste final.                                      }
@@ -34,10 +35,9 @@
 {        basico, mismo combo que el grid de inventarios).                      }
 {      - TfrmModalSelFamilia (picker jerarquico, tecla F3).                    }
 {                                                                              }
-{    Documentado en                                                            }
-{    DESARROLLOS EN CURSO/pruebas_sesiones/pruebas_sesiones.md.                }
+{    Documentado en DESARROLLOS EN CURSO/compras_sesiones.md.                  }
 {******************************************************************************}
-unit inMtoPruebaSesionGrid;
+unit inMtoComprasSesiones;
 
 interface
 
@@ -74,7 +74,7 @@ type
   // inLibGridTallasInline (compartidos con futuros Mtos de Pedidos
   // / Albaranes / Facturas que reusen el patron).
 
-  TfrmMtoPruebaSesionGrid = class(TfrmMtoGen)
+  TfrmMtoComprasSesiones = class(TfrmMtoGen)
     // ------------------------------------------------------------------
     // Columnas grid lista (tsLista, heredada)
     // ------------------------------------------------------------------
@@ -179,6 +179,7 @@ type
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
+    procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
@@ -205,7 +206,7 @@ type
   end;
 
 var
-  frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid;
+  frmMtoComprasSesiones: TfrmMtoComprasSesiones;
 
 implementation
 
@@ -233,19 +234,19 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 // La logica vive en inLibGridTallasInline.ActivarEnterComoTab — funciona
 // igual para cualquier Mto que use el patron.
 
-procedure TfrmMtoPruebaSesionGrid.cxgrdLineasEnter(Sender: TObject);
+procedure TfrmMtoComprasSesiones.cxgrdLineasEnter(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
 end;
 
-procedure TfrmMtoPruebaSesionGrid.cxgrdLineasExit(Sender: TObject);
+procedure TfrmMtoComprasSesiones.cxgrdLineasExit(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
-procedure TfrmMtoPruebaSesionGrid.btnGrabarClick(Sender: TObject);
+procedure TfrmMtoComprasSesiones.btnGrabarClick(Sender: TObject);
 begin
   inherited;
   // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar el
@@ -259,12 +260,12 @@ end;
 //   Bootstrapping
 // ===========================================================================
 
-function TfrmMtoPruebaSesionGrid.Dmm: TdmComprasSesiones;
+function TfrmMtoComprasSesiones.Dmm: TdmComprasSesiones;
 begin
   Result := tdmDataModule as TdmComprasSesiones;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.CrearTablaPrincipal;
+procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
   inherited;
   if tdmDataModule = nil then Exit;
@@ -308,7 +309,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.dsTablaGDataChangeHook(Sender: TObject;
+procedure TfrmMtoComprasSesiones.dsTablaGDataChangeHook(Sender: TObject;
                                                           Field: TField);
 begin
   // Field = nil => cambio de record activo en el master (no es un cambio
@@ -323,7 +324,7 @@ begin
   FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.unqrySesionLinAfterPostHook(
+procedure TfrmMtoComprasSesiones.unqrySesionLinAfterPostHook(
                                                       DataSet: TDataSet);
 begin
   // Cuando el usuario cambia de fila el dataset hace Post automatico:
@@ -336,12 +337,12 @@ begin
     FGestorTallas.CargarCantidadesTodasLineas;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.ResetForm;
+procedure TfrmMtoComprasSesiones.ResetForm;
 begin
   inherited;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.FormCreate(Sender: TObject);
+procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
 begin
   // OJO: TODO lo que vaya a usar el `inherited` (que ejecuta
   // ProcesarPerfiles -> CrearTablaPrincipal -> abre unqrySesionLin -> el
@@ -383,7 +384,7 @@ begin
   CargarBasicosColor;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.FormDestroy(Sender: TObject);
+procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 begin
   // Cerrar la query del lookup y soltar la connection ANTES del
   // inherited: TfrmMtoGen.FormDestroy libera el DataModule y, por
@@ -409,7 +410,7 @@ begin
   inherited;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.CargarBasicosColor;
+procedure TfrmMtoComprasSesiones.CargarBasicosColor;
 var
   q : TUniQuery;
   i : Integer;
@@ -441,7 +442,7 @@ end;
 //   Creacion y cache de columnas de talla
 // ===========================================================================
 
-procedure TfrmMtoPruebaSesionGrid.CrearColumnasTallas;
+procedure TfrmMtoComprasSesiones.CrearColumnasTallas;
 var
   i        : Integer;
   col      : TcxGridDBColumn;
@@ -475,7 +476,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.InicializarGestorTallas;
+procedure TfrmMtoComprasSesiones.InicializarGestorTallas;
 var
   cfg     : TGridTallasConfig;
   i       : Integer;
@@ -538,7 +539,7 @@ end;
 //   Lineas — alta, baja, navegacion
 // ===========================================================================
 
-procedure TfrmMtoPruebaSesionGrid.btnAddLineaClick(Sender: TObject);
+procedure TfrmMtoComprasSesiones.btnAddLineaClick(Sender: TObject);
 begin
   inherited;
   if Dmm.unqryTablaG.IsEmpty then
@@ -560,7 +561,7 @@ begin
   Dmm.unqrySesionLin.Insert;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.btnDelLineaClick(Sender: TObject);
+procedure TfrmMtoComprasSesiones.btnDelLineaClick(Sender: TObject);
 var
   iLinea : Integer;
 begin
@@ -595,7 +596,7 @@ begin
   if Assigned(FGestorTallas) then FGestorTallas.RecalcularMaxColumnas;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.btnImprimirClick(Sender: TObject);
+procedure TfrmMtoComprasSesiones.btnImprimirClick(Sender: TObject);
 var
   form     : TfrmPrintSesion;
   sSerie   : string;
@@ -627,7 +628,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.btnNuevoColorClick(Sender: TObject);
+procedure TfrmMtoComprasSesiones.btnNuevoColorClick(Sender: TObject);
 var
   ds                 : TDataSet;
   sFam, sCodArt      : string;
@@ -762,7 +763,7 @@ begin
     tvLineas.Controller.EditingController.ShowEdit;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.tvLineasEditKeyDown(
+procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
@@ -783,25 +784,47 @@ begin
   Key := 0;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.dbcLinFamiliaPropertiesEditValueChanged(
+procedure TfrmMtoComprasSesiones.dbcLinFamiliaPropertiesEditValueChanged(
   Sender: TObject);
 var
   ed       : TcxCustomEdit;
   sNuevo   : string;
   sTent    : string;
+  sPrv     : string;
+  rDup     : TResolverDuplicadoSesion;
 begin
   inherited;
   if not (Sender is TcxCustomEdit) then Exit;
   ed := TcxCustomEdit(Sender);
   ed.PostEditValue;
 
-  // El usuario ha tecleado el codigo de familia directamente (sin F3).
-  // Comportamos igual que el modal: si la familia tiene contador activo,
-  // ResolverCodigoFamilia genera CODIGO_FAM+RELLENO. Si ya hay un codigo
-  // tentativo expandido para esa misma familia ('BOLSOS00001' cuando
-  // sNuevo='BOLSOS'), no consumimos otro contador.
   sNuevo := Trim(Dmm.unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString);
   if sNuevo = '' then Exit;
+
+  // 1. Reusar articulo existente: si lo tecleado coincide con un
+  //    CODIGO_ART_ART, marcamos REUSAR y prerellenamos descripcion,
+  //    familia, sistema de tallas, color base y coste sugerido. Asi el
+  //    usuario solo tiene que poner el color nuevo y las cantidades.
+  sPrv := '';
+  if not Dmm.unqryTablaG.IsEmpty then
+    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sNuevo, sPrv);
+  if rDup.Encontrado then
+  begin
+    AplicarDuplicadoEnLinea(Dmm, rDup);
+    if Assigned(FGestorTallas) then
+    begin
+      FGestorTallas.RecalcularMaxColumnas;
+      FGestorTallas.ActualizarCaptionsLineaActiva;
+    end;
+    Exit;
+  end;
+
+  // 2. Si no es un CODIGO_ART existente, probar como CODIGO_FAM:
+  //    ResolverCodigoFamilia genera CODIGO_FAM+RELLENO si la familia
+  //    tiene contador activo. Salvaguarda: si ya hay un codigo
+  //    tentativo expandido para la misma familia (p.ej. 'BOLSOS00001'
+  //    cuando sNuevo='BOLSOS'), no consumimos otro contador.
   sTent  := Dmm.unqrySesionLin.FieldByName(
                                     'CODIGO_ART_TENTATIVO_SESLIN').AsString;
   if (sTent <> '') and (Length(sTent) > Length(sNuevo))
@@ -810,7 +833,42 @@ begin
   ExpandirCodigoFamiliaActiva(sNuevo);
 end;
 
-procedure TfrmMtoPruebaSesionGrid.ExpandirCodigoFamiliaActiva(
+procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  ed   : TcxCustomEdit;
+  sRef : string;
+  sPrv : string;
+  rDup : TResolverDuplicadoSesion;
+begin
+  inherited;
+  if not (Sender is TcxCustomEdit) then Exit;
+  ed := TcxCustomEdit(Sender);
+  ed.PostEditValue;
+
+  // Si la cabecera no tiene proveedor todavia no podemos identificar
+  // un duplicado por referencia: salimos en silencio.
+  if Dmm.unqryTablaG.IsEmpty then Exit;
+  sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if sPrv = '' then Exit;
+  if Dmm.unqrySesionLin.IsEmpty then Exit;
+
+  sRef := Trim(Dmm.unqrySesionLin.FieldByName('REF_PRV_SESLIN').AsString);
+  if sRef = '' then Exit;
+
+  // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,
+  // marcamos REUSAR (la helper rellena el resto de campos de la linea).
+  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sRef, sPrv);
+  if not rDup.Encontrado then Exit;
+  AplicarDuplicadoEnLinea(Dmm, rDup);
+  if Assigned(FGestorTallas) then
+  begin
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.ExpandirCodigoFamiliaActiva(
   const ACodigoFam: string; const ANombreFam: string);
 var
   ds         : TDataSet;
@@ -862,7 +920,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.tvLineasFocusedRecordChanged(
+procedure TfrmMtoComprasSesiones.tvLineasFocusedRecordChanged(
   Sender: TcxCustomGridTableView; APrevFocusedRecord,
   AFocusedRecord: TcxCustomGridRecord;
   ANewItemRecordFocusingChanged: Boolean);
@@ -875,7 +933,7 @@ end;
 //   Color basico — selector con paleta
 // ===========================================================================
 
-procedure TfrmMtoPruebaSesionGrid.tvLineasInitEdit(
+procedure TfrmMtoComprasSesiones.tvLineasInitEdit(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
 var
@@ -913,7 +971,7 @@ begin
     Btn.Kind := bkEllipsis;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.tvLineasCustomDrawCell(
+procedure TfrmMtoComprasSesiones.tvLineasCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
 var
@@ -975,7 +1033,7 @@ begin
     ADone := True;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.tvLineasEditing(
+procedure TfrmMtoComprasSesiones.tvLineasEditing(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   var AAllow: Boolean);
 var
@@ -999,7 +1057,7 @@ begin
     AAllow := False;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.dbcLinColorBasicoPropertiesButtonClick(
+procedure TfrmMtoComprasSesiones.dbcLinColorBasicoPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
   AvActual : string;
@@ -1043,7 +1101,7 @@ end;
 //   Auto-PVP
 // ===========================================================================
 
-procedure TfrmMtoPruebaSesionGrid.dbcLinPrecioCompraPropertiesEditValueChanged(
+procedure TfrmMtoComprasSesiones.dbcLinPrecioCompraPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
@@ -1052,7 +1110,7 @@ begin
   ProponerPrecioVenta;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.ProponerPrecioVenta;
+procedure TfrmMtoComprasSesiones.ProponerPrecioVenta;
 var
   rCoste, rMargen, rMultiplo, rAjuste, rVenta : Double;
   ds                                          : TDataSet;
@@ -1075,7 +1133,7 @@ end;
 //   Conjunto de tallas (Sistema tallas) cambia -> rebuild de cabeceras
 // ===========================================================================
 
-procedure TfrmMtoPruebaSesionGrid.dbcLinTallasPropertiesEditValueChanged(
+procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
@@ -1100,5 +1158,5 @@ end;
 // engancha automaticamente en InicializarGestorTallas.
 
 initialization
-  ForceReferenceToClass(TfrmMtoPruebaSesionGrid);
+  ForceReferenceToClass(TfrmMtoComprasSesiones);
 end.

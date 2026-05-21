@@ -629,8 +629,8 @@
             <Form>frmFotoArticulo</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
-        <DCCReference Include="DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas">
-            <Form>frmMtoPruebaSesionGrid</Form>
+        <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
+            <Form>frmMtoComprasSesiones</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
