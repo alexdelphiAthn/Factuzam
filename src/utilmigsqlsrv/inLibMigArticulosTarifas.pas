@@ -344,7 +344,13 @@ begin
 
       // Calcular PRECIO_FINAL y DTO.
       // - Si PrecioRebaja > 0 y < PrecioSalida → ese es el final.
-      // - Si no → final = salida (sin descuento).
+      // - Si no → final = salida (sin descuento) y limpiamos fPorDto: el
+      //   legacy a veces trae PorDtoRebaja basura (típicamente 100) en
+      //   filas sin rebaja real; si no lo reseteamos, queda almacenado
+      //   en PORCENTAJE_DTO_ARTTAR y la pestaña Tarifas muestra "100 %"
+      //   con PRECIO_DTO_ARTTAR vacío y PRECIO_FINAL = PRECIO_SALIDA
+      //   (inconsistente). Saneo retroactivo:
+      //   DESARROLLOS EN CURSO/tarifas_limpiar_porcentaje_dto_basura.sql
       if (fRebaja > 0) and (fRebaja < fSalida) then
       begin
         fFinal := fRebaja;
@@ -352,8 +358,9 @@ begin
       end
       else
       begin
-        fFinal := fSalida;
-        fDto   := 0;
+        fFinal  := fSalida;
+        fDto    := 0;
+        fPorDto := 0;
       end;
 
       // 14 columnas en cCols: el literal 'S' (ESACTIVO_ARTTAR) va
