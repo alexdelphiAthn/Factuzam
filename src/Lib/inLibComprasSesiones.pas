@@ -123,6 +123,14 @@ procedure ImportarKitsDeProveedor(ADM: TdmComprasSesiones;
                                   const AUsuario: string);
 
 function  ValidarSesion(ADM: TdmComprasSesiones; out AError: string): Boolean;
+
+// Recorre TODAS las reglas de validacion y deja una linea por
+// incidencia en AIncidencias. Devuelve True si no hay ninguna (sesion
+// lista para materializar). El form usa esto para abrir un modal con
+// la lista en lugar del mensaje unico de ValidarSesion.
+function ValidarSesionDetallado(ADM: TdmComprasSesiones;
+                                 AIncidencias: TStrings): Boolean;
+
 function  ContarArticulosNuevos(ADM: TdmComprasSesiones): Integer;
 function  ContarSkusPotenciales(ADM: TdmComprasSesiones): Integer;
 function  CalcularTotalCompra(ADM: TdmComprasSesiones): Double;
@@ -902,35 +910,151 @@ end;
 
 function ValidarSesion(ADM: TdmComprasSesiones; out AError: string): Boolean;
 var
+  inc: TStringList;
+begin
+  // ValidarSesion (legacy) ahora delega en el validador detallado y
+  // devuelve solo la primera incidencia como string. El form prefiere
+  // llamar a ValidarSesionDetallado para mostrar todas.
+  inc := TStringList.Create;
+  try
+    Result := ValidarSesionDetallado(ADM, inc);
+    if Result then AError := ''
+    else if inc.Count > 0 then AError := inc[0]
+    else AError := 'Hay incidencias sin detalle.';
+  finally
+    FreeAndNil(inc);
+  end;
+end;
+
+function ValidarSesionDetallado(ADM: TdmComprasSesiones;
+                                 AIncidencias: TStrings): Boolean;
+var
   q: TUniQuery;
+  sSerie, sNum: string;
+
+  procedure AnadirInc(const ALinea: Integer;
+                       const ATipo, AMensaje: string);
+  var
+    sLin: string;
+  begin
+    if ALinea > 0 then sLin := Format('Linea %d', [ALinea])
+    else sLin := 'Cabecera';
+    AIncidencias.Add(Format('[%s] %s: %s', [ATipo, sLin, AMensaje]));
+  end;
+
 begin
   Result := True;
-  AError := '';
+  if AIncidencias = nil then Exit;
+  AIncidencias.Clear;
+  if ADM.unqryTablaG.IsEmpty then
+  begin
+    AIncidencias.Add('[CABECERA] No hay sesion activa.');
+    Exit(False);
+  end;
+
+  sSerie := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNum   := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+
+  // ---- Cabecera ----
+  if Trim(ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString) = '' then
+    AnadirInc(0, 'CABECERA', 'Falta CODIGO_EMP_SES (Empresa).');
+  if Trim(ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString) = '' then
+    AnadirInc(0, 'CABECERA', 'Falta CODIGO_PRV_SES (Proveedor).');
+  // Si la cabecera marca generar albaran, exigimos almacen
+  if (ADM.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S')
+     and (Trim(ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString) = '')
+  then
+    AnadirInc(0, 'CABECERA',
+        'ESGENERA_ALBARAN=S pero no hay CODIGO_ALM_SES (Almacen).');
+
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
-    // 1. Líneas marcadas como duplicado sin acción resuelta
+
+    // ---- Hay al menos una linea ----
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM fza_compras_sesiones_lineas ' +
-      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
-      '   AND ESDUPLICADO_SESLIN = ''S'' ' +
-      '   AND (ACCION_DUPLICADO_SESLIN IS NULL OR ACCION_DUPLICADO_SESLIN = ' +
-      ''''')';
-    q.ParamByName('s').AsString :=
-      ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString :=
-      ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNum;
     q.Open;
-    if q.FieldByName('N').AsInteger > 0 then
+    if q.FieldByName('N').AsInteger = 0 then
+      AnadirInc(0, 'CABECERA', 'La sesion no tiene lineas.');
+    q.Close;
+
+    // ---- Lineas con codigo duplicado sin accion resuelta ----
+    q.SQL.Text :=
+      'SELECT L.LINEA_SESLIN, L.CODIGO_ART_TENTATIVO_SESLIN, ' +
+      '       L.DESCRIPCION_SESLIN, ' +
+      '       A.ESACTIVO_ART ' +
+      '  FROM fza_compras_sesiones_lineas L ' +
+      '  LEFT JOIN fza_articulos A ' +
+      '         ON A.CODIGO_ART_ART = L.CODIGO_ART_TENTATIVO_SESLIN ' +
+      ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
+      '   AND L.ESDUPLICADO_SESLIN = ''S'' ' +
+      '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+      '        OR TRIM(L.ACCION_DUPLICADO_SESLIN) = '''') ' +
+      ' ORDER BY L.LINEA_SESLIN';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNum;
+    q.Open;
+    while not q.Eof do
     begin
-      AError := 'Hay líneas con código duplicado sin resolver.';
-      Exit(False);
+      AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
+          'DUPLICADO',
+          Format('Codigo %s ya existe en fza_articulos%s. ' +
+                 'Decide REUSAR o RENOMBRAR.',
+                 [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
+                  IfThen(q.FieldByName('ESACTIVO_ART').AsString = 'N',
+                         ' (inactivo)', '')]));
+      q.Next;
     end;
     q.Close;
 
-    // 2. Líneas MATRIZ sin celdas
+    // ---- Lineas sin CODIGO_ART_TENTATIVO_SESLIN ----
     q.SQL.Text :=
-      'SELECT L.LINEA_SESLIN, L.DESCRIPCION_SESLIN ' +
+      'SELECT LINEA_SESLIN FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
+      '   AND (CODIGO_ART_TENTATIVO_SESLIN IS NULL ' +
+      '        OR TRIM(CODIGO_ART_TENTATIVO_SESLIN) = '''') ' +
+      ' ORDER BY LINEA_SESLIN';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNum;
+    q.Open;
+    while not q.Eof do
+    begin
+      AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
+          'CODIGO',
+          'La linea no tiene CODIGO_ART_TENTATIVO_SESLIN.');
+      q.Next;
+    end;
+    q.Close;
+
+    // ---- Lineas sin descripcion ----
+    q.SQL.Text :=
+      'SELECT LINEA_SESLIN, CODIGO_ART_TENTATIVO_SESLIN ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
+      '   AND (DESCRIPCION_SESLIN IS NULL ' +
+      '        OR TRIM(DESCRIPCION_SESLIN) = '''') ' +
+      ' ORDER BY LINEA_SESLIN';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNum;
+    q.Open;
+    while not q.Eof do
+    begin
+      AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
+          'DESCRIPCION',
+          Format('Linea sin descripcion (codigo %s).',
+                 [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString]));
+      q.Next;
+    end;
+    q.Close;
+
+    // ---- Lineas MATRIZ sin celdas con cantidad > 0 ----
+    q.SQL.Text :=
+      'SELECT L.LINEA_SESLIN, L.CODIGO_ART_TENTATIVO_SESLIN, ' +
+      '       L.DESCRIPCION_SESLIN ' +
       '  FROM fza_compras_sesiones_lineas L ' +
       ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
       '   AND L.TIPO_LINEA_SESLIN = ''MATRIZ'' ' +
@@ -938,23 +1062,46 @@ begin
       '                    WHERE C.SERIE_SES_SESCEL = L.SERIE_SES_SESLIN ' +
       '                      AND C.NUMERO_SES_SESCEL = L.NUMERO_SES_SESLIN ' +
       '                      AND C.LINEA_SES_SESCEL = L.LINEA_SESLIN ' +
-      '                      AND C.CANTIDAD_SESCEL > 0)';
-    q.ParamByName('s').AsString :=
-      ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString :=
-      ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+      '                      AND C.CANTIDAD_SESCEL > 0) ' +
+      ' ORDER BY L.LINEA_SESLIN';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNum;
     q.Open;
-    if not q.IsEmpty then
+    while not q.Eof do
     begin
-      AError := Format(
-        'La línea %d (%s) es de tipo MATRIZ pero no tiene celdas con cantidad.',
-                       [q.FieldByName('LINEA_SESLIN').AsInteger,
-                        q.FieldByName('DESCRIPCION_SESLIN').AsString]);
-      Exit(False);
+      AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
+          'CANTIDADES',
+          Format('Linea MATRIZ sin cantidades por talla (codigo %s - %s).',
+                 [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
+                  q.FieldByName('DESCRIPCION_SESLIN').AsString]));
+      q.Next;
+    end;
+    q.Close;
+
+    // ---- Lineas MATRIZ sin ID_AC_PIVOT (sistema de tallas) ----
+    q.SQL.Text :=
+      'SELECT LINEA_SESLIN, CODIGO_ART_TENTATIVO_SESLIN ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
+      '   AND TIPO_LINEA_SESLIN = ''MATRIZ'' ' +
+      '   AND (ID_AC_PIVOT_SESLIN IS NULL OR ID_AC_PIVOT_SESLIN = 0) ' +
+      ' ORDER BY LINEA_SESLIN';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNum;
+    q.Open;
+    while not q.Eof do
+    begin
+      AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
+          'SISTEMA_TALLAS',
+          Format('Linea MATRIZ sin sistema de tallas (codigo %s).',
+                 [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString]));
+      q.Next;
     end;
   finally
     FreeAndNil(q);
   end;
+
+  Result := AIncidencias.Count = 0;
 end;
 
 function ContarArticulosNuevos(ADM: TdmComprasSesiones): Integer;
