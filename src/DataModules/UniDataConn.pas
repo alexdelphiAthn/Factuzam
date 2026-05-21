@@ -46,6 +46,7 @@ uses inLibDir,
      inLibtb,
      inLibWin,
      inLibLog,
+     inLibAppParam,
      inMtoPrincipal,
      inLibGlobalVar;
 
@@ -157,12 +158,16 @@ begin
                        [E.ErrorCode, sLineBreak, E.Message]);
     bEsErrorGenerico := True;
   end;
-  {$IFDEF DEBUG}
-    // En debug mostramos el original SOLO si no lo hemos puesto ya en el 'else'
+  // En DEBUG o si el usuario activó appModoDebug, anexamos el error MySQL
+  // original al mensaje mostrado para facilitar el diagnóstico.
+  if {$IFDEF DEBUG}True{$ELSE}
+      (Assigned(inLibAppParam.oAppParams) and
+       inLibAppParam.oAppParams.GetBool('appModoDebug', False)){$ENDIF} then
+  begin
     if (not bEsErrorGenerico) and (E.ErrorCode <> 0) then
       sMensaje := sMensaje + Format('%s(MySQL %d: %s)',
                                      [sLineBreak, E.ErrorCode, E.Message]);
-  {$ENDIF}
+  end;
   // Guardamos en el log siempre el error real
   inLibLog.Log.LogError(Format('MySQL %d: %s', [E.ErrorCode, E.Message]));
   Fail := False;
@@ -171,26 +176,28 @@ end;
 
 procedure TdmConn.DataModuleCreate(Sender: TObject);
 begin
+  // Por defecto el monitor SQL arranca apagado. Se activa más tarde desde
+  // inLibLog.AplicarModosDepuracion según appModoDebugSQL / appModoDebug,
+  // que se llama en cuanto oAppParams está cargado.
   UniSQLMonitor1.Active := False;
-  //oMemoSQL.Visible := False;
   {$IFDEF DEBUG}
     UniSQLMonitor1.Active := True;
-   // oMemoSQL.Visible := True;
-  {$ENDIF }
-  //ofrmMto2.pcPrincipal.Align := alClient;
+  {$ENDIF}
 end;
 
 procedure TdmConn.UniSQLMonitor1SQL(Sender: TObject; Text: string;
   Flag: TDATraceFlag);
 begin
-  {$IFDEF DEBUG}
-    oMemoSQL.Lines.Add('-- begin-- ' +
-                       FormatDateTime('hh:nn:ss.zzz', Now));
+  // Log.LogSQL ya está internamente gateado por ltSQL: si appModoDebugSQL
+  // está apagado, escribir aquí es un no-op. El monitor estará activo
+  // solo cuando uno de los modos lo encienda.
+  inLibLog.Log.LogSQL(Text);
+  if Assigned(oMemoSQL) and oMemoSQL.Visible then
+  begin
+    oMemoSQL.Lines.Add('-- begin-- ' + FormatDateTime('hh:nn:ss.zzz', Now));
     oMemoSQL.Lines.Add(Text);
-    inLibLog.Log.LogSQL(Text);
-    oMemoSQL.Lines.Add('-- end-- ' +
-                       FormatDateTime('hh:nn:ss.zzz', Now));
-  {$ENDIF }
+    oMemoSQL.Lines.Add('-- end-- '   + FormatDateTime('hh:nn:ss.zzz', Now));
+  end;
 end;
 
 procedure TdmConn.ActualizarUserTimeModif(DataSet:TDataSet);

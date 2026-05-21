@@ -185,6 +185,19 @@ begin
   RegistrarParametro('Apariencia', 'appTema',
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');
 
+  // --- Depuración ---
+  // Modo debug general. Reservado: hoy activa también el monitor SQL.
+  // Pensado para incrementar la verbosidad cuando haga falta diagnosticar
+  // un fallo intermitente sin recompilar.
+  RegistrarParametro('Depuración', 'appModoDebug',
+    'Modo debug (incluye trazado SQL y detalles MySQL en errores)',
+    tpBoolean, 'False');
+  // Modo debug SQL aislado. Traza cada sentencia SQL al log y, si está
+  // disponible, al monitor SQL en pantalla.
+  RegistrarParametro('Depuración', 'appModoDebugSQL',
+    'Modo debug SQL (traza todas las sentencias en el log)',
+    tpBoolean, 'False');
+
   Inicializar(AUsuario, AGrupo);
 end;
 
