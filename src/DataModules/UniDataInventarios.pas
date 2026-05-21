@@ -666,6 +666,14 @@ begin
   DataSet.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger        := 0;
   DataSet.FieldByName('USUARIO_ALTA').AsString := FUsuario;
   DataSet.FieldByName('USUARIO_MODIF').AsString := FUsuario;
+  // INSTANTE_ALTA / INSTANTE_MODIF son NOT NULL en BBDD con DEFAULT. El
+  // TClientDataSet propaga Required=True por poIncFieldProps y, si los
+  // dejamos NULL en el buffer, el Post de cdsLineas revienta con
+  // "Field value required" antes incluso de llegar al provider. La BBDD
+  // sobrescribira INSTANTE_MODIF en su ON UPDATE; aqui solo necesitamos
+  // un valor inicial valido.
+  DataSet.FieldByName('INSTANTE_ALTA').AsDateTime  := Now;
+  DataSet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
 procedure TdmInventarios.cdsLineasCalcFields(DataSet: TDataSet);
