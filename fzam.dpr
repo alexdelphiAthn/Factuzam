@@ -95,6 +95,8 @@ uses
   inMtoCajaOpe in 'src\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
   UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe},
   inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
+  inMtoCajaFormasPago in 'src\Forms\inMtoCajaFormasPago.pas' {frmMtoCajaFormasPago},
+  UniDataCajaFormasPago in 'src\DataModules\UniDataCajaFormasPago.pas' {dmCajaFormasPago: TdmCajaFormasPago},
   inLibDefaultValues in 'src\Lib\inLibDefaultValues.pas',
   inLibGenBusq in 'src\Lib\inLibGenBusq.pas',
   inMtoAlmacenes in 'src\Forms\inMtoAlmacenes.pas' {frmMtoAlmacenes},
