@@ -786,7 +786,7 @@ begin
   if AEsColor then FColGrupo.Caption := 'Color'
   else             FColGrupo.Caption := 'Almac'#233'n';
   FColGrupo.DataBinding.FieldName := 'GRUPO';
-  FColGrupo.HeaderAlignmentHorz := taLeft;
+  FColGrupo.HeaderAlignmentHorz := taLeftJustify;
   FColGrupo.Width := 130;
   FColGrupo.Options.Editing := False;
   FColGrupo.Options.Sorting := False;
