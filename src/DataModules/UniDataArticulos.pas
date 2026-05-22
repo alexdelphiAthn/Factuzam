@@ -953,21 +953,23 @@ const
     '       tar.ESIMP_INCL_TAR     AS ESIMP_INCL_TAR,'                        +
     '       :FECHA_APLICACION      AS FECHA_APLICACION,'                      +
     '       COALESCE(stk.STOCK_FILTRADO, 0) AS STOCK_FILTRADO,'               +
-    '       ('                                                                +
-    '         SELECT atb.HEX_ATB'                                             +
-    '           FROM fza_atributos_sku sa'                                    +
-    '           JOIN fza_atributos_valores av'                                +
-    '             ON av.ID_AV = sa.ID_AV_SA'                                  +
-    '            AND av.ID_VA_AV = ''CO'''                                    +
-    '           JOIN fza_articulos_atributos_basicos aab'                     +
-    '             ON aab.CODIGO_ART_AAB = eti.CODIGO_ART_ART'                 +
-    '            AND aab.ID_AV_AAB     = av.ID_AV'                            +
-    '           JOIN fza_atributos_basicos atb'                               +
-    '             ON atb.ID_ATB = aab.ID_ATB_AAB'                             +
-    '          WHERE sa.CODIGO_UNIDAD_SKU_SA = eti.CODIGO_UNIDAD_SKU'         +
-    '          LIMIT 1'                                                       +
-    '       ) AS HEX_ATR_CO'                                                  +
+    '       atb_co.HEX_ATB AS HEX_ATR_CO'                                     +
     '  FROM vi_articulos_skus_etiquetas eti'                                  +
+    '  LEFT JOIN ('                                                           +
+    '       SELECT sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD_SKU,'             +
+    '              MIN(av.ID_AV)           AS ID_AV_CO'                       +
+    '         FROM fza_atributos_sku sa'                                      +
+    '         JOIN fza_atributos_valores av'                                  +
+    '           ON av.ID_AV     = sa.ID_AV_SA'                                +
+    '          AND av.ID_VA_AV  = ''CO'''                                     +
+    '        GROUP BY sa.CODIGO_UNIDAD_SKU_SA'                                +
+    '       ) av_co'                                                          +
+    '    ON av_co.CODIGO_UNIDAD_SKU = eti.CODIGO_UNIDAD_SKU'                  +
+    '  LEFT JOIN fza_articulos_atributos_basicos aab_co'                      +
+    '    ON aab_co.CODIGO_ART_AAB = eti.CODIGO_ART_ART'                       +
+    '   AND aab_co.ID_AV_AAB     = av_co.ID_AV_CO'                            +
+    '  LEFT JOIN fza_atributos_basicos atb_co'                                +
+    '    ON atb_co.ID_ATB = aab_co.ID_ATB_AAB'                                +
     '  LEFT JOIN fza_tarifas tar'                                             +
     '    ON tar.CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR'                       +
     '  LEFT JOIN fza_articulos_tarifas prc'                                   +
