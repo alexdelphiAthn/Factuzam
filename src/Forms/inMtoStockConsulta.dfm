@@ -7,31 +7,32 @@ object frmStockConsulta: TfrmStockConsulta
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
-  Font.Name = 'Segoe UI'
+  Font.Height = -17
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poDesigned
+  StyleElements = [seFont, seClient, seBorder]
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnClose = FormClose
-  TextHeight = 17
+  TextHeight = 21
   object pnlCabecera: TPanel
     Left = 0
     Top = 0
     Width = 900
-    Height = 130
+    Height = 200
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     object lblArt: TcxLabel
       Left = 16
-      Top = 16
+      Top = 14
       Caption = 'Art'#237'culo'
       Transparent = True
     end
     object btnArt: TcxButtonEdit
       Left = 90
-      Top = 14
+      Top = 12
       Properties.Buttons = <
         item
           Default = True
@@ -44,7 +45,7 @@ object frmStockConsulta: TfrmStockConsulta
     end
     object lblDescr: TcxLabel
       Left = 16
-      Top = 56
+      Top = 46
       Caption = ''
       Style.IsFontAssigned = True
       Style.Font.Style = [fsBold]
@@ -52,9 +53,20 @@ object frmStockConsulta: TfrmStockConsulta
       Transparent = True
       Width = 600
     end
+    object lblInfo: TcxLabel
+      Left = 16
+      Top = 78
+      Caption = ''
+      Anchors = [akLeft, akTop, akRight]
+      Properties.WordWrap = True
+      Style.IsFontAssigned = True
+      Transparent = True
+      Height = 116
+      Width = 740
+    end
     object imgFoto: TImage
       Left = 770
-      Top = 8
+      Top = 12
       Width = 114
       Height = 114
       Anchors = [akTop, akRight]
@@ -94,35 +106,20 @@ object frmStockConsulta: TfrmStockConsulta
     Align = alClient
     TabOrder = 2
     object tvStock: TcxGridDBTableView
+      OnCustomDrawColumnHeader = tvStockCustomDrawColumnHeader
       Navigator.Buttons.CustomButtons = <>
-      OptionsBehavior.IncSearch = True
+      OptionsBehavior.IncSearch = False
+      OptionsCustomize.ColumnHiding = False
+      OptionsCustomize.ColumnMoving = False
+      OptionsData.Editing = False
       OptionsView.GroupByBox = False
-      object colSku: TcxGridDBColumn
-        Caption = 'SKU'
-        DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
-        Width = 200
-      end
-      object colColorAv: TcxGridDBColumn
-        Caption = 'Color'
-        DataBinding.FieldName = 'COLOR_AV'
-        Width = 140
-      end
-      object colTallaAv: TcxGridDBColumn
+      object colTalla: TcxGridDBColumn
         Caption = 'Talla'
-        DataBinding.FieldName = 'TALLA_AV'
-        Width = 100
-      end
-      object colAlmacen: TcxGridDBColumn
-        Caption = 'Almac'#233'n'
-        DataBinding.FieldName = 'CODIGO_ALM_ALM'
-        Width = 120
-      end
-      object colCantidad: TcxGridDBColumn
-        Caption = 'Cantidad'
-        DataBinding.FieldName = 'CANTIDAD'
-        PropertiesClassName = 'TcxCurrencyEditProperties'
-        Properties.DisplayFormat = '#,##0.##'
-        HeaderAlignmentHorz = taRightJustify
+        DataBinding.FieldName = 'TALLA'
+        HeaderAlignmentHorz = taCenter
+        Options.Editing = False
+        Options.Sorting = False
+        Tag = -2
         Width = 100
       end
     end
