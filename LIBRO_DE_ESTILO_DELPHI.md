@@ -1298,7 +1298,282 @@ funciona porque la FK lógica contra `fza_articulos` no se cumple.
 
 ---
 
-## 19. Checklist antes de un commit
+## 19. Sistema de log y errores
+
+Subsistema transversal para diagnosticar fallos y trazar actividad del
+usuario sin recompilar. Se controla por completo desde **Parámetros
+Generales** (`frmMtoAppParam`) y los cambios se aplican en caliente.
+
+Las unidades implicadas son:
+
+| Unidad                  | Carpeta            | Rol                                                                                  |
+|-------------------------|--------------------|--------------------------------------------------------------------------------------|
+| `inLibLog`              | `src/Lib/`         | Singleton `Log: TLog`, niveles, rotación, mutex entre procesos, `AplicarModosDepuracion` |
+| `inLibAppParam`         | `src/Lib/`         | Registra los 4 parámetros booleanos y llama a `AplicarFlagsLog` tras `Recargar`      |
+| `UniDataConn`           | `src/DataModules/` | `UniSQLMonitor1SQL` cronometra cada query y la vuelca con `LogSQLExt`                |
+| `inMtoFrmBase`          | `src/Core/`        | `DoShow` / `DoClose` autologuean apertura y cierre de cualquier formulario           |
+| `UniDataGen`            | `src/DataModules/` | `BeforeInsert` / `BeforePost` autologuean alta y modificación del dataset principal  |
+| `inMtoPrincipal`        | `src/Core/`        | `Application.OnException := AppException` — captura global de excepciones no atrapadas |
+| `inMtoAppParam`         | `src/Core/`        | Al guardar parámetros invoca `inLibLog.AplicarModosDepuracion` para refrescar flags  |
+
+### 19.1 Niveles de log
+
+```pascal
+TLogType = (ltInfo, ltWarning, ltError, ltSQL, ltPerf, ltAvanzado);
+```
+
+| Nivel        | Para qué                                                            | API                  |
+|--------------|---------------------------------------------------------------------|----------------------|
+| `ltInfo`     | Mensajes informativos (arranque, hitos del flujo)                   | `Log.LogInfo`        |
+| `ltWarning`  | Avisos no fatales (recursos opcionales no disponibles, fallback)    | `Log.LogWarning`     |
+| `ltError`    | Fallos. Siempre activo. `AppException` escribe aquí                 | `Log.LogError`       |
+| `ltSQL`      | Sentencias SQL con tiempo, filas y OK/ERR                           | `Log.LogSQLExt` (auto desde `UniDataConn`); `Log.LogSQL` para volcado crudo |
+| `ltPerf`     | Cronómetros de operaciones largas (`[PERF:tag] detalle | N ms`)     | `Log.LogPerf`        |
+| `ltAvanzado` | Eventos de UI / dataset (`EVT: unidad | objeto | evento | detalle`) | `Log.LogEvento`      |
+
+`ltInfo`, `ltWarning` y `ltError` están **siempre encendidos**. Los
+otros tres se controlan con los flags de §19.2.
+
+### 19.2 Flags de activación (Parámetros Generales)
+
+Hay dos categorías de switches:
+
+**Categoría "Depuración"** — switches "gordos":
+
+| Clave              | Enciende                                  |
+|--------------------|-------------------------------------------|
+| `appModoDebug`     | `ltPerf` + `ltSQL` + detalle MySQL en `conUniError` |
+| `appModoDebugSQL`  | `ltSQL` (solo SQL, sin cronómetros)       |
+
+**Categoría "Log"** — controles finos:
+
+| Clave            | Enciende      |
+|------------------|---------------|
+| `appLogSQL`      | `ltSQL`       |
+| `appLogAvanzado` | `ltAvanzado`  |
+
+La aplicación de los flags está centralizada en
+`inLibLog.AplicarModosDepuracion` (único *source of truth*). Se invoca:
+
+1. En `TfrmMtoPrincipal.FormCreate` (arranque, en cuanto `oAppParams`
+   está cargado).
+2. En `TfrmMtoAppParam` al guardar parámetros.
+3. A través de `TAppParams.Recargar` → `AplicarFlagsLog` (que delega).
+
+En compilaciones `{$IFDEF DEBUG}` el modo SQL queda forzado a `True`
+independientemente de los flags.
+
+### 19.3 Qué se loguea automáticamente
+
+Si tu unidad hereda de la base correcta y usa el dataset principal del
+patrón, **no tienes que escribir nada**: el log ya cubre lo siguiente.
+
+| Heredas de…   | Te logueas gratis                                                                  |
+|---------------|------------------------------------------------------------------------------------|
+| `TfrmBase`    | `EVT: <UnitName> | <ClassName> | Show | <Name>` y el equivalente `Close`           |
+| `TfrmMtoGen`  | Lo de `TfrmBase` (encadena por `inherited`)                                        |
+| `TdmBase`     | `EVT: <UnitName> | <DataSet.Name> | BeforeInsert | ''` (solo `unqryTablaG`)        |
+| `TdmBase`     | `EVT: <UnitName> | <DataSet.Name> | BeforePost | state=<estado>` (`unqryTablaG` y `unqryPerfiles`) |
+| Toda query que pase por `oConn` | `SQL: [OK|ERR] N ms | filas=- | <sentencia>` vía `UniSQLMonitor1` |
+| Toda excepción no atrapada      | `ERROR: AppException <Clase>: <Mensaje>` + diálogo modal con detalle copiable     |
+
+Reglas que esto impone al código nuevo:
+
+- **Formularios**: heredar de `TfrmBase`, `TfrmMtoGen` o derivado.
+  Nunca de `TForm` (ya estaba en §1.4 y §4.1, ahora también por log).
+- **Data modules**: heredar de `TdmBase`. El dataset principal se llama
+  `unqryTablaG` (§5.4 y §10.3). Si lo renombras, pierdes el autolog de
+  `BeforeInsert` / `BeforePost`.
+- **Queries**: usar `inLibGlobalVar.oConn` como `Connection` (§10.3).
+  Si creas un `TUniConnection` paralelo, su SQL **no** se loguea
+  porque `UniSQLMonitor1` está cableado al conn global.
+- **Excepciones**: si las dejas subir sin `try/except`, las captura el
+  manejador global. Solo envuelve en `try/except` cuando vas a reaccionar
+  (§12.2). El comportamiento por defecto es el correcto.
+
+### 19.4 Qué hay que loguear a mano
+
+El autolog cubre la "actividad de fondo". Para el resto, llama
+explícitamente desde tu unidad. Estos son los puntos típicos.
+
+#### 19.4.1 Cronómetros (`LogPerf`)
+
+Cuando una operación pueda tardar lo suficiente como para que importe
+medirla (consulta agregada, exportación, materialización de sesión,
+proceso por lotes…), envuelve en `TStopwatch`:
+
+```pascal
+uses System.Diagnostics, inLibLog;
+
+procedure TdmFacturas.CargarLineasDeFactura(const ASerie: string;
+                                            ANumero: Integer);
+var
+  sw: TStopwatch;
+begin
+  sw := TStopwatch.StartNew;
+  try
+    unqryLineasFac.Close;
+    unqryLineasFac.ParamByName('SERIE').AsString  := ASerie;
+    unqryLineasFac.ParamByName('NUMERO').AsInteger := ANumero;
+    unqryLineasFac.Open;
+  except
+    on E: Exception do
+    begin
+      Log.LogError('CargarLineasDeFactura: ' + E.Message);
+      raise;   // siempre raise tras loguear (§12.2)
+    end;
+  end;
+  Log.LogPerf('Facturas.CargarLineasDeFactura',
+              Format('serie=%s nro=%d filas=%d',
+                     [ASerie, ANumero, unqryLineasFac.RecordCount]),
+              sw.ElapsedMilliseconds);
+end;
+```
+
+El log queda como `[PERF:Facturas.CargarLineasDeFactura] serie=A nro=42
+filas=18 | 73 ms`. Solo se escribe si `appModoDebug` está encendido.
+
+Sitios habituales donde añadir `LogPerf` en una unidad nueva:
+
+- `AfterOpen` / `AfterScroll` del `unqryTablaG` si abren detalles
+  pesados (patrón actual en `UniDataArticulos`, `UniDataFacturas`).
+- Procedimientos de negocio largos en el data module (consolidaciones,
+  cálculos de stock, generaciones de pedidos…).
+- Materializaciones / exportaciones / impresiones (`inLib*`).
+
+#### 19.4.2 Eventos relevantes (`LogEvento`)
+
+El autolog cubre Show/Close/Insert/Post. Si en tu unidad hay otra
+acción de usuario que merezca aparecer en la traza avanzada (un
+diálogo modal con resultado, un click en un botón de acción
+significativo, una operación que dispara efectos colaterales), llámalo:
+
+```pascal
+Log.LogEvento(Self.UnitName, Self.ClassName, 'MaterializarCompras',
+              Format('serie=%s nro=%d lineas=%d',
+                     [sSerie, iNumero, iLineas]));
+```
+
+Patrón: `(UnitName, identificador del objeto, nombre de evento, detalle)`.
+El detalle es opcional. Solo se escribe si `appLogAvanzado` está activo.
+
+#### 19.4.3 Errores controlados (`LogError`)
+
+Cuando hagas `try/except` para reaccionar localmente, loguea el error y
+**vuelve a lanzar**:
+
+```pascal
+try
+  // ...
+except
+  on E: Exception do
+  begin
+    Log.LogError(Self.UnitName + '.' + 'NombreDelMetodo: ' + E.Message);
+    raise;
+  end;
+end;
+```
+
+El `raise;` es obligatorio si la operación no se considera completada
+(criterio de modest-fermat-WUvkF para evitar dejar queries colgadas).
+Solo se omite si la excepción es genuinamente recuperable y la
+operación puede seguir.
+
+#### 19.4.4 Avisos (`LogWarning`)
+
+Para condiciones inesperadas pero no fatales: un parámetro huérfano,
+un fichero opcional ausente, una conversión que recurre a un valor por
+defecto. Que la operación pueda seguir, pero quede traza:
+
+```pascal
+if not FileExists(sLogo) then
+  Log.LogWarning('Logo de empresa no encontrado: ' + sLogo);
+```
+
+#### 19.4.5 Información de hitos (`LogInfo`)
+
+Para marcar el inicio y fin de procesos largos o cambios de estado
+globales. Úsalo con moderación: el archivo de log lo lee gente, no
+solo `grep`.
+
+```pascal
+Log.LogInfo('Inicio de cierre de caja ' + sCodCaja);
+```
+
+### 19.5 API rápida
+
+```pascal
+uses inLibLog;
+
+Log.LogInfo   (const AMessage: string);
+Log.LogWarning(const AMessage: string);
+Log.LogError  (const AMessage: string);
+Log.LogSQL    (const ASQL: string);                            // crudo
+Log.LogSQLExt (const ASQL: string; AElapsedMs: Int64;          // detallado
+               ARows: Integer; AOk: Boolean;
+               const AError: string = '';
+               const AParams: string = '');
+Log.LogPerf   (const ATag, ADetalle: string; AElapsedMs: Int64);
+Log.LogEvento (const AUnidad, AObjeto, AEvento, ADetalle: string);
+
+// Encender / apagar un nivel a mano (raro: lo normal es vía parámetros).
+Log.EnableLogType(ltAvanzado);
+Log.DisableLogType(ltAvanzado);
+Log.IsLogTypeEnabled(ltSQL): Boolean;
+```
+
+Los ficheros se generan en `GetLogFolder` con nombre
+`LOG_<UUID>_<dd_mm_yyyy>.log`. Cuando el contador de ficheros supera
+`DEFAULT_LOG_RETENTION` (10), se zippean los más antiguos en
+`archive/`. La rotación se hace al arrancar.
+
+### 19.6 Sistema de errores — `AppException`
+
+Definido en `TfrmMtoPrincipal` y enganchado vía
+`Application.OnException := AppException` en `FormCreate`. Captura
+**cualquier** excepción no atrapada por bloques `try/except` y:
+
+1. Construye un detalle completo (`ConstruirDetalleException`):
+   aplicación + versión, fecha, usuario, empresa, almacén, caja,
+   equipo, clase y mensaje de la excepción, dirección (`ExceptAddr`),
+   sender, stack trace (si hay proveedor — `madExcept`/`JCL`/`EurekaLog`),
+   y hasta 5 niveles de `InnerException`.
+2. Lo vuelca al log con `LogError` (dos líneas: cabecera + detalle).
+3. Abre un diálogo modal (`MostrarDetalleExcepcion`) con el detalle en
+   un `TMemo` Consolas + botón **Copiar al portapapeles** para pegarlo
+   en un reporte.
+
+Implicación práctica para una unidad nueva:
+
+- **No reinventes manejadores globales.** Tu unidad no asigna nada a
+  `Application.OnException`; ya está cubierto.
+- **Tu `try/except` solo cubre la reacción local.** El detalle completo
+  ya lo da el manejador global si dejas subir la excepción.
+- **No engulláis excepciones.** Un `except on E: Exception do end;` sin
+  `raise;` ni `Log.LogError` rompe la traza global y deja la operación
+  en estado inconsistente.
+
+El handler se desinstala en `FormDestroy`
+(`Application.OnException := nil`) para que el shutdown ordenado no
+intente mostrar diálogos sobre un form ya liberado.
+
+### 19.7 Checklist al añadir una unidad nueva
+
+- [ ] El formulario hereda de `TfrmBase` o derivado → autolog Show/Close.
+- [ ] El data module hereda de `TdmBase` y su query principal se llama
+      `unqryTablaG` → autolog BeforeInsert/BeforePost.
+- [ ] Todas las queries usan `inLibGlobalVar.oConn` → autolog SQL con
+      cronómetro.
+- [ ] Operaciones que puedan tardar > 100 ms instrumentadas con
+      `Log.LogPerf` y `TStopwatch`.
+- [ ] Eventos relevantes del dominio (no triviales) con `Log.LogEvento`.
+- [ ] `try/except` añadidos por necesidad loguean con `Log.LogError` y
+      hacen `raise;` salvo que la operación sea genuinamente recuperable.
+- [ ] No se asigna nada a `Application.OnException` — está reservado.
+
+---
+
+## 20. Checklist antes de un commit
 
 - [ ] Cabecera de unidad presente y con la fecha correcta.
 - [ ] Nombre de unidad y nombre de fichero coinciden.
