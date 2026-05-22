@@ -131,6 +131,18 @@ function  ValidarSesion(ADM: TdmComprasSesiones; out AError: string): Boolean;
 function ValidarSesionDetallado(ADM: TdmComprasSesiones;
                                  AIncidencias: TStrings): Boolean;
 
+// Normaliza duplicados intra-sesion: para cada CODIGO_ART_TENTATIVO que
+// aparece en >1 lineas, deja la primera (LINEA_SESLIN minimo) tal cual
+// y marca las demas con ESDUPLICADO_SESLIN='S', ACCION='REUSAR',
+// CODIGO_ART_REUSAR=el mismo codigo, para que la materializacion solo
+// haga INSERT en fza_articulos una vez (la primera) y las variantes
+// del mismo articulo (distinto color/SKU) reusen la cabecera. Devuelve
+// el numero de lineas marcadas. Idempotente: si todas estan ya
+// resueltas, devuelve 0.
+function NormalizarDuplicadosIntraSesion(AConn: TUniConnection;
+                                          const AUsuario, ASerieSes,
+                                                ANumSes: string): Integer;
+
 function  ContarArticulosNuevos(ADM: TdmComprasSesiones): Integer;
 function  ContarSkusPotenciales(ADM: TdmComprasSesiones): Integer;
 function  CalcularTotalCompra(ADM: TdmComprasSesiones): Double;
@@ -982,7 +994,58 @@ begin
       AnadirInc(0, 'CABECERA', 'La sesion no tiene lineas.');
     q.Close;
 
-    // ---- Lineas con codigo duplicado sin accion resuelta ----
+    // ---- Duplicados intra-sesion sin resolver (mismo CODIGO_ART_TENTATIVO
+    //      en >1 lineas, alguna sin ACCION=REUSAR). La materializacion
+    //      reventaria al hacer INSERT del segundo articulo con la misma
+    //      PK CODIGO_ART_ART. El form auto-normaliza con
+    //      NormalizarDuplicadosIntraSesion antes de validar, asi que esto
+    //      es defensivo: si por algun camino llega sin normalizar, lo
+    //      detectamos aqui antes que MySQL.
+    q.SQL.Text :=
+      'SELECT L.LINEA_SESLIN, L.CODIGO_ART_TENTATIVO_SESLIN, ' +
+      '       G.PRIMERA, G.N ' +
+      '  FROM fza_compras_sesiones_lineas L ' +
+      '  JOIN (SELECT SERIE_SES_SESLIN, NUMERO_SES_SESLIN, ' +
+      '               CODIGO_ART_TENTATIVO_SESLIN, ' +
+      '               MIN(LINEA_SESLIN) AS PRIMERA, ' +
+      '               COUNT(*)          AS N ' +
+      '          FROM fza_compras_sesiones_lineas ' +
+      '         WHERE SERIE_SES_SESLIN = :s ' +
+      '           AND NUMERO_SES_SESLIN = :n ' +
+      '           AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL ' +
+      '           AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''' ' +
+      '         GROUP BY SERIE_SES_SESLIN, NUMERO_SES_SESLIN, ' +
+      '                  CODIGO_ART_TENTATIVO_SESLIN ' +
+      '        HAVING COUNT(*) > 1) AS G ' +
+      '    ON G.SERIE_SES_SESLIN            = L.SERIE_SES_SESLIN ' +
+      '   AND G.NUMERO_SES_SESLIN           = L.NUMERO_SES_SESLIN ' +
+      '   AND G.CODIGO_ART_TENTATIVO_SESLIN = L.CODIGO_ART_TENTATIVO_SESLIN ' +
+      ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+      '   AND L.NUMERO_SES_SESLIN = :n ' +
+      '   AND L.LINEA_SESLIN <> G.PRIMERA ' +
+      '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+      '        OR TRIM(L.ACCION_DUPLICADO_SESLIN) = '''' ' +
+      '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'') ' +
+      ' ORDER BY L.LINEA_SESLIN';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNum;
+    q.Open;
+    while not q.Eof do
+    begin
+      AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
+          'DUP_INTRA',
+          Format('Codigo %s repetido dentro de la sesion (primera vez en ' +
+                 'linea %d). Marca esta linea como REUSAR o cambia el ' +
+                 'codigo.',
+                 [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
+                  q.FieldByName('PRIMERA').AsInteger]));
+      q.Next;
+    end;
+    q.Close;
+
+    // ---- Lineas con codigo duplicado externo sin accion resuelta
+    //      (CODIGO_ART_TENTATIVO ya existe en fza_articulos y el usuario
+    //      no eligio REUSAR ni RENOMBRAR). ----
     q.SQL.Text :=
       'SELECT L.LINEA_SESLIN, L.CODIGO_ART_TENTATIVO_SESLIN, ' +
       '       L.DESCRIPCION_SESLIN, ' +
@@ -1560,6 +1623,67 @@ begin
   if (AResul.Origen = 'ART') and (AResul.RefProveedor <> '') and
      (Trim(ds.FieldByName('REF_PRV_SESLIN').AsString) = '') then
     ds.FieldByName('REF_PRV_SESLIN').AsString := AResul.RefProveedor;
+end;
+
+function NormalizarDuplicadosIntraSesion(AConn: TUniConnection;
+                                          const AUsuario, ASerieSes,
+                                                ANumSes: string): Integer;
+var
+  q : TUniQuery;
+begin
+  Result := 0;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    // Para cada (CODIGO_ART_TENTATIVO_SESLIN) que aparece >1 veces en la
+    // sesion, dejamos la primera linea (LINEA_SESLIN minimo) intacta y
+    // marcamos el resto como REUSAR del mismo codigo. Asi InsertarArticulo
+    // solo se ejecuta una vez por codigo durante la materializacion y las
+    // demas lineas (variantes color/SKU) comparten la cabecera del
+    // articulo en fza_articulos.
+    //
+    // Solo tocamos lineas que NO tienen ACCION_DUPLICADO ya resuelta
+    // (NULL / vacia / distinta de REUSAR) — respetamos elecciones del
+    // usuario (p. ej. si decidio RENOMBRAR alguna ya estara con su
+    // codigo final distinto, no entra en este grupo).
+    q.SQL.Text :=
+      'UPDATE fza_compras_sesiones_lineas L ' +
+      '  JOIN ( ' +
+      '       SELECT SERIE_SES_SESLIN, NUMERO_SES_SESLIN, ' +
+      '              CODIGO_ART_TENTATIVO_SESLIN, ' +
+      '              MIN(LINEA_SESLIN) AS PRIMERA, ' +
+      '              COUNT(*)          AS N ' +
+      '         FROM fza_compras_sesiones_lineas ' +
+      '        WHERE SERIE_SES_SESLIN = :s ' +
+      '          AND NUMERO_SES_SESLIN = :n ' +
+      '          AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL ' +
+      '          AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''' ' +
+      '        GROUP BY SERIE_SES_SESLIN, NUMERO_SES_SESLIN, ' +
+      '                 CODIGO_ART_TENTATIVO_SESLIN ' +
+      '       HAVING COUNT(*) > 1 ' +
+      '  ) AS G ' +
+      '    ON G.SERIE_SES_SESLIN            = L.SERIE_SES_SESLIN ' +
+      '   AND G.NUMERO_SES_SESLIN           = L.NUMERO_SES_SESLIN ' +
+      '   AND G.CODIGO_ART_TENTATIVO_SESLIN = L.CODIGO_ART_TENTATIVO_SESLIN ' +
+      '   SET L.ESDUPLICADO_SESLIN       = ''S'', ' +
+      '       L.ACCION_DUPLICADO_SESLIN  = ''REUSAR'', ' +
+      '       L.CODIGO_ART_REUSAR_SESLIN = L.CODIGO_ART_TENTATIVO_SESLIN, ' +
+      '       L.USUARIO_MODIF            = :u, ' +
+      '       L.INSTANTE_MODIF           = NOW() ' +
+      ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+      '   AND L.NUMERO_SES_SESLIN = :n ' +
+      '   AND L.LINEA_SESLIN <> G.PRIMERA ' +
+      '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+      '        OR TRIM(L.ACCION_DUPLICADO_SESLIN) = '''' ' +
+      '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+    q.ParamByName('s').AsString := ASerieSes;
+    q.ParamByName('n').AsString := ANumSes;
+    q.ParamByName('u').AsString := AUsuario;
+    q.ExecSQL;
+    Result := q.RowsAffected;
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 end.
