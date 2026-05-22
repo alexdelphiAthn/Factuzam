@@ -158,7 +158,8 @@ implementation
 uses
   inLibGlobalVar,
   inLibtb,
-  inLibComprasSesiones;
+  inLibComprasSesiones,
+  inLibContadorLineas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -295,64 +296,33 @@ end;
 procedure TdmComprasSesiones.unqrySesionLinAfterInsert(DataSet: TDataSet);
 var
   iNuevaLinea : Integer;
-  iContPrev   : Integer;
-  iMaxLineaBD : Integer;
   sSerie      : string;
   sNumero     : string;
-  q           : TUniQuery;
 begin
   inherited;
-  // Contador de lineas en cabecera (mismo patron que cdsCabecera.
-  // CONTADOR_LINEAS_FAC en caja/facturas/pedidos/albaranes): cada linea
-  // suma 10 al contador y se queda con ese numero. Pasos de 10 para que
-  // el usuario pueda intercalar lineas mas adelante (ej: poner una en el
-  // 15 entre 10 y 20).
-  iContPrev := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger;
-
-  // Robustez frente a desync master<->detail: el CONTADOR en memoria puede
-  // haber quedado por debajo del MAX(LINEA_SESLIN) real en BD. Caso tipico:
-  // Add + posteo implicito de la linea por navegacion (LINEA=CONTADOR+10
-  // se persiste en BD) seguido de Cancelar el master (CONTADOR rollback a
-  // su valor en BD), dejando lineas en BD con LINEA > CONTADOR. El siguiente
-  // Add provocaria una colision de LINEA_SESLIN. Consultamos MAX real y
-  // tomamos el mayor de los dos como base.
+  // Pedimos la siguiente LINEA al helper generico (inLibContadorLineas).
+  // El helper hace UPDATE atomico sobre fza_compras_sesiones incrementando
+  // CONTADOR_LINEAS_SES en +10 y devuelve el nuevo valor. La persistencia
+  // del contador NO depende de que el usuario Postee la cabecera, por lo
+  // que ya no hay riesgo de colision si despues Cancela el master con
+  // lineas posteadas (caso clasico: Add+navegacion=detail.Post implicito,
+  // y Cancelar master rollbackeaba CONTADOR en memoria pero la linea ya
+  // estaba en BD; el siguiente Add reasignaba la misma LINEA).
   sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  if (sSerie <> '') and (sNumero <> '') then
+  iNuevaLinea := GetSiguienteLineaDoc(CONT_SESIONES, sSerie, sNumero);
+  if iNuevaLinea = 0 then
   begin
-    iMaxLineaBD := 0;
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := inLibGlobalVar.oConn;
-      q.SQL.Text :=
-        'SELECT IFNULL(MAX(LINEA_SESLIN), 0) AS MAX_LIN ' +
-        '  FROM fza_compras_sesiones_lineas ' +
-        ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n';
-      q.ParamByName('s').AsString := sSerie;
-      q.ParamByName('n').AsString := sNumero;
-      q.Open;
-      if not q.FieldByName('MAX_LIN').IsNull then
-        iMaxLineaBD := q.FieldByName('MAX_LIN').AsInteger;
-    finally
-      FreeAndNil(q);
-    end;
-    if iMaxLineaBD > iContPrev then
-    begin
-      LogSes(Format('  CONTADOR memoria=%d < MAX(LINEA_SESLIN) BD=%d -> uso %d como base',
-                    [iContPrev, iMaxLineaBD, iMaxLineaBD]));
-      iContPrev := iMaxLineaBD;
-    end;
+    // Cabecera no localizada (caso raro: master aun no posteado, sin
+    // SERIE/NUMERO). Fallback al patron antiguo CONTADOR+10 en memoria.
+    iNuevaLinea := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger + 10;
+    LogSes(Format('  helper devolvio 0 (cabecera sin SERIE/NUMERO?), fallback LINEA=%d',
+                  [iNuevaLinea]));
   end;
+  LogSes(Format('DM.unqrySesionLinAfterInsert: nueva LINEA=%d', [iNuevaLinea]));
 
-  iNuevaLinea := iContPrev + 10;
-  LogSes(Format('DM.unqrySesionLinAfterInsert: CONTADOR efectivo=%d -> nueva LINEA=%d',
-                [iContPrev, iNuevaLinea]));
-
-  // Solo actualizamos el contador en memoria; la grabacion del cabecera
-  // la hace el usuario con el boton Grabar normal (mismo patron que en
-  // caja/facturas: cdsCabecera queda en Edit, no se hace Post implicito
-  // desde AfterInsert de la linea para no comprometer al usuario con un
-  // commit prematuro del documento).
+  // Sincronizar CONTADOR en memoria con el nuevo valor para que los demas
+  // handlers que lo leen (LogSes, displays, etc.) vean el valor coherente.
   if not (unqryTablaG.State in [dsEdit, dsInsert]) then
   begin
     LogSes('  master estaba fuera de edit/insert, forzando master.Edit');

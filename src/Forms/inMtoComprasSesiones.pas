@@ -1418,9 +1418,18 @@ begin
     TcxCustomTextEdit(AEdit).SelectAll;
   // Sistema tallas: auto-desplegar el combo al entrar en la celda para que
   // el usuario pueda elegir directamente con flechas + Enter sin un click
-  // extra. Aplica a cualquier editor desplegable (lookup combo).
+  // extra. Diferimos via ForceQueue porque InitEdit corre antes de que el
+  // editor sea visible: el set inmediato de DroppedDown no abre el popup.
   if (AItem = dbcLinTallas) and (AEdit is TcxCustomDropDownEdit) then
-    TcxCustomDropDownEdit(AEdit).DroppedDown := True;
+    TThread.ForceQueue(nil,
+      procedure
+      var Edit: TcxCustomEdit;
+      begin
+        if tvLineas.Controller.EditingController = nil then Exit;
+        Edit := tvLineas.Controller.EditingController.Edit;
+        if Edit is TcxCustomDropDownEdit then
+          TcxCustomDropDownEdit(Edit).DroppedDown := True;
+      end);
   if AItem <> dbcLinColorBasico then Exit;
   if not (AEdit is TcxButtonEdit) then Exit;
   BE := TcxButtonEdit(AEdit);
