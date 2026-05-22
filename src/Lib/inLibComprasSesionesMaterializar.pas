@@ -196,19 +196,33 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
-    // Pivot
+    // Pivot. COALESCE en cascada para ID_VA_ACA:
+    //   1) L.ID_VA_PIVOT_SESLIN (si el usuario lo seteo en la linea)
+    //   2) S.ID_VA_PIVOT_SES    (si lo seteo en la cabecera)
+    //   3) AC_P.ID_VA_AC        (del propio conjunto elegido por ID_AC)
+    // Sin el fallback (3) las sesiones del flujo muestrario (combo
+    // 'Sistema tallas' que solo guarda ID_AC_PIVOT_SESLIN) acababan con
+    // ID_VA_ACA NULL -> INSERT IGNORE silenciaba el error NOT NULL y el
+    // articulo se quedaba sin conjuntos asignados (Color/Talla "Sin
+    // conjunto" en la ficha) y por tanto sin SKUs.
     q.SQL.Text :=
       'INSERT IGNORE INTO fza_articulos_conjuntos_asign ' +
       '  (CODIGO_ART_ACA, ID_AC_ACA, ID_VA_ACA, ESGENERACION_AUTO_ACA, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'SELECT :art, COALESCE(L.ID_AC_PIVOT_SESLIN, S.ID_AC_PIVOT_SES), ' +
-      '       COALESCE(L.ID_VA_PIVOT_SESLIN, S.ID_VA_PIVOT_SES), ' +
+      'SELECT :art, ' +
+      '       COALESCE(L.ID_AC_PIVOT_SESLIN, S.ID_AC_PIVOT_SES), ' +
+      '       COALESCE(L.ID_VA_PIVOT_SESLIN, S.ID_VA_PIVOT_SES, ' +
+      '                AC_P.ID_VA_AC), ' +
       '       ''S'', NOW(), :u, NOW(), :u ' +
       '  FROM fza_compras_sesiones_lineas L ' +
       '  JOIN fza_compras_sesiones S ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
       '                              AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+      '  LEFT JOIN fza_atributos_conjuntos AC_P ' +
+      '         ON AC_P.ID_AC = ' +
+      '            COALESCE(L.ID_AC_PIVOT_SESLIN, S.ID_AC_PIVOT_SES) ' +
       ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
-      '   AND L.LINEA_SESLIN = :l';
+      '   AND L.LINEA_SESLIN = :l ' +
+      '   AND COALESCE(L.ID_AC_PIVOT_SESLIN, S.ID_AC_PIVOT_SES) IS NOT NULL';
     q.ParamByName('s').AsString  := ASerieSes;
     q.ParamByName('n').AsString  := ANumSes;
     q.ParamByName('l').AsInteger := ALinea;
@@ -216,17 +230,22 @@ begin
     q.ParamByName('u').AsString  := AUsuario;
     q.ExecSQL;
 
-    // Fila
+    // Fila — mismo fallback en cascada.
     q.SQL.Text :=
       'INSERT IGNORE INTO fza_articulos_conjuntos_asign ' +
       '  (CODIGO_ART_ACA, ID_AC_ACA, ID_VA_ACA, ESGENERACION_AUTO_ACA, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'SELECT :art, COALESCE(L.ID_AC_FILA_SESLIN, S.ID_AC_FILA_SES), ' +
-      '       COALESCE(L.ID_VA_FILA_SESLIN, S.ID_VA_FILA_SES), ' +
+      'SELECT :art, ' +
+      '       COALESCE(L.ID_AC_FILA_SESLIN, S.ID_AC_FILA_SES), ' +
+      '       COALESCE(L.ID_VA_FILA_SESLIN, S.ID_VA_FILA_SES, ' +
+      '                AC_F.ID_VA_AC), ' +
       '       ''S'', NOW(), :u, NOW(), :u ' +
       '  FROM fza_compras_sesiones_lineas L ' +
       '  JOIN fza_compras_sesiones S ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
       '                              AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+      '  LEFT JOIN fza_atributos_conjuntos AC_F ' +
+      '         ON AC_F.ID_AC = ' +
+      '            COALESCE(L.ID_AC_FILA_SESLIN, S.ID_AC_FILA_SES) ' +
       ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
       '   AND L.LINEA_SESLIN = :l ' +
       '   AND COALESCE(L.ID_AC_FILA_SESLIN, S.ID_AC_FILA_SES) IS NOT NULL';
@@ -623,26 +642,59 @@ procedure UpsertArticuloTarifa(AConn: TUniConnection;
                                APrecioVenta: Double);
 var
   q: TUniQuery;
+  iCodigoUnico: Integer;
 begin
   if (Trim(ACodigoTar) = '') or (APrecioVenta <= 0) then Exit;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
+    // fza_articulos_tarifas tiene PK = CODIGO_UNICO_ARTTAR (autoincrement),
+    // sin UNIQUE KEY logico sobre (CODIGO_ART, CODIGO_UNIDAD, CODIGO_TAR).
+    // ON DUPLICATE KEY UPDATE nunca disparaba porque el autoincrement no
+    // colisiona, asi que cada llamada (una por linea de la sesion)
+    // inseraba una fila nueva: si la sesion tenia 2 lineas REUSAR del
+    // mismo articulo, se acababan con 2 tarifas iguales. Hacemos upsert
+    // manual: SELECT por (CODIGO_ART, CODIGO_UNIDAD='', CODIGO_TAR) ->
+    // si existe UPDATE, si no existe INSERT.
     q.SQL.Text :=
-      'INSERT INTO fza_articulos_tarifas ' +
-      '  (CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
-      '   ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
-      '   FECHA_DESDE_ARTTAR, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (:art, '''', :tar, ''S'', :pre, :pre, CURDATE(), ' +
-      '        NOW(), :u, NOW(), :u) ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      '  PRECIO_SALIDA_ARTTAR = :pre, ' +
-      '  PRECIO_FINAL_ARTTAR  = :pre, ' +
-      '  ESACTIVO_ARTTAR      = ''S'', ' +
-      '  INSTANTE_MODIF       = NOW(), USUARIO_MODIF = :u';
+      'SELECT CODIGO_UNICO_ARTTAR FROM fza_articulos_tarifas ' +
+      ' WHERE CODIGO_ART_ARTTAR    = :art ' +
+      '   AND CODIGO_UNIDAD_ARTTAR = '''' ' +
+      '   AND CODIGO_TAR_ARTTAR    = :tar ' +
+      ' LIMIT 1';
     q.ParamByName('art').AsString := ACodigoArt;
     q.ParamByName('tar').AsString := ACodigoTar;
+    q.Open;
+    iCodigoUnico := 0;
+    if not q.IsEmpty then
+      iCodigoUnico := q.FieldByName('CODIGO_UNICO_ARTTAR').AsInteger;
+    q.Close;
+
+    if iCodigoUnico > 0 then
+    begin
+      q.SQL.Text :=
+        'UPDATE fza_articulos_tarifas ' +
+        '   SET PRECIO_SALIDA_ARTTAR = :pre, ' +
+        '       PRECIO_FINAL_ARTTAR  = :pre, ' +
+        '       ESACTIVO_ARTTAR      = ''S'', ' +
+        '       INSTANTE_MODIF       = NOW(), ' +
+        '       USUARIO_MODIF        = :u ' +
+        ' WHERE CODIGO_UNICO_ARTTAR  = :cu';
+      q.ParamByName('cu').AsInteger := iCodigoUnico;
+    end
+    else
+    begin
+      q.SQL.Text :=
+        'INSERT INTO fza_articulos_tarifas ' +
+        '  (CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
+        '   ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
+        '   FECHA_DESDE_ARTTAR, ' +
+        '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'VALUES (:art, '''', :tar, ''S'', :pre, :pre, CURDATE(), ' +
+        '        NOW(), :u, NOW(), :u)';
+      q.ParamByName('art').AsString := ACodigoArt;
+      q.ParamByName('tar').AsString := ACodigoTar;
+    end;
     q.ParamByName('pre').AsFloat  := APrecioVenta;
     q.ParamByName('u').AsString   := AUsuario;
     q.ExecSQL;
