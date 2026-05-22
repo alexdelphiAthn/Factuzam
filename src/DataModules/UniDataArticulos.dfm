@@ -1,6 +1,6 @@
 inherited dmArticulos: TdmArticulos
-  Height = 459
-  Width = 1129
+  Height = 665
+  Width = 1640
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
@@ -639,8 +639,8 @@ inherited dmArticulos: TdmArticulos
     DetailFields = 'CODIGO_ART_SKU'
     BeforePost = unqrySkusBeforePost
     BeforeDelete = unqrySkusBeforeDelete
-    Left = 232
-    Top = 296
+    Left = 112
+    Top = 416
     ParamData = <
       item
         DataType = ftWideString
@@ -651,8 +651,8 @@ inherited dmArticulos: TdmArticulos
   end
   object dsSkus: TDataSource
     DataSet = unqrySkus
-    Left = 232
-    Top = 344
+    Left = 128
+    Top = 496
   end
   object unqryStockArticulos: TUniQuery
     Connection = dmConn.conUni
@@ -760,8 +760,120 @@ inherited dmArticulos: TdmArticulos
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * FROM vi_articulos_skus_etiquetas')
+    Active = True
     Left = 888
     Top = 360
+    object unqryArtPrintCODIGO_UNIDAD_SKU: TWideStringField
+      FieldName = 'CODIGO_UNIDAD_SKU'
+      Required = True
+      Size = 50
+    end
+    object unqryArtPrintCODIGO_ART_ART: TWideStringField
+      FieldName = 'CODIGO_ART_ART'
+      Required = True
+    end
+    object unqryArtPrintCODIGO_VAR_SKU: TWideStringField
+      FieldName = 'CODIGO_VAR_SKU'
+      Required = True
+    end
+    object unqryArtPrintESACTIVO_SKU: TWideStringField
+      FieldName = 'ESACTIVO_SKU'
+      Size = 1
+    end
+    object unqryArtPrintESACTIVO_ART: TWideStringField
+      FieldName = 'ESACTIVO_ART'
+      Required = True
+      Size = 1
+    end
+    object unqryArtPrintDESCRIPCION_ART: TWideStringField
+      FieldName = 'DESCRIPCION_ART'
+      Required = True
+      Size = 1000
+    end
+    object unqryArtPrintTIPO_ART: TWideStringField
+      FieldName = 'TIPO_ART'
+      Required = True
+      Size = 10
+    end
+    object unqryArtPrintTIPO_IVA_ART: TWideStringField
+      FieldName = 'TIPO_IVA_ART'
+      Required = True
+      Size = 2
+    end
+    object unqryArtPrintCODIGO_FAM_ART: TWideStringField
+      FieldName = 'CODIGO_FAM_ART'
+    end
+    object unqryArtPrintNOMBRE_FAM_FAM: TWideStringField
+      FieldName = 'NOMBRE_FAM_FAM'
+      Size = 200
+    end
+    object unqryArtPrintDESCRIPCION_FAM: TWideStringField
+      FieldName = 'DESCRIPCION_FAM'
+      Size = 200
+    end
+    object unqryArtPrintATR_CO: TWideStringField
+      FieldName = 'ATR_CO'
+      Size = 100
+    end
+    object unqryArtPrintATR_TAL: TWideStringField
+      FieldName = 'ATR_TAL'
+      Size = 100
+    end
+    object unqryArtPrintATRIBUTOS_TXT: TWideMemoField
+      FieldName = 'ATRIBUTOS_TXT'
+      BlobType = ftWideMemo
+    end
+    object unqryArtPrintDESCRIPCION_SKU: TWideMemoField
+      FieldName = 'DESCRIPCION_SKU'
+      BlobType = ftWideMemo
+    end
+    object unqryArtPrintPROP_MARCA: TWideStringField
+      FieldName = 'PROP_MARCA'
+      Size = 255
+    end
+    object unqryArtPrintPROP_MATERIAL: TWideStringField
+      FieldName = 'PROP_MATERIAL'
+      Size = 255
+    end
+    object unqryArtPrintPROP_TEMPORADA: TWideStringField
+      FieldName = 'PROP_TEMPORADA'
+      Size = 255
+    end
+    object unqryArtPrintPROP_GENERO: TWideStringField
+      FieldName = 'PROP_GENERO'
+      Size = 255
+    end
+    object unqryArtPrintPROP_ESTILO: TWideStringField
+      FieldName = 'PROP_ESTILO'
+      Size = 255
+    end
+    object unqryArtPrintPROP_ORIGEN: TWideStringField
+      FieldName = 'PROP_ORIGEN'
+      Size = 255
+    end
+    object unqryArtPrintPROP_COMPOSICION: TWideStringField
+      FieldName = 'PROP_COMPOSICION'
+      Size = 255
+    end
+    object unqryArtPrintPROPIEDADES_TXT: TWideMemoField
+      FieldName = 'PROPIEDADES_TXT'
+      BlobType = ftWideMemo
+    end
+    object unqryArtPrintCODIGO_PRV_PRV: TWideStringField
+      FieldName = 'CODIGO_PRV_PRV'
+    end
+    object unqryArtPrintRAZON_SOCIAL_PRV: TWideStringField
+      FieldName = 'RAZON_SOCIAL_PRV'
+      Size = 200
+    end
+    object unqryArtPrintREF_PROVEEDOR: TWideStringField
+      FieldName = 'REF_PROVEEDOR'
+      Size = 100
+    end
+    object unqryArtPrintCODIGO_BARRAS_CB: TWideStringField
+      FieldName = 'CODIGO_BARRAS_CB'
+      Size = 50
+    end
   end
   object dtstprvEtiquetasArt: TDataSetProvider
     DataSet = unqryArtPrint
@@ -786,7 +898,7 @@ inherited dmArticulos: TdmArticulos
     Description = 'EtiquetasArt'
     UserName = 'EtiquetasArt'
     CloseDataSource = False
-    DataSet = cdsEtiquetasArt
+    OpenDataSource = False
     BCDToCurrency = False
     DataSetOptions = []
     Left = 1184

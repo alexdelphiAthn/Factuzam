@@ -61,6 +61,33 @@ type
     fxdsEtiquetasArt: TfrxDBDataset;
     unqryAlmacenesPrint: TUniQuery;
     unqryTarifasPrint: TUniQuery;
+    unqryArtPrintCODIGO_UNIDAD_SKU: TWideStringField;
+    unqryArtPrintCODIGO_ART_ART: TWideStringField;
+    unqryArtPrintCODIGO_VAR_SKU: TWideStringField;
+    unqryArtPrintESACTIVO_SKU: TWideStringField;
+    unqryArtPrintESACTIVO_ART: TWideStringField;
+    unqryArtPrintDESCRIPCION_ART: TWideStringField;
+    unqryArtPrintTIPO_ART: TWideStringField;
+    unqryArtPrintTIPO_IVA_ART: TWideStringField;
+    unqryArtPrintCODIGO_FAM_ART: TWideStringField;
+    unqryArtPrintNOMBRE_FAM_FAM: TWideStringField;
+    unqryArtPrintDESCRIPCION_FAM: TWideStringField;
+    unqryArtPrintATR_CO: TWideStringField;
+    unqryArtPrintATR_TAL: TWideStringField;
+    unqryArtPrintATRIBUTOS_TXT: TWideMemoField;
+    unqryArtPrintDESCRIPCION_SKU: TWideMemoField;
+    unqryArtPrintPROP_MARCA: TWideStringField;
+    unqryArtPrintPROP_MATERIAL: TWideStringField;
+    unqryArtPrintPROP_TEMPORADA: TWideStringField;
+    unqryArtPrintPROP_GENERO: TWideStringField;
+    unqryArtPrintPROP_ESTILO: TWideStringField;
+    unqryArtPrintPROP_ORIGEN: TWideStringField;
+    unqryArtPrintPROP_COMPOSICION: TWideStringField;
+    unqryArtPrintPROPIEDADES_TXT: TWideMemoField;
+    unqryArtPrintCODIGO_PRV_PRV: TWideStringField;
+    unqryArtPrintRAZON_SOCIAL_PRV: TWideStringField;
+    unqryArtPrintREF_PROVEEDOR: TWideStringField;
+    unqryArtPrintCODIGO_BARRAS_CB: TWideStringField;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
@@ -1168,7 +1195,10 @@ begin
     cdsEtiquetasArt.Close;
     cdsEtiquetasArt.FieldDefs.Clear;
     if unqryArtPrint.Active then
+    begin
+      unqryArtPrint.FieldDefs.Update;
       cdsEtiquetasArt.FieldDefs.Assign(unqryArtPrint.FieldDefs);
+    end;
     // Quitamos Required/AutoInc/etc para que Append no se queje despues.
     for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do
     begin

@@ -320,8 +320,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Properties.CustomButtons.Buttons = <>
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
       OnChange = pcPrincipalChange
-      ExplicitLeft = -1
-      ExplicitTop = 16
+      ExplicitWidth = 1122
+      ExplicitHeight = 451
       ClientRectBottom = 457
       ClientRectLeft = 2
       ClientRectRight = 1122
