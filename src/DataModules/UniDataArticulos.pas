@@ -80,7 +80,7 @@ type
                              aPrecioField, aFechaField: TField);
     procedure EliminarCosteSku(const aSku: string);
     procedure ExpandirEtiquetasPorStock(const aFldStock: string);
-    procedure AgregarHexColorBasicoAlCdsEtiq;
+    procedure PoblarCdsEtiquetasArtDesdeUniQuery;
   public
     // Override: abre las queries detalle y lookups del Mto de Articulos
     // (tarifas, proveedores, lineas-factura, variaciones, skus, stock,
@@ -1033,23 +1033,13 @@ begin
   unqryArtPrint.ParamByName('FECHA_APLICACION').AsDate    := aFechaTarifa;
   unqryArtPrint.Open;
 
-  // El TClientDataSet alimenta al TfrxDBDataset; replica el patron de
-  // CrearDataSetEtiquetas de UniDataClientes.
-  cdsEtiquetasArt.Close;
-  cdsEtiquetasArt.Data := dtstprvEtiquetasArt.Data;
-  cdsEtiquetasArt.ReadOnly := False;
-  cdsEtiquetasArt.Active := True;
-
-  // Anyade HEX_ATR_CO al cds resolviendo la cadena
-  //   fza_atributos_sku -> fza_atributos_valores (ID_VA_AV='CO')
-  //   -> fza_articulos_atributos_basicos (mapeo articulo->basico)
-  //   -> fza_atributos_basicos (HEX_ATB)
-  // La hacemos en Delphi y no en la SQL principal porque el subselect /
-  // derivada metido en el SELECT principal hace que dtstprvEtiquetasArt.Data
-  // devuelva Null (TDataSetProvider con UniDAC en este caso concreto), y el
-  // cdsEtiquetasArt.Active := True acaba lanzando 'Missing data provider or
-  // data packet'. Reconstruir el cds aqui es lento pero robusto.
-  AgregarHexColorBasicoAlCdsEtiq;
+  // Construimos el cdsEtiquetasArt copiando manualmente desde unqryArtPrint,
+  // sin pasar por dtstprvEtiquetasArt. La ruta provider -> Data variant ->
+  // cds lanzaba intermitentemente 'Missing data provider or data packet'
+  // (TDataSetProvider con TUniQuery + JOINs complejos devolvia Variant
+  // null), y a la vez nos da margen para anyadir el campo HEX_ATR_CO en
+  // la misma pasada.
+  PoblarCdsEtiquetasArtDesdeUniQuery;
 
   // Cuando el usuario marca almacenes, una etiqueta por unidad de stock:
   // se elimina cualquier SKU sin existencia en los almacenes elegidos y se
@@ -1116,7 +1106,7 @@ begin
   end;
 end;
 
-procedure TdmArticulos.AgregarHexColorBasicoAlCdsEtiq;
+procedure TdmArticulos.PoblarCdsEtiquetasArtDesdeUniQuery;
 const
   // Cadena articulo -> color basico -> HEX. JOINs sencillos sobre tablas
   // base; no usa la vista vi_articulos_skus_etiquetas para evitar el coste
@@ -1138,17 +1128,11 @@ const
 var
   qryHex: TUniQuery;
   oHexMap: TDictionary<string, string>;
-  i, j, iCols, iOriginales, iCodSkuIdx: Integer;
-  Filas: array of array of Variant;
-  Hexs: array of string;
   fldDef: TFieldDef;
   sCodSku, sHex: string;
+  k, iCodSkuIdxOrig: Integer;
 begin
-  if (not cdsEtiquetasArt.Active) or cdsEtiquetasArt.IsEmpty then Exit;
-  if cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU') = nil then Exit;
-
-  // 1) Mapa CODIGO_UNIDAD_SKU -> HEX_ATB en memoria. Una sola query, mucho
-  //    mas barato que un correlated subquery por fila.
+  // 1) Mapa CODIGO_UNIDAD_SKU -> HEX_ATB en memoria. Una sola query.
   oHexMap := TDictionary<string, string>.Create;
   try
     qryHex := TUniQuery.Create(nil);
@@ -1157,78 +1141,75 @@ begin
       qryHex.SQL.Text   := cSqlHex;
       try
         qryHex.Open;
-      except
-        // Si la query falla (BBDD sin las tablas, permisos...) no tiramos
-        // toda la impresion: simplemente no habra colores y la banda
-        // saldra blanca.
-        Exit;
-      end;
-      try
-        while not qryHex.Eof do
-        begin
-          sCodSku := qryHex.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-          sHex    := qryHex.FieldByName('HEX_ATR_CO').AsString;
-          if sCodSku <> '' then
-            oHexMap.AddOrSetValue(sCodSku, sHex);
-          qryHex.Next;
+        try
+          while not qryHex.Eof do
+          begin
+            sCodSku := qryHex.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+            sHex    := qryHex.FieldByName('HEX_ATR_CO').AsString;
+            if sCodSku <> '' then
+              oHexMap.AddOrSetValue(sCodSku, sHex);
+            qryHex.Next;
+          end;
+        finally
+          qryHex.Close;
         end;
-      finally
-        qryHex.Close;
+      except
+        // BBDD sin las tablas, permisos... ignoramos: la banda saldra
+        // blanca, pero la impresion sigue adelante.
       end;
     finally
       qryHex.Free;
     end;
 
-    // 2) Reconstruir el cds anyadiendo el FieldDef HEX_ATR_CO. Cerramos +
-    //    CreateDataSet porque cambiamos el esquema (ExpandirEtiquetasPorStock
-    //    usa EmptyDataSet porque conserva esquema; aqui no se puede).
+    // 2) Reconstruir el cds desde cero copiando el esquema de unqryArtPrint
+    //    + HEX_ATR_CO. Evita el TDataSetProvider, que con esta combinacion
+    //    UniDAC + JOINs devuelve un Variant Null y dispara
+    //    'Missing data provider or data packet' al activar el cds.
+    cdsEtiquetasArt.Close;
+    cdsEtiquetasArt.FieldDefs.Clear;
+    if unqryArtPrint.Active then
+      cdsEtiquetasArt.FieldDefs.Assign(unqryArtPrint.FieldDefs);
+    // Quitamos Required/AutoInc/etc para que Append no se queje despues.
+    for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do
+    begin
+      cdsEtiquetasArt.FieldDefs[k].Required := False;
+      cdsEtiquetasArt.FieldDefs[k].Attributes := [];
+    end;
+    iCodSkuIdxOrig := cdsEtiquetasArt.FieldDefs.IndexOf('CODIGO_UNIDAD_SKU');
+    if cdsEtiquetasArt.FieldDefs.IndexOf('HEX_ATR_CO') < 0 then
+    begin
+      fldDef          := cdsEtiquetasArt.FieldDefs.AddFieldDef;
+      fldDef.Name     := 'HEX_ATR_CO';
+      fldDef.DataType := ftString;
+      fldDef.Size     := 7;
+    end;
+    cdsEtiquetasArt.CreateDataSet;
+    cdsEtiquetasArt.LogChanges := False;
+    for k := 0 to cdsEtiquetasArt.FieldCount - 1 do
+    begin
+      cdsEtiquetasArt.Fields[k].ReadOnly := False;
+      cdsEtiquetasArt.Fields[k].Required := False;
+    end;
+
+    if (not unqryArtPrint.Active) or unqryArtPrint.IsEmpty then Exit;
+
+    // 3) Volcar filas de unqryArtPrint -> cdsEtiquetasArt + HEX por SKU.
     cdsEtiquetasArt.DisableControls;
-    cdsEtiquetasArt.DisableConstraints;
     try
-      iCols       := cdsEtiquetasArt.FieldCount;
-      iOriginales := cdsEtiquetasArt.RecordCount;
-      iCodSkuIdx  := cdsEtiquetasArt.FieldByName('CODIGO_UNIDAD_SKU').Index;
-      SetLength(Filas, iOriginales);
-      SetLength(Hexs,  iOriginales);
-      cdsEtiquetasArt.First;
-      for i := 0 to iOriginales - 1 do
-      begin
-        SetLength(Filas[i], iCols);
-        for j := 0 to iCols - 1 do
-          Filas[i][j] := cdsEtiquetasArt.Fields[j].Value;
-        sCodSku := VarToStr(Filas[i][iCodSkuIdx]);
-        if (sCodSku = '') or
-           (not oHexMap.TryGetValue(sCodSku, Hexs[i])) then
-          Hexs[i] := '';
-        cdsEtiquetasArt.Next;
-      end;
-
-      cdsEtiquetasArt.Close;
-      if cdsEtiquetasArt.FieldDefs.IndexOf('HEX_ATR_CO') < 0 then
-      begin
-        fldDef          := cdsEtiquetasArt.FieldDefs.AddFieldDef;
-        fldDef.Name     := 'HEX_ATR_CO';
-        fldDef.DataType := ftString;
-        fldDef.Size     := 7;
-      end;
-      cdsEtiquetasArt.CreateDataSet;
-      // Tras CreateDataSet la coleccion Fields se reconstruye, asi que el
-      // ReadOnly/Required hay que volver a aplicarlos sobre los nuevos
-      // TField (los TFieldDef que vienen del provider los marcan a True por
-      // defecto y reventarian el Append).
-      for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
-      begin
-        cdsEtiquetasArt.Fields[j].ReadOnly := False;
-        cdsEtiquetasArt.Fields[j].Required := False;
-      end;
-
-      for i := 0 to iOriginales - 1 do
+      unqryArtPrint.First;
+      while not unqryArtPrint.Eof do
       begin
         cdsEtiquetasArt.Append;
-        for j := 0 to iCols - 1 do
-          cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
-        cdsEtiquetasArt.FieldByName('HEX_ATR_CO').AsString := Hexs[i];
+        for k := 0 to unqryArtPrint.FieldCount - 1 do
+          cdsEtiquetasArt.Fields[k].Value := unqryArtPrint.Fields[k].Value;
+        if iCodSkuIdxOrig >= 0 then
+        begin
+          sCodSku := unqryArtPrint.Fields[iCodSkuIdxOrig].AsString;
+          if (sCodSku <> '') and oHexMap.TryGetValue(sCodSku, sHex) then
+            cdsEtiquetasArt.FieldByName('HEX_ATR_CO').AsString := sHex;
+        end;
         cdsEtiquetasArt.Post;
+        unqryArtPrint.Next;
       end;
     finally
       cdsEtiquetasArt.EnableControls;
