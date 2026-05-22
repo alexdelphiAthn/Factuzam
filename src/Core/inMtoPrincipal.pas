@@ -1007,15 +1007,9 @@ end;
 
 procedure TfrmMtoPrincipal.Albaranes1Click(Sender: TObject);
 begin
-  // No existe todavia un Mto de Albaranes de Compra ni la tabla
-  // fza_albaranes_compra. Los albaranes de compra se materializan hoy
-  // desde Sesiones de Compra, asi que el slot del menu enlaza alli.
-  // Respetamos tambien la visibilidad de Sesiones1: ese si esta gestio-
-  // nado por perfiles (es el menu registrado en fza_winforms para
-  // ComprasSesiones), y si el perfil lo oculta, no debemos saltarnoslo.
   inherited;
-  if Albaranes1.Visible and Sesiones1.Visible then
-    ShowMto(Self, 'ComprasSesiones');
+  if Albaranes1.Visible then
+    ShowMto(Self, 'AlbaranesCompra');
 end;
 
 procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
