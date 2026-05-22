@@ -61,11 +61,41 @@ type
     // funcione cuando hay dos ventanas Articulos abiertas a la vez).
     DM: TdmArticulos;
     procedure preparar_consulta; override;
+    procedure AfterReportLoaded; override;
   end;
 
 implementation
 
 {$R *.dfm}
+
+procedure TfrmPrintEtiqArt.AfterReportLoaded;
+begin
+  // 1. Llamamos al inherited para mantener la lógica base (como la carga de fotos)
+  inherited;
+
+  if Assigned(DM) then
+  begin
+    // 2. DETECCIÓN DE MODO DISEÑO:
+    // Si el ClientDataSet está cerrado, es que venimos del botón "Editar".
+    // Inicializamos su estructura llamando a tu método del DataModule.
+    if not DM.cdsEtiquetasArt.Active then
+    begin
+      // Usamos un código de artículo inexistente para que la base de datos responda
+      // en 0 milisegundos, pero genere el catálogo completo de columnas en el dataset.
+      DM.CrearDataSetEtiquetasArt('DUMMY_DISENO', '', '', Date);
+    end;
+
+    // 3. Re-enlazamos los datasets del informe a nuestra instancia de DM
+    RebindReportDataSetsByDataModule(frxrprt1, DM);
+
+    // 4. FORZAR ACTUALIZACIÓN EN EL DISEÑADOR:
+    // Al vaciar los FieldAliases, obligamos a FastReport a descartar su caché estática
+    // y re-escanear en vivo los campos del ClientDataSet que acabamos de estructurar.
+    DM.fxdsEtiquetasArt.DataSet := nil;
+    DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
+    DM.fxdsEtiquetasArt.FieldAliases.Clear;
+  end;
+end;
 
 procedure TfrmPrintEtiqArt.FormCreate(Sender: TObject);
 begin

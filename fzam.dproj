@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -118,6 +118,7 @@
         <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
+        <Debugger_DebugSourcePath>C:\DISCO_DURO\Fastreport\Sources\FastReport\VCL\Sources\;$(Debugger_DebugSourcePath)</Debugger_DebugSourcePath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>

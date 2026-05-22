@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
@@ -43,7 +43,7 @@ uses
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
-  dxDateRanges, cxMemo;
+  dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox;
 
 type
   TEstadoStock = (
@@ -765,17 +765,16 @@ begin
   // color basico a la izquierda del texto, via inLibAtributosPaleta.
   // En modo Por Almacen, se muestra el codigo del almacen plano.
   FColGrupo := tvStock.CreateColumn;
-  if AEsColor then FColGrupo.Caption := 'Color'
-  else             FColGrupo.Caption := 'Almac'#233'n';
+  if AEsColor then
+    FColGrupo.Caption := 'Color'
+  else
+    FColGrupo.Caption := 'Almac'#233'n';
   FColGrupo.DataBinding.FieldName := 'GRUPO';
-<<<<<<< HEAD
-  FColGrupo.HeaderAlignmentHorz := taLeft;
-  if AEsColor then FColGrupo.Width := 150  // espacio extra para el cuadradito
-  else             FColGrupo.Width := 130;
-=======
+  if AEsColor then
+    FColGrupo.Width := 150  // espacio extra para el cuadradito
+  else
+    FColGrupo.Width := 130;
   FColGrupo.HeaderAlignmentHorz := taLeftJustify;
-  FColGrupo.Width := 130;
->>>>>>> 764bed9a6abf4611f655430375c304aa1054cf1d
   FColGrupo.Options.Editing := False;
   FColGrupo.Options.Sorting := False;
   FColsDin.Add(FColGrupo);

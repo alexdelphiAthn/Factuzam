@@ -11,11 +11,10 @@ object frmStockConsulta: TfrmStockConsulta
   Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poDesigned
-  StyleElements = [seFont, seClient, seBorder]
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnClose = FormClose
-  TextHeight = 21
+  TextHeight = 19
   object pnlCabecera: TPanel
     Left = 0
     Top = 0
@@ -24,10 +23,24 @@ object frmStockConsulta: TfrmStockConsulta
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    DesignSize = (
+      900
+      200)
+    object imgFoto: TImage
+      Left = 744
+      Top = 12
+      Width = 138
+      Height = 133
+      Anchors = [akTop, akRight]
+      Center = True
+      Proportional = True
+      Stretch = True
+    end
     object lblArt: TcxLabel
       Left = 16
       Top = 14
       Caption = 'Art'#237'culo'
+      TabOrder = 1
       Transparent = True
     end
     object btnArt: TcxButtonEdit
@@ -46,38 +59,24 @@ object frmStockConsulta: TfrmStockConsulta
     object lblDescr: TcxLabel
       Left = 16
       Top = 46
-      Caption = ''
-      Style.IsFontAssigned = True
-      Style.Font.Style = [fsBold]
       Properties.WordWrap = True
+      TabOrder = 2
       Transparent = True
-      Width = 600
+      Width = 9
     end
     object lblInfo: TcxLabel
       Left = 16
       Top = 78
-      Caption = ''
       Anchors = [akLeft, akTop, akRight]
       Properties.WordWrap = True
-      Style.IsFontAssigned = True
+      TabOrder = 3
       Transparent = True
-      Height = 116
-      Width = 740
-    end
-    object imgFoto: TImage
-      Left = 770
-      Top = 12
-      Width = 114
-      Height = 114
-      Anchors = [akTop, akRight]
-      Center = True
-      Proportional = True
-      Stretch = True
+      Width = 738
     end
   end
   object pnlFiltros: TPanel
     Left = 0
-    Top = 130
+    Top = 200
     Width = 900
     Height = 44
     Align = alTop
@@ -87,28 +86,26 @@ object frmStockConsulta: TfrmStockConsulta
       Left = 16
       Top = 12
       Caption = 'Estado del stock'
+      TabOrder = 1
       Transparent = True
     end
     object cbbEstado: TcxComboBox
-      Left = 150
+      Left = 162
       Top = 10
       Properties.DropDownListStyle = lsFixedList
       Properties.OnEditValueChanged = cbbEstadoPropertiesEditValueChanged
       TabOrder = 0
-      Width = 200
+      Width = 188
     end
   end
   object grdStock: TcxGrid
     Left = 0
-    Top = 174
+    Top = 244
     Width = 900
-    Height = 226
+    Height = 156
     Align = alClient
     TabOrder = 2
     object tvStock: TcxGridDBTableView
-      Navigator.Buttons.CustomButtons = <>
-      OptionsBehavior.IncSearch = False
-      OptionsCustomize.ColumnHiding = False
       OptionsCustomize.ColumnMoving = False
       OptionsData.Editing = False
       OptionsView.GroupByBox = False
@@ -125,6 +122,9 @@ object frmStockConsulta: TfrmStockConsulta
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
+    DesignSize = (
+      900
+      220)
     object pcEje: TcxPageControl
       Left = 0
       Top = 0
@@ -136,6 +136,7 @@ object frmStockConsulta: TfrmStockConsulta
       Properties.CustomButtons.Buttons = <>
       OnChange = pcEjeChange
       ClientRectBottom = 218
+      ClientRectLeft = 2
       ClientRectRight = 238
       ClientRectTop = 29
       object tsPorColor: TcxTabSheet
@@ -151,18 +152,18 @@ object frmStockConsulta: TfrmStockConsulta
       Left = 248
       Top = 6
       Caption = 'Almacenes'
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
+      TabOrder = 1
       Transparent = True
     end
     object clbAlmacenes: TcxCheckListBox
       Left = 248
       Top = 30
-      Width = 645
+      Width = 643
       Height = 184
       Anchors = [akLeft, akTop, akRight, akBottom]
-      OnClickCheck = clbAlmacenesClickCheck
+      Items = <>
       TabOrder = 2
+      OnClickCheck = clbAlmacenesClickCheck
     end
   end
 end
