@@ -23,6 +23,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 |--------------------------------------|-----------|
 | `fza_albaranes`                      | `ALB`     |
 | `fza_albaranes_compra`               | `ALBC`    |
+| `fza_albaranes_compra_celdas`        | `ALBCCEL` |
 | `fza_albaranes_compra_lineas`        | `ALBCLIN` |
 | `fza_albaranes_lineas`               | `ALBLIN`  |
 | `fza_almacenes`                      | `ALM`     |
