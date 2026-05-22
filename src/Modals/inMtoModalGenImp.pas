@@ -1069,6 +1069,7 @@ begin
   unqryPerfiles.ParamByName('Usuario').AsString := oUser;
   unqryPerfiles.ParamByName('Grupo').AsString := oGroup;
   unqryPerfiles.ParamByName('Todos').AsString := oAll;
+  unqryPerfiles.KeyFields := 'KEY_USUPER;VALUE_USUPER';
   unqryPerfiles.Open;
   FGuiasRuntime := TList.Create;
 end;
@@ -1113,7 +1114,7 @@ begin
   begin
     memStream:=TMemoryStream.Create;
     try
-      frxrprt1.SaveToStream(memStream);
+      Report.SaveToStream(memStream);
       memStream.Position:=0;
       if unqryPerfiles.Locate('VALUE_USUPER',sDescripcion, []) then
       begin
