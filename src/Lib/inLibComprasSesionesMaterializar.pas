@@ -58,6 +58,17 @@ function MaterializarSesion(ADM: TdmComprasSesiones;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
                                 AMsgError: string): Boolean;
 
+// Revierte la materializacion: borra los movimientos de almacen que la
+// sesion genero (TIPO_DOC_MOV='AC' apuntando a SERIE_SES/NUMERO_SES) y
+// devuelve la cabecera a ESTADO_SES='BORRADOR'. Los articulos, SKUs y
+// codigos de barras creados se conservan: re-materializar es idempotente
+// porque los INSERTs auxiliares usan INSERT IGNORE / DUPLICATE KEY y la
+// generacion de EAN13 ahora se salta si el SKU ya tiene uno.
+// Devuelve True si todo OK, False si error (AMsgError lleva el detalle).
+function RevertirMaterializacion(ADM: TdmComprasSesiones;
+                                  const AUsuario: string;
+                                  out AMsgError: string): Boolean;
+
 implementation
 
 uses
@@ -483,19 +494,31 @@ begin
       qIns.ParamByName('u').AsString   := AUsuario;
       qIns.ExecSQL;
 
-      // EAN13
-      sEAN13 := GenerarEAN13Local(AConn, APrefijoEAN);
-
+      // EAN13 — solo si el SKU no tiene ya un codigo de barras EAN13
+      // (idempotencia entre materializaciones tras un Revertir).
       qBar.SQL.Text :=
-        'INSERT INTO fza_codigos_barras ' +
-        '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-        '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, ' +
-        '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:cb, :sku, ''EAN13'', ''S'', NOW(), :u, NOW(), :u)';
-      qBar.ParamByName('cb').AsString  := sEAN13;
+        'SELECT COUNT(*) AS N FROM fza_codigos_barras ' +
+        ' WHERE CODIGO_UNIDAD_CB = :sku AND TIPO_CODIGO_CB = ''EAN13''';
       qBar.ParamByName('sku').AsString := sCodigoSKU;
-      qBar.ParamByName('u').AsString   := AUsuario;
-      qBar.ExecSQL;
+      qBar.Open;
+      if qBar.FieldByName('N').AsInteger = 0 then
+      begin
+        qBar.Close;
+        sEAN13 := GenerarEAN13Local(AConn, APrefijoEAN);
+
+        qBar.SQL.Text :=
+          'INSERT INTO fza_codigos_barras ' +
+          '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
+          '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, ' +
+          '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+          'VALUES (:cb, :sku, ''EAN13'', ''S'', NOW(), :u, NOW(), :u)';
+        qBar.ParamByName('cb').AsString  := sEAN13;
+        qBar.ParamByName('sku').AsString := sCodigoSKU;
+        qBar.ParamByName('u').AsString   := AUsuario;
+        qBar.ExecSQL;
+      end
+      else
+        qBar.Close;
 
       qC.Next;
     end;
@@ -1051,6 +1074,95 @@ begin
       except
         // tragado: si esto también falla, no hay nada que hacer
       end;
+    end;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Revertir la materializacion
+// ---------------------------------------------------------------------------
+
+function RevertirMaterializacion(ADM: TdmComprasSesiones;
+                                  const AUsuario: string;
+                                  out AMsgError: string): Boolean;
+var
+  conn      : TUniConnection;
+  sSerieSes, sNumSes: string;
+  q         : TUniQuery;
+  bTxOwned  : Boolean;
+begin
+  Result    := False;
+  AMsgError := '';
+
+  if ADM = nil then
+  begin
+    AMsgError := 'DataModule no inicializado.';
+    Exit;
+  end;
+  if ADM.unqryTablaG.IsEmpty then
+  begin
+    AMsgError := 'No hay sesion activa.';
+    Exit;
+  end;
+  if ADM.unqryTablaG.FieldByName('ESTADO_SES').AsString <> 'CERRADA' then
+  begin
+    AMsgError := 'La sesion no esta CERRADA, no hay nada que revertir.';
+    Exit;
+  end;
+
+  conn      := inLibGlobalVar.oConn;
+  sSerieSes := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumSes   := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+
+  bTxOwned := not conn.InTransaction;
+  if bTxOwned then conn.StartTransaction;
+  try
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := conn;
+
+      // 1. Borrar los movimientos de almacen que esta sesion creo. Solo
+      //    los TIPO_DOC_MOV='AC' apuntando a SERIE/NUMERO de la sesion:
+      //    los demas movimientos del articulo (anteriores o de otras
+      //    sesiones) se preservan.
+      q.SQL.Text :=
+        'DELETE FROM fza_movimientos_almacen ' +
+        ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
+        '   AND SERIE_DOC_MOV  = :s ' +
+        '   AND NUMERO_DOC_MOV = :n';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 2. Cabecera vuelve a BORRADOR + limpiamos referencias a docs.
+      q.SQL.Text :=
+        'UPDATE fza_compras_sesiones SET ' +
+        '  ESTADO_SES                = ''BORRADOR'', ' +
+        '  INSTANTE_MATERIALIZA_SES  = NULL, ' +
+        '  USUARIO_MATERIALIZA_SES   = NULL, ' +
+        '  SERIE_PEDC_SES            = NULL, ' +
+        '  NUMERO_PEDC_SES           = NULL, ' +
+        '  SERIE_ALBC_SES            = NULL, ' +
+        '  NUMERO_ALBC_SES           = NULL, ' +
+        '  MENSAJE_ERROR_SES         = NULL, ' +
+        '  INSTANTE_MODIF            = NOW(), ' +
+        '  USUARIO_MODIF             = :u ' +
+        ' WHERE SERIE_SES = :s AND NUMERO_SES = :n';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ParamByName('u').AsString := AUsuario;
+      q.ExecSQL;
+    finally
+      FreeAndNil(q);
+    end;
+
+    if bTxOwned and conn.InTransaction then conn.Commit;
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      if bTxOwned and conn.InTransaction then conn.Rollback;
+      AMsgError := E.Message;
     end;
   end;
 end;
