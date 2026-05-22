@@ -16,10 +16,14 @@
 {      - Cabecera: Empresa, Proveedor, Tarifa venta, Margen,                   }
 {        Multiplo redondeo, Ajuste final.                                      }
 {      - Una linea = un articulo. Columnas: Familia (F3 -> picker),            }
-{        Codigo articulo (auto familia+contador), Descripcion, Color           }
-{        (libre), Color basico (selector paleta), Pr. compra,                  }
-{        Pr. venta (propuesto al teclear coste), Sistema tallas,               }
-{        N columnas TALLA inline, Total tallas, Importe s/IVA.                 }
+{        Codigo articulo (editable; si lo tecleado coincide con una            }
+{        familia con contador activo se expande a FAMILIA+RELLENO,             }
+{        p. ej. '0101' -> '0101003'), Descripcion, Color (libre),              }
+{        Color basico (selector paleta), Pr. compra, Pr. venta                 }
+{        (propuesto al teclear coste), Sistema tallas, N columnas              }
+{        TALLA inline, Total tallas, Importe s/IVA.                            }
+{      - Boton 'Arbol familias' en la barra de lineas abre el mismo            }
+{        modal jerarquico que F3 sobre la columna Familia.                     }
 {                                                                              }
 {    Las columnas TALLA son no-bound: su valor vive en                         }
 {    tvLineas.DataController.Values y se sincroniza con                        }
@@ -127,6 +131,7 @@ type
     btnDelLinea              : TcxButton;
     btnNuevoColor            : TcxButton;
     btnFoto                  : TcxButton;
+    btnArbolFamilias         : TcxButton;
     dlgFoto                  : TOpenDialog;
     lblHint                  : TcxLabel;
 
@@ -165,6 +170,7 @@ type
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
     procedure btnFotoClick(Sender: TObject);
+    procedure btnArbolFamiliasClick(Sender: TObject);
     procedure btnCrearClick(Sender: TObject);
     procedure btnRevertirClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
@@ -195,6 +201,7 @@ type
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
+    procedure dbcLinCodArtPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
@@ -469,20 +476,26 @@ var
   i        : Integer;
   col      : TcxGridDBColumn;
   curProps : TcxCurrencyEditProperties;
-  idxRefe  : Integer;
 begin
   // Inserta CANT_TALLAS_MAX columnas no-bound entre dbcLinTallas (sistema
   // de tallas) y dbcLinTotalTallas. Cada columna persiste su valor en el
   // DataController.Values del cxGrid; cuando el usuario teclea, el
   // OnEditValueChanged delega en FGestorTallas.PersistirCeldaActiva,
   // que upsertea en la tabla de celdas y refresca totales.
+  //
+  // Insercion dinamica: cada nueva columna se coloca en
+  // dbcLinTotalTallas.Index (justo antes). Tras la asignacion cxGrid
+  // desplaza TotalTallas una posicion, asi que en la siguiente iteracion
+  // el indice "antes de TotalTallas" ya es uno mayor y las columnas se
+  // apilan en orden col0, col1, ..., col(N-1), TotalTallas. Antes
+  // se usaba `idxRefe + i` con idxRefe capturado fuera del bucle: solo
+  // colocaba bien la primera y el resto acababan al final del header.
   if not Assigned(dbcLinTotalTallas) then Exit;
-  idxRefe := dbcLinTotalTallas.Index;
   for i := 0 to CANT_TALLAS_MAX - 1 do
   begin
     col := tvLineas.CreateColumn;
     col.Name        := 'dbcLinTalla' + Format('%.2d', [i + 1]);
-    col.Index       := idxRefe + i;
+    col.Index       := dbcLinTotalTallas.Index;
     col.Caption     := '';
     col.Width       := 50;
     col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
@@ -1028,7 +1041,9 @@ begin
   inherited;
   if (Key <> VK_F3) or (Shift <> []) then Exit;
   if not Assigned(AItem) then Exit;
-  if AItem <> dbcLinFamilia then Exit;
+  // F3 abre el selector tanto desde Familia como desde el Codigo articulo:
+  // ambos confluyen en el mismo modal y el codigo elegido se expande igual.
+  if (AItem <> dbcLinFamilia) and (AItem <> dbcLinCodArt) then Exit;
 
   frmSel := TfrmModalSelFamilia.Create(Self);
   try
@@ -1038,6 +1053,28 @@ begin
     FreeAndNil(frmSel);
   end;
   Key := 0;
+end;
+
+procedure TfrmMtoComprasSesiones.btnArbolFamiliasClick(Sender: TObject);
+var
+  frmSel : TfrmModalSelFamilia;
+begin
+  inherited;
+  // Mismo modal jerarquico que F3 sobre la columna Familia. Operamos sobre
+  // la linea con foco; si no hay (sesion sin lineas) avisamos.
+  if Dmm.unqrySesionLin.IsEmpty then
+  begin
+    MessageDlg('Anade una linea (o ponte sobre una) para asignarle familia.',
+               mtInformation, [mbOk], 0);
+    Exit;
+  end;
+  frmSel := TfrmModalSelFamilia.Create(Self);
+  try
+    if frmSel.ShowModal = mrOk then
+      ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
+  finally
+    FreeAndNil(frmSel);
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinFamiliaPropertiesEditValueChanged(
@@ -1087,6 +1124,65 @@ begin
      and SameText(Copy(sTent, 1, Length(sNuevo)), sNuevo) then
     Exit; // ya parece expandido para la familia actual
   ExpandirCodigoFamiliaActiva(sNuevo);
+end;
+
+procedure TfrmMtoComprasSesiones.dbcLinCodArtPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  ed         : TcxCustomEdit;
+  sTecleado  : string;
+  sExpandido : string;
+  ds         : TDataSet;
+  q          : TUniQuery;
+  sNombre    : string;
+begin
+  inherited;
+  // Permitimos teclear el codigo directamente en la celda 'Cod. articulo'.
+  // Si lo tecleado coincide con una familia con contador activo, se expande
+  // a FAMILIA+RELLENO igual que cuando se teclea en la columna Familia
+  // (p. ej. '0101' con contador 3 -> '0101003'). Si no es familia, se queda
+  // tal cual (codigo manual) y no se toca CODIGO_FAM_SESLIN.
+  if not (Sender is TcxCustomEdit) then Exit;
+  ed := TcxCustomEdit(Sender);
+  ed.PostEditValue;
+
+  ds := Dmm.unqrySesionLin;
+  if ds.IsEmpty then Exit;
+  sTecleado := Trim(ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
+  if sTecleado = '' then Exit;
+
+  // ResolverCodigoFamilia incrementa el contador como efecto colateral si
+  // resuelve: solo se llama una vez por edicion de celda. Si devuelve False
+  // no consume nada y dejamos el codigo manual sin tocar.
+  if not ResolverCodigoFamilia(inLibGlobalVar.oConn, sTecleado, oUser,
+                               sExpandido) then Exit;
+
+  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+  ds.FieldByName('CODIGO_FAM_SESLIN').AsString          := sTecleado;
+  ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sExpandido;
+  ed.EditValue := sExpandido;
+
+  // Pre-rellenar descripcion con NOMBRE_FAM_FAM si esta vacia (mismo
+  // comportamiento que ExpandirCodigoFamiliaActiva por simetria con F3
+  // / tipeo en la columna Familia).
+  if ds.FieldByName('DESCRIPCION_SESLIN').AsString <> '' then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
+      ' WHERE CODIGO_FAM_FAM = :p';
+    q.ParamByName('p').AsString := sTecleado;
+    q.Open;
+    if not q.IsEmpty then
+    begin
+      sNombre := q.FieldByName('NOMBRE_FAM_FAM').AsString;
+      if sNombre <> '' then
+        ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
