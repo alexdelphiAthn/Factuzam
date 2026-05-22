@@ -60,10 +60,10 @@ object frmStockConsulta: TfrmStockConsulta
     object lblDescr: TcxLabel
       Left = 16
       Top = 46
-      Properties.WordWrap = True
+      Properties.WordWrap = False
       TabOrder = 2
       Transparent = True
-      Width = 9
+      Width = 720
     end
     object lblInfo: TcxLabel
       Left = 16
