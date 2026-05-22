@@ -941,17 +941,19 @@ begin
   qC := TUniQuery.Create(nil);
   try
     qC.Connection := AConn;
-    // Agrupamos por (sku-resolvable inputs, almacen). El SKU real se
-    // resuelve por linea con ResolverCodigoSku, asi que aqui agrupamos
-    // por los componentes (articulo, pivot, fila) + almacen y luego
-    // pedimos el SKU una vez por grupo.
+    // Agrupamos por (articulo, pivot=talla, color, almacen). El SKU real
+    // se resuelve por grupo con ResolverCodigoSku. CLAVE: agrupamos por
+    // CODIGO_ATB_COLOR_SESLIN (el atributo basico de color de la linea),
+    // NO por ID_VA_FILA_SESLIN (que es 'CO', un position string). El
+    // ID_AV numerico de cada color se resuelve dentro del bucle.
     qC.SQL.Text :=
       'SELECT  ' +
       '    CASE WHEN L.ACCION_DUPLICADO_SESLIN = ''REUSAR'' ' +
       '         THEN L.CODIGO_ART_REUSAR_SESLIN ' +
       '         ELSE L.CODIGO_ART_TENTATIVO_SESLIN END AS CODIGO_ART, ' +
       '    C.ID_AV_PIVOT_SESCEL, ' +
-      '    CAST(IFNULL(L.ID_VA_FILA_SESLIN, ''0'') AS UNSIGNED) AS AV_FILA, ' +
+      '    IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
+      '    IFNULL(L.COLOR_TEXTO_SESLIN, '''')     AS COLOR_TEXTO, ' +
       '    IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) AS ALM_EFE, ' +
       '    SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
       '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
@@ -967,10 +969,11 @@ begin
       '   AND C.NUMERO_SES_SESCEL = :n ' +
       '   AND C.CANTIDAD_SESCEL   > 0 ' +
       '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
-      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, AV_FILA, ALM_EFE, ' +
+      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, COD_COLOR, ' +
+      '          COLOR_TEXTO, ALM_EFE, ' +
       '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN ' +
-      ' ORDER BY CODIGO_ART, AV_FILA, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
+      ' ORDER BY CODIGO_ART, COD_COLOR, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
     qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
     qC.ParamByName('s').AsString := ASerieSes;
     qC.ParamByName('n').AsString := ANumSes;
@@ -980,7 +983,6 @@ begin
     begin
       sCodigoArt := qC.FieldByName('CODIGO_ART').AsString;
       iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
-      iIdAvFila  := qC.FieldByName('AV_FILA').AsInteger;
       sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
       rCantidad  := qC.FieldByName('CANTIDAD_TOTAL').AsFloat;
       rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
@@ -988,6 +990,17 @@ begin
       sCodigoFam := qC.FieldByName('CODIGO_FAM_SESLIN').AsString;
       sTipoIva   := qC.FieldByName('TIPO_IVA').AsString;
       rPorIva    := 0;  // se podra cruzar con fza_ivas en hito posterior
+
+      // Resolver ID_AV del color (fila) desde CODIGO_ATB_COLOR_SESLIN.
+      // Si la linea no tiene color (ESCALAR), iIdAvFila queda 0 y
+      // ResolverCodigoSku usa la query simple (solo pivot).
+      iIdAvFila := 0;
+      if Trim(qC.FieldByName('COD_COLOR').AsString) <> '' then
+        iIdAvFila := ResolverIdAvColorLinea(
+          AConn,
+          qC.FieldByName('COLOR_TEXTO').AsString,
+          qC.FieldByName('COD_COLOR').AsString,
+          AUsuario, sCodigoSku);  // sCodigoSku se reusa como out, se sobreescribe abajo
 
       sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
       if sCodigoSku = '' then
@@ -1051,7 +1064,8 @@ begin
       '       L.CODIGO_ART_TENTATIVO_SESLIN, L.CODIGO_ART_REUSAR_SESLIN, ' +
       '       L.ACCION_DUPLICADO_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '       L.PRECIO_COMPRA_SESLIN, L.TIPO_LINEA_SESLIN, ' +
-      '       L.ID_VA_FILA_SESLIN ' +
+      '       IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
+      '       IFNULL(L.COLOR_TEXTO_SESLIN, '''')     AS COLOR_TEXTO ' +
       '  FROM fza_compras_sesiones_celdas C ' +
       '  JOIN fza_compras_sesiones_lineas L ' +
       '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
@@ -1088,12 +1102,18 @@ begin
         Continue;
       end;
 
-      // Solo MATRIZ tiene ID_VA_FILA (color). Para ESCALAR la fila
-      // viene vacia y SKU se busca solo por pivot.
+      // Resolver ID_AV del color (fila) desde CODIGO_ATB_COLOR_SESLIN.
+      // L.ID_VA_FILA_SESLIN es un position string ('CO'), NO un ID
+      // numerico: el codigo viejo hacia StrToIntDef y siempre daba 0,
+      // por lo que ResolverCodigoSku no encontraba SKUs MATRIZ y se
+      // saltaban los movimientos en silencio.
       iIdAvFila := 0;
-      if not qC.FieldByName('ID_VA_FILA_SESLIN').IsNull then
-        iIdAvFila :=
-                StrToIntDef(qC.FieldByName('ID_VA_FILA_SESLIN').AsString, 0);
+      if Trim(qC.FieldByName('COD_COLOR').AsString) <> '' then
+        iIdAvFila := ResolverIdAvColorLinea(
+          AConn,
+          qC.FieldByName('COLOR_TEXTO').AsString,
+          qC.FieldByName('COD_COLOR').AsString,
+          AUsuario, sCodigoSku);  // sCodigoSku se reusa como out, se sobreescribe abajo
 
       sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
       if sCodigoSku = '' then
