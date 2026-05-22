@@ -127,8 +127,67 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
   end
   inherited frxReportOrigen: TfrxReport
     ReportOptions.Author = ''
-    ReportOptions.LastChange = 46164.000000000000000000
+    ReportOptions.LastChange = 46173.000000000000000000
     ScriptText.Strings = (
+      'function HexNibble(c: Char): Integer;'
+      'begin'
+      '  if (c >= ''0'') and (c <= ''9'') then'
+      '    Result := Ord(c) - Ord(''0'')'
+      '  else if (c >= ''A'') and (c <= ''F'') then'
+      '    Result := Ord(c) - Ord(''A'') + 10'
+      '  else if (c >= ''a'') and (c <= ''f'') then'
+      '    Result := Ord(c) - Ord(''a'') + 10'
+      '  else'
+      '    Result := -1;'
+      'end;'
+      ''
+      'function HexToColor(sHex: String): Integer;'
+      'var'
+      '  iOff, R, G, B, n0, n1, n2, n3, n4, n5: Integer;'
+      'begin'
+      '  Result := -1;'
+      '  sHex := Trim(sHex);'
+      '  if Length(sHex) < 6 then Exit;'
+      '  if Copy(sHex, 1, 1) = ''#'' then iOff := 1 else iOff := 0;'
+      '  if Length(sHex) < 6 + iOff then Exit;'
+      '  n0 := HexNibble(sHex[iOff + 1]);'
+      '  n1 := HexNibble(sHex[iOff + 2]);'
+      '  n2 := HexNibble(sHex[iOff + 3]);'
+      '  n3 := HexNibble(sHex[iOff + 4]);'
+      '  n4 := HexNibble(sHex[iOff + 5]);'
+      '  n5 := HexNibble(sHex[iOff + 6]);'
+      '  if (n0 < 0) or (n1 < 0) or (n2 < 0) or (n3 < 0) or (n4 < 0) or (n5 < 0) then Exit;'
+      '  R := n0 * 16 + n1;'
+      '  G := n2 * 16 + n3;'
+      '  B := n4 * 16 + n5;'
+      '  Result := (B shl 16) or (G shl 8) or R;'
+      'end;'
+      ''
+      'procedure EtiqColorOnBeforePrint(Sender: TfrxComponent);'
+      'var'
+      '  sHex: String;'
+      '  c, R, G, B, Y: Integer;'
+      '  m: TfrxMemoView;'
+      'begin'
+      '  m := TfrxMemoView(Sender);'
+      '  sHex := <EtiquetasArt."HEX_ATR_CO">;'
+      '  c := HexToColor(sHex);'
+      '  if c < 0 then begin'
+      '    m.Color := $00FFFFFF;'
+      '    m.Font.Color := $00000000;'
+      '    Exit;'
+      '  end;'
+      '  m.Color := c;'
+      '  R := c and $FF;'
+      '  G := (c shr 8) and $FF;'
+      '  B := (c shr 16) and $FF;'
+      '  Y := (R * 299 + G * 587 + B * 114) div 1000;'
+      '  if Y < 140 then'
+      '    m.Font.Color := $00FFFFFF'
+      '  else'
+      '    m.Font.Color := $00000000;'
+      'end;'
+      ''
       'begin'
       'end.')
     Left = 120
@@ -141,13 +200,15 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     Variables = <>
     Style = <>
     inherited Page1: TfrxReportPage
-      TopMargin = 10.000000000000000000
-      BottomMargin = 10.000000000000000000
+      LeftMargin = 0.000000000000000000
+      RightMargin = 0.000000000000000000
+      TopMargin = 13.000000000000000000
+      BottomMargin = 8.000000000000000000
       Columns = 2
-      ColumnWidth = 100.000000000000000000
+      ColumnWidth = 105.000000000000000000
       ColumnPositions.Strings = (
         '0'
-        '100')
+        '105')
       object MasterData1: TfrxMasterData
         FillType = ftBrush
         FillGap.Top = 0
@@ -155,19 +216,19 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
         FillGap.Bottom = 0
         FillGap.Right = 0
         Frame.Typ = []
-        Height = 120.000000000000000000
-        Top = 18.897650000000000000
+        Height = 181.417440000000000000
+        Top = 49.133890000000000000
         Width = 396.850650000000000000
         DataSet = dmArticulos.fxdsEtiquetasArt
         DataSetName = 'EtiquetasArt'
         RowCount = 0
-        object EtiqDescripcionArt: TfrxMemoView
+        object EtiqMarca: TfrxMemoView
           AllowVectorExport = True
-          Left = 5.000000000000000000
-          Top = 5.000000000000000000
-          Width = 360.000000000000000000
+          Left = 8.000000000000000000
+          Top = 4.000000000000000000
+          Width = 200.000000000000000000
           Height = 18.000000000000000000
-          DataField = 'DESCRIPCION_ART'
+          DataField = 'PROP_MARCA'
           DataSet = dmArticulos.fxdsEtiquetasArt
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
@@ -177,33 +238,14 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[EtiquetasArt."DESCRIPCION_ART"]')
-          ParentFont = False
-        end
-        object EtiqDescripcionSku: TfrxMemoView
-          AllowVectorExport = True
-          Left = 5.000000000000000000
-          Top = 25.000000000000000000
-          Width = 360.000000000000000000
-          Height = 16.000000000000000000
-          DataField = 'DESCRIPCION_SKU'
-          DataSet = dmArticulos.fxdsEtiquetasArt
-          DataSetName = 'EtiquetasArt'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
-          Font.Style = []
-          Frame.Typ = []
-          Memo.UTF8W = (
-            '[EtiquetasArt."DESCRIPCION_SKU"]')
+            '[EtiquetasArt."PROP_MARCA"]')
           ParentFont = False
         end
         object EtiqRefProv: TfrxMemoView
           AllowVectorExport = True
-          Left = 5.000000000000000000
-          Top = 45.000000000000000000
-          Width = 360.000000000000000000
+          Left = 210.000000000000000000
+          Top = 6.000000000000000000
+          Width = 180.000000000000000000
           Height = 14.000000000000000000
           DataField = 'REF_PROVEEDOR'
           DataSet = dmArticulos.fxdsEtiquetasArt
@@ -214,35 +256,33 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
+          HAlign = haRight
           Memo.UTF8W = (
             'Ref: [EtiquetasArt."REF_PROVEEDOR"]')
           ParentFont = False
         end
-        object EtiqCodigoBarras: TfrxMemoView
+        object EtiqLblPrecio: TfrxMemoView
           AllowVectorExport = True
-          Left = 5.000000000000000000
-          Top = 65.000000000000000000
-          Width = 200.000000000000000000
-          Height = 14.000000000000000000
-          DataField = 'CODIGO_BARRAS_CB'
-          DataSet = dmArticulos.fxdsEtiquetasArt
-          DataSetName = 'EtiquetasArt'
+          Left = 8.000000000000000000
+          Top = 34.000000000000000000
+          Width = 55.000000000000000000
+          Height = 16.000000000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -11
           Font.Name = 'Arial'
-          Font.Style = []
+          Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[EtiquetasArt."CODIGO_BARRAS_CB"]')
+            'P.V.P')
           ParentFont = False
         end
         object EtiqPrecio: TfrxMemoView
           AllowVectorExport = True
-          Left = 210.000000000000000000
-          Top = 65.000000000000000000
-          Width = 155.000000000000000000
-          Height = 30.000000000000000000
+          Left = 62.000000000000000000
+          Top = 24.000000000000000000
+          Width = 205.000000000000000000
+          Height = 32.000000000000000000
           DataField = 'PRECIO_FINAL_ARTTAR'
           DataSet = dmArticulos.fxdsEtiquetasArt
           DataSetName = 'EtiquetasArt'
@@ -250,13 +290,115 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -18
+          Font.Height = -22
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
-          HAlign = haRight
+          HAlign = haLeft
           Memo.UTF8W = (
             '[EtiquetasArt."PRECIO_FINAL_ARTTAR"] '#8364)
+          ParentFont = False
+        end
+        object EtiqTalla: TfrxMemoView
+          AllowVectorExport = True
+          Left = 275.000000000000000000
+          Top = 22.000000000000000000
+          Width = 115.000000000000000000
+          Height = 40.000000000000000000
+          DataField = 'ATR_TAL'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -28
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Color = clBlack
+          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Frame.Width = 1.500000000000000000
+          HAlign = haCenter
+          VAlign = vaCenter
+          Memo.UTF8W = (
+            '[EtiquetasArt."ATR_TAL"]')
+          ParentFont = False
+        end
+        object EtiqBarcode: TfrxBarCodeView
+          AllowVectorExport = True
+          Left = 8.000000000000000000
+          Top = 66.000000000000000000
+          Width = 200.000000000000000000
+          Height = 42.000000000000000000
+          BarType = bcCode128A
+          Expression = '<EtiquetasArt."CODIGO_BARRAS_CB">'
+          Rotation = 0
+          ShowText = True
+          Text = '0000000000000'
+          WideBarRatio = 2.500000000000000000
+          Zoom = 1.000000000000000000
+        end
+        object EtiqCodArt: TfrxMemoView
+          AllowVectorExport = True
+          Left = 215.000000000000000000
+          Top = 68.000000000000000000
+          Width = 175.000000000000000000
+          Height = 14.000000000000000000
+          DataField = 'CODIGO_ART_ART'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[EtiquetasArt."CODIGO_ART_ART"]')
+          ParentFont = False
+        end
+        object EtiqColor: TfrxMemoView
+          AllowVectorExport = True
+          Left = 8.000000000000000000
+          Top = 116.000000000000000000
+          Width = 382.000000000000000000
+          Height = 22.000000000000000000
+          DataField = 'ATR_CO'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          FillType = ftBrush
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -12
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Color = clBlack
+          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Frame.Width = 1.000000000000000000
+          HAlign = haCenter
+          VAlign = vaCenter
+          Memo.UTF8W = (
+            '[EtiquetasArt."ATR_CO"]')
+          OnBeforePrint = 'EtiqColorOnBeforePrint'
+          ParentFont = False
+        end
+        object EtiqDescArt: TfrxMemoView
+          AllowVectorExport = True
+          Left = 8.000000000000000000
+          Top = 144.000000000000000000
+          Width = 382.000000000000000000
+          Height = 18.000000000000000000
+          DataField = 'DESCRIPCION_ART'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haLeft
+          Memo.UTF8W = (
+            '[EtiquetasArt."DESCRIPCION_ART"]')
           ParentFont = False
         end
       end
