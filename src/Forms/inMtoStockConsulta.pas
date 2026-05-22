@@ -765,10 +765,8 @@ begin
   // color basico a la izquierda del texto, via inLibAtributosPaleta.
   // En modo Por Almacen, se muestra el codigo del almacen plano.
   FColGrupo := tvStock.CreateColumn;
-  if AEsColor then
-    FColGrupo.Caption := 'Color'
-  else
-    FColGrupo.Caption := 'Almac'#233'n';
+  if AEsColor then FColGrupo.Caption := 'Color'
+  else             FColGrupo.Caption := 'Almacén';
   FColGrupo.DataBinding.FieldName := 'GRUPO';
   if AEsColor then
     FColGrupo.Width := 150  // espacio extra para el cuadradito
