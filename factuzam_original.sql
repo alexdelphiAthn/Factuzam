@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 22/05/2026 23:42:27
+-- Backup generado: 23/05/2026 0:06:16
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -163,6 +163,31 @@ ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_ESTADO` (`ESTADO_ALBC`);
 ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_PEDIDO` (`SERIE_PED_ALBC`, `NUMERO_PED_ALBC`);
 ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_PROVEEDOR_FECHA` (`CODIGO_PRV_ALBC`, `FECHA_ALBC`);
 
+-- Datos de fza_albaranes_compra
+INSERT INTO `fza_albaranes_compra` (`NUMERO_ALBC`, `SERIE_ALBC`, `FECHA_ALBC`, `ESTADO_ALBC`, `NUMERO_PED_ALBC`, `SERIE_PED_ALBC`, `NUMERO_FAC_ALBC`, `SERIE_FAC_ALBC`, `CODIGO_EMP_ALBC`, `RAZON_SOCIAL_EMPRESA_ALBC`, `NIF_EMPRESA_ALBC`, `MOVIL_EMPRESA_ALBC`, `EMAIL_EMPRESA_ALBC`, `DIRECCION1_EMPRESA_ALBC`, `DIRECCION2_EMPRESA_ALBC`, `POBLACION_EMPRESA_ALBC`, `PROVINCIA_EMPRESA_ALBC`, `CODIGO_PAI_EMPRESA_ALBC`, `NOMBRE_PAI_EMPRESA_ALBC`, `CODIGO_POSTAL_EMPRESA_ALBC`, `CODIGO_PRV_ALBC`, `RAZON_SOCIAL_PRV_ALBC`, `NIF_PRV_ALBC`, `MOVIL_PRV_ALBC`, `EMAIL_PRV_ALBC`, `DIRECCION1_PRV_ALBC`, `DIRECCION2_PRV_ALBC`, `POBLACION_PRV_ALBC`, `PROVINCIA_PRV_ALBC`, `CODIGO_PAI_PRV_ALBC`, `NOMBRE_PAI_PRV_ALBC`, `CODIGO_POSTAL_PRV_ALBC`, `REF_PROVEEDOR_ALBC`, `CODIGO_ALM_ALBC`, `TRANSPORTISTA_ALBC`, `CODIGO_IVA_ALBC`, `PORCENTAJE_IVAN_ALBC`, `TOTAL_IVAN_ALBC`, `PORCENTAJE_IVAR_ALBC`, `TOTAL_IVAR_ALBC`, `PORCENTAJE_IVAS_ALBC`, `TOTAL_IVAS_ALBC`, `PORCENTAJE_IVAE_ALBC`, `TOTAL_IVAE_ALBC`, `TOTAL_BASES_ALBC`, `TOTAL_IMPUESTOS_ALBC`, `TOTAL_LIQUIDO_ALBC`, `FORMA_PAGO_ALBC`, `CONTADOR_LINEAS_ALBC`, `COMENTARIOS_ALBC`, `OBSERVACIONES_ALBC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('001', 'A1', '2026-05-12 00:00:00', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, 'xdr4565', 'GEN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1471, 0, 1471, NULL, '00000350', '', '', '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador');
+-- 1 registros exportados
+
+
+-- Tabla: fza_albaranes_compra_celdas
+
+DROP TABLE IF EXISTS `fza_albaranes_compra_celdas`;
+CREATE TABLE `fza_albaranes_compra_celdas` (
+  `SERIE_ALBC_ALBCCEL` varchar(20) NOT NULL,
+  `NUMERO_ALBC_ALBCCEL` varchar(20) NOT NULL,
+  `LINEA_ALBC_ALBCCEL` varchar(4) NOT NULL,
+  `ID_FILA_ALBC_ALBCCEL` int(11) NOT NULL DEFAULT '1',
+  `ID_AV_PIVOT_ALBCCEL` int(11) NOT NULL COMMENT 'ID del valor de atributo (talla) que pivota',
+  `CANTIDAD_ALBCCEL` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `CODIGO_ALM_ALBCCEL` varchar(10) NULL DEFAULT NULL,
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL,
+  `USUARIO_MODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`SERIE_ALBC_ALBCCEL`,`NUMERO_ALBC_ALBCCEL`,`LINEA_ALBC_ALBCCEL`,`ID_FILA_ALBC_ALBCCEL`,`ID_AV_PIVOT_ALBCCEL`)
+);
+ALTER TABLE `fza_albaranes_compra_celdas` ADD INDEX `IDX_ALBCCEL_LINEA` (`SERIE_ALBC_ALBCCEL`, `NUMERO_ALBC_ALBCCEL`, `LINEA_ALBC_ALBCCEL`);
+
 
 -- Tabla: fza_albaranes_compra_lineas
 
@@ -176,11 +201,13 @@ CREATE TABLE `fza_albaranes_compra_lineas` (
   `LINEA_PEDC_ALBCLIN` varchar(4) NULL DEFAULT NULL COMMENT 'Linea de origen en fza_pedidos_compra_lineas',
   `CODIGO_ART_ALBCLIN` varchar(20) NULL DEFAULT NULL,
   `CODIGO_UNIDAD_ALBCLIN` varchar(50) NULL DEFAULT NULL COMMENT 'SKU del articulo',
+  `ID_AC_PIVOT_ALBCLIN` int(11) NULL DEFAULT NULL COMMENT 'Conjunto de atributos pivot (fza_atributos_conjuntos)',
   `CODIGO_FAM_ALBCLIN` varchar(20) NULL DEFAULT NULL,
   `NOMBRE_FAM_ALBCLIN` varchar(200) NULL DEFAULT NULL,
   `DESCRIPCION_ARTICULO_ALBCLIN` varchar(100) NULL DEFAULT NULL,
   `TIPO_CANTIDAD_ARTICULO_ALBCLIN` varchar(20) NULL DEFAULT 'Uds',
   `CANTIDAD_ALBCLIN` decimal(19,6) NULL DEFAULT '1.000000',
+  `TOTAL_UNIDADES_ALBCLIN` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'SUM(CANTIDAD) de celdas cuando ID_AC_PIVOT esta fijado',
   `TIPO_IVA_ARTICULO_ALBCLIN` varchar(2) NULL DEFAULT 'N',
   `PORCENTAJE_IVA_ALBCLIN` decimal(19,6) NULL DEFAULT '0.000000',
   `PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN` decimal(19,6) NULL DEFAULT '0.000000',
@@ -202,6 +229,45 @@ CREATE TABLE `fza_albaranes_compra_lineas` (
 );
 ALTER TABLE `fza_albaranes_compra_lineas` ADD INDEX `IDX_ALBCLIN_ARTICULO` (`CODIGO_ART_ALBCLIN`);
 ALTER TABLE `fza_albaranes_compra_lineas` ADD INDEX `IDX_ALBCLIN_PEDIDO` (`SERIE_PEDC_ALBCLIN`, `NUMERO_PEDC_ALBCLIN`, `LINEA_PEDC_ALBCLIN`);
+
+-- Datos de fza_albaranes_compra_lineas
+INSERT INTO `fza_albaranes_compra_lineas` (`NUMERO_ALBC_ALBCLIN`, `SERIE_ALBC_ALBCLIN`, `LINEA_ALBCLIN`, `NUMERO_PEDC_ALBCLIN`, `SERIE_PEDC_ALBCLIN`, `LINEA_PEDC_ALBCLIN`, `CODIGO_ART_ALBCLIN`, `CODIGO_UNIDAD_ALBCLIN`, `ID_AC_PIVOT_ALBCLIN`, `CODIGO_FAM_ALBCLIN`, `NOMBRE_FAM_ALBCLIN`, `DESCRIPCION_ARTICULO_ALBCLIN`, `TIPO_CANTIDAD_ARTICULO_ALBCLIN`, `CANTIDAD_ALBCLIN`, `TOTAL_UNIDADES_ALBCLIN`, `TIPO_IVA_ARTICULO_ALBCLIN`, `PORCENTAJE_IVA_ALBCLIN`, `PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN`, `PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN`, `TOTAL_ALBCLIN`, `CODIGO_ALMACEN_ALBCLIN`, `LOTE_ALBCLIN`, `FECHA_CADUCIDAD_ALBCLIN`, `DESCRIPCION_VARIACION_ALBCLIN`, `ESFACTURADA_ALBCLIN`, `NUMERO_FAC_ALBCLIN`, `SERIE_FAC_ALBCLIN`, `LINEA_FAC_ALBCLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('001', 'A1', '0010', NULL, NULL, NULL, 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/42', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 3, 0, 'N', 0, 10, 10, 30, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0020', NULL, NULL, NULL, 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/43', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 4, 0, 'N', 0, 10, 10, 40, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0030', NULL, NULL, NULL, 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/41', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 4, 0, 'N', 0, 10, 10, 40, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0040', NULL, NULL, NULL, 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/40', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 2, 0, 'N', 0, 10, 10, 20, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0050', NULL, NULL, NULL, 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/44', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 4, 0, 'N', 0, 10, 10, 40, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0060', NULL, NULL, NULL, 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/39', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 2, 0, 'N', 0, 10, 10, 20, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0070', NULL, NULL, NULL, 'BOLSOS00006', 'BOLSOS00006/VERDE/42', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 2, 0, 'N', 0, 10, 10, 20, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0080', NULL, NULL, NULL, 'BOLSOS00006', 'BOLSOS00006/VERDE/43', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 3, 0, 'N', 0, 10, 10, 30, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0090', NULL, NULL, NULL, 'BOLSOS00006', 'BOLSOS00006/VERDE/41', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 1, 0, 'N', 0, 10, 10, 10, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0100', NULL, NULL, NULL, 'BOLSOS00006', 'BOLSOS00006/VERDE/40', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 2, 0, 'N', 0, 10, 10, 20, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0110', NULL, NULL, NULL, 'BOLSOS00006', 'BOLSOS00006/VERDE/44', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 2, 0, 'N', 0, 10, 10, 20, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0120', NULL, NULL, NULL, 'BOLSOS00006', 'BOLSOS00006/VERDE/39', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 1, 0, 'N', 0, 10, 10, 10, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0130', NULL, NULL, NULL, 'BOLSOS00007', 'BOLSOS00007/AMARILLO/S', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 1, 0, 'N', 0, 22, 22, 22, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0140', NULL, NULL, NULL, 'BOLSOS00007', 'BOLSOS00007/AMARILLO/M', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 1, 0, 'N', 0, 22, 22, 22, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0150', NULL, NULL, NULL, 'BOLSOS00007', 'BOLSOS00007/AMARILLO/L', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 2, 0, 'N', 0, 22, 22, 44, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0160', NULL, NULL, NULL, 'BOLSOS00007', 'BOLSOS00007/AMARILLO/XL', NULL, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 2, 0, 'N', 0, 22, 22, 44, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0170', NULL, NULL, NULL, 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/42', NULL, 'COMPLEMENTOS', '', 'Complementos Accesorios', 'Uds', 2, 0, 'N', 0, 12, 12, 24, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0180', NULL, NULL, NULL, 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/43', NULL, 'COMPLEMENTOS', '', 'Complementos Accesorios', 'Uds', 1, 0, 'N', 0, 12, 12, 12, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0190', NULL, NULL, NULL, 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/41', NULL, 'COMPLEMENTOS', '', 'Complementos Accesorios', 'Uds', 2, 0, 'N', 0, 12, 12, 24, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0200', NULL, NULL, NULL, 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/40', NULL, 'COMPLEMENTOS', '', 'Complementos Accesorios', 'Uds', 2, 0, 'N', 0, 12, 12, 24, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0210', NULL, NULL, NULL, 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/44', NULL, 'COMPLEMENTOS', '', 'Complementos Accesorios', 'Uds', 1, 0, 'N', 0, 12, 12, 12, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0220', NULL, NULL, NULL, 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/39', NULL, 'COMPLEMENTOS', '', 'Complementos Accesorios', 'Uds', 1, 0, 'N', 0, 12, 12, 12, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0230', NULL, NULL, NULL, 'DEPORTIVO001', 'DEPORTIVO001/BLANCO/42', NULL, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 4, 0, 'N', 0, 34, 34, 136, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0240', NULL, NULL, NULL, 'DEPORTIVO001', 'DEPORTIVO001/BLANCO/43', NULL, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 3, 0, 'N', 0, 34, 34, 102, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0250', NULL, NULL, NULL, 'DEPORTIVO001', 'DEPORTIVO001/BLANCO/41', NULL, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 6, 0, 'N', 0, 34, 34, 204, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0260', NULL, NULL, NULL, 'DEPORTIVO001', 'DEPORTIVO001/BLANCO/40', NULL, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 3, 0, 'N', 0, 34, 34, 102, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0270', NULL, NULL, NULL, 'DEPORTIVO001', 'DEPORTIVO001/BLANCO/44', NULL, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 3, 0, 'N', 0, 34, 34, 102, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0280', NULL, NULL, NULL, 'DEPORTIVO001', 'DEPORTIVO001/BLANCO/39', NULL, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 3, 0, 'N', 0, 34, 34, 102, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0290', NULL, NULL, NULL, 'DEPORTIVO002', 'DEPORTIVO002/VERDE/42', NULL, 'DEPORTIVO', '', 'Zapatillas deportivas', 'Uds', 2, 0, 'N', 0, 19, 19, 38, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0300', NULL, NULL, NULL, 'DEPORTIVO002', 'DEPORTIVO002/VERDE/43', NULL, 'DEPORTIVO', '', 'Zapatillas deportivas', 'Uds', 1, 0, 'N', 0, 19, 19, 19, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0310', NULL, NULL, NULL, 'DEPORTIVO002', 'DEPORTIVO002/VERDE/41', NULL, 'DEPORTIVO', '', 'Zapatillas deportivas', 'Uds', 2, 0, 'N', 0, 19, 19, 38, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0320', NULL, NULL, NULL, 'DEPORTIVO002', 'DEPORTIVO002/VERDE/40', NULL, 'DEPORTIVO', '', 'Zapatillas deportivas', 'Uds', 2, 0, 'N', 0, 19, 19, 38, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0330', NULL, NULL, NULL, 'DEPORTIVO002', 'DEPORTIVO002/VERDE/44', NULL, 'DEPORTIVO', '', 'Zapatillas deportivas', 'Uds', 1, 0, 'N', 0, 19, 19, 19, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0340', NULL, NULL, NULL, 'DEPORTIVO002', 'DEPORTIVO002/VERDE/39', NULL, 'DEPORTIVO', '', 'Zapatillas deportivas', 'Uds', 1, 0, 'N', 0, 19, 19, 19, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('001', 'A1', '0350', NULL, NULL, NULL, 'DEPORTIVO003', 'DEPORTIVO003/COLORADITO/39', NULL, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 1, 0, 'N', 0, 12, 12, 12, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador');
+-- 35 registros exportados
 
 
 -- Tabla: fza_albaranes_lineas
@@ -339,22 +405,22 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
   ('ABRIGO-PAÑO', 'S', 'ESTANDAR', 'Abrigo de Paño Caballero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:12', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('BLUS-SEDA', 'S', 'ESTANDAR', 'Blusa de Seda Cuello V', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:13', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('BOLSO-PIEL', 'S', 'ESTANDAR', 'Bolso de Piel Mujer Grande', 'BOLSOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
-  ('BOLSOS00005', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador', 'TC'),
-  ('BOLSOS00006', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
-  ('BOLSOS00007', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
+  ('BOLSOS00005', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador', 'TC'),
+  ('BOLSOS00006', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador', 'TC'),
+  ('BOLSOS00007', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador', 'TC'),
   ('BOTIN-ANIT', 'S', 'ESTANDAR', 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:05', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CAMI-BASICA', 'S', 'ESTANDAR', 'Camiseta de Algodón Básica', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:04', '2026-03-11 22:27:51', 'ADMIN', 'ADMIN', 'TC'),
   ('CAMI-POLO', 'S', 'ESTANDAR', 'Polo Manga Corta Hombre', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:03', '2026-01-10 08:00:00', 'DEMO', 'Administrador', 'TC'),
   ('CARTERA-PIEL', 'S', 'ESTANDAR', 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-01-07 19:47:30', '2026-03-11 22:27:51', 'DEMO', 'DEMO', NULL),
   ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:59', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CINTURON-PIEL', 'S', 'ESTANDAR', 'Cinturón Piel Reversible', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
-  ('COMPLEMENTOS002', 'S', 'ESTANDAR', 'Complementos Accesorios', 'COMPLEMENTOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
+  ('COMPLEMENTOS002', 'S', 'ESTANDAR', 'Complementos Accesorios', 'COMPLEMENTOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador', 'TC'),
   ('DEMO-BASICO', 'S', 'ESTANDAR', 'Camiseta Algodón Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:57', '2026-03-26 17:34:00', 'Admin', 'Administrador', 'TC'),
   ('DEMO-CAMISA', 'S', 'ESTANDAR', 'Camisa Lino Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:58', '2026-03-26 19:15:56', '', 'Administrador', 'TC'),
   ('DEMO-PRO', 'S', 'ESTANDAR', 'Cinturón Piel Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:59', '2026-03-26 17:34:00', 'Admin', 'Administrador', 'TC'),
-  ('DEPORTIVO001', 'S', 'ESTANDAR', 'Ropa Deportiva', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
-  ('DEPORTIVO002', 'S', 'ESTANDAR', 'Zapatillas deportivas', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
-  ('DEPORTIVO003', 'S', 'ESTANDAR', 'Ropa Deportiva', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
+  ('DEPORTIVO001', 'S', 'ESTANDAR', 'Ropa Deportiva', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador', 'TC'),
+  ('DEPORTIVO002', 'S', 'ESTANDAR', 'Zapatillas deportivas', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador', 'TC'),
+  ('DEPORTIVO003', 'S', 'ESTANDAR', 'Ropa Deportiva', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador', 'TC'),
   ('FALD-JEAN', 'S', 'ESTANDAR', 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:54', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('FALD-PLIS', 'S', 'ESTANDAR', 'Falda Larga Plisada', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:51', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('JERSEY-LANA', 'S', 'ESTANDAR', 'Jersey de Lana Cuello Redondo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:50', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
@@ -427,9 +493,9 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('ABRIGO-PAÑO', 1, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('BLUS-SEDA', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('BLUS-SEDA', 3, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  ('BOLSOS00005', 4, '', 0, 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00006', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007', 3, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005', 4, 'TAL', 0, 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00006', 4, 'TAL', 0, 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007', 3, 'TAL', 0, 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('BOTIN-ANIT', 5, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('CAMI-BASICA', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
@@ -438,10 +504,10 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('CAMI-POLO', 1, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO', 2, 'CO', 1, 'S', '2026-05-19 18:39:33', '2026-05-12 07:13:38', 'DEMO', 'SISTEMA'),
   ('CHAQ-CUERO', 1, 'TAL', 2, 'S', '2026-05-19 18:27:54', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  ('COMPLEMENTOS002', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO003', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002', 4, 'TAL', 0, 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001', 4, 'TAL', 0, 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002', 4, 'TAL', 0, 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003', 4, 'TAL', 0, 'S', '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
   ('FALD-JEAN', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('FALD-JEAN', 3, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('FALD-PLIS', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
@@ -614,9 +680,9 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('BOLSO-PIEL', 'ORIGEN', NULL, 'España', '2026-03-22 18:32:14', 'DEMO'),
   ('BOLSO-PIEL', 'PESO_GR', NULL, '620', '2026-03-22 18:32:14', 'DEMO'),
   ('BOLSO-PIEL', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
-  ('BOLSOS00005', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
-  ('BOLSOS00006', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
-  ('BOLSOS00007', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
+  ('BOLSOS00005', 'TEMPORADA', 12, NULL, '2026-05-23 00:03:05', 'Administrador'),
+  ('BOLSOS00006', 'TEMPORADA', 12, NULL, '2026-05-23 00:03:06', 'Administrador'),
+  ('BOLSOS00007', 'TEMPORADA', 12, NULL, '2026-05-23 00:03:06', 'Administrador'),
   ('BOTIN-ANIT', 'ALTURA_TAC', NULL, '4', '2026-03-22 18:32:14', 'DEMO'),
   ('BOTIN-ANIT', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('BOTIN-ANIT', 'IMPERMEAB', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
@@ -654,7 +720,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('CHAQ-CUERO', 'MATERIAL', 21, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'ORIGEN', NULL, 'Italia', '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
-  ('COMPLEMENTOS002', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
+  ('COMPLEMENTOS002', 'TEMPORADA', 12, NULL, '2026-05-23 00:03:06', 'Administrador'),
   ('DEMO-CAMISA', 'COMPOSICION', NULL, '100% ALGODÓN', '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'ES_ECO', NULL, 'S', '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'ESTILO', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
@@ -663,9 +729,9 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('DEMO-CAMISA', 'MARCA', 5, NULL, '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'ORIGEN', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'TEMPORADA', 10, NULL, '2026-03-26 19:15:56', 'Administrador'),
-  ('DEPORTIVO001', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
-  ('DEPORTIVO002', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
-  ('DEPORTIVO003', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
+  ('DEPORTIVO001', 'TEMPORADA', 12, NULL, '2026-05-23 00:03:05', 'Administrador'),
+  ('DEPORTIVO002', 'TEMPORADA', 12, NULL, '2026-05-23 00:03:06', 'Administrador'),
+  ('DEPORTIVO003', 'TEMPORADA', 12, NULL, '2026-05-23 00:03:07', 'Administrador'),
   ('LEGGING-SPORT', 'ACTIVIDAD', 56, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('LEGGING-SPORT', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('LEGGING-SPORT', 'MARCA', 4, NULL, '2026-03-22 18:32:14', 'DEMO'),
@@ -778,13 +844,13 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('21', 'JERSEY-LANA', 'sueter', 5, '2026-05-01 00:00:00', 'S', '2026-05-10 19:02:21', '2026-05-10 17:45:23', 'Administrador', 'Administrador'),
   ('7', '013', NULL, 5, '2023-10-20 00:00:00', 'S', '2023-11-04 14:56:50', '2023-11-04 14:56:50', 'Administrador', 'Administrador'),
   ('ANGEL', 'ALFALFA', NULL, 0.17, NULL, '', '2025-04-17 09:36:55', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
-  ('ANGEL', 'BOLSOS00005', 'ART03983', 10, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('ANGEL', 'BOLSOS00006', 'ART03983', 10, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('ANGEL', 'BOLSOS00007', 'AIMOE98Ç', 22, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('ANGEL', 'COMPLEMENTOS002', 'PUNKU383', 12, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('ANGEL', 'DEPORTIVO001', 'PUMA93834', 34, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('ANGEL', 'DEPORTIVO002', 'ADIDAS212', 19, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('ANGEL', 'DEPORTIVO003', '3232', 12, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('ANGEL', 'BOLSOS00005', 'ART03983', 10, '2026-05-23 00:03:05', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('ANGEL', 'BOLSOS00006', 'ART03983', 10, '2026-05-23 00:03:06', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('ANGEL', 'BOLSOS00007', 'AIMOE98Ç', 22, '2026-05-23 00:03:06', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('ANGEL', 'COMPLEMENTOS002', 'PUNKU383', 12, '2026-05-23 00:03:06', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('ANGEL', 'DEPORTIVO001', 'PUMA93834', 34, '2026-05-23 00:03:06', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('ANGEL', 'DEPORTIVO002', 'ADIDAS212', 19, '2026-05-23 00:03:06', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('ANGEL', 'DEPORTIVO003', '3232', 12, '2026-05-23 00:03:07', 'S', '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
   ('FER', '016', NULL, 25, NULL, 'N', '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
   ('LAIBENSE', 'PATITORICO', NULL, 1.5, NULL, '', '2025-09-19 11:23:01', '2024-10-06 20:54:23', 'Administrador', 'Administrador'),
   ('PEPI', 'PAPAFRITA', NULL, 0.2, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
@@ -820,28 +886,28 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('BLUS-SEDA/NEGRO/S', 'BLUS-SEDA', 'TC', 'S', '2026-05-10 23:08:23', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'Administrador'),
   ('BLUS-SEDA/ROSA/M', 'BLUS-SEDA', 'TC', 'S', '2026-05-10 23:08:25', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'Administrador'),
   ('BOLSO-PIEL', 'BOLSO-PIEL', '-', 'S', '2026-05-08 17:01:50', '2026-05-08 17:01:50', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/39', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/40', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/41', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/42', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/43', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/44', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/39', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/40', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/41', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/42', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/43', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/44', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/39', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/40', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/41', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/42', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/43', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/44', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/L', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/M', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/S', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/XL', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/39', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/40', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/41', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/42', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/43', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/44', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/39', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/40', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/41', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/42', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/43', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/44', 'BOLSOS00005', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/39', 'BOLSOS00006', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/40', 'BOLSOS00006', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/41', 'BOLSOS00006', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/42', 'BOLSOS00006', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/43', 'BOLSOS00006', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/44', 'BOLSOS00006', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/L', 'BOLSOS00007', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/M', 'BOLSOS00007', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/S', 'BOLSOS00007', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/XL', 'BOLSOS00007', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT/MARRON/37', 'BOTIN-ANIT', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('BOTIN-ANIT/MARRON/38', 'BOTIN-ANIT', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('BOTIN-ANIT/MARRON/40', 'BOTIN-ANIT', 'TC', 'S', '2026-05-11 18:27:19', '2026-05-11 18:27:19', 'Administrador', 'Administrador'),
@@ -871,12 +937,12 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('CHAQ-CUERO/NEGRO/XL', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/XXXL', 'CHAQ-CUERO', 'TC', 'S', '2026-05-15 17:54:40', '2026-05-15 17:54:40', 'SISTEMA', 'SISTEMA'),
   ('CINTURON-PIEL', 'CINTURON-PIEL', '-', 'S', '2026-05-12 07:06:08', '2026-05-12 07:06:08', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/39', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/40', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/41', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/42', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/43', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/44', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/39', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/40', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/41', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/42', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/43', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/44', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/3XL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-14 19:57:39', '2026-05-11 19:19:56', 'SISTEMA', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-05-08 13:51:34', '2026-05-08 13:51:34', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/XL', 'DEMO-CAMISA', 'TC', 'N', '2026-05-15 18:25:08', '2026-03-27 07:36:52', 'SISTEMA', 'Administrador'),
@@ -891,31 +957,31 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('DEMO-CAMISA/NEGRO/S', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/NEGRO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-PRO', 'DEMO-PRO', '-', 'S', '2026-05-10 07:20:51', '2026-05-10 07:20:51', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/39', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/40', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/41', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/42', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/43', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/44', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO003/COLORADITO/39', 'DEPORTIVO003', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/39', 'DEPORTIVO002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/40', 'DEPORTIVO002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/41', 'DEPORTIVO002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/42', 'DEPORTIVO002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/43', 'DEPORTIVO002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/44', 'DEPORTIVO002', 'TC', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003/COLORADITO/39', 'DEPORTIVO003', 'TC', 'S', '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
   ('FALD-JEAN/VAQUERO/L', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:04', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 'FALD-JEAN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('FALD-JEAN/VAQUERO/S', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:10', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
@@ -1286,18 +1352,15 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('FALD-JEAN', 67, 'FALD-JEAN/VAQUERO/L', 'VENTAMAYOR', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA', 68, 'DEMO-CAMISA/AZULMARINO/L', 'PVP', 'S', 29.95, 29.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 22:56:57', '2026-05-10 22:56:31', 'Administrador', 'Administrador'),
   ('BLUS-SEDA', 69, 'BLUS-SEDA/BLANCO/L', 'PVP', 'S', 20.95, 20.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 23:12:00', '2026-05-10 23:08:56', 'Administrador', 'Administrador'),
-  ('BOLSOS00005', 71, '', 'PVP', 'S', 35.01, 35.01, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005', 72, '', 'PVP', 'S', 35.01, 35.01, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001', 73, '', 'PVP', 'S', 84.99, 84.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006', 74, '', 'PVP', 'S', 24.99, 24.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001', 75, '', 'PVP', 'S', 84.99, 84.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001', 76, '', 'PVP', 'S', 84.99, 84.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007', 77, '', 'PVP', 'S', 54.99, 54.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002', 78, '', 'PVP', 'S', 29.99, 29.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002', 79, '', 'PVP', 'S', 47.99, 47.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO003', 80, '', 'PVP', 'S', 29.99, 29.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador');
+  ('BOLSOS00005', 83, '', 'PVP', 'S', 35.01, 35.01, NULL, NULL, NULL, NULL, NULL, '2026-05-23 00:00:00', NULL, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001', 84, '', 'PVP', 'S', 84.99, 84.99, NULL, NULL, NULL, NULL, NULL, '2026-05-23 00:00:00', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006', 85, '', 'PVP', 'S', 24.99, 24.99, NULL, NULL, NULL, NULL, NULL, '2026-05-23 00:00:00', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007', 86, '', 'PVP', 'S', 54.99, 54.99, NULL, NULL, NULL, NULL, NULL, '2026-05-23 00:00:00', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002', 87, '', 'PVP', 'S', 29.99, 29.99, NULL, NULL, NULL, NULL, NULL, '2026-05-23 00:00:00', NULL, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002', 88, '', 'PVP', 'S', 47.99, 47.99, NULL, NULL, NULL, NULL, NULL, '2026-05-23 00:00:00', NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003', 89, '', 'PVP', 'S', 29.99, 29.99, NULL, NULL, NULL, NULL, NULL, '2026-05-23 00:00:00', NULL, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 76 registros exportados
+-- 73 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -1526,50 +1589,50 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('BLUS-SEDA/NEGRO/S', 110, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BLUS-SEDA/ROSA/M', 3, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BLUS-SEDA/ROSA/M', 221, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
-  ('BOLSOS00005/AZUL_CIELO/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/39', 9215, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/40', 225, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/40', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/41', 224, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/41', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/42', 126, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/42', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/43', 127, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/43', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/AZUL_CIELO/44', 9215, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/39', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/40', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/41', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/42', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/43', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/44', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00005/BEIGE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/39', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/40', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/41', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/42', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/43', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/44', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00006/VERDE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/L', 9103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/L', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/M', 9102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/M', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/S', 9101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/S', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/XL', 9104, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('BOLSOS00007/AMARILLO/XL', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/39', 227, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/39', 9215, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/40', 225, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/40', 9215, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/41', 224, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/41', 9215, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/42', 126, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/42', 9215, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/43', 127, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/43', 9215, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/44', 226, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/44', 9215, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/39', 220, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/39', 227, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/40', 220, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/40', 225, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/41', 220, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/41', 224, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/42', 126, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/42', 220, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/43', 127, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/43', 220, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/44', 220, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/44', 226, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/39', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/39', 227, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/40', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/40', 225, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/41', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/41', 224, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/42', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/42', 126, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/43', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/43', 127, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/44', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/44', 226, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/L', 9103, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/L', 9204, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/M', 9102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/M', 9204, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/S', 9101, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/S', 9204, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/XL', 9104, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/XL', 9204, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT/MARRON/37', 103, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BOTIN-ANIT/MARRON/37', 121, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BOTIN-ANIT/MARRON/38', 103, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -1624,18 +1687,18 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('CHAQ-CUERO/NEGRO/XL', 111, '2026-01-08 18:55:21', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/XXXL', 9202, '2026-05-15 17:54:40', NULL, '', ''),
   ('CHAQ-CUERO/NEGRO/XXXL', 9212, '2026-05-15 17:54:40', NULL, '', ''),
-  ('COMPLEMENTOS002/AZUL/39', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/40', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/41', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/42', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/43', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/44', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('COMPLEMENTOS002/AZUL/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/39', 218, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/39', 227, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/40', 218, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/40', 225, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/41', 218, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/41', 224, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/42', 126, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/42', 218, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/43', 127, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/43', 218, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/44', 218, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/44', 226, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/3XL', 9204, '2026-05-11 19:19:56', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/3XL', 9213, '2026-05-11 19:19:56', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/L', 4, '2026-05-08 13:51:34', '2026-05-08 13:51:34', 'Administrador', 'Administrador'),
@@ -1667,56 +1730,56 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('DEMO-CAMISA/NEGRO/XL', 9104, '2026-03-27 07:26:37', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/NEGRO/XL', 9202, '2026-03-27 07:26:37', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/XXL', 9210, '2026-05-11 19:09:37', NULL, '', ''),
-  ('DEPORTIVO001/BLANCO/39', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/40', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/41', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/42', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/43', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/44', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/BLANCO/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/39', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/40', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/41', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/42', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/43', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/44', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/MARRON/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/39', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/40', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/41', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/42', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/43', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/44', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO001/VERDE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/39', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/40', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/41', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/42', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/43', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/44', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO002/VERDE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO003/COLORADITO/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  ('DEPORTIVO003/COLORADITO/39', 9216, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/39', 101, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/39', 227, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/40', 101, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/40', 225, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/41', 101, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/41', 224, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/42', 101, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/42', 126, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/43', 101, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/43', 127, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/44', 101, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/44', 226, '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/39', 103, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/39', 227, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/40', 103, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/40', 225, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/41', 103, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/41', 224, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/42', 103, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/42', 126, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/43', 103, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/43', 127, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/44', 103, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/44', 226, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/39', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/39', 227, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/40', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/40', 225, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/41', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/41', 224, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/42', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/42', 126, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/43', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/43', 127, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/44', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/44', 226, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/39', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/39', 227, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/40', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/40', 225, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/41', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/41', 224, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/42', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/42', 126, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/43', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/43', 127, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/44', 102, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/44', 226, '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003/COLORADITO/39', 227, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003/COLORADITO/39', 9216, '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
   ('FALD-JEAN/VAQUERO/L', 4, '2026-01-08 18:55:32', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/L', 105, '2026-01-08 18:55:38', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 3, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -2485,59 +2548,6 @@ INSERT INTO `fza_codigos_barras` (`ID_CB`, `CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB
   (86, '2100000000715', 'CHAQ-CUERO/NEGRO/M', 'EAN13', 'S', '2026-05-13 17:32:32', '2026-05-13 17:32:32', 'Administrador', 'Administrador'),
   (87, '2100000000722', 'CHAQ-CUERO/NEGRO/XL', 'EAN13', 'S', '2026-05-13 17:32:32', '2026-05-13 17:32:32', 'Administrador', 'Administrador'),
   (94, '2100000000739', 'CARTERA-PIEL', 'EAN13', 'S', '2026-05-22 19:53:24', '2026-05-22 19:53:24', 'Administrador', 'Administrador'),
-  (95, '2100000000746', 'BOLSOS00005/AZUL_CIELO/42', 'EAN13', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  (96, '2100000000753', 'BOLSOS00005/AZUL_CIELO/43', 'EAN13', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  (97, '2100000000760', 'BOLSOS00005/AZUL_CIELO/41', 'EAN13', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  (98, '2100000000777', 'BOLSOS00005/AZUL_CIELO/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (99, '2100000000784', 'BOLSOS00005/AZUL_CIELO/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (100, '2100000000791', 'BOLSOS00005/AZUL_CIELO/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (101, '2100000000807', 'BOLSOS00005/BEIGE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (102, '2100000000814', 'BOLSOS00005/BEIGE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (103, '2100000000821', 'BOLSOS00005/BEIGE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (104, '2100000000838', 'BOLSOS00005/BEIGE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (105, '2100000000845', 'BOLSOS00005/BEIGE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (106, '2100000000852', 'BOLSOS00005/BEIGE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (107, '2100000000869', 'DEPORTIVO001/BLANCO/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (108, '2100000000876', 'DEPORTIVO001/BLANCO/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (109, '2100000000883', 'DEPORTIVO001/BLANCO/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (110, '2100000000890', 'DEPORTIVO001/BLANCO/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (111, '2100000000906', 'DEPORTIVO001/BLANCO/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (112, '2100000000913', 'DEPORTIVO001/BLANCO/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (113, '2100000000920', 'BOLSOS00006/VERDE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (114, '2100000000937', 'BOLSOS00006/VERDE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (115, '2100000000944', 'BOLSOS00006/VERDE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (116, '2100000000951', 'BOLSOS00006/VERDE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (117, '2100000000968', 'BOLSOS00006/VERDE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (118, '2100000000975', 'BOLSOS00006/VERDE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (119, '2100000000982', 'DEPORTIVO001/MARRON/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (120, '2100000000999', 'DEPORTIVO001/MARRON/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (121, '2100000001002', 'DEPORTIVO001/MARRON/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (122, '2100000001019', 'DEPORTIVO001/MARRON/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (123, '2100000001026', 'DEPORTIVO001/MARRON/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (124, '2100000001033', 'DEPORTIVO001/MARRON/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (125, '2100000001040', 'DEPORTIVO001/VERDE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (126, '2100000001057', 'DEPORTIVO001/VERDE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (127, '2100000001064', 'DEPORTIVO001/VERDE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (128, '2100000001071', 'DEPORTIVO001/VERDE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (129, '2100000001088', 'DEPORTIVO001/VERDE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (130, '2100000001095', 'DEPORTIVO001/VERDE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (131, '2100000001101', 'BOLSOS00007/AMARILLO/S', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (132, '2100000001118', 'BOLSOS00007/AMARILLO/M', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (133, '2100000001125', 'BOLSOS00007/AMARILLO/L', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (134, '2100000001132', 'BOLSOS00007/AMARILLO/XL', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (135, '2100000001149', 'COMPLEMENTOS002/AZUL/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (136, '2100000001156', 'COMPLEMENTOS002/AZUL/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (137, '2100000001163', 'COMPLEMENTOS002/AZUL/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (138, '2100000001170', 'COMPLEMENTOS002/AZUL/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (139, '2100000001187', 'COMPLEMENTOS002/AZUL/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (140, '2100000001194', 'COMPLEMENTOS002/AZUL/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (141, '2100000001200', 'DEPORTIVO002/VERDE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (142, '2100000001217', 'DEPORTIVO002/VERDE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (143, '2100000001224', 'DEPORTIVO002/VERDE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (144, '2100000001231', 'DEPORTIVO002/VERDE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (145, '2100000001248', 'DEPORTIVO002/VERDE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (146, '2100000001255', 'DEPORTIVO002/VERDE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
-  (147, '2100000001262', 'DEPORTIVO003/COLORADITO/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   (148, '2100000000746', 'DEMO-CAMISA/AMARILLO/3XL', 'EAN13', 'S', '2026-05-22 20:33:25', '2026-05-22 20:33:25', 'Administrador', 'Administrador'),
   (149, '', 'DEMO-CAMISA/AMARILLO/L', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
   (150, '', 'DEMO-CAMISA/AZULMARINO/L', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
@@ -2552,7 +2562,60 @@ INSERT INTO `fza_codigos_barras` (`ID_CB`, `CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB
   (159, '', 'DEMO-CAMISA/NEGRO/XL', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
   (160, '2100000000760', 'JERSEY-LANA/BEIGE/M', 'EAN13', 'S', '2026-05-22 20:56:22', '2026-05-22 20:56:22', 'Administrador', 'Administrador'),
   (161, '2100000000777', 'JERSEY-LANA/GRIS/L', 'EAN13', 'S', '2026-05-22 20:56:22', '2026-05-22 20:56:22', 'Administrador', 'Administrador'),
-  (162, '2100000000784', 'JERSEY-LANA/GRIS/M', 'EAN13', 'S', '2026-05-22 20:56:22', '2026-05-22 20:56:22', 'Administrador', 'Administrador');
+  (162, '2100000000784', 'JERSEY-LANA/GRIS/M', 'EAN13', 'S', '2026-05-22 20:56:22', '2026-05-22 20:56:22', 'Administrador', 'Administrador'),
+  (187, '2100000000791', 'BOLSOS00005/AZUL_CIELO/42', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (188, '2100000000807', 'BOLSOS00005/AZUL_CIELO/43', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (189, '2100000000814', 'BOLSOS00005/AZUL_CIELO/41', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (190, '2100000000821', 'BOLSOS00005/AZUL_CIELO/40', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (191, '2100000000838', 'BOLSOS00005/AZUL_CIELO/44', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (192, '2100000000845', 'BOLSOS00005/AZUL_CIELO/39', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (193, '2100000000852', 'BOLSOS00005/BEIGE/42', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (194, '2100000000869', 'BOLSOS00005/BEIGE/43', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (195, '2100000000876', 'BOLSOS00005/BEIGE/41', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (196, '2100000000883', 'BOLSOS00005/BEIGE/40', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (197, '2100000000890', 'BOLSOS00005/BEIGE/44', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (198, '2100000000906', 'BOLSOS00005/BEIGE/39', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (199, '2100000000913', 'DEPORTIVO001/BLANCO/42', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (200, '2100000000920', 'DEPORTIVO001/BLANCO/43', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (201, '2100000000937', 'DEPORTIVO001/BLANCO/41', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (202, '2100000000944', 'DEPORTIVO001/BLANCO/40', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (203, '2100000000951', 'DEPORTIVO001/BLANCO/44', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (204, '2100000000968', 'DEPORTIVO001/BLANCO/39', 'EAN13', 'S', '2026-05-23 00:03:05', '2026-05-23 00:03:05', 'Administrador', 'Administrador'),
+  (205, '2100000000975', 'BOLSOS00006/VERDE/42', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (206, '2100000000982', 'BOLSOS00006/VERDE/43', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (207, '2100000000999', 'BOLSOS00006/VERDE/41', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (208, '2100000001002', 'BOLSOS00006/VERDE/40', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (209, '2100000001019', 'BOLSOS00006/VERDE/44', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (210, '2100000001026', 'BOLSOS00006/VERDE/39', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (211, '2100000001033', 'DEPORTIVO001/MARRON/42', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (212, '2100000001040', 'DEPORTIVO001/MARRON/43', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (213, '2100000001057', 'DEPORTIVO001/MARRON/41', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (214, '2100000001064', 'DEPORTIVO001/MARRON/40', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (215, '2100000001071', 'DEPORTIVO001/MARRON/44', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (216, '2100000001088', 'DEPORTIVO001/MARRON/39', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (217, '2100000001095', 'DEPORTIVO001/VERDE/42', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (218, '2100000001101', 'DEPORTIVO001/VERDE/43', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (219, '2100000001118', 'DEPORTIVO001/VERDE/41', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (220, '2100000001125', 'DEPORTIVO001/VERDE/40', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (221, '2100000001132', 'DEPORTIVO001/VERDE/44', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (222, '2100000001149', 'DEPORTIVO001/VERDE/39', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (223, '2100000001156', 'BOLSOS00007/AMARILLO/S', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (224, '2100000001163', 'BOLSOS00007/AMARILLO/M', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (225, '2100000001170', 'BOLSOS00007/AMARILLO/L', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (226, '2100000001187', 'BOLSOS00007/AMARILLO/XL', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (227, '2100000001194', 'COMPLEMENTOS002/AZUL/42', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (228, '2100000001200', 'COMPLEMENTOS002/AZUL/43', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (229, '2100000001217', 'COMPLEMENTOS002/AZUL/41', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (230, '2100000001224', 'COMPLEMENTOS002/AZUL/40', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (231, '2100000001231', 'COMPLEMENTOS002/AZUL/44', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (232, '2100000001248', 'COMPLEMENTOS002/AZUL/39', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (233, '2100000001255', 'DEPORTIVO002/VERDE/42', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (234, '2100000001262', 'DEPORTIVO002/VERDE/43', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (235, '2100000001279', 'DEPORTIVO002/VERDE/41', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (236, '2100000001286', 'DEPORTIVO002/VERDE/40', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (237, '2100000001293', 'DEPORTIVO002/VERDE/44', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (238, '2100000001309', 'DEPORTIVO002/VERDE/39', 'EAN13', 'S', '2026-05-23 00:03:06', '2026-05-23 00:03:06', 'Administrador', 'Administrador'),
+  (239, '2100000001316', 'DEPORTIVO003/COLORADITO/39', 'EAN13', 'S', '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_codigos_barras` ENABLE KEYS */;
 -- 155 registros exportados
 
@@ -2678,8 +2741,7 @@ ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_TEMPORADA` (`ID_PV_TEMPORA
 
 -- Datos de fza_compras_sesiones
 INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`, `ID_PV_TEMPORADA_SES`) VALUES
-  ('A1', '000002', '2026-05-12 00:00:00', 'BORRADOR', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, NULL, NULL, 'N', 'S', NULL, NULL, NULL, NULL, 'Ya existe un registro con ese valor (entrada duplicada).
-(MySQL 1062: #23000Duplicate entry ''BOLSOS00005'' for key ''PRIMARY'')', 130, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-22 23:35:03', 'Administrador', 'N', 12);
+  ('A1', '000002', '2026-05-12 00:00:00', 'CERRADA', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, '2026-05-23 00:03:07', 'Administrador', 'N', 'S', '', '', 'A1', '001', NULL, 130, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-23 00:03:07', 'Administrador', 'N', 12);
 -- 1 registros exportados
 
 
@@ -3016,6 +3078,7 @@ CREATE TABLE `fza_contadores` (
 
 -- Datos de fza_contadores
 INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('AB', '-', '-', 2, 3, 'S', 'S', '2026-05-23 00:03:07', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
   ('AO', '-', '-', 38, 3, 'S', 'S', '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
   ('BA', '-', '-', 79, 10, 'S', 'S', '2026-05-22 20:56:22', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
@@ -3042,7 +3105,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 249, 3, 'S', 'S', '2026-05-22 23:41:58', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 251, 3, 'S', 'S', '2026-05-22 23:59:32', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -3054,7 +3117,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador'),
   ('SE', '-', '-', 0, 6, 'S', 'S', '2026-05-12 18:38:25', '2026-05-12 18:38:25', 'Administrador', 'Administrador'),
   ('SE', '012', 'A1', 3, 6, 'S', 'N', '2026-05-12 19:56:12', '2026-05-12 19:52:18', 'Administrador', 'Administrador');
--- 38 registros exportados
+-- 39 registros exportados
 
 
 -- Tabla: fza_depositos_cliente
@@ -8556,8 +8619,483 @@ SELECT  a.*,
          ON prv.CODIGO_PRV_PRV = a.CODIGO_PRV_ALBC
   LEFT  JOIN fza_empresas    emp
          ON emp.CODIGO_EMP_EMP = a.CODIGO_EMP_ALBC;
-', '2026-05-22 23:41:58', '2026-05-22 23:41:58', 'Administrador', 'Administrador');
--- 44 registros exportados
+', '2026-05-22 23:41:58', '2026-05-22 23:41:58', 'Administrador', 'Administrador'),
+  ('249', 'albaranes_compra', '-- ============================================================================
+-- Albaranes de Compra — esquema base
+--
+-- Crea las tablas `fza_albaranes_compra` (cabecera) y
+-- `fza_albaranes_compra_lineas` (lineas), espejo simplificado de
+-- `fza_albaranes` / `fza_albaranes_lineas` adaptado a documento de
+-- COMPRA: sustituye CLIENTE por PROVEEDOR y PRECIO_VENTA por
+-- PRECIO_COMPRA. Sufijos de columna: `_ALBC` cabecera, `_ALBCLIN` lineas
+-- (registrados en LIBRO_DE_ESTILO_BBDD para que el normalizador BBDD
+-- los reconozca).
+--
+-- Idempotente: comprueba INFORMATION_SCHEMA antes de cada DDL para que
+-- el script pueda volver a ejecutarse sin error si las tablas / indices
+-- / filas ya existen.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. fza_albaranes_compra: cabecera
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_albaranes_compra` (''
+  ''  `NUMERO_ALBC` varchar(20) NOT NULL,''
+  ''  `SERIE_ALBC`  varchar(20) NOT NULL,''
+  ''  `FECHA_ALBC`  date NULL DEFAULT NULL,''
+  ''  `ESTADO_ALBC` varchar(20) NULL DEFAULT ''''ABIERTO''''''
+  ''       COMMENT ''''ABIERTO, FACTURADO, CANCELADO'''',''
+  ''  `NUMERO_PED_ALBC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_pedidos_compra'''',''
+  ''  `SERIE_PED_ALBC`  varchar(20) NULL DEFAULT NULL,''
+  ''  `NUMERO_FAC_ALBC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_facturas_compras'''',''
+  ''  `SERIE_FAC_ALBC`  varchar(20) NULL DEFAULT NULL,''
+  ''  `CODIGO_EMP_ALBC` varchar(8) NULL DEFAULT NULL,''
+  ''  `RAZON_SOCIAL_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_EMPRESA_ALBC`       varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_EMPRESA_ALBC`     varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_EMPRESA_ALBC`     varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_EMPRESA_ALBC` varchar(3)  NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_EMPRESA_ALBC` varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_EMPRESA_ALBC` varchar(15) NULL DEFAULT NULL,''
+  ''  `CODIGO_PRV_ALBC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_proveedores'''',''
+  ''  `RAZON_SOCIAL_PRV_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_PRV_ALBC`          varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_PRV_ALBC`        varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_PRV_ALBC`        varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_PRV_ALBC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_PRV_ALBC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_PRV_ALBC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_PRV_ALBC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_PRV_ALBC`   varchar(3)   NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_PRV_ALBC`   varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_PRV_ALBC` varchar(15) NULL DEFAULT NULL,''
+  ''  `REF_PROVEEDOR_ALBC` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Numero de albaran segun el proveedor'''',''
+  ''  `CODIGO_ALM_ALBC` varchar(10) NULL DEFAULT NULL''
+  ''       COMMENT ''''Almacen destino de la entrada de mercancia'''',''
+  ''  `TRANSPORTISTA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_IVA_ALBC` varchar(20) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAN_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAN_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAR_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAR_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAS_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAS_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAE_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAE_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASES_ALBC`     decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IMPUESTOS_ALBC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_LIQUIDO_ALBC`   decimal(18,6) NULL DEFAULT NULL,''
+  ''  `FORMA_PAGO_ALBC`      varchar(200)  NULL DEFAULT NULL,''
+  ''  `CONTADOR_LINEAS_ALBC` varchar(8)    NULL DEFAULT NULL,''
+  ''  `COMENTARIOS_ALBC`     varchar(1000) NULL DEFAULT '''''''',''
+  ''  `OBSERVACIONES_ALBC`   varchar(2000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_ALBC`,`SERIE_ALBC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Indices de cabecera
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_PROVEEDOR_FECHA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_PROVEEDOR_FECHA` ''
+  ''(`CODIGO_PRV_ALBC`,`FECHA_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_EMPRESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_EMPRESA` (`CODIGO_EMP_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_ESTADO` (`ESTADO_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_PEDIDO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_PEDIDO` ''
+  ''(`SERIE_PED_ALBC`,`NUMERO_PED_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2. fza_albaranes_compra_lineas: detalle
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_albaranes_compra_lineas` (''
+  ''  `NUMERO_ALBC_ALBCLIN` varchar(20) NOT NULL,''
+  ''  `SERIE_ALBC_ALBCLIN`  varchar(20) NOT NULL,''
+  ''  `LINEA_ALBCLIN`       varchar(4)  NOT NULL,''
+  ''  `NUMERO_PEDC_ALBCLIN` varchar(20) NULL DEFAULT NULL,''
+  ''  `SERIE_PEDC_ALBCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `LINEA_PEDC_ALBCLIN`  varchar(4)  NULL DEFAULT NULL''
+  ''       COMMENT ''''Linea de origen en fza_pedidos_compra_lineas'''',''
+  ''  `CODIGO_ART_ALBCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `CODIGO_UNIDAD_ALBCLIN` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''SKU del articulo'''',''
+  ''  `CODIGO_FAM_ALBCLIN`  varchar(20)  NULL DEFAULT NULL,''
+  ''  `NOMBRE_FAM_ALBCLIN`  varchar(200) NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_ARTICULO_ALBCLIN` varchar(100) NULL DEFAULT NULL,''
+  ''  `TIPO_CANTIDAD_ARTICULO_ALBCLIN` varchar(20)''
+  ''       NULL DEFAULT ''''Uds'''',''
+  ''  `CANTIDAD_ALBCLIN` decimal(19,6) NULL DEFAULT ''''1.000000'''',''
+  ''  `TIPO_IVA_ARTICULO_ALBCLIN` varchar(2) NULL DEFAULT ''''N'''',''
+  ''  `PORCENTAJE_IVA_ALBCLIN`    decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_ALBCLIN` decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `CODIGO_ALMACEN_ALBCLIN` varchar(10) NULL DEFAULT NULL,''
+  ''  `LOTE_ALBCLIN`           varchar(50) NULL DEFAULT NULL,''
+  ''  `FECHA_CADUCIDAD_ALBCLIN` date       NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_VARIACION_ALBCLIN` varchar(200) NULL DEFAULT NULL,''
+  ''  `ESFACTURADA_ALBCLIN` varchar(1) NULL DEFAULT ''''N'''',''
+  ''  `NUMERO_FAC_ALBCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `SERIE_FAC_ALBCLIN`   varchar(20) NULL DEFAULT NULL,''
+  ''  `LINEA_FAC_ALBCLIN`   varchar(4)  NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_ALBC_ALBCLIN`,`SERIE_ALBC_ALBCLIN`,''
+  ''               `LINEA_ALBCLIN`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+     AND INDEX_NAME   = ''IDX_ALBCLIN_ARTICULO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra_lineas` ''
+  ''ADD INDEX `IDX_ALBCLIN_ARTICULO` (`CODIGO_ART_ALBCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+     AND INDEX_NAME   = ''IDX_ALBCLIN_PEDIDO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra_lineas` ''
+  ''ADD INDEX `IDX_ALBCLIN_PEDIDO` ''
+  ''(`SERIE_PEDC_ALBCLIN`,`NUMERO_PEDC_ALBCLIN`,`LINEA_PEDC_ALBCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2bis. Columnas para soporte de tallas pivotadas en linea
+-- (igual que SESLIN: ID_AC_PIVOT identifica el conjunto de tallas
+-- usado y TOTAL_UNIDADES es la suma de celdas de esa linea).
+-- ----------------------------------------------------------------------------
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+     AND COLUMN_NAME  = ''ID_AC_PIVOT_ALBCLIN''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra_lineas` ''
+  ''ADD COLUMN `ID_AC_PIVOT_ALBCLIN` int(11) NULL DEFAULT NULL ''
+  ''     COMMENT ''''Conjunto de atributos pivot (fza_atributos_conjuntos)'''' ''
+  ''AFTER `CODIGO_UNIDAD_ALBCLIN`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+     AND COLUMN_NAME  = ''TOTAL_UNIDADES_ALBCLIN''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra_lineas` ''
+  ''ADD COLUMN `TOTAL_UNIDADES_ALBCLIN` decimal(19,6) NULL DEFAULT 0 ''
+  ''     COMMENT ''''SUM(CANTIDAD) de celdas cuando ID_AC_PIVOT esta ''
+  ''fijado'''' ''
+  ''AFTER `CANTIDAD_ALBCLIN`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2ter. fza_albaranes_compra_celdas: cantidad por (linea, fila, talla)
+-- Espejo de fza_compras_sesiones_celdas. Sufijo ALBCCEL.
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_celdas''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_albaranes_compra_celdas` (''
+  ''  `SERIE_ALBC_ALBCCEL`  varchar(20)   NOT NULL,''
+  ''  `NUMERO_ALBC_ALBCCEL` varchar(20)   NOT NULL,''
+  ''  `LINEA_ALBC_ALBCCEL`  varchar(4)    NOT NULL,''
+  ''  `ID_FILA_ALBC_ALBCCEL` int(11)      NOT NULL DEFAULT 1,''
+  ''  `ID_AV_PIVOT_ALBCCEL` int(11)       NOT NULL''
+  ''       COMMENT ''''ID del valor de atributo (talla) que pivota'''',''
+  ''  `CANTIDAD_ALBCCEL`    decimal(19,6) NOT NULL DEFAULT 0,''
+  ''  `CODIGO_ALM_ALBCCEL`  varchar(10)   NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`SERIE_ALBC_ALBCCEL`,`NUMERO_ALBC_ALBCCEL`,''
+  ''               `LINEA_ALBC_ALBCCEL`,`ID_FILA_ALBC_ALBCCEL`,''
+  ''               `ID_AV_PIVOT_ALBCCEL`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_celdas''
+     AND INDEX_NAME   = ''IDX_ALBCCEL_LINEA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra_celdas` ''
+  ''ADD INDEX `IDX_ALBCCEL_LINEA` ''
+  ''(`SERIE_ALBC_ALBCCEL`,`NUMERO_ALBC_ALBCCEL`,`LINEA_ALBC_ALBCCEL`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 3. Alinear fza_tipos_documentos con el nombre real de la tabla
+-- Antes apuntaba a ''fza_albaranes_compras'' (plural) — corregimos a la
+-- forma que usamos realmente.
+-- ----------------------------------------------------------------------------
+UPDATE `fza_tipos_documentos`
+   SET `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` = ''fza_albaranes_compra''
+ WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''AB''
+   AND `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` <> ''fza_albaranes_compra'';
+
+-- ----------------------------------------------------------------------------
+-- 4. Registrar el nuevo Mto en fza_winforms (idempotente)
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''AlbaranesCompra'',
+       ''Albaranes de Compra'',
+       ''Albaranes1'',
+       ''inMtoAlbaranesCompra.TfrmMtoAlbaranesCompra'',
+       ''Ctrl+Alt+C'',
+       ''UniDataAlbaranesCompra.TdmAlbaranesCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms`
+    WHERE `CALL_WINF` = ''AlbaranesCompra''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 5. Vista basica vi_albaranes_compra (lectura para tsLista)
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_albaranes_compra` AS
+SELECT  a.*,
+        prv.NOMBRE_PRV         AS NOMBRE_PRV_ALBC,
+        emp.RAZON_SOCIAL_EMP   AS RAZON_SOCIAL_EMPRESA_VIEW_ALBC
+  FROM  fza_albaranes_compra a
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = a.CODIGO_PRV_ALBC
+  LEFT  JOIN fza_empresas    emp
+         ON emp.CODIGO_EMP_EMP = a.CODIGO_EMP_ALBC;
+', '2026-05-22 23:59:19', '2026-05-22 23:59:19', 'Administrador', 'Administrador'),
+  ('250', NULL, '
+START TRANSACTION;
+
+-- 1) codigos_barras (EAN13s)
+DELETE CB FROM fza_codigos_barras CB
+  JOIN fza_articulos_skus SK ON SK.CODIGO_UNIDAD_SKU = CB.CODIGO_UNIDAD_CB
+ WHERE SK.CODIGO_ART_SKU IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN
+     FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+-- 2) atributos_sku
+DELETE AS_X FROM fza_atributos_sku AS_X
+  JOIN fza_articulos_skus SK ON SK.CODIGO_UNIDAD_SKU = AS_X.CODIGO_UNIDAD_SKU_SA
+ WHERE SK.CODIGO_ART_SKU IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN
+     FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+-- 3) SKUs
+DELETE FROM fza_articulos_skus
+ WHERE CODIGO_ART_SKU IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN
+     FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+-- 4) conjuntos, tarifas, proveedores, propiedades, fotos
+DELETE FROM fza_articulos_conjuntos_asign
+ WHERE CODIGO_ART_ACA IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+DELETE FROM fza_articulos_tarifas
+ WHERE CODIGO_ART_ARTTAR IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+DELETE FROM fza_articulos_proveedores
+ WHERE CODIGO_ART_AP IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+DELETE FROM fza_articulos_propiedades
+ WHERE CODIGO_ART_ART IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+-- fotos: si tu BBDD no tiene la tabla, ignora este DELETE
+DELETE FROM fza_articulos_fotos
+ WHERE CODIGO_ART_FOT IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+-- 5) Albaran de compra (si quedo pegado)
+DELETE FROM fza_albaranes_compra_lineas
+ WHERE (NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN) IN (
+   SELECT NUMERO_ALBC_SES, SERIE_ALBC_SES FROM fza_compras_sesiones
+    WHERE SERIE_SES = ''A1'' AND NUMERO_SES = ''000002''
+      AND NUMERO_ALBC_SES IS NOT NULL);
+
+DELETE FROM fza_albaranes_compra
+ WHERE (NUMERO_ALBC, SERIE_ALBC) IN (
+   SELECT NUMERO_ALBC_SES, SERIE_ALBC_SES FROM fza_compras_sesiones
+    WHERE SERIE_SES = ''A1'' AND NUMERO_SES = ''000002''
+      AND NUMERO_ALBC_SES IS NOT NULL);
+
+-- 6) Movimientos
+DELETE FROM fza_movimientos_almacen
+ WHERE TIPO_DOC_MOV = ''AC''
+   AND NUMERO_DOC_MOV = ''000002''
+   AND SERIE_DOC_MOV = ''A1'';
+
+-- 7) Cabecera articulos
+DELETE FROM fza_articulos
+ WHERE CODIGO_ART_ART IN (
+   SELECT DISTINCT CODIGO_ART_TENTATIVO_SESLIN FROM fza_compras_sesiones_lineas
+    WHERE SERIE_SES_SESLIN = ''A1'' AND NUMERO_SES_SESLIN = ''000002''
+      AND CODIGO_ART_TENTATIVO_SESLIN IS NOT NULL
+      AND TRIM(CODIGO_ART_TENTATIVO_SESLIN) <> '''');
+
+-- 8) Reset cabecera sesion a BORRADOR (idempotente)
+UPDATE fza_compras_sesiones
+   SET ESTADO_SES = ''BORRADOR'',
+       INSTANTE_MATERIALIZA_SES = NULL,
+       USUARIO_MATERIALIZA_SES  = NULL,
+       SERIE_PEDC_SES = NULL, NUMERO_PEDC_SES = NULL,
+       SERIE_ALBC_SES = NULL, NUMERO_ALBC_SES = NULL,
+       MENSAJE_ERROR_SES = NULL,
+       INSTANTE_MODIF = NOW(), USUARIO_MODIF = ''Administrador''
+ WHERE SERIE_SES = ''A1'' AND NUMERO_SES = ''000002'';
+
+COMMIT;', '2026-05-23 00:02:55', '2026-05-22 23:59:32', 'Administrador', 'Administrador');
+-- 46 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -10295,7 +10833,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-22 23:37:18', '2026-05-22 23:37:18', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-22 23:59:05', '2026-05-22 23:59:05', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -23612,4 +24150,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 22/05/2026 23:42:29
+-- Backup completado: 23/05/2026 0:06:18
