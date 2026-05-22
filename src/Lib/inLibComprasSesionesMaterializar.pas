@@ -1333,6 +1333,141 @@ begin
     try
       q.Connection := conn;
 
+      // 0. Articulos creados por esta sesion (lineas no REUSAR) + todos
+      //    sus dependientes. Sin esto, al re-materializar una sesion
+      //    revertida choca contra la PK CODIGO_ART_ART en fza_articulos.
+      //    Lineas con ACCION_DUPLICADO=REUSAR no entran aqui porque
+      //    apuntan a articulos preexistentes que no debemos borrar.
+      //
+      //    Orden de borrado (no hay FK cascade): hijos del SKU primero,
+      //    luego SKU, despues conjuntos/tarifas/proveedores/propiedades/
+      //    fotos, finalmente la cabecera del articulo.
+
+      // 0a. codigos_barras (EAN13 por SKU)
+      q.SQL.Text :=
+        'DELETE CB FROM fza_codigos_barras CB ' +
+        '  JOIN fza_articulos_skus SK ON SK.CODIGO_UNIDAD_SKU = CB.CODIGO_UNIDAD_CB ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = SK.CODIGO_ART_SKU ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 0b. atributos_sku
+      q.SQL.Text :=
+        'DELETE AS_X FROM fza_atributos_sku AS_X ' +
+        '  JOIN fza_articulos_skus SK ' +
+        '    ON SK.CODIGO_UNIDAD_SKU = AS_X.CODIGO_UNIDAD_SKU_SA ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = SK.CODIGO_ART_SKU ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 0c. SKUs
+      q.SQL.Text :=
+        'DELETE SK FROM fza_articulos_skus SK ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = SK.CODIGO_ART_SKU ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 0d. conjuntos asignados (CODIGO_ART_ACA)
+      q.SQL.Text :=
+        'DELETE ACA FROM fza_articulos_conjuntos_asign ACA ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = ACA.CODIGO_ART_ACA ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 0e. tarifas (CODIGO_ART_ARTTAR)
+      q.SQL.Text :=
+        'DELETE T FROM fza_articulos_tarifas T ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = T.CODIGO_ART_ARTTAR ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 0f. proveedores (CODIGO_ART_AP)
+      q.SQL.Text :=
+        'DELETE AP FROM fza_articulos_proveedores AP ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = AP.CODIGO_ART_AP ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 0g. propiedades (CODIGO_ART_PRO)
+      q.SQL.Text :=
+        'DELETE P FROM fza_articulos_propiedades P ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = P.CODIGO_ART_PRO ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
+      // 0h. fotos (CODIGO_ART_AFO). Si la tabla no existe en esta BBDD
+      //     o no hubo fotos, no es critico — try/except con log.
+      try
+        q.SQL.Text :=
+          'DELETE AFO FROM fza_articulos_fotos AFO ' +
+          '  JOIN fza_compras_sesiones_lineas L ' +
+          '    ON L.CODIGO_ART_TENTATIVO_SESLIN = AFO.CODIGO_ART_AFO ' +
+          ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+          '   AND L.NUMERO_SES_SESLIN = :n ' +
+          '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+          '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+        q.ParamByName('s').AsString := sSerieSes;
+        q.ParamByName('n').AsString := sNumSes;
+        q.ExecSQL;
+      except
+        // tragado: cleanup de fotos es best-effort
+      end;
+
+      // 0i. cabecera del articulo
+      q.SQL.Text :=
+        'DELETE A FROM fza_articulos A ' +
+        '  JOIN fza_compras_sesiones_lineas L ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = A.CODIGO_ART_ART ' +
+        ' WHERE L.SERIE_SES_SESLIN  = :s ' +
+        '   AND L.NUMERO_SES_SESLIN = :n ' +
+        '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
+        '        OR L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'')';
+      q.ParamByName('s').AsString := sSerieSes;
+      q.ParamByName('n').AsString := sNumSes;
+      q.ExecSQL;
+
       // 1. Borrar los movimientos de almacen que esta sesion creo. Solo
       //    los TIPO_DOC_MOV='AC' cuyo NUMERO_DOC coincide con el de la
       //    sesion: los demas movimientos del articulo (anteriores o de
@@ -1353,16 +1488,24 @@ begin
       // 1b. Borrar las filas de pendiente de recibir generadas por
       //     esta sesion (si genero pedido). Mismo criterio: NUMERO_DOC
       //     coincide y SERIE_DOC es la de la sesion o la del pedido.
-      q.SQL.Text :=
-        'DELETE FROM fza_articulos_pdte_recibir ' +
-        ' WHERE NUMERO_DOC_PDR = :n ' +
-        '   AND (SERIE_DOC_PDR = :ses ' +
-        '        OR (:sped <> '''' AND SERIE_DOC_PDR = :sped))';
-      q.ParamByName('n').AsString    := sNumSes;
-      q.ParamByName('ses').AsString  := sSerieSes;
-      q.ParamByName('sped').AsString :=
+      //     try/except porque hay BBDD que aun no tienen la tabla creada
+      //     (migracion pendiente en DESARROLLOS EN CURSO/) y no debe
+      //     bloquear la reversion del resto.
+      try
+        q.SQL.Text :=
+          'DELETE FROM fza_articulos_pdte_recibir ' +
+          ' WHERE NUMERO_DOC_PDR = :n ' +
+          '   AND (SERIE_DOC_PDR = :ses ' +
+          '        OR (:sped <> '''' AND SERIE_DOC_PDR = :sped))';
+        q.ParamByName('n').AsString    := sNumSes;
+        q.ParamByName('ses').AsString  := sSerieSes;
+        q.ParamByName('sped').AsString :=
                           ADM.unqryTablaG.FieldByName('SERIE_PEDC_SES').AsString;
-      q.ExecSQL;
+        q.ExecSQL;
+      except
+        // tragado: tabla pdte_recibir puede no existir en esta BBDD si
+        // no se ha aplicado la migracion correspondiente.
+      end;
 
       // 2. Cabecera vuelve a BORRADOR + limpiamos referencias a docs.
       q.SQL.Text :=
