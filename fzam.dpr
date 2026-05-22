@@ -206,6 +206,7 @@ uses
   inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
+  inMtoStockConsulta in 'src\Forms\inMtoStockConsulta.pas' {frmStockConsulta},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones};
 
