@@ -106,7 +106,6 @@ object frmStockConsulta: TfrmStockConsulta
     Align = alClient
     TabOrder = 2
     object tvStock: TcxGridDBTableView
-      OnCustomDrawColumnHeader = tvStockCustomDrawColumnHeader
       Navigator.Buttons.CustomButtons = <>
       OptionsBehavior.IncSearch = False
       OptionsCustomize.ColumnHiding = False
