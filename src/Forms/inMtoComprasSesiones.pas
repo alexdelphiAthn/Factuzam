@@ -16,10 +16,14 @@
 {      - Cabecera: Empresa, Proveedor, Tarifa venta, Margen,                   }
 {        Multiplo redondeo, Ajuste final.                                      }
 {      - Una linea = un articulo. Columnas: Familia (F3 -> picker),            }
-{        Codigo articulo (auto familia+contador), Descripcion, Color           }
-{        (libre), Color basico (selector paleta), Pr. compra,                  }
-{        Pr. venta (propuesto al teclear coste), Sistema tallas,               }
-{        N columnas TALLA inline, Total tallas, Importe s/IVA.                 }
+{        Codigo articulo (editable; si lo tecleado coincide con una            }
+{        familia con contador activo se expande a FAMILIA+RELLENO,             }
+{        p. ej. '0101' -> '0101003'), Descripcion, Color (libre),              }
+{        Color basico (selector paleta), Pr. compra, Pr. venta                 }
+{        (propuesto al teclear coste), Sistema tallas, N columnas              }
+{        TALLA inline, Total tallas, Importe s/IVA.                            }
+{      - Boton 'Arbol familias' en la barra de lineas abre el mismo            }
+{        modal jerarquico que F3 sobre la columna Familia.                     }
 {                                                                              }
 {    Las columnas TALLA son no-bound: su valor vive en                         }
 {    tvLineas.DataController.Values y se sincroniza con                        }
@@ -126,8 +130,12 @@ type
     btnAddLinea              : TcxButton;
     btnDelLinea              : TcxButton;
     btnNuevoColor            : TcxButton;
+<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
     btnFoto                  : TcxButton;
     dlgFoto                  : TOpenDialog;
+=======
+    btnArbolFamilias         : TcxButton;
+>>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
     lblHint                  : TcxLabel;
 
     // ------------------------------------------------------------------
@@ -164,9 +172,13 @@ type
     procedure btnAddLineaClick(Sender: TObject);
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
+<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
     procedure btnFotoClick(Sender: TObject);
     procedure btnCrearClick(Sender: TObject);
     procedure btnRevertirClick(Sender: TObject);
+=======
+    procedure btnArbolFamiliasClick(Sender: TObject);
+>>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
     procedure btnImprimirClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
@@ -195,7 +207,11 @@ type
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
+<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
     procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
+=======
+    procedure dbcLinCodArtPropertiesEditValueChanged(Sender: TObject);
+>>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
@@ -1028,7 +1044,9 @@ begin
   inherited;
   if (Key <> VK_F3) or (Shift <> []) then Exit;
   if not Assigned(AItem) then Exit;
-  if AItem <> dbcLinFamilia then Exit;
+  // F3 abre el selector tanto desde Familia como desde el Codigo articulo:
+  // ambos confluyen en el mismo modal y el codigo elegido se expande igual.
+  if (AItem <> dbcLinFamilia) and (AItem <> dbcLinCodArt) then Exit;
 
   frmSel := TfrmModalSelFamilia.Create(Self);
   try
@@ -1040,7 +1058,33 @@ begin
   Key := 0;
 end;
 
+<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
 procedure TfrmMtoComprasSesiones.dbcLinFamiliaPropertiesEditValueChanged(
+=======
+procedure TfrmMtoPruebaSesionGrid.btnArbolFamiliasClick(Sender: TObject);
+var
+  frmSel : TfrmModalSelFamilia;
+begin
+  inherited;
+  // Mismo modal jerarquico que F3 sobre la columna Familia. Operamos sobre
+  // la linea con foco; si no hay (sesion sin lineas) avisamos.
+  if Dmm.unqrySesionLin.IsEmpty then
+  begin
+    MessageDlg('Anade una linea (o ponte sobre una) para asignarle familia.',
+               mtInformation, [mbOk], 0);
+    Exit;
+  end;
+  frmSel := TfrmModalSelFamilia.Create(Self);
+  try
+    if frmSel.ShowModal = mrOk then
+      ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
+  finally
+    FreeAndNil(frmSel);
+  end;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.dbcLinFamiliaPropertiesEditValueChanged(
+>>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
   Sender: TObject);
 var
   ed       : TcxCustomEdit;
@@ -1089,6 +1133,7 @@ begin
   ExpandirCodigoFamiliaActiva(sNuevo);
 end;
 
+<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
 procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
   Sender: TObject);
 var
@@ -1098,10 +1143,29 @@ var
   rDup : TResolverDuplicadoSesion;
 begin
   inherited;
+=======
+procedure TfrmMtoPruebaSesionGrid.dbcLinCodArtPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  ed         : TcxCustomEdit;
+  sTecleado  : string;
+  sExpandido : string;
+  ds         : TDataSet;
+  q          : TUniQuery;
+  sNombre    : string;
+begin
+  inherited;
+  // Permitimos teclear el codigo directamente en la celda 'Cod. articulo'.
+  // Si lo tecleado coincide con una familia con contador activo, se expande
+  // a FAMILIA+RELLENO igual que cuando se teclea en la columna Familia
+  // (p. ej. '0101' con contador 3 -> '0101003'). Si no es familia, se queda
+  // tal cual (codigo manual) y no se toca CODIGO_FAM_SESLIN.
+>>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
   if not (Sender is TcxCustomEdit) then Exit;
   ed := TcxCustomEdit(Sender);
   ed.PostEditValue;
 
+<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
   // Si la cabecera no tiene proveedor todavia no podemos identificar
   // un duplicado por referencia: salimos en silencio.
   if Dmm.unqryTablaG.IsEmpty then Exit;
@@ -1125,6 +1189,48 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.ExpandirCodigoFamiliaActiva(
+=======
+  ds := Dmm.unqrySesionLin;
+  if ds.IsEmpty then Exit;
+  sTecleado := Trim(ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
+  if sTecleado = '' then Exit;
+
+  // ResolverCodigoFamilia incrementa el contador como efecto colateral si
+  // resuelve: solo se llama una vez por edicion de celda. Si devuelve False
+  // no consume nada y dejamos el codigo manual sin tocar.
+  if not ResolverCodigoFamilia(inLibGlobalVar.oConn, sTecleado, oUser,
+                               sExpandido) then Exit;
+
+  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+  ds.FieldByName('CODIGO_FAM_SESLIN').AsString          := sTecleado;
+  ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sExpandido;
+  ed.EditValue := sExpandido;
+
+  // Pre-rellenar descripcion con NOMBRE_FAM_FAM si esta vacia (mismo
+  // comportamiento que ExpandirCodigoFamiliaActiva por simetria con F3
+  // / tipeo en la columna Familia).
+  if ds.FieldByName('DESCRIPCION_SESLIN').AsString <> '' then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
+      ' WHERE CODIGO_FAM_FAM = :p';
+    q.ParamByName('p').AsString := sTecleado;
+    q.Open;
+    if not q.IsEmpty then
+    begin
+      sNombre := q.FieldByName('NOMBRE_FAM_FAM').AsString;
+      if sNombre <> '' then
+        ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmMtoPruebaSesionGrid.ExpandirCodigoFamiliaActiva(
+>>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
   const ACodigoFam: string; const ANombreFam: string);
 var
   ds         : TDataSet;
