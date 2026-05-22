@@ -1,0 +1,427 @@
+inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
+  Caption = 'Mantenimiento de Albaranes de Compra'
+  ClientHeight = 765
+  ClientWidth = 1085
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 1085
+  ExplicitHeight = 765
+  TextHeight = 19
+  OnCreate = FormCreate
+  inherited pButtonPage: TPanel
+    Width = 945
+    Height = 765
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitWidth = 945
+    ExplicitHeight = 765
+    inherited pcPantalla: TcxPageControl
+      Width = 945
+      Height = 725
+      ExplicitWidth = 945
+      ExplicitHeight = 725
+      ClientRectBottom = 723
+      ClientRectRight = 943
+      inherited tsLista: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 941
+        ExplicitHeight = 694
+        inherited cxGrdPrincipal: TcxGrid
+          Width = 941
+          Height = 694
+          ExplicitWidth = 941
+          ExplicitHeight = 694
+          inherited cxGrdDBTabPrin: TcxGridDBTableView
+            object dbcGrdAlbcNUMERO_ALBC: TcxGridDBColumn
+              Caption = 'N'#250'mero'
+              DataBinding.FieldName = 'NUMERO_ALBC'
+              Width = 90
+            end
+            object dbcGrdAlbcSERIE_ALBC: TcxGridDBColumn
+              Caption = 'Serie'
+              DataBinding.FieldName = 'SERIE_ALBC'
+              Width = 80
+            end
+            object dbcGrdAlbcFECHA_ALBC: TcxGridDBColumn
+              Caption = 'Fecha'
+              DataBinding.FieldName = 'FECHA_ALBC'
+              Width = 100
+            end
+            object dbcGrdAlbcESTADO_ALBC: TcxGridDBColumn
+              Caption = 'Estado'
+              DataBinding.FieldName = 'ESTADO_ALBC'
+              Width = 110
+            end
+            object dbcGrdAlbcCODIGO_EMP_ALBC: TcxGridDBColumn
+              Caption = 'Empresa'
+              DataBinding.FieldName = 'CODIGO_EMP_ALBC'
+              Width = 100
+            end
+            object dbcGrdAlbcCODIGO_PRV_ALBC: TcxGridDBColumn
+              Caption = 'Proveedor'
+              DataBinding.FieldName = 'CODIGO_PRV_ALBC'
+              Width = 100
+            end
+            object dbcGrdAlbcRSPRV_ALBC: TcxGridDBColumn
+              Caption = 'Raz'#243'n Social Proveedor'
+              DataBinding.FieldName = 'RAZON_SOCIAL_PRV_ALBC'
+              Width = 220
+            end
+            object dbcGrdAlbcREF_PROVEEDOR_ALBC: TcxGridDBColumn
+              Caption = 'Ref. proveedor'
+              DataBinding.FieldName = 'REF_PROVEEDOR_ALBC'
+              Width = 130
+            end
+            object dbcGrdAlbcCODIGO_ALM_ALBC: TcxGridDBColumn
+              Caption = 'Almac'#233'n'
+              DataBinding.FieldName = 'CODIGO_ALM_ALBC'
+              Width = 100
+            end
+            object dbcGrdAlbcTOTAL_LIQUIDO_ALBC: TcxGridDBColumn
+              Caption = 'Total l'#237'quido'
+              DataBinding.FieldName = 'TOTAL_LIQUIDO_ALBC'
+              Width = 120
+            end
+          end
+        end
+      end
+      inherited tsFicha: TcxTabSheet
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 941
+        ExplicitHeight = 694
+        object pnlTopFicha: TPanel
+          Left = 0
+          Top = 0
+          Width = 941
+          Height = 200
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 0
+          object pcCab: TcxPageControl
+            Left = 0
+            Top = 0
+            Width = 941
+            Height = 200
+            Align = alClient
+            TabOrder = 0
+            Properties.ActivePage = tsCabecera
+            Properties.CustomButtons.Buttons = <>
+            ClientRectBottom = 198
+            ClientRectLeft = 2
+            ClientRectRight = 939
+            ClientRectTop = 29
+            object tsCabecera: TcxTabSheet
+              Caption = 'Cabecera'
+              object lblNroAlbaran: TcxLabel
+                Left = 8
+                Top = 12
+                Caption = 'N'#250'mero'
+                TabOrder = 0
+              end
+              object txtNUMERO_ALBC: TcxDBTextEdit
+                Left = 8
+                Top = 32
+                DataBinding.DataField = 'NUMERO_ALBC'
+                DataBinding.DataSource = dsTablaG
+                Properties.ReadOnly = True
+                TabOrder = 1
+                Width = 100
+              end
+              object lblSerieAlbaran: TcxLabel
+                Left = 116
+                Top = 12
+                Caption = 'Serie'
+                TabOrder = 2
+              end
+              object txtSERIE_ALBC: TcxDBTextEdit
+                Left = 116
+                Top = 32
+                DataBinding.DataField = 'SERIE_ALBC'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 3
+                Width = 80
+              end
+              object lblFechaAlbaran: TcxLabel
+                Left = 204
+                Top = 12
+                Caption = 'Fecha'
+                TabOrder = 4
+              end
+              object dteFECHA_ALBC: TcxDBDateEdit
+                Left = 204
+                Top = 32
+                DataBinding.DataField = 'FECHA_ALBC'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 5
+                Width = 110
+              end
+              object lblEstadoAlbaran: TcxLabel
+                Left = 320
+                Top = 12
+                Caption = 'Estado'
+                TabOrder = 6
+              end
+              object txtESTADO_ALBC: TcxDBTextEdit
+                Left = 320
+                Top = 32
+                DataBinding.DataField = 'ESTADO_ALBC'
+                DataBinding.DataSource = dsTablaG
+                Properties.ReadOnly = True
+                TabOrder = 7
+                Width = 110
+              end
+              object lblCodigoEmpresa: TcxLabel
+                Left = 8
+                Top = 72
+                Caption = 'Empresa'
+                TabOrder = 8
+              end
+              object btnCODIGO_EMP_ALBC: TcxDBButtonEdit
+                Left = 8
+                Top = 92
+                DataBinding.DataField = 'CODIGO_EMP_ALBC'
+                DataBinding.DataSource = dsTablaG
+                Properties.Buttons = <
+                  item
+                    Default = True
+                    Kind = bkEllipsis
+                  end>
+                TabOrder = 9
+                Width = 150
+              end
+              object lblCodigoProveedor: TcxLabel
+                Left = 168
+                Top = 72
+                Caption = 'Proveedor'
+                TabOrder = 10
+              end
+              object btnCODIGO_PRV_ALBC: TcxDBButtonEdit
+                Left = 168
+                Top = 92
+                DataBinding.DataField = 'CODIGO_PRV_ALBC'
+                DataBinding.DataSource = dsTablaG
+                Properties.Buttons = <
+                  item
+                    Default = True
+                    Kind = bkEllipsis
+                  end>
+                TabOrder = 11
+                Width = 150
+              end
+              object lblRefProveedor: TcxLabel
+                Left = 328
+                Top = 72
+                Caption = 'Ref. proveedor'
+                TabOrder = 12
+              end
+              object txtREF_PROVEEDOR_ALBC: TcxDBTextEdit
+                Left = 328
+                Top = 92
+                DataBinding.DataField = 'REF_PROVEEDOR_ALBC'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 13
+                Width = 180
+              end
+              object lblCodigoAlmacen: TcxLabel
+                Left = 520
+                Top = 72
+                Caption = 'Almac'#233'n destino'
+                TabOrder = 14
+              end
+              object txtCODIGO_ALM_ALBC: TcxDBTextEdit
+                Left = 520
+                Top = 92
+                DataBinding.DataField = 'CODIGO_ALM_ALBC'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 15
+                Width = 120
+              end
+            end
+          end
+        end
+        object pnlBotonesAcciones: TPanel
+          Left = 0
+          Top = 200
+          Width = 941
+          Height = 38
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 1
+          object btnAnadirLinea: TcxButton
+            Left = 8
+            Top = 6
+            Width = 110
+            Height = 26
+            Caption = 'A'#241'adir l'#237'nea'
+            OnClick = btnAnadirLineaClick
+            TabOrder = 0
+          end
+          object btnBorrarLinea: TcxButton
+            Left = 124
+            Top = 6
+            Width = 110
+            Height = 26
+            Caption = 'Borrar l'#237'nea'
+            OnClick = btnBorrarLineaClick
+            TabOrder = 1
+          end
+        end
+        object pnlBodyFicha: TPanel
+          Left = 0
+          Top = 238
+          Width = 941
+          Height = 380
+          Align = alClient
+          BevelOuter = bvNone
+          TabOrder = 2
+          object pcAlbaran: TcxPageControl
+            Left = 0
+            Top = 0
+            Width = 941
+            Height = 380
+            Align = alClient
+            TabOrder = 0
+            Properties.ActivePage = tsLineasAlbaran
+            Properties.CustomButtons.Buttons = <>
+            ClientRectBottom = 378
+            ClientRectLeft = 2
+            ClientRectRight = 939
+            ClientRectTop = 29
+            object tsLineasAlbaran: TcxTabSheet
+              Caption = 'L'#237'neas'
+              object cxgrdLineasAlbaran: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 937
+                Height = 347
+                Align = alClient
+                TabOrder = 0
+                object tvLineasAlbaran: TcxGridDBTableView
+                  Navigator.Buttons.CustomButtons = <>
+                  DataController.Summary.DefaultGroupSummaryItems = <>
+                  DataController.Summary.FooterSummaryItems = <>
+                  DataController.Summary.SummaryGroups = <>
+                  object colLineaAlbcLINEA: TcxGridDBColumn
+                    Caption = 'L'#237'nea'
+                    DataBinding.FieldName = 'LINEA_ALBCLIN'
+                    Width = 60
+                  end
+                  object colLineaAlbcCODIGO_ART: TcxGridDBColumn
+                    Caption = 'Art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_ALBCLIN'
+                    Width = 100
+                  end
+                  object colLineaAlbcCODIGO_UNIDAD: TcxGridDBColumn
+                    Caption = 'SKU'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_ALBCLIN'
+                    Width = 120
+                  end
+                  object colLineaAlbcDESCRIPCION: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_ALBCLIN'
+                    Width = 240
+                  end
+                  object colLineaAlbcCANTIDAD: TcxGridDBColumn
+                    Caption = 'Cantidad'
+                    DataBinding.FieldName = 'CANTIDAD_ALBCLIN'
+                    Width = 80
+                  end
+                  object colLineaAlbcPRECIO_COMPRA: TcxGridDBColumn
+                    Caption = 'Precio compra'
+                    DataBinding.FieldName = 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN'
+                    Width = 110
+                  end
+                  object colLineaAlbcPORCENTAJE_IVA: TcxGridDBColumn
+                    Caption = '% IVA'
+                    DataBinding.FieldName = 'PORCENTAJE_IVA_ALBCLIN'
+                    Width = 70
+                  end
+                  object colLineaAlbcTOTAL: TcxGridDBColumn
+                    Caption = 'Total'
+                    DataBinding.FieldName = 'TOTAL_ALBCLIN'
+                    Width = 100
+                  end
+                  object colLineaAlbcALMACEN: TcxGridDBColumn
+                    Caption = 'Almac'#233'n'
+                    DataBinding.FieldName = 'CODIGO_ALMACEN_ALBCLIN'
+                    Width = 90
+                  end
+                end
+                object cxgrdlvlLineasAlbaran: TcxGridLevel
+                  GridView = tvLineasAlbaran
+                end
+              end
+            end
+            object tsObservaciones: TcxTabSheet
+              Caption = 'Observaciones'
+              object memObservaciones: TcxDBMemo
+                Left = 0
+                Top = 0
+                Align = alClient
+                DataBinding.DataField = 'OBSERVACIONES_ALBC'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 0
+                Height = 347
+                Width = 937
+              end
+            end
+          end
+        end
+        object pnlBottomTotales: TPanel
+          Left = 0
+          Top = 618
+          Width = 941
+          Height = 76
+          Align = alBottom
+          BevelOuter = bvNone
+          TabOrder = 3
+          object lblTotalBases: TcxLabel
+            Left = 16
+            Top = 8
+            Caption = 'Total bases'
+            TabOrder = 0
+          end
+          object curTOTAL_BASES_ALBC: TcxDBCurrencyEdit
+            Left = 16
+            Top = 32
+            DataBinding.DataField = 'TOTAL_BASES_ALBC'
+            DataBinding.DataSource = dsTablaG
+            Properties.ReadOnly = True
+            TabOrder = 1
+            Width = 140
+          end
+          object lblTotalImpuestos: TcxLabel
+            Left = 176
+            Top = 8
+            Caption = 'Total impuestos'
+            TabOrder = 2
+          end
+          object curTOTAL_IMPUESTOS_ALBC: TcxDBCurrencyEdit
+            Left = 176
+            Top = 32
+            DataBinding.DataField = 'TOTAL_IMPUESTOS_ALBC'
+            DataBinding.DataSource = dsTablaG
+            Properties.ReadOnly = True
+            TabOrder = 3
+            Width = 140
+          end
+          object lblTotalLiquido: TcxLabel
+            Left = 336
+            Top = 8
+            Caption = 'Total l'#237'quido'
+            TabOrder = 4
+          end
+          object curTOTAL_LIQUIDO_ALBC: TcxDBCurrencyEdit
+            Left = 336
+            Top = 32
+            DataBinding.DataField = 'TOTAL_LIQUIDO_ALBC'
+            DataBinding.DataSource = dsTablaG
+            Properties.ReadOnly = True
+            TabOrder = 5
+            Width = 160
+          end
+        end
+      end
+    end
+  end
+end

@@ -550,6 +550,13 @@
             <Form>dmAlbaranes</Form>
             <DesignClass>TdmAlbaranes</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoAlbaranesCompra.pas">
+            <Form>frmMtoAlbaranesCompra</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAlbaranesCompra.pas">
+            <Form>dmAlbaranesCompra</Form>
+            <DesignClass>TdmAlbaranesCompra</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
             <Form>frmModalFacturarAlbaranesFechas</Form>
         </DCCReference>
