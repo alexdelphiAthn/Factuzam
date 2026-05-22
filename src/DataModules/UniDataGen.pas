@@ -18,8 +18,8 @@ unit UniDataGen;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, inLibWin;
+  System.SysUtils, System.Classes, System.TypInfo, Data.DB, MemDS, DBAccess,
+  Uni, inLibUser, inLibWin, inLibLog;
 
 type
   TdmBase = class(TDataModule)
@@ -187,6 +187,10 @@ end;
 procedure TdmBase.unqryPerfilesBeforePost(DataSet: TDataSet);
 begin
   odmConn.ActualizarUserTimeModif(DataSet);
+  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+    Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
+                  'state=' + GetEnumName(TypeInfo(TDataSetState),
+                                          Ord(DataSet.State)));
 end;
 
 procedure TdmBase.unqryTablaGBeforeInsert(DataSet: TDataSet);
@@ -199,11 +203,17 @@ begin
     if LForm.tsFicha.TabVisible then
        LForm.pcPantalla.ActivePage := LForm.tsFicha;
   end;
+  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+    Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforeInsert', '');
 end;
 
 procedure TdmBase.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   oDmConn.ActualizarUserTimeModif(DataSet);
+  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+    Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
+                  'state=' + GetEnumName(TypeInfo(TDataSetState),
+                                          Ord(DataSet.State)));
 end;
 
 end.

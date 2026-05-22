@@ -29,7 +29,9 @@ const
 type
   // ltPerf: instrumentación de cronómetros (LogPerf). Apagado por defecto
   // para no ensuciar el log; se enciende con appModoDebug.
-  TLogType = (ltInfo, ltWarning, ltError, ltSQL, ltPerf);
+  // ltAvanzado: eventos de UI / dataset (LogEvento). Se enciende con
+  // appLogAvanzado.
+  TLogType = (ltInfo, ltWarning, ltError, ltSQL, ltPerf, ltAvanzado);
   TLogFlags = set of TLogType;
   TLog = class
   private
@@ -54,6 +56,18 @@ type
     procedure LogWarning(const AMessage: string);
     procedure LogError(const AMessage: string);
     procedure LogSQL(const ASQL: string);
+    // Version detallada del log SQL. Registra el SQL ya ejecutado junto
+    // con su tiempo en ms, filas afectadas/devueltas y exito/fallo.
+    // AParams es opcional: si viene relleno (clave=valor;clave=valor)
+    // se anade tras la query. Pensado para que el invocador decida si
+    // se loguean valores reales segun appLogParamsSQL.
+    procedure LogSQLExt(const ASQL: string; AElapsedMs: Int64; ARows: Integer;
+                        AOk: Boolean; const AError: string = '';
+                        const AParams: string = '');
+    // Log avanzado de eventos de usuario / UI. Una linea por evento con
+    // unidad (modulo Pascal), objeto (form / control / dataset), evento
+    // (Click, Show, BeforePost, Execute...) y un detalle libre.
+    procedure LogEvento(const AUnidad, AObjeto, AEvento, ADetalle: string);
     // Cronometro instrumentado. Escribe al log y, si el monitor SQL
     // (oMemoSQL) esta visible, tambien suelta una linea ahi para que el
     // usuario vea las metricas junto a las queries. Patron tipico:
@@ -91,6 +105,7 @@ begin
     ltError: Result := 'ERROR';
     ltSQL: Result := 'SQL';
     ltPerf: Result := 'PERF';
+    ltAvanzado: Result := 'AVANZADO';
   else
     Result := 'DESCONOCIDO';
   end;
@@ -233,6 +248,55 @@ begin
   WriteToLog('SQL: ' + SQLOneLine, ltSQL);
 end;
 
+procedure TLog.LogSQLExt(const ASQL: string; AElapsedMs: Int64; ARows: Integer;
+                         AOk: Boolean; const AError: string = '';
+                         const AParams: string = '');
+var
+  SQLOneLine, sEstado, sFilas, sLinea: string;
+begin
+  if not (ltSQL in FLogFlags) then
+    Exit;
+
+  SQLOneLine := StringReplace(ASQL, sLineBreak, ' ', [rfReplaceAll]);
+  SQLOneLine := Trim(SQLOneLine);
+
+  if AOk then
+    sEstado := 'OK'
+  else
+    sEstado := 'ERR';
+
+  if ARows >= 0 then
+    sFilas := IntToStr(ARows)
+  else
+    sFilas := '-';
+
+  sLinea := Format('SQL: [%s] %d ms | filas=%s | %s',
+                   [sEstado, AElapsedMs, sFilas, SQLOneLine]);
+
+  if AParams <> '' then
+    sLinea := sLinea + ' | params=' + AParams;
+
+  if not AOk and (AError <> '') then
+    sLinea := sLinea + ' | error=' + AError;
+
+  WriteToLog(sLinea, ltSQL);
+end;
+
+procedure TLog.LogEvento(const AUnidad, AObjeto, AEvento, ADetalle: string);
+var
+  sLinea: string;
+begin
+  if not (ltAvanzado in FLogFlags) then
+    Exit;
+
+  sLinea := Format('EVT: %s | %s | %s', [AUnidad, AObjeto, AEvento]);
+  if ADetalle <> '' then
+    sLinea := sLinea + ' | ' +
+              StringReplace(ADetalle, sLineBreak, ' ', [rfReplaceAll]);
+
+  WriteToLog(sLinea, ltAvanzado);
+end;
+
 procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
 begin
   // Gateado por ltPerf: si appModoDebug está apagado, esta llamada es no-op.
@@ -302,44 +366,65 @@ end;
 
 procedure AplicarModosDepuracion;
 var
-  bDebug   : Boolean;
-  bDebugSQL: Boolean;
+  bDebug      : Boolean;
+  bDebugSQL   : Boolean;
+  bLogSQL     : Boolean;
+  bLogAvanzado: Boolean;
+  bSQLFinal   : Boolean;
 begin
   if not Assigned(oAppParams) then Exit;
+  // Flags 'Depuración' (modest-fermat-WUvkF): switches gordos.
   bDebug    := oAppParams.GetBool('appModoDebug',    False);
-  // appModoDebug implica también SQL: con un solo switch ya está todo verboso
   bDebugSQL := oAppParams.GetBool('appModoDebugSQL', False) or bDebug;
+  // Flags 'Log' (great-wright-Xs8yZ): controles finos por tipo.
+  bLogSQL      := oAppParams.GetBool('appLogSQL',      False);
+  bLogAvanzado := oAppParams.GetBool('appLogAvanzado', False);
+
+  // ltSQL se enciende si CUALQUIERA de los modos relacionados con SQL
+  // está activo. El cronómetro de UniSQLMonitor (LogSQLExt) y el dump
+  // crudo (LogSQL) comparten el mismo flag.
+  bSQLFinal := bDebugSQL or bLogSQL;
   {$IFDEF DEBUG}
   // En compilaciones DEBUG forzamos siempre el modo SQL
-  bDebugSQL := True;
+  bSQLFinal := True;
   {$ENDIF}
 
-  if bDebugSQL then
+  if bSQLFinal then
     Log.EnableLogType(ltSQL)
   else
     Log.DisableLogType(ltSQL);
 
-  // Los cronómetros LogPerf se enganchan al modo debug general.
+  // Cronómetros LogPerf enganchados al modo debug general.
   if bDebug then
     Log.EnableLogType(ltPerf)
   else
     Log.DisableLogType(ltPerf);
 
+  // Eventos de UI (LogEvento) controlados por su propio flag.
+  if bLogAvanzado then
+    Log.EnableLogType(ltAvanzado)
+  else
+    Log.DisableLogType(ltAvanzado);
+
   if Assigned(odmConn) and Assigned(odmConn.UniSQLMonitor1) then
-    odmConn.UniSQLMonitor1.Active := bDebugSQL;
+    odmConn.UniSQLMonitor1.Active := bSQLFinal;
 
   // El memo SQL en pantalla acompaña al modo: si se activa SQL, se muestra;
   // si se desactiva, se oculta junto con su panel contenedor.
   if Assigned(oMemoSQL) then
   begin
-    oMemoSQL.Visible := bDebugSQL;
+    oMemoSQL.Visible := bSQLFinal;
     if Assigned(oMemoSQL.Parent) then
-      oMemoSQL.Parent.Visible := bDebugSQL;
+      oMemoSQL.Parent.Visible := bSQLFinal;
   end;
 
   Log.LogInfo(Format(
-    'Modos depuración aplicados: appModoDebug=%s, appModoDebugSQL=%s',
-    [BoolToStr(bDebug, True), BoolToStr(bDebugSQL, True)]));
+    'Modos log aplicados: appModoDebug=%s, appModoDebugSQL=%s, ' +
+    'appLogSQL=%s, appLogAvanzado=%s',
+    [BoolToStr(bDebug,        True),
+     BoolToStr(bDebugSQL,     True),
+     BoolToStr(bLogSQL,       True),
+     BoolToStr(bLogAvanzado,  True)]));
 end;
 
 initialization

@@ -32,7 +32,13 @@ type
     procedure conUniError(Sender: TObject; E: EDAError; var Fail: Boolean);
     procedure conUniAfterConnect(Sender: TObject);
   private
-    { Private declarations }
+    // Estado para cronometrar entre tfQExecute y el siguiente flag que
+    // indique fin (tfQOpen para SELECT, tfQClose para DML, tfQError...).
+    // Si llega un nuevo tfQExecute antes de cerrar, se loguea el pendiente.
+    FSQLStartMs   : Int64;
+    FSQLActual    : string;
+    FSQLPendiente : Boolean;
+    procedure VolcarSQLPendiente(AOk: Boolean; const AError: string);
   public
     procedure ActualizarUserTimeModif(DataSet:TDataSet);
   end;
@@ -48,7 +54,8 @@ uses inLibDir,
      inLibLog,
      inLibAppParam,
      inMtoPrincipal,
-     inLibGlobalVar;
+     inLibGlobalVar,
+     Winapi.Windows;
 
 {$R *.dfm}
 
@@ -176,28 +183,60 @@ end;
 
 procedure TdmConn.DataModuleCreate(Sender: TObject);
 begin
-  // Por defecto el monitor SQL arranca apagado. Se activa más tarde desde
-  // inLibLog.AplicarModosDepuracion según appModoDebugSQL / appModoDebug,
-  // que se llama en cuanto oAppParams está cargado.
-  UniSQLMonitor1.Active := False;
-  {$IFDEF DEBUG}
-    UniSQLMonitor1.Active := True;
-  {$ENDIF}
+  // El monitor se queda activo siempre; el filtrado real lo hace TLog
+  // segun IsLogTypeEnabled(ltSQL). El estado del monitor lo reajusta
+  // inLibLog.AplicarModosDepuracion cuando se cargan/cambian los flags.
+  UniSQLMonitor1.Active := True;
+  FSQLPendiente := False;
+end;
+
+procedure TdmConn.VolcarSQLPendiente(AOk: Boolean; const AError: string);
+var
+  ElapsedMs: Int64;
+begin
+  if not FSQLPendiente then
+    Exit;
+  ElapsedMs     := GetTickCount64 - FSQLStartMs;
+  // -1 en filas: el UniSQLMonitor no expone RowsAffected en su evento.
+  // Si un caller necesita la cifra exacta, debe llamar directamente a
+  // Log.LogSQLExt desde el AfterExecute/AfterOpen de su query concreta.
+  inLibLog.Log.LogSQLExt(FSQLActual, ElapsedMs, -1, AOk, AError);
+  FSQLPendiente := False;
 end;
 
 procedure TdmConn.UniSQLMonitor1SQL(Sender: TObject; Text: string;
   Flag: TDATraceFlag);
 begin
-  // Log.LogSQL ya está internamente gateado por ltSQL: si appModoDebugSQL
-  // está apagado, escribir aquí es un no-op. El monitor estará activo
-  // solo cuando uno de los modos lo encienda.
-  inLibLog.Log.LogSQL(Text);
-  if Assigned(oMemoSQL) and oMemoSQL.Visible then
+  if not inLibLog.Log.IsLogTypeEnabled(ltSQL) then
   begin
-    oMemoSQL.Lines.Add('-- begin-- ' + FormatDateTime('hh:nn:ss.zzz', Now));
-    oMemoSQL.Lines.Add(Text);
-    oMemoSQL.Lines.Add('-- end-- '   + FormatDateTime('hh:nn:ss.zzz', Now));
+    // Tambien limpiamos el pendiente si lo hay para no arrastrar timing
+    // entre sesiones de log activado/desactivado.
+    FSQLPendiente := False;
+    Exit;
   end;
+
+  case Flag of
+    tfQExecute:
+      begin
+        // Si quedaba uno sin cerrar (operacion sin tfQOpen/tfQClose),
+        // lo volcamos antes de arrancar el nuevo cronometro.
+        if FSQLPendiente then
+          VolcarSQLPendiente(True, '');
+        FSQLActual    := Text;
+        FSQLStartMs   := GetTickCount64;
+        FSQLPendiente := True;
+      end;
+    tfQOpen, tfQFetch, tfQClose:
+      VolcarSQLPendiente(True, '');
+    tfQError:
+      VolcarSQLPendiente(False, Text);
+  end;
+
+  // Dump al memo SQL en pantalla si esta visible (lo controla
+  // AplicarModosDepuracion en funcion de los flags). No restringido a
+  // DEBUG: si el usuario activo el modo SQL, ya esta autorizado.
+  if Assigned(oMemoSQL) and oMemoSQL.Visible and (Flag = tfQExecute) then
+    oMemoSQL.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + Text);
 end;
 
 procedure TdmConn.ActualizarUserTimeModif(DataSet:TDataSet);
