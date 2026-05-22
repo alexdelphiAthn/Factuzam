@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.3.0                                                         }
+{ Version:       0.4.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -13,23 +13,24 @@
 {    que herede de TfrmMtoGen. Al abrirse pre-carga el articulo / SKU activo   }
 {    via TfrmMtoGen.ResolverArtSkuActivo.                                      }
 {                                                                              }
-{    Layout:                                                                   }
-{      - Cabecera: Articulo + descripcion + bloque de info del articulo        }
-{        (temporada, tarifas / PVP / VENTAMAYOR / REBAJAS, proveedores con     }
-{        precio de ultima compra) + foto a la derecha.                         }
-{      - Filtros: combo "Estado del stock".                                    }
-{      - Grid pivot: tallas como columnas, almacenes o colores como filas.     }
-{        Las celdas de color en modo "Por Color" llevan un cuadradito HEX a    }
-{        la izquierda (custom-draw via inLibAtributosPaleta).                  }
-{      - Eje: pestanas "Por Color" / "Por Almacen" (default Almacen). Cada    }
-{        pestana contiene su propio TcxCheckListBox para filtrar las filas:    }
-{          * Por Almacen   -> almacenes activos (TIPO_USO='ESTANDAR' por      }
-{            defecto marcados).                                                }
-{          * Por Color     -> colores AV de los SKUs activos del articulo     }
-{            (todos marcados por defecto).                                     }
-{        El estado de cada checklist persiste entre cambios de pestana y       }
-{        actua como filtro de la otra dimension cuando no es la activa.        }
+{    Layout (estilo OdaGest+):                                                 }
+{      - Cabecera (pnlCabecera): boton de busqueda de articulo + descripcion   }
+{        + bloque de info (temporada, tarifas, proveedores) + foto.            }
+{      - Filtros (pnlFiltros): combo "Estado del stock".                       }
+{      - Cuerpo (pnlBody): split horizontal con un TSplitter.                  }
+{        * pnlIzq (alLeft, 280px): pcFiltros con dos pestanas                  }
+{            "1 Colores"   -> clbColores (checklist de AVs de color)           }
+{            "2 Almacenes" -> clbAlmacenes (checklist de almacenes activos)    }
+{        * pnlDer (alClient): pcVistas (alTop, 30px) con dos pestanas          }
+{            "3 Por almacenes" -> grid con almacenes como filas                }
+{            "4 Por colores"   -> grid con colores como filas                  }
+{          y el TcxGrid (alClient) compartido. La pestana activa de pcVistas   }
+{          determina el modo de pivote y se aplica como filtro cruzado el      }
+{          checklist opuesto.                                                  }
 {                                                                              }
+{    v0.4: split horizontal estilo OdaGest+ — checklist a la izquierda,        }
+{    pestanas de vista pivote arriba del grid a la derecha. Tabs numeradas     }
+{    1/2/3/4 como en el original.                                              }
 {    v0.3: temporada en cabecera, formato de tarifas/proveedores depurado,     }
 {    layout reorganizado: checklist de almacenes movido a la pestana Por       }
 {    Almacen y checklist nuevo de colores en la pestana Por Color.             }
@@ -85,17 +86,23 @@ type
     pnlFiltros    : TPanel;
       lblEstado     : TcxLabel;
       cbbEstado     : TcxComboBox;
-    grdStock      : TcxGrid;
-      tvStock       : TcxGridDBTableView;
-      glStock       : TcxGridLevel;
-    pnlEjes       : TPanel;
-      pcEje         : TcxPageControl;
-        tsPorColor    : TcxTabSheet;
-          lblColores    : TcxLabel;
-          clbColores    : TcxCheckListBox;
-        tsPorAlmacen  : TcxTabSheet;
-          lblAlmacenes  : TcxLabel;
-          clbAlmacenes  : TcxCheckListBox;
+    pnlBody       : TPanel;
+      pnlIzq        : TPanel;
+        pcFiltros     : TcxPageControl;
+          tsColores     : TcxTabSheet;
+            lblColores    : TcxLabel;
+            clbColores    : TcxCheckListBox;
+          tsAlmacenes   : TcxTabSheet;
+            lblAlmacenes  : TcxLabel;
+            clbAlmacenes  : TcxCheckListBox;
+      splVert       : TSplitter;
+      pnlDer        : TPanel;
+        pcVistas      : TcxPageControl;
+          tsPorAlmacen  : TcxTabSheet;
+          tsPorColor    : TcxTabSheet;
+        grdStock      : TcxGrid;
+          tvStock       : TcxGridDBTableView;
+          glStock       : TcxGridLevel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -106,7 +113,7 @@ type
               APrevState, ANewState: TcxCheckBoxState);
     procedure clbColoresClickCheck(Sender: TObject; AIndex: Integer;
               APrevState, ANewState: TcxCheckBoxState);
-    procedure pcEjeChange(Sender: TObject);
+    procedure pcVistasChange(Sender: TObject);
     procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
               ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
               var ADone: Boolean);
@@ -207,7 +214,8 @@ begin
   cbbEstado.Properties.Items.Add('Prestadas');
   cbbEstado.ItemIndex := 0;
 
-  pcEje.ActivePage := tsPorAlmacen;
+  pcVistas.ActivePage := tsPorAlmacen;
+  pcFiltros.ActivePage := tsColores;
   CargarAlmacenes;
 end;
 
@@ -946,7 +954,7 @@ var
   bEsColor: Boolean;
 begin
   if FQry.Active then FQry.Close;
-  bEsColor := pcEje.ActivePage = tsPorColor;
+  bEsColor := pcVistas.ActivePage = tsPorColor;
 
   if Trim(FCodArt) = '' then
   begin
@@ -1080,7 +1088,7 @@ begin
   RecargarConsulta;
 end;
 
-procedure TfrmStockConsulta.pcEjeChange(Sender: TObject);
+procedure TfrmStockConsulta.pcVistasChange(Sender: TObject);
 begin
   RecargarConsulta;
 end;
