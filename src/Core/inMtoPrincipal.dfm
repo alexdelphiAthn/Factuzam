@@ -1441,6 +1441,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object Albaranes1: TMenuItem
         Caption = 'Albaranes'
+        OnClick = Albaranes1Click
       end
       object Facturas1: TMenuItem
         Caption = 'Facturas'
