@@ -23,6 +23,14 @@ uses Uni,
 // TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of
 // object;
 
+type
+  // Callback de log para depurar el flujo de Sesiones de Compra
+  // (alta de linea, posts, persistir celda, crear articulos...). El form
+  // de sesiones asigna aqui un metodo que vuelca al memo de su pestania
+  // 'Log' y lo nilea al cerrarse. Cualquier punto del DM o de la lib
+  // puede llamar a LogSes(...) sin tener que conocer al form.
+  TLogSesionProc = procedure(const S: string) of object;
+
 var
   odmPerfiles:TdmPerfiles;
   oConn      :TUniConnection;
@@ -39,12 +47,23 @@ var
   oAppName   :String;
   oVersion   :String;
   oAll       :string;
+  oLogSesion :TLogSesionProc;
+
+// Helper: emite un mensaje al log de sesiones si esta enganchado. No-op
+// si nadie tiene un memo activo.
+procedure LogSes(const S: string);
 
 implementation
 
+procedure LogSes(const S: string);
+begin
+  if Assigned(oLogSesion) then
+    oLogSesion(S);
+end;
+
 initialization
   oAppName         := 'Fzam';
-  oVersion         := '1.0.15.202605220150.alpha';
+  oVersion         := '1.0.15.202605220160.alpha';
   oUser            := 'No definido';
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
@@ -53,4 +72,5 @@ initialization
   odmConn          := nil;
   oConn            := nil;
   oAll             := 'Todos';
+  oLogSesion       := nil;
 end.

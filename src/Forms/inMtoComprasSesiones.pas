@@ -162,6 +162,15 @@ type
     btnRevertir: TcxButton;
 
     // ------------------------------------------------------------------
+    // Pestania Log (trazas de depuracion del flujo de sesion)
+    // ------------------------------------------------------------------
+    tsLog        : TcxTabSheet;
+    pnlLogTop    : TPanel;
+    btnLogClear  : TcxButton;
+    btnLogCopy   : TcxButton;
+    mLog         : TcxMemo;
+
+    // ------------------------------------------------------------------
     // Eventos
     // ------------------------------------------------------------------
     procedure FormCreate(Sender: TObject);
@@ -174,6 +183,8 @@ type
     procedure btnCrearClick(Sender: TObject);
     procedure btnRevertirClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
+    procedure btnLogClearClick(Sender: TObject);
+    procedure btnLogCopyClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
@@ -223,6 +234,7 @@ type
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
                 const ANombreFam: string = '');
     procedure ProponerPrecioVenta;
+    procedure LogMsg(const S: string);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -238,6 +250,7 @@ uses
   inLibUser,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
+  Vcl.Clipbrd,
   inLibAtributosPaleta,
   inLibFotos,
   inMtoModalSelFamilia,
@@ -275,7 +288,9 @@ end;
 
 procedure TfrmMtoComprasSesiones.btnGrabarClick(Sender: TObject);
 begin
+  LogSes('btnGrabarClick INICIO (delega al inherited)');
   inherited;
+  LogSes('btnGrabarClick FIN. master/detail han hecho Post.');
   // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar el
   // row (los Posts del master/detail provocan re-fetch). Recargamos
   // las cantidades desde la tabla de celdas para que las celdas
@@ -411,6 +426,38 @@ begin
   inherited;
 
   CargarBasicosColor;
+
+  // Enganchar el callback de log: cualquier punto del DM o de la lib
+  // que llame a LogSes(...) vuelca aqui. Se desengancha en FormDestroy.
+  inLibGlobalVar.oLogSesion := Self.LogMsg;
+  LogMsg('Form abierto. version=' + inLibGlobalVar.oVersion);
+end;
+
+procedure TfrmMtoComprasSesiones.LogMsg(const S: string);
+begin
+  // Vuelca al memo de la pestania 'Log'. Limite blando de 5000 lineas
+  // para que el memo no engorde indefinidamente en sesiones largas;
+  // cuando se pasa, se recorta la mitad inicial.
+  if not Assigned(mLog) then Exit;
+  mLog.Lines.BeginUpdate;
+  try
+    mLog.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' ' + S);
+    if mLog.Lines.Count > 5000 then
+      while mLog.Lines.Count > 2500 do
+        mLog.Lines.Delete(0);
+  finally
+    mLog.Lines.EndUpdate;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.btnLogClearClick(Sender: TObject);
+begin
+  if Assigned(mLog) then mLog.Lines.Clear;
+end;
+
+procedure TfrmMtoComprasSesiones.btnLogCopyClick(Sender: TObject);
+begin
+  if Assigned(mLog) then Clipboard.AsText := mLog.Lines.Text;
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
@@ -433,6 +480,10 @@ begin
     FQryConjuntosTallas.Connection := nil;
     FreeAndNil(FQryConjuntosTallas);
   end;
+  // Desenganchar el log antes del inherited (que libera el form): si
+  // algun chivato disparara LogSes durante la destruccion del DM no
+  // queremos que intente escribir en mLog ya liberado.
+  inLibGlobalVar.oLogSesion := nil;
   FreeAndNil(FDsConjuntosTallas);
   FreeAndNil(FGestorTallas);
   FreeAndNil(FBmpSwatch);
@@ -575,10 +626,19 @@ end;
 // ===========================================================================
 
 procedure TfrmMtoComprasSesiones.btnAddLineaClick(Sender: TObject);
+const
+  ARR_ST: array[TDataSetState] of string = (
+    'dsInactive','dsBrowse','dsEdit','dsInsert','dsSetKey','dsCalcFields',
+    'dsFilter','dsNewValue','dsOldValue','dsCurValue','dsBlockRead',
+    'dsInternalCalc','dsOpening','dsRefreshFields');
 begin
   inherited;
+  LogSes(Format('btnAddLineaClick INICIO. master.State=%s, CONTADOR_LINEAS_SES=%d',
+                [ARR_ST[Dmm.unqryTablaG.State],
+                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
   if Dmm.unqryTablaG.IsEmpty then
   begin
+    LogSes('btnAddLineaClick: master IsEmpty -> aviso y salida');
     MessageDlg('Crea y graba la cabecera de la sesion antes de anadir lineas.',
                mtInformation, [mbOk], 0);
     Exit;
@@ -591,9 +651,23 @@ begin
   // las asignaciones de SERIE_SES_SESLIN, etc. revientan con
   // 'Dataset not in edit or insert mode'.
   if Dmm.unqryTablaG.State in [dsInsert, dsEdit] then
+  begin
+    LogSes('btnAddLineaClick: master.Post (estaba en edit/insert)');
     Dmm.unqryTablaG.Post;
+    LogSes(Format('  post OK. master.State=%s, CONTADOR_LINEAS_SES=%d',
+                  [ARR_ST[Dmm.unqryTablaG.State],
+                   Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
+  end;
+  LogSes('btnAddLineaClick: master.Edit');
   Dmm.unqryTablaG.Edit;
+  LogSes(Format('  master.State=%s, CONTADOR_LINEAS_SES=%d',
+                [ARR_ST[Dmm.unqryTablaG.State],
+                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
+  LogSes('btnAddLineaClick: detail.Insert');
   Dmm.unqrySesionLin.Insert;
+  LogSes(Format('btnAddLineaClick FIN. detail.LINEA_SESLIN=%d, master.CONTADOR_LINEAS_SES=%d',
+                [Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger,
+                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
 end;
 
 procedure TfrmMtoComprasSesiones.btnDelLineaClick(Sender: TObject);
@@ -601,10 +675,19 @@ var
   iLinea : Integer;
 begin
   inherited;
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
+  if Dmm.unqrySesionLin.IsEmpty then
+  begin
+    LogSes('btnDelLineaClick: detail vacio, salida');
+    Exit;
+  end;
   if MessageDlg('Borrar la linea seleccionada?',
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  begin
+    LogSes('btnDelLineaClick: cancelado por el usuario');
+    Exit;
+  end;
   iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+  LogSes(Format('btnDelLineaClick: linea=%d', [iLinea]));
   // Limpiar SESCEL de la linea antes de borrar la cabecera (no hay FK
   // cascade en BBDD; el patron es delete-on-app).
   if iLinea > 0 then
@@ -623,11 +706,14 @@ begin
         Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
       ParamByName('l').AsInteger := iLinea;
       ExecSQL;
+      LogSes(Format('  SESCEL borradas para linea=%d (filas=%d)',
+                    [iLinea, RowsAffected]));
     finally
       Free;
     end;
   end;
   Dmm.unqrySesionLin.Delete;
+  LogSes('btnDelLineaClick: detail.Delete OK');
   if Assigned(FGestorTallas) then FGestorTallas.RecalcularMaxColumnas;
 end;
 
@@ -701,23 +787,38 @@ begin
   //   3. Modal de settings (serie / fecha / almacen / tarifa / temporada
   //      / flags). Si Salir, abortar.
   //   4. MaterializarSesion con los settings elegidos.
+  LogSes('btnCrearClick INICIO');
   if Dmm.unqryTablaG.IsEmpty then
   begin
+    LogSes('  cabecera vacia, salida');
     ShowMessage('No hay sesion activa.');
     Exit;
   end;
+  LogSes(Format('  sesion=%s/%s, estado=%s, lineas master.CONTADOR=%d',
+                [Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+                 Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
+                 Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString,
+                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
   if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString = 'CERRADA' then
   begin
+    LogSes('  sesion ya CERRADA, abortar');
     ShowMessage('La sesion ya esta cerrada. No se puede materializar dos ' +
                 'veces.');
     Exit;
   end;
   if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+  begin
+    LogSes('  master.Post pendiente');
     Dmm.unqryTablaG.Post;
+  end;
   if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+  begin
+    LogSes('  detail.Post pendiente');
     Dmm.unqrySesionLin.Post;
+  end;
 
   // ---- 2. Validador detallado ----
+  LogSes('  ValidarSesionDetallado');
   incidencias := TStringList.Create;
   try
     if not ValidarSesionDetallado(Dmm, incidencias) then
@@ -785,6 +886,10 @@ begin
   end;
 
   // ---- 4. Materializar ----
+  LogSes(Format('  MaterializarSesion(genPed=%s, genAlb=%s, serieAlb=%s, seriePed=%s)',
+                [Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString,
+                 Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString,
+                 frmSet.SerieAlb, frmSet.SeriePed]));
   Screen.Cursor := crHourGlass;
   try
     bOK := MaterializarSesion(
@@ -797,6 +902,8 @@ begin
   finally
     Screen.Cursor := crDefault;
   end;
+  LogSes(Format('  MaterializarSesion -> bOK=%s, pedido=%s/%s, albaran=%s/%s, err=%s',
+                [BoolToStr(bOK, True), sSerPed, sNumPed, sSerAlb, sNumAlb, sErr]));
 
   if bOK then
   begin
@@ -804,6 +911,7 @@ begin
       ShowMessage('Sesion materializada. Albaran: ' + sSerAlb + ' / ' + sNumAlb)
     else
       ShowMessage('Sesion materializada (sin albaran).');
+    LogSes('  master.Refresh');
     Dmm.unqryTablaG.Refresh;
   end
   else
@@ -821,6 +929,7 @@ begin
       FreeAndNil(incidencias);
     end;
   end;
+  LogSes('btnCrearClick FIN');
 end;
 
 procedure TfrmMtoComprasSesiones.btnRevertirClick(Sender: TObject);
@@ -828,18 +937,16 @@ var
   sErr: string;
 begin
   inherited;
-  // Vuelve a BORRADOR la sesion CERRADA borrando los movimientos de
-  // almacen que genero. Articulos / SKUs / EAN13 se conservan: si el
-  // usuario vuelve a materializar, los INSERTs auxiliares (INSERT
-  // IGNORE / DUPLICATE KEY) los respetan y la generacion de EAN13 se
-  // salta cuando el SKU ya tiene uno.
+  LogSes('btnRevertirClick INICIO');
   if Dmm.unqryTablaG.IsEmpty then
   begin
+    LogSes('  cabecera vacia, salida');
     ShowMessage('No hay sesion activa.');
     Exit;
   end;
   if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString <> 'CERRADA' then
   begin
+    LogSes('  sesion no esta CERRADA, abortar');
     ShowMessage('La sesion no esta CERRADA. Solo se pueden revertir ' +
                 'sesiones materializadas.');
     Exit;
@@ -849,20 +956,30 @@ begin
                 'Los articulos / SKUs / codigos de barras se conservan ' +
                 '(re-materializar es idempotente).' + sLineBreak +
                 sLineBreak + 'Continuar?',
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  begin
+    LogSes('  cancelado por el usuario');
+    Exit;
+  end;
 
+  LogSes('  RevertirMaterializacion');
   Screen.Cursor := crHourGlass;
   try
     if RevertirMaterializacion(Dmm, oUser, sErr) then
     begin
+      LogSes('  reversion OK, master.Refresh');
       ShowMessage('Sesion revertida. Estado: BORRADOR.');
       Dmm.unqryTablaG.Refresh;
     end
     else
+    begin
+      LogSes('  reversion KO: ' + sErr);
       ShowMessage('No se pudo revertir la sesion:' + sLineBreak + sErr);
+    end;
   finally
     Screen.Cursor := crDefault;
   end;
+  LogSes('btnRevertirClick FIN');
 end;
 
 procedure TfrmMtoComprasSesiones.btnImprimirClick(Sender: TObject);
