@@ -106,9 +106,10 @@ type
     procedure UpsertCosteSku(const aSku: string;
                              aPrecioField, aFechaField: TField);
     procedure EliminarCosteSku(const aSku: string);
-    procedure ExpandirEtiquetasPorStock(const aFldStock: string);
-    procedure PoblarCdsEtiquetasArtDesdeUniQuery;
+
   public
+    procedure PoblarCdsEtiquetasArtDesdeUniQuery;
+    procedure ExpandirEtiquetasPorStock(const aFldStock: string);
     // Override: abre las queries detalle y lookups del Mto de Articulos
     // (tarifas, proveedores, lineas-factura, variaciones, skus, stock,
     // movimientos, atributos basicos, ivas, familias). Lo invoca

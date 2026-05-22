@@ -10,8 +10,8 @@ inherited frmPrint: TfrmPrint
   Scaled = False
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 359
-  ExplicitHeight = 287
+  ExplicitWidth = 357
+  ExplicitHeight = 279
   TextHeight = 19
   object pnl1: TPanel [0]
     Left = 197
@@ -49,14 +49,13 @@ inherited frmPrint: TfrmPrint
     end
     object btnSalir: TcxButton
       Left = 1
-      Top = 222
+      Top = 214
       Width = 142
       Height = 25
       Align = alBottom
       Caption = '&Salir'
       TabOrder = 5
       OnClick = btnSalirClick
-      ExplicitTop = 214
     end
     object btnEditar: TcxButton
       Left = 0
