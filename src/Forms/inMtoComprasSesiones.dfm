@@ -394,15 +394,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object lblHint: TcxLabel
             Left = 760
             Top = 7
-            Caption =
-              'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el coste.'
+            Caption = 
+              'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
+              'oste.'
             TabOrder = 5
-          end
-          object dlgFoto: TOpenDialog
-            Filter = 'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp'
-            Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-            Left = 920
-            Top = 8
           end
         end
         object cxgrdLineas: TcxGrid
@@ -542,9 +537,37 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           end
         end
       end
+      inherited tsPerfil: TcxTabSheet
+        ExplicitWidth = 1096
+        ExplicitHeight = 649
+        inherited pnlPerfilTop: TPanel
+          Width = 1096
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 1096
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
+        end
+        inherited pnlPerfilDetail: TPanel
+          Width = 1096
+          Height = 592
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 1096
+          ExplicitHeight = 592
+          inherited cxgrdPerfil: TcxGrid
+            Width = 1096
+            Height = 592
+            ExplicitWidth = 1096
+            ExplicitHeight = 592
+          end
+        end
+      end
       object tsLog: TcxTabSheet
         Caption = 'Log'
-        ImageIndex = -1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlLogTop: TPanel
           Left = 0
           Top = 0
@@ -579,40 +602,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Properties.ReadOnly = True
           Properties.ScrollBars = ssVertical
           Properties.WordWrap = False
-          Style.Font.Charset = DEFAULT_CHARSET
-          Style.Font.Color = clWindowText
-          Style.Font.Height = -13
-          Style.Font.Name = 'Consolas'
-          Style.Font.Style = []
-          Style.IsFontAssigned = True
           TabOrder = 1
           Height = 613
           Width = 1096
-        end
-      end
-      inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 1096
-        ExplicitHeight = 649
-        inherited pnlPerfilTop: TPanel
-          Width = 1096
-          StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1096
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
-        end
-        inherited pnlPerfilDetail: TPanel
-          Width = 1096
-          Height = 592
-          StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1096
-          ExplicitHeight = 592
-          inherited cxgrdPerfil: TcxGrid
-            Width = 1096
-            Height = 592
-            ExplicitWidth = 1096
-            ExplicitHeight = 592
-          end
         end
       end
     end
@@ -638,6 +630,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
     ExplicitHeight = 720
     inherited pButtonGen: TPanel
       Top = 522
+      TabOrder = 4
       StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 522
     end
@@ -690,5 +683,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       WordWrap = True
       OnClick = btnImprimirClick
     end
+  end
+  object dlgFoto: TOpenDialog
+    Filter = 
+      'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|*.png;*.jpg;*.' +
+      'jpeg;*.webp;*.avif;*.bmp'
+    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Left = 920
+    Top = 8
   end
 end

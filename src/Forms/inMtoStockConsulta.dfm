@@ -2,8 +2,8 @@ object frmStockConsulta: TfrmStockConsulta
   Left = 0
   Top = 0
   Caption = 'Consulta de stock (Ctrl+U)'
-  ClientHeight = 620
-  ClientWidth = 900
+  ClientHeight = 612
+  ClientWidth = 898
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,16 +18,16 @@ object frmStockConsulta: TfrmStockConsulta
   object pnlCabecera: TPanel
     Left = 0
     Top = 0
-    Width = 900
+    Width = 898
     Height = 200
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     DesignSize = (
-      900
+      898
       200)
     object imgFoto: TImage
-      Left = 744
+      Left = 740
       Top = 12
       Width = 138
       Height = 133
@@ -35,6 +35,7 @@ object frmStockConsulta: TfrmStockConsulta
       Center = True
       Proportional = True
       Stretch = True
+      ExplicitLeft = 744
     end
     object lblArt: TcxLabel
       Left = 16
@@ -71,13 +72,13 @@ object frmStockConsulta: TfrmStockConsulta
       Properties.WordWrap = True
       TabOrder = 3
       Transparent = True
-      Width = 738
+      Width = 734
     end
   end
   object pnlFiltros: TPanel
     Left = 0
     Top = 200
-    Width = 900
+    Width = 898
     Height = 44
     Align = alTop
     BevelOuter = bvNone
@@ -101,8 +102,8 @@ object frmStockConsulta: TfrmStockConsulta
   object grdStock: TcxGrid
     Left = 0
     Top = 244
-    Width = 900
-    Height = 156
+    Width = 898
+    Height = 148
     Align = alClient
     TabOrder = 2
     object tvStock: TcxGridDBTableView
@@ -116,14 +117,14 @@ object frmStockConsulta: TfrmStockConsulta
   end
   object pnlEjes: TPanel
     Left = 0
-    Top = 400
-    Width = 900
+    Top = 392
+    Width = 898
     Height = 220
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
     DesignSize = (
-      900
+      898
       220)
     object pcEje: TcxPageControl
       Left = 0
@@ -142,6 +143,10 @@ object frmStockConsulta: TfrmStockConsulta
       object tsPorColor: TcxTabSheet
         Caption = 'Por Color'
         ImageIndex = 0
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
       end
       object tsPorAlmacen: TcxTabSheet
         Caption = 'Por Almac'#233'n'
@@ -158,7 +163,7 @@ object frmStockConsulta: TfrmStockConsulta
     object clbAlmacenes: TcxCheckListBox
       Left = 248
       Top = 30
-      Width = 643
+      Width = 639
       Height = 184
       Anchors = [akLeft, akTop, akRight, akBottom]
       Items = <>

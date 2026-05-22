@@ -194,7 +194,7 @@ type
     FLogForm: TForm;
     FLogMemo: TSynEdit;
     FSavedNCMValid: Boolean;
-    FExceptionDialogMemo: TMemo;
+    FExceptionDialogMemo: TcxMemo;
     procedure AppException(Sender: TObject; E: Exception);
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
     procedure MostrarDetalleExcepcion(const ATexto: string);
@@ -1342,14 +1342,14 @@ begin
     btnCopiar.Left         := btnCerrar.Left - btnCopiar.Width - 8;
     btnCopiar.OnClick      := CopiarExceptionDialogClick;
 
-    FExceptionDialogMemo := TMemo.Create(Dialog);
+    FExceptionDialogMemo := TcxMemo.Create(Dialog);
     FExceptionDialogMemo.Parent     := Dialog;
     FExceptionDialogMemo.Align      := alClient;
-    FExceptionDialogMemo.ReadOnly   := True;
-    FExceptionDialogMemo.ScrollBars := ssBoth;
-    FExceptionDialogMemo.WordWrap   := False;
-    FExceptionDialogMemo.Font.Name  := 'Consolas';
-    FExceptionDialogMemo.Font.Size  := 9;
+    FExceptionDialogMemo.Properties.ReadOnly   := True;
+    FExceptionDialogMemo.Properties.ScrollBars := ssBoth;
+    FExceptionDialogMemo.Properties.WordWrap   := False;
+    FExceptionDialogMemo.Style.Font.Name  := 'Consolas';
+    FExceptionDialogMemo.Style.Font.Size  := 9;
     FExceptionDialogMemo.Text       := ATexto;
 
     Dialog.ActiveControl := btnCerrar;
