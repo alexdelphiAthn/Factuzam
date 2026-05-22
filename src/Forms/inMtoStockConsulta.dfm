@@ -99,82 +99,122 @@ object frmStockConsulta: TfrmStockConsulta
       Width = 188
     end
   end
-  object grdStock: TcxGrid
+  object pnlBody: TPanel
     Left = 0
     Top = 244
     Width = 898
-    Height = 148
+    Height = 368
     Align = alClient
-    TabOrder = 2
-    object tvStock: TcxGridDBTableView
-      OptionsCustomize.ColumnMoving = False
-      OptionsData.Editing = False
-      OptionsView.GroupByBox = False
-    end
-    object glStock: TcxGridLevel
-      GridView = tvStock
-    end
-  end
-  object pnlEjes: TPanel
-    Left = 0
-    Top = 392
-    Width = 898
-    Height = 220
-    Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 3
-    object pcEje: TcxPageControl
+    TabOrder = 2
+    object pnlIzq: TPanel
       Left = 0
       Top = 0
-      Width = 898
-      Height = 220
-      Align = alClient
+      Width = 280
+      Height = 368
+      Align = alLeft
+      BevelOuter = bvNone
       TabOrder = 0
-      Properties.ActivePage = tsPorAlmacen
-      Properties.CustomButtons.Buttons = <>
-      OnChange = pcEjeChange
-      ClientRectBottom = 218
-      ClientRectLeft = 2
-      ClientRectRight = 896
-      ClientRectTop = 29
-      object tsPorColor: TcxTabSheet
-        Caption = 'Por Color'
-        ImageIndex = 0
-        object lblColores: TcxLabel
-          Left = 8
-          Top = 4
-          Caption = 'Colores del art'#237'culo'
-          Transparent = True
+      object pcFiltros: TcxPageControl
+        Left = 0
+        Top = 0
+        Width = 280
+        Height = 368
+        Align = alClient
+        TabOrder = 0
+        Properties.ActivePage = tsColores
+        Properties.CustomButtons.Buttons = <>
+        object tsColores: TcxTabSheet
+          Caption = '1 Colores'
+          ImageIndex = 0
+          object lblColores: TcxLabel
+            Left = 8
+            Top = 4
+            Caption = 'Colores del art'#237'culo'
+            Transparent = True
+          end
+          object clbColores: TcxCheckListBox
+            Left = 8
+            Top = 32
+            Width = 260
+            Height = 301
+            Anchors = [akLeft, akTop, akRight, akBottom]
+            Items = <>
+            TabOrder = 0
+            OnClickCheck = clbColoresClickCheck
+          end
         end
-        object clbColores: TcxCheckListBox
-          Left = 8
-          Top = 32
-          Width = 878
-          Height = 153
-          Anchors = [akLeft, akTop, akRight, akBottom]
-          Items = <>
-          TabOrder = 0
-          OnClickCheck = clbColoresClickCheck
+        object tsAlmacenes: TcxTabSheet
+          Caption = '2 Almacenes'
+          ImageIndex = 1
+          object lblAlmacenes: TcxLabel
+            Left = 8
+            Top = 4
+            Caption = 'Almacenes'
+            Transparent = True
+          end
+          object clbAlmacenes: TcxCheckListBox
+            Left = 8
+            Top = 32
+            Width = 260
+            Height = 301
+            Anchors = [akLeft, akTop, akRight, akBottom]
+            Items = <>
+            TabOrder = 0
+            OnClickCheck = clbAlmacenesClickCheck
+          end
         end
       end
-      object tsPorAlmacen: TcxTabSheet
-        Caption = 'Por Almac'#233'n'
-        ImageIndex = 1
-        object lblAlmacenes: TcxLabel
-          Left = 8
-          Top = 4
-          Caption = 'Almacenes'
-          Transparent = True
+    end
+    object splVert: TSplitter
+      Left = 280
+      Top = 0
+      Height = 368
+      ExplicitLeft = 280
+      ExplicitTop = 0
+      ExplicitHeight = 368
+    end
+    object pnlDer: TPanel
+      Left = 283
+      Top = 0
+      Width = 615
+      Height = 368
+      Align = alClient
+      BevelOuter = bvNone
+      TabOrder = 1
+      object pcVistas: TcxPageControl
+        Left = 0
+        Top = 0
+        Width = 615
+        Height = 30
+        Align = alTop
+        TabOrder = 0
+        Properties.ActivePage = tsPorAlmacen
+        Properties.CustomButtons.Buttons = <>
+        OnChange = pcVistasChange
+        object tsPorAlmacen: TcxTabSheet
+          Caption = '3 Por almacenes'
+          ImageIndex = 0
         end
-        object clbAlmacenes: TcxCheckListBox
-          Left = 8
-          Top = 32
-          Width = 878
-          Height = 153
-          Anchors = [akLeft, akTop, akRight, akBottom]
-          Items = <>
-          TabOrder = 0
-          OnClickCheck = clbAlmacenesClickCheck
+        object tsPorColor: TcxTabSheet
+          Caption = '4 Por colores'
+          ImageIndex = 1
+        end
+      end
+      object grdStock: TcxGrid
+        Left = 0
+        Top = 30
+        Width = 615
+        Height = 338
+        Align = alClient
+        TabOrder = 1
+        object tvStock: TcxGridDBTableView
+          OptionsCustomize.ColumnMoving = False
+          OptionsData.Editing = False
+          OptionsView.GroupByBox = False
+        end
+        object glStock: TcxGridLevel
+          GridView = tvStock
         end
       end
     end
