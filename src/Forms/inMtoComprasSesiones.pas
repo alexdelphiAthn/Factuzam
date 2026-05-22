@@ -525,6 +525,7 @@ end;
 procedure TfrmMtoComprasSesiones.CrearColumnasTallas;
 var
   i        : Integer;
+  iBase    : Integer;
   col      : TcxGridDBColumn;
   curProps : TcxCurrencyEditProperties;
 begin
@@ -534,31 +535,45 @@ begin
   // OnEditValueChanged delega en FGestorTallas.PersistirCeldaActiva,
   // que upsertea en la tabla de celdas y refresca totales.
   //
-  // Insercion dinamica: cada nueva columna se coloca en
-  // dbcLinTotalTallas.Index (justo antes). Tras la asignacion cxGrid
-  // desplaza TotalTallas una posicion, asi que en la siguiente iteracion
-  // el indice "antes de TotalTallas" ya es uno mayor y las columnas se
-  // apilan en orden col0, col1, ..., col(N-1), TotalTallas. Antes
-  // se usaba `idxRefe + i` con idxRefe capturado fuera del bucle: solo
-  // colocaba bien la primera y el resto acababan al final del header.
+  // Se hace en DOS pasadas separadas por BeginUpdate/EndUpdate:
+  //   1) Crear todas las columnas (cxGrid las anyade al final).
+  //   2) Reposicionarlas todas justo antes de dbcLinTotalTallas.
+  // Si se interleaves create + SetIndex dentro de un mismo bucle, cxGrid
+  // a veces solo aplica el move de la PRIMERA: la primera queda bien
+  // entre Pr. venta y TotalTallas, pero el resto se queda al final del
+  // header (despues de ImporteTotal y Numero). Con un pase de moves
+  // separado, sobre columnas ya completamente creadas, el SetIndex
+  // funciona en cascada.
   if not Assigned(dbcLinTotalTallas) then Exit;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    col := tvLineas.CreateColumn;
-    col.Name        := 'dbcLinTalla' + Format('%.2d', [i + 1]);
-    col.Index       := dbcLinTotalTallas.Index;
-    col.Caption     := '';
-    col.Width       := 50;
-    col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
-    col.Visible     := False;             // se hara visible segun max
-    col.DataBinding.ValueTypeClass := TcxFloatValueType;
-    col.PropertiesClass := TcxCurrencyEditProperties;
-    curProps := TcxCurrencyEditProperties(col.Properties);
-    curProps.DisplayFormat := '#,##0';
-    // El handler se asigna en InicializarGestorTallas (necesita la
-    // instancia del gestor para delegar). Aqui solo dejamos las
-    // columnas listas con su Tag posicional.
-    FTallaColumns[i] := col;
+  tvLineas.BeginUpdate;
+  try
+    for i := 0 to CANT_TALLAS_MAX - 1 do
+    begin
+      col := tvLineas.CreateColumn;
+      col.Name        := 'dbcLinTalla' + Format('%.2d', [i + 1]);
+      col.Caption     := '';
+      col.Width       := 50;
+      col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
+      col.Visible     := False;             // se hara visible segun max
+      col.DataBinding.ValueTypeClass := TcxFloatValueType;
+      col.PropertiesClass := TcxCurrencyEditProperties;
+      curProps := TcxCurrencyEditProperties(col.Properties);
+      curProps.DisplayFormat := '#,##0';
+      // El handler se asigna en InicializarGestorTallas (necesita la
+      // instancia del gestor para delegar). Aqui solo dejamos las
+      // columnas listas con su Tag posicional.
+      FTallaColumns[i] := col;
+    end;
+    // Pass 2: mover todas las columnas talla a su sitio definitivo.
+    // iBase = posicion actual de dbcLinTotalTallas (las talla columns
+    // estan ahora al final). Cada move desplaza TotalTallas una
+    // posicion adelante, por eso talla[i] va a iBase + i.
+    iBase := dbcLinTotalTallas.Index;
+    for i := 0 to CANT_TALLAS_MAX - 1 do
+      if Assigned(FTallaColumns[i]) then
+        FTallaColumns[i].Index := iBase + i;
+  finally
+    tvLineas.EndUpdate;
   end;
 end;
 
@@ -1416,19 +1431,29 @@ begin
   // asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
-  // Sistema tallas: auto-desplegar el combo al entrar en la celda para que
-  // el usuario pueda elegir directamente con flechas + Enter sin un click
-  // extra. Diferimos via ForceQueue porque InitEdit corre antes de que el
-  // editor sea visible: el set inmediato de DroppedDown no abre el popup.
-  if (AItem = dbcLinTallas) and (AEdit is TcxCustomDropDownEdit) then
+  // Sistema tallas: auto-desplegar el combo al entrar en la celda. Hay
+  // que diferir con ForceQueue para que el editor este completamente
+  // visible (set inmediato en InitEdit no abre el popup). Mismo patron
+  // que en inMtoFacturasBase.pas:1552 (ShowEdit + DroppedDown).
+  if AItem = dbcLinTallas then
     TThread.ForceQueue(nil,
       procedure
-      var Edit: TcxCustomEdit;
+      var ec  : TcxCustomEdit;
       begin
+        if tvLineas.Controller.FocusedColumn <> dbcLinTallas then Exit;
         if tvLineas.Controller.EditingController = nil then Exit;
-        Edit := tvLineas.Controller.EditingController.Edit;
-        if Edit is TcxCustomDropDownEdit then
-          TcxCustomDropDownEdit(Edit).DroppedDown := True;
+        tvLineas.Controller.EditingController.ShowEdit;
+        ec := tvLineas.Controller.EditingController.Edit;
+        if ec = nil then
+        begin
+          LogSes('  auto-dropdown Sistema tallas: Edit es nil');
+          Exit;
+        end;
+        if ec is TcxCustomDropDownEdit then
+          TcxCustomDropDownEdit(ec).DroppedDown := True
+        else
+          LogSes(Format('  auto-dropdown Sistema tallas: Edit es %s, no DropDown',
+                        [ec.ClassName]));
       end);
   if AItem <> dbcLinColorBasico then Exit;
   if not (AEdit is TcxButtonEdit) then Exit;
