@@ -38,6 +38,7 @@ uses
   cxClasses, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxButtonEdit, cxButtons, cxMaskEdit,
   cxDropDownEdit, cxCheckBox, cxCheckListBox, cxCustomData, cxStyles,
+  cxCurrencyEdit,
   cxFilter, cxData, cxDataStorage, cxNavigator, cxDBData, cxGridLevel,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
@@ -646,6 +647,10 @@ begin
     col.Caption := AColumnas[i].Texto;
     col.DataBinding.FieldName := Format('C%d', [i]);
     col.PropertiesClassName := 'TcxCurrencyEditProperties';
+    // Numero plano sin simbolo de moneda. Si la cantidad es entera
+    // (Uds.) no muestra decimales; si tiene fraccion los muestra.
+    TcxCurrencyEditProperties(col.Properties).DisplayFormat := '#,##0.##;-#,##0.##;0';
+    TcxCurrencyEditProperties(col.Properties).UseDisplayFormatWhenEditing := True;
     col.HeaderAlignmentHorz := taCenter;
     col.Width := 90;
     col.Options.Editing := False;
@@ -677,6 +682,8 @@ begin
   colTotal.Caption := 'Total';
   colTotal.DataBinding.FieldName := 'TOTAL';
   colTotal.PropertiesClassName := 'TcxCurrencyEditProperties';
+  TcxCurrencyEditProperties(colTotal.Properties).DisplayFormat := '#,##0.##;-#,##0.##;0';
+  TcxCurrencyEditProperties(colTotal.Properties).UseDisplayFormatWhenEditing := True;
   colTotal.HeaderAlignmentHorz := taCenter;
   colTotal.Width := 90;
   colTotal.Options.Editing := False;
