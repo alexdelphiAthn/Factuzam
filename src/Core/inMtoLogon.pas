@@ -112,7 +112,6 @@ type
                            f: TUniConnection): Boolean;
     function GetGrupo(sUser: string; conn: TUniConnection;
       var EsGrupoAdmin: string): string;
-    procedure AppException(Sender: TObject; E: Exception);
   public
     sSuccess:String;
     function IsInitializeAuto:Boolean;
@@ -238,7 +237,6 @@ begin
   ucConexion.PoolingOptions.MinPoolSize := 1;
   ucConexion.PoolingOptions.MaxPoolSize := 50;
   ucConexion.PoolingOptions.ConnectionLifeTime := 3 * 60;
-  Application.OnException := AppException;
   UniSQLMonitor1.Active := False;
   Self.Width := 375;
   Self.ClientHeight := 353;
@@ -620,11 +618,6 @@ begin
   qryGrupo.Close;
   FreeAndNil(qryGrupo);
   Result := sResult;
-end;
-
-procedure TfrmLogon.AppException(Sender: TObject; E: Exception);
-begin
-  inliblog.Log.LogError('Error general: ' + E.ClassName +': '+ E.Message) ;
 end;
 
 procedure TfrmLogon.btnChangePassRootClick(Sender: TObject);

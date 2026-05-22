@@ -194,7 +194,11 @@ type
     FLogForm: TForm;
     FLogMemo: TSynEdit;
     FSavedNCMValid: Boolean;
-    // procedure AppException(Sender: TObject; E: Exception);
+    FExceptionDialogMemo: TMemo;
+    procedure AppException(Sender: TObject; E: Exception);
+    function ConstruirDetalleException(Sender: TObject; E: Exception): string;
+    procedure MostrarDetalleExcepcion(const ATexto: string);
+    procedure CopiarExceptionDialogClick(Sender: TObject);
     function CopiaSeguridad: Boolean;
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ActualizarFondoLogo;
@@ -238,7 +242,9 @@ uses inLibUser,
   inLibBuscarImpresora,
   inMtoGen,
   inMtoFotoArticulo,
-  System.RegularExpressions;
+  System.RegularExpressions,
+  Vcl.StdCtrls,
+  Vcl.Clipbrd;
 
 {$R *.dfm}
 
@@ -377,6 +383,7 @@ var
   end;
 
 begin
+  Application.OnException := AppException;
   FSavedNCMValid := False;
   Application.OnIdle := ApplicationEvents1Idle;
   sDis := '';
@@ -531,6 +538,7 @@ procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 //var
 //  I: Integer;
 begin
+  Application.OnException := nil;
   inherited;
   try
     inLibLog.Log.LogInfo('Cerrando ventana principal');
@@ -1147,6 +1155,184 @@ begin
   frmFotoArticulo.VincularDataSources(frmActivo.DataSourcesParaFoto,
                                       frmActivo.ResolverArtSkuActivo);
   frmFotoArticulo.SetArticuloSku(sArt, sSku);
+end;
+
+// Captura cualquier excepción no atrapada por bloques try/except en la
+// aplicación. Asignado a Application.OnException desde FormCreate. El
+// objetivo es no perder NINGÚN detalle del fallo: registra todo al log
+// y muestra al usuario un diálogo con la traza completa y un botón
+// para copiarla al portapapeles (para que pueda pegarla en un reporte).
+procedure TfrmMtoPrincipal.AppException(Sender: TObject; E: Exception);
+var
+  sDetalle: string;
+begin
+  try
+    sDetalle := ConstruirDetalleException(Sender, E);
+    try
+      inLibLog.Log.LogError('AppException ' + E.ClassName + ': ' + E.Message);
+      inLibLog.Log.LogError('AppException detalle:' + sLineBreak + sDetalle);
+    except
+      // Si el log falla no podemos hacer mucho; seguimos para mostrarlo.
+    end;
+    MostrarDetalleExcepcion(sDetalle);
+  except
+    // Última red de seguridad: si la construcción del detalle o el
+    // diálogo fallan, al menos mostramos lo básico para que el usuario
+    // sepa que algo ha pasado.
+    try
+      Application.ShowException(E);
+    except
+    end;
+  end;
+end;
+
+function TfrmMtoPrincipal.ConstruirDetalleException(Sender: TObject;
+                                                   E: Exception): string;
+var
+  sSenderClass, sSenderName: string;
+  pAddr: Pointer;
+  Inner: Exception;
+  iNivel: Integer;
+begin
+  if Assigned(Sender) then
+  begin
+    sSenderClass := Sender.ClassName;
+    if (Sender is TComponent) and (TComponent(Sender).Name <> '') then
+      sSenderName := TComponent(Sender).Name
+    else
+      sSenderName := '(sin nombre)';
+  end
+  else
+  begin
+    sSenderClass := '(nil)';
+    sSenderName  := '(nil)';
+  end;
+  pAddr := ExceptAddr;
+  Result :=
+    '=== Detalle del error ===' + sLineBreak +
+    'Aplicación   : ' + oAppName + ' ' + oVersion + sLineBreak +
+    'Fecha / hora : ' + FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) +
+                                                                  sLineBreak +
+    'Usuario      : ' + oUser + ' (' + oGroup + ')' + sLineBreak +
+    'Empresa      : ' + oEmpresa + sLineBreak +
+    'Almacén/Caja : ' + oAlmacen + ' / ' + oCaja + sLineBreak +
+    'Equipo       : ' + GetComputerName + sLineBreak +
+    sLineBreak +
+    '--- Excepción ---' + sLineBreak +
+    'Clase        : ' + E.ClassName + sLineBreak +
+    'Mensaje      : ' + E.Message + sLineBreak +
+    'Dirección    : $' + IntToHex(NativeUInt(pAddr),
+                                  SizeOf(Pointer) * 2) + sLineBreak +
+    sLineBreak +
+    '--- Sender ---' + sLineBreak +
+    'Clase        : ' + sSenderClass + sLineBreak +
+    'Nombre       : ' + sSenderName + sLineBreak;
+  // Stack trace: solo aparece si hay un proveedor registrado (madExcept,
+  // JCL, EurekaLog…). Si no, será cadena vacía: no es un fallo.
+  if E.StackTrace <> '' then
+    Result := Result + sLineBreak +
+      '--- Stack ---' + sLineBreak + E.StackTrace + sLineBreak;
+  // Excepciones encadenadas (raise … from). Limitamos profundidad
+  // para evitar bucles infinitos por ciclos accidentales.
+  Inner := E.InnerException;
+  iNivel := 1;
+  while Assigned(Inner) and (iNivel <= 5) do
+  begin
+    Result := Result + sLineBreak +
+      Format('--- Inner exception #%d ---', [iNivel]) + sLineBreak +
+      'Clase   : ' + Inner.ClassName + sLineBreak +
+      'Mensaje : ' + Inner.Message + sLineBreak;
+    if Inner.StackTrace <> '' then
+      Result := Result + 'Stack   :' + sLineBreak + Inner.StackTrace +
+                                                                  sLineBreak;
+    Inner := Inner.InnerException;
+    Inc(iNivel);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.MostrarDetalleExcepcion(const ATexto: string);
+var
+  Dialog    : TForm;
+  pnlBotones: TPanel;
+  btnCopiar : TButton;
+  btnCerrar : TButton;
+  lblCabec  : TLabel;
+begin
+  Dialog := TForm.Create(nil);
+  try
+    Dialog.Caption     := 'Se ha producido un error';
+    Dialog.Position    := poScreenCenter;
+    Dialog.Width       := 760;
+    Dialog.Height      := 520;
+    Dialog.BorderStyle := bsSizeable;
+    Dialog.BorderIcons := [biSystemMenu];
+    Dialog.KeyPreview  := True;
+
+    lblCabec := TLabel.Create(Dialog);
+    lblCabec.Parent    := Dialog;
+    lblCabec.Align     := alTop;
+    lblCabec.AutoSize  := False;
+    lblCabec.Height    := 28;
+    lblCabec.Layout    := tlCenter;
+    lblCabec.Caption   := '  Detalle completo del error. Usa "Copiar al ' +
+                          'portapapeles" para pegarlo en un reporte.';
+
+    pnlBotones := TPanel.Create(Dialog);
+    pnlBotones.Parent      := Dialog;
+    pnlBotones.Align       := alBottom;
+    pnlBotones.Height      := 48;
+    pnlBotones.BevelOuter  := bvNone;
+
+    btnCerrar := TButton.Create(Dialog);
+    btnCerrar.Parent       := pnlBotones;
+    btnCerrar.Caption      := 'Cerrar';
+    btnCerrar.Width        := 100;
+    btnCerrar.Height       := 32;
+    btnCerrar.Top          := 8;
+    btnCerrar.Anchors      := [akRight, akTop];
+    btnCerrar.Left         := pnlBotones.ClientWidth - btnCerrar.Width - 12;
+    btnCerrar.ModalResult  := mrOk;
+    btnCerrar.Default      := True;
+    btnCerrar.Cancel       := True;
+
+    btnCopiar := TButton.Create(Dialog);
+    btnCopiar.Parent       := pnlBotones;
+    btnCopiar.Caption      := 'Copiar al portapapeles';
+    btnCopiar.Width        := 190;
+    btnCopiar.Height       := 32;
+    btnCopiar.Top          := 8;
+    btnCopiar.Anchors      := [akRight, akTop];
+    btnCopiar.Left         := btnCerrar.Left - btnCopiar.Width - 8;
+    btnCopiar.OnClick      := CopiarExceptionDialogClick;
+
+    FExceptionDialogMemo := TMemo.Create(Dialog);
+    FExceptionDialogMemo.Parent     := Dialog;
+    FExceptionDialogMemo.Align      := alClient;
+    FExceptionDialogMemo.ReadOnly   := True;
+    FExceptionDialogMemo.ScrollBars := ssBoth;
+    FExceptionDialogMemo.WordWrap   := False;
+    FExceptionDialogMemo.Font.Name  := 'Consolas';
+    FExceptionDialogMemo.Font.Size  := 9;
+    FExceptionDialogMemo.Text       := ATexto;
+
+    Dialog.ActiveControl := btnCerrar;
+    Dialog.ShowModal;
+  finally
+    FExceptionDialogMemo := nil;
+    FreeAndNil(Dialog);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.CopiarExceptionDialogClick(Sender: TObject);
+begin
+  if Assigned(FExceptionDialogMemo) then
+  try
+    Clipboard.AsText := FExceptionDialogMemo.Text;
+  except
+    on E: Exception do
+      inLibLog.Log.LogWarning('No se pudo copiar al portapapeles: ' +
+                                                                   E.Message);
+  end;
 end;
 
 end.
