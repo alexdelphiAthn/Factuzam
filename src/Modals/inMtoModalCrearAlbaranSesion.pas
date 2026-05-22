@@ -40,8 +40,12 @@ type
     pnlBody       : TPanel;
     pnlButton     : TPanel;
     lblTitulo     : TcxLabel;
-    lblSerie      : TcxLabel;
-    txtSerie      : TcxTextEdit;
+    chkGenAlbaran : TcxCheckBox;
+    lblSerieAlb   : TcxLabel;
+    txtSerieAlb   : TcxTextEdit;
+    chkGenPedido  : TcxCheckBox;
+    lblSeriePed   : TcxLabel;
+    txtSeriePed   : TcxTextEdit;
     lblFecha      : TcxLabel;
     dteFecha      : TcxDateEdit;
     lblAlmacen    : TcxLabel;
@@ -50,36 +54,40 @@ type
     cbbTarifa     : TcxLookupComboBox;
     lblTemporada  : TcxLabel;
     cbbTemporada  : TcxLookupComboBox;
-    chkGenPedido  : TcxCheckBox;
-    chkGenAlbaran : TcxCheckBox;
     btnGenerar    : TcxButton;
     btnSalir      : TcxButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGenerarClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
+    procedure chkGenAlbaranPropertiesEditValueChanged(Sender: TObject);
+    procedure chkGenPedidoPropertiesEditValueChanged(Sender: TObject);
   private
     FConfirmed: Boolean;
-    function GetSerie: string;
+    function GetSerieAlb: string;
+    function GetSeriePed: string;
     function GetFecha: TDateTime;
     function GetAlmacen: string;
     function GetTarifa: string;
     function GetTemporada: Integer;
     function GetGenPedido: Boolean;
     function GetGenAlbaran: Boolean;
+    procedure ActualizarHabilitados;
   public
     /// Conecta los lookups con las queries del DM padre.
     procedure ConfigurarLookups(ADsAlmacenes, ADsTarifas,
                                  ADsTemporadas: TDataSource);
     /// Rellena los valores iniciales (vienen de la cabecera).
-    procedure SetDefecto(const ASerie: string; AFecha: TDateTime;
+    procedure SetDefecto(const ASerieAlb, ASeriePed: string;
+                         AFecha: TDateTime;
                          const ACodigoAlm, ACodigoTar: string;
                          AIdPvTemporada: Integer;
                          AGenPedido, AGenAlbaran: Boolean);
 
     /// True si el usuario pulso Generar.
     property Confirmado : Boolean read FConfirmed;
-    property Serie      : string  read GetSerie;
+    property SerieAlb   : string  read GetSerieAlb;
+    property SeriePed   : string  read GetSeriePed;
     property Fecha      : TDateTime read GetFecha;
     property Almacen    : string  read GetAlmacen;
     property Tarifa     : string  read GetTarifa;
@@ -114,15 +122,15 @@ begin
   cbbTemporada.Properties.ListSource := ADsTemporadas;
 end;
 
-procedure TfrmModalCrearAlbaranSesion.SetDefecto(const ASerie: string;
-                                                  AFecha: TDateTime;
-                                                  const ACodigoAlm,
-                                                        ACodigoTar: string;
-                                                  AIdPvTemporada: Integer;
-                                                  AGenPedido,
-                                                  AGenAlbaran: Boolean);
+procedure TfrmModalCrearAlbaranSesion.SetDefecto(
+  const ASerieAlb, ASeriePed: string;
+  AFecha: TDateTime;
+  const ACodigoAlm, ACodigoTar: string;
+  AIdPvTemporada: Integer;
+  AGenPedido, AGenAlbaran: Boolean);
 begin
-  txtSerie.Text       := ASerie;
+  txtSerieAlb.Text := ASerieAlb;
+  txtSeriePed.Text := ASeriePed;
   if AFecha = 0 then dteFecha.Date := Date else dteFecha.Date := AFecha;
   cbbAlmacen.EditValue   := ACodigoAlm;
   cbbTarifa.EditValue    := ACodigoTar;
@@ -130,11 +138,36 @@ begin
   else cbbTemporada.EditValue := Null;
   chkGenPedido.Checked  := AGenPedido;
   chkGenAlbaran.Checked := AGenAlbaran;
+  ActualizarHabilitados;
 end;
 
-function TfrmModalCrearAlbaranSesion.GetSerie: string;
+procedure TfrmModalCrearAlbaranSesion.ActualizarHabilitados;
 begin
-  Result := Trim(txtSerie.Text);
+  // Cada campo de serie se habilita solo si su checkbox esta marcado.
+  txtSerieAlb.Enabled := chkGenAlbaran.Checked;
+  txtSeriePed.Enabled := chkGenPedido.Checked;
+end;
+
+procedure TfrmModalCrearAlbaranSesion.chkGenAlbaranPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  ActualizarHabilitados;
+end;
+
+procedure TfrmModalCrearAlbaranSesion.chkGenPedidoPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  ActualizarHabilitados;
+end;
+
+function TfrmModalCrearAlbaranSesion.GetSerieAlb: string;
+begin
+  Result := Trim(txtSerieAlb.Text);
+end;
+
+function TfrmModalCrearAlbaranSesion.GetSeriePed: string;
+begin
+  Result := Trim(txtSeriePed.Text);
 end;
 
 function TfrmModalCrearAlbaranSesion.GetFecha: TDateTime;
@@ -180,15 +213,26 @@ end;
 procedure TfrmModalCrearAlbaranSesion.btnGenerarClick(Sender: TObject);
 begin
   inherited;
-  if Trim(txtSerie.Text) = '' then
+  if (not GetGenAlbaran) and (not GetGenPedido) then
   begin
-    ShowMessage('Indica la serie del albaran.');
-    if txtSerie.CanFocus then txtSerie.SetFocus;
+    ShowMessage('Marca al menos uno: Albaran y/o Pedido.');
     Exit;
   end;
-  if GetGenAlbaran and (GetAlmacen = '') then
+  if GetGenAlbaran and (Trim(txtSerieAlb.Text) = '') then
   begin
-    ShowMessage('Si vas a generar albaran, indica un almacen destino.');
+    ShowMessage('Indica la serie del albaran.');
+    if txtSerieAlb.CanFocus then txtSerieAlb.SetFocus;
+    Exit;
+  end;
+  if GetGenPedido and (Trim(txtSeriePed.Text) = '') then
+  begin
+    ShowMessage('Indica la serie del pedido.');
+    if txtSeriePed.CanFocus then txtSeriePed.SetFocus;
+    Exit;
+  end;
+  if (GetGenAlbaran or GetGenPedido) and (GetAlmacen = '') then
+  begin
+    ShowMessage('Indica un almacen destino.');
     if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
     Exit;
   end;

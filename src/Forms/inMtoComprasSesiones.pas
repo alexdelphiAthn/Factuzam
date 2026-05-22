@@ -734,7 +734,8 @@ begin
     frmSet.ConfigurarLookups(Dmm.dsAlmacenes, Dmm.dsTarifas,
                               Dmm.dsTemporadas);
     frmSet.SetDefecto(
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString, // serie albaran
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString, // serie pedido
       Date,
       Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString,
       Dmm.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString,
@@ -749,9 +750,10 @@ begin
     if not frmSet.Confirmado then Exit;
 
     // Aplicar a la cabecera los settings elegidos para que la
-    // materializacion los vea: serie/fecha del albaran (la propia
-    // sesion en este modelo simplificado), almacen, tarifa, temporada,
-    // flags.
+    // materializacion los vea: almacen, tarifa, temporada, flags. Las
+    // series elegidas (albaran / pedido) viajan como parametros a
+    // MaterializarSesion, no se persisten en la cabecera porque pueden
+    // ser distintas en cada materializacion.
     Dmm.unqryTablaG.Edit;
     Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString := frmSet.Almacen;
     Dmm.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString := frmSet.Tarifa;
@@ -777,6 +779,7 @@ begin
       Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S',
       Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S',
       oUser,
+      frmSet.SerieAlb, frmSet.SeriePed,
       sSerPed, sNumPed, sSerAlb, sNumAlb, sErr);
   finally
     Screen.Cursor := crDefault;

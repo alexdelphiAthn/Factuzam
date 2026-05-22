@@ -1,17 +1,17 @@
 inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
-  Caption = 'Crear art'#237'culos y albar'#225'n'
-  ClientHeight = 420
-  ClientWidth = 560
+  Caption = 'Crear art'#237'culos y albar'#225'n / pedido'
+  ClientHeight = 440
+  ClientWidth = 580
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 560
-  ExplicitHeight = 420
+  ExplicitWidth = 580
+  ExplicitHeight = 440
   TextHeight = 19
   object pnlBody: TPanel [0]
     Left = 0
     Top = 0
-    Width = 560
-    Height = 360
+    Width = 580
+    Height = 380
     Align = alClient
     TabOrder = 0
     object lblTitulo: TcxLabel
@@ -22,41 +22,79 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
       Style.IsFontAssigned = True
       Transparent = True
     end
-    object lblSerie: TcxLabel
+    object chkGenAlbaran: TcxCheckBox
       Left = 16
-      Top = 56
+      Top = 50
+      Caption = 'Generar albar'#225'n (mueve stock)'
+      Properties.OnEditValueChanged = chkGenAlbaranPropertiesEditValueChanged
+      Properties.ValueChecked = True
+      Properties.ValueUnchecked = False
+      State = cbsChecked
+      TabOrder = 0
+      Transparent = True
+      Width = 280
+    end
+    object lblSerieAlb: TcxLabel
+      Left = 310
+      Top = 52
       Caption = 'Serie albar'#225'n'
       Transparent = True
     end
-    object txtSerie: TcxTextEdit
-      Left = 160
-      Top = 54
+    object txtSerieAlb: TcxTextEdit
+      Left = 430
+      Top = 50
       Properties.CharCase = ecUpperCase
       Properties.MaxLength = 12
-      TabOrder = 0
-      Width = 100
+      TabOrder = 1
+      Width = 120
+    end
+    object chkGenPedido: TcxCheckBox
+      Left = 16
+      Top = 90
+      Caption = 'Generar pedido (pdte. de recibir)'
+      Properties.OnEditValueChanged = chkGenPedidoPropertiesEditValueChanged
+      Properties.ValueChecked = True
+      Properties.ValueUnchecked = False
+      TabOrder = 2
+      Transparent = True
+      Width = 280
+    end
+    object lblSeriePed: TcxLabel
+      Left = 310
+      Top = 92
+      Caption = 'Serie pedido'
+      Transparent = True
+    end
+    object txtSeriePed: TcxTextEdit
+      Left = 430
+      Top = 90
+      Enabled = False
+      Properties.CharCase = ecUpperCase
+      Properties.MaxLength = 12
+      TabOrder = 3
+      Width = 120
     end
     object lblFecha: TcxLabel
-      Left = 290
-      Top = 56
+      Left = 16
+      Top = 140
       Caption = 'Fecha'
       Transparent = True
     end
     object dteFecha: TcxDateEdit
-      Left = 360
-      Top = 54
-      TabOrder = 1
+      Left = 160
+      Top = 138
+      TabOrder = 4
       Width = 130
     end
     object lblAlmacen: TcxLabel
       Left = 16
-      Top = 100
+      Top = 180
       Caption = 'Almac'#233'n destino'
       Transparent = True
     end
     object cbbAlmacen: TcxLookupComboBox
       Left = 160
-      Top = 98
+      Top = 178
       Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
       Properties.ListColumns = <
         item
@@ -69,18 +107,18 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
           FieldName = 'NOMBRE_ALM_ALM'
         end>
       Properties.ListOptions.ShowHeader = False
-      TabOrder = 2
-      Width = 330
+      TabOrder = 5
+      Width = 390
     end
     object lblTarifa: TcxLabel
       Left = 16
-      Top = 144
+      Top = 220
       Caption = 'Tarifa venta'
       Transparent = True
     end
     object cbbTarifa: TcxLookupComboBox
       Left = 160
-      Top = 142
+      Top = 218
       Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
       Properties.ListColumns = <
         item
@@ -88,18 +126,18 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
           FieldName = 'NOMBRE_TAR_TAR'
         end>
       Properties.ListOptions.ShowHeader = False
-      TabOrder = 3
-      Width = 330
+      TabOrder = 6
+      Width = 390
     end
     object lblTemporada: TcxLabel
       Left = 16
-      Top = 188
+      Top = 260
       Caption = 'Temporada'
       Transparent = True
     end
     object cbbTemporada: TcxLookupComboBox
       Left = 160
-      Top = 186
+      Top = 258
       Properties.KeyFieldNames = 'ID_PV_ARTPROP'
       Properties.ListColumns = <
         item
@@ -107,35 +145,14 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
           FieldName = 'PV'
         end>
       Properties.ListOptions.ShowHeader = False
-      TabOrder = 4
-      Width = 330
-    end
-    object chkGenAlbaran: TcxCheckBox
-      Left = 160
-      Top = 234
-      Caption = 'Generar albar'#225'n de compra (mueve stock)'
-      Properties.ValueChecked = True
-      Properties.ValueUnchecked = False
-      State = cbsChecked
-      TabOrder = 5
-      Transparent = True
-      Width = 360
-    end
-    object chkGenPedido: TcxCheckBox
-      Left = 160
-      Top = 270
-      Caption = 'Generar pedido de compra'
-      Properties.ValueChecked = True
-      Properties.ValueUnchecked = False
-      TabOrder = 6
-      Transparent = True
-      Width = 360
+      TabOrder = 7
+      Width = 390
     end
   end
   object pnlButton: TPanel [1]
     Left = 0
-    Top = 360
-    Width = 560
+    Top = 380
+    Width = 580
     Height = 60
     Align = alBottom
     TabOrder = 1
@@ -150,7 +167,7 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
       OnClick = btnSalirClick
     end
     object btnGenerar: TcxButton
-      Left = 350
+      Left = 370
       Top = 12
       Width = 170
       Height = 38

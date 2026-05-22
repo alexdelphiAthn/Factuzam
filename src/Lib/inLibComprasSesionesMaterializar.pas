@@ -52,18 +52,24 @@ uses
   Data.DB, DBAccess, Uni,
   UniDataComprasSesiones;
 
+// Materializa la sesion. ASerieDocAlb / ASerieDocPed permiten elegir la
+// serie del documento generado (movimientos / pedido pendiente); si
+// llegan vacios se usa SERIE_SES como fallback. ANumPed/ASerieAlb/etc.
+// devuelven los identificadores de los docs creados.
 function MaterializarSesion(ADM: TdmComprasSesiones;
                             AESGeneraPedido, AESGeneraAlbaran: Boolean;
                             const AUsuario: string;
+                            const ASerieDocAlb, ASerieDocPed: string;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
                                 AMsgError: string): Boolean;
 
 // Revierte la materializacion: borra los movimientos de almacen que la
 // sesion genero (TIPO_DOC_MOV='AC' apuntando a SERIE_SES/NUMERO_SES) y
-// devuelve la cabecera a ESTADO_SES='BORRADOR'. Los articulos, SKUs y
-// codigos de barras creados se conservan: re-materializar es idempotente
-// porque los INSERTs auxiliares usan INSERT IGNORE / DUPLICATE KEY y la
-// generacion de EAN13 ahora se salta si el SKU ya tiene uno.
+// las filas de fza_articulos_pdte_recibir asociadas, y devuelve la
+// cabecera a ESTADO_SES='BORRADOR'. Los articulos, SKUs y codigos de
+// barras se conservan: re-materializar es idempotente porque los
+// INSERTs auxiliares usan INSERT IGNORE / DUPLICATE KEY y la generacion
+// de EAN13 ahora se salta si el SKU ya tiene uno.
 // Devuelve True si todo OK, False si error (AMsgError lleva el detalle).
 function RevertirMaterializacion(ADM: TdmComprasSesiones;
                                   const AUsuario: string;
@@ -850,12 +856,149 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// Pendiente de recibir (pedido de compra, no toca movimientos)
+// ---------------------------------------------------------------------------
+// Itera fza_compras_sesiones_celdas con cantidad > 0 y crea una fila por
+// (SKU, almacen, doc) en fza_articulos_pdte_recibir. NO genera
+// movimientos en fza_movimientos_almacen: el stock fisico no cambia,
+// solo se acumula compromiso futuro. Cuando el pedido se reciba (futuro
+// flujo de albaran), tocara borrar la fila correspondiente y entonces
+// si crear el movimiento de entrada.
+//
+// ASerieSes/ANumSes son los de la sesion (para resolver lineas y celdas).
+// ASerieDoc/ANumDoc son los del pedido generado (van como SERIE_DOC_PDR /
+// NUMERO_DOC_PDR de la tabla).
+procedure GenerarPedidoPdteRecibir(AConn: TUniConnection;
+                                    ADM: TdmComprasSesiones;
+                                    const ASerieSes, ANumSes,
+                                          ASerieDoc, ANumDoc,
+                                          AUsuario: string);
+var
+  qC, qIns: TUniQuery;
+  sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
+  sCodigoEmp: string;
+  iIdAvPivot, iIdAvFila, iLinea: Integer;
+  rCantidad, rCoste: Double;
+  dFechaPedido: TDateTime;
+begin
+  sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+  sCodigoEmp    := ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+  dFechaPedido  := Date;
+  if not ADM.unqryTablaG.FieldByName('FECHA_SES').IsNull then
+    dFechaPedido := ADM.unqryTablaG.FieldByName('FECHA_SES').AsDateTime;
+  if sCodigoAlmCab = '' then
+    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
+                           'para generar el pedido pendiente de recibir.');
+
+  qC   := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  try
+    qC.Connection   := AConn;
+    qIns.Connection := AConn;
+
+    qC.SQL.Text :=
+      'SELECT C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
+      '       C.CANTIDAD_SESCEL, ' +
+      '       IFNULL(NULLIF(C.CODIGO_ALM_SESCEL,''''), :alm_cab) AS ALM_EFE, ' +
+      '       L.CODIGO_ART_TENTATIVO_SESLIN, L.CODIGO_ART_REUSAR_SESLIN, ' +
+      '       L.ACCION_DUPLICADO_SESLIN, ' +
+      '       L.PRECIO_COMPRA_SESLIN, L.TIPO_LINEA_SESLIN, ' +
+      '       L.ID_VA_FILA_SESLIN ' +
+      '  FROM fza_compras_sesiones_celdas C ' +
+      '  JOIN fza_compras_sesiones_lineas L ' +
+      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
+      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
+      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
+      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
+      '   AND C.NUMERO_SES_SESCEL = :n ' +
+      '   AND C.CANTIDAD_SESCEL   > 0 ' +
+      ' ORDER BY C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL';
+    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
+    qC.ParamByName('s').AsString := ASerieSes;
+    qC.ParamByName('n').AsString := ANumSes;
+    qC.Open;
+
+    while not qC.Eof do
+    begin
+      iLinea     := qC.FieldByName('LINEA_SES_SESCEL').AsInteger;
+      iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
+      rCantidad  := qC.FieldByName('CANTIDAD_SESCEL').AsFloat;
+      sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
+      rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+
+      if qC.FieldByName('ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
+        sCodigoArt := qC.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
+      else
+        sCodigoArt := qC.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
+
+      // Lineas SERVICIO no tienen SKU ni stock pendiente.
+      if qC.FieldByName('TIPO_LINEA_SESLIN').AsString = 'SERVICIO' then
+      begin
+        qC.Next;
+        Continue;
+      end;
+
+      iIdAvFila := 0;
+      if not qC.FieldByName('ID_VA_FILA_SESLIN').IsNull then
+        iIdAvFila :=
+                StrToIntDef(qC.FieldByName('ID_VA_FILA_SESLIN').AsString, 0);
+
+      sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt,
+                                       iIdAvPivot, iIdAvFila);
+      if sCodigoSku = '' then
+      begin
+        qC.Next;
+        Continue;
+      end;
+
+      // UPSERT por PK (SKU, ALM, SERIE_DOC, NUMERO_DOC, LINEA): si por
+      // alguna razon se materializa dos veces, suma cantidad y mantiene
+      // ultimo precio / fechas.
+      qIns.SQL.Text :=
+        'INSERT INTO fza_articulos_pdte_recibir ' +
+        '  (CODIGO_UNIDAD_PDR, CODIGO_ALM_PDR, SERIE_DOC_PDR, NUMERO_DOC_PDR, ' +
+        '   LINEA_PDR, CODIGO_ART_PDR, CODIGO_PRV_PDR, CODIGO_EMP_PDR, ' +
+        '   CANTIDAD_PDR, PRECIO_COMPRA_PDR, FECHA_PEDIDO_PDR, ' +
+        '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'VALUES (:sku, :alm, :s, :n, :l, :art, :prv, :emp, ' +
+        '        :qty, :pre, :fped, NOW(), :u, NOW(), :u) ' +
+        'ON DUPLICATE KEY UPDATE ' +
+        '  CANTIDAD_PDR      = :qty, ' +
+        '  PRECIO_COMPRA_PDR = :pre, ' +
+        '  FECHA_PEDIDO_PDR  = :fped, ' +
+        '  INSTANTE_MODIF    = NOW(), ' +
+        '  USUARIO_MODIF     = :u';
+      qIns.ParamByName('sku').AsString  := sCodigoSku;
+      qIns.ParamByName('alm').AsString  := sCodigoAlm;
+      qIns.ParamByName('s').AsString    := ASerieDoc;
+      qIns.ParamByName('n').AsString    := ANumDoc;
+      qIns.ParamByName('l').AsInteger   := iLinea;
+      qIns.ParamByName('art').AsString  := sCodigoArt;
+      qIns.ParamByName('prv').AsString  :=
+                          ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString;
+      qIns.ParamByName('emp').AsString  := sCodigoEmp;
+      qIns.ParamByName('qty').AsFloat   := rCantidad;
+      qIns.ParamByName('pre').AsFloat   := rCoste;
+      qIns.ParamByName('fped').AsDateTime := dFechaPedido;
+      qIns.ParamByName('u').AsString    := AUsuario;
+      qIns.ExecSQL;
+
+      qC.Next;
+    end;
+  finally
+    FreeAndNil(qC);
+    FreeAndNil(qIns);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 
 function MaterializarSesion(ADM: TdmComprasSesiones;
                             AESGeneraPedido, AESGeneraAlbaran: Boolean;
                             const AUsuario: string;
+                            const ASerieDocAlb, ASerieDocPed: string;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
                                 AMsgError: string): Boolean;
 var
@@ -863,6 +1006,7 @@ var
   sSerieSes, sNumSes, sPrefijoEAN: string;
   sCodigoPrv : string;
   sCodigoTar : string;
+  sSerieAlbReal, sSeriePedReal: string;
   iIdPvTemporada: Integer;
   qLin       : TUniQuery;
   sError     : string;
@@ -894,6 +1038,14 @@ begin
   if not ADM.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').IsNull then
     iIdPvTemporada :=
       ADM.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').AsInteger;
+
+  // Si el llamante no fija serie, usamos la propia de la sesion como
+  // fallback (preserva el comportamiento anterior cuando todavia no
+  // existian las series independientes de albaran / pedido).
+  sSerieAlbReal := Trim(ASerieDocAlb);
+  if sSerieAlbReal = '' then sSerieAlbReal := sSerieSes;
+  sSeriePedReal := Trim(ASerieDocPed);
+  if sSeriePedReal = '' then sSeriePedReal := sSerieSes;
 
   bTxOwned := not conn.InTransaction;
   if bTxOwned then conn.StartTransaction;
@@ -1008,17 +1160,25 @@ begin
 
     if AESGeneraPedido then
     begin
-      // ASeriePed := 'PC'; ANumPed := ProximoContador('PC');
+      // Pedido de compra: no toca fza_movimientos_almacen. Las
+      // cantidades pendientes de recibir se acumulan en
+      // fza_articulos_pdte_recibir para que el modulo de stock las
+      // pueda consultar via vi_articulos_pdte_recibir sin contaminar
+      // el stock fisico.
+      GenerarPedidoPdteRecibir(conn, ADM, sSerieSes, sNumSes,
+                                sSeriePedReal, sNumSes, AUsuario);
+      ASeriePed := sSeriePedReal;
+      ANumPed   := sNumSes;
     end;
     if AESGeneraAlbaran then
     begin
       // Por ahora no hay cabecera fza_albaranes_compra; los movimientos
-      // se generan apuntando a la propia sesion como documento
-      // (SERIE_DOC_MOV=SERIE_SES, NUMERO_DOC_MOV=NUMERO_SES,
-      // TIPO_DOC_MOV='AC'). Cuando exista la cabecera de albaran de
-      // compra, se creara primero y los movimientos pasaran a ella.
-      GenerarMovimientosAlbaran(conn, ADM, sSerieSes, sNumSes, AUsuario);
-      ASerieAlb := sSerieSes;
+      // se generan apuntando a la sesion (SERIE_DOC_MOV=sSerieAlbReal,
+      // NUMERO_DOC_MOV=NUMERO_SES, TIPO_DOC_MOV='AC'). Cuando exista
+      // la cabecera del albaran de compra, se creara primero y los
+      // movimientos pasaran a ella.
+      GenerarMovimientosAlbaran(conn, ADM, sSerieAlbReal, sNumSes, AUsuario);
+      ASerieAlb := sSerieAlbReal;
       ANumAlb   := sNumSes;
     end;
 
@@ -1122,16 +1282,34 @@ begin
       q.Connection := conn;
 
       // 1. Borrar los movimientos de almacen que esta sesion creo. Solo
-      //    los TIPO_DOC_MOV='AC' apuntando a SERIE/NUMERO de la sesion:
-      //    los demas movimientos del articulo (anteriores o de otras
-      //    sesiones) se preservan.
+      //    los TIPO_DOC_MOV='AC' cuyo NUMERO_DOC coincide con el de la
+      //    sesion: los demas movimientos del articulo (anteriores o de
+      //    otras sesiones) se preservan. Si la sesion uso serie de
+      //    albaran distinta a la propia, tambien la borramos.
       q.SQL.Text :=
         'DELETE FROM fza_movimientos_almacen ' +
         ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
-        '   AND SERIE_DOC_MOV  = :s ' +
-        '   AND NUMERO_DOC_MOV = :n';
-      q.ParamByName('s').AsString := sSerieSes;
-      q.ParamByName('n').AsString := sNumSes;
+        '   AND NUMERO_DOC_MOV = :n ' +
+        '   AND (SERIE_DOC_MOV = :ses ' +
+        '        OR (:salb <> '''' AND SERIE_DOC_MOV = :salb))';
+      q.ParamByName('n').AsString    := sNumSes;
+      q.ParamByName('ses').AsString  := sSerieSes;
+      q.ParamByName('salb').AsString :=
+                          ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
+      q.ExecSQL;
+
+      // 1b. Borrar las filas de pendiente de recibir generadas por
+      //     esta sesion (si genero pedido). Mismo criterio: NUMERO_DOC
+      //     coincide y SERIE_DOC es la de la sesion o la del pedido.
+      q.SQL.Text :=
+        'DELETE FROM fza_articulos_pdte_recibir ' +
+        ' WHERE NUMERO_DOC_PDR = :n ' +
+        '   AND (SERIE_DOC_PDR = :ses ' +
+        '        OR (:sped <> '''' AND SERIE_DOC_PDR = :sped))';
+      q.ParamByName('n').AsString    := sNumSes;
+      q.ParamByName('ses').AsString  := sSerieSes;
+      q.ParamByName('sped').AsString :=
+                          ADM.unqryTablaG.FieldByName('SERIE_PEDC_SES').AsString;
       q.ExecSQL;
 
       // 2. Cabecera vuelve a BORRADOR + limpiamos referencias a docs.
