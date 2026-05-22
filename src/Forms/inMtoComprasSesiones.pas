@@ -1416,6 +1416,11 @@ begin
   // asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
+  // Sistema tallas: auto-desplegar el combo al entrar en la celda para que
+  // el usuario pueda elegir directamente con flechas + Enter sin un click
+  // extra. Aplica a cualquier editor desplegable (lookup combo).
+  if (AItem = dbcLinTallas) and (AEdit is TcxCustomDropDownEdit) then
+    TcxCustomDropDownEdit(AEdit).DroppedDown := True;
   if AItem <> dbcLinColorBasico then Exit;
   if not (AEdit is TcxButtonEdit) then Exit;
   BE := TcxButtonEdit(AEdit);
