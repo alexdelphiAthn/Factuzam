@@ -186,6 +186,8 @@ uses
   inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
   inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
+  inMtoModalIncidencias in 'src\Modals\inMtoModalIncidencias.pas' {frmModalIncidencias},
+  inMtoModalCrearAlbaranSesion in 'src\Modals\inMtoModalCrearAlbaranSesion.pas' {frmModalCrearAlbaranSesion},
   inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',
   inLibGridTallasInline in 'src\Lib\inLibGridTallasInline.pas',
   inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas',
@@ -204,8 +206,9 @@ uses
   inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
+  inMtoStockConsulta in 'src\Forms\inMtoStockConsulta.pas' {frmStockConsulta},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
-  inMtoPruebaSesionGrid in 'DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas' {frmMtoPruebaSesionGrid};
+  inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones};
 
 {$R *.res}
 
