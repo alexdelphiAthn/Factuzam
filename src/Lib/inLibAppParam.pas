@@ -48,6 +48,10 @@ type
     procedure InicializarParametrosApp(const AUsuario, AGrupo: string);
     procedure Inicializar(const AUsuario, AGrupo: string);
     procedure Recargar(const AUsuario, AGrupo: string);
+    // Sincroniza los flags del singleton Log (inLibLog) con los parametros
+    // booleanos appLogSQL / appLogAvanzado. Se llama tras Inicializar y
+    // tras Recargar para aplicar los cambios sin reiniciar.
+    procedure AplicarFlagsLog;
     function GetPath(const ANombre: string): string;
     function GetString(const AKey: string; const ADefault: string = '' ): string;
     function GetBool  (const AKey: string;
@@ -63,7 +67,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibPathTokens;
+  inLibGlobalVar, inLibPathTokens, inLibLog;
 
 { TAppParamDef }
 
@@ -185,25 +189,47 @@ begin
   RegistrarParametro('Apariencia', 'appTema',
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');
 
-  // --- Depuración ---
-  // Modo debug general. Reservado: hoy activa también el monitor SQL.
-  // Pensado para incrementar la verbosidad cuando haga falta diagnosticar
-  // un fallo intermitente sin recompilar.
+  // --- Depuración --- (switches "gordos", afectan a varios tipos a la vez)
+  // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en
+  // el popup de error de conUniError. Implica también el modo SQL.
   RegistrarParametro('Depuración', 'appModoDebug',
-    'Modo debug (incluye trazado SQL y detalles MySQL en errores)',
+    'Modo debug (cronómetros LogPerf + trazado SQL + detalles MySQL)',
     tpBoolean, 'False');
-  // Modo debug SQL aislado. Traza cada sentencia SQL al log y, si está
-  // disponible, al monitor SQL en pantalla.
+  // Modo debug SQL aislado: enciende UniSQLMonitor y traza cada sentencia
+  // al log y al monitor en pantalla.
   RegistrarParametro('Depuración', 'appModoDebugSQL',
     'Modo debug SQL (traza todas las sentencias en el log)',
     tpBoolean, 'False');
 
+  // --- Log --- (controles finos por tipo)
+  // Log SQL fino: registra cada consulta con tiempo de ejecución, filas
+  // (cuando se conocen) y éxito/fallo. Los valores reales de :param se
+  // incluyen porque UniSQLMonitor los entrega ya sustituidos.
+  RegistrarParametro('Log', 'appLogSQL',
+    'Log SQL (consultas, tiempo de ejecución, filas y parámetros)',
+    tpBoolean, 'False');
+  // Log avanzado: registra eventos de usuario significativos (apertura
+  // / cierre de formularios, inserciones, modificaciones).
+  RegistrarParametro('Log', 'appLogAvanzado',
+    'Log avanzado (eventos de usuario: unidad, objeto, evento)',
+    tpBoolean, 'False');
+
   Inicializar(AUsuario, AGrupo);
+  AplicarFlagsLog;
 end;
 
 procedure TAppParams.Recargar(const AUsuario, AGrupo: string);
 begin
   CargarDesdeDB(AUsuario, AGrupo);
+  AplicarFlagsLog;
+end;
+
+procedure TAppParams.AplicarFlagsLog;
+begin
+  // Delegamos en inLibLog.AplicarModosDepuracion: es la unica fuente de
+  // verdad para los 4 flags (appModoDebug, appModoDebugSQL, appLogSQL,
+  // appLogAvanzado) y se ocupa tambien del UniSQLMonitor y del memo SQL.
+  AplicarModosDepuracion;
 end;
 
 function TAppParams.GetString(const AKey: string; const ADefault: string): string;
