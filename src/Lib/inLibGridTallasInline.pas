@@ -49,8 +49,8 @@
 {      Albaranes:  ALBCEL / ALBLIN / ALB (cuando existan)                      }
 {      Facturas:   FACCEL / FACLIN / FAC (cuando existan)                      }
 {                                                                              }
-{    Documentacion: DESARROLLOS EN CURSO/pruebas_sesiones/pruebas_sesiones.md  }
-{    seccion 12.                                                               }
+{    Documentacion: DESARROLLOS EN CURSO/compras_sesiones.md                   }
+{    (grid tallas inline).                                                     }
 {******************************************************************************}
 unit inLibGridTallasInline;
 

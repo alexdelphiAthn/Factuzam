@@ -86,6 +86,10 @@ type
     dsTarifas: TDataSource;
     unqryEmpresas: TUniQuery;
     dsEmpresas: TDataSource;
+    // Lookup de temporadas (fza_propiedades_valores con ID_PROP_PV='TEMPORADA').
+    // Una por sesion; se propaga a fza_articulos_propiedades al materializar.
+    unqryTemporadas: TUniQuery;
+    dsTemporadas: TDataSource;
     // Lookup de series de la empresa actual para TIPO_DOC='SE'
     unqryEmpresaSeries: TUniQuery;
     dsEmpresaSeries: TDataSource;
@@ -100,7 +104,7 @@ type
     unstrdprcValidarSesion: TUniStoredProc;
 
     // ------------------------------------------------------------------
-    // Impresion FastReport horizontal (prueba pruebas_sesiones/print)
+    // Impresion FastReport horizontal (compras_sesiones, print)
     // ------------------------------------------------------------------
     // Vista cabecera enriquecida (empresa + proveedor + totales).
     unqryCabSesionPrint:  TUniQuery;
@@ -186,6 +190,7 @@ begin
   unqryAlmacenes.Connection         := inLibGlobalVar.oConn;
   unqryTarifas.Connection           := inLibGlobalVar.oConn;
   unqryEmpresas.Connection          := inLibGlobalVar.oConn;
+  unqryTemporadas.Connection        := inLibGlobalVar.oConn;
   unqryEmpresaSeries.Connection     := inLibGlobalVar.oConn;
   unqryArticuloExiste.Connection    := inLibGlobalVar.oConn;
   unstrdprcGetContadorSesion.Connection := inLibGlobalVar.oConn;
@@ -205,6 +210,7 @@ begin
   unqryAlmacenes.Open;
   unqryTarifas.Open;
   unqryEmpresas.Open;
+  unqryTemporadas.Open;
 end;
 
 procedure TdmComprasSesiones.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -370,7 +376,24 @@ begin
   begin
     ChequearDuplicado(sTecla, bExiste, sDescr);
     if bExiste then
-      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'S'
+    begin
+      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'S';
+      // Si la linea no tiene accion resuelta, marcamos REUSAR por
+      // defecto apuntando al articulo existente. Esto es lo que el
+      // usuario espera en el flujo de muestrarios: tecleo el codigo
+      // (o la ref. proveedor) de un articulo que ya tengo y meto
+      // nuevo color + cantidades sin tener que arbitrar duplicados.
+      // Si el usuario hubiera querido RENOMBRAR, la accion ya estaria
+      // puesta por el flujo correspondiente y respetamos su eleccion.
+      if Trim(unqrySesionLin.FieldByName(
+                  'ACCION_DUPLICADO_SESLIN').AsString) = '' then
+      begin
+        unqrySesionLin.FieldByName('ACCION_DUPLICADO_SESLIN').AsString :=
+                                                                    'REUSAR';
+        unqrySesionLin.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString :=
+                                                                       sTecla;
+      end;
+    end
     else
       unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
   end;

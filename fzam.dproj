@@ -596,6 +596,12 @@
         <DCCReference Include="src\Modals\inMtoModalSesionDuplicado.pas">
             <Form>frmModalSesionDuplicado</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalIncidencias.pas">
+            <Form>frmModalIncidencias</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalCrearAlbaranSesion.pas">
+            <Form>frmModalCrearAlbaranSesion</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializar.pas"/>
@@ -628,9 +634,12 @@
         <DCCReference Include="src\Forms\inMtoFotoArticulo.pas">
             <Form>frmFotoArticulo</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoStockConsulta.pas">
+            <Form>frmStockConsulta</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
-        <DCCReference Include="DESARROLLOS EN CURSO\pruebas_sesiones\inMtoPruebaSesionGrid.pas">
-            <Form>frmMtoPruebaSesionGrid</Form>
+        <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
+            <Form>frmMtoComprasSesiones</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
