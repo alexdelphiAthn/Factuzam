@@ -768,9 +768,14 @@ begin
   if AEsColor then FColGrupo.Caption := 'Color'
   else             FColGrupo.Caption := 'Almac'#233'n';
   FColGrupo.DataBinding.FieldName := 'GRUPO';
+<<<<<<< HEAD
   FColGrupo.HeaderAlignmentHorz := taLeft;
   if AEsColor then FColGrupo.Width := 150  // espacio extra para el cuadradito
   else             FColGrupo.Width := 130;
+=======
+  FColGrupo.HeaderAlignmentHorz := taLeftJustify;
+  FColGrupo.Width := 130;
+>>>>>>> 764bed9a6abf4611f655430375c304aa1054cf1d
   FColGrupo.Options.Editing := False;
   FColGrupo.Options.Sorting := False;
   FColsDin.Add(FColGrupo);
