@@ -1,8 +1,8 @@
 {******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
-{    Tipo:       Formulario (flotante, alStayOnTop opcional)                   }
-{ Version:       0.1.0                                                         }
+{    Tipo:       Formulario (flotante, fsStayOnTop)                            }
+{ Version:       0.2.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -11,18 +11,19 @@
 {  Descripcion:                                                                }
 {    Consulta de stock invocable con Ctrl+U desde cualquier mantenimiento      }
 {    que herede de TfrmMtoGen. Al abrirse pre-carga el articulo / SKU activo   }
-{    via TfrmMtoGen.ResolverArtSkuActivo. Pantalla pensada como referencia     }
-{    rapida (similar a inMtoFotoArticulo).                                     }
+{    via TfrmMtoGen.ResolverArtSkuActivo.                                      }
 {                                                                              }
-{      - Cabecera: campo Articulo (texto + busqueda), descripcion, foto.       }
-{      - Combo "Estado del stock": Existencias / Entradas / Salidas /          }
-{        Ventas / Regularizadas / Pdte. recibir / Pdte. servir / Prestadas.    }
-{      - Pestanas Por Color / Por Almacen para alternar eje de filas.          }
-{      - Check-list de almacenes (default los TIPO_USO 'ESTANDAR').            }
+{    Layout:                                                                   }
+{      - Cabecera: Articulo + descripcion + bloque de precios (PVP / otras     }
+{        tarifas / coste / proveedor[es]) + foto a la derecha.                 }
+{      - Filtros: combo "Estado del stock".                                    }
+{      - Grid pivot: tallas en filas, almacenes o colores en columnas. Las     }
+{        columnas de color llevan un cuadradito HEX al lado del nombre.        }
+{      - Eje: pestanas "Por Color" / "Por Almacen" (default Almacen) + lista   }
+{        de almacenes (TIPO_USO='ESTANDAR' marcados por defecto).              }
 {                                                                              }
-{    v0.1: solo estado "Existencias" implementado contra                       }
-{    fza_articulos_stockactual. Grid plano (sin pivot de tallas). El pivot     }
-{    estilo caja y los demas estados quedan para iteracion siguiente.          }
+{    v0.2: pivote dinamico, colores con swatch en cabecera, panel de           }
+{    precios/proveedores. Estado "Prestadas" sigue siendo stub.                }
 {******************************************************************************}
 unit inMtoStockConsulta;
 
@@ -41,7 +42,7 @@ uses
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
-  dxDateRanges;
+  dxDateRanges, cxMemo;
 
 type
   TEstadoStock = (
@@ -55,11 +56,19 @@ type
     esPrestadas
   );
 
+  TInfoColumna = record
+    Codigo : string;     // CODIGO_ALM o AV del color
+    Texto  : string;     // Caption a mostrar
+    Hex    : string;     // HEX (solo para color, '' si no)
+    EsColor: Boolean;
+  end;
+
   TfrmStockConsulta = class(TForm)
     pnlCabecera   : TPanel;
       lblArt        : TcxLabel;
       btnArt        : TcxButtonEdit;
       lblDescr      : TcxLabel;
+      lblInfo       : TcxLabel;
       imgFoto       : TImage;
     pnlFiltros    : TPanel;
       lblEstado     : TcxLabel;
@@ -67,11 +76,7 @@ type
     grdStock      : TcxGrid;
       tvStock       : TcxGridDBTableView;
       glStock       : TcxGridLevel;
-      colSku        : TcxGridDBColumn;
-      colColorAv    : TcxGridDBColumn;
-      colTallaAv    : TcxGridDBColumn;
-      colAlmacen    : TcxGridDBColumn;
-      colCantidad   : TcxGridDBColumn;
+      colTalla      : TcxGridDBColumn;
     pnlEjes       : TPanel;
       pcEje         : TcxPageControl;
         tsPorColor    : TcxTabSheet;
@@ -87,16 +92,28 @@ type
     procedure clbAlmacenesClickCheck(Sender: TObject; AIndex: Integer;
               APrevState, ANewState: TcxCheckBoxState);
     procedure pcEjeChange(Sender: TObject);
+    procedure tvStockCustomDrawColumnHeader(Sender: TcxGridTableView;
+              ACanvas: TcxCanvas; AViewInfo: TcxGridColumnHeaderViewInfo;
+              var ADone: Boolean);
   private
     FQry        : TUniQuery;
     FDs         : TDataSource;
     FCodArt     : string;
     FCodSku     : string;
+    FColumnas   : TArray<TInfoColumna>;  // Codigo + Texto + Hex por columna
+    FColsDin    : TList<TcxGridDBColumn>;
     procedure CargarAlmacenes;
     procedure CargarFoto;
+    procedure CargarInfoPrecios;
     function  EstadoActual: TEstadoStock;
+    function  AlmacenesSeleccionadosSQL: string;  // 'CODA','CODB' o NULL
+    function  AlmacenesSeleccionadosLista: TArray<string>;
+    function  ColoresArticulo: TArray<TInfoColumna>;
+    function  ConstruirSQLPivot(const AColumnas: TArray<TInfoColumna>;
+                                 AEsColor: Boolean): string;
+    function  EstadoBaseSelect: string;  // CTE/source segun estado
+    procedure ReconstruirColumnas(const AColumnas: TArray<TInfoColumna>);
     procedure RecargarConsulta;
-    function  AlmacenesSeleccionados: string;  // 'CODA','CODB',...
   public
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
@@ -105,20 +122,17 @@ var
   frmStockConsulta: TfrmStockConsulta;
 
 /// Abre (o trae al frente) la consulta de stock con el (articulo, sku)
-/// indicado. Si la ventana ya existe la reutiliza. Mismo patron que
-/// inMtoFotoArticulo.MostrarFotoFlotante.
+/// indicado. Mismo patron que inMtoFotoArticulo.MostrarFotoFlotante.
 procedure MostrarStockConsulta(AOwner: TComponent;
                                const ACodArt, ACodSku: string);
 
 implementation
 
 uses
+  System.StrUtils,
   inLibGlobalVar, inLibFotos;
 
 {$R *.dfm}
-
-const
-  cTallaInactiva = $00E8E8E8;
 
 // ---------------------------------------------------------------------------
 //  Funcion publica de apertura
@@ -153,8 +167,9 @@ begin
   FDs  := TDataSource.Create(Self);
   FDs.DataSet := FQry;
   tvStock.DataController.DataSource := FDs;
+  FColsDin := TList<TcxGridDBColumn>.Create;
 
-  // Combo de estados — orden y captions a mostrar
+  // Combo de estados
   cbbEstado.Properties.Items.Clear;
   cbbEstado.Properties.Items.Add('Existencias');
   cbbEstado.Properties.Items.Add('Entradas');
@@ -164,7 +179,7 @@ begin
   cbbEstado.Properties.Items.Add('Pdte. de recibir');
   cbbEstado.Properties.Items.Add('Pdte. de servir');
   cbbEstado.Properties.Items.Add('Prestadas');
-  cbbEstado.ItemIndex := 0;  // Existencias por defecto
+  cbbEstado.ItemIndex := 0;
 
   pcEje.ActivePage := tsPorAlmacen;
   CargarAlmacenes;
@@ -178,12 +193,11 @@ begin
     FreeAndNil(FQry);
   end;
   FreeAndNil(FDs);
+  FreeAndNil(FColsDin);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  // No liberamos: la ventana sobrevive entre invocaciones (igual que
-  // la foto flotante). Solo ocultamos.
   Action := caHide;
 end;
 
@@ -211,14 +225,9 @@ begin
       item := clbAlmacenes.Items.Add;
       item.Text := q.FieldByName('CODIGO_ALM_ALM').AsString + ' - ' +
                    q.FieldByName('NOMBRE_ALM_ALM').AsString;
-      // Los almacenes ESTANDAR (admitimos 'ESTANDAR' y 'ESTANDARD' por
-      // datos historicos) van marcados por defecto. Depositos, transitos
-      // y otros tipos especiales quedan sin marcar.
       bStd := (q.FieldByName('TIPO_USO_ALM').AsString = 'ESTANDAR') or
               (q.FieldByName('TIPO_USO_ALM').AsString = 'ESTANDARD');
-      item.State := TcxCheckBoxState(Ord(bStd));
-      // Guardamos el codigo del almacen en Tag para no parsearlo del texto
-      item.Tag := 0;  // tag entero, no nos sirve para string
+      if bStd then item.State := cbsChecked else item.State := cbsUnchecked;
       q.Next;
     end;
   finally
@@ -226,27 +235,44 @@ begin
   end;
 end;
 
-function TfrmStockConsulta.AlmacenesSeleccionados: string;
+function TfrmStockConsulta.AlmacenesSeleccionadosLista: TArray<string>;
 var
-  i  : Integer;
+  i, p: Integer;
   s, sCod: string;
-  p  : Integer;
 begin
-  Result := '';
+  SetLength(Result, 0);
   for i := 0 to clbAlmacenes.Items.Count - 1 do
     if clbAlmacenes.Items[i].State = cbsChecked then
     begin
-      // El texto es "CODIGO - NOMBRE": el codigo es el prefijo hasta " - "
       s := clbAlmacenes.Items[i].Text;
       p := Pos(' - ', s);
       if p > 0 then sCod := Copy(s, 1, p - 1) else sCod := s;
-      if Result <> '' then Result := Result + ',';
-      Result := Result + '''' + sCod + '''';
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := sCod;
     end;
 end;
 
+function TfrmStockConsulta.AlmacenesSeleccionadosSQL: string;
+var
+  alms: TArray<string>;
+  i: Integer;
+begin
+  alms := AlmacenesSeleccionadosLista;
+  if Length(alms) = 0 then
+  begin
+    Result := 'NULL';
+    Exit;
+  end;
+  Result := '';
+  for i := 0 to High(alms) do
+  begin
+    if Result <> '' then Result := Result + ',';
+    Result := Result + QuotedStr(alms[i]);
+  end;
+end;
+
 // ---------------------------------------------------------------------------
-//  Carga de articulo / SKU + foto
+//  Carga de articulo / SKU + foto + info de precios
 // ---------------------------------------------------------------------------
 procedure TfrmStockConsulta.SetArticuloSku(const ACodArt, ACodSku: string);
 var
@@ -256,7 +282,6 @@ begin
   FCodSku := ACodSku;
   btnArt.Text := ACodArt;
 
-  // Descripcion del articulo
   lblDescr.Caption := '';
   if Trim(ACodArt) <> '' then
   begin
@@ -276,6 +301,7 @@ begin
   end;
 
   CargarFoto;
+  CargarInfoPrecios;
   RecargarConsulta;
 end;
 
@@ -299,8 +325,404 @@ begin
   end;
 end;
 
+procedure TfrmStockConsulta.CargarInfoPrecios;
+var
+  q   : TUniQuery;
+  sb  : TStringList;
+  hayDef: Boolean;
+begin
+  lblInfo.Caption := '';
+  if Trim(FCodArt) = '' then Exit;
+
+  sb := TStringList.Create;
+  q  := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+
+    // ---- Tarifas del articulo (sin SKU especifico) ----
+    q.SQL.Text :=
+      'SELECT AT.CODIGO_TAR_ARTTAR, T.NOMBRE_TAR_TAR, T.ESDEFAULT_TAR, ' +
+      '       AT.PRECIO_FINAL_ARTTAR ' +
+      '  FROM fza_articulos_tarifas AT ' +
+      '  LEFT JOIN fza_tarifas T ' +
+      '    ON T.CODIGO_TAR_ARTTAR = AT.CODIGO_TAR_ARTTAR ' +
+      ' WHERE AT.CODIGO_ART_ARTTAR = :art ' +
+      '   AND IFNULL(AT.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
+      '   AND AT.ESACTIVO_ARTTAR = ''S'' ' +
+      ' ORDER BY T.ESDEFAULT_TAR DESC, T.ORDEN_TAR, T.NOMBRE_TAR_TAR';
+    q.ParamByName('art').AsString := FCodArt;
+    q.Open;
+    hayDef := False;
+    while not q.Eof do
+    begin
+      if (not hayDef) and (q.FieldByName('ESDEFAULT_TAR').AsString = 'S') then
+      begin
+        sb.Add(Format('PVP (%s): %s',
+          [q.FieldByName('NOMBRE_TAR_TAR').AsString,
+           FormatFloat('#,##0.00', q.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat)
+           + ' '#8364]));
+        hayDef := True;
+      end
+      else
+        sb.Add(Format('  %s: %s',
+          [q.FieldByName('NOMBRE_TAR_TAR').AsString,
+           FormatFloat('#,##0.00', q.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat)
+           + ' '#8364]));
+      q.Next;
+    end;
+    q.Close;
+
+    // ---- Proveedores ----
+    q.SQL.Text :=
+      'SELECT AP.CODIGO_PRV_AP, P.RAZON_SOCIAL_PRV, ' +
+      '       AP.REF_PROVEEDOR_AP, AP.PRECIO_ULT_COMPRA_AP, ' +
+      '       AP.ESPROVEEDORPRINCIPAL_AP ' +
+      '  FROM fza_articulos_proveedores AP ' +
+      '  LEFT JOIN fza_proveedores P ' +
+      '    ON P.CODIGO_PRV_PRV = AP.CODIGO_PRV_AP ' +
+      ' WHERE AP.CODIGO_ART_AP = :art ' +
+      ' ORDER BY AP.ESPROVEEDORPRINCIPAL_AP DESC, P.RAZON_SOCIAL_PRV';
+    q.ParamByName('art').AsString := FCodArt;
+    q.Open;
+    if not q.IsEmpty then
+      sb.Add('');
+    while not q.Eof do
+    begin
+      sb.Add(Format('%s %s%s: %s',
+        [IfThen(q.FieldByName('ESPROVEEDORPRINCIPAL_AP').AsString = 'S',
+                'Proveedor ppal.', 'Proveedor'),
+         q.FieldByName('RAZON_SOCIAL_PRV').AsString,
+         IfThen(Trim(q.FieldByName('REF_PROVEEDOR_AP').AsString) <> '',
+                ' (ref ' + q.FieldByName('REF_PROVEEDOR_AP').AsString + ')',
+                ''),
+         FormatFloat('#,##0.00',
+                     q.FieldByName('PRECIO_ULT_COMPRA_AP').AsFloat) + ' '#8364
+        ]));
+      q.Next;
+    end;
+
+    lblInfo.Caption := sb.Text;
+  finally
+    FreeAndNil(q);
+    FreeAndNil(sb);
+  end;
+end;
+
 // ---------------------------------------------------------------------------
-//  Estado del stock + consulta SQL
+//  Colores del articulo (para "Por Color")
+// ---------------------------------------------------------------------------
+function TfrmStockConsulta.ColoresArticulo: TArray<TInfoColumna>;
+var
+  q: TUniQuery;
+  inf: TInfoColumna;
+begin
+  SetLength(Result, 0);
+  if Trim(FCodArt) = '' then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    // Distintos AV de color de los SKUs activos del articulo, con el
+    // HEX_ATB del basico asociado (si lo hay) para pintar el cuadradito.
+    q.SQL.Text :=
+      'SELECT DISTINCT AV.AV, AV.ORDEN_AV, ATB.HEX_ATB ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_atributos_sku SA ' +
+      '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
+      '  LEFT JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = AV.ID_ATB_AV ' +
+      ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+      '   AND AV.ID_VA_AV = ''CO'' ' +
+      ' ORDER BY AV.ORDEN_AV, AV.AV';
+    q.ParamByName('art').AsString := FCodArt;
+    q.Open;
+    while not q.Eof do
+    begin
+      inf := Default(TInfoColumna);
+      inf.Codigo  := q.FieldByName('AV').AsString;
+      inf.Texto   := q.FieldByName('AV').AsString;
+      inf.Hex     := q.FieldByName('HEX_ATB').AsString;
+      inf.EsColor := True;
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := inf;
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Estado: base SELECT (que va dentro del SUM(CASE WHEN ...))
+// ---------------------------------------------------------------------------
+// Devuelve un subselect que produce filas (CODIGO_UNIDAD_SKU, COLOR,
+// TALLA, ALM, CANTIDAD). El pivote SQL exterior agrupa por TALLA y mete
+// CASE-WHEN por COLOR o ALM en cada columna.
+function TfrmStockConsulta.EstadoBaseSelect: string;
+var
+  est: TEstadoStock;
+  sAlms: string;
+begin
+  est   := EstadoActual;
+  sAlms := AlmacenesSeleccionadosSQL;
+  case est of
+    esExistencias:
+      Result :=
+        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
+        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
+        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
+        '       STK.CODIGO_ALM_STK AS ALM, ' +
+        '       SUM(STK.CANTIDAD_STK) AS CANTIDAD ' +
+        '  FROM fza_articulos_skus SKU ' +
+        '  JOIN fza_articulos_stockactual STK ' +
+        '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
+        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+        '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
+        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
+    esPdteRecibir:
+      Result :=
+        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
+        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
+        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
+        '       PDR.CODIGO_ALM_PDR AS ALM, ' +
+        '       SUM(PDR.CANTIDAD_PDR) AS CANTIDAD ' +
+        '  FROM fza_articulos_skus SKU ' +
+        '  JOIN fza_articulos_pdte_recibir PDR ' +
+        '    ON PDR.CODIGO_UNIDAD_PDR = SKU.CODIGO_UNIDAD_SKU ' +
+        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+        '   AND PDR.CODIGO_ALM_PDR IN (' + sAlms + ') ' +
+        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, PDR.CODIGO_ALM_PDR';
+    esPdteServir:
+      Result :=
+        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
+        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
+        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
+        '       STK.CODIGO_ALM_STK AS ALM, ' +
+        '       SUM(STK.CANTIDAD_PTE_SERVIR_STK) AS CANTIDAD ' +
+        '  FROM fza_articulos_skus SKU ' +
+        '  JOIN fza_articulos_stockactual STK ' +
+        '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
+        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+        '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
+        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
+    esEntradas, esSalidas, esVentas, esRegularizadas:
+      Result :=
+        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
+        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
+        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
+        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
+        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
+        '       M.CODIGO_ALM_MOV AS ALM, ' +
+        '       SUM(M.CANTIDAD_MOV) AS CANTIDAD ' +
+        '  FROM fza_articulos_skus SKU ' +
+        '  JOIN fza_movimientos_almacen M ' +
+        '    ON M.CODIGO_UNIDAD_MOV = SKU.CODIGO_UNIDAD_SKU ' +
+        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+        '   AND M.CODIGO_ALM_MOV IN (' + sAlms + ') ' +
+        '   AND M.ESACTIVO_MOV   = ''S'' ';
+      case est of
+        esEntradas:      Result := Result + '   AND M.TIPO_MOV = ''E'' ';
+        esSalidas:       Result := Result + '   AND M.TIPO_MOV = ''S'' ' +
+                                            '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
+        esVentas:        Result := Result + '   AND M.TIPO_DOC_MOV = ''VE'' ';
+        esRegularizadas: Result := Result + '   AND M.TIPO_DOC_MOV = ''IN'' ';
+      end;
+      Result := Result +
+        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, M.CODIGO_ALM_MOV';
+  else
+    // esPrestadas y otros: stub vacio
+    Result :=
+      'SELECT ''''       AS CODIGO_UNIDAD_SKU, ' +
+      '       NULL       AS COLOR_AV, ' +
+      '       NULL       AS TALLA_AV, ' +
+      '       0          AS ORDEN_TALLA, ' +
+      '       ''''       AS ALM, ' +
+      '       0          AS CANTIDAD ' +
+      '  FROM dual WHERE 0';
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Build SQL pivote: rows=talla, cols=almacenes o colores
+// ---------------------------------------------------------------------------
+function TfrmStockConsulta.ConstruirSQLPivot(
+  const AColumnas: TArray<TInfoColumna>; AEsColor: Boolean): string;
+var
+  sBase, sCols, sCampoFiltro: string;
+  i: Integer;
+begin
+  sBase := EstadoBaseSelect;
+  if AEsColor then sCampoFiltro := 'COLOR_AV'
+  else             sCampoFiltro := 'ALM';
+
+  sCols := '';
+  for i := 0 to High(AColumnas) do
+  begin
+    sCols := sCols + Format(', SUM(CASE WHEN B.%s = %s THEN B.CANTIDAD ELSE 0 END) AS C%d',
+                            [sCampoFiltro, QuotedStr(AColumnas[i].Codigo), i]);
+  end;
+
+  Result :=
+    'SELECT B.TALLA_AV AS TALLA, COALESCE(B.ORDEN_TALLA, 0) AS ORDEN' +
+    sCols + ', SUM(B.CANTIDAD) AS TOTAL ' +
+    '  FROM (' + sBase + ') B ' +
+    ' WHERE B.TALLA_AV IS NOT NULL ' +
+    ' GROUP BY B.TALLA_AV, COALESCE(B.ORDEN_TALLA, 0) ' +
+    ' ORDER BY COALESCE(B.ORDEN_TALLA, 0), B.TALLA_AV';
+end;
+
+// ---------------------------------------------------------------------------
+//  Reconstruir columnas dinamicas del grid
+// ---------------------------------------------------------------------------
+procedure TfrmStockConsulta.ReconstruirColumnas(
+  const AColumnas: TArray<TInfoColumna>);
+var
+  i: Integer;
+  col: TcxGridDBColumn;
+  colTotal: TcxGridDBColumn;
+begin
+  // Borrar columnas dinamicas anteriores
+  for i := FColsDin.Count - 1 downto 0 do
+    FColsDin[i].Free;
+  FColsDin.Clear;
+
+  for i := 0 to High(AColumnas) do
+  begin
+    col := tvStock.CreateColumn;
+    col.Caption := AColumnas[i].Texto;
+    col.DataBinding.FieldName := Format('C%d', [i]);
+    col.PropertiesClassName := 'TcxCurrencyEditProperties';
+    col.HeaderAlignmentHorz := taCenter;
+    col.Width := 90;
+    col.Options.Editing := False;
+    col.Options.Sorting := False;
+    col.Tag := i;
+    FColsDin.Add(col);
+  end;
+
+  // Columna Total al final
+  colTotal := tvStock.CreateColumn;
+  colTotal.Caption := 'Total';
+  colTotal.DataBinding.FieldName := 'TOTAL';
+  colTotal.PropertiesClassName := 'TcxCurrencyEditProperties';
+  colTotal.HeaderAlignmentHorz := taCenter;
+  colTotal.Width := 90;
+  colTotal.Options.Editing := False;
+  colTotal.Options.Sorting := False;
+  colTotal.Tag := -1;  // marca Total para que no se dibuje swatch
+  FColsDin.Add(colTotal);
+
+  FColumnas := Copy(AColumnas);
+end;
+
+// ---------------------------------------------------------------------------
+//  Header custom-draw: cuadradito de color al lado del nombre
+// ---------------------------------------------------------------------------
+procedure TfrmStockConsulta.tvStockCustomDrawColumnHeader(
+  Sender: TcxGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridColumnHeaderViewInfo; var ADone: Boolean);
+var
+  col   : TcxGridDBColumn;
+  idx   : Integer;
+  inf   : TInfoColumna;
+  rSwatch, rTexto : TRect;
+  cFill : TColor;
+  s     : string;
+begin
+  ADone := False;
+  if not (AViewInfo.Item is TcxGridDBColumn) then Exit;
+  col := TcxGridDBColumn(AViewInfo.Item);
+  idx := col.Tag;
+  if (idx < 0) or (idx > High(FColumnas)) then Exit;
+  inf := FColumnas[idx];
+  if (not inf.EsColor) or (inf.Hex = '') then Exit;
+
+  // Fondo de cabecera + linea separadora inferior. Imitacion sencilla del
+  // header standard del cxGrid; no usamos el LookAndFeelPainter porque
+  // su API ha cambiado entre versiones de DevExpress.
+  ACanvas.Brush.Color := $00F2F2F2;
+  ACanvas.FillRect(AViewInfo.Bounds);
+  ACanvas.Pen.Color := clBtnShadow;
+  ACanvas.MoveTo(AViewInfo.Bounds.Left, AViewInfo.Bounds.Bottom - 1);
+  ACanvas.LineTo(AViewInfo.Bounds.Right, AViewInfo.Bounds.Bottom - 1);
+
+  // Cuadradito (14 x 14) centrado verticalmente, pegado a la izquierda.
+  rSwatch := AViewInfo.Bounds;
+  rSwatch.Left   := rSwatch.Left + 6;
+  rSwatch.Right  := rSwatch.Left + 14;
+  rSwatch.Top    := (AViewInfo.Bounds.Top + AViewInfo.Bounds.Bottom - 14)
+                    div 2;
+  rSwatch.Bottom := rSwatch.Top + 14;
+
+  // HEX (#RRGGBB o RRGGBB) -> TColor (BBGGRR)
+  s := inf.Hex;
+  if (Length(s) > 0) and (s[1] = '#') then Delete(s, 1, 1);
+  if Length(s) = 6 then
+  begin
+    cFill := RGB(StrToIntDef('$' + Copy(s, 1, 2), 0),
+                 StrToIntDef('$' + Copy(s, 3, 2), 0),
+                 StrToIntDef('$' + Copy(s, 5, 2), 0));
+    ACanvas.Brush.Color := cFill;
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.FillRect(rSwatch);
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.Pen.Color := clBlack;
+    ACanvas.Rectangle(rSwatch);
+    ACanvas.Brush.Style := bsSolid;
+  end;
+
+  // Texto a la derecha del cuadradito
+  rTexto := AViewInfo.Bounds;
+  rTexto.Left := rSwatch.Right + 4;
+  ACanvas.Brush.Style := bsClear;
+  ACanvas.Font.Assign(AViewInfo.Font);
+  ACanvas.Font.Color := clBlack;
+  DrawText(ACanvas.Handle, PChar(inf.Texto), Length(inf.Texto), rTexto,
+           DT_VCENTER or DT_LEFT or DT_SINGLELINE);
+  ACanvas.Brush.Style := bsSolid;
+
+  ADone := True;
+end;
+
+// ---------------------------------------------------------------------------
+//  RecargarConsulta
 // ---------------------------------------------------------------------------
 function TfrmStockConsulta.EstadoActual: TEstadoStock;
 begin
@@ -320,114 +742,43 @@ end;
 
 procedure TfrmStockConsulta.RecargarConsulta;
 var
-  sAlms, sSQL: string;
-  est: TEstadoStock;
+  cols  : TArray<TInfoColumna>;
+  alms  : TArray<string>;
+  i     : Integer;
+  inf   : TInfoColumna;
+  bEsColor: Boolean;
 begin
   if FQry.Active then FQry.Close;
   if Trim(FCodArt) = '' then
   begin
-    FQry.SQL.Text := 'SELECT 1 WHERE 0';
+    ReconstruirColumnas([]);
+    FQry.SQL.Text := 'SELECT '''' AS TALLA, 0 AS ORDEN, 0 AS TOTAL FROM dual ' +
+                     'WHERE 0';
     FQry.Open;
     Exit;
   end;
-  sAlms := AlmacenesSeleccionados;
-  if sAlms = '' then sAlms := 'NULL';
-  est := EstadoActual;
 
-  case est of
-    esExistencias:
-      // Lectura directa de la tabla agregada de stock. Sumamos por
-      // (SKU, ALM) ignorando lotes.
-      sSQL :=
-        'SELECT STK.CODIGO_UNIDAD_STK AS CODIGO_UNIDAD_SKU, ' +
-        '       STK.CODIGO_ALM_STK   AS CODIGO_ALM_ALM, ' +
-        '       (SELECT GROUP_CONCAT(AV.AV ORDER BY AV.ID_VA_AV SEPARATOR '' / '') ' +
-        '          FROM fza_atributos_sku SA ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
-        '         WHERE SA.CODIGO_UNIDAD_SKU_SA = STK.CODIGO_UNIDAD_STK ' +
-        '           AND AV.ID_VA_AV = ''CO'')                  AS COLOR_AV, ' +
-        '       (SELECT GROUP_CONCAT(AV.AV ORDER BY AV.ID_VA_AV SEPARATOR '' / '') ' +
-        '          FROM fza_atributos_sku SA ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
-        '         WHERE SA.CODIGO_UNIDAD_SKU_SA = STK.CODIGO_UNIDAD_STK ' +
-        '           AND AV.ID_VA_AV <> ''CO'')                 AS TALLA_AV, ' +
-        '       SUM(STK.CANTIDAD_STK)                          AS CANTIDAD ' +
-        '  FROM fza_articulos_stockactual STK ' +
-        '  JOIN fza_articulos_skus SKU ' +
-        '    ON SKU.CODIGO_UNIDAD_SKU = STK.CODIGO_UNIDAD_STK ' +
-        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-        '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
-        ' GROUP BY STK.CODIGO_UNIDAD_STK, STK.CODIGO_ALM_STK ' +
-        ' ORDER BY STK.CODIGO_UNIDAD_STK, STK.CODIGO_ALM_STK';
-    esPdteRecibir:
-      // Suma desde fza_articulos_pdte_recibir (nueva tabla) o desde
-      // fza_articulos_stockactual.CANTIDAD_PTE_RECIBIR_STK. Usamos la
-      // tabla nueva porque tiene granularidad por documento.
-      sSQL :=
-        'SELECT P.CODIGO_UNIDAD_PDR AS CODIGO_UNIDAD_SKU, ' +
-        '       P.CODIGO_ALM_PDR   AS CODIGO_ALM_ALM, ' +
-        '       (SELECT GROUP_CONCAT(AV.AV ORDER BY AV.ID_VA_AV SEPARATOR '' / '') ' +
-        '          FROM fza_atributos_sku SA ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
-        '         WHERE SA.CODIGO_UNIDAD_SKU_SA = P.CODIGO_UNIDAD_PDR ' +
-        '           AND AV.ID_VA_AV = ''CO'') AS COLOR_AV, ' +
-        '       (SELECT GROUP_CONCAT(AV.AV ORDER BY AV.ID_VA_AV SEPARATOR '' / '') ' +
-        '          FROM fza_atributos_sku SA ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
-        '         WHERE SA.CODIGO_UNIDAD_SKU_SA = P.CODIGO_UNIDAD_PDR ' +
-        '           AND AV.ID_VA_AV <> ''CO'') AS TALLA_AV, ' +
-        '       SUM(P.CANTIDAD_PDR) AS CANTIDAD ' +
-        '  FROM fza_articulos_pdte_recibir P ' +
-        ' WHERE P.CODIGO_ART_PDR = ' + QuotedStr(FCodArt) +
-        '   AND P.CODIGO_ALM_PDR IN (' + sAlms + ') ' +
-        ' GROUP BY P.CODIGO_UNIDAD_PDR, P.CODIGO_ALM_PDR';
-    esPdteServir:
-      sSQL :=
-        'SELECT STK.CODIGO_UNIDAD_STK AS CODIGO_UNIDAD_SKU, ' +
-        '       STK.CODIGO_ALM_STK   AS CODIGO_ALM_ALM, ' +
-        '       NULL AS COLOR_AV, NULL AS TALLA_AV, ' +
-        '       SUM(STK.CANTIDAD_PTE_SERVIR_STK) AS CANTIDAD ' +
-        '  FROM fza_articulos_stockactual STK ' +
-        '  JOIN fza_articulos_skus SKU ' +
-        '    ON SKU.CODIGO_UNIDAD_SKU = STK.CODIGO_UNIDAD_STK ' +
-        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-        '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
-        ' GROUP BY STK.CODIGO_UNIDAD_STK, STK.CODIGO_ALM_STK';
-    esEntradas, esSalidas, esVentas, esRegularizadas:
-      // Sumamos cantidades sobre fza_movimientos_almacen filtrando por
-      // TIPO_DOC / TIPO_MOV. Para entradas miramos todos los E (compras,
-      // traspasos entrantes, regularizaciones positivas). Salidas /
-      // ventas / regularizadas son distintos TIPO_DOC.
-      sSQL :=
-        'SELECT M.CODIGO_UNIDAD_MOV AS CODIGO_UNIDAD_SKU, ' +
-        '       M.CODIGO_ALM_MOV   AS CODIGO_ALM_ALM, ' +
-        '       NULL AS COLOR_AV, NULL AS TALLA_AV, ' +
-        '       SUM(M.CANTIDAD_MOV) AS CANTIDAD ' +
-        '  FROM fza_movimientos_almacen M ' +
-        ' WHERE M.CODIGO_ART_MOV = ' + QuotedStr(FCodArt) +
-        '   AND M.CODIGO_ALM_MOV IN (' + sAlms + ') ' +
-        '   AND M.ESACTIVO_MOV   = ''S'' ' +
-        (function: string
-         begin
-           case est of
-             esEntradas:      Result := '   AND M.TIPO_MOV = ''E'' ';
-             esSalidas:       Result := '   AND M.TIPO_MOV = ''S'' ' +
-                                        '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
-             esVentas:        Result := '   AND M.TIPO_DOC_MOV = ''VE'' ';
-             esRegularizadas: Result := '   AND M.TIPO_DOC_MOV = ''IN'' ';
-           else Result := '';
-           end;
-         end)() +
-        ' GROUP BY M.CODIGO_UNIDAD_MOV, M.CODIGO_ALM_MOV';
-    esPrestadas:
-      // TODO: depende de tabla / flujo de prestamos. De momento devuelve
-      // vacio para no enganarse con datos.
-      sSQL := 'SELECT NULL AS CODIGO_UNIDAD_SKU, NULL AS CODIGO_ALM_ALM, ' +
-              '       NULL AS COLOR_AV, NULL AS TALLA_AV, ' +
-              '       0 AS CANTIDAD FROM dual WHERE 0';
+  bEsColor := pcEje.ActivePage = tsPorColor;
+  if bEsColor then
+    cols := ColoresArticulo
+  else
+  begin
+    SetLength(cols, 0);
+    alms := AlmacenesSeleccionadosLista;
+    for i := 0 to High(alms) do
+    begin
+      inf := Default(TInfoColumna);
+      inf.Codigo  := alms[i];
+      inf.Texto   := alms[i];
+      inf.Hex     := '';
+      inf.EsColor := False;
+      SetLength(cols, Length(cols) + 1);
+      cols[High(cols)] := inf;
+    end;
   end;
 
-  FQry.SQL.Text := sSQL;
+  ReconstruirColumnas(cols);
+  FQry.SQL.Text := ConstruirSQLPivot(cols, bEsColor);
   FQry.Open;
 end;
 
@@ -437,8 +788,7 @@ end;
 procedure TfrmStockConsulta.btnArtPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  // TODO: abrir picker de articulos. Por ahora solo se acepta el texto
-  // que el usuario teclee como CODIGO_ART y se recarga al cambiar.
+  // TODO: picker de articulos con F3 (siguiente iteracion).
 end;
 
 procedure TfrmStockConsulta.btnArtPropertiesEditValueChanged(Sender: TObject);
@@ -459,8 +809,6 @@ end;
 
 procedure TfrmStockConsulta.pcEjeChange(Sender: TObject);
 begin
-  // El cambio de pestana solo afecta a la presentacion (agrupacion del
-  // grid) — los datos de fondo son los mismos. v0.1 no agrupa todavia.
   RecargarConsulta;
 end;
 
