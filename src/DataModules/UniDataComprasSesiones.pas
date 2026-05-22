@@ -296,6 +296,10 @@ procedure TdmComprasSesiones.unqrySesionLinAfterInsert(DataSet: TDataSet);
 var
   iNuevaLinea : Integer;
   iContPrev   : Integer;
+  iMaxLineaBD : Integer;
+  sSerie      : string;
+  sNumero     : string;
+  q           : TUniQuery;
 begin
   inherited;
   // Contador de lineas en cabecera (mismo patron que cdsCabecera.
@@ -303,9 +307,45 @@ begin
   // suma 10 al contador y se queda con ese numero. Pasos de 10 para que
   // el usuario pueda intercalar lineas mas adelante (ej: poner una en el
   // 15 entre 10 y 20).
-  iContPrev   := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger;
+  iContPrev := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger;
+
+  // Robustez frente a desync master<->detail: el CONTADOR en memoria puede
+  // haber quedado por debajo del MAX(LINEA_SESLIN) real en BD. Caso tipico:
+  // Add + posteo implicito de la linea por navegacion (LINEA=CONTADOR+10
+  // se persiste en BD) seguido de Cancelar el master (CONTADOR rollback a
+  // su valor en BD), dejando lineas en BD con LINEA > CONTADOR. El siguiente
+  // Add provocaria una colision de LINEA_SESLIN. Consultamos MAX real y
+  // tomamos el mayor de los dos como base.
+  sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
+    iMaxLineaBD := 0;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT IFNULL(MAX(LINEA_SESLIN), 0) AS MAX_LIN ' +
+        '  FROM fza_compras_sesiones_lineas ' +
+        ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n';
+      q.ParamByName('s').AsString := sSerie;
+      q.ParamByName('n').AsString := sNumero;
+      q.Open;
+      if not q.FieldByName('MAX_LIN').IsNull then
+        iMaxLineaBD := q.FieldByName('MAX_LIN').AsInteger;
+    finally
+      FreeAndNil(q);
+    end;
+    if iMaxLineaBD > iContPrev then
+    begin
+      LogSes(Format('  CONTADOR memoria=%d < MAX(LINEA_SESLIN) BD=%d -> uso %d como base',
+                    [iContPrev, iMaxLineaBD, iMaxLineaBD]));
+      iContPrev := iMaxLineaBD;
+    end;
+  end;
+
   iNuevaLinea := iContPrev + 10;
-  LogSes(Format('DM.unqrySesionLinAfterInsert: CONTADOR previo=%d -> nueva LINEA=%d',
+  LogSes(Format('DM.unqrySesionLinAfterInsert: CONTADOR efectivo=%d -> nueva LINEA=%d',
                 [iContPrev, iNuevaLinea]));
 
   // Solo actualizamos el contador en memoria; la grabacion del cabecera
