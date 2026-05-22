@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAlbaranesCompra                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -22,7 +22,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs,
+  Forms, Dialogs, Uni,
   inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
@@ -36,7 +36,7 @@ uses
   cxCheckBox, cxGroupBox, cxDBLabel, cxButtonEdit, cxGridBandedTableView,
   cxGridDBBandedTableView,
   inLibGridTallasInline,
-  UniDataAlbaranesCompra;
+  UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs;
 
 const
   CANT_TALLAS_MAX = 20;

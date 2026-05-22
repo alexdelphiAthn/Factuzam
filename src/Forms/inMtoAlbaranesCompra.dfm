@@ -3,11 +3,10 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
   ClientHeight = 765
   ClientWidth = 1085
   StyleElements = [seFont, seClient, seBorder]
+  OnDestroy = FormDestroy
   ExplicitWidth = 1085
   ExplicitHeight = 765
   TextHeight = 19
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
   inherited pButtonPage: TPanel
     Width = 945
     Height = 765
@@ -254,8 +253,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Width = 110
             Height = 26
             Caption = 'A'#241'adir l'#237'nea'
-            OnClick = btnAnadirLineaClick
             TabOrder = 0
+            OnClick = btnAnadirLineaClick
           end
           object btnBorrarLinea: TcxButton
             Left = 124
@@ -263,8 +262,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Width = 110
             Height = 26
             Caption = 'Borrar l'#237'nea'
-            OnClick = btnBorrarLineaClick
             TabOrder = 1
+            OnClick = btnBorrarLineaClick
           end
           object btnTallasHorizontal: TcxButton
             Left = 256
@@ -272,8 +271,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Width = 170
             Height = 26
             Caption = 'Tallas en horizontal'
-            OnClick = btnTallasHorizontalClick
             TabOrder = 2
+            OnClick = btnTallasHorizontalClick
           end
           object btnAtributosColumna: TcxButton
             Left = 432
@@ -281,8 +280,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Width = 180
             Height = 26
             Caption = 'Atributo por columna'
-            OnClick = btnAtributosColumnaClick
             TabOrder = 3
+            OnClick = btnAtributosColumnaClick
           end
         end
         object pnlBodyFicha: TPanel
@@ -308,6 +307,10 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             ClientRectTop = 29
             object tsLineasAlbaran: TcxTabSheet
               Caption = 'L'#237'neas'
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLineasAlbaran: TcxGrid
                 Left = 0
                 Top = 0
@@ -316,10 +319,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Align = alClient
                 TabOrder = 0
                 object tvLineasAlbaran: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   object colLineaAlbcLINEA: TcxGridDBColumn
                     Caption = 'L'#237'nea'
                     DataBinding.FieldName = 'LINEA_ALBCLIN'
@@ -373,6 +372,10 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             end
             object tsObservaciones: TcxTabSheet
               Caption = 'Observaciones'
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
@@ -380,7 +383,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataField = 'OBSERVACIONES_ALBC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                Height = 347
+                ExplicitHeight = 347
+                Height = 349
                 Width = 937
               end
             end
@@ -440,6 +444,50 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Width = 160
           end
         end
+      end
+      inherited tsPerfil: TcxTabSheet
+        ExplicitWidth = 941
+        ExplicitHeight = 694
+        inherited pnlPerfilTop: TPanel
+          Width = 941
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 941
+        end
+        inherited pnlPerfilDetail: TPanel
+          Width = 941
+          Height = 637
+          StyleElements = [seFont, seClient, seBorder]
+        end
+      end
+    end
+    inherited pnlTopPage: TPanel
+      Width = 945
+      StyleElements = [seFont, seClient, seBorder]
+      ExplicitWidth = 945
+      inherited pnlTopGrid: TPanel
+        Width = 945
+        StyleElements = [seFont, seClient, seBorder]
+        ExplicitWidth = 945
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    Left = 945
+    Height = 765
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 945
+    ExplicitHeight = 765
+    inherited pButtonGen: TPanel
+      Top = 567
+      StyleElements = [seFont, seClient, seBorder]
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
   end
