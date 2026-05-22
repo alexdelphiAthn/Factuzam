@@ -792,6 +792,7 @@ var
   incidencias : TStringList;
   frmInc      : TfrmModalIncidencias;
   frmSet      : TfrmModalCrearAlbaranSesion;
+  iAutoFix    : Integer;
   iIdPvTemp   : Integer;
 begin
   inherited;
@@ -830,6 +831,30 @@ begin
   begin
     LogSes('  detail.Post pendiente');
     Dmm.unqrySesionLin.Post;
+  end;
+
+  // ---- 1b. Normalizar duplicados intra-sesion ----
+  // Si hay varias lineas con el mismo CODIGO_ART_TENTATIVO_SESLIN sin
+  // resolver, la materializacion reventaria con Duplicate entry en
+  // fza_articulos (PK CODIGO_ART_ART). Las marcamos automaticamente
+  // como REUSAR (la primera por LINEA crea el articulo, las demas son
+  // variantes — color/SKU — del mismo articulo). El boton "+ color
+  // (mismo articulo)" ya lo deja marcado desde su creacion; esto es
+  // para sesiones que ya tenian duplicados sin marcar.
+  iAutoFix := NormalizarDuplicadosIntraSesion(
+                inLibGlobalVar.oConn, oUser,
+                Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+                Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
+  if iAutoFix > 0 then
+  begin
+    LogSes(Format('  NormalizarDuplicadosIntraSesion: %d linea(s) marcadas REUSAR',
+                  [iAutoFix]));
+    ShowMessage(Format(
+      'Se han detectado y marcado %d linea(s) como REUSAR de codigos ' +
+      'repetidos dentro de esta sesion (variantes color/SKU del mismo ' +
+      'articulo). La materializacion crea el articulo una sola vez.',
+      [iAutoFix]));
+    Dmm.unqrySesionLin.Refresh;
   end;
 
   // ---- 2. Validador detallado ----
@@ -1132,6 +1157,14 @@ begin
   // Color y color basico se quedan vacios — los rellena el usuario.
   ds.FieldByName('COLOR_TEXTO_SESLIN').Clear;
   ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+  // Marcar como duplicado intra-sesion para que la materializacion no
+  // intente INSERT del articulo dos veces (la linea origen crea
+  // CODIGO_ART_ART; esta variante - mismo codigo, distinto color/SKU -
+  // lo REUSA). Sin este marcado, ambas lineas irian a InsertarArticulo
+  // y la segunda fallaria con 'Duplicate entry' en fza_articulos.
+  ds.FieldByName('ESDUPLICADO_SESLIN').AsString       := 'S';
+  ds.FieldByName('ACCION_DUPLICADO_SESLIN').AsString  := 'REUSAR';
+  ds.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString := sCodArt;
   // Sobreescribir LINEA_SESLIN si hay hueco para colocarse justo
   // detras de la origen (mantener cohesion visual entre las variantes
   // de color del mismo articulo).
