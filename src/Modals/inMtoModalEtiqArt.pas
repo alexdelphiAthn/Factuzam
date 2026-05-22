@@ -30,7 +30,7 @@ uses
   cxCheckBox, ComCtrls, UniDataArticulos, inMtoArticulos, inLibLayoutForm,
   JvComponentBase, JvEnterTab, frxSmartMemo, frLocalization, frLanguageSpanish,
   dxCore, System.Actions, Vcl.ActnList, frxExportBaseImageSettingsDialog,
-  frCoreClasses;
+  frCoreClasses, system.Rtti;
 
 type
   TfrmPrintEtiqArt = class(TfrmPrint)
@@ -48,6 +48,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure btnEditarClick(Sender: TObject);
   private
     FCodigosTarifa: TStringList;
     FLayout: TLayoutLoader;
@@ -62,6 +63,8 @@ type
     DM: TdmArticulos;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
+    function RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet; override; // <-- AÑADIR
+    procedure OnGuiasAplicadas; override;
   end;
 
 implementation
@@ -69,32 +72,115 @@ implementation
 {$R *.dfm}
 
 procedure TfrmPrintEtiqArt.AfterReportLoaded;
+var
+  i: Integer;
+  obj: TfrxComponent;
+  ctx: TRttiContext;
+  rType: TRttiType;
+  propDs, propName: TRttiProperty;
+  dsName: string;
 begin
-  // 1. Llamamos al inherited para mantener la lógica base (como la carga de fotos)
   inherited;
-
   if Assigned(DM) then
   begin
-    // 2. DETECCIÓN DE MODO DISEÑO:
-    // Si el ClientDataSet está cerrado, es que venimos del botón "Editar".
-    // Inicializamos su estructura llamando a tu método del DataModule.
+    // 1. Si está cerrado (ej: al entrar a Diseñar), forzamos la estructura de columnas
     if not DM.cdsEtiquetasArt.Active then
-    begin
-      // Usamos un código de artículo inexistente para que la base de datos responda
-      // en 0 milisegundos, pero genere el catálogo completo de columnas en el dataset.
       DM.CrearDataSetEtiquetasArt('DUMMY_DISENO', '', '', Date);
-    end;
 
-    // 3. Re-enlazamos los datasets del informe a nuestra instancia de DM
-    RebindReportDataSetsByDataModule(frxrprt1, DM);
-
-    // 4. FORZAR ACTUALIZACIÓN EN EL DISEÑADOR:
-    // Al vaciar los FieldAliases, obligamos a FastReport a descartar su caché estática
-    // y re-escanear en vivo los campos del ClientDataSet que acabamos de estructurar.
+    // 2. Limpieza de cachés del puente de FastReport
     DM.fxdsEtiquetasArt.DataSet := nil;
     DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
     DM.fxdsEtiquetasArt.FieldAliases.Clear;
+
+    // 3. Forzamos el registro del Dataset global del informe
+    frxrprt1.DataSets.Clear;
+    frxrprt1.DataSets.Add(DM.fxdsEtiquetasArt);
+
+    // 4. SOLUCIÓN AL "PREDETERMINADO VACÍO": Re-enlazamos componentes por Nombre vía RTTI
+    ctx := TRttiContext.Create;
+    try
+      for i := 0 to frxrprt1.AllObjects.Count - 1 do
+      begin
+        obj := TfrxComponent(frxrprt1.AllObjects[i]);
+        rType := ctx.GetType(obj.ClassType);
+
+        propDs   := rType.GetProperty('DataSet');
+        propName := rType.GetProperty('DataSetName');
+
+        if (propDs <> nil) and (propName <> nil) and propName.IsReadable and propDs.IsWritable then
+        begin
+          dsName := propName.GetValue(obj).AsString;
+          if SameText(dsName, 'EtiquetasArt') then
+            propDs.SetValue(obj, DM.fxdsEtiquetasArt);
+        end;
+      end;
+    finally
+      ctx.Free;
+    end;
   end;
+end;
+
+function TfrmPrintEtiqArt.RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet;
+begin
+  // Le decimos a la clase base que cuando vea el ClientDataSet, aplique el LEFT JOIN a la Query física
+  if Assigned(DM) then
+    Result := DM.unqryArtPrint
+  else
+    Result := inherited RelacionarClientDataSetConQuery(aCDS);
+end;
+
+procedure TfrmPrintEtiqArt.OnGuiasAplicadas;
+begin
+  inherited;
+  // ¡AQUÍ OCURRE LA MAGIA DE LAS GUÍAS!
+  // La clase base acaba de alterar y abrir "unqryArtPrint" con los campos extra de las guías.
+  // Ahora volcamos esa información fresca y enriquecida en nuestro ClientDataSet en memoria.
+  if Assigned(DM) and DM.unqryArtPrint.Active then
+  begin
+    // Copia los nuevos metadatos de las columnas dinámicamente y rellena el CDS
+    DM.PoblarCdsEtiquetasArtDesdeUniQuery;
+
+    // Si hay almacenes seleccionados, volvemos a expandir las filas según unidades de stock
+    if Trim(ObtenerAlmacenesCsv) <> '' then
+      DM.ExpandirEtiquetasPorStock('STOCK_FILTRADO');
+
+    DM.cdsEtiquetasArt.First;
+  end;
+end;
+
+//procedure TfrmPrintEtiqArt.AfterReportLoaded;
+//begin
+//  // 1. Llamamos al inherited para mantener la lógica base (como la carga de fotos)
+//  inherited;
+//
+//  if Assigned(DM) then
+//  begin
+//    // 2. DETECCIÓN DE MODO DISEÑO:
+//    // Si el ClientDataSet está cerrado, es que venimos del botón "Editar".
+//    // Inicializamos su estructura llamando a tu método del DataModule.
+//    if not DM.cdsEtiquetasArt.Active then
+//    begin
+//      // Usamos un código de artículo inexistente para que la base de datos responda
+//      // en 0 milisegundos, pero genere el catálogo completo de columnas en el dataset.
+//      DM.CrearDataSetEtiquetasArt('DUMMY_DISENO', '', '', Date);
+//    end;
+//
+//    // 3. Re-enlazamos los datasets del informe a nuestra instancia de DM
+//    RebindReportDataSetsByDataModule(frxrprt1, DM);
+//
+//    // 4. FORZAR ACTUALIZACIÓN EN EL DISEÑADOR:
+//    // Al vaciar los FieldAliases, obligamos a FastReport a descartar su caché estática
+//    // y re-escanear en vivo los campos del ClientDataSet que acabamos de estructurar.
+//    DM.fxdsEtiquetasArt.DataSet := nil;
+//    DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
+//    DM.fxdsEtiquetasArt.FieldAliases.Clear;
+//  end;
+//end;
+
+procedure TfrmPrintEtiqArt.btnEditarClick(Sender: TObject);
+begin
+  inherited;
+  AfterReportLoaded;
 end;
 
 procedure TfrmPrintEtiqArt.FormCreate(Sender: TObject);

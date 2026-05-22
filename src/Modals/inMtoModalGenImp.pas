@@ -119,6 +119,9 @@ type
     // fza_informes_guias las guias globales referenciadas en el report
     // para que queden tambien atadas a ese formato. Idempotente.
     procedure ConsolidarGuiasParaFormato(const aFormato: string);
+    // NUEVOS HOOKS PARA SOPORTE DE CLIENTDATASETS:
+    function RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet; virtual;
+    procedure OnGuiasAplicadas; virtual;
   end;
 
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
@@ -132,6 +135,16 @@ uses
   inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog;
 
 {$R *.dfm}
+
+function TfrmPrint.RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet;
+begin
+  Result := aCDS; // Por defecto devuelve el mismo
+end;
+
+procedure TfrmPrint.OnGuiasAplicadas;
+begin
+  // Vacío por defecto en la clase base
+end;
 
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
                                            DM: TDataModule);
@@ -308,6 +321,8 @@ begin
         oDS := dsMaster.DataSet;
         if (oDS = nil) and (dsMaster.DataSource <> nil) then
           oDS := dsMaster.DataSource.DataSet;
+        if (oDS <> nil) and (oDS is TClientDataSet) then
+          oDS := RelacionarClientDataSetConQuery(oDS);
         if (oDS = nil) or not (oDS is TUniQuery) then
         begin
           inLibLog.Log.LogWarning(Format(
@@ -834,6 +849,7 @@ begin
   begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
+    OnGuiasAplicadas;
     try
       // Los demas botones (Imprimir/PDF/Excel/Editar) hacen
       // PrepareReport(True) antes; Vista Preliminar tenia ShowReport
