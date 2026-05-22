@@ -112,15 +112,6 @@ object frmStockConsulta: TfrmStockConsulta
       OptionsCustomize.ColumnMoving = False
       OptionsData.Editing = False
       OptionsView.GroupByBox = False
-      object colTalla: TcxGridDBColumn
-        Caption = 'Talla'
-        DataBinding.FieldName = 'TALLA'
-        HeaderAlignmentHorz = taCenter
-        Options.Editing = False
-        Options.Sorting = False
-        Tag = -2
-        Width = 100
-      end
     end
     object glStock: TcxGridLevel
       GridView = tvStock
