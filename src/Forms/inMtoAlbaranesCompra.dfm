@@ -7,6 +7,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
   ExplicitHeight = 765
   TextHeight = 19
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   inherited pButtonPage: TPanel
     Width = 945
     Height = 765
@@ -264,6 +265,24 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Caption = 'Borrar l'#237'nea'
             OnClick = btnBorrarLineaClick
             TabOrder = 1
+          end
+          object btnTallasHorizontal: TcxButton
+            Left = 256
+            Top = 6
+            Width = 170
+            Height = 26
+            Caption = 'Tallas en horizontal'
+            OnClick = btnTallasHorizontalClick
+            TabOrder = 2
+          end
+          object btnAtributosColumna: TcxButton
+            Left = 432
+            Top = 6
+            Width = 180
+            Height = 26
+            Caption = 'Atributo por columna'
+            OnClick = btnAtributosColumnaClick
+            TabOrder = 3
           end
         end
         object pnlBodyFicha: TPanel

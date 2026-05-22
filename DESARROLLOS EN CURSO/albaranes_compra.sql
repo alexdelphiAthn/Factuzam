@@ -238,6 +238,93 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
+-- 2bis. Columnas para soporte de tallas pivotadas en linea
+-- (igual que SESLIN: ID_AC_PIVOT identifica el conjunto de tallas
+-- usado y TOTAL_UNIDADES es la suma de celdas de esa linea).
+-- ----------------------------------------------------------------------------
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_albaranes_compra_lineas'
+     AND COLUMN_NAME  = 'ID_AC_PIVOT_ALBCLIN'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_albaranes_compra_lineas` '
+  'ADD COLUMN `ID_AC_PIVOT_ALBCLIN` int(11) NULL DEFAULT NULL '
+  '     COMMENT ''Conjunto de atributos pivot (fza_atributos_conjuntos)'' '
+  'AFTER `CODIGO_UNIDAD_ALBCLIN`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_albaranes_compra_lineas'
+     AND COLUMN_NAME  = 'TOTAL_UNIDADES_ALBCLIN'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_albaranes_compra_lineas` '
+  'ADD COLUMN `TOTAL_UNIDADES_ALBCLIN` decimal(19,6) NULL DEFAULT 0 '
+  '     COMMENT ''SUM(CANTIDAD) de celdas cuando ID_AC_PIVOT esta '
+  'fijado'' '
+  'AFTER `CANTIDAD_ALBCLIN`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2ter. fza_albaranes_compra_celdas: cantidad por (linea, fila, talla)
+-- Espejo de fza_compras_sesiones_celdas. Sufijo ALBCCEL.
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_albaranes_compra_celdas'
+);
+SET @ddl := IF(@tab_exists = 0,
+  'CREATE TABLE `fza_albaranes_compra_celdas` ('
+  '  `SERIE_ALBC_ALBCCEL`  varchar(20)   NOT NULL,'
+  '  `NUMERO_ALBC_ALBCCEL` varchar(20)   NOT NULL,'
+  '  `LINEA_ALBC_ALBCCEL`  varchar(4)    NOT NULL,'
+  '  `ID_FILA_ALBC_ALBCCEL` int(11)      NOT NULL DEFAULT 1,'
+  '  `ID_AV_PIVOT_ALBCCEL` int(11)       NOT NULL'
+  '       COMMENT ''ID del valor de atributo (talla) que pivota'','
+  '  `CANTIDAD_ALBCCEL`    decimal(19,6) NOT NULL DEFAULT 0,'
+  '  `CODIGO_ALM_ALBCCEL`  varchar(10)   NULL DEFAULT NULL,'
+  '  `INSTANTE_MODIF` timestamp NOT NULL'
+  '       DEFAULT current_timestamp() ON UPDATE current_timestamp(),'
+  '  `INSTANTE_ALTA`  timestamp NOT NULL'
+  '       DEFAULT ''0000-00-00 00:00:00'','
+  '  `USUARIO_ALTA`   varchar(100) NOT NULL,'
+  '  `USUARIO_MODIF`  varchar(100) NOT NULL,'
+  '  PRIMARY KEY (`SERIE_ALBC_ALBCCEL`,`NUMERO_ALBC_ALBCCEL`,'
+  '               `LINEA_ALBC_ALBCCEL`,`ID_FILA_ALBC_ALBCCEL`,'
+  '               `ID_AV_PIVOT_ALBCCEL`)'
+  ')',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_albaranes_compra_celdas'
+     AND INDEX_NAME   = 'IDX_ALBCCEL_LINEA'
+);
+SET @ddl := IF(@idx_exists = 0,
+  'ALTER TABLE `fza_albaranes_compra_celdas` '
+  'ADD INDEX `IDX_ALBCCEL_LINEA` '
+  '(`SERIE_ALBC_ALBCCEL`,`NUMERO_ALBC_ALBCCEL`,`LINEA_ALBC_ALBCCEL`)',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
 -- 3. Alinear fza_tipos_documentos con el nombre real de la tabla
 -- Antes apuntaba a 'fza_albaranes_compras' (plural) — corregimos a la
 -- forma que usamos realmente.
