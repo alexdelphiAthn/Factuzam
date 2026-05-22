@@ -77,7 +77,6 @@ type
     grdStock      : TcxGrid;
       tvStock       : TcxGridDBTableView;
       glStock       : TcxGridLevel;
-      colTalla      : TcxGridDBColumn;
     pnlEjes       : TPanel;
       pcEje         : TcxPageControl;
         tsPorColor    : TcxTabSheet;
@@ -98,8 +97,11 @@ type
     FDs         : TDataSource;
     FCodArt     : string;
     FCodSku     : string;
-    FColumnas   : TArray<TInfoColumna>;  // Codigo + Texto + Hex por columna
+    FColumnas   : TArray<TInfoColumna>;  // Tallas (columnas dinamicas)
     FColsDin    : TList<TcxGridDBColumn>;
+    FColSwatch  : TcxGridDBColumn;       // cuadradito de color (Por Color)
+    FColGrupo   : TcxGridDBColumn;       // nombre de la fila (color o alm)
+    FStyleHex   : TDictionary<string, TcxStyle>;
     procedure CargarAlmacenes;
     procedure CargarFoto;
     procedure CargarInfoPrecios;
@@ -107,10 +109,15 @@ type
     function  AlmacenesSeleccionadosSQL: string;  // 'CODA','CODB' o NULL
     function  AlmacenesSeleccionadosLista: TArray<string>;
     function  ColoresArticulo: TArray<TInfoColumna>;
-    function  ConstruirSQLPivot(const AColumnas: TArray<TInfoColumna>;
+    function  TallasArticulo: TArray<TInfoColumna>;
+    function  ConstruirSQLPivot(const ATallas: TArray<TInfoColumna>;
                                  AEsColor: Boolean): string;
     function  EstadoBaseSelect: string;  // CTE/source segun estado
-    procedure ReconstruirColumnas(const AColumnas: TArray<TInfoColumna>);
+    procedure ReconstruirColumnas(const ATallas: TArray<TInfoColumna>;
+                                   AEsColor: Boolean);
+    procedure tvStockStylesGetContentStyle(Sender: TcxCustomGridTableView;
+              ARecord: TcxCustomGridRecord; AItem: TcxCustomGridTableItem;
+              var AStyle: TcxStyle);
     procedure RecargarConsulta;
   public
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
@@ -165,7 +172,10 @@ begin
   FDs  := TDataSource.Create(Self);
   FDs.DataSet := FQry;
   tvStock.DataController.DataSource := FDs;
-  FColsDin := TList<TcxGridDBColumn>.Create;
+  FColsDin   := TList<TcxGridDBColumn>.Create;
+  FStyleHex  := TDictionary<string, TcxStyle>.Create;
+  // Hook style-getter — pinta la celda del cuadradito con el HEX del color
+  tvStock.Styles.OnGetContentStyle := tvStockStylesGetContentStyle;
 
   // Combo de estados
   cbbEstado.Properties.Items.Clear;
@@ -192,6 +202,7 @@ begin
   end;
   FreeAndNil(FDs);
   FreeAndNil(FColsDin);
+  FreeAndNil(FStyleHex);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -580,37 +591,147 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Build SQL pivote: rows=talla, cols=almacenes o colores
+//  Build SQL pivote: rows=almacenes o colores, cols=tallas
 // ---------------------------------------------------------------------------
+// Las TALLAS van SIEMPRE como columnas dinamicas (T0..Tn-1). Las filas
+// son almacenes (los marcados en clbAlmacenes) o colores del articulo
+// (todos los del articulo). El campo HEX viaja para que el style del
+// cuadradito en "Por Color" lo pinte; en "Por Almacen" HEX queda en ''.
 function TfrmStockConsulta.ConstruirSQLPivot(
-  const AColumnas: TArray<TInfoColumna>; AEsColor: Boolean): string;
+  const ATallas: TArray<TInfoColumna>; AEsColor: Boolean): string;
 var
-  sBase, sCols, sCampoFiltro: string;
+  sBase, sCols, sOuter, sJoin, sWhere, sGroup, sOrder: string;
   i: Integer;
+  alms: TArray<string>;
 begin
   sBase := EstadoBaseSelect;
-  if AEsColor then sCampoFiltro := 'COLOR_AV'
-  else             sCampoFiltro := 'ALM';
-
   sCols := '';
-  for i := 0 to High(AColumnas) do
-  begin
-    sCols := sCols + Format(', SUM(CASE WHEN B.%s = %s THEN B.CANTIDAD ELSE 0 END) AS C%d',
-                            [sCampoFiltro, QuotedStr(AColumnas[i].Codigo), i]);
-  end;
+  for i := 0 to High(ATallas) do
+    sCols := sCols + Format(', SUM(CASE WHEN B.TALLA_AV = %s THEN B.CANTIDAD ELSE 0 END) AS T%d',
+                            [QuotedStr(ATallas[i].Codigo), i]);
 
-  Result :=
-    'SELECT B.TALLA_AV AS TALLA, COALESCE(B.ORDEN_TALLA, 0) AS ORDEN' +
-    sCols + ', SUM(B.CANTIDAD) AS TOTAL ' +
-    '  FROM (' + sBase + ') B ' +
-    ' WHERE B.TALLA_AV IS NOT NULL ' +
-    ' GROUP BY B.TALLA_AV, COALESCE(B.ORDEN_TALLA, 0) ' +
-    ' ORDER BY COALESCE(B.ORDEN_TALLA, 0), B.TALLA_AV';
+  if AEsColor then
+  begin
+    // Filas = colores del articulo, vienen de fza_atributos_valores con
+    // ID_VA_AV='CO' filtrado a los AVs presentes en SKUs del articulo.
+    sOuter :=
+      '(SELECT DISTINCT AV.ID_AV, AV.AV, AV.ORDEN_AV, AV.ID_ATB_AV ' +
+      '   FROM fza_articulos_skus SKU ' +
+      '   JOIN fza_atributos_sku SA ' +
+      '     ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '   JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
+      '  WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+      '    AND AV.ID_VA_AV = ''CO'') C';
+    sJoin :=
+      ' LEFT JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = C.ID_ATB_AV ' +
+      ' LEFT JOIN (' + sBase + ') B ON B.COLOR_AV = C.AV';
+    sWhere := '';
+    sGroup := ' GROUP BY C.AV, ATB.HEX_ATB, C.ORDEN_AV';
+    sOrder := ' ORDER BY C.ORDEN_AV, C.AV';
+    Result :=
+      'SELECT C.AV AS GRUPO, COALESCE(ATB.HEX_ATB, '''') AS HEX, ' +
+      '       C.ORDEN_AV AS ORDEN' + sCols + ', SUM(B.CANTIDAD) AS TOTAL ' +
+      '  FROM ' + sOuter + sJoin + sWhere + sGroup + sOrder;
+  end
+  else
+  begin
+    // Filas = almacenes marcados en el check-list.
+    alms := AlmacenesSeleccionadosLista;
+    if Length(alms) = 0 then
+    begin
+      // Sin almacenes marcados: no hay filas que mostrar.
+      Result := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN' +
+                sCols + ', 0 AS TOTAL FROM dual WHERE 0';
+      Exit;
+    end;
+    Result :=
+      'SELECT ALM.CODIGO_ALM_ALM AS GRUPO, '''' AS HEX, ' +
+      '       ALM.ORDEN_ALM AS ORDEN' + sCols + ', SUM(B.CANTIDAD) AS TOTAL ' +
+      '  FROM fza_almacenes ALM ' +
+      '  LEFT JOIN (' + sBase + ') B ON B.ALM = ALM.CODIGO_ALM_ALM ' +
+      ' WHERE ALM.CODIGO_ALM_ALM IN (' + AlmacenesSeleccionadosSQL + ') ' +
+      ' GROUP BY ALM.CODIGO_ALM_ALM, ALM.ORDEN_ALM ' +
+      ' ORDER BY ALM.ORDEN_ALM, ALM.CODIGO_ALM_ALM';
+  end;
 end;
 
 // ---------------------------------------------------------------------------
 //  Reconstruir columnas dinamicas del grid
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+//  Tallas del articulo (columnas dinamicas del grid)
+// ---------------------------------------------------------------------------
+function TfrmStockConsulta.TallasArticulo: TArray<TInfoColumna>;
+var
+  q: TUniQuery;
+  inf: TInfoColumna;
+  iAcPivot: Integer;
+begin
+  SetLength(Result, 0);
+  if Trim(FCodArt) = '' then Exit;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+
+    // 1. Conjunto pivot (tallas) asignado al articulo. Si la asignacion
+    //    tiene varios candidatos no-color, cogemos el primero por
+    //    ID_VA_ACA. Si el articulo no tiene asignacion, fallback en (2).
+    q.SQL.Text :=
+      'SELECT ID_AC_ACA FROM fza_articulos_conjuntos_asign ' +
+      ' WHERE CODIGO_ART_ACA = :art ' +
+      '   AND ID_VA_ACA <> ''CO'' ' +
+      ' ORDER BY ID_VA_ACA LIMIT 1';
+    q.ParamByName('art').AsString := FCodArt;
+    q.Open;
+    iAcPivot := 0;
+    if not q.IsEmpty then iAcPivot := q.FieldByName('ID_AC_ACA').AsInteger;
+    q.Close;
+
+    if iAcPivot > 0 then
+    begin
+      // 1b. Todas las tallas del conjunto, en orden. Salen TODAS aunque
+      //     algunas no tengan SKUs/stock — el pivote las muestra a 0.
+      q.SQL.Text :=
+        'SELECT AV.AV, AV.ORDEN_AV ' +
+        '  FROM fza_atributos_conjuntos_det ACD ' +
+        '  JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
+        ' WHERE ACD.ID_AC_ACD = :ac ' +
+        ' ORDER BY ACD.ORDEN_ACD, AV.AV';
+      q.ParamByName('ac').AsInteger := iAcPivot;
+    end
+    else
+    begin
+      // 2. Fallback: tallas presentes en SKUs del articulo (puede ser
+      //    incompleto pero al menos muestra lo que hay).
+      q.SQL.Text :=
+        'SELECT DISTINCT AV.AV, AV.ORDEN_AV ' +
+        '  FROM fza_articulos_skus SKU ' +
+        '  JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
+        ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+        '   AND AV.ID_VA_AV <> ''CO'' ' +
+        ' ORDER BY AV.ORDEN_AV, AV.AV';
+      q.ParamByName('art').AsString := FCodArt;
+    end;
+    q.Open;
+    while not q.Eof do
+    begin
+      inf := Default(TInfoColumna);
+      inf.Codigo  := q.FieldByName('AV').AsString;
+      inf.Texto   := q.FieldByName('AV').AsString;
+      inf.Hex     := '';
+      inf.EsColor := False;
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := inf;
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 function HexAColor(const AHex: string; out AColor: TColor): Boolean;
 var
   s: string;
@@ -627,57 +748,67 @@ begin
 end;
 
 procedure TfrmStockConsulta.ReconstruirColumnas(
-  const AColumnas: TArray<TInfoColumna>);
+  const ATallas: TArray<TInfoColumna>; AEsColor: Boolean);
 var
   i: Integer;
-  col: TcxGridDBColumn;
-  colTotal: TcxGridDBColumn;
-  st: TcxStyle;
-  c: TColor;
+  col, colTotal: TcxGridDBColumn;
 begin
-  // Borrar columnas dinamicas anteriores. Los estilos creados con
-  // Owner=tvStock se liberan automaticamente al destruirse el grid.
+  // Borrar columnas dinamicas anteriores (no hay columnas fijas: todo
+  // se crea en este metodo y se libera al volver a llamar).
   for i := FColsDin.Count - 1 downto 0 do
     FColsDin[i].Free;
   FColsDin.Clear;
+  FColSwatch := nil;
+  FColGrupo  := nil;
 
-  for i := 0 to High(AColumnas) do
+  // 1. Cuadradito de color: columna estrecha, solo visible en Por Color.
+  //    Su contenido (HEX) no se muestra como texto, pero
+  //    tvStockStylesGetContentStyle lo lee del registro y pinta el
+  //    fondo de la celda con el color basico.
+  if AEsColor then
+  begin
+    FColSwatch := tvStock.CreateColumn;
+    FColSwatch.Caption := '';
+    FColSwatch.DataBinding.FieldName := 'HEX';
+    FColSwatch.PropertiesClassName := 'TcxTextEditProperties';
+    FColSwatch.HeaderAlignmentHorz := taCenter;
+    FColSwatch.Width := 22;
+    FColSwatch.Options.Editing  := False;
+    FColSwatch.Options.Sorting  := False;
+    FColSwatch.Options.Filtering := False;
+    // La celda se pintara con el estilo de fondo HEX y el texto se
+    // pone del mismo color que el fondo, asi que el HEX no se ve.
+    FColsDin.Add(FColSwatch);
+  end;
+
+  // 2. Columna principal de fila: nombre del color o codigo del almacen.
+  FColGrupo := tvStock.CreateColumn;
+  if AEsColor then FColGrupo.Caption := 'Color'
+  else             FColGrupo.Caption := 'Almac'#233'n';
+  FColGrupo.DataBinding.FieldName := 'GRUPO';
+  FColGrupo.HeaderAlignmentHorz := taLeft;
+  FColGrupo.Width := 130;
+  FColGrupo.Options.Editing := False;
+  FColGrupo.Options.Sorting := False;
+  FColsDin.Add(FColGrupo);
+
+  // 3. Tallas: columnas dinamicas T0..Tn-1.
+  for i := 0 to High(ATallas) do
   begin
     col := tvStock.CreateColumn;
-    col.Caption := AColumnas[i].Texto;
-    col.DataBinding.FieldName := Format('C%d', [i]);
+    col.Caption := ATallas[i].Texto;
+    col.DataBinding.FieldName := Format('T%d', [i]);
     col.PropertiesClassName := 'TcxCurrencyEditProperties';
-    // Numero plano sin simbolo de moneda. Si la cantidad es entera
-    // (Uds.) no muestra decimales; si tiene fraccion los muestra.
     TcxCurrencyEditProperties(col.Properties).DisplayFormat := '#,##0.##;-#,##0.##;0';
     TcxCurrencyEditProperties(col.Properties).UseDisplayFormatWhenEditing := True;
     col.HeaderAlignmentHorz := taCenter;
-    col.Width := 90;
+    col.Width := 60;
     col.Options.Editing := False;
     col.Options.Sorting := False;
-    col.Tag := i;
-
-    // Si es columna de color y tenemos HEX, pintamos el header con ese
-    // color para que el usuario lo reconozca de un vistazo. El texto se
-    // pone en blanco o negro segun la luminancia para que se lea bien.
-    if AColumnas[i].EsColor and (AColumnas[i].Hex <> '') and
-       HexAColor(AColumnas[i].Hex, c) then
-    begin
-      st := TcxStyle.Create(tvStock);
-      st.AssignedValues := [svColor, svTextColor];
-      st.Color := c;
-      if (GetRValue(c) * 299 + GetGValue(c) * 587 + GetBValue(c) * 114)
-         div 1000 < 128 then
-        st.TextColor := clWhite
-      else
-        st.TextColor := clBlack;
-      col.Styles.Header := st;
-    end;
-
     FColsDin.Add(col);
   end;
 
-  // Columna Total al final
+  // 4. Total al final.
   colTotal := tvStock.CreateColumn;
   colTotal.Caption := 'Total';
   colTotal.DataBinding.FieldName := 'TOTAL';
@@ -685,13 +816,53 @@ begin
   TcxCurrencyEditProperties(colTotal.Properties).DisplayFormat := '#,##0.##;-#,##0.##;0';
   TcxCurrencyEditProperties(colTotal.Properties).UseDisplayFormatWhenEditing := True;
   colTotal.HeaderAlignmentHorz := taCenter;
-  colTotal.Width := 90;
+  colTotal.Width := 70;
   colTotal.Options.Editing := False;
   colTotal.Options.Sorting := False;
-  colTotal.Tag := -1;
   FColsDin.Add(colTotal);
 
-  FColumnas := Copy(AColumnas);
+  FColumnas := Copy(ATallas);
+end;
+
+// ---------------------------------------------------------------------------
+//  Cuadradito de color: pinta el fondo de la celda HEX con el HEX del
+//  color basico de la fila. La skin de DevExpress NO pisa el estilo
+//  de contenido de celda (solo el header), asi que esto siempre se ve.
+// ---------------------------------------------------------------------------
+procedure TfrmStockConsulta.tvStockStylesGetContentStyle(
+  Sender: TcxCustomGridTableView; ARecord: TcxCustomGridRecord;
+  AItem: TcxCustomGridTableItem; var AStyle: TcxStyle);
+var
+  s     : string;
+  c     : TColor;
+  st    : TcxStyle;
+begin
+  AStyle := nil;
+  if FColSwatch = nil then Exit;
+  if AItem <> FColSwatch then Exit;
+  if not Assigned(FQry) or (not FQry.Active) then Exit;
+  if ARecord = nil then Exit;
+
+  // El registro del grid trae el HEX en una columna; lo leemos del
+  // dataset directo (mas barato que pivotar el ARecord.Values).
+  s := VarToStr(ARecord.Values[FColSwatch.Index]);
+  if (s = '') or (Length(s) <> 6) then Exit;
+
+  // Cache de estilos por HEX para no crear uno nuevo en cada redraw.
+  if FStyleHex.TryGetValue(s, st) then
+  begin
+    AStyle := st;
+    Exit;
+  end;
+  if HexAColor(s, c) then
+  begin
+    st := TcxStyle.Create(tvStock);
+    st.AssignedValues := [svColor, svTextColor];
+    st.Color := c;
+    st.TextColor := c;  // mismo color que fondo: oculta el texto HEX
+    FStyleHex.Add(s, st);
+    AStyle := st;
+  end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -722,43 +893,24 @@ end;
 
 procedure TfrmStockConsulta.RecargarConsulta;
 var
-  cols  : TArray<TInfoColumna>;
-  alms  : TArray<string>;
-  i     : Integer;
-  inf   : TInfoColumna;
+  tallas  : TArray<TInfoColumna>;
   bEsColor: Boolean;
 begin
   if FQry.Active then FQry.Close;
+  bEsColor := pcEje.ActivePage = tsPorColor;
+
   if Trim(FCodArt) = '' then
   begin
-    ReconstruirColumnas([]);
-    FQry.SQL.Text := 'SELECT '''' AS TALLA, 0 AS ORDEN, 0 AS TOTAL FROM dual ' +
-                     'WHERE 0';
+    ReconstruirColumnas([], bEsColor);
+    FQry.SQL.Text := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN, ' +
+                     '0 AS TOTAL FROM dual WHERE 0';
     FQry.Open;
     Exit;
   end;
 
-  bEsColor := pcEje.ActivePage = tsPorColor;
-  if bEsColor then
-    cols := ColoresArticulo
-  else
-  begin
-    SetLength(cols, 0);
-    alms := AlmacenesSeleccionadosLista;
-    for i := 0 to High(alms) do
-    begin
-      inf := Default(TInfoColumna);
-      inf.Codigo  := alms[i];
-      inf.Texto   := alms[i];
-      inf.Hex     := '';
-      inf.EsColor := False;
-      SetLength(cols, Length(cols) + 1);
-      cols[High(cols)] := inf;
-    end;
-  end;
-
-  ReconstruirColumnas(cols);
-  FQry.SQL.Text := ConstruirSQLPivot(cols, bEsColor);
+  tallas := TallasArticulo;
+  ReconstruirColumnas(tallas, bEsColor);
+  FQry.SQL.Text := ConstruirSQLPivot(tallas, bEsColor);
   FQry.Open;
 end;
 
