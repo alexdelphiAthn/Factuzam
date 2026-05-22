@@ -813,9 +813,6 @@ begin
 end;
 
 initialization
-
-finalization
-  if Assigned(frmStockConsulta) then
-    FreeAndNil(frmStockConsulta);
+  frmStockConsulta := nil;
 
 end.
