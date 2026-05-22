@@ -135,20 +135,23 @@ const
   TAG = 'Clientes.AbrirDetalles';
 
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-//  var
-//    swQ: TStopwatch;
+  var
+    swQ: TStopwatch;
   begin
     if qry.Active then Exit;
-//    swQ := TStopwatch.StartNew;
-//    try
+    swQ := TStopwatch.StartNew;
+    try
       qry.Open;
-//      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-//    except
-//      on E: Exception do
-//        inLibLog.Log.LogPerf(TAG,
-//          Nombre + ' ERROR=' + E.Message,
-//          swQ.ElapsedMilliseconds);
-//    end;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf(TAG,
+          Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
   end;
 
 var
@@ -161,44 +164,50 @@ begin
   AbrirConTiempo(unqryPaises,    'unqryPaises');
   AbrirConTiempo(unqryFormaPago, 'unqryFormaPago');
   AbrirConTiempo(unqryTarifas,   'unqryTarifas');
-//  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmClientes.AsegurarHistoriaFacturacionAbierta;
-//var swQ: TStopwatch;
+var swQ: TStopwatch;
 begin
   if unqryFacturasClientes.Active
      and unqryFacturasLineasClientes.Active then Exit;
-//  swQ := TStopwatch.StartNew;
-//  try
+  swQ := TStopwatch.StartNew;
+  try
     if not unqryFacturasClientes.Active then
       unqryFacturasClientes.Open;
     if not unqryFacturasLineasClientes.Active then
       unqryFacturasLineasClientes.Open;
-//    inLibLog.Log.LogPerf('Clientes.Lazy',
-//      'unqryFacturasClientes+Lineas OK', swQ.ElapsedMilliseconds);
-//  except
-//    on E: Exception do
-//      inLibLog.Log.LogPerf('Clientes.Lazy',
-//        'unqryFacturasClientes+Lineas ERROR=' + E.Message,
-//        swQ.ElapsedMilliseconds);
-//  end;
+    inLibLog.Log.LogPerf('Clientes.Lazy',
+      'unqryFacturasClientes+Lineas OK', swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('Clientes.Lazy',
+        'unqryFacturasClientes+Lineas ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+      raise;
+    end;
+  end;
 end;
 
 procedure TdmClientes.AsegurarDepositosAbierta;
-//var swQ: TStopwatch;
+var swQ: TStopwatch;
 begin
   if unqryDepositos.Active then Exit;
-//  swQ := TStopwatch.StartNew;
-//  try
+  swQ := TStopwatch.StartNew;
+  try
     unqryDepositos.Open;
-//    inLibLog.Log.LogPerf('Clientes.Lazy', 'unqryDepositos OK',
-//      swQ.ElapsedMilliseconds);
-//  except
-//    on E: Exception do
-//      inLibLog.Log.LogPerf('Clientes.Lazy',
-//        'unqryDepositos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-//  end;
+    inLibLog.Log.LogPerf('Clientes.Lazy', 'unqryDepositos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('Clientes.Lazy',
+        'unqryDepositos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+      raise;
+    end;
+  end;
 end;
 
 procedure TdmClientes.DataModuleDestroy(Sender: TObject);

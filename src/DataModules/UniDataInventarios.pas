@@ -676,11 +676,11 @@ begin
     msDef := swQry2.ElapsedMilliseconds;
   end;
 
-//  inLibLog.Log.LogPerf('RellenarDatosArticulo',
-//    Format('articulo=%s NumAtr=%d | unqryArticulo=%d ' +
-//           'unqryDefinicionArticulo=%d',
-//           [ACodigoArticulo, ANumAtributos, msArt, msDef]),
-//    swTotal.ElapsedMilliseconds);
+  inLibLog.Log.LogPerf('RellenarDatosArticulo',
+    Format('articulo=%s NumAtr=%d | unqryArticulo=%d ' +
+           'unqryDefinicionArticulo=%d',
+           [ACodigoArticulo, ANumAtributos, msArt, msDef]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TdmInventarios.RellenarDatosSku(const ASku: string;
@@ -703,10 +703,10 @@ begin
     APMPActual := unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
   end;
 
-//  inLibLog.Log.LogPerf('RellenarDatosSku',
-//    Format('sku=%s almacen=%s teo=%.2f pmp=%.4f',
-//           [ASku, FCodigoAlmacen, ACantidadTeorica, APMPActual]),
-//    swTotal.ElapsedMilliseconds);
+  inLibLog.Log.LogPerf('RellenarDatosSku',
+    Format('sku=%s almacen=%s teo=%.2f pmp=%.4f',
+           [ASku, FCodigoAlmacen, ACantidadTeorica, APMPActual]),
+    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TdmInventarios.cdsLineasNewRecord(DataSet: TDataSet);

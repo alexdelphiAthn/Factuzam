@@ -141,22 +141,25 @@ begin
 end;
 
 procedure TdmIvas.AbrirDetalles;
-//var
-//  swQ: TStopwatch;
+var
+  swQ: TStopwatch;
 begin
   inherited;
   if unqryZonasIVA.Active then Exit;
-//  swQ := TStopwatch.StartNew;
-//  try
+  swQ := TStopwatch.StartNew;
+  try
     unqryZonasIVA.Open;
-//    inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
-//      'unqryZonasIVA OK', swQ.ElapsedMilliseconds);
-//  except
-//    on E: Exception do
-//      inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
-//        'unqryZonasIVA ERROR=' + E.Message,
-//        swQ.ElapsedMilliseconds);
-//  end;
+    inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
+      'unqryZonasIVA OK', swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
+        'unqryZonasIVA ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+      raise;
+    end;
+  end;
 end;
 
 function TdmIvas.ExisteGrupoZonaIVA(sCodigoGrupo: String): Boolean;
