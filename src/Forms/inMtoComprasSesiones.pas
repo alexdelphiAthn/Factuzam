@@ -476,20 +476,26 @@ var
   i        : Integer;
   col      : TcxGridDBColumn;
   curProps : TcxCurrencyEditProperties;
-  idxRefe  : Integer;
 begin
   // Inserta CANT_TALLAS_MAX columnas no-bound entre dbcLinTallas (sistema
   // de tallas) y dbcLinTotalTallas. Cada columna persiste su valor en el
   // DataController.Values del cxGrid; cuando el usuario teclea, el
   // OnEditValueChanged delega en FGestorTallas.PersistirCeldaActiva,
   // que upsertea en la tabla de celdas y refresca totales.
+  //
+  // Insercion dinamica: cada nueva columna se coloca en
+  // dbcLinTotalTallas.Index (justo antes). Tras la asignacion cxGrid
+  // desplaza TotalTallas una posicion, asi que en la siguiente iteracion
+  // el indice "antes de TotalTallas" ya es uno mayor y las columnas se
+  // apilan en orden col0, col1, ..., col(N-1), TotalTallas. Antes
+  // se usaba `idxRefe + i` con idxRefe capturado fuera del bucle: solo
+  // colocaba bien la primera y el resto acababan al final del header.
   if not Assigned(dbcLinTotalTallas) then Exit;
-  idxRefe := dbcLinTotalTallas.Index;
   for i := 0 to CANT_TALLAS_MAX - 1 do
   begin
     col := tvLineas.CreateColumn;
     col.Name        := 'dbcLinTalla' + Format('%.2d', [i + 1]);
-    col.Index       := idxRefe + i;
+    col.Index       := dbcLinTotalTallas.Index;
     col.Caption     := '';
     col.Width       := 50;
     col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
