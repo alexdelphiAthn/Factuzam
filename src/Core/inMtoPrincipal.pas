@@ -47,7 +47,7 @@ uses
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
   ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
-  dxGDIPlusClasses, cxImage;
+  dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -198,6 +198,7 @@ type
     function CopiaSeguridad: Boolean;
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ActualizarFondoLogo;
+    procedure CargarFondoLogo;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -410,17 +411,53 @@ begin
   cxMemo1.Visible     := True;
 {$ENDIF}
   AplicarTema;
-  if not Application.Icon.Empty then
-    imgFondoLogo.Picture.Icon.Assign(Application.Icon);
+  CargarFondoLogo;
+  imgFondoLogo.BringToFront;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
+end;
+
+// El Picture.Data del .dfm trae un envoltorio TdxSmartImage que el TImage
+// de VCL no sabe deserializar (queda vacio al cargar el form). Cargamos
+// 'fondo.png' desde disco en runtime probando rutas candidatas relativas
+// al .exe (Debug queda en Win32\Debug, Release al lado de los assets).
+procedure TfrmMtoPrincipal.CargarFondoLogo;
+const
+  CRutas: array[0..3] of string = (
+    'fondo.png',
+    '..\..\fondo.png',
+    'logo_art\icon-256.png',
+    '..\..\logo_art\icon-256.png'
+  );
+var
+  sBase, sRuta: string;
+  i: Integer;
+begin
+  sBase := inLibDir.DirApp;
+  for i := 0 to High(CRutas) do
+  begin
+    sRuta := sBase + CRutas[i];
+    if FileExists(sRuta) then
+    begin
+      try
+        imgFondoLogo.Picture.LoadFromFile(sRuta);
+        Exit;
+      except
+        on E: Exception do
+          inLibLog.Log.LogWarning('No se pudo cargar fondo ' + sRuta +
+                                  ': ' + E.Message);
+      end;
+    end;
+  end;
+  inLibLog.Log.LogWarning('No se encontro imagen de fondo (fondo.png).');
 end;
 
 procedure TfrmMtoPrincipal.ActualizarFondoLogo;
 var
   bDebeVerse: Boolean;
 begin
-  bDebeVerse := (pcPrincipal.PageCount = 0) and (not Application.Icon.Empty);
+  bDebeVerse := (pcPrincipal.PageCount = 0) and
+                (imgFondoLogo.Picture.Graphic <> nil);
   if (imgFondoLogo.Visible <> bDebeVerse) then
     imgFondoLogo.Visible := bDebeVerse;
 end;

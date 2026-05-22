@@ -382,12 +382,21 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 3
             OnClick = btnFotoClick
           end
+          object btnArbolFamilias: TcxButton
+            Left = 600
+            Top = 5
+            Width = 150
+            Height = 28
+            Caption = #193'rbol familias (F3)'
+            TabOrder = 4
+            OnClick = btnArbolFamiliasClick
+          end
           object lblHint: TcxLabel
-            Left = 598
+            Left = 760
             Top = 7
             Caption =
-              'F3 sobre Familia. PVP se propone al teclear el coste.'
-            TabOrder = 4
+              'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el coste.'
+            TabOrder = 5
           end
           object dlgFoto: TOpenDialog
             Filter = 'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp'
@@ -432,7 +441,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinCodArt: TcxGridDBColumn
               Caption = 'C'#243'd. art'#237'culo'
               DataBinding.FieldName = 'CODIGO_ART_TENTATIVO_SESLIN'
-              Options.Editing = False
+              PropertiesClassName = 'TcxTextEditProperties'
+              Properties.CharCase = ecUpperCase
+              Properties.OnEditValueChanged = dbcLinCodArtPropertiesEditValueChanged
               Width = 130
             end
             object dbcLinRefPrv: TcxGridDBColumn
