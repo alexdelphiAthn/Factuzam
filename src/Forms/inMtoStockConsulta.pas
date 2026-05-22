@@ -775,7 +775,6 @@ begin
   else
     FColGrupo.Width := 130;
   FColGrupo.HeaderAlignmentHorz := taLeftJustify;
-  FColGrupo.Options.Editing := False;
   FColGrupo.Options.Sorting := False;
   FColsDin.Add(FColGrupo);
 
