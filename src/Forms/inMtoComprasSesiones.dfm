@@ -371,6 +371,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 2
             OnClick = btnNuevoColorClick
           end
+<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.dfm
           object btnFoto: TcxButton
             Left = 472
             Top = 5
@@ -394,6 +395,24 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
             Left = 920
             Top = 8
+=======
+          object btnArbolFamilias: TcxButton
+            Left = 472
+            Top = 5
+            Width = 150
+            Height = 28
+            Caption = #193'rbol familias (F3)'
+            TabOrder = 3
+            OnClick = btnArbolFamiliasClick
+          end
+          object lblHint: TcxLabel
+            Left = 630
+            Top = 7
+            Caption =
+              'F3 sobre Familia abre el selector. PVP se propone al teclear el ' +
+              'coste.'
+            TabOrder = 4
+>>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.dfm
           end
         end
         object cxgrdLineas: TcxGrid
@@ -432,7 +451,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinCodArt: TcxGridDBColumn
               Caption = 'C'#243'd. art'#237'culo'
               DataBinding.FieldName = 'CODIGO_ART_TENTATIVO_SESLIN'
-              Options.Editing = False
+              PropertiesClassName = 'TcxTextEditProperties'
+              Properties.CharCase = ecUpperCase
+              Properties.OnEditValueChanged = dbcLinCodArtPropertiesEditValueChanged
               Width = 130
             end
             object dbcLinRefPrv: TcxGridDBColumn
