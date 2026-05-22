@@ -605,15 +605,29 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       WordWrap = True
       OnClick = btnCrearClick
     end
-    object btnImprimir: TcxButton
+    object btnRevertir: TcxButton
       Left = 0
       Top = 308
+      Width = 137
+      Height = 40
+      Caption = 'Revertir materializaci'#243'n'
+      Colors.Default = 11337471
+      Colors.Normal = 11337471
+      LookAndFeel.Kind = lfFlat
+      LookAndFeel.NativeStyle = False
+      TabOrder = 2
+      WordWrap = True
+      OnClick = btnRevertirClick
+    end
+    object btnImprimir: TcxButton
+      Left = 0
+      Top = 358
       Width = 137
       Height = 69
       Caption = 'Imprimir horizontal'
       LookAndFeel.Kind = lfFlat
       LookAndFeel.NativeStyle = False
-      TabOrder = 2
+      TabOrder = 3
       WordWrap = True
       OnClick = btnImprimirClick
     end
