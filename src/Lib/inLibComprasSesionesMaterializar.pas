@@ -1690,11 +1690,12 @@ begin
       q.ParamByName('n').AsString := sNumSes;
       q.ExecSQL;
 
-      // 0g. propiedades (CODIGO_ART_PRO)
+      // 0g. propiedades (CODIGO_ART_ART — el sufijo del FK reusa la PK
+      //     del articulo, no el sufijo de la tabla)
       q.SQL.Text :=
         'DELETE P FROM fza_articulos_propiedades P ' +
         '  JOIN fza_compras_sesiones_lineas L ' +
-        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = P.CODIGO_ART_PRO ' +
+        '    ON L.CODIGO_ART_TENTATIVO_SESLIN = P.CODIGO_ART_ART ' +
         ' WHERE L.SERIE_SES_SESLIN  = :s ' +
         '   AND L.NUMERO_SES_SESLIN = :n ' +
         '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
@@ -1703,13 +1704,13 @@ begin
       q.ParamByName('n').AsString := sNumSes;
       q.ExecSQL;
 
-      // 0h. fotos (CODIGO_ART_AFO). Si la tabla no existe en esta BBDD
+      // 0h. fotos (CODIGO_ART_FOT). Si la tabla no existe en esta BBDD
       //     o no hubo fotos, no es critico — try/except con log.
       try
         q.SQL.Text :=
-          'DELETE AFO FROM fza_articulos_fotos AFO ' +
+          'DELETE F FROM fza_articulos_fotos F ' +
           '  JOIN fza_compras_sesiones_lineas L ' +
-          '    ON L.CODIGO_ART_TENTATIVO_SESLIN = AFO.CODIGO_ART_AFO ' +
+          '    ON L.CODIGO_ART_TENTATIVO_SESLIN = F.CODIGO_ART_FOT ' +
           ' WHERE L.SERIE_SES_SESLIN  = :s ' +
           '   AND L.NUMERO_SES_SESLIN = :n ' +
           '   AND (L.ACCION_DUPLICADO_SESLIN IS NULL ' +
