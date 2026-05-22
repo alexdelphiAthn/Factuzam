@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.2.0                                                         }
+{ Version:       0.3.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -14,14 +14,25 @@
 {    via TfrmMtoGen.ResolverArtSkuActivo.                                      }
 {                                                                              }
 {    Layout:                                                                   }
-{      - Cabecera: Articulo + descripcion + bloque de precios (PVP / otras     }
-{        tarifas / coste / proveedor[es]) + foto a la derecha.                 }
+{      - Cabecera: Articulo + descripcion + bloque de info del articulo        }
+{        (temporada, tarifas / PVP / VENTAMAYOR / REBAJAS, proveedores con     }
+{        precio de ultima compra) + foto a la derecha.                         }
 {      - Filtros: combo "Estado del stock".                                    }
-{      - Grid pivot: tallas en filas, almacenes o colores en columnas. Las     }
-{        columnas de color llevan un cuadradito HEX al lado del nombre.        }
-{      - Eje: pestanas "Por Color" / "Por Almacen" (default Almacen) + lista   }
-{        de almacenes (TIPO_USO='ESTANDAR' marcados por defecto).              }
+{      - Grid pivot: tallas como columnas, almacenes o colores como filas.     }
+{        Las celdas de color en modo "Por Color" llevan un cuadradito HEX a    }
+{        la izquierda (custom-draw via inLibAtributosPaleta).                  }
+{      - Eje: pestanas "Por Color" / "Por Almacen" (default Almacen). Cada    }
+{        pestana contiene su propio TcxCheckListBox para filtrar las filas:    }
+{          * Por Almacen   -> almacenes activos (TIPO_USO='ESTANDAR' por      }
+{            defecto marcados).                                                }
+{          * Por Color     -> colores AV de los SKUs activos del articulo     }
+{            (todos marcados por defecto).                                     }
+{        El estado de cada checklist persiste entre cambios de pestana y       }
+{        actua como filtro de la otra dimension cuando no es la activa.        }
 {                                                                              }
+{    v0.3: temporada en cabecera, formato de tarifas/proveedores depurado,     }
+{    layout reorganizado: checklist de almacenes movido a la pestana Por       }
+{    Almacen y checklist nuevo de colores en la pestana Por Color.             }
 {    v0.2: pivote dinamico, colores con swatch en cabecera, panel de           }
 {    precios/proveedores. Estado "Prestadas" sigue siendo stub.                }
 {******************************************************************************}
@@ -80,9 +91,11 @@ type
     pnlEjes       : TPanel;
       pcEje         : TcxPageControl;
         tsPorColor    : TcxTabSheet;
+          lblColores    : TcxLabel;
+          clbColores    : TcxCheckListBox;
         tsPorAlmacen  : TcxTabSheet;
-      lblAlmacenes  : TcxLabel;
-      clbAlmacenes  : TcxCheckListBox;
+          lblAlmacenes  : TcxLabel;
+          clbAlmacenes  : TcxCheckListBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -90,6 +103,8 @@ type
     procedure btnArtPropertiesEditValueChanged(Sender: TObject);
     procedure cbbEstadoPropertiesEditValueChanged(Sender: TObject);
     procedure clbAlmacenesClickCheck(Sender: TObject; AIndex: Integer;
+              APrevState, ANewState: TcxCheckBoxState);
+    procedure clbColoresClickCheck(Sender: TObject; AIndex: Integer;
               APrevState, ANewState: TcxCheckBoxState);
     procedure pcEjeChange(Sender: TObject);
     procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
@@ -105,12 +120,14 @@ type
     FColGrupo   : TcxGridDBColumn;       // nombre de la fila (color o alm)
     FEsModoColor: Boolean;
     procedure CargarAlmacenes;
+    procedure CargarColores;
     procedure CargarFoto;
-    procedure CargarInfoPrecios;
+    procedure CargarInfoCabecera;
     function  EstadoActual: TEstadoStock;
     function  AlmacenesSeleccionadosSQL: string;  // 'CODA','CODB' o NULL
     function  AlmacenesSeleccionadosLista: TArray<string>;
-    function  ColoresArticulo: TArray<TInfoColumna>;
+    function  ColoresSeleccionadosSQL: string;    // 'CO1','CO2' o NULL
+    function  ColoresSeleccionadosLista: TArray<string>;
     function  TallasArticulo: TArray<TInfoColumna>;
     function  ConstruirSQLPivot(const ATallas: TArray<TInfoColumna>;
                                  AEsColor: Boolean): string;
@@ -280,6 +297,78 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+//  Colores del articulo (check-list de la pestana "Por Color")
+// ---------------------------------------------------------------------------
+// Carga los AVs distintos de color (ID_VA_AV='CO') que aparecen en los SKUs
+// activos del articulo. Por defecto todos marcados; el usuario puede
+// desmarcar para filtrar las filas (modo Por Color) o las cantidades
+// agregadas (modo Por Almacen).
+procedure TfrmStockConsulta.CargarColores;
+var
+  q   : TUniQuery;
+  item: TcxCheckListBoxItem;
+begin
+  clbColores.Items.Clear;
+  if Trim(FCodArt) = '' then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT DISTINCT AV.AV, AV.ORDEN_AV ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_atributos_sku SA ' +
+      '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
+      ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+      '   AND AV.ID_VA_AV = ''CO'' ' +
+      ' ORDER BY AV.ORDEN_AV, AV.AV';
+    q.ParamByName('art').AsString := FCodArt;
+    q.Open;
+    while not q.Eof do
+    begin
+      item := clbColores.Items.Add;
+      item.Text  := q.FieldByName('AV').AsString;
+      item.State := cbsChecked;
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function TfrmStockConsulta.ColoresSeleccionadosLista: TArray<string>;
+var
+  i: Integer;
+begin
+  SetLength(Result, 0);
+  for i := 0 to clbColores.Items.Count - 1 do
+    if clbColores.Items[i].State = cbsChecked then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := clbColores.Items[i].Text;
+    end;
+end;
+
+function TfrmStockConsulta.ColoresSeleccionadosSQL: string;
+var
+  cols: TArray<string>;
+  i: Integer;
+begin
+  cols := ColoresSeleccionadosLista;
+  if Length(cols) = 0 then
+  begin
+    Result := 'NULL';
+    Exit;
+  end;
+  Result := '';
+  for i := 0 to High(cols) do
+  begin
+    if Result <> '' then Result := Result + ',';
+    Result := Result + QuotedStr(cols[i]);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
 //  Carga de articulo / SKU + foto + info de precios
 // ---------------------------------------------------------------------------
 procedure TfrmStockConsulta.SetArticuloSku(const ACodArt, ACodSku: string);
@@ -309,7 +398,8 @@ begin
   end;
 
   CargarFoto;
-  CargarInfoPrecios;
+  CargarInfoCabecera;
+  CargarColores;
   RecargarConsulta;
 end;
 
@@ -333,11 +423,15 @@ begin
   end;
 end;
 
-procedure TfrmStockConsulta.CargarInfoPrecios;
+// Pinta el bloque de info de la cabecera (temporada + tarifas + proveedores).
+// Las tarifas se listan de la por defecto a las demas (ORDER BY ESDEFAULT
+// DESC, ORDEN_TAR con NULLs al final). Los proveedores van con el principal
+// primero. Se ignoran tarifas/proveedores con SKU especifico — aqui solo
+// mostramos el dato a nivel de articulo.
+procedure TfrmStockConsulta.CargarInfoCabecera;
 var
-  q   : TUniQuery;
-  sb  : TStringList;
-  hayDef: Boolean;
+  q : TUniQuery;
+  sb: TStringList;
 begin
   lblInfo.Caption := '';
   if Trim(FCodArt) = '' then Exit;
@@ -346,6 +440,20 @@ begin
   q  := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
+
+    // ---- Temporada (fza_articulos_propiedades, prop TEMPORADA) ----
+    q.SQL.Text :=
+      'SELECT PV.PV ' +
+      '  FROM fza_articulos_propiedades AP ' +
+      '  LEFT JOIN fza_propiedades_valores PV ' +
+      '    ON PV.ID_PV_ARTPROP = AP.ID_PV_ARTPROP ' +
+      ' WHERE AP.CODIGO_ART_ART = :art ' +
+      '   AND AP.CODIGO_PROP_ARTPROP = ''TEMPORADA''';
+    q.ParamByName('art').AsString := FCodArt;
+    q.Open;
+    if (not q.IsEmpty) and (Trim(q.FieldByName('PV').AsString) <> '') then
+      sb.Add('Temporada: ' + q.FieldByName('PV').AsString);
+    q.Close;
 
     // ---- Tarifas del articulo (sin SKU especifico) ----
     q.SQL.Text :=
@@ -357,25 +465,22 @@ begin
       ' WHERE AT.CODIGO_ART_ARTTAR = :art ' +
       '   AND IFNULL(AT.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
       '   AND AT.ESACTIVO_ARTTAR = ''S'' ' +
-      ' ORDER BY T.ESDEFAULT_TAR DESC, T.ORDEN_TAR, T.NOMBRE_TAR_TAR';
+      ' ORDER BY T.ESDEFAULT_TAR DESC, ' +
+      '          COALESCE(T.ORDEN_TAR, 999999), T.NOMBRE_TAR_TAR';
     q.ParamByName('art').AsString := FCodArt;
     q.Open;
-    hayDef := False;
+    if not q.IsEmpty then
+      sb.Add('');
     while not q.Eof do
     begin
-      if (not hayDef) and (q.FieldByName('ESDEFAULT_TAR').AsString = 'S') then
-      begin
-        sb.Add(Format('PVP (%s): %s',
-          [q.FieldByName('NOMBRE_TAR_TAR').AsString,
-           FormatFloat('#,##0.00', q.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat)
-           + ' '#8364]));
-        hayDef := True;
-      end
-      else
-        sb.Add(Format('  %s: %s',
-          [q.FieldByName('NOMBRE_TAR_TAR').AsString,
-           FormatFloat('#,##0.00', q.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat)
-           + ' '#8364]));
+      sb.Add(Format('%s%s: %s',
+        [IfThen(q.FieldByName('ESDEFAULT_TAR').AsString = 'S',
+                'Tarifa por defecto - ', ''),
+         IfThen(Trim(q.FieldByName('NOMBRE_TAR_TAR').AsString) <> '',
+                q.FieldByName('NOMBRE_TAR_TAR').AsString,
+                q.FieldByName('CODIGO_TAR_ARTTAR').AsString),
+         FormatFloat('#,##0.00', q.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat)
+         + ' '#8364]));
       q.Next;
     end;
     q.Close;
@@ -396,10 +501,12 @@ begin
       sb.Add('');
     while not q.Eof do
     begin
-      sb.Add(Format('%s %s%s: %s',
+      sb.Add(Format('%s%s%s: %s',
         [IfThen(q.FieldByName('ESPROVEEDORPRINCIPAL_AP').AsString = 'S',
-                'Proveedor ppal.', 'Proveedor'),
-         q.FieldByName('RAZON_SOCIAL_PRV').AsString,
+                'Proveedor ppal. - ', 'Proveedor - '),
+         IfThen(Trim(q.FieldByName('RAZON_SOCIAL_PRV').AsString) <> '',
+                q.FieldByName('RAZON_SOCIAL_PRV').AsString,
+                q.FieldByName('CODIGO_PRV_AP').AsString),
          IfThen(Trim(q.FieldByName('REF_PROVEEDOR_AP').AsString) <> '',
                 ' (ref ' + q.FieldByName('REF_PROVEEDOR_AP').AsString + ')',
                 ''),
@@ -413,49 +520,6 @@ begin
   finally
     FreeAndNil(q);
     FreeAndNil(sb);
-  end;
-end;
-
-// ---------------------------------------------------------------------------
-//  Colores del articulo (para "Por Color")
-// ---------------------------------------------------------------------------
-function TfrmStockConsulta.ColoresArticulo: TArray<TInfoColumna>;
-var
-  q: TUniQuery;
-  inf: TInfoColumna;
-begin
-  SetLength(Result, 0);
-  if Trim(FCodArt) = '' then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    // Distintos AV de color de los SKUs activos del articulo, con el
-    // HEX_ATB del basico asociado (si lo hay) para pintar el cuadradito.
-    q.SQL.Text :=
-      'SELECT DISTINCT AV.AV, AV.ORDEN_AV, ATB.HEX_ATB ' +
-      '  FROM fza_articulos_skus SKU ' +
-      '  JOIN fza_atributos_sku SA ' +
-      '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-      '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
-      '  LEFT JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = AV.ID_ATB_AV ' +
-      ' WHERE SKU.CODIGO_ART_SKU = :art ' +
-      '   AND AV.ID_VA_AV = ''CO'' ' +
-      ' ORDER BY AV.ORDEN_AV, AV.AV';
-    q.ParamByName('art').AsString := FCodArt;
-    q.Open;
-    while not q.Eof do
-    begin
-      inf := Default(TInfoColumna);
-      inf.Codigo  := q.FieldByName('AV').AsString;
-      inf.Texto   := q.FieldByName('AV').AsString;
-      inf.Hex     := q.FieldByName('HEX_ATB').AsString;
-      inf.EsColor := True;
-      SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := inf;
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
   end;
 end;
 
@@ -592,14 +656,19 @@ end;
 // ---------------------------------------------------------------------------
 //  Build SQL pivote: rows=almacenes o colores, cols=tallas
 // ---------------------------------------------------------------------------
-// Las TALLAS van SIEMPRE como columnas dinamicas (T0..Tn-1). Las filas
-// son almacenes (los marcados en clbAlmacenes) o colores del articulo
-// (todos los del articulo). El campo HEX viaja para que el style del
-// cuadradito en "Por Color" lo pinte; en "Por Almacen" HEX queda en ''.
+// Las TALLAS van SIEMPRE como columnas dinamicas (T0..Tn-1). Las filas son
+// almacenes marcados en clbAlmacenes (modo Por Almacen) o colores marcados
+// en clbColores (modo Por Color). El filtro de la dimension "no activa" se
+// aplica como filtro adicional sobre B:
+//   * Por Color  -> almacenes se filtran ya en EstadoBaseSelect.
+//   * Por Almacen-> los colores marcados se filtran en el JOIN ON B.COLOR_AV.
+// HEX viaja en la columna de filas para que el custom-draw del cuadradito
+// pinte el swatch en modo Por Color; en Por Almacen queda vacio.
 function TfrmStockConsulta.ConstruirSQLPivot(
   const ATallas: TArray<TInfoColumna>; AEsColor: Boolean): string;
 var
   sBase, sCols, sOuter, sJoin, sWhere, sGroup, sOrder: string;
+  sFiltroColores: string;
   i: Integer;
   alms: TArray<string>;
 begin
@@ -608,11 +677,12 @@ begin
   for i := 0 to High(ATallas) do
     sCols := sCols + Format(', SUM(CASE WHEN B.TALLA_AV = %s THEN B.CANTIDAD ELSE 0 END) AS T%d',
                             [QuotedStr(ATallas[i].Codigo), i]);
+  sFiltroColores := ColoresSeleccionadosSQL;
 
   if AEsColor then
   begin
-    // Filas = colores del articulo, vienen de fza_atributos_valores con
-    // ID_VA_AV='CO' filtrado a los AVs presentes en SKUs del articulo.
+    // Filas = colores marcados en clbColores (subset de los AV de color
+    // presentes en los SKUs del articulo).
     sOuter :=
       '(SELECT DISTINCT AV.ID_AV, AV.AV, AV.ORDEN_AV, AV.ID_ATB_AV ' +
       '   FROM fza_articulos_skus SKU ' +
@@ -620,7 +690,8 @@ begin
       '     ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
       '   JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
       '  WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-      '    AND AV.ID_VA_AV = ''CO'') C';
+      '    AND AV.ID_VA_AV = ''CO''' +
+      '    AND AV.AV IN (' + sFiltroColores + ')) C';
     sJoin :=
       ' LEFT JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = C.ID_ATB_AV ' +
       ' LEFT JOIN (' + sBase + ') B ON B.COLOR_AV = C.AV';
@@ -634,11 +705,12 @@ begin
   end
   else
   begin
-    // Filas = almacenes marcados en el check-list.
+    // Filas = almacenes marcados en clbAlmacenes. El filtro de colores
+    // marcados se aplica al subselect B via JOIN ON: si un almacen no tiene
+    // SKUs con esos colores aparece igual (LEFT JOIN) con cantidades 0.
     alms := AlmacenesSeleccionadosLista;
     if Length(alms) = 0 then
     begin
-      // Sin almacenes marcados: no hay filas que mostrar.
       Result := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN' +
                 sCols + ', 0 AS TOTAL FROM dual WHERE 0';
       Exit;
@@ -647,7 +719,9 @@ begin
       'SELECT ALM.CODIGO_ALM_ALM AS GRUPO, '''' AS HEX, ' +
       '       ALM.ORDEN_ALM AS ORDEN' + sCols + ', SUM(B.CANTIDAD) AS TOTAL ' +
       '  FROM fza_almacenes ALM ' +
-      '  LEFT JOIN (' + sBase + ') B ON B.ALM = ALM.CODIGO_ALM_ALM ' +
+      '  LEFT JOIN (' + sBase + ') B ' +
+      '    ON B.ALM = ALM.CODIGO_ALM_ALM ' +
+      '   AND B.COLOR_AV IN (' + sFiltroColores + ') ' +
       ' WHERE ALM.CODIGO_ALM_ALM IN (' + AlmacenesSeleccionadosSQL + ') ' +
       ' GROUP BY ALM.CODIGO_ALM_ALM, ALM.ORDEN_ALM ' +
       ' ORDER BY ALM.ORDEN_ALM, ALM.CODIGO_ALM_ALM';
@@ -899,6 +973,12 @@ begin
 end;
 
 procedure TfrmStockConsulta.clbAlmacenesClickCheck(Sender: TObject;
+  AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
+begin
+  RecargarConsulta;
+end;
+
+procedure TfrmStockConsulta.clbColoresClickCheck(Sender: TObject;
   AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
 begin
   RecargarConsulta;
