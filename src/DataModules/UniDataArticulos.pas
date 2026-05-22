@@ -21,6 +21,7 @@ uses
   Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
+  System.Generics.Collections,
   frxClass, frxDBSet, frCoreClasses, System.UITypes;
 
 type
@@ -79,6 +80,7 @@ type
                              aPrecioField, aFechaField: TField);
     procedure EliminarCosteSku(const aSku: string);
     procedure ExpandirEtiquetasPorStock(const aFldStock: string);
+    procedure AgregarHexColorBasicoAlCdsEtiq;
   public
     // Override: abre las queries detalle y lookups del Mto de Articulos
     // (tarifas, proveedores, lineas-factura, variaciones, skus, stock,
@@ -952,24 +954,8 @@ const
     '       tar.NOMBRE_TAR_TAR     AS NOMBRE_TAR_TAR,'                        +
     '       tar.ESIMP_INCL_TAR     AS ESIMP_INCL_TAR,'                        +
     '       :FECHA_APLICACION      AS FECHA_APLICACION,'                      +
-    '       COALESCE(stk.STOCK_FILTRADO, 0) AS STOCK_FILTRADO,'               +
-    '       atb_co.HEX_ATB AS HEX_ATR_CO'                                     +
+    '       COALESCE(stk.STOCK_FILTRADO, 0) AS STOCK_FILTRADO'                +
     '  FROM vi_articulos_skus_etiquetas eti'                                  +
-    '  LEFT JOIN ('                                                           +
-    '       SELECT sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD_SKU,'             +
-    '              MIN(av.ID_AV)           AS ID_AV_CO'                       +
-    '         FROM fza_atributos_sku sa'                                      +
-    '         JOIN fza_atributos_valores av'                                  +
-    '           ON av.ID_AV     = sa.ID_AV_SA'                                +
-    '          AND av.ID_VA_AV  = ''CO'''                                     +
-    '        GROUP BY sa.CODIGO_UNIDAD_SKU_SA'                                +
-    '       ) av_co'                                                          +
-    '    ON av_co.CODIGO_UNIDAD_SKU = eti.CODIGO_UNIDAD_SKU'                  +
-    '  LEFT JOIN fza_articulos_atributos_basicos aab_co'                      +
-    '    ON aab_co.CODIGO_ART_AAB = eti.CODIGO_ART_ART'                       +
-    '   AND aab_co.ID_AV_AAB     = av_co.ID_AV_CO'                            +
-    '  LEFT JOIN fza_atributos_basicos atb_co'                                +
-    '    ON atb_co.ID_ATB = aab_co.ID_ATB_AAB'                                +
     '  LEFT JOIN fza_tarifas tar'                                             +
     '    ON tar.CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR'                       +
     '  LEFT JOIN fza_articulos_tarifas prc'                                   +
@@ -1054,6 +1040,17 @@ begin
   cdsEtiquetasArt.ReadOnly := False;
   cdsEtiquetasArt.Active := True;
 
+  // Anyade HEX_ATR_CO al cds resolviendo la cadena
+  //   fza_atributos_sku -> fza_atributos_valores (ID_VA_AV='CO')
+  //   -> fza_articulos_atributos_basicos (mapeo articulo->basico)
+  //   -> fza_atributos_basicos (HEX_ATB)
+  // La hacemos en Delphi y no en la SQL principal porque el subselect /
+  // derivada metido en el SELECT principal hace que dtstprvEtiquetasArt.Data
+  // devuelva Null (TDataSetProvider con UniDAC en este caso concreto), y el
+  // cdsEtiquetasArt.Active := True acaba lanzando 'Missing data provider or
+  // data packet'. Reconstruir el cds aqui es lento pero robusto.
+  AgregarHexColorBasicoAlCdsEtiq;
+
   // Cuando el usuario marca almacenes, una etiqueta por unidad de stock:
   // se elimina cualquier SKU sin existencia en los almacenes elegidos y se
   // replica cada fila restante tantas veces como unidades tenga. Sin
@@ -1116,6 +1113,128 @@ begin
     end;
   finally
     cdsEtiquetasArt.EnableControls;
+  end;
+end;
+
+procedure TdmArticulos.AgregarHexColorBasicoAlCdsEtiq;
+const
+  // Cadena articulo -> color basico -> HEX. JOINs sencillos sobre tablas
+  // base; no usa la vista vi_articulos_skus_etiquetas para evitar el coste
+  // de repetir todo el pipeline de SKUs/proveedores/codigos de barras.
+  cSqlHex =
+    'SELECT sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD_SKU,'                    +
+    '       atb.HEX_ATB             AS HEX_ATR_CO '                           +
+    '  FROM fza_atributos_sku sa'                                             +
+    '  JOIN fza_articulos_skus sk'                                            +
+    '    ON sk.CODIGO_UNIDAD_SKU = sa.CODIGO_UNIDAD_SKU_SA'                   +
+    '  JOIN fza_atributos_valores av'                                         +
+    '    ON av.ID_AV     = sa.ID_AV_SA'                                       +
+    '   AND av.ID_VA_AV  = ''CO'''                                            +
+    '  JOIN fza_articulos_atributos_basicos aab'                              +
+    '    ON aab.CODIGO_ART_AAB = sk.CODIGO_ART_SKU'                           +
+    '   AND aab.ID_AV_AAB     = av.ID_AV'                                     +
+    '  JOIN fza_atributos_basicos atb'                                        +
+    '    ON atb.ID_ATB = aab.ID_ATB_AAB';
+var
+  qryHex: TUniQuery;
+  oHexMap: TDictionary<string, string>;
+  i, j, iCols, iOriginales, iCodSkuIdx: Integer;
+  Filas: array of array of Variant;
+  Hexs: array of string;
+  fldDef: TFieldDef;
+  sCodSku, sHex: string;
+begin
+  if (not cdsEtiquetasArt.Active) or cdsEtiquetasArt.IsEmpty then Exit;
+  if cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU') = nil then Exit;
+
+  // 1) Mapa CODIGO_UNIDAD_SKU -> HEX_ATB en memoria. Una sola query, mucho
+  //    mas barato que un correlated subquery por fila.
+  oHexMap := TDictionary<string, string>.Create;
+  try
+    qryHex := TUniQuery.Create(nil);
+    try
+      qryHex.Connection := unqryArtPrint.Connection;
+      qryHex.SQL.Text   := cSqlHex;
+      try
+        qryHex.Open;
+      except
+        // Si la query falla (BBDD sin las tablas, permisos...) no tiramos
+        // toda la impresion: simplemente no habra colores y la banda
+        // saldra blanca.
+        Exit;
+      end;
+      try
+        while not qryHex.Eof do
+        begin
+          sCodSku := qryHex.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+          sHex    := qryHex.FieldByName('HEX_ATR_CO').AsString;
+          if sCodSku <> '' then
+            oHexMap.AddOrSetValue(sCodSku, sHex);
+          qryHex.Next;
+        end;
+      finally
+        qryHex.Close;
+      end;
+    finally
+      qryHex.Free;
+    end;
+
+    // 2) Reconstruir el cds anyadiendo el FieldDef HEX_ATR_CO. Cerramos +
+    //    CreateDataSet porque cambiamos el esquema (ExpandirEtiquetasPorStock
+    //    usa EmptyDataSet porque conserva esquema; aqui no se puede).
+    cdsEtiquetasArt.DisableControls;
+    cdsEtiquetasArt.DisableConstraints;
+    try
+      iCols       := cdsEtiquetasArt.FieldCount;
+      iOriginales := cdsEtiquetasArt.RecordCount;
+      iCodSkuIdx  := cdsEtiquetasArt.FieldByName('CODIGO_UNIDAD_SKU').Index;
+      SetLength(Filas, iOriginales);
+      SetLength(Hexs,  iOriginales);
+      cdsEtiquetasArt.First;
+      for i := 0 to iOriginales - 1 do
+      begin
+        SetLength(Filas[i], iCols);
+        for j := 0 to iCols - 1 do
+          Filas[i][j] := cdsEtiquetasArt.Fields[j].Value;
+        sCodSku := VarToStr(Filas[i][iCodSkuIdx]);
+        if (sCodSku = '') or
+           (not oHexMap.TryGetValue(sCodSku, Hexs[i])) then
+          Hexs[i] := '';
+        cdsEtiquetasArt.Next;
+      end;
+
+      cdsEtiquetasArt.Close;
+      if cdsEtiquetasArt.FieldDefs.IndexOf('HEX_ATR_CO') < 0 then
+      begin
+        fldDef          := cdsEtiquetasArt.FieldDefs.AddFieldDef;
+        fldDef.Name     := 'HEX_ATR_CO';
+        fldDef.DataType := ftString;
+        fldDef.Size     := 7;
+      end;
+      cdsEtiquetasArt.CreateDataSet;
+      // Tras CreateDataSet la coleccion Fields se reconstruye, asi que el
+      // ReadOnly/Required hay que volver a aplicarlos sobre los nuevos
+      // TField (los TFieldDef que vienen del provider los marcan a True por
+      // defecto y reventarian el Append).
+      for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
+      begin
+        cdsEtiquetasArt.Fields[j].ReadOnly := False;
+        cdsEtiquetasArt.Fields[j].Required := False;
+      end;
+
+      for i := 0 to iOriginales - 1 do
+      begin
+        cdsEtiquetasArt.Append;
+        for j := 0 to iCols - 1 do
+          cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
+        cdsEtiquetasArt.FieldByName('HEX_ATR_CO').AsString := Hexs[i];
+        cdsEtiquetasArt.Post;
+      end;
+    finally
+      cdsEtiquetasArt.EnableControls;
+    end;
+  finally
+    oHexMap.Free;
   end;
 end;
 
