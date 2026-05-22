@@ -634,6 +634,9 @@
         <DCCReference Include="src\Forms\inMtoFotoArticulo.pas">
             <Form>frmFotoArticulo</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoStockConsulta.pas">
+            <Form>frmStockConsulta</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
             <Form>frmMtoComprasSesiones</Form>

@@ -231,7 +231,7 @@ uses inMtoGenSearch,
      inLibLog,
      inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
-     inLibFotos, inMtoFotoArticulo,
+     inLibFotos, inMtoFotoArticulo, inMtoStockConsulta,
      System.Diagnostics,   // TStopwatch para cronometrar carga inicial
      Vcl.ComCtrls;         // TProgressBar marquee en overlay de carga
      // System.Threading ya esta en el interface (para TList<ITask>).
@@ -1257,6 +1257,15 @@ begin
         frmFotoArticulo.VincularDataSources(DataSourcesParaFoto,
                                             ResolverArtSkuActivo);
     end;
+    Key := 0;
+  end;
+  // Ctrl + U -> Consulta de stock del articulo / SKU activo
+  if (Key = Ord('U')) and (ssCtrl in Shift) and (not (ssAlt in Shift)) then
+  begin
+    var sArt: string := '';
+    var sSku: string := '';
+    ResolverArtSkuActivo(sArt, sSku);
+    inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
     Key := 0;
   end;
 end;
