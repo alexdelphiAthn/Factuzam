@@ -535,45 +535,40 @@ begin
   // OnEditValueChanged delega en FGestorTallas.PersistirCeldaActiva,
   // que upsertea en la tabla de celdas y refresca totales.
   //
-  // Se hace en DOS pasadas separadas por BeginUpdate/EndUpdate:
-  //   1) Crear todas las columnas (cxGrid las anyade al final).
-  //   2) Reposicionarlas todas justo antes de dbcLinTotalTallas.
-  // Si se interleaves create + SetIndex dentro de un mismo bucle, cxGrid
-  // a veces solo aplica el move de la PRIMERA: la primera queda bien
-  // entre Pr. venta y TotalTallas, pero el resto se queda al final del
-  // header (despues de ImporteTotal y Numero). Con un pase de moves
-  // separado, sobre columnas ya completamente creadas, el SetIndex
-  // funciona en cascada.
+  // Patron probado en inMtoCajaOpe.CrearColumnasAtributos:
+  //   1) Capturar iBase = posicion ACTUAL del ancla ANTES del bucle.
+  //   2) Crear cada columna y, AL FINAL (despues de PropertiesClass,
+  //      DataBinding, Caption, etc.), asignar col.Index := iBase + i.
+  //   3) NO BeginUpdate (parece que en algunos casos cxGrid difiere
+  //      los SetIndex y solo aplica el primero al hacer EndUpdate).
+  //
+  // En este caso el ancla es dbcLinTotalTallas. Movemos las nuevas
+  // columnas justo ANTES de ella. Cada move desplaza TotalTallas una
+  // posicion adelante, asi que iBase capturado UNA VEZ + i (creciente)
+  // apunta exactamente al sitio que queda libre delante de TotalTallas
+  // tras los moves anteriores. CRITICO: Index es la ULTIMA asignacion;
+  // ponerlo antes de PropertiesClass hace que solo se aplique al primero.
   if not Assigned(dbcLinTotalTallas) then Exit;
-  tvLineas.BeginUpdate;
-  try
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-    begin
-      col := tvLineas.CreateColumn;
-      col.Name        := 'dbcLinTalla' + Format('%.2d', [i + 1]);
-      col.Caption     := '';
-      col.Width       := 50;
-      col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
-      col.Visible     := False;             // se hara visible segun max
-      col.DataBinding.ValueTypeClass := TcxFloatValueType;
-      col.PropertiesClass := TcxCurrencyEditProperties;
-      curProps := TcxCurrencyEditProperties(col.Properties);
-      curProps.DisplayFormat := '#,##0';
-      // El handler se asigna en InicializarGestorTallas (necesita la
-      // instancia del gestor para delegar). Aqui solo dejamos las
-      // columnas listas con su Tag posicional.
-      FTallaColumns[i] := col;
-    end;
-    // Pass 2: mover todas las columnas talla a su sitio definitivo.
-    // iBase = posicion actual de dbcLinTotalTallas (las talla columns
-    // estan ahora al final). Cada move desplaza TotalTallas una
-    // posicion adelante, por eso talla[i] va a iBase + i.
-    iBase := dbcLinTotalTallas.Index;
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-      if Assigned(FTallaColumns[i]) then
-        FTallaColumns[i].Index := iBase + i;
-  finally
-    tvLineas.EndUpdate;
+  iBase := dbcLinTotalTallas.Index;
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+  begin
+    col := tvLineas.CreateColumn;
+    col.Name        := 'dbcLinTalla' + Format('%.2d', [i + 1]);
+    col.Caption     := '';
+    col.Width       := 50;
+    col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
+    col.Visible     := False;             // se hara visible segun max
+    col.DataBinding.ValueTypeClass := TcxFloatValueType;
+    col.PropertiesClass := TcxCurrencyEditProperties;
+    curProps := TcxCurrencyEditProperties(col.Properties);
+    curProps.DisplayFormat := '#,##0';
+    // El handler se asigna en InicializarGestorTallas (necesita la
+    // instancia del gestor para delegar). Aqui solo dejamos las
+    // columnas listas con su Tag posicional.
+    FTallaColumns[i] := col;
+    // Move al final, despues de PropertiesClass — clave para que cxGrid
+    // lo aplique de verdad (ver comment block arriba).
+    col.Index := iBase + i;
   end;
 end;
 
