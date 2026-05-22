@@ -785,6 +785,7 @@ begin
   begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
+    OnGuiasAplicadas;
     try
       frxrprt1.PrepareReport(True);
       frxlsxprtExcel.DefaultPath := oAppParams.GetPath('appDirExcel');
@@ -805,6 +806,7 @@ begin
   begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
+    OnGuiasAplicadas;
     try
       frxrprt1.PrepareReport(True);
       frxrprt1.Print;
@@ -829,6 +831,7 @@ begin
   begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
+    OnGuiasAplicadas;
     try
       frxrprt1.PrepareReport(True);
       frxpdfxprtPedWeb.DefaultPath := oAppParams.GetPath('appDirPDF');
