@@ -92,6 +92,9 @@ type
     procedure clbAlmacenesClickCheck(Sender: TObject; AIndex: Integer;
               APrevState, ANewState: TcxCheckBoxState);
     procedure pcEjeChange(Sender: TObject);
+    procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
+              ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+              var ADone: Boolean);
   private
     FQry        : TUniQuery;
     FDs         : TDataSource;
@@ -99,9 +102,8 @@ type
     FCodSku     : string;
     FColumnas   : TArray<TInfoColumna>;  // Tallas (columnas dinamicas)
     FColsDin    : TList<TcxGridDBColumn>;
-    FColSwatch  : TcxGridDBColumn;       // cuadradito de color (Por Color)
     FColGrupo   : TcxGridDBColumn;       // nombre de la fila (color o alm)
-    FStyleHex   : TDictionary<string, TcxStyle>;
+    FEsModoColor: Boolean;
     procedure CargarAlmacenes;
     procedure CargarFoto;
     procedure CargarInfoPrecios;
@@ -115,9 +117,6 @@ type
     function  EstadoBaseSelect: string;  // CTE/source segun estado
     procedure ReconstruirColumnas(const ATallas: TArray<TInfoColumna>;
                                    AEsColor: Boolean);
-    procedure tvStockStylesGetContentStyle(Sender: TcxCustomGridTableView;
-              ARecord: TcxCustomGridRecord; AItem: TcxCustomGridTableItem;
-              var AStyle: TcxStyle);
     procedure RecargarConsulta;
   public
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
@@ -135,7 +134,7 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar, inLibFotos;
+  inLibGlobalVar, inLibFotos, inLibAtributosPaleta;
 
 {$R *.dfm}
 
@@ -172,10 +171,11 @@ begin
   FDs  := TDataSource.Create(Self);
   FDs.DataSet := FQry;
   tvStock.DataController.DataSource := FDs;
-  FColsDin   := TList<TcxGridDBColumn>.Create;
-  FStyleHex  := TDictionary<string, TcxStyle>.Create;
-  // Hook style-getter — pinta la celda del cuadradito con el HEX del color
-  tvStock.Styles.OnGetContentStyle := tvStockStylesGetContentStyle;
+  FColsDin := TList<TcxGridDBColumn>.Create;
+  // Custom-draw para pintar el cuadradito del color basico en la celda
+  // del color, via la libreria inLibAtributosPaleta (que se encarga del
+  // lookup contra fza_atributos_basicos por texto/codigo y la cache).
+  tvStock.OnCustomDrawCell := tvStockCustomDrawCell;
 
   // Combo de estados
   cbbEstado.Properties.Items.Clear;
@@ -202,7 +202,6 @@ begin
   end;
   FreeAndNil(FDs);
   FreeAndNil(FColsDin);
-  FreeAndNil(FStyleHex);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -758,41 +757,25 @@ begin
   for i := FColsDin.Count - 1 downto 0 do
     FColsDin[i].Free;
   FColsDin.Clear;
-  FColSwatch := nil;
-  FColGrupo  := nil;
+  FColGrupo    := nil;
+  FEsModoColor := AEsColor;
 
-  // 1. Cuadradito de color: columna estrecha, solo visible en Por Color.
-  //    Su contenido (HEX) no se muestra como texto, pero
-  //    tvStockStylesGetContentStyle lo lee del registro y pinta el
-  //    fondo de la celda con el color basico.
-  if AEsColor then
-  begin
-    FColSwatch := tvStock.CreateColumn;
-    FColSwatch.Caption := '';
-    FColSwatch.DataBinding.FieldName := 'HEX';
-    FColSwatch.PropertiesClassName := 'TcxTextEditProperties';
-    FColSwatch.HeaderAlignmentHorz := taCenter;
-    FColSwatch.Width := 22;
-    FColSwatch.Options.Editing  := False;
-    FColSwatch.Options.Sorting  := False;
-    FColSwatch.Options.Filtering := False;
-    // La celda se pintara con el estilo de fondo HEX y el texto se
-    // pone del mismo color que el fondo, asi que el HEX no se ve.
-    FColsDin.Add(FColSwatch);
-  end;
-
-  // 2. Columna principal de fila: nombre del color o codigo del almacen.
+  // Columna principal de fila: nombre del color o codigo del almacen.
+  // En modo Por Color, tvStockCustomDrawCell pinta el cuadradito del
+  // color basico a la izquierda del texto, via inLibAtributosPaleta.
+  // En modo Por Almacen, se muestra el codigo del almacen plano.
   FColGrupo := tvStock.CreateColumn;
   if AEsColor then FColGrupo.Caption := 'Color'
   else             FColGrupo.Caption := 'Almac'#233'n';
   FColGrupo.DataBinding.FieldName := 'GRUPO';
   FColGrupo.HeaderAlignmentHorz := taLeft;
-  FColGrupo.Width := 130;
+  if AEsColor then FColGrupo.Width := 150  // espacio extra para el cuadradito
+  else             FColGrupo.Width := 130;
   FColGrupo.Options.Editing := False;
   FColGrupo.Options.Sorting := False;
   FColsDin.Add(FColGrupo);
 
-  // 3. Tallas: columnas dinamicas T0..Tn-1.
+  // Tallas: columnas dinamicas T0..Tn-1.
   for i := 0 to High(ATallas) do
   begin
     col := tvStock.CreateColumn;
@@ -808,7 +791,7 @@ begin
     FColsDin.Add(col);
   end;
 
-  // 4. Total al final.
+  // Total al final.
   colTotal := tvStock.CreateColumn;
   colTotal.Caption := 'Total';
   colTotal.DataBinding.FieldName := 'TOTAL';
@@ -825,44 +808,25 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Cuadradito de color: pinta el fondo de la celda HEX con el HEX del
-//  color basico de la fila. La skin de DevExpress NO pisa el estilo
-//  de contenido de celda (solo el header), asi que esto siempre se ve.
+//  Custom-draw de la columna Color en modo Por Color: delega en la libreria
+//  inLibAtributosPaleta.PintarCeldaSwatchSiAplica, que ya hace el lookup
+//  contra fza_atributos_basicos (incluido el matching por texto cuando el
+//  AV no tiene ID_ATB_AV) y pinta el cuadradito a la izquierda + el texto
+//  desplazado a la derecha. Misma libreria que usa caja/inventarios.
 // ---------------------------------------------------------------------------
-procedure TfrmStockConsulta.tvStockStylesGetContentStyle(
-  Sender: TcxCustomGridTableView; ARecord: TcxCustomGridRecord;
-  AItem: TcxCustomGridTableItem; var AStyle: TcxStyle);
-var
-  s     : string;
-  c     : TColor;
-  st    : TcxStyle;
+procedure TfrmStockConsulta.tvStockCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
 begin
-  AStyle := nil;
-  if FColSwatch = nil then Exit;
-  if AItem <> FColSwatch then Exit;
-  if not Assigned(FQry) or (not FQry.Active) then Exit;
-  if ARecord = nil then Exit;
+  ADone := False;
+  if not FEsModoColor then Exit;
+  if FColGrupo = nil then Exit;
+  if not (AViewInfo.Item is TcxGridDBColumn) then Exit;
+  if AViewInfo.Item <> FColGrupo then Exit;
 
-  // El registro del grid trae el HEX en una columna; lo leemos del
-  // dataset directo (mas barato que pivotar el ARecord.Values).
-  s := VarToStr(ARecord.Values[FColSwatch.Index]);
-  if (s = '') or (Length(s) <> 6) then Exit;
-
-  // Cache de estilos por HEX para no crear uno nuevo en cada redraw.
-  if FStyleHex.TryGetValue(s, st) then
-  begin
-    AStyle := st;
-    Exit;
-  end;
-  if HexAColor(s, c) then
-  begin
-    st := TcxStyle.Create(tvStock);
-    st.AssignedValues := [svColor, svTextColor];
-    st.Color := c;
-    st.TextColor := c;  // mismo color que fondo: oculta el texto HEX
-    FStyleHex.Add(s, st);
-    AStyle := st;
-  end;
+  // ADict=nil → usa el diccionario global cacheado en la libreria.
+  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+    ADone := True;
 end;
 
 // ---------------------------------------------------------------------------
