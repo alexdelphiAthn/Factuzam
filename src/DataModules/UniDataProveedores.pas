@@ -70,60 +70,69 @@ const
   TAG = 'Proveedores.AbrirDetalles';
 
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-//  var swQ: TStopwatch;
+  var swQ: TStopwatch;
   begin
     if qry.Active then Exit;
-//    swQ := TStopwatch.StartNew;
-//    try
+    swQ := TStopwatch.StartNew;
+    try
       qry.Open;
-//      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-//    except
-//      on E: Exception do
-//        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
-//          swQ.ElapsedMilliseconds);
-//    end;
+      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
   end;
 
-//var sw: TStopwatch;
+var sw: TStopwatch;
 begin
   inherited;
-//  sw := TStopwatch.StartNew;
+  sw := TStopwatch.StartNew;
   // Ambas queries son lazy. AbrirDetalles solo registra el TOTAL para
   // mantener consistencia con los demas Mtos.
-//  inLibLog.Log.LogPerf(TAG, 'TOTAL (todo lazy)', sw.ElapsedMilliseconds);
+  inLibLog.Log.LogPerf(TAG, 'TOTAL (todo lazy)', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmProveedores.AsegurarArticulosAbierta;
-//var swQ: TStopwatch;
+var swQ: TStopwatch;
 begin
   if unqryArticulos.Active then Exit;
-//  swQ := TStopwatch.StartNew;
-//  try
+  swQ := TStopwatch.StartNew;
+  try
     unqryArticulos.Open;
-//    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryArticulos OK',
-//      swQ.ElapsedMilliseconds);
-//  except
-//    on E: Exception do
-//      inLibLog.Log.LogPerf('Proveedores.Lazy',
-//        'unqryArticulos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-//  end;
+    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryArticulos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('Proveedores.Lazy',
+        'unqryArticulos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+      raise;
+    end;
+  end;
 end;
 
 procedure TdmProveedores.AsegurarVentasAbierta;
-//var swQ: TStopwatch;
+var swQ: TStopwatch;
 begin
   if unqryLinFacturasArticulos.Active then Exit;
-//  swQ := TStopwatch.StartNew;
-//  try
+  swQ := TStopwatch.StartNew;
+  try
     unqryLinFacturasArticulos.Open;
-//    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryLinFacturasArticulos OK',
-//      swQ.ElapsedMilliseconds);
-//  except
-//    on E: Exception do
-//      inLibLog.Log.LogPerf('Proveedores.Lazy',
-//        'unqryLinFacturasArticulos ERROR=' + E.Message,
-//        swQ.ElapsedMilliseconds);
-//  end;
+    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryLinFacturasArticulos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('Proveedores.Lazy',
+        'unqryLinFacturasArticulos ERROR=' + E.Message,
+        swQ.ElapsedMilliseconds);
+      raise;
+    end;
+  end;
 end;
 
 procedure TdmProveedores.GetCodigoAutoProveedor;

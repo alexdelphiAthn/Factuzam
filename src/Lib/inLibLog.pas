@@ -27,7 +27,9 @@ const
   MUTEX_TIMEOUT = 5000; // 5 segundos de timeout
 
 type
-  TLogType = (ltInfo, ltWarning, ltError, ltSQL);
+  // ltPerf: instrumentación de cronómetros (LogPerf). Apagado por defecto
+  // para no ensuciar el log; se enciende con appModoDebug.
+  TLogType = (ltInfo, ltWarning, ltError, ltSQL, ltPerf);
   TLogFlags = set of TLogType;
   TLog = class
   private
@@ -67,10 +69,17 @@ type
   end;
 var
   Log: TLog;
+
+// Aplica los flags de depuración leídos de oAppParams (appModoDebug y
+// appModoDebugSQL) al log y al monitor SQL global. Idempotente: se puede
+// invocar en arranque y cada vez que el usuario guarde los parámetros.
+procedure AplicarModosDepuracion;
+
 implementation
 
 uses
-  System.DateUtils, inLibWin, inLibGlobalVar;  // oMemoSQL para LogPerf
+  System.DateUtils, inLibWin, inLibGlobalVar,    // oMemoSQL para LogPerf
+  inLibAppParam;                                 // oAppParams.GetBool
 
 { TLog }
 
@@ -81,6 +90,7 @@ begin
     ltWarning: Result := 'WARNING';
     ltError: Result := 'ERROR';
     ltSQL: Result := 'SQL';
+    ltPerf: Result := 'PERF';
   else
     Result := 'DESCONOCIDO';
   end;
@@ -225,13 +235,14 @@ end;
 
 procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
 begin
+  // Gateado por ltPerf: si appModoDebug está apagado, esta llamada es no-op.
   // Solo al archivo de log general — TLog.WriteToLog ya es thread-safe
   // (mutex interno). NO tocamos oMemoSQL: es un TcxMemo de DevExpress
   // y NO es thread-safe. Si necesitas ver las metricas junto al log
   // SQL en debug, abre el archivo de log (fzam-YYYYMMDD.log) en paralelo.
-  WriteToLog(Format('INFO: [PERF:%s] %s | %d ms',
+  WriteToLog(Format('[PERF:%s] %s | %d ms',
                     [ATag, ADetalle, AElapsedMs]),
-             ltInfo);
+             ltPerf);
 end;
 
 procedure TLog.EnableLogType(ALogType: TLogType);
@@ -287,6 +298,48 @@ begin
   begin
    WriteToLogInternal(Format('%s - %s', [AMessage, LogTypeToString(ALogType)]));
   end;
+end;
+
+procedure AplicarModosDepuracion;
+var
+  bDebug   : Boolean;
+  bDebugSQL: Boolean;
+begin
+  if not Assigned(oAppParams) then Exit;
+  bDebug    := oAppParams.GetBool('appModoDebug',    False);
+  // appModoDebug implica también SQL: con un solo switch ya está todo verboso
+  bDebugSQL := oAppParams.GetBool('appModoDebugSQL', False) or bDebug;
+  {$IFDEF DEBUG}
+  // En compilaciones DEBUG forzamos siempre el modo SQL
+  bDebugSQL := True;
+  {$ENDIF}
+
+  if bDebugSQL then
+    Log.EnableLogType(ltSQL)
+  else
+    Log.DisableLogType(ltSQL);
+
+  // Los cronómetros LogPerf se enganchan al modo debug general.
+  if bDebug then
+    Log.EnableLogType(ltPerf)
+  else
+    Log.DisableLogType(ltPerf);
+
+  if Assigned(odmConn) and Assigned(odmConn.UniSQLMonitor1) then
+    odmConn.UniSQLMonitor1.Active := bDebugSQL;
+
+  // El memo SQL en pantalla acompaña al modo: si se activa SQL, se muestra;
+  // si se desactiva, se oculta junto con su panel contenedor.
+  if Assigned(oMemoSQL) then
+  begin
+    oMemoSQL.Visible := bDebugSQL;
+    if Assigned(oMemoSQL.Parent) then
+      oMemoSQL.Parent.Visible := bDebugSQL;
+  end;
+
+  Log.LogInfo(Format(
+    'Modos depuración aplicados: appModoDebug=%s, appModoDebugSQL=%s',
+    [BoolToStr(bDebug, True), BoolToStr(bDebugSQL, True)]));
 end;
 
 initialization
