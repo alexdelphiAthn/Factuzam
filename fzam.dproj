@@ -606,6 +606,7 @@
         <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializar.pas"/>
+        <DCCReference Include="src\Lib\inLibContadorLineas.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAltaRapida.pas">
             <Form>frmMtoModalAltaRapida</Form>
         </DCCReference>
