@@ -130,12 +130,9 @@ type
     btnAddLinea              : TcxButton;
     btnDelLinea              : TcxButton;
     btnNuevoColor            : TcxButton;
-<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
     btnFoto                  : TcxButton;
-    dlgFoto                  : TOpenDialog;
-=======
     btnArbolFamilias         : TcxButton;
->>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
+    dlgFoto                  : TOpenDialog;
     lblHint                  : TcxLabel;
 
     // ------------------------------------------------------------------
@@ -172,13 +169,10 @@ type
     procedure btnAddLineaClick(Sender: TObject);
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
-<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
     procedure btnFotoClick(Sender: TObject);
+    procedure btnArbolFamiliasClick(Sender: TObject);
     procedure btnCrearClick(Sender: TObject);
     procedure btnRevertirClick(Sender: TObject);
-=======
-    procedure btnArbolFamiliasClick(Sender: TObject);
->>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
     procedure btnImprimirClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
@@ -207,11 +201,8 @@ type
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
-<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
-    procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
-=======
     procedure dbcLinCodArtPropertiesEditValueChanged(Sender: TObject);
->>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
+    procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
@@ -1058,10 +1049,7 @@ begin
   Key := 0;
 end;
 
-<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
-procedure TfrmMtoComprasSesiones.dbcLinFamiliaPropertiesEditValueChanged(
-=======
-procedure TfrmMtoPruebaSesionGrid.btnArbolFamiliasClick(Sender: TObject);
+procedure TfrmMtoComprasSesiones.btnArbolFamiliasClick(Sender: TObject);
 var
   frmSel : TfrmModalSelFamilia;
 begin
@@ -1083,8 +1071,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.dbcLinFamiliaPropertiesEditValueChanged(
->>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
+procedure TfrmMtoComprasSesiones.dbcLinFamiliaPropertiesEditValueChanged(
   Sender: TObject);
 var
   ed       : TcxCustomEdit;
@@ -1133,18 +1120,7 @@ begin
   ExpandirCodigoFamiliaActiva(sNuevo);
 end;
 
-<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
-procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
-  Sender: TObject);
-var
-  ed   : TcxCustomEdit;
-  sRef : string;
-  sPrv : string;
-  rDup : TResolverDuplicadoSesion;
-begin
-  inherited;
-=======
-procedure TfrmMtoPruebaSesionGrid.dbcLinCodArtPropertiesEditValueChanged(
+procedure TfrmMtoComprasSesiones.dbcLinCodArtPropertiesEditValueChanged(
   Sender: TObject);
 var
   ed         : TcxCustomEdit;
@@ -1160,36 +1136,10 @@ begin
   // a FAMILIA+RELLENO igual que cuando se teclea en la columna Familia
   // (p. ej. '0101' con contador 3 -> '0101003'). Si no es familia, se queda
   // tal cual (codigo manual) y no se toca CODIGO_FAM_SESLIN.
->>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
   if not (Sender is TcxCustomEdit) then Exit;
   ed := TcxCustomEdit(Sender);
   ed.PostEditValue;
 
-<<<<<<< HEAD:src/Forms/inMtoComprasSesiones.pas
-  // Si la cabecera no tiene proveedor todavia no podemos identificar
-  // un duplicado por referencia: salimos en silencio.
-  if Dmm.unqryTablaG.IsEmpty then Exit;
-  sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if sPrv = '' then Exit;
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
-
-  sRef := Trim(Dmm.unqrySesionLin.FieldByName('REF_PRV_SESLIN').AsString);
-  if sRef = '' then Exit;
-
-  // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,
-  // marcamos REUSAR (la helper rellena el resto de campos de la linea).
-  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sRef, sPrv);
-  if not rDup.Encontrado then Exit;
-  AplicarDuplicadoEnLinea(Dmm, rDup);
-  if Assigned(FGestorTallas) then
-  begin
-    FGestorTallas.RecalcularMaxColumnas;
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.ExpandirCodigoFamiliaActiva(
-=======
   ds := Dmm.unqrySesionLin;
   if ds.IsEmpty then Exit;
   sTecleado := Trim(ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
@@ -1229,8 +1179,42 @@ procedure TfrmMtoComprasSesiones.ExpandirCodigoFamiliaActiva(
   end;
 end;
 
-procedure TfrmMtoPruebaSesionGrid.ExpandirCodigoFamiliaActiva(
->>>>>>> 80373c67b09c3f057583bf26da522f4b554474b6:DESARROLLOS EN CURSO/pruebas_sesiones/inMtoPruebaSesionGrid.pas
+procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  ed   : TcxCustomEdit;
+  sRef : string;
+  sPrv : string;
+  rDup : TResolverDuplicadoSesion;
+begin
+  inherited;
+  if not (Sender is TcxCustomEdit) then Exit;
+  ed := TcxCustomEdit(Sender);
+  ed.PostEditValue;
+
+  // Si la cabecera no tiene proveedor todavia no podemos identificar
+  // un duplicado por referencia: salimos en silencio.
+  if Dmm.unqryTablaG.IsEmpty then Exit;
+  sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if sPrv = '' then Exit;
+  if Dmm.unqrySesionLin.IsEmpty then Exit;
+
+  sRef := Trim(Dmm.unqrySesionLin.FieldByName('REF_PRV_SESLIN').AsString);
+  if sRef = '' then Exit;
+
+  // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,
+  // marcamos REUSAR (la helper rellena el resto de campos de la linea).
+  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sRef, sPrv);
+  if not rDup.Encontrado then Exit;
+  AplicarDuplicadoEnLinea(Dmm, rDup);
+  if Assigned(FGestorTallas) then
+  begin
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.ExpandirCodigoFamiliaActiva(
   const ACodigoFam: string; const ANombreFam: string);
 var
   ds         : TDataSet;
