@@ -757,13 +757,270 @@ begin
   end;
 end;
 
+// Crea la cabecera del albaran de compra en fza_albaranes_compra y sus
+// lineas (una por SKU + almacen con cantidad > 0). Devuelve el
+// NUMERO_ALBC generado. Denormaliza datos de empresa y proveedor desde
+// fza_empresas y fza_proveedores (mismo patron que albaranes de venta).
+// La cabecera CODIGO_ALM_ALBC arranca con el almacen de la sesion;
+// cada linea lleva su propio CODIGO_ALMACEN_ALBCLIN (puede diferir si
+// la celda venia con almacen explicito).
+procedure InsertarAlbaranCompraCabecera(AConn: TUniConnection;
+                                         ADM: TdmComprasSesiones;
+                                         const ASerieAlbc, ANumAlbc,
+                                               AUsuario: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_albaranes_compra ' +
+      '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ESTADO_ALBC, ' +
+      '   CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, NIF_EMPRESA_ALBC, ' +
+      '   MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, ' +
+      '   DIRECCION1_EMPRESA_ALBC, DIRECCION2_EMPRESA_ALBC, ' +
+      '   POBLACION_EMPRESA_ALBC, PROVINCIA_EMPRESA_ALBC, ' +
+      '   CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
+      '   CODIGO_POSTAL_EMPRESA_ALBC, ' +
+      '   CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, NIF_PRV_ALBC, ' +
+      '   MOVIL_PRV_ALBC, EMAIL_PRV_ALBC, ' +
+      '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
+      '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
+      '   CODIGO_POSTAL_PRV_ALBC, ' +
+      '   REF_PROVEEDOR_ALBC, CODIGO_ALM_ALBC, ' +
+      '   TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
+      '   CONTADOR_LINEAS_ALBC, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'SELECT :nalbc, :salbc, S.FECHA_SES, ''ABIERTO'', ' +
+      '       E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, ' +
+      '       E.MOVIL_EMP, E.EMAIL_EMP, ' +
+      '       E.DIRECCION1_EMP, E.DIRECCION2_EMP, ' +
+      '       E.POBLACION_EMP, E.PROVINCIA_EMP, ' +
+      '       E.CODIGO_PAI_EMP, E.NOMBRE_PAI_EMP, ' +
+      '       E.CODIGO_POSTAL_EMP, ' +
+      '       P.CODIGO_PRV_PRV, P.RAZON_SOCIAL_PRV, P.NIF_PRV, ' +
+      '       P.MOVIL_PRV, P.EMAIL_PRV, ' +
+      '       P.DIRECCION1_PRV, P.DIRECCION2_PRV, ' +
+      '       P.POBLACION_PRV, P.PROVINCIA_PRV, ' +
+      '       P.CODIGO_POSTAL_PRV, ' +
+      '       S.REF_PRV_SES, S.CODIGO_ALM_SES, ' +
+      '       0, 0, 0, ''0'', ' +
+      '       NOW(), :u, NOW(), :u ' +
+      '  FROM fza_compras_sesiones S ' +
+      '  LEFT JOIN fza_empresas E    ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+      '  LEFT JOIN fza_proveedores P ON P.CODIGO_PRV_PRV = S.CODIGO_PRV_SES ' +
+      ' WHERE S.SERIE_SES = :s AND S.NUMERO_SES = :n';
+    q.ParamByName('nalbc').AsString := ANumAlbc;
+    q.ParamByName('salbc').AsString := ASerieAlbc;
+    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('u').AsString := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Inserta una linea en fza_albaranes_compra_lineas con SUM(CANTIDAD) por
+// (SKU, almacen) agregando todas las celdas que aportan a esa combinacion
+// dentro de la linea actual de la sesion. Devuelve la LINEA_ALBCLIN
+// asignada (PK secundaria, 4 digitos LPAD).
+procedure InsertarLineaAlbaranCompra(AConn: TUniConnection;
+                                      const ASerieAlbc, ANumAlbc,
+                                            ALineaAlbc, ACodigoArt,
+                                            ACodigoSku, ACodigoFam,
+                                            ANombreFam, ADescripcion,
+                                            ACodigoAlm, ATipoIva,
+                                            AUsuario: string;
+                                      ACantidad, APrecio,
+                                      APorcIva: Double);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_albaranes_compra_lineas ' +
+      '  (NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, ' +
+      '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
+      '   CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
+      '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
+      '   CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+      '   PORCENTAJE_IVA_ALBCLIN, ' +
+      '   PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
+      '   PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, ' +
+      '   TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ' +
+      '   ESFACTURADA_ALBCLIN, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (:n, :s, :l, :art, :sku, :fam, :nomfam, :desc, ''Uds'', ' +
+      '        :cant, :tiva, :piva, :pre, :preciva, :tot, :alm, ''N'', ' +
+      '        NOW(), :u, NOW(), :u)';
+    q.ParamByName('n').AsString    := ANumAlbc;
+    q.ParamByName('s').AsString    := ASerieAlbc;
+    q.ParamByName('l').AsString    := ALineaAlbc;
+    q.ParamByName('art').AsString  := ACodigoArt;
+    q.ParamByName('sku').AsString  := ACodigoSku;
+    q.ParamByName('fam').AsString  := ACodigoFam;
+    q.ParamByName('nomfam').AsString := ANombreFam;
+    q.ParamByName('desc').AsString := ADescripcion;
+    q.ParamByName('cant').AsFloat  := ACantidad;
+    q.ParamByName('tiva').AsString := ATipoIva;
+    q.ParamByName('piva').AsFloat  := APorcIva;
+    q.ParamByName('pre').AsFloat   := APrecio;
+    q.ParamByName('preciva').AsFloat := APrecio * (1 + APorcIva / 100);
+    q.ParamByName('tot').AsFloat   := ACantidad * APrecio;
+    q.ParamByName('alm').AsString  := ACodigoAlm;
+    q.ParamByName('u').AsString    := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Recalcula los totales de la cabecera del albaran a partir de sus
+// lineas. Lo llamamos justo despues de insertar todas las lineas para
+// no tener que mantener acumuladores en codigo cliente.
+procedure RecalcularTotalesAlbaranCompra(AConn: TUniConnection;
+                                          const ASerieAlbc, ANumAlbc: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'UPDATE fza_albaranes_compra C ' +
+      '  JOIN ( ' +
+      '       SELECT NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, ' +
+      '              IFNULL(SUM(TOTAL_ALBCLIN), 0) AS BASE, ' +
+      '              IFNULL(SUM(TOTAL_ALBCLIN * PORCENTAJE_IVA_ALBCLIN / 100), 0) AS IVA, ' +
+      '              COUNT(*) AS NLIN ' +
+      '         FROM fza_albaranes_compra_lineas ' +
+      '        WHERE NUMERO_ALBC_ALBCLIN = :n ' +
+      '          AND SERIE_ALBC_ALBCLIN  = :s ' +
+      '        GROUP BY NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN) AS T ' +
+      '    ON T.NUMERO_ALBC_ALBCLIN = C.NUMERO_ALBC ' +
+      '   AND T.SERIE_ALBC_ALBCLIN  = C.SERIE_ALBC ' +
+      '   SET C.TOTAL_BASES_ALBC     = T.BASE, ' +
+      '       C.TOTAL_IMPUESTOS_ALBC = T.IVA, ' +
+      '       C.TOTAL_LIQUIDO_ALBC   = T.BASE + T.IVA, ' +
+      '       C.CONTADOR_LINEAS_ALBC = LPAD(T.NLIN * 10, 8, ''0'') ' +
+      ' WHERE C.NUMERO_ALBC = :n AND C.SERIE_ALBC = :s';
+    q.ParamByName('n').AsString := ANumAlbc;
+    q.ParamByName('s').AsString := ASerieAlbc;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Itera celdas de la sesion agrupadas por (SKU, almacen) y crea una
+// linea en fza_albaranes_compra_lineas por cada combinacion con
+// cantidad > 0. LINEA_ALBCLIN se asigna secuencial (010, 020, 030...).
+procedure InsertarLineasAlbaranCompra(AConn: TUniConnection;
+                                       ADM: TdmComprasSesiones;
+                                       const ASerieSes, ANumSes,
+                                             ASerieAlbc, ANumAlbc,
+                                             AUsuario: string);
+var
+  qC : TUniQuery;
+  sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
+  sDescripcion, sCodigoFam, sNombreFam, sTipoIva,
+  sLineaAlbc: string;
+  iIdAvPivot, iIdAvFila, iLineaSeq: Integer;
+  rCantidad, rCoste, rPorIva: Double;
+begin
+  sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+  if sCodigoAlmCab = '' then
+    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
+                           'para generar el albaran de compra.');
+
+  iLineaSeq := 0;
+  qC := TUniQuery.Create(nil);
+  try
+    qC.Connection := AConn;
+    // Agrupamos por (sku-resolvable inputs, almacen). El SKU real se
+    // resuelve por linea con ResolverCodigoSku, asi que aqui agrupamos
+    // por los componentes (articulo, pivot, fila) + almacen y luego
+    // pedimos el SKU una vez por grupo.
+    qC.SQL.Text :=
+      'SELECT  ' +
+      '    CASE WHEN L.ACCION_DUPLICADO_SESLIN = ''REUSAR'' ' +
+      '         THEN L.CODIGO_ART_REUSAR_SESLIN ' +
+      '         ELSE L.CODIGO_ART_TENTATIVO_SESLIN END AS CODIGO_ART, ' +
+      '    C.ID_AV_PIVOT_SESCEL, ' +
+      '    CAST(IFNULL(L.ID_VA_FILA_SESLIN, ''0'') AS UNSIGNED) AS AV_FILA, ' +
+      '    IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) AS ALM_EFE, ' +
+      '    SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
+      '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
+      '    L.CODIGO_FAM_SESLIN, ' +
+      '    IFNULL(L.TIPO_IVA_SESLIN, ''N'') AS TIPO_IVA, ' +
+      '    L.TIPO_LINEA_SESLIN ' +
+      '  FROM fza_compras_sesiones_celdas C ' +
+      '  JOIN fza_compras_sesiones_lineas L ' +
+      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
+      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
+      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
+      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
+      '   AND C.NUMERO_SES_SESCEL = :n ' +
+      '   AND C.CANTIDAD_SESCEL   > 0 ' +
+      '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
+      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, AV_FILA, ALM_EFE, ' +
+      '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
+      '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN ' +
+      ' ORDER BY CODIGO_ART, AV_FILA, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
+    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
+    qC.ParamByName('s').AsString := ASerieSes;
+    qC.ParamByName('n').AsString := ANumSes;
+    qC.Open;
+
+    while not qC.Eof do
+    begin
+      sCodigoArt := qC.FieldByName('CODIGO_ART').AsString;
+      iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
+      iIdAvFila  := qC.FieldByName('AV_FILA').AsInteger;
+      sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
+      rCantidad  := qC.FieldByName('CANTIDAD_TOTAL').AsFloat;
+      rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+      sDescripcion := qC.FieldByName('DESCRIPCION_SESLIN').AsString;
+      sCodigoFam := qC.FieldByName('CODIGO_FAM_SESLIN').AsString;
+      sTipoIva   := qC.FieldByName('TIPO_IVA').AsString;
+      rPorIva    := 0;  // se podra cruzar con fza_ivas en hito posterior
+
+      sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
+      if sCodigoSku = '' then
+      begin
+        qC.Next;
+        Continue;
+      end;
+
+      // El NOMBRE_FAM lo dejamos vacio aqui — se puede rellenar despues
+      // con un JOIN si hace falta para reports. Lineas se numeran de 10
+      // en 10 para permitir intercalado posterior si fuera necesario.
+      sNombreFam := '';
+      iLineaSeq := iLineaSeq + 1;
+      sLineaAlbc := Format('%.4d', [iLineaSeq * 10]);
+
+      InsertarLineaAlbaranCompra(AConn,
+        ASerieAlbc, ANumAlbc, sLineaAlbc,
+        sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam, sDescripcion,
+        sCodigoAlm, sTipoIva, AUsuario,
+        rCantidad, rCoste, rPorIva);
+
+      qC.Next;
+    end;
+  finally
+    FreeAndNil(qC);
+  end;
+end;
+
 // Genera movimientos de entrada en almacen (TIPO_DOC_MOV='AC',
 // TIPO_MOV='E') por cada (linea, fila, pivot) con cantidad > 0 de la
 // sesion. Una sola pasada SQL que itera celdas y resuelve SKU/articulo
-// linea a linea. La cabecera de cada movimiento queda apuntando a la
-// propia sesion (SERIE_SES/NUMERO_SES) como SERIE_DOC_MOV/NUMERO_DOC_MOV
-// — todavia no tenemos cabecera de albaran de compra como entidad
-// separada (fza_albaranes_compra esta pendiente).
+// linea a linea. La cabecera de cada movimiento apunta al albaran de
+// compra recien creado (SERIE_ALBC/NUMERO_ALBC).
 procedure GenerarMovimientosAlbaran(AConn: TUniConnection;
                                      ADM: TdmComprasSesiones;
                                      const ASerieSes, ANumSes,
@@ -1224,14 +1481,23 @@ begin
     end;
     if AESGeneraAlbaran then
     begin
-      // Por ahora no hay cabecera fza_albaranes_compra; los movimientos
-      // se generan apuntando a la sesion (SERIE_DOC_MOV=sSerieAlbReal,
-      // NUMERO_DOC_MOV=NUMERO_SES, TIPO_DOC_MOV='AC'). Cuando exista
-      // la cabecera del albaran de compra, se creara primero y los
-      // movimientos pasaran a ella.
-      GenerarMovimientosAlbaran(conn, ADM, sSerieAlbReal, sNumSes, AUsuario);
+      // 1. Obtener NUMERO_ALBC del contador global (tipo 'AB').
+      ANumAlb   := inLibtb.ObtenerSiguienteContador('AB');
       ASerieAlb := sSerieAlbReal;
-      ANumAlb   := sNumSes;
+
+      // 2. Crear cabecera en fza_albaranes_compra denormalizando
+      //    empresa + proveedor desde la sesion.
+      InsertarAlbaranCompraCabecera(conn, ADM, ASerieAlb, ANumAlb, AUsuario);
+
+      // 3. Crear lineas: una por (SKU, almacen) con SUM(CANTIDAD).
+      InsertarLineasAlbaranCompra(conn, ADM, sSerieSes, sNumSes,
+                                  ASerieAlb, ANumAlb, AUsuario);
+
+      // 4. Recalcular totales de la cabecera a partir de las lineas.
+      RecalcularTotalesAlbaranCompra(conn, ASerieAlb, ANumAlb);
+
+      // 5. Movimientos de entrada apuntando al albaran recien creado.
+      GenerarMovimientosAlbaran(conn, ADM, ASerieAlb, ANumAlb, AUsuario);
     end;
 
     // Cerrar la sesión
@@ -1467,6 +1733,36 @@ begin
       q.ParamByName('s').AsString := sSerieSes;
       q.ParamByName('n').AsString := sNumSes;
       q.ExecSQL;
+
+      // 0j. Albaranes de compra creados por esta sesion + sus lineas.
+      //     Identificados por SERIE_ALBC_SES/NUMERO_ALBC_SES en la
+      //     cabecera de la sesion (apuntan al albaran creado).
+      if ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString <> '' then
+      begin
+        try
+          // Lineas primero (PK incluye albaran)
+          q.SQL.Text :=
+            'DELETE FROM fza_albaranes_compra_lineas ' +
+            ' WHERE NUMERO_ALBC_ALBCLIN = :nalb ' +
+            '   AND SERIE_ALBC_ALBCLIN  = :salb';
+          q.ParamByName('nalb').AsString :=
+                ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString;
+          q.ParamByName('salb').AsString :=
+                ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
+          q.ExecSQL;
+          // Cabecera
+          q.SQL.Text :=
+            'DELETE FROM fza_albaranes_compra ' +
+            ' WHERE NUMERO_ALBC = :nalb AND SERIE_ALBC = :salb';
+          q.ParamByName('nalb').AsString :=
+                ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString;
+          q.ParamByName('salb').AsString :=
+                ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
+          q.ExecSQL;
+        except
+          // tabla puede no existir en BBDD legacy — best effort
+        end;
+      end;
 
       // 1. Borrar los movimientos de almacen que esta sesion creo. Solo
       //    los TIPO_DOC_MOV='AC' cuyo NUMERO_DOC coincide con el de la
