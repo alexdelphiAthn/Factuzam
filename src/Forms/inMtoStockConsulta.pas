@@ -128,6 +128,7 @@ type
     function  AlmacenesSeleccionadosLista: TArray<string>;
     function  ColoresSeleccionadosSQL: string;    // 'CO1','CO2' o NULL
     function  ColoresSeleccionadosLista: TArray<string>;
+    function  BuscarArticulo: string;
     function  TallasArticulo: TArray<TInfoColumna>;
     function  ConstruirSQLPivot(const ATallas: TArray<TInfoColumna>;
                                  AEsColor: Boolean): string;
@@ -151,7 +152,7 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar, inLibFotos, inLibAtributosPaleta;
+  inLibGlobalVar, inLibFotos, inLibAtributosPaleta, inLibGenBusq;
 
 {$R *.dfm}
 
@@ -963,12 +964,98 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+//  Busqueda de articulos (popup del boton "...")
+// ---------------------------------------------------------------------------
+// Lanza TfrmMtoSearch (via TBusquedaUtils.EjecutarBusqueda) listando los
+// articulos activos con columnas Codigo / Descripcion / Familia / Temporada
+// / Proveedor ppal. / PVP. El PVP se calcula con una correlated subquery
+// para garantizar UNA fila por articulo (en vez de unirse a
+// fza_articulos_tarifas que da N filas si el articulo tiene varias
+// tarifas). Mismo patron que TfrmMtoOpeCaja.BuscarArticulo pero sin filtro
+// por tarifa/fecha (la consulta de stock es generica). Layout persistido
+// bajo el Name 'frmMtoArtStockSearch' (independiente del de caja).
+function TfrmStockConsulta.BuscarArticulo: string;
+
+  procedure ConfigCampo(F: TField; const ALabel, AFormat: string);
+  begin
+    if F = nil then Exit;
+    if ALabel <> '' then F.DisplayLabel := ALabel;
+    if AFormat = '' then Exit;
+    if F is TFloatField then
+      TFloatField(F).DisplayFormat := AFormat
+    else if F is TBCDField then
+      TBCDField(F).DisplayFormat := AFormat
+    else if F is TFMTBCDField then
+      TFMTBCDField(F).DisplayFormat := AFormat;
+  end;
+
+var
+  q: TUniQuery;
+begin
+  Result := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT'                                                       + sLineBreak +
+      '    a.CODIGO_ART_ART,'                                        + sLineBreak +
+      '    a.DESCRIPCION_ART,'                                       + sLineBreak +
+      '    f.DESCRIPCION_FAM,'                                       + sLineBreak +
+      '    pv.PV                      AS TEMPORADA,'                 + sLineBreak +
+      '    p.RAZON_SOCIAL_PRV         AS PROVEEDOR,'                 + sLineBreak +
+      '    (SELECT t.PRECIO_FINAL_ARTTAR'                            + sLineBreak +
+      '       FROM fza_articulos_tarifas t'                          + sLineBreak +
+      '       JOIN fza_tarifas tt'                                   + sLineBreak +
+      '         ON tt.CODIGO_TAR_ARTTAR = t.CODIGO_TAR_ARTTAR'       + sLineBreak +
+      '      WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART'           + sLineBreak +
+      '        AND IFNULL(t.CODIGO_UNIDAD_ARTTAR, '''') = '''''      + sLineBreak +
+      '        AND t.ESACTIVO_ARTTAR = ''S'''                        + sLineBreak +
+      '        AND tt.ESDEFAULT_TAR = ''S'''                         + sLineBreak +
+      '      LIMIT 1)                 AS PRECIO_PVP'                 + sLineBreak +
+      'FROM fza_articulos a'                                         + sLineBreak +
+      'LEFT JOIN fza_articulos_familias f'                           + sLineBreak +
+      '       ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART'                + sLineBreak +
+      'LEFT JOIN fza_articulos_propiedades ap'                       + sLineBreak +
+      '       ON ap.CODIGO_ART_ART = a.CODIGO_ART_ART'               + sLineBreak +
+      '      AND ap.CODIGO_PROP_ARTPROP = ''TEMPORADA'''             + sLineBreak +
+      'LEFT JOIN fza_propiedades_valores pv'                         + sLineBreak +
+      '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'                + sLineBreak +
+      'LEFT JOIN fza_articulos_proveedores aprv'                     + sLineBreak +
+      '       ON aprv.CODIGO_ART_AP = a.CODIGO_ART_ART'              + sLineBreak +
+      '      AND aprv.ESPROVEEDORPRINCIPAL_AP = ''S'''               + sLineBreak +
+      'LEFT JOIN fza_proveedores p'                                  + sLineBreak +
+      '       ON p.CODIGO_PRV_PRV = aprv.CODIGO_PRV_AP'              + sLineBreak +
+      'WHERE a.ESACTIVO_ART = ''S'''                                 + sLineBreak +
+      'ORDER BY a.CODIGO_ART_ART';
+
+    q.Open;
+    ConfigCampo(q.FindField('CODIGO_ART_ART'),  'Código',      '');
+    ConfigCampo(q.FindField('DESCRIPCION_ART'), 'Descripción', '');
+    ConfigCampo(q.FindField('DESCRIPCION_FAM'), 'Familia',     '');
+    ConfigCampo(q.FindField('TEMPORADA'),       'Temporada',   '');
+    ConfigCampo(q.FindField('PROVEEDOR'),       'Proveedor',   '');
+    ConfigCampo(q.FindField('PRECIO_PVP'),      'PVP',         '#,##0.00 €');
+
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos',
+                                       q,
+                                       'frmMtoArtStockSearch') then
+      Result := q.FieldByName('CODIGO_ART_ART').AsString;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
 //  Events
 // ---------------------------------------------------------------------------
 procedure TfrmStockConsulta.btnArtPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
+var
+  sCodigo: string;
 begin
-  // TODO: picker de articulos con F3 (siguiente iteracion).
+  sCodigo := BuscarArticulo;
+  if sCodigo <> '' then
+    SetArticuloSku(sCodigo, '');
 end;
 
 procedure TfrmStockConsulta.btnArtPropertiesEditValueChanged(Sender: TObject);
