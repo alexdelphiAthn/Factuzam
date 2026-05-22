@@ -188,7 +188,8 @@ procedure SeleccionarTodoEnEditor(AEdit: TcxCustomEdit);
 implementation
 
 uses
-  System.Math;
+  System.Math,
+  inLibGlobalVar;
 
 { TGestorGridTallas }
 
@@ -477,8 +478,18 @@ var
 begin
   // Upsert / delete sobre la tabla de celdas para (linea, fila=fijo,
   // pivot, almacen=vacio).
-  if (ALinea <= 0) or (AIdAv <= 0) then Exit;
-  if SerieDoc = '' then Exit;
+  LogSes(Format('Tallas.PersistirCantidad: doc=%s/%s linea=%d idAv=%d cantidad=%g',
+                [SerieDoc, NumeroDoc, ALinea, AIdAv, ACantidad]));
+  if (ALinea <= 0) or (AIdAv <= 0) then
+  begin
+    LogSes('  guard: ALinea<=0 o AIdAv<=0, salida');
+    Exit;
+  end;
+  if SerieDoc = '' then
+  begin
+    LogSes('  guard: SerieDoc vacia, salida');
+    Exit;
+  end;
 
   q := TUniQuery.Create(nil);
   try
@@ -631,7 +642,13 @@ begin
   iLinea := Lineas.FieldByName(FCfg.FieldLinea).AsInteger;
   iAc    := Lineas.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
   arr    := GetPosicionesConjunto(iAc);
-  if iPos > Length(arr) then Exit;     // posicion fuera del sistema
+  LogSes(Format('Tallas.PersistirCeldaActiva: linea=%d pos=%d/%d iAc=%d Lineas.State=%d',
+                [iLinea, iPos, Length(arr), iAc, Ord(Lineas.State)]));
+  if iPos > Length(arr) then
+  begin
+    LogSes('  guard: iPos fuera del conjunto pivot, salida');
+    Exit;
+  end;
 
   vEdit := ed.EditValue;
   if VarIsNull(vEdit) or VarIsClear(vEdit) then

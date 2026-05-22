@@ -542,6 +542,54 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           end
         end
       end
+      object tsLog: TcxTabSheet
+        Caption = 'Log'
+        ImageIndex = -1
+        object pnlLogTop: TPanel
+          Left = 0
+          Top = 0
+          Width = 1096
+          Height = 36
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 0
+          object btnLogClear: TcxButton
+            Left = 8
+            Top = 4
+            Width = 110
+            Height = 28
+            Caption = 'Limpiar log'
+            TabOrder = 0
+            OnClick = btnLogClearClick
+          end
+          object btnLogCopy: TcxButton
+            Left = 124
+            Top = 4
+            Width = 110
+            Height = 28
+            Caption = 'Copiar al portapapeles'
+            TabOrder = 1
+            OnClick = btnLogCopyClick
+          end
+        end
+        object mLog: TcxMemo
+          Left = 0
+          Top = 36
+          Align = alClient
+          Properties.ReadOnly = True
+          Properties.ScrollBars = ssVertical
+          Properties.WordWrap = False
+          Style.Font.Charset = DEFAULT_CHARSET
+          Style.Font.Color = clWindowText
+          Style.Font.Height = -13
+          Style.Font.Name = 'Consolas'
+          Style.Font.Style = []
+          Style.IsFontAssigned = True
+          TabOrder = 1
+          Height = 613
+          Width = 1096
+        end
+      end
       inherited tsPerfil: TcxTabSheet
         ExplicitWidth = 1096
         ExplicitHeight = 649

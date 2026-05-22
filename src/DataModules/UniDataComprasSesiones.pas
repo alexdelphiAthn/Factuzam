@@ -260,6 +260,11 @@ var
   sSerie, sEmpresa, sNumero : string;
 begin
   inherited;
+  LogSes(Format('DM.unqryTablaGBeforePost: state=%d, SERIE=%s NUMERO=%s CONTADOR_LINEAS=%d',
+                [Ord(unqryTablaG.State),
+                 unqryTablaG.FieldByName('SERIE_SES').AsString,
+                 unqryTablaG.FieldByName('NUMERO_SES').AsString,
+                 unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
   sNumero  := unqryTablaG.FieldByName('NUMERO_SES').AsString;
   sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
@@ -290,6 +295,7 @@ end;
 procedure TdmComprasSesiones.unqrySesionLinAfterInsert(DataSet: TDataSet);
 var
   iNuevaLinea : Integer;
+  iContPrev   : Integer;
 begin
   inherited;
   // Contador de lineas en cabecera (mismo patron que cdsCabecera.
@@ -297,7 +303,10 @@ begin
   // suma 10 al contador y se queda con ese numero. Pasos de 10 para que
   // el usuario pueda intercalar lineas mas adelante (ej: poner una en el
   // 15 entre 10 y 20).
-  iNuevaLinea := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger + 10;
+  iContPrev   := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger;
+  iNuevaLinea := iContPrev + 10;
+  LogSes(Format('DM.unqrySesionLinAfterInsert: CONTADOR previo=%d -> nueva LINEA=%d',
+                [iContPrev, iNuevaLinea]));
 
   // Solo actualizamos el contador en memoria; la grabacion del cabecera
   // la hace el usuario con el boton Grabar normal (mismo patron que en
@@ -305,7 +314,10 @@ begin
   // desde AfterInsert de la linea para no comprometer al usuario con un
   // commit prematuro del documento).
   if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+  begin
+    LogSes('  master estaba fuera de edit/insert, forzando master.Edit');
     unqryTablaG.Edit;
+  end;
   unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger := iNuevaLinea;
 
   with unqrySesionLin do
@@ -342,6 +354,11 @@ var
   sNuevo  : string;
 begin
   inherited;
+  LogSes(Format('DM.unqrySesionLinBeforePost: state=%d, LINEA=%d, COD_TENT=%s, FAM=%s',
+                [Ord(unqrySesionLin.State),
+                 unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger,
+                 unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
+                 unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString]));
   // Sincroniza TIPO_ART desde TIPO_LINEA
   if unqrySesionLin.FieldByName('TIPO_LINEA_SESLIN').AsString = 'SERVICIO' then
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'SERVICIO'
@@ -405,12 +422,15 @@ end;
 procedure TdmComprasSesiones.unqrySesionLinAfterPost(DataSet: TDataSet);
 begin
   inherited;
+  LogSes(Format('DM.unqrySesionLinAfterPost: LINEA=%d posteada',
+                [unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger]));
   RefrescarTotalesSesion;
 end;
 
 procedure TdmComprasSesiones.unqrySesionLinAfterDelete(DataSet: TDataSet);
 begin
   inherited;
+  LogSes('DM.unqrySesionLinAfterDelete');
   // Las celdas y filas se borran en cascada por la app (no por FK).
   RefrescarTotalesSesion;
 end;
