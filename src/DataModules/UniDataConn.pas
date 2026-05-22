@@ -226,9 +226,9 @@ begin
         FSQLStartMs   := GetTickCount64;
         FSQLPendiente := True;
       end;
-    tfQOpen, tfQFetch, tfQClose:
+    tfConnect, tfQFetch, tfObjDestroy:
       VolcarSQLPendiente(True, '');
-    tfQError:
+    tfError:
       VolcarSQLPendiente(False, Text);
   end;
 

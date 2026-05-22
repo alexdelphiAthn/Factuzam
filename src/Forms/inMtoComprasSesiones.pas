@@ -627,10 +627,10 @@ end;
 
 procedure TfrmMtoComprasSesiones.btnAddLineaClick(Sender: TObject);
 const
-  ARR_ST: array[TDataSetState] of string = (
-    'dsInactive','dsBrowse','dsEdit','dsInsert','dsSetKey','dsCalcFields',
-    'dsFilter','dsNewValue','dsOldValue','dsCurValue','dsBlockRead',
-    'dsInternalCalc','dsOpening','dsRefreshFields');
+  ARR_ST: array[TDataSetState] of string =('dsInactive', 'dsBrowse', 'dsEdit', 'dsInsert', 'dsSetKey',
+    'dsCalcFields', 'dsFilter', 'dsNewValue', 'dsOldValue',
+    'dsCurValue', 'dsBlockRead', 'dsInternalCalc', 'dsOpening');
+
 begin
   inherited;
   LogSes(Format('btnAddLineaClick INICIO. master.State=%s, CONTADOR_LINEAS_SES=%d',
