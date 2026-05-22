@@ -13,11 +13,11 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     Left = 394
     Height = 452
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 394
-    ExplicitHeight = 452
+    ExplicitLeft = 392
+    ExplicitHeight = 444
     inherited btnSalir: TcxButton
       Top = 426
-      ExplicitTop = 426
+      ExplicitTop = 418
     end
   end
   object pnlOpciones: TPanel [1]
@@ -28,6 +28,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 392
+    ExplicitHeight = 444
     object cxlblArticulo: TcxLabel
       Left = 12
       Top = 12

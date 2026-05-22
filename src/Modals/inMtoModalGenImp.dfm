@@ -212,7 +212,7 @@ inherited frmPrint: TfrmPrint
     GradientEnd = 11982554
     GradientStart = clWindow
     TemplatesExt = 'fr3'
-    Restrictions = [drDontEditReportScript]
+    Restrictions = []
     RTLLanguage = False
     MemoParentFont = False
     OnSaveReport = frxdsgnr1SaveReport

@@ -768,7 +768,7 @@ inherited dmArticulos: TdmArticulos
     Constraints = False
     Options = []
     Left = 888
-    Top = 408
+    Top = 448
   end
   object cdsEtiquetasArt: TClientDataSet
     Aggregates = <>
@@ -780,7 +780,7 @@ inherited dmArticulos: TdmArticulos
   object dsEtiquetasArt: TDataSource
     DataSet = cdsEtiquetasArt
     Left = 1040
-    Top = 408
+    Top = 448
   end
   object fxdsEtiquetasArt: TfrxDBDataset
     Description = 'EtiquetasArt'
@@ -814,6 +814,6 @@ inherited dmArticulos: TdmArticulos
       '          NOMBRE_TAR_TAR,'
       '          CODIGO_TAR_ARTTAR')
     Left = 1184
-    Top = 456
+    Top = 504
   end
 end
