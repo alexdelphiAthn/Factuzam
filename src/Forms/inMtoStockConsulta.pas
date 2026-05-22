@@ -92,9 +92,6 @@ type
     procedure clbAlmacenesClickCheck(Sender: TObject; AIndex: Integer;
               APrevState, ANewState: TcxCheckBoxState);
     procedure pcEjeChange(Sender: TObject);
-    procedure tvStockCustomDrawColumnHeader(Sender: TcxGridTableView;
-              ACanvas: TcxCanvas; AViewInfo: TcxGridColumnHeaderViewInfo;
-              var ADone: Boolean);
   private
     FQry        : TUniQuery;
     FDs         : TDataSource;
@@ -535,37 +532,39 @@ begin
         '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
         ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
     esEntradas, esSalidas, esVentas, esRegularizadas:
-      Result :=
-        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
-        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
-        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
-        '       M.CODIGO_ALM_MOV AS ALM, ' +
-        '       SUM(M.CANTIDAD_MOV) AS CANTIDAD ' +
-        '  FROM fza_articulos_skus SKU ' +
-        '  JOIN fza_movimientos_almacen M ' +
-        '    ON M.CODIGO_UNIDAD_MOV = SKU.CODIGO_UNIDAD_SKU ' +
-        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-        '   AND M.CODIGO_ALM_MOV IN (' + sAlms + ') ' +
-        '   AND M.ESACTIVO_MOV   = ''S'' ';
-      case est of
-        esEntradas:      Result := Result + '   AND M.TIPO_MOV = ''E'' ';
-        esSalidas:       Result := Result + '   AND M.TIPO_MOV = ''S'' ' +
-                                            '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
-        esVentas:        Result := Result + '   AND M.TIPO_DOC_MOV = ''VE'' ';
-        esRegularizadas: Result := Result + '   AND M.TIPO_DOC_MOV = ''IN'' ';
+      begin
+        Result :=
+          'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
+          '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
+          '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
+          '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+          '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
+          '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
+          '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+          '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+          '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
+          '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
+          '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+          '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+          '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
+          '       M.CODIGO_ALM_MOV AS ALM, ' +
+          '       SUM(M.CANTIDAD_MOV) AS CANTIDAD ' +
+          '  FROM fza_articulos_skus SKU ' +
+          '  JOIN fza_movimientos_almacen M ' +
+          '    ON M.CODIGO_UNIDAD_MOV = SKU.CODIGO_UNIDAD_SKU ' +
+          ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+          '   AND M.CODIGO_ALM_MOV IN (' + sAlms + ') ' +
+          '   AND M.ESACTIVO_MOV   = ''S'' ';
+        case est of
+          esEntradas:      Result := Result + '   AND M.TIPO_MOV = ''E'' ';
+          esSalidas:       Result := Result + '   AND M.TIPO_MOV = ''S'' ' +
+                                              '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
+          esVentas:        Result := Result + '   AND M.TIPO_DOC_MOV = ''VE'' ';
+          esRegularizadas: Result := Result + '   AND M.TIPO_DOC_MOV = ''IN'' ';
+        end;
+        Result := Result +
+          ' GROUP BY SKU.CODIGO_UNIDAD_SKU, M.CODIGO_ALM_MOV';
       end;
-      Result := Result +
-        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, M.CODIGO_ALM_MOV';
   else
     // esPrestadas y otros: stub vacio
     Result :=
@@ -611,14 +610,32 @@ end;
 // ---------------------------------------------------------------------------
 //  Reconstruir columnas dinamicas del grid
 // ---------------------------------------------------------------------------
+function HexAColor(const AHex: string; out AColor: TColor): Boolean;
+var
+  s: string;
+begin
+  Result := False;
+  AColor := clBlack;
+  s := AHex;
+  if (Length(s) > 0) and (s[1] = '#') then Delete(s, 1, 1);
+  if Length(s) <> 6 then Exit;
+  AColor := RGB(StrToIntDef('$' + Copy(s, 1, 2), 0),
+                StrToIntDef('$' + Copy(s, 3, 2), 0),
+                StrToIntDef('$' + Copy(s, 5, 2), 0));
+  Result := True;
+end;
+
 procedure TfrmStockConsulta.ReconstruirColumnas(
   const AColumnas: TArray<TInfoColumna>);
 var
   i: Integer;
   col: TcxGridDBColumn;
   colTotal: TcxGridDBColumn;
+  st: TcxStyle;
+  c: TColor;
 begin
-  // Borrar columnas dinamicas anteriores
+  // Borrar columnas dinamicas anteriores. Los estilos creados con
+  // Owner=tvStock se liberan automaticamente al destruirse el grid.
   for i := FColsDin.Count - 1 downto 0 do
     FColsDin[i].Free;
   FColsDin.Clear;
@@ -634,6 +651,24 @@ begin
     col.Options.Editing := False;
     col.Options.Sorting := False;
     col.Tag := i;
+
+    // Si es columna de color y tenemos HEX, pintamos el header con ese
+    // color para que el usuario lo reconozca de un vistazo. El texto se
+    // pone en blanco o negro segun la luminancia para que se lea bien.
+    if AColumnas[i].EsColor and (AColumnas[i].Hex <> '') and
+       HexAColor(AColumnas[i].Hex, c) then
+    begin
+      st := TcxStyle.Create(tvStock);
+      st.AssignedValues := [svColor, svTextColor];
+      st.Color := c;
+      if (GetRValue(c) * 299 + GetGValue(c) * 587 + GetBValue(c) * 114)
+         div 1000 < 128 then
+        st.TextColor := clWhite
+      else
+        st.TextColor := clBlack;
+      col.Styles.Header := st;
+    end;
+
     FColsDin.Add(col);
   end;
 
@@ -646,80 +681,18 @@ begin
   colTotal.Width := 90;
   colTotal.Options.Editing := False;
   colTotal.Options.Sorting := False;
-  colTotal.Tag := -1;  // marca Total para que no se dibuje swatch
+  colTotal.Tag := -1;
   FColsDin.Add(colTotal);
 
   FColumnas := Copy(AColumnas);
 end;
 
 // ---------------------------------------------------------------------------
-//  Header custom-draw: cuadradito de color al lado del nombre
+//  Cuadradito de color en la cabecera: pintamos las celdas de datos de
+//  la columna con el HEX como background (sustituye al custom-draw del
+//  header, que dependia de un API de DevExpress no portable). El
+//  usuario reconoce el color por la franja de fondo de su columna.
 // ---------------------------------------------------------------------------
-procedure TfrmStockConsulta.tvStockCustomDrawColumnHeader(
-  Sender: TcxGridTableView; ACanvas: TcxCanvas;
-  AViewInfo: TcxGridColumnHeaderViewInfo; var ADone: Boolean);
-var
-  col   : TcxGridDBColumn;
-  idx   : Integer;
-  inf   : TInfoColumna;
-  rSwatch, rTexto : TRect;
-  cFill : TColor;
-  s     : string;
-begin
-  ADone := False;
-  if not (AViewInfo.Item is TcxGridDBColumn) then Exit;
-  col := TcxGridDBColumn(AViewInfo.Item);
-  idx := col.Tag;
-  if (idx < 0) or (idx > High(FColumnas)) then Exit;
-  inf := FColumnas[idx];
-  if (not inf.EsColor) or (inf.Hex = '') then Exit;
-
-  // Fondo de cabecera + linea separadora inferior. Imitacion sencilla del
-  // header standard del cxGrid; no usamos el LookAndFeelPainter porque
-  // su API ha cambiado entre versiones de DevExpress.
-  ACanvas.Brush.Color := $00F2F2F2;
-  ACanvas.FillRect(AViewInfo.Bounds);
-  ACanvas.Pen.Color := clBtnShadow;
-  ACanvas.MoveTo(AViewInfo.Bounds.Left, AViewInfo.Bounds.Bottom - 1);
-  ACanvas.LineTo(AViewInfo.Bounds.Right, AViewInfo.Bounds.Bottom - 1);
-
-  // Cuadradito (14 x 14) centrado verticalmente, pegado a la izquierda.
-  rSwatch := AViewInfo.Bounds;
-  rSwatch.Left   := rSwatch.Left + 6;
-  rSwatch.Right  := rSwatch.Left + 14;
-  rSwatch.Top    := (AViewInfo.Bounds.Top + AViewInfo.Bounds.Bottom - 14)
-                    div 2;
-  rSwatch.Bottom := rSwatch.Top + 14;
-
-  // HEX (#RRGGBB o RRGGBB) -> TColor (BBGGRR)
-  s := inf.Hex;
-  if (Length(s) > 0) and (s[1] = '#') then Delete(s, 1, 1);
-  if Length(s) = 6 then
-  begin
-    cFill := RGB(StrToIntDef('$' + Copy(s, 1, 2), 0),
-                 StrToIntDef('$' + Copy(s, 3, 2), 0),
-                 StrToIntDef('$' + Copy(s, 5, 2), 0));
-    ACanvas.Brush.Color := cFill;
-    ACanvas.Brush.Style := bsSolid;
-    ACanvas.FillRect(rSwatch);
-    ACanvas.Brush.Style := bsClear;
-    ACanvas.Pen.Color := clBlack;
-    ACanvas.Rectangle(rSwatch);
-    ACanvas.Brush.Style := bsSolid;
-  end;
-
-  // Texto a la derecha del cuadradito
-  rTexto := AViewInfo.Bounds;
-  rTexto.Left := rSwatch.Right + 4;
-  ACanvas.Brush.Style := bsClear;
-  ACanvas.Font.Assign(AViewInfo.Font);
-  ACanvas.Font.Color := clBlack;
-  DrawText(ACanvas.Handle, PChar(inf.Texto), Length(inf.Texto), rTexto,
-           DT_VCENTER or DT_LEFT or DT_SINGLELINE);
-  ACanvas.Brush.Style := bsSolid;
-
-  ADone := True;
-end;
 
 // ---------------------------------------------------------------------------
 //  RecargarConsulta
