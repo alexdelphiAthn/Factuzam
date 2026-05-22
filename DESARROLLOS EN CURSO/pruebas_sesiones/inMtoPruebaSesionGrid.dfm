@@ -295,13 +295,22 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             TabOrder = 2
             OnClick = btnNuevoColorClick
           end
-          object lblHint: TcxLabel
+          object btnArbolFamilias: TcxButton
             Left = 472
+            Top = 5
+            Width = 150
+            Height = 28
+            Caption = #193'rbol familias (F3)'
+            TabOrder = 3
+            OnClick = btnArbolFamiliasClick
+          end
+          object lblHint: TcxLabel
+            Left = 630
             Top = 7
-            Caption = 
+            Caption =
               'F3 sobre Familia abre el selector. PVP se propone al teclear el ' +
               'coste.'
-            TabOrder = 3
+            TabOrder = 4
           end
         end
         object cxgrdLineas: TcxGrid
@@ -340,7 +349,9 @@ inherited frmMtoPruebaSesionGrid: TfrmMtoPruebaSesionGrid
             object dbcLinCodArt: TcxGridDBColumn
               Caption = 'C'#243'd. art'#237'culo'
               DataBinding.FieldName = 'CODIGO_ART_TENTATIVO_SESLIN'
-              Options.Editing = False
+              PropertiesClassName = 'TcxTextEditProperties'
+              Properties.CharCase = ecUpperCase
+              Properties.OnEditValueChanged = dbcLinCodArtPropertiesEditValueChanged
               Width = 130
             end
             object dbcLinRefPrv: TcxGridDBColumn
