@@ -154,6 +154,7 @@ type
     dbcLinNumero             : TcxGridDBColumn;
     btnImprimir: TcxButton;
     btnCrear: TcxButton;
+    btnRevertir: TcxButton;
 
     // ------------------------------------------------------------------
     // Eventos
@@ -165,6 +166,7 @@ type
     procedure btnNuevoColorClick(Sender: TObject);
     procedure btnFotoClick(Sender: TObject);
     procedure btnCrearClick(Sender: TObject);
+    procedure btnRevertirClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
@@ -802,6 +804,48 @@ begin
     finally
       FreeAndNil(incidencias);
     end;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.btnRevertirClick(Sender: TObject);
+var
+  sErr: string;
+begin
+  inherited;
+  // Vuelve a BORRADOR la sesion CERRADA borrando los movimientos de
+  // almacen que genero. Articulos / SKUs / EAN13 se conservan: si el
+  // usuario vuelve a materializar, los INSERTs auxiliares (INSERT
+  // IGNORE / DUPLICATE KEY) los respetan y la generacion de EAN13 se
+  // salta cuando el SKU ya tiene uno.
+  if Dmm.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay sesion activa.');
+    Exit;
+  end;
+  if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString <> 'CERRADA' then
+  begin
+    ShowMessage('La sesion no esta CERRADA. Solo se pueden revertir ' +
+                'sesiones materializadas.');
+    Exit;
+  end;
+  if MessageDlg('Se borraran los movimientos de almacen creados por esta ' +
+                'sesion y volvera a BORRADOR.' + sLineBreak + sLineBreak +
+                'Los articulos / SKUs / codigos de barras se conservan ' +
+                '(re-materializar es idempotente).' + sLineBreak +
+                sLineBreak + 'Continuar?',
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+
+  Screen.Cursor := crHourGlass;
+  try
+    if RevertirMaterializacion(Dmm, oUser, sErr) then
+    begin
+      ShowMessage('Sesion revertida. Estado: BORRADOR.');
+      Dmm.unqryTablaG.Refresh;
+    end
+    else
+      ShowMessage('No se pudo revertir la sesion:' + sLineBreak + sErr);
+  finally
+    Screen.Cursor := crDefault;
   end;
 end;
 
