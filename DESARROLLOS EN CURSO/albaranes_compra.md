@@ -65,6 +65,32 @@ el `SHORTCUT_WINF` en la BBDD.
 
 ---
 
+## Modos de vista en el grid de lineas
+
+El panel de acciones tiene dos botones toggle que cambian la vista
+del grid sin tocar el modelo de datos:
+
+- **«Tallas en horizontal»**: muestra `CANT_TALLAS_MAX = 20` columnas
+  no-bound al final del grid, una por talla del conjunto pivot de la
+  linea con foco. Patron y libreria identicos a los de
+  `inMtoComprasSesiones` (`inLibGridTallasInline.TGestorGridTallas`).
+  Las cantidades persisten en `fza_albaranes_compra_celdas` (sufijo
+  `ALBCCEL`) via UPSERT al teclear.
+
+  Requisitos en BBDD (creados por `albaranes_compra.sql`):
+  - Columna `ID_AC_PIVOT_ALBCLIN` en lineas: conjunto pivot.
+  - Columna `TOTAL_UNIDADES_ALBCLIN` en lineas: SUM celdas.
+  - Tabla `fza_albaranes_compra_celdas`.
+
+- **«Atributo por columna»**: muestra `CANT_ATRIB_MAX = 5` columnas
+  no-bound con los nombres de atributo del articulo de la linea con
+  foco. Patron similar a `inMtoInventarios.ConstruirColumnasAtributos`
+  pero simplificado: solo etiqueta dinamica. La carga de **valores**
+  por SKU queda como TODO (ver hito 6 abajo).
+
+Ambos botones son toggles independientes: pueden estar activos a la
+vez, se pueden apagar.
+
 ## Pendiente / hitos siguientes
 
 1. **Snapshot de proveedor y empresa al grabar cabecera**: copiar
@@ -87,7 +113,20 @@ el `SHORTCUT_WINF` en la BBDD.
    `fza_facturas_compras` destino, procs analogos a
    `PRC_ALB_CREAR_FACTURA_*`).
 
-5. **Mantenimiento comun para sesiones / pedidos / albaranes de
+5. **Valores de atributo por SKU en modo «Atributo por columna»**:
+   hoy el boton solo carga las etiquetas de las columnas. Para
+   poblar los valores hay que iterar las lineas del documento,
+   consultar `fza_atributos_sku` por `CODIGO_UNIDAD_ALBCLIN` y
+   volcar a `Values[colTag]`. Patron concreto en
+   `inMtoInventarios.CargarValoresAtributosLinea`.
+
+6. **F3 / lookup sobre `ID_AC_PIVOT_ALBCLIN`** desde el grid de
+   lineas: hoy hay que teclear el ID del conjunto. Ver el handler
+   `dbcLinTallasOnPropertiesButtonClick` de Sesiones para el modal
+   selector. Tambien podria copiarse el `ValidarSistemaSeleccionado`
+   del gestor para avisar si el conjunto excede `CANT_TALLAS_MAX`.
+
+7. **Mantenimiento comun para sesiones / pedidos / albaranes de
    compra**: la idea original era un solo Mto con selector de tipo
    de documento. Esta version mantiene el Mto separado siguiendo el
    patron existente; si se quiere unificar mas adelante hay tres
