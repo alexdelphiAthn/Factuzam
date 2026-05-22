@@ -191,6 +191,7 @@ uses
   inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',
   inLibGridTallasInline in 'src\Lib\inLibGridTallasInline.pas',
   inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas',
+  inLibContadorLineas in 'src\Lib\inLibContadorLineas.pas',
   inMtoModalAltaRapida in 'src\Modals\inMtoModalAltaRapida.pas' {frmMtoModalAltaRapida},
   inLibArticulosValidador in 'src\Lib\inLibArticulosValidador.pas',
   inLibArticulosResolver in 'src\Lib\inLibArticulosResolver.pas',
