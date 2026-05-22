@@ -123,52 +123,60 @@ object frmStockConsulta: TfrmStockConsulta
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
-    DesignSize = (
-      898
-      220)
     object pcEje: TcxPageControl
       Left = 0
       Top = 0
-      Width = 240
+      Width = 898
       Height = 220
-      Align = alLeft
+      Align = alClient
       TabOrder = 0
       Properties.ActivePage = tsPorAlmacen
       Properties.CustomButtons.Buttons = <>
       OnChange = pcEjeChange
       ClientRectBottom = 218
       ClientRectLeft = 2
-      ClientRectRight = 238
+      ClientRectRight = 896
       ClientRectTop = 29
       object tsPorColor: TcxTabSheet
         Caption = 'Por Color'
         ImageIndex = 0
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
+        object lblColores: TcxLabel
+          Left = 8
+          Top = 4
+          Caption = 'Colores del art'#237'culo'
+          Transparent = True
+        end
+        object clbColores: TcxCheckListBox
+          Left = 8
+          Top = 32
+          Width = 878
+          Height = 153
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          Items = <>
+          TabOrder = 0
+          OnClickCheck = clbColoresClickCheck
+        end
       end
       object tsPorAlmacen: TcxTabSheet
         Caption = 'Por Almac'#233'n'
         ImageIndex = 1
+        object lblAlmacenes: TcxLabel
+          Left = 8
+          Top = 4
+          Caption = 'Almacenes'
+          Transparent = True
+        end
+        object clbAlmacenes: TcxCheckListBox
+          Left = 8
+          Top = 32
+          Width = 878
+          Height = 153
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          Items = <>
+          TabOrder = 0
+          OnClickCheck = clbAlmacenesClickCheck
+        end
       end
-    end
-    object lblAlmacenes: TcxLabel
-      Left = 248
-      Top = 6
-      Caption = 'Almacenes'
-      TabOrder = 1
-      Transparent = True
-    end
-    object clbAlmacenes: TcxCheckListBox
-      Left = 248
-      Top = 30
-      Width = 639
-      Height = 184
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Items = <>
-      TabOrder = 2
-      OnClickCheck = clbAlmacenesClickCheck
     end
   end
 end
