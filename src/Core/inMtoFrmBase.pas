@@ -48,6 +48,11 @@ type
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
+  protected
+    // Hooks de log avanzado a nivel de formulario. Se loguean solo si
+    // ltAvanzado esta activo en TLog (parametro appLogAvanzado).
+    procedure DoShow; override;
+    procedure DoClose(var Action: TCloseAction); override;
   public
     { Public declarations }
   end;
@@ -57,6 +62,9 @@ var
 
 implementation
 
+uses
+  inLibLog;
+
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
 
@@ -64,6 +72,20 @@ procedure TfrmBase.FormCreate(Sender: TObject);
 begin
   Localizer1.Locale := 1034;
   Localizer1.Active := True;
+end;
+
+procedure TfrmBase.DoShow;
+begin
+  inherited;
+  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+    Log.LogEvento(Self.UnitName, Self.ClassName, 'Show', Self.Name);
+end;
+
+procedure TfrmBase.DoClose(var Action: TCloseAction);
+begin
+  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+    Log.LogEvento(Self.UnitName, Self.ClassName, 'Close', Self.Name);
+  inherited;
 end;
 
 {

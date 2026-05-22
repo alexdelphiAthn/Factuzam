@@ -48,6 +48,10 @@ type
     procedure InicializarParametrosApp(const AUsuario, AGrupo: string);
     procedure Inicializar(const AUsuario, AGrupo: string);
     procedure Recargar(const AUsuario, AGrupo: string);
+    // Sincroniza los flags del singleton Log (inLibLog) con los parametros
+    // booleanos appLogSQL / appLogAvanzado. Se llama tras Inicializar y
+    // tras Recargar para aplicar los cambios sin reiniciar.
+    procedure AplicarFlagsLog;
     function GetPath(const ANombre: string): string;
     function GetString(const AKey: string; const ADefault: string = '' ): string;
     function GetBool  (const AKey: string;
@@ -63,7 +67,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibPathTokens;
+  inLibGlobalVar, inLibPathTokens, inLibLog;
 
 { TAppParamDef }
 
@@ -185,12 +189,41 @@ begin
   RegistrarParametro('Apariencia', 'appTema',
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');
 
+  // --- Log ---
+  // Modo log SQL: registra cada consulta con tiempo de ejecucion, filas
+  // (cuando se conocen) y exito/fallo. Los valores reales de :param se
+  // incluyen porque UniSQLMonitor los entrega ya sustituidos.
+  RegistrarParametro('Log', 'appLogSQL',
+    'Log SQL (consultas, tiempo de ejecucion, filas y parametros)',
+    tpBoolean, 'False');
+  // Modo log avanzado: registra eventos de usuario significativos
+  // (apertura/cierre de formularios, inserciones, modificaciones).
+  RegistrarParametro('Log', 'appLogAvanzado',
+    'Log avanzado (eventos de usuario: unidad, objeto, evento)',
+    tpBoolean, 'False');
+
   Inicializar(AUsuario, AGrupo);
+  AplicarFlagsLog;
 end;
 
 procedure TAppParams.Recargar(const AUsuario, AGrupo: string);
 begin
   CargarDesdeDB(AUsuario, AGrupo);
+  AplicarFlagsLog;
+end;
+
+procedure TAppParams.AplicarFlagsLog;
+begin
+  if Log = nil then
+    Exit;
+  if GetBool('appLogSQL') then
+    Log.EnableLogType(ltSQL)
+  else
+    Log.DisableLogType(ltSQL);
+  if GetBool('appLogAvanzado') then
+    Log.EnableLogType(ltAvanzado)
+  else
+    Log.DisableLogType(ltAvanzado);
 end;
 
 function TAppParams.GetString(const AKey: string; const ADefault: string): string;
