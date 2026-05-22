@@ -313,15 +313,20 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
+    // GROUP BY AV.AV para deduplicar por nombre de color: en
+    // fza_atributos_valores puede haber varios ID_AV con el mismo texto
+    // (ej. NEGRO con ID_AV=100 y otro NEGRO con otro ID_AV/ORDEN_AV).
+    // En el checklist y en el grid los queremos como UNA sola entrada.
     q.SQL.Text :=
-      'SELECT DISTINCT AV.AV, AV.ORDEN_AV ' +
+      'SELECT AV.AV, MIN(AV.ORDEN_AV) AS ORDEN_AV ' +
       '  FROM fza_articulos_skus SKU ' +
       '  JOIN fza_atributos_sku SA ' +
       '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
       '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
       ' WHERE SKU.CODIGO_ART_SKU = :art ' +
       '   AND AV.ID_VA_AV = ''CO'' ' +
-      ' ORDER BY AV.ORDEN_AV, AV.AV';
+      ' GROUP BY AV.AV ' +
+      ' ORDER BY MIN(AV.ORDEN_AV), AV.AV';
     q.ParamByName('art').AsString := FCodArt;
     q.Open;
     while not q.Eof do
@@ -682,16 +687,20 @@ begin
   if AEsColor then
   begin
     // Filas = colores marcados en clbColores (subset de los AV de color
-    // presentes en los SKUs del articulo).
+    // presentes en los SKUs del articulo). Dedupe por AV.AV (igual que en
+    // CargarColores) — varios ID_AV pueden compartir el mismo nombre de
+    // color y nos llevarian a una fila duplicada por cada uno.
     sOuter :=
-      '(SELECT DISTINCT AV.ID_AV, AV.AV, AV.ORDEN_AV, AV.ID_ATB_AV ' +
+      '(SELECT AV.AV, MIN(AV.ORDEN_AV) AS ORDEN_AV, ' +
+      '        MIN(AV.ID_ATB_AV) AS ID_ATB_AV ' +
       '   FROM fza_articulos_skus SKU ' +
       '   JOIN fza_atributos_sku SA ' +
       '     ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
       '   JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
       '  WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
       '    AND AV.ID_VA_AV = ''CO''' +
-      '    AND AV.AV IN (' + sFiltroColores + ')) C';
+      '    AND AV.AV IN (' + sFiltroColores + ') ' +
+      '  GROUP BY AV.AV) C';
     sJoin :=
       ' LEFT JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = C.ID_ATB_AV ' +
       ' LEFT JOIN (' + sBase + ') B ON B.COLOR_AV = C.AV';
