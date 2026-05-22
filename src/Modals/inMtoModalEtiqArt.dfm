@@ -1,34 +1,35 @@
 inherited frmPrintEtiqArt: TfrmPrintEtiqArt
   Caption = 'Impresi'#243'n de Etiquetas de Art'#237'culo'
-  ClientHeight = 452
-  ClientWidth = 538
+  ClientHeight = 426
+  ClientWidth = 536
   StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitWidth = 554
-  ExplicitHeight = 491
+  ExplicitLeft = 3
+  ExplicitTop = 3
+  ExplicitWidth = 552
+  ExplicitHeight = 465
   TextHeight = 19
   inherited pnl1: TPanel
-    Left = 394
-    Height = 452
+    Left = 392
+    Height = 426
     StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 392
     ExplicitHeight = 444
     inherited btnSalir: TcxButton
-      Top = 426
+      Top = 400
       ExplicitTop = 418
     end
   end
   object pnlOpciones: TPanel [1]
     Left = 0
     Top = 0
-    Width = 394
-    Height = 452
+    Width = 392
+    Height = 426
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 392
     ExplicitHeight = 444
     object cxlblArticulo: TcxLabel
       Left = 12

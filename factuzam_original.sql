@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 22/05/2026 18:07:53
+-- Backup generado: 22/05/2026 23:42:27
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -95,6 +95,113 @@ ALTER TABLE `fza_albaranes` ADD INDEX `IDX_ALB_EMPRESA` (`CODIGO_EMP_ALB`);
 ALTER TABLE `fza_albaranes` ADD INDEX `IDX_ALB_ESTADO` (`ESTADO_ALB`);
 ALTER TABLE `fza_albaranes` ADD INDEX `IDX_ALB_FACTURA` (`SERIE_FAC_ALB`, `NUMERO_FAC_ALB`);
 ALTER TABLE `fza_albaranes` ADD INDEX `IDX_ALB_PEDIDO` (`SERIE_PED_ALB`, `NUMERO_PED_ALB`);
+
+
+-- Tabla: fza_albaranes_compra
+
+DROP TABLE IF EXISTS `fza_albaranes_compra`;
+CREATE TABLE `fza_albaranes_compra` (
+  `NUMERO_ALBC` varchar(20) NOT NULL,
+  `SERIE_ALBC` varchar(20) NOT NULL,
+  `FECHA_ALBC` date NULL DEFAULT NULL,
+  `ESTADO_ALBC` varchar(20) NULL DEFAULT 'ABIERTO' COMMENT 'ABIERTO, FACTURADO, CANCELADO',
+  `NUMERO_PED_ALBC` varchar(20) NULL DEFAULT NULL COMMENT 'FK logica a fza_pedidos_compra',
+  `SERIE_PED_ALBC` varchar(20) NULL DEFAULT NULL,
+  `NUMERO_FAC_ALBC` varchar(20) NULL DEFAULT NULL COMMENT 'FK logica a fza_facturas_compras',
+  `SERIE_FAC_ALBC` varchar(20) NULL DEFAULT NULL,
+  `CODIGO_EMP_ALBC` varchar(8) NULL DEFAULT NULL,
+  `RAZON_SOCIAL_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,
+  `NIF_EMPRESA_ALBC` varchar(50) NULL DEFAULT NULL,
+  `MOVIL_EMPRESA_ALBC` varchar(40) NULL DEFAULT NULL,
+  `EMAIL_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,
+  `DIRECCION1_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,
+  `DIRECCION2_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,
+  `POBLACION_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,
+  `PROVINCIA_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,
+  `CODIGO_PAI_EMPRESA_ALBC` varchar(3) NULL DEFAULT '724',
+  `NOMBRE_PAI_EMPRESA_ALBC` varchar(150) NULL DEFAULT 'Espana',
+  `CODIGO_POSTAL_EMPRESA_ALBC` varchar(15) NULL DEFAULT NULL,
+  `CODIGO_PRV_ALBC` varchar(20) NULL DEFAULT NULL COMMENT 'FK logica a fza_proveedores',
+  `RAZON_SOCIAL_PRV_ALBC` varchar(200) NULL DEFAULT NULL,
+  `NIF_PRV_ALBC` varchar(50) NULL DEFAULT NULL,
+  `MOVIL_PRV_ALBC` varchar(40) NULL DEFAULT NULL,
+  `EMAIL_PRV_ALBC` varchar(200) NULL DEFAULT NULL,
+  `DIRECCION1_PRV_ALBC` varchar(200) NULL DEFAULT NULL,
+  `DIRECCION2_PRV_ALBC` varchar(200) NULL DEFAULT NULL,
+  `POBLACION_PRV_ALBC` varchar(200) NULL DEFAULT NULL,
+  `PROVINCIA_PRV_ALBC` varchar(200) NULL DEFAULT NULL,
+  `CODIGO_PAI_PRV_ALBC` varchar(3) NULL DEFAULT '724',
+  `NOMBRE_PAI_PRV_ALBC` varchar(150) NULL DEFAULT 'Espana',
+  `CODIGO_POSTAL_PRV_ALBC` varchar(15) NULL DEFAULT NULL,
+  `REF_PROVEEDOR_ALBC` varchar(50) NULL DEFAULT NULL COMMENT 'Numero de albaran segun el proveedor',
+  `CODIGO_ALM_ALBC` varchar(10) NULL DEFAULT NULL COMMENT 'Almacen destino de la entrada de mercancia',
+  `TRANSPORTISTA_ALBC` varchar(200) NULL DEFAULT NULL,
+  `CODIGO_IVA_ALBC` varchar(20) NULL DEFAULT NULL,
+  `PORCENTAJE_IVAN_ALBC` decimal(19,6) NULL DEFAULT NULL,
+  `TOTAL_IVAN_ALBC` decimal(18,6) NULL DEFAULT NULL,
+  `PORCENTAJE_IVAR_ALBC` decimal(19,6) NULL DEFAULT NULL,
+  `TOTAL_IVAR_ALBC` decimal(18,6) NULL DEFAULT NULL,
+  `PORCENTAJE_IVAS_ALBC` decimal(19,6) NULL DEFAULT NULL,
+  `TOTAL_IVAS_ALBC` decimal(18,6) NULL DEFAULT NULL,
+  `PORCENTAJE_IVAE_ALBC` decimal(19,6) NULL DEFAULT NULL,
+  `TOTAL_IVAE_ALBC` decimal(18,6) NULL DEFAULT NULL,
+  `TOTAL_BASES_ALBC` decimal(18,6) NULL DEFAULT NULL,
+  `TOTAL_IMPUESTOS_ALBC` decimal(18,6) NULL DEFAULT NULL,
+  `TOTAL_LIQUIDO_ALBC` decimal(18,6) NULL DEFAULT NULL,
+  `FORMA_PAGO_ALBC` varchar(200) NULL DEFAULT NULL,
+  `CONTADOR_LINEAS_ALBC` varchar(8) NULL DEFAULT NULL,
+  `COMENTARIOS_ALBC` varchar(1000) NULL DEFAULT '',
+  `OBSERVACIONES_ALBC` varchar(2000) NULL DEFAULT '',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL,
+  `USUARIO_MODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`NUMERO_ALBC`,`SERIE_ALBC`)
+);
+ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_EMPRESA` (`CODIGO_EMP_ALBC`);
+ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_ESTADO` (`ESTADO_ALBC`);
+ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_PEDIDO` (`SERIE_PED_ALBC`, `NUMERO_PED_ALBC`);
+ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_PROVEEDOR_FECHA` (`CODIGO_PRV_ALBC`, `FECHA_ALBC`);
+
+
+-- Tabla: fza_albaranes_compra_lineas
+
+DROP TABLE IF EXISTS `fza_albaranes_compra_lineas`;
+CREATE TABLE `fza_albaranes_compra_lineas` (
+  `NUMERO_ALBC_ALBCLIN` varchar(20) NOT NULL,
+  `SERIE_ALBC_ALBCLIN` varchar(20) NOT NULL,
+  `LINEA_ALBCLIN` varchar(4) NOT NULL,
+  `NUMERO_PEDC_ALBCLIN` varchar(20) NULL DEFAULT NULL,
+  `SERIE_PEDC_ALBCLIN` varchar(20) NULL DEFAULT NULL,
+  `LINEA_PEDC_ALBCLIN` varchar(4) NULL DEFAULT NULL COMMENT 'Linea de origen en fza_pedidos_compra_lineas',
+  `CODIGO_ART_ALBCLIN` varchar(20) NULL DEFAULT NULL,
+  `CODIGO_UNIDAD_ALBCLIN` varchar(50) NULL DEFAULT NULL COMMENT 'SKU del articulo',
+  `CODIGO_FAM_ALBCLIN` varchar(20) NULL DEFAULT NULL,
+  `NOMBRE_FAM_ALBCLIN` varchar(200) NULL DEFAULT NULL,
+  `DESCRIPCION_ARTICULO_ALBCLIN` varchar(100) NULL DEFAULT NULL,
+  `TIPO_CANTIDAD_ARTICULO_ALBCLIN` varchar(20) NULL DEFAULT 'Uds',
+  `CANTIDAD_ALBCLIN` decimal(19,6) NULL DEFAULT '1.000000',
+  `TIPO_IVA_ARTICULO_ALBCLIN` varchar(2) NULL DEFAULT 'N',
+  `PORCENTAJE_IVA_ALBCLIN` decimal(19,6) NULL DEFAULT '0.000000',
+  `PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN` decimal(19,6) NULL DEFAULT '0.000000',
+  `PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN` decimal(19,6) NULL DEFAULT '0.000000',
+  `TOTAL_ALBCLIN` decimal(19,6) NULL DEFAULT '0.000000',
+  `CODIGO_ALMACEN_ALBCLIN` varchar(10) NULL DEFAULT NULL,
+  `LOTE_ALBCLIN` varchar(50) NULL DEFAULT NULL,
+  `FECHA_CADUCIDAD_ALBCLIN` date NULL DEFAULT NULL,
+  `DESCRIPCION_VARIACION_ALBCLIN` varchar(200) NULL DEFAULT NULL,
+  `ESFACTURADA_ALBCLIN` varchar(1) NULL DEFAULT 'N',
+  `NUMERO_FAC_ALBCLIN` varchar(20) NULL DEFAULT NULL,
+  `SERIE_FAC_ALBCLIN` varchar(20) NULL DEFAULT NULL,
+  `LINEA_FAC_ALBCLIN` varchar(4) NULL DEFAULT NULL,
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL,
+  `USUARIO_MODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`NUMERO_ALBC_ALBCLIN`,`SERIE_ALBC_ALBCLIN`,`LINEA_ALBCLIN`)
+);
+ALTER TABLE `fza_albaranes_compra_lineas` ADD INDEX `IDX_ALBCLIN_ARTICULO` (`CODIGO_ART_ALBCLIN`);
+ALTER TABLE `fza_albaranes_compra_lineas` ADD INDEX `IDX_ALBCLIN_PEDIDO` (`SERIE_PEDC_ALBCLIN`, `NUMERO_PEDC_ALBCLIN`, `LINEA_PEDC_ALBCLIN`);
 
 
 -- Tabla: fza_albaranes_lineas
@@ -232,15 +339,22 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
   ('ABRIGO-PAÑO', 'S', 'ESTANDAR', 'Abrigo de Paño Caballero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:12', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('BLUS-SEDA', 'S', 'ESTANDAR', 'Blusa de Seda Cuello V', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:13', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('BOLSO-PIEL', 'S', 'ESTANDAR', 'Bolso de Piel Mujer Grande', 'BOLSOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
+  ('BOLSOS00005', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador', 'TC'),
+  ('BOLSOS00006', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
+  ('BOLSOS00007', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
   ('BOTIN-ANIT', 'S', 'ESTANDAR', 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:05', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CAMI-BASICA', 'S', 'ESTANDAR', 'Camiseta de Algodón Básica', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:04', '2026-03-11 22:27:51', 'ADMIN', 'ADMIN', 'TC'),
   ('CAMI-POLO', 'S', 'ESTANDAR', 'Polo Manga Corta Hombre', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:03', '2026-01-10 08:00:00', 'DEMO', 'Administrador', 'TC'),
   ('CARTERA-PIEL', 'S', 'ESTANDAR', 'Cartera Piel Caballero', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-01-07 19:47:30', '2026-03-11 22:27:51', 'DEMO', 'DEMO', NULL),
   ('CHAQ-CUERO', 'S', 'ESTANDAR', 'Chaqueta Biker Cuero', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:59', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('CINTURON-PIEL', 'S', 'ESTANDAR', 'Cinturón Piel Reversible', 'COMPLEMENTOS', 'N', 'N', 'Uds', 'N', 'N', NULL, '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL),
+  ('COMPLEMENTOS002', 'S', 'ESTANDAR', 'Complementos Accesorios', 'COMPLEMENTOS', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
   ('DEMO-BASICO', 'S', 'ESTANDAR', 'Camiseta Algodón Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:57', '2026-03-26 17:34:00', 'Admin', 'Administrador', 'TC'),
   ('DEMO-CAMISA', 'S', 'ESTANDAR', 'Camisa Lino Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:58', '2026-03-26 19:15:56', '', 'Administrador', 'TC'),
   ('DEMO-PRO', 'S', 'ESTANDAR', 'Cinturón Piel Demo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-27 07:17:59', '2026-03-26 17:34:00', 'Admin', 'Administrador', 'TC'),
+  ('DEPORTIVO001', 'S', 'ESTANDAR', 'Ropa Deportiva', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
+  ('DEPORTIVO002', 'S', 'ESTANDAR', 'Zapatillas deportivas', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
+  ('DEPORTIVO003', 'S', 'ESTANDAR', 'Ropa Deportiva', 'DEPORTIVO', '1', 'N', 'Uds', 'S', 'N', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador', 'TC'),
   ('FALD-JEAN', 'S', 'ESTANDAR', 'Minifalda Vaquera', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:54', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('FALD-PLIS', 'S', 'ESTANDAR', 'Falda Larga Plisada', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:51', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('JERSEY-LANA', 'S', 'ESTANDAR', 'Jersey de Lana Cuello Redondo', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:50', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
@@ -256,7 +370,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
   ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
   ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:34', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC');
--- 27 registros exportados
+-- 34 registros exportados
 
 
 -- Tabla: fza_articulos_atributos_basicos
@@ -313,6 +427,9 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('ABRIGO-PAÑO', 1, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('BLUS-SEDA', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('BLUS-SEDA', 3, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  ('BOLSOS00005', 4, '', 0, 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00006', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007', 3, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('BOTIN-ANIT', 5, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('CAMI-BASICA', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
@@ -321,6 +438,10 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('CAMI-POLO', 1, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO', 2, 'CO', 1, 'S', '2026-05-19 18:39:33', '2026-05-12 07:13:38', 'DEMO', 'SISTEMA'),
   ('CHAQ-CUERO', 1, 'TAL', 2, 'S', '2026-05-19 18:27:54', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  ('COMPLEMENTOS002', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003', 4, '', 0, 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('FALD-JEAN', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('FALD-JEAN', 3, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('FALD-PLIS', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
@@ -343,7 +464,7 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('ZAP-OXFORD', 4, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN', 5, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO');
--- 34 registros exportados
+-- 41 registros exportados
 
 
 -- Tabla: fza_articulos_familias
@@ -371,10 +492,10 @@ ALTER TABLE `fza_articulos_familias` ADD INDEX `IDX_FAM_PADRE` (`CODIGO_PADRE_FA
 
 -- Datos de fza_articulos_familias
 INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `CODIGO_PADRE_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `CONTADOR_ART_FAM`, `ESCONTADOR_ART_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `PAD_ART_FAM`) VALUES
-  ('BOLSOS', NULL, 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 7, 'S', '2026-05-18 21:42:31', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
+  ('BOLSOS', NULL, 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 10, 'S', '2026-05-22 19:36:08', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
   ('CALZADO', NULL, 'S', 2, 'N', NULL, 'Calzado Elegante', 'Calzado Todo tiempo', 0, 'S', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
   ('COMPLEMENTOS', NULL, 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 2, 'S', '2026-05-18 22:01:06', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 3),
-  ('DEPORTIVO', NULL, 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 2, 'S', '2026-05-19 06:50:46', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 3),
+  ('DEPORTIVO', NULL, 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 3, 'S', '2026-05-22 19:32:13', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 3),
   ('OTR', NULL, 'S', 6, 'S', NULL, 'Otros articulos agrícolas', 'Otros articulos agrícolas', 0, 'N', '2026-05-12 18:38:02', '2022-11-02 16:06:31', 'Administrador', 'Administrador', 5),
   ('ROPA', NULL, 'S', 1, 'N', NULL, 'Ropa de Vestir', 'Ropa de Vestir a la moda', 0, 'N', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Adminnistrador', 'Administrador', 5);
 -- 6 registros exportados
@@ -426,6 +547,33 @@ INSERT INTO `fza_articulos_fotos` (`CODIGO_ART_FOT`, `CODIGO_UNIDAD_FOT`, `NOMBR
 -- 25 registros exportados
 
 
+-- Tabla: fza_articulos_pdte_recibir
+
+DROP TABLE IF EXISTS `fza_articulos_pdte_recibir`;
+CREATE TABLE `fza_articulos_pdte_recibir` (
+  `CODIGO_UNIDAD_PDR` varchar(50) NOT NULL,
+  `CODIGO_ALM_PDR` varchar(10) NOT NULL,
+  `SERIE_DOC_PDR` varchar(12) NOT NULL COMMENT 'Serie del pedido de compra',
+  `NUMERO_DOC_PDR` varchar(12) NOT NULL COMMENT 'Numero del pedido de compra',
+  `LINEA_PDR` int(11) NOT NULL,
+  `CODIGO_ART_PDR` varchar(20) NOT NULL,
+  `CODIGO_PRV_PDR` varchar(20) NULL DEFAULT NULL,
+  `CODIGO_EMP_PDR` varchar(20) NULL DEFAULT NULL,
+  `CANTIDAD_PDR` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `PRECIO_COMPRA_PDR` decimal(19,6) NULL DEFAULT NULL,
+  `FECHA_PEDIDO_PDR` date NULL DEFAULT NULL,
+  `FECHA_PREVISTA_PDR` date NULL DEFAULT NULL COMMENT 'Fecha estimada de recepcion (opcional)',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL,
+  `USUARIO_MODIF` varchar(100) NOT NULL,
+  PRIMARY KEY (`CODIGO_UNIDAD_PDR`,`CODIGO_ALM_PDR`,`SERIE_DOC_PDR`,`NUMERO_DOC_PDR`,`LINEA_PDR`)
+);
+ALTER TABLE `fza_articulos_pdte_recibir` ADD INDEX `IDX_PDR_ART` (`CODIGO_ART_PDR`);
+ALTER TABLE `fza_articulos_pdte_recibir` ADD INDEX `IDX_PDR_DOC` (`SERIE_DOC_PDR`, `NUMERO_DOC_PDR`);
+ALTER TABLE `fza_articulos_pdte_recibir` ADD INDEX `IDX_PDR_SKU_ALM` (`CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`);
+
+
 -- Tabla: fza_articulos_propiedades
 
 DROP TABLE IF EXISTS `fza_articulos_propiedades`;
@@ -466,6 +614,9 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('BOLSO-PIEL', 'ORIGEN', NULL, 'España', '2026-03-22 18:32:14', 'DEMO'),
   ('BOLSO-PIEL', 'PESO_GR', NULL, '620', '2026-03-22 18:32:14', 'DEMO'),
   ('BOLSO-PIEL', 'TEMPORADA', 13, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('BOLSOS00005', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
+  ('BOLSOS00006', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
+  ('BOLSOS00007', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
   ('BOTIN-ANIT', 'ALTURA_TAC', NULL, '4', '2026-03-22 18:32:14', 'DEMO'),
   ('BOTIN-ANIT', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('BOTIN-ANIT', 'IMPERMEAB', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
@@ -503,6 +654,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('CHAQ-CUERO', 'MATERIAL', 21, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'ORIGEN', NULL, 'Italia', '2026-03-22 18:32:14', 'DEMO'),
   ('CHAQ-CUERO', 'TEMPORADA', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('COMPLEMENTOS002', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
   ('DEMO-CAMISA', 'COMPOSICION', NULL, '100% ALGODÓN', '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'ES_ECO', NULL, 'S', '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'ESTILO', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
@@ -511,6 +663,9 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('DEMO-CAMISA', 'MARCA', 5, NULL, '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'ORIGEN', NULL, NULL, '2026-03-26 19:15:56', 'Administrador'),
   ('DEMO-CAMISA', 'TEMPORADA', 10, NULL, '2026-03-26 19:15:56', 'Administrador'),
+  ('DEPORTIVO001', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
+  ('DEPORTIVO002', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
+  ('DEPORTIVO003', 'TEMPORADA', 12, NULL, '2026-05-22 19:56:39', 'Administrador'),
   ('LEGGING-SPORT', 'ACTIVIDAD', 56, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('LEGGING-SPORT', 'GENERO', 28, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('LEGGING-SPORT', 'MARCA', 4, NULL, '2026-03-22 18:32:14', 'DEMO'),
@@ -573,7 +728,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('ZAP-TACÓN', 'ORIGEN', NULL, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TEMPORADA', 10, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TIPO_SUELA', 49, NULL, '2026-03-24 07:06:54', 'Administrador');
--- 131 registros exportados
+-- 138 registros exportados
 
 
 -- Tabla: fza_articulos_proveedores
@@ -623,10 +778,17 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('21', 'JERSEY-LANA', 'sueter', 5, '2026-05-01 00:00:00', 'S', '2026-05-10 19:02:21', '2026-05-10 17:45:23', 'Administrador', 'Administrador'),
   ('7', '013', NULL, 5, '2023-10-20 00:00:00', 'S', '2023-11-04 14:56:50', '2023-11-04 14:56:50', 'Administrador', 'Administrador'),
   ('ANGEL', 'ALFALFA', NULL, 0.17, NULL, '', '2025-04-17 09:36:55', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
+  ('ANGEL', 'BOLSOS00005', 'ART03983', 10, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('ANGEL', 'BOLSOS00006', 'ART03983', 10, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('ANGEL', 'BOLSOS00007', 'AIMOE98Ç', 22, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('ANGEL', 'COMPLEMENTOS002', 'PUNKU383', 12, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('ANGEL', 'DEPORTIVO001', 'PUMA93834', 34, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('ANGEL', 'DEPORTIVO002', 'ADIDAS212', 19, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('ANGEL', 'DEPORTIVO003', '3232', 12, '2026-05-22 19:56:39', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('FER', '016', NULL, 25, NULL, 'N', '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
   ('LAIBENSE', 'PATITORICO', NULL, 1.5, NULL, '', '2025-09-19 11:23:01', '2024-10-06 20:54:23', 'Administrador', 'Administrador'),
   ('PEPI', 'PAPAFRITA', NULL, 0.2, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
--- 29 registros exportados
+-- 36 registros exportados
 
 
 -- Tabla: fza_articulos_skus
@@ -658,6 +820,28 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('BLUS-SEDA/NEGRO/S', 'BLUS-SEDA', 'TC', 'S', '2026-05-10 23:08:23', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'Administrador'),
   ('BLUS-SEDA/ROSA/M', 'BLUS-SEDA', 'TC', 'S', '2026-05-10 23:08:25', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'Administrador'),
   ('BOLSO-PIEL', 'BOLSO-PIEL', '-', 'S', '2026-05-08 17:01:50', '2026-05-08 17:01:50', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/39', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/40', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/41', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/42', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/43', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/44', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/39', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/40', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/41', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/42', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/43', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/44', 'BOLSOS00005', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/39', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/40', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/41', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/42', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/43', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/44', 'BOLSOS00006', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/L', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/M', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/S', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/XL', 'BOLSOS00007', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT/MARRON/37', 'BOTIN-ANIT', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('BOTIN-ANIT/MARRON/38', 'BOTIN-ANIT', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('BOTIN-ANIT/MARRON/40', 'BOTIN-ANIT', 'TC', 'S', '2026-05-11 18:27:19', '2026-05-11 18:27:19', 'Administrador', 'Administrador'),
@@ -687,6 +871,12 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('CHAQ-CUERO/NEGRO/XL', 'CHAQ-CUERO', 'TC', 'S', '2026-01-08 18:34:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/XXXL', 'CHAQ-CUERO', 'TC', 'S', '2026-05-15 17:54:40', '2026-05-15 17:54:40', 'SISTEMA', 'SISTEMA'),
   ('CINTURON-PIEL', 'CINTURON-PIEL', '-', 'S', '2026-05-12 07:06:08', '2026-05-12 07:06:08', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/39', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/40', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/41', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/42', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/43', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/44', 'COMPLEMENTOS002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/3XL', 'DEMO-CAMISA', 'TC', 'S', '2026-05-14 19:57:39', '2026-05-11 19:19:56', 'SISTEMA', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/L', 'DEMO-CAMISA', 'TC', 'S', '2026-05-08 13:51:34', '2026-05-08 13:51:34', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/XL', 'DEMO-CAMISA', 'TC', 'N', '2026-05-15 18:25:08', '2026-03-27 07:36:52', 'SISTEMA', 'Administrador'),
@@ -701,6 +891,31 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('DEMO-CAMISA/NEGRO/S', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-CAMISA/NEGRO/XL', 'DEMO-CAMISA', 'TC', 'S', '2026-03-27 07:26:37', '2026-03-27 07:26:37', 'SISTEMA', 'SISTEMA'),
   ('DEMO-PRO', 'DEMO-PRO', '-', 'S', '2026-05-10 07:20:51', '2026-05-10 07:20:51', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/39', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/40', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/41', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/42', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/43', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/44', 'DEPORTIVO001', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/39', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/40', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/41', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/42', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/43', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/44', 'DEPORTIVO002', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003/COLORADITO/39', 'DEPORTIVO003', 'TC', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('FALD-JEAN/VAQUERO/L', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:04', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 'FALD-JEAN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('FALD-JEAN/VAQUERO/S', 'FALD-JEAN', 'TC', 'S', '2026-01-08 18:35:10', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
@@ -767,7 +982,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 119 registros exportados
+-- 172 registros exportados
 
 
 -- Tabla: fza_articulos_skus_costes
@@ -883,6 +1098,22 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'BOLSO-PIEL', '', NULL, 2, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00005/AZUL_CIELO/39', '', NULL, 2, '2026-05-22 19:56:40', 20, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00005/AZUL_CIELO/40', '', NULL, 2, '2026-05-22 19:56:40', 20, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00005/AZUL_CIELO/41', '', NULL, 4, '2026-05-22 19:56:40', 40, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00005/AZUL_CIELO/42', '', NULL, 3, '2026-05-22 19:56:40', 30, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00005/AZUL_CIELO/43', '', NULL, 4, '2026-05-22 19:56:40', 40, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00005/AZUL_CIELO/44', '', NULL, 4, '2026-05-22 19:56:40', 40, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00006/VERDE/39', '', NULL, 1, '2026-05-22 19:56:40', 10, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00006/VERDE/40', '', NULL, 2, '2026-05-22 19:56:40', 20, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00006/VERDE/41', '', NULL, 1, '2026-05-22 19:56:40', 10, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00006/VERDE/42', '', NULL, 2, '2026-05-22 19:56:40', 20, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00006/VERDE/43', '', NULL, 3, '2026-05-22 19:56:40', 30, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00006/VERDE/44', '', NULL, 2, '2026-05-22 19:56:40', 20, 10, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00007/AMARILLO/L', '', NULL, 2, '2026-05-22 19:56:40', 44, 22, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00007/AMARILLO/M', '', NULL, 1, '2026-05-22 19:56:40', 22, 22, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00007/AMARILLO/S', '', NULL, 1, '2026-05-22 19:56:40', 22, 22, 0, 0, 0, 0),
+  ('GEN', 'BOLSOS00007/AMARILLO/XL', '', NULL, 2, '2026-05-22 19:56:40', 44, 22, 0, 0, 0, 0),
   ('GEN', 'BOTIN-ANIT/MARRON/37', '', NULL, 12, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, 14, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
@@ -906,9 +1137,28 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'CHAQ-CUERO/NEGRO/S', '', NULL, 1, '2026-05-19 18:24:20', 5, 5, 0, 0, 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/XL', '', NULL, 4, '2026-05-19 18:24:20', 20, 5, 0, 0, 0, 0),
   ('GEN', 'CINTURON-PIEL', '', NULL, 5, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'COMPLEMENTOS002/AZUL/39', '', NULL, 1, '2026-05-22 19:56:40', 12, 12, 0, 0, 0, 0),
+  ('GEN', 'COMPLEMENTOS002/AZUL/40', '', NULL, 2, '2026-05-22 19:56:40', 24, 12, 0, 0, 0, 0),
+  ('GEN', 'COMPLEMENTOS002/AZUL/41', '', NULL, 2, '2026-05-22 19:56:40', 24, 12, 0, 0, 0, 0),
+  ('GEN', 'COMPLEMENTOS002/AZUL/42', '', NULL, 2, '2026-05-22 19:56:40', 24, 12, 0, 0, 0, 0),
+  ('GEN', 'COMPLEMENTOS002/AZUL/43', '', NULL, 1, '2026-05-22 19:56:40', 12, 12, 0, 0, 0, 0),
+  ('GEN', 'COMPLEMENTOS002/AZUL/44', '', NULL, 1, '2026-05-22 19:56:40', 12, 12, 0, 0, 0, 0),
   ('GEN', 'DEMO-BASICO', '', NULL, 2, '2026-05-19 07:47:45', 30, 15, 0, 0, 0, 0),
   ('GEN', 'DEMO-CAMISA/AMARILLO/3XL', '', NULL, 2, '2026-05-19 07:47:45', 24, 12, 0, 0, 0, 0),
   ('GEN', 'DEMO-CAMISA/AMARILLO/L', '', NULL, 0, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO001/BLANCO/39', '', NULL, 3, '2026-05-22 19:56:40', 102, 34, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO001/BLANCO/40', '', NULL, 3, '2026-05-22 19:56:40', 102, 34, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO001/BLANCO/41', '', NULL, 6, '2026-05-22 19:56:40', 204, 34, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO001/BLANCO/42', '', NULL, 4, '2026-05-22 19:56:40', 136, 34, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO001/BLANCO/43', '', NULL, 3, '2026-05-22 19:56:40', 102, 34, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO001/BLANCO/44', '', NULL, 3, '2026-05-22 19:56:40', 102, 34, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO002/VERDE/39', '', NULL, 1, '2026-05-22 19:56:40', 19, 19, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO002/VERDE/40', '', NULL, 2, '2026-05-22 19:56:40', 38, 19, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO002/VERDE/41', '', NULL, 2, '2026-05-22 19:56:40', 38, 19, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO002/VERDE/42', '', NULL, 2, '2026-05-22 19:56:40', 38, 19, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO002/VERDE/43', '', NULL, 1, '2026-05-22 19:56:40', 19, 19, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO002/VERDE/44', '', NULL, 1, '2026-05-22 19:56:40', 19, 19, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO003/COLORADITO/39', '', NULL, 1, '2026-05-22 19:56:40', 12, 12, 0, 0, 0, 0),
   ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 1, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
@@ -936,7 +1186,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-05-18 06:10:38', 0, 0, 0, 0, 0, 0);
--- 75 registros exportados
+-- 110 registros exportados
 
 
 -- Tabla: fza_articulos_tarifas
@@ -1035,9 +1285,19 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('FALD-JEAN', 66, 'FALD-JEAN/VAQUERO/L', 'PVP', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
   ('FALD-JEAN', 67, 'FALD-JEAN/VAQUERO/L', 'VENTAMAYOR', 'N', 0, 0, NULL, NULL, NULL, NULL, NULL, '2026-05-08 00:00:00', NULL, '2026-05-08 16:22:20', '2026-05-08 16:22:20', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA', 68, 'DEMO-CAMISA/AZULMARINO/L', 'PVP', 'S', 29.95, 29.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 22:56:57', '2026-05-10 22:56:31', 'Administrador', 'Administrador'),
-  ('BLUS-SEDA', 69, 'BLUS-SEDA/BLANCO/L', 'PVP', 'S', 20.95, 20.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 23:12:00', '2026-05-10 23:08:56', 'Administrador', 'Administrador');
+  ('BLUS-SEDA', 69, 'BLUS-SEDA/BLANCO/L', 'PVP', 'S', 20.95, 20.95, NULL, 0, NULL, NULL, NULL, '2026-05-10 00:00:00', NULL, '2026-05-10 23:12:00', '2026-05-10 23:08:56', 'Administrador', 'Administrador'),
+  ('BOLSOS00005', 71, '', 'PVP', 'S', 35.01, 35.01, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005', 72, '', 'PVP', 'S', 35.01, 35.01, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001', 73, '', 'PVP', 'S', 84.99, 84.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006', 74, '', 'PVP', 'S', 24.99, 24.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001', 75, '', 'PVP', 'S', 84.99, 84.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001', 76, '', 'PVP', 'S', 84.99, 84.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007', 77, '', 'PVP', 'S', 54.99, 54.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002', 78, '', 'PVP', 'S', 29.99, 29.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002', 79, '', 'PVP', 'S', 47.99, 47.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003', 80, '', 'PVP', 'S', 29.99, 29.99, NULL, NULL, NULL, NULL, NULL, '2026-05-22 00:00:00', NULL, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 66 registros exportados
+-- 76 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -1266,6 +1526,50 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('BLUS-SEDA/NEGRO/S', 110, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BLUS-SEDA/ROSA/M', 3, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BLUS-SEDA/ROSA/M', 221, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
+  ('BOLSOS00005/AZUL_CIELO/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/39', 9215, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/40', 225, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/40', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/41', 224, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/41', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/42', 126, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/42', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/43', 127, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/43', 9215, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/AZUL_CIELO/44', 9215, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/39', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/40', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/41', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/42', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/43', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/44', 220, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00005/BEIGE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/39', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/40', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/41', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/42', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/43', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/44', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00006/VERDE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/L', 9103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/L', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/M', 9102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/M', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/S', 9101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/S', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/XL', 9104, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('BOLSOS00007/AMARILLO/XL', 9204, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT/MARRON/37', 103, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BOTIN-ANIT/MARRON/37', 121, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BOTIN-ANIT/MARRON/38', 103, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -1320,6 +1624,18 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('CHAQ-CUERO/NEGRO/XL', 111, '2026-01-08 18:55:21', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('CHAQ-CUERO/NEGRO/XXXL', 9202, '2026-05-15 17:54:40', NULL, '', ''),
   ('CHAQ-CUERO/NEGRO/XXXL', 9212, '2026-05-15 17:54:40', NULL, '', ''),
+  ('COMPLEMENTOS002/AZUL/39', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/40', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/41', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/42', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/43', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/44', 218, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('COMPLEMENTOS002/AZUL/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('DEMO-CAMISA/AMARILLO/3XL', 9204, '2026-05-11 19:19:56', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/3XL', 9213, '2026-05-11 19:19:56', NULL, '', ''),
   ('DEMO-CAMISA/AMARILLO/L', 4, '2026-05-08 13:51:34', '2026-05-08 13:51:34', 'Administrador', 'Administrador'),
@@ -1351,6 +1667,56 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('DEMO-CAMISA/NEGRO/XL', 9104, '2026-03-27 07:26:37', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/NEGRO/XL', 9202, '2026-03-27 07:26:37', '2026-05-05 07:47:47', '', ''),
   ('DEMO-CAMISA/XXL', 9210, '2026-05-11 19:09:37', NULL, '', ''),
+  ('DEPORTIVO001/BLANCO/39', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/40', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/41', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/42', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/43', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/44', 101, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/BLANCO/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/39', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/40', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/41', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/42', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/43', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/44', 103, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/MARRON/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/39', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/40', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/41', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/42', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/43', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/44', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO001/VERDE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/39', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/40', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/40', 225, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/41', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/41', 224, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/42', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/42', 126, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/43', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/43', 127, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/44', 102, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO002/VERDE/44', 226, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003/COLORADITO/39', 227, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  ('DEPORTIVO003/COLORADITO/39', 9216, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
   ('FALD-JEAN/VAQUERO/L', 4, '2026-01-08 18:55:32', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/L', 105, '2026-01-08 18:55:38', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('FALD-JEAN/VAQUERO/M', 3, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
@@ -1475,7 +1841,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 227 registros exportados
+-- 333 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -1549,9 +1915,11 @@ INSERT INTO `fza_atributos_valores` (`ID_AV`, `ID_VA_AV`, `AV`, `ORDEN_AV`, `DES
   (9210, 'TAL', 'XXL', 50, NULL, 'S', 1, NULL, NULL, 21, '2026-05-14 19:34:42', '2026-03-28 19:22:26', 'SISTEMA', 'SISTEMA'),
   (9211, 'CO', 'PEPINO', 20, NULL, 'S', 1, NULL, NULL, NULL, '2026-03-29 07:37:23', '2026-03-29 07:37:23', 'SISTEMA', 'SISTEMA'),
   (9212, 'TAL', 'XXXL', 60, NULL, 'S', 1, NULL, NULL, 22, '2026-05-14 19:34:42', '2026-04-28 17:28:02', 'SISTEMA', 'SISTEMA'),
-  (9213, 'TAL', '3XL', 60, NULL, 'S', 1, NULL, NULL, NULL, '2026-05-11 19:19:29', '2026-05-11 19:19:29', 'SISTEMA', 'SISTEMA');
+  (9213, 'TAL', '3XL', 60, NULL, 'S', 1, NULL, NULL, NULL, '2026-05-11 19:19:29', '2026-05-11 19:19:29', 'SISTEMA', 'SISTEMA'),
+  (9215, 'CO', 'AZUL_CIELO', 0, NULL, 'S', 1, NULL, NULL, 5, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  (9216, 'CO', 'COLORADITO', 0, NULL, 'S', 1, NULL, NULL, 172, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 45 registros exportados
+-- 47 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -2115,9 +2483,78 @@ INSERT INTO `fza_codigos_barras` (`ID_CB`, `CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB
   (84, '2100000000692', 'CHAQ-CUERO/MARRON/XL', 'EAN13', 'S', '2026-05-13 17:32:31', '2026-05-13 17:32:31', 'Administrador', 'Administrador'),
   (85, '2100000000708', 'CHAQ-CUERO/NEGRO/L', 'EAN13', 'S', '2026-05-13 17:32:31', '2026-05-13 17:32:31', 'Administrador', 'Administrador'),
   (86, '2100000000715', 'CHAQ-CUERO/NEGRO/M', 'EAN13', 'S', '2026-05-13 17:32:32', '2026-05-13 17:32:32', 'Administrador', 'Administrador'),
-  (87, '2100000000722', 'CHAQ-CUERO/NEGRO/XL', 'EAN13', 'S', '2026-05-13 17:32:32', '2026-05-13 17:32:32', 'Administrador', 'Administrador');
+  (87, '2100000000722', 'CHAQ-CUERO/NEGRO/XL', 'EAN13', 'S', '2026-05-13 17:32:32', '2026-05-13 17:32:32', 'Administrador', 'Administrador'),
+  (94, '2100000000739', 'CARTERA-PIEL', 'EAN13', 'S', '2026-05-22 19:53:24', '2026-05-22 19:53:24', 'Administrador', 'Administrador'),
+  (95, '2100000000746', 'BOLSOS00005/AZUL_CIELO/42', 'EAN13', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  (96, '2100000000753', 'BOLSOS00005/AZUL_CIELO/43', 'EAN13', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  (97, '2100000000760', 'BOLSOS00005/AZUL_CIELO/41', 'EAN13', 'S', '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
+  (98, '2100000000777', 'BOLSOS00005/AZUL_CIELO/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (99, '2100000000784', 'BOLSOS00005/AZUL_CIELO/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (100, '2100000000791', 'BOLSOS00005/AZUL_CIELO/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (101, '2100000000807', 'BOLSOS00005/BEIGE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (102, '2100000000814', 'BOLSOS00005/BEIGE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (103, '2100000000821', 'BOLSOS00005/BEIGE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (104, '2100000000838', 'BOLSOS00005/BEIGE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (105, '2100000000845', 'BOLSOS00005/BEIGE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (106, '2100000000852', 'BOLSOS00005/BEIGE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (107, '2100000000869', 'DEPORTIVO001/BLANCO/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (108, '2100000000876', 'DEPORTIVO001/BLANCO/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (109, '2100000000883', 'DEPORTIVO001/BLANCO/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (110, '2100000000890', 'DEPORTIVO001/BLANCO/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (111, '2100000000906', 'DEPORTIVO001/BLANCO/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (112, '2100000000913', 'DEPORTIVO001/BLANCO/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (113, '2100000000920', 'BOLSOS00006/VERDE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (114, '2100000000937', 'BOLSOS00006/VERDE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (115, '2100000000944', 'BOLSOS00006/VERDE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (116, '2100000000951', 'BOLSOS00006/VERDE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (117, '2100000000968', 'BOLSOS00006/VERDE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (118, '2100000000975', 'BOLSOS00006/VERDE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (119, '2100000000982', 'DEPORTIVO001/MARRON/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (120, '2100000000999', 'DEPORTIVO001/MARRON/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (121, '2100000001002', 'DEPORTIVO001/MARRON/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (122, '2100000001019', 'DEPORTIVO001/MARRON/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (123, '2100000001026', 'DEPORTIVO001/MARRON/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (124, '2100000001033', 'DEPORTIVO001/MARRON/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (125, '2100000001040', 'DEPORTIVO001/VERDE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (126, '2100000001057', 'DEPORTIVO001/VERDE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (127, '2100000001064', 'DEPORTIVO001/VERDE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (128, '2100000001071', 'DEPORTIVO001/VERDE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (129, '2100000001088', 'DEPORTIVO001/VERDE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (130, '2100000001095', 'DEPORTIVO001/VERDE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (131, '2100000001101', 'BOLSOS00007/AMARILLO/S', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (132, '2100000001118', 'BOLSOS00007/AMARILLO/M', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (133, '2100000001125', 'BOLSOS00007/AMARILLO/L', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (134, '2100000001132', 'BOLSOS00007/AMARILLO/XL', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (135, '2100000001149', 'COMPLEMENTOS002/AZUL/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (136, '2100000001156', 'COMPLEMENTOS002/AZUL/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (137, '2100000001163', 'COMPLEMENTOS002/AZUL/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (138, '2100000001170', 'COMPLEMENTOS002/AZUL/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (139, '2100000001187', 'COMPLEMENTOS002/AZUL/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (140, '2100000001194', 'COMPLEMENTOS002/AZUL/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (141, '2100000001200', 'DEPORTIVO002/VERDE/42', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (142, '2100000001217', 'DEPORTIVO002/VERDE/43', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (143, '2100000001224', 'DEPORTIVO002/VERDE/41', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (144, '2100000001231', 'DEPORTIVO002/VERDE/40', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (145, '2100000001248', 'DEPORTIVO002/VERDE/44', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (146, '2100000001255', 'DEPORTIVO002/VERDE/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (147, '2100000001262', 'DEPORTIVO003/COLORADITO/39', 'EAN13', 'S', '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (148, '2100000000746', 'DEMO-CAMISA/AMARILLO/3XL', 'EAN13', 'S', '2026-05-22 20:33:25', '2026-05-22 20:33:25', 'Administrador', 'Administrador'),
+  (149, '', 'DEMO-CAMISA/AMARILLO/L', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (150, '', 'DEMO-CAMISA/AZULMARINO/L', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (151, '', 'DEMO-CAMISA/BLANCO/L', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (152, '', 'DEMO-CAMISA/BLANCO/M', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (153, '', 'DEMO-CAMISA/COLORAO/L', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (154, '', 'DEMO-CAMISA/COLORAO/XL', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (155, '2100000000753', 'DEMO-CAMISA/NEGRO/3XL', 'EAN13', 'S', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (156, '', 'DEMO-CAMISA/NEGRO/L', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (157, '', 'DEMO-CAMISA/NEGRO/M', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (158, '', 'DEMO-CAMISA/NEGRO/S', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (159, '', 'DEMO-CAMISA/NEGRO/XL', 'EAN13', 'N', '2026-05-22 20:33:26', '2026-05-22 20:33:26', 'Administrador', 'Administrador'),
+  (160, '2100000000760', 'JERSEY-LANA/BEIGE/M', 'EAN13', 'S', '2026-05-22 20:56:22', '2026-05-22 20:56:22', 'Administrador', 'Administrador'),
+  (161, '2100000000777', 'JERSEY-LANA/GRIS/L', 'EAN13', 'S', '2026-05-22 20:56:22', '2026-05-22 20:56:22', 'Administrador', 'Administrador'),
+  (162, '2100000000784', 'JERSEY-LANA/GRIS/M', 'EAN13', 'S', '2026-05-22 20:56:22', '2026-05-22 20:56:22', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_codigos_barras` ENABLE KEYS */;
--- 86 registros exportados
+-- 155 registros exportados
 
 
 -- Tabla: fza_compras_plantillas
@@ -2241,7 +2678,8 @@ ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_TEMPORADA` (`ID_PV_TEMPORA
 
 -- Datos de fza_compras_sesiones
 INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`, `ID_PV_TEMPORADA_SES`) VALUES
-  ('A1', '000002', '2026-05-12 00:00:00', 'BORRADOR', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, NULL, NULL, 'N', 'N', NULL, NULL, NULL, NULL, NULL, 100, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-18 22:04:55', 'Administrador', 'N', NULL);
+  ('A1', '000002', '2026-05-12 00:00:00', 'BORRADOR', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, NULL, NULL, 'N', 'S', NULL, NULL, NULL, NULL, 'Ya existe un registro con ese valor (entrada duplicada).
+(MySQL 1062: #23000Duplicate entry ''BOLSOS00005'' for key ''PRIMARY'')', 130, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-22 23:35:03', 'Administrador', 'N', 12);
 -- 1 registros exportados
 
 
@@ -2316,8 +2754,9 @@ INSERT INTO `fza_compras_sesiones_celdas` (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCE
   ('A1', '000002', 110, 1, 224, '', 2, '2026-05-19 06:52:22', 'Administrador'),
   ('A1', '000002', 110, 1, 225, '', 2, '2026-05-19 06:52:22', 'Administrador'),
   ('A1', '000002', 110, 1, 226, '', 1, '2026-05-19 06:52:24', 'Administrador'),
-  ('A1', '000002', 110, 1, 227, '', 1, '2026-05-19 06:52:21', 'Administrador');
--- 52 registros exportados
+  ('A1', '000002', 110, 1, 227, '', 1, '2026-05-19 06:52:21', 'Administrador'),
+  ('A1', '000002', 120, 1, 227, '', 1, '2026-05-22 19:33:00', 'Administrador');
+-- 53 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_documentos
@@ -2436,15 +2875,16 @@ ALTER TABLE `fza_compras_sesiones_lineas` ADD INDEX `IDX_SESLIN_ATB_COLOR` (`COD
 -- Datos de fza_compras_sesiones_lineas
 INSERT INTO `fza_compras_sesiones_lineas` (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLIN`, `LINEA_SESLIN`, `CODIGO_ART_TENTATIVO_SESLIN`, `DESCRIPCION_SESLIN`, `CODIGO_FAM_SESLIN`, `TIPO_LINEA_SESLIN`, `TIPO_ART_SESLIN`, `TIPO_IVA_SESLIN`, `TIPO_CANTIDAD_SESLIN`, `ESTRAZABLE_SESLIN`, `CODIGO_VAR_SESLIN`, `ID_VA_PIVOT_SESLIN`, `ID_AC_PIVOT_SESLIN`, `ID_VA_FILA_SESLIN`, `ID_AC_FILA_SESLIN`, `CANTIDAD_ESCALAR_SESLIN`, `ESDUPLICADO_SESLIN`, `ACCION_DUPLICADO_SESLIN`, `CODIGO_ART_REUSAR_SESLIN`, `PRECIO_COMPRA_SESLIN`, `PORCENTAJE_MARGEN_SESLIN`, `PRECIO_VENTA_SESLIN`, `REF_PRV_SESLIN`, `TOTAL_UNIDADES_SESLIN`, `TOTAL_LINEA_SESLIN`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `COLOR_TEXTO_SESLIN`, `CODIGO_ATB_COLOR_SESLIN`) VALUES
   ('A1', '000002', 10, 'BOLSOS00005', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 10, NULL, 35.01, 'ART03983', 10, 100, '2026-05-18 19:25:22', 'Administrador', '2026-05-19 06:49:55', 'Administrador', '07', 'AZUL_CIELO'),
-  ('A1', '000002', 15, 'BOLSOS00005', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 10, NULL, 35.01, 'ART03983', 9, 90, '2026-05-18 22:04:36', 'Administrador', '2026-05-18 22:05:00', 'Administrador', '09', 'BEIGE'),
+  ('A1', '000002', 15, 'BOLSOS00005', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'S', 'REUSAR', 'BOLSOS00005', 10, NULL, 35.01, 'ART03983', 9, 90, '2026-05-18 22:04:36', 'Administrador', '2026-05-22 19:55:38', 'Administrador', '09', 'BEIGE'),
   ('A1', '000002', 20, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 34, NULL, 84.99, 'PUMA93834', 8, 272, '2026-05-18 20:28:16', 'Administrador', '2026-05-18 20:30:34', 'Administrador', '389', 'BLANCO'),
   ('A1', '000002', 50, 'BOLSOS00006', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 10, NULL, 24.99, 'ART03983', 11, 110, '2026-05-18 20:59:10', 'Administrador', '2026-05-18 21:48:35', 'Administrador', '08', 'VERDE'),
-  ('A1', '000002', 60, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 34, NULL, 84.99, 'PUMA93834', 7, 238, '2026-05-18 21:27:39', 'Administrador', '2026-05-18 21:28:05', 'Administrador', '981', 'MARRON'),
-  ('A1', '000002', 70, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 34, NULL, 84.99, 'PUMA93834', 7, 238, '2026-05-18 21:40:11', 'Administrador', '2026-05-18 21:40:30', 'Administrador', '87', 'VERDE'),
+  ('A1', '000002', 60, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'S', 'REUSAR', 'DEPORTIVO001', 34, NULL, 84.99, 'PUMA93834', 7, 238, '2026-05-18 21:27:39', 'Administrador', '2026-05-22 19:55:38', 'Administrador', '981', 'MARRON'),
+  ('A1', '000002', 70, 'DEPORTIVO001', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'S', 'REUSAR', 'DEPORTIVO001', 34, NULL, 84.99, 'PUMA93834', 7, 238, '2026-05-18 21:40:11', 'Administrador', '2026-05-22 19:55:38', 'Administrador', '87', 'VERDE'),
   ('A1', '000002', 80, 'BOLSOS00007', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 3, NULL, NULL, NULL, 'N', NULL, NULL, 22, NULL, 54.99, 'AIMOE98Ç', 6, 132, '2026-05-18 21:42:18', 'Administrador', '2026-05-18 21:43:14', 'Administrador', '32', 'AMARILLO'),
   ('A1', '000002', 90, 'COMPLEMENTOS002', 'Complementos Accesorios', 'COMPLEMENTOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 12, NULL, 29.99, 'PUNKU383', 9, 108, '2026-05-18 22:00:15', 'Administrador', '2026-05-18 22:01:51', 'Administrador', '21', 'AZUL'),
-  ('A1', '000002', 110, 'DEPORTIVO002', 'Zapatillas deportivas', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 19, NULL, 47.99, 'ADIDAS212', 9, 171, '2026-05-19 06:50:41', 'Administrador', '2026-05-19 06:52:26', 'Administrador', '11', 'VERDE');
--- 9 registros exportados
+  ('A1', '000002', 110, 'DEPORTIVO002', 'Zapatillas deportivas', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 19, NULL, 47.99, 'ADIDAS212', 9, 171, '2026-05-19 06:50:41', 'Administrador', '2026-05-19 06:52:26', 'Administrador', '11', 'VERDE'),
+  ('A1', '000002', 120, 'DEPORTIVO003', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 12, NULL, 29.99, '3232', 0, 0, '2026-05-22 19:32:02', 'Administrador', '2026-05-22 19:32:52', 'Administrador', '988', 'COLORADITO');
+-- 10 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_lineas_filas
@@ -2578,7 +3018,7 @@ CREATE TABLE `fza_contadores` (
 INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('AO', '-', '-', 38, 3, 'S', 'S', '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
-  ('BA', '-', '-', 73, 10, 'S', 'S', '2026-05-13 17:32:32', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
+  ('BA', '-', '-', 79, 10, 'S', 'S', '2026-05-22 20:56:22', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
@@ -2602,11 +3042,11 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 246, 3, 'S', 'S', '2026-05-22 18:07:45', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 249, 3, 'S', 'S', '2026-05-22 23:41:58', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 234, 10, 'S', 'S', '2026-05-17 16:26:45', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('MV', '-', '-', 287, 10, 'S', 'S', '2026-05-22 19:56:40', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
   ('OV', '012', 'OV', 150, 8, 'S', 'S', '2026-05-17 16:26:45', '2026-04-02 20:05:59', '1', '1'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
@@ -7684,8 +8124,440 @@ UPDATE `fza_compras_sesiones_lineas` L
    AND (L.`ACCION_DUPLICADO_SESLIN` IS NULL
         OR TRIM(L.`ACCION_DUPLICADO_SESLIN`) = '''');
 ', '2026-05-22 00:28:16', '2026-05-22 00:28:16', 'Administrador', 'Administrador'),
-  ('245', NULL, 'ALTER TABLE fza_usuarios_perfiles MODIFY COLUMN VALUE_BLOB_USUPER MEDIUMBLOB;', '2026-05-22 18:07:45', '2026-05-22 18:07:45', 'Administrador', 'Administrador');
--- 41 registros exportados
+  ('245', NULL, 'ALTER TABLE fza_usuarios_perfiles MODIFY COLUMN VALUE_BLOB_USUPER MEDIUMBLOB;', '2026-05-22 18:07:45', '2026-05-22 18:07:45', 'Administrador', 'Administrador'),
+  ('246', 'fix_contador_lineas_ses', '-- =============================================================================
+-- Fix CONTADOR_LINEAS_SES en fza_compras_sesiones
+-- =============================================================================
+-- Sincroniza el contador de lineas de la cabecera con la ultima LINEA real
+-- almacenada en fza_compras_sesiones_lineas. Repara sesiones donde el
+-- contador quedo por debajo del MAX(LINEA_SESLIN) por desync master/detail.
+--
+-- Caso clasico que dejaba el contador colgado:
+--   1. Master cargado con CONTADOR=110, max LINEA=110.
+--   2. Add -> AfterInsert pone CONTADOR=120 (memoria) y LINEA=120 (memoria).
+--   3. Navegacion -> detail.Post implicito persiste LINEA=120 en BD.
+--   4. Usuario cancela el master -> CONTADOR rollback a 110 (BD), pero
+--      linea 120 sigue persistida.
+--   5. Siguiente Add reasignaba CONTADOR+10=120 -> colision con PK
+--      (SERIE_SES_SESLIN, NUMERO_SES_SESLIN, LINEA_SESLIN).
+--
+-- El nuevo helper inLibContadorLineas.GetSiguienteLineaDoc hace el UPDATE
+-- atomico contra BD, asi que el problema no puede repetirse para nuevas
+-- sesiones. Este script repara las que ya quedaron con el contador
+-- desincronizado en su momento.
+--
+-- Idempotente: se puede ejecutar varias veces sin efectos secundarios.
+-- =============================================================================
+
+UPDATE fza_compras_sesiones AS S
+   JOIN (
+       SELECT SERIE_SES_SESLIN,
+              NUMERO_SES_SESLIN,
+              MAX(LINEA_SESLIN) AS ULTIMA_LINEA
+         FROM fza_compras_sesiones_lineas
+        GROUP BY SERIE_SES_SESLIN, NUMERO_SES_SESLIN
+   ) AS L
+     ON L.SERIE_SES_SESLIN  = S.SERIE_SES
+    AND L.NUMERO_SES_SESLIN = S.NUMERO_SES
+  SET S.CONTADOR_LINEAS_SES = L.ULTIMA_LINEA
+WHERE S.CONTADOR_LINEAS_SES IS NULL
+   OR S.CONTADOR_LINEAS_SES < L.ULTIMA_LINEA;
+', '2026-05-22 19:31:52', '2026-05-22 19:31:52', 'Administrador', 'Administrador'),
+  ('247', 'compras_sesiones_pdte_recibir', '-- ============================================================================
+-- Compras / sesiones — stock "Pendiente de recibir" (pedidos de compra)
+--
+-- Cuando una sesion genera PEDIDO (no albaran), no mueve stock fisico
+-- pero queda como compromiso futuro. Para reflejar esa cantidad sin
+-- contaminar fza_movimientos_almacen ni los calculos de stock real,
+-- usamos una tabla aparte.
+--
+-- Cada fila representa una linea de pedido por SKU y almacen. Cuando el
+-- pedido se transforma en albaran (recepcion fisica) el cliente debera
+-- borrar la fila correspondiente y crear el movimiento de entrada en
+-- fza_movimientos_almacen — eso queda fuera de este script.
+--
+-- PK: (SKU, ALMACEN, SERIE_DOC, NUMERO_DOC, LINEA) — la misma sesion
+-- puede tener varias lineas para el mismo SKU si el cliente declara
+-- subtotales (raro pero posible).
+--
+-- Idempotente: el CREATE solo se ejecuta si la tabla no existe.
+-- ============================================================================
+
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_articulos_pdte_recibir''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_articulos_pdte_recibir` (''
+  ''  `CODIGO_UNIDAD_PDR`  varchar(50)   NOT NULL,''
+  ''  `CODIGO_ALM_PDR`     varchar(10)   NOT NULL,''
+  ''  `SERIE_DOC_PDR`      varchar(12)   NOT NULL''
+  ''       COMMENT ''''Serie del pedido de compra'''',''
+  ''  `NUMERO_DOC_PDR`     varchar(12)   NOT NULL''
+  ''       COMMENT ''''Numero del pedido de compra'''',''
+  ''  `LINEA_PDR`          int(11)       NOT NULL,''
+  ''  `CODIGO_ART_PDR`     varchar(20)   NOT NULL,''
+  ''  `CODIGO_PRV_PDR`     varchar(20)   NULL DEFAULT NULL,''
+  ''  `CODIGO_EMP_PDR`     varchar(20)   NULL DEFAULT NULL,''
+  ''  `CANTIDAD_PDR`       decimal(19,6) NOT NULL DEFAULT 0,''
+  ''  `PRECIO_COMPRA_PDR`  decimal(19,6) NULL DEFAULT NULL,''
+  ''  `FECHA_PEDIDO_PDR`   date          NULL DEFAULT NULL,''
+  ''  `FECHA_PREVISTA_PDR` date          NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha estimada de recepcion (opcional)'''',''
+  ''  `INSTANTE_MODIF`     timestamp     NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`      timestamp     NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`       varchar(100)  NOT NULL,''
+  ''  `USUARIO_MODIF`      varchar(100)  NOT NULL,''
+  ''  PRIMARY KEY (`CODIGO_UNIDAD_PDR`,`CODIGO_ALM_PDR`,''
+  ''               `SERIE_DOC_PDR`,`NUMERO_DOC_PDR`,`LINEA_PDR`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_articulos_pdte_recibir''
+     AND INDEX_NAME   = ''IDX_PDR_SKU_ALM''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_articulos_pdte_recibir` ''
+  ''ADD INDEX `IDX_PDR_SKU_ALM` ''
+  ''(`CODIGO_UNIDAD_PDR`,`CODIGO_ALM_PDR`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_articulos_pdte_recibir''
+     AND INDEX_NAME   = ''IDX_PDR_DOC''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_articulos_pdte_recibir` ''
+  ''ADD INDEX `IDX_PDR_DOC` (`SERIE_DOC_PDR`,`NUMERO_DOC_PDR`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_articulos_pdte_recibir''
+     AND INDEX_NAME   = ''IDX_PDR_ART''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_articulos_pdte_recibir` ''
+  ''ADD INDEX `IDX_PDR_ART` (`CODIGO_ART_PDR`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- Vista de stock pendiente de recibir, agregada por SKU + almacen
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_articulos_pdte_recibir` AS
+SELECT  `CODIGO_UNIDAD_PDR` AS `CODIGO_UNIDAD_SKU`,
+        `CODIGO_ALM_PDR`    AS `CODIGO_ALM_ALM`,
+        `CODIGO_ART_PDR`    AS `CODIGO_ART_ART`,
+        SUM(`CANTIDAD_PDR`) AS `CANTIDAD_PTE_RECIBIR`,
+        COUNT(*)            AS `NUM_LINEAS_PDR`,
+        MIN(`FECHA_PEDIDO_PDR`)   AS `FECHA_PEDIDO_MIN`,
+        MIN(`FECHA_PREVISTA_PDR`) AS `FECHA_PREVISTA_MIN`
+  FROM  `fza_articulos_pdte_recibir`
+ GROUP  BY `CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`, `CODIGO_ART_PDR`;
+', '2026-05-22 23:34:02', '2026-05-22 23:34:02', 'Administrador', 'Administrador'),
+  ('248', 'albaranes_compra', '/* ERROR DEL PARSER: Error: line 263, pos 6: Unexpected token: WHERE, expected one of ,,FROM */
+-- ============================================================================
+-- Albaranes de Compra — esquema base
+--
+-- Crea las tablas `fza_albaranes_compra` (cabecera) y
+-- `fza_albaranes_compra_lineas` (lineas), espejo simplificado de
+-- `fza_albaranes` / `fza_albaranes_lineas` adaptado a documento de
+-- COMPRA: sustituye CLIENTE por PROVEEDOR y PRECIO_VENTA por
+-- PRECIO_COMPRA. Sufijos de columna: `_ALBC` cabecera, `_ALBCLIN` lineas
+-- (registrados en LIBRO_DE_ESTILO_BBDD para que el normalizador BBDD
+-- los reconozca).
+--
+-- Idempotente: comprueba INFORMATION_SCHEMA antes de cada DDL para que
+-- el script pueda volver a ejecutarse sin error si las tablas / indices
+-- / filas ya existen.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. fza_albaranes_compra: cabecera
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_albaranes_compra` (''
+  ''  `NUMERO_ALBC` varchar(20) NOT NULL,''
+  ''  `SERIE_ALBC`  varchar(20) NOT NULL,''
+  ''  `FECHA_ALBC`  date NULL DEFAULT NULL,''
+  ''  `ESTADO_ALBC` varchar(20) NULL DEFAULT ''''ABIERTO''''''
+  ''       COMMENT ''''ABIERTO, FACTURADO, CANCELADO'''',''
+  ''  `NUMERO_PED_ALBC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_pedidos_compra'''',''
+  ''  `SERIE_PED_ALBC`  varchar(20) NULL DEFAULT NULL,''
+  ''  `NUMERO_FAC_ALBC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_facturas_compras'''',''
+  ''  `SERIE_FAC_ALBC`  varchar(20) NULL DEFAULT NULL,''
+  ''  `CODIGO_EMP_ALBC` varchar(8) NULL DEFAULT NULL,''
+  ''  `RAZON_SOCIAL_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_EMPRESA_ALBC`       varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_EMPRESA_ALBC`     varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_EMPRESA_ALBC`     varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_EMPRESA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_EMPRESA_ALBC` varchar(3)  NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_EMPRESA_ALBC` varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_EMPRESA_ALBC` varchar(15) NULL DEFAULT NULL,''
+  ''  `CODIGO_PRV_ALBC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_proveedores'''',''
+  ''  `RAZON_SOCIAL_PRV_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_PRV_ALBC`          varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_PRV_ALBC`        varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_PRV_ALBC`        varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_PRV_ALBC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_PRV_ALBC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_PRV_ALBC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_PRV_ALBC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_PRV_ALBC`   varchar(3)   NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_PRV_ALBC`   varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_PRV_ALBC` varchar(15) NULL DEFAULT NULL,''
+  ''  `REF_PROVEEDOR_ALBC` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Numero de albaran segun el proveedor'''',''
+  ''  `CODIGO_ALM_ALBC` varchar(10) NULL DEFAULT NULL''
+  ''       COMMENT ''''Almacen destino de la entrada de mercancia'''',''
+  ''  `TRANSPORTISTA_ALBC` varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_IVA_ALBC` varchar(20) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAN_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAN_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAR_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAR_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAS_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAS_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAE_ALBC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAE_ALBC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASES_ALBC`     decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IMPUESTOS_ALBC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_LIQUIDO_ALBC`   decimal(18,6) NULL DEFAULT NULL,''
+  ''  `FORMA_PAGO_ALBC`      varchar(200)  NULL DEFAULT NULL,''
+  ''  `CONTADOR_LINEAS_ALBC` varchar(8)    NULL DEFAULT NULL,''
+  ''  `COMENTARIOS_ALBC`     varchar(1000) NULL DEFAULT '''''''',''
+  ''  `OBSERVACIONES_ALBC`   varchar(2000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_ALBC`,`SERIE_ALBC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Indices de cabecera
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_PROVEEDOR_FECHA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_PROVEEDOR_FECHA` ''
+  ''(`CODIGO_PRV_ALBC`,`FECHA_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_EMPRESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_EMPRESA` (`CODIGO_EMP_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_ESTADO` (`ESTADO_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra''
+     AND INDEX_NAME   = ''IDX_ALBC_PEDIDO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra` ''
+  ''ADD INDEX `IDX_ALBC_PEDIDO` ''
+  ''(`SERIE_PED_ALBC`,`NUMERO_PED_ALBC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2. fza_albaranes_compra_lineas: detalle
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_albaranes_compra_lineas` (''
+  ''  `NUMERO_ALBC_ALBCLIN` varchar(20) NOT NULL,''
+  ''  `SERIE_ALBC_ALBCLIN`  varchar(20) NOT NULL,''
+  ''  `LINEA_ALBCLIN`       varchar(4)  NOT NULL,''
+  ''  `NUMERO_PEDC_ALBCLIN` varchar(20) NULL DEFAULT NULL,''
+  ''  `SERIE_PEDC_ALBCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `LINEA_PEDC_ALBCLIN`  varchar(4)  NULL DEFAULT NULL''
+  ''       COMMENT ''''Linea de origen en fza_pedidos_compra_lineas'''',''
+  ''  `CODIGO_ART_ALBCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `CODIGO_UNIDAD_ALBCLIN` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''SKU del articulo'''',''
+  ''  `CODIGO_FAM_ALBCLIN`  varchar(20)  NULL DEFAULT NULL,''
+  ''  `NOMBRE_FAM_ALBCLIN`  varchar(200) NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_ARTICULO_ALBCLIN` varchar(100) NULL DEFAULT NULL,''
+  ''  `TIPO_CANTIDAD_ARTICULO_ALBCLIN` varchar(20)''
+  ''       NULL DEFAULT ''''Uds'''',''
+  ''  `CANTIDAD_ALBCLIN` decimal(19,6) NULL DEFAULT ''''1.000000'''',''
+  ''  `TIPO_IVA_ARTICULO_ALBCLIN` varchar(2) NULL DEFAULT ''''N'''',''
+  ''  `PORCENTAJE_IVA_ALBCLIN`    decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_ALBCLIN` decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `CODIGO_ALMACEN_ALBCLIN` varchar(10) NULL DEFAULT NULL,''
+  ''  `LOTE_ALBCLIN`           varchar(50) NULL DEFAULT NULL,''
+  ''  `FECHA_CADUCIDAD_ALBCLIN` date       NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_VARIACION_ALBCLIN` varchar(200) NULL DEFAULT NULL,''
+  ''  `ESFACTURADA_ALBCLIN` varchar(1) NULL DEFAULT ''''N'''',''
+  ''  `NUMERO_FAC_ALBCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `SERIE_FAC_ALBCLIN`   varchar(20) NULL DEFAULT NULL,''
+  ''  `LINEA_FAC_ALBCLIN`   varchar(4)  NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_ALBC_ALBCLIN`,`SERIE_ALBC_ALBCLIN`,''
+  ''               `LINEA_ALBCLIN`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+     AND INDEX_NAME   = ''IDX_ALBCLIN_ARTICULO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra_lineas` ''
+  ''ADD INDEX `IDX_ALBCLIN_ARTICULO` (`CODIGO_ART_ALBCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_compra_lineas''
+     AND INDEX_NAME   = ''IDX_ALBCLIN_PEDIDO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_albaranes_compra_lineas` ''
+  ''ADD INDEX `IDX_ALBCLIN_PEDIDO` ''
+  ''(`SERIE_PEDC_ALBCLIN`,`NUMERO_PEDC_ALBCLIN`,`LINEA_PEDC_ALBCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 3. Alinear fza_tipos_documentos con el nombre real de la tabla
+-- Antes apuntaba a ''fza_albaranes_compras'' (plural) — corregimos a la
+-- forma que usamos realmente.
+-- ----------------------------------------------------------------------------
+UPDATE `fza_tipos_documentos`
+   SET `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` = ''fza_albaranes_compra''
+ WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''AB''
+   AND `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` <> ''fza_albaranes_compra'';
+
+-- ----------------------------------------------------------------------------
+-- 4. Registrar el nuevo Mto en fza_winforms (idempotente)
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''AlbaranesCompra'',
+       ''Albaranes de Compra'',
+       ''Albaranes1'',
+       ''inMtoAlbaranesCompra.TfrmMtoAlbaranesCompra'',
+       ''Ctrl+Alt+C'',
+       ''UniDataAlbaranesCompra.TdmAlbaranesCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms`
+    WHERE `CALL_WINF` = ''AlbaranesCompra''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 5. Vista basica vi_albaranes_compra (lectura para tsLista)
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_albaranes_compra` AS
+SELECT  a.*,
+        prv.NOMBRE_PRV         AS NOMBRE_PRV_ALBC,
+        emp.RAZON_SOCIAL_EMP   AS RAZON_SOCIAL_EMPRESA_VIEW_ALBC
+  FROM  fza_albaranes_compra a
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = a.CODIGO_PRV_ALBC
+  LEFT  JOIN fza_empresas    emp
+         ON emp.CODIGO_EMP_EMP = a.CODIGO_EMP_ALBC;
+', '2026-05-22 23:41:58', '2026-05-22 23:41:58', 'Administrador', 'Administrador');
+-- 44 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -7713,7 +8585,7 @@ ALTER TABLE `fza_informes_guias` ADD INDEX `IDX_INFGUI_INFORME` (`INFORME_INFGUI
 
 -- Datos de fza_informes_guias
 INSERT INTO `fza_informes_guias` (`CODIGO_INFGUI`, `INFORME_INFGUI`, `FORMATO_INFGUI`, `DATASET_MASTER_INFGUI`, `TIPO_INFGUI`, `TABLA_INFGUI`, `SQL_INFGUI`, `MASTER_FIELDS_INFGUI`, `DETAIL_FIELDS_INFGUI`, `ORDEN_INFGUI`, `ESACTIVO_INFGUI`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
-  ('EtiquetasArt_vi_proveedores', 'frmPrintEtiqArt', 'Luis', 'EtiquetasArt', 'TABLA', 'fza_proveedores', NULL, 'CODIGO_PRV_PRV', 'CODIGO_PRV_PRV', 0, 'S', '2026-05-22 17:38:38', 'Administrador', '2026-05-22 18:04:27', 'Administrador'),
+  ('EtiquetasArt_fza_proveedores', 'frmPrintEtiqArt', 'Luis', 'EtiquetasArt', 'TABLA', 'fza_proveedores', NULL, 'CODIGO_PRV_PRV', 'CODIGO_PRV_PRV', 0, 'S', '2026-05-22 20:44:00', 'Administrador', '2026-05-22 20:44:00', 'Administrador'),
   ('Lineas_Facturas_fza_articulos', 'frmPrintFac', 'tuprimoenbragas', 'Lineas Facturas', 'TABLA', 'fza_articulos', NULL, 'CODIGO_ART_FACLIN', 'CODIGO_ART_ART', 0, 'S', '2026-05-19 16:33:31', 'Administrador', '2026-05-19 16:33:31', 'Administrador');
 -- 2 registros exportados
 
@@ -9230,7 +10102,7 @@ INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `R
   ('7', 'S', NULL, 'Pavlova, Ltd.', NULL, NULL, '(03) 444-2343', NULL, '74 Rose St. Moonie Ponds', NULL, 'Melbourne', 'Victoria', '3058', 'Australia', NULL, NULL, 'Ian Devling', NULL, NULL, NULL, '2021-06-10 19:33:48', '2021-06-10 19:33:48', 'Administrador', 'Administrador'),
   ('8', 'S', NULL, 'Cooperativa de Quesos Las Cabras', NULL, NULL, '(98) 598 76 54', NULL, 'Calle del Rosal 4', NULL, 'Oviedo', 'Asturias', '33007', 'Spain', NULL, NULL, 'Antonio del Valle Saavedra', NULL, NULL, NULL, '2021-06-10 19:34:56', '2021-06-10 19:34:56', 'Administrador', 'Administrador'),
   ('9', 'S', NULL, 'Forêts dérables', NULL, NULL, '(514) 555-2955', NULL, '148 rue Chasseur', NULL, 'Ste-Hyacinthe', 'Québec', 'J2S 7S8', 'Canada', NULL, NULL, 'Chantal Goulet', NULL, NULL, NULL, '2021-06-10 19:36:14', '2021-06-10 19:36:14', 'Administrador', 'Administrador'),
-  ('ANGEL', 'S', NULL, 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-17 09:36:55', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
+  ('ANGEL', 'S', NULL, 'ANGEL MARTIN JULIÁN', 'MARCA BUENA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-22 21:23:35', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
   ('FER', 'S', NULL, 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
   ('LAIBENSE', 'S', NULL, 'LA IBENSE JUGUETERA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-19 11:23:01', '2024-10-06 20:36:59', 'Administrador', 'Administrador'),
   ('PEPI', 'S', NULL, 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
@@ -9362,7 +10234,7 @@ CREATE TABLE `fza_tipos_documentos` (
 
 -- Datos de fza_tipos_documentos
 INSERT INTO `fza_tipos_documentos` (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`, `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`) VALUES
-  ('AB', 'ALBARÁN DE COMPRAS', 'fza_albaranes_compras'),
+  ('AB', 'ALBARÁN DE COMPRAS', 'fza_albaranes_compra'),
   ('AE', 'ALBARÁN DE ENTRADA', 'fza_albaran_compra'),
   ('AL', 'VENTA PRÉSTAMO', 'fza_caja_operaciones'),
   ('AO', 'ORDEN ARTICULOS', 'fza_articulos'),
@@ -9423,7 +10295,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-22 18:07:33', '2026-05-22 18:07:33', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-22 23:37:18', '2026-05-22 23:37:18', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -17717,7 +18589,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoVariaciones', 'tvSkus_ESACTIVO_SKU_Visible', 'True', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvSkus_ESACTIVO_SKU_Width', '70', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvSkus_Filtro', '', '', NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmPrintEtiqArt', 'frxrprt1_Luis', 'Luis', NULL, NULL, 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D227574662D3822207374616E64616C6F6E653D226E6F223F3E0D0A3C546672785265706F72742056657273696F6E3D22323032352E312E312220446F744D61747269785265706F72743D2246616C73652220496E6946696C653D225C536F6674776172655C46617374205265706F7274732220507265766965774F7074696F6E732E427574746F6E733D22343039352220507265766965774F7074696F6E732E5A6F6F6D3D223122205072696E744F7074696F6E732E5072696E7465723D22506F72206465666563746F22205072696E744F7074696F6E732E5072696E744F6E53686565743D223022205265706F72744F7074696F6E732E437265617465446174653D2234323438312C3633343637353734303722205265706F72744F7074696F6E732E4465736372697074696F6E2E546578743D2222205265706F72744F7074696F6E732E4C6173744368616E67653D2234363136342C37333533373134313222205363726970744C616E67756167653D2250617363616C5363726970742220536372697074546578742E546578743D2266756E6374696F6E204865784E6962626C6528633A2043686172293A20496E74656765723B262331333B262331303B626567696E262331333B262331303B2020696620286320262336323B3D202730272920616E6420286320262336303B3D2027392729207468656E262331333B262331303B20202020526573756C74203A3D204F7264286329202D204F72642827302729262331333B262331303B2020656C736520696620286320262336323B3D202741272920616E6420286320262336303B3D2027462729207468656E262331333B262331303B20202020526573756C74203A3D204F7264286329202D204F72642827412729202B203130262331333B262331303B2020656C736520696620286320262336323B3D202761272920616E6420286320262336303B3D2027662729207468656E262331333B262331303B20202020526573756C74203A3D204F7264286329202D204F72642827612729202B203130262331333B262331303B2020656C7365262331333B262331303B20202020526573756C74203A3D202D313B262331333B262331303B656E643B262331333B262331303B262331333B262331303B66756E6374696F6E20486578546F436F6C6F7228734865783A20537472696E67293A20496E74656765723B262331333B262331303B766172262331333B262331303B2020694F66662C20522C20472C20422C206E302C206E312C206E322C206E332C206E342C206E353A20496E74656765723B262331333B262331303B626567696E262331333B262331303B2020526573756C74203A3D202D313B262331333B262331303B202073486578203A3D205472696D2873486578293B262331333B262331303B20206966204C656E67746828734865782920262336303B2036207468656E20457869743B262331333B262331303B2020696620436F707928734865782C20312C203129203D20272327207468656E20694F6666203A3D203120656C736520694F6666203A3D20303B262331333B262331303B20206966204C656E67746828734865782920262336303B2036202B20694F6666207468656E20457869743B262331333B262331303B20206E30203A3D204865784E6962626C6528734865785B694F6666202B20315D293B262331333B262331303B20206E31203A3D204865784E6962626C6528734865785B694F6666202B20325D293B262331333B262331303B20206E32203A3D204865784E6962626C6528734865785B694F6666202B20335D293B262331333B262331303B20206E33203A3D204865784E6962626C6528734865785B694F6666202B20345D293B262331333B262331303B20206E34203A3D204865784E6962626C6528734865785B694F6666202B20355D293B262331333B262331303B20206E35203A3D204865784E6962626C6528734865785B694F6666202B20365D293B262331333B262331303B2020696620286E3020262336303B203029206F7220286E3120262336303B203029206F7220286E3220262336303B203029206F7220286E3320262336303B203029206F7220286E3420262336303B203029206F7220286E3520262336303B203029207468656E20457869743B262331333B262331303B202052203A3D206E30202A203136202B206E313B262331333B262331303B202047203A3D206E32202A203136202B206E333B262331333B262331303B202042203A3D206E34202A203136202B206E353B262331333B262331303B2020526573756C74203A3D2028422073686C20313629206F722028472073686C203829206F7220523B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652045746971436F6C6F724F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B766172262331333B262331303B2020734865783A20537472696E673B262331333B262331303B2020632C20522C20472C20422C20593A20496E74656765723B262331333B262331303B20206D3A20546672784D656D6F566965773B262331333B262331303B626567696E262331333B262331303B20206D203A3D20546672784D656D6F566965772853656E646572293B262331333B262331303B202073486578203A3D20262336303B4574697175657461734172742E262333343B4845585F4154525F434F262333343B262336323B3B262331333B262331303B202063203A3D20486578546F436F6C6F722873486578293B262331333B262331303B20206966206320262336303B2030207468656E20626567696E262331333B262331303B202020206D2E436F6C6F72203A3D202430304646464646463B262331333B262331303B202020206D2E466F6E742E436F6C6F72203A3D202430303030303030303B262331333B262331303B20202020457869743B262331333B262331303B2020656E643B262331333B262331303B20206D2E436F6C6F72203A3D20633B262331333B262331303B202052203A3D206320616E64202446463B262331333B262331303B202047203A3D2028632073687220382920616E64202446463B262331333B262331303B202042203A3D202863207368722031362920616E64202446463B262331333B262331303B202059203A3D202852202A20323939202B2047202A20353837202B2042202A20313134292064697620313030303B262331333B262331303B20206966205920262336303B20313430207468656E262331333B262331303B202020206D2E466F6E742E436F6C6F72203A3D20243030464646464646262331333B262331303B2020656C7365262331333B262331303B202020206D2E466F6E742E436F6C6F72203A3D202430303030303030303B262331333B262331303B656E643B262331333B262331303B262331333B262331303B626567696E262331333B262331303B656E642E223E0D0A20203C44617461736574733E0D0A202020203C6974656D20446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D22457469717565746173417274222F3E0D0A20203C2F44617461736574733E0D0A20203C546672784461746150616765204E616D653D22446174612220484775696465732E546578743D222220564775696465732E546578743D2222204865696768743D223130303022204C6566743D22302220546F703D2230222057696474683D2231303030222F3E0D0A20203C546672785265706F727450616765204E616D653D2250616765312220484775696465732E546578743D222220564775696465732E546578743D222220506170657257696474683D22323130222050617065724865696768743D223239372220506170657253697A653D223922204C6566744D617267696E3D2230222052696768744D617267696E3D22302220546F704D617267696E3D2231332220426F74746F6D4D617267696E3D22382220436F6C756D6E733D22322220436F6C756D6E57696474683D223130352220436F6C756D6E506F736974696F6E732E546578743D2230262331333B262331303B31303522204672616D652E5479703D223022204D6972726F724D6F64653D2230223E0D0A202020203C546672784D617374657244617461204E616D653D224D61737465724461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223138312C343137343422204C6566743D22302220546F703D2231382C3839373635222057696474683D223339362C38353036352220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D22457469714D617263612220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D2234222057696474683D2232303022204865696768743D2231382220446174614669656C643D2250524F505F4D415243412220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B50524F505F4D41524341262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224574697152656650726F762220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223231302220546F703D2236222057696474683D2231383022204865696768743D2231342220446174614669656C643D225245465F50524F564545444F522220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31302220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B5245465F50524F564545444F52262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22457469714C626C50726563696F2220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D223334222057696474683D22353522204865696768743D2231362220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22502E562E50222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224574697150726563696F2220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2236322220546F703D223234222057696474683D2232303522204865696768743D2233322220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D2250524543494F5F46494E414C5F4152545441522220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D32322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B50524543494F5F46494E414C5F415254544152262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224574697154616C6C612220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223136392C31373331362220546F703D2236332C3537343833222057696474683D2239362C313032333522204865696768743D2234302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D224154525F54414C2220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D32382220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22313522204672616D652E57696474683D22312C35222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C7365222056416C69676E3D22766143656E7465722220546578743D225B4574697175657461734172742E262333343B4154525F54414C262333343B5D222F3E0D0A2020202020203C54667278426172436F646556696577204E616D653D2245746971426172636F64652220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D223636222057696474683D223134392C373633373622204865696768743D22343222204175746F53697A653D2246616C73652220426172547970653D226263436F646531323841222045787072657373696F6E3D22262336303B4574697175657461734172742E262333343B434F4449474F5F4241525241535F4342262333343B262336323B22204672616D652E5479703D22302220526F746174696F6E3D22302220546573744C696E653D2246616C73652220546578743D2230303030303030303030303030222057696465426172526174696F3D22322C3522205A6F6F6D3D22302C3833323032303838383838383838392220436F6C6F724261723D22302220426172636F6465546578742E5465787453657474696E67732E466F6E742E436861727365743D22312220426172636F6465546578742E5465787453657474696E67732E466F6E742E436F6C6F723D222D31363737373230382220426172636F6465546578742E5465787453657474696E67732E466F6E742E4865696768743D222D31322220426172636F6465546578742E5465787453657474696E67732E466F6E742E4E616D653D22417269616C2220426172636F6465546578742E5465787453657474696E67732E466F6E742E5374796C653D22302220426172636F6465546578742E5465787453657474696E67732E42617254657874506F733D22627470426F74746F6D2220426172636F6465546578742E53757053657474696E67732E466F6E742E436861727365743D22312220426172636F6465546578742E53757053657474696E67732E466F6E742E436F6C6F723D222D31363737373230382220426172636F6465546578742E53757053657474696E67732E466F6E742E4865696768743D222D31322220426172636F6465546578742E53757053657474696E67732E466F6E742E4E616D653D22417269616C2220426172636F6465546578742E53757053657474696E67732E466F6E742E5374796C653D22302220426172636F6465546578742E53757053657474696E67732E42617254657874506F733D22627470546F70222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2245746971436F644172742220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223231382C37373935332220546F703D223132302C3931333432222057696474683D2231373522204865696768743D2231342220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D22434F4449474F5F4152545F4152542220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B434F4449474F5F4152545F415254262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2245746971436F6C6F722220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D22313136222057696474683D223230342C333632303922204865696768743D22323222204F6E4265666F72655072696E743D2245746971436F6C6F724F6E4265666F72655072696E742220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D224154525F434F2220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D223135222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C7365222056416C69676E3D22766143656E7465722220546578743D225B4574697175657461734172742E262333343B4154525F434F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2245746971446573634172742220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D22313434222057696474683D2233383222204865696768743D2231382220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D224445534352495043494F4E5F4152542220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B4445534352495043494F4E5F415254262333343B5D222F3E0D0A2020202020203C546672785069637475726556696577204E616D653D22666F746F3330302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223236382C33343636333134362220546F703D2232362C3435363730383234222057696474683D223131372C313635343232323522204865696768743D2238362C393239313839393222204672616D652E5479703D2230222048696768745175616C6974793D2246616C736522205472616E73706172656E743D2246616C736522205472616E73706172656E74436F6C6F723D223136373737323135222F3E0D0A202020203C2F546672784D6173746572446174613E0D0A20203C2F546672785265706F7274506167653E0D0A3C2F546672785265706F72743E0D0A, '2026-05-22 17:38:56', '2026-05-22 17:38:56', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmPrintEtiqArt', 'frxrprt1_Luis', 'Luis', NULL, NULL, 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D227574662D3822207374616E64616C6F6E653D226E6F223F3E0D0A3C546672785265706F72742056657273696F6E3D22323032352E312E312220446F744D61747269785265706F72743D2246616C73652220496E6946696C653D225C536F6674776172655C46617374205265706F7274732220507265766965774F7074696F6E732E427574746F6E733D22343039352220507265766965774F7074696F6E732E5A6F6F6D3D223122205072696E744F7074696F6E732E5072696E7465723D22506F72206465666563746F22205072696E744F7074696F6E732E5072696E744F6E53686565743D223022205265706F72744F7074696F6E732E437265617465446174653D2234323438312C3633343637353734303722205265706F72744F7074696F6E732E4465736372697074696F6E2E546578743D2222205265706F72744F7074696F6E732E4C6173744368616E67653D2234363136342C3839323936313131313122205363726970744C616E67756167653D2250617363616C5363726970742220536372697074546578742E546578743D2266756E6374696F6E204865784E6962626C6528633A2043686172293A20496E74656765723B262331333B262331303B626567696E262331333B262331303B2020696620286320262336323B3D202730272920616E6420286320262336303B3D2027392729207468656E262331333B262331303B20202020526573756C74203A3D204F7264286329202D204F72642827302729262331333B262331303B2020656C736520696620286320262336323B3D202741272920616E6420286320262336303B3D2027462729207468656E262331333B262331303B20202020526573756C74203A3D204F7264286329202D204F72642827412729202B203130262331333B262331303B2020656C736520696620286320262336323B3D202761272920616E6420286320262336303B3D2027662729207468656E262331333B262331303B20202020526573756C74203A3D204F7264286329202D204F72642827612729202B203130262331333B262331303B2020656C7365262331333B262331303B20202020526573756C74203A3D202D313B262331333B262331303B656E643B262331333B262331303B262331333B262331303B66756E6374696F6E20486578546F436F6C6F7228734865783A20537472696E67293A20496E74656765723B262331333B262331303B766172262331333B262331303B2020694F66662C20522C20472C20422C206E302C206E312C206E322C206E332C206E342C206E353A20496E74656765723B262331333B262331303B626567696E262331333B262331303B2020526573756C74203A3D202D313B262331333B262331303B202073486578203A3D205472696D2873486578293B262331333B262331303B20206966204C656E67746828734865782920262336303B2036207468656E20457869743B262331333B262331303B2020696620436F707928734865782C20312C203129203D20272327207468656E20694F6666203A3D203120656C736520694F6666203A3D20303B262331333B262331303B20206966204C656E67746828734865782920262336303B2036202B20694F6666207468656E20457869743B262331333B262331303B20206E30203A3D204865784E6962626C6528734865785B694F6666202B20315D293B262331333B262331303B20206E31203A3D204865784E6962626C6528734865785B694F6666202B20325D293B262331333B262331303B20206E32203A3D204865784E6962626C6528734865785B694F6666202B20335D293B262331333B262331303B20206E33203A3D204865784E6962626C6528734865785B694F6666202B20345D293B262331333B262331303B20206E34203A3D204865784E6962626C6528734865785B694F6666202B20355D293B262331333B262331303B20206E35203A3D204865784E6962626C6528734865785B694F6666202B20365D293B262331333B262331303B2020696620286E3020262336303B203029206F7220286E3120262336303B203029206F7220286E3220262336303B203029206F7220286E3320262336303B203029206F7220286E3420262336303B203029206F7220286E3520262336303B203029207468656E20457869743B262331333B262331303B202052203A3D206E30202A203136202B206E313B262331333B262331303B202047203A3D206E32202A203136202B206E333B262331333B262331303B202042203A3D206E34202A203136202B206E353B262331333B262331303B2020526573756C74203A3D2028422073686C20313629206F722028472073686C203829206F7220523B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652045746971436F6C6F724F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B766172262331333B262331303B2020734865783A20537472696E673B262331333B262331303B2020632C20522C20472C20422C20593A20496E74656765723B262331333B262331303B20206D3A20546672784D656D6F566965773B262331333B262331303B626567696E262331333B262331303B20206D203A3D20546672784D656D6F566965772853656E646572293B262331333B262331303B202073486578203A3D20262336303B4574697175657461734172742E262333343B4845585F4154525F434F262333343B262336323B3B262331333B262331303B202063203A3D20486578546F436F6C6F722873486578293B262331333B262331303B20206966206320262336303B2030207468656E20626567696E262331333B262331303B202020206D2E436F6C6F72203A3D202430304646464646463B262331333B262331303B202020206D2E466F6E742E436F6C6F72203A3D202430303030303030303B262331333B262331303B20202020457869743B262331333B262331303B2020656E643B262331333B262331303B20206D2E436F6C6F72203A3D20633B262331333B262331303B202052203A3D206320616E64202446463B262331333B262331303B202047203A3D2028632073687220382920616E64202446463B262331333B262331303B202042203A3D202863207368722031362920616E64202446463B262331333B262331303B202059203A3D202852202A20323939202B2047202A20353837202B2042202A20313134292064697620313030303B262331333B262331303B20206966205920262336303B20313430207468656E262331333B262331303B202020206D2E466F6E742E436F6C6F72203A3D20243030464646464646262331333B262331303B2020656C7365262331333B262331303B202020206D2E466F6E742E436F6C6F72203A3D202430303030303030303B262331333B262331303B656E643B262331333B262331303B262331333B262331303B626567696E262331333B262331303B656E642E223E0D0A20203C44617461736574733E0D0A202020203C6974656D20446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D22457469717565746173417274222F3E0D0A20203C2F44617461736574733E0D0A20203C546672784461746150616765204E616D653D22446174612220484775696465732E546578743D222220564775696465732E546578743D2222204865696768743D223130303022204C6566743D22302220546F703D2230222057696474683D2231303030222F3E0D0A20203C546672785265706F727450616765204E616D653D2250616765312220484775696465732E546578743D222220564775696465732E546578743D222220506170657257696474683D22323130222050617065724865696768743D223239372220506170657253697A653D223922204C6566744D617267696E3D2230222052696768744D617267696E3D22302220546F704D617267696E3D2231332220426F74746F6D4D617267696E3D22382220436F6C756D6E733D22322220436F6C756D6E57696474683D223130352220436F6C756D6E506F736974696F6E732E546578743D2230262331333B262331303B31303522204672616D652E5479703D223022204D6972726F724D6F64653D2230223E0D0A202020203C546672784D617374657244617461204E616D653D224D61737465724461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223138312C343137343422204C6566743D22302220546F703D2231382C3839373635222057696474683D223339362C38353036352220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D22457469714D617263612220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D2234222057696474683D2235322C353938333322204865696768743D2231382220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B434F4449474F5F5052565F505256262333343B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D224574697152656650726F762220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223238392C33373031332220546F703D2238222057696474683D223130302C363239383722204865696768743D2231342220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D225245465F50524F564545444F522220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31302220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B5245465F50524F564545444F52262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22457469714C626C50726563696F2220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D223334222057696474683D22353522204865696768743D2231362220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22502E562E50222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224574697150726563696F2220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2236322220546F703D223234222057696474683D2232303522204865696768743D2233322220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D2250524543494F5F46494E414C5F4152545441522220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D32322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B50524543494F5F46494E414C5F415254544152262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224574697154616C6C612220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223136392C31373331362220546F703D2236332C3537343833222057696474683D2239362C313032333522204865696768743D2234302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D224154525F54414C2220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D32382220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22313522204672616D652E57696474683D22312C35222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C7365222056416C69676E3D22766143656E7465722220546578743D225B4574697175657461734172742E262333343B4154525F54414C262333343B5D222F3E0D0A2020202020203C54667278426172436F646556696577204E616D653D2245746971426172636F64652220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D223636222057696474683D223134392C373633373622204865696768743D22343222204175746F53697A653D2246616C73652220426172547970653D226263436F646531323841222045787072657373696F6E3D22262336303B4574697175657461734172742E262333343B434F4449474F5F4241525241535F4342262333343B262336323B22204672616D652E5479703D22302220526F746174696F6E3D22302220546573744C696E653D2246616C73652220546578743D2230303030303030303030303030222057696465426172526174696F3D22322C3522205A6F6F6D3D22302C3833323032303838383838383838392220436F6C6F724261723D22302220426172636F6465546578742E5465787453657474696E67732E466F6E742E436861727365743D22312220426172636F6465546578742E5465787453657474696E67732E466F6E742E436F6C6F723D222D31363737373230382220426172636F6465546578742E5465787453657474696E67732E466F6E742E4865696768743D222D31322220426172636F6465546578742E5465787453657474696E67732E466F6E742E4E616D653D22417269616C2220426172636F6465546578742E5465787453657474696E67732E466F6E742E5374796C653D22302220426172636F6465546578742E5465787453657474696E67732E42617254657874506F733D22627470426F74746F6D2220426172636F6465546578742E53757053657474696E67732E466F6E742E436861727365743D22312220426172636F6465546578742E53757053657474696E67732E466F6E742E436F6C6F723D222D31363737373230382220426172636F6465546578742E53757053657474696E67732E466F6E742E4865696768743D222D31322220426172636F6465546578742E53757053657474696E67732E466F6E742E4E616D653D22417269616C2220426172636F6465546578742E53757053657474696E67732E466F6E742E5374796C653D22302220426172636F6465546578742E53757053657474696E67732E42617254657874506F733D22627470546F70222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2245746971436F644172742220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223231382C37373935332220546F703D223132302C3931333432222057696474683D2231373522204865696768743D2231342220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D22434F4449474F5F4152545F4152542220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B434F4449474F5F4152545F415254262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2245746971436F6C6F722220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D22313136222057696474683D223230342C333632303922204865696768743D22323222204F6E4265666F72655072696E743D2245746971436F6C6F724F6E4265666F72655072696E742220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D224154525F434F2220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D223135222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C7365222056416C69676E3D22766143656E7465722220546578743D225B4574697175657461734172742E262333343B4154525F434F262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2245746971446573634172742220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22382220546F703D22313434222057696474683D2233383222204865696768743D2231382220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D224445534352495043494F4E5F4152542220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B4445534352495043494F4E5F415254262333343B5D222F3E0D0A2020202020203C546672785069637475726556696577204E616D653D22666F746F3330302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223239312C30323338313134362220546F703D2232362C3435363730383234222057696474683D2239342C343838323432323522204865696768743D2238362C393239313839393222204672616D652E5479703D2230222048696768745175616C6974793D2246616C736522205472616E73706172656E743D2246616C736522205472616E73706172656E74436F6C6F723D223136373737323135222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2237312C38313130372220546F703D2234222057696474683D223139322C343430393422204865696768743D2231382220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174615365743D22646D4172746963756C6F732E667864734574697175657461734172742220446174615365744E616D653D224574697175657461734172742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4574697175657461734172742E262333343B4E4F4D4252455F505256262333343B5D222F3E0D0A202020203C2F546672784D6173746572446174613E0D0A20203C2F546672785265706F7274506167653E0D0A3C2F546672785265706F72743E0D0A, '2026-05-22 21:25:55', '2026-05-22 21:25:55', 'Administrador', 'Administrador'),
   ('Administrador', 'frmPrintFac', 'frxrprt1_tuprimoenbragas', 'tuprimoenbragas', NULL, NULL, 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D227574662D3822207374616E64616C6F6E653D226E6F223F3E0D0A3C546672785265706F72742056657273696F6E3D22323032352E312E312220446F744D61747269785265706F72743D2246616C73652220456E67696E654F7074696F6E732E446F75626C65506173733D22547275652220496E6946696C653D225C536F6674776172655C46617374205265706F7274732220507265766965774F7074696F6E732E427574746F6E733D22343039352220507265766965774F7074696F6E732E5A6F6F6D3D223122205072696E744F7074696F6E732E5072696E7465723D22506F72206465666563746F22205072696E744F7074696F6E732E5072696E744F6E53686565743D223022205265706F72744F7074696F6E732E417574686F723D2246616374755A616D22205265706F72744F7074696F6E732E437265617465446174653D2234323438312C3633343637353734303722205265706F72744F7074696F6E732E4465736372697074696F6E2E546578743D2222205265706F72744F7074696F6E732E4C6173744368616E67653D2234363136312C3639353437333632323722205363726970744C616E67756167653D2250617363616C5363726970742220536372697074546578742E546578743D2270726F63656475726520526574656E63696F6E546F74616C4F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F524554454E43494F4E5F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B20202020747874526574656E63696F6E546F74616C2E56697369626C65203A3D20547275653B262331333B262331303B20202020526574656E63696F6E2E56697369626C653A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B20202020747874526574656E63696F6E546F74616C2E56697369626C65203A3D2046616C73653B262331333B262331303B20202020526574656E63696F6E2E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F63656475726520496D70756573746F73546F74616C4F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F494D50554553544F535F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B20202020496D70756573746F73546F74616C2E56697369626C65203A3D20547275653B262331333B262331303B20202020496D70756573746F732E56697369626C653A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B20202020496D70756573746F73546F74616C2E56697369626C65203A3D2046616C73653B262331333B262331303B20202020496D70756573746F732E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652042617365496D706F6E69626C654E4F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F42415345495F4956414E5F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C654E2E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F4956414E5F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F4956414E5F464143545552412E56697369626C653A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F52454E5F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F52454E5F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C654E2E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F4956414E5F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F4956414E5F464143545552412E56697369626C653A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F52454E5F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F52454E5F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652042617365496D706F6E69626C65524F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F42415345495F495641525F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C65522E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F495641525F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F495641525F464143545552412E56697369626C653A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F5245525F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C65522E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F495641525F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F495641525F464143545552412E56697369626C653A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F5245525F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652042617365496D706F6E69626C65534F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F42415345495F495641535F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C65532E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F495641535F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F495641535F464143545552412E56697369626C653A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F5245535F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C65532E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F495641535F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F495641535F464143545552412E56697369626C653A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F5245535F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652042617365496D706F6E69626C65454F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B20202020696620262336303B46616374757261732E262333343B544F54414C5F42415345495F495641455F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C65452E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F495641455F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F495641455F464143545552412E56697369626C653A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F5245455F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F5245455F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B2020202042617365496D706F6E69626C65452E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F495641455F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F495641455F464143545552412E56697369626C653A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F5245455F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F5245455F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B202069662028262336303B46616374757261732E262333343B544F54414C5F42415345495F495641455F464143262333343B262336323B203D20262336303B46616374757261732E262333343B544F54414C5F42415345535F464143262333343B262336323B29207468656E262331333B262331303B2020626567696E262331333B262331303B2020202043616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B2020202043616A61546974756C6F734956412E56697369626C65203A3D2046616C73653B262331333B262331303B2020202042617365496D706F6E69626C65452E56697369626C65203A3D2046616C73653B262331333B262331303B20202020546974756C6F506F7263656E43616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F495641455F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F495641455F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020202042617365496D706F6E69626C6543616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B20202020546974756C6F546F74616C43616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F636564757265204661637475726173544F54414C5F52454E5F464143545552414F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F52454E5F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F52454E5F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F52454E5F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F52454E5F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F52454E5F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F636564757265204661637475726173544F54414C5F5245525F464143545552414F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F5245525F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F5245525F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F5245525F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F636564757265204661637475726173544F54414C5F5245535F464143545552414F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020696620262336303B46616374757261732E262333343B544F54414C5F5245535F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F5245535F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F5245535F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F636564757265204661637475726173544F54414C5F5245455F464143545552414F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B20202020696620262336303B46616374757261732E262333343B544F54414C5F5245455F464143262333343B262336323B20262336303B262336323B2030207468656E262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F5245455F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173544F54414C5F5245455F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B202020204661637475726173504F5243454E5F5245455F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173544F54414C5F5245455F464143545552412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E643B262331333B262331303B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F63656475726520526574656E63696F6E506F72634F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020496620282820262336303B46616374757261732E262333343B544F54414C5F5245455F464143262333343B262336323B202B262331333B262331303B2020202020202020262336303B46616374757261732E262333343B544F54414C5F5245535F464143262333343B262336323B202B262331333B262331303B2020202020202020262336303B46616374757261732E262333343B544F54414C5F5245525F464143262333343B262336323B202B262331333B262331303B2020202020202020262336303B46616374757261732E262333343B544F54414C5F52454E5F464143262333343B262336323B2029203D203029207468656E262331333B262331303B2020626567696E262331333B262331303B20202020526574656E63696F6E506F72632E56697369626C65203A3D2046616C73653B262331333B262331303B20202020526574656E63696F6E546F742E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B20202020526574656E63696F6E506F72632E56697369626C65203A3D20547275653B262331333B262331303B20202020526574656E63696F6E546F742E56697369626C65203A3D20547275653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652050616765466F6F746572314F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020456E67696E652E43757259203A3D20283230202A20667231636D293B262331333B262331303B20206966202828262336303B546F74616C5061676573262336323B20262336323B20312920616E642028262336303B50616765262336323B20262336303B262336323B20262336303B546F74616C5061676573262336323B2929207468656E262331333B262331303B2020626567696E262331333B262331303B2020202043616A61546974756C6F734956412E56697369626C65203A3D2046616C73653B262331333B262331303B2020202042617365496D706F6E69626C6543616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B20202020546974756C6F506F7263656E43616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B20202020546974756C6F546F74616C43616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B20202020546F74616C42617365732E56697369626C65203A3D2046616C73653B262331333B262331303B20202020496D70756573746F732E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B20202020496D70756573746F73546F74616C2E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B20202020526574656E63696F6E546F742E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020206D546F74616C466163747572612E56697369626C65203A3D2046616C73653B262331333B262331303B202020206D546F74616C466163747572614374642E56697369626C65203A3D2046616C73653B262331333B262331303B20202020747874526574656E63696F6E546F74616C2E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B20202020526574656E63696F6E2E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B20202020526574656E63696F6E506F72632E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B2020202043616A614956412E56697369626C65203A3D2046616C73653B262331333B262331303B20202020466F726D615061676F2E56697369626C65203A3D2046616C73653B262331333B262331303B20202020436F6E74696E75612E56697369626C65203A3D20547275653B262331333B262331303B2020202042617365496D706F6E69626C654E2E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B2020202042617365496D706F6E69626C65522E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B2020202042617365496D706F6E69626C65532E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B2020202042617365496D706F6E69626C65452E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B20202020546F74616C42617365496D706F6E69626C652E56697369626C65203A3D2046616C73653B262331333B262331303B202020204661637475726173504F5243454E5F4956414E5F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173504F5243454E5F495641525F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173504F5243454E5F495641535F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173504F5243454E5F495641455F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F4956414E5F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F495641525F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F495641535F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F495641455F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173504F5243454E5F52454E5F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173504F5243454E5F5245525F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173504F5243454E5F5245535F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173504F5243454E5F5245455F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F52454E5F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F5245455F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E466F6E742E436F6C6F72203A3D20636C57686974653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B20202020436F6E74696E75612E56697369626C65203A3D2046616C73653B262331333B262331303B2020202043616A61546974756C6F734956412E56697369626C65203A3D20547275653B262331333B262331303B2020202042617365496D706F6E69626C6543616A614956412E56697369626C65203A3D20547275653B262331333B262331303B20202020546974756C6F506F7263656E43616A614956412E56697369626C65203A3D20547275653B262331333B262331303B20202020546974756C6F546F74616C43616A614956412E56697369626C65203A3D20547275653B262331333B262331303B20202020546F74616C42617365732E56697369626C65203A3D20547275653B262331333B262331303B20202020496D70756573746F732E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B20202020496D70756573746F73546F74616C2E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B20202020526574656E63696F6E546F742E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020206D546F74616C466163747572612E56697369626C65203A3D20547275653B262331333B262331303B202020206D546F74616C466163747572614374642E56697369626C65203A3D20547275653B262331333B262331303B2020202043616A614956412E56697369626C65203A3D20547275653B262331333B262331303B20202020747874526574656E63696F6E546F74616C2E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B20202020526574656E63696F6E2E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B20202020526574656E63696F6E506F72632E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B20202020466F726D615061676F2E56697369626C65203A3D20547275653B262331333B262331303B2020202042617365496D706F6E69626C654E2E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B2020202042617365496D706F6E69626C65522E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B2020202042617365496D706F6E69626C65532E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B2020202042617365496D706F6E69626C65452E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B20202020546F74616C42617365496D706F6E69626C652E56697369626C65203A3D20547275653B262331333B262331303B202020204661637475726173504F5243454E5F4956414E5F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173504F5243454E5F495641525F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173504F5243454E5F495641535F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173504F5243454E5F495641455F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F4956414E5F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F495641525F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F495641535F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F495641455F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173504F5243454E5F52454E5F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173504F5243454E5F5245525F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173504F5243454E5F5245535F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173504F5243454E5F5245455F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F52454E5F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F5245455F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F5245525F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B202020204661637475726173544F54414C5F5245535F464143545552412E466F6E742E436F6C6F72203A3D20636C426C61636B3B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652044657461696C44617461314F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B202049662028262336303B46616374757261732E262333343B455346454348414445454E54524547415F464143262333343B262336323B20262336303B262336323B2027532729207468656E262331333B262331303B202020626567696E262331333B262331303B202020202F2F204C696E65617346616374757261734445534352495043494F4E5F4152544943554C4F5F464143545552415F4C494E45412E5769647468203A3D2037363B262331333B262331303B202020204C696E656173466163747572617346454348415F454E54524547415F464143545552415F4C494E45412E56697369626C65203A3D2046616C73653B262331333B262331303B2020656E64262331333B262331303B2020656C7365262331333B262331303B2020626567696E262331333B262331303B202020202F2F204C696E65617346616374757261734445534352495043494F4E5F4152544943554C4F5F464143545552415F4C494E45412E5769647468203A3D2039383B262331333B262331303B202020204C696E656173466163747572617346454348415F454E54524547415F464143545552415F4C494E45412E56697369626C65203A3D20547275653B262331333B262331303B2020656E643B262331333B262331303B656E643B262331333B262331303B70726F636564757265204665636861456E7472656761546974746C654F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B202049662028262336303B46616374757261732E262333343B455346454348414445454E54524547415F464143262333343B262336323B20262336303B262336323B2027532729207468656E262331333B262331303B202020204665636861456E7472656761546974746C652E56697369626C65203A3D2046616C7365262331333B262331303B2020656C7365262331333B262331303B202020204665636861456E7472656761546974746C652E56697369626C65203A3D20547275653B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F63656475726520466163747572617350524F56494E4349415F454D50524553415F464143545552414F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B202049462028262336303B46616374757261732E262333343B504F424C4143494F4E5F454D50524553415F464143262333343B262336323B203D20262336303B46616374757261732E262333343B50524F56494E4349415F454D50524553415F464143262333343B262336323B29207468656E262331333B262331303B20202020466163747572617350524F56494E4349415F454D50524553415F464143545552412E56697369626C65203A3D2046616C7365262331333B262331303B2020656C7365262331333B262331303B20202020466163747572617350524F56494E4349415F454D50524553415F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B656E643B262331333B262331303B262331333B262331303B262331333B262331303B70726F63656475726520466163747572617350524F56494E4349415F434C49454E54455F464143545552414F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B202049462028262336303B46616374757261732E262333343B504F424C4143494F4E5F434C49454E54455F464143262333343B262336323B203D20262336303B46616374757261732E262333343B50524F56494E4349415F434C49454E54455F464143262333343B262336323B29207468656E262331333B262331303B20202020466163747572617350524F56494E4349415F434C49454E54455F464143545552412E56697369626C65203A3D2046616C7365262331333B262331303B2020656C7365262331333B262331303B20202020466163747572617350524F56494E4349415F434C49454E54455F464143545552412E56697369626C65203A3D20547275653B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F63656475726520496D70756573746F734F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B2020496620282820262336303B46616374757261732E262333343B544F54414C5F5245455F464143262333343B262336323B202B262331333B262331303B2020202020202020262336303B46616374757261732E262333343B544F54414C5F5245535F464143262333343B262336323B202B262331333B262331303B2020202020202020262336303B46616374757261732E262333343B544F54414C5F5245525F464143262333343B262336323B202B262331333B262331303B2020202020202020262336303B46616374757261732E262333343B544F54414C5F52454E5F464143262333343B262336323B2029203D203029207468656E262331333B262331303B20202020496D70756573746F732E4D656D6F2E54657874203A3D2027546F74616C205B46616374757261732E262333343B50414C414252415F5245504F5254535F5A4F4E415F4956415F464143262333343B5D27262331333B262331303B2020656C7365262331333B262331303B20202020496D70756573746F732E4D656D6F2E54657874203A3D2027546F74616C205B46616374757261732E262333343B50414C414252415F5245504F5254535F5A4F4E415F4956415F464143262333343B5D202B20522E452E27262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F636564757265206D4E756D506167696E61734F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B202069662028262336303B546F74616C5061676573262336323B20262336323B203129207468656E262331333B262331303B202020206D4E756D506167696E61732E56697369626C65203A3D2054727565262331333B262331303B2020656C7365262331333B262331303B202020206D4E756D506167696E61732E56697369626C65203A3D2046616C73653B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F63656475726520466F726D615061676F4F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B20206966202828262336303B46616374757261732E262333343B455356455242414E434F454D50524553415F464F524D415F5041474F5F4650262333343B262336323B203D202753272920616E64262331333B262331303B20202020202028262336303B46616374757261732E262333343B4553434F4E5441444F5F464F524D415F5041474F5F4650262333343B262336323B203D20274E272920616E64262331333B262331303B20202020202028262336303B46616374757261732E262333343B4942414E5F454D50262333343B262336323B20262336303B262336323B202727292920207468656E262331333B262331303B20202020466F726D615061676F2E4D656D6F2E54657874203A3D205472696D28466F726D615061676F2E4D656D6F2E5465787429202B2027202020202027202B20262336303B46616374757261732E262333343B4942414E5F454D50262333343B262336323B3B262331333B262331303B20206966202828262336303B46616374757261732E262333343B455356455242414E434F454D50524553415F464F524D415F5041474F5F4650262333343B262336323B203D20274E272920616E64262331333B262331303B20202020202028262336303B46616374757261732E262333343B4553434F4E5441444F5F464F524D415F5041474F5F4650262333343B262336323B203D20274E272920616E64262331333B262331303B20202020202028262336303B46616374757261732E262333343B4942414E5F434C49262333343B262336323B20262336303B262336323B2027272929207468656E262331333B262331303B20202020466F726D615061676F2E4D656D6F2E54657874203A3D205472696D28466F726D615061676F2E4D656D6F2E5465787429202B2027202020202027202B20262336303B46616374757261732E262333343B4942414E5F434C49262333343B262336323B3B262331333B262331303B202069662028262336303B46616374757261732E262333343B56454E43494D49454E544F535F52454349424F53262333343B262336323B20262336303B262336323B20272729207468656E262331333B262331303B20202020466F726D615061676F2E4D656D6F2E54657874203A3D20466F726D615061676F2E4D656D6F2E54657874202B202756656E63696D69656E746F2F733A2027202B20262336303B46616374757261732E262333343B56454E43494D49454E544F535F52454349424F53262333343B262336323B3B262331333B262331303B656E643B70726F636564757265204C696E6561734661637475726173544F54414C5F4C494E45414F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B202069662028262336303B4C696E6561732046616374757261732E262333343B4553494D505F494E434C5F5441524946415F4641434C494E262333343B262336323B203D2027532729207468656E262331333B262331303B202020204C696E6561734661637475726173544F54414C5F4C494E45412E4D656D6F2E54657874203A3D20275B4C696E6561732046616374757261732E262333343B544F54414C5F4641434C494E262333343B5D27262331333B262331303B2020656C7365262331333B262331303B202020204C696E6561734661637475726173544F54414C5F4C494E45412E4D656D6F2E54657874203A3D20275B262336303B4C696E6561732046616374757261732E262333343B43414E54494441445F4641434C494E262333343B262336323B20272B262331333B262331303B20202020202020202020202020202020202020202020202020202020202020202020202020202020202020272A262336303B4C696E6561732046616374757261732E262333343B50524543494F5F56454E54415F534956415F4152544943554C4F5F4641434C494E262333343B262336323B5D273B262331333B262331303B656E643B262331333B262331303B262331333B262331303B70726F6365647572652050726563696F556E69746172696F4C696E65617346616374757261734F6E4265666F72655072696E742853656E6465723A2054667278436F6D706F6E656E74293B262331333B262331303B626567696E262331333B262331303B202069662028262336303B4C696E6561732046616374757261732E262333343B4553494D505F494E434C5F5441524946415F4641434C494E262333343B262336323B203D2027532729207468656E262331333B262331303B2020202050726563696F556E69746172696F4C696E65617346616374757261732E4D656D6F2E54657874203A3D20275B262336303B4C696E6561732046616374757261732E262333343B50524543494F5F56454E54415F434956415F4152544943554C4F5F4641434C494E262333343B262336323B5D27262331333B262331303B2020656C7365262331333B262331303B2020202050726563696F556E69746172696F4C696E65617346616374757261732E4D656D6F2E54657874203A3D20275B262336303B4C696E6561732046616374757261732E262333343B50524543494F5F56454E54415F534956415F4152544943554C4F5F4641434C494E262333343B262336323B5D27262331333B262331303B656E643B262331333B262331303B262331333B262331303B626567696E262331333B262331303B656E642E223E0D0A20203C44617461736574733E0D0A202020203C6974656D20446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D224661637475726173222F3E0D0A202020203C6974656D20446174615365743D22646D46616374757261732E66786473745072696E744C696E4661632220446174615365744E616D653D224C696E656173204661637475726173222F3E0D0A202020203C6974656D20446174615365743D22646D46616374757261732E6678647352656369626F732220446174615365744E616D653D2252656369626F73222F3E0D0A20203C2F44617461736574733E0D0A20203C546672784461746150616765204E616D653D22446174612220484775696465732E546578743D222220564775696465732E546578743D2222204865696768743D223130303022204C6566743D22302220546F703D2230222057696474683D2231303030222F3E0D0A20203C546672785265706F727450616765204E616D653D2250616765312220484775696465732E546578743D222220564775696465732E546578743D222220506170657257696474683D22323130222050617065724865696768743D223239372220506170657253697A653D223922204C6566744D617267696E3D223130222052696768744D617267696E3D22352220546F704D617267696E3D2232302220426F74746F6D4D617267696E3D2232302220436F6C756D6E57696474683D22302220436F6C756D6E506F736974696F6E732E546578743D2222204672616D652E5479703D223022204D6972726F724D6F64653D2230223E0D0A202020203C5466727844657461696C44617461204E616D653D2244657461696C4461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D2232362C343536373122204C6566743D22302220546F703D223532352C3335343637222057696474683D223733372C303038333522204F6E4265666F72655072696E743D2244657461696C44617461314F6E4265666F72655072696E742220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D46616374757261732E66786473745072696E744C696E4661632220446174615365744E616D653D224C696E6561732046616374757261732220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D224C696E6561734661637475726173544F54414C5F4C494E45412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223634342C38353836392220546F703D22342C3333383539222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D224C696E6561734661637475726173544F54414C5F4C494E45414F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22262331333B262331303B5B262336303B4C696E6561732046616374757261732E262333343B43414E54494441445F4641434C494E262333343B262336323B2A262336303B4C696E6561732046616374757261732E262333343B50524543494F5F56454E54415F534956415F4152544943554C4F5F4641434C494E262333343B262336323B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224C696E656173466163747572617343414E54494441445F464143545552415F4C494E45412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223338362C30353533352220546F703D22332C3737393533222057696474683D2237392C333730313322204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B4C696E6561732046616374757261732E262333343B43414E54494441445F4641434C494E262333343B5D205B4C696E6561732046616374757261732E262333343B5449504F5F43414E54494441445F4152544943554C4F5F4641434C494E262333343B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D2250726563696F556E69746172696F4C696E65617346616374757261732220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223437392C39383435342220546F703D22332C3737393533222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D2250726563696F556E69746172696F4C696E65617346616374757261734F6E4265666F72655072696E742220446174614669656C643D2250524543494F5F56454E54415F534956415F4152544943554C4F5F4641434C494E2220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B4C696E6561732046616374757261732E262333343B50524543494F5F56454E54415F534956415F4152544943554C4F5F4641434C494E262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224C696E6561734661637475726173504F5243454E5F4956415F464143545552415F4C494E45412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223538322C30343736322220546F703D22332C3737393533222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D22256720252220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C73652220546578743D225B4C696E6561732046616374757261732E262333343B504F5243454E54414A455F4956415F4641434C494E262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224C696E656173466163747572617346454348415F454E54524547415F464143545552415F4C494E45412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223330362C31323631362220546F703D22332C3737393533222057696474683D2237392C333730313322204865696768743D2231382C38393736352220446174614669656C643D2246454348415F454E54524547415F4641434C494E2220446174615365743D22646D46616374757261732E66786473745072696E744C696E4661632220446174615365744E616D653D224C696E6561732046616374757261732220446973706C6179466F726D61742E466F726D61745374723D2264642F6D6D2F797979792220446973706C6179466F726D61742E4B696E643D22666B4461746554696D652220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4C696E6561732046616374757261732E262333343B46454348415F454E54524547415F4641434C494E262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224C696E65617346616374757261734445534352495043494F4E5F4152544943554C4F5F464143545552415F4C494E45412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223134332C36323231342220546F703D22332C3737393533222057696474683D223135312C3138313222204865696768743D2231382C38393736352220537472657463684D6F64653D22736D4D61784865696768742220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D224445534352495043494F4E5F4152544943554C4F5F4641434C494E2220446174615365743D22646D46616374757261732E66786473745072696E744C696E4661632220446174615365744E616D653D224C696E6561732046616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31322220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D223022204C696E6553706163696E673D22342220506172656E74466F6E743D2246616C73652220576F7264427265616B3D22547275652220546578743D225B4C696E6561732046616374757261732E262333343B4445534352495043494F4E5F4152544943554C4F5F4641434C494E262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231312C35353930353937382220546F703D22362C3033393338333938222057696474683D223132332C343634363432323122204865696768743D2231352C31313831323333372220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B4C696E6561732046616374757261732E262333343B434F4449474F5F46414D5F415254262333343B5D222F3E0D0A202020203C2F5466727844657461696C446174613E0D0A202020203C546672784D656D6F56696577204E616D653D224D656D6F31392220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223837362C38353039373436352220546F703D223631392C3834323932222057696474683D2237392C333730313322204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F4C49515549444F5F464143262333343B5D222F3E0D0A202020203C546672784D656D6F56696577204E616D653D224D656D6F32312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223837362C38353039373436352220546F703D223538322C3034373632222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22526574656E63696F6E546F74616C4F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B262336303B46616374757261732E262333343B544F54414C5F524554454E43494F4E5F464143262333343B262336323B202A20282D31295D222F3E0D0A202020203C546672784D656D6F56696577204E616D653D224D656D6F32332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223837372C39363930393436352220546F703D223535332C373031313435222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22496D70756573746F73546F74616C4F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F494D50554553544F535F464143262333343B5D222F3E0D0A202020203C546672784D656D6F56696577204E616D653D224D656D6F32352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223837372C39363930393436352220546F703D223532352C3335343637222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22496D70756573746F73546F74616C4F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F42415345535F464143262333343B5D222F3E0D0A202020203C5466727850616765486561646572204E616D653D225061676548656164657231222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223430302C363330313822204C6566743D22302220546F703D2231382C3839373635222057696474683D223733372C3030383335223E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F372220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231332C35353930362220546F703D223336322C3833343838222057696474683D223731302C353531363422204865696768743D2232362C34353637312220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223331392C37303039392220546F703D2234352C3335343336222057696474683D223130392C363036333722204865696768743D2232322C363737313822204175746F57696474683D22547275652220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D32312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223522204672616D652E5479703D2230222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C73652220546578743D2246414354555241222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D22372C35353930362220546F703D223230372C3837343135222057696474683D223335352C323735383222204865696768743D223133362C30363330382220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223337392C35313230362220546F703D223230372C3837343135222057696474683D223334332C393337323322204865696768743D223133362C30363330382220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617352415A4F4E534F4349414C5F454D50524553415F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C37373935332220546F703D223231312C3635333638222057696474683D223334302C3135373722204865696768743D2231382C38393736352220446174614669656C643D2252415A4F4E5F534F4349414C5F454D50524553415F4641432220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B52415A4F4E5F534F4349414C5F454D50524553415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173444952454343494F4E315F454D50524553415F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C37373935332220546F703D223233342C3333303836222057696474683D223334302C3135373722204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B444952454343494F4E315F454D50524553415F464143262333343B5D205B46616374757261732E262333343B444952454343494F4E325F454D50524553415F464143262333343B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617343504F5354414C5F454D50524553415F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C37373935332220546F703D223235362C3232383531222057696474683D223334302C3135373722204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B434F4449474F5F504F5354414C5F454D50524553415F464143262333343B5D2020205B46616374757261732E262333343B504F424C4143494F4E5F454D50524553415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617350524F56494E4349415F454D50524553415F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C37373935332220546F703D223237382C33363234222057696474683D223334302C3135373722204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22466163747572617350524F56494E4349415F454D50524553415F464143545552414F6E4265666F72655072696E7422204F6E50726576696577436C69636B3D22466163747572617350524F56494E4349415F454D50524553415F464143545552414F6E50726576696577436C69636B2220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B50524F56494E4349415F454D50524553415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734D4F56494C5F454D50524553415F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C37373935332220546F703D223330312C3033393538222057696474683D2238332C313439363622204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B4D4F56494C5F454D50524553415F464143262333343B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F342220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231332C35353930362220546F703D223137332C3835383338222057696474683D2235322C393133343222204865696768743D2232322C36373731382220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31362220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22456D69736F72222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F352220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223338302C31373334372220546F703D223137332C3835383338222057696474683D2237352C3539303622204865696768743D2232322C36373731382220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31362220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225265636570746F72222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617352415A4F4E534F4349414C5F434C49454E54455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339322C3935332220546F703D223231312C3635333638222057696474683D223334372C373136373622204865696768743D2231382C38393736352220446174614669656C643D2252415A4F4E5F534F4349414C5F434C49454E54455F4641432220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B52415A4F4E5F534F4349414C5F434C49454E54455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173444952454343494F4E315F454D50524553415F46414354555241312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339322C3935332220546F703D223233342C3333303836222057696474683D223334372C373136373622204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B444952454343494F4E315F434C49454E54455F464143262333343B5D205B46616374757261732E262333343B444952454343494F4E325F434C49454E54455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617343504F5354414C5F434C49454E54455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339322C3935332220546F703D223235362C3232383531222057696474683D223330322C3336323422204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B434F4449474F5F504F5354414C5F434C49454E54455F464143262333343B5D2020205B46616374757261732E262333343B504F424C4143494F4E5F434C49454E54455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466163747572617350524F56494E4349415F434C49454E54455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339322C3935332220546F703D223237382C33363234222057696474683D223334372C373136373622204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22466163747572617350524F56494E4349415F434C49454E54455F464143545552414F6E4265666F72655072696E742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B50524F56494E4349415F434C49454E54455F464143262333343B5D2020205B46616374757261732E262333343B4E4F4D4252455F5041495F434C49454E54455F464143262333343B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734D4F56494C5F434C49454E54455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339322C3935332220546F703D223332322C3436343735222057696474683D223236342C3536373122204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224E49463A205B46616374757261732E262333343B4E49465F434C49454E54455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F362220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231332C35353930362220546F703D2239302C3730383732222057696474683D223334302C3135373722204865696768743D2232322C36373731382220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31352220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2246656368613A205B46616374757261732E262333343B46454348415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734E524F5F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231332C35353930362220546F703D223132302C3934343936222057696474683D223334302C3135373722204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31352220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224EC3BA6D65726F20646520466163747572613A205B46616374757261732E262333343B53455249455F464143262333343B5D2E5B46616374757261732E262333343B4E554D45524F5F464143262333343B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F382220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231372C37373935332220546F703D223336362C3631343431222057696474683D2237392C333730313322204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22446573637269706369C3B36E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F392220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223633352C37343035372220546F703D223336362C3631343431222057696474683D2237392C333730313322204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22546F74616C222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31302220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223338392C38333438382220546F703D223336362C3631343431222057696474683D2237352C3539303622204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D2243414E54494441445F41525456494E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223437362C32303530312220546F703D223336362C3631343431222057696474683D2238332C313439363622204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D2250726563696F222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22546974756C6F497661436F6C756D6E612220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223537322C393239352220546F703D223336362C3631343431222057696474683D2237352C3539303622204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D2230222048416C69676E3D22686143656E7465722220506172656E74466F6E743D2246616C73652220546578743D2225205B46616374757261732E262333343B50414C414252415F5245504F5254535F5A4F4E415F4956415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224665636861456E7472656761546974746C652220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223330362C31323631362220546F703D223336362C3631343431222057696474683D2239302C373038373222204865696768743D2231382C383937363522204F6E4265666F72655072696E743D224665636861456E7472656761546974746C654F6E4265666F72655072696E742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22466563686120456E7472656761222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734D4F56494C5F434C49454E54455F46414354555241312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339322C3935332220546F703D223330312C3033393538222057696474683D2239342C343838323522204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B4D4F56494C5F434C49454E54455F464143262333343B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734E49465F454D50524553415F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232302C37373935332220546F703D223332322C3436343735222057696474683D223237322C313236313622204865696768743D2231382C38393736352220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D223022204672616D652E57696474683D22312C352220506172656E74466F6E743D2246616C73652220546578743D224E49463A205B46616374757261732E262333343B4E49465F454D50524553415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31322220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223436382C36363137322220546F703D223330312C30333935393232222057696474683D223234392C343438393822204865696768743D2231382C383937363337382220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B454D41494C5F434C49454E54455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31332220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530362C34353730322220546F703D2239342C3438383235222057696474683D223022204865696768743D2232322C36373731382220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224D656D6F31342220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223130392C36303633372220546F703D223330312C33363234222057696474683D223234392C343438393822204865696768743D2231382C38393736352220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B454D41494C5F454D50524553415F464143262333343B5D222F3E0D0A202020203C2F54667278506167654865616465723E0D0A202020203C546672784D617374657244617461204E616D653D224D61737465724461746131222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D2232322C363737313822204C6566743D22302220546F703D223438302C3030303331222056697369626C653D2246616C7365222057696474683D223733372C30303833352220436F6C756D6E57696474683D22302220436F6C756D6E4761703D22302220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220526F77436F756E743D2230223E0D0A2020202020203C546672784D656D6F56696577204E616D653D2246616374757261734E524F5F46414354555241312220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2236342C32353230312220546F703D2230222057696474683D2239342C343838323522204865696768743D2231382C38393736352220446174614669656C643D224E554D45524F5F4641432220446174615365743D22646D46616374757261732E667864735072696E744661632220446174615365744E616D653D2246616374757261732220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B4E554D45524F5F464143262333343B5D222F3E0D0A202020203C2F546672784D6173746572446174613E0D0A202020203C5466727850616765466F6F746572204E616D653D2250616765466F6F74657231222046696C6C547970653D2266744272757368222046696C6C4761702E546F703D2230222046696C6C4761702E4C6566743D2230222046696C6C4761702E426F74746F6D3D2230222046696C6C4761702E52696768743D223022204672616D652E5479703D223022204865696768743D223234392C343438393822204C6566743D22302220546F703D223631322C3238333836222057696474683D223733372C303038333522204F6E4265666F72655072696E743D2250616765466F6F746572314F6E4265666F72655072696E74223E0D0A2020202020203C546672784D656D6F56696577204E616D653D2243616A614956412220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231382C38393736352220546F703D2233322C3637373138222057696474683D223436382C363631343137333222204865696768743D223131332C333835392220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2243616A61546974756C6F734956412220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231382C38393736352220546F703D22362C3232303437222057696474683D223436382C363631343137333222204865696768743D2232362C34353637312220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2231352220506172656E74466F6E743D2246616C73652220546578743D22222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D226D546F74616C466163747572612220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530372C36373735303436352220546F703D223132342C3732343439222057696474683D223231352C343333323122204865696768743D2232322C36373731382220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31362220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D22313522204672616D652E57696474683D22312C352220506172656E74466F6E743D2246616C73652220546578743D22546F74616C204661637475726120222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2242617365496D706F6E69626C654E2220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232322C36373731393436352220546F703D2233362C3435363731222057696474683D2239302C373038373222204865696768743D2231352C313138313222204F6E4265666F72655072696E743D2242617365496D706F6E69626C654E4F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F42415345495F4956414E5F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2242617365496D706F6E69626C6543616A614956412220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232362C34353637323436352220546F703D223130222057696474683D223130322C303437333122204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D224261736520496D706F6E69626C65222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2242617365496D706F6E69626C65452220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231382C38393736363436352220546F703D223131352C3832363834222057696474683D2239342C343838323522204865696768743D2231382C383937363522204F6E4265666F72655072696E743D2242617365496D706F6E69626C65454F6E4265666F72655072696E742220446174614669656C643D22544F54414C5F42415345495F495641455F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F42415345495F495641455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22546974756C6F506F7263656E43616A614956412220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223134372C34303136383436352220546F703D223130222057696474683D2236382C303331353422204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D2225205B46616374757261732E262333343B50414C414252415F5245504F5254535F5A4F4E415F4956415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22546974756C6F546F74616C43616A614956412220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232383436352220546F703D223130222057696474683D2238362C393239313922204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22546F74616C205B46616374757261732E262333343B50414C414252415F5245504F5254535F5A4F4E415F4956415F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22526574656E63696F6E506F72632220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223331332C37303130303436352220546F703D223130222057696474683D2237312C383131303722204865696768743D2231352C313138313222204F6E4265666F72655072696E743D22526574656E63696F6E506F72634F6E4265666F72655072696E742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D222520522E452E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22526574656E63696F6E546F742220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339342C36333031393436352220546F703D223130222057696474683D2237312C383131303722204865696768743D2231352C31313831322220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22546F74616C20522E452E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F4956414E5F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232383436352220546F703D2233362C3435363731222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F4956414E5F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F4956414E5F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223134372C34303136383436352220546F703D2233362C3435363731222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F4956414E5F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F495641525F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223134372C34303136383436352220546F703D2236322C3931333432222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F495641525F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F495641535F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223134372C34303136383436352220546F703D2238392C3337303133222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F495641535F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F495641455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223134372C34303136383436352220546F703D223131352C3832363834222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F495641455F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F495641525F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232383436352220546F703D2236322C3931333432222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446174614669656C643D22544F54414C5F495641525F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F495641525F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F495641535F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232383436352220546F703D2238392C3337303133222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446174614669656C643D22544F54414C5F495641535F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F495641535F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F495641455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223232322C39393232383436352220546F703D223131352C3832363834222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446174614669656C643D22544F54414C5F495641455F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F495641455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F52454E5F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223331332C37303130303436352220546F703D2233362C3435363731222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F52454E5F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F5245525F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223331332C37303130303436352220546F703D2236322C3931333432222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F5245525F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F5245455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223331332C37303130303436352220546F703D223131352C3832363834222057696474683D2235362C363932393522204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F5245455F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173504F5243454E5F5245535F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223331332C37303130303436352220546F703D2238392C3337303133222057696474683D2235322C393133343222204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B504F5243454E54414A455F5245535F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F52454E5F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339342C36333031393436352220546F703D2233362C3435363731222057696474683D2236342C323532303122204865696768743D2231382C383937363522204F6E4265666F72655072696E743D224661637475726173544F54414C5F52454E5F464143545552414F6E4265666F72655072696E742220446174614669656C643D22544F54414C5F52454E5F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F52454E5F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F5245455F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339342C36333031393436352220546F703D223131352C3832363834222057696474683D2236342C323532303122204865696768743D2231382C383937363522204F6E4265666F72655072696E743D224661637475726173544F54414C5F5245455F464143545552414F6E4265666F72655072696E742220446174614669656C643D22544F54414C5F5245455F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F5245455F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2242617365496D706F6E69626C65522220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231382C38393736363436352220546F703D2236322C3931333432222057696474683D2239342C343838323522204865696768743D2231382C383937363522204F6E4265666F72655072696E743D2242617365496D706F6E69626C65524F6E4265666F72655072696E742220446174614669656C643D22544F54414C5F42415345495F495641525F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F42415345495F495641525F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D2242617365496D706F6E69626C65532220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231382C38393736363436352220546F703D2238392C3337303133222057696474683D2239342C343838323522204865696768743D2231382C383937363522204F6E4265666F72655072696E743D2242617365496D706F6E69626C65534F6E4265666F72655072696E742220446174614669656C643D22544F54414C5F42415345495F495641535F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F42415345495F495641535F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F5245525F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339342C36333031393436352220546F703D2236322C3931333432222057696474683D2236382C303331353422204865696768743D2231382C383937363522204F6E4265666F72655072696E743D224661637475726173544F54414C5F5245525F464143545552414F6E4265666F72655072696E742220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D22544F54414C5F5245525F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F5245525F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173544F54414C5F5245535F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223339342C36333031393436352220546F703D2238392C3337303133222057696474683D2236382C303331353422204865696768743D2231382C383937363522204F6E4265666F72655072696E743D224661637475726173544F54414C5F5245535F464143545552414F6E4265666F72655072696E742220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D6178497465726174696F6E56616C75653D22302220436F6E74656E745363616C654F7074696F6E732E436F6E73747261696E74732E4D696E497465726174696F6E56616C75653D22302220446174614669656C643D22544F54414C5F5245535F4641432220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F5245535F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22526574656E63696F6E2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530372C31313834343436352220546F703D2238362C3932393139222057696474683D223134332C363232313422204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22526574656E6369C3B36E2049525046205B46616374757261732E262333343B504F5243454E54414A455F524554454E43494F4E5F464143262333343B5D25222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22747874526574656E63696F6E546F74616C2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223634312C30373931373436352220546F703D2238362C3932393139222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22526574656E63696F6E546F74616C4F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B262336303B46616374757261732E262333343B544F54414C5F524554454E43494F4E5F464143262333343B262336323B202A20282D31295D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22496D70756573746F73546F74616C2220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223634322C31393732393436352220546F703D2235382C353832373135222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22496D70756573746F73546F74616C4F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F494D50554553544F535F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22496D70756573746F732220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530382C32333635363436352220546F703D2235382C353832373135222057696474683D223134332C363232313422204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22496D70756573746F734F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225672220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22546F74616C20495641202B205245222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22546F74616C42617365732220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223634322C31393732393436352220546F703D2233302C3233363234222057696474683D2237392C333730313322204865696768743D2231382C383937363522204F6E4265666F72655072696E743D22496D70756573746F73546F74616C4F6E4265666F72655072696E742220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F42415345535F464143262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22546F74616C42617365496D706F6E69626C652220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223530382C32333635363436352220546F703D2233302C3233363234222057696474683D223134332C363232313422204865696768743D2231382C38393736352220446973706C6179466F726D61742E446563696D616C536570617261746F723D222C2220446973706C6179466F726D61742E466F726D61745374723D2225672220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22546F74616C204261736520496D706F6E69626C65222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D224661637475726173434F4D454E544152494F535F464143545552412220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2231392C38393736363436352220546F703D223138382C3430313637222057696474683D223731302C353531363422204865696768743D2233302C32333632342220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D222D31363737373230382220466F6E742E4865696768743D222D31312220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D225B566172546F53747228262336303B46616374757261732E262333343B544558544F5F4C4547414C5F434C49454E54455F464143262333343B262336323B292B272020272B262331333B262331303B20566172546F53747228262336303B46616374757261732E262333343B544558544F5F4C4547414C5F454D50524553415F464143262333343B262336323B29202B272020272B262331333B262331303B20566172546F53747228262336303B46616374757261732E262333343B434F4D454E544152494F535F464143262333343B262336323B295D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D22466F726D615061676F2220496E6465785461673D22312220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232322C36373731393436352220546F703D223135372C3430313637222057696474683D223639392C323133303522204865696768743D2233372C3739353322204F6E4265666F72655072696E743D22466F726D615061676F4F6E4265666F72655072696E742220537472657463684D6F64653D22736D41637475616C48656967687422204175746F57696474683D22547275652220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D22302220506172656E74466F6E743D2246616C73652220546578743D22466F726D61206465205061676F3A205B46616374757261732E262333343B4445534352495043494F4E5F464F524D415F5041474F5F4650262333343B5D222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D226D4E756D506167696E61732220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223631362C32383338362220546F703D223231392C37373138222057696474683D223131332C3338353922204865696768743D2232322C363737313822204F6E4265666F72655072696E743D226D4E756D506167696E61734F6E4265666F72655072696E742220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31332220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D2250C3A167696E61205B262336303B50616765262336323B5D206465205B262336303B546F74616C506167657323262336323B5D223E0D0A20202020202020203C466F726D6174733E0D0A202020202020202020203C6974656D2F3E0D0A202020202020202020203C6974656D2F3E0D0A20202020202020203C2F466F726D6174733E0D0A2020202020203C2F546672784D656D6F566965773E0D0A2020202020203C546672784D656D6F56696577204E616D653D22436F6E74696E75612220416C6C6F77566563746F724578706F72743D225472756522204C6566743D2232322C36373731382220546F703D2230222057696474683D223330392C393231343622204865696768743D2232322C36373731382220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D2231363737373231352220466F6E742E4865696768743D222D31362220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223022204672616D652E5479703D2230222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D22436F6E74696EC3BA6120656E206C61207369677569656E74652070C3A167696E61202E2E2E222F3E0D0A2020202020203C546672784D656D6F56696577204E616D653D226D546F74616C466163747572614374642220416C6C6F77566563746F724578706F72743D225472756522204C6566743D223539362C36303636382220546F703D223132342C3732343439222057696474683D223132342C373234343922204865696768743D2232322C36373731382220446973706C6179466F726D61742E466F726D61745374723D2225322E326D2220446973706C6179466F726D61742E4B696E643D22666B4E756D657269632220466F6E742E436861727365743D22312220466F6E742E436F6C6F723D22302220466F6E742E4865696768743D222D31362220466F6E742E4E616D653D22417269616C2220466F6E742E5374796C653D223122204672616D652E5479703D223022204672616D652E57696474683D22312C35222048416C69676E3D22686152696768742220506172656E74466F6E743D2246616C73652220546578743D225B46616374757261732E262333343B544F54414C5F4C49515549444F5F464143262333343B5D222F3E0D0A202020203C2F5466727850616765466F6F7465723E0D0A20203C2F546672785265706F7274506167653E0D0A3C2F546672785265706F72743E0D0A, '2026-05-19 16:41:28', '2026-05-19 16:41:28', 'Administrador', 'Administrador'),
   ('Administradores', 'frmMtoCajaParam', 'vgerArqueoTarjetas', 'False', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
   ('Administradores', 'frmMtoCajaParam', 'vgerAvisoStockWarning', 'Artículo sin Stock. Compruebe Stock en almacén', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
@@ -18358,6 +19230,7 @@ CREATE TABLE `fza_winforms` (
 -- Datos de fza_winforms
 INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`, `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`) VALUES
   ('Albaranes', 'Albaranes', 'mnuAlbaranesVenta', 'inMtoAlbaranes.TfrmMtoAlbaranes', 'Ctrl+Alt+A', 'UniDataAlbaranes.TdmAlbaranes', 5),
+  ('AlbaranesCompra', 'Albaranes de Compra', 'Albaranes1', 'inMtoAlbaranesCompra.TfrmMtoAlbaranesCompra', 'Ctrl+Alt+C', 'UniDataAlbaranesCompra.TdmAlbaranesCompra', 5),
   ('Almacenes', 'Almacenes', 'mnuAlmacenes', 'inMtoAlmacenes.TfrmMtoAlmacenes', 'Ctrl+L', 'UniDataAlmacenes.TdmAlmacenes', 5),
   ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'Ctrl+A', 'UniDataArticulos.TdmArticulos', 5),
   ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 5),
@@ -18393,7 +19266,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 5),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 5),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 5);
--- 36 registros exportados
+-- 37 registros exportados
 
 
 -- ========================================
@@ -18407,6 +19280,10 @@ CREATE ALGORITHM=UNDEFINED  VIEW `fza_caja_depositos_view` AS select 'ALTA' AS `
 -- Vista: vi_albaranes
 DROP VIEW IF EXISTS `vi_albaranes`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes` AS select `fza_albaranes`.`NUMERO_ALB` AS `NUMERO_ALB`,`fza_albaranes`.`SERIE_ALB` AS `SERIE_ALB`,`fza_albaranes`.`FECHA_ALB` AS `FECHA_ALB`,`fza_albaranes`.`ESCONSOLIDADO_ALB` AS `ESCONSOLIDADO_ALB`,`fza_albaranes`.`ESTADO_ALB` AS `ESTADO_ALB`,`fza_albaranes`.`NUMERO_PED_ALB` AS `NUMERO_PED_ALB`,`fza_albaranes`.`SERIE_PED_ALB` AS `SERIE_PED_ALB`,`fza_albaranes`.`NUMERO_FAC_ALB` AS `NUMERO_FAC_ALB`,`fza_albaranes`.`SERIE_FAC_ALB` AS `SERIE_FAC_ALB`,`fza_albaranes`.`CODIGO_EMP_ALB` AS `CODIGO_EMP_ALB`,`fza_albaranes`.`RAZON_SOCIAL_EMPRESA_ALB` AS `RAZON_SOCIAL_EMPRESA_ALB`,`fza_albaranes`.`NIF_EMPRESA_ALB` AS `NIF_EMPRESA_ALB`,`fza_albaranes`.`MOVIL_EMPRESA_ALB` AS `MOVIL_EMPRESA_ALB`,`fza_albaranes`.`EMAIL_EMPRESA_ALB` AS `EMAIL_EMPRESA_ALB`,`fza_albaranes`.`DIRECCION1_EMPRESA_ALB` AS `DIRECCION1_EMPRESA_ALB`,`fza_albaranes`.`DIRECCION2_EMPRESA_ALB` AS `DIRECCION2_EMPRESA_ALB`,`fza_albaranes`.`POBLACION_EMPRESA_ALB` AS `POBLACION_EMPRESA_ALB`,`fza_albaranes`.`PROVINCIA_EMPRESA_ALB` AS `PROVINCIA_EMPRESA_ALB`,`fza_albaranes`.`CODIGO_PAI_EMPRESA_ALB` AS `CODIGO_PAI_EMPRESA_ALB`,`fza_albaranes`.`NOMBRE_PAI_EMPRESA_ALB` AS `NOMBRE_PAI_EMPRESA_ALB`,`fza_albaranes`.`CODIGO_POSTAL_EMPRESA_ALB` AS `CODIGO_POSTAL_EMPRESA_ALB`,`fza_albaranes`.`GRUPO_ZONA_IVA_EMPRESA_ALB` AS `GRUPO_ZONA_IVA_EMPRESA_ALB`,`fza_albaranes`.`CODIGO_CLI_ALB` AS `CODIGO_CLI_ALB`,`fza_albaranes`.`RAZON_SOCIAL_CLIENTE_ALB` AS `RAZON_SOCIAL_CLIENTE_ALB`,`fza_albaranes`.`NIF_CLIENTE_ALB` AS `NIF_CLIENTE_ALB`,`fza_albaranes`.`MOVIL_CLIENTE_ALB` AS `MOVIL_CLIENTE_ALB`,`fza_albaranes`.`EMAIL_CLIENTE_ALB` AS `EMAIL_CLIENTE_ALB`,`fza_albaranes`.`DIRECCION1_CLIENTE_ALB` AS `DIRECCION1_CLIENTE_ALB`,`fza_albaranes`.`DIRECCION2_CLIENTE_ALB` AS `DIRECCION2_CLIENTE_ALB`,`fza_albaranes`.`POBLACION_CLIENTE_ALB` AS `POBLACION_CLIENTE_ALB`,`fza_albaranes`.`PROVINCIA_CLIENTE_ALB` AS `PROVINCIA_CLIENTE_ALB`,`fza_albaranes`.`CODIGO_POSTAL_CLIENTE_ALB` AS `CODIGO_POSTAL_CLIENTE_ALB`,`fza_albaranes`.`CODIGO_PAI_CLIENTE_ALB` AS `CODIGO_PAI_CLIENTE_ALB`,`fza_albaranes`.`NOMBRE_PAI_CLIENTE_ALB` AS `NOMBRE_PAI_CLIENTE_ALB`,`fza_albaranes`.`NOMBRE_CLI_ENVIO_ALB` AS `NOMBRE_CLI_ENVIO_ALB`,`fza_albaranes`.`MOVIL_CLIENTE_ENVIO_ALB` AS `MOVIL_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`DIRECCION1_CLIENTE_ENVIO_ALB` AS `DIRECCION1_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`DIRECCION2_CLIENTE_ENVIO_ALB` AS `DIRECCION2_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`POBLACION_CLIENTE_ENVIO_ALB` AS `POBLACION_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`PROVINCIA_CLIENTE_ENVIO_ALB` AS `PROVINCIA_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`CODIGO_POSTAL_CLIENTE_ENVIO_ALB` AS `CODIGO_POSTAL_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`CODIGO_PAI_CLIENTE_ENVIO_ALB` AS `CODIGO_PAI_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`NOMBRE_PAI_CLIENTE_ENVIO_ALB` AS `NOMBRE_PAI_CLIENTE_ENVIO_ALB`,`fza_albaranes`.`TRANSPORTISTA_ALB` AS `TRANSPORTISTA_ALB`,`fza_albaranes`.`CODIGO_IVA_ALB` AS `CODIGO_IVA_ALB`,`fza_albaranes`.`ESIVA_RECARGO_CLIENTE_ALB` AS `ESIVA_RECARGO_CLIENTE_ALB`,`fza_albaranes`.`ESIVA_EXENTO_CLIENTE_ALB` AS `ESIVA_EXENTO_CLIENTE_ALB`,`fza_albaranes`.`ESINTRACOMUNITARIO_CLIENTE_ALB` AS `ESINTRACOMUNITARIO_CLIENTE_ALB`,`fza_albaranes`.`TARIFA_ARTICULO_CLIENTE_ALB` AS `TARIFA_ARTICULO_CLIENTE_ALB`,`fza_albaranes`.`ESIMP_INCL_TARIFA_CLIENTE_ALB` AS `ESIMP_INCL_TARIFA_CLIENTE_ALB`,`fza_albaranes`.`PORCENTAJE_IVAN_ALB` AS `PORCENTAJE_IVAN_ALB`,`fza_albaranes`.`TOTAL_IVAN_ALB` AS `TOTAL_IVAN_ALB`,`fza_albaranes`.`PORCENTAJE_IVAR_ALB` AS `PORCENTAJE_IVAR_ALB`,`fza_albaranes`.`TOTAL_IVAR_ALB` AS `TOTAL_IVAR_ALB`,`fza_albaranes`.`PORCENTAJE_IVAS_ALB` AS `PORCENTAJE_IVAS_ALB`,`fza_albaranes`.`TOTAL_IVAS_ALB` AS `TOTAL_IVAS_ALB`,`fza_albaranes`.`PORCENTAJE_IVAE_ALB` AS `PORCENTAJE_IVAE_ALB`,`fza_albaranes`.`TOTAL_IVAE_ALB` AS `TOTAL_IVAE_ALB`,`fza_albaranes`.`TOTAL_BASES_ALB` AS `TOTAL_BASES_ALB`,`fza_albaranes`.`TOTAL_IMPUESTOS_ALB` AS `TOTAL_IMPUESTOS_ALB`,`fza_albaranes`.`TOTAL_LIQUIDO_ALB` AS `TOTAL_LIQUIDO_ALB`,`fza_albaranes`.`FORMA_PAGO_ALB` AS `FORMA_PAGO_ALB`,`fza_albaranes`.`CONTADOR_LINEAS_ALB` AS `CONTADOR_LINEAS_ALB`,`fza_albaranes`.`COMENTARIOS_ALB` AS `COMENTARIOS_ALB`,`fza_albaranes`.`OBSERVACIONES_ALB` AS `OBSERVACIONES_ALB`,`fza_albaranes`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_albaranes`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_albaranes`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_albaranes`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_albaranes`;
+
+-- Vista: vi_albaranes_compra
+DROP VIEW IF EXISTS `vi_albaranes_compra`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra` AS select `a`.`NUMERO_ALBC` AS `NUMERO_ALBC`,`a`.`SERIE_ALBC` AS `SERIE_ALBC`,`a`.`FECHA_ALBC` AS `FECHA_ALBC`,`a`.`ESTADO_ALBC` AS `ESTADO_ALBC`,`a`.`NUMERO_PED_ALBC` AS `NUMERO_PED_ALBC`,`a`.`SERIE_PED_ALBC` AS `SERIE_PED_ALBC`,`a`.`NUMERO_FAC_ALBC` AS `NUMERO_FAC_ALBC`,`a`.`SERIE_FAC_ALBC` AS `SERIE_FAC_ALBC`,`a`.`CODIGO_EMP_ALBC` AS `CODIGO_EMP_ALBC`,`a`.`RAZON_SOCIAL_EMPRESA_ALBC` AS `RAZON_SOCIAL_EMPRESA_ALBC`,`a`.`NIF_EMPRESA_ALBC` AS `NIF_EMPRESA_ALBC`,`a`.`MOVIL_EMPRESA_ALBC` AS `MOVIL_EMPRESA_ALBC`,`a`.`EMAIL_EMPRESA_ALBC` AS `EMAIL_EMPRESA_ALBC`,`a`.`DIRECCION1_EMPRESA_ALBC` AS `DIRECCION1_EMPRESA_ALBC`,`a`.`DIRECCION2_EMPRESA_ALBC` AS `DIRECCION2_EMPRESA_ALBC`,`a`.`POBLACION_EMPRESA_ALBC` AS `POBLACION_EMPRESA_ALBC`,`a`.`PROVINCIA_EMPRESA_ALBC` AS `PROVINCIA_EMPRESA_ALBC`,`a`.`CODIGO_PAI_EMPRESA_ALBC` AS `CODIGO_PAI_EMPRESA_ALBC`,`a`.`NOMBRE_PAI_EMPRESA_ALBC` AS `NOMBRE_PAI_EMPRESA_ALBC`,`a`.`CODIGO_POSTAL_EMPRESA_ALBC` AS `CODIGO_POSTAL_EMPRESA_ALBC`,`a`.`CODIGO_PRV_ALBC` AS `CODIGO_PRV_ALBC`,`a`.`RAZON_SOCIAL_PRV_ALBC` AS `RAZON_SOCIAL_PRV_ALBC`,`a`.`NIF_PRV_ALBC` AS `NIF_PRV_ALBC`,`a`.`MOVIL_PRV_ALBC` AS `MOVIL_PRV_ALBC`,`a`.`EMAIL_PRV_ALBC` AS `EMAIL_PRV_ALBC`,`a`.`DIRECCION1_PRV_ALBC` AS `DIRECCION1_PRV_ALBC`,`a`.`DIRECCION2_PRV_ALBC` AS `DIRECCION2_PRV_ALBC`,`a`.`POBLACION_PRV_ALBC` AS `POBLACION_PRV_ALBC`,`a`.`PROVINCIA_PRV_ALBC` AS `PROVINCIA_PRV_ALBC`,`a`.`CODIGO_PAI_PRV_ALBC` AS `CODIGO_PAI_PRV_ALBC`,`a`.`NOMBRE_PAI_PRV_ALBC` AS `NOMBRE_PAI_PRV_ALBC`,`a`.`CODIGO_POSTAL_PRV_ALBC` AS `CODIGO_POSTAL_PRV_ALBC`,`a`.`REF_PROVEEDOR_ALBC` AS `REF_PROVEEDOR_ALBC`,`a`.`CODIGO_ALM_ALBC` AS `CODIGO_ALM_ALBC`,`a`.`TRANSPORTISTA_ALBC` AS `TRANSPORTISTA_ALBC`,`a`.`CODIGO_IVA_ALBC` AS `CODIGO_IVA_ALBC`,`a`.`PORCENTAJE_IVAN_ALBC` AS `PORCENTAJE_IVAN_ALBC`,`a`.`TOTAL_IVAN_ALBC` AS `TOTAL_IVAN_ALBC`,`a`.`PORCENTAJE_IVAR_ALBC` AS `PORCENTAJE_IVAR_ALBC`,`a`.`TOTAL_IVAR_ALBC` AS `TOTAL_IVAR_ALBC`,`a`.`PORCENTAJE_IVAS_ALBC` AS `PORCENTAJE_IVAS_ALBC`,`a`.`TOTAL_IVAS_ALBC` AS `TOTAL_IVAS_ALBC`,`a`.`PORCENTAJE_IVAE_ALBC` AS `PORCENTAJE_IVAE_ALBC`,`a`.`TOTAL_IVAE_ALBC` AS `TOTAL_IVAE_ALBC`,`a`.`TOTAL_BASES_ALBC` AS `TOTAL_BASES_ALBC`,`a`.`TOTAL_IMPUESTOS_ALBC` AS `TOTAL_IMPUESTOS_ALBC`,`a`.`TOTAL_LIQUIDO_ALBC` AS `TOTAL_LIQUIDO_ALBC`,`a`.`FORMA_PAGO_ALBC` AS `FORMA_PAGO_ALBC`,`a`.`CONTADOR_LINEAS_ALBC` AS `CONTADOR_LINEAS_ALBC`,`a`.`COMENTARIOS_ALBC` AS `COMENTARIOS_ALBC`,`a`.`OBSERVACIONES_ALBC` AS `OBSERVACIONES_ALBC`,`a`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`a`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`a`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`a`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_ALBC`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_ALBC` from ((`fza_albaranes_compra` `a` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `a`.`CODIGO_PRV_ALBC`)) left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `a`.`CODIGO_EMP_ALBC`));
 
 -- Vista: vi_albaranes_lineas
 DROP VIEW IF EXISTS `vi_albaranes_lineas`;
@@ -18435,6 +19312,10 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_fotos` AS select `sku`.`CODIGO_AR
 -- Vista: vi_articulos_list
 DROP VIEW IF EXISTS `vi_articulos_list`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_list` AS select `fza_articulos`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,`fza_articulos`.`ESACTIVO_ART` AS `ESACTIVO_ART`,`fza_articulos`.`ORDEN_ART` AS `ORDEN_ART`,`fza_articulos`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`fza_articulos`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`fza_articulos_familias`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`fza_articulos`.`TIPO_IVA_ART` AS `TIPO_IVA_ART`,`fza_articulos`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`fza_articulos`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`fza_articulos_proveedores`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`fza_proveedores`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`fza_articulos`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_articulos`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_articulos`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_articulos`.`USUARIO_MODIF` AS `USUARIO_MODIF` from (((`fza_articulos` left join `fza_articulos_familias` on(`fza_articulos`.`CODIGO_FAM_ART` = `fza_articulos_familias`.`CODIGO_FAM_FAM`)) left join `fza_articulos_proveedores` on(`fza_articulos_proveedores`.`CODIGO_ART_AP` = `fza_articulos`.`CODIGO_ART_ART` and `fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` on(`fza_proveedores`.`CODIGO_PRV_PRV` = `fza_articulos_proveedores`.`CODIGO_PRV_AP`)) where `fza_articulos`.`ESACTIVO_ART` = 'S' order by `fza_articulos`.`ORDEN_ART`;
+
+-- Vista: vi_articulos_pdte_recibir
+DROP VIEW IF EXISTS `vi_articulos_pdte_recibir`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_pdte_recibir` AS select `fza_articulos_pdte_recibir`.`CODIGO_UNIDAD_PDR` AS `CODIGO_UNIDAD_SKU`,`fza_articulos_pdte_recibir`.`CODIGO_ALM_PDR` AS `CODIGO_ALM_ALM`,`fza_articulos_pdte_recibir`.`CODIGO_ART_PDR` AS `CODIGO_ART_ART`,sum(`fza_articulos_pdte_recibir`.`CANTIDAD_PDR`) AS `CANTIDAD_PTE_RECIBIR`,count(0) AS `NUM_LINEAS_PDR`,min(`fza_articulos_pdte_recibir`.`FECHA_PEDIDO_PDR`) AS `FECHA_PEDIDO_MIN`,min(`fza_articulos_pdte_recibir`.`FECHA_PREVISTA_PDR`) AS `FECHA_PREVISTA_MIN` from `fza_articulos_pdte_recibir` group by `fza_articulos_pdte_recibir`.`CODIGO_UNIDAD_PDR`,`fza_articulos_pdte_recibir`.`CODIGO_ALM_PDR`,`fza_articulos_pdte_recibir`.`CODIGO_ART_PDR`;
 
 -- Vista: vi_articulos_propiedades_slots
 DROP VIEW IF EXISTS `vi_articulos_propiedades_slots`;
@@ -22731,4 +23612,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 22/05/2026 18:07:57
+-- Backup completado: 22/05/2026 23:42:29
