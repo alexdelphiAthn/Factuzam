@@ -33,6 +33,9 @@ type
     unqryArtDataLinAlbc:        TUniQuery;
     unqrySkusAlbc:              TUniQuery;
     unstrdprcGetContadorAlbc:   TUniStoredProc;
+    // Definicion de atributos del articulo padre (para columnas
+    // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
+    unqryDefArticuloAlbc:       TUniQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -68,6 +71,7 @@ begin
   unqryArtDataLinAlbc.Connection        := inLibGlobalVar.oConn;
   unqrySkusAlbc.Connection              := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbc.Connection   := inLibGlobalVar.oConn;
+  unqryDefArticuloAlbc.Connection       := inLibGlobalVar.oConn;
 end;
 
 procedure TdmAlbaranesCompra.DataModuleDestroy(Sender: TObject);
