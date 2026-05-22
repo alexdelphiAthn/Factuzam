@@ -27,7 +27,7 @@ const
   MUTEX_TIMEOUT = 5000; // 5 segundos de timeout
 
 type
-  TLogType = (ltInfo, ltWarning, ltError, ltSQL);
+  TLogType = (ltInfo, ltWarning, ltError, ltSQL, ltAvanzado);
   TLogFlags = set of TLogType;
   TLog = class
   private
@@ -52,6 +52,18 @@ type
     procedure LogWarning(const AMessage: string);
     procedure LogError(const AMessage: string);
     procedure LogSQL(const ASQL: string);
+    // Version detallada del log SQL. Registra el SQL ya ejecutado junto
+    // con su tiempo en ms, filas afectadas/devueltas y exito/fallo.
+    // AParams es opcional: si viene relleno (clave=valor;clave=valor)
+    // se anade tras la query. Pensado para que el invocador decida si
+    // se loguean valores reales segun appLogParamsSQL.
+    procedure LogSQLExt(const ASQL: string; AElapsedMs: Int64; ARows: Integer;
+                        AOk: Boolean; const AError: string = '';
+                        const AParams: string = '');
+    // Log avanzado de eventos de usuario / UI. Una linea por evento con
+    // unidad (modulo Pascal), objeto (form / control / dataset), evento
+    // (Click, Show, BeforePost, Execute...) y un detalle libre.
+    procedure LogEvento(const AUnidad, AObjeto, AEvento, ADetalle: string);
     // Cronometro instrumentado. Escribe al log y, si el monitor SQL
     // (oMemoSQL) esta visible, tambien suelta una linea ahi para que el
     // usuario vea las metricas junto a las queries. Patron tipico:
@@ -81,6 +93,7 @@ begin
     ltWarning: Result := 'WARNING';
     ltError: Result := 'ERROR';
     ltSQL: Result := 'SQL';
+    ltAvanzado: Result := 'AVANZADO';
   else
     Result := 'DESCONOCIDO';
   end;
@@ -221,6 +234,55 @@ begin
   SQLOneLine := StringReplace(ASQL, sLineBreak, ' ', [rfReplaceAll]);
   SQLOneLine := Trim(SQLOneLine);
   WriteToLog('SQL: ' + SQLOneLine, ltSQL);
+end;
+
+procedure TLog.LogSQLExt(const ASQL: string; AElapsedMs: Int64; ARows: Integer;
+                         AOk: Boolean; const AError: string = '';
+                         const AParams: string = '');
+var
+  SQLOneLine, sEstado, sFilas, sLinea: string;
+begin
+  if not (ltSQL in FLogFlags) then
+    Exit;
+
+  SQLOneLine := StringReplace(ASQL, sLineBreak, ' ', [rfReplaceAll]);
+  SQLOneLine := Trim(SQLOneLine);
+
+  if AOk then
+    sEstado := 'OK'
+  else
+    sEstado := 'ERR';
+
+  if ARows >= 0 then
+    sFilas := IntToStr(ARows)
+  else
+    sFilas := '-';
+
+  sLinea := Format('SQL: [%s] %d ms | filas=%s | %s',
+                   [sEstado, AElapsedMs, sFilas, SQLOneLine]);
+
+  if AParams <> '' then
+    sLinea := sLinea + ' | params=' + AParams;
+
+  if not AOk and (AError <> '') then
+    sLinea := sLinea + ' | error=' + AError;
+
+  WriteToLog(sLinea, ltSQL);
+end;
+
+procedure TLog.LogEvento(const AUnidad, AObjeto, AEvento, ADetalle: string);
+var
+  sLinea: string;
+begin
+  if not (ltAvanzado in FLogFlags) then
+    Exit;
+
+  sLinea := Format('EVT: %s | %s | %s', [AUnidad, AObjeto, AEvento]);
+  if ADetalle <> '' then
+    sLinea := sLinea + ' | ' +
+              StringReplace(ADetalle, sLineBreak, ' ', [rfReplaceAll]);
+
+  WriteToLog(sLinea, ltAvanzado);
 end;
 
 procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);

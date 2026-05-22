@@ -32,7 +32,13 @@ type
     procedure conUniError(Sender: TObject; E: EDAError; var Fail: Boolean);
     procedure conUniAfterConnect(Sender: TObject);
   private
-    { Private declarations }
+    // Estado para cronometrar entre tfQExecute y el siguiente flag que
+    // indique fin (tfQOpen para SELECT, tfQClose para DML, tfQError...).
+    // Si llega un nuevo tfQExecute antes de cerrar, se loguea el pendiente.
+    FSQLStartMs   : Int64;
+    FSQLActual    : string;
+    FSQLPendiente : Boolean;
+    procedure VolcarSQLPendiente(AOk: Boolean; const AError: string);
   public
     procedure ActualizarUserTimeModif(DataSet:TDataSet);
   end;
@@ -47,7 +53,8 @@ uses inLibDir,
      inLibWin,
      inLibLog,
      inMtoPrincipal,
-     inLibGlobalVar;
+     inLibGlobalVar,
+     Winapi.Windows;
 
 {$R *.dfm}
 
@@ -171,25 +178,58 @@ end;
 
 procedure TdmConn.DataModuleCreate(Sender: TObject);
 begin
-  UniSQLMonitor1.Active := False;
-  //oMemoSQL.Visible := False;
-  {$IFDEF DEBUG}
-    UniSQLMonitor1.Active := True;
-   // oMemoSQL.Visible := True;
-  {$ENDIF }
-  //ofrmMto2.pcPrincipal.Align := alClient;
+  // El monitor se queda activo siempre; el filtrado real lo hace TLog
+  // segun IsLogTypeEnabled(ltSQL). Asi el flag se controla desde
+  // Parametros Generales > Log sin reiniciar.
+  UniSQLMonitor1.Active := True;
+  FSQLPendiente := False;
+end;
+
+procedure TdmConn.VolcarSQLPendiente(AOk: Boolean; const AError: string);
+var
+  ElapsedMs: Int64;
+begin
+  if not FSQLPendiente then
+    Exit;
+  ElapsedMs     := GetTickCount64 - FSQLStartMs;
+  // -1 en filas: el UniSQLMonitor no expone RowsAffected en su evento.
+  // Si un caller necesita la cifra exacta, debe llamar directamente a
+  // Log.LogSQLExt desde el AfterExecute/AfterOpen de su query concreta.
+  inLibLog.Log.LogSQLExt(FSQLActual, ElapsedMs, -1, AOk, AError);
+  FSQLPendiente := False;
 end;
 
 procedure TdmConn.UniSQLMonitor1SQL(Sender: TObject; Text: string;
   Flag: TDATraceFlag);
 begin
+  if not inLibLog.Log.IsLogTypeEnabled(ltSQL) then
+  begin
+    // Tambien limpiamos el pendiente si lo hay para no arrastrar timing
+    // entre sesiones de log activado/desactivado.
+    FSQLPendiente := False;
+    Exit;
+  end;
+
+  case Flag of
+    tfQExecute:
+      begin
+        // Si quedaba uno sin cerrar (operacion sin tfQOpen/tfQClose),
+        // lo volcamos antes de arrancar el nuevo cronometro.
+        if FSQLPendiente then
+          VolcarSQLPendiente(True, '');
+        FSQLActual    := Text;
+        FSQLStartMs   := GetTickCount64;
+        FSQLPendiente := True;
+      end;
+    tfQOpen, tfQFetch, tfQClose:
+      VolcarSQLPendiente(True, '');
+    tfQError:
+      VolcarSQLPendiente(False, Text);
+  end;
+
   {$IFDEF DEBUG}
-    oMemoSQL.Lines.Add('-- begin-- ' +
-                       FormatDateTime('hh:nn:ss.zzz', Now));
-    oMemoSQL.Lines.Add(Text);
-    inLibLog.Log.LogSQL(Text);
-    oMemoSQL.Lines.Add('-- end-- ' +
-                       FormatDateTime('hh:nn:ss.zzz', Now));
+    if Assigned(oMemoSQL) and (Flag = tfQExecute) then
+      oMemoSQL.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + Text);
   {$ENDIF }
 end;
 
