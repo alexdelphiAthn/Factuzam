@@ -132,19 +132,23 @@ end;
 procedure TfrmPrintEtiqArt.OnGuiasAplicadas;
 begin
   inherited;
-  // ¡AQUÍ OCURRE LA MAGIA DE LAS GUÍAS!
-  // La clase base acaba de alterar y abrir "unqryArtPrint" con los campos extra de las guías.
-  // Ahora volcamos esa información fresca y enriquecida en nuestro ClientDataSet en memoria.
   if Assigned(DM) and DM.unqryArtPrint.Active then
   begin
-    // Copia los nuevos metadatos de las columnas dinámicamente y rellena el CDS
+    // 1. Esto destruye y recrea el ClientDataSet bajo nuestros pies
     DM.PoblarCdsEtiquetasArtDesdeUniQuery;
 
-    // Si hay almacenes seleccionados, volvemos a expandir las filas según unidades de stock
+    // 2. Expandimos por stock si es necesario
     if Trim(ObtenerAlmacenesCsv) <> '' then
       DM.ExpandirEtiquetasPorStock('STOCK_FILTRADO');
 
     DM.cdsEtiquetasArt.First;
+
+    // 3. PARCHE: Refrescamos la caché del puente de FastReport
+    // Como el paso 1 acaba de destruir la estructura en memoria,
+    // forzamos al componente de FastReport a re-leerla.
+    DM.fxdsEtiquetasArt.DataSet := nil;
+    DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
+    DM.fxdsEtiquetasArt.FieldAliases.Clear;
   end;
 end;
 
