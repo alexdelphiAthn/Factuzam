@@ -150,31 +150,13 @@ type
     dbcLinPrecioCompra       : TcxGridDBColumn;
     dbcLinPrecioVenta        : TcxGridDBColumn;
     dbcLinTallas             : TcxGridDBColumn;
-    // dbcLinTalla01..20: predefinidas en el DFM entre dbcLinTallas y
-    // dbcLinTotalTallas para garantizar el orden visual (el moverlas
-    // dinamicamente con col.Index falla en cxGrid a partir de la
-    // segunda columna). CrearColumnasTallas solo las indexa en
-    // FTallaColumns y aplica Caption / Visible segun el conjunto.
-    dbcLinTalla01            : TcxGridDBColumn;
-    dbcLinTalla02            : TcxGridDBColumn;
-    dbcLinTalla03            : TcxGridDBColumn;
-    dbcLinTalla04            : TcxGridDBColumn;
-    dbcLinTalla05            : TcxGridDBColumn;
-    dbcLinTalla06            : TcxGridDBColumn;
-    dbcLinTalla07            : TcxGridDBColumn;
-    dbcLinTalla08            : TcxGridDBColumn;
-    dbcLinTalla09            : TcxGridDBColumn;
-    dbcLinTalla10            : TcxGridDBColumn;
-    dbcLinTalla11            : TcxGridDBColumn;
-    dbcLinTalla12            : TcxGridDBColumn;
-    dbcLinTalla13            : TcxGridDBColumn;
-    dbcLinTalla14            : TcxGridDBColumn;
-    dbcLinTalla15            : TcxGridDBColumn;
-    dbcLinTalla16            : TcxGridDBColumn;
-    dbcLinTalla17            : TcxGridDBColumn;
-    dbcLinTalla18            : TcxGridDBColumn;
-    dbcLinTalla19            : TcxGridDBColumn;
-    dbcLinTalla20            : TcxGridDBColumn;
+    // Las columnas de talla (CANT_TALLAS_MAX) se crean en runtime en
+    // CrearColumnasTallas y se exponen via FTallaColumns. Predefinirlas
+    // en DFM disparaba RLINK32 'Unsupported 16bit resource' al compilar
+    // los descendientes (linker se atragantaba con muchos nodos cx
+    // repetidos). El orden visual contiguo entre dbcLinTallas y
+    // dbcLinTotalTallas se garantiza asignando Col.Index al final del
+    // bucle (patron heredado de inMtoCajaOpe.ConstruirColumnasDinamicas).
     dbcLinTotalTallas        : TcxGridDBColumn;
     dbcLinImporteTotal       : TcxGridDBColumn;
     dbcLinNumero             : TcxGridDBColumn;
@@ -545,41 +527,39 @@ end;
 
 procedure TfrmMtoComprasSesiones.CrearColumnasTallas;
 var
-  i : Integer;
+  i          : Integer;
+  Col        : TcxGridDBColumn;
+  IndiceBase : Integer;
 begin
-  // Las columnas dbcLinTalla01..dbcLinTalla20 estan predefinidas en el
-  // DFM, ya entre dbcLinTallas y dbcLinTotalTallas. Antes se creaban en
-  // runtime y se movian con col.Index, pero el orden en cxGrid no
-  // quedaba contiguo (la primera bien, las demas detras de Total linea)
-  // sin importar el patron usado. Predefinidas en DFM el orden es
-  // estable.
-  // Aqui indexamos en FTallaColumns y ademas seteamos
-  // DataBinding.ValueTypeClass: en el DFM esa propiedad no se puede
-  // serializar (DFM streaming lanza EReadError "Property
-  // ValueTypeClass does not exist"); hay que asignarla a runtime.
-  FTallaColumns[0]  := dbcLinTalla01;
-  FTallaColumns[1]  := dbcLinTalla02;
-  FTallaColumns[2]  := dbcLinTalla03;
-  FTallaColumns[3]  := dbcLinTalla04;
-  FTallaColumns[4]  := dbcLinTalla05;
-  FTallaColumns[5]  := dbcLinTalla06;
-  FTallaColumns[6]  := dbcLinTalla07;
-  FTallaColumns[7]  := dbcLinTalla08;
-  FTallaColumns[8]  := dbcLinTalla09;
-  FTallaColumns[9]  := dbcLinTalla10;
-  FTallaColumns[10] := dbcLinTalla11;
-  FTallaColumns[11] := dbcLinTalla12;
-  FTallaColumns[12] := dbcLinTalla13;
-  FTallaColumns[13] := dbcLinTalla14;
-  FTallaColumns[14] := dbcLinTalla15;
-  FTallaColumns[15] := dbcLinTalla16;
-  FTallaColumns[16] := dbcLinTalla17;
-  FTallaColumns[17] := dbcLinTalla18;
-  FTallaColumns[18] := dbcLinTalla19;
-  FTallaColumns[19] := dbcLinTalla20;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    if Assigned(FTallaColumns[i]) then
-      FTallaColumns[i].DataBinding.ValueTypeClass := TcxFloatValueType;
+  // Crea CANT_TALLAS_MAX columnas inline entre dbcLinTallas y
+  // dbcLinTotalTallas. Patron heredado de inMtoCajaOpe.ConstruirColumnasDinamicas:
+  // BeginUpdate + CreateColumn + asignar Col.Index al final con
+  // IndiceBase = dbcLinTallas.Index. Esto garantiza orden visual
+  // contiguo (predefinirlas en DFM disparaba RLINK32 'Unsupported 16bit
+  // resource' al compilar los descendientes).
+  IndiceBase := dbcLinTallas.Index;
+  tvLineas.BeginUpdate;
+  try
+    for i := 0 to CANT_TALLAS_MAX - 1 do
+    begin
+      Col := tvLineas.CreateColumn;
+      Col.Name    := Format('dbcLinTalla%2.2d', [i + 1]);
+      Col.Tag     := i + 1;
+      Col.Caption := '';
+      Col.Visible := False;
+      Col.Width   := 50;
+      Col.PropertiesClass := TcxCurrencyEditProperties;
+      TcxCurrencyEditProperties(Col.Properties).DisplayFormat := '#,##0';
+      // ValueTypeClass solo se puede asignar a runtime (no serializable
+      // en DFM: dispara EReadError 'Property ValueTypeClass does not
+      // exist' al cargar el form).
+      Col.DataBinding.ValueTypeClass := TcxFloatValueType;
+      Col.Index := IndiceBase + i + 1;
+      FTallaColumns[i] := Col;
+    end;
+  finally
+    tvLineas.EndUpdate;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.InicializarGestorTallas;
