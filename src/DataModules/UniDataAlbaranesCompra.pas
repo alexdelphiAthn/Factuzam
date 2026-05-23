@@ -55,7 +55,8 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, System.Diagnostics;
+  inLibGlobalVar, inLibLog, System.Diagnostics,
+  inMtoAlbaranesCompra;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -72,6 +73,11 @@ begin
   unqrySkusAlbc.Connection              := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloAlbc.Connection       := inLibGlobalVar.oConn;
+  // Master-detail server-side: el WHERE del SQL toma los valores de
+  // dsTablaG (master), evitando descargar fza_albaranes_compra_lineas
+  // entera y filtrar en cliente.
+  unqryAlbaranesCompraLineas.MasterSource :=
+    (GetOwnerForm<TfrmMtoAlbaranesCompra>).dsTablaG;
 end;
 
 procedure TdmAlbaranesCompra.DataModuleDestroy(Sender: TObject);
