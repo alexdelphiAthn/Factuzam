@@ -287,6 +287,9 @@
         <DCCReference Include="src\Modals\inMtoModalImpAlbCompra.pas">
             <Form>frmPrintAlbCompra</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpAlbCompraV.pas">
+            <Form>frmPrintAlbCompraV</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCliEti.pas">
             <Form>frmPrintCliEti</Form>
         </DCCReference>

@@ -1,6 +1,6 @@
 {******************************************************************************}
 {                                                                              }
-{  Modulo:       inMtoModalImpAlbCompra                                        }
+{  Modulo:       inMtoModalImpAlbCompraV                                       }
 {    Tipo:       Formulario (Modal)                                            }
 { Version:       0.1.0                                                         }
 {   Fecha:       23/05/2026                                                    }
@@ -9,14 +9,13 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Modal de impresion de un albaran de compra. Hereda del modal generico     }
-{    TfrmPrint. Misma logica que inMtoModalImpSesion pero contra los datasets  }
-{    de albaranes (TdmAlbaranesCompra.PrepararPrint y los fxds* asociados).    }
-{    La orientacion (horizontal / vertical) la decide el llamador via la       }
-{    propiedad Orientacion; el report .fr3 embebido en frxrprt1 se disena      }
-{    a mano con el FastReport designer.                                        }
+{    Modal de impresion VERTICAL del albaran de compra. Estilo factura:        }
+{    una fila por SKU sin pivotar tallas. Hereda de TfrmPrint igual que        }
+{    el modal horizontal pero usa LineasAlbaranSku (no LineasAlbaran) y        }
+{    tiene su propio diseno FastReport embebido (a disenar con el FR          }
+{    designer la primera vez que se abra).                                     }
 {******************************************************************************}
-unit inMtoModalImpAlbCompra;
+unit inMtoModalImpAlbCompraV;
 
 interface
 
@@ -37,7 +36,7 @@ uses
   inMtoModalGenImp, UniDataAlbaranesCompra;
 
 type
-  TfrmPrintAlbCompra = class(TfrmPrint)
+  TfrmPrintAlbCompraV = class(TfrmPrint)
     lblSerie:  TcxLabel;
     edtSerie:  TcxTextEdit;
     lblNumero: TcxLabel;
@@ -53,24 +52,19 @@ implementation
 
 {$R *.dfm}
 
-procedure TfrmPrintAlbCompra.FormCreate(Sender: TObject);
+procedure TfrmPrintAlbCompraV.FormCreate(Sender: TObject);
 begin
   inherited;
-  // El diseno FastReport vive embebido en frxrprt1 (.dfm). Lo
-  // duplicamos en frxReportOrigen para que la opcion "Predeterminado"
-  // de Consultar_Formularios (frxrprt1.AssignAll(frxReportOrigen))
-  // restaure el diseno original en vez de vaciar el report. Mismo
-  // patron que TfrmPrintSesion.
   frxReportOrigen.AssignAll(frxrprt1);
 end;
 
-procedure TfrmPrintAlbCompra.preparar_consulta;
+procedure TfrmPrintAlbCompraV.preparar_consulta;
 begin
   if dmAlbc = nil then Exit;
-  dmAlbc.PrepararPrint(edtSerie.Text, edtNumero.Text);
+  dmAlbc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
 end;
 
-procedure TfrmPrintAlbCompra.AfterReportLoaded;
+procedure TfrmPrintAlbCompraV.AfterReportLoaded;
 begin
   inherited;
   if dmAlbc <> nil then

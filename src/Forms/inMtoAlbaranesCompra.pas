@@ -108,7 +108,6 @@ type
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnImprimirHClick(Sender: TObject);
     procedure btnImprimirVClick(Sender: TObject);
-    procedure AbrirModalImpresion(AHorizontal: Boolean);
     // Eventos del grid de lineas — mismos handlers que en Sesiones de compra:
     // sin esto, las celdas talla quedan vacias al navegar, no se sombrean
     // las celdas fuera del conjunto pivot y Enter no salta de celda.
@@ -184,7 +183,8 @@ implementation
 uses
   inLibGlobalVar,
   inLibAtributosPaleta,
-  inMtoModalImpAlbCompra;
+  inMtoModalImpAlbCompra,
+  inMtoModalImpAlbCompraV;
 
 {$R *.dfm}
 
@@ -504,30 +504,12 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnImprimirHClick(Sender: TObject);
-begin
-  inherited;
-  AbrirModalImpresion(True);
-end;
-
-procedure TfrmMtoAlbaranesCompra.btnImprimirVClick(Sender: TObject);
-begin
-  inherited;
-  AbrirModalImpresion(False);
-end;
-
-procedure TfrmMtoAlbaranesCompra.AbrirModalImpresion(AHorizontal: Boolean);
 var
   form    : TfrmPrintAlbCompra;
   sSerie  : string;
   sNumero : string;
 begin
-  // Mismo patron que TfrmMtoComprasSesiones.btnImprimirClick: persistir
-  // ediciones pendientes para que el report vea los ultimos cambios y
-  // abrir el modal con serie + numero. La orientacion la usa el modal
-  // para elegir entre dos diseños FastReport (a disenar a mano en el
-  // .dfm con el FastReport designer; ambos viven en el mismo frxrprt1
-  // como paginas distintas o el modal carga distinto fichero segun
-  // valor de Orientacion — decision de diseño futura).
+  inherited;
   if dmmAlbaranesCompra = nil then Exit;
   if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
   begin
@@ -543,10 +525,6 @@ begin
   form := TfrmPrintAlbCompra.Create(Application);
   try
     form.dmAlbc        := dmmAlbaranesCompra;
-    if AHorizontal then
-      form.Orientacion := oacHorizontal
-    else
-      form.Orientacion := oacVertical;
     form.edtSerie.Text := sSerie;
     form.edtNumero.Text:= sNumero;
     form.ShowModal;
@@ -554,6 +532,37 @@ begin
     FreeAndNil(form);
   end;
 end;
+
+procedure TfrmMtoAlbaranesCompra.btnImprimirVClick(Sender: TObject);
+var
+  form    : TfrmPrintAlbCompraV;
+  sSerie  : string;
+  sNumero : string;
+begin
+  inherited;
+  if dmmAlbaranesCompra = nil then Exit;
+  if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay albaran de compra activo que imprimir.');
+    Exit;
+  end;
+  if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+    dmmAlbaranesCompra.unqryTablaG.Post;
+  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in [dsEdit, dsInsert] then
+    dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Post;
+  sSerie  := dmmAlbaranesCompra.unqryTablaG.FieldByName('SERIE_ALBC').AsString;
+  sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
+  form := TfrmPrintAlbCompraV.Create(Application);
+  try
+    form.dmAlbc        := dmmAlbaranesCompra;
+    form.edtSerie.Text := sSerie;
+    form.edtNumero.Text:= sNumero;
+    form.ShowModal;
+  finally
+    FreeAndNil(form);
+  end;
+end;
+
 
 procedure TfrmMtoAlbaranesCompra.btnAtributosColumnaClick(Sender: TObject);
 begin
