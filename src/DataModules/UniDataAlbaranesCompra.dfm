@@ -220,4 +220,40 @@ inherited dmAlbaranesCompra: TdmAlbaranesCompra
     Left = 552
     Top = 104
   end
+  object unqryLinAlbcSkuPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT L.*'
+      '  FROM fza_albaranes_compra_lineas L'
+      ' WHERE L.SERIE_ALBC_ALBCLIN = :SERIE_ALBC'
+      '   AND L.NUMERO_ALBC_ALBCLIN = :NUMERO_ALBC'
+      ' ORDER BY L.LINEA_ALBCLIN')
+    Left = 648
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_ALBC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_ALBC'
+        Value = nil
+      end>
+  end
+  object dsLinAlbcSkuPrint: TDataSource
+    DataSet = unqryLinAlbcSkuPrint
+    Left = 648
+    Top = 64
+  end
+  object fxdsLinAlbcSku: TfrxDBDataset
+    UserName = 'LineasAlbaranSku'
+    CloseDataSource = False
+    DataSource = dsLinAlbcSkuPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 648
+    Top = 104
+  end
 end
