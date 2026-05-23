@@ -63,7 +63,7 @@ end;
 
 initialization
   oAppName         := 'Fzam';
-  oVersion         := '1.0.15.202605230380.alpha';
+  oVersion         := '1.0.15.202605230390.alpha';
   oUser            := 'No definido';
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
