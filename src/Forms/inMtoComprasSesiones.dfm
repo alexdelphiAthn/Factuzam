@@ -514,7 +514,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 1
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -523,7 +522,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 2
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -532,7 +530,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 3
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -541,7 +538,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 4
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -550,7 +546,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 5
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -559,7 +554,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 6
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -568,7 +562,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 7
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -577,7 +570,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 8
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -586,7 +578,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 9
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -595,7 +586,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 10
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -604,7 +594,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 11
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -613,7 +602,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 12
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -622,7 +610,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 13
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -631,7 +618,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 14
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -640,7 +626,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 15
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -649,7 +634,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 16
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -658,7 +642,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 17
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -667,7 +650,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 18
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -676,7 +658,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 19
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end
@@ -685,7 +666,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Tag = 20
               Visible = False
               Width = 50
-              DataBinding.ValueTypeClass = TcxFloatValueType
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
             end

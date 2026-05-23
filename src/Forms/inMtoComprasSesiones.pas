@@ -544,15 +544,19 @@ end;
 // ===========================================================================
 
 procedure TfrmMtoComprasSesiones.CrearColumnasTallas;
+var
+  i : Integer;
 begin
   // Las columnas dbcLinTalla01..dbcLinTalla20 estan predefinidas en el
   // DFM, ya entre dbcLinTallas y dbcLinTotalTallas. Antes se creaban en
   // runtime y se movian con col.Index, pero el orden en cxGrid no
   // quedaba contiguo (la primera bien, las demas detras de Total linea)
-  // sin importar el patron usado (idxRefe+i, lectura dinamica,
-  // BeginUpdate+two-pass). Predefinidas en DFM el orden es estable.
-  // Aqui solo indexamos en FTallaColumns para que el GestorTallas las
-  // referencie por posicion 1..CANT_TALLAS_MAX.
+  // sin importar el patron usado. Predefinidas en DFM el orden es
+  // estable.
+  // Aqui indexamos en FTallaColumns y ademas seteamos
+  // DataBinding.ValueTypeClass: en el DFM esa propiedad no se puede
+  // serializar (DFM streaming lanza EReadError "Property
+  // ValueTypeClass does not exist"); hay que asignarla a runtime.
   FTallaColumns[0]  := dbcLinTalla01;
   FTallaColumns[1]  := dbcLinTalla02;
   FTallaColumns[2]  := dbcLinTalla03;
@@ -573,6 +577,9 @@ begin
   FTallaColumns[17] := dbcLinTalla18;
   FTallaColumns[18] := dbcLinTalla19;
   FTallaColumns[19] := dbcLinTalla20;
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    if Assigned(FTallaColumns[i]) then
+      FTallaColumns[i].DataBinding.ValueTypeClass := TcxFloatValueType;
 end;
 
 procedure TfrmMtoComprasSesiones.InicializarGestorTallas;
