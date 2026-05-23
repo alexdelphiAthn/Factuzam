@@ -330,18 +330,23 @@ begin
       q.Close;
     end;
 
-    // 2. Texto exacto. Priorizamos AV que tenga ID_ATB_AV NO NULL para
-    //    que el SKU acabe con el atributo basico enlazado (la pestania
-    //    'Atributos del SKU' del Mto Articulos muestra entonces el
-    //    color basico). Si solo hay AVs huerfanos, los reparamos en el
-    //    momento intentando enlazarlos al ATB por CODIGO_ATB / NOMBRE_ATB.
+    // 2. Texto exacto. Priorizamos AV que tenga ID_ATB_AV apuntando a
+    //    un ATB existente (no NULL y no FK rota). Si el AV elegido
+    //    tiene ID_ATB_AV NULL o apunta a un ATB borrado, intentamos
+    //    repararlo enlazandolo al ATB por CODIGO_ATB / NOMBRE_ATB.
     if Trim(AColorTexto) <> '' then
     begin
       s := Trim(AColorTexto);
       q.SQL.Text :=
-        'SELECT ID_AV, AV, ID_ATB_AV FROM fza_atributos_valores ' +
-        ' WHERE ID_VA_AV = ''CO'' AND AV = :v ' +
-        ' ORDER BY CASE WHEN ID_ATB_AV IS NULL THEN 1 ELSE 0 END, ID_AV ' +
+        'SELECT AV.ID_AV, AV.AV, AV.ID_ATB_AV, ' +
+        '       (SELECT 1 FROM fza_atributos_basicos ATB ' +
+        '         WHERE ATB.ID_ATB = AV.ID_ATB_AV LIMIT 1) AS ATB_OK ' +
+        '  FROM fza_atributos_valores AV ' +
+        ' WHERE AV.ID_VA_AV = ''CO'' AND AV.AV = :v ' +
+        ' ORDER BY (AV.ID_ATB_AV IS NULL OR ' +
+        '           NOT EXISTS (SELECT 1 FROM fza_atributos_basicos ATB ' +
+        '                        WHERE ATB.ID_ATB = AV.ID_ATB_AV)), ' +
+        '          AV.ID_AV ' +
         ' LIMIT 1';
       q.ParamByName('v').AsString := s;
       q.Open;
@@ -349,7 +354,10 @@ begin
       begin
         Result := q.FieldByName('ID_AV').AsInteger;
         AValor := q.FieldByName('AV').AsString;
-        if q.FieldByName('ID_ATB_AV').IsNull then
+        // Reparar si ID_ATB_AV es NULL o FK rota (no existe ATB con
+        // ese ID). Buscamos el ATB por CODIGO_ATB o NOMBRE_ATB.
+        if q.FieldByName('ID_ATB_AV').IsNull or
+           q.FieldByName('ATB_OK').IsNull then
         begin
           q.Close;
           q.SQL.Text :=
@@ -358,8 +366,8 @@ begin
             '    WHERE ID_VA_ATB = ''CO'' ' +
             '      AND (CODIGO_ATB = :v OR NOMBRE_ATB = :v) ' +
             '    LIMIT 1) ' +
-            ' WHERE ID_AV = :id AND ID_ATB_AV IS NULL';
-          q.ParamByName('v').AsString  := s;
+            ' WHERE ID_AV = :id';
+          q.ParamByName('v').AsString   := s;
           q.ParamByName('id').AsInteger := Result;
           q.ExecSQL;
         end;
