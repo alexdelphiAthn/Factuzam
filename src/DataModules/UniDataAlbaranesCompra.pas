@@ -47,6 +47,9 @@ type
     unqryLinAlbcPrint:          TUniQuery;
     dsLinAlbcPrint:             TDataSource;
     fxdsLinAlbc:                TfrxDBDataset;
+    unqryGuiasAlbcPrint:        TUniQuery;
+    dsGuiasAlbcPrint:           TDataSource;
+    fxdsGuiasAlbc:              TfrxDBDataset;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -405,6 +408,10 @@ begin
   unqryLinAlbcPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
   unqryLinAlbcPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
   unqryLinAlbcPrint.Open;
+  unqryGuiasAlbcPrint.Close;
+  unqryGuiasAlbcPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
+  unqryGuiasAlbcPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
+  unqryGuiasAlbcPrint.Open;
 end;
 
 end.
