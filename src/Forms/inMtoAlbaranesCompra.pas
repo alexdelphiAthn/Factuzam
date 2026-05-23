@@ -150,6 +150,7 @@ type
                                       var Accept: Boolean);
     procedure PublicarCantidadesPivot;
     procedure AplicarVisibilidadColumnasPivot(AModoPivot: Boolean);
+    function  ValidarPivotePosible(var AMensaje: string): Boolean;
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
   end;
@@ -390,11 +391,27 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.btnTallasHorizontalClick(Sender: TObject);
 var
-  ds: TUniQuery;
+  ds       : TUniQuery;
+  sActivar : Boolean;
+  sMensaje : string;
 begin
   inherited;
-  FMostrarTallas := not FMostrarTallas;
   if dmmAlbaranesCompra = nil then Exit;
+  sActivar := not FMostrarTallas;
+  // Antes de activar, validar que TODAS las lineas son pivotables: no
+  // articulos sin sistema de tallas, no conjuntos con > CANT_TALLAS_MAX,
+  // no SKUs con tallas fuera del sistema asignado al articulo. Si hay
+  // alguna incidencia, abortar el toggle y mantener vista plana — el
+  // usuario corrige y vuelve a intentarlo.
+  if sActivar then
+  begin
+    if not ValidarPivotePosible(sMensaje) then
+    begin
+      MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+      Exit;
+    end;
+  end;
+  FMostrarTallas := sActivar;
   ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
   // El toggle alterna entre vista plana (1 fila por SKU, columnas SKU /
   // Cantidad / Total visibles) y vista pivote (1 fila representante por
@@ -459,15 +476,32 @@ end;
 procedure TfrmMtoAlbaranesCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
 var
-  ds: TUniQuery;
+  ds       : TUniQuery;
+  sMensaje : string;
 begin
   if Field <> nil then Exit;
   if FGestorTallas = nil then Exit;
   if not FMostrarTallas then Exit;
+  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  // El albaran que acaba de tomar foco puede no ser pivotable (articulos
+  // sin sistema, sistema demasiado largo, talla huerfana). En ese caso
+  // auto-desactivamos el pivote y avisamos: el usuario corrige y vuelve
+  // a activarlo manualmente.
+  if not ValidarPivotePosible(sMensaje) then
+  begin
+    ds.Filtered       := False;
+    ds.OnFilterRecord := nil;
+    FPivotLineasRepr.Clear;
+    FPivotCantidades.Clear;
+    FMostrarTallas := False;
+    AplicarVisibilidadColumnasPivot(False);
+    RefrescarVisibilidadTallas;
+    MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+    Exit;
+  end;
   // Modo pivote activo + cambio de albaran activo: recargar el cache
   // (lineas representantes + cantidades por talla del nuevo albaran) y
   // reaplicar el filtro y la publicacion de cantidades sobre el grid.
-  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
   ds.Filtered := False;
   CargarCachePivot;
   ds.Filtered := True;
@@ -604,6 +638,135 @@ end;
 //
 // Al volver a vista plana, OnFilterRecord se desconecta y todas las
 // lineas SKU vuelven a aparecer con su columna Cantidad / SKU.
+
+// Comprueba que el albaran activo es pivotable. Bloquea el toggle si:
+//   1. Algun articulo del albaran no tiene sistema de tallas asignado
+//      (ID_AC_PIVOT_ALBCLIN NULL o 0). Sin sistema no hay donde meter
+//      la cantidad de la celda.
+//   2. Algun sistema de tallas referenciado tiene mas de CANT_TALLAS_MAX
+//      valores. No tenemos columnas suficientes en el grid (hard-limit
+//      de la lib de tallas inline).
+//   3. Algun SKU tiene un AV con ID_VA_AV = 'TAL' que NO esta en el
+//      conjunto pivot asignado a su linea (talla "huerfana": el sistema
+//      cambio despues de crear el SKU).
+// En cualquiera de los tres casos devuelve False con un mensaje
+// descriptivo. El llamador (btnTallasHorizontalClick) muestra el aviso
+// y mantiene la vista plana.
+function TfrmMtoAlbaranesCompra.ValidarPivotePosible(
+                                     var AMensaje: string): Boolean;
+var
+  q           : TUniQuery;
+  incidencias : TStringList;
+  sSerie      : string;
+  sNumero     : string;
+begin
+  Result   := True;
+  AMensaje := '';
+  if dmmAlbaranesCompra = nil then Exit;
+  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty then Exit;
+  sSerie  := dsTablaG.DataSet.FieldByName('SERIE_ALBC').AsString;
+  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_ALBC').AsString;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  incidencias := TStringList.Create;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    // 1. Articulos sin sistema de tallas asignado en la linea.
+    q.SQL.Text :=
+      'SELECT DISTINCT L.CODIGO_ART_ALBCLIN AS ART ' +
+      '  FROM fza_albaranes_compra_lineas L ' +
+      ' WHERE L.SERIE_ALBC_ALBCLIN = :SERIE ' +
+      '   AND L.NUMERO_ALBC_ALBCLIN = :NUMERO ' +
+      '   AND (L.ID_AC_PIVOT_ALBCLIN IS NULL ' +
+      '        OR L.ID_AC_PIVOT_ALBCLIN = 0) ' +
+      ' ORDER BY ART';
+    q.ParamByName('SERIE').AsString  := sSerie;
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.Open;
+    while not q.Eof do
+    begin
+      incidencias.Add('- Articulo SIN sistema de tallas: ' +
+                      q.FieldByName('ART').AsString);
+      q.Next;
+    end;
+    q.Close;
+    // 2. Sistemas de tallas con mas valores que CANT_TALLAS_MAX.
+    q.SQL.Text :=
+      'SELECT L.CODIGO_ART_ALBCLIN AS ART, AC.NOMBRE_AC AS SISTEMA, ' +
+      '       COUNT(*) AS N ' +
+      '  FROM fza_albaranes_compra_lineas L ' +
+      '  JOIN fza_atributos_conjuntos AC ' +
+      '    ON AC.ID_AC = L.ID_AC_PIVOT_ALBCLIN ' +
+      '  JOIN fza_atributos_conjuntos_det ACD ' +
+      '    ON ACD.ID_AC_ACD = L.ID_AC_PIVOT_ALBCLIN ' +
+      ' WHERE L.SERIE_ALBC_ALBCLIN = :SERIE ' +
+      '   AND L.NUMERO_ALBC_ALBCLIN = :NUMERO ' +
+      '   AND L.ID_AC_PIVOT_ALBCLIN > 0 ' +
+      ' GROUP BY L.CODIGO_ART_ALBCLIN, AC.NOMBRE_AC, ' +
+      '          L.ID_AC_PIVOT_ALBCLIN ' +
+      'HAVING N > :NMAX ' +
+      ' ORDER BY ART';
+    q.ParamByName('SERIE').AsString  := sSerie;
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.ParamByName('NMAX').AsInteger  := CANT_TALLAS_MAX;
+    q.Open;
+    while not q.Eof do
+    begin
+      incidencias.Add(Format(
+        '- Articulo %s: sistema "%s" con %d tallas (maximo %d).',
+        [q.FieldByName('ART').AsString,
+         q.FieldByName('SISTEMA').AsString,
+         q.FieldByName('N').AsInteger,
+         CANT_TALLAS_MAX]));
+      q.Next;
+    end;
+    q.Close;
+    // 3. SKUs con talla "huerfana" (TAL no presente en el sistema
+    //    asignado a la linea).
+    q.SQL.Text :=
+      'SELECT DISTINCT L.CODIGO_UNIDAD_ALBCLIN AS SKU, ' +
+      '       L.CODIGO_ART_ALBCLIN AS ART, AV.AV AS TALLA ' +
+      '  FROM fza_albaranes_compra_lineas L ' +
+      '  JOIN fza_atributos_sku SAT ' +
+      '    ON SAT.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
+      '  JOIN fza_atributos_valores AV ' +
+      '    ON AV.ID_AV = SAT.ID_AV_SA ' +
+      '   AND AV.ID_VA_AV = ''TAL'' ' +
+      ' WHERE L.SERIE_ALBC_ALBCLIN = :SERIE ' +
+      '   AND L.NUMERO_ALBC_ALBCLIN = :NUMERO ' +
+      '   AND L.ID_AC_PIVOT_ALBCLIN > 0 ' +
+      '   AND NOT EXISTS ( ' +
+      '         SELECT 1 FROM fza_atributos_conjuntos_det ACD ' +
+      '          WHERE ACD.ID_AC_ACD = L.ID_AC_PIVOT_ALBCLIN ' +
+      '            AND ACD.ID_AV_ACD = SAT.ID_AV_SA) ' +
+      ' ORDER BY ART, SKU';
+    q.ParamByName('SERIE').AsString  := sSerie;
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.Open;
+    while not q.Eof do
+    begin
+      incidencias.Add(Format(
+        '- SKU %s (art %s): talla "%s" fuera del sistema asignado.',
+        [q.FieldByName('SKU').AsString,
+         q.FieldByName('ART').AsString,
+         q.FieldByName('TALLA').AsString]));
+      q.Next;
+    end;
+    q.Close;
+    if incidencias.Count > 0 then
+    begin
+      AMensaje := 'No se puede activar el modo pivote por tallas:' +
+                  sLineBreak + sLineBreak +
+                  incidencias.Text + sLineBreak +
+                  'Se mantiene la vista plana (linea por SKU).';
+      Result := False;
+    end;
+  finally
+    FreeAndNil(q);
+    FreeAndNil(incidencias);
+  end;
+end;
 
 // Lanza una sola query que devuelve por cada SKU del albaran activo su
 // articulo, AV de color, AV de talla y CANTIDAD_ALBCLIN. Itera el result
