@@ -268,6 +268,13 @@ begin
     FieldByName('CANTIDAD_ALBCLIN').AsFloat := 1;
     if FindField('ESFACTURADA_ALBCLIN') <> nil then
       FieldByName('ESFACTURADA_ALBCLIN').AsString := 'N';
+    // Auditoria estandar: las 4 columnas del libro de estilo bbdd §3.7
+    // son NOT NULL sin default; hay que rellenarlas en alta. En BeforePost
+    // tambien sobrescribimos USUARIO_MODIF para que refleje la ultima edicion.
+    FieldByName('USUARIO_ALTA').AsString    := oUser;
+    FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    FieldByName('USUARIO_MODIF').AsString   := oUser;
+    FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
   end;
 end;
 
@@ -285,6 +292,22 @@ begin
       FieldByName('TOTAL_ALBCLIN').AsFloat :=
         FieldByName('CANTIDAD_ALBCLIN').AsFloat *
         FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN').AsFloat;
+    // Refrescamos auditoria en cada Post (edicion / alta nueva).
+    if FindField('USUARIO_MODIF') <> nil then
+      FieldByName('USUARIO_MODIF').AsString   := oUser;
+    if FindField('INSTANTE_MODIF') <> nil then
+      FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
+    // En alta (State=dsInsert) tambien los campos *_ALTA por si
+    // AfterInsert no los puso (p.ej. inserciones programaticas).
+    if (DataSet.State = dsInsert) then
+    begin
+      if (FindField('USUARIO_ALTA') <> nil) and
+         (FieldByName('USUARIO_ALTA').AsString = '') then
+        FieldByName('USUARIO_ALTA').AsString := oUser;
+      if (FindField('INSTANTE_ALTA') <> nil) and
+         FieldByName('INSTANTE_ALTA').IsNull then
+        FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    end;
 
     // Si el usuario tecleo un SKU pero no el articulo, lo deducimos
     // consultando fza_articulos_skus (mismo patron que en venta).
