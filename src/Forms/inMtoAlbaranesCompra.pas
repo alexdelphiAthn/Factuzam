@@ -100,6 +100,24 @@ type
     procedure btnBorrarLineaClick(Sender: TObject);
     procedure btnTallasHorizontalClick(Sender: TObject);
     procedure btnAtributosColumnaClick(Sender: TObject);
+    // Eventos del grid de lineas — mismos handlers que en Sesiones de compra:
+    // sin esto, las celdas talla quedan vacias al navegar, no se sombrean
+    // las celdas fuera del conjunto pivot y Enter no salta de celda.
+    procedure tvLineasAlbaranFocusedRecordChanged(
+                Sender: TcxCustomGridTableView;
+                APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
+                ANewItemRecordFocusingChanged: Boolean);
+    procedure tvLineasAlbaranCustomDrawCell(
+                Sender: TcxCustomGridTableView;
+                ACanvas: TcxCanvas;
+                AViewInfo: TcxGridTableDataCellViewInfo;
+                var ADone: Boolean);
+    procedure tvLineasAlbaranEditing(
+                Sender: TcxCustomGridTableView;
+                AItem: TcxCustomGridTableItem;
+                var AAllow: Boolean);
+    procedure cxgrdLineasAlbaranEnter(Sender: TObject);
+    procedure cxgrdLineasAlbaranExit(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FTallaColumns    : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
@@ -112,6 +130,11 @@ type
     procedure RefrescarVisibilidadTallas;
     procedure RefrescarVisibilidadAtributos;
     procedure CargarCaptionsAtributosLineaActiva;
+    // Hooks que reaccionan a cambios de master / detail para republicar
+    // las cantidades de las celdas no-bound (cxGrid las pierde al repintar
+    // tras un Post automatico del dataset).
+    procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    procedure unqryLineasAfterPostHook(DataSet: TDataSet);
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
   end;
@@ -152,6 +175,19 @@ begin
   // tras unqryTablaG, igual que en el Mto de albaranes de venta.
 
   InicializarGestorTallas;
+  // Hook OnDataChange del master: al navegar de un albaran a otro hay
+  // que re-cargar las cantidades de tallas porque las columnas no-bound
+  // del cxGrid se vacian al cambiar el record activo. Mismo patron que
+  // en inMtoComprasSesiones.
+  dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  // Hook AfterPost del detail: cuando el usuario cambia de fila el
+  // dataset hace Post automatico y cxGrid repinta la fila desde el
+  // dataset, borrando los Values[] no-bound de la fila que abandona.
+  // Re-publicamos las cantidades — el SELECT agregado es barato. Hay
+  // que conservar la logica original del DM (CalcularTotalesAlbaranCompra),
+  // por eso el hook hace las dos cosas.
+  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterPost :=
+                                             unqryLineasAfterPostHook;
   FMostrarTallas    := False;
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
@@ -362,6 +398,132 @@ begin
     dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
     dsTablaG.DataSet.Post;
   end;
+  // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar el
+  // row (los Posts del master/detail provocan re-fetch). Recargamos
+  // cantidades desde la tabla de celdas para que las celdas talla
+  // vuelvan a mostrar lo que el usuario tecleo. Mismo patron que en
+  // inMtoComprasSesiones.btnGrabarClick.
+  if Assigned(FGestorTallas) then
+    FGestorTallas.CargarCantidadesTodasLineas;
+end;
+
+// Hook del OnDataChange de dsTablaG: solo nos interesa el evento global
+// (Field = nil) que dispara cxGrid al cambiar de record activo en el
+// master. Es el momento de invalidar la cache del gestor (los conjuntos
+// pivot pueden cambiar entre albaranes), recalcular el numero de
+// columnas talla visibles y republicar las cantidades de las lineas
+// del albaran que acaba de tomar foco.
+procedure TfrmMtoAlbaranesCompra.dsTablaGDataChangeHook(Sender: TObject;
+                                                       Field: TField);
+begin
+  if Field <> nil then Exit;
+  if FGestorTallas = nil then Exit;
+  if not FMostrarTallas then Exit;
+  FGestorTallas.InvalidarCache;
+  FGestorTallas.RecalcularMaxColumnas;
+  FGestorTallas.CargarCantidadesTodasLineas;
+  FGestorTallas.ActualizarCaptionsLineaActiva;
+end;
+
+// Hook AfterPost del detail: encadena la logica original del DM
+// (CalcularTotalesAlbaranCompra) con la republicacion de Values[] no-bound
+// del gestor. Sustituye al AfterPost original del DM (asignado en
+// FormCreate tras crear el DM).
+procedure TfrmMtoAlbaranesCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
+begin
+  if Assigned(dmmAlbaranesCompra) then
+    dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
+  if Assigned(FGestorTallas) and FMostrarTallas then
+    FGestorTallas.CargarCantidadesTodasLineas;
+end;
+
+// Al cambiar de linea con foco actualizamos los captions de las columnas
+// talla (cada linea puede tener un sistema de tallaje distinto) y, si
+// el modo "atributo por columna" esta activo, recargamos los nombres de
+// atributo del articulo activo. Mismo patron que en Sesiones.
+procedure TfrmMtoAlbaranesCompra.tvLineasAlbaranFocusedRecordChanged(
+  Sender: TcxCustomGridTableView; APrevFocusedRecord,
+  AFocusedRecord: TcxCustomGridRecord;
+  ANewItemRecordFocusingChanged: Boolean);
+begin
+  inherited;
+  if Assigned(FGestorTallas) and FMostrarTallas then
+    FGestorTallas.ActualizarCaptionsLineaActiva;
+  if FMostrarAtributos then
+    CargarCaptionsAtributosLineaActiva;
+end;
+
+// Sombrea en gris claro las celdas talla cuya posicion (Tag = 1..N)
+// excede el tamanyo del conjunto pivot de la fila para que el usuario
+// vea de un vistazo cuales no aplican. El bloqueo real de edicion vive
+// en tvLineasAlbaranEditing — este handler solo pinta.
+procedure TfrmMtoAlbaranesCompra.tvLineasAlbaranCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  Col   : TcxGridColumn;
+  colAc : TcxGridColumn;
+  vAc   : Variant;
+  iAc   : Integer;
+  arr   : TArrPosConjunto;
+begin
+  inherited;
+  if (not FMostrarTallas) or (FGestorTallas = nil) then Exit;
+  if AViewInfo.GridRecord = nil then Exit;
+  if not (AViewInfo.Item is TcxGridColumn) then Exit;
+  Col := TcxGridColumn(AViewInfo.Item);
+  if (Col.Tag < 1) or (Col.Tag > CANT_TALLAS_MAX) then Exit;
+  if Col <> FTallaColumns[Col.Tag - 1] then Exit;
+  colAc := tvLineasAlbaran.GetColumnByFieldName('ID_AC_PIVOT_ALBCLIN');
+  if colAc = nil then Exit;
+  vAc := AViewInfo.GridRecord.Values[colAc.Index];
+  if VarIsNull(vAc) or VarIsEmpty(vAc) or (not VarIsNumeric(vAc)) then Exit;
+  iAc := vAc;
+  if iAc <= 0 then Exit;
+  arr := FGestorTallas.GetPosicionesConjunto(iAc);
+  if Col.Tag <= Length(arr) then Exit;
+  ACanvas.Brush.Color := $00E8E8E8;
+  ACanvas.FillRect(AViewInfo.Bounds);
+  ADone := True;
+end;
+
+// Bloquea la edicion en celdas talla fuera del conjunto pivot de la
+// linea activa. Asi el usuario no puede teclear cantidades en celdas
+// que no aplican al sistema de tallaje de esa linea.
+procedure TfrmMtoAlbaranesCompra.tvLineasAlbaranEditing(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+var
+  iAc : Integer;
+  arr : TArrPosConjunto;
+begin
+  inherited;
+  if AItem = nil then Exit;
+  if (AItem.Tag < 1) or (AItem.Tag > CANT_TALLAS_MAX) then Exit;
+  if FGestorTallas = nil then Exit;
+  if dmmAlbaranesCompra = nil then Exit;
+  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.IsEmpty then Exit;
+  iAc := dmmAlbaranesCompra.unqryAlbaranesCompraLineas.
+                              FieldByName('ID_AC_PIVOT_ALBCLIN').AsInteger;
+  if iAc <= 0 then Exit;
+  arr := FGestorTallas.GetPosicionesConjunto(iAc);
+  if AItem.Tag > Length(arr) then
+    AAllow := False;
+end;
+
+// Apaga TJvEnterAsTab al entrar al grid para que Enter navegue de
+// celda a celda (combinado con FocusCellOnTab del grid en el DFM) y lo
+// reactiva al salir. Misma logica que en Sesiones.
+procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranEnter(Sender: TObject);
+begin
+  inherited;
+  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
+end;
+
+procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranExit(Sender: TObject);
+begin
+  inherited;
+  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnAnadirLineaClick(Sender: TObject);
