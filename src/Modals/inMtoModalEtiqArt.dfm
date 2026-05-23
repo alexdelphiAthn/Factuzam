@@ -492,8 +492,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     inherited Page1: TfrxReportPage
       LeftMargin = 0.000000000000000000
       RightMargin = 0.000000000000000000
-      TopMargin = 13.000000000000000000
-      BottomMargin = 8.000000000000000000
+      TopMargin = 4.500000000000000000
+      BottomMargin = 4.500000000000000000
       Columns = 2
       ColumnWidth = 105.000000000000000000
       ColumnPositions.Strings = (
