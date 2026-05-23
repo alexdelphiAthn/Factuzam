@@ -114,6 +114,7 @@ type
     procedure CargarCaptionsAtributosLineaActiva;
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
+    procedure CrearTablaPrincipal; override;
   end;
 
 var
@@ -135,27 +136,37 @@ begin
   // del Mto base puede tocar el grid (CrearTablaPrincipal, etc.).
   CrearColumnasTallas;
   CrearColumnasAtributos;
-
   inherited;
-
-  dmmAlbaranesCompra := TdmAlbaranesCompra.Create(Self);
-  dsTablaG.DataSet := dmmAlbaranesCompra.unqryTablaG;
-  tvLineasAlbaran.DataController.DataSource :=
-    dmmAlbaranesCompra.dsAlbaranesCompraLineas;
-  // Enganchar master-detail: el detail tiene MasterFields/DetailFields en
-  // el DFM pero MasterSource solo se puede asignar a runtime porque el
-  // dsTablaG es del form (no del DM). Sin esto el detail no se filtra
-  // por la cabecera activa y o no ve nada o ve todas las lineas de la
-  // BBDD (segun como UniDAC lo interprete).
-  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
-  // unqryAlbaranesCompraLineas se abre en AbrirDetalles (main thread)
-  // tras unqryTablaG, igual que en el Mto de albaranes de venta.
-
   InicializarGestorTallas;
   FMostrarTallas    := False;
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+end;
+
+procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;
+begin
+  inherited;
+  // El padre (TfrmMtoGen.CrearTablaPrincipal -> CrearDataModule) ya creo
+  // la instancia del DM via RTTI desde fza_winforms y la dejo en
+  // tdmDataModule, ademas de enganchar dsTablaG.DataSet a su unqryTablaG.
+  // Tomamos esa misma instancia; antes haciamos TdmAlbaranesCompra.Create
+  // en FormCreate y enlazabamos el grid de lineas a un segundo DM cuyo
+  // unqryAlbaranesCompraLineas nunca recibia el .Open de
+  // AbrirTablaPrincipalAsync. Fallback Create(Self) por si la BBDD no
+  // tiene la entrada en fza_winforms (migracion no aplicada).
+  dmmAlbaranesCompra := (tdmDataModule as TdmAlbaranesCompra);
+  if not Assigned(dmmAlbaranesCompra) then
+  begin
+    dmmAlbaranesCompra := TdmAlbaranesCompra.Create(Self);
+    dsTablaG.DataSet := dmmAlbaranesCompra.unqryTablaG;
+  end;
+  tvLineasAlbaran.DataController.DataSource :=
+    dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+  // MasterSource se enlaza en DataModuleCreate del DM, pero lo
+  // re-aseguramos por idempotencia.
+  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
+  pkFieldName := 'SERIE_ALBC;NUMERO_ALBC';
 end;
 
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
