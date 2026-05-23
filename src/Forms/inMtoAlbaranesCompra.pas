@@ -97,6 +97,7 @@ type
     btnAtributosColumna:  TcxButton;
     btnImprimirH:         TcxButton;
     btnImprimirV:         TcxButton;
+    btnPegatinas:         TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -108,6 +109,7 @@ type
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnImprimirHClick(Sender: TObject);
     procedure btnImprimirVClick(Sender: TObject);
+    procedure btnPegatinasClick(Sender: TObject);
     // Eventos del grid de lineas — mismos handlers que en Sesiones de compra:
     // sin esto, las celdas talla quedan vacias al navegar, no se sombrean
     // las celdas fuera del conjunto pivot y Enter no salta de celda.
@@ -184,8 +186,10 @@ uses
   System.StrUtils,
   inLibGlobalVar,
   inLibAtributosPaleta,
+  UniDataArticulos,
   inMtoModalImpAlbCompra,
-  inMtoModalImpAlbCompraV;
+  inMtoModalImpAlbCompraV,
+  inMtoModalEtiqAlb;
 
 {$R *.dfm}
 
@@ -578,6 +582,46 @@ begin
   end;
 end;
 
+
+procedure TfrmMtoAlbaranesCompra.btnPegatinasClick(Sender: TObject);
+var
+  form    : TfrmPrintEtiqAlb;
+  dmArt   : TdmArticulos;
+  sSerie  : string;
+  sNumero : string;
+begin
+  inherited;
+  if dmmAlbaranesCompra = nil then Exit;
+  if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay albaran de compra activo.');
+    Exit;
+  end;
+  if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+    dmmAlbaranesCompra.unqryTablaG.Post;
+  sSerie  := dmmAlbaranesCompra.unqryTablaG.FieldByName('SERIE_ALBC').AsString;
+  sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
+  // El modal reutiliza el dataset de etiquetas del DM de articulos
+  // (cdsEtiquetasArt, fxdsEtiquetasArt) para que el mismo .fr3 sirva
+  // en ambos sitios. Creamos un DM temporal porque el form de
+  // albaranes no necesita uno permanente.
+  dmArt := TdmArticulos.Create(nil);
+  try
+    dmArt.OpenTables;
+    form := TfrmPrintEtiqAlb.Create(Application);
+    try
+      form.DMArt  := dmArt;
+      form.DMAlbc := dmmAlbaranesCompra;
+      form.Serie  := sSerie;
+      form.Numero := sNumero;
+      form.ShowModal;
+    finally
+      FreeAndNil(form);
+    end;
+  finally
+    FreeAndNil(dmArt);
+  end;
+end;
 
 procedure TfrmMtoAlbaranesCompra.btnAtributosColumnaClick(Sender: TObject);
 begin

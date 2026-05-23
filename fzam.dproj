@@ -290,6 +290,9 @@
         <DCCReference Include="src\Modals\inMtoModalImpAlbCompraV.pas">
             <Form>frmPrintAlbCompraV</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalEtiqAlb.pas">
+            <Form>frmPrintEtiqAlb</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCliEti.pas">
             <Form>frmPrintCliEti</Form>
         </DCCReference>

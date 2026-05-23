@@ -21,9 +21,11 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Variants,
+  System.Generics.Collections,
+  Vcl.ComCtrls, cxListView,
   Data.DB, MemDS, DBAccess, Uni,
   frxClass, frxDBSet,
-  UniDataGen, inLibUser, inMtoPrincipal;
+  UniDataGen, UniDataArticulos, inLibUser, inMtoPrincipal;
 
 type
   TdmAlbaranesCompra = class(TdmBase)
@@ -69,6 +71,8 @@ type
     // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
     // entrada nueva), 'ABRIR' (revertir mov. existentes) o ''.
     FTransicionEstadoAlbc: string;
+    procedure FiltrarCdsEtiquetasPorAlbaran(ADmArt: TdmArticulos;
+                                             const ASerie, ANumero: string);
   public
     procedure GetCodigoAutoAlbaranCompra;
     procedure CalcularTotalesAlbaranCompra;
@@ -78,6 +82,17 @@ type
     // Version SKU (lineas planas, sin pivote talla) para el modal
     // vertical estilo factura.
     procedure PrepararPrintSku(const ASerie, ANumero: string);
+    // Carga en el listview los almacenes distintos que aparecen en las
+    // lineas del albaran (usado por el modal de pegatinas).
+    procedure CargarAlmacenesDelAlbaran(const ASerie, ANumero: string;
+                                         ALV: TObject);
+    // Crea el dataset cdsEtiquetasArt del DM articulos filtrado a los
+    // SKUs del albaran. Reutiliza la query base de etiquetas anyadiendo
+    // un WHERE por SKU IN (SELECT ... FROM albaranes_compra_lineas).
+    procedure CrearDataSetEtiquetasAlb(ADmArt: TObject;
+                                        const ASerie, ANumero,
+                                              ACodTarifa, AAlmacenesCsv: string;
+                                        AFecha: TDateTime);
     procedure OpenTables;
     // Override: abre las queries detalle tras unqryTablaG. Llamada
     // desde TfrmMtoGen.AbrirTablaPrincipalAsync.
@@ -420,6 +435,127 @@ begin
   unqryGuiasAlbcPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
   unqryGuiasAlbcPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
   unqryGuiasAlbcPrint.Open;
+end;
+
+procedure TdmAlbaranesCompra.FiltrarCdsEtiquetasPorAlbaran(
+                                            ADmArt: TdmArticulos;
+                                            const ASerie, ANumero: string);
+var
+  q   : TUniQuery;
+  setSku : TDictionary<string, Boolean>;
+  fld : TField;
+  sku : string;
+begin
+  // Construimos un set con los SKUs del albaran y recorremos el
+  // ClientDataSet borrando lo que no este. El campo SKU del CDS es
+  // CODIGO_UNIDAD_SKU (definido en vi_articulos_skus_etiquetas).
+  if (ADmArt = nil) or (not ADmArt.cdsEtiquetasArt.Active) then Exit;
+  fld := ADmArt.cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU');
+  if fld = nil then Exit;
+  set := TDictionary<string, Boolean>.Create;
+  q   := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT DISTINCT CODIGO_UNIDAD_ALBCLIN ' +
+      '  FROM fza_albaranes_compra_lineas ' +
+      ' WHERE SERIE_ALBC_ALBCLIN = :s AND NUMERO_ALBC_ALBCLIN = :n ' +
+      '   AND COALESCE(CODIGO_UNIDAD_ALBCLIN, '''') <> ''''';
+    q.ParamByName('s').AsString := ASerie;
+    q.ParamByName('n').AsString := ANumero;
+    q.Open;
+    while not q.Eof do
+    begin
+      setSku.AddOrSetValue(q.FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString, True);
+      q.Next;
+    end;
+    ADmArt.cdsEtiquetasArt.DisableControls;
+    try
+      ADmArt.cdsEtiquetasArt.First;
+      while not ADmArt.cdsEtiquetasArt.Eof do
+      begin
+        sku := fld.AsString;
+        if not setSku.ContainsKey(sku) then
+          ADmArt.cdsEtiquetasArt.Delete
+        else
+          ADmArt.cdsEtiquetasArt.Next;
+      end;
+      ADmArt.cdsEtiquetasArt.First;
+    finally
+      ADmArt.cdsEtiquetasArt.EnableControls;
+    end;
+  finally
+    FreeAndNil(q);
+    FreeAndNil(set);
+  end;
+end;
+
+procedure TdmAlbaranesCompra.CargarAlmacenesDelAlbaran(
+                                      const ASerie, ANumero: string;
+                                      ALV: TObject);
+var
+  q  : TUniQuery;
+  lv : TcxListView;
+  it : TListItem;
+begin
+  if not (ALV is TcxListView) then Exit;
+  lv := TcxListView(ALV);
+  lv.Items.BeginUpdate;
+  try
+    lv.Items.Clear;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT DISTINCT L.CODIGO_ALMACEN_ALBCLIN AS COD, ' +
+        '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_ALBCLIN) AS NOM ' +
+        '  FROM fza_albaranes_compra_lineas L ' +
+        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = L.CODIGO_ALMACEN_ALBCLIN ' +
+        ' WHERE L.SERIE_ALBC_ALBCLIN = :s AND L.NUMERO_ALBC_ALBCLIN = :n ' +
+        '   AND COALESCE(L.CODIGO_ALMACEN_ALBCLIN, '''') <> '''' ' +
+        ' ORDER BY COD';
+      q.ParamByName('s').AsString := ASerie;
+      q.ParamByName('n').AsString := ANumero;
+      q.Open;
+      while not q.Eof do
+      begin
+        it := lv.Items.Add;
+        it.Caption := q.FieldByName('COD').AsString;
+        it.SubItems.Add(q.FieldByName('NOM').AsString);
+        it.Checked := True;
+        q.Next;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  finally
+    lv.Items.EndUpdate;
+  end;
+end;
+
+procedure TdmAlbaranesCompra.CrearDataSetEtiquetasAlb(ADmArt: TObject;
+                                  const ASerie, ANumero,
+                                        ACodTarifa, AAlmacenesCsv: string;
+                                  AFecha: TDateTime);
+var
+  dm : TdmArticulos;
+begin
+  // Reutilizamos el dataset / lookup de etiquetas del DM de articulos
+  // (cdsEtiquetasArt, unqryArtPrint, fxdsEtiquetasArt) para que el
+  // mismo .fr3 sirva en ambos modales. La unica diferencia es que
+  // tras la carga normal filtramos las filas del CDS dejando solo los
+  // SKUs que aparecen en este albaran.
+  if not (ADmArt is TdmArticulos) then Exit;
+  dm := TdmArticulos(ADmArt);
+  // 1. Carga base (sin filtro por articulo) con tarifa, almacenes,
+  //    fecha. Devuelve TODOS los SKUs activos con su PVP.
+  dm.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv, AFecha);
+  // 2. Restringir el CDS a los SKUs del albaran. Hacemos un loop:
+  //    cargamos los SKUs del albaran en un set y borramos del CDS lo
+  //    que no este. Implementacion in-place para no pasar por el
+  //    provider y mantener los campos extra ya enriquecidos (PRECIO,
+  //    STOCK, etc.).
+  FiltrarCdsEtiquetasPorAlbaran(dm, ASerie, ANumero);
 end;
 
 procedure TdmAlbaranesCompra.PrepararPrintSku(const ASerie, ANumero: string);
