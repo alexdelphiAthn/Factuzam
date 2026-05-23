@@ -513,6 +513,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Caption = 'Total tallas'
               DataBinding.FieldName = 'TOTAL_UNIDADES_SESLIN'
               PropertiesClassName = 'TcxSpinEditProperties'
+              Properties.Alignment.Horz = taRightJustify
+              HeaderAlignmentHorz = taRightJustify
               Options.Editing = False
               Width = 100
             end
@@ -520,6 +522,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Caption = 'Importe s/IVA'
               DataBinding.FieldName = 'TOTAL_LINEA_SESLIN'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.Alignment.Horz = taRightJustify
+              HeaderAlignmentHorz = taRightJustify
               Options.Editing = False
               Width = 110
             end
