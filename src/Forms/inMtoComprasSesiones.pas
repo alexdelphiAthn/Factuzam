@@ -64,6 +64,7 @@ uses
   dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab,
   inMtoGen,
+  inMtoModalCrearAlbaranSesion,
   inLibGridTallasInline,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
   dxDateRanges;
@@ -225,6 +226,11 @@ type
   private
     FGestorTallas : TGestorGridTallas;     // mueve toda la logica reusable
                                            // de tallas pivotadas a la lib
+    function MaterializarSesionConTx(AFrmSet: TfrmModalCrearAlbaranSesion;
+                                      const AUsuario: string;
+                                      out ASerPed, ANumPed,
+                                          ASerAlb, ANumAlb,
+                                          AErr: string): Boolean;
     FTallaColumns : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
     FBasicosColor : TArray<string>;
     FQryConjuntosTallas : TUniQuery;
@@ -261,8 +267,7 @@ uses
   inLibFotos,
   inMtoModalSelFamilia,
   inMtoModalImpSesion,
-  inMtoModalIncidencias,
-  inMtoModalCrearAlbaranSesion;
+  inMtoModalIncidencias;
 
 const
   fIdVaColor = 'CO';
@@ -946,13 +951,9 @@ begin
                  frmSet.SerieAlb, frmSet.SeriePed]));
   Screen.Cursor := crHourGlass;
   try
-    bOK := MaterializarSesion(
-      Dmm,
-      Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S',
-      Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S',
-      oUser,
-      frmSet.SerieAlb, frmSet.SeriePed,
-      sSerPed, sNumPed, sSerAlb, sNumAlb, sErr);
+    bOK := MaterializarSesionConTx(Dmm, frmSet, oUser,
+                                   sSerPed, sNumPed,
+                                   sSerAlb, sNumAlb, sErr);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -1623,6 +1624,100 @@ begin
   begin
     AAllow := False;
     AbrirDistribuidor;
+  end;
+end;
+
+function TfrmMtoComprasSesiones.MaterializarSesionConTx(
+                  AFrmSet: TfrmModalCrearAlbaranSesion;
+                  const AUsuario: string;
+                  out ASerPed, ANumPed, ASerAlb, ANumAlb, AErr: string): Boolean;
+var
+  oConn      : TUniConnection;
+  bTxOwned   : Boolean;
+  oQry       : TUniQuery;
+  bGenPed    : Boolean;
+  bGenAlb    : Boolean;
+  bUnPorAlm  : Boolean;
+  sAlm       : string;
+  sSerPedTmp : string;
+  sNumPedTmp : string;
+  sSerAlbTmp : string;
+  sNumAlbTmp : string;
+begin
+  // Envolvemos el flujo en una transaccion explicita: si cualquier
+  // iteracion (creacion pedido/albaran, generacion movimientos, marcar
+  // sesion) falla, hacemos rollback completo y la BBDD queda como
+  // antes. Sin esto un fallo a mitad dejaba albaranes huerfanos con
+  // ESTADO_ALBC='ABIERTO' y total 0 (visto en debug).
+  Result    := False;
+  ASerPed   := ''; ANumPed := '';
+  ASerAlb   := ''; ANumAlb := '';
+  AErr      := '';
+  bGenPed   := Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S';
+  bGenAlb   := Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S';
+  bUnPorAlm := AFrmSet.UnDocPorAlmacen;
+  oConn     := inLibGlobalVar.oConn;
+  bTxOwned  := not oConn.InTransaction;
+  if bTxOwned then oConn.StartTransaction;
+  try
+    if bUnPorAlm then
+    begin
+      // Iteramos los almacenes distintos que aparecen en celdas con
+      // cantidad > 0. MaterializarSesion filtra por cada uno con
+      // AFiltroAlmacen y crea un albaran/pedido independiente por
+      // almacen. La cabecera de sesion queda con el ULTIMO doc (la
+      // lista completa vive en fza_compras_sesiones_documentos).
+      oQry := TUniQuery.Create(nil);
+      try
+        oQry.Connection := oConn;
+        oQry.SQL.Text :=
+          'SELECT DISTINCT IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), ' +
+          '                       :alm_cab) AS ALM ' +
+          '  FROM fza_compras_sesiones_celdas C ' +
+          ' WHERE C.SERIE_SES_SESCEL = :s AND C.NUMERO_SES_SESCEL = :n ' +
+          '   AND C.CANTIDAD_SESCEL > 0 ' +
+          ' ORDER BY ALM';
+        oQry.ParamByName('alm_cab').AsString :=
+          Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+        oQry.ParamByName('s').AsString :=
+          Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+        oQry.ParamByName('n').AsString :=
+          Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+        oQry.Open;
+        while not oQry.Eof do
+        begin
+          sAlm := oQry.FieldByName('ALM').AsString;
+          if not MaterializarSesion(Dmm, bGenPed, bGenAlb, AUsuario,
+                                     AFrmSet.SerieAlb, AFrmSet.SeriePed,
+                                     sSerPedTmp, sNumPedTmp,
+                                     sSerAlbTmp, sNumAlbTmp, AErr,
+                                     sAlm) then
+            raise Exception.Create(AErr);
+          // Conservamos el primer resultado para el mensaje al usuario.
+          if ASerAlb = '' then begin ASerAlb := sSerAlbTmp; ANumAlb := sNumAlbTmp; end;
+          if ASerPed = '' then begin ASerPed := sSerPedTmp; ANumPed := sNumPedTmp; end;
+          oQry.Next;
+        end;
+      finally
+        FreeAndNil(oQry);
+      end;
+    end
+    else
+    begin
+      if not MaterializarSesion(Dmm, bGenPed, bGenAlb, AUsuario,
+                                 AFrmSet.SerieAlb, AFrmSet.SeriePed,
+                                 ASerPed, ANumPed, ASerAlb, ANumAlb, AErr) then
+        raise Exception.Create(AErr);
+    end;
+    if bTxOwned then oConn.Commit;
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      if bTxOwned and oConn.InTransaction then oConn.Rollback;
+      if AErr = '' then AErr := E.Message;
+      Result := False;
+    end;
   end;
 end;
 
