@@ -185,6 +185,9 @@ minúscula**. Si el componente está ligado a un campo de la BBDD, el
 | `fxds`   | `TfrxDBDataset`                             | `fxdsEtiquetas`                       |
 | `act`    | `TAction`                                   | `actEmpresas`, `actFacturas`          |
 
+Ojo! NUNCA usar una palabra reservada del lenguaje para nombrar una variable. 
+
+
 ### 5.2 Componentes ligados a un campo de BBDD
 
 Cuando el componente edita o muestra una columna concreta, el nombre =
