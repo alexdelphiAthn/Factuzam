@@ -857,6 +857,7 @@ procedure InsertarLineaAlbaranCompra(AConn: TUniConnection;
                                             ACodigoSku, ACodigoFam,
                                             ANombreFam, ADescripcion,
                                             ACodigoAlm, ATipoIva,
+                                            ARefPrv,
                                             AUsuario: string;
                                       ACantidad, APrecio,
                                       APorcIva: Double;
@@ -875,7 +876,7 @@ begin
     q.SQL.Text :=
       'INSERT INTO fza_albaranes_compra_lineas ' +
       '  (NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, ' +
-      '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
+      '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN, ' +
       '   ID_AC_PIVOT_ALBCLIN, ' +
       '   CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
       '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
@@ -886,7 +887,7 @@ begin
       '   TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ' +
       '   ESFACTURADA_ALBCLIN, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (:n, :s, :l, :art, :sku, :acpivot, ' +
+      'VALUES (:n, :s, :l, :art, :sku, :refprv, :acpivot, ' +
       '        :fam, :nomfam, :desc, ''Uds'', ' +
       '        :cant, :tiva, :piva, :pre, :preciva, :tot, :alm, ''N'', ' +
       '        NOW(), :u, NOW(), :u)';
@@ -895,6 +896,10 @@ begin
     q.ParamByName('l').AsString    := ALineaAlbc;
     q.ParamByName('art').AsString  := ACodigoArt;
     q.ParamByName('sku').AsString  := ACodigoSku;
+    if ARefPrv <> '' then
+      q.ParamByName('refprv').AsString := ARefPrv
+    else
+      q.ParamByName('refprv').Clear;
     if AIdAcPivot > 0 then
       q.ParamByName('acpivot').AsInteger := AIdAcPivot
     else
@@ -1072,7 +1077,8 @@ begin
       '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '    L.CODIGO_FAM_SESLIN, ' +
       '    IFNULL(L.TIPO_IVA_SESLIN, ''N'') AS TIPO_IVA, ' +
-      '    L.TIPO_LINEA_SESLIN ' +
+      '    L.TIPO_LINEA_SESLIN, ' +
+      '    IFNULL(L.REF_PRV_SESLIN, '''') AS REF_PRV ' +
       '  FROM fza_compras_sesiones_celdas C ' +
       '  JOIN fza_compras_sesiones_lineas L ' +
       '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
@@ -1085,7 +1091,7 @@ begin
       ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, ID_AC_PIVOT, COD_COLOR, ' +
       '          COLOR_TEXTO, ALM_EFE, ' +
       '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
-      '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN ' +
+      '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN, REF_PRV ' +
       ' ORDER BY CODIGO_ART, COD_COLOR, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
     qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
     qC.ParamByName('s').AsString := ASerieSes;
@@ -1133,7 +1139,9 @@ begin
       InsertarLineaAlbaranCompra(AConn,
         ASerieAlbc, ANumAlbc, sLineaAlbc,
         sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam, sDescripcion,
-        sCodigoAlm, sTipoIva, AUsuario,
+        sCodigoAlm, sTipoIva,
+        qC.FieldByName('REF_PRV').AsString,
+        AUsuario,
         rCantidad, rCoste, rPorIva, iIdAcPivot);
 
       qC.Next;
