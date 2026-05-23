@@ -137,6 +137,7 @@ type
     FPivotLineasRepr : TList<Integer>;
     FPivotCantidades : TDictionary<Int64,Double>;
     FPivotColorTexto : TDictionary<Integer,string>;
+    FPivotIdAc       : TDictionary<Integer,Integer>;
     FPivotMaxAvTalla : Integer;
     FColColorPivot   : TcxGridDBColumn;
     procedure CrearColumnasTallas;
@@ -184,6 +185,7 @@ begin
   FPivotLineasRepr := TList<Integer>.Create;
   FPivotCantidades := TDictionary<Int64,Double>.Create;
   FPivotColorTexto := TDictionary<Integer,string>.Create;
+  FPivotIdAc       := TDictionary<Integer,Integer>.Create;
   // Columna no-bound 'Color' solo visible en modo pivote (los SKUs ya
   // no se ven y necesitamos algo que distinga visualmente las filas
   // representantes que comparten articulo).
@@ -252,6 +254,7 @@ begin
   FreeAndNil(FPivotLineasRepr);
   FreeAndNil(FPivotCantidades);
   FreeAndNil(FPivotColorTexto);
+  FreeAndNil(FPivotIdAc);
   inherited;
 end;
 
@@ -471,6 +474,7 @@ begin
     if Assigned(FPivotLineasRepr) then FPivotLineasRepr.Clear;
     if Assigned(FPivotCantidades) then FPivotCantidades.Clear;
     if Assigned(FPivotColorTexto) then FPivotColorTexto.Clear;
+    if Assigned(FPivotIdAc) then FPivotIdAc.Clear;
   end;
   AplicarVisibilidadColumnasPivot(FMostrarTallas);
   RefrescarVisibilidadTallas;
@@ -850,6 +854,7 @@ begin
   FPivotLineasRepr.Clear;
   FPivotCantidades.Clear;
   FPivotColorTexto.Clear;
+  FPivotIdAc.Clear;
   FPivotMaxAvTalla := 0;
   if dmmAlbaranesCompra = nil then Exit;
   if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
@@ -868,6 +873,7 @@ begin
     q.SQL.Text :=
       'SELECT L.LINEA_ALBCLIN AS LINEA, ' +
       '       L.CODIGO_ART_ALBCLIN AS ART, ' +
+      '       COALESCE(L.ID_AC_PIVOT_ALBCLIN, 0) AS ID_AC, ' +
       '       COALESCE(C.ID_AV_SA, 0) AS COLOR_AV, ' +
       '       COALESCE(AVC_TXT.AV, '''') AS COLOR_TXT, ' +
       '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
@@ -906,6 +912,8 @@ begin
         FPivotLineasRepr.Add(iLineaRepr);
         FPivotColorTexto.AddOrSetValue(iLineaRepr,
                                        q.FieldByName('COLOR_TXT').AsString);
+        FPivotIdAc.AddOrSetValue(iLineaRepr,
+                                 q.FieldByName('ID_AC').AsInteger);
       end;
       if iTallaAv > 0 then
       begin
@@ -943,10 +951,8 @@ end;
 procedure TfrmMtoAlbaranesCompra.PublicarCantidadesPivot;
 var
   colLinea : TcxGridDBColumn;
-  colAc    : TcxGridDBColumn;
   recIdx   : Integer;
   vLinea   : Variant;
-  vAc      : Variant;
   iLinea   : Integer;
   iAc      : Integer;
   arr      : TArrPosConjunto;
@@ -954,31 +960,27 @@ var
   iKey     : Int64;
   rCant    : Double;
 begin
-  // Mismo patron que TGestorGridTallas.CargarCantidadesTodasLineas:
-  // iterar el DataController del grid (no el cursor del dataset) y
-  // leer LINEA / ID_AC via Values[] sin mover el cursor. Asi recIdx
-  // siempre coincide con el record real visible. Iterar ds.First/Next
-  // mientras Filtered=True desincronizaba el indice con el grid y
-  // ninguna cantidad acertaba a su celda.
+  // Iteramos el DataController del grid (no el cursor del dataset) y
+  // leemos LINEA via Values[] sin mover el cursor. El ID_AC NO se
+  // puede leer del grid: no hay columna en el dfm para
+  // ID_AC_PIVOT_ALBCLIN. Lo cogemos de FPivotIdAc que se rellena en
+  // CargarCachePivot indexado por linea representante.
   if FGestorTallas = nil then Exit;
   if dmmAlbaranesCompra = nil then Exit;
   colLinea := tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBCLIN');
-  colAc    := tvLineasAlbaran.GetColumnByFieldName('ID_AC_PIVOT_ALBCLIN');
-  if (colLinea = nil) or (colAc = nil) then Exit;
+  if colLinea = nil then Exit;
   tvLineasAlbaran.DataController.BeginUpdate;
   try
     for recIdx := 0 to tvLineasAlbaran.DataController.RecordCount - 1 do
     begin
       vLinea := tvLineasAlbaran.DataController.Values[recIdx, colLinea.Index];
-      vAc    := tvLineasAlbaran.DataController.Values[recIdx, colAc.Index];
       if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
-      if VarIsNull(vAc) or VarIsEmpty(vAc) then Continue;
-      // LINEA_ALBCLIN es varchar(4) ('0010', '0070'...). El Variant
-      // llega como string y la asignacion directa a Integer no convierte:
-      // forzamos StrToIntDef para que el lookup en el cache acierte.
+      // LINEA_ALBCLIN es varchar(4) ('0010', '0070'...). Variant llega
+      // como string; forzamos StrToIntDef para que las keys casen.
       iLinea := StrToIntDef(VarToStr(vLinea), 0);
-      iAc    := vAc;
-      if (iLinea <= 0) or (iAc <= 0) then Continue;
+      if iLinea <= 0 then Continue;
+      if not FPivotIdAc.TryGetValue(iLinea, iAc) then Continue;
+      if iAc <= 0 then Continue;
       // Publicar el color (no-bound) primero — no depende del conjunto.
       if Assigned(FColColorPivot) and Assigned(FPivotColorTexto) then
       begin
