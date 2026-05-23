@@ -68,9 +68,33 @@ begin
 end;
 
 procedure TfrmPrintAlbCompra.preparar_consulta;
+var
+  i: Integer;
+  pg: TfrxReportPage;
 begin
   if dmAlbc = nil then Exit;
   dmAlbc.PrepararPrint(edtSerie.Text, edtNumero.Text);
+  // Aplica orientacion sobre TODAS las paginas del report. La plantilla
+  // embebida se diseno en horizontal (297x210); para vertical giramos
+  // a 210x297. El usuario puede reajustar el ancho de las columnas con
+  // el FastReport designer si necesita una version vertical mas fina.
+  for i := 0 to frxrprt1.PagesCount - 1 do
+  begin
+    if not (frxrprt1.Pages[i] is TfrxReportPage) then Continue;
+    pg := TfrxReportPage(frxrprt1.Pages[i]);
+    if Orientacion = oacHorizontal then
+    begin
+      pg.Orientation := poLandscape;
+      pg.PaperWidth  := 297;
+      pg.PaperHeight := 210;
+    end
+    else
+    begin
+      pg.Orientation := poPortrait;
+      pg.PaperWidth  := 210;
+      pg.PaperHeight := 297;
+    end;
+  end;
 end;
 
 procedure TfrmPrintAlbCompra.AfterReportLoaded;
