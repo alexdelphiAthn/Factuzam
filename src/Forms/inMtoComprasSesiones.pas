@@ -1649,12 +1649,16 @@ begin
     oForm.ShowModal;
     if oForm.Confirmado then
     begin
-      // Refrescar el grid principal: la suma por talla se recalcula via
-      // FGestorTallas.CargarCantidadesUnaLinea (lee fza_compras_sesiones_celdas
-      // sumando todas las celdas de esta linea agrupando por pivot, sin
-      // filtrar por almacen, asi que recoge el reparto distribuido).
+      // Refrescar el grid principal: cantidades por talla (gestor lee
+      // celdas SUMando por pivot, sin filtro por almacen) y totales de
+      // la linea (TOTAL_UNIDADES_SESLIN / TOTAL_LINEA_SESLIN). Sin la
+      // segunda llamada las columnas 'Uds' y 'Total' se quedan a 0
+      // hasta una edicion manual de la linea.
       if Assigned(FGestorTallas) then
+      begin
+        FGestorTallas.RefrescarTotalesLineaActual;
         FGestorTallas.CargarCantidadesTodasLineas;
+      end;
     end;
   finally
     FreeAndNil(oForm);
