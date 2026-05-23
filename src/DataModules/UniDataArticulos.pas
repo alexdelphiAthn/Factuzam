@@ -116,7 +116,8 @@ type
     procedure CrearDataSetEtiquetasArt(const aCodigoArt,
                                              aCodTarifa,
                                              aAlmacenesCsv: string;
-                                             aFechaTarifa: TDateTime);
+                                             aFechaTarifa: TDateTime;
+                                             const aSkusCsv: string = '');
   end;
 
 implementation
@@ -945,7 +946,8 @@ end;
 procedure TdmArticulos.CrearDataSetEtiquetasArt(const aCodigoArt,
                                                       aCodTarifa,
                                                       aAlmacenesCsv: string;
-                                                      aFechaTarifa: TDateTime);
+                                                      aFechaTarifa: TDateTime;
+                                                      const aSkusCsv: string);
 const
   // Construimos manualmente la lista IN (...) con los codigos elegidos.
   // Los codigos vienen de fza_almacenes (validados al cargar el checklist),
@@ -999,6 +1001,7 @@ const
     '       ) stk'                                                            +
     '    ON stk.CODIGO_UNIDAD_STK = eti.CODIGO_UNIDAD_SKU'                    +
     ' WHERE (:CODIGO_ART_ART = ''''  OR eti.CODIGO_ART_ART = :CODIGO_ART_ART)'+
+    '   %SKU_FILTER%'                                                         +
     '   AND eti.ESACTIVO_SKU = ''S'''                                         +
     '   AND eti.ESACTIVO_ART = ''S'''                                         +
     ' ORDER BY eti.CODIGO_ART_ART, eti.CODIGO_UNIDAD_SKU';
@@ -1039,6 +1042,16 @@ begin
                         '%ALMACEN_FILTER%',
                         sFiltroAlm,
                         [rfReplaceAll]);
+  // Filtro opcional por SKUs concretos (lo usa el modal de pegatinas de
+  // albaranes / pedidos para reducir la query a los SKUs del documento).
+  // El parser de SQL exige una lista literal — la construimos a partir
+  // del CSV de entrada (codigos vienen de fza_albaranes_compra_lineas).
+  if Trim(aSkusCsv) <> '' then
+    sSql := StringReplace(sSql, '%SKU_FILTER%',
+              'AND eti.CODIGO_UNIDAD_SKU IN (' + aSkusCsv + ')',
+              [rfReplaceAll])
+  else
+    sSql := StringReplace(sSql, '%SKU_FILTER%', '', [rfReplaceAll]);
 
   unqryArtPrint.Close;
   unqryArtPrint.SQL.Text := sSql;

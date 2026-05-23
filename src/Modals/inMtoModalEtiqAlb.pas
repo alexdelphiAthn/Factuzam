@@ -72,6 +72,12 @@ implementation
 
 procedure TfrmPrintEtiqAlb.FormCreate(Sender: TObject);
 begin
+  // Compartimos persistencia (formatos guardados + guias) con el modal
+  // de etiquetas de articulos: el padre TfrmPrint las indexa por
+  // Self.Name. Forzando el mismo nombre aqui reusamos los .fr3 y las
+  // guias ya guardadas para 'frmPrintEtiqArt'. Es seguro mientras no
+  // se abra simultaneamente el otro modal (no es flujo normal).
+  Self.Name := 'frmPrintEtiqArt';
   inherited;
   FCodigosTarifa := TStringList.Create;
   FLayout        := TLayoutLoader.Create(Self.Name);
