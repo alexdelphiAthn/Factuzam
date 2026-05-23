@@ -714,20 +714,24 @@ begin
     end;
     q.Close;
     // 2. Sistemas de tallas con mas valores que CANT_TALLAS_MAX.
+    //    Subquery escalar para contar ACD UNA sola vez por conjunto.
+    //    Antes haciamos JOIN a ACD desde el FROM y eso multiplicaba
+    //    cartesianamente: N = #lineas_articulo x #tallas_conjunto, lo
+    //    que daba falsos positivos del tipo "98 tallas" cuando en
+    //    realidad eran 14 tallas x 7 SKUs.
     q.SQL.Text :=
-      'SELECT L.CODIGO_ART_ALBCLIN AS ART, AC.NOMBRE_AC AS SISTEMA, ' +
-      '       COUNT(*) AS N ' +
+      'SELECT DISTINCT L.CODIGO_ART_ALBCLIN AS ART, ' +
+      '       AC.NOMBRE_AC AS SISTEMA, ' +
+      '       (SELECT COUNT(*) FROM fza_atributos_conjuntos_det ACD ' +
+      '         WHERE ACD.ID_AC_ACD = L.ID_AC_PIVOT_ALBCLIN) AS N ' +
       '  FROM fza_albaranes_compra_lineas L ' +
       '  JOIN fza_atributos_conjuntos AC ' +
       '    ON AC.ID_AC = L.ID_AC_PIVOT_ALBCLIN ' +
-      '  JOIN fza_atributos_conjuntos_det ACD ' +
-      '    ON ACD.ID_AC_ACD = L.ID_AC_PIVOT_ALBCLIN ' +
       ' WHERE L.SERIE_ALBC_ALBCLIN = :SERIE ' +
       '   AND L.NUMERO_ALBC_ALBCLIN = :NUMERO ' +
       '   AND L.ID_AC_PIVOT_ALBCLIN > 0 ' +
-      ' GROUP BY L.CODIGO_ART_ALBCLIN, AC.NOMBRE_AC, ' +
-      '          L.ID_AC_PIVOT_ALBCLIN ' +
-      'HAVING N > :NMAX ' +
+      '   AND (SELECT COUNT(*) FROM fza_atributos_conjuntos_det ACD ' +
+      '         WHERE ACD.ID_AC_ACD = L.ID_AC_PIVOT_ALBCLIN) > :NMAX ' +
       ' ORDER BY ART';
     q.ParamByName('SERIE').AsString  := sSerie;
     q.ParamByName('NUMERO').AsString := sNumero;
