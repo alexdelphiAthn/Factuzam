@@ -299,8 +299,8 @@ begin
               'INSERT INTO fza_compras_sesiones_celdas ' +
               '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
               '   CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL, ' +
-              '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-              'VALUES (:s, :n, :l, :a, :p, :c, NOW(), :u, NOW(), :u) ' +
+              '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+              'VALUES (:s, :n, :l, :a, :p, :c, NOW(), :u) ' +
               'ON DUPLICATE KEY UPDATE CANTIDAD_SESCEL = :c, ' +
               '                        INSTANTE_MODIF  = NOW(), ' +
               '                        USUARIO_MODIF   = :u';
