@@ -367,6 +367,11 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                     DataBinding.FieldName = 'CODIGO_UNIDAD_ALBCLIN'
                     Width = 120
                   end
+                  object colLineaAlbcREF_PRV: TcxGridDBColumn
+                    Caption = 'Ref. prov.'
+                    DataBinding.FieldName = 'REF_PRV_ALBCLIN'
+                    Width = 100
+                  end
                   object colLineaAlbcDESCRIPCION: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
                     DataBinding.FieldName = 'DESCRIPCION_ARTICULO_ALBCLIN'
