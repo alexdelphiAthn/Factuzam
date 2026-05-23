@@ -441,41 +441,42 @@ procedure TdmAlbaranesCompra.FiltrarCdsEtiquetasPorAlbaran(
                                             ADmArt: TdmArticulos;
                                             const ASerie, ANumero: string);
 var
-  q   : TUniQuery;
-  setSku : TDictionary<string, Boolean>;
-  fld : TField;
-  sku : string;
+  oQry    : TUniQuery;
+  oSetSku : TDictionary<string, Boolean>;
+  oFldSku : TField;
+  sSku    : string;
 begin
   // Construimos un set con los SKUs del albaran y recorremos el
   // ClientDataSet borrando lo que no este. El campo SKU del CDS es
   // CODIGO_UNIDAD_SKU (definido en vi_articulos_skus_etiquetas).
   if (ADmArt = nil) or (not ADmArt.cdsEtiquetasArt.Active) then Exit;
-  fld := ADmArt.cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU');
-  if fld = nil then Exit;
-  setSku := TDictionary<string, Boolean>.Create;
-  q   := TUniQuery.Create(nil);
+  oFldSku := ADmArt.cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU');
+  if oFldSku = nil then Exit;
+  oSetSku := TDictionary<string, Boolean>.Create;
+  oQry    := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
-    q.SQL.Text :=
+    oQry.Connection := inLibGlobalVar.oConn;
+    oQry.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_ALBCLIN ' +
       '  FROM fza_albaranes_compra_lineas ' +
       ' WHERE SERIE_ALBC_ALBCLIN = :s AND NUMERO_ALBC_ALBCLIN = :n ' +
       '   AND COALESCE(CODIGO_UNIDAD_ALBCLIN, '''') <> ''''';
-    q.ParamByName('s').AsString := ASerie;
-    q.ParamByName('n').AsString := ANumero;
-    q.Open;
-    while not q.Eof do
+    oQry.ParamByName('s').AsString := ASerie;
+    oQry.ParamByName('n').AsString := ANumero;
+    oQry.Open;
+    while not oQry.Eof do
     begin
-      setSku.AddOrSetValue(q.FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString, True);
-      q.Next;
+      oSetSku.AddOrSetValue(
+        oQry.FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString, True);
+      oQry.Next;
     end;
     ADmArt.cdsEtiquetasArt.DisableControls;
     try
       ADmArt.cdsEtiquetasArt.First;
       while not ADmArt.cdsEtiquetasArt.Eof do
       begin
-        sku := fld.AsString;
-        if not setSku.ContainsKey(sku) then
+        sSku := oFldSku.AsString;
+        if not oSetSku.ContainsKey(sSku) then
           ADmArt.cdsEtiquetasArt.Delete
         else
           ADmArt.cdsEtiquetasArt.Next;
@@ -485,8 +486,8 @@ begin
       ADmArt.cdsEtiquetasArt.EnableControls;
     end;
   finally
-    FreeAndNil(q);
-    FreeAndNil(set);
+    FreeAndNil(oQry);
+    FreeAndNil(oSetSku);
   end;
 end;
 
@@ -494,19 +495,19 @@ procedure TdmAlbaranesCompra.CargarAlmacenesDelAlbaran(
                                       const ASerie, ANumero: string;
                                       ALV: TObject);
 var
-  q  : TUniQuery;
-  lv : TcxListView;
-  it : TListItem;
+  oQry  : TUniQuery;
+  oLv   : TcxListView;
+  oItem : TListItem;
 begin
   if not (ALV is TcxListView) then Exit;
-  lv := TcxListView(ALV);
-  lv.Items.BeginUpdate;
+  oLv := TcxListView(ALV);
+  oLv.Items.BeginUpdate;
   try
-    lv.Items.Clear;
-    q := TUniQuery.Create(nil);
+    oLv.Items.Clear;
+    oQry := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
-      q.SQL.Text :=
+      oQry.Connection := inLibGlobalVar.oConn;
+      oQry.SQL.Text :=
         'SELECT DISTINCT L.CODIGO_ALMACEN_ALBCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_ALBCLIN) AS NOM ' +
         '  FROM fza_albaranes_compra_lineas L ' +
@@ -514,22 +515,22 @@ begin
         ' WHERE L.SERIE_ALBC_ALBCLIN = :s AND L.NUMERO_ALBC_ALBCLIN = :n ' +
         '   AND COALESCE(L.CODIGO_ALMACEN_ALBCLIN, '''') <> '''' ' +
         ' ORDER BY COD';
-      q.ParamByName('s').AsString := ASerie;
-      q.ParamByName('n').AsString := ANumero;
-      q.Open;
-      while not q.Eof do
+      oQry.ParamByName('s').AsString := ASerie;
+      oQry.ParamByName('n').AsString := ANumero;
+      oQry.Open;
+      while not oQry.Eof do
       begin
-        it := lv.Items.Add;
-        it.Caption := q.FieldByName('COD').AsString;
-        it.SubItems.Add(q.FieldByName('NOM').AsString);
-        it.Checked := True;
-        q.Next;
+        oItem := oLv.Items.Add;
+        oItem.Caption := oQry.FieldByName('COD').AsString;
+        oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
+        oItem.Checked := True;
+        oQry.Next;
       end;
     finally
-      FreeAndNil(q);
+      FreeAndNil(oQry);
     end;
   finally
-    lv.Items.EndUpdate;
+    oLv.Items.EndUpdate;
   end;
 end;
 
@@ -538,7 +539,7 @@ procedure TdmAlbaranesCompra.CrearDataSetEtiquetasAlb(ADmArt: TObject;
                                         ACodTarifa, AAlmacenesCsv: string;
                                   AFecha: TDateTime);
 var
-  dm : TdmArticulos;
+  oDmArt : TdmArticulos;
 begin
   // Reutilizamos el dataset / lookup de etiquetas del DM de articulos
   // (cdsEtiquetasArt, unqryArtPrint, fxdsEtiquetasArt) para que el
@@ -546,16 +547,16 @@ begin
   // tras la carga normal filtramos las filas del CDS dejando solo los
   // SKUs que aparecen en este albaran.
   if not (ADmArt is TdmArticulos) then Exit;
-  dm := TdmArticulos(ADmArt);
+  oDmArt := TdmArticulos(ADmArt);
   // 1. Carga base (sin filtro por articulo) con tarifa, almacenes,
   //    fecha. Devuelve TODOS los SKUs activos con su PVP.
-  dm.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv, AFecha);
+  oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv, AFecha);
   // 2. Restringir el CDS a los SKUs del albaran. Hacemos un loop:
   //    cargamos los SKUs del albaran en un set y borramos del CDS lo
   //    que no este. Implementacion in-place para no pasar por el
   //    provider y mantener los campos extra ya enriquecidos (PRECIO,
   //    STOCK, etc.).
-  FiltrarCdsEtiquetasPorAlbaran(dm, ASerie, ANumero);
+  FiltrarCdsEtiquetasPorAlbaran(oDmArt, ASerie, ANumero);
 end;
 
 procedure TdmAlbaranesCompra.PrepararPrintSku(const ASerie, ANumero: string);
