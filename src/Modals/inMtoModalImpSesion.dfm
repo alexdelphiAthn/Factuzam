@@ -942,7 +942,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            'Modelo')
+            'Modelo / Alm.')
           ParentFont = False
         end
         object HdrDescr: TfrxMemoView
@@ -1110,7 +1110,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           HAlign = haLeft
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[LineasSesiones."REF_PRV"]')
+            '[IIF(<Sesiones."ESFORMATO_DISTRIBUIDO_SES"> = '#39'S'#39', <LineasSesiones."REF_PRV"> + '#39' / '#39' + <LineasSesiones."CODIGO_ALM">, <LineasSesiones."REF_PRV">)]')
           ParentFont = False
         end
         object LinDescr: TfrxMemoView
