@@ -507,20 +507,27 @@ begin
   unqryMovimientosArticulos.Connection := oConn;
   unqryDetallesAtributos.Connection := oConn;
   unqryAtributosBasicosLookup.Connection := oConn;
-// unqryStockArticulos.MasterSource :=
-// (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  unqryVariacionesArticulos.MasterSource :=
+  // Las MasterSource solo aplican cuando el DM se instancia desde el
+  // Mto de Articulos (Owner = TfrmMtoArticulos). Si lo crea otro
+  // contexto puntual (p.ej. el boton 'Pegatinas' del Mto de Albaranes
+  // de Compra crea un TdmArticulos temporal solo para reutilizar las
+  // queries de etiquetas) el GetOwnerForm devuelve nil y aqui hariamos
+  // un AV. Saltamos la asignacion si no hay form de articulos.
+  if GetOwnerForm<TfrmMtoArticulos> <> nil then
+  begin
+    unqryVariacionesArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  unqrySkus.MasterSource :=
+    unqrySkus.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  unqryLinFacturasArticulos.MasterSource :=
+    unqryLinFacturasArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  unqryTarifasArticulos.MasterSource :=
+    unqryTarifasArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  unqryProveedoresArticulos.MasterSource :=
+    unqryProveedoresArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  unqryMovimientosArticulos.MasterSource :=
+    unqryMovimientosArticulos.MasterSource :=
                                       (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
+  end;
   // El detalle de atributos sigue al SKU activo (master) para mostrar sólo
   // las filas del SKU posicionado en la rejilla superior.
   unqryDetallesAtributos.MasterSource := dsSkus;
