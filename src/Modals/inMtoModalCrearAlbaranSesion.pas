@@ -54,6 +54,8 @@ type
     cbbTarifa     : TcxLookupComboBox;
     lblTemporada  : TcxLabel;
     cbbTemporada  : TcxLookupComboBox;
+    lblRefPrv     : TcxLabel;
+    txtRefPrv     : TcxTextEdit;
     btnGenerar    : TcxButton;
     btnSalir      : TcxButton;
     procedure FormCreate(Sender: TObject);
@@ -72,6 +74,7 @@ type
     function GetTemporada: Integer;
     function GetGenPedido: Boolean;
     function GetGenAlbaran: Boolean;
+    function GetRefPrv: string;
     procedure ActualizarHabilitados;
   public
     /// Conecta los lookups con las queries del DM padre.
@@ -82,7 +85,10 @@ type
                          AFecha: TDateTime;
                          const ACodigoAlm, ACodigoTar: string;
                          AIdPvTemporada: Integer;
-                         AGenPedido, AGenAlbaran: Boolean);
+                         AGenPedido, AGenAlbaran: Boolean;
+                         const ARefPrv: string = '');
+    /// Referencia del documento del proveedor (albaran prov / pedido prov).
+    property RefPrv     : string  read GetRefPrv;
 
     /// True si el usuario pulso Generar.
     property Confirmado : Boolean read FConfirmed;
@@ -127,7 +133,8 @@ procedure TfrmModalCrearAlbaranSesion.SetDefecto(
   AFecha: TDateTime;
   const ACodigoAlm, ACodigoTar: string;
   AIdPvTemporada: Integer;
-  AGenPedido, AGenAlbaran: Boolean);
+  AGenPedido, AGenAlbaran: Boolean;
+  const ARefPrv: string);
 begin
   txtSerieAlb.Text := ASerieAlb;
   txtSeriePed.Text := ASeriePed;
@@ -138,7 +145,13 @@ begin
   else cbbTemporada.EditValue := Null;
   chkGenPedido.Checked  := AGenPedido;
   chkGenAlbaran.Checked := AGenAlbaran;
+  txtRefPrv.Text        := ARefPrv;
   ActualizarHabilitados;
+end;
+
+function TfrmModalCrearAlbaranSesion.GetRefPrv: string;
+begin
+  Result := Trim(txtRefPrv.Text);
 end;
 
 procedure TfrmModalCrearAlbaranSesion.ActualizarHabilitados;
