@@ -259,6 +259,7 @@ end;
 procedure TdmComprasSesiones.unqryTablaGBeforePost(DataSet: TDataSet);
 var
   sSerie, sEmpresa, sNumero : string;
+  oFldDist                  : TField;
 begin
   inherited;
   LogSes(Format('DM.unqryTablaGBeforePost: state=%d, SERIE=%s NUMERO=%s CONTADOR_LINEAS=%d',
@@ -266,6 +267,18 @@ begin
                  unqryTablaG.FieldByName('SERIE_SES').AsString,
                  unqryTablaG.FieldByName('NUMERO_SES').AsString,
                  unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
+  // 'Formato distribuido' solo puede fijarse al crear la sesion. Una
+  // vez que la sesion existe (State=dsEdit) el valor no puede cambiar:
+  // ya hay celdas asignadas a un almacen y cambiar el modo dejaria
+  // datos inconsistentes (modo distribuido vacio o cantidades simples
+  // sin almacen). El usuario tiene que crear una sesion nueva si
+  // quiere otro modo.
+  oFldDist := DataSet.FindField('ESFORMATO_DISTRIBUIDO_SES');
+  if (oFldDist <> nil) and (DataSet.State = dsEdit) and
+     (VarToStr(oFldDist.OldValue) <> VarToStr(oFldDist.NewValue)) then
+    raise Exception.Create(
+      'No se puede cambiar el formato distribuido de una sesion ya creada. ' +
+      'Crea una sesion nueva con el modo deseado.');
   sNumero  := unqryTablaG.FieldByName('NUMERO_SES').AsString;
   sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
