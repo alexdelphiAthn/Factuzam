@@ -309,6 +309,15 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             TabOrder = 5
             OnClick = btnImprimirVClick
           end
+          object btnPegatinas: TcxButton
+            Left = 900
+            Top = 6
+            Width = 110
+            Height = 26
+            Caption = 'Pegatinas'
+            TabOrder = 6
+            OnClick = btnPegatinasClick
+          end
         end
         object pnlBodyFicha: TPanel
           Left = 0
