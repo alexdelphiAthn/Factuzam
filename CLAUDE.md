@@ -105,7 +105,9 @@ UniDAC por FireDAC ni nada parecido — es decisión arquitectónica.
 
 - **Commits "Auto-update YYYY-MM-DD …"**: los genera un workflow
   automatizado. **No** los crees tú; tu commit debe describir el cambio.
-  
+- **Orden de las instrucciones**: No meter en una misma linea dos instrucciones.
+  por ejemplo Hola := 'Hola'; 
+            y Adios := 'Adios'; //cada instrucción va en una linea. 
 - **If, While y bucles**: Siempre en dos lineas, if, while o for y su 
   expresión en una linea y acción en otra. Evitar if (expresion) then token
   en una sola linea.
