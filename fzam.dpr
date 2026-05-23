@@ -64,6 +64,7 @@ uses
   inMtoModalImpRecFac in 'src\Modals\inMtoModalImpRecFac.pas' {frmPrintRecFac},
   inMtoModalImpSesion in 'src\Modals\inMtoModalImpSesion.pas' {frmPrintSesion},
   inMtoModalImpAlbCompra in 'src\Modals\inMtoModalImpAlbCompra.pas' {frmPrintAlbCompra},
+  inMtoModalImpAlbCompraV in 'src\Modals\inMtoModalImpAlbCompraV.pas' {frmPrintAlbCompraV},
   inMtoModalCliEti in 'src\Modals\inMtoModalCliEti.pas' {frmPrintCliEti},
   inMtoModalEtiqArt in 'src\Modals\inMtoModalEtiqArt.pas' {frmPrintEtiqArt},
   inMtoSplash in 'src\Core\inMtoSplash.pas' {frmSplash},
