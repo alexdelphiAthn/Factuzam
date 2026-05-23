@@ -512,7 +512,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla01: TcxGridDBColumn
               Caption = ''
               Tag = 1
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -520,7 +520,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla02: TcxGridDBColumn
               Caption = ''
               Tag = 2
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -528,7 +528,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla03: TcxGridDBColumn
               Caption = ''
               Tag = 3
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -536,7 +536,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla04: TcxGridDBColumn
               Caption = ''
               Tag = 4
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -544,7 +544,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla05: TcxGridDBColumn
               Caption = ''
               Tag = 5
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -552,7 +552,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla06: TcxGridDBColumn
               Caption = ''
               Tag = 6
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -560,7 +560,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla07: TcxGridDBColumn
               Caption = ''
               Tag = 7
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -568,7 +568,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla08: TcxGridDBColumn
               Caption = ''
               Tag = 8
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -576,7 +576,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla09: TcxGridDBColumn
               Caption = ''
               Tag = 9
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -584,7 +584,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla10: TcxGridDBColumn
               Caption = ''
               Tag = 10
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -592,7 +592,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla11: TcxGridDBColumn
               Caption = ''
               Tag = 11
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -600,7 +600,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla12: TcxGridDBColumn
               Caption = ''
               Tag = 12
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -608,7 +608,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla13: TcxGridDBColumn
               Caption = ''
               Tag = 13
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -616,7 +616,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla14: TcxGridDBColumn
               Caption = ''
               Tag = 14
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -624,7 +624,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla15: TcxGridDBColumn
               Caption = ''
               Tag = 15
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -632,7 +632,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla16: TcxGridDBColumn
               Caption = ''
               Tag = 16
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -640,7 +640,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla17: TcxGridDBColumn
               Caption = ''
               Tag = 17
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -648,7 +648,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla18: TcxGridDBColumn
               Caption = ''
               Tag = 18
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -656,7 +656,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla19: TcxGridDBColumn
               Caption = ''
               Tag = 19
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -664,7 +664,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTalla20: TcxGridDBColumn
               Caption = ''
               Tag = 20
-              Visible = False
+              Visible = True
               Width = 50
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0'
@@ -848,7 +848,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
     Filter = 
       'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|*.png;*.jpg;*.' +
       'jpeg;*.webp;*.avif;*.bmp'
-    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Options = [ofHideReadOnly, ofPathMustExist,# changed Visible: 20
+ ofFileMustExist, ofEnableSizing]
     Left = 920
     Top = 8
   end
