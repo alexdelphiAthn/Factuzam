@@ -50,6 +50,11 @@ type
     unqryGuiasAlbcPrint:        TUniQuery;
     dsGuiasAlbcPrint:           TDataSource;
     fxdsGuiasAlbc:              TfrxDBDataset;
+    // Lineas "planas" (una fila por SKU sin pivotar por talla) para el
+    // formato vertical estilo factura.
+    unqryLinAlbcSkuPrint:       TUniQuery;
+    dsLinAlbcSkuPrint:          TDataSource;
+    fxdsLinAlbcSku:             TfrxDBDataset;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -70,6 +75,9 @@ type
     // Abre unqryCabAlbcPrint y unqryLinAlbcPrint con los parametros
     // del albaran a imprimir. Mismo nombre/firma que en sesiones.
     procedure PrepararPrint(const ASerie, ANumero: string);
+    // Version SKU (lineas planas, sin pivote talla) para el modal
+    // vertical estilo factura.
+    procedure PrepararPrintSku(const ASerie, ANumero: string);
     procedure OpenTables;
     // Override: abre las queries detalle tras unqryTablaG. Llamada
     // desde TfrmMtoGen.AbrirTablaPrincipalAsync.
@@ -412,6 +420,18 @@ begin
   unqryGuiasAlbcPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
   unqryGuiasAlbcPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
   unqryGuiasAlbcPrint.Open;
+end;
+
+procedure TdmAlbaranesCompra.PrepararPrintSku(const ASerie, ANumero: string);
+begin
+  unqryCabAlbcPrint.Close;
+  unqryCabAlbcPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
+  unqryCabAlbcPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
+  unqryCabAlbcPrint.Open;
+  unqryLinAlbcSkuPrint.Close;
+  unqryLinAlbcSkuPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
+  unqryLinAlbcSkuPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
+  unqryLinAlbcSkuPrint.Open;
 end;
 
 end.
