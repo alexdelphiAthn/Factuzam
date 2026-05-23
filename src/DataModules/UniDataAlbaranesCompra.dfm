@@ -105,4 +105,83 @@ inherited dmAlbaranesCompra: TdmAlbaranesCompra
         Value = nil
       end>
   end
+  object unqryCabAlbcPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT C.*, '
+      '       E.RAZON_SOCIAL_EMP, E.NIF_EMP, E.DIRECCION1_EMP, '
+      '       E.POBLACION_EMP, E.PROVINCIA_EMP, E.CODIGO_POSTAL_EMP, '
+      '       E.TELEFONO1_EMP, E.EMAIL_EMP, '
+      '       P.RAZON_SOCIAL_PRV, P.NIF_PRV, P.DIRECCION1_PRV, '
+      '       P.POBLACION_PRV, P.PROVINCIA_PRV, P.CODIGO_POSTAL_PRV, '
+      '       P.TELEFONO1_PRV, P.EMAIL_PRV '
+      '  FROM fza_albaranes_compra C '
+      '  LEFT JOIN fza_empresas E ON E.CODIGO_EMP = C.CODIGO_EMP_ALBC '
+      '  LEFT JOIN fza_proveedores P ON P.CODIGO_PRV = C.CODIGO_PRV_ALBC '
+      ' WHERE C.SERIE_ALBC = :SERIE_ALBC '
+      '   AND C.NUMERO_ALBC = :NUMERO_ALBC')
+    Left = 360
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_ALBC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_ALBC'
+        Value = nil
+      end>
+  end
+  object dsCabAlbcPrint: TDataSource
+    DataSet = unqryCabAlbcPrint
+    Left = 360
+    Top = 64
+  end
+  object fxdsCabAlbc: TfrxDBDataset
+    UserName = 'Albaran'
+    CloseDataSource = False
+    DataSource = dsCabAlbcPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 360
+    Top = 104
+  end
+  object unqryLinAlbcPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT L.* '
+      '  FROM fza_albaranes_compra_lineas L '
+      ' WHERE L.SERIE_ALBC_ALBCLIN = :SERIE_ALBC '
+      '   AND L.NUMERO_ALBC_ALBCLIN = :NUMERO_ALBC '
+      ' ORDER BY L.LINEA_ALBCLIN')
+    Left = 456
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_ALBC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_ALBC'
+        Value = nil
+      end>
+  end
+  object dsLinAlbcPrint: TDataSource
+    DataSet = unqryLinAlbcPrint
+    Left = 456
+    Top = 64
+  end
+  object fxdsLinAlbc: TfrxDBDataset
+    UserName = 'LineasAlbaran'
+    CloseDataSource = False
+    DataSource = dsLinAlbcPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 456
+    Top = 104
+  end
 end
