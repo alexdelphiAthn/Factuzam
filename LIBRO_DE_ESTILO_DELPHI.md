@@ -162,6 +162,7 @@ minúscula**. Si el componente está ligado a un campo de la BBDD, el
 |----------|---------------------------------------------|---------------------------------------|
 | `btn`    | `TcxButton`, `TButton`                      | `btnGrabar`, `btnCancelar`, `btnIraFactura` |
 | `lbl`    | `TcxLabel`, `TLabel`                        | `lblUsuario`, `lblTextoLegal`         |
+**inicializar tcxLabel siempre con transparent = true**
 | `txt`    | `TcxTextEdit`, `TcxDBTextEdit`              | `txtCODIGO_CLIENTE`, `txtRAZONSOCIAL_CLIENTE` |
 | `edt`    | Editores no ligados a BBDD                  | `edtUser`, `edtPass`, `edtBusqGlobal` |
 | `m`      | `TcxMemo`, `TcxDBMemo`                      | `mTEXTO_LEGAL_FACTURA_CLIENTE`        |
