@@ -1809,31 +1809,12 @@ begin
       //    sesion: los demas movimientos del articulo (anteriores o de
       //    otras sesiones) se preservan. Si la sesion uso serie de
       //    albaran distinta a la propia, tambien la borramos.
-      // Filtramos los DELETE por TIPO+SERIE+NUMERO+EMPRESA+ALMACEN para
-      // no tocar movimientos de otras empresas / almacenes con la misma
-      // numeracion. CODIGO_EMP_MOV y CODIGO_ALM_MOV vienen de la
-      // cabecera de la sesion (CODIGO_EMP_SES, CODIGO_ALM_SES).
-      q.SQL.Text :=
-        'DELETE FROM fza_movimientos_almacen ' +
-        ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
-        '   AND NUMERO_DOC_MOV = :n ' +
-        '   AND (SERIE_DOC_MOV = :ses ' +
-        '        OR (:salb <> '''' AND SERIE_DOC_MOV = :salb)) ' +
-        '   AND CODIGO_EMP_MOV = :emp ' +
-        '   AND CODIGO_ALM_MOV = :alm';
-      q.ParamByName('n').AsString    := sNumSes;
-      q.ParamByName('ses').AsString  := sSerieSes;
-      q.ParamByName('salb').AsString :=
-                          ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
-      q.ParamByName('emp').AsString  :=
-                          ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
-      q.ParamByName('alm').AsString  :=
-                          ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-      q.ExecSQL;
-      // 1.bis Borrar tambien los movimientos cuyo NUMERO_DOC_MOV es el
-      // del ALBARAN materializado (no el de la sesion). La generacion
-      // los crea con (SERIE_ALBC, NUMERO_ALBC) — la rama de arriba
-      // filtra por numero de sesion y no los pilla.
+      // Borrar movimientos creados por la materializacion. Los inserta
+      // GenerarMovimientosDesdeAlbaranCompra con TIPO_DOC_MOV='AC',
+      // SERIE/NUMERO del ALBARAN y EMPRESA/ALMACEN de la cabecera. Sin
+      // albaran materializado no hay nada que borrar (los pedidos
+      // pendientes de recibir no generan movimientos, viven en
+      // fza_articulos_pdte_recibir y se borran abajo).
       if (ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString <> '') and
          (ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString  <> '') then
       begin
