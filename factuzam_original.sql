@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 23/05/2026 17:37:49
+-- Backup generado: 23/05/2026 18:48:47
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -2769,6 +2769,7 @@ CREATE TABLE `fza_compras_sesiones` (
   `USUARIO_MATERIALIZA_SES` varchar(50) NULL DEFAULT NULL,
   `ESGENERA_PEDIDO_SES` char(1) NOT NULL DEFAULT 'N',
   `ESGENERA_ALBARAN_SES` char(1) NOT NULL DEFAULT 'N',
+  `ESFORMATO_DISTRIBUIDO_SES` varchar(1) NOT NULL DEFAULT 'N',
   `SERIE_PEDC_SES` varchar(12) NULL DEFAULT NULL COMMENT 'FK al pedido de compra generado',
   `NUMERO_PEDC_SES` varchar(12) NULL DEFAULT NULL,
   `SERIE_ALBC_SES` varchar(12) NULL DEFAULT NULL COMMENT 'FK al albarán de compra generado',
@@ -2790,8 +2791,8 @@ ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_PRV_FECHA` (`CODIGO_PRV_SE
 ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_TEMPORADA` (`ID_PV_TEMPORADA_SES`);
 
 -- Datos de fza_compras_sesiones
-INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`, `ID_PV_TEMPORADA_SES`) VALUES
-  ('A1', '000002', '2026-05-12 00:00:00', 'CERRADA', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, '2026-05-23 09:21:13', 'Administrador', 'N', 'S', '', '', 'A1', '006', NULL, 130, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-23 09:21:13', 'Administrador', 'N', 12);
+INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `ESFORMATO_DISTRIBUIDO_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`, `ID_PV_TEMPORADA_SES`) VALUES
+  ('A1', '000002', '2026-05-12 00:00:00', 'CERRADA', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, '2026-05-23 09:21:13', 'Administrador', 'N', 'S', 'N', '', '', 'A1', '006', NULL, 130, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-23 09:21:13', 'Administrador', 'N', 12);
 -- 1 registros exportados
 
 
@@ -3156,7 +3157,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 259, 3, 'S', 'S', '2026-05-23 17:37:31', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 260, 3, 'S', 'S', '2026-05-23 18:48:40', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -9810,8 +9811,27 @@ SET @s := IF(@c = 0,
      AFTER `ESPIVOTE_HORIZONTAL_ALBC`'',
   ''SELECT 1'');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
-', '2026-05-23 17:37:31', '2026-05-23 17:37:31', 'Administrador', 'Administrador');
--- 54 registros exportados
+', '2026-05-23 17:37:31', '2026-05-23 17:37:31', 'Administrador', 'Administrador'),
+  ('259', 'ses_formato_distribuido', '-- Anyade ESFORMATO_DISTRIBUIDO_SES a fza_compras_sesiones (idempotente).
+-- ''S'' = la sesion captura cantidades por (linea, talla, almacen) usando
+--       un modal distribuidor (almacen x talla). En el grid principal de
+--       la sesion la cantidad mostrada por talla es la SUMA de todos los
+--       almacenes. Al materializar se crea un SKU por almacen.
+-- ''N'' = comportamiento clasico: una celda = una cantidad en el almacen
+--       de cabecera (CODIGO_ALM_SES).
+
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = ''fza_compras_sesiones''
+              AND COLUMN_NAME  = ''ESFORMATO_DISTRIBUIDO_SES'');
+SET @s := IF(@c = 0,
+  ''ALTER TABLE `fza_compras_sesiones`
+     ADD COLUMN `ESFORMATO_DISTRIBUIDO_SES` varchar(1) NOT NULL DEFAULT ''''N''''
+     AFTER `ESGENERA_ALBARAN_SES`'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+', '2026-05-23 18:48:40', '2026-05-23 18:48:40', 'Administrador', 'Administrador');
+-- 55 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -11665,7 +11685,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-23 17:37:13', '2026-05-23 17:37:13', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-23 18:48:31', '2026-05-23 18:48:31', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -25005,4 +25025,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 23/05/2026 17:37:50
+-- Backup completado: 23/05/2026 18:48:48
