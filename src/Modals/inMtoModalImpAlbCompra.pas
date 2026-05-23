@@ -70,15 +70,20 @@ end;
 
 procedure TfrmPrintAlbCompra.preparar_consulta;
 var
-  i: Integer;
-  pg: TfrxReportPage;
+  i, j   : Integer;
+  pg     : TfrxReportPage;
+  obj    : TfrxComponent;
+  view   : TfrxView;
+  factor : Extended;
 begin
   if dmAlbc = nil then Exit;
   dmAlbc.PrepararPrint(edtSerie.Text, edtNumero.Text);
-  // Aplica orientacion sobre TODAS las paginas del report. La plantilla
-  // embebida se diseno en horizontal (297x210); para vertical giramos
-  // a 210x297. El usuario puede reajustar el ancho de las columnas con
-  // el FastReport designer si necesita una version vertical mas fina.
+  // Restauramos el diseno original ANTES de aplicar orientacion: si el
+  // usuario ha imprimido vertical antes, los Left/Width estan reducidos
+  // y aplicar otra vez el factor los reduciria de nuevo. frxReportOrigen
+  // tiene el snapshot que se hizo en FormCreate (siempre el diseno
+  // horizontal original).
+  frxrprt1.AssignAll(frxReportOrigen);
   for i := 0 to frxrprt1.PagesCount - 1 do
   begin
     if not (frxrprt1.Pages[i] is TfrxReportPage) then Continue;
@@ -94,6 +99,22 @@ begin
       pg.Orientation := poPortrait;
       pg.PaperWidth  := 210;
       pg.PaperHeight := 297;
+      // Reescala todos los memos/views al 210/297 = ~0,707 de su ancho
+      // y left originales. Las fuentes y altos no se tocan: lo que
+      // queremos es que un diseno pensado para apaisado quepa tal cual
+      // en vertical aunque con texto mas comprimido. Solucion pragmatica
+      // hasta tener un .fr3 vertical especifico disenado a mano.
+      factor := 210 / 297;
+      for j := 0 to pg.AllObjects.Count - 1 do
+      begin
+        obj := TfrxComponent(pg.AllObjects[j]);
+        if obj is TfrxView then
+        begin
+          view := TfrxView(obj);
+          view.Left  := view.Left * factor;
+          view.Width := view.Width * factor;
+        end;
+      end;
     end;
   end;
 end;
