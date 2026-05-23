@@ -78,6 +78,12 @@ begin
   // ese Name al cargar perfiles. Asi compartimos formatos guardados
   // y guias entre los dos modales sin duplicar el diseno.
   inherited;
+  // Snapshot del diseno embebido en frxrprt1 para que la opcion
+  // 'Predeterminado' del selector de formatos (Consultar_Formularios)
+  // pueda restaurarlo via frxrprt1.AssignAll(frxReportOrigen). Sin
+  // este AssignAll la primera vez, frxReportOrigen queda vacio y
+  // 'Predeterminado' pinta un report en blanco.
+  frxReportOrigen.AssignAll(frxrprt1);
   FCodigosTarifa := TStringList.Create;
   FLayout        := TLayoutLoader.Create(Self.Name);
   dtFechaAplicacion.Date := Date;
