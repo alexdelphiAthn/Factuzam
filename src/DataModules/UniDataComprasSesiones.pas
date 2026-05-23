@@ -234,6 +234,8 @@ begin
     FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
+    if FindField('ESFORMATO_DISTRIBUIDO_SES') <> nil then
+      FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString := 'N';
     // Contador de lineas: cada nueva linea hace +10 sobre este valor
     // (mismo patron que facturas/pedidos/albaranes). Arrancar en 0 => la
     // primera linea sera 10, la segunda 20, etc.
