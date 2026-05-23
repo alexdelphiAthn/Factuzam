@@ -187,12 +187,13 @@ type
                                 const ACodigoArt, AUsuario: string);
 
     /// Handler enganchado a `TfrxReport.OnBeforePrint`. FastReport lo
-    /// invoca antes de pintar cada View en cada iteracion. Si el View
-    /// es un TfrxPictureView llamado foto300/foto600/fotoreal, refresca
-    /// su Picture con la foto del registro actual del DataSet de su
-    /// banda padre. Es la pieza que hace que en informes iterativos
-    /// (etiquetas) cada fila salga con su foto y no con la del primero.
-    procedure HandlerReportBeforePrint(View: TfrxView);
+    /// invoca antes de pintar cada componente del informe en cada
+    /// iteracion. Si el componente es un TfrxPictureView llamado
+    /// foto300/foto600/fotoreal, refresca su Picture con la foto del
+    /// registro actual del DataSet de su banda padre. Es la pieza que
+    /// hace que en informes iterativos (etiquetas) cada fila salga con
+    /// su foto y no con la del primero.
+    procedure HandlerReportBeforePrint(Component: TfrxReportComponent);
   end;
 
 /// Engancha el evento Delphi `Report.OnBeforePrint` para que en cada
@@ -1144,16 +1145,17 @@ end;
 // articulo+SKU del DataSet de la banda padre) vive en
 // `SustituirFotoEnPicture`, que se reutiliza desde aqui.
 
-procedure TFotosArticulos.HandlerReportBeforePrint(View: TfrxView);
+procedure TFotosArticulos.HandlerReportBeforePrint(
+  Component: TfrxReportComponent);
 var
   pic    : TfrxPictureView;
   sName  : string;
   res    : TFotoResolucion;
   bMatch : Boolean;
 begin
-  if not (View is TfrxPictureView) then
+  if not (Component is TfrxPictureView) then
     Exit;
-  pic := TfrxPictureView(View);
+  pic := TfrxPictureView(Component);
   sName := LowerCase(pic.Name);
   bMatch := True;
   if      sName = 'foto300'  then res := frPx300
