@@ -893,8 +893,12 @@ begin
       '       L.CODIGO_ART_ALBCLIN AS ART, ' +
       '       COALESCE(L.ID_AC_PIVOT_ALBCLIN, 0) AS ID_AC, ' +
       '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
-      '       COALESCE(ATBC.NOMBRE_ATB, AVC.AV, '''') AS COLOR_TXT, ' +
-      '       COALESCE(ATBC.CODIGO_ATB, '''')         AS COLOR_COD, ' +
+      '       COALESCE(ATBC.NOMBRE_ATB, AVC.AV, ' +
+      '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.CODIGO_UNIDAD_ALBCLIN, ''/'', 2), ''/'', -1), ' +
+      '                '''') AS COLOR_TXT, ' +
+      '       COALESCE(ATBC.CODIGO_ATB, ' +
+      '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.CODIGO_UNIDAD_ALBCLIN, ''/'', 2), ''/'', -1), ' +
+      '                '''') AS COLOR_COD, ' +
       '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
       '       L.CANTIDAD_ALBCLIN AS CANTIDAD ' +
       '  FROM fza_albaranes_compra_lineas L ' +
