@@ -881,25 +881,29 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
-    // Usamos vi_atributos_sku_basico para el color: la vista ya hace
-    // el cruce SKU -> AV -> atributo basico y trae NOMBRE_ATB y
-    // HEX_ATB (codigo y hex del color del proveedor). Asi la columna
-    // 'Color' en pivote muestra el nombre del color y el cuadradito
-    // (OnCustomDrawCell pinta el HEX). Para la talla del SKU seguimos
-    // usando fza_atributos_sku porque solo necesitamos el ID_AV.
+    // JOINs directos a fza_atributos_sku / valores / basicos en vez
+    // de a vi_atributos_sku_basico: la vista es un UNION ALL con
+    // muchos LEFT JOIN que MySQL materializa entero (27 s observados
+    // sobre un albaran de 100 lineas). Aqui solo necesitamos el AV
+    // global (val.ID_ATB_AV) sin overrides por articulo / conjunto,
+    // que es lo suficiente para mostrar nombre y hex del color.
     q.SQL.Text :=
       'SELECT L.LINEA_ALBCLIN AS LINEA, ' +
       '       L.CODIGO_ART_ALBCLIN AS ART, ' +
       '       COALESCE(L.ID_AC_PIVOT_ALBCLIN, 0) AS ID_AC, ' +
-      '       COALESCE(VS.ID_AV, 0) AS COLOR_AV, ' +
-      '       COALESCE(VS.NOMBRE_ATB, '''') AS COLOR_TXT, ' +
-      '       COALESCE(VS.HEX_ATB, '''')    AS COLOR_HEX, ' +
+      '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
+      '       COALESCE(ATBC.NOMBRE_ATB, AVC.AV, '''') AS COLOR_TXT, ' +
+      '       COALESCE(ATBC.HEX_ATB, '''')           AS COLOR_HEX, ' +
       '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
       '       L.CANTIDAD_ALBCLIN AS CANTIDAD ' +
       '  FROM fza_albaranes_compra_lineas L ' +
-      '  LEFT JOIN vi_atributos_sku_basico VS ' +
-      '    ON VS.CODIGO_UNIDAD_SKU = L.CODIGO_UNIDAD_ALBCLIN ' +
-      '   AND VS.ID_VA_AV = ''CO'' ' +
+      '  LEFT JOIN fza_atributos_sku SAC ' +
+      '    ON SAC.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
+      '  LEFT JOIN fza_atributos_valores AVC ' +
+      '    ON AVC.ID_AV = SAC.ID_AV_SA ' +
+      '   AND AVC.ID_VA_AV = ''CO'' ' +
+      '  LEFT JOIN fza_atributos_basicos ATBC ' +
+      '    ON ATBC.ID_ATB = AVC.ID_ATB_AV ' +
       '  LEFT JOIN fza_atributos_sku T ' +
       '    ON T.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
       '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVT ' +
