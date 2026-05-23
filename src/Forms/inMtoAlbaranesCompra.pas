@@ -137,9 +137,12 @@ type
     FPivotLineasRepr : TList<Integer>;
     FPivotCantidades : TDictionary<Int64,Double>;
     FPivotColorTexto : TDictionary<Integer,string>;
+    FPivotColorHex   : TDictionary<Integer,string>;
     FPivotIdAc       : TDictionary<Integer,Integer>;
     FPivotMaxAvTalla : Integer;
     FColColorPivot   : TcxGridDBColumn;
+    FOrigColIndexAlmacen : Integer;
+    FOrigColIndexColor   : Integer;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorTallas;
@@ -157,6 +160,11 @@ type
                                       var Accept: Boolean);
     procedure PublicarCantidadesPivot;
     procedure AplicarVisibilidadColumnasPivot(AModoPivot: Boolean);
+    procedure IntercambiarPosicionColorAlmacen(AModoPivot: Boolean);
+    procedure tvLineasAlbaranColorCustomDrawCell(Sender: TcxCustomGridTableView;
+                ACanvas: TcxCanvas;
+                AViewInfo: TcxGridTableDataCellViewInfo;
+                var ADone: Boolean);
     function  ValidarPivotePosible(var AMensaje: string): Boolean;
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
@@ -185,7 +193,10 @@ begin
   FPivotLineasRepr := TList<Integer>.Create;
   FPivotCantidades := TDictionary<Int64,Double>.Create;
   FPivotColorTexto := TDictionary<Integer,string>.Create;
+  FPivotColorHex   := TDictionary<Integer,string>.Create;
   FPivotIdAc       := TDictionary<Integer,Integer>.Create;
+  FOrigColIndexAlmacen := -1;
+  FOrigColIndexColor   := -1;
   // Columna no-bound 'Color' solo visible en modo pivote (los SKUs ya
   // no se ven y necesitamos algo que distinga visualmente las filas
   // representantes que comparten articulo).
@@ -195,6 +206,7 @@ begin
   FColColorPivot.Width   := 110;
   FColColorPivot.Visible := False;
   FColColorPivot.Options.Editing := False;
+  FColColorPivot.OnCustomDrawCell := tvLineasAlbaranColorCustomDrawCell;
   inherited;
   InicializarGestorTallas;
   // Hook OnDataChange del master: al navegar de un albaran a otro hay
@@ -254,6 +266,7 @@ begin
   FreeAndNil(FPivotLineasRepr);
   FreeAndNil(FPivotCantidades);
   FreeAndNil(FPivotColorTexto);
+  FreeAndNil(FPivotColorHex);
   FreeAndNil(FPivotIdAc);
   inherited;
 end;
@@ -474,6 +487,7 @@ begin
     if Assigned(FPivotLineasRepr) then FPivotLineasRepr.Clear;
     if Assigned(FPivotCantidades) then FPivotCantidades.Clear;
     if Assigned(FPivotColorTexto) then FPivotColorTexto.Clear;
+    if Assigned(FPivotColorHex) then FPivotColorHex.Clear;
     if Assigned(FPivotIdAc) then FPivotIdAc.Clear;
   end;
   AplicarVisibilidadColumnasPivot(FMostrarTallas);
@@ -854,6 +868,7 @@ begin
   FPivotLineasRepr.Clear;
   FPivotCantidades.Clear;
   FPivotColorTexto.Clear;
+  FPivotColorHex.Clear;
   FPivotIdAc.Clear;
   FPivotMaxAvTalla := 0;
   if dmmAlbaranesCompra = nil then Exit;
@@ -866,26 +881,25 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
-    // AVC_TXT trae el texto visible del color (AV.AV). LEFT JOIN al
-    // AV via C.ID_AV_SA (no condicionado a ID_VA_AV: si C ya filtro
-    // por 'CO' el AV recuperado lo es; si C no encontro nada,
-    // AVC_TXT queda en NULL y COALESCE devuelve '').
+    // Usamos vi_atributos_sku_basico para el color: la vista ya hace
+    // el cruce SKU -> AV -> atributo basico y trae NOMBRE_ATB y
+    // HEX_ATB (codigo y hex del color del proveedor). Asi la columna
+    // 'Color' en pivote muestra el nombre del color y el cuadradito
+    // (OnCustomDrawCell pinta el HEX). Para la talla del SKU seguimos
+    // usando fza_atributos_sku porque solo necesitamos el ID_AV.
     q.SQL.Text :=
       'SELECT L.LINEA_ALBCLIN AS LINEA, ' +
       '       L.CODIGO_ART_ALBCLIN AS ART, ' +
       '       COALESCE(L.ID_AC_PIVOT_ALBCLIN, 0) AS ID_AC, ' +
-      '       COALESCE(C.ID_AV_SA, 0) AS COLOR_AV, ' +
-      '       COALESCE(AVC_TXT.AV, '''') AS COLOR_TXT, ' +
+      '       COALESCE(VS.ID_AV, 0) AS COLOR_AV, ' +
+      '       COALESCE(VS.NOMBRE_ATB, '''') AS COLOR_TXT, ' +
+      '       COALESCE(VS.HEX_ATB, '''')    AS COLOR_HEX, ' +
       '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
       '       L.CANTIDAD_ALBCLIN AS CANTIDAD ' +
       '  FROM fza_albaranes_compra_lineas L ' +
-      '  LEFT JOIN fza_atributos_sku C ' +
-      '    ON C.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
-      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVC ' +
-      '                WHERE AVC.ID_AV = C.ID_AV_SA ' +
-      '                  AND AVC.ID_VA_AV = ''CO'') ' +
-      '  LEFT JOIN fza_atributos_valores AVC_TXT ' +
-      '    ON AVC_TXT.ID_AV = C.ID_AV_SA ' +
+      '  LEFT JOIN vi_atributos_sku_basico VS ' +
+      '    ON VS.CODIGO_UNIDAD_SKU = L.CODIGO_UNIDAD_ALBCLIN ' +
+      '   AND VS.ID_VA_AV = ''CO'' ' +
       '  LEFT JOIN fza_atributos_sku T ' +
       '    ON T.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
       '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVT ' +
@@ -912,6 +926,8 @@ begin
         FPivotLineasRepr.Add(iLineaRepr);
         FPivotColorTexto.AddOrSetValue(iLineaRepr,
                                        q.FieldByName('COLOR_TXT').AsString);
+        FPivotColorHex.AddOrSetValue(iLineaRepr,
+                                     q.FieldByName('COLOR_HEX').AsString);
         FPivotIdAc.AddOrSetValue(iLineaRepr,
                                  q.FieldByName('ID_AC').AsInteger);
       end;
@@ -1028,6 +1044,98 @@ begin
   // el color ya esta en el SKU y la columna seria redundante).
   if Assigned(FColColorPivot) then
     FColColorPivot.Visible := AModoPivot;
+  // Intercambio Color <-> Almacen en modo pivote: el usuario quiere
+  // ver el Color a la izquierda (donde estaba Almacen) y el Almacen
+  // a la derecha (donde estaba Color). En plano se restaura el orden
+  // original (Almacen junto al resto de la ficha, Color oculta).
+  IntercambiarPosicionColorAlmacen(AModoPivot);
+end;
+
+procedure TfrmMtoAlbaranesCompra.tvLineasAlbaranColorCustomDrawCell(
+            Sender: TcxCustomGridTableView;
+            ACanvas: TcxCanvas;
+            AViewInfo: TcxGridTableDataCellViewInfo;
+            var ADone: Boolean);
+var
+  rectCuadro : TRect;
+  rectTexto  : TRect;
+  sHex       : string;
+  sTexto     : string;
+  iColor     : TColor;
+  colLinea   : TcxGridDBColumn;
+  vLinea     : Variant;
+  iLinea     : Integer;
+  recIdx     : Integer;
+begin
+  // Pinta el cuadradito HEX a la izquierda del texto. Si no hay HEX,
+  // dejamos pintar al default. AViewInfo.GridRecord.RecordIndex es el
+  // indice del record en el DataController; resolvemos LINEA_ALBCLIN
+  // via la columna bound y buscamos en los caches.
+  ADone := False;
+  if FPivotColorHex = nil then Exit;
+  if AViewInfo.GridRecord = nil then Exit;
+  recIdx := AViewInfo.GridRecord.RecordIndex;
+  colLinea := tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBCLIN');
+  if colLinea = nil then Exit;
+  vLinea := tvLineasAlbaran.DataController.Values[recIdx, colLinea.Index];
+  if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Exit;
+  iLinea := StrToIntDef(VarToStr(vLinea), 0);
+  if iLinea <= 0 then Exit;
+  sHex := '';
+  sTexto := '';
+  FPivotColorHex.TryGetValue(iLinea, sHex);
+  FPivotColorTexto.TryGetValue(iLinea, sTexto);
+  if (sHex = '') and (sTexto = '') then Exit;
+  ACanvas.FillRect(AViewInfo.Bounds, AViewInfo.Params.Color);
+  rectCuadro := AViewInfo.Bounds;
+  rectCuadro.Left   := rectCuadro.Left + 4;
+  rectCuadro.Top    := rectCuadro.Top + 3;
+  rectCuadro.Right  := rectCuadro.Left + 16;
+  rectCuadro.Bottom := rectCuadro.Bottom - 3;
+  if sHex <> '' then
+  begin
+    // HEX en formato '#RRGGBB'. Pasamos a TColor (BGR Windows).
+    iColor := RGB(StrToIntDef('$' + Copy(sHex, 2, 2), 0),
+                  StrToIntDef('$' + Copy(sHex, 4, 2), 0),
+                  StrToIntDef('$' + Copy(sHex, 6, 2), 0));
+    ACanvas.Brush.Color := iColor;
+    ACanvas.Pen.Color   := clBlack;
+    ACanvas.Rectangle(rectCuadro);
+  end;
+  rectTexto := AViewInfo.Bounds;
+  rectTexto.Left := rectCuadro.Right + 6;
+  ACanvas.Font.Color := AViewInfo.Params.TextColor;
+  ACanvas.Brush.Style := bsClear;
+  ACanvas.TextOut(rectTexto.Left, rectTexto.Top + 2, sTexto);
+  ADone := True;
+end;
+
+procedure TfrmMtoAlbaranesCompra.IntercambiarPosicionColorAlmacen(
+                                                       AModoPivot: Boolean);
+var
+  colAlm : TcxGridDBColumn;
+  iTmp   : Integer;
+begin
+  if not Assigned(FColColorPivot) then Exit;
+  colAlm := tvLineasAlbaran.GetColumnByFieldName('CODIGO_ALMACEN_ALBCLIN');
+  if colAlm = nil then Exit;
+  if AModoPivot then
+  begin
+    if FOrigColIndexAlmacen < 0 then
+      FOrigColIndexAlmacen := colAlm.Position.ColIndex;
+    if FOrigColIndexColor < 0 then
+      FOrigColIndexColor := FColColorPivot.Position.ColIndex;
+    iTmp := colAlm.Position.ColIndex;
+    colAlm.Position.ColIndex := FColColorPivot.Position.ColIndex;
+    FColColorPivot.Position.ColIndex := iTmp;
+  end
+  else
+  begin
+    if FOrigColIndexAlmacen >= 0 then
+      colAlm.Position.ColIndex := FOrigColIndexAlmacen;
+    if FOrigColIndexColor >= 0 then
+      FColColorPivot.Position.ColIndex := FOrigColIndexColor;
+  end;
 end;
 
 initialization
