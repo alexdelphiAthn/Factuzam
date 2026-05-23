@@ -14,7 +14,10 @@ inherited dmAlbaranesCompra: TdmAlbaranesCompra
   object unqryAlbaranesCompraLineas: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM fza_albaranes_compra_lineas')
+      'SELECT * FROM fza_albaranes_compra_lineas'
+      ' WHERE NUMERO_ALBC_ALBCLIN = :NUMERO_ALBC'
+      '   AND SERIE_ALBC_ALBCLIN  = :SERIE_ALBC'
+      ' ORDER BY LINEA_ALBCLIN')
     MasterFields = 'NUMERO_ALBC;SERIE_ALBC'
     DetailFields = 'NUMERO_ALBC_ALBCLIN;SERIE_ALBC_ALBCLIN'
     AfterInsert = unqryAlbaranesCompraLineasAfterInsert
@@ -24,13 +27,15 @@ inherited dmAlbaranesCompra: TdmAlbaranesCompra
     Top = 8
     ParamData = <
       item
-        DataType = ftUnknown
+        DataType = ftWideString
         Name = 'NUMERO_ALBC'
+        ParamType = ptInput
         Value = nil
       end
       item
-        DataType = ftUnknown
+        DataType = ftWideString
         Name = 'SERIE_ALBC'
+        ParamType = ptInput
         Value = nil
       end>
   end
