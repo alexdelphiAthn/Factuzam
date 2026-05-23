@@ -367,7 +367,13 @@ begin
     Exit;
   end;
   FGestorTallas.RecalcularMaxColumnas;
-  FGestorTallas.CargarCantidadesTodasLineas;
+  // OJO: NO llamar a FGestorTallas.CargarCantidadesTodasLineas: el
+  // gestor consulta fza_albaranes_compra_celdas (tabla inexistente —
+  // en compras la cantidad por SKU vive directamente en la linea, no
+  // en una tabla de celdas separada como en sesiones). La excepcion
+  // resultante abortaba el flujo y la publicacion de Color y tallas
+  // nunca llegaba a ejecutarse. La carga de cantidades del modo
+  // pivote la hace PublicarCantidadesPivot desde btnTallasHorizontalClick.
   FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
@@ -495,12 +501,14 @@ begin
     dsTablaG.DataSet.Post;
   end;
   // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar el
-  // row (los Posts del master/detail provocan re-fetch). Recargamos
-  // cantidades desde la tabla de celdas para que las celdas talla
-  // vuelvan a mostrar lo que el usuario tecleo. Mismo patron que en
-  // inMtoComprasSesiones.btnGrabarClick.
-  if Assigned(FGestorTallas) then
-    FGestorTallas.CargarCantidadesTodasLineas;
+  // row. Si estamos en modo pivote, republicamos cantidades y Color
+  // desde el cache local (no hay tabla de celdas en compras, asi que
+  // no podemos usar el gestor — leemos del propio fza_albaranes_compra_lineas).
+  if FMostrarTallas then
+  begin
+    CargarCachePivot;
+    PublicarCantidadesPivot;
+  end;
 end;
 
 // Hook del OnDataChange de dsTablaG: solo nos interesa el evento global
@@ -555,8 +563,13 @@ procedure TfrmMtoAlbaranesCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
 begin
   if Assigned(dmmAlbaranesCompra) then
     dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
-  if Assigned(FGestorTallas) and FMostrarTallas then
-    FGestorTallas.CargarCantidadesTodasLineas;
+  // Sin tabla de celdas en compras: republicamos via cache local en
+  // vez de delegar en el gestor (mismo motivo que en btnGrabarClick).
+  if FMostrarTallas then
+  begin
+    CargarCachePivot;
+    PublicarCantidadesPivot;
+  end;
 end;
 
 // Al cambiar de linea con foco actualizamos los captions de las columnas
