@@ -108,7 +108,7 @@ type
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnImprimirHClick(Sender: TObject);
     procedure btnImprimirVClick(Sender: TObject);
-    procedure AbrirModalImpresion(AOrientacion: TOrientacionAlbCompra);
+    procedure AbrirModalImpresion(AHorizontal: Boolean);
     // Eventos del grid de lineas — mismos handlers que en Sesiones de compra:
     // sin esto, las celdas talla quedan vacias al navegar, no se sombrean
     // las celdas fuera del conjunto pivot y Enter no salta de celda.
@@ -506,17 +506,16 @@ end;
 procedure TfrmMtoAlbaranesCompra.btnImprimirHClick(Sender: TObject);
 begin
   inherited;
-  AbrirModalImpresion(oacHorizontal);
+  AbrirModalImpresion(True);
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnImprimirVClick(Sender: TObject);
 begin
   inherited;
-  AbrirModalImpresion(oacVertical);
+  AbrirModalImpresion(False);
 end;
 
-procedure TfrmMtoAlbaranesCompra.AbrirModalImpresion(
-                                       AOrientacion: TOrientacionAlbCompra);
+procedure TfrmMtoAlbaranesCompra.AbrirModalImpresion(AHorizontal: Boolean);
 var
   form    : TfrmPrintAlbCompra;
   sSerie  : string;
@@ -544,7 +543,10 @@ begin
   form := TfrmPrintAlbCompra.Create(Application);
   try
     form.dmAlbc        := dmmAlbaranesCompra;
-    form.Orientacion   := AOrientacion;
+    if AHorizontal then
+      form.Orientacion := oacHorizontal
+    else
+      form.Orientacion := oacVertical;
     form.edtSerie.Text := sSerie;
     form.edtNumero.Text:= sNumero;
     form.ShowModal;
