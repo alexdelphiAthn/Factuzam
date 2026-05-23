@@ -318,7 +318,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Height = 347
                 Align = alClient
                 TabOrder = 0
+                OnEnter = cxgrdLineasAlbaranEnter
+                OnExit = cxgrdLineasAlbaranExit
                 object tvLineasAlbaran: TcxGridDBTableView
+                  OnCustomDrawCell = tvLineasAlbaranCustomDrawCell
+                  OnEditing = tvLineasAlbaranEditing
+                  OnFocusedRecordChanged = tvLineasAlbaranFocusedRecordChanged
+                  OptionsBehavior.FocusCellOnTab = True
+                  OptionsBehavior.FocusFirstCellOnNewRecord = True
                   object colLineaAlbcLINEA: TcxGridDBColumn
                     Caption = 'L'#237'nea'
                     DataBinding.FieldName = 'LINEA_ALBCLIN'
