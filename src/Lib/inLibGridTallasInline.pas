@@ -507,6 +507,12 @@ begin
     end
     else
     begin
+      // Auditoria estandar (libro de estilo bbdd §3.7): las 4
+      // columnas INSTANTE_ALTA/MODIF y USUARIO_ALTA/MODIF son NOT NULL
+      // sin default. Hay que rellenarlas TODAS en el INSERT;
+      // ON DUPLICATE KEY UPDATE solo refresca las MODIF, las ALTA se
+      // conservan. Antes solo rellenabamos MODIF y MariaDB rechazaba
+      // el insert por 'Field USUARIO_ALTA doesnt have a default value'.
       q.SQL.Text :=
         'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
         FCfg.FieldSerieCel   + ', ' +
@@ -516,8 +522,8 @@ begin
         FCfg.FieldAvPivotCel + ', ' +
         FCfg.FieldAlmacenCel + ', ' +
         FCfg.FieldCantidadCel +
-        ', INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:s, :n, :l, :f, :p, :a, :c, NOW(), :u) ' +
+        ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'VALUES (:s, :n, :l, :f, :p, :a, :c, NOW(), :u, NOW(), :u) ' +
         'ON DUPLICATE KEY UPDATE ' +
         FCfg.FieldCantidadCel + ' = :c, ' +
         'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
