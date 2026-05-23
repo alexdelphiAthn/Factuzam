@@ -1122,19 +1122,19 @@ begin
   if AModoPivot then
   begin
     if FOrigColIndexAlmacen < 0 then
-      FOrigColIndexAlmacen := colAlm.VisibleIndex;
+      FOrigColIndexAlmacen := colAlm.Index;
     if FOrigColIndexColor < 0 then
-      FOrigColIndexColor := FColColorPivot.VisibleIndex;
-    iTmp := colAlm.VisibleIndex;
-    colAlm.VisibleIndex := FColColorPivot.VisibleIndex;
-    FColColorPivot.VisibleIndex := iTmp;
+      FOrigColIndexColor := FColColorPivot.Index;
+    iTmp := colAlm.Index;
+    colAlm.Index := FColColorPivot.Index;
+    FColColorPivot.Index := iTmp;
   end
   else
   begin
     if FOrigColIndexAlmacen >= 0 then
-      colAlm.VisibleIndex := FOrigColIndexAlmacen;
+      colAlm.Index := FOrigColIndexAlmacen;
     if FOrigColIndexColor >= 0 then
-      FColColorPivot.VisibleIndex := FOrigColIndexColor;
+      FColColorPivot.Index := FOrigColIndexColor;
   end;
 end;
 
