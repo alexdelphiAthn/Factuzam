@@ -291,6 +291,24 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             TabOrder = 3
             OnClick = btnAtributosColumnaClick
           end
+          object btnImprimirH: TcxButton
+            Left = 618
+            Top = 6
+            Width = 140
+            Height = 26
+            Caption = 'Imprimir horizontal'
+            TabOrder = 4
+            OnClick = btnImprimirHClick
+          end
+          object btnImprimirV: TcxButton
+            Left = 764
+            Top = 6
+            Width = 130
+            Height = 26
+            Caption = 'Imprimir vertical'
+            TabOrder = 5
+            OnClick = btnImprimirVClick
+          end
         end
         object pnlBodyFicha: TPanel
           Left = 0
