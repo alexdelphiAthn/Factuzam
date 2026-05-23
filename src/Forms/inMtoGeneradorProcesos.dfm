@@ -4,7 +4,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
   Caption = 'Generador de Procesos'
   ClientHeight = 571
   ClientWidth = 999
-  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 999
   ExplicitHeight = 571
   TextHeight = 19
@@ -12,7 +11,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     Width = 859
     Height = 571
     TabOrder = 0
-    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 859
     ExplicitHeight = 571
     inherited pcPantalla: TcxPageControl
@@ -279,6 +277,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               Caption = '&2_Metadatos'
               ImageIndex = 2
               OnShow = tsMetadatosShow
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object splDetalleMeta: TcxSplitter
                 Left = 377
                 Top = 0
@@ -311,6 +313,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsEstructura: TcxTabSheet
                     Caption = '&Estructura Metadato'
                     ImageIndex = 0
+                    ExplicitLeft = 0
+                    ExplicitTop = 0
+                    ExplicitWidth = 0
+                    ExplicitHeight = 0
                     object mmoSalida: TMemo
                       Left = 488
                       Top = 344
@@ -418,6 +424,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                   object tsContenido: TcxTabSheet
                     Caption = '&Vista Contenido'
                     ImageIndex = 1
+                    ExplicitLeft = 0
+                    ExplicitTop = 0
+                    ExplicitWidth = 0
+                    ExplicitHeight = 0
                     object cxgrdMetadatos1: TcxGrid
                       Left = 0
                       Top = 0
@@ -624,6 +634,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
             object tsVistaDatos: TcxTabSheet
               Caption = '&3_VistaDatos'
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxVista: TcxGrid
                 Left = 0
                 Top = 0
@@ -905,7 +919,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         ExplicitHeight = 500
         inherited pnlPerfilTop: TPanel
           Width = 855
-          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 855
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
@@ -914,7 +927,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         inherited pnlPerfilDetail: TPanel
           Width = 855
           Height = 443
-          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 855
           ExplicitHeight = 443
           inherited cxgrdPerfil: TcxGrid
@@ -972,11 +984,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     inherited pnlTopPage: TPanel
       Width = 859
       TabOrder = 0
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 859
       inherited pnlTopGrid: TPanel
         Width = 859
-        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 859
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
@@ -992,22 +1002,11 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     Left = 859
     Height = 571
     TabOrder = 1
-    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 859
     ExplicitHeight = 571
     inherited pButtonGen: TPanel
       Top = 373
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 373
-    end
-    inherited pButtonBDStat: TPanel
-      StyleElements = [seFont, seClient, seBorder]
-      inherited pnStateDataSet: TPanel
-        StyleElements = [seFont, seClient, seBorder]
-      end
-      inherited pnlDataSetName: TPanel
-        StyleElements = [seFont, seClient, seBorder]
-      end
     end
     object btnEjecutar: TcxButton
       Left = 1
@@ -1042,7 +1041,6 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     DelimitedIdentifierAttri.Background = clWhite
     DelimitedIdentifierAttri.Foreground = clGreen
     IdentifierAttri.Background = clWhite
-    IdentifierAttri.Foreground = clForestgreen
     KeyAttri.Foreground = clBlue
     NumberAttri.Foreground = clNavy
     PLSQLAttri.Foreground = clBlue
