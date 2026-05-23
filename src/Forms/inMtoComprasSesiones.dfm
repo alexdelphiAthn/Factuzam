@@ -510,7 +510,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Width = 170
             end
             object dbcLinTalla01: TcxGridDBColumn
-              Caption = ''
               Tag = 1
               Visible = True
               Width = 50
@@ -518,7 +517,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla02: TcxGridDBColumn
-              Caption = ''
               Tag = 2
               Visible = True
               Width = 50
@@ -526,7 +524,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla03: TcxGridDBColumn
-              Caption = ''
               Tag = 3
               Visible = True
               Width = 50
@@ -534,7 +531,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla04: TcxGridDBColumn
-              Caption = ''
               Tag = 4
               Visible = True
               Width = 50
@@ -542,7 +538,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla05: TcxGridDBColumn
-              Caption = ''
               Tag = 5
               Visible = True
               Width = 50
@@ -550,7 +545,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla06: TcxGridDBColumn
-              Caption = ''
               Tag = 6
               Visible = True
               Width = 50
@@ -558,7 +552,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla07: TcxGridDBColumn
-              Caption = ''
               Tag = 7
               Visible = True
               Width = 50
@@ -566,7 +559,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla08: TcxGridDBColumn
-              Caption = ''
               Tag = 8
               Visible = True
               Width = 50
@@ -574,7 +566,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla09: TcxGridDBColumn
-              Caption = ''
               Tag = 9
               Visible = True
               Width = 50
@@ -582,7 +573,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla10: TcxGridDBColumn
-              Caption = ''
               Tag = 10
               Visible = True
               Width = 50
@@ -590,7 +580,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla11: TcxGridDBColumn
-              Caption = ''
               Tag = 11
               Visible = True
               Width = 50
@@ -598,7 +587,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla12: TcxGridDBColumn
-              Caption = ''
               Tag = 12
               Visible = True
               Width = 50
@@ -606,7 +594,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla13: TcxGridDBColumn
-              Caption = ''
               Tag = 13
               Visible = True
               Width = 50
@@ -614,7 +601,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla14: TcxGridDBColumn
-              Caption = ''
               Tag = 14
               Visible = True
               Width = 50
@@ -622,7 +608,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla15: TcxGridDBColumn
-              Caption = ''
               Tag = 15
               Visible = True
               Width = 50
@@ -630,7 +615,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla16: TcxGridDBColumn
-              Caption = ''
               Tag = 16
               Visible = True
               Width = 50
@@ -638,7 +622,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla17: TcxGridDBColumn
-              Caption = ''
               Tag = 17
               Visible = True
               Width = 50
@@ -646,7 +629,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla18: TcxGridDBColumn
-              Caption = ''
               Tag = 18
               Visible = True
               Width = 50
@@ -654,7 +636,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla19: TcxGridDBColumn
-              Caption = ''
               Tag = 19
               Visible = True
               Width = 50
@@ -662,7 +643,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               Properties.DisplayFormat = '#,##0'
             end
             object dbcLinTalla20: TcxGridDBColumn
-              Caption = ''
               Tag = 20
               Visible = True
               Width = 50
