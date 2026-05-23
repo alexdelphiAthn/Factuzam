@@ -136,7 +136,9 @@ type
     // no cambia; el agrupado es solo de vista.
     FPivotLineasRepr : TList<Integer>;
     FPivotCantidades : TDictionary<Int64,Double>;
+    FPivotColorTexto : TDictionary<Integer,string>;
     FPivotMaxAvTalla : Integer;
+    FColColorPivot   : TcxGridDBColumn;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorTallas;
@@ -181,6 +183,16 @@ begin
   CrearColumnasAtributos;
   FPivotLineasRepr := TList<Integer>.Create;
   FPivotCantidades := TDictionary<Int64,Double>.Create;
+  FPivotColorTexto := TDictionary<Integer,string>.Create;
+  // Columna no-bound 'Color' solo visible en modo pivote (los SKUs ya
+  // no se ven y necesitamos algo que distinga visualmente las filas
+  // representantes que comparten articulo).
+  FColColorPivot := tvLineasAlbaran.CreateColumn;
+  FColColorPivot.Name    := 'colLinAlbcColorPivot';
+  FColColorPivot.Caption := 'Color';
+  FColColorPivot.Width   := 110;
+  FColColorPivot.Visible := False;
+  FColColorPivot.Options.Editing := False;
   inherited;
   InicializarGestorTallas;
   // Hook OnDataChange del master: al navegar de un albaran a otro hay
@@ -239,6 +251,7 @@ begin
   FreeAndNil(FGestorTallas);
   FreeAndNil(FPivotLineasRepr);
   FreeAndNil(FPivotCantidades);
+  FreeAndNil(FPivotColorTexto);
   inherited;
 end;
 
@@ -451,6 +464,7 @@ begin
     ds.OnFilterRecord := nil;
     if Assigned(FPivotLineasRepr) then FPivotLineasRepr.Clear;
     if Assigned(FPivotCantidades) then FPivotCantidades.Clear;
+    if Assigned(FPivotColorTexto) then FPivotColorTexto.Clear;
   end;
   AplicarVisibilidadColumnasPivot(FMostrarTallas);
   RefrescarVisibilidadTallas;
@@ -822,6 +836,7 @@ var
 begin
   FPivotLineasRepr.Clear;
   FPivotCantidades.Clear;
+  FPivotColorTexto.Clear;
   FPivotMaxAvTalla := 0;
   if dmmAlbaranesCompra = nil then Exit;
   if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
@@ -833,10 +848,15 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
+    // AVC_TXT trae el texto visible del color (AV.AV). LEFT JOIN al
+    // AV via C.ID_AV_SA (no condicionado a ID_VA_AV: si C ya filtro
+    // por 'CO' el AV recuperado lo es; si C no encontro nada,
+    // AVC_TXT queda en NULL y COALESCE devuelve '').
     q.SQL.Text :=
       'SELECT L.LINEA_ALBCLIN AS LINEA, ' +
       '       L.CODIGO_ART_ALBCLIN AS ART, ' +
       '       COALESCE(C.ID_AV_SA, 0) AS COLOR_AV, ' +
+      '       COALESCE(AVC_TXT.AV, '''') AS COLOR_TXT, ' +
       '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
       '       L.CANTIDAD_ALBCLIN AS CANTIDAD ' +
       '  FROM fza_albaranes_compra_lineas L ' +
@@ -845,6 +865,8 @@ begin
       '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVC ' +
       '                WHERE AVC.ID_AV = C.ID_AV_SA ' +
       '                  AND AVC.ID_VA_AV = ''CO'') ' +
+      '  LEFT JOIN fza_atributos_valores AVC_TXT ' +
+      '    ON AVC_TXT.ID_AV = C.ID_AV_SA ' +
       '  LEFT JOIN fza_atributos_sku T ' +
       '    ON T.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
       '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVT ' +
@@ -869,6 +891,8 @@ begin
         iLineaRepr := iLinea;
         dictRepr.Add(sKey, iLineaRepr);
         FPivotLineasRepr.Add(iLineaRepr);
+        FPivotColorTexto.AddOrSetValue(iLineaRepr,
+                                       q.FieldByName('COLOR_TXT').AsString);
       end;
       if iTallaAv > 0 then
       begin
@@ -936,9 +960,19 @@ begin
       vAc    := tvLineasAlbaran.DataController.Values[recIdx, colAc.Index];
       if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
       if VarIsNull(vAc) or VarIsEmpty(vAc) then Continue;
-      iLinea := vLinea;
+      // LINEA_ALBCLIN es varchar(4) ('0010', '0070'...). El Variant
+      // llega como string y la asignacion directa a Integer no convierte:
+      // forzamos StrToIntDef para que el lookup en el cache acierte.
+      iLinea := StrToIntDef(VarToStr(vLinea), 0);
       iAc    := vAc;
-      if iAc <= 0 then Continue;
+      if (iLinea <= 0) or (iAc <= 0) then Continue;
+      // Publicar el color (no-bound) primero — no depende del conjunto.
+      if Assigned(FColColorPivot) and Assigned(FPivotColorTexto) then
+      begin
+        if FPivotColorTexto.ContainsKey(iLinea) then
+          tvLineasAlbaran.DataController.Values[recIdx,
+                                FColColorPivot.Index] := FPivotColorTexto[iLinea];
+      end;
       arr := FGestorTallas.GetPosicionesConjunto(iAc);
       for i := 0 to High(arr) do
       begin
@@ -975,6 +1009,10 @@ begin
     if col <> nil then
       col.Visible := not AModoPivot;
   end;
+  // Columna 'Color' no-bound: solo visible en modo pivote (en plano,
+  // el color ya esta en el SKU y la columna seria redundante).
+  if Assigned(FColColorPivot) then
+    FColColorPivot.Visible := AModoPivot;
 end;
 
 initialization
