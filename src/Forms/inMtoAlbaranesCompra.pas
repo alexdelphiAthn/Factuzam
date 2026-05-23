@@ -905,50 +905,52 @@ end;
 // columna la da el gestor a partir del ID_AC_PIVOT_ALBCLIN de la linea.
 procedure TfrmMtoAlbaranesCompra.PublicarCantidadesPivot;
 var
-  ds       : TUniQuery;
-  bk       : TBookmark;
+  colLinea : TcxGridDBColumn;
+  colAc    : TcxGridDBColumn;
+  recIdx   : Integer;
+  vLinea   : Variant;
+  vAc      : Variant;
   iLinea   : Integer;
   iAc      : Integer;
   arr      : TArrPosConjunto;
   i        : Integer;
   iKey     : Int64;
   rCant    : Double;
-  recIdx   : Integer;
 begin
+  // Mismo patron que TGestorGridTallas.CargarCantidadesTodasLineas:
+  // iterar el DataController del grid (no el cursor del dataset) y
+  // leer LINEA / ID_AC via Values[] sin mover el cursor. Asi recIdx
+  // siempre coincide con el record real visible. Iterar ds.First/Next
+  // mientras Filtered=True desincronizaba el indice con el grid y
+  // ninguna cantidad acertaba a su celda.
   if FGestorTallas = nil then Exit;
   if dmmAlbaranesCompra = nil then Exit;
-  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-  if (ds = nil) or not ds.Active then Exit;
+  colLinea := tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBCLIN');
+  colAc    := tvLineasAlbaran.GetColumnByFieldName('ID_AC_PIVOT_ALBCLIN');
+  if (colLinea = nil) or (colAc = nil) then Exit;
   tvLineasAlbaran.DataController.BeginUpdate;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
   try
-    ds.First;
-    recIdx := 0;
-    while not ds.Eof do
+    for recIdx := 0 to tvLineasAlbaran.DataController.RecordCount - 1 do
     begin
-      iLinea := ds.FieldByName('LINEA_ALBCLIN').AsInteger;
-      iAc    := ds.FieldByName('ID_AC_PIVOT_ALBCLIN').AsInteger;
-      if iAc > 0 then
+      vLinea := tvLineasAlbaran.DataController.Values[recIdx, colLinea.Index];
+      vAc    := tvLineasAlbaran.DataController.Values[recIdx, colAc.Index];
+      if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
+      if VarIsNull(vAc) or VarIsEmpty(vAc) then Continue;
+      iLinea := vLinea;
+      iAc    := vAc;
+      if iAc <= 0 then Continue;
+      arr := FGestorTallas.GetPosicionesConjunto(iAc);
+      for i := 0 to High(arr) do
       begin
-        arr := FGestorTallas.GetPosicionesConjunto(iAc);
-        for i := 0 to High(arr) do
-        begin
-          if i >= CANT_TALLAS_MAX then Break;
-          if FTallaColumns[i] = nil then Continue;
-          iKey := Int64(iLinea) * 100000 + arr[i].IdAv;
-          if FPivotCantidades.TryGetValue(iKey, rCant) and (rCant <> 0) then
-            tvLineasAlbaran.DataController.Values[recIdx,
-                                            FTallaColumns[i].Index] := rCant;
-        end;
+        if i >= CANT_TALLAS_MAX then Break;
+        if FTallaColumns[i] = nil then Continue;
+        iKey := Int64(iLinea) * 100000 + arr[i].IdAv;
+        if FPivotCantidades.TryGetValue(iKey, rCant) and (rCant <> 0) then
+          tvLineasAlbaran.DataController.Values[recIdx,
+                                          FTallaColumns[i].Index] := rCant;
       end;
-      Inc(recIdx);
-      ds.Next;
     end;
   finally
-    if ds.BookmarkValid(bk) then ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
     tvLineasAlbaran.DataController.EndUpdate;
   end;
 end;
