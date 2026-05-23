@@ -62,7 +62,8 @@ function MaterializarSesion(ADM: TdmComprasSesiones;
                             const ASerieDocAlb, ASerieDocPed: string;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
                                 AMsgError: string;
-                            const AFiltroAlmacen: string = ''): Boolean;
+                            const AFiltroAlmacen: string = '';
+                            ASoloDocumentos: Boolean = False): Boolean;
 
 // Revierte la materializacion: borra los movimientos de almacen que la
 // sesion genero (TIPO_DOC_MOV='AC' apuntando a SERIE_SES/NUMERO_SES) y
@@ -1302,7 +1303,8 @@ function MaterializarSesion(ADM: TdmComprasSesiones;
                             const ASerieDocAlb, ASerieDocPed: string;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
                                 AMsgError: string;
-                            const AFiltroAlmacen: string = ''): Boolean;
+                            const AFiltroAlmacen: string = '';
+                            ASoloDocumentos: Boolean = False): Boolean;
 var
   conn       : TUniConnection;
   sSerieSes, sNumSes, sPrefijoEAN: string;
@@ -1352,82 +1354,63 @@ begin
   bTxOwned := not conn.InTransaction;
   if bTxOwned then conn.StartTransaction;
   try
-    qLin := TUniQuery.Create(nil);
-    try
-      qLin.Connection := conn;
-      qLin.SQL.Text :=
-        'SELECT L.* FROM fza_compras_sesiones_lineas L ' +
-        ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
-        ' ORDER BY L.LINEA_SESLIN';
-      qLin.ParamByName('s').AsString := sSerieSes;
-      qLin.ParamByName('n').AsString := sNumSes;
-      qLin.Open;
-
-      while not qLin.Eof do
-      begin
-        iLin   := qLin.FieldByName('LINEA_SESLIN').AsInteger;
-        rPrecio := qLin.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
-
-        if qLin.FieldByName('ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
-          sCodigoArt := qLin.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
-        else
+    // Creacion de articulos / SKUs / barras / proveedor / tarifa /
+    // propiedades / fotos. Esta fase es global a la sesion (no depende
+    // del almacen) y solo debe ejecutarse UNA vez aunque el caller
+    // itere materializaciones por almacen (modo distribuido + 'un doc
+    // por almacen'). El llamador pasa ASoloDocumentos=True en las
+    // iteraciones 2..N para saltarla.
+    if not ASoloDocumentos then
+    begin
+      qLin := TUniQuery.Create(nil);
+      try
+        qLin.Connection := conn;
+        qLin.SQL.Text :=
+          'SELECT L.* FROM fza_compras_sesiones_lineas L ' +
+          ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
+          ' ORDER BY L.LINEA_SESLIN';
+        qLin.ParamByName('s').AsString := sSerieSes;
+        qLin.ParamByName('n').AsString := sNumSes;
+        qLin.Open;
+        while not qLin.Eof do
         begin
-          sCodigoArt :=
-            qLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
-          InsertarArticulo(conn, ADM, AUsuario, sSerieSes, sNumSes, iLin);
+          iLin   := qLin.FieldByName('LINEA_SESLIN').AsInteger;
+          rPrecio := qLin.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+          if qLin.FieldByName('ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
+            sCodigoArt := qLin.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
+          else
+          begin
+            sCodigoArt :=
+              qLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
+            InsertarArticulo(conn, ADM, AUsuario, sSerieSes, sNumSes, iLin);
+          end;
+          if qLin.FieldByName('TIPO_LINEA_SESLIN').AsString = 'MATRIZ' then
+          begin
+            InsertarConjuntosAtributos(conn, sSerieSes, sNumSes,
+                                       sCodigoArt, AUsuario, iLin);
+            InsertarSkusYBarras(conn, sSerieSes, sNumSes, sCodigoArt,
+                                AUsuario, sPrefijoEAN, iLin);
+          end;
+          InsertarPropiedadesFijas(conn, sSerieSes, sNumSes,
+                                   sCodigoArt, AUsuario);
+          InsertarTemporadaCabecera(conn, sCodigoArt, AUsuario,
+                                    iIdPvTemporada);
+          if qLin.FieldByName('TIPO_LINEA_SESLIN').AsString <> 'SERVICIO' then
+          begin
+            UpsertArticuloProveedor(conn, sCodigoArt, sCodigoPrv,
+              qLin.FieldByName('REF_PRV_SESLIN').AsString,
+              AUsuario, rPrecio);
+            rPrecioVta := qLin.FieldByName('PRECIO_VENTA_SESLIN').AsFloat;
+            UpsertArticuloTarifa(conn, sCodigoArt, sCodigoTar,
+              AUsuario, rPrecioVta);
+          end;
+          inLibFotos.oFotos.MigrarFotosSesion(sSerieSes, sNumSes, iLin,
+                                              sCodigoArt, AUsuario);
+          qLin.Next;
         end;
-
-        if qLin.FieldByName('TIPO_LINEA_SESLIN').AsString = 'MATRIZ' then
-        begin
-          InsertarConjuntosAtributos(conn, sSerieSes, sNumSes,
-                                     sCodigoArt, AUsuario, iLin);
-          InsertarSkusYBarras(conn, sSerieSes, sNumSes, sCodigoArt,
-                              AUsuario, sPrefijoEAN, iLin);
-        end
-        else if qLin.FieldByName('TIPO_LINEA_SESLIN').AsString = 'ESCALAR' then
-        begin
-          // Generar 1 EAN13 a nivel de artículo (sin SKU intermedio)
-          // Implementación pendiente: INSERT directo en fza_codigos_barras
-          // con CODIGO_UNIDAD_CB = sCodigoArt.
-        end;
-        // TIPO_LINEA = SERVICIO → ni SKU ni EAN13.
-
-        InsertarPropiedadesFijas(conn,
-                                 sSerieSes,
-                                 sNumSes,
-                                 sCodigoArt,
-                                 AUsuario);
-
-        // Temporada de cabecera -> propiedad TEMPORADA del articulo.
-        // Aplica tanto a articulos nuevos como a REUSAR (INSERT IGNORE
-        // respeta el valor preexistente si ya hay fila).
-        InsertarTemporadaCabecera(conn, sCodigoArt, AUsuario,
-                                  iIdPvTemporada);
-
-        if qLin.FieldByName('TIPO_LINEA_SESLIN').AsString <> 'SERVICIO' then
-        begin
-          UpsertArticuloProveedor(conn, sCodigoArt, sCodigoPrv,
-            qLin.FieldByName('REF_PRV_SESLIN').AsString,
-            AUsuario, rPrecio);
-
-          // Tarifa de venta de cabecera con el PRECIO_VENTA_SESLIN de la
-          // linea. UPSERT — si ya existe la rifa para este articulo, se
-          // actualiza el precio final con el sugerido por la sesion.
-          rPrecioVta := qLin.FieldByName('PRECIO_VENTA_SESLIN').AsFloat;
-          UpsertArticuloTarifa(conn, sCodigoArt, sCodigoTar,
-            AUsuario, rPrecioVta);
-        end;
-
-        // Migrar fotos tomadas en muestrario (fza_compras_sesiones_fotos)
-        // a fza_articulos_fotos con el codigo final del articulo. Renombra
-        // los PNG 300/600/real y borra el rastro de sesion.
-        inLibFotos.oFotos.MigrarFotosSesion(sSerieSes, sNumSes, iLin,
-                                            sCodigoArt, AUsuario);
-
-        qLin.Next;
+      finally
+        FreeAndNil(qLin);
       end;
-    finally
-      FreeAndNil(qLin);
     end;
 
     // Documentos resultantes — pendiente cuando existan las tablas
