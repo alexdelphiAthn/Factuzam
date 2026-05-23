@@ -226,11 +226,6 @@ type
   private
     FGestorTallas : TGestorGridTallas;     // mueve toda la logica reusable
                                            // de tallas pivotadas a la lib
-    function MaterializarSesionConTx(AFrmSet: TfrmModalCrearAlbaranSesion;
-                                      const AUsuario: string;
-                                      out ASerPed, ANumPed,
-                                          ASerAlb, ANumAlb,
-                                          AErr: string): Boolean;
     FTallaColumns : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
     FBasicosColor : TArray<string>;
     FQryConjuntosTallas : TUniQuery;
@@ -246,6 +241,11 @@ type
                 const ANombreFam: string = '');
     procedure ProponerPrecioVenta;
     procedure LogMsg(const S: string);
+    function MaterializarSesionConTx(AFrmSet: TfrmModalCrearAlbaranSesion;
+                                      const AUsuario: string;
+                                      out ASerPed, ANumPed,
+                                          ASerAlb, ANumAlb,
+                                          AErr: string): Boolean;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -951,7 +951,7 @@ begin
                  frmSet.SerieAlb, frmSet.SeriePed]));
   Screen.Cursor := crHourGlass;
   try
-    bOK := MaterializarSesionConTx(Dmm, frmSet, oUser,
+    bOK := MaterializarSesionConTx(frmSet, oUser,
                                    sSerPed, sNumPed,
                                    sSerAlb, sNumAlb, sErr);
   finally
