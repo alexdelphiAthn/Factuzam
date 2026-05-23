@@ -137,7 +137,7 @@ type
     FPivotLineasRepr : TList<Integer>;
     FPivotCantidades : TDictionary<Int64,Double>;
     FPivotColorTexto : TDictionary<Integer,string>;
-    FPivotColorHex   : TDictionary<Integer,string>;
+    FPivotColorCodigo: TDictionary<Integer,string>;
     FPivotIdAc       : TDictionary<Integer,Integer>;
     FPivotMaxAvTalla : Integer;
     FColColorPivot   : TcxGridDBColumn;
@@ -177,7 +177,8 @@ var
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar,
+  inLibAtributosPaleta;
 
 {$R *.dfm}
 
@@ -193,7 +194,7 @@ begin
   FPivotLineasRepr := TList<Integer>.Create;
   FPivotCantidades := TDictionary<Int64,Double>.Create;
   FPivotColorTexto := TDictionary<Integer,string>.Create;
-  FPivotColorHex   := TDictionary<Integer,string>.Create;
+  FPivotColorCodigo:= TDictionary<Integer,string>.Create;
   FPivotIdAc       := TDictionary<Integer,Integer>.Create;
   FOrigColIndexAlmacen := -1;
   FOrigColIndexColor   := -1;
@@ -266,7 +267,7 @@ begin
   FreeAndNil(FPivotLineasRepr);
   FreeAndNil(FPivotCantidades);
   FreeAndNil(FPivotColorTexto);
-  FreeAndNil(FPivotColorHex);
+  FreeAndNil(FPivotColorCodigo);
   FreeAndNil(FPivotIdAc);
   inherited;
 end;
@@ -487,7 +488,7 @@ begin
     if Assigned(FPivotLineasRepr) then FPivotLineasRepr.Clear;
     if Assigned(FPivotCantidades) then FPivotCantidades.Clear;
     if Assigned(FPivotColorTexto) then FPivotColorTexto.Clear;
-    if Assigned(FPivotColorHex) then FPivotColorHex.Clear;
+    if Assigned(FPivotColorCodigo) then FPivotColorCodigo.Clear;
     if Assigned(FPivotIdAc) then FPivotIdAc.Clear;
   end;
   AplicarVisibilidadColumnasPivot(FMostrarTallas);
@@ -868,7 +869,7 @@ begin
   FPivotLineasRepr.Clear;
   FPivotCantidades.Clear;
   FPivotColorTexto.Clear;
-  FPivotColorHex.Clear;
+  FPivotColorCodigo.Clear;
   FPivotIdAc.Clear;
   FPivotMaxAvTalla := 0;
   if dmmAlbaranesCompra = nil then Exit;
@@ -893,7 +894,7 @@ begin
       '       COALESCE(L.ID_AC_PIVOT_ALBCLIN, 0) AS ID_AC, ' +
       '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
       '       COALESCE(ATBC.NOMBRE_ATB, AVC.AV, '''') AS COLOR_TXT, ' +
-      '       COALESCE(ATBC.HEX_ATB, '''')           AS COLOR_HEX, ' +
+      '       COALESCE(ATBC.CODIGO_ATB, '''')         AS COLOR_COD, ' +
       '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
       '       L.CANTIDAD_ALBCLIN AS CANTIDAD ' +
       '  FROM fza_albaranes_compra_lineas L ' +
@@ -930,8 +931,8 @@ begin
         FPivotLineasRepr.Add(iLineaRepr);
         FPivotColorTexto.AddOrSetValue(iLineaRepr,
                                        q.FieldByName('COLOR_TXT').AsString);
-        FPivotColorHex.AddOrSetValue(iLineaRepr,
-                                     q.FieldByName('COLOR_HEX').AsString);
+        FPivotColorCodigo.AddOrSetValue(iLineaRepr,
+                                        q.FieldByName('COLOR_COD').AsString);
         FPivotIdAc.AddOrSetValue(iLineaRepr,
                                  q.FieldByName('ID_AC').AsInteger);
       end;
@@ -1061,22 +1062,21 @@ procedure TfrmMtoAlbaranesCompra.tvLineasAlbaranColorCustomDrawCell(
             AViewInfo: TcxGridTableDataCellViewInfo;
             var ADone: Boolean);
 var
-  rectCuadro : TRect;
-  rectTexto  : TRect;
-  sHex       : string;
-  sTexto     : string;
-  iColor     : TColor;
-  colLinea   : TcxGridDBColumn;
-  vLinea     : Variant;
-  iLinea     : Integer;
-  recIdx     : Integer;
+  colLinea : TcxGridDBColumn;
+  vLinea   : Variant;
+  iLinea   : Integer;
+  recIdx   : Integer;
+  sCodigo  : string;
+  sTexto   : string;
+  Info     : TInfoBasico;
 begin
-  // Pinta el cuadradito HEX a la izquierda del texto. Si no hay HEX,
-  // dejamos pintar al default. AViewInfo.GridRecord.RecordIndex es el
-  // indice del record en el DataController; resolvemos LINEA_ALBCLIN
-  // via la columna bound y buscamos en los caches.
+  // Mismo patron que inMtoComprasSesiones.tvLineasCustomDrawCell para
+  // la celda dbcLinColorBasico: resolver el atributo basico por su
+  // CODIGO_ATB y delegar el dibujo del swatch en
+  // PintarCeldaConCuadradoColor (Lib/inLibAtributosPaleta). Asi
+  // unificamos look & feel con sesiones y no duplicamos pintado.
   ADone := False;
-  if FPivotColorHex = nil then Exit;
+  if FPivotColorCodigo = nil then Exit;
   if AViewInfo.GridRecord = nil then Exit;
   recIdx := AViewInfo.GridRecord.RecordIndex;
   colLinea := tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBCLIN');
@@ -1085,33 +1085,15 @@ begin
   if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Exit;
   iLinea := StrToIntDef(VarToStr(vLinea), 0);
   if iLinea <= 0 then Exit;
-  sHex := '';
-  sTexto := '';
-  FPivotColorHex.TryGetValue(iLinea, sHex);
+  sCodigo := '';
+  sTexto  := '';
+  FPivotColorCodigo.TryGetValue(iLinea, sCodigo);
   FPivotColorTexto.TryGetValue(iLinea, sTexto);
-  if (sHex = '') and (sTexto = '') then Exit;
-  ACanvas.FillRect(AViewInfo.Bounds, AViewInfo.Params.Color);
-  rectCuadro := AViewInfo.Bounds;
-  rectCuadro.Left   := rectCuadro.Left + 4;
-  rectCuadro.Top    := rectCuadro.Top + 3;
-  rectCuadro.Right  := rectCuadro.Left + 16;
-  rectCuadro.Bottom := rectCuadro.Bottom - 3;
-  if sHex <> '' then
-  begin
-    // HEX en formato '#RRGGBB'. Pasamos a TColor (BGR Windows).
-    iColor := RGB(StrToIntDef('$' + Copy(sHex, 2, 2), 0),
-                  StrToIntDef('$' + Copy(sHex, 4, 2), 0),
-                  StrToIntDef('$' + Copy(sHex, 6, 2), 0));
-    ACanvas.Brush.Color := iColor;
-    ACanvas.Pen.Color   := clBlack;
-    ACanvas.Rectangle(rectCuadro);
-  end;
-  rectTexto := AViewInfo.Bounds;
-  rectTexto.Left := rectCuadro.Right + 6;
-  ACanvas.Font.Color := AViewInfo.Params.TextColor;
-  ACanvas.Brush.Style := bsClear;
-  ACanvas.TextOut(rectTexto.Left, rectTexto.Top + 2, sTexto);
-  ADone := True;
+  if (sCodigo = '') then Exit;
+  Info := Default(TInfoBasico);
+  if not ObtenerInfoBasico('CO', sCodigo, Info) then Exit;
+  if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto) then
+    ADone := True;
 end;
 
 procedure TfrmMtoAlbaranesCompra.IntercambiarPosicionColorAlmacen(
