@@ -1429,6 +1429,7 @@
                 TabOrder = 6
                 Height = 21
                 Width = 410
+                Transparent = True
               end
               object lblNumSerie: TcxLabel
                 Left = 60
@@ -1452,6 +1453,7 @@
                 TabOrder = 9
                 Height = 21
                 Width = 410
+                Transparent = True
               end
               object lblTitular: TcxLabel
                 Left = 142
@@ -1468,6 +1470,7 @@
                 TabOrder = 11
                 Height = 21
                 Width = 410
+                Transparent = True
               end
               object btnSeleccionarCer: TcxButton
                 Left = 290

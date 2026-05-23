@@ -286,9 +286,9 @@ begin
   if chkSoloEsteArt.Checked then
     sCodArt := Trim(edtCodArt.Text);
   DM.CrearDataSetEtiquetasArt(sCodArt,
-                                        ObtenerCodigoTarifa,
-                                        ObtenerAlmacenesCsv,
-                                        dtFechaAplicacion.Date);
+                              ObtenerCodigoTarifa,
+                              ObtenerAlmacenesCsv,
+                              dtFechaAplicacion.Date);
 end;
 
 end.

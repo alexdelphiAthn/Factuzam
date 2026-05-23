@@ -18,6 +18,7 @@ inherited frmGenFacRec: TfrmGenFacRec
     Top = 4
     Caption = 'Factura Origen N'#250'mero'
     TabOrder = 1
+    Transparent = True
   end
   object edtNumFacOrigen: TcxTextEdit [1]
     Left = 135
@@ -104,6 +105,7 @@ inherited frmGenFacRec: TfrmGenFacRec
     Margins.Bottom = 4
     Caption = 'Serie Factura Destino'
     TabOrder = 8
+    Transparent = True
   end
   object cmbSerieFactura: TcxLookupComboBox [8]
     Left = 16
@@ -127,6 +129,7 @@ inherited frmGenFacRec: TfrmGenFacRec
     Margins.Bottom = 4
     Caption = 'Fecha Factura Destino'
     TabOrder = 9
+    Transparent = True
   end
   object dtFecha: TcxDateEdit [10]
     Left = 16

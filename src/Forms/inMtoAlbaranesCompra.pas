@@ -12,9 +12,13 @@
 {    Mantenimiento de albaranes de COMPRA.                                     }
 {    Cabecera + lineas sobre fza_albaranes_compra. Espejo simplificado         }
 {    de inMtoAlbaranes adaptado a documento de compra (proveedor en            }
-{    lugar de cliente, precio de compra en lugar de venta). No genera          }
-{    aun factura ni movimientos de stock; eso vendra en hitos                  }
-{    posteriores.                                                              }
+{    lugar de cliente, precio de compra en lugar de venta).                    }
+{                                                                              }
+{    Movimientos de stock: el data module (UniDataAlbaranesCompra)             }
+{    detecta transiciones de ESTADO_ALBC en BeforePost y dispara en            }
+{    AfterPost la generacion (ABIERTO -> CERRADO) o reversion                  }
+{    (CERRADO -> ABIERTO) via inLibAlbaranesCompraMovimientos.                 }
+{    La generacion de factura sigue pendiente para un hito posterior.          }
 {******************************************************************************}
 unit inMtoAlbaranesCompra;
 
@@ -153,6 +157,7 @@ type
     function  ValidarPivotePosible(var AMensaje: string): Boolean;
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
+    procedure CrearTablaPrincipal; override;
   end;
 
 var
@@ -176,22 +181,7 @@ begin
   CrearColumnasAtributos;
   FPivotLineasRepr := TList<Integer>.Create;
   FPivotCantidades := TDictionary<Int64,Double>.Create;
-
   inherited;
-
-  dmmAlbaranesCompra := TdmAlbaranesCompra.Create(Self);
-  dsTablaG.DataSet := dmmAlbaranesCompra.unqryTablaG;
-  tvLineasAlbaran.DataController.DataSource :=
-    dmmAlbaranesCompra.dsAlbaranesCompraLineas;
-  // Enganchar master-detail: el detail tiene MasterFields/DetailFields en
-  // el DFM pero MasterSource solo se puede asignar a runtime porque el
-  // dsTablaG es del form (no del DM). Sin esto el detail no se filtra
-  // por la cabecera activa y o no ve nada o ve todas las lineas de la
-  // BBDD (segun como UniDAC lo interprete).
-  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
-  // unqryAlbaranesCompraLineas se abre en AbrirDetalles (main thread)
-  // tras unqryTablaG, igual que en el Mto de albaranes de venta.
-
   InicializarGestorTallas;
   // Hook OnDataChange del master: al navegar de un albaran a otro hay
   // que re-cargar las cantidades de tallas porque las columnas no-bound
@@ -210,6 +200,31 @@ begin
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+end;
+
+procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;
+begin
+  inherited;
+  // El padre (TfrmMtoGen.CrearTablaPrincipal -> CrearDataModule) ya creo
+  // la instancia del DM via RTTI desde fza_winforms y la dejo en
+  // tdmDataModule, ademas de enganchar dsTablaG.DataSet a su unqryTablaG.
+  // Tomamos esa misma instancia; antes haciamos TdmAlbaranesCompra.Create
+  // en FormCreate y enlazabamos el grid de lineas a un segundo DM cuyo
+  // unqryAlbaranesCompraLineas nunca recibia el .Open de
+  // AbrirTablaPrincipalAsync. Fallback Create(Self) por si la BBDD no
+  // tiene la entrada en fza_winforms (migracion no aplicada).
+  dmmAlbaranesCompra := (tdmDataModule as TdmAlbaranesCompra);
+  if not Assigned(dmmAlbaranesCompra) then
+  begin
+    dmmAlbaranesCompra := TdmAlbaranesCompra.Create(Self);
+    dsTablaG.DataSet := dmmAlbaranesCompra.unqryTablaG;
+  end;
+  tvLineasAlbaran.DataController.DataSource :=
+    dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+  // MasterSource se enlaza en DataModuleCreate del DM, pero lo
+  // re-aseguramos por idempotencia.
+  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
+  pkFieldName := 'SERIE_ALBC;NUMERO_ALBC';
 end;
 
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
