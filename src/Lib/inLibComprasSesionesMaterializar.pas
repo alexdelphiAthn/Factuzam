@@ -1808,6 +1808,26 @@ begin
                           ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
         q.ExecSQL;
       end;
+      // 1.ter Cleanup de movimientos AC huerfanos en la misma
+      // empresa+almacen. Si la sesion se materializo varias veces sin
+      // revertir o si versiones anteriores no limpiaban bien, quedan
+      // movimientos cuyo albaran ya no existe en fza_albaranes_compra
+      // (el albaran se borro en el paso 0j de esta o de una reversion
+      // previa). Sin albaran que los respalde, son residuos.
+      q.SQL.Text :=
+        'DELETE MOV FROM fza_movimientos_almacen MOV ' +
+        '  LEFT JOIN fza_albaranes_compra ALBC ' +
+        '         ON ALBC.SERIE_ALBC  = MOV.SERIE_DOC_MOV ' +
+        '        AND ALBC.NUMERO_ALBC = MOV.NUMERO_DOC_MOV ' +
+        ' WHERE MOV.TIPO_DOC_MOV   = ''AC'' ' +
+        '   AND MOV.CODIGO_EMP_MOV = :emp ' +
+        '   AND MOV.CODIGO_ALM_MOV = :alm ' +
+        '   AND ALBC.NUMERO_ALBC IS NULL';
+      q.ParamByName('emp').AsString :=
+                          ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+      q.ParamByName('alm').AsString :=
+                          ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+      q.ExecSQL;
 
       // 1b. Borrar las filas de pendiente de recibir generadas por
       //     esta sesion (si genero pedido). Mismo criterio: NUMERO_DOC

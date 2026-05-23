@@ -181,6 +181,7 @@ var
 implementation
 
 uses
+  System.StrUtils,
   inLibGlobalVar,
   inLibAtributosPaleta,
   inMtoModalImpAlbCompra,
@@ -501,6 +502,20 @@ begin
   RefrescarVisibilidadTallas;
   if FMostrarTallas then
     PublicarCantidadesPivot;
+  // Persistir la preferencia en la cabecera del albaran para que la
+  // proxima vez que se abra arranque ya en el modo elegido. Solo si la
+  // llamada viene del usuario (Sender <> nil); las llamadas automaticas
+  // desde dsTablaGDataChangeHook pasan Sender=nil y no deben re-escribir.
+  if (Sender <> nil) and (dsTablaG.DataSet <> nil) and
+     dsTablaG.DataSet.Active and (not dsTablaG.DataSet.IsEmpty) and
+     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil) then
+  begin
+    if not (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
+      dsTablaG.DataSet.Edit;
+    dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString :=
+      IfThen(FMostrarTallas, 'S', 'N');
+    dsTablaG.DataSet.Post;
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnImprimirHClick(Sender: TObject);
@@ -611,6 +626,21 @@ var
 begin
   if Field <> nil then Exit;
   if FGestorTallas = nil then Exit;
+  // Si la cabecera tiene ESPIVOTE_HORIZONTAL_ALBC='S' y el toggle aun no
+  // esta activo, lo activamos automaticamente. Asi cada albaran recuerda
+  // su preferencia individual. Si es 'N' y el toggle estaba activo por
+  // el usuario sobre otro albaran, lo desactivamos al cambiar.
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     (not dsTablaG.DataSet.IsEmpty) and
+     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil) then
+  begin
+    if (dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString = 'S')
+       and (not FMostrarTallas) then
+      btnTallasHorizontalClick(nil)
+    else if (dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString <> 'S')
+       and FMostrarTallas then
+      btnTallasHorizontalClick(nil);
+  end;
   if not FMostrarTallas then Exit;
   ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
   // El albaran que acaba de tomar foco puede no ser pivotable (articulos
