@@ -916,6 +916,49 @@ begin
   end;
 end;
 
+// Rellena PORCENTAJE_IVA_ALBCLIN y PRECIO_COMPRA_CIVA en las lineas
+// del albaran a partir de los porcentajes que viven en la cabecera
+// (PORCENTAJE_IVAN_ALBC, _IVAR_ALBC, _IVAS_ALBC, _IVAE_ALBC), mapeando
+// por TIPO_IVA_ARTICULO_ALBCLIN. La sesion origen no maneja IVA, por
+// eso InsertarLineaAlbaranCompra inserta el porcentaje a 0 y aqui se
+// reconstruye. Llamar SIEMPRE antes de RecalcularTotalesAlbaranCompra
+// — los totales suman IVA con este porcentaje.
+procedure RellenarIvaLineasAlbaranCompra(AConn: TUniConnection;
+                                          const ASerieAlbc, ANumAlbc: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'UPDATE fza_albaranes_compra_lineas L ' +
+      '  JOIN fza_albaranes_compra C ' +
+      '    ON C.NUMERO_ALBC = L.NUMERO_ALBC_ALBCLIN ' +
+      '   AND C.SERIE_ALBC  = L.SERIE_ALBC_ALBCLIN ' +
+      '   SET L.PORCENTAJE_IVA_ALBCLIN = CASE L.TIPO_IVA_ARTICULO_ALBCLIN ' +
+      '          WHEN ''N'' THEN IFNULL(C.PORCENTAJE_IVAN_ALBC, 0) ' +
+      '          WHEN ''R'' THEN IFNULL(C.PORCENTAJE_IVAR_ALBC, 0) ' +
+      '          WHEN ''S'' THEN IFNULL(C.PORCENTAJE_IVAS_ALBC, 0) ' +
+      '          WHEN ''E'' THEN IFNULL(C.PORCENTAJE_IVAE_ALBC, 0) ' +
+      '          ELSE 0 END, ' +
+      '       L.PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN = ' +
+      '         L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * (1 + ' +
+      '           CASE L.TIPO_IVA_ARTICULO_ALBCLIN ' +
+      '            WHEN ''N'' THEN IFNULL(C.PORCENTAJE_IVAN_ALBC, 0) ' +
+      '            WHEN ''R'' THEN IFNULL(C.PORCENTAJE_IVAR_ALBC, 0) ' +
+      '            WHEN ''S'' THEN IFNULL(C.PORCENTAJE_IVAS_ALBC, 0) ' +
+      '            WHEN ''E'' THEN IFNULL(C.PORCENTAJE_IVAE_ALBC, 0) ' +
+      '            ELSE 0 END / 100) ' +
+      ' WHERE L.NUMERO_ALBC_ALBCLIN = :n AND L.SERIE_ALBC_ALBCLIN = :s';
+    q.ParamByName('n').AsString := ANumAlbc;
+    q.ParamByName('s').AsString := ASerieAlbc;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 // Recalcula los totales de la cabecera del albaran a partir de sus
 // lineas. Lo llamamos justo despues de insertar todas las lineas para
 // no tener que mantener acumuladores en codigo cliente.
@@ -1402,7 +1445,10 @@ begin
       // 3. Crear lineas: una por (SKU, almacen) con SUM(CANTIDAD).
       InsertarLineasAlbaranCompra(conn, ADM, sSerieSes, sNumSes,
                                   ASerieAlb, ANumAlb, AUsuario);
-      // 4. Recalcular totales de la cabecera a partir de las lineas.
+      // 4. Rellenar IVA en lineas (sesion no maneja IVA, lo tomamos
+      //    de la cabecera del albaran segun TIPO_IVA del articulo).
+      RellenarIvaLineasAlbaranCompra(conn, ASerieAlb, ANumAlb);
+      // 5. Recalcular totales de la cabecera a partir de las lineas.
       RecalcularTotalesAlbaranCompra(conn, ASerieAlb, ANumAlb);
       // 5. Movimientos de entrada leyendo del propio albaran. Asi el
       //    flujo es el mismo que cuando el albaran se cierra a mano
