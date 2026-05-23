@@ -294,6 +294,9 @@
             <Form>frmPrintEtiqArt</Form>
             <FormType>TfrmPrintEtiqAlb</FormType>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalDistribuidor.pas">
+            <Form>frmModalDistribuidor</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCliEti.pas">
             <Form>frmPrintCliEti</Form>
         </DCCReference>
