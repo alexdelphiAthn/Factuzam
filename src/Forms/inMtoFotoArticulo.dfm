@@ -39,6 +39,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       TabOrder = 1
       Visible = False
       Width = 69
+      Transparent = True
     end
   end
   object pnlControles: TPanel [1]
@@ -81,6 +82,7 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       Top = 4
       Caption = 'Nivel al que aplica el cambio:'
       TabOrder = 7
+      Transparent = True
     end
     object cbbNivelSku: TcxComboBox
       Left = 380

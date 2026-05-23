@@ -40,6 +40,7 @@ object frmLogon: TfrmLogon
         TabOrder = 4
         Height = 21
         Width = 312
+        Transparent = True
       end
       object lblContrasena: TcxLabel
         Left = 7
@@ -49,6 +50,7 @@ object frmLogon: TfrmLogon
         TabOrder = 5
         Height = 21
         Width = 335
+        Transparent = True
       end
       object edtUser: TcxTextEdit
         Left = 7
@@ -134,6 +136,7 @@ object frmLogon: TfrmLogon
       TabOrder = 10
       Height = 24
       Width = 358
+      Transparent = True
     end
     object lblHostBBDD: TcxLabel
       Left = 24
@@ -143,6 +146,7 @@ object frmLogon: TfrmLogon
       TabOrder = 11
       Height = 21
       Width = 312
+      Transparent = True
     end
     object lblPortHost: TcxLabel
       Left = 264
@@ -152,6 +156,7 @@ object frmLogon: TfrmLogon
       TabOrder = 12
       Height = 21
       Width = 72
+      Transparent = True
     end
     object lblNomBBDD: TcxLabel
       Left = 24
@@ -161,6 +166,7 @@ object frmLogon: TfrmLogon
       TabOrder = 13
       Height = 21
       Width = 312
+      Transparent = True
     end
     object lblUserBBDD: TcxLabel
       Left = 24
@@ -170,6 +176,7 @@ object frmLogon: TfrmLogon
       TabOrder = 14
       Height = 21
       Width = 312
+      Transparent = True
     end
     object edtHostName: TcxTextEdit
       Left = 24

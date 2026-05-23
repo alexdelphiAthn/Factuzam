@@ -35,6 +35,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Top = 12
       Caption = 'C'#243'digo de Art'#237'culo:'
       TabOrder = 5
+      Transparent = True
     end
     object edtCodArt: TcxTextEdit
       Left = 156
@@ -56,6 +57,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Top = 76
       Caption = 'Tarifa:'
       TabOrder = 6
+      Transparent = True
     end
     object cbbTarifa: TcxComboBox
       Left = 156
@@ -69,6 +71,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Top = 108
       Caption = 'Fecha de aplicaci'#243'n:'
       TabOrder = 7
+      Transparent = True
     end
     object dtFechaAplicacion: TcxDateEdit
       Left = 193
@@ -81,6 +84,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Top = 140
       Caption = 'Almacenes (marque uno o varios):'
       TabOrder = 8
+      Transparent = True
     end
     object lvAlmacenes: TcxListView
       Left = 12

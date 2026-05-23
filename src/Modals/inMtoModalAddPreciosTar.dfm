@@ -50,6 +50,7 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
       Font.Quality = fqClearTypeNatural
       ParentFont = False
       ExplicitWidth = 191
+      Transparent = True
     end
     object lblTarifas: TLabel
       AlignWithMargins = True
@@ -72,6 +73,7 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
       Font.Quality = fqClearTypeNatural
       ParentFont = False
       ExplicitWidth = 206
+      Transparent = True
     end
     object pnlFechas: TPanel
       Left = 1
@@ -96,6 +98,7 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
         Font.Style = [fsBold]
         Font.Quality = fqClearTypeNatural
         ParentFont = False
+        Transparent = True
       end
       object lblHasta: TLabel
         Left = 280
@@ -103,6 +106,7 @@ inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
         Width = 142
         Height = 19
         Caption = 'Hasta (opcional):'
+        Transparent = True
       end
       object dtpDesde: TcxDateEdit
         Left = 141

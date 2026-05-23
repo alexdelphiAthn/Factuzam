@@ -1346,54 +1346,63 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Top = 40
                   Caption = 'Total R.E.'
                   TabOrder = 0
+                  Transparent = True
                 end
                 object PorRE: TcxLabel
                   Left = 440
                   Top = 40
                   Caption = '%R.E.'
                   TabOrder = 1
+                  Transparent = True
                 end
                 object lblTotIVA: TcxLabel
                   Left = 336
                   Top = 40
                   Caption = 'Total IVA'
                   TabOrder = 2
+                  Transparent = True
                 end
                 object lblPorIVA: TcxLabel
                   Left = 280
                   Top = 40
                   Caption = '%IVA'
                   TabOrder = 3
+                  Transparent = True
                 end
                 object lblBaseNeta: TcxLabel
                   Left = 176
                   Top = 40
                   Caption = 'BaseNeta'
                   TabOrder = 4
+                  Transparent = True
                 end
                 object lblNormal: TcxLabel
                   Left = 90
                   Top = 82
                   Caption = 'Normal'
                   TabOrder = 5
+                  Transparent = True
                 end
                 object lblReducido: TcxLabel
                   Left = 73
                   Top = 133
                   Caption = 'Reducido'
                   TabOrder = 6
+                  Transparent = True
                 end
                 object lblSReducido: TcxLabel
                   Left = 21
                   Top = 181
                   Caption = 'S'#250'per Reducido'
                   TabOrder = 7
+                  Transparent = True
                 end
                 object lblExento: TcxLabel
                   Left = 94
                   Top = 229
                   Caption = 'Exento'
                   TabOrder = 8
+                  Transparent = True
                 end
                 object curTOTAL_BASEI_IVAN_FAC: TcxDBCurrencyEdit
                   Left = 162
@@ -2072,6 +2081,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Width = 176
                   Height = 19
                   Caption = 'PETICION_COMPLETA'
+                  Transparent = True
                 end
                 object lblRESPUESTA_COMPLETA: TLabel
                   Left = 32
@@ -2080,6 +2090,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'RESPUESTA_COMPLETA'
                   FocusControl = cxdbmRESPUESTA_COMPLETA
+                  Transparent = True
                 end
                 object lblQRCODE_BASE64: TLabel
                   Left = 63
@@ -2088,6 +2099,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'QRCODE_BASE64'
                   FocusControl = cxdbmQRCODE_BASE64
+                  Transparent = True
                 end
                 object lblVERIFACTU_URL: TLabel
                   Left = 69
@@ -2096,6 +2108,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'VERIFACTU_URL'
                   FocusControl = cxdbmVERIFACTU_URL
+                  Transparent = True
                 end
                 object lblCHAIN_HASH: TLabel
                   Left = 90
@@ -2104,6 +2117,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'CHAIN_HASH'
                   FocusControl = txtCHAIN_HASH
+                  Transparent = True
                 end
                 object lblCHAIN_NUMBER: TLabel
                   Left = 81
@@ -2112,6 +2126,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'CHAIN_NUMBER'
                   FocusControl = txtCHAIN_NUMBER
+                  Transparent = True
                 end
                 object lblISSUED_TIME: TLabel
                   Left = 110
@@ -2120,6 +2135,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'ISSUED_TIME'
                   FocusControl = dteISSUED_TIME
+                  Transparent = True
                 end
                 object lblISSUER_IRS_ID: TLabel
                   Left = 97
@@ -2128,6 +2144,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'ISSUER_IRS_ID'
                   FocusControl = txtISSUER_IRS_ID
+                  Transparent = True
                 end
                 object lblQUEUE_ID: TLabel
                   Left = 131
@@ -2136,6 +2153,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'QUEUE_ID'
                   FocusControl = spQUEUE_ID
+                  Transparent = True
                 end
                 object lblREQUEST_ID: TLabel
                   Left = 114
@@ -2144,6 +2162,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'REQUEST_ID'
                   FocusControl = txtREQUEST_ID
+                  Transparent = True
                 end
                 object lbl: TLabel
                   Left = 50
@@ -2152,6 +2171,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'ID_FACCON'
                   FocusControl = spID_CONSOLIDACION
+                  Transparent = True
                 end
                 object lblFECHA_PROCESAMIENTO: TLabel
                   Left = 435
@@ -2160,6 +2180,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'FECHA_PROCESAMIENTO'
                   FocusControl = dteFECHA_PROCESAMIENTO
+                  Transparent = True
                 end
                 object lblESTADO: TLabel
                   Left = 375
@@ -2168,6 +2189,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Height = 19
                   Caption = 'ESTADO'
                   FocusControl = txtESTADO
+                  Transparent = True
                 end
                 object btnReconsolidar: TSpeedButton
                   Left = 841

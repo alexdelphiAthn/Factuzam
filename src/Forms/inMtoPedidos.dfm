@@ -127,6 +127,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 12
                 Caption = 'N'#250'mero'
                 TabOrder = 9
+                Transparent = True
               end
               object txtNUMERO_PED: TcxDBTextEdit
                 Left = 8
@@ -141,6 +142,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 12
                 Caption = 'Serie'
                 TabOrder = 10
+                Transparent = True
               end
               object txtSERIE_PED: TcxDBTextEdit
                 Left = 106
@@ -155,6 +157,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 12
                 Caption = 'Fecha'
                 TabOrder = 11
+                Transparent = True
               end
               object dteFECHA_PED: TcxDBDateEdit
                 Left = 184
@@ -169,6 +172,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 12
                 Caption = 'Fecha entrega'
                 TabOrder = 12
+                Transparent = True
               end
               object dteFECHA_ENTREGA_PED: TcxDBDateEdit
                 Left = 302
@@ -183,6 +187,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 12
                 Caption = 'Estado'
                 TabOrder = 13
+                Transparent = True
               end
               object txtESTADO_PED: TcxDBTextEdit
                 Left = 420
@@ -198,6 +203,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 12
                 Caption = 'ID PrestaShop'
                 TabOrder = 14
+                Transparent = True
               end
               object txtIDPS_PED: TcxDBTextEdit
                 Left = 540
@@ -213,6 +219,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 68
                 Caption = 'Ref. PrestaShop'
                 TabOrder = 15
+                Transparent = True
               end
               object txtREFERENCIAPS_PED: TcxDBTextEdit
                 Left = 540
@@ -228,6 +235,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 Top = 80
                 Caption = 'Empresa Emisora'
                 TabOrder = 16
+                Transparent = True
               end
               object btnCODIGO_EMP: TcxDBButtonEdit
                 Left = 8
@@ -250,12 +258,14 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 TabOrder = 17
                 Height = 21
                 Width = 380
+                Transparent = True
               end
               object lblCodigoCliente: TcxLabel
                 Left = 8
                 Top = 140
                 Caption = 'Cliente'
                 TabOrder = 18
+                Transparent = True
               end
               object btnCODIGO_CLI: TcxDBButtonEdit
                 Left = 8
@@ -278,6 +288,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 TabOrder = 19
                 Height = 21
                 Width = 380
+                Transparent = True
               end
             end
             object tsEmpresa: TcxTabSheet
@@ -294,6 +305,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Top = 24
                   Caption = 'NIF'
                   TabOrder = 9
+                  Transparent = True
                 end
                 object txtNIF_EMPRESA_PED: TcxDBTextEdit
                   Left = 12
@@ -308,6 +320,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Top = 24
                   Caption = 'M'#243'vil'
                   TabOrder = 10
+                  Transparent = True
                 end
                 object txtMOVIL_EMPRESA_PED: TcxDBTextEdit
                   Left = 152
@@ -322,6 +335,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   Top = 24
                   Caption = 'Email'
                   TabOrder = 11
+                  Transparent = True
                 end
                 object txtEMAIL_EMPRESA_PED: TcxDBTextEdit
                   Left = 292
@@ -814,6 +828,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Top = 8
             Caption = 'Bases'
             TabOrder = 3
+            Transparent = True
           end
           object curTOTAL_BASES_PED: TcxDBCurrencyEdit
             Left = 425
@@ -829,6 +844,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Top = 8
             Caption = 'IVA'
             TabOrder = 4
+            Transparent = True
           end
           object curTOTAL_IMPUESTOS_PED: TcxDBCurrencyEdit
             Left = 570
@@ -844,6 +860,7 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             Top = 8
             Caption = 'TOTAL'
             TabOrder = 5
+            Transparent = True
           end
           object curTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit
             Left = 740

@@ -283,6 +283,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Top = 56
                   Caption = #218'ltimo contador'
                   TabOrder = 3
+                  Transparent = True
                 end
                 object spnContadorArt: TcxDBSpinEdit
                   Left = 164
@@ -300,6 +301,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Top = 56
                   Caption = 'D'#237'gitos relleno'
                   TabOrder = 4
+                  Transparent = True
                 end
                 object spnPadArt: TcxDBSpinEdit
                   Left = 414
@@ -318,6 +320,7 @@ inherited frmMtoFamilias: TfrmMtoFamilias
                   Caption = 'Ej: contador 0, d'#237'gitos 5  '#8594'  pr'#243'ximo c'#243'digo = FAM00001'
                   Style.TextColor = clGrayText
                   TabOrder = 5
+                  Transparent = True
                 end
               end
             end
