@@ -63,7 +63,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
       end
       item
         DataSet = dmAlbaranesCompra.fxdsCabAlbc
-        DataSetName = 'GuiasTallas'
+        DataSetName = 'Albaran'
       end>
     Variables = <>
     Style = <>
@@ -452,7 +452,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
         Top = 173.858380000000000000
         Width = 1046.929500000000000000
         DataSet = dmAlbaranesCompra.fxdsCabAlbc
-        DataSetName = 'GuiasTallas'
+        DataSetName = 'Albaran'
         RowCount = 0
         object GuiaSistema: TfrxMemoView
           AllowVectorExport = True
@@ -461,7 +461,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 60.000000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -10
@@ -471,7 +471,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."NOMBRE_CORTO_AC"]')
+            '')
           ParentFont = False
         end
         object GuiaNombre: TfrxMemoView
@@ -481,7 +481,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 350.000000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -10
@@ -491,7 +491,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haLeft
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."NOMBRE_AC"]')
+            '')
           ParentFont = False
         end
         object GuiaT01: TfrxMemoView
@@ -501,7 +501,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -511,7 +511,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T01"]')
+            '')
           ParentFont = False
         end
         object GuiaT02: TfrxMemoView
@@ -521,7 +521,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -531,7 +531,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T02"]')
+            '')
           ParentFont = False
         end
         object GuiaT03: TfrxMemoView
@@ -541,7 +541,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -551,7 +551,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T03"]')
+            '')
           ParentFont = False
         end
         object GuiaT04: TfrxMemoView
@@ -561,7 +561,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -571,7 +571,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T04"]')
+            '')
           ParentFont = False
         end
         object GuiaT05: TfrxMemoView
@@ -581,7 +581,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -591,7 +591,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T05"]')
+            '')
           ParentFont = False
         end
         object GuiaT06: TfrxMemoView
@@ -601,7 +601,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -611,7 +611,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T06"]')
+            '')
           ParentFont = False
         end
         object GuiaT07: TfrxMemoView
@@ -621,7 +621,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -631,7 +631,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T07"]')
+            '')
           ParentFont = False
         end
         object GuiaT08: TfrxMemoView
@@ -641,7 +641,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -651,7 +651,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T08"]')
+            '')
           ParentFont = False
         end
         object GuiaT09: TfrxMemoView
@@ -661,7 +661,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -671,7 +671,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T09"]')
+            '')
           ParentFont = False
         end
         object GuiaT10: TfrxMemoView
@@ -681,7 +681,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -691,7 +691,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T10"]')
+            '')
           ParentFont = False
         end
         object GuiaT11: TfrxMemoView
@@ -701,7 +701,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -711,7 +711,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T11"]')
+            '')
           ParentFont = False
         end
         object GuiaT12: TfrxMemoView
@@ -721,7 +721,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -731,7 +731,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T12"]')
+            '')
           ParentFont = False
         end
         object GuiaT13: TfrxMemoView
@@ -741,7 +741,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -751,7 +751,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T13"]')
+            '')
           ParentFont = False
         end
         object GuiaT14: TfrxMemoView
@@ -761,7 +761,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -771,7 +771,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T14"]')
+            '')
           ParentFont = False
         end
         object GuiaT15: TfrxMemoView
@@ -781,7 +781,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -791,7 +791,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T15"]')
+            '')
           ParentFont = False
         end
         object GuiaT16: TfrxMemoView
@@ -801,7 +801,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -811,7 +811,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T16"]')
+            '')
           ParentFont = False
         end
         object GuiaT17: TfrxMemoView
@@ -821,7 +821,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -831,7 +831,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T17"]')
+            '')
           ParentFont = False
         end
         object GuiaT18: TfrxMemoView
@@ -841,7 +841,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -851,7 +851,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T18"]')
+            '')
           ParentFont = False
         end
         object GuiaT19: TfrxMemoView
@@ -861,7 +861,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -871,7 +871,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T19"]')
+            '')
           ParentFont = False
         end
         object GuiaT20: TfrxMemoView
@@ -881,7 +881,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Width = 26.500000000000000000
           Height = 18.897650000000000000
           DataSet = dmAlbaranesCompra.fxdsCabAlbc
-          DataSetName = 'GuiasTallas'
+          DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -9
@@ -891,7 +891,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[GuiasTallas."T20"]')
+            '')
           ParentFont = False
         end
       end
@@ -1726,7 +1726,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
       end
       item
         DataSet = dmAlbaranesCompra.fxdsCabAlbc
-        DataSetName = 'GuiasTallas'
+        DataSetName = 'Albaran'
       end>
     Variables = <>
     Style = <>
