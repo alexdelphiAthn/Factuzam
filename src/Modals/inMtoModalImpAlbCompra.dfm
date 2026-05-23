@@ -1108,7 +1108,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haLeft
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[LineasAlbaran."REF_PRV"]')
+            '[LineasAlbaran."CODIGO_UNIDAD_ALBCLIN"]')
           ParentFont = False
         end
         object LinDescr: TfrxMemoView
@@ -1148,7 +1148,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haLeft
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[LineasAlbaran."COLOR_TEXTO"]')
+            '')
           ParentFont = False
         end
         object LinSistema: TfrxMemoView
@@ -1168,7 +1168,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[LineasAlbaran."NOMBRE_CORTO_AC"]')
+            '')
           ParentFont = False
         end
         object LinT01: TfrxMemoView
@@ -1188,7 +1188,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T01"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T01">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT02: TfrxMemoView
@@ -1208,7 +1208,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T02"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T02">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT03: TfrxMemoView
@@ -1228,7 +1228,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T03"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T03">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT04: TfrxMemoView
@@ -1248,7 +1248,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T04"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T04">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT05: TfrxMemoView
@@ -1268,7 +1268,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T05"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T05">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT06: TfrxMemoView
@@ -1288,7 +1288,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T06"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T06">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT07: TfrxMemoView
@@ -1308,7 +1308,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T07"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T07">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT08: TfrxMemoView
@@ -1328,7 +1328,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T08"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T08">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT09: TfrxMemoView
@@ -1348,7 +1348,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T09"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T09">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT10: TfrxMemoView
@@ -1368,7 +1368,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T10"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T10">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT11: TfrxMemoView
@@ -1388,7 +1388,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T11"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T11">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT12: TfrxMemoView
@@ -1408,7 +1408,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T12"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T12">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT13: TfrxMemoView
@@ -1428,7 +1428,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T13"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T13">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT14: TfrxMemoView
@@ -1448,7 +1448,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T14"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T14">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT15: TfrxMemoView
@@ -1468,7 +1468,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T15"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T15">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT16: TfrxMemoView
@@ -1488,7 +1488,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T16"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T16">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT17: TfrxMemoView
@@ -1508,7 +1508,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T17"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T17">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT18: TfrxMemoView
@@ -1528,7 +1528,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T18"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T18">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT19: TfrxMemoView
@@ -1548,7 +1548,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T19"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T19">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinT20: TfrxMemoView
@@ -1568,7 +1568,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haCenter
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T20"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T20">), '#39#39')]')
+            '[IIF(0 > 0, FormatFloat('#39'0'#39', 0), '#39#39')]')
           ParentFont = False
         end
         object LinTotalUds: TfrxMemoView
@@ -1590,7 +1590,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haRight
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[LineasAlbaran."TOTAL_UNIDADES"]')
+            '[LineasAlbaran."CANTIDAD_ALBCLIN"]')
           ParentFont = False
         end
         object LinImporte: TfrxMemoView
@@ -1612,7 +1612,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haRight
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[LineasAlbaran."TOTAL_LINEA"]')
+            '[LineasAlbaran."TOTAL_ALBCLIN"]')
           ParentFont = False
         end
       end
@@ -1641,7 +1641,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haRight
           VAlign = vaCenter
           Memo.UTF8W = (
-            'TOTAL: [Albaran."TOTAL_UNIDADES_SES"] unidades')
+            'TOTAL: [Albaran."CONTADOR_LINEAS_ALBC"] unidades')
           ParentFont = False
         end
         object MemoTotalImporte: TfrxMemoView
@@ -1663,7 +1663,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           HAlign = haRight
           VAlign = vaCenter
           Memo.UTF8W = (
-            '[Albaran."TOTAL_LINEAS_SES"]')
+            '[Albaran."CONTADOR_LINEAS_ALBC"]')
           ParentFont = False
         end
         object MemoPagina: TfrxMemoView
