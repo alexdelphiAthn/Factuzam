@@ -604,6 +604,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                     Top = 8
                     Caption = 'Control+A al editor'
                     TabOrder = 1
+                    Transparent = True
                   end
                 end
                 object tvMetadatos: TTreeView

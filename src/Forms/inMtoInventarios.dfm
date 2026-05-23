@@ -113,6 +113,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Top = 15
               Caption = 'Empresa'
               TabOrder = 0
+              Transparent = True
             end
             object cbbCODIGO_EMPRESA_INVENTARIO: TcxDBLookupComboBox
               Left = 121
@@ -138,6 +139,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Top = 47
               Caption = 'Almac'#233'n'
               TabOrder = 2
+              Transparent = True
             end
             object cbbCODIGO_ALMACEN_INVENTARIO: TcxDBLookupComboBox
               Left = 121
@@ -162,6 +164,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Top = 85
               Caption = 'Serie'
               TabOrder = 4
+              Transparent = True
             end
             object cbbSERIE_INVENTARIO: TcxDBLookupComboBox
               Left = 121
@@ -182,6 +185,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Top = 115
               Caption = 'N'#250'mero'
               TabOrder = 6
+              Transparent = True
             end
             object txtNRO_INVENTARIO: TcxDBTextEdit
               Left = 121
@@ -196,6 +200,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Top = 115
               Caption = 'Fecha'
               TabOrder = 8
+              Transparent = True
             end
             object dtFECHA_INVENTARIO: TcxDBDateEdit
               Left = 418
@@ -210,6 +215,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Top = 85
               Caption = 'Estado'
               TabOrder = 10
+              Transparent = True
             end
             object txtESTADO_INVENTARIO: TcxDBTextEdit
               Left = 418
@@ -225,6 +231,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               Top = 144
               Caption = 'Descripci'#243'n'
               TabOrder = 12
+              Transparent = True
             end
             object txtDESCRIPCION_INVENTARIO: TcxDBTextEdit
               Left = 121
@@ -578,6 +585,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Top = 16
                   Caption = 'Movimientos generados al aplicar este inventario en el Kardex'
                   TabOrder = 1
+                  Transparent = True
                 end
                 object btnEliminarRegularizacion: TcxButton
                   Left = 560
@@ -704,6 +712,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Top = 196
                   Caption = 'Observaciones'
                   TabOrder = 2
+                  Transparent = True
                 end
                 object mmoOBSERVACIONES_INVENTARIO: TcxDBMemo
                   Left = 156
@@ -726,6 +735,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Top = 32
                     Caption = 'Total unidades de descuadre'
                     TabOrder = 1
+                    Transparent = True
                   end
                   object txtTOTAL_UNIDADES_DIFERENCIA: TcxDBTextEdit
                     Left = 265
@@ -741,6 +751,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Top = 76
                     Caption = 'Variaci'#243'n econ'#243'mica ('#8364')'
                     TabOrder = 2
+                    Transparent = True
                   end
                   object curTOTAL_EUROS_DIFERENCIA_INV: TcxDBCurrencyEdit
                     Left = 265
@@ -763,6 +774,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Top = 8
                     Caption = 'Alta'
                     TabOrder = 4
+                    Transparent = True
                   end
                   object txtUSUARIOALTA: TcxDBTextEdit
                     Left = 74
@@ -778,6 +790,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Top = 8
                     Caption = 'Fecha Alta'
                     TabOrder = 5
+                    Transparent = True
                   end
                   object txtINSTANTEALTA: TcxDBTextEdit
                     Left = 364
@@ -793,6 +806,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Top = 50
                     Caption = 'Modif.'
                     TabOrder = 6
+                    Transparent = True
                   end
                   object txtUSUARIOMODIF: TcxDBTextEdit
                     Left = 74
@@ -808,6 +822,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Top = 50
                     Caption = 'Fecha Modif.'
                     TabOrder = 7
+                    Transparent = True
                   end
                   object txtINSTANTEMODIF: TcxDBTextEdit
                     Left = 364

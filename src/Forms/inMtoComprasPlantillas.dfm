@@ -78,6 +78,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 24
                 Caption = 'C'#243'digo'
                 TabOrder = 10
+                Transparent = True
               end
               object txtCodigo: TcxDBTextEdit
                 Left = 100
@@ -92,6 +93,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 60
                 Caption = 'Nombre'
                 TabOrder = 11
+                Transparent = True
               end
               object txtNombre: TcxDBTextEdit
                 Left = 100
@@ -106,6 +108,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 96
                 Caption = 'Descripci'#243'n'
                 TabOrder = 12
+                Transparent = True
               end
               object txtDescripcion: TcxDBTextEdit
                 Left = 100
@@ -120,6 +123,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 132
                 Caption = 'Proveedor'
                 TabOrder = 13
+                Transparent = True
               end
               object cbbProveedor: TcxDBLookupComboBox
                 Left = 100
@@ -135,6 +139,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 132
                 Caption = 'Familia'
                 TabOrder = 14
+                Transparent = True
               end
               object cbbFamilia: TcxDBLookupComboBox
                 Left = 460
@@ -150,6 +155,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 168
                 Caption = 'Variaci'#243'n'
                 TabOrder = 15
+                Transparent = True
               end
               object cbbVariacion: TcxDBLookupComboBox
                 Left = 100
@@ -175,6 +181,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 204
                 Caption = 'Conj. pivot'
                 TabOrder = 16
+                Transparent = True
               end
               object cbbConjuntoPivot: TcxDBLookupComboBox
                 Left = 100
@@ -190,6 +197,7 @@ inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
                 Top = 240
                 Caption = 'Conj. fila'
                 TabOrder = 17
+                Transparent = True
               end
               object cbbConjuntoFila: TcxDBLookupComboBox
                 Left = 100
