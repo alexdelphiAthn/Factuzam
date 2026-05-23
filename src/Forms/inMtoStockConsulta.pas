@@ -125,6 +125,8 @@ type
     procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
               ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
               var ADone: Boolean);
+    procedure ColEstadoGetDisplayText(Sender: TcxCustomGridTableItem;
+              ARecord: TcxCustomGridRecord; var AText: string);
   private
     FQry        : TUniQuery;
     FDs         : TDataSource;
@@ -1017,13 +1019,14 @@ begin
   FColsDin.Add(FColGrupo);
 
   // Columna "Estado" — solo en modo Todo a la vez. Bindeada al campo
-  // numerico ESTADO_NUM pero el texto visible lo pinta el OnCustomDrawCell
+  // numerico ESTADO_NUM pero el texto visible lo pinta el OnGetDisplayText
   // a traves de NombreEstadoCorto (asi evitamos meter strings en el SQL).
   if FEsModoTodo then
   begin
     FColEstado := tvStock.CreateColumn;
     FColEstado.Caption := 'Estado';
     FColEstado.DataBinding.FieldName := 'ESTADO_NUM';
+    FColEstado.OnGetDisplayText := ColEstadoGetDisplayText;
     FColEstado.Width := 110;
     FColEstado.HeaderAlignmentHorz := taLeftJustify;
     FColEstado.Options.Sorting := False;
@@ -1102,10 +1105,10 @@ begin
     Exit;
   end;
 
-  // Columna Estado: mostramos el nombre corto en lugar del numero.
+  // Columna Estado: el texto visible lo resuelve ColEstadoGetDisplayText
+  // (asignado al column.OnGetDisplayText). Aqui solo pintamos el color.
   if FEsModoTodo and (FColEstado <> nil) and (AViewInfo.Item = FColEstado) then
   begin
-    AViewInfo.Params.Text      := NombreEstadoCorto(estadoCol);
     AViewInfo.Params.TextColor := ColorEstado(estadoCol);
     Exit;
   end;
@@ -1114,6 +1117,20 @@ begin
   // estado de la fila (en modo normal todas las filas tienen el mismo
   // estado activo; en modo Todo a la vez cada fila lleva su color).
   AViewInfo.Params.TextColor := ColorEstado(estadoCol);
+end;
+
+// Convierte el ESTADO_NUM crudo (int) en su nombre corto. Se asigna a
+// FColEstado.OnGetDisplayText en ReconstruirColumnas para que la celda
+// muestre "Existencias" en vez de "0", "Ventas" en vez de "3", etc.
+procedure TfrmStockConsulta.ColEstadoGetDisplayText(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AText: string);
+var
+  i: Integer;
+begin
+  i := StrToIntDef(AText, -1);
+  if (i >= Ord(Low(TEstadoStock))) and (i <= Ord(High(TEstadoStock))) then
+    AText := NombreEstadoCorto(TEstadoStock(i));
 end;
 
 // ---------------------------------------------------------------------------
