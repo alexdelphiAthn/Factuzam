@@ -787,7 +787,8 @@ end;
 procedure InsertarAlbaranCompraCabecera(AConn: TUniConnection;
                                          ADM: TdmComprasSesiones;
                                          const ASerieAlbc, ANumAlbc,
-                                               AUsuario: string);
+                                               AUsuario: string;
+                                         const ACodigoAlmOverride: string = '');
 var
   q: TUniQuery;
 begin
@@ -824,7 +825,8 @@ begin
       '       P.DIRECCION1_PRV, P.DIRECCION2_PRV, ' +
       '       P.POBLACION_PRV, P.PROVINCIA_PRV, ' +
       '       P.CODIGO_POSTAL_PRV, ' +
-      '       S.REF_PRV_SES, S.CODIGO_ALM_SES, ' +
+      '       S.REF_PRV_SES, ' +
+      '       CASE WHEN :alm_ovr <> '''' THEN :alm_ovr ELSE S.CODIGO_ALM_SES END, ' +
       '       0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
       '  FROM fza_compras_sesiones S ' +
@@ -836,6 +838,7 @@ begin
     q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
     q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
     q.ParamByName('u').AsString := AUsuario;
+    q.ParamByName('alm_ovr').AsString := ACodigoAlmOverride;
     q.ExecSQL;
   finally
     FreeAndNil(q);
@@ -1462,7 +1465,8 @@ begin
       ASerieAlb := sSerieAlbReal;
       // 2. Crear cabecera en fza_albaranes_compra denormalizando
       //    empresa + proveedor desde la sesion.
-      InsertarAlbaranCompraCabecera(conn, ADM, ASerieAlb, ANumAlb, AUsuario);
+      InsertarAlbaranCompraCabecera(conn, ADM, ASerieAlb, ANumAlb, AUsuario,
+                                     AFiltroAlmacen);
       // 3. Crear lineas: una por (SKU, almacen) con SUM(CANTIDAD).
       InsertarLineasAlbaranCompra(conn, ADM, sSerieSes, sNumSes,
                                   ASerieAlb, ANumAlb, AUsuario,
