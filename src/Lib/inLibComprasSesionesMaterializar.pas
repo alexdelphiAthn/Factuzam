@@ -330,19 +330,39 @@ begin
       q.Close;
     end;
 
-    // 2. Texto exacto
+    // 2. Texto exacto. Priorizamos AV que tenga ID_ATB_AV NO NULL para
+    //    que el SKU acabe con el atributo basico enlazado (la pestania
+    //    'Atributos del SKU' del Mto Articulos muestra entonces el
+    //    color basico). Si solo hay AVs huerfanos, los reparamos en el
+    //    momento intentando enlazarlos al ATB por CODIGO_ATB / NOMBRE_ATB.
     if Trim(AColorTexto) <> '' then
     begin
       s := Trim(AColorTexto);
       q.SQL.Text :=
-        'SELECT ID_AV, AV FROM fza_atributos_valores ' +
-        ' WHERE ID_VA_AV = ''CO'' AND AV = :v LIMIT 1';
+        'SELECT ID_AV, AV, ID_ATB_AV FROM fza_atributos_valores ' +
+        ' WHERE ID_VA_AV = ''CO'' AND AV = :v ' +
+        ' ORDER BY CASE WHEN ID_ATB_AV IS NULL THEN 1 ELSE 0 END, ID_AV ' +
+        ' LIMIT 1';
       q.ParamByName('v').AsString := s;
       q.Open;
       if not q.IsEmpty then
       begin
         Result := q.FieldByName('ID_AV').AsInteger;
         AValor := q.FieldByName('AV').AsString;
+        if q.FieldByName('ID_ATB_AV').IsNull then
+        begin
+          q.Close;
+          q.SQL.Text :=
+            'UPDATE fza_atributos_valores SET ID_ATB_AV = ' +
+            '  (SELECT ID_ATB FROM fza_atributos_basicos ' +
+            '    WHERE ID_VA_ATB = ''CO'' ' +
+            '      AND (CODIGO_ATB = :v OR NOMBRE_ATB = :v) ' +
+            '    LIMIT 1) ' +
+            ' WHERE ID_AV = :id AND ID_ATB_AV IS NULL';
+          q.ParamByName('v').AsString  := s;
+          q.ParamByName('id').AsInteger := Result;
+          q.ExecSQL;
+        end;
         Exit;
       end;
       q.Close;
@@ -1789,17 +1809,32 @@ begin
       //    sesion: los demas movimientos del articulo (anteriores o de
       //    otras sesiones) se preservan. Si la sesion uso serie de
       //    albaran distinta a la propia, tambien la borramos.
-      q.SQL.Text :=
-        'DELETE FROM fza_movimientos_almacen ' +
-        ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
-        '   AND NUMERO_DOC_MOV = :n ' +
-        '   AND (SERIE_DOC_MOV = :ses ' +
-        '        OR (:salb <> '''' AND SERIE_DOC_MOV = :salb))';
-      q.ParamByName('n').AsString    := sNumSes;
-      q.ParamByName('ses').AsString  := sSerieSes;
-      q.ParamByName('salb').AsString :=
+      // Borrar movimientos creados por la materializacion. Los inserta
+      // GenerarMovimientosDesdeAlbaranCompra con TIPO_DOC_MOV='AC',
+      // SERIE/NUMERO del ALBARAN y EMPRESA/ALMACEN de la cabecera. Sin
+      // albaran materializado no hay nada que borrar (los pedidos
+      // pendientes de recibir no generan movimientos, viven en
+      // fza_articulos_pdte_recibir y se borran abajo).
+      if (ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString <> '') and
+         (ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString  <> '') then
+      begin
+        q.SQL.Text :=
+          'DELETE FROM fza_movimientos_almacen ' +
+          ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
+          '   AND SERIE_DOC_MOV  = :salb ' +
+          '   AND NUMERO_DOC_MOV = :nalb ' +
+          '   AND CODIGO_EMP_MOV = :emp ' +
+          '   AND CODIGO_ALM_MOV = :alm';
+        q.ParamByName('salb').AsString :=
                           ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
-      q.ExecSQL;
+        q.ParamByName('nalb').AsString :=
+                          ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString;
+        q.ParamByName('emp').AsString  :=
+                          ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+        q.ParamByName('alm').AsString  :=
+                          ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+        q.ExecSQL;
+      end;
 
       // 1b. Borrar las filas de pendiente de recibir generadas por
       //     esta sesion (si genero pedido). Mismo criterio: NUMERO_DOC
