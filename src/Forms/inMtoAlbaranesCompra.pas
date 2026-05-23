@@ -22,7 +22,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, Uni,
+  Forms, Dialogs, Uni, System.Generics.Collections,
   inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
@@ -124,6 +124,15 @@ type
     FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
     FMostrarTallas    : Boolean;
     FMostrarAtributos : Boolean;
+    // ----- Estado del modo pivote -----
+    // Cuando FMostrarTallas=True, el detail se filtra para mostrar solo una
+    // linea representante por (articulo + color) y las cantidades de cada
+    // SKU del grupo se publican en las celdas talla no-bound del grid. La
+    // estructura subyacente de fza_albaranes_compra_lineas (1 fila por SKU)
+    // no cambia; el agrupado es solo de vista.
+    FPivotLineasRepr : TList<Integer>;
+    FPivotCantidades : TDictionary<Int64,Double>;
+    FPivotMaxAvTalla : Integer;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorTallas;
@@ -135,6 +144,12 @@ type
     // tras un Post automatico del dataset).
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    // Pivote por SKU -> art+color (vista, no toca BBDD).
+    procedure CargarCachePivot;
+    procedure unqryLineasFilterRecord(DataSet: TDataSet;
+                                      var Accept: Boolean);
+    procedure PublicarCantidadesPivot;
+    procedure AplicarVisibilidadColumnasPivot(AModoPivot: Boolean);
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
   end;
@@ -158,6 +173,8 @@ begin
   // del Mto base puede tocar el grid (CrearTablaPrincipal, etc.).
   CrearColumnasTallas;
   CrearColumnasAtributos;
+  FPivotLineasRepr := TList<Integer>.Create;
+  FPivotCantidades := TDictionary<Int64,Double>.Create;
 
   inherited;
 
@@ -197,6 +214,8 @@ end;
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FGestorTallas);
+  FreeAndNil(FPivotLineasRepr);
+  FreeAndNil(FPivotCantidades);
   inherited;
 end;
 
@@ -370,10 +389,34 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnTallasHorizontalClick(Sender: TObject);
+var
+  ds: TUniQuery;
 begin
   inherited;
   FMostrarTallas := not FMostrarTallas;
+  if dmmAlbaranesCompra = nil then Exit;
+  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  // El toggle alterna entre vista plana (1 fila por SKU, columnas SKU /
+  // Cantidad / Total visibles) y vista pivote (1 fila representante por
+  // articulo+color, columnas talla con la cantidad de cada SKU). El
+  // modelo BBDD no cambia: el filtro vive en cliente.
+  if FMostrarTallas then
+  begin
+    CargarCachePivot;
+    ds.OnFilterRecord := unqryLineasFilterRecord;
+    ds.Filtered       := True;
+  end
+  else
+  begin
+    ds.Filtered       := False;
+    ds.OnFilterRecord := nil;
+    if Assigned(FPivotLineasRepr) then FPivotLineasRepr.Clear;
+    if Assigned(FPivotCantidades) then FPivotCantidades.Clear;
+  end;
+  AplicarVisibilidadColumnasPivot(FMostrarTallas);
   RefrescarVisibilidadTallas;
+  if FMostrarTallas then
+    PublicarCantidadesPivot;
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnAtributosColumnaClick(Sender: TObject);
@@ -415,14 +458,23 @@ end;
 // del albaran que acaba de tomar foco.
 procedure TfrmMtoAlbaranesCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
+var
+  ds: TUniQuery;
 begin
   if Field <> nil then Exit;
   if FGestorTallas = nil then Exit;
   if not FMostrarTallas then Exit;
+  // Modo pivote activo + cambio de albaran activo: recargar el cache
+  // (lineas representantes + cantidades por talla del nuevo albaran) y
+  // reaplicar el filtro y la publicacion de cantidades sobre el grid.
+  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  ds.Filtered := False;
+  CargarCachePivot;
+  ds.Filtered := True;
   FGestorTallas.InvalidarCache;
   FGestorTallas.RecalcularMaxColumnas;
-  FGestorTallas.CargarCantidadesTodasLineas;
   FGestorTallas.ActualizarCaptionsLineaActiva;
+  PublicarCantidadesPivot;
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM
@@ -538,6 +590,200 @@ begin
   if MessageDlg('Esta seguro de que desea eliminar esta linea?',
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Delete;
+end;
+
+// =============================================================================
+//   Modo PIVOTE — vista por (articulo + color), tallas en horizontal
+// =============================================================================
+// El modelo de fza_albaranes_compra_lineas es 1 fila por SKU (articulo +
+// color + talla) porque cada SKU genera un movimiento de stock. En modo
+// pivote NO cambiamos el modelo: agrupamos visualmente las lineas SKU
+// que comparten (articulo + color), dejamos solo una representante por
+// grupo via OnFilterRecord y publicamos las cantidades de cada SKU en
+// la columna talla correspondiente como Values[] no-bound del cxGrid.
+//
+// Al volver a vista plana, OnFilterRecord se desconecta y todas las
+// lineas SKU vuelven a aparecer con su columna Cantidad / SKU.
+
+// Lanza una sola query que devuelve por cada SKU del albaran activo su
+// articulo, AV de color, AV de talla y CANTIDAD_ALBCLIN. Itera el result
+// set para:
+//   - construir FPivotLineasRepr (la primera LINEA_ALBCLIN encontrada
+//     para cada par articulo + color);
+//   - construir FPivotCantidades indexado por (LINEA_REPR, AV_TALLA) =>
+//     CANTIDAD acumulada.
+// El SQL usa LEFT JOIN para que un SKU sin atributos de color o sin
+// atributos de talla siga produciendo una fila (con AV=0). Asi los
+// articulos planos (sin sistema de tallaje) tambien funcionan: se les
+// considera 1 unico grupo y su cantidad queda fuera de columnas talla.
+procedure TfrmMtoAlbaranesCompra.CargarCachePivot;
+var
+  q          : TUniQuery;
+  dictRepr   : TDictionary<string,Integer>;
+  sSerie     : string;
+  sNumero    : string;
+  sArt       : string;
+  sKey       : string;
+  iLinea     : Integer;
+  iColorAv   : Integer;
+  iTallaAv   : Integer;
+  rCant      : Double;
+  iLineaRepr : Integer;
+  iKeyPivot  : Int64;
+begin
+  FPivotLineasRepr.Clear;
+  FPivotCantidades.Clear;
+  FPivotMaxAvTalla := 0;
+  if dmmAlbaranesCompra = nil then Exit;
+  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty then Exit;
+  sSerie  := dsTablaG.DataSet.FieldByName('SERIE_ALBC').AsString;
+  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_ALBC').AsString;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  dictRepr := TDictionary<string,Integer>.Create;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT L.LINEA_ALBCLIN AS LINEA, ' +
+      '       L.CODIGO_ART_ALBCLIN AS ART, ' +
+      '       COALESCE(C.ID_AV_SA, 0) AS COLOR_AV, ' +
+      '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
+      '       L.CANTIDAD_ALBCLIN AS CANTIDAD ' +
+      '  FROM fza_albaranes_compra_lineas L ' +
+      '  LEFT JOIN fza_atributos_sku C ' +
+      '    ON C.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
+      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVC ' +
+      '                WHERE AVC.ID_AV = C.ID_AV_SA ' +
+      '                  AND AVC.ID_VA_AV = ''CO'') ' +
+      '  LEFT JOIN fza_atributos_sku T ' +
+      '    ON T.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_ALBCLIN ' +
+      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVT ' +
+      '                WHERE AVT.ID_AV = T.ID_AV_SA ' +
+      '                  AND AVT.ID_VA_AV = ''TAL'') ' +
+      ' WHERE L.SERIE_ALBC_ALBCLIN = :SERIE ' +
+      '   AND L.NUMERO_ALBC_ALBCLIN = :NUMERO ' +
+      ' ORDER BY ART, COLOR_AV, L.LINEA_ALBCLIN';
+    q.ParamByName('SERIE').AsString  := sSerie;
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.Open;
+    while not q.Eof do
+    begin
+      iLinea   := q.FieldByName('LINEA').AsInteger;
+      sArt     := q.FieldByName('ART').AsString;
+      iColorAv := q.FieldByName('COLOR_AV').AsInteger;
+      iTallaAv := q.FieldByName('TALLA_AV').AsInteger;
+      rCant    := q.FieldByName('CANTIDAD').AsFloat;
+      sKey := sArt + '|' + IntToStr(iColorAv);
+      if not dictRepr.TryGetValue(sKey, iLineaRepr) then
+      begin
+        iLineaRepr := iLinea;
+        dictRepr.Add(sKey, iLineaRepr);
+        FPivotLineasRepr.Add(iLineaRepr);
+      end;
+      if iTallaAv > 0 then
+      begin
+        iKeyPivot := Int64(iLineaRepr) * 100000 + iTallaAv;
+        if FPivotCantidades.ContainsKey(iKeyPivot) then
+          FPivotCantidades[iKeyPivot] := FPivotCantidades[iKeyPivot] + rCant
+        else
+          FPivotCantidades.Add(iKeyPivot, rCant);
+        if iTallaAv > FPivotMaxAvTalla then FPivotMaxAvTalla := iTallaAv;
+      end;
+      q.Next;
+    end;
+    q.Close;
+  finally
+    FreeAndNil(q);
+    FreeAndNil(dictRepr);
+  end;
+end;
+
+// Filtra el dataset detail en cliente: solo deja pasar las lineas
+// representantes. Se desconecta al volver a vista plana.
+procedure TfrmMtoAlbaranesCompra.unqryLineasFilterRecord(DataSet: TDataSet;
+                                                          var Accept: Boolean);
+var
+  iLinea: Integer;
+begin
+  if FPivotLineasRepr = nil then begin Accept := True; Exit; end;
+  iLinea := DataSet.FieldByName('LINEA_ALBCLIN').AsInteger;
+  Accept := FPivotLineasRepr.Contains(iLinea);
+end;
+
+// Recorre los records visibles (representantes) y publica las cantidades
+// del cache en las columnas talla. La traduccion AV_TALLA -> posicion de
+// columna la da el gestor a partir del ID_AC_PIVOT_ALBCLIN de la linea.
+procedure TfrmMtoAlbaranesCompra.PublicarCantidadesPivot;
+var
+  ds       : TUniQuery;
+  bk       : TBookmark;
+  iLinea   : Integer;
+  iAc      : Integer;
+  arr      : TArrPosConjunto;
+  i        : Integer;
+  iKey     : Int64;
+  rCant    : Double;
+  recIdx   : Integer;
+begin
+  if FGestorTallas = nil then Exit;
+  if dmmAlbaranesCompra = nil then Exit;
+  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  if (ds = nil) or not ds.Active then Exit;
+  tvLineasAlbaran.DataController.BeginUpdate;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    recIdx := 0;
+    while not ds.Eof do
+    begin
+      iLinea := ds.FieldByName('LINEA_ALBCLIN').AsInteger;
+      iAc    := ds.FieldByName('ID_AC_PIVOT_ALBCLIN').AsInteger;
+      if iAc > 0 then
+      begin
+        arr := FGestorTallas.GetPosicionesConjunto(iAc);
+        for i := 0 to High(arr) do
+        begin
+          if i >= CANT_TALLAS_MAX then Break;
+          if FTallaColumns[i] = nil then Continue;
+          iKey := Int64(iLinea) * 100000 + arr[i].IdAv;
+          if FPivotCantidades.TryGetValue(iKey, rCant) and (rCant <> 0) then
+            tvLineasAlbaran.DataController.Values[recIdx,
+                                            FTallaColumns[i].Index] := rCant;
+        end;
+      end;
+      Inc(recIdx);
+      ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bk) then ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+    tvLineasAlbaran.DataController.EndUpdate;
+  end;
+end;
+
+// Oculta las columnas SKU / Cantidad / Total en modo pivote — los datos
+// expandidos viven ahora en las columnas talla. En vista plana se
+// restauran.
+procedure TfrmMtoAlbaranesCompra.AplicarVisibilidadColumnasPivot(
+                                                       AModoPivot: Boolean);
+const
+  CAMPOS_OCULTOS_PIVOTE: array[0..2] of string = (
+    'CODIGO_UNIDAD_ALBCLIN',
+    'CANTIDAD_ALBCLIN',
+    'TOTAL_ALBCLIN');
+var
+  i   : Integer;
+  col : TcxGridColumn;
+begin
+  for i := 0 to High(CAMPOS_OCULTOS_PIVOTE) do
+  begin
+    col := tvLineasAlbaran.GetColumnByFieldName(CAMPOS_OCULTOS_PIVOTE[i]);
+    if col <> nil then
+      col.Visible := not AModoPivot;
+  end;
 end;
 
 initialization
