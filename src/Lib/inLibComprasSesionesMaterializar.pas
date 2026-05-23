@@ -155,7 +155,7 @@ begin
   try
     q.Connection := AConn;
     q.SQL.Text :=
-      'INSERT INTO fza_articulos ' +
+      'INSERT IGNORE INTO fza_articulos ' +
       '  (CODIGO_ART_ART, ESACTIVO_ART, TIPO_ART, DESCRIPCION_ART, ' +
       '   CODIGO_FAM_ART, TIPO_IVA_ART, TIPO_CANTIDAD_ART, ESVARIACION_ART, ' +
       '   ESTRAZABLE_ART, TIPO_VARIACION_ART, INSTANTE_ALTA, USUARIO_ALTA, ' +
@@ -551,7 +551,7 @@ begin
         sEAN13 := GenerarEAN13Local(AConn, APrefijoEAN);
 
         qBar.SQL.Text :=
-          'INSERT INTO fza_codigos_barras ' +
+          'INSERT IGNORE INTO fza_codigos_barras ' +
           '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
           '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, ' +
           '   INSTANTE_MODIF, USUARIO_MODIF) ' +
@@ -602,7 +602,7 @@ begin
     if bHayPrincipal then sEsPrincipal := 'N' else sEsPrincipal := 'S';
 
     q.SQL.Text :=
-      'INSERT INTO fza_articulos_proveedores ' +
+      'INSERT IGNORE INTO fza_articulos_proveedores ' +
       '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, ' +
       '   PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ESPROVEEDORPRINCIPAL_AP, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
@@ -704,7 +704,7 @@ begin
     else
     begin
       q.SQL.Text :=
-        'INSERT INTO fza_articulos_tarifas ' +
+        'INSERT IGNORE INTO fza_articulos_tarifas ' +
         '  (CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR, ' +
         '   ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
         '   FECHA_DESDE_ARTTAR, ' +
@@ -1256,7 +1256,7 @@ begin
       // alguna razon se materializa dos veces, suma cantidad y mantiene
       // ultimo precio / fechas.
       qIns.SQL.Text :=
-        'INSERT INTO fza_articulos_pdte_recibir ' +
+        'INSERT IGNORE INTO fza_articulos_pdte_recibir ' +
         '  (CODIGO_UNIDAD_PDR, CODIGO_ALM_PDR, SERIE_DOC_PDR, NUMERO_DOC_PDR, ' +
         '   LINEA_PDR, CODIGO_ART_PDR, CODIGO_PRV_PDR, CODIGO_EMP_PDR, ' +
         '   CANTIDAD_PDR, PRECIO_COMPRA_PDR, FECHA_PEDIDO_PDR, ' +
