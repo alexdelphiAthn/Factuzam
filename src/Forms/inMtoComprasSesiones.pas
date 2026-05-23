@@ -900,7 +900,8 @@ begin
       // (escenario tipico de muestrarios).
       (Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S')
         or (Trim(Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString)
-            <> ''));
+            <> ''),
+      Dmm.unqryTablaG.FieldByName('REF_PRV_SES').AsString);
     frmSet.ShowModal;
     if not frmSet.Confirmado then Exit;
 
@@ -921,6 +922,10 @@ begin
                             IfThen(frmSet.GenPedido, 'S', 'N');
     Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString :=
                             IfThen(frmSet.GenAlbaran, 'S', 'N');
+    // Ref. del documento del proveedor: viaja a REF_PROVEEDOR_ALBC en la
+    // cabecera del albaran (via InsertarAlbaranCompraCabecera, que ya lee
+    // S.REF_PRV_SES). Lo persistimos antes de materializar.
+    Dmm.unqryTablaG.FieldByName('REF_PRV_SES').AsString := frmSet.RefPrv;
     Dmm.unqryTablaG.Post;
   finally
     // FormClose libera el modal
