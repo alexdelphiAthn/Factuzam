@@ -142,6 +142,12 @@ begin
   dsTablaG.DataSet := dmmAlbaranesCompra.unqryTablaG;
   tvLineasAlbaran.DataController.DataSource :=
     dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+  // Enganchar master-detail: el detail tiene MasterFields/DetailFields en
+  // el DFM pero MasterSource solo se puede asignar a runtime porque el
+  // dsTablaG es del form (no del DM). Sin esto el detail no se filtra
+  // por la cabecera activa y o no ve nada o ve todas las lineas de la
+  // BBDD (segun como UniDAC lo interprete).
+  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
   // unqryAlbaranesCompraLineas se abre en AbrirDetalles (main thread)
   // tras unqryTablaG, igual que en el Mto de albaranes de venta.
 
