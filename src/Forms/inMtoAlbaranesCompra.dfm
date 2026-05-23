@@ -117,6 +117,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 12
                 Caption = 'N'#250'mero'
                 TabOrder = 0
+                Transparent = True
               end
               object txtNUMERO_ALBC: TcxDBTextEdit
                 Left = 8
@@ -132,6 +133,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 12
                 Caption = 'Serie'
                 TabOrder = 2
+                Transparent = True
               end
               object txtSERIE_ALBC: TcxDBTextEdit
                 Left = 116
@@ -146,6 +148,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 12
                 Caption = 'Fecha'
                 TabOrder = 4
+                Transparent = True
               end
               object dteFECHA_ALBC: TcxDBDateEdit
                 Left = 204
@@ -160,6 +163,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 12
                 Caption = 'Estado'
                 TabOrder = 6
+                Transparent = True
               end
               object txtESTADO_ALBC: TcxDBTextEdit
                 Left = 320
@@ -175,6 +179,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 72
                 Caption = 'Empresa'
                 TabOrder = 8
+                Transparent = True
               end
               object btnCODIGO_EMP_ALBC: TcxDBButtonEdit
                 Left = 8
@@ -194,6 +199,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 72
                 Caption = 'Proveedor'
                 TabOrder = 10
+                Transparent = True
               end
               object btnCODIGO_PRV_ALBC: TcxDBButtonEdit
                 Left = 168
@@ -213,6 +219,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 72
                 Caption = 'Ref. proveedor'
                 TabOrder = 12
+                Transparent = True
               end
               object txtREF_PROVEEDOR_ALBC: TcxDBTextEdit
                 Left = 328
@@ -227,6 +234,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 72
                 Caption = 'Almac'#233'n destino'
                 TabOrder = 14
+                Transparent = True
               end
               object txtCODIGO_ALM_ALBC: TcxDBTextEdit
                 Left = 520
@@ -403,6 +411,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Top = 8
             Caption = 'Total bases'
             TabOrder = 0
+            Transparent = True
           end
           object curTOTAL_BASES_ALBC: TcxDBCurrencyEdit
             Left = 16
@@ -418,6 +427,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Top = 8
             Caption = 'Total impuestos'
             TabOrder = 2
+            Transparent = True
           end
           object curTOTAL_IMPUESTOS_ALBC: TcxDBCurrencyEdit
             Left = 176
@@ -433,6 +443,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Top = 8
             Caption = 'Total l'#237'quido'
             TabOrder = 4
+            Transparent = True
           end
           object curTOTAL_LIQUIDO_ALBC: TcxDBCurrencyEdit
             Left = 336
