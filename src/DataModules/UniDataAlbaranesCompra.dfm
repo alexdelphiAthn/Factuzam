@@ -8,6 +8,7 @@ inherited dmAlbaranesCompra: TdmAlbaranesCompra
       'SELECT * FROM vi_albaranes_compra')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
+    AfterPost = unqryTablaGAfterPost
     Left = 48
     Top = 24
   end

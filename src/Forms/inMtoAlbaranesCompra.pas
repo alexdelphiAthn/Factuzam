@@ -12,9 +12,13 @@
 {    Mantenimiento de albaranes de COMPRA.                                     }
 {    Cabecera + lineas sobre fza_albaranes_compra. Espejo simplificado         }
 {    de inMtoAlbaranes adaptado a documento de compra (proveedor en            }
-{    lugar de cliente, precio de compra en lugar de venta). No genera          }
-{    aun factura ni movimientos de stock; eso vendra en hitos                  }
-{    posteriores.                                                              }
+{    lugar de cliente, precio de compra en lugar de venta).                    }
+{                                                                              }
+{    Movimientos de stock: el data module (UniDataAlbaranesCompra)             }
+{    detecta transiciones de ESTADO_ALBC en BeforePost y dispara en            }
+{    AfterPost la generacion (ABIERTO -> CERRADO) o reversion                  }
+{    (CERRADO -> ABIERTO) via inLibAlbaranesCompraMovimientos.                 }
+{    La generacion de factura sigue pendiente para un hito posterior.          }
 {******************************************************************************}
 unit inMtoAlbaranesCompra;
 
