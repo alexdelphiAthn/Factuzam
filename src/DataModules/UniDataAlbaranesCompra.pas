@@ -452,7 +452,7 @@ begin
   if (ADmArt = nil) or (not ADmArt.cdsEtiquetasArt.Active) then Exit;
   fld := ADmArt.cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU');
   if fld = nil then Exit;
-  set := TDictionary<string, Boolean>.Create;
+  setSku := TDictionary<string, Boolean>.Create;
   q   := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
