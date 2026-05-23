@@ -127,6 +127,9 @@ type
               var ADone: Boolean);
     procedure ColEstadoGetDisplayText(Sender: TcxCustomGridTableItem;
               ARecord: TcxCustomGridRecord; var AText: string);
+    procedure ColTodoGetContentStyle(Sender: TcxCustomGridTableView;
+              ARecord: TcxCustomGridRecord; AItem: TcxCustomGridTableItem;
+              var AStyle: TcxStyle);
   private
     FQry        : TUniQuery;
     FDs         : TDataSource;
@@ -138,11 +141,13 @@ type
     FColEstado  : TcxGridDBColumn;       // nombre del estado (solo en Todo a la vez)
     FEsModoColor: Boolean;
     FEsModoTodo : Boolean;               // estado=esTodoAlaVez en la ultima recarga
+    FStyEstado  : array[TEstadoStock] of TcxStyle; // un estilo por estado
     procedure CargarAlmacenes;
     procedure CargarColores;
     procedure CargarFoto;
     procedure CargarInfoCabecera;
     procedure CrearLeyenda;
+    procedure CrearEstilosEstado;
     function  EstadoActual: TEstadoStock;
     function  AlmacenesSeleccionadosSQL: string;  // 'CODA','CODB' o NULL
     function  AlmacenesSeleccionadosLista: TArray<string>;
@@ -272,8 +277,29 @@ begin
 
   pcVistas.ActivePage := tsPorAlmacen;
   pcFiltros.ActivePage := tsColores;
+  CrearEstilosEstado;
   CrearLeyenda;
   CargarAlmacenes;
+end;
+
+// Crea un TcxStyle por estado con su TextColor. Los asignamos como
+// Styles.Content de las columnas de datos en modo normal y se usan via
+// OnGetContentStyle en modo "Todo a la vez" para pintar cada fila en
+// el color de su estado. La via Styles.Content es la que respeta cxGrid
+// — modificar AViewInfo.Params.TextColor en OnCustomDrawCell no surte
+// efecto porque el render por defecto sobrescribe ese color.
+procedure TfrmStockConsulta.CrearEstilosEstado;
+var
+  est: TEstadoStock;
+  sty: TcxStyle;
+begin
+  for est := Low(TEstadoStock) to High(TEstadoStock) do
+  begin
+    sty := TcxStyle.Create(Self);
+    sty.AssignedValues := [svTextColor];
+    sty.TextColor      := ColorEstado(est);
+    FStyEstado[est]    := sty;
+  end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -1030,6 +1056,7 @@ begin
     FColEstado.Width := 110;
     FColEstado.HeaderAlignmentHorz := taLeftJustify;
     FColEstado.Options.Sorting := False;
+    FColEstado.Styles.OnGetContentStyle := ColTodoGetContentStyle;
     FColsDin.Add(FColEstado);
   end;
 
@@ -1046,6 +1073,10 @@ begin
     col.Width := 60;
     col.Options.Editing := False;
     col.Options.Sorting := False;
+    if FEsModoTodo then
+      col.Styles.OnGetContentStyle := ColTodoGetContentStyle
+    else
+      col.Styles.Content := FStyEstado[EstadoActual];
     FColsDin.Add(col);
   end;
 
@@ -1060,9 +1091,32 @@ begin
   colTotal.Width := 70;
   colTotal.Options.Editing := False;
   colTotal.Options.Sorting := False;
+  if FEsModoTodo then
+    colTotal.Styles.OnGetContentStyle := ColTodoGetContentStyle
+  else
+    colTotal.Styles.Content := FStyEstado[EstadoActual];
   FColsDin.Add(colTotal);
 
   FColumnas := Copy(ATallas);
+end;
+
+// Handler del Styles.OnGetContentStyle de cada columna de datos en modo
+// "Todo a la vez": devuelve el estilo correspondiente al ESTADO_NUM de
+// la fila, asi cada fila se pinta con el color de su estado. Si el
+// ESTADO_NUM esta fuera de rango (no deberia pasar) deja el estilo a
+// nil para que cxGrid use el por defecto.
+procedure TfrmStockConsulta.ColTodoGetContentStyle(
+  Sender: TcxCustomGridTableView; ARecord: TcxCustomGridRecord;
+  AItem: TcxCustomGridTableItem; var AStyle: TcxStyle);
+var
+  iEstNum: Integer;
+begin
+  if (FColEstado = nil) or (ARecord = nil) then Exit;
+  iEstNum := StrToIntDef(
+               VarToStr(ARecord.Values[FColEstado.Index]), -1);
+  if (iEstNum >= Ord(Low(TEstadoStock))) and
+     (iEstNum <= Ord(High(TEstadoStock))) then
+    AStyle := FStyEstado[TEstadoStock(iEstNum)];
 end;
 
 // ---------------------------------------------------------------------------
@@ -1075,48 +1129,21 @@ end;
 procedure TfrmStockConsulta.tvStockCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
-var
-  vEstNum   : Variant;
-  iEstNum   : Integer;
-  estadoCol : TEstadoStock;
 begin
   ADone := False;
+  // Solo nos interesa pintar el cuadradito de color delante del texto
+  // en la columna de fila Color (modo Por Color). El coloreado del
+  // texto del resto de celdas se hace via cxStyles (Styles.Content en
+  // modo normal y Styles.OnGetContentStyle en modo Todo a la vez), no
+  // por OnCustomDrawCell — modificar AViewInfo.Params.TextColor aqui
+  // no surte efecto en el render por defecto.
+  if not FEsModoColor then Exit;
+  if FColGrupo = nil then Exit;
   if not (AViewInfo.Item is TcxGridDBColumn) then Exit;
+  if AViewInfo.Item <> FColGrupo then Exit;
 
-  // Estado correspondiente a la fila:
-  //  - En modo "Todo a la vez" lo lee del campo ESTADO_NUM de la fila.
-  //  - En cualquier otro modo es EstadoActual (todas las filas comparten).
-  estadoCol := EstadoActual;
-  if FEsModoTodo and (FColEstado <> nil) and (AViewInfo.GridRecord <> nil) then
-  begin
-    vEstNum := AViewInfo.GridRecord.Values[FColEstado.Index];
-    iEstNum := StrToIntDef(VarToStr(vEstNum), -1);
-    if (iEstNum >= Ord(Low(TEstadoStock))) and
-       (iEstNum <= Ord(High(TEstadoStock))) then
-      estadoCol := TEstadoStock(iEstNum);
-  end;
-
-  if AViewInfo.Item = FColGrupo then
-  begin
-    // Columna de filas (Color/Almacen): swatch en modo Por Color.
-    if FEsModoColor then
-      if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
-        ADone := True;
-    Exit;
-  end;
-
-  // Columna Estado: el texto visible lo resuelve ColEstadoGetDisplayText
-  // (asignado al column.OnGetDisplayText). Aqui solo pintamos el color.
-  if FEsModoTodo and (FColEstado <> nil) and (AViewInfo.Item = FColEstado) then
-  begin
-    AViewInfo.Params.TextColor := ColorEstado(estadoCol);
-    Exit;
-  end;
-
-  // Resto de columnas (T0..Tn y TOTAL): pinta el numero en el color del
-  // estado de la fila (en modo normal todas las filas tienen el mismo
-  // estado activo; en modo Todo a la vez cada fila lleva su color).
-  AViewInfo.Params.TextColor := ColorEstado(estadoCol);
+  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+    ADone := True;
 end;
 
 // Convierte el ESTADO_NUM crudo (int) en su nombre corto. Se asigna a
