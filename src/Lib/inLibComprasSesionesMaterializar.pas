@@ -299,110 +299,75 @@ function ResolverIdAvColorLinea(AConn: TUniConnection;
                                        AUsuario: string;
                                  out AValor: string): Integer;
 var
-  q : TUniQuery;
-  s : string;
+  q     : TUniQuery;
+  idAtb : Integer;
 begin
+  // Resuelve el ID_AV de color que debe llevar el SKU a partir del
+  // CODIGO_ATB del color del proveedor (campo CODIGO_ATB_COLOR_SESLIN
+  // de la linea de sesion). Garantia: el AV devuelto SIEMPRE esta
+  // enlazado al ATB correcto via ID_ATB_AV; si no existe se crea.
+  //
+  // No usamos fallback por texto: la sesion guarda el CODIGO_ATB
+  // como dato canonico y reusar AVs viejos por nombre llevaria a
+  // SKUs con FK incorrecta o huerfana (problema visto en BBDD
+  // legacy donde varios AVs 'VERDE' apuntaban a distintos ATBs).
+  // Si la linea solo tiene texto libre sin CODIGO_ATB, devolvemos 0
+  // y el llamador decide (el SKU se crea sin atributo CO).
   Result := 0;
   AValor := '';
-  if (Trim(AColorTexto) = '') and (Trim(ACodigoAtbColor) = '') then Exit;
+  if Trim(ACodigoAtbColor) = '' then Exit;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
-
-    // 1. CODIGO_ATB → ID_ATB → ID_AV
-    if Trim(ACodigoAtbColor) <> '' then
-    begin
-      q.SQL.Text :=
-        'SELECT AV.ID_AV, AV.AV ' +
-        '  FROM fza_atributos_valores AV ' +
-        '  JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = AV.ID_ATB_AV ' +
-        ' WHERE AV.ID_VA_AV = ''CO'' ' +
-        '   AND ATB.CODIGO_ATB = :cod ' +
-        ' ORDER BY AV.ID_AV LIMIT 1';
-      q.ParamByName('cod').AsString := ACodigoAtbColor;
-      q.Open;
-      if not q.IsEmpty then
-      begin
-        Result := q.FieldByName('ID_AV').AsInteger;
-        AValor := q.FieldByName('AV').AsString;
-        Exit;
-      end;
-      q.Close;
-    end;
-
-    // 2. Texto exacto. Priorizamos AV que tenga ID_ATB_AV apuntando a
-    //    un ATB existente (no NULL y no FK rota). Si el AV elegido
-    //    tiene ID_ATB_AV NULL o apunta a un ATB borrado, intentamos
-    //    repararlo enlazandolo al ATB por CODIGO_ATB / NOMBRE_ATB.
-    if Trim(AColorTexto) <> '' then
-    begin
-      s := Trim(AColorTexto);
-      q.SQL.Text :=
-        'SELECT AV.ID_AV, AV.AV, AV.ID_ATB_AV, ' +
-        '       (SELECT 1 FROM fza_atributos_basicos ATB ' +
-        '         WHERE ATB.ID_ATB = AV.ID_ATB_AV LIMIT 1) AS ATB_OK ' +
-        '  FROM fza_atributos_valores AV ' +
-        ' WHERE AV.ID_VA_AV = ''CO'' AND AV.AV = :v ' +
-        ' ORDER BY (AV.ID_ATB_AV IS NULL OR ' +
-        '           NOT EXISTS (SELECT 1 FROM fza_atributos_basicos ATB ' +
-        '                        WHERE ATB.ID_ATB = AV.ID_ATB_AV)), ' +
-        '          AV.ID_AV ' +
-        ' LIMIT 1';
-      q.ParamByName('v').AsString := s;
-      q.Open;
-      if not q.IsEmpty then
-      begin
-        Result := q.FieldByName('ID_AV').AsInteger;
-        AValor := q.FieldByName('AV').AsString;
-        // Reparar si ID_ATB_AV es NULL o FK rota (no existe ATB con
-        // ese ID). Buscamos el ATB por CODIGO_ATB o NOMBRE_ATB.
-        if q.FieldByName('ID_ATB_AV').IsNull or
-           q.FieldByName('ATB_OK').IsNull then
-        begin
-          q.Close;
-          q.SQL.Text :=
-            'UPDATE fza_atributos_valores SET ID_ATB_AV = ' +
-            '  (SELECT ID_ATB FROM fza_atributos_basicos ' +
-            '    WHERE ID_VA_ATB = ''CO'' ' +
-            '      AND (CODIGO_ATB = :v OR NOMBRE_ATB = :v) ' +
-            '    LIMIT 1) ' +
-            ' WHERE ID_AV = :id';
-          q.ParamByName('v').AsString   := s;
-          q.ParamByName('id').AsInteger := Result;
-          q.ExecSQL;
-        end;
-        Exit;
-      end;
-      q.Close;
-    end;
-
-    // 3. Crear un fza_atributos_valores nuevo. Usamos el CODIGO_ATB
-    //    como valor (consistente con la paleta basica) si lo hay; si no,
-    //    el texto libre tal cual.
-    if Trim(ACodigoAtbColor) <> '' then s := ACodigoAtbColor
-    else                                   s := Trim(AColorTexto);
+    // 1. Resolver el ID_ATB. Si no existe el atributo basico, falla
+    //    explicitamente — corresponde al usuario crear el color en
+    //    Mto Atributos Basicos antes de materializar.
     q.SQL.Text :=
-      'INSERT INTO fza_atributos_valores ' +
-      '  (ID_VA_AV, AV, ID_ATB_AV, ESACTIVO_AV, ORDEN_AV, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (''CO'', :v, ' +
-      '        (SELECT ID_ATB FROM fza_atributos_basicos ' +
-      '          WHERE CODIGO_ATB = :cod AND ID_VA_ATB = ''CO'' LIMIT 1), ' +
-      '        ''S'', 0, NOW(), :u, NOW(), :u)';
-    q.ParamByName('v').AsString   := s;
+      'SELECT ID_ATB FROM fza_atributos_basicos ' +
+      ' WHERE ID_VA_ATB = ''CO'' AND CODIGO_ATB = :cod LIMIT 1';
     q.ParamByName('cod').AsString := ACodigoAtbColor;
-    q.ParamByName('u').AsString   := AUsuario;
-    q.ExecSQL;
-
+    q.Open;
+    if q.IsEmpty then
+      raise Exception.CreateFmt(
+        'No existe el atributo basico de color con CODIGO_ATB=%s. ' +
+        'Crealo en Mto Atributos Basicos antes de materializar.',
+        [ACodigoAtbColor]);
+    idAtb := q.FieldByName('ID_ATB').AsInteger;
+    q.Close;
+    // 2. Buscar AV bien enlazado a ese ATB.
     q.SQL.Text :=
-      'SELECT ID_AV FROM fza_atributos_valores ' +
-      ' WHERE ID_VA_AV = ''CO'' AND AV = :v ORDER BY ID_AV DESC LIMIT 1';
-    q.ParamByName('v').AsString := s;
+      'SELECT ID_AV, AV FROM fza_atributos_valores ' +
+      ' WHERE ID_VA_AV = ''CO'' AND ID_ATB_AV = :ia LIMIT 1';
+    q.ParamByName('ia').AsInteger := idAtb;
     q.Open;
     if not q.IsEmpty then
     begin
       Result := q.FieldByName('ID_AV').AsInteger;
-      AValor := s;
+      AValor := q.FieldByName('AV').AsString;
+      Exit;
+    end;
+    q.Close;
+    // 3. No existe: insertarlo. AV se rellena con CODIGO_ATB para
+    //    mantener consistencia con la paleta basica.
+    q.SQL.Text :=
+      'INSERT INTO fza_atributos_valores ' +
+      '  (ID_VA_AV, AV, ID_ATB_AV, ESACTIVO_AV, ORDEN_AV, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (''CO'', :v, :ia, ''S'', 0, NOW(), :u, NOW(), :u)';
+    q.ParamByName('v').AsString    := ACodigoAtbColor;
+    q.ParamByName('ia').AsInteger  := idAtb;
+    q.ParamByName('u').AsString    := AUsuario;
+    q.ExecSQL;
+    q.SQL.Text :=
+      'SELECT ID_AV FROM fza_atributos_valores ' +
+      ' WHERE ID_VA_AV = ''CO'' AND ID_ATB_AV = :ia ' +
+      ' ORDER BY ID_AV DESC LIMIT 1';
+    q.ParamByName('ia').AsInteger := idAtb;
+    q.Open;
+    if not q.IsEmpty then
+    begin
+      Result := q.FieldByName('ID_AV').AsInteger;
+      AValor := ACodigoAtbColor;
     end;
   finally
     FreeAndNil(q);
