@@ -185,15 +185,27 @@ type
     procedure MigrarFotosSesion(const ASerieSes, ANumeroSes: string;
                                 ALinea: Integer;
                                 const ACodigoArt, AUsuario: string);
+
+    /// Handler enganchado a `TfrxReport.OnBeforePrint`. FastReport lo
+    /// invoca antes de pintar cada View en cada iteracion. Si el View
+    /// es un TfrxPictureView llamado foto300/foto600/fotoreal, refresca
+    /// su Picture con la foto del registro actual del DataSet de su
+    /// banda padre. Es la pieza que hace que en informes iterativos
+    /// (etiquetas) cada fila salga con su foto y no con la del primero.
+    procedure HandlerReportBeforePrint(View: TfrxView);
   end;
 
-/// Sustituye en el informe los TfrxPictureView llamados foto300/foto600/
-/// fotoReal por la foto resuelta del par (articulo, sku) que se obtenga
-/// del `DataSet` de la banda padre. Llamar tras PrepareReport o desde
-/// `AfterReportLoaded`. Si el par no se puede inferir (no hay banda con
-/// dataset, o el dataset no tiene los campos esperados), la imagen se
-/// limpia (queda en blanco).
-procedure SustituirFotosEnReport(Report: TfrxReport);
+/// Engancha el evento Delphi `Report.OnBeforePrint` para que en cada
+/// iteracion del informe FastReport refresque los TfrxPictureView
+/// llamados foto300/foto600/fotoReal con la foto resuelta del par
+/// (articulo, sku) del DataSet de la banda padre. Llamar desde
+/// `AfterReportLoaded` (antes de PrepareReport). El handler se dispara
+/// para cada View justo antes de pintarse, asi en informes iterativos
+/// (etiquetas, tickets con detalle) cada fila se imprime con la foto
+/// que toca y no con la del primer registro. Si el par no se puede
+/// inferir (no hay banda con dataset, o no estan los campos), la
+/// imagen se limpia (queda en blanco).
+procedure EngancharFotosEnReport(Report: TfrxReport);
 
 /// Genera la lista de claves candidatas para `CODIGO_UNIDAD_FOT` a partir
 /// de un `CODIGO_UNIDAD_SKU`, en orden de mas a menos especifica:
@@ -1120,45 +1132,45 @@ end;
 //   FastReport: sustitucion de fotos
 // ============================================================================
 //
-// En esta version de FastReport `OnBeforePrint` de un `TfrxView` es una
-// propiedad STRING (nombre de un proc del script del informe) y no un
-// evento Delphi nativo, por lo que no se puede enganchar codigo desde
-// fuera del script.
-//
-// Estrategia simple y robusta: una sola pasada justo antes de imprimir,
-// recorriendo `Report.AllObjects` y cargando la foto resuelta a partir
-// del dataset que la imagen tenga vinculado (`TfrxPictureView.DataSet`)
-// o, en su defecto, del dataset de la banda padre. Esto cubre informes
-// de un solo registro (ficha de articulo, vista previa, ticket) y
-// informes iterativos cuando la imagen sigue el dataset de su banda:
-// FastReport vuelve a evaluar `AllObjects` por iteracion al preparar el
-// reporte. Para informes mas exoticos se podria pasar luego a un hook
-// con scripts, pero hoy se queda en esta capa.
+// `TfrxView.OnBeforePrint` es una propiedad STRING (nombre de un proc
+// del script del .frx) en esta version de FastReport, por lo que no se
+// puede enganchar codigo Delphi a nivel de View. Sin embargo
+// `TfrxReport.OnBeforePrint` SI es un evento Delphi nativo que se
+// dispara para cada View en cada iteracion, justo antes de pintarse.
+// Esa es la pieza que usamos para refrescar los TfrxPictureView por
+// fila (etiquetas, tickets con detalle): el handler se invoca tantas
+// veces como (objetos x filas) y solo actua sobre los Picture llamados
+// foto300/foto600/fotoreal. La logica de carga (resolucion del par
+// articulo+SKU del DataSet de la banda padre) vive en
+// `SustituirFotoEnPicture`, que se reutiliza desde aqui.
 
-procedure SustituirFotosEnReport(Report: TfrxReport);
+procedure TFotosArticulos.HandlerReportBeforePrint(View: TfrxView);
 var
-  i      : Integer;
-  obj    : TfrxComponent;
   pic    : TfrxPictureView;
   sName  : string;
-  bMatch : Boolean;
   res    : TFotoResolucion;
+  bMatch : Boolean;
 begin
-  if Report = nil then Exit;
-  for i := 0 to Report.AllObjects.Count - 1 do
-  begin
-    obj := TfrxComponent(Report.AllObjects[i]);
-    if not (obj is TfrxPictureView) then Continue;
-    pic := TfrxPictureView(obj);
-    sName := LowerCase(pic.Name);
-    bMatch := True;
-    if      sName = 'foto300'  then res := frPx300
-    else if sName = 'foto600'  then res := frPx600
-    else if sName = 'fotoreal' then res := frReal
-    else bMatch := False;
-    if not bMatch then Continue;
-    SustituirFotoEnPicture(pic, res);
-  end;
+  if not (View is TfrxPictureView) then
+    Exit;
+  pic := TfrxPictureView(View);
+  sName := LowerCase(pic.Name);
+  bMatch := True;
+  if      sName = 'foto300'  then res := frPx300
+  else if sName = 'foto600'  then res := frPx600
+  else if sName = 'fotoreal' then res := frReal
+  else
+    bMatch := False;
+  if not bMatch then
+    Exit;
+  SustituirFotoEnPicture(pic, res);
+end;
+
+procedure EngancharFotosEnReport(Report: TfrxReport);
+begin
+  if Report = nil then
+    Exit;
+  Report.OnBeforePrint := oFotos.HandlerReportBeforePrint;
 end;
 
 // ============================================================================

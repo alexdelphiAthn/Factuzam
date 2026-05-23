@@ -201,10 +201,11 @@ end;
 procedure TfrmPrint.AfterReportLoaded;
 begin
   // Hook para descendientes: re-enlazar DataSets del informe.
-  // Aqui ademas sustituimos los TfrxPictureView llamados foto300 /
-  // foto600 / fotoReal por la foto resuelta del par (articulo, sku) que
-  // vive en la banda padre del componente.
-  SustituirFotosEnReport(frxrprt1);
+  // Aqui ademas enganchamos el OnBeforePrint del Report para que en
+  // cada iteracion FastReport refresque los TfrxPictureView llamados
+  // foto300 / foto600 / fotoReal con la foto del registro activo de la
+  // banda padre (necesario en etiquetas y otros informes iterativos).
+  EngancharFotosEnReport(frxrprt1);
 end;
 
 procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
