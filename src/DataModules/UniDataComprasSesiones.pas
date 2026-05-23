@@ -156,6 +156,7 @@ type
 implementation
 
 uses
+  System.Variants,
   inLibGlobalVar,
   inLibtb,
   inLibComprasSesiones,
