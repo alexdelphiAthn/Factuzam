@@ -110,6 +110,7 @@ type
         grdStock      : TcxGrid;
           tvStock       : TcxGridDBTableView;
           glStock       : TcxGridLevel;
+    pnlLeyenda    : TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -139,6 +140,7 @@ type
     procedure CargarColores;
     procedure CargarFoto;
     procedure CargarInfoCabecera;
+    procedure CrearLeyenda;
     function  EstadoActual: TEstadoStock;
     function  AlmacenesSeleccionadosSQL: string;  // 'CODA','CODB' o NULL
     function  AlmacenesSeleccionadosLista: TArray<string>;
@@ -268,7 +270,39 @@ begin
 
   pcVistas.ActivePage := tsPorAlmacen;
   pcFiltros.ActivePage := tsColores;
+  CrearLeyenda;
   CargarAlmacenes;
+end;
+
+// ---------------------------------------------------------------------------
+//  Leyenda al pie del formulario: nombre de cada estado en su color, igual
+//  que la leyenda inferior de OdaGest+. Se construye dinamicamente con
+//  TLabels para que añadir un estado nuevo se reduzca a tocar ColorEstado
+//  y NombreEstadoCorto.
+// ---------------------------------------------------------------------------
+procedure TfrmStockConsulta.CrearLeyenda;
+const
+  ESTADOS_LEYENDA: array[0..7] of TEstadoStock = (
+    esExistencias, esEntradas, esSalidas, esVentas, esRegularizadas,
+    esPdteRecibir, esPdteServir, esPrestadas);
+var
+  i: Integer;
+  lbl: TLabel;
+  x: Integer;
+begin
+  x := 8;
+  for i := Low(ESTADOS_LEYENDA) to High(ESTADOS_LEYENDA) do
+  begin
+    lbl := TLabel.Create(pnlLeyenda);
+    lbl.Parent     := pnlLeyenda;
+    lbl.AutoSize   := True;
+    lbl.Font.Color := ColorEstado(ESTADOS_LEYENDA[i]);
+    lbl.Font.Style := [fsBold];
+    lbl.Caption    := NombreEstadoCorto(ESTADOS_LEYENDA[i]);
+    lbl.Top        := 5;
+    lbl.Left       := x;
+    x := x + lbl.Width + 14;
+  end;
 end;
 
 procedure TfrmStockConsulta.FormDestroy(Sender: TObject);
