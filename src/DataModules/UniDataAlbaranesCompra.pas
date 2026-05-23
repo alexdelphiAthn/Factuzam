@@ -20,7 +20,7 @@ unit UniDataAlbaranesCompra;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.Variants,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser, inMtoPrincipal;
 
@@ -40,9 +40,16 @@ type
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterInsert(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterPost(DataSet: TDataSet);
+  private
+    // Transicion de estado detectada en BeforePost. La aplicamos en
+    // AfterPost para que la cabecera ya este guardada en BBDD cuando
+    // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
+    // entrada nueva), 'ABRIR' (revertir mov. existentes) o ''.
+    FTransicionEstadoAlbc: string;
   public
     procedure GetCodigoAutoAlbaranCompra;
     procedure CalcularTotalesAlbaranCompra;
@@ -56,7 +63,8 @@ implementation
 
 uses
   inLibGlobalVar, inLibLog, System.Diagnostics,
-  inMtoAlbaranesCompra;
+  inMtoAlbaranesCompra,
+  inLibAlbaranesCompraMovimientos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -142,15 +150,95 @@ begin
     FieldByName('CODIGO_EMP_ALBC').AsString := '0';
     FieldByName('CODIGO_PRV_ALBC').AsString := '0';
   end;
+  // Insert nuevo: no hay transicion (sin estado previo).
+  FTransicionEstadoAlbc := '';
 end;
 
 procedure TdmAlbaranesCompra.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  fEstado: TField;
+  sEstadoNuevo, sEstadoAnterior: string;
+  qChk: TUniQuery;
 begin
   inherited;
   if (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '') then
     GetCodigoAutoAlbaranCompra;
   CalcularTotalesAlbaranCompra;
+  // Deteccion de transicion de ESTADO_ALBC. Solo aplica en modo Edit
+  // (en Insert el albaran nace ABIERTO y los movimientos los genera
+  // MaterializarSesion o un Edit posterior). Comparamos OldValue vs
+  // valor actual; UniDAC garantiza que OldValue refleja el snapshot
+  // previo al Edit. Guardamos la transicion para aplicarla en
+  // AfterPost cuando la cabecera ya este persistida.
+  FTransicionEstadoAlbc := '';
+  if unqryTablaG.State <> dsEdit then
+    Exit;
+  fEstado := unqryTablaG.FindField('ESTADO_ALBC');
+  if fEstado = nil then
+    Exit;
+  sEstadoNuevo    := UpperCase(Trim(fEstado.AsString));
+  sEstadoAnterior := UpperCase(Trim(VarToStr(fEstado.OldValue)));
+  if sEstadoNuevo = sEstadoAnterior then
+    Exit;
+  if (sEstadoAnterior = 'ABIERTO') and (sEstadoNuevo = 'CERRADO') then
+    FTransicionEstadoAlbc := 'CERRAR'
+  else if (sEstadoAnterior = 'CERRADO') and (sEstadoNuevo = 'ABIERTO') then
+    FTransicionEstadoAlbc := 'ABRIR';
+  // Pre-validacion del cierre: si vamos a cerrar y no hay lineas con
+  // cantidad > 0, abortamos el Post para no dejar el albaran CERRADO
+  // sin movimientos. Mejor abortar aqui que en AfterPost (donde la
+  // cabecera ya estaria persistida con el estado nuevo).
+  if FTransicionEstadoAlbc = 'CERRAR' then
+  begin
+    qChk := TUniQuery.Create(nil);
+    try
+      qChk.Connection := inLibGlobalVar.oConn;
+      qChk.SQL.Text :=
+        'SELECT COUNT(*) AS N FROM fza_albaranes_compra_lineas ' +
+        ' WHERE SERIE_ALBC_ALBCLIN  = :s ' +
+        '   AND NUMERO_ALBC_ALBCLIN = :n ' +
+        '   AND IFNULL(CANTIDAD_ALBCLIN, 0) > 0';
+      qChk.ParamByName('s').AsString :=
+        unqryTablaG.FieldByName('SERIE_ALBC').AsString;
+      qChk.ParamByName('n').AsString :=
+        unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
+      qChk.Open;
+      if qChk.FieldByName('N').AsInteger = 0 then
+        raise Exception.Create(
+          'No se puede cerrar el albaran: no tiene lineas con cantidad ' +
+          'mayor que 0. Añade lineas antes de cerrar.');
+    finally
+      FreeAndNil(qChk);
+    end;
+  end;
+end;
+
+// Tras persistir la cabecera, aplicamos la transicion de estado
+// detectada en BeforePost: generar movimientos al cerrar o revertir
+// los movimientos al reabrir. Cualquier excepcion se propaga al
+// usuario (el Post original ya quedo aplicado, por lo que el albaran
+// guardara su nuevo estado aunque los movimientos fallen — el usuario
+// debe revisar y reintentar o revertir manualmente).
+procedure TdmAlbaranesCompra.unqryTablaGAfterPost(DataSet: TDataSet);
+var
+  sSerie, sNumero: string;
+begin
+  inherited;
+  if FTransicionEstadoAlbc = '' then
+    Exit;
+  sSerie  := unqryTablaG.FieldByName('SERIE_ALBC').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
+  try
+    if FTransicionEstadoAlbc = 'CERRAR' then
+      inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
+        inLibGlobalVar.oConn, sSerie, sNumero, oUser)
+    else if FTransicionEstadoAlbc = 'ABRIR' then
+      inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
+        inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+  finally
+    FTransicionEstadoAlbc := '';
+  end;
 end;
 
 procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterInsert(
