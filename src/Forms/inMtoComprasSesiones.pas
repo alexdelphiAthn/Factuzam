@@ -1638,6 +1638,7 @@ var
   bGenPed    : Boolean;
   bGenAlb    : Boolean;
   bUnPorAlm  : Boolean;
+  bPrimera   : Boolean;
   sAlm       : string;
   sSerPedTmp : string;
   sNumPedTmp : string;
@@ -1684,6 +1685,12 @@ begin
         oQry.ParamByName('n').AsString :=
           Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
         oQry.Open;
+        bPrimera := True;
+        // Solo la PRIMERA iteracion crea articulos / SKUs / barras /
+        // tarifas; las siguientes pasan ASoloDocumentos=True y solo
+        // crean el pedido/albaran de su almacen. Asi evitamos
+        // re-procesar los mismos articulos N veces (rendimiento +
+        // limpieza, no solo evitar duplicados via INSERT IGNORE).
         while not oQry.Eof do
         begin
           sAlm := oQry.FieldByName('ALM').AsString;
@@ -1691,8 +1698,9 @@ begin
                                      AFrmSet.SerieAlb, AFrmSet.SeriePed,
                                      sSerPedTmp, sNumPedTmp,
                                      sSerAlbTmp, sNumAlbTmp, AErr,
-                                     sAlm) then
+                                     sAlm, not bPrimera) then
             raise Exception.Create(AErr);
+          bPrimera := False;
           // Conservamos el primer resultado para el mensaje al usuario.
           if ASerAlb = '' then begin ASerAlb := sSerAlbTmp; ANumAlb := sNumAlbTmp; end;
           if ASerPed = '' then begin ASerPed := sSerPedTmp; ANumPed := sNumPedTmp; end;
