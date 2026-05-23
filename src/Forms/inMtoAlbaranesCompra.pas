@@ -605,9 +605,12 @@ begin
   // (cdsEtiquetasArt, fxdsEtiquetasArt) para que el mismo .fr3 sirva
   // en ambos sitios. Creamos un DM temporal porque el form de
   // albaranes no necesita uno permanente.
+  // TdmArticulos.Create dispara DataModuleCreate que ya asigna la
+  // conexion. No necesitamos AbrirDetalles ni OpenTables — las queries
+  // de print (unqryTarifasPrint, unqryArtPrint) se abren bajo demanda
+  // desde el modal / CrearDataSetEtiquetasArt.
   dmArt := TdmArticulos.Create(nil);
   try
-    dmArt.OpenTables;
     form := TfrmPrintEtiqAlb.Create(Application);
     try
       form.DMArt  := dmArt;
