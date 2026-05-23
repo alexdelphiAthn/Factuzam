@@ -218,6 +218,13 @@ begin
   begin
     dmmAlbaranesCompra := TdmAlbaranesCompra.Create(Self);
     dsTablaG.DataSet := dmmAlbaranesCompra.unqryTablaG;
+    // Sin esta linea, TfrmMtoGen.AbrirTablaPrincipalAsync ve
+    // tdmDataModule=nil y aborta -> la query principal nunca se abre y
+    // el form se queda vacio. Solo pasa cuando fza_winforms NO tiene la
+    // entrada de AlbaranesCompra (BBDD sin la migracion aplicada); con
+    // la entrada presente, el padre rellena tdmDataModule antes de
+    // entrar a CrearTablaPrincipal y este bloque no se ejecuta.
+    tdmDataModule := dmmAlbaranesCompra;
   end;
   tvLineasAlbaran.DataController.DataSource :=
     dmmAlbaranesCompra.dsAlbaranesCompraLineas;
