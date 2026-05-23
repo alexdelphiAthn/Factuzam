@@ -317,36 +317,48 @@ BEGIN
 
         IF v_filtros_fijos IS NULL THEN SET v_filtros_fijos = ''; END IF;
 
-        /* QUERY FINAL: Almacen + Atributo Fila (Color) + Columnas Dinamicas (Talla) */
-        SET @sql = CONCAT(
-            'SELECT
-                alm.NOMBRE_ALM_ALM AS Almacen',
-                v_select_fila, ', ',
-                v_columnas_dinamicas, ',
-                COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
-             FROM fza_almacenes alm
-             LEFT JOIN (
-                SELECT stk.CODIGO_ALM_STK, av.AV, stk.CANTIDAD_STK', v_src_select_fila, '
-                FROM fza_articulos_stockactual stk
-                JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
-                JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SKU_SA
-                JOIN fza_atributos_valores av ON ask.ID_AV_SA = av.ID_AV',
-                v_join_fila, '
-                WHERE sk.CODIGO_ART_SKU = ''', v_codigo_articulo, '''
-                  AND av.ID_VA_AV = ''', v_id_atributo_pivot, ''' ',
-                  v_filtros_fijos, '
-             ) src ON alm.CODIGO_ALM_ALM = src.CODIGO_ALM_STK
-             WHERE alm.ESACTIVO_ALM = ''S''
-             GROUP BY alm.NOMBRE_ALM_ALM', v_groupby_fila, '
-             ORDER BY alm.NOMBRE_ALM_ALM', v_groupby_fila
-        );
+        /* Si el articulo tiene atributo pivote definido pero todavia no
+           tiene SKUs cargados, GROUP_CONCAT devuelve NULL. CONCAT con un
+           argumento NULL devuelve NULL, y PREPARE stmt FROM NULL revienta
+           con "near 'NULL' at line 1". Caemos al fallback. */
+        IF v_columnas_dinamicas IS NOT NULL THEN
 
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
+            /* QUERY FINAL: Almacen + Atributo Fila (Color) + Columnas Dinamicas (Talla) */
+            SET @sql = CONCAT(
+                'SELECT
+                    alm.NOMBRE_ALM_ALM AS Almacen',
+                    v_select_fila, ', ',
+                    v_columnas_dinamicas, ',
+                    COALESCE(SUM(src.CANTIDAD_STK), 0) AS Total
+                 FROM fza_almacenes alm
+                 LEFT JOIN (
+                    SELECT stk.CODIGO_ALM_STK, av.AV, stk.CANTIDAD_STK', v_src_select_fila, '
+                    FROM fza_articulos_stockactual stk
+                    JOIN fza_articulos_skus sk ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU
+                    JOIN fza_atributos_sku ask ON sk.CODIGO_UNIDAD_SKU = ask.CODIGO_UNIDAD_SKU_SA
+                    JOIN fza_atributos_valores av ON ask.ID_AV_SA = av.ID_AV',
+                    v_join_fila, '
+                    WHERE sk.CODIGO_ART_SKU = ''', v_codigo_articulo, '''
+                      AND av.ID_VA_AV = ''', v_id_atributo_pivot, ''' ',
+                      v_filtros_fijos, '
+                 ) src ON alm.CODIGO_ALM_ALM = src.CODIGO_ALM_STK
+                 WHERE alm.ESACTIVO_ALM = ''S''
+                 GROUP BY alm.NOMBRE_ALM_ALM', v_groupby_fila, '
+                 ORDER BY alm.NOMBRE_ALM_ALM', v_groupby_fila
+            );
 
-    ELSE
-        /* CASO B: ARTICULO SIMPLE (Sin atributos) */
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+
+        END IF;
+
+    END IF;
+
+    /* Fallback: articulo simple, articulo sin TIPO_VARIACION_ART o
+       articulo con pivote pero sin SKUs. Devuelve fila por almacen
+       con stock total (0 si no hay nada todavia). */
+    IF v_id_atributo_pivot IS NULL OR v_columnas_dinamicas IS NULL THEN
         SELECT
             alm.NOMBRE_ALM_ALM as Almacen,
             COALESCE(SUM(stk.CANTIDAD_STK), 0) as `Stock Total`
@@ -357,7 +369,6 @@ BEGIN
         WHERE alm.ESACTIVO_ALM = 'S'
         GROUP BY alm.NOMBRE_ALM_ALM
         ORDER BY alm.NOMBRE_ALM_ALM;
-
     END IF;
 END ;;
 DELIMITER ;
