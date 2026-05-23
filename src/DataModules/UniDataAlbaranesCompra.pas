@@ -22,6 +22,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Variants,
   Data.DB, MemDS, DBAccess, Uni,
+  frxClass, frxDBSet,
   UniDataGen, inLibUser, inMtoPrincipal;
 
 type
@@ -36,6 +37,16 @@ type
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
     unqryDefArticuloAlbc:       TUniQuery;
+    // Datasets para impresion del albaran via FastReport. Mismo patron
+    // que TdmComprasSesiones (unqry*Print -> ds*Print -> fxds*). El
+    // .fr3 embebido en el modal inMtoModalImpAlbCompra.dfm los
+    // referencia por UserName ('Albaran', 'LineasAlbaran').
+    unqryCabAlbcPrint:          TUniQuery;
+    dsCabAlbcPrint:             TDataSource;
+    fxdsCabAlbc:                TfrxDBDataset;
+    unqryLinAlbcPrint:          TUniQuery;
+    dsLinAlbcPrint:             TDataSource;
+    fxdsLinAlbc:                TfrxDBDataset;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -53,6 +64,9 @@ type
   public
     procedure GetCodigoAutoAlbaranCompra;
     procedure CalcularTotalesAlbaranCompra;
+    // Abre unqryCabAlbcPrint y unqryLinAlbcPrint con los parametros
+    // del albaran a imprimir. Mismo nombre/firma que en sesiones.
+    procedure PrepararPrint(const ASerie, ANumero: string);
     procedure OpenTables;
     // Override: abre las queries detalle tras unqryTablaG. Llamada
     // desde TfrmMtoGen.AbrirTablaPrincipalAsync.
@@ -356,6 +370,18 @@ begin
   unqryTablaG.FieldByName('TOTAL_BASES_ALBC').AsFloat     := fBase;
   unqryTablaG.FieldByName('TOTAL_IMPUESTOS_ALBC').AsFloat := fIva;
   unqryTablaG.FieldByName('TOTAL_LIQUIDO_ALBC').AsFloat   := fBase + fIva;
+end;
+
+procedure TdmAlbaranesCompra.PrepararPrint(const ASerie, ANumero: string);
+begin
+  unqryCabAlbcPrint.Close;
+  unqryCabAlbcPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
+  unqryCabAlbcPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
+  unqryCabAlbcPrint.Open;
+  unqryLinAlbcPrint.Close;
+  unqryLinAlbcPrint.ParamByName('SERIE_ALBC').AsString  := ASerie;
+  unqryLinAlbcPrint.ParamByName('NUMERO_ALBC').AsString := ANumero;
+  unqryLinAlbcPrint.Open;
 end;
 
 end.
