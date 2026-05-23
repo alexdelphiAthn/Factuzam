@@ -219,4 +219,13 @@ object frmStockConsulta: TfrmStockConsulta
       end
     end
   end
+  object pnlLeyenda: TPanel
+    Left = 0
+    Top = 584
+    Width = 898
+    Height = 28
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 3
+  end
 end
