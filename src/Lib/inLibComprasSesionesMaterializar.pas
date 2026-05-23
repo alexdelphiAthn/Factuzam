@@ -61,7 +61,8 @@ function MaterializarSesion(ADM: TdmComprasSesiones;
                             const AUsuario: string;
                             const ASerieDocAlb, ASerieDocPed: string;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
-                                AMsgError: string): Boolean;
+                                AMsgError: string;
+                            const AFiltroAlmacen: string = ''): Boolean;
 
 // Revierte la materializacion: borra los movimientos de almacen que la
 // sesion genero (TIPO_DOC_MOV='AC' apuntando a SERIE_SES/NUMERO_SES) y
@@ -1033,7 +1034,8 @@ procedure InsertarLineasAlbaranCompra(AConn: TUniConnection;
                                        ADM: TdmComprasSesiones;
                                        const ASerieSes, ANumSes,
                                              ASerieAlbc, ANumAlbc,
-                                             AUsuario: string);
+                                             AUsuario: string;
+                                       const AFiltroAlmacen: string = '');
 var
   qC : TUniQuery;
   sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
@@ -1297,7 +1299,8 @@ function MaterializarSesion(ADM: TdmComprasSesiones;
                             const AUsuario: string;
                             const ASerieDocAlb, ASerieDocPed: string;
                             out ASeriePed, ANumPed, ASerieAlb, ANumAlb,
-                                AMsgError: string): Boolean;
+                                AMsgError: string;
+                            const AFiltroAlmacen: string = ''): Boolean;
 var
   conn       : TUniConnection;
   sSerieSes, sNumSes, sPrefijoEAN: string;

@@ -33,7 +33,8 @@ uses
   cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
   cxTextEdit, cxCheckBox, cxMaskEdit, cxDropDownEdit, cxCalendar,
-  cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox;
+  cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
+  cxRadioGroup;
 
 type
   TfrmModalCrearAlbaranSesion = class(TfrmBase)
