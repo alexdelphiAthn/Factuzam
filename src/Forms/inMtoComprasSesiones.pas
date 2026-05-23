@@ -390,6 +390,8 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
+var
+  i, IdxBase : Integer;
 begin
   // OJO: TODO lo que vaya a usar el `inherited` (que ejecuta
   // ProcesarPerfiles -> CrearTablaPrincipal -> abre unqrySesionLin -> el
@@ -427,6 +429,17 @@ begin
   CrearColumnasTallas;
 
   inherited;
+
+  // Forzar orden visual: perfiles/layouts guardados pueden alterar
+  // los Index de las columnas talla y separarlas del bloque dbcLinTallas
+  // .. dbcLinTotalTallas. Reasignamos Index despues del inherited
+  // (que restaura layout) para garantizar que quedan contiguas.
+  IdxBase := dbcLinTallas.Index;
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+  begin
+    if Assigned(FTallaColumns[i]) then
+      FTallaColumns[i].Index := IdxBase + i + 1;
+  end;
 
   CargarBasicosColor;
 
@@ -550,6 +563,9 @@ begin
       Col.Width   := 50;
       Col.PropertiesClass := TcxCurrencyEditProperties;
       TcxCurrencyEditProperties(Col.Properties).DisplayFormat := '#,##0';
+      // Cuadrar texto: cabecera y contenido centrados.
+      Col.HeaderAlignmentHorz := taCenter;
+      TcxCurrencyEditProperties(Col.Properties).Alignment.Horz := taCenter;
       // ValueTypeClass solo se puede asignar a runtime (no serializable
       // en DFM: dispara EReadError 'Property ValueTypeClass does not
       // exist' al cargar el form).
