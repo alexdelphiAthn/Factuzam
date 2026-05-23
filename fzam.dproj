@@ -291,7 +291,8 @@
             <Form>frmPrintAlbCompraV</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEtiqAlb.pas">
-            <Form>frmPrintEtiqAlb</Form>
+            <Form>frmPrintEtiqArt</Form>
+            <FormType>TfrmPrintEtiqAlb</FormType>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCliEti.pas">
             <Form>frmPrintCliEti</Form>

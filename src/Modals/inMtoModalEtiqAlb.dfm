@@ -1,4 +1,4 @@
-inherited frmPrintEtiqAlb: TfrmPrintEtiqAlb
+inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
   Caption = 'Impresi'#243'n de Etiquetas de Albar'#225'n'
   ClientHeight = 426
   ClientWidth = 536
