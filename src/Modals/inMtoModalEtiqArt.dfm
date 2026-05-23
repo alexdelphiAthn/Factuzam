@@ -6,8 +6,6 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 552
   ExplicitHeight = 465
   TextHeight = 19
@@ -15,11 +13,11 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     Left = 392
     Height = 426
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 392
-    ExplicitHeight = 444
+    ExplicitLeft = 390
+    ExplicitHeight = 418
     inherited btnSalir: TcxButton
       Top = 400
-      ExplicitTop = 418
+      ExplicitTop = 392
     end
   end
   object pnlOpciones: TPanel [1]
@@ -30,12 +28,14 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitHeight = 444
+    ExplicitWidth = 390
+    ExplicitHeight = 418
     object cxlblArticulo: TcxLabel
       Left = 12
       Top = 12
       Caption = 'C'#243'digo de Art'#237'culo:'
       TabOrder = 5
+      Transparent = True
     end
     object edtCodArt: TcxTextEdit
       Left = 156
@@ -57,6 +57,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Top = 76
       Caption = 'Tarifa:'
       TabOrder = 6
+      Transparent = True
     end
     object cbbTarifa: TcxComboBox
       Left = 156
@@ -70,6 +71,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Top = 108
       Caption = 'Fecha de aplicaci'#243'n:'
       TabOrder = 7
+      Transparent = True
     end
     object dtFechaAplicacion: TcxDateEdit
       Left = 193
@@ -82,6 +84,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
       Top = 140
       Caption = 'Almacenes (marque uno o varios):'
       TabOrder = 8
+      Transparent = True
     end
     object lvAlmacenes: TcxListView
       Left = 12
@@ -183,8 +186,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     inherited Page1: TfrxReportPage
       LeftMargin = 0.000000000000000000
       RightMargin = 0.000000000000000000
-      TopMargin = 13.000000000000000000
-      BottomMargin = 8.000000000000000000
+      TopMargin = 4.500000000000000000
+      BottomMargin = 4.500000000000000000
       Columns = 2
       ColumnWidth = 105.000000000000000000
       ColumnPositions.Strings = (
@@ -493,8 +496,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqArt
     inherited Page1: TfrxReportPage
       LeftMargin = 0.000000000000000000
       RightMargin = 0.000000000000000000
-      TopMargin = 13.000000000000000000
-      BottomMargin = 8.000000000000000000
+      TopMargin = 4.500000000000000000
+      BottomMargin = 4.500000000000000000
       Columns = 2
       ColumnWidth = 105.000000000000000000
       ColumnPositions.Strings = (

@@ -82,7 +82,8 @@ uses
   inLibEAN13,
   inLibComprasSesiones,
   inLibFotos,
-  inLibtb;
+  inLibtb,
+  inLibAlbaranesCompraMovimientos;
 
 // ---------------------------------------------------------------------------
 // Generación local de EAN13
@@ -1053,160 +1054,13 @@ begin
   end;
 end;
 
-// Genera movimientos de entrada en almacen (TIPO_DOC_MOV='AC',
-// TIPO_MOV='E') por cada (linea, fila, pivot) con cantidad > 0 de la
-// sesion. Una sola pasada SQL que itera celdas y resuelve SKU/articulo
-// linea a linea. La cabecera de cada movimiento apunta al albaran de
-// compra recien creado (SERIE_ALBC/NUMERO_ALBC).
-procedure GenerarMovimientosAlbaran(AConn: TUniConnection;
-                                     ADM: TdmComprasSesiones;
-                                     const ASerieSes, ANumSes,
-                                           AUsuario: string);
-var
-  qC : TUniQuery;
-  sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
-  sCodigoEmp, sDescripcion, sNumeroMov, sLinea: string;
-  iIdAvPivot, iIdAvFila, iLinea: Integer;
-  rCantidad, rCoste, rTotal: Double;
-begin
-  sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-  sCodigoEmp    := ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
-  if sCodigoAlmCab = '' then
-    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
-                           'para generar el albaran.');
-
-  qC := TUniQuery.Create(nil);
-  try
-    qC.Connection := AConn;
-    // Por linea + fila + pivot. Resolvemos articulo y los datos
-    // basicos en la propia consulta — el SKU se busca despues con
-    // ResolverCodigoSku ya que depende de fza_atributos_sku.
-    qC.SQL.Text :=
-      'SELECT C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
-      '       C.CANTIDAD_SESCEL, ' +
-      '       IFNULL(NULLIF(C.CODIGO_ALM_SESCEL,''''), :alm_cab) AS ALM_EFE, ' +
-      '       L.CODIGO_ART_TENTATIVO_SESLIN, L.CODIGO_ART_REUSAR_SESLIN, ' +
-      '       L.ACCION_DUPLICADO_SESLIN, L.DESCRIPCION_SESLIN, ' +
-      '       L.PRECIO_COMPRA_SESLIN, L.TIPO_LINEA_SESLIN, ' +
-      '       IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
-      '       IFNULL(L.COLOR_TEXTO_SESLIN, '''')     AS COLOR_TEXTO ' +
-      '  FROM fza_compras_sesiones_celdas C ' +
-      '  JOIN fza_compras_sesiones_lineas L ' +
-      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
-      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
-      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
-      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
-      '   AND C.NUMERO_SES_SESCEL = :n ' +
-      '   AND C.CANTIDAD_SESCEL   > 0 ' +
-      ' ORDER BY C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL';
-    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
-    qC.ParamByName('s').AsString := ASerieSes;
-    qC.ParamByName('n').AsString := ANumSes;
-    qC.Open;
-
-    while not qC.Eof do
-    begin
-      iLinea     := qC.FieldByName('LINEA_SES_SESCEL').AsInteger;
-      iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
-      rCantidad  := qC.FieldByName('CANTIDAD_SESCEL').AsFloat;
-      sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
-      sDescripcion := qC.FieldByName('DESCRIPCION_SESLIN').AsString;
-      rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
-      rTotal     := rCantidad * rCoste;
-
-      if qC.FieldByName('ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
-        sCodigoArt := qC.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
-      else
-        sCodigoArt := qC.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
-
-      // Lineas SERVICIO no llevan SKU ni movimiento.
-      if qC.FieldByName('TIPO_LINEA_SESLIN').AsString = 'SERVICIO' then
-      begin
-        qC.Next;
-        Continue;
-      end;
-
-      // Resolver ID_AV del color (fila) desde CODIGO_ATB_COLOR_SESLIN.
-      // L.ID_VA_FILA_SESLIN es un position string ('CO'), NO un ID
-      // numerico: el codigo viejo hacia StrToIntDef y siempre daba 0,
-      // por lo que ResolverCodigoSku no encontraba SKUs MATRIZ y se
-      // saltaban los movimientos en silencio.
-      iIdAvFila := 0;
-      if Trim(qC.FieldByName('COD_COLOR').AsString) <> '' then
-        iIdAvFila := ResolverIdAvColorLinea(
-          AConn,
-          qC.FieldByName('COLOR_TEXTO').AsString,
-          qC.FieldByName('COD_COLOR').AsString,
-          AUsuario, sCodigoSku);  // sCodigoSku se reusa como out, se sobreescribe abajo
-
-      sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
-      if sCodigoSku = '' then
-      begin
-        // El SKU no existe — no podemos mover stock contra el. Saltamos
-        // (no es fatal: puede pasar con REUSAR a articulo sin ese AV).
-        qC.Next;
-        Continue;
-      end;
-
-      // Numero de movimiento via contador 'MV' (mismo que albaranes
-      // de venta y resto del sistema).
-      sNumeroMov := inLibtb.ObtenerSiguienteContador('MV');
-      sLinea     := Format('%.4d', [iLinea]);
-
-      with TUniStoredProc.Create(nil) do
-      try
-        Connection := AConn;
-        StoredProcName := 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT';
-        Params.Clear;
-        Params.CreateParam(ftString, 'p_NUMERO_MOV',                ptInput);
-        Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',              ptInput);
-        Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',             ptInput);
-        Params.CreateParam(ftString, 'p_NRO_DOC_MOV',               ptInput);
-        Params.CreateParam(ftString, 'p_LINEA_MOV',                 ptInput);
-        Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',        ptInput);
-        Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',        ptInput);
-        Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
-        Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',         ptInput);
-        Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV',       ptInput);
-        Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',              ptInput);
-        Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',          ptInput);
-        Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',           ptInput);
-        Params.CreateParam(ftString, 'p_USUARIO',                   ptInput);
-        Params.CreateParam(ftString, 'p_ALMACEN_DOC',               ptInput);
-        Params.CreateParam(ftString, 'p_NUMOP_DOC',                 ptInput);
-        Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV',       ptInput);
-        Params.CreateParam(ftString, 'p_CODCLIENTE',                ptInput);
-        Params.CreateParam(ftString, 'p_CODARTICULO',               ptInput);
-        ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
-        ParamByName('p_TIPO_DOC_MOV').AsString        := 'AC';
-        ParamByName('p_SERIE_DOC_MOV').AsString       := ASerieSes;
-        ParamByName('p_NRO_DOC_MOV').AsString         := ANumSes;
-        ParamByName('p_LINEA_MOV').AsString           := sLinea;
-        ParamByName('p_CODIGO_EMPRESA_MOV').AsString  := sCodigoEmp;
-        ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sCodigoAlm;
-        ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
-        ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sCodigoSku;
-        ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'E';
-        ParamByName('p_CANTIDAD_MOV').AsFloat         := rCantidad;
-        ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := rCoste;
-        ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := rTotal;
-        ParamByName('p_USUARIO').AsString             := AUsuario;
-        ParamByName('p_ALMACEN_DOC').AsString         := sCodigoAlm;
-        ParamByName('p_NUMOP_DOC').AsString           := '';
-        ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := '';
-        ParamByName('p_CODCLIENTE').AsString          := '';
-        ParamByName('p_CODARTICULO').AsString         := sCodigoArt;
-        ExecProc;
-      finally
-        Free;
-      end;
-
-      qC.Next;
-    end;
-  finally
-    FreeAndNil(qC);
-  end;
-end;
+// La generacion de movimientos del albaran de compra se ha movido a
+// inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra,
+// que lee del propio albaran (lineas + celdas) en vez de la sesion
+// origen. Asi el flujo es identico tanto si el albaran viene de una
+// sesion materializada como si se pica a mano y luego se cierra desde
+// el Mto. MaterializarSesion (mas abajo) llama directamente a la nueva
+// funcion despues de InsertarLineasAlbaranCompra y RecalcularTotales.
 
 // ---------------------------------------------------------------------------
 // Pendiente de recibir (pedido de compra, no toca movimientos)
@@ -1528,20 +1382,39 @@ begin
       // 1. Obtener NUMERO_ALBC del contador global (tipo 'AB').
       ANumAlb   := inLibtb.ObtenerSiguienteContador('AB');
       ASerieAlb := sSerieAlbReal;
-
       // 2. Crear cabecera en fza_albaranes_compra denormalizando
       //    empresa + proveedor desde la sesion.
       InsertarAlbaranCompraCabecera(conn, ADM, ASerieAlb, ANumAlb, AUsuario);
-
       // 3. Crear lineas: una por (SKU, almacen) con SUM(CANTIDAD).
       InsertarLineasAlbaranCompra(conn, ADM, sSerieSes, sNumSes,
                                   ASerieAlb, ANumAlb, AUsuario);
-
       // 4. Recalcular totales de la cabecera a partir de las lineas.
       RecalcularTotalesAlbaranCompra(conn, ASerieAlb, ANumAlb);
-
-      // 5. Movimientos de entrada apuntando al albaran recien creado.
-      GenerarMovimientosAlbaran(conn, ADM, ASerieAlb, ANumAlb, AUsuario);
+      // 5. Movimientos de entrada leyendo del propio albaran. Asi el
+      //    flujo es el mismo que cuando el albaran se cierra a mano
+      //    desde el Mto, y la funcion vive en una sola unidad.
+      inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
+        conn, ASerieAlb, ANumAlb, AUsuario);
+      // 6. Como ya tiene movimientos, marcamos el albaran como CERRADO
+      //    para que el Mto no permita modificarlo sin reabrirlo (el
+      //    AfterPost del data module se encarga de revertir/regenerar
+      //    movimientos segun las transiciones de estado).
+      qLin := TUniQuery.Create(nil);
+      try
+        qLin.Connection := conn;
+        qLin.SQL.Text :=
+          'UPDATE fza_albaranes_compra SET ' +
+          '  ESTADO_ALBC    = ''CERRADO'', ' +
+          '  INSTANTE_MODIF = NOW(), ' +
+          '  USUARIO_MODIF  = :u ' +
+          ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n';
+        qLin.ParamByName('s').AsString := ASerieAlb;
+        qLin.ParamByName('n').AsString := ANumAlb;
+        qLin.ParamByName('u').AsString := AUsuario;
+        qLin.ExecSQL;
+      finally
+        FreeAndNil(qLin);
+      end;
     end;
 
     // Cerrar la sesión

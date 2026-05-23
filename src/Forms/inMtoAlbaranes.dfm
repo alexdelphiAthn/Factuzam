@@ -133,6 +133,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Top = 12
                 Caption = 'N'#250'mero'
                 TabOrder = 9
+                Transparent = True
               end
               object txtNUMERO_ALB: TcxDBTextEdit
                 Left = 8
@@ -147,6 +148,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Top = 12
                 Caption = 'Serie'
                 TabOrder = 10
+                Transparent = True
               end
               object txtSERIE_ALB: TcxDBTextEdit
                 Left = 116
@@ -161,6 +163,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Top = 12
                 Caption = 'Fecha'
                 TabOrder = 11
+                Transparent = True
               end
               object dteFECHA_ALB: TcxDBDateEdit
                 Left = 204
@@ -175,6 +178,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Top = 12
                 Caption = 'Estado'
                 TabOrder = 12
+                Transparent = True
               end
               object txtESTADO_ALB: TcxDBTextEdit
                 Left = 320
@@ -190,6 +194,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Top = 12
                 Caption = 'Pedido origen (N'#250'mero / Serie)'
                 TabOrder = 13
+                Transparent = True
               end
               object txtNUMERO_PED_ALB: TcxDBTextEdit
                 Left = 440
@@ -214,6 +219,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Top = 12
                 Caption = 'Factura (N'#250'mero / Serie)'
                 TabOrder = 14
+                Transparent = True
               end
               object txtNUMERO_FAC_ALB: TcxDBTextEdit
                 Left = 640
@@ -238,6 +244,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Top = 80
                 Caption = 'Empresa Emisora'
                 TabOrder = 15
+                Transparent = True
               end
               object btnCODIGO_EMP_ALB: TcxDBButtonEdit
                 Left = 8
@@ -259,12 +266,14 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 DataBinding.DataSource = dsTablaG
                 Style.Font.Style = [fsBold]
                 Width = 380
+                Transparent = True
               end
               object lblCodigoCliente: TcxLabel
                 Left = 8
                 Top = 140
                 Caption = 'Cliente'
                 TabOrder = 16
+                Transparent = True
               end
               object btnCODIGO_CLI_ALB: TcxDBButtonEdit
                 Left = 8
@@ -286,6 +295,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 DataBinding.DataSource = dsTablaG
                 Style.Font.Style = [fsBold]
                 Width = 380
+                Transparent = True
               end
             end
             object tsEmpresa: TcxTabSheet
@@ -301,6 +311,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                   Left = 12
                   Top = 24
                   Caption = 'NIF'
+                  Transparent = True
                 end
                 object txtNIF_EMPRESA_ALB: TcxDBTextEdit
                   Left = 12
@@ -314,6 +325,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                   Left = 152
                   Top = 24
                   Caption = 'M'#243'vil'
+                  Transparent = True
                 end
                 object txtMOVIL_EMPRESA_ALB: TcxDBTextEdit
                   Left = 152
@@ -327,6 +339,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                   Left = 292
                   Top = 24
                   Caption = 'Email'
+                  Transparent = True
                 end
                 object txtEMAIL_EMPRESA_ALB: TcxDBTextEdit
                   Left = 292
@@ -895,6 +908,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
             Top = 8
             Caption = 'Bases'
             TabOrder = 3
+            Transparent = True
           end
           object curTOTAL_BASES_ALB: TcxDBCurrencyEdit
             Left = 425
@@ -910,6 +924,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
             Top = 8
             Caption = 'IVA'
             TabOrder = 4
+            Transparent = True
           end
           object curTOTAL_IMPUESTOS_ALB: TcxDBCurrencyEdit
             Left = 570
@@ -926,6 +941,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
             Caption = 'TOTAL'
             Style.Font.Style = [fsBold]
             TabOrder = 5
+            Transparent = True
           end
           object curTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit
             Left = 740

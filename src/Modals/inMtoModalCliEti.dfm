@@ -32,6 +32,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
       Properties.WordWrap = True
       TabOrder = 0
       Width = 154
+      Transparent = True
     end
   end
   object speDejarBlancos: TcxSpinEdit [2]
@@ -51,6 +52,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
     Top = 48
     Caption = 'C'#243'digo de Cliente: '
     TabOrder = 4
+    Transparent = True
   end
   inherited frxrprt1: TfrxReport
     Left = 8
