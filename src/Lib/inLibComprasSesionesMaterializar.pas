@@ -429,6 +429,30 @@ begin
     iAvColor := ResolverIdAvColorLinea(AConn, sColorTexto, sCodigoAtbColor,
                                         AUsuario, sValColor);
 
+    // Asociar el atributo basico (color) al articulo en
+    // fza_articulos_atributos_basicos (AAB). Sin esto:
+    //   - el panel "Atributos del SKU + Atributo basico" en la ficha
+    //     del articulo sale vacio (su query JOINea AAB).
+    //   - las etiquetas de articulo no encuentran el HEX del color.
+    //   - el modal de "Atributo basico" del Mto no muestra el color.
+    // El ID_ATB lo tomamos de fza_atributos_valores.ID_ATB_AV del propio
+    // ID_AV resuelto. Idempotente: INSERT IGNORE por PK (CODIGO_ART, ID_AV).
+    if iAvColor > 0 then
+    begin
+      qIns.SQL.Text :=
+        'INSERT IGNORE INTO fza_articulos_atributos_basicos ' +
+        '  (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
+        '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'SELECT :art, AV.ID_AV, AV.ID_ATB_AV, NOW(), :u, NOW(), :u ' +
+        '  FROM fza_atributos_valores AV ' +
+        ' WHERE AV.ID_AV = :av ' +
+        '   AND AV.ID_ATB_AV IS NOT NULL';
+      qIns.ParamByName('art').AsString := ACodigoArt;
+      qIns.ParamByName('av').AsInteger := iAvColor;
+      qIns.ParamByName('u').AsString   := AUsuario;
+      qIns.ExecSQL;
+    end;
+
     // Una fila por SKU único (linea, fila, pivot) sumando cantidades
     // de todos los almacenes. El SKU y su EAN13 son a nivel de artículo,
     // no de almacén: 1 SKU por (color, talla), regardless of warehouse.
