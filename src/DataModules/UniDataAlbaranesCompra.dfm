@@ -111,13 +111,13 @@ inherited dmAlbaranesCompra: TdmAlbaranesCompra
       'SELECT C.*, '
       '       E.RAZON_SOCIAL_EMP, E.NIF_EMP, E.DIRECCION1_EMP, '
       '       E.POBLACION_EMP, E.PROVINCIA_EMP, E.CODIGO_POSTAL_EMP, '
-      '       E.TELEFONO1_EMP, E.EMAIL_EMP, '
+      '       E.MOVIL_EMP, E.EMAIL_EMP, '
       '       P.RAZON_SOCIAL_PRV, P.NIF_PRV, P.DIRECCION1_PRV, '
       '       P.POBLACION_PRV, P.PROVINCIA_PRV, P.CODIGO_POSTAL_PRV, '
-      '       P.TELEFONO1_PRV, P.EMAIL_PRV '
+      '       P.MOVIL_PRV, P.EMAIL_PRV '
       '  FROM fza_albaranes_compra C '
-      '  LEFT JOIN fza_empresas E ON E.CODIGO_EMP = C.CODIGO_EMP_ALBC '
-      '  LEFT JOIN fza_proveedores P ON P.CODIGO_PRV = C.CODIGO_PRV_ALBC '
+      '  LEFT JOIN fza_empresas E ON E.CODIGO_EMP_EMP = C.CODIGO_EMP_ALBC '
+      '  LEFT JOIN fza_proveedores P ON P.CODIGO_PRV_PRV = C.CODIGO_PRV_ALBC '
       ' WHERE C.SERIE_ALBC = :SERIE_ALBC '
       '   AND C.NUMERO_ALBC = :NUMERO_ALBC')
     Left = 360
