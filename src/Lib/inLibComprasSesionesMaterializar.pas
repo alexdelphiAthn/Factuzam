@@ -859,17 +859,24 @@ procedure InsertarLineaAlbaranCompra(AConn: TUniConnection;
                                             ACodigoAlm, ATipoIva,
                                             AUsuario: string;
                                       ACantidad, APrecio,
-                                      APorcIva: Double);
+                                      APorcIva: Double;
+                                      AIdAcPivot: Integer);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
+    // ID_AC_PIVOT_ALBCLIN: sistema de tallas heredado de la linea de
+    // sesion. Imprescindible para que el modo 'Tallas en horizontal'
+    // del Mto sepa que conjunto pivot aplicar — sin el, todas las
+    // columnas talla quedan ocultas. Si AIdAcPivot=0 va NULL (linea
+    // escalar sin tallaje, p.ej. SERVICIO).
     q.SQL.Text :=
       'INSERT INTO fza_albaranes_compra_lineas ' +
       '  (NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, ' +
       '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
+      '   ID_AC_PIVOT_ALBCLIN, ' +
       '   CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
       '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
       '   CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
@@ -879,7 +886,8 @@ begin
       '   TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ' +
       '   ESFACTURADA_ALBCLIN, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (:n, :s, :l, :art, :sku, :fam, :nomfam, :desc, ''Uds'', ' +
+      'VALUES (:n, :s, :l, :art, :sku, :acpivot, ' +
+      '        :fam, :nomfam, :desc, ''Uds'', ' +
       '        :cant, :tiva, :piva, :pre, :preciva, :tot, :alm, ''N'', ' +
       '        NOW(), :u, NOW(), :u)';
     q.ParamByName('n').AsString    := ANumAlbc;
@@ -887,6 +895,10 @@ begin
     q.ParamByName('l').AsString    := ALineaAlbc;
     q.ParamByName('art').AsString  := ACodigoArt;
     q.ParamByName('sku').AsString  := ACodigoSku;
+    if AIdAcPivot > 0 then
+      q.ParamByName('acpivot').AsInteger := AIdAcPivot
+    else
+      q.ParamByName('acpivot').Clear;
     q.ParamByName('fam').AsString  := ACodigoFam;
     q.ParamByName('nomfam').AsString := ANombreFam;
     q.ParamByName('desc').AsString := ADescripcion;
@@ -954,7 +966,7 @@ var
   sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
   sDescripcion, sCodigoFam, sNombreFam, sTipoIva,
   sLineaAlbc: string;
-  iIdAvPivot, iIdAvFila, iLineaSeq: Integer;
+  iIdAvPivot, iIdAvFila, iIdAcPivot, iLineaSeq: Integer;
   rCantidad, rCoste, rPorIva: Double;
 begin
   sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
@@ -977,6 +989,7 @@ begin
       '         THEN L.CODIGO_ART_REUSAR_SESLIN ' +
       '         ELSE L.CODIGO_ART_TENTATIVO_SESLIN END AS CODIGO_ART, ' +
       '    C.ID_AV_PIVOT_SESCEL, ' +
+      '    IFNULL(L.ID_AC_PIVOT_SESLIN, 0) AS ID_AC_PIVOT, ' +
       '    IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
       '    IFNULL(L.COLOR_TEXTO_SESLIN, '''')     AS COLOR_TEXTO, ' +
       '    IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) AS ALM_EFE, ' +
@@ -994,7 +1007,7 @@ begin
       '   AND C.NUMERO_SES_SESCEL = :n ' +
       '   AND C.CANTIDAD_SESCEL   > 0 ' +
       '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
-      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, COD_COLOR, ' +
+      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, ID_AC_PIVOT, COD_COLOR, ' +
       '          COLOR_TEXTO, ALM_EFE, ' +
       '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN ' +
@@ -1008,6 +1021,7 @@ begin
     begin
       sCodigoArt := qC.FieldByName('CODIGO_ART').AsString;
       iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
+      iIdAcPivot := qC.FieldByName('ID_AC_PIVOT').AsInteger;
       sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
       rCantidad  := qC.FieldByName('CANTIDAD_TOTAL').AsFloat;
       rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
@@ -1045,7 +1059,7 @@ begin
         ASerieAlbc, ANumAlbc, sLineaAlbc,
         sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam, sDescripcion,
         sCodigoAlm, sTipoIva, AUsuario,
-        rCantidad, rCoste, rPorIva);
+        rCantidad, rCoste, rPorIva, iIdAcPivot);
 
       qC.Next;
     end;
