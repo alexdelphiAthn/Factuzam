@@ -92,6 +92,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 24
             Caption = 'Serie'
             TabOrder = 0
+            Transparent = True
           end
           object txtSerie: TcxDBTextEdit
             Left = 80
@@ -108,6 +109,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 24
             Caption = 'N'#250'mero'
             TabOrder = 2
+            Transparent = True
           end
           object txtNumero: TcxDBTextEdit
             Left = 232
@@ -123,6 +125,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 24
             Caption = 'Fecha'
             TabOrder = 4
+            Transparent = True
           end
           object dteFecha: TcxDBDateEdit
             Left = 380
@@ -137,6 +140,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 24
             Caption = 'Estado'
             TabOrder = 18
+            Transparent = True
           end
           object txtEstado: TcxDBTextEdit
             Left = 580
@@ -152,6 +156,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 67
             Caption = 'Empresa'
             TabOrder = 6
+            Transparent = True
           end
           object cbbEmpresa: TcxDBLookupComboBox
             Left = 92
@@ -178,6 +183,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 67
             Caption = 'Proveedor'
             TabOrder = 8
+            Transparent = True
           end
           object cbbProveedor: TcxDBLookupComboBox
             Left = 470
@@ -204,6 +210,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 67
             Caption = 'Ref. prov.'
             TabOrder = 10
+            Transparent = True
           end
           object txtRefPrv: TcxDBTextEdit
             Left = 850
@@ -219,6 +226,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 109
             Caption = 'Almac'#233'n'
             TabOrder = 20
+            Transparent = True
           end
           object cbbAlmacen: TcxDBLookupComboBox
             Left = 92
@@ -245,6 +253,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 109
             Caption = 'Tarifa venta'
             TabOrder = 22
+            Transparent = True
           end
           object cbbTarifa: TcxDBLookupComboBox
             Left = 392
@@ -266,6 +275,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 109
             Caption = 'Temporada'
             TabOrder = 24
+            Transparent = True
           end
           object cbbTemporada: TcxDBLookupComboBox
             Left = 700
@@ -287,6 +297,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 152
             Caption = 'Margen %'
             TabOrder = 12
+            Transparent = True
           end
           object spnMargen: TcxDBSpinEdit
             Left = 102
@@ -302,6 +313,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 152
             Caption = 'M'#250'lt. redondeo'
             TabOrder = 14
+            Transparent = True
           end
           object spnMultiploRedondeo: TcxDBSpinEdit
             Left = 334
@@ -318,6 +330,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 152
             Caption = 'Ajuste final'
             TabOrder = 16
+            Transparent = True
           end
           object spnAjusteFinal: TcxDBSpinEdit
             Left = 530
@@ -398,6 +411,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
               'oste.'
             TabOrder = 5
+            Transparent = True
           end
         end
         object cxgrdLineas: TcxGrid
