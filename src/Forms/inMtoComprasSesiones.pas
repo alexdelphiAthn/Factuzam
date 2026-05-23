@@ -150,10 +150,31 @@ type
     dbcLinPrecioCompra       : TcxGridDBColumn;
     dbcLinPrecioVenta        : TcxGridDBColumn;
     dbcLinTallas             : TcxGridDBColumn;
-    // dbcLinTalla01..15 se crean en runtime en FormCreate; ver
-    // FTallaColumns. Mantenerlas en el DFM no aporta porque hay que
-    // reconfigurarlas igualmente (Tag, Caption, OnEditValueChanged,
-    // Properties).
+    // dbcLinTalla01..20: predefinidas en el DFM entre dbcLinTallas y
+    // dbcLinTotalTallas para garantizar el orden visual (el moverlas
+    // dinamicamente con col.Index falla en cxGrid a partir de la
+    // segunda columna). CrearColumnasTallas solo las indexa en
+    // FTallaColumns y aplica Caption / Visible segun el conjunto.
+    dbcLinTalla01            : TcxGridDBColumn;
+    dbcLinTalla02            : TcxGridDBColumn;
+    dbcLinTalla03            : TcxGridDBColumn;
+    dbcLinTalla04            : TcxGridDBColumn;
+    dbcLinTalla05            : TcxGridDBColumn;
+    dbcLinTalla06            : TcxGridDBColumn;
+    dbcLinTalla07            : TcxGridDBColumn;
+    dbcLinTalla08            : TcxGridDBColumn;
+    dbcLinTalla09            : TcxGridDBColumn;
+    dbcLinTalla10            : TcxGridDBColumn;
+    dbcLinTalla11            : TcxGridDBColumn;
+    dbcLinTalla12            : TcxGridDBColumn;
+    dbcLinTalla13            : TcxGridDBColumn;
+    dbcLinTalla14            : TcxGridDBColumn;
+    dbcLinTalla15            : TcxGridDBColumn;
+    dbcLinTalla16            : TcxGridDBColumn;
+    dbcLinTalla17            : TcxGridDBColumn;
+    dbcLinTalla18            : TcxGridDBColumn;
+    dbcLinTalla19            : TcxGridDBColumn;
+    dbcLinTalla20            : TcxGridDBColumn;
     dbcLinTotalTallas        : TcxGridDBColumn;
     dbcLinImporteTotal       : TcxGridDBColumn;
     dbcLinNumero             : TcxGridDBColumn;
@@ -523,53 +544,35 @@ end;
 // ===========================================================================
 
 procedure TfrmMtoComprasSesiones.CrearColumnasTallas;
-var
-  i        : Integer;
-  iBase    : Integer;
-  col      : TcxGridDBColumn;
-  curProps : TcxCurrencyEditProperties;
 begin
-  // Inserta CANT_TALLAS_MAX columnas no-bound entre dbcLinTallas (sistema
-  // de tallas) y dbcLinTotalTallas. Cada columna persiste su valor en el
-  // DataController.Values del cxGrid; cuando el usuario teclea, el
-  // OnEditValueChanged delega en FGestorTallas.PersistirCeldaActiva,
-  // que upsertea en la tabla de celdas y refresca totales.
-  //
-  // Patron probado en inMtoCajaOpe.CrearColumnasAtributos:
-  //   1) Capturar iBase = posicion ACTUAL del ancla ANTES del bucle.
-  //   2) Crear cada columna y, AL FINAL (despues de PropertiesClass,
-  //      DataBinding, Caption, etc.), asignar col.Index := iBase + i.
-  //   3) NO BeginUpdate (parece que en algunos casos cxGrid difiere
-  //      los SetIndex y solo aplica el primero al hacer EndUpdate).
-  //
-  // En este caso el ancla es dbcLinTotalTallas. Movemos las nuevas
-  // columnas justo ANTES de ella. Cada move desplaza TotalTallas una
-  // posicion adelante, asi que iBase capturado UNA VEZ + i (creciente)
-  // apunta exactamente al sitio que queda libre delante de TotalTallas
-  // tras los moves anteriores. CRITICO: Index es la ULTIMA asignacion;
-  // ponerlo antes de PropertiesClass hace que solo se aplique al primero.
-  if not Assigned(dbcLinTotalTallas) then Exit;
-  iBase := dbcLinTotalTallas.Index;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    col := tvLineas.CreateColumn;
-    col.Name        := 'dbcLinTalla' + Format('%.2d', [i + 1]);
-    col.Caption     := '';
-    col.Width       := 50;
-    col.Tag         := i + 1;             // posicion 1..CANT_TALLAS_MAX
-    col.Visible     := False;             // se hara visible segun max
-    col.DataBinding.ValueTypeClass := TcxFloatValueType;
-    col.PropertiesClass := TcxCurrencyEditProperties;
-    curProps := TcxCurrencyEditProperties(col.Properties);
-    curProps.DisplayFormat := '#,##0';
-    // El handler se asigna en InicializarGestorTallas (necesita la
-    // instancia del gestor para delegar). Aqui solo dejamos las
-    // columnas listas con su Tag posicional.
-    FTallaColumns[i] := col;
-    // Move al final, despues de PropertiesClass — clave para que cxGrid
-    // lo aplique de verdad (ver comment block arriba).
-    col.Index := iBase + i;
-  end;
+  // Las columnas dbcLinTalla01..dbcLinTalla20 estan predefinidas en el
+  // DFM, ya entre dbcLinTallas y dbcLinTotalTallas. Antes se creaban en
+  // runtime y se movian con col.Index, pero el orden en cxGrid no
+  // quedaba contiguo (la primera bien, las demas detras de Total linea)
+  // sin importar el patron usado (idxRefe+i, lectura dinamica,
+  // BeginUpdate+two-pass). Predefinidas en DFM el orden es estable.
+  // Aqui solo indexamos en FTallaColumns para que el GestorTallas las
+  // referencie por posicion 1..CANT_TALLAS_MAX.
+  FTallaColumns[0]  := dbcLinTalla01;
+  FTallaColumns[1]  := dbcLinTalla02;
+  FTallaColumns[2]  := dbcLinTalla03;
+  FTallaColumns[3]  := dbcLinTalla04;
+  FTallaColumns[4]  := dbcLinTalla05;
+  FTallaColumns[5]  := dbcLinTalla06;
+  FTallaColumns[6]  := dbcLinTalla07;
+  FTallaColumns[7]  := dbcLinTalla08;
+  FTallaColumns[8]  := dbcLinTalla09;
+  FTallaColumns[9]  := dbcLinTalla10;
+  FTallaColumns[10] := dbcLinTalla11;
+  FTallaColumns[11] := dbcLinTalla12;
+  FTallaColumns[12] := dbcLinTalla13;
+  FTallaColumns[13] := dbcLinTalla14;
+  FTallaColumns[14] := dbcLinTalla15;
+  FTallaColumns[15] := dbcLinTalla16;
+  FTallaColumns[16] := dbcLinTalla17;
+  FTallaColumns[17] := dbcLinTalla18;
+  FTallaColumns[18] := dbcLinTalla19;
+  FTallaColumns[19] := dbcLinTalla20;
 end;
 
 procedure TfrmMtoComprasSesiones.InicializarGestorTallas;
