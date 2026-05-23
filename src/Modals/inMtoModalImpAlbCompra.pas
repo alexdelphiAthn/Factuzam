@@ -30,6 +30,7 @@ uses
   cxEdit, cxTextEdit, cxLabel, cxButtons, cxClasses, cxLocalization, cxStyles,
   cxMaskEdit,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxSkinsDefaultPainters,
+  Vcl.Printers,
   frxClass, frxDBSet, frxDesgn, frxExportBaseDialog, frxExportPDF,
   frxExportXLSX, frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization, frLanguageSpanish, frxSmartMemo,
