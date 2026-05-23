@@ -1083,12 +1083,14 @@ begin
       '   AND C.NUMERO_SES_SESCEL = :n ' +
       '   AND C.CANTIDAD_SESCEL   > 0 ' +
       '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
+      '   AND (:falm = '''' OR IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) = :falm) ' +
       ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, ID_AC_PIVOT, COD_COLOR, ' +
       '          COLOR_TEXTO, ALM_EFE, ' +
       '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN, REF_PRV ' +
       ' ORDER BY CODIGO_ART, COD_COLOR, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
     qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
+    qC.ParamByName('falm').AsString := AFiltroAlmacen;
     qC.ParamByName('s').AsString := ASerieSes;
     qC.ParamByName('n').AsString := ANumSes;
     qC.Open;
@@ -1480,7 +1482,8 @@ begin
       InsertarAlbaranCompraCabecera(conn, ADM, ASerieAlb, ANumAlb, AUsuario);
       // 3. Crear lineas: una por (SKU, almacen) con SUM(CANTIDAD).
       InsertarLineasAlbaranCompra(conn, ADM, sSerieSes, sNumSes,
-                                  ASerieAlb, ANumAlb, AUsuario);
+                                  ASerieAlb, ANumAlb, AUsuario,
+                                  AFiltroAlmacen);
       // 4a. Asignar % IVA en la cabecera (desde vi_ivas_empresa).
       AsignarIvaCabeceraAlbaranCompra(conn, ASerieAlb, ANumAlb);
       // 4b. Rellenar IVA en lineas (sesion no maneja IVA, lo tomamos
