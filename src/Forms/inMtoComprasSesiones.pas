@@ -116,6 +116,7 @@ type
     cbbTarifa                : TcxDBLookupComboBox;
     lblTemporada             : TcxLabel;
     cbbTemporada             : TcxDBLookupComboBox;
+    chkFormatoDistribuido    : TcxDBCheckBox;
     lblMargen                : TcxLabel;
     spnMargen                : TcxDBSpinEdit;
     lblMultiploRedondeo      : TcxLabel;
@@ -210,6 +211,7 @@ type
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
                 var AAllow: Boolean);
+    procedure AbrirDistribuidor;
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
@@ -252,6 +254,7 @@ uses
   inLibGlobalVar,
   inLibUser,
   inLibComprasSesiones,
+  inMtoModalDistribuidor,
   inLibComprasSesionesMaterializar,
   Vcl.Clipbrd,
   inLibAtributosPaleta,
@@ -902,6 +905,11 @@ begin
         or (Trim(Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString)
             <> ''),
       Dmm.unqryTablaG.FieldByName('REF_PRV_SES').AsString);
+    // Mostrar la opcion 'agrupar / un doc por almacen' solo cuando la
+    // cabecera tenga el formato distribuido activo. En modo clasico no
+    // tiene sentido — solo hay un almacen efectivo.
+    frmSet.MostrarOpcionAgrupacion(
+      Dmm.unqryTablaG.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S');
     frmSet.ShowModal;
     if not frmSet.Confirmado then Exit;
 
@@ -1601,7 +1609,56 @@ begin
   if iAc <= 0 then Exit;
   arr := FGestorTallas.GetPosicionesConjunto(iAc);
   if AItem.Tag > Length(arr) then
+  begin
     AAllow := False;
+    Exit;
+  end;
+  // Modo 'Formato distribuido': bloquear edicion inline y disparar el
+  // modal de distribuidor (que reparte cantidades por almacen). El
+  // grid principal mostrara la SUMA de almacenes por talla — la query
+  // del gestor ya agrupa por pivot sin filtrar por almacen, asi que
+  // solo hay que refrescar despues.
+  if (not Dmm.unqryTablaG.IsEmpty) and
+     (Dmm.unqryTablaG.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S') then
+  begin
+    AAllow := False;
+    AbrirDistribuidor;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.AbrirDistribuidor;
+var
+  oForm  : TfrmModalDistribuidor;
+  iLinea : Integer;
+  iAc    : Integer;
+begin
+  if Dmm.unqrySesionLin.IsEmpty then Exit;
+  iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+  iAc    := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+  if (iLinea <= 0) or (iAc <= 0) then Exit;
+  // Persistir cualquier edicion pendiente para que el modal vea el
+  // estado consistente de la linea (en particular ID_AC_PIVOT_SESLIN).
+  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+    Dmm.unqrySesionLin.Post;
+  oForm := TfrmModalDistribuidor.Create(Application);
+  try
+    oForm.Preparar(inLibGlobalVar.oConn, oUser,
+                    Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+                    Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
+                    iLinea, iAc);
+    oForm.ShowModal;
+    if oForm.Confirmado then
+    begin
+      // Refrescar el grid principal: la suma por talla se recalcula via
+      // FGestorTallas.CargarCantidadesUnaLinea (lee fza_compras_sesiones_celdas
+      // sumando todas las celdas de esta linea agrupando por pivot, sin
+      // filtrar por almacen, asi que recoge el reparto distribuido).
+      if Assigned(FGestorTallas) then
+        FGestorTallas.CargarCantidadesTodasLineas;
+    end;
+  finally
+    FreeAndNil(oForm);
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinColorBasicoPropertiesButtonClick(

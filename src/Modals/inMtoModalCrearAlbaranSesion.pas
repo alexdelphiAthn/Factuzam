@@ -56,6 +56,7 @@ type
     cbbTemporada  : TcxLookupComboBox;
     lblRefPrv     : TcxLabel;
     txtRefPrv     : TcxTextEdit;
+    rgAgrupacion  : TcxRadioGroup;
     btnGenerar    : TcxButton;
     btnSalir      : TcxButton;
     procedure FormCreate(Sender: TObject);
@@ -75,6 +76,7 @@ type
     function GetGenPedido: Boolean;
     function GetGenAlbaran: Boolean;
     function GetRefPrv: string;
+    function GetUnDocPorAlmacen: Boolean;
     procedure ActualizarHabilitados;
   public
     /// Conecta los lookups con las queries del DM padre.
@@ -89,6 +91,11 @@ type
                          const ARefPrv: string = '');
     /// Referencia del documento del proveedor (albaran prov / pedido prov).
     property RefPrv     : string  read GetRefPrv;
+    /// True si el usuario eligio 'Un documento por almacen' (solo se
+    /// muestra el control cuando la sesion esta en formato distribuido).
+    property UnDocPorAlmacen: Boolean read GetUnDocPorAlmacen;
+    /// Visibilidad del control segun la cabecera de sesion lo necesite.
+    procedure MostrarOpcionAgrupacion(AVisible: Boolean);
 
     /// True si el usuario pulso Generar.
     property Confirmado : Boolean read FConfirmed;
@@ -152,6 +159,20 @@ end;
 function TfrmModalCrearAlbaranSesion.GetRefPrv: string;
 begin
   Result := Trim(txtRefPrv.Text);
+end;
+
+function TfrmModalCrearAlbaranSesion.GetUnDocPorAlmacen: Boolean;
+begin
+  // ItemIndex = 0 -> agrupar; 1 -> uno por almacen.
+  Result := rgAgrupacion.Visible and (rgAgrupacion.ItemIndex = 1);
+end;
+
+procedure TfrmModalCrearAlbaranSesion.MostrarOpcionAgrupacion(
+                                                       AVisible: Boolean);
+begin
+  rgAgrupacion.Visible := AVisible;
+  if AVisible and (rgAgrupacion.ItemIndex < 0) then
+    rgAgrupacion.ItemIndex := 0;
 end;
 
 procedure TfrmModalCrearAlbaranSesion.ActualizarHabilitados;

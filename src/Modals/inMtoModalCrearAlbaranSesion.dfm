@@ -1,6 +1,6 @@
 inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
   Caption = 'Crear art'#237'culos y albar'#225'n / pedido'
-  ClientHeight = 480
+  ClientHeight = 560
   ClientWidth = 580
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
@@ -11,7 +11,7 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
     Left = 0
     Top = 0
     Width = 580
-    Height = 420
+    Height = 500
     Align = alClient
     TabOrder = 0
     object lblTitulo: TcxLabel
@@ -161,10 +161,27 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
       TabOrder = 8
       Width = 390
     end
+    object rgAgrupacion: TcxRadioGroup
+      Left = 16
+      Top = 332
+      Caption = ' Agrupaci'#243'n almac'#233'n (formato distribuido) '
+      Properties.Items = <
+        item
+          Caption = 'Agrupar todos los almacenes en un solo documento'
+        end
+        item
+          Caption = 'Generar un documento por almac'#233'n'
+        end>
+      ItemIndex = 0
+      TabOrder = 9
+      Height = 80
+      Visible = False
+      Width = 534
+    end
   end
   object pnlButton: TPanel [1]
     Left = 0
-    Top = 420
+    Top = 500
     Width = 580
     Height = 60
     Align = alBottom
