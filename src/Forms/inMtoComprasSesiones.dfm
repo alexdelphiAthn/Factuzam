@@ -292,6 +292,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 25
             Width = 220
           end
+          object chkFormatoDistribuido: TcxDBCheckBox
+            Left = 940
+            Top = 107
+            Caption = 'Formato distribuido (por almac'#233'n)'
+            DataBinding.DataField = 'ESFORMATO_DISTRIBUIDO_SES'
+            DataBinding.DataSource = dsTablaG
+            Properties.ValueChecked = 'S'
+            Properties.ValueUnchecked = 'N'
+            TabOrder = 26
+            Transparent = True
+            Width = 260
+          end
           object lblMargen: TcxLabel
             Left = 12
             Top = 152
