@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.4.0                                                         }
+{ Version:       0.5.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -28,6 +28,12 @@
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
 {          checklist opuesto.                                                  }
 {                                                                              }
+{    v0.5: estado "Todo a la vez" en el combo + colores por estado. Cada      }
+{    estado pinta las celdas de datos con un color distintivo (azul para      }
+{    existencias, rojo para ventas, naranja para pte. recibir, etc.) y el     }
+{    combo seleccionado refleja ese color. En modo "Todo a la vez" el grid    }
+{    desdobla cada fila de grupo (almacen o color) en una fila por estado    }
+{    con datos, pintando cada fila en el color de su estado.                  }
 {    v0.4: split horizontal estilo OdaGest+ — checklist a la izquierda,        }
 {    pestanas de vista pivote arriba del grid a la derecha. Tabs numeradas     }
 {    1/2/3/4 como en el original.                                              }
@@ -66,7 +72,8 @@ type
     esRegularizadas,
     esPdteRecibir,
     esPdteServir,
-    esPrestadas
+    esPrestadas,
+    esTodoAlaVez   // muestra todos los estados anteriores en filas separadas
   );
 
   TInfoColumna = record
@@ -103,6 +110,7 @@ type
         grdStock      : TcxGrid;
           tvStock       : TcxGridDBTableView;
           glStock       : TcxGridLevel;
+    pnlLeyenda    : TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -125,11 +133,14 @@ type
     FColumnas   : TArray<TInfoColumna>;  // Tallas (columnas dinamicas)
     FColsDin    : TList<TcxGridDBColumn>;
     FColGrupo   : TcxGridDBColumn;       // nombre de la fila (color o alm)
+    FColEstado  : TcxGridDBColumn;       // nombre del estado (solo en Todo a la vez)
     FEsModoColor: Boolean;
+    FEsModoTodo : Boolean;               // estado=esTodoAlaVez en la ultima recarga
     procedure CargarAlmacenes;
     procedure CargarColores;
     procedure CargarFoto;
     procedure CargarInfoCabecera;
+    procedure CrearLeyenda;
     function  EstadoActual: TEstadoStock;
     function  AlmacenesSeleccionadosSQL: string;  // 'CODA','CODB' o NULL
     function  AlmacenesSeleccionadosLista: TArray<string>;
@@ -140,6 +151,7 @@ type
     function  ConstruirSQLPivot(const ATallas: TArray<TInfoColumna>;
                                  AEsColor: Boolean): string;
     function  EstadoBaseSelect: string;  // CTE/source segun estado
+    function  EstadoBaseSelectFor(AEstado: TEstadoStock): string;
     procedure ReconstruirColumnas(const ATallas: TArray<TInfoColumna>;
                                    AEsColor: Boolean);
     procedure RecargarConsulta;
@@ -162,6 +174,46 @@ uses
   inLibGlobalVar, inLibFotos, inLibAtributosPaleta, inLibGenBusq;
 
 {$R *.dfm}
+
+// ---------------------------------------------------------------------------
+//  Colores por estado del stock (texto en las celdas / combo seleccionado)
+// ---------------------------------------------------------------------------
+// Misma idea que la leyenda inferior de OdaGest+: cada estado tiene un
+// color distintivo. Las celdas de datos del grid se pintan con el color
+// del estado activo, y en modo "Todo a la vez" cada fila se colorea con
+// el color de su estado. Los valores BGR siguen el orden de Delphi
+// ($00BBGGRR), por eso el naranja sale como $000080FF.
+function ColorEstado(AEstado: TEstadoStock): TColor;
+begin
+  case AEstado of
+    esExistencias:    Result := clNavy;        // azul oscuro - disponible
+    esEntradas:       Result := clGreen;       // verde - entradas
+    esSalidas:        Result := clMaroon;      // rojo oscuro - salidas
+    esVentas:         Result := clRed;         // rojo brillante - ventas
+    esRegularizadas:  Result := clPurple;      // morado - regularizadas
+    esPdteRecibir:    Result := $000080FF;     // naranja - pte. recibir
+    esPdteServir:     Result := clTeal;        // turquesa - pte. servir
+    esPrestadas:      Result := clGray;        // gris - prestadas
+  else
+    Result := clBlack;                          // esTodoAlaVez -> sin color uniforme
+  end;
+end;
+
+function NombreEstadoCorto(AEstado: TEstadoStock): string;
+begin
+  case AEstado of
+    esExistencias:    Result := 'Existencias';
+    esEntradas:       Result := 'Entradas';
+    esSalidas:        Result := 'Salidas';
+    esVentas:         Result := 'Ventas';
+    esRegularizadas:  Result := 'Regulariz.';
+    esPdteRecibir:    Result := 'Pte. recibir';
+    esPdteServir:     Result := 'Pte. servir';
+    esPrestadas:      Result := 'Prestadas';
+  else
+    Result := '';
+  end;
+end;
 
 // ---------------------------------------------------------------------------
 //  Funcion publica de apertura
@@ -212,11 +264,45 @@ begin
   cbbEstado.Properties.Items.Add('Pdte. de recibir');
   cbbEstado.Properties.Items.Add('Pdte. de servir');
   cbbEstado.Properties.Items.Add('Prestadas');
+  cbbEstado.Properties.Items.Add('Todo a la vez');
   cbbEstado.ItemIndex := 0;
+  cbbEstado.Style.TextColor := ColorEstado(esExistencias);
 
   pcVistas.ActivePage := tsPorAlmacen;
   pcFiltros.ActivePage := tsColores;
+  CrearLeyenda;
   CargarAlmacenes;
+end;
+
+// ---------------------------------------------------------------------------
+//  Leyenda al pie del formulario: nombre de cada estado en su color, igual
+//  que la leyenda inferior de OdaGest+. Se construye dinamicamente con
+//  TLabels para que añadir un estado nuevo se reduzca a tocar ColorEstado
+//  y NombreEstadoCorto.
+// ---------------------------------------------------------------------------
+procedure TfrmStockConsulta.CrearLeyenda;
+const
+  ESTADOS_LEYENDA: array[0..7] of TEstadoStock = (
+    esExistencias, esEntradas, esSalidas, esVentas, esRegularizadas,
+    esPdteRecibir, esPdteServir, esPrestadas);
+var
+  i: Integer;
+  lbl: TLabel;
+  x: Integer;
+begin
+  x := 8;
+  for i := Low(ESTADOS_LEYENDA) to High(ESTADOS_LEYENDA) do
+  begin
+    lbl := TLabel.Create(pnlLeyenda);
+    lbl.Parent     := pnlLeyenda;
+    lbl.AutoSize   := True;
+    lbl.Font.Color := ColorEstado(ESTADOS_LEYENDA[i]);
+    lbl.Font.Style := [fsBold];
+    lbl.Caption    := NombreEstadoCorto(ESTADOS_LEYENDA[i]);
+    lbl.Top        := 5;
+    lbl.Left       := x;
+    x := x + lbl.Width + 14;
+  end;
 end;
 
 procedure TfrmStockConsulta.FormDestroy(Sender: TObject);
@@ -543,14 +629,18 @@ end;
 // Devuelve un subselect que produce filas (CODIGO_UNIDAD_SKU, COLOR,
 // TALLA, ALM, CANTIDAD). El pivote SQL exterior agrupa por TALLA y mete
 // CASE-WHEN por COLOR o ALM en cada columna.
-function TfrmStockConsulta.EstadoBaseSelect: string;
+// Subselect base parametrizado por estado. Cada bloque devuelve filas con
+// el mismo shape (CODIGO_UNIDAD_SKU, COLOR_AV, TALLA_AV, ORDEN_TALLA, ALM,
+// CANTIDAD) + un literal ESTADO_NUM que identifica el estado origen para
+// que en modo "Todo a la vez" podamos hacer UNION ALL y agrupar tambien
+// por ESTADO_NUM en el pivote exterior.
+function TfrmStockConsulta.EstadoBaseSelectFor(AEstado: TEstadoStock): string;
 var
-  est: TEstadoStock;
-  sAlms: string;
+  sAlms, sEstadoNum: string;
 begin
-  est   := EstadoActual;
-  sAlms := AlmacenesSeleccionadosSQL;
-  case est of
+  sAlms      := AlmacenesSeleccionadosSQL;
+  sEstadoNum := IntToStr(Ord(AEstado));
+  case AEstado of
     esExistencias:
       Result :=
         'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
@@ -567,7 +657,8 @@ begin
         '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
         '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
         '       STK.CODIGO_ALM_STK AS ALM, ' +
-        '       SUM(STK.CANTIDAD_STK) AS CANTIDAD ' +
+        '       SUM(STK.CANTIDAD_STK) AS CANTIDAD, ' +
+        '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
         '  FROM fza_articulos_skus SKU ' +
         '  JOIN fza_articulos_stockactual STK ' +
         '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
@@ -590,7 +681,8 @@ begin
         '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
         '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
         '       PDR.CODIGO_ALM_PDR AS ALM, ' +
-        '       SUM(PDR.CANTIDAD_PDR) AS CANTIDAD ' +
+        '       SUM(PDR.CANTIDAD_PDR) AS CANTIDAD, ' +
+        '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
         '  FROM fza_articulos_skus SKU ' +
         '  JOIN fza_articulos_pdte_recibir PDR ' +
         '    ON PDR.CODIGO_UNIDAD_PDR = SKU.CODIGO_UNIDAD_SKU ' +
@@ -613,7 +705,8 @@ begin
         '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
         '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
         '       STK.CODIGO_ALM_STK AS ALM, ' +
-        '       SUM(STK.CANTIDAD_PTE_SERVIR_STK) AS CANTIDAD ' +
+        '       SUM(STK.CANTIDAD_PTE_SERVIR_STK) AS CANTIDAD, ' +
+        '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
         '  FROM fza_articulos_skus SKU ' +
         '  JOIN fza_articulos_stockactual STK ' +
         '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
@@ -637,14 +730,15 @@ begin
           '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
           '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
           '       M.CODIGO_ALM_MOV AS ALM, ' +
-          '       SUM(M.CANTIDAD_MOV) AS CANTIDAD ' +
+          '       SUM(M.CANTIDAD_MOV) AS CANTIDAD, ' +
+          '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
           '  FROM fza_articulos_skus SKU ' +
           '  JOIN fza_movimientos_almacen M ' +
           '    ON M.CODIGO_UNIDAD_MOV = SKU.CODIGO_UNIDAD_SKU ' +
           ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
           '   AND M.CODIGO_ALM_MOV IN (' + sAlms + ') ' +
           '   AND M.ESACTIVO_MOV   = ''S'' ';
-        case est of
+        case AEstado of
           esEntradas:      Result := Result + '   AND M.TIPO_MOV = ''E'' ';
           esSalidas:       Result := Result + '   AND M.TIPO_MOV = ''S'' ' +
                                               '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
@@ -655,15 +749,42 @@ begin
           ' GROUP BY SKU.CODIGO_UNIDAD_SKU, M.CODIGO_ALM_MOV';
       end;
   else
-    // esPrestadas y otros: stub vacio
+    // esPrestadas / esTodoAlaVez no se construyen aqui directamente:
+    // - esPrestadas: stub vacio (queda para futura iteracion).
+    // - esTodoAlaVez: lo agrega EstadoBaseSelect como UNION ALL.
     Result :=
       'SELECT ''''       AS CODIGO_UNIDAD_SKU, ' +
       '       NULL       AS COLOR_AV, ' +
       '       NULL       AS TALLA_AV, ' +
       '       0          AS ORDEN_TALLA, ' +
       '       ''''       AS ALM, ' +
-      '       0          AS CANTIDAD ' +
+      '       0          AS CANTIDAD, ' +
+      '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
       '  FROM dual WHERE 0';
+  end;
+end;
+
+// En modo "Todo a la vez" hace UNION ALL de los 7 estados con datos
+// reales (existencias, entradas, salidas, ventas, regularizadas, pte.
+// recibir, pte. servir). esPrestadas queda fuera por ser stub.
+function TfrmStockConsulta.EstadoBaseSelect: string;
+const
+  ESTADOS_TODO: array[0..6] of TEstadoStock = (
+    esExistencias, esEntradas, esSalidas, esVentas, esRegularizadas,
+    esPdteRecibir, esPdteServir);
+var
+  i: Integer;
+begin
+  if EstadoActual <> esTodoAlaVez then
+  begin
+    Result := EstadoBaseSelectFor(EstadoActual);
+    Exit;
+  end;
+  Result := '';
+  for i := Low(ESTADOS_TODO) to High(ESTADOS_TODO) do
+  begin
+    if Result <> '' then Result := Result + ' UNION ALL ';
+    Result := Result + '(' + EstadoBaseSelectFor(ESTADOS_TODO[i]) + ')';
   end;
 end;
 
@@ -681,24 +802,43 @@ end;
 function TfrmStockConsulta.ConstruirSQLPivot(
   const ATallas: TArray<TInfoColumna>; AEsColor: Boolean): string;
 var
-  sBase, sCols, sOuter, sJoin, sWhere, sGroup, sOrder: string;
+  sBase, sCols, sOuter, sJoin, sGroup, sOrder, sWhere: string;
   sFiltroColores: string;
+  sExtraSel, sExtraGroup, sExtraOrder: string;
+  bEsTodo: Boolean;
   i: Integer;
   alms: TArray<string>;
 begin
-  sBase := EstadoBaseSelect;
-  sCols := '';
+  sBase   := EstadoBaseSelect;
+  bEsTodo := EstadoActual = esTodoAlaVez;
+  sCols   := '';
   for i := 0 to High(ATallas) do
     sCols := sCols + Format(', SUM(CASE WHEN B.TALLA_AV = %s THEN B.CANTIDAD ELSE 0 END) AS T%d',
                             [QuotedStr(ATallas[i].Codigo), i]);
   sFiltroColores := ColoresSeleccionadosSQL;
 
+  // En modo "Todo a la vez" el pivote agrupa ademas por ESTADO_NUM:
+  // cada fila de grupo (almacen o color) se desdobla en una fila por
+  // estado con datos. Los grupos sin ningun dato (LEFT JOIN sin match)
+  // se descartan filtrando B.ESTADO_NUM IS NOT NULL — sino saldria una
+  // fila con ESTADO_NUM=NULL por cada grupo vacio.
+  if bEsTodo then
+  begin
+    sExtraSel   := ', B.ESTADO_NUM AS ESTADO_NUM';
+    sExtraGroup := ', B.ESTADO_NUM';
+    sExtraOrder := ', B.ESTADO_NUM';
+  end
+  else
+  begin
+    sExtraSel   := '';
+    sExtraGroup := '';
+    sExtraOrder := '';
+  end;
+
   if AEsColor then
   begin
-    // Filas = colores marcados en clbColores (subset de los AV de color
-    // presentes en los SKUs del articulo). Dedupe por AV.AV (igual que en
-    // CargarColores) — varios ID_AV pueden compartir el mismo nombre de
-    // color y nos llevarian a una fila duplicada por cada uno.
+    // Filas = colores marcados en clbColores. Dedupe por AV.AV (varios
+    // ID_AV pueden compartir el mismo nombre de color).
     sOuter :=
       '(SELECT AV.AV, MIN(AV.ORDEN_AV) AS ORDEN_AV, ' +
       '        MIN(AV.ID_ATB_AV) AS ID_ATB_AV ' +
@@ -713,36 +853,42 @@ begin
     sJoin :=
       ' LEFT JOIN fza_atributos_basicos ATB ON ATB.ID_ATB = C.ID_ATB_AV ' +
       ' LEFT JOIN (' + sBase + ') B ON B.COLOR_AV = C.AV';
-    sWhere := '';
-    sGroup := ' GROUP BY C.AV, ATB.HEX_ATB, C.ORDEN_AV';
-    sOrder := ' ORDER BY C.ORDEN_AV, C.AV';
+    if bEsTodo then
+      sWhere := ' WHERE B.ESTADO_NUM IS NOT NULL '
+    else
+      sWhere := '';
+    sGroup := ' GROUP BY C.AV, ATB.HEX_ATB, C.ORDEN_AV' + sExtraGroup;
+    sOrder := ' ORDER BY C.ORDEN_AV, C.AV' + sExtraOrder;
     Result :=
       'SELECT C.AV AS GRUPO, COALESCE(ATB.HEX_ATB, '''') AS HEX, ' +
-      '       C.ORDEN_AV AS ORDEN' + sCols + ', SUM(B.CANTIDAD) AS TOTAL ' +
+      '       C.ORDEN_AV AS ORDEN' + sExtraSel + sCols +
+      ', SUM(B.CANTIDAD) AS TOTAL ' +
       '  FROM ' + sOuter + sJoin + sWhere + sGroup + sOrder;
   end
   else
   begin
-    // Filas = almacenes marcados en clbAlmacenes. El filtro de colores
-    // marcados se aplica al subselect B via JOIN ON: si un almacen no tiene
-    // SKUs con esos colores aparece igual (LEFT JOIN) con cantidades 0.
+    // Filas = almacenes marcados. Filtro de colores se aplica al
+    // subselect B via JOIN ON.
     alms := AlmacenesSeleccionadosLista;
     if Length(alms) = 0 then
     begin
       Result := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN' +
+                IfThen(bEsTodo, ', 0 AS ESTADO_NUM', '') +
                 sCols + ', 0 AS TOTAL FROM dual WHERE 0';
       Exit;
     end;
     Result :=
       'SELECT ALM.CODIGO_ALM_ALM AS GRUPO, '''' AS HEX, ' +
-      '       ALM.ORDEN_ALM AS ORDEN' + sCols + ', SUM(B.CANTIDAD) AS TOTAL ' +
+      '       ALM.ORDEN_ALM AS ORDEN' + sExtraSel + sCols +
+      ', SUM(B.CANTIDAD) AS TOTAL ' +
       '  FROM fza_almacenes ALM ' +
       '  LEFT JOIN (' + sBase + ') B ' +
       '    ON B.ALM = ALM.CODIGO_ALM_ALM ' +
       '   AND B.COLOR_AV IN (' + sFiltroColores + ') ' +
       ' WHERE ALM.CODIGO_ALM_ALM IN (' + AlmacenesSeleccionadosSQL + ') ' +
-      ' GROUP BY ALM.CODIGO_ALM_ALM, ALM.ORDEN_ALM ' +
-      ' ORDER BY ALM.ORDEN_ALM, ALM.CODIGO_ALM_ALM';
+      IfThen(bEsTodo, '   AND B.ESTADO_NUM IS NOT NULL ', '') +
+      ' GROUP BY ALM.CODIGO_ALM_ALM, ALM.ORDEN_ALM' + sExtraGroup + ' ' +
+      ' ORDER BY ALM.ORDEN_ALM, ALM.CODIGO_ALM_ALM' + sExtraOrder;
   end;
 end;
 
@@ -850,7 +996,9 @@ begin
     FColsDin[i].Free;
   FColsDin.Clear;
   FColGrupo    := nil;
+  FColEstado   := nil;
   FEsModoColor := AEsColor;
+  FEsModoTodo  := EstadoActual = esTodoAlaVez;
 
   // Columna principal de fila: nombre del color o codigo del almacen.
   // En modo Por Color, tvStockCustomDrawCell pinta el cuadradito del
@@ -867,6 +1015,20 @@ begin
   FColGrupo.HeaderAlignmentHorz := taLeftJustify;
   FColGrupo.Options.Sorting := False;
   FColsDin.Add(FColGrupo);
+
+  // Columna "Estado" — solo en modo Todo a la vez. Bindeada al campo
+  // numerico ESTADO_NUM pero el texto visible lo pinta el OnCustomDrawCell
+  // a traves de NombreEstadoCorto (asi evitamos meter strings en el SQL).
+  if FEsModoTodo then
+  begin
+    FColEstado := tvStock.CreateColumn;
+    FColEstado.Caption := 'Estado';
+    FColEstado.DataBinding.FieldName := 'ESTADO_NUM';
+    FColEstado.Width := 110;
+    FColEstado.HeaderAlignmentHorz := taLeftJustify;
+    FColEstado.Options.Sorting := False;
+    FColsDin.Add(FColEstado);
+  end;
 
   // Tallas: columnas dinamicas T0..Tn-1.
   for i := 0 to High(ATallas) do
@@ -910,16 +1072,48 @@ end;
 procedure TfrmStockConsulta.tvStockCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  vEstNum   : Variant;
+  iEstNum   : Integer;
+  estadoCol : TEstadoStock;
 begin
   ADone := False;
-  if not FEsModoColor then Exit;
-  if FColGrupo = nil then Exit;
   if not (AViewInfo.Item is TcxGridDBColumn) then Exit;
-  if AViewInfo.Item <> FColGrupo then Exit;
 
-  // ADict=nil → usa el diccionario global cacheado en la libreria.
-  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
-    ADone := True;
+  // Estado correspondiente a la fila:
+  //  - En modo "Todo a la vez" lo lee del campo ESTADO_NUM de la fila.
+  //  - En cualquier otro modo es EstadoActual (todas las filas comparten).
+  estadoCol := EstadoActual;
+  if FEsModoTodo and (FColEstado <> nil) and (AViewInfo.GridRecord <> nil) then
+  begin
+    vEstNum := AViewInfo.GridRecord.Values[FColEstado.Index];
+    iEstNum := StrToIntDef(VarToStr(vEstNum), -1);
+    if (iEstNum >= Ord(Low(TEstadoStock))) and
+       (iEstNum <= Ord(High(TEstadoStock))) then
+      estadoCol := TEstadoStock(iEstNum);
+  end;
+
+  if AViewInfo.Item = FColGrupo then
+  begin
+    // Columna de filas (Color/Almacen): swatch en modo Por Color.
+    if FEsModoColor then
+      if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+        ADone := True;
+    Exit;
+  end;
+
+  // Columna Estado: mostramos el nombre corto en lugar del numero.
+  if FEsModoTodo and (FColEstado <> nil) and (AViewInfo.Item = FColEstado) then
+  begin
+    AViewInfo.Params.Text      := NombreEstadoCorto(estadoCol);
+    AViewInfo.Params.TextColor := ColorEstado(estadoCol);
+    Exit;
+  end;
+
+  // Resto de columnas (T0..Tn y TOTAL): pinta el numero en el color del
+  // estado de la fila (en modo normal todas las filas tienen el mismo
+  // estado activo; en modo Todo a la vez cada fila lleva su color).
+  AViewInfo.Params.TextColor := ColorEstado(estadoCol);
 end;
 
 // ---------------------------------------------------------------------------
@@ -943,6 +1137,7 @@ begin
     5: Result := esPdteRecibir;
     6: Result := esPdteServir;
     7: Result := esPrestadas;
+    8: Result := esTodoAlaVez;
   else
     Result := esExistencias;
   end;
@@ -1073,6 +1268,7 @@ end;
 
 procedure TfrmStockConsulta.cbbEstadoPropertiesEditValueChanged(Sender: TObject);
 begin
+  cbbEstado.Style.TextColor := ColorEstado(EstadoActual);
   RecargarConsulta;
 end;
 
