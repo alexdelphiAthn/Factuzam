@@ -296,15 +296,21 @@ begin
   // consolida cambios'.
   iColCod := -1;
   SetLength(iColT, Length(FPosiciones));
+  // En cxGrid el DataBinding.FieldName vive en TcxGridDBColumn, no en
+  // el TcxCustomGridTableItem base; cast obligatorio.
   for i := 0 to tvCuadr.ItemCount - 1 do
-    if SameText(tvCuadr.Items[i].DataBinding.FieldName, 'CODIGO_ALM') then
+    if (tvCuadr.Items[i] is TcxGridDBColumn) and
+       SameText(TcxGridDBColumn(tvCuadr.Items[i]).DataBinding.FieldName,
+                'CODIGO_ALM') then
       iColCod := tvCuadr.Items[i].Index;
   for i := 0 to High(FPosiciones) do
   begin
     iColT[i] := -1;
     sKey := Format('T%.2d', [i + 1]);
     for iRec := 0 to tvCuadr.ItemCount - 1 do
-      if SameText(tvCuadr.Items[iRec].DataBinding.FieldName, sKey) then
+      if (tvCuadr.Items[iRec] is TcxGridDBColumn) and
+         SameText(TcxGridDBColumn(tvCuadr.Items[iRec]).DataBinding.FieldName,
+                  sKey) then
         iColT[i] := tvCuadr.Items[iRec].Index;
   end;
   if iColCod < 0 then Exit;
