@@ -42,7 +42,6 @@
       Properties.DisplayFormat = 'dd/mm/yyyy'
       Properties.EditFormat = 'dd/mm/yyyy'
       Properties.ImmediatePost = True
-      Properties.OnChange = dtpFechaPropertiesChange
       Properties.OnEditValueChanged = dtpFechaPropertiesEditValueChanged
       Properties.OnGetDayState = dtpFechaPropertiesGetDayState
       TabOrder = 0

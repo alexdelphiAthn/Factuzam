@@ -73,6 +73,13 @@ type
     // (al abrir el form, al aplicar el layout, al cambiar visibilidad de
     // pestanas, etc.) y antes recargabamos 3-4 veces lo mismo.
     FUltimaClaveHijas: string;
+    // Clave (Fecha|Emp|Alm|Caja|Txt) de la ultima carga del maestro. Si
+    // CargarMaestro entra con la misma combinacion, salimos sin tocar
+    // BBDD ni resetear FUltimaClaveHijas, evitando la cascada completa.
+    // Caso tipico: al abrir el form, dtpFecha.Date := AFecha dispara
+    // OnEditValueChanged y luego FormShow llama tambien a RecargarMaestro:
+    // antes salian 2-3 cargas identicas.
+    FUltimaClaveMaestro: string;
   public
     procedure CargarMaestro(AFecha:     TDate;
                             const AEmp,
@@ -508,10 +515,26 @@ procedure TdmConsultaOpe.CargarMaestro(AFecha:     TDate;
                                              AAlm,
                                              ACaja,
                                              ATextoLibre: string);
+var
+  sClaveMaestro: string;
 begin
+  // Escudo anti-recarga del maestro: si los parametros no han cambiado,
+  // no relanzamos ni el SELECT del maestro ni las 8 queries hijas. Al
+  // abrir el form, PrepararValores + FormShow encadenaban hasta 3
+  // CargarMaestro identicos (uno por handler de dtpFecha y otro por
+  // FormShow); ahora la 2a y 3a salen sin tocar BBDD.
+  sClaveMaestro := DateToStr(AFecha) + '|' + AEmp + '|' + AAlm + '|' + ACaja +
+                   '|' + ATextoLibre;
+  if sClaveMaestro = FUltimaClaveMaestro then
+  begin
+    Log.LogInfo(Format('CargarMaestro: SKIP (mismos params "%s")',
+                       [sClaveMaestro]));
+    Exit;
+  end;
   Log.LogInfo(Format('CargarMaestro: fecha=%s emp="%s" alm="%s" caja="%s" ' +
-                     'txt="%s"',
-                     [DateToStr(AFecha), AEmp, AAlm, ACaja, ATextoLibre]));
+                     'txt="%s" (prev="%s")',
+                     [DateToStr(AFecha), AEmp, AAlm, ACaja, ATextoLibre,
+                      FUltimaClaveMaestro]));
   // Cerramos todas las queries hijas primero para que OnDataChange no
   // dispare mientras recargamos el maestro.
   FCargando := True;
@@ -531,10 +554,11 @@ begin
     qryMaestro.ParamByName('PCAJA').AsString   := ACaja;
     qryMaestro.ParamByName('PTXT').AsString    := ATextoLibre;
     qryMaestro.Open;
-    // Reset del cache de clave: forzamos que la siguiente
+    // Reset del cache de clave de hijas: forzamos que la siguiente
     // RefrescarPestanasHijas SI recargue (puede ser la misma op pero con
     // datos del maestro recien releidos).
-    FUltimaClaveHijas := '';
+    FUltimaClaveHijas  := '';
+    FUltimaClaveMaestro := sClaveMaestro;
   finally
     FCargando := False;
   end;
