@@ -21,6 +21,7 @@ uses
   inLibDir in 'src\Lib\inLibDir.pas',
   inLibGlobalVar in 'src\Lib\inLibGlobalVar.pas',
   inLibLog in 'src\Lib\inLibLog.pas',
+  inLibDiag in 'src\Lib\inLibDiag.pas',
   inLibtb in 'src\Lib\inLibtb.pas',
   inLibUser in 'src\Lib\inLibUser.pas',
   inLibWin in 'src\Lib\inLibWin.pas',
@@ -264,5 +265,12 @@ begin
   Screen.MenuFont.Name := 'Lucida Sans';
   Screen.MenuFont.Size := 13;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+  // Diagnóstico: con /teststack se encola una excepción de prueba
+  // para verificar JCL stack trace + AppException + log + modal.
+  if FindCmdLineSwitch('teststack', True) then
+    TThread.ForceQueue(nil, procedure
+                            begin
+                              inLibDiag.ProbarStackTrace;
+                            end);
   Application.Run;
 end.
