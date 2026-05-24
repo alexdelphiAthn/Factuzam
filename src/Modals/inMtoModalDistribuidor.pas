@@ -2,14 +2,14 @@
 {                                                                              }
 {  Modulo:       inMtoModalDistribuidor                                        }
 {    Tipo:       Formulario (Modal)                                            }
-{ Version:       0.2.0                                                         }
-{   Fecha:       23/05/2026                                                    }
+{ Version:       0.3.0                                                         }
+{   Fecha:       24/05/2026                                                    }
 {                                                                              }
 {  Descripcion:                                                                }
 {    Modal "distribuidor por almacen" para sesiones de compra en modo          }
 {    ESFORMATO_DISTRIBUIDO_SES='S'. Pinta un cuadrante almacenes x tallas      }
 {    para una linea concreta de la sesion. El usuario reparte cantidades       }
-{    por (almacen, talla); al aceptar hace upsert en                            }
+{    por (almacen, talla); al aceptar hace upsert en                           }
 {    fza_compras_sesiones_celdas (clave compuesta por serie+numero+linea+      }
 {    almacen+id_av_pivot, idfila=0 para distribuidor: el "color/fila" del      }
 {    pivote en sesiones vive a nivel de linea, no a nivel de celda).           }
@@ -18,6 +18,9 @@
 {    una fila por almacen activo con columnas T01..T20. Al cargar leemos las   }
 {    celdas existentes; al aceptar comparamos contra el snapshot inicial y     }
 {    aplicamos INSERT / UPDATE / DELETE para cada cambio.                      }
+{                                                                              }
+{    Hereda de TfrmModalAceptCancel para reutilizar pnlBody + pnlButton con    }
+{    los botones Aceptar/Cancelar (F12/ESC) estandar de la app.                }
 {******************************************************************************}
 unit inMtoModalDistribuidor;
 
@@ -27,6 +30,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, Vcl.ComCtrls,
+  System.Actions, Vcl.ActnList,
   System.Generics.Collections,
   Data.DB, DBClient, MemDS, DBAccess, Uni,
   cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxControls, cxContainer,
@@ -34,20 +38,18 @@ uses
   cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxStyles,
   dxSkinsCore, dxSkinBlue,
-  inMtoFrmBase, inLibGridTallasInline, cxCustomData, cxFilter, cxData,
-  cxDataStorage, cxNavigator, dxDateRanges, dxScrollbarAnnotations,
+  inMtoModalAceptCancel, inLibGridTallasInline,
+  cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
+  dxDateRanges, dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab;
 
 type
-  TfrmModalDistribuidor = class(TfrmBase)
+  TfrmModalDistribuidor = class(TfrmModalAceptCancel)
     pnlCab        : TPanel;
     lblTitulo     : TcxLabel;
     lblLinea      : TcxLabel;
     edtLinea      : TcxTextEdit;
     pnlCuadrante  : TPanel;
-    pnlBot        : TPanel;
-    btnAceptar    : TcxButton;
-    btnCancelar   : TcxButton;
     cdsCuadr      : TClientDataSet;
     dsCuadr       : TDataSource;
     cxgrdCuadr    : TcxGrid;
@@ -58,7 +60,6 @@ type
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
   private
-    FConfirmado   : Boolean;
     FConn         : TUniConnection;
     FUsuario      : string;
     FIdAcPivot    : Integer;
@@ -71,11 +72,14 @@ type
     procedure PersistirCambios;
     function  ClaveCelda(const ACodigoAlm: string;
                          APosicion: Integer): string; inline;
+    function  GetConfirmado: Boolean;
   public
     SerieSes  : string;
     NumeroSes : string;
     LineaSes  : Integer;
-    property Confirmado: Boolean read FConfirmado;
+    // Confirmado se deriva de sFicha ('S' tras Aceptar, 'N' tras Cancelar)
+    // que gestiona el ancestro TfrmModalAceptCancel.
+    property Confirmado: Boolean read GetConfirmado;
     procedure Preparar(AConn: TUniConnection;
                        const AUsuario, ASerie, ANumero: string;
                        ALinea, AIdAcPivot: Integer);
@@ -91,15 +95,18 @@ uses
 procedure TfrmModalDistribuidor.FormCreate(Sender: TObject);
 begin
   inherited;
-  FConfirmado := False;
-  FSnapshot   := TDictionary<string, Double>.Create;
-  Self.Position := poScreenCenter;
+  FSnapshot := TDictionary<string, Double>.Create;
 end;
 
 procedure TfrmModalDistribuidor.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FSnapshot);
   inherited;
+end;
+
+function TfrmModalDistribuidor.GetConfirmado: Boolean;
+begin
+  Result := sFicha = 'S';
 end;
 
 procedure TfrmModalDistribuidor.Preparar(AConn: TUniConnection;
@@ -293,8 +300,10 @@ begin
           iIdAv  := FPosiciones[i].IdAv;
           rCantN := cdsCuadr.FieldByName(Format('T%.2d', [i + 1])).AsFloat;
           sKey   := ClaveCelda(sCod, i + 1);
-          if not FSnapshot.TryGetValue(sKey, rCantO) then rCantO := 0;
-          if rCantN = rCantO then Continue;
+          if not FSnapshot.TryGetValue(sKey, rCantO) then
+            rCantO := 0;
+          if rCantN = rCantO then
+            Continue;
           if rCantN > 0 then
           begin
             oQry.SQL.Text :=
@@ -337,18 +346,23 @@ end;
 
 procedure TfrmModalDistribuidor.btnAceptarClick(Sender: TObject);
 begin
-  inherited;
-  if cdsCuadr.State in [dsEdit, dsInsert] then cdsCuadr.Post;
+  // Persistir antes de delegar al ancestro: si algo falla aqui, no se
+  // setea sFicha='S' ni se cierra el modal (el inherited del ancestro
+  // hace ambas cosas), y el usuario puede reintentar.
+  if cdsCuadr.State in [dsEdit, dsInsert] then
+    cdsCuadr.Post;
   PersistirCambios;
-  FConfirmado := True;
-  ModalResult := mrOk;
+  inherited;
 end;
 
 procedure TfrmModalDistribuidor.btnCancelarClick(Sender: TObject);
 begin
+  // El ancestro no asigna OnClick a btnCancelar (solo lo cubre via
+  // Cancel:=True / Action2 con shortcut ESC); aqui lo enganchamos para
+  // que el click del boton tambien cierre con sFicha='N'.
   inherited;
-  FConfirmado := False;
-  ModalResult := mrCancel;
+  sFicha := 'N';
+  PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 end.

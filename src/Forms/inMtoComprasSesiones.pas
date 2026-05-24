@@ -1744,6 +1744,9 @@ begin
   if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
     Dmm.unqrySesionLin.Post;
   oForm := TfrmModalDistribuidor.Create(Application);
+  // Evitamos el caFree heredado de TfrmModalAceptCancel para poder hacer
+  // FreeAndNil manual en el finally sin riesgo de doble liberacion.
+  oForm.OnClose := nil;
   try
     oForm.Preparar(inLibGlobalVar.oConn, oUser,
                     Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
