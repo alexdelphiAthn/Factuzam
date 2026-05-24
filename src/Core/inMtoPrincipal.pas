@@ -225,6 +225,7 @@ type
     // Logo de fondo + nombre + version creados dinamicamente sobre Panel1.
     // Replica visual del splash; visibles cuando no hay pestañas abiertas
     // y ocultos en cuanto se abre cualquier mantenimiento.
+    FLogoBgPanel:   TObject;
     FLogoBgImage:   TObject;
     FLogoBgNombre:  TObject;
     FLogoBgVersion: TObject;
@@ -478,73 +479,32 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.CrearLogoFondoBg;
-const
-  CRutas: array[0..3] of string = (
-    'fondo.png',
-    '..\..\fondo.png',
-    'logo_art\icon-256.png',
-    '..\..\logo_art\icon-256.png'
-  );
 var
-  sBase, sRuta: string;
-  i: Integer;
-  bCargado: Boolean;
-  oImg:     TImage;
-  oPng:     TPngImage;
   oNombre:  TcxLabel;
   oVer:     TcxLabel;
 begin
+  FLogoBgPanel   := nil;
   FLogoBgImage   := nil;
   FLogoBgNombre  := nil;
   FLogoBgVersion := nil;
-  oImg := TImage.Create(Self);
-  oImg.Parent := Panel1;
-  oImg.Proportional := True;
-  oImg.Stretch      := True;
-  oImg.Center       := True;
-  // Transparent=False: con Transparent=True y un PNG RGBA encima de
-  // pcPrincipal (alClient de Panel1), el TImage no termina de pintarse.
-  // Con Transparent=False la zona del rectangulo se compone primero
-  // contra el color de Panel1 antes de aplicar el alpha del PNG.
-  oImg.Transparent  := False;
-  oImg.Visible      := False;
-  sBase := inLibDir.DirApp;
-  bCargado := False;
-  for i := 0 to High(CRutas) do
-  begin
-    sRuta := sBase + CRutas[i];
-    if FileExists(sRuta) then
-    try
-      // Cargamos como TPngImage explicitamente para asegurar que el
-      // canal alpha se respeta. Picture.LoadFromFile delega en la
-      // extension del fichero y normalmente acaba aqui tambien, pero
-      // el camino directo evita ambiguedades cuando el control venia
-      // de un .dfm con Picture.Data envuelto.
-      oPng := TPngImage.Create;
-      try
-        oPng.LoadFromFile(sRuta);
-        oImg.Picture.Assign(oPng);
-      finally
-        oPng.Free;
-      end;
-      bCargado := True;
-      Break;
-    except
-      on E: Exception do
-        inLibLog.Log.LogWarning('Logo fondo: no se pudo cargar ' + sRuta +
-                                ': ' + E.Message);
-    end;
-  end;
-  if not bCargado then
-  begin
-    FreeAndNil(oImg);
-    inLibLog.Log.LogWarning('Logo fondo: no se encontro fondo.png');
-    Exit;
-  end;
-  FLogoBgImage := oImg;
-  // Nombre del autor centrado bajo el logo.
+  // Truco del commit 2b39e93: TImage es TGraphicControl y NUNCA puede
+  // pintarse encima de un TWinControl hermano (pcPrincipal alClient en
+  // Panel1). La solucion es REPARENTAR imgFondoLogo al propio
+  // pcPrincipal — queda como hijo directo del PageControl (no en una
+  // TabSheet), se pinta sobre su area cliente vacia cuando no hay
+  // pestanas, y la TcxTabSheet activa lo tapa automaticamente cuando
+  // si las hay (z-order natural, sin tener que togglear Visible).
+  imgFondoLogo.Parent  := pcPrincipal;
+  imgFondoLogo.Anchors := [akTop, akRight];
+  imgFondoLogo.Proportional := True;
+  imgFondoLogo.Stretch      := True;
+  imgFondoLogo.Center       := True;
+  FLogoBgImage := imgFondoLogo;
+  // Labels nombre+version tambien dentro de pcPrincipal para que
+  // sigan el mismo destino: visibles sin pestanas, tapados por la
+  // TabSheet activa cuando hay alguna abierta.
   oNombre := TcxLabel.Create(Self);
-  oNombre.Parent  := Panel1;
+  oNombre.Parent  := pcPrincipal;
   oNombre.Caption := 'Alejandro Laorden Hidalgo';
   oNombre.AutoSize := False;
   oNombre.Style.Font.Name   := 'Lucida Sans';
@@ -552,18 +512,15 @@ begin
   oNombre.Style.Font.Style  := [fsBold];
   oNombre.Properties.Alignment.Horz := taCenter;
   oNombre.Transparent := True;
-  oNombre.Visible     := False;
   FLogoBgNombre := oNombre;
-  // Version dinamica.
   oVer := TcxLabel.Create(Self);
-  oVer.Parent  := Panel1;
+  oVer.Parent  := pcPrincipal;
   oVer.Caption := 'Versión ' + oVersion;
   oVer.AutoSize := False;
   oVer.Style.Font.Name   := 'Lucida Sans';
   oVer.Style.Font.Height := -14;
   oVer.Properties.Alignment.Horz := taCenter;
   oVer.Transparent := True;
-  oVer.Visible     := False;
   FLogoBgVersion := oVer;
   CentrarLogoFondoBg;
 end;
@@ -572,23 +529,23 @@ procedure TfrmMtoPrincipal.CentrarLogoFondoBg;
 var
   cw, ch, w, h, cx, cy: Integer;
 begin
-  if FLogoBgImage = nil then
+  if imgFondoLogo = nil then
     Exit;
-  cw := Panel1.ClientWidth;
-  ch := Panel1.ClientHeight;
-  // Logo ocupa hasta el 50% del ancho, manteniendo aspect 4:1 de fondo.png
-  // (520x130). Maximo 600 de ancho para que no se vea descomunal en
-  // monitores 4K.
+  // Trabajamos sobre el cliente de pcPrincipal (donde reparentamos los
+  // controles), no sobre Panel1. Asi al cambiar el tamano de la ventana
+  // FormResize recoloca todo respecto al area cliente real.
+  cw := pcPrincipal.ClientWidth;
+  ch := pcPrincipal.ClientHeight;
+  // Logo: 50% del ancho, max 600, min 240, manteniendo aspect 520x130.
   w := cw div 2;
   if w > 600 then w := 600;
   if w < 240 then w := 240;
   h := Round(w * 130 / 520);
   cx := (cw - w) div 2;
-  // Posicion vertical: tercio superior (no centro absoluto) para dejar
-  // sitio a las dos lineas de texto debajo sin saturar el medio.
   cy := (ch - h - 80) div 2;
   if cy < 20 then cy := 20;
-  TImage(FLogoBgImage).SetBounds(cx, cy, w, h);
+  imgFondoLogo.Anchors := [];
+  imgFondoLogo.SetBounds(cx, cy, w, h);
   if FLogoBgNombre <> nil then
     TcxLabel(FLogoBgNombre).SetBounds(0, cy + h + 8, cw, 26);
   if FLogoBgVersion <> nil then
@@ -666,36 +623,22 @@ end;
 
 procedure TfrmMtoPrincipal.ActualizarFondoLogo;
 var
-  bDebeVerse: Boolean;
+  bDebeVerse, bTieneImg: Boolean;
 begin
-  // El imgFondoLogo del .dfm tiene Picture.Data envuelto en TdxSmartImage
-  // que VCL no deserializa, y aunque LoadFromFile lo carga el control no
-  // se llega a pintar. Lo dejamos oculto definitivamente y servimos el
-  // logo de fondo via FLogoBg* (image + labels) creados en runtime.
-  if imgFondoLogo.Visible then
-    imgFondoLogo.Visible := False;
-  bDebeVerse := (pcPrincipal.PageCount = 0) and (FLogoBgImage <> nil);
-  if FLogoBgImage <> nil then
-  begin
-    if TImage(FLogoBgImage).Visible <> bDebeVerse then
-      TImage(FLogoBgImage).Visible := bDebeVerse;
-    if bDebeVerse then
-      TImage(FLogoBgImage).BringToFront;
-  end;
+  // Con imgFondoLogo y labels reparentados a pcPrincipal, la TcxTabSheet
+  // activa los tapa por z-order automaticamente cuando hay pestanas
+  // abiertas — pero togglear Visible es mas barato que dejarlos pintando
+  // detras, asi que mantenemos la condicion PageCount=0 explicita.
+  bTieneImg  := imgFondoLogo.Picture.Graphic <> nil;
+  bDebeVerse := (pcPrincipal.PageCount = 0) and bTieneImg;
+  if imgFondoLogo.Visible <> bDebeVerse then
+    imgFondoLogo.Visible := bDebeVerse;
   if FLogoBgNombre <> nil then
-  begin
     if TcxLabel(FLogoBgNombre).Visible <> bDebeVerse then
       TcxLabel(FLogoBgNombre).Visible := bDebeVerse;
-    if bDebeVerse then
-      TcxLabel(FLogoBgNombre).BringToFront;
-  end;
   if FLogoBgVersion <> nil then
-  begin
     if TcxLabel(FLogoBgVersion).Visible <> bDebeVerse then
       TcxLabel(FLogoBgVersion).Visible := bDebeVerse;
-    if bDebeVerse then
-      TcxLabel(FLogoBgVersion).BringToFront;
-  end;
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
