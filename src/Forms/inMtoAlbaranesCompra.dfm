@@ -291,33 +291,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             TabOrder = 3
             OnClick = btnAtributosColumnaClick
           end
-          object btnImprimirH: TcxButton
-            Left = 618
-            Top = 6
-            Width = 140
-            Height = 26
-            Caption = 'Imprimir horizontal'
-            TabOrder = 4
-            OnClick = btnImprimirHClick
-          end
-          object btnImprimirV: TcxButton
-            Left = 764
-            Top = 6
-            Width = 130
-            Height = 26
-            Caption = 'Imprimir vertical'
-            TabOrder = 5
-            OnClick = btnImprimirVClick
-          end
-          object btnPegatinas: TcxButton
-            Left = 900
-            Top = 6
-            Width = 110
-            Height = 26
-            Caption = 'Pegatinas'
-            TabOrder = 6
-            OnClick = btnPegatinasClick
-          end
         end
         object pnlBodyFicha: TPanel
           Left = 0
@@ -342,15 +315,11 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             ClientRectTop = 29
             object tsLineasAlbaran: TcxTabSheet
               Caption = 'L'#237'neas'
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLineasAlbaran: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 937
-                Height = 347
+                Height = 349
                 Align = alClient
                 TabOrder = 0
                 OnEnter = cxgrdLineasAlbaranEnter
@@ -361,6 +330,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   OnFocusedRecordChanged = tvLineasAlbaranFocusedRecordChanged
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.FocusFirstCellOnNewRecord = True
+                  OptionsData.Appending = True
+                  OptionsView.GroupByBox = False
                   object colLineaAlbcLINEA: TcxGridDBColumn
                     Caption = 'L'#237'nea'
                     DataBinding.FieldName = 'LINEA_ALBCLIN'
@@ -419,10 +390,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             end
             object tsObservaciones: TcxTabSheet
               Caption = 'Observaciones'
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
@@ -430,7 +397,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataField = 'OBSERVACIONES_ALBC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                ExplicitHeight = 347
                 Height = 349
                 Width = 937
               end
@@ -502,11 +468,22 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
           Width = 941
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 941
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 941
           Height = 637
           StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 941
+          ExplicitHeight = 637
+          inherited cxgrdPerfil: TcxGrid
+            Width = 941
+            Height = 637
+            ExplicitWidth = 941
+            ExplicitHeight = 637
+          end
         end
       end
     end
@@ -518,6 +495,9 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
         Width = 945
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 945
+        inherited edtBusqGlobal: TcxTextEdit
+          ExplicitHeight = 27
+        end
       end
     end
   end
@@ -530,6 +510,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
     inherited pButtonGen: TPanel
       Top = 567
       StyleElements = [seFont, seClient, seBorder]
+      ExplicitTop = 567
     end
     inherited pButtonBDStat: TPanel
       StyleElements = [seFont, seClient, seBorder]
@@ -539,6 +520,33 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
       inherited pnlDataSetName: TPanel
         StyleElements = [seFont, seClient, seBorder]
       end
+    end
+    object btnImprimirH: TcxButton
+      Left = 0
+      Top = 307
+      Width = 137
+      Height = 48
+      Caption = 'Imprimir hor.'
+      TabOrder = 2
+      OnClick = btnImprimirHClick
+    end
+    object btnImprimirV: TcxButton
+      Left = 0
+      Top = 254
+      Width = 137
+      Height = 46
+      Caption = 'Imprimir vert.'
+      TabOrder = 3
+      OnClick = btnImprimirVClick
+    end
+    object btnPegatinas: TcxButton
+      Left = 0
+      Top = 204
+      Width = 137
+      Height = 43
+      Caption = 'Etiquetas'
+      TabOrder = 4
+      OnClick = btnPegatinasClick
     end
   end
 end
