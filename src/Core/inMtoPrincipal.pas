@@ -597,7 +597,36 @@ const
 var
   sBase, sRuta: string;
   i: Integer;
+  oRes: TResourceStream;
+  oPng: TPngImage;
 begin
+  // 1) Recurso RCDATA 'FONDO' embebido en el .exe via {$R fondo.res} en
+  //    fzam.dpr. Es el camino preferente porque no depende de tener el
+  //    fichero al lado del .exe. Si el recurso no esta presente (porque
+  //    se compilo sin fondo.res) caemos a las rutas relativas de disco.
+  try
+    oRes := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
+    try
+      oPng := TPngImage.Create;
+      try
+        oPng.LoadFromStream(oRes);
+        imgFondoLogo.Picture.Assign(oPng);
+        inLibLog.Log.LogInfo('CargarFondoLogo: OK desde recurso FONDO ' +
+                             '(' + IntToStr(oRes.Size) + ' bytes)');
+        Exit;
+      finally
+        oPng.Free;
+      end;
+    finally
+      oRes.Free;
+    end;
+  except
+    on E: Exception do
+      inLibLog.Log.LogInfo('CargarFondoLogo: recurso FONDO no disponible ' +
+                           '(' + E.Message + '); pruebo disco');
+  end;
+  // 2) Fallback a fichero suelto: para builds Debug donde fondo.png
+  //    vive en la raiz del repo (..\..\fondo.png desde Win32/Debug).
   sBase := inLibDir.DirApp;
   inLibLog.Log.LogInfo('CargarFondoLogo: base="' + sBase + '"');
   for i := 0 to High(CRutas) do
