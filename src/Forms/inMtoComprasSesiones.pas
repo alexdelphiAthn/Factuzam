@@ -1200,7 +1200,15 @@ begin
   //    (que YA llevan el agregado correcto, una sola celda con
   //    almacen vacio = el de cabecera).
   if Dmm.unqryTablaG.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
-    CopiarCeldasDistribuidasOtroColor(iSrcLinea, iNewLinea)
+  begin
+    CopiarCeldasDistribuidasOtroColor(iSrcLinea, iNewLinea);
+    // El INSERT-SELECT y el UPDATE de totales viven fuera del cds —
+    // refrescamos para que el grid principal vea los TOTAL_UNIDADES /
+    // TOTAL_LINEA actualizados de la nueva linea (sin refresh, el cds
+    // mantiene los valores de su Insert + Post iniciales, ambos 0).
+    ds.Refresh;
+    ds.Locate('LINEA_SESLIN', iNewLinea, []);
+  end
   else if iAcPivot > 0 then
   begin
     arr := FGestorTallas.GetPosicionesConjunto(iAcPivot);
@@ -1742,16 +1750,18 @@ procedure TfrmMtoComprasSesiones.CopiarCeldasDistribuidasOtroColor(
                                   ALineaOrigen, ALineaDestino: Integer);
 var
   oQry : TUniQuery;
-  sSer, sNum : string;
+  sSer, sNum, sAlmCab : string;
 begin
   // Replica las celdas (almacen, talla, cantidad) de la linea origen
-  // en la linea destino con un solo INSERT-SELECT. Se conserva
-  // CODIGO_ALM_SESCEL y ID_AV_PIVOT_SESCEL — el cuadrante distribuido
-  // del proveedor llega intacto a la nueva variante de color. El
-  // ON DUPLICATE KEY UPDATE no aplica porque la linea destino acaba
-  // de crearse y no tiene celdas.
-  sSer := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-  sNum := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  // en la linea destino. NORMALIZA CODIGO_ALM_SESCEL: si la celda
+  // origen lo tiene vacio (residuo de cuando la sesion era no
+  // distribuida), la copia con el CODIGO_ALM_SES de cabecera. Sin esta
+  // normalizacion, el modal distribuidor de la linea nueva no veria
+  // esas celdas (las ignora por sCod='') y los totales del grid no
+  // cuadrarian con el cuadrante que el usuario ve.
+  sSer    := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNum    := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  sAlmCab := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
   oQry := TUniQuery.Create(nil);
   try
     oQry.Connection := inLibGlobalVar.oConn;
@@ -1762,7 +1772,9 @@ begin
       '   CANTIDAD_SESCEL, INSTANTE_ALTA, USUARIO_ALTA, ' +
       '   INSTANTE_MODIF, USUARIO_MODIF) ' +
       'SELECT SERIE_SES_SESCEL, NUMERO_SES_SESCEL, :ldst, ' +
-      '       ID_FILA_SES_SESCEL, CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, ' +
+      '       ID_FILA_SES_SESCEL, ' +
+      '       IFNULL(NULLIF(CODIGO_ALM_SESCEL, ''''), :alm_cab), ' +
+      '       ID_AV_PIVOT_SESCEL, ' +
       '       CANTIDAD_SESCEL, NOW(), :u, NOW(), :u ' +
       '  FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL  = :s ' +
@@ -1773,7 +1785,37 @@ begin
     oQry.ParamByName('n').AsString    := sNum;
     oQry.ParamByName('lsrc').AsInteger := ALineaOrigen;
     oQry.ParamByName('ldst').AsInteger := ALineaDestino;
+    oQry.ParamByName('alm_cab').AsString := sAlmCab;
     oQry.ParamByName('u').AsString    := oUser;
+    oQry.ExecSQL;
+    // Tras copiar, refrescar totales de la linea destino para que
+    // TOTAL_UNIDADES_SESLIN y TOTAL_LINEA_SESLIN cuadren con la suma
+    // de celdas (si no, las columnas Uds/Total del grid principal
+    // salen a 0 para la nueva linea aunque las cantidades por talla
+    // esten bien).
+    oQry.SQL.Text :=
+      'UPDATE fza_compras_sesiones_lineas ' +
+      '   SET TOTAL_UNIDADES_SESLIN = ' +
+      '         (SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) ' +
+      '            FROM fza_compras_sesiones_celdas ' +
+      '           WHERE SERIE_SES_SESCEL  = :s ' +
+      '             AND NUMERO_SES_SESCEL = :n ' +
+      '             AND LINEA_SES_SESCEL  = :l), ' +
+      '       TOTAL_LINEA_SESLIN    = ' +
+      '         (SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) ' +
+      '            FROM fza_compras_sesiones_celdas ' +
+      '           WHERE SERIE_SES_SESCEL  = :s ' +
+      '             AND NUMERO_SES_SESCEL = :n ' +
+      '             AND LINEA_SES_SESCEL  = :l) * ' +
+      '         PRECIO_COMPRA_SESLIN, ' +
+      '       INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u ' +
+      ' WHERE SERIE_SES_SESLIN  = :s ' +
+      '   AND NUMERO_SES_SESLIN = :n ' +
+      '   AND LINEA_SESLIN      = :l';
+    oQry.ParamByName('s').AsString  := sSer;
+    oQry.ParamByName('n').AsString  := sNum;
+    oQry.ParamByName('l').AsInteger := ALineaDestino;
+    oQry.ParamByName('u').AsString  := oUser;
     oQry.ExecSQL;
   finally
     FreeAndNil(oQry);
