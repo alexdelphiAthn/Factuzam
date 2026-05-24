@@ -95,9 +95,9 @@ type
     btnBorrarLinea:       TcxButton;
     btnTallasHorizontal:  TcxButton;
     btnAtributosColumna:  TcxButton;
-    btnImprimirH:         TcxButton;
-    btnImprimirV:         TcxButton;
-    btnPegatinas:         TcxButton;
+    btnImprimirH: TcxButton;
+    btnImprimirV: TcxButton;
+    btnPegatinas: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
