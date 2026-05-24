@@ -80,11 +80,12 @@ LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_ALBC`
 -- 2. Lineas con T01..T20 pivotadas por talla
 -- ---------------------------------------------------------------------------
 -- Como en albaran cada linea ya es un SKU, agrupamos por (articulo, color
--- derivado del SKU, ID_AC_PIVOT) y sumamos CANTIDAD_ALBCLIN en la posicion
--- correspondiente del conjunto pivot. La talla del SKU se obtiene de
--- fza_atributos_sku (atributo con ID_VA_AV='TAL'). El color se obtiene del
--- mismo modo (atributo con ID_VA_AV='CO' -> CODIGO_ATB/NOMBRE_ATB del
--- atributo basico, o fallback al segundo segmento del SKU).
+-- derivado del SKU, ID_AC_PIVOT, almacen destino) y sumamos
+-- CANTIDAD_ALBCLIN en la posicion correspondiente del conjunto pivot. La
+-- talla del SKU se obtiene de fza_atributos_sku (atributo con
+-- ID_VA_AV='TAL'). El color se obtiene del mismo modo (atributo con
+-- ID_VA_AV='CO' -> CODIGO_ATB/NOMBRE_ATB del atributo basico, o fallback
+-- al segundo segmento del SKU).
 -- IMPORTANTE: el color forma parte de la clave de agrupacion. Sin el, las
 -- lineas de varios colores del mismo articulo + sistema de tallas se
 -- colapsaban en una unica fila y los SUM por talla sumaban todas las
@@ -92,6 +93,11 @@ LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_ALBC`
 -- los 4 colores). El GROUP BY incluye CODIGO_ATB_COLOR + NOMBRE_COLOR
 -- (color via atributo basico) y el segmento medio del SKU (fallback para
 -- SKUs sin atributo CO).
+-- Tambien forma parte de la clave el CODIGO_ALMACEN_ALBCLIN: en albaranes
+-- agrupados (mezclan varios almacenes destino aunque la cabecera tenga
+-- uno principal) las lineas de un mismo articulo en distintos almacenes
+-- aparecen como filas separadas, una por almacen, para que el .frx pueda
+-- imprimir junto a cada linea el almacen al que va destinada.
 CREATE OR REPLACE VIEW `vi_albaranes_compra_lin_print` AS
 WITH `pos_acd` AS (
   SELECT
@@ -140,6 +146,21 @@ SELECT
   L.`ID_AC_PIVOT_ALBCLIN`           AS `ID_AC_PIVOT`,
   ac.`NOMBRE_AC`,
   COALESCE(ac.`NOMBRE_CORTO_AC`, UPPER(LEFT(ac.`NOMBRE_AC`, 8))) AS `NOMBRE_CORTO_AC`,
+  -- Almacen destino de la linea (clave de agrupacion). El JOIN a
+  -- fza_almacenes expone los campos descriptivos del almacen para
+  -- que el .frx los pueda imprimir junto a cada linea. Si la
+  -- cabecera CODIGO_ALM_ALBC coincide con todas las lineas, ambos
+  -- niveles muestran lo mismo; en albaranes agrupados con varios
+  -- almacenes, cada linea reflejara su propio destino.
+  L.`CODIGO_ALMACEN_ALBCLIN`        AS `CODIGO_ALM_ALBCLIN`,
+  MIN(alm.`CODIGO_EMP_ALM`)         AS `CODIGO_EMP_ALM_ALBCLIN`,
+  MIN(alm.`NOMBRE_ALM_ALM`)         AS `NOMBRE_ALM_ALBCLIN`,
+  MIN(alm.`DIRECCION_ALM`)          AS `DIRECCION_ALM_ALBCLIN`,
+  MIN(alm.`CODIGO_POSTAL_ALM`)      AS `CODIGO_POSTAL_ALM_ALBCLIN`,
+  MIN(alm.`POBLACION_ALM`)          AS `POBLACION_ALM_ALBCLIN`,
+  MIN(alm.`PROVINCIA_ALM`)          AS `PROVINCIA_ALM_ALBCLIN`,
+  MIN(alm.`TELEFONO_ALM`)           AS `TELEFONO_ALM_ALBCLIN`,
+  MIN(alm.`EMAIL_ALM`)              AS `EMAIL_ALM_ALBCLIN`,
   SUM(L.`CANTIDAD_ALBCLIN`)         AS `TOTAL_UNIDADES`,
   SUM(L.`TOTAL_ALBCLIN`)            AS `TOTAL_LINEA`,
   COALESCE(SUM(CASE WHEN p.`POSICION` =  1 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T01`,
@@ -172,12 +193,15 @@ LEFT JOIN `pos_acd` p
       AND p.`ID_AV` = st.`ID_AV_TALLA`
 LEFT JOIN `sku_color` sc
        ON sc.`CODIGO_UNIDAD` = L.`CODIGO_UNIDAD_ALBCLIN`
+LEFT JOIN `fza_almacenes` alm
+       ON alm.`CODIGO_ALM_ALM` = L.`CODIGO_ALMACEN_ALBCLIN`
 GROUP BY
   L.`SERIE_ALBC_ALBCLIN`, L.`NUMERO_ALBC_ALBCLIN`,
   L.`CODIGO_ART_ALBCLIN`,
   L.`ID_AC_PIVOT_ALBCLIN`, ac.`NOMBRE_AC`, ac.`NOMBRE_CORTO_AC`,
   sc.`CODIGO_ATB_COLOR`, sc.`NOMBRE_COLOR`,
-  SUBSTRING_INDEX(SUBSTRING_INDEX(L.`CODIGO_UNIDAD_ALBCLIN`, '/', 2), '/', -1);
+  SUBSTRING_INDEX(SUBSTRING_INDEX(L.`CODIGO_UNIDAD_ALBCLIN`, '/', 2), '/', -1),
+  L.`CODIGO_ALMACEN_ALBCLIN`;
 
 -- ---------------------------------------------------------------------------
 -- 3. Guias de tallas (mismas que en sesiones — depende solo de conjuntos)
