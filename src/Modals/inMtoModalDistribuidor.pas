@@ -338,6 +338,14 @@ end;
 procedure TfrmModalDistribuidor.btnAceptarClick(Sender: TObject);
 begin
   inherited;
+  // Forzar al cxGrid a postear la celda en edicion al cds — sin esto,
+  // si el usuario pulsa Aceptar con una celda con foco y un valor
+  // tecleado, el valor sigue en buffer del editor y el cds aun lo
+  // tiene como antes. PersistirCambios entonces lee el valor viejo,
+  // calcula que no hay diff vs snapshot y no hace nada.
+  if (tvCuadr.Controller <> nil) and
+     (tvCuadr.Controller.EditingController <> nil) then
+    tvCuadr.Controller.EditingController.HideEdit(True);
   if cdsCuadr.State in [dsEdit, dsInsert] then cdsCuadr.Post;
   PersistirCambios;
   FConfirmado := True;
