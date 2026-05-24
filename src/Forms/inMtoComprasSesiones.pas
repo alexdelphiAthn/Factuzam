@@ -245,6 +245,7 @@ type
     procedure LogMsg(const S: string);
     function MaterializarSesionConTx(AFrmSet: TfrmModalCrearAlbaranSesion;
                                       const AUsuario: string;
+                                      AListaDocs: TStringList;
                                       out ASerPed, ANumPed,
                                           ASerAlb, ANumAlb,
                                           AErr: string): Boolean;
@@ -263,6 +264,8 @@ uses
   inLibUser,
   inLibComprasSesiones,
   inMtoModalDistribuidor,
+  inMtoModalDocsCreados,
+  inLibShowMto, inMtoPrincipal,
   inLibComprasSesionesMaterializar,
   Vcl.Clipbrd,
   inLibAtributosPaleta,
@@ -805,6 +808,11 @@ var
   frmSet      : TfrmModalCrearAlbaranSesion;
   iAutoFix    : Integer;
   iIdPvTemp   : Integer;
+  oListaDocs  : TStringList;
+  frmDocs     : TfrmModalDocsCreados;
+  i           : Integer;
+  sLin        : string;
+  arrPart     : TArray<string>;
 begin
   inherited;
   // Flujo:
@@ -951,40 +959,75 @@ begin
                 [Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString,
                  Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString,
                  frmSet.SerieAlb, frmSet.SeriePed]));
-  Screen.Cursor := crHourGlass;
+  oListaDocs := TStringList.Create;
   try
-    bOK := MaterializarSesionConTx(frmSet, oUser,
-                                   sSerPed, sNumPed,
-                                   sSerAlb, sNumAlb, sErr);
-  finally
-    Screen.Cursor := crDefault;
-  end;
-  LogSes(Format('  MaterializarSesion -> bOK=%s, pedido=%s/%s, albaran=%s/%s, err=%s',
-                [BoolToStr(bOK, True), sSerPed, sNumPed, sSerAlb, sNumAlb, sErr]));
-
-  if bOK then
-  begin
-    if sSerAlb <> '' then
-      ShowMessage('Sesion materializada. Albaran: ' + sSerAlb + ' / ' + sNumAlb)
-    else
-      ShowMessage('Sesion materializada (sin albaran).');
-    LogSes('  master.Refresh');
-    Dmm.unqryTablaG.Refresh;
-  end
-  else
-  begin
-    // Mostrar el error de materializacion tambien en modal de
-    // incidencias para que se vea bien aunque sea largo.
-    incidencias := TStringList.Create;
+    Screen.Cursor := crHourGlass;
     try
-      incidencias.Add('[MATERIALIZAR] ' + sErr);
-      frmInc := TfrmModalIncidencias.Create(Self);
-      frmInc.SetIncidencias(
-        'No se pudo materializar la sesion:', incidencias);
-      frmInc.ShowModal;
+      bOK := MaterializarSesionConTx(frmSet, oUser, oListaDocs,
+                                     sSerPed, sNumPed,
+                                     sSerAlb, sNumAlb, sErr);
     finally
-      FreeAndNil(incidencias);
+      Screen.Cursor := crDefault;
     end;
+    LogSes(Format('  MaterializarSesion -> bOK=%s, pedido=%s/%s, albaran=%s/%s, err=%s',
+                  [BoolToStr(bOK, True), sSerPed, sNumPed, sSerAlb, sNumAlb, sErr]));
+    if bOK then
+    begin
+      LogSes('  master.Refresh');
+      Dmm.unqryTablaG.Refresh;
+      // Mostrar todos los docs creados con boton "Ir a documento". En
+      // modo distribuido salen N albaranes (uno por almacen); en modo
+      // clasico solo uno. Sin docs (caso 'sin albaran ni pedido') no
+      // abrimos modal: simple ShowMessage.
+      if oListaDocs.Count = 0 then
+        ShowMessage('Sesion materializada (sin documentos).')
+      else
+      begin
+        frmDocs := TfrmModalDocsCreados.Create(Self);
+        // Bloqueamos caFree del ancestro para liberarlo nosotros aqui.
+        frmDocs.OnClose := nil;
+        try
+          for i := 0 to oListaDocs.Count - 1 do
+          begin
+            sLin := oListaDocs[i];
+            arrPart := sLin.Split(['|']);
+            if Length(arrPart) = 4 then
+              frmDocs.Agregar(arrPart[0], arrPart[1], arrPart[2], arrPart[3]);
+          end;
+          frmDocs.ShowModal;
+          if frmDocs.Confirmado then
+          begin
+            // Solo listamos albaranes (los unicos navegables via Mto
+            // hoy). 'AlbaranesCompra' es el CALL_WINF en fza_winforms.
+            // BuscarTabla en inLibShowMto soporta PK compuesta con
+            // valores separados por coma.
+            if SameText(frmDocs.SeleccionadoTipo, 'Albaran') then
+              ShowMto(frmMtoPrincipal, 'AlbaranesCompra',
+                      frmDocs.SeleccionadoSerie + ',' +
+                      frmDocs.SeleccionadoNumero);
+          end;
+        finally
+          FreeAndNil(frmDocs);
+        end;
+      end;
+    end
+    else
+    begin
+      // Mostrar el error de materializacion tambien en modal de
+      // incidencias para que se vea bien aunque sea largo.
+      incidencias := TStringList.Create;
+      try
+        incidencias.Add('[MATERIALIZAR] ' + sErr);
+        frmInc := TfrmModalIncidencias.Create(Self);
+        frmInc.SetIncidencias(
+          'No se pudo materializar la sesion:', incidencias);
+        frmInc.ShowModal;
+      finally
+        FreeAndNil(incidencias);
+      end;
+    end;
+  finally
+    FreeAndNil(oListaDocs);
   end;
   LogSes('btnCrearClick FIN');
 end;
@@ -1647,6 +1690,7 @@ end;
 function TfrmMtoComprasSesiones.MaterializarSesionConTx(
                   AFrmSet: TfrmModalCrearAlbaranSesion;
                   const AUsuario: string;
+                  AListaDocs: TStringList;
                   out ASerPed, ANumPed, ASerAlb, ANumAlb, AErr: string): Boolean;
 var
   oConn      : TUniConnection;
@@ -1718,9 +1762,18 @@ begin
                                      sAlm, not bPrimera) then
             raise Exception.Create(AErr);
           bPrimera := False;
-          // Conservamos el primer resultado para el mensaje al usuario.
+          // Conservamos el primer resultado para retro-compat (callers
+          // que solo miran ASerAlb / ANumAlb). La lista completa va en
+          // AListaDocs.
           if ASerAlb = '' then begin ASerAlb := sSerAlbTmp; ANumAlb := sNumAlbTmp; end;
           if ASerPed = '' then begin ASerPed := sSerPedTmp; ANumPed := sNumPedTmp; end;
+          // Solo acumulamos albaranes en la lista: son los unicos
+          // navegables via ShowMto ('AlbaranesCompra'). Pedidos de
+          // compra se crean pero hoy no tienen Mto propio, asi que
+          // listarlos no aporta nada al usuario.
+          if Assigned(AListaDocs) and bGenAlb and (sSerAlbTmp <> '') then
+            AListaDocs.Add(Format('Albaran|%s|%s|%s',
+                                  [sSerAlbTmp, sNumAlbTmp, sAlm]));
           oQry.Next;
         end;
       finally
@@ -1733,6 +1786,12 @@ begin
                                  AFrmSet.SerieAlb, AFrmSet.SeriePed,
                                  ASerPed, ANumPed, ASerAlb, ANumAlb, AErr) then
         raise Exception.Create(AErr);
+      if Assigned(AListaDocs) and bGenAlb and (ASerAlb <> '') then
+      begin
+        sAlm := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+        AListaDocs.Add(Format('Albaran|%s|%s|%s',
+                              [ASerAlb, ANumAlb, sAlm]));
+      end;
     end;
     if bTxOwned then oConn.Commit;
     Result := True;
