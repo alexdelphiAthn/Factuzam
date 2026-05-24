@@ -802,11 +802,30 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
     end
   end
   object dlgFoto: TOpenDialog
-    Filter = 
+    Filter =
       'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|*.png;*.jpg;*.' +
       'jpeg;*.webp;*.avif;*.bmp'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Left = 920
     Top = 8
+  end
+  object alNavegacion: TActionList
+    Left = 1000
+    Top = 8
+    object actIrArticulos: TAction
+      Caption = 'Ir a Art'#237'culos'
+      ShortCut = 16449
+      OnExecute = actIrArticulosExecute
+    end
+    object actIrAlbaranesCompra: TAction
+      Caption = 'Ir a Albaranes de Compra'
+      ShortCut = 24641
+      OnExecute = actIrAlbaranesCompraExecute
+    end
+    object actIrPedidosCompra: TAction
+      Caption = 'Ir a Pedidos de Compra'
+      ShortCut = 24656
+      OnExecute = actIrPedidosCompraExecute
+    end
   end
 end

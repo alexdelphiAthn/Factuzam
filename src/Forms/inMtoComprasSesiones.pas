@@ -186,6 +186,17 @@ type
     dbcDocUsuario: TcxGridDBColumn;
 
     // ------------------------------------------------------------------
+    // Navegacion rapida via TActionList. Los shortcuts SOLO disparan
+    // cuando este form esta activo (cxTabSheet enfocada), asi evitamos
+    // que un KeyDown se filtre a otra instancia abierta. Patron
+    // recomendado en VCL frente a Form.OnKeyDown global.
+    // ------------------------------------------------------------------
+    alNavegacion         : TActionList;
+    actIrArticulos       : TAction;
+    actIrAlbaranesCompra : TAction;
+    actIrPedidosCompra   : TAction;
+
+    // ------------------------------------------------------------------
     // Pestania Log (trazas de depuracion del flujo de sesion)
     // ------------------------------------------------------------------
     tsLog        : TcxTabSheet;
@@ -211,6 +222,9 @@ type
     procedure btnLogCopyClick(Sender: TObject);
     procedure btnIrADocClick(Sender: TObject);
     procedure tvDocsDblClick(Sender: TObject);
+    procedure actIrArticulosExecute(Sender: TObject);
+    procedure actIrAlbaranesCompraExecute(Sender: TObject);
+    procedure actIrPedidosCompraExecute(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
@@ -541,6 +555,29 @@ end;
 procedure TfrmMtoComprasSesiones.tvDocsDblClick(Sender: TObject);
 begin
   btnIrADocClick(Sender);
+end;
+
+procedure TfrmMtoComprasSesiones.actIrArticulosExecute(Sender: TObject);
+begin
+  // ShortCut Ctrl+A. El TActionList scope a este form garantiza que el
+  // shortcut solo se procesa cuando esta pestania esta activa; otras
+  // instancias o Mtos abiertos no reciben el evento.
+  ShowMto(frmMtoPrincipal, 'Articulos');
+end;
+
+procedure TfrmMtoComprasSesiones.actIrAlbaranesCompraExecute(Sender: TObject);
+begin
+  // ShortCut Ctrl+Shift+A.
+  ShowMto(frmMtoPrincipal, 'AlbaranesCompra');
+end;
+
+procedure TfrmMtoComprasSesiones.actIrPedidosCompraExecute(Sender: TObject);
+begin
+  // ShortCut Ctrl+Shift+P. Hoy no hay Mto de pedidos de compra (no esta
+  // en fza_winforms). Reservamos la action y avisamos al usuario; el
+  // dia que se cree el Mto basta cambiar la implementacion a ShowMto.
+  ShowMessage('El mantenimiento de Pedidos de compra todavia no esta ' +
+              'disponible.');
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
