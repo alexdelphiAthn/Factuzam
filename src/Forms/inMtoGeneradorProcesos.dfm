@@ -4,6 +4,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
   Caption = 'Generador de Procesos'
   ClientHeight = 571
   ClientWidth = 999
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 999
   ExplicitHeight = 571
   TextHeight = 19
@@ -11,6 +12,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     Width = 859
     Height = 571
     TabOrder = 0
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 859
     ExplicitHeight = 571
     inherited pcPantalla: TcxPageControl
@@ -165,6 +167,10 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
               Caption = '&1_C'#243'digo SQL'
               ImageIndex = 0
               OnShow = tsSQLShow
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlInferior: TPanel
                 Left = 0
                 Top = 259
@@ -912,6 +918,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlTopFicha
+          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -919,6 +926,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         ExplicitHeight = 500
         inherited pnlPerfilTop: TPanel
           Width = 855
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 855
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
@@ -927,6 +935,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
         inherited pnlPerfilDetail: TPanel
           Width = 855
           Height = 443
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 855
           ExplicitHeight = 443
           inherited cxgrdPerfil: TcxGrid
@@ -984,9 +993,11 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     inherited pnlTopPage: TPanel
       Width = 859
       TabOrder = 0
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 859
       inherited pnlTopGrid: TPanel
         Width = 859
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 859
         inherited edtBusqGlobal: TcxTextEdit
           ExplicitHeight = 27
@@ -1002,11 +1013,22 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
     Left = 859
     Height = 571
     TabOrder = 1
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 859
     ExplicitHeight = 571
     inherited pButtonGen: TPanel
       Top = 373
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 373
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
     end
     object btnEjecutar: TcxButton
       Left = 1

@@ -690,7 +690,7 @@
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
-            <Deployment Version="4">
+            <Deployment Version="5">
                 <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>
                 <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="$(crossvcl)\Redist\crossvcl.icns"/>
@@ -698,76 +698,20 @@
                 <DeployFile LocalName="$(crossvcl)\Redist\libcrossvcl64.dylib"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
-                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile">
-                    <Platform Name="Win64">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
+                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
                 <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>fzam.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win64">
-                        <RemoteName>fzam.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput">
-                    <Platform Name="Win64">
-                        <RemoteName>fzam.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Debug" Class="UWP_DelphiLogo150">
-                    <Platform Name="Win32">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo150x150.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150">
-                    <Platform Name="Win32">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo150x150.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150">
-                    <Platform Name="Win64">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo150x150.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Debug" Class="UWP_DelphiLogo44">
-                    <Platform Name="Win32">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo44x44.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44">
-                    <Platform Name="Win32">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo44x44.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44">
-                    <Platform Name="Win64">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo44x44.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
+                <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
+                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>
+                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150"/>
+                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150"/>
+                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>
+                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44"/>
+                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="payment_48_48.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="payment_tax_invoice_document_calculator_icon_188684.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>
                 <DeployClass Name="AdditionalDebugSymbols">
@@ -782,16 +726,6 @@
                         <Operation>0</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="AndroidClasses">
-                    <Platform Name="Android">
-                        <RemoteDir>classes</RemoteDir>
-                        <Operation>64</Operation>
-                    </Platform>
-                    <Platform Name="Android64">
-                        <RemoteDir>classes</RemoteDir>
-                        <Operation>64</Operation>
-                    </Platform>
-                </DeployClass>
                 <DeployClass Name="AndroidFileProvider">
                     <Platform Name="Android">
                         <RemoteDir>res\xml</RemoteDir>
@@ -799,12 +733,6 @@
                     </Platform>
                     <Platform Name="Android64">
                         <RemoteDir>res\xml</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                </DeployClass>
-                <DeployClass Name="AndroidGDBServer">
-                    <Platform Name="Android">
-                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -1438,6 +1366,9 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win64x">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>

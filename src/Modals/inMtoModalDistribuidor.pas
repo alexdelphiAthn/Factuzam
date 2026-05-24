@@ -34,7 +34,9 @@ uses
   cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxStyles,
   dxSkinsCore, dxSkinBlue,
-  inMtoFrmBase, inLibGridTallasInline;
+  inMtoFrmBase, inLibGridTallasInline, cxCustomData, cxFilter, cxData,
+  cxDataStorage, cxNavigator, dxDateRanges, dxScrollbarAnnotations,
+  JvComponentBase, JvEnterTab;
 
 type
   TfrmModalDistribuidor = class(TfrmBase)
