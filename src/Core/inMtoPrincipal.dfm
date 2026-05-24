@@ -9,7 +9,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
-  OnResize = FormResize
   OnShow = FormShow
   ExplicitLeft = 3
   ExplicitTop = 3
