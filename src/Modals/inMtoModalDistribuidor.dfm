@@ -82,8 +82,8 @@ inherited frmModalDistribuidor: TfrmModalDistribuidor
         TabOrder = 0
         object tvCuadr: TcxGridDBTableView
           DataController.DataSource = dsCuadr
-          OptionsBehavior.AlwaysShowEditor = True
           OptionsBehavior.FocusCellOnTab = True
+          OptionsBehavior.ImmediateEditor = True
           OptionsCustomize.ColumnHiding = True
           OptionsData.Deleting = False
           OptionsData.DeletingConfirmation = False
