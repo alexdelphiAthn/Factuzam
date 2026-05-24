@@ -73,6 +73,13 @@ LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_ALBC`
 -- fza_atributos_sku (atributo con ID_VA_AV='TAL'). El color se obtiene del
 -- mismo modo (atributo con ID_VA_AV='CO' -> CODIGO_ATB/NOMBRE_ATB del
 -- atributo basico, o fallback al segundo segmento del SKU).
+-- IMPORTANTE: el color forma parte de la clave de agrupacion. Sin el, las
+-- lineas de varios colores del mismo articulo + sistema de tallas se
+-- colapsaban en una unica fila y los SUM por talla sumaban todas las
+-- cantidades juntas (impresion horizontal mostraba 1 fila con la suma de
+-- los 4 colores). El GROUP BY incluye CODIGO_ATB_COLOR + NOMBRE_COLOR
+-- (color via atributo basico) y el segmento medio del SKU (fallback para
+-- SKUs sin atributo CO).
 CREATE OR REPLACE VIEW `vi_albaranes_compra_lin_print` AS
 WITH `pos_acd` AS (
   SELECT
@@ -156,7 +163,9 @@ LEFT JOIN `sku_color` sc
 GROUP BY
   L.`SERIE_ALBC_ALBCLIN`, L.`NUMERO_ALBC_ALBCLIN`,
   L.`CODIGO_ART_ALBCLIN`,
-  L.`ID_AC_PIVOT_ALBCLIN`, ac.`NOMBRE_AC`, ac.`NOMBRE_CORTO_AC`;
+  L.`ID_AC_PIVOT_ALBCLIN`, ac.`NOMBRE_AC`, ac.`NOMBRE_CORTO_AC`,
+  sc.`CODIGO_ATB_COLOR`, sc.`NOMBRE_COLOR`,
+  SUBSTRING_INDEX(SUBSTRING_INDEX(L.`CODIGO_UNIDAD_ALBCLIN`, '/', 2), '/', -1);
 
 -- ---------------------------------------------------------------------------
 -- 3. Guias de tallas (mismas que en sesiones — depende solo de conjuntos)
