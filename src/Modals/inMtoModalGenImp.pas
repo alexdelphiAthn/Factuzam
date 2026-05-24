@@ -132,7 +132,8 @@ implementation
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam,
   System.Generics.Collections, System.Rtti, inLibFotos,
-  inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog;
+  inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog,
+  inLibInformesGuiasCache;
 
 {$R *.dfm}
 
@@ -248,10 +249,12 @@ var
   dsMaster: TfrxDBDataset;
   oDS: TDataSet;
   uniMaster, qryColsExt, qryTmp: TUniQuery;
-  i, k, nPares, iSuf: Integer;
+  i, k, nPares, iSuf, iGuia: Integer;
   sSqlActual, sSqlNuevo, sCol, sAlias, sOn, sSelectExt: string;
   setCamposMaster: TStringList;
   arrMaster, arrDetail: TArray<string>;
+  arrGuias: TArray<TInformeGuiaItem>;
+  sFormatoBuscado: string;
 begin
   // Asegurar listas internas. CerrarGuiasRuntime tambien las gestiona.
   if FGuiasRuntime = nil then
@@ -260,26 +263,22 @@ begin
     CerrarGuiasRuntime;
   if FSqlOriginales = nil then
     FSqlOriginales := TStringList.Create;
-
   // El parametro aSoloUsadasEnReport queda como referencia historica:
   // ahora cada guia enriquece el SQL del TUniQuery del master con un
   // LEFT JOIN, asi que los campos extra son nativos del master en el
   // .frx (`[<UserName>."CAMPO"]`) y no hay datasets paralelos que
   // filtrar.
-
-  unqryInformesGuias.Close;
-  unqryInformesGuias.ParamByName('INF').AsString := Self.Name;
-  if (sElegido = '') or SameText(sElegido, 'Predeterminado') then
-    unqryInformesGuias.ParamByName('FMT').AsString := ''
-  else
-    unqryInformesGuias.ParamByName('FMT').AsString := sElegido;
-  unqryInformesGuias.Open;
-  if unqryInformesGuias.IsEmpty then
-  begin
-    unqryInformesGuias.Close;
+  // Las guias se sirven del cache en memoria precargado al login
+  // (oInfGuiasCache.Precargar). Asi no se vuelve a BBDD en cada click.
+  if (oInfGuiasCache = nil) or (not oInfGuiasCache.Cargada) then
     Exit;
-  end;
-
+  if (sElegido = '') or SameText(sElegido, 'Predeterminado') then
+    sFormatoBuscado := ''
+  else
+    sFormatoBuscado := sElegido;
+  arrGuias := oInfGuiasCache.Obtener(Self.Name, sFormatoBuscado);
+  if Length(arrGuias) = 0 then
+    Exit;
   qryColsExt := TUniQuery.Create(nil);
   try
     qryColsExt.Connection := oConn;
@@ -287,18 +286,12 @@ begin
       'select COLUMN_NAME from information_schema.COLUMNS ' +
       ' where TABLE_SCHEMA = database() and TABLE_NAME = :TAB ' +
       ' order by ORDINAL_POSITION';
-
-    unqryInformesGuias.First;
-    while not unqryInformesGuias.Eof do
+    for iGuia := 0 to High(arrGuias) do
     begin
-      sDatasetMaster := unqryInformesGuias.FieldByName(
-                                       'DATASET_MASTER_INFGUI').AsString;
-      sTabla         := unqryInformesGuias.FieldByName(
-                                       'TABLA_INFGUI').AsString;
-      sMaster        := unqryInformesGuias.FieldByName(
-                                       'MASTER_FIELDS_INFGUI').AsString;
-      sDetail        := unqryInformesGuias.FieldByName(
-                                       'DETAIL_FIELDS_INFGUI').AsString;
+      sDatasetMaster := arrGuias[iGuia].DatasetMaster;
+      sTabla         := arrGuias[iGuia].Tabla;
+      sMaster        := arrGuias[iGuia].MasterFields;
+      sDetail        := arrGuias[iGuia].DetailFields;
       try
         // 1) Localizar el TfrxDBDataset por UserName y resolver
         //    TDataSet (DataSet directo o via DataSource).
@@ -316,7 +309,6 @@ begin
           inLibLog.Log.LogWarning(Format(
             'Guia ignorada: master "%s" no esta en el report de %s',
             [sDatasetMaster, Self.Name]));
-          unqryInformesGuias.Next;
           Continue;
         end;
         oDS := dsMaster.DataSet;
@@ -328,7 +320,6 @@ begin
         begin
           inLibLog.Log.LogWarning(Format(
             'Guia ignorada: master %s no es TUniQuery', [sDatasetMaster]));
-          unqryInformesGuias.Next;
           Continue;
         end;
         uniMaster := TUniQuery(oDS);
@@ -349,10 +340,7 @@ begin
           sSqlActual := TrimRight(sSqlActual);
         end;
         if sSqlActual = '' then
-        begin
-          unqryInformesGuias.Next;
           Continue;
-        end;
 
         // 3) Inferir los campos ACTUALES del master (envoltorio
         //    WHERE 1=0 con parametros copiados del original).
@@ -415,10 +403,7 @@ begin
                           arrMaster[k];
           end;
           if (sOn = '') or (sSelectExt = '') then
-          begin
-            unqryInformesGuias.Next;
             Continue;
-          end;
 
           // 6) Componer SQL enriquecido y aplicarlo. Los parametros se
           //    mantienen porque solo cambia SQL.Text.
@@ -481,12 +466,10 @@ begin
             Format('Guia (%s -> %s) fallo: %s',
                    [sDatasetMaster, sTabla, E.Message]));
       end;
-      unqryInformesGuias.Next;
     end;
   finally
     FreeAndNil(qryColsExt);
   end;
-  unqryInformesGuias.Close;
 end;
 
 procedure TfrmPrint.CerrarGuiasRuntime;
@@ -632,6 +615,10 @@ begin
     FreeAndNil(qryChk);
     FreeAndNil(qrySrc);
   end;
+  // Si ConsolidarGuiasParaFormato inserto nuevas filas en fza_informes_guias,
+  // refrescamos el cache para que el proximo AbrirGuiasRuntime las vea.
+  if oInfGuiasCache <> nil then
+    oInfGuiasCache.Precargar;
 end;
 
 procedure TfrmPrint.EditarGuiasParaFormato(const aFormato: string;
@@ -651,6 +638,10 @@ begin
       oForm.sFormatoSugerido := aFormato;
     oForm.FReport := aReport;
     oForm.ShowModal;
+    // El usuario pudo dar de alta / modificar / borrar guias en el modal:
+    // refrescamos el cache para que el proximo Imprimir / PDF lo vea.
+    if oInfGuiasCache <> nil then
+      oInfGuiasCache.Precargar;
   finally
     FreeAndNil(oForm);
   end;
@@ -710,6 +701,9 @@ begin
       oWiz.sInforme := Self.Name;
       oWiz.FReport  := frxrprt1;
       oWiz.ShowModal;
+      // El wizard puede haber dado de alta / editado guias: refresco cache.
+      if oInfGuiasCache <> nil then
+        oInfGuiasCache.Precargar;
       if oWiz.sFicha = 'S' then
       begin
         sElegido           := oWiz.sFormato;

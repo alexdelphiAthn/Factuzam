@@ -18,7 +18,8 @@ interface
 
 uses Uni,
      UniDataPerfiles,
-     UniDataConn,cxMemo, inMtoPrincipal;
+     UniDataConn,cxMemo, inMtoPrincipal,
+     inLibInformesGuiasCache;
 //type
 // TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of
 // object;
@@ -32,9 +33,10 @@ type
   TLogSesionProc = procedure(const S: string) of object;
 
 var
-  odmPerfiles:TdmPerfiles;
-  oConn      :TUniConnection;
-  odmConn    :TdmConn;
+  odmPerfiles    :TdmPerfiles;
+  oInfGuiasCache :TInformesGuiasCache;
+  oConn          :TUniConnection;
+  odmConn        :TdmConn;
   oMemoSQL   :TcxMemo;
   ofrmMto2   :TfrmMtoPrincipal;
   oNomImpresoraCaja:String;
@@ -63,12 +65,13 @@ end;
 
 initialization
   oAppName         := 'Fzam';
-  oVersion         := '1.0.15.202605240250.alpha';
+  oVersion         := '1.0.15.202605240260.alpha';
   oUser            := 'No definido';
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
   orootGroup       := 'N';
   odmPerfiles      := nil;
+  oInfGuiasCache   := nil;
   odmConn          := nil;
   oConn            := nil;
   oAll             := 'Todos';

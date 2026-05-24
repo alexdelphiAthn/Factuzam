@@ -231,6 +231,7 @@ uses inLibUser,
   inLibShowMto,
   inLibtb,
   inLibGlobalVar,
+  inLibInformesGuiasCache,
   inLibLog,
   inLibDir,
   inMtoSplash,
@@ -404,6 +405,11 @@ begin
   inLibLog.Log.LogInfo(Format('Arranque: pre-PrecargarPerfilesUsuario ' +
                               'oUser="%s" oGroup="%s"', [oUser, oGroup]));
   odmPerfiles.PrecargarPerfilesUsuario;
+  inLibLog.Log.LogInfo('Arranque: pre-PrecargarInformesGuias');
+  // Precarga en memoria de fza_informes_guias para que AbrirGuiasRuntime
+  // en los TfrmPrint no vaya a BBDD en cada click (mataba 8 s por print).
+  oInfGuiasCache := TInformesGuiasCache.Create;
+  oInfGuiasCache.Precargar;
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');

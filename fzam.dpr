@@ -33,6 +33,7 @@ uses
   inLibScriptDB in 'src\Lib\inLibScriptDB.pas',
   inLibIBAN in 'src\Lib\inLibIBAN.pas',
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
+  inLibInformesGuiasCache in 'src\Lib\inLibInformesGuiasCache.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
