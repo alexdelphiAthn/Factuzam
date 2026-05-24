@@ -294,25 +294,23 @@ begin
   // Values[] directamente cogemos el valor REAL aunque el cds aun lo
   // tenga a 0. Esto fue la causa raiz del bug 'el distribuidor no
   // consolida cambios'.
+  // Resolvemos los Index de columnas via GetColumnByFieldName (mas
+  // fiable que iterar Items y castear). El Index devuelto es el que
+  // espera DataController.Values[recIdx, colIdx].
   iColCod := -1;
+  if tvCuadr.GetColumnByFieldName('CODIGO_ALM') <> nil then
+    iColCod := tvCuadr.GetColumnByFieldName('CODIGO_ALM').Index;
   SetLength(iColT, Length(FPosiciones));
-  // En cxGrid el DataBinding.FieldName vive en TcxGridDBColumn, no en
-  // el TcxCustomGridTableItem base; cast obligatorio.
-  for i := 0 to tvCuadr.ItemCount - 1 do
-    if (tvCuadr.Items[i] is TcxGridDBColumn) and
-       SameText(TcxGridDBColumn(tvCuadr.Items[i]).DataBinding.FieldName,
-                'CODIGO_ALM') then
-      iColCod := tvCuadr.Items[i].Index;
   for i := 0 to High(FPosiciones) do
   begin
     iColT[i] := -1;
     sKey := Format('T%.2d', [i + 1]);
-    for iRec := 0 to tvCuadr.ItemCount - 1 do
-      if (tvCuadr.Items[iRec] is TcxGridDBColumn) and
-         SameText(TcxGridDBColumn(tvCuadr.Items[iRec]).DataBinding.FieldName,
-                  sKey) then
-        iColT[i] := tvCuadr.Items[iRec].Index;
+    if tvCuadr.GetColumnByFieldName(sKey) <> nil then
+      iColT[i] := tvCuadr.GetColumnByFieldName(sKey).Index;
   end;
+  LogSes(Format('PersistirCambios: iColCod=%d, records=%d, posiciones=%d',
+                [iColCod, tvCuadr.DataController.RecordCount,
+                 Length(FPosiciones)]));
   if iColCod < 0 then Exit;
   oQry := TUniQuery.Create(nil);
   try
