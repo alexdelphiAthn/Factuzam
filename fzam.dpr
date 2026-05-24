@@ -225,6 +225,7 @@ uses
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones};
 
 {$R *.res}
+{$R fondo.res}
 
 var
   frmLogon: TfrmLogon;
