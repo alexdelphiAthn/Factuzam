@@ -23,7 +23,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, SynEditHighlighter,
   SynHighlighterSQL,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
-  cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls,
+  cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, cxLabel,
   Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
   UniDataPerfiles, cxLocalization, Vcl.Buttons, inLibUnitForm, JvMenus,
   System.UITypes, DAScript, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
@@ -222,7 +222,16 @@ type
     // del FormCreate, respetando un suelo minimo de visibilidad.
     FSplashInicio:    TObject;
     FSplashTimestamp: TDateTime;
+    // Logo de fondo + nombre + version creados dinamicamente sobre Panel1.
+    // Replica visual del splash; visibles cuando no hay pestañas abiertas
+    // y ocultos en cuanto se abre cualquier mantenimiento.
+    FLogoBgImage:   TObject;
+    FLogoBgNombre:  TObject;
+    FLogoBgVersion: TObject;
     procedure CerrarSplashInicio(aMinimoMs: Integer);
+    procedure CrearLogoFondoBg;
+    procedure CentrarLogoFondoBg;
+    procedure FormResize(Sender: TObject);
   end;
 
 var
@@ -451,12 +460,124 @@ begin
   AplicarTema;
   CargarFondoLogo;
   imgFondoLogo.BringToFront;
+  // Logo de fondo via TImage + labels dinamicos (replica del splash).
+  // El imgFondoLogo del .dfm no termina de pintar por culpa del wrapper
+  // TdxSmartImage que VCL no deserializa, asi que servimos la imagen
+  // desde controles creados aqui.
+  CrearLogoFondoBg;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
   // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
   // de 1000 ms, esperamos a llegar a ese minimo para que el usuario
   // pueda leer la marca; si tardo mas, lo cerramos sin demora.
   CerrarSplashInicio(1000);
+end;
+
+procedure TfrmMtoPrincipal.CrearLogoFondoBg;
+const
+  CRutas: array[0..3] of string = (
+    'fondo.png',
+    '..\..\fondo.png',
+    'logo_art\icon-256.png',
+    '..\..\logo_art\icon-256.png'
+  );
+var
+  sBase, sRuta: string;
+  i: Integer;
+  bCargado: Boolean;
+  oImg:     TImage;
+  oNombre:  TcxLabel;
+  oVer:     TcxLabel;
+begin
+  FLogoBgImage   := nil;
+  FLogoBgNombre  := nil;
+  FLogoBgVersion := nil;
+  oImg := TImage.Create(Self);
+  oImg.Parent := Panel1;
+  oImg.Proportional := True;
+  oImg.Stretch      := True;
+  oImg.Center       := True;
+  oImg.Transparent  := True;
+  oImg.Visible      := False;
+  sBase := inLibDir.DirApp;
+  bCargado := False;
+  for i := 0 to High(CRutas) do
+  begin
+    sRuta := sBase + CRutas[i];
+    if FileExists(sRuta) then
+    try
+      oImg.Picture.LoadFromFile(sRuta);
+      bCargado := True;
+      Break;
+    except
+      on E: Exception do
+        inLibLog.Log.LogWarning('Logo fondo: no se pudo cargar ' + sRuta +
+                                ': ' + E.Message);
+    end;
+  end;
+  if not bCargado then
+  begin
+    FreeAndNil(oImg);
+    inLibLog.Log.LogWarning('Logo fondo: no se encontro fondo.png');
+    Exit;
+  end;
+  FLogoBgImage := oImg;
+  // Nombre del autor centrado bajo el logo.
+  oNombre := TcxLabel.Create(Self);
+  oNombre.Parent  := Panel1;
+  oNombre.Caption := 'Alejandro Laorden Hidalgo';
+  oNombre.AutoSize := False;
+  oNombre.Style.Font.Name   := 'Lucida Sans';
+  oNombre.Style.Font.Height := -20;
+  oNombre.Style.Font.Style  := [fsBold];
+  oNombre.Properties.Alignment.Horz := taCenter;
+  oNombre.Transparent := True;
+  oNombre.Visible     := False;
+  FLogoBgNombre := oNombre;
+  // Version dinamica.
+  oVer := TcxLabel.Create(Self);
+  oVer.Parent  := Panel1;
+  oVer.Caption := 'Versión ' + oVersion;
+  oVer.AutoSize := False;
+  oVer.Style.Font.Name   := 'Lucida Sans';
+  oVer.Style.Font.Height := -14;
+  oVer.Properties.Alignment.Horz := taCenter;
+  oVer.Transparent := True;
+  oVer.Visible     := False;
+  FLogoBgVersion := oVer;
+  CentrarLogoFondoBg;
+end;
+
+procedure TfrmMtoPrincipal.CentrarLogoFondoBg;
+var
+  cw, ch, w, h, cx, cy: Integer;
+begin
+  if FLogoBgImage = nil then
+    Exit;
+  cw := Panel1.ClientWidth;
+  ch := Panel1.ClientHeight;
+  // Logo ocupa hasta el 50% del ancho, manteniendo aspect 4:1 de fondo.png
+  // (520x130). Maximo 600 de ancho para que no se vea descomunal en
+  // monitores 4K.
+  w := cw div 2;
+  if w > 600 then w := 600;
+  if w < 240 then w := 240;
+  h := Round(w * 130 / 520);
+  cx := (cw - w) div 2;
+  // Posicion vertical: tercio superior (no centro absoluto) para dejar
+  // sitio a las dos lineas de texto debajo sin saturar el medio.
+  cy := (ch - h - 80) div 2;
+  if cy < 20 then cy := 20;
+  TImage(FLogoBgImage).SetBounds(cx, cy, w, h);
+  if FLogoBgNombre <> nil then
+    TcxLabel(FLogoBgNombre).SetBounds(0, cy + h + 8, cw, 26);
+  if FLogoBgVersion <> nil then
+    TcxLabel(FLogoBgVersion).SetBounds(0, cy + h + 38, cw, 20);
+end;
+
+procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
+begin
+  CentrarLogoFondoBg;
 end;
 
 procedure TfrmMtoPrincipal.CerrarSplashInicio(aMinimoMs: Integer);
@@ -525,17 +646,36 @@ end;
 
 procedure TfrmMtoPrincipal.ActualizarFondoLogo;
 var
-  bDebeVerse, bTieneImg: Boolean;
+  bDebeVerse: Boolean;
 begin
-  bTieneImg  := imgFondoLogo.Picture.Graphic <> nil;
-  bDebeVerse := (pcPrincipal.PageCount = 0) and bTieneImg;
-  inLibLog.Log.LogInfo(Format(
-    'ActualizarFondoLogo: PageCount=%d TieneImg=%s ' +
-    'DebeVerse=%s VisibleActual=%s',
-    [pcPrincipal.PageCount, BoolToStr(bTieneImg, True),
-     BoolToStr(bDebeVerse, True), BoolToStr(imgFondoLogo.Visible, True)]));
-  if (imgFondoLogo.Visible <> bDebeVerse) then
-    imgFondoLogo.Visible := bDebeVerse;
+  // El imgFondoLogo del .dfm tiene Picture.Data envuelto en TdxSmartImage
+  // que VCL no deserializa, y aunque LoadFromFile lo carga el control no
+  // se llega a pintar. Lo dejamos oculto definitivamente y servimos el
+  // logo de fondo via FLogoBg* (image + labels) creados en runtime.
+  if imgFondoLogo.Visible then
+    imgFondoLogo.Visible := False;
+  bDebeVerse := (pcPrincipal.PageCount = 0) and (FLogoBgImage <> nil);
+  if FLogoBgImage <> nil then
+  begin
+    if TImage(FLogoBgImage).Visible <> bDebeVerse then
+      TImage(FLogoBgImage).Visible := bDebeVerse;
+    if bDebeVerse then
+      TImage(FLogoBgImage).BringToFront;
+  end;
+  if FLogoBgNombre <> nil then
+  begin
+    if TcxLabel(FLogoBgNombre).Visible <> bDebeVerse then
+      TcxLabel(FLogoBgNombre).Visible := bDebeVerse;
+    if bDebeVerse then
+      TcxLabel(FLogoBgNombre).BringToFront;
+  end;
+  if FLogoBgVersion <> nil then
+  begin
+    if TcxLabel(FLogoBgVersion).Visible <> bDebeVerse then
+      TcxLabel(FLogoBgVersion).Visible := bDebeVerse;
+    if bDebeVerse then
+      TcxLabel(FLogoBgVersion).BringToFront;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
