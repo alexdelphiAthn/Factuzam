@@ -308,9 +308,14 @@ begin
     if tvCuadr.GetColumnByFieldName(sKey) <> nil then
       iColT[i] := tvCuadr.GetColumnByFieldName(sKey).Index;
   end;
-  LogSes(Format('PersistirCambios: iColCod=%d, records=%d, posiciones=%d',
-                [iColCod, tvCuadr.DataController.RecordCount,
-                 Length(FPosiciones)]));
+  // DIAGNOSTICO (quitar cuando se confirme que se persiste). Si:
+  //   iColCod=-1 -> lookup de columna fallo (CreateColumn no aplico el FieldName)
+  //   records=0  -> el cds esta vacio (PoblarFilas no anadio almacenes)
+  //   val[0,T01]=0 -> el cxGrid no commitea valores al DataController
+  ShowMessage(Format(
+    'PersistirCambios DIAG'#13#10 +
+    'iColCod=%d records=%d posiciones=%d',
+    [iColCod, tvCuadr.DataController.RecordCount, Length(FPosiciones)]));
   if iColCod < 0 then Exit;
   oQry := TUniQuery.Create(nil);
   try
