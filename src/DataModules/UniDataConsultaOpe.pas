@@ -66,6 +66,13 @@ type
     procedure DataModuleCreate(Sender: TObject);
   private
     FCargando: Boolean;
+    // Clave (Emp|Alm|Caja|NumOp) de la ultima operacion para la que se
+    // refrescaron las pestanas hijas. Si una nueva llamada a
+    // RefrescarPestanasHijas trae la misma clave, salimos sin tocar BBDD:
+    // el grid suele disparar OnDataChange varias veces por la misma fila
+    // (al abrir el form, al aplicar el layout, al cambiar visibilidad de
+    // pestanas, etc.) y antes recargabamos 3-4 veces lo mismo.
+    FUltimaClaveHijas: string;
   public
     procedure CargarMaestro(AFecha:     TDate;
                             const AEmp,
@@ -90,7 +97,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibGlobalVar;
+uses inLibGlobalVar, inLibLog;
 
 {$R *.dfm}
 
@@ -385,23 +392,32 @@ end;
 
 procedure TdmConsultaOpe.RefrescarPestanasHijas;
 var
-  sEmp, sAlm, sCaja, sNumOp, sCli, sSerie, sNroFac: string;
+  sEmp, sAlm, sCaja, sNumOp, sCli, sSerie, sNroFac, sClave: string;
 begin
   if FCargando then
-    Exit;
-  if qryMaestro.IsEmpty then
   begin
-    qryOperacion.Close;
-    qryPagos.Close;
-    qryVales.Close;
-    qryMovimientos.Close;
-    qryCliente.Close;
-    qryDepositos.Close;
-    qryFactura.Close;
-    qryFacturaLin.Close;
+    Log.LogInfo('RefrescarPestanasHijas: BLOQUEADA por FCargando=True');
     Exit;
   end;
-
+  if qryMaestro.IsEmpty then
+  begin
+    if FUltimaClaveHijas <> '' then
+    begin
+      Log.LogInfo('RefrescarPestanasHijas: maestro vacio, cerrando hijas');
+      qryOperacion.Close;
+      qryPagos.Close;
+      qryVales.Close;
+      qryMovimientos.Close;
+      qryCliente.Close;
+      qryDepositos.Close;
+      qryFactura.Close;
+      qryFacturaLin.Close;
+      FUltimaClaveHijas := '';
+    end
+    else
+      Log.LogInfo('RefrescarPestanasHijas: maestro vacio (no-op, ya cerradas)');
+    Exit;
+  end;
   sEmp    := qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
   sAlm    := qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
   sCaja   := qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
@@ -409,7 +425,17 @@ begin
   sCli    := qryMaestro.FieldByName('CLIENTE').AsString;
   sSerie  := qryMaestro.FieldByName('SERIE_FAC').AsString;
   sNroFac := qryMaestro.FieldByName('NUMERO_FAC').AsString;
-
+  // Escudo anti-recarga redundante: si la fila activa del maestro no ha
+  // cambiado, no relanzamos las 8 queries hijas.
+  sClave := sEmp + '|' + sAlm + '|' + sCaja + '|' + sNumOp;
+  if sClave = FUltimaClaveHijas then
+  begin
+    Log.LogInfo(Format('RefrescarPestanasHijas: SKIP (misma op "%s")',
+                       [sClave]));
+    Exit;
+  end;
+  Log.LogInfo(Format('RefrescarPestanasHijas: cargando op "%s" (prev="%s")',
+                     [sClave, FUltimaClaveHijas]));
   // --- Operacion ---
   qryOperacion.Close;
   qryOperacion.ParamByName('PEMP').AsString    := sEmp;
@@ -473,6 +499,7 @@ begin
     qryFacturaLin.ParamByName('PNROFAC').AsString := sNroFac;
     AbrirSeguro(qryFacturaLin, 'Lineas de Facturas');
   end;
+  FUltimaClaveHijas := sClave;
 end;
 
 // -----------------------------------------------------------------------------
@@ -482,6 +509,9 @@ procedure TdmConsultaOpe.CargarMaestro(AFecha:     TDate;
                                              ACaja,
                                              ATextoLibre: string);
 begin
+  Log.LogInfo(Format('CargarMaestro: fecha=%s emp="%s" alm="%s" caja="%s" ' +
+                     'txt="%s"',
+                     [DateToStr(AFecha), AEmp, AAlm, ACaja, ATextoLibre]));
   // Cerramos todas las queries hijas primero para que OnDataChange no
   // dispare mientras recargamos el maestro.
   FCargando := True;
@@ -501,6 +531,10 @@ begin
     qryMaestro.ParamByName('PCAJA').AsString   := ACaja;
     qryMaestro.ParamByName('PTXT').AsString    := ATextoLibre;
     qryMaestro.Open;
+    // Reset del cache de clave: forzamos que la siguiente
+    // RefrescarPestanasHijas SI recargue (puede ser la misma op pero con
+    // datos del maestro recien releidos).
+    FUltimaClaveHijas := '';
   finally
     FCargando := False;
   end;
