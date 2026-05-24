@@ -1848,23 +1848,26 @@ begin
     oForm.ShowModal;
     if oForm.Confirmado then
     begin
-      // Refrescar el grid principal: cantidades por talla (gestor lee
-      // celdas SUMando por pivot, sin filtro por almacen) y totales de
-      // la linea (TOTAL_UNIDADES_SESLIN / TOTAL_LINEA_SESLIN). Sin la
-      // segunda llamada las columnas 'Uds' y 'Total' se quedan a 0
-      // hasta una edicion manual de la linea.
+      // ORDEN CRITICO. El Refresh del dataset resetea el DataController
+      // del cxGrid y borra los Values[] de las columnas no-bound (las
+      // tallas), asi que CargarCantidadesTodasLineas TIENE que ir
+      // DESPUES del Refresh. Si va antes (como estaba), las celdas talla
+      // se pintan y luego el Refresh las deja en blanco.
+      //   1) RefrescarTotalesLineaActual: Edit en memoria sobre la linea
+      //      activa, actualiza TOTAL_UNIDADES_SESLIN / TOTAL_LINEA_SESLIN.
+      //   2) Refresh: posttea el Edit (UPDATE SQL) y re-fetchea -> reset
+      //      del DataController, pierde las tallas no-bound.
+      //   3) InvalidarCache + CargarCantidadesTodasLineas: re-pinta las
+      //      tallas YA con los Values[] correctos, leyendo SUM(CANTIDAD)
+      //      desde fza_compras_sesiones_celdas.
+      if Assigned(FGestorTallas) then
+        FGestorTallas.RefrescarTotalesLineaActual;
+      Dmm.unqrySesionLin.Refresh;
       if Assigned(FGestorTallas) then
       begin
         FGestorTallas.InvalidarCache;
-        FGestorTallas.RefrescarTotalesLineaActual;
         FGestorTallas.CargarCantidadesTodasLineas;
       end;
-      // Refrescamos el dataset de lineas para que el cds vea los
-      // TOTAL_UNIDADES_SESLIN / TOTAL_LINEA_SESLIN actualizados por
-      // RefrescarTotalesLineaActual (que escribe via UPDATE SQL
-      // directo). Sin Refresh el grid principal sigue mostrando los
-      // valores antiguos de la linea recien editada.
-      Dmm.unqrySesionLin.Refresh;
     end;
   finally
     FreeAndNil(oForm);
