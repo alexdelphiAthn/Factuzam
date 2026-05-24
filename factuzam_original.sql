@@ -1,6 +1,6 @@
 ﻿-- ========================================
--- Backup generado: 23/05/2026 22:07:56
--- Base de datos: factuzam
+-- Backup generado: 24/05/2026 6:48:11
+-- Base de datos: Factuzam
 -- ========================================
 
 START TRANSACTION;
@@ -2937,7 +2937,7 @@ ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_TEMPORADA` (`ID_PV_TEMPORA
 -- Datos de fza_compras_sesiones
 INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `ESFORMATO_DISTRIBUIDO_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`, `ID_PV_TEMPORADA_SES`) VALUES
   ('A1', '000002', '2026-05-12 00:00:00', 'CERRADA', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, '2026-05-23 09:21:13', 'Administrador', 'N', 'S', 'N', '', '', 'A1', '006', NULL, 130, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-23 09:21:13', 'Administrador', 'N', 12),
-  ('A1', '000004', '2026-05-23 00:00:00', 'BORRADOR', '012', '20', 'dasdfa', NULL, 'GEN', 'EUR', 'N', 240, 'PVP', 'S', 'N', 1, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, 'N', 'N', 'S', NULL, NULL, NULL, NULL, NULL, 10, NULL, '2026-05-23 22:04:01', 'Administrador', '2026-05-23 22:05:43', 'Administrador', 'N', 12);
+  ('A1', '000004', '2026-05-23 00:00:00', 'BORRADOR', '012', '20', 'dasdfa', NULL, 'GEN', 'EUR', 'N', 240, 'PVP', 'S', 'N', 1, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, 'N', 'N', 'S', NULL, NULL, NULL, NULL, NULL, 30, NULL, '2026-05-23 22:04:01', 'Administrador', '2026-05-24 06:37:05', 'Administrador', 'N', 12);
 -- 2 registros exportados
 
 
@@ -3034,19 +3034,55 @@ INSERT INTO `fza_compras_sesiones_celdas` (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCE
   ('A1', '000003', 30, 1, 9104, '', 4, '2026-05-23 21:55:02', 'Administrador', '2026-05-23 21:55:02', 'Administrador'),
   ('A1', '000003', 30, 1, 9210, '', 2, '2026-05-23 21:55:02', 'Administrador', '2026-05-23 21:55:02', 'Administrador'),
   ('A1', '000003', 30, 1, 9212, '', 2, '2026-05-23 21:55:02', 'Administrador', '2026-05-23 21:55:02', 'Administrador'),
+  ('A1', '000004', 10, 0, 126, 'ALE', 1, '2026-05-24 06:45:42', 'Administrador', '2026-05-24 06:45:42', 'Administrador'),
   ('A1', '000004', 10, 0, 126, 'BCN', 2, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
   ('A1', '000004', 10, 0, 126, 'GEN', 2, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
+  ('A1', '000004', 10, 0, 127, 'ALE', 1, '2026-05-24 06:45:42', 'Administrador', '2026-05-24 06:45:42', 'Administrador'),
   ('A1', '000004', 10, 0, 127, 'BCN', 1, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
   ('A1', '000004', 10, 0, 127, 'GEN', 1, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
+  ('A1', '000004', 10, 0, 224, 'ALE', 1, '2026-05-24 06:45:42', 'Administrador', '2026-05-24 06:45:42', 'Administrador'),
   ('A1', '000004', 10, 0, 224, 'BCN', 2, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
   ('A1', '000004', 10, 0, 224, 'GEN', 2, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
+  ('A1', '000004', 10, 0, 225, 'ALE', 1, '2026-05-24 06:45:42', 'Administrador', '2026-05-24 06:45:42', 'Administrador'),
   ('A1', '000004', 10, 0, 225, 'BCN', 2, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
   ('A1', '000004', 10, 0, 225, 'GEN', 2, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
+  ('A1', '000004', 10, 0, 226, 'ALE', 1, '2026-05-24 06:45:42', 'Administrador', '2026-05-24 06:45:42', 'Administrador'),
   ('A1', '000004', 10, 0, 226, 'BCN', 1, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
   ('A1', '000004', 10, 0, 226, 'GEN', 1, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
+  ('A1', '000004', 10, 0, 227, 'ALE', 1, '2026-05-24 06:45:42', 'Administrador', '2026-05-24 06:45:42', 'Administrador'),
   ('A1', '000004', 10, 0, 227, 'BCN', 1, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
-  ('A1', '000004', 10, 0, 227, 'GEN', 1, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador');
--- 83 registros exportados
+  ('A1', '000004', 10, 0, 227, 'GEN', 1, '2026-05-23 22:05:38', 'Administrador', '2026-05-23 22:05:38', 'Administrador'),
+  ('A1', '000004', 20, 0, 126, 'ALE', 1, '2026-05-24 06:46:32', 'Administrador', '2026-05-24 06:46:32', 'Administrador'),
+  ('A1', '000004', 20, 0, 126, 'BCN', 2, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 126, 'GEN', 2, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 127, 'ALE', 5, '2026-05-24 06:46:32', 'Administrador', '2026-05-24 06:46:32', 'Administrador'),
+  ('A1', '000004', 20, 0, 127, 'BCN', 1, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 127, 'GEN', 1, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 224, 'ALE', 1, '2026-05-24 06:46:32', 'Administrador', '2026-05-24 06:46:32', 'Administrador'),
+  ('A1', '000004', 20, 0, 224, 'BCN', 2, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 224, 'GEN', 2, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 225, 'ALE', 1, '2026-05-24 06:46:32', 'Administrador', '2026-05-24 06:46:32', 'Administrador'),
+  ('A1', '000004', 20, 0, 225, 'BCN', 2, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 225, 'GEN', 2, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 226, 'ALE', 1, '2026-05-24 06:46:32', 'Administrador', '2026-05-24 06:46:32', 'Administrador'),
+  ('A1', '000004', 20, 0, 226, 'BCN', 1, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 226, 'GEN', 1, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 227, 'ALE', 1, '2026-05-24 06:46:32', 'Administrador', '2026-05-24 06:46:32', 'Administrador'),
+  ('A1', '000004', 20, 0, 227, 'BCN', 1, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 20, 0, 227, 'GEN', 1, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:35:43', 'Administrador'),
+  ('A1', '000004', 30, 0, 126, 'BCN', 2, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 126, 'GEN', 2, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 127, 'BCN', 1, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 127, 'GEN', 1, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 224, 'BCN', 2, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 224, 'GEN', 2, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 225, 'BCN', 2, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 225, 'GEN', 2, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 226, 'BCN', 1, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 226, 'GEN', 1, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 227, 'BCN', 1, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador'),
+  ('A1', '000004', 30, 0, 227, 'GEN', 1, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:36:36', 'Administrador');
+-- 119 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_documentos
@@ -3177,8 +3213,10 @@ INSERT INTO `fza_compras_sesiones_lineas` (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLI
   ('A1', '000002', 120, 'DEPORTIVO003', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 12, NULL, 29.99, '3232', 0, 0, '2026-05-22 19:32:02', 'Administrador', '2026-05-22 19:32:52', 'Administrador', '988', 'COLORADITO'),
   ('A1', '000003', 10, 'CALZADO00003', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 1, NULL, NULL, NULL, 'N', NULL, NULL, 13, NULL, 32.95, '334', 18, 234, '2026-05-23 20:04:28', 'Administrador', '2026-05-23 20:43:33', 'Administrador', 'PALO ROSA', 'ROSA'),
   ('A1', '000003', 30, 'CALZADO00003', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 1, NULL, NULL, NULL, 'S', 'REUSAR', 'CALZADO00003', 13, NULL, 32.95, '334', 18, 234, '2026-05-23 21:55:02', 'Administrador', '2026-05-23 21:55:22', 'Administrador', 'PALO ROSA', 'ROSA'),
-  ('A1', '000004', 10, 'CALZADO00005', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 12, NULL, 29, '2322', 18, 216, '2026-05-23 22:04:02', 'Administrador', '2026-05-23 22:05:43', 'Administrador', 'VERDE OLIVO', 'VERDE');
--- 13 registros exportados
+  ('A1', '000004', 10, 'CALZADO00005', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 12, NULL, 29, '2322', 24, 288, '2026-05-23 22:04:02', 'Administrador', '2026-05-24 06:45:44', 'Administrador', 'VERDE OLIVO', 'VERDE'),
+  ('A1', '000004', 20, 'CALZADO00005', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', 'REUSAR', 'CALZADO00005', 12, NULL, 29, '2322', 28, 336, '2026-05-24 06:35:43', 'Administrador', '2026-05-24 06:46:34', 'Administrador', 'PALO ROSA', 'ROSA'),
+  ('A1', '000004', 30, 'CALZADO00005', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', 'REUSAR', 'CALZADO00005', 12, NULL, 29, '2322', 18, 216, '2026-05-24 06:36:36', 'Administrador', '2026-05-24 06:47:30', 'Administrador', 'ROJO', 'ROJO');
+-- 15 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_lineas_filas
@@ -12226,7 +12264,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-23 22:03:16', '2026-05-23 22:03:16', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-24 06:45:00', '2026-05-24 06:45:00', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -25566,4 +25604,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 23/05/2026 22:07:57
+-- Backup completado: 24/05/2026 6:48:11
