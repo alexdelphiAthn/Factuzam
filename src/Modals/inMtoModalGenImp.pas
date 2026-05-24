@@ -93,6 +93,21 @@ type
     // para poder restaurarlo en CerrarGuiasRuntime. Asi el data module
     // queda igual que como vino tras el cierre del modal.
     FSqlOriginales: TStringList;
+    // Lee el .frx serializado en VALUE_BLOB_USUPER de la fila identificada
+    // por (Self.Name, aDescripcion) — una vez localizada en unqryPerfiles
+    // por Locate. La query principal ya no trae el BLOB (cientos de KB)
+    // por performance; este helper hace el unico round-trip necesario y
+    // vuelca el contenido en aStream. Devuelve True si se ha cargado.
+    function LeerBlobFormato(const aDescripcion: string;
+                             aStream: TStream): Boolean;
+    // Persiste el .frx (aStream) en fza_usuarios_perfiles via SQL directo,
+    // sin pasar por unqryPerfiles (que no expone el campo BLOB). Decide
+    // INSERT vs UPDATE segun PK (USUARIO_GRUPO_USUPER, KEY_USUPER,
+    // SUBKEY_USUPER). Usado por frxdsgnr1SaveReport.
+    procedure GuardarBlobFormato(const aUsuario, aSubKey,
+                                  aDescripcion: string;
+                                  aStream: TStream;
+                                  aInsertar: Boolean);
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
@@ -712,20 +727,14 @@ begin
         bAceptado          := True;
 
         // Cargar el .frx del formato elegido. Si existe lo cargamos
-        // del BLOB; si es nuevo partimos del .frx base.
+        // del BLOB (query lazy en LeerBlobFormato); si no existe o el
+        // BLOB esta vacio partimos del .frx base.
         if oWiz.bExiste then
         begin
-          unqryPerfiles.Close;
-          unqryPerfiles.Open;
           memStream := TMemoryStream.Create;
           try
-            if unqryPerfiles.Locate('VALUE_USUPER', sElegido, []) then
-            begin
-              TBlobField(unqryPerfiles.FieldByName(
-                                'VALUE_BLOB_USUPER')).SaveToStream(memStream);
-              memStream.Position := 0;
-              frxrprt1.LoadFromStream(memStream);
-            end
+            if LeerBlobFormato(sElegido, memStream) then
+              frxrprt1.LoadFromStream(memStream)
             else
               frxrprt1.AssignAll(frxReportOrigen);
           finally
@@ -1001,17 +1010,13 @@ begin
       sDescripcion := sElegido;
       memStream := TMemoryStream.Create;
       try
-        if unqryPerfiles.Locate('VALUE_USUPER', sDescripcion, []) then
-        begin
-          TBlobField(unqryPerfiles.FieldByName(
-                                'VALUE_BLOB_USUPER')).SaveToStream(memStream);
-          memStream.Position := 0;
-          frxrprt1.LoadFromStream(memStream);
-        end
+        // El BLOB del .frx no viene en unqryPerfiles (query solo de
+        // metadatos por performance); LeerBlobFormato hace el unico
+        // round-trip necesario para esta seleccion.
+        if LeerBlobFormato(sDescripcion, memStream) then
+          frxrprt1.LoadFromStream(memStream)
         else
-        begin
-           frxrprt1.AssignAll(frxReportOrigen);
-        end;
+          frxrprt1.AssignAll(frxReportOrigen);
       finally
         FreeAndNil(memStream);
       end;
@@ -1080,18 +1085,92 @@ begin
   FreeAndNil(FSqlOriginales);
 end;
 
+function TfrmPrint.LeerBlobFormato(const aDescripcion: string;
+                                    aStream: TStream): Boolean;
+var
+  qry: TUniQuery;
+  fld: TBlobField;
+begin
+  Result := False;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT VALUE_BLOB_USUPER FROM fza_usuarios_perfiles ' +
+      ' WHERE KEY_USUPER     = :FormName ' +
+      '   AND VALUE_USUPER   = :Descripcion ' +
+      '   AND (USUARIO_GRUPO_USUPER = :Usuario OR ' +
+      '        USUARIO_GRUPO_USUPER = :Grupo   OR ' +
+      '        USUARIO_GRUPO_USUPER = :Todos) ' +
+      ' LIMIT 1';
+    qry.ParamByName('FormName').AsString    := Self.Name;
+    qry.ParamByName('Descripcion').AsString := aDescripcion;
+    qry.ParamByName('Usuario').AsString     := oUser;
+    qry.ParamByName('Grupo').AsString       := oGroup;
+    qry.ParamByName('Todos').AsString       := oAll;
+    qry.Open;
+    if qry.IsEmpty then
+      Exit;
+    fld := TBlobField(qry.FieldByName('VALUE_BLOB_USUPER'));
+    if fld.IsNull then
+      Exit;
+    fld.SaveToStream(aStream);
+    aStream.Position := 0;
+    Result := True;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TfrmPrint.GuardarBlobFormato(const aUsuario, aSubKey,
+                                        aDescripcion: string;
+                                        aStream: TStream;
+                                        aInsertar: Boolean);
+var
+  qry: TUniQuery;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    if aInsertar then
+      qry.SQL.Text :=
+        'INSERT INTO fza_usuarios_perfiles (' +
+        '  USUARIO_GRUPO_USUPER, KEY_USUPER, SUBKEY_USUPER, ' +
+        '  VALUE_USUPER, VALUE_BLOB_USUPER, ' +
+        '  INSTANTE_ALTA, INSTANTE_MODIF, ' +
+        '  USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (' +
+        '  :USU, :KEY, :SUB, ' +
+        '  :VAL, :BLOB, ' +
+        '  NOW(), NOW(), ' +
+        '  :USUACT, :USUACT)'
+    else
+      qry.SQL.Text :=
+        'UPDATE fza_usuarios_perfiles SET ' +
+        '  VALUE_USUPER      = :VAL, ' +
+        '  VALUE_BLOB_USUPER = :BLOB, ' +
+        '  INSTANTE_MODIF    = NOW(), ' +
+        '  USUARIO_MODIF     = :USUACT ' +
+        ' WHERE USUARIO_GRUPO_USUPER = :USU ' +
+        '   AND KEY_USUPER           = :KEY ' +
+        '   AND SUBKEY_USUPER        = :SUB';
+    qry.ParamByName('USU').AsString    := aUsuario;
+    qry.ParamByName('KEY').AsString    := Self.Name;
+    qry.ParamByName('SUB').AsString    := aSubKey;
+    qry.ParamByName('VAL').AsString    := aDescripcion;
+    qry.ParamByName('USUACT').AsString := oUser;
+    aStream.Position := 0;
+    qry.ParamByName('BLOB').LoadFromStream(aStream, ftBlob);
+    qry.Execute;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
 procedure TfrmPrint.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  // CacheBlobs=False: la query trae solo metadatos; el BLOB del .frx
-  // (VALUE_BLOB_USUPER) se materializa lazy cuando TBlobField.SaveToStream
-  // se invoca. Se asigna por codigo (no en el DFM) porque las opciones
-  // dependen del provider de Connection, y en formularios heredados la
-  // referencia Connection = dmConn.conUni se resuelve via FixupReferences
-  // al final de la deserializacion: ponerlo en el DFM dispara EReadError
-  // "Connection is not defined" al cargar el .dfm.
-  unqryPerfiles.Options.CacheBlobs := False;
   unqryPerfiles.ParamByName('FormName').AsString := Self.Name;
   unqryPerfiles.ParamByName('Usuario').AsString := oUser;
   unqryPerfiles.ParamByName('Grupo').AsString := oGroup;
@@ -1106,7 +1185,7 @@ function TfrmPrint.frxdsgnr1SaveReport(Report: TfrxReport;
 var
   memStream:TMemoryStream;
   formulario: TfrmModalGenImpSave;
-  bGuardar : Boolean;
+  bGuardar, bExiste : Boolean;
   sDescripcion, sPermisos : string;
 begin
   Result := False;
@@ -1143,36 +1222,35 @@ begin
     try
       Report.SaveToStream(memStream);
       memStream.Position:=0;
-      if unqryPerfiles.Locate('VALUE_USUPER',sDescripcion, []) then
+      // Locate sigue siendo util: la query trae metadatos suficientes
+      // (VALUE_USUPER) para decidir INSERT vs UPDATE sin pedir el BLOB.
+      bExiste := unqryPerfiles.Locate('VALUE_USUPER', sDescripcion, []);
+      // Si FFormatoFijado=True el wizard ya advirtio al usuario y vamos
+      // directos al UPDATE. En modo normal preguntamos confirmacion antes
+      // de sobreescribir un formato existente.
+      if bExiste and (not FFormatoFijado) then
       begin
-        if FFormatoFijado then
-          // El wizard ya advirtio al usuario de que el formato existia.
-          unqryPerfiles.Edit
-        else if ( Application.MessageBox( 'El informe ya existe. ' +
-                                    '¿Desea reemplazar el informe?',
-                                    'Mensaje Advertencia',
-                                    MB_YESNO ) = ID_YES ) then
-          unqryPerfiles.Edit
-        else
+        if Application.MessageBox('El informe ya existe. ' +
+                                  '¿Desea reemplazar el informe?',
+                                  'Mensaje Advertencia',
+                                  MB_YESNO) <> ID_YES then
           bGuardar := False;
-      end
-      else
-        unqryPerfiles.Insert;
+      end;
       if (bGuardar) then
       begin
-        unqryPerfiles.FieldByName('USUARIO_GRUPO_USUPER').AsString :=
-                                                                      sPermisos;
-        unqryPerfiles.FieldByName('KEY_USUPER').AsString := Self.Name;
-        unqryPerfiles.FieldByName('SUBKEY_USUPER').AsString := frxrprt1.Name +
-                                                             '_' + sDescripcion;
-        unqryPerfiles.FieldByName('VALUE_USUPER').AsString := sDescripcion;
-        unqryPerfiles.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-        unqryPerfiles.FieldByName('USUARIO_MODIF').AsString := oUser;
-        unqryPerfiles.FieldByName('USUARIO_ALTA').AsString := oUser;
-        TBlobField(unqryPerfiles.FieldByName('VALUE_BLOB_USUPER')).
-                                                      LoadFromStream(memStream);
-        //https://forums.devart.com/viewtopic.php?t=19115
-        unqryPerfiles.Post;
+        // Persistir via SQL directo: unqryPerfiles ya no expone el campo
+        // VALUE_BLOB_USUPER, asi que el flujo Insert/Edit + Post del
+        // dataset no sirve para el BLOB. GuardarBlobFormato hace el
+        // INSERT o UPDATE (segun bExiste) con un unico round-trip.
+        GuardarBlobFormato(sPermisos,
+                           frxrprt1.Name + '_' + sDescripcion,
+                           sDescripcion,
+                           memStream,
+                           not bExiste);
+        // Refrescamos unqryPerfiles para que CargarFormatos vea el alta
+        // / edicion en la proxima invocacion sin un Close+Open implicito.
+        unqryPerfiles.Close;
+        unqryPerfiles.Open;
         // Refrescamos el cache de perfiles del form (lo usa CargarFormatos)
         // para que la lista de formatos refleje el alta inmediatamente.
         if odmPerfiles <> nil then
@@ -1194,7 +1272,6 @@ begin
         Result := False;
     finally
       FreeAndNil(memStream);
-      //https://forum.fast-report.com/en/categories/fastreport-vcl-6
     end;
   end;
 end;
