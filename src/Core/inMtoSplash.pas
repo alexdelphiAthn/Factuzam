@@ -85,16 +85,19 @@ var
   sBase, sRuta: string;
   i: Integer;
   bCargado: Boolean;
+  oRes: TResourceStream;
+  oPng: TPngImage;
 begin
   // El email del .dfm se sobreescribe en runtime para no quedar atado al
   // valor cableado (que ademas en versiones antiguas era una direccion
   // de batch antigua).
   hlEmail.Text := CEmail;
   // Sustituimos el GIF heredado del .dfm por el logo (fondo.png) cargado
-  // en runtime. Usamos las mismas rutas candidatas que CargarFondoLogo en
-  // TfrmMtoPrincipal. Si no se encuentra ningun archivo dejamos el GIF
-  // visible como fallback para no quedarnos con un area en blanco.
-  sBase := inLibDir.DirApp;
+  // en runtime. Primero intentamos el recurso RCDATA 'FONDO' embebido en
+  // el .exe (via {$R fondo.res} en fzam.dpr); si no, caemos a fichero
+  // suelto con las mismas rutas que TfrmMtoPrincipal.CargarFondoLogo. Si
+  // no se encuentra de ningun modo, dejamos el GIF heredado para no
+  // quedarnos con un area en blanco.
   bCargado := False;
   FimgLogo := TImage.Create(Self);
   FimgLogo.Parent := Panel1;
@@ -103,18 +106,39 @@ begin
   FimgLogo.Proportional := True;
   FimgLogo.Stretch      := True;
   FimgLogo.Center       := True;
-  for i := 0 to High(CRutas) do
-  begin
-    sRuta := sBase + CRutas[i];
-    if FileExists(sRuta) then
+  try
+    oRes := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
     try
-      FimgLogo.Picture.LoadFromFile(sRuta);
-      bCargado := True;
-      Break;
-    except
-      on E: Exception do
-        inLibLog.Log.LogWarning('Splash: no se pudo cargar ' + sRuta +
-                                ': ' + E.Message);
+      oPng := TPngImage.Create;
+      try
+        oPng.LoadFromStream(oRes);
+        FimgLogo.Picture.Assign(oPng);
+        bCargado := True;
+      finally
+        oPng.Free;
+      end;
+    finally
+      oRes.Free;
+    end;
+  except
+    // Recurso no presente (build sin fondo.res); seguimos a disco.
+  end;
+  if not bCargado then
+  begin
+    sBase := inLibDir.DirApp;
+    for i := 0 to High(CRutas) do
+    begin
+      sRuta := sBase + CRutas[i];
+      if FileExists(sRuta) then
+      try
+        FimgLogo.Picture.LoadFromFile(sRuta);
+        bCargado := True;
+        Break;
+      except
+        on E: Exception do
+          inLibLog.Log.LogWarning('Splash: no se pudo cargar ' + sRuta +
+                                  ': ' + E.Message);
+      end;
     end;
   end;
   if bCargado then
@@ -123,7 +147,7 @@ begin
   begin
     FreeAndNil(FimgLogo);
     inLibLog.Log.LogWarning(
-      'Splash: no se encontro fondo.png, se deja el GIF heredado.');
+      'Splash: no se encontro fondo (recurso ni fichero); GIF heredado.');
   end;
   // Nombre del autor superpuesto al GIF (banda inferior del area de
   // imagen, justo encima del panel de creditos).
