@@ -501,6 +501,7 @@ var
   i: Integer;
 begin
   sBase := inLibDir.DirApp;
+  inLibLog.Log.LogInfo('CargarFondoLogo: base="' + sBase + '"');
   for i := 0 to High(CRutas) do
   begin
     sRuta := sBase + CRutas[i];
@@ -508,23 +509,31 @@ begin
     begin
       try
         imgFondoLogo.Picture.LoadFromFile(sRuta);
+        inLibLog.Log.LogInfo('CargarFondoLogo: OK desde "' + sRuta + '"');
         Exit;
       except
         on E: Exception do
           inLibLog.Log.LogWarning('No se pudo cargar fondo ' + sRuta +
                                   ': ' + E.Message);
       end;
-    end;
+    end
+    else
+      inLibLog.Log.LogInfo('CargarFondoLogo: no existe "' + sRuta + '"');
   end;
   inLibLog.Log.LogWarning('No se encontro imagen de fondo (fondo.png).');
 end;
 
 procedure TfrmMtoPrincipal.ActualizarFondoLogo;
 var
-  bDebeVerse: Boolean;
+  bDebeVerse, bTieneImg: Boolean;
 begin
-  bDebeVerse := (pcPrincipal.PageCount = 0) and
-                (imgFondoLogo.Picture.Graphic <> nil);
+  bTieneImg  := imgFondoLogo.Picture.Graphic <> nil;
+  bDebeVerse := (pcPrincipal.PageCount = 0) and bTieneImg;
+  inLibLog.Log.LogInfo(Format(
+    'ActualizarFondoLogo: PageCount=%d TieneImg=%s ' +
+    'DebeVerse=%s VisibleActual=%s',
+    [pcPrincipal.PageCount, BoolToStr(bTieneImg, True),
+     BoolToStr(bDebeVerse, True), BoolToStr(imgFondoLogo.Visible, True)]));
   if (imgFondoLogo.Visible <> bDebeVerse) then
     imgFondoLogo.Visible := bDebeVerse;
 end;
@@ -687,6 +696,13 @@ begin
     PostMessage(Handle, wm_Close, 0, 0);
     Exit;
   end;
+  // Defensivo: tras todo el init de FormCreate, garantizamos que el logo
+  // este encima de pcPrincipal (z-order) y que ActualizarFondoLogo haya
+  // decidido visibilidad ya con el form fisicamente visible en pantalla.
+  // Si CargarFondoLogo no encontro el png, esto es no-op (Picture.Graphic
+  // sigue nil y ActualizarFondoLogo deja Visible=False).
+  imgFondoLogo.BringToFront;
+  ActualizarFondoLogo;
 end;
 
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
