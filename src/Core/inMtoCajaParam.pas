@@ -67,6 +67,7 @@ type
     FStrs:  TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
     procedure CapturarValoresOriginales;
+    function  HayCambiosPendientes: Boolean;
     procedure LimpiarMemoria;
     procedure ResetearADefectos;
     function  ObtenerCategoria(
@@ -495,11 +496,66 @@ end;
 procedure TfrmMtoCajaParam.actSalirExecute(Sender: TObject);
 begin
   inherited;
+  // Solo pedimos confirmación si hay cambios reales sin guardar
+  if not HayCambiosPendientes then
+  begin
+    Close;
+    Exit;
+  end;
   if MessageDlg('¿Está seguro de que desea salir sin guardar?',
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
     Close;
+end;
+
+function TfrmMtoCajaParam.HayCambiosPendientes: Boolean;
+var
+  i, j: Integer;
+  NodoPrincipal, ParamItem: TJvCustomInspectorItem;
+  ValorActual: string;
+begin
+  // Recorremos los items igual que en btnGuardarClick comparando contra los
+  // valores capturados al cargar; basta un cambio para devolver True
+  Result := False;
+  if FValoresOriginales = nil then
+    Exit;
+  JvInspector1.SaveValues;
+  for i := 0 to JvInspector1.Root.Count - 1 do
+  begin
+    NodoPrincipal := JvInspector1.Root.Items[i];
+    if not (NodoPrincipal is TJvInspectorCustomCategoryItem) then
+      Continue;
+    for j := 0 to NodoPrincipal.Count - 1 do
+    begin
+      ParamItem := NodoPrincipal.Items[j];
+      if ParamItem.Data <> nil then
+        case ParamItem.Data.TypeInfo.Kind of
+          tkEnumeration:
+            if ParamItem.Data.AsOrdinal <> 0 then
+              ValorActual := 'True'
+            else
+              ValorActual := 'False';
+          tkInteger:
+            ValorActual := IntToStr(ParamItem.Data.AsOrdinal);
+        else
+          ValorActual := ParamItem.Data.AsString;
+        end
+      else
+        ValorActual := '';
+      if FValoresOriginales.ContainsKey(ParamItem.Name) then
+      begin
+        if not SameText(FValoresOriginales[ParamItem.Name], ValorActual) then
+          Exit(True);
+      end
+      else
+      begin
+        // Item nuevo no capturado: lo consideramos cambio si no está vacío
+        if ValorActual <> '' then
+          Exit(True);
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoCajaParam.btnChangeIdClick(Sender: TObject);
