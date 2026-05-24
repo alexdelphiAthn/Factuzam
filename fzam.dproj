@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -149,6 +149,8 @@
         <VerInfo_Special>true</VerInfo_Special>
         <VerInfo_Private>true</VerInfo_Private>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.1;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+        <DCC_MapFile>3</DCC_MapFile>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -161,6 +163,7 @@
         <VerInfo_Private>true</VerInfo_Private>
         <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
+        <DCC_MapFile>3</DCC_MapFile>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -172,6 +175,7 @@
         <DCCReference Include="src\Lib\inLibDir.pas"/>
         <DCCReference Include="src\Lib\inLibGlobalVar.pas"/>
         <DCCReference Include="src\Lib\inLibLog.pas"/>
+        <DCCReference Include="src\Lib\inLibDiag.pas"/>
         <DCCReference Include="src\Lib\inLibtb.pas"/>
         <DCCReference Include="src\Lib\inLibUser.pas"/>
         <DCCReference Include="src\Lib\inLibWin.pas"/>
@@ -297,6 +301,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalDistribuidor.pas">
             <Form>frmModalDistribuidor</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalDocsCreados.pas">
+            <Form>frmModalDocsCreados</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCliEti.pas">
             <Form>frmPrintCliEti</Form>
