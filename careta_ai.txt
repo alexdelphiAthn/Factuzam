@@ -18,3 +18,17 @@ La clase no sabe quién la usará, solo cumple su contrato.
 4. Programar contra abstracciones no contra implementaciones.
 5. 
 Observa cómo el procesador de pedidos no sabe cómo se envía el mail,
+
+
+**Cambios para sensación Excel EN CXGRID:**
+
+| Cambio | Efecto |
+|---|---|
+| `GoToNextCellOnEnter = True` | Enter avanza a siguiente celda (fluido) |
+| `IncSearch = False` | Las teclas numéricas no disparan búsqueda, van al editor |
+| `ImmediateEditor = True` (ya estaba) | Primer dígito abre editor con ese valor |
+| `Options.Focusing := False` en `CODIGO_ALM` y `NOMBRE_ALM` | Enter/Tab/flechas saltan estas columnas → siempre caes en una celda talla editable |
+| Override `DoShow` | Al abrir, foco en T01 del primer almacén (no en btnAceptar) → tecleas sin click previo |
+| `WHERE TIPO_USO_ALM IN ('ESTANDAR','ESTANDARD')` | Solo almacenes estándar (oculta DEPÓSITO/TRÁNSITO/TARAS). El `IN` cubre el typo histórico de un registro |
+
+Tras pull y recompilar deberías abrir el distribuidor, ver solo almacenes estándar, con el cursor ya en la primera talla del primer almacén, y poder teclear → Enter → siguiente celda en bucle sin tocar el ratón.
