@@ -133,7 +133,7 @@ implementation
 
 {$R *.dfm}
 
-uses inLibtb, inLibGenerarTicketBD, inLibGlobalVar,
+uses inLibtb, inLibGenerarTicketBD, inLibGlobalVar, inLibLog,
      inLibFotos, inMtoFotoArticulo;
 
 // -----------------------------------------------------------------------------
@@ -196,12 +196,16 @@ end;
 procedure TfrmConsultaOpe.FormShow(Sender: TObject);
 begin
   inherited;
+  Log.LogInfo(Format('frmConsultaOpe.FormShow: INICIO emp="%s" alm="%s" ' +
+                     'caja="%s" fecha=%s',
+                     [FEmpresa, FAlmacen, FCaja, DateToStr(dtpFecha.Date)]));
   Caption := Format('Buscar operaciones — Empresa %s / Almacen %s / Caja %s',
                     [FEmpresa, FAlmacen, FCaja]);
   RecargarMaestro;
   RestaurarLayout;
   if edtBuscar.CanFocus then
     edtBuscar.SetFocus;
+  Log.LogInfo('frmConsultaOpe.FormShow: FIN');
 end;
 
 procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
@@ -273,12 +277,18 @@ end;
 
 procedure TfrmConsultaOpe.RestaurarLayout;
 begin
-  if not FLayout.Disponible then Exit;
+  if not FLayout.Disponible then
+  begin
+    Log.LogInfo('RestaurarLayout: SKIP (FLayout no disponible)');
+    Exit;
+  end;
+  Log.LogInfo('RestaurarLayout: aplicando geometria + 9 grids');
   FLayout.RestaurarGeometria(Self);
   FLayout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
   FLayout.RestaurarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta, 50);
   FLayout.RestaurarGrid('Maestro', cxViewMaestro);
   AplicarAnchosPestanasHijas;
+  Log.LogInfo('RestaurarLayout: FIN');
 end;
 
 procedure TfrmConsultaOpe.AplicarAnchosPestanasHijas;
@@ -321,7 +331,15 @@ end;
 
 procedure TfrmConsultaOpe.RecargarMaestro;
 begin
-  if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then Exit;
+  if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
+  begin
+    Log.LogInfo('RecargarMaestro: SKIP (contexto vacio)');
+    Exit;
+  end;
+  Log.LogInfo(Format('RecargarMaestro: emp="%s" alm="%s" caja="%s" ' +
+                     'fecha=%s txt="%s"',
+                     [FEmpresa, FAlmacen, FCaja, DateToStr(dtpFecha.Date),
+                      Trim(edtBuscar.Text)]));
   Screen.Cursor := crHourGlass;
   try
     FdmConsulta.CargarMaestro(dtpFecha.Date,
@@ -336,8 +354,11 @@ end;
 procedure TfrmConsultaOpe.OnMaestroDataChange(Sender: TObject; Field: TField);
 begin
   // Field=nil => cambio de fila (no de celda). Refrescamos hijas y visibilidad.
+  // El escudo FUltimaClaveHijas en el dm evita relanzar las 8 queries si la
+  // operacion activa no ha cambiado realmente.
   if Field = nil then
   begin
+    Log.LogInfo('OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas');
     FdmConsulta.RefrescarPestanasHijas;
     AjustarVisibilidadPestanas;
   end;
