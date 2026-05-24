@@ -78,15 +78,9 @@ begin
   with Conuni do
   begin
     Pooling := True;
-    // IMPORTANTE: 0 significa que la conexión física vive indefinidamente en el
-    // pool.
-    //SpecificOptions.Values['ConnectionLifetime'] := '0';
+    PoolingOptions.Validate := False;
     PoolingOptions.ConnectionLifetime := 0;
-    PoolingOptions.Validate := True;
-    // Pide al servidor usar 'interactive_timeout' en vez de 'wait_timeout'
-    // Esto suele darte 8 horas (28800s) si el servidor lo permite.
     SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    // Tiempo máximo para intentar establecer la conexión inicial
     SpecificOptions.Values['ConnectionTimeout'] := '30';
     // 3. LA CLAVE: AUTO-RECONEXIÓN (LocalFailover)
     // Esto hace que si se cae la red o el servidor patea la conexión,
