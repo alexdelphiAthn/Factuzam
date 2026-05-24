@@ -490,6 +490,7 @@ var
   i: Integer;
   bCargado: Boolean;
   oImg:     TImage;
+  oPng:     TPngImage;
   oNombre:  TcxLabel;
   oVer:     TcxLabel;
 begin
@@ -501,7 +502,11 @@ begin
   oImg.Proportional := True;
   oImg.Stretch      := True;
   oImg.Center       := True;
-  oImg.Transparent  := True;
+  // Transparent=False: con Transparent=True y un PNG RGBA encima de
+  // pcPrincipal (alClient de Panel1), el TImage no termina de pintarse.
+  // Con Transparent=False la zona del rectangulo se compone primero
+  // contra el color de Panel1 antes de aplicar el alpha del PNG.
+  oImg.Transparent  := False;
   oImg.Visible      := False;
   sBase := inLibDir.DirApp;
   bCargado := False;
@@ -510,7 +515,18 @@ begin
     sRuta := sBase + CRutas[i];
     if FileExists(sRuta) then
     try
-      oImg.Picture.LoadFromFile(sRuta);
+      // Cargamos como TPngImage explicitamente para asegurar que el
+      // canal alpha se respeta. Picture.LoadFromFile delega en la
+      // extension del fichero y normalmente acaba aqui tambien, pero
+      // el camino directo evita ambiguedades cuando el control venia
+      // de un .dfm con Picture.Data envuelto.
+      oPng := TPngImage.Create;
+      try
+        oPng.LoadFromFile(sRuta);
+        oImg.Picture.Assign(oPng);
+      finally
+        oPng.Free;
+      end;
       bCargado := True;
       Break;
     except
