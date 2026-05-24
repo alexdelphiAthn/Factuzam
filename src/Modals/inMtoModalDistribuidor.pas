@@ -90,7 +90,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibLog;
 
 procedure TfrmModalDistribuidor.FormCreate(Sender: TObject);
 begin
@@ -308,14 +308,12 @@ begin
     if tvCuadr.GetColumnByFieldName(sKey) <> nil then
       iColT[i] := tvCuadr.GetColumnByFieldName(sKey).Index;
   end;
-  // DIAGNOSTICO (quitar cuando se confirme que se persiste). Si:
-  //   iColCod=-1 -> lookup de columna fallo (CreateColumn no aplico el FieldName)
-  //   records=0  -> el cds esta vacio (PoblarFilas no anadio almacenes)
-  //   val[0,T01]=0 -> el cxGrid no commitea valores al DataController
-  ShowMessage(Format(
-    'PersistirCambios DIAG'#13#10 +
-    'iColCod=%d records=%d posiciones=%d',
+  // DIAGNOSTICO: con appLogAvanzado=True estas lineas salen al log.
+  Log.LogInfo(Format(
+    '[Distribuidor.PersistirCambios] iColCod=%d records=%d posiciones=%d',
     [iColCod, tvCuadr.DataController.RecordCount, Length(FPosiciones)]));
+  for i := 0 to High(iColT) do
+    Log.LogInfo(Format('  iColT[%d]=%d', [i, iColT[i]]));
   if iColCod < 0 then Exit;
   oQry := TUniQuery.Create(nil);
   try
@@ -335,6 +333,9 @@ begin
         else rCantN := vVal;
         sKey   := ClaveCelda(sCod, i + 1);
         if not FSnapshot.TryGetValue(sKey, rCantO) then rCantO := 0;
+        Log.LogInfo(Format(
+          '  rec=%d alm=%s pos=%d (T%.2d) idav=%d val_actual=%g snapshot=%g',
+          [iRec, sCod, i + 1, i + 1, iIdAv, rCantN, rCantO]));
         if rCantN = rCantO then Continue;
         if rCantN > 0 then
         begin
