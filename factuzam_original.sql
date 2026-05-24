@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 24/05/2026 17:52:04
+-- Backup generado: 24/05/2026 18:13:23
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -4048,7 +4048,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 267, 3, 'S', 'S', '2026-05-24 17:42:27', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 269, 3, 'S', 'S', '2026-05-24 18:12:55', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 21, 2, 'S', 'S', '2026-05-18 07:50:39', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -11185,8 +11185,263 @@ SELECT
 FROM fza_articulos_skus ask
 JOIN fza_variaciones_atributos vat
   ON vat.ID_VAR_VA = ask.CODIGO_VAR_SKU;
-', '2026-05-24 17:42:49', '2026-05-24 17:42:26', 'Administrador', 'Administrador');
--- 62 registros exportados
+', '2026-05-24 17:42:49', '2026-05-24 17:42:26', 'Administrador', 'Administrador'),
+  ('267', 'fza_informes_guias_drop_idx_redundante', '-- =====================================================================
+-- Script: fza_informes_guias_drop_idx_redundante.sql
+-- Objetivo: borrar el indice secundario IDX_INFGUI_INFORME sobre
+--           fza_informes_guias porque es PREFIJO de la clave primaria
+--           (INFORME_INFGUI, FORMATO_INFGUI, CODIGO_INFGUI) — InnoDB ya
+--           sirve cualquier busqueda por INFORME / (INFORME, FORMATO) a
+--           traves del PK sin coste adicional. Mantenerlo doblaba el
+--           espacio del indice y el coste de cada INSERT / UPDATE de la
+--           tabla sin ganancia de lectura.
+--
+-- Contexto: en el optimizado de 24/05/2026 se introdujo el cache en
+--           memoria de fza_informes_guias (inLibInformesGuiasCache.pas),
+--           con una unica lectura completa al login. Ya no se ejecutan
+--           SELECTs filtrados por INFORME en cada print, asi que el
+--           valor del indice secundario es cero.
+--
+-- Idempotente: solo borra el indice si existe.
+-- =====================================================================
+
+SET @schema := DATABASE();
+SET @tabla  := ''fza_informes_guias'';
+SET @indice := ''IDX_INFGUI_INFORME'';
+
+SET @existe := (
+  SELECT COUNT(*)
+    FROM information_schema.STATISTICS
+   WHERE TABLE_SCHEMA = @schema
+     AND TABLE_NAME   = @tabla
+     AND INDEX_NAME   = @indice
+);
+
+SET @sql := IF(@existe > 0,
+  CONCAT(''ALTER TABLE `'', @tabla, ''` DROP INDEX `'', @indice, ''`''),
+  ''SELECT ''''IDX_INFGUI_INFORME ya no existe, nada que hacer'''' AS info''
+);
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-05-24 18:02:41', '2026-05-24 18:02:41', 'Administrador', 'Administrador'),
+  ('268', 'vi_albaranes_compra_print', '-- =============================================================================
+-- Vistas para la impresion del albaran de compra
+-- Analogo a vi_compras_sesiones_*_print pero contra el modelo de albaranes
+-- de compra (cabecera + lineas; sin tabla de celdas separada — los SKUs
+-- viven directamente en fza_albaranes_compra_lineas y la talla se deduce
+-- del atributo CO/TAL del SKU).
+--
+-- Script idempotente: CREATE OR REPLACE, se puede aplicar repetidamente.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Cabecera enriquecida (empresa + proveedor + totales)
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_albaranes_compra_cab_print` AS
+SELECT
+  alb.`SERIE_ALBC`,
+  alb.`NUMERO_ALBC`,
+  alb.`FECHA_ALBC`,
+  alb.`ESTADO_ALBC`,
+  alb.`REF_PROVEEDOR_ALBC`,
+  alb.`COMENTARIOS_ALBC`,
+  alb.`OBSERVACIONES_ALBC`,
+  alb.`CODIGO_EMP_ALBC`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  alb.`CODIGO_PRV_ALBC`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  alb.`CODIGO_ALM_ALBC`,
+  alb.`CODIGO_IVA_ALBC`,
+  alb.`PORCENTAJE_IVAN_ALBC`,
+  alb.`PORCENTAJE_IVAR_ALBC`,
+  alb.`PORCENTAJE_IVAS_ALBC`,
+  alb.`PORCENTAJE_IVAE_ALBC`,
+  alb.`TOTAL_BASES_ALBC`,
+  alb.`TOTAL_IMPUESTOS_ALBC`,
+  alb.`TOTAL_LIQUIDO_ALBC`,
+  alb.`INSTANTE_ALTA`,
+  alb.`USUARIO_ALTA`,
+  -- Agregados de las lineas
+  (SELECT COALESCE(SUM(`CANTIDAD_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `NUM_LINEAS_SES`
+FROM `fza_albaranes_compra` alb
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_ALBC`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_ALBC`;
+
+-- ---------------------------------------------------------------------------
+-- 2. Lineas con T01..T20 pivotadas por talla
+-- ---------------------------------------------------------------------------
+-- Como en albaran cada linea ya es un SKU, agrupamos por (articulo, color
+-- derivado del SKU, ID_AC_PIVOT) y sumamos CANTIDAD_ALBCLIN en la posicion
+-- correspondiente del conjunto pivot. La talla del SKU se obtiene de
+-- fza_atributos_sku (atributo con ID_VA_AV=''TAL''). El color se obtiene del
+-- mismo modo (atributo con ID_VA_AV=''CO'' -> CODIGO_ATB/NOMBRE_ATB del
+-- atributo basico, o fallback al segundo segmento del SKU).
+-- IMPORTANTE: el color forma parte de la clave de agrupacion. Sin el, las
+-- lineas de varios colores del mismo articulo + sistema de tallas se
+-- colapsaban en una unica fila y los SUM por talla sumaban todas las
+-- cantidades juntas (impresion horizontal mostraba 1 fila con la suma de
+-- los 4 colores). El GROUP BY incluye CODIGO_ATB_COLOR + NOMBRE_COLOR
+-- (color via atributo basico) y el segmento medio del SKU (fallback para
+-- SKUs sin atributo CO).
+CREATE OR REPLACE VIEW `vi_albaranes_compra_lin_print` AS
+WITH `pos_acd` AS (
+  SELECT
+    `ID_AC_ACD` AS `ID_AC`,
+    `ID_AV_ACD` AS `ID_AV`,
+    ROW_NUMBER() OVER (
+      PARTITION BY `ID_AC_ACD`
+      ORDER BY `ORDEN_ACD`, `ID_AV_ACD`
+    ) AS `POSICION`
+  FROM `fza_atributos_conjuntos_det`
+),
+`sku_talla` AS (
+  SELECT
+    sa.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,
+    sa.`ID_AV_SA`             AS `ID_AV_TALLA`
+  FROM `fza_atributos_sku` sa
+  JOIN `fza_atributos_valores` av
+    ON av.`ID_AV` = sa.`ID_AV_SA`
+   AND av.`ID_VA_AV` = ''TAL''
+),
+`sku_color` AS (
+  SELECT
+    sa.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,
+    atb.`CODIGO_ATB`          AS `CODIGO_ATB_COLOR`,
+    atb.`NOMBRE_ATB`          AS `NOMBRE_COLOR`
+  FROM `fza_atributos_sku` sa
+  JOIN `fza_atributos_valores` av
+    ON av.`ID_AV` = sa.`ID_AV_SA`
+   AND av.`ID_VA_AV` = ''CO''
+  LEFT JOIN `fza_atributos_basicos` atb
+    ON atb.`ID_ATB` = av.`ID_ATB_AV`
+)
+SELECT
+  L.`SERIE_ALBC_ALBCLIN`            AS `SERIE_ALBC`,
+  L.`NUMERO_ALBC_ALBCLIN`           AS `NUMERO_ALBC`,
+  MIN(L.`LINEA_ALBCLIN`)            AS `LINEA_ALBC`,
+  L.`CODIGO_ART_ALBCLIN`            AS `CODIGO_ART`,
+  COALESCE(MIN(L.`REF_PRV_ALBCLIN`), '''') AS `REF_PRV`,
+  MIN(L.`DESCRIPCION_ARTICULO_ALBCLIN`) AS `DESCRIPCION`,
+  COALESCE(MIN(sc.`NOMBRE_COLOR`),
+           SUBSTRING_INDEX(SUBSTRING_INDEX(MIN(L.`CODIGO_UNIDAD_ALBCLIN`), ''/'', 2), ''/'', -1),
+           '''')                      AS `COLOR_TEXTO`,
+  COALESCE(MIN(sc.`CODIGO_ATB_COLOR`), '''') AS `CODIGO_ATB_COLOR`,
+  AVG(L.`PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN`) AS `PRECIO_COMPRA`,
+  0                                 AS `PRECIO_VENTA`,
+  L.`ID_AC_PIVOT_ALBCLIN`           AS `ID_AC_PIVOT`,
+  ac.`NOMBRE_AC`,
+  COALESCE(ac.`NOMBRE_CORTO_AC`, UPPER(LEFT(ac.`NOMBRE_AC`, 8))) AS `NOMBRE_CORTO_AC`,
+  SUM(L.`CANTIDAD_ALBCLIN`)         AS `TOTAL_UNIDADES`,
+  SUM(L.`TOTAL_ALBCLIN`)            AS `TOTAL_LINEA`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  1 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T01`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  2 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T02`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  3 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T03`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  4 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T04`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  5 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T05`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  6 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T06`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  7 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T07`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  8 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T08`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` =  9 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T09`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 10 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T10`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 11 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T11`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 12 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T12`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 13 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T13`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 14 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T14`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 15 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T15`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 16 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T16`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 17 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T17`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 18 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T18`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 19 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T19`,
+  COALESCE(SUM(CASE WHEN p.`POSICION` = 20 THEN L.`CANTIDAD_ALBCLIN` END), 0) AS `T20`
+FROM `fza_albaranes_compra_lineas` L
+LEFT JOIN `fza_atributos_conjuntos` ac
+       ON ac.`ID_AC` = L.`ID_AC_PIVOT_ALBCLIN`
+LEFT JOIN `sku_talla` st
+       ON st.`CODIGO_UNIDAD` = L.`CODIGO_UNIDAD_ALBCLIN`
+LEFT JOIN `pos_acd` p
+       ON p.`ID_AC` = L.`ID_AC_PIVOT_ALBCLIN`
+      AND p.`ID_AV` = st.`ID_AV_TALLA`
+LEFT JOIN `sku_color` sc
+       ON sc.`CODIGO_UNIDAD` = L.`CODIGO_UNIDAD_ALBCLIN`
+GROUP BY
+  L.`SERIE_ALBC_ALBCLIN`, L.`NUMERO_ALBC_ALBCLIN`,
+  L.`CODIGO_ART_ALBCLIN`,
+  L.`ID_AC_PIVOT_ALBCLIN`, ac.`NOMBRE_AC`, ac.`NOMBRE_CORTO_AC`,
+  sc.`CODIGO_ATB_COLOR`, sc.`NOMBRE_COLOR`,
+  SUBSTRING_INDEX(SUBSTRING_INDEX(L.`CODIGO_UNIDAD_ALBCLIN`, ''/'', 2), ''/'', -1);
+
+-- ---------------------------------------------------------------------------
+-- 3. Guias de tallas (mismas que en sesiones — depende solo de conjuntos)
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_albaranes_compra_guias_print` AS
+WITH `pos_acd` AS (
+  SELECT
+    acd.`ID_AC_ACD` AS `ID_AC`,
+    acd.`ID_AV_ACD` AS `ID_AV`,
+    av.`AV`,
+    ROW_NUMBER() OVER (
+      PARTITION BY acd.`ID_AC_ACD`
+      ORDER BY acd.`ORDEN_ACD`, acd.`ID_AV_ACD`
+    ) AS `POSICION`
+  FROM `fza_atributos_conjuntos_det` acd
+  INNER JOIN `fza_atributos_valores` av ON av.`ID_AV` = acd.`ID_AV_ACD`
+)
+SELECT
+  ac.`ID_AC`,
+  ac.`NOMBRE_AC`,
+  COALESCE(ac.`NOMBRE_CORTO_AC`, UPPER(LEFT(ac.`NOMBRE_AC`, 8))) AS `NOMBRE_CORTO_AC`,
+  MAX(CASE WHEN p.`POSICION` =  1 THEN p.`AV` END) AS `T01`,
+  MAX(CASE WHEN p.`POSICION` =  2 THEN p.`AV` END) AS `T02`,
+  MAX(CASE WHEN p.`POSICION` =  3 THEN p.`AV` END) AS `T03`,
+  MAX(CASE WHEN p.`POSICION` =  4 THEN p.`AV` END) AS `T04`,
+  MAX(CASE WHEN p.`POSICION` =  5 THEN p.`AV` END) AS `T05`,
+  MAX(CASE WHEN p.`POSICION` =  6 THEN p.`AV` END) AS `T06`,
+  MAX(CASE WHEN p.`POSICION` =  7 THEN p.`AV` END) AS `T07`,
+  MAX(CASE WHEN p.`POSICION` =  8 THEN p.`AV` END) AS `T08`,
+  MAX(CASE WHEN p.`POSICION` =  9 THEN p.`AV` END) AS `T09`,
+  MAX(CASE WHEN p.`POSICION` = 10 THEN p.`AV` END) AS `T10`,
+  MAX(CASE WHEN p.`POSICION` = 11 THEN p.`AV` END) AS `T11`,
+  MAX(CASE WHEN p.`POSICION` = 12 THEN p.`AV` END) AS `T12`,
+  MAX(CASE WHEN p.`POSICION` = 13 THEN p.`AV` END) AS `T13`,
+  MAX(CASE WHEN p.`POSICION` = 14 THEN p.`AV` END) AS `T14`,
+  MAX(CASE WHEN p.`POSICION` = 15 THEN p.`AV` END) AS `T15`,
+  MAX(CASE WHEN p.`POSICION` = 16 THEN p.`AV` END) AS `T16`,
+  MAX(CASE WHEN p.`POSICION` = 17 THEN p.`AV` END) AS `T17`,
+  MAX(CASE WHEN p.`POSICION` = 18 THEN p.`AV` END) AS `T18`,
+  MAX(CASE WHEN p.`POSICION` = 19 THEN p.`AV` END) AS `T19`,
+  MAX(CASE WHEN p.`POSICION` = 20 THEN p.`AV` END) AS `T20`
+FROM `fza_atributos_conjuntos` ac
+INNER JOIN `pos_acd` p ON p.`ID_AC` = ac.`ID_AC`
+WHERE p.`POSICION` <= 20
+  AND ac.`ESACTIVO_AC` = ''S''
+GROUP BY ac.`ID_AC`, ac.`NOMBRE_AC`, ac.`NOMBRE_CORTO_AC`;
+', '2026-05-24 18:12:55', '2026-05-24 18:12:55', 'Administrador', 'Administrador');
+-- 64 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -11210,7 +11465,6 @@ CREATE TABLE `fza_informes_guias` (
   `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
   PRIMARY KEY (`CODIGO_INFGUI`,`INFORME_INFGUI`,`FORMATO_INFGUI`)
 );
-ALTER TABLE `fza_informes_guias` ADD INDEX `IDX_INFGUI_INFORME` (`INFORME_INFGUI`, `FORMATO_INFGUI`);
 
 -- Datos de fza_informes_guias
 INSERT INTO `fza_informes_guias` (`CODIGO_INFGUI`, `INFORME_INFGUI`, `FORMATO_INFGUI`, `DATASET_MASTER_INFGUI`, `TIPO_INFGUI`, `TABLA_INFGUI`, `SQL_INFGUI`, `MASTER_FIELDS_INFGUI`, `DETAIL_FIELDS_INFGUI`, `ORDEN_INFGUI`, `ESACTIVO_INFGUI`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
@@ -13219,7 +13473,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `DIMINUTIVO_TICKET_USU`, `CODIGO_EMPLEADO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-24 17:49:51', '2026-05-24 17:49:51', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', 'ALEX', '1', '2026-05-24 18:12:19', '2026-05-24 18:12:19', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1');
 -- 1 registros exportados
 
 
@@ -24385,7 +24639,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra_guias_print` AS with pos_a
 
 -- Vista: vi_albaranes_compra_lin_print
 DROP VIEW IF EXISTS `vi_albaranes_compra_lin_print`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra_lin_print` AS with pos_acd as (select `fza_atributos_conjuntos_det`.`ID_AC_ACD` AS `ID_AC`,`fza_atributos_conjuntos_det`.`ID_AV_ACD` AS `ID_AV`,row_number() over ( partition by `fza_atributos_conjuntos_det`.`ID_AC_ACD` order by `fza_atributos_conjuntos_det`.`ORDEN_ACD`,`fza_atributos_conjuntos_det`.`ID_AV_ACD`) AS `POSICION` from `fza_atributos_conjuntos_det`), sku_talla as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,`sa`.`ID_AV_SA` AS `ID_AV_TALLA` from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA` and `av`.`ID_VA_AV` = 'TAL'))), sku_color as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB_COLOR`,`atb`.`NOMBRE_ATB` AS `NOMBRE_COLOR` from ((`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA` and `av`.`ID_VA_AV` = 'CO')) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = `av`.`ID_ATB_AV`)))select `l`.`SERIE_ALBC_ALBCLIN` AS `SERIE_ALBC`,`l`.`NUMERO_ALBC_ALBCLIN` AS `NUMERO_ALBC`,min(`l`.`LINEA_ALBCLIN`) AS `LINEA_ALBC`,`l`.`CODIGO_ART_ALBCLIN` AS `CODIGO_ART`,coalesce(min(`l`.`REF_PRV_ALBCLIN`),'') AS `REF_PRV`,min(`l`.`DESCRIPCION_ARTICULO_ALBCLIN`) AS `DESCRIPCION`,coalesce(min(`sc`.`NOMBRE_COLOR`),substring_index(substring_index(min(`l`.`CODIGO_UNIDAD_ALBCLIN`),'/',2),'/',-1),'') AS `COLOR_TEXTO`,coalesce(min(`sc`.`CODIGO_ATB_COLOR`),'') AS `CODIGO_ATB_COLOR`,avg(`l`.`PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN`) AS `PRECIO_COMPRA`,0 AS `PRECIO_VENTA`,`l`.`ID_AC_PIVOT_ALBCLIN` AS `ID_AC_PIVOT`,`ac`.`NOMBRE_AC` AS `NOMBRE_AC`,coalesce(`ac`.`NOMBRE_CORTO_AC`,ucase(left(`ac`.`NOMBRE_AC`,8))) AS `NOMBRE_CORTO_AC`,sum(`l`.`CANTIDAD_ALBCLIN`) AS `TOTAL_UNIDADES`,sum(`l`.`TOTAL_ALBCLIN`) AS `TOTAL_LINEA`,coalesce(sum(case when `p`.`POSICION` = 1 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T01`,coalesce(sum(case when `p`.`POSICION` = 2 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T02`,coalesce(sum(case when `p`.`POSICION` = 3 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T03`,coalesce(sum(case when `p`.`POSICION` = 4 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T04`,coalesce(sum(case when `p`.`POSICION` = 5 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T05`,coalesce(sum(case when `p`.`POSICION` = 6 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T06`,coalesce(sum(case when `p`.`POSICION` = 7 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T07`,coalesce(sum(case when `p`.`POSICION` = 8 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T08`,coalesce(sum(case when `p`.`POSICION` = 9 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T09`,coalesce(sum(case when `p`.`POSICION` = 10 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T10`,coalesce(sum(case when `p`.`POSICION` = 11 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T11`,coalesce(sum(case when `p`.`POSICION` = 12 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T12`,coalesce(sum(case when `p`.`POSICION` = 13 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T13`,coalesce(sum(case when `p`.`POSICION` = 14 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T14`,coalesce(sum(case when `p`.`POSICION` = 15 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T15`,coalesce(sum(case when `p`.`POSICION` = 16 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T16`,coalesce(sum(case when `p`.`POSICION` = 17 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T17`,coalesce(sum(case when `p`.`POSICION` = 18 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T18`,coalesce(sum(case when `p`.`POSICION` = 19 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T19`,coalesce(sum(case when `p`.`POSICION` = 20 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T20` from ((((`fza_albaranes_compra_lineas` `l` left join `fza_atributos_conjuntos` `ac` on(`ac`.`ID_AC` = `l`.`ID_AC_PIVOT_ALBCLIN`)) left join `sku_talla` `st` on(`st`.`CODIGO_UNIDAD` = `l`.`CODIGO_UNIDAD_ALBCLIN`)) left join `pos_acd` `p` on(`p`.`ID_AC` = `l`.`ID_AC_PIVOT_ALBCLIN` and `p`.`ID_AV` = `st`.`ID_AV_TALLA`)) left join `sku_color` `sc` on(`sc`.`CODIGO_UNIDAD` = `l`.`CODIGO_UNIDAD_ALBCLIN`)) group by `l`.`SERIE_ALBC_ALBCLIN`,`l`.`NUMERO_ALBC_ALBCLIN`,`l`.`CODIGO_ART_ALBCLIN`,`l`.`ID_AC_PIVOT_ALBCLIN`,`ac`.`NOMBRE_AC`,`ac`.`NOMBRE_CORTO_AC`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra_lin_print` AS with pos_acd as (select `fza_atributos_conjuntos_det`.`ID_AC_ACD` AS `ID_AC`,`fza_atributos_conjuntos_det`.`ID_AV_ACD` AS `ID_AV`,row_number() over ( partition by `fza_atributos_conjuntos_det`.`ID_AC_ACD` order by `fza_atributos_conjuntos_det`.`ORDEN_ACD`,`fza_atributos_conjuntos_det`.`ID_AV_ACD`) AS `POSICION` from `fza_atributos_conjuntos_det`), sku_talla as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,`sa`.`ID_AV_SA` AS `ID_AV_TALLA` from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA` and `av`.`ID_VA_AV` = 'TAL'))), sku_color as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB_COLOR`,`atb`.`NOMBRE_ATB` AS `NOMBRE_COLOR` from ((`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA` and `av`.`ID_VA_AV` = 'CO')) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = `av`.`ID_ATB_AV`)))select `l`.`SERIE_ALBC_ALBCLIN` AS `SERIE_ALBC`,`l`.`NUMERO_ALBC_ALBCLIN` AS `NUMERO_ALBC`,min(`l`.`LINEA_ALBCLIN`) AS `LINEA_ALBC`,`l`.`CODIGO_ART_ALBCLIN` AS `CODIGO_ART`,coalesce(min(`l`.`REF_PRV_ALBCLIN`),'') AS `REF_PRV`,min(`l`.`DESCRIPCION_ARTICULO_ALBCLIN`) AS `DESCRIPCION`,coalesce(min(`sc`.`NOMBRE_COLOR`),substring_index(substring_index(min(`l`.`CODIGO_UNIDAD_ALBCLIN`),'/',2),'/',-1),'') AS `COLOR_TEXTO`,coalesce(min(`sc`.`CODIGO_ATB_COLOR`),'') AS `CODIGO_ATB_COLOR`,avg(`l`.`PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN`) AS `PRECIO_COMPRA`,0 AS `PRECIO_VENTA`,`l`.`ID_AC_PIVOT_ALBCLIN` AS `ID_AC_PIVOT`,`ac`.`NOMBRE_AC` AS `NOMBRE_AC`,coalesce(`ac`.`NOMBRE_CORTO_AC`,ucase(left(`ac`.`NOMBRE_AC`,8))) AS `NOMBRE_CORTO_AC`,sum(`l`.`CANTIDAD_ALBCLIN`) AS `TOTAL_UNIDADES`,sum(`l`.`TOTAL_ALBCLIN`) AS `TOTAL_LINEA`,coalesce(sum(case when `p`.`POSICION` = 1 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T01`,coalesce(sum(case when `p`.`POSICION` = 2 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T02`,coalesce(sum(case when `p`.`POSICION` = 3 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T03`,coalesce(sum(case when `p`.`POSICION` = 4 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T04`,coalesce(sum(case when `p`.`POSICION` = 5 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T05`,coalesce(sum(case when `p`.`POSICION` = 6 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T06`,coalesce(sum(case when `p`.`POSICION` = 7 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T07`,coalesce(sum(case when `p`.`POSICION` = 8 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T08`,coalesce(sum(case when `p`.`POSICION` = 9 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T09`,coalesce(sum(case when `p`.`POSICION` = 10 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T10`,coalesce(sum(case when `p`.`POSICION` = 11 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T11`,coalesce(sum(case when `p`.`POSICION` = 12 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T12`,coalesce(sum(case when `p`.`POSICION` = 13 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T13`,coalesce(sum(case when `p`.`POSICION` = 14 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T14`,coalesce(sum(case when `p`.`POSICION` = 15 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T15`,coalesce(sum(case when `p`.`POSICION` = 16 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T16`,coalesce(sum(case when `p`.`POSICION` = 17 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T17`,coalesce(sum(case when `p`.`POSICION` = 18 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T18`,coalesce(sum(case when `p`.`POSICION` = 19 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T19`,coalesce(sum(case when `p`.`POSICION` = 20 then `l`.`CANTIDAD_ALBCLIN` end),0) AS `T20` from ((((`fza_albaranes_compra_lineas` `l` left join `fza_atributos_conjuntos` `ac` on(`ac`.`ID_AC` = `l`.`ID_AC_PIVOT_ALBCLIN`)) left join `sku_talla` `st` on(`st`.`CODIGO_UNIDAD` = `l`.`CODIGO_UNIDAD_ALBCLIN`)) left join `pos_acd` `p` on(`p`.`ID_AC` = `l`.`ID_AC_PIVOT_ALBCLIN` and `p`.`ID_AV` = `st`.`ID_AV_TALLA`)) left join `sku_color` `sc` on(`sc`.`CODIGO_UNIDAD` = `l`.`CODIGO_UNIDAD_ALBCLIN`)) group by `l`.`SERIE_ALBC_ALBCLIN`,`l`.`NUMERO_ALBC_ALBCLIN`,`l`.`CODIGO_ART_ALBCLIN`,`l`.`ID_AC_PIVOT_ALBCLIN`,`ac`.`NOMBRE_AC`,`ac`.`NOMBRE_CORTO_AC`,`sc`.`CODIGO_ATB_COLOR`,`sc`.`NOMBRE_COLOR`,substring_index(substring_index(`l`.`CODIGO_UNIDAD_ALBCLIN`,'/',2),'/',-1);
 
 -- Vista: vi_albaranes_lineas
 DROP VIEW IF EXISTS `vi_albaranes_lineas`;
@@ -28725,4 +28979,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 24/05/2026 17:52:07
+-- Backup completado: 24/05/2026 18:13:25
