@@ -277,67 +277,86 @@ procedure TfrmModalDistribuidor.PersistirCambios;
 var
   oQry    : TUniQuery;
   sCod    : string;
-  i       : Integer;
+  i, iRec : Integer;
   iIdAv   : Integer;
   rCantN  : Double;
   rCantO  : Double;
   sKey    : string;
+  vVal    : Variant;
+  iColCod : Integer;
+  iColT   : array of Integer;
 begin
-  // Diff snapshot inicial vs cds. Para cada celda con cambio:
-  //   - cantidad > 0  : upsert
-  //   - cantidad <= 0 : delete (si existia)
+  // IMPORTANTE: leemos del DataController del cxGrid (Values[record,col])
+  // NO del cds. El cxGrid mantiene el valor tecleado en el buffer de su
+  // editor / data controller y no siempre lo baja al cds (especialmente
+  // con AlwaysShowEditor=True: la celda en edicion al pulsar Aceptar no
+  // hace OnExit y el valor se queda en el buffer del view). Leyendo
+  // Values[] directamente cogemos el valor REAL aunque el cds aun lo
+  // tenga a 0. Esto fue la causa raiz del bug 'el distribuidor no
+  // consolida cambios'.
+  iColCod := -1;
+  SetLength(iColT, Length(FPosiciones));
+  for i := 0 to tvCuadr.ItemCount - 1 do
+    if SameText(tvCuadr.Items[i].DataBinding.FieldName, 'CODIGO_ALM') then
+      iColCod := tvCuadr.Items[i].Index;
+  for i := 0 to High(FPosiciones) do
+  begin
+    iColT[i] := -1;
+    sKey := Format('T%.2d', [i + 1]);
+    for iRec := 0 to tvCuadr.ItemCount - 1 do
+      if SameText(tvCuadr.Items[iRec].DataBinding.FieldName, sKey) then
+        iColT[i] := tvCuadr.Items[iRec].Index;
+  end;
+  if iColCod < 0 then Exit;
   oQry := TUniQuery.Create(nil);
   try
     oQry.Connection := FConn;
-    cdsCuadr.DisableControls;
-    try
-      cdsCuadr.First;
-      while not cdsCuadr.Eof do
+    for iRec := 0 to tvCuadr.DataController.RecordCount - 1 do
+    begin
+      vVal := tvCuadr.DataController.Values[iRec, iColCod];
+      if VarIsNull(vVal) or VarIsEmpty(vVal) then Continue;
+      sCod := VarToStr(vVal);
+      if sCod = '' then Continue;
+      for i := 0 to High(FPosiciones) do
       begin
-        sCod := cdsCuadr.FieldByName('CODIGO_ALM').AsString;
-        for i := 0 to High(FPosiciones) do
+        if iColT[i] < 0 then Continue;
+        iIdAv  := FPosiciones[i].IdAv;
+        vVal   := tvCuadr.DataController.Values[iRec, iColT[i]];
+        if VarIsNull(vVal) or VarIsEmpty(vVal) then rCantN := 0
+        else rCantN := vVal;
+        sKey   := ClaveCelda(sCod, i + 1);
+        if not FSnapshot.TryGetValue(sKey, rCantO) then rCantO := 0;
+        if rCantN = rCantO then Continue;
+        if rCantN > 0 then
         begin
-          iIdAv  := FPosiciones[i].IdAv;
-          rCantN := cdsCuadr.FieldByName(Format('T%.2d', [i + 1])).AsFloat;
-          sKey   := ClaveCelda(sCod, i + 1);
-          if not FSnapshot.TryGetValue(sKey, rCantO) then
-            rCantO := 0;
-          if rCantN = rCantO then
-            Continue;
-          if rCantN > 0 then
-          begin
-            oQry.SQL.Text :=
-              'INSERT INTO fza_compras_sesiones_celdas ' +
-              '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
-              '   ID_FILA_SES_SESCEL, ' +
-              '   CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL, ' +
-              '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-              'VALUES (:s, :n, :l, 0, :a, :p, :c, NOW(), :u, NOW(), :u) ' +
-              'ON DUPLICATE KEY UPDATE CANTIDAD_SESCEL = :c, ' +
-              '                        INSTANTE_MODIF  = NOW(), ' +
-              '                        USUARIO_MODIF   = :u';
-            oQry.ParamByName('c').AsFloat := rCantN;
-            oQry.ParamByName('u').AsString := FUsuario;
-          end
-          else
-          begin
-            oQry.SQL.Text :=
-              'DELETE FROM fza_compras_sesiones_celdas ' +
-              ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-              '   AND LINEA_SES_SESCEL = :l AND CODIGO_ALM_SESCEL = :a ' +
-              '   AND ID_AV_PIVOT_SESCEL = :p';
-          end;
-          oQry.ParamByName('s').AsString  := SerieSes;
-          oQry.ParamByName('n').AsString  := NumeroSes;
-          oQry.ParamByName('l').AsInteger := LineaSes;
-          oQry.ParamByName('a').AsString  := sCod;
-          oQry.ParamByName('p').AsInteger := iIdAv;
-          oQry.ExecSQL;
+          oQry.SQL.Text :=
+            'INSERT INTO fza_compras_sesiones_celdas ' +
+            '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
+            '   ID_FILA_SES_SESCEL, ' +
+            '   CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL, ' +
+            '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+            'VALUES (:s, :n, :l, 0, :a, :p, :c, NOW(), :u, NOW(), :u) ' +
+            'ON DUPLICATE KEY UPDATE CANTIDAD_SESCEL = :c, ' +
+            '                        INSTANTE_MODIF  = NOW(), ' +
+            '                        USUARIO_MODIF   = :u';
+          oQry.ParamByName('c').AsFloat := rCantN;
+          oQry.ParamByName('u').AsString := FUsuario;
+        end
+        else
+        begin
+          oQry.SQL.Text :=
+            'DELETE FROM fza_compras_sesiones_celdas ' +
+            ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
+            '   AND LINEA_SES_SESCEL = :l AND CODIGO_ALM_SESCEL = :a ' +
+            '   AND ID_AV_PIVOT_SESCEL = :p';
         end;
-        cdsCuadr.Next;
+        oQry.ParamByName('s').AsString  := SerieSes;
+        oQry.ParamByName('n').AsString  := NumeroSes;
+        oQry.ParamByName('l').AsInteger := LineaSes;
+        oQry.ParamByName('a').AsString  := sCod;
+        oQry.ParamByName('p').AsInteger := iIdAv;
+        oQry.ExecSQL;
       end;
-    finally
-      cdsCuadr.EnableControls;
     end;
   finally
     FreeAndNil(oQry);
@@ -346,15 +365,24 @@ end;
 
 procedure TfrmModalDistribuidor.btnAceptarClick(Sender: TObject);
 begin
-  // Forzar al cxGrid a postear la celda en edicion al cds. Tres
-  // niveles necesarios para cubrir el caso de la ULTIMA celda (que
-  // ningun OnExit anterior commitea):
-  //   1) HideEdit(True) cierra el editor confirmando el valor.
-  //   2) DataController.Post baja del buffer del controller al cds.
-  //   3) cdsCuadr.Post finaliza el record (no-op si ya esta en browse).
+  // Forzar al cxGrid a bajar la celda en edicion AL CDS. El cxGrid
+  // mantiene el valor tecleado en el buffer del editor hasta que el
+  // foco abandona la celda; al pulsar Aceptar con foco en una celda
+  // la encadena de commits es:
+  //   - SetFocus(btnAceptar): dispara OnExit del editor activo, que
+  //     baja al InplaceEditor.
+  //   - HideEdit(True): cierra editor confirmando valor.
+  //   - DataController.UpdateData: pasa buffer del controller al record.
+  //   - DataController.Post(False): finaliza el record.
+  //   - cdsCuadr.Post: cierra cualquier estado dsEdit residual.
+  // Sin este orden la ULTIMA celda con foco no se persiste y
+  // PersistirCambios la ve igual que en el snapshot (no hay diff
+  // -> no se hace UPSERT).
+  if btnAceptar.CanFocus then btnAceptar.SetFocus;
   if (tvCuadr.Controller <> nil) and
      (tvCuadr.Controller.EditingController <> nil) then
     tvCuadr.Controller.EditingController.HideEdit(True);
+  tvCuadr.DataController.UpdateData;
   tvCuadr.DataController.Post(False);
   if cdsCuadr.State in [dsEdit, dsInsert] then cdsCuadr.Post;
   PersistirCambios;
