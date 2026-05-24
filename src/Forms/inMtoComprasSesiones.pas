@@ -213,6 +213,8 @@ type
                 AItem: TcxCustomGridTableItem;
                 var AAllow: Boolean);
     procedure AbrirDistribuidor;
+    procedure CopiarCeldasDistribuidasOtroColor(ALineaOrigen,
+                                                 ALineaDestino: Integer);
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
@@ -1192,7 +1194,14 @@ begin
   iNewLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
 
   // 5. Persistir cantidades para la nueva linea (mismo conjunto pivot).
-  if iAcPivot > 0 then
+  //    En modo distribuido copiamos celda a celda preservando
+  //    CODIGO_ALM_SESCEL — el cuadrante almacen x talla del proveedor
+  //    se conserva. En modo clasico usamos los Values[] del grid
+  //    (que YA llevan el agregado correcto, una sola celda con
+  //    almacen vacio = el de cabecera).
+  if Dmm.unqryTablaG.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
+    CopiarCeldasDistribuidasOtroColor(iSrcLinea, iNewLinea)
+  else if iAcPivot > 0 then
   begin
     arr := FGestorTallas.GetPosicionesConjunto(iAcPivot);
     for i := 0 to High(arr) do
@@ -1726,6 +1735,48 @@ begin
       if AErr = '' then AErr := E.Message;
       Result := False;
     end;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.CopiarCeldasDistribuidasOtroColor(
+                                  ALineaOrigen, ALineaDestino: Integer);
+var
+  oQry : TUniQuery;
+  sSer, sNum : string;
+begin
+  // Replica las celdas (almacen, talla, cantidad) de la linea origen
+  // en la linea destino con un solo INSERT-SELECT. Se conserva
+  // CODIGO_ALM_SESCEL y ID_AV_PIVOT_SESCEL — el cuadrante distribuido
+  // del proveedor llega intacto a la nueva variante de color. El
+  // ON DUPLICATE KEY UPDATE no aplica porque la linea destino acaba
+  // de crearse y no tiene celdas.
+  sSer := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNum := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  oQry := TUniQuery.Create(nil);
+  try
+    oQry.Connection := inLibGlobalVar.oConn;
+    oQry.SQL.Text :=
+      'INSERT INTO fza_compras_sesiones_celdas ' +
+      '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
+      '   ID_FILA_SES_SESCEL, CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, ' +
+      '   CANTIDAD_SESCEL, INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'SELECT SERIE_SES_SESCEL, NUMERO_SES_SESCEL, :ldst, ' +
+      '       ID_FILA_SES_SESCEL, CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, ' +
+      '       CANTIDAD_SESCEL, NOW(), :u, NOW(), :u ' +
+      '  FROM fza_compras_sesiones_celdas ' +
+      ' WHERE SERIE_SES_SESCEL  = :s ' +
+      '   AND NUMERO_SES_SESCEL = :n ' +
+      '   AND LINEA_SES_SESCEL  = :lsrc ' +
+      '   AND CANTIDAD_SESCEL   > 0';
+    oQry.ParamByName('s').AsString    := sSer;
+    oQry.ParamByName('n').AsString    := sNum;
+    oQry.ParamByName('lsrc').AsInteger := ALineaOrigen;
+    oQry.ParamByName('ldst').AsInteger := ALineaDestino;
+    oQry.ParamByName('u').AsString    := oUser;
+    oQry.ExecSQL;
+  finally
+    FreeAndNil(oQry);
   end;
 end;
 
