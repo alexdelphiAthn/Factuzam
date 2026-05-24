@@ -47,6 +47,42 @@ inherited dmComprasSesiones: TdmComprasSesiones
     Left = 56
     Top = 72
   end
+  object unqrySesDocs: TUniQuery
+    SQL.Strings = (
+      'SELECT D.TIPO_DOC_SESDOC AS TIPO,'
+      '       D.SERIE_SESDOC    AS SERIE,'
+      '       D.NUMERO_SESDOC   AS NUMERO,'
+      '       D.CODIGO_ALM_SESDOC AS ALMACEN,'
+      '       D.INSTANTE_ALTA   AS INSTANTE,'
+      '       D.USUARIO_ALTA    AS USUARIO'
+      '  FROM fza_compras_sesiones_documentos D'
+      ' WHERE D.SERIE_SES_SESDOC  = :SERIE_SES'
+      '   AND D.NUMERO_SES_SESDOC = :NUMERO_SES'
+      ' ORDER BY D.INSTANTE_ALTA DESC,'
+      '          D.TIPO_DOC_SESDOC,'
+      '          D.SERIE_SESDOC,'
+      '          D.NUMERO_SESDOC')
+    MasterFields = 'SERIE_SES;NUMERO_SES'
+    DetailFields = 'SERIE_SES_SESDOC;NUMERO_SES_SESDOC'
+    Left = 144
+    Top = 16
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
+  end
+  object dsSesDocs: TDataSource
+    DataSet = unqrySesDocs
+    Left = 144
+    Top = 72
+  end
   object unqrySesionFil: TUniQuery
     SQL.Strings = (
       'SELECT * FROM fza_compras_sesiones_lineas_filas'

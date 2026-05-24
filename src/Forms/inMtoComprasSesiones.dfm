@@ -567,6 +567,93 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           end
         end
       end
+      object tsDocumentos: TcxTabSheet
+        Caption = 'Documentos'
+        ImageIndex = 0
+        ExplicitLeft = 2
+        ExplicitTop = 29
+        ExplicitWidth = 1096
+        ExplicitHeight = 649
+        object pnlDocsTop: TPanel
+          Left = 0
+          Top = 0
+          Width = 1096
+          Height = 40
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 0
+          object btnIrADoc: TcxButton
+            Left = 12
+            Top = 6
+            Width = 200
+            Height = 28
+            Caption = 'Ir a documento (F12)'
+            LookAndFeel.Kind = lfFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 0
+            OnClick = btnIrADocClick
+          end
+          object lblDocsInfo: TcxLabel
+            Left = 224
+            Top = 10
+            Caption = 'Pedidos y albaranes generados al materializar la sesi'#243'n. Doble click o F12 navega al documento.'
+            TabOrder = 1
+            Transparent = True
+          end
+        end
+        object cxgrdDocs: TcxGrid
+          Left = 0
+          Top = 40
+          Width = 1096
+          Height = 609
+          Align = alClient
+          TabOrder = 1
+          object tvDocs: TcxGridDBTableView
+            OnDblClick = tvDocsDblClick
+            DataController.DataSource = Dmm.dsSesDocs
+            OptionsBehavior.IncSearch = False
+            OptionsCustomize.ColumnHiding = True
+            OptionsData.Deleting = False
+            OptionsData.DeletingConfirmation = False
+            OptionsData.Editing = False
+            OptionsData.Inserting = False
+            OptionsView.GroupByBox = False
+            object dbcDocTipo: TcxGridDBColumn
+              Caption = 'Tipo'
+              DataBinding.FieldName = 'TIPO'
+              Width = 80
+            end
+            object dbcDocSerie: TcxGridDBColumn
+              Caption = 'Serie'
+              DataBinding.FieldName = 'SERIE'
+              Width = 80
+            end
+            object dbcDocNumero: TcxGridDBColumn
+              Caption = 'N'#250'mero'
+              DataBinding.FieldName = 'NUMERO'
+              Width = 120
+            end
+            object dbcDocAlmacen: TcxGridDBColumn
+              Caption = 'Almac'#233'n'
+              DataBinding.FieldName = 'ALMACEN'
+              Width = 140
+            end
+            object dbcDocInstante: TcxGridDBColumn
+              Caption = 'Fecha alta'
+              DataBinding.FieldName = 'INSTANTE'
+              Width = 150
+            end
+            object dbcDocUsuario: TcxGridDBColumn
+              Caption = 'Usuario'
+              DataBinding.FieldName = 'USUARIO'
+              Width = 120
+            end
+          end
+          object glDocs: TcxGridLevel
+            GridView = tvDocs
+          end
+        end
+      end
       inherited tsPerfil: TcxTabSheet
         ExplicitWidth = 1096
         ExplicitHeight = 649

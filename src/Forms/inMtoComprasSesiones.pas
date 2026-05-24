@@ -167,6 +167,25 @@ type
     btnRevertir: TcxButton;
 
     // ------------------------------------------------------------------
+    // Pestania Documentos — pedidos / albaranes generados al materializar.
+    // El grid es solo lectura; doble-click o F12 ('Ir a documento') hace
+    // ShowMto al doc seleccionado.
+    // ------------------------------------------------------------------
+    tsDocumentos : TcxTabSheet;
+    pnlDocsTop   : TPanel;
+    btnIrADoc    : TcxButton;
+    lblDocsInfo  : TcxLabel;
+    cxgrdDocs    : TcxGrid;
+    tvDocs       : TcxGridDBTableView;
+    glDocs       : TcxGridLevel;
+    dbcDocTipo   : TcxGridDBColumn;
+    dbcDocSerie  : TcxGridDBColumn;
+    dbcDocNumero : TcxGridDBColumn;
+    dbcDocAlmacen: TcxGridDBColumn;
+    dbcDocInstante: TcxGridDBColumn;
+    dbcDocUsuario: TcxGridDBColumn;
+
+    // ------------------------------------------------------------------
     // Pestania Log (trazas de depuracion del flujo de sesion)
     // ------------------------------------------------------------------
     tsLog        : TcxTabSheet;
@@ -190,6 +209,8 @@ type
     procedure btnImprimirClick(Sender: TObject);
     procedure btnLogClearClick(Sender: TObject);
     procedure btnLogCopyClick(Sender: TObject);
+    procedure btnIrADocClick(Sender: TObject);
+    procedure tvDocsDblClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
@@ -349,6 +370,11 @@ begin
     unqrySesionLin.AfterPost := unqrySesionLinAfterPostHook;
     if not unqrySesionLin.Active then unqrySesionLin.Open;
     if not unqrySesionCel.Active then unqrySesionCel.Open;
+    // Master/detail de la pestania 'Documentos'. Mismo patron que
+    // unqrySesionLin: declaramos MasterSource aqui (no en el dfm).
+    unqrySesDocs.MasterFields := 'SERIE_SES;NUMERO_SES';
+    unqrySesDocs.MasterSource := dsTablaG;
+    if not unqrySesDocs.Active then unqrySesDocs.Open;
   end;
   tvLineas.DataController.DataSource := Dmm.dsSesionLin;
 
@@ -487,6 +513,34 @@ end;
 procedure TfrmMtoComprasSesiones.btnLogCopyClick(Sender: TObject);
 begin
   if Assigned(mLog) then Clipboard.AsText := mLog.Lines.Text;
+end;
+
+procedure TfrmMtoComprasSesiones.btnIrADocClick(Sender: TObject);
+var
+  sTipo, sSerie, sNumero: string;
+begin
+  // Navega al documento seleccionado en la pestania Documentos. La
+  // query unqrySesDocs es master/detail con unqryTablaG (cabecera de
+  // sesion); siempre lista los docs de la sesion enfocada.
+  if (Dmm.unqrySesDocs = nil) or Dmm.unqrySesDocs.IsEmpty then
+    Exit;
+  sTipo   := Dmm.unqrySesDocs.FieldByName('TIPO').AsString;
+  sSerie  := Dmm.unqrySesDocs.FieldByName('SERIE').AsString;
+  sNumero := Dmm.unqrySesDocs.FieldByName('NUMERO').AsString;
+  // ALBC = albaran de compra ('AlbaranesCompra' en fza_winforms). PEDC
+  // = pedido de compra, hoy sin Mto registrado; lo dejamos para el
+  // futuro y avisamos al usuario sin abortar.
+  if SameText(sTipo, 'ALBC') then
+    ShowMto(frmMtoPrincipal, 'AlbaranesCompra', sSerie + ',' + sNumero)
+  else
+    ShowMessage(Format(
+      'No hay mantenimiento disponible para el tipo de documento "%s".',
+      [sTipo]));
+end;
+
+procedure TfrmMtoComprasSesiones.tvDocsDblClick(Sender: TObject);
+begin
+  btnIrADocClick(Sender);
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
