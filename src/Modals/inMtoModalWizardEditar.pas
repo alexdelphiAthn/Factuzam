@@ -108,8 +108,15 @@ type
     procedure unqryGuiasBeforePost(DataSet: TDataSet);
     procedure lstDatasetsClick(Sender: TObject);
     procedure lstTablasClick(Sender: TObject);
+    procedure lstCamposTablaClick(Sender: TObject);
     procedure btnAddGuiaClick(Sender: TObject);
   private
+    // Orden de seleccion del usuario en lstCamposTabla (Shift/Ctrl).
+    // TcxListBox.Selected[] solo expone que items estan seleccionados,
+    // no en que orden — pero el ON clause del LEFT JOIN se construye
+    // EXT.detail[k] = M.master[k] por posicion, asi que conservar el
+    // orden de seleccion del usuario es critico.
+    FOrdenDetail: TStringList;
     procedure CargarFormatosExistentes;
     procedure CargarScopes;
     procedure RellenarListDatasets;
@@ -119,8 +126,11 @@ type
     procedure FiltrarGuiasPorDatasetSeleccionado;
     function DatasetMasterSeleccionado: string;
     function TablaSeleccionada: string;
-    function CampoTablaSeleccionado: string;
+    function CamposTablaMarcadosCsv(const aSep: string = ';'): string;
     function CamposMarcadosCsv(const aSep: string = ';'): string;
+    // Quita el prefijo '* ' / '  ' que pintamos delante de cada campo
+    // (PK marcada con '*'). Devuelve el nombre limpio.
+    function LimpiarPrefijoPk(const aTexto: string): string;
     function NombreFinal: string;
     function EsFormatoNuevo: Boolean;
     // Cascada A->C->B para resolver los campos de un master:
@@ -173,6 +183,9 @@ begin
   // limite. CamposMarcadosCsv sigue leyendo Items[i].Checked, asi
   // que el formato del EditValue es solo para almacenamiento interno.
   lstCampos.EditValueFormat := cvfIndices;
+  // Lista de campos de la tabla externa seleccionados, en orden de
+  // seleccion del usuario. Se rellena/reconcilia en lstCamposTablaClick.
+  FOrdenDetail := TStringList.Create;
   // Los botones Start/Last/Help quedan ocultos en cada pagina via
   // VisibleButtons (propiedad publicada de TJvWizardCustomPage).
   // TJvWizardNavigateButton no expone Visible.
@@ -224,6 +237,7 @@ begin
   if unqryGuias.State in [dsEdit, dsInsert] then
     unqryGuias.Post;
   unqryGuias.Close;
+  FreeAndNil(FOrdenDetail);
 end;
 
 procedure TfrmModalWizardEditar.CargarFormatosExistentes;
@@ -633,6 +647,9 @@ begin
   lstCamposTabla.Items.BeginUpdate;
   try
     lstCamposTabla.Items.Clear;
+    // Cambio de tabla externa = reset del orden de seleccion previo.
+    if FOrdenDetail <> nil then
+      FOrdenDetail.Clear;
     if TablaSeleccionada = '' then Exit;
     unqryCamposTabla.Close;
     unqryCamposTabla.ParamByName('TAB').AsString := TablaSeleccionada;
@@ -659,6 +676,36 @@ begin
   RellenarListCamposTabla;
 end;
 
+procedure TfrmModalWizardEditar.lstCamposTablaClick(Sender: TObject);
+var
+  i, idx: Integer;
+  sCampo: string;
+begin
+  // Reconciliacion FOrdenDetail <-> Selected[]:
+  // 1) Quitamos los campos que el usuario ya no tiene seleccionados.
+  // 2) Anadimos los recien seleccionados al final de la lista, asi
+  //    el orden de seleccion del usuario se preserva (lo necesita el
+  //    pareo posicional master[k]=detail[k] del ON clause).
+  if FOrdenDetail = nil then
+    Exit;
+  for i := FOrdenDetail.Count - 1 downto 0 do
+  begin
+    sCampo := FOrdenDetail[i];
+    idx := lstCamposTabla.Items.IndexOf('* ' + sCampo);
+    if idx < 0 then
+      idx := lstCamposTabla.Items.IndexOf('  ' + sCampo);
+    if (idx < 0) or (not lstCamposTabla.Selected[idx]) then
+      FOrdenDetail.Delete(i);
+  end;
+  for i := 0 to lstCamposTabla.Items.Count - 1 do
+  begin
+    if not lstCamposTabla.Selected[i] then Continue;
+    sCampo := LimpiarPrefijoPk(lstCamposTabla.Items[i]);
+    if FOrdenDetail.IndexOf(sCampo) < 0 then
+      FOrdenDetail.Add(sCampo);
+  end;
+end;
+
 function TfrmModalWizardEditar.TablaSeleccionada: string;
 begin
   if (lstTablas.ItemIndex >= 0) and
@@ -668,18 +715,28 @@ begin
     Result := '';
 end;
 
-function TfrmModalWizardEditar.CampoTablaSeleccionado: string;
+function TfrmModalWizardEditar.LimpiarPrefijoPk(const aTexto: string): string;
 var
   s: string;
 begin
-  Result := '';
-  if (lstCamposTabla.ItemIndex < 0) or
-     (lstCamposTabla.ItemIndex >= lstCamposTabla.Count) then Exit;
-  s := lstCamposTabla.Items[lstCamposTabla.ItemIndex];
-  // El prefijo '* ' / '  ' lo añadimos al pintar. Lo quitamos aqui.
+  s := aTexto;
   if (Length(s) >= 2) and ((Copy(s, 1, 2) = '* ') or (Copy(s, 1, 2) = '  ')) then
     Delete(s, 1, 2);
   Result := Trim(s);
+end;
+
+function TfrmModalWizardEditar.CamposTablaMarcadosCsv(
+                                        const aSep: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  if FOrdenDetail = nil then Exit;
+  for i := 0 to FOrdenDetail.Count - 1 do
+  begin
+    if Result <> '' then Result := Result + aSep;
+    Result := Result + FOrdenDetail[i];
+  end;
 end;
 
 procedure TfrmModalWizardEditar.FiltrarGuiasPorDatasetSeleccionado;
@@ -735,7 +792,7 @@ begin
   sDS         := DatasetMasterSeleccionado;
   sCampos     := CamposMarcadosCsv;
   sTabla      := TablaSeleccionada;
-  sCampoTabla := CampoTablaSeleccionado;
+  sCampoTabla := CamposTablaMarcadosCsv;
 
   if sDS = '' then
   begin
@@ -756,8 +813,10 @@ begin
   end;
   if sCampoTabla = '' then
   begin
-    ShowMessage('4) Selecciona el campo de la tabla externa que se ' +
-                'cruza con el master (la PK aparece marcada con "*").');
+    ShowMessage('4) Selecciona el campo (o campos) de la tabla externa ' +
+                'que se cruzan con el master. Para seleccionar varios ' +
+                'usa Ctrl o Mayus; el orden de seleccion determina el ' +
+                'pareo con los Master fields (k=1,2,...).');
     Exit;
   end;
 
