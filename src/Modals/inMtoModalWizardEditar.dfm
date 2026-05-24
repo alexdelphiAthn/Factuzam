@@ -246,12 +246,14 @@ inherited frmModalWizardEditar: TfrmModalWizardEditar
             Width = 340
             Height = 178
             ItemHeight = 19
+            MultiSelect = True
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
             Style.Font.Height = -13
             Style.Font.Name = 'Consolas'
             Style.IsFontAssigned = True
             TabOrder = 3
+            OnClick = lstCamposTablaClick
           end
         end
         object pnlAddGuia: TPanel
