@@ -863,20 +863,41 @@ begin
 end;
 
 procedure TfrmPrint.CargarFormatos(form:TfrmMtoModalGenImpEle);
+var
+  perfilDic: TProfileDicc;
+  kvp: TPair<string, TDictValue>;
 begin
-   with unqryPerfiles do
-  begin
-    Refresh;
-    if (unqryPerfiles.RecordCount > 0) then
-    begin
-      First;
-      Form.lstFormatos.Clear;
-      while not Eof do
-      begin
-        form.lstFormatos.AddItem(FieldByName('VALUE_USUPER').AsString, nil);
-        Next;
-      end;
+  // Servimos la lista de formatos desde el cache precargado al login
+  // (PrecargarPerfilesUsuario). Asi no se va a BBDD a refrescar; el BLOB
+  // del .frx se carga lazy cuando el usuario elige un formato concreto.
+  form.lstFormatos.Clear;
+  if (odmPerfiles <> nil) and
+     odmPerfiles.ObtenerPerfilFormCache(Self.Name, perfilDic) then
+  try
+    for kvp in perfilDic do
+      form.lstFormatos.AddItem(kvp.Value.sValue, nil);
+    if form.lstFormatos.Count > 0 then
       form.lstFormatos.ItemIndex := 0;
+  finally
+    FreeAndNil(perfilDic);
+  end
+  else
+  begin
+    // Fallback: si la precarga fallo (FCachePrecargada=False) tiramos del
+    // TUniQuery como antes. No es lo esperado en operacion normal.
+    with unqryPerfiles do
+    begin
+      Refresh;
+      if RecordCount > 0 then
+      begin
+        First;
+        while not Eof do
+        begin
+          form.lstFormatos.AddItem(FieldByName('VALUE_USUPER').AsString, nil);
+          Next;
+        end;
+        form.lstFormatos.ItemIndex := 0;
+      end;
     end;
   end;
 end;
@@ -1038,6 +1059,9 @@ begin
         unqrySol.ParamByName('NombreReport').AsString := Self.Name;
         unqrySol.ParamByName('Descripcion').AsString := sElegido;
         unqrySol.Execute;
+        // Refrescamos cache para que CargarFormatos no vea el borrado.
+        if odmPerfiles <> nil then
+          odmPerfiles.ResincronizarCachePerfilForm(Self.Name);
       end;
       CargarFormatos(form);
     end;
@@ -1141,6 +1165,10 @@ begin
                                                       LoadFromStream(memStream);
         //https://forums.devart.com/viewtopic.php?t=19115
         unqryPerfiles.Post;
+        // Refrescamos el cache de perfiles del form (lo usa CargarFormatos)
+        // para que la lista de formatos refleje el alta inmediatamente.
+        if odmPerfiles <> nil then
+          odmPerfiles.ResincronizarCachePerfilForm(Self.Name);
         // Atar las guias referenciadas por este .frx al formato recien
         // guardado: clona en fza_informes_guias las que existian como
         // globales para que el formato quede autocontenido.
