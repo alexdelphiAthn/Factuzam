@@ -27,6 +27,11 @@ type
     // Cabecera de sesión (lista principal). unqryTablaG ya existe en TdmBase.
     unqrySesionLin: TUniQuery;
     dsSesionLin: TDataSource;
+    // Lista de documentos generados al materializar la sesion (PEDC /
+    // ALBC). Master/detail con unqryTablaG via SERIE_SES/NUMERO_SES.
+    // Alimenta la pestania 'Documentos' del Mto.
+    unqrySesDocs: TUniQuery;
+    dsSesDocs: TDataSource;
 
     unqrySesionFil: TUniQuery;
     dsSesionFil: TDataSource;
@@ -170,6 +175,7 @@ procedure TdmComprasSesiones.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqrySesionLin.Connection         := inLibGlobalVar.oConn;
+  unqrySesDocs.Connection           := inLibGlobalVar.oConn;
   unqrySesionFil.Connection         := inLibGlobalVar.oConn;
   unqrySesionFilAtr.Connection      := inLibGlobalVar.oConn;
   unqrySesionCel.Connection         := inLibGlobalVar.oConn;
