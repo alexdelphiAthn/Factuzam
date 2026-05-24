@@ -1457,6 +1457,36 @@ begin
                                 sSeriePedReal, sNumSes, AUsuario);
       ASeriePed := sSeriePedReal;
       ANumPed   := sNumSes;
+      // Registro en fza_compras_sesiones_documentos para la pestania
+      // 'Documentos' del Mto. Usamos INSERT IGNORE para soportar
+      // re-materializacion sin chocar contra la PK (aunque revertir ya
+      // los borra, defendemos el caso de varias materializaciones
+      // parciales al mismo almacen).
+      qLin := TUniQuery.Create(nil);
+      try
+        qLin.Connection := conn;
+        qLin.SQL.Text :=
+          'INSERT IGNORE INTO fza_compras_sesiones_documentos ' +
+          '  (SERIE_SES_SESDOC, NUMERO_SES_SESDOC, TIPO_DOC_SESDOC, ' +
+          '   CODIGO_ALM_SESDOC, CODIGO_EMP_SESDOC, ' +
+          '   SERIE_SESDOC, NUMERO_SESDOC, ' +
+          '   INSTANTE_ALTA, USUARIO_ALTA) ' +
+          'SELECT :s, :n, ''PEDC'', ' +
+          '       CASE WHEN :alm_ovr <> '''' THEN :alm_ovr ' +
+          '            ELSE S.CODIGO_ALM_SES END, ' +
+          '       S.CODIGO_EMP_SES, :sd, :nd, NOW(), :u ' +
+          '  FROM fza_compras_sesiones S ' +
+          ' WHERE S.SERIE_SES = :s AND S.NUMERO_SES = :n';
+        qLin.ParamByName('s').AsString  := sSerieSes;
+        qLin.ParamByName('n').AsString  := sNumSes;
+        qLin.ParamByName('alm_ovr').AsString := AFiltroAlmacen;
+        qLin.ParamByName('sd').AsString := sSeriePedReal;
+        qLin.ParamByName('nd').AsString := sNumSes;
+        qLin.ParamByName('u').AsString  := AUsuario;
+        qLin.ExecSQL;
+      finally
+        FreeAndNil(qLin);
+      end;
     end;
     if AESGeneraAlbaran then
     begin
@@ -1499,6 +1529,33 @@ begin
         qLin.ParamByName('s').AsString := ASerieAlb;
         qLin.ParamByName('n').AsString := ANumAlb;
         qLin.ParamByName('u').AsString := AUsuario;
+        qLin.ExecSQL;
+      finally
+        FreeAndNil(qLin);
+      end;
+      // Registro en fza_compras_sesiones_documentos (TIPO_DOC='ALBC')
+      // para la pestania 'Documentos' del Mto. Tomamos el almacen
+      // efectivo del albaran que acabamos de crear (CODIGO_ALM_ALBC),
+      // que ya respeta el override por almacen si lo hay.
+      qLin := TUniQuery.Create(nil);
+      try
+        qLin.Connection := conn;
+        qLin.SQL.Text :=
+          'INSERT IGNORE INTO fza_compras_sesiones_documentos ' +
+          '  (SERIE_SES_SESDOC, NUMERO_SES_SESDOC, TIPO_DOC_SESDOC, ' +
+          '   CODIGO_ALM_SESDOC, CODIGO_EMP_SESDOC, ' +
+          '   SERIE_SESDOC, NUMERO_SESDOC, ' +
+          '   INSTANTE_ALTA, USUARIO_ALTA) ' +
+          'SELECT :s, :n, ''ALBC'', ' +
+          '       A.CODIGO_ALM_ALBC, A.CODIGO_EMP_ALBC, ' +
+          '       :sd, :nd, NOW(), :u ' +
+          '  FROM fza_albaranes_compra A ' +
+          ' WHERE A.SERIE_ALBC = :sd AND A.NUMERO_ALBC = :nd';
+        qLin.ParamByName('s').AsString  := sSerieSes;
+        qLin.ParamByName('n').AsString  := sNumSes;
+        qLin.ParamByName('sd').AsString := ASerieAlb;
+        qLin.ParamByName('nd').AsString := ANumAlb;
+        qLin.ParamByName('u').AsString  := AUsuario;
         qLin.ExecSQL;
       finally
         FreeAndNil(qLin);
@@ -1768,6 +1825,22 @@ begin
         except
           // tabla puede no existir en BBDD legacy — best effort
         end;
+      end;
+      // 0j-bis. Limpiar fza_compras_sesiones_documentos. Si se vuelve a
+      //         materializar, los INSERT IGNORE meterian otra vez los
+      //         mismos docs. Borramos siempre toda la lista de la
+      //         sesion sin filtrar tipo, para vaciar tanto PEDC como
+      //         ALBC. Best effort: si la tabla no existe (BBDD legacy
+      //         pre-script) seguimos sin abortar.
+      try
+        q.SQL.Text :=
+          'DELETE FROM fza_compras_sesiones_documentos ' +
+          ' WHERE SERIE_SES_SESDOC  = :s ' +
+          '   AND NUMERO_SES_SESDOC = :n';
+        q.ParamByName('s').AsString := sSerieSes;
+        q.ParamByName('n').AsString := sNumSes;
+        q.ExecSQL;
+      except
       end;
 
       // 1. Borrar los movimientos de almacen que esta sesion creo. Solo
