@@ -86,10 +86,11 @@ begin
   FlblNombre.AutoSize := False;
   FlblNombre.SetBounds(0, 295, Panel1.Width, 22);
   FlblNombre.Properties.Alignment.Horz := taCenter;
+  // Asignar cualquier propiedad de Style.Font activa IsFontAssigned
+  // automaticamente; no hay que tocarla en runtime (es read-only).
   FlblNombre.Style.Font.Name   := 'Lucida Sans';
   FlblNombre.Style.Font.Height := -16;
   FlblNombre.Style.Font.Style  := [fsBold];
-  FlblNombre.Style.IsFontAssigned := True;
   FlblNombre.Transparent := True;
   // Version dinamica, leida de inLibGlobalVar para evitar drift entre
   // splash y about.
@@ -102,7 +103,6 @@ begin
   FlblVersion.Style.Font.Name   := 'Lucida Sans';
   FlblVersion.Style.Font.Height := -12;
   FlblVersion.Style.Font.Style  := [];
-  FlblVersion.Style.IsFontAssigned := True;
   FlblVersion.Transparent := True;
 end;
 
