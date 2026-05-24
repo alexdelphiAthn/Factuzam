@@ -346,24 +346,23 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 object chkVerColumnasAtributos: TcxCheckBox
                   Left = 7
                   Top = 50
+                  Hint = 
+                    'Activa la construcci'#243'n de las columnas SKU1..SKU5 con los nombre' +
+                    's de atributo del art'#237'culo. Implica recorrer todas las l'#237'neas pa' +
+                    'ra desempaquetar el SKU. Si hay m'#225's de 150 l'#237'neas se muestra una' +
+                    ' barra de progreso.'
                   Caption = 'Ver atributos en columnas'
                   ParentShowHint = False
                   Properties.OnChange = chkVerColumnasAtributosPropertiesChange
                   ShowHint = True
-                  Hint =
-                    'Activa la construcci'#243'n de las columnas SKU1..SKU5 con los nombr' +
-                    'es de atributo del art'#237'culo. Implica recorrer todas las l'#237'neas' +
-                    ' para desempaquetar el SKU. Si hay m'#225's de 150 l'#237'neas se muestra' +
-                    ' una barra de progreso.'
                   TabOrder = 7
-                  Width = 230
                 end
               end
               object cxgrdLineas: TcxGrid
                 Left = 0
-                Top = 50
+                Top = 80
                 Width = 1130
-                Height = 382
+                Height = 352
                 Align = alClient
                 TabOrder = 1
                 object tvLineas: TcxGridDBTableView
@@ -387,6 +386,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.FocusCellOnCycle = True
+                  OptionsData.Appending = True
                   OptionsSelection.HideFocusRectOnExit = False
                   OptionsView.Footer = True
                   OptionsView.GroupByBox = False

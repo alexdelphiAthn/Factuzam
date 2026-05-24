@@ -2,8 +2,8 @@ inherited frmModalDistribuidor: TfrmModalDistribuidor
   Caption = 'Distribuidor por almac'#233'n / talla'
   ClientHeight = 480
   ClientWidth = 900
-  StyleElements = [seFont, seClient, seBorder]
   Position = poScreenCenter
+  StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
   ExplicitWidth = 916
   ExplicitHeight = 519
@@ -16,18 +16,19 @@ inherited frmModalDistribuidor: TfrmModalDistribuidor
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 898
     object lblTitulo: TcxLabel
       Left = 16
       Top = 12
       Caption = 'Distribuci'#243'n almac'#233'n / talla'
-      Style.Font.Style = [fsBold]
-      Style.IsFontAssigned = True
+      TabOrder = 1
       Transparent = True
     end
     object lblLinea: TcxLabel
       Left = 320
       Top = 14
       Caption = 'L'#237'nea:'
+      TabOrder = 2
       Transparent = True
     end
     object edtLinea: TcxTextEdit
@@ -46,6 +47,8 @@ inherited frmModalDistribuidor: TfrmModalDistribuidor
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 898
+    ExplicitHeight = 362
     object cxgrdCuadr: TcxGrid
       Left = 0
       Top = 0
@@ -53,9 +56,12 @@ inherited frmModalDistribuidor: TfrmModalDistribuidor
       Height = 370
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 898
+      ExplicitHeight = 362
       object tvCuadr: TcxGridDBTableView
         DataController.DataSource = dsCuadr
-        OptionsBehavior.IncSearch = True
+        OptionsBehavior.AlwaysShowEditor = True
+        OptionsBehavior.FocusCellOnTab = True
         OptionsCustomize.ColumnHiding = True
         OptionsData.Deleting = False
         OptionsData.DeletingConfirmation = False
@@ -75,6 +81,8 @@ inherited frmModalDistribuidor: TfrmModalDistribuidor
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitTop = 412
+    ExplicitWidth = 898
     object btnAceptar: TcxButton
       Left = 650
       Top = 12
