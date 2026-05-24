@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibDiag                                                     }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.0.1                                                         }
 {   Fecha:       24/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -16,8 +16,17 @@
 {    arranque del form principal se encola una excepción de prueba             }
 {    con varios niveles de llamada para que el stack tenga frames              }
 {    visibles y se distinga si JCL está rellenando E.StackTrace.               }
+{                                                                              }
+{    Directivas locales: forzamos sin optimización, con stack frames           }
+{    y sin inlining para que cada capa intermedia aparezca como                }
+{    frame propio en el volcado de pila (de lo contrario el                    }
+{    compilador colapsa las llamadas triviales).                               }
 {******************************************************************************}
 unit inLibDiag;
+
+{$O-}
+{$STACKFRAMES ON}
+{$INLINE OFF}
 
 interface
 
@@ -28,26 +37,35 @@ implementation
 uses
   System.SysUtils;
 
-// Tres niveles encadenados para que la pila no quede plana.
-procedure LanzarExcepcionProfunda;
+// Cada capa concatena su nombre a la traza para que el compilador
+// no pueda colapsar la llamada (tail call) ni inlinearla. Así
+// el stack trace muestra los 4 frames de la cadena.
+
+procedure LanzarExcepcionProfunda(const ATraza: string);
 begin
-  raise Exception.Create
-    ('Prueba forzada con /teststack: verificación de JCL stack trace');
+  raise Exception.CreateFmt
+    ('Prueba forzada con /teststack [%s]: JCL stack trace activo',
+     [ATraza]);
 end;
 
-procedure CapaIntermedia;
+procedure CapaProfunda(const ATraza: string);
 begin
-  LanzarExcepcionProfunda;
+  LanzarExcepcionProfunda(ATraza + ' -> profunda');
 end;
 
-procedure CapaSuperficial;
+procedure CapaMedia(const ATraza: string);
 begin
-  CapaIntermedia;
+  CapaProfunda(ATraza + ' -> media');
+end;
+
+procedure CapaSuperficial(const ATraza: string);
+begin
+  CapaMedia(ATraza + ' -> superficial');
 end;
 
 procedure ProbarStackTrace;
 begin
-  CapaSuperficial;
+  CapaSuperficial('arranque');
 end;
 
 end.
