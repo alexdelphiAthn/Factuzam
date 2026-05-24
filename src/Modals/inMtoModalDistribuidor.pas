@@ -341,7 +341,7 @@ begin
             '   ID_FILA_SES_SESCEL, ' +
             '   CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL, ' +
             '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-            'VALUES (:s, :n, :l, 0, :a, :p, :c, NOW(), :u, NOW(), :u) ' +
+            'VALUES (:s, :n, :l, 1, :a, :p, :c, NOW(), :u, NOW(), :u) ' +
             'ON DUPLICATE KEY UPDATE CANTIDAD_SESCEL = :c, ' +
             '                        INSTANTE_MODIF  = NOW(), ' +
             '                        USUARIO_MODIF   = :u';

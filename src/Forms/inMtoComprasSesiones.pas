@@ -1855,9 +1855,16 @@ begin
       // hasta una edicion manual de la linea.
       if Assigned(FGestorTallas) then
       begin
+        FGestorTallas.InvalidarCache;
         FGestorTallas.RefrescarTotalesLineaActual;
         FGestorTallas.CargarCantidadesTodasLineas;
       end;
+      // Refrescamos el dataset de lineas para que el cds vea los
+      // TOTAL_UNIDADES_SESLIN / TOTAL_LINEA_SESLIN actualizados por
+      // RefrescarTotalesLineaActual (que escribe via UPDATE SQL
+      // directo). Sin Refresh el grid principal sigue mostrando los
+      // valores antiguos de la linea recien editada.
+      Dmm.unqrySesionLin.Refresh;
     end;
   finally
     FreeAndNil(oForm);
