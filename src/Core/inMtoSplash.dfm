@@ -12,6 +12,7 @@
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   Position = poScreenCenter
+  OnCreate = FormCreate
   TextHeight = 13
   object Panel1: TPanel
     Left = 0

@@ -35,8 +35,10 @@ type
     procedure JvGIFAnimator1Click(Sender: TObject);
     procedure cxLabel1Click(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
-    { Private declarations }
+    FlblNombre:  TcxLabel;
+    FlblVersion: TcxLabel;
   public
     { Public declarations }
   end;
@@ -44,6 +46,9 @@ var
   frmSplash: TfrmSplash;
 
 implementation
+
+uses
+  inLibGlobalVar;
 
 {$R *.dfm}
 
@@ -62,6 +67,43 @@ end;
 procedure TfrmSplash.btnAceptarClick(Sender: TObject);
 begin
   Self.Close;
+end;
+
+procedure TfrmSplash.FormCreate(Sender: TObject);
+const
+  CNombre: string = 'Alejandro Laorden Hidalgo';
+  CEmail:  string = 'alejandro.laorden@protonmail.com';
+begin
+  // El email del .dfm se sobreescribe en runtime para no quedar atado al
+  // valor cableado (que ademas en versiones antiguas era una direccion
+  // de batch antigua).
+  hlEmail.Text := CEmail;
+  // Nombre del autor superpuesto al GIF (banda inferior del area de
+  // imagen, justo encima del panel de creditos).
+  FlblNombre := TcxLabel.Create(Self);
+  FlblNombre.Parent  := Panel1;
+  FlblNombre.Caption := CNombre;
+  FlblNombre.AutoSize := False;
+  FlblNombre.SetBounds(0, 295, Panel1.Width, 22);
+  FlblNombre.Properties.Alignment.Horz := taCenter;
+  FlblNombre.Style.Font.Name   := 'Lucida Sans';
+  FlblNombre.Style.Font.Height := -16;
+  FlblNombre.Style.Font.Style  := [fsBold];
+  FlblNombre.Style.IsFontAssigned := True;
+  FlblNombre.Transparent := True;
+  // Version dinamica, leida de inLibGlobalVar para evitar drift entre
+  // splash y about.
+  FlblVersion := TcxLabel.Create(Self);
+  FlblVersion.Parent  := Panel1;
+  FlblVersion.Caption := 'Versión ' + oVersion;
+  FlblVersion.AutoSize := False;
+  FlblVersion.SetBounds(0, 316, Panel1.Width, 18);
+  FlblVersion.Properties.Alignment.Horz := taCenter;
+  FlblVersion.Style.Font.Name   := 'Lucida Sans';
+  FlblVersion.Style.Font.Height := -12;
+  FlblVersion.Style.Font.Style  := [];
+  FlblVersion.Style.IsFontAssigned := True;
+  FlblVersion.Transparent := True;
 end;
 
 initialization

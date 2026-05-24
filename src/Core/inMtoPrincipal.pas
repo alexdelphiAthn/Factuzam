@@ -218,6 +218,11 @@ type
     FDmConn: TdmConn;
     FdmDataPerfiles: TdmPerfiles;
     oFzaWinf: TfzaWinF;
+    // Splash mostrado al arrancar; lo libera CerrarSplashInicio al final
+    // del FormCreate, respetando un suelo minimo de visibilidad.
+    FSplashInicio:    TObject;
+    FSplashTimestamp: TDateTime;
+    procedure CerrarSplashInicio(aMinimoMs: Integer);
   end;
 
 var
@@ -391,6 +396,21 @@ begin
   Application.OnIdle := ApplicationEvents1Idle;
   sDis := '';
   oMemoSQL := cxMemo1;
+  // Splash no-modal al arrancar. Lo mantenemos visible mientras corre el
+  // resto de la inicializacion y garantizamos un suelo de 1000 ms para
+  // que la marca se lea aunque todo termine en 250 ms.
+  FSplashInicio := nil;
+  FSplashTimestamp := Now;
+  try
+    FSplashInicio := TfrmSplash.Create(nil);
+    TfrmSplash(FSplashInicio).FormStyle := fsStayOnTop;
+    TfrmSplash(FSplashInicio).btnAceptar.Visible := False;
+    TfrmSplash(FSplashInicio).Show;
+    Application.ProcessMessages;
+  except
+    // Si el splash falla por lo que sea, no rompemos el arranque.
+    FreeAndNil(FSplashInicio);
+  end;
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
   FDmConn.conUni.Connect;
@@ -433,6 +453,35 @@ begin
   imgFondoLogo.BringToFront;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
+  // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
+  // de 1000 ms, esperamos a llegar a ese minimo para que el usuario
+  // pueda leer la marca; si tardo mas, lo cerramos sin demora.
+  CerrarSplashInicio(1000);
+end;
+
+procedure TfrmMtoPrincipal.CerrarSplashInicio(aMinimoMs: Integer);
+var
+  iElapsedMs, iEsperaMs: Integer;
+begin
+  if FSplashInicio = nil then
+    Exit;
+  // Si ya ha pasado el suelo minimo, cierre inmediato. Si no, dormimos
+  // lo que falte. Sleep simple: el splash no se anima durante la espera
+  // pero la VCL no se cuelga porque estamos en el ultimo paso de
+  // FormCreate; Application.Run procesara mensajes despues.
+  iElapsedMs := Round((Now - FSplashTimestamp) * 86400000);
+  if iElapsedMs < aMinimoMs then
+  begin
+    iEsperaMs := aMinimoMs - iElapsedMs;
+    Application.ProcessMessages;
+    Sleep(iEsperaMs);
+  end;
+  try
+    TfrmSplash(FSplashInicio).Close;
+  except
+    // Si el form ya estaba liberado por algun motivo, lo ignoramos.
+  end;
+  FreeAndNil(FSplashInicio);
 end;
 
 // El Picture.Data del .dfm trae un envoltorio TdxSmartImage que el TImage
