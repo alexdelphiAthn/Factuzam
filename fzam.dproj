@@ -698,19 +698,13 @@
                 <DeployFile LocalName="$(crossvcl)\Redist\libcrossvcl64.dylib"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
-                <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
-                <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="logo_art\icon-128.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>
                 <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150"/>
-                <DeployFile LocalName="logo_art\icon-128.png" Configuration="Release" Class="UWP_DelphiLogo150"/>
                 <DeployFile LocalName="logo_art\icon-48.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>
-                <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="logo_art\icon-48.png" Configuration="Release" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="payment_48_48.png" Configuration="Debug" Class="UWP_DelphiLogo44"/>
                 <DeployFile LocalName="payment_tax_invoice_document_calculator_icon_188684.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>

@@ -1,7 +1,7 @@
 inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
   ClientHeight = 429
-  ClientWidth = 1364
+  ClientWidth = 1359
   Font.Charset = ANSI_CHARSET
   Font.Height = -19
   StyleElements = [seFont, seClient, seBorder]
@@ -9,13 +9,15 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitWidth = 1380
+  ExplicitLeft = -92
+  ExplicitTop = 3
+  ExplicitWidth = 1375
   ExplicitHeight = 468
   TextHeight = 22
   object pnlUp: TPanel [0]
     Left = 0
     Top = 0
-    Width = 1364
+    Width = 1359
     Height = 89
     Align = alTop
     TabOrder = 0
@@ -179,7 +181,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli: TPanel [1]
     Left = 0
     Top = 89
-    Width = 1364
+    Width = 1359
     Height = 340
     Align = alClient
     TabOrder = 1
@@ -188,21 +190,20 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 241
-      Width = 1362
+      Width = 1357
       Height = 98
       Align = alBottom
       TabOrder = 1
       ExplicitTop = 233
       ExplicitWidth = 1360
       object pnlTotal: TPanel
-        Left = 878
+        Left = 928
         Top = 1
-        Width = 483
+        Width = 428
         Height = 96
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitLeft = 876
         object lblTotal: TcxLabel
           Left = 0
           Top = 0
@@ -228,20 +229,22 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Properties.Orientation = cxoRight
           Properties.WordWrap = True
           TabOrder = 0
+          ExplicitLeft = 56
+          ExplicitWidth = 427
           Height = 96
-          Width = 483
-          AnchorX = 483
+          Width = 428
+          AnchorX = 428
         end
       end
       object pnlBotones: TPanel
         Left = 1
         Top = 1
-        Width = 877
+        Width = 927
         Height = 96
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 875
+        ExplicitWidth = 920
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -458,7 +461,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     object pnlAccionesDer: TPanel
       Left = 1
       Top = 1
-      Width = 1362
+      Width = 1357
       Height = 240
       Align = alClient
       TabOrder = 0
@@ -467,7 +470,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object cxgrdLineasOpe: TcxGrid
         Left = 1
         Top = 1
-        Width = 1360
+        Width = 1355
         Height = 114
         Align = alClient
         Font.Charset = ANSI_CHARSET
@@ -573,14 +576,14 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object pnlBusqueda: TPanel
         Left = 1
         Top = 123
-        Width = 1360
+        Width = 1355
         Height = 116
         Align = alBottom
         TabOrder = 1
         ExplicitTop = 115
         ExplicitWidth = 1358
         object pnlFotoStock: TPanel
-          Left = 1239
+          Left = 1234
           Top = 1
           Width = 120
           Height = 114
@@ -600,7 +603,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           end
         end
         object splFotoStock: TcxSplitter
-          Left = 1229
+          Left = 1224
           Top = 1
           Width = 10
           Height = 114
@@ -611,7 +614,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
-          Width = 1228
+          Width = 1223
           Height = 114
           Align = alClient
           Font.Charset = ANSI_CHARSET
@@ -654,7 +657,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object splOpe: TcxSplitter
         Left = 1
         Top = 115
-        Width = 1360
+        Width = 1355
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
