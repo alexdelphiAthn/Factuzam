@@ -14,6 +14,7 @@ uses
   {$ENDIF }
   {$ENDIF }
   Sysutils,
+  Classes,
   dxCore,
   JclDebug,
   JclHookExcept,
