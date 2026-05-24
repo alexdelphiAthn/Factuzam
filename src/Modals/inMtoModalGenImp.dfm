@@ -160,12 +160,15 @@ inherited frmPrint: TfrmPrint
   object unqryPerfiles: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'select *'
-      'from fza_usuarios_perfiles'
-      'where (KEY_USUPER = :FormName)'
-      'and (USUARIO_GRUPO_USUPER = :Usuario OR'
-      '     USUARIO_GRUPO_USUPER = :Grupo   OR'
-      '     USUARIO_GRUPO_USUPER = :Todos)')
+      'select USUARIO_GRUPO_USUPER, KEY_USUPER, SUBKEY_USUPER,'
+      '       VALUE_USUPER, TYPE_BLOB_USUPER,'
+      '       INSTANTE_MODIF, INSTANTE_ALTA,'
+      '       USUARIO_ALTA, USUARIO_MODIF'
+      '  from fza_usuarios_perfiles'
+      ' where (KEY_USUPER = :FormName)'
+      '   and (USUARIO_GRUPO_USUPER = :Usuario OR'
+      '        USUARIO_GRUPO_USUPER = :Grupo   OR'
+      '        USUARIO_GRUPO_USUPER = :Todos)')
     Left = 16
     Top = 8
     ParamData = <
