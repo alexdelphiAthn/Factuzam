@@ -19,7 +19,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1366
+    ExplicitWidth = 1362
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -183,7 +183,8 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 340
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1366
+    ExplicitWidth = 1362
+    ExplicitHeight = 332
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 241
@@ -191,7 +192,8 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitWidth = 1364
+      ExplicitTop = 233
+      ExplicitWidth = 1360
       object pnlTotal: TPanel
         Left = 878
         Top = 1
@@ -200,7 +202,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitLeft = 880
+        ExplicitLeft = 876
         object lblTotal: TcxLabel
           Left = 0
           Top = 0
@@ -239,7 +241,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 879
+        ExplicitWidth = 875
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -460,11 +462,13 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 240
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 1360
+      ExplicitHeight = 232
       object cxgrdLineasOpe: TcxGrid
         Left = 1
         Top = 1
         Width = 1360
-        Height = 112
+        Height = 114
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -477,6 +481,8 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
+        ExplicitWidth = 1358
+        ExplicitHeight = 106
         object tvLineasOpe: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
@@ -488,7 +494,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           OnInitEdit = cxGrid1DBTableView1InitEdit
           DataController.DataSource = dsLineas
           OptionsBehavior.GoToNextCellOnEnter = True
-          OptionsBehavior.FocusCellOnCycle = True
           OptionsData.Appending = True
           OptionsView.NoDataToDisplayInfoText = 'No hay art'#237'culos'
           OptionsView.ColumnAutoWidth = True
@@ -572,14 +577,17 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Height = 116
         Align = alBottom
         TabOrder = 1
+        ExplicitTop = 115
+        ExplicitWidth = 1358
         object pnlFotoStock: TPanel
-          Left = 1240
+          Left = 1239
           Top = 1
           Width = 120
           Height = 114
           Align = alRight
           BevelOuter = bvLowered
           TabOrder = 1
+          ExplicitLeft = 1237
           object imgFotoStock: TImage
             Left = 1
             Top = 1
@@ -592,17 +600,18 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           end
         end
         object splFotoStock: TcxSplitter
-          Left = 1232
+          Left = 1229
           Top = 1
           Width = 10
           Height = 114
           AlignSplitter = salRight
           Control = pnlFotoStock
+          ExplicitLeft = 1227
         end
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
-          Width = 1358
+          Width = 1228
           Height = 114
           Align = alClient
           Font.Charset = ANSI_CHARSET
@@ -616,6 +625,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
+          ExplicitWidth = 1226
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnCustomDrawCell = dbtvStockCustomDrawCell
@@ -643,12 +653,14 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object splOpe: TcxSplitter
         Left = 1
-        Top = 113
-        Width = 10
-        Height = 10
+        Top = 115
+        Width = 1360
+        Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
+        ExplicitTop = 107
+        ExplicitWidth = 1358
       end
     end
   end
