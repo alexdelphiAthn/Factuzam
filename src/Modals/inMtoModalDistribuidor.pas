@@ -67,6 +67,11 @@ type
     // garantizaba via DFM-streaming. CloseQuery siempre se llama al cerrar,
     // tanto si fue click en boton, F12 (Action1) o cierre programatico.
     function CloseQuery: Boolean; override;
+    // DoShow es dynamic en TCustomForm. Lo overrideamos para mover el
+    // foco al grid (el ancestro lo deja en btnAceptar). Asi el usuario
+    // teclea numeros y entra en edicion inmediata sobre la primera
+    // celda editable (T01 del primer almacen) -> sensacion Excel.
+    procedure DoShow; override;
   private
     FConn         : TUniConnection;
     FUsuario      : string;
@@ -110,6 +115,31 @@ procedure TfrmModalDistribuidor.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FSnapshot);
   inherited;
+end;
+
+procedure TfrmModalDistribuidor.DoShow;
+var
+  iCol: Integer;
+begin
+  // inherited dispara OnShow del ancestro que pone foco en btnAceptar.
+  // Acto seguido lo redirigimos al grid: ponemos record activo en 0 y
+  // columna activa en la primera focusable (las dos de etiqueta llevan
+  // Focusing:=False, asi caemos en T01 = primera talla, fila 1 = primer
+  // almacen). Experiencia Excel: el usuario teclea numero -> editor con
+  // ImmediateEditor abre directamente.
+  inherited;
+  if (tvCuadr.DataController.RecordCount > 0) and (tvCuadr.ColumnCount > 0) then
+  begin
+    tvCuadr.Controller.FocusedRecordIndex := 0;
+    for iCol := 0 to tvCuadr.ColumnCount - 1 do
+      if tvCuadr.Columns[iCol].Options.Focusing then
+      begin
+        tvCuadr.Controller.FocusedColumnIndex := iCol;
+        Break;
+      end;
+  end;
+  if cxgrdCuadr.CanFocus then
+    cxgrdCuadr.SetFocus;
 end;
 
 function TfrmModalDistribuidor.GetConfirmado: Boolean;
@@ -164,18 +194,24 @@ begin
   // Recreamos las columnas del cxGrid bound al cds. La columna almacen
   // es read-only; las tallas editables.
   tvCuadr.ClearItems;
+  // Las dos primeras columnas son etiqueta (read-only). Focusing:=False
+  // hace que Enter/Tab/Flechas las SALTEN, asi siempre caes en una talla
+  // editable. Visualmente siguen apareciendo, solo no se puede aterrizar
+  // en ellas via teclado ni click.
   with tvCuadr.CreateColumn do
   begin
     DataBinding.FieldName := 'CODIGO_ALM';
     Caption := 'Almacen';
-    Options.Editing := False;
+    Options.Editing  := False;
+    Options.Focusing := False;
     Width := 70;
   end;
   with tvCuadr.CreateColumn do
   begin
     DataBinding.FieldName := 'NOMBRE_ALM';
     Caption := 'Nombre';
-    Options.Editing := False;
+    Options.Editing  := False;
+    Options.Focusing := False;
     Width := 160;
   end;
   for i := 0 to High(FPosiciones) do
@@ -203,10 +239,15 @@ begin
     oQry := TUniQuery.Create(nil);
     try
       oQry.Connection := FConn;
+      // Filtramos por tipo ESTANDAR para no listar almacenes especiales
+      // (DEPOSITO, TRANSITO, TARAS, etc) que no aplican al reparto. El IN
+      // cubre la variante 'ESTANDARD' (typo historico en datos antiguos)
+      // ademas del canonico 'ESTANDAR' que es el DEFAULT del esquema.
       oQry.SQL.Text :=
         'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
         '  FROM fza_almacenes ' +
         ' WHERE ESACTIVO_ALM = ''S'' ' +
+        '   AND TIPO_USO_ALM IN (''ESTANDAR'', ''ESTANDARD'') ' +
         ' ORDER BY CODIGO_ALM_ALM';
       oQry.Open;
       while not oQry.Eof do
