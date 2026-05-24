@@ -1084,14 +1084,13 @@ procedure TfrmPrint.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  // CacheLobs=False: la query trae solo metadatos; el BLOB del .frx
-  // (VALUE_BLOB_USUPER) se materializa lazy cuando TBlobField.SaveToStream
-  // se invoca. Se asigna por codigo (no en el DFM) porque las opciones
-  // dependen del provider de Connection, y en formularios heredados la
-  // referencia Connection = dmConn.conUni se resuelve via FixupReferences
-  // al final de la deserializacion: ponerlo en el DFM dispara EReadError
-  // "Connection is not defined" al cargar el .dfm.
-  unqryPerfiles.Options.CacheLobs := False;
+  // Nota: el commit 9287b4d intentaba diferir la carga del BLOB del .frx
+  // (VALUE_BLOB_USUPER) via SpecificOptions['CacheLobs']=False. Esta
+  // version de UniDAC no expone ni Options.CacheLobs ni Options.CacheBlobs
+  // (E2003 al compilar) y 'CacheLobs' tampoco es valida como SpecificOption
+  // del provider MySQL. La optimizacion queda pendiente hasta encontrar
+  // la API correcta para esta version; por ahora unqryPerfiles trae el
+  // .frx eager.
   unqryPerfiles.ParamByName('FormName').AsString := Self.Name;
   unqryPerfiles.ParamByName('Usuario').AsString := oUser;
   unqryPerfiles.ParamByName('Grupo').AsString := oGroup;
