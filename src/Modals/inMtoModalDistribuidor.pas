@@ -346,9 +346,16 @@ end;
 
 procedure TfrmModalDistribuidor.btnAceptarClick(Sender: TObject);
 begin
+  // Forzar al cxGrid a postear la celda en edicion al cds. Tres
+  // niveles necesarios para cubrir el caso de la ULTIMA celda (que
+  // ningun OnExit anterior commitea):
+  //   1) HideEdit(True) cierra el editor confirmando el valor.
+  //   2) DataController.Post baja del buffer del controller al cds.
+  //   3) cdsCuadr.Post finaliza el record (no-op si ya esta en browse).
   if (tvCuadr.Controller <> nil) and
      (tvCuadr.Controller.EditingController <> nil) then
     tvCuadr.Controller.EditingController.HideEdit(True);
+  tvCuadr.DataController.Post(False);
   if cdsCuadr.State in [dsEdit, dsInsert] then cdsCuadr.Post;
   PersistirCambios;
   inherited;
