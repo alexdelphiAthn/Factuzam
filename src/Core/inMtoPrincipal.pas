@@ -465,6 +465,10 @@ begin
   // TdxSmartImage que VCL no deserializa, asi que servimos la imagen
   // desde controles creados aqui.
   CrearLogoFondoBg;
+  // OnResize lo bindeamos en codigo porque FormResize esta en public y
+  // .dfm streaming solo encuentra event handlers en published; asi
+  // evitamos un EReadError 'Invalid property value' al cargar el form.
+  Self.OnResize := FormResize;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
   // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
