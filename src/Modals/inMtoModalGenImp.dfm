@@ -166,8 +166,6 @@ inherited frmPrint: TfrmPrint
       'and (USUARIO_GRUPO_USUPER = :Usuario OR'
       '     USUARIO_GRUPO_USUPER = :Grupo   OR'
       '     USUARIO_GRUPO_USUPER = :Todos)')
-    SpecificOptions.Strings = (
-      'CacheLobs=False')
     Left = 16
     Top = 8
     ParamData = <

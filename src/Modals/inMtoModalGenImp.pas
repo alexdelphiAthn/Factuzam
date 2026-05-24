@@ -1084,6 +1084,14 @@ procedure TfrmPrint.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+  // CacheLobs=False: la query trae solo metadatos; el BLOB del .frx
+  // (VALUE_BLOB_USUPER) se materializa lazy cuando TBlobField.SaveToStream
+  // se invoca. Se asigna por codigo (no en el DFM) porque SpecificOptions
+  // depende del provider de Connection, y en formularios heredados la
+  // referencia Connection = dmConn.conUni se resuelve via FixupReferences
+  // al final de la deserializacion: ponerlo en el DFM dispara EReadError
+  // "Connection is not defined" al cargar el .dfm.
+  unqryPerfiles.SpecificOptions.Values['CacheLobs'] := 'False';
   unqryPerfiles.ParamByName('FormName').AsString := Self.Name;
   unqryPerfiles.ParamByName('Usuario').AsString := oUser;
   unqryPerfiles.ParamByName('Grupo').AsString := oGroup;
