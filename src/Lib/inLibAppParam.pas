@@ -189,19 +189,17 @@ begin
   RegistrarParametro('Apariencia', 'appTema',
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');
 
-  // --- Depuración --- (switches "gordos", afectan a varios tipos a la vez)
+  // --- Log --- (los 4 switches de depuración y traza, agrupados)
   // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en
   // el popup de error de conUniError. Implica también el modo SQL.
-  RegistrarParametro('Depuración', 'appModoDebug',
+  RegistrarParametro('Log', 'appModoDebug',
     'Modo debug (cronómetros LogPerf + trazado SQL + detalles MySQL)',
     tpBoolean, 'False');
   // Modo debug SQL aislado: enciende UniSQLMonitor y traza cada sentencia
   // al log y al monitor en pantalla.
-  RegistrarParametro('Depuración', 'appModoDebugSQL',
+  RegistrarParametro('Log', 'appModoDebugSQL',
     'Modo debug SQL (traza todas las sentencias en el log)',
     tpBoolean, 'False');
-
-  // --- Log --- (controles finos por tipo)
   // Log SQL fino: registra cada consulta con tiempo de ejecución, filas
   // (cuando se conocen) y éxito/fallo. Los valores reales de :param se
   // incluyen porque UniSQLMonitor los entrega ya sustituidos.

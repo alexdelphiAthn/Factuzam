@@ -109,7 +109,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb, inMtoModalGenImpSave,
+  inLibGlobalVar, inLibLog, inLibtb, inMtoModalGenImpSave,
   cxGridDBDataDefinitions;
 
 // =============================================================================
@@ -117,13 +117,23 @@ uses
 // =============================================================================
 
 constructor TLayoutLoader.Create(const AFormKey: string);
+var
+  iClaves: Integer;
 begin
   inherited Create;
   FFormKey := AFormKey;
   FPerfil  := nil;
+  Log.LogInfo(Format('TLayoutLoader.Create: formKey="%s" -> GetFormUserProfile',
+                     [AFormKey]));
   inLibUser.GetFormUserProfile(FPerfil, FFormKey,
                                inLibGlobalVar.oUser, inLibGlobalVar.oGroup);
   FDisponible := FPerfil <> nil;
+  if FPerfil <> nil then
+    iClaves := FPerfil.Count
+  else
+    iClaves := -1;
+  Log.LogInfo(Format('TLayoutLoader.Create: formKey="%s" disponible=%s claves=%d',
+                     [AFormKey, BoolToStr(FDisponible, True), iClaves]));
 end;
 
 destructor TLayoutLoader.Destroy;
