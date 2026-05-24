@@ -752,6 +752,39 @@ begin
                                                        'FECHA_FAC').AsDateTime;
           qryBusq.ParamByName('TOKEN').AsString := '%' + TextoBusqueda + '%';
           qryBusq.Open;
+          // Diagnostico: registramos el resultado de la busqueda incremental
+          // para saber si la vista vi_art_busquedas devuelve filas. El log SQL
+          // estandar marca filas=- en queries con LIMIT, asi que aqui lo
+          // contamos explicitamente. Si filas=0, el problema es de datos (la
+          // vista no devuelve nada para esa TARIFA/FECHA) y no del UI.
+          try
+            inLibLog.Log.LogInfo(Format('qryBusq.Open: TARIFA="%s" ' +
+              'FECHA_TARIFA="%s" TOKEN="%s" IsEmpty=%s RecordCount=%d',
+              [qryBusq.ParamByName('TARIFA').AsString,
+               DateToStr(qryBusq.ParamByName('FECHA_TARIFA').AsDate),
+               qryBusq.ParamByName('TOKEN').AsString,
+               BoolToStr(qryBusq.IsEmpty, True),
+               qryBusq.RecordCount]));
+            // Volcamos los primeros 5 codigos para verificar que la vista
+            // realmente devuelve algo aprovechable (no nulls, codigos validos)
+            if not qryBusq.IsEmpty then
+            begin
+              qryBusq.First;
+              while (not qryBusq.Eof) and (qryBusq.RecNo <= 5) do
+              begin
+                inLibLog.Log.LogInfo(Format('qryBusq fila %d: cod="%s" desc="%s"',
+                  [qryBusq.RecNo,
+                   qryBusq.FieldByName('CODIGO_PADRE').AsString,
+                   qryBusq.FieldByName('DESCRIPCION_ART').AsString]));
+                qryBusq.Next;
+              end;
+              qryBusq.First;
+            end;
+          except
+            on E: Exception do
+              inLibLog.Log.LogWarning('qryBusq diagnostico: ' +
+                                      E.ClassName + ' ' + E.Message);
+          end;
           dbtvBusq.DataController.DataSource := dsBusq;
           dbtvBusq.DataController.Refresh;
         end;
