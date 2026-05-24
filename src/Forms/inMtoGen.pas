@@ -978,7 +978,7 @@ begin
     Exit;
   dmDat := TdmBase(tdmDataModule);
   unqry := dmDat.unqryTablaG;
-  if (unqry = nil) or unqry.Active then
+  if unqry = nil then
     Exit;
   // Modo sincrono: la UI esta congelada durante el Open. Forzamos cursor
   // de reloj global (Screen.Cursor) para que el usuario sepa que la app
@@ -989,7 +989,15 @@ begin
   sw := TStopwatch.StartNew;
   try
     try
-      unqry.Open;
+      if not unqry.Active then
+        unqry.Open;
+      // Sin abrir los detalles, los grids master/detail se quedan en
+      // blanco aunque la BBDD tenga datos (la query detalle no esta
+      // Active y MasterSource solo refresca params, no la activa). La
+      // version async ya lo hace en su callback; en sync hay que
+      // llamarlo aqui para que ShowMto(...,'<busqueda>') muestre las
+      // lineas/celdas tras Locate sobre el master.
+      dmDat.AbrirDetalles;
       inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
         sw.ElapsedMilliseconds);
     except
