@@ -15,6 +15,8 @@ uses
   {$ENDIF }
   Sysutils,
   dxCore,
+  JclDebug,
+  JclHookExcept,
   inLibDevExp in 'src\Lib\inLibDevExp.pas',
   inLibDir in 'src\Lib\inLibDir.pas',
   inLibGlobalVar in 'src\Lib\inLibGlobalVar.pas',
@@ -228,6 +230,12 @@ begin
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
 //  {$ENDIF}
+  // Tracking de excepciones con JCL: rellena E.StackTrace al lanzar
+  // cualquier excepcion. AppException en inMtoPrincipal ya vuelca el
+  // detalle (incluido el stack) al log y al modal del usuario.
+  Include(JclStackTrackingOptions, stStack);
+  Include(JclStackTrackingOptions, stStaticModuleList);
+  JclStartExceptionTracking;
   TdxDiacriticStringOptions.ComparisonMode :=
                                    TdxDiacriticStringComparisonMode.Insensitive;
   TdxDiacriticStringOptions.NormalizationMode :=
