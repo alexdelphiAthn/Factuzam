@@ -9,7 +9,7 @@
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. Cabecera enriquecida (empresa + proveedor + totales)
+-- 1. Cabecera enriquecida (empresa + proveedor + almacen destino + totales)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE VIEW `vi_albaranes_compra_cab_print` AS
 SELECT
@@ -36,7 +36,18 @@ SELECT
   prv.`PROVINCIA_PRV`,
   prv.`NIF_PRV`        AS `CIF_PRV`,
   COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  -- Almacen destino: el codigo vive en la cabecera (CODIGO_ALM_ALBC) y
+  -- los datos descriptivos se resuelven via JOIN a fza_almacenes. No
+  -- snapshoteamos como con empresa/proveedor: si cambia la direccion
+  -- del almacen, los albaranes historicos mostraran la actual.
   alb.`CODIGO_ALM_ALBC`,
+  alm.`NOMBRE_ALM_ALM`  AS `NOMBRE_ALM_ALBC`,
+  alm.`DIRECCION_ALM`   AS `DIRECCION_ALM_ALBC`,
+  alm.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_ALBC`,
+  alm.`POBLACION_ALM`   AS `POBLACION_ALM_ALBC`,
+  alm.`PROVINCIA_ALM`   AS `PROVINCIA_ALM_ALBC`,
+  alm.`TELEFONO_ALM`    AS `TELEFONO_ALM_ALBC`,
+  alm.`EMAIL_ALM`       AS `EMAIL_ALM_ALBC`,
   alb.`CODIGO_IVA_ALBC`,
   alb.`PORCENTAJE_IVAN_ALBC`,
   alb.`PORCENTAJE_IVAR_ALBC`,
@@ -62,7 +73,8 @@ SELECT
       AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `NUM_LINEAS_SES`
 FROM `fza_albaranes_compra` alb
 LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_ALBC`
-LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_ALBC`;
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_ALBC`
+LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_ALBC`;
 
 -- ---------------------------------------------------------------------------
 -- 2. Lineas con T01..T20 pivotadas por talla
