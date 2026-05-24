@@ -346,11 +346,10 @@ end;
 
 procedure TfrmModalDistribuidor.btnAceptarClick(Sender: TObject);
 begin
-  // Persistir antes de delegar al ancestro: si algo falla aqui, no se
-  // setea sFicha='S' ni se cierra el modal (el inherited del ancestro
-  // hace ambas cosas), y el usuario puede reintentar.
-  if cdsCuadr.State in [dsEdit, dsInsert] then
-    cdsCuadr.Post;
+  if (tvCuadr.Controller <> nil) and
+     (tvCuadr.Controller.EditingController <> nil) then
+    tvCuadr.Controller.EditingController.HideEdit(True);
+  if cdsCuadr.State in [dsEdit, dsInsert] then cdsCuadr.Post;
   PersistirCambios;
   inherited;
 end;
