@@ -72,7 +72,7 @@ implementation
 
 uses
   inLibDir, inLibWin,
-  inLibGlobalVar;
+  inLibGlobalVar, inLibLog;
 
 // Dentro de inLibUser.pas
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
@@ -80,18 +80,29 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
 var
   oDictValue: TDictValue;
   qPerfil: TUniQuery;
+  iFilas: Integer;
 begin
+  Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" sUser="%s" sGrupo="%s" ' +
+                     'oUser_global="%s" oGroup_global="%s"',
+                     [AFormName, sUsuario, sGrupo,
+                      inLibGlobalVar.oUser, inLibGlobalVar.oGroup]));
   // Si la caché en memoria está precargada para el usuario y grupo actuales,
   // sírvela y evita el round-trip a PRC_GETPERFILFORMULARIO.
   if Assigned(inLibGlobalVar.odmPerfiles) and
      (sUsuario = inLibGlobalVar.oUser) and
      (sGrupo   = inLibGlobalVar.oGroup) and
      inLibGlobalVar.odmPerfiles.ObtenerPerfilFormCache(AFormName, APerfilDic) then
+  begin
+    Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" servido desde CACHE',
+                       [AFormName]));
     Exit;
-
+  end;
+  Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" cache no aplicable, ' +
+                     'llamando PRC_GETPERFILFORMULARIO', [AFormName]));
   APerfilDic := TProfileDicc.Create;
   APerfilDic.Clear;
   qPerfil := TUniQuery.Create(nil);
+  iFilas := 0;
   try
     qPerfil.Connection := inLibGlobalVar.oConn;
     qPerfil.SQL.Text := 'CALL PRC_GETPERFILFORMULARIO(:u, :g, :f)';
@@ -106,8 +117,11 @@ begin
                         qPerfil.FieldByName('VALUE_TEXT_USUPER').AsWideString;
       APerfilDic.AddOrSetValue(qPerfil.FieldByName('SUBKEY_USUPER').AsString,
                                oDictValue);
+      Inc(iFilas);
       qPerfil.Next;
     end;
+    Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" via PRC filas=%d',
+                       [AFormName, iFilas]));
   finally
     FreeAndNil(qPerfil);
   end;
@@ -185,14 +199,23 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc; AFormName: string);
 var
   oPerfilUserDic    : TProfileUserDicc;
 begin
+  Log.LogInfo(Format('GetFormUserProfile(form): form="%s" oUser="%s" oGroup="%s"',
+                     [AFormName, oUser, oGroup]));
   // Si la caché está precargada para el usuario/grupo actuales, sírvela y
   // ahorramos el SELECT a fza_usuarios_perfiles + FilterProfileUserGroup.
   if Assigned(odmPerfiles) and
      odmPerfiles.ObtenerPerfilFormCache(AFormName, APerfilDic) then
+  begin
+    Log.LogInfo(Format('GetFormUserProfile(form): form="%s" servido desde CACHE',
+                       [AFormName]));
     Exit;
-
+  end;
+  Log.LogInfo(Format('GetFormUserProfile(form): form="%s" cayendo a ' +
+                     'Assign_Profile_Dict (camino SQL antiguo)', [AFormName]));
   odmPerfiles.Assign_Profile_Dict(AFormName, oPerfilUserDic);
   FilterProfileUserGroup(oPerfilUserDic, APerfilDic);
+  Log.LogInfo(Format('GetFormUserProfile(form): form="%s" via SQL antiguo, ' +
+                     'claves_finales=%d', [AFormName, APerfilDic.Count]));
   FreeAndNil(oPerfilUserDic);
 end;
 

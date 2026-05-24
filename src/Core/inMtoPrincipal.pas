@@ -401,8 +401,12 @@ begin
   ofrmMto2        := Self;
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
+  inLibLog.Log.LogInfo(Format('Arranque: pre-PrecargarPerfilesUsuario ' +
+                              'oUser="%s" oGroup="%s"', [oUser, oGroup]));
   odmPerfiles.PrecargarPerfilesUsuario;
+  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
+  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');
   oAppParams.InicializarParametrosApp(oUser, oGroup);
   oNomImpresoraCaja := GetImpresoraCaja;
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +

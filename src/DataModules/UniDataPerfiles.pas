@@ -85,7 +85,7 @@ var
 
 implementation
 
-uses inLibGlobalVar, System.SysConst;
+uses inLibGlobalVar, inLibLog, System.SysConst;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -231,10 +231,23 @@ var
   sKeyForm, sSubKey: string;
   v: TDictValue;
   PerfilDic: TProfileDicc;
+  iFilas, iForms: Integer;
 begin
+  Log.LogInfo(Format('PrecargarPerfilesUsuario: INICIO ' +
+                     'oUser="%s" oGroup="%s" oAll="%s" ' +
+                     'oConnAssigned=%s oConnConnected=%s',
+                     [oUser, oGroup, oAll,
+                      BoolToStr(oConn <> nil, True),
+                      BoolToStr((oConn <> nil) and oConn.Connected, True)]));
   FCachePerfilesForm.Clear;
   FCachePrecargada := False;
-  if (oConn = nil) or (not oConn.Connected) then Exit;
+  if (oConn = nil) or (not oConn.Connected) then
+  begin
+    Log.LogWarning('PrecargarPerfilesUsuario: ABORTADA, oConn no disponible. ' +
+                   'FCachePrecargada queda False');
+    Exit;
+  end;
+  iFilas := 0;
   try
     qry := TUniQuery.Create(nil);
     try
@@ -265,17 +278,33 @@ begin
           FCachePerfilesForm.Add(sKeyForm, PerfilDic);
         end;
         PerfilDic.AddOrSetValue(sSubKey, v);
+        Inc(iFilas);
         qry.Next;
       end;
     finally
       FreeAndNil(qry);
     end;
     FCachePrecargada := True;
+    iForms := FCachePerfilesForm.Count;
+    Log.LogInfo(Format('PrecargarPerfilesUsuario: OK ' +
+                       'filas=%d forms_distintos=%d FCachePrecargada=True',
+                       [iFilas, iForms]));
+    // Listar los forms cacheados para saber exactamente qué se precargó
+    for sKeyForm in FCachePerfilesForm.Keys do
+      Log.LogInfo(Format('PrecargarPerfilesUsuario: cache form="%s" claves=%d',
+                         [sKeyForm, FCachePerfilesForm[sKeyForm].Count]));
   except
     // Si la precarga falla, dejamos FCachePrecargada=False para que los
     // callers (GetFormUserProfile) caigan al camino SQL/SP anterior y la
     // app siga funcionando.
-    FCachePerfilesForm.Clear;
+    on E: Exception do
+    begin
+      FCachePerfilesForm.Clear;
+      Log.LogError(Format('PrecargarPerfilesUsuario: EXCEPCION %s: %s ' +
+                          'filas_leidas_antes_fallo=%d. ' +
+                          'FCachePrecargada queda False, cache vacio',
+                          [E.ClassName, E.Message, iFilas]));
+    end;
   end;
 end;
 
@@ -286,14 +315,28 @@ var
 begin
   APerfilDic := nil;
   Result := False;
-  if not FCachePrecargada then Exit;
+  if not FCachePrecargada then
+  begin
+    Log.LogWarning(Format('ObtenerPerfilFormCache: form="%s" cache NO precargado ' +
+                          '(FCachePrecargada=False), devuelve False', [AFormName]));
+    Exit;
+  end;
   // Servimos siempre un clon: el caller (TLayoutLoader, etc.) hace
   // FreeAndNil de FPerfil en su Destroy. Si devolviéramos la referencia
   // cacheada, la siguiente apertura del mismo form crashearía.
   if FCachePerfilesForm.TryGetValue(AFormName, Cached) then
-    APerfilDic := ClonarPerfilDicc(Cached)
+  begin
+    APerfilDic := ClonarPerfilDicc(Cached);
+    Log.LogInfo(Format('ObtenerPerfilFormCache: form="%s" HIT claves=%d',
+                       [AFormName, Cached.Count]));
+  end
   else
+  begin
     APerfilDic := TProfileDicc.Create;
+    Log.LogWarning(Format('ObtenerPerfilFormCache: form="%s" MISS ' +
+                          '(precargado pero sin entrada), devuelve dicc vacio ' +
+                          'con Result=True', [AFormName]));
+  end;
   Result := True;
 end;
 
@@ -301,19 +344,31 @@ procedure TdmPerfiles.ResincronizarCachePerfilForm(const AFormName: string);
 var
   Nuevo: TProfileDicc;
 begin
-  if not FCachePrecargada then Exit;
+  if not FCachePrecargada then
+  begin
+    Log.LogWarning(Format('ResincronizarCachePerfilForm: form="%s" ' +
+                          'cache no precargado, ignorado', [AFormName]));
+    Exit;
+  end;
   Nuevo := CargarPerfilFormDesdeDB(AFormName);
   if Nuevo.Count > 0 then
-    FCachePerfilesForm.AddOrSetValue(AFormName, Nuevo)
+  begin
+    FCachePerfilesForm.AddOrSetValue(AFormName, Nuevo);
+    Log.LogInfo(Format('ResincronizarCachePerfilForm: form="%s" actualizado ' +
+                       'claves=%d', [AFormName, Nuevo.Count]));
+  end
   else
   begin
     FreeAndNil(Nuevo);
     FCachePerfilesForm.Remove(AFormName);
+    Log.LogInfo(Format('ResincronizarCachePerfilForm: form="%s" sin filas, ' +
+                       'eliminado del cache', [AFormName]));
   end;
 end;
 
 procedure TdmPerfiles.InvalidarCachePerfiles;
 begin
+  Log.LogInfo('InvalidarCachePerfiles: limpio cache y marco no precargado');
   FCachePerfilesForm.Clear;
   FCachePrecargada := False;
 end;
