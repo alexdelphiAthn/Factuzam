@@ -88,7 +88,6 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnRefrescarClick(Sender: TObject);
-    procedure dtpFechaPropertiesChange(Sender: TObject);
     procedure edtBuscarPropertiesChange(Sender: TObject);
     procedure tmrBusquedaTimer(Sender: TObject);
     procedure btnReimprimirClick(Sender: TObject);
@@ -390,14 +389,14 @@ begin
   RecargarMaestro;
 end;
 
-procedure TfrmConsultaOpe.dtpFechaPropertiesChange(Sender: TObject);
-begin
-  RecargarMaestro;
-end;
-
 procedure TfrmConsultaOpe.dtpFechaPropertiesEditValueChanged(Sender: TObject);
 begin
   inherited;
+  // Antes habia tambien un handler dtpFechaPropertiesChange (Properties.
+  // OnChange en el dfm) llamando a RecargarMaestro. Disparaba la carga del
+  // maestro dos veces seguidas con los mismos parametros porque tanto
+  // OnChange como OnEditValueChanged se activan al setear dtpFecha.Date.
+  // Eliminado el handler OnChange; este (OnEditValueChanged) es suficiente.
   RecargarMaestro;
 end;
 
