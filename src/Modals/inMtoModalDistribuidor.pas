@@ -57,8 +57,16 @@ type
     tvCuadr       : TcxGridDBTableView;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
+  protected
+    // CloseQuery es VIRTUAL en TCustomForm, asi que este override se
+    // despacha correctamente por VMT. Es el unico hook fiable: el ancestro
+    // TfrmModalAceptCancel.btnAceptarClick es estatico (no virtual), y
+    // ademas Action1Execute (F12) lo llama por enlace estatico -> nuestro
+    // antiguo override de btnAceptarClick no se invocaba por F12 ni se
+    // garantizaba via DFM-streaming. CloseQuery siempre se llama al cerrar,
+    // tanto si fue click en boton, F12 (Action1) o cierre programatico.
+    function CloseQuery: Boolean; override;
   private
     FConn         : TUniConnection;
     FUsuario      : string;
@@ -373,30 +381,31 @@ begin
   end;
 end;
 
-procedure TfrmModalDistribuidor.btnAceptarClick(Sender: TObject);
+function TfrmModalDistribuidor.CloseQuery: Boolean;
 begin
-  // Forzar al cxGrid a bajar la celda en edicion AL CDS. El cxGrid
-  // mantiene el valor tecleado en el buffer del editor hasta que el
-  // foco abandona la celda; al pulsar Aceptar con foco en una celda
-  // la encadena de commits es:
-  //   - SetFocus(btnAceptar): dispara OnExit del editor activo, que
-  //     baja al InplaceEditor.
-  //   - HideEdit(True): cierra editor confirmando valor.
-  //   - DataController.UpdateData: pasa buffer del controller al record.
-  //   - DataController.Post(False): finaliza el record.
-  //   - cdsCuadr.Post: cierra cualquier estado dsEdit residual.
-  // Sin este orden la ULTIMA celda con foco no se persiste y
-  // PersistirCambios la ve igual que en el snapshot (no hay diff
-  // -> no se hace UPSERT).
-  if btnAceptar.CanFocus then btnAceptar.SetFocus;
+  // sFicha ya viene asignado por el ancestro:
+  //   'S' tras btnAceptarClick / Action1 (F12)
+  //   'N' tras Action2 (ESC)
+  // Solo persistimos en confirmacion. La cadena de commits del cxGrid
+  // (HideEdit + UpdateData + Post) se hace AQUI: el form aun esta visible
+  // y el editor sigue activo, asi que la ultima celda en edicion baja
+  // correctamente al DataController antes de leerla.
+  Result := inherited CloseQuery;
+  if not Result then
+    Exit;
+  if sFicha <> 'S' then
+    Exit;
+  Log.LogInfo(Format(
+    '[Distribuidor.CloseQuery] sFicha=S serie=%s num=%s lin=%d',
+    [SerieSes, NumeroSes, LineaSes]));
   if (tvCuadr.Controller <> nil) and
      (tvCuadr.Controller.EditingController <> nil) then
     tvCuadr.Controller.EditingController.HideEdit(True);
   tvCuadr.DataController.UpdateData;
   tvCuadr.DataController.Post(False);
-  if cdsCuadr.State in [dsEdit, dsInsert] then cdsCuadr.Post;
+  if cdsCuadr.State in [dsEdit, dsInsert] then
+    cdsCuadr.Post;
   PersistirCambios;
-  inherited;
 end;
 
 procedure TfrmModalDistribuidor.btnCancelarClick(Sender: TObject);
