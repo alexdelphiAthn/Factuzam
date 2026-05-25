@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoSplash                                                   }
 {    Tipo:       Formulario (Core)                                             }
@@ -160,7 +160,7 @@ begin
   // Asignar cualquier propiedad de Style.Font activa IsFontAssigned
   // automaticamente; no hay que tocarla en runtime (es read-only).
   FlblNombre.Style.Font.Name   := 'Lucida Sans';
-  FlblNombre.Style.Font.Height := -16;
+  FlblNombre.Style.Font.Height := -17;
   FlblNombre.Style.Font.Style  := [fsBold];
   FlblNombre.Transparent := True;
   // Version dinamica, leida de inLibGlobalVar para evitar drift entre
@@ -172,7 +172,7 @@ begin
   FlblVersion.SetBounds(0, 316, Panel1.Width, 18);
   FlblVersion.Properties.Alignment.Horz := taCenter;
   FlblVersion.Style.Font.Name   := 'Lucida Sans';
-  FlblVersion.Style.Font.Height := -12;
+  FlblVersion.Style.Font.Height := -17;
   FlblVersion.Style.Font.Style  := [];
   FlblVersion.Transparent := True;
 end;

@@ -1,4 +1,4 @@
-object frmMtoModalScriptLog: TfrmMtoModalScriptLog
+﻿object frmMtoModalScriptLog: TfrmMtoModalScriptLog
   Left = 0
   Top = 0
   Caption = 'Progreso de Ejecuci'#243'n del Script'
@@ -7,8 +7,8 @@ object frmMtoModalScriptLog: TfrmMtoModalScriptLog
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
-  Font.Name = 'Segoe UI'
+  Font.Height = -17
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poMainFormCenter
   OnCreate = FormCreate

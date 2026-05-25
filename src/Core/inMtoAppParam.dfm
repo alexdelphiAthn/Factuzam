@@ -1,4 +1,4 @@
-object frmMtoAppParam: TfrmMtoAppParam
+﻿object frmMtoAppParam: TfrmMtoAppParam
   Left = 0
   Top = 0
   Caption = 'Par'#225'metros Generales de la Aplicaci'#243'n'
@@ -7,7 +7,7 @@ object frmMtoAppParam: TfrmMtoAppParam
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -16
+  Font.Height = -17
   Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poMainFormCenter
@@ -28,7 +28,7 @@ object frmMtoAppParam: TfrmMtoAppParam
     Divider = 300
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -12
+    Font.Height = -17
     Font.Name = 'Lucida Sans'
     Font.Style = []
     ItemHeight = 20
@@ -123,29 +123,29 @@ object frmMtoAppParam: TfrmMtoAppParam
   object JvInspectorDotNETPainter1: TJvInspectorDotNETPainter
     CategoryFont.Charset = DEFAULT_CHARSET
     CategoryFont.Color = clBtnText
-    CategoryFont.Height = -15
-    CategoryFont.Name = 'Segoe UI'
+    CategoryFont.Height = -17
+    CategoryFont.Name = 'Lucida Sans'
     CategoryFont.Style = []
     NameFont.Charset = DEFAULT_CHARSET
     NameFont.Color = clWindowText
-    NameFont.Height = -15
-    NameFont.Name = 'Segoe UI'
+    NameFont.Height = -17
+    NameFont.Name = 'Lucida Sans'
     NameFont.Style = []
     ValueFont.Charset = DEFAULT_CHARSET
     ValueFont.Color = clWindowText
-    ValueFont.Height = -15
-    ValueFont.Name = 'Segoe UI'
+    ValueFont.Height = -17
+    ValueFont.Name = 'Lucida Sans'
     ValueFont.Style = []
     DrawNameEndEllipsis = False
     HideSelectFont.Charset = DEFAULT_CHARSET
     HideSelectFont.Color = clHighlightText
-    HideSelectFont.Height = -15
-    HideSelectFont.Name = 'Segoe UI'
+    HideSelectFont.Height = -17
+    HideSelectFont.Name = 'Lucida Sans'
     HideSelectFont.Style = []
     SelectedFont.Charset = DEFAULT_CHARSET
     SelectedFont.Color = clHighlightText
-    SelectedFont.Height = -15
-    SelectedFont.Name = 'Segoe UI'
+    SelectedFont.Height = -17
+    SelectedFont.Name = 'Lucida Sans'
     SelectedFont.Style = []
     Left = 608
     Top = 496

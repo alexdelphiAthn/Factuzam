@@ -1,4 +1,4 @@
-inherited frmModalInformesGuias: TfrmModalInformesGuias
+﻿inherited frmModalInformesGuias: TfrmModalInformesGuias
   BorderIcons = [biSystemMenu]
   Caption = 'Gu'#237'as del informe'
   ClientHeight = 540
@@ -24,8 +24,8 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
       Caption = 'Gu'#237'as del informe'
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 3618615
-      Style.Font.Height = -19
-      Style.Font.Name = 'Segoe UI Semibold'
+      Style.Font.Height = -17
+      Style.Font.Name = 'Lucida Sans'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
       Style.TransparentBorder = False
@@ -37,8 +37,8 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
       Caption = ' '
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 6710886
-      Style.Font.Height = -13
-      Style.Font.Name = 'Segoe UI'
+      Style.Font.Height = -17
+      Style.Font.Name = 'Lucida Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
       Transparent = True
@@ -71,8 +71,8 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
       Properties.WordWrap = True
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 4210752
-      Style.Font.Height = -13
-      Style.Font.Name = 'Segoe UI'
+      Style.Font.Height = -17
+      Style.Font.Name = 'Lucida Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
       Style.TransparentBorder = False
@@ -276,8 +276,8 @@ inherited frmModalInformesGuias: TfrmModalInformesGuias
       Color = 14998263
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -13
-      Font.Name = 'Segoe UI Semibold'
+      Font.Height = -17
+      Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
     end
   end

@@ -1,4 +1,4 @@
-object frmMtoMenuCaja: TfrmMtoMenuCaja
+﻿object frmMtoMenuCaja: TfrmMtoMenuCaja
   Left = 0
   Top = 0
   Caption = 'Men'#250' de Caja'
@@ -7,8 +7,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Height = -17
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -89441,8 +89441,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.HotTrack = False
     Style.Shadow = True
@@ -89467,8 +89467,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.HotTrack = False
     Style.Shadow = True
@@ -89493,8 +89493,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89517,8 +89517,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89547,8 +89547,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Height = 212
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Tahoma'
+    Font.Height = -17
+    Font.Name = 'Lucida Sans'
     Font.Style = []
     TabOrder = 5
     OnCustomDrawDayNumber = cxDateNavigator1CustomDrawDayNumber
@@ -89565,8 +89565,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.HotTrack = False
     Style.Shadow = True
@@ -89591,8 +89591,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89615,8 +89615,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.HotTrack = False
     Style.Shadow = True
@@ -89641,8 +89641,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89665,8 +89665,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89689,8 +89689,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.HotTrack = False
     Style.Shadow = True
@@ -89714,8 +89714,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -27
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89737,8 +89737,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -27
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89762,8 +89762,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsUltraFlat
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -20
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89787,8 +89787,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     TabOrder = 15
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
-    Font.Name = 'Segoe UI'
+    Font.Height = -17
+    Font.Name = 'Lucida Sans'
     Font.Style = []
     ParentFont = False
     OnClick = cxButton1Click
@@ -89805,8 +89805,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.Color = clBtnFace
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clOlive
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89832,8 +89832,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clOlive
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
@@ -89857,8 +89857,8 @@ object frmMtoMenuCaja: TfrmMtoMenuCaja
     Style.BorderStyle = ebsOffice11
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clNavy
-    Style.Font.Height = -33
-    Style.Font.Name = 'Arial Black'
+    Style.Font.Height = -17
+    Style.Font.Name = 'Lucida Sans'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True

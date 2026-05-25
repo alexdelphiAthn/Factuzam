@@ -1,4 +1,4 @@
-inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
+﻿inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
   Caption = 'Imprimir Albar'#225'n de Compra (Vertical)'
   ClientHeight = 220
   ClientWidth = 460
@@ -92,8 +92,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -16
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftBottom]
           HAlign = haCenter
@@ -111,8 +111,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
@@ -129,8 +129,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -147,8 +147,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -165,8 +165,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -181,8 +181,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 14.000000000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -199,8 +199,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
@@ -217,8 +217,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -235,8 +235,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -253,8 +253,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
@@ -274,8 +274,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
@@ -293,8 +293,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
@@ -321,8 +321,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -339,8 +339,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -357,8 +357,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -375,8 +375,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -393,8 +393,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -411,8 +411,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -429,8 +429,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -447,8 +447,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -481,8 +481,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
@@ -500,8 +500,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haLeft
@@ -519,8 +519,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haLeft
@@ -538,8 +538,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haLeft
@@ -557,8 +557,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haLeft
@@ -578,8 +578,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
@@ -599,8 +599,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
@@ -620,8 +620,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
@@ -652,8 +652,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -672,8 +672,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -692,8 +692,8 @@ inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
