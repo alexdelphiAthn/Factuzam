@@ -610,7 +610,7 @@
             Caption = 'Facturar este albar'#225'n'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -17
+            Font.Height = -15
             Font.Name = 'Lucida Sans'
             Font.Style = [fsBold]
             ParentFont = False

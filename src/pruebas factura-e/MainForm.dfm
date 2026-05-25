@@ -7,7 +7,7 @@
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
+  Font.Height = -15
   Font.Name = 'Lucida Sans'
   Font.Style = []
   OnCreate = FormCreate
@@ -21,7 +21,7 @@
     TabOrder = 0
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
-    TitleFont.Height = -17
+    TitleFont.Height = -15
     TitleFont.Name = 'Lucida Sans'
     TitleFont.Style = []
   end
@@ -33,7 +33,7 @@
     TabOrder = 1
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
-    TitleFont.Height = -17
+    TitleFont.Height = -15
     TitleFont.Name = 'Lucida Sans'
     TitleFont.Style = []
   end

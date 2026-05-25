@@ -772,7 +772,7 @@ begin
       lblTexto.Layout := tlCenter;
       lblTexto.Caption := 'Cargando datos, espera por favor...';
       lblTexto.Font.Style := [fsBold];
-      lblTexto.Font.Size := 13;
+      lblTexto.Font.Size := 11;
       lblTexto.Font.Color := clNavy;
       lblTexto.Transparent := True;
 

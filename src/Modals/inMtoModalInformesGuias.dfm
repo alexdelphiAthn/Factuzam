@@ -24,7 +24,7 @@
       Caption = 'Gu'#237'as del informe'
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 3618615
-      Style.Font.Height = -17
+      Style.Font.Height = -15
       Style.Font.Name = 'Lucida Sans'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
@@ -37,7 +37,7 @@
       Caption = ' '
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 6710886
-      Style.Font.Height = -17
+      Style.Font.Height = -15
       Style.Font.Name = 'Lucida Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
@@ -71,7 +71,7 @@
       Properties.WordWrap = True
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 4210752
-      Style.Font.Height = -17
+      Style.Font.Height = -15
       Style.Font.Name = 'Lucida Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
@@ -276,7 +276,7 @@
       Color = 14998263
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -15
       Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
     end

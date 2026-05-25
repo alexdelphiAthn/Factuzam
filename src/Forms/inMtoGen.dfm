@@ -311,7 +311,7 @@
           Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -367,7 +367,7 @@
           Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -423,7 +423,7 @@
           Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -498,7 +498,7 @@
           Caption = 'Buscar BBDD'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -517,7 +517,7 @@
           Caption = 'Buscar Grid'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
