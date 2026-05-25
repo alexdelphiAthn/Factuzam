@@ -405,7 +405,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
-      Font.Name = 'Lucida Sans Unicode'
+      Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural

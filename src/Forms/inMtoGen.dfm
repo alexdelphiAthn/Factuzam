@@ -312,7 +312,7 @@ inherited frmMtoGen: TfrmMtoGen
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Lucida Sans Unicode'
+          Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -368,7 +368,7 @@ inherited frmMtoGen: TfrmMtoGen
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Lucida Sans Unicode'
+          Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -424,7 +424,7 @@ inherited frmMtoGen: TfrmMtoGen
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Lucida Sans Unicode'
+          Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
