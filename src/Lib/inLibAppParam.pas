@@ -181,6 +181,9 @@ begin
   RegistrarParametro('Fotos', 'appNumAtributosFoto',
     'Atributos del SKU que componen la clave de foto (0 = solo artículo)',
     tpInteger, '1');
+  // --- Ventas ---
+  RegistrarParametro('Ventas', 'appTarifaDefault',
+    'Tarifa por defecto', tpString, '');
   // --- Impresión ---
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');
