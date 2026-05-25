@@ -939,6 +939,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasCODIGO_ARTICULO_TARIFA: TcxGridDBBandedColumn
+                    Caption = 'C'#243'digo Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_ARTTAR'
                     Visible = False
                     VisibleForCustomization = False
@@ -955,6 +956,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasDESCRIPCION_ARTICULO: TcxGridDBBandedColumn
+                    Caption = 'Descripci'#243'n'
                     DataBinding.FieldName = 'DESCRIPCION_ART'
                     Visible = False
                     VisibleForCustomization = False
@@ -963,6 +965,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasTIPO_CANTIDAD_ARTICULO: TcxGridDBBandedColumn
+                    Caption = 'Tipo Cantidad'
                     DataBinding.FieldName = 'TIPO_CANTIDAD_ART'
                     Visible = False
                     VisibleForCustomization = False
@@ -1030,6 +1033,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasTIPO_IVA_ARTICULO: TcxGridDBBandedColumn
+                    Caption = 'Tipo IVA'
                     DataBinding.FieldName = 'TIPO_IVA_ARTICULO'
                     Visible = False
                     VisibleForCustomization = False
@@ -1127,6 +1131,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasINSTANTEALTA: TcxGridDBBandedColumn
+                    Caption = 'Fecha Alta'
                     DataBinding.FieldName = 'INSTANTE_ALTA'
                     Visible = False
                     Position.BandIndex = 1
@@ -1134,6 +1139,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasINSTANTEMODIF: TcxGridDBBandedColumn
+                    Caption = 'Fecha Modif.'
                     DataBinding.FieldName = 'INSTANTE_MODIF'
                     Visible = False
                     Position.BandIndex = 1
@@ -1141,6 +1147,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasUSUARIOALTA: TcxGridDBBandedColumn
+                    Caption = 'Usuario Alta'
                     DataBinding.FieldName = 'USUARIO_ALTA'
                     Visible = False
                     Position.BandIndex = 1
@@ -1148,6 +1155,7 @@
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasUSUARIOMODIF: TcxGridDBBandedColumn
+                    Caption = 'Usuario Modif.'
                     DataBinding.FieldName = 'USUARIO_MODIF'
                     Visible = False
                     Position.BandIndex = 1
@@ -1155,6 +1163,7 @@
                     Position.RowIndex = 0
                   end
                   object dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBBandedColumn
+                    Caption = 'C'#243'd. '#218'nico'
                     DataBinding.FieldName = 'CODIGO_UNICO_ARTTAR'
                     Visible = False
                     Position.BandIndex = 1
@@ -1162,6 +1171,7 @@
                     Position.RowIndex = 0
                   end
                   object tvTarifasESVARIACION_ARTICULO: TcxGridDBBandedColumn
+                    Caption = 'Variaci'#243'n'
                     DataBinding.FieldName = 'ESVARIACION_ART'
                     Visible = False
                     Position.BandIndex = 1
@@ -1169,6 +1179,7 @@
                     Position.RowIndex = 0
                   end
                   object tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBBandedColumn
+                    Caption = 'N'#186' Atributos'
                     DataBinding.FieldName = 'NUM_ATRIBUTOS_REQ'
                     Visible = False
                     Position.BandIndex = 1
