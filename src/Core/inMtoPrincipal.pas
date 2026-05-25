@@ -43,7 +43,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
+  dxSkinWhiteprint, dxSkinWXI, dxSkinXmas2008Blue,
+  inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
   ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
@@ -378,7 +379,7 @@ var
 
   procedure AplicarTema;
   var
-    sTema: string;
+    sTema, sPaleta: string;
   begin
     if not (Assigned(LookAndFeelController1) and
             Assigned(dxSkinController1)) then
@@ -394,6 +395,10 @@ var
       end;
       LookAndFeelController1.SkinName := sTema;
       dxSkinController1.SkinName      := sTema;
+      // Paleta de color (solo skins modernos la soportan)
+      sPaleta := oAppParams.GetString('appPaleta');
+      if sPaleta <> '' then
+        TcxRootLookAndFeel.Instance.SkinPaletteName := sPaleta;
     except
       on E: Exception do
         inLibLog.Log.LogWarning('Error al establecer skin: ' + E.Message);
