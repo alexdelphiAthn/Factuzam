@@ -8,7 +8,6 @@ inherited frmGenFacRec: TfrmGenFacRec
   ClientWidth = 419
   FormStyle = fsStayOnTop
   Position = poMainFormCenter
-  Scaled = False
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 435
   ExplicitHeight = 390
