@@ -1,4 +1,4 @@
-object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
+﻿object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
   Left = 0
   Top = 0
   BorderStyle = bsDialog
@@ -8,7 +8,7 @@ object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -17
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poScreenCenter

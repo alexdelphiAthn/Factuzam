@@ -1,4 +1,4 @@
-inherited frmPrintAlbCompra: TfrmPrintAlbCompra
+﻿inherited frmPrintAlbCompra: TfrmPrintAlbCompra
   Caption = 'Imprimir Albar'#225'n de Compra'
   ClientHeight = 220
   ClientWidth = 460
@@ -96,7 +96,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -18
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftBottom]
@@ -113,7 +113,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -131,7 +131,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -149,7 +149,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -167,7 +167,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -186,7 +186,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -202,7 +202,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -220,7 +220,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -238,7 +238,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -256,7 +256,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -275,7 +275,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -291,7 +291,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -309,7 +309,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -326,7 +326,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -346,7 +346,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -362,7 +362,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -380,7 +380,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -396,7 +396,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -414,7 +414,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -430,7 +430,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -464,7 +464,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -484,7 +484,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -504,7 +504,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -524,7 +524,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -544,7 +544,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -564,7 +564,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -584,7 +584,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -604,7 +604,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -624,7 +624,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -644,7 +644,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -664,7 +664,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -684,7 +684,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -704,7 +704,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -724,7 +724,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -744,7 +744,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -764,7 +764,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -784,7 +784,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -804,7 +804,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -824,7 +824,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -844,7 +844,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -864,7 +864,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -884,7 +884,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -913,7 +913,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -932,7 +932,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -951,7 +951,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -970,7 +970,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -989,7 +989,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -1008,7 +1008,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -1027,7 +1027,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -1046,7 +1046,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -1081,7 +1081,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1101,7 +1101,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1121,7 +1121,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1141,7 +1141,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1161,7 +1161,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1181,7 +1181,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1201,7 +1201,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1221,7 +1221,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1241,7 +1241,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1261,7 +1261,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1281,7 +1281,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1301,7 +1301,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1321,7 +1321,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1341,7 +1341,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1361,7 +1361,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1381,7 +1381,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1401,7 +1401,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1421,7 +1421,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1441,7 +1441,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1461,7 +1461,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1481,7 +1481,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1501,7 +1501,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1521,7 +1521,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1541,7 +1541,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1561,7 +1561,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1583,7 +1583,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1605,7 +1605,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1634,7 +1634,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1656,7 +1656,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
@@ -1674,7 +1674,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -9
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []

@@ -1,4 +1,4 @@
-inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
+﻿inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
   Caption = 'Impresi'#243'n de Etiquetas de Albar'#225'n'
   ClientHeight = 426
   ClientWidth = 536
@@ -207,7 +207,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -224,7 +224,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           Height = 16.000000000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -247,7 +247,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -22
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -268,7 +268,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -28
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -311,7 +311,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -334,7 +334,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -357,7 +357,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -386,7 +386,7 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []

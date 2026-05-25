@@ -1,4 +1,4 @@
-inherited frmPrint: TfrmPrint
+﻿inherited frmPrint: TfrmPrint
   Left = 506
   Top = 279
   HorzScrollBar.Visible = False
@@ -203,7 +203,7 @@ inherited frmPrint: TfrmPrint
     DefaultScriptLanguage = 'PascalScript'
     DefaultFont.Charset = DEFAULT_CHARSET
     DefaultFont.Color = clWindowText
-    DefaultFont.Height = -13
+    DefaultFont.Height = -17
     DefaultFont.Name = 'Arial'
     DefaultFont.Style = []
     DefaultLeftMargin = 10.000000000000000000
