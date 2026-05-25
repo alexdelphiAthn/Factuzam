@@ -1,4 +1,4 @@
-﻿object FormNormalizer: TFormNormalizer
+object FormNormalizer: TFormNormalizer
   Left = 0
   Top = 0
   Caption = 'Factuzam Normalizer'
@@ -7,8 +7,8 @@
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
-  Font.Name = 'Lucida Sans'
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
   Font.Style = []
   OnCreate = FormCreate
   OnDestroy = FormDestroy

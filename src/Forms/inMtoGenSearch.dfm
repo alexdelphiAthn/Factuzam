@@ -1,4 +1,4 @@
-﻿inherited frmMtoSearch: TfrmMtoSearch
+inherited frmMtoSearch: TfrmMtoSearch
   BorderStyle = bsSizeable
   Caption = 'frmMtoSearch'
   ClientHeight = 501
@@ -154,7 +154,7 @@
         StyleElements = [seFont, seClient, seBorder]
         inherited lblTablaOrigen: TcxLabel
           ParentFont = False
-          Style.Font.Height = -17
+          Style.Font.Height = -15
           Style.IsFontAssigned = True
           ExplicitWidth = 92
           ExplicitHeight = 21

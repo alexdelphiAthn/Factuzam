@@ -661,7 +661,7 @@ begin
   begin
     // Fallback si falla, llenamos lo básico
     FillChar(LogFont, SizeOf(LogFont), 0);
-    StrPCopy(LogFont.lfFaceName, 'Consolas');
+    StrPCopy(LogFont.lfFaceName, 'Courier New');
   end;
   // 3. Configuración CRÍTICA para nitidez
   LogFont.lfHeight := -AlturaPixels;

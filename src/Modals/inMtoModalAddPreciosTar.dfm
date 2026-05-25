@@ -1,4 +1,4 @@
-﻿inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
+inherited frmMtoModalAddPreciosTar: TfrmMtoModalAddPreciosTar
   Caption = 'A'#241'adir precios a Tarifas'
   ClientHeight = 600
   ClientWidth = 550
@@ -43,8 +43,8 @@
       Caption = ' 1. Seleccione los SKUs:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
-      Font.Name = 'Lucida Sans'
+      Font.Height = -16
+      Font.Name = 'Tahoma'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural
@@ -66,8 +66,8 @@
       Caption = ' 2. Seleccione las Tarifas:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
-      Font.Name = 'Lucida Sans'
+      Font.Height = -16
+      Font.Name = 'Tahoma'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural
@@ -92,8 +92,8 @@
         Caption = 'Vigente desde:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Height = -16
+        Font.Name = 'Tahoma'
         Font.Pitch = fpFixed
         Font.Style = [fsBold]
         Font.Quality = fqClearTypeNatural

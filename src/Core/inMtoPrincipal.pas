@@ -508,7 +508,7 @@ begin
   oNombre.Caption := 'Alejandro Laorden Hidalgo';
   oNombre.AutoSize := False;
   oNombre.Style.Font.Name   := 'Lucida Sans';
-  oNombre.Style.Font.Height := -17;
+  oNombre.Style.Font.Height := -20;
   oNombre.Style.Font.Style  := [fsBold];
   oNombre.Properties.Alignment.Horz := taCenter;
   oNombre.Transparent := True;
@@ -518,7 +518,7 @@ begin
   oVer.Caption := 'Versión ' + oVersion;
   oVer.AutoSize := False;
   oVer.Style.Font.Name   := 'Lucida Sans';
-  oVer.Style.Font.Height := -17;
+  oVer.Style.Font.Height := -14;
   oVer.Properties.Alignment.Horz := taCenter;
   oVer.Transparent := True;
   FLogoBgVersion := oVer;
