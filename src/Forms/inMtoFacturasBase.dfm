@@ -7,7 +7,6 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Caption = #186
   ClientHeight = 844
   ClientWidth = 1231
-  Scaled = False
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1231
   ExplicitHeight = 844
