@@ -88,8 +88,8 @@ type
                            Strings: TStrings);
     procedure GetPaletasList(Sender: TJvCustomInspectorItem;
                               Strings: TStrings);
-    procedure GetTarifasList(Sender: TJvCustomInspectorItem;
-                              Strings: TStrings);
+//    procedure GetTarifasList(Sender: TJvCustomInspectorItem;
+//                              Strings: TStrings);
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
@@ -104,7 +104,8 @@ implementation
 
 uses
   StrUtils, inLibAppParam, inLibLog, Vcl.Printers,
-  dxSkinsLookAndFeelPainter,               // TdxSkinLookAndFeelPainter
+   dxSkinsLookAndFeelPainter,
+   dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens;               // SelectDirectory
 
 // -----------------------------------------------------------------------
@@ -288,42 +289,49 @@ begin
   end;
 end;
 
-procedure TfrmMtoAppParam.GetPaletasList(
-  Sender: TJvCustomInspectorItem; Strings: TStrings);
+procedure TfrmMtoAppParam.GetPaletasList(Sender: TJvCustomInspectorItem; Strings: TStrings);
 var
-  I, J: Integer;
   LSkinName: string;
   LItemTema: TJvCustomInspectorItem;
-  LSkin: TdxSkin;
+  LPainter: TcxCustomLookAndFeelPainter;
+  LPainterInfo: TdxSkinLookAndFeelPainterInfo; // Usamos la clase de información de tu unidad
+  I: Integer;
 begin
-  Strings.Clear;
-  Strings.Add('Default');
-  // Obtener el skin seleccionado actualmente en el inspector
-  LItemTema := BuscarItemPorNombre(JvInspector1.Root, 'appTema');
-  if (LItemTema <> nil) and (LItemTema.Data <> nil) then
-    LSkinName := LItemTema.Data.AsString
-  else
-    LSkinName := oAppParams.GetString('appTema');
-  if LSkinName = '' then
-    Exit;
-  // Buscar el painter del skin y enumerar sus paletas
-  for I := 0 to cxLookAndFeelPaintersManager.Count - 1 do
-  begin
-    if not SameText(cxLookAndFeelPaintersManager[I].LookAndFeelName,
-       LSkinName) then
-      Continue;
-    if not (cxLookAndFeelPaintersManager[I] is TdxSkinLookAndFeelPainter) then
-      Continue;
-    LSkin := TdxSkinLookAndFeelPainter(
-      cxLookAndFeelPaintersManager[I]).Skin;
-    if (LSkin <> nil) and (LSkin.ColorPalettes.Count > 0) then
+  Strings.BeginUpdate;
+  try
+    Strings.Clear;
+    Strings.Add('Default');
+
+    // 1. Obtener el nombre del skin seleccionado actualmente en el inspector
+    LItemTema := BuscarItemPorNombre(JvInspector1.Root, 'appTema');
+
+    if (LItemTema <> nil) and Assigned(LItemTema.Data) then
+      LSkinName := LItemTema.Data.AsString
+    else
+      LSkinName := oAppParams.GetString('appTema');
+
+    if Trim(LSkinName) = '' then
+      Exit;
+
+    // 2. Usar el manager global nativo que SÍ existe en tu versión
+    if cxLookAndFeelPaintersManager.GetPainter(LSkinName, LPainter) then
     begin
-      Strings.Clear;
-      Strings.Add('Default');
-      for J := 0 to LSkin.ColorPalettes.Count - 1 do
-        Strings.Add(LSkin.ColorPalettes[J].Name);
+      // 3. Extraer la información interna del Skin de forma segura
+      if LPainter.GetPainterData(LPainterInfo) then
+      begin
+        // 4. Ahora SÍ podemos acceder a .Skin y a sus Paletas sin que Delphi se queje
+        if Assigned(LPainterInfo.Skin) and (LPainterInfo.Skin.ColorPalettes.Count > 0) then
+        begin
+          for I := 0 to LPainterInfo.Skin.ColorPalettes.Count - 1 do
+          begin
+            Strings.Add(LPainterInfo.Skin.ColorPalettes[I].Name);
+          end;
+        end;
+      end;
     end;
-    Break;
+
+  finally
+    Strings.EndUpdate;
   end;
 end;
 

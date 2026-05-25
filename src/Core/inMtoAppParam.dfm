@@ -1,4 +1,4 @@
-﻿object frmMtoAppParam: TfrmMtoAppParam
+object frmMtoAppParam: TfrmMtoAppParam
   Left = 0
   Top = 0
   Caption = 'Par'#225'metros Generales de la Aplicaci'#243'n'
@@ -15,7 +15,7 @@
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  TextHeight = 18
+  TextHeight = 17
   object JvInspector1: TJvInspector
     Left = 0
     Top = 57
@@ -26,11 +26,6 @@
     BevelKind = bkSoft
     BevelOuter = bvRaised
     Divider = 300
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -15
-    Font.Name = 'Lucida Sans'
-    Font.Style = []
     ItemHeight = 20
     Painter = JvInspectorDotNETPainter1
     TabStop = True
