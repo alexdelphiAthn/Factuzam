@@ -1,4 +1,4 @@
-object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
+﻿object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   Left = 0
   Top = 0
   BorderIcons = []
@@ -9,8 +9,8 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -16
-  Font.Name = 'Lucida San'#180
+  Font.Height = -17
+  Font.Name = 'Lucida Sans'#180
   Font.Style = []
   Position = poScreenCenter
   OnCreate = FormCreate
@@ -38,7 +38,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       BevelOuter = bvNone
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -23
+      Font.Height = -17
       Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
       ParentBackground = False
@@ -70,7 +70,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -83,7 +83,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -96,7 +96,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -109,7 +109,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = ANSI_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -207,7 +207,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -220,7 +220,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = ANSI_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -266,7 +266,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -279,7 +279,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = ANSI_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -392,7 +392,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -418,7 +418,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             ParentFont = False
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
-            Style.Font.Height = -23
+            Style.Font.Height = -17
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -460,7 +460,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         BevelOuter = bvNone
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -23
+        Font.Height = -17
         Font.Name = 'Lucida Sans'
         Font.Style = []
         ParentBackground = False
@@ -483,7 +483,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -504,7 +504,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 1
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -526,7 +526,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 2
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -547,7 +547,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 3
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -569,7 +569,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 4
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -590,7 +590,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 5
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -612,7 +612,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 6
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -633,7 +633,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 7
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -654,7 +654,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 8
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -675,7 +675,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 9
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -695,7 +695,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 10
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -717,7 +717,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 11
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -739,7 +739,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 12
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -759,7 +759,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 13
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -780,7 +780,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 14
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -801,7 +801,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 15
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -822,7 +822,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 16
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
@@ -842,7 +842,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 17
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
-          Font.Height = -23
+          Font.Height = -17
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
@@ -866,7 +866,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           ParentFont = False
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clNavy
-          Style.Font.Height = -27
+          Style.Font.Height = -17
           Style.Font.Name = 'Lucida Sans'
           Style.Font.Style = []
           Style.IsFontAssigned = True
@@ -884,7 +884,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Style.Color = clCream
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clWindowText
-          Style.Font.Height = -23
+          Style.Font.Height = -17
           Style.Font.Name = 'Lucida Sans'
           Style.Font.Style = []
           Style.IsFontAssigned = True
@@ -898,7 +898,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           ParentFont = False
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clWindowText
-          Style.Font.Height = -23
+          Style.Font.Height = -17
           Style.Font.Name = 'Lucida Sans'
           Style.Font.Style = []
           Style.IsFontAssigned = True

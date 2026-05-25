@@ -1,4 +1,4 @@
-inherited frmPrintCliEti: TfrmPrintCliEti
+﻿inherited frmPrintCliEti: TfrmPrintCliEti
   Caption = 'Impresi'#243'n de Etiquetas'
   ClientHeight = 296
   ClientWidth = 389
@@ -122,8 +122,8 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -141,8 +141,8 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -160,8 +160,8 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -179,8 +179,8 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -198,8 +198,8 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Arial'
+          Font.Height = -17
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (

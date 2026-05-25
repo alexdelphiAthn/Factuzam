@@ -1,4 +1,4 @@
-inherited frmMtoPrincipal: TfrmMtoPrincipal
+﻿inherited frmMtoPrincipal: TfrmMtoPrincipal
   Caption = 'Fzam'
   ClientHeight = 549
   ClientWidth = 1124
@@ -404,8 +404,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Color = clAqua
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Lucida Sans Unicode'
+      Font.Height = -17
+      Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural

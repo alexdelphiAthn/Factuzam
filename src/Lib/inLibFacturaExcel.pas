@@ -90,7 +90,7 @@ begin
   var ImpuestosIncluidos :=
       (QMaster.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString = 'S');
   W(Sheet, 1, COL_DESC, 'FACTURA', True);
-  Sheet.Cells[1, COL_DESC].Style.Font.Size := 18;
+  Sheet.Cells[1, COL_DESC].Style.Font.Size := 13;
   W(Sheet, 1, COL_TOTAL, 'Fecha: ' +
                QMaster.FieldByName('FECHA_FAC').AsString, False, ssahRight);
   W(Sheet, 2, COL_TOTAL, 'Número: ' +
@@ -289,7 +289,7 @@ begin
                                 FormulaStr := FormulaStr + '+' + RefRetenciones;
     SetText(FormulaStr, True);
     Style.Font.Style := [fsBold];
-    Style.Font.Size := 14;
+    Style.Font.Size := 13;
     Style.DataFormat.FormatCode := '#,##0.00" €"';
     Style.AlignHorz := ssahRight;
   end;
