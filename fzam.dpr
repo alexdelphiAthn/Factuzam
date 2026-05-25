@@ -270,7 +270,7 @@ begin
   Application.DefaultFont.Name   := 'Lucida Sans';
   Application.DefaultFont.Height := -17;
   Screen.MenuFont.Name := 'Lucida Sans';
-  Screen.MenuFont.Size := 13;
+  Screen.MenuFont.Size := 11;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
   // Diagnóstico: con /teststack se encola una excepción de prueba
   // para verificar JCL stack trace + AppException + log + modal.
