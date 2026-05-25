@@ -123,7 +123,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -142,7 +142,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -161,7 +161,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -180,7 +180,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -199,7 +199,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
