@@ -88,8 +88,10 @@ type
                            Strings: TStrings);
     procedure GetPaletasList(Sender: TJvCustomInspectorItem;
                               Strings: TStrings);
-//    procedure GetTarifasList(Sender: TJvCustomInspectorItem;
-//                              Strings: TStrings);
+    procedure GetTarifasList(Sender: TJvCustomInspectorItem;
+                              Strings: TStrings);
+    procedure GetTemporadasList(Sender: TJvCustomInspectorItem;
+                                Strings: TStrings);
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
@@ -233,10 +235,17 @@ begin
                                  [iifValueList, iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetPaletasList;
             end
-            else if SameText(Param.Nombre, 'appTarifaDefault') then
+            else if SameText(Param.Nombre, 'appTarifaDefecto') then
             begin
-              ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
-              //ItemCombo.OnGetValueList := GetTarifasList;
+              ItemCombo.Flags := ItemCombo.Flags +
+                                 [iifValueList, iifAllowNonListValues];
+              ItemCombo.OnGetValueList := GetTarifasList;
+            end
+            else if SameText(Param.Nombre, 'appTemporadaDefecto') then
+            begin
+              ItemCombo.Flags := ItemCombo.Flags +
+                                 [iifValueList, iifAllowNonListValues];
+              ItemCombo.OnGetValueList := GetTemporadasList;
             end
             else if StartsText('appDir', Param.Nombre) then
             begin
@@ -332,6 +341,57 @@ begin
 
   finally
     Strings.EndUpdate;
+  end;
+end;
+
+procedure TfrmMtoAppParam.GetTarifasList(
+  Sender: TJvCustomInspectorItem; Strings: TStrings);
+var
+  qry: TUniQuery;
+begin
+  Strings.Clear;
+  Strings.Add('');
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas' +
+      ' WHERE ESACTIVO_ARTTAR = ''S''' +
+      ' ORDER BY ORDEN_TAR';
+    qry.Open;
+    while not qry.Eof do
+    begin
+      Strings.Add(qry.FieldByName('CODIGO_TAR_ARTTAR').AsString);
+      qry.Next;
+    end;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TfrmMtoAppParam.GetTemporadasList(
+  Sender: TJvCustomInspectorItem; Strings: TStrings);
+var
+  qry: TUniQuery;
+begin
+  Strings.Clear;
+  Strings.Add('');
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT PV FROM fza_propiedades_valores' +
+      ' WHERE ID_PROP_PV = ''TEMPORADA''' +
+      '   AND ESACTIVO_PV = ''S''' +
+      ' ORDER BY PV';
+    qry.Open;
+    while not qry.Eof do
+    begin
+      Strings.Add(qry.FieldByName('PV').AsString);
+      qry.Next;
+    end;
+  finally
+    FreeAndNil(qry);
   end;
 end;
 
