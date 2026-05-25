@@ -99,7 +99,7 @@
           Style.Font.Charset = DEFAULT_CHARSET
           Style.Font.Color = 6710886
           Style.Font.Height = -17
-          Style.Font.Name = 'Segoe UI'
+          Style.Font.Name = 'Lucida Sans'
           Style.Font.Style = [fsItalic]
           Style.IsFontAssigned = True
           Transparent = True
@@ -135,7 +135,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
             Transparent = True
@@ -158,7 +158,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
             Transparent = True
@@ -172,7 +172,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI'
+            Style.Font.Name = 'Lucida Sans'
             Style.IsFontAssigned = True
             TabOrder = 0
             OnClick = lstDatasetsClick
@@ -184,7 +184,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
             Transparent = True
@@ -198,7 +198,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI'
+            Style.Font.Name = 'Lucida Sans'
             Style.IsFontAssigned = True
             TabOrder = 1
           end
@@ -209,7 +209,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
             Transparent = True
@@ -223,7 +223,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI'
+            Style.Font.Name = 'Lucida Sans'
             Style.IsFontAssigned = True
             TabOrder = 2
             OnClick = lstTablasClick
@@ -235,7 +235,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI Semibold'
+            Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
             Transparent = True
@@ -273,7 +273,7 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 4210752
             Style.Font.Height = -17
-            Style.Font.Name = 'Segoe UI'
+            Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsItalic]
             Style.IsFontAssigned = True
             Transparent = True
@@ -483,7 +483,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -17
-      Font.Name = 'Segoe UI Semibold'
+      Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
     end
   end

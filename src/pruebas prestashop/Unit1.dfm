@@ -8,7 +8,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -17
-  Font.Name = 'Tahoma'
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   TextHeight = 13
   object spl1: TSplitter
@@ -156,7 +156,7 @@
               TitleFont.Charset = DEFAULT_CHARSET
               TitleFont.Color = clWindowText
               TitleFont.Height = -17
-              TitleFont.Name = 'Tahoma'
+              TitleFont.Name = 'Lucida Sans'
               TitleFont.Style = []
             end
           end
@@ -173,7 +173,7 @@
               TitleFont.Charset = DEFAULT_CHARSET
               TitleFont.Color = clWindowText
               TitleFont.Height = -17
-              TitleFont.Name = 'Tahoma'
+              TitleFont.Name = 'Lucida Sans'
               TitleFont.Style = []
             end
           end
@@ -190,7 +190,7 @@
               TitleFont.Charset = DEFAULT_CHARSET
               TitleFont.Color = clWindowText
               TitleFont.Height = -17
-              TitleFont.Name = 'Tahoma'
+              TitleFont.Name = 'Lucida Sans'
               TitleFont.Style = []
             end
           end
