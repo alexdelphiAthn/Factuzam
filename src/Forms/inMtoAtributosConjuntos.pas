@@ -158,7 +158,9 @@ var
   LValor, LNombre, LOrden: Variant;
 begin
   if (dmmAtributosConjuntos = nil) or (dsTablaG = nil) or
-     (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) then
+     (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
+     (not dmmAtributosConjuntos.unqryVariacionesLookup.Active) or
+     (not dmmAtributosConjuntos.unqryAtributosLookup.Active) then
     Exit;
 
   LIdVar := dsTablaG.DataSet.FieldByName('ID_VAR_AC').AsString;
