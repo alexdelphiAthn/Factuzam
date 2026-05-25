@@ -471,7 +471,7 @@
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -566,7 +566,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -1004,7 +1004,7 @@
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -1099,7 +1099,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []

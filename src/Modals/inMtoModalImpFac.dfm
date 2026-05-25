@@ -1018,7 +1018,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -1039,7 +1039,7 @@
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -1069,7 +1069,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
