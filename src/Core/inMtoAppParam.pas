@@ -236,7 +236,7 @@ begin
             else if SameText(Param.Nombre, 'appTarifaDefault') then
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
-              ItemCombo.OnGetValueList := GetTarifasList;
+              //ItemCombo.OnGetValueList := GetTarifasList;
             end
             else if StartsText('appDir', Param.Nombre) then
             begin
