@@ -128,3 +128,7 @@ SET @ddl = IF(@col_exists > 0,
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- 3. Limpiar entradas huerfanas de ESDEFAULT_TARIFA en perfiles de grids
+DELETE FROM fza_usuarios_perfiles
+ WHERE SUBKEY_USUPER LIKE '%ESDEFAULT_TARIFA%';
