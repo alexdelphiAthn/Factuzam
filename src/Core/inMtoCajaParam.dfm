@@ -1,4 +1,4 @@
-﻿object frmMtoCajaParam: TfrmMtoCajaParam
+object frmMtoCajaParam: TfrmMtoCajaParam
   Left = 0
   Top = 0
   Caption = 'Par'#225'metros de Caja'
@@ -7,7 +7,7 @@
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
+  Font.Height = -16
   Font.Name = 'Lucida Sans'
   Font.Style = []
   OnClose = FormClose
@@ -34,7 +34,7 @@
       Divider = 300
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -12
       Font.Name = 'Lucida Sans'
       Font.Style = []
       ItemHeight = 20
@@ -131,29 +131,29 @@
   object JvInspectorDotNETPainter1: TJvInspectorDotNETPainter
     CategoryFont.Charset = DEFAULT_CHARSET
     CategoryFont.Color = clBtnText
-    CategoryFont.Height = -17
+    CategoryFont.Height = -13
     CategoryFont.Name = 'Lucida Sans'
     CategoryFont.Style = []
     NameFont.Charset = DEFAULT_CHARSET
     NameFont.Color = clWindowText
-    NameFont.Height = -17
+    NameFont.Height = -13
     NameFont.Name = 'Lucida Sans'
     NameFont.Style = []
     ValueFont.Charset = DEFAULT_CHARSET
     ValueFont.Color = clWindowText
-    ValueFont.Height = -17
+    ValueFont.Height = -13
     ValueFont.Name = 'Lucida Sans'
     ValueFont.Style = []
     DrawNameEndEllipsis = False
     HideSelectFont.Charset = DEFAULT_CHARSET
     HideSelectFont.Color = clHighlightText
-    HideSelectFont.Height = -17
-    HideSelectFont.Name = 'Lucida Sans'
+    HideSelectFont.Height = -15
+    HideSelectFont.Name = 'Segoe UI'
     HideSelectFont.Style = []
     SelectedFont.Charset = DEFAULT_CHARSET
     SelectedFont.Color = clHighlightText
-    SelectedFont.Height = -17
-    SelectedFont.Name = 'Lucida Sans'
+    SelectedFont.Height = -15
+    SelectedFont.Name = 'Segoe UI'
     SelectedFont.Style = []
     Left = 368
     Top = 328

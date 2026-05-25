@@ -1,9 +1,9 @@
-﻿inherited frmMtoOpeCaja: TfrmMtoOpeCaja
+inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
   ClientHeight = 429
   ClientWidth = 1359
   Font.Charset = ANSI_CHARSET
-  Font.Height = -17
+  Font.Height = -19
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnDestroy = FormDestroy
@@ -32,8 +32,8 @@
       Style.Edges = []
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = clNavy
-      Style.Font.Height = -17
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Height = -20
+      Style.Font.Name = 'Arial Black'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = [fsBold]
       Style.Font.Quality = fqClearTypeNatural
@@ -78,7 +78,7 @@
       Style.BorderStyle = ebsFlat
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
-      Style.Font.Height = -17
+      Style.Font.Height = -14
       Style.Font.Name = 'Lucida Sans'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
@@ -98,7 +98,7 @@
       Style.BorderStyle = ebsFlat
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
-      Style.Font.Height = -17
+      Style.Font.Height = -14
       Style.Font.Name = 'Lucida Sans'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
@@ -115,7 +115,7 @@
       ParentFont = False
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
-      Style.Font.Height = -17
+      Style.Font.Height = -13
       Style.Font.Name = 'Lucida Sans'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
@@ -148,8 +148,8 @@
       Style.Edges = []
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = clNavy
-      Style.Font.Height = -17
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Height = -20
+      Style.Font.Name = 'Arial Black'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = [fsBold]
       Style.Font.Quality = fqClearTypeNatural
@@ -214,8 +214,8 @@
           Style.BorderStyle = ebsOffice11
           Style.Font.Charset = DEFAULT_CHARSET
           Style.Font.Color = clNavy
-          Style.Font.Height = -17
-          Style.Font.Name = 'Lucida Sans'
+          Style.Font.Height = -50
+          Style.Font.Name = 'Arial Black'
           Style.Font.Pitch = fpFixed
           Style.Font.Style = [fsBold]
           Style.Font.Quality = fqClearTypeNatural
@@ -257,8 +257,8 @@
           TabOrder = 0
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -277,8 +277,8 @@
           TabOrder = 1
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -296,8 +296,8 @@
           TabOrder = 2
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -315,8 +315,8 @@
           TabOrder = 3
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -334,8 +334,8 @@
           TabOrder = 4
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -353,8 +353,8 @@
           TabOrder = 5
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -372,8 +372,8 @@
           TabOrder = 6
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -392,8 +392,8 @@
           TabOrder = 7
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
           Font.Pitch = fpFixed
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
@@ -475,7 +475,7 @@
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
-        Font.Height = -17
+        Font.Height = -19
         Font.Name = 'Lucida Sans'
         Font.Pitch = fpFixed
         Font.Style = []
@@ -619,7 +619,7 @@
           Align = alClient
           Font.Charset = ANSI_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -19
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -694,7 +694,7 @@
       Color = 11529442
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
-      Font.Height = -17
+      Font.Height = -12
       Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
     end
@@ -702,7 +702,7 @@
       AssignedValues = [svFont]
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clOlive
-      Font.Height = -17
+      Font.Height = -12
       Font.Name = 'Lucida Sans'
       Font.Style = []
     end
@@ -711,7 +711,7 @@
       Color = 11529442
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = 20
       Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
       TextColor = clDefault

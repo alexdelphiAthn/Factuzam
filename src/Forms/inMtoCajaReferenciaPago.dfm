@@ -1,4 +1,4 @@
-﻿object frmCajaReferenciaPago: TfrmCajaReferenciaPago
+object frmCajaReferenciaPago: TfrmCajaReferenciaPago
   Left = 0
   Top = 0
   BorderStyle = bsDialog
@@ -8,7 +8,7 @@
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
+  Font.Height = -14
   Font.Name = 'Lucida Sans'
   Font.Style = []
   KeyPreview = True
