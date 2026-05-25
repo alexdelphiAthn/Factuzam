@@ -205,6 +205,7 @@ type
     procedure ActionCortarExecute(Sender: TObject);
     procedure ActionCopiarExecute(Sender: TObject);
     procedure ActionPegarExecute(Sender: TObject);
+    procedure ActionSiguienteControlExecute(Sender: TObject);
     procedure CrearMenuContextual;
     procedure ActivarEnterComoTab(Activo: Boolean);
     procedure EditorEnter(Sender: TObject);
@@ -292,6 +293,12 @@ begin
     DBSynEdit1.PasteFromClipboard
   else if syndtEstructura.Focused then
     syndtEstructura.PasteFromClipboard;
+end;
+
+procedure TfrmMtoGeneradorProcesos.ActionSiguienteControlExecute(
+  Sender: TObject);
+begin
+  SelectNext(ActiveControl as TWinControl, True, True);
 end;
 
 procedure TfrmMtoGeneradorProcesos.ActionEditoresUpdate(Sender: TObject);
@@ -1135,32 +1142,14 @@ procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject;
                                                var Key: Word;
                                                Shift: TShiftState);
 begin
-  if (Key = VK_DIVIDE) then
-  if (Shift = [ssCtrl]) then
-  begin
-    ActionComentarExecute(Sender);
-    Key := 0;
-    Exit;
-  end;
-  // 1. Comprobamos si es una de las teclas de navegación o el Enter
+  // Passthrough de teclas de navegación para los editores SynEdit
   if (Key = VK_RETURN) or (Key = VK_PRIOR) or (Key = VK_NEXT) or
      (Key = VK_HOME) or (Key = VK_END) then
   begin
-    if (Key = VK_RETURN) and (ssCtrl in Shift) then
-    begin
-         SelectNext(ActiveControl as TWinControl, True, True);
-         key := 0;
-         Exit;
-    end
-    else
-      if DBSynEdit1.Focused or syndtEstructura.Focused then
-      begin
-        Exit;
-      end;
+    if DBSynEdit1.Focused or syndtEstructura.Focused then
+      Exit;
   end;
   inherited;
-  if (Key = VK_F5) then
-    btnEjecutarClick(Sender);
 end;
 
 procedure TfrmMtoGeneradorProcesos.FormKeyUp(Sender: TObject; var Key: Word;
@@ -1319,6 +1308,16 @@ begin
     ActionList := alGenerador;
     ShortCut := TextToShortCut('Ctrl+Shift+F');
     OnExecute := ActionBuscarGlobalExecute;
+  end;
+  // [Ctrl + /] Comentar línea(s)
+  actComentar.ShortCut := Menus.ShortCut(VK_DIVIDE, [ssCtrl]);
+  actComentar.OnExecute := ActionComentarExecute;
+  // [Ctrl + Enter] Siguiente control
+  with TAction.Create(Self) do
+  begin
+    ActionList := alGenerador;
+    ShortCut := Menus.ShortCut(VK_RETURN, [ssCtrl]);
+    OnExecute := ActionSiguienteControlExecute;
   end;
   if DBsynEdit1.CanFocus then
     DBsynEdit1.SetFocus;
