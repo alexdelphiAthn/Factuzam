@@ -202,7 +202,7 @@
     DefaultScriptLanguage = 'PascalScript'
     DefaultFont.Charset = DEFAULT_CHARSET
     DefaultFont.Color = clWindowText
-    DefaultFont.Height = -15
+    DefaultFont.Height = -14
     DefaultFont.Name = 'Lucida Sans'
     DefaultFont.Style = []
     DefaultLeftMargin = 10.000000000000000000
