@@ -111,7 +111,79 @@ WHERE at.ESACTIVO_ARTTAR = 'S'
   AND (at.FECHA_HASTA_ARTTAR IS NULL OR at.FECHA_HASTA_ARTTAR >= CURDATE())
 ORDER BY t.ORDEN_TAR, a.ORDEN_ART, at.CODIGO_UNIDAD_ARTTAR;
 
--- 2. Eliminar la columna ESDEFAULT_TAR de fza_tarifas
+-- 2. Recrear vi_tarifas SIN ESDEFAULT_TAR
+CREATE OR REPLACE VIEW vi_tarifas AS
+SELECT
+  CODIGO_TAR_ARTTAR,
+  NOMBRE_TAR_TAR,
+  ESACTIVO_ARTTAR,
+  ORDEN_TAR,
+  ESIMP_INCL_TAR,
+  PORCENTAJE_MARGEN_TAR,
+  VALOR_MULTIPLO_AJUSTE_TAR,
+  VALOR_MENOS_AJUSTE_TAR,
+  INSTANTE_MODIF,
+  INSTANTE_ALTA,
+  USUARIO_ALTA,
+  USUARIO_MODIF
+FROM fza_tarifas
+WHERE ESACTIVO_ARTTAR = 'S'
+ORDER BY ORDEN_TAR;
+
+-- 3. Recrear vi_art_busquedas: el JOIN a fza_tarifas ya no filtra por
+--    ESDEFAULT_TAR='S'; en su lugar filtra por la tarifa con menor ORDEN_TAR.
+CREATE OR REPLACE VIEW vi_art_busquedas AS
+SELECT
+  a.CODIGO_ART_ART,
+  a.ESACTIVO_ART,
+  a.DESCRIPCION_ART,
+  a.CODIGO_FAM_ART,
+  af.DESCRIPCION_FAM,
+  ap.CODIGO_PRV_AP                       AS CODIGO_PRV_PRV,
+  p.RAZON_SOCIAL_PRV                     AS RAZON_SOCIAL_PROVEEDOR,
+  ap.ESPROVEEDORPRINCIPAL_AP             AS ESPROVEEDORPRINCIPAL,
+  ap.PRECIO_ULT_COMPRA_AP               AS PRECIO_ULT_COMPRA,
+  at2.CODIGO_TAR_ARTTAR,
+  t.NOMBRE_TAR_TAR,
+  at2.PRECIO_SALIDA_ARTTAR,
+  at2.PRECIO_DTO_ARTTAR,
+  at2.PORCENTAJE_DTO_ARTTAR,
+  at2.PRECIO_FINAL_ARTTAR,
+  at2.FECHA_DESDE_ARTTAR,
+  at2.FECHA_HASTA_ARTTAR,
+  t.ESIMP_INCL_TAR,
+  iv.NOMBRE_TIPO_IVA_IVATIP,
+  a.TIPO_IVA_ART,
+  a.TIPO_CANTIDAD_ART,
+  a.USUARIO_MODIF,
+  a.INSTANTE_ALTA,
+  a.INSTANTE_MODIF,
+  a.USUARIO_ALTA,
+  a.ESACTIVO_FIJO_ART
+FROM fza_articulos a
+LEFT JOIN fza_articulos_familias af
+       ON af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART
+LEFT JOIN fza_articulos_tarifas at2
+       ON at2.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART
+      AND IFNULL(at2.CODIGO_UNIDAD_ARTTAR, '') = ''
+      AND at2.ESACTIVO_ARTTAR = 'S'
+LEFT JOIN fza_tarifas t
+       ON t.CODIGO_TAR_ARTTAR = at2.CODIGO_TAR_ARTTAR
+      AND t.ESACTIVO_ARTTAR = 'S'
+      AND t.ORDEN_TAR = (SELECT MIN(t2.ORDEN_TAR)
+                           FROM fza_tarifas t2
+                          WHERE t2.ESACTIVO_ARTTAR = 'S')
+LEFT JOIN fza_ivas_tipos iv
+       ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART
+LEFT JOIN fza_articulos_proveedores ap
+       ON ap.CODIGO_ART_AP = a.CODIGO_ART_ART
+      AND ap.ESPROVEEDORPRINCIPAL_AP = 'S'
+LEFT JOIN fza_proveedores p
+       ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP
+WHERE a.ESACTIVO_ART = 'S'
+ORDER BY a.ORDEN_ART;
+
+-- 4. Eliminar la columna ESDEFAULT_TAR de fza_tarifas
 SET @dbname = DATABASE();
 SET @tablename = 'fza_tarifas';
 SET @columnname = 'ESDEFAULT_TAR';
@@ -128,3 +200,7 @@ SET @ddl = IF(@col_exists > 0,
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- 5. Limpiar entradas huerfanas de ESDEFAULT_TARIFA en perfiles de grids
+DELETE FROM fza_usuarios_perfiles
+ WHERE SUBKEY_USUPER LIKE '%ESDEFAULT_TARIFA%';
