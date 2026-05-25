@@ -7,7 +7,7 @@
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
+  Font.Height = -19
   Font.Name = 'Lucida Sans'
   Font.Style = []
   TextHeight = 22
@@ -48,8 +48,8 @@
       Style.Edges = []
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = clNavy
-      Style.Font.Height = -17
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Height = -20
+      Style.Font.Name = 'Arial Black'
       Style.Font.Style = [fsBold]
       Style.Shadow = True
       Style.IsFontAssigned = True
@@ -111,8 +111,8 @@
         TabOrder = 0
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlue
-        Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Height = -27
+        Font.Name = 'Segoe UI Black'
         Font.Style = [fsUnderline]
         ParentFont = False
       end
@@ -128,8 +128,8 @@
         TabOrder = 1
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlue
-        Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Height = -27
+        Font.Name = 'Segoe UI Black'
         Font.Style = [fsUnderline]
         ParentFont = False
       end
@@ -145,8 +145,8 @@
         TabOrder = 2
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlue
-        Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Height = -27
+        Font.Name = 'Segoe UI Black'
         Font.Style = [fsUnderline]
         ParentFont = False
       end
@@ -162,8 +162,8 @@
         TabOrder = 3
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlue
-        Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Height = -27
+        Font.Name = 'Segoe UI Black'
         Font.Style = [fsUnderline]
         ParentFont = False
       end
@@ -179,8 +179,8 @@
         TabOrder = 4
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlue
-        Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Height = -27
+        Font.Name = 'Segoe UI Black'
         Font.Style = [fsUnderline]
         ParentFont = False
       end
@@ -218,8 +218,8 @@
         Style.BorderStyle = ebsOffice11
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clNavy
-        Style.Font.Height = -17
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Height = -53
+        Style.Font.Name = 'Arial Black'
         Style.Font.Style = [fsBold]
         Style.Shadow = True
         Style.IsFontAssigned = True
@@ -243,8 +243,8 @@
         TabOrder = 11
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlue
-        Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Height = -27
+        Font.Name = 'Segoe UI Black'
         Font.Style = [fsUnderline]
         ParentFont = False
       end
@@ -271,7 +271,7 @@
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
-        Font.Height = -17
+        Font.Height = -19
         Font.Name = 'Lucida Sans'
         Font.Style = []
         ParentFont = False
@@ -341,8 +341,8 @@
     Style.Edges = []
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clNavy
-    Style.Font.Height = -17
-    Style.Font.Name = 'Lucida Sans'
+    Style.Font.Height = -20
+    Style.Font.Name = 'Arial Black'
     Style.Font.Style = [fsBold]
     Style.Shadow = True
     Style.IsFontAssigned = True
