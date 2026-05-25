@@ -163,6 +163,7 @@ implementation
 uses
   System.Variants,
   inLibGlobalVar,
+  inLibAppParam,
   inLibtb,
   inLibComprasSesiones,
   inLibContadorLineas;
@@ -258,8 +259,21 @@ begin
     if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then
       FieldByName('CODIGO_VAR_SES').AsString :=
         unqryVariaciones.FieldByName('CODIGO_VAR').AsString;
-    // SERIE_SES la elige el usuario del lookup cbbSerie alimentado por
-    // fza_empresas_series filtrado por TIPO_DOC_EMPSER='SE' + empresa.
+    // Temporada por defecto desde parámetros
+    if oAppParams.GetString('appTemporadaDefecto') <> '' then
+      FieldByName('ID_PV_TEMPORADA_SES').AsString :=
+        oAppParams.GetString('appTemporadaDefecto');
+    // Tarifa sugerida desde parámetros
+    if oAppParams.GetString('appTarifaDefecto') <> '' then
+      FieldByName('CODIGO_TAR_SES').AsString :=
+        oAppParams.GetString('appTarifaDefecto');
+    // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='SE'
+    if Trim(oEmpresa) <> '' then
+    begin
+      var sSerieDef := ObtenerSerieDefecto(oEmpresa, 'SE');
+      if sSerieDef <> '' then
+        FieldByName('SERIE_SES').AsString := sSerieDef;
+    end;
     FieldByName('USUARIO_ALTA').AsString := oUser;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;

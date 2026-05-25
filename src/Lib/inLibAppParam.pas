@@ -191,6 +191,14 @@ begin
   RegistrarParametro('Apariencia', 'appPaleta',
     'Paleta de color del tema', tpString, 'Default');
 
+  // --- Valores por defecto ---
+  RegistrarParametro('Valores por defecto', 'appTarifaDefecto',
+    'Tarifa por defecto del sistema (código de tarifa)',
+    tpString, 'PVP');
+  RegistrarParametro('Valores por defecto', 'appTemporadaDefecto',
+    'Temporada por defecto (ID de fza_propiedades_valores)',
+    tpString, '');
+
   // --- Log --- (los 4 switches de depuración y traza, agrupados)
   // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en
   // el popup de error de conUniError. Implica también el modo SQL.
