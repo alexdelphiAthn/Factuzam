@@ -88,6 +88,8 @@ type
                            Strings: TStrings);
     procedure GetPaletasList(Sender: TJvCustomInspectorItem;
                               Strings: TStrings);
+    procedure GetTarifasList(Sender: TJvCustomInspectorItem;
+                              Strings: TStrings);
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
@@ -102,7 +104,7 @@ implementation
 
 uses
   StrUtils, inLibAppParam, inLibLog, Vcl.Printers,
-            // TdxSkinController, GetRegisteredSkins
+  dxSkinsLookAndFeelPainter,               // TdxSkinLookAndFeelPainter
   FileCtrl, inLibPathTokens;               // SelectDirectory
 
 // -----------------------------------------------------------------------
@@ -230,6 +232,11 @@ begin
                                  [iifValueList, iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetPaletasList;
             end
+            else if SameText(Param.Nombre, 'appTarifaDefault') then
+            begin
+              ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
+              ItemCombo.OnGetValueList := GetTarifasList;
+            end
             else if StartsText('appDir', Param.Nombre) then
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifEditButton];
@@ -299,21 +306,24 @@ begin
     LSkinName := oAppParams.GetString('appTema');
   if LSkinName = '' then
     Exit;
-  // Buscar el skin registrado y enumerar sus paletas
-  for I := 0 to dxRegisteredSkinCount - 1 do
+  // Buscar el painter del skin y enumerar sus paletas
+  for I := 0 to cxLookAndFeelPaintersManager.Count - 1 do
   begin
-    if SameText(dxRegisteredSkinName(I), LSkinName) then
+    if not SameText(cxLookAndFeelPaintersManager[I].LookAndFeelName,
+       LSkinName) then
+      Continue;
+    if not (cxLookAndFeelPaintersManager[I] is TdxSkinLookAndFeelPainter) then
+      Continue;
+    LSkin := TdxSkinLookAndFeelPainter(
+      cxLookAndFeelPaintersManager[I]).Skin;
+    if (LSkin <> nil) and (LSkin.ColorPalettes.Count > 0) then
     begin
-      LSkin := dxRegisteredSkin(I);
-      if (LSkin <> nil) and (LSkin.ColorPalettes.Count > 0) then
-      begin
-        Strings.Clear;
-        Strings.Add('Default');
-        for J := 0 to LSkin.ColorPalettes.Count - 1 do
-          Strings.Add(LSkin.ColorPalettes[J].Name);
-      end;
-      Break;
+      Strings.Clear;
+      Strings.Add('Default');
+      for J := 0 to LSkin.ColorPalettes.Count - 1 do
+        Strings.Add(LSkin.ColorPalettes[J].Name);
     end;
+    Break;
   end;
 end;
 
