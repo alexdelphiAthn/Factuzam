@@ -207,7 +207,7 @@
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -224,7 +224,7 @@
           Height = 16.000000000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -247,7 +247,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -268,7 +268,7 @@
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -311,7 +311,7 @@
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -334,7 +334,7 @@
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -357,7 +357,7 @@
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -386,7 +386,7 @@
           ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []

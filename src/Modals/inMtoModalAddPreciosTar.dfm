@@ -43,7 +43,7 @@
       Caption = ' 1. Seleccione los SKUs:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -15
       Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
@@ -66,7 +66,7 @@
       Caption = ' 2. Seleccione las Tarifas:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -15
       Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
@@ -92,7 +92,7 @@
         Caption = 'Vigente desde:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -17
+        Font.Height = -15
         Font.Name = 'Lucida Sans'
         Font.Pitch = fpFixed
         Font.Style = [fsBold]

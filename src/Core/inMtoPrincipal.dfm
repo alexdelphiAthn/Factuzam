@@ -404,7 +404,7 @@
       Color = clAqua
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -15
       Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
@@ -415,7 +415,7 @@
   object EditStyleController: TcxEditStyleController
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -17
+    Style.Font.Height = -15
     Style.Font.Name = 'Lucida Sans'
     Style.Font.Pitch = fpFixed
     Style.Font.Style = []
