@@ -1310,13 +1310,13 @@ begin
     OnExecute := ActionBuscarGlobalExecute;
   end;
   // [Ctrl + /] Comentar línea(s)
-  actComentar.ShortCut := Menus.ShortCut(VK_DIVIDE, [ssCtrl]);
+  actComentar.ShortCut := scCtrl or VK_DIVIDE;
   actComentar.OnExecute := ActionComentarExecute;
   // [Ctrl + Enter] Siguiente control
   with TAction.Create(Self) do
   begin
     ActionList := alGenerador;
-    ShortCut := Menus.ShortCut(VK_RETURN, [ssCtrl]);
+    ShortCut := scCtrl or VK_RETURN;
     OnExecute := ActionSiguienteControlExecute;
   end;
   if DBsynEdit1.CanFocus then
