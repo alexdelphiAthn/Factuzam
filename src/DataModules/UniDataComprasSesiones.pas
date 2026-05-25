@@ -259,10 +259,13 @@ begin
     if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then
       FieldByName('CODIGO_VAR_SES').AsString :=
         unqryVariaciones.FieldByName('CODIGO_VAR').AsString;
-    // Temporada por defecto desde parámetros
-    if oAppParams.GetString('appTemporadaDefecto') <> '' then
-      FieldByName('ID_PV_TEMPORADA_SES').AsString :=
-        oAppParams.GetString('appTemporadaDefecto');
+    // Temporada por defecto: el parámetro almacena el nombre visible
+    // (ej. 'PRIM-VER 2026'); buscamos su ID numérico en el lookup
+    var sTemp := oAppParams.GetString('appTemporadaDefecto');
+    if (sTemp <> '') and unqryTemporadas.Active
+       and unqryTemporadas.Locate('PV', sTemp, []) then
+      FieldByName('ID_PV_TEMPORADA_SES').AsInteger :=
+        unqryTemporadas.FieldByName('ID_PV_ARTPROP').AsInteger;
     // Tarifa sugerida desde parámetros
     if oAppParams.GetString('appTarifaDefecto') <> '' then
       FieldByName('CODIGO_TAR_SES').AsString :=
