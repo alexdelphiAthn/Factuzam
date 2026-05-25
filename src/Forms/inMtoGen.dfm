@@ -499,7 +499,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -17
-          Font.Name = 'Montserrat Medium'
+          Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -518,7 +518,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -17
-          Font.Name = 'Montserrat Medium'
+          Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType

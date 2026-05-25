@@ -44,7 +44,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -17
-      Font.Name = 'Tahoma'
+      Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural
@@ -67,7 +67,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -17
-      Font.Name = 'Tahoma'
+      Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural
@@ -93,7 +93,7 @@
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -17
-        Font.Name = 'Tahoma'
+        Font.Name = 'Lucida Sans'
         Font.Pitch = fpFixed
         Font.Style = [fsBold]
         Font.Quality = fqClearTypeNatural

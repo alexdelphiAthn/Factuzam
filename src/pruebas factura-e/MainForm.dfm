@@ -8,7 +8,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -17
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   OnCreate = FormCreate
   TextHeight = 15
@@ -22,7 +22,7 @@
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
     TitleFont.Height = -17
-    TitleFont.Name = 'Segoe UI'
+    TitleFont.Name = 'Lucida Sans'
     TitleFont.Style = []
   end
   object DBGrid2: TDBGrid
@@ -34,7 +34,7 @@
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
     TitleFont.Height = -17
-    TitleFont.Name = 'Segoe UI'
+    TitleFont.Name = 'Lucida Sans'
     TitleFont.Style = []
   end
   object ButtonGenerate: TButton

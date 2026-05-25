@@ -10,7 +10,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -17
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   KeyPreview = True
   Position = poScreenCenter

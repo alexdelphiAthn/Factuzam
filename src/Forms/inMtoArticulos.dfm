@@ -1,4 +1,4 @@
-inherited frmMtoArticulos: TfrmMtoArticulos
+﻿inherited frmMtoArticulos: TfrmMtoArticulos
   Left = 5
   Top = 4
   Caption = 'Articulos'
@@ -2498,13 +2498,13 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
         inherited rbBBDD: TcxRadioButton
           Top = 3
-          Font.Name = 'Calibri'
+          Font.Name = 'Lucida Sans'
           Font.Quality = fqClearTypeNatural
           TabOrder = 0
           ExplicitTop = 3
         end
         inherited rbGrid: TcxRadioButton
-          Font.Name = 'Calibri'
+          Font.Name = 'Lucida Sans'
         end
       end
     end
