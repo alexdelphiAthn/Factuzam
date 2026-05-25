@@ -419,7 +419,7 @@
     Style.Font.Name = 'Lucida Sans'
     Style.Font.Pitch = fpFixed
     Style.Font.Style = []
-    Style.Font.Quality = fqClearType
+    Style.Font.Quality = fqClearTypeNatural
     Style.IsFontAssigned = True
     Left = 192
     Top = 144
