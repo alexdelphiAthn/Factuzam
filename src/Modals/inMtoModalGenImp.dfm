@@ -7,7 +7,6 @@
   ClientHeight = 240
   ClientWidth = 341
   FormStyle = fsStayOnTop
-  Scaled = False
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   ExplicitWidth = 357
