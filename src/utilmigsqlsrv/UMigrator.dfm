@@ -8,7 +8,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -17
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -318,7 +318,7 @@
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clMaroon
         Font.Height = -17
-        Font.Name = 'Segoe UI'
+        Font.Name = 'Lucida Sans'
         Font.Style = [fsBold]
         ParentFont = False
         TabOrder = 5
@@ -440,7 +440,7 @@
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -17
-        Font.Name = 'Segoe UI'
+        Font.Name = 'Lucida Sans'
         Font.Style = [fsBold]
         ParentFont = False
         TabOrder = 3
@@ -514,7 +514,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clMaroon
       Font.Height = -17
-      Font.Name = 'Segoe UI'
+      Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
       ParentFont = False
     end

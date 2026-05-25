@@ -204,7 +204,7 @@
     DefaultFont.Charset = DEFAULT_CHARSET
     DefaultFont.Color = clWindowText
     DefaultFont.Height = -17
-    DefaultFont.Name = 'Arial'
+    DefaultFont.Name = 'Lucida Sans'
     DefaultFont.Style = []
     DefaultLeftMargin = 10.000000000000000000
     DefaultRightMargin = 10.000000000000000000
