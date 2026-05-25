@@ -7,7 +7,7 @@ object frmBase: TfrmBase
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
+  Font.Height = -15
   Font.Name = 'Lucida Sans'
   Font.Pitch = fpFixed
   Font.Style = []
