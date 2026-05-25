@@ -92,7 +92,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftBottom]
@@ -111,7 +111,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -129,7 +129,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -147,7 +147,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -165,7 +165,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -181,7 +181,7 @@
           Height = 14.000000000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -199,7 +199,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -217,7 +217,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -235,7 +235,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -253,7 +253,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -274,7 +274,7 @@
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -293,7 +293,7 @@
           DataSetName = 'Albaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -321,7 +321,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -339,7 +339,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -357,7 +357,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -375,7 +375,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -393,7 +393,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -411,7 +411,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -429,7 +429,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -447,7 +447,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Fill.BackColor = 6710886
@@ -481,7 +481,7 @@
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -500,7 +500,7 @@
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -519,7 +519,7 @@
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -538,7 +538,7 @@
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -557,7 +557,7 @@
           DataSetName = 'LineasAlbaranSku'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -578,7 +578,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -599,7 +599,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -620,7 +620,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -652,7 +652,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -672,7 +672,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -692,7 +692,7 @@
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]

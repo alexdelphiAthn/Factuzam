@@ -122,7 +122,7 @@
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -141,7 +141,7 @@
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -160,7 +160,7 @@
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -179,7 +179,7 @@
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
@@ -198,7 +198,7 @@
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -14
           Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
