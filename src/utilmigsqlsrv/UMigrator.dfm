@@ -1,4 +1,4 @@
-object FormMigrator: TFormMigrator
+﻿object FormMigrator: TFormMigrator
   Left = 0
   Top = 0
   Caption = 'Factuzam Migrator SQL Server'
@@ -7,7 +7,7 @@ object FormMigrator: TFormMigrator
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
+  Font.Height = -17
   Font.Name = 'Segoe UI'
   Font.Style = []
   OnCreate = FormCreate
@@ -317,7 +317,7 @@ object FormMigrator: TFormMigrator
         Caption = 'Borrar BBDD destino (DROP)...'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clMaroon
-        Font.Height = -12
+        Font.Height = -17
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -439,7 +439,7 @@ object FormMigrator: TFormMigrator
         Caption = 'Ejecutar migraciones'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
@@ -513,7 +513,7 @@ object FormMigrator: TFormMigrator
       Caption = 'Errores y avisos (filtrado de los ! del log):'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clMaroon
-      Font.Height = -12
+      Font.Height = -17
       Font.Name = 'Segoe UI'
       Font.Style = [fsBold]
       ParentFont = False

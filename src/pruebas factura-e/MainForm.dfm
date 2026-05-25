@@ -1,4 +1,4 @@
-object FormMain: TFormMain
+﻿object FormMain: TFormMain
   Left = 0
   Top = 0
   Caption = 'Convertir Factura en Factura-e'
@@ -7,7 +7,7 @@ object FormMain: TFormMain
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
+  Font.Height = -17
   Font.Name = 'Segoe UI'
   Font.Style = []
   OnCreate = FormCreate
@@ -21,7 +21,7 @@ object FormMain: TFormMain
     TabOrder = 0
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
-    TitleFont.Height = -12
+    TitleFont.Height = -17
     TitleFont.Name = 'Segoe UI'
     TitleFont.Style = []
   end
@@ -33,7 +33,7 @@ object FormMain: TFormMain
     TabOrder = 1
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
-    TitleFont.Height = -12
+    TitleFont.Height = -17
     TitleFont.Name = 'Segoe UI'
     TitleFont.Style = []
   end

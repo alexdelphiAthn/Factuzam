@@ -1,4 +1,4 @@
-inherited frmMtoAlbaranes: TfrmMtoAlbaranes
+﻿inherited frmMtoAlbaranes: TfrmMtoAlbaranes
   Caption = 'Mantenimiento de Albaranes'
   ClientHeight = 765
   ClientWidth = 1085
@@ -610,7 +610,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
             Caption = 'Facturar este albar'#225'n'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -11
+            Font.Height = -17
             Font.Name = 'Tahoma'
             Font.Style = [fsBold]
             ParentFont = False
