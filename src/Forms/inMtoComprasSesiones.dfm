@@ -302,7 +302,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Properties.ValueUnchecked = 'N'
             TabOrder = 26
             Transparent = True
-            Width = 260
           end
           object lblMargen: TcxLabel
             Left = 12
@@ -388,7 +387,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Top = 5
             Width = 170
             Height = 28
-            Caption = 'Otro color (mismo art'#237'culo)'
+            Caption = 'Otro color'
             Colors.Default = 14346982
             Colors.Normal = 14346982
             LookAndFeel.Kind = lfFlat
@@ -410,14 +409,14 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object btnArbolFamilias: TcxButton
             Left = 600
             Top = 5
-            Width = 150
+            Width = 164
             Height = 28
             Caption = #193'rbol familias (F3)'
             TabOrder = 4
             OnClick = btnArbolFamiliasClick
           end
           object lblHint: TcxLabel
-            Left = 760
+            Left = 770
             Top = 7
             Caption = 
               'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
@@ -567,13 +566,34 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           end
         end
       end
+      inherited tsPerfil: TcxTabSheet
+        ExplicitWidth = 1096
+        ExplicitHeight = 649
+        inherited pnlPerfilTop: TPanel
+          Width = 1096
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 1096
+          inherited edtPerfilBusq: TcxTextEdit
+            ExplicitHeight = 27
+          end
+        end
+        inherited pnlPerfilDetail: TPanel
+          Width = 1096
+          Height = 592
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 1096
+          ExplicitHeight = 592
+          inherited cxgrdPerfil: TcxGrid
+            Width = 1096
+            Height = 592
+            ExplicitWidth = 1096
+            ExplicitHeight = 592
+          end
+        end
+      end
       object tsDocumentos: TcxTabSheet
         Caption = 'Documentos'
         ImageIndex = 0
-        ExplicitLeft = 2
-        ExplicitTop = 29
-        ExplicitWidth = 1096
-        ExplicitHeight = 649
         object pnlDocsTop: TPanel
           Left = 0
           Top = 0
@@ -596,7 +616,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object lblDocsInfo: TcxLabel
             Left = 224
             Top = 10
-            Caption = 'Pedidos y albaranes generados al materializar la sesi'#243'n. Doble click o F12 navega al documento.'
+            Caption = 
+              'Pedidos y albaranes generados al materializar la sesi'#243'n. Doble c' +
+              'lick o F12 navega al documento.'
             TabOrder = 1
             Transparent = True
           end
@@ -610,8 +632,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           TabOrder = 1
           object tvDocs: TcxGridDBTableView
             OnDblClick = tvDocsDblClick
-            DataController.DataSource = Dmm.dsSesDocs
-            OptionsBehavior.IncSearch = False
             OptionsCustomize.ColumnHiding = True
             OptionsData.Deleting = False
             OptionsData.DeletingConfirmation = False
@@ -654,37 +674,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           end
         end
       end
-      inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 1096
-        ExplicitHeight = 649
-        inherited pnlPerfilTop: TPanel
-          Width = 1096
-          StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1096
-          inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
-          end
-        end
-        inherited pnlPerfilDetail: TPanel
-          Width = 1096
-          Height = 592
-          StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1096
-          ExplicitHeight = 592
-          inherited cxgrdPerfil: TcxGrid
-            Width = 1096
-            Height = 592
-            ExplicitWidth = 1096
-            ExplicitHeight = 592
-          end
-        end
-      end
       object tsLog: TcxTabSheet
         Caption = 'Log'
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnlLogTop: TPanel
           Left = 0
           Top = 0
@@ -802,7 +793,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
     end
   end
   object dlgFoto: TOpenDialog
-    Filter =
+    Filter = 
       'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|*.png;*.jpg;*.' +
       'jpeg;*.webp;*.avif;*.bmp'
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
