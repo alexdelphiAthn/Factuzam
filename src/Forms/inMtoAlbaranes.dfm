@@ -611,7 +611,7 @@
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -17
-            Font.Name = 'Tahoma'
+            Font.Name = 'Lucida Sans'
             Font.Style = [fsBold]
             ParentFont = False
             TabOrder = 3
