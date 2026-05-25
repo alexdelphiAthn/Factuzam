@@ -1,4 +1,4 @@
-object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
+﻿object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
   Left = 0
   Top = 0
   BorderStyle = bsDialog
@@ -8,8 +8,8 @@ object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Height = -15
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poScreenCenter
   OnCreate = FormCreate

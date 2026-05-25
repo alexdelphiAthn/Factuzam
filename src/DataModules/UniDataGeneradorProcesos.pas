@@ -60,6 +60,14 @@ procedure TdmGeneradorProcesos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString := '0';
+  // Foco al editor SQL tras insertar
+  with GetOwnerForm<TfrmMtoGeneradorProcesos> do
+  begin
+    pcPantalla.ActivePage := tsFicha;
+    pcPestana.ActivePage := tsSQL;
+    if DBSynEdit1.CanFocus then
+      DBSynEdit1.SetFocus;
+  end;
 end;
 
 procedure TdmGeneradorProcesos.unqryTablaGAfterScroll(DataSet: TDataSet);

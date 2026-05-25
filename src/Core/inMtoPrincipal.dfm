@@ -404,8 +404,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Color = clAqua
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Lucida Sans Unicode'
+      Font.Height = -15
+      Font.Name = 'Lucida Sans'
       Font.Pitch = fpFixed
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural
@@ -415,11 +415,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   object EditStyleController: TcxEditStyleController
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
-    Style.Font.Height = -17
+    Style.Font.Height = -15
     Style.Font.Name = 'Lucida Sans'
     Style.Font.Pitch = fpFixed
     Style.Font.Style = []
-    Style.Font.Quality = fqClearType
+    Style.Font.Quality = fqClearTypeNatural
     Style.IsFontAssigned = True
     Left = 192
     Top = 144

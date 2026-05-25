@@ -1,4 +1,4 @@
-inherited frmMtoPedidos: TfrmMtoPedidos
+﻿inherited frmMtoPedidos: TfrmMtoPedidos
   Caption = 'Mantenimiento de Pedidos'
   ClientHeight = 765
   ClientWidth = 1085
@@ -607,8 +607,8 @@ inherited frmMtoPedidos: TfrmMtoPedidos
             TabOrder = 3
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -11
-            Font.Name = 'Tahoma'
+            Font.Height = -15
+            Font.Name = 'Lucida Sans'
             Font.Style = [fsBold]
             ParentFont = False
             OnClick = btnCrearAlbaranClick

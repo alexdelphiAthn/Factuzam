@@ -188,6 +188,8 @@ begin
   // --- Apariencia ---
   RegistrarParametro('Apariencia', 'appTema',
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');
+  RegistrarParametro('Apariencia', 'appPaleta',
+    'Paleta de color del tema', tpString, 'Default');
 
   // --- Log --- (los 4 switches de depuración y traza, agrupados)
   // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en

@@ -1,4 +1,4 @@
-inherited frmPrint: TfrmPrint
+﻿inherited frmPrint: TfrmPrint
   Left = 506
   Top = 279
   HorzScrollBar.Visible = False
@@ -7,7 +7,6 @@ inherited frmPrint: TfrmPrint
   ClientHeight = 240
   ClientWidth = 341
   FormStyle = fsStayOnTop
-  Scaled = False
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   ExplicitWidth = 357
@@ -203,8 +202,8 @@ inherited frmPrint: TfrmPrint
     DefaultScriptLanguage = 'PascalScript'
     DefaultFont.Charset = DEFAULT_CHARSET
     DefaultFont.Color = clWindowText
-    DefaultFont.Height = -13
-    DefaultFont.Name = 'Arial'
+    DefaultFont.Height = -15
+    DefaultFont.Name = 'Lucida Sans'
     DefaultFont.Style = []
     DefaultLeftMargin = 10.000000000000000000
     DefaultRightMargin = 10.000000000000000000

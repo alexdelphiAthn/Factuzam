@@ -1,4 +1,4 @@
-object frmLogon: TfrmLogon
+﻿object frmLogon: TfrmLogon
   Left = 0
   Top = 0
   BorderIcons = []
@@ -9,8 +9,8 @@ object frmLogon: TfrmLogon
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -16
-  Font.Name = 'Segoe UI'
+  Font.Height = -15
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   KeyPreview = True
   Position = poScreenCenter

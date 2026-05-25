@@ -225,6 +225,7 @@ uses
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones};
 
 {$R *.res}
+{$R fondo.res}
 
 var
   frmLogon: TfrmLogon;
@@ -265,8 +266,11 @@ begin
   finally
     frmLogon.Free;
   end;
+  // Fuente global para toda la aplicacion
+  Application.DefaultFont.Name   := 'Lucida Sans';
+  Application.DefaultFont.Height := -15;
   Screen.MenuFont.Name := 'Lucida Sans';
-  Screen.MenuFont.Size := 13;
+  Screen.MenuFont.Size := 11;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
   // Diagnóstico: con /teststack se encola una excepción de prueba
   // para verificar JCL stack trace + AppException + log + modal.

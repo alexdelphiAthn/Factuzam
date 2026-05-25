@@ -23,7 +23,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, SynEditHighlighter,
   SynHighlighterSQL,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
-  cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls,
+  cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, cxLabel,
   Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
   UniDataPerfiles, cxLocalization, Vcl.Buttons, inLibUnitForm, JvMenus,
   System.UITypes, DAScript, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
@@ -43,7 +43,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibFormManager, System.Actions,
+  dxSkinWhiteprint, dxSkinWXI, dxSkinXmas2008Blue,
+  inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
   ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
@@ -218,6 +219,21 @@ type
     FDmConn: TdmConn;
     FdmDataPerfiles: TdmPerfiles;
     oFzaWinf: TfzaWinF;
+    // Splash mostrado al arrancar; lo libera CerrarSplashInicio al final
+    // del FormCreate, respetando un suelo minimo de visibilidad.
+    FSplashInicio:    TObject;
+    FSplashTimestamp: TDateTime;
+    // Logo de fondo + nombre + version creados dinamicamente sobre Panel1.
+    // Replica visual del splash; visibles cuando no hay pestañas abiertas
+    // y ocultos en cuanto se abre cualquier mantenimiento.
+    FLogoBgPanel:   TObject;
+    FLogoBgImage:   TObject;
+    FLogoBgNombre:  TObject;
+    FLogoBgVersion: TObject;
+    procedure CerrarSplashInicio(aMinimoMs: Integer);
+    procedure CrearLogoFondoBg;
+    procedure CentrarLogoFondoBg;
+    procedure FormResize(Sender: TObject);
   end;
 
 var
@@ -363,7 +379,7 @@ var
 
   procedure AplicarTema;
   var
-    sTema: string;
+    sTema, sPaleta: string;
   begin
     if not (Assigned(LookAndFeelController1) and
             Assigned(dxSkinController1)) then
@@ -379,6 +395,10 @@ var
       end;
       LookAndFeelController1.SkinName := sTema;
       dxSkinController1.SkinName      := sTema;
+      // Paleta de color (solo skins modernos la soportan)
+      sPaleta := oAppParams.GetString('appPaleta');
+      if sPaleta <> '' then
+        TcxRootLookAndFeel.Instance.SkinPaletteName := sPaleta;
     except
       on E: Exception do
         inLibLog.Log.LogWarning('Error al establecer skin: ' + E.Message);
@@ -391,6 +411,21 @@ begin
   Application.OnIdle := ApplicationEvents1Idle;
   sDis := '';
   oMemoSQL := cxMemo1;
+  // Splash no-modal al arrancar. Lo mantenemos visible mientras corre el
+  // resto de la inicializacion y garantizamos un suelo de 1000 ms para
+  // que la marca se lea aunque todo termine en 250 ms.
+  FSplashInicio := nil;
+  FSplashTimestamp := Now;
+  try
+    FSplashInicio := TfrmSplash.Create(nil);
+    TfrmSplash(FSplashInicio).FormStyle := fsStayOnTop;
+    TfrmSplash(FSplashInicio).btnAceptar.Visible := False;
+    TfrmSplash(FSplashInicio).Show;
+    Application.ProcessMessages;
+  except
+    // Si el splash falla por lo que sea, no rompemos el arranque.
+    FreeAndNil(FSplashInicio);
+  end;
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
   FDmConn.conUni.Connect;
@@ -431,8 +466,125 @@ begin
   AplicarTema;
   CargarFondoLogo;
   imgFondoLogo.BringToFront;
+  // Logo de fondo via TImage + labels dinamicos (replica del splash).
+  // El imgFondoLogo del .dfm no termina de pintar por culpa del wrapper
+  // TdxSmartImage que VCL no deserializa, asi que servimos la imagen
+  // desde controles creados aqui.
+  CrearLogoFondoBg;
+  // OnResize lo bindeamos en codigo porque FormResize esta en public y
+  // .dfm streaming solo encuentra event handlers en published; asi
+  // evitamos un EReadError 'Invalid property value' al cargar el form.
+  Self.OnResize := FormResize;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
+  // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
+  // de 1000 ms, esperamos a llegar a ese minimo para que el usuario
+  // pueda leer la marca; si tardo mas, lo cerramos sin demora.
+  CerrarSplashInicio(1000);
+end;
+
+procedure TfrmMtoPrincipal.CrearLogoFondoBg;
+var
+  oNombre:  TcxLabel;
+  oVer:     TcxLabel;
+begin
+  FLogoBgPanel   := nil;
+  FLogoBgImage   := nil;
+  FLogoBgNombre  := nil;
+  FLogoBgVersion := nil;
+  // Truco del commit 2b39e93: TImage es TGraphicControl y NUNCA puede
+  // pintarse encima de un TWinControl hermano (pcPrincipal alClient en
+  // Panel1). La solucion es REPARENTAR imgFondoLogo al propio
+  // pcPrincipal — queda como hijo directo del PageControl (no en una
+  // TabSheet), se pinta sobre su area cliente vacia cuando no hay
+  // pestanas, y la TcxTabSheet activa lo tapa automaticamente cuando
+  // si las hay (z-order natural, sin tener que togglear Visible).
+  imgFondoLogo.Parent  := pcPrincipal;
+  imgFondoLogo.Anchors := [akTop, akRight];
+  imgFondoLogo.Proportional := True;
+  imgFondoLogo.Stretch      := True;
+  imgFondoLogo.Center       := True;
+  FLogoBgImage := imgFondoLogo;
+  // Labels nombre+version tambien dentro de pcPrincipal para que
+  // sigan el mismo destino: visibles sin pestanas, tapados por la
+  // TabSheet activa cuando hay alguna abierta.
+  oNombre := TcxLabel.Create(Self);
+  oNombre.Parent  := pcPrincipal;
+  oNombre.Caption := 'Alejandro Laorden Hidalgo';
+  oNombre.AutoSize := False;
+  oNombre.Style.Font.Name   := 'Lucida Sans';
+  oNombre.Style.Font.Height := -17;
+  oNombre.Style.Font.Style  := [fsBold];
+  oNombre.Properties.Alignment.Horz := taCenter;
+  oNombre.Transparent := True;
+  FLogoBgNombre := oNombre;
+  oVer := TcxLabel.Create(Self);
+  oVer.Parent  := pcPrincipal;
+  oVer.Caption := 'Versión ' + oVersion;
+  oVer.AutoSize := False;
+  oVer.Style.Font.Name   := 'Lucida Sans';
+  oVer.Style.Font.Height := -14;
+  oVer.Properties.Alignment.Horz := taCenter;
+  oVer.Transparent := True;
+  FLogoBgVersion := oVer;
+  CentrarLogoFondoBg;
+end;
+
+procedure TfrmMtoPrincipal.CentrarLogoFondoBg;
+var
+  cw, ch, w, h, cx, cy: Integer;
+begin
+  if imgFondoLogo = nil then
+    Exit;
+  // Trabajamos sobre el cliente de pcPrincipal (donde reparentamos los
+  // controles), no sobre Panel1. Asi al cambiar el tamano de la ventana
+  // FormResize recoloca todo respecto al area cliente real.
+  cw := pcPrincipal.ClientWidth;
+  ch := pcPrincipal.ClientHeight;
+  // Logo: 50% del ancho, max 600, min 240, manteniendo aspect 520x130.
+  w := cw div 2;
+  if w > 600 then w := 600;
+  if w < 240 then w := 240;
+  h := Round(w * 130 / 520);
+  cx := (cw - w) div 2;
+  cy := (ch - h - 80) div 2;
+  if cy < 20 then cy := 20;
+  imgFondoLogo.Anchors := [];
+  imgFondoLogo.SetBounds(cx, cy, w, h);
+  if FLogoBgNombre <> nil then
+    TcxLabel(FLogoBgNombre).SetBounds(0, cy + h + 8, cw, 26);
+  if FLogoBgVersion <> nil then
+    TcxLabel(FLogoBgVersion).SetBounds(0, cy + h + 38, cw, 20);
+end;
+
+procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
+begin
+  CentrarLogoFondoBg;
+end;
+
+procedure TfrmMtoPrincipal.CerrarSplashInicio(aMinimoMs: Integer);
+var
+  iElapsedMs, iEsperaMs: Integer;
+begin
+  if FSplashInicio = nil then
+    Exit;
+  // Si ya ha pasado el suelo minimo, cierre inmediato. Si no, dormimos
+  // lo que falte. Sleep simple: el splash no se anima durante la espera
+  // pero la VCL no se cuelga porque estamos en el ultimo paso de
+  // FormCreate; Application.Run procesara mensajes despues.
+  iElapsedMs := Round((Now - FSplashTimestamp) * 86400000);
+  if iElapsedMs < aMinimoMs then
+  begin
+    iEsperaMs := aMinimoMs - iElapsedMs;
+    Application.ProcessMessages;
+    Sleep(iEsperaMs);
+  end;
+  try
+    TfrmSplash(FSplashInicio).Close;
+  except
+    // Si el form ya estaba liberado por algun motivo, lo ignoramos.
+  end;
+  FreeAndNil(FSplashInicio);
 end;
 
 // El Picture.Data del .dfm trae un envoltorio TdxSmartImage que el TImage
@@ -450,8 +602,38 @@ const
 var
   sBase, sRuta: string;
   i: Integer;
+  oRes: TResourceStream;
+  oPng: TPngImage;
 begin
+  // 1) Recurso RCDATA 'FONDO' embebido en el .exe via {$R fondo.res} en
+  //    fzam.dpr. Es el camino preferente porque no depende de tener el
+  //    fichero al lado del .exe. Si el recurso no esta presente (porque
+  //    se compilo sin fondo.res) caemos a las rutas relativas de disco.
+  try
+    oRes := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
+    try
+      oPng := TPngImage.Create;
+      try
+        oPng.LoadFromStream(oRes);
+        imgFondoLogo.Picture.Assign(oPng);
+        inLibLog.Log.LogInfo('CargarFondoLogo: OK desde recurso FONDO ' +
+                             '(' + IntToStr(oRes.Size) + ' bytes)');
+        Exit;
+      finally
+        oPng.Free;
+      end;
+    finally
+      oRes.Free;
+    end;
+  except
+    on E: Exception do
+      inLibLog.Log.LogInfo('CargarFondoLogo: recurso FONDO no disponible ' +
+                           '(' + E.Message + '); pruebo disco');
+  end;
+  // 2) Fallback a fichero suelto: para builds Debug donde fondo.png
+  //    vive en la raiz del repo (..\..\fondo.png desde Win32/Debug).
   sBase := inLibDir.DirApp;
+  inLibLog.Log.LogInfo('CargarFondoLogo: base="' + sBase + '"');
   for i := 0 to High(CRutas) do
   begin
     sRuta := sBase + CRutas[i];
@@ -459,25 +641,38 @@ begin
     begin
       try
         imgFondoLogo.Picture.LoadFromFile(sRuta);
+        inLibLog.Log.LogInfo('CargarFondoLogo: OK desde "' + sRuta + '"');
         Exit;
       except
         on E: Exception do
           inLibLog.Log.LogWarning('No se pudo cargar fondo ' + sRuta +
                                   ': ' + E.Message);
       end;
-    end;
+    end
+    else
+      inLibLog.Log.LogInfo('CargarFondoLogo: no existe "' + sRuta + '"');
   end;
   inLibLog.Log.LogWarning('No se encontro imagen de fondo (fondo.png).');
 end;
 
 procedure TfrmMtoPrincipal.ActualizarFondoLogo;
 var
-  bDebeVerse: Boolean;
+  bDebeVerse, bTieneImg: Boolean;
 begin
-  bDebeVerse := (pcPrincipal.PageCount = 0) and
-                (imgFondoLogo.Picture.Graphic <> nil);
-  if (imgFondoLogo.Visible <> bDebeVerse) then
+  // Con imgFondoLogo y labels reparentados a pcPrincipal, la TcxTabSheet
+  // activa los tapa por z-order automaticamente cuando hay pestanas
+  // abiertas — pero togglear Visible es mas barato que dejarlos pintando
+  // detras, asi que mantenemos la condicion PageCount=0 explicita.
+  bTieneImg  := imgFondoLogo.Picture.Graphic <> nil;
+  bDebeVerse := (pcPrincipal.PageCount = 0) and bTieneImg;
+  if imgFondoLogo.Visible <> bDebeVerse then
     imgFondoLogo.Visible := bDebeVerse;
+  if FLogoBgNombre <> nil then
+    if TcxLabel(FLogoBgNombre).Visible <> bDebeVerse then
+      TcxLabel(FLogoBgNombre).Visible := bDebeVerse;
+  if FLogoBgVersion <> nil then
+    if TcxLabel(FLogoBgVersion).Visible <> bDebeVerse then
+      TcxLabel(FLogoBgVersion).Visible := bDebeVerse;
 end;
 
 procedure TfrmMtoPrincipal.mnuTarifasClick(Sender: TObject);
@@ -638,6 +833,13 @@ begin
     PostMessage(Handle, wm_Close, 0, 0);
     Exit;
   end;
+  // Defensivo: tras todo el init de FormCreate, garantizamos que el logo
+  // este encima de pcPrincipal (z-order) y que ActualizarFondoLogo haya
+  // decidido visibilidad ya con el form fisicamente visible en pantalla.
+  // Si CargarFondoLogo no encontro el png, esto es no-op (Picture.Graphic
+  // sigue nil y ActualizarFondoLogo deja Visible=False).
+  imgFondoLogo.BringToFront;
+  ActualizarFondoLogo;
 end;
 
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;

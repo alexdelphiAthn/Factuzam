@@ -3,7 +3,7 @@
   ClientHeight = 720
   ClientWidth = 1200
   Font.Charset = ANSI_CHARSET
-  Font.Height = -16
+  Font.Height = -15
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose

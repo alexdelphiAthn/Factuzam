@@ -1,4 +1,4 @@
-object FormVisualizador: TFormVisualizador
+﻿object FormVisualizador: TFormVisualizador
   Left = 0
   Top = 0
   Caption = 'Visualizador de Ticket T'#233'rmico - ESC/POS'
@@ -7,8 +7,8 @@ object FormVisualizador: TFormVisualizador
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -15
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poScreenCenter
   OnCreate = FormCreate

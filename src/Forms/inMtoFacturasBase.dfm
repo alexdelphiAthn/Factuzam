@@ -1,4 +1,4 @@
-inherited frmMtoFacturasBase: TfrmMtoFacturasBase
+﻿inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
@@ -7,7 +7,6 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Caption = #186
   ClientHeight = 844
   ClientWidth = 1231
-  Scaled = False
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1231
   ExplicitHeight = 844
@@ -2680,7 +2679,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   ParentFont = False
                   Style.Font.Charset = DEFAULT_CHARSET
                   Style.Font.Color = clWindowText
-                  Style.Font.Height = -17
+                  Style.Font.Height = -15
                   Style.Font.Name = 'Lucida Sans'
                   Style.Font.Style = []
                   Style.IsFontAssigned = True
@@ -2716,7 +2715,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   ParentFont = False
                   Style.Font.Charset = DEFAULT_CHARSET
                   Style.Font.Color = clWindowText
-                  Style.Font.Height = -17
+                  Style.Font.Height = -15
                   Style.Font.Name = 'Lucida Sans'
                   Style.Font.Style = []
                   Style.IsFontAssigned = True
@@ -2984,7 +2983,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                     ParentFont = False
                     Style.Font.Charset = ANSI_CHARSET
                     Style.Font.Color = clWindowText
-                    Style.Font.Height = -17
+                    Style.Font.Height = -15
                     Style.Font.Name = 'Lucida Sans'
                     Style.Font.Style = []
                     Style.IsFontAssigned = True
@@ -3002,7 +3001,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                     ParentFont = False
                     Style.Font.Charset = ANSI_CHARSET
                     Style.Font.Color = clWindowText
-                    Style.Font.Height = -17
+                    Style.Font.Height = -15
                     Style.Font.Name = 'Lucida Sans'
                     Style.Font.Style = []
                     Style.IsFontAssigned = True
@@ -3044,7 +3043,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                     ParentFont = False
                     Style.Font.Charset = ANSI_CHARSET
                     Style.Font.Color = clWindowText
-                    Style.Font.Height = -17
+                    Style.Font.Height = -15
                     Style.Font.Name = 'Lucida Sans'
                     Style.Font.Style = []
                     Style.IsFontAssigned = True
