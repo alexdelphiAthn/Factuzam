@@ -1,4 +1,4 @@
-inherited frmPrintRecFac: TfrmPrintRecFac
+﻿inherited frmPrintRecFac: TfrmPrintRecFac
   Caption = 'Imprimir Recibos'
   ClientHeight = 253
   ClientWidth = 434
@@ -114,7 +114,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -128,7 +128,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 49.133890000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -142,7 +142,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -168,7 +168,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -184,7 +184,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 49.133890000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -198,7 +198,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -214,7 +214,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -232,7 +232,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -246,7 +246,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -262,7 +262,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -280,7 +280,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -294,7 +294,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -310,7 +310,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -329,7 +329,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -343,7 +343,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -361,7 +361,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -375,7 +375,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -394,7 +394,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -452,7 +452,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -471,7 +471,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -488,7 +488,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -566,7 +566,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -647,7 +647,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -661,7 +661,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 49.133890000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -675,7 +675,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -701,7 +701,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -717,7 +717,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 49.133890000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -731,7 +731,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -747,7 +747,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -765,7 +765,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -779,7 +779,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -795,7 +795,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -813,7 +813,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -827,7 +827,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -843,7 +843,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -862,7 +862,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -876,7 +876,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -894,7 +894,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -908,7 +908,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -927,7 +927,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -985,7 +985,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1004,7 +1004,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1021,7 +1021,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1099,7 +1099,7 @@ inherited frmPrintRecFac: TfrmPrintRecFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []

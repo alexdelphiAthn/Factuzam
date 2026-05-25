@@ -1,4 +1,4 @@
-inherited frmPrintFac: TfrmPrintFac
+﻿inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Factura'
   ClientHeight = 249
   ClientWidth = 412
@@ -404,7 +404,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -427,7 +427,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -449,7 +449,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -471,7 +471,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -492,7 +492,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -513,7 +513,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -1018,7 +1018,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1039,7 +1039,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1069,7 +1069,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1090,7 +1090,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1113,7 +1113,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1134,7 +1134,7 @@ inherited frmPrintFac: TfrmPrintFac
           DataSetName = 'Lineas Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1156,7 +1156,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -1178,7 +1178,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -1199,7 +1199,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -1220,7 +1220,7 @@ inherited frmPrintFac: TfrmPrintFac
         DisplayFormat.Kind = fkNumeric
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
-        Font.Height = -13
+        Font.Height = -17
         Font.Name = 'Arial'
         Font.Style = []
         Frame.Typ = []
@@ -1247,7 +1247,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 26.456710000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1262,7 +1262,7 @@ inherited frmPrintFac: TfrmPrintFac
           AutoWidth = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -21
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold, fsUnderline]
           Frame.Typ = []
@@ -1281,7 +1281,7 @@ inherited frmPrintFac: TfrmPrintFac
           ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1295,7 +1295,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 136.063080000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1311,7 +1311,7 @@ inherited frmPrintFac: TfrmPrintFac
           DataField = 'RAZON_SOCIAL_EMPRESA_FAC'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1328,7 +1328,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1352,7 +1352,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1373,7 +1373,7 @@ inherited frmPrintFac: TfrmPrintFac
           OnPreviewClick = 'FacturasPROVINCIA_EMPRESA_FACTURAOnPreviewClick'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1390,7 +1390,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1411,7 +1411,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -16
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1428,7 +1428,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -16
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1447,7 +1447,7 @@ inherited frmPrintFac: TfrmPrintFac
           DataField = 'RAZON_SOCIAL_CLIENTE_FAC'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1464,7 +1464,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1483,7 +1483,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1503,7 +1503,7 @@ inherited frmPrintFac: TfrmPrintFac
           OnBeforePrint = 'FacturasPROVINCIA_CLIENTE_FACTURAOnBeforePrint'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1529,7 +1529,7 @@ inherited frmPrintFac: TfrmPrintFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1545,7 +1545,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1562,7 +1562,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -15
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1585,7 +1585,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1601,7 +1601,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1618,7 +1618,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1635,7 +1635,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1652,7 +1652,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1670,7 +1670,7 @@ inherited frmPrintFac: TfrmPrintFac
           OnBeforePrint = 'FechaEntregaTittleOnBeforePrint'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
@@ -1689,7 +1689,7 @@ inherited frmPrintFac: TfrmPrintFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1713,7 +1713,7 @@ inherited frmPrintFac: TfrmPrintFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1730,7 +1730,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897637800000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1746,7 +1746,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1761,7 +1761,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1796,7 +1796,7 @@ inherited frmPrintFac: TfrmPrintFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1824,7 +1824,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 113.385900000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1838,7 +1838,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 26.456710000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1856,7 +1856,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -16
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1877,7 +1877,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1894,7 +1894,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1916,7 +1916,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1933,7 +1933,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1949,7 +1949,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1966,7 +1966,7 @@ inherited frmPrintFac: TfrmPrintFac
           OnBeforePrint = 'RetencionPorcOnBeforePrint'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1982,7 +1982,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2002,7 +2002,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2022,7 +2022,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2041,7 +2041,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2060,7 +2060,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2079,7 +2079,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2100,7 +2100,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2122,7 +2122,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2144,7 +2144,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2165,7 +2165,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2185,7 +2185,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2205,7 +2205,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2225,7 +2225,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2247,7 +2247,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2269,7 +2269,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2291,7 +2291,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2314,7 +2314,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2339,7 +2339,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2363,7 +2363,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2383,7 +2383,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2404,7 +2404,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2425,7 +2425,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2446,7 +2446,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.FormatStr = '%g'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2466,7 +2466,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2487,7 +2487,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2504,7 +2504,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 30.236240000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -11
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2526,7 +2526,7 @@ inherited frmPrintFac: TfrmPrintFac
           AutoWidth = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2543,7 +2543,7 @@ inherited frmPrintFac: TfrmPrintFac
           OnBeforePrint = 'mNumPaginasOnBeforePrint'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2564,7 +2564,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -16
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -2583,7 +2583,7 @@ inherited frmPrintFac: TfrmPrintFac
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -16
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []

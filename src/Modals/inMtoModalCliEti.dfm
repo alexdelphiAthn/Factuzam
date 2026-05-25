@@ -1,4 +1,4 @@
-inherited frmPrintCliEti: TfrmPrintCliEti
+﻿inherited frmPrintCliEti: TfrmPrintCliEti
   Caption = 'Impresi'#243'n de Etiquetas'
   ClientHeight = 296
   ClientWidth = 389
@@ -122,7 +122,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -141,7 +141,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -160,7 +160,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -179,7 +179,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -198,7 +198,7 @@ inherited frmPrintCliEti: TfrmPrintCliEti
           DataSetName = 'Etiquetas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -17
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []

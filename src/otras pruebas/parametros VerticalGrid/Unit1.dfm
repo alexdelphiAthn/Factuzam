@@ -1,4 +1,4 @@
-object Form1: TForm1
+﻿object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
@@ -7,7 +7,7 @@ object Form1: TForm1
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -16
+  Font.Height = -17
   Font.Name = 'Lucida Sans'
   Font.Style = []
   OnShow = FormShow
