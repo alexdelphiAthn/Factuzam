@@ -83,7 +83,7 @@ type
     ValorMultiploAjuste: Double;        // efectivo
     ValorMenosAjuste   : Double;        // efectivo
     EsImpIncl          : Boolean;       // ESIMP_INCL_TAR
-    EsTarifaDefault    : Boolean;       // ESDEFAULT_TAR
+    EsTarifaDefault    : Boolean;       // appTarifaDefecto
     FechaDesde         : TDateTime;
     FechaHasta         : TDateTime;     // 0 si abierta
     Vigente            : Boolean;       // hay fila vigente en la fecha
@@ -147,7 +147,7 @@ type
     TipoVariacion       : string;
 
     PrecioPedido        : TArticuloPrecio;   // tarifa solicitada
-    PrecioTarifaDefault : TArticuloPrecio;   // tarifa con ESDEFAULT_TAR='S'
+    PrecioTarifaDefault : TArticuloPrecio;   // tarifa de appTarifaDefecto
     UltimoCoste         : TArticuloCoste;    // proveedor principal o el pedido
     PMP                 : TArticuloPMP;      // por almacén o ponderado
 
@@ -165,7 +165,7 @@ type
   public
     constructor Create(AConexion: TUniConnection);
 
-    // Pipeline completo. Si ACodigoTarifa es '', usa la marcada ESDEFAULT_TAR.
+    // Pipeline completo. Si ACodigoTarifa es '', usa appTarifaDefecto.
     // Si ACodigoAlmacen es '', el PMP es ponderado entre todos los almacenes.
     function ResolverDatos(const ACodigoArt, ACodigoSku: string;
                            const ACodigoTarifa: string = '';
@@ -198,6 +198,9 @@ type
   end;
 
 implementation
+
+uses
+  inLibAppParam;
 
 { Helpers de records ──────────────────────────────────────────────────────── }
 
@@ -278,21 +281,8 @@ begin
 end;
 
 function TArticulosResolver.TarifaDefault: string;
-var q: TUniQuery;
 begin
-  Result := '';
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas ' +
-      ' WHERE ESACTIVO_ARTTAR = ''S'' AND ESDEFAULT_TAR = ''S'' LIMIT 1';
-    q.Open;
-    if not q.IsEmpty then
-      Result := q.FieldByName('CODIGO_TAR_ARTTAR').AsString;
-  finally
-    FreeAndNil(q);
-  end;
+  Result := oAppParams.GetString('appTarifaDefecto', 'PVP');
 end;
 
 function TArticulosResolver.ContarSkusActivos(const ACodigoArt: string;
@@ -340,7 +330,8 @@ begin
                        q.FieldByName('VALOR_MULTIPLO_AJUSTE_EFECTIVO').AsFloat;
   P.ValorMenosAjuste := q.FieldByName('VALOR_MENOS_AJUSTE_EFECTIVO').AsFloat;
   P.EsImpIncl        := q.FieldByName('ESIMP_INCL_TAR').AsString = 'S';
-  P.EsTarifaDefault  := q.FieldByName('ESDEFAULT_TAR').AsString = 'S';
+  P.EsTarifaDefault  := SameText(q.FieldByName('CODIGO_TAR_ARTTAR').AsString,
+                                     oAppParams.GetString('appTarifaDefecto', 'PVP'));
   if not q.FieldByName('FECHA_DESDE_ARTTAR').IsNull then
     P.FechaDesde     := q.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime;
   if not q.FieldByName('FECHA_HASTA_ARTTAR').IsNull then
@@ -391,7 +382,7 @@ begin
       '       COALESCE(t.VALOR_MENOS_AJUSTE_ARTTAR,    ' +
       'tar.VALOR_MENOS_AJUSTE_TAR) ' +
       '              AS VALOR_MENOS_AJUSTE_EFECTIVO, ' +
-      '       tar.ESIMP_INCL_TAR, tar.ESDEFAULT_TAR, ' +
+      '       tar.ESIMP_INCL_TAR, ' +
       '       t.FECHA_DESDE_ARTTAR, t.FECHA_HASTA_ARTTAR ' +
       '  FROM fza_articulos_tarifas t ' +
       '  JOIN fza_tarifas tar ON tar.CODIGO_TAR_ARTTAR = t.CODIGO_TAR_ARTTAR ' +

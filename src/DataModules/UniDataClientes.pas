@@ -66,7 +66,8 @@ type
 implementation
 
 uses
-  inMtoClientes, inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics;
+  inMtoClientes, inLibGlobalVar, inLibAppParam, inLibtb, inLibLog,
+  System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -246,9 +247,7 @@ begin
                                                              'CODIGO_FP_FP',
                                                          'ESDEFAULT_FORMA_PAGO_FP');
   unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString :=
-                                                  GetDefaultValue('fza_tarifas',
-                                                                'CODIGO_TAR_ARTTAR',
-                                                            'ESDEFAULT_TAR');
+    oAppParams.GetString('appTarifaDefecto', 'PVP');
 end;
 
 procedure TdmClientes.unqryTablaGBeforeDelete(DataSet: TDataSet);

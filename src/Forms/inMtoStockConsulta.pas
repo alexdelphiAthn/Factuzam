@@ -178,7 +178,8 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar, inLibFotos, inLibAtributosPaleta, inLibGenBusq;
+  inLibGlobalVar, inLibAppParam, inLibFotos, inLibAtributosPaleta,
+  inLibGenBusq;
 
 {$R *.dfm}
 
@@ -585,7 +586,7 @@ begin
 
     // ---- Tarifas del articulo (sin SKU especifico) ----
     q.SQL.Text :=
-      'SELECT AT.CODIGO_TAR_ARTTAR, T.NOMBRE_TAR_TAR, T.ESDEFAULT_TAR, ' +
+      'SELECT AT.CODIGO_TAR_ARTTAR, T.NOMBRE_TAR_TAR, ' +
       '       AT.PRECIO_FINAL_ARTTAR ' +
       '  FROM fza_articulos_tarifas AT ' +
       '  LEFT JOIN fza_tarifas T ' +
@@ -593,8 +594,7 @@ begin
       ' WHERE AT.CODIGO_ART_ARTTAR = :art ' +
       '   AND IFNULL(AT.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
       '   AND AT.ESACTIVO_ARTTAR = ''S'' ' +
-      ' ORDER BY T.ESDEFAULT_TAR DESC, ' +
-      '          COALESCE(T.ORDEN_TAR, 999999), T.NOMBRE_TAR_TAR';
+      ' ORDER BY COALESCE(T.ORDEN_TAR, 999999), T.NOMBRE_TAR_TAR';
     q.ParamByName('art').AsString := FCodArt;
     q.Open;
     if not q.IsEmpty then
@@ -602,7 +602,8 @@ begin
     while not q.Eof do
     begin
       sb.Add(Format('%s%s: %s',
-        [IfThen(q.FieldByName('ESDEFAULT_TAR').AsString = 'S',
+        [IfThen(SameText(q.FieldByName('CODIGO_TAR_ARTTAR').AsString,
+                oAppParams.GetString('appTarifaDefecto', 'PVP')),
                 'Tarifa por defecto - ', ''),
          IfThen(Trim(q.FieldByName('NOMBRE_TAR_TAR').AsString) <> '',
                 q.FieldByName('NOMBRE_TAR_TAR').AsString,
@@ -1257,7 +1258,8 @@ begin
       '      WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART'           + sLineBreak +
       '        AND IFNULL(t.CODIGO_UNIDAD_ARTTAR, '''') = '''''      + sLineBreak +
       '        AND t.ESACTIVO_ARTTAR = ''S'''                        + sLineBreak +
-      '        AND tt.ESDEFAULT_TAR = ''S'''                         + sLineBreak +
+      '        AND tt.CODIGO_TAR_ARTTAR = ' +
+      QuotedStr(oAppParams.GetString('appTarifaDefecto', 'PVP'))  + sLineBreak +
       '      LIMIT 1)                 AS PRECIO_PVP'                 + sLineBreak +
       'FROM fza_articulos a'                                         + sLineBreak +
       'LEFT JOIN fza_articulos_familias f'                           + sLineBreak +

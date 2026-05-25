@@ -385,6 +385,7 @@ implementation
 
 uses inLibtb,
      inLibData,
+     inLibAppParam,
      inMtoCajaOpe,
      inLibDevExp,
      inLibFacturas,
@@ -1804,19 +1805,7 @@ end;
 
 function TdmCajaOpe.GetTarifaDefault: string;
 begin
-  var sql := TUniQuery.Create(nil);
-  try
-    sql.Connection := oConn;
-    sql.SQL.Text := 'SELECT CODIGO_TAR_ARTTAR ' +
-                    ' FROM fza_tarifas ' +
-                    'WHERE ESDEFAULT_TAR = ' + QuotedStr('S') +
-                    ' LIMIT 1 ' ;
-    sql.Open;
-    Result := sql.FieldByName('CODIGO_TAR_ARTTAR').AsString;
-    sql.Close;
-  finally
-    FreeAndNil(sql);
-  end;
+  Result := oAppParams.GetString('appTarifaDefecto', 'PVP');
 end;
 
 procedure TdmCajaOpe.cdsCabeceraAfterInsert(DataSet: TDataSet);

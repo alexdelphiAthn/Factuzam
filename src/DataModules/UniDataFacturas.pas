@@ -139,6 +139,7 @@ implementation
 uses
   inMtoFacturasBase,
   inLibGlobalVar,
+  inLibAppParam,
   inLibtb,
   inLibLog,
   System.Diagnostics,
@@ -1077,8 +1078,7 @@ end;
 
 function TdmFacturas.TarifaDefault: string;
 begin
-  unqryTarifas.Locate('ESDEFAULT_TAR', 'S', []);
-  Result := unqryTarifas.FindField('CODIGO_TAR_ARTTAR').AsString;
+  Result := oAppParams.GetString('appTarifaDefecto', 'PVP');
 end;
 
 procedure TdmFacturas.GetCodigoAutoEmpresa;

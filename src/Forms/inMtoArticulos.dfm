@@ -1064,17 +1064,6 @@
                     Position.ColIndex = 12
                     Position.RowIndex = 0
                   end
-                  object dbcTarifasESDEFAULT_TARIFA: TcxGridDBBandedColumn
-                    Caption = 'Tarifa x Defecto'
-                    DataBinding.FieldName = 'ESDEFAULT_TAR'
-                    PropertiesClassName = 'TcxCheckBoxProperties'
-                    Properties.ValueChecked = 'S'
-                    Properties.ValueUnchecked = 'N'
-                    Width = 161
-                    Position.BandIndex = 1
-                    Position.ColIndex = 13
-                    Position.RowIndex = 0
-                  end
                   object cxgrdbclmnTarifasCODIGO_PROVEEDOR: TcxGridDBBandedColumn
                     Caption = 'C'#243'digo Proveedor'
                     DataBinding.FieldName = 'CODIGO_PRV_PRV'
