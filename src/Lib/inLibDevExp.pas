@@ -31,7 +31,8 @@ uses
     cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs, inLibUser,
     cxGroupBox, cxLabel,  cxListBox, System.NetEncoding, UniDataPerfiles,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
-    OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo;
+    OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
+    inLibLog;
 type
   TUpdateTotalEvent = procedure(Sender: TObject;
                                 NuevoTotal: Currency) of object;
@@ -483,23 +484,30 @@ procedure PonerAnchosTitulos(AcxgrdtvVista: TcxCustomGridTableView;
                              var oPerfilDic: TProfileDicc);
 var
   oItem: TcxGridColumn;
-  i: Integer;
-  sName, sColumnName, sSubKey, sFiltroBase64: string;
+  i, iIdx, iBand, iCol, iRow: Integer;
+  sName, sColumnName, sSubKey, sFiltroBase64, sVal: string;
   LStream: TMemoryStream;
   BStream: TStringStream;
+  iMaxIdx: Integer;
+  oBanded: TcxGridDBBandedColumn;
+  oBandedView: TcxGridDBBandedTableView;
+  iMaxBands: Integer;
 begin
   AcxgrdtvVista.BeginUpdate;
   try
     sName := AcxgrdtvVista.Name;
+    iMaxIdx := AcxgrdtvVista.ItemCount - 1;
+    Log.LogInfo(Format('PonerAnchosTitulos: vista=%s items=%d form=%s',
+                       [sName, AcxgrdtvVista.ItemCount, AsDes]));
 
     // 1. Restaurar Visibilidad, Caption, Ancho y Ordenación de datos
     for i := 0 to AcxgrdtvVista.ItemCount - 1 do
     begin
       oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
-      if sColumnName = '' then Continue;
+      if sColumnName = '' then
+        Continue;
       sSubKey := sName + '_' + sColumnName;
-
       oItem.Visible := SameText(
         GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Visible', 'True'),
         'True');
@@ -509,8 +517,6 @@ begin
                                                oItem.Caption);
       oItem.Width   := StrToIntDef(
         GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', ''), oItem.Width);
-
-      // Restaurar Ordenación (Sorting)
       oItem.SortOrder := TcxDataSortOrder(StrToIntDef(
         GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
       if Ord(oItem.SortOrder) <> 0 then
@@ -523,14 +529,30 @@ begin
     begin
       oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
       sColumnName := GetItemFieldName(oItem);
-      if sColumnName = '' then Continue;
+      if sColumnName = '' then
+        Continue;
       sSubKey := sName + '_' + sColumnName;
-      oItem.Index := StrToIntDef(
-        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', ''), oItem.Index);
+      sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', '');
+      iIdx := StrToIntDef(sVal, oItem.Index);
+      // Protección: si el perfil trae un Index fuera de rango (columna
+      // eliminada desplazó los índices), clampear al máximo válido.
+      if iIdx > iMaxIdx then
+      begin
+        Log.LogWarning(Format(
+          '  columna %s: Index guardado=%d > max=%d, ajustado',
+          [sColumnName, iIdx, iMaxIdx]));
+        iIdx := iMaxIdx;
+      end;
+      if iIdx < 0 then
+        iIdx := 0;
+      oItem.Index := iIdx;
     end;
 
     // 3. Para columnas banded, restaurar Position.BandIndex / ColIndex /
-    // RowIndex
+    // RowIndex con protección contra índices fuera de rango.
+    iMaxBands := 0;
+    if AcxgrdtvVista is TcxGridDBBandedTableView then
+      iMaxBands := TcxGridDBBandedTableView(AcxgrdtvVista).Bands.Count;
     for i := 0 to AcxgrdtvVista.ItemCount - 1 do
     begin
       oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
@@ -539,19 +561,36 @@ begin
         Continue;
       if not (oItem is TcxGridDBBandedColumn) then
         Continue;
+      oBanded := TcxGridDBBandedColumn(oItem);
       sSubKey := sName + '_' + sColumnName;
-      with TcxGridDBBandedColumn(oItem).Position do
+      iBand := StrToIntDef(
+        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'BandIndex', ''),
+        oBanded.Position.BandIndex);
+      iCol  := StrToIntDef(
+        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'ColIndex',  ''),
+        oBanded.Position.ColIndex);
+      iRow  := StrToIntDef(
+        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'RowIndex',  ''),
+        oBanded.Position.RowIndex);
+      // Protección contra BandIndex inválido
+      if (iMaxBands > 0) and (iBand >= iMaxBands) then
       begin
-        BandIndex := StrToIntDef(
-          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'BandIndex', ''),
-          BandIndex);
-        ColIndex  := StrToIntDef(
-          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'ColIndex',  ''),
-          ColIndex);
-        RowIndex  := StrToIntDef(
-          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'RowIndex',  ''),
-          RowIndex);
+        Log.LogWarning(Format(
+          '  columna banded %s: BandIndex=%d >= bands=%d, ajustado a %d',
+          [sColumnName, iBand, iMaxBands, iMaxBands - 1]));
+        iBand := iMaxBands - 1;
       end;
+      if iBand < 0 then
+        iBand := 0;
+      if iCol < 0 then
+        iCol := 0;
+      if iRow < 0 then
+        iRow := 0;
+      Log.LogInfo(Format('  banded %s: band=%d col=%d row=%d',
+                         [sColumnName, iBand, iCol, iRow]));
+      oBanded.Position.BandIndex := iBand;
+      oBanded.Position.ColIndex  := iCol;
+      oBanded.Position.RowIndex  := iRow;
     end;
 
     // 3. Restaurar el Filtro (Desde VALUE_TEXT_USUPER)
