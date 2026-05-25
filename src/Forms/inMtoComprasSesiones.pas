@@ -305,6 +305,7 @@ uses
   Vcl.Clipbrd,
   inLibAtributosPaleta,
   inLibFotos,
+  inLibtb,
   inMtoModalSelFamilia,
   inMtoModalImpSesion,
   inMtoModalIncidencias;
@@ -997,9 +998,18 @@ begin
   try
     frmSet.ConfigurarLookups(Dmm.dsAlmacenes, Dmm.dsTarifas,
                               Dmm.dsTemporadas);
+    // Series por defecto: buscar en Empresas->Series por tipo de documento
+    var sSerieAlbDef := ObtenerSerieDefecto(
+          Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString, 'AB');
+    if sSerieAlbDef = '' then
+      sSerieAlbDef := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    var sSeriePedDef := ObtenerSerieDefecto(
+          Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString, 'PC');
+    if sSeriePedDef = '' then
+      sSeriePedDef := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
     frmSet.SetDefecto(
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString, // serie albaran
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString, // serie pedido
+      sSerieAlbDef,
+      sSeriePedDef,
       Date,
       Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString,
       Dmm.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString,

@@ -65,7 +65,6 @@ type
     cxgrdbclmnGrdDBTabPrinNOMBRE_TARIFA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinACTIVO_TARIFA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinESIMP_INCL_TARIFA: TcxGridDBColumn;
-    cxgrdbclmnGrdDBTabPrinESDEFAULT_TARIFA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
@@ -127,7 +126,6 @@ type
     tvArticulosPRECIO_DTO_TARIFA: TcxGridDBColumn;
     tvArticulosPORCEN_DTO_TARIFA: TcxGridDBColumn;
     tvArticulosESIMP_INCL_TARIFA: TcxGridDBColumn;
-    tvArticulosESDEFAULT_TARIFA: TcxGridDBColumn;
     tvArticulosESVARIACION_ARTICULO: TcxGridDBColumn;
     tvArticulosTIPO_IVA_ARTICULO: TcxGridDBColumn;
     tvArticulosTIENE_SKU: TcxGridDBColumn;

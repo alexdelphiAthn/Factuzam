@@ -509,7 +509,7 @@ inherited dmArticulos: TdmArticulos
       'SELECT COUNT(*) FROM fza_ivas_tipos')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR, ESDEFAULT_TAR '
+      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR '
       'FROM fza_tarifas '
       'WHERE CODIGO_TAR_ARTTAR NOT IN ( SELECT CODIGO_TAR_ARTTAR '
       '                               FROM fza_articulos_tarifas '
@@ -807,7 +807,7 @@ inherited dmArticulos: TdmArticulos
   object unqryTarifasPrint: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR, ESDEFAULT_TAR'
+      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR'
       '  FROM fza_tarifas'
       ' WHERE ESACTIVO_ARTTAR = '#39'S'#39
       ' ORDER BY COALESCE(ORDEN_TAR, 999999),'

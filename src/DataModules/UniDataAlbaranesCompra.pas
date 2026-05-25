@@ -101,7 +101,8 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, System.Diagnostics,
+  inLibGlobalVar, inLibAppParam, inLibLog, inLibtb,
+  System.Diagnostics,
   inMtoAlbaranesCompra,
   inLibAlbaranesCompraMovimientos;
 
@@ -176,20 +177,31 @@ begin
 end;
 
 procedure TdmAlbaranesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
+var
+  sSerie: string;
 begin
   inherited;
   with unqryTablaG do
   begin
     FieldByName('NUMERO_ALBC').AsString := '0';
+    // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='AB'
+    sSerie := ObtenerSerieDefecto(oEmpresa, 'AB');
     if FindField('SERIE_ALBC') <> nil then
-      FieldByName('SERIE_ALBC').AsString := 'C1';
+    begin
+      if sSerie <> '' then
+        FieldByName('SERIE_ALBC').AsString := sSerie
+      else
+        FieldByName('SERIE_ALBC').AsString := 'C1';
+    end;
     FieldByName('FECHA_ALBC').AsDateTime := Date;
     if FindField('ESTADO_ALBC') <> nil then
       FieldByName('ESTADO_ALBC').AsString := 'ABIERTO';
-    FieldByName('CODIGO_EMP_ALBC').AsString := '0';
+    if Trim(oEmpresa) <> '' then
+      FieldByName('CODIGO_EMP_ALBC').AsString := oEmpresa
+    else
+      FieldByName('CODIGO_EMP_ALBC').AsString := '0';
     FieldByName('CODIGO_PRV_ALBC').AsString := '0';
   end;
-  // Insert nuevo: no hay transicion (sin estado previo).
   FTransicionEstadoAlbc := '';
 end;
 

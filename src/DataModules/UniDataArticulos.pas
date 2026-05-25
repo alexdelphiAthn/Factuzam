@@ -125,6 +125,7 @@ implementation
 uses
   inMtoArticulos,
   inLibGlobalVar,
+  inLibAppParam,
   inLibLog,
   System.Diagnostics,
   inLibtb;
@@ -674,7 +675,8 @@ begin
       Itm := lst.Items.Add;
       Itm.Caption := FindField('CODIGO_TAR_ARTTAR').AsString;
       Itm.SubItems.Add(FindField('NOMBRE_TAR_TAR').AsString);
-      if FieldByName('ESDEFAULT_TAR').AsString = 'S' then
+      if SameText(FindField('CODIGO_TAR_ARTTAR').AsString,
+                  oAppParams.GetString('appTarifaDefecto', 'PVP')) then
         Itm.Checked := True;
       Next;
     end;
@@ -913,7 +915,8 @@ begin
     items.Add(unqryTarifasPrint.FieldByName('NOMBRE_TAR_TAR').AsString);
     codigos.Add(unqryTarifasPrint.FieldByName('CODIGO_TAR_ARTTAR').AsString);
     if (aIdxDefault = -1) and
-       (unqryTarifasPrint.FieldByName('ESDEFAULT_TAR').AsString = 'S') then
+       SameText(unqryTarifasPrint.FieldByName('CODIGO_TAR_ARTTAR').AsString,
+                oAppParams.GetString('appTarifaDefecto', 'PVP')) then
       aIdxDefault := i;
     Inc(i);
     unqryTarifasPrint.Next;
