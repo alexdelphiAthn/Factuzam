@@ -1,4 +1,4 @@
-﻿inherited frmMtoGen: TfrmMtoGen
+inherited frmMtoGen: TfrmMtoGen
   BorderStyle = bsNone
   Caption = 'Ventana Gen'#233'rica'
   ClientHeight = 558
@@ -311,7 +311,7 @@
           Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -367,7 +367,7 @@
           Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -423,7 +423,7 @@
           Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
+          Font.Height = -15
           Font.Name = 'Lucida Sans'
           Font.Pitch = fpFixed
           Font.Style = []
@@ -498,8 +498,8 @@
           Caption = 'Buscar BBDD'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -12
+          Font.Name = 'Montserrat Medium'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -517,8 +517,8 @@
           Caption = 'Buscar Grid'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -17
-          Font.Name = 'Lucida Sans'
+          Font.Height = -12
+          Font.Name = 'Montserrat Medium'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType

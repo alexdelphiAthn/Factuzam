@@ -1,4 +1,4 @@
-﻿object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
+object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
   Left = 0
   Top = 0
   BorderStyle = bsDialog
@@ -8,7 +8,7 @@
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
+  Font.Height = -15
   Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poScreenCenter
