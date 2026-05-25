@@ -55,11 +55,6 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               DataBinding.FieldName = 'ESIMP_INCL_TAR'
               Width = 141
             end
-            object cxgrdbclmnGrdDBTabPrinESDEFAULT_TARIFA: TcxGridDBColumn
-              Caption = 'Tarifa por defecto'
-              DataBinding.FieldName = 'ESDEFAULT_TAR'
-              Width = 202
-            end
             object cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               DataBinding.FieldName = 'INSTANTE_MODIF'
               Visible = False
@@ -454,10 +449,6 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                     end
                     object tvArticulosESIMP_INCL_TARIFA: TcxGridDBColumn
                       DataBinding.FieldName = 'ESIMP_INCL_TAR'
-                      Visible = False
-                    end
-                    object tvArticulosESDEFAULT_TARIFA: TcxGridDBColumn
-                      DataBinding.FieldName = 'ESDEFAULT_TAR'
                       Visible = False
                     end
                     object tvArticulosESVARIACION_ARTICULO: TcxGridDBColumn

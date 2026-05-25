@@ -92,6 +92,7 @@ type
                                     EventoUpdateTotal: TUpdateTotalEvent = nil
                                    );
 
+  function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string): string;
   function CheckOpenDatasets(AModule: TDataModule): Boolean;
   procedure CancelarDatasets(AModule: TDataModule);
   procedure GrabarDatasets(AModule: TDataModule);
@@ -322,6 +323,33 @@ begin
       EventoUpdateTotal(nil, Totales.Totales.TotalLiquido);
   finally
     FreeAndNil(Totales);
+  end;
+end;
+
+function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string): string;
+var
+  q: TUniQuery;
+begin
+  Result := '';
+  if (Trim(AEmpresa) = '') or (Trim(ATipoDoc) = '') then
+    Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text :=
+      'SELECT EMPSER FROM fza_empresas_series ' +
+      ' WHERE CODIGO_EMP_EMPSER = :emp ' +
+      '   AND TIPO_DOC_EMPSER   = :tip ' +
+      '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
+      '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+      ' LIMIT 1';
+    q.ParamByName('emp').AsString := AEmpresa;
+    q.ParamByName('tip').AsString := ATipoDoc;
+    q.Open;
+    if not q.IsEmpty then
+      Result := q.FieldByName('EMPSER').AsString;
+  finally
+    FreeAndNil(q);
   end;
 end;
 

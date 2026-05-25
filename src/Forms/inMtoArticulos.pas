@@ -162,7 +162,6 @@ type
     actTarifas: TAction;
     dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBBandedColumn;
     dbcTarifasESIMP_INCL_TARIFA: TcxGridDBBandedColumn;
-    dbcTarifasESDEFAULT_TARIFA: TcxGridDBBandedColumn;
     dbcDESCRIPCION_FAM: TcxDBLabel;
     dbcNOMBRE_FAM_FAM: TcxDBLabel;
     tsGeneral: TcxTabSheet;
