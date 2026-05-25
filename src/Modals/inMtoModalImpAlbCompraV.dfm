@@ -116,7 +116,7 @@
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Albaran."RAZON_SOCIAL_EMP"]')
+            '[Albaran."NOMBRE_ALM_ALBC"]')
           ParentFont = False
         end
         object MemoEmpDirV: TfrxMemoView
@@ -134,7 +134,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Albaran."DIRECCION1_EMP"]')
+            '[Albaran."DIRECCION_ALM_ALBC"]')
           ParentFont = False
         end
         object MemoEmpCpPobV: TfrxMemoView
@@ -152,7 +152,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Albaran."CODIGO_POSTAL_EMP"] [Albaran."POBLACION_EMP"] ([Albaran."PROVINCIA_EMP"])')
+            '[Albaran."CODIGO_POSTAL_ALM_ALBC"] [Albaran."POBLACION_ALM_ALBC"] ([Albaran."PROVINCIA_ALM_ALBC"])')
           ParentFont = False
         end
         object MemoEmpCifV: TfrxMemoView
@@ -170,7 +170,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'CIF: [Albaran."CIF_EMP"]   Tel: [Albaran."TELEFONO1_EMP"]')
+            'Tel: [Albaran."TELEFONO_ALM_ALBC"]   Email: [Albaran."EMAIL_ALM_ALBC"]')
           ParentFont = False
         end
         object MemoPrvLblV: TfrxMemoView
