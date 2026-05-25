@@ -115,7 +115,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -129,7 +129,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -143,7 +143,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haCenter
@@ -169,7 +169,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -185,7 +185,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -199,7 +199,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -215,7 +215,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -233,7 +233,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -247,7 +247,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -263,7 +263,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -281,7 +281,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -295,7 +295,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -311,7 +311,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -330,7 +330,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -344,7 +344,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -362,7 +362,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -376,7 +376,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -395,7 +395,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
@@ -453,7 +453,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -472,7 +472,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -489,7 +489,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -567,7 +567,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -648,7 +648,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -662,7 +662,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -676,7 +676,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haCenter
@@ -702,7 +702,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -718,7 +718,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -732,7 +732,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -748,7 +748,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -766,7 +766,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -780,7 +780,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -796,7 +796,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -814,7 +814,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -828,7 +828,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -844,7 +844,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -863,7 +863,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -877,7 +877,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -895,7 +895,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           ParentFont = False
@@ -909,7 +909,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -928,7 +928,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
@@ -986,7 +986,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -1005,7 +1005,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -1022,7 +1022,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -1100,7 +1100,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
