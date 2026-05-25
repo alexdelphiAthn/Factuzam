@@ -98,7 +98,7 @@
           Properties.WordWrap = True
           Style.Font.Charset = DEFAULT_CHARSET
           Style.Font.Color = 6710886
-          Style.Font.Height = -17
+          Style.Font.Height = -15
           Style.Font.Name = 'Lucida Sans'
           Style.Font.Style = [fsItalic]
           Style.IsFontAssigned = True
@@ -134,7 +134,7 @@
             Caption = 'Gu'#237'as'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -157,7 +157,7 @@
             Caption = '1. Dataset master'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -171,7 +171,7 @@
             ItemHeight = 19
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.IsFontAssigned = True
             TabOrder = 0
@@ -183,7 +183,7 @@
             Caption = '2. Master fields (uno o varios)'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -197,7 +197,7 @@
             Items = <>
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.IsFontAssigned = True
             TabOrder = 1
@@ -208,7 +208,7 @@
             Caption = '3. Tabla o vista externa'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -222,7 +222,7 @@
             ItemHeight = 19
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clWindowText
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.IsFontAssigned = True
             TabOrder = 2
@@ -234,7 +234,7 @@
             Caption = '4. Campo de uni'#243'n (PK marcada con *)'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 3618615
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsBold]
             Style.IsFontAssigned = True
@@ -272,7 +272,7 @@
             Caption = '5. Los campos de la tabla externa se a'#241'aden al master (UserName se mantiene). Colisiones -> sufijo 1,2,...'
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = 4210752
-            Style.Font.Height = -17
+            Style.Font.Height = -15
             Style.Font.Name = 'Lucida Sans'
             Style.Font.Style = [fsItalic]
             Style.IsFontAssigned = True
@@ -482,7 +482,7 @@
       Color = 14998263
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -17
+      Font.Height = -15
       Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
     end

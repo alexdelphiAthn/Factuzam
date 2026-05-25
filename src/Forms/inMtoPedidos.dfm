@@ -607,7 +607,7 @@
             TabOrder = 3
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -17
+            Font.Height = -15
             Font.Name = 'Lucida Sans'
             Font.Style = [fsBold]
             ParentFont = False

@@ -7,7 +7,7 @@
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -17
+  Font.Height = -15
   Font.Name = 'Lucida Sans'
   Font.Style = []
   OnCreate = FormCreate
@@ -317,7 +317,7 @@
         Caption = 'Borrar BBDD destino (DROP)...'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clMaroon
-        Font.Height = -17
+        Font.Height = -15
         Font.Name = 'Lucida Sans'
         Font.Style = [fsBold]
         ParentFont = False
@@ -439,7 +439,7 @@
         Caption = 'Ejecutar migraciones'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -17
+        Font.Height = -15
         Font.Name = 'Lucida Sans'
         Font.Style = [fsBold]
         ParentFont = False
@@ -513,7 +513,7 @@
       Caption = 'Errores y avisos (filtrado de los ! del log):'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clMaroon
-      Font.Height = -17
+      Font.Height = -15
       Font.Name = 'Lucida Sans'
       Font.Style = [fsBold]
       ParentFont = False
