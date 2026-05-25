@@ -266,6 +266,9 @@ begin
   finally
     frmLogon.Free;
   end;
+  // Fuente global para toda la aplicacion
+  Application.DefaultFont.Name   := 'Lucida Sans';
+  Application.DefaultFont.Height := -17;
   Screen.MenuFont.Name := 'Lucida Sans';
   Screen.MenuFont.Size := 13;
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
