@@ -86,6 +86,8 @@ type
                                         Strings: TStrings);
     procedure GetTemasList(Sender: TJvCustomInspectorItem;
                            Strings: TStrings);
+    procedure GetPaletasList(Sender: TJvCustomInspectorItem;
+                              Strings: TStrings);
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
@@ -222,6 +224,12 @@ begin
               ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
               ItemCombo.OnGetValueList := GetTemasList;
             end
+            else if SameText(Param.Nombre, 'appPaleta') then
+            begin
+              ItemCombo.Flags := ItemCombo.Flags +
+                                 [iifValueList, iifAllowNonListValues];
+              ItemCombo.OnGetValueList := GetPaletasList;
+            end
             else if StartsText('appDir', Param.Nombre) then
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifEditButton];
@@ -253,64 +261,60 @@ end;
 
 procedure TfrmMtoAppParam.GetTemasList(
   Sender: TJvCustomInspectorItem; Strings: TStrings);
+var
+  I: Integer;
+  LSorted: TStringList;
+begin
+  // Enumeración dinámica: muestra todos los skins registrados en la app
+  LSorted := TStringList.Create;
+  try
+    LSorted.Sorted := True;
+    LSorted.Duplicates := dupIgnore;
+    for I := 0 to cxLookAndFeelPaintersManager.Count - 1 do
+    begin
+      if cxLookAndFeelPaintersManager[I].LookAndFeelStyle = lfsSkin then
+        LSorted.Add(cxLookAndFeelPaintersManager[I].LookAndFeelName);
+    end;
+    Strings.Assign(LSorted);
+  finally
+    LSorted.Free;
+  end;
+end;
+
+procedure TfrmMtoAppParam.GetPaletasList(
+  Sender: TJvCustomInspectorItem; Strings: TStrings);
+var
+  I, J: Integer;
+  LSkinName: string;
+  LItemTema: TJvCustomInspectorItem;
+  LSkin: TdxSkin;
 begin
   Strings.Clear;
-  // Lista fija de los skins incluidos en DevExpress VCL
-  Strings.Add('Basic');
-  Strings.Add('Black');
-  Strings.Add('Blueprint');
-  Strings.Add('Caramel');
-  Strings.Add('Coffee');
-  Strings.Add('Darkroom');
-  Strings.Add('DarkSide');
-  Strings.Add('DevExpressDarkStyle');
-  Strings.Add('DevExpressStyle');
-  Strings.Add('Foggy');
-  Strings.Add('GlassOceans');
-  Strings.Add('HighContrast');
-  Strings.Add('iMaginary');
-  Strings.Add('Lilian');
-  Strings.Add('LiquidSky');
-  Strings.Add('LondonLiquidSky');
-  Strings.Add('McSkin');
-  Strings.Add('Metropolis');
-  Strings.Add('MetropolisDark');
-  Strings.Add('MoneyTwins');
-  Strings.Add('Office2007Black');
-  Strings.Add('Office2007Blue');
-  Strings.Add('Office2007Green');
-  Strings.Add('Office2007Pink');
-  Strings.Add('Office2007Silver');
-  Strings.Add('Office2010Black');
-  Strings.Add('Office2010Blue');
-  Strings.Add('Office2010Silver');
-  Strings.Add('Office2013DarkGray');
-  Strings.Add('Office2013LightGray');
-  Strings.Add('Office2013White');
-  Strings.Add('Office2016Colorful');
-  Strings.Add('Office2016Dark');
-  Strings.Add('Office2019Black');
-  Strings.Add('Office2019Colorful');
-  Strings.Add('Office2019DarkGray');
-  Strings.Add('Office2019White');
-  Strings.Add('Pumpkin');
-  Strings.Add('Seven');
-  Strings.Add('SevenClassic');
-  Strings.Add('Sharp');
-  Strings.Add('SharpPlus');
-  Strings.Add('Silver');
-  Strings.Add('Springtime');
-  Strings.Add('Stardust');
-  Strings.Add('Summer2008');
-  Strings.Add('TheAsphaltWorld');
-  Strings.Add('TheBezier');
-  Strings.Add('Valentine');
-  Strings.Add('VisualStudio2013Blue');
-  Strings.Add('VisualStudio2013Dark');
-  Strings.Add('VisualStudio2013Light');
-  Strings.Add('VS2010');
-  Strings.Add('Whiteprint');
-  Strings.Add('Xmas2008Blue');
+  Strings.Add('Default');
+  // Obtener el skin seleccionado actualmente en el inspector
+  LItemTema := BuscarItemPorNombre(JvInspector1.Root, 'appTema');
+  if (LItemTema <> nil) and (LItemTema.Data <> nil) then
+    LSkinName := LItemTema.Data.AsString
+  else
+    LSkinName := oAppParams.GetString('appTema');
+  if LSkinName = '' then
+    Exit;
+  // Buscar el skin registrado y enumerar sus paletas
+  for I := 0 to dxRegisteredSkinCount - 1 do
+  begin
+    if SameText(dxRegisteredSkinName(I), LSkinName) then
+    begin
+      LSkin := dxRegisteredSkin(I);
+      if (LSkin <> nil) and (LSkin.ColorPalettes.Count > 0) then
+      begin
+        Strings.Clear;
+        Strings.Add('Default');
+        for J := 0 to LSkin.ColorPalettes.Count - 1 do
+          Strings.Add(LSkin.ColorPalettes[J].Name);
+      end;
+      Break;
+    end;
+  end;
 end;
 
 procedure TfrmMtoAppParam.InspectorItemEdit(Sender: TJvCustomInspector;

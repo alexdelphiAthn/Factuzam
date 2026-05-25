@@ -1,4 +1,4 @@
-inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
+﻿inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
   Left = 5
   Top = 4
   Caption = 'Generador de Procesos'
@@ -359,7 +359,7 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
                         Gutter.Font.Charset = DEFAULT_CHARSET
                         Gutter.Font.Color = clWindowText
                         Gutter.Font.Height = -11
-                        Gutter.Font.Name = 'Courier New'
+                        Gutter.Font.Name = 'Consolas'
                         Gutter.Font.Style = []
                         Gutter.Font.Quality = fqClearTypeNatural
                         Gutter.ShowLineNumbers = True
@@ -1091,10 +1091,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
       OnUpdate = ActionSeleccionarUpdate
     end
     object ActionEjecutar: TAction
-      Caption = 'ActionEjecutar'
+      Caption = 'Ejecutar'
       ShortCut = 116
       OnExecute = ActionEjecutarExecute
-      OnUpdate = ActionSeleccionarUpdate
     end
     object actComentar: TAction
       Caption = 'Comentar'

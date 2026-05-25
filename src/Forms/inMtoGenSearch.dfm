@@ -1,4 +1,4 @@
-inherited frmMtoSearch: TfrmMtoSearch
+﻿inherited frmMtoSearch: TfrmMtoSearch
   BorderStyle = bsSizeable
   Caption = 'frmMtoSearch'
   ClientHeight = 501

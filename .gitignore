@@ -34,3 +34,4 @@ config.ini
 database.cfg
 *.key
 *.lic
+herreras.sql

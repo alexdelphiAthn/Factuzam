@@ -1,4 +1,4 @@
-inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
+﻿inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
   Caption = 'Impresi'#243'n de Etiquetas de Albar'#225'n'
   ClientHeight = 426
   ClientWidth = 536
@@ -207,8 +207,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -224,8 +224,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           Height = 16.000000000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
@@ -247,8 +247,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -22
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
@@ -268,8 +268,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -28
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           Frame.Width = 1.500000000000000000
@@ -311,8 +311,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
@@ -334,8 +334,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
@@ -357,8 +357,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
@@ -386,8 +386,8 @@ inherited frmPrintEtiqArt: TfrmPrintEtiqAlb
           ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
           Font.Style = []
           Frame.Typ = []
           ParentFont = False

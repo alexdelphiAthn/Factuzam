@@ -8,10 +8,11 @@
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Height = -15
+  Font.Name = 'Lucida Sans'
   Font.Style = []
   Position = poScreenCenter
+  OnCreate = FormCreate
   TextHeight = 13
   object Panel1: TPanel
     Left = 0
@@ -43265,7 +43266,7 @@
         ParentFont = False
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
-        Style.Font.Height = -16
+        Style.Font.Height = -15
         Style.Font.Name = 'Lucida Sans'
         Style.Font.Style = []
         Style.IsFontAssigned = True
@@ -43284,7 +43285,7 @@
         Properties.Prefix = 'mailto:'
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
-        Style.Font.Height = -16
+        Style.Font.Height = -15
         Style.Font.Name = 'Lucida Sans'
         Style.Font.Style = []
         Style.IsFontAssigned = True
@@ -43300,7 +43301,7 @@
         ParentFont = False
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
-        Style.Font.Height = -16
+        Style.Font.Height = -15
         Style.Font.Name = 'Lucida Sans'
         Style.Font.Style = []
         Style.IsFontAssigned = True
@@ -43320,7 +43321,7 @@
         TabOrder = 3
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -16
+        Font.Height = -15
         Font.Name = 'Lucida Sans'
         Font.Style = []
         ParentFont = False
