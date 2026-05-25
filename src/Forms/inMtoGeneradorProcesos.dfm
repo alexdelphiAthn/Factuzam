@@ -1091,10 +1091,9 @@ inherited frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos
       OnUpdate = ActionSeleccionarUpdate
     end
     object ActionEjecutar: TAction
-      Caption = 'ActionEjecutar'
+      Caption = 'Ejecutar'
       ShortCut = 116
       OnExecute = ActionEjecutarExecute
-      OnUpdate = ActionSeleccionarUpdate
     end
     object actComentar: TAction
       Caption = 'Comentar'
