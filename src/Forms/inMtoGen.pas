@@ -1494,6 +1494,27 @@ begin
     SimulateTabKey;
     Exit;
   end;
+  // Ctrl+Inicio / Ctrl+Fin -> primer / ultimo registro
+  // (excepto si el foco esta en un memo o SynEdit: ahi es ir al
+  // principio/fin del texto y dejamos el comportamiento nativo)
+  if (Key in [VK_HOME, VK_END]) and (ssCtrl in Shift) and
+     not (ssAlt in Shift) then
+  begin
+    if not ((ActiveControl is TCustomMemo) or
+            (Pos('Memo', ActiveControl.ClassName) > 0) or
+            (Pos('SynEdit', ActiveControl.ClassName) > 0)) then
+    begin
+      if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active then
+      begin
+        if Key = VK_HOME then
+          dsTablaG.DataSet.First
+        else
+          dsTablaG.DataSet.Last;
+      end;
+      Key := 0;
+      Exit;
+    end;
+  end;
   // Alt+F12 -> Guardar layout (equivalente al botón sbGrabarGrid)
   if (Key = VK_F12) and (ssAlt in Shift) and not (ssCtrl in Shift) then
   begin
