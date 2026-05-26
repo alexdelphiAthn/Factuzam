@@ -279,11 +279,7 @@ end;
 
 procedure TfrmMtoFormasdePago.btnGrabarClick(Sender: TObject);
 begin
-  if ( (dsTablaG.DataSet.State = dsInsert) or
-       (dsTablaG.DataSet.State = dsEdit)) then
-  begin
-    dsTablaG.DataSet.Post;
-  end;
+  inherited;
 end;
 
 procedure TfrmMtoFormasdePago.btnIraArticuloClick(Sender: TObject);

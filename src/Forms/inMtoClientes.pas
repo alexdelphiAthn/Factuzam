@@ -532,11 +532,7 @@ end;
 
 procedure TfrmMtoClientes.btnGrabarClick(Sender: TObject);
 begin
-  //inherited;
-  if (dsTablaG.DataSet <> nil) and
-     ((dsTablaG.State = dsInsert) or
-     (dsTablaG.State = dsEdit)) then
-    dmmClientes.unqryTablaG.Post;
+  inherited;
 end;
 
 procedure TfrmMtoClientes.btnIraArticuloClick(Sender: TObject);
