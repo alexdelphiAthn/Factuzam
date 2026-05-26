@@ -408,6 +408,22 @@ begin
                  unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger,
                  unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
                  unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString]));
+  // Linea sin articulo: cancelar silenciosamente. El cxGrid hace Post
+  // automatico al navegar con flechas; si la linea es un placeholder
+  // vacio, Cancel + Abort lo descarta sin molestar al usuario.
+  if Trim(unqrySesionLin.FieldByName(
+              'CODIGO_ART_TENTATIVO_SESLIN').AsString) = '' then
+  begin
+    LogSes('  linea sin articulo, Cancel diferido + Abort');
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        if unqrySesionLin.Active and
+           (unqrySesionLin.State in [dsEdit, dsInsert]) then
+          unqrySesionLin.Cancel;
+      end);
+    Abort;
+  end;
   // Sincroniza TIPO_ART desde TIPO_LINEA
   if unqrySesionLin.FieldByName('TIPO_LINEA_SESLIN').AsString = 'SERVICIO' then
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'SERVICIO'
