@@ -84,6 +84,8 @@ begin
   TieneRE := QMaster.FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString = 'S';
   Sheet := ASheetControl.AddSheet('Factura',
                             TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
+  Sheet.BeginUpdate;
+  try
   if not QMaster.FieldByName('NUMERO_FAC').IsNull then
     Sheet.Caption := 'Factura ' + QMaster.FieldByName('SERIE_FAC').AsString
                      + '_' + QMaster.FieldByName('NUMERO_FAC').AsString;
@@ -315,6 +317,9 @@ begin
   Sheet.Columns[COL_TOTAL].Size := 110;
   Sheet.Columns[COL_BASEI].Visible := False;
   Sheet.Columns[COL_TIPO_L].Visible := False;
+  finally
+    Sheet.EndUpdate;
+  end;
 end;
 
 end.
