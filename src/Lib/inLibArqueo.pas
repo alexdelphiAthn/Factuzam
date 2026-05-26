@@ -107,6 +107,8 @@ type
                                   var AArqueo: TArqueoCaja);
     class procedure CalcularPagos(AConn: TUniConnection;
                                   var AArqueo: TArqueoCaja);
+    class procedure CalcularEfectivoAnterior(AConn: TUniConnection;
+                                              var AArqueo: TArqueoCaja);
     class procedure CalcularDerivados(var AArqueo: TArqueoCaja);
   public
     class function Calcular(AConn          : TUniConnection;
@@ -153,6 +155,7 @@ begin
   CalcularDepositos(AConn, Result);
   CalcularVales(AConn, Result);
   CalcularPagos(AConn, Result);
+  CalcularEfectivoAnterior(AConn, Result);
   CalcularDerivados(Result);
 end;
 
@@ -548,6 +551,42 @@ begin
   finally
     FreeAndNil(Lista);
   end;
+end;
+
+class procedure TArqueoCalculadora.CalcularEfectivoAnterior(
+  AConn: TUniConnection; var AArqueo: TArqueoCaja);
+var
+  Query: TUniQuery;
+begin
+  { Buscar el último arqueo CERRADO de la misma caja anterior a este
+    rango. Si existe, su EFECTIVO_DEJADO_CAJA_ARQ es nuestro
+    EfectivoAnterior (el cambio que quedó en el cajón). }
+  Query := TUniQuery.Create(nil);
+  try
+    Query.Connection := AConn;
+    Query.SQL.Text :=
+      'SELECT EFECTIVO_DEJADO_CAJA_ARQ' +
+      '  FROM fza_caja_arqueos' +
+      ' WHERE CODIGO_EMP_ARQ  = :pEMPRESA' +
+      '   AND CODIGO_ALM_ARQ  = :pALMACEN' +
+      '   AND CODIGO_CAJA_ARQ = :pCAJA' +
+      '   AND FASE_ARQ        = ''CERRADO''' +
+      '   AND FECHA_HASTA_ARQ < :pFDESDE' +
+      ' ORDER BY FECHA_HASTA_ARQ DESC' +
+      ' LIMIT 1';
+    Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
+    Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
+    Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
+    Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
+    Query.Open;
+    if not Query.Eof then
+      AArqueo.EfectivoAnterior :=
+        Query.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
+  except
+    { Si la columna no existe todavía, ignorar }
+  end;
+  if Assigned(Query) then
+    FreeAndNil(Query);
 end;
 
 class procedure TArqueoCalculadora.CalcularDerivados(var AArqueo: TArqueoCaja);
