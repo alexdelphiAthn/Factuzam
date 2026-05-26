@@ -1024,6 +1024,11 @@ begin
             inLibLog.Log.LogError(
               '[ReactivarControlesTrasAbrir] ' + Self.Name + ': ' + E.Message);
         end;
+      // (e) Restaurar posicion del cursor guardada en el perfil.
+      // AplicarEtiquetas lo intenta en FormCreate pero el dataset
+      // aun no tiene datos; aqui ya esta abierto y vinculado.
+      if oPerfilDic <> nil then
+        RestaurarFocoGrid(cxGrdDBTabPrin, oPerfilDic);
     end);
 end;
 
@@ -1060,6 +1065,9 @@ begin
       dmDat.AbrirDetalles;
       // Enriquecer con guias de grid (LEFT JOIN runtime)
       AplicarGuiasGrid(unqry);
+      // Restaurar posicion del cursor guardada en el perfil
+      if oPerfilDic <> nil then
+        RestaurarFocoGrid(cxGrdDBTabPrin, oPerfilDic);
       inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
         sw.ElapsedMilliseconds);
     except
