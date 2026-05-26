@@ -299,9 +299,7 @@ end;
 
 procedure TfrmMtoProveedores.btnGrabarClick(Sender: TObject);
 begin
-  if ((dmmProveedores.unqryTablaG.state = dsInsert) or
-     (dmmProveedores.unqryTablaG.state = dsEdit)) then
-  dmmProveedores.unqryTablaG.Post;
+  inherited;
 end;
 
 procedure TfrmMtoProveedores.CrearTablaPrincipal;
