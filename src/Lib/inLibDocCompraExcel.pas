@@ -250,6 +250,8 @@ begin
   iColMax := COL_IMP;
   Sheet := ASheetControl.AddSheet(ACfg.Titulo,
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
+  Sheet.BeginUpdate;
+  try
   // --- Cabecera ---
   PintarCabeceraDoc(Sheet, QMaster, ACfg, iColMax, iRow);
   // --- Guias de tallas (justo encima de las cabeceras de columna) ---
@@ -418,6 +420,9 @@ begin
     Sheet.Columns[COL_T01 + i].Size := 38;
   Sheet.Columns[COL_UDS].Size := 55;
   Sheet.Columns[COL_IMP].Size := 80;
+  finally
+    Sheet.EndUpdate;
+  end;
 end;
 
 // ===== Exportacion vertical (una fila por SKU) ==============================
@@ -445,6 +450,8 @@ begin
   ASheetControl.ClearAll;
   Sheet := ASheetControl.AddSheet(ACfg.Titulo,
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
+  Sheet.BeginUpdate;
+  try
   // --- Cabecera ---
   PintarCabeceraDoc(Sheet, QMaster, ACfg, COL_TOTAL, iRow);
   // --- Cabecera de lineas ---
@@ -554,6 +561,9 @@ begin
   Sheet.Columns[COL_CANT].Size  := 55;
   Sheet.Columns[COL_PREC].Size  := 75;
   Sheet.Columns[COL_TOTAL].Size := 85;
+  finally
+    Sheet.EndUpdate;
+  end;
 end;
 
 end.
