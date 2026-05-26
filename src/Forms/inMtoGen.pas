@@ -1506,6 +1506,13 @@ begin
   begin
     sbResetGridClick(nil);
     Key := 0;
+    Exit;
+  end;
+  // Ctrl+F11 -> BestFit anchos de columna
+  if (Key = VK_F11) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    sbBestFitClick(nil);
+    Key := 0;
   end;
 end;
 
