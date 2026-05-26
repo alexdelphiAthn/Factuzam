@@ -149,16 +149,13 @@ begin
   //   (mas abajo) necesita la query activa al volver.
   if TargetForm is TfrmMtoGen then
   begin
-    if ABusq <> '' then
-    begin
-      // Búsqueda externa: preparar filtros y cargar síncrono
+    // Instancia 1 (reservada para búsquedas): forzar filtro "Todos"
+    if (ofzaF.NumVentanas > 1) and
+       (NewCaption = ofzaF.Caption + ' 1') then
       TfrmMtoGen(TargetForm).PrepararBusquedaExterna(ABusq);
-      TfrmMtoGen(TargetForm).AbrirTablaPrincipalSincrono;
-    end
-    else if not ((ofzaF.NumVentanas > 1) and
-                 (NewCaption = ofzaF.Caption + ' 1')) then
-      // Apertura normal del usuario: carga async.
-      // La instancia 1 (reservada para búsquedas) no precarga.
+    if ABusq <> '' then
+      TfrmMtoGen(TargetForm).AbrirTablaPrincipalSincrono
+    else
       TfrmMtoGen(TargetForm).AbrirTablaPrincipalAsync;
   end;
   if (ABusq <> '') and (TargetForm is TfrmMtoGen) then
