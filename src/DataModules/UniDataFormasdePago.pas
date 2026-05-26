@@ -138,7 +138,11 @@ end;
 procedure TdmFormasdePago.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
-    with unqryTablaG do
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('DESCRIPCION_FORMA_PAGO_FP').AsString) = '') then
+    Abort;
+  with unqryTablaG do
   begin
     if Trim(FindField('DESCRIPCION_FORMA_PAGO_FP').AsString) = '' then
       raise ERangeError.CreateFmt('%s no es un valor válido ' +

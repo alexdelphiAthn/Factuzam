@@ -77,6 +77,10 @@ end;
 procedure TdmAtributosBasicos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(DataSet.FieldByName('NOMBRE_ATB').AsString) = '') then
+    Abort;
   if Trim(DataSet.FieldByName('ID_VA_ATB').AsString) = '' then
     raise Exception.Create(
       'Indica el atributo (CO para color, TAL para talla, etc.).');

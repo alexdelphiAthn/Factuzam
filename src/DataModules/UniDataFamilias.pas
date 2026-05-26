@@ -186,7 +186,11 @@ end;
 procedure TdmFamilias.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
-    with unqryTablaG do
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('NOMBRE_FAM_FAM').AsString) = '') then
+    Abort;
+  with unqryTablaG do
   begin
     if Trim(FindField('NOMBRE_FAM_FAM').AsString) = '' then
     begin
