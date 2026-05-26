@@ -31,6 +31,8 @@ type
     procedure btnCerrarClick(Sender: TObject);
     procedure btnGuardarClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     FCanvas: TCanvas;
     FCurrentY: Integer;
@@ -53,8 +55,11 @@ type
     procedure DibujarQRCode;
 
   public
+    FComandos: string;
     procedure ExportarAPDF(const Comandos: string; const RutaArchivo: string);
     procedure CargarYMostrar(const Comandos: string);
+    procedure GuardarPNG(const ARuta: string);
+    procedure ImprimirEnImpresora;
   end;
 
 procedure VisualizarTicket(const Comandos: string);
@@ -67,7 +72,7 @@ implementation
 {$R *.dfm}
 
 uses
-  SynPdf, inLibDir; // Añadir esto arriba
+  SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers;
 
 const
   ANCHO_PAPEL_MM = 80;
@@ -209,19 +214,12 @@ end;
 procedure VisualizarTicket(const Comandos: string);
 var
   Form: TFormVisualizador;
-  RutaPDF: string;
 begin
   Form := TFormVisualizador.Create(nil);
   try
+    Form.FComandos := Comandos;
     Form.CargarYMostrar(Comandos);
-//    Form.Image1.Picture.SaveToFile(
-//      GetUserFolderTickets + 'Ticket_' +
-//      FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.bmp');
-
-    // 3. Generar PDF con dimensiones ya conocidas
-    RutaPDF := GetUserFolderTickets + 'Ticket_' +
-               FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    Form.ExportarAPDF(Comandos, RutaPDF);
+    Form.ShowModal;
   finally
     FreeAndNil(Form);
   end;
@@ -333,6 +331,7 @@ end;
 
 procedure TFormVisualizador.FormCreate(Sender: TObject);
 begin
+  KeyPreview := True;
   Self.ClientWidth := ANCHO_PAPEL_PIXELS + 30;
   Image1.Picture.Bitmap.Width := ANCHO_PAPEL_PIXELS;
   Image1.Picture.Bitmap.Height := 2000; // Altura inicial
@@ -734,6 +733,67 @@ begin
   FCurrentY := FCurrentY + ObtenerAltoLinea;
 end;
 
+procedure TFormVisualizador.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  sRuta: string;
+  sBase: string;
+begin
+  sBase := GetUserFolderTickets + 'Ticket_' +
+           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+  case Key of
+    VK_ESCAPE:
+      Close;
+    VK_F6:
+    begin
+      sRuta := sBase + '.png';
+      GuardarPNG(sRuta);
+      ShowMessage('PNG guardado en: ' + sRuta);
+    end;
+    VK_F7:
+    begin
+      sRuta := sBase + '.pdf';
+      ExportarAPDF(FComandos, sRuta);
+      ShowMessage('PDF guardado en: ' + sRuta);
+    end;
+    VK_F8:
+      ImprimirEnImpresora;
+  end;
+  Key := 0;
+end;
+
+procedure TFormVisualizador.GuardarPNG(const ARuta: string);
+var
+  png: TPngImage;
+begin
+  png := TPngImage.Create;
+  try
+    png.Assign(Image1.Picture.Bitmap);
+    png.SaveToFile(ARuta);
+  finally
+    FreeAndNil(png);
+  end;
+end;
+
+procedure TFormVisualizador.ImprimirEnImpresora;
+var
+  R: TRect;
+begin
+  if PrintDialog(Self.Handle) then
+  begin
+    Printer.BeginDoc;
+    try
+      R := Rect(0, 0, Printer.PageWidth,
+        MulDiv(Image1.Picture.Bitmap.Height,
+               Printer.PageWidth,
+               Image1.Picture.Bitmap.Width));
+      Printer.Canvas.StretchDraw(R, Image1.Picture.Bitmap);
+    finally
+      Printer.EndDoc;
+    end;
+  end;
+end;
+
 procedure TFormVisualizador.btnCerrarClick(Sender: TObject);
 begin
   Close;
@@ -741,10 +801,13 @@ end;
 
 procedure TFormVisualizador.btnGuardarClick(Sender: TObject);
 begin
-  SaveDialog1.Filter := 'Imagen BMP|*.bmp';
+  SaveDialog1.Filter := 'Imagen PNG|*.png|Imagen BMP|*.bmp';
   if SaveDialog1.Execute then
   begin
-    Image1.Picture.SaveToFile(SaveDialog1.FileName);
+    if LowerCase(ExtractFileExt(SaveDialog1.FileName)) = '.png' then
+      GuardarPNG(SaveDialog1.FileName)
+    else
+      Image1.Picture.SaveToFile(SaveDialog1.FileName);
     ShowMessage('Imagen guardada correctamente');
   end;
 end;

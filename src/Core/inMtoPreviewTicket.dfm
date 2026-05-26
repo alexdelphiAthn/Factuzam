@@ -1,7 +1,7 @@
-﻿object FormVisualizador: TFormVisualizador
+object FormVisualizador: TFormVisualizador
   Left = 0
   Top = 0
-  Caption = 'Visualizador de Ticket T'#233'rmico - ESC/POS'
+  Caption = 'Ticket  |  F8 Imprimir  |  F7 PDF  |  F6 PNG  |  ESC Salir'
   ClientHeight = 572
   ClientWidth = 402
   Color = clBtnFace
@@ -10,9 +10,11 @@
   Font.Height = -15
   Font.Name = 'Lucida Sans'
   Font.Style = []
+  KeyPreview = True
   Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   TextHeight = 13
   object Panel1: TPanel
     Left = 0
@@ -21,23 +23,21 @@
     Height = 50
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 531
-    ExplicitWidth = 408
     object btnCerrar: TButton
       Left = 16
       Top = 10
       Width = 100
       Height = 30
-      Caption = 'Cerrar'
+      Caption = 'ESC Cerrar'
       TabOrder = 0
       OnClick = btnCerrarClick
     end
     object btnGuardar: TButton
       Left = 130
       Top = 10
-      Width = 150
+      Width = 120
       Height = 30
-      Caption = 'Guardar como Imagen'
+      Caption = 'Guardar imagen'
       TabOrder = 1
       OnClick = btnGuardarClick
     end
@@ -49,8 +49,6 @@
     Height = 522
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 408
-    ExplicitHeight = 531
     object Image1: TImage
       Left = 14
       Top = 3
