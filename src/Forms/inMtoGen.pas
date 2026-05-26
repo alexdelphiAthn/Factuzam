@@ -101,6 +101,17 @@ type
     lblTablaOrigen: TcxLabel;
     saveDialog: TdxSaveFileDialog;
     tmrBusqGlobal: TTimer;
+    alMtoGen: TActionList;
+    actEliminarRegistro: TAction;
+    actRegistroAnterior: TAction;
+    actRegistroSiguiente: TAction;
+    actInsertarRegistro: TAction;
+    actPrimerRegistro: TAction;
+    actUltimoRegistro: TAction;
+    actEditarRegistro: TAction;
+    actGrabarRegistro: TAction;
+    actFotoArticulo: TAction;
+    actConsultaStock: TAction;
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -124,6 +135,19 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnSalirClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure actEliminarRegistroExecute(Sender: TObject);
+    procedure actEliminarRegistroUpdate(Sender: TObject);
+    procedure actNavBrowseUpdate(Sender: TObject);
+    procedure actRegistroAnteriorExecute(Sender: TObject);
+    procedure actRegistroSiguienteExecute(Sender: TObject);
+    procedure actInsertarRegistroExecute(Sender: TObject);
+    procedure actPrimerRegistroExecute(Sender: TObject);
+    procedure actUltimoRegistroExecute(Sender: TObject);
+    procedure actEditarRegistroExecute(Sender: TObject);
+    procedure actGrabarRegistroExecute(Sender: TObject);
+    procedure actGrabarRegistroUpdate(Sender: TObject);
+    procedure actFotoArticuloExecute(Sender: TObject);
+    procedure actConsultaStockExecute(Sender: TObject);
   private
     // Conexion propia del Mto (Fase 1 multithreading). Se clona de `oConn`
     // global al crear el data module y se reasigna a todas las queries/SPs
@@ -149,6 +173,11 @@ type
 //                                        const sProfile: string;
 //                                        AList: TPerfilList);
   protected
+    // Indica si las teclas de navegacion (PgUp, PgDn, Home, End, Ins, F2)
+    // deben activar las acciones del TActionList base. Los Mtos con
+    // editores multilinea (SynEdit, etc.) sobreescriben para devolver
+    // False cuando el editor tiene el foco.
+    function PermitirNavegacionTeclas: Boolean; virtual;
     // Clona los params relevantes de `oConn` global y devuelve una nueva
     // TUniConnection ya conectada (usa el pool de UniDAC). Los Mtos
     // especializados pueden override para variantes (p.ej. una replica
@@ -1178,107 +1207,128 @@ procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   inherited;
+  // ESC -> cancelar grids en edicion
   if (Key = VK_ESCAPE) then
   begin
     CancelarGrids(Owner);
-    key := 0;
+    Key := 0;
   end;
+  // RETURN sin control activo -> simular Tab
   if ((Key = VK_RETURN) and (ActiveControl = nil)) then
   begin
-    key := 0;
+    Key := 0;
     SimulateTabKey;
     Exit;
   end;
-  if (Key = VK_RETURN) and (ssCtrl in Shift) then
-  begin
+end;
 
-  end;
-  if (Key = VK_DELETE) and (ssCtrl in Shift) then
-  begin
-    if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and not
-       dsTablaG.DataSet.IsEmpty and (dsTablaG.State = dsBrowse) then
-    begin
-      if Application.MessageBox(
-        '¿Estás seguro de que deseas eliminar este registro?',
-                                'Confirmar eliminación',
-                                MB_YESNO + MB_ICONWARNING) = ID_YES then
-      begin
-        dsTablaG.DataSet.Delete;
-      end;
-    end;
-    Key := 0; // Evitamos que la pulsación se propague
-    Exit;     // Salimos para no evaluar más condiciones
-  end;
-  // -------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Acciones del TActionList base (alMtoGen)
+// Sustituyen al antiguo FormKeyDown para que inMtoPrincipal.IsShortCut
+// enrute siempre al formulario activo en la pestaña correcta.
+// ---------------------------------------------------------------------------
 
-  if (dsTablaG.State = dsBrowse) then
+function TfrmMtoGen.PermitirNavegacionTeclas: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TfrmMtoGen.actNavBrowseUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled :=
+    Assigned(dsTablaG.DataSet) and
+    dsTablaG.DataSet.Active and
+    (dsTablaG.State = dsBrowse) and
+    PermitirNavegacionTeclas;
+end;
+
+procedure TfrmMtoGen.actEliminarRegistroUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled :=
+    Assigned(dsTablaG.DataSet) and
+    dsTablaG.DataSet.Active and
+    not dsTablaG.DataSet.IsEmpty and
+    (dsTablaG.State = dsBrowse);
+end;
+
+procedure TfrmMtoGen.actEliminarRegistroExecute(Sender: TObject);
+begin
+  if Application.MessageBox(
+    '¿Estás seguro de que deseas eliminar este registro?',
+    'Confirmar eliminación',
+    MB_YESNO + MB_ICONWARNING) = ID_YES then
+    dsTablaG.DataSet.Delete;
+end;
+
+procedure TfrmMtoGen.actRegistroAnteriorExecute(Sender: TObject);
+begin
+  nvNavegador.Buttons.Prior.Click;
+end;
+
+procedure TfrmMtoGen.actRegistroSiguienteExecute(Sender: TObject);
+begin
+  nvNavegador.Buttons.Next.Click;
+end;
+
+procedure TfrmMtoGen.actInsertarRegistroExecute(Sender: TObject);
+begin
+  dsTablaG.DataSet.Insert;
+end;
+
+procedure TfrmMtoGen.actPrimerRegistroExecute(Sender: TObject);
+begin
+  dsTablaG.DataSet.First;
+end;
+
+procedure TfrmMtoGen.actUltimoRegistroExecute(Sender: TObject);
+begin
+  dsTablaG.DataSet.Last;
+end;
+
+procedure TfrmMtoGen.actEditarRegistroExecute(Sender: TObject);
+begin
+  dsTablaG.DataSet.Edit;
+end;
+
+procedure TfrmMtoGen.actGrabarRegistroUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled :=
+    Assigned(dsTablaG.DataSet) and
+    dsTablaG.DataSet.Active and
+    ((dsTablaG.State = dsEdit) or (dsTablaG.State = dsInsert));
+end;
+
+procedure TfrmMtoGen.actGrabarRegistroExecute(Sender: TObject);
+begin
+  dsTablaG.DataSet.Post;
+end;
+
+procedure TfrmMtoGen.actFotoArticuloExecute(Sender: TObject);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := '';
+  sSku := '';
+  ResolverArtSkuActivo(sArt, sSku);
+  if sArt <> '' then
   begin
-    if (Key = VK_PRIOR) then
-    begin
-      nvNavegador.Buttons.Prior.Click;
-      Key := 0;
-    end
-    else if (Key = VK_NEXT) then
-    begin
-      nvNavegador.Buttons.Next.Click;
-      Key := 0;
-    end
-    else if (Key = VK_INSERT) then
-    begin
-      dsTablaG.DataSet.Insert;
-      Key := 0;
-    end
-    else if (Key = VK_HOME) then
-    begin
-      dsTablaG.DataSet.First;
-      Key := 0;
-    end
-    else if (Key = VK_END) then
-    begin
-      dsTablaG.DataSet.Last;
-      Key := 0;
-    end
-    else if (Key = VK_F2) then
-    begin
-      dsTablaG.DataSet.Edit;
-      Key := 0;
-    end;
+    MostrarFotoFlotante(Self, sArt, sSku);
+    if Assigned(frmFotoArticulo) then
+      frmFotoArticulo.VincularDataSources(DataSourcesParaFoto,
+                                          ResolverArtSkuActivo);
   end;
-  if (key = VK_F12) then
-  begin
-    if ((dsTablaG.State = dsEdit) or
-        (dsTablaG.State = dsInsert)) then
-      dsTablaG.DataSet.Post;
-    key := 0;
-  end;
-  // Ctrl + Alt + F -> Foto del articulo / SKU activo
-  if (Key = Ord('F')) and (ssCtrl in Shift) and (ssAlt in Shift) then
-  begin
-    var sArt: string := '';
-    var sSku: string := '';
-    ResolverArtSkuActivo(sArt, sSku);
-    if sArt <> '' then
-    begin
-      MostrarFotoFlotante(Self, sArt, sSku);
-      // Auto-refresh: la pantalla flotante se engancha a todos los
-      // DataSources que el Mto declara en DataSourcesParaFoto (por
-      // defecto solo dsTablaG; los Mtos con sub-grids sobreescriben
-      // para incluir tambien esos data sources).
-      if Assigned(frmFotoArticulo) then
-        frmFotoArticulo.VincularDataSources(DataSourcesParaFoto,
-                                            ResolverArtSkuActivo);
-    end;
-    Key := 0;
-  end;
-  // Ctrl + U -> Consulta de stock del articulo / SKU activo
-  if (Key = Ord('U')) and (ssCtrl in Shift) and (not (ssAlt in Shift)) then
-  begin
-    var sArt: string := '';
-    var sSku: string := '';
-    ResolverArtSkuActivo(sArt, sSku);
-    inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
-    Key := 0;
-  end;
+end;
+
+procedure TfrmMtoGen.actConsultaStockExecute(Sender: TObject);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := '';
+  sSku := '';
+  ResolverArtSkuActivo(sArt, sSku);
+  inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
 end;
 
 procedure TfrmMtoGen.ResolverArtSkuActivo(out ACodArt, ACodSku: string);

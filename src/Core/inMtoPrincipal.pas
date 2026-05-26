@@ -843,18 +843,6 @@ begin
 end;
 
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
-
-  function GetKeyShiftState: TShiftState;
-  begin
-    Result := [];
-    if GetKeyState(VK_SHIFT) < 0 then
-      Include(Result, ssShift);
-    if GetKeyState(VK_CONTROL) < 0 then
-      Include(Result, ssCtrl);
-    if GetKeyState(VK_MENU) < 0 then
-      Include(Result, ssAlt);
-  end;
-
 var
   Component: TComponent;
   ActiveForm: TCustomForm;
@@ -862,10 +850,8 @@ var
   I: Integer;
   iPageActive: Integer;
   bFound: Boolean;
-  aShortCutList: TList<Integer>;
-  CurrentShortCut: TShortCut;
-  ShiftState: TShiftState;
 begin
+  // Alt+F4 -> cerrar aplicacion
   if (Message.CharCode = VK_F4)
      and (HiWord(Message.KeyData) and KF_ALTDOWN <> 0) then
   begin
@@ -873,6 +859,7 @@ begin
     Result := True;
     Exit;
   end;
+  // ESC -> cerrar pestaña activa o salir
   if (Message.CharCode = VK_ESCAPE) then
   begin
     if Application.ModalLevel > 0 then
@@ -900,6 +887,7 @@ begin
       Exit;
     end;
   end;
+  // Ventana no embebida (modal top-level) -> delegar a sus ActionLists
   ActiveForm := Screen.ActiveForm;
   if Assigned(ActiveForm) and
      (ActiveForm <> Self) and
@@ -920,44 +908,35 @@ begin
     end;
     Exit;
   end;
-  I := 0;
-  Result := True;
+  // Enrutar a los TActionList del formulario hijo en la pestaña activa.
+  // Recorre TODOS los ActionList del hijo (base + propios del Mto).
   bFound := False;
-  ShiftState := GetKeyShiftState;
-  CurrentShortCut := Vcl.Menus.ShortCut(Message.CharCode, ShiftState);
-  aShortCutList := oFzaWinf.GetShortCutListOrd;
-  try
-    if (aShortCutList.Contains(CurrentShortCut)) then
+  if (Self.pcPrincipal.PageCount > 0) then
+  begin
+    iPageActive := pcPrincipal.ActivePageIndex;
+    if (iPageActive >= 0) then
     begin
-      if (Self.pcPrincipal.PageCount) > 0 then
+      ts := (Self.pcPrincipal.Pages[iPageActive] as TcxTabSheet);
+      if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
       begin
-        iPageActive := pcPrincipal.ActivePageIndex;
-        ts := (Self.pcPrincipal.Pages[iPageActive] as TcxTabSheet);
-        if (ts.Controls[0] is TForm) then
+        for I := 0 to (ts.Controls[0] as TForm).ComponentCount - 1 do
         begin
-          while ((I >= 0) and
-                 (I < (ts.Controls[0] as TForm).ComponentCount) and
-                 (not(bFound))) do
+          Component := (ts.Controls[0] as TForm).Components[I];
+          if (Component is TActionList) then
           begin
-            Component := (ts.Controls[0] as TForm).Components[I];
-            if (Component is TActionList) then
+            if TActionList(Component).IsShortCut(Message) then
             begin
-              if TActionList(Component).IsShortCut(Message) then
-              begin
-                bFound := True;
-                Result := True;
-                Break;
-              end;
+              bFound := True;
+              Break;
             end;
-            Inc(I);
           end;
         end;
       end;
     end;
-  finally
-    FreeAndNil(aShortCutList);
   end;
-  if (not bFound) then
+  if bFound then
+    Result := True
+  else
     Result := inherited IsShortCut(Message);
 end;
 
