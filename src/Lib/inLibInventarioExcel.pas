@@ -86,6 +86,8 @@ begin
   ASheetControl.ClearAll;
   Sheet := ASheetControl.AddSheet('Inventario',
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
+  Sheet.BeginUpdate;
+  try
   // --- Cabecera del documento ---
   iRow := 1;
   W(Sheet, iRow, 0, 'INVENTARIO', True);
@@ -229,6 +231,9 @@ begin
   Sheet.Columns[COL_PMP].Size   := 80;
   Sheet.Columns[COL_PMPN].Size  := 80;
   Sheet.Columns[COL_COSTE].Size := 90;
+  finally
+    Sheet.EndUpdate;
+  end;
 end;
 
 // =============================================================================
