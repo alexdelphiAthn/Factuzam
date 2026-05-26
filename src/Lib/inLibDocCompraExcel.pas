@@ -31,6 +31,7 @@ uses
 
 const
   MAX_TALLAS = 20;
+  FMT_EUR = '#,##0.00" '#$20AC'"';
 
 type
   // Mapeo de campos de cabecera. Permite que sesiones y albaranes
@@ -251,12 +252,7 @@ begin
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   // --- Cabecera ---
   PintarCabeceraDoc(Sheet, QMaster, ACfg, iColMax, iRow);
-  // --- Guias de tallas ---
-  Inc(iRow);
-  W(Sheet, iRow, 0, 'GUIAS DE TALLAS', True, ssahCenter);
-  Merge(Sheet, iRow, 0, iColMax + 1, 1);
-  Sheet.Cells[iRow, 0].Style.Font.Color := clWhite;
-  Sheet.Cells[iRow, 0].Style.Brush.BackgroundColor := $00666666;
+  // --- Guias de tallas (justo encima de las cabeceras de columna) ---
   Inc(iRow);
   iFilaInicioGuias := iRow;
   if (QGuias <> nil) and QGuias.Active and (not QGuias.IsEmpty) then
@@ -264,29 +260,35 @@ begin
     QGuias.First;
     while not QGuias.Eof do
     begin
-      W(Sheet, iRow, 0,
+      // Sistema en la zona de columnas fijas
+      W(Sheet, iRow, COL_SIS,
         QGuias.FieldByName('NOMBRE_CORTO_AC').AsString, True, ssahCenter);
-      W(Sheet, iRow, 1,
-        QGuias.FieldByName('NOMBRE_AC').AsString);
-      Merge(Sheet, iRow, 1, 3, 1);
+      Sheet.Cells[iRow, COL_SIS].Style.Brush.BackgroundColor := $00E8E8E8;
+      // Nombre completo del sistema
+      var COL_PC_LOCAL := COL_SIS + 1;
+      W(Sheet, iRow, COL_PC_LOCAL,
+        QGuias.FieldByName('NOMBRE_AC').AsString, False, ssahLeft);
+      Sheet.Cells[iRow, COL_PC_LOCAL].Style.Brush.BackgroundColor := $00E8E8E8;
+      // Etiquetas de talla alineadas con T01..Txx
       for i := 1 to iNumTallas do
       begin
         sField := Format('T%.2d', [i]);
-        if QGuias.FindField(sField) <> nil then
+        if (QGuias.FindField(sField) <> nil) and
+           (Trim(QGuias.FieldByName(sField).AsString) <> '') then
+        begin
           W(Sheet, iRow, COL_T01 + i - 1,
-            QGuias.FieldByName(sField).AsString, False, ssahCenter);
+            QGuias.FieldByName(sField).AsString, True, ssahCenter);
+          Sheet.Cells[iRow, COL_T01 + i - 1].Style.Font.Size := 9;
+          Sheet.Cells[iRow, COL_T01 + i - 1].Style.Brush.BackgroundColor :=
+            $00E8E8E8;
+        end;
       end;
       Inc(iRow);
       QGuias.Next;
     end;
   end;
   iFilaFinGuias := iRow - 1;
-  // Bordes en la zona de guias
-  if iFilaFinGuias >= iFilaInicioGuias then
-    PintarCuadro(Sheet, iFilaInicioGuias, 0,
-      iFilaFinGuias, COL_T01 + iNumTallas - 1, sscbsThin);
   // --- Cabecera de lineas ---
-  Inc(iRow);
   iFilaHeaders := iRow;
   W(Sheet, iRow, COL_ART,   'Cod. Art.',    True, ssahCenter);
   W(Sheet, iRow, COL_REF,   'Ref. Prv.',    True, ssahCenter);
@@ -301,7 +303,7 @@ begin
       Format('T%.2d', [i]), True, ssahCenter);
   W(Sheet, iRow, COL_UDS,   'Uds.',    True, ssahRight);
   W(Sheet, iRow, COL_IMP,   'Importe', True, ssahRight);
-  // Fondo gris para la cabecera
+  // Fondo gris oscuro para la cabecera
   for c := 0 to iColMax do
     if Sheet.Cells[iRow, c] <> nil then
     begin
@@ -330,12 +332,12 @@ begin
       // Precio compra
       rVal := QLineas.FieldByName('PRECIO_COMPRA').AsFloat;
       W(Sheet, iRow, COL_PC, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_PC].Style.DataFormat.FormatCode := '#,##0.00';
+      Sheet.Cells[iRow, COL_PC].Style.DataFormat.FormatCode := FMT_EUR;
       if COL_PV >= 0 then
       begin
         rVal := QLineas.FieldByName('PRECIO_VENTA').AsFloat;
         W(Sheet, iRow, COL_PV, rVal, False, ssahRight);
-        Sheet.Cells[iRow, COL_PV].Style.DataFormat.FormatCode := '#,##0.00';
+        Sheet.Cells[iRow, COL_PV].Style.DataFormat.FormatCode := FMT_EUR;
       end;
       // Tallas T01..T20
       for i := 1 to iNumTallas do
@@ -359,7 +361,7 @@ begin
       // Importe
       rVal := QLineas.FieldByName('TOTAL_LINEA').AsFloat;
       W(Sheet, iRow, COL_IMP, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_IMP].Style.DataFormat.FormatCode := '#,##0.00';
+      Sheet.Cells[iRow, COL_IMP].Style.DataFormat.FormatCode := FMT_EUR;
       Inc(iRow);
       QLineas.Next;
     end;
@@ -390,7 +392,7 @@ begin
     WFormula(Sheet, iRow, COL_IMP,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_IMP) + ':' +
                 GetRef(iFilaFinLineas, COL_IMP) + ')',
-      '#,##0.00" "#8364');
+      FMT_EUR);
     Sheet.Cells[iRow, COL_IMP].Style.Font.Style := [fsBold];
     Sheet.Cells[iRow, COL_IMP].Style.Font.Size := 13;
     // Borde superior en fila de totales
@@ -484,11 +486,11 @@ begin
       rVal := QLineas.FieldByName(
         'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN').AsFloat;
       W(Sheet, iRow, COL_PREC, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_PREC].Style.DataFormat.FormatCode := '#,##0.00';
+      Sheet.Cells[iRow, COL_PREC].Style.DataFormat.FormatCode := FMT_EUR;
       // Total linea (formula)
       WFormula(Sheet, iRow, COL_TOTAL,
         '=' + GetRef(iRow, COL_CANT) + '*' + GetRef(iRow, COL_PREC),
-        '#,##0.00');
+        FMT_EUR);
       Inc(iRow);
       QLineas.Next;
     end;
@@ -503,7 +505,7 @@ begin
     WFormula(Sheet, iRow, COL_TOTAL,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_TOTAL) + ':' +
                 GetRef(iFilaFinLineas, COL_TOTAL) + ')',
-      '#,##0.00');
+      FMT_EUR);
     Sheet.Cells[iRow, COL_TOTAL].Style.Font.Style := [fsBold];
     // Total unidades
     W(Sheet, iRow, COL_DESC, 'Total Uds:', True, ssahRight);
@@ -521,14 +523,14 @@ begin
       W(Sheet, iRow, COL_TOTAL,
         QMaster.FieldByName('TOTAL_IMPUESTOS_ALBC').AsFloat,
         False, ssahRight);
-      Sheet.Cells[iRow, COL_TOTAL].Style.DataFormat.FormatCode := '#,##0.00';
+      Sheet.Cells[iRow, COL_TOTAL].Style.DataFormat.FormatCode := FMT_EUR;
       var RefTotalIVA := GetRef(iRow, COL_TOTAL);
       // Total liquido
       Inc(iRow);
       W(Sheet, iRow, COL_PREC, 'TOTAL:', True, ssahRight);
       WFormula(Sheet, iRow, COL_TOTAL,
         '=' + RefTotalBase + '+' + RefTotalIVA,
-        '#,##0.00');
+        FMT_EUR);
       Sheet.Cells[iRow, COL_TOTAL].Style.Font.Style := [fsBold];
       Sheet.Cells[iRow, COL_TOTAL].Style.Font.Size := 14;
     end;
