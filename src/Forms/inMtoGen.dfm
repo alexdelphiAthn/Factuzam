@@ -466,6 +466,24 @@
           ParentFont = False
           OnClick = sbResetGridClick
         end
+        object sbBestFit: TSpeedButton
+          Left = 890
+          Top = 6
+          Width = 21
+          Height = 23
+          Hint = 'Ajustar anchos de columna'
+          Flat = True
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
+          Font.Pitch = fpFixed
+          Font.Style = []
+          Font.Quality = fqClearType
+          Caption = #8596
+          ParentFont = False
+          OnClick = sbBestFitClick
+        end
         object edtBusqGlobal: TcxTextEdit
           Left = 136
           Top = 6
