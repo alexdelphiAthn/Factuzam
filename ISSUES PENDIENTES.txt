@@ -15,7 +15,7 @@ que hay en la primera factura. Me sale en un nuevo Mto, debería usar el primero
 - Poner una barra de progreso en la copia de seguridad y en Recuperar Copia de Seguridad ( no vincular a control visual de inmediato, quita mucha performance, sólo mostrar editor al final). **pendiente probar**
 - no salen los traspasos en control + U Poner entrada traspaso, Salida Traspaso (TR y AT)-- (acumular estados en fza_stocks)
 
-- Quizás convenga hacer otra tabla de permisos. y el mantenimiento correspondiente, Primero permisos por item de menú. Luego Poder exportar a Excel. Poder modificar, poder borrar, y luego incorporar funcionalidades extra. Para Caja... tengo un par de permisos nuevos
+- Quizás convenga hacer otra tabla de permisos. y el mantenimiento correspondiente, Primero permisos por item de menú. Luego Poder exportar a Excel. Poder modificar, poder borrar, y luego incorporar funcionalidades extra. Para Caja... tengo un par de permisos nuevos **pendiente probar** (tabla + cache + Mto creados, falta vincular a fza_winforms y aplicar en puntos concretos)
 - Hay un Parámetro no mostrar tarjetas en arqueos... borrar este parámetro y pasarlo a permisos. Para que en arqueos no se muestren las cantidades ni el Resumen de Arqueo, sólo en el ticket de cierre. aplicarlo sólo para no-administradores. 
 - Hacer un nuevo parámetro de no cambiar fecha para no-administradores.
 
