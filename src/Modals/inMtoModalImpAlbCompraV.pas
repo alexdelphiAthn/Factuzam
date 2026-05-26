@@ -33,6 +33,8 @@ uses
   frxExportXLSX, frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization, frLanguageSpanish, frxSmartMemo,
   JvComponentBase, JvEnterTab,
+  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
+  dxSpreadSheetStyles, dxHashUtils,
   inMtoModalGenImp, UniDataAlbaranesCompra;
 
 type
@@ -42,6 +44,7 @@ type
     lblNumero: TcxLabel;
     edtNumero: TcxTextEdit;
     procedure FormCreate(Sender: TObject);
+    procedure btnExcelClick(Sender: TObject);
   public
     dmAlbc: TdmAlbaranesCompra;
     procedure preparar_consulta; override;
@@ -50,7 +53,58 @@ type
 
 implementation
 
+uses
+  inMtoPreviewExcel, inLibDocCompraExcel, inLibAppParam;
+
 {$R *.dfm}
+
+procedure TfrmPrintAlbCompraV.btnExcelClick(Sender: TObject);
+var
+  fPreview: TfrmMtoPreviewExcel;
+  cfg: TDocCompraCabCfg;
+begin
+  if dmAlbc = nil then
+    Exit;
+  dmAlbc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
+  cfg := Default(TDocCompraCabCfg);
+  cfg.Titulo         := 'ALBARAN DE COMPRA';
+  cfg.EtiquetaIzq    := 'ALMACEN DESTINO';
+  cfg.FieldRazonIzq  := 'NOMBRE_ALM_ALBC';
+  cfg.FieldDirIzq    := 'DIRECCION_ALM_ALBC';
+  cfg.FieldCPIzq     := 'CODIGO_POSTAL_ALM_ALBC';
+  cfg.FieldPobIzq    := 'POBLACION_ALM_ALBC';
+  cfg.FieldCifIzq    := 'CIF_EMP';
+  cfg.FieldTelIzq    := 'TELEFONO_ALM_ALBC';
+  cfg.FieldProvIzq   := 'PROVINCIA_ALM_ALBC';
+  cfg.FieldRazonPrv  := 'RAZON_SOCIAL_PRV';
+  cfg.FieldDirPrv    := 'DIRECCION1_PRV';
+  cfg.FieldCPPrv     := 'CODIGO_POSTAL_PRV';
+  cfg.FieldPobPrv    := 'POBLACION_PRV';
+  cfg.FieldCifPrv    := 'CIF_PRV';
+  cfg.FieldTelPrv    := 'TELEFONO1_PRV';
+  cfg.FieldProvPrv   := 'PROVINCIA_PRV';
+  cfg.FieldSerie     := 'SERIE_ALBC';
+  cfg.FieldNumero    := 'NUMERO_ALBC';
+  cfg.FieldFecha     := 'FECHA_ALBC';
+  cfg.FieldEstado    := 'ESTADO_ALBC';
+  cfg.FieldRefPrv    := 'REF_PROVEEDOR_ALBC';
+  cfg.MostrarPrecioVenta := False;
+  fPreview := TfrmMtoPreviewExcel.Create(Self);
+  try
+    fPreview.PopupParent := Self;
+    fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+    fPreview.DialogoGuardar.FileName :=
+      'AlbCompraV_' + edtSerie.Text + '_' + edtNumero.Text;
+    ExportarDocCompraVertical(
+      fPreview.dxSpreadSheet1,
+      dmAlbc.unqryCabAlbcPrint,
+      dmAlbc.unqryLinAlbcSkuPrint,
+      cfg);
+    fPreview.ShowModal;
+  finally
+    FreeAndNil(fPreview);
+  end;
+end;
 
 procedure TfrmPrintAlbCompraV.FormCreate(Sender: TObject);
 begin

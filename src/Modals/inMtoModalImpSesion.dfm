@@ -18,6 +18,9 @@ inherited frmPrintSesion: TfrmPrintSesion
       Top = 223
       ExplicitTop = 186
     end
+    inherited btnExcel: TcxButton
+      OnClick = btnExcelClick
+    end
   end
   object lblSerie: TcxLabel [1]
     Left = 16
