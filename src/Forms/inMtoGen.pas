@@ -1427,7 +1427,7 @@ begin
     for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
     begin
       col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
-      if col.DataBinding.FieldName = '' then
+      if (col.DataBinding.FieldName = '') or (not col.Visible) then
         Continue;
       lblAntiguo := TLabel.Create(frm);
       lblAntiguo.Parent := frm;
