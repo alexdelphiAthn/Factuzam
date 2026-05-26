@@ -883,19 +883,31 @@ end;
 procedure TfrmModalArqueo.tvBilletesKeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 var
-  iRow: Integer;
+  iRow, iDest: Integer;
 begin
-  if Key = VK_RETURN then
+  if (Key = VK_RETURN) or
+     ((Key = VK_END) and (ssCtrl in Shift)) or
+     ((Key = VK_HOME) and (ssCtrl in Shift)) then
   begin
-    { Postear el valor editado antes de mover }
     if tvBilletes.Controller.EditingController.IsEditing then
       tvBilletes.Controller.EditingController.HideEdit(True);
     iRow := tvBilletes.DataController.FocusedRecordIndex;
-    if iRow < tvBilletes.DataController.RecordCount - 1 then
+    if Key = VK_RETURN then
+      iDest := iRow + 1
+    else if Key = VK_END then
+      iDest := tvBilletes.DataController.RecordCount - 1
+    else
+      iDest := 0;
+    if iDest < 0 then
+      iDest := 0;
+    if iDest > tvBilletes.DataController.RecordCount - 1 then
+      iDest := tvBilletes.DataController.RecordCount - 1;
+    if iDest <> iRow then
     begin
-      tvBilletes.DataController.FocusedRecordIndex := iRow + 1;
+      tvBilletes.DataController.FocusedRecordIndex := iDest;
       tvBilletes.Controller.FocusedColumn := tvBilletesUds;
-      tvBilletes.Controller.EditingController.ShowEdit(tvBilletesUds);
+      tvBilletes.Controller.EditingController.ShowEdit(
+        tvBilletesUds);
     end;
     Key := 0;
   end;
@@ -904,16 +916,28 @@ end;
 procedure TfrmModalArqueo.tvRecuentoKeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 var
-  iRow: Integer;
+  iRow, iDest: Integer;
 begin
-  if Key = VK_RETURN then
+  if (Key = VK_RETURN) or
+     ((Key = VK_END) and (ssCtrl in Shift)) or
+     ((Key = VK_HOME) and (ssCtrl in Shift)) then
   begin
     if tvRecuento.Controller.EditingController.IsEditing then
       tvRecuento.Controller.EditingController.HideEdit(True);
     iRow := tvRecuento.DataController.FocusedRecordIndex;
-    if iRow < tvRecuento.DataController.RecordCount - 1 then
+    if Key = VK_RETURN then
+      iDest := iRow + 1
+    else if Key = VK_END then
+      iDest := tvRecuento.DataController.RecordCount - 1
+    else
+      iDest := 0;
+    if iDest < 0 then
+      iDest := 0;
+    if iDest > tvRecuento.DataController.RecordCount - 1 then
+      iDest := tvRecuento.DataController.RecordCount - 1;
+    if iDest <> iRow then
     begin
-      tvRecuento.DataController.FocusedRecordIndex := iRow + 1;
+      tvRecuento.DataController.FocusedRecordIndex := iDest;
       tvRecuento.Controller.FocusedColumn := tvRecuentoImporte;
       tvRecuento.Controller.EditingController.ShowEdit(
         tvRecuentoImporte);
