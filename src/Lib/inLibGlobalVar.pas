@@ -19,7 +19,8 @@ interface
 uses Uni,
      UniDataPerfiles,
      UniDataConn,cxMemo, inMtoPrincipal,
-     inLibInformesGuiasCache;
+     inLibInformesGuiasCache,
+     inLibConfigCampos;
 //type
 // TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of
 // object;
@@ -65,7 +66,7 @@ end;
 
 initialization
   oAppName         := 'Fzam';
-  oVersion         := '1.0.15.202605260080.alpha';
+  oVersion         := '1.0.15.202605260090.alpha';
   oUser            := 'No definido';
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
