@@ -250,6 +250,7 @@ uses inLibUser,
   inLibtb,
   inLibGlobalVar,
   inLibInformesGuiasCache,
+  inLibConfigCampos,
   inLibLog,
   inLibDir,
   inMtoSplash,
@@ -447,6 +448,9 @@ begin
   // en los TfrmPrint no vaya a BBDD en cada click (mataba 8 s por print).
   oInfGuiasCache := TInformesGuiasCache.Create;
   oInfGuiasCache.Precargar;
+  inLibLog.Log.LogInfo('Arranque: pre-PrecargarConfigCampos');
+  oConfigCampos := TConfigCamposCache.Create;
+  oConfigCampos.Precargar;
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');

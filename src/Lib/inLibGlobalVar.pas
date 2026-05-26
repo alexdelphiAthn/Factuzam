@@ -19,7 +19,8 @@ interface
 uses Uni,
      UniDataPerfiles,
      UniDataConn,cxMemo, inMtoPrincipal,
-     inLibInformesGuiasCache;
+     inLibInformesGuiasCache,
+     inLibConfigCampos;
 //type
 // TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of
 // object;
