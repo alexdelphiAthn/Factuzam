@@ -67,22 +67,30 @@ var
   sBase: string;
   iSeq: Integer;
 begin
-  sBase := AEmpresa + '-' + AAlmacen + '-' + ACaja + '-' +
-           FormatDateTime('yyyymmdd', AFecha);
+  { Formato compacto para caber en varchar(20):
+    YYYYMMDD-NN  (8+1+2 = 11 fijo, resto para secuencia).
+    Ejemplo: 20260526-01  Si hay más de uno el mismo día: -02, -03... }
+  sBase := FormatDateTime('yyyymmdd', AFecha);
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := AConn;
     Query.SQL.Text :=
       'SELECT COUNT(*) AS TOTAL' +
       '  FROM fza_caja_arqueos' +
-      ' WHERE CODIGO_ARQ LIKE :pBASE';
+      ' WHERE CODIGO_EMP_ARQ  = :pEMP' +
+      '   AND CODIGO_ALM_ARQ  = :pALM' +
+      '   AND CODIGO_CAJA_ARQ = :pCAJA' +
+      '   AND CODIGO_ARQ LIKE :pBASE';
+    Query.ParamByName('pEMP').AsString  := AEmpresa;
+    Query.ParamByName('pALM').AsString  := AAlmacen;
+    Query.ParamByName('pCAJA').AsString := ACaja;
     Query.ParamByName('pBASE').AsString := sBase + '%';
     Query.Open;
     iSeq := Query.FieldByName('TOTAL').AsInteger + 1;
   finally
     FreeAndNil(Query);
   end;
-  Result := sBase + '-' + Format('%.3d', [iSeq]);
+  Result := sBase + '-' + Format('%.2d', [iSeq]);
 end;
 
 { --------------------------------------------------------------------------- }
