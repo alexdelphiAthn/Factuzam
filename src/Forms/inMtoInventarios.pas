@@ -2131,17 +2131,17 @@ end;
 procedure TfrmMtoInventarios.btnCargarExcelClick(Sender: TObject);
 var
   Lista: TStringList;
-  Archivo: string;
-  sMsg: string;
+  ListaNuevos: TStringList;
+  Archivo, sSku, sCant, sMsg: string;
   Sheet: TdxSpreadSheet;
-  i: Integer;
+  i, iActualizados, iNuevos: Integer;
+  rCant: Double;
 begin
   if not PuedeEditar then
   begin
     ShowMessage('El inventario debe estar ABIERTO.');
     Exit;
   end;
-  // Dialogo de seleccion de archivo
   dlgAbrir.Filter :=
     'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|Todos (*.*)|*.*';
   dlgAbrir.DefaultExt := 'xlsx';
@@ -2154,7 +2154,6 @@ begin
     Exit;
   end;
   Lista := nil;
-  // Formato Excel: leer con dxSpreadSheet
   if SameText(ExtractFileExt(Archivo), '.xlsx') or
      SameText(ExtractFileExt(Archivo), '.xls') then
   begin
@@ -2168,7 +2167,6 @@ begin
   end
   else
   begin
-    // Formato CSV/TXT: SKU;CANTIDAD_ARTVIN por linea
     Lista := TStringList.Create;
     Lista.LoadFromFile(Archivo);
     for i := 0 to Lista.Count - 1 do
@@ -2184,16 +2182,58 @@ begin
     FreeAndNil(Lista);
     Exit;
   end;
+  // Separar: existentes se actualizan (reemplazar cantidad), nuevos se insertan
   Screen.Cursor := crHourGlass;
+  ListaNuevos := TStringList.Create;
   try
-    dmmInventarios.CargarDesdeListaSkus(Lista);
+    iActualizados := 0;
+    iNuevos := 0;
+    dmmInventarios.cdsLineas.DisableControls;
+    try
+      for i := 0 to Lista.Count - 1 do
+      begin
+        sSku := Lista.Names[i];
+        if sSku = '' then
+          Continue;
+        sCant := Lista.ValueFromIndex[i];
+        rCant := StrToFloatDef(sCant, 1);
+        // Si el SKU ya existe en el inventario, actualizar cantidad fisica
+        if dmmInventarios.cdsLineas.Locate(
+             'CODIGO_UNIDAD_INVLIN', sSku, [loCaseInsensitive]) then
+        begin
+          dmmInventarios.cdsLineas.Edit;
+          dmmInventarios.cdsLineas.FieldByName(
+            'CANTIDAD_FISICA_INVLIN').AsFloat := rCant;
+          dmmInventarios.cdsLineas.FieldByName(
+            'FECHA_RECUENTO_INVLIN').AsDateTime := Now;
+          dmmInventarios.cdsLineas.Post;
+          Inc(iActualizados);
+        end
+        else
+        begin
+          ListaNuevos.Add(Lista[i]);
+          Inc(iNuevos);
+        end;
+      end;
+      // Persistir las actualizaciones
+      if iActualizados > 0 then
+        dmmInventarios.cdsLineas.ApplyUpdates(0);
+    finally
+      dmmInventarios.cdsLineas.EnableControls;
+    end;
+    // Insertar los SKUs nuevos via el metodo del DM
+    if ListaNuevos.Count > 0 then
+      dmmInventarios.CargarDesdeListaSkus(ListaNuevos);
     pcDetail.ActivePage := tsDetalle;
     CargarLineasYRefrescar;
-    ShowMessage(sMsg + #13#10 +
-      'SKUs nuevos insertados; existentes actualizados (cantidad sumada).');
+    ShowMessage(
+      sMsg + #13#10 +
+      Format('%d actualizados, %d nuevos insertados.',
+        [iActualizados, iNuevos]));
   finally
     Screen.Cursor := crDefault;
     FreeAndNil(Lista);
+    FreeAndNil(ListaNuevos);
   end;
 end;
 
