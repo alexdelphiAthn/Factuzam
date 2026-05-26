@@ -1,23 +1,23 @@
 inherited frmModalEntradaCambio: TfrmModalEntradaCambio
   BorderStyle = bsDialog
   Caption = 'Entrada de Cambio (F6)'
-  ClientHeight = 250
-  ClientWidth = 450
+  ClientHeight = 230
+  ClientWidth = 500
   Position = poScreenCenter
   OnCreate = FormCreate
   TextHeight = 19
   object pnlPrincipal: TPanel [0]
     Left = 0
     Top = 0
-    Width = 450
-    Height = 200
+    Width = 500
+    Height = 180
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 0
     object lblTitulo: TcxLabel
       Left = 16
-      Top = 10
+      Top = 8
       Caption = 'Introduzca el efectivo que entra en caja'
       Style.TextColor = clNavy
       Style.Font.Size = 10
@@ -27,69 +27,76 @@ inherited frmModalEntradaCambio: TfrmModalEntradaCambio
     end
     object lblEmpleadoLbl: TcxLabel
       Left = 16
-      Top = 48
+      Top = 42
       Caption = 'Empleado:'
       TabOrder = 7
       Transparent = True
     end
-    object txtEmpleado: TcxTextEdit
+    object btnEmpleado: TcxButtonEdit
       Left = 100
-      Top = 46
-      Properties.OnChange = txtEmpleadoPropertiesChange
+      Top = 40
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
+      Properties.OnButtonClick = btnEmpleadoPropertiesButtonClick
+      Properties.OnValidate = btnEmpleadoPropertiesValidate
       TabOrder = 0
       Width = 120
     end
     object lblEmpleadoNombre: TcxLabel
-      Left = 228
-      Top = 48
+      Left = 230
+      Top = 42
       AutoSize = False
       Style.TextColor = clNavy
+      Style.Font.Style = [fsBold]
       TabOrder = 8
       Transparent = True
       Height = 21
-      Width = 200
+      Width = 250
     end
     object lblImporteLbl: TcxLabel
       Left = 16
-      Top = 88
+      Top = 80
       Caption = 'Importe:'
       TabOrder = 9
       Transparent = True
     end
     object txtImporte: TcxCurrencyEdit
       Left = 100
-      Top = 86
+      Top = 78
       TabOrder = 1
       Value = 0.000000000000000000
-      Width = 160
+      Width = 140
     end
     object lblConceptoLbl: TcxLabel
       Left = 16
-      Top = 128
+      Top = 118
       Caption = 'Concepto:'
       TabOrder = 10
       Transparent = True
     end
     object txtConcepto: TcxTextEdit
       Left = 100
-      Top = 126
+      Top = 116
       Properties.MaxLength = 100
       TabOrder = 2
       Text = 'Entrada de cambio'
-      Width = 330
+      Width = 380
     end
   end
   object pnlBotones: TPanel [1]
     Left = 0
-    Top = 200
-    Width = 450
+    Top = 180
+    Width = 500
     Height = 50
     Align = alBottom
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 1
     object btnAceptar: TcxButton
-      Left = 140
+      Left = 170
       Top = 8
       Width = 130
       Height = 35
@@ -98,7 +105,7 @@ inherited frmModalEntradaCambio: TfrmModalEntradaCambio
       TabOrder = 0
     end
     object btnCancelar: TcxButton
-      Left = 280
+      Left = 310
       Top = 8
       Width = 130
       Height = 35
@@ -109,7 +116,7 @@ inherited frmModalEntradaCambio: TfrmModalEntradaCambio
   end
   object alAcciones: TActionList
     Left = 16
-    Top = 210
+    Top = 190
     object actAceptar: TAction
       Caption = 'Aceptar (F12)'
       ShortCut = 123
