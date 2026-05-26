@@ -1433,27 +1433,69 @@ begin
 end;
 
 function TfrmMtoInventarios.BuscarArticuloDialog: string;
-const
-  SQL =
-    'SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART, a.TIPO_ART, ' +
-    '       a.CODIGO_FAM_ART, f.DESCRIPCION_FAM, ' +
-    '       a.TIPO_CANTIDAD_ART, a.ESVARIACION_ART ' +
-    '  FROM fza_articulos a ' +
-    '  LEFT JOIN fza_articulos_familias f ' +
-    '    ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART ' +
-    ' WHERE a.ESACTIVO_ART = ''S'' ' +
-    ' ORDER BY a.ORDEN_ART, a.CODIGO_ART_ART';
+  // Fija DisplayLabel y formato de un campo para que la grilla
+  // genérica muestre cabeceras legibles sin layout guardado.
+  procedure ConfigCampo(F: TField; const ALabel, AFormat: string);
+  begin
+    if F = nil then Exit;
+    F.DisplayLabel := ALabel;
+    if AFormat = '' then Exit;
+    if F is TFloatField then
+      TFloatField(F).DisplayFormat := AFormat
+    else if F is TBCDField then
+      TBCDField(F).DisplayFormat := AFormat
+    else if F is TSQLTimeStampField then
+      TSQLTimeStampField(F).DisplayFormat := AFormat;
+  end;
 var
-  sCodigo: string;
+  unqryBusq: TUniQuery;
 begin
   Result := '';
-  if TBusquedaUtils.EjecutarBusqueda(
-       'Búsqueda de Artículos',
-       SQL,
-       'CODIGO_ART_ART',
-       sCodigo,
-       'frmMtoArtInvSearch') then
-    Result := sCodigo;
+  unqryBusq := TUniQuery.Create(nil);
+  try
+    unqryBusq.Connection := inLibGlobalVar.oConn;
+    unqryBusq.SQL.Text :=
+      'SELECT'                                                      + sLineBreak +
+      '    v.CODIGO_ART_ART,'                                       + sLineBreak +
+      '    v.DESCRIPCION_ART,'                                      + sLineBreak +
+      '    v.DESCRIPCION_FAM,'                                      + sLineBreak +
+      '    pv.PV                       AS TEMPORADA,'               + sLineBreak +
+      '    v.RAZON_SOCIAL_PROVEEDOR,'                               + sLineBreak +
+      '    v.PRECIO_ULT_COMPRA,'                                    + sLineBreak +
+      '    v.PRECIO_FINAL_ARTTAR,'                                  + sLineBreak +
+      '    v.TIPO_CANTIDAD_ART'                                     + sLineBreak +
+      'FROM vi_art_busquedas v'                                     + sLineBreak +
+      'LEFT JOIN fza_articulos_propiedades ap'                      + sLineBreak +
+      '       ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART'             + sLineBreak +
+      '      AND ap.CODIGO_PROP_ARTPROP = ''TEMPORADA'''            + sLineBreak +
+      'LEFT JOIN fza_propiedades_valores pv'                        + sLineBreak +
+      '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'              + sLineBreak +
+      'ORDER BY v.CODIGO_ART_ART';
+    unqryBusq.Open;
+    ConfigCampo(unqryBusq.FindField('CODIGO_ART_ART'),
+                'Código',                '');
+    ConfigCampo(unqryBusq.FindField('DESCRIPCION_ART'),
+                'Descripción',           '');
+    ConfigCampo(unqryBusq.FindField('DESCRIPCION_FAM'),
+                'Familia',               '');
+    ConfigCampo(unqryBusq.FindField('TEMPORADA'),
+                'Temporada',             '');
+    ConfigCampo(unqryBusq.FindField('RAZON_SOCIAL_PROVEEDOR'),
+                'Proveedor',             '');
+    ConfigCampo(unqryBusq.FindField('PRECIO_ULT_COMPRA'),
+                'P. compra',             '#,##0.00 €');
+    ConfigCampo(unqryBusq.FindField('PRECIO_FINAL_ARTTAR'),
+                'P. venta',              '#,##0.00 €');
+    ConfigCampo(unqryBusq.FindField('TIPO_CANTIDAD_ART'),
+                'Tipo cant.',            '');
+    if TBusquedaUtils.EjecutarBusqueda(
+         'Búsqueda de Artículos',
+         unqryBusq,
+         'frmMtoArtInvSearch') then
+      Result := unqryBusq.FieldByName('CODIGO_ART_ART').AsString;
+  finally
+    FreeAndNil(unqryBusq);
+  end;
 end;
 
 procedure TfrmMtoInventarios.ResolverInputArticulo(const AInput: string;
