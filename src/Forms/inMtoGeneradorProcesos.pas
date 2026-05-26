@@ -183,6 +183,8 @@ type
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+  protected
+    function PermitirNavegacionTeclas: Boolean; override;
   private
     FFindDialog: TFindDialog;
     FReplaceDialog: TReplaceDialog;
@@ -1138,13 +1140,21 @@ begin
   end;
 end;
 
+function TfrmMtoGeneradorProcesos.PermitirNavegacionTeclas: Boolean;
+begin
+  // Cuando un SynEdit tiene el foco, las teclas de navegacion
+  // (PgUp, PgDn, Home, End, Ins, F2) deben llegar al editor,
+  // no disparar las acciones de navegacion del Mto base.
+  Result := not DBSynEdit1.Focused and
+            not syndtEstructura.Focused;
+end;
+
 procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject;
                                                var Key: Word;
                                                Shift: TShiftState);
 begin
-  // Passthrough de teclas de navegación para los editores SynEdit
-  if (Key = VK_RETURN) or (Key = VK_PRIOR) or (Key = VK_NEXT) or
-     (Key = VK_HOME) or (Key = VK_END) then
+  // Passthrough de RETURN para editores SynEdit
+  if (Key = VK_RETURN) then
   begin
     if DBSynEdit1.Focused or syndtEstructura.Focused then
       Exit;
