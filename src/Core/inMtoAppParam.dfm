@@ -10,6 +10,7 @@ object frmMtoAppParam: TfrmMtoAppParam
   Font.Height = -15
   Font.Name = 'Lucida Sans'
   Font.Style = []
+  KeyPreview = True
   Position = poMainFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
@@ -157,6 +158,11 @@ object frmMtoAppParam: TfrmMtoAppParam
       Caption = 'Salir'
       ShortCut = 27
       OnExecute = actSalirExecute
+    end
+    object actGuardarLayout: TAction
+      Caption = 'Guardar Layout'
+      ShortCut = 32891
+      OnExecute = actGuardarLayoutExecute
     end
   end
 end
