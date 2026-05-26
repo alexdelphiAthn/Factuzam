@@ -275,7 +275,10 @@ inherited dmArticulos: TdmArticulos
       'SELECT COUNT(*) FROM fza_articulos_tarifas')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'select *'
+      'select l.*, f.FECHA_FAC, f.TOTAL_LIQUIDO_FAC,'
+      '       f.RAZON_SOCIAL_CLIENTE_FAC, f.CODIGO_CLI_FAC,'
+      '       f.FORMA_PAGO_FAC, f.DESCRIPCION_FORMA_PAGO_FP,'
+      '       f.RAZON_SOCIAL_EMPRESA_FAC, f.CODIGO_EMP_FAC'
       'from vi_fac_lin_busquedas l'
       'INNER JOIN vi_fac_busquedas f'
       'ON l.NUMERO_FAC_FACLIN = f.NUMERO_FAC'
