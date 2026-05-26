@@ -167,6 +167,13 @@ type
     // se crea lazy en EjecutarEnBackground y se libera en Destroy
     // despues del WaitForAll.
     FTareasActivas: TList<ITask>;
+    // Popup de selector de columnas (boton derecho en grid)
+    FPopMenuColumnas: TPopupMenu;
+    FSqlOriginalTablaG: string;
+    FCamposGuia: TStringList;
+    procedure PopMenuColumnasPopup(Sender: TObject);
+    procedure PopMenuColumnaClick(Sender: TObject);
+    procedure PopMenuNuevaGuiaClick(Sender: TObject);
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
@@ -261,6 +268,8 @@ uses inMtoGenSearch,
      inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
      inLibFotos, inMtoFotoArticulo, inMtoStockConsulta,
+     inLibGridColumnChooser, inMtoModalGridGuias,
+     inLibInformesGuiasCache,
      System.Diagnostics,   // TStopwatch para cronometrar carga inicial
      Vcl.ComCtrls;         // TProgressBar marquee en overlay de carga
      // System.Threading ya esta en el interface (para TList<ITask>).
@@ -1183,7 +1192,13 @@ begin
                                                      Self.Caption + ' Abierta');
   tsFichCab := nil;
   tsFichBut := nil;
+  FCamposGuia := nil;
+  FSqlOriginalTablaG := '';
   Self.Position  := poScreenCenter;
+  // Popup de columnas: boton derecho en el grid principal
+  FPopMenuColumnas := TPopupMenu.Create(Self);
+  FPopMenuColumnas.OnPopup := PopMenuColumnasPopup;
+  cxgrdPrincipal.PopupMenu := FPopMenuColumnas;
   swTramo := TStopwatch.StartNew;
   ProcesarPerfiles;
   msProcesarPerfiles := swTramo.ElapsedMilliseconds;
@@ -1201,6 +1216,144 @@ begin
   inLibLog.Log.LogPerf(Self.Name + '.FormCreate',
     'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
     swTotal.ElapsedMilliseconds);
+end;
+
+// ============================================================================
+// Popup de selector de columnas (boton derecho en grid)
+// ============================================================================
+
+procedure TfrmMtoGen.PopMenuColumnasPopup(Sender: TObject);
+var
+  i: Integer;
+  col: TcxGridDBColumn;
+  mi, miSep, miGuia: TMenuItem;
+  sCaption: string;
+begin
+  FPopMenuColumnas.Items.Clear;
+  // Items por cada columna del grid principal
+  for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+  begin
+    col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
+    if col.DataBinding.FieldName = '' then
+      Continue;
+    mi := TMenuItem.Create(FPopMenuColumnas);
+    sCaption := col.Caption;
+    if sCaption = '' then
+      sCaption := col.DataBinding.FieldName;
+    mi.Caption := sCaption;
+    mi.Checked := col.Visible;
+    mi.AutoCheck := False;
+    mi.Tag := i;
+    mi.OnClick := PopMenuColumnaClick;
+    FPopMenuColumnas.Items.Add(mi);
+  end;
+  // Separador + "Nueva guia..."
+  miSep := TMenuItem.Create(FPopMenuColumnas);
+  miSep.Caption := '-';
+  FPopMenuColumnas.Items.Add(miSep);
+  miGuia := TMenuItem.Create(FPopMenuColumnas);
+  miGuia.Caption := 'Nueva guía...';
+  miGuia.OnClick := PopMenuNuevaGuiaClick;
+  FPopMenuColumnas.Items.Add(miGuia);
+end;
+
+procedure TfrmMtoGen.PopMenuColumnaClick(Sender: TObject);
+var
+  mi: TMenuItem;
+  col: TcxGridDBColumn;
+begin
+  mi := TMenuItem(Sender);
+  if (mi.Tag >= 0) and (mi.Tag < cxGrdDBTabPrin.ColumnCount) then
+  begin
+    col := cxGrdDBTabPrin.Columns[mi.Tag] as TcxGridDBColumn;
+    col.Visible := not col.Visible;
+  end;
+end;
+
+procedure TfrmMtoGen.PopMenuNuevaGuiaClick(Sender: TObject);
+var
+  frm: TfrmModalGridGuias;
+  oDS: TDataSet;
+  guiaResult: TGridGuiaResult;
+  camposElegidos: TStringList;
+  i: Integer;
+  col: TcxGridDBColumn;
+begin
+  // Abrir mantenimiento de guias del grid
+  frm := TfrmModalGridGuias.Create(Application);
+  try
+    frm.sFormulario := Self.Name;
+    oDS := nil;
+    if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) then
+      oDS := dsTablaG.DataSet;
+    frm.FDataSet := oDS;
+    frm.ShowModal;
+  finally
+    FreeAndNil(frm);
+  end;
+  // Recargar cache de guias
+  if oInfGuiasCache <> nil then
+  begin
+    oInfGuiasCache.Invalidar;
+    oInfGuiasCache.Precargar;
+  end;
+  // Enriquecer query si hay guias nuevas
+  if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
+  begin
+    var unqry := TdmBase(tdmDataModule).unqryTablaG;
+    if (unqry <> nil) and (unqry.Active) then
+    begin
+      // Restaurar SQL original si ya estaba enriquecido
+      if FSqlOriginalTablaG <> '' then
+      begin
+        unqry.Close;
+        unqry.SQL.Text := FSqlOriginalTablaG;
+      end;
+      guiaResult := EnriquecerQueryConGuias(Self.Name, unqry);
+      try
+        if guiaResult.Exito and (guiaResult.CamposNuevos.Count > 0) then
+        begin
+          FSqlOriginalTablaG := guiaResult.SqlOriginal;
+          // Dejar elegir columnas al usuario
+          camposElegidos := ElegirColumnasNuevas(Self,
+                                                 guiaResult.CamposNuevos);
+          try
+            // Reabrir query con SQL enriquecido
+            unqry.Open;
+            // Crear columnas dinamicas en el grid
+            cxGrdDBTabPrin.BeginUpdate;
+            try
+              for i := 0 to guiaResult.CamposNuevos.Count - 1 do
+              begin
+                col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
+                col.DataBinding.FieldName :=
+                  guiaResult.CamposNuevos[i];
+                col.Caption := guiaResult.CamposNuevos[i];
+                col.Visible :=
+                  camposElegidos.IndexOf(guiaResult.CamposNuevos[i]) >= 0;
+              end;
+            finally
+              cxGrdDBTabPrin.EndUpdate;
+            end;
+            // Guardar nombres de campos guia para limpieza
+            FreeAndNil(FCamposGuia);
+            FCamposGuia := TStringList.Create;
+            FCamposGuia.Assign(guiaResult.CamposNuevos);
+          finally
+            FreeAndNil(camposElegidos);
+          end;
+        end
+        else
+        begin
+          // No hay guias o fallo: reabrir con SQL original si lo cerramos
+          if not unqry.Active then
+            unqry.Open;
+        end;
+      finally
+        FreeAndNil(guiaResult.CamposNuevos);
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
