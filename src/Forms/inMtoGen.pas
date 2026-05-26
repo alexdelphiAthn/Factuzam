@@ -1500,9 +1500,10 @@ begin
   if (Key in [VK_HOME, VK_END]) and (ssCtrl in Shift) and
      not (ssAlt in Shift) then
   begin
-    if not ((ActiveControl is TCustomMemo) or
+    if not (Assigned(ActiveControl) and
+           ((ActiveControl is TCustomMemo) or
             (Pos('Memo', ActiveControl.ClassName) > 0) or
-            (Pos('SynEdit', ActiveControl.ClassName) > 0)) then
+            (Pos('SynEdit', ActiveControl.ClassName) > 0))) then
     begin
       if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active then
       begin
