@@ -1656,6 +1656,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         ShortCut = 24655
         OnClick = mnuCajaOperacionesHistClick
       end
+      object mnuCajaArqueosHist: TMenuItem
+        Caption = 'Hist'#243'rico de Arqueos'
+        ShortCut = 24641
+        OnClick = mnuCajaArqueosHistClick
+      end
       object mnuFacturasSimplif: TMenuItem
         Caption = 'Facturas Simplificadas'
         ShortCut = 24659
