@@ -224,10 +224,12 @@ end;
 procedure TfrmPrintEtiqArt.FormKeyDown(Sender: TObject; var Key: Word;
                                                         Shift: TShiftState);
 begin
-  // Alt+F12 dispara la grabacion de la personalizacion, igual que en
-  // inMtoConsultaOpe.
-  if (Key = VK_F12) and (ssAlt in Shift) then
+  // Alt+F12 -> guardar layout
+  if (Key = VK_F12) and (ssAlt in Shift) and not (ssCtrl in Shift) then
     GuardarLayout;
+  // Ctrl+F12 -> resetear layout
+  if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+    ResetearLayout(Self.Name);
 end;
 
 procedure TfrmPrintEtiqArt.RestaurarLayout;

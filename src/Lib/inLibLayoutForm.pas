@@ -112,9 +112,15 @@ type
     function  PreguntarYGrabar(const ADescripcion: string): Boolean;
   end;
 
+// Borra el perfil de layout guardado para el formulario dado.
+// Muestra un modal para elegir el nivel de permisos a resetear.
+// Devuelve True si se borró, False si el usuario canceló.
+function ResetearLayout(const AFormKey: string): Boolean;
+
 implementation
 
 uses
+  Vcl.Dialogs,
   inLibGlobalVar, inLibLog, inLibtb, inMtoModalGenImpSave,
   cxGridDBDataDefinitions;
 
@@ -329,6 +335,34 @@ begin
   finally
     FreeAndNil(Lote);
   end;
+  Result := True;
+end;
+
+// =============================================================================
+// ResetearLayout
+// =============================================================================
+
+function ResetearLayout(const AFormKey: string): Boolean;
+var
+  formulario: TfrmModalGenImpSave;
+  sPermisos: string;
+begin
+  Result := False;
+  formulario := TfrmModalGenImpSave.Create(Application);
+  try
+    formulario.edtNombreOrigen.Text := AFormKey;
+    formulario.edtDescripcion.Enabled := False;
+    formulario.edtDescripcion.Text := 'Resetear Layout';
+    formulario.ShowModal;
+    if formulario.sFicha <> 'S' then
+      Exit;
+    sPermisos := formulario.cbbPermisos.Text;
+  finally
+    FreeAndNil(formulario);
+  end;
+  odmPerfiles.DeleteProfile(sPermisos, AFormKey);
+  ShowMessage('Layout reseteado.' + sLineBreak +
+              'Se aplicará la próxima vez que abra el formulario.');
   Result := True;
 end;
 

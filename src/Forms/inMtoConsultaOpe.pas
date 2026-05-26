@@ -230,7 +230,11 @@ begin
   case Key of
     VK_ESCAPE: Close;
     VK_F5:     RecargarMaestro;
-    VK_F12:    if ssAlt in Shift then GuardarLayout;
+    VK_F12:
+      if (ssAlt in Shift) and not (ssCtrl in Shift) then
+        GuardarLayout
+      else if (ssCtrl in Shift) and not (ssAlt in Shift) then
+        ResetearLayout(Self.Name);
   end;
 end;
 
