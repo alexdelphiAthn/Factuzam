@@ -99,6 +99,7 @@ class procedure TArqueoPersistencia.GrabarArqueo(
   const AUsuario: string);
 var
   sCodigo: string;
+  sSetOpcional: string;
   Query: TUniQuery;
   i: Integer;
 begin
@@ -113,6 +114,9 @@ begin
     Query := TUniQuery.Create(nil);
     try
       Query.Connection := AConn;
+      { Solo columnas que existen en factuzam_original.sql (esquema
+        base). Las columnas añadidas por migración van en un UPDATE
+        aparte para no fallar si la migración no se ejecutó aún. }
       Query.SQL.Text :=
         'INSERT INTO fza_caja_arqueos (' +
         '  CODIGO_ARQ,' +
@@ -141,9 +145,6 @@ begin
         '  TOTAL_EFECTIVO_CAJA_ARQ,' +
         '  TOTAL_OTROS_INGRESOS_ARQ,' +
         '  TOTAL_SALDO_RECONTAR_ARQ,' +
-        '  TOTAL_RECUENTO_ARQ,' +
-        '  DIFERENCIA_TOTAL_ARQ,' +
-        '  EFECTIVO_DEJADO_CAJA_ARQ,' +
         '  OBSERVACIONES_ARQ,' +
         '  INSTANTE_ALTA,' +
         '  USUARIO_ALTA,' +
@@ -175,9 +176,6 @@ begin
         '  :pEFT_CAJA,' +
         '  :pOTROS_ING,' +
         '  :pSALDO_REC,' +
-        '  :pTOTAL_RECUENTO,' +
-        '  :pDIFERENCIA,' +
-        '  :pEFT_DEJADO,' +
         '  :pOBS,' +
         '  NOW(),' +
         '  :pUSUARIO,' +
@@ -208,9 +206,6 @@ begin
       Query.ParamByName('pEFT_CAJA').AsCurrency  := AArqueo.EfectivoCaja;
       Query.ParamByName('pOTROS_ING').AsCurrency := AArqueo.OtrosIngresos;
       Query.ParamByName('pSALDO_REC').AsCurrency := AArqueo.SaldoRecontar;
-      Query.ParamByName('pTOTAL_RECUENTO').AsCurrency := ATotalRecuento;
-      Query.ParamByName('pDIFERENCIA').AsCurrency := ADiferenciaTotal;
-      Query.ParamByName('pEFT_DEJADO').AsCurrency := AEfectivoDejado;
       Query.ParamByName('pOBS').AsString         := AObservaciones;
       Query.ParamByName('pUSUARIO').AsString     := AUsuario;
       Query.ParamByName('pUSUARIO2').AsString    := AUsuario;
@@ -218,31 +213,83 @@ begin
     finally
       FreeAndNil(Query);
     end;
-    { -- Columnas opcionales (pueden no existir aún) ---------------------- }
+    { -- Columnas opcionales (añadidas por arqueo_recuento.sql) ----------- }
+    { Construir UPDATE dinámico solo con las columnas que existen.
+      UniDAC propaga errores SQL a través de OnError antes de que un
+      except local los capture, así que no podemos usar try/except. }
+    Query := TUniQuery.Create(nil);
     try
+      Query.Connection := AConn;
+      Query.SQL.Text :=
+        'SELECT COLUMN_NAME' +
+        '  FROM INFORMATION_SCHEMA.COLUMNS' +
+        ' WHERE TABLE_SCHEMA = DATABASE()' +
+        '   AND TABLE_NAME   = ''fza_caja_arqueos''' +
+        '   AND COLUMN_NAME IN (' +
+        '     ''TOTAL_PRESTAMOS_ARQ'',' +
+        '     ''TOTAL_VENTAS_NORMALES_ARQ'',' +
+        '     ''TOTAL_VENTAS_PRESTAMOS_ARQ'',' +
+        '     ''TOTAL_DEVOLUCIONES_ARQ'',' +
+        '     ''TOTAL_VENTAS_ARQ'',' +
+        '     ''TOTAL_RECUENTO_ARQ'',' +
+        '     ''DIFERENCIA_TOTAL_ARQ'',' +
+        '     ''EFECTIVO_DEJADO_CAJA_ARQ'')';
+      Query.Open;
+      if not Query.Eof then
+      begin
+        { Hay columnas opcionales: montar SET dinámico }
+        sSetOpcional := '';
+        while not Query.Eof do
+        begin
+          if sSetOpcional <> '' then
+            sSetOpcional := sSetOpcional + ', ';
+          sSetOpcional := sSetOpcional +
+            Query.FieldByName('COLUMN_NAME').AsString +
+            ' = :p' +
+            Query.FieldByName('COLUMN_NAME').AsString;
+          Query.Next;
+        end;
+      end;
+    finally
+      FreeAndNil(Query);
+    end;
+    if sSetOpcional <> '' then
+    begin
       Query := TUniQuery.Create(nil);
       try
         Query.Connection := AConn;
         Query.SQL.Text :=
-          'UPDATE fza_caja_arqueos SET' +
-          '  TOTAL_PRESTAMOS_ARQ        = :pPREST,' +
-          '  TOTAL_VENTAS_NORMALES_ARQ  = :pV_NORM,' +
-          '  TOTAL_VENTAS_PRESTAMOS_ARQ = :pV_PREST,' +
-          '  TOTAL_DEVOLUCIONES_ARQ     = :pDEVOL,' +
-          '  TOTAL_VENTAS_ARQ           = :pT_VENTAS' +
+          'UPDATE fza_caja_arqueos SET ' + sSetOpcional +
           ' WHERE CODIGO_ARQ = :pCODIGO';
-        Query.ParamByName('pPREST').AsCurrency   := AArqueo.Prestamos;
-        Query.ParamByName('pV_NORM').AsCurrency  := AArqueo.VentasNormales;
-        Query.ParamByName('pV_PREST').AsCurrency := AArqueo.VentasPrestamos;
-        Query.ParamByName('pDEVOL').AsCurrency   := AArqueo.Devoluciones;
-        Query.ParamByName('pT_VENTAS').AsCurrency := AArqueo.TotalVentas;
-        Query.ParamByName('pCODIGO').AsString    := sCodigo;
+        Query.ParamByName('pCODIGO').AsString := sCodigo;
+        if Query.FindParam('pTOTAL_PRESTAMOS_ARQ') <> nil then
+          Query.ParamByName('pTOTAL_PRESTAMOS_ARQ').AsCurrency :=
+            AArqueo.Prestamos;
+        if Query.FindParam('pTOTAL_VENTAS_NORMALES_ARQ') <> nil then
+          Query.ParamByName('pTOTAL_VENTAS_NORMALES_ARQ').AsCurrency :=
+            AArqueo.VentasNormales;
+        if Query.FindParam('pTOTAL_VENTAS_PRESTAMOS_ARQ') <> nil then
+          Query.ParamByName('pTOTAL_VENTAS_PRESTAMOS_ARQ').AsCurrency :=
+            AArqueo.VentasPrestamos;
+        if Query.FindParam('pTOTAL_DEVOLUCIONES_ARQ') <> nil then
+          Query.ParamByName('pTOTAL_DEVOLUCIONES_ARQ').AsCurrency :=
+            AArqueo.Devoluciones;
+        if Query.FindParam('pTOTAL_VENTAS_ARQ') <> nil then
+          Query.ParamByName('pTOTAL_VENTAS_ARQ').AsCurrency :=
+            AArqueo.TotalVentas;
+        if Query.FindParam('pTOTAL_RECUENTO_ARQ') <> nil then
+          Query.ParamByName('pTOTAL_RECUENTO_ARQ').AsCurrency :=
+            ATotalRecuento;
+        if Query.FindParam('pDIFERENCIA_TOTAL_ARQ') <> nil then
+          Query.ParamByName('pDIFERENCIA_TOTAL_ARQ').AsCurrency :=
+            ADiferenciaTotal;
+        if Query.FindParam('pEFECTIVO_DEJADO_CAJA_ARQ') <> nil then
+          Query.ParamByName('pEFECTIVO_DEJADO_CAJA_ARQ').AsCurrency :=
+            AEfectivoDejado;
         Query.Execute;
       finally
         FreeAndNil(Query);
       end;
-    except
-      { Columnas opcionales: si no existen aún se ignora el error }
     end;
 
     { -- Detalle por forma de pago ------------------------------------------ }
