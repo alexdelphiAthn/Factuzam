@@ -275,6 +275,7 @@ type
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqrySesionLinAfterPostHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeInsertHook(DataSet: TDataSet);
+    procedure unqrySesionLinAfterInsertHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterDeleteHook(DataSet: TDataSet);
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
@@ -387,6 +388,7 @@ begin
     // de todas las lineas desde la cache de SESCEL.
     unqrySesionLin.AfterPost    := unqrySesionLinAfterPostHook;
     unqrySesionLin.BeforeInsert := unqrySesionLinBeforeInsertHook;
+    unqrySesionLin.AfterInsert  := unqrySesionLinAfterInsertHook;
     unqrySesionLin.BeforeDelete := unqrySesionLinBeforeDeleteHook;
     unqrySesionLin.AfterDelete  := unqrySesionLinAfterDeleteHook;
     if not unqrySesionLin.Active then unqrySesionLin.Open;
@@ -459,6 +461,17 @@ begin
     Dmm.unqryTablaG.Post;
   if Dmm.unqryTablaG.State = dsBrowse then
     Dmm.unqryTablaG.Edit;
+end;
+
+procedure TfrmMtoComprasSesiones.unqrySesionLinAfterInsertHook(
+  DataSet: TDataSet);
+begin
+  // Delegar al handler del DM (asigna FKs y numero de linea)
+  Dmm.unqrySesionLinAfterInsert(DataSet);
+  // Foco en codigo de articulo
+  tvLineas.Controller.FocusedColumn := dbcLinCodArt;
+  if tvLineas.Controller.EditingController <> nil then
+    tvLineas.Controller.EditingController.ShowEdit;
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinBeforeDeleteHook(

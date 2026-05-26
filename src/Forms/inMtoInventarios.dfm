@@ -288,10 +288,11 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Height = 30
                   Caption = '+ A'#241'adir l'#237'nea'
                   TabOrder = 0
+                  Visible = False
                   OnClick = btnAnadirLineaClick
                 end
                 object btnAnadirSkusArt: TcxButton
-                  Left = 143
+                  Left = 7
                   Top = 11
                   Width = 170
                   Height = 30
@@ -311,10 +312,11 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Height = 30
                   Caption = '- Eliminar l'#237'nea'
                   TabOrder = 2
+                  Visible = False
                   OnClick = btnEliminarLineaClick
                 end
                 object btnRecalcularDetalle: TcxButton
-                  Left = 479
+                  Left = 183
                   Top = 11
                   Width = 200
                   Height = 30
@@ -323,7 +325,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   OnClick = btnRecalcularDetalleClick
                 end
                 object btnCargarExcel: TcxButton
-                  Left = 685
+                  Left = 389
                   Top = 11
                   Width = 130
                   Height = 30
@@ -332,7 +334,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   OnClick = btnCargarExcelClick
                 end
                 object btnExportarInv: TcxButton
-                  Left = 821
+                  Left = 525
                   Top = 11
                   Width = 140
                   Height = 30
@@ -341,7 +343,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   OnClick = btnExportarInvClick
                 end
                 object btnIraArticulo: TcxButton
-                  Left = 967
+                  Left = 671
                   Top = 11
                   Width = 130
                   Height = 30
@@ -372,6 +374,15 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 Align = alClient
                 TabOrder = 1
                 object tvLineas: TcxGridDBTableView
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Buttons.PriorPage.Visible = False
+                  Navigator.Buttons.NextPage.Visible = False
+                  Navigator.Buttons.Append.Visible = False
+                  Navigator.Buttons.Edit.Visible = False
+                  Navigator.Buttons.SaveBookmark.Visible = False
+                  Navigator.Buttons.GotoBookmark.Visible = False
+                  Navigator.Buttons.Filter.Visible = False
+                  Navigator.Visible = True
                   OnCustomDrawCell = tvLineasCustomDrawCell
                   OnEditing = tvLineasEditing
                   OnEditKeyDown = tvLineasEditKeyDown
