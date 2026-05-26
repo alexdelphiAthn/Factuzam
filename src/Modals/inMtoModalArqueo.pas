@@ -710,12 +710,19 @@ begin
        FormatFloat(',0.00', AArqueo.EfectivoSalidas),
        FormatFloat(',0.00', AArqueo.EfectivoAnterior)]);
   { Grid de otras formas de pago (solo las NO efectivo) }
+  Log.LogInfo(Format('CargarRecuento: PagosPorForma=%d filas',
+    [Length(AArqueo.PagosPorForma)]));
   tvRecuento.BeginUpdate;
   try
     tvRecuento.DataController.RecordCount := 0;
     iRow := 0;
     for i := 0 to High(AArqueo.PagosPorForma) do
     begin
+      Log.LogInfo(Format('  FP[%d]: %s (%s) EsEfectivo=%s Importe=%.2f',
+        [i, AArqueo.PagosPorForma[i].Codigo,
+         AArqueo.PagosPorForma[i].Descripcion,
+         BoolToStr(AArqueo.PagosPorForma[i].EsEfectivo, True),
+         Double(AArqueo.PagosPorForma[i].Importe)]));
       if AArqueo.PagosPorForma[i].EsEfectivo then
         Continue;
       tvRecuento.DataController.RecordCount := iRow + 1;
