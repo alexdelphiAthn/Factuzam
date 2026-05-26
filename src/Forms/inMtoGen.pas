@@ -175,6 +175,7 @@ type
     procedure PopMenuColumnaClick(Sender: TObject);
     procedure PopMenuNuevaGuiaClick(Sender: TObject);
     procedure BorrarGuiasGrid;
+    procedure AplicarGuiasGrid(AQuery: TUniQuery);
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
@@ -990,12 +991,14 @@ begin
             inLibLog.Log.LogError(
               '[AbrirDetalles] ' + Self.Name + ': ' + E.Message);
         end;
-      // (b) Revincular grid solo si lo soltamos antes (yaActiva = False).
+      // (b) Enriquecer query con guias de grid (LEFT JOIN runtime)
+      AplicarGuiasGrid(unqry);
+      // (c) Revincular grid solo si lo soltamos antes (yaActiva = False).
       // Si la query ya estaba activa al entrar, dsTablaG.DataSet sigue
       // apuntando al original y no tocamos.
       if (not yaActiva) and Assigned(dsTablaG) and Assigned(unqry) then
         dsTablaG.DataSet := unqry;
-      // (c) Reactivar TDataSource del DM (los hayamos desactivado o no
+      // (d) Reactivar TDataSource del DM (los hayamos desactivado o no
       // en AbrirDetalles) y disparar AfterScroll del stock.
       if Assigned(dmDat) then
         try
@@ -1039,6 +1042,8 @@ begin
       // llamarlo aqui para que ShowMto(...,'<busqueda>') muestre las
       // lineas/celdas tras Locate sobre el master.
       dmDat.AbrirDetalles;
+      // Enriquecer con guias de grid (LEFT JOIN runtime)
+      AplicarGuiasGrid(unqry);
       inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
         sw.ElapsedMilliseconds);
     except
@@ -1239,6 +1244,83 @@ begin
   // Invalidar cache para que la proxima apertura no use guias borradas
   if oInfGuiasCache <> nil then
     oInfGuiasCache.Invalidar;
+end;
+
+procedure TfrmMtoGen.AplicarGuiasGrid(AQuery: TUniQuery);
+var
+  guiaResult: TGridGuiaResult;
+  i: Integer;
+  col: TcxGridDBColumn;
+  sField: string;
+  bYaExiste: Boolean;
+  j: Integer;
+begin
+  if AQuery = nil then
+    Exit;
+  guiaResult := EnriquecerQueryConGuias(Self.Name, AQuery);
+  try
+    if not guiaResult.Exito then
+    begin
+      FreeAndNil(guiaResult.CamposNuevos);
+      Exit;
+    end;
+    if guiaResult.CamposNuevos.Count = 0 then
+    begin
+      FreeAndNil(guiaResult.CamposNuevos);
+      Exit;
+    end;
+    FSqlOriginalTablaG := guiaResult.SqlOriginal;
+    // Reabrir query con SQL enriquecido
+    try
+      AQuery.Open;
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogError(
+          'AplicarGuiasGrid: error al reabrir query: ' + E.Message);
+        FreeAndNil(guiaResult.CamposNuevos);
+        Exit;
+      end;
+    end;
+    // Crear columnas dinamicas en el grid para los campos nuevos
+    cxGrdDBTabPrin.BeginUpdate;
+    try
+      for i := 0 to guiaResult.CamposNuevos.Count - 1 do
+      begin
+        sField := guiaResult.CamposNuevos[i];
+        // No duplicar si ya existe
+        bYaExiste := False;
+        for j := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+          if SameText(
+            (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
+              .DataBinding.FieldName, sField) then
+          begin
+            bYaExiste := True;
+            Break;
+          end;
+        if bYaExiste then
+          Continue;
+        col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
+        col.DataBinding.FieldName := sField;
+        col.Caption := sField;
+        // Por defecto ocultas; el perfil las mostrara si el usuario
+        // las activo previamente con Alt+F12
+        col.Visible := False;
+      end;
+    finally
+      cxGrdDBTabPrin.EndUpdate;
+    end;
+    // Re-aplicar perfil para que las columnas de guia recuperen
+    // visibilidad/ancho/caption guardados por el usuario
+    if oPerfilDic <> nil then
+      PonerAnchosTitulos(cxGrdDBTabPrin, Self.Name, oPerfilDic);
+    // Guardar lista de campos guia para limpieza
+    FreeAndNil(FCamposGuia);
+    FCamposGuia := TStringList.Create;
+    FCamposGuia.Assign(guiaResult.CamposNuevos);
+  finally
+    FreeAndNil(guiaResult.CamposNuevos);
+  end;
 end;
 
 // ============================================================================
