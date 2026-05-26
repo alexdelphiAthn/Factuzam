@@ -569,42 +569,45 @@ begin
     end;
   end;
 
-  if oCajaParams.GetBool('vgerChkStockOnly', False) then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := oConn;
-      if Trim(FCodigoAlmacen) <> '' then
+  // Comprobar stock: si vgerChkStockOnly=True bloquea la venta;
+  // si es False, avisa pero deja continuar
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    if Trim(FCodigoAlmacen) <> '' then
+    begin
+      qry.SQL.Text :=
+        'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
+        '  FROM fza_articulos_stockactual ' +
+        ' WHERE CODIGO_UNIDAD_STK = :SKU ' +
+        '   AND CODIGO_ALM_STK    = :ALM';
+      qry.ParamByName('SKU').AsString := SkuLimpio;
+      qry.ParamByName('ALM').AsString := FCodigoAlmacen;
+    end
+    else
+    begin
+      qry.SQL.Text :=
+        'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
+        '  FROM fza_articulos_stockactual ' +
+        ' WHERE CODIGO_UNIDAD_STK = :SKU';
+      qry.ParamByName('SKU').AsString := SkuLimpio;
+    end;
+    qry.Open;
+    Cantidad := qry.FieldByName('QTY').AsFloat;
+    if Cantidad <= 0 then
+    begin
+      MensajeStock := oCajaParams.GetString('vgerAvisoStockWarning',
+        'Artículo sin stock. Compruebe stock en almacén.');
+      ShowMessage(MensajeStock);
+      // Si vgerChkStockOnly=True, bloquear la venta
+      if oCajaParams.GetBool('vgerChkStockOnly', False) then
       begin
-        qry.SQL.Text :=
-          'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
-          '  FROM fza_articulos_stockactual ' +
-          ' WHERE CODIGO_UNIDAD_STK = :SKU ' +
-          '   AND CODIGO_ALM_STK    = :ALM';
-        qry.ParamByName('SKU').AsString := SkuLimpio;
-        qry.ParamByName('ALM').AsString := FCodigoAlmacen;
-      end
-      else
-      begin
-        qry.SQL.Text :=
-          'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
-          '  FROM fza_articulos_stockactual ' +
-          ' WHERE CODIGO_UNIDAD_STK = :SKU';
-        qry.ParamByName('SKU').AsString := SkuLimpio;
-      end;
-      qry.Open;
-      Cantidad := qry.FieldByName('QTY').AsFloat;
-      if Cantidad <= 0 then
-      begin
-        MensajeStock := oCajaParams.GetString('vgerAvisoStockWarning',
-          'Artículo sin stock. Compruebe stock en almacén.');
-        ShowMessage(MensajeStock);
         Result := False;
         Exit;
       end;
-    finally
-      FreeAndNil(qry);
     end;
+  finally
+    FreeAndNil(qry);
   end;
 end;
 
