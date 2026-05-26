@@ -87,6 +87,7 @@ type
     mnuCajaOperacionesHist: TMenuItem;
     mnuDepositosCliente: TMenuItem;
     mnuFacturasSimplif: TMenuItem;
+    mnuCajaArqueosHist: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -102,6 +103,7 @@ type
     procedure mnuCajaPagosHistClick(Sender: TObject);
     procedure mnuCajaValesHistClick(Sender: TObject);
     procedure mnuCajaOperacionesHistClick(Sender: TObject);
+    procedure mnuCajaArqueosHistClick(Sender: TObject);
     procedure FormasdePagoCaja1Click(Sender: TObject);
     procedure mnuFacturasSimplifClick(Sender: TObject);
     procedure Movimientosdealmacn1Click(Sender: TObject);
@@ -1353,6 +1355,12 @@ procedure TfrmMtoPrincipal.mnuCajaOperacionesHistClick(Sender: TObject);
 begin
   if (mnuCajaOperacionesHist.Visible) then
     ShowMto(Self, 'CajaOperacionesHist');
+end;
+
+procedure TfrmMtoPrincipal.mnuCajaArqueosHistClick(Sender: TObject);
+begin
+  if (mnuCajaArqueosHist.Visible) then
+    ShowMto(Self, 'CajaArqueosHist');
 end;
 
 procedure TfrmMtoPrincipal.Movimientosdealmacn1Click(Sender: TObject);

@@ -1,7 +1,7 @@
 inherited frmModalArqueo: TfrmModalArqueo
   Caption = 'Arqueo de caja'
-  ClientHeight = 510
-  ClientWidth = 880
+  ClientHeight = 560
+  ClientWidth = 920
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
@@ -808,6 +808,162 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
         end
       end
+      object tsRecuento: TcxTabSheet
+        Caption = 'Recuento'
+        object pnlRecuento: TPanel
+          Left = 8
+          Top = 8
+          Width = 896
+          Height = 280
+          BevelInner = bvLowered
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 0
+          object lblRecuentoTit: TcxLabel
+            Left = 10
+            Top = 6
+            Caption = 'Recuento por forma de pago'
+            Style.TextColor = clNavy
+            TabOrder = 1
+            Transparent = True
+          end
+          object cxgrdRecuento: TcxGrid
+            Left = 8
+            Top = 30
+            Width = 880
+            Height = 240
+            TabOrder = 0
+            object tvRecuento: TcxGridTableView
+              OnEditValueChanged = tvRecuentoImportePropertiesEditValueChanged
+              OptionsBehavior.IncSearch = True
+              OptionsBehavior.FocusCellOnTab = True
+              OptionsData.Appending = False
+              OptionsData.Deleting = False
+              OptionsData.Inserting = False
+              OptionsView.GroupByBox = False
+              object tvRecuentoFP: TcxGridColumn
+                Caption = 'C'#243'digo'
+                Options.Editing = False
+                Width = 80
+              end
+              object tvRecuentoDesc: TcxGridColumn
+                Caption = 'Forma de pago'
+                Options.Editing = False
+                Width = 220
+              end
+              object tvRecuentoSistema: TcxGridColumn
+                Caption = 'Importe sistema'
+                Options.Editing = False
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 160
+              end
+              object tvRecuentoImporte: TcxGridColumn
+                Caption = 'Importe recontado'
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 160
+              end
+              object tvRecuentoDiferencia: TcxGridColumn
+                Caption = 'Diferencia'
+                Options.Editing = False
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 140
+              end
+            end
+            object lvRecuento: TcxGridLevel
+              GridView = tvRecuento
+            end
+          end
+        end
+        object pnlRecuentoTotales: TPanel
+          Left = 8
+          Top = 296
+          Width = 896
+          Height = 90
+          BevelInner = bvLowered
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 1
+          object lblRecTotalSistemaLbl: TcxLabel
+            Left = 16
+            Top = 10
+            Caption = 'Total sistema:'
+            TabOrder = 0
+            Transparent = True
+          end
+          object lblRecTotalSistema: TcxLabel
+            Left = 200
+            Top = 10
+            AutoSize = False
+            Properties.Alignment.Horz = taRightJustify
+            TabOrder = 1
+            Transparent = True
+            Height = 21
+            Width = 160
+            AnchorX = 360
+          end
+          object lblRecTotalRecuentoLbl: TcxLabel
+            Left = 380
+            Top = 10
+            Caption = 'Total recontado:'
+            TabOrder = 2
+            Transparent = True
+          end
+          object lblRecTotalRecuento: TcxLabel
+            Left = 560
+            Top = 10
+            AutoSize = False
+            Properties.Alignment.Horz = taRightJustify
+            TabOrder = 3
+            Transparent = True
+            Height = 21
+            Width = 160
+            AnchorX = 720
+          end
+          object lblRecDiferenciaLbl: TcxLabel
+            Left = 740
+            Top = 10
+            Caption = 'Diferencia:'
+            TabOrder = 4
+            Transparent = True
+          end
+          object lblRecDiferencia: TcxLabel
+            Left = 740
+            Top = 34
+            AutoSize = False
+            Style.Font.Size = 12
+            Style.Font.Style = [fsBold]
+            Properties.Alignment.Horz = taRightJustify
+            TabOrder = 5
+            Transparent = True
+            Height = 28
+            Width = 150
+            AnchorX = 890
+          end
+          object lblObservacionesLbl: TcxLabel
+            Left = 16
+            Top = 42
+            Caption = 'Observaciones:'
+            TabOrder = 6
+            Transparent = True
+          end
+          object txtObservaciones: TcxTextEdit
+            Left = 130
+            Top = 40
+            Properties.MaxLength = 500
+            TabOrder = 7
+            Width = 580
+          end
+          object btnGrabarArqueo: TcxButton
+            Left = 730
+            Top = 56
+            Width = 160
+            Height = 30
+            Caption = 'Grabar Arqueo (F2)'
+            TabOrder = 8
+            OnClick = btnGrabarArqueoClick
+          end
+        end
+      end
     end
   end
   object pnlBottom: TPanel [2]
@@ -857,6 +1013,11 @@ inherited frmModalArqueo: TfrmModalArqueo
       Caption = 'Imprimir'
       ShortCut = 122
       OnExecute = actImprimirExecute
+    end
+    object actGrabar: TAction
+      Caption = 'Grabar'
+      ShortCut = 113
+      OnExecute = actGrabarExecute
     end
   end
   object dsResEmpleado: TDataSource
