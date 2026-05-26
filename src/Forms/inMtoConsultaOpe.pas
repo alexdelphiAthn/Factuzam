@@ -132,8 +132,8 @@ implementation
 
 {$R *.dfm}
 
-uses inLibtb, inLibGenerarTicketBD, inLibGlobalVar, inLibLog,
-     inLibFotos, inMtoFotoArticulo;
+uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
+     inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -380,7 +380,9 @@ begin
     pcHijos.ActivePage := tsOperacion;
 
   btnReimprimir.Enabled :=
-    FdmConsulta.TieneFactura or FdmConsulta.TieneDepositos;
+    FdmConsulta.TieneFactura
+    or FdmConsulta.TieneDepositos
+    or FdmConsulta.EsOperacionCaja;
 end;
 
 // -----------------------------------------------------------------------------
@@ -436,9 +438,14 @@ begin
     ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
   if FdmConsulta.TieneDepositos then
     ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
-  if (not FdmConsulta.TieneFactura) and (not FdmConsulta.TieneDepositos) then
+  if FdmConsulta.EsOperacionCaja then
+    ImprimirTicketOperacionCaja(sEmp, sAlm, sCaja, sNumOp,
+                                oNomImpresoraCaja);
+  if (not FdmConsulta.TieneFactura)
+     and (not FdmConsulta.TieneDepositos)
+     and (not FdmConsulta.EsOperacionCaja) then
   begin
-    ShowMessage('Esta operacion no tiene ticket ni deposito asociado.');
+    ShowMessage('Esta operación no tiene ticket asociado.');
     Exit;
   end;
   if Trim(sCliente) <> '' then

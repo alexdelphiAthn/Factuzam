@@ -93,6 +93,7 @@ type
     function  TieneCliente:     Boolean;
     function  TieneDepositos:   Boolean;
     function  TieneFactura:     Boolean;
+    function  EsOperacionCaja: Boolean;
   private
     procedure AbrirSeguro(q: TUniQuery; const sNombre: string);
   end;
@@ -613,6 +614,17 @@ end;
 function TdmConsultaOpe.TieneFactura: Boolean;
 begin
   Result := qryFactura.Active and (not qryFactura.IsEmpty);
+end;
+
+function TdmConsultaOpe.EsOperacionCaja: Boolean;
+var
+  sTipos: string;
+begin
+  Result := False;
+  if qryMaestro.IsEmpty then
+    Exit;
+  sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
+  Result := (Pos('EC', sTipos) > 0) or (Pos('GC', sTipos) > 0);
 end;
 
 end.
