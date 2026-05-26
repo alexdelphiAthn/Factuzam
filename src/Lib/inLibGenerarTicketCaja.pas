@@ -83,7 +83,6 @@ begin
   Ticket := TTicketTermico.Create(ANombreImpresora);
   try
     Ticket.Inicializar;
-    Ticket.SaltarLineas(1);
     { Título }
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
@@ -95,30 +94,22 @@ begin
     Ticket.TextoColumnas('Fecha:', sFecha);
     Ticket.TextoColumnas('Caja:', ACaja);
     Ticket.TextoColumnas('Empleado:', sEmpleado);
-    Ticket.TextoColumnas('Operación:', ANumOperacion);
-    Ticket.LineaSeparadora;
+    Ticket.TextoColumnas('Op.:', ANumOperacion);
     if sConcepto <> '' then
-    begin
-      Ticket.EscribirLinea('Concepto:');
-      Ticket.EscribirLinea('  ' + sConcepto);
-      Ticket.LineaSeparadora;
-    end;
+      Ticket.TextoColumnas('Concepto:', sConcepto);
+    Ticket.LineaSeparadora;
     { Importe }
-    Ticket.SaltarLineas(1);
     Ticket.Negrita(True);
-    Ticket.TamanoDoble(True, True);
-    Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea(FormatFloat(',0.00', dImporte) + ' EUR');
-    Ticket.TamanoDoble(False, False);
+    Ticket.TextoColumnas('IMPORTE:',
+      FormatFloat(',0.00', dImporte) + ' EUR');
     Ticket.Negrita(False);
-    Ticket.SaltarLineas(1);
     Ticket.LineaSeparadora;
     { Pie }
     Ticket.Alinear(alCentro);
     Ticket.EscribirLinea('Firma:');
-    Ticket.SaltarLineas(3);
-    Ticket.LineaSeparadora('.');
     Ticket.SaltarLineas(2);
+    Ticket.LineaSeparadora('.');
+    Ticket.SaltarLineas(1);
     Ticket.CortarPapel;
     { Imprimir o previsualizar }
     ComandosESC := Ticket.ObtenerComandos;
