@@ -174,6 +174,7 @@ type
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
     procedure PopMenuNuevaGuiaClick(Sender: TObject);
+    procedure BorrarGuiasGrid;
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
@@ -640,6 +641,8 @@ begin
                                                      sPermisos);
       end;
     end;
+    // Borrar guias de grid asociadas al layout
+    BorrarGuiasGrid;
   end;
 end;
 
@@ -1216,6 +1219,26 @@ begin
   inLibLog.Log.LogPerf(Self.Name + '.FormCreate',
     'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
     swTotal.ElapsedMilliseconds);
+end;
+
+procedure TfrmMtoGen.BorrarGuiasGrid;
+var
+  qry: TUniQuery;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'DELETE FROM fza_informes_guias ' +
+      ' WHERE INFORME_INFGUI = :INF';
+    qry.ParamByName('INF').AsString := 'GRID:' + Self.Name;
+    qry.Execute;
+  finally
+    FreeAndNil(qry);
+  end;
+  // Invalidar cache para que la proxima apertura no use guias borradas
+  if oInfGuiasCache <> nil then
+    oInfGuiasCache.Invalidar;
 end;
 
 // ============================================================================
