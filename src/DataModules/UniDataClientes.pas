@@ -264,6 +264,10 @@ end;
 procedure TdmClientes.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('RAZON_SOCIAL_CLI').AsString) = '') then
+    Abort;
   (* if ((unqryRetenciones.State = dsInsert) or
       (unqryRetenciones.State = dsEdit)) then
          unqryRetenciones.Post; *)

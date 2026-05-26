@@ -701,6 +701,10 @@ end;
 procedure TdmArticulos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString) = '') then
+    Abort;
   with unqryTablaG do
   begin
     var sDescripcion := Trim(FindField('DESCRIPCION_ART').AsString);

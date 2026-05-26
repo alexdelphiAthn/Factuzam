@@ -53,6 +53,10 @@ end;
 procedure TdmCajaFormasPago.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('DESCRIPCION_FORMA_PAGO_CFP').AsString) = '') then
+    Abort;
   with unqryTablaG do
   begin
     if Trim(FindField('CODIGO_FP_CFP').AsString) = '' then

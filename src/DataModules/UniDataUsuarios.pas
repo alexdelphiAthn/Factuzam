@@ -88,6 +88,10 @@ var
   bError:Boolean;
 begin
   inherited;
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('USUARIO_USU').AsString) = '') then
+    Abort;
   bError := False;
   with unqryTablaG do
   begin

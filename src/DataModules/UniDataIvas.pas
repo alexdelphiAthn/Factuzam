@@ -72,6 +72,10 @@ var
   unqrySol: TUniQuery;
 begin
   inherited;
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('CODIGO_IVA').AsString) = '') then
+    Abort;
   bError := False;
   with unqryTablaG do
   begin
