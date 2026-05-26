@@ -97,6 +97,7 @@ type
   procedure CancelarDatasets(AModule: TDataModule);
   procedure GrabarDatasets(AModule: TDataModule);
   function ObtenerClavePrimaria(ADataSet: TDataSet): string;
+  function ExtraerTablaDeSQL(const aSQL: string): string;
   function StrToKeyValues(const S: string; const FieldNames: string): Variant;
   function KeyValuesToStr(const V: Variant): string;
 
@@ -167,35 +168,88 @@ begin
   end;
 end;
 
+function ExtraerTablaDeSQL(const aSQL: string): string;
+var
+  sUp: string;
+  iFrom, iEnd, i: Integer;
+begin
+  Result := '';
+  sUp := UpperCase(Trim(aSQL));
+  iFrom := Pos('FROM ', sUp);
+  if iFrom = 0 then
+    iFrom := Pos('FROM'#9, sUp);
+  if iFrom = 0 then
+    Exit;
+  i := iFrom + 5;
+  while (i <= Length(sUp)) and (sUp[i] <= ' ') do
+    Inc(i);
+  iEnd := i;
+  while (iEnd <= Length(sUp)) and
+        not (sUp[iEnd] in [' ', #13, #10, #9, '(', ',', ';']) do
+    Inc(iEnd);
+  Result := Trim(Copy(aSQL, i, iEnd - i));
+  if (Length(Result) >= 2) and (Result[1] = '`') then
+    Result := Copy(Result, 2, Length(Result) - 2);
+end;
+
 function ObtenerClavePrimaria(ADataSet: TDataSet): string;
 var
   i: Integer;
+  sTabla: string;
+  qry: TUniQuery;
 begin
   Result := '';
   if not Assigned(ADataSet) or not ADataSet.Active then
     Exit;
-  // 1. Intento nativo UniDAC: Comprobamos si el dataset es de la familia Devart
-  // y si tiene la propiedad KeyFields asignada manualmente en el componente.
+  // 1. Intento nativo UniDAC: KeyFields asignado manualmente
   if ADataSet is TUniQuery then
   begin
     Result := TUniQuery(ADataSet).KeyFields;
-
-    // UniDAC suele separar las claves compuestas con punto y coma, igual que
-    // cxGrid.
     if Result <> '' then
       Exit;
   end;
+  // 2. ProviderFlags: campos marcados como clave primaria
   for i := 0 to ADataSet.FieldCount - 1 do
   begin
-    // Si el campo está marcado como clave primaria en los metadatos
     if pfInKey in ADataSet.Fields[i].ProviderFlags then
     begin
-      // Si ya hay un campo (clave compuesta), añadimos el separador de
-      // DevExpress
       if Result <> '' then
         Result := Result + ';';
-
       Result := Result + ADataSet.Fields[i].FieldName;
+    end;
+  end;
+  if Result <> '' then
+    Exit;
+  // 3. Fallback: consultar information_schema por la PK de la tabla
+  if (ADataSet is TUniQuery) and
+     Assigned(TUniQuery(ADataSet).Connection) then
+  begin
+    // Extraer nombre de tabla del SQL (busca FROM xxx)
+    sTabla := ExtraerTablaDeSQL(TUniQuery(ADataSet).SQL.Text);
+    if sTabla = '' then
+      Exit;
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := TUniQuery(ADataSet).Connection;
+      qry.SQL.Text :=
+        'SELECT COLUMN_NAME ' +
+        '  FROM information_schema.KEY_COLUMN_USAGE ' +
+        ' WHERE TABLE_SCHEMA = database() ' +
+        '   AND TABLE_NAME = :TAB ' +
+        '   AND CONSTRAINT_NAME = ''PRIMARY'' ' +
+        ' ORDER BY ORDINAL_POSITION';
+      qry.ParamByName('TAB').AsString := sTabla;
+      qry.Open;
+      while not qry.Eof do
+      begin
+        if Result <> '' then
+          Result := Result + ';';
+        Result := Result + qry.FieldByName('COLUMN_NAME').AsString;
+        qry.Next;
+      end;
+      qry.Close;
+    finally
+      FreeAndNil(qry);
     end;
   end;
 end;
