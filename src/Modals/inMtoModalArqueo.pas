@@ -728,11 +728,12 @@ begin
       tvRecuento.DataController.Values[
         iRow, tvRecuentoSistema.Index] :=
         Double(AArqueo.PagosPorForma[i].Importe);
+      // Pre-rellenar con el importe del sistema para avisar del recuento
       tvRecuento.DataController.Values[
-        iRow, tvRecuentoImporte.Index] := Double(0);
+        iRow, tvRecuentoImporte.Index] :=
+        Double(AArqueo.PagosPorForma[i].Importe);
       tvRecuento.DataController.Values[
-        iRow, tvRecuentoDiferencia.Index] :=
-        Double(0) - Double(AArqueo.PagosPorForma[i].Importe);
+        iRow, tvRecuentoDiferencia.Index] := Double(0);
       Inc(iRow);
     end;
   finally
