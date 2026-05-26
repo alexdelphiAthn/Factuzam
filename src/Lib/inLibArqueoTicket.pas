@@ -665,12 +665,8 @@ begin
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
-    Ticket.TamanoDoble(True, False);
-    Ticket.EscribirLinea('CIERRE DE CAJA');
-    Ticket.TamanoDoble(False, False);
-    Ticket.EscribirLinea(Format('CAJA %s', [AArqueo.Caja]));
+    Ticket.EscribirLinea('CIERRE DE CAJA ' + AArqueo.Caja);
     Ticket.Negrita(False);
-    Ticket.SaltarLineas(1);
     { Datos del cierre }
     Ticket.Alinear(alIzquierda);
     Ticket.TextoColumnas('Inicio:',
@@ -731,16 +727,14 @@ begin
     Ticket.Negrita(True);
     Ticket.EscribirLinea('RECUENTO');
     Ticket.Negrita(False);
+    Ticket.TextoColumnas('  Sist.   Rec.', 'Dif.');
     for i := 0 to High(ALineas) do
     begin
       Ticket.EscribirLinea(ALineas[i].Descripcion);
-      Ticket.TextoColumnas(
-        '  Sistema:',    FmtImp(ALineas[i].Sistema));
-      Ticket.TextoColumnas(
-        '  Recontado:',  FmtImp(ALineas[i].Recuento));
-      if ALineas[i].Diferencia <> 0 then
-        Ticket.TextoColumnas(
-          '  Diferencia:', FmtImp(ALineas[i].Diferencia));
+      Ticket.EscribirLinea(
+        '  ' + FmtImp(ALineas[i].Sistema) +
+        '  ' + FmtImp(ALineas[i].Recuento) +
+        '  ' + FmtImp(ALineas[i].Diferencia));
     end;
     Ticket.LineaSeparadora('=');
     { Totales }
@@ -749,14 +743,10 @@ begin
       FmtImp(ATotalSistema));
     Ticket.TextoColumnas('TOTAL RECONTADO:',
       FmtImp(ATotalRecuento));
-    Ticket.SaltarLineas(1);
-    Ticket.TamanoDoble(True, True);
-    Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea('DIF: ' + FmtImp(ADiferencia));
-    Ticket.TamanoDoble(False, False);
+    Ticket.TextoColumnas('DIFERENCIA:',
+      FmtImp(ADiferencia));
     Ticket.Negrita(False);
-    Ticket.Alinear(alIzquierda);
-    Ticket.SaltarLineas(1);
+    Ticket.LineaSeparadora;
     { Retirada }
     if ARetirada > 0 then
     begin
@@ -776,17 +766,15 @@ begin
       Ticket.LineaSeparadora;
       Ticket.EscribirLinea('Obs: ' + AObservaciones);
     end;
-    { Pie: fecha/hora + firma }
-    Ticket.SaltarLineas(1);
+    { Pie }
     Ticket.LineaSeparadora;
     Ticket.Alinear(alCentro);
     Ticket.EscribirLinea(
       FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
-    Ticket.SaltarLineas(1);
     Ticket.EscribirLinea('Firma:');
-    Ticket.SaltarLineas(3);
-    Ticket.LineaSeparadora('.');
     Ticket.SaltarLineas(2);
+    Ticket.LineaSeparadora('.');
+    Ticket.SaltarLineas(1);
     Ticket.CortarPapel;
     { Imprimir o previsualizar }
     ComandosESC := Ticket.ObtenerComandos;
