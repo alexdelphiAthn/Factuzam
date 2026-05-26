@@ -3009,6 +3009,12 @@ procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   if (Key = VK_F5) then
     btnF5.Click;
+  // Ctrl+F12 -> resetear layout
+  if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    ResetearLayout(Self.Name);
+    Key := 0;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);

@@ -223,10 +223,17 @@ procedure TfrmFotoArticulo.FormKeyDown(Sender: TObject; var Key: Word;
                                        Shift: TShiftState);
 begin
   inherited;
-  // Alt + F12 -> guardar geometria (igual patron que inMtoConsultaOpe).
-  if (Key = VK_F12) and (ssAlt in Shift) then
+  // Alt+F12 -> guardar geometria
+  if (Key = VK_F12) and (ssAlt in Shift) and not (ssCtrl in Shift) then
   begin
     GuardarLayout;
+    Key := 0;
+    Exit;
+  end;
+  // Ctrl+F12 -> resetear layout
+  if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    ResetearLayout(Self.Name);
     Key := 0;
     Exit;
   end;

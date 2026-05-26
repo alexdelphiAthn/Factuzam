@@ -1313,10 +1313,85 @@ begin
   ResolverArtSkuActivo(sArt, sSku);
   if sArt <> '' then
   begin
+<<<<<<< HEAD
     MostrarFotoFlotante(Self, sArt, sSku);
     if Assigned(frmFotoArticulo) then
       frmFotoArticulo.VincularDataSources(DataSourcesParaFoto,
                                           ResolverArtSkuActivo);
+=======
+    if (Key = VK_PRIOR) then
+    begin
+      nvNavegador.Buttons.Prior.Click;
+      Key := 0;
+    end
+    else if (Key = VK_NEXT) then
+    begin
+      nvNavegador.Buttons.Next.Click;
+      Key := 0;
+    end
+    else if (Key = VK_INSERT) then
+    begin
+      dsTablaG.DataSet.Insert;
+      Key := 0;
+    end
+    else if (Key = VK_HOME) then
+    begin
+      dsTablaG.DataSet.First;
+      Key := 0;
+    end
+    else if (Key = VK_END) then
+    begin
+      dsTablaG.DataSet.Last;
+      Key := 0;
+    end
+    else if (Key = VK_F2) then
+    begin
+      dsTablaG.DataSet.Edit;
+      Key := 0;
+    end;
+  end;
+  // Ctrl+F12 -> Resetear layout (equivalente al botón sbResetGrid)
+  if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    sbResetGridClick(nil);
+    Key := 0;
+    Exit;
+  end;
+  // F12 sin modificadores -> Post del registro
+  if (Key = VK_F12) and (Shift = []) then
+  begin
+    if (dsTablaG.State in [dsEdit, dsInsert]) then
+      dsTablaG.DataSet.Post;
+    Key := 0;
+  end;
+  // Ctrl + Alt + F -> Foto del articulo / SKU activo
+  if (Key = Ord('F')) and (ssCtrl in Shift) and (ssAlt in Shift) then
+  begin
+    var sArt: string := '';
+    var sSku: string := '';
+    ResolverArtSkuActivo(sArt, sSku);
+    if sArt <> '' then
+    begin
+      MostrarFotoFlotante(Self, sArt, sSku);
+      // Auto-refresh: la pantalla flotante se engancha a todos los
+      // DataSources que el Mto declara en DataSourcesParaFoto (por
+      // defecto solo dsTablaG; los Mtos con sub-grids sobreescriben
+      // para incluir tambien esos data sources).
+      if Assigned(frmFotoArticulo) then
+        frmFotoArticulo.VincularDataSources(DataSourcesParaFoto,
+                                            ResolverArtSkuActivo);
+    end;
+    Key := 0;
+  end;
+  // Ctrl + U -> Consulta de stock del articulo / SKU activo
+  if (Key = Ord('U')) and (ssCtrl in Shift) and (not (ssAlt in Shift)) then
+  begin
+    var sArt: string := '';
+    var sSku: string := '';
+    ResolverArtSkuActivo(sArt, sSku);
+    inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
+    Key := 0;
+>>>>>>> f989795a030bf2e6ed15be8121efde401814e7cd
   end;
 end;
 
