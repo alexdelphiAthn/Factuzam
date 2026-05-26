@@ -4,7 +4,7 @@ que hay en la primera factura. Me sale en un nuevo Mto, debería usar el primero
 - En artículos, líneas de venta, salen líneas duplicadas. **DESCARTADO: no hay duplicados reales**
 
 - No sale aviso en Caja en inMtoCajaOperaciones cuando hay un artículo sin stock debería mostrar el letrero de parámetros, pero no sale nada. EStá permitida la venta sin stock. **pendiente probar**
-- En Arqueos -> Recuento -> Otras formas de pago no se rellenan para avisar del recuento.
+- En Arqueos -> Recuento -> Otras formas de pago no se rellenan para avisar del recuento. **pendiente probar**
 - En arqueos -> Recuento-> hay muchos letreros que no caben bien o que se montan. 
 - La pantalla de visualizador de ticket térmico, añadir F8 imprimir Impresora F7 guardar pdf F6 guardar imagen(png) ESC Salir de la pantalla **pendiente probar**
 - F10 y F6 no funcionan en la pantalla de arqueos, deberían desplegar el desde y el hasta.... quitar label azules y poner entre paréntesis al lado de los label (F6)
