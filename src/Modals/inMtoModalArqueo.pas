@@ -2,17 +2,18 @@
 {                                                                              }
 {  Módulo:       inMtoModalArqueo                                              }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       17/05/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       26/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
 {    Pantalla F11 del menú de caja: arqueo (cierre Z) de un rango de fechas.   }
-{    En este primer paso es solo lectura: muestra los importes calculados      }
-{    por TArqueoCalculadora a partir de fza_caja_operaciones,                  }
-{    fza_caja_pagos, fza_caja_vales y fza_facturas_lineas.                     }
+{    Pestaña Arqueo/Resúmenes/Más datos: importes calculados (lectura).        }
+{    Pestaña Recuento: grid editable con una fila por forma de pago para       }
+{    que el usuario introduzca lo que ha contado. Botón Grabar Arqueo          }
+{    persiste en fza_caja_arqueos + fza_caja_arqueos_recuento.                 }
 {******************************************************************************}
 unit inMtoModalArqueo;
 
@@ -31,7 +32,8 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   Uni,
-  inMtoFrmBase, inLibArqueo, inLibArqueoTicket, Vcl.ComCtrls, dxCore,
+  inMtoFrmBase, inLibArqueo, inLibArqueoTicket, inLibArqueoPersistencia,
+  Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, JvComponentBase, JvEnterTab, cxLocalization;
 
 type
@@ -170,6 +172,29 @@ type
     lblSaldoLbl: TcxLabel;
     lblSaldo: TcxLabel;
 
+    // Pestaña Recuento
+    tsRecuento: TcxTabSheet;
+    pnlRecuento: TPanel;
+    lblRecuentoTit: TcxLabel;
+    cxgrdRecuento: TcxGrid;
+    tvRecuento: TcxGridTableView;
+    tvRecuentoFP: TcxGridColumn;
+    tvRecuentoDesc: TcxGridColumn;
+    tvRecuentoSistema: TcxGridColumn;
+    tvRecuentoImporte: TcxGridColumn;
+    tvRecuentoDiferencia: TcxGridColumn;
+    lvRecuento: TcxGridLevel;
+    pnlRecuentoTotales: TPanel;
+    lblRecTotalSistemaLbl: TcxLabel;
+    lblRecTotalSistema: TcxLabel;
+    lblRecTotalRecuentoLbl: TcxLabel;
+    lblRecTotalRecuento: TcxLabel;
+    lblRecDiferenciaLbl: TcxLabel;
+    lblRecDiferencia: TcxLabel;
+    txtObservaciones: TcxTextEdit;
+    lblObservacionesLbl: TcxLabel;
+    btnGrabarArqueo: TcxButton;
+
     // Pie
     btnAtras: TcxButton;
     lblESC: TcxLabel;
@@ -179,28 +204,38 @@ type
     actEscape: TAction;
     actRecalcular: TAction;
     actImprimir: TAction;
+    actGrabar: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAtrasClick(Sender: TObject);
     procedure btnRecalcularClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
+    procedure btnGrabarArqueoClick(Sender: TObject);
     procedure actEscapeExecute(Sender: TObject);
     procedure actRecalcularExecute(Sender: TObject);
     procedure actImprimirExecute(Sender: TObject);
+    procedure actGrabarExecute(Sender: TObject);
     procedure dteFechaDesdePropertiesChange(Sender: TObject);
     procedure dteFechaHastaPropertiesChange(Sender: TObject);
+    procedure tvRecuentoImportePropertiesEditValueChanged(
+      Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem);
   private
     FConn         : TUniConnection;
     FEmpresa      : string;
     FAlmacen      : string;
     FCaja         : string;
+    FArqueoActual : TArqueoCaja;
     procedure RellenarPantalla(const AArqueo: TArqueoCaja);
     procedure Recalcular;
     procedure ConfigurarResumenes;
     procedure RefrescarResumenes;
     procedure AbrirQryConParams(Q: TUniQuery);
     function  FormatImporte(AValor: Currency): string;
+    procedure CargarRecuento(const AArqueo: TArqueoCaja);
+    procedure RecalcularTotalesRecuento;
+    procedure GrabarArqueo;
   public
     class procedure Ejecutar(AOwner       : TComponent;
                              AConn        : TUniConnection;
@@ -330,18 +365,17 @@ end;
 // =============================================================================
 
 procedure TfrmModalArqueo.Recalcular;
-var
-  Datos: TArqueoCaja;
 begin
   Screen.Cursor := crHourGlass;
   try
-    Datos := TArqueoCalculadora.Calcular(FConn,
-                                         FEmpresa,
-                                         FAlmacen,
-                                         FCaja,
-                                         dteFechaDesde.Date,
-                                         dteFechaHasta.Date);
-    RellenarPantalla(Datos);
+    FArqueoActual := TArqueoCalculadora.Calcular(FConn,
+                                                  FEmpresa,
+                                                  FAlmacen,
+                                                  FCaja,
+                                                  dteFechaDesde.Date,
+                                                  dteFechaHasta.Date);
+    RellenarPantalla(FArqueoActual);
+    CargarRecuento(FArqueoActual);
     RefrescarResumenes;
   finally
     Screen.Cursor := crDefault;
@@ -581,12 +615,192 @@ end;
 
 function TfrmModalArqueo.FormatImporte(AValor: Currency): string;
 begin
-  // Estilo TPV: dos decimales con coma; vacío si es exactamente 0 para no
-  // pintar ceros por todas partes (como en la pantalla de referencia).
   if AValor = 0 then
     Result := ''
   else
     Result := FormatFloat(',0.00', AValor);
+end;
+
+// =============================================================================
+//   Recuento
+// =============================================================================
+
+procedure TfrmModalArqueo.CargarRecuento(const AArqueo: TArqueoCaja);
+var
+  i: Integer;
+begin
+  tvRecuento.BeginUpdate;
+  try
+    tvRecuento.DataController.RecordCount := 0;
+    tvRecuento.DataController.RecordCount := Length(AArqueo.PagosPorForma);
+    for i := 0 to High(AArqueo.PagosPorForma) do
+    begin
+      tvRecuento.DataController.Values[i, tvRecuentoFP.Index] :=
+        AArqueo.PagosPorForma[i].Codigo;
+      tvRecuento.DataController.Values[i, tvRecuentoDesc.Index] :=
+        AArqueo.PagosPorForma[i].Descripcion;
+      tvRecuento.DataController.Values[i, tvRecuentoSistema.Index] :=
+        Double(AArqueo.PagosPorForma[i].Importe);
+      tvRecuento.DataController.Values[i, tvRecuentoImporte.Index] :=
+        Double(0);
+      tvRecuento.DataController.Values[i, tvRecuentoDiferencia.Index] :=
+        Double(0) - Double(AArqueo.PagosPorForma[i].Importe);
+    end;
+  finally
+    tvRecuento.EndUpdate;
+  end;
+  RecalcularTotalesRecuento;
+end;
+
+procedure TfrmModalArqueo.RecalcularTotalesRecuento;
+var
+  i: Integer;
+  dSistema, dRecuento, dDif: Double;
+  v: Variant;
+begin
+  dSistema  := 0;
+  dRecuento := 0;
+  for i := 0 to tvRecuento.DataController.RecordCount - 1 do
+  begin
+    v := tvRecuento.DataController.Values[i, tvRecuentoSistema.Index];
+    if not VarIsNull(v) then
+      dSistema := dSistema + Double(v);
+    v := tvRecuento.DataController.Values[i, tvRecuentoImporte.Index];
+    if not VarIsNull(v) then
+      dRecuento := dRecuento + Double(v);
+  end;
+  dDif := dRecuento - dSistema;
+  lblRecTotalSistema.Caption  := FormatFloat(',0.00', dSistema);
+  lblRecTotalRecuento.Caption := FormatFloat(',0.00', dRecuento);
+  lblRecDiferencia.Caption    := FormatFloat(',0.00', dDif);
+  if dDif < 0 then
+    lblRecDiferencia.Style.TextColor := clRed
+  else if dDif > 0 then
+    lblRecDiferencia.Style.TextColor := clGreen
+  else
+    lblRecDiferencia.Style.TextColor := clWindowText;
+end;
+
+procedure TfrmModalArqueo.tvRecuentoImportePropertiesEditValueChanged(
+  Sender: TcxCustomGridTableView;
+  AItem: TcxCustomGridTableItem);
+var
+  iRow: Integer;
+  dSistema, dRecuento, dDif: Double;
+  v: Variant;
+begin
+  { Solo recalcular si se editó la columna de recuento }
+  if AItem <> tvRecuentoImporte then
+    Exit;
+  iRow := tvRecuento.DataController.FocusedRecordIndex;
+  if iRow < 0 then
+    Exit;
+  dSistema  := 0;
+  dRecuento := 0;
+  v := tvRecuento.DataController.Values[
+         iRow, tvRecuentoSistema.Index];
+  if not VarIsNull(v) then
+    dSistema := Double(v);
+  v := tvRecuento.DataController.Values[
+         iRow, tvRecuentoImporte.Index];
+  if not VarIsNull(v) then
+    dRecuento := Double(v);
+  dDif := dRecuento - dSistema;
+  tvRecuento.DataController.Values[
+    iRow, tvRecuentoDiferencia.Index] := dDif;
+  RecalcularTotalesRecuento;
+end;
+
+procedure TfrmModalArqueo.btnGrabarArqueoClick(Sender: TObject);
+begin
+  inherited;
+  actGrabarExecute(Sender);
+end;
+
+procedure TfrmModalArqueo.actGrabarExecute(Sender: TObject);
+begin
+  inherited;
+  GrabarArqueo;
+end;
+
+procedure TfrmModalArqueo.GrabarArqueo;
+var
+  Lineas: TArray<TArqueoRecuentoLinea>;
+  i: Integer;
+  dTotalRecuento, dDiferenciaTotal: Currency;
+  dTotalSistema: Currency;
+  sObs: string;
+  v: Variant;
+begin
+  if (FConn = nil) or (not FConn.Connected) then
+    Exit;
+  if tvRecuento.DataController.RecordCount = 0 then
+  begin
+    Application.MessageBox(
+      'No hay datos de recuento. Pulse Recalcular primero.',
+      'Aviso', MB_OK or MB_ICONWARNING);
+    Exit;
+  end;
+  if Application.MessageBox(
+       'Se va a grabar el arqueo con los importes recontados.' +
+       #13#10 +
+       'Las operaciones del rango quedarán marcadas.' +
+       #13#10#13#10 +
+       '¿Desea continuar?',
+       'Confirmar Arqueo',
+       MB_YESNO or MB_ICONQUESTION) <> IDYES then
+    Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    SetLength(Lineas, tvRecuento.DataController.RecordCount);
+    dTotalSistema  := 0;
+    dTotalRecuento := 0;
+    for i := 0 to High(Lineas) do
+    begin
+      Lineas[i].CodigoFP := VarToStr(
+        tvRecuento.DataController.Values[
+          i, tvRecuentoFP.Index]);
+      Lineas[i].Descripcion := VarToStr(
+        tvRecuento.DataController.Values[
+          i, tvRecuentoDesc.Index]);
+      if (i <= High(FArqueoActual.PagosPorForma)) and
+         FArqueoActual.PagosPorForma[i].EsEfectivo then
+        Lineas[i].EsCajon := 'S'
+      else
+        Lineas[i].EsCajon := 'N';
+      v := tvRecuento.DataController.Values[
+             i, tvRecuentoSistema.Index];
+      if not VarIsNull(v) then
+        Lineas[i].Sistema := Currency(Double(v))
+      else
+        Lineas[i].Sistema := 0;
+      v := tvRecuento.DataController.Values[
+             i, tvRecuentoImporte.Index];
+      if not VarIsNull(v) then
+        Lineas[i].Recuento := Currency(Double(v))
+      else
+        Lineas[i].Recuento := 0;
+      Lineas[i].Diferencia :=
+        Lineas[i].Recuento - Lineas[i].Sistema;
+      dTotalSistema  := dTotalSistema  + Lineas[i].Sistema;
+      dTotalRecuento := dTotalRecuento + Lineas[i].Recuento;
+    end;
+    dDiferenciaTotal := dTotalRecuento - dTotalSistema;
+    sObs := Trim(txtObservaciones.Text);
+    TArqueoPersistencia.GrabarArqueo(
+      FConn,
+      FArqueoActual,
+      Lineas,
+      dTotalRecuento,
+      dDiferenciaTotal,
+      sObs,
+      oUser);
+    Application.MessageBox(
+      'Arqueo grabado correctamente.',
+      'Información', MB_OK or MB_ICONINFORMATION);
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 initialization
