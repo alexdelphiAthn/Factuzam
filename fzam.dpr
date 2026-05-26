@@ -63,6 +63,7 @@ uses
   inMtoModalGenImp in 'src\Modals\inMtoModalGenImp.pas' {frmPrint},
   inMtoModalGenImpEle in 'src\Modals\inMtoModalGenImpEle.pas' {frmMtoModalGenImpEle},
   inMtoModalGenImpSave in 'src\Modals\inMtoModalGenImpSave.pas' {frmModalGenImpSave},
+  inMtoModalGuiasBase in 'src\Modals\inMtoModalGuiasBase.pas' {frmModalGuiasBase},
   inMtoModalInformesGuias in 'src\Modals\inMtoModalInformesGuias.pas' {frmModalInformesGuias},
   inMtoModalGridGuias in 'src\Modals\inMtoModalGridGuias.pas' {frmModalGridGuias},
   inMtoModalWizardEditar in 'src\Modals\inMtoModalWizardEditar.pas' {frmModalWizardEditar},
