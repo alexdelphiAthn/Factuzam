@@ -45,6 +45,7 @@ type
     ActionList1: TActionList;
     actGuardar: TAction;
     actSalir: TAction;
+    actGuardarLayout: TAction;
 
     procedure cxButtonEdit1PropertiesButtonClick(Sender: TObject;
                                                  AButtonIndex: Integer);
@@ -57,6 +58,7 @@ type
     procedure btnChangeIdClick(Sender: TObject);
     procedure actGuardarExecute(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
+    procedure actGuardarLayoutExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -81,6 +83,8 @@ type
                                const pUsuario,
                                pGrupo: string);
     procedure ConstruirInspector;
+    procedure GuardarLayout;
+    procedure RestaurarLayout;
     procedure GetTipoImpresionList(Sender: TJvCustomInspectorItem;
                                    Strings: TStrings);
     procedure GetImpresorasList(Sender: TJvCustomInspectorItem;
@@ -95,7 +99,7 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils, inLibCajaParam;
+  StrUtils, inLibCajaParam, inLibLayoutForm;
 
 // ----------------------------------------------------------------------
 // GESTIÓN DE MEMORIA Y CICLO DE VIDA
@@ -271,6 +275,46 @@ begin
 end;
 
 // ----------------------------------------------------------------------
+// LAYOUT (geometría + divider del inspector)
+// ----------------------------------------------------------------------
+
+procedure TfrmMtoCajaParam.GuardarLayout;
+var
+  Layout: TLayoutSaver;
+begin
+  Layout := TLayoutSaver.Create(Self.Name);
+  try
+    Layout.GuardarGeometria(Self);
+    Layout.GuardarDividerInspector('Divider', JvInspector1);
+    if Layout.PreguntarYGrabar('Personalización Parámetros Caja') then
+      ShowMessage('Layout guardado.');
+  finally
+    FreeAndNil(Layout);
+  end;
+end;
+
+procedure TfrmMtoCajaParam.RestaurarLayout;
+var
+  Layout: TLayoutLoader;
+begin
+  Layout := TLayoutLoader.Create(Self.Name);
+  try
+    if Layout.Disponible then
+    begin
+      Layout.RestaurarGeometria(Self);
+      Layout.RestaurarDividerInspector('Divider', JvInspector1);
+    end;
+  finally
+    FreeAndNil(Layout);
+  end;
+end;
+
+procedure TfrmMtoCajaParam.actGuardarLayoutExecute(Sender: TObject);
+begin
+  GuardarLayout;
+end;
+
+// ----------------------------------------------------------------------
 // CARGA Y GUARDADO (LÓGICA GENÉRICA)
 // ----------------------------------------------------------------------
 
@@ -428,6 +472,7 @@ begin
   cmbGrupoUsuario.ItemIndex := 0;
 
   btnChangeId.Visible := (oRootGroup = 'S');
+  RestaurarLayout;
 
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;

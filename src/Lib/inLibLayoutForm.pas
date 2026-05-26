@@ -59,6 +59,7 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, Vcl.ExtCtrls,
   cxGridDBTableView, cxGridCustomTableView,
+  JvInspector,          // TJvInspector (divider del inspector)
   inLibUser,            // TProfileDicc
   UniDataPerfiles;      // TPerfilList, TPerfilItem
 
@@ -83,6 +84,9 @@ type
                                   AMinimo: Integer = 30);
     procedure RestaurarGrid(const APrefijoClave: string;
                             AView: TcxGridDBTableView);
+    procedure RestaurarDividerInspector(const AClave: string;
+                                        AInspector: TJvInspector;
+                                        AMinimo: Integer = 100);
     property Disponible: Boolean read FDisponible;
   end;
 
@@ -103,6 +107,8 @@ type
     procedure GuardarAnchoPanel(const AClave: string; APanel: TPanel);
     procedure GuardarGrid(const APrefijoClave: string;
                           AView: TcxGridDBTableView);
+    procedure GuardarDividerInspector(const AClave: string;
+                                      AInspector: TJvInspector);
     function  PreguntarYGrabar(const ADescripcion: string): Boolean;
   end;
 
@@ -208,6 +214,18 @@ begin
   end;
 end;
 
+procedure TLayoutLoader.RestaurarDividerInspector(const AClave: string;
+  AInspector: TJvInspector; AMinimo: Integer);
+var
+  D: Integer;
+begin
+  if not FDisponible then
+    Exit;
+  D := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
+  if D > AMinimo then
+    AInspector.Divider := D;
+end;
+
 // =============================================================================
 // TLayoutSaver
 // =============================================================================
@@ -265,6 +283,12 @@ begin
     SetClave(APrefijoClave + '_Col_' + Col.DataBinding.FieldName,
              IntToStr(Col.Width));
   end;
+end;
+
+procedure TLayoutSaver.GuardarDividerInspector(const AClave: string;
+  AInspector: TJvInspector);
+begin
+  SetClave(AClave, IntToStr(AInspector.Divider));
 end;
 
 // Pregunta al usuario el perfil destino y graba TODAS las claves acumuladas
