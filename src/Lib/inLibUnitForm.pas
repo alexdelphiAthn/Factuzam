@@ -82,6 +82,8 @@ type
    function GetElement(sCall:string):TfzaForm;
    function GetShortCutListOrd:TList<integer>;
    function GetShortCutListString:string;
+   function Count: Integer;
+   function Item(AIndex: Integer): TfzaForm;
  end;
 
 
@@ -238,6 +240,16 @@ begin
   finally
     FreeAndNil(qrySol);
   end;
+end;
+
+function TfzaWinF.Count: Integer;
+begin
+  Result := FList.Count;
+end;
+
+function TfzaWinF.Item(AIndex: Integer): TfzaForm;
+begin
+  Result := FList[AIndex];
 end;
 
 constructor TfzaWinF.Create(Owner:TComponent);

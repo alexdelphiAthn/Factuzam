@@ -204,6 +204,7 @@ type
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
     procedure MostrarDetalleExcepcion(const ATexto: string);
     procedure CopiarExceptionDialogClick(Sender: TObject);
+    procedure AplicarPermisosMenu;
     function CopiaSeguridad: Boolean;
     procedure BackupProgress(const AEtapa: string;
                               APaso, ATotal: Integer);
@@ -463,6 +464,8 @@ begin
   jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis;
   jvStatusBar1.Panels[3].Text := oEmpresa + '\' + oAlmacen + '\' + oCaja;
   Self.Caption := oAppName + ' ' + oVersion;
+  // Aplicar permisos de menú: ocultar items sin acceso
+  AplicarPermisosMenu;
   // Visibilidad inicial del panel de monitor SQL: ya no la decide solo el
   // {$IFDEF DEBUG}. AplicarModosDepuracion la sincronizará con los flags
   // appModoDebug / appModoDebugSQL que acaba de cargar InicializarParametrosApp.
@@ -694,6 +697,26 @@ end;
 
 // validar iban online https://www.iban.com
 // validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
+
+procedure TfrmMtoPrincipal.AplicarPermisosMenu;
+var
+  i: Integer;
+  ofzaF: TfzaForm;
+begin
+  if (oPermisos = nil) or (not oPermisos.Cargada) then
+    Exit;
+  for i := 0 to oFzaWinf.Count - 1 do
+  begin
+    ofzaF := oFzaWinf.Item(i);
+    if (ofzaF.mnMenuItem <> nil) and
+       (not oPermisos.TienePermiso('menu.' + ofzaF.Call)) then
+    begin
+      ofzaF.mnMenuItem.Visible := False;
+      Log.LogInfo(Format('Permiso menu.%s denegado: menú oculto',
+        [ofzaF.Call]));
+    end;
+  end;
+end;
 
 procedure TfrmMtoPrincipal.BackupProgress(const AEtapa: string;
                                           APaso, ATotal: Integer);
