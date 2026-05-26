@@ -10,7 +10,10 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   Font.Height = -16
   Font.Name = 'Lucida Sans'
   Font.Style = []
+  KeyPreview = True
   OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   TextHeight = 18
   object Panel2: TPanel
@@ -170,6 +173,11 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Caption = 'actSalir'
       ShortCut = 27
       OnExecute = actSalirExecute
+    end
+    object actGuardarLayout: TAction
+      Caption = 'Guardar Layout'
+      ShortCut = 32891
+      OnExecute = actGuardarLayoutExecute
     end
   end
 end
