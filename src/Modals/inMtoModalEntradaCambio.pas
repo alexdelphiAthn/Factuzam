@@ -2,16 +2,15 @@
 {                                                                              }
 {  Módulo:       inMtoModalEntradaCambio                                       }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       2.0.0                                                         }
+{ Versión:       3.0.0                                                         }
 {   Fecha:       26/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Modal F6 del menú de caja: entrada de cambio (efectivo que se             }
-{    introduce en el cajón al inicio del turno o como refuerzo).               }
-{    Pide empleado (con búsqueda + etiqueta nombre), importe y concepto.       }
+{    Modal F6 del menú de caja: entrada de cambio. Campo empleado con          }
+{    búsqueda (...) igual que en operaciones de caja.                          }
 {******************************************************************************}
 unit inMtoModalEntradaCambio;
 
@@ -23,7 +22,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ActnList, System.Actions,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCurrencyEdit,
-  Uni,
+  cxButtonEdit, Uni,
   inMtoFrmBase;
 
 type
@@ -32,7 +31,7 @@ type
     pnlBotones: TPanel;
     lblTitulo: TcxLabel;
     lblEmpleadoLbl: TcxLabel;
-    txtEmpleado: TcxTextEdit;
+    btnEmpleado: TcxButtonEdit;
     lblEmpleadoNombre: TcxLabel;
     lblImporteLbl: TcxLabel;
     txtImporte: TcxCurrencyEdit;
@@ -46,13 +45,18 @@ type
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure txtEmpleadoPropertiesChange(Sender: TObject);
+    procedure btnEmpleadoPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
+    procedure btnEmpleadoPropertiesValidate(Sender: TObject;
+      var DisplayValue: Variant; var ErrorText: TCaption;
+      var Error: Boolean);
   private
     FConn: TUniConnection;
     FEmpresa: string;
     FAlmacen: string;
     FCaja: string;
-    procedure BuscarNombreEmpleado;
+    procedure BuscarEmpleados;
+    procedure ValidarEmpleado;
     procedure Grabar;
   public
     class function Ejecutar(AOwner: TComponent;
@@ -66,7 +70,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibGlobalVar, UniDataCaja, inLibGenerarTicketCaja;
+  inLibGlobalVar, UniDataCaja, inLibGenerarTicketCaja,
+  inMtoGenSearch, Data.DB;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -84,8 +89,8 @@ begin
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
-    frm.txtEmpleado.Text := oUser;
-    frm.BuscarNombreEmpleado;
+    frm.btnEmpleado.Text := oUser;
+    frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
       Result := True;
   finally
@@ -100,18 +105,60 @@ begin
   Position := poScreenCenter;
 end;
 
-procedure TfrmModalEntradaCambio.txtEmpleadoPropertiesChange(
-  Sender: TObject);
+procedure TfrmModalEntradaCambio.btnEmpleadoPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
 begin
-  BuscarNombreEmpleado;
+  BuscarEmpleados;
 end;
 
-procedure TfrmModalEntradaCambio.BuscarNombreEmpleado;
+procedure TfrmModalEntradaCambio.btnEmpleadoPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant;
+  var ErrorText: TCaption; var Error: Boolean);
+begin
+  ValidarEmpleado;
+end;
+
+procedure TfrmModalEntradaCambio.BuscarEmpleados;
+var
+  formulario: TfrmMtoSearch;
+  unqry: TUniQuery;
+begin
+  unqry := TUniQuery.Create(nil);
+  try
+    unqry.Connection := FConn;
+    unqry.SQL.Text :=
+      'SELECT CODIGO_EMPLEADO_USU AS `Código`,' +
+      '       DIMINUTIVO_TICKET_USU AS `Nombre`' +
+      '  FROM fza_usuarios' +
+      ' WHERE ESACTIVO_USU = ''S''' +
+      '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
+      ' ORDER BY CODIGO_EMPLEADO_USU';
+    formulario := TfrmMtoSearch.Create(nil);
+    try
+      formulario.Caption := 'Búsqueda de Empleados';
+      formulario.dsTablaG.DataSet := unqry;
+      unqry.Open;
+      formulario.ProcesarPerfiles;
+      formulario.ShowModal;
+      if formulario.sFicha = 'S' then
+      begin
+        btnEmpleado.Text := unqry.Fields[0].AsString;
+        ValidarEmpleado;
+      end;
+    finally
+      FreeAndNil(formulario);
+    end;
+  finally
+    FreeAndNil(unqry);
+  end;
+end;
+
+procedure TfrmModalEntradaCambio.ValidarEmpleado;
 var
   Q: TUniQuery;
 begin
   lblEmpleadoNombre.Caption := '';
-  if (FConn = nil) or (Trim(txtEmpleado.Text) = '') then
+  if (FConn = nil) or (Trim(btnEmpleado.Text) = '') then
     Exit;
   Q := TUniQuery.Create(nil);
   try
@@ -119,8 +166,10 @@ begin
     Q.SQL.Text :=
       'SELECT DIMINUTIVO_TICKET_USU' +
       '  FROM fza_usuarios' +
-      ' WHERE USUARIO_USU = :pCOD';
-    Q.ParamByName('pCOD').AsString := Trim(txtEmpleado.Text);
+      ' WHERE (USUARIO_USU = :pCOD' +
+      '    OR CODIGO_EMPLEADO_USU = :pCOD2)';
+    Q.ParamByName('pCOD').AsString  := Trim(btnEmpleado.Text);
+    Q.ParamByName('pCOD2').AsString := Trim(btnEmpleado.Text);
     Q.Open;
     if not Q.Eof then
       lblEmpleadoNombre.Caption :=
@@ -132,12 +181,12 @@ end;
 
 procedure TfrmModalEntradaCambio.actAceptarExecute(Sender: TObject);
 begin
-  if Trim(txtEmpleado.Text) = '' then
+  if Trim(btnEmpleado.Text) = '' then
   begin
     Application.MessageBox(
       'Introduzca el empleado que realiza la operación.',
       'Aviso', MB_OK or MB_ICONWARNING);
-    txtEmpleado.SetFocus;
+    btnEmpleado.SetFocus;
     Exit;
   end;
   if txtImporte.Value <= 0 then
@@ -168,7 +217,7 @@ begin
   dm := TdmCajaOpe.Create(nil);
   try
     dImporte  := Currency(txtImporte.Value);
-    sEmpleado := Trim(txtEmpleado.Text);
+    sEmpleado := Trim(btnEmpleado.Text);
     sConcepto := Trim(txtConcepto.Text);
     if sConcepto = '' then
       sConcepto := 'Entrada de cambio';
@@ -182,21 +231,12 @@ begin
         dm.InsertarOperacionCaja(
           QryTrx,
           FEmpresa, FAlmacen, FCaja,
-          sNumOp,
-          'EC',
-          dImporte,
-          sEmpleado,
-          '', '', '',
-          sConcepto);
+          sNumOp, 'EC', dImporte, sEmpleado,
+          '', '', '', sConcepto);
         dm.InsertarPagoCaja(
           QryTrx,
           FEmpresa, FAlmacen, FCaja,
-          '',
-          sNumOp,
-          1,
-          'EFE',
-          dImporte,
-          0);
+          '', sNumOp, 1, 'EFE', dImporte, 0);
       finally
         FreeAndNil(QryTrx);
       end;

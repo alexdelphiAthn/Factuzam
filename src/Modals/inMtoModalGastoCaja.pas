@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoModalGastoCaja                                           }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       3.0.0                                                         }
+{ Versión:       4.0.0                                                         }
 {   Fecha:       26/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -11,8 +11,7 @@
 {  Descripción:                                                                }
 {    Modal F7 del menú de caja: gastos por caja y retiradas de efectivo.       }
 {    Tipos: Pago proveedor, Gastos limpieza, Retirada banco, Retirada         }
-{    encargado, Caja fuerte. Se puede abrir prerrellenado desde el             }
-{    recuento con el sobrante.                                                 }
+{    encargado, Caja fuerte. Campo empleado con búsqueda (...).               }
 {******************************************************************************}
 unit inMtoModalGastoCaja;
 
@@ -24,7 +23,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ActnList, System.Actions,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCurrencyEdit,
-  cxRadioGroup, Uni,
+  cxRadioGroup, cxButtonEdit, Uni,
   inMtoFrmBase;
 
 type
@@ -35,7 +34,7 @@ type
     lblTipoLbl: TcxLabel;
     rgTipo: TcxRadioGroup;
     lblEmpleadoLbl: TcxLabel;
-    txtEmpleado: TcxTextEdit;
+    btnEmpleado: TcxButtonEdit;
     lblEmpleadoNombre: TcxLabel;
     lblImporteLbl: TcxLabel;
     txtImporte: TcxCurrencyEdit;
@@ -49,22 +48,25 @@ type
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure txtEmpleadoPropertiesChange(Sender: TObject);
+    procedure btnEmpleadoPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
+    procedure btnEmpleadoPropertiesValidate(Sender: TObject;
+      var DisplayValue: Variant; var ErrorText: TCaption;
+      var Error: Boolean);
   private
     FConn: TUniConnection;
     FEmpresa: string;
     FAlmacen: string;
     FCaja: string;
-    procedure BuscarNombreEmpleado;
+    procedure BuscarEmpleados;
+    procedure ValidarEmpleado;
     procedure Grabar;
     function ObtenerTipoTexto: string;
   public
-    { Llamada normal desde F7 }
     class function Ejecutar(
       AOwner: TComponent;
       AConn: TUniConnection;
       const AEmpresa, AAlmacen, ACaja: string): Boolean;
-    { Llamada desde el recuento con importe prerrellenado }
     class function EjecutarConImporte(
       AOwner: TComponent;
       AConn: TUniConnection;
@@ -77,7 +79,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibGlobalVar, UniDataCaja, inLibGenerarTicketCaja;
+  inLibGlobalVar, UniDataCaja, inLibGenerarTicketCaja,
+  inMtoGenSearch, Data.DB;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -95,8 +98,8 @@ begin
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
-    frm.txtEmpleado.Text := oUser;
-    frm.BuscarNombreEmpleado;
+    frm.btnEmpleado.Text := oUser;
+    frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
       Result := True;
   finally
@@ -119,11 +122,10 @@ begin
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
-    frm.txtEmpleado.Text := oUser;
-    frm.BuscarNombreEmpleado;
+    frm.btnEmpleado.Text := oUser;
+    frm.ValidarEmpleado;
     frm.txtImporte.Value := Double(AImporte);
-    frm.lblTitulo.Caption :=
-      'Retirar sobrante del recuento';
+    frm.lblTitulo.Caption := 'Retirar sobrante del recuento';
     if frm.ShowModal = mrOk then
       Result := True;
   finally
@@ -138,18 +140,60 @@ begin
   Position := poScreenCenter;
 end;
 
-procedure TfrmModalGastoCaja.txtEmpleadoPropertiesChange(
-  Sender: TObject);
+procedure TfrmModalGastoCaja.btnEmpleadoPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
 begin
-  BuscarNombreEmpleado;
+  BuscarEmpleados;
 end;
 
-procedure TfrmModalGastoCaja.BuscarNombreEmpleado;
+procedure TfrmModalGastoCaja.btnEmpleadoPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant;
+  var ErrorText: TCaption; var Error: Boolean);
+begin
+  ValidarEmpleado;
+end;
+
+procedure TfrmModalGastoCaja.BuscarEmpleados;
+var
+  formulario: TfrmMtoSearch;
+  unqry: TUniQuery;
+begin
+  unqry := TUniQuery.Create(nil);
+  try
+    unqry.Connection := FConn;
+    unqry.SQL.Text :=
+      'SELECT CODIGO_EMPLEADO_USU AS `Código`,' +
+      '       DIMINUTIVO_TICKET_USU AS `Nombre`' +
+      '  FROM fza_usuarios' +
+      ' WHERE ESACTIVO_USU = ''S''' +
+      '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
+      ' ORDER BY CODIGO_EMPLEADO_USU';
+    formulario := TfrmMtoSearch.Create(nil);
+    try
+      formulario.Caption := 'Búsqueda de Empleados';
+      formulario.dsTablaG.DataSet := unqry;
+      unqry.Open;
+      formulario.ProcesarPerfiles;
+      formulario.ShowModal;
+      if formulario.sFicha = 'S' then
+      begin
+        btnEmpleado.Text := unqry.Fields[0].AsString;
+        ValidarEmpleado;
+      end;
+    finally
+      FreeAndNil(formulario);
+    end;
+  finally
+    FreeAndNil(unqry);
+  end;
+end;
+
+procedure TfrmModalGastoCaja.ValidarEmpleado;
 var
   Q: TUniQuery;
 begin
   lblEmpleadoNombre.Caption := '';
-  if (FConn = nil) or (Trim(txtEmpleado.Text) = '') then
+  if (FConn = nil) or (Trim(btnEmpleado.Text) = '') then
     Exit;
   Q := TUniQuery.Create(nil);
   try
@@ -157,8 +201,10 @@ begin
     Q.SQL.Text :=
       'SELECT DIMINUTIVO_TICKET_USU' +
       '  FROM fza_usuarios' +
-      ' WHERE USUARIO_USU = :pCOD';
-    Q.ParamByName('pCOD').AsString := Trim(txtEmpleado.Text);
+      ' WHERE (USUARIO_USU = :pCOD' +
+      '    OR CODIGO_EMPLEADO_USU = :pCOD2)';
+    Q.ParamByName('pCOD').AsString  := Trim(btnEmpleado.Text);
+    Q.ParamByName('pCOD2').AsString := Trim(btnEmpleado.Text);
     Q.Open;
     if not Q.Eof then
       lblEmpleadoNombre.Caption :=
@@ -183,12 +229,12 @@ end;
 
 procedure TfrmModalGastoCaja.actAceptarExecute(Sender: TObject);
 begin
-  if Trim(txtEmpleado.Text) = '' then
+  if Trim(btnEmpleado.Text) = '' then
   begin
     Application.MessageBox(
       'Introduzca el empleado que realiza la operación.',
       'Aviso', MB_OK or MB_ICONWARNING);
-    txtEmpleado.SetFocus;
+    btnEmpleado.SetFocus;
     Exit;
   end;
   if txtImporte.Value <= 0 then
@@ -219,7 +265,7 @@ begin
   dm := TdmCajaOpe.Create(nil);
   try
     dImporte  := Currency(txtImporte.Value);
-    sEmpleado := Trim(txtEmpleado.Text);
+    sEmpleado := Trim(btnEmpleado.Text);
     sTipo     := ObtenerTipoTexto;
     sConcepto := Trim(txtConcepto.Text);
     if sConcepto <> '' then
@@ -236,21 +282,12 @@ begin
         dm.InsertarOperacionCaja(
           QryTrx,
           FEmpresa, FAlmacen, FCaja,
-          sNumOp,
-          'GC',
-          dImporte,
-          sEmpleado,
-          '', '', '',
-          sConcepto);
+          sNumOp, 'GC', dImporte, sEmpleado,
+          '', '', '', sConcepto);
         dm.InsertarPagoCaja(
           QryTrx,
           FEmpresa, FAlmacen, FCaja,
-          '',
-          sNumOp,
-          1,
-          'EFE',
-          dImporte,
-          0);
+          '', sNumOp, 1, 'EFE', dImporte, 0);
       finally
         FreeAndNil(QryTrx);
       end;
