@@ -950,19 +950,33 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 150
             AnchorX = 890
           end
-          object lblObservacionesLbl: TcxLabel
+          object lblDejoCajaLbl: TcxLabel
             Left = 16
-            Top = 60
-            Caption = 'Observaciones:'
+            Top = 58
+            Caption = 'Dejo en caja (cambio):'
             TabOrder = 6
             Transparent = True
           end
-          object txtObservaciones: TcxTextEdit
-            Left = 130
-            Top = 58
-            Properties.MaxLength = 500
+          object txtDejoCaja: TcxCurrencyEdit
+            Left = 180
+            Top = 56
             TabOrder = 7
-            Width = 580
+            Value = 0.000000000000000000
+            Width = 130
+          end
+          object lblObservacionesLbl: TcxLabel
+            Left = 340
+            Top = 58
+            Caption = 'Observaciones:'
+            TabOrder = 8
+            Transparent = True
+          end
+          object txtObservaciones: TcxTextEdit
+            Left = 450
+            Top = 56
+            Properties.MaxLength = 500
+            TabOrder = 9
+            Width = 270
           end
           object btnGrabarArqueo: TcxButton
             Left = 730
@@ -970,7 +984,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             Width = 160
             Height = 30
             Caption = 'Grabar Arqueo (F2)'
-            TabOrder = 8
+            TabOrder = 10
             OnClick = btnGrabarArqueoClick
           end
         end

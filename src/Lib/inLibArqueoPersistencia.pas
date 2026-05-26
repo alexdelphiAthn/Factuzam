@@ -45,6 +45,7 @@ type
       const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
       ATotalRecuento: Currency;
       ADiferenciaTotal: Currency;
+      AEfectivoDejado: Currency;
       const AObservaciones: string;
       const AUsuario: string);
   end;
@@ -93,6 +94,7 @@ class procedure TArqueoPersistencia.GrabarArqueo(
   const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
   ATotalRecuento: Currency;
   ADiferenciaTotal: Currency;
+  AEfectivoDejado: Currency;
   const AObservaciones: string;
   const AUsuario: string);
 var
@@ -105,7 +107,9 @@ begin
     AArqueo.FechaDesde);
   AConn.StartTransaction;
   try
-    { -- Cabecera ----------------------------------------------------------- }
+    { -- Cabecera: solo columnas del esquema base (factuzam_original)
+         + las que añade arqueo_recuento.sql (ya ejecutado). Columnas
+         nuevas como TOTAL_PRESTAMOS_ARQ se graban aparte si existen. }
     Query := TUniQuery.Create(nil);
     try
       Query.Connection := AConn;
@@ -125,11 +129,6 @@ begin
         '  TOTAL_BRUTO_OPERACIONES_ARQ,' +
         '  TOTAL_DESCUENTOS_OPERACIONES_ARQ,' +
         '  TOTAL_NETO_ARQ,' +
-        '  TOTAL_PRESTAMOS_ARQ,' +
-        '  TOTAL_VENTAS_NORMALES_ARQ,' +
-        '  TOTAL_VENTAS_PRESTAMOS_ARQ,' +
-        '  TOTAL_DEVOLUCIONES_ARQ,' +
-        '  TOTAL_VENTAS_ARQ,' +
         '  TOTAL_VALES_RECOGIDOS_ARQ,' +
         '  TOTAL_VALES_EMITIDOS_ARQ,' +
         '  TOTAL_COBROS_CLIENTES_ARQ,' +
@@ -144,6 +143,7 @@ begin
         '  TOTAL_SALDO_RECONTAR_ARQ,' +
         '  TOTAL_RECUENTO_ARQ,' +
         '  DIFERENCIA_TOTAL_ARQ,' +
+        '  EFECTIVO_DEJADO_CAJA_ARQ,' +
         '  OBSERVACIONES_ARQ,' +
         '  INSTANTE_ALTA,' +
         '  USUARIO_ALTA,' +
@@ -163,11 +163,6 @@ begin
         '  :pBRUTO_OPE,' +
         '  :pDESC_OPE,' +
         '  :pNETO,' +
-        '  :pPREST,' +
-        '  :pV_NORM,' +
-        '  :pV_PREST,' +
-        '  :pDEVOL,' +
-        '  :pT_VENTAS,' +
         '  :pVALES_REC,' +
         '  :pVALES_EMI,' +
         '  :pCOBROS_CLI,' +
@@ -182,6 +177,7 @@ begin
         '  :pSALDO_REC,' +
         '  :pTOTAL_RECUENTO,' +
         '  :pDIFERENCIA,' +
+        '  :pEFT_DEJADO,' +
         '  :pOBS,' +
         '  NOW(),' +
         '  :pUSUARIO,' +
@@ -200,11 +196,6 @@ begin
       Query.ParamByName('pBRUTO_OPE').AsCurrency := AArqueo.BrutoOperaciones;
       Query.ParamByName('pDESC_OPE').AsCurrency  := AArqueo.DescuentosOperaciones;
       Query.ParamByName('pNETO').AsCurrency      := AArqueo.Neto;
-      Query.ParamByName('pPREST').AsCurrency     := AArqueo.Prestamos;
-      Query.ParamByName('pV_NORM').AsCurrency    := AArqueo.VentasNormales;
-      Query.ParamByName('pV_PREST').AsCurrency   := AArqueo.VentasPrestamos;
-      Query.ParamByName('pDEVOL').AsCurrency     := AArqueo.Devoluciones;
-      Query.ParamByName('pT_VENTAS').AsCurrency  := AArqueo.TotalVentas;
       Query.ParamByName('pVALES_REC').AsCurrency := AArqueo.ValesRecogidos;
       Query.ParamByName('pVALES_EMI').AsCurrency := AArqueo.ValesEmitidos;
       Query.ParamByName('pCOBROS_CLI').AsCurrency := AArqueo.CobrosClientes;
@@ -219,12 +210,39 @@ begin
       Query.ParamByName('pSALDO_REC').AsCurrency := AArqueo.SaldoRecontar;
       Query.ParamByName('pTOTAL_RECUENTO').AsCurrency := ATotalRecuento;
       Query.ParamByName('pDIFERENCIA').AsCurrency := ADiferenciaTotal;
+      Query.ParamByName('pEFT_DEJADO').AsCurrency := AEfectivoDejado;
       Query.ParamByName('pOBS').AsString         := AObservaciones;
       Query.ParamByName('pUSUARIO').AsString     := AUsuario;
       Query.ParamByName('pUSUARIO2').AsString    := AUsuario;
       Query.Execute;
     finally
       FreeAndNil(Query);
+    end;
+    { -- Columnas opcionales (pueden no existir aún) ---------------------- }
+    try
+      Query := TUniQuery.Create(nil);
+      try
+        Query.Connection := AConn;
+        Query.SQL.Text :=
+          'UPDATE fza_caja_arqueos SET' +
+          '  TOTAL_PRESTAMOS_ARQ        = :pPREST,' +
+          '  TOTAL_VENTAS_NORMALES_ARQ  = :pV_NORM,' +
+          '  TOTAL_VENTAS_PRESTAMOS_ARQ = :pV_PREST,' +
+          '  TOTAL_DEVOLUCIONES_ARQ     = :pDEVOL,' +
+          '  TOTAL_VENTAS_ARQ           = :pT_VENTAS' +
+          ' WHERE CODIGO_ARQ = :pCODIGO';
+        Query.ParamByName('pPREST').AsCurrency   := AArqueo.Prestamos;
+        Query.ParamByName('pV_NORM').AsCurrency  := AArqueo.VentasNormales;
+        Query.ParamByName('pV_PREST').AsCurrency := AArqueo.VentasPrestamos;
+        Query.ParamByName('pDEVOL').AsCurrency   := AArqueo.Devoluciones;
+        Query.ParamByName('pT_VENTAS').AsCurrency := AArqueo.TotalVentas;
+        Query.ParamByName('pCODIGO').AsString    := sCodigo;
+        Query.Execute;
+      finally
+        FreeAndNil(Query);
+      end;
+    except
+      { Columnas opcionales: si no existen aún se ignora el error }
     end;
 
     { -- Detalle por forma de pago ------------------------------------------ }
