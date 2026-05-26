@@ -32,7 +32,8 @@ uses
   System.Actions, Vcl.ActnList, cxButtonEdit, cxSplitter, cxRadioGroup,
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
   dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
-  Vcl.ActnMan, System.Generics.Collections;
+  Vcl.ActnMan, System.Generics.Collections,
+  dxSpreadSheet, dxSpreadSheetCore;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -299,6 +300,9 @@ uses
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
   inLibLog,
+  inLibAppParam,
+  inLibInventarioExcel,
+  inMtoPreviewExcel,
   System.Diagnostics,
   inMtoPrincipal, inMtoModalAddBlockInventario;
 
@@ -1910,9 +1914,32 @@ begin
 end;
 
 procedure TfrmMtoInventarios.btnExportarInvClick(Sender: TObject);
+var
+  fPreview: TfrmMtoPreviewExcel;
 begin
-  ExportarExcel(cxgrdMovs, 'Movimientos_Inventario_' +
-                dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString);
+  if dmmInventarios.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay inventario activo.');
+    Exit;
+  end;
+  // Asegurar que las lineas estan cargadas
+  dmmInventarios.CargarLineasInventario;
+  fPreview := TfrmMtoPreviewExcel.Create(Self);
+  try
+    fPreview.PopupParent := Self;
+    fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+    fPreview.DialogoGuardar.FileName :=
+      'Inventario_' +
+      dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString + '_' +
+      dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
+    ExportarInventarioExcel(
+      fPreview.dxSpreadSheet1,
+      dmmInventarios.unqryTablaG,
+      dmmInventarios.cdsLineas);
+    fPreview.ShowModal;
+  finally
+    FreeAndNil(fPreview);
+  end;
 end;
 
 procedure TfrmMtoInventarios.btnIraArticuloClick(Sender: TObject);
@@ -2105,50 +2132,67 @@ procedure TfrmMtoInventarios.btnCargarExcelClick(Sender: TObject);
 var
   Lista: TStringList;
   Archivo: string;
+  sMsg: string;
+  Sheet: TdxSpreadSheet;
+  i: Integer;
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario debe estar ABIERTO.'); Exit;
+    ShowMessage('El inventario debe estar ABIERTO.');
+    Exit;
   end;
-
-//  Archivo := Trim(edtRutaExcel.Text);
-  if (Archivo = '') or not FileExists(Archivo) then
+  // Dialogo de seleccion de archivo
+  dlgAbrir.Filter :=
+    'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|Todos (*.*)|*.*';
+  dlgAbrir.DefaultExt := 'xlsx';
+  if not dlgAbrir.Execute then
+    Exit;
+  Archivo := dlgAbrir.FileName;
+  if not FileExists(Archivo) then
   begin
-    ShowMessage('Selecciona primero un archivo válido.'); Exit;
+    ShowMessage('El archivo no existe.');
+    Exit;
   end;
-
-  // Por simplicidad: si es CSV/TXT lo cargamos directamente.
-  // Para XLSX se debería usar un parser (p.ej. la unidad de Excel del
-  // proyecto).
-  // Formato esperado: SKU=CANTIDAD_ARTVIN por línea (o solo SKU)
-  Lista := TStringList.Create;
-  try
-    if SameText(ExtractFileExt(Archivo), '.xlsx') or
-       SameText(ExtractFileExt(Archivo), '.xls') then
-    begin
-      ShowMessage(
-        'Para XLSX: utiliza la opción "Exportar a CSV" desde Excel y vuelve ' +
-        'a cargar.' + #13#10 +
-        'Formato esperado del CSV: SKU;CANTIDAD_ARTVIN por línea.');
-      Exit;
+  Lista := nil;
+  // Formato Excel: leer con dxSpreadSheet
+  if SameText(ExtractFileExt(Archivo), '.xlsx') or
+     SameText(ExtractFileExt(Archivo), '.xls') then
+  begin
+    Sheet := TdxSpreadSheet.Create(nil);
+    try
+      Sheet.LoadFromFile(Archivo);
+      ImportarInventarioDesdeSheet(Sheet, Lista, sMsg);
+    finally
+      FreeAndNil(Sheet);
     end;
-
+  end
+  else
+  begin
+    // Formato CSV/TXT: SKU;CANTIDAD_ARTVIN por linea
+    Lista := TStringList.Create;
     Lista.LoadFromFile(Archivo);
-    // Convertimos ; en = para que TStringList interprete Names/Values
-    var i: Integer;
     for i := 0 to Lista.Count - 1 do
       Lista[i] := StringReplace(Lista[i], ';', '=', [rfReplaceAll]);
-
-    Screen.Cursor := crHourGlass;
-    try
-      dmmInventarios.CargarDesdeListaSkus(Lista);
-      pcDetail.ActivePage := tsDetalle;
-      CargarLineasYRefrescar;
-      ShowMessage(Format('Procesadas %d líneas del archivo.', [Lista.Count]));
-    finally
-      Screen.Cursor := crDefault;
-    end;
+    sMsg := Format('Leidas %d lineas del CSV.', [Lista.Count]);
+  end;
+  if (Lista = nil) or (Lista.Count = 0) then
+  begin
+    if sMsg <> '' then
+      ShowMessage(sMsg)
+    else
+      ShowMessage('No se encontraron datos para importar.');
+    FreeAndNil(Lista);
+    Exit;
+  end;
+  Screen.Cursor := crHourGlass;
+  try
+    dmmInventarios.CargarDesdeListaSkus(Lista);
+    pcDetail.ActivePage := tsDetalle;
+    CargarLineasYRefrescar;
+    ShowMessage(sMsg + #13#10 +
+      'SKUs nuevos insertados; existentes actualizados (cantidad sumada).');
   finally
+    Screen.Cursor := crDefault;
     FreeAndNil(Lista);
   end;
 end;
