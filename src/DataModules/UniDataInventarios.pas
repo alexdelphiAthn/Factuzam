@@ -817,11 +817,24 @@ begin
       'La cabecera del inventario no tiene numero. Graba primero la ' +
       'cabecera para que el sistema asigne el numero.');
 
+  // Linea sin articulo: cancelar silenciosamente en vez de lanzar
+  // excepcion. El cxGrid hace Post automatico al navegar con las
+  // flechas; si la linea es un placeholder vacio, Cancel + Abort
+  // lo descarta sin molestar al usuario.
   if Trim(DataSet.FieldByName('CODIGO_ART_INVLIN').AsString) = '' then
-    raise Exception.Create(
-      'No se puede grabar una linea sin articulo. Selecciona un articulo o '+
-      'elimina la linea (linea ' +
-      DataSet.FieldByName('LINEA_INVLIN').AsString + ').');
+  begin
+    // Diferir el Cancel: no se puede llamar dentro de BeforePost
+    // porque el dataset esta en medio de un Post. El Abort cancela
+    // el Post y deja el registro en dsEdit/dsInsert; el Cancel
+    // posterior lo revierte a Browse.
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        if cdsLineas.Active and (cdsLineas.State in [dsEdit, dsInsert]) then
+          cdsLineas.Cancel;
+      end);
+    Abort;
+  end;
   // Si por alguna razon CODIGO_UNIDAD_INVLIN ha quedado vacio, lo rellenamos
   // con el codigo del articulo. CODIGO_UNIDAD_INVLIN es NOT NULL en BD.
   if Trim(DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString) = '' then
