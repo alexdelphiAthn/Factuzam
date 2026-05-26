@@ -35,6 +35,7 @@ uses
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
   inLibInformesGuiasCache in 'src\Lib\inLibInformesGuiasCache.pas',
   inLibGridColumnChooser in 'src\Lib\inLibGridColumnChooser.pas',
+  inLibConfigCampos in 'src\Lib\inLibConfigCampos.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
