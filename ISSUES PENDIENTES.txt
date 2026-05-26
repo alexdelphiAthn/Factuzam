@@ -1,7 +1,8 @@
 - Cuando entro en artículos, después de haber grabado un layout, las columnas en PEstaña 5 Tarifas salen mal, desordenadas, campos antiguos, anchos mal.
 - Cuando estoy posicionado en un artículo en Empresas->Histórico Facturas y le doy a Control + A, no me lleva al artículo seleccionado si no al primero 
 que hay en la primera factura. Me sale en un nuevo Mto, debería usar el primero para las búsquedas (y poner en en el primero siempre Todos, no sólo activo, porque si no, no saldrán los que no tienen esa marca, y esta búsqueda debería dar pie a todos los artículos.
-- En artículos, líneas de venta, salen líneas duplicadas. 
+- En artículos, líneas de venta, salen líneas duplicadas. **DESCARTADO: no hay duplicados reales**
+
 - No sale aviso en Caja en inMtoCajaOperaciones cuando hay un artículo sin stock debería mostrar el letrero de parámetros, pero no sale nada. EStá permitida la venta sin stock.
 - En Arqueos -> Recuento -> Otras formas de pago no se rellenan para avisar del recuento.
 - En arqueos -> Recuento-> hay muchos letreros que no caben bien o que se montan. 
