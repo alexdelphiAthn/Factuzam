@@ -395,6 +395,10 @@ var
   sCodigoEmpresa, sRazonSocial:String;
 begin
   inherited;
+  // Insert vacío (accidental): cancelar sin error
+  if (DataSet.State = dsInsert) and
+     (Trim(unqryTablaG.FindField('RAZON_SOCIAL_EMP').AsString) = '') then
+    Abort;
   bError := False;
   if ((unqryRetenciones.State = dsInsert) or
       (unqryRetenciones.State = dsEdit)) then
