@@ -1220,6 +1220,13 @@ begin
     SimulateTabKey;
     Exit;
   end;
+  // Alt+F12 -> Guardar layout (equivalente al botón sbGrabarGrid)
+  if (Key = VK_F12) and (ssAlt in Shift) and not (ssCtrl in Shift) then
+  begin
+    sbGrabarGridClick(nil);
+    Key := 0;
+    Exit;
+  end;
   // Ctrl+F12 -> Resetear layout (equivalente al botón sbResetGrid)
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
