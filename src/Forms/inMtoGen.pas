@@ -1244,12 +1244,19 @@ begin
       Key := 0;
     end;
   end;
-  if (key = VK_F12) then
+  // Ctrl+F12 -> Resetear layout (equivalente al botón sbResetGrid)
+  if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
-    if ((dsTablaG.State = dsEdit) or
-        (dsTablaG.State = dsInsert)) then
+    sbResetGridClick(nil);
+    Key := 0;
+    Exit;
+  end;
+  // F12 sin modificadores -> Post del registro
+  if (Key = VK_F12) and (Shift = []) then
+  begin
+    if (dsTablaG.State in [dsEdit, dsInsert]) then
       dsTablaG.DataSet.Post;
-    key := 0;
+    Key := 0;
   end;
   // Ctrl + Alt + F -> Foto del articulo / SKU activo
   if (Key = Ord('F')) and (ssCtrl in Shift) and (ssAlt in Shift) then
