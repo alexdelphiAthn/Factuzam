@@ -12,7 +12,7 @@ que hay en la primera factura. Me sale en un nuevo Mto, debería usar el primero
 - La pantalla de búsqueda inmediata en Caja se ve pequeña la descripción del artículo **pendiente probar**
 - En las pantallas de búsqueda de datos por ejemplo de artículos, también se podrán cambiar los nombres de columnas, editar los Layouts con AltF12 ControlF12, lo mismo que en las pantallas de mantenimiento inmtoGen. Añadir guías.... que funcione el botón derecho en las columnas. **pendiente probar**
 
-- Poner una barra de progreso en la copia de seguridad y en Recuperar Copia de Seguridad ( no vincular a control visual de inmediato, quita mucha performance, sólo mostrar editor al final).
+- Poner una barra de progreso en la copia de seguridad y en Recuperar Copia de Seguridad ( no vincular a control visual de inmediato, quita mucha performance, sólo mostrar editor al final). **pendiente probar**
 - no salen los traspasos en control + U Poner entrada traspaso, Salida Traspaso (TR y AT)-- (acumular estados en fza_stocks)
 
 - Quizás convenga hacer otra tabla de permisos. y el mantenimiento correspondiente, Primero permisos por item de menú. Luego Poder exportar a Excel. Poder modificar, poder borrar, y luego incorporar funcionalidades extra. Para Caja... tengo un par de permisos nuevos

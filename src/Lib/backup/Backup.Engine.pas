@@ -7,6 +7,9 @@ uses
   Data.DB, System.SysUtils, Core_Engine, system.StrUtils;
 
 type
+  TBackupProgressEvent = procedure(const AEtapa: string;
+                                    APaso, ATotal: Integer) of object;
+
   TDBBackupEngine = class
   private
     FProvider: IDBMetadataProvider;
@@ -15,7 +18,8 @@ type
     FOptions: TBackupOptions;
     FIncludeTables: TStringList;
     FExcludeTables: TStringList;
-    
+    FOnProgress: TBackupProgressEvent;
+
     procedure BackupTables;
     procedure BackupTable(const TableName: string);
     procedure BackupTableData(const TableName: string);
@@ -24,6 +28,7 @@ type
     procedure BackupProcedures;
     procedure BackupFunctions;
     function ShouldProcessTable(const TableName: string): Boolean;
+    procedure DoProgress(const AEtapa: string; APaso, ATotal: Integer);
   public
     constructor Create(Provider: IDBMetadataProvider;
                        Writer: IScriptWriter;
@@ -31,6 +36,7 @@ type
                        Options: TBackupOptions;
                        IncludeTables, ExcludeTables: TStringList);
     procedure GenerateBackup;
+    property OnProgress: TBackupProgressEvent read FOnProgress write FOnProgress;
   end;
 
 implementation
@@ -47,6 +53,13 @@ begin
   FOptions := Options;
   FIncludeTables := IncludeTables;
   FExcludeTables := ExcludeTables;
+end;
+
+procedure TDBBackupEngine.DoProgress(const AEtapa: string;
+                                     APaso, ATotal: Integer);
+begin
+  if Assigned(FOnProgress) then
+    FOnProgress(AEtapa, APaso, ATotal);
 end;
 
 function TDBBackupEngine.ShouldProcessTable(const TableName: string): Boolean;
@@ -131,7 +144,10 @@ begin
     for i := 0 to Tables.Count - 1 do
     begin
       if ShouldProcessTable(Tables[i]) then
+      begin
+        DoProgress(Tables[i], i + 1, Tables.Count);
         BackupTable(Tables[i]);
+      end;
     end;
   finally
     Tables.Free;
