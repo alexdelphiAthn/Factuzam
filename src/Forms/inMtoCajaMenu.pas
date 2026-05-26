@@ -171,7 +171,8 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe, inMtoPrincipal,
+  inLibGlobalVar, inLibCajaParam, inLibPermisos,
+  DateUtils, inMtoConsultaOpe, inMtoPrincipal,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja;
 
 {$R *.dfm}
@@ -227,7 +228,9 @@ begin
   calMes.ShowHint       := True;
   calMes.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', Now);
-
+  // Permiso: si no puede cambiar fecha, deshabilitar calendario
+  if Assigned(oPermisos) and (not oPermisos.TienePermiso('caja.cambiarFecha')) then
+    calMes.Enabled := False;
   // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del
   // calendario
   FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
