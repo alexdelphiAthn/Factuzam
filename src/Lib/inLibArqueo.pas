@@ -560,33 +560,35 @@ var
 begin
   { Buscar el último arqueo CERRADO de la misma caja anterior a este
     rango. Si existe, su EFECTIVO_DEJADO_CAJA_ARQ es nuestro
-    EfectivoAnterior (el cambio que quedó en el cajón). }
+    EfectivoAnterior (el cambio que quedó en el cajón).
+    Si la columna no existe aún (migración pendiente) se ignora. }
   Query := TUniQuery.Create(nil);
   try
-    Query.Connection := AConn;
-    Query.SQL.Text :=
-      'SELECT EFECTIVO_DEJADO_CAJA_ARQ' +
-      '  FROM fza_caja_arqueos' +
-      ' WHERE CODIGO_EMP_ARQ  = :pEMPRESA' +
-      '   AND CODIGO_ALM_ARQ  = :pALMACEN' +
-      '   AND CODIGO_CAJA_ARQ = :pCAJA' +
-      '   AND FASE_ARQ        = ''CERRADO''' +
-      '   AND FECHA_HASTA_ARQ < :pFDESDE' +
-      ' ORDER BY FECHA_HASTA_ARQ DESC' +
-      ' LIMIT 1';
-    Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
-    Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
-    Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-    Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
-    Query.Open;
-    if not Query.Eof then
-      AArqueo.EfectivoAnterior :=
-        Query.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
-  except
-    { Si la columna no existe todavía, ignorar }
-  end;
-  if Assigned(Query) then
+    try
+      Query.Connection := AConn;
+      Query.SQL.Text :=
+        'SELECT EFECTIVO_DEJADO_CAJA_ARQ' +
+        '  FROM fza_caja_arqueos' +
+        ' WHERE CODIGO_EMP_ARQ  = :pEMPRESA' +
+        '   AND CODIGO_ALM_ARQ  = :pALMACEN' +
+        '   AND CODIGO_CAJA_ARQ = :pCAJA' +
+        '   AND FASE_ARQ        = ''CERRADO''' +
+        '   AND FECHA_HASTA_ARQ < :pFDESDE' +
+        ' ORDER BY FECHA_HASTA_ARQ DESC' +
+        ' LIMIT 1';
+      Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
+      Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
+      Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
+      Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
+      Query.Open;
+      if not Query.Eof then
+        AArqueo.EfectivoAnterior :=
+          Query.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
+    except
+    end;
+  finally
     FreeAndNil(Query);
+  end;
 end;
 
 class procedure TArqueoCalculadora.CalcularDerivados(var AArqueo: TArqueoCaja);
