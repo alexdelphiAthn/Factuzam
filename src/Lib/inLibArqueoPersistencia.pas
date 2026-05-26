@@ -46,6 +46,9 @@ type
       ATotalRecuento: Currency;
       ADiferenciaTotal: Currency;
       AEfectivoDejado: Currency;
+      AImporteRetirada: Currency;
+      const AConceptoRetirada: string;
+      const ADesgloseBilletes: string;
       const AObservaciones: string;
       const AUsuario: string);
   end;
@@ -103,6 +106,9 @@ class procedure TArqueoPersistencia.GrabarArqueo(
   ATotalRecuento: Currency;
   ADiferenciaTotal: Currency;
   AEfectivoDejado: Currency;
+  AImporteRetirada: Currency;
+  const AConceptoRetirada: string;
+  const ADesgloseBilletes: string;
   const AObservaciones: string;
   const AUsuario: string);
 var
@@ -241,7 +247,10 @@ begin
         '     ''TOTAL_VENTAS_ARQ'',' +
         '     ''TOTAL_RECUENTO_ARQ'',' +
         '     ''DIFERENCIA_TOTAL_ARQ'',' +
-        '     ''EFECTIVO_DEJADO_CAJA_ARQ'')';
+        '     ''EFECTIVO_DEJADO_CAJA_ARQ'',' +
+        '     ''DESGLOSE_BILLETES_ARQ'',' +
+        '     ''IMPORTE_RETIRADA_ARQ'',' +
+        '     ''CONCEPTO_RETIRADA_ARQ'')';
       Query.Open;
       if not Query.Eof then
       begin
@@ -294,6 +303,15 @@ begin
         if Query.FindParam('pEFECTIVO_DEJADO_CAJA_ARQ') <> nil then
           Query.ParamByName('pEFECTIVO_DEJADO_CAJA_ARQ').AsCurrency :=
             AEfectivoDejado;
+        if Query.FindParam('pDESGLOSE_BILLETES_ARQ') <> nil then
+          Query.ParamByName('pDESGLOSE_BILLETES_ARQ').AsString :=
+            ADesgloseBilletes;
+        if Query.FindParam('pIMPORTE_RETIRADA_ARQ') <> nil then
+          Query.ParamByName('pIMPORTE_RETIRADA_ARQ').AsCurrency :=
+            AImporteRetirada;
+        if Query.FindParam('pCONCEPTO_RETIRADA_ARQ') <> nil then
+          Query.ParamByName('pCONCEPTO_RETIRADA_ARQ').AsString :=
+            AConceptoRetirada;
         Query.Execute;
       finally
         FreeAndNil(Query);
@@ -368,6 +386,67 @@ begin
       Query.Execute;
     finally
       FreeAndNil(Query);
+    end;
+
+    { -- Retirada: crear operación GC si hay importe ---------------------- }
+    if AImporteRetirada > 0 then
+    begin
+      Query := TUniQuery.Create(nil);
+      try
+        Query.Connection := AConn;
+        { Obtener siguiente número de operación }
+        Query.SQL.Text :=
+          'CALL PRC_GET_NEXT_OP_CAJA(:pEmp,:pAlm,:pCaja,:pUsr)';
+        Query.ParamByName('pEmp').AsString := AArqueo.Empresa;
+        Query.ParamByName('pAlm').AsString := AArqueo.Almacen;
+        Query.ParamByName('pCaja').AsString := AArqueo.Caja;
+        Query.ParamByName('pUsr').AsString := AUsuario;
+        Query.Open;
+      finally
+        FreeAndNil(Query);
+      end;
+      { Usar InsertarOperacionCaja vía SQL directo }
+      Query := TUniQuery.Create(nil);
+      try
+        Query.Connection := AConn;
+        Query.SQL.Text :=
+          'INSERT INTO fza_caja_operaciones (' +
+          '  CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA,' +
+          '  CODIGO_CAJA_OPCAJA, NUMERO_OPERACION_OPCAJA,' +
+          '  TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA,' +
+          '  FECHA_OPERACION_OPCAJA, FECHA_OP_DIA_OPCAJA,' +
+          '  CODIGO_EMPLEADO_OPCAJA,' +
+          '  CONCEPTO_GASTO_INGRESO_OPCAJA,' +
+          '  ESTADO_DEVOLUCION_OPCAJA,' +
+          '  CODIGO_ARQUEO_OPCAJA,' +
+          '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
+          ') VALUES (' +
+          '  :EMP, :ALM, :CAJA,' +
+          '  (SELECT IFNULL(MAX(CAST(NUMERO_OPERACION_OPCAJA' +
+          '     AS UNSIGNED)),0)+1' +
+          '     FROM fza_caja_operaciones o2' +
+          '    WHERE o2.CODIGO_EMP_OPCAJA  = :EMP2' +
+          '      AND o2.CODIGO_ALM_OPCAJA  = :ALM2' +
+          '      AND o2.CODIGO_CAJA_OPCAJA = :CAJA2),' +
+          '  ''GC'', :IMP, NOW(), CURRENT_DATE,' +
+          '  :USR, :CONCEPTO, ''N'', :ARQ,' +
+          '  :USR2, :USR3, NOW())';
+        Query.ParamByName('EMP').AsString   := AArqueo.Empresa;
+        Query.ParamByName('ALM').AsString   := AArqueo.Almacen;
+        Query.ParamByName('CAJA').AsString  := AArqueo.Caja;
+        Query.ParamByName('EMP2').AsString  := AArqueo.Empresa;
+        Query.ParamByName('ALM2').AsString  := AArqueo.Almacen;
+        Query.ParamByName('CAJA2').AsString := AArqueo.Caja;
+        Query.ParamByName('IMP').AsCurrency := AImporteRetirada;
+        Query.ParamByName('USR').AsString   := AUsuario;
+        Query.ParamByName('CONCEPTO').AsString := AConceptoRetirada;
+        Query.ParamByName('ARQ').AsString   := sCodigo;
+        Query.ParamByName('USR2').AsString  := AUsuario;
+        Query.ParamByName('USR3').AsString  := AUsuario;
+        Query.Execute;
+      finally
+        FreeAndNil(Query);
+      end;
     end;
 
     AConn.Commit;
