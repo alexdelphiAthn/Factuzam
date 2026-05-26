@@ -81,7 +81,8 @@ implementation
        inLibWin,
        inLibtb,
        inLibDir,
-       inLibGlobalVar, inLibAppParam, uGenericIfThen; // , DuckTypeUtilsU;
+       inLibGlobalVar, inLibAppParam, uGenericIfThen,
+       inLibConfigCampos;
 
 procedure GridRecalc(Sender: TObject;
                      View: TcxGridDBTableView;
@@ -511,12 +512,20 @@ begin
       oItem.Visible := SameText(
         GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Visible', 'True'),
         'True');
-      oItem.Caption := GetPerfilSubKeyValueDef(oPerfilDic,
-                                               sSubKey,
-                                               'Caption',
-                                               oItem.Caption);
-      oItem.Width   := StrToIntDef(
-        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', ''), oItem.Width);
+      // Caption: perfil usuario > config_campos > design-time
+      sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Caption', '');
+      if sVal <> '' then
+        oItem.Caption := sVal
+      else if Assigned(oConfigCampos) and oConfigCampos.Cargada and
+              (oConfigCampos.ObtenerTitulo(sColumnName) <> '') then
+        oItem.Caption := oConfigCampos.ObtenerTitulo(sColumnName);
+      // Ancho: perfil usuario > config_campos > design-time
+      sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', '');
+      if sVal <> '' then
+        oItem.Width := StrToIntDef(sVal, oItem.Width)
+      else if Assigned(oConfigCampos) and oConfigCampos.Cargada and
+              (oConfigCampos.ObtenerAncho(sColumnName) > 0) then
+        oItem.Width := oConfigCampos.ObtenerAncho(sColumnName);
       oItem.SortOrder := TcxDataSortOrder(StrToIntDef(
         GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
       if Ord(oItem.SortOrder) <> 0 then
