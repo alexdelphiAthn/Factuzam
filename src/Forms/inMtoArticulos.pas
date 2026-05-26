@@ -1991,9 +1991,15 @@ end;
 
 procedure TfrmMtoArticulos.PrepararBusquedaExterna(const ABusq: string);
 begin
-  // Poner filtro "Todos" para que el Locate encuentre cualquier artículo
-  if Assigned(cbbFiltroEstadoArt) then
-    cbbFiltroEstadoArt.ItemIndex := 0;
+  // Cargar solo el artículo buscado: rápido y siempre lo encuentra
+  if (ABusq <> '') and (tdmDataModule <> nil) and
+     (tdmDataModule is TdmBase) then
+  begin
+    TdmBase(tdmDataModule).unqryTablaG.Close;
+    TdmBase(tdmDataModule).unqryTablaG.SQL.Text :=
+      'SELECT * FROM vi_articulos ' +
+      ' WHERE CODIGO_ART_ART = ' + QuotedStr(ABusq);
+  end;
 end;
 
 function TfrmMtoArticulos.ConstruirSqlArticulos: string;
