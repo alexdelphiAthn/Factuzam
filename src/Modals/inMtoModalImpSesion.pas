@@ -96,18 +96,23 @@ begin
   cfg.FieldEstado    := 'ESTADO_SES';
   cfg.FieldRefPrv    := 'REF_PRV_SES';
   cfg.MostrarPrecioVenta := True;
+  Screen.Cursor := crHourGlass;
   fPreview := TfrmMtoPreviewExcel.Create(Self);
   try
     fPreview.PopupParent := Self;
     fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
     fPreview.DialogoGuardar.FileName :=
       'Sesion_' + edtSerie.Text + '_' + edtNumero.Text;
-    ExportarDocCompraHorizontal(
-      fPreview.dxSpreadSheet1,
-      dmSesion.unqryCabSesionPrint,
-      dmSesion.unqryLinSesionPrint,
-      dmSesion.unqryGuiasSesionPrint,
-      cfg);
+    try
+      ExportarDocCompraHorizontal(
+        fPreview.dxSpreadSheet1,
+        dmSesion.unqryCabSesionPrint,
+        dmSesion.unqryLinSesionPrint,
+        dmSesion.unqryGuiasSesionPrint,
+        cfg);
+    finally
+      Screen.Cursor := crDefault;
+    end;
     fPreview.ShowModal;
   finally
     FreeAndNil(fPreview);
