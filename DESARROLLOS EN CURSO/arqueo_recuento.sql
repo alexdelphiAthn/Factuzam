@@ -111,6 +111,45 @@ SET @s = IF(@e=0,
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 -- ---------------------------------------------------------------------------
+-- Desglose de billetes y monedas del recuento
+-- ---------------------------------------------------------------------------
+
+SET @c = 'DESGLOSE_BILLETES_ARQ';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
+         '` text NULL DEFAULT NULL ',
+         'COMMENT ''Desglose billetes/monedas formato denom:uds;...'' ',
+         'AFTER `EFECTIVO_DEJADO_CAJA_ARQ`'),
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
+-- Importe y concepto de la retirada al cerrar
+-- ---------------------------------------------------------------------------
+
+SET @c = 'IMPORTE_RETIRADA_ARQ';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
+         '` decimal(19,6) NOT NULL DEFAULT ''0.000000'' ',
+         'AFTER `DESGLOSE_BILLETES_ARQ`'),
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = 'CONCEPTO_RETIRADA_ARQ';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
+         '` varchar(100) NULL DEFAULT NULL ',
+         'AFTER `IMPORTE_RETIRADA_ARQ`'),
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
 -- Tabla hija: detalle del recuento por forma de pago (sufijo _ARQR)
 -- ---------------------------------------------------------------------------
 

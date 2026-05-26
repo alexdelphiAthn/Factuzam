@@ -69,19 +69,25 @@ type
                              AFechaDesde: TDate;
                              AFechaHasta: TDate;
                              const ANombreImpresora: string = 'DEBUG');
-    class procedure ImprimirRecuento(
+    class procedure ImprimirCierre(
       AConn: TUniConnection;
       const AArqueo: TArqueoCaja;
       const ALineas: TArray<TArqueoRecuentoLinea>;
       ATotalSistema: Currency;
       ATotalRecuento: Currency;
       ADiferencia: Currency;
+      ARetirada: Currency;
+      const AConceptoRetirada: string;
       AEfectivoDejado: Currency;
+      const ADesgloseBilletes: string;
       const AObservaciones: string;
       const ANombreImpresora: string = 'DEBUG');
   end;
 
 implementation
+
+uses
+  inLibGlobalVar;
 
 // =============================================================================
 //   Helpers de formato
@@ -629,14 +635,17 @@ end;
 //   Ticket de recuento (cierre Z grabado)
 // =============================================================================
 
-class procedure TArqueoTicket.ImprimirRecuento(
+class procedure TArqueoTicket.ImprimirCierre(
   AConn: TUniConnection;
   const AArqueo: TArqueoCaja;
   const ALineas: TArray<TArqueoRecuentoLinea>;
   ATotalSistema: Currency;
   ATotalRecuento: Currency;
   ADiferencia: Currency;
+  ARetirada: Currency;
+  const AConceptoRetirada: string;
   AEfectivoDejado: Currency;
+  const ADesgloseBilletes: string;
   const AObservaciones: string;
   const ANombreImpresora: string = 'DEBUG');
 var
@@ -644,21 +653,25 @@ var
   Preview: TFormVisualizador;
   ComandosESC, RutaPDF: string;
   i: Integer;
+  slBilletes: TStringList;
+  sPar, sDenom, sUds: string;
+  iPos: Integer;
 begin
   Ticket := TTicketTermico.Create(ANombreImpresora);
   try
     Ticket.Inicializar;
-    { Cabecera de empresa }
     EscribirCabeceraEmpresa(Ticket, AConn, AArqueo.Empresa);
     { Título }
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('RECUENTO DE CAJA');
+    Ticket.TamanoDoble(True, False);
+    Ticket.EscribirLinea('CIERRE DE CAJA');
+    Ticket.TamanoDoble(False, False);
     Ticket.EscribirLinea(Format('CAJA %s', [AArqueo.Caja]));
     Ticket.Negrita(False);
     Ticket.SaltarLineas(1);
-    { Rango de fechas }
+    { Datos del cierre }
     Ticket.Alinear(alIzquierda);
     Ticket.TextoColumnas('Inicio:',
       FormatDateTime('dd/mm/yyyy hh:nn', AArqueo.FechaDesde));
@@ -666,40 +679,76 @@ begin
       FormatDateTime('dd/mm/yyyy hh:nn', AArqueo.FechaHasta));
     Ticket.TextoColumnas('Ventas:',
       IntToStr(AArqueo.CantidadVentas));
+    Ticket.TextoColumnas('Cierre por:',
+      inLibGlobalVar.oUser);
     Ticket.LineaSeparadora('=');
-    { Desglose del efectivo }
+    { Desglose de billetes y monedas }
+    if ADesgloseBilletes <> '' then
+    begin
+      Ticket.Negrita(True);
+      Ticket.EscribirLinea('BILLETES Y MONEDAS');
+      Ticket.Negrita(False);
+      slBilletes := TStringList.Create;
+      try
+        slBilletes.Delimiter := ';';
+        slBilletes.DelimitedText := ADesgloseBilletes;
+        for i := 0 to slBilletes.Count - 1 do
+        begin
+          sPar := slBilletes[i];
+          iPos := Pos(':', sPar);
+          if iPos > 0 then
+          begin
+            sDenom := Copy(sPar, 1, iPos - 1);
+            sUds   := Copy(sPar, iPos + 1, MaxInt);
+            if StrToIntDef(sUds, 0) > 0 then
+              Ticket.TextoColumnas(
+                '  ' + sDenom + ' EUR x ' + sUds,
+                FmtImp(StrToFloatDef(sDenom, 0) *
+                        StrToIntDef(sUds, 0)));
+          end;
+        end;
+      finally
+        FreeAndNil(slBilletes);
+      end;
+      Ticket.LineaSeparadora;
+    end;
+    { Efectivo sistema (desglose) }
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('EFECTIVO');
+    Ticket.EscribirLinea('EFECTIVO SISTEMA');
     Ticket.Negrita(False);
-    Ticket.TextoColumnas('  Ingresos ventas:', FmtImp(AArqueo.EfectivoIngresos));
-    Ticket.TextoColumnas('  + Entradas caja:', FmtImp(AArqueo.EfectivoEntradas));
-    Ticket.TextoColumnas('  - Gastos caja:',   FmtImp(AArqueo.EfectivoSalidas));
-    Ticket.TextoColumnas('  + Anterior:',      FmtImp(AArqueo.EfectivoAnterior));
-    Ticket.TextoColumnas('  = Efectivo caja:', FmtImp(AArqueo.EfectivoCaja));
-    Ticket.TextoColumnas('  Otros (tarj...):',
-      FmtImp(AArqueo.OtrosIngresos));
+    Ticket.TextoColumnas('  Ventas:',
+      FmtImp(AArqueo.EfectivoIngresos));
+    Ticket.TextoColumnas('  + Entradas:',
+      FmtImp(AArqueo.EfectivoEntradas));
+    Ticket.TextoColumnas('  - Gastos:',
+      FmtImp(AArqueo.EfectivoSalidas));
+    Ticket.TextoColumnas('  + Anterior:',
+      FmtImp(AArqueo.EfectivoAnterior));
+    Ticket.TextoColumnas('  = Total:',
+      FmtImp(AArqueo.EfectivoCaja));
     Ticket.LineaSeparadora;
     { Detalle por forma de pago }
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('RECUENTO POR FORMA DE PAGO');
+    Ticket.EscribirLinea('RECUENTO');
     Ticket.Negrita(False);
-    Ticket.TextoColumnas('Forma de pago', 'Sist / Rec / Dif');
-    Ticket.LineaSeparadora('-');
     for i := 0 to High(ALineas) do
     begin
       Ticket.EscribirLinea(ALineas[i].Descripcion);
       Ticket.TextoColumnas(
-        '  Sistema:',  FmtImp(ALineas[i].Sistema));
+        '  Sistema:',    FmtImp(ALineas[i].Sistema));
       Ticket.TextoColumnas(
-        '  Recontado:', FmtImp(ALineas[i].Recuento));
-      Ticket.TextoColumnas(
-        '  Diferencia:', FmtImp(ALineas[i].Diferencia));
+        '  Recontado:',  FmtImp(ALineas[i].Recuento));
+      if ALineas[i].Diferencia <> 0 then
+        Ticket.TextoColumnas(
+          '  Diferencia:', FmtImp(ALineas[i].Diferencia));
     end;
     Ticket.LineaSeparadora('=');
     { Totales }
     Ticket.Negrita(True);
-    Ticket.TextoColumnas('TOTAL SISTEMA:',   FmtImp(ATotalSistema));
-    Ticket.TextoColumnas('TOTAL RECONTADO:', FmtImp(ATotalRecuento));
+    Ticket.TextoColumnas('TOTAL SISTEMA:',
+      FmtImp(ATotalSistema));
+    Ticket.TextoColumnas('TOTAL RECONTADO:',
+      FmtImp(ATotalRecuento));
     Ticket.SaltarLineas(1);
     Ticket.TamanoDoble(True, True);
     Ticket.Alinear(alCentro);
@@ -708,20 +757,32 @@ begin
     Ticket.Negrita(False);
     Ticket.Alinear(alIzquierda);
     Ticket.SaltarLineas(1);
-    { Dejo en caja }
-    if AEfectivoDejado > 0 then
-      Ticket.TextoColumnas('DEJO EN CAJA:', FmtImp(AEfectivoDejado));
+    { Retirada }
+    if ARetirada > 0 then
+    begin
+      Ticket.TextoColumnas('RETIRADA:',
+        FmtImp(ARetirada));
+      Ticket.TextoColumnas('  Destino:',
+        AConceptoRetirada);
+    end;
+    { Dejo para mañana }
+    Ticket.Negrita(True);
+    Ticket.TextoColumnas('DEJO EN CAJA:',
+      FmtImp(AEfectivoDejado));
+    Ticket.Negrita(False);
     { Observaciones }
     if AObservaciones <> '' then
     begin
       Ticket.LineaSeparadora;
       Ticket.EscribirLinea('Obs: ' + AObservaciones);
     end;
-    { Pie }
+    { Pie: fecha/hora + firma }
     Ticket.SaltarLineas(1);
     Ticket.LineaSeparadora;
     Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
+    Ticket.EscribirLinea(
+      FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
+    Ticket.SaltarLineas(1);
     Ticket.EscribirLinea('Firma:');
     Ticket.SaltarLineas(3);
     Ticket.LineaSeparadora('.');

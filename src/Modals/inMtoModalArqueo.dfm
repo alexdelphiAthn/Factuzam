@@ -1,7 +1,7 @@
 inherited frmModalArqueo: TfrmModalArqueo
   Caption = 'Arqueo de caja'
-  ClientHeight = 560
-  ClientWidth = 920
+  ClientHeight = 620
+  ClientWidth = 980
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
@@ -810,32 +810,120 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsRecuento: TcxTabSheet
         Caption = 'Recuento'
-        object pnlRecuento: TPanel
+        object pnlAnterior: TPanel
           Left = 8
-          Top = 8
-          Width = 896
-          Height = 280
-          BevelInner = bvLowered
+          Top = 4
+          Width = 956
+          Height = 26
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 0
-          object lblRecuentoTit: TcxLabel
-            Left = 10
-            Top = 6
-            Caption = 'Recuento por forma de pago'
+          object lblAnteriorTit: TcxLabel
+            Left = 4
+            Top = 2
+            Caption = 'Resto d'#237'a anterior:'
+            Style.TextColor = clNavy
+            Style.Font.Style = [fsBold]
+            TabOrder = 0
+            Transparent = True
+          end
+          object lblAnteriorImporte: TcxLabel
+            Left = 180
+            Top = 2
+            Caption = '0,00 EUR'
+            Style.Font.Style = [fsBold]
+            TabOrder = 1
+            Transparent = True
+          end
+        end
+        object pnlBilletes: TPanel
+          Left = 8
+          Top = 32
+          Width = 320
+          Height = 310
+          BevelInner = bvLowered
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 1
+          object lblBilletesTit: TcxLabel
+            Left = 8
+            Top = 4
+            Caption = 'Efectivo (billetes y monedas)'
+            Style.TextColor = clNavy
+            TabOrder = 1
+            Transparent = True
+          end
+          object cxgrdBilletes: TcxGrid
+            Left = 4
+            Top = 26
+            Width = 310
+            Height = 252
+            TabOrder = 0
+            object tvBilletes: TcxGridTableView
+              OnEditValueChanged = tvBilletesUdsEditValueChanged
+              OptionsBehavior.FocusCellOnTab = True
+              OptionsData.Appending = False
+              OptionsData.Deleting = False
+              OptionsData.Inserting = False
+              OptionsView.GroupByBox = False
+              OptionsView.ColumnAutoWidth = True
+              object tvBilletesDenom: TcxGridColumn
+                Caption = 'Denominaci'#243'n'
+                Options.Editing = False
+                Width = 100
+              end
+              object tvBilletesUds: TcxGridColumn
+                Caption = 'Uds'
+                PropertiesClassName = 'TcxSpinEditProperties'
+                Width = 60
+              end
+              object tvBilletesSubtotal: TcxGridColumn
+                Caption = 'Subtotal'
+                Options.Editing = False
+                PropertiesClassName = 'TcxCurrencyEditProperties'
+                Width = 100
+              end
+            end
+            object lvBilletes: TcxGridLevel
+              GridView = tvBilletes
+            end
+          end
+          object lblTotalEfectivo: TcxLabel
+            Left = 8
+            Top = 284
+            Caption = '0,00'
+            Style.TextColor = clNavy
+            Style.Font.Size = 11
+            Style.Font.Style = [fsBold]
+            TabOrder = 2
+            Transparent = True
+          end
+        end
+        object pnlOtrasFP: TPanel
+          Left = 336
+          Top = 32
+          Width = 628
+          Height = 186
+          BevelInner = bvLowered
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 2
+          object lblOtrasFPTit: TcxLabel
+            Left = 8
+            Top = 4
+            Caption = 'Otras formas de pago'
             Style.TextColor = clNavy
             TabOrder = 1
             Transparent = True
           end
           object cxgrdRecuento: TcxGrid
-            Left = 8
-            Top = 30
-            Width = 880
-            Height = 240
+            Left = 4
+            Top = 26
+            Width = 618
+            Height = 154
             TabOrder = 0
             object tvRecuento: TcxGridTableView
               OnEditValueChanged = tvRecuentoImportePropertiesEditValueChanged
-              OptionsBehavior.IncSearch = True
               OptionsBehavior.FocusCellOnTab = True
               OptionsData.Appending = False
               OptionsData.Deleting = False
@@ -844,29 +932,29 @@ inherited frmModalArqueo: TfrmModalArqueo
               object tvRecuentoFP: TcxGridColumn
                 Caption = 'C'#243'digo'
                 Options.Editing = False
-                Width = 80
+                Width = 70
               end
               object tvRecuentoDesc: TcxGridColumn
                 Caption = 'Forma de pago'
                 Options.Editing = False
-                Width = 220
+                Width = 160
               end
               object tvRecuentoSistema: TcxGridColumn
-                Caption = 'Importe sistema'
+                Caption = 'Sistema'
                 Options.Editing = False
                 PropertiesClassName = 'TcxCurrencyEditProperties'
-                Width = 160
+                Width = 110
               end
               object tvRecuentoImporte: TcxGridColumn
-                Caption = 'Importe recontado'
+                Caption = 'Recontado'
                 PropertiesClassName = 'TcxCurrencyEditProperties'
-                Width = 160
+                Width = 110
               end
               object tvRecuentoDiferencia: TcxGridColumn
                 Caption = 'Diferencia'
                 Options.Editing = False
                 PropertiesClassName = 'TcxCurrencyEditProperties'
-                Width = 140
+                Width = 100
               end
             end
             object lvRecuento: TcxGridLevel
@@ -875,118 +963,158 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
         end
         object pnlRecuentoTotales: TPanel
-          Left = 8
-          Top = 296
-          Width = 896
-          Height = 110
+          Left = 336
+          Top = 224
+          Width = 628
+          Height = 118
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
-          TabOrder = 1
+          TabOrder = 3
           object lblDesgloseEfectivo: TcxLabel
-            Left = 16
-            Top = 8
+            Left = 8
+            Top = 4
             AutoSize = False
-            Caption = 'Efectivo = ventas (0,00) + entradas (0,00) '#8722' gastos (0,00) + anterior (0,00)'
             Style.TextColor = clGray
-            TabOrder = 10
+            TabOrder = 0
             Transparent = True
-            Height = 17
-            Width = 700
+            Height = 15
+            Width = 610
           end
           object lblRecTotalSistemaLbl: TcxLabel
-            Left = 16
-            Top = 30
+            Left = 8
+            Top = 22
             Caption = 'Total sistema:'
-            TabOrder = 0
+            TabOrder = 1
             Transparent = True
           end
           object lblRecTotalSistema: TcxLabel
-            Left = 200
-            Top = 30
+            Left = 120
+            Top = 22
             AutoSize = False
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 1
+            TabOrder = 2
             Transparent = True
-            Height = 21
-            Width = 160
-            AnchorX = 360
+            Height = 19
+            Width = 100
+            AnchorX = 220
           end
           object lblRecTotalRecuentoLbl: TcxLabel
-            Left = 380
-            Top = 30
+            Left = 240
+            Top = 22
             Caption = 'Total recontado:'
-            TabOrder = 2
+            TabOrder = 3
             Transparent = True
           end
           object lblRecTotalRecuento: TcxLabel
-            Left = 560
-            Top = 30
+            Left = 370
+            Top = 22
             AutoSize = False
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 3
+            TabOrder = 4
             Transparent = True
-            Height = 21
-            Width = 160
-            AnchorX = 720
+            Height = 19
+            Width = 100
+            AnchorX = 470
           end
           object lblRecDiferenciaLbl: TcxLabel
-            Left = 740
-            Top = 30
+            Left = 490
+            Top = 22
             Caption = 'Diferencia:'
-            TabOrder = 4
+            TabOrder = 5
             Transparent = True
           end
           object lblRecDiferencia: TcxLabel
-            Left = 740
-            Top = 52
+            Left = 490
+            Top = 42
             AutoSize = False
             Style.Font.Size = 12
             Style.Font.Style = [fsBold]
             Properties.Alignment.Horz = taRightJustify
-            TabOrder = 5
-            Transparent = True
-            Height = 28
-            Width = 150
-            AnchorX = 890
-          end
-          object lblDejoCajaLbl: TcxLabel
-            Left = 16
-            Top = 58
-            Caption = 'Dejo en caja (cambio):'
             TabOrder = 6
             Transparent = True
-          end
-          object txtDejoCaja: TcxCurrencyEdit
-            Left = 180
-            Top = 56
-            TabOrder = 7
-            Value = 0.000000000000000000
+            Height = 26
             Width = 130
+            AnchorX = 620
+          end
+          object lblRetiradaLbl: TcxLabel
+            Left = 8
+            Top = 46
+            Caption = 'Retirada:'
+            TabOrder = 7
+            Transparent = True
+          end
+          object rgRetiradaTipo: TcxRadioGroup
+            Left = 80
+            Top = 44
+            Properties.Columns = 5
+            Properties.Items = <
+              item
+                Caption = 'Banco'
+              end
+              item
+                Caption = 'Encargado'
+              end
+              item
+                Caption = 'C. fuerte'
+              end
+              item
+                Caption = 'Proveedor'
+              end
+              item
+                Caption = 'Limpieza'
+              end>
+            ItemIndex = 0
+            TabOrder = 8
+            Height = 38
+            Width = 400
+          end
+          object txtRetiradaImporte: TcxCurrencyEdit
+            Left = 8
+            Top = 88
+            Properties.OnChange = txtRetiradaImportePropertiesChange
+            TabOrder = 9
+            Value = 0.000000000000000000
+            Width = 110
+          end
+          object lblDejoLbl: TcxLabel
+            Left = 130
+            Top = 90
+            Caption = 'Dejo para ma'#241'ana:'
+            TabOrder = 10
+            Transparent = True
+          end
+          object lblDejoImporte: TcxLabel
+            Left = 280
+            Top = 90
+            Caption = '0,00 EUR'
+            Style.Font.Style = [fsBold]
+            TabOrder = 11
+            Transparent = True
           end
           object lblObservacionesLbl: TcxLabel
-            Left = 340
-            Top = 58
-            Caption = 'Observaciones:'
-            TabOrder = 8
+            Left = 390
+            Top = 90
+            Caption = 'Obs:'
+            TabOrder = 12
             Transparent = True
           end
           object txtObservaciones: TcxTextEdit
-            Left = 450
-            Top = 56
+            Left = 426
+            Top = 88
             Properties.MaxLength = 500
-            TabOrder = 9
-            Width = 270
+            TabOrder = 13
+            Width = 196
           end
-          object btnGrabarArqueo: TcxButton
-            Left = 730
-            Top = 76
-            Width = 160
-            Height = 30
-            Caption = 'Grabar Arqueo (F2)'
-            TabOrder = 10
-            OnClick = btnGrabarArqueoClick
-          end
+        end
+        object btnGrabarArqueo: TcxButton
+          Left = 336
+          Top = 348
+          Width = 320
+          Height = 34
+          Caption = 'Grabar Arqueo y emitir justificante (F2)'
+          TabOrder = 4
+          OnClick = btnGrabarArqueoClick
         end
       end
     end
