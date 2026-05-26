@@ -878,21 +878,32 @@ inherited frmModalArqueo: TfrmModalArqueo
           Left = 8
           Top = 296
           Width = 896
-          Height = 90
+          Height = 110
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 1
+          object lblDesgloseEfectivo: TcxLabel
+            Left = 16
+            Top = 8
+            AutoSize = False
+            Caption = 'Efectivo = ventas (0,00) + entradas (0,00) '#8722' gastos (0,00) + anterior (0,00)'
+            Style.TextColor = clGray
+            TabOrder = 10
+            Transparent = True
+            Height = 17
+            Width = 700
+          end
           object lblRecTotalSistemaLbl: TcxLabel
             Left = 16
-            Top = 10
+            Top = 30
             Caption = 'Total sistema:'
             TabOrder = 0
             Transparent = True
           end
           object lblRecTotalSistema: TcxLabel
             Left = 200
-            Top = 10
+            Top = 30
             AutoSize = False
             Properties.Alignment.Horz = taRightJustify
             TabOrder = 1
@@ -903,14 +914,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblRecTotalRecuentoLbl: TcxLabel
             Left = 380
-            Top = 10
+            Top = 30
             Caption = 'Total recontado:'
             TabOrder = 2
             Transparent = True
           end
           object lblRecTotalRecuento: TcxLabel
             Left = 560
-            Top = 10
+            Top = 30
             AutoSize = False
             Properties.Alignment.Horz = taRightJustify
             TabOrder = 3
@@ -921,14 +932,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblRecDiferenciaLbl: TcxLabel
             Left = 740
-            Top = 10
+            Top = 30
             Caption = 'Diferencia:'
             TabOrder = 4
             Transparent = True
           end
           object lblRecDiferencia: TcxLabel
             Left = 740
-            Top = 34
+            Top = 52
             AutoSize = False
             Style.Font.Size = 12
             Style.Font.Style = [fsBold]
@@ -941,21 +952,21 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblObservacionesLbl: TcxLabel
             Left = 16
-            Top = 42
+            Top = 60
             Caption = 'Observaciones:'
             TabOrder = 6
             Transparent = True
           end
           object txtObservaciones: TcxTextEdit
             Left = 130
-            Top = 40
+            Top = 58
             Properties.MaxLength = 500
             TabOrder = 7
             Width = 580
           end
           object btnGrabarArqueo: TcxButton
             Left = 730
-            Top = 56
+            Top = 76
             Width = 160
             Height = 30
             Caption = 'Grabar Arqueo (F2)'
