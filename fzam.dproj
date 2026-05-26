@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -187,6 +187,7 @@
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
+        <DCCReference Include="src\Lib\inLibGridColumnChooser.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
         </DCCReference>
@@ -271,8 +272,14 @@
         <DCCReference Include="src\Modals\inMtoModalGenImpSave.pas">
             <Form>frmModalGenImpSave</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalGuiasBase.pas">
+            <Form>frmModalGuiasBase</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalInformesGuias.pas">
             <Form>frmModalInformesGuias</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalGridGuias.pas">
+            <Form>frmModalGridGuias</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalWizardEditar.pas">
             <Form>frmModalWizardEditar</Form>
@@ -458,8 +465,16 @@
         <DCCReference Include="src\Lib\inLibCajaParam.pas"/>
         <DCCReference Include="src\Lib\inLibArqueo.pas"/>
         <DCCReference Include="src\Lib\inLibArqueoTicket.pas"/>
+        <DCCReference Include="src\Lib\inLibArqueoPersistencia.pas"/>
+        <DCCReference Include="src\Lib\inLibGenerarTicketCaja.pas"/>
         <DCCReference Include="src\Modals\inMtoModalArqueo.pas">
             <Form>frmModalArqueo</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalEntradaCambio.pas">
+            <Form>frmModalEntradaCambio</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalGastoCaja.pas">
+            <Form>frmModalGastoCaja</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
         <DCCReference Include="src\Lib\inLibDocCompraExcel.pas"/>
@@ -589,6 +604,13 @@
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataCajaOperacionesHist.pas">
             <Form>dmCajaOperacionesHist</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoCajaArqueosHist.pas">
+            <Form>frmMtoCajaArqueosHist</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataCajaArqueosHist.pas">
+            <Form>dmCajaArqueosHist</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoCajaPagosHist.pas">
