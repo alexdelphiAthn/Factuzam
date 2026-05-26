@@ -786,11 +786,7 @@ begin
     begin
       Printer.BeginDoc;
       try
-        R := Rect(0, 0, Printer.PageWidth,
-          MulDiv(Image1.Picture.Bitmap.Height,
-                 Printer.PageWidth,
-                 Image1.Picture.Bitmap.Width));
-        Printer.Canvas.StretchDraw(R, Image1.Picture.Bitmap);
+        Printer.Canvas.Draw(0, 0, Image1.Picture.Bitmap);
       finally
         Printer.EndDoc;
       end;
