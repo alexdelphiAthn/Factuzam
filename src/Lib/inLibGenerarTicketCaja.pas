@@ -124,11 +124,14 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     if UpperCase(ANombreImpresora) = 'DEBUG' then
     begin
-      RutaFicheroPDF := ObtenerRutaPDF('ticket_caja_' +
-        ANumOperacion + '.pdf');
+      RutaFicheroPDF := GetUserFolderTickets + 'ticket_caja_' +
+        ANumOperacion + '.pdf';
       FormPreview := TFormVisualizador.Create(nil);
       try
-        FormPreview.MostrarPreview(ComandosESC, RutaFicheroPDF);
+        FormPreview.Hide;
+        FormPreview.CargarYMostrar(ComandosESC);
+        FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
+        FormPreview.ShowModal;
       finally
         FreeAndNil(FormPreview);
       end;

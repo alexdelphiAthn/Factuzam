@@ -836,12 +836,20 @@ begin
       Currency(txtDejoCaja.Value),
       sObs,
       oUser);
-    Application.MessageBox(
-      'Arqueo grabado correctamente.',
-      'Información', MB_OK or MB_ICONINFORMATION);
   finally
     Screen.Cursor := crDefault;
   end;
+  { Ticket de recuento }
+  TArqueoTicket.ImprimirRecuento(
+    FConn,
+    FArqueoActual,
+    Lineas,
+    dTotalSistema,
+    dTotalRecuento,
+    dDiferenciaTotal,
+    Currency(txtDejoCaja.Value),
+    sObs,
+    oNomImpresoraCaja);
 end;
 
 initialization

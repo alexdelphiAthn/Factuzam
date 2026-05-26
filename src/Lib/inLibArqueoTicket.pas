@@ -28,6 +28,7 @@ uses
   System.SysUtils, System.Classes,
   Data.DB, Uni,
   inLibArqueo,
+  inLibArqueoPersistencia,
   inLibFTicket,
   inMtoPreviewTicket,
   inLibDir;
@@ -68,6 +69,16 @@ type
                              AFechaDesde: TDate;
                              AFechaHasta: TDate;
                              const ANombreImpresora: string = 'DEBUG');
+    class procedure ImprimirRecuento(
+      AConn: TUniConnection;
+      const AArqueo: TArqueoCaja;
+      const ALineas: TArray<TArqueoRecuentoLinea>;
+      ATotalSistema: Currency;
+      ATotalRecuento: Currency;
+      ADiferencia: Currency;
+      AEfectivoDejado: Currency;
+      const AObservaciones: string;
+      const ANombreImpresora: string = 'DEBUG');
   end;
 
 implementation
@@ -596,6 +607,129 @@ begin
     // Vista previa o impresión real
     ComandosESC := Ticket.ObtenerComandos;
     RutaPDF := GetUserFolderTickets + 'Arqueo_' +
+               FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+    Preview := TFormVisualizador.Create(nil);
+    try
+      Preview.Hide;
+      Preview.CargarYMostrar(ComandosESC);
+      Preview.ExportarAPDF(ComandosESC, RutaPDF);
+      if UpperCase(ANombreImpresora) = 'DEBUG' then
+        Preview.ShowModal
+      else
+        Ticket.Imprimir;
+    finally
+      FreeAndNil(Preview);
+    end;
+  finally
+    FreeAndNil(Ticket);
+  end;
+end;
+
+// =============================================================================
+//   Ticket de recuento (cierre Z grabado)
+// =============================================================================
+
+class procedure TArqueoTicket.ImprimirRecuento(
+  AConn: TUniConnection;
+  const AArqueo: TArqueoCaja;
+  const ALineas: TArray<TArqueoRecuentoLinea>;
+  ATotalSistema: Currency;
+  ATotalRecuento: Currency;
+  ADiferencia: Currency;
+  AEfectivoDejado: Currency;
+  const AObservaciones: string;
+  const ANombreImpresora: string = 'DEBUG');
+var
+  Ticket: TTicketTermico;
+  Preview: TFormVisualizador;
+  ComandosESC, RutaPDF: string;
+  i: Integer;
+begin
+  Ticket := TTicketTermico.Create(ANombreImpresora);
+  try
+    Ticket.Inicializar;
+    { Cabecera de empresa }
+    EscribirCabeceraEmpresa(Ticket, AConn, AArqueo.Empresa);
+    { Título }
+    Ticket.SaltarLineas(1);
+    Ticket.Alinear(alCentro);
+    Ticket.Negrita(True);
+    Ticket.EscribirLinea('RECUENTO DE CAJA');
+    Ticket.EscribirLinea(Format('CAJA %s', [AArqueo.Caja]));
+    Ticket.Negrita(False);
+    Ticket.SaltarLineas(1);
+    { Rango de fechas }
+    Ticket.Alinear(alIzquierda);
+    Ticket.TextoColumnas('Inicio:',
+      FormatDateTime('dd/mm/yyyy hh:nn', AArqueo.FechaDesde));
+    Ticket.TextoColumnas('Fin:',
+      FormatDateTime('dd/mm/yyyy hh:nn', AArqueo.FechaHasta));
+    Ticket.TextoColumnas('Ventas:',
+      IntToStr(AArqueo.CantidadVentas));
+    Ticket.LineaSeparadora('=');
+    { Desglose del efectivo }
+    Ticket.Negrita(True);
+    Ticket.EscribirLinea('EFECTIVO');
+    Ticket.Negrita(False);
+    Ticket.TextoColumnas('  Ingresos ventas:', FmtImp(AArqueo.EfectivoIngresos));
+    Ticket.TextoColumnas('  + Entradas caja:', FmtImp(AArqueo.EfectivoEntradas));
+    Ticket.TextoColumnas('  - Gastos caja:',   FmtImp(AArqueo.EfectivoSalidas));
+    Ticket.TextoColumnas('  + Anterior:',      FmtImp(AArqueo.EfectivoAnterior));
+    Ticket.TextoColumnas('  = Efectivo caja:', FmtImp(AArqueo.EfectivoCaja));
+    Ticket.TextoColumnas('  Otros (tarj...):',
+      FmtImp(AArqueo.OtrosIngresos));
+    Ticket.LineaSeparadora;
+    { Detalle por forma de pago }
+    Ticket.Negrita(True);
+    Ticket.EscribirLinea('RECUENTO POR FORMA DE PAGO');
+    Ticket.Negrita(False);
+    Ticket.TextoColumnas('Forma de pago', 'Sist / Rec / Dif');
+    Ticket.LineaSeparadora('-');
+    for i := 0 to High(ALineas) do
+    begin
+      Ticket.EscribirLinea(ALineas[i].Descripcion);
+      Ticket.TextoColumnas(
+        '  Sistema:',  FmtImp(ALineas[i].Sistema));
+      Ticket.TextoColumnas(
+        '  Recontado:', FmtImp(ALineas[i].Recuento));
+      Ticket.TextoColumnas(
+        '  Diferencia:', FmtImp(ALineas[i].Diferencia));
+    end;
+    Ticket.LineaSeparadora('=');
+    { Totales }
+    Ticket.Negrita(True);
+    Ticket.TextoColumnas('TOTAL SISTEMA:',   FmtImp(ATotalSistema));
+    Ticket.TextoColumnas('TOTAL RECONTADO:', FmtImp(ATotalRecuento));
+    Ticket.SaltarLineas(1);
+    Ticket.TamanoDoble(True, True);
+    Ticket.Alinear(alCentro);
+    Ticket.EscribirLinea('DIF: ' + FmtImp(ADiferencia));
+    Ticket.TamanoDoble(False, False);
+    Ticket.Negrita(False);
+    Ticket.Alinear(alIzquierda);
+    Ticket.SaltarLineas(1);
+    { Dejo en caja }
+    if AEfectivoDejado > 0 then
+      Ticket.TextoColumnas('DEJO EN CAJA:', FmtImp(AEfectivoDejado));
+    { Observaciones }
+    if AObservaciones <> '' then
+    begin
+      Ticket.LineaSeparadora;
+      Ticket.EscribirLinea('Obs: ' + AObservaciones);
+    end;
+    { Pie }
+    Ticket.SaltarLineas(1);
+    Ticket.LineaSeparadora;
+    Ticket.Alinear(alCentro);
+    Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
+    Ticket.EscribirLinea('Firma:');
+    Ticket.SaltarLineas(3);
+    Ticket.LineaSeparadora('.');
+    Ticket.SaltarLineas(2);
+    Ticket.CortarPapel;
+    { Imprimir o previsualizar }
+    ComandosESC := Ticket.ObtenerComandos;
+    RutaPDF := GetUserFolderTickets + 'Recuento_' +
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
     Preview := TFormVisualizador.Create(nil);
     try
