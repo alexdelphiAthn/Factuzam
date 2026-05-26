@@ -247,6 +247,10 @@ type
     procedure tvBilletesUdsEditValueChanged(
       Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem);
+    procedure tvBilletesKeyDown(Sender: TObject;
+      var Key: Word; Shift: TShiftState);
+    procedure tvRecuentoKeyDown(Sender: TObject;
+      var Key: Word; Shift: TShiftState);
     procedure txtRetiradaImportePropertiesChange(Sender: TObject);
   private
     FConn         : TUniConnection;
@@ -874,6 +878,72 @@ begin
   tvRecuento.DataController.Values[
     iRow, tvRecuentoImporte.Index] := dRecuento;
   RecalcularTotalesRecuento;
+end;
+
+procedure TfrmModalArqueo.tvBilletesKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+var
+  iRow, iDest: Integer;
+begin
+  if (Key = VK_RETURN) or
+     ((Key = VK_END) and (ssCtrl in Shift)) or
+     ((Key = VK_HOME) and (ssCtrl in Shift)) then
+  begin
+    if tvBilletes.Controller.EditingController.IsEditing then
+      tvBilletes.Controller.EditingController.HideEdit(True);
+    iRow := tvBilletes.DataController.FocusedRecordIndex;
+    if Key = VK_RETURN then
+      iDest := iRow + 1
+    else if Key = VK_END then
+      iDest := tvBilletes.DataController.RecordCount - 1
+    else
+      iDest := 0;
+    if iDest < 0 then
+      iDest := 0;
+    if iDest > tvBilletes.DataController.RecordCount - 1 then
+      iDest := tvBilletes.DataController.RecordCount - 1;
+    if iDest <> iRow then
+    begin
+      tvBilletes.DataController.FocusedRecordIndex := iDest;
+      tvBilletes.Controller.FocusedColumn := tvBilletesUds;
+      tvBilletes.Controller.EditingController.ShowEdit(
+        tvBilletesUds);
+    end;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmModalArqueo.tvRecuentoKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+var
+  iRow, iDest: Integer;
+begin
+  if (Key = VK_RETURN) or
+     ((Key = VK_END) and (ssCtrl in Shift)) or
+     ((Key = VK_HOME) and (ssCtrl in Shift)) then
+  begin
+    if tvRecuento.Controller.EditingController.IsEditing then
+      tvRecuento.Controller.EditingController.HideEdit(True);
+    iRow := tvRecuento.DataController.FocusedRecordIndex;
+    if Key = VK_RETURN then
+      iDest := iRow + 1
+    else if Key = VK_END then
+      iDest := tvRecuento.DataController.RecordCount - 1
+    else
+      iDest := 0;
+    if iDest < 0 then
+      iDest := 0;
+    if iDest > tvRecuento.DataController.RecordCount - 1 then
+      iDest := tvRecuento.DataController.RecordCount - 1;
+    if iDest <> iRow then
+    begin
+      tvRecuento.DataController.FocusedRecordIndex := iDest;
+      tvRecuento.Controller.FocusedColumn := tvRecuentoImporte;
+      tvRecuento.Controller.EditingController.ShowEdit(
+        tvRecuentoImporte);
+    end;
+    Key := 0;
+  end;
 end;
 
 procedure TfrmModalArqueo.txtRetiradaImportePropertiesChange(
