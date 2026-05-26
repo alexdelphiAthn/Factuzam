@@ -62,7 +62,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibGlobalVar, UniDataCaja;
+  inLibGlobalVar, UniDataCaja, inLibGenerarTicketCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -161,6 +161,10 @@ begin
       FConn.Rollback;
       raise;
     end;
+    { Ticket de confirmación }
+    ImprimirTicketOperacionCaja(
+      FEmpresa, FAlmacen, FCaja, sNumOp,
+      oNomImpresoraCaja);
   finally
     FreeAndNil(dm);
   end;

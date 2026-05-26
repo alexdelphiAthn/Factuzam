@@ -126,6 +126,7 @@ uses
   inLibArqueo in 'src\Lib\inLibArqueo.pas',
   inLibArqueoTicket in 'src\Lib\inLibArqueoTicket.pas',
   inLibArqueoPersistencia in 'src\Lib\inLibArqueoPersistencia.pas',
+  inLibGenerarTicketCaja in 'src\Lib\inLibGenerarTicketCaja.pas',
   inMtoModalArqueo in 'src\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
   inMtoModalEntradaCambio in 'src\Modals\inMtoModalEntradaCambio.pas' {frmModalEntradaCambio},
   inMtoModalGastoCaja in 'src\Modals\inMtoModalGastoCaja.pas' {frmModalGastoCaja},
