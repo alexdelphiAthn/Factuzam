@@ -861,6 +861,26 @@ begin
     Result := True;
     Exit;
   end;
+  // Ctrl+F4 -> cerrar pestaña activa o ventana flotante
+  if (Message.CharCode = VK_F4)
+     and (GetKeyState(VK_CONTROL) < 0)
+     and (HiWord(Message.KeyData) and KF_ALTDOWN = 0) then
+  begin
+    // Ventana flotante (no modal): cerrarla
+    if Assigned(Screen.ActiveForm) and
+       (Screen.ActiveForm <> Self) and
+       (Screen.ActiveForm.Parent = nil) then
+    begin
+      Screen.ActiveForm.Close;
+      Result := True;
+      Exit;
+    end;
+    // Pestaña embebida
+    if (pcPrincipal.PageCount > 0) then
+      FormManager.CloseActiveForm;
+    Result := True;
+    Exit;
+  end;
   // ESC -> cerrar pestaña activa o salir
   if (Message.CharCode = VK_ESCAPE) then
   begin
