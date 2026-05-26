@@ -70,10 +70,12 @@ type
     esSalidas,
     esVentas,
     esRegularizadas,
+    esEntradaTraspaso,
+    esSalidaTraspaso,
     esPdteRecibir,
     esPdteServir,
     esPrestadas,
-    esTodoAlaVez   // muestra todos los estados anteriores en filas separadas
+    esTodoAlaVez
   );
 
   TInfoColumna = record
@@ -195,9 +197,11 @@ function ColorEstado(AEstado: TEstadoStock): TColor;
 begin
   case AEstado of
     esExistencias:    Result := clNavy;        // azul oscuro - disponible
-    esEntradas:       Result := clGreen;       // verde - entradas
-    esSalidas:        Result := clMaroon;      // rojo oscuro - salidas
-    esVentas:         Result := clRed;         // rojo brillante - ventas
+    esEntradas:        Result := clGreen;
+    esSalidas:         Result := clMaroon;
+    esVentas:          Result := clRed;
+    esEntradaTraspaso: Result := clTeal;
+    esSalidaTraspaso:  Result := clPurple;
     esRegularizadas:  Result := clPurple;      // morado - regularizadas
     esPdteRecibir:    Result := $000080FF;     // naranja - pte. recibir
     esPdteServir:     Result := clTeal;        // turquesa - pte. servir
@@ -214,10 +218,12 @@ begin
     esEntradas:       Result := 'Entradas';
     esSalidas:        Result := 'Salidas';
     esVentas:         Result := 'Ventas';
-    esRegularizadas:  Result := 'Regulariz.';
-    esPdteRecibir:    Result := 'Pte. recibir';
-    esPdteServir:     Result := 'Pte. servir';
-    esPrestadas:      Result := 'Prestadas';
+    esRegularizadas:    Result := 'Regulariz.';
+    esEntradaTraspaso:  Result := 'Ent. traspaso';
+    esSalidaTraspaso:   Result := 'Sal. traspaso';
+    esPdteRecibir:      Result := 'Pte. recibir';
+    esPdteServir:       Result := 'Pte. servir';
+    esPrestadas:        Result := 'Prestadas';
   else
     Result := '';
   end;
@@ -269,6 +275,8 @@ begin
   cbbEstado.Properties.Items.Add('Salidas');
   cbbEstado.Properties.Items.Add('Ventas');
   cbbEstado.Properties.Items.Add('Regularizadas');
+  cbbEstado.Properties.Items.Add('Ent. traspaso');
+  cbbEstado.Properties.Items.Add('Sal. traspaso');
   cbbEstado.Properties.Items.Add('Pdte. de recibir');
   cbbEstado.Properties.Items.Add('Pdte. de servir');
   cbbEstado.Properties.Items.Add('Prestadas');
@@ -768,11 +776,14 @@ begin
           '   AND M.CODIGO_ALM_MOV IN (' + sAlms + ') ' +
           '   AND M.ESACTIVO_MOV   = ''S'' ';
         case AEstado of
-          esEntradas:      Result := Result + '   AND M.TIPO_MOV = ''E'' ';
-          esSalidas:       Result := Result + '   AND M.TIPO_MOV = ''S'' ' +
-                                              '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
-          esVentas:        Result := Result + '   AND M.TIPO_DOC_MOV = ''VE'' ';
-          esRegularizadas: Result := Result + '   AND M.TIPO_DOC_MOV = ''IN'' ';
+          esEntradas:        Result := Result + '   AND M.TIPO_MOV = ''E'' ';
+          esSalidas:         Result := Result + '   AND M.TIPO_MOV = ''S'' ';
+          esVentas:          Result := Result + '   AND M.TIPO_DOC_MOV = ''VE'' ';
+          esRegularizadas:   Result := Result + '   AND M.TIPO_DOC_MOV = ''IN'' ';
+          esEntradaTraspaso: Result := Result + '   AND M.TIPO_MOV = ''E'' ' +
+                                                '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
+          esSalidaTraspaso:  Result := Result + '   AND M.TIPO_MOV = ''S'' ' +
+                                                '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
         end;
         Result := Result +
           ' GROUP BY SKU.CODIGO_UNIDAD_SKU, M.CODIGO_ALM_MOV';
