@@ -274,6 +274,9 @@ type
     procedure InicializarGestorTallas;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqrySesionLinAfterPostHook(DataSet: TDataSet);
+    procedure unqrySesionLinBeforeInsertHook(DataSet: TDataSet);
+    procedure unqrySesionLinBeforeDeleteHook(DataSet: TDataSet);
+    procedure unqrySesionLinAfterDeleteHook(DataSet: TDataSet);
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
                 const ANombreFam: string = '');
     procedure ProponerPrecioVenta;
@@ -382,7 +385,10 @@ begin
     // hace Post automatico y cxGrid repinta la fila desde el dataset,
     // limpiando los Values[] no-bound. Re-publicamos las cantidades
     // de todas las lineas desde la cache de SESCEL.
-    unqrySesionLin.AfterPost := unqrySesionLinAfterPostHook;
+    unqrySesionLin.AfterPost    := unqrySesionLinAfterPostHook;
+    unqrySesionLin.BeforeInsert := unqrySesionLinBeforeInsertHook;
+    unqrySesionLin.BeforeDelete := unqrySesionLinBeforeDeleteHook;
+    unqrySesionLin.AfterDelete  := unqrySesionLinAfterDeleteHook;
     if not unqrySesionLin.Active then unqrySesionLin.Open;
     if not unqrySesionCel.Active then unqrySesionCel.Open;
     // Master/detail de la pestania 'Documentos'. Mismo patron que
@@ -436,6 +442,64 @@ begin
   // lo deja en una sola pasada.
   if Assigned(FGestorTallas) then
     FGestorTallas.CargarCantidadesTodasLineas;
+end;
+
+procedure TfrmMtoComprasSesiones.unqrySesionLinBeforeInsertHook(
+  DataSet: TDataSet);
+begin
+  // Preparar master antes de insertar en el detail. Dispara tanto
+  // desde btnAddLinea / btnNuevoColor como desde el navigator del grid.
+  if Dmm.unqryTablaG.IsEmpty then
+  begin
+    MessageDlg('Crea y graba la cabecera de la sesion antes de anadir lineas.',
+               mtInformation, [mbOk], 0);
+    Abort;
+  end;
+  if Dmm.unqryTablaG.State in [dsInsert, dsEdit] then
+    Dmm.unqryTablaG.Post;
+  if Dmm.unqryTablaG.State = dsBrowse then
+    Dmm.unqryTablaG.Edit;
+end;
+
+procedure TfrmMtoComprasSesiones.unqrySesionLinBeforeDeleteHook(
+  DataSet: TDataSet);
+var
+  iLinea : Integer;
+begin
+  // Limpiar SESCEL de la linea ANTES del delete. No hay FK cascade
+  // en BBDD; el patron es delete-on-app. Idempotente.
+  iLinea := DataSet.FieldByName('LINEA_SESLIN').AsInteger;
+  if iLinea <= 0 then
+    Exit;
+  LogSes(Format('BeforeDelete: limpiando SESCEL linea=%d', [iLinea]));
+  with TUniQuery.Create(nil) do
+  try
+    Connection := inLibGlobalVar.oConn;
+    SQL.Text :=
+      'DELETE FROM fza_compras_sesiones_celdas ' +
+      ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
+      '   AND LINEA_SES_SESCEL = :l';
+    ParamByName('s').AsString :=
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    ParamByName('n').AsString :=
+      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    ParamByName('l').AsInteger := iLinea;
+    ExecSQL;
+    LogSes(Format('  SESCEL borradas (filas=%d)', [RowsAffected]));
+  finally
+    Free;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.unqrySesionLinAfterDeleteHook(
+  DataSet: TDataSet);
+begin
+  // Sustituye el handler del DM (que solo llamaba RefrescarTotalesSesion)
+  // y anade la recalculacion de columnas de talla del grid.
+  LogSes('AfterDelete: RefrescarTotalesSesion + RecalcularMaxColumnas');
+  Dmm.RefrescarTotalesSesion;
+  if Assigned(FGestorTallas) then
+    FGestorTallas.RecalcularMaxColumnas;
 end;
 
 procedure TfrmMtoComprasSesiones.ResetForm;
@@ -747,53 +811,17 @@ end;
 // ===========================================================================
 
 procedure TfrmMtoComprasSesiones.btnAddLineaClick(Sender: TObject);
-const
-  ARR_ST: array[TDataSetState] of string =('dsInactive', 'dsBrowse', 'dsEdit', 'dsInsert', 'dsSetKey',
-    'dsCalcFields', 'dsFilter', 'dsNewValue', 'dsOldValue',
-    'dsCurValue', 'dsBlockRead', 'dsInternalCalc', 'dsOpening');
-
 begin
   inherited;
-  LogSes(Format('btnAddLineaClick INICIO. master.State=%s, CONTADOR_LINEAS_SES=%d',
-                [ARR_ST[Dmm.unqryTablaG.State],
-                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
-  if Dmm.unqryTablaG.IsEmpty then
-  begin
-    LogSes('btnAddLineaClick: master IsEmpty -> aviso y salida');
-    MessageDlg('Crea y graba la cabecera de la sesion antes de anadir lineas.',
-               mtInformation, [mbOk], 0);
-    Exit;
-  end;
-  // Si el master esta en dsInsert/dsEdit, hay que Postearlo primero para que
-  // tenga SERIE_SES/NUMERO_SES (los rellena BeforePost via PRC_GET_NEXT_CONT).
-  // Despues volvemos a ponerlo en Edit ANTES de Insert al detail: si el
-  // AfterInsert del DM se encuentra el master en dsBrowse y llama a Edit,
-  // la transicion del master rompe el dsInsert del detail master-detail y
-  // las asignaciones de SERIE_SES_SESLIN, etc. revientan con
-  // 'Dataset not in edit or insert mode'.
-  if Dmm.unqryTablaG.State in [dsInsert, dsEdit] then
-  begin
-    LogSes('btnAddLineaClick: master.Post (estaba en edit/insert)');
-    Dmm.unqryTablaG.Post;
-    LogSes(Format('  post OK. master.State=%s, CONTADOR_LINEAS_SES=%d',
-                  [ARR_ST[Dmm.unqryTablaG.State],
-                   Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
-  end;
-  LogSes('btnAddLineaClick: master.Edit');
-  Dmm.unqryTablaG.Edit;
-  LogSes(Format('  master.State=%s, CONTADOR_LINEAS_SES=%d',
-                [ARR_ST[Dmm.unqryTablaG.State],
-                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
+  // BeforeInsert se encarga de preparar el master (Post si pendiente,
+  // Edit si Browse, Abort si IsEmpty).
   LogSes('btnAddLineaClick: detail.Insert');
   Dmm.unqrySesionLin.Insert;
-  LogSes(Format('btnAddLineaClick FIN. detail.LINEA_SESLIN=%d, master.CONTADOR_LINEAS_SES=%d',
-                [Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger,
-                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
+  LogSes(Format('btnAddLineaClick FIN. LINEA_SESLIN=%d',
+                [Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger]));
 end;
 
 procedure TfrmMtoComprasSesiones.btnDelLineaClick(Sender: TObject);
-var
-  iLinea : Integer;
 begin
   inherited;
   if Dmm.unqrySesionLin.IsEmpty then
@@ -807,35 +835,11 @@ begin
     LogSes('btnDelLineaClick: cancelado por el usuario');
     Exit;
   end;
-  iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  LogSes(Format('btnDelLineaClick: linea=%d', [iLinea]));
-  // Limpiar SESCEL de la linea antes de borrar la cabecera (no hay FK
-  // cascade en BBDD; el patron es delete-on-app).
-  if iLinea > 0 then
-  begin
-    // Borrado explicito de celdas de la linea
-    with TUniQuery.Create(nil) do
-    try
-      Connection := inLibGlobalVar.oConn;
-      SQL.Text :=
-        'DELETE FROM fza_compras_sesiones_celdas ' +
-        ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-        '   AND LINEA_SES_SESCEL = :l';
-      ParamByName('s').AsString :=
-        Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-      ParamByName('n').AsString :=
-        Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-      ParamByName('l').AsInteger := iLinea;
-      ExecSQL;
-      LogSes(Format('  SESCEL borradas para linea=%d (filas=%d)',
-                    [iLinea, RowsAffected]));
-    finally
-      Free;
-    end;
-  end;
+  LogSes(Format('btnDelLineaClick: linea=%d',
+                [Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger]));
+  // BeforeDelete limpia SESCEL, AfterDelete recalcula columnas y totales
   Dmm.unqrySesionLin.Delete;
-  LogSes('btnDelLineaClick: detail.Delete OK');
-  if Assigned(FGestorTallas) then FGestorTallas.RecalcularMaxColumnas;
+  LogSes('btnDelLineaClick FIN');
 end;
 
 procedure TfrmMtoComprasSesiones.btnFotoClick(Sender: TObject);
