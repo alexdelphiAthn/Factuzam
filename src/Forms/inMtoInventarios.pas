@@ -495,7 +495,14 @@ begin
     end;
   end;
   if Field = nil then
+  begin
     ActualizarEstadoUI;
+    // Recargar lineas cuando cambia el registro activo y la pestana
+    // Detalle esta visible (navegacion entre inventarios desde la ficha
+    // o entrada desde la lista).
+    if pcDetail.ActivePage = tsDetalle then
+      CargarLineasYRefrescar;
+  end;
 end;
 
 function TfrmMtoInventarios.EstadoActual: string;
