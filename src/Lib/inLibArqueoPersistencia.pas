@@ -394,21 +394,6 @@ begin
       Query := TUniQuery.Create(nil);
       try
         Query.Connection := AConn;
-        { Obtener siguiente número de operación }
-        Query.SQL.Text :=
-          'CALL PRC_GET_NEXT_OP_CAJA(:pEmp,:pAlm,:pCaja,:pUsr)';
-        Query.ParamByName('pEmp').AsString := AArqueo.Empresa;
-        Query.ParamByName('pAlm').AsString := AArqueo.Almacen;
-        Query.ParamByName('pCaja').AsString := AArqueo.Caja;
-        Query.ParamByName('pUsr').AsString := AUsuario;
-        Query.Open;
-      finally
-        FreeAndNil(Query);
-      end;
-      { Usar InsertarOperacionCaja vía SQL directo }
-      Query := TUniQuery.Create(nil);
-      try
-        Query.Connection := AConn;
         Query.SQL.Text :=
           'INSERT INTO fza_caja_operaciones (' +
           '  CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA,' +
