@@ -84,6 +84,7 @@ inherited dmInventarios: TdmInventarios
     BeforePost = cdsLineasBeforePost
     AfterPost = cdsLineasAfterPost
     BeforeDelete = cdsLineasBeforeDelete
+    AfterDelete = cdsLineasAfterDelete
     OnCalcFields = cdsLineasCalcFields
     OnNewRecord = cdsLineasNewRecord
     Left = 282
