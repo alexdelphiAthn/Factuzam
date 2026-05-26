@@ -350,14 +350,14 @@ begin
           begin
             W(Sheet, iRow, COL_T01 + i - 1, rVal, False, ssahCenter);
             Sheet.Cells[iRow, COL_T01 + i - 1].Style.DataFormat.FormatCode :=
-              '#,##0';
+              '0';
           end;
         end;
       end;
       // Total unidades
       rVal := QLineas.FieldByName('TOTAL_UNIDADES').AsFloat;
       W(Sheet, iRow, COL_UDS, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_UDS].Style.DataFormat.FormatCode := '#,##0';
+      Sheet.Cells[iRow, COL_UDS].Style.DataFormat.FormatCode := '0';
       // Importe
       rVal := QLineas.FieldByName('TOTAL_LINEA').AsFloat;
       W(Sheet, iRow, COL_IMP, rVal, False, ssahRight);
@@ -379,14 +379,14 @@ begin
       WFormula(Sheet, iRow, c,
         '=SUM(' + GetRef(iFilaInicioLineas, c) + ':' +
                   GetRef(iFilaFinLineas, c) + ')',
-        '#,##0');
+        '0');
       Sheet.Cells[iRow, c].Style.Font.Style := [fsBold];
     end;
     // SUM total unidades
     WFormula(Sheet, iRow, COL_UDS,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_UDS) + ':' +
                 GetRef(iFilaFinLineas, COL_UDS) + ')',
-      '#,##0');
+      '0');
     Sheet.Cells[iRow, COL_UDS].Style.Font.Style := [fsBold];
     // SUM importe
     WFormula(Sheet, iRow, COL_IMP,
@@ -512,7 +512,7 @@ begin
     WFormula(Sheet, iRow, COL_CANT,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_CANT) + ':' +
                 GetRef(iFilaFinLineas, COL_CANT) + ')',
-      '#,##0');
+      '0');
     Sheet.Cells[iRow, COL_CANT].Style.Font.Style := [fsBold];
     var RefTotalBase := GetRef(iRow, COL_TOTAL);
     // IVA (si la cabecera tiene datos de impuestos)

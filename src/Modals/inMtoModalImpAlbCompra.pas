@@ -90,18 +90,23 @@ begin
   cfg.FieldEstado    := 'ESTADO_ALBC';
   cfg.FieldRefPrv    := 'REF_PROVEEDOR_ALBC';
   cfg.MostrarPrecioVenta := False;
+  Screen.Cursor := crHourGlass;
   fPreview := TfrmMtoPreviewExcel.Create(Self);
   try
     fPreview.PopupParent := Self;
     fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
     fPreview.DialogoGuardar.FileName :=
       'AlbCompra_' + edtSerie.Text + '_' + edtNumero.Text;
-    ExportarDocCompraHorizontal(
-      fPreview.dxSpreadSheet1,
-      dmAlbc.unqryCabAlbcPrint,
-      dmAlbc.unqryLinAlbcPrint,
-      dmAlbc.unqryGuiasAlbcPrint,
-      cfg);
+    try
+      ExportarDocCompraHorizontal(
+        fPreview.dxSpreadSheet1,
+        dmAlbc.unqryCabAlbcPrint,
+        dmAlbc.unqryLinAlbcPrint,
+        dmAlbc.unqryGuiasAlbcPrint,
+        cfg);
+    finally
+      Screen.Cursor := crDefault;
+    end;
     fPreview.ShowModal;
   finally
     FreeAndNil(fPreview);
