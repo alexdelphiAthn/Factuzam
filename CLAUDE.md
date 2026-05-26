@@ -109,11 +109,12 @@ UniDAC por FireDAC ni nada parecido — es decisión arquitectónica.
   por ejemplo Hola := 'Hola'; 
             y Adios := 'Adios'; //cada instrucción va en una linea. 
 - **If, While y bucles**: Siempre en dos lineas, if, while o for y su 
-  expresión en una linea y acción en otra. Evitar if (expresion) then token
+  expresión en una linea y acción en otra. Evitar if (expresion) then token;
   en una sola linea.
-  
+- **Evitar Exit y Continue**: Aparte de ser malas prácticas de programación, 
+  hacen que leer el código sea más difícil.
 - **Comentarios**: Dentro del código, hacer comentarios breves y útiles, 
-  por ejemplo para delimitar bloques importantes, limitaciones, lineasa
+  por ejemplo para delimitar bloques importantes, limitaciones, lineas
   a resaltar por lógica de negocio.
   **Lineas en blanco**: Evitar dejar lineas en blanco dentro de los bloques.  
 ---
