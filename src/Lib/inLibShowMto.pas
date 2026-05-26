@@ -85,16 +85,18 @@ begin
   NewCaption := ofzaF.Caption;
   if ofzaF.NumVentanas > 1 then
   begin
-    // Si viene con búsqueda, reutilizar la primera instancia existente
     if ABusq <> '' then
     begin
-      TargetForm := frmMain.FormManager.FindFormByCaption(
-                                                ofzaF.Caption + ' 1');
+      // Ctrl+A: la instancia 1 es la de búsquedas (filtro Todos).
+      // Si no existe la creamos; si existe la reutilizamos.
       NewCaption := ofzaF.Caption + ' 1';
+      TargetForm := frmMain.FormManager.FindFormByCaption(NewCaption);
     end
     else
     begin
-      iNum := 1;
+      // Apertura normal del usuario: empieza en la 2 para dejar la 1
+      // reservada como instancia de búsqueda.
+      iNum := 2;
       NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
       while (iNum <= ofzaF.NumVentanas) and
             (frmMain.FormManager.FindFormByCaption(NewCaption) <> nil) do
@@ -104,7 +106,7 @@ begin
       end;
       if iNum > ofzaF.NumVentanas then
         TargetForm := frmMain.FormManager.FindFormByCaption(
-                                                  ofzaF.Caption + ' 1')
+                                                  ofzaF.Caption + ' 2')
       else
         TargetForm := nil;
     end;
