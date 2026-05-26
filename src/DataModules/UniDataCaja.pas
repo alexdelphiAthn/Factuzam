@@ -148,10 +148,6 @@ type
     FOnRellenarArticulo:  TRellenarArticuloEvent;
     FOnRellenarAtributos: TRellenarAtributosEvent;
     FOnUpdateTotal: TOnUpdateTotalEvent;
-    function SiguienteOpCaja(AEmpresa,
-                             AAlmacen,
-                             ACaja,
-                             AEmpleado:string): string;
     procedure InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
                           ATipoDoc:   string;
@@ -171,48 +167,6 @@ type
                           const ANumOperacion: string = '';
                           const ACodCliente:string = '';
                           const ACodArticulo:string='');
-    procedure InsertarOperacionCaja(
-                        QryTrx:          TUniQuery;
-                        const AEmpresa:  string;
-                        const AAlmacen:  string;
-                        const ACaja:     string;
-                        ANumOperacion:   string;
-                        // 'VE','VL','AL','CB','EC','GC','TR','AT'
-                        const ATipoOp:   string;
-                        AImporte:        Currency; // negativo en VL y AT
-                        const AEmpleado: string;
-                        // — opcionales —
-                        const ANroFactura:       string = '';
-                        const ASerieFactura:     string = '';
-                        const ACliente:          string = '';
-                        const AConcepto:         string = '';
-                        const ASerieOrigen:      string = '';
-                        const ANroOrigen:        string = '';
-                        const AMotivoDevolucion: string = '';
-                        const AEmpresaContra:    string = '';
-                        const AAlmContra:        string = '';
-                        const AEsTraspaso:       string = 'N';
-                        const AIdDeposito:       string = '');
-    procedure InsertarPagoCaja(
-                        QryTrx:           TUniQuery;
-                        const AEmpresa:   string;
-                        const AAlmacen:   string;
-                        const ACaja:      string;
-                        // serie de la operación de caja
-                        const ASerie:     string;
-                        ANumOperacion:    string;
-                        // 1, 2, 3... por forma de pago
-                        ANumLinea:        Integer;
-                        const AFormaP:    string;    // FK a fza_formas_pago
-                        AImporteEntregado: Currency;
-                        AImporteCambio:   Currency;  // 0 si no hay cambio
-                        // — opcionales —
-                        const ADivisa:       string   = '';
-                        const ARedBlockchain:string   = '';
-                        AFactorCambio:       Double   = 1;
-                        AImporteDivisa:      Double   = 0;
-                        const AReferencia:   string   = '';
-                        const AObservaciones:string   = '');
     procedure InsertarLineaFactura(
                         QryTrx:              TUniQuery;
                         // — identificación —
@@ -371,6 +325,47 @@ type
     property OnRellenarAtributos: TRellenarAtributosEvent
                                   read FOnRellenarAtributos
                                   write FOnRellenarAtributos;
+    function SiguienteOpCaja(AEmpresa,
+                             AAlmacen,
+                             ACaja,
+                             AEmpleado: string): string;
+    procedure InsertarOperacionCaja(
+                        QryTrx:          TUniQuery;
+                        const AEmpresa:  string;
+                        const AAlmacen:  string;
+                        const ACaja:     string;
+                        ANumOperacion:   string;
+                        const ATipoOp:   string;
+                        AImporte:        Currency;
+                        const AEmpleado: string;
+                        const ANroFactura:       string = '';
+                        const ASerieFactura:     string = '';
+                        const ACliente:          string = '';
+                        const AConcepto:         string = '';
+                        const ASerieOrigen:      string = '';
+                        const ANroOrigen:        string = '';
+                        const AMotivoDevolucion: string = '';
+                        const AEmpresaContra:    string = '';
+                        const AAlmContra:        string = '';
+                        const AEsTraspaso:       string = 'N';
+                        const AIdDeposito:       string = '');
+    procedure InsertarPagoCaja(
+                        QryTrx:           TUniQuery;
+                        const AEmpresa:   string;
+                        const AAlmacen:   string;
+                        const ACaja:      string;
+                        const ASerie:     string;
+                        ANumOperacion:    string;
+                        ANumLinea:        Integer;
+                        const AFormaP:    string;
+                        AImporteEntregado: Currency;
+                        AImporteCambio:   Currency;
+                        const ADivisa:       string   = '';
+                        const ARedBlockchain:string   = '';
+                        AFactorCambio:       Double   = 1;
+                        AImporteDivisa:      Double   = 0;
+                        const AReferencia:   string   = '';
+                        const AObservaciones:string   = '');
   end;
 
   function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
