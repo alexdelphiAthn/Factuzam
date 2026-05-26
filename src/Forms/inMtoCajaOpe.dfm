@@ -806,10 +806,12 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object dbtvBusqCODIGO_ARTICULO: TcxGridDBColumn
         Caption = 'Art'#237'culo'
         DataBinding.FieldName = 'CODIGO_PADRE'
+        Width = 120
       end
       object dbtvBusqDESCRIPCION_ARTICULO: TcxGridDBColumn
         Caption = 'Descripci'#243'n'
         DataBinding.FieldName = 'DESCRIPCION_ART'
+        Width = 280
       end
       object dbtvBusqTEMPORADA: TcxGridDBColumn
         Caption = 'Temporada'
@@ -832,7 +834,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Properties.DropDownListStyle = lsEditList
       Properties.DropDownRows = 15
       Properties.DropDownSizeable = True
-      Properties.DropDownWidth = 400
+      Properties.DropDownWidth = 750
       Properties.ImmediateDropDownWhenActivated = True
       Properties.ImmediateDropDownWhenKeyPressed = False
       Properties.IncrementalFiltering = False
