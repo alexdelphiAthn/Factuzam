@@ -1,4 +1,4 @@
-﻿inherited frmMtoArticulos: TfrmMtoArticulos
+inherited frmMtoArticulos: TfrmMtoArticulos
   Left = 5
   Top = 4
   Caption = 'Articulos'
@@ -8,7 +8,7 @@
   OnDestroy = FormDestroy
   ExplicitWidth = 1217
   ExplicitHeight = 711
-  TextHeight = 19
+  TextHeight = 17
   inherited pButtonPage: TPanel
     Width = 1077
     Height = 711
@@ -26,13 +26,13 @@
       ClientRectRight = 1075
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 2
-        ExplicitTop = 29
+        ExplicitTop = 27
         ExplicitWidth = 1073
-        ExplicitHeight = 640
+        ExplicitHeight = 642
         inherited cxGrdPrincipal: TcxGrid
           Top = 60
           Width = 1073
-          Height = 580
+          Height = 582
           ExplicitTop = 60
           ExplicitWidth = 1073
           ExplicitHeight = 580
@@ -170,9 +170,9 @@
       end
       inherited tsFicha: TcxTabSheet
         ExplicitLeft = 2
-        ExplicitTop = 29
+        ExplicitTop = 27
         ExplicitWidth = 1073
-        ExplicitHeight = 640
+        ExplicitHeight = 642
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
@@ -254,7 +254,7 @@
               Width = 322
             end
             object lblFamilia: TcxLabel
-              Left = 24
+              Left = 33
               Top = 96
               Margins.Left = 4
               Margins.Top = 4
@@ -292,7 +292,7 @@
           Left = 0
           Top = 184
           Width = 1073
-          Height = 456
+          Height = 458
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
@@ -300,18 +300,20 @@
             Left = 0
             Top = 0
             Width = 1073
-            Height = 456
+            Height = 458
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet3
+            Properties.ActivePage = tsTarifas
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 454
+            ClientRectBottom = 456
             ClientRectLeft = 2
             ClientRectRight = 1071
-            ClientRectTop = 29
+            ClientRectTop = 27
             object tsGeneral: TcxTabSheet
               Caption = '&1_General'
               ImageIndex = 4
+              ExplicitTop = 29
+              ExplicitHeight = 425
               object rgTipoIVA: TcxDBRadioGroup
                 Left = 408
                 Top = 19
@@ -410,6 +412,10 @@
             object tsSkuMto: TcxTabSheet
               Caption = '&2_SKUs'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlTopSkus: TPanel
                 Left = 0
                 Top = 0
@@ -514,15 +520,17 @@
                 Align = alClient
                 Caption = ' Atributos del SKU + Atributo b'#225'sico (helper) '
                 TabOrder = 2
-                Height = 158
+                Height = 162
                 Width = 1069
                 object cxgrdSkuAtributosBasicos: TcxGrid
                   Left = 4
-                  Top = 22
+                  Top = 20
                   Width = 1061
-                  Height = 120
+                  Height = 126
                   Align = alClient
                   TabOrder = 0
+                  ExplicitTop = 22
+                  ExplicitHeight = 120
                   object tvSkuAtributosBasicos: TcxGridDBTableView
                     OnDblClick = tvSkuAtributosBasicosDblClick
                     Navigator.Buttons.ConfirmDelete = True
@@ -670,10 +678,18 @@
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlBotonesCB: TPanel
                 Left = 948
                 Top = 0
@@ -848,7 +864,7 @@
                 Left = 0
                 Top = 0
                 Width = 936
-                Height = 425
+                Height = 429
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -893,8 +909,10 @@
                   DataController.DataSource = dmArticulos.dsTarifasArticulos
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   OptionsBehavior.AlwaysShowEditor = True
+                  OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
+                  OptionsBehavior.FocusCellOnCycle = True
                   OptionsCustomize.ColumnHiding = True
                   OptionsData.Inserting = False
                   OptionsView.GroupByBox = False
@@ -1038,7 +1056,7 @@
                     Visible = False
                     VisibleForCustomization = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 27
+                    Position.ColIndex = 26
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasACTIVO_TARIFA: TcxGridDBBandedColumn
@@ -1075,7 +1093,7 @@
                     Properties.ReadOnly = True
                     Width = 175
                     Position.BandIndex = 1
-                    Position.ColIndex = 14
+                    Position.ColIndex = 13
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasRAZONSOCIAL_PROVEEDOR: TcxGridDBBandedColumn
@@ -1085,7 +1103,7 @@
                     Properties.ReadOnly = True
                     Width = 260
                     Position.BandIndex = 1
-                    Position.ColIndex = 15
+                    Position.ColIndex = 14
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasPRECIO_ULT_COMPRA: TcxGridDBBandedColumn
@@ -1095,7 +1113,7 @@
                     Properties.ReadOnly = True
                     Width = 176
                     Position.BandIndex = 1
-                    Position.ColIndex = 16
+                    Position.ColIndex = 15
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasFECHA_VALIDEZ: TcxGridDBBandedColumn
@@ -1105,7 +1123,7 @@
                     Properties.ReadOnly = True
                     Width = 136
                     Position.BandIndex = 1
-                    Position.ColIndex = 17
+                    Position.ColIndex = 16
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasCODIGO_FAMILIA_ARTICULO: TcxGridDBBandedColumn
@@ -1116,7 +1134,7 @@
                     Visible = False
                     Width = 252
                     Position.BandIndex = 1
-                    Position.ColIndex = 18
+                    Position.ColIndex = 17
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasDESCRIPCION_FAMILIA: TcxGridDBBandedColumn
@@ -1127,7 +1145,7 @@
                     Visible = False
                     Width = 339
                     Position.BandIndex = 1
-                    Position.ColIndex = 19
+                    Position.ColIndex = 18
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasINSTANTEALTA: TcxGridDBBandedColumn
@@ -1135,7 +1153,7 @@
                     DataBinding.FieldName = 'INSTANTE_ALTA'
                     Visible = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 20
+                    Position.ColIndex = 19
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasINSTANTEMODIF: TcxGridDBBandedColumn
@@ -1143,7 +1161,7 @@
                     DataBinding.FieldName = 'INSTANTE_MODIF'
                     Visible = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 21
+                    Position.ColIndex = 20
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasUSUARIOALTA: TcxGridDBBandedColumn
@@ -1151,7 +1169,7 @@
                     DataBinding.FieldName = 'USUARIO_ALTA'
                     Visible = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 22
+                    Position.ColIndex = 21
                     Position.RowIndex = 0
                   end
                   object cxgrdbclmnTarifasUSUARIOMODIF: TcxGridDBBandedColumn
@@ -1159,7 +1177,7 @@
                     DataBinding.FieldName = 'USUARIO_MODIF'
                     Visible = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 23
+                    Position.ColIndex = 22
                     Position.RowIndex = 0
                   end
                   object dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBBandedColumn
@@ -1167,7 +1185,7 @@
                     DataBinding.FieldName = 'CODIGO_UNICO_ARTTAR'
                     Visible = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 24
+                    Position.ColIndex = 23
                     Position.RowIndex = 0
                   end
                   object tvTarifasESVARIACION_ARTICULO: TcxGridDBBandedColumn
@@ -1175,7 +1193,7 @@
                     DataBinding.FieldName = 'ESVARIACION_ART'
                     Visible = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 25
+                    Position.ColIndex = 24
                     Position.RowIndex = 0
                   end
                   object tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBBandedColumn
@@ -1183,7 +1201,7 @@
                     DataBinding.FieldName = 'NUM_ATRIBUTOS_REQ'
                     Visible = False
                     Position.BandIndex = 1
-                    Position.ColIndex = 26
+                    Position.ColIndex = 25
                     Position.RowIndex = 0
                   end
                 end
@@ -1195,7 +1213,7 @@
                 Left = 936
                 Top = 0
                 Width = 133
-                Height = 425
+                Height = 429
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1231,6 +1249,10 @@
             object tsProveedores: TcxTabSheet
               Caption = '&6_Proveedores'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -1400,6 +1422,10 @@
             object tsLineasFactura: TcxTabSheet
               Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -1928,7 +1954,7 @@
                 Left = 0
                 Top = 0
                 Width = 888
-                Height = 425
+                Height = 429
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -2022,7 +2048,7 @@
                 Left = 888
                 Top = 0
                 Width = 181
-                Height = 425
+                Height = 429
                 Align = alRight
                 TabOrder = 1
                 object btnStockExportarExcel: TcxButton
@@ -2057,6 +2083,10 @@
             object tsMovimientos: TcxTabSheet
               Caption = '&9_Movimientos'
               ImageIndex = 8
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0
@@ -2306,13 +2336,16 @@
             object tsOtros: TcxTabSheet
               Caption = '&0_Otros'
               ImageIndex = 3
+              ExplicitTop = 29
+              ExplicitHeight = 425
               object pnl3: TPanel
                 Left = 0
-                Top = 346
+                Top = 350
                 Width = 1069
                 Height = 79
                 Align = alBottom
                 TabOrder = 3
+                ExplicitTop = 346
                 object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
                   Left = 17
                   Top = 37
@@ -2454,8 +2487,9 @@
         end
       end
       inherited tsPerfil: TcxTabSheet
+        ExplicitTop = 27
         ExplicitWidth = 1073
-        ExplicitHeight = 640
+        ExplicitHeight = 642
         inherited pnlPerfilTop: TPanel
           Width = 1073
           StyleElements = [seFont, seClient, seBorder]
@@ -2466,7 +2500,7 @@
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1073
-          Height = 583
+          Height = 585
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1073
           ExplicitHeight = 583
@@ -2490,7 +2524,7 @@
         ExplicitWidth = 1077
         inherited edtBusqGlobal: TcxTextEdit
           TabOrder = 4
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 324
@@ -2498,13 +2532,9 @@
         end
         inherited rbBBDD: TcxRadioButton
           Top = 3
-          Font.Name = 'Lucida Sans'
           Font.Quality = fqClearTypeNatural
           TabOrder = 0
           ExplicitTop = 3
-        end
-        inherited rbGrid: TcxRadioButton
-          Font.Name = 'Lucida Sans'
         end
       end
     end

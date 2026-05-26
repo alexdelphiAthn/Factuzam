@@ -1,20 +1,20 @@
-﻿inherited frmPrintAlbCompra: TfrmPrintAlbCompra
+inherited frmPrintAlbCompra: TfrmPrintAlbCompra
   Caption = 'Imprimir Albar'#225'n de Compra'
   ClientHeight = 220
   ClientWidth = 460
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 476
   ExplicitHeight = 259
-  TextHeight = 19
+  TextHeight = 17
   inherited pnl1: TPanel
-    Left = 320
+    Left = 316
     Height = 220
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 320
-    ExplicitHeight = 220
+    ExplicitLeft = 314
+    ExplicitHeight = 212
     inherited btnSalir: TcxButton
       Top = 194
-      ExplicitTop = 194
+      ExplicitTop = 186
     end
   end
   object lblSerie: TcxLabel [1]
@@ -62,7 +62,7 @@
         DataSetName = 'LineasAlbaran'
       end
       item
-        DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+        DataSet = dmComprasSesiones.fxdsGuiasSesion
         DataSetName = 'GuiasTallas'
       end>
     Variables = <>
@@ -71,13 +71,10 @@
       Orientation = poLandscape
       PaperWidth = 297.000000000000000000
       PaperHeight = 210.000000000000000000
-      PaperSize = 9
       LeftMargin = 10.000000000000000000
       RightMargin = 10.000000000000000000
       TopMargin = 10.000000000000000000
       BottomMargin = 10.000000000000000000
-      Frame.Typ = []
-      MirrorMode = []
       object PageHeader1: TfrxPageHeader
         FillType = ftBrush
         FillGap.Top = 0
@@ -87,11 +84,9 @@
         Frame.Typ = []
         Height = 132.283464570000000000
         Top = 18.897650000000000000
-        Width = 1046.929500000000000000
+        Width = 1046.929810000000000000
         object MemoTitulo: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
-          Top = 0.000000000000000000
           Width = 1046.929500000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -107,7 +102,6 @@
         end
         object MemoEmpLbl: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 30.236240000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
@@ -123,7 +117,6 @@
         end
         object MemoEmpRazon: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 45.354360000000000000
           Width = 340.157700000000000000
           Height = 18.897650000000000000
@@ -141,7 +134,6 @@
         end
         object MemoEmpDir: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 64.252010000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
@@ -159,7 +151,6 @@
         end
         object MemoEmpCpPob: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 79.370130000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
@@ -172,13 +163,13 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-
-              '[Albaran."CODIGO_POSTAL_ALM_ALBC"] [Albaran."POBLACION_ALM_ALBC"] ([Albaran."PROVINCIA_ALM_ALBC"])')
+            
+              '[Albaran."CODIGO_POSTAL_ALM_ALBC"] [Albaran."POBLACION_ALM_ALBC"' +
+              '] ([Albaran."PROVINCIA_ALM_ALBC"])')
           ParentFont = False
         end
         object MemoEmpCif: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 94.488250000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
@@ -191,7 +182,9 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Tel: [Albaran."TELEFONO_ALM_ALBC"]   Email: [Albaran."EMAIL_ALM_ALBC"]')
+            
+              'Tel: [Albaran."TELEFONO_ALM_ALBC"]   Email: [Albaran."EMAIL_ALM_' +
+              'ALBC"]')
           ParentFont = False
         end
         object MemoPrvLbl: TfrxMemoView
@@ -261,8 +254,9 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-
-              '[Albaran."CODIGO_POSTAL_PRV"] [Albaran."POBLACION_PRV"] ([Albaran."PROVINCIA_PRV"])')
+            
+              '[Albaran."CODIGO_POSTAL_PRV"] [Albaran."POBLACION_PRV"] ([Albara' +
+              'n."PROVINCIA_PRV"])')
           ParentFont = False
         end
         object MemoPrvCif: TfrxMemoView
@@ -424,7 +418,6 @@
         end
         object MemoGuiaTitulo: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 117.165430000000000000
           Width = 1046.929500000000000000
           Height = 15.118120000000000000
@@ -433,8 +426,8 @@
           Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = []
+          Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
             'GU'#205'AS DE TALLAS')
@@ -449,18 +442,16 @@
         FillGap.Right = 0
         Frame.Typ = []
         Height = 18.897650000000000000
-        Top = 173.858380000000000000
-        Width = 1046.929500000000000000
-        DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+        Top = 211.653680000000000000
+        Width = 1046.929810000000000000
+        DataSet = dmComprasSesiones.fxdsGuiasSesion
         DataSetName = 'GuiasTallas'
         RowCount = 0
         object GuiaSistema: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
-          Top = 0.000000000000000000
           Width = 60.000000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -469,18 +460,17 @@
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."NOMBRE_CORTO_AC"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaNombre: TfrxMemoView
           AllowVectorExport = True
           Left = 60.000000000000000000
-          Top = 0.000000000000000000
           Width = 350.000000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -488,19 +478,17 @@
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          HAlign = haLeft
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."NOMBRE_AC"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT01: TfrxMemoView
           AllowVectorExport = True
           Left = 410.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -509,18 +497,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T01"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT02: TfrxMemoView
           AllowVectorExport = True
           Left = 436.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -529,18 +516,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T02"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT03: TfrxMemoView
           AllowVectorExport = True
           Left = 463.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -549,18 +535,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T03"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT04: TfrxMemoView
           AllowVectorExport = True
           Left = 489.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -569,18 +554,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T04"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT05: TfrxMemoView
           AllowVectorExport = True
           Left = 516.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -589,18 +573,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T05"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT06: TfrxMemoView
           AllowVectorExport = True
           Left = 542.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -609,18 +592,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T06"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT07: TfrxMemoView
           AllowVectorExport = True
           Left = 569.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -629,18 +611,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T07"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT08: TfrxMemoView
           AllowVectorExport = True
           Left = 595.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -649,18 +630,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T08"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT09: TfrxMemoView
           AllowVectorExport = True
           Left = 622.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -669,18 +649,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T09"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT10: TfrxMemoView
           AllowVectorExport = True
           Left = 648.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -689,18 +668,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T10"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT11: TfrxMemoView
           AllowVectorExport = True
           Left = 675.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -709,18 +687,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T11"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT12: TfrxMemoView
           AllowVectorExport = True
           Left = 701.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -729,18 +706,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T12"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT13: TfrxMemoView
           AllowVectorExport = True
           Left = 728.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -749,18 +725,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T13"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT14: TfrxMemoView
           AllowVectorExport = True
           Left = 754.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -769,18 +744,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T14"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT15: TfrxMemoView
           AllowVectorExport = True
           Left = 781.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -789,18 +763,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T15"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT16: TfrxMemoView
           AllowVectorExport = True
           Left = 807.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -809,18 +782,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T16"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT17: TfrxMemoView
           AllowVectorExport = True
           Left = 834.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -829,18 +801,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T17"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT18: TfrxMemoView
           AllowVectorExport = True
           Left = 860.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -849,18 +820,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T18"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT19: TfrxMemoView
           AllowVectorExport = True
           Left = 887.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -869,18 +839,17 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T19"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object GuiaT20: TfrxMemoView
           AllowVectorExport = True
           Left = 913.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+          DataSet = dmComprasSesiones.fxdsGuiasSesion
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -889,10 +858,10 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[GuiasTallas."T20"]')
           ParentFont = False
+          VAlign = vaCenter
         end
       end
       object HeaderLineas: TfrxHeader
@@ -903,12 +872,10 @@
         FillGap.Right = 0
         Frame.Typ = []
         Height = 22.677180000000000000
-        Top = 207.874150000000000000
-        Width = 1046.929500000000000000
+        Top = 253.228510000000000000
+        Width = 1046.929810000000000000
         object HdrCodArt: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
-          Top = 0.000000000000000000
           Width = 70.000000000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -916,18 +883,17 @@
           Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             'C'#243'd. Art.')
           ParentFont = False
+          VAlign = vaCenter
         end
         object HdrModelo: TfrxMemoView
           AllowVectorExport = True
           Left = 70.000000000000000000
-          Top = 0.000000000000000000
           Width = 60.000000000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -935,18 +901,17 @@
           Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             'Modelo')
           ParentFont = False
+          VAlign = vaCenter
         end
         object HdrDescr: TfrxMemoView
           AllowVectorExport = True
           Left = 130.000000000000000000
-          Top = 0.000000000000000000
           Width = 140.000000000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -954,18 +919,17 @@
           Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             'Descripci'#243'n')
           ParentFont = False
+          VAlign = vaCenter
         end
         object HdrColor: TfrxMemoView
           AllowVectorExport = True
           Left = 270.000000000000000000
-          Top = 0.000000000000000000
           Width = 90.000000000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -973,18 +937,17 @@
           Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             'Color')
           ParentFont = False
+          VAlign = vaCenter
         end
         object HdrSistema: TfrxMemoView
           AllowVectorExport = True
           Left = 360.000000000000000000
-          Top = 0.000000000000000000
           Width = 50.000000000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -992,18 +955,17 @@
           Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             'Sis.')
           ParentFont = False
+          VAlign = vaCenter
         end
         object HdrTallasBlock: TfrxMemoView
           AllowVectorExport = True
           Left = 410.000000000000000000
-          Top = 0.000000000000000000
           Width = 530.000000000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -1011,18 +973,17 @@
           Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            'Cantidades por talla (T01..T20 — ver gu'#237'as arriba)')
+            'Cantidades por talla (T01..T20 '#226#128#148' ver gu'#237'as arriba)')
           ParentFont = False
+          VAlign = vaCenter
         end
         object HdrTotal: TfrxMemoView
           AllowVectorExport = True
           Left = 940.000000000000000000
-          Top = 0.000000000000000000
           Width = 45.000000000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -1030,18 +991,17 @@
           Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             'Uds.')
           ParentFont = False
+          VAlign = vaCenter
         end
         object HdrImporte: TfrxMemoView
           AllowVectorExport = True
           Left = 985.000000000000000000
-          Top = 0.000000000000000000
           Width = 61.929500000000000000
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
@@ -1049,13 +1009,13 @@
           Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Fill.BackColor = 6710886
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 6710886
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             'Importe')
           ParentFont = False
+          VAlign = vaCenter
         end
       end
       object DataBandLineas: TfrxMasterData
@@ -1066,37 +1026,37 @@
         FillGap.Right = 0
         Frame.Typ = []
         Height = 22.677180000000000000
-        Top = 245.669450000000000000
-        Width = 1046.929500000000000000
+        Top = 298.582870000000000000
+        Width = 1046.929810000000000000
         DataSet = dmAlbaranesCompra.fxdsLinAlbc
         DataSetName = 'LineasAlbaran'
         RowCount = 0
         object LinCodArt: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
-          Top = 0.000000000000000000
           Width = 70.000000000000000000
           Height = 22.677180000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
+          Font.Height = -11
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          HAlign = haLeft
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[LineasAlbaran."CODIGO_ART"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinModelo: TfrxMemoView
           AllowVectorExport = True
           Left = 70.000000000000000000
-          Top = 0.000000000000000000
           Width = 60.000000000000000000
           Height = 22.677180000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
@@ -1105,16 +1065,14 @@
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          HAlign = haLeft
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[LineasAlbaran."REF_PRV"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinDescr: TfrxMemoView
           AllowVectorExport = True
           Left = 130.000000000000000000
-          Top = 0.000000000000000000
           Width = 140.000000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1125,36 +1083,34 @@
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          HAlign = haLeft
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[LineasAlbaran."DESCRIPCION"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinColor: TfrxMemoView
           AllowVectorExport = True
           Left = 270.000000000000000000
-          Top = 0.000000000000000000
           Width = 90.000000000000000000
           Height = 22.677180000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
           DataSetName = 'LineasAlbaran'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -11
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          HAlign = haLeft
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[LineasAlbaran."COLOR_TEXTO"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinSistema: TfrxMemoView
           AllowVectorExport = True
           Left = 360.000000000000000000
-          Top = 0.000000000000000000
           Width = 50.000000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1166,15 +1122,14 @@
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[LineasAlbaran."NOMBRE_CORTO_AC"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT01: TfrxMemoView
           AllowVectorExport = True
           Left = 410.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1186,15 +1141,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T01"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T01">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T01"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T01">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT02: TfrxMemoView
           AllowVectorExport = True
           Left = 436.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1206,15 +1162,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T02"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T02">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T02"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T02">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT03: TfrxMemoView
           AllowVectorExport = True
           Left = 463.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1226,15 +1183,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T03"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T03">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T03"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T03">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT04: TfrxMemoView
           AllowVectorExport = True
           Left = 489.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1246,15 +1204,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T04"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T04">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T04"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T04">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT05: TfrxMemoView
           AllowVectorExport = True
           Left = 516.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1266,15 +1225,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T05"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T05">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T05"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T05">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT06: TfrxMemoView
           AllowVectorExport = True
           Left = 542.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1286,15 +1246,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T06"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T06">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T06"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T06">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT07: TfrxMemoView
           AllowVectorExport = True
           Left = 569.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1306,15 +1267,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T07"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T07">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T07"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T07">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT08: TfrxMemoView
           AllowVectorExport = True
           Left = 595.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1326,15 +1288,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T08"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T08">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T08"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T08">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT09: TfrxMemoView
           AllowVectorExport = True
           Left = 622.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1346,15 +1309,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T09"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T09">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T09"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T09">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT10: TfrxMemoView
           AllowVectorExport = True
           Left = 648.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1366,15 +1330,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T10"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T10">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T10"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T10">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT11: TfrxMemoView
           AllowVectorExport = True
           Left = 675.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1386,15 +1351,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T11"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T11">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T11"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T11">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT12: TfrxMemoView
           AllowVectorExport = True
           Left = 701.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1406,15 +1372,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T12"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T12">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T12"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T12">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT13: TfrxMemoView
           AllowVectorExport = True
           Left = 728.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1426,15 +1393,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T13"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T13">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T13"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T13">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT14: TfrxMemoView
           AllowVectorExport = True
           Left = 754.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1446,15 +1414,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T14"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T14">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T14"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T14">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT15: TfrxMemoView
           AllowVectorExport = True
           Left = 781.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1466,15 +1435,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T15"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T15">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T15"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T15">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT16: TfrxMemoView
           AllowVectorExport = True
           Left = 807.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1486,15 +1456,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T16"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T16">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T16"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T16">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT17: TfrxMemoView
           AllowVectorExport = True
           Left = 834.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1506,15 +1477,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T17"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T17">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T17"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T17">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT18: TfrxMemoView
           AllowVectorExport = True
           Left = 860.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1526,15 +1498,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T18"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T18">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T18"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T18">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT19: TfrxMemoView
           AllowVectorExport = True
           Left = 887.000000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1546,15 +1519,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T19"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T19">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T19"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T19">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinT20: TfrxMemoView
           AllowVectorExport = True
           Left = 913.500000000000000000
-          Top = 0.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1566,15 +1540,16 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
-          VAlign = vaCenter
           Memo.UTF8W = (
-            '[IIF(<LineasAlbaran."T20"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran."T20">), '#39#39')]')
+            
+              '[IIF(<LineasAlbaran."T20"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
+              '"T20">), '#39#39')]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinTotalUds: TfrxMemoView
           AllowVectorExport = True
           Left = 940.000000000000000000
-          Top = 0.000000000000000000
           Width = 45.000000000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1588,15 +1563,14 @@
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[LineasAlbaran."TOTAL_UNIDADES"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object LinImporte: TfrxMemoView
           AllowVectorExport = True
           Left = 985.000000000000000000
-          Top = 0.000000000000000000
           Width = 61.929500000000000000
           Height = 22.677180000000000000
           DataSet = dmAlbaranesCompra.fxdsLinAlbc
@@ -1610,10 +1584,10 @@
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[LineasAlbaran."TOTAL_LINEA"]')
           ParentFont = False
+          VAlign = vaCenter
         end
       end
       object PageFooter1: TfrxPageFooter
@@ -1624,8 +1598,8 @@
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 287.244280000000000000
-        Width = 1046.929500000000000000
+        Top = 381.732530000000000000
+        Width = 1046.929810000000000000
         object MemoTotalUds: TfrxMemoView
           AllowVectorExport = True
           Left = 700.000000000000000000
@@ -1639,10 +1613,10 @@
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             'TOTAL: [Albaran."TOTAL_UNIDADES_SES"] unidades')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoTotalImporte: TfrxMemoView
           AllowVectorExport = True
@@ -1661,14 +1635,13 @@
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[Albaran."TOTAL_LINEAS_SES"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoPagina: TfrxMemoView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 3.779530000000000000
           Width = 300.000000000000000000
           Height = 18.897650000000000000
@@ -1702,7 +1675,6 @@
     Top = 8
   end
   inherited frxdsgnr1: TfrxDesigner
-    DefaultPaperSize = 9
     DefaultOrientation = poLandscape
     Left = 288
     Top = 184
@@ -1725,7 +1697,7 @@
         DataSetName = 'LineasAlbaran'
       end
       item
-        DataSet = dmAlbaranesCompra.fxdsGuiasAlbc
+        DataSet = dmComprasSesiones.fxdsGuiasSesion
         DataSetName = 'GuiasTallas'
       end>
     Variables = <>
@@ -1734,13 +1706,10 @@
       Orientation = poLandscape
       PaperWidth = 297.000000000000000000
       PaperHeight = 210.000000000000000000
-      PaperSize = 9
       LeftMargin = 10.000000000000000000
       RightMargin = 10.000000000000000000
       TopMargin = 10.000000000000000000
       BottomMargin = 10.000000000000000000
-      Frame.Typ = []
-      MirrorMode = []
     end
   end
 end
