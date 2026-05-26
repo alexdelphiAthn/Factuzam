@@ -671,4 +671,66 @@
     Left = 120
     Top = 440
   end
+  object alMtoGen: TActionList
+    Left = 320
+    Top = 440
+    object actEliminarRegistro: TAction
+      Caption = 'Eliminar registro'
+      ShortCut = 16430
+      OnExecute = actEliminarRegistroExecute
+      OnUpdate = actEliminarRegistroUpdate
+    end
+    object actRegistroAnterior: TAction
+      Caption = 'Registro anterior'
+      ShortCut = 33
+      OnExecute = actRegistroAnteriorExecute
+      OnUpdate = actNavBrowseUpdate
+    end
+    object actRegistroSiguiente: TAction
+      Caption = 'Registro siguiente'
+      ShortCut = 34
+      OnExecute = actRegistroSiguienteExecute
+      OnUpdate = actNavBrowseUpdate
+    end
+    object actInsertarRegistro: TAction
+      Caption = 'Insertar registro'
+      ShortCut = 45
+      OnExecute = actInsertarRegistroExecute
+      OnUpdate = actNavBrowseUpdate
+    end
+    object actPrimerRegistro: TAction
+      Caption = 'Primer registro'
+      ShortCut = 36
+      OnExecute = actPrimerRegistroExecute
+      OnUpdate = actNavBrowseUpdate
+    end
+    object actUltimoRegistro: TAction
+      Caption = 'Ultimo registro'
+      ShortCut = 35
+      OnExecute = actUltimoRegistroExecute
+      OnUpdate = actNavBrowseUpdate
+    end
+    object actEditarRegistro: TAction
+      Caption = 'Editar registro'
+      ShortCut = 113
+      OnExecute = actEditarRegistroExecute
+      OnUpdate = actNavBrowseUpdate
+    end
+    object actGrabarRegistro: TAction
+      Caption = 'Grabar registro'
+      ShortCut = 123
+      OnExecute = actGrabarRegistroExecute
+      OnUpdate = actGrabarRegistroUpdate
+    end
+    object actFotoArticulo: TAction
+      Caption = 'Foto articulo'
+      ShortCut = 49222
+      OnExecute = actFotoArticuloExecute
+    end
+    object actConsultaStock: TAction
+      Caption = 'Consulta stock'
+      ShortCut = 16469
+      OnExecute = actConsultaStockExecute
+    end
+  end
 end
