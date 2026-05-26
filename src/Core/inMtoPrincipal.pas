@@ -254,6 +254,7 @@ uses inLibUser,
   inLibGlobalVar,
   inLibInformesGuiasCache,
   inLibConfigCampos,
+  inLibPermisos,
   inLibLog,
   inLibDir,
   inMtoSplash,
@@ -447,6 +448,9 @@ begin
   inLibLog.Log.LogInfo('Arranque: pre-PrecargarConfigCampos');
   oConfigCampos := TConfigCamposCache.Create;
   oConfigCampos.Precargar;
+  inLibLog.Log.LogInfo('Arranque: pre-PrecargarPermisos');
+  oPermisos := TPermisosCache.Create;
+  oPermisos.Precargar(oConn, oUser, oGroup, oRootGroup = 'S');
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');
