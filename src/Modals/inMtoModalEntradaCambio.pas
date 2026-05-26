@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoModalEntradaCambio                                       }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       1.0.0                                                         }
+{ Versión:       2.0.0                                                         }
 {   Fecha:       26/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -11,8 +11,7 @@
 {  Descripción:                                                                }
 {    Modal F6 del menú de caja: entrada de cambio (efectivo que se             }
 {    introduce en el cajón al inicio del turno o como refuerzo).               }
-{    Crea una operación EC en fza_caja_operaciones + un pago EFE en            }
-{    fza_caja_pagos para que el arqueo lo recoja como efectivo entrante.        }
+{    Pide empleado (con búsqueda + etiqueta nombre), importe y concepto.       }
 {******************************************************************************}
 unit inMtoModalEntradaCambio;
 
@@ -24,7 +23,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ActnList, System.Actions,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCurrencyEdit,
-  cxMemo, Uni,
+  Uni,
   inMtoFrmBase;
 
 type
@@ -32,6 +31,9 @@ type
     pnlPrincipal: TPanel;
     pnlBotones: TPanel;
     lblTitulo: TcxLabel;
+    lblEmpleadoLbl: TcxLabel;
+    txtEmpleado: TcxTextEdit;
+    lblEmpleadoNombre: TcxLabel;
     lblImporteLbl: TcxLabel;
     txtImporte: TcxCurrencyEdit;
     lblConceptoLbl: TcxLabel;
@@ -44,11 +46,13 @@ type
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure txtEmpleadoPropertiesChange(Sender: TObject);
   private
     FConn: TUniConnection;
     FEmpresa: string;
     FAlmacen: string;
     FCaja: string;
+    procedure BuscarNombreEmpleado;
     procedure Grabar;
   public
     class function Ejecutar(AOwner: TComponent;
@@ -80,6 +84,8 @@ begin
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
+    frm.txtEmpleado.Text := oUser;
+    frm.BuscarNombreEmpleado;
     if frm.ShowModal = mrOk then
       Result := True;
   finally
@@ -94,8 +100,46 @@ begin
   Position := poScreenCenter;
 end;
 
+procedure TfrmModalEntradaCambio.txtEmpleadoPropertiesChange(
+  Sender: TObject);
+begin
+  BuscarNombreEmpleado;
+end;
+
+procedure TfrmModalEntradaCambio.BuscarNombreEmpleado;
+var
+  Q: TUniQuery;
+begin
+  lblEmpleadoNombre.Caption := '';
+  if (FConn = nil) or (Trim(txtEmpleado.Text) = '') then
+    Exit;
+  Q := TUniQuery.Create(nil);
+  try
+    Q.Connection := FConn;
+    Q.SQL.Text :=
+      'SELECT NOMBRE_USU' +
+      '  FROM fza_usuarios' +
+      ' WHERE CODIGO_USU_USU = :pCOD';
+    Q.ParamByName('pCOD').AsString := Trim(txtEmpleado.Text);
+    Q.Open;
+    if not Q.Eof then
+      lblEmpleadoNombre.Caption :=
+        Q.FieldByName('NOMBRE_USU').AsString;
+  finally
+    FreeAndNil(Q);
+  end;
+end;
+
 procedure TfrmModalEntradaCambio.actAceptarExecute(Sender: TObject);
 begin
+  if Trim(txtEmpleado.Text) = '' then
+  begin
+    Application.MessageBox(
+      'Introduzca el empleado que realiza la operación.',
+      'Aviso', MB_OK or MB_ICONWARNING);
+    txtEmpleado.SetFocus;
+    Exit;
+  end;
   if txtImporte.Value <= 0 then
   begin
     Application.MessageBox(
@@ -119,31 +163,31 @@ var
   sNumOp: string;
   QryTrx: TUniQuery;
   dImporte: Currency;
-  sConcepto: string;
+  sConcepto, sEmpleado: string;
 begin
   dm := TdmCajaOpe.Create(nil);
   try
     dImporte  := Currency(txtImporte.Value);
+    sEmpleado := Trim(txtEmpleado.Text);
     sConcepto := Trim(txtConcepto.Text);
     if sConcepto = '' then
       sConcepto := 'Entrada de cambio';
-    sNumOp := dm.SiguienteOpCaja(FEmpresa, FAlmacen, FCaja, oUser);
+    sNumOp := dm.SiguienteOpCaja(
+      FEmpresa, FAlmacen, FCaja, sEmpleado);
     FConn.StartTransaction;
     try
       QryTrx := TUniQuery.Create(nil);
       try
         QryTrx.Connection := FConn;
-        { Operación tipo EC (Entrada de Cambio) }
         dm.InsertarOperacionCaja(
           QryTrx,
           FEmpresa, FAlmacen, FCaja,
           sNumOp,
           'EC',
           dImporte,
-          oUser,
+          sEmpleado,
           '', '', '',
           sConcepto);
-        { Pago en efectivo asociado }
         dm.InsertarPagoCaja(
           QryTrx,
           FEmpresa, FAlmacen, FCaja,
@@ -161,7 +205,6 @@ begin
       FConn.Rollback;
       raise;
     end;
-    { Ticket de confirmación }
     ImprimirTicketOperacionCaja(
       FEmpresa, FAlmacen, FCaja, sNumOp,
       oNomImpresoraCaja);

@@ -253,7 +253,7 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar;
+uses inLibGlobalVar, inMtoModalGastoCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -768,7 +768,7 @@ var
   Lineas: TArray<TArqueoRecuentoLinea>;
   i: Integer;
   dTotalRecuento, dDiferenciaTotal: Currency;
-  dTotalSistema: Currency;
+  dTotalSistema, dSobrante: Currency;
   sObs: string;
   v: Variant;
 begin
@@ -850,6 +850,20 @@ begin
     Currency(txtDejoCaja.Value),
     sObs,
     oNomImpresoraCaja);
+  { Si hay sobrante (recontado − dejado en caja > 0), ofrecer retirar }
+  dSobrante := dTotalRecuento - Currency(txtDejoCaja.Value);
+  if dSobrante > 0 then
+  begin
+    if Application.MessageBox(
+         PChar(Format(
+           'Sobrante de %s EUR.' + #13#10 +
+           '¿Desea registrar la retirada del sobrante?',
+           [FormatFloat(',0.00', dSobrante)])),
+         'Retirada de sobrante',
+         MB_YESNO or MB_ICONQUESTION) = IDYES then
+      TfrmModalGastoCaja.EjecutarConImporte(
+        Self, FConn, FEmpresa, FAlmacen, FCaja, dSobrante);
+  end;
 end;
 
 initialization
