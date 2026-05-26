@@ -21,7 +21,7 @@ inherited frmModalArqueo: TfrmModalArqueo
     object lblTituloDesde: TcxLabel
       Left = 16
       Top = 6
-      Caption = 'Fecha desde'
+      Caption = 'Fecha desde (F10)'
       Style.TextColor = clNavy
       TabOrder = 4
       Transparent = True
@@ -35,38 +35,22 @@ inherited frmModalArqueo: TfrmModalArqueo
       TabOrder = 0
       Width = 170
     end
-    object lblF10: TcxLabel
-      Left = 192
-      Top = 32
-      Caption = 'F10'
-      Style.TextColor = clBlue
-      TabOrder = 5
-      Transparent = True
-    end
     object lblTituloHasta: TcxLabel
-      Left = 250
+      Left = 200
       Top = 6
-      Caption = 'Fecha hasta'
+      Caption = 'Fecha hasta (F6)'
       Style.TextColor = clNavy
       TabOrder = 6
       Transparent = True
     end
     object dteFechaHasta: TcxDateEdit
-      Left = 250
+      Left = 200
       Top = 28
       Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
       Properties.Kind = ckDateTime
       Properties.OnChange = dteFechaHastaPropertiesChange
       TabOrder = 1
       Width = 170
-    end
-    object lblF6: TcxLabel
-      Left = 426
-      Top = 32
-      Caption = 'F6'
-      Style.TextColor = clBlue
-      TabOrder = 7
-      Transparent = True
     end
     object lblTituloVentas: TcxLabel
       Left = 480
@@ -1041,14 +1025,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblRetiradaLbl: TcxLabel
             Left = 8
-            Top = 46
+            Top = 72
             Caption = 'Retirada:'
             TabOrder = 7
             Transparent = True
           end
           object rgRetiradaTipo: TcxRadioGroup
             Left = 80
-            Top = 44
+            Top = 70
             Properties.Columns = 5
             Properties.Items = <
               item
@@ -1073,7 +1057,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object txtRetiradaImporte: TcxCurrencyEdit
             Left = 8
-            Top = 88
+            Top = 114
             Properties.OnChange = txtRetiradaImportePropertiesChange
             TabOrder = 9
             Value = 0.000000000000000000
@@ -1081,14 +1065,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblDejoLbl: TcxLabel
             Left = 130
-            Top = 90
+            Top = 116
             Caption = 'Dejo para ma'#241'ana:'
             TabOrder = 10
             Transparent = True
           end
           object lblDejoImporte: TcxLabel
             Left = 280
-            Top = 90
+            Top = 116
             Caption = '0,00 EUR'
             Style.Font.Style = [fsBold]
             TabOrder = 11
@@ -1096,14 +1080,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblObservacionesLbl: TcxLabel
             Left = 390
-            Top = 90
+            Top = 116
             Caption = 'Obs:'
             TabOrder = 12
             Transparent = True
           end
           object txtObservaciones: TcxTextEdit
             Left = 426
-            Top = 88
+            Top = 114
             Properties.MaxLength = 500
             TabOrder = 13
             Width = 196
@@ -1173,6 +1157,16 @@ inherited frmModalArqueo: TfrmModalArqueo
       Caption = 'Grabar'
       ShortCut = 113
       OnExecute = actGrabarExecute
+    end
+    object actDesplegarDesde: TAction
+      Caption = 'Desplegar Desde'
+      ShortCut = 121
+      OnExecute = actDesplegarDesdeExecute
+    end
+    object actDesplegarHasta: TAction
+      Caption = 'Desplegar Hasta'
+      ShortCut = 117
+      OnExecute = actDesplegarHastaExecute
     end
   end
   object dsResEmpleado: TDataSource
