@@ -159,15 +159,15 @@ begin
       // Uds teoricas
       rVal := QLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsFloat;
       W(Sheet, iRow, COL_TEOR, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_TEOR].Style.DataFormat.FormatCode := '#,##0';
+      Sheet.Cells[iRow, COL_TEOR].Style.DataFormat.FormatCode := '0';
       // Uds fisicas
       rVal := QLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsFloat;
       W(Sheet, iRow, COL_FISIC, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_FISIC].Style.DataFormat.FormatCode := '#,##0';
+      Sheet.Cells[iRow, COL_FISIC].Style.DataFormat.FormatCode := '0';
       // Diferencia (formula)
       WFormula(Sheet, iRow, COL_DIF,
         '=' + GetRef(iRow, COL_FISIC) + '-' + GetRef(iRow, COL_TEOR),
-        '#,##0');
+        '0');
       // PMP actual
       rVal := QLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsFloat;
       W(Sheet, iRow, COL_PMP, rVal, False, ssahRight);
@@ -192,15 +192,15 @@ begin
     W(Sheet, iRow, COL_DESC, 'TOTALES', True, ssahRight);
     WFormula(Sheet, iRow, COL_TEOR,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_TEOR) + ':' +
-                GetRef(iFilaFinLineas, COL_TEOR) + ')', '#,##0');
+                GetRef(iFilaFinLineas, COL_TEOR) + ')', '0');
     Sheet.Cells[iRow, COL_TEOR].Style.Font.Style := [fsBold];
     WFormula(Sheet, iRow, COL_FISIC,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_FISIC) + ':' +
-                GetRef(iFilaFinLineas, COL_FISIC) + ')', '#,##0');
+                GetRef(iFilaFinLineas, COL_FISIC) + ')', '0');
     Sheet.Cells[iRow, COL_FISIC].Style.Font.Style := [fsBold];
     WFormula(Sheet, iRow, COL_DIF,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_DIF) + ':' +
-                GetRef(iFilaFinLineas, COL_DIF) + ')', '#,##0');
+                GetRef(iFilaFinLineas, COL_DIF) + ')', '0');
     Sheet.Cells[iRow, COL_DIF].Style.Font.Style := [fsBold];
     WFormula(Sheet, iRow, COL_COSTE,
       '=SUM(' + GetRef(iFilaInicioLineas, COL_COSTE) + ':' +

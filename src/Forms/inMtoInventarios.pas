@@ -1922,20 +1922,24 @@ begin
     ShowMessage('No hay inventario activo.');
     Exit;
   end;
-  // Asegurar que las lineas estan cargadas
-  dmmInventarios.CargarLineasInventario;
-  fPreview := TfrmMtoPreviewExcel.Create(Self);
+  Screen.Cursor := crHourGlass;
   try
-    fPreview.PopupParent := Self;
-    fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
-    fPreview.DialogoGuardar.FileName :=
-      'Inventario_' +
-      dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString + '_' +
-      dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
-    ExportarInventarioExcel(
-      fPreview.dxSpreadSheet1,
-      dmmInventarios.unqryTablaG,
-      dmmInventarios.cdsLineas);
+    dmmInventarios.CargarLineasInventario;
+    fPreview := TfrmMtoPreviewExcel.Create(Self);
+    try
+      fPreview.PopupParent := Self;
+      fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+      fPreview.DialogoGuardar.FileName :=
+        'Inventario_' +
+        dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString + '_' +
+        dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
+      ExportarInventarioExcel(
+        fPreview.dxSpreadSheet1,
+        dmmInventarios.unqryTablaG,
+        dmmInventarios.cdsLineas);
+    finally
+      Screen.Cursor := crDefault;
+    end;
     fPreview.ShowModal;
   finally
     FreeAndNil(fPreview);
