@@ -497,21 +497,7 @@ end;
 
 procedure TfrmMtoEmpresas.btnGrabarClick(Sender: TObject);
 begin
-  if ( (dmmEmpresas.unqryTablaG.State = dsInsert) or
-       (dmmEmpresas.unqryTablaG.State = dsEdit)) then
-  begin
-    dmmEmpresas.unqryTablaG.Post;
-  end;
-  if ( (dmmEmpresas.unqryRetenciones.State = dsInsert) or
-       (dmmEmpresas.unqryRetenciones.State = dsEdit)) then
-  begin
-    dmmEmpresas.unqryRetenciones.Post;
-  end;
-  if ( (dmmEmpresas.unqrySeries.State = dsInsert) or
-       (dmmEmpresas.unqrySeries.State = dsEdit)) then
-  begin
-    dmmEmpresas.unqrySeries.Post;
-  end;
+  inherited;
 end;
 
 procedure TfrmMtoEmpresas.chkAplicaRetencionesPropertiesChange(Sender: TObject);

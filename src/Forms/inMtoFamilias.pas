@@ -221,16 +221,7 @@ end;
 
 procedure TfrmMtoFamilias.btnGrabarClick(Sender: TObject);
 begin
-  if ( (dsTablaG.DataSet.State = dsInsert) or
-       (dsTablaG.DataSet.State = dsEdit)) then
-  begin
-    dsTablaG.DataSet.Post;
-  end;
-  if ( (dmmFamilias.unqryArticulosFamilias.State = dsInsert) or
-       (dmmFamilias.unqryArticulosFamilias.State = dsEdit) ) then
-  begin
-    dmmFamilias.unqryArticulosFamilias.Post;
-  end;
+  inherited;
 end;
 
 procedure TfrmMtoFamilias.btnNuevaFamiliaClick(Sender: TObject);

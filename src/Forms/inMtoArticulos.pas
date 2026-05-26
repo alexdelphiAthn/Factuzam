@@ -1335,6 +1335,8 @@ begin
       Exit;
     end;
   end;
+  // Delegar en base: transacción + mensaje de confirmación
+  inherited;
 end;
 
 procedure TfrmMtoArticulos.btnNuevoArticuloClick(Sender: TObject);
