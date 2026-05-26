@@ -36,8 +36,9 @@ type
   TfrmMtoAppParam = class(TFrmBase)
     JvInspectorDotNETPainter1: TJvInspectorDotNETPainter;
     ActionList1    : TActionList;
-    actGuardar     : TAction;
-    actSalir       : TAction;
+    actGuardar       : TAction;
+    actSalir         : TAction;
+    actGuardarLayout : TAction;
     JvInspector1: TJvInspector;
     Panel1: TPanel;
     edtBusqueda: TcxButtonEdit;
@@ -54,6 +55,7 @@ type
     procedure btnChangeIdClick(Sender: TObject);
     procedure actGuardarExecute(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
+    procedure actGuardarLayoutExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -80,6 +82,8 @@ type
     procedure CargarParametros(Grid: TJvInspector;
                                const pUsuario, pGrupo: string);
     procedure ConstruirInspector;
+    procedure GuardarLayout;
+    procedure RestaurarLayout;
 
     // Handlers de listas desplegables
     procedure GetImpresorasInformesList(Sender: TJvCustomInspectorItem;
@@ -108,7 +112,8 @@ uses
   StrUtils, inLibAppParam, inLibLog, Vcl.Printers,
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
-  FileCtrl, inLibPathTokens;               // SelectDirectory
+  FileCtrl, inLibPathTokens,               // SelectDirectory
+  inLibLayoutForm;
 
 // -----------------------------------------------------------------------
 // CICLO DE VIDA
@@ -613,6 +618,46 @@ begin
 end;
 
 // -----------------------------------------------------------------------
+// LAYOUT (geometría + divider del inspector)
+// -----------------------------------------------------------------------
+
+procedure TfrmMtoAppParam.GuardarLayout;
+var
+  Layout: TLayoutSaver;
+begin
+  Layout := TLayoutSaver.Create(Self.Name);
+  try
+    Layout.GuardarGeometria(Self);
+    Layout.GuardarDividerInspector('Divider', JvInspector1);
+    if Layout.PreguntarYGrabar('Personalización Parámetros Aplicación') then
+      ShowMessage('Layout guardado.');
+  finally
+    FreeAndNil(Layout);
+  end;
+end;
+
+procedure TfrmMtoAppParam.RestaurarLayout;
+var
+  Layout: TLayoutLoader;
+begin
+  Layout := TLayoutLoader.Create(Self.Name);
+  try
+    if Layout.Disponible then
+    begin
+      Layout.RestaurarGeometria(Self);
+      Layout.RestaurarDividerInspector('Divider', JvInspector1);
+    end;
+  finally
+    FreeAndNil(Layout);
+  end;
+end;
+
+procedure TfrmMtoAppParam.actGuardarLayoutExecute(Sender: TObject);
+begin
+  GuardarLayout;
+end;
+
+// -----------------------------------------------------------------------
 // EVENTOS DE FORMULARIO
 // -----------------------------------------------------------------------
 
@@ -627,6 +672,7 @@ begin
   cmbGrupoUsuario.ItemIndex := 0;
   btnChangeId.Visible := (oRootGroup = 'S');
   CargarParametros(JvInspector1, oUser, '');
+  RestaurarLayout;
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;
 end;

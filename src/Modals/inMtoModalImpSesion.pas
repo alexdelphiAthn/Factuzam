@@ -40,6 +40,8 @@ uses
   frxExportXLSX, frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization, frLanguageSpanish, frxSmartMemo,
   JvComponentBase, JvEnterTab,
+  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
+  dxSpreadSheetStyles, dxHashUtils,
   inMtoModalGenImp, UniDataComprasSesiones;
 
 type
@@ -49,6 +51,7 @@ type
     lblNumero: TcxLabel;
     edtNumero: TcxTextEdit;
     procedure FormCreate(Sender: TObject);
+    procedure btnExcelClick(Sender: TObject);
   public
     dmSesion: TdmComprasSesiones;
     procedure preparar_consulta;   override;
@@ -57,7 +60,59 @@ type
 
 implementation
 
+uses
+  inMtoPreviewExcel, inLibDocCompraExcel, inLibAppParam;
+
 {$R *.dfm}
+
+procedure TfrmPrintSesion.btnExcelClick(Sender: TObject);
+var
+  fPreview: TfrmMtoPreviewExcel;
+  cfg: TDocCompraCabCfg;
+begin
+  if dmSesion = nil then
+    Exit;
+  dmSesion.PrepararPrint(edtSerie.Text, edtNumero.Text);
+  cfg := Default(TDocCompraCabCfg);
+  cfg.Titulo         := 'SESION DE COMPRA';
+  cfg.EtiquetaIzq    := 'EMPRESA';
+  cfg.FieldRazonIzq  := 'RAZON_SOCIAL_EMP';
+  cfg.FieldDirIzq    := 'DIRECCION1_EMP';
+  cfg.FieldCPIzq     := 'CODIGO_POSTAL_EMP';
+  cfg.FieldPobIzq    := 'POBLACION_EMP';
+  cfg.FieldCifIzq    := 'CIF_EMP';
+  cfg.FieldTelIzq    := 'TELEFONO1_EMP';
+  cfg.FieldProvIzq   := 'PROVINCIA_EMP';
+  cfg.FieldRazonPrv  := 'RAZON_SOCIAL_PRV';
+  cfg.FieldDirPrv    := 'DIRECCION1_PRV';
+  cfg.FieldCPPrv     := 'CODIGO_POSTAL_PRV';
+  cfg.FieldPobPrv    := 'POBLACION_PRV';
+  cfg.FieldCifPrv    := 'CIF_PRV';
+  cfg.FieldTelPrv    := 'TELEFONO1_PRV';
+  cfg.FieldProvPrv   := 'PROVINCIA_PRV';
+  cfg.FieldSerie     := 'SERIE_SES';
+  cfg.FieldNumero    := 'NUMERO_SES';
+  cfg.FieldFecha     := 'FECHA_SES';
+  cfg.FieldEstado    := 'ESTADO_SES';
+  cfg.FieldRefPrv    := 'REF_PRV_SES';
+  cfg.MostrarPrecioVenta := True;
+  fPreview := TfrmMtoPreviewExcel.Create(Self);
+  try
+    fPreview.PopupParent := Self;
+    fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+    fPreview.DialogoGuardar.FileName :=
+      'Sesion_' + edtSerie.Text + '_' + edtNumero.Text;
+    ExportarDocCompraHorizontal(
+      fPreview.dxSpreadSheet1,
+      dmSesion.unqryCabSesionPrint,
+      dmSesion.unqryLinSesionPrint,
+      dmSesion.unqryGuiasSesionPrint,
+      cfg);
+    fPreview.ShowModal;
+  finally
+    FreeAndNil(fPreview);
+  end;
+end;
 
 procedure TfrmPrintSesion.FormCreate(Sender: TObject);
 begin

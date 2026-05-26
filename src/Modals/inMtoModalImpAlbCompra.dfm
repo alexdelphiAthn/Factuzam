@@ -16,6 +16,9 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
       Top = 194
       ExplicitTop = 186
     end
+    inherited btnExcel: TcxButton
+      OnClick = btnExcelClick
+    end
   end
   object lblSerie: TcxLabel [1]
     Left = 16

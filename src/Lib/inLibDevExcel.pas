@@ -36,6 +36,7 @@ uses
                          R1, C1, R2, C2: Integer;
                          DxStyle: TdxSpreadSheetCellBorderStyle);
   function GetRef(R, C: Integer; Absolute: Boolean = False): string;
+  function ColToLetras(C: Integer): string;
 
 implementation
   procedure Merge(Sheet: TdxSpreadSheetTableView;
@@ -122,12 +123,20 @@ implementation
     end;
   end;
 
+  function ColToLetras(C: Integer): string;
+  begin
+    Result := '';
+    repeat
+      Result := Chr(Ord('A') + (C mod 26)) + Result;
+      C := C div 26 - 1;
+    until C < 0;
+  end;
+
   function GetRef(R, C: Integer; Absolute: Boolean = False): string;
   var
     ColStr: string;
   begin
-    // Convertimos 0->A, 1->B...
-    ColStr := Chr(Ord('A') + C);
+    ColStr := ColToLetras(C);
     if Absolute then
       Result := '$' + ColStr + '$' + IntToStr(R + 1)
     else
