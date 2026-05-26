@@ -438,7 +438,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Navigator.Buttons.ConfirmDelete = True
             Navigator.Buttons.PriorPage.Visible = False
             Navigator.Buttons.NextPage.Visible = False
+            Navigator.Buttons.Append.Visible = False
             Navigator.Buttons.Edit.Visible = False
+            Navigator.Buttons.SaveBookmark.Visible = False
+            Navigator.Buttons.GotoBookmark.Visible = False
             Navigator.Buttons.Filter.Visible = False
             Navigator.Visible = True
             OnCustomDrawCell = tvLineasCustomDrawCell
