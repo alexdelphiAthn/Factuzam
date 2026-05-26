@@ -185,6 +185,7 @@ type
     tvRecuentoDiferencia: TcxGridColumn;
     lvRecuento: TcxGridLevel;
     pnlRecuentoTotales: TPanel;
+    lblDesgloseEfectivo: TcxLabel;
     lblRecTotalSistemaLbl: TcxLabel;
     lblRecTotalSistema: TcxLabel;
     lblRecTotalRecuentoLbl: TcxLabel;
@@ -628,27 +629,55 @@ end;
 procedure TfrmModalArqueo.CargarRecuento(const AArqueo: TArqueoCaja);
 var
   i: Integer;
+  dSistema: Double;
+  dAjuste: Double;
+  bAjusteAplicado: Boolean;
 begin
+  { El efectivo en caja incluye: pagos en efectivo (ventas) + entradas
+    de cambio − gastos por caja + efectivo anterior. El ajuste se suma
+    a la primera forma de pago tipo cajón (normalmente EFE). }
+  dAjuste := Double(AArqueo.EfectivoEntradas)
+           - Double(AArqueo.EfectivoSalidas)
+           + Double(AArqueo.EfectivoAnterior);
+  bAjusteAplicado := False;
   tvRecuento.BeginUpdate;
   try
     tvRecuento.DataController.RecordCount := 0;
-    tvRecuento.DataController.RecordCount := Length(AArqueo.PagosPorForma);
+    tvRecuento.DataController.RecordCount :=
+      Length(AArqueo.PagosPorForma);
     for i := 0 to High(AArqueo.PagosPorForma) do
     begin
       tvRecuento.DataController.Values[i, tvRecuentoFP.Index] :=
         AArqueo.PagosPorForma[i].Codigo;
       tvRecuento.DataController.Values[i, tvRecuentoDesc.Index] :=
         AArqueo.PagosPorForma[i].Descripcion;
-      tvRecuento.DataController.Values[i, tvRecuentoSistema.Index] :=
-        Double(AArqueo.PagosPorForma[i].Importe);
-      tvRecuento.DataController.Values[i, tvRecuentoImporte.Index] :=
-        Double(0);
-      tvRecuento.DataController.Values[i, tvRecuentoDiferencia.Index] :=
-        Double(0) - Double(AArqueo.PagosPorForma[i].Importe);
+      dSistema := Double(AArqueo.PagosPorForma[i].Importe);
+      { Primera forma efectivo: sumar entradas − gastos + anterior }
+      if AArqueo.PagosPorForma[i].EsEfectivo
+         and (not bAjusteAplicado) then
+      begin
+        dSistema := dSistema + dAjuste;
+        bAjusteAplicado := True;
+      end;
+      tvRecuento.DataController.Values[
+        i, tvRecuentoSistema.Index] := dSistema;
+      tvRecuento.DataController.Values[
+        i, tvRecuentoImporte.Index] := Double(0);
+      tvRecuento.DataController.Values[
+        i, tvRecuentoDiferencia.Index] := Double(0) - dSistema;
     end;
   finally
     tvRecuento.EndUpdate;
   end;
+  { Desglose del cálculo de efectivo }
+  lblDesgloseEfectivo.Caption :=
+    Format(
+      'Efectivo = ventas (%s) + entradas (%s) ' +
+      #8722' gastos (%s) + anterior (%s)',
+      [FormatFloat(',0.00', AArqueo.EfectivoIngresos),
+       FormatFloat(',0.00', AArqueo.EfectivoEntradas),
+       FormatFloat(',0.00', AArqueo.EfectivoSalidas),
+       FormatFloat(',0.00', AArqueo.EfectivoAnterior)]);
   RecalcularTotalesRecuento;
 end;
 
@@ -688,26 +717,35 @@ var
   iRow: Integer;
   dSistema, dRecuento, dDif: Double;
   v: Variant;
+  oEdit: TcxCustomEdit;
 begin
-  { Solo recalcular si se editó la columna de recuento }
   if AItem <> tvRecuentoImporte then
     Exit;
   iRow := tvRecuento.DataController.FocusedRecordIndex;
   if iRow < 0 then
     Exit;
-  dSistema  := 0;
-  dRecuento := 0;
+  { Sistema: leer del DataController (ya estaba grabado) }
+  dSistema := 0;
   v := tvRecuento.DataController.Values[
          iRow, tvRecuentoSistema.Index];
   if not VarIsNull(v) then
     dSistema := Double(v);
-  v := tvRecuento.DataController.Values[
-         iRow, tvRecuentoImporte.Index];
-  if not VarIsNull(v) then
-    dRecuento := Double(v);
+  { Recuento: leer del editor activo, que tiene el valor nuevo
+    antes de que se postee al DataController }
+  dRecuento := 0;
+  oEdit := tvRecuento.Controller.EditingController.Edit;
+  if Assigned(oEdit) then
+  begin
+    v := oEdit.EditValue;
+    if not VarIsNull(v) then
+      dRecuento := Double(v);
+  end;
   dDif := dRecuento - dSistema;
   tvRecuento.DataController.Values[
     iRow, tvRecuentoDiferencia.Index] := dDif;
+  { Postear el valor del editor para que totales lo vean }
+  tvRecuento.DataController.Values[
+    iRow, tvRecuentoImporte.Index] := dRecuento;
   RecalcularTotalesRecuento;
 end;
 
