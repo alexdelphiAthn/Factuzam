@@ -278,6 +278,7 @@ uses inMtoGenSearch,
      inLibFotos, inMtoFotoArticulo, inMtoStockConsulta,
      inLibGridColumnChooser, inMtoModalGridGuias,
      inLibInformesGuiasCache,
+     SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
      System.Diagnostics,   // TStopwatch para cronometrar carga inicial
      Vcl.ComCtrls;         // TProgressBar marquee en overlay de carga
      // System.Threading ya esta en el interface (para TList<ITask>).
@@ -742,20 +743,21 @@ begin
 end;
 
 procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);
+var
+  vParser: ISQLParserSelect;
+  unqry: TUniQuery;
 begin
-  // Cargar solo el registro buscado para que el Locate sea instantáneo
-  if (ABusq <> '') and (pkFieldName <> '') and
-     (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
-  begin
-    var unqry := TdmBase(tdmDataModule).unqryTablaG;
-    if unqry <> nil then
-    begin
-      unqry.Close;
-      unqry.SQL.Text :=
-        'SELECT * FROM (' + unqry.SQL.Text + ') _busq ' +
-        ' WHERE ' + pkFieldName + ' = ' + QuotedStr(ABusq);
-    end;
-  end;
+  if (ABusq = '') or (pkFieldName = '') then
+    Exit;
+  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
+    Exit;
+  unqry := TdmBase(tdmDataModule).unqryTablaG;
+  if unqry = nil then
+    Exit;
+  unqry.Close;
+  vParser := TGaSQLParserFactory.Select(unqry.SQL.Text);
+  vParser.AddWhere(pkFieldName + ' = ' + QuotedStr(ABusq), pcAnd);
+  unqry.SQL.Text := vParser.ToString;
 end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
