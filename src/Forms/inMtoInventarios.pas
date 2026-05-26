@@ -2131,11 +2131,11 @@ end;
 procedure TfrmMtoInventarios.btnCargarExcelClick(Sender: TObject);
 var
   Lista: TStringList;
+  Lineas: TLineasImportadas;
   ListaNuevos: TStringList;
-  Archivo, sSku, sCant, sMsg: string;
+  Archivo, sMsg: string;
   Sheet: TdxSpreadSheet;
   i, iActualizados, iNuevos: Integer;
-  rCant: Double;
 begin
   if not PuedeEditar then
   begin
@@ -2154,13 +2154,14 @@ begin
     Exit;
   end;
   Lista := nil;
+  SetLength(Lineas, 0);
   if SameText(ExtractFileExt(Archivo), '.xlsx') or
      SameText(ExtractFileExt(Archivo), '.xls') then
   begin
     Sheet := TdxSpreadSheet.Create(nil);
     try
       Sheet.LoadFromFile(Archivo);
-      ImportarInventarioDesdeSheet(Sheet, Lista, sMsg);
+      ImportarInventarioDesdeSheet(Sheet, Lineas, Lista, sMsg);
     finally
       FreeAndNil(Sheet);
     end;
@@ -2182,7 +2183,7 @@ begin
     FreeAndNil(Lista);
     Exit;
   end;
-  // Separar: existentes se actualizan (reemplazar cantidad), nuevos se insertan
+  // Existentes: actualizar cantidad y PMP. Nuevos: insertar via DM.
   Screen.Cursor := crHourGlass;
   ListaNuevos := TStringList.Create;
   try
@@ -2190,38 +2191,66 @@ begin
     iNuevos := 0;
     dmmInventarios.cdsLineas.DisableControls;
     try
-      for i := 0 to Lista.Count - 1 do
+      // Ruta Excel: tenemos el array con PMP
+      if Length(Lineas) > 0 then
       begin
-        sSku := Lista.Names[i];
-        if sSku = '' then
-          Continue;
-        sCant := Lista.ValueFromIndex[i];
-        rCant := StrToFloatDef(sCant, 1);
-        // Si el SKU ya existe en el inventario, actualizar cantidad fisica
-        if dmmInventarios.cdsLineas.Locate(
-             'CODIGO_UNIDAD_INVLIN', sSku, [loCaseInsensitive]) then
+        for i := 0 to High(Lineas) do
         begin
-          dmmInventarios.cdsLineas.Edit;
-          dmmInventarios.cdsLineas.FieldByName(
-            'CANTIDAD_FISICA_INVLIN').AsFloat := rCant;
-          dmmInventarios.cdsLineas.FieldByName(
-            'FECHA_RECUENTO_INVLIN').AsDateTime := Now;
-          dmmInventarios.cdsLineas.Post;
-          Inc(iActualizados);
-        end
-        else
+          if Lineas[i].Sku = '' then
+            Continue;
+          if dmmInventarios.cdsLineas.Locate(
+               'CODIGO_UNIDAD_INVLIN', Lineas[i].Sku, [loCaseInsensitive]) then
+          begin
+            dmmInventarios.cdsLineas.Edit;
+            dmmInventarios.cdsLineas.FieldByName(
+              'CANTIDAD_FISICA_INVLIN').AsFloat := Lineas[i].Cantidad;
+            if Lineas[i].TienePmp then
+              dmmInventarios.cdsLineas.FieldByName(
+                'PRECIO_MEDIO_NUEVO_INVLIN').AsFloat := Lineas[i].PmpNuevo;
+            dmmInventarios.cdsLineas.FieldByName(
+              'FECHA_RECUENTO_INVLIN').AsDateTime := Now;
+            dmmInventarios.cdsLineas.Post;
+            Inc(iActualizados);
+          end
+          else
+          begin
+            ListaNuevos.Add(Lista[i]);
+            Inc(iNuevos);
+          end;
+        end;
+      end
+      else
+      begin
+        // Ruta CSV: solo SKU=Cantidad, sin PMP
+        for i := 0 to Lista.Count - 1 do
         begin
-          ListaNuevos.Add(Lista[i]);
-          Inc(iNuevos);
+          var sSku := Lista.Names[i];
+          if sSku = '' then
+            Continue;
+          if dmmInventarios.cdsLineas.Locate(
+               'CODIGO_UNIDAD_INVLIN', sSku, [loCaseInsensitive]) then
+          begin
+            dmmInventarios.cdsLineas.Edit;
+            dmmInventarios.cdsLineas.FieldByName(
+              'CANTIDAD_FISICA_INVLIN').AsFloat :=
+              StrToFloatDef(Lista.ValueFromIndex[i], 1);
+            dmmInventarios.cdsLineas.FieldByName(
+              'FECHA_RECUENTO_INVLIN').AsDateTime := Now;
+            dmmInventarios.cdsLineas.Post;
+            Inc(iActualizados);
+          end
+          else
+          begin
+            ListaNuevos.Add(Lista[i]);
+            Inc(iNuevos);
+          end;
         end;
       end;
-      // Persistir las actualizaciones
       if iActualizados > 0 then
         dmmInventarios.cdsLineas.ApplyUpdates(0);
     finally
       dmmInventarios.cdsLineas.EnableControls;
     end;
-    // Insertar los SKUs nuevos via el metodo del DM
     if ListaNuevos.Count > 0 then
       dmmInventarios.CargarDesdeListaSkus(ListaNuevos);
     pcDetail.ActivePage := tsDetalle;

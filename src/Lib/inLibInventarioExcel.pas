@@ -26,16 +26,25 @@ uses
   dxSpreadSheetStyles, dxHashUtils,
   inLibDevExcel;
 
+type
+  TLineaImportada = record
+    Sku: string;
+    Cantidad: Double;
+    PmpNuevo: Double;
+    TienePmp: Boolean;
+  end;
+  TLineasImportadas = TArray<TLineaImportada>;
+
 procedure ExportarInventarioExcel(
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas: TDataSet);
 
-// Lee la primera hoja del dxSpreadSheet y devuelve una TStringList
-// con formato SKU=CANTIDAD_ARTVIN. Busca las columnas SKU y Cantidad
-// por cabecera (fila 1). Si no encuentra cabecera, asume col A=SKU,
-// col B=Cantidad. Ignora filas vacias.
+// Lee la primera hoja del dxSpreadSheet. Busca columnas SKU, Cantidad
+// y PMP Nuevo por cabecera. Si no encuentra cabecera, asume col A=SKU,
+// col B=Cantidad. Devuelve un array de registros y un mensaje resumen.
 procedure ImportarInventarioDesdeSheet(
   ASheetControl: TdxSpreadSheet;
+  out ALineas: TLineasImportadas;
   out ALista: TStringList;
   out AMsg: string);
 
@@ -223,27 +232,30 @@ end;
 
 procedure ImportarInventarioDesdeSheet(
   ASheetControl: TdxSpreadSheet;
+  out ALineas: TLineasImportadas;
   out ALista: TStringList;
   out AMsg: string);
 var
   Sheet: TdxSpreadSheetTableView;
-  iColSku, iColCant: Integer;
+  iColSku, iColCant, iColPmp: Integer;
   r, c, iLastRow: Integer;
-  sSku, sCant: string;
+  sSku, sCant, sPmp: string;
   iLeidas, iVacias: Integer;
+  lin: TLineaImportada;
 
   function CellText(ARow, ACol: Integer): string;
   begin
     Result := '';
+    if (ACol < 0) then
+      Exit;
     if (Sheet.Cells[ARow, ACol] <> nil) then
-    begin
       if not VarIsNull(Sheet.Cells[ARow, ACol].AsVariant) then
         Result := Trim(VarToStr(Sheet.Cells[ARow, ACol].AsVariant));
-    end;
   end;
 
 begin
   ALista := TStringList.Create;
+  SetLength(ALineas, 0);
   AMsg := '';
   if ASheetControl.SheetCount = 0 then
   begin
@@ -254,6 +266,7 @@ begin
   // Buscar columnas por cabecera (fila 0)
   iColSku  := -1;
   iColCant := -1;
+  iColPmp  := -1;
   for c := 0 to 20 do
   begin
     var sHdr := UpperCase(CellText(0, c));
@@ -263,17 +276,18 @@ begin
     else if (sHdr = 'CANTIDAD') or (sHdr = 'CANTIDAD_ARTVIN') or
             (sHdr = 'UDS') or (sHdr = 'UDS. FISICAS') or
             (sHdr = 'FISICAS') or (sHdr = 'QTY') then
-      iColCant := c;
+      iColCant := c
+    else if (sHdr = 'PMP NUEVO') or (sHdr = 'PMP_NUEVO') or
+            (sHdr = 'PRECIO_MEDIO_NUEVO') or (sHdr = 'PMP') then
+      iColPmp := c;
   end;
-  var iFilaInicio := 1; // saltar cabecera
-  // Si no encontramos cabecera, asumir A=SKU B=Cantidad desde fila 0
+  var iFilaInicio := 1;
   if iColSku < 0 then
   begin
     iColSku := 0;
     iColCant := 1;
     iFilaInicio := 0;
   end;
-  // Ultima fila con datos
   iLastRow := Sheet.Dimensions.Bottom;
   if iLastRow < iFilaInicio then
   begin
@@ -290,14 +304,23 @@ begin
       Inc(iVacias);
       Continue;
     end;
-    if iColCant >= 0 then
-      sCant := CellText(r, iColCant)
-    else
-      sCant := '1';
+    sCant := CellText(r, iColCant);
     if sCant = '' then
       sCant := '1';
-    // Formato SKU=CANTIDAD_ARTVIN compatible con CargarDesdeListaSkus
+    // Lista SKU=CANTIDAD para CargarDesdeListaSkus (SKUs nuevos)
     ALista.Add(sSku + '=' + sCant);
+    // Registro completo con PMP
+    lin := Default(TLineaImportada);
+    lin.Sku := sSku;
+    lin.Cantidad := StrToFloatDef(sCant, 1);
+    sPmp := CellText(r, iColPmp);
+    if sPmp <> '' then
+    begin
+      lin.PmpNuevo := StrToFloatDef(sPmp, 0);
+      lin.TienePmp := True;
+    end;
+    SetLength(ALineas, Length(ALineas) + 1);
+    ALineas[High(ALineas)] := lin;
     Inc(iLeidas);
   end;
   AMsg := Format('Leidas %d lineas (%d vacias ignoradas).', [iLeidas, iVacias]);
