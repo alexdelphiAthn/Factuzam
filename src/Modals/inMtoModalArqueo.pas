@@ -192,6 +192,8 @@ type
     lblRecTotalRecuento: TcxLabel;
     lblRecDiferenciaLbl: TcxLabel;
     lblRecDiferencia: TcxLabel;
+    lblDejoCajaLbl: TcxLabel;
+    txtDejoCaja: TcxCurrencyEdit;
     txtObservaciones: TcxTextEdit;
     lblObservacionesLbl: TcxLabel;
     btnGrabarArqueo: TcxButton;
@@ -831,6 +833,7 @@ begin
       Lineas,
       dTotalRecuento,
       dDiferenciaTotal,
+      Currency(txtDejoCaja.Value),
       sObs,
       oUser);
     Application.MessageBox(
