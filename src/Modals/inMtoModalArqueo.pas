@@ -247,6 +247,10 @@ type
     procedure tvBilletesUdsEditValueChanged(
       Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem);
+    procedure tvBilletesKeyDown(Sender: TObject;
+      var Key: Word; Shift: TShiftState);
+    procedure tvRecuentoKeyDown(Sender: TObject;
+      var Key: Word; Shift: TShiftState);
     procedure txtRetiradaImportePropertiesChange(Sender: TObject);
   private
     FConn         : TUniConnection;
@@ -874,6 +878,48 @@ begin
   tvRecuento.DataController.Values[
     iRow, tvRecuentoImporte.Index] := dRecuento;
   RecalcularTotalesRecuento;
+end;
+
+procedure TfrmModalArqueo.tvBilletesKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+var
+  iRow: Integer;
+begin
+  if Key = VK_RETURN then
+  begin
+    { Postear el valor editado antes de mover }
+    if tvBilletes.Controller.EditingController.IsEditing then
+      tvBilletes.Controller.EditingController.HideEdit(True);
+    iRow := tvBilletes.DataController.FocusedRecordIndex;
+    if iRow < tvBilletes.DataController.RecordCount - 1 then
+    begin
+      tvBilletes.DataController.FocusedRecordIndex := iRow + 1;
+      tvBilletes.Controller.FocusedColumn := tvBilletesUds;
+      tvBilletes.Controller.EditingController.ShowEdit(tvBilletesUds);
+    end;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmModalArqueo.tvRecuentoKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+var
+  iRow: Integer;
+begin
+  if Key = VK_RETURN then
+  begin
+    if tvRecuento.Controller.EditingController.IsEditing then
+      tvRecuento.Controller.EditingController.HideEdit(True);
+    iRow := tvRecuento.DataController.FocusedRecordIndex;
+    if iRow < tvRecuento.DataController.RecordCount - 1 then
+    begin
+      tvRecuento.DataController.FocusedRecordIndex := iRow + 1;
+      tvRecuento.Controller.FocusedColumn := tvRecuentoImporte;
+      tvRecuento.Controller.EditingController.ShowEdit(
+        tvRecuentoImporte);
+    end;
+    Key := 0;
+  end;
 end;
 
 procedure TfrmModalArqueo.txtRetiradaImportePropertiesChange(
