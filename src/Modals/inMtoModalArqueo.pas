@@ -289,7 +289,7 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar;
+uses inLibGlobalVar, inLibPermisos;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -316,6 +316,22 @@ begin
     // Defaults: desde = 00:00:00, hasta = 23:59:59 del mismo día/rango.
     frm.dteFechaDesde.Date := DateOf(AFechaDesde);
     frm.dteFechaHasta.Date := DateOf(AFechaHasta) + EncodeTime(23, 59, 59, 0);
+    // Permisos
+    if Assigned(oPermisos) then
+    begin
+      if not oPermisos.TienePermiso('caja.cambiarFecha') then
+      begin
+        frm.dteFechaDesde.Properties.ReadOnly := True;
+        frm.dteFechaHasta.Properties.ReadOnly := True;
+      end;
+      if not oPermisos.TienePermiso('arqueo.verImportes') then
+      begin
+        // Ocultar importes en recuento; solo salen en el ticket de cierre
+        frm.tvRecuentoSistema.Visible := False;
+        frm.tvRecuentoImporte.Visible := False;
+        frm.tvRecuentoDiferencia.Visible := False;
+      end;
+    end;
     frm.Recalcular;
     frm.ShowModal;
   finally
@@ -1035,6 +1051,32 @@ var
 begin
   if (FConn = nil) or (not FConn.Connected) then
     Exit;
+  // Comprobar doble cierre
+  var qryChk := TUniQuery.Create(nil);
+  try
+    qryChk.Connection := FConn;
+    qryChk.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM fza_caja_arqueos ' +
+      ' WHERE CODIGO_EMP_ARQ  = :E ' +
+      '   AND CODIGO_ALM_ARQ  = :A ' +
+      '   AND CODIGO_CAJA_ARQ = :C ' +
+      '   AND FECHA_DESDE_ARQ = :FD ' +
+      '   AND FASE_ARQ = ''CERRADO''';
+    qryChk.ParamByName('E').AsString  := FEmpresa;
+    qryChk.ParamByName('A').AsString  := FAlmacen;
+    qryChk.ParamByName('C').AsString  := FCaja;
+    qryChk.ParamByName('FD').AsDate   := DateOf(dteFechaDesde.Date);
+    qryChk.Open;
+    if qryChk.FieldByName('N').AsInteger > 0 then
+    begin
+      Application.MessageBox(
+        'Ya existe un cierre para esta fecha y caja. No se permite doble cierre.',
+        'Arqueo duplicado', MB_OK or MB_ICONWARNING);
+      Exit;
+    end;
+  finally
+    FreeAndNil(qryChk);
+  end;
   dEfectivoRecontado := ObtenerTotalEfectivoBilletes;
   if (dEfectivoRecontado = 0)
      and (tvRecuento.DataController.RecordCount = 0) then
