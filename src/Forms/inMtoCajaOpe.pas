@@ -943,6 +943,8 @@ begin
                 'Código',                '');
     ConfigCampo(unqryBusq.FindField('DESCRIPCION_ART'),
                 'Descripción',           '');
+    if unqryBusq.FindField('DESCRIPCION_ART') <> nil then
+      unqryBusq.FindField('DESCRIPCION_ART').DisplayWidth := 40;
     ConfigCampo(unqryBusq.FindField('DESCRIPCION_FAM'),
                 'Familia',               '');
     ConfigCampo(unqryBusq.FindField('TEMPORADA'),

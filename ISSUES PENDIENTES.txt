@@ -8,7 +8,7 @@ que hay en la primera factura. Me sale en un nuevo Mto, debería usar el primero
 - En arqueos -> Recuento-> hay muchos letreros que no caben bien o que se montan. 
 - La pantalla de visualizador de ticket térmico, añadir F8 imprimir Impresora F7 guardar pdf F6 guardar imagen(png) ESC Salir de la pantalla **pendiente probar**
 - F10 y F6 no funcionan en la pantalla de arqueos, deberían desplegar el desde y el hasta.... quitar label azules y poner entre paréntesis al lado de los label (F6)
-- La pantalla de búsqueda inmediata en Caja se ve pequeña la descripción del artículo
+- La pantalla de búsqueda inmediata en Caja se ve pequeña la descripción del artículo **pendiente probar**
 - En las pantallas de búsqueda de datos por ejemplo de artículos, también se podrán cambiar los nombres de columnas, editar los Layouts con AltF12 ControlF12, lo mismo que en las pantallas de mantenimiento inmtoGen. Añadir guías.... que funcione el botón derecho en las columnas. **pendiente probar**
 
 - Poner una barra de progreso en la copia de seguridad y en Recuperar Copia de Seguridad ( no vincular a control visual de inmediato, quita mucha performance, sólo mostrar editor al final).
