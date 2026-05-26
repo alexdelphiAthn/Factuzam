@@ -88,6 +88,7 @@ var
   fPreview: TfrmMtoPreviewExcel;
   NombreSugerido: string;
 begin
+  Screen.Cursor := crHourGlass;
   fPreview := TfrmMtoPreviewExcel.Create(Self);
   try
     fPreview.PopupParent := Self;
@@ -96,9 +97,13 @@ begin
       NombreSugerido := ObtenerNombreFactura(unqryTablaG);
       fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := NombreSugerido;
-      ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
-                                 unqryTablaG,
-                                 unqryLinFac);
+      try
+        ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
+                                   unqryTablaG,
+                                   unqryLinFac);
+      finally
+        Screen.Cursor := crDefault;
+      end;
     end;
     fPreview.ShowModal;
   finally

@@ -1940,7 +1940,9 @@ begin
   end;
   Screen.Cursor := crHourGlass;
   try
-    dmmInventarios.CargarLineasInventario;
+    // Solo recargar si no estan ya abiertas (evitar re-query de 4 s)
+    if not dmmInventarios.cdsLineas.Active then
+      dmmInventarios.CargarLineasInventario;
     fPreview := TfrmMtoPreviewExcel.Create(Self);
     try
       fPreview.PopupParent := Self;

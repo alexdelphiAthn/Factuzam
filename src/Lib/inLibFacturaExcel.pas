@@ -139,6 +139,8 @@ begin
     if Sheet.Cells[iRow, c] <> nil then
       Sheet.Cells[iRow, c].Style.Borders[bBottom].Style := sscbsThin;
   var FilaInicioLineas := iRow + 1;
+  QLineas.DisableControls;
+  try
   QLineas.First;
   while not QLineas.Eof do
   begin
@@ -176,6 +178,9 @@ begin
     W(Sheet, iRow, COL_TIPO_L, QLineas.FieldByName(
                  'TIPO_IVA_ARTICULO_FACLIN').AsString, False, ssahCenter);
     QLineas.Next;
+  end;
+  finally
+    QLineas.EnableControls;
   end;
 
   var FilaFinLineas := iRow;
