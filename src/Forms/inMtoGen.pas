@@ -743,8 +743,19 @@ end;
 
 procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);
 begin
-  // Los descendientes sobreescriben para ampliar filtros (ej. poner
-  // "Todos" en vez de "Solo activos") antes de buscar desde otra pantalla.
+  // Cargar solo el registro buscado para que el Locate sea instantáneo
+  if (ABusq <> '') and (pkFieldName <> '') and
+     (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
+  begin
+    var unqry := TdmBase(tdmDataModule).unqryTablaG;
+    if unqry <> nil then
+    begin
+      unqry.Close;
+      unqry.SQL.Text :=
+        'SELECT * FROM (' + unqry.SQL.Text + ') _busq ' +
+        ' WHERE ' + pkFieldName + ' = ' + QuotedStr(ABusq);
+    end;
+  end;
 end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
