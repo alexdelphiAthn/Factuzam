@@ -778,19 +778,25 @@ end;
 procedure TFormVisualizador.ImprimirEnImpresora;
 var
   R: TRect;
+  pd: TPrintDialog;
 begin
-  if PrintDialog(Self.Handle) then
-  begin
-    Printer.BeginDoc;
-    try
-      R := Rect(0, 0, Printer.PageWidth,
-        MulDiv(Image1.Picture.Bitmap.Height,
-               Printer.PageWidth,
-               Image1.Picture.Bitmap.Width));
-      Printer.Canvas.StretchDraw(R, Image1.Picture.Bitmap);
-    finally
-      Printer.EndDoc;
+  pd := TPrintDialog.Create(Self);
+  try
+    if pd.Execute then
+    begin
+      Printer.BeginDoc;
+      try
+        R := Rect(0, 0, Printer.PageWidth,
+          MulDiv(Image1.Picture.Bitmap.Height,
+                 Printer.PageWidth,
+                 Image1.Picture.Bitmap.Width));
+        Printer.Canvas.StretchDraw(R, Image1.Picture.Bitmap);
+      finally
+        Printer.EndDoc;
+      end;
     end;
+  finally
+    FreeAndNil(pd);
   end;
 end;
 
