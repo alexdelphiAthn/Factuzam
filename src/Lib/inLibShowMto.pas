@@ -85,21 +85,29 @@ begin
   NewCaption := ofzaF.Caption;
   if ofzaF.NumVentanas > 1 then
   begin
-    iNum := 1;
-    NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
-    // Buscamos un hueco libre dentro del límite (ej: Facturas 1..N)
-    while (iNum <= ofzaF.NumVentanas) and
-          (frmMain.FormManager.FindFormByCaption(NewCaption) <> nil) do
+    // Si viene con búsqueda, reutilizar la primera instancia existente
+    if ABusq <> '' then
     begin
-      Inc(iNum);
-      NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
-    end;
-    if iNum > ofzaF.NumVentanas then
-      // Todas las instancias están ocupadas: activamos la primera
       TargetForm := frmMain.FormManager.FindFormByCaption(
-                                                ofzaF.Caption + ' 1')
+                                                ofzaF.Caption + ' 1');
+      NewCaption := ofzaF.Caption + ' 1';
+    end
     else
-      TargetForm := nil; // Forzamos creación
+    begin
+      iNum := 1;
+      NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
+      while (iNum <= ofzaF.NumVentanas) and
+            (frmMain.FormManager.FindFormByCaption(NewCaption) <> nil) do
+      begin
+        Inc(iNum);
+        NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
+      end;
+      if iNum > ofzaF.NumVentanas then
+        TargetForm := frmMain.FormManager.FindFormByCaption(
+                                                  ofzaF.Caption + ' 1')
+      else
+        TargetForm := nil;
+    end;
   end
   else
     TargetForm := frmMain.FormManager.FindFormByCaption(ofzaF.Caption);
@@ -151,11 +159,16 @@ begin
     begin
       dmDat := TdmBase(frmGen.tdmDataModule);
       sPkTab := frmGen.pkFieldName;
+      // Intentar buscar: si no encuentra, pedir al Mto que amplíe
+      // los filtros (ej. "Todos" en vez de "Solo activos") y reintentar
       if not BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
       begin
-        ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
-      end
-      else
+        frmGen.PrepararBusquedaExterna(ABusq);
+        frmGen.AbrirTablaPrincipalSincrono;
+        if not BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
+          ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
+      end;
+      if BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
       begin
         if (frmGen.tsFicha <> nil) and (frmGen.tsFicha.TabVisible) then
           frmGen.pcPantalla.ActivePage := frmGen.tsFicha;

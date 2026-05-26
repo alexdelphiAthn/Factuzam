@@ -480,6 +480,7 @@ type
   public
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
                                           const sPermisos: string); override;
+    procedure PrepararBusquedaExterna(const ABusq: string); override;
   private
     FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
@@ -1986,6 +1987,13 @@ begin
   item.SubKey := 'oFiltroTemporadas';
   item.Value  := sTemporadas;
   oList.Add(item);
+end;
+
+procedure TfrmMtoArticulos.PrepararBusquedaExterna(const ABusq: string);
+begin
+  // Poner filtro "Todos" para que el Locate encuentre cualquier artículo
+  if Assigned(cbbFiltroEstadoArt) then
+    cbbFiltroEstadoArt.ItemIndex := 0;
 end;
 
 function TfrmMtoArticulos.ConstruirSqlArticulos: string;
