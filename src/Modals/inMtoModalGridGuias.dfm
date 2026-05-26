@@ -61,11 +61,11 @@ inherited frmModalGridGuias: TfrmModalGridGuias
         '   Una gu'#237'a a'#241'ade al grid columnas de otra tabla mediante LEFT JO' +
         'IN en runtime.'#13#10'   Cada fila:'#13#10'      '#8226' C'#243'digo = nombre interno' +
         ' de la gu'#237'a.'#13#10'      '#8226' Tipo = TABLA (usa la tabla tal cual) o SQ' +
-        'L (consulta libre).'#13#10'      '#8226' Master fields = campos del grid pri' +
-        'ncipal que sirven de enlace (separados por '#39';'#39').'#13#10'      '#8226' Detai' +
-        'l fields = campos de la tabla externa que corresponden (separados' +
-        ' por '#39';'#39').'#13#10'      '#8226' Tras a'#241'adir una gu'#237'a, bot'#243'n derecho sobre ' +
-        'cabecera de columna para elegir qu'#233' columnas nuevas mostrar.'
+        'L (consulta libre).'#13#10'      '#8226' Dataset master = nombre del dataset ' +
+        'principal del grid (ver lista a la derecha).'#13#10'      '#8226' Master / D' +
+        'etail fields = pares de campos separados por '#39';'#39' (CODIGO_CLI_FAC' +
+        ' '#8594' CODIGO_CLI).'#13#10'      '#8226' Formato = vac'#237'o '#8594' gu'#237'a global;   rel' +
+        'leno '#8594' solo para ese perfil concreto.'
       Properties.WordWrap = True
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 4210752
@@ -79,7 +79,7 @@ inherited frmModalGridGuias: TfrmModalGridGuias
       Width = 660
       AnchorY = 8
     end
-    object mmoCampos: TcxMemo
+    object mmoDatasets: TcxMemo
       Left = 684
       Top = 8
       Align = alCustom
@@ -171,6 +171,16 @@ inherited frmModalGridGuias: TfrmModalGridGuias
         Options.Sorting = False
         Width = 170
       end
+      object tvGuiasFORMATO: TcxGridDBColumn
+        Caption = 'Formato (vac. = global)'
+        DataBinding.FieldName = 'FORMATO_INFGUI'
+        Width = 160
+      end
+      object tvGuiasMASTER_DS: TcxGridDBColumn
+        Caption = 'Dataset master'
+        DataBinding.FieldName = 'DATASET_MASTER_INFGUI'
+        Width = 140
+      end
       object tvGuiasTIPO: TcxGridDBColumn
         Caption = 'Tipo'
         DataBinding.FieldName = 'TIPO_INFGUI'
@@ -230,7 +240,7 @@ inherited frmModalGridGuias: TfrmModalGridGuias
       'select *'
       '  from fza_informes_guias'
       ' where INFORME_INFGUI = :INF'
-      ' order by ORDEN_INFGUI, CODIGO_INFGUI')
+      ' order by FORMATO_INFGUI, ORDEN_INFGUI, CODIGO_INFGUI')
     BeforePost = unqryGuiasBeforePost
     Left = 32
     Top = 96
