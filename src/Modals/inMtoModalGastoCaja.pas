@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoModalGastoCaja                                           }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       2.0.0                                                         }
+{ Versión:       3.0.0                                                         }
 {   Fecha:       26/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -10,10 +10,9 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Modal F7 del menú de caja: gastos por caja y retiradas de efectivo.       }
-{    Pide empleado (con búsqueda + etiqueta nombre), destino del dinero        }
-{    (caja fuerte, banco, encargado), importe y concepto.                      }
-{    Crea una operación GC en fza_caja_operaciones + un pago EFE en            }
-{    fza_caja_pagos para que el arqueo lo recoja como salida de efectivo.       }
+{    Tipos: Pago proveedor, Gastos limpieza, Retirada banco, Retirada         }
+{    encargado, Caja fuerte. Se puede abrir prerrellenado desde el             }
+{    recuento con el sobrante.                                                 }
 {******************************************************************************}
 unit inMtoModalGastoCaja;
 
@@ -33,12 +32,11 @@ type
     pnlPrincipal: TPanel;
     pnlBotones: TPanel;
     lblTitulo: TcxLabel;
+    lblTipoLbl: TcxLabel;
     rgTipo: TcxRadioGroup;
     lblEmpleadoLbl: TcxLabel;
     txtEmpleado: TcxTextEdit;
     lblEmpleadoNombre: TcxLabel;
-    lblDestinoLbl: TcxLabel;
-    rgDestino: TcxRadioGroup;
     lblImporteLbl: TcxLabel;
     txtImporte: TcxCurrencyEdit;
     lblConceptoLbl: TcxLabel;
@@ -59,11 +57,19 @@ type
     FCaja: string;
     procedure BuscarNombreEmpleado;
     procedure Grabar;
+    function ObtenerTipoTexto: string;
   public
-    class function Ejecutar(AOwner: TComponent;
-                            AConn: TUniConnection;
-                            const AEmpresa, AAlmacen, ACaja: string
-                            ): Boolean;
+    { Llamada normal desde F7 }
+    class function Ejecutar(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const AEmpresa, AAlmacen, ACaja: string): Boolean;
+    { Llamada desde el recuento con importe prerrellenado }
+    class function EjecutarConImporte(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const AEmpresa, AAlmacen, ACaja: string;
+      AImporte: Currency): Boolean;
   end;
 
 implementation
@@ -91,6 +97,33 @@ begin
     frm.FCaja    := ACaja;
     frm.txtEmpleado.Text := oUser;
     frm.BuscarNombreEmpleado;
+    if frm.ShowModal = mrOk then
+      Result := True;
+  finally
+    FreeAndNil(frm);
+  end;
+end;
+
+class function TfrmModalGastoCaja.EjecutarConImporte(
+  AOwner: TComponent;
+  AConn: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AImporte: Currency): Boolean;
+var
+  frm: TfrmModalGastoCaja;
+begin
+  Result := False;
+  frm := TfrmModalGastoCaja.Create(AOwner);
+  try
+    frm.FConn    := AConn;
+    frm.FEmpresa := AEmpresa;
+    frm.FAlmacen := AAlmacen;
+    frm.FCaja    := ACaja;
+    frm.txtEmpleado.Text := oUser;
+    frm.BuscarNombreEmpleado;
+    frm.txtImporte.Value := Double(AImporte);
+    frm.lblTitulo.Caption :=
+      'Retirar sobrante del recuento';
     if frm.ShowModal = mrOk then
       Result := True;
   finally
@@ -135,6 +168,19 @@ begin
   end;
 end;
 
+function TfrmModalGastoCaja.ObtenerTipoTexto: string;
+begin
+  case rgTipo.ItemIndex of
+    0: Result := 'Pago proveedor';
+    1: Result := 'Gastos limpieza';
+    2: Result := 'Retirada banco';
+    3: Result := 'Retirada encargado';
+    4: Result := 'Caja fuerte';
+  else
+    Result := '';
+  end;
+end;
+
 procedure TfrmModalGastoCaja.actAceptarExecute(Sender: TObject);
 begin
   if Trim(txtEmpleado.Text) = '' then
@@ -153,14 +199,6 @@ begin
     txtImporte.SetFocus;
     Exit;
   end;
-  if Trim(txtConcepto.Text) = '' then
-  begin
-    Application.MessageBox(
-      'Introduzca un concepto para el gasto o retirada.',
-      'Aviso', MB_OK or MB_ICONWARNING);
-    txtConcepto.SetFocus;
-    Exit;
-  end;
   Grabar;
   ModalResult := mrOk;
 end;
@@ -176,26 +214,18 @@ var
   sNumOp: string;
   QryTrx: TUniQuery;
   dImporte: Currency;
-  sConcepto, sDestino, sEmpleado: string;
+  sConcepto, sTipo, sEmpleado: string;
 begin
   dm := TdmCajaOpe.Create(nil);
   try
     dImporte  := Currency(txtImporte.Value);
     sEmpleado := Trim(txtEmpleado.Text);
+    sTipo     := ObtenerTipoTexto;
     sConcepto := Trim(txtConcepto.Text);
-    { Destino }
-    case rgDestino.ItemIndex of
-      0: sDestino := 'Caja fuerte';
-      1: sDestino := 'Banco';
-      2: sDestino := 'Encargado';
+    if sConcepto <> '' then
+      sConcepto := sTipo + ': ' + sConcepto
     else
-      sDestino := '';
-    end;
-    { Prefijo según tipo }
-    if rgTipo.ItemIndex = 1 then
-      sConcepto := 'Retirada (' + sDestino + '): ' + sConcepto
-    else
-      sConcepto := sConcepto + ' [' + sDestino + ']';
+      sConcepto := sTipo;
     sNumOp := dm.SiguienteOpCaja(
       FEmpresa, FAlmacen, FCaja, sEmpleado);
     FConn.StartTransaction;
