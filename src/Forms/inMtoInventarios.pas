@@ -32,12 +32,8 @@ uses
   System.Actions, Vcl.ActnList, cxButtonEdit, cxSplitter, cxRadioGroup,
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
   dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
-<<<<<<< HEAD
-  Vcl.ActnMan, System.Generics.Collections, System.Types;
-=======
-  Vcl.ActnMan, System.Generics.Collections,
+  Vcl.ActnMan, System.Generics.Collections, System.Types,
   dxSpreadSheet, dxSpreadSheetCore;
->>>>>>> df56cd5ca7da9053a88c97bb6cb516e7a3d92e5d
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
