@@ -480,7 +480,6 @@ type
   public
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
                                           const sPermisos: string); override;
-    procedure PrepararBusquedaExterna(const ABusq: string); override;
   private
     FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
@@ -1987,19 +1986,6 @@ begin
   item.SubKey := 'oFiltroTemporadas';
   item.Value  := sTemporadas;
   oList.Add(item);
-end;
-
-procedure TfrmMtoArticulos.PrepararBusquedaExterna(const ABusq: string);
-begin
-  // Cargar solo el artículo buscado: rápido y siempre lo encuentra
-  if (ABusq <> '') and (tdmDataModule <> nil) and
-     (tdmDataModule is TdmBase) then
-  begin
-    TdmBase(tdmDataModule).unqryTablaG.Close;
-    TdmBase(tdmDataModule).unqryTablaG.SQL.Text :=
-      'SELECT * FROM vi_articulos ' +
-      ' WHERE CODIGO_ART_ART = ' + QuotedStr(ABusq);
-  end;
 end;
 
 function TfrmMtoArticulos.ConstruirSqlArticulos: string;
