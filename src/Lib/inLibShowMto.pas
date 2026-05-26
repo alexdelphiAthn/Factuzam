@@ -149,10 +149,17 @@ begin
   //   (mas abajo) necesita la query activa al volver.
   if TargetForm is TfrmMtoGen then
   begin
-    if ABusq = '' then
-      TfrmMtoGen(TargetForm).AbrirTablaPrincipalAsync
-    else
+    if ABusq <> '' then
+    begin
+      // Búsqueda externa: preparar filtros y cargar síncrono
+      TfrmMtoGen(TargetForm).PrepararBusquedaExterna(ABusq);
       TfrmMtoGen(TargetForm).AbrirTablaPrincipalSincrono;
+    end
+    else if not ((ofzaF.NumVentanas > 1) and
+                 (NewCaption = ofzaF.Caption + ' 1')) then
+      // Apertura normal del usuario: carga async.
+      // La instancia 1 (reservada para búsquedas) no precarga.
+      TfrmMtoGen(TargetForm).AbrirTablaPrincipalAsync;
   end;
   if (ABusq <> '') and (TargetForm is TfrmMtoGen) then
   begin
@@ -161,15 +168,8 @@ begin
     begin
       dmDat := TdmBase(frmGen.tdmDataModule);
       sPkTab := frmGen.pkFieldName;
-      // Intentar buscar: si no encuentra, pedir al Mto que amplíe
-      // los filtros (ej. "Todos" en vez de "Solo activos") y reintentar
       if not BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
-      begin
-        frmGen.PrepararBusquedaExterna(ABusq);
-        frmGen.AbrirTablaPrincipalSincrono;
-        if not BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
-          ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
-      end;
+        ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
       if BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
       begin
         if (frmGen.tsFicha <> nil) and (frmGen.tsFicha.TabVisible) then
