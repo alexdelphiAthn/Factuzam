@@ -176,6 +176,7 @@ type
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
     procedure PopMenuNuevaGuiaClick(Sender: TObject);
+    procedure PopMenuRenombrarClick(Sender: TObject);
     procedure BorrarGuiasGrid;
     procedure AplicarGuiasGrid(AQuery: TUniQuery);
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
@@ -1376,10 +1377,14 @@ begin
     mi.OnClick := PopMenuColumnaClick;
     FPopMenuColumnas.Items.Add(mi);
   end;
-  // Separador + "Nueva guia..."
+  // Separador + "Renombrar columna..." + "Nueva guia..."
   miSep := TMenuItem.Create(FPopMenuColumnas);
   miSep.Caption := '-';
   FPopMenuColumnas.Items.Add(miSep);
+  miGuia := TMenuItem.Create(FPopMenuColumnas);
+  miGuia.Caption := 'Renombrar columna...';
+  miGuia.OnClick := PopMenuRenombrarClick;
+  FPopMenuColumnas.Items.Add(miGuia);
   miGuia := TMenuItem.Create(FPopMenuColumnas);
   miGuia.Caption := 'Nueva guía...';
   miGuia.OnClick := PopMenuNuevaGuiaClick;
@@ -1396,6 +1401,86 @@ begin
   begin
     col := cxGrdDBTabPrin.Columns[mi.Tag] as TcxGridDBColumn;
     col.Visible := not col.Visible;
+  end;
+end;
+
+procedure TfrmMtoGen.PopMenuRenombrarClick(Sender: TObject);
+var
+  frm: TForm;
+  pnlBot: TPanel;
+  btnOK, btnCancel: TButton;
+  i, iTop: Integer;
+  col: TcxGridDBColumn;
+  lblAntiguo: TLabel;
+  edtNuevo: TEdit;
+  edits: TStringList;
+begin
+  edits := TStringList.Create;
+  frm := TForm.Create(Self);
+  try
+    frm.Caption := 'Renombrar columnas';
+    frm.Width := 620;
+    frm.Position := poMainFormCenter;
+    frm.BorderStyle := bsDialog;
+    // Crear pares (antiguo -> nuevo) para cada columna visible
+    iTop := 12;
+    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+    begin
+      col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
+      if col.DataBinding.FieldName = '' then
+        Continue;
+      lblAntiguo := TLabel.Create(frm);
+      lblAntiguo.Parent := frm;
+      lblAntiguo.Left := 12;
+      lblAntiguo.Top := iTop + 3;
+      lblAntiguo.Width := 250;
+      lblAntiguo.Caption := col.DataBinding.FieldName;
+      lblAntiguo.Font.Color := clGray;
+      edtNuevo := TEdit.Create(frm);
+      edtNuevo.Parent := frm;
+      edtNuevo.Left := 270;
+      edtNuevo.Top := iTop;
+      edtNuevo.Width := 320;
+      edtNuevo.Text := col.Caption;
+      edtNuevo.Tag := i;
+      edits.AddObject(col.DataBinding.FieldName, edtNuevo);
+      iTop := iTop + 30;
+    end;
+    frm.ClientHeight := iTop + 55;
+    pnlBot := TPanel.Create(frm);
+    pnlBot.Parent := frm;
+    pnlBot.Align := alBottom;
+    pnlBot.Height := 45;
+    pnlBot.BevelOuter := bvNone;
+    btnOK := TButton.Create(pnlBot);
+    btnOK.Parent := pnlBot;
+    btnOK.Caption := 'Aplicar';
+    btnOK.ModalResult := mrOk;
+    btnOK.Left := 370;
+    btnOK.Top := 8;
+    btnOK.Width := 110;
+    btnOK.Height := 30;
+    btnCancel := TButton.Create(pnlBot);
+    btnCancel.Parent := pnlBot;
+    btnCancel.Caption := 'Cancelar';
+    btnCancel.ModalResult := mrCancel;
+    btnCancel.Left := 490;
+    btnCancel.Top := 8;
+    btnCancel.Width := 110;
+    btnCancel.Height := 30;
+    if frm.ShowModal = mrOk then
+    begin
+      for i := 0 to edits.Count - 1 do
+      begin
+        edtNuevo := TEdit(edits.Objects[i]);
+        col := cxGrdDBTabPrin.Columns[edtNuevo.Tag] as TcxGridDBColumn;
+        if edtNuevo.Text <> col.Caption then
+          col.Caption := edtNuevo.Text;
+      end;
+    end;
+  finally
+    FreeAndNil(frm);
+    FreeAndNil(edits);
   end;
 end;
 
