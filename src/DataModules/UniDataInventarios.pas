@@ -106,6 +106,7 @@ type
     procedure cdsLineasBeforePost(DataSet: TDataSet);
     procedure cdsLineasBeforeDelete(DataSet: TDataSet);
     procedure cdsLineasBeforeInsert(DataSet: TDataSet);
+    procedure cdsLineasAfterDelete(DataSet: TDataSet);
     procedure cdsLineasCalcFields(DataSet: TDataSet);
     procedure cdsLineasNewRecord(DataSet: TDataSet);
   private
@@ -906,13 +907,18 @@ end;
 
 procedure TdmInventarios.cdsLineasBeforeInsert(DataSet: TDataSet);
 begin
-  // Antes de aceptar la insercion de una linea, exigimos que la cabecera
-  // tenga un NUMERO_INV definitivo. Si la cabecera sigue en dsInsert con
-  // NUMERO_INV='0' (marcador), cdsLineasNewRecord copiaria ese '0' a
-  // NUMERO_INV_INVLIN y cdsLineasAfterPost lo persistiria via ApplyUpdates.
-  // Cuando despues la cabecera reciba su numero real, esa linea queda
-  // huerfana y aparece como "registro fantasma" la siguiente vez que se
-  // inserta un inventario nuevo (FNumero='0').
+  // Si la linea actual es un placeholder sin articulo (p.ej. el usuario
+  // pulso Insert pero no relleno nada), cancelar antes de que
+  // CheckBrowseMode intente Post (que fallaria en BeforePost con
+  // 'No se puede grabar una linea sin articulo').
+  if DataSet.State in [dsEdit, dsInsert] then
+  begin
+    if Trim(DataSet.FieldByName('CODIGO_ART_INVLIN').AsString) = '' then
+      DataSet.Cancel;
+  end;
+  // Exigimos que la cabecera tenga un NUMERO_INV definitivo. Si sigue
+  // en dsInsert con NUMERO_INV='0' (marcador), cdsLineasNewRecord
+  // copiaria ese '0' y la linea quedaria huerfana.
   if (unqryTablaG = nil) or (not unqryTablaG.Active) then Exit;
   if unqryTablaG.State in [dsInsert, dsEdit] then
   begin
@@ -921,9 +927,6 @@ begin
     except
       on E: Exception do
       begin
-        // Si no se puede grabar la cabecera, abortamos la insercion de
-        // linea: dejar entrar a una linea sin cabecera grabada generaria
-        // un fantasma. Re-elevamos para que el llamante vea el motivo.
         raise Exception.Create(
           'No se puede a' + #241 + 'adir una l' + #237 + 'nea: ' +
           'la cabecera del inventario no se ha podido grabar.' + sLineBreak +
@@ -932,10 +935,6 @@ begin
           'intentarlo.');
       end;
     end;
-    // Tras el Post, BeforePost ha sustituido NUMERO_INV='0' por el numero
-    // real (via GetCodigoAutoInventario). Resincronizamos las claves activas
-    // para que cdsLineasNewRecord use el NUMERO real al rellenar la nueva
-    // linea, y no quede ningun resto del marcador '0'.
     SetClavesActivas(
       unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString,
       unqryTablaG.FieldByName('CODIGO_ALM_INV').AsString,
@@ -943,6 +942,13 @@ begin
       unqryTablaG.FieldByName('NUMERO_INV').AsString
     );
   end;
+end;
+
+procedure TdmInventarios.cdsLineasAfterDelete(DataSet: TDataSet);
+begin
+  // Persistir la eliminacion en BBDD (mismo patron que AfterPost).
+  if cdsLineas.ChangeCount > 0 then
+    cdsLineas.ApplyUpdates(0);
 end;
 
 function TdmInventarios.GetEstadoInventario: string;

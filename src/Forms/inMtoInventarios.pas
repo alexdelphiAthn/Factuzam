@@ -270,6 +270,9 @@ type
     procedure ActualizarEstadoUI;
     procedure HabilitarEdicionLineas(Habilitado: Boolean);
 
+    // === HOOKS DATASET ===
+    procedure cdsLineasAfterInsertHook(DataSet: TDataSet);
+
     // === HELPERS ===
     function EstadoActual: string;
     function PuedeEditar: Boolean;
@@ -352,6 +355,7 @@ begin
   cbbSERIE_INVENTARIO.Properties.ListSource := dmmInventarios.dsSeries;
   tvLineas.DataController.DataSource := dmmInventarios.dsLineas;
   tvMovs.DataController.DataSource   := dmmInventarios.dsMovsRegul;
+  dmmInventarios.cdsLineas.AfterInsert := cdsLineasAfterInsertHook;
 end;
 
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
@@ -1759,6 +1763,18 @@ end;
 procedure TfrmMtoInventarios.btnRecalcularDetalleClick(Sender: TObject);
 begin
   btnRecalcularClick(Sender);
+end;
+
+// ============================================================================
+//   HOOK: foco en SKU/Articulo tras insertar desde el navigator
+// ============================================================================
+
+procedure TfrmMtoInventarios.cdsLineasAfterInsertHook(DataSet: TDataSet);
+begin
+  // Poner foco en la columna unificada SKU/Articulo tras insertar
+  tvLineas.Controller.FocusedColumn := tvLineasUNIDAD;
+  if tvLineas.Controller.EditingController <> nil then
+    tvLineas.Controller.EditingController.ShowEdit;
 end;
 
 // ============================================================================
