@@ -862,6 +862,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             object tvBilletes: TcxGridTableView
               OnEditValueChanged = tvBilletesUdsEditValueChanged
               OptionsBehavior.FocusCellOnTab = True
+              OptionsBehavior.GoToNextCellOnEnter = True
               OptionsData.Appending = False
               OptionsData.Deleting = False
               OptionsData.Inserting = False
@@ -925,6 +926,7 @@ inherited frmModalArqueo: TfrmModalArqueo
             object tvRecuento: TcxGridTableView
               OnEditValueChanged = tvRecuentoImportePropertiesEditValueChanged
               OptionsBehavior.FocusCellOnTab = True
+              OptionsBehavior.GoToNextCellOnEnter = True
               OptionsData.Appending = False
               OptionsData.Deleting = False
               OptionsData.Inserting = False
