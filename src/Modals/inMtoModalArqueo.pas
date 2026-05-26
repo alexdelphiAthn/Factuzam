@@ -113,10 +113,8 @@ type
     // Cabecera (rango + ventas + accesos)
     lblTituloDesde: TcxLabel;
     dteFechaDesde: TcxDateEdit;
-    lblF10: TcxLabel;
     lblTituloHasta: TcxLabel;
     dteFechaHasta: TcxDateEdit;
-    lblF6: TcxLabel;
     lblTituloVentas: TcxLabel;
     lblVentas: TcxLabel;
     btnRecalcular: TcxButton;
@@ -228,6 +226,8 @@ type
     actRecalcular: TAction;
     actImprimir: TAction;
     actGrabar: TAction;
+    actDesplegarDesde: TAction;
+    actDesplegarHasta: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -239,6 +239,8 @@ type
     procedure actRecalcularExecute(Sender: TObject);
     procedure actImprimirExecute(Sender: TObject);
     procedure actGrabarExecute(Sender: TObject);
+    procedure actDesplegarDesdeExecute(Sender: TObject);
+    procedure actDesplegarHastaExecute(Sender: TObject);
     procedure dteFechaDesdePropertiesChange(Sender: TObject);
     procedure dteFechaHastaPropertiesChange(Sender: TObject);
     procedure tvRecuentoImportePropertiesEditValueChanged(
@@ -1008,6 +1010,16 @@ procedure TfrmModalArqueo.actGrabarExecute(Sender: TObject);
 begin
   inherited;
   GrabarArqueo;
+end;
+
+procedure TfrmModalArqueo.actDesplegarDesdeExecute(Sender: TObject);
+begin
+  dteFechaDesde.DroppedDown := True;
+end;
+
+procedure TfrmModalArqueo.actDesplegarHastaExecute(Sender: TObject);
+begin
+  dteFechaHasta.DroppedDown := True;
 end;
 
 procedure TfrmModalArqueo.GrabarArqueo;
