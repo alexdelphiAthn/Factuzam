@@ -153,8 +153,22 @@ begin
 end;
 
 procedure TfrmModalGuiasBase.cbbTablaPropertiesChange(Sender: TObject);
+var
+  sTabla, sCodigo: string;
 begin
   CargarCamposTabla(cbbTabla.Text);
+  // Auto-proponer código si está vacío
+  sTabla := cbbTabla.Text;
+  if (sTabla <> '') and (Trim(edtCodigo.Text) = '') then
+  begin
+    sCodigo := sTabla;
+    // Quitar prefijo fza_ / vi_
+    if Pos('fza_', sCodigo) = 1 then
+      Delete(sCodigo, 1, 4)
+    else if Pos('vi_', sCodigo) = 1 then
+      Delete(sCodigo, 1, 3);
+    edtCodigo.Text := sCodigo;
+  end;
   ActualizarResumen;
 end;
 
