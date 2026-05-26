@@ -97,6 +97,7 @@ type
     rbGrid: TcxRadioButton;
     sbGrabarGrid: TSpeedButton;
     sbResetGrid: TSpeedButton;
+    sbBestFit: TSpeedButton;
     pnlDataSetName: TPanel;
     lblTablaOrigen: TcxLabel;
     saveDialog: TdxSaveFileDialog;
@@ -128,6 +129,7 @@ type
                                      NewPage: TcxTabSheet;
                                      var AllowChange: Boolean);
     procedure sbResetGridClick(Sender: TObject);
+    procedure sbBestFitClick(Sender: TObject);
     procedure sbGrabarGridClick(Sender: TObject);
     procedure edtBusqGlobalPropertiesChange(Sender: TObject);
     procedure tmrBusqGlobalTimer(Sender: TObject);
@@ -644,6 +646,20 @@ begin
     end;
     // Borrar guias de grid asociadas al layout
     BorrarGuiasGrid;
+  end;
+end;
+
+procedure TfrmMtoGen.sbBestFitClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  cxGrdDBTabPrin.BeginUpdate;
+  try
+    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+      if cxGrdDBTabPrin.Columns[i].Visible then
+        cxGrdDBTabPrin.Columns[i].ApplyBestFit;
+  finally
+    cxGrdDBTabPrin.EndUpdate;
   end;
 end;
 
@@ -1478,6 +1494,27 @@ begin
     SimulateTabKey;
     Exit;
   end;
+  // Ctrl+Inicio / Ctrl+Fin -> primer / ultimo registro
+  // (excepto si el foco esta en un memo o SynEdit: ahi es ir al
+  // principio/fin del texto y dejamos el comportamiento nativo)
+  if (Key in [VK_HOME, VK_END]) and (ssCtrl in Shift) and
+     not (ssAlt in Shift) then
+  begin
+    if not ((ActiveControl is TCustomMemo) or
+            (Pos('Memo', ActiveControl.ClassName) > 0) or
+            (Pos('SynEdit', ActiveControl.ClassName) > 0)) then
+    begin
+      if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active then
+      begin
+        if Key = VK_HOME then
+          dsTablaG.DataSet.First
+        else
+          dsTablaG.DataSet.Last;
+      end;
+      Key := 0;
+      Exit;
+    end;
+  end;
   // Alt+F12 -> Guardar layout (equivalente al botón sbGrabarGrid)
   if (Key = VK_F12) and (ssAlt in Shift) and not (ssCtrl in Shift) then
   begin
@@ -1489,6 +1526,13 @@ begin
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
     sbResetGridClick(nil);
+    Key := 0;
+    Exit;
+  end;
+  // Ctrl+F11 -> BestFit anchos de columna
+  if (Key = VK_F11) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  begin
+    sbBestFitClick(nil);
     Key := 0;
   end;
 end;
