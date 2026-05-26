@@ -266,7 +266,7 @@ begin
       while not Data.Eof do
       begin
         Inc(RowCount);
-        if (RowCount mod 500) = 0 then
+        if (RowCount mod 5000) = 0 then
           DoProgress(TableName, RowCount, Data.RecordCount);
         Fields.Clear;
         Values.Clear;
