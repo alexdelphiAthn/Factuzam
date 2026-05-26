@@ -32,7 +32,7 @@ uses
   System.Actions, Vcl.ActnList, cxButtonEdit, cxSplitter, cxRadioGroup,
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
   dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
-  Vcl.ActnMan, System.Generics.Collections;
+  Vcl.ActnMan, System.Generics.Collections, System.Types;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -1496,9 +1496,9 @@ begin
   // RellenarAtributosDesdeSku. Cada Lookup arranca una conexion / ejecuta
   // queries, asi que aqui se ve el reparto.
   msResolver              := 0;
-  msSetFieldsCabecera     := 0;
-  msActColsDin            := 0;
-  msSetFieldsSku          := 0;
+//  msSetFieldsCabecera     := 0;
+//  msActColsDin            := 0;
+//  msSetFieldsSku          := 0;
   msRellenarDatosSku      := 0;
   msSetFieldsImporte      := 0;
   msRellenarAtributos     := 0;

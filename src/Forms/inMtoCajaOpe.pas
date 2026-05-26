@@ -24,7 +24,7 @@ uses
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, Data.DB, Data.FmtBcd, Data.SqlTimSt, cxDBData,
-  cxClasses, cxGridCustomTableView,
+  cxClasses, cxGridCustomTableView, system.types,
   cxGridTableView, cxGridDBTableView, cxGridLevel, cxGridCustomView, cxGrid,
   Vcl.StdCtrls, cxButtons, Datasnap.DBClient, Datasnap.Provider, UniDataCaja,
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
@@ -211,7 +211,7 @@ type
     function BuscarArticulo:String;
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
-    procedure ForzarDespliegue(Sender: TObject);
+//    procedure ForzarDespliegue(Sender: TObject);
     procedure ConstruirColumnasDinamicas;
     procedure RellenarAtributosDesdeSku(Sku: string);
     procedure ActualizarColumnasDinamicas(ArticuloPadre: string);
@@ -3021,11 +3021,11 @@ end;
 // el OnEnter de TcxButtonEdit ahora apunta a AbrirPopupAvEnEntrada que
 // abre el popup SeleccionarAvConPaleta directamente (mismo patron que
 // inMtoInventarios).
-procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
-begin
-  // Sin uso: el flujo de seleccion de atributos pasa por
-  // AbrirPopupAvEnEntrada + tvLineasOpeAvButtonClick.
-end;
+//procedure TfrmMtoOpeCaja.ForzarDespliegue(Sender: TObject);
+//begin
+//  // Sin uso: el flujo de seleccion de atributos pasa por
+//  // AbrirPopupAvEnEntrada + tvLineasOpeAvButtonClick.
+//end;
 
 procedure TfrmMtoOpeCaja.AbrirPopupAvEnEntrada(Sender: TObject);
 var

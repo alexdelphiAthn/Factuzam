@@ -5,7 +5,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1280
   ExplicitHeight = 720
-  TextHeight = 19
+  TextHeight = 17
   inherited pButtonPage: TPanel
     Width = 1140
     Height = 720
@@ -247,26 +247,32 @@ inherited frmMtoInventarios: TfrmMtoInventarios
           Left = 0
           Top = 184
           Width = 1136
-          Height = 465
+          Height = 467
           Align = alClient
           TabOrder = 1
+          ExplicitHeight = 465
           object pcDetail: TcxPageControl
             Left = 1
             Top = 1
             Width = 1134
-            Height = 463
+            Height = 465
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsDetalle
             Properties.CustomButtons.Buttons = <>
             OnChange = pcDetailChange
-            ClientRectBottom = 461
+            ExplicitHeight = 463
+            ClientRectBottom = 463
             ClientRectLeft = 2
             ClientRectRight = 1132
-            ClientRectTop = 29
+            ClientRectTop = 27
             object tsDetalle: TcxTabSheet
               Caption = '&1. Detalle del inventario'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlDetalleTop: TPanel
                 Left = 0
                 Top = 0
@@ -572,6 +578,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsMovsRegul: TcxTabSheet
               Caption = '&2. Movimientos regularizados'
               ImageIndex = 2
+              ExplicitTop = 29
+              ExplicitHeight = 432
               object pnlMovsTop: TPanel
                 Left = 0
                 Top = 0
@@ -601,10 +609,11 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 Left = 0
                 Top = 50
                 Width = 1009
-                Height = 382
+                Height = 386
                 Align = alClient
                 TabOrder = 1
                 ExplicitWidth = 1130
+                ExplicitHeight = 382
                 object tvMovs: TcxGridDBTableView
                   OptionsData.Deleting = False
                   OptionsData.Editing = False
@@ -667,7 +676,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 Left = 1009
                 Top = 50
                 Width = 121
-                Height = 382
+                Height = 386
                 Align = alRight
                 TabOrder = 2
                 ExplicitLeft = 948
@@ -846,11 +855,13 @@ inherited frmMtoInventarios: TfrmMtoInventarios
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
+          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
+        ExplicitTop = 27
         ExplicitWidth = 1136
-        ExplicitHeight = 649
+        ExplicitHeight = 651
         inherited pnlPerfilTop: TPanel
           Width = 1136
           StyleElements = [seFont, seClient, seBorder]
@@ -861,7 +872,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1136
-          Height = 592
+          Height = 594
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1136
           ExplicitHeight = 592
