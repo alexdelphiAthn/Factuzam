@@ -544,28 +544,34 @@ begin
           GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortIndex', '-1'), -1);
     end;
 
-    // 2. Restaurar la posición física de las columnas (Index)
-    for i := 0 to AcxgrdtvVista.ItemCount - 1 do
+    // 2. Restaurar la posición física de las columnas (Index).
+    // Para banded grids, el Index general puede causar desorden si el
+    // perfil tiene columnas que ya no existen; en ese caso solo aplicamos
+    // BandIndex/ColIndex/RowIndex (paso 3) y dejamos el Index original.
+    if not (AcxgrdtvVista is TcxGridDBBandedTableView) then
     begin
-      oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
-      sColumnName := GetItemFieldName(oItem);
-      if sColumnName = '' then
-        Continue;
-      sSubKey := sName + '_' + sColumnName;
-      sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', '');
-      iIdx := StrToIntDef(sVal, oItem.Index);
-      // Protección: si el perfil trae un Index fuera de rango (columna
-      // eliminada desplazó los índices), clampear al máximo válido.
-      if iIdx > iMaxIdx then
+      for i := 0 to AcxgrdtvVista.ItemCount - 1 do
       begin
-        Log.LogWarning(Format(
-          '  columna %s: Index guardado=%d > max=%d, ajustado',
-          [sColumnName, iIdx, iMaxIdx]));
-        iIdx := iMaxIdx;
+        oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
+        sColumnName := GetItemFieldName(oItem);
+        if sColumnName = '' then
+          Continue;
+        sSubKey := sName + '_' + sColumnName;
+        sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', '');
+        if sVal = '' then
+          Continue;
+        iIdx := StrToIntDef(sVal, oItem.Index);
+        if iIdx > iMaxIdx then
+        begin
+          Log.LogWarning(Format(
+            '  columna %s: Index guardado=%d > max=%d, ajustado',
+            [sColumnName, iIdx, iMaxIdx]));
+          iIdx := iMaxIdx;
+        end;
+        if iIdx < 0 then
+          iIdx := 0;
+        oItem.Index := iIdx;
       end;
-      if iIdx < 0 then
-        iIdx := 0;
-      oItem.Index := iIdx;
     end;
 
     // 3. Para columnas banded, restaurar Position.BandIndex / ColIndex /
