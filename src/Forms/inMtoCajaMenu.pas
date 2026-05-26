@@ -287,6 +287,8 @@ procedure TfrmMtoMenuCaja.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   case Key of
     VK_F5:     lblVentasClick(Sender);
+    VK_F6:     lblEntradaCambioClick(Sender);
+    VK_F7:     lblGastosCajaClick(Sender);
     VK_ESCAPE: lblESCClick(Sender);
     VK_F10:    AbrirBuscarModificar;
     VK_F11:    lblArqueoClick(Sender);
