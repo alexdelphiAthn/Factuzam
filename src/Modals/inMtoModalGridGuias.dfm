@@ -1,8 +1,8 @@
 inherited frmModalGridGuias: TfrmModalGridGuias
   BorderIcons = [biSystemMenu]
   Caption = 'Gu'#237'as del grid'
-  ClientHeight = 540
-  ClientWidth = 1180
+  ClientHeight = 620
+  ClientWidth = 1100
   Position = poMainFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
@@ -11,8 +11,8 @@ inherited frmModalGridGuias: TfrmModalGridGuias
   object pnlCabecera: TPanel [0]
     Left = 0
     Top = 0
-    Width = 1180
-    Height = 62
+    Width = 1100
+    Height = 42
     Align = alTop
     BevelOuter = bvNone
     Color = 16444393
@@ -32,8 +32,8 @@ inherited frmModalGridGuias: TfrmModalGridGuias
       Transparent = True
     end
     object lblInfo: TcxLabel
-      Left = 18
-      Top = 36
+      Left = 250
+      Top = 12
       Caption = ' '
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 6710886
@@ -44,64 +44,218 @@ inherited frmModalGridGuias: TfrmModalGridGuias
       Transparent = True
     end
   end
-  object pnlAyuda: TPanel [1]
+  object pnlConstructor: TPanel [1]
     Left = 0
-    Top = 62
-    Width = 1180
-    Height = 180
+    Top = 42
+    Width = 1100
+    Height = 310
     Align = alTop
     BevelOuter = bvNone
     Color = 16380385
     ParentBackground = False
     TabOrder = 1
-    object lblAyuda: TcxLabel
-      Left = 16
-      Top = 8
-      Caption =
-        '   Una gu'#237'a a'#241'ade al grid columnas de otra tabla mediante LEFT JO' +
-        'IN en runtime.'#13#10'   Cada fila:'#13#10'      '#8226' C'#243'digo = nombre interno' +
-        ' de la gu'#237'a.'#13#10'      '#8226' Tipo = TABLA (usa la tabla tal cual) o SQ' +
-        'L (consulta libre).'#13#10'      '#8226' Dataset master = nombre del dataset ' +
-        'principal del grid (ver lista a la derecha).'#13#10'      '#8226' Master / D' +
-        'etail fields = pares de campos separados por '#39';'#39' (CODIGO_CLI_FAC' +
-        ' '#8594' CODIGO_CLI).'#13#10'      '#8226' Formato = vac'#237'o '#8594' gu'#237'a global;   rel' +
-        'leno '#8594' solo para ese perfil concreto.'
-      Properties.WordWrap = True
-      Style.Font.Charset = DEFAULT_CHARSET
-      Style.Font.Color = 4210752
-      Style.Font.Height = -15
-      Style.Font.Name = 'Lucida Sans'
-      Style.Font.Style = []
-      Style.IsFontAssigned = True
-      Style.TransparentBorder = False
-      Transparent = True
-      Height = 164
-      Width = 660
-      AnchorY = 8
-    end
-    object mmoDatasets: TcxMemo
-      Left = 684
-      Top = 8
-      Align = alCustom
-      Properties.ReadOnly = True
-      Properties.ScrollBars = ssVertical
-      Properties.WantReturns = False
-      Properties.WordWrap = False
-      Style.Font.Charset = DEFAULT_CHARSET
-      Style.Font.Color = clWindowText
-      Style.Font.Height = -12
-      Style.Font.Name = 'Consolas'
-      Style.Font.Style = []
-      Style.IsFontAssigned = True
+    object pnlCamposGrid: TPanel
+      Left = 8
+      Top = 4
+      Width = 300
+      Height = 300
+      BevelOuter = bvNone
+      Color = 16380385
+      ParentBackground = False
       TabOrder = 0
-      Height = 164
-      Width = 480
+      object lblCamposGrid: TcxLabel
+        Left = 0
+        Top = 0
+        Caption = 'Campos del grid (master):'
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = 4210752
+        Style.Font.Height = -13
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = [fsBold]
+        Style.IsFontAssigned = True
+        Transparent = True
+      end
+      object lbCamposGrid: TcxListBox
+        Left = 0
+        Top = 22
+        Width = 296
+        Height = 274
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -12
+        Style.Font.Name = 'Consolas'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 0
+        OnClick = lbCamposGridClick
+      end
+    end
+    object pnlTabla: TPanel
+      Left = 316
+      Top = 4
+      Width = 300
+      Height = 300
+      BevelOuter = bvNone
+      Color = 16380385
+      ParentBackground = False
+      TabOrder = 1
+      object lblTabla: TcxLabel
+        Left = 0
+        Top = 0
+        Caption = 'Tabla externa:'
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = 4210752
+        Style.Font.Height = -13
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = [fsBold]
+        Style.IsFontAssigned = True
+        Transparent = True
+      end
+      object cbbTabla: TcxComboBox
+        Left = 0
+        Top = 22
+        Properties.DropDownListStyle = lsEditFixedList
+        Properties.OnChange = cbbTablaPropertiesChange
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -12
+        Style.Font.Name = 'Consolas'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 0
+        Width = 296
+      end
+      object lblCamposTabla: TcxLabel
+        Left = 0
+        Top = 52
+        Caption = 'Campos de la tabla (detail):'
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = 4210752
+        Style.Font.Height = -13
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = [fsBold]
+        Style.IsFontAssigned = True
+        Transparent = True
+      end
+      object lbCamposTabla: TcxListBox
+        Left = 0
+        Top = 74
+        Width = 296
+        Height = 222
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -12
+        Style.Font.Name = 'Consolas'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 1
+        OnClick = lbCamposTablaClick
+      end
+    end
+    object pnlAcciones: TPanel
+      Left = 624
+      Top = 4
+      Width = 468
+      Height = 300
+      BevelOuter = bvNone
+      Color = 16380385
+      ParentBackground = False
+      TabOrder = 2
+      object lblCodigo: TcxLabel
+        Left = 0
+        Top = 0
+        Caption = 'C'#243'digo de la gu'#237'a:'
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = 4210752
+        Style.Font.Height = -13
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = [fsBold]
+        Style.IsFontAssigned = True
+        Transparent = True
+      end
+      object edtCodigo: TcxTextEdit
+        Left = 0
+        Top = 22
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -12
+        Style.Font.Name = 'Consolas'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 0
+        Width = 250
+      end
+      object lblResumen: TcxLabel
+        Left = 0
+        Top = 56
+        Caption = 'Enlace configurado:'
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = 4210752
+        Style.Font.Height = -13
+        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Style = [fsBold]
+        Style.IsFontAssigned = True
+        Transparent = True
+      end
+      object mmoResumen: TcxMemo
+        Left = 0
+        Top = 78
+        Properties.ReadOnly = True
+        Properties.ScrollBars = ssVertical
+        Style.Font.Charset = DEFAULT_CHARSET
+        Style.Font.Color = clWindowText
+        Style.Font.Height = -12
+        Style.Font.Name = 'Consolas'
+        Style.Font.Style = []
+        Style.IsFontAssigned = True
+        TabOrder = 1
+        Height = 150
+        Width = 460
+      end
+      object btnAnadir: TcxButton
+        Left = 0
+        Top = 240
+        Width = 220
+        Height = 36
+        Caption = 'A'#241'adir gu'#237'a'
+        Colors.Default = 11468541
+        Colors.DefaultText = clWhite
+        LookAndFeel.NativeStyle = False
+        LookAndFeel.SkinName = 'Office2019Colorful'
+        TabOrder = 2
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWhite
+        Font.Height = -13
+        Font.Name = 'Lucida Sans'
+        Font.Style = [fsBold]
+        ParentFont = False
+        OnClick = btnAnadirClick
+      end
+      object btnEliminar: TcxButton
+        Left = 232
+        Top = 240
+        Width = 220
+        Height = 36
+        Caption = 'Eliminar seleccionada'
+        Colors.Default = 6316128
+        Colors.DefaultText = clWhite
+        LookAndFeel.NativeStyle = False
+        LookAndFeel.SkinName = 'Office2019Colorful'
+        TabOrder = 3
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWhite
+        Font.Height = -13
+        Font.Name = 'Lucida Sans'
+        Font.Style = [fsBold]
+        ParentFont = False
+        OnClick = btnEliminarClick
+      end
     end
   end
   object pnlBotones: TPanel [2]
     Left = 0
-    Top = 491
-    Width = 1180
+    Top = 571
+    Width = 1100
     Height = 49
     Align = alBottom
     BevelOuter = bvNone
@@ -109,7 +263,7 @@ inherited frmModalGridGuias: TfrmModalGridGuias
     ParentBackground = False
     TabOrder = 2
     object btnCerrar: TcxButton
-      Left = 1011
+      Left = 931
       Top = 11
       Width = 155
       Height = 29
@@ -123,93 +277,45 @@ inherited frmModalGridGuias: TfrmModalGridGuias
   end
   object grdGuias: TcxGrid [3]
     Left = 0
-    Top = 242
-    Width = 1180
-    Height = 249
+    Top = 352
+    Width = 1100
+    Height = 219
     Align = alClient
     TabOrder = 3
     LookAndFeel.NativeStyle = False
     object tvGuias: TcxGridDBTableView
       Navigator.Buttons.CustomButtons = <>
-      Navigator.Buttons.ConfirmDelete = True
-      Navigator.Buttons.First.Hint = 'Primero'
-      Navigator.Buttons.PriorPage.Hint = 'P'#225'gina anterior'
-      Navigator.Buttons.Prior.Hint = 'Anterior'
-      Navigator.Buttons.Next.Hint = 'Siguiente'
-      Navigator.Buttons.NextPage.Hint = 'P'#225'gina siguiente'
-      Navigator.Buttons.Last.Hint = #218'ltimo'
-      Navigator.Buttons.Insert.Hint = 'Nueva gu'#237'a'
-      Navigator.Buttons.Insert.Visible = True
-      Navigator.Buttons.Delete.Hint = 'Borrar gu'#237'a'
-      Navigator.Buttons.Delete.Visible = True
-      Navigator.Buttons.Edit.Hint = 'Editar'
-      Navigator.Buttons.Edit.Visible = True
-      Navigator.Buttons.Post.Hint = 'Guardar'
-      Navigator.Buttons.Post.Visible = True
-      Navigator.Buttons.Cancel.Hint = 'Cancelar'
-      Navigator.Buttons.Cancel.Visible = True
-      Navigator.Buttons.Refresh.Hint = 'Refrescar'
-      Navigator.Buttons.Refresh.Visible = True
-      Navigator.Visible = True
+      Navigator.Visible = False
       DataController.DataSource = dsGuias
       DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
       OptionsBehavior.AlwaysShowEditor = False
       OptionsBehavior.GoToNextCellOnEnter = True
-      OptionsBehavior.IncSearch = True
-      OptionsCustomize.ColumnHiding = True
-      OptionsData.CancelOnExit = False
-      OptionsData.Deleting = True
-      OptionsData.DeletingConfirmation = True
-      OptionsData.Editing = True
-      OptionsData.Inserting = True
+      OptionsData.CancelOnExit = True
+      OptionsData.Deleting = False
+      OptionsData.Editing = False
+      OptionsData.Inserting = False
       OptionsView.GroupByBox = False
       OptionsView.Indicator = True
       Styles.Header = cxsHeader
       object tvGuiasCODIGO: TcxGridDBColumn
         Caption = 'C'#243'digo'
         DataBinding.FieldName = 'CODIGO_INFGUI'
-        Options.Sorting = False
-        Width = 170
-      end
-      object tvGuiasFORMATO: TcxGridDBColumn
-        Caption = 'Formato (vac. = global)'
-        DataBinding.FieldName = 'FORMATO_INFGUI'
-        Width = 160
-      end
-      object tvGuiasMASTER_DS: TcxGridDBColumn
-        Caption = 'Dataset master'
-        DataBinding.FieldName = 'DATASET_MASTER_INFGUI'
         Width = 140
-      end
-      object tvGuiasTIPO: TcxGridDBColumn
-        Caption = 'Tipo'
-        DataBinding.FieldName = 'TIPO_INFGUI'
-        PropertiesClassName = 'TcxComboBoxProperties'
-        Properties.DropDownListStyle = lsFixedList
-        Properties.Items.Strings = (
-          'TABLA'
-          'SQL')
-        Width = 80
       end
       object tvGuiasTABLA: TcxGridDBColumn
         Caption = 'Tabla'
         DataBinding.FieldName = 'TABLA_INFGUI'
         Width = 150
       end
-      object tvGuiasSQL: TcxGridDBColumn
-        Caption = 'SQL libre'
-        DataBinding.FieldName = 'SQL_INFGUI'
-        Width = 180
-      end
       object tvGuiasMASTER_FIELDS: TcxGridDBColumn
         Caption = 'Master fields'
         DataBinding.FieldName = 'MASTER_FIELDS_INFGUI'
-        Width = 160
+        Width = 200
       end
       object tvGuiasDETAIL_FIELDS: TcxGridDBColumn
         Caption = 'Detail fields'
         DataBinding.FieldName = 'DETAIL_FIELDS_INFGUI'
-        Width = 160
+        Width = 200
       end
       object tvGuiasORDEN: TcxGridDBColumn
         Caption = 'Orden'
@@ -219,11 +325,6 @@ inherited frmModalGridGuias: TfrmModalGridGuias
       object tvGuiasACTIVO: TcxGridDBColumn
         Caption = 'Activo'
         DataBinding.FieldName = 'ESACTIVO_INFGUI'
-        PropertiesClassName = 'TcxComboBoxProperties'
-        Properties.DropDownListStyle = lsFixedList
-        Properties.Items.Strings = (
-          'S'
-          'N')
         Width = 60
       end
     end
@@ -233,17 +334,16 @@ inherited frmModalGridGuias: TfrmModalGridGuias
   end
   inherited Localizer1: TcxLocalizer
     Left = 832
-    Top = 312
+    Top = 400
   end
   object unqryGuias: TUniQuery
     SQL.Strings = (
       'select *'
       '  from fza_informes_guias'
       ' where INFORME_INFGUI = :INF'
-      ' order by FORMATO_INFGUI, ORDEN_INFGUI, CODIGO_INFGUI')
-    BeforePost = unqryGuiasBeforePost
+      ' order by ORDEN_INFGUI, CODIGO_INFGUI')
     Left = 32
-    Top = 96
+    Top = 420
     ParamData = <
       item
         DataType = ftUnknown
@@ -254,11 +354,11 @@ inherited frmModalGridGuias: TfrmModalGridGuias
   object dsGuias: TDataSource
     DataSet = unqryGuias
     Left = 32
-    Top = 152
+    Top = 476
   end
   object ActionList1: TActionList
     Left = 32
-    Top = 208
+    Top = 540
     object actSalir: TAction
       Caption = 'Salir'
       ShortCut = 27
@@ -267,7 +367,7 @@ inherited frmModalGridGuias: TfrmModalGridGuias
   end
   object cxStyleRepo: TcxStyleRepository
     Left = 832
-    Top = 240
+    Top = 464
     PixelsPerInch = 96
     object cxsHeader: TcxStyle
       AssignedValues = [svColor, svFont]
