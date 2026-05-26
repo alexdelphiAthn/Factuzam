@@ -231,12 +231,17 @@ var
   sCamposClave: string;
   vLocateValues: Variant;
   oDBDataCtrl: TcxGridDBDataController;
+  bFound: Boolean;
 begin
   oDBDataCtrl := GetDBDataController(AcxgrdtvVista);
   if (oDBDataCtrl = nil) or
      not Assigned(oDBDataCtrl.DataSet) or
      not oDBDataCtrl.DataSet.Active then
+  begin
+    Log.LogInfo(Format('RestaurarFocoGrid: vista=%s SKIP (dataset no activo)',
+      [AcxgrdtvVista.Name]));
     Exit;
+  end;
 
   sCamposClave := oDBDataCtrl.KeyFieldNames;
   if sCamposClave = '' then
@@ -246,23 +251,29 @@ begin
       oDBDataCtrl.KeyFieldNames := sCamposClave;
   end;
 
-  if sCamposClave = '' then Exit;
+  if sCamposClave = '' then
+  begin
+    Log.LogWarning(Format('RestaurarFocoGrid: vista=%s SKIP (sin clave primaria)',
+      [AcxgrdtvVista.Name]));
+    Exit;
+  end;
 
-  // 1. Buscamos el string guardado (ej. "1|1500" o "45")
   sFocusedIDString := GetPerfilValueDef(oPerfilDic,
                                         AcxgrdtvVista.Name + '_FocusedID', '');
 
+  Log.LogInfo(Format('RestaurarFocoGrid: vista=%s clave="%s" valorGuardado="%s"',
+    [AcxgrdtvVista.Name, sCamposClave, sFocusedIDString]));
+
   if sFocusedIDString <> '' then
   begin
-    // 2. Convertimos el string al formato que necesita el Locate
     vLocateValues := StrToKeyValues(sFocusedIDString, sCamposClave);
-
-    // 3. Movemos el cursor
-    oDBDataCtrl.DataSet.Locate(
+    bFound := oDBDataCtrl.DataSet.Locate(
       sCamposClave,
       vLocateValues,
       []
     );
+    Log.LogInfo(Format('RestaurarFocoGrid: Locate(%s, %s) = %s',
+      [sCamposClave, sFocusedIDString, BoolToStr(bFound, True)]));
   end;
 end;
 
