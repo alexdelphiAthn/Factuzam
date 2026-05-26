@@ -222,6 +222,9 @@ type
     // hacer Add. Por defecto no anyade nada.
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
                                           const sPermisos: string); virtual;
+    // Hook para que descendientes amplíen filtros antes de una búsqueda
+    // externa (Ctrl+A desde otra pantalla). Por defecto no hace nada.
+    procedure PrepararBusquedaExterna(const ABusq: string); virtual;
     // Resuelve los codigos ART y SKU del registro activo en `dsTablaG`.
     // Recorre la lista de alias habituales (CODIGO_ART_*, CODIGO_UNIDAD_*).
     // Los Mtos que necesiten otra fuente pueden sobreescribirlo (p.ej.
@@ -736,9 +739,12 @@ end;
 procedure TfrmMtoGen.RecogerPerfilesParticulares(var oList: TPerfilList;
                                                  const sPermisos: string);
 begin
-  // Por defecto el Mto no anyade nada. Los descendientes (p.ej.
-  // TfrmMtoArticulos) sobreescriben este metodo para volcar entradas
-  // adicionales al batch del sbGrabarGridClick.
+end;
+
+procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);
+begin
+  // Los descendientes sobreescriben para ampliar filtros (ej. poner
+  // "Todos" en vez de "Solo activos") antes de buscar desde otra pantalla.
 end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
