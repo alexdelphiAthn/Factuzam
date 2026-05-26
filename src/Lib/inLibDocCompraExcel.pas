@@ -316,6 +316,8 @@ begin
   iFilaInicioLineas := iRow;
   if (QLineas <> nil) and QLineas.Active and (not QLineas.IsEmpty) then
   begin
+    QLineas.DisableControls;
+    try
     QLineas.First;
     while not QLineas.Eof do
     begin
@@ -364,6 +366,9 @@ begin
       Sheet.Cells[iRow, COL_IMP].Style.DataFormat.FormatCode := FMT_EUR;
       Inc(iRow);
       QLineas.Next;
+    end;
+    finally
+      QLineas.EnableControls;
     end;
   end;
   iFilaFinLineas := iRow - 1;
@@ -464,6 +469,8 @@ begin
   iFilaInicioLineas := iRow;
   if (QLineas <> nil) and QLineas.Active and (not QLineas.IsEmpty) then
   begin
+    QLineas.DisableControls;
+    try
     QLineas.First;
     while not QLineas.Eof do
     begin
@@ -493,6 +500,9 @@ begin
         FMT_EUR);
       Inc(iRow);
       QLineas.Next;
+    end;
+    finally
+      QLineas.EnableControls;
     end;
   end;
   iFilaFinLineas := iRow - 1;
