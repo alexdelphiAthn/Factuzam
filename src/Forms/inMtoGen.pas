@@ -97,6 +97,7 @@ type
     rbGrid: TcxRadioButton;
     sbGrabarGrid: TSpeedButton;
     sbResetGrid: TSpeedButton;
+    sbBestFit: TSpeedButton;
     pnlDataSetName: TPanel;
     lblTablaOrigen: TcxLabel;
     saveDialog: TdxSaveFileDialog;
@@ -128,6 +129,7 @@ type
                                      NewPage: TcxTabSheet;
                                      var AllowChange: Boolean);
     procedure sbResetGridClick(Sender: TObject);
+    procedure sbBestFitClick(Sender: TObject);
     procedure sbGrabarGridClick(Sender: TObject);
     procedure edtBusqGlobalPropertiesChange(Sender: TObject);
     procedure tmrBusqGlobalTimer(Sender: TObject);
@@ -644,6 +646,20 @@ begin
     end;
     // Borrar guias de grid asociadas al layout
     BorrarGuiasGrid;
+  end;
+end;
+
+procedure TfrmMtoGen.sbBestFitClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  cxGrdDBTabPrin.BeginUpdate;
+  try
+    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+      if cxGrdDBTabPrin.Columns[i].Visible then
+        cxGrdDBTabPrin.Columns[i].ApplyBestFit;
+  finally
+    cxGrdDBTabPrin.EndUpdate;
   end;
 end;
 
