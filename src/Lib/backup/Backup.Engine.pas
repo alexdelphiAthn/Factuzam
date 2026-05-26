@@ -252,6 +252,8 @@ begin
   ValueRows := TStringList.Create;
   try
     RowCount    := 0;
+    // Notificar inicio con total de filas (si el dataset lo soporta)
+    DoProgress(TableName + ' (datos)', 0, Data.RecordCount);
     RowsInBatch := 0;
     FieldList   := '';
     BatchSize   := FOptions.ExtendedInsertRows; // 0 = sin límite
@@ -263,6 +265,9 @@ begin
                                   [FHelpers.QuoteIdentifier(TableName)]));
       while not Data.Eof do
       begin
+        Inc(RowCount);
+        if (RowCount mod 500) = 0 then
+          DoProgress(TableName, RowCount, Data.RecordCount);
         Fields.Clear;
         Values.Clear;
         for i := 0 to Data.FieldCount - 1 do
@@ -305,12 +310,12 @@ begin
           FWriter.AddCommand(
             FHelpers.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
         end;
-        Inc(RowCount);
         Data.Next;
       end;
       // Volcar las filas que queden pendientes en el buffer
       if FOptions.ExtendedInsert then
         FlushExtendedInsert;
+      DoProgress(TableName + ' OK', RowCount, RowCount);
       if HasIdentity then
         FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s ENABLE KEYS */;',
                                   [FHelpers.QuoteIdentifier(TableName)]));

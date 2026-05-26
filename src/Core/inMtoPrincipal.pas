@@ -694,8 +694,12 @@ end;
 procedure TfrmMtoPrincipal.BackupProgress(const AEtapa: string;
                                           APaso, ATotal: Integer);
 begin
-  jvStatusBar1.Panels[0].Text :=
-    Format('Copia: %s (%d/%d)', [AEtapa, APaso, ATotal]);
+  if ATotal > 0 then
+    jvStatusBar1.Panels[0].Text :=
+      Format('Copia: %s  %d / %d', [AEtapa, APaso, ATotal])
+  else
+    jvStatusBar1.Panels[0].Text :=
+      Format('Copia: %s', [AEtapa]);
   Application.ProcessMessages;
 end;
 
