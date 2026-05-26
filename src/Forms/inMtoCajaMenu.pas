@@ -172,7 +172,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibCajaParam, DateUtils, inMtoConsultaOpe, inMtoPrincipal,
-  inMtoModalArqueo;
+  inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja;
 
 {$R *.dfm}
 
@@ -631,7 +631,8 @@ end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioClick(Sender: TObject);
 begin
-  // TODO: implementar acción de Entrada de Cambio
+  TfrmModalEntradaCambio.Ejecutar(Self, oConn,
+    FEmpresa, FAlmacen, FCaja);
 end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioMouseEnter(Sender: TObject);
@@ -659,7 +660,8 @@ end;
 // F7 - Gastos por Caja
 procedure TfrmMtoMenuCaja.lblGastosCajaClick(Sender: TObject);
 begin
-  // TODO: implementar acción de Gastos por Caja
+  TfrmModalGastoCaja.Ejecutar(Self, oConn,
+    FEmpresa, FAlmacen, FCaja);
 end;
 
 procedure TfrmMtoMenuCaja.lblGastosCajaMouseEnter(Sender: TObject);

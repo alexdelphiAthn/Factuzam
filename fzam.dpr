@@ -127,6 +127,8 @@ uses
   inLibArqueoTicket in 'src\Lib\inLibArqueoTicket.pas',
   inLibArqueoPersistencia in 'src\Lib\inLibArqueoPersistencia.pas',
   inMtoModalArqueo in 'src\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
+  inMtoModalEntradaCambio in 'src\Modals\inMtoModalEntradaCambio.pas' {frmModalEntradaCambio},
+  inMtoModalGastoCaja in 'src\Modals\inMtoModalGastoCaja.pas' {frmModalGastoCaja},
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
   ts.core.sqlparser in 'src\Lib\sqlformatter\ts.core.sqlparser.pas',
   ts.core.sqlscanner in 'src\Lib\sqlformatter\ts.core.sqlscanner.pas',
