@@ -155,14 +155,14 @@ begin
   try
     Q.Connection := FConn;
     Q.SQL.Text :=
-      'SELECT NOMBRE_USU' +
+      'SELECT DIMINUTIVO_TICKET_USU' +
       '  FROM fza_usuarios' +
-      ' WHERE CODIGO_USU_USU = :pCOD';
+      ' WHERE USUARIO_USU = :pCOD';
     Q.ParamByName('pCOD').AsString := Trim(txtEmpleado.Text);
     Q.Open;
     if not Q.Eof then
       lblEmpleadoNombre.Caption :=
-        Q.FieldByName('NOMBRE_USU').AsString;
+        Q.FieldByName('DIMINUTIVO_TICKET_USU').AsString;
   finally
     FreeAndNil(Q);
   end;
