@@ -557,35 +557,53 @@ class procedure TArqueoCalculadora.CalcularEfectivoAnterior(
   AConn: TUniConnection; var AArqueo: TArqueoCaja);
 var
   Query: TUniQuery;
+  bExiste: Boolean;
 begin
-  { Buscar el último arqueo CERRADO de la misma caja anterior a este
-    rango. Si existe, su EFECTIVO_DEJADO_CAJA_ARQ es nuestro
-    EfectivoAnterior (el cambio que quedó en el cajón).
-    Si la columna no existe aún (migración pendiente) se ignora. }
+  { Comprobar primero si la columna existe (migración pendiente). El
+    evento OnError de la conexión UniDAC propaga la excepción antes
+    de que un except local la capture, así que hay que evitar el
+    SELECT sobre una columna inexistente. }
+  bExiste := False;
   Query := TUniQuery.Create(nil);
   try
-    try
-      Query.Connection := AConn;
-      Query.SQL.Text :=
-        'SELECT EFECTIVO_DEJADO_CAJA_ARQ' +
-        '  FROM fza_caja_arqueos' +
-        ' WHERE CODIGO_EMP_ARQ  = :pEMPRESA' +
-        '   AND CODIGO_ALM_ARQ  = :pALMACEN' +
-        '   AND CODIGO_CAJA_ARQ = :pCAJA' +
-        '   AND FASE_ARQ        = ''CERRADO''' +
-        '   AND FECHA_HASTA_ARQ < :pFDESDE' +
-        ' ORDER BY FECHA_HASTA_ARQ DESC' +
-        ' LIMIT 1';
-      Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
-      Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
-      Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-      Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
-      Query.Open;
-      if not Query.Eof then
-        AArqueo.EfectivoAnterior :=
-          Query.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
-    except
-    end;
+    Query.Connection := AConn;
+    Query.SQL.Text :=
+      'SELECT COUNT(*) AS N' +
+      '  FROM INFORMATION_SCHEMA.COLUMNS' +
+      ' WHERE TABLE_SCHEMA = DATABASE()' +
+      '   AND TABLE_NAME   = ''fza_caja_arqueos''' +
+      '   AND COLUMN_NAME  = ''EFECTIVO_DEJADO_CAJA_ARQ''';
+    Query.Open;
+    bExiste := (not Query.Eof)
+               and (Query.FieldByName('N').AsInteger > 0);
+  finally
+    FreeAndNil(Query);
+  end;
+  if not bExiste then
+    Exit;
+  { La columna existe: buscar el último arqueo CERRADO de la misma
+    caja anterior a este rango. }
+  Query := TUniQuery.Create(nil);
+  try
+    Query.Connection := AConn;
+    Query.SQL.Text :=
+      'SELECT EFECTIVO_DEJADO_CAJA_ARQ' +
+      '  FROM fza_caja_arqueos' +
+      ' WHERE CODIGO_EMP_ARQ  = :pEMPRESA' +
+      '   AND CODIGO_ALM_ARQ  = :pALMACEN' +
+      '   AND CODIGO_CAJA_ARQ = :pCAJA' +
+      '   AND FASE_ARQ        = ''CERRADO''' +
+      '   AND FECHA_HASTA_ARQ < :pFDESDE' +
+      ' ORDER BY FECHA_HASTA_ARQ DESC' +
+      ' LIMIT 1';
+    Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
+    Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
+    Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
+    Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
+    Query.Open;
+    if not Query.Eof then
+      AArqueo.EfectivoAnterior :=
+        Query.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
   finally
     FreeAndNil(Query);
   end;
