@@ -197,6 +197,7 @@ type
     FStopwatch: TStopwatch;
     FLogForm: TForm;
     FLogMemo: TSynEdit;
+    FLogBuffer: TStringList;
     FSavedNCMValid: Boolean;
     FExceptionDialogMemo: TcxMemo;
     procedure AppException(Sender: TObject; E: Exception);
@@ -204,6 +205,8 @@ type
     procedure MostrarDetalleExcepcion(const ATexto: string);
     procedure CopiarExceptionDialogClick(Sender: TObject);
     function CopiaSeguridad: Boolean;
+    procedure BackupProgress(const AEtapa: string;
+                              APaso, ATotal: Integer);
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ActualizarFondoLogo;
     procedure CargarFondoLogo;
@@ -281,20 +284,16 @@ end;
 procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject;
                                                var SQL: string;
                                                var Omit: Boolean);
-var
-  TempList: TStringList;
 begin
-  FLogMemo.Lines.Add(' -- Ejecutando (' +
-                                   FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
-  TempList := TStringList.Create;
-  try
-    TempList.Text := SQL;
-    FLogMemo.Lines.AddStrings(TempList);
-  finally
-    FreeAndNil(TempList);
-  end;
-  FLogMemo.SelStart := Length(FLogMemo.Text);
-  SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
+  // Acumular en buffer sin tocar el memo (rendimiento)
+  if FLogBuffer = nil then
+    FLogBuffer := TStringList.Create;
+  FLogBuffer.Add(' -- Ejecutando (' +
+                  FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
+  FLogBuffer.Add(SQL);
+  // Progreso en barra de estado
+  jvStatusBar1.Panels[0].Text :=
+    Format('Script: sentencia %d...', [FLogBuffer.Count div 3 + 1]);
   Application.ProcessMessages;
   FStopwatch := TStopwatch.StartNew;
 end;
@@ -302,15 +301,12 @@ end;
 procedure TfrmMtoPrincipal.ScriptAfterExecute(Sender: TObject; SQL: string);
 begin
   FStopwatch.Stop;
-  if Assigned(FLogMemo) then
+  if FLogBuffer <> nil then
   begin
-    FLogMemo.Lines.Add(Format(' -- [OK] Filas afectadas: %d | Tiempo: %d ms',
-                              [(Sender as TUniScript).RowsAffected,
-                              FStopwatch.ElapsedMilliseconds]));
-    FLogMemo.Lines.Add('--------------------------------------------------');
-    FLogMemo.SelStart := Length(FLogMemo.Text);
-    SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
-    Application.ProcessMessages;
+    FLogBuffer.Add(Format(' -- [OK] Filas afectadas: %d | Tiempo: %d ms',
+                           [(Sender as TUniScript).RowsAffected,
+                           FStopwatch.ElapsedMilliseconds]));
+    FLogBuffer.Add('--------------------------------------------------');
   end;
 end;
 
@@ -695,6 +691,14 @@ end;
 // validar iban online https://www.iban.com
 // validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
 
+procedure TfrmMtoPrincipal.BackupProgress(const AEtapa: string;
+                                          APaso, ATotal: Integer);
+begin
+  jvStatusBar1.Panels[0].Text :=
+    Format('Copia: %s (%d/%d)', [AEtapa, APaso, ATotal]);
+  Application.ProcessMessages;
+end;
+
 function TfrmMtoPrincipal.CopiaSeguridad: Boolean;
 var
   Options: TBackupOptions;
@@ -752,7 +756,9 @@ begin
                                          IncludeTables,
                                          ExcludeTables);
         try
+          Engine.OnProgress := BackupProgress;
           Engine.GenerateBackup;
+          jvStatusBar1.Panels[0].Text := '';
           inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
                                                            saveDialog.FileName);
           ShowMessage('La copia se guardó exitosamente.');
@@ -1030,9 +1036,23 @@ begin
         FLogMemo.Lines.Add('-- Archivo: ' +
                                           ExtractFileName(openDialog.FileName));
         FLogMemo.Lines.Add('-------------------------------------------------');
+        FreeAndNil(FLogBuffer);
+        FLogBuffer := TStringList.Create;
         FLogForm.Show;
         SqlScript.Execute;
         FdmConn.conUni.Commit;
+        jvStatusBar1.Panels[0].Text := '';
+        // Volcar log acumulado al memo de una sola vez
+        if (FLogBuffer <> nil) and Assigned(FLogMemo) then
+        begin
+          FLogMemo.Lines.BeginUpdate;
+          try
+            FLogMemo.Lines.AddStrings(FLogBuffer);
+          finally
+            FLogMemo.Lines.EndUpdate;
+          end;
+        end;
+        FreeAndNil(FLogBuffer);
         ShowMessage('El script se ejecutó exitosamente');
       except
           on E: Exception do
