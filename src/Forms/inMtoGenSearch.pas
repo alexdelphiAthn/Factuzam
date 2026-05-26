@@ -158,17 +158,18 @@ end;
 procedure TfrmMtoSearch.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  case Key of
-    VK_F12:
-    begin
-      Key := 0;
-      btnAceptarClick(Self);
-    end;
-    VK_ESCAPE:
-    begin
-      Key := 0;
-      btnCancelarClick(Self);
-    end;
+  // F12 solo (sin modificadores) -> Aceptar búsqueda
+  if (Key = VK_F12) and (Shift = []) then
+  begin
+    Key := 0;
+    btnAceptarClick(Self);
+    Exit;
+  end;
+  if (Key = VK_ESCAPE) and (Shift = []) then
+  begin
+    Key := 0;
+    btnCancelarClick(Self);
+    Exit;
   end;
   inherited;
 end;
