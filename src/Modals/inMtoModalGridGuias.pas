@@ -40,7 +40,7 @@ type
     lblInfo: TcxLabel;
     pnlAyuda: TPanel;
     lblAyuda: TcxLabel;
-    mmoCampos: TcxMemo;
+    mmoDatasets: TcxMemo;
     pnlBotones: TPanel;
     btnCerrar: TcxButton;
     grdGuias: TcxGrid;
@@ -49,6 +49,8 @@ type
     unqryGuias: TUniQuery;
     dsGuias: TDataSource;
     tvGuiasCODIGO: TcxGridDBColumn;
+    tvGuiasFORMATO: TcxGridDBColumn;
+    tvGuiasMASTER_DS: TcxGridDBColumn;
     tvGuiasTIPO: TcxGridDBColumn;
     tvGuiasTABLA: TcxGridDBColumn;
     tvGuiasSQL: TcxGridDBColumn;
@@ -102,23 +104,23 @@ var
   i: Integer;
   sLine: string;
 begin
-  mmoCampos.Lines.BeginUpdate;
+  mmoDatasets.Lines.BeginUpdate;
   try
-    mmoCampos.Lines.Clear;
+    mmoDatasets.Lines.Clear;
     if (FDataSet = nil) or (not FDataSet.Active) or
        (FDataSet.FieldCount = 0) then
     begin
-      mmoCampos.Lines.Add('(Dataset no disponible.)');
+      mmoDatasets.Lines.Add('(Dataset no disponible.)');
       Exit;
     end;
-    mmoCampos.Lines.Add('Campos del grid (usar en Master fields):');
-    mmoCampos.Lines.Add('');
+    mmoDatasets.Lines.Add('Campos del grid (usar en Master fields):');
+    mmoDatasets.Lines.Add('');
     sLine := '    ';
     for i := 0 to FDataSet.FieldCount - 1 do
     begin
       if Length(sLine) + Length(FDataSet.Fields[i].FieldName) > 95 then
       begin
-        mmoCampos.Lines.Add(sLine);
+        mmoDatasets.Lines.Add(sLine);
         sLine := '    ';
       end;
       if sLine <> '    ' then
@@ -126,13 +128,13 @@ begin
       sLine := sLine + FDataSet.Fields[i].FieldName;
     end;
     if sLine <> '    ' then
-      mmoCampos.Lines.Add(sLine);
-    mmoCampos.Lines.Add('');
-    mmoCampos.Lines.Add(
+      mmoDatasets.Lines.Add(sLine);
+    mmoDatasets.Lines.Add('');
+    mmoDatasets.Lines.Add(
       'Tip: copia los nombres de campo a "Master fields" / ' +
       '"Detail fields" separados por '';''.');
   finally
-    mmoCampos.Lines.EndUpdate;
+    mmoDatasets.Lines.EndUpdate;
   end;
 end;
 
