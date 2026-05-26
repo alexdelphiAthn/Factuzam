@@ -2060,7 +2060,7 @@ end;
 procedure TfrmMtoArticulos.btnToggleFiltrosArtClick(Sender: TObject);
 const
   ALTO_CABECERA = 22;
-  ALTO_CONTENIDO = 38;
+  ALTO_CONTENIDO = 44;
 begin
   // Persiana: arranca cerrada (Visible=False en el DFM) y al pulsar la
   // cabecera alternamos visibilidad y altura del contenedor padre.

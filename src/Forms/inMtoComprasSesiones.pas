@@ -47,7 +47,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.StrUtils,
-  System.Variants,
+  System.Variants, System.types,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, System.UITypes, System.Actions,
   Vcl.ActnList, System.Generics.Collections,

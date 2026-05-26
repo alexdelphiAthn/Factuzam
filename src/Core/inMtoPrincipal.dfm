@@ -1441,16 +1441,20 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object Pedidos1: TMenuItem
         Caption = 'Pedidos'
+        ShortCut = 24656
       end
       object Albaranes1: TMenuItem
         Caption = 'Albaranes'
+        ShortCut = 24641
         OnClick = Albaranes1Click
       end
       object Facturas1: TMenuItem
         Caption = 'Facturas'
+        ShortCut = 24646
       end
       object Formasdepago2: TMenuItem
         Caption = 'Formas de pago'
+        ShortCut = 24647
       end
     end
     object Ventas1: TMenuItem
@@ -1593,6 +1597,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object mnuFormaPagoVenta: TMenuItem
         Caption = 'Formas de pago'
+        ShortCut = 49223
         OnClick = mnuFormaPagoVentaClick
       end
       object mnuPedidosVenta: TMenuItem
@@ -1638,7 +1643,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object mnuCajaPagosHist: TMenuItem
         Caption = 'Hist'#243'rico de Pagos de Caja'
-        ShortCut = 24656
+        ShortCut = 24650
         OnClick = mnuCajaPagosHistClick
       end
       object mnuCajaValesHist: TMenuItem
@@ -1653,7 +1658,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object mnuFacturasSimplif: TMenuItem
         Caption = 'Facturas Simplificadas'
-        ShortCut = 24646
+        ShortCut = 24659
         OnClick = mnuFacturasSimplifClick
       end
     end
@@ -1674,6 +1679,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Caption = 'Otros'
       object mnuParmetrosdeEntorno: TMenuItem
         Caption = 'Par'#225'metros del entorno'
+        ShortCut = 16505
         OnClick = mnuParmetrosdeEntornoClick
       end
       object N2: TMenuItem
