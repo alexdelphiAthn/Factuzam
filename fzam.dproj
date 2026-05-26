@@ -463,6 +463,7 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
         <DCCReference Include="src\Lib\inLibDocCompraExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlparser.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlscanner.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqltree.pas"/>
