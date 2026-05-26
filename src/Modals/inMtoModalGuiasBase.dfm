@@ -218,17 +218,7 @@ inherited frmModalGuiasBase: TfrmModalGuiasBase
         Width = 220
         Height = 36
         Caption = 'A'#241'adir gu'#237'a'
-        Colors.Default = 11468541
-        Colors.DefaultText = clWhite
-        LookAndFeel.NativeStyle = False
-        LookAndFeel.SkinName = 'Office2019Colorful'
         TabOrder = 2
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -13
-        Font.Name = 'Lucida Sans'
-        Font.Style = [fsBold]
-        ParentFont = False
         OnClick = btnAnadirClick
       end
       object btnEliminar: TcxButton
@@ -237,17 +227,7 @@ inherited frmModalGuiasBase: TfrmModalGuiasBase
         Width = 220
         Height = 36
         Caption = 'Eliminar seleccionada'
-        Colors.Default = 6316128
-        Colors.DefaultText = clWhite
-        LookAndFeel.NativeStyle = False
-        LookAndFeel.SkinName = 'Office2019Colorful'
         TabOrder = 3
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -13
-        Font.Name = 'Lucida Sans'
-        Font.Style = [fsBold]
-        ParentFont = False
         OnClick = btnEliminarClick
       end
     end
