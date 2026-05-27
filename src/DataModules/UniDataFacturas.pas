@@ -1144,8 +1144,8 @@ begin
   begin
     if (FieldByName(fdesart).AsString = '') then
     begin
-      raise EDatabaseError.CreateFmt('Error.Descripción de linea ' +
-                                     'de factura vacía.',[]);
+      DataSet.Cancel;
+      Abort;
     end;
     var sNumLin := FindField(fnrolin).AsString;
     if (sNumLin = '0') or
