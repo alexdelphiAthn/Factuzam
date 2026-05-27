@@ -172,6 +172,7 @@ type
     // Popup de selector de columnas (boton derecho en grid)
     FPopMenuColumnas: TPopupMenu;
     FSqlOriginalTablaG: string;
+    FSqlBaseBusquedaExterna: string;
     FCamposGuia: TStringList;
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
@@ -757,6 +758,12 @@ begin
   if unqry = nil then
     Exit;
   unqry.Close;
+  // Guardar SQL base la primera vez; restaurarla en llamadas siguientes
+  // para que los WHERE de busquedas anteriores no se acumulen.
+  if FSqlBaseBusquedaExterna = '' then
+    FSqlBaseBusquedaExterna := unqry.SQL.Text
+  else
+    unqry.SQL.Text := FSqlBaseBusquedaExterna;
   vParser := TGaSQLParserFactory.Select(unqry.SQL.Text);
   // PK compuesta: pkFieldName usa ';' (convencion Locate de Delphi),
   // ABusq usa ',' como separador de valores.
@@ -1257,6 +1264,7 @@ begin
   tsFichBut := nil;
   FCamposGuia := nil;
   FSqlOriginalTablaG := '';
+  FSqlBaseBusquedaExterna := '';
   Self.Position  := poScreenCenter;
   // Popup de columnas: boton derecho en el grid principal
   FPopMenuColumnas := TPopupMenu.Create(Self);
