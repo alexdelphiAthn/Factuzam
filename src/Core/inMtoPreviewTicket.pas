@@ -815,6 +815,9 @@ begin
 end;
 
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
+var
+  sRuta: string;
+  frm: TFormVisualizador;
 begin
   SaveDialog1.Filter := 'PDF|*.pdf';
   SaveDialog1.DefaultExt := 'pdf';
@@ -822,17 +825,21 @@ begin
     FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
   if not SaveDialog1.Execute then
     Exit;
-  // Re-renderizar comandos desde cero (mismo patrón que funciona
-  // en inLibGenerarTicketBD) usando una instancia temporal
-  var frm := TFormVisualizador.Create(nil);
+  sRuta := SaveDialog1.FileName;
+  frm := TFormVisualizador.Create(nil);
   try
     frm.Hide;
     frm.CargarYMostrar(FComandos);
-    frm.ExportarAPDF(FComandos, SaveDialog1.FileName);
+    frm.ExportarAPDF(FComandos, sRuta);
   finally
     FreeAndNil(frm);
   end;
-  ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
+  if FileExists(sRuta) then
+    ShowMessage('PDF guardado en: ' + sRuta)
+  else
+    ShowMessage('ERROR: no se creó el PDF.' + sLineBreak +
+                'Ruta: ' + sRuta + sLineBreak +
+                'Comandos: ' + IntToStr(Length(FComandos)) + ' chars');
 end;
 
 procedure TFormVisualizador.btnPNGClick(Sender: TObject);
