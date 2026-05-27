@@ -1145,9 +1145,10 @@ begin
       raise EDatabaseError.CreateFmt('Error.Descripción de linea ' +
                                      'de factura vacía.',[]);
     end;
-    var sNumLin := FindField(fnrolin).AsString;
-    if (sNumLin = '0') or
-       (sNumLin = '') then
+    // Asignar nro de línea para registros nuevos (dsInsert) o sin número
+    if (DataSet.State = dsInsert) or
+       (Trim(FindField(fnrolin).AsString) = '') or
+       (Trim(FindField(fnrolin).AsString) = '0') then
     begin
       unstdGetContadorLinea.ParamByName('pnumfac').AsString :=
                             unqryTablaG.FieldByName(fnrofac).AsString;
@@ -1157,15 +1158,13 @@ begin
       sNuevoNroLinea :=
                        unstdGetContadorLinea.ParamByName('presul').AsString;
       FindField(fnrolin).AsString := sNuevoNroLinea;
-      // El SP ha actualizado fza_facturas.CONTADOR_LINEAS_FAC en BD a
-      // (presul + 10). Si no sincronizamos el dataset de la cabecera, el
-      // proximo Post de la cabecera (disparado por unqryLinFacBeforeInsert
-      // al anadir la siguiente linea) escribiria el valor antiguo encima,
-      // y el SP volveria a devolver '010', generando un Duplicate entry.
+      // Sincronizar el contador en el dataset de cabecera para que un
+      // Post posterior de la cabecera no sobreescriba el valor correcto
       if unqryTablaG.FindField('CONTADOR_LINEAS_FAC') <> nil then
       begin
         iContadorBD := StrToIntDef(sNuevoNroLinea, 0) + 10;
-        if unqryTablaG.State = dsBrowse then unqryTablaG.Edit;
+        if unqryTablaG.State = dsBrowse then
+          unqryTablaG.Edit;
         unqryTablaG.FieldByName('CONTADOR_LINEAS_FAC').AsString :=
                                                 Format('%.3d', [iContadorBD]);
       end;
