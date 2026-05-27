@@ -1366,9 +1366,9 @@ begin
         col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
         col.DataBinding.FieldName := sField;
         col.Caption := sField;
-        // Por defecto ocultas; el perfil las mostrara si el usuario
-        // las activo previamente con Alt+F12
-        col.Visible := False;
+        // Visible solo si está en la lista guardada de columnas visibles
+        col.Visible :=
+          guiaResult.ColumnasVisibles.IndexOf(sField) >= 0;
       end;
     finally
       cxGrdDBTabPrin.EndUpdate;
@@ -1383,6 +1383,7 @@ begin
     FCamposGuia.Assign(guiaResult.CamposNuevos);
   finally
     FreeAndNil(guiaResult.CamposNuevos);
+    FreeAndNil(guiaResult.ColumnasVisibles);
   end;
 end;
 
@@ -1595,6 +1596,24 @@ begin
             FreeAndNil(FCamposGuia);
             FCamposGuia := TStringList.Create;
             FCamposGuia.Assign(guiaResult.CamposNuevos);
+            // Persistir columnas visibles en fza_informes_guias
+            var qryVis := TUniQuery.Create(nil);
+            try
+              qryVis.Connection := oConn;
+              qryVis.SQL.Text :=
+                'UPDATE fza_informes_guias ' +
+                '   SET COLUMNAS_VISIBLES_INFGUI = :VIS ' +
+                ' WHERE INFORME_INFGUI = :INF';
+              camposElegidos.StrictDelimiter := True;
+              camposElegidos.Delimiter := ';';
+              qryVis.ParamByName('VIS').AsString :=
+                camposElegidos.DelimitedText;
+              qryVis.ParamByName('INF').AsString :=
+                'GRID:' + Self.Name;
+              qryVis.Execute;
+            finally
+              FreeAndNil(qryVis);
+            end;
           finally
             FreeAndNil(camposElegidos);
           end;
@@ -1607,6 +1626,7 @@ begin
         end;
       finally
         FreeAndNil(guiaResult.CamposNuevos);
+        FreeAndNil(guiaResult.ColumnasVisibles);
       end;
     end;
 end;

@@ -25,6 +25,7 @@ type
   TGridGuiaResult = record
     Exito: Boolean;
     CamposNuevos: TStringList;
+    ColumnasVisibles: TStringList;
     SqlOriginal: string;
   end;
 
@@ -78,6 +79,8 @@ var
 begin
   Result.Exito := False;
   Result.CamposNuevos := TStringList.Create;
+  Result.ColumnasVisibles := TStringList.Create;
+  Result.ColumnasVisibles.CaseSensitive := False;
   Result.SqlOriginal := AQuery.SQL.Text;
   if (oInfGuiasCache = nil) or (not oInfGuiasCache.Cargada) then
     Exit;
@@ -185,6 +188,15 @@ begin
             'FROM (' + sSqlActual + ') M_GUIA ' +
             'LEFT JOIN ' + sTabla + ' EXT_GUIA ON ' + sOn;
           Result.Exito := True;
+          // Cargar columnas visibles guardadas en la guía
+          if arrGuias[iGuia].ColumnasVisibles <> '' then
+          begin
+            var arrVis := SplitFields(arrGuias[iGuia].ColumnasVisibles);
+            for k := 0 to High(arrVis) do
+              if (arrVis[k] <> '') and
+                 (Result.ColumnasVisibles.IndexOf(arrVis[k]) < 0) then
+                Result.ColumnasVisibles.Add(arrVis[k]);
+          end;
         finally
           FreeAndNil(setCamposMaster);
         end;
