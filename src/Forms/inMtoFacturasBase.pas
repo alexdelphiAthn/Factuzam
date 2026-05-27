@@ -502,6 +502,7 @@ type
     procedure CambiarEstadoRecibo(sEstado:String);
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure PrepararBusquedaExterna(const ABusq: string); override;
     procedure CambiarIVA;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
@@ -1255,6 +1256,19 @@ end;
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
 begin
   Result := '';
+end;
+
+procedure TfrmMtoFacturasBase.PrepararBusquedaExterna(const ABusq: string);
+begin
+  // Búsqueda externa: usar vi_facturas (todas) en vez de la vista
+  // filtrada del descendiente (vi_facturas_normales / simplificadas)
+  // para que la factura se encuentre sea del tipo que sea.
+  if Assigned(dmmFacturas) and (dmmFacturas.unqryTablaG <> nil) then
+  begin
+    dmmFacturas.unqryTablaG.Close;
+    dmmFacturas.unqryTablaG.SQL.Text := 'SELECT * FROM vi_facturas';
+  end;
+  inherited;
 end;
 
 procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
