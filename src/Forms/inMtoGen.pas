@@ -174,6 +174,7 @@ type
     FSqlOriginalTablaG: string;
     FSqlBaseBusquedaExterna: string;
     FCamposGuia: TStringList;
+    FColumnasVisiblesGuia: TStringList;
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
     procedure PopMenuNuevaGuiaClick(Sender: TObject);
@@ -1377,10 +1378,13 @@ begin
     // visibilidad/ancho/caption guardados por el usuario
     if oPerfilDic <> nil then
       PonerAnchosTitulos(cxGrdDBTabPrin, Self.Name, oPerfilDic);
-    // Guardar lista de campos guia para limpieza
+    // Guardar listas para re-aplicar visibilidad tras AplicarEtiquetas
     FreeAndNil(FCamposGuia);
     FCamposGuia := TStringList.Create;
     FCamposGuia.Assign(guiaResult.CamposNuevos);
+    FreeAndNil(FColumnasVisiblesGuia);
+    FColumnasVisiblesGuia := TStringList.Create;
+    FColumnasVisiblesGuia.Assign(guiaResult.ColumnasVisibles);
   finally
     FreeAndNil(guiaResult.CamposNuevos);
     FreeAndNil(guiaResult.ColumnasVisibles);
@@ -1898,7 +1902,21 @@ begin
                                inLibGlobalVar.oGroup);
   CrearTablaPrincipal;
   AplicarEtiquetas;
-
+  // Re-aplicar visibilidad de columnas guía: CreateAllItems y
+  // AplicarEtiquetas/PonerAnchosTitulos pueden haberlas hecho visibles
+  if (FCamposGuia <> nil) and (FColumnasVisiblesGuia <> nil) then
+  begin
+    var k: Integer;
+    for k := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+    begin
+      var sFld :=
+        (cxGrdDBTabPrin.Columns[k] as TcxGridDBColumn)
+          .DataBinding.FieldName;
+      if FCamposGuia.IndexOf(sFld) >= 0 then
+        cxGrdDBTabPrin.Columns[k].Visible :=
+          FColumnasVisiblesGuia.IndexOf(sFld) >= 0;
+    end;
+  end;
 end;
 
 procedure TfrmMtoGen.rbBBDDClick(Sender: TObject);
