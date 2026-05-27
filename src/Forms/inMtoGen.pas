@@ -758,8 +758,9 @@ begin
     Exit;
   unqry.Close;
   vParser := TGaSQLParserFactory.Select(unqry.SQL.Text);
-  // PK compuesta: NUMERO_FAC,SERIE_FAC con valor 000135,2026.A1
-  aCampos  := pkFieldName.Split([',']);
+  // PK compuesta: pkFieldName usa ';' (convencion Locate de Delphi),
+  // ABusq usa ',' como separador de valores.
+  aCampos  := pkFieldName.Split([';']);
   aValores := ABusq.Split([',']);
   for i := 0 to High(aCampos) do
   begin
