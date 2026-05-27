@@ -142,7 +142,7 @@ end;
 
 procedure TfrmMtoSearch.FormCreate(Sender: TObject);
 begin
-  Self.Position := poScreenCenter;
+  inherited;
   Self.KeyPreview := True;
   sUso := 'Busq';
   sFicha := 'N';
