@@ -113,13 +113,35 @@ begin
 end;
 
 procedure TfrmMtoSearch.CrearTablaPrincipal;
+var
+  i, j: Integer;
+  sField: string;
+  bDuplicada: Boolean;
 begin
   inherited;
-  // Enriquecer con guías ANTES de CreateAllItems: las columnas guía
-  // se crean ocultas y CreateAllItems no las sobreescribe
   if Assigned(dsTablaG.DataSet) and (dsTablaG.DataSet is TUniQuery) then
     AplicarGuiasGrid(TUniQuery(dsTablaG.DataSet));
   cxGrdDBTabPrin.DataController.CreateAllItems;
+  // Eliminar columnas duplicadas que CreateAllItems haya creado
+  // sobre las ya creadas por AplicarGuiasGrid
+  for i := cxGrdDBTabPrin.ColumnCount - 1 downto 0 do
+  begin
+    sField := (cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn)
+                .DataBinding.FieldName;
+    bDuplicada := False;
+    for j := 0 to i - 1 do
+    begin
+      if SameText(
+        (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
+          .DataBinding.FieldName, sField) then
+      begin
+        bDuplicada := True;
+        Break;
+      end;
+    end;
+    if bDuplicada then
+      cxGrdDBTabPrin.Columns[i].Free;
+  end;
   cxGrdDBTabPrin.ApplyBestFit();
 end;
 
