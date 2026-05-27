@@ -113,13 +113,41 @@ begin
 end;
 
 procedure TfrmMtoSearch.CrearTablaPrincipal;
+var
+  i, j: Integer;
+  sField: string;
+  bYaExiste: Boolean;
+  col: TcxGridDBColumn;
+  ds: TDataSet;
 begin
   inherited;
-  // Enriquecer con guías ANTES de CreateAllItems: las columnas guía
-  // se crean ocultas y CreateAllItems no las sobreescribe
   if Assigned(dsTablaG.DataSet) and (dsTablaG.DataSet is TUniQuery) then
     AplicarGuiasGrid(TUniQuery(dsTablaG.DataSet));
-  cxGrdDBTabPrin.DataController.CreateAllItems;
+  // Crear columnas solo para campos que aún no tengan columna
+  ds := cxGrdDBTabPrin.DataController.DataSource.DataSet;
+  if Assigned(ds) then
+  begin
+    for i := 0 to ds.FieldCount - 1 do
+    begin
+      sField := ds.Fields[i].FieldName;
+      bYaExiste := False;
+      for j := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+      begin
+        if SameText(
+          (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
+            .DataBinding.FieldName, sField) then
+        begin
+          bYaExiste := True;
+          Break;
+        end;
+      end;
+      if not bYaExiste then
+      begin
+        col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
+        col.DataBinding.FieldName := sField;
+      end;
+    end;
+  end;
   cxGrdDBTabPrin.ApplyBestFit();
 end;
 
