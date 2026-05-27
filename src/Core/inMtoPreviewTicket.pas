@@ -224,6 +224,9 @@ begin
   try
     Form.FComandos := Comandos;
     Form.CargarYMostrar(Comandos);
+    // Generar PDF antes del ShowModal (funciona siempre en este punto)
+    Form.FRutaPDFTemporal := GetUserFolderTickets + '_preview_tmp.pdf';
+    Form.ExportarAPDF(Comandos, Form.FRutaPDFTemporal);
     Form.ShowModal;
   finally
     FreeAndNil(Form);
@@ -816,30 +819,25 @@ end;
 
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
 var
-  sRuta: string;
-  frm: TFormVisualizador;
+  sSrc, sDst: string;
 begin
+  // El PDF bueno ya se genera en la carpeta de tickets al visualizar.
+  // Buscamos el último PDF generado y lo copiamos donde el usuario elija.
+  sSrc := FRutaPDFTemporal;
+  if (sSrc = '') or (not FileExists(sSrc)) then
+  begin
+    ShowMessage('No hay PDF disponible para copiar.');
+    Exit;
+  end;
   SaveDialog1.Filter := 'PDF|*.pdf';
   SaveDialog1.DefaultExt := 'pdf';
   SaveDialog1.FileName := 'Ticket_' +
     FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-  if not SaveDialog1.Execute then
-    Exit;
-  sRuta := SaveDialog1.FileName;
-  frm := TFormVisualizador.Create(nil);
-  try
-    frm.Hide;
-    frm.CargarYMostrar(FComandos);
-    frm.ExportarAPDF(FComandos, sRuta);
-  finally
-    FreeAndNil(frm);
+  if SaveDialog1.Execute then
+  begin
+    TFile.Copy(sSrc, SaveDialog1.FileName, True);
+    ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
   end;
-  if FileExists(sRuta) then
-    ShowMessage('PDF guardado en: ' + sRuta)
-  else
-    ShowMessage('ERROR: no se creó el PDF.' + sLineBreak +
-                'Ruta: ' + sRuta + sLineBreak +
-                'Comandos: ' + IntToStr(Length(FComandos)) + ' chars');
 end;
 
 procedure TFormVisualizador.btnPNGClick(Sender: TObject);
