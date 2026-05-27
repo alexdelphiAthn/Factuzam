@@ -549,12 +549,20 @@ begin
 end;
 
 procedure TfrmMtoEmpresas.btnIraArticuloClick(Sender: TObject);
+var
+  sCodArt: string;
+  iRow: Integer;
 begin
   inherited;
-  with tvLineasFacturacion.DataController.DataSet do
-    ShowMto(Self.Owner,
-            'Articulos',
-            FieldByName('CODIGO_ART_FACLIN').AsString);
+  // Leer del registro focalizado en el grid (no del DataSet, que en
+  // master-detail puede no coincidir con la fila seleccionada)
+  iRow := tvLineasFacturacion.DataController.FocusedRowIndex;
+  if iRow < 0 then
+    Exit;
+  sCodArt := VarToStr(tvLineasFacturacion.DataController.Values[
+    iRow, tvLineasFacturacionCODIGO_ARTICULO_LINEA.Index]);
+  if sCodArt <> '' then
+    ShowMto(Self.Owner, 'Articulos', sCodArt);
 end;
 
 procedure TfrmMtoEmpresas.btnIraClienteClick(Sender: TObject);
