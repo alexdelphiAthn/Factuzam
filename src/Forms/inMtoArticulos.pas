@@ -509,6 +509,7 @@ type
     procedure AsegurarSkuArticulo(const aCodArticulo: string);
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
+    procedure PrepararBusquedaExterna(const ABusq: string); override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
     // Recorre las columnas de tvStock y, para las que contienen valores que
@@ -2057,6 +2058,33 @@ begin
   finally
     qry.EnableControls;
   end;
+end;
+
+procedure TfrmMtoArticulos.PrepararBusquedaExterna(const ABusq: string);
+var
+  i: Integer;
+begin
+  // Búsqueda externa (Ctrl+A desde otro Mto): sin filtros de carga
+  // para que salgan todos los artículos. Resetear controles y SQL
+  // antes de que inherited añada el WHERE de búsqueda vía parser.
+  FFiltrosArtCargando := True;
+  try
+    cbbFiltroEstadoArt.ItemIndex := 0;
+    chkFiltroConStockArt.Checked := False;
+    for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
+      ccbFiltroTemporadaArt.States[i] := cbsUnchecked;
+  finally
+    FFiltrosArtCargando := False;
+  end;
+  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG <> nil) then
+  begin
+    dmmArticulos.unqryTablaG.Close;
+    dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
+  end;
+  pnlContFiltrosArt.Visible := False;
+  pnlFiltrosArt.Height := 22;
+  btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
+  inherited;
 end;
 
 procedure TfrmMtoArticulos.btnToggleFiltrosArtClick(Sender: TObject);
