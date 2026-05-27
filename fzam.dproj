@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -643,6 +643,7 @@
             <Form>frmModalAddBlockTarifa</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
+        <DCCReference Include="src\Lib\inLibBackupWorker.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesiones.pas">
             <Form>dmComprasSesiones</Form>
             <DesignClass>TdmComprasSesiones</DesignClass>

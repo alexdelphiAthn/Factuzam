@@ -849,7 +849,7 @@ begin
     FProgressLabel.Parent := pnlPPBottom;
     FProgressLabel.Align := alTop;
     FProgressLabel.AutoSize := False;
-    FProgressLabel.Height := 20;
+    FProgressLabel.Height := 26;
     FProgressLabel.Caption := '';
     FProgressLabel.Transparent := True;
   end;
