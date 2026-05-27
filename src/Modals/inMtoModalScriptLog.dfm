@@ -13,11 +13,29 @@
   Position = poMainFormCenter
   OnCreate = FormCreate
   TextHeight = 17
+  object pnlBotonera: TPanel
+    Left = 0
+    Top = 462
+    Width = 750
+    Height = 38
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 1
+    object btnGuardarComo: TButton
+      Left = 607
+      Top = 5
+      Width = 135
+      Height = 28
+      Caption = 'Guardar como...'
+      TabOrder = 0
+      OnClick = btnGuardarComoClick
+    end
+  end
   object LogMemo: TSynEdit
     Left = 0
     Top = 0
     Width = 750
-    Height = 500
+    Height = 462
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText

@@ -19,7 +19,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, cxLookAndFeelPainters, StdCtrls, cxButtons, rtti,
+  Dialogs, cxLookAndFeelPainters, StdCtrls, ComCtrls, cxButtons, rtti,
   UniDataConn, inLibUser, ImgList, Buttons, cxControls, cxContainer,
   Vcl.ExtCtrls, Data.DB, DBAccess, Uni, UniProvider, MySQLUniProvider, DADump,
   MemDS, cxGraphics, cxLookAndFeels, Vcl.Menus, cxEdit, cxCheckBox,
@@ -100,12 +100,33 @@ type
     procedure leerini;
     procedure GetIniValues;
   private
+    FProgressBar: TProgressBar;
+    FProgressLabel: TLabel;
+    FLogBuffer: TStringList;
+    FStopwatch: TStopwatch;
     procedure CambiarPass(f:TUniConnection);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
     procedure escribirini;
     procedure SetIniValues;
-
+    procedure BackupProgress(const AEtapa: string;
+                              APaso, ATotal: Integer;
+                              AFilaGlobal,
+                              AFilasGlobalTotal: Integer);
+    procedure MostrarBarraProgreso;
+    procedure OcultarBarraProgreso;
+    procedure WorkerProgreso(const AEtapa: string;
+                              APaso, ATotal: Integer;
+                              AFilaGlobal,
+                              AFilasGlobalTotal: Integer);
+    procedure BackupFinalizar(AExito: Boolean; const AError: string;
+                               ALogBuffer: TStringList);
+    procedure RestoreFinalizar(AExito: Boolean; const AError: string;
+                                ALogBuffer: TStringList);
+    procedure RestoreBeforeExecute(Sender: TObject;
+                                    var SQL: string;
+                                    var Omit: Boolean);
+    procedure RestoreAfterExecute(Sender: TObject; SQL: string);
     function ExisteUser(sNom: string; f: TUniConnection): Boolean;
     function LoginCorrecto(sNom,
                            sPassLogin: string;
@@ -134,7 +155,11 @@ uses  inLibWin,
       Providers_MySQL_Helpers,
       ScriptWriters,
       Core_Interfaces,
-      Core_Helpers, inLibDBStructure;
+      Core_Helpers,
+      inLibDBStructure,
+      inMtoModalScriptLog,
+      inLibBackupWorker,
+      System.Diagnostics;
 
 {$R *.dfm}
 
@@ -377,19 +402,171 @@ begin
   end;
 end;
 
+procedure TfrmLogon.BackupProgress(const AEtapa: string;
+                                   APaso, ATotal: Integer;
+                                   AFilaGlobal,
+                                   AFilasGlobalTotal: Integer);
+begin
+  if AFilasGlobalTotal > 0 then
+  begin
+    FProgressBar.Max := AFilasGlobalTotal;
+    FProgressBar.Position := AFilaGlobal;
+  end;
+  if ATotal > 0 then
+    FProgressLabel.Caption :=
+      Format('Copia: %s  %d / %d', [AEtapa, APaso, ATotal])
+  else
+    FProgressLabel.Caption :=
+      Format('Copia: %s', [AEtapa]);
+  FProgressBar.Update;
+  FProgressLabel.Update;
+end;
+
+procedure TfrmLogon.MostrarBarraProgreso;
+begin
+  if FProgressBar = nil then
+  begin
+    FProgressBar := TProgressBar.Create(Self);
+    FProgressBar.Parent := pnlBBDD;
+    FProgressBar.Left := 24;
+    FProgressBar.Top := 340;
+    FProgressBar.Width := 312;
+    FProgressBar.Height := 18;
+    FProgressBar.Min := 0;
+    FProgressBar.Max := 100;
+    FProgressBar.Position := 0;
+    FProgressBar.Smooth := True;
+  end;
+  if FProgressLabel = nil then
+  begin
+    FProgressLabel := TLabel.Create(Self);
+    FProgressLabel.Parent := pnlBBDD;
+    FProgressLabel.Left := 24;
+    FProgressLabel.Top := 328;
+    FProgressLabel.Width := 312;
+    FProgressLabel.Height := 16;
+    FProgressLabel.Caption := '';
+  end;
+  FProgressLabel.Visible := True;
+  FProgressBar.Visible := True;
+  FProgressBar.Position := 0;
+  FProgressLabel.Caption := 'Preparando...';
+  FProgressBar.Update;
+  FProgressLabel.Update;
+end;
+
+procedure TfrmLogon.OcultarBarraProgreso;
+begin
+  if FProgressBar <> nil then
+    FProgressBar.Visible := False;
+  if FProgressLabel <> nil then
+    FProgressLabel.Visible := False;
+end;
+
+procedure TfrmLogon.WorkerProgreso(const AEtapa: string;
+                                   APaso, ATotal: Integer;
+                                   AFilaGlobal,
+                                   AFilasGlobalTotal: Integer);
+begin
+  if (FProgressBar = nil) or (not FProgressBar.Visible) then
+    Exit;
+  if AFilasGlobalTotal > 0 then
+  begin
+    FProgressBar.Max := AFilasGlobalTotal;
+    FProgressBar.Position := AFilaGlobal;
+  end;
+  if ATotal > 0 then
+    FProgressLabel.Caption :=
+      Format('%s  %d / %d', [AEtapa, APaso, ATotal])
+  else
+    FProgressLabel.Caption := AEtapa;
+  FProgressBar.Update;
+  FProgressLabel.Update;
+end;
+
+procedure TfrmLogon.BackupFinalizar(AExito: Boolean;
+  const AError: string; ALogBuffer: TStringList);
+begin
+  OcultarBarraProgreso;
+  if AExito then
+  begin
+    Log.LogInfo(edtUser.Text + ' Guardó copia exitosamente');
+    ShowMessage('La copia se guardó exitosamente');
+  end
+  else
+  begin
+    Log.LogError('La copia falló: ' + AError);
+    ShowMessage('No se pudo crear la copia de seguridad.' +
+                sLineBreak + AError);
+  end;
+end;
+
+procedure TfrmLogon.RestoreFinalizar(AExito: Boolean;
+  const AError: string; ALogBuffer: TStringList);
+var
+  LogForm: TfrmMtoModalScriptLog;
+begin
+  OcultarBarraProgreso;
+  LogForm := TfrmMtoModalScriptLog.Create(Self);
+  LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
+  LogForm.LogMemo.Lines.Add(
+    '-------------------------------------------------');
+  if ALogBuffer <> nil then
+  begin
+    LogForm.AppendLines(ALogBuffer);
+    FreeAndNil(ALogBuffer);
+  end;
+  LogForm.Show;
+  if AExito then
+    ShowMessage(SScriptSuccess)
+  else
+  begin
+    Log.LogError('Error en restauración: ' + AError);
+    ShowMessage('Hubo problemas al restaurar la copia.' +
+                sLineBreak + AError);
+  end;
+end;
+
+procedure TfrmLogon.RestoreBeforeExecute(Sender: TObject;
+                                          var SQL: string;
+                                          var Omit: Boolean);
+begin
+  if FLogBuffer = nil then
+    FLogBuffer := TStringList.Create;
+  FLogBuffer.Add(' -- Ejecutando (' +
+                  FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
+  FLogBuffer.Add(SQL);
+  FStopwatch := TStopwatch.StartNew;
+end;
+
+procedure TfrmLogon.RestoreAfterExecute(Sender: TObject; SQL: string);
+begin
+  FStopwatch.Stop;
+  if FLogBuffer <> nil then
+  begin
+    FLogBuffer.Add(Format(' -- [OK] Filas afectadas: %d | Tiempo: %d ms',
+                           [(Sender as TUniScript).RowsAffected,
+                           FStopwatch.ElapsedMilliseconds]));
+    FLogBuffer.Add('--------------------------------------------------');
+  end;
+  if (FProgressBar <> nil) and FProgressBar.Visible then
+  begin
+    FProgressBar.Position := FProgressBar.Position + 1;
+    if (FProgressBar.Position mod 20) = 0 then
+    begin
+      FProgressLabel.Caption :=
+        Format('Sentencia %d / %d...',
+               [FProgressBar.Position, FProgressBar.Max]);
+      FProgressBar.Update;
+      FProgressLabel.Update;
+    end;
+  end;
+end;
+
 procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
 var
-  s         : string;
-  MyText    : TStringlist;
   iButtonSel: Integer;
-
-  // Variables para el nuevo motor de backup
-  Options: TBackupOptions;
-  Provider: IDBMetadataProvider;
-  Helpers: IDBHelpers;
-  Writer: IScriptWriter;
-  Engine: TDBBackupEngine;
-  IncludeTables, ExcludeTables: TStringList;
+  Worker: TBackupWorker;
 begin
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
     sPass,
@@ -397,13 +574,11 @@ begin
     edtPortBD.Text,
     edtNomBD.Text);
   iButtonSel := 0;
-
   saveDialog.Title := 'Guardar copia de seguridad';
   saveDialog.DefaultFolder := GetCurrentDir;
   saveDialog.DefaultExtension := '.crypt';
   savedialog.FileName := 'copiaseguridad_' + sPassEn +
                                        FormatDateTime('_dd_mm', Now) + '.crypt';
-
   if (saveDialog.Execute) then
   begin
     if FileExists(savedialog.FileName) then
@@ -411,57 +586,21 @@ begin
       iButtonSel := MessageDlg('¿Desea reemplazar el fichero existente?',
         mtCustom, [mbYes, mbNo], 0);
     end;
-
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
-      // 1. Configurar Opciones del Backup
-      Options.WithData := True;
-      Options.WithTriggers := True;
-      Options.WithProcedures := True;
-      Options.WithFunctions := True;
-      Options.WithViews := True;
-      Options.DropTablesFirst := True;
-      Options.UseTransactions := True;
-      IncludeTables := TStringList.Create;
-      ExcludeTables := TStringList.Create;
-      Provider := TMySQLMetadataProvider.Create(ucConexion, edtNomBD.Text);
-      Helpers := TMySQLHelpers.Create;
-      Writer := TScriptWriter.Create('');
-      try
-        Engine := TDBBackupEngine.Create(Provider,
-                                         Writer,
-                                         Helpers,
-                                         Options,
-                                         IncludeTables,
-                                         ExcludeTables);
-        try
-          // 3. Ejecutar la generación del script
-          Engine.GenerateBackup;
-          // 4. Obtener el script en formato String
-          s := Writer.GetScript;
-          s := StringReplace(s, 'DEFINER=`root`@`localhost`', '',
-            [rfReplaceAll, rfIgnoreCase]);
-          // 6. Encriptar el resultado
-          s := EncriptAESPass(s, AnsiString(sPass));
-          // 7. Guardar el archivo encriptado
-          MyText := TStringlist.Create;
-          try
-            MyText.Text := s;
-            saveDialog.DefaultFolder := GetUserDeskFolder;
-            MyText.SaveToFile(saveDialog.FileName);
-          finally
-            FreeAndNil(MyText);
-          end;
-          Log.LogInfo(edtUser.Text + ' Guardó copia Encriptada en ' +
-            savedialog.FileName);
-          ShowMessage('La copia se guardó exitosamente');
-        finally
-          FreeAndNil(Engine);
-        end;
-      finally
-        FreeAndNil(IncludeTables);
-        FreeAndNil(ExcludeTables);
-      end;
+      MostrarBarraProgreso;
+      Worker := TBackupWorker.Create(
+        edtHostName.Text,
+        StrToIntDef(edtPortBD.Text, 3306),
+        edtNomBD.Text,
+        edtUserBD.Text,
+        sPass,
+        saveDialog.FileName,
+        True,
+        AnsiString(sPass));
+      Worker.OnProgreso := WorkerProgreso;
+      Worker.OnFinalizar := BackupFinalizar;
+      Worker.Start;
     end;
   end
   else
@@ -473,10 +612,8 @@ end;
 
 procedure TfrmLogon.btnRecoverClick(Sender: TObject);
 var
-  MyText            : TStringList;
-  s                 : string;
   unqryTestBD       : TUniQuery;
-  SqlScript         : TUniScript;
+  Worker            : TRestoreWorker;
 begin
   sPass := InputBox(SGetPassBBDD, '', '');
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
@@ -484,69 +621,38 @@ begin
     edtHostName.Text,
     edtPortBD.Text,
     'information_schema');
-
   unqryTestBD := TUniQuery.Create(nil);
-  unqryTestBD.Connection := ucConexion;
-  unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
-                          '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
-                          ' WHERE SCHEMA_NAME = :BBDD ' ;
-  unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
-  unqryTestBD.Open;
-
-  if (unqryTestBD.RecordCount > 0) then
-  begin
-     if ucConexion.Connected = true then
-     begin
-       ucConexion.Disconnect;
-       ConstruirConexionConnect( ucConexion,
-                                 edtUserBD.Text,
-                                 sPass,
-                                 edtHostName.Text,
-                                 edtPortBD.Text,
-                                 edtNomBD.Text);
-     end;
+  try
+    unqryTestBD.Connection := ucConexion;
+    unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
+                            '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
+                            ' WHERE SCHEMA_NAME = :BBDD ' ;
+    unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
+    unqryTestBD.Open;
+  finally
+    unqryTestBD.Close;
+    FreeAndNil(unqryTestBD);
   end;
-
   opendialog.Title := 'Cargar copia encriptada';
   opendialog.DefaultExtension := 'crypt';
   openDialog.DefaultFolder := GetUserDeskFolder;
-
   if openDialog.Execute then
   begin
-    MyText := TStringlist.create;
-    try
-      MyText.LoadFromFile(opendialog.FileName);
-      s := MyText.Text;
-    finally
-      FreeAndNil(MyText);
-    end;
-    // Creamos y configuramos TUniScript
-    SqlScript := TUniScript.Create(nil);
-    try
-      SqlScript.Connection := ucConexion;
-      SqlScript.NoPreconnect := True; // Crucial para los DELIMITER de MySQL
-      try
-        // Desencriptamos y lo asignamos a la propiedad SQL del script
-        SqlScript.SQL.Text := DecriptAESPass(s, AnsiString(edtPassBD.Text));
-      except
-        on E: Exception do
-        begin
-          ShowMessage(SErrorPassMatchBBDD +' '+ E.ClassName +
-            ' Mensaje:' + E.Message);
-          raise;
-        end;
-      end;
-      // Ejecutamos la restauración
-      SqlScript.Execute;
-      ShowMessage(SScriptSuccess);
-    finally
-      FreeAndNil(SqlScript); // Liberamos el componente
-    end;
+    MostrarBarraProgreso;
+    Worker := TRestoreWorker.Create(
+      edtHostName.Text,
+      StrToIntDef(edtPortBD.Text, 3306),
+      edtNomBD.Text,
+      edtUserBD.Text,
+      sPass,
+      openDialog.FileName,
+      AnsiString(edtPassBD.Text));
+    Worker.OnProgreso := WorkerProgreso;
+    Worker.OnFinalizar := RestoreFinalizar;
+    Worker.Start;
   end
   else
     ShowMessage('Se canceló la carga del script.');
-  unqryTestBD.Close;
-  FreeAndNil(unqryTestBD);
 end;
 
 procedure TfrmLogon.btnTestClick(Sender: TObject);

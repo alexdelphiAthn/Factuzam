@@ -7,8 +7,14 @@ uses
   Data.DB, System.SysUtils, Core_Engine, system.StrUtils;
 
 type
+  // AEtapa: nombre de tabla o etapa actual
+  // APaso, ATotal: progreso dentro de la etapa (tabla)
+  // AFilaGlobal: filas procesadas acumuladas en todo el backup
+  // AFilasGlobalTotal: total estimado de filas en todas las tablas
   TBackupProgressEvent = procedure(const AEtapa: string;
-                                    APaso, ATotal: Integer) of object;
+                                    APaso, ATotal: Integer;
+                                    AFilaGlobal,
+                                    AFilasGlobalTotal: Integer) of object;
 
   TDBBackupEngine = class
   private
@@ -19,7 +25,8 @@ type
     FIncludeTables: TStringList;
     FExcludeTables: TStringList;
     FOnProgress: TBackupProgressEvent;
-
+    FFilasGlobalTotal: Integer;
+    FFilasProcesadas: Integer;
     procedure BackupTables;
     procedure BackupTable(const TableName: string);
     procedure BackupTableData(const TableName: string);
@@ -29,6 +36,7 @@ type
     procedure BackupFunctions;
     function ShouldProcessTable(const TableName: string): Boolean;
     procedure DoProgress(const AEtapa: string; APaso, ATotal: Integer);
+    procedure ContarFilasTotal;
   public
     constructor Create(Provider: IDBMetadataProvider;
                        Writer: IScriptWriter;
@@ -59,7 +67,27 @@ procedure TDBBackupEngine.DoProgress(const AEtapa: string;
                                      APaso, ATotal: Integer);
 begin
   if Assigned(FOnProgress) then
-    FOnProgress(AEtapa, APaso, ATotal);
+    FOnProgress(AEtapa, APaso, ATotal,
+                FFilasProcesadas, FFilasGlobalTotal);
+end;
+
+procedure TDBBackupEngine.ContarFilasTotal;
+var
+  Tables: TStringList;
+  i: Integer;
+begin
+  FFilasGlobalTotal := 0;
+  Tables := FProvider.GetTables;
+  try
+    for i := 0 to Tables.Count - 1 do
+    begin
+      if ShouldProcessTable(Tables[i]) then
+        FFilasGlobalTotal := FFilasGlobalTotal +
+          FProvider.GetRowCount(Tables[i]);
+    end;
+  finally
+    Tables.Free;
+  end;
 end;
 
 function TDBBackupEngine.ShouldProcessTable(const TableName: string): Boolean;
@@ -78,6 +106,9 @@ end;
 
 procedure TDBBackupEngine.GenerateBackup;
 begin
+  FFilasProcesadas := 0;
+  if FOptions.WithData then
+    ContarFilasTotal;
   FWriter.AddComment('========================================');
   FWriter.AddComment('Backup generado: ' + DateTimeToStr(Now));
   FWriter.AddComment('Base de datos: ' + FProvider.GetDatabaseName);
@@ -266,6 +297,7 @@ begin
       while not Data.Eof do
       begin
         Inc(RowCount);
+        Inc(FFilasProcesadas);
         if (RowCount mod 5000) = 0 then
           DoProgress(TableName, RowCount, Data.RecordCount);
         Fields.Clear;

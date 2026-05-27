@@ -200,14 +200,25 @@ type
     FLogBuffer: TStringList;
     FSavedNCMValid: Boolean;
     FExceptionDialogMemo: TcxMemo;
+    FEnOperacionLarga: Boolean;
+    FProgressBar: TProgressBar;
+    FProgressLabel: TLabel;
     procedure AppException(Sender: TObject; E: Exception);
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
     procedure MostrarDetalleExcepcion(const ATexto: string);
     procedure CopiarExceptionDialogClick(Sender: TObject);
     procedure AplicarPermisosMenu;
     function CopiaSeguridad: Boolean;
-    procedure BackupProgress(const AEtapa: string;
-                              APaso, ATotal: Integer);
+    procedure WorkerProgreso(const AEtapa: string;
+                              APaso, ATotal: Integer;
+                              AFilaGlobal,
+                              AFilasGlobalTotal: Integer);
+    procedure BackupFinalizar(AExito: Boolean; const AError: string;
+                               ALogBuffer: TStringList);
+    procedure RestoreFinalizar(AExito: Boolean; const AError: string;
+                                ALogBuffer: TStringList);
+    procedure MostrarBarraProgreso;
+    procedure OcultarBarraProgreso;
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ActualizarFondoLogo;
     procedure CargarFondoLogo;
@@ -271,6 +282,7 @@ uses inLibUser,
   inMtoFotoArticulo,
   System.RegularExpressions,
   Vcl.StdCtrls,
+  inLibBackupWorker,
   Vcl.Clipbrd;
 
 {$R *.dfm}
@@ -287,16 +299,11 @@ procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject;
                                                var SQL: string;
                                                var Omit: Boolean);
 begin
-  // Acumular en buffer sin tocar el memo (rendimiento)
   if FLogBuffer = nil then
     FLogBuffer := TStringList.Create;
   FLogBuffer.Add(' -- Ejecutando (' +
                   FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
   FLogBuffer.Add(SQL);
-  // Progreso en barra de estado
-  jvStatusBar1.Panels[0].Text :=
-    Format('Script: sentencia %d...', [FLogBuffer.Count div 3 + 1]);
-  Application.ProcessMessages;
   FStopwatch := TStopwatch.StartNew;
 end;
 
@@ -309,6 +316,19 @@ begin
                            [(Sender as TUniScript).RowsAffected,
                            FStopwatch.ElapsedMilliseconds]));
     FLogBuffer.Add('--------------------------------------------------');
+  end;
+  // Actualizar barra de progreso (cada 20 sentencias)
+  if (FProgressBar <> nil) and FProgressBar.Visible then
+  begin
+    FProgressBar.Position := FProgressBar.Position + 1;
+    if (FProgressBar.Position mod 20) = 0 then
+    begin
+      FProgressLabel.Caption :=
+        Format('Sentencia %d / %d...',
+               [FProgressBar.Position, FProgressBar.Max]);
+      FProgressBar.Update;
+      FProgressLabel.Update;
+    end;
   end;
 end;
 
@@ -356,6 +376,11 @@ procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject;
 var
   EstadoTeclas: string;
 begin
+  if FEnOperacionLarga then
+  begin
+    Done := True;
+    Exit;
+  end;
   EstadoTeclas := '';
   if (GetKeyState(VK_CAPITAL) and 1) <> 0 then
     EstadoTeclas := EstadoTeclas + 'CAPS  ';
@@ -691,8 +716,40 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
+var
+  Worker: TBackupWorker;
 begin
-  CopiaSeguridad;
+  saveDialog.Title := 'Guardar copia de seguridad';
+  saveDialog.DefaultExtension := 'sql';
+  saveDialog.DefaultFolder := oAppParams.GetPath('appDirCopiasSeguridad');
+  saveDialog.FileTypes.Clear;
+  with saveDialog.FileTypes.Add do
+  begin
+    DisplayName := 'Archivos SQL';
+    FileMask := '*.sql';
+  end;
+  with saveDialog.FileTypes.Add do
+  begin
+    DisplayName := 'Todos los archivos';
+    FileMask := '*.*';
+  end;
+  saveDialog.FileName := 'copiaseguridad' +
+    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
+  if saveDialog.Execute then
+  begin
+    MostrarBarraProgreso;
+    Worker := TBackupWorker.Create(
+      FDmConn.conUni.Server,
+      FDmConn.conUni.Port,
+      FDmConn.conUni.Database,
+      FDmConn.conUni.Username,
+      FDmConn.conUni.Password,
+      saveDialog.FileName,
+      False, '');
+    Worker.OnProgreso := WorkerProgreso;
+    Worker.OnFinalizar := BackupFinalizar;
+    Worker.Start;
+  end;
 end;
 
 // validar iban online https://www.iban.com
@@ -718,16 +775,111 @@ begin
   end;
 end;
 
-procedure TfrmMtoPrincipal.BackupProgress(const AEtapa: string;
-                                          APaso, ATotal: Integer);
+procedure TfrmMtoPrincipal.WorkerProgreso(const AEtapa: string;
+                                          APaso, ATotal: Integer;
+                                          AFilaGlobal,
+                                          AFilasGlobalTotal: Integer);
 begin
+  if (FProgressBar = nil) or (not FProgressBar.Visible) then
+    Exit;
+  if AFilasGlobalTotal > 0 then
+  begin
+    FProgressBar.Max := AFilasGlobalTotal;
+    FProgressBar.Position := AFilaGlobal;
+  end;
   if ATotal > 0 then
-    jvStatusBar1.Panels[0].Text :=
-      Format('Copia: %s  %d / %d', [AEtapa, APaso, ATotal])
+    FProgressLabel.Caption :=
+      Format('%s  %d / %d', [AEtapa, APaso, ATotal])
   else
-    jvStatusBar1.Panels[0].Text :=
-      Format('Copia: %s', [AEtapa]);
-  Application.ProcessMessages;
+    FProgressLabel.Caption := AEtapa;
+  FProgressBar.Update;
+  FProgressLabel.Update;
+end;
+
+procedure TfrmMtoPrincipal.BackupFinalizar(AExito: Boolean;
+  const AError: string; ALogBuffer: TStringList);
+begin
+  OcultarBarraProgreso;
+  if AExito then
+  begin
+    inLibLog.Log.LogInfo('Copia de seguridad creada exitosamente');
+    ShowMessage('La copia se guardó exitosamente.');
+  end
+  else
+  begin
+    inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' + AError);
+    ShowMessage('No se pudo crear la copia de seguridad.' +
+                sLineBreak + AError);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.RestoreFinalizar(AExito: Boolean;
+  const AError: string; ALogBuffer: TStringList);
+var
+  LogForm: TfrmMtoModalScriptLog;
+begin
+  OcultarBarraProgreso;
+  // Mostrar log de ejecución
+  LogForm := TfrmMtoModalScriptLog.Create(Self);
+  LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
+  LogForm.LogMemo.Lines.Add(
+    '-------------------------------------------------');
+  if ALogBuffer <> nil then
+  begin
+    LogForm.AppendLines(ALogBuffer);
+    FreeAndNil(ALogBuffer);
+  end;
+  LogForm.Show;
+  if AExito then
+    ShowMessage('El script se ejecutó exitosamente')
+  else
+  begin
+    inLibLog.Log.LogError('Error en restauración: ' + AError);
+    ShowMessage('Hubo problemas al ejecutar el script.' +
+                sLineBreak + AError);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.MostrarBarraProgreso;
+begin
+  FEnOperacionLarga := True;
+  if FProgressLabel = nil then
+  begin
+    FProgressLabel := TLabel.Create(Self);
+    FProgressLabel.Parent := pnlPPBottom;
+    FProgressLabel.Align := alTop;
+    FProgressLabel.Height := 20;
+    FProgressLabel.Caption := '';
+    FProgressLabel.AlignWithMargins := True;
+  end;
+  if FProgressBar = nil then
+  begin
+    FProgressBar := TProgressBar.Create(Self);
+    FProgressBar.Parent := pnlPPBottom;
+    FProgressBar.Align := alTop;
+    FProgressBar.Height := 18;
+    FProgressBar.Min := 0;
+    FProgressBar.Max := 100;
+    FProgressBar.Position := 0;
+    FProgressBar.Smooth := True;
+  end;
+  FProgressLabel.Visible := True;
+  FProgressBar.Visible := True;
+  pnlPPBottom.Visible := True;
+  FProgressBar.Position := 0;
+  FProgressLabel.Caption := 'Preparando...';
+  FProgressBar.Update;
+  FProgressLabel.Update;
+end;
+
+procedure TfrmMtoPrincipal.OcultarBarraProgreso;
+begin
+  FEnOperacionLarga := False;
+  if FProgressBar <> nil then
+    FProgressBar.Visible := False;
+  if FProgressLabel <> nil then
+    FProgressLabel.Visible := False;
+  pnlPPBottom.Visible := False;
 end;
 
 function TfrmMtoPrincipal.CopiaSeguridad: Boolean;
@@ -739,13 +891,11 @@ var
   Engine: TDBBackupEngine;
   IncludeTables, ExcludeTables: TStringList;
 begin
-  // Asumimos por defecto que no se completará (ej. el usuario cancela)
   Result := False;
-
-  // Configuración del diálogo
   saveDialog.Title := 'Guardar copia de seguridad';
   saveDialog.DefaultExtension := 'sql';
   saveDialog.DefaultFolder := oAppParams.GetPath('appDirCopiasSeguridad');
+  saveDialog.FileTypes.Clear;
   with saveDialog.FileTypes.Add do
   begin
     DisplayName := 'Archivos SQL';
@@ -756,12 +906,10 @@ begin
     DisplayName := 'Todos los archivos';
     FileMask := '*.*';
   end;
-  //saveDialog.FileTypes.Add(); := 'Archivos SQL (*.sql)|*.sql';
   saveDialog.FileName := 'copiaseguridad' +
                            FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
   if saveDialog.Execute then
   begin
-    // 1. Configurar Opciones de la librería
     Options.WithData := True;
     Options.WithTriggers := True;
     Options.WithProcedures := True;
@@ -769,27 +917,23 @@ begin
     Options.WithViews := True;
     Options.DropTablesFirst := True;
     Options.UseTransactions := True;
-    Options.ExtendedInsert   := True;
+    Options.ExtendedInsert := True;
     Options.ExtendedInsertRows := 500;
     IncludeTables := TStringList.Create;
     ExcludeTables := TStringList.Create;
-    // 2. Inicializar el Provider
     Provider := TMySQLMetadataProvider.Create(FDmConn.conUni,
                                               FDmConn.conUni.Database);
     Helpers := TMySQLHelpers.Create;
     Writer := TScriptWriter.Create(saveDialog.FileName);
+    MostrarBarraProgreso;
     try
       try
-        Engine := TDBBackupEngine.Create(Provider,
-                                         Writer,
-                                         Helpers,
+        Engine := TDBBackupEngine.Create(Provider, Writer, Helpers,
                                          Options,
-                                         IncludeTables,
-                                         ExcludeTables);
+                                         IncludeTables, ExcludeTables);
         try
-          Engine.OnProgress := BackupProgress;
+          Engine.OnProgress := WorkerProgreso;
           Engine.GenerateBackup;
-          jvStatusBar1.Panels[0].Text := '';
           inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
                                                            saveDialog.FileName);
           ShowMessage('La copia se guardó exitosamente.');
@@ -808,6 +952,7 @@ begin
         end;
       end;
     finally
+      OcultarBarraProgreso;
       FreeAndNil(IncludeTables);
       FreeAndNil(ExcludeTables);
     end;
@@ -1005,7 +1150,9 @@ end;
 
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
 var
-  SqlScript: TUniScript;
+  SqlTexto: string;
+  MyText: TStringList;
+  Worker: TRestoreWorker;
 begin
   if not mnuEjecutarScript.Visible then
     Exit;
@@ -1025,80 +1172,49 @@ begin
   openDialog.DefaultFolder := oAppParams.GetPath('appDirCopiasSeguridad');
   if openDialog.Execute then
   begin
-    SqlScript := TUniScript.Create(nil);
-    SqlScript.OnError := UniScript1Error;
-    SqlScript.BeforeExecute := ScriptBeforeExecute;
-    SqlScript.AfterExecute := ScriptAfterExecute;
+    // Leer fichero para comprobar DDL antes de lanzar el hilo
+    MyText := TStringList.Create;
     try
-      SqlScript.Connection := FDmConn.conUni;
-      if FdmConn.conuni.InTransaction then
-        FdmConn.conuni.Commit;
-      FdmConn.conUni.StartTransaction;
-      SqlScript.SQL.LoadFromFile(openDialog.FileName, TEncoding.UTF8);
-      if ContieneDDL(SqlScript.SQL.Text) then
-      begin
-        var Respuesta := MessageDlg(
-          'ATENCIÓN: El script contiene sentencias DDL (modifican la ' +
-          'estructura de la base de datos).' + sLineBreak +
-          'En MySQL/MariaDB, estos cambios provocan un guardado automático y ' +
-          'NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
-          '¿Deseas realizar una copia de seguridad antes de continuar?',
-            mtWarning, [mbYes, mbNo, mbCancel], 0);
-        case Respuesta of
-          mrYes:
-            begin
-              if not CopiaSeguridad then
-              begin
-                ShowMessage('Operación cancelada. El script no se ejecutará.');
-                Exit;
-              end;
-            end;
-          mrCancel:
-            Exit; // El usuario se arrepiente, abortamos todo
-          //mrNo: // El usuario es valiente y decide continuar sin copia
-        end;
-      end;
-      try
-        var LogFrm := TfrmMtoModalScriptLog.Create(Self);
-        FLogForm := LogFrm;
-        FLogForm.OnClose := LogFormClose;
-        FLogMemo := LogFrm.LogMemo;
-        FLogMemo.Lines.Add('-- INICIO DE EJECUCIÓN DEL SCRIPT --');
-        FLogMemo.Lines.Add('-- Archivo: ' +
-                                          ExtractFileName(openDialog.FileName));
-        FLogMemo.Lines.Add('-------------------------------------------------');
-        FreeAndNil(FLogBuffer);
-        FLogBuffer := TStringList.Create;
-        FLogForm.Show;
-        SqlScript.Execute;
-        FdmConn.conUni.Commit;
-        jvStatusBar1.Panels[0].Text := '';
-        // Volcar log acumulado al memo de una sola vez
-        if (FLogBuffer <> nil) and Assigned(FLogMemo) then
-        begin
-          FLogMemo.Lines.BeginUpdate;
-          try
-            FLogMemo.Lines.AddStrings(FLogBuffer);
-          finally
-            FLogMemo.Lines.EndUpdate;
-          end;
-        end;
-        FreeAndNil(FLogBuffer);
-        ShowMessage('El script se ejecutó exitosamente');
-      except
-          on E: Exception do
-          begin
-            FdmConn.conUni.Rollback;
-            inLibLog.Log.LogError('Error al ejecutar el script: ' + E.Message);
-            ShowMessage('Hubo problemas al ejecutar el script. E:' +
-                                                                   E.ClassName +
-              ' Mensaje:' + Copy(E.Message, 1, 200));
-            raise;
-          end;
-      end;
+      MyText.LoadFromFile(openDialog.FileName, TEncoding.UTF8);
+      SqlTexto := MyText.Text;
     finally
-      FreeAndNil(SqlScript);
+      FreeAndNil(MyText);
     end;
+    if ContieneDDL(SqlTexto) then
+    begin
+      var Respuesta := MessageDlg(
+        'ATENCIÓN: El script contiene sentencias DDL (modifican la ' +
+        'estructura de la base de datos).' + sLineBreak +
+        'En MySQL/MariaDB, estos cambios provocan un guardado automático y ' +
+        'NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
+        '¿Deseas realizar una copia de seguridad antes de continuar?',
+          mtWarning, [mbYes, mbNo, mbCancel], 0);
+      case Respuesta of
+        mrYes:
+          begin
+            if not CopiaSeguridad then
+            begin
+              ShowMessage('Operación cancelada. El script no se ejecutará.');
+              Exit;
+            end;
+          end;
+        mrCancel:
+          Exit;
+      end;
+    end;
+    // Lanzar ejecución en segundo plano
+    MostrarBarraProgreso;
+    Worker := TRestoreWorker.Create(
+      FDmConn.conUni.Server,
+      FDmConn.conUni.Port,
+      FDmConn.conUni.Database,
+      FDmConn.conUni.Username,
+      FDmConn.conUni.Password,
+      openDialog.FileName,
+      '');
+    Worker.OnProgreso := WorkerProgreso;
+    Worker.OnFinalizar := RestoreFinalizar;
+    Worker.Start;
   end;
 end;
 
