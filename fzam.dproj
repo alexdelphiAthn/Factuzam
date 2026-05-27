@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -188,6 +188,8 @@
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
         <DCCReference Include="src\Lib\inLibGridColumnChooser.pas"/>
+        <DCCReference Include="src\Lib\inLibConfigCampos.pas"/>
+        <DCCReference Include="src\Lib\inLibPermisos.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
         </DCCReference>
@@ -387,6 +389,10 @@
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataUsuariosPerfiles.pas">
             <Form>dmUsuariosPerfiles</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPermisosGrupo.pas">
+            <Form>dmPermisosGrupo</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataFacturas.pas">
