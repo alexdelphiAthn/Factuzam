@@ -815,11 +815,6 @@ begin
 end;
 
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
-var
-  Pdf: TPdfDocumentGDI;
-  Metafile: TMetafile;
-  MetaCanvas: TMetafileCanvas;
-  AlturaReal, PageW, PageH, MargenH: Integer;
 begin
   SaveDialog1.Filter := 'PDF|*.pdf';
   SaveDialog1.DefaultExt := 'pdf';
@@ -827,37 +822,17 @@ begin
     FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
   if not SaveDialog1.Execute then
     Exit;
-  AlturaReal := FCurrentY + 10;
-  MargenH := 20;
-  PageW := ANCHO_PAPEL_PIXELS_PDF + (MargenH * 2);
-  PageH := AlturaReal + 40;
-  Pdf := TPdfDocumentGDI.Create;
-  Metafile := TMetafile.Create;
+  // Re-renderizar comandos desde cero (mismo patrón que funciona
+  // en inLibGenerarTicketBD) usando una instancia temporal
+  var frm := TFormVisualizador.Create(nil);
   try
-    Metafile.Width := ANCHO_PAPEL_PIXELS_PDF;
-    Metafile.Height := AlturaReal;
-    MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
-    try
-      // Copiar el bitmap ya renderizado al metafile
-      MetaCanvas.Draw(0, 0, Image1.Picture.Bitmap);
-    finally
-      FreeAndNil(MetaCanvas);
-    end;
-    Pdf.DefaultPaperSize := psUserDefined;
-    Pdf.DefaultPageWidth := PageW;
-    Pdf.DefaultPageHeight := PageH;
-    Pdf.AddPage;
-    PlayEnhMetaFile(Pdf.VCLCanvas.Handle,
-                    Metafile.Handle,
-                    Rect(MargenH, 0,
-                         MargenH + ANCHO_PAPEL_PIXELS_PDF,
-                         AlturaReal));
-    Pdf.SaveToFile(SaveDialog1.FileName);
-    ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
+    frm.Hide;
+    frm.CargarYMostrar(FComandos);
+    frm.ExportarAPDF(FComandos, SaveDialog1.FileName);
   finally
-    FreeAndNil(Metafile);
-    FreeAndNil(Pdf);
+    FreeAndNil(frm);
   end;
+  ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
 end;
 
 procedure TFormVisualizador.btnPNGClick(Sender: TObject);
