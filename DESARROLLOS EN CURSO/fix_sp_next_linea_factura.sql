@@ -1,51 +1,7 @@
--- Reemplazar PRC_FNC_GET_NEXT_LINEA_FACTURA para que sea resiliente
--- a contadores desincronizados. Usa MAX real de líneas como respaldo.
-DROP PROCEDURE IF EXISTS `PRC_FNC_GET_NEXT_LINEA_FACTURA`;
-DELIMITER ;;
-CREATE PROCEDURE `PRC_FNC_GET_NEXT_LINEA_FACTURA`(
-    IN  `pnumfac` VARCHAR(12),
-    IN  `pserie`  VARCHAR(12),
-    OUT `presul`  VARCHAR(3)
-)
-BEGIN
-    DECLARE v_MaxReal   BIGINT DEFAULT 0;
-    DECLARE v_Contador  BIGINT DEFAULT 0;
-    DECLARE v_Next      BIGINT;
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    blk: BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END blk;
-    START TRANSACTION;
-    -- Máximo real de las líneas existentes en la factura
-    SELECT COALESCE(MAX(CAST(LINEA_FACLIN AS UNSIGNED)), 0)
-      INTO v_MaxReal
-      FROM fza_facturas_lineas
-     WHERE NUMERO_FAC_FACLIN = pnumfac
-       AND SERIE_FAC_FACLIN  = pserie;
-    -- Contador almacenado en la cabecera (con bloqueo de fila)
-    SELECT COALESCE(CAST(CONTADOR_LINEAS_FAC AS UNSIGNED), 0)
-      INTO v_Contador
-      FROM fza_facturas
-     WHERE NUMERO_FAC = pnumfac
-       AND SERIE_FAC  = pserie
-       FOR UPDATE;
-    -- Usar el mayor de ambos + 10
-    SET v_Next = GREATEST(v_MaxReal, v_Contador) + 10;
-    -- Actualizar el contador en la cabecera
-    UPDATE fza_facturas
-       SET CONTADOR_LINEAS_FAC = LPAD(v_Next, 3, '0')
-     WHERE NUMERO_FAC = pnumfac
-       AND SERIE_FAC  = pserie;
-    IF ROW_COUNT() > 0 THEN
-        SET presul = LPAD(v_Next, 3, '0');
-    ELSE
-        SET presul = '010';
-    END IF;
-    COMMIT;
-END ;;
-DELIMITER ;
--- Reparar contadores desincronizados en facturas existentes
+-- Reparar contadores de líneas desincronizados en facturas existentes.
+-- NO modifica el SP (la lógica atómica con LAST_INSERT_ID es correcta).
+-- La corrección de raíz está en el BeforePost de UniDataFacturas.pas:
+-- ahora llama al SP siempre que DataSet.State = dsInsert.
 UPDATE fza_facturas f
    SET CONTADOR_LINEAS_FAC = (
        SELECT LPAD(COALESCE(MAX(CAST(l.LINEA_FACLIN AS UNSIGNED)), 0) + 10, 3, '0')
