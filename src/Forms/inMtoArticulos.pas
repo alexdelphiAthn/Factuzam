@@ -843,7 +843,7 @@ begin
       btnIraEmpresaClick(Sender)
     else
       ShowMto(Self.Owner,
-              'Facturas');
+              'Empresas');
 end;
 
 procedure TfrmMtoArticulos.actFacturasExecute(Sender: TObject);
