@@ -1059,12 +1059,8 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object txtRetiradaImporte: TcxCurrencyEdit
             Left = 8
-<<<<<<< HEAD
             Top = 114
             EditValue = 0.000000000000000000
-=======
-            Top = 122
->>>>>>> 2a89e6cc054350e30f019fccd39732988afb7b57
             Properties.OnChange = txtRetiradaImportePropertiesChange
             TabOrder = 9
             Width = 110
