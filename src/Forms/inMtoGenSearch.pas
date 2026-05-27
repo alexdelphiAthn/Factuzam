@@ -116,6 +116,9 @@ procedure TfrmMtoSearch.CrearTablaPrincipal;
 begin
   inherited;
   cxGrdDBTabPrin.DataController.CreateAllItems;
+  // Aplicar guías si el dataset es TUniQuery (búsquedas sin data module)
+  if Assigned(dsTablaG.DataSet) and (dsTablaG.DataSet is TUniQuery) then
+    AplicarGuiasGrid(TUniQuery(dsTablaG.DataSet));
   cxGrdDBTabPrin.ApplyBestFit();
 end;
 

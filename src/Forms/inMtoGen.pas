@@ -1530,6 +1530,7 @@ var
   camposElegidos: TStringList;
   i: Integer;
   col: TcxGridDBColumn;
+  unqry: TUniQuery;
 begin
   // Abrir mantenimiento de guias del grid
   frm := TfrmModalGridGuias.Create(Application);
@@ -1549,11 +1550,14 @@ begin
     oInfGuiasCache.Invalidar;
     oInfGuiasCache.Precargar;
   end;
-  // Enriquecer query si hay guias nuevas
+  // Obtener TUniQuery: del data module o del DataSource (búsquedas)
+  unqry := nil;
   if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
-  begin
-    var unqry := TdmBase(tdmDataModule).unqryTablaG;
-    if (unqry <> nil) and (unqry.Active) then
+    unqry := TdmBase(tdmDataModule).unqryTablaG
+  else if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) and
+          (dsTablaG.DataSet is TUniQuery) then
+    unqry := TUniQuery(dsTablaG.DataSet);
+  if (unqry <> nil) and (unqry.Active) then
     begin
       // Restaurar SQL original si ya estaba enriquecido
       if FSqlOriginalTablaG <> '' then
@@ -1605,7 +1609,6 @@ begin
         FreeAndNil(guiaResult.CamposNuevos);
       end;
     end;
-  end;
 end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
@@ -1659,8 +1662,8 @@ begin
     Key := 0;
     Exit;
   end;
-  // Ctrl+F11 -> BestFit anchos de columna
-  if (Key = VK_F11) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  // Ctrl+F10 -> BestFit anchos de columna
+  if (Key = VK_F10) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
     sbBestFitClick(nil);
     Key := 0;
