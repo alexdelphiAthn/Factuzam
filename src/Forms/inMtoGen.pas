@@ -179,13 +179,13 @@ type
     procedure PopMenuNuevaGuiaClick(Sender: TObject);
     procedure PopMenuRenombrarClick(Sender: TObject);
     procedure BorrarGuiasGrid;
-    procedure AplicarGuiasGrid(AQuery: TUniQuery);
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
 //                                        const sProfile: string;
 //                                        AList: TPerfilList);
   protected
+    procedure AplicarGuiasGrid(AQuery: TUniQuery);
     // Indica si las teclas de navegacion (PgUp, PgDn, Home, End, Ins, F2)
     // deben activar las acciones del TActionList base. Los Mtos con
     // editores multilinea (SynEdit, etc.) sobreescriben para devolver
