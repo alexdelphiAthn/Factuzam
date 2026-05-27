@@ -1232,6 +1232,9 @@ begin
     FieldByName('FECHA_FAC').AsDateTime := Trunc(Now);
     FieldByName('FORMA_PAGO_FAC').AsString := FormaPagoDefault;
     FieldByName('ESCONSOLIDADA_FAC').AsString := 'N';
+    // Tipo de factura segun el formulario (NORMAL / SIMPLIFICADA)
+    FieldByName('TIPO_FAC').AsString :=
+      (GetOwnerForm<TfrmMtoFacturasBase>).TipoFacturaFiltro;
     (GetOwnerForm<TfrmMtoFacturasBase>).sbNuevaFacturaClick(Self.Owner);
   end;
 end;
