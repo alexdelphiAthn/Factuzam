@@ -35,8 +35,9 @@ type
     Tabla:         string;
     SqlStr:        string;
     MasterFields:  string;
-    DetailFields:  string;
-    Orden:         Integer;
+    DetailFields:      string;
+    Orden:             Integer;
+    ColumnasVisibles:  string;
   end;
 
   TListaGuias      = TList<TInformeGuiaItem>;
@@ -106,7 +107,7 @@ begin
         'SELECT CODIGO_INFGUI, INFORME_INFGUI, FORMATO_INFGUI, '       +
         '       DATASET_MASTER_INFGUI, TIPO_INFGUI, TABLA_INFGUI, '    +
         '       SQL_INFGUI, MASTER_FIELDS_INFGUI, DETAIL_FIELDS_INFGUI,' +
-        '       ORDEN_INFGUI '                                          +
+        '       ORDEN_INFGUI, COLUMNAS_VISIBLES_INFGUI '               +
         '  FROM fza_informes_guias '                                    +
         ' WHERE ESACTIVO_INFGUI = ''S'' '                               +
         ' ORDER BY INFORME_INFGUI, ORDEN_INFGUI, CODIGO_INFGUI';
@@ -123,6 +124,8 @@ begin
         item.MasterFields  := qry.FieldByName('MASTER_FIELDS_INFGUI').AsString;
         item.DetailFields  := qry.FieldByName('DETAIL_FIELDS_INFGUI').AsString;
         item.Orden         := qry.FieldByName('ORDEN_INFGUI').AsInteger;
+        item.ColumnasVisibles :=
+          qry.FieldByName('COLUMNAS_VISIBLES_INFGUI').AsString;
         // Indexamos por nombre de informe en minusculas porque el INFORME
         // viene de Self.Name del TfrmPrint y el campo DB es varchar con
         // collation case-insensitive por defecto en MariaDB.
