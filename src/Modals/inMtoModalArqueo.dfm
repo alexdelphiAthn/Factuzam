@@ -952,7 +952,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           Left = 336
           Top = 224
           Width = 628
-          Height = 118
+          Height = 180
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
@@ -969,14 +969,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblRecTotalSistemaLbl: TcxLabel
             Left = 8
-            Top = 22
+            Top = 24
             Caption = 'Total sistema:'
             TabOrder = 1
             Transparent = True
           end
           object lblRecTotalSistema: TcxLabel
             Left = 120
-            Top = 22
+            Top = 24
             AutoSize = False
             Properties.Alignment.Horz = taRightJustify
             TabOrder = 2
@@ -987,14 +987,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblRecTotalRecuentoLbl: TcxLabel
             Left = 240
-            Top = 22
+            Top = 24
             Caption = 'Total recontado:'
             TabOrder = 3
             Transparent = True
           end
           object lblRecTotalRecuento: TcxLabel
             Left = 370
-            Top = 22
+            Top = 24
             AutoSize = False
             Properties.Alignment.Horz = taRightJustify
             TabOrder = 4
@@ -1005,14 +1005,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblRecDiferenciaLbl: TcxLabel
             Left = 490
-            Top = 22
+            Top = 24
             Caption = 'Diferencia:'
             TabOrder = 5
             Transparent = True
           end
           object lblRecDiferencia: TcxLabel
             Left = 490
-            Top = 42
+            Top = 46
             AutoSize = False
             Style.Font.Size = 12
             Style.Font.Style = [fsBold]
@@ -1025,14 +1025,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblRetiradaLbl: TcxLabel
             Left = 8
-            Top = 72
+            Top = 80
             Caption = 'Retirada:'
             TabOrder = 7
             Transparent = True
           end
           object rgRetiradaTipo: TcxRadioGroup
             Left = 80
-            Top = 70
+            Top = 76
             Properties.Columns = 5
             Properties.Items = <
               item
@@ -1057,7 +1057,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object txtRetiradaImporte: TcxCurrencyEdit
             Left = 8
-            Top = 114
+            Top = 122
             Properties.OnChange = txtRetiradaImportePropertiesChange
             TabOrder = 9
             Value = 0.000000000000000000
@@ -1065,14 +1065,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblDejoLbl: TcxLabel
             Left = 130
-            Top = 116
+            Top = 124
             Caption = 'Dejo para ma'#241'ana:'
             TabOrder = 10
             Transparent = True
           end
           object lblDejoImporte: TcxLabel
             Left = 280
-            Top = 116
+            Top = 124
             Caption = '0,00 EUR'
             Style.Font.Style = [fsBold]
             TabOrder = 11
@@ -1080,14 +1080,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblObservacionesLbl: TcxLabel
             Left = 390
-            Top = 116
+            Top = 124
             Caption = 'Obs:'
             TabOrder = 12
             Transparent = True
           end
           object txtObservaciones: TcxTextEdit
             Left = 426
-            Top = 114
+            Top = 122
             Properties.MaxLength = 500
             TabOrder = 13
             Width = 196
