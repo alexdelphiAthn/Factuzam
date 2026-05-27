@@ -1753,6 +1753,12 @@ var
   sArt: string;
   sSku: string;
 begin
+  // Toggle: si la foto ya está visible, ocultarla
+  if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
+  begin
+    frmFotoArticulo.Hide;
+    Exit;
+  end;
   sArt := '';
   sSku := '';
   ResolverArtSkuActivo(sArt, sSku);
