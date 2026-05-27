@@ -375,7 +375,7 @@ begin
           sNroFactura := FieldByName('NUMERO_FAC').AsString;
           sSerieFactura := FieldByName('SERIE_FAC').AsString;
           ShowMto(Self.Owner,
-                  'Facturas',
+                  ResolverCallFactura(sNroFactura, sSerieFactura),
                   sNroFactura + ',' + sSerieFactura);
        end
      else

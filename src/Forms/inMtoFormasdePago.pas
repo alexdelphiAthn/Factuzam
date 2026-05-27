@@ -248,10 +248,14 @@ procedure TfrmMtoFormasdePago.btnIraFacturaClick(Sender: TObject);
 begin
   inherited;
   with tvFacturacion.DataController.DataSource.DataSet do
-  ShowMto(Self.Owner,
-          'Facturas',
-          FieldByName('NUMERO_FAC').AsString + ',' +
-          FieldByName('SERIE_FAC').AsString);
+  begin
+    ShowMto(Self.Owner,
+            ResolverCallFactura(
+              FieldByName('NUMERO_FAC').AsString,
+              FieldByName('SERIE_FAC').AsString),
+            FieldByName('NUMERO_FAC').AsString + ',' +
+            FieldByName('SERIE_FAC').AsString);
+  end;
 end;
 
 procedure TfrmMtoFormasdePago.actFacturasExecute(Sender: TObject);

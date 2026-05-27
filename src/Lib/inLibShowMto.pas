@@ -32,6 +32,7 @@ type
   procedure ShowMto(AOwner: TComponent;
                     ACall:String;
                     ABusq:string = '');
+  function ResolverCallFactura(const ANumero, ASerie: string): string;
   function CrearDataModule(ADataUnit:String;var AOwnerForm:TfrmMtoGen):TObject;
 
 implementation
@@ -236,6 +237,34 @@ begin
     end;
   finally
     ctx.Free;
+  end;
+end;
+
+function ResolverCallFactura(const ANumero, ASerie: string): string;
+var
+  qry: TUniQuery;
+  sTipo: string;
+begin
+  Result := 'Facturas';
+  if (oConn = nil) or (not oConn.Connected) then
+    Exit;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT TIPO_FAC FROM fza_facturas' +
+      ' WHERE NUMERO_FAC = :NUM AND SERIE_FAC = :SER';
+    qry.ParamByName('NUM').AsString := ANumero;
+    qry.ParamByName('SER').AsString := ASerie;
+    qry.Open;
+    if not qry.IsEmpty then
+    begin
+      sTipo := qry.FieldByName('TIPO_FAC').AsString;
+      if SameText(sTipo, 'SIMPLIFICADA') then
+        Result := 'FacturasSimplif';
+    end;
+  finally
+    FreeAndNil(qry);
   end;
 end;
 
