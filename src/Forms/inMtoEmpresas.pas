@@ -551,13 +551,15 @@ end;
 procedure TfrmMtoEmpresas.btnIraArticuloClick(Sender: TObject);
 var
   sCodArt: string;
-  ds: TDataSet;
+  iRec, iCol: Integer;
 begin
   inherited;
-  ds := tvLineasFacturacion.DataController.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+  iRec := tvLineasFacturacion.DataController.FocusedRecordIndex;
+  if iRec < 0 then
     Exit;
-  sCodArt := ds.FieldByName('CODIGO_ART_FACLIN').AsString;
+  iCol := tvLineasFacturacionCODIGO_ARTICULO_LINEA.Index;
+  sCodArt := VarToStr(
+    tvLineasFacturacion.DataController.GetValue(iRec, iCol));
   if sCodArt <> '' then
     ShowMto(Self.Owner, 'Articulos', sCodArt);
 end;
