@@ -174,6 +174,7 @@ type
     FSqlOriginalTablaG: string;
     FSqlBaseBusquedaExterna: string;
     FCamposGuia: TStringList;
+    FCamposGuiaTabla: TStringList;
     FColumnasVisiblesGuia: TStringList;
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
@@ -1378,11 +1379,15 @@ begin
     FreeAndNil(FCamposGuia);
     FCamposGuia := TStringList.Create;
     FCamposGuia.Assign(guiaResult.CamposNuevos);
+    FreeAndNil(FCamposGuiaTabla);
+    FCamposGuiaTabla := TStringList.Create;
+    FCamposGuiaTabla.Assign(guiaResult.CamposTabla);
     FreeAndNil(FColumnasVisiblesGuia);
     FColumnasVisiblesGuia := TStringList.Create;
     FColumnasVisiblesGuia.Assign(guiaResult.ColumnasVisibles);
   finally
     FreeAndNil(guiaResult.CamposNuevos);
+    FreeAndNil(guiaResult.CamposTabla);
     FreeAndNil(guiaResult.ColumnasVisibles);
   end;
 end;
@@ -1395,48 +1400,54 @@ procedure TfrmMtoGen.PopMenuColumnasPopup(Sender: TObject);
 var
   i: Integer;
   col: TcxGridDBColumn;
-  mi, miSep, miGuia, miSubGuias: TMenuItem;
-  sCaption, sField: string;
-  bEsGuia: Boolean;
+  mi, miSep, miGuia, miSub: TMenuItem;
+  sCaption, sField, sTabla: string;
+  dicSubMenus: TDictionary<string, TMenuItem>;
 begin
   FPopMenuColumnas.Items.Clear;
-  miSubGuias := nil;
-  // Crear submenú para columnas guía si existen
-  if (FCamposGuia <> nil) and (FCamposGuia.Count > 0) then
-  begin
-    miSubGuias := TMenuItem.Create(FPopMenuColumnas);
-    miSubGuias.Caption := 'Columnas guía';
+  dicSubMenus := TDictionary<string, TMenuItem>.Create;
+  try
+    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+    begin
+      col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
+      sField := col.DataBinding.FieldName;
+      if sField = '' then
+        Continue;
+      mi := TMenuItem.Create(FPopMenuColumnas);
+      sCaption := col.Caption;
+      if sCaption = '' then
+        sCaption := sField;
+      mi.Caption := sCaption;
+      mi.Checked := col.Visible;
+      mi.AutoCheck := False;
+      mi.Tag := i;
+      mi.OnClick := PopMenuColumnaClick;
+      // Determinar si es columna guía y a qué tabla pertenece
+      sTabla := '';
+      if (FCamposGuiaTabla <> nil) then
+        sTabla := FCamposGuiaTabla.Values[sField];
+      if sTabla <> '' then
+      begin
+        if not dicSubMenus.TryGetValue(sTabla, miSub) then
+        begin
+          miSub := TMenuItem.Create(FPopMenuColumnas);
+          miSub.Caption := 'Guía: ' + sTabla;
+          dicSubMenus.Add(sTabla, miSub);
+        end;
+        miSub.Add(mi);
+      end
+      else
+        FPopMenuColumnas.Items.Add(mi);
+    end;
+    // Separador + submenús por tabla + acciones
+    miSep := TMenuItem.Create(FPopMenuColumnas);
+    miSep.Caption := '-';
+    FPopMenuColumnas.Items.Add(miSep);
+    for miSub in dicSubMenus.Values do
+      FPopMenuColumnas.Items.Add(miSub);
+  finally
+    FreeAndNil(dicSubMenus);
   end;
-  for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
-  begin
-    col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
-    sField := col.DataBinding.FieldName;
-    if sField = '' then
-      Continue;
-    mi := TMenuItem.Create(FPopMenuColumnas);
-    sCaption := col.Caption;
-    if sCaption = '' then
-      sCaption := sField;
-    mi.Caption := sCaption;
-    mi.Checked := col.Visible;
-    mi.AutoCheck := False;
-    mi.Tag := i;
-    mi.OnClick := PopMenuColumnaClick;
-    bEsGuia := (FCamposGuia <> nil) and
-               (FCamposGuia.IndexOf(sField) >= 0);
-    if bEsGuia and (miSubGuias <> nil) then
-      miSubGuias.Add(mi)
-    else
-      FPopMenuColumnas.Items.Add(mi);
-  end;
-  // Separador + submenú guías (si tiene items) + acciones
-  miSep := TMenuItem.Create(FPopMenuColumnas);
-  miSep.Caption := '-';
-  FPopMenuColumnas.Items.Add(miSep);
-  if (miSubGuias <> nil) and (miSubGuias.Count > 0) then
-    FPopMenuColumnas.Items.Add(miSubGuias)
-  else
-    FreeAndNil(miSubGuias);
   miGuia := TMenuItem.Create(FPopMenuColumnas);
   miGuia.Caption := 'Renombrar columna...';
   miGuia.OnClick := PopMenuRenombrarClick;
@@ -1677,6 +1688,7 @@ begin
         end;
       finally
         FreeAndNil(guiaResult.CamposNuevos);
+        FreeAndNil(guiaResult.CamposTabla);
         FreeAndNil(guiaResult.ColumnasVisibles);
       end;
     end;
