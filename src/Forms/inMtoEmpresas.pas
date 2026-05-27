@@ -553,6 +553,7 @@ var
   sCodArt: string;
   vw: TcxCustomGridView;
   dbView: TcxGridDBTableView;
+  colArticulo: TcxGridDBColumn;
 begin
   inherited;
   sCodArt := '';
@@ -560,11 +561,11 @@ begin
   if (vw <> nil) and (vw is TcxGridDBTableView) then
   begin
     dbView := TcxGridDBTableView(vw);
-    if Assigned(dbView.DataController.DataSet) and
-       dbView.DataController.DataSet.Active and
-       (dbView.DataController.DataSet.FindField('CODIGO_ART_FACLIN') <> nil) then
-      sCodArt := dbView.DataController.DataSet.
-        FieldByName('CODIGO_ART_FACLIN').AsString;
+    colArticulo := dbView.GetColumnByFieldName('CODIGO_ART_FACLIN');
+    if Assigned(colArticulo) and
+       Assigned(dbView.Controller.FocusedRecord) then
+      sCodArt := VarToStr(
+        dbView.Controller.FocusedRecord.Values[colArticulo.Index]);
   end;
   if sCodArt <> '' then
     ShowMto(Self.Owner, 'Articulos', sCodArt);
