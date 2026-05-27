@@ -506,10 +506,10 @@ begin
               (DataSet.FindField(
                 'PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
      end;
+     // Cantidad por defecto = 1
+     if FindField('CANTIDAD_FACLIN') <> nil then
+       FindField('CANTIDAD_FACLIN').AsCurrency := 1;
   end;
-  // Cantidad por defecto = 1, el usuario la modifica antes de grabar
-  if FindField('CANTIDAD_FACLIN') <> nil then
-    FindField('CANTIDAD_FACLIN').AsCurrency := 1;
 end;
 
 procedure TdmFacturas.CopiarClienteaFactura(DataSet:TDataSet);
@@ -1162,7 +1162,8 @@ begin
       end;
     end;
   end;
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  if DataSet.State in [dsEdit, dsInsert] then
+    oDmConn.ActualizarUserTimeModif(DataSet);
 end;
 
 procedure TdmFacturas.unqryTablaGBeforeDelete(DataSet: TDataSet);
