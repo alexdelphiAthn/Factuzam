@@ -19,7 +19,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Diagnostics,
-  Backup.Engine, Backup.Types;
+  Backup.Engine, Backup.Types, DAScript;
 
 type
   TWorkerProgresoEvent = procedure(const AEtapa: string;
@@ -111,7 +111,7 @@ implementation
 uses
   Core_Interfaces, Core_Helpers,
   Providers_MySQL, Providers_MySQL_Helpers, ScriptWriters,
-  Uni, MySQLUniProvider, UniScript, DAScript,
+  Uni, MySQLUniProvider, UniScript,
   inLibtb;
 
 { TBackupWorker }
