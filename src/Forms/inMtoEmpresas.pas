@@ -551,15 +551,28 @@ end;
 procedure TfrmMtoEmpresas.btnIraArticuloClick(Sender: TObject);
 var
   sCodArt: string;
-  iRec, iCol: Integer;
+  vw: TcxCustomGridView;
+  dbCtrl: TcxGridDBDataController;
+  iRec: Integer;
 begin
   inherited;
-  iRec := tvLineasFacturacion.DataController.FocusedRecordIndex;
-  if iRec < 0 then
-    Exit;
-  iCol := tvLineasFacturacionCODIGO_ARTICULO_LINEA.Index;
-  sCodArt := VarToStr(
-    tvLineasFacturacion.DataController.GetValue(iRec, iCol));
+  sCodArt := '';
+  // FocusedView devuelve la vista activa: si el usuario está en el
+  // detail (líneas) devuelve ese; si está en el master (facturas)
+  // devuelve el master
+  vw := cxgrdEmpresasFacturas.FocusedView;
+  if (vw <> nil) and (vw.DataController is TcxGridDBDataController) then
+  begin
+    dbCtrl := TcxGridDBDataController(vw.DataController);
+    iRec := dbCtrl.FocusedRecordIndex;
+    if (iRec >= 0) and Assigned(dbCtrl.DataSet) and
+       dbCtrl.DataSet.Active then
+    begin
+      dbCtrl.DataSet.MoveBy(0);
+      if dbCtrl.DataSet.FindField('CODIGO_ART_FACLIN') <> nil then
+        sCodArt := dbCtrl.DataSet.FieldByName('CODIGO_ART_FACLIN').AsString;
+    end;
+  end;
   if sCodArt <> '' then
     ShowMto(Self.Owner, 'Articulos', sCodArt);
 end;
