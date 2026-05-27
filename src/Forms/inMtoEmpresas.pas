@@ -551,16 +551,13 @@ end;
 procedure TfrmMtoEmpresas.btnIraArticuloClick(Sender: TObject);
 var
   sCodArt: string;
-  iRow: Integer;
+  ds: TDataSet;
 begin
   inherited;
-  // Leer del registro focalizado en el grid (no del DataSet, que en
-  // master-detail puede no coincidir con la fila seleccionada)
-  iRow := tvLineasFacturacion.DataController.FocusedRowIndex;
-  if iRow < 0 then
+  ds := tvLineasFacturacion.DataController.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
     Exit;
-  sCodArt := VarToStr(tvLineasFacturacion.DataController.Values[
-    iRow, tvLineasFacturacionCODIGO_ARTICULO_LINEA.Index]);
+  sCodArt := ds.FieldByName('CODIGO_ART_FACLIN').AsString;
   if sCodArt <> '' then
     ShowMto(Self.Owner, 'Articulos', sCodArt);
 end;
