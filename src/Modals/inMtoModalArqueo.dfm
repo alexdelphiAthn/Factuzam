@@ -1,23 +1,25 @@
 inherited frmModalArqueo: TfrmModalArqueo
   Caption = 'Arqueo de caja'
-  ClientHeight = 620
-  ClientWidth = 980
+  ClientHeight = 639
+  ClientWidth = 1006
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 996
-  ExplicitHeight = 659
+  ExplicitLeft = 3
+  ExplicitTop = 3
+  ExplicitWidth = 1022
+  ExplicitHeight = 678
   TextHeight = 17
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
-    Width = 980
+    Width = 1006
     Height = 70
     Align = alTop
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 982
+    ExplicitWidth = 978
     object lblTituloDesde: TcxLabel
       Left = 16
       Top = 6
@@ -94,34 +96,33 @@ inherited frmModalArqueo: TfrmModalArqueo
   object pnlBody: TPanel [1]
     Left = 0
     Top = 70
-    Width = 980
-    Height = 500
+    Width = 1006
+    Height = 519
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 1
-    ExplicitWidth = 878
-    ExplicitHeight = 382
+    ExplicitWidth = 978
+    ExplicitHeight = 492
     object pcArqueo: TcxPageControl
       Left = 0
       Top = 0
-      Width = 980
-      Height = 500
+      Width = 1006
+      Height = 519
       Align = alClient
       TabOrder = 0
       Properties.ActivePage = tsArqueo
       Properties.CustomButtons.Buttons = <>
-      ExplicitWidth = 878
-      ExplicitHeight = 382
-      ClientRectBottom = 498
-      ClientRectLeft = 2
-      ClientRectRight = 978
-      ClientRectTop = 27
+      ExplicitWidth = 978
+      ExplicitHeight = 492
+      ClientRectBottom = 515
+      ClientRectLeft = 4
+      ClientRectRight = 1002
+      ClientRectTop = 28
       object tsArqueo: TcxTabSheet
         Caption = 'Arqueo'
-        ExplicitTop = 29
-        ExplicitWidth = 876
-        ExplicitHeight = 359
+        ExplicitWidth = 970
+        ExplicitHeight = 460
         object pnlLineas: TPanel
           Left = 8
           Top = 8
@@ -522,9 +523,8 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsResumenes: TcxTabSheet
         Caption = 'Res'#250'menes'
-        ExplicitTop = 29
-        ExplicitWidth = 876
-        ExplicitHeight = 359
+        ExplicitWidth = 972
+        ExplicitHeight = 468
         object pnlResEmpleado: TPanel
           Left = 8
           Top = 8
@@ -729,9 +729,8 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsMasDatos: TcxTabSheet
         Caption = 'M'#225's datos'
-        ExplicitTop = 29
-        ExplicitWidth = 876
-        ExplicitHeight = 359
+        ExplicitWidth = 972
+        ExplicitHeight = 468
         object pnlResIVA: TPanel
           Left = 8
           Top = 8
@@ -801,9 +800,8 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsRecuento: TcxTabSheet
         Caption = 'Recuento'
-        ExplicitTop = 29
-        ExplicitWidth = 876
-        ExplicitHeight = 359
+        ExplicitWidth = 972
+        ExplicitHeight = 468
         object pnlAnterior: TPanel
           Left = 8
           Top = 4
@@ -954,9 +952,9 @@ inherited frmModalArqueo: TfrmModalArqueo
         end
         object pnlRecuentoTotales: TPanel
           Left = 336
-          Top = 224
-          Width = 628
-          Height = 140
+          Top = 211
+          Width = 665
+          Height = 195
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
@@ -968,81 +966,78 @@ inherited frmModalArqueo: TfrmModalArqueo
             Style.TextColor = clGray
             TabOrder = 0
             Transparent = True
-            Height = 15
-            Width = 610
+            Height = 35
+            Width = 633
           end
           object lblRecTotalSistemaLbl: TcxLabel
-            Left = 8
-            Top = 24
+            Left = 9
+            Top = 41
             Caption = 'Total sistema:'
             TabOrder = 1
             Transparent = True
           end
           object lblRecTotalSistema: TcxLabel
-            Left = 120
-            Top = 24
+            Left = 121
+            Top = 41
             AutoSize = False
-            Properties.Alignment.Horz = taRightJustify
+            Properties.Alignment.Horz = taLeftJustify
             TabOrder = 2
             Transparent = True
             Height = 19
             Width = 100
-            AnchorX = 220
           end
           object lblRecTotalRecuentoLbl: TcxLabel
-            Left = 240
-            Top = 24
+            Left = 241
+            Top = 41
             Caption = 'Total recontado:'
             TabOrder = 3
             Transparent = True
           end
           object lblRecTotalRecuento: TcxLabel
             Left = 370
-            Top = 24
+            Top = 41
             AutoSize = False
-            Properties.Alignment.Horz = taRightJustify
+            Properties.Alignment.Horz = taLeftJustify
             TabOrder = 4
             Transparent = True
             Height = 19
             Width = 100
-            AnchorX = 470
           end
           object lblRecDiferenciaLbl: TcxLabel
-            Left = 490
-            Top = 24
+            Left = 491
+            Top = 41
             Caption = 'Diferencia:'
             TabOrder = 5
             Transparent = True
           end
           object lblRecDiferencia: TcxLabel
-            Left = 490
-            Top = 46
+            Left = 578
+            Top = 41
             AutoSize = False
-            Properties.Alignment.Horz = taRightJustify
+            Properties.Alignment.Horz = taLeftJustify
             TabOrder = 6
             Transparent = True
-            Height = 26
+            Height = 19
             Width = 130
-            AnchorX = 620
           end
           object lblRetiradaLbl: TcxLabel
-            Left = 8
-            Top = 80
+            Left = 9
+            Top = 160
             Caption = 'Retirada:'
             TabOrder = 7
             Transparent = True
           end
           object txtRetiradaImporte: TcxCurrencyEdit
-            Left = 80
-            Top = 78
+            Left = 83
+            Top = 158
             EditValue = 0.000000000000000000
             Properties.OnChange = txtRetiradaImportePropertiesChange
             TabOrder = 8
             Width = 110
           end
           object rgRetiradaTipo: TcxRadioGroup
-            Left = 200
-            Top = 72
+            Left = 9
+            Top = 63
             Properties.Columns = 5
             Properties.Items = <
               item
@@ -1053,51 +1048,44 @@ inherited frmModalArqueo: TfrmModalArqueo
               end
               item
                 Caption = 'C. fuerte'
-              end
-              item
-                Caption = 'Proveedor'
-              end
-              item
-                Caption = 'Limpieza'
               end>
             ItemIndex = 0
             TabOrder = 9
-            Height = 36
-            Width = 420
+            Height = 48
+            Width = 601
           end
           object lblDejoLbl: TcxLabel
             Left = 8
-            Top = 114
+            Top = 123
             Caption = 'Dejo para ma'#241'ana:'
             TabOrder = 10
             Transparent = True
           end
           object lblDejoImporte: TcxLabel
             Left = 160
-            Top = 114
+            Top = 123
             Caption = '0,00 EUR'
-            Style.Font.Style = [fsBold]
             TabOrder = 11
             Transparent = True
           end
           object lblObservacionesLbl: TcxLabel
             Left = 300
-            Top = 114
+            Top = 123
             Caption = 'Obs:'
             TabOrder = 12
             Transparent = True
           end
           object txtObservaciones: TcxTextEdit
             Left = 340
-            Top = 112
+            Top = 119
             Properties.MaxLength = 500
             TabOrder = 13
             Width = 280
           end
         end
         object btnGrabarArqueo: TcxButton
-          Left = 336
-          Top = 370
+          Left = 340
+          Top = 412
           Width = 320
           Height = 34
           Caption = 'Grabar Arqueo y emitir justificante (F2)'
@@ -1109,14 +1097,15 @@ inherited frmModalArqueo: TfrmModalArqueo
   end
   object pnlBottom: TPanel [2]
     Left = 0
-    Top = 570
-    Width = 980
+    Top = 589
+    Width = 1006
     Height = 50
     Align = alBottom
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 2
-    ExplicitWidth = 982
+    ExplicitTop = 562
+    ExplicitWidth = 978
     object lblESC: TcxLabel
       Left = 600
       Top = 14
