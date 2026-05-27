@@ -1560,6 +1560,23 @@ begin
     unqry := TUniQuery(dsTablaG.DataSet);
   if (unqry <> nil) and (unqry.Active) then
     begin
+      // Limpiar columnas de guías anteriores del grid
+      if (FCamposGuia <> nil) and (FCamposGuia.Count > 0) then
+      begin
+        cxGrdDBTabPrin.BeginUpdate;
+        try
+          for i := cxGrdDBTabPrin.ColumnCount - 1 downto 0 do
+          begin
+            if FCamposGuia.IndexOf(
+              (cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn)
+                .DataBinding.FieldName) >= 0 then
+              cxGrdDBTabPrin.Columns[i].Free;
+          end;
+        finally
+          cxGrdDBTabPrin.EndUpdate;
+        end;
+        FreeAndNil(FCamposGuia);
+      end;
       // Restaurar SQL original si ya estaba enriquecido
       if FSqlOriginalTablaG <> '' then
       begin
@@ -1577,17 +1594,34 @@ begin
           try
             // Reabrir query con SQL enriquecido
             unqry.Open;
-            // Crear columnas dinamicas en el grid
+            // Crear o actualizar columnas en el grid
             cxGrdDBTabPrin.BeginUpdate;
             try
               for i := 0 to guiaResult.CamposNuevos.Count - 1 do
               begin
-                col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
-                col.DataBinding.FieldName :=
-                  guiaResult.CamposNuevos[i];
-                col.Caption := guiaResult.CamposNuevos[i];
-                col.Visible :=
-                  camposElegidos.IndexOf(guiaResult.CamposNuevos[i]) >= 0;
+                var sField := guiaResult.CamposNuevos[i];
+                var bVisible :=
+                  camposElegidos.IndexOf(sField) >= 0;
+                var bYaExiste := False;
+                var j: Integer;
+                for j := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+                begin
+                  if SameText(
+                    (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
+                      .DataBinding.FieldName, sField) then
+                  begin
+                    cxGrdDBTabPrin.Columns[j].Visible := bVisible;
+                    bYaExiste := True;
+                    Break;
+                  end;
+                end;
+                if not bYaExiste then
+                begin
+                  col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
+                  col.DataBinding.FieldName := sField;
+                  col.Caption := sField;
+                  col.Visible := bVisible;
+                end;
               end;
             finally
               cxGrdDBTabPrin.EndUpdate;
