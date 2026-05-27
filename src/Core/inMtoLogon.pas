@@ -43,7 +43,7 @@ uses
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue, dascript,
-      UniScript;
+      UniScript, System.Diagnostics;
 
 type
   EInvalidUser = class(Exception);
@@ -158,8 +158,7 @@ uses  inLibWin,
       Core_Helpers,
       inLibDBStructure,
       inMtoModalScriptLog,
-      inLibBackupWorker,
-      System.Diagnostics;
+      inLibBackupWorker;
 
 {$R *.dfm}
 
