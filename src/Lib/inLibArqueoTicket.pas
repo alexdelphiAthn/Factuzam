@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibArqueoTicket                                             }
 {    Tipo:       Librería                                                      }
@@ -617,6 +617,7 @@ begin
     Preview := TFormVisualizador.Create(nil);
     try
       Preview.Hide;
+      Preview.FRutaPDFReal := RutaPDF;
       Preview.CargarYMostrar(ComandosESC);
       Preview.ExportarAPDF(ComandosESC, RutaPDF);
       if UpperCase(ANombreImpresora) = 'DEBUG' then
@@ -783,6 +784,7 @@ begin
     Preview := TFormVisualizador.Create(nil);
     try
       Preview.Hide;
+      Preview.FRutaPDFReal := RutaPDF;
       Preview.CargarYMostrar(ComandosESC);
       Preview.ExportarAPDF(ComandosESC, RutaPDF);
       if UpperCase(ANombreImpresora) = 'DEBUG' then

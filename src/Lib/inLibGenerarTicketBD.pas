@@ -390,6 +390,7 @@ begin
       FormPreview := TFormVisualizador.Create(nil);
       try
         FormPreview.Hide;
+        FormPreview.FRutaPDFReal := RutaFicheroPDF;
         FormPreview.CargarYMostrar(ComandosESC);
         FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
         if UpperCase(ANombreImpresora) = 'DEBUG' then

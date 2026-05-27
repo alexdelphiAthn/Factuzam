@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalGastoCaja                                           }
 {    Tipo:       Formulario (Modal)                                            }
@@ -24,7 +24,8 @@ uses
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCurrencyEdit,
   cxRadioGroup, cxButtonEdit, Uni,
-  inMtoFrmBase;
+  inMtoFrmBase, dxCoreGraphics, Vcl.Menus, cxMaskEdit, cxGroupBox,
+  JvComponentBase, JvEnterTab, cxClasses, cxLocalization;
 
 type
   TfrmModalGastoCaja = class(TfrmBase)
