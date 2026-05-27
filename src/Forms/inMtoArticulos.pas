@@ -1251,13 +1251,18 @@ begin
 end;
 
 procedure TfrmMtoArticulos.btnIraFacturaClick(Sender: TObject);
+var
+  sNum, sSer: string;
 begin
   inherited;
   with tvLinFac.DataController.DataSource.DataSet do
-  ShowMto(Self.Owner,
-          'Facturas',
-          FieldByName('NUMERO_FAC_FACLIN').AsString + ',' +
-          FieldByName('SERIE_FAC_FACLIN').AsString);
+  begin
+    sNum := FieldByName('NUMERO_FAC_FACLIN').AsString;
+    sSer := FieldByName('SERIE_FAC_FACLIN').AsString;
+    ShowMto(Self.Owner,
+            ResolverCallFactura(sNum, sSer),
+            sNum + ',' + sSer);
+  end;
 end;
 
 procedure TfrmMtoArticulos.btnIraProveedorClick(Sender: TObject);

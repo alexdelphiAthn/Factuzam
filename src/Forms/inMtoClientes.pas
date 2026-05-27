@@ -526,8 +526,8 @@ begin
   sSerieFactura := tvFacturacion.DataController.DataSet.FieldByName(
                                                       'SERIE_FAC').AsString;
   ShowMto(Self.Owner,
-          'Facturas',
-          sNroFactura+','+ sSerieFactura);
+          ResolverCallFactura(sNroFactura, sSerieFactura),
+          sNroFactura + ',' + sSerieFactura);
 end;
 
 procedure TfrmMtoClientes.btnGrabarClick(Sender: TObject);
