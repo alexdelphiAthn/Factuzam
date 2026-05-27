@@ -746,6 +746,8 @@ procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);
 var
   vParser: ISQLParserSelect;
   unqry: TUniQuery;
+  aCampos, aValores: TArray<string>;
+  i: Integer;
 begin
   if (ABusq = '') or (pkFieldName = '') then
     Exit;
@@ -756,7 +758,15 @@ begin
     Exit;
   unqry.Close;
   vParser := TGaSQLParserFactory.Select(unqry.SQL.Text);
-  vParser.AddWhere(pkFieldName + ' = ' + QuotedStr(ABusq), pcAnd);
+  // PK compuesta: NUMERO_FAC,SERIE_FAC con valor 000135,2026.A1
+  aCampos  := pkFieldName.Split([',']);
+  aValores := ABusq.Split([',']);
+  for i := 0 to High(aCampos) do
+  begin
+    if i <= High(aValores) then
+      vParser.AddWhere(
+        Trim(aCampos[i]) + ' = ' + QuotedStr(Trim(aValores[i])), pcAnd);
+  end;
   unqry.SQL.Text := vParser.ToString;
 end;
 
