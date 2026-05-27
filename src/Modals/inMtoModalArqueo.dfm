@@ -956,7 +956,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           Left = 336
           Top = 224
           Width = 628
-          Height = 180
+          Height = 200
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
@@ -1059,7 +1059,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object txtRetiradaImporte: TcxCurrencyEdit
             Left = 8
-            Top = 114
+            Top = 120
             EditValue = 0.000000000000000000
             Properties.OnChange = txtRetiradaImportePropertiesChange
             TabOrder = 9
@@ -1067,28 +1067,28 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
           object lblDejoLbl: TcxLabel
             Left = 130
-            Top = 124
+            Top = 148
             Caption = 'Dejo para ma'#241'ana:'
             TabOrder = 10
             Transparent = True
           end
           object lblDejoImporte: TcxLabel
             Left = 280
-            Top = 124
+            Top = 148
             Caption = '0,00 EUR'
             TabOrder = 11
             Transparent = True
           end
           object lblObservacionesLbl: TcxLabel
             Left = 390
-            Top = 124
+            Top = 148
             Caption = 'Obs:'
             TabOrder = 12
             Transparent = True
           end
           object txtObservaciones: TcxTextEdit
             Left = 426
-            Top = 122
+            Top = 146
             Properties.MaxLength = 500
             TabOrder = 13
             Width = 196
@@ -1096,7 +1096,7 @@ inherited frmModalArqueo: TfrmModalArqueo
         end
         object btnGrabarArqueo: TcxButton
           Left = 336
-          Top = 412
+          Top = 430
           Width = 320
           Height = 34
           Caption = 'Grabar Arqueo y emitir justificante (F2)'
