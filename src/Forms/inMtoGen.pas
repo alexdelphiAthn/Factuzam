@@ -1374,10 +1374,6 @@ begin
     finally
       cxGrdDBTabPrin.EndUpdate;
     end;
-    // Re-aplicar perfil para que las columnas de guia recuperen
-    // visibilidad/ancho/caption guardados por el usuario
-    if oPerfilDic <> nil then
-      PonerAnchosTitulos(cxGrdDBTabPrin, Self.Name, oPerfilDic);
     // Guardar listas para re-aplicar visibilidad tras AplicarEtiquetas
     FreeAndNil(FCamposGuia);
     FCamposGuia := TStringList.Create;
