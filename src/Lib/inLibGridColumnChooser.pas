@@ -25,6 +25,7 @@ type
   TGridGuiaResult = record
     Exito: Boolean;
     CamposNuevos: TStringList;
+    CamposTabla: TStringList;
     ColumnasVisibles: TStringList;
     SqlOriginal: string;
   end;
@@ -79,6 +80,7 @@ var
 begin
   Result.Exito := False;
   Result.CamposNuevos := TStringList.Create;
+  Result.CamposTabla := TStringList.Create;
   Result.ColumnasVisibles := TStringList.Create;
   Result.ColumnasVisibles.CaseSensitive := False;
   Result.SqlOriginal := AQuery.SQL.Text;
@@ -156,6 +158,7 @@ begin
             end;
             setCamposMaster.Add(sAlias);
             Result.CamposNuevos.Add(sAlias);
+            Result.CamposTabla.Add(sAlias + '=' + sTabla);
             if sSelectExt <> '' then
               sSelectExt := sSelectExt + ', ';
             sSelectExt := sSelectExt +
