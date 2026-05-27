@@ -116,31 +116,37 @@ procedure TfrmMtoSearch.CrearTablaPrincipal;
 var
   i, j: Integer;
   sField: string;
-  bDuplicada: Boolean;
+  bYaExiste: Boolean;
+  col: TcxGridDBColumn;
+  ds: TDataSet;
 begin
   inherited;
   if Assigned(dsTablaG.DataSet) and (dsTablaG.DataSet is TUniQuery) then
     AplicarGuiasGrid(TUniQuery(dsTablaG.DataSet));
-  cxGrdDBTabPrin.DataController.CreateAllItems;
-  // Eliminar columnas duplicadas que CreateAllItems haya creado
-  // sobre las ya creadas por AplicarGuiasGrid
-  for i := cxGrdDBTabPrin.ColumnCount - 1 downto 0 do
+  // Crear columnas solo para campos que aún no tengan columna
+  ds := cxGrdDBTabPrin.DataController.DataSource.DataSet;
+  if Assigned(ds) then
   begin
-    sField := (cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn)
-                .DataBinding.FieldName;
-    bDuplicada := False;
-    for j := 0 to i - 1 do
+    for i := 0 to ds.FieldCount - 1 do
     begin
-      if SameText(
-        (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
-          .DataBinding.FieldName, sField) then
+      sField := ds.Fields[i].FieldName;
+      bYaExiste := False;
+      for j := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
       begin
-        bDuplicada := True;
-        Break;
+        if SameText(
+          (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
+            .DataBinding.FieldName, sField) then
+        begin
+          bYaExiste := True;
+          Break;
+        end;
+      end;
+      if not bYaExiste then
+      begin
+        col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
+        col.DataBinding.FieldName := sField;
       end;
     end;
-    if bDuplicada then
-      cxGrdDBTabPrin.Columns[i].Free;
   end;
   cxGrdDBTabPrin.ApplyBestFit();
 end;
