@@ -137,7 +137,7 @@ begin
     qry.SQL.Text :=
       'SELECT TABLE_NAME FROM information_schema.TABLES ' +
       ' WHERE TABLE_SCHEMA = database() ' +
-      '   AND TABLE_TYPE = ''BASE TABLE'' ' +
+      '   AND TABLE_TYPE IN (''BASE TABLE'', ''VIEW'') ' +
       ' ORDER BY TABLE_NAME';
     qry.Open;
     while not qry.Eof do
