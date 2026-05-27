@@ -283,13 +283,25 @@ begin
 end;
 
 procedure TfrmMtoFormasdePago.btnIraArticuloClick(Sender: TObject);
+var
+  sCodArt: string;
+  vw: TcxCustomGridView;
+  dbView: TcxGridDBTableView;
+  col: TcxGridDBColumn;
 begin
   inherited;
-  with tvLineasFacturacion.DataController.DataSet do
-    ShowMto(Self.Owner,
-            'Articulos',
-            FieldByName('CODIGO_ART_FACLIN').AsString);
-
+  sCodArt := '';
+  vw := cxgrdFacturas.FocusedView;
+  if (vw <> nil) and (vw is TcxGridDBTableView) then
+  begin
+    dbView := TcxGridDBTableView(vw);
+    col := dbView.GetColumnByFieldName('CODIGO_ART_FACLIN');
+    if Assigned(col) and Assigned(dbView.Controller.FocusedRecord) then
+      sCodArt := VarToStr(
+        dbView.Controller.FocusedRecord.Values[col.Index]);
+  end;
+  if sCodArt <> '' then
+    ShowMto(Self.Owner, 'Articulos', sCodArt);
 end;
 
 procedure TfrmMtoFormasdePago.btnIraClienteClick(Sender: TObject);
