@@ -1,11 +1,12 @@
-- Cuando entro en artículos, después de haber grabado un layout, las columnas en PEstaña 5 Tarifas salen mal, desordenadas, campos antiguos, anchos mal. **pendiente probar**
+- Cuando entro en artículos, después de haber grabado un layout, las columnas en PEstaña 5 Tarifas salen mal, desordenadas, campos antiguos, anchos mal. **pendiente probar** funciona ok
 - Cuando estoy posicionado en un artículo en Empresas->Histórico Facturas y le doy a Control + A, no me lleva al artículo seleccionado si no al primero
-que hay en la primera factura. Me sale en un nuevo Mto, debería usar el primero para las búsquedas (y poner en en el primero siempre Todos, no sólo activo, porque si no, no saldrán los que no tienen esa marca, y esta búsqueda debería dar pie a todos los artículos. **pendiente probar**
-- En artículos, líneas de venta, salen líneas duplicadas. **DESCARTADO: no hay duplicados reales**
+que hay en la primera factura. Me sale en un nuevo Mto, debería usar el primero para las búsquedas (y poner en en el primero siempre Todos, no sólo activo, porque si no, no saldrán los que no tienen esa marca, y esta búsqueda debería dar pie a todos los artículos. **pendiente probar** SIGUE SALIENDO EL PRIMER VENDIDO, NO EL SELECCIONADO.
 
-- No sale aviso en Caja en inMtoCajaOperaciones cuando hay un artículo sin stock debería mostrar el letrero de parámetros, pero no sale nada. EStá permitida la venta sin stock. **pendiente probar**
-- En Arqueos -> Recuento -> Otras formas de pago no se rellenan para avisar del recuento. **pendiente probar** (OJO: el issue de permisos 16 puede requerir volver a poner 0 para no-administradores)
-- En arqueos -> Recuento-> hay muchos letreros que no caben bien o que se montan. **pendiente probar**
+- No sale aviso en Caja en inMtoCajaOperaciones cuando hay un artículo sin stock debería mostrar el letrero de parámetros, pero no sale nada. EStá permitida la venta sin stock. **pendiente probar** funciona ok.
+
+- En Arqueos -> Recuento -> Otras formas de pago no se rellenan para avisar del recuento. **pendiente probar** (OJO: el issue de permisos 16 puede requerir volver a poner 0 para no-administradores), funciona ok, salen todas.
+
+- En arqueos -> Recuento-> hay muchos letreros que no caben bien o que se montan. **pendiente probar** siguen saliendo mal, label Efectivo sis, label banco encargado,  la caja de texto donde se pone el dinero retirado no se ve.
 
 - La pantalla de visualizador de ticket térmico, añadir F8 imprimir Impresora F7 guardar pdf F6 guardar imagen(png) ESC Salir de la pantalla **pendiente probar**
 - F10 y F6 no funcionan en la pantalla de arqueos, deberían desplegar el desde y el hasta.... quitar label azules y poner entre paréntesis al lado de los label (F6) **pendiente probar**

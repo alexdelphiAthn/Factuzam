@@ -35,7 +35,7 @@ uses
   inMtoFrmBase, inLibArqueo, inLibArqueoTicket, inLibArqueoPersistencia,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxSpinEdit, cxRadioGroup,
-  JvComponentBase, JvEnterTab, cxLocalization;
+  JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox;
 
 type
   TfrmModalArqueo = class(TfrmBase)
@@ -289,7 +289,7 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar, inLibPermisos;
+uses inLibGlobalVar, inLibPermisos, inLibLog;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 

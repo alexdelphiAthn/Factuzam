@@ -5,19 +5,19 @@ inherited frmModalArqueo: TfrmModalArqueo
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitWidth = 896
-  ExplicitHeight = 549
-  TextHeight = 19
+  ExplicitWidth = 996
+  ExplicitHeight = 659
+  TextHeight = 17
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
-    Width = 880
+    Width = 980
     Height = 70
     Align = alTop
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 878
+    ExplicitWidth = 982
     object lblTituloDesde: TcxLabel
       Left = 16
       Top = 6
@@ -57,7 +57,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Top = 6
       Caption = 'Ventas'
       Style.TextColor = clNavy
-      TabOrder = 8
+      TabOrder = 5
       Transparent = True
     end
     object lblVentas: TcxLabel
@@ -66,7 +66,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       AutoSize = False
       Caption = '0'
       Properties.Alignment.Horz = taRightJustify
-      TabOrder = 9
+      TabOrder = 7
       Transparent = True
       Height = 28
       Width = 90
@@ -94,8 +94,8 @@ inherited frmModalArqueo: TfrmModalArqueo
   object pnlBody: TPanel [1]
     Left = 0
     Top = 70
-    Width = 880
-    Height = 390
+    Width = 980
+    Height = 500
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False
@@ -105,22 +105,23 @@ inherited frmModalArqueo: TfrmModalArqueo
     object pcArqueo: TcxPageControl
       Left = 0
       Top = 0
-      Width = 880
-      Height = 390
+      Width = 980
+      Height = 500
       Align = alClient
       TabOrder = 0
       Properties.ActivePage = tsArqueo
       Properties.CustomButtons.Buttons = <>
       ExplicitWidth = 878
       ExplicitHeight = 382
-      ClientRectBottom = 388
+      ClientRectBottom = 498
       ClientRectLeft = 2
-      ClientRectRight = 878
-      ClientRectTop = 29
+      ClientRectRight = 978
+      ClientRectTop = 27
       object tsArqueo: TcxTabSheet
         Caption = 'Arqueo'
-        ExplicitWidth = 874
-        ExplicitHeight = 351
+        ExplicitTop = 29
+        ExplicitWidth = 876
+        ExplicitHeight = 359
         object pnlLineas: TPanel
           Left = 8
           Top = 8
@@ -521,6 +522,9 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsResumenes: TcxTabSheet
         Caption = 'Res'#250'menes'
+        ExplicitTop = 29
+        ExplicitWidth = 876
+        ExplicitHeight = 359
         object pnlResEmpleado: TPanel
           Left = 8
           Top = 8
@@ -725,6 +729,9 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsMasDatos: TcxTabSheet
         Caption = 'M'#225's datos'
+        ExplicitTop = 29
+        ExplicitWidth = 876
+        ExplicitHeight = 359
         object pnlResIVA: TPanel
           Left = 8
           Top = 8
@@ -794,6 +801,9 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsRecuento: TcxTabSheet
         Caption = 'Recuento'
+        ExplicitTop = 29
+        ExplicitWidth = 876
+        ExplicitHeight = 359
         object pnlAnterior: TPanel
           Left = 8
           Top = 4
@@ -807,7 +817,6 @@ inherited frmModalArqueo: TfrmModalArqueo
             Top = 2
             Caption = 'Resto d'#237'a anterior:'
             Style.TextColor = clNavy
-            Style.Font.Style = [fsBold]
             TabOrder = 0
             Transparent = True
           end
@@ -815,7 +824,6 @@ inherited frmModalArqueo: TfrmModalArqueo
             Left = 180
             Top = 2
             Caption = '0,00 EUR'
-            Style.Font.Style = [fsBold]
             TabOrder = 1
             Transparent = True
           end
@@ -844,14 +852,13 @@ inherited frmModalArqueo: TfrmModalArqueo
             Height = 252
             TabOrder = 0
             object tvBilletes: TcxGridTableView
-              OnEditValueChanged = tvBilletesUdsEditValueChanged
               OnKeyDown = tvBilletesKeyDown
+              OnEditValueChanged = tvBilletesUdsEditValueChanged
               OptionsBehavior.FocusCellOnTab = True
-              OptionsData.Appending = False
               OptionsData.Deleting = False
               OptionsData.Inserting = False
-              OptionsView.GroupByBox = False
               OptionsView.ColumnAutoWidth = True
+              OptionsView.GroupByBox = False
               object tvBilletesDenom: TcxGridColumn
                 Caption = 'Denominaci'#243'n'
                 Options.Editing = False
@@ -864,8 +871,8 @@ inherited frmModalArqueo: TfrmModalArqueo
               end
               object tvBilletesSubtotal: TcxGridColumn
                 Caption = 'Subtotal'
-                Options.Editing = False
                 PropertiesClassName = 'TcxCurrencyEditProperties'
+                Options.Editing = False
                 Width = 100
               end
             end
@@ -878,8 +885,6 @@ inherited frmModalArqueo: TfrmModalArqueo
             Top = 284
             Caption = '0,00'
             Style.TextColor = clNavy
-            Style.Font.Size = 11
-            Style.Font.Style = [fsBold]
             TabOrder = 2
             Transparent = True
           end
@@ -908,10 +913,9 @@ inherited frmModalArqueo: TfrmModalArqueo
             Height = 154
             TabOrder = 0
             object tvRecuento: TcxGridTableView
-              OnEditValueChanged = tvRecuentoImportePropertiesEditValueChanged
               OnKeyDown = tvRecuentoKeyDown
+              OnEditValueChanged = tvRecuentoImportePropertiesEditValueChanged
               OptionsBehavior.FocusCellOnTab = True
-              OptionsData.Appending = False
               OptionsData.Deleting = False
               OptionsData.Inserting = False
               OptionsView.GroupByBox = False
@@ -927,8 +931,8 @@ inherited frmModalArqueo: TfrmModalArqueo
               end
               object tvRecuentoSistema: TcxGridColumn
                 Caption = 'Sistema'
-                Options.Editing = False
                 PropertiesClassName = 'TcxCurrencyEditProperties'
+                Options.Editing = False
                 Width = 110
               end
               object tvRecuentoImporte: TcxGridColumn
@@ -938,8 +942,8 @@ inherited frmModalArqueo: TfrmModalArqueo
               end
               object tvRecuentoDiferencia: TcxGridColumn
                 Caption = 'Diferencia'
-                Options.Editing = False
                 PropertiesClassName = 'TcxCurrencyEditProperties'
+                Options.Editing = False
                 Width = 100
               end
             end
@@ -1014,8 +1018,6 @@ inherited frmModalArqueo: TfrmModalArqueo
             Left = 490
             Top = 42
             AutoSize = False
-            Style.Font.Size = 12
-            Style.Font.Style = [fsBold]
             Properties.Alignment.Horz = taRightJustify
             TabOrder = 6
             Transparent = True
@@ -1058,9 +1060,9 @@ inherited frmModalArqueo: TfrmModalArqueo
           object txtRetiradaImporte: TcxCurrencyEdit
             Left = 8
             Top = 114
+            EditValue = 0.000000000000000000
             Properties.OnChange = txtRetiradaImportePropertiesChange
             TabOrder = 9
-            Value = 0.000000000000000000
             Width = 110
           end
           object lblDejoLbl: TcxLabel
@@ -1074,7 +1076,6 @@ inherited frmModalArqueo: TfrmModalArqueo
             Left = 280
             Top = 116
             Caption = '0,00 EUR'
-            Style.Font.Style = [fsBold]
             TabOrder = 11
             Transparent = True
           end
@@ -1107,15 +1108,14 @@ inherited frmModalArqueo: TfrmModalArqueo
   end
   object pnlBottom: TPanel [2]
     Left = 0
-    Top = 460
-    Width = 880
+    Top = 570
+    Width = 980
     Height = 50
     Align = alBottom
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 2
-    ExplicitTop = 452
-    ExplicitWidth = 878
+    ExplicitWidth = 982
     object lblESC: TcxLabel
       Left = 600
       Top = 14
