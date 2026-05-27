@@ -317,6 +317,7 @@ var
   MyText: TStringList;
   s: string;
   i: Integer;
+  Linea: string;
 begin
   try
   Conn := TUniConnection.Create(nil);
@@ -331,13 +332,6 @@ begin
     Conn.LoginPrompt := False;
     Conn.Connected := True;
     try
-      MyText := TStringList.Create;
-      try
-        MyText.LoadFromFile(FRutaFichero);
-        s := MyText.Text;
-      finally
-        FreeAndNil(MyText);
-      end;
       SqlScript := TUniScript.Create(nil);
       try
         SqlScript.Connection := Conn;
@@ -346,17 +340,27 @@ begin
         SqlScript.BeforeExecute := ScriptBeforeExecute;
         SqlScript.AfterExecute := ScriptAfterExecute;
         if FPassDesencriptar <> '' then
-          s := DecriptAESPass(s, FPassDesencriptar);
-        // Contar sentencias antes de asignar al script
+        begin
+          MyText := TStringList.Create;
+          try
+            MyText.LoadFromFile(FRutaFichero);
+            s := DecriptAESPass(MyText.Text, FPassDesencriptar);
+          finally
+            FreeAndNil(MyText);
+          end;
+          SqlScript.SQL.Text := s;
+          s := '';
+        end
+        else
+          SqlScript.SQL.LoadFromFile(FRutaFichero);
         FTotal := 0;
         FPosicion := 0;
-        for i := 1 to Length(s) do
+        for i := 0 to SqlScript.SQL.Count - 1 do
         begin
-          if s[i] = ';' then
+          Linea := SqlScript.SQL[i];
+          if Pos(';', Linea) > 0 then
             Inc(FTotal);
         end;
-        SqlScript.SQL.Text := s;
-        s := '';
         Synchronize(SyncProgreso);
         SqlScript.Execute;
         FExito := True;

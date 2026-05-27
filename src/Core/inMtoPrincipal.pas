@@ -1152,7 +1152,9 @@ end;
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
 var
   SqlTexto: string;
-  MyText: TStringList;
+  FS: TFileStream;
+  Bytes: TBytes;
+  BytesToRead: Int64;
   Worker: TRestoreWorker;
 begin
   if not mnuEjecutarScript.Visible then
@@ -1173,13 +1175,19 @@ begin
   openDialog.DefaultFolder := oAppParams.GetPath('appDirCopiasSeguridad');
   if openDialog.Execute then
   begin
-    // Leer fichero para comprobar DDL antes de lanzar el hilo
-    MyText := TStringList.Create;
+    // Leer solo los primeros 64 KB para comprobar DDL sin cargar
+    // todo el fichero en memoria (los backups pueden ser muy grandes).
+    FS := TFileStream.Create(openDialog.FileName,
+                             fmOpenRead or fmShareDenyNone);
     try
-      MyText.LoadFromFile(openDialog.FileName, TEncoding.UTF8);
-      SqlTexto := MyText.Text;
+      BytesToRead := FS.Size;
+      if BytesToRead > 65536 then
+        BytesToRead := 65536;
+      SetLength(Bytes, BytesToRead);
+      FS.ReadBuffer(Bytes, BytesToRead);
+      SqlTexto := TEncoding.UTF8.GetString(Bytes);
     finally
-      FreeAndNil(MyText);
+      FreeAndNil(FS);
     end;
     if ContieneDDL(SqlTexto) then
     begin
