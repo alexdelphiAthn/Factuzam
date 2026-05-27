@@ -239,7 +239,7 @@ begin
   finally
     Conn.Free;
   end;
-  Queue(SyncFinalizar);
+  Synchronize(SyncFinalizar);
 end;
 
 { TRestoreWorker }
@@ -369,7 +369,7 @@ begin
   finally
     Conn.Free;
   end;
-  Queue(SyncFinalizar);
+  Synchronize(SyncFinalizar);
 end;
 
 end.
