@@ -768,18 +768,33 @@ end;
 
 procedure TFormVisualizador.ImprimirEnImpresora;
 var
-  R: TRect;
   pd: TPrintDialog;
+  bmpSrc, bmpPrint: TBitmap;
+  AnchoImp, AltoImp: Integer;
 begin
   pd := TPrintDialog.Create(Self);
   try
     if pd.Execute then
     begin
-      Printer.BeginDoc;
+      bmpSrc := Image1.Picture.Bitmap;
+      // Crear bitmap compatible con la impresora
+      bmpPrint := TBitmap.Create;
       try
-        Printer.Canvas.Draw(0, 0, Image1.Picture.Bitmap);
+        bmpPrint.PixelFormat := pf24bit;
+        bmpPrint.Width := bmpSrc.Width;
+        bmpPrint.Height := bmpSrc.Height;
+        bmpPrint.Canvas.Draw(0, 0, bmpSrc);
+        AnchoImp := Printer.PageWidth;
+        AltoImp := MulDiv(bmpPrint.Height, AnchoImp, bmpPrint.Width);
+        Printer.BeginDoc;
+        try
+          Printer.Canvas.StretchDraw(
+            Rect(0, 0, AnchoImp, AltoImp), bmpPrint);
+        finally
+          Printer.EndDoc;
+        end;
       finally
-        Printer.EndDoc;
+        FreeAndNil(bmpPrint);
       end;
     end;
   finally
@@ -798,23 +813,29 @@ begin
 end;
 
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
-var
-  sRuta: string;
 begin
-  sRuta := GetUserFolderTickets + 'Ticket_' +
-           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-  ExportarAPDF(FComandos, sRuta);
-  ShowMessage('PDF guardado en: ' + sRuta);
+  SaveDialog1.Filter := 'PDF|*.pdf';
+  SaveDialog1.DefaultExt := 'pdf';
+  SaveDialog1.FileName := 'Ticket_' +
+    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+  if SaveDialog1.Execute then
+  begin
+    ExportarAPDF(FComandos, SaveDialog1.FileName);
+    ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
+  end;
 end;
 
 procedure TFormVisualizador.btnPNGClick(Sender: TObject);
-var
-  sRuta: string;
 begin
-  sRuta := GetUserFolderTickets + 'Ticket_' +
-           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.png';
-  GuardarPNG(sRuta);
-  ShowMessage('PNG guardado en: ' + sRuta);
+  SaveDialog1.Filter := 'PNG|*.png';
+  SaveDialog1.DefaultExt := 'png';
+  SaveDialog1.FileName := 'Ticket_' +
+    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.png';
+  if SaveDialog1.Execute then
+  begin
+    GuardarPNG(SaveDialog1.FileName);
+    ShowMessage('PNG guardado en: ' + SaveDialog1.FileName);
+  end;
 end;
 
 end.
