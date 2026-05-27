@@ -250,7 +250,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           object lblOpeDevolLbl: TcxLabel
             Left = 16
             Top = 78
-            Caption = #8722' Devoluciones'
+            Caption = '- Devoluciones'
             TabOrder = 5
             Transparent = True
           end
