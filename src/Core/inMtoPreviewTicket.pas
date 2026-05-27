@@ -76,7 +76,7 @@ implementation
 {$R *.dfm}
 
 uses
-  SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers;
+  SynPdf, inLibDir, Vcl.Imaging.PngImage, Winapi.ShellAPI;
 
 const
   ANCHO_PAPEL_MM = 80;
@@ -768,38 +768,12 @@ end;
 
 procedure TFormVisualizador.ImprimirEnImpresora;
 var
-  pd: TPrintDialog;
-  bmpSrc, bmpPrint: TBitmap;
-  AnchoImp, AltoImp: Integer;
+  sRutaPDF: string;
 begin
-  pd := TPrintDialog.Create(Self);
-  try
-    if pd.Execute then
-    begin
-      bmpSrc := Image1.Picture.Bitmap;
-      // Crear bitmap compatible con la impresora
-      bmpPrint := TBitmap.Create;
-      try
-        bmpPrint.PixelFormat := pf24bit;
-        bmpPrint.Width := bmpSrc.Width;
-        bmpPrint.Height := bmpSrc.Height;
-        bmpPrint.Canvas.Draw(0, 0, bmpSrc);
-        AnchoImp := Printer.PageWidth;
-        AltoImp := MulDiv(bmpPrint.Height, AnchoImp, bmpPrint.Width);
-        Printer.BeginDoc;
-        try
-          Printer.Canvas.StretchDraw(
-            Rect(0, 0, AnchoImp, AltoImp), bmpPrint);
-        finally
-          Printer.EndDoc;
-        end;
-      finally
-        FreeAndNil(bmpPrint);
-      end;
-    end;
-  finally
-    FreeAndNil(pd);
-  end;
+  // Generar PDF temporal e imprimir via ShellExecute (print)
+  sRutaPDF := GetUserFolderTickets + 'Ticket_print_tmp.pdf';
+  ExportarAPDF(FComandos, sRutaPDF);
+  ShellExecute(0, 'print', PChar(sRutaPDF), nil, nil, SW_HIDE);
 end;
 
 procedure TFormVisualizador.btnCerrarClick(Sender: TObject);
