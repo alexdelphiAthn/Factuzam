@@ -95,6 +95,7 @@ type
     procedure CargarTablas;
     procedure CargarCamposTabla(const sTabla: string);
     procedure ActualizarResumen;
+    procedure AutoGenerarCodigo;
   public
     sFormulario: string;
   end;
@@ -153,22 +154,8 @@ begin
 end;
 
 procedure TfrmModalGuiasBase.cbbTablaPropertiesChange(Sender: TObject);
-var
-  sTabla, sCodigo: string;
 begin
   CargarCamposTabla(cbbTabla.Text);
-  // Auto-proponer código si está vacío
-  sTabla := cbbTabla.Text;
-  if (sTabla <> '') and (Trim(edtCodigo.Text) = '') then
-  begin
-    sCodigo := sTabla;
-    // Quitar prefijo fza_ / vi_
-    if Pos('fza_', sCodigo) = 1 then
-      Delete(sCodigo, 1, 4)
-    else if Pos('vi_', sCodigo) = 1 then
-      Delete(sCodigo, 1, 3);
-    edtCodigo.Text := sCodigo;
-  end;
   ActualizarResumen;
 end;
 
@@ -222,6 +209,41 @@ begin
     mmoResumen.Lines.Add('  ON ' + sDetail + ' = ' + sMaster)
   else
     mmoResumen.Lines.Add('  (selecciona campo master y detail)');
+  AutoGenerarCodigo;
+end;
+
+procedure TfrmModalGuiasBase.AutoGenerarCodigo;
+var
+  sMaster, sTabla, sDetail, sBase, sCodigo: string;
+  i: Integer;
+begin
+  sTabla := UpperCase(cbbTabla.Text);
+  if (sTabla <> '') and (lbCamposMaster.ItemIndex >= 0) and
+     (lbCamposTabla.ItemIndex >= 0) then
+  begin
+    sMaster := UpperCase(ObtenerCampoMasterSeleccionado);
+    sDetail := UpperCase(
+      lbCamposTabla.Items[lbCamposTabla.ItemIndex]);
+    sBase := sMaster + '.' + sTabla + '.' + sDetail;
+    sCodigo := sBase;
+    // Si ya existe una guía con ese código, añadir sufijo numérico
+    if unqryGuias.Active then
+    begin
+      i := 1;
+      unqryGuias.DisableControls;
+      try
+        while unqryGuias.Locate('CODIGO_INFGUI', sCodigo,
+                                 [loCaseInsensitive]) do
+        begin
+          sCodigo := sBase + IntToStr(i);
+          Inc(i);
+        end;
+      finally
+        unqryGuias.EnableControls;
+      end;
+    end;
+    edtCodigo.Text := sCodigo;
+  end;
 end;
 
 procedure TfrmModalGuiasBase.lbCamposMasterClick(Sender: TObject);
