@@ -1096,7 +1096,7 @@ inherited frmModalArqueo: TfrmModalArqueo
         end
         object btnGrabarArqueo: TcxButton
           Left = 336
-          Top = 348
+          Top = 412
           Width = 320
           Height = 34
           Caption = 'Grabar Arqueo y emitir justificante (F2)'
