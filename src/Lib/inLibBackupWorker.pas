@@ -171,6 +171,7 @@ var
   s: string;
   MyText: TStringList;
 begin
+  try
   Conn := TUniConnection.Create(nil);
   try
     Conn.ProviderName := 'MySQL';
@@ -239,7 +240,9 @@ begin
   finally
     Conn.Free;
   end;
-  Synchronize(SyncFinalizar);
+  finally
+    Synchronize(SyncFinalizar);
+  end;
 end;
 
 { TRestoreWorker }
@@ -315,6 +318,7 @@ var
   s: string;
   i: Integer;
 begin
+  try
   Conn := TUniConnection.Create(nil);
   try
     Conn.ProviderName := 'MySQL';
@@ -342,17 +346,17 @@ begin
         SqlScript.BeforeExecute := ScriptBeforeExecute;
         SqlScript.AfterExecute := ScriptAfterExecute;
         if FPassDesencriptar <> '' then
-          SqlScript.SQL.Text := DecriptAESPass(s, FPassDesencriptar)
-        else
-          SqlScript.SQL.Text := s;
-        // Contar sentencias para progreso
+          s := DecriptAESPass(s, FPassDesencriptar);
+        // Contar sentencias antes de asignar al script
         FTotal := 0;
         FPosicion := 0;
-        for i := 1 to Length(SqlScript.SQL.Text) do
+        for i := 1 to Length(s) do
         begin
-          if SqlScript.SQL.Text[i] = ';' then
+          if s[i] = ';' then
             Inc(FTotal);
         end;
+        SqlScript.SQL.Text := s;
+        s := '';
         Synchronize(SyncProgreso);
         SqlScript.Execute;
         FExito := True;
@@ -369,7 +373,9 @@ begin
   finally
     Conn.Free;
   end;
-  Synchronize(SyncFinalizar);
+  finally
+    Synchronize(SyncFinalizar);
+  end;
 end;
 
 end.
