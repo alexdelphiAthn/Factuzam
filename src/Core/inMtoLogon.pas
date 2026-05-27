@@ -101,7 +101,7 @@ type
     procedure GetIniValues;
   private
     FProgressBar: TProgressBar;
-    FProgressLabel: TLabel;
+    FProgressLabel: TcxLabel;
     FLogBuffer: TStringList;
     FStopwatch: TStopwatch;
     procedure CambiarPass(f:TUniConnection);
@@ -439,13 +439,15 @@ begin
   end;
   if FProgressLabel = nil then
   begin
-    FProgressLabel := TLabel.Create(Self);
+    FProgressLabel := TcxLabel.Create(Self);
     FProgressLabel.Parent := pnlBBDD;
     FProgressLabel.Left := 24;
     FProgressLabel.Top := 328;
+    FProgressLabel.AutoSize := False;
     FProgressLabel.Width := 312;
     FProgressLabel.Height := 16;
     FProgressLabel.Caption := '';
+    FProgressLabel.Transparent := True;
   end;
   FProgressLabel.Visible := True;
   FProgressBar.Visible := True;

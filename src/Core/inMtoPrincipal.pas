@@ -202,7 +202,7 @@ type
     FExceptionDialogMemo: TcxMemo;
     FEnOperacionLarga: Boolean;
     FProgressBar: TProgressBar;
-    FProgressLabel: TLabel;
+    FProgressLabel: TcxLabel;
     procedure AppException(Sender: TObject; E: Exception);
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
     procedure MostrarDetalleExcepcion(const ATexto: string);
@@ -845,12 +845,13 @@ begin
   FEnOperacionLarga := True;
   if FProgressLabel = nil then
   begin
-    FProgressLabel := TLabel.Create(Self);
+    FProgressLabel := TcxLabel.Create(Self);
     FProgressLabel.Parent := pnlPPBottom;
     FProgressLabel.Align := alTop;
+    FProgressLabel.AutoSize := False;
     FProgressLabel.Height := 20;
     FProgressLabel.Caption := '';
-    FProgressLabel.AlignWithMargins := True;
+    FProgressLabel.Transparent := True;
   end;
   if FProgressBar = nil then
   begin
