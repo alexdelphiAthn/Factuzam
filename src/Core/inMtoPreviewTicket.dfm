@@ -3,7 +3,7 @@ object FormVisualizador: TFormVisualizador
   Top = 0
   Caption = 'Ticket  |  F8 Imprimir  |  F7 PDF  |  F6 PNG  |  ESC Salir'
   ClientHeight = 572
-  ClientWidth = 402
+  ClientWidth = 500
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,12 +19,12 @@ object FormVisualizador: TFormVisualizador
   object Panel1: TPanel
     Left = 0
     Top = 522
-    Width = 402
+    Width = 500
     Height = 50
     Align = alBottom
     TabOrder = 0
     object btnCerrar: TButton
-      Left = 16
+      Left = 10
       Top = 10
       Width = 100
       Height = 30
@@ -32,20 +32,38 @@ object FormVisualizador: TFormVisualizador
       TabOrder = 0
       OnClick = btnCerrarClick
     end
-    object btnGuardar: TButton
-      Left = 130
+    object btnImprimir: TButton
+      Left = 120
       Top = 10
-      Width = 120
+      Width = 110
       Height = 30
-      Caption = 'Guardar imagen'
+      Caption = 'F8 Imprimir'
       TabOrder = 1
-      OnClick = btnGuardarClick
+      OnClick = btnImprimirClick
+    end
+    object btnPDF: TButton
+      Left = 240
+      Top = 10
+      Width = 100
+      Height = 30
+      Caption = 'F7 PDF'
+      TabOrder = 2
+      OnClick = btnPDFClick
+    end
+    object btnPNG: TButton
+      Left = 350
+      Top = 10
+      Width = 100
+      Height = 30
+      Caption = 'F6 PNG'
+      TabOrder = 3
+      OnClick = btnPNGClick
     end
   end
   object ScrollBox1: TScrollBox
     Left = 0
     Top = 0
-    Width = 402
+    Width = 500
     Height = 522
     Align = alClient
     TabOrder = 1

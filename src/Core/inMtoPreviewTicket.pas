@@ -25,11 +25,15 @@ type
     Image1: TImage;
     Panel1: TPanel;
     btnCerrar: TButton;
-    btnGuardar: TButton;
+    btnImprimir: TButton;
+    btnPDF: TButton;
+    btnPNG: TButton;
     SaveDialog1: TSaveDialog;
     procedure FormCreate(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
-    procedure btnGuardarClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject);
+    procedure btnPDFClick(Sender: TObject);
+    procedure btnPNGClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -735,29 +739,16 @@ end;
 
 procedure TFormVisualizador.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-  sRuta: string;
-  sBase: string;
 begin
-  sBase := GetUserFolderTickets + 'Ticket_' +
-           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
   case Key of
     VK_ESCAPE:
       Close;
     VK_F6:
-    begin
-      sRuta := sBase + '.png';
-      GuardarPNG(sRuta);
-      ShowMessage('PNG guardado en: ' + sRuta);
-    end;
+      btnPNGClick(nil);
     VK_F7:
-    begin
-      sRuta := sBase + '.pdf';
-      ExportarAPDF(FComandos, sRuta);
-      ShowMessage('PDF guardado en: ' + sRuta);
-    end;
+      btnPDFClick(nil);
     VK_F8:
-      ImprimirEnImpresora;
+      btnImprimirClick(nil);
   end;
   Key := 0;
 end;
@@ -801,17 +792,29 @@ begin
   Close;
 end;
 
-procedure TFormVisualizador.btnGuardarClick(Sender: TObject);
+procedure TFormVisualizador.btnImprimirClick(Sender: TObject);
 begin
-  SaveDialog1.Filter := 'Imagen PNG|*.png|Imagen BMP|*.bmp';
-  if SaveDialog1.Execute then
-  begin
-    if LowerCase(ExtractFileExt(SaveDialog1.FileName)) = '.png' then
-      GuardarPNG(SaveDialog1.FileName)
-    else
-      Image1.Picture.SaveToFile(SaveDialog1.FileName);
-    ShowMessage('Imagen guardada correctamente');
-  end;
+  ImprimirEnImpresora;
+end;
+
+procedure TFormVisualizador.btnPDFClick(Sender: TObject);
+var
+  sRuta: string;
+begin
+  sRuta := GetUserFolderTickets + 'Ticket_' +
+           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+  ExportarAPDF(FComandos, sRuta);
+  ShowMessage('PDF guardado en: ' + sRuta);
+end;
+
+procedure TFormVisualizador.btnPNGClick(Sender: TObject);
+var
+  sRuta: string;
+begin
+  sRuta := GetUserFolderTickets + 'Ticket_' +
+           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.png';
+  GuardarPNG(sRuta);
+  ShowMessage('PNG guardado en: ' + sRuta);
 end;
 
 end.
