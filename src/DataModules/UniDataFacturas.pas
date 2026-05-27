@@ -1125,6 +1125,8 @@ begin
   with unqryLinFac do
   begin
     AplicarValoresPorDefecto(unqryLinFac, 'fza_facturas_lineas');
+    // Limpiar nro de línea para que BeforePost llame al SP de contador
+    FindField(fnrolin).AsString := '0';
     FindField(fporiva).AsCurrency := GetTipoIVA(
           FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString);
     FieldByName(fimpcl).AsString :=
@@ -1145,10 +1147,9 @@ begin
       raise EDatabaseError.CreateFmt('Error.Descripción de linea ' +
                                      'de factura vacía.',[]);
     end;
-    // Asignar nro de línea para registros nuevos (dsInsert) o sin número
-    if (DataSet.State = dsInsert) or
-       (Trim(FindField(fnrolin).AsString) = '') or
-       (Trim(FindField(fnrolin).AsString) = '0') then
+    var sNumLin := FindField(fnrolin).AsString;
+    if (sNumLin = '0') or
+       (sNumLin = '') then
     begin
       unstdGetContadorLinea.ParamByName('pnumfac').AsString :=
                             unqryTablaG.FieldByName(fnrofac).AsString;
