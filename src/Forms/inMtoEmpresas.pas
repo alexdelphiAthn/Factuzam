@@ -552,26 +552,19 @@ procedure TfrmMtoEmpresas.btnIraArticuloClick(Sender: TObject);
 var
   sCodArt: string;
   vw: TcxCustomGridView;
-  dbCtrl: TcxGridDBDataController;
-  iRec: Integer;
+  dbView: TcxGridDBTableView;
 begin
   inherited;
   sCodArt := '';
-  // FocusedView devuelve la vista activa: si el usuario está en el
-  // detail (líneas) devuelve ese; si está en el master (facturas)
-  // devuelve el master
   vw := cxgrdEmpresasFacturas.FocusedView;
-  if (vw <> nil) and (vw.DataController is TcxGridDBDataController) then
+  if (vw <> nil) and (vw is TcxGridDBTableView) then
   begin
-    dbCtrl := TcxGridDBDataController(vw.DataController);
-    iRec := dbCtrl.FocusedRecordIndex;
-    if (iRec >= 0) and Assigned(dbCtrl.DataSet) and
-       dbCtrl.DataSet.Active then
-    begin
-      dbCtrl.DataSet.MoveBy(0);
-      if dbCtrl.DataSet.FindField('CODIGO_ART_FACLIN') <> nil then
-        sCodArt := dbCtrl.DataSet.FieldByName('CODIGO_ART_FACLIN').AsString;
-    end;
+    dbView := TcxGridDBTableView(vw);
+    if Assigned(dbView.DataController.DataSet) and
+       dbView.DataController.DataSet.Active and
+       (dbView.DataController.DataSet.FindField('CODIGO_ART_FACLIN') <> nil) then
+      sCodArt := dbView.DataController.DataSet.
+        FieldByName('CODIGO_ART_FACLIN').AsString;
   end;
   if sCodArt <> '' then
     ShowMto(Self.Owner, 'Articulos', sCodArt);
