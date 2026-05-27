@@ -60,6 +60,7 @@ type
 
   public
     FComandos: string;
+    FRutaPDFTemporal: string;
     procedure ExportarAPDF(const Comandos: string; const RutaArchivo: string);
     procedure CargarYMostrar(const Comandos: string);
     procedure GuardarPNG(const ARuta: string);
@@ -76,7 +77,7 @@ implementation
 {$R *.dfm}
 
 uses
-  SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, Winapi.ShellAPI;
+  SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils;
 
 const
   ANCHO_PAPEL_MM = 80;
@@ -223,6 +224,9 @@ begin
   try
     Form.FComandos := Comandos;
     Form.CargarYMostrar(Comandos);
+    // Generar PDF ahora (mismo momento que los otros sitios que funcionan)
+    Form.FRutaPDFTemporal := GetUserFolderTickets + '_preview_tmp.pdf';
+    Form.ExportarAPDF(Comandos, Form.FRutaPDFTemporal);
     Form.ShowModal;
   finally
     FreeAndNil(Form);
@@ -821,7 +825,9 @@ begin
     FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
   if SaveDialog1.Execute then
   begin
-    ExportarAPDF(FComandos, SaveDialog1.FileName);
+    // Copiar el PDF generado al abrir (funciona siempre)
+    if FileExists(FRutaPDFTemporal) then
+      TFile.Copy(FRutaPDFTemporal, SaveDialog1.FileName, True);
     ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
   end;
 end;
