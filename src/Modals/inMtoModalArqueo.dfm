@@ -956,7 +956,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           Left = 336
           Top = 224
           Width = 628
-          Height = 200
+          Height = 140
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
@@ -1032,9 +1032,17 @@ inherited frmModalArqueo: TfrmModalArqueo
             TabOrder = 7
             Transparent = True
           end
-          object rgRetiradaTipo: TcxRadioGroup
+          object txtRetiradaImporte: TcxCurrencyEdit
             Left = 80
-            Top = 76
+            Top = 78
+            EditValue = 0.000000000000000000
+            Properties.OnChange = txtRetiradaImportePropertiesChange
+            TabOrder = 8
+            Width = 110
+          end
+          object rgRetiradaTipo: TcxRadioGroup
+            Left = 200
+            Top = 72
             Properties.Columns = 5
             Properties.Items = <
               item
@@ -1053,50 +1061,43 @@ inherited frmModalArqueo: TfrmModalArqueo
                 Caption = 'Limpieza'
               end>
             ItemIndex = 0
-            TabOrder = 8
-            Height = 38
-            Width = 400
-          end
-          object txtRetiradaImporte: TcxCurrencyEdit
-            Left = 8
-            Top = 120
-            EditValue = 0.000000000000000000
-            Properties.OnChange = txtRetiradaImportePropertiesChange
             TabOrder = 9
-            Width = 110
+            Height = 36
+            Width = 420
           end
           object lblDejoLbl: TcxLabel
-            Left = 130
-            Top = 148
+            Left = 8
+            Top = 114
             Caption = 'Dejo para ma'#241'ana:'
             TabOrder = 10
             Transparent = True
           end
           object lblDejoImporte: TcxLabel
-            Left = 280
-            Top = 148
+            Left = 160
+            Top = 114
             Caption = '0,00 EUR'
+            Style.Font.Style = [fsBold]
             TabOrder = 11
             Transparent = True
           end
           object lblObservacionesLbl: TcxLabel
-            Left = 390
-            Top = 148
+            Left = 300
+            Top = 114
             Caption = 'Obs:'
             TabOrder = 12
             Transparent = True
           end
           object txtObservaciones: TcxTextEdit
-            Left = 426
-            Top = 146
+            Left = 340
+            Top = 112
             Properties.MaxLength = 500
             TabOrder = 13
-            Width = 196
+            Width = 280
           end
         end
         object btnGrabarArqueo: TcxButton
           Left = 336
-          Top = 430
+          Top = 370
           Width = 320
           Height = 34
           Caption = 'Grabar Arqueo y emitir justificante (F2)'
