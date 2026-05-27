@@ -99,10 +99,8 @@ UniDAC por FireDAC ni nada parecido — es decisión arquitectónica.
 - **Auditoría**: toda tabla nueva incluye las 4 columnas estándar
   (`INSTANTE_ALTA`, `INSTANTE_MODIF`, `USUARIO_ALTA`, `USUARIO_MODIF`)
   sin sufijo de tabla. Detalle en `LIBRO_DE_ESTILO_BBDD.md` §3.7.
-
 - **Booleanos**: `varchar(1)` con valores `'S'` / `'N'`. Columna
   con prefijo `ES` sin guión: `ESACTIVO_CLI`, `ESDEFAULT_FP`.
-
 - **Commits "Auto-update YYYY-MM-DD …"**: los genera un workflow
   automatizado. **No** los crees tú; tu commit debe describir el cambio.
 - **Orden de las instrucciones**: No meter en una misma linea dos instrucciones.
@@ -119,7 +117,9 @@ UniDAC por FireDAC ni nada parecido — es decisión arquitectónica.
   por ejemplo para delimitar bloques importantes, limitaciones, lineas
   a resaltar por lógica de negocio.
   **Lineas en blanco**: Evitar dejar lineas en blanco dentro de los bloques
-                        de código fuente y en los SQL.  
+  de código fuente y en los SQL.  
+  **Controles nuevos**: Si se necesita meter controles nuevos en el código, serán preferentemente
+  los de Developer Express TcxMemo TcxLabel, tcx....
 ---
 
 ## Cuándo preguntar

@@ -18,7 +18,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ExtCtrls, Vcl.StdCtrls, System.Math, DelphiZXingQRCode;
+  Vcl.ExtCtrls, Vcl.StdCtrls, System.Math, DelphiZXingQRCode, inLibFTicket;
 type
   TFormVisualizador = class(TForm)
     ScrollBox1: TScrollBox;
@@ -29,6 +29,7 @@ type
     btnPDF: TButton;
     btnPNG: TButton;
     SaveDialog1: TSaveDialog;
+    btnImprimirTicket: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
@@ -37,6 +38,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure btnImprimirTicketClick(Sender: TObject);
   private
     FCanvas: TCanvas;
     FCurrentY: Integer;
@@ -319,6 +321,7 @@ end;
 procedure TFormVisualizador.CargarYMostrar(const Comandos: string);
 begin
   ProcesarComandosESCPOS(Comandos);
+  FComandos := Comandos;
   // Ajustar altura de la imagen al contenido
   Image1.Picture.Bitmap.Height := FCurrentY + 50;
   Image1.Height := FCurrentY + 50;
@@ -771,6 +774,39 @@ end;
 procedure TFormVisualizador.btnImprimirClick(Sender: TObject);
 begin
   ImprimirEnImpresora;
+end;
+
+procedure TFormVisualizador.btnImprimirTicketClick(Sender: TObject);
+var
+  pd: TPrintDialog;
+  NombreImpresoraElegida: string;
+begin
+  if FComandos = '' then
+  begin
+    ShowMessage('No hay comandos ESC/POS para enviar a la impresora.');
+    Exit;
+  end;
+
+  // 1. Mostrar diálogo para elegir la impresora
+  pd := TPrintDialog.Create(Self);
+  try
+    if not pd.Execute then
+      Exit; // Si el usuario cancela, salimos
+
+    // Obtener el nombre exacto de la impresora seleccionada
+    NombreImpresoraElegida := Printer.Printers[Printer.PrinterIndex];
+  finally
+    FreeAndNil(pd);
+  end;
+
+  // 2. Usar tu librería para enviar el ticket de forma nativa
+  try
+    EnviarComandoRAW(NombreImpresoraElegida, FComandos);
+    ShowMessage('Ticket enviado correctamente a: ' + NombreImpresoraElegida);
+  except
+    on E: Exception do
+      ShowMessage('Error al imprimir: ' + E.Message);
+  end;
 end;
 
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
