@@ -1395,31 +1395,48 @@ procedure TfrmMtoGen.PopMenuColumnasPopup(Sender: TObject);
 var
   i: Integer;
   col: TcxGridDBColumn;
-  mi, miSep, miGuia: TMenuItem;
-  sCaption: string;
+  mi, miSep, miGuia, miSubGuias: TMenuItem;
+  sCaption, sField: string;
+  bEsGuia: Boolean;
 begin
   FPopMenuColumnas.Items.Clear;
-  // Items por cada columna del grid principal
+  miSubGuias := nil;
+  // Crear submenú para columnas guía si existen
+  if (FCamposGuia <> nil) and (FCamposGuia.Count > 0) then
+  begin
+    miSubGuias := TMenuItem.Create(FPopMenuColumnas);
+    miSubGuias.Caption := 'Columnas guía';
+  end;
   for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
   begin
     col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
-    if col.DataBinding.FieldName = '' then
+    sField := col.DataBinding.FieldName;
+    if sField = '' then
       Continue;
     mi := TMenuItem.Create(FPopMenuColumnas);
     sCaption := col.Caption;
     if sCaption = '' then
-      sCaption := col.DataBinding.FieldName;
+      sCaption := sField;
     mi.Caption := sCaption;
     mi.Checked := col.Visible;
     mi.AutoCheck := False;
     mi.Tag := i;
     mi.OnClick := PopMenuColumnaClick;
-    FPopMenuColumnas.Items.Add(mi);
+    bEsGuia := (FCamposGuia <> nil) and
+               (FCamposGuia.IndexOf(sField) >= 0);
+    if bEsGuia and (miSubGuias <> nil) then
+      miSubGuias.Add(mi)
+    else
+      FPopMenuColumnas.Items.Add(mi);
   end;
-  // Separador + "Renombrar columna..." + "Nueva guia..."
+  // Separador + submenú guías (si tiene items) + acciones
   miSep := TMenuItem.Create(FPopMenuColumnas);
   miSep.Caption := '-';
   FPopMenuColumnas.Items.Add(miSep);
+  if (miSubGuias <> nil) and (miSubGuias.Count > 0) then
+    FPopMenuColumnas.Items.Add(miSubGuias)
+  else
+    FreeAndNil(miSubGuias);
   miGuia := TMenuItem.Create(FPopMenuColumnas);
   miGuia.Caption := 'Renombrar columna...';
   miGuia.OnClick := PopMenuRenombrarClick;
