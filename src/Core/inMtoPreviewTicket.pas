@@ -224,9 +224,6 @@ begin
   try
     Form.FComandos := Comandos;
     Form.CargarYMostrar(Comandos);
-    // Generar PDF ahora (mismo momento que los otros sitios que funcionan)
-    Form.FRutaPDFTemporal := GetUserFolderTickets + '_preview_tmp.pdf';
-    Form.ExportarAPDF(Comandos, Form.FRutaPDFTemporal);
     Form.ShowModal;
   finally
     FreeAndNil(Form);
@@ -818,17 +815,48 @@ begin
 end;
 
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
+var
+  Pdf: TPdfDocumentGDI;
+  Metafile: TMetafile;
+  MetaCanvas: TMetafileCanvas;
+  AlturaReal, PageW, PageH, MargenH: Integer;
 begin
   SaveDialog1.Filter := 'PDF|*.pdf';
   SaveDialog1.DefaultExt := 'pdf';
   SaveDialog1.FileName := 'Ticket_' +
     FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-  if SaveDialog1.Execute then
-  begin
-    // Copiar el PDF generado al abrir (funciona siempre)
-    if FileExists(FRutaPDFTemporal) then
-      TFile.Copy(FRutaPDFTemporal, SaveDialog1.FileName, True);
+  if not SaveDialog1.Execute then
+    Exit;
+  AlturaReal := FCurrentY + 10;
+  MargenH := 20;
+  PageW := ANCHO_PAPEL_PIXELS_PDF + (MargenH * 2);
+  PageH := AlturaReal + 40;
+  Pdf := TPdfDocumentGDI.Create;
+  Metafile := TMetafile.Create;
+  try
+    Metafile.Width := ANCHO_PAPEL_PIXELS_PDF;
+    Metafile.Height := AlturaReal;
+    MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
+    try
+      // Copiar el bitmap ya renderizado al metafile
+      MetaCanvas.Draw(0, 0, Image1.Picture.Bitmap);
+    finally
+      FreeAndNil(MetaCanvas);
+    end;
+    Pdf.DefaultPaperSize := psUserDefined;
+    Pdf.DefaultPageWidth := PageW;
+    Pdf.DefaultPageHeight := PageH;
+    Pdf.AddPage;
+    PlayEnhMetaFile(Pdf.VCLCanvas.Handle,
+                    Metafile.Handle,
+                    Rect(MargenH, 0,
+                         MargenH + ANCHO_PAPEL_PIXELS_PDF,
+                         AlturaReal));
+    Pdf.SaveToFile(SaveDialog1.FileName);
     ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
+  finally
+    FreeAndNil(Metafile);
+    FreeAndNil(Pdf);
   end;
 end;
 
