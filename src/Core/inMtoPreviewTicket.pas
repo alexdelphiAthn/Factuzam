@@ -60,7 +60,7 @@ type
 
   public
     FComandos: string;
-    FRutaPDFTemporal: string;
+    FRutaPDFReal: string;
     procedure ExportarAPDF(const Comandos: string; const RutaArchivo: string);
     procedure CargarYMostrar(const Comandos: string);
     procedure GuardarPNG(const ARuta: string);
@@ -92,65 +92,6 @@ const
   FUENTE_B_ALTO = 17;
   FUENTE_C_ANCHO = 7;
   FUENTE_C_ALTO = 14;
-
-(* procedure TFormVisualizador.ExportarAPDF(const Comandos: string;
-                                         const RutaArchivo: string);
-var
-  Pdf: TPdfDocumentGDI;
-  Metafile: TMetafile;
-  MetaCanvas: TMetafileCanvas;
-  CanvasBackup: TCanvas;
-  AnchoPDF, AltoPDF: Integer;
-  AnchoPDFConMargen: Integer;
-  AlturaReal: Integer;
-  MargenPDF: Integer;
-begin
-  AlturaReal := Image1.Picture.Bitmap.Height;
-  MargenPDF  := 10; // 10 puntos PDF de margen (~3.5mm) en cada lado
-  AnchoPDF          := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 72, DPI);
-  AnchoPDFConMargen := AnchoPDF + (MargenPDF * 2);          // página más ancha
-  AltoPDF           := MulDiv(AlturaReal + 100, 72, DPI);
-  Pdf := TPdfDocumentGDI.Create;
-  Metafile := TMetafile.Create;
-  try
-    Metafile.Width    := ANCHO_PAPEL_PIXELS_PDF;
-    Metafile.Height   := AlturaReal;
-    Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 2540, DPI);
-    Metafile.MMHeight := MulDiv(AlturaReal, 2540, DPI);
-    MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
-    CanvasBackup := FCanvas;
-    FCanvas := MetaCanvas;
-    try
-      FCurrentY     := MARGEN_PIXELS;
-      FFuenteActual := 0;
-      FNegrita      := False;
-      FSubrayado    := False;
-      FAlineacion   := 0;
-      FTamanoAncho  := 1;
-      FTamanoAlto   := 1;
-      FInverso      := False;
-      FQRTexto      := '';
-      MetaCanvas.Brush.Color := clWhite;
-      MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS_PDF, AlturaReal));
-      ProcesarComandosESCPOS(Comandos);
-    finally
-      FreeAndNil(MetaCanvas);
-      FCanvas := CanvasBackup;
-    end;
-    Pdf.DefaultPaperSize  := psUserDefined;
-    Pdf.DefaultPageWidth  := AnchoPDFConMargen; // página con margen
-    Pdf.DefaultPageHeight := AltoPDF;
-    Pdf.AddPage;
-    // Dibujar el contenido desplazado MargenPDF puntos a la derecha
-    PlayEnhMetaFile(Pdf.VCLCanvas.Handle,
-                    Metafile.Handle,
-                    Rect(MargenPDF, 0, AnchoPDF + MargenPDF, AltoPDF));
-    Pdf.SaveToFile(RutaArchivo);
-  finally
-    FreeAndNil(Metafile);
-    FreeAndNil(Pdf);
-  end;
-end; *)
 
 procedure TFormVisualizador.ExportarAPDF(const Comandos: string;
                                          const RutaArchivo: string);
@@ -225,8 +166,8 @@ begin
     Form.FComandos := Comandos;
     Form.CargarYMostrar(Comandos);
     // Generar PDF antes del ShowModal (funciona siempre en este punto)
-    Form.FRutaPDFTemporal := GetUserFolderTickets + '_preview_tmp.pdf';
-    Form.ExportarAPDF(Comandos, Form.FRutaPDFTemporal);
+//    Form.FRutaPDFTemporal := GetUserFolderTickets + '_preview_tmp.pdf';
+//    Form.ExportarAPDF(Comandos, Form.FRutaPDFTemporal);
     Form.ShowModal;
   finally
     FreeAndNil(Form);
@@ -775,6 +716,8 @@ var
   pd: TPrintDialog;
   bmp: TBitmap;
   AnchoImp, AltoImp: Integer;
+  MargenIzq, MargenSup: Integer;
+  DPI_X, DPI_Y: Integer;
 begin
   // Copiar imagen a pf24bit y enviar a impresora con diálogo
   pd := TPrintDialog.Create(Self);
@@ -789,12 +732,25 @@ begin
         bmp.Canvas.Brush.Color := clWhite;
         bmp.Canvas.FillRect(Rect(0, 0, bmp.Width, bmp.Height));
         bmp.Canvas.Draw(0, 0, Image1.Picture.Bitmap);
-        AnchoImp := Printer.PageWidth div 2;
-        AltoImp := MulDiv(bmp.Height, AnchoImp, bmp.Width);
+
         Printer.BeginDoc;
         try
+          // 1. Obtener los puntos por pulgada (DPI) de la impresora seleccionada
+          DPI_X := GetDeviceCaps(Printer.Handle, LOGPIXELSX);
+          DPI_Y := GetDeviceCaps(Printer.Handle, LOGPIXELSY);
+
+          // 2. Calcular los márgenes (1 cm). 1 pulgada = 2.54 cm
+          MargenIzq := Round((1.0 / 2.54) * DPI_X);
+          MargenSup := Round((1.0 / 2.54) * DPI_Y);
+
+          // 3. Calcular el ancho y alto a imprimir
+          AnchoImp := Printer.PageWidth div 2;
+          AltoImp := MulDiv(bmp.Height, AnchoImp, bmp.Width);
+
+          // 4. Dibujar desplazando el rectángulo inicial a las coordenadas del margen
           Printer.Canvas.StretchDraw(
-            Rect(0, 0, AnchoImp, AltoImp), bmp);
+            Rect(MargenIzq, MargenSup, MargenIzq + AnchoImp, MargenSup + AltoImp),
+            bmp);
         finally
           Printer.EndDoc;
         end;
@@ -819,20 +775,17 @@ end;
 
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
 var
-  sSrc, sDst: string;
+  sSrc: string;
 begin
-  // El PDF bueno ya se genera en la carpeta de tickets al visualizar.
-  // Buscamos el último PDF generado y lo copiamos donde el usuario elija.
-  sSrc := FRutaPDFTemporal;
+  sSrc := FRutaPDFReal;
   if (sSrc = '') or (not FileExists(sSrc)) then
   begin
-    ShowMessage('No hay PDF disponible para copiar.');
+    ShowMessage('No se encuentra el PDF original para copiar.');
     Exit;
   end;
   SaveDialog1.Filter := 'PDF|*.pdf';
   SaveDialog1.DefaultExt := 'pdf';
-  SaveDialog1.FileName := 'Ticket_' +
-    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+  SaveDialog1.FileName := ExtractFileName(sSrc);
   if SaveDialog1.Execute then
   begin
     TFile.Copy(sSrc, SaveDialog1.FileName, True);

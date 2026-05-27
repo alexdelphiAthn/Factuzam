@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibGenerarTicketCaja                                        }
 {    Tipo:       Librería                                                      }
@@ -120,6 +120,7 @@ begin
       FormPreview := TFormVisualizador.Create(nil);
       try
         FormPreview.Hide;
+        FormPreview.FRutaPDFReal := RutaFicheroPDF;
         FormPreview.CargarYMostrar(ComandosESC);
         FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
         FormPreview.ShowModal;

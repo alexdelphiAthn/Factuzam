@@ -4,8 +4,10 @@ inherited frmModalGastoCaja: TfrmModalGastoCaja
   ClientHeight = 330
   ClientWidth = 500
   Position = poScreenCenter
-  OnCreate = FormCreate
-  TextHeight = 19
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 516
+  ExplicitHeight = 369
+  TextHeight = 17
   object pnlPrincipal: TPanel [0]
     Left = 0
     Top = 0
@@ -15,21 +17,21 @@ inherited frmModalGastoCaja: TfrmModalGastoCaja
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 0
+    ExplicitWidth = 498
+    ExplicitHeight = 272
     object lblTitulo: TcxLabel
       Left = 16
       Top = 8
       Caption = 'Registrar gasto o retirada de efectivo'
       Style.TextColor = clNavy
-      Style.Font.Size = 10
-      Style.Font.Style = [fsBold]
-      TabOrder = 10
+      TabOrder = 4
       Transparent = True
     end
     object lblTipoLbl: TcxLabel
       Left = 16
       Top = 36
       Caption = 'Tipo:'
-      TabOrder = 11
+      TabOrder = 5
       Transparent = True
     end
     object rgTipo: TcxRadioGroup
@@ -61,7 +63,7 @@ inherited frmModalGastoCaja: TfrmModalGastoCaja
       Left = 16
       Top = 132
       Caption = 'Empleado:'
-      TabOrder = 12
+      TabOrder = 6
       Transparent = True
     end
     object btnEmpleado: TcxButtonEdit
@@ -82,8 +84,7 @@ inherited frmModalGastoCaja: TfrmModalGastoCaja
       Top = 132
       AutoSize = False
       Style.TextColor = clNavy
-      Style.Font.Style = [fsBold]
-      TabOrder = 13
+      TabOrder = 7
       Transparent = True
       Height = 21
       Width = 250
@@ -92,21 +93,21 @@ inherited frmModalGastoCaja: TfrmModalGastoCaja
       Left = 16
       Top = 170
       Caption = 'Importe:'
-      TabOrder = 14
+      TabOrder = 8
       Transparent = True
     end
     object txtImporte: TcxCurrencyEdit
       Left = 100
       Top = 168
+      EditValue = 0.000000000000000000
       TabOrder = 2
-      Value = 0.000000000000000000
       Width = 140
     end
     object lblConceptoLbl: TcxLabel
       Left = 16
       Top = 208
       Caption = 'Concepto:'
-      TabOrder = 15
+      TabOrder = 9
       Transparent = True
     end
     object txtConcepto: TcxTextEdit
@@ -126,6 +127,8 @@ inherited frmModalGastoCaja: TfrmModalGastoCaja
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 1
+    ExplicitTop = 272
+    ExplicitWidth = 498
     object btnAceptar: TcxButton
       Left = 170
       Top = 8

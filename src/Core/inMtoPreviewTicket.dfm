@@ -15,7 +15,7 @@ object FormVisualizador: TFormVisualizador
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  TextHeight = 13
+  TextHeight = 17
   object Panel1: TPanel
     Left = 0
     Top = 522
@@ -23,6 +23,8 @@ object FormVisualizador: TFormVisualizador
     Height = 50
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 514
+    ExplicitWidth = 498
     object btnCerrar: TButton
       Left = 10
       Top = 10
@@ -67,6 +69,8 @@ object FormVisualizador: TFormVisualizador
     Height = 522
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 498
+    ExplicitHeight = 514
     object Image1: TImage
       Left = 14
       Top = 3
