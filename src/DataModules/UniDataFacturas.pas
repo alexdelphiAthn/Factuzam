@@ -507,18 +507,9 @@ begin
                 'PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
      end;
   end;
-  oLinFac :=
-    TLinFac.Create((GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryLinFac,
-                            (
-                              GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryTablaG);
-  oLinFac.Cant := 1;
-  FreeAndNil(oLinFac);
-  facTotales := TFacturaTotales.Create(
-    (GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryTablaG,
-                                       (
-                                         GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryLinFac);
-  facTotales.ProcesarFacturaCompleta;//(oLinFac);
-  FreeAndNil(facTotales);
+  // Cantidad por defecto = 1, el usuario la modifica antes de grabar
+  if FindField('CANTIDAD_FACLIN') <> nil then
+    FindField('CANTIDAD_FACLIN').AsCurrency := 1;
 end;
 
 procedure TdmFacturas.CopiarClienteaFactura(DataSet:TDataSet);
