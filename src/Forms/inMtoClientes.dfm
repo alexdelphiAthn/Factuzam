@@ -2709,7 +2709,7 @@
     end
     object actFacturas: TAction
       Caption = 'Facturas'
-      ShortCut = 16454
+      ShortCut = 49222
       OnExecute = actFacturasExecute
     end
     object actArticulos: TAction

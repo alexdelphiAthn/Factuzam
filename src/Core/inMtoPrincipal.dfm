@@ -1450,7 +1450,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object Facturas1: TMenuItem
         Caption = 'Facturas'
-        ShortCut = 24646
+        ShortCut = 57414
       end
       object Formasdepago2: TMenuItem
         Caption = 'Formas de pago'
@@ -1592,7 +1592,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000}
         Caption = 'Facturas'
-        ShortCut = 16454
+        ShortCut = 49222
         OnClick = mnuFacturasClick
       end
       object mnuFormaPagoVenta: TMenuItem
@@ -1663,7 +1663,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object mnuFacturasSimplif: TMenuItem
         Caption = 'Facturas Simplificadas'
-        ShortCut = 24659
+        ShortCut = 24646
         OnClick = mnuFacturasSimplifClick
       end
     end

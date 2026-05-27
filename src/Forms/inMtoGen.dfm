@@ -742,7 +742,7 @@
     end
     object actFotoArticulo: TAction
       Caption = 'Foto articulo'
-      ShortCut = 49222
+      ShortCut = 16454
       OnExecute = actFotoArticuloExecute
     end
     object actConsultaStock: TAction
