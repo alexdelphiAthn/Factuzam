@@ -46,6 +46,7 @@ type
     function GetFunctionDefinition(const FunctionName:string):string;
     function GetData(const TableName: string;
                      const Filter: string = ''): TDataSet;
+    function GetRowCount(const TableName: string): Integer;
   private
     function StripDefiner(const SQL: string): string;
   end;
@@ -77,6 +78,28 @@ begin
     Query.SQL.Add('WHERE ' + Filter);
   Query.Open;
   Result := Query;
+end;
+
+function TMySQLMetadataProvider.GetRowCount(
+  const TableName: string): Integer;
+var
+  Query: TUniQuery;
+begin
+  Result := 0;
+  Query := TUniQuery.Create(nil);
+  try
+    Query.Connection := FConn;
+    Query.SQL.Text :=
+      'SELECT TABLE_ROWS' +
+      '  FROM INFORMATION_SCHEMA.TABLES' +
+      ' WHERE TABLE_SCHEMA = ' + QuotedStr(FDBName) +
+      '   AND TABLE_NAME = ' + QuotedStr(TableName);
+    Query.Open;
+    if not Query.Eof then
+      Result := Query.Fields[0].AsInteger;
+  finally
+    Query.Free;
+  end;
 end;
 
 function TMySQLMetadataProvider.GetFunctionDefinition(

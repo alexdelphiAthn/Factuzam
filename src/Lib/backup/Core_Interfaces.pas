@@ -25,6 +25,7 @@ type
     function GetFunctions:TStringList;
     function GetFunctionDefinition(const FunctionName:string):string;
     function GetSequences: TStringList;
+    function GetRowCount(const TableName: string): Integer;
   end;
 
   // Contrato para escribir el script
