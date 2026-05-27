@@ -510,7 +510,6 @@ type
     // vi_facturas_simplificadas), no toca al codigo.
     function NombreVistaListado: string; virtual;
     // TIPO_FAC que el descendiente quiere por defecto en los inserts
-    // (se aplicara en unqryTablaGAfterInsert en commits siguientes).
     function TipoFacturaFiltro: string; virtual;
     //procedure CalcularLinea;
   private
