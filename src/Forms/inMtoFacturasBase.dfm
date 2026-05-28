@@ -2768,6 +2768,19 @@
                   TabOrder = 12
                   Transparent = True
                 end
+                object chkMueveStock: TcxDBCheckBox
+                  Left = 36
+                  Top = 275
+                  Caption = 'Generar movimientos de stock al consolidar'
+                  DataBinding.DataField = 'ESMUEVE_STOCK_FAC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 13
+                  Transparent = True
+                  Width = 280
+                end
                 object txtINSTANTECONSOLIDACION: TcxDBTextEdit
                   Left = 325
                   Top = 245
