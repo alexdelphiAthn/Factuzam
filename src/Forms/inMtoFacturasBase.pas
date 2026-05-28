@@ -1079,6 +1079,7 @@ end;
 procedure TfrmMtoFacturasBase.cbbSerieFacturaPropertiesChange(Sender: TObject);
 var
   sSubtipo: string;
+  sFiltro: string;
 begin
   inherited;
   if (dsTablaG.Dataset = nil) then
@@ -1086,12 +1087,22 @@ begin
   if ((dsTablaG.DataSet.State <> dsEdit) and
       (dsTablaG.DataSet.State <> dsInsert)) then
     Exit;
-  sSubtipo := dmmFacturas.GetSubtipoSerieEmpresa(
-                dsTablaG.DataSet.FindField(fseriefac).AsString,
-                dsTablaG.DataSet.FindField(fcodemp).AsString,
-                dsTablaG.DataSet.FindField(ffechfac).AsDateTime);
-  if (sSubtipo = '') then
-    sSubtipo := 'NORMAL';
+  // El descendiente (Normal / Simplif) fija el TIPO_FAC del formulario
+  // y manda sobre el SUBTIPO_EMPSER de la serie: una factura abierta en
+  // "Ventas Mayor > Facturas" debe ser NORMAL aunque la serie por
+  // defecto esté marcada como SIMPLIFICADA en fza_empresas_series.
+  sFiltro := TipoFacturaFiltro;
+  if (sFiltro <> '') then
+    sSubtipo := sFiltro
+  else
+  begin
+    sSubtipo := dmmFacturas.GetSubtipoSerieEmpresa(
+                  dsTablaG.DataSet.FindField(fseriefac).AsString,
+                  dsTablaG.DataSet.FindField(fcodemp).AsString,
+                  dsTablaG.DataSet.FindField(ffechfac).AsDateTime);
+    if (sSubtipo = '') then
+      sSubtipo := 'NORMAL';
+  end;
   dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
 end;
 
