@@ -162,6 +162,7 @@ type
     procedure mnuAlbaranesVentaClick(Sender: TObject);
     procedure Sesiones1Click(Sender: TObject);
     procedure Albaranes1Click(Sender: TObject);
+    procedure Pedidos1Click(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
     procedure mnuProveedoresClick(Sender: TObject);
@@ -1403,6 +1404,13 @@ begin
   inherited;
   if Albaranes1.Visible then
     ShowMto(Self, 'AlbaranesCompra');
+end;
+
+procedure TfrmMtoPrincipal.Pedidos1Click(Sender: TObject);
+begin
+  inherited;
+  if Pedidos1.Visible then
+    ShowMto(Self, 'PedidosCompra');
 end;
 
 procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
