@@ -1477,24 +1477,30 @@ procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
-  frmSel: TfrmModalSelFamilia;
-  vColIndex: Integer;
+  frmSel : TfrmModalSelFamilia;
 begin
   inherited;
-  // --- SELECTOR DE FAMILIA / ARTÍCULO (F3) ---
-  if (Key <> VK_F3) or (Shift <> []) then Exit;
-  if not Assigned(AItem) then Exit;
-
-  if (AItem <> dbcLinFamilia) and (AItem <> dbcLinCodArt) then Exit;
-
-  frmSel := TfrmModalSelFamilia.Create(Self);
-  try
-    if frmSel.ShowModal = mrOk then
-      ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
-  finally
-    FreeAndNil(frmSel);
+  // Ctrl+Enter en 'Sistema tallas' despliega el mismo listbox de 3
+  // columnas que el boton ellipsis '...'. Pasamos AEdit (el editor en
+  // edicion) como Sender para que el popup salga justo debajo de la celda.
+  if (Key = VK_RETURN) and (Shift = [ssCtrl]) and (AItem = dbcLinTallas) then
+  begin
+    dbcLinTallasPropertiesButtonClick(AEdit, 0);
+    Key := 0;
+  end
+  // F3 sobre Familia / Codigo articulo abre el picker jerarquico de familia.
+  else if (Key = VK_F3) and (Shift = []) and
+          ((AItem = dbcLinFamilia) or (AItem = dbcLinCodArt)) then
+  begin
+    frmSel := TfrmModalSelFamilia.Create(Self);
+    try
+      if frmSel.ShowModal = mrOk then
+        ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
+    finally
+      FreeAndNil(frmSel);
+    end;
+    Key := 0;
   end;
-  Key := 0;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesButtonClick(
