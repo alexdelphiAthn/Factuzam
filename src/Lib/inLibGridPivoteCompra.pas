@@ -79,7 +79,21 @@ type
     FieldCantidadRecibida: string;
     FieldIdAcPivot       : string;   // ID_AC_PIVOT_ALBCLIN / _PEDCLIN
     FieldAlmacen         : string;   // CODIGO_ALMACEN_ALBCLIN / _PEDCLIN
+    // Almacen por defecto del documento (en cabecera). Usado como
+    // fallback cuando una linea no lleva almacen propio. Vacio si la
+    // cabecera no expone almacen (no aplica fallback).
+    FieldAlmacenMaster   : string;   // CODIGO_ALM_PEDC / CODIGO_ALM_ALBC
     CamposOcultosEnPivote: TArray<string>;
+  end;
+
+  // Resultado de IterarARecibirPorAlmacen. Cada record corresponde a una
+  // celda de la matriz pivote (linea-representante x talla) con cantidad
+  // "A recibir" > 0 cuyo almacen efectivo coincide con el elegido.
+  TCeldaARecibir = record
+    LineaPedido  : string;    // LINEA_PEDCLIN real de la fila origen
+    CodigoSku    : string;
+    CodigoAlmacen: string;
+    Cantidad     : Double;
   end;
 
   TEstadoFilaRecibida = (efrIndefinido, efrNada, efrParcial, efrTotal);
@@ -94,6 +108,12 @@ type
     FPivotCantidadesRecibidas: TDictionary<Int64,Double>;
     FPivotTotalPedido        : TDictionary<Integer,Double>;
     FPivotTotalRecibido      : TDictionary<Integer,Double>;
+    // Mapeo celda -> SKU / almacen / linea_pedido para iterar la matriz
+    // y mapear "A recibir" de vuelta a la linea concreta del pedido al
+    // crear el albaran.
+    FCeldaSku                : TDictionary<Int64,string>;
+    FCeldaAlmacen            : TDictionary<Int64,string>;
+    FCeldaLineaPedido        : TDictionary<Int64,string>;
     FPivotColorTexto  : TDictionary<Integer,string>;
     FPivotColorCodigo : TDictionary<Integer,string>;
     FPivotIdAc        : TDictionary<Integer,Integer>;
@@ -115,10 +135,21 @@ type
     property Activo: Boolean read FActivo;
     // True si la config trae campo de cantidad recibida (solo pedidos).
     function PuedeExpandir: Boolean;
-    // Doble alto + pinta recibidos en mitad inferior con color de estado.
+    // Triple/cuadruple alto + pinta Pedida / Pte de recibir / Recibida /
+    // A recibir (editable) en sub-segmentos verticales.
     procedure Expandir;
     procedure Contraer;
     property Expandido: Boolean read FExpandido;
+    // Itera la matriz buscando celdas con cantidad "A recibir" > 0 cuyo
+    // almacen efectivo coincida con ACodigoAlm. Lo usa el flujo "Crear
+    // albaran" para saber que cantidades aplicar.
+    function IterarARecibirPorAlmacen(
+                                  const ACodigoAlm: string): TArray<TCeldaARecibir>;
+    // Limpia las cantidades "A recibir" tecleadas en el grid para el
+    // almacen indicado (las del resto se conservan). Se llama tras
+    // crear el albaran para evitar que el usuario tenga que borrarlas
+    // a mano antes de procesar otro almacen.
+    procedure LimpiarARecibirParaAlmacen(const ACodigoAlm: string);
     procedure CustomDrawCellTalla(Sender: TcxCustomGridTableView;
                 ACanvas: TcxCanvas;
                 AViewInfo: TcxGridTableDataCellViewInfo;
@@ -135,6 +166,11 @@ type
     procedure PublicarCantidadesPivot;
     procedure AplicarVisibilidadColumnasPivot(AModoPivot: Boolean);
     procedure IntercambiarPosicionColorAlmacen(AModoPivot: Boolean);
+    procedure PintarCeldaTalla3Segmentos(
+                ACanvas: TcxCanvas;
+                AViewInfo: TcxGridTableDataCellViewInfo;
+                AColorFondo: TColor;
+                APedida, ARecibida: Double);
   end;
 
 const
@@ -142,8 +178,9 @@ const
   COL_REC_NADA    : TColor = $0099FFFF;  // amarillo
   COL_REC_PARCIAL : TColor = $0099FF99;  // verde
   COL_REC_TOTAL   : TColor = $00FFCC99;  // azul claro
-  // Altura por defecto de fila expandida (px). Permite ver 2 numeros.
-  ALTURA_FILA_EXPANDIDA = 42;
+  // Altura por defecto de fila expandida (px). 3 sub-segmentos:
+  // Pedido / Recibido / A recibir.
+  ALTURA_FILA_EXPANDIDA = 60;
 
 implementation
 
@@ -161,6 +198,9 @@ begin
   FPivotCantidadesRecibidas:= TDictionary<Int64,Double>.Create;
   FPivotTotalPedido        := TDictionary<Integer,Double>.Create;
   FPivotTotalRecibido      := TDictionary<Integer,Double>.Create;
+  FCeldaSku                := TDictionary<Int64,string>.Create;
+  FCeldaAlmacen            := TDictionary<Int64,string>.Create;
+  FCeldaLineaPedido        := TDictionary<Int64,string>.Create;
   FPivotColorTexto         := TDictionary<Integer,string>.Create;
   FPivotColorCodigo        := TDictionary<Integer,string>.Create;
   FPivotIdAc               := TDictionary<Integer,Integer>.Create;
@@ -177,6 +217,9 @@ begin
   FreeAndNil(FPivotCantidadesRecibidas);
   FreeAndNil(FPivotTotalPedido);
   FreeAndNil(FPivotTotalRecibido);
+  FreeAndNil(FCeldaSku);
+  FreeAndNil(FCeldaAlmacen);
+  FreeAndNil(FCeldaLineaPedido);
   FreeAndNil(FPivotColorTexto);
   FreeAndNil(FPivotColorCodigo);
   FreeAndNil(FPivotIdAc);
@@ -348,6 +391,9 @@ begin
   FPivotCantidadesRecibidas.Clear;
   FPivotTotalPedido.Clear;
   FPivotTotalRecibido.Clear;
+  FCeldaSku.Clear;
+  FCeldaAlmacen.Clear;
+  FCeldaLineaPedido.Clear;
   FPivotColorTexto.Clear;
   FPivotColorCodigo.Clear;
   FPivotIdAc.Clear;
@@ -366,27 +412,173 @@ begin
   Result := FCfg.FieldCantidadRecibida <> '';
 end;
 
-// Activa el modo expandido: duplica la altura de fila y deja que
-// CustomDrawCellTalla pinte pedido en mitad superior + recibida en
-// mitad inferior con color de estado. Idempotente.
+// Activa el modo expandido: cuadruple altura de fila y deja que
+// CustomDrawCellTalla pinte 4 sub-segmentos (Pedida / Pte de recibir /
+// Recibida / A recibir). En este modo la columna talla pasa a ser
+// EDITABLE y su Value es la cantidad "A recibir" tecleada por el
+// usuario; la cantidad pedida deja de publicarse en Values[] (la
+// dibuja la lib desde FPivotCantidades). Idempotente.
 procedure TGridPivoteCompra.Expandir;
+var
+  i, recIdx: Integer;
 begin
   if (not FActivo) or (not PuedeExpandir) or FExpandido then Exit;
   if FCfg.Grid = nil then Exit;
+  FCfg.Grid.DataController.BeginUpdate;
+  try
+    // 1. Vaciar Values[] de columnas talla. Eran pedida (publicada por
+    //    PublicarCantidadesPivot en modo plano pivote); ahora son el
+    //    buffer "A recibir".
+    for recIdx := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+      for i := 0 to High(FCfg.ColumnasTallas) do
+        if FCfg.ColumnasTallas[i] <> nil then
+          FCfg.Grid.DataController.Values[recIdx,
+                                  FCfg.ColumnasTallas[i].Index] := Null;
+    // 2. Hacer columnas talla editables.
+    for i := 0 to High(FCfg.ColumnasTallas) do
+      if FCfg.ColumnasTallas[i] <> nil then
+        FCfg.ColumnasTallas[i].Options.Editing := True;
+  finally
+    FCfg.Grid.DataController.EndUpdate;
+  end;
   FAlturaFilaOriginal := FCfg.Grid.OptionsView.DataRowHeight;
-  // Cambiar DataRowHeight dispara la actualizacion del layout del cxGrid
-  // automaticamente: las filas pasan a tener la nueva altura y se
-  // repintan invocando OnCustomDrawCell.
   FCfg.Grid.OptionsView.DataRowHeight := ALTURA_FILA_EXPANDIDA;
   FExpandido := True;
 end;
 
 procedure TGridPivoteCompra.Contraer;
+var
+  i: Integer;
 begin
   if not FExpandido then Exit;
   if FCfg.Grid <> nil then
+  begin
+    // Restaurar altura y desactivar la edicion de columnas talla.
     FCfg.Grid.OptionsView.DataRowHeight := FAlturaFilaOriginal;
+    for i := 0 to High(FCfg.ColumnasTallas) do
+      if FCfg.ColumnasTallas[i] <> nil then
+        FCfg.ColumnasTallas[i].Options.Editing := False;
+  end;
   FExpandido := False;
+  // Re-publicar las cantidades pedidas en Values[] para que la vista
+  // plana pivote vuelva a ensenarlas (en lugar de los Values[]=Null
+  // que dejamos al expandir).
+  PublicarCantidadesPivot;
+end;
+
+// Itera el grid en modo pivote leyendo las celdas talla cuyo Value
+// (cantidad "A recibir") es > 0. Filtra por el almacen indicado. Cada
+// celda no-cero genera un TCeldaARecibir con el SKU/linea/almacen que
+// se mapearon en CargarCachePivot. Si no se esta en pivote o no hay
+// celdas, devuelve [].
+function TGridPivoteCompra.IterarARecibirPorAlmacen(
+                            const ACodigoAlm: string): TArray<TCeldaARecibir>;
+var
+  res: TList<TCeldaARecibir>;
+  colLinea: TcxGridDBColumn;
+  recIdx, i: Integer;
+  vLinea, vARec: Variant;
+  iLinea, iAc: Integer;
+  arr: TArrPosConjunto;
+  iTallaAv: Integer;
+  iKey: Int64;
+  rARec: Double;
+  sSku, sAlm, sLineaRaw: string;
+  c: TCeldaARecibir;
+begin
+  Result := nil;
+  if (not FActivo) or (FCfg.Gestor = nil) or (FCfg.Grid = nil) then Exit;
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then Exit;
+  res := TList<TCeldaARecibir>.Create;
+  try
+    for recIdx := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+    begin
+      vLinea := FCfg.Grid.DataController.Values[recIdx, colLinea.Index];
+      if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
+      iLinea := StrToIntDef(VarToStr(vLinea), 0);
+      if iLinea <= 0 then Continue;
+      if not FPivotIdAc.TryGetValue(iLinea, iAc) then Continue;
+      if iAc <= 0 then Continue;
+      arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+      for i := 0 to High(arr) do
+      begin
+        if i >= FCfg.MaxColumnasTallas then Break;
+        if (i >= Length(FCfg.ColumnasTallas)) or
+           (FCfg.ColumnasTallas[i] = nil) then Continue;
+        vARec := FCfg.Grid.DataController.Values[recIdx,
+                                  FCfg.ColumnasTallas[i].Index];
+        if VarIsNull(vARec) or VarIsEmpty(vARec) then Continue;
+        if VarIsNumeric(vARec) then
+          rARec := vARec
+        else
+          rARec := StrToFloatDef(VarToStr(vARec), 0);
+        if rARec <= 0 then Continue;
+        iTallaAv := arr[i].IdAv;
+        iKey := Int64(iLinea) * 100000 + iTallaAv;
+        // Mapeo celda -> SKU/almacen/linea.
+        if not FCeldaSku.TryGetValue(iKey, sSku) then Continue;
+        if not FCeldaAlmacen.TryGetValue(iKey, sAlm) then Continue;
+        if not FCeldaLineaPedido.TryGetValue(iKey, sLineaRaw) then Continue;
+        // Filtro por almacen.
+        if not SameText(sAlm, ACodigoAlm) then Continue;
+        c.LineaPedido   := sLineaRaw;
+        c.CodigoSku     := sSku;
+        c.CodigoAlmacen := sAlm;
+        c.Cantidad      := rARec;
+        res.Add(c);
+      end;
+    end;
+    Result := res.ToArray;
+  finally
+    FreeAndNil(res);
+  end;
+end;
+
+// Limpia (pone a Null) las celdas "A recibir" cuyo almacen efectivo
+// coincide con ACodigoAlm. Usado tras crear el albaran para que el
+// usuario no tenga que borrar los valores procesados antes de
+// recibir otro almacen.
+procedure TGridPivoteCompra.LimpiarARecibirParaAlmacen(const ACodigoAlm: string);
+var
+  colLinea: TcxGridDBColumn;
+  recIdx, i: Integer;
+  vLinea: Variant;
+  iLinea, iAc: Integer;
+  arr: TArrPosConjunto;
+  iTallaAv: Integer;
+  iKey: Int64;
+  sAlm: string;
+begin
+  if (not FActivo) or (FCfg.Gestor = nil) or (FCfg.Grid = nil) then Exit;
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then Exit;
+  FCfg.Grid.DataController.BeginUpdate;
+  try
+    for recIdx := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+    begin
+      vLinea := FCfg.Grid.DataController.Values[recIdx, colLinea.Index];
+      if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
+      iLinea := StrToIntDef(VarToStr(vLinea), 0);
+      if iLinea <= 0 then Continue;
+      if not FPivotIdAc.TryGetValue(iLinea, iAc) then Continue;
+      if iAc <= 0 then Continue;
+      arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+      for i := 0 to High(arr) do
+      begin
+        if i >= FCfg.MaxColumnasTallas then Break;
+        if (i >= Length(FCfg.ColumnasTallas)) or
+           (FCfg.ColumnasTallas[i] = nil) then Continue;
+        iTallaAv := arr[i].IdAv;
+        iKey := Int64(iLinea) * 100000 + iTallaAv;
+        if FCeldaAlmacen.TryGetValue(iKey, sAlm) and SameText(sAlm, ACodigoAlm) then
+          FCfg.Grid.DataController.Values[recIdx,
+                                FCfg.ColumnasTallas[i].Index] := Null;
+      end;
+    end;
+  finally
+    FCfg.Grid.DataController.EndUpdate;
+  end;
 end;
 
 // Determina el estado de recepcion de una linea representante segun los
@@ -477,6 +669,7 @@ var
   iKeyPivot  : Int64;
   sSelectRecibida: string;
   bTieneRecibida: Boolean;
+  sSku, sAlmLin, sAlmCab, sAlmEfe, sLineaRaw: string;
 begin
   FPivotLineasRepr.Clear;
   FPivotCantidades.Clear;
@@ -493,6 +686,12 @@ begin
     sSelectRecibida := ', IFNULL(L.' + FCfg.FieldCantidadRecibida + ', 0) AS RECIBIDA '
   else
     sSelectRecibida := ', 0 AS RECIBIDA ';
+  // Almacen de cabecera para fallback cuando la linea no lleva el suyo.
+  sAlmCab := '';
+  if (FCfg.FieldAlmacenMaster <> '') and Assigned(FCfg.SourceMaster) and
+     Assigned(FCfg.SourceMaster.DataSet) and FCfg.SourceMaster.DataSet.Active
+     and (not FCfg.SourceMaster.DataSet.IsEmpty) then
+    sAlmCab := FCfg.SourceMaster.DataSet.FieldByName(FCfg.FieldAlmacenMaster).AsString;
   dictRepr := TDictionary<string,Integer>.Create;
   q := TUniQuery.Create(nil);
   try
@@ -511,7 +710,9 @@ begin
       '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
       '                '''') AS COLOR_COD, ' +
       '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
-      '       L.' + FCfg.FieldCantidad + ' AS CANTIDAD ' +
+      '       L.' + FCfg.FieldCantidad + ' AS CANTIDAD, ' +
+      '       L.' + FCfg.FieldSku + ' AS SKU, ' +
+      '       L.' + FCfg.FieldAlmacen + ' AS ALM_LIN ' +
       sSelectRecibida +
       '  FROM ' + FCfg.TablaLineas + ' L ' +
       '  LEFT JOIN fza_atributos_sku SAC ' +
@@ -540,6 +741,14 @@ begin
       iTallaAv  := q.FieldByName('TALLA_AV').AsInteger;
       rCant     := q.FieldByName('CANTIDAD').AsFloat;
       rRecibida := q.FieldByName('RECIBIDA').AsFloat;
+      sSku      := q.FieldByName('SKU').AsString;
+      sAlmLin   := q.FieldByName('ALM_LIN').AsString;
+      sLineaRaw := q.FieldByName('LINEA').AsString;
+      // Almacen efectivo: el de la linea con fallback al de cabecera.
+      if Trim(sAlmLin) <> '' then
+        sAlmEfe := sAlmLin
+      else
+        sAlmEfe := sAlmCab;
       sKey := sArt + '|' + IntToStr(iColorAv);
       if not dictRepr.TryGetValue(sKey, iLineaRepr) then
       begin
@@ -574,6 +783,12 @@ begin
                                 FPivotCantidadesRecibidas[iKeyPivot] + rRecibida
         else
           FPivotCantidadesRecibidas.Add(iKeyPivot, rRecibida);
+        // Mapeo celda -> SKU concreto + almacen + linea_pedido. Cada
+        // (repr, talla) corresponde a una unica linea de pedido (la del
+        // SKU exacto), asi que aqui solo hay que setear (no acumular).
+        FCeldaSku.AddOrSetValue(iKeyPivot, sSku);
+        FCeldaAlmacen.AddOrSetValue(iKeyPivot, sAlmEfe);
+        FCeldaLineaPedido.AddOrSetValue(iKeyPivot, sLineaRaw);
         if iTallaAv > FPivotMaxAvTalla then FPivotMaxAvTalla := iTallaAv;
       end;
       q.Next;
@@ -617,6 +832,10 @@ begin
           FCfg.Grid.DataController.Values[recIdx,
                                 FCfg.ColColorPivot.Index] := FPivotColorTexto[iLinea];
       end;
+      // En modo EXPANDIDO no publicamos pedida en Values[]: la pinta la
+      // lib desde FPivotCantidades, y Values[] es el buffer "A recibir"
+      // que el usuario teclea.
+      if FExpandido then Continue;
       arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
       for i := 0 to High(arr) do
       begin
@@ -758,7 +977,11 @@ begin
   if AViewInfo.GridRecord.Selected then Exit;
   if bEsTalla then
   begin
-    // Para celdas talla validas: pintamos fondo + pedido (top) + recibida (bot).
+    // Celdas talla validas: pintamos fondo + 4 sub-segmentos verticales:
+    //   1. Pedida           (gris, normal)
+    //   2. Pte de recibir   (negro, negrita)
+    //   3. Recibida         (verde, italic)
+    //   4. A recibir        (azul, negrita, EDITABLE)
     colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldIdAcPivot);
     iAc   := 0;
     if colAc <> nil then
@@ -776,34 +999,8 @@ begin
     rRecibida := 0;
     FPivotCantidades.TryGetValue(iKey, rPedido);
     FPivotCantidadesRecibidas.TryGetValue(iKey, rRecibida);
-    if rPedido <> 0 then
-      sPedido := IntToStr(Round(rPedido))
-    else
-      sPedido := '';
-    if rRecibida <> 0 then
-      sRecibida := IntToStr(Round(rRecibida))
-    else
-      sRecibida := '';
-    // Fondo color de estado
-    ACanvas.Brush.Color := ColorFila;
-    ACanvas.FillRect(AViewInfo.Bounds);
-    // Texto pedido en mitad superior (negro normal)
-    iMid    := (AViewInfo.Bounds.Top + AViewInfo.Bounds.Bottom) div 2;
-    rectTop := Rect(AViewInfo.Bounds.Left, AViewInfo.Bounds.Top,
-                    AViewInfo.Bounds.Right, iMid);
-    rectBot := Rect(AViewInfo.Bounds.Left, iMid,
-                    AViewInfo.Bounds.Right, AViewInfo.Bounds.Bottom);
-    ACanvas.Brush.Style := bsClear;
-    ACanvas.Font.Color  := clBlack;
-    ACanvas.Font.Style  := [];
-    DrawText(ACanvas.Handle, PChar(sPedido), Length(sPedido), rectTop,
-             DT_CENTER or DT_VCENTER or DT_SINGLELINE);
-    // Texto recibida en mitad inferior (azul oscuro, italic)
-    ACanvas.Font.Color := clNavy;
-    ACanvas.Font.Style := [fsItalic];
-    DrawText(ACanvas.Handle, PChar(sRecibida), Length(sRecibida), rectBot,
-             DT_CENTER or DT_VCENTER or DT_SINGLELINE);
-    ACanvas.Brush.Style := bsSolid;
+    PintarCeldaTalla3Segmentos(ACanvas, AViewInfo, ColorFila,
+                                rPedido, rRecibida);
     ADone := True;
   end
   else
@@ -813,6 +1010,68 @@ begin
     ACanvas.Brush.Color := ColorFila;
     ACanvas.FillRect(AViewInfo.Bounds);
   end;
+end;
+
+// Pinta las 3 sub-secciones verticales de una celda talla en modo
+// expandido: Pedido / Recibido / A recibir.
+// El "A recibir" se lee de Values[] del DataController (lo edita el
+// usuario en el grid).
+procedure TGridPivoteCompra.PintarCeldaTalla3Segmentos(
+                       ACanvas: TcxCanvas;
+                       AViewInfo: TcxGridTableDataCellViewInfo;
+                       AColorFondo: TColor;
+                       APedida, ARecibida: Double);
+var
+  rARec     : Double;
+  vARec     : Variant;
+  recIdx, colIdx: Integer;
+  b: TRect;
+  hSeg, top1, top2, top3: Integer;
+  rect1, rect2, rect3: TRect;
+  sPed, sRec, sARec: string;
+begin
+  recIdx := AViewInfo.GridRecord.RecordIndex;
+  colIdx := AViewInfo.Item.Index;
+  vARec  := FCfg.Grid.DataController.Values[recIdx, colIdx];
+  rARec  := 0;
+  if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
+  begin
+    if VarIsNumeric(vARec) then
+      rARec := vARec
+    else
+      rARec := StrToFloatDef(VarToStr(vARec), 0);
+  end;
+  if APedida   > 0 then sPed  := IntToStr(Round(APedida))   else sPed  := '';
+  if ARecibida > 0 then sRec  := IntToStr(Round(ARecibida)) else sRec  := '';
+  if rARec     > 0 then sARec := IntToStr(Round(rARec))     else sARec := '';
+  ACanvas.Brush.Color := AColorFondo;
+  ACanvas.FillRect(AViewInfo.Bounds);
+  b    := AViewInfo.Bounds;
+  hSeg := (b.Bottom - b.Top) div 3;
+  top1 := b.Top;
+  top2 := b.Top + hSeg;
+  top3 := b.Top + 2 * hSeg;
+  rect1 := Rect(b.Left, top1, b.Right, top2);
+  rect2 := Rect(b.Left, top2, b.Right, top3);
+  rect3 := Rect(b.Left, top3, b.Right, b.Bottom);
+  ACanvas.Brush.Style := bsClear;
+  // Pedido: gris claro
+  ACanvas.Font.Style  := [];
+  ACanvas.Font.Color  := clGrayText;
+  DrawText(ACanvas.Handle, PChar(sPed), Length(sPed), rect1,
+           DT_CENTER or DT_VCENTER or DT_SINGLELINE);
+  // Recibido: verde italic
+  ACanvas.Font.Color := clGreen;
+  ACanvas.Font.Style := [fsItalic];
+  DrawText(ACanvas.Handle, PChar(sRec), Length(sRec), rect2,
+           DT_CENTER or DT_VCENTER or DT_SINGLELINE);
+  // A recibir: azul negrita (editable)
+  ACanvas.Font.Color := clBlue;
+  ACanvas.Font.Style := [fsBold];
+  DrawText(ACanvas.Handle, PChar(sARec), Length(sARec), rect3,
+           DT_CENTER or DT_VCENTER or DT_SINGLELINE);
+  ACanvas.Font.Style := [];
+  ACanvas.Brush.Style := bsSolid;
 end;
 
 procedure TGridPivoteCompra.EditingCeldaTalla(Sender: TcxCustomGridTableView;
