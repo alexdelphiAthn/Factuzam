@@ -28,7 +28,7 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
   DBAccess, Uni, UniDataConn, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs, inLibGlobalVar,
-  cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida;
+  cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida, inLibDevExp;
 
 type
   TDefCampo = record
@@ -148,6 +148,9 @@ begin
       end;
     end;
   end;
+  // Asignar properties por prefijo (PRECIO_/TOTAL_/IMPORTE_ -> currency €,
+  // PORCENTAJE_ -> %, VALOR_/CANTIDAD_ -> numerico, ESxxx -> checkbox S/N).
+  AplicarPropertiesPorPrefijo(cxGrdDBTabPrin);
   cxGrdDBTabPrin.ApplyBestFit();
 end;
 
