@@ -602,6 +602,17 @@
             <Form>dmAlbaranesCompra</Form>
             <DesignClass>TdmAlbaranesCompra</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPedidosCompra.pas">
+            <Form>frmMtoPedidosCompra</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataPedidosCompra.pas">
+            <Form>dmPedidosCompra</Form>
+            <DesignClass>TdmPedidosCompra</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalSelAlmacenPedido.pas">
+            <Form>frmModalSelAlmacenPedido</Form>
+        </DCCReference>
+        <DCCReference Include="src\Lib\inLibPedidosCompra.pas"/>
         <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
             <Form>frmModalFacturarAlbaranesFechas</Form>
         </DCCReference>
