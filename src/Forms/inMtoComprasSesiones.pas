@@ -278,6 +278,7 @@ type
     procedure unqrySesionLinAfterInsertHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterDeleteHook(DataSet: TDataSet);
+    procedure unqrySesionLinRecargarTallasHook(DataSet: TDataSet);
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
                 const ANombreFam: string = '');
     procedure ProponerPrecioVenta;
@@ -391,6 +392,13 @@ begin
     unqrySesionLin.AfterInsert  := unqrySesionLinAfterInsertHook;
     unqrySesionLin.BeforeDelete := unqrySesionLinBeforeDeleteHook;
     unqrySesionLin.AfterDelete  := unqrySesionLinAfterDeleteHook;
+    // Hook AfterRefresh / AfterOpen: cualquier re-fetch de unqrySesionLin
+    // (Refresh explicito, re-fetch master/detail tras cambios en el master,
+    // navegacion entre sesiones, etc.) resetea los Values[] no-bound del
+    // cxGrid. Sin esta recarga las celdas talla quedan en blanco aunque el
+    // SELECT de CargarCantidadesTodasLineas se haya ejecutado antes.
+    unqrySesionLin.AfterRefresh := unqrySesionLinRecargarTallasHook;
+    unqrySesionLin.AfterOpen    := unqrySesionLinRecargarTallasHook;
     if not unqrySesionLin.Active then unqrySesionLin.Open;
     if not unqrySesionCel.Active then unqrySesionCel.Open;
     // Master/detail de la pestania 'Documentos'. Mismo patron que
@@ -444,6 +452,27 @@ begin
   // lo deja en una sola pasada.
   if Assigned(FGestorTallas) then
     FGestorTallas.CargarCantidadesTodasLineas;
+end;
+
+procedure TfrmMtoComprasSesiones.unqrySesionLinRecargarTallasHook(
+                                                      DataSet: TDataSet);
+begin
+  // AfterRefresh / AfterOpen comparten handler. Cualquier re-fetch del
+  // dataset de lineas (Refresh explicito en btnCrearClick / Distribuidor,
+  // re-fetch master/detail al cambiar de cabecera o al Postear el master,
+  // boton Refresh del navegador) borra los Values[] no-bound de las
+  // columnas talla. El SELECT que CargarCantidadesUnaLinea hace para
+  // recuperarlos solo funciona si se ejecuta DESPUES del re-fetch — y la
+  // tabla `fza_compras_sesiones_celdas` ya tiene la cantidad correcta, lo
+  // unico que falta es volver a pintar el grid.
+  // Diferimos con ForceQueue para que el DataController de cxGrid termine
+  // de procesar la notificacion del re-fetch antes de tocar Values[].
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if Assigned(FGestorTallas) then
+        FGestorTallas.CargarCantidadesTodasLineas;
+    end);
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinBeforeInsertHook(
