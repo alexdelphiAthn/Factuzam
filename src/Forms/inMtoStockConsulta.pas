@@ -61,21 +61,28 @@ uses
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
-  dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox;
+  dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
+  cxRadioGroup;
 
 type
   TEstadoStock = (
     esExistencias,
-    esEntradas,
-    esSalidas,
-    esVentas,
-    esRegularizadas,
-    esEntradaTraspaso,
-    esSalidaTraspaso,
+    esEntradas,            // total de entradas (suma acumulados ENT)
+    esSalidas,             // total de salidas  (suma acumulados SAL)
+    esVentas,              // VE (SAL)
+    esRegularizadas,       // IN (ENT)
+    esEntradaTraspaso,     // TR/AT (ENT)
+    esSalidaTraspaso,      // TR/AT (SAL)
     esPdteRecibir,
     esPdteServir,
-    esPrestadas,
-    esTodoAlaVez
+    esPrestadas,           // stub
+    esTodoAlaVez,
+    // Desglosado:
+    esEntradaCompra,       // AC (ENT)
+    esEntradaDeposito,     // DP (ENT) - incluye préstamo
+    esSalidaDeposito,      // DP (SAL)
+    esSalidaAlbVenta,      // AV (SAL)
+    esEntradaAlbEntrada    // AE (ENT)
   );
 
   TInfoColumna = record
@@ -144,6 +151,14 @@ type
     FEsModoColor: Boolean;
     FEsModoTodo : Boolean;               // estado=esTodoAlaVez en la ultima recarga
     FStyEstado  : array[TEstadoStock] of TcxStyle; // un estilo por estado
+    FEstadosCombo : TList<TEstadoStock>; // mapeo combo.ItemIndex -> estado
+    FModoDesglosado : Boolean;
+    FrbSimplificado : TcxRadioButton;
+    FrbDesglosado   : TcxRadioButton;
+    procedure   PoblarComboEstados;
+    procedure   GuardarModoUsuario;
+    procedure   CargarModoUsuario;
+    procedure   rbModoClick(Sender: TObject);
     procedure CargarAlmacenes;
     procedure CargarColores;
     procedure CargarFoto;
@@ -181,7 +196,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar, inLibAppParam, inLibFotos, inLibAtributosPaleta,
-  inLibGenBusq;
+  inLibGenBusq, inLibUser, UniDataPerfiles;
 
 {$R *.dfm}
 
@@ -196,34 +211,44 @@ uses
 function ColorEstado(AEstado: TEstadoStock): TColor;
 begin
   case AEstado of
-    esExistencias:    Result := clNavy;        // azul oscuro - disponible
-    esEntradas:        Result := clGreen;
-    esSalidas:         Result := clMaroon;
-    esVentas:          Result := clRed;
-    esEntradaTraspaso: Result := clTeal;
-    esSalidaTraspaso:  Result := clPurple;
-    esRegularizadas:  Result := clPurple;      // morado - regularizadas
-    esPdteRecibir:    Result := $000080FF;     // naranja - pte. recibir
-    esPdteServir:     Result := clTeal;        // turquesa - pte. servir
-    esPrestadas:      Result := clGray;        // gris - prestadas
+    esExistencias:        Result := clNavy;
+    esEntradas:           Result := clGreen;
+    esSalidas:            Result := clMaroon;
+    esVentas:             Result := clRed;
+    esEntradaTraspaso:    Result := clTeal;
+    esSalidaTraspaso:     Result := clPurple;
+    esRegularizadas:      Result := clPurple;
+    esPdteRecibir:        Result := $000080FF;
+    esPdteServir:         Result := clTeal;
+    esPrestadas:          Result := clGray;
+    esEntradaCompra:      Result := $00008000;  // verde oscuro
+    esEntradaDeposito:    Result := $00CC9900;  // ámbar
+    esSalidaDeposito:     Result := $0099CCFF;  // amarillo claro
+    esSalidaAlbVenta:     Result := $000000C0;  // rojo oscuro
+    esEntradaAlbEntrada:  Result := $0000C000;  // verde claro
   else
-    Result := clBlack;                          // esTodoAlaVez -> sin color uniforme
+    Result := clBlack;
   end;
 end;
 
 function NombreEstadoCorto(AEstado: TEstadoStock): string;
 begin
   case AEstado of
-    esExistencias:    Result := 'Existencias';
-    esEntradas:       Result := 'Entradas';
-    esSalidas:        Result := 'Salidas';
-    esVentas:         Result := 'Ventas';
-    esRegularizadas:    Result := 'Regulariz.';
-    esEntradaTraspaso:  Result := 'Ent. traspaso';
-    esSalidaTraspaso:   Result := 'Sal. traspaso';
-    esPdteRecibir:      Result := 'Pte. recibir';
-    esPdteServir:       Result := 'Pte. servir';
-    esPrestadas:        Result := 'Prestadas';
+    esExistencias:        Result := 'Existencias';
+    esEntradas:           Result := 'Entradas';
+    esSalidas:            Result := 'Salidas';
+    esVentas:             Result := 'Ventas';
+    esRegularizadas:      Result := 'Regulariz.';
+    esEntradaTraspaso:    Result := 'Ent. traspaso';
+    esSalidaTraspaso:     Result := 'Sal. traspaso';
+    esPdteRecibir:        Result := 'Pte. recibir';
+    esPdteServir:         Result := 'Pte. servir';
+    esPrestadas:          Result := 'Prestadas';
+    esEntradaCompra:      Result := 'Ent. compra';
+    esEntradaDeposito:    Result := 'Ent. depósito';
+    esSalidaDeposito:     Result := 'Sal. depósito';
+    esSalidaAlbVenta:     Result := 'Alb. venta';
+    esEntradaAlbEntrada:  Result := 'Alb. entrada';
   else
     Result := '';
   end;
@@ -268,20 +293,28 @@ begin
   // lookup contra fza_atributos_basicos por texto/codigo y la cache).
   tvStock.OnCustomDrawCell := tvStockCustomDrawCell;
 
-  // Combo de estados
-  cbbEstado.Properties.Items.Clear;
-  cbbEstado.Properties.Items.Add('Existencias');
-  cbbEstado.Properties.Items.Add('Entradas');
-  cbbEstado.Properties.Items.Add('Salidas');
-  cbbEstado.Properties.Items.Add('Ventas');
-  cbbEstado.Properties.Items.Add('Regularizadas');
-  cbbEstado.Properties.Items.Add('Ent. traspaso');
-  cbbEstado.Properties.Items.Add('Sal. traspaso');
-  cbbEstado.Properties.Items.Add('Pdte. de recibir');
-  cbbEstado.Properties.Items.Add('Pdte. de servir');
-  cbbEstado.Properties.Items.Add('Prestadas');
-  cbbEstado.Properties.Items.Add('Todo a la vez');
-  cbbEstado.ItemIndex := 0;
+  // Lista paralela combo -> estado y radios de modo
+  FEstadosCombo := TList<TEstadoStock>.Create;
+  FrbSimplificado := TcxRadioButton.Create(Self);
+  FrbSimplificado.Parent := pnlFiltros;
+  FrbSimplificado.Caption := 'Simplificado';
+  FrbSimplificado.SetBounds(cbbEstado.Left + cbbEstado.Width + 16,
+                            cbbEstado.Top, 110, 18);
+  FrbSimplificado.GroupIndex := 1;
+  FrbSimplificado.OnClick := rbModoClick;
+  FrbDesglosado := TcxRadioButton.Create(Self);
+  FrbDesglosado.Parent := pnlFiltros;
+  FrbDesglosado.Caption := 'Desglosado';
+  FrbDesglosado.SetBounds(FrbSimplificado.Left + FrbSimplificado.Width + 4,
+                          cbbEstado.Top, 110, 18);
+  FrbDesglosado.GroupIndex := 1;
+  FrbDesglosado.OnClick := rbModoClick;
+  CargarModoUsuario;
+  if FModoDesglosado then
+    FrbDesglosado.Checked := True
+  else
+    FrbSimplificado.Checked := True;
+  PoblarComboEstados;
   cbbEstado.Style.TextColor := ColorEstado(esExistencias);
 
   pcVistas.ActivePage := tsPorAlmacen;
@@ -289,6 +322,75 @@ begin
   CrearEstilosEstado;
   CrearLeyenda;
   CargarAlmacenes;
+end;
+
+procedure TfrmStockConsulta.PoblarComboEstados;
+  procedure AddEstado(AEstado: TEstadoStock);
+  begin
+    cbbEstado.Properties.Items.Add(NombreEstadoCorto(AEstado));
+    FEstadosCombo.Add(AEstado);
+  end;
+begin
+  cbbEstado.Properties.Items.BeginUpdate;
+  try
+    cbbEstado.Properties.Items.Clear;
+    FEstadosCombo.Clear;
+    // Siempre presentes (modo simplificado)
+    AddEstado(esExistencias);
+    AddEstado(esEntradas);
+    AddEstado(esSalidas);
+    AddEstado(esPdteServir);
+    AddEstado(esPdteRecibir);
+    AddEstado(esTodoAlaVez);
+    if FModoDesglosado then
+    begin
+      AddEstado(esEntradaCompra);
+      AddEstado(esEntradaTraspaso);
+      AddEstado(esSalidaTraspaso);
+      AddEstado(esEntradaDeposito);
+      AddEstado(esSalidaDeposito);
+      AddEstado(esVentas);
+      AddEstado(esRegularizadas);
+      AddEstado(esSalidaAlbVenta);
+      AddEstado(esEntradaAlbEntrada);
+      AddEstado(esPrestadas);
+    end;
+  finally
+    cbbEstado.Properties.Items.EndUpdate;
+  end;
+  cbbEstado.ItemIndex := 0;
+end;
+
+procedure TfrmStockConsulta.rbModoClick(Sender: TObject);
+begin
+  FModoDesglosado := FrbDesglosado.Checked;
+  PoblarComboEstados;
+  GuardarModoUsuario;
+  RecargarConsulta;
+end;
+
+procedure TfrmStockConsulta.CargarModoUsuario;
+var
+  dic: TProfileDicc;
+begin
+  dic := nil;
+  try
+    GetFormUserProfile(dic, 'frmStockConsulta',
+                       inLibGlobalVar.oUser, inLibGlobalVar.oGroup);
+    FModoDesglosado := SameText(
+      GetPerfilValueDef(dic, 'ModoDesglosado', 'N'), 'S');
+  finally
+    if dic <> nil then
+      FreeAndNil(dic);
+  end;
+end;
+
+procedure TfrmStockConsulta.GuardarModoUsuario;
+begin
+  if odmPerfiles <> nil then
+    odmPerfiles.GrabarPerfil(inLibGlobalVar.oUser, 'frmStockConsulta',
+                             'ModoDesglosado',
+                             IfThen(FModoDesglosado, 'S', 'N'));
 end;
 
 // Crea un TcxStyle por estado con su TextColor. Los asignamos como
@@ -351,6 +453,7 @@ begin
   end;
   FreeAndNil(FDs);
   FreeAndNil(FColsDin);
+  FreeAndNil(FEstadosCombo);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -671,127 +774,74 @@ end;
 // CANTIDAD) + un literal ESTADO_NUM que identifica el estado origen para
 // que en modo "Todo a la vez" podamos hacer UNION ALL y agrupar tambien
 // por ESTADO_NUM en el pivote exterior.
+// Expresión del campo CANTIDAD (lectura directa del acumulado en
+// fza_articulos_stockactual). Para esPdteRecibir/esPrestadas se gestiona
+// en EstadoBaseSelectFor con una rama propia.
+function CampoCantidadStock(AEstado: TEstadoStock): string;
+begin
+  case AEstado of
+    esExistencias:        Result := 'STK.CANTIDAD_STK';
+    esEntradas:           Result :=
+      'STK.CANTIDAD_ENT_COMPRA_STK + STK.CANTIDAD_ENT_TRASPASO_STK + ' +
+      'STK.CANTIDAD_ENT_DEPOSITO_STK + STK.CANTIDAD_ENT_REGULAR_STK + ' +
+      'STK.CANTIDAD_ENT_ALBENTRADA_STK';
+    esSalidas:            Result :=
+      'STK.CANTIDAD_SAL_TRASPASO_STK + STK.CANTIDAD_SAL_DEPOSITO_STK + ' +
+      'STK.CANTIDAD_SAL_VENTA_STK + STK.CANTIDAD_SAL_ALBVENTA_STK';
+    esVentas:             Result := 'STK.CANTIDAD_SAL_VENTA_STK';
+    esRegularizadas:      Result := 'STK.CANTIDAD_ENT_REGULAR_STK';
+    esEntradaTraspaso:    Result := 'STK.CANTIDAD_ENT_TRASPASO_STK';
+    esSalidaTraspaso:     Result := 'STK.CANTIDAD_SAL_TRASPASO_STK';
+    esEntradaCompra:      Result := 'STK.CANTIDAD_ENT_COMPRA_STK';
+    esEntradaDeposito:    Result := 'STK.CANTIDAD_ENT_DEPOSITO_STK';
+    esSalidaDeposito:     Result := 'STK.CANTIDAD_SAL_DEPOSITO_STK';
+    esSalidaAlbVenta:     Result := 'STK.CANTIDAD_SAL_ALBVENTA_STK';
+    esEntradaAlbEntrada:  Result := 'STK.CANTIDAD_ENT_ALBENTRADA_STK';
+    esPdteServir:         Result := 'STK.CANTIDAD_PTE_SERVIR_STK';
+  else
+    Result := '0';
+  end;
+end;
+
 function TfrmStockConsulta.EstadoBaseSelectFor(AEstado: TEstadoStock): string;
+const
+  CSelectSkuAttrs =
+    'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
+    '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
+    '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
+    '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+    '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
+    '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
+    '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+    '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+    '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
+    '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
+    '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
+    '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+    '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ';
 var
-  sAlms, sEstadoNum: string;
+  sAlms, sEstadoNum, sCampo: string;
 begin
   sAlms      := AlmacenesSeleccionadosSQL;
   sEstadoNum := IntToStr(Ord(AEstado));
-  case AEstado of
-    esExistencias:
-      Result :=
-        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
-        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
-        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
-        '       STK.CODIGO_ALM_STK AS ALM, ' +
-        '       SUM(STK.CANTIDAD_STK) AS CANTIDAD, ' +
-        '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
-        '  FROM fza_articulos_skus SKU ' +
-        '  JOIN fza_articulos_stockactual STK ' +
-        '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
-        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-        '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
-        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
-    esPdteRecibir:
-      Result :=
-        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
-        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
-        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
-        '       PDR.CODIGO_ALM_PDR AS ALM, ' +
-        '       SUM(PDR.CANTIDAD_PDR) AS CANTIDAD, ' +
-        '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
-        '  FROM fza_articulos_skus SKU ' +
-        '  JOIN fza_articulos_pdte_recibir PDR ' +
-        '    ON PDR.CODIGO_UNIDAD_PDR = SKU.CODIGO_UNIDAD_SKU ' +
-        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-        '   AND PDR.CODIGO_ALM_PDR IN (' + sAlms + ') ' +
-        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, PDR.CODIGO_ALM_PDR';
-    esPdteServir:
-      Result :=
-        'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
-        '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
-        '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
-        '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
-        '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-        '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
-        '       STK.CODIGO_ALM_STK AS ALM, ' +
-        '       SUM(STK.CANTIDAD_PTE_SERVIR_STK) AS CANTIDAD, ' +
-        '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
-        '  FROM fza_articulos_skus SKU ' +
-        '  JOIN fza_articulos_stockactual STK ' +
-        '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
-        ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-        '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
-        ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
-    esEntradas, esSalidas, esVentas, esRegularizadas:
-      begin
-        Result :=
-          'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
-          '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
-          '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
-          '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-          '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
-          '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
-          '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-          '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-          '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
-          '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
-          '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-          '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-          '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ' +
-          '       M.CODIGO_ALM_MOV AS ALM, ' +
-          '       SUM(M.CANTIDAD_MOV) AS CANTIDAD, ' +
-          '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
-          '  FROM fza_articulos_skus SKU ' +
-          '  JOIN fza_movimientos_almacen M ' +
-          '    ON M.CODIGO_UNIDAD_MOV = SKU.CODIGO_UNIDAD_SKU ' +
-          ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-          '   AND M.CODIGO_ALM_MOV IN (' + sAlms + ') ' +
-          '   AND M.ESACTIVO_MOV   = ''S'' ';
-        case AEstado of
-          esEntradas:        Result := Result + '   AND M.TIPO_MOV = ''E'' ';
-          esSalidas:         Result := Result + '   AND M.TIPO_MOV = ''S'' ';
-          esVentas:          Result := Result + '   AND M.TIPO_DOC_MOV = ''VE'' ';
-          esRegularizadas:   Result := Result + '   AND M.TIPO_DOC_MOV = ''IN'' ';
-          esEntradaTraspaso: Result := Result + '   AND M.TIPO_MOV = ''E'' ' +
-                                                '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
-          esSalidaTraspaso:  Result := Result + '   AND M.TIPO_MOV = ''S'' ' +
-                                                '   AND M.TIPO_DOC_MOV IN (''TR'',''AT'') ';
-        end;
-        Result := Result +
-          ' GROUP BY SKU.CODIGO_UNIDAD_SKU, M.CODIGO_ALM_MOV';
-      end;
-  else
-    // esPrestadas / esTodoAlaVez no se construyen aqui directamente:
-    // - esPrestadas: stub vacio (queda para futura iteracion).
-    // - esTodoAlaVez: lo agrega EstadoBaseSelect como UNION ALL.
+  // Pdte. recibir: viene de tabla aparte, no del acumulado
+  if AEstado = esPdteRecibir then
+  begin
+    Result := CSelectSkuAttrs +
+      '       PDR.CODIGO_ALM_PDR AS ALM, ' +
+      '       SUM(PDR.CANTIDAD_PDR) AS CANTIDAD, ' +
+      '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_articulos_pdte_recibir PDR ' +
+      '    ON PDR.CODIGO_UNIDAD_PDR = SKU.CODIGO_UNIDAD_SKU ' +
+      ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+      '   AND PDR.CODIGO_ALM_PDR IN (' + sAlms + ') ' +
+      ' GROUP BY SKU.CODIGO_UNIDAD_SKU, PDR.CODIGO_ALM_PDR';
+    Exit;
+  end;
+  // esPrestadas: stub. esTodoAlaVez: lo agrega EstadoBaseSelect.
+  if (AEstado = esPrestadas) or (AEstado = esTodoAlaVez) then
+  begin
     Result :=
       'SELECT ''''       AS CODIGO_UNIDAD_SKU, ' +
       '       NULL       AS COLOR_AV, ' +
@@ -801,7 +851,20 @@ begin
       '       0          AS CANTIDAD, ' +
       '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
       '  FROM dual WHERE 0';
+    Exit;
   end;
+  // Resto: lectura directa del acumulado en fza_articulos_stockactual
+  sCampo := CampoCantidadStock(AEstado);
+  Result := CSelectSkuAttrs +
+    '       STK.CODIGO_ALM_STK AS ALM, ' +
+    '       SUM(' + sCampo + ') AS CANTIDAD, ' +
+    '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
+    '  FROM fza_articulos_skus SKU ' +
+    '  JOIN fza_articulos_stockactual STK ' +
+    '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
+    ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+    '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
+    ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
 end;
 
 // En modo "Todo a la vez" hace UNION ALL de los 7 estados con datos
@@ -809,11 +872,23 @@ end;
 // recibir, pte. servir). esPrestadas queda fuera por ser stub.
 function TfrmStockConsulta.EstadoBaseSelect: string;
 const
-  ESTADOS_TODO: array[0..6] of TEstadoStock = (
-    esExistencias, esEntradas, esSalidas, esVentas, esRegularizadas,
-    esPdteRecibir, esPdteServir);
+  // Modo simplificado: solo totales y pendientes
+  ESTADOS_TODO_SIMPLE: array[0..4] of TEstadoStock = (
+    esExistencias, esEntradas, esSalidas,
+    esPdteServir, esPdteRecibir);
+  // Modo desglosado: añade subtipos
+  ESTADOS_TODO_FULL: array[0..14] of TEstadoStock = (
+    esExistencias, esEntradas, esSalidas,
+    esPdteServir, esPdteRecibir,
+    esEntradaCompra,
+    esEntradaTraspaso, esSalidaTraspaso,
+    esEntradaDeposito, esSalidaDeposito,
+    esVentas, esRegularizadas,
+    esSalidaAlbVenta, esEntradaAlbEntrada,
+    esPrestadas);
 var
   i: Integer;
+  est: TEstadoStock;
 begin
   if EstadoActual <> esTodoAlaVez then
   begin
@@ -821,10 +896,23 @@ begin
     Exit;
   end;
   Result := '';
-  for i := Low(ESTADOS_TODO) to High(ESTADOS_TODO) do
+  if FModoDesglosado then
   begin
-    if Result <> '' then Result := Result + ' UNION ALL ';
-    Result := Result + '(' + EstadoBaseSelectFor(ESTADOS_TODO[i]) + ')';
+    for i := Low(ESTADOS_TODO_FULL) to High(ESTADOS_TODO_FULL) do
+    begin
+      est := ESTADOS_TODO_FULL[i];
+      if Result <> '' then Result := Result + ' UNION ALL ';
+      Result := Result + '(' + EstadoBaseSelectFor(est) + ')';
+    end;
+  end
+  else
+  begin
+    for i := Low(ESTADOS_TODO_SIMPLE) to High(ESTADOS_TODO_SIMPLE) do
+    begin
+      est := ESTADOS_TODO_SIMPLE[i];
+      if Result <> '' then Result := Result + ' UNION ALL ';
+      Result := Result + '(' + EstadoBaseSelectFor(est) + ')';
+    end;
   end;
 end;
 
@@ -1184,19 +1272,14 @@ end;
 // ---------------------------------------------------------------------------
 function TfrmStockConsulta.EstadoActual: TEstadoStock;
 begin
-  case cbbEstado.ItemIndex of
-    0: Result := esExistencias;
-    1: Result := esEntradas;
-    2: Result := esSalidas;
-    3: Result := esVentas;
-    4: Result := esRegularizadas;
-    5: Result := esPdteRecibir;
-    6: Result := esPdteServir;
-    7: Result := esPrestadas;
-    8: Result := esTodoAlaVez;
+  // Mapeo basado en la lista paralela poblada por PoblarComboEstados,
+  // que cambia según el modo Simplificado/Desglosado.
+  if (FEstadosCombo <> nil) and
+     (cbbEstado.ItemIndex >= 0) and
+     (cbbEstado.ItemIndex < FEstadosCombo.Count) then
+    Result := FEstadosCombo[cbbEstado.ItemIndex]
   else
     Result := esExistencias;
-  end;
 end;
 
 procedure TfrmStockConsulta.RecargarConsulta;

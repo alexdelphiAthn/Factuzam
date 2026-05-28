@@ -506,7 +506,7 @@ begin
               (DataSet.FindField(
                 'PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
      end;
-     // Cantidad por defecto = 1, el usuario la modifica antes de grabar
+     // Cantidad por defecto = 1
      if FindField('CANTIDAD_FACLIN') <> nil then
        FindField('CANTIDAD_FACLIN').AsCurrency := 1;
   end;
@@ -1206,6 +1206,21 @@ begin
                                 unqryTablaG.FieldByName(fnrofac).AsString;
     ExecSQL;
     Free;
+  end;
+  // Borrar movimientos asociados via SP (decrementa stock + acumulados)
+  var qMov := TUniQuery.Create(Self);
+  try
+    qMov.Connection := inLibGlobalVar.oConn;
+    qMov.SQL.Text :=
+      'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
+    qMov.ParamByName('t').AsString := 'FC';
+    qMov.ParamByName('s').AsString :=
+                            unqryTablaG.FieldByName(fseriefac).AsString;
+    qMov.ParamByName('n').AsString :=
+                            unqryTablaG.FieldByName(fnrofac).AsString;
+    qMov.ExecSQL;
+  finally
+    FreeAndNil(qMov);
   end;
 end;
 
