@@ -308,13 +308,11 @@ begin
     qPares.Open;
     if qPares.Eof then
       Exit;  // nada que revertir
-    // 2. Borrar los movimientos. El stockactual queda inconsistente
-    //    temporalmente: se restaura en el paso 3 via SP de recalculo.
+    // 2. Borrar los movimientos llamando al SP, que decrementa
+    //    CANTIDAD_STK + acumuladores por subtipo en una transacción.
     qExec.SQL.Text :=
-      'DELETE FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
-      '   AND SERIE_DOC_MOV  = :s ' +
-      '   AND NUMERO_DOC_MOV = :n';
+      'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
+    qExec.ParamByName('t').AsString := 'AC';
     qExec.ParamByName('s').AsString := ASerieAlbc;
     qExec.ParamByName('n').AsString := ANumAlbc;
     qExec.ExecSQL;
