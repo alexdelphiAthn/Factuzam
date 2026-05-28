@@ -1207,6 +1207,21 @@ begin
     ExecSQL;
     Free;
   end;
+  // Borrar movimientos asociados via SP (decrementa stock + acumulados)
+  var qMov := TUniQuery.Create(Self);
+  try
+    qMov.Connection := inLibGlobalVar.oConn;
+    qMov.SQL.Text :=
+      'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
+    qMov.ParamByName('t').AsString := 'FC';
+    qMov.ParamByName('s').AsString :=
+                            unqryTablaG.FieldByName(fseriefac).AsString;
+    qMov.ParamByName('n').AsString :=
+                            unqryTablaG.FieldByName(fnrofac).AsString;
+    qMov.ExecSQL;
+  finally
+    FreeAndNil(qMov);
+  end;
 end;
 
 procedure TdmFacturas.unqryTablaGAfterInsert(DataSet: TDataSet);
