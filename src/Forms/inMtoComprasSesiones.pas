@@ -1426,19 +1426,19 @@ var
   frmSel : TfrmModalSelFamilia;
 begin
   inherited;
-  // Sistema tallas (cxLookupComboBox auto-desplegado): el primer Enter
-  // cierra el dropdown internamente sin disparar PostEditValue, asi que
-  // el ID_AC seleccionado no llega al dataset hasta que el usuario hace
-  // un segundo Enter o pulsa fuera. Mismo problema documentado en
-  // inMtoCajaOpe.pas:1655 para el cxExtLookupComboBox de la columna
-  // articulo. Cerramos el dropdown explicitamente y forzamos PostEditValue
-  // para que OnEditValueChanged se dispare con la seleccion confirmada.
+  // Sistema tallas (cxLookupComboBox auto-desplegado): si forzamos
+  // DroppedDown:=False + PostEditValue, DevExpress lo interpreta como
+  // Escape y cancela la fila resaltada — el dataset recibe el valor
+  // antiguo (o vacio) en lugar de la seleccion. Tab es la tecla de
+  // confirmacion nativa del cxLookupComboBox: cierra el desplegable,
+  // postea el valor y, gracias a OptionsBehavior.FocusCellOnTab, avanza
+  // el foco a la celda contigua. Transformamos VK_RETURN en VK_TAB
+  // solo cuando el desplegable esta abierto.
   if (Key = VK_RETURN) and (Shift = []) and (AItem = dbcLinTallas) and
      (AEdit is TcxCustomDropDownEdit) then
   begin
     if TcxCustomDropDownEdit(AEdit).DroppedDown then
-      TcxCustomDropDownEdit(AEdit).DroppedDown := False;
-    AEdit.PostEditValue;
+      Key := VK_TAB;
   end;
   if (Key <> VK_F3) or (Shift <> []) then Exit;
   if not Assigned(AItem) then Exit;
