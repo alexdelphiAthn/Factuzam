@@ -389,7 +389,6 @@ procedure TfrmMtoGen.AplicarEtiquetas;
 var
   i:integer;
   cxGrid: TcxCustomGridTableView;
-  oDBCtrl: TcxGridDBDataController;
   oGrids: TList<TcxCustomGridTableView>;
 begin
   // El dataset puede ser TUniQuery (mantenimientos normales) o
@@ -421,15 +420,16 @@ begin
                           cxGrid.Name
                             + '__oCreateItems', 'False')), 'True') then
         begin
-          oDBCtrl := GetDBDataController(cxGrid);
-          if oDBCtrl <> nil then
-          begin
-            cxGrid.BeginUpdate;
-            try
-              oDBCtrl.CreateAllItems;
-            finally
-              cxGrid.EndUpdate;
-            end;
+          // Creamos sólo las columnas para los Fields que aún no estén en
+          // la vista. La llamada antigua a DataController.CreateAllItems
+          // duplicaba todas las columnas existentes (del DFM y de la
+          // ejecución previa de CrearTablaPrincipal) en cada apertura del
+          // form, lo que descolocaba el orden tras Alt+F12.
+          cxGrid.BeginUpdate;
+          try
+            CrearItemsFaltantes(cxGrid);
+          finally
+            cxGrid.EndUpdate;
           end;
         end;
       end;
