@@ -133,6 +133,12 @@ type
     FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
+    // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
+    // su Edit + set field + Post dispara OnDataChange tres veces, y entre
+    // el Edit y el set la cabecera todavia tiene el ESPIVOTE viejo. Sin
+    // este guardia el hook auto-toggle veria "field='N' y Activo=True"
+    // y desactivaria justo despues de activar.
+    FInToggleClick   : Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -411,25 +417,32 @@ var
 begin
   inherited;
   if (dmmPedidosCompra = nil) or (FPivote = nil) then Exit;
-  // No llamamos a RefrescarVisibilidadTallas: Activar/Desactivar de la
-  // libreria ya ajustan la visibilidad de las columnas talla y publican
-  // cantidades en el orden correcto (visibilidad ANTES de publicar, para
-  // que cxGrid no limpie los Values[] no-bound).
-  if not FPivote.Activo then
-  begin
-    if not FPivote.ValidarPivotePosible(sMensaje) then
+  // Guardia de reentrada: bloquea el auto-toggle del data-change hook
+  // mientras PersistirPreferenciaPivote esta editando+posting la cabecera.
+  // Sin esto, el Edit dispara OnDataChange con la cabecera todavia con
+  // el valor viejo, el hook ve discrepancia con Activo y vuelve a llamar
+  // a este handler.
+  if FInToggleClick then Exit;
+  FInToggleClick := True;
+  try
+    if not FPivote.Activo then
     begin
-      MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-      Exit;
-    end;
-    FPivote.Activar;
-  end
-  else
-    FPivote.Desactivar;
-  // Sender=nil: llamada automatica desde el data-change hook, no
-  // re-escribir la preferencia en la cabecera.
-  if Sender <> nil then
-    PersistirPreferenciaPivote;
+      if not FPivote.ValidarPivotePosible(sMensaje) then
+      begin
+        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        Exit;
+      end;
+      FPivote.Activar;
+    end
+    else
+      FPivote.Desactivar;
+    // Sender=nil: llamada automatica desde el data-change hook, no
+    // re-escribir la preferencia en la cabecera.
+    if Sender <> nil then
+      PersistirPreferenciaPivote;
+  finally
+    FInToggleClick := False;
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.btnAtributosColumnaClick(Sender: TObject);
