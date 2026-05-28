@@ -285,11 +285,26 @@ begin
   FCfg.SourceLineas.OnFilterRecord := FilterRecord;
   FCfg.SourceLineas.Filtered       := True;
   AplicarVisibilidadColumnasPivot(True);
+  // IMPORTANTE: RecalcularMaxColumnas pone Visible=True/False en las
+  // columnas talla. Cambiar Visible de una columna no-bound en cxGrid
+  // limpia su Values[] en el DataController. Por eso tiene que ir
+  // ANTES de PublicarCantidadesPivot — si publicasemos primero y luego
+  // ajustasemos visibilidad, los valores recien publicados se perderian
+  // (asi se rompio cuando se introdujo esta libreria — antes el form
+  // hacia Visibilidad -> Publicar y funcionaba; el orden hay que
+  // respetarlo).
+  if Assigned(FCfg.Gestor) then
+  begin
+    FCfg.Gestor.RecalcularMaxColumnas;
+    FCfg.Gestor.ActualizarCaptionsLineaActiva;
+  end;
   PublicarCantidadesPivot;
   FActivo := True;
 end;
 
 procedure TGridPivoteCompra.Desactivar;
+var
+  i: Integer;
 begin
   if FCfg.SourceLineas <> nil then
   begin
@@ -302,6 +317,10 @@ begin
   FPivotColorCodigo.Clear;
   FPivotIdAc.Clear;
   AplicarVisibilidadColumnasPivot(False);
+  // Ocultar todas las columnas talla al volver a vista plana.
+  for i := 0 to High(FCfg.ColumnasTallas) do
+    if FCfg.ColumnasTallas[i] <> nil then
+      FCfg.ColumnasTallas[i].Visible := False;
   FActivo := False;
 end;
 
@@ -321,6 +340,8 @@ begin
   FCfg.SourceLineas.Filtered := False;
   CargarCachePivot;
   FCfg.SourceLineas.Filtered := True;
+  // RecalcularMaxColumnas antes de PublicarCantidadesPivot por el motivo
+  // explicado en Activar (cambiar Visible limpia Values[]).
   if Assigned(FCfg.Gestor) then
   begin
     FCfg.Gestor.InvalidarCache;
