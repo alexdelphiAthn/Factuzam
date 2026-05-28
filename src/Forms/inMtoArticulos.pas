@@ -510,6 +510,7 @@ type
     procedure CrearTablaPrincipal; override;
     procedure ResetForm;  override;
     procedure PrepararBusquedaExterna(const ABusq: string); override;
+    procedure AplicarLayoutInstanciaBusqueda; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
     // Recorre las columnas de tvStock y, para las que contienen valores que
@@ -2090,6 +2091,15 @@ begin
   pnlFiltrosArt.Height := 22;
   btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
   inherited;
+end;
+
+procedure TfrmMtoArticulos.AplicarLayoutInstanciaBusqueda;
+begin
+  inherited;
+  // Precarga: oculta el panel de Filtros de carga (cabecera + contenido).
+  // En instancia 1 ya viene precargado el articulo concreto de la busqueda,
+  // no tiene sentido permitir reabrir la lista con otros filtros.
+  pnlFiltrosArt.Visible := False;
 end;
 
 procedure TfrmMtoArticulos.btnToggleFiltrosArtClick(Sender: TObject);

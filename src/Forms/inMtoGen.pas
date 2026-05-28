@@ -210,6 +210,13 @@ type
     pkFieldName:string;
     tsFichCab:TcxTabSheet;
     tsFichBut:TcxTabSheet;
+    // True cuando este Mto es la instancia 1 reservada para busquedas
+    // externas (Ctrl+A desde otra pantalla, navegar a una factura, etc.).
+    // Activa el layout reducido: sin Lista, sin Busqueda, sin Precarga,
+    // sin Exportar a Excel, y navegador limitado a Edit/Post/Cancel/
+    // Delete/Insert. Las shortcuts Alt+F12/Ctrl+F12/Ctrl+F10 siguen
+    // funcionando porque viven en FormKeyDown, no dependen del boton.
+    EsInstanciaBusqueda: Boolean;
     procedure SimulateTabKey;
     procedure ProcesarPerfiles;
     procedure AplicarEtiquetas;     virtual;
@@ -228,6 +235,12 @@ type
     // Hook para que descendientes amplíen filtros antes de una búsqueda
     // externa (Ctrl+A desde otra pantalla). Por defecto no hace nada.
     procedure PrepararBusquedaExterna(const ABusq: string); virtual;
+    // Aplica el layout reducido propio de la instancia 1 (la reservada
+    // para busquedas). Lo invoca inLibShowMto cuando crea la instancia
+    // 1, antes del Show. Los descendientes pueden override (llamando a
+    // inherited) para esconder controles propios — por ejemplo Articulos
+    // oculta el panel pnlFiltrosArt de Filtros de carga (Precarga).
+    procedure AplicarLayoutInstanciaBusqueda; virtual;
     // Resuelve los codigos ART y SKU del registro activo en `dsTablaG`.
     // Recorre la lista de alias habituales (CODIGO_ART_*, CODIGO_UNIDAD_*).
     // Los Mtos que necesiten otra fuente pueden sobreescribirlo (p.ej.
@@ -778,6 +791,42 @@ begin
         Trim(aCampos[i]) + ' = ' + QuotedStr(Trim(aValores[i])), pcAnd);
   end;
   unqry.SQL.Text := vParser.ToString;
+end;
+
+procedure TfrmMtoGen.AplicarLayoutInstanciaBusqueda;
+begin
+  // Lista: la instancia de busqueda llega directa a la Ficha del registro
+  // localizado, no se navega por el grid.
+  tsLista.TabVisible := False;
+  // Busqueda global: el filtro ya viene impuesto por PrepararBusquedaExterna.
+  edtBusqGlobal.Visible    := False;
+  lblTextoaBuscar.Visible  := False;
+  rbBBDD.Visible           := False;
+  rbGrid.Visible           := False;
+  // Exportar a Excel y botones de configuracion de grid: no aplican sin
+  // grid visible. Las shortcuts Alt+F12/Ctrl+F12/Ctrl+F10 siguen vivas en
+  // FormKeyDown — disparan los handlers sin necesidad del boton visible.
+  sbExportExcel.Visible := False;
+  sbGrabarGrid.Visible  := False;
+  sbResetGrid.Visible   := False;
+  sbBestFit.Visible     := False;
+  // Navegador reducido a Insert/Delete/Edit/Post/Cancel.
+  nvNavegador.Buttons.First.Visible        := False;
+  nvNavegador.Buttons.PriorPage.Visible    := False;
+  nvNavegador.Buttons.Prior.Visible        := False;
+  nvNavegador.Buttons.Next.Visible         := False;
+  nvNavegador.Buttons.NextPage.Visible     := False;
+  nvNavegador.Buttons.Last.Visible         := False;
+  nvNavegador.Buttons.Insert.Visible       := True;
+  nvNavegador.Buttons.Append.Visible       := False;
+  nvNavegador.Buttons.Delete.Visible       := True;
+  nvNavegador.Buttons.Edit.Visible         := True;
+  nvNavegador.Buttons.Post.Visible         := True;
+  nvNavegador.Buttons.Cancel.Visible       := True;
+  nvNavegador.Buttons.Refresh.Visible      := False;
+  nvNavegador.Buttons.SaveBookmark.Visible := False;
+  nvNavegador.Buttons.GotoBookmark.Visible := False;
+  nvNavegador.Buttons.Filter.Visible       := False;
 end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;

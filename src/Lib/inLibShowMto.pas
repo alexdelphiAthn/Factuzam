@@ -124,6 +124,17 @@ begin
         FormClass := TFormBaseClass(GetTypeData(lType.Handle)^.ClassType);
         TargetForm := FormClass.Create(frmMain);
         TargetForm.Hide;
+        // Si es la instancia 1 (reservada para busquedas), marcar el flag
+        // y recortar el layout antes de embeber: sin Lista, sin Busqueda,
+        // sin Precarga, sin Exportar a Excel; navegador con solo Insert/
+        // Delete/Edit/Post/Cancel. Asi el Show muestra ya la UI reducida.
+        if (TargetForm is TfrmMtoGen) and
+           (ofzaF.NumVentanas > 1) and
+           (NewCaption = ofzaF.Caption + ' 1') then
+        begin
+          TfrmMtoGen(TargetForm).EsInstanciaBusqueda := True;
+          TfrmMtoGen(TargetForm).AplicarLayoutInstanciaBusqueda;
+        end;
         frmMain.FormManager.EmbedForm(TargetForm, NewCaption, True);
         inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
       end
