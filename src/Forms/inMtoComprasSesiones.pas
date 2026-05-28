@@ -1426,6 +1426,20 @@ var
   frmSel : TfrmModalSelFamilia;
 begin
   inherited;
+  // Sistema tallas (cxLookupComboBox auto-desplegado): el primer Enter
+  // cierra el dropdown internamente sin disparar PostEditValue, asi que
+  // el ID_AC seleccionado no llega al dataset hasta que el usuario hace
+  // un segundo Enter o pulsa fuera. Mismo problema documentado en
+  // inMtoCajaOpe.pas:1655 para el cxExtLookupComboBox de la columna
+  // articulo. Cerramos el dropdown explicitamente y forzamos PostEditValue
+  // para que OnEditValueChanged se dispare con la seleccion confirmada.
+  if (Key = VK_RETURN) and (Shift = []) and (AItem = dbcLinTallas) and
+     (AEdit is TcxCustomDropDownEdit) then
+  begin
+    if TcxCustomDropDownEdit(AEdit).DroppedDown then
+      TcxCustomDropDownEdit(AEdit).DroppedDown := False;
+    AEdit.PostEditValue;
+  end;
   if (Key <> VK_F3) or (Shift <> []) then Exit;
   if not Assigned(AItem) then Exit;
   // F3 abre el selector tanto desde Familia como desde el Codigo articulo:
