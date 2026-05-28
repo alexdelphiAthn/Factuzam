@@ -61,10 +61,19 @@ procedure BorrarPdteRecibirDesdePedido(AConn: TUniConnection;
 //
 // Devuelve True si el albaran se creo. Si no habia lineas pendientes
 // para el almacen, devuelve False y AMensaje explica el motivo.
+//
+// Los parametros ARefPrv, AFechaRecepcion y AIdPvTemporada vienen del
+// modal "Crear albaran" y sobreescriben los defaults del pedido
+// (REF_PROVEEDOR_PEDC, FECHA_PEDC, etc). Si ARefPrv='' se usa el del
+// pedido; si AFechaRecepcion=0 se usa la del pedido; si
+// AIdPvTemporada=0 no se aplica temporada explicita.
 function CrearAlbaranDesdePedido(AConn: TUniConnection;
                                   const ASeriePedc, ANumPedc,
                                         ACodigoAlm, ASerieAlbc,
                                         AUsuario: string;
+                                  const ARefPrv: string;
+                                  AFechaRecepcion: TDateTime;
+                                  AIdPvTemporada: Integer;
                                   out ANumAlbc: string;
                                   out AMensaje: string): Boolean;
 
@@ -291,6 +300,9 @@ function CrearAlbaranDesdePedido(AConn: TUniConnection;
                                   const ASeriePedc, ANumPedc,
                                         ACodigoAlm, ASerieAlbc,
                                         AUsuario: string;
+                                  const ARefPrv: string;
+                                  AFechaRecepcion: TDateTime;
+                                  AIdPvTemporada: Integer;
                                   out ANumAlbc: string;
                                   out AMensaje: string): Boolean;
 var
@@ -373,7 +385,12 @@ begin
       '   TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'SELECT :nalbc, :salbc, IFNULL(P.FECHA_PEDC, CURDATE()), ''ABIERTO'', ' +
+      // Fecha del albaran: override del modal (AFechaRecepcion) > FECHA_PEDC > hoy.
+      // Ref proveedor: override del modal (ARefPrv) > REF_PROVEEDOR_PEDC.
+      'SELECT :nalbc, :salbc, ' +
+      '       CASE WHEN :usar_fecha = ''S'' THEN :freal ' +
+      '            ELSE IFNULL(P.FECHA_PEDC, CURDATE()) END, ' +
+      '       ''ABIERTO'', ' +
       '       P.NUMERO_PEDC, P.SERIE_PEDC, ' +
       '       P.CODIGO_EMP_PEDC, P.RAZON_SOCIAL_EMPRESA_PEDC, P.NIF_EMPRESA_PEDC, ' +
       '       P.MOVIL_EMPRESA_PEDC, P.EMAIL_EMPRESA_PEDC, ' +
@@ -386,7 +403,7 @@ begin
       '       P.DIRECCION1_PRV_PEDC, P.DIRECCION2_PRV_PEDC, ' +
       '       P.POBLACION_PRV_PEDC, P.PROVINCIA_PRV_PEDC, ' +
       '       P.CODIGO_POSTAL_PRV_PEDC, ' +
-      '       P.REF_PROVEEDOR_PEDC, :alm, ' +
+      '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), :alm, ' +
       '       0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
       '  FROM fza_pedidos_compra P ' +
@@ -394,6 +411,17 @@ begin
     qIns.ParamByName('nalbc').AsString := ANumAlbc;
     qIns.ParamByName('salbc').AsString := ASerieAlbc;
     qIns.ParamByName('alm').AsString   := ACodigoAlm;
+    qIns.ParamByName('rprv').AsString  := ARefPrv;
+    if AFechaRecepcion > 0 then
+    begin
+      qIns.ParamByName('usar_fecha').AsString  := 'S';
+      qIns.ParamByName('freal').AsDateTime     := AFechaRecepcion;
+    end
+    else
+    begin
+      qIns.ParamByName('usar_fecha').AsString  := 'N';
+      qIns.ParamByName('freal').Clear;
+    end;
     qIns.ParamByName('s').AsString     := ASeriePedc;
     qIns.ParamByName('n').AsString     := ANumPedc;
     qIns.ParamByName('u').AsString     := AUsuario;
@@ -572,6 +600,38 @@ begin
   // 7. Resincronizar pendientes de recibir y recalcular estado pedido.
   GenerarPdteRecibirDesdePedido(AConn, ASeriePedc, ANumPedc, AUsuario);
   RecalcularEstadoPedido(AConn, ASeriePedc, ANumPedc, AUsuario);
+
+  // 8. Si el modal indico temporada explicita, actualizamos la
+  //    propiedad TEMPORADA de los articulos del albaran. Usamos
+  //    INSERT ... ON DUPLICATE KEY UPDATE para sobreescribir un valor
+  //    previo (los articulos ya existen — los creo la sesion al
+  //    materializar — y aqui el usuario lo cambia al recibir).
+  if AIdPvTemporada > 0 then
+  begin
+    qIns := TUniQuery.Create(nil);
+    try
+      qIns.Connection := AConn;
+      qIns.SQL.Text :=
+        'INSERT INTO fza_articulos_propiedades ' +
+        '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
+        '   VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA) ' +
+        'SELECT DISTINCT L.CODIGO_ART_ALBCLIN, ''TEMPORADA'', :pv, ' +
+        '       NULL, NOW(), :u ' +
+        '  FROM fza_albaranes_compra_lineas L ' +
+        ' WHERE L.SERIE_ALBC_ALBCLIN  = :s ' +
+        '   AND L.NUMERO_ALBC_ALBCLIN = :n ' +
+        '   AND L.CODIGO_ART_ALBCLIN IS NOT NULL ' +
+        '   AND L.CODIGO_ART_ALBCLIN <> '''' ' +
+        'ON DUPLICATE KEY UPDATE ID_PV_ARTPROP = :pv';
+      qIns.ParamByName('pv').AsInteger := AIdPvTemporada;
+      qIns.ParamByName('u').AsString   := AUsuario;
+      qIns.ParamByName('s').AsString   := ASerieAlbc;
+      qIns.ParamByName('n').AsString   := ANumAlbc;
+      qIns.ExecSQL;
+    finally
+      FreeAndNil(qIns);
+    end;
+  end;
 
   AMensaje := Format('Albaran %s/%s creado correctamente.',
                      [ASerieAlbc, ANumAlbc]);

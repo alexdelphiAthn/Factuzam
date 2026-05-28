@@ -2,18 +2,28 @@
 {                                                                              }
 {  Modulo:       inMtoModalSelAlmacenPedido                                    }
 {    Tipo:       Formulario (Modal)                                            }
-{ Version:       1.0.0                                                         }
+{ Version:       1.1.0                                                         }
 {   Fecha:       28/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Modal de seleccion de almacen al crear un albaran de compra desde un      }
-{    pedido. Lista los distintos almacenes que aparecen en las lineas del      }
-{    pedido (campo CODIGO_ALMACEN_PEDCLIN, con fallback al de cabecera) y      }
-{    al lado la cantidad total pendiente de recibir para ese almacen.         }
-{    El usuario elige uno; CodigoAlmacen se rellena al aceptar.                }
+{    Modal de "Crear albaran desde pedido". Estilo similar al modal de         }
+{    materializar sesion de compras (inMtoModalCrearAlbaranSesion):            }
+{                                                                              }
+{    1. Selector de almacen destino: lista los almacenes con cantidad          }
+{       pendiente de recibir en el pedido (calculada como                      }
+{       CANTIDAD_PEDCLIN - CANTIDAD_RECIBIDA_PEDCLIN agregada por almacen).   }
+{    2. Serie del albaran (texto, default = serie del pedido).                 }
+{    3. Ref. proveedor (texto, default = ref del pedido).                      }
+{    4. Temporada (lookup, de fza_propiedades_valores filtrado a               }
+{       ID_PROP_PV='TEMPORADA').                                               }
+{    5. Fecha de recepcion (default = hoy).                                    }
+{                                                                              }
+{    El usuario elige + completa y pulsa Aceptar. El form de pedidos          }
+{    de compra lee los properties y crea el albaran via                       }
+{    inLibPedidosCompra.CrearAlbaranDesdePedido.                              }
 {******************************************************************************}
 unit inMtoModalSelAlmacenPedido;
 
@@ -28,7 +38,9 @@ uses
   cxLocalization, cxButtons, cxControls, cxContainer, cxEdit,
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxNavigator, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
-  cxGridTableView, cxGrid,
+  cxGridTableView, cxGrid, cxTextEdit, cxLabel, cxCalendar,
+  cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit,
+  cxDBLookupComboBox,
   System.Actions, Vcl.ActnList,
   Data.DB, MemDS, DBAccess, Uni;
 
@@ -39,12 +51,23 @@ type
     btnAceptar:  TcxButton;
     pnlBody:     TPanel;
     lblPedido:   TLabel;
+    lblAlmacen:  TcxLabel;
     cxgrdAlmacenes: TcxGrid;
     tvAlmacenes:    TcxGridTableView;
     cxgrdlvlAlm:    TcxGridLevel;
     colCodigoAlm:   TcxGridColumn;
     colNombreAlm:   TcxGridColumn;
     colPendiente:   TcxGridColumn;
+    lblSerieAlb:    TcxLabel;
+    txtSerieAlb:    TcxTextEdit;
+    lblRefPrv:      TcxLabel;
+    txtRefPrv:      TcxTextEdit;
+    lblTemporada:   TcxLabel;
+    cbbTemporada:   TcxLookupComboBox;
+    dsTemporadas:   TDataSource;
+    unqryTemporadas: TUniQuery;
+    lblFecha:       TcxLabel;
+    dteFecha:       TcxDateEdit;
     ActionList1: TActionList;
     actAceptar:  TAction;
     actCancelar: TAction;
@@ -57,10 +80,19 @@ type
     procedure tvAlmacenesDblClick(Sender: TObject);
   private
     procedure CargarAlmacenes;
+    procedure ConfigurarLookupTemporada;
   public
-    SeriePedc, NumPedc: string;
-    CodigoAlmacen: string;
-    Aceptado: Boolean;
+    SeriePedc, NumPedc      : string;
+    SerieAlbDefecto         : string;  // default texto serie
+    RefProveedorDefecto     : string;
+    IdPvTemporadaDefecto    : Integer;
+    // Devueltos al cerrar con Aceptado=True:
+    CodigoAlmacen           : string;
+    SerieAlbaran            : string;
+    RefProveedor            : string;
+    IdPvTemporada           : Integer;
+    FechaRecepcion          : TDateTime;
+    Aceptado                : Boolean;
   end;
 
 implementation
@@ -74,19 +106,36 @@ procedure TfrmModalSelAlmacenPedido.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  Aceptado := False;
+  Aceptado      := False;
   CodigoAlmacen := '';
+  SerieAlbaran  := '';
+  RefProveedor  := '';
+  IdPvTemporada := 0;
+  FechaRecepcion := Date;
+  // Conexion de la query de temporadas (esta unica que la lib usa).
+  unqryTemporadas.Connection := inLibGlobalVar.oConn;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);
 begin
   inherited;
   lblPedido.Caption := Format(
-    'Pedido %s/%s — selecciona el almacen al que vas a generar el albaran:',
+    'Crear albaran desde pedido %s/%s',
     [SeriePedc, NumPedc]);
   CargarAlmacenes;
+  ConfigurarLookupTemporada;
+  // Defaults.
+  txtSerieAlb.Text := SerieAlbDefecto;
+  txtRefPrv.Text   := RefProveedorDefecto;
+  if IdPvTemporadaDefecto > 0 then
+    cbbTemporada.EditValue := IdPvTemporadaDefecto
+  else
+    cbbTemporada.EditValue := Null;
+  dteFecha.Date := Date;
   if tvAlmacenes.DataController.RecordCount > 0 then
     tvAlmacenes.Controller.FocusedRowIndex := 0;
+  if txtSerieAlb.CanFocus then
+    txtSerieAlb.SetFocus;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormClose(Sender: TObject;
@@ -101,9 +150,6 @@ var
   q: TUniQuery;
   i: Integer;
 begin
-  // Cargamos los almacenes distintos del pedido con la suma de cantidad
-  // pendiente (CANTIDAD - CANTIDAD_RECIBIDA). Solo los que tienen
-  // pendiente > 0 — si todo esta recibido no tiene sentido albaranear.
   tvAlmacenes.DataController.RecordCount := 0;
   q := TUniQuery.Create(nil);
   try
@@ -129,11 +175,6 @@ begin
     q.ParamByName('s').AsString := SeriePedc;
     q.ParamByName('n').AsString := NumPedc;
     q.Open;
-    // Patron estandar en el resto de modales (ver
-    // inMtoModalFacturarAlbaranesFechas.CargarGrid): primero dimensionar
-    // el DataController y luego rellenar celda a celda via Values[i, col.Index].
-    // AppendRecord(array) no esta disponible en esta version de DevExpress
-    // y daba E2034 / E2010.
     tvAlmacenes.DataController.RecordCount := q.RecordCount;
     i := 0;
     while not q.Eof do
@@ -149,6 +190,22 @@ begin
     end;
   finally
     FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmModalSelAlmacenPedido.ConfigurarLookupTemporada;
+begin
+  // El SQL ya esta en el DFM. Lo abrimos al show.
+  if not unqryTemporadas.Active then
+    unqryTemporadas.Open;
+  cbbTemporada.Properties.ListSource    := dsTemporadas;
+  cbbTemporada.Properties.KeyFieldNames := 'ID_PV_ARTPROP';
+  cbbTemporada.Properties.ListColumns.Clear;
+  with cbbTemporada.Properties.ListColumns.Add do
+  begin
+    FieldName := 'PV';
+    Caption   := 'Temporada';
+    Width     := 240;
   end;
 end;
 
@@ -175,8 +232,10 @@ procedure TfrmModalSelAlmacenPedido.btnAceptarClick(Sender: TObject);
 var
   iIdx: Integer;
   vAlm: Variant;
+  vTmp: Variant;
 begin
   inherited;
+  // Validaciones minimas.
   iIdx := tvAlmacenes.Controller.FocusedRowIndex;
   if (iIdx < 0) or (iIdx >= tvAlmacenes.DataController.RecordCount) then
   begin
@@ -190,7 +249,22 @@ begin
                mtWarning, [mbOk], 0);
     Exit;
   end;
+  if Trim(txtSerieAlb.Text) = '' then
+  begin
+    MessageDlg('Indica la serie del albaran.', mtInformation, [mbOk], 0);
+    if txtSerieAlb.CanFocus then txtSerieAlb.SetFocus;
+    Exit;
+  end;
+  // Captura resultado.
   CodigoAlmacen := VarToStr(vAlm);
+  SerieAlbaran  := Trim(txtSerieAlb.Text);
+  RefProveedor  := Trim(txtRefPrv.Text);
+  vTmp := cbbTemporada.EditValue;
+  if VarIsNull(vTmp) or VarIsEmpty(vTmp) then
+    IdPvTemporada := 0
+  else
+    IdPvTemporada := StrToIntDef(VarToStr(vTmp), 0);
+  FechaRecepcion := dteFecha.Date;
   Aceptado := True;
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
