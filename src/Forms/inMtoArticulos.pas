@@ -365,6 +365,7 @@ type
     chkFiltroConStockArt: TcxCheckBox;
     lblFiltroTemporadaArt: TcxLabel;
     ccbFiltroTemporadaArt: TcxCheckComboBox;
+    actFamilias: TAction;
     procedure btnToggleFiltrosArtClick(Sender: TObject);
     procedure cbbFiltroEstadoArtPropertiesEditValueChanged(Sender: TObject);
     procedure chkFiltroConStockArtPropertiesEditValueChanged(Sender: TObject);
