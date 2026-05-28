@@ -136,6 +136,11 @@ type
     FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
+    // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
+    // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
+    // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
+    // veria discrepancia con Activo).
+    FInToggleClick   : Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -439,29 +444,32 @@ var
 begin
   inherited;
   if (dmmAlbaranesCompra = nil) or (FPivote = nil) then Exit;
-  // Toggle alterna entre vista plana (1 fila por SKU) y vista pivote
-  // (1 fila representante por articulo+color, columnas talla con la
-  // cantidad de cada SKU). El modelo BBDD no cambia: el filtro vive
-  // en cliente y lo gestiona la libreria.
-  // No llamamos a RefrescarVisibilidadTallas: Activar/Desactivar de la
-  // libreria ya ajustan la visibilidad de las columnas talla y publican
-  // cantidades en el orden correcto (visibilidad ANTES de publicar; si
-  // se hiciera al reves cxGrid limpiaria los Values[] no-bound).
-  if not FPivote.Activo then
-  begin
-    if not FPivote.ValidarPivotePosible(sMensaje) then
+  // Guardia de reentrada: ver comentario en el campo FInToggleClick.
+  if FInToggleClick then Exit;
+  FInToggleClick := True;
+  try
+    // Toggle alterna entre vista plana (1 fila por SKU) y vista pivote
+    // (1 fila representante por articulo+color, columnas talla con la
+    // cantidad de cada SKU). El modelo BBDD no cambia: el filtro vive
+    // en cliente y lo gestiona la libreria.
+    if not FPivote.Activo then
     begin
-      MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-      Exit;
-    end;
-    FPivote.Activar;
-  end
-  else
-    FPivote.Desactivar;
-  // Sender=nil: llamada automatica desde el data-change hook; no
-  // re-escribir la preferencia.
-  if Sender <> nil then
-    PersistirPreferenciaPivote;
+      if not FPivote.ValidarPivotePosible(sMensaje) then
+      begin
+        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        Exit;
+      end;
+      FPivote.Activar;
+    end
+    else
+      FPivote.Desactivar;
+    // Sender=nil: llamada automatica desde el data-change hook; no
+    // re-escribir la preferencia.
+    if Sender <> nil then
+      PersistirPreferenciaPivote;
+  finally
+    FInToggleClick := False;
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.PersistirPreferenciaPivote;
