@@ -183,15 +183,24 @@ begin
   txtSeriePed.Enabled := chkGenPedido.Checked;
 end;
 
+// Pedido y albaran son mutuamente exclusivos: nunca tiene sentido
+// generar los dos a la vez para la misma sesion (el pedido es
+// compromiso, el albaran es entrada real de stock — se eligen uno u
+// otro segun el momento de la operacion). Cuando el usuario marca uno,
+// desmarcamos el otro silenciosamente y refrescamos habilitados.
 procedure TfrmModalCrearAlbaranSesion.chkGenAlbaranPropertiesEditValueChanged(
   Sender: TObject);
 begin
+  if chkGenAlbaran.Checked and chkGenPedido.Checked then
+    chkGenPedido.Checked := False;
   ActualizarHabilitados;
 end;
 
 procedure TfrmModalCrearAlbaranSesion.chkGenPedidoPropertiesEditValueChanged(
   Sender: TObject);
 begin
+  if chkGenPedido.Checked and chkGenAlbaran.Checked then
+    chkGenAlbaran.Checked := False;
   ActualizarHabilitados;
 end;
 

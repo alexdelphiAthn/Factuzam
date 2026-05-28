@@ -1442,6 +1442,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       object Pedidos1: TMenuItem
         Caption = 'Pedidos'
         ShortCut = 24656
+        OnClick = Pedidos1Click
       end
       object Albaranes1: TMenuItem
         Caption = 'Albaranes'

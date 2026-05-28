@@ -55,10 +55,12 @@ inherited dmFamilias: TdmFamilias
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT F.*, '
-      '       SUB.NOMBRE_FAM_FAM AS NOMBRE_SUBFAMILIA'
-      '  FROM fza_articulos_familias F'
-      '  LEFT JOIN fza_articulos_familias SUB'
-      '    ON SUB.CODIGO_FAM_FAM = F.CODIGO_SUBFAMILIA_FAM')
+      '       (SELECT SUB.NOMBRE_FAM_FAM'
+      '          FROM fza_articulos_familias SUB'
+
+        '         WHERE SUB.CODIGO_FAM_FAM = F.CODIGO_SUBFAMILIA_FAM) AS N' +
+        'OMBRE_SUBFAMILIA'
+      '  FROM fza_articulos_familias F')
     Active = True
     AfterInsert = unqryTablaGAfterInsert
   end

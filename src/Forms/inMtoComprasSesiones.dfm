@@ -18,8 +18,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       Height = 680
       ExplicitWidth = 1100
       ExplicitHeight = 680
-      ClientRectBottom = 678
-      ClientRectRight = 1098
+      ClientRectBottom = 676
+      ClientRectRight = 1096
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 2
         ExplicitTop = 27
@@ -75,10 +75,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 1096
-        ExplicitHeight = 651
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1092
+        ExplicitHeight = 648
         object gbCabecera: TcxGroupBox
           Left = 0
           Top = 0
@@ -86,7 +86,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Caption = ' Cabecera '
           TabOrder = 0
           Height = 200
-          Width = 1096
+          Width = 1092
           object lblSerie: TcxLabel
             Left = 12
             Top = 24
@@ -359,7 +359,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object pnlLineasTop: TPanel
           Left = 0
           Top = 200
-          Width = 1096
+          Width = 1092
           Height = 36
           Align = alTop
           BevelOuter = bvNone
@@ -428,8 +428,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object cxgrdLineas: TcxGrid
           Left = 0
           Top = 236
-          Width = 1096
-          Height = 415
+          Width = 1092
+          Height = 412
           Align = alClient
           TabOrder = 2
           OnEnter = cxgrdLineasEnter
@@ -456,7 +456,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Column = dbcLinTotalTallas
               end>
             OptionsBehavior.FocusCellOnTab = True
-            OptionsBehavior.FocusFirstCellOnNewRecord = True
             OptionsBehavior.GoToNextCellOnEnter = True
             OptionsData.Appending = True
             OptionsView.Footer = True
@@ -578,20 +577,21 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitTop = 27
-        ExplicitWidth = 1096
-        ExplicitHeight = 651
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1094
+        ExplicitHeight = 650
         inherited pnlPerfilTop: TPanel
-          Width = 1096
+          Width = 1092
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1096
+          ExplicitWidth = 1094
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 1096
-          Height = 594
+          Width = 1092
+          Height = 591
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1096
           ExplicitHeight = 594
@@ -609,7 +609,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object pnlDocsTop: TPanel
           Left = 0
           Top = 0
-          Width = 1096
+          Width = 1092
           Height = 40
           Align = alTop
           BevelOuter = bvNone
@@ -638,10 +638,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object cxgrdDocs: TcxGrid
           Left = 0
           Top = 40
-          Width = 1096
-          Height = 611
+          Width = 1092
+          Height = 608
           Align = alClient
           TabOrder = 1
+          ExplicitWidth = 1096
+          ExplicitHeight = 611
           object tvDocs: TcxGridDBTableView
             OnDblClick = tvDocsDblClick
             OptionsCustomize.ColumnHiding = True
@@ -688,6 +690,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       end
       object tsLog: TcxTabSheet
         Caption = 'Log'
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlLogTop: TPanel
           Left = 0
           Top = 0
@@ -723,8 +729,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Properties.ScrollBars = ssVertical
           Properties.WordWrap = False
           TabOrder = 1
-          Height = 615
-          Width = 1096
+          Height = 612
+          Width = 1092
         end
       end
     end

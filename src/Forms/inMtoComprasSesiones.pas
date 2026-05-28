@@ -1144,12 +1144,14 @@ begin
           frmDocs.ShowModal;
           if frmDocs.Confirmado then
           begin
-            // Solo listamos albaranes (los unicos navegables via Mto
-            // hoy). 'AlbaranesCompra' es el CALL_WINF en fza_winforms.
-            // BuscarTabla en inLibShowMto soporta PK compuesta con
-            // valores separados por coma.
+            // Tanto Albaran como Pedido tienen Mto propio. BuscarTabla
+            // en inLibShowMto soporta PK compuesta separada por coma.
             if SameText(frmDocs.SeleccionadoTipo, 'Albaran') then
               ShowMto(frmMtoPrincipal, 'AlbaranesCompra',
+                      frmDocs.SeleccionadoSerie + ',' +
+                      frmDocs.SeleccionadoNumero)
+            else if SameText(frmDocs.SeleccionadoTipo, 'Pedido') then
+              ShowMto(frmMtoPrincipal, 'PedidosCompra',
                       frmDocs.SeleccionadoSerie + ',' +
                       frmDocs.SeleccionadoNumero);
           end;
@@ -1941,13 +1943,17 @@ begin
           // AListaDocs.
           if ASerAlb = '' then begin ASerAlb := sSerAlbTmp; ANumAlb := sNumAlbTmp; end;
           if ASerPed = '' then begin ASerPed := sSerPedTmp; ANumPed := sNumPedTmp; end;
-          // Solo acumulamos albaranes en la lista: son los unicos
-          // navegables via ShowMto ('AlbaranesCompra'). Pedidos de
-          // compra se crean pero hoy no tienen Mto propio, asi que
-          // listarlos no aporta nada al usuario.
+          // Acumulamos albaranes y pedidos generados en la lista. Ambos
+          // tipos tienen Mto propio (AlbaranesCompra / PedidosCompra) y
+          // el modal frmDocs sabe dispatchar a uno u otro segun el
+          // primer campo. Antes solo se anyadian albaranes, lo que
+          // hacia que materializar solo pedido mostrase 'sin documentos'.
           if Assigned(AListaDocs) and bGenAlb and (sSerAlbTmp <> '') then
             AListaDocs.Add(Format('Albaran|%s|%s|%s',
                                   [sSerAlbTmp, sNumAlbTmp, sAlm]));
+          if Assigned(AListaDocs) and bGenPed and (sSerPedTmp <> '') then
+            AListaDocs.Add(Format('Pedido|%s|%s|%s',
+                                  [sSerPedTmp, sNumPedTmp, sAlm]));
           oQry.Next;
         end;
       finally
@@ -1960,12 +1966,13 @@ begin
                                  AFrmSet.SerieAlb, AFrmSet.SeriePed,
                                  ASerPed, ANumPed, ASerAlb, ANumAlb, AErr) then
         raise Exception.Create(AErr);
+      sAlm := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
       if Assigned(AListaDocs) and bGenAlb and (ASerAlb <> '') then
-      begin
-        sAlm := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
         AListaDocs.Add(Format('Albaran|%s|%s|%s',
                               [ASerAlb, ANumAlb, sAlm]));
-      end;
+      if Assigned(AListaDocs) and bGenPed and (ASerPed <> '') then
+        AListaDocs.Add(Format('Pedido|%s|%s|%s',
+                              [ASerPed, ANumPed, sAlm]));
     end;
     if bTxOwned then oConn.Commit;
     Result := True;
