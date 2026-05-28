@@ -64,6 +64,11 @@ type
   procedure PonerAnchosTitulos( AcxgrdtvVista: TcxCustomGridTableView;
                                 AsDes: string;
                                 var oPerfilDic: TProfileDicc);
+  // Aplica TcxCurrencyEditProperties / TcxCheckBoxProperties segun el
+  // prefijo del campo (PRECIO_/TOTAL_/IMPORTE_, PORCENTAJE_,
+  // VALOR_/CANTIDAD_, ESxxx_). Pensada para mantenimientos de busqueda
+  // que crean columnas dinamicas sin properties (inMtoGenSearch).
+  procedure AplicarPropertiesPorPrefijo(AView: TcxCustomGridTableView);
   procedure ExportarExcel(AcxGrd: TcxGrid;
                           AsNomFile: string);
   procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
@@ -169,6 +174,129 @@ begin
     Result := TcxGridDBDataController(AView.DataController)
   else
     Result := nil;
+end;
+
+// Helpers locales para AplicarPropertiesPorPrefijo
+function EsCampoBooleanoSN(AField: TField): Boolean;
+begin
+  // Booleano S/N de Factuzam: varchar(1). En UniDAC puede mapear a
+  // ftString o ftFixedChar. En ambos casos Size=1.
+  Result := Assigned(AField) and
+            (AField.DataType in [ftString, ftFixedChar, ftWideString,
+                                 ftFixedWideChar]) and
+            (AField.Size = 1);
+end;
+
+procedure SetCurrencyProps(ACol: TcxGridDBColumn;
+                           const AFormato: string);
+var
+  cp: TcxCurrencyEditProperties;
+begin
+  ACol.PropertiesClass := TcxCurrencyEditProperties;
+  cp := TcxCurrencyEditProperties(ACol.Properties);
+  cp.DisplayFormat               := AFormato;
+  cp.UseDisplayFormatWhenEditing := True;
+end;
+
+procedure SetCheckBoxProps(ACol: TcxGridDBColumn);
+var
+  cb: TcxCheckBoxProperties;
+begin
+  ACol.PropertiesClass := TcxCheckBoxProperties;
+  cb := TcxCheckBoxProperties(ACol.Properties);
+  cb.ValueChecked   := 'S';
+  cb.ValueUnchecked := 'N';
+  cb.ValueGrayed    := '';
+  cb.NullStyle      := nssUnchecked;
+end;
+
+procedure AplicarPropertiesPorPrefijo(AView: TcxCustomGridTableView);
+const
+  // Prefijos monetarios (€)
+  PRE_DINERO: array[0..2] of string = ('PRECIO_', 'TOTAL_', 'IMPORTE_');
+  // Prefijo porcentaje (%)
+  PRE_PORC: array[0..0] of string = ('PORCENTAJE_');
+  // Prefijos numericos sin moneda
+  PRE_NUM: array[0..1] of string = ('VALOR_', 'CANTIDAD_');
+  // Formatos con sufijo de moneda/porcentaje fijo
+  FMT_EURO  = '#,##0.00 "€";-#,##0.00 "€";0.00 "€"';
+  FMT_PORC  = '#,##0.00 "%";-#,##0.00 "%";0.00 "%"';
+  FMT_NUM   = '#,##0.##;-#,##0.##;0';
+
+  function CampoEmpiezaPor(const AField: string;
+                           const APrefijos: array of string): Boolean;
+  var
+    p: string;
+  begin
+    Result := False;
+    for p in APrefijos do
+      if (not Result) and StartsText(p, AField) then
+        Result := True;
+  end;
+
+  function EsPrefijoES(const AField: string): Boolean;
+  begin
+    // Booleano: 'ES' seguido de mayuscula (ESACTIVO, ESDEFECTO, ESVIP...).
+    // No queremos confundir con campos que casualmente empiecen por 'es'
+    // pero no sean booleanos. Adicionalmente se valida con
+    // EsCampoBooleanoSN que el tipo subyacente sea varchar(1).
+    Result := (Length(AField) >= 3) and
+              (UpCase(AField[1]) = 'E') and
+              (UpCase(AField[2]) = 'S') and
+              CharInSet(AField[3], ['A'..'Z']);
+  end;
+
+var
+  i: Integer;
+  oItem: TcxCustomGridTableItem;
+  oCol: TcxGridDBColumn;
+  sField, sProp: string;
+  oField: TField;
+  oDBCtrl: TcxGridDBDataController;
+  bAplicable: Boolean;
+begin
+  if AView <> nil then
+  begin
+    oDBCtrl := GetDBDataController(AView);
+    AView.BeginUpdate;
+    try
+      for i := 0 to AView.ItemCount - 1 do
+      begin
+        oItem := AView.Items[i];
+        if (oItem is TcxGridDBColumn) then
+        begin
+          oCol := TcxGridDBColumn(oItem);
+          sField := GetItemFieldName(oCol);
+          sProp := oCol.PropertiesClassName;
+          // Solo aplicamos si la columna no tiene properties especificas
+          // ya asignadas (no pisamos lo que venga del .dfm o de otra
+          // rutina externa).
+          bAplicable := (sField <> '') and
+                        ((sProp = '') or (sProp = 'TcxTextEditProperties'));
+          if bAplicable then
+          begin
+            if EsPrefijoES(sField) then
+            begin
+              // ESxxx -> CheckBox S/N (solo si el TField es varchar(1))
+              oField := nil;
+              if (oDBCtrl <> nil) and Assigned(oDBCtrl.DataSet) then
+                oField := oDBCtrl.DataSet.FindField(sField);
+              if EsCampoBooleanoSN(oField) then
+                SetCheckBoxProps(oCol);
+            end
+            else if CampoEmpiezaPor(sField, PRE_DINERO) then
+              SetCurrencyProps(oCol, FMT_EURO)
+            else if CampoEmpiezaPor(sField, PRE_PORC) then
+              SetCurrencyProps(oCol, FMT_PORC)
+            else if CampoEmpiezaPor(sField, PRE_NUM) then
+              SetCurrencyProps(oCol, FMT_NUM);
+          end;
+        end;
+      end;
+    finally
+      AView.EndUpdate;
+    end;
+  end;
 end;
 
 procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
