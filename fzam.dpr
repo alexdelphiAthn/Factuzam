@@ -199,6 +199,7 @@ uses
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},
   inLibPedidosCompra in 'src\Lib\inLibPedidosCompra.pas',
+  inLibGridPivoteCompra in 'src\Lib\inLibGridPivoteCompra.pas',
   inMtoModalFacturarAlbaranesFechas in 'src\Modals\inMtoModalFacturarAlbaranesFechas.pas' {frmModalFacturarAlbaranesFechas},
   inMtoCajaOperacionesHist in 'src\Forms\inMtoCajaOperacionesHist.pas' {frmMtoCajaOperacionesHist},
   UniDataCajaOperacionesHist in 'src\DataModules\UniDataCajaOperacionesHist.pas' {dmCajaOperacionesHist: TDataModule},
