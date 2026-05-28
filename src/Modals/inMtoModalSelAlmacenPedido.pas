@@ -99,6 +99,7 @@ end;
 procedure TfrmModalSelAlmacenPedido.CargarAlmacenes;
 var
   q: TUniQuery;
+  i: Integer;
 begin
   // Cargamos los almacenes distintos del pedido con la suma de cantidad
   // pendiente (CANTIDAD - CANTIDAD_RECIBIDA). Solo los que tienen
@@ -128,12 +129,22 @@ begin
     q.ParamByName('s').AsString := SeriePedc;
     q.ParamByName('n').AsString := NumPedc;
     q.Open;
+    // Patron estandar en el resto de modales (ver
+    // inMtoModalFacturarAlbaranesFechas.CargarGrid): primero dimensionar
+    // el DataController y luego rellenar celda a celda via Values[i, col.Index].
+    // AppendRecord(array) no esta disponible en esta version de DevExpress
+    // y daba E2034 / E2010.
+    tvAlmacenes.DataController.RecordCount := q.RecordCount;
+    i := 0;
     while not q.Eof do
     begin
-      tvAlmacenes.DataController.AppendRecord(
-        [q.FieldByName('ALM').AsString,
-         q.FieldByName('NOMBRE').AsString,
-         q.FieldByName('PEND').AsFloat]);
+      tvAlmacenes.DataController.Values[i, colCodigoAlm.Index] :=
+        q.FieldByName('ALM').AsString;
+      tvAlmacenes.DataController.Values[i, colNombreAlm.Index] :=
+        q.FieldByName('NOMBRE').AsString;
+      tvAlmacenes.DataController.Values[i, colPendiente.Index] :=
+        q.FieldByName('PEND').AsFloat;
+      Inc(i);
       q.Next;
     end;
   finally
