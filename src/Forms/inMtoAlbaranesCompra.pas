@@ -357,6 +357,7 @@ begin
   cfgP.FieldCantidad        := 'CANTIDAD_ALBCLIN';
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_ALBCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_ALBCLIN';
+  cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_ALBC';
   cfgP.CamposOcultosEnPivote := TArray<string>.Create(
     'CODIGO_UNIDAD_ALBCLIN',
     'CANTIDAD_ALBCLIN',
