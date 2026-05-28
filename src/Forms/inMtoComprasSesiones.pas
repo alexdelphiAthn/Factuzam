@@ -276,6 +276,7 @@ type
     function  Dmm: TdmComprasSesiones;
     procedure CargarBasicosColor;
     procedure CargarConjuntosTallas;
+    function  DispararEditButtonLineaActiva: Boolean;
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
@@ -295,6 +296,12 @@ type
                                       out ASerPed, ANumPed,
                                           ASerAlb, ANumAlb,
                                           AErr: string): Boolean;
+  protected
+    // Interceptamos a nivel de form (KeyPreview heredado = True) para
+    // que Ctrl+Enter abra el selector de la columna editbutton enfocada
+    // ANTES de que la navegacion Enter->Tab del grid / FormKeyDown base
+    // mueva el foco a otra pestania.
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -1484,9 +1491,9 @@ begin
   // Ctrl+Enter sobre cualquier columna 'editbutton' (color basico,
   // sistema tallas, ...) dispara el click de su primer boton, igual que
   // pulsar el ellipsis '...'. Generico: invoca el OnButtonClick cableado
-  // en esa columna pasando AEdit (el editor en edicion) como Sender, asi
-  // el popup sale justo debajo de la celda. Cualquier columna TcxButtonEdit
-  // futura hereda el atajo sin tocar este handler.
+  // en esa columna pasando AEdit (el editor en edicion) como Sender.
+  // Normalmente lo atrapa antes el KeyDown del form (KeyPreview); esto es
+  // la red por si la pulsacion llega ya dentro del editor inline.
   if (Key = VK_RETURN) and (Shift = [ssCtrl]) and (AItem is TcxGridDBColumn) and
      (TcxGridDBColumn(AItem).Properties is TcxButtonEditProperties) then
   begin
@@ -1510,6 +1517,61 @@ begin
     end;
     Key := 0;
   end;
+end;
+
+function TfrmMtoComprasSesiones.DispararEditButtonLineaActiva: Boolean;
+var
+  ac     : TWinControl;
+  enGrid : Boolean;
+  col    : TcxGridColumn;
+  props  : TcxButtonEditProperties;
+  ed     : TcxCustomEdit;
+begin
+  Result := False;
+  // Solo actuamos si el foco esta dentro del grid de lineas (la celda o
+  // su editor inline). Asi Ctrl+Enter en la cabecera u otra pestania no
+  // dispara nada y sigue su curso normal. Usamos Screen.ActiveControl
+  // (foco real a nivel aplicacion) para que funcione tambien con el Mto
+  // embebido.
+  ac     := Screen.ActiveControl;
+  enGrid := (ac <> nil) and
+            ((ac = cxgrdLineas) or cxgrdLineas.ContainsControl(ac));
+  if enGrid then
+    col := tvLineas.Controller.FocusedColumn
+  else
+    col := nil;
+  if (col <> nil) and (col.Properties is TcxButtonEditProperties) then
+  begin
+    props := TcxButtonEditProperties(col.Properties);
+    if (props.Buttons.Count > 0) and Assigned(props.OnButtonClick) then
+    begin
+      // Garantizar editor activo en la celda para posicionar el popup
+      // justo debajo (si la celda estaba solo enfocada, ShowEdit lo crea).
+      ed := nil;
+      if tvLineas.Controller.EditingController <> nil then
+      begin
+        tvLineas.Controller.EditingController.ShowEdit;
+        ed := tvLineas.Controller.EditingController.Edit;
+      end;
+      props.OnButtonClick(ed, 0);
+      Result := True;
+    end;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  // Ctrl+Enter sobre una columna editbutton del grid de lineas abre su
+  // selector (paleta de color / sistema tallas / ...), igual que pulsar
+  // el ellipsis. Con KeyPreview heredado=True este KeyDown corre antes
+  // que la navegacion Enter->Tab del grid y que el FormKeyDown base, que
+  // si no sacarian el foco a la pestania Documentos. Solo lo consumimos
+  // cuando de verdad se ha disparado el selector.
+  if (Key = VK_RETURN) and (Shift = [ssCtrl]) and
+     DispararEditButtonLineaActiva then
+    Key := 0
+  else
+    inherited KeyDown(Key, Shift);
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesButtonClick(
