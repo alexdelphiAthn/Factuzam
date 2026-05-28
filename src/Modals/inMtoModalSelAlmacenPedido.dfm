@@ -56,8 +56,8 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
       Width = 568
       Height = 345
       TabOrder = 0
-      OnDblClick = tvAlmacenesDblClick
       object tvAlmacenes: TcxGridTableView
+        OnDblClick = tvAlmacenesDblClick
         NavigatorButtons.ConfirmDelete = False
         OptionsBehavior.GoToNextCellOnEnter = True
         OptionsCustomize.ColumnFiltering = False
