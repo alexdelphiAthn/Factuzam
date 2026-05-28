@@ -1609,23 +1609,44 @@ end;
 procedure TfrmMtoPrincipal.AppException(Sender: TObject; E: Exception);
 var
   sDetalle: string;
+  bRuidoEditorInplace: Boolean;
 begin
-  try
-    sDetalle := ConstruirDetalleException(Sender, E);
+  // Filtro: EInvalidOperation "no tiene ventana principal" disparado por
+  // el editor inplace del cxGrid sin Parent durante transiciones de celda.
+  // Es ruido benigno: el handle se acaba creando en la siguiente pasada,
+  // el usuario no pierde datos. Solo lo registramos como warning, sin
+  // diálogo modal. Patron mitigado tambien en inMtoCajaOpe e inLibDevExp.
+  bRuidoEditorInplace := (E is EInvalidOperation) and
+                         (Pos('no tiene ventana principal',
+                              E.Message) > 0);
+  if bRuidoEditorInplace then
+  begin
     try
-      inLibLog.Log.LogError('AppException ' + E.ClassName + ': ' + E.Message);
-      inLibLog.Log.LogError('AppException detalle:' + sLineBreak + sDetalle);
+      inLibLog.Log.LogWarning('AppException ignorado (editor inplace sin ' +
+                              'Parent): ' + E.Message);
     except
-      // Si el log falla no podemos hacer mucho; seguimos para mostrarlo.
     end;
-    MostrarDetalleExcepcion(sDetalle);
-  except
-    // Última red de seguridad: si la construcción del detalle o el
-    // diálogo fallan, al menos mostramos lo básico para que el usuario
-    // sepa que algo ha pasado.
+  end
+  else
+  begin
     try
-      Application.ShowException(E);
+      sDetalle := ConstruirDetalleException(Sender, E);
+      try
+        inLibLog.Log.LogError('AppException ' + E.ClassName + ': ' +
+                              E.Message);
+        inLibLog.Log.LogError('AppException detalle:' + sLineBreak + sDetalle);
+      except
+        // Si el log falla no podemos hacer mucho; seguimos para mostrarlo.
+      end;
+      MostrarDetalleExcepcion(sDetalle);
     except
+      // Última red de seguridad: si la construcción del detalle o el
+      // diálogo fallan, al menos mostramos lo básico para que el usuario
+      // sepa que algo ha pasado.
+      try
+        Application.ShowException(E);
+      except
+      end;
     end;
   end;
 end;
