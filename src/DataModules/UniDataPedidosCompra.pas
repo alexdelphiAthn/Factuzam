@@ -1,0 +1,366 @@
+{******************************************************************************}
+{                                                                              }
+{  Modulo:       UniDataPedidosCompra                                          }
+{    Tipo:       Data Module                                                   }
+{ Version:       1.0.0                                                         }
+{   Fecha:       28/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripcion:                                                                }
+{    Data module de pedidos de COMPRA.                                         }
+{    Espejo simplificado de UniDataAlbaranesCompra. Diferencias clave:         }
+{      - Numeracion con TIPO_DOC = 'PC' (vs 'AB' de albaranes).                }
+{      - AfterPost de cabecera dispara GenerarPdteRecibirDesdePedido para      }
+{        sincronizar fza_articulos_pdte_recibir con las lineas actuales.      }
+{      - BeforeDelete de cabecera y lineas dispara BorrarPdteRecibir para     }
+{        no dejar filas huerfanas en fza_articulos_pdte_recibir.              }
+{      - NO genera movimientos de stock — el pedido es compromiso, no         }
+{        entrada fisica. Los movs los genera el albaran cuando se cree        }
+{        desde el pedido via inLibPedidosCompra.CrearAlbaranDesdePedido.      }
+{******************************************************************************}
+unit UniDataPedidosCompra;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, System.Variants,
+  Data.DB, MemDS, DBAccess, Uni,
+  UniDataGen, inLibUser, inMtoPrincipal;
+
+type
+  TdmPedidosCompra = class(TdmBase)
+    unqryPedidosCompraLineas: TUniQuery;
+    dsPedidosCompraLineas:    TDataSource;
+    unqryEmpDataPedc:         TUniQuery;
+    unqryPrvDataPedc:         TUniQuery;
+    unqrySkusPedc:            TUniQuery;
+    unstrdprcGetContadorPedc: TUniStoredProc;
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
+    procedure unqryTablaGAfterInsert(DataSet: TDataSet);
+    procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
+    procedure unqryPedidosCompraLineasAfterInsert(DataSet: TDataSet);
+    procedure unqryPedidosCompraLineasBeforePost(DataSet: TDataSet);
+    procedure unqryPedidosCompraLineasAfterPost(DataSet: TDataSet);
+    procedure unqryPedidosCompraLineasBeforeDelete(DataSet: TDataSet);
+  public
+    procedure GetCodigoAutoPedidoCompra;
+    procedure CalcularTotalesPedidoCompra;
+    procedure OpenTables;
+    procedure AbrirDetalles; override;
+  end;
+
+implementation
+
+uses
+  inLibGlobalVar, inLibLog, inLibtb,
+  System.Diagnostics,
+  inMtoPedidosCompra,
+  inLibPedidosCompra;
+
+{%CLASSGROUP 'Vcl.Controls.TControl'}
+
+{$R *.dfm}
+
+procedure TdmPedidosCompra.DataModuleCreate(Sender: TObject);
+begin
+  inherited;
+  unqryTablaG.Connection              := inLibGlobalVar.oConn;
+  unqryPedidosCompraLineas.Connection := inLibGlobalVar.oConn;
+  unqryEmpDataPedc.Connection         := inLibGlobalVar.oConn;
+  unqryPrvDataPedc.Connection         := inLibGlobalVar.oConn;
+  unqrySkusPedc.Connection            := inLibGlobalVar.oConn;
+  unstrdprcGetContadorPedc.Connection := inLibGlobalVar.oConn;
+  unqryPedidosCompraLineas.MasterSource :=
+    (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
+end;
+
+procedure TdmPedidosCompra.DataModuleDestroy(Sender: TObject);
+begin
+  if Assigned(unqryPedidosCompraLineas) and
+     unqryPedidosCompraLineas.Active then
+    unqryPedidosCompraLineas.Close;
+  inherited;
+end;
+
+procedure TdmPedidosCompra.OpenTables;
+begin
+  AbrirDetalles;
+end;
+
+procedure TdmPedidosCompra.AbrirDetalles;
+const
+  TAG = 'PedidosCompra.AbrirDetalles';
+var
+  sw, swQ: TStopwatch;
+begin
+  inherited;
+  sw := TStopwatch.StartNew;
+  if not unqryPedidosCompraLineas.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      unqryPedidosCompraLineas.Open;
+      inLibLog.Log.LogPerf(TAG, 'unqryPedidosCompraLineas OK',
+                            swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf(TAG,
+          'unqryPedidosCompraLineas ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
+  end;
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmPedidosCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
+var
+  sSerie: string;
+begin
+  inherited;
+  with unqryTablaG do
+  begin
+    FieldByName('NUMERO_PEDC').AsString := '0';
+    sSerie := ObtenerSerieDefecto(oEmpresa, 'PC');
+    if FindField('SERIE_PEDC') <> nil then
+    begin
+      if sSerie <> '' then
+        FieldByName('SERIE_PEDC').AsString := sSerie
+      else
+        FieldByName('SERIE_PEDC').AsString := 'C1';
+    end;
+    FieldByName('FECHA_PEDC').AsDateTime := Date;
+    if FindField('ESTADO_PEDC') <> nil then
+      FieldByName('ESTADO_PEDC').AsString := 'ABIERTO';
+    if Trim(oEmpresa) <> '' then
+      FieldByName('CODIGO_EMP_PEDC').AsString := oEmpresa
+    else
+      FieldByName('CODIGO_EMP_PEDC').AsString := '0';
+    FieldByName('CODIGO_PRV_PEDC').AsString := '0';
+  end;
+end;
+
+procedure TdmPedidosCompra.unqryTablaGBeforePost(DataSet: TDataSet);
+begin
+  inherited;
+  if (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '0') or
+     (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
+    GetCodigoAutoPedidoCompra;
+  CalcularTotalesPedidoCompra;
+end;
+
+procedure TdmPedidosCompra.unqryTablaGAfterPost(DataSet: TDataSet);
+var
+  sSerie, sNumero: string;
+begin
+  inherited;
+  // Sincronizar pendientes de recibir: borra y reinserta todas las
+  // filas del pedido en fza_articulos_pdte_recibir. Aqui ya tenemos
+  // la cabecera persistida en BBDD asi que la lectura de las lineas
+  // ve el estado real.
+  sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
+    inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+end;
+
+procedure TdmPedidosCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
+var
+  sSerie, sNumero: string;
+begin
+  inherited;
+  // Limpiar pendientes de recibir antes de borrar la cabecera para no
+  // dejar filas huerfanas. Las lineas las borra el ON DELETE CASCADE
+  // (no aplica aqui: no hay FK) — bueno, simplemente las lineas se
+  // pueden quedar tambien huerfanas. Las borramos a mano.
+  sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
+    inLibGlobalVar.oConn, sSerie, sNumero);
+  // Borrar lineas asociadas para que no se queden huerfanas (no hay
+  // FK con CASCADE).
+  with TUniQuery.Create(nil) do
+  try
+    Connection := inLibGlobalVar.oConn;
+    SQL.Text :=
+      'DELETE FROM fza_pedidos_compra_lineas ' +
+      ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
+      '   AND NUMERO_PEDC_PEDCLIN = :n';
+    ParamByName('s').AsString := sSerie;
+    ParamByName('n').AsString := sNumero;
+    ExecSQL;
+  finally
+    Free;
+  end;
+end;
+
+procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterInsert(
+                                                       DataSet: TDataSet);
+begin
+  inherited;
+  with unqryPedidosCompraLineas do
+  begin
+    FieldByName('NUMERO_PEDC_PEDCLIN').AsString :=
+      unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+    FieldByName('SERIE_PEDC_PEDCLIN').AsString :=
+      unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+    FieldByName('CANTIDAD_PEDCLIN').AsFloat := 1;
+    FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat := 0;
+    // Por defecto la linea hereda el almacen de la cabecera; el usuario
+    // puede sobreescribirlo si quiere mezclar lineas de varios almacenes.
+    if FindField('CODIGO_ALMACEN_PEDCLIN') <> nil then
+      FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString :=
+        unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+    FieldByName('USUARIO_ALTA').AsString    := oUser;
+    FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    FieldByName('USUARIO_MODIF').AsString   := oUser;
+    FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
+  end;
+end;
+
+procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforePost(
+                                                       DataSet: TDataSet);
+var
+  sSku, sArt: string;
+begin
+  inherited;
+  with unqryPedidosCompraLineas do
+  begin
+    if (FindField('CANTIDAD_PEDCLIN') <> nil) and
+       (FindField('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN') <> nil) and
+       (FindField('TOTAL_PEDCLIN') <> nil) then
+      FieldByName('TOTAL_PEDCLIN').AsFloat :=
+        FieldByName('CANTIDAD_PEDCLIN').AsFloat *
+        FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN').AsFloat;
+    if FindField('USUARIO_MODIF') <> nil then
+      FieldByName('USUARIO_MODIF').AsString   := oUser;
+    if FindField('INSTANTE_MODIF') <> nil then
+      FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
+    if (DataSet.State = dsInsert) then
+    begin
+      if (FindField('USUARIO_ALTA') <> nil) and
+         (FieldByName('USUARIO_ALTA').AsString = '') then
+        FieldByName('USUARIO_ALTA').AsString := oUser;
+      if (FindField('INSTANTE_ALTA') <> nil) and
+         FieldByName('INSTANTE_ALTA').IsNull then
+        FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    end;
+    // Si tecleo SKU pero no articulo, lo deducimos via fza_articulos_skus.
+    if (FindField('CODIGO_UNIDAD_PEDCLIN') <> nil) and
+       (FindField('CODIGO_ART_PEDCLIN') <> nil) then
+    begin
+      sSku := Trim(FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString);
+      sArt := Trim(FieldByName('CODIGO_ART_PEDCLIN').AsString);
+      if (sSku <> '') and (sArt = '') then
+      begin
+        unqrySkusPedc.Close;
+        unqrySkusPedc.ParamByName('pSKU').AsString := sSku;
+        unqrySkusPedc.Open;
+        if not unqrySkusPedc.Eof then
+          FieldByName('CODIGO_ART_PEDCLIN').AsString :=
+            unqrySkusPedc.FieldByName('CODIGO_ART_SKU').AsString;
+        unqrySkusPedc.Close;
+      end;
+    end;
+  end;
+end;
+
+procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterPost(
+                                                       DataSet: TDataSet);
+var
+  sSerie, sNumero: string;
+begin
+  inherited;
+  CalcularTotalesPedidoCompra;
+  // Tras editar una linea, resincronizamos las pendientes de recibir
+  // (cantidad de la linea puede haber cambiado).
+  sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
+    inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+end;
+
+procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforeDelete(
+                                                       DataSet: TDataSet);
+var
+  sSerie, sNumero, sLinea: string;
+begin
+  inherited;
+  // Borrar la fila concreta de fza_articulos_pdte_recibir antes de
+  // borrar la linea: la PK incluye LINEA_PDR asi que es seguro.
+  sSerie  := unqryPedidosCompraLineas.FieldByName('SERIE_PEDC_PEDCLIN').AsString;
+  sNumero := unqryPedidosCompraLineas.FieldByName('NUMERO_PEDC_PEDCLIN').AsString;
+  sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
+    inLibGlobalVar.oConn, sSerie, sNumero, sLinea);
+end;
+
+procedure TdmPedidosCompra.GetCodigoAutoPedidoCompra;
+begin
+  with unstrdprcGetContadorPedc do
+  begin
+    Params.Clear;
+    Params.CreateParam(ftString, 'pserie',            ptInput);
+    Params.CreateParam(ftString, 'ptipodoc',          ptInput);
+    Params.CreateParam(ftString, 'pcont',             ptOutput);
+    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
+    Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
+    ParamByName('pserie').AsString :=
+      unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+    ParamByName('ptipodoc').AsString := 'PC';
+    ParamByName('pUSUARIOMODIF').AsString := oUser;
+    ParamByName('pEMPRESA_CONTADOR').AsString :=
+      unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString;
+    ExecProc;
+    unqryTablaG.FieldByName('NUMERO_PEDC').AsString :=
+      ParamByName('pcont').AsString;
+  end;
+end;
+
+procedure TdmPedidosCompra.CalcularTotalesPedidoCompra;
+var
+  fBase, fIva, fTotal, fPorIva: Double;
+  bk: TBookmark;
+begin
+  if not unqryPedidosCompraLineas.Active then Exit;
+  fBase  := 0;
+  fIva   := 0;
+  bk := unqryPedidosCompraLineas.GetBookmark;
+  try
+    unqryPedidosCompraLineas.DisableControls;
+    unqryPedidosCompraLineas.First;
+    while not unqryPedidosCompraLineas.Eof do
+    begin
+      fPorIva := unqryPedidosCompraLineas.
+                   FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      fTotal  := unqryPedidosCompraLineas.
+                   FieldByName('TOTAL_PEDCLIN').AsFloat;
+      fBase   := fBase + fTotal;
+      fIva    := fIva  + (fTotal * fPorIva / 100);
+      unqryPedidosCompraLineas.Next;
+    end;
+  finally
+    if unqryPedidosCompraLineas.BookmarkValid(bk) then
+      unqryPedidosCompraLineas.GotoBookmark(bk);
+    unqryPedidosCompraLineas.FreeBookmark(bk);
+    unqryPedidosCompraLineas.EnableControls;
+  end;
+  if not (unqryTablaG.State in dsEditModes) then
+    unqryTablaG.Edit;
+  unqryTablaG.FieldByName('TOTAL_BASES_PEDC').AsFloat     := fBase;
+  unqryTablaG.FieldByName('TOTAL_IMPUESTOS_PEDC').AsFloat := fIva;
+  unqryTablaG.FieldByName('TOTAL_LIQUIDO_PEDC').AsFloat   := fBase + fIva;
+end;
+
+end.
