@@ -253,7 +253,8 @@ type
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
-    procedure dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
+    procedure dbcLinTallasPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinCodArtPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
@@ -266,10 +267,15 @@ type
     FTallaColumns : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
     FBasicosColor : TArray<string>;
     FQryConjuntosTallas : TUniQuery;
-    FDsConjuntosTallas  : TDataSource;
+    // Opciones del selector "Sistema tallas" (listbox 3 columnas, mismo
+    // patron que el de color basico) y diccionario ID_AC -> NOMBRE_AC
+    // que usa el CustomDrawCell para pintar el nombre en vez del ID crudo.
+    FOpcionesTallas  : TArray<TOpcionConjuntoTalla>;
+    FNombresConjunto : TDictionary<Integer, string>;
     FBmpSwatch    : TBitmap;
     function  Dmm: TdmComprasSesiones;
     procedure CargarBasicosColor;
+    procedure CargarConjuntosTallas;
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
@@ -390,9 +396,6 @@ begin
   cbbAlmacen.Properties.ListSource   := Dmm.dsAlmacenes;
   cbbTarifa.Properties.ListSource    := Dmm.dsTarifas;
   cbbTemporada.Properties.ListSource := Dmm.dsTemporadas;
-
-  TcxLookupComboBoxProperties(dbcLinTallas.Properties).ListSource :=
-                                                    FDsConjuntosTallas;
 
   with Dmm do
   begin
@@ -573,10 +576,11 @@ begin
   // grid dispara OnFocusedRecordChanged sobre el gestor de tallas) tiene
   // que estar creado ANTES del inherited.
   FBmpSwatch := TBitmap.Create;
-  // Query propia del lookup "Sistema tallas": solo conjuntos del
+  FNombresConjunto := TDictionary<Integer, string>.Create;
+  // Query que alimenta el selector "Sistema tallas": solo conjuntos del
   // atributo pivot (ID_VA_AC = 'TAL'), no colores ni otros ejes. Trae
   // ademas primera y ultima talla (ordenadas por ORDEN_ACD) para
-  // mostrarlas como rango en el dropdown.
+  // mostrarlas como rango (columnas 'Desde' / 'Hasta') en el listbox.
   FQryConjuntosTallas := TUniQuery.Create(Self);
   FQryConjuntosTallas.Connection := inLibGlobalVar.oConn;
   FQryConjuntosTallas.SQL.Text :=
@@ -594,8 +598,9 @@ begin
     '   AND AC.ID_VA_AC = ''TAL'' ' +
     ' ORDER BY AC.NOMBRE_AC';
   FQryConjuntosTallas.Open;
-  FDsConjuntosTallas := TDataSource.Create(Self);
-  FDsConjuntosTallas.DataSet := FQryConjuntosTallas;
+  // Volcar la query a la lista de opciones del selector y al diccionario
+  // ID_AC -> NOMBRE_AC (lo usa CustomDrawCell para mostrar el nombre).
+  CargarConjuntosTallas;
 
   // CrearColumnasTallas debe correr antes de inherited (CrearTablaPrincipal,
   // lanzada desde inherited, llama a RecalcularMaxColumnas y
@@ -724,7 +729,7 @@ begin
   // algun chivato disparara LogSes durante la destruccion del DM no
   // queremos que intente escribir en mLog ya liberado.
   inLibGlobalVar.oLogSesion := nil;
-  FreeAndNil(FDsConjuntosTallas);
+  FreeAndNil(FNombresConjunto);
   FreeAndNil(FGestorTallas);
   FreeAndNil(FBmpSwatch);
   inherited;
@@ -761,6 +766,36 @@ end;
 // ===========================================================================
 //   Creacion y cache de columnas de talla
 // ===========================================================================
+
+procedure TfrmMtoComprasSesiones.CargarConjuntosTallas;
+var
+  iId : Integer;
+  k   : Integer;
+begin
+  // Vuelca FQryConjuntosTallas a FOpcionesTallas (lo consume el selector
+  // listbox de 3 columnas) y a FNombresConjunto (ID_AC -> NOMBRE_AC, lo
+  // usa tvLineasCustomDrawCell para mostrar el nombre del sistema en la
+  // celda en vez del ID numerico que esta bound).
+  SetLength(FOpcionesTallas, 0);
+  if Assigned(FNombresConjunto) then
+    FNombresConjunto.Clear;
+  if (FQryConjuntosTallas = nil) or (not FQryConjuntosTallas.Active) then Exit;
+  SetLength(FOpcionesTallas, FQryConjuntosTallas.RecordCount);
+  k := 0;
+  FQryConjuntosTallas.First;
+  while not FQryConjuntosTallas.Eof do
+  begin
+    iId := FQryConjuntosTallas.FieldByName('ID_AC').AsInteger;
+    FOpcionesTallas[k].IdAc    := iId;
+    FOpcionesTallas[k].Nombre  := FQryConjuntosTallas.FieldByName('NOMBRE_AC').AsString;
+    FOpcionesTallas[k].Primera := FQryConjuntosTallas.FieldByName('PRIMERA').AsString;
+    FOpcionesTallas[k].Ultima  := FQryConjuntosTallas.FieldByName('ULTIMA').AsString;
+    if Assigned(FNombresConjunto) then
+      FNombresConjunto.AddOrSetValue(iId, FOpcionesTallas[k].Nombre);
+    Inc(k);
+    FQryConjuntosTallas.Next;
+  end;
+end;
 
 procedure TfrmMtoComprasSesiones.CrearColumnasTallas;
 var
@@ -1460,41 +1495,62 @@ begin
   Key := 0;
 end;
 
-procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
+procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  ds       : TDataSet;
+  Edit     : TWinControl;
+  ScrPt    : TPoint;
+  WidHint  : Integer;
+  IdActual : Integer;
+  IdNuevo  : Integer;
 begin
-  inherited; // Ojo: asegúrate de que el inherited encaje con la firma (Sender: TObject)
-
-//  // Aquí Sender SÍ es el editor en memoria (TcxCustomEdit), por lo que el cast funciona
-//  if Sender is TcxCustomEdit then
-//    TcxCustomEdit(Sender).PostEditValue;
-//
-//  if Dmm.unqrySesionLin.IsEmpty then Exit;
-//  if FGestorTallas = nil then Exit;
-//
-//  // Rechaza sistemas con más valores que el máximo (mtError + clear)
-//  if not FGestorTallas.ValidarSistemaSeleccionado then Exit;
-//
-//  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-//    Dmm.unqrySesionLin.Post;
-//
-//  FGestorTallas.RecalcularMaxColumnas;
-//  FGestorTallas.ActualizarCaptionsLineaActiva;
-//
-//  // --- Salto automático a la siguiente celda visual (Talla 1) ---
-//  TThread.ForceQueue(nil,
-//    procedure
-//    var
-//      vColIndex: Integer;
-//    begin
-//      // Validamos que el foco sigue en esta columna antes de saltar
-//      if tvLineas.Controller.FocusedItem = dbcLinTallas then
-//      begin
-//        vColIndex := dbcLinTallas.VisibleIndex + 1;
-//        if vColIndex < tvLineas.VisibleItemCount then
-//          tvLineas.Controller.FocusedItem := tvLineas.VisibleItems[vColIndex];
-//      end;
-//    end
-//  );
+  // Mismo patron que el selector de color basico: el ellipsis abre un
+  // listbox owner-drawn sin marco (SeleccionarConjuntoTalla) con las tres
+  // columnas Sistema / Desde / Hasta. Sustituye al antiguo
+  // TcxLookupComboBox (que daba guerra con Enter/Tab/auto-dropdown dentro
+  // del grid). Un click selecciona y cierra; Esc o click fuera cancelan.
+  if Length(FOpcionesTallas) = 0 then
+  begin
+    MessageDlg('No hay sistemas de tallas activos en ' +
+               'fza_atributos_conjuntos (ID_VA_AC=''TAL'').',
+               mtInformation, [mbOk], 0);
+    Exit;
+  end;
+  ds := Dmm.unqrySesionLin;
+  if ds.IsEmpty then Exit;
+  IdActual := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+  // Posicionar el popup justo debajo del editor (igual que color basico).
+  ScrPt.X := -1;
+  ScrPt.Y := -1;
+  WidHint := 380;
+  if Sender is TWinControl then
+  begin
+    Edit    := TWinControl(Sender);
+    ScrPt   := Edit.ClientToScreen(Point(0, Edit.Height));
+    WidHint := Edit.Width;
+    if WidHint < 380 then WidHint := 380;
+  end;
+  if not SeleccionarConjuntoTalla(FOpcionesTallas, IdActual, IdNuevo,
+                                  ScrPt.X, ScrPt.Y, WidHint) then
+    Exit;
+  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+  ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := IdNuevo;
+  if Sender is TcxCustomEdit then
+    TcxCustomEdit(Sender).EditValue := IdNuevo;
+  // Validar contra el maximo de columnas inline. Si el conjunto excede
+  // CANT_TALLAS_MAX, el gestor avisa y limpia el campo; reflejamos el
+  // borrado en el editor. Si es valido, recolocar columnas y captions.
+  if Assigned(FGestorTallas) then
+  begin
+    if FGestorTallas.ValidarSistemaSeleccionado then
+    begin
+      FGestorTallas.RecalcularMaxColumnas;
+      FGestorTallas.ActualizarCaptionsLineaActiva;
+    end
+    else if Sender is TcxCustomEdit then
+      TcxCustomEdit(Sender).EditValue := Null;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.btnArbolFamiliasClick(Sender: TObject);
@@ -1741,43 +1797,10 @@ begin
   // asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
-  // Sistema tallas: auto-desplegar el combo al entrar en la celda. Hay
-  // que diferir con ForceQueue para que el editor este completamente
-  // visible (set inmediato en InitEdit no abre el popup). Mismo patron
-  // que en inMtoFacturasBase.pas:1552 (ShowEdit + DroppedDown).
-  // OJO: el popup del cxLookupComboBox vive fuera del contenedor cxGrid,
-  // asi que cuando se abre se dispara cxgrdLineas.OnExit -> reactiva
-  // JvEnterAsTab. Si el Enter llega al popup ya convertido en Tab, la
-  // seleccion se cancela (DevExpress trata el Tab dentro del dropdown
-  // como close-without-commit). Forzamos JvEnterAsTab=False mientras el
-  // editor del combo este vivo; se vuelve a activar en cxgrdLineasExit
-  // cuando el foco salga del grid.
-  if AItem = dbcLinTallas then
-  begin
-    inLibGridTallasInline.ActivarEnterComoTab(Self, False);
-    TThread.ForceQueue(nil,
-      procedure
-      var ec  : TcxCustomEdit;
-      begin
-        if tvLineas.Controller.FocusedItem <> dbcLinTallas then Exit;
-        if tvLineas.Controller.EditingController = nil then Exit;
-        tvLineas.Controller.EditingController.ShowEdit;
-        ec := tvLineas.Controller.EditingController.Edit;
-        if ec = nil then
-        begin
-          LogSes('  auto-dropdown Sistema tallas: Edit es nil');
-          Exit;
-        end;
-        // Re-aseguramos por si el popup ya disparo el OnExit del grid
-        // entre el InitEdit y el ForceQueue.
-        inLibGridTallasInline.ActivarEnterComoTab(Self, False);
-        if ec is TcxCustomDropDownEdit then
-          TcxCustomDropDownEdit(ec).DroppedDown := True
-        else
-          LogSes(Format('  auto-dropdown Sistema tallas: Edit es %s, no DropDown',
-                        [ec.ClassName]));
-      end);
-  end;
+  // 'Sistema tallas' ya no es un combo: es un TcxButtonEdit con ellipsis
+  // que abre el listbox de 3 columnas (dbcLinTallasPropertiesButtonClick),
+  // igual que el selector de color basico. No hay popup que auto-desplegar
+  // ni guerra con JvEnterAsTab/DroppedDown dentro del grid.
   if AItem <> dbcLinColorBasico then Exit;
   if not (AEdit is TcxButtonEdit) then Exit;
   BE := TcxButtonEdit(AEdit);
@@ -1813,6 +1836,7 @@ var
   vAc      : Variant;
   iAc      : Integer;
   arr      : TArrPosConjunto;
+  TxtRect  : TRect;
 begin
   inherited;
   Col := nil;
@@ -1851,6 +1875,40 @@ begin
         end;
       end;
     end;
+  end;
+
+  // ---- Nombre del sistema de tallas (columna selector) ----
+  // dbcLinTallas esta bound al ID numerico (ID_AC_PIVOT_SESLIN); pintamos
+  // el NOMBRE_AC del conjunto para que la celda muestre el nombre legible
+  // y no el ID crudo. El editor (ellipsis) solo aparece al entrar a la
+  // celda; el resto del tiempo manda este pintado.
+  if Col = dbcLinTallas then
+  begin
+    AvActual := '';
+    vAc := AViewInfo.GridRecord.Values[Col.Index];
+    if (not VarIsNull(vAc)) and (not VarIsEmpty(vAc)) and VarIsNumeric(vAc) then
+    begin
+      iAc := vAc;
+      if (iAc <= 0) or (FNombresConjunto = nil) or
+         (not FNombresConjunto.TryGetValue(iAc, AvActual)) then
+        AvActual := '';
+    end;
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := AViewInfo.Params.Color;
+    ACanvas.FillRect(AViewInfo.Bounds);
+    if AvActual <> '' then
+    begin
+      TxtRect := AViewInfo.Bounds;
+      Inc(TxtRect.Left, 4);
+      ACanvas.Font.Assign(AViewInfo.Params.Font);
+      ACanvas.Font.Color := AViewInfo.Params.TextColor;
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.DrawText(AvActual, TxtRect,
+                       DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
+      ACanvas.Brush.Style := bsSolid;
+    end;
+    ADone := True;
+    Exit;
   end;
 
   // ---- Swatch de color basico ----
