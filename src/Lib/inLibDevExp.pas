@@ -64,10 +64,19 @@ type
   procedure PonerAnchosTitulos( AcxgrdtvVista: TcxCustomGridTableView;
                                 AsDes: string;
                                 var oPerfilDic: TProfileDicc);
-  // Aplica TcxCurrencyEditProperties / TcxCheckBoxProperties segun el
-  // prefijo del campo (PRECIO_/TOTAL_/IMPORTE_, PORCENTAJE_,
-  // VALOR_/CANTIDAD_, ESxxx_). Pensada para mantenimientos de busqueda
-  // que crean columnas dinamicas sin properties (inMtoGenSearch).
+  // Asigna PropertiesClass a las columnas del view en funcion del prefijo
+  // del campo, siguiendo la convencion del LIBRO_DE_ESTILO_BBDD.md §3.2.
+  // Mapeo:
+  //   PRECIO_  / TOTAL_ / IMPORTE_  -> TcxCurrencyEditProperties (€)
+  //   PORCENTAJE_                   -> TcxCurrencyEditProperties (%)
+  //   VALOR_   / CANTIDAD_          -> TcxCurrencyEditProperties (decimal)
+  //   ESxxx (con TField varchar(1)) -> TcxCheckBoxProperties (S/N)
+  // No toca columnas que ya traigan un PropertiesClassName distinto de
+  // vacio o TcxTextEditProperties (respeta lo del .dfm). NUMERO_/LINEA_/
+  // CONTADOR_ son varchar en BBDD (salen como texto, no necesitan
+  // properties); ORDEN_ es int (cxGrid usa TcxSpinEditProperties por
+  // defecto); FECHA_/INSTANTE_ son date/datetime (cxGrid usa
+  // TcxDateEditProperties por defecto). Por eso quedan fuera.
   procedure AplicarPropertiesPorPrefijo(AView: TcxCustomGridTableView);
   procedure ExportarExcel(AcxGrd: TcxGrid;
                           AsNomFile: string);

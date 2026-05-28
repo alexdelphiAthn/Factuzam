@@ -1577,7 +1577,99 @@ intente mostrar diálogos sobre un form ya liberado.
 
 ---
 
-## 20. Checklist antes de un commit
+## 20. Formato automatico de columnas en grids dinamicos
+
+En los formularios de **busqueda** (`TfrmMtoSearch` y descendientes) las
+columnas del grid principal se crean a vuelo de pajaro, recorriendo
+`unqryTablaG.Fields` con `cxGrdDBTabPrin.CreateColumn`. Eso deja la
+columna con `PropertiesClass = nil` (que cxGrid renderiza como
+`TcxTextEditProperties`), asi que un campo `PRECIO_VENTA_ART` sale como
+texto plano y un `ESACTIVO_CLI` aparece literalmente como `'S'` o `'N'`.
+
+Para evitar configurar la columna a mano en cada Mto, `inLibDevExp.pas`
+expone `AplicarPropertiesPorPrefijo(AView)`, que recorre las columnas
+del view y asigna `PropertiesClass` segun el **prefijo del campo**,
+siguiendo la convencion del `LIBRO_DE_ESTILO_BBDD.md` §3.2.
+
+### 20.1 Mapa de prefijo a properties
+
+| Prefijo del campo                | PropertiesClass                | DisplayFormat                  |
+|----------------------------------|--------------------------------|--------------------------------|
+| `PRECIO_*` / `TOTAL_*` / `IMPORTE_*` | `TcxCurrencyEditProperties` | `#,##0.00 "€";-#,##0.00 "€";0.00 "€"` |
+| `PORCENTAJE_*`                   | `TcxCurrencyEditProperties`    | `#,##0.00 "%";-#,##0.00 "%";0.00 "%"` |
+| `VALOR_*` / `CANTIDAD_*`         | `TcxCurrencyEditProperties`    | `#,##0.##;-#,##0.##;0`         |
+| `ES*` (con TField `varchar(1)`)  | `TcxCheckBoxProperties`        | `ValueChecked='S'`, `ValueUnchecked='N'` |
+
+`UseDisplayFormatWhenEditing = True` para que el formato persista al
+entrar en edicion de celda.
+
+### 20.2 Prefijos que NO se tocan (y por que)
+
+| Prefijo / convencion         | Tipo BBDD     | Resultado por defecto                |
+|------------------------------|---------------|--------------------------------------|
+| `NUMERO_*` / `LINEA_*` / `CONTADOR_*` | `varchar` | Texto plano — es un identificador (`"F2026-0042"`), no un numero. |
+| `ORDEN_*`                    | `int(11)`     | cxGrid asigna `TcxSpinEditProperties` por el `TIntegerField`. |
+| `FECHA_*`                    | `date`        | cxGrid asigna `TcxDateEditProperties` por el `TDateField`. |
+| `INSTANTE_*` (incluidas las 4 de auditoria) | `datetime` | cxGrid asigna `TcxDateEditProperties` por el `TDateTimeField`. |
+| `USUARIO_ALTA` / `USUARIO_MODIF` | `varchar(50)` | Texto plano. |
+
+### 20.3 Salvaguarda: respetar lo del .dfm
+
+La rutina **solo asigna properties si la columna no tiene ya un
+`PropertiesClassName` propio** (vacio o `TcxTextEditProperties`). Si el
+diseñador puso `TcxLookupComboBoxProperties` en el .dfm para una
+columna `CODIGO_TAR_*`, no se pisa.
+
+### 20.4 Donde se llama automaticamente
+
+`TfrmMtoSearch.CrearTablaPrincipal` (`src/Forms/inMtoGenSearch.pas`)
+la invoca al final, despues de crear las columnas y antes de
+`ApplyBestFit`. Eso cubre todos los Mtos que se lanzan via
+`TBusquedaUtils.EjecutarBusqueda` (F3 de articulos, busqueda de
+clientes, etc).
+
+`PonerAnchosTitulos` (que corre despues, en `AplicarEtiquetas`)
+restaura `Caption`/`Width`/`Visible`/`Sort` del perfil del usuario pero
+**no toca `PropertiesClass`**, asi que el formato sobrevive.
+
+### 20.5 Como invocarla en otros mantenimientos
+
+Si un Mto normal (no de busqueda) tiene columnas dinamicas con campos
+sin properties, basta con llamarla manualmente tras crear las columnas
+o al final de `AplicarEtiquetas`:
+
+```pascal
+uses inLibDevExp;
+
+procedure TfrmMtoMisCosas.CrearTablaPrincipal;
+begin
+  inherited;
+  // ... crear columnas dinamicas ...
+  AplicarPropertiesPorPrefijo(cxGrdDBTabPrin);
+end;
+```
+
+Funciona con cualquier descendiente de `TcxCustomGridTableView`
+(incluido `TcxGridDBBandedTableView`). No es necesario llamarla en
+Mtos cuyas columnas estan completamente cableadas desde el .dfm — solo
+tiene efecto sobre las que esten "sin properties".
+
+### 20.6 Como añadir un prefijo nuevo
+
+Cuando aparezca un prefijo de columna nuevo en `LIBRO_DE_ESTILO_BBDD.md`
+§3.2 que merezca formato automatico:
+
+1. Edita `AplicarPropertiesPorPrefijo` en `src/Lib/inLibDevExp.pas`.
+2. Añade el prefijo al array `PRE_DINERO` / `PRE_PORC` / `PRE_NUM`
+   correspondiente, o crea una nueva categoria con su formato.
+3. Si requiere una `PropertiesClass` distinta a las tres ya soportadas
+   (Currency / CheckBox), añade un helper `SetXxxProps` siguiendo el
+   patron de `SetCurrencyProps` / `SetCheckBoxProps`.
+4. Actualiza la tabla §20.1 de este documento.
+
+---
+
+## 21. Checklist antes de un commit
 
 - [ ] Cabecera de unidad presente y con la fecha correcta.
 - [ ] Nombre de unidad y nombre de fichero coinciden.
