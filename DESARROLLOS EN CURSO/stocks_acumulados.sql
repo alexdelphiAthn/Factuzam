@@ -1,16 +1,13 @@
 -- =====================================================================
--- Acumular en fza_articulos_stockactual los movimientos por subtipo
--- (compra, venta, traspaso, regularización, depósito, préstamo).
--- Cada subtipo se desglosa en ENT y SAL.
---
--- Mapeo TIPO_DOC_MOV → subtipo acumulado:
---   AC       → COMPRA  (TIPO_MOV=E)
---   AE       → COMPRA  (TIPO_MOV=S, devolución a proveedor)
---   VE       → VENTA   (TIPO_MOV=S venta, TIPO_MOV=E devolución cliente)
---   TR, AT   → TRASPASO
---   IN       → REGULAR
---   DP       → DEPOSITO (futuro)
---   PR       → PRESTAMO (futuro)
+-- Acumular en fza_articulos_stockactual los movimientos por subtipo.
+-- Modelo simplificado:
+--   COMPRA       → solo ENT      (AC)
+--   TRASPASO     → ENT + SAL     (TR/AT)
+--   DEPOSITO     → ENT + SAL     (DP, incluye préstamos)
+--   VENTA        → solo SAL      (VE)
+--   REGULAR      → solo ENT      (IN)
+--   ALBVENTA     → solo SAL      (AV - albaranes de venta)
+--   ALBENTRADA   → solo ENT      (AE - albaranes de entrada/devolución)
 -- =====================================================================
 
 -- 1. Añadir columnas idempotentemente
@@ -35,17 +32,14 @@ END;;
 DELIMITER ;
 
 CALL tmp_add_col_stk('CANTIDAD_ENT_COMPRA_STK');
-CALL tmp_add_col_stk('CANTIDAD_SAL_COMPRA_STK');
-CALL tmp_add_col_stk('CANTIDAD_ENT_VENTA_STK');
-CALL tmp_add_col_stk('CANTIDAD_SAL_VENTA_STK');
 CALL tmp_add_col_stk('CANTIDAD_ENT_TRASPASO_STK');
 CALL tmp_add_col_stk('CANTIDAD_SAL_TRASPASO_STK');
-CALL tmp_add_col_stk('CANTIDAD_ENT_REGULAR_STK');
-CALL tmp_add_col_stk('CANTIDAD_SAL_REGULAR_STK');
 CALL tmp_add_col_stk('CANTIDAD_ENT_DEPOSITO_STK');
 CALL tmp_add_col_stk('CANTIDAD_SAL_DEPOSITO_STK');
-CALL tmp_add_col_stk('CANTIDAD_ENT_PRESTAMO_STK');
-CALL tmp_add_col_stk('CANTIDAD_SAL_PRESTAMO_STK');
+CALL tmp_add_col_stk('CANTIDAD_SAL_VENTA_STK');
+CALL tmp_add_col_stk('CANTIDAD_ENT_REGULAR_STK');
+CALL tmp_add_col_stk('CANTIDAD_SAL_ALBVENTA_STK');
+CALL tmp_add_col_stk('CANTIDAD_ENT_ALBENTRADA_STK');
 
 DROP PROCEDURE tmp_add_col_stk;
 
@@ -77,14 +71,14 @@ BEGIN
     DECLARE v_PMPActual DECIMAL(19,6) DEFAULT 0;
     DECLARE v_PrecioFinal DECIMAL(19,6);
     DECLARE v_CosteFinal DECIMAL(19,6);
-    DECLARE v_dEntCompra, v_dSalCompra DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_dEntVenta, v_dSalVenta DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_dEntCompra DECIMAL(19,6) DEFAULT 0;
     DECLARE v_dEntTraspaso, v_dSalTraspaso DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_dEntRegular, v_dSalRegular DECIMAL(19,6) DEFAULT 0;
     DECLARE v_dEntDeposito, v_dSalDeposito DECIMAL(19,6) DEFAULT 0;
-    DECLARE v_dEntPrestamo, v_dSalPrestamo DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_dSalVenta DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_dEntRegular DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_dSalAlbVenta DECIMAL(19,6) DEFAULT 0;
+    DECLARE v_dEntAlbEntrada DECIMAL(19,6) DEFAULT 0;
 
-    -- PMP actual
     SELECT IFNULL(PRECIO_MEDIO_STK, 0)
       INTO v_PMPActual
       FROM fza_articulos_stockactual
@@ -100,32 +94,25 @@ BEGIN
         SET v_CosteFinal  = p_TOTAL_COSTE_MOV;
     END IF;
 
-    -- Calcular delta por subtipo según TIPO_DOC_MOV
-    IF p_TIPO_DOC_MOV = 'AC' THEN
-        IF p_TIPO_MOVIMIENTO_MOV = 'E' THEN SET v_dEntCompra = p_CANTIDAD_MOV;
-        ELSE SET v_dSalCompra = p_CANTIDAD_MOV; END IF;
-    ELSEIF p_TIPO_DOC_MOV = 'AE' THEN
-        -- Devolución compra a proveedor
-        IF p_TIPO_MOVIMIENTO_MOV = 'S' THEN SET v_dSalCompra = p_CANTIDAD_MOV;
-        ELSE SET v_dEntCompra = p_CANTIDAD_MOV; END IF;
-    ELSEIF p_TIPO_DOC_MOV = 'VE' THEN
-        IF p_TIPO_MOVIMIENTO_MOV = 'S' THEN SET v_dSalVenta = p_CANTIDAD_MOV;
-        ELSE SET v_dEntVenta = p_CANTIDAD_MOV; END IF;
+    -- Delta de acumulado según TIPO_DOC_MOV
+    IF p_TIPO_DOC_MOV = 'AC' AND p_TIPO_MOVIMIENTO_MOV = 'E' THEN
+        SET v_dEntCompra = p_CANTIDAD_MOV;
     ELSEIF p_TIPO_DOC_MOV IN ('TR','AT') THEN
         IF p_TIPO_MOVIMIENTO_MOV = 'E' THEN SET v_dEntTraspaso = p_CANTIDAD_MOV;
         ELSE SET v_dSalTraspaso = p_CANTIDAD_MOV; END IF;
-    ELSEIF p_TIPO_DOC_MOV = 'IN' THEN
-        IF p_TIPO_MOVIMIENTO_MOV = 'E' THEN SET v_dEntRegular = p_CANTIDAD_MOV;
-        ELSE SET v_dSalRegular = p_CANTIDAD_MOV; END IF;
     ELSEIF p_TIPO_DOC_MOV = 'DP' THEN
         IF p_TIPO_MOVIMIENTO_MOV = 'E' THEN SET v_dEntDeposito = p_CANTIDAD_MOV;
         ELSE SET v_dSalDeposito = p_CANTIDAD_MOV; END IF;
-    ELSEIF p_TIPO_DOC_MOV = 'PR' THEN
-        IF p_TIPO_MOVIMIENTO_MOV = 'E' THEN SET v_dEntPrestamo = p_CANTIDAD_MOV;
-        ELSE SET v_dSalPrestamo = p_CANTIDAD_MOV; END IF;
+    ELSEIF p_TIPO_DOC_MOV = 'VE' AND p_TIPO_MOVIMIENTO_MOV = 'S' THEN
+        SET v_dSalVenta = p_CANTIDAD_MOV;
+    ELSEIF p_TIPO_DOC_MOV = 'IN' AND p_TIPO_MOVIMIENTO_MOV = 'E' THEN
+        SET v_dEntRegular = p_CANTIDAD_MOV;
+    ELSEIF p_TIPO_DOC_MOV = 'AV' AND p_TIPO_MOVIMIENTO_MOV = 'S' THEN
+        SET v_dSalAlbVenta = p_CANTIDAD_MOV;
+    ELSEIF p_TIPO_DOC_MOV = 'AE' AND p_TIPO_MOVIMIENTO_MOV = 'E' THEN
+        SET v_dEntAlbEntrada = p_CANTIDAD_MOV;
     END IF;
 
-    -- Insertar movimiento real
     INSERT INTO fza_movimientos_almacen (
         NUMERO_MOV,
         TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV,
@@ -148,16 +135,16 @@ BEGIN
         p_CODCLIENTE, p_CODARTICULO
     );
 
-    -- Actualizar stock + acumulados
     INSERT INTO fza_articulos_stockactual (
         CODIGO_ALM_STK, CODIGO_UNIDAD_STK,
         CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF,
-        CANTIDAD_ENT_COMPRA_STK,   CANTIDAD_SAL_COMPRA_STK,
-        CANTIDAD_ENT_VENTA_STK,    CANTIDAD_SAL_VENTA_STK,
+        CANTIDAD_ENT_COMPRA_STK,
         CANTIDAD_ENT_TRASPASO_STK, CANTIDAD_SAL_TRASPASO_STK,
-        CANTIDAD_ENT_REGULAR_STK,  CANTIDAD_SAL_REGULAR_STK,
         CANTIDAD_ENT_DEPOSITO_STK, CANTIDAD_SAL_DEPOSITO_STK,
-        CANTIDAD_ENT_PRESTAMO_STK, CANTIDAD_SAL_PRESTAMO_STK
+        CANTIDAD_SAL_VENTA_STK,
+        CANTIDAD_ENT_REGULAR_STK,
+        CANTIDAD_SAL_ALBVENTA_STK,
+        CANTIDAD_ENT_ALBENTRADA_STK
     ) VALUES (
         p_CODIGO_ALMACEN_MOV,
         p_CODIGO_UNIDAD_MOV,
@@ -165,12 +152,13 @@ BEGIN
         IF(p_TIPO_MOVIMIENTO_MOV = 'E', v_CosteFinal, -v_CosteFinal),
         v_PrecioFinal,
         NOW(),
-        v_dEntCompra,   v_dSalCompra,
-        v_dEntVenta,    v_dSalVenta,
+        v_dEntCompra,
         v_dEntTraspaso, v_dSalTraspaso,
-        v_dEntRegular,  v_dSalRegular,
         v_dEntDeposito, v_dSalDeposito,
-        v_dEntPrestamo, v_dSalPrestamo
+        v_dSalVenta,
+        v_dEntRegular,
+        v_dSalAlbVenta,
+        v_dEntAlbEntrada
     )
     ON DUPLICATE KEY UPDATE
         CANTIDAD_STK     = CANTIDAD_STK     + VALUES(CANTIDAD_STK),
@@ -179,61 +167,52 @@ BEGIN
                               VALOR_TOTAL_STK / CANTIDAD_STK, 0),
         INSTANTE_MODIF   = NOW(),
         CANTIDAD_ENT_COMPRA_STK   = CANTIDAD_ENT_COMPRA_STK   + VALUES(CANTIDAD_ENT_COMPRA_STK),
-        CANTIDAD_SAL_COMPRA_STK   = CANTIDAD_SAL_COMPRA_STK   + VALUES(CANTIDAD_SAL_COMPRA_STK),
-        CANTIDAD_ENT_VENTA_STK    = CANTIDAD_ENT_VENTA_STK    + VALUES(CANTIDAD_ENT_VENTA_STK),
-        CANTIDAD_SAL_VENTA_STK    = CANTIDAD_SAL_VENTA_STK    + VALUES(CANTIDAD_SAL_VENTA_STK),
         CANTIDAD_ENT_TRASPASO_STK = CANTIDAD_ENT_TRASPASO_STK + VALUES(CANTIDAD_ENT_TRASPASO_STK),
         CANTIDAD_SAL_TRASPASO_STK = CANTIDAD_SAL_TRASPASO_STK + VALUES(CANTIDAD_SAL_TRASPASO_STK),
-        CANTIDAD_ENT_REGULAR_STK  = CANTIDAD_ENT_REGULAR_STK  + VALUES(CANTIDAD_ENT_REGULAR_STK),
-        CANTIDAD_SAL_REGULAR_STK  = CANTIDAD_SAL_REGULAR_STK  + VALUES(CANTIDAD_SAL_REGULAR_STK),
         CANTIDAD_ENT_DEPOSITO_STK = CANTIDAD_ENT_DEPOSITO_STK + VALUES(CANTIDAD_ENT_DEPOSITO_STK),
         CANTIDAD_SAL_DEPOSITO_STK = CANTIDAD_SAL_DEPOSITO_STK + VALUES(CANTIDAD_SAL_DEPOSITO_STK),
-        CANTIDAD_ENT_PRESTAMO_STK = CANTIDAD_ENT_PRESTAMO_STK + VALUES(CANTIDAD_ENT_PRESTAMO_STK),
-        CANTIDAD_SAL_PRESTAMO_STK = CANTIDAD_SAL_PRESTAMO_STK + VALUES(CANTIDAD_SAL_PRESTAMO_STK);
+        CANTIDAD_SAL_VENTA_STK    = CANTIDAD_SAL_VENTA_STK    + VALUES(CANTIDAD_SAL_VENTA_STK),
+        CANTIDAD_ENT_REGULAR_STK  = CANTIDAD_ENT_REGULAR_STK  + VALUES(CANTIDAD_ENT_REGULAR_STK),
+        CANTIDAD_SAL_ALBVENTA_STK   = CANTIDAD_SAL_ALBVENTA_STK   + VALUES(CANTIDAD_SAL_ALBVENTA_STK),
+        CANTIDAD_ENT_ALBENTRADA_STK = CANTIDAD_ENT_ALBENTRADA_STK + VALUES(CANTIDAD_ENT_ALBENTRADA_STK);
 END ;;
 DELIMITER ;
 
 -- 3. Reinicializar acumulados desde los movimientos existentes
 UPDATE fza_articulos_stockactual SET
-  CANTIDAD_ENT_COMPRA_STK   = 0, CANTIDAD_SAL_COMPRA_STK   = 0,
-  CANTIDAD_ENT_VENTA_STK    = 0, CANTIDAD_SAL_VENTA_STK    = 0,
+  CANTIDAD_ENT_COMPRA_STK   = 0,
   CANTIDAD_ENT_TRASPASO_STK = 0, CANTIDAD_SAL_TRASPASO_STK = 0,
-  CANTIDAD_ENT_REGULAR_STK  = 0, CANTIDAD_SAL_REGULAR_STK  = 0,
   CANTIDAD_ENT_DEPOSITO_STK = 0, CANTIDAD_SAL_DEPOSITO_STK = 0,
-  CANTIDAD_ENT_PRESTAMO_STK = 0, CANTIDAD_SAL_PRESTAMO_STK = 0;
+  CANTIDAD_SAL_VENTA_STK    = 0,
+  CANTIDAD_ENT_REGULAR_STK    = 0,
+  CANTIDAD_SAL_ALBVENTA_STK   = 0,
+  CANTIDAD_ENT_ALBENTRADA_STK = 0;
 
 UPDATE fza_articulos_stockactual s
   INNER JOIN (
     SELECT
       CODIGO_ALM_MOV     AS alm,
       CODIGO_UNIDAD_MOV  AS uni,
-      SUM(IF(TIPO_DOC_MOV='AC' AND TIPO_MOV='E', CANTIDAD_MOV, 0))                            AS ent_compra,
-      SUM(IF((TIPO_DOC_MOV='AC' AND TIPO_MOV='S') OR (TIPO_DOC_MOV='AE' AND TIPO_MOV='S'), CANTIDAD_MOV, 0))   AS sal_compra,
-      SUM(IF(TIPO_DOC_MOV='AE' AND TIPO_MOV='E', CANTIDAD_MOV, 0))                            AS ent_venta_dev,
-      SUM(IF(TIPO_DOC_MOV='VE' AND TIPO_MOV='E', CANTIDAD_MOV, 0))                            AS ent_venta,
-      SUM(IF(TIPO_DOC_MOV='VE' AND TIPO_MOV='S', CANTIDAD_MOV, 0))                            AS sal_venta,
-      SUM(IF(TIPO_DOC_MOV IN ('TR','AT') AND TIPO_MOV='E', CANTIDAD_MOV, 0))                  AS ent_traspaso,
-      SUM(IF(TIPO_DOC_MOV IN ('TR','AT') AND TIPO_MOV='S', CANTIDAD_MOV, 0))                  AS sal_traspaso,
-      SUM(IF(TIPO_DOC_MOV='IN' AND TIPO_MOV='E', CANTIDAD_MOV, 0))                            AS ent_regular,
-      SUM(IF(TIPO_DOC_MOV='IN' AND TIPO_MOV='S', CANTIDAD_MOV, 0))                            AS sal_regular,
-      SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='E', CANTIDAD_MOV, 0))                            AS ent_deposito,
-      SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='S', CANTIDAD_MOV, 0))                            AS sal_deposito,
-      SUM(IF(TIPO_DOC_MOV='PR' AND TIPO_MOV='E', CANTIDAD_MOV, 0))                            AS ent_prestamo,
-      SUM(IF(TIPO_DOC_MOV='PR' AND TIPO_MOV='S', CANTIDAD_MOV, 0))                            AS sal_prestamo
+      SUM(IF(TIPO_DOC_MOV='AC' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_compra,
+      SUM(IF(TIPO_DOC_MOV IN ('TR','AT') AND TIPO_MOV='E', CANTIDAD_MOV, 0)) AS ent_traspaso,
+      SUM(IF(TIPO_DOC_MOV IN ('TR','AT') AND TIPO_MOV='S', CANTIDAD_MOV, 0)) AS sal_traspaso,
+      SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_deposito,
+      SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='S', CANTIDAD_MOV, 0))         AS sal_deposito,
+      SUM(IF(TIPO_DOC_MOV='VE' AND TIPO_MOV='S', CANTIDAD_MOV, 0))         AS sal_venta,
+      SUM(IF(TIPO_DOC_MOV='IN' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_regular,
+      SUM(IF(TIPO_DOC_MOV='AV' AND TIPO_MOV='S', CANTIDAD_MOV, 0))         AS sal_albventa,
+      SUM(IF(TIPO_DOC_MOV='AE' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_albentrada
     FROM fza_movimientos_almacen
     WHERE ESACTIVO_MOV = 'S'
     GROUP BY CODIGO_ALM_MOV, CODIGO_UNIDAD_MOV
   ) m ON m.alm = s.CODIGO_ALM_STK AND m.uni = s.CODIGO_UNIDAD_STK
 SET
   s.CANTIDAD_ENT_COMPRA_STK   = m.ent_compra,
-  s.CANTIDAD_SAL_COMPRA_STK   = m.sal_compra,
-  s.CANTIDAD_ENT_VENTA_STK    = m.ent_venta + m.ent_venta_dev,
-  s.CANTIDAD_SAL_VENTA_STK    = m.sal_venta,
   s.CANTIDAD_ENT_TRASPASO_STK = m.ent_traspaso,
   s.CANTIDAD_SAL_TRASPASO_STK = m.sal_traspaso,
-  s.CANTIDAD_ENT_REGULAR_STK  = m.ent_regular,
-  s.CANTIDAD_SAL_REGULAR_STK  = m.sal_regular,
   s.CANTIDAD_ENT_DEPOSITO_STK = m.ent_deposito,
   s.CANTIDAD_SAL_DEPOSITO_STK = m.sal_deposito,
-  s.CANTIDAD_ENT_PRESTAMO_STK = m.ent_prestamo,
-  s.CANTIDAD_SAL_PRESTAMO_STK = m.sal_prestamo;
+  s.CANTIDAD_SAL_VENTA_STK    = m.sal_venta,
+  s.CANTIDAD_ENT_REGULAR_STK    = m.ent_regular,
+  s.CANTIDAD_SAL_ALBVENTA_STK   = m.sal_albventa,
+  s.CANTIDAD_ENT_ALBENTRADA_STK = m.ent_albentrada;
