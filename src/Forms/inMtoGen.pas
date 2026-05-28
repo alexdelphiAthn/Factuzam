@@ -177,6 +177,13 @@ type
     FSqlBaseBusquedaExterna: string;
     FCamposGuia: TStringList;
     FCamposGuiaTabla: TStringList;
+    // Hook BeforeDelete del dataset principal original (en el data module).
+    // Lo conservamos para reinvocarlo cuando la accion final sea Borrar; si
+    // el usuario elige Desactivar o Cancelar lo saltamos.
+    FBeforeDeleteOrig: TDataSetNotifyEvent;
+    FGuardianBorradoInstalado: Boolean;
+    procedure InstalarGuardianBorrado;
+    procedure GuardianBeforeDelete(DataSet: TDataSet);
     FColumnasVisiblesGuia: TStringList;
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
@@ -744,6 +751,7 @@ var
     end;
   end;
 begin
+    InstalarGuardianBorrado;
     FocusControl := FindNextFocusableControl(tsFicha);
     if Assigned(FocusControl) then
     begin
@@ -752,6 +760,56 @@ begin
         FocusControl.SetFocus;
       end;
     end;
+end;
+
+procedure TfrmMtoGen.InstalarGuardianBorrado;
+var
+  ds: TDataSet;
+begin
+  if FGuardianBorradoInstalado then
+    Exit;
+  ds := dsTablaG.DataSet;
+  if ds = nil then
+    Exit;
+  // Encadenamos: el handler original (p.ej. cascada de DELETE de lineas y
+  // recibos en facturas) sigue ejecutandose si la accion final es Borrar.
+  FBeforeDeleteOrig := ds.BeforeDelete;
+  ds.BeforeDelete := GuardianBeforeDelete;
+  // Desactivamos el dialogo nativo de confirmacion del navegador para no
+  // mostrar dos popups en cascada (el nativo y el nuestro). El cxGrid del
+  // listado tiene su propio mini navegador; lo cubrimos tambien si esta
+  // presente.
+  if Assigned(nvNavegador) then
+    nvNavegador.Buttons.ConfirmDelete := False;
+  if Assigned(cxGrdDBTabPrin) and Assigned(cxGrdDBTabPrin.Navigator) then
+    cxGrdDBTabPrin.Navigator.Buttons.ConfirmDelete := False;
+  FGuardianBorradoInstalado := True;
+end;
+
+procedure TfrmMtoGen.GuardianBeforeDelete(DataSet: TDataSet);
+var
+  sCampoActivo: string;
+begin
+  case PreguntarAccionBorrado of
+    abCancelar:
+      SysUtils.Abort;
+    abDesactivar:
+      begin
+        sCampoActivo := NombreCampoESACTIVO;
+        if (sCampoActivo <> '') and
+           (DataSet.FindField(sCampoActivo) <> nil) then
+        begin
+          if not (DataSet.State in [dsEdit, dsInsert]) then
+            DataSet.Edit;
+          DataSet.FieldByName(sCampoActivo).AsString := 'N';
+          DataSet.Post;
+        end;
+        SysUtils.Abort;
+      end;
+    abContinuar:
+      if Assigned(FBeforeDeleteOrig) then
+        FBeforeDeleteOrig(DataSet);
+  end;
 end;
 
 procedure TfrmMtoGen.CargarPerfilesComunes(sUser:string = 'Todos');
@@ -1138,6 +1196,8 @@ begin
       // aun no tiene datos; aqui ya esta abierto y vinculado.
       if oPerfilDic <> nil then
         RestaurarFocoGrid(cxGrdDBTabPrin, oPerfilDic);
+      // (f) Hook de borrar (Delete -> Desactivar). Idempotente.
+      InstalarGuardianBorrado;
     end);
 end;
 
@@ -1177,6 +1237,8 @@ begin
       // Restaurar posicion del cursor guardada en el perfil
       if oPerfilDic <> nil then
         RestaurarFocoGrid(cxGrdDBTabPrin, oPerfilDic);
+      // Hook de borrar (Delete -> Desactivar). Idempotente.
+      InstalarGuardianBorrado;
       inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
         sw.ElapsedMilliseconds);
     except
@@ -1852,30 +1914,15 @@ begin
 end;
 
 procedure TfrmMtoGen.actEliminarRegistroExecute(Sender: TObject);
-var
-  Accion: TAccionBorrado;
-  sCampoActivo: string;
-  ds: TDataSet;
 begin
-  Accion := PreguntarAccionBorrado;
-  case Accion of
-    abCancelar:
-      ;
-    abDesactivar:
-      begin
-        sCampoActivo := NombreCampoESACTIVO;
-        ds := dsTablaG.DataSet;
-        if (sCampoActivo = '') or not Assigned(ds) or
-           (ds.FindField(sCampoActivo) = nil) then
-          Exit;
-        if not (ds.State in [dsEdit, dsInsert]) then
-          ds.Edit;
-        ds.FieldByName(sCampoActivo).AsString := 'N';
-        ds.Post;
-      end;
-    abContinuar:
-      dsTablaG.DataSet.Delete;
-  end;
+  // El guardian BeforeDelete (GuardianBeforeDelete) hace la pregunta y, segun
+  // la respuesta, aborta, desactiva o continua con el delete original. No
+  // duplicamos aqui la logica para que el flujo sea identico cuando el
+  // usuario pulsa el boton de borrar del navegador (que llama directamente
+  // a DataSet.Delete sin pasar por esta accion).
+  if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+     not dsTablaG.DataSet.IsEmpty then
+    dsTablaG.DataSet.Delete;
 end;
 
 function TfrmMtoGen.PreguntarAccionBorrado: TAccionBorrado;
