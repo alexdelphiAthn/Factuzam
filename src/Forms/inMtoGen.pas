@@ -802,7 +802,7 @@ var
 begin
   case PreguntarAccionBorrado of
     abCancelar:
-      SysUtils.Abort;
+      Abort;
     abDesactivar:
       begin
         sCampoActivo := NombreCampoESACTIVO;
@@ -814,7 +814,7 @@ begin
           DataSet.FieldByName(sCampoActivo).AsString := 'N';
           DataSet.Post;
         end;
-        SysUtils.Abort;
+        Abort;
       end;
     abContinuar:
       if Assigned(FBeforeDeleteOrig) then
