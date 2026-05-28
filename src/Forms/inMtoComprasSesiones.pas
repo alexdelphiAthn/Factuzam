@@ -1475,24 +1475,39 @@ procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
-  frmSel: TfrmModalSelFamilia;
-  vColIndex: Integer;
+  frmSel : TfrmModalSelFamilia;
+  props  : TcxButtonEditProperties;
 begin
   inherited;
-  // --- SELECTOR DE FAMILIA / ARTÍCULO (F3) ---
-  if (Key <> VK_F3) or (Shift <> []) then Exit;
-  if not Assigned(AItem) then Exit;
-
-  if (AItem <> dbcLinFamilia) and (AItem <> dbcLinCodArt) then Exit;
-
-  frmSel := TfrmModalSelFamilia.Create(Self);
-  try
-    if frmSel.ShowModal = mrOk then
-      ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
-  finally
-    FreeAndNil(frmSel);
+  // Ctrl+Enter sobre cualquier columna 'editbutton' (color basico,
+  // sistema tallas, ...) dispara el click de su primer boton, igual que
+  // pulsar el ellipsis '...'. Generico: invoca el OnButtonClick cableado
+  // en esa columna pasando AEdit (el editor en edicion) como Sender, asi
+  // el popup sale justo debajo de la celda. Cualquier columna TcxButtonEdit
+  // futura hereda el atajo sin tocar este handler.
+  if (Key = VK_RETURN) and (Shift = [ssCtrl]) and (AItem is TcxGridDBColumn) and
+     (TcxGridDBColumn(AItem).Properties is TcxButtonEditProperties) then
+  begin
+    props := TcxButtonEditProperties(TcxGridDBColumn(AItem).Properties);
+    if (props.Buttons.Count > 0) and Assigned(props.OnButtonClick) then
+    begin
+      props.OnButtonClick(AEdit, 0);
+      Key := 0;
+    end;
+  end
+  // F3 sobre Familia / Codigo articulo abre el picker jerarquico de familia.
+  else if (Key = VK_F3) and (Shift = []) and
+          ((AItem = dbcLinFamilia) or (AItem = dbcLinCodArt)) then
+  begin
+    frmSel := TfrmModalSelFamilia.Create(Self);
+    try
+      if frmSel.ShowModal = mrOk then
+        ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
+    finally
+      FreeAndNil(frmSel);
+    end;
+    Key := 0;
   end;
-  Key := 0;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesButtonClick(
