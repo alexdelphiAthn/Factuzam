@@ -4,7 +4,7 @@
 --   COMPRA       → solo ENT      (AC)
 --   TRASPASO     → ENT + SAL     (TR/AT)
 --   DEPOSITO     → ENT + SAL     (DP, incluye préstamos)
---   VENTA        → solo SAL      (VE)
+--   VENTA        → solo SAL      (VE caja POS, FC facturas)
 --   REGULAR      → solo ENT      (IN)
 --   ALBVENTA     → solo SAL      (AV - albaranes de venta)
 --   ALBENTRADA   → solo ENT      (AE - albaranes de entrada/devolución)
@@ -103,7 +103,7 @@ BEGIN
     ELSEIF p_TIPO_DOC_MOV = 'DP' THEN
         IF p_TIPO_MOVIMIENTO_MOV = 'E' THEN SET v_dEntDeposito = p_CANTIDAD_MOV;
         ELSE SET v_dSalDeposito = p_CANTIDAD_MOV; END IF;
-    ELSEIF p_TIPO_DOC_MOV = 'VE' AND p_TIPO_MOVIMIENTO_MOV = 'S' THEN
+    ELSEIF p_TIPO_DOC_MOV IN ('VE','FC') AND p_TIPO_MOVIMIENTO_MOV = 'S' THEN
         SET v_dSalVenta = p_CANTIDAD_MOV;
     ELSEIF p_TIPO_DOC_MOV = 'IN' AND p_TIPO_MOVIMIENTO_MOV = 'E' THEN
         SET v_dEntRegular = p_CANTIDAD_MOV;
@@ -198,7 +198,7 @@ UPDATE fza_articulos_stockactual s
       SUM(IF(TIPO_DOC_MOV IN ('TR','AT') AND TIPO_MOV='S', CANTIDAD_MOV, 0)) AS sal_traspaso,
       SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_deposito,
       SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='S', CANTIDAD_MOV, 0))         AS sal_deposito,
-      SUM(IF(TIPO_DOC_MOV='VE' AND TIPO_MOV='S', CANTIDAD_MOV, 0))         AS sal_venta,
+      SUM(IF(TIPO_DOC_MOV IN ('VE','FC') AND TIPO_MOV='S', CANTIDAD_MOV, 0)) AS sal_venta,
       SUM(IF(TIPO_DOC_MOV='IN' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_regular,
       SUM(IF(TIPO_DOC_MOV='AV' AND TIPO_MOV='S', CANTIDAD_MOV, 0))         AS sal_albventa,
       SUM(IF(TIPO_DOC_MOV='AE' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_albentrada
