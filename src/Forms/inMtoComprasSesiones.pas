@@ -1704,7 +1704,16 @@ begin
   // que diferir con ForceQueue para que el editor este completamente
   // visible (set inmediato en InitEdit no abre el popup). Mismo patron
   // que en inMtoFacturasBase.pas:1552 (ShowEdit + DroppedDown).
+  // OJO: el popup del cxLookupComboBox vive fuera del contenedor cxGrid,
+  // asi que cuando se abre se dispara cxgrdLineas.OnExit -> reactiva
+  // JvEnterAsTab. Si el Enter llega al popup ya convertido en Tab, la
+  // seleccion se cancela (DevExpress trata el Tab dentro del dropdown
+  // como close-without-commit). Forzamos JvEnterAsTab=False mientras el
+  // editor del combo este vivo; se vuelve a activar en cxgrdLineasExit
+  // cuando el foco salga del grid.
   if AItem = dbcLinTallas then
+  begin
+    inLibGridTallasInline.ActivarEnterComoTab(Self, False);
     TThread.ForceQueue(nil,
       procedure
       var ec  : TcxCustomEdit;
@@ -1718,12 +1727,16 @@ begin
           LogSes('  auto-dropdown Sistema tallas: Edit es nil');
           Exit;
         end;
+        // Re-aseguramos por si el popup ya disparo el OnExit del grid
+        // entre el InitEdit y el ForceQueue.
+        inLibGridTallasInline.ActivarEnterComoTab(Self, False);
         if ec is TcxCustomDropDownEdit then
           TcxCustomDropDownEdit(ec).DroppedDown := True
         else
           LogSes(Format('  auto-dropdown Sistema tallas: Edit es %s, no DropDown',
                         [ec.ClassName]));
       end);
+  end;
   if AItem <> dbcLinColorBasico then Exit;
   if not (AEdit is TcxButtonEdit) then Exit;
   BE := TcxButtonEdit(AEdit);
