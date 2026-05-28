@@ -1437,10 +1437,13 @@ begin
     if not StartsText('ES', f.FieldName) then
       Continue;
     // Tipos que disparan ConvertToFloat / ConvertToInteger en MyDAC al
-    // intentar leer una columna varchar(1) con 'S' / 'N'.
-    if f.DataType in [ftFloat, ftCurrency, ftBCD, ftFMTBcd, ftSingle,
-                      ftExtended, ftInteger, ftSmallint, ftLargeint,
-                      ftWord, ftByte] then
+    // intentar leer una columna varchar(1) con 'S' / 'N'. Cualificamos
+    // con Data.DB porque System.TypInfo.TFloatType tambien declara
+    // ftSingle y ftExtended y choca al estar mas abajo en el uses.
+    if f.DataType in [Data.DB.ftFloat, Data.DB.ftCurrency, Data.DB.ftBCD,
+                      Data.DB.ftFMTBcd, Data.DB.ftSingle, Data.DB.ftExtended,
+                      Data.DB.ftInteger, Data.DB.ftSmallint,
+                      Data.DB.ftLargeint, Data.DB.ftWord, Data.DB.ftByte] then
     begin
       sTipo := GetEnumName(TypeInfo(TFieldType), Ord(f.DataType));
       inLibLog.Log.LogError(Format(
