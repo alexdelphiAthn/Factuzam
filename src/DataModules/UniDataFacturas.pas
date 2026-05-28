@@ -1092,15 +1092,30 @@ begin
 end;
 
 procedure TdmFacturas.unqryFacAfterPost(DataSet: TDataSet);
+var
+  sTipo, sMueveStock: string;
+  bGeneraMovs: Boolean;
 begin
   inherited;
   CalcularFactura;
-  // Sólo las facturas simplificadas (tickets directos sin albarán previo)
-  // generan movimientos automáticos al consolidarse.
-  if (unqryTablaG.Active) and
-     (unqryTablaG.FindField('TIPO_FAC') <> nil) and
-     (unqryTablaG.FieldByName('TIPO_FAC').AsString = 'SIMPLIFICADA') and
-     (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) <> '') then
+  // Las facturas SIMPLIFICADAS (tickets directos sin albaran previo)
+  // generan movimientos automaticos al consolidarse. Las NORMALES solo
+  // si el usuario marco el check ESMUEVE_STOCK_FAC (caso venta directa
+  // al mayor sin albaran). El SP de insercion es idempotente: comprueba
+  // que no exista ya el movimiento por TIPO_DOC_REF_MOV/SERIE/NUMERO/LINEA.
+  if (not unqryTablaG.Active) or
+     (unqryTablaG.FindField('TIPO_FAC') = nil) or
+     (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) = '') then
+    Exit;
+  sTipo := unqryTablaG.FieldByName('TIPO_FAC').AsString;
+  bGeneraMovs := (sTipo = 'SIMPLIFICADA');
+  if (not bGeneraMovs) and (sTipo = 'NORMAL') and
+     (unqryTablaG.FindField('ESMUEVE_STOCK_FAC') <> nil) then
+  begin
+    sMueveStock := unqryTablaG.FieldByName('ESMUEVE_STOCK_FAC').AsString;
+    bGeneraMovs := SameText(sMueveStock, 'S');
+  end;
+  if bGeneraMovs then
     GenerarMovimientosSalidaFactura;
 end;
 

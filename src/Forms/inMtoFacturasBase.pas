@@ -343,6 +343,7 @@ type
     cbbPaisesCli: TcxDBLookupComboBox;
     cbbPaisesEmp: TcxDBLookupComboBox;
     chkConsolidada: TcxDBCheckBox;
+    chkMueveStock: TcxDBCheckBox;
     pnlUserInstantBottom: TPanel;
     txtUSUARIOALTA: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
@@ -1221,6 +1222,10 @@ begin
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
+  // El check de mover stock solo aplica a facturas NORMAL: en SIMPLIFICADA
+  // se generan movimientos siempre. Lo ocultamos para que el descendiente
+  // simplificado no muestre la opcion.
+  chkMueveStock.Visible := SameText(TipoFacturaFiltro, 'NORMAL');
   // Carga perezosa de sub-pestañas detail (Recibos, Consolidacion,
   // Errores, Movimientos). Solo se abren al activar su pestaña.
   pcDetail.OnChange := PcDetailChange;
