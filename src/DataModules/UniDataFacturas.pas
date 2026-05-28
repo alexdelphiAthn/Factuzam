@@ -506,15 +506,9 @@ begin
               (DataSet.FindField(
                 'PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
      end;
-<<<<<<< HEAD
-    // Cantidad por defecto = 1, el usuario la modifica antes de grabar
-    if FindField('CANTIDAD_FACLIN') <> nil then
-      FindField('CANTIDAD_FACLIN').AsCurrency := 1;
-=======
-     // Cantidad por defecto = 1
+     // Cantidad por defecto = 1, el usuario la modifica antes de grabar
      if FindField('CANTIDAD_FACLIN') <> nil then
        FindField('CANTIDAD_FACLIN').AsCurrency := 1;
->>>>>>> 14eaa43965fec3199cb9227028ac15714af16362
   end;
 end;
 
