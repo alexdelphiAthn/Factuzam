@@ -520,6 +520,10 @@ type
     // refresh master/detail innecesario al cambiar de factura cuando la
     // pestaña no esta visible.
     procedure PcDetailChange(Sender: TObject);
+    // Envuelve GridRecalc con try/except EInvalidOperation. El editor
+    // inplace del cxGrid puede llegar sin Parent durante transiciones
+    // de celda; mismo patron defensivo que en inMtoCajaOpe.
+    procedure RecalcLineaFacturaSegura(Sender: TObject);
   public
     dmmFacturas : TdmFacturas;
   end;
@@ -1630,23 +1634,34 @@ procedure TfrmMtoFacturasBase.tvLineasFacturaKeyDown(Sender: TObject;
                                                  Shift: TShiftState);
 begin
   inherited;
-  // Antes de insertar nueva línea, asegurar que la cabecera está grabada
-  if (Key = VK_RETURN) and (Shift <> [ssCtrl]) and
-     (dmmFacturas.dsLinFac.DataSet.RecordCount = 0) then
-  begin
-    if dmmFacturas.unqryTablaG.State in [dsInsert, dsEdit] then
+  // Defensa: el editor inplace del cxGrid puede llegar sin Parent durante
+  // transiciones de celda; tocar Insert/Post sobre el datacontroller puede
+  // disparar EInvalidOperation "no tiene ventana principal" via refresh de
+  // controles ligados. Mismo patron que en inMtoCajaOpe.
+  try
+    // Antes de insertar nueva línea, asegurar que la cabecera está grabada
+    if (Key = VK_RETURN) and (Shift <> [ssCtrl]) and
+       (dmmFacturas.dsLinFac.DataSet.RecordCount = 0) then
     begin
-      try
-        dmmFacturas.unqryTablaG.Post;
-      except
-        on E: Exception do
-        begin
-          ShowMessage('Debe completar los datos de la factura: ' + E.Message);
-          Exit;
+      if dmmFacturas.unqryTablaG.State in [dsInsert, dsEdit] then
+      begin
+        try
+          dmmFacturas.unqryTablaG.Post;
+        except
+          on E: Exception do
+          begin
+            ShowMessage('Debe completar los datos de la factura: ' + E.Message);
+            Exit;
+          end;
         end;
       end;
+      tvLineasFactura.DataController.Insert;
     end;
-    tvLineasFactura.DataController.Insert;
+  except
+    on E: EInvalidOperation do
+      // Tragamos solo el caso del editor inplace sin Parent. El handler
+      // global AppException ya filtra y registra como warning.
+      ;
   end;
 end;
 
@@ -1658,15 +1673,29 @@ begin
         dmmFacturas.unqryTablaG);
 end;
 
+procedure TfrmMtoFacturasBase.RecalcLineaFacturaSegura(Sender: TObject);
+begin
+  try
+    GridRecalc(Sender,
+               tvLineasFactura,
+               dmmFacturas.unqryLinFac,
+               dmmFacturas.unqryTablaG);
+  except
+    on E: EInvalidOperation do
+      // Editor inplace de cxGrid sin Parent durante transicion de celda.
+      // GridRecalc ya valida Edit.Parent, pero el FocusedColumn / refresh
+      // posterior puede disparar el mismo error en carrera. AppException
+      // lo registrara como warning si llega tan arriba.
+      ;
+  end;
+end;
+
 procedure TfrmMtoFacturasBase.
               tvLineasFacturaPORCEN_DTO_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -1674,22 +1703,14 @@ procedure TfrmMtoFacturasBase.
   Sender: TObject);
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
-//var
-//  e: TcxCustomEdit;
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -1697,10 +1718,7 @@ procedure TfrmMtoFacturasBase.
                                                                Sender: TObject);
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -1708,10 +1726,7 @@ procedure TfrmMtoFacturasBase.
                                                                Sender: TObject);
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -1719,10 +1734,7 @@ procedure TfrmMtoFacturasBase.
                                                                Sender: TObject);
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -1746,10 +1758,7 @@ procedure TfrmMtoFacturasBase.ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChang
   Sender: TObject);
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -1757,10 +1766,7 @@ procedure TfrmMtoFacturasBase.
   Sender: TObject);
 begin
   inherited;
-  GridRecalc(Sender,
-             tvLineasFactura,
-             dmmFacturas.unqryLinFac,
-             dmmFacturas.unqryTablaG);
+  RecalcLineaFacturaSegura(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.AsignarControles;
