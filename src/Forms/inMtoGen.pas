@@ -53,6 +53,8 @@ uses
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
+  // Resultado del dialogo de borrado: cancelar, desactivar o borrar igual.
+  TAccionBorrado = (abContinuar, abDesactivar, abCancelar);
   TfrmMtoGen = class(TfrmBase)
     pButtonPage: TPanel;
     pButtonRightBar: TPanel;
@@ -182,6 +184,9 @@ type
     procedure PopMenuRenombrarClick(Sender: TObject);
     procedure BorrarGuiasGrid;
     procedure CargarPerfilesComunes(sUser:string = 'Todos');
+    // Decide que dialogo mostrar al ejecutar actEliminarRegistro segun
+    // NombreCampoESACTIVO y ContarHijosActivos.
+    function PreguntarAccionBorrado: TAccionBorrado;
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
 //                                        const sProfile: string;
@@ -255,6 +260,21 @@ type
     // movimientos...) lo sobreescriben para incluir tambien esos
     // DataSources, asi la foto sigue al cursor en cualquier pestaña.
     function DataSourcesParaFoto: TArray<TDataSource>; virtual;
+    // ----- Hooks para el flujo de Borrar -----------------------------------
+    // Devuelve el nombre del campo ESACTIVO de la tabla principal si esta es
+    // "desactivable" (ESACTIVO_CLI, ESACTIVO_ART, ESACTIVO_FAM...). Vacio
+    // por defecto: el Mto solo permite borrar/cancelar sin opcion de
+    // desactivar.
+    function NombreCampoESACTIVO: string; virtual;
+    // Cuenta los registros hijos "activos" del registro maestro actualmente
+    // enfocado en dsTablaG (lineas de factura, albaranes del cliente, etc.).
+    // 0 por defecto. Los Mtos con tablas dependientes lo sobreescriben.
+    function ContarHijosActivos: Integer; virtual;
+    // Texto descriptivo de los hijos para el dialogo de borrado
+    // ("lineas de factura", "facturas y albaranes del cliente", ...). Solo
+    // se usa cuando ContarHijosActivos > 0. Vacio por defecto.
+    function DescripcionHijos: string; virtual;
+    // -----------------------------------------------------------------------
     // Ejecuta `AccionBG` en un thread aparte (TTask.Run del RTL). Mientras
     // corre, este Mto queda bloqueado con overlay "Procesando...", pero
     // los demas tabs siguen 100% interactivos. Al terminar (OK o
@@ -1832,12 +1852,102 @@ begin
 end;
 
 procedure TfrmMtoGen.actEliminarRegistroExecute(Sender: TObject);
+var
+  Accion: TAccionBorrado;
+  sCampoActivo: string;
+  ds: TDataSet;
 begin
-  if Application.MessageBox(
-    '¿Estás seguro de que deseas eliminar este registro?',
-    'Confirmar eliminación',
-    MB_YESNO + MB_ICONWARNING) = ID_YES then
-    dsTablaG.DataSet.Delete;
+  Accion := PreguntarAccionBorrado;
+  case Accion of
+    abCancelar:
+      ;
+    abDesactivar:
+      begin
+        sCampoActivo := NombreCampoESACTIVO;
+        ds := dsTablaG.DataSet;
+        if (sCampoActivo = '') or not Assigned(ds) or
+           (ds.FindField(sCampoActivo) = nil) then
+          Exit;
+        if not (ds.State in [dsEdit, dsInsert]) then
+          ds.Edit;
+        ds.FieldByName(sCampoActivo).AsString := 'N';
+        ds.Post;
+      end;
+    abContinuar:
+      dsTablaG.DataSet.Delete;
+  end;
+end;
+
+function TfrmMtoGen.PreguntarAccionBorrado: TAccionBorrado;
+var
+  sCampoActivo, sDescHijos, sMsg: string;
+  iHijos: Integer;
+  bDesactivable: Boolean;
+  iResp: Integer;
+begin
+  sCampoActivo := NombreCampoESACTIVO;
+  bDesactivable := (sCampoActivo <> '') and
+                   Assigned(dsTablaG.DataSet) and
+                   (dsTablaG.DataSet.FindField(sCampoActivo) <> nil);
+  // Si el registro ya esta desactivado, no ofrecemos "desactivar" otra vez:
+  // el usuario tendra solo Borrar/Cancelar.
+  if bDesactivable and
+     SameText(dsTablaG.DataSet.FieldByName(sCampoActivo).AsString, 'N') then
+    bDesactivable := False;
+  iHijos := ContarHijosActivos;
+  sDescHijos := DescripcionHijos;
+  if sDescHijos = '' then
+    sDescHijos := 'registros asociados';
+  // Caso 1: tabla no desactivable y sin hijos -> confirmacion simple Si/No.
+  if (not bDesactivable) and (iHijos = 0) then
+  begin
+    if Application.MessageBox(
+        '¿Estás seguro de que deseas eliminar este registro?',
+        'Confirmar eliminación',
+        MB_YESNO + MB_ICONWARNING) = ID_YES then
+      Result := abContinuar
+    else
+      Result := abCancelar;
+    Exit;
+  end;
+  // Caso 2: tabla no desactivable pero tiene hijos -> avisar y Si/No.
+  if not bDesactivable then
+  begin
+    sMsg := Format('Hay %d %s vinculados a este registro.',
+                   [iHijos, sDescHijos]) + sLineBreak + sLineBreak +
+            'No se recomienda eliminarlo: se rompera la relacion con' +
+            sLineBreak + 'los registros hijos.' + sLineBreak + sLineBreak +
+            '¿Deseas eliminarlo de todas formas?';
+    if Application.MessageBox(PChar(sMsg),
+        'Confirmar eliminación',
+        MB_YESNO + MB_ICONWARNING + MB_DEFBUTTON2) = ID_YES then
+      Result := abContinuar
+    else
+      Result := abCancelar;
+    Exit;
+  end;
+  // Caso 3 y 4: tabla desactivable, con o sin hijos.
+  if iHijos > 0 then
+    sMsg := Format('Hay %d %s vinculados a este registro.',
+                   [iHijos, sDescHijos]) + sLineBreak + sLineBreak +
+            'No se recomienda eliminarlo. Te sugerimos DESACTIVARLO' +
+            sLineBreak + 'para conservar el historico.'
+  else
+    sMsg := 'Este registro puede DESACTIVARSE en lugar de eliminarse' +
+            sLineBreak + 'para conservar el historico.';
+  sMsg := sMsg + sLineBreak + sLineBreak +
+          'Sí       = Desactivar (recomendado)' + sLineBreak +
+          'No       = Eliminar definitivamente' + sLineBreak +
+          'Cancelar = No hacer nada';
+  iResp := Application.MessageBox(PChar(sMsg),
+             'Confirmar eliminación',
+             MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1);
+  case iResp of
+    ID_YES:    Result := abDesactivar;
+    ID_NO:     Result := abContinuar;
+  else
+    Result := abCancelar;
+  end;
 end;
 
 procedure TfrmMtoGen.actRegistroAnteriorExecute(Sender: TObject);
@@ -1931,6 +2041,21 @@ begin
   // sub-grids con articulo / SKU activo sobreescriben para anadir
   // tambien esos DataSources.
   Result := [dsTablaG];
+end;
+
+function TfrmMtoGen.NombreCampoESACTIVO: string;
+begin
+  Result := '';
+end;
+
+function TfrmMtoGen.ContarHijosActivos: Integer;
+begin
+  Result := 0;
+end;
+
+function TfrmMtoGen.DescripcionHijos: string;
+begin
+  Result := '';
 end;
 
 procedure TfrmMtoGen.SimulateTabKey;

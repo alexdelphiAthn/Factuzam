@@ -424,6 +424,9 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    function  NombreCampoESACTIVO: string; override;
+    function  ContarHijosActivos: Integer; override;
+    function  DescripcionHijos: string; override;
   end;
 
 var
@@ -442,7 +445,9 @@ uses
   inMtoModalCliEti,
   inLibDir,
   inLibIBAN,
-  inMtoPrincipal;
+  inMtoPrincipal,
+  Uni,
+  inLibGlobalVar;
 
 {$R *.dfm}
 
@@ -680,6 +685,44 @@ procedure TfrmMtoClientes.ResetForm;
 begin
   inherited;
   pcPestanas.ActivePage := tsDomicilioFiscal;
+end;
+
+function TfrmMtoClientes.NombreCampoESACTIVO: string;
+begin
+  Result := 'ESACTIVO_CLI';
+end;
+
+function TfrmMtoClientes.ContarHijosActivos: Integer;
+var
+  q: TUniQuery;
+  sCodCli: string;
+begin
+  Result := 0;
+  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty then
+    Exit;
+  sCodCli := dsTablaG.DataSet.FieldByName('CODIGO_CLI_CLI').AsString;
+  if sCodCli = '' then
+    Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT (SELECT COUNT(*) FROM fza_facturas  ' +
+      '         WHERE CODIGO_CLI_FAC = :pCli) ' +
+      '     + (SELECT COUNT(*) FROM fza_albaranes ' +
+      '         WHERE CODIGO_CLI_ALB = :pCli) AS N';
+    q.ParamByName('pCli').AsString := sCodCli;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function TfrmMtoClientes.DescripcionHijos: string;
+begin
+  Result := 'facturas y albaranes del cliente';
 end;
 
 procedure TfrmMtoClientes.txtNOMBRE_PAIS_CLIENTEPropertiesChange(
