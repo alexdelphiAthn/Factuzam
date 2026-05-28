@@ -101,6 +101,7 @@ type
     btnTallasHorizontal:  TcxButton;
     btnAtributosColumna:  TcxButton;
     btnCrearAlbaran:      TcxButton;
+    btnExpandirRecibidos: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -111,6 +112,7 @@ type
     procedure btnTallasHorizontalClick(Sender: TObject);
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
+    procedure btnExpandirRecibidosClick(Sender: TObject);
     procedure tvLineasPedidoFocusedRecordChanged(
                 Sender: TcxCustomGridTableView;
                 APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
@@ -325,6 +327,7 @@ begin
   cfgP.FieldArt             := 'CODIGO_ART_PEDCLIN';
   cfgP.FieldSku             := 'CODIGO_UNIDAD_PEDCLIN';
   cfgP.FieldCantidad        := 'CANTIDAD_PEDCLIN';
+  cfgP.FieldCantidadRecibida:= 'CANTIDAD_RECIBIDA_PEDCLIN';
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_PEDCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_PEDCLIN';
   cfgP.CamposOcultosEnPivote := TArray<string>.Create(
@@ -450,6 +453,29 @@ begin
   inherited;
   FMostrarAtributos := not FMostrarAtributos;
   RefrescarVisibilidadAtributos;
+end;
+
+// Toggle del modo "Expandir recibidos": solo aplica con el pivote activo.
+// Si esta inactivo, lo activamos primero (el usuario probablemente
+// queria entrar a la vista pivote y ver recibidos directamente). Pivote
+// inactivo + intento de expandir => activamos pivote + expandimos.
+procedure TfrmMtoPedidosCompra.btnExpandirRecibidosClick(Sender: TObject);
+begin
+  inherited;
+  if FPivote = nil then Exit;
+  if not FPivote.PuedeExpandir then
+  begin
+    ShowMessage('Este Mto no soporta el modo expandido (sin cantidad recibida).');
+    Exit;
+  end;
+  // Asegurar pivote activo antes de expandir.
+  if not FPivote.Activo then
+    btnTallasHorizontalClick(Sender);
+  if not FPivote.Activo then Exit;
+  if FPivote.Expandido then
+    FPivote.Contraer
+  else
+    FPivote.Expandir;
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
