@@ -113,6 +113,15 @@ UniDAC por FireDAC ni nada parecido — es decisión arquitectónica.
   en una sola linea.
 - **Evitar Exit y Continue**: Aparte de ser malas prácticas de programación, 
   hacen que leer el código sea más difícil.
+- **Orden en la declaración de clase (E2169)**: dentro de cada sección
+  (`private`, `protected`, `public`, `published`) Delphi exige primero los
+  **campos** (`FAlgo: TTipo;`) y solo después los **métodos** (`procedure` /
+  `function`). Si insertas un campo nuevo, ponlo junto a los demás del bloque
+  y no detrás de ningún `procedure`/`function` o el compilador lanzará
+  E2169 "Field definition not allowed after methods or properties" y
+  arrastrará un F2063 al usar la unit. Cuando añadas hooks (hook +
+  variable de estado), declara primero los campos juntos y debajo los
+  procedure que los usan.
 - **Comentarios**: Dentro del código, hacer comentarios breves y útiles, 
   por ejemplo para delimitar bloques importantes, limitaciones, lineas
   a resaltar por lógica de negocio.
