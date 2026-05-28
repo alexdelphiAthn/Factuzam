@@ -1161,6 +1161,343 @@ end;
 // funcion despues de InsertarLineasAlbaranCompra y RecalcularTotales.
 
 // ---------------------------------------------------------------------------
+// Pedidos de compra — funciones espejo de las de albaran
+// ---------------------------------------------------------------------------
+// Mismo patron que InsertarAlbaranCompraCabecera/Lineas/Iva/Totales pero
+// escribiendo en fza_pedidos_compra(_lineas). A diferencia del albaran,
+// el pedido NO mueve stock fisico: la cantidad pendiente la deposita
+// GenerarPedidoPdteRecibir en fza_articulos_pdte_recibir. Las cantidades
+// de las lineas son las pedidas; CANTIDAD_RECIBIDA_PEDCLIN nace a 0 y se
+// va incrementando cuando se generan albaranes desde el Mto de pedidos
+// (inLibPedidosCompra.CrearAlbaranDesdePedido).
+
+procedure InsertarPedidoCompraCabecera(AConn: TUniConnection;
+                                        ADM: TdmComprasSesiones;
+                                        const ASeriePedc, ANumPedc,
+                                              AUsuario: string;
+                                        const ACodigoAlmOverride: string = '');
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_pedidos_compra ' +
+      '  (NUMERO_PEDC, SERIE_PEDC, FECHA_PEDC, ESTADO_PEDC, ' +
+      '   CODIGO_EMP_PEDC, RAZON_SOCIAL_EMPRESA_PEDC, NIF_EMPRESA_PEDC, ' +
+      '   MOVIL_EMPRESA_PEDC, EMAIL_EMPRESA_PEDC, ' +
+      '   DIRECCION1_EMPRESA_PEDC, DIRECCION2_EMPRESA_PEDC, ' +
+      '   POBLACION_EMPRESA_PEDC, PROVINCIA_EMPRESA_PEDC, ' +
+      '   CODIGO_PAI_EMPRESA_PEDC, NOMBRE_PAI_EMPRESA_PEDC, ' +
+      '   CODIGO_POSTAL_EMPRESA_PEDC, ' +
+      '   CODIGO_PRV_PEDC, RAZON_SOCIAL_PRV_PEDC, NIF_PRV_PEDC, ' +
+      '   MOVIL_PRV_PEDC, EMAIL_PRV_PEDC, ' +
+      '   DIRECCION1_PRV_PEDC, DIRECCION2_PRV_PEDC, ' +
+      '   POBLACION_PRV_PEDC, PROVINCIA_PRV_PEDC, ' +
+      '   CODIGO_POSTAL_PRV_PEDC, ' +
+      '   REF_PROVEEDOR_PEDC, CODIGO_ALM_PEDC, ' +
+      '   TOTAL_BASES_PEDC, TOTAL_IMPUESTOS_PEDC, TOTAL_LIQUIDO_PEDC, ' +
+      '   CONTADOR_LINEAS_PEDC, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'SELECT :npedc, :spedc, S.FECHA_SES, ''ABIERTO'', ' +
+      '       E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, ' +
+      '       E.MOVIL_EMP, E.EMAIL_EMP, ' +
+      '       E.DIRECCION1_EMP, E.DIRECCION2_EMP, ' +
+      '       E.POBLACION_EMP, E.PROVINCIA_EMP, ' +
+      '       E.CODIGO_PAI_EMP, E.NOMBRE_PAI_EMP, ' +
+      '       E.CODIGO_POSTAL_EMP, ' +
+      '       P.CODIGO_PRV_PRV, P.RAZON_SOCIAL_PRV, P.NIF_PRV, ' +
+      '       P.MOVIL_PRV, P.EMAIL_PRV, ' +
+      '       P.DIRECCION1_PRV, P.DIRECCION2_PRV, ' +
+      '       P.POBLACION_PRV, P.PROVINCIA_PRV, ' +
+      '       P.CODIGO_POSTAL_PRV, ' +
+      '       S.REF_PRV_SES, ' +
+      '       CASE WHEN :alm_ovr <> '''' THEN :alm_ovr ELSE S.CODIGO_ALM_SES END, ' +
+      '       0, 0, 0, ''0'', ' +
+      '       NOW(), :u, NOW(), :u ' +
+      '  FROM fza_compras_sesiones S ' +
+      '  LEFT JOIN fza_empresas E    ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+      '  LEFT JOIN fza_proveedores P ON P.CODIGO_PRV_PRV = S.CODIGO_PRV_SES ' +
+      ' WHERE S.SERIE_SES = :s AND S.NUMERO_SES = :n';
+    q.ParamByName('npedc').AsString := ANumPedc;
+    q.ParamByName('spedc').AsString := ASeriePedc;
+    q.ParamByName('s').AsString := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('u').AsString := AUsuario;
+    q.ParamByName('alm_ovr').AsString := ACodigoAlmOverride;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure InsertarLineaPedidoCompra(AConn: TUniConnection;
+                                     const ASeriePedc, ANumPedc,
+                                           ALineaPedc, ACodigoArt,
+                                           ACodigoSku, ACodigoFam,
+                                           ANombreFam, ADescripcion,
+                                           ACodigoAlm, ATipoIva,
+                                           ARefPrv,
+                                           AUsuario: string;
+                                     ACantidad, APrecio,
+                                     APorIva: Double;
+                                     AIdAcPivot: Integer);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_pedidos_compra_lineas ' +
+      '  (NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN, LINEA_PEDCLIN, ' +
+      '   CODIGO_ART_PEDCLIN, CODIGO_UNIDAD_PEDCLIN, REF_PRV_PEDCLIN, ' +
+      '   ID_AC_PIVOT_PEDCLIN, ' +
+      '   CODIGO_FAM_PEDCLIN, NOMBRE_FAM_PEDCLIN, ' +
+      '   DESCRIPCION_ARTICULO_PEDCLIN, TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
+      '   CANTIDAD_PEDCLIN, CANTIDAD_RECIBIDA_PEDCLIN, ' +
+      '   TIPO_IVA_ARTICULO_PEDCLIN, PORCENTAJE_IVA_PEDCLIN, ' +
+      '   PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
+      '   PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
+      '   TOTAL_PEDCLIN, CODIGO_ALMACEN_PEDCLIN, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (:n, :s, :l, :art, :sku, :refprv, :acpivot, ' +
+      '        :fam, :nomfam, :desc, ''Uds'', ' +
+      '        :cant, 0, :tiva, :piva, :pre, :preciva, :tot, :alm, ' +
+      '        NOW(), :u, NOW(), :u)';
+    q.ParamByName('n').AsString    := ANumPedc;
+    q.ParamByName('s').AsString    := ASeriePedc;
+    q.ParamByName('l').AsString    := ALineaPedc;
+    q.ParamByName('art').AsString  := ACodigoArt;
+    q.ParamByName('sku').AsString  := ACodigoSku;
+    if ARefPrv <> '' then
+      q.ParamByName('refprv').AsString := ARefPrv
+    else
+      q.ParamByName('refprv').Clear;
+    if AIdAcPivot > 0 then
+      q.ParamByName('acpivot').AsInteger := AIdAcPivot
+    else
+      q.ParamByName('acpivot').Clear;
+    q.ParamByName('fam').AsString  := ACodigoFam;
+    q.ParamByName('nomfam').AsString := ANombreFam;
+    q.ParamByName('desc').AsString := ADescripcion;
+    q.ParamByName('cant').AsFloat  := ACantidad;
+    q.ParamByName('tiva').AsString := ATipoIva;
+    q.ParamByName('piva').AsFloat  := APorIva;
+    q.ParamByName('pre').AsFloat   := APrecio;
+    q.ParamByName('preciva').AsFloat := APrecio * (1 + APorIva / 100);
+    q.ParamByName('tot').AsFloat   := ACantidad * APrecio;
+    q.ParamByName('alm').AsString  := ACodigoAlm;
+    q.ParamByName('u').AsString    := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Espejo de InsertarLineasAlbaranCompra: itera celdas de la sesion
+// agrupadas por (SKU, almacen) y crea una linea en
+// fza_pedidos_compra_lineas por cada combinacion con cantidad > 0.
+// LINEA_PEDCLIN se asigna secuencial (0010, 0020, ...).
+procedure InsertarLineasPedidoCompra(AConn: TUniConnection;
+                                      ADM: TdmComprasSesiones;
+                                      const ASerieSes, ANumSes,
+                                            ASeriePedc, ANumPedc,
+                                            AUsuario: string;
+                                      const AFiltroAlmacen: string = '');
+var
+  qC : TUniQuery;
+  sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
+  sDescripcion, sCodigoFam, sNombreFam, sTipoIva,
+  sLineaPedc: string;
+  iIdAvPivot, iIdAvFila, iIdAcPivot, iLineaSeq: Integer;
+  rCantidad, rCoste, rPorIva: Double;
+begin
+  sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+  if sCodigoAlmCab = '' then
+    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
+                           'para generar el pedido de compra.');
+  iLineaSeq := 0;
+  qC := TUniQuery.Create(nil);
+  try
+    qC.Connection := AConn;
+    qC.SQL.Text :=
+      'SELECT  ' +
+      '    CASE WHEN L.ACCION_DUPLICADO_SESLIN = ''REUSAR'' ' +
+      '         THEN L.CODIGO_ART_REUSAR_SESLIN ' +
+      '         ELSE L.CODIGO_ART_TENTATIVO_SESLIN END AS CODIGO_ART, ' +
+      '    C.ID_AV_PIVOT_SESCEL, ' +
+      '    IFNULL(L.ID_AC_PIVOT_SESLIN, 0) AS ID_AC_PIVOT, ' +
+      '    IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
+      '    IFNULL(L.COLOR_TEXTO_SESLIN, '''')     AS COLOR_TEXTO, ' +
+      '    IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) AS ALM_EFE, ' +
+      '    SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
+      '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
+      '    L.CODIGO_FAM_SESLIN, ' +
+      '    IFNULL(L.TIPO_IVA_SESLIN, ''N'') AS TIPO_IVA, ' +
+      '    L.TIPO_LINEA_SESLIN, ' +
+      '    IFNULL(L.REF_PRV_SESLIN, '''') AS REF_PRV ' +
+      '  FROM fza_compras_sesiones_celdas C ' +
+      '  JOIN fza_compras_sesiones_lineas L ' +
+      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
+      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
+      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
+      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
+      '   AND C.NUMERO_SES_SESCEL = :n ' +
+      '   AND C.CANTIDAD_SESCEL   > 0 ' +
+      '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
+      '   AND (:falm = '''' OR IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) = :falm) ' +
+      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, ID_AC_PIVOT, COD_COLOR, ' +
+      '          COLOR_TEXTO, ALM_EFE, ' +
+      '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
+      '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN, REF_PRV ' +
+      ' ORDER BY CODIGO_ART, COD_COLOR, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
+    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
+    qC.ParamByName('falm').AsString := AFiltroAlmacen;
+    qC.ParamByName('s').AsString := ASerieSes;
+    qC.ParamByName('n').AsString := ANumSes;
+    qC.Open;
+    while not qC.Eof do
+    begin
+      sCodigoArt := qC.FieldByName('CODIGO_ART').AsString;
+      iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
+      iIdAcPivot := qC.FieldByName('ID_AC_PIVOT').AsInteger;
+      sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
+      rCantidad  := qC.FieldByName('CANTIDAD_TOTAL').AsFloat;
+      rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+      sDescripcion := qC.FieldByName('DESCRIPCION_SESLIN').AsString;
+      sCodigoFam := qC.FieldByName('CODIGO_FAM_SESLIN').AsString;
+      sTipoIva   := qC.FieldByName('TIPO_IVA').AsString;
+      rPorIva    := 0;
+      iIdAvFila := 0;
+      if Trim(qC.FieldByName('COD_COLOR').AsString) <> '' then
+        iIdAvFila := ResolverIdAvColorLinea(
+          AConn,
+          qC.FieldByName('COLOR_TEXTO').AsString,
+          qC.FieldByName('COD_COLOR').AsString,
+          AUsuario, sCodigoSku);
+      sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
+      if sCodigoSku = '' then
+      begin
+        qC.Next;
+        Continue;
+      end;
+      sNombreFam := '';
+      iLineaSeq := iLineaSeq + 1;
+      sLineaPedc := Format('%.4d', [iLineaSeq * 10]);
+      InsertarLineaPedidoCompra(AConn,
+        ASeriePedc, ANumPedc, sLineaPedc,
+        sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam, sDescripcion,
+        sCodigoAlm, sTipoIva,
+        qC.FieldByName('REF_PRV').AsString,
+        AUsuario,
+        rCantidad, rCoste, rPorIva, iIdAcPivot);
+      qC.Next;
+    end;
+  finally
+    FreeAndNil(qC);
+  end;
+end;
+
+procedure AsignarIvaCabeceraPedidoCompra(AConn: TUniConnection;
+                                          const ASeriePedc, ANumPedc: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'UPDATE fza_pedidos_compra C ' +
+      '  JOIN vi_ivas_empresa V ' +
+      '    ON V.CODIGO_EMP_EMP = C.CODIGO_EMP_PEDC ' +
+      '   AND V.ESDEFAULT_IVA_IVAGRP = ''S'' ' +
+      '   SET C.CODIGO_IVA_PEDC      = V.CODIGO_IVA, ' +
+      '       C.PORCENTAJE_IVAN_PEDC = V.PORCENTAJE_NORMAL_IVA, ' +
+      '       C.PORCENTAJE_IVAR_PEDC = V.PORCENTAJE_REDUCIDO_IVA, ' +
+      '       C.PORCENTAJE_IVAS_PEDC = V.PORCENTAJE_SUPERREDUCIDO_IVA, ' +
+      '       C.PORCENTAJE_IVAE_PEDC = V.PORCENTAJE_EXENTO_IVA ' +
+      ' WHERE C.NUMERO_PEDC = :n AND C.SERIE_PEDC = :s';
+    q.ParamByName('n').AsString := ANumPedc;
+    q.ParamByName('s').AsString := ASeriePedc;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure RellenarIvaLineasPedidoCompra(AConn: TUniConnection;
+                                         const ASeriePedc, ANumPedc: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'UPDATE fza_pedidos_compra_lineas L ' +
+      '  JOIN fza_pedidos_compra C ' +
+      '    ON C.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+      '   AND C.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+      '   SET L.PORCENTAJE_IVA_PEDCLIN = CASE L.TIPO_IVA_ARTICULO_PEDCLIN ' +
+      '          WHEN ''N'' THEN IFNULL(C.PORCENTAJE_IVAN_PEDC, 0) ' +
+      '          WHEN ''R'' THEN IFNULL(C.PORCENTAJE_IVAR_PEDC, 0) ' +
+      '          WHEN ''S'' THEN IFNULL(C.PORCENTAJE_IVAS_PEDC, 0) ' +
+      '          WHEN ''E'' THEN IFNULL(C.PORCENTAJE_IVAE_PEDC, 0) ' +
+      '          ELSE 0 END, ' +
+      '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN = ' +
+      '         L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN * (1 + ' +
+      '           CASE L.TIPO_IVA_ARTICULO_PEDCLIN ' +
+      '            WHEN ''N'' THEN IFNULL(C.PORCENTAJE_IVAN_PEDC, 0) ' +
+      '            WHEN ''R'' THEN IFNULL(C.PORCENTAJE_IVAR_PEDC, 0) ' +
+      '            WHEN ''S'' THEN IFNULL(C.PORCENTAJE_IVAS_PEDC, 0) ' +
+      '            WHEN ''E'' THEN IFNULL(C.PORCENTAJE_IVAE_PEDC, 0) ' +
+      '            ELSE 0 END / 100) ' +
+      ' WHERE L.NUMERO_PEDC_PEDCLIN = :n AND L.SERIE_PEDC_PEDCLIN = :s';
+    q.ParamByName('n').AsString := ANumPedc;
+    q.ParamByName('s').AsString := ASeriePedc;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure RecalcularTotalesPedidoCompra(AConn: TUniConnection;
+                                         const ASeriePedc, ANumPedc: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'UPDATE fza_pedidos_compra C ' +
+      '  JOIN ( ' +
+      '       SELECT NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN, ' +
+      '              IFNULL(SUM(TOTAL_PEDCLIN), 0) AS BASE, ' +
+      '              IFNULL(SUM(TOTAL_PEDCLIN * PORCENTAJE_IVA_PEDCLIN / 100), 0) AS IVA, ' +
+      '              COUNT(*) AS NLIN ' +
+      '         FROM fza_pedidos_compra_lineas ' +
+      '        WHERE NUMERO_PEDC_PEDCLIN = :n ' +
+      '          AND SERIE_PEDC_PEDCLIN  = :s ' +
+      '        GROUP BY NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN) AS T ' +
+      '    ON T.NUMERO_PEDC_PEDCLIN = C.NUMERO_PEDC ' +
+      '   AND T.SERIE_PEDC_PEDCLIN  = C.SERIE_PEDC ' +
+      '   SET C.TOTAL_BASES_PEDC     = T.BASE, ' +
+      '       C.TOTAL_IMPUESTOS_PEDC = T.IVA, ' +
+      '       C.TOTAL_LIQUIDO_PEDC   = T.BASE + T.IVA, ' +
+      '       C.CONTADOR_LINEAS_PEDC = LPAD(T.NLIN * 10, 8, ''0'') ' +
+      ' WHERE C.NUMERO_PEDC = :n AND C.SERIE_PEDC = :s';
+    q.ParamByName('n').AsString := ANumPedc;
+    q.ParamByName('s').AsString := ASeriePedc;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
 // Pendiente de recibir (pedido de compra, no toca movimientos)
 // ---------------------------------------------------------------------------
 // Itera fza_compras_sesiones_celdas con cantidad > 0 y crea una fila por
@@ -1448,20 +1785,36 @@ begin
 
     if AESGeneraPedido then
     begin
-      // Pedido de compra: no toca fza_movimientos_almacen. Las
-      // cantidades pendientes de recibir se acumulan en
-      // fza_articulos_pdte_recibir para que el modulo de stock las
-      // pueda consultar via vi_articulos_pdte_recibir sin contaminar
-      // el stock fisico.
-      GenerarPedidoPdteRecibir(conn, ADM, sSerieSes, sNumSes,
-                                sSeriePedReal, sNumSes, AUsuario);
+      // 1. Reservar NUMERO_PEDC del contador global (tipo 'PC'). En el
+      //    modo "un doc por almacen" cada iteracion del bucle exterior
+      //    pasa por aqui y obtiene su propio numero — antes se reusaba
+      //    sNumSes y eso provocaba colisiones de PK entre almacenes.
+      ANumPed   := inLibtb.ObtenerSiguienteContador('PC');
       ASeriePed := sSeriePedReal;
-      ANumPed   := sNumSes;
-      // Registro en fza_compras_sesiones_documentos para la pestania
-      // 'Documentos' del Mto. Usamos INSERT IGNORE para soportar
-      // re-materializacion sin chocar contra la PK (aunque revertir ya
-      // los borra, defendemos el caso de varias materializaciones
-      // parciales al mismo almacen).
+      // 2. Crear cabecera en fza_pedidos_compra denormalizando empresa
+      //    y proveedor desde la sesion. AFiltroAlmacen viaja como
+      //    almacen destino por defecto (override sobre CODIGO_ALM_SES).
+      InsertarPedidoCompraCabecera(conn, ADM, ASeriePed, ANumPed, AUsuario,
+                                    AFiltroAlmacen);
+      // 3. Lineas agregadas por (SKU, almacen): una por combinacion con
+      //    cantidad > 0. Misma logica que el albaran pero escribiendo en
+      //    fza_pedidos_compra_lineas con CANTIDAD_RECIBIDA = 0.
+      InsertarLineasPedidoCompra(conn, ADM, sSerieSes, sNumSes,
+                                  ASeriePed, ANumPed, AUsuario,
+                                  AFiltroAlmacen);
+      // 4. IVA en cabecera + lineas y totales. Reusamos el patron del
+      //    albaran porque la sesion origen no maneja IVA explicito.
+      AsignarIvaCabeceraPedidoCompra(conn, ASeriePed, ANumPed);
+      RellenarIvaLineasPedidoCompra(conn, ASeriePed, ANumPed);
+      RecalcularTotalesPedidoCompra(conn, ASeriePed, ANumPed);
+      // 5. Pendientes de recibir: una fila por (SKU, almacen, doc) en
+      //    fza_articulos_pdte_recibir. Es lo que ve el modulo de stock
+      //    via vi_articulos_pdte_recibir. NO mueve stock fisico.
+      GenerarPedidoPdteRecibir(conn, ADM, sSerieSes, sNumSes,
+                                ASeriePed, ANumPed, AUsuario);
+      // 6. Registro en fza_compras_sesiones_documentos para la pestania
+      //    'Documentos' del Mto. Usamos INSERT IGNORE para soportar
+      //    re-materializacion sin chocar contra la PK.
       qLin := TUniQuery.Create(nil);
       try
         qLin.Connection := conn;
@@ -1480,8 +1833,8 @@ begin
         qLin.ParamByName('s').AsString  := sSerieSes;
         qLin.ParamByName('n').AsString  := sNumSes;
         qLin.ParamByName('alm_ovr').AsString := AFiltroAlmacen;
-        qLin.ParamByName('sd').AsString := sSeriePedReal;
-        qLin.ParamByName('nd').AsString := sNumSes;
+        qLin.ParamByName('sd').AsString := ASeriePed;
+        qLin.ParamByName('nd').AsString := ANumPed;
         qLin.ParamByName('u').AsString  := AUsuario;
         qLin.ExecSQL;
       finally
@@ -1905,12 +2258,68 @@ begin
         FreeAndNil(qHuerf);
       end;
 
-      // 1b. Borrar las filas de pendiente de recibir generadas por
-      //     esta sesion (si genero pedido). Mismo criterio: NUMERO_DOC
-      //     coincide y SERIE_DOC es la de la sesion o la del pedido.
-      //     try/except porque hay BBDD que aun no tienen la tabla creada
-      //     (migracion pendiente en DESARROLLOS EN CURSO/) y no debe
-      //     bloquear la reversion del resto.
+      // 1b. Borrar las filas de pendiente de recibir y los pedidos de
+      //     compra generados por esta sesion. La fuente de verdad es
+      //     fza_compras_sesiones_documentos (TIPO_DOC_SESDOC='PEDC')
+      //     que lleva una fila por (sesion, almacen) con la SERIE y
+      //     NUMERO del pedido realmente generado — mas robusto que
+      //     deducirlo de la cabecera de sesion porque en modo "un doc
+      //     por almacen" cada iteracion genero su propio numero.
+      //     try/except porque hay BBDD que aun no tienen las tablas
+      //     creadas (migraciones pendientes) y no debe bloquear la
+      //     reversion del resto.
+      try
+        // 1b.1 Cantidades pendientes de recibir
+        q.SQL.Text :=
+          'DELETE PDR FROM fza_articulos_pdte_recibir PDR ' +
+          '  JOIN fza_compras_sesiones_documentos D ' +
+          '    ON D.SERIE_SESDOC  = PDR.SERIE_DOC_PDR ' +
+          '   AND D.NUMERO_SESDOC = PDR.NUMERO_DOC_PDR ' +
+          ' WHERE D.SERIE_SES_SESDOC  = :s ' +
+          '   AND D.NUMERO_SES_SESDOC = :n ' +
+          '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
+        q.ParamByName('s').AsString := sSerieSes;
+        q.ParamByName('n').AsString := sNumSes;
+        q.ExecSQL;
+      except
+        // tabla pdte_recibir o sesiones_documentos puede no existir.
+      end;
+      // 1b.2 Lineas del pedido de compra
+      try
+        q.SQL.Text :=
+          'DELETE PEDL FROM fza_pedidos_compra_lineas PEDL ' +
+          '  JOIN fza_compras_sesiones_documentos D ' +
+          '    ON D.SERIE_SESDOC  = PEDL.SERIE_PEDC_PEDCLIN ' +
+          '   AND D.NUMERO_SESDOC = PEDL.NUMERO_PEDC_PEDCLIN ' +
+          ' WHERE D.SERIE_SES_SESDOC  = :s ' +
+          '   AND D.NUMERO_SES_SESDOC = :n ' +
+          '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
+        q.ParamByName('s').AsString := sSerieSes;
+        q.ParamByName('n').AsString := sNumSes;
+        q.ExecSQL;
+      except
+        // tabla fza_pedidos_compra_lineas puede no existir.
+      end;
+      // 1b.3 Cabeceras del pedido de compra
+      try
+        q.SQL.Text :=
+          'DELETE PED FROM fza_pedidos_compra PED ' +
+          '  JOIN fza_compras_sesiones_documentos D ' +
+          '    ON D.SERIE_SESDOC  = PED.SERIE_PEDC ' +
+          '   AND D.NUMERO_SESDOC = PED.NUMERO_PEDC ' +
+          ' WHERE D.SERIE_SES_SESDOC  = :s ' +
+          '   AND D.NUMERO_SES_SESDOC = :n ' +
+          '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
+        q.ParamByName('s').AsString := sSerieSes;
+        q.ParamByName('n').AsString := sNumSes;
+        q.ExecSQL;
+      except
+        // tabla fza_pedidos_compra puede no existir.
+      end;
+      // 1b.4 Fallback: tambien borramos por la ruta antigua (NUMERO_DOC_PDR
+      // = sNumSes) por compatibilidad con sesiones materializadas antes de
+      // este cambio, que usaban sNumSes como numero de pedido y no creaban
+      // las cabeceras en fza_pedidos_compra.
       try
         q.SQL.Text :=
           'DELETE FROM fza_articulos_pdte_recibir ' +
@@ -1923,8 +2332,6 @@ begin
                           ADM.unqryTablaG.FieldByName('SERIE_PEDC_SES').AsString;
         q.ExecSQL;
       except
-        // tragado: tabla pdte_recibir puede no existir en esta BBDD si
-        // no se ha aplicado la migracion correspondiente.
       end;
 
       // 2. Cabecera vuelve a BORRADOR + limpiamos referencias a docs.
