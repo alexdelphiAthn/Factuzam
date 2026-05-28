@@ -1,5 +1,8 @@
 inherited dmMovimientosAlmacen: TdmMovimientosAlmacen
   inherited unqryTablaG: TUniQuery
+    BeforeInsert = unqryTablaGBeforeInsert
+    BeforeEdit = unqryTablaGBeforeEdit
+    BeforeDelete = unqryTablaGBeforeDelete
     SQLInsert.Strings = (
       'INSERT INTO `fza_movimientos_almacen`'
       '  (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_MOV`, `NUMERO_DOC_MOV`, `LINEA_MOV`, `CODIGO_EMP_MOV`, `CODIGO_ALM_MOV`, `FECHA_MOV`, `CODIGO_ART_MOV`, `CODIGO_UNIDAD_MOV`, `DESCRIPCION_ARTICULO_MOV`, `TI' +
