@@ -411,6 +411,10 @@ var
 begin
   inherited;
   if (dmmPedidosCompra = nil) or (FPivote = nil) then Exit;
+  // No llamamos a RefrescarVisibilidadTallas: Activar/Desactivar de la
+  // libreria ya ajustan la visibilidad de las columnas talla y publican
+  // cantidades en el orden correcto (visibilidad ANTES de publicar, para
+  // que cxGrid no limpie los Values[] no-bound).
   if not FPivote.Activo then
   begin
     if not FPivote.ValidarPivotePosible(sMensaje) then
@@ -422,7 +426,6 @@ begin
   end
   else
     FPivote.Desactivar;
-  RefrescarVisibilidadTallas;
   // Sender=nil: llamada automatica desde el data-change hook, no
   // re-escribir la preferencia en la cabecera.
   if Sender <> nil then
@@ -480,8 +483,11 @@ begin
       btnTallasHorizontalClick(nil);
   end;
   if not FPivote.Activo then Exit;
+  // RecargarYRepublicar ya hace RecalcularMaxColumnas + Captions
+  // ANTES de publicar. Llamar a RefrescarVisibilidadTallas aqui haria
+  // un segundo RecalcularMax tras publicar y limpiaria los Values[]
+  // recien puestos.
   FPivote.RecargarYRepublicar;
-  RefrescarVisibilidadTallas;
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM

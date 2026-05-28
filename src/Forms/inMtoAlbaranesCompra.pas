@@ -443,6 +443,10 @@ begin
   // (1 fila representante por articulo+color, columnas talla con la
   // cantidad de cada SKU). El modelo BBDD no cambia: el filtro vive
   // en cliente y lo gestiona la libreria.
+  // No llamamos a RefrescarVisibilidadTallas: Activar/Desactivar de la
+  // libreria ya ajustan la visibilidad de las columnas talla y publican
+  // cantidades en el orden correcto (visibilidad ANTES de publicar; si
+  // se hiciera al reves cxGrid limpiaria los Values[] no-bound).
   if not FPivote.Activo then
   begin
     if not FPivote.ValidarPivotePosible(sMensaje) then
@@ -454,7 +458,6 @@ begin
   end
   else
     FPivote.Desactivar;
-  RefrescarVisibilidadTallas;
   // Sender=nil: llamada automatica desde el data-change hook; no
   // re-escribir la preferencia.
   if Sender <> nil then
@@ -631,8 +634,11 @@ begin
       btnTallasHorizontalClick(nil);
   end;
   if not FPivote.Activo then Exit;
+  // RecargarYRepublicar ya hace RecalcularMaxColumnas + Captions
+  // ANTES de publicar. Llamar a RefrescarVisibilidadTallas aqui haria
+  // un segundo RecalcularMax tras publicar y limpiaria los Values[]
+  // recien puestos.
   FPivote.RecargarYRepublicar;
-  RefrescarVisibilidadTallas;
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM
