@@ -236,7 +236,7 @@ UPDATE `fza_tipos_documentos`
 -- Si no existe la entrada, la creamos para que el contador PRC_GET_CONTADOR_FACTURA
 -- la conozca.
 INSERT INTO `fza_tipos_documentos`
-  (`CODIGO_TIPO_DOCUMENTO_TD`, `NOMBRE_TIPO_DOCUMENTO_TD`,
+  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`,
    `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
 SELECT 'PC', 'PEDIDO DE COMPRAS', 'fza_pedidos_compra'
  WHERE NOT EXISTS (
