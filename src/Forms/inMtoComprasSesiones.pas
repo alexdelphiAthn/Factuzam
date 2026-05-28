@@ -338,9 +338,24 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.cxgrdLineasExit(Sender: TObject);
+var
+  bPopupAbierto: Boolean;
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+
+//  bPopupAbierto := False;
+//  if (tvLineas.Controller.EditingController <> nil) and
+//     (tvLineas.Controller.EditingController.Edit <> nil) and
+//     (tvLineas.Controller.EditingController.Edit is TcxCustomDropDownEdit) then
+//  begin
+//    bPopupAbierto := TcxCustomDropDownEdit(tvLineas.Controller.EditingController.Edit).DroppedDown;
+//  end;
+//
+//  // Si salimos del grid porque se ha abierto el popup del combo de tallas,
+//  // NO reactivamos el EnterAsTab. Así permitimos que el Enter nativo llegue al combo
+//  // para confirmar la selección.
+//  if not bPopupAbierto then
+//    inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
 procedure TfrmMtoComprasSesiones.btnGrabarClick(Sender: TObject);
@@ -1421,31 +1436,20 @@ begin
     tvLineas.Controller.EditingController.ShowEdit;
 end;
 
+// 1. Declaramos la clase cracker para acceder al popup interno
+
 procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
-  frmSel : TfrmModalSelFamilia;
+  frmSel: TfrmModalSelFamilia;
+  vColIndex: Integer;
 begin
   inherited;
-  // Sistema tallas (cxLookupComboBox auto-desplegado): si forzamos
-  // DroppedDown:=False + PostEditValue, DevExpress lo interpreta como
-  // Escape y cancela la fila resaltada — el dataset recibe el valor
-  // antiguo (o vacio) en lugar de la seleccion. Tab es la tecla de
-  // confirmacion nativa del cxLookupComboBox: cierra el desplegable,
-  // postea el valor y, gracias a OptionsBehavior.FocusCellOnTab, avanza
-  // el foco a la celda contigua. Transformamos VK_RETURN en VK_TAB
-  // solo cuando el desplegable esta abierto.
-  if (Key = VK_RETURN) and (Shift = []) and (AItem = dbcLinTallas) and
-     (AEdit is TcxCustomDropDownEdit) then
-  begin
-    if TcxCustomDropDownEdit(AEdit).DroppedDown then
-      Key := VK_TAB;
-  end;
+  // --- SELECTOR DE FAMILIA / ARTÍCULO (F3) ---
   if (Key <> VK_F3) or (Shift <> []) then Exit;
   if not Assigned(AItem) then Exit;
-  // F3 abre el selector tanto desde Familia como desde el Codigo articulo:
-  // ambos confluyen en el mismo modal y el codigo elegido se expande igual.
+
   if (AItem <> dbcLinFamilia) and (AItem <> dbcLinCodArt) then Exit;
 
   frmSel := TfrmModalSelFamilia.Create(Self);
@@ -1456,6 +1460,43 @@ begin
     FreeAndNil(frmSel);
   end;
   Key := 0;
+end;
+
+procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesEditValueChanged(Sender: TObject);
+begin
+  inherited; // Ojo: asegúrate de que el inherited encaje con la firma (Sender: TObject)
+
+//  // Aquí Sender SÍ es el editor en memoria (TcxCustomEdit), por lo que el cast funciona
+//  if Sender is TcxCustomEdit then
+//    TcxCustomEdit(Sender).PostEditValue;
+//
+//  if Dmm.unqrySesionLin.IsEmpty then Exit;
+//  if FGestorTallas = nil then Exit;
+//
+//  // Rechaza sistemas con más valores que el máximo (mtError + clear)
+//  if not FGestorTallas.ValidarSistemaSeleccionado then Exit;
+//
+//  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+//    Dmm.unqrySesionLin.Post;
+//
+//  FGestorTallas.RecalcularMaxColumnas;
+//  FGestorTallas.ActualizarCaptionsLineaActiva;
+//
+//  // --- Salto automático a la siguiente celda visual (Talla 1) ---
+//  TThread.ForceQueue(nil,
+//    procedure
+//    var
+//      vColIndex: Integer;
+//    begin
+//      // Validamos que el foco sigue en esta columna antes de saltar
+//      if tvLineas.Controller.FocusedItem = dbcLinTallas then
+//      begin
+//        vColIndex := dbcLinTallas.VisibleIndex + 1;
+//        if vColIndex < tvLineas.VisibleItemCount then
+//          tvLineas.Controller.FocusedItem := tvLineas.VisibleItems[vColIndex];
+//      end;
+//    end
+//  );
 end;
 
 procedure TfrmMtoComprasSesiones.btnArbolFamiliasClick(Sender: TObject);
@@ -1720,7 +1761,7 @@ begin
       procedure
       var ec  : TcxCustomEdit;
       begin
-        if tvLineas.Controller.FocusedColumn <> dbcLinTallas then Exit;
+        if tvLineas.Controller.FocusedItem <> dbcLinTallas then Exit;
         if tvLineas.Controller.EditingController = nil then Exit;
         tvLineas.Controller.EditingController.ShowEdit;
         ec := tvLineas.Controller.EditingController.Edit;
@@ -2189,26 +2230,6 @@ end;
 // ===========================================================================
 //   Conjunto de tallas (Sistema tallas) cambia -> rebuild de cabeceras
 // ===========================================================================
-
-procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesEditValueChanged(
-  Sender: TObject);
-begin
-  inherited;
-  if Sender is TcxCustomEdit then
-    TcxCustomEdit(Sender).PostEditValue;
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
-  if FGestorTallas = nil then Exit;
-
-  // Rechaza sistemas con mas valores que el maximo (mtError + clear)
-  // ANTES de Postear/reasignar columnas. La validacion vive en la
-  // libreria — un solo punto para todos los Mtos que usen el patron.
-  if not FGestorTallas.ValidarSistemaSeleccionado then Exit;
-
-  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-    Dmm.unqrySesionLin.Post;
-  FGestorTallas.RecalcularMaxColumnas;
-  FGestorTallas.ActualizarCaptionsLineaActiva;
-end;
 
 // La edicion de celdas talla (antiguo TallaCellEditValueChanged) se
 // extrajo a TGestorGridTallas.PersistirCeldaActiva; el handler se
