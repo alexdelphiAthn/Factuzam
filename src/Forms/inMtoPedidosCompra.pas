@@ -618,8 +618,12 @@ begin
   sNumero := dmmPedidosCompra.unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
   form := TfrmModalSelAlmacenPedido.Create(Application);
   try
-    form.SeriePedc := sSerie;
-    form.NumPedc   := sNumero;
+    form.SeriePedc            := sSerie;
+    form.NumPedc              := sNumero;
+    form.SerieAlbDefecto      := sSerie;  // default = misma serie
+    form.RefProveedorDefecto  :=
+      dmmPedidosCompra.unqryTablaG.FieldByName('REF_PROVEEDOR_PEDC').AsString;
+    form.IdPvTemporadaDefecto := 0;
     form.ShowModal;
     if not form.Aceptado then Exit;
     if Trim(form.CodigoAlmacen) = '' then Exit;
@@ -628,7 +632,9 @@ begin
     try
       bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
               inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-              sSerie, oUser, sNumAlb, sMsg);
+              form.SerieAlbaran, oUser,
+              form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
+              sNumAlb, sMsg);
       if bOk then
       begin
         if bTxOwned then inLibGlobalVar.oConn.Commit;
