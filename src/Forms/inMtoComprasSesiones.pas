@@ -1478,15 +1478,24 @@ procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
   frmSel : TfrmModalSelFamilia;
+  props  : TcxButtonEditProperties;
 begin
   inherited;
-  // Ctrl+Enter en 'Sistema tallas' despliega el mismo listbox de 3
-  // columnas que el boton ellipsis '...'. Pasamos AEdit (el editor en
-  // edicion) como Sender para que el popup salga justo debajo de la celda.
-  if (Key = VK_RETURN) and (Shift = [ssCtrl]) and (AItem = dbcLinTallas) then
+  // Ctrl+Enter sobre cualquier columna 'editbutton' (color basico,
+  // sistema tallas, ...) dispara el click de su primer boton, igual que
+  // pulsar el ellipsis '...'. Generico: invoca el OnButtonClick cableado
+  // en esa columna pasando AEdit (el editor en edicion) como Sender, asi
+  // el popup sale justo debajo de la celda. Cualquier columna TcxButtonEdit
+  // futura hereda el atajo sin tocar este handler.
+  if (Key = VK_RETURN) and (Shift = [ssCtrl]) and (AItem is TcxGridDBColumn) and
+     (TcxGridDBColumn(AItem).Properties is TcxButtonEditProperties) then
   begin
-    dbcLinTallasPropertiesButtonClick(AEdit, 0);
-    Key := 0;
+    props := TcxButtonEditProperties(TcxGridDBColumn(AItem).Properties);
+    if (props.Buttons.Count > 0) and Assigned(props.OnButtonClick) then
+    begin
+      props.OnButtonClick(AEdit, 0);
+      Key := 0;
+    end;
   end
   // F3 sobre Familia / Codigo articulo abre el picker jerarquico de familia.
   else if (Key = VK_F3) and (Shift = []) and
