@@ -37,6 +37,7 @@ type
     unqryPrvDataPedc:         TUniQuery;
     unqrySkusPedc:            TUniQuery;
     unstrdprcGetContadorPedc: TUniStoredProc;
+    unqryDefArticuloPedc:     TUniQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -75,6 +76,7 @@ begin
   unqryPrvDataPedc.Connection         := inLibGlobalVar.oConn;
   unqrySkusPedc.Connection            := inLibGlobalVar.oConn;
   unstrdprcGetContadorPedc.Connection := inLibGlobalVar.oConn;
+  unqryDefArticuloPedc.Connection     := inLibGlobalVar.oConn;
   unqryPedidosCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
 end;

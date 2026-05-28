@@ -225,6 +225,57 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
+-- 2bis. fza_pedidos_compra_celdas: cantidad por (linea, fila, talla)
+-- Espejo de fza_albaranes_compra_celdas. Sufijo PEDCCEL. Soporta el modo
+-- 'Tallas en horizontal' del Mto: una celda por SKU dentro de la matriz
+-- pivote por talla x color.
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_pedidos_compra_celdas'
+);
+SET @ddl := IF(@tab_exists = 0,
+  'CREATE TABLE `fza_pedidos_compra_celdas` ('
+  '  `SERIE_PEDC_PEDCCEL`  varchar(20)   NOT NULL,'
+  '  `NUMERO_PEDC_PEDCCEL` varchar(20)   NOT NULL,'
+  '  `LINEA_PEDC_PEDCCEL`  varchar(4)    NOT NULL,'
+  '  `ID_FILA_PEDC_PEDCCEL` int(11)      NOT NULL DEFAULT 1,'
+  '  `ID_AV_PIVOT_PEDCCEL` int(11)       NOT NULL'
+  '       COMMENT ''ID del valor de atributo (talla) que pivota'','
+  '  `CANTIDAD_PEDCCEL`    decimal(19,6) NOT NULL DEFAULT 0,'
+  '  `CODIGO_ALM_PEDCCEL`  varchar(10)   NULL DEFAULT NULL,'
+  '  `INSTANTE_MODIF` timestamp NOT NULL'
+  '       DEFAULT current_timestamp() ON UPDATE current_timestamp(),'
+  '  `INSTANTE_ALTA`  timestamp NOT NULL'
+  '       DEFAULT ''0000-00-00 00:00:00'','
+  '  `USUARIO_ALTA`   varchar(100) NOT NULL,'
+  '  `USUARIO_MODIF`  varchar(100) NOT NULL,'
+  '  PRIMARY KEY (`SERIE_PEDC_PEDCCEL`,`NUMERO_PEDC_PEDCCEL`,'
+  '               `LINEA_PEDC_PEDCCEL`,`ID_FILA_PEDC_PEDCCEL`,'
+  '               `ID_AV_PIVOT_PEDCCEL`)'
+  ')',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_pedidos_compra_celdas'
+     AND INDEX_NAME   = 'IDX_PEDCCEL_LINEA'
+);
+SET @ddl := IF(@idx_exists = 0,
+  'ALTER TABLE `fza_pedidos_compra_celdas` '
+  'ADD INDEX `IDX_PEDCCEL_LINEA` '
+  '(`SERIE_PEDC_PEDCCEL`,`NUMERO_PEDC_PEDCCEL`,`LINEA_PEDC_PEDCCEL`)',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
 -- 3. Alinear fza_tipos_documentos: el codigo 'PC' apunta a la tabla nueva.
 --    Antes apuntaba a 'fza_pedidos_compras' (plural) que no existia.
 -- ----------------------------------------------------------------------------
