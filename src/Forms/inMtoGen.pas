@@ -177,6 +177,7 @@ type
     FSqlBaseBusquedaExterna: string;
     FCamposGuia: TStringList;
     FCamposGuiaTabla: TStringList;
+    FColumnasVisiblesGuia: TStringList;
     // Hook BeforeDelete del dataset principal original (en el data module).
     // Lo conservamos para reinvocarlo cuando la accion final sea Borrar; si
     // el usuario elige Desactivar o Cancelar lo saltamos.
@@ -184,7 +185,6 @@ type
     FGuardianBorradoInstalado: Boolean;
     procedure InstalarGuardianBorrado;
     procedure GuardianBeforeDelete(DataSet: TDataSet);
-    FColumnasVisiblesGuia: TStringList;
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
     procedure PopMenuNuevaGuiaClick(Sender: TObject);
