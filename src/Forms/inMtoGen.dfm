@@ -1,4 +1,4 @@
-﻿inherited frmMtoGen: TfrmMtoGen
+inherited frmMtoGen: TfrmMtoGen
   BorderStyle = bsNone
   Caption = 'Ventana Gen'#233'rica'
   ClientHeight = 558
@@ -13,7 +13,7 @@
   OnShow = FormShow
   ExplicitWidth = 1091
   ExplicitHeight = 558
-  TextHeight = 19
+  TextHeight = 17
   object pButtonPage: TPanel [0]
     Left = 0
     Top = 0
@@ -40,7 +40,7 @@
       ClientRectBottom = 516
       ClientRectLeft = 2
       ClientRectRight = 949
-      ClientRectTop = 29
+      ClientRectTop = 27
       object tsLista: TcxTabSheet
         Caption = '&Lista'
         ImageIndex = 0
@@ -124,6 +124,8 @@
         Caption = 'Perfil'
         ImageIndex = 2
         TabVisible = False
+        ExplicitTop = 29
+        ExplicitHeight = 487
         object pnlPerfilTop: TPanel
           Left = 0
           Top = 0
@@ -177,11 +179,12 @@
           Left = 0
           Top = 57
           Width = 947
-          Height = 430
+          Height = 432
           Align = alClient
           BevelOuter = bvNone
           Caption = 'pnlPerfilDetail'
           TabOrder = 1
+          ExplicitHeight = 430
           object cxgrdPerfil: TcxGrid
             Left = 0
             Top = 0
@@ -472,6 +475,7 @@
           Width = 21
           Height = 23
           Hint = 'Ajustar anchos de columna'
+          Caption = #8596
           Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
@@ -480,7 +484,6 @@
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
-          Caption = #8596
           ParentFont = False
           OnClick = sbBestFitClick
         end
