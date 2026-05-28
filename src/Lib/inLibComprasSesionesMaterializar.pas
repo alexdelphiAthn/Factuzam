@@ -1857,21 +1857,14 @@ begin
       if (ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString <> '') and
          (ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString  <> '') then
       begin
+        // Borrar movimientos via SP: decrementa stock + acumulados
         q.SQL.Text :=
-          'DELETE FROM fza_movimientos_almacen ' +
-          ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
-          '   AND SERIE_DOC_MOV  = :salb ' +
-          '   AND NUMERO_DOC_MOV = :nalb ' +
-          '   AND CODIGO_EMP_MOV = :emp ' +
-          '   AND CODIGO_ALM_MOV = :alm';
+          'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :salb, :nalb)';
+        q.ParamByName('t').AsString := 'AC';
         q.ParamByName('salb').AsString :=
                           ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
         q.ParamByName('nalb').AsString :=
                           ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString;
-        q.ParamByName('emp').AsString  :=
-                          ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
-        q.ParamByName('alm').AsString  :=
-                          ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
         q.ExecSQL;
       end;
       // 1.ter Cleanup de movimientos AC huerfanos en la misma
@@ -1880,20 +1873,37 @@ begin
       // movimientos cuyo albaran ya no existe en fza_albaranes_compra
       // (el albaran se borro en el paso 0j de esta o de una reversion
       // previa). Sin albaran que los respalde, son residuos.
-      q.SQL.Text :=
-        'DELETE MOV FROM fza_movimientos_almacen MOV ' +
-        '  LEFT JOIN fza_albaranes_compra ALBC ' +
-        '         ON ALBC.SERIE_ALBC  = MOV.SERIE_DOC_MOV ' +
-        '        AND ALBC.NUMERO_ALBC = MOV.NUMERO_DOC_MOV ' +
-        ' WHERE MOV.TIPO_DOC_MOV   = ''AC'' ' +
-        '   AND MOV.CODIGO_EMP_MOV = :emp ' +
-        '   AND MOV.CODIGO_ALM_MOV = :alm ' +
-        '   AND ALBC.NUMERO_ALBC IS NULL';
-      q.ParamByName('emp').AsString :=
+      // Buscar huerfanos y borrarlos uno a uno via SP para mantener
+      // los acumuladores sincronizados (DELETE masivo los dejaria atrás)
+      var qHuerf := TUniQuery.Create(nil);
+      try
+        qHuerf.Connection := q.Connection;
+        qHuerf.SQL.Text :=
+          'SELECT MOV.NUMERO_MOV ' +
+          '  FROM fza_movimientos_almacen MOV ' +
+          '  LEFT JOIN fza_albaranes_compra ALBC ' +
+          '         ON ALBC.SERIE_ALBC  = MOV.SERIE_DOC_MOV ' +
+          '        AND ALBC.NUMERO_ALBC = MOV.NUMERO_DOC_MOV ' +
+          ' WHERE MOV.TIPO_DOC_MOV   = ''AC'' ' +
+          '   AND MOV.CODIGO_EMP_MOV = :emp ' +
+          '   AND MOV.CODIGO_ALM_MOV = :alm ' +
+          '   AND ALBC.NUMERO_ALBC IS NULL';
+        qHuerf.ParamByName('emp').AsString :=
                           ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
-      q.ParamByName('alm').AsString :=
+        qHuerf.ParamByName('alm').AsString :=
                           ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-      q.ExecSQL;
+        qHuerf.Open;
+        while not qHuerf.Eof do
+        begin
+          q.SQL.Text := 'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE(:m)';
+          q.ParamByName('m').AsString :=
+            qHuerf.FieldByName('NUMERO_MOV').AsString;
+          q.ExecSQL;
+          qHuerf.Next;
+        end;
+      finally
+        FreeAndNil(qHuerf);
+      end;
 
       // 1b. Borrar las filas de pendiente de recibir generadas por
       //     esta sesion (si genero pedido). Mismo criterio: NUMERO_DOC

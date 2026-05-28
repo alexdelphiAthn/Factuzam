@@ -724,18 +724,20 @@ begin
     Ticket.TextoColumnas('  = Total:',
       FmtImp(AArqueo.EfectivoCaja));
     Ticket.LineaSeparadora;
-    { Detalle por forma de pago }
+    { Detalle por forma de pago: 3 columnas alineadas a la derecha
+      sobre los 42 caracteres del ticket (14+14+14) }
     Ticket.Negrita(True);
     Ticket.EscribirLinea('RECUENTO');
     Ticket.Negrita(False);
-    Ticket.TextoColumnas('  Sist.   Rec.', 'Dif.');
+    Ticket.EscribirLinea(Format('%14s%14s%14s', ['Sist.', 'Rec.', 'Dif.']));
     for i := 0 to High(ALineas) do
     begin
       Ticket.EscribirLinea(ALineas[i].Descripcion);
       Ticket.EscribirLinea(
-        '  ' + FmtImp(ALineas[i].Sistema) +
-        '  ' + FmtImp(ALineas[i].Recuento) +
-        '  ' + FmtImp(ALineas[i].Diferencia));
+        Format('%14s%14s%14s',
+               [FmtImp(ALineas[i].Sistema),
+                FmtImp(ALineas[i].Recuento),
+                FmtImp(ALineas[i].Diferencia)]));
     end;
     Ticket.LineaSeparadora('=');
     { Totales }

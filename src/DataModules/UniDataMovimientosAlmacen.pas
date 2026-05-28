@@ -11,6 +11,12 @@
 {  Descripción:                                                                }
 {    Data module de movimientos de almacén.                                    }
 {    Contenedor de consultas sobre fza_movimientos_almacen (kardex).           }
+{                                                                              }
+{    Solo lectura desde la UI: cualquier intento de Insert/Edit/Delete         }
+{    desde el grid de mantenimiento se bloquea con Abort. Los procesos         }
+{    legítimos (albaranes, facturas, traspasos, regularización...) generan     }
+{    movimientos llamando a PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT, no por este    }
+{    data module.                                                              }
 {******************************************************************************}
 unit UniDataMovimientosAlmacen;
 
@@ -18,14 +24,15 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn;
+  inLibUser, UniDataConn, Vcl.Dialogs;
 
 type
   TdmMovimientosAlmacen = class(TdmBase)
+    procedure unqryTablaGBeforeInsert(DataSet: TDataSet);
+    procedure unqryTablaGBeforeEdit(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
-    { Private declarations }
-  public
-    { Public declarations }
+    procedure BloquearEdicion(const aOp: string);
   end;
 
 implementation
@@ -35,6 +42,33 @@ implementation
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TdmMovimientosAlmacen.BloquearEdicion(const aOp: string);
+begin
+  ShowMessage(
+    'No se permite ' + aOp + ' movimientos de almacén manualmente.' + #13#10 +
+    'Usa el proceso correspondiente (albarán, factura, traspaso, ' +
+    'regularización de inventario...).');
+  Abort;
+end;
+
+procedure TdmMovimientosAlmacen.unqryTablaGBeforeInsert(DataSet: TDataSet);
+begin
+  inherited;
+  BloquearEdicion('insertar');
+end;
+
+procedure TdmMovimientosAlmacen.unqryTablaGBeforeEdit(DataSet: TDataSet);
+begin
+  inherited;
+  BloquearEdicion('editar');
+end;
+
+procedure TdmMovimientosAlmacen.unqryTablaGBeforeDelete(DataSet: TDataSet);
+begin
+  inherited;
+  BloquearEdicion('borrar');
+end;
 
 initialization
   ForceReferenceToClass(TdmMovimientosAlmacen);
