@@ -72,6 +72,16 @@ type
   end;
   TArrPosConjunto = TArray<TPosConjunto>;
 
+  // Una opcion del selector "Sistema de tallas": un conjunto de
+  // atributos (fza_atributos_conjuntos) con su nombre y el rango
+  // (primera..ultima talla) que se muestran como tres columnas.
+  TOpcionConjuntoTalla = record
+    IdAc    : Integer;   // ID_AC (clave que devuelve el selector)
+    Nombre  : string;    // NOMBRE_AC      -> columna 'Sistema'
+    Primera : string;    // primera talla  -> columna 'Desde'
+    Ultima  : string;    // ultima talla   -> columna 'Hasta'
+  end;
+
   // Configuracion del gestor. Cada Mto consumidor rellena su instancia
   // con los nombres de tabla / campos especificos antes de crear el
   // gestor. Todos los nombres son SQL crudos (no constantes f*).
@@ -185,10 +195,27 @@ procedure ActivarEnterComoTab(AForm: TForm; AActivo: Boolean);
 // el contenido quede seleccionado.
 procedure SeleccionarTodoEnEditor(AEdit: TcxCustomEdit);
 
+// Muestra un dropdown sin marco con un TListBox owner-drawn de TRES
+// columnas (Sistema / Desde / Hasta) y una cabecera, para elegir un
+// sistema de tallas imitando el selector de paleta de colores
+// (inLibAtributosPaleta.SeleccionarAvConPaleta) pero con varias
+// columnas. Un click selecciona y cierra; Esc o click fuera cancelan.
+// Pasa AScreenLeft/AScreenTop = posicion en pantalla justo debajo del
+// editor y AWidthHint = ancho minimo. Devuelve True y el ID_AC elegido
+// en AIdAc; False si se cancela.
+function SeleccionarConjuntoTalla(
+                          const AOpciones: array of TOpcionConjuntoTalla;
+                          const AIdAcActual: Integer;
+                          out AIdAc: Integer;
+                          AScreenLeft: Integer = -1;
+                          AScreenTop: Integer = -1;
+                          AWidthHint: Integer = 380): Boolean;
+
 implementation
 
 uses
-  System.Math,
+  System.Math, System.Types,
+  Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls,
   inLibGlobalVar;
 
 { TGestorGridTallas }
@@ -704,6 +731,294 @@ procedure SeleccionarTodoEnEditor(AEdit: TcxCustomEdit);
 begin
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
+end;
+
+// =============================================================================
+//   Selector "Sistema de tallas" (listbox owner-drawn de 3 columnas)
+// =============================================================================
+// Calca el patron de TfrmSelPalAvAux de inLibAtributosPaleta: dropdown sin
+// marco anclado al form activo via PopupParent, click=selecciona+cierra,
+// Esc/click-fuera=cancela. La diferencia es que pinta TRES columnas
+// (Sistema / Desde / Hasta) con una cabecera rotulada arriba.
+
+type
+  TfrmSelConjTallaAux = class(TForm)
+  private
+    FListBox  : TListBox;
+    FHeader   : TPaintBox;
+    FOpciones : TArray<TOpcionConjuntoTalla>;
+    FShown    : Boolean;
+    procedure CalcularColumnas(AWidth: Integer;
+                               out AInicioDesde, AInicioHasta: Integer);
+    procedure HeaderPaint(Sender: TObject);
+    procedure ListBoxDrawItem(Control: TWinControl; Index: Integer;
+                              ARect: TRect; State: TOwnerDrawState);
+    procedure ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
+                               Shift: TShiftState; X, Y: Integer);
+    procedure ListBoxKeyDown(Sender: TObject;
+                             var Key: Word; Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  public
+    constructor CreateConOpciones(
+                  const AOpciones: array of TOpcionConjuntoTalla;
+                  const AIdAcActual: Integer;
+                  AScreenLeft, AScreenTop, AWidthHint: Integer);
+  end;
+
+const
+  // Anchos fijos de las columnas de rango (la columna 'Sistema' ocupa
+  // el resto). MARGEN_COL = padding interno de cada columna.
+  ANCHO_COL_DESDE = 64;
+  ANCHO_COL_HASTA = 64;
+  MARGEN_COL      = 6;
+
+procedure TfrmSelConjTallaAux.CalcularColumnas(AWidth: Integer;
+                                  out AInicioDesde, AInicioHasta: Integer);
+begin
+  AInicioHasta := AWidth - ANCHO_COL_HASTA;     // x de inicio de 'Hasta'
+  AInicioDesde := AInicioHasta - ANCHO_COL_DESDE; // x de inicio de 'Desde'
+  // Garantizar un minimo para la columna 'Sistema' si el popup es muy
+  // estrecho (no deberia pasar, AWidthHint manda).
+  if AInicioDesde < 80 then
+  begin
+    AInicioDesde := 80;
+    if AInicioHasta < AInicioDesde + 20 then
+      AInicioHasta := AInicioDesde + 20;
+  end;
+end;
+
+procedure TfrmSelConjTallaAux.HeaderPaint(Sender: TObject);
+var
+  cv : TCanvas;
+  xD, xH : Integer;
+  r : TRect;
+begin
+  cv := FHeader.Canvas;
+  cv.Brush.Style := bsSolid;
+  cv.Brush.Color := clBtnFace;
+  cv.FillRect(FHeader.ClientRect);
+  CalcularColumnas(FHeader.ClientWidth, xD, xH);
+  cv.Font.Assign(Self.Font);
+  cv.Font.Style := [fsBold];
+  cv.Brush.Style := bsClear;
+  r := Rect(MARGEN_COL, 0, xD - MARGEN_COL, FHeader.ClientHeight);
+  DrawText(cv.Handle, 'Sistema', -1, r,
+           DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
+  r := Rect(xD + MARGEN_COL, 0, xH - MARGEN_COL, FHeader.ClientHeight);
+  DrawText(cv.Handle, 'Desde', -1, r,
+           DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+  r := Rect(xH + MARGEN_COL, 0, FHeader.ClientWidth - MARGEN_COL,
+            FHeader.ClientHeight);
+  DrawText(cv.Handle, 'Hasta', -1, r,
+           DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+  // Separadores verticales + linea inferior.
+  cv.Pen.Color := clBtnShadow;
+  cv.MoveTo(xD, 2);
+  cv.LineTo(xD, FHeader.ClientHeight - 2);
+  cv.MoveTo(xH, 2);
+  cv.LineTo(xH, FHeader.ClientHeight - 2);
+  cv.MoveTo(0, FHeader.ClientHeight - 1);
+  cv.LineTo(FHeader.ClientWidth, FHeader.ClientHeight - 1);
+end;
+
+procedure TfrmSelConjTallaAux.ListBoxDrawItem(Control: TWinControl;
+  Index: Integer; ARect: TRect; State: TOwnerDrawState);
+var
+  LB : TListBox;
+  op : TOpcionConjuntoTalla;
+  xD, xH : Integer;
+  r : TRect;
+begin
+  LB := Control as TListBox;
+  if (Index < 0) or (Index >= Length(FOpciones)) then Exit;
+  op := FOpciones[Index];
+  if odSelected in State then
+    LB.Canvas.Brush.Color := clHighlight
+  else
+    LB.Canvas.Brush.Color := clWindow;
+  LB.Canvas.Brush.Style := bsSolid;
+  LB.Canvas.FillRect(ARect);
+  CalcularColumnas(LB.ClientWidth, xD, xH);
+  if odSelected in State then
+    LB.Canvas.Font.Color := clHighlightText
+  else
+    LB.Canvas.Font.Color := clWindowText;
+  LB.Canvas.Brush.Style := bsClear;
+  r := Rect(ARect.Left + MARGEN_COL, ARect.Top,
+            ARect.Left + xD - MARGEN_COL, ARect.Bottom);
+  DrawText(LB.Canvas.Handle, PChar(op.Nombre), -1, r,
+           DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
+  r := Rect(ARect.Left + xD + MARGEN_COL, ARect.Top,
+            ARect.Left + xH - MARGEN_COL, ARect.Bottom);
+  DrawText(LB.Canvas.Handle, PChar(op.Primera), -1, r,
+           DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_END_ELLIPSIS);
+  r := Rect(ARect.Left + xH + MARGEN_COL, ARect.Top,
+            ARect.Right - MARGEN_COL, ARect.Bottom);
+  DrawText(LB.Canvas.Handle, PChar(op.Ultima), -1, r,
+           DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_END_ELLIPSIS);
+  // Separadores verticales tenues entre columnas.
+  LB.Canvas.Pen.Color := clBtnFace;
+  LB.Canvas.MoveTo(ARect.Left + xD, ARect.Top);
+  LB.Canvas.LineTo(ARect.Left + xD, ARect.Bottom);
+  LB.Canvas.MoveTo(ARect.Left + xH, ARect.Top);
+  LB.Canvas.LineTo(ARect.Left + xH, ARect.Bottom);
+  LB.Canvas.Brush.Style := bsSolid;
+  if odFocused in State then
+    LB.Canvas.DrawFocusRect(ARect);
+end;
+
+procedure TfrmSelConjTallaAux.ListBoxMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Idx : Integer;
+begin
+  if Button <> mbLeft then Exit;
+  Idx := FListBox.ItemAtPos(Point(X, Y), True);
+  if Idx >= 0 then
+  begin
+    FListBox.ItemIndex := Idx;
+    ModalResult := mrOk;
+  end;
+end;
+
+procedure TfrmSelConjTallaAux.ListBoxKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Key = VK_RETURN) and (FListBox.ItemIndex >= 0) then
+  begin
+    ModalResult := mrOk;
+    Key := 0;
+  end;
+end;
+
+procedure TfrmSelConjTallaAux.FormShow(Sender: TObject);
+begin
+  FShown := True;
+end;
+
+procedure TfrmSelConjTallaAux.FormDeactivate(Sender: TObject);
+begin
+  // Click fuera del popup -> cancela (como un combo).
+  if FShown and (ModalResult = mrNone) then
+    ModalResult := mrCancel;
+end;
+
+procedure TfrmSelConjTallaAux.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+  begin
+    ModalResult := mrCancel;
+    Key := 0;
+  end;
+end;
+
+constructor TfrmSelConjTallaAux.CreateConOpciones(
+              const AOpciones: array of TOpcionConjuntoTalla;
+              const AIdAcActual: Integer;
+              AScreenLeft, AScreenTop, AWidthHint: Integer);
+const
+  ALTO_FILA = 22;
+  ALTO_HDR  = 22;
+  ANCHO_MIN = 260;
+  ALTO_MAX  = 380;
+var
+  i, idxSel, W, H : Integer;
+begin
+  inherited CreateNew(nil);
+  // Anclar el popup al form activo como PopupParent (mismo motivo que
+  // TfrmSelPalAvAux: sin esto el ShowModal de un form sin borde devuelve
+  // el foco al MainForm al cerrarse y hunde la cadena de ventanas).
+  if Screen.ActiveForm <> nil then
+  begin
+    Self.PopupParent := Screen.ActiveForm;
+    Self.PopupMode   := pmExplicit;
+  end
+  else
+    Self.PopupMode := pmAuto;
+  BorderStyle := bsNone;
+  Position    := poDesigned;
+  Caption     := '';
+  KeyPreview  := True;
+  FShown      := False;
+  OnShow       := FormShow;
+  OnDeactivate := FormDeactivate;
+  OnKeyDown    := FormKeyDown;
+  SetLength(FOpciones, Length(AOpciones));
+  for i := 0 to High(AOpciones) do
+    FOpciones[i] := AOpciones[i];
+  // Cabecera con los rotulos de las tres columnas, anclada arriba.
+  FHeader := TPaintBox.Create(Self);
+  FHeader.Parent  := Self;
+  FHeader.Align   := alTop;
+  FHeader.Height  := ALTO_HDR;
+  FHeader.OnPaint := HeaderPaint;
+  FListBox := TListBox.Create(Self);
+  FListBox.Parent      := Self;
+  FListBox.Align       := alClient;
+  FListBox.Style       := lbOwnerDrawFixed;
+  FListBox.BorderStyle := bsSingle;
+  FListBox.ItemHeight  := ALTO_FILA;
+  FListBox.OnDrawItem  := ListBoxDrawItem;
+  FListBox.OnMouseDown := ListBoxMouseDown;
+  FListBox.OnKeyDown   := ListBoxKeyDown;
+  idxSel := -1;
+  for i := 0 to High(AOpciones) do
+  begin
+    // El TListBox necesita una entrada por fila (aunque el texto real
+    // lo pinta ListBoxDrawItem desde FOpciones). Guardamos el nombre.
+    FListBox.Items.Add(AOpciones[i].Nombre);
+    if (idxSel < 0) and (AOpciones[i].IdAc = AIdAcActual) then
+      idxSel := i;
+  end;
+  if (idxSel < 0) and (FListBox.Items.Count > 0) then
+    idxSel := 0;
+  if idxSel >= 0 then
+    FListBox.ItemIndex := idxSel;
+  ActiveControl := FListBox;
+  W := AWidthHint;
+  if W < ANCHO_MIN then W := ANCHO_MIN;
+  Width := W;
+  H := ALTO_HDR + Length(AOpciones) * ALTO_FILA + 4;
+  if H > ALTO_MAX then H := ALTO_MAX;
+  Height := H;
+  if (AScreenLeft >= 0) and (AScreenTop >= 0) then
+  begin
+    Left := AScreenLeft;
+    Top  := AScreenTop;
+  end
+  else
+    Position := poScreenCenter;
+end;
+
+function SeleccionarConjuntoTalla(
+                          const AOpciones: array of TOpcionConjuntoTalla;
+                          const AIdAcActual: Integer;
+                          out AIdAc: Integer;
+                          AScreenLeft, AScreenTop, AWidthHint: Integer): Boolean;
+var
+  F : TfrmSelConjTallaAux;
+begin
+  AIdAc  := 0;
+  Result := False;
+  if Length(AOpciones) = 0 then Exit;
+  F := TfrmSelConjTallaAux.CreateConOpciones(AOpciones, AIdAcActual,
+                                             AScreenLeft, AScreenTop, AWidthHint);
+  try
+    if F.ShowModal = mrOk then
+    begin
+      if (F.FListBox.ItemIndex >= 0) and
+         (F.FListBox.ItemIndex < Length(F.FOpciones)) then
+      begin
+        AIdAc  := F.FOpciones[F.FListBox.ItemIndex].IdAc;
+        Result := True;
+      end;
+    end;
+  finally
+    F.Free;
+  end;
 end;
 
 end.

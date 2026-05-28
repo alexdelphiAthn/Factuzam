@@ -521,28 +521,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object dbcLinTallas: TcxGridDBColumn
               Caption = 'Sistema tallas'
               DataBinding.FieldName = 'ID_AC_PIVOT_SESLIN'
-              PropertiesClassName = 'TcxLookupComboBoxProperties'
-              Properties.DropDownListStyle = lsFixedList
-              Properties.DropDownWidth = 380
-              Properties.KeyFieldNames = 'ID_AC'
-              Properties.ListColumns = <
+              PropertiesClassName = 'TcxButtonEditProperties'
+              Properties.Buttons = <
                 item
-                  Caption = 'Sistema'
-                  Width = 240
-                  FieldName = 'NOMBRE_AC'
-                end
-                item
-                  Caption = 'Desde'
-                  Width = 60
-                  FieldName = 'PRIMERA'
-                end
-                item
-                  Caption = 'Hasta'
-                  Width = 60
-                  FieldName = 'ULTIMA'
+                  Default = True
+                  Kind = bkEllipsis
                 end>
-              Properties.ListOptions.SyncMode = True
-              Properties.OnEditValueChanged = dbcLinTallasPropertiesEditValueChanged
+              Properties.OnButtonClick = dbcLinTallasPropertiesButtonClick
               Width = 170
             end
             object dbcLinTotalTallas: TcxGridDBColumn
