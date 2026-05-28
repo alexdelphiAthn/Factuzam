@@ -320,6 +320,15 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             TabOrder = 4
             OnClick = btnCrearAlbaranClick
           end
+          object btnExpandirRecibidos: TcxButton
+            Left = 768
+            Top = 6
+            Width = 160
+            Height = 26
+            Caption = 'Expandir recibidos'
+            TabOrder = 5
+            OnClick = btnExpandirRecibidosClick
+          end
         end
         object pnlBodyFicha: TPanel
           Left = 0
