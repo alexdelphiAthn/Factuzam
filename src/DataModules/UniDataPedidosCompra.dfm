@@ -83,4 +83,21 @@ inherited dmPedidosCompra: TdmPedidosCompra
     Left = 256
     Top = 24
   end
+  object unqryDefArticuloPedc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT DISTINCT NOMBRE_ATRIBUTO, ORDEN_VISUAL_ATRIBUTO '
+      '  FROM vi_atributos_nombres '
+      ' WHERE CODIGO_ART_PADRE_ARTVIN = :ARTICULO '
+      ' ORDER BY ORDEN_VISUAL_ATRIBUTO')
+    Left = 256
+    Top = 96
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'ARTICULO'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
 end

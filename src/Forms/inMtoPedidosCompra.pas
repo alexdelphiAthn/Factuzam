@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoPedidosCompra                                            }
 {    Tipo:       Formulario (Mto)                                              }
-{ Version:       1.0.0                                                         }
+{ Version:       1.1.0                                                         }
 {   Fecha:       28/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -10,15 +10,17 @@
 {                                                                              }
 {  Descripcion:                                                                }
 {    Mantenimiento de pedidos de COMPRA.                                       }
-{    Cabecera + lineas sobre fza_pedidos_compra. Espejo simplificado del       }
-{    Mto de albaranes de compra, adaptado a un documento que NO mueve         }
-{    stock fisico: en su lugar deposita el compromiso en                       }
-{    fza_articulos_pdte_recibir.                                               }
+{    Cabecera + lineas sobre fza_pedidos_compra. La logica de movimientos     }
+{    de stock NO existe en pedidos (es compromiso, no entrada): el AfterPost  }
+{    de la cabecera sincroniza fza_articulos_pdte_recibir y el boton          }
+{    "Crear albaran" genera un albaran de compra para el almacen elegido,    }
+{    que es quien dispara los movimientos via                                  }
+{    inLibAlbaranesCompraMovimientos.                                          }
 {                                                                              }
-{    Boton "Crear albaran" abre el modal selector de almacen y, al             }
-{    aceptar, llama a inLibPedidosCompra.CrearAlbaranDesdePedido para         }
-{    generar un albaran con las lineas pendientes del almacen elegido y       }
-{    disparar los movimientos via inLibAlbaranesCompraMovimientos.            }
+{    Modo "Tallas en horizontal": delegado en TGridPivoteCompra              }
+{    (inLibGridPivoteCompra). Esta libreria orquesta el filtrado, cache,      }
+{    publicacion de cantidades y pintado de celdas, y se comparte con el     }
+{    Mto de albaranes de compra.                                              }
 {******************************************************************************}
 unit inMtoPedidosCompra;
 
@@ -39,7 +41,13 @@ uses
   cxRadioGroup, cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo,
   cxCheckBox, cxGroupBox, cxDBLabel, cxButtonEdit, cxGridBandedTableView,
   cxGridDBBandedTableView,
+  inLibGridTallasInline,
+  inLibGridPivoteCompra,
   UniDataPedidosCompra;
+
+const
+  CANT_TALLAS_MAX = 20;
+  CANT_ATRIB_MAX  = 5;
 
 type
   TfrmMtoPedidosCompra = class(TfrmMtoGen)
@@ -88,17 +96,52 @@ type
     memObservaciones: TcxDBMemo;
 
     // Botones de accion
-    btnAnadirLinea:   TcxButton;
-    btnBorrarLinea:   TcxButton;
-    btnCrearAlbaran:  TcxButton;
+    btnAnadirLinea:       TcxButton;
+    btnBorrarLinea:       TcxButton;
+    btnTallasHorizontal:  TcxButton;
+    btnAtributosColumna:  TcxButton;
+    btnCrearAlbaran:      TcxButton;
 
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnAnadirLineaClick(Sender: TObject);
     procedure btnBorrarLineaClick(Sender: TObject);
+    procedure btnTallasHorizontalClick(Sender: TObject);
+    procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
+    procedure tvLineasPedidoFocusedRecordChanged(
+                Sender: TcxCustomGridTableView;
+                APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
+                ANewItemRecordFocusingChanged: Boolean);
+    procedure tvLineasPedidoCustomDrawCell(
+                Sender: TcxCustomGridTableView;
+                ACanvas: TcxCanvas;
+                AViewInfo: TcxGridTableDataCellViewInfo;
+                var ADone: Boolean);
+    procedure tvLineasPedidoEditing(
+                Sender: TcxCustomGridTableView;
+                AItem: TcxCustomGridTableItem;
+                var AAllow: Boolean);
+    procedure cxgrdLineasPedidoEnter(Sender: TObject);
+    procedure cxgrdLineasPedidoExit(Sender: TObject);
   private
+    FGestorTallas    : TGestorGridTallas;
+    FPivote          : TGridPivoteCompra;
+    FTallaColumns    : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
+    FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
+    FMostrarAtributos: Boolean;
+    FColColorPivot   : TcxGridDBColumn;
+    procedure CrearColumnasTallas;
+    procedure CrearColumnasAtributos;
+    procedure InicializarGestorYPivote;
+    procedure RefrescarVisibilidadTallas;
+    procedure RefrescarVisibilidadAtributos;
+    procedure CargarCaptionsAtributosLineaActiva;
+    procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    procedure PersistirPreferenciaPivote;
   public
     dmmPedidosCompra: TdmPedidosCompra;
     procedure CrearTablaPrincipal; override;
@@ -110,6 +153,7 @@ var
 implementation
 
 uses
+  System.StrUtils,
   inLibGlobalVar,
   inLibPedidosCompra,
   inMtoModalSelAlmacenPedido;
@@ -120,15 +164,46 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
 begin
+  // Mismo orden que albaranes / sesiones: columnas no-bound de tallas
+  // y atributos se crean ANTES del inherited.
+  CrearColumnasTallas;
+  CrearColumnasAtributos;
+  // Columna no-bound 'Color' solo visible en modo pivote.
+  FColColorPivot := tvLineasPedido.CreateColumn;
+  FColColorPivot.Name    := 'colLinPedcColorPivot';
+  FColColorPivot.Caption := 'Color';
+  FColColorPivot.Width   := 110;
+  FColColorPivot.Visible := False;
+  FColColorPivot.Options.Editing := False;
+  inherited;
+  InicializarGestorYPivote;
+  // Pintado del swatch de color en la columna no-bound: delegamos en el
+  // controlador de pivote.
+  if Assigned(FPivote) then
+    FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
+  // Hook OnDataChange del master: al cambiar de pedido activo, el
+  // controlador recarga su cache y republica.
+  dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  // Hook AfterPost del detail: cxGrid borra los Values[] no-bound al
+  // repintar tras Post; encadenamos totales del DM + recarga del
+  // controlador.
+  dmmPedidosCompra.unqryPedidosCompraLineas.AfterPost :=
+                                             unqryLineasAfterPostHook;
+  FMostrarAtributos := False;
+  RefrescarVisibilidadTallas;
+  RefrescarVisibilidadAtributos;
+end;
+
+procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FPivote);
+  FreeAndNil(FGestorTallas);
   inherited;
 end;
 
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;
 begin
   inherited;
-  // El padre (TfrmMtoGen.CrearTablaPrincipal -> CrearDataModule) ya creo
-  // la instancia del DM via RTTI desde fza_winforms. Fallback Create por
-  // si la entrada en fza_winforms no esta presente (BBDD sin migracion).
   dmmPedidosCompra := (tdmDataModule as TdmPedidosCompra);
   if not Assigned(dmmPedidosCompra) then
   begin
@@ -140,6 +215,225 @@ begin
     dmmPedidosCompra.dsPedidosCompraLineas;
   dmmPedidosCompra.unqryPedidosCompraLineas.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
+end;
+
+procedure TfrmMtoPedidosCompra.CrearColumnasTallas;
+var
+  i        : Integer;
+  col      : TcxGridDBColumn;
+  curProps : TcxCurrencyEditProperties;
+begin
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+  begin
+    col := tvLineasPedido.CreateColumn;
+    col.Name    := 'dbcLinPedcTalla' + Format('%.2d', [i + 1]);
+    col.Caption := '';
+    col.Width   := 50;
+    col.Tag     := i + 1;
+    col.Visible := False;
+    col.DataBinding.ValueTypeClass := TcxFloatValueType;
+    col.PropertiesClass := TcxCurrencyEditProperties;
+    curProps := TcxCurrencyEditProperties(col.Properties);
+    curProps.DisplayFormat := '#,##0';
+    FTallaColumns[i] := col;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.CrearColumnasAtributos;
+var
+  i: Integer;
+  col: TcxGridDBColumn;
+begin
+  for i := 0 to CANT_ATRIB_MAX - 1 do
+  begin
+    col := tvLineasPedido.CreateColumn;
+    col.Name    := 'dbcLinPedcAtrib' + Format('%.2d', [i + 1]);
+    col.Caption := '';
+    col.Width   := 90;
+    col.Tag     := -(i + 1);  // tag negativo para no chocar con tallas
+    col.Visible := False;
+    col.Options.Editing := False;
+    FAtribColumns[i] := col;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.InicializarGestorYPivote;
+var
+  cfgT : TGridTallasConfig;
+  cfgP : TGridPivoteCompraConfig;
+  i    : Integer;
+  arr  : TArray<TcxGridDBColumn>;
+begin
+  if FGestorTallas <> nil then FreeAndNil(FGestorTallas);
+  if FPivote       <> nil then FreeAndNil(FPivote);
+  if dmmPedidosCompra = nil then Exit;
+  SetLength(arr, CANT_TALLAS_MAX);
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    arr[i] := FTallaColumns[i];
+  // 1. Gestor inline de tallas (libreria existente).
+  cfgT := Default(TGridTallasConfig);
+  cfgT.Conexion           := inLibGlobalVar.oConn;
+  cfgT.Usuario            := oUser;
+  cfgT.Grid               := tvLineasPedido;
+  cfgT.SourceMaster       := dsTablaG;
+  cfgT.SourceLineas       := dmmPedidosCompra.dsPedidosCompraLineas;
+  cfgT.ColumnasTallas     := arr;
+  cfgT.FieldSerieMaster   := 'SERIE_PEDC';
+  cfgT.FieldNumeroMaster  := 'NUMERO_PEDC';
+  cfgT.FieldLinea         := 'LINEA_PEDCLIN';
+  cfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_PEDCLIN';
+  cfgT.FieldPrecioBase    := 'PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN';
+  cfgT.FieldTotalUds      := 'TOTAL_UNIDADES_PEDCLIN';
+  cfgT.FieldTotalLinea    := 'TOTAL_PEDCLIN';
+  cfgT.TablaCeldas        := 'fza_pedidos_compra_celdas';
+  cfgT.FieldSerieCel      := 'SERIE_PEDC_PEDCCEL';
+  cfgT.FieldNumeroCel     := 'NUMERO_PEDC_PEDCCEL';
+  cfgT.FieldLineaCel      := 'LINEA_PEDC_PEDCCEL';
+  cfgT.FieldFilaCel       := 'ID_FILA_PEDC_PEDCCEL';
+  cfgT.FieldAvPivotCel    := 'ID_AV_PIVOT_PEDCCEL';
+  cfgT.FieldCantidadCel   := 'CANTIDAD_PEDCCEL';
+  cfgT.FieldAlmacenCel    := 'CODIGO_ALM_PEDCCEL';
+  cfgT.IdFilaFijo         := 1;
+  cfgT.MaxColumnas        := CANT_TALLAS_MAX;
+  FGestorTallas := TGestorGridTallas.Create(cfgT);
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    if FTallaColumns[i] <> nil then
+      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
+        OnEditValueChanged := FGestorTallas.PersistirCeldaActiva;
+  // 2. Orquestador de pivote (libreria nueva compartida con albaranes).
+  cfgP := Default(TGridPivoteCompraConfig);
+  cfgP.Conexion             := inLibGlobalVar.oConn;
+  cfgP.Grid                 := tvLineasPedido;
+  cfgP.SourceMaster         := dsTablaG;
+  cfgP.SourceLineas         := dmmPedidosCompra.unqryPedidosCompraLineas;
+  cfgP.Gestor               := FGestorTallas;
+  cfgP.ColColorPivot        := FColColorPivot;
+  cfgP.ColumnasTallas       := arr;
+  cfgP.MaxColumnasTallas    := CANT_TALLAS_MAX;
+  cfgP.TablaLineas          := 'fza_pedidos_compra_lineas';
+  cfgP.FieldSerieMaster     := 'SERIE_PEDC';
+  cfgP.FieldNumeroMaster    := 'NUMERO_PEDC';
+  cfgP.FieldSerieLin        := 'SERIE_PEDC_PEDCLIN';
+  cfgP.FieldNumeroLin       := 'NUMERO_PEDC_PEDCLIN';
+  cfgP.FieldLinea           := 'LINEA_PEDCLIN';
+  cfgP.FieldArt             := 'CODIGO_ART_PEDCLIN';
+  cfgP.FieldSku             := 'CODIGO_UNIDAD_PEDCLIN';
+  cfgP.FieldCantidad        := 'CANTIDAD_PEDCLIN';
+  cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_PEDCLIN';
+  cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_PEDCLIN';
+  cfgP.CamposOcultosEnPivote := TArray<string>.Create(
+    'CODIGO_UNIDAD_PEDCLIN',
+    'CANTIDAD_PEDCLIN',
+    'CANTIDAD_RECIBIDA_PEDCLIN',
+    'TOTAL_PEDCLIN');
+  FPivote := TGridPivoteCompra.Create(cfgP);
+end;
+
+procedure TfrmMtoPedidosCompra.RefrescarVisibilidadTallas;
+var
+  i: Integer;
+begin
+  if (FPivote = nil) or (not FPivote.Activo) or (FGestorTallas = nil) then
+  begin
+    for i := 0 to CANT_TALLAS_MAX - 1 do
+      if FTallaColumns[i] <> nil then
+        FTallaColumns[i].Visible := False;
+    Exit;
+  end;
+  FGestorTallas.RecalcularMaxColumnas;
+  FGestorTallas.ActualizarCaptionsLineaActiva;
+end;
+
+procedure TfrmMtoPedidosCompra.RefrescarVisibilidadAtributos;
+var
+  i: Integer;
+begin
+  for i := 0 to CANT_ATRIB_MAX - 1 do
+    if FAtribColumns[i] <> nil then
+      FAtribColumns[i].Visible := FMostrarAtributos;
+  if FMostrarAtributos then
+    CargarCaptionsAtributosLineaActiva;
+end;
+
+// Lee los nombres de atributo del articulo de la linea con foco y los
+// aplica como captions de las columnas ATTRn. La carga de VALORES por
+// SKU queda como TODO (hito posterior).
+procedure TfrmMtoPedidosCompra.CargarCaptionsAtributosLineaActiva;
+var
+  i: Integer;
+  sArt: string;
+  qry: TUniQuery;
+  iCol: Integer;
+begin
+  if dmmPedidosCompra = nil then Exit;
+  qry := dmmPedidosCompra.unqryDefArticuloPedc;
+  if qry = nil then Exit;
+  for i := 0 to CANT_ATRIB_MAX - 1 do
+    if FAtribColumns[i] <> nil then
+      FAtribColumns[i].Caption := 'Atributo ' + IntToStr(i + 1);
+  if (dmmPedidosCompra.unqryPedidosCompraLineas = nil) or
+     (not dmmPedidosCompra.unqryPedidosCompraLineas.Active) or
+     (dmmPedidosCompra.unqryPedidosCompraLineas.IsEmpty) then Exit;
+  sArt := dmmPedidosCompra.unqryPedidosCompraLineas.
+            FieldByName('CODIGO_ART_PEDCLIN').AsString;
+  if sArt = '' then Exit;
+  qry.Close;
+  qry.ParamByName('ARTICULO').AsString := sArt;
+  qry.Open;
+  iCol := 0;
+  while (not qry.Eof) and (iCol < CANT_ATRIB_MAX) do
+  begin
+    if FAtribColumns[iCol] <> nil then
+      FAtribColumns[iCol].Caption :=
+        qry.FieldByName('NOMBRE_ATRIBUTO').AsString;
+    Inc(iCol);
+    qry.Next;
+  end;
+  qry.Close;
+end;
+
+procedure TfrmMtoPedidosCompra.PersistirPreferenciaPivote;
+begin
+  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty or
+     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') = nil) then
+    Exit;
+  if not (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
+    dsTablaG.DataSet.Edit;
+  dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString :=
+    IfThen(FPivote.Activo, 'S', 'N');
+  dsTablaG.DataSet.Post;
+end;
+
+procedure TfrmMtoPedidosCompra.btnTallasHorizontalClick(Sender: TObject);
+var
+  sMensaje: string;
+begin
+  inherited;
+  if (dmmPedidosCompra = nil) or (FPivote = nil) then Exit;
+  if not FPivote.Activo then
+  begin
+    if not FPivote.ValidarPivotePosible(sMensaje) then
+    begin
+      MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+      Exit;
+    end;
+    FPivote.Activar;
+  end
+  else
+    FPivote.Desactivar;
+  RefrescarVisibilidadTallas;
+  // Sender=nil: llamada automatica desde el data-change hook, no
+  // re-escribir la preferencia en la cabecera.
+  if Sender <> nil then
+    PersistirPreferenciaPivote;
+end;
+
+procedure TfrmMtoPedidosCompra.btnAtributosColumnaClick(Sender: TObject);
+begin
+  inherited;
+  FMostrarAtributos := not FMostrarAtributos;
+  RefrescarVisibilidadAtributos;
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
@@ -157,6 +451,90 @@ begin
     dmmPedidosCompra.CalcularTotalesPedidoCompra;
     dsTablaG.DataSet.Post;
   end;
+  // Tras Grabar, cxGrid borra los Values[] no-bound al repintar.
+  // RecargarYRepublicar lo solventa.
+  if Assigned(FPivote) and FPivote.Activo then
+    FPivote.RecargarYRepublicar;
+end;
+
+// Hook del OnDataChange de dsTablaG: solo nos interesa el evento global
+// (Field=nil). Reaplica el modo pivote si la cabecera lo trae como
+// preferencia y republica cantidades. Toda la fontaneria vive en la
+// libreria; aqui solo orquestamos el toggle desde la cabecera.
+procedure TfrmMtoPedidosCompra.dsTablaGDataChangeHook(Sender: TObject;
+                                                     Field: TField);
+var
+  bDeberiaEstarActivo: Boolean;
+begin
+  if Field <> nil then Exit;
+  if FPivote = nil then Exit;
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     (not dsTablaG.DataSet.IsEmpty) and
+     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) then
+  begin
+    bDeberiaEstarActivo :=
+      dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString = 'S';
+    if bDeberiaEstarActivo and (not FPivote.Activo) then
+      btnTallasHorizontalClick(nil)
+    else if (not bDeberiaEstarActivo) and FPivote.Activo then
+      btnTallasHorizontalClick(nil);
+  end;
+  if not FPivote.Activo then Exit;
+  FPivote.RecargarYRepublicar;
+  RefrescarVisibilidadTallas;
+end;
+
+// Hook AfterPost del detail: encadena la logica original del DM
+// (totales) con la republicacion de Values[] no-bound del controlador.
+procedure TfrmMtoPedidosCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
+begin
+  if Assigned(dmmPedidosCompra) then
+    dmmPedidosCompra.CalcularTotalesPedidoCompra;
+  if Assigned(FPivote) and FPivote.Activo then
+    FPivote.RecargarYRepublicar;
+end;
+
+procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
+  Sender: TcxCustomGridTableView; APrevFocusedRecord,
+  AFocusedRecord: TcxCustomGridRecord;
+  ANewItemRecordFocusingChanged: Boolean);
+begin
+  inherited;
+  if Assigned(FGestorTallas) and Assigned(FPivote) and FPivote.Activo then
+    FGestorTallas.ActualizarCaptionsLineaActiva;
+  if FMostrarAtributos then
+    CargarCaptionsAtributosLineaActiva;
+end;
+
+// Sombrear celdas talla fuera del conjunto pivot — delegamos en la lib.
+procedure TfrmMtoPedidosCompra.tvLineasPedidoCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+begin
+  inherited;
+  if Assigned(FPivote) then
+    FPivote.CustomDrawCellTalla(Sender, ACanvas, AViewInfo, ADone);
+end;
+
+procedure TfrmMtoPedidosCompra.tvLineasPedidoEditing(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+begin
+  inherited;
+  if Assigned(FPivote) then
+    FPivote.EditingCeldaTalla(Sender, AItem, AAllow);
+end;
+
+procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoEnter(Sender: TObject);
+begin
+  inherited;
+  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
+end;
+
+procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);
+begin
+  inherited;
+  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
 procedure TfrmMtoPedidosCompra.btnAnadirLineaClick(Sender: TObject);
@@ -187,8 +565,6 @@ begin
     ShowMessage('No hay pedido activo del que crear albaran.');
     Exit;
   end;
-  // Persistir cualquier cambio pendiente para que el modal y la
-  // generacion vean el ultimo estado.
   if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
     dmmPedidosCompra.unqryTablaG.Post;
   if dmmPedidosCompra.unqryPedidosCompraLineas.State in [dsEdit, dsInsert] then
@@ -202,7 +578,6 @@ begin
     form.ShowModal;
     if not form.Aceptado then Exit;
     if Trim(form.CodigoAlmacen) = '' then Exit;
-
     bTxOwned := not inLibGlobalVar.oConn.InTransaction;
     if bTxOwned then inLibGlobalVar.oConn.StartTransaction;
     try
@@ -213,8 +588,6 @@ begin
       begin
         if bTxOwned then inLibGlobalVar.oConn.Commit;
         ShowMessage(sMsg);
-        // Refrescar el pedido en pantalla para ver CANTIDAD_RECIBIDA
-        // actualizada y nuevo ESTADO_PEDC.
         dmmPedidosCompra.unqryTablaG.Refresh;
         dmmPedidosCompra.unqryPedidosCompraLineas.Refresh;
       end
