@@ -88,6 +88,12 @@ type
   function GetDBDataController(
     AView: TcxCustomGridTableView): TcxGridDBDataController;
   function GetItemFieldName(AItem: TcxCustomGridTableItem): string;
+  // Crea sólo las columnas para los Fields del dataset que aún no tengan
+  // columna en la vista (comparación por FieldName, case-insensitive).
+  // Devuelve el número de columnas nuevas creadas. Sustituye a la antigua
+  // llamada directa a DataController.CreateAllItems, que duplicaba todas
+  // las columnas en cada apertura del form con oCreateItems='True'.
+  function CrearItemsFaltantes(AView: TcxCustomGridTableView): Integer;
 
 implementation
 
@@ -183,6 +189,60 @@ begin
     Result := TcxGridDBDataController(AView.DataController)
   else
     Result := nil;
+end;
+
+function CrearItemsFaltantes(AView: TcxCustomGridTableView): Integer;
+var
+  oCtrl       : TcxGridDBDataController;
+  oDataSet    : TDataSet;
+  oExistentes : TDictionary<string, Boolean>;
+  i           : Integer;
+  sField      : string;
+  oCol        : TcxCustomGridTableItem;
+begin
+  Result := 0;
+  oCtrl := GetDBDataController(AView);
+  if (oCtrl <> nil) and Assigned(oCtrl.DataSource) then
+  begin
+    oDataSet := oCtrl.DataSource.DataSet;
+    if Assigned(oDataSet) then
+    begin
+      oExistentes := TDictionary<string, Boolean>.Create;
+      try
+        // Recolectar FieldName ya presentes en la vista (case-insensitive)
+        for i := 0 to AView.ItemCount - 1 do
+        begin
+          sField := GetItemFieldName(AView.Items[i]);
+          if sField <> '' then
+            oExistentes.AddOrSetValue(UpperCase(sField), True);
+        end;
+        // Crear sólo las columnas para los Fields que no estén ya
+        for i := 0 to oDataSet.FieldCount - 1 do
+        begin
+          sField := oDataSet.Fields[i].FieldName;
+          if not oExistentes.ContainsKey(UpperCase(sField)) then
+          begin
+            oCol := nil;
+            if AView is TcxGridDBBandedTableView then
+              oCol := TcxGridDBBandedTableView(AView).CreateColumn
+            else if AView is TcxGridDBTableView then
+              oCol := TcxGridDBTableView(AView).CreateColumn;
+            if (oCol <> nil) and (oCol.DataBinding <> nil) and
+               (oCol.DataBinding is TcxGridItemDBDataBinding) then
+            begin
+              TcxGridItemDBDataBinding(oCol.DataBinding).FieldName := sField;
+              oExistentes.AddOrSetValue(UpperCase(sField), True);
+              Inc(Result);
+            end;
+          end;
+        end;
+      finally
+        FreeAndNil(oExistentes);
+      end;
+    end;
+  end;
+  Log.LogInfo(Format('CrearItemsFaltantes: vista=%s creadas=%d items_total=%d',
+                     [AView.Name, Result, AView.ItemCount]));
 end;
 
 // Helpers locales para AplicarPropertiesPorPrefijo
