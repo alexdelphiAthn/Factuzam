@@ -1599,6 +1599,10 @@ begin
                                                   Precio.PrecioFinal * (
                                                     1 + fPorcen);
     end;
+    // Disparamos el recalculo para que TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN
+    // se vuelquen al dataset. Si el usuario se va de la fila sin tocar
+    // otros campos, sin esto los totales quedaban a 0 en el INSERT.
+    RecalcLineaFacturaSegura(Sender);
   finally
     FreeAndNil(Validador);
     FreeAndNil(Resolver);
