@@ -362,6 +362,11 @@ begin
   ds := Lineas;
   if (ds = nil) or not ds.Active or ds.IsEmpty then Exit;
   iAc := ds.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
+  // Linea sin sistema asignado todavia (linea nueva en blanco, p.ej.):
+  // dejar las captions tal cual estaban. Si las sobrescribimos a la
+  // generica 'Talla N' al pasar por una linea vacia, perdemos el
+  // contexto visual de la linea anterior que el usuario seguia viendo.
+  if iAc <= 0 then Exit;
   arr := GetPosicionesConjunto(iAc);
   for i := 0 to High(FCfg.ColumnasTallas) do
   begin
