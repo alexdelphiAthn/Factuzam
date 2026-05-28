@@ -3,6 +3,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
   ClientHeight = 765
   ClientWidth = 1085
   StyleElements = [seFont, seClient, seBorder]
+  OnDestroy = FormDestroy
   ExplicitWidth = 1085
   ExplicitHeight = 765
   TextHeight = 19
@@ -292,13 +293,31 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             TabOrder = 1
             OnClick = btnBorrarLineaClick
           end
+          object btnTallasHorizontal: TcxButton
+            Left = 240
+            Top = 6
+            Width = 170
+            Height = 26
+            Caption = 'Tallas en horizontal'
+            TabOrder = 2
+            OnClick = btnTallasHorizontalClick
+          end
+          object btnAtributosColumna: TcxButton
+            Left = 416
+            Top = 6
+            Width = 170
+            Height = 26
+            Caption = 'Atributo por columna'
+            TabOrder = 3
+            OnClick = btnAtributosColumnaClick
+          end
           object btnCrearAlbaran: TcxButton
-            Left = 256
+            Left = 592
             Top = 6
             Width = 170
             Height = 26
             Caption = 'Crear albar'#225'n'
-            TabOrder = 2
+            TabOrder = 4
             OnClick = btnCrearAlbaranClick
           end
         end
@@ -332,7 +351,12 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 Height = 349
                 Align = alClient
                 TabOrder = 0
+                OnEnter = cxgrdLineasPedidoEnter
+                OnExit = cxgrdLineasPedidoExit
                 object tvLineasPedido: TcxGridDBTableView
+                  OnCustomDrawCell = tvLineasPedidoCustomDrawCell
+                  OnEditing = tvLineasPedidoEditing
+                  OnFocusedRecordChanged = tvLineasPedidoFocusedRecordChanged
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.FocusFirstCellOnNewRecord = True
                   OptionsData.Appending = True
