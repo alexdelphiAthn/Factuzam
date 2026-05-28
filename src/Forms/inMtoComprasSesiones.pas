@@ -651,11 +651,9 @@ end;
 
 procedure TfrmMtoComprasSesiones.actIrPedidosCompraExecute(Sender: TObject);
 begin
-  // ShortCut Ctrl+Shift+P. Hoy no hay Mto de pedidos de compra (no esta
-  // en fza_winforms). Reservamos la action y avisamos al usuario; el
-  // dia que se cree el Mto basta cambiar la implementacion a ShowMto.
-  ShowMessage('El mantenimiento de Pedidos de compra todavia no esta ' +
-              'disponible.');
+  // ShortCut Ctrl+Shift+P. El Mto de pedidos de compra ya existe
+  // (CALL_WINF='PedidosCompra' en fza_winforms).
+  ShowMto(frmMtoPrincipal, 'PedidosCompra');
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
