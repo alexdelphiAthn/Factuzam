@@ -455,8 +455,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Kind = skSum
                 Column = dbcLinTotalTallas
               end>
+            OptionsBehavior.AlwaysShowEditor = True
             OptionsBehavior.FocusCellOnTab = True
             OptionsBehavior.FocusFirstCellOnNewRecord = True
+            OptionsBehavior.GoToNextCellOnEnter = True
             OptionsData.Appending = True
             OptionsView.Footer = True
             OptionsView.GroupByBox = False
