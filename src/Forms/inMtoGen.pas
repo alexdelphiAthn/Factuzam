@@ -200,6 +200,14 @@ type
 //                                        AList: TPerfilList);
   protected
     procedure AplicarGuiasGrid(AQuery: TUniQuery);
+    // Recorre los campos abiertos y deja en el log un error por cada
+    // columna cuyo nombre empieza por `ES` (boolean por convencion del
+    // proyecto) pero esta tipada como numerica. Sirve para cazar las
+    // EConvertError 'X is not a valid floating point value' que se
+    // disparan al fetch — la fuente real suele ser metadata de vista
+    // desactualizada tras un ALTER TABLE.
+    procedure DiagnosticarCamposBooleanos(AQuery: TUniQuery;
+                                          const AContexto: string);
     // Indica si las teclas de navegacion (PgUp, PgDn, Home, End, Ins, F2)
     // deben activar las acciones del TActionList base. Los Mtos con
     // editores multilinea (SynEdit, etc.) sobreescriben para devolver
@@ -322,8 +330,10 @@ uses inMtoGenSearch,
      inLibGridColumnChooser, inMtoModalGridGuias,
      inLibInformesGuiasCache,
      SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
-     System.Diagnostics,   // TStopwatch para cronometrar carga inicial
-     Vcl.ComCtrls;         // TProgressBar marquee en overlay de carga
+     System.Diagnostics,    // TStopwatch para cronometrar carga inicial
+     System.StrUtils,       // StartsText en DiagnosticarCamposBooleanos
+     System.TypInfo,        // GetEnumName del TFieldType en el log
+     Vcl.ComCtrls;          // TProgressBar marquee en overlay de carga
      // System.Threading ya esta en el interface (para TList<ITask>).
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
@@ -1174,6 +1184,10 @@ begin
             inLibLog.Log.LogError(
               '[AbrirDetalles] ' + Self.Name + ': ' + E.Message);
         end;
+      // Diagnostico defensivo: cazar columnas ES* tipadas como numericas
+      // antes de que el Refresh del navegador rompa con EConvertError
+      // 'N' is not a valid floating point value. Solo loguea, no aborta.
+      DiagnosticarCamposBooleanos(unqry, Self.Name);
       // (b) Enriquecer query con guias de grid (LEFT JOIN runtime)
       AplicarGuiasGrid(unqry);
       // (c) Revincular grid solo si lo soltamos antes (yaActiva = False).
@@ -1232,6 +1246,9 @@ begin
       // llamarlo aqui para que ShowMto(...,'<busqueda>') muestre las
       // lineas/celdas tras Locate sobre el master.
       dmDat.AbrirDetalles;
+      // Diagnostico defensivo: cazar columnas ES* tipadas como numericas
+      // antes de que el Refresh del navegador rompa con EConvertError.
+      DiagnosticarCamposBooleanos(unqry, Self.Name);
       // Enriquecer con guias de grid (LEFT JOIN runtime)
       AplicarGuiasGrid(unqry);
       // Restaurar posicion del cursor guardada en el perfil
@@ -1473,8 +1490,21 @@ begin
       on E: Exception do
       begin
         inLibLog.Log.LogError(
-          'AplicarGuiasGrid: error al reabrir query: ' + E.Message);
-        FreeAndNil(guiaResult.CamposNuevos);
+          'AplicarGuiasGrid: error al reabrir query enriquecida: ' +
+          E.Message);
+        // Restaurar el SQL original y reabrir. Si no, el dataset queda
+        // cerrado con el SQL roto y cualquier Refresh posterior del
+        // navegador dispara el mismo error al usuario.
+        try
+          AQuery.Close;
+          AQuery.SQL.Text := guiaResult.SqlOriginal;
+          AQuery.Open;
+        except
+          on E2: Exception do
+            inLibLog.Log.LogError(
+              'AplicarGuiasGrid: tampoco abre el SQL original tras ' +
+              'restaurar: ' + E2.Message);
+        end;
         Exit;
       end;
     end;
@@ -1520,6 +1550,37 @@ begin
     FreeAndNil(guiaResult.CamposNuevos);
     FreeAndNil(guiaResult.CamposTabla);
     FreeAndNil(guiaResult.ColumnasVisibles);
+  end;
+end;
+
+procedure TfrmMtoGen.DiagnosticarCamposBooleanos(AQuery: TUniQuery;
+                                                 const AContexto: string);
+var
+  i: Integer;
+  f: TField;
+  sTipo: string;
+begin
+  if (AQuery = nil) or (not AQuery.Active) then
+    Exit;
+  for i := 0 to AQuery.FieldCount - 1 do
+  begin
+    f := AQuery.Fields[i];
+    if not StartsText('ES', f.FieldName) then
+      Continue;
+    // Tipos que disparan ConvertToFloat / ConvertToInteger en MyDAC al
+    // intentar leer una columna varchar(1) con 'S' / 'N'.
+    if f.DataType in [ftFloat, ftCurrency, ftBCD, ftFMTBcd, ftSingle,
+                      ftExtended, ftInteger, ftSmallint, ftLargeint,
+                      ftWord, ftByte] then
+    begin
+      sTipo := GetEnumName(TypeInfo(TFieldType), Ord(f.DataType));
+      inLibLog.Log.LogError(Format(
+        '[DiagnosticarCamposBooleanos] %s: campo "%s" tipado como %s ' +
+        'pero por convencion deberia ser varchar(1) S/N. Causa probable: ' +
+        'metadata de vista desactualizada tras ALTER TABLE. ' +
+        'Solucion: DROP VIEW + CREATE VIEW de la vista usada por el grid.',
+        [AContexto, f.FieldName, sTipo]));
+    end;
   end;
 end;
 
