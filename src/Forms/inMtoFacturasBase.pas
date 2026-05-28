@@ -506,6 +506,8 @@ type
     procedure CambiarIVA;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
+    function  ContarHijosActivos: Integer; override;
+    function  DescripcionHijos: string; override;
     // Nombre de la vista SQL a consultar en el listado principal.
     // La filtra el propio motor de BD (vi_facturas_normales /
     // vi_facturas_simplificadas), no toca al codigo.
@@ -1198,6 +1200,39 @@ begin
     Result := [dsTablaG, dmmFacturas.dsLinFac]
   else
     Result := [dsTablaG];
+end;
+
+function TfrmMtoFacturasBase.ContarHijosActivos: Integer;
+var
+  q: TUniQuery;
+  sNum, sSerie: string;
+begin
+  Result := 0;
+  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty then
+    Exit;
+  sNum   := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+  sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_facturas_lineas ' +
+      ' WHERE NUMERO_FAC_FACLIN = :pNum ' +
+      '   AND SERIE_FAC_FACLIN  = :pSer';
+    q.ParamByName('pNum').AsString := sNum;
+    q.ParamByName('pSer').AsString := sSerie;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function TfrmMtoFacturasBase.DescripcionHijos: string;
+begin
+  Result := 'líneas de factura';
 end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
