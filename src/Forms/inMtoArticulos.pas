@@ -1820,6 +1820,17 @@ begin
   tvLinFac.DataController.DataSource := dmmArticulos.dsLinFacturasArticulos;
   tvSkus.DataController.DataSource := dmmArticulos.dsVariacionesArticulos;
   tvStock.DataController.DataSource := dmmArticulos.dsStockArticulos;
+  // Estos cuatro grids/lookup vienen cableados en el DFM contra el componente
+  // 'dmArticulos'. Con varias pestañas de Articulos abiertas la VCL resuelve
+  // ese nombre al PRIMER data module creado, asi que la segunda pestaña
+  // mostraba los SKUs / atributos / movimientos del articulo de la primera.
+  // Los rebindeamos a la instancia local del Mto.
+  tvSkuMto.DataController.DataSource := dmmArticulos.dsSkus;
+  tvSkuAtributosBasicos.DataController.DataSource :=
+                                            dmmArticulos.dsDetallesAtributos;
+  (tvSkuAtributosBasicosID_ATB_AV.Properties as TcxLookupComboBoxProperties)
+                          .ListSource := dmmArticulos.dsAtributosBasicosLookup;
+  tvMovimientos.DataController.DataSource := dmmArticulos.dsMovimientosArticulos;
   pkFieldName := 'CODIGO_ART_ART';
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   // Carga perezosa de Tarifas: solo abrir unqryTarifasArticulos cuando
