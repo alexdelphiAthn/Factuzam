@@ -102,6 +102,9 @@ type
     btnAtributosColumna:  TcxButton;
     btnCrearAlbaran:      TcxButton;
     btnExpandirRecibidos: TcxButton;
+    // Label de contexto que muestra Pedido / Recibida de la celda
+    // talla focused en modo expandido. Visible solo cuando aplica.
+    lblContextoTalla:     TcxLabel;
     // Columna no-bound editable solo en modo vertical (pivote OFF).
     // El usuario teclea aqui "A recibir" por linea SKU. Se oculta
     // cuando entra en modo pivote.
@@ -139,8 +142,6 @@ type
                 APrevFocusedItem, AFocusedItem: TcxCustomGridTableItem);
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
-    procedure cxgrdLineasPedidoKeyDown(Sender: TObject;
-                var Key: Word; Shift: TShiftState);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -195,12 +196,6 @@ uses
 
 {$R *.dfm}
 
-type
-  // Acceso a OnKeyDown (protected en TWinControl). cxGrid no lo
-  // publica como propiedad streamable y por eso lo asignamos en
-  // runtime con este descendant cast.
-  TWinControlHack = class(TWinControl);
-
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
@@ -227,13 +222,9 @@ begin
   // controlador de pivote.
   if Assigned(FPivote) then
     FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
-  // Hook OnKeyDown del grid: lo conectamos en runtime porque cxGrid no
-  // publica este evento (es protected en TWinControl).
-  TWinControlHack(cxgrdLineasPedido).OnKeyDown := cxgrdLineasPedidoKeyDown;
-  // Hook OnFocusedItemChanged: al entrar a una celda talla en pivote
-  // expandido apagamos OptionsBehavior.ImmediateEditor para que cxGrid
-  // no se "trague" las pulsaciones intentando abrir el editor (que
-  // esta bloqueado). Asi las teclas llegan a OnKeyDown del grid.
+  // Hook OnFocusedItemChanged: al moverse a una celda talla en
+  // pivote expandido alimentamos el label de contexto con Pedido /
+  // Recibida (que el editor inplace nativo tapa durante la edicion).
   tvLineasPedido.OnFocusedItemChanged := tvLineasPedidoFocusedItemChanged;
   // Hook OnDataChange del master: al cambiar de pedido activo, el
   // controlador recarga su cache y republica.
@@ -686,6 +677,10 @@ begin
     FGestorTallas.ActualizarCaptionsLineaActiva;
   if FMostrarAtributos then
     CargarCaptionsAtributosLineaActiva;
+  // Al saltar de fila el FocusedColumn no cambia pero la celda activa
+  // si — refrescamos el label de contexto.
+  tvLineasPedidoFocusedItemChanged(Sender, nil,
+                                   Sender.Controller.FocusedColumn);
 end;
 
 // Sombrear celdas talla fuera del conjunto pivot — delegamos en la lib.
@@ -704,17 +699,7 @@ procedure TfrmMtoPedidosCompra.tvLineasPedidoEditing(
 begin
   inherited;
   if Assigned(FPivote) then
-  begin
     FPivote.EditingCeldaTalla(Sender, AItem, AAllow);
-    // En pivote expandido bloqueamos el editor inplace de cualquier
-    // columna talla (Tag > 0). Sin esto cxGrid abriria un TcxCurrency
-    // Edit que tapa los 3 sub-segmentos pintados (Pedido, Recibida,
-    // A recibir). El bloqueo aqui es independiente del que la libreria
-    // pone por talla-fuera-de-conjunto.
-    if FPivote.Activo and FPivote.Expandido and
-       Assigned(AItem) and (AItem.Tag > 0) then
-      AAllow := False;
-  end;
 end;
 
 // SelectAll estilo Excel via libreria. En pivote expandido el editor
@@ -741,35 +726,32 @@ begin
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
-// En pivote expandido apagamos ImmediateEditor sobre celdas talla
-// (Tag>0) para que cxGrid no se "trague" las pulsaciones intentando
-// abrir el editor inplace (bloqueado por tvLineasPedidoEditing). Con
-// ImmediateEditor=False los digitos llegan al OnKeyDown del grid y
-// alimentan ProcesarTeclaCeldaTalla. En el resto de columnas / modos
-// restauramos el comportamiento estandar.
+// Alimenta el label de contexto con Pedido/Recibida de la celda
+// talla focused. cxGrid edita la celda con su editor nativo (cursor
+// real, navegacion, etc) tapando el pintado durante la edicion; el
+// label de arriba muestra la misma informacion fuera de la celda
+// para que el usuario no la pierda mientras teclea.
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedItemChanged(
   Sender: TcxCustomGridTableView; APrevFocusedItem,
   AFocusedItem: TcxCustomGridTableItem);
+var
+  sTalla   : string;
+  rPed     : Double;
+  rRec     : Double;
 begin
-  if Assigned(AFocusedItem) and Assigned(FPivote) and
-     FPivote.Activo and FPivote.Expandido and
-     (AFocusedItem.Tag > 0) then
-    Sender.OptionsBehavior.ImmediateEditor := False
+  if Assigned(FPivote) and
+     FPivote.GetInfoCeldaTallaActiva(sTalla, rPed, rRec) then
+  begin
+    lblContextoTalla.Caption := Format(
+      'Talla %s    Pedido: %.0f    Recibido: %.0f',
+      [sTalla, rPed, rRec]);
+    lblContextoTalla.Visible := True;
+  end
   else
-    Sender.OptionsBehavior.ImmediateEditor := True;
-end;
-
-// Captura digitos / backspace / delete / esc cuando el editor talla
-// expandida esta bloqueado. Redirige a la libreria que muta
-// DataController.Values[] (zona 'A recibir') y dispara repintado.
-procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoKeyDown(Sender: TObject;
-                                                       var Key: Word;
-                                                       Shift: TShiftState);
-begin
-  inherited;
-  if not Assigned(FPivote) then Exit;
-  if FPivote.ProcesarTeclaCeldaTalla(Key) then
-    Key := 0;
+  begin
+    lblContextoTalla.Caption := '';
+    lblContextoTalla.Visible := False;
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.btnAnadirLineaClick(Sender: TObject);
