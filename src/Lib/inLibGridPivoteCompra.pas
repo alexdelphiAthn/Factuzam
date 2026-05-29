@@ -751,8 +751,16 @@ begin
       '       L.' + FCfg.FieldAlmacen + ' AS ALM_LIN ' +
       sSelectRecibida +
       '  FROM ' + FCfg.TablaLineas + ' L ' +
+      // SAC: filtramos a la fila del atributo CO para que la fza_
+      // atributos_sku no multiplique filas (un SKU tiene N atributos,
+      // y sin filtro el resto del SELECT se replicaba N veces; las
+      // sumas de CANTIDAD y RECIBIDA salian multiplicadas por N en el
+      // cache de pivote y la matriz se veia duplicada).
       '  LEFT JOIN fza_atributos_sku SAC ' +
       '    ON SAC.CODIGO_UNIDAD_SKU_SA = L.' + FCfg.FieldSku + ' ' +
+      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AV ' +
+      '                WHERE AV.ID_AV = SAC.ID_AV_SA ' +
+      '                  AND AV.ID_VA_AV = ''CO'') ' +
       '  LEFT JOIN fza_atributos_valores AVC ' +
       '    ON AVC.ID_AV = SAC.ID_AV_SA ' +
       '   AND AVC.ID_VA_AV = ''CO'' ' +
