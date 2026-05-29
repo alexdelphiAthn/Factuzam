@@ -61,7 +61,15 @@ type
     SourceMaster         : TDataSource;
     SourceLineas         : TUniQuery;
     Gestor               : TGestorGridTallas;
+    // Columna no-bound del grid que mostrara el color BASICO con
+    // cuadradito (p.ej. "VERDE" con swatch). El lib le publica el
+    // valor leido de ATBC.NOMBRE_ATB.
     ColColorPivot        : TcxGridDBColumn;
+    // Columna no-bound del grid para el COLOR DEL PROVEEDOR (texto
+    // libre del proveedor, p.ej. "011" o "AZUL TURQUESA PROV-XYZ").
+    // Si esta seteada, el lib le publica COLOR_TEXTO_PEDCLIN (o el
+    // campo que indique FieldColorTexto). Sin cuadradito — es texto.
+    ColColorProveedorPivot: TcxGridDBColumn;
     ColumnasTallas       : TArray<TcxGridDBColumn>;
     MaxColumnasTallas    : Integer;
     TablaLineas          : string;   // fza_albaranes_compra_lineas / pedidos
@@ -121,6 +129,10 @@ type
     FCeldaAlmacen            : TDictionary<Int64,string>;
     FCeldaLineaPedido        : TDictionary<Int64,string>;
     FPivotColorTexto  : TDictionary<Integer,string>;
+    // Texto libre del color del proveedor por linea representante
+    // (poblado solo si la config trae FieldColorTexto, p. ej.
+    // pedidos con COLOR_TEXTO_PEDCLIN). Vacio para albaranes.
+    FPivotColorProveedor: TDictionary<Integer,string>;
     FPivotColorCodigo : TDictionary<Integer,string>;
     FPivotIdAc        : TDictionary<Integer,Integer>;
     FPivotMaxAvTalla  : Integer;
@@ -209,6 +221,7 @@ begin
   FCeldaAlmacen            := TDictionary<Int64,string>.Create;
   FCeldaLineaPedido        := TDictionary<Int64,string>.Create;
   FPivotColorTexto         := TDictionary<Integer,string>.Create;
+  FPivotColorProveedor     := TDictionary<Integer,string>.Create;
   FPivotColorCodigo        := TDictionary<Integer,string>.Create;
   FPivotIdAc               := TDictionary<Integer,Integer>.Create;
   FPivotMaxAvTalla         := 0;
@@ -228,6 +241,7 @@ begin
   FreeAndNil(FCeldaAlmacen);
   FreeAndNil(FCeldaLineaPedido);
   FreeAndNil(FPivotColorTexto);
+  FreeAndNil(FPivotColorProveedor);
   FreeAndNil(FPivotColorCodigo);
   FreeAndNil(FPivotIdAc);
   inherited;
@@ -402,6 +416,7 @@ begin
   FCeldaAlmacen.Clear;
   FCeldaLineaPedido.Clear;
   FPivotColorTexto.Clear;
+  FPivotColorProveedor.Clear;
   FPivotColorCodigo.Clear;
   FPivotIdAc.Clear;
   AplicarVisibilidadColumnasPivot(False);
@@ -684,6 +699,7 @@ begin
   FPivotTotalPedido.Clear;
   FPivotTotalRecibido.Clear;
   FPivotColorTexto.Clear;
+  FPivotColorProveedor.Clear;
   FPivotColorCodigo.Clear;
   FPivotIdAc.Clear;
   FPivotMaxAvTalla := 0;
@@ -710,17 +726,19 @@ begin
       '       L.' + FCfg.FieldArt + ' AS ART, ' +
       '       COALESCE(L.' + FCfg.FieldIdAcPivot + ', 0) AS ID_AC, ' +
       '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
-      // COLOR_TXT: si el documento trae FieldColorTexto (p. ej. pedidos
-      // con COLOR_TEXTO_PEDCLIN heredado del COLOR_TEXTO_SESLIN), ese
-      // texto libre del color del articulo del proveedor tiene la
-      // MAXIMA prioridad. Luego AVC.AV (valor canonico), luego
-      // ATBC.NOMBRE_ATB (color basico), y por ultimo el parseado del SKU.
-      '       COALESCE(' +
-      IfThen(FCfg.FieldColorTexto <> '',
-             'NULLIF(L.' + FCfg.FieldColorTexto + ', ''''), ', '') +
-      'NULLIF(AVC.AV, ''''), ATBC.NOMBRE_ATB, ' +
+      // COLOR_TXT: SIEMPRE el COLOR BASICO (nombre del atributo basico,
+      // como "VERDE" o "AZUL"). Si no hay basico, fallback al AVC.AV o
+      // al parseado del SKU. Nunca mezcla con el color del proveedor.
+      '       COALESCE(ATBC.NOMBRE_ATB, NULLIF(AVC.AV, ''''), ' +
       '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
       '                '''') AS COLOR_TXT, ' +
+      // COLOR_PROV_TXT: el COLOR DEL PROVEEDOR (texto libre, p.ej. "011"
+      // o "AZUL TURQUESA PROV-XYZ"). Solo se lee si la config trae
+      // FieldColorTexto (pedidos lo tiene como COLOR_TEXTO_PEDCLIN).
+      // Vacio para albaranes.
+      IfThen(FCfg.FieldColorTexto <> '',
+             '       COALESCE(NULLIF(L.' + FCfg.FieldColorTexto + ', ''''), '''') AS COLOR_PROV_TXT, ',
+             '       '''' AS COLOR_PROV_TXT, ') +
       '       COALESCE(ATBC.CODIGO_ATB, ' +
       '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
       '                '''') AS COLOR_COD, ' +
@@ -772,6 +790,8 @@ begin
         FPivotLineasRepr.Add(iLineaRepr);
         FPivotColorTexto.AddOrSetValue(iLineaRepr,
                                        q.FieldByName('COLOR_TXT').AsString);
+        FPivotColorProveedor.AddOrSetValue(iLineaRepr,
+                                       q.FieldByName('COLOR_PROV_TXT').AsString);
         FPivotColorCodigo.AddOrSetValue(iLineaRepr,
                                         q.FieldByName('COLOR_COD').AsString);
         FPivotIdAc.AddOrSetValue(iLineaRepr,
@@ -847,6 +867,13 @@ begin
           FCfg.Grid.DataController.Values[recIdx,
                                 FCfg.ColColorPivot.Index] := FPivotColorTexto[iLinea];
       end;
+      // Columna del color del proveedor (solo si se configuro).
+      if Assigned(FCfg.ColColorProveedorPivot) and Assigned(FPivotColorProveedor) then
+      begin
+        if FPivotColorProveedor.ContainsKey(iLinea) then
+          FCfg.Grid.DataController.Values[recIdx,
+                  FCfg.ColColorProveedorPivot.Index] := FPivotColorProveedor[iLinea];
+      end;
       // En modo EXPANDIDO no publicamos pedida en Values[]: la pinta la
       // lib desde FPivotCantidades, y Values[] es el buffer "A recibir"
       // que el usuario teclea.
@@ -882,6 +909,8 @@ begin
   end;
   if Assigned(FCfg.ColColorPivot) then
     FCfg.ColColorPivot.Visible := AModoPivot;
+  if Assigned(FCfg.ColColorProveedorPivot) then
+    FCfg.ColColorProveedorPivot.Visible := AModoPivot;
   IntercambiarPosicionColorAlmacen(AModoPivot);
 end;
 
