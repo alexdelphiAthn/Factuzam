@@ -161,6 +161,7 @@ type
     procedure PersistirPreferenciaPivote;
     function  RecogerCeldasARecibirVertical(
                                 const ACodigoAlm: string): TArray<TCeldaARecibir>;
+    function  ColumnaPedidosCompraExiste(const ANombreColumna: string): Boolean;
     // ApplyBestFit + ensanche para la columna Color (el cuadradito de
     // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
     procedure BestFitConSwatch;
@@ -361,7 +362,11 @@ begin
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_PEDCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_PEDCLIN';
   cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_PEDC';
-  cfgP.FieldColorTexto      := 'COLOR_TEXTO_PEDCLIN';
+  // FieldColorTexto solo si la columna existe en BBDD. Asi no crasheamos
+  // si el usuario aun no ha aplicado el ALTER de pedidos_compra.sql que
+  // anyade COLOR_TEXTO_PEDCLIN.
+  if ColumnaPedidosCompraExiste('COLOR_TEXTO_PEDCLIN') then
+    cfgP.FieldColorTexto    := 'COLOR_TEXTO_PEDCLIN';
   cfgP.CamposOcultosEnPivote := TArray<string>.Create(
     'CODIGO_UNIDAD_PEDCLIN',
     'CANTIDAD_PEDCLIN',
@@ -619,6 +624,33 @@ begin
   tvLineasPedido.ApplyBestFit;
   if Assigned(FColColorPivot) and FColColorPivot.Visible then
     FColColorPivot.Width := FColColorPivot.Width + ANCHO_SWATCH_PX;
+end;
+
+// Comprueba via INFORMATION_SCHEMA si una columna existe en
+// fza_pedidos_compra_lineas. Lo usamos para activar features
+// (FieldColorTexto, etc.) solo si el ALTER correspondiente de
+// pedidos_compra.sql se ha aplicado.
+function TfrmMtoPedidosCompra.ColumnaPedidosCompraExiste(
+                                       const ANombreColumna: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM INFORMATION_SCHEMA.COLUMNS ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      '   AND TABLE_NAME   = ''fza_pedidos_compra_lineas'' ' +
+      '   AND COLUMN_NAME  = :c';
+    q.ParamByName('c').AsString := ANombreColumna;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger > 0;
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
