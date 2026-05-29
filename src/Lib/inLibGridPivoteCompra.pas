@@ -907,9 +907,8 @@ procedure TGridPivoteCompra.CustomDrawCellTalla(
             var ADone: Boolean);
 var
   Col       : TcxGridColumn;
-  colAc     : TcxGridColumn;
   colLinea  : TcxGridColumn;
-  vAc, vLin : Variant;
+  vLin      : Variant;
   iAc       : Integer;
   iLinea    : Integer;
   arr       : TArrPosConjunto;
@@ -920,10 +919,6 @@ var
   iKey      : Int64;
   rPedido   : Double;
   rRecibida : Double;
-  sPedido   : string;
-  sRecibida : string;
-  rectTop, rectBot : TRect;
-  iMid : Integer;
 begin
   if (not FActivo) or (FCfg.Gestor = nil) then Exit;
   if AViewInfo.GridRecord = nil then Exit;
@@ -933,63 +928,53 @@ begin
               (Col.Tag - 1 < Length(FCfg.ColumnasTallas)) and
               (Col = FCfg.ColumnasTallas[Col.Tag - 1]);
 
-  // 1. GRAY-OUT de celdas talla fuera del conjunto pivot (no depende de
-  //    modo expandido).
-  if bEsTalla then
-  begin
-    colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldIdAcPivot);
-    if colAc <> nil then
-    begin
-      vAc := AViewInfo.GridRecord.Values[colAc.Index];
-      if (not VarIsNull(vAc)) and (not VarIsEmpty(vAc)) and VarIsNumeric(vAc) then
-      begin
-        iAc := vAc;
-        if iAc > 0 then
-        begin
-          arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
-          if Col.Tag > Length(arr) then
-          begin
-            ACanvas.Brush.Color := $00E8E8E8;
-            ACanvas.FillRect(AViewInfo.Bounds);
-            ADone := True;
-            Exit;
-          end;
-        end;
-      end;
-    end;
-  end;
-
-  // 2. Modo EXPANDIDO: fondo de fila con color de estado y pintado
-  //    pedido / recibida en mitades para celdas talla.
-  if not (FExpandido and PuedeExpandir) then Exit;
-  // Resolver linea del record para consultar los totales.
+  // Obtener LINEA del record (siempre necesario para resolver iAc y
+  // pintar). Si la columna LINEA no esta en el grid no podemos hacer
+  // nada.
   colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
   if colLinea = nil then Exit;
   vLin := AViewInfo.GridRecord.Values[colLinea.Index];
   if VarIsNull(vLin) or VarIsEmpty(vLin) then Exit;
   iLinea := StrToIntDef(VarToStr(vLin), 0);
   if iLinea <= 0 then Exit;
+
+  // iAc: lo leemos del cache FPivotIdAc (poblado en CargarCachePivot)
+  // en vez de buscarlo en una columna ID_AC_PIVOT_* del grid — esa
+  // columna puede no existir en el DFM y entonces iAc se quedaba a 0
+  // y nunca pintabamos las cantidades.
+  iAc := 0;
+  if not FPivotIdAc.TryGetValue(iLinea, iAc) then iAc := 0;
+
+  // 1. GRAY-OUT de celdas talla fuera del conjunto pivot (no depende de
+  //    modo expandido).
+  if bEsTalla and (iAc > 0) then
+  begin
+    arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+    if Col.Tag > Length(arr) then
+    begin
+      ACanvas.Brush.Color := $00E8E8E8;
+      ACanvas.FillRect(AViewInfo.Bounds);
+      ADone := True;
+      Exit;
+    end;
+  end;
+
+  // 2. EXIT si no expandido. El resto del pintado solo aplica con
+  //    pivote expandido.
+  if not (FExpandido and PuedeExpandir) then Exit;
+
   estado    := GetEstadoFila(iLinea);
   if estado = efrIndefinido then Exit;
   ColorFila := GetColorEstadoFila(estado);
-  // Respetar el highlight de seleccion: si el record esta seleccionado,
-  // no sobreescribimos su color natural.
+  // Respetar highlight de seleccion.
   if AViewInfo.GridRecord.Selected then Exit;
+
   if bEsTalla then
   begin
-    // Celdas talla validas: pintamos fondo + 4 sub-segmentos verticales:
-    //   1. Pedida           (gris, normal)
-    //   2. Pte de recibir   (negro, negrita)
-    //   3. Recibida         (verde, italic)
-    //   4. A recibir        (azul, negrita, EDITABLE)
-    colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldIdAcPivot);
-    iAc   := 0;
-    if colAc <> nil then
-    begin
-      vAc := AViewInfo.GridRecord.Values[colAc.Index];
-      if (not VarIsNull(vAc)) and (not VarIsEmpty(vAc)) and VarIsNumeric(vAc) then
-        iAc := vAc;
-    end;
+    // Celdas talla validas: 3 sub-segmentos verticales:
+    //   1. Pedido    (gris)
+    //   2. Recibido  (verde italic)
+    //   3. A recibir (azul, negrita, EDITABLE)
     if iAc <= 0 then Exit;
     arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
     if Col.Tag > Length(arr) then Exit;
@@ -1005,8 +990,7 @@ begin
   end
   else
   begin
-    // Para celdas no-talla: pintamos solo el fondo con color de estado.
-    // Dejamos ADone := False para que cxGrid dibuje el texto encima.
+    // Celdas no-talla: solo fondo (el texto lo pinta cxGrid encima).
     ACanvas.Brush.Color := ColorFila;
     ACanvas.FillRect(AViewInfo.Bounds);
   end;
