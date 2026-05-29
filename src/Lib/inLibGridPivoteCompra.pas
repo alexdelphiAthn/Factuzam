@@ -45,6 +45,7 @@ uses
   Data.DB, DBAccess, Uni,
   Vcl.Controls, Vcl.Graphics,
   cxClasses, cxGraphics, cxControls, cxCustomData,
+  cxEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   inLibGridTallasInline,
@@ -136,9 +137,10 @@ type
     FPivotColorCodigo : TDictionary<Integer,string>;
     FPivotIdAc        : TDictionary<Integer,Integer>;
     FPivotMaxAvTalla  : Integer;
-    FOrigColIndexAlm  : Integer;
-    FOrigColIndexCol  : Integer;
-    FAlturaFilaOriginal : Integer;
+    FOrigColIndexAlm     : Integer;
+    FOrigColIndexCol     : Integer;
+    FOrigColIndexColProv : Integer;
+    FAlturaFilaOriginal  : Integer;
     procedure FilterRecord(DataSet: TDataSet; var Accept: Boolean);
     function  GetSerieNumeroActivos(out ASerie, ANumero: string): Boolean;
     function  GetEstadoFila(iLinea: Integer): TEstadoFilaRecibida;
@@ -179,6 +181,14 @@ type
                 ACanvas: TcxCanvas;
                 AViewInfo: TcxGridTableDataCellViewInfo;
                 var ADone: Boolean);
+    // Engancha al OnInitEdit del grid. Al entrar a editar una celda
+    // talla en modo expandido, posiciona el editor inplace solo en el
+    // tercio inferior de la celda (zona 'A recibir'), dejando visibles
+    // Pedido y Recibida pintados arriba. Selecciona el contenido al
+    // entrar (estilo Excel) para que una pulsacion lo sustituya.
+    procedure InitEditCeldaTalla(Sender: TcxCustomGridTableView;
+                AItem: TcxCustomGridTableItem;
+                AEdit: TcxCustomEdit);
   private
     procedure CargarCachePivot;
     procedure PublicarCantidadesPivot;
@@ -227,6 +237,7 @@ begin
   FPivotMaxAvTalla         := 0;
   FOrigColIndexAlm         := -1;
   FOrigColIndexCol         := -1;
+  FOrigColIndexColProv     := -1;
   FAlturaFilaOriginal      := 0;
 end;
 
@@ -931,11 +942,24 @@ begin
     iTmp := colAlm.Index;
     colAlm.Index := FCfg.ColColorPivot.Index;
     FCfg.ColColorPivot.Index := iTmp;
+    // Coloca 'Color' (proveedor) inmediatamente antes de 'C. Basico'.
+    // Sin esto, queda al final del grid (tras todas las tallas) y el
+    // usuario no lo encuentra. Ponerla en C.Basico.Index empuja
+    // C.Basico una posicion a la derecha, quedando Color | C. Basico.
+    if Assigned(FCfg.ColColorProveedorPivot) then
+    begin
+      if FOrigColIndexColProv < 0 then
+        FOrigColIndexColProv := FCfg.ColColorProveedorPivot.Index;
+      FCfg.ColColorProveedorPivot.Index := FCfg.ColColorPivot.Index;
+    end;
   end
   else
   begin
     if FOrigColIndexAlm >= 0 then colAlm.Index := FOrigColIndexAlm;
     if FOrigColIndexCol >= 0 then FCfg.ColColorPivot.Index := FOrigColIndexCol;
+    if Assigned(FCfg.ColColorProveedorPivot) and
+       (FOrigColIndexColProv >= 0) then
+      FCfg.ColColorProveedorPivot.Index := FOrigColIndexColProv;
   end;
 end;
 
@@ -1139,6 +1163,49 @@ begin
   arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
   if AItem.Tag > Length(arr) then
     AAllow := False;
+end;
+
+procedure TGridPivoteCompra.InitEditCeldaTalla(
+                          Sender: TcxCustomGridTableView;
+                          AItem: TcxCustomGridTableItem;
+                          AEdit: TcxCustomEdit);
+var
+  bEsTalla : Boolean;
+begin
+  // Estilo Excel: seleccion total al entrar a la celda, asi una pulsacion
+  // sustituye el contenido en lugar de concatenarse.
+  if AEdit is TcxCustomTextEdit then
+    TcxCustomTextEdit(AEdit).SelectAll;
+  // Solo manipulamos el editor en modo pivote expandido sobre celdas
+  // talla: ahi pintamos 3 sub-segmentos (Pedido/Recibida/A recibir) y el
+  // editor por defecto cubre los 3, ocultando Pedido y Recibida. Lo
+  // bajamos al tercio inferior para que el usuario siga viendo lo
+  // pedido / recibido mientras teclea A recibir. El reposicionado se
+  // difiere con TThread.ForceQueue porque cxGrid sobrescribe SetBounds
+  // tras OnInitEdit en su pase de layout.
+  if not (FActivo and FExpandido and PuedeExpandir) then Exit;
+  if AItem = nil then Exit;
+  if (AItem.Tag < 1) or (AItem.Tag > FCfg.MaxColumnasTallas) then Exit;
+  bEsTalla := (AItem.Tag - 1 < Length(FCfg.ColumnasTallas)) and
+              (AItem = FCfg.ColumnasTallas[AItem.Tag - 1]);
+  if not bEsTalla then Exit;
+  if AEdit = nil then Exit;
+  TThread.ForceQueue(nil,
+    procedure
+    var
+      r    : TRect;
+      newH : Integer;
+    begin
+      if AEdit = nil then Exit;
+      if not AEdit.HandleAllocated then Exit;
+      r    := AEdit.BoundsRect;
+      newH := (r.Bottom - r.Top) div 3;
+      if newH <= 0 then Exit;
+      AEdit.SetBounds(r.Left,
+                      r.Top + 2 * newH,
+                      r.Right - r.Left,
+                      newH);
+    end);
 end;
 
 procedure TGridPivoteCompra.CustomDrawColorCell(
