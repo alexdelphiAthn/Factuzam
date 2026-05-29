@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UPrincipal                                                    }
 {    Tipo:       Formulario principal (FMX, Android)                           }
@@ -28,7 +28,7 @@ uses
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
   FMX.Objects, FMX.TabControl, FMX.ScrollBox, FMX.Memo, FMX.Memo.Types,
   FMX.ActnList, FMX.MediaLibrary.Actions, FMX.Layouts,
-  UConfigFotos, UColaFotosNube, UImagenUtil;
+  UConfigFotos, UColaFotosNube, UImagenUtil, FMX.MediaLibrary, FMX.StdActns;
 
 type
   TfrmPrincipal = class(TForm)
