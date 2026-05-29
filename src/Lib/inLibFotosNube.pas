@@ -50,6 +50,11 @@ function ElegirFotoRepresentativa(const AArchivos: TArray<string>): string;
 // ARTICULO_COLOR_INDICE_real.png) case con AColor. Si AColor = '' o no hay
 // coincidencia, cae en ElegirFotoRepresentativa. Sirve para integrar al
 // nivel artículo/color que muestra el visor de fotos.
+// OJO: AColor es el segmento de color del SKU = el VALOR DE ATRIBUTO
+// (fza_atributos_valores.AV: COLORAO, AZUL_CIELO, NEGRO...), el mismo token
+// con el que el servidor nombra el fichero. NO es el color de proveedor en
+// texto libre (COLOR_TEXTO_SESLIN: "011", "988"...) ni el código del
+// atributo básico (fza_atributos_basicos.CODIGO_ATB).
 function ElegirFotoNubePorColor(const AArchivos: TArray<string>;
                                 const AColor: string): string;
 
@@ -282,7 +287,8 @@ begin
       orden.Duplicates := dupAccept;
       for i := 0 to High(AArchivos) do
         orden.Add(AArchivos[i]);
-      // Buscamos un '_real' cuyo nombre contenga el token _COLOR_.
+      // Buscamos un '_real' cuyo nombre contenga el token _COLOR_, donde
+      // COLOR es el valor de atributo del SKU (no el color de proveedor).
       for i := 0 to orden.Count - 1 do
       begin
         sBase := UpperCase(ExtractFileName(orden[i]));
