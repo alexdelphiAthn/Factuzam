@@ -1185,7 +1185,7 @@ end;
 
 // dsTablaG apunta a la cabecera de factura, que no tiene CODIGO_ART_*.
 // El articulo activo vive en la linea seleccionada del sub-grid
-// tvLineasFactura. Leemos de ahi para que Ctrl+Alt+F muestre la foto
+// tvLineasFactura. Leemos de ahi para que Ctrl+F muestre la foto
 // de la linea actual.
 procedure TfrmMtoFacturasBase.ResolverArtSkuActivo(out ACodArt,
                                                    ACodSku: string);
