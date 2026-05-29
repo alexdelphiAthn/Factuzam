@@ -1,0 +1,311 @@
+object frmPrincipal: TfrmPrincipal
+  Left = 0
+  Top = 0
+  Caption = 'Factuzam - Fotos Nube'
+  ClientHeight = 640
+  ClientWidth = 360
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad, Android]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
+  object memoLog: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    ReadOnly = True
+    StyledSettings = [Family, Style, FontColor]
+    TextSettings.Font.Size = 12.000000000000000000
+    Align = Bottom
+    Height = 140.000000000000000000
+    Position.Y = 500.000000000000000000
+    Size.Width = 360.000000000000000000
+    Size.Height = 140.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+  end
+  object TabControl1: TTabControl
+    Align = Client
+    Size.Width = 360.000000000000000000
+    Size.Height = 500.000000000000000000
+    Size.PlatformDefault = False
+    TabIndex = 0
+    TabOrder = 1
+    TabPosition = PlatformDefault
+    object tabCapturar: TTabItem
+      CustomIcon = <
+        item
+        end>
+      IsSelected = True
+      Size.Width = 73.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'Capturar'
+      ExplicitSize.cx = 100.000000000000000000
+      ExplicitSize.cy = 50.000000000000000000
+      object imgPrevia: TImage
+        Align = Top
+        Height = 180.000000000000000000
+        Margins.Left = 6.000000000000000000
+        Margins.Top = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 6.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 180.000000000000000000
+        Size.PlatformDefault = False
+        WrapMode = Fit
+      end
+      object btnCamara: TButton
+        Align = Top
+        Margins.Left = 6.000000000000000000
+        Margins.Top = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 192.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 44.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Hacer foto'
+        OnClick = btnCamaraClick
+      end
+      object btnGaleria: TButton
+        Align = Top
+        Margins.Left = 6.000000000000000000
+        Margins.Top = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 242.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 44.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Elegir de galer'#237'a'
+        OnClick = btnGaleriaClick
+      end
+      object btnSubir: TButton
+        Align = Bottom
+        Margins.Left = 6.000000000000000000
+        Margins.Top = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Margins.Bottom = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 424.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 44.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Subir todas (0)'
+        OnClick = btnSubirClick
+      end
+      object lstCola: TListView
+        ItemAppearanceName = 'ListItemRightDetail'
+        ItemEditAppearanceName = 'ListItemRightDetail'
+        HeaderAppearanceName = 'ListHeader'
+        FooterAppearanceName = 'ListFooter'
+        Align = Client
+        Margins.Left = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 132.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+      end
+    end
+    object tabConfig: TTabItem
+      CustomIcon = <
+        item
+        end>
+      Size.Width = 95.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'Configuraci'#243'n'
+      ExplicitSize.cx = 100.000000000000000000
+      ExplicitSize.cy = 50.000000000000000000
+      object cajaConfig: TVertScrollBox
+        Align = Client
+        Size.Width = 360.000000000000000000
+        Size.Height = 474.000000000000000000
+        Size.PlatformDefault = False
+        ShowScrollBars = True
+        TabOrder = 0
+        Viewport.Width = 360.000000000000000000
+        Viewport.Height = 474.000000000000000000
+        object lblUrl: TLabel
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 6.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'URL del webservice (upload_foto.php)'
+          TabOrder = 0
+        end
+        object edUrl: TEdit
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 26.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 40.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+          TextPrompt = 'https://servidor/fotos/upload_foto.php'
+        end
+        object lblApiKey: TLabel
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 66.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'API key'
+          TabOrder = 2
+        end
+        object edApiKey: TEdit
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 86.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 40.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 3
+          TextPrompt = 'Clave de acceso'
+        end
+        object lblCliente: TLabel
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 126.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Cliente (obligatorio)'
+          TabOrder = 4
+        end
+        object edCliente: TEdit
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 146.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 40.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 5
+          TextPrompt = 'Identificador de cliente/empresa'
+        end
+        object lblSku: TLabel
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 186.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'SKU por defecto (opcional)'
+          TabOrder = 6
+        end
+        object edSku: TEdit
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 206.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 40.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 7
+          TextPrompt = 'SKU o referencia'
+        end
+        object lblResolucion: TLabel
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 246.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Resoluci'#243'n m'#225'xima en p'#237'xeles (lado mayor)'
+          TabOrder = 8
+        end
+        object edResolucion: TEdit
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 266.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 40.000000000000000000
+          Size.PlatformDefault = False
+          KeyboardType = NumberPad
+          TabOrder = 9
+          Text = '1000'
+          TextPrompt = '1000'
+        end
+        object btnGuardarConfig: TButton
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 12.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 318.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 44.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 10
+          Text = 'Guardar configuraci'#243'n'
+          OnClick = btnGuardarConfigClick
+        end
+        object lblRutaIni: TLabel
+          Align = Top
+          Margins.Left = 6.000000000000000000
+          Margins.Top = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
+          Position.X = 6.000000000000000000
+          Position.Y = 362.000000000000000000
+          Size.Width = 348.000000000000000000
+          Size.Height = 32.000000000000000000
+          Size.PlatformDefault = False
+          StyledSettings = [Family, Style, FontColor]
+          TextSettings.Font.Size = 11.000000000000000000
+          TextSettings.WordWrap = True
+          Text = 'INI:'
+          TabOrder = 11
+        end
+      end
+    end
+  end
+  object ActionList1: TActionList
+    Left = 280
+    Top = 16
+    object actHacerFoto: TTakePhotoFromCameraAction
+      Category = 'Media Library'
+      OnDidFinishTaking = actHacerFotoDidFinishTaking
+    end
+    object actElegirFoto: TTakePhotoFromLibraryAction
+      Category = 'Media Library'
+      OnDidFinishTaking = actElegirFotoDidFinishTaking
+    end
+  end
+end
