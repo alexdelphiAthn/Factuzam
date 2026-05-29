@@ -82,6 +82,7 @@ type
     SerieAlbDefecto         : string;  // default texto serie
     RefProveedorDefecto     : string;
     IdPvTemporadaDefecto    : Integer;
+    CodigoAlmacenDefecto    : string;  // default seleccion combo
     // Devueltos al cerrar con Aceptado=True:
     CodigoAlmacen           : string;
     SerieAlbaran            : string;
@@ -102,12 +103,13 @@ procedure TfrmModalSelAlmacenPedido.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  Aceptado      := False;
-  CodigoAlmacen := '';
-  SerieAlbaran  := '';
-  RefProveedor  := '';
-  IdPvTemporada := 0;
-  FechaRecepcion := Date;
+  Aceptado             := False;
+  CodigoAlmacen        := '';
+  CodigoAlmacenDefecto := '';
+  SerieAlbaran         := '';
+  RefProveedor         := '';
+  IdPvTemporada        := 0;
+  FechaRecepcion       := Date;
   // Conexion de la query de temporadas (esta unica que la lib usa).
   unqryTemporadas.Connection := inLibGlobalVar.oConn;
 end;
@@ -128,7 +130,13 @@ begin
   else
     cbbTemporada.EditValue := Null;
   dteFecha.Date := Date;
-  cbbAlmacen.EditValue := Null;
+  // Default del almacen: lo que pase el llamador (almacen efectivo de
+  // una linea del pedido). Si no manda nada, dejamos el combo vacio
+  // para forzar al usuario a elegirlo.
+  if Trim(CodigoAlmacenDefecto) <> '' then
+    cbbAlmacen.EditValue := CodigoAlmacenDefecto
+  else
+    cbbAlmacen.EditValue := Null;
   if cbbAlmacen.CanFocus then
     cbbAlmacen.SetFocus;
 end;
