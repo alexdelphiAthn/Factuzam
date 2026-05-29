@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoClientes                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -403,7 +403,6 @@ type
     tvDepositosClienteCANTIDAD_PENDIENTE_DEP: TcxGridDBColumn;
     tvDepositosClienteFECHA_ENTREGA_DEP: TcxGridDBColumn;
     tvDepositosClienteDESCRIPCION_ARTICULO: TcxGridDBColumn;
-    procedure btnGrabarClick(Sender: TObject);
     procedure btnNuevoClienteClick(Sender: TObject);
     procedure btnIraFacturaClick(Sender: TObject);
     procedure btnExportarClick(Sender: TObject);
@@ -533,11 +532,6 @@ begin
   ShowMto(Self.Owner,
           ResolverCallFactura(sNroFactura, sSerieFactura),
           sNroFactura + ',' + sSerieFactura);
-end;
-
-procedure TfrmMtoClientes.btnGrabarClick(Sender: TObject);
-begin
-  inherited;
 end;
 
 procedure TfrmMtoClientes.btnIraArticuloClick(Sender: TObject);
