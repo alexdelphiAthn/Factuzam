@@ -188,6 +188,14 @@ type
     // Values[] y dispara repintado. Devuelve True si consumio la
     // tecla (digito, backspace, delete, esc).
     function ProcesarTeclaCeldaTalla(AKey: Word): Boolean;
+    // Devuelve los valores Pedido / Recibida de la celda talla
+    // focused actual (la que el usuario esta editando). Usado por el
+    // form para alimentar el panel de contexto que muestra estas
+    // cantidades fuera de la celda. Devuelve False si no hay celda
+    // talla focused valida (no pivote, no expandido, no talla, fuera
+    // de conjunto, etc).
+    function GetInfoCeldaTallaActiva(out ATallaCaption: string;
+                                      out APedido, ARecibida: Double): Boolean;
     // Engancha al OnInitEdit del grid. Mantenido por compatibilidad,
     // ahora solo hace SelectAll estilo Excel — el ajuste de tamanyo
     // del editor en talla expandida ya no aplica porque el editor
@@ -1280,6 +1288,51 @@ begin
   // a modo vertical.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
+end;
+
+function TGridPivoteCompra.GetInfoCeldaTallaActiva(
+                              out ATallaCaption: string;
+                              out APedido, ARecibida: Double): Boolean;
+var
+  rec      : TcxCustomGridRecord;
+  col      : TcxGridColumn;
+  colLinea : TcxGridColumn;
+  vLin     : Variant;
+  iLinea   : Integer;
+  iAc      : Integer;
+  arr      : TArrPosConjunto;
+  iKey     : Int64;
+  iTallaAv : Integer;
+begin
+  Result        := False;
+  ATallaCaption := '';
+  APedido       := 0;
+  ARecibida     := 0;
+  if not (FActivo and FExpandido and PuedeExpandir) then Exit;
+  if FCfg.Grid = nil then Exit;
+  rec := FCfg.Grid.Controller.FocusedRecord;
+  col := FCfg.Grid.Controller.FocusedColumn;
+  if (rec = nil) or (col = nil) then Exit;
+  // Solo celdas talla (Tag positivo).
+  if (col.Tag < 1) or (col.Tag > FCfg.MaxColumnasTallas) then Exit;
+  if (col.Tag - 1 >= Length(FCfg.ColumnasTallas)) or
+     (col <> FCfg.ColumnasTallas[col.Tag - 1]) then Exit;
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then Exit;
+  vLin := rec.Values[colLinea.Index];
+  if VarIsNull(vLin) or VarIsEmpty(vLin) then Exit;
+  iLinea := StrToIntDef(VarToStr(vLin), 0);
+  if iLinea <= 0 then Exit;
+  if not FPivotIdAc.TryGetValue(iLinea, iAc) then Exit;
+  if iAc <= 0 then Exit;
+  arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+  if col.Tag > Length(arr) then Exit;
+  iTallaAv      := arr[col.Tag - 1].IdAv;
+  ATallaCaption := arr[col.Tag - 1].Valor;
+  iKey          := Int64(iLinea) * 100000 + iTallaAv;
+  FPivotCantidades.TryGetValue(iKey, APedido);
+  FPivotCantidadesRecibidas.TryGetValue(iKey, ARecibida);
+  Result := True;
 end;
 
 procedure TGridPivoteCompra.CustomDrawColorCell(
