@@ -129,6 +129,11 @@ type
     FCeldaSku                : TDictionary<Int64,string>;
     FCeldaAlmacen            : TDictionary<Int64,string>;
     FCeldaLineaPedido        : TDictionary<Int64,string>;
+    // Cantidades 'A recibir' tecleadas manualmente por el usuario en
+    // la matriz pivote expandida. Persistencia en memoria porque
+    // cxGrid borra DataController.Values[] de columnas no-bound al
+    // navegar entre records. La key es linea*100000 + tallaAv.
+    FARecibirManual          : TDictionary<Int64,Double>;
     FPivotColorTexto  : TDictionary<Integer,string>;
     // Texto libre del color del proveedor por linea representante
     // (poblado solo si la config trae FieldColorTexto, p. ej.
@@ -201,6 +206,12 @@ type
     // tallas ya totalmente recibidas o sin Pedido no escribe nada.
     // Devuelve numero de celdas modificadas (0 si no aplica).
     function RecibirFilaEntera: Integer;
+    // Captura el valor del editor inplace de una celda talla y lo
+    // guarda en FARecibirManual. Se llama desde OnEditValueChanged
+    // de las columnas talla. cxGrid borra DataController.Values[]
+    // de columnas no-bound al hacer Post (que ocurre al navegar entre
+    // records), por eso necesitamos un almacenamiento propio.
+    procedure CapturarARecibirEditValueChanged(ASender: TObject);
     // Engancha al OnInitEdit del grid. Mantenido por compatibilidad,
     // ahora solo hace SelectAll estilo Excel — el ajuste de tamanyo
     // del editor en talla expandida ya no aplica porque el editor
@@ -217,7 +228,7 @@ type
                 ACanvas: TcxCanvas;
                 AViewInfo: TcxGridTableDataCellViewInfo;
                 AColorFondo: TColor;
-                APedida, ARecibida: Double);
+                APedida, ARecibida, ARecibir: Double);
     procedure DibujarBordeFocused(ACanvas: TcxCanvas; const ARect: TRect);
   end;
 
@@ -250,6 +261,7 @@ begin
   FCeldaSku                := TDictionary<Int64,string>.Create;
   FCeldaAlmacen            := TDictionary<Int64,string>.Create;
   FCeldaLineaPedido        := TDictionary<Int64,string>.Create;
+  FARecibirManual          := TDictionary<Int64,Double>.Create;
   FPivotColorTexto         := TDictionary<Integer,string>.Create;
   FPivotColorProveedor     := TDictionary<Integer,string>.Create;
   FPivotColorCodigo        := TDictionary<Integer,string>.Create;
@@ -271,6 +283,7 @@ begin
   FreeAndNil(FCeldaSku);
   FreeAndNil(FCeldaAlmacen);
   FreeAndNil(FCeldaLineaPedido);
+  FreeAndNil(FARecibirManual);
   FreeAndNil(FPivotColorTexto);
   FreeAndNil(FPivotColorProveedor);
   FreeAndNil(FPivotColorCodigo);
@@ -446,6 +459,7 @@ begin
   FCeldaSku.Clear;
   FCeldaAlmacen.Clear;
   FCeldaLineaPedido.Clear;
+  FARecibirManual.Clear;
   FPivotColorTexto.Clear;
   FPivotColorProveedor.Clear;
   FPivotColorCodigo.Clear;
@@ -519,68 +533,40 @@ begin
   PublicarCantidadesPivot;
 end;
 
-// Itera el grid en modo pivote leyendo las celdas talla cuyo Value
-// (cantidad "A recibir") es > 0. Filtra por el almacen indicado. Cada
-// celda no-cero genera un TCeldaARecibir con el SKU/linea/almacen que
-// se mapearon en CargarCachePivot. Si no se esta en pivote o no hay
-// celdas, devuelve [].
+// Itera FARecibirManual (dict persistente con las cantidades 'A
+// recibir' tecleadas por el usuario) y produce una TCeldaARecibir
+// por entrada cuyo almacen mapeado coincida con ACodigoAlm. Antes
+// iterabamos Values[] del grid, pero cxGrid borraba los Values[] de
+// columnas no-bound al hacer Post entre navegaciones — el dict es
+// inmune a eso.
 function TGridPivoteCompra.IterarARecibirPorAlmacen(
                             const ACodigoAlm: string): TArray<TCeldaARecibir>;
 var
-  res: TList<TCeldaARecibir>;
-  colLinea: TcxGridDBColumn;
-  recIdx, i: Integer;
-  vLinea, vARec: Variant;
-  iLinea, iAc: Integer;
-  arr: TArrPosConjunto;
-  iTallaAv: Integer;
-  iKey: Int64;
-  rARec: Double;
-  sSku, sAlm, sLineaRaw: string;
-  c: TCeldaARecibir;
+  res    : TList<TCeldaARecibir>;
+  pair   : TPair<Int64,Double>;
+  sSku   : string;
+  sAlm   : string;
+  sLineaRaw: string;
+  c      : TCeldaARecibir;
 begin
   Result := nil;
-  if (not FActivo) or (FCfg.Gestor = nil) or (FCfg.Grid = nil) then Exit;
-  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
-  if colLinea = nil then Exit;
+  if (not FActivo) or (FCfg.Gestor = nil) then Exit;
+  if FARecibirManual = nil then Exit;
   res := TList<TCeldaARecibir>.Create;
   try
-    for recIdx := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+    for pair in FARecibirManual do
     begin
-      vLinea := FCfg.Grid.DataController.Values[recIdx, colLinea.Index];
-      if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
-      iLinea := StrToIntDef(VarToStr(vLinea), 0);
-      if iLinea <= 0 then Continue;
-      if not FPivotIdAc.TryGetValue(iLinea, iAc) then Continue;
-      if iAc <= 0 then Continue;
-      arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
-      for i := 0 to High(arr) do
-      begin
-        if i >= FCfg.MaxColumnasTallas then Break;
-        if (i >= Length(FCfg.ColumnasTallas)) or
-           (FCfg.ColumnasTallas[i] = nil) then Continue;
-        vARec := FCfg.Grid.DataController.Values[recIdx,
-                                  FCfg.ColumnasTallas[i].Index];
-        if VarIsNull(vARec) or VarIsEmpty(vARec) then Continue;
-        if VarIsNumeric(vARec) then
-          rARec := vARec
-        else
-          rARec := StrToFloatDef(VarToStr(vARec), 0);
-        if rARec <= 0 then Continue;
-        iTallaAv := arr[i].IdAv;
-        iKey := Int64(iLinea) * 100000 + iTallaAv;
-        // Mapeo celda -> SKU/almacen/linea.
-        if not FCeldaSku.TryGetValue(iKey, sSku) then Continue;
-        if not FCeldaAlmacen.TryGetValue(iKey, sAlm) then Continue;
-        if not FCeldaLineaPedido.TryGetValue(iKey, sLineaRaw) then Continue;
-        // Filtro por almacen.
-        if not SameText(sAlm, ACodigoAlm) then Continue;
-        c.LineaPedido   := sLineaRaw;
-        c.CodigoSku     := sSku;
-        c.CodigoAlmacen := sAlm;
-        c.Cantidad      := rARec;
-        res.Add(c);
-      end;
+      if pair.Value <= 0 then Continue;
+      // Mapeo celda -> SKU/almacen/linea poblado en CargarCachePivot.
+      if not FCeldaSku.TryGetValue(pair.Key, sSku) then Continue;
+      if not FCeldaAlmacen.TryGetValue(pair.Key, sAlm) then Continue;
+      if not FCeldaLineaPedido.TryGetValue(pair.Key, sLineaRaw) then Continue;
+      if not SameText(sAlm, ACodigoAlm) then Continue;
+      c.LineaPedido   := sLineaRaw;
+      c.CodigoSku     := sSku;
+      c.CodigoAlmacen := sAlm;
+      c.Cantidad      := pair.Value;
+      res.Add(c);
     end;
     Result := res.ToArray;
   finally
@@ -588,50 +574,34 @@ begin
   end;
 end;
 
-// Limpia (pone a Null) las celdas "A recibir" cuyo almacen efectivo
-// coincide con ACodigoAlm. Usado tras crear el albaran para que el
-// usuario no tenga que borrar los valores procesados antes de
-// recibir otro almacen.
+// Limpia las entradas 'A recibir' del FARecibirManual cuyo almacen
+// efectivo coincide con ACodigoAlm. Usado tras crear el albaran para
+// que el usuario no tenga que borrar los valores procesados antes de
+// recibir otro almacen. Tambien dispara invalidacion del grid para
+// repintar las celdas afectadas con el segmento 'A recibir' vacio.
 procedure TGridPivoteCompra.LimpiarARecibirParaAlmacen(const ACodigoAlm: string);
 var
-  colLinea: TcxGridDBColumn;
-  recIdx, i: Integer;
-  vLinea: Variant;
-  iLinea, iAc: Integer;
-  arr: TArrPosConjunto;
-  iTallaAv: Integer;
-  iKey: Int64;
-  sAlm: string;
+  pair  : TPair<Int64,Double>;
+  sAlm  : string;
+  aDel  : TList<Int64>;
+  iKey  : Int64;
 begin
-  if (not FActivo) or (FCfg.Gestor = nil) or (FCfg.Grid = nil) then Exit;
-  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
-  if colLinea = nil then Exit;
-  FCfg.Grid.DataController.BeginUpdate;
+  if FARecibirManual = nil then Exit;
+  aDel := TList<Int64>.Create;
   try
-    for recIdx := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+    for pair in FARecibirManual do
     begin
-      vLinea := FCfg.Grid.DataController.Values[recIdx, colLinea.Index];
-      if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
-      iLinea := StrToIntDef(VarToStr(vLinea), 0);
-      if iLinea <= 0 then Continue;
-      if not FPivotIdAc.TryGetValue(iLinea, iAc) then Continue;
-      if iAc <= 0 then Continue;
-      arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
-      for i := 0 to High(arr) do
-      begin
-        if i >= FCfg.MaxColumnasTallas then Break;
-        if (i >= Length(FCfg.ColumnasTallas)) or
-           (FCfg.ColumnasTallas[i] = nil) then Continue;
-        iTallaAv := arr[i].IdAv;
-        iKey := Int64(iLinea) * 100000 + iTallaAv;
-        if FCeldaAlmacen.TryGetValue(iKey, sAlm) and SameText(sAlm, ACodigoAlm) then
-          FCfg.Grid.DataController.Values[recIdx,
-                                FCfg.ColumnasTallas[i].Index] := Null;
-      end;
+      if not FCeldaAlmacen.TryGetValue(pair.Key, sAlm) then Continue;
+      if SameText(sAlm, ACodigoAlm) then
+        aDel.Add(pair.Key);
     end;
+    for iKey in aDel do
+      FARecibirManual.Remove(iKey);
   finally
-    FCfg.Grid.DataController.EndUpdate;
+    FreeAndNil(aDel);
   end;
+  if Assigned(FCfg.Grid) and Assigned(FCfg.Grid.Site) then
+    FCfg.Grid.Site.Invalidate;
 end;
 
 // Determina el estado de recepcion de una linea representante segun los
@@ -1009,6 +979,7 @@ var
   iKey      : Int64;
   rPedido   : Double;
   rRecibida : Double;
+  rARecibir : Double;
 begin
   if (not FActivo) or (FCfg.Gestor = nil) then Exit;
   if AViewInfo.GridRecord = nil then Exit;
@@ -1077,10 +1048,12 @@ begin
     iKey      := Int64(iLinea) * 100000 + iTallaAv;
     rPedido   := 0;
     rRecibida := 0;
+    rARecibir := 0;
     FPivotCantidades.TryGetValue(iKey, rPedido);
     FPivotCantidadesRecibidas.TryGetValue(iKey, rRecibida);
+    FARecibirManual.TryGetValue(iKey, rARecibir);
     PintarCeldaTalla3Segmentos(ACanvas, AViewInfo, ColorFila,
-                                rPedido, rRecibida);
+                                rPedido, rRecibida, rARecibir);
     // Resalte de celda focused: borde grueso navy sobre los 3 sub-
     // segmentos para que el usuario sepa donde esta tras Tab / flechas
     // sin tener que mirar el label de contexto.
@@ -1099,33 +1072,23 @@ end;
 
 // Pinta las 3 sub-secciones verticales de una celda talla en modo
 // expandido: Pedido / Recibido / A recibir.
-// El "A recibir" se lee de Values[] del DataController (lo edita el
-// usuario en el grid).
+// El "A recibir" llega como parametro precalculado desde el caller
+// (que lee FARecibirManual). Antes se leia de Values[], pero cxGrid
+// borra los Values[] de columnas no-bound al hacer Post — la entrada
+// quedaba volatil entre navegaciones.
 procedure TGridPivoteCompra.PintarCeldaTalla3Segmentos(
                        ACanvas: TcxCanvas;
                        AViewInfo: TcxGridTableDataCellViewInfo;
                        AColorFondo: TColor;
-                       APedida, ARecibida: Double);
+                       APedida, ARecibida, ARecibir: Double);
 var
   rARec     : Double;
-  vARec     : Variant;
-  recIdx, colIdx: Integer;
   b: TRect;
   hSeg, top1, top2, top3: Integer;
   rect1, rect2, rect3: TRect;
   sPed, sRec, sARec: string;
 begin
-  recIdx := AViewInfo.GridRecord.RecordIndex;
-  colIdx := AViewInfo.Item.Index;
-  vARec  := FCfg.Grid.DataController.Values[recIdx, colIdx];
-  rARec  := 0;
-  if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
-  begin
-    if VarIsNumeric(vARec) then
-      rARec := vARec
-    else
-      rARec := StrToFloatDef(VarToStr(vARec), 0);
-  end;
+  rARec := ARecibir;
   // Mostramos las 3 sub-filas siempre, aunque la cantidad sea 0 (asi
   // el usuario ve claramente que la celda tiene 3 partes: Pedido /
   // Recibido / A recibir). Si Pedido es 0 dejamos en blanco para no
@@ -1412,11 +1375,64 @@ begin
       rPdte := rPed - rRec;
       if rPdte <= 0 then Continue;
       FCfg.Grid.DataController.Values[recIdx, colTalla.Index] := rPdte;
+      FARecibirManual.AddOrSetValue(iKey, rPdte);
       Inc(Result);
     end;
   finally
     FCfg.Grid.DataController.EndUpdate;
   end;
+end;
+
+procedure TGridPivoteCompra.CapturarARecibirEditValueChanged(
+                                                       ASender: TObject);
+var
+  ed       : TcxCustomEdit;
+  rec      : TcxCustomGridRecord;
+  col      : TcxGridColumn;
+  colLinea : TcxGridColumn;
+  vLin     : Variant;
+  vEdit    : Variant;
+  iLinea   : Integer;
+  iAc      : Integer;
+  arr      : TArrPosConjunto;
+  iKey     : Int64;
+  iTallaAv : Integer;
+  rValor   : Double;
+begin
+  if not (FActivo and FExpandido and PuedeExpandir) then Exit;
+  if not (ASender is TcxCustomEdit) then Exit;
+  ed := TcxCustomEdit(ASender);
+  ed.PostEditValue;
+  if FCfg.Grid = nil then Exit;
+  rec := FCfg.Grid.Controller.FocusedRecord;
+  col := FCfg.Grid.Controller.FocusedColumn;
+  if (rec = nil) or (col = nil) then Exit;
+  if (col.Tag < 1) or (col.Tag > FCfg.MaxColumnasTallas) then Exit;
+  if (col.Tag - 1 >= Length(FCfg.ColumnasTallas)) or
+     (col <> FCfg.ColumnasTallas[col.Tag - 1]) then Exit;
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then Exit;
+  vLin := rec.Values[colLinea.Index];
+  if VarIsNull(vLin) or VarIsEmpty(vLin) then Exit;
+  iLinea := StrToIntDef(VarToStr(vLin), 0);
+  if iLinea <= 0 then Exit;
+  if not FPivotIdAc.TryGetValue(iLinea, iAc) then Exit;
+  if iAc <= 0 then Exit;
+  arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+  if col.Tag > Length(arr) then Exit;
+  iTallaAv := arr[col.Tag - 1].IdAv;
+  iKey     := Int64(iLinea) * 100000 + iTallaAv;
+  vEdit := ed.EditValue;
+  if VarIsNull(vEdit) or VarIsEmpty(vEdit) then
+    rValor := 0
+  else if VarIsNumeric(vEdit) then
+    rValor := vEdit
+  else
+    rValor := StrToFloatDef(VarToStr(vEdit), 0);
+  if rValor <= 0 then
+    FARecibirManual.Remove(iKey)
+  else
+    FARecibirManual.AddOrSetValue(iKey, rValor);
 end;
 
 procedure TGridPivoteCompra.CustomDrawColorCell(
