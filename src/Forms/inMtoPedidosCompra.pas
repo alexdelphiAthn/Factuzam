@@ -698,7 +698,20 @@ procedure TfrmMtoPedidosCompra.tvLineasPedidoEditing(
 begin
   inherited;
   if Assigned(FPivote) then
+  begin
+    // La libreria gestiona el bloqueo por talla-fuera-de-conjunto.
     FPivote.EditingCeldaTalla(Sender, AItem, AAllow);
+    // En modo pivote expandido bloqueamos explicitamente el editor
+    // inplace en TODAS las columnas talla (Tag > 0, asignado en
+    // CrearColumnasTallas). Sin este bloqueo cxGrid abre el TcxCurrency
+    // Edit que tapa los 3 sub-segmentos pintados (Pedido, Recibida,
+    // A recibir). Con el editor bloqueado las pulsaciones llegan al
+    // OnKeyDown del grid y de ahi al ProcesarTeclaCeldaTalla de la
+    // libreria, que muta DataController.Values[] y dispara repintado.
+    if FPivote.Activo and FPivote.Expandido and
+       Assigned(AItem) and (AItem.Tag > 0) then
+      AAllow := False;
+  end;
 end;
 
 // Reposiciona el inplace editor al tercio inferior de la celda talla en
