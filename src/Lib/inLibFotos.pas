@@ -400,6 +400,8 @@ var
   i        : Integer;
   sInList  : string;
   sClave   : string;
+  sNombre  : string;
+  sExt     : string;
 begin
   Result.Clear;
   Result.CodigoArt := ACodArt;
@@ -462,6 +464,39 @@ begin
       Result.ClaveResuelta   := '';
       Result.NombreBase      := q.FieldByName(fnomfot).AsString;
       Result.ExtensionOrigen := q.FieldByName(fextfot).AsString;
+    end;
+
+    // 3. Compatibilidad: si no hubo match exacto (SKU/prefijo) ni foto de
+    //    articulo, pero existe UNA sola foto del articulo (p.ej. una unica
+    //    foto por color descargada del servidor), la mostramos igualmente.
+    //    Si hay varias, no adivinamos y se mantiene "sin foto".
+    if not Result.Encontrada then
+    begin
+      q.Close;
+      q.SQL.Text :=
+        ' SELECT * FROM fza_articulos_fotos ' +
+        '  WHERE CODIGO_ART_FOT = :CODIGO_ART ' +
+        '  LIMIT 2';
+      q.ParamByName('CODIGO_ART').AsString := ACodArt;
+      q.Open;
+      if not q.Eof then
+      begin
+        sClave  := q.FieldByName(fcodunidadfot).AsString;
+        sNombre := q.FieldByName(fnomfot).AsString;
+        sExt    := q.FieldByName(fextfot).AsString;
+        q.Next;
+        if q.Eof then
+        begin
+          Result.Encontrada      := True;
+          if sClave = '' then
+            Result.Origen := foArticulo
+          else
+            Result.Origen := foSkuPrefijo;
+          Result.ClaveResuelta   := sClave;
+          Result.NombreBase      := sNombre;
+          Result.ExtensionOrigen := sExt;
+        end;
+      end;
     end;
   finally
     FreeAndNil(q);
