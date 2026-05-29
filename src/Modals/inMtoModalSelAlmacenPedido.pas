@@ -12,9 +12,10 @@
 {    Modal de "Crear albaran desde pedido". Estilo similar al modal de         }
 {    materializar sesion de compras (inMtoModalCrearAlbaranSesion):            }
 {                                                                              }
-{    1. Selector de almacen destino: lista los almacenes con cantidad          }
-{       pendiente de recibir en el pedido (calculada como                      }
-{       CANTIDAD_PEDCLIN - CANTIDAD_RECIBIDA_PEDCLIN agregada por almacen).   }
+{    1. Selector de almacen destino: combo libre con TODOS los almacenes      }
+{       activos. El almacen escogido es definitivo — el albaran y los         }
+{       movimientos se generan contra el, independientemente del que          }
+{       figure en las lineas del pedido.                                       }
 {    2. Serie del albaran (texto, default = serie del pedido).                 }
 {    3. Ref. proveedor (texto, default = ref del pedido).                      }
 {    4. Temporada (lookup, de fza_propiedades_valores filtrado a               }
@@ -37,8 +38,7 @@ uses
   cxClasses, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
   cxLocalization, cxButtons, cxControls, cxContainer, cxEdit,
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage,
-  cxNavigator, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
-  cxGridTableView, cxGrid, cxTextEdit, cxLabel, cxCalendar,
+  cxNavigator, cxTextEdit, cxLabel, cxCalendar,
   cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit,
   cxDBLookupComboBox,
   System.Actions, Vcl.ActnList,
@@ -52,12 +52,9 @@ type
     pnlBody:     TPanel;
     lblPedido:   TLabel;
     lblAlmacen:  TcxLabel;
-    cxgrdAlmacenes: TcxGrid;
-    tvAlmacenes:    TcxGridTableView;
-    cxgrdlvlAlm:    TcxGridLevel;
-    colCodigoAlm:   TcxGridColumn;
-    colNombreAlm:   TcxGridColumn;
-    colPendiente:   TcxGridColumn;
+    cbbAlmacen:     TcxLookupComboBox;
+    unqryAlmacenes: TUniQuery;
+    dsAlmacenes:    TDataSource;
     lblSerieAlb:    TcxLabel;
     txtSerieAlb:    TcxTextEdit;
     lblRefPrv:      TcxLabel;
@@ -77,7 +74,6 @@ type
     procedure btnAceptarClick(Sender: TObject);
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
-    procedure tvAlmacenesDblClick(Sender: TObject);
   private
     procedure CargarAlmacenes;
     procedure ConfigurarLookupTemporada;
@@ -132,10 +128,9 @@ begin
   else
     cbbTemporada.EditValue := Null;
   dteFecha.Date := Date;
-  if tvAlmacenes.DataController.RecordCount > 0 then
-    tvAlmacenes.Controller.FocusedRowIndex := 0;
-  if txtSerieAlb.CanFocus then
-    txtSerieAlb.SetFocus;
+  cbbAlmacen.EditValue := Null;
+  if cbbAlmacen.CanFocus then
+    cbbAlmacen.SetFocus;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormClose(Sender: TObject;
@@ -150,51 +145,21 @@ begin
 end;
 
 procedure TfrmModalSelAlmacenPedido.CargarAlmacenes;
-var
-  q: TUniQuery;
-  i: Integer;
 begin
-  tvAlmacenes.DataController.RecordCount := 0;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := inLibGlobalVar.oConn;
-    q.SQL.Text :=
-      'SELECT IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN,''''), ' +
-      '              P.CODIGO_ALM_PEDC) AS ALM, ' +
-      '       IFNULL(A.NOMBRE_ALM_ALM, '''') AS NOMBRE, ' +
-      '       SUM(L.CANTIDAD_PEDCLIN - ' +
-      '           IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0)) AS PEND ' +
-      '  FROM fza_pedidos_compra_lineas L ' +
-      '  JOIN fza_pedidos_compra P ' +
-      '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
-      '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
-      '  LEFT JOIN fza_almacenes A ' +
-      '    ON A.CODIGO_ALM_ALM = IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN,''''), ' +
-      '                                  P.CODIGO_ALM_PEDC) ' +
-      ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
-      '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
-      ' GROUP BY ALM, NOMBRE ' +
-      'HAVING PEND > 0 ' +
-      ' ORDER BY ALM';
-    q.ParamByName('s').AsString := SeriePedc;
-    q.ParamByName('n').AsString := NumPedc;
-    q.Open;
-    tvAlmacenes.DataController.RecordCount := q.RecordCount;
-    i := 0;
-    while not q.Eof do
-    begin
-      tvAlmacenes.DataController.Values[i, colCodigoAlm.Index] :=
-        q.FieldByName('ALM').AsString;
-      tvAlmacenes.DataController.Values[i, colNombreAlm.Index] :=
-        q.FieldByName('NOMBRE').AsString;
-      tvAlmacenes.DataController.Values[i, colPendiente.Index] :=
-        q.FieldByName('PEND').AsFloat;
-      Inc(i);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
+  // Combo libre: el usuario elige cualquier almacen activo, no solo
+  // los que tienen pendientes en el pedido. Asi el destinatario final
+  // (que en el modal es definitivo) puede ser distinto del que figura
+  // en las lineas — util cuando el pedido se generaliza al almacen
+  // central y el albaran se hace contra una tienda concreta.
+  unqryAlmacenes.Connection := inLibGlobalVar.oConn;
+  if not unqryAlmacenes.Active then
+    unqryAlmacenes.Open
+  else
+  begin
+    unqryAlmacenes.Close;
+    unqryAlmacenes.Open;
   end;
+  cbbAlmacen.Properties.ListSource := dsAlmacenes;
 end;
 
 procedure TfrmModalSelAlmacenPedido.ConfigurarLookupTemporada;
@@ -213,12 +178,6 @@ begin
   end;
 end;
 
-procedure TfrmModalSelAlmacenPedido.tvAlmacenesDblClick(Sender: TObject);
-begin
-  inherited;
-  btnAceptarClick(Sender);
-end;
-
 procedure TfrmModalSelAlmacenPedido.actAceptarExecute(Sender: TObject);
 begin
   inherited;
@@ -234,23 +193,16 @@ end;
 
 procedure TfrmModalSelAlmacenPedido.btnAceptarClick(Sender: TObject);
 var
-  iIdx: Integer;
   vAlm: Variant;
   vTmp: Variant;
 begin
   inherited;
   // Validaciones minimas.
-  iIdx := tvAlmacenes.Controller.FocusedRowIndex;
-  if (iIdx < 0) or (iIdx >= tvAlmacenes.DataController.RecordCount) then
+  vAlm := cbbAlmacen.EditValue;
+  if VarIsNull(vAlm) or VarIsEmpty(vAlm) or (Trim(VarToStr(vAlm)) = '') then
   begin
     MessageDlg('Selecciona un almacen.', mtInformation, [mbOk], 0);
-    Exit;
-  end;
-  vAlm := tvAlmacenes.DataController.Values[iIdx, colCodigoAlm.Index];
-  if VarIsNull(vAlm) or VarIsEmpty(vAlm) then
-  begin
-    MessageDlg('La fila seleccionada no tiene codigo de almacen.',
-               mtWarning, [mbOk], 0);
+    if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
     Exit;
   end;
   if Trim(txtSerieAlb.Text) = '' then
