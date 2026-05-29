@@ -76,7 +76,7 @@ type
     procedure RefrescarCola;
     procedure ProcesarImagen(const AImagen: TBitmap);
     procedure PedirPermisoCamara;
-    function ValidarArticulo: Boolean;
+    function ValidarDatosFoto: Boolean;
   public
   end;
 
@@ -170,21 +170,28 @@ begin
 {$ENDIF}
 end;
 
-function TfrmPrincipal.ValidarArticulo: Boolean;
+function TfrmPrincipal.ValidarDatosFoto: Boolean;
 begin
-  // El artículo es obligatorio para identificar la foto en el servidor.
-  Result := Trim(edArticulo.Text) <> '';
-  if not Result then
+  // Artículo y color son obligatorios: el webservice nombra el fichero
+  // como ARTICULO_COLOR_INDICE y exige los tres campos no vacíos.
+  Result := True;
+  if Trim(edArticulo.Text) = '' then
   begin
     Log('Indica el código de artículo antes de hacer la foto');
-    TabControl1.ActiveTab := tabCapturar;
     edArticulo.SetFocus;
+    Result := False;
+  end
+  else if Trim(edColor.Text) = '' then
+  begin
+    Log('Indica el color antes de hacer la foto');
+    edColor.SetFocus;
+    Result := False;
   end;
 end;
 
 procedure TfrmPrincipal.btnCamaraClick(Sender: TObject);
 begin
-  if ValidarArticulo then
+  if ValidarDatosFoto then
   begin
     // Limitamos la resolución ya en la captura para gastar menos memoria.
     actHacerFoto.MaxWidth := FConfig.ResolucionMaxima;
@@ -195,7 +202,7 @@ end;
 
 procedure TfrmPrincipal.btnGaleriaClick(Sender: TObject);
 begin
-  if ValidarArticulo then
+  if ValidarDatosFoto then
   begin
     actElegirFoto.MaxWidth := FConfig.ResolucionMaxima;
     actElegirFoto.MaxHeight := FConfig.ResolucionMaxima;

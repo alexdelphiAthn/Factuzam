@@ -80,7 +80,7 @@ object frmPrincipal: TfrmPrincipal
         Size.Width = 348.000000000000000000
         Size.Height = 18.000000000000000000
         Size.PlatformDefault = False
-        Text = 'Color (opcional)'
+        Text = 'Color (obligatorio)'
         TabOrder = 2
       end
       object edColor: TEdit
