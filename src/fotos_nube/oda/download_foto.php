@@ -60,7 +60,14 @@ if ($articulo === '') {
     salir_error(400, 'Falta el parámetro articulo.');
 }
 
-$color  = preg_replace('/[^A-Za-z0-9_-]/', '_', $colorRaw);
+// Color: misma regla de saneo que el cliente Delphi (SanearColorFoto) y que
+// upload_foto.php. Mayusculas; espacios -> '-'; simbolos prohibidos.
+$color  = strtoupper(trim($colorRaw));
+$color  = str_replace(' ', '-', $color);
+$color  = preg_replace('/[^A-Za-z0-9_-]/', '', $color);
+$color  = preg_replace('/-+/', '-', $color);
+$color  = preg_replace('/_+/', '_', $color);
+$color  = trim($color, '-_');
 $indice = preg_replace('/[^0-9]/',         '',  $indiceRaw);
 
 $resolucionesValidas = ['150', '300', 'real'];

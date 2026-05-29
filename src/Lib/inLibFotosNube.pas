@@ -50,11 +50,10 @@ function ElegirFotoRepresentativa(const AArchivos: TArray<string>): string;
 // ARTICULO_COLOR_INDICE_real.png) case con AColor. Si AColor = '' o no hay
 // coincidencia, cae en ElegirFotoRepresentativa. Sirve para integrar al
 // nivel artículo/color que muestra el visor de fotos.
-// OJO: AColor es el segmento de color del SKU = el VALOR DE ATRIBUTO
-// (fza_atributos_valores.AV: COLORAO, AZUL_CIELO, NEGRO...), el mismo token
-// con el que el servidor nombra el fichero. NO es el color de proveedor en
-// texto libre (COLOR_TEXTO_SESLIN: "011", "988"...) ni el código del
-// atributo básico (fza_atributos_basicos.CODIGO_ATB).
+// AColor es el segmento de color del SKU, que es el TEXTO DEL PROVEEDOR
+// saneado (persistido como fza_atributos_valores.AV; el color básico es solo
+// un helper de clasificación). El servidor nombra el fichero con ese mismo
+// token saneado (misma regla que SanearColorFoto) para que case.
 function ElegirFotoNubePorColor(const AArchivos: TArray<string>;
                                 const AColor: string): string;
 
@@ -254,17 +253,35 @@ begin
   end;
 end;
 
-function SanearServidor(const AValor: string): string;
+function SanearColorFoto(const AValor: string): string;
 var
-  i: Integer;
+  i        : Integer;
+  sParcial : string;
+  c        : Char;
 begin
-  // Misma sanitizacion que los PHP del servidor: [^A-Za-z0-9_-] -> '_'.
-  Result := AValor;
-  for i := 1 to Length(Result) do
+  // Misma regla que SanearColorSku (inLibComprasSesionesMaterializar) y que
+  // debe usar el servidor de fotos al nombrar el token COLOR: mayusculas;
+  // espacios -> '-'; se conservan letras, digitos, '-' y '_'; el resto de
+  // simbolos (/, %, EUR, ...) se descarta. Asi el color del SKU y el de la
+  // foto casan exactamente.
+  sParcial := UpperCase(Trim(AValor));
+  Result := '';
+  for i := 1 to Length(sParcial) do
   begin
-    if not CharInSet(Result[i], ['A'..'Z', 'a'..'z', '0'..'9', '_', '-']) then
-      Result[i] := '_';
+    c := sParcial[i];
+    if c = ' ' then
+      Result := Result + '-'
+    else if CharInSet(c, ['A'..'Z', '0'..'9', '-', '_']) then
+      Result := Result + c;
   end;
+  while Pos('--', Result) > 0 do
+    Result := StringReplace(Result, '--', '-', [rfReplaceAll]);
+  while Pos('__', Result) > 0 do
+    Result := StringReplace(Result, '__', '_', [rfReplaceAll]);
+  while (Result <> '') and CharInSet(Result[1], ['-', '_']) do
+    Delete(Result, 1, 1);
+  while (Result <> '') and CharInSet(Result[Length(Result)], ['-', '_']) do
+    Delete(Result, Length(Result), 1);
 end;
 
 function ElegirFotoNubePorColor(const AArchivos: TArray<string>;
@@ -276,7 +293,7 @@ var
   sBase : string;
 begin
   Result := '';
-  sColor := UpperCase(SanearServidor(Trim(AColor)));
+  sColor := SanearColorFoto(AColor);
   if sColor = '' then
     Result := ElegirFotoRepresentativa(AArchivos)
   else
@@ -288,7 +305,7 @@ begin
       for i := 0 to High(AArchivos) do
         orden.Add(AArchivos[i]);
       // Buscamos un '_real' cuyo nombre contenga el token _COLOR_, donde
-      // COLOR es el valor de atributo del SKU (no el color de proveedor).
+      // COLOR es el color del SKU (texto del proveedor saneado).
       for i := 0 to orden.Count - 1 do
       begin
         sBase := UpperCase(ExtractFileName(orden[i]));
