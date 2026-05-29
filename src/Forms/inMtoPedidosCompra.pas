@@ -179,6 +179,11 @@ type
     procedure PersistirPreferenciaPivote;
     function  RecogerCeldasARecibirVertical(
                                 const ACodigoAlm: string): TArray<TCeldaARecibir>;
+    // Hook unificado para OnEditValueChanged de columnas talla: en
+    // pivote expandido captura el valor en el dict de la libreria
+    // (persistencia frente a Post de cxGrid); en el resto de modos
+    // delega en el gestor de tallas como antes.
+    procedure TallaEditValueChangedHook(Sender: TObject);
     function  ColumnaPedidosCompraExiste(const ANombreColumna: string): Boolean;
     // ApplyBestFit + ensanche para la columna Color (el cuadradito de
     // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
@@ -360,7 +365,7 @@ begin
   for i := 0 to CANT_TALLAS_MAX - 1 do
     if FTallaColumns[i] <> nil then
       TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnEditValueChanged := FGestorTallas.PersistirCeldaActiva;
+        OnEditValueChanged := TallaEditValueChangedHook;
   // 2. Orquestador de pivote (libreria nueva compartida con albaranes).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := inLibGlobalVar.oConn;
@@ -803,6 +808,14 @@ end;
 // Recoge las cantidades "A recibir" tecleadas en modo vertical (no
 // pivote). Lee la columna no-bound colLineaPedcARecibir para cada
 // linea del dataset, y devuelve las que tengan cantidad > 0.
+procedure TfrmMtoPedidosCompra.TallaEditValueChangedHook(Sender: TObject);
+begin
+  if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
+    FPivote.CapturarARecibirEditValueChanged(Sender)
+  else if Assigned(FGestorTallas) then
+    FGestorTallas.PersistirCeldaActiva(Sender);
+end;
+
 function TfrmMtoPedidosCompra.RecogerCeldasARecibirVertical(
                                   const ACodigoAlm: string): TArray<TCeldaARecibir>;
 var
