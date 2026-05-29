@@ -460,7 +460,6 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Properties.DisplayFormat = '#,##0.###'
                     Options.Editing = True
                     Options.Focusing = True
-                    Options.Tabstop = True
                     Width = 90
                   end
                   object colLineaPedcPRECIO_COMPRA: TcxGridDBColumn
