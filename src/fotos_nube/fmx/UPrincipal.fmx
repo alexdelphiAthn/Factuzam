@@ -6,7 +6,7 @@ object frmPrincipal: TfrmPrincipal
   ClientWidth = 360
   FormFactor.Width = 320
   FormFactor.Height = 480
-  FormFactor.Devices = [Desktop, iPhone, iPad, Android]
+  FormFactor.Devices = [Desktop, iPhone, iPad]
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   DesignerMasterStyle = 0
@@ -15,29 +15,34 @@ object frmPrincipal: TfrmPrincipal
     DataDetectorTypes = []
     ReadOnly = True
     StyledSettings = [Family, Style, FontColor]
-    TextSettings.Font.Size = 12.000000000000000000
     Align = Bottom
-    Height = 130.000000000000000000
     Position.Y = 510.000000000000000000
     Size.Width = 360.000000000000000000
     Size.Height = 130.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
+    Viewport.Width = 356.000000000000000000
+    Viewport.Height = 126.000000000000000000
   end
   object TabControl1: TTabControl
     Align = Client
     Size.Width = 360.000000000000000000
     Size.Height = 510.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 1
     TabPosition = PlatformDefault
+    Sizes = (
+      360s
+      484s
+      360s
+      484s)
     object tabCapturar: TTabItem
       CustomIcon = <
         item
         end>
-      IsSelected = True
-      Size.Width = 73.000000000000000000
+      IsSelected = False
+      Size.Width = 66.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
@@ -59,15 +64,16 @@ object frmPrincipal: TfrmPrincipal
         TabOrder = 0
       end
       object edArticulo: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
         Align = Top
-        Margins.Left = 6.000000000000000000
-        Margins.Right = 6.000000000000000000
+        TabOrder = 1
         Position.X = 6.000000000000000000
         Position.Y = 24.000000000000000000
+        Margins.Left = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 40.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 1
         TextPrompt = 'C'#243'digo de art'#237'culo'
       end
       object lblColor: TLabel
@@ -84,20 +90,23 @@ object frmPrincipal: TfrmPrincipal
         TabOrder = 2
       end
       object edColor: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
         Align = Top
-        Margins.Left = 6.000000000000000000
-        Margins.Right = 6.000000000000000000
+        TabOrder = 3
         Position.X = 6.000000000000000000
         Position.Y = 86.000000000000000000
+        Margins.Left = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 40.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 3
         TextPrompt = 'Color'
       end
       object imgPrevia: TImage
+        MultiResBitmap = <
+          item
+          end>
         Align = Top
-        Height = 140.000000000000000000
         Margins.Left = 6.000000000000000000
         Margins.Top = 6.000000000000000000
         Margins.Right = 6.000000000000000000
@@ -106,7 +115,6 @@ object frmPrincipal: TfrmPrincipal
         Size.Width = 348.000000000000000000
         Size.Height = 140.000000000000000000
         Size.PlatformDefault = False
-        WrapMode = Fit
       end
       object btnCamara: TButton
         Align = Top
@@ -143,7 +151,7 @@ object frmPrincipal: TfrmPrincipal
         Margins.Right = 6.000000000000000000
         Margins.Bottom = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 430.000000000000000000
+        Position.Y = 434.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 44.000000000000000000
         Size.PlatformDefault = False
@@ -152,15 +160,15 @@ object frmPrincipal: TfrmPrincipal
         OnClick = btnSubirClick
       end
       object lstCola: TListView
-        ItemAppearanceName = 'ListItemRightDetail'
-        ItemEditAppearanceName = 'ListItemRightDetail'
-        HeaderAppearanceName = 'ListHeader'
-        FooterAppearanceName = 'ListFooter'
+        ItemAppearanceClassName = 'TListItemAppearance'
+        ItemEditAppearanceClassName = 'TListItemShowCheckAppearance'
+        HeaderAppearanceClassName = 'TListHeaderObjects'
+        FooterAppearanceClassName = 'TListHeaderObjects'
         Align = Client
         Margins.Left = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Size.Width = 348.000000000000000000
-        Size.Height = 102.000000000000000000
+        Size.Height = 56.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 7
       end
@@ -169,7 +177,8 @@ object frmPrincipal: TfrmPrincipal
       CustomIcon = <
         item
         end>
-      Size.Width = 95.000000000000000000
+      IsSelected = True
+      Size.Width = 94.000000000000000000
       Size.Height = 26.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = ''
@@ -182,7 +191,6 @@ object frmPrincipal: TfrmPrincipal
         Size.Width = 360.000000000000000000
         Size.Height = 484.000000000000000000
         Size.PlatformDefault = False
-        ShowScrollBars = True
         TabOrder = 0
         Viewport.Width = 360.000000000000000000
         Viewport.Height = 484.000000000000000000
@@ -200,15 +208,17 @@ object frmPrincipal: TfrmPrincipal
           TabOrder = 0
         end
         object edUrl: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
           Align = Top
-          Margins.Left = 6.000000000000000000
-          Margins.Right = 6.000000000000000000
+          TabOrder = 1
+          Text = 'https://webservice.veryverifactu.com/upload_foto.php'
           Position.X = 6.000000000000000000
           Position.Y = 26.000000000000000000
+          Margins.Left = 6.000000000000000000
+          Margins.Right = 6.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 1
           TextPrompt = 'https://servidor/fotos/upload_foto.php'
         end
         object lblApiKey: TLabel
@@ -217,7 +227,7 @@ object frmPrincipal: TfrmPrincipal
           Margins.Top = 6.000000000000000000
           Margins.Right = 6.000000000000000000
           Position.X = 6.000000000000000000
-          Position.Y = 66.000000000000000000
+          Position.Y = 72.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
@@ -225,15 +235,17 @@ object frmPrincipal: TfrmPrincipal
           TabOrder = 2
         end
         object edApiKey: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
           Align = Top
+          TabOrder = 3
+          Text = 'k7Hq9mZ2pXvR4nL8'
+          Position.X = 6.000000000000000000
+          Position.Y = 92.000000000000000000
           Margins.Left = 6.000000000000000000
           Margins.Right = 6.000000000000000000
-          Position.X = 6.000000000000000000
-          Position.Y = 86.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 3
           TextPrompt = 'Clave de acceso (X-API-Key)'
         end
         object lblCarpetaCliente: TLabel
@@ -242,7 +254,7 @@ object frmPrincipal: TfrmPrincipal
           Margins.Top = 6.000000000000000000
           Margins.Right = 6.000000000000000000
           Position.X = 6.000000000000000000
-          Position.Y = 126.000000000000000000
+          Position.Y = 138.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
@@ -250,15 +262,17 @@ object frmPrincipal: TfrmPrincipal
           TabOrder = 4
         end
         object edCarpetaCliente: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
           Align = Top
+          TabOrder = 5
+          Text = 'herreras'
+          Position.X = 6.000000000000000000
+          Position.Y = 158.000000000000000000
           Margins.Left = 6.000000000000000000
           Margins.Right = 6.000000000000000000
-          Position.X = 6.000000000000000000
-          Position.Y = 146.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 5
           TextPrompt = 'Carpeta del cliente en el servidor'
         end
         object lblResolucion: TLabel
@@ -267,7 +281,7 @@ object frmPrincipal: TfrmPrincipal
           Margins.Top = 6.000000000000000000
           Margins.Right = 6.000000000000000000
           Position.X = 6.000000000000000000
-          Position.Y = 186.000000000000000000
+          Position.Y = 204.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
@@ -275,17 +289,18 @@ object frmPrincipal: TfrmPrincipal
           TabOrder = 6
         end
         object edResolucion: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
           Align = Top
+          TabOrder = 7
+          KeyboardType = NumberPad
+          Text = '1000'
+          Position.X = 6.000000000000000000
+          Position.Y = 224.000000000000000000
           Margins.Left = 6.000000000000000000
           Margins.Right = 6.000000000000000000
-          Position.X = 6.000000000000000000
-          Position.Y = 206.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          KeyboardType = NumberPad
-          TabOrder = 7
-          Text = '1000'
           TextPrompt = '1000'
         end
         object btnGuardarConfig: TButton
@@ -294,7 +309,7 @@ object frmPrincipal: TfrmPrincipal
           Margins.Top = 12.000000000000000000
           Margins.Right = 6.000000000000000000
           Position.X = 6.000000000000000000
-          Position.Y = 258.000000000000000000
+          Position.Y = 276.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 44.000000000000000000
           Size.PlatformDefault = False
@@ -304,17 +319,16 @@ object frmPrincipal: TfrmPrincipal
         end
         object lblRutaIni: TLabel
           Align = Top
+          StyledSettings = [Family, Style, FontColor]
           Margins.Left = 6.000000000000000000
           Margins.Top = 6.000000000000000000
           Margins.Right = 6.000000000000000000
           Position.X = 6.000000000000000000
-          Position.Y = 302.000000000000000000
+          Position.Y = 326.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 32.000000000000000000
           Size.PlatformDefault = False
-          StyledSettings = [Family, Style, FontColor]
           TextSettings.Font.Size = 11.000000000000000000
-          TextSettings.WordWrap = True
           Text = 'INI:'
           TabOrder = 9
         end

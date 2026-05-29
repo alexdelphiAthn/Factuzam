@@ -34,7 +34,9 @@ fmx/
    key, carpeta de cliente (`carpeta_cliente`, obligatoria) y resolución
    máxima (por defecto 1000). Se guarda en `fotosnube.ini` dentro de la
    carpeta de documentos de la app (sandbox). La ruta exacta se muestra en
-   pantalla.
+   pantalla. **La carpeta del cliente debe existir ya en el servidor**: se
+   dan de alta a mano para evitar duplicados por errores de tecleo. Si no
+   existe, el webservice responde 404 y la app muestra el mensaje.
 2. **Capturar** (pestaña *Capturar*): se teclea el **código de artículo**
    y el **color** (ambos obligatorios); *Hacer foto* abre la cámara y
    *Elegir de galería* la toma del carrete. Cada foto se reduce al máximo
@@ -81,14 +83,31 @@ API key también por cabecera `X-API-Key`. Respuesta JSON:
 
 ### Permisos de Android
 
-La app pide el permiso de **cámara** en tiempo de ejecución
-(`PedirPermisoCamara` en `UPrincipal`). Además hay que **marcar los
-permisos** en *Project ▸ Options ▸ Application ▸ Uses Permissions*:
+La app pide el permiso de **cámara** en tiempo de ejecución al pulsar
+*Hacer foto* (`ConPermisoCamara` en `UPrincipal`). **Pero eso solo funciona
+si el permiso está declarado en el manifest**: hay que **marcar los
+permisos** en *Project ▸ Options ▸ Application ▸ Uses Permissions* (con la
+plataforma **Android 64-bit** seleccionada):
 
-- `Camera` (cámara).
+- `Camera` (cámara) — **obligatorio**; si no, Android deniega sin preguntar.
 - `Internet` (ya activo por defecto) — necesario para la subida.
 - `Read external storage` / `Read media images` — para *Elegir de
   galería* según versión de Android.
+
+(Los permisos también van declarados como `Android_*` en el `.dproj`, así
+que normalmente no hay que tocarlos a mano.)
+
+### Icono y splash de Android
+
+El proyecto **no incluye** icono ni splash propios: se generan desde el IDE
+en *Project ▸ Options ▸ Application ▸ Icons* y *Splash Images* (con
+**Android 64-bit** seleccionado), p. ej. con un texto convertido en imagen.
+El IDE añade los recursos y su despliegue al `.dproj` al guardarlos.
+El tema es `NoTitleBar` para no depender del icono de la ActionBar al
+arrancar (antes causaba un crash `Resources NotFoundException`).
+
+Si ya instalaste la app y denegaste el permiso, vuelve a concederlo en
+*Ajustes de Android ▸ Aplicaciones ▸ Factuzam Fotos Nube ▸ Permisos*.
 
 ## Nota sobre la versión (regla 6 de CLAUDE.md)
 

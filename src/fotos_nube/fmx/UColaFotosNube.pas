@@ -190,42 +190,41 @@ begin
       HTTP.CustomHeaders['X-API-Key'] := FApiKey;
       Res := HTTP.Post(FUrl, Form, nil);
       Cuerpo := Res.ContentAsString;
-      if Res.StatusCode <> 200 then
+      // Respuesta JSON { status, message, sha1, ... }. La parseamos
+      // siempre (tambien en error) para mostrar el 'message' del servidor,
+      // p.ej. "La carpeta del cliente 'X' no existe" en un 404.
+      Estado := '';
+      AItem.Hash := '';
+      AItem.Mensaje := Cuerpo;
+      Json := TJSONObject.ParseJSONValue(Cuerpo);
+      try
+        if Json is TJSONObject then
+        begin
+          Obj := TJSONObject(Json);
+          Valor := Obj.GetValue('status');
+          if Valor <> nil then
+            Estado := Valor.Value;
+          Valor := Obj.GetValue('sha1');
+          if Valor <> nil then
+            AItem.Hash := Valor.Value;
+          Valor := Obj.GetValue('message');
+          if Valor <> nil then
+            AItem.Mensaje := Valor.Value;
+        end;
+      finally
+        Json.Free;
+      end;
+      if (Res.StatusCode = 200) and SameText(Estado, 'success') then
       begin
-        AItem.Estado := esError;
-        AItem.Mensaje := Format('HTTP %d: %s', [Res.StatusCode, Cuerpo]);
+        AItem.Estado := esOk;
+        Result := True;
       end
       else
       begin
-        // Respuesta JSON { status, message, sha1, ... }.
-        Estado := '';
-        AItem.Hash := '';
-        AItem.Mensaje := Cuerpo;
-        Json := TJSONObject.ParseJSONValue(Cuerpo);
-        try
-          if Json is TJSONObject then
-          begin
-            Obj := TJSONObject(Json);
-            Valor := Obj.GetValue('status');
-            if Valor <> nil then
-              Estado := Valor.Value;
-            Valor := Obj.GetValue('sha1');
-            if Valor <> nil then
-              AItem.Hash := Valor.Value;
-            Valor := Obj.GetValue('message');
-            if Valor <> nil then
-              AItem.Mensaje := Valor.Value;
-          end;
-        finally
-          Json.Free;
-        end;
-        if SameText(Estado, 'success') then
-        begin
-          AItem.Estado := esOk;
-          Result := True;
-        end
-        else
-          AItem.Estado := esError;
+        AItem.Estado := esError;
+        // Si el servidor no dio un mensaje util, dejamos el codigo HTTP.
+        if AItem.Mensaje = Cuerpo then
+          AItem.Mensaje := Format('HTTP %d: %s', [Res.StatusCode, Cuerpo]);
       end;
     finally
       Form.Free;

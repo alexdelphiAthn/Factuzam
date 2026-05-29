@@ -109,19 +109,15 @@ if (!extension_loaded('gd')) {
 $baseStorage = __DIR__ . DIRECTORY_SEPARATOR . 'cloud_storage';
 $uploadDir   = $baseStorage . DIRECTORY_SEPARATOR . $carpetaCliente . DIRECTORY_SEPARATOR;
 
-// Asegurar el almacén base. carpeta_cliente ya viene saneada a
-// [A-Za-z0-9_-], asi que crear su carpeta no permite path traversal y deja
-// que un cliente nuevo (p.ej. la app movil) suba sin aprovisionar a mano.
-if (!is_dir($baseStorage) && !@mkdir($baseStorage, 0775, true) && !is_dir($baseStorage)) {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'No se pudo crear el almacen base.']);
-    exit;
-}
-if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
-    http_response_code(500);
+// La carpeta del cliente debe existir previamente. NO se crea aqui: las
+// carpetas de cliente se dan de alta a mano para evitar que un error de
+// tecleo (carpeta_cliente mal escrita) genere carpetas duplicadas para un
+// mismo cliente y distorsione el almacen.
+if (!is_dir($uploadDir)) {
+    http_response_code(404);
     echo json_encode([
         'status'  => 'error',
-        'message' => "No se pudo crear la carpeta del cliente '$carpetaCliente'."
+        'message' => "La carpeta del cliente '$carpetaCliente' no existe."
     ]);
     exit;
 }
