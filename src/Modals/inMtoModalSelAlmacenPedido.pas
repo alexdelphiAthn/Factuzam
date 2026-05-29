@@ -142,7 +142,11 @@ procedure TfrmModalSelAlmacenPedido.FormClose(Sender: TObject;
                                               var Action: TCloseAction);
 begin
   inherited;
-  Action := caFree;
+  // No usar caFree: el llamador (btnCrearAlbaranClick) hace
+  // FreeAndNil(form) en su finally. Si la cerramos aqui dejamos un
+  // puntero colgante que provoca double-free AV al leer Aceptado /
+  // CodigoAlmacen / etc tras ShowModal.
+  Action := caHide;
 end;
 
 procedure TfrmModalSelAlmacenPedido.CargarAlmacenes;
