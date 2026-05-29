@@ -1238,7 +1238,7 @@ procedure InsertarLineaPedidoCompra(AConn: TUniConnection;
                                            ACodigoSku, ACodigoFam,
                                            ANombreFam, ADescripcion,
                                            ACodigoAlm, ATipoIva,
-                                           ARefPrv,
+                                           ARefPrv, AColorTexto,
                                            AUsuario: string;
                                      ACantidad, APrecio,
                                      APorIva: Double;
@@ -1254,7 +1254,7 @@ begin
       '  (NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN, LINEA_PEDCLIN, ' +
       '   CODIGO_ART_PEDCLIN, CODIGO_UNIDAD_PEDCLIN, REF_PRV_PEDCLIN, ' +
       '   ID_AC_PIVOT_PEDCLIN, ' +
-      '   CODIGO_FAM_PEDCLIN, NOMBRE_FAM_PEDCLIN, ' +
+      '   CODIGO_FAM_PEDCLIN, NOMBRE_FAM_PEDCLIN, COLOR_TEXTO_PEDCLIN, ' +
       '   DESCRIPCION_ARTICULO_PEDCLIN, TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
       '   CANTIDAD_PEDCLIN, CANTIDAD_RECIBIDA_PEDCLIN, ' +
       '   TIPO_IVA_ARTICULO_PEDCLIN, PORCENTAJE_IVA_PEDCLIN, ' +
@@ -1263,7 +1263,7 @@ begin
       '   TOTAL_PEDCLIN, CODIGO_ALMACEN_PEDCLIN, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
       'VALUES (:n, :s, :l, :art, :sku, :refprv, :acpivot, ' +
-      '        :fam, :nomfam, :desc, ''Uds'', ' +
+      '        :fam, :nomfam, :coltxt, :desc, ''Uds'', ' +
       '        :cant, 0, :tiva, :piva, :pre, :preciva, :tot, :alm, ' +
       '        NOW(), :u, NOW(), :u)';
     q.ParamByName('n').AsString    := ANumPedc;
@@ -1281,6 +1281,10 @@ begin
       q.ParamByName('acpivot').Clear;
     q.ParamByName('fam').AsString  := ACodigoFam;
     q.ParamByName('nomfam').AsString := ANombreFam;
+    if AColorTexto <> '' then
+      q.ParamByName('coltxt').AsString := AColorTexto
+    else
+      q.ParamByName('coltxt').Clear;
     q.ParamByName('desc').AsString := ADescripcion;
     q.ParamByName('cant').AsFloat  := ACantidad;
     q.ParamByName('tiva').AsString := ATipoIva;
@@ -1391,6 +1395,7 @@ begin
         sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam, sDescripcion,
         sCodigoAlm, sTipoIva,
         qC.FieldByName('REF_PRV').AsString,
+        qC.FieldByName('COLOR_TEXTO').AsString,
         AUsuario,
         rCantidad, rCoste, rPorIva, iIdAcPivot);
       qC.Next;
