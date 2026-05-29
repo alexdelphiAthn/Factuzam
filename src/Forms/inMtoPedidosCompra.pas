@@ -218,6 +218,11 @@ begin
   // controlador de pivote.
   if Assigned(FPivote) then
     FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
+  // Hook OnKeyDown del grid: lo conectamos en runtime porque cxGrid no
+  // publica este evento en el DFM (al ser heredado de TWinControl no
+  // queda visible al streaming, y meterlo en .dfm da EReadError
+  // "Property OnKeyDown does not exist").
+  cxgrdLineasPedido.OnKeyDown := cxgrdLineasPedidoKeyDown;
   // Hook OnDataChange del master: al cambiar de pedido activo, el
   // controlador recarga su cache y republica.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
