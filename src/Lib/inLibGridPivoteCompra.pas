@@ -45,7 +45,7 @@ uses
   Data.DB, DBAccess, Uni,
   Vcl.Controls, Vcl.Graphics,
   cxClasses, cxGraphics, cxControls, cxCustomData,
-  cxEdit,
+  cxEdit, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   inLibGridTallasInline,
