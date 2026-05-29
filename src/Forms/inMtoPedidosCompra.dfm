@@ -264,6 +264,28 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 17
                 Width = 120
               end
+              object lblTemporada: TcxLabel
+                Left = 656
+                Top = 72
+                Caption = 'Temporada'
+                TabOrder = 18
+                Transparent = True
+              end
+              object cbbTemporadaPedc: TcxDBLookupComboBox
+                Left = 656
+                Top = 92
+                DataBinding.DataField = 'ID_PV_TEMPORADA_PEDC'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'ID_PV_ARTPROP'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Temporada'
+                    FieldName = 'PV'
+                  end>
+                Properties.ListOptions.ShowHeader = False
+                TabOrder = 19
+                Width = 180
+              end
             end
           end
         end
@@ -275,8 +297,17 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          object lblContextoTalla: TcxLabel
+          object btnRecibirFilaEntera: TcxButton
             Left = 8
+            Top = 38
+            Width = 180
+            Height = 26
+            Caption = 'Recibir fila entera'
+            TabOrder = 6
+            OnClick = btnRecibirFilaEnteraClick
+          end
+          object lblContextoTalla: TcxLabel
+            Left = 200
             Top = 38
             Caption = ''
             Style.Font.Charset = DEFAULT_CHARSET
@@ -287,7 +318,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             Style.IsFontAssigned = True
             Visible = False
             Transparent = True
-            Width = 920
+            Width = 728
           end
           object btnAnadirLinea: TcxButton
             Left = 8

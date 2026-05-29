@@ -1197,6 +1197,7 @@ begin
       '   POBLACION_PRV_PEDC, PROVINCIA_PRV_PEDC, ' +
       '   CODIGO_POSTAL_PRV_PEDC, ' +
       '   REF_PROVEEDOR_PEDC, CODIGO_ALM_PEDC, ' +
+      '   ID_PV_TEMPORADA_PEDC, ' +
       '   TOTAL_BASES_PEDC, TOTAL_IMPUESTOS_PEDC, TOTAL_LIQUIDO_PEDC, ' +
       '   CONTADOR_LINEAS_PEDC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
@@ -1214,6 +1215,7 @@ begin
       '       P.CODIGO_POSTAL_PRV, ' +
       '       S.REF_PRV_SES, ' +
       '       CASE WHEN :alm_ovr <> '''' THEN :alm_ovr ELSE S.CODIGO_ALM_SES END, ' +
+      '       S.ID_PV_TEMPORADA_SES, ' +
       '       0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
       '  FROM fza_compras_sesiones S ' +
