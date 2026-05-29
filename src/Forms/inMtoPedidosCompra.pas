@@ -130,6 +130,10 @@ type
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
                 var AAllow: Boolean);
+    procedure tvLineasPedidoInitEdit(
+                Sender: TcxCustomGridTableView;
+                AItem: TcxCustomGridTableItem;
+                AEdit: TcxCustomEdit);
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
   private
@@ -196,14 +200,16 @@ begin
   FColColorProveedorPivot := tvLineasPedido.CreateColumn;
   FColColorProveedorPivot.Name    := 'colLinPedcColorProveedor';
   FColColorProveedorPivot.Caption := 'Color';
-  FColColorProveedorPivot.Width   := 90;
+  FColColorProveedorPivot.Width   := 120;
   FColColorProveedorPivot.Visible := False;
   FColColorProveedorPivot.Options.Editing := False;
-  // Columna 'C. basico': nombre del color basico + cuadradito visual.
+  // Columna 'C. Basico': nombre del color basico + cuadradito visual.
+  // Caption sin tildes para evitar la 'a' como cuadradito que sale en
+  // cxGrid cuando la unidad .pas no tiene BOM UTF-8.
   FColColorPivot := tvLineasPedido.CreateColumn;
   FColColorPivot.Name    := 'colLinPedcColorPivot';
-  FColColorPivot.Caption := 'C. b'#225'sico';
-  FColColorPivot.Width   := 110;
+  FColColorPivot.Caption := 'C. Basico';
+  FColColorPivot.Width   := 130;
   FColColorPivot.Visible := False;
   FColColorPivot.Options.Editing := False;
   inherited;
@@ -682,6 +688,18 @@ begin
   inherited;
   if Assigned(FPivote) then
     FPivote.EditingCeldaTalla(Sender, AItem, AAllow);
+end;
+
+// Reposiciona el inplace editor al tercio inferior de la celda talla en
+// modo expandido para que Pedido y Recibida sigan visibles arriba
+// mientras el usuario teclea A recibir. Delegamos en la libreria.
+procedure TfrmMtoPedidosCompra.tvLineasPedidoInitEdit(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  AEdit: TcxCustomEdit);
+begin
+  inherited;
+  if Assigned(FPivote) then
+    FPivote.InitEditCeldaTalla(Sender, AItem, AEdit);
 end;
 
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoEnter(Sender: TObject);
