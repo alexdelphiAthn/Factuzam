@@ -1,6 +1,6 @@
 
 **ON PROGRESS**
-
+- probar foto y traer de la nube foto.
 - no salen los traspasos en control + U Poner entrada traspaso, Salida Traspaso (TR y AT)-- (acumular estados en fza_stocks) **pendiente probar** (MEJORA: agrupar Entradas/Salidas con checks de subtipo: compras, traspasos, depósitos, ventas. Los depósitos también son salidas.)
 
 **PENDIENTES**
