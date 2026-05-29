@@ -365,6 +365,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 object tvLineasPedido: TcxGridDBTableView
                   OnCustomDrawCell = tvLineasPedidoCustomDrawCell
                   OnEditing = tvLineasPedidoEditing
+                  OnInitEdit = tvLineasPedidoInitEdit
                   OnFocusedRecordChanged = tvLineasPedidoFocusedRecordChanged
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.FocusFirstCellOnNewRecord = True
