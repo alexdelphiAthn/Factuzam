@@ -83,14 +83,19 @@ API key también por cabecera `X-API-Key`. Respuesta JSON:
 
 ### Permisos de Android
 
-La app pide el permiso de **cámara** en tiempo de ejecución
-(`PedirPermisoCamara` en `UPrincipal`). Además hay que **marcar los
-permisos** en *Project ▸ Options ▸ Application ▸ Uses Permissions*:
+La app pide el permiso de **cámara** en tiempo de ejecución al pulsar
+*Hacer foto* (`ConPermisoCamara` en `UPrincipal`). **Pero eso solo funciona
+si el permiso está declarado en el manifest**: hay que **marcar los
+permisos** en *Project ▸ Options ▸ Application ▸ Uses Permissions* (con la
+plataforma **Android 64-bit** seleccionada):
 
-- `Camera` (cámara).
+- `Camera` (cámara) — **obligatorio**; si no, Android deniega sin preguntar.
 - `Internet` (ya activo por defecto) — necesario para la subida.
 - `Read external storage` / `Read media images` — para *Elegir de
   galería* según versión de Android.
+
+Si ya instalaste la app y denegaste el permiso, vuelve a concederlo en
+*Ajustes de Android ▸ Aplicaciones ▸ Factuzam Fotos Nube ▸ Permisos*.
 
 ## Nota sobre la versión (regla 6 de CLAUDE.md)
 

@@ -75,7 +75,9 @@ type
     procedure UIAConfig;
     procedure RefrescarCola;
     procedure ProcesarImagen(const AImagen: TBitmap);
-    procedure PedirPermisoCamara;
+    // Pide el permiso de camara (Android) y, si se concede, ejecuta
+    // ATrasConceder. En el resto de plataformas ejecuta directamente.
+    procedure ConPermisoCamara(const ATrasConceder: TProc);
     function ValidarDatosFoto: Boolean;
   public
   end;
@@ -110,7 +112,6 @@ begin
   FCola := TColaFotos.Create;
   ConfigAUI;
   RefrescarCola;
-  PedirPermisoCamara;
   Log('Factuzam Fotos Nube ' + cVersionApp);
   Log('Configuración: ' + FConfig.RutaIni);
 end;
@@ -153,20 +154,29 @@ begin
     IntToStr(FConfig.ResolucionMaxima) + ' px)');
 end;
 
-procedure TfrmPrincipal.PedirPermisoCamara;
+procedure TfrmPrincipal.ConPermisoCamara(const ATrasConceder: TProc);
 begin
-  // En Android hay que pedir el permiso de cámara en tiempo de
-  // ejecución; en el resto de plataformas no hace nada.
+  // En Android se pide el permiso de cámara en tiempo de ejecución, justo
+  // al ir a usarla, y solo si se concede se ejecuta la acción. En el resto
+  // de plataformas se ejecuta directamente.
 {$IFDEF ANDROID}
   PermissionsService.RequestPermissions(
     [JStringToString(TJManifest_permission.JavaClass.CAMERA)],
     procedure(const APermissions: TClassicStringDynArray;
       const AGrantResults: TClassicPermissionStatusDynArray)
     begin
-      if (Length(AGrantResults) = 0) or
-         (AGrantResults[0] <> TPermissionStatus.Granted) then
-        Log('Permiso de cámara no concedido');
+      if (Length(AGrantResults) = 1) and
+         (AGrantResults[0] = TPermissionStatus.Granted) then
+      begin
+        if Assigned(ATrasConceder) then
+          ATrasConceder();
+      end
+      else
+        Log('Permiso de cámara no concedido. Actívalo en Ajustes de Android.');
     end);
+{$ELSE}
+  if Assigned(ATrasConceder) then
+    ATrasConceder();
 {$ENDIF}
 end;
 
@@ -192,12 +202,15 @@ end;
 procedure TfrmPrincipal.btnCamaraClick(Sender: TObject);
 begin
   if ValidarDatosFoto then
-  begin
-    // Limitamos la resolución ya en la captura para gastar menos memoria.
-    actHacerFoto.MaxWidth := FConfig.ResolucionMaxima;
-    actHacerFoto.MaxHeight := FConfig.ResolucionMaxima;
-    actHacerFoto.ExecuteTarget(Self);
-  end;
+    // Pedimos el permiso al ir a usar la cámara; si se concede, dispara.
+    ConPermisoCamara(
+      procedure
+      begin
+        // Limitamos la resolución ya en la captura para gastar memoria.
+        actHacerFoto.MaxWidth := FConfig.ResolucionMaxima;
+        actHacerFoto.MaxHeight := FConfig.ResolucionMaxima;
+        actHacerFoto.ExecuteTarget(Self);
+      end);
 end;
 
 procedure TfrmPrincipal.btnGaleriaClick(Sender: TObject);
