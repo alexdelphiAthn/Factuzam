@@ -737,10 +737,12 @@ begin
       '       L.' + FCfg.FieldArt + ' AS ART, ' +
       '       COALESCE(L.' + FCfg.FieldIdAcPivot + ', 0) AS ID_AC, ' +
       '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
-      // COLOR_TXT: SIEMPRE el COLOR BASICO (nombre del atributo basico,
-      // como "VERDE" o "AZUL"). Si no hay basico, fallback al AVC.AV o
-      // al parseado del SKU. Nunca mezcla con el color del proveedor.
-      '       COALESCE(ATBC.NOMBRE_ATB, NULLIF(AVC.AV, ''''), ' +
+      // COLOR_TXT: texto del COLOR DEL SKU (AVC.AV, p.ej. "VERDE"). El
+      // cuadradito visual lo aporta CODIGO_ATB via lookup HEX. Asi el
+      // usuario ve la etiqueta del SKU y a su lado el cuadradito del
+      // basico que le aplica. Si no hay AV, fallback al nombre del
+      // basico y luego al parseo del codigo SKU.
+      '       COALESCE(NULLIF(AVC.AV, ''''), ATBC.NOMBRE_ATB, ' +
       '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
       '                '''') AS COLOR_TXT, ' +
       // COLOR_PROV_TXT: el COLOR DEL PROVEEDOR (texto libre, p.ej. "011"
