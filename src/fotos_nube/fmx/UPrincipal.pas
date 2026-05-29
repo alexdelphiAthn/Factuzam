@@ -231,7 +231,9 @@ begin
   Reducida := RedimensionarMax(AImagen, FConfig.ResolucionMaxima);
   try
     imgPrevia.Bitmap.Assign(Reducida);
-    Ruta := TPath.Combine(TPath.GetTempPath,
+    // Cualificamos System.IOUtils.TPath: FMX.Objects tambien declara un
+    // TPath (la forma vectorial) y, al ir despues en el uses, taparia este.
+    Ruta := System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath,
       'foto_' + FormatDateTime('yyyymmdd_hhnnsszzz', Now) + '.jpg');
     Reducida.SaveToFile(Ruta);
     FCola.Add(Ruta, Trim(edArticulo.Text), Trim(edColor.Text));
