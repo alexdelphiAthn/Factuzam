@@ -677,10 +677,12 @@ begin
     FGestorTallas.ActualizarCaptionsLineaActiva;
   if FMostrarAtributos then
     CargarCaptionsAtributosLineaActiva;
-  // Al saltar de fila el FocusedColumn no cambia pero la celda activa
-  // si — refrescamos el label de contexto.
+  // Al saltar de fila la celda activa cambia aunque la columna no —
+  // refrescamos el label de contexto. Sender.Controller expone
+  // FocusedItem (TcxCustomGridTableItem); FocusedColumn solo esta en
+  // el controller DB-tipado.
   tvLineasPedidoFocusedItemChanged(Sender, nil,
-                                   Sender.Controller.FocusedColumn);
+                                   Sender.Controller.FocusedItem);
 end;
 
 // Sombrear celdas talla fuera del conjunto pivot — delegamos en la lib.
