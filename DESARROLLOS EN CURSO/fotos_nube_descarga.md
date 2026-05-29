@@ -48,33 +48,31 @@ servidor responde 4xx con JSON, muestra su `message`.
 ## ¿Qué "color" lleva la foto? (importante)
 
 El token `COLOR` del nombre del fichero (`ARTICULO_COLOR_INDICE_real.png`) y
-el segmento de color de la clave de la foto (`CODIGO_UNIDAD_FOT`, p. ej.
-`DEMO-CAMISA/COLORAO`) son **el mismo token que usa el SKU**, y ese token es
-el **VALOR DE ATRIBUTO**, no el color de proveedor. En Factuzam el color vive
-en tres capas:
+el segmento de color de la clave de la foto (`CODIGO_UNIDAD_FOT`) son **el
+mismo token que usa el SKU**, y ese token es el **TEXTO DEL PROVEEDOR saneado**.
+El color básico es solo un *helper* de clasificación (importante, pero helper).
 
-| Capa | Tabla / columna | Ejemplo | ¿En el nombre de la foto? |
+| Concepto | Dónde | Ejemplo | ¿En el SKU / nombre de foto? |
 |---|---|---|---|
-| 1. Color de proveedor (texto libre) | `COLOR_TEXTO_SESLIN` / `COLOR_PROV_TXT` | `011`, `988`, `AZUL TURQUESA PROV-XYZ` | **No** |
-| 2. Valor de atributo (el del SKU) | `fza_atributos_valores.AV` | `COLORAO`, `AZUL_CIELO`, `NEGRO` | **Sí** ← este |
-| 3. Atributo básico (catálogo, con HEX) | `fza_atributos_basicos.CODIGO_ATB` | `ROJO (#C60000)` | Indirecto |
+| Color de proveedor (texto libre, saneado) | `COLOR_TEXTO_SESLIN` → `fza_atributos_valores.AV` | `011-AZ` | **Sí** ← identidad del color |
+| Color básico (helper, con HEX) | `fza_atributos_basicos.CODIGO_ATB` (vía `AV.ID_ATB_AV`) | `AZUL (#0066CC)` | Helper (HEX, agrupar, etiquetas) |
 
-El valor de atributo (capa 2) apunta a su básico vía
-`fza_atributos_valores.ID_ATB_AV`. Coincide con el código básico cuando el
-`AV` es "limpio" (`NEGRO`, `AZUL_CIELO`); cuando no (`COLORAO` → básico
-`ROJO`), el SKU y la foto usan el `AV`, no el básico ni el texto del
-proveedor.
+Ejemplo: el proveedor llama al color `011-AZ` y se clasifica como básico
+`AZUL`. El SKU queda `ARTICULO/011-AZ/talla`, el `AV` es `011-AZ` (enlazado al
+básico `AZUL` vía `ID_ATB_AV`) y la foto se nombra `ARTICULO_011-AZ_1_real.png`.
 
-Ejemplo en datos demo: SKU `DEMO-CAMISA/COLORAO/L`, foto
-`DEMO-CAMISA_COLORAO_001` con `CODIGO_UNIDAD_FOT = 'DEMO-CAMISA/COLORAO'`.
-`COLORAO` es `fza_atributos_valores.AV` (`ID_AV=9206`, `ID_VA='CO'`).
+**Saneo del token COLOR** (idéntico en SKU y foto: `SanearColorSku` y
+`SanearColorFoto`): mayúsculas; espacios → `-`; se conservan letras, dígitos,
+`-` y `_`; el resto de símbolos (`/`, `%`, `€`, …) se **prohíben**; sin
+separadores repetidos ni en los extremos.
 
 Consecuencia: `ElegirFotoNubePorColor` casa el segmento de color del SKU (el
-`AV`) contra el token `COLOR` del fichero. Funciona **siempre que el servidor
-nombre las fotos con ese mismo `AV`**. En compras, el texto libre del
-proveedor (`988`) se mapea antes a un color (botón "Color básico") y es el
-`AV` resultante el que acaba en el SKU y debe llevar la foto; el texto del
-proveedor nunca interviene en el emparejamiento.
+texto del proveedor saneado) contra el token `COLOR` del fichero. Funciona
+**siempre que el servidor nombre las fotos con esa misma regla de saneo**.
+
+> Modelo: el color del SKU es el texto del proveedor (identidad por
+> proveedor), no el código del básico. El básico se mantiene como helper
+> importante. Detalle en `sku_color_texto_proveedor.md`.
 
 ## Convención de nombre y sentinela `COLOR=NONE`
 
