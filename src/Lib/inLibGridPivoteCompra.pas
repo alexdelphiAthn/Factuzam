@@ -1238,14 +1238,17 @@ begin
     else
       s := VarToStr(vVal);
   end;
+  // VK_0..VK_9 no estan declarados en Winapi.Windows (Microsoft no
+  // les puso nombre, son simplemente Ord('0')..Ord('9') = $30..$39).
+  // Usamos los valores literales para el rango de digitos.
   case AKey of
     VK_BACK:
       if s <> '' then s := Copy(s, 1, Length(s) - 1);
     VK_DELETE, VK_ESCAPE:
       s := '';
-    VK_0..VK_9:
+    Ord('0')..Ord('9'):
       begin
-        ch := Char(Ord('0') + (AKey - VK_0));
+        ch := Char(AKey);
         s := s + ch;
       end;
     VK_NUMPAD0..VK_NUMPAD9:
