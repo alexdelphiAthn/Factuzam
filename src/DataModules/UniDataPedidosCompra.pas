@@ -211,6 +211,9 @@ end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
+var
+  qMax: TUniQuery;
+  iMax: Integer;
 begin
   inherited;
   with unqryPedidosCompraLineas do
@@ -219,6 +222,26 @@ begin
       unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     FieldByName('SERIE_PEDC_PEDCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+    // Auto-asignar LINEA_PEDCLIN al siguiente multiplo de 10 sobre el
+    // maximo actual del pedido. Sin esto, cxGrid disparaba Post al
+    // navegar fuera de la nueva fila y CheckRequiredFields lanzaba
+    // 'LINEA_PEDCLIN must have a value'.
+    qMax := TUniQuery.Create(nil);
+    try
+      qMax.Connection := inLibGlobalVar.oConn;
+      qMax.SQL.Text :=
+        'SELECT IFNULL(MAX(CAST(LINEA_PEDCLIN AS UNSIGNED)),0) AS M ' +
+        '  FROM fza_pedidos_compra_lineas ' +
+        ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
+        '   AND NUMERO_PEDC_PEDCLIN = :n';
+      qMax.ParamByName('s').AsString := FieldByName('SERIE_PEDC_PEDCLIN').AsString;
+      qMax.ParamByName('n').AsString := FieldByName('NUMERO_PEDC_PEDCLIN').AsString;
+      qMax.Open;
+      iMax := qMax.FieldByName('M').AsInteger;
+    finally
+      FreeAndNil(qMax);
+    end;
+    FieldByName('LINEA_PEDCLIN').AsString := Format('%.4d', [iMax + 10]);
     FieldByName('CANTIDAD_PEDCLIN').AsFloat := 1;
     FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat := 0;
     // Por defecto la linea hereda el almacen de la cabecera; el usuario
