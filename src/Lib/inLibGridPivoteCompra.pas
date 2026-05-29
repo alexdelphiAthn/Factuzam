@@ -212,6 +212,11 @@ type
     // de columnas no-bound al hacer Post (que ocurre al navegar entre
     // records), por eso necesitamos un almacenamiento propio.
     procedure CapturarARecibirEditValueChanged(ASender: TObject);
+    // Devuelve el almacen de la primera celda con cantidad 'A recibir'
+    // > 0 (cualquiera vale; itera el dict en orden de insercion). Sin
+    // entradas validas devuelve ''. Lo usa el form para precargar el
+    // combo del modal Crear Albaran con el almacen mas probable.
+    function PrimerAlmacenARecibir: string;
     // Engancha al OnInitEdit del grid. Mantenido por compatibilidad,
     // ahora solo hace SelectAll estilo Excel — el ajuste de tamanyo
     // del editor en talla expandida ya no aplica porque el editor
@@ -1441,6 +1446,23 @@ begin
     FARecibirManual.Remove(iKey)
   else
     FARecibirManual.AddOrSetValue(iKey, rValor);
+end;
+
+function TGridPivoteCompra.PrimerAlmacenARecibir: string;
+var
+  pair : TPair<Int64,Double>;
+  sAlm : string;
+begin
+  Result := '';
+  if FARecibirManual = nil then Exit;
+  for pair in FARecibirManual do
+  begin
+    if pair.Value <= 0 then Continue;
+    if not FCeldaAlmacen.TryGetValue(pair.Key, sAlm) then Continue;
+    if Trim(sAlm) = '' then Continue;
+    Result := sAlm;
+    Exit;
+  end;
 end;
 
 procedure TGridPivoteCompra.CustomDrawColorCell(
