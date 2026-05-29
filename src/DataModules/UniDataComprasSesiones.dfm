@@ -5,8 +5,15 @@ inherited dmComprasSesiones: TdmComprasSesiones
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM fza_compras_sesiones'
-      'ORDER BY FECHA_SES DESC, NUMERO_SES DESC')
+      'SELECT fza_compras_sesiones.*,'
+      '       (SELECT P.RAZON_SOCIAL_PRV FROM fza_proveedores P'
+      '         WHERE P.CODIGO_PRV_PRV = fza_compras_sesiones.CODIGO_PRV_SES)'
+      '         AS RAZON_SOCIAL_PRV_SES,'
+      '       (SELECT P.NOMBRE_PRV FROM fza_proveedores P'
+      '         WHERE P.CODIGO_PRV_PRV = fza_compras_sesiones.CODIGO_PRV_SES)'
+      '         AS NOMBRE_PRV_SES'
+      '  FROM fza_compras_sesiones'
+      ' ORDER BY FECHA_SES DESC, NUMERO_SES DESC')
     AfterInsert = unqryTablaGAfterInsert
   end
   inherited unqryPerfiles: TUniQuery
@@ -416,8 +423,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object unqryProveedores: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_PRV_PRV, RAZON_SOCIAL_PRV FROM fza_proveedores'
-      'WHERE ESACTIVO_PRV = '#39'S'#39
+      'SELECT CODIGO_PRV_PRV, NOMBRE_PRV, RAZON_SOCIAL_PRV'
+      '  FROM fza_proveedores'
       'ORDER BY RAZON_SOCIAL_PRV')
     Left = 344
     Top = 128

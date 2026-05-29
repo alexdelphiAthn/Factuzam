@@ -440,7 +440,8 @@ inferior con pestañas de la sesión seleccionada.
 ┌── Datos generales ─────────────────────────────────────────────────────┐
 │ Serie: [SES ▼]  Nº: [auto] Fecha: [06/05/2026] Estado: BORRADOR        │
 │ Empresa: [01 — Mi Empresa S.L.        ▼]                               │
-│ Proveedor: [010 — Acme Textiles, S.A. ▼]  Ref. prov.: [PO-2026-04]     │
+│ Proveedor: [010      ...]  Ref. prov.: [PO-2026-04]                    │
+│ 010 - Acme Textiles, S.A.  (Acme)                                      │
 │ Almacén destino albarán: [GEN ▼]   Moneda: [EUR ▼]                     │
 │ Comentarios: [____________________________________________________]    │
 └────────────────────────────────────────────────────────────────────────┘
