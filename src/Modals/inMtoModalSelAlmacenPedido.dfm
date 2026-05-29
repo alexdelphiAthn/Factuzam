@@ -62,42 +62,26 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
       Caption = 'Almac'#233'n destino (s'#243'lo se reciben las l'#237'neas de este almac'#233'n):'
       Transparent = True
     end
-    object cxgrdAlmacenes: TcxGrid
+    object cbbAlmacen: TcxLookupComboBox
       Left = 16
       Top = 64
-      Width = 628
-      Height = 200
-      TabOrder = 0
-      object tvAlmacenes: TcxGridTableView
-        OnDblClick = tvAlmacenesDblClick
-        NavigatorButtons.ConfirmDelete = False
-        OptionsBehavior.GoToNextCellOnEnter = True
-        OptionsCustomize.ColumnFiltering = False
-        OptionsData.CancelOnExit = False
-        OptionsData.Editing = False
-        OptionsData.Deleting = False
-        OptionsData.Inserting = False
-        OptionsSelection.CellSelect = False
-        OptionsView.GroupByBox = False
-        OptionsView.Indicator = True
-        object colCodigoAlm: TcxGridColumn
+      Properties.DropDownAutoSize = True
+      Properties.DropDownListStyle = lsFixedList
+      Properties.DropDownSizeable = True
+      Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+      Properties.ListColumns = <
+        item
           Caption = 'C'#243'digo'
-          Width = 120
+          Width = 100
+          FieldName = 'CODIGO_ALM_ALM'
         end
-        object colNombreAlm: TcxGridColumn
+        item
           Caption = 'Almac'#233'n'
-          Width = 340
-        end
-        object colPendiente: TcxGridColumn
-          Caption = 'Pendiente'
-          Width = 140
-          PropertiesClassName = 'TcxCurrencyEditProperties'
-          Properties.DisplayFormat = '#,##0.###'
-        end
-      end
-      object cxgrdlvlAlm: TcxGridLevel
-        GridView = tvAlmacenes
-      end
+          Width = 320
+          FieldName = 'NOMBRE_ALM_ALM'
+        end>
+      TabOrder = 0
+      Width = 460
     end
     object lblSerieAlb: TcxLabel
       Left = 16
@@ -178,6 +162,20 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
   object dsTemporadas: TDataSource
     DataSet = unqryTemporadas
     Left = 392
+    Top = 16
+  end
+  object unqryAlmacenes: TUniQuery
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      ' ORDER BY NOMBRE_ALM_ALM')
+    Left = 456
+    Top = 16
+  end
+  object dsAlmacenes: TDataSource
+    DataSet = unqryAlmacenes
+    Left = 504
     Top = 16
   end
 end
