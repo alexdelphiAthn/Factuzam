@@ -264,6 +264,28 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 17
                 Width = 120
               end
+              object lblTemporada: TcxLabel
+                Left = 656
+                Top = 72
+                Caption = 'Temporada'
+                TabOrder = 18
+                Transparent = True
+              end
+              object cbbTemporadaPedc: TcxDBLookupComboBox
+                Left = 656
+                Top = 92
+                DataBinding.DataField = 'ID_PV_TEMPORADA_PEDC'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'ID_PV_ARTPROP'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Temporada'
+                    FieldName = 'PV'
+                  end>
+                Properties.ListOptions.ShowHeader = False
+                TabOrder = 19
+                Width = 180
+              end
             end
           end
         end
