@@ -4,6 +4,7 @@
 *.dll
 *.bpl
 *.dcp
+*.so
 *.dsk
 *.local
 fzam.res
