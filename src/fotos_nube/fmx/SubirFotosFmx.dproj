@@ -170,6 +170,41 @@
                             <Overwrite>true</Overwrite>
                         </Platform>
                     </DeployFile>
+                    <DeployFile LocalName="res\splash_426.png" Configuration="Debug" Class="Android_SplashImage426">
+                        <Platform Name="Android64">
+                            <RemoteDir>res\drawable-small</RemoteDir>
+                            <RemoteName>splash_image.png</RemoteName>
+                            <Overwrite>true</Overwrite>
+                        </Platform>
+                    </DeployFile>
+                    <DeployFile LocalName="res\splash_470.png" Configuration="Debug" Class="Android_SplashImage470">
+                        <Platform Name="Android64">
+                            <RemoteDir>res\drawable-normal</RemoteDir>
+                            <RemoteName>splash_image.png</RemoteName>
+                            <Overwrite>true</Overwrite>
+                        </Platform>
+                    </DeployFile>
+                    <DeployFile LocalName="res\splash_640.png" Configuration="Debug" Class="Android_SplashImage640">
+                        <Platform Name="Android64">
+                            <RemoteDir>res\drawable-large</RemoteDir>
+                            <RemoteName>splash_image.png</RemoteName>
+                            <Overwrite>true</Overwrite>
+                        </Platform>
+                    </DeployFile>
+                    <DeployFile LocalName="res\splash_960.png" Configuration="Debug" Class="Android_SplashImage960">
+                        <Platform Name="Android64">
+                            <RemoteDir>res\drawable-xlarge</RemoteDir>
+                            <RemoteName>splash_image.png</RemoteName>
+                            <Overwrite>true</Overwrite>
+                        </Platform>
+                    </DeployFile>
+                    <DeployFile LocalName="res\splash_470.png" Configuration="Debug" Class="Android_SplashImage470">
+                        <Platform Name="Android64">
+                            <RemoteDir>res\drawable</RemoteDir>
+                            <RemoteName>splash_image.png</RemoteName>
+                            <Overwrite>true</Overwrite>
+                        </Platform>
+                    </DeployFile>
                 </Deployment>
             </Delphi.Personality>
         </BorlandProject>
