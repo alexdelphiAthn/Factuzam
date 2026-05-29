@@ -185,6 +185,15 @@ type
     // delega en el gestor de tallas como antes.
     procedure TallaEditValueChangedHook(Sender: TObject);
     function  ColumnaPedidosCompraExiste(const ANombreColumna: string): Boolean;
+    // Devuelve el almacen efectivo de la primera linea del pedido
+    // (CODIGO_ALMACEN_PEDCLIN, con fallback al CODIGO_ALM_PEDC de
+    // cabecera). Usado como default del combo en el modal Crear
+    // albaran. Vacio si el pedido no tiene lineas.
+    function  AlmacenEfectivoPrimeraLinea(const ASerie,
+                                          ANumero: string): string;
+    // Devuelve el almacen efectivo de la primera linea en modo vertical
+    // cuyo "A recibir" sea > 0. Sin tecleos devuelve ''.
+    function  PrimerAlmacenARecibirVertical: string;
     // ApplyBestFit + ensanche para la columna Color (el cuadradito de
     // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
     procedure BestFitConSwatch;
@@ -702,6 +711,37 @@ begin
   end;
 end;
 
+function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(
+                                  const ASerie, ANumero: string): string;
+var
+  q: TUniQuery;
+begin
+  Result := '';
+  if (Trim(ASerie) = '') or (Trim(ANumero) = '') then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
+      '              P.CODIGO_ALM_PEDC) AS ALM ' +
+      '  FROM fza_pedidos_compra_lineas L ' +
+      '  JOIN fza_pedidos_compra P ' +
+      '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+      '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+      ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
+      '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+      ' ORDER BY L.LINEA_PEDCLIN ' +
+      ' LIMIT 1';
+    q.ParamByName('s').AsString := ASerie;
+    q.ParamByName('n').AsString := ANumero;
+    q.Open;
+    if not q.Eof then
+      Result := q.FieldByName('ALM').AsString;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
   Sender: TcxCustomGridTableView; APrevFocusedRecord,
   AFocusedRecord: TcxCustomGridRecord;
@@ -816,6 +856,56 @@ begin
     FGestorTallas.PersistirCeldaActiva(Sender);
 end;
 
+function TfrmMtoPedidosCompra.PrimerAlmacenARecibirVertical: string;
+var
+  ds: TUniQuery;
+  bk: TBookmark;
+  recIdx, idxCol: Integer;
+  vARec: Variant;
+  rARec: Double;
+  sAlmLin, sAlmCab: string;
+begin
+  Result := '';
+  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  sAlmCab := dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+  idxCol := colLineaPedcARecibir.Index;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    recIdx := 0;
+    ds.First;
+    while not ds.Eof do
+    begin
+      vARec := tvLineasPedido.DataController.Values[recIdx, idxCol];
+      rARec := 0;
+      if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
+      begin
+        if VarIsNumeric(vARec) then
+          rARec := vARec
+        else
+          rARec := StrToFloatDef(VarToStr(vARec), 0);
+      end;
+      if rARec > 0 then
+      begin
+        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
+        if Trim(sAlmLin) <> '' then
+          Result := sAlmLin
+        else
+          Result := sAlmCab;
+        Exit;
+      end;
+      Inc(recIdx);
+      ds.Next;
+    end;
+  finally
+    if Assigned(bk) then ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+  end;
+end;
+
 function TfrmMtoPedidosCompra.RecogerCeldasARecibirVertical(
                                   const ACodigoAlm: string): TArray<TCeldaARecibir>;
 var
@@ -914,6 +1004,17 @@ begin
     // tiene (NULL) cae a 0 y el combo queda en blanco.
     form.IdPvTemporadaDefecto :=
       dmmPedidosCompra.unqryTablaG.FieldByName('ID_PV_TEMPORADA_PEDC').AsInteger;
+    // Almacen por defecto del modal: el de la primera celda con
+    // cantidad 'A recibir' > 0 (sea en pivote expandido o en modo
+    // vertical). Si el usuario no ha tecleado nada todavia, caemos al
+    // almacen efectivo de la primera linea del pedido como fallback.
+    if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
+      form.CodigoAlmacenDefecto := FPivote.PrimerAlmacenARecibir
+    else
+      form.CodigoAlmacenDefecto := PrimerAlmacenARecibirVertical;
+    if Trim(form.CodigoAlmacenDefecto) = '' then
+      form.CodigoAlmacenDefecto :=
+        AlmacenEfectivoPrimeraLinea(sSerie, sNumero);
     form.ShowModal;
     if not form.Aceptado then Exit;
     if Trim(form.CodigoAlmacen) = '' then Exit;
