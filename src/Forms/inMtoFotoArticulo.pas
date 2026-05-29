@@ -328,7 +328,14 @@ begin
         sColor := '';
       sFile := ElegirFotoNubePorColor(archivos, sColor);
       if sFile <> '' then
-        oFotos.Guardar(FCodigoArt, sClave, sFile);
+      begin
+        // Sentinela COLOR=NONE: si el PNG no es por color, lo guardamos a
+        // nivel articulo (CODIGO_UNIDAD = ''); si no, al nivel del combo.
+        if Pos('_NONE_', UpperCase(ExtractFileName(sFile))) > 0 then
+          oFotos.Guardar(FCodigoArt, '', sFile)
+        else
+          oFotos.Guardar(FCodigoArt, sClave, sFile);
+      end;
       // Re-resolver y refrescar la imagen que se muestra ahora mismo.
       SetArticuloSku(FCodigoArt, FCodigoSku);
       ShowMessage(Format('Descargadas %d foto(s) del articulo %s.',
