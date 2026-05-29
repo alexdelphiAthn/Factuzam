@@ -258,9 +258,11 @@ begin
       Etiqueta := Item.Articulo;
       if Item.Color <> '' then
         Etiqueta := Etiqueta + ' / ' + Item.Color;
+      // La apariencia por defecto del TListView solo muestra Text, asi
+      // que metemos el estado en la misma linea para no perderlo.
+      Etiqueta := Etiqueta + '  [' + EstadoTexto(Item.Estado) + ']';
       Fila := lstCola.Items.Add;
       Fila.Text := Etiqueta;
-      Fila.Detail := EstadoTexto(Item.Estado);
     end;
   finally
     lstCola.EndUpdate;

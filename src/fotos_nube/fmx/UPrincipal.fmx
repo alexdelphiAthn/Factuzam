@@ -149,10 +149,6 @@ object frmPrincipal: TfrmPrincipal
         OnClick = btnSubirClick
       end
       object lstCola: TListView
-        ItemAppearanceName = 'ListItemRightDetail'
-        ItemEditAppearanceName = 'ListItemRightDetail'
-        HeaderAppearanceName = 'ListHeader'
-        FooterAppearanceName = 'ListFooter'
         Align = Client
         Margins.Left = 6.000000000000000000
         Margins.Right = 6.000000000000000000
