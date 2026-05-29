@@ -58,7 +58,7 @@
         <Android_MinSdkVersion>23</Android_MinSdkVersion>
         <Android_TargetSdkVersion>34</Android_TargetSdkVersion>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>package=com.factuzam.fotosnube;label=Fotos Nube;versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;buildAPIKey=;minSdkVersion=23;targetSdkVersion=34;debuggable=True</VerInfo_Keys>
+        <VerInfo_Keys>package=com.factuzam.fotosnube;label=Fotos Nube;versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=NoTitleBar;hardwareAccelerated=true;apiKey=;buildAPIKey=;minSdkVersion=23;targetSdkVersion=34;debuggable=True</VerInfo_Keys>
         <!-- Permisos Android: el IDE los inyecta en el manifest al compilar.
              Asi llegan por git pull sin tener que marcar los checkboxes en
              Project Options > Uses Permissions. -->
