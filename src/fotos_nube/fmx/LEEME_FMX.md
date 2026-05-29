@@ -34,7 +34,9 @@ fmx/
    key, carpeta de cliente (`carpeta_cliente`, obligatoria) y resolución
    máxima (por defecto 1000). Se guarda en `fotosnube.ini` dentro de la
    carpeta de documentos de la app (sandbox). La ruta exacta se muestra en
-   pantalla.
+   pantalla. **La carpeta del cliente debe existir ya en el servidor**: se
+   dan de alta a mano para evitar duplicados por errores de tecleo. Si no
+   existe, el webservice responde 404 y la app muestra el mensaje.
 2. **Capturar** (pestaña *Capturar*): se teclea el **código de artículo**
    y el **color** (ambos obligatorios); *Hacer foto* abre la cámara y
    *Elegir de galería* la toma del carrete. Cada foto se reduce al máximo
