@@ -136,8 +136,6 @@ type
                 AEdit: TcxCustomEdit);
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
-    procedure cxgrdLineasPedidoKeyDown(Sender: TObject;
-                var Key: Word; Shift: TShiftState);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -192,12 +190,6 @@ uses
 
 {$R *.dfm}
 
-type
-  // Acceso a OnKeyDown (protected en TWinControl). cxGrid no lo
-  // publica como propiedad streamable y por eso lo asignamos en
-  // runtime con este descendant cast.
-  TWinControlHack = class(TWinControl);
-
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
@@ -224,11 +216,6 @@ begin
   // controlador de pivote.
   if Assigned(FPivote) then
     FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
-  // Hook OnKeyDown del grid: lo conectamos en runtime porque cxGrid no
-  // publica este evento (es protected en TWinControl). Usamos el truco
-  // del descendant cast para acceder al setter — TWinControlHack es
-  // del mismo arbol y "ve" los miembros protected del padre.
-  TWinControlHack(cxgrdLineasPedido).OnKeyDown := cxgrdLineasPedidoKeyDown;
   // Hook OnDataChange del master: al cambiar de pedido activo, el
   // controlador recarga su cache y republica.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
@@ -698,32 +685,33 @@ procedure TfrmMtoPedidosCompra.tvLineasPedidoEditing(
 begin
   inherited;
   if Assigned(FPivote) then
-  begin
-    // La libreria gestiona el bloqueo por talla-fuera-de-conjunto.
     FPivote.EditingCeldaTalla(Sender, AItem, AAllow);
-    // En modo pivote expandido bloqueamos explicitamente el editor
-    // inplace en TODAS las columnas talla (Tag > 0, asignado en
-    // CrearColumnasTallas). Sin este bloqueo cxGrid abre el TcxCurrency
-    // Edit que tapa los 3 sub-segmentos pintados (Pedido, Recibida,
-    // A recibir). Con el editor bloqueado las pulsaciones llegan al
-    // OnKeyDown del grid y de ahi al ProcesarTeclaCeldaTalla de la
-    // libreria, que muta DataController.Values[] y dispara repintado.
-    if FPivote.Activo and FPivote.Expandido and
-       Assigned(AItem) and (AItem.Tag > 0) then
-      AAllow := False;
-  end;
 end;
 
-// Reposiciona el inplace editor al tercio inferior de la celda talla en
-// modo expandido para que Pedido y Recibida sigan visibles arriba
-// mientras el usuario teclea A recibir. Delegamos en la libreria.
+// Reposiciona el inplace editor al tercio inferior de la celda talla
+// en modo pivote expandido para que Pedido y Recibida (pintados por
+// CustomDraw) sigan visibles arriba mientras el usuario teclea A
+// recibir con cursor y navegacion nativos.
 procedure TfrmMtoPedidosCompra.tvLineasPedidoInitEdit(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
+var
+  R: TRect;
 begin
   inherited;
-  if Assigned(FPivote) then
-    FPivote.InitEditCeldaTalla(Sender, AItem, AEdit);
+  if not Assigned(FPivote) then Exit;
+  // SelectAll estilo Excel.
+  FPivote.InitEditCeldaTalla(Sender, AItem, AEdit);
+  // En pivote expandido sobre celda talla (Tag>0): encogemos el editor
+  // bajando el borde superior. Las columnas talla tienen Tag = i+1 por
+  // convencion de CrearColumnasTallas; atributos tienen Tag negativo.
+  if FPivote.Activo and FPivote.Expandido and
+     Assigned(AItem) and (AItem.Tag > 0) and Assigned(AEdit) then
+  begin
+    R := AEdit.BoundsRect;
+    R.Top := R.Bottom - ((R.Bottom - R.Top) div 3);
+    AEdit.BoundsRect := R;
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoEnter(Sender: TObject);
@@ -736,23 +724,6 @@ procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
-end;
-
-// Captura de teclas para 'A recibir' en modo pivote expandido. El
-// editor inplace esta bloqueado para no tapar los sub-segmentos
-// pintados (Pedido / Recibida). Las pulsaciones de digitos, backspace
-// y delete se redirigen al controlador de pivote, que modifica
-// Values[] directamente y dispara repintado. Si la libreria consume
-// la tecla, anulamos Key para que cxGrid no la propague (asi no abre
-// el editor ni mueve foco).
-procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoKeyDown(Sender: TObject;
-                                                       var Key: Word;
-                                                       Shift: TShiftState);
-begin
-  inherited;
-  if not Assigned(FPivote) then Exit;
-  if FPivote.ProcesarTeclaCeldaTalla(Key) then
-    Key := 0;
 end;
 
 procedure TfrmMtoPedidosCompra.btnAnadirLineaClick(Sender: TObject);
