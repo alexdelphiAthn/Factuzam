@@ -192,6 +192,12 @@ uses
 
 {$R *.dfm}
 
+type
+  // Acceso a OnKeyDown (protected en TWinControl). cxGrid no lo
+  // publica como propiedad streamable y por eso lo asignamos en
+  // runtime con este descendant cast.
+  TWinControlHack = class(TWinControl);
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
@@ -219,10 +225,10 @@ begin
   if Assigned(FPivote) then
     FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
   // Hook OnKeyDown del grid: lo conectamos en runtime porque cxGrid no
-  // publica este evento en el DFM (al ser heredado de TWinControl no
-  // queda visible al streaming, y meterlo en .dfm da EReadError
-  // "Property OnKeyDown does not exist").
-  cxgrdLineasPedido.OnKeyDown := cxgrdLineasPedidoKeyDown;
+  // publica este evento (es protected en TWinControl). Usamos el truco
+  // del descendant cast para acceder al setter — TWinControlHack es
+  // del mismo arbol y "ve" los miembros protected del padre.
+  TWinControlHack(cxgrdLineasPedido).OnKeyDown := cxgrdLineasPedidoKeyDown;
   // Hook OnDataChange del master: al cambiar de pedido activo, el
   // controlador recarga su cache y republica.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
