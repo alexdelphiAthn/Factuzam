@@ -4,9 +4,6 @@ object frmPrincipal: TfrmPrincipal
   Caption = 'Factuzam - Fotos Nube'
   ClientHeight = 640
   ClientWidth = 360
-  FormFactor.Width = 320
-  FormFactor.Height = 480
-  FormFactor.Devices = [Desktop, iPhone, iPad, Android]
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   DesignerMasterStyle = 0
