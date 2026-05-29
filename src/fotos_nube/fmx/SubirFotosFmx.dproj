@@ -59,6 +59,15 @@
         <Android_TargetSdkVersion>34</Android_TargetSdkVersion>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>package=com.factuzam.fotosnube;label=Fotos Nube;versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;buildAPIKey=;minSdkVersion=23;targetSdkVersion=34;debuggable=True</VerInfo_Keys>
+        <!-- Permisos Android: el IDE los inyecta en el manifest al compilar.
+             Asi llegan por git pull sin tener que marcar los checkboxes en
+             Project Options > Uses Permissions. -->
+        <Android_Camera>true</Android_Camera>
+        <Android_Internet>true</Android_Internet>
+        <Android_AccessNetworkState>true</Android_AccessNetworkState>
+        <Android_ReadExternalStorage>true</Android_ReadExternalStorage>
+        <Android_WriteExternalStorage>true</Android_WriteExternalStorage>
+        <Android_ReadMediaImages>true</Android_ReadMediaImages>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
