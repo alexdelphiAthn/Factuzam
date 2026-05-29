@@ -109,16 +109,24 @@ if (!extension_loaded('gd')) {
 $baseStorage = __DIR__ . DIRECTORY_SEPARATOR . 'cloud_storage';
 $uploadDir   = $baseStorage . DIRECTORY_SEPARATOR . $carpetaCliente . DIRECTORY_SEPARATOR;
 
-if (!is_dir($uploadDir)) {
-    http_response_code(404);
+// Asegurar el almacén base. carpeta_cliente ya viene saneada a
+// [A-Za-z0-9_-], asi que crear su carpeta no permite path traversal y deja
+// que un cliente nuevo (p.ej. la app movil) suba sin aprovisionar a mano.
+if (!is_dir($baseStorage) && !@mkdir($baseStorage, 0775, true) && !is_dir($baseStorage)) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'No se pudo crear el almacen base.']);
+    exit;
+}
+if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
+    http_response_code(500);
     echo json_encode([
         'status'  => 'error',
-        'message' => "La carpeta del cliente '$carpetaCliente' no existe."
+        'message' => "No se pudo crear la carpeta del cliente '$carpetaCliente'."
     ]);
     exit;
 }
 
-// Defensa en profundidad
+// Defensa en profundidad: la ruta resuelta debe quedar dentro del almacen.
 $baseAllowed = realpath($baseStorage);
 $uploadReal  = realpath($uploadDir);
 if ($baseAllowed === false || $uploadReal === false ||
