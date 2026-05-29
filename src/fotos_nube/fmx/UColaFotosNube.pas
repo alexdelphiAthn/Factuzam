@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Módulo:       UColaFotosNube                                                }
-{    Tipo:       Librería (FMX, multiplataforma)                               }
+{    Tipo:       Librería (FMX, Android)                                       }
 { Versión:       1.0.0                                                         }
 {   Fecha:       29/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
@@ -10,17 +10,18 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Cola de subida por lotes de fotos al webservice de Factuzam              }
-{    (upload_foto.php / fotosnube). Cada foto se sube por multipart con los    }
-{    campos cliente, sku, api_key e imagen. La subida se hace en un hilo de    }
-{    fondo y va notificando el estado de cada elemento a la interfaz.          }
-{    Mismo contrato que el cliente VCL existente (TFotoUploader).              }
+{    (upload_foto.php / fotosnube). Cada foto se identifica por código de      }
+{    artículo y color; si hay más de una foto del mismo artículo+color se les  }
+{    asigna un índice correlativo. La subida se hace en un hilo de fondo y va  }
+{    notificando el estado de cada elemento a la interfaz. Mismo contrato      }
+{    multipart que el cliente VCL existente (UFotoUploader).                   }
 {******************************************************************************}
 unit UColaFotosNube;
 
 interface
 
 uses
-  System.Classes, System.SysUtils, System.JSON,
+  System.Classes, System.SysUtils, System.JSON, System.Hash,
   System.Generics.Collections, System.Net.HttpClient, System.Net.Mime,
   System.Net.URLClient;
 
@@ -28,11 +29,14 @@ type
   // Estado de cada foto dentro de la cola.
   TEstadoSubida = (esPendiente, esSubiendo, esOk, esError);
 
-  // Un elemento de la cola: la foto local y el resultado del servidor.
+  // Un elemento de la cola: la foto local, su identificación de negocio
+  // (artículo + color) y el resultado del servidor.
   TFotoItem = class
   public
     Archivo: string;
-    Sku: string;
+    Articulo: string;
+    Color: string;
+    Indice: string;
     Hash: string;
     Mensaje: string;
     Estado: TEstadoSubida;
@@ -49,27 +53,28 @@ type
     FItems: TObjectList<TFotoItem>;
     FUrl: string;
     FApiKey: string;
-    FCliente: string;
+    FCarpetaCliente: string;
     function SubirUno(const AItem: TFotoItem): Boolean;
-    // Notifica el estado de un item en el hilo principal. AItem es
-    // parámetro para capturarlo por valor en cada llamada y evitar el
-    // problema de captura de la variable de bucle en anónimos.
+    // Índice a enviar: vacío si la foto es única para su artículo+color,
+    // o el ordinal (1..n) si hay varias del mismo artículo+color.
+    function CalcularIndice(const AItem: TFotoItem): string;
     procedure NotificarItem(const AProgreso: TProgresoFotoProc;
       const AItem: TFotoItem);
   public
     constructor Create;
     destructor Destroy; override;
-    function Add(const AArchivo, ASku: string): TFotoItem;
+    function Add(const AArchivo, AArticulo, AColor: string): TFotoItem;
     procedure Limpiar;
     function PendientesCount: Integer;
     // Sube en segundo plano todas las fotos no subidas. Notifica por
-    // AProgreso cada vez que cambia el estado de una y AFin al terminar.
+    // AProgreso cada cambio de estado y AFin al terminar el lote.
     procedure SubirTodasAsync(AProgreso: TProgresoFotoProc;
       AFin: TFinLoteProc);
     property Items: TObjectList<TFotoItem> read FItems;
     property Url: string read FUrl write FUrl;
     property ApiKey: string read FApiKey write FApiKey;
-    property Cliente: string read FCliente write FCliente;
+    property CarpetaCliente: string read FCarpetaCliente
+      write FCarpetaCliente;
   end;
 
 // Texto legible para un estado (para pintarlo en la lista).
@@ -103,11 +108,12 @@ begin
   inherited;
 end;
 
-function TColaFotos.Add(const AArchivo, ASku: string): TFotoItem;
+function TColaFotos.Add(const AArchivo, AArticulo, AColor: string): TFotoItem;
 begin
   Result := TFotoItem.Create;
   Result.Archivo := AArchivo;
-  Result.Sku := ASku;
+  Result.Articulo := AArticulo;
+  Result.Color := AColor;
   Result.Estado := esPendiente;
   FItems.Add(Result);
 end;
@@ -127,6 +133,33 @@ begin
       Inc(Result);
 end;
 
+function TColaFotos.CalcularIndice(const AItem: TFotoItem): string;
+var
+  Otro: TFotoItem;
+  Total: Integer;
+  Ordinal: Integer;
+begin
+  // Contamos cuántas fotos comparten artículo+color y la posición de
+  // ésta dentro de ese grupo (en el orden de la cola).
+  Total := 0;
+  Ordinal := 0;
+  for Otro in FItems do
+  begin
+    if SameText(Otro.Articulo, AItem.Articulo) and
+       SameText(Otro.Color, AItem.Color) then
+    begin
+      Inc(Total);
+      if Otro = AItem then
+        Ordinal := Total;
+    end;
+  end;
+  // Sólo añadimos índice cuando hay más de una del mismo artículo+color.
+  if Total <= 1 then
+    Result := ''
+  else
+    Result := IntToStr(Ordinal);
+end;
+
 function TColaFotos.SubirUno(const AItem: TFotoItem): Boolean;
 var
   HTTP: THTTPClient;
@@ -135,20 +168,25 @@ var
   Json: TJSONValue;
   Obj: TJSONObject;
   Valor: TJSONValue;
-  EsOk: Boolean;
+  Estado: string;
   Cuerpo: string;
 begin
   Result := False;
+  AItem.Indice := CalcularIndice(AItem);
   HTTP := THTTPClient.Create;
   try
     Form := TMultipartFormData.Create;
     try
-      // Mismos campos que espera upload_foto.php.
-      Form.AddField('cliente', FCliente);
-      Form.AddField('sku', AItem.Sku);
-      Form.AddField('api_key', FApiKey);
+      // Mismos campos que espera upload_foto.php (oda).
+      Form.AddField('articulo', AItem.Articulo);
+      Form.AddField('color', AItem.Color);
+      Form.AddField('indice', AItem.Indice);
+      Form.AddField('carpeta_cliente', FCarpetaCliente);
+      Form.AddField('nombre_original', ExtractFileName(AItem.Archivo));
+      // SHA1 del fichero local para verificación extremo a extremo.
+      Form.AddField('osha1',
+        LowerCase(THashSHA1.GetHashStringFromFile(AItem.Archivo)));
       Form.AddFile('imagen', AItem.Archivo);
-      // La clave también por cabecera (el servidor admite ambas).
       HTTP.CustomHeaders['X-API-Key'] := FApiKey;
       Res := HTTP.Post(FUrl, Form, nil);
       Cuerpo := Res.ContentAsString;
@@ -159,8 +197,8 @@ begin
       end
       else
       begin
-        // Respuesta JSON { ok, mensaje, hash, url }.
-        EsOk := False;
+        // Respuesta JSON { status, message, sha1, ... }.
+        Estado := '';
         AItem.Hash := '';
         AItem.Mensaje := Cuerpo;
         Json := TJSONObject.ParseJSONValue(Cuerpo);
@@ -168,20 +206,20 @@ begin
           if Json is TJSONObject then
           begin
             Obj := TJSONObject(Json);
-            Valor := Obj.GetValue('ok');
-            if Valor is TJSONBool then
-              EsOk := TJSONBool(Valor).AsBoolean;
-            Valor := Obj.GetValue('hash');
+            Valor := Obj.GetValue('status');
+            if Valor <> nil then
+              Estado := Valor.Value;
+            Valor := Obj.GetValue('sha1');
             if Valor <> nil then
               AItem.Hash := Valor.Value;
-            Valor := Obj.GetValue('mensaje');
+            Valor := Obj.GetValue('message');
             if Valor <> nil then
               AItem.Mensaje := Valor.Value;
           end;
         finally
           Json.Free;
         end;
-        if EsOk then
+        if SameText(Estado, 'success') then
         begin
           AItem.Estado := esOk;
           Result := True;
@@ -200,6 +238,8 @@ end;
 procedure TColaFotos.NotificarItem(const AProgreso: TProgresoFotoProc;
   const AItem: TFotoItem);
 begin
+  // AItem es parámetro para capturarlo por valor en cada llamada y evitar
+  // el problema de captura de la variable de bucle en los anónimos.
   if Assigned(AProgreso) then
     TThread.Queue(nil,
       procedure
