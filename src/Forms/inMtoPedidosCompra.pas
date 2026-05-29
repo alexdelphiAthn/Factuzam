@@ -185,6 +185,12 @@ type
     // delega en el gestor de tallas como antes.
     procedure TallaEditValueChangedHook(Sender: TObject);
     function  ColumnaPedidosCompraExiste(const ANombreColumna: string): Boolean;
+    // Devuelve el almacen efectivo de la primera linea del pedido
+    // (CODIGO_ALMACEN_PEDCLIN, con fallback al CODIGO_ALM_PEDC de
+    // cabecera). Usado como default del combo en el modal Crear
+    // albaran. Vacio si el pedido no tiene lineas.
+    function  AlmacenEfectivoPrimeraLinea(const ASerie,
+                                          ANumero: string): string;
     // ApplyBestFit + ensanche para la columna Color (el cuadradito de
     // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
     procedure BestFitConSwatch;
@@ -702,6 +708,37 @@ begin
   end;
 end;
 
+function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(
+                                  const ASerie, ANumero: string): string;
+var
+  q: TUniQuery;
+begin
+  Result := '';
+  if (Trim(ASerie) = '') or (Trim(ANumero) = '') then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
+      '              P.CODIGO_ALM_PEDC) AS ALM ' +
+      '  FROM fza_pedidos_compra_lineas L ' +
+      '  JOIN fza_pedidos_compra P ' +
+      '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+      '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+      ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
+      '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+      ' ORDER BY L.LINEA_PEDCLIN ' +
+      ' LIMIT 1';
+    q.ParamByName('s').AsString := ASerie;
+    q.ParamByName('n').AsString := ANumero;
+    q.Open;
+    if not q.Eof then
+      Result := q.FieldByName('ALM').AsString;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
   Sender: TcxCustomGridTableView; APrevFocusedRecord,
   AFocusedRecord: TcxCustomGridRecord;
@@ -914,6 +951,12 @@ begin
     // tiene (NULL) cae a 0 y el combo queda en blanco.
     form.IdPvTemporadaDefecto :=
       dmmPedidosCompra.unqryTablaG.FieldByName('ID_PV_TEMPORADA_PEDC').AsInteger;
+    // Almacen por defecto del modal: el efectivo de la primera linea
+    // del pedido (CODIGO_ALMACEN_PEDCLIN; si esta vacio, el de la
+    // cabecera CODIGO_ALM_PEDC). El usuario puede sobreescribirlo en
+    // el combo si el albaran se imputa a otro almacen.
+    form.CodigoAlmacenDefecto :=
+      AlmacenEfectivoPrimeraLinea(sSerie, sNumero);
     form.ShowModal;
     if not form.Aceptado then Exit;
     if Trim(form.CodigoAlmacen) = '' then Exit;
