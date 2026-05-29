@@ -271,10 +271,24 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
           Left = 0
           Top = 200
           Width = 941
-          Height = 38
+          Height = 70
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
+          object lblContextoTalla: TcxLabel
+            Left = 8
+            Top = 38
+            Caption = ''
+            Style.Font.Charset = DEFAULT_CHARSET
+            Style.Font.Color = clNavy
+            Style.Font.Height = -16
+            Style.Font.Name = 'Tahoma'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
+            Visible = False
+            Transparent = True
+            Width = 920
+          end
           object btnAnadirLinea: TcxButton
             Left = 8
             Top = 6
