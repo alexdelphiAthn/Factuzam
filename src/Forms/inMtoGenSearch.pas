@@ -28,7 +28,8 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
   DBAccess, Uni, UniDataConn, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs, inLibGlobalVar,
-  cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida, inLibDevExp;
+  cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida, inLibDevExp,
+  inLibConfigCampos;
 
 type
   TDefCampo = record
@@ -119,6 +120,8 @@ var
   bYaExiste: Boolean;
   col: TcxGridDBColumn;
   ds: TDataSet;
+  sTit: string;
+  iAncho: Integer;
 begin
   inherited;
   if Assigned(dsTablaG.DataSet) and (dsTablaG.DataSet is TUniQuery) then
@@ -152,6 +155,25 @@ begin
   // PORCENTAJE_ -> %, VALOR_/CANTIDAD_ -> numerico, ESxxx -> checkbox S/N).
   AplicarPropertiesPorPrefijo(cxGrdDBTabPrin);
   cxGrdDBTabPrin.ApplyBestFit();
+  // Titulos y anchos "bonitos" desde fza_config_campos (cache oConfigCampos):
+  // sustituye los nombres crudos de columna (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV
+  // ...) por el TITULO_VISUAL_CC configurado. Es el mismo origen que usa
+  // PonerAnchosTitulos en los Mtos normales, pero el buscador crea sus
+  // columnas a mano y no pasa por esa ruta (va ligada a oApplyWidth), asi que
+  // lo aplicamos aqui explicitamente. Tras ApplyBestFit para que el ancho
+  // configurado prevalezca.
+  if Assigned(oConfigCampos) and oConfigCampos.Cargada then
+    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+    begin
+      col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
+      sField := col.DataBinding.FieldName;
+      sTit := oConfigCampos.ObtenerTitulo(sField);
+      if sTit <> '' then
+        col.Caption := sTit;
+      iAncho := oConfigCampos.ObtenerAncho(sField);
+      if iAncho > 0 then
+        col.Width := iAncho;
+    end;
 end;
 
 procedure TfrmMtoSearch.ResetForm;
