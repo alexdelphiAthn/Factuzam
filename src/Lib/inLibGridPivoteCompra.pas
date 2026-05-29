@@ -1170,16 +1170,6 @@ begin
   if AItem = nil then Exit;
   if (AItem.Tag < 1) or (AItem.Tag > FCfg.MaxColumnasTallas) then Exit;
   if FCfg.Gestor = nil then Exit;
-  // En modo pivote expandido bloqueamos el editor inplace en las celdas
-  // talla: si se abriera, taparia los 3 sub-segmentos pintados (Pedido,
-  // Recibida, A recibir). La entrada de cantidades se hace por
-  // captura de teclas en ProcesarTeclaCeldaTalla (llamado desde el form
-  // en OnKeyDown del grid).
-  if FExpandido and PuedeExpandir then
-  begin
-    AAllow := False;
-    Exit;
-  end;
   if (FCfg.SourceLineas = nil) or FCfg.SourceLineas.IsEmpty then Exit;
   iAc := FCfg.SourceLineas.FieldByName(FCfg.FieldIdAcPivot).AsInteger;
   if iAc <= 0 then Exit;
