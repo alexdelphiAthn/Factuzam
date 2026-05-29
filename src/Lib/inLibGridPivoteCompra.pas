@@ -218,6 +218,7 @@ type
                 AViewInfo: TcxGridTableDataCellViewInfo;
                 AColorFondo: TColor;
                 APedida, ARecibida: Double);
+    procedure DibujarBordeFocused(ACanvas: TcxCanvas; const ARect: TRect);
   end;
 
 const
@@ -1080,6 +1081,12 @@ begin
     FPivotCantidadesRecibidas.TryGetValue(iKey, rRecibida);
     PintarCeldaTalla3Segmentos(ACanvas, AViewInfo, ColorFila,
                                 rPedido, rRecibida);
+    // Resalte de celda focused: borde grueso navy sobre los 3 sub-
+    // segmentos para que el usuario sepa donde esta tras Tab / flechas
+    // sin tener que mirar el label de contexto.
+    if (FCfg.Grid.Controller.FocusedRecord = AViewInfo.GridRecord) and
+       (FCfg.Grid.Controller.FocusedItem   = AViewInfo.Item) then
+      DibujarBordeFocused(ACanvas, AViewInfo.Bounds);
     ADone := True;
   end
   else
@@ -1170,6 +1177,24 @@ begin
   ACanvas.LineTo(b.Right, top2);
   ACanvas.MoveTo(b.Left,  top3);
   ACanvas.LineTo(b.Right, top3);
+  ACanvas.Brush.Style := bsSolid;
+end;
+
+// Dibuja un borde grueso navy sobre la celda focused para que el
+// usuario sepa donde esta tras Tab / flechas. Se pinta encima de los
+// sub-segmentos sin alterarlos.
+procedure TGridPivoteCompra.DibujarBordeFocused(ACanvas: TcxCanvas;
+                                                  const ARect: TRect);
+var
+  r: TRect;
+begin
+  r := ARect;
+  ACanvas.Brush.Style := bsClear;
+  ACanvas.Pen.Color   := clNavy;
+  ACanvas.Pen.Width   := 2;
+  ACanvas.Pen.Style   := psSolid;
+  ACanvas.Rectangle(r.Left + 1, r.Top + 1, r.Right - 1, r.Bottom - 1);
+  ACanvas.Pen.Width   := 1;
   ACanvas.Brush.Style := bsSolid;
 end;
 
