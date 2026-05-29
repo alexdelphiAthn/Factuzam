@@ -178,9 +178,10 @@ const
   COL_REC_NADA    : TColor = $0099FFFF;  // amarillo
   COL_REC_PARCIAL : TColor = $0099FF99;  // verde
   COL_REC_TOTAL   : TColor = $00FFCC99;  // azul claro
-  // Altura por defecto de fila expandida (px). 3 sub-segmentos:
-  // Pedido / Recibido / A recibir.
-  ALTURA_FILA_EXPANDIDA = 60;
+  // Altura por defecto de fila expandida (px). 3 sub-filas visibles:
+  // Pedido / Recibido / A recibir. Cada una ~25 px para que se lean
+  // bien las cantidades y haya hueco entre las lineas separadoras.
+  ALTURA_FILA_EXPANDIDA = 75;
 
 implementation
 
@@ -703,7 +704,11 @@ begin
       '       L.' + FCfg.FieldArt + ' AS ART, ' +
       '       COALESCE(L.' + FCfg.FieldIdAcPivot + ', 0) AS ID_AC, ' +
       '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
-      '       COALESCE(ATBC.NOMBRE_ATB, AVC.AV, ' +
+      // COLOR_TXT: priorizamos AVC.AV (valor especifico del articulo, p.ej.
+      // "Verde botella" o "Marron chocolate") sobre ATBC.NOMBRE_ATB (color
+      // basico tipo "Verde" o "Negro") — el usuario quiere ver el color
+      // del articulo, no solo el basico al que mapea.
+      '       COALESCE(NULLIF(AVC.AV, ''''), ATBC.NOMBRE_ATB, ' +
       '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
       '                '''') AS COLOR_TXT, ' +
       '       COALESCE(ATBC.CODIGO_ATB, ' +
@@ -1025,9 +1030,20 @@ begin
     else
       rARec := StrToFloatDef(VarToStr(vARec), 0);
   end;
-  if APedida   > 0 then sPed  := IntToStr(Round(APedida))   else sPed  := '';
-  if ARecibida > 0 then sRec  := IntToStr(Round(ARecibida)) else sRec  := '';
-  if rARec     > 0 then sARec := IntToStr(Round(rARec))     else sARec := '';
+  // Mostramos las 3 sub-filas siempre, aunque la cantidad sea 0 (asi
+  // el usuario ve claramente que la celda tiene 3 partes: Pedido /
+  // Recibido / A recibir). Si Pedido es 0 dejamos en blanco para no
+  // ensuciar las celdas talla que no pertenecen al conjunto (no
+  // deberian llegar aqui pero por defensa).
+  if APedida > 0 then
+    sPed := IntToStr(Round(APedida))
+  else
+    sPed := '';
+  sRec  := IntToStr(Round(ARecibida));
+  if rARec > 0 then
+    sARec := IntToStr(Round(rARec))
+  else
+    sARec := '';
   ACanvas.Brush.Color := AColorFondo;
   ACanvas.FillRect(AViewInfo.Bounds);
   b    := AViewInfo.Bounds;
@@ -1044,17 +1060,27 @@ begin
   ACanvas.Font.Color  := clGrayText;
   DrawText(ACanvas.Handle, PChar(sPed), Length(sPed), rect1,
            DT_CENTER or DT_VCENTER or DT_SINGLELINE);
-  // Recibido: verde italic
+  // Recibido: verde italic (siempre se muestra para que el usuario
+  // distinga la fila incluso cuando recibido = 0).
   ACanvas.Font.Color := clGreen;
   ACanvas.Font.Style := [fsItalic];
   DrawText(ACanvas.Handle, PChar(sRec), Length(sRec), rect2,
            DT_CENTER or DT_VCENTER or DT_SINGLELINE);
-  // A recibir: azul negrita (editable)
+  // A recibir: azul negrita (editable). Si esta vacio dejamos blanco
+  // para no confundir con un valor real cero.
   ACanvas.Font.Color := clBlue;
   ACanvas.Font.Style := [fsBold];
   DrawText(ACanvas.Handle, PChar(sARec), Length(sARec), rect3,
            DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   ACanvas.Font.Style := [];
+  // Lineas separadoras horizontales finas entre las 3 sub-filas para
+  // dejar claro al usuario que la celda tiene 3 areas diferentes.
+  ACanvas.Pen.Color := clSilver;
+  ACanvas.Pen.Width := 1;
+  ACanvas.MoveTo(b.Left,  top2);
+  ACanvas.LineTo(b.Right, top2);
+  ACanvas.MoveTo(b.Left,  top3);
+  ACanvas.LineTo(b.Right, top3);
   ACanvas.Brush.Style := bsSolid;
 end;
 
