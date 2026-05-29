@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Módulo:       UConfigFotos                                                  }
-{    Tipo:       Librería (FMX, multiplataforma)                               }
+{    Tipo:       Librería (FMX, Android)                                       }
 { Versión:       1.0.0                                                         }
 {   Fecha:       29/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
@@ -11,9 +11,9 @@
 {  Descripción:                                                                }
 {    Configuración persistente de la app de fotos a la nube. Se guarda en      }
 {    un INI dentro del sandbox de la app (carpeta de documentos), de modo      }
-{    que funciona igual en Android y en Windows sin depender de la BBDD.       }
-{    Incluye la resolución máxima por defecto (1000 px) con la que se          }
-{    reducen las fotos antes de enviarlas al webservice.                       }
+{    que funciona sin depender de la BBDD. Incluye la resolución máxima por    }
+{    defecto (1000 px) con la que se reducen las fotos antes de enviarlas al   }
+{    webservice (upload_foto.php / fotosnube).                                 }
 {******************************************************************************}
 unit UConfigFotos;
 
@@ -37,8 +37,7 @@ type
     FRutaIni: string;
     FUrl: string;
     FApiKey: string;
-    FCliente: string;
-    FSkuPorDefecto: string;
+    FCarpetaCliente: string;
     FResolucionMaxima: Integer;
     function RutaIniPorDefecto: string;
     procedure SetResolucionMaxima(const AValor: Integer);
@@ -48,8 +47,9 @@ type
     procedure Guardar;
     property Url: string read FUrl write FUrl;
     property ApiKey: string read FApiKey write FApiKey;
-    property Cliente: string read FCliente write FCliente;
-    property SkuPorDefecto: string read FSkuPorDefecto write FSkuPorDefecto;
+    // Carpeta del cliente en el servidor (parámetro carpeta_cliente).
+    property CarpetaCliente: string read FCarpetaCliente
+      write FCarpetaCliente;
     property ResolucionMaxima: Integer read FResolucionMaxima
       write SetResolucionMaxima;
     property RutaIni: string read FRutaIni;
@@ -71,15 +71,14 @@ begin
     FRutaIni := ARutaIni;
   FUrl := '';
   FApiKey := '';
-  FCliente := '';
-  FSkuPorDefecto := '';
+  FCarpetaCliente := '';
   FResolucionMaxima := cResolucionMaximaDefecto;
 end;
 
 function TConfigFotos.RutaIniPorDefecto: string;
 begin
-  // En Android es el sandbox de la app; en Windows, la carpeta de
-  // documentos del usuario. En ambos casos es escribible.
+  // En Android es el sandbox de la app (carpeta de documentos), siempre
+  // escribible sin permisos extra.
   Result := TPath.Combine(TPath.GetDocumentsPath, 'fotosnube.ini');
 end;
 
@@ -102,8 +101,8 @@ begin
   try
     FUrl := Ini.ReadString(cSeccion, 'Url', FUrl);
     FApiKey := Ini.ReadString(cSeccion, 'ApiKey', FApiKey);
-    FCliente := Ini.ReadString(cSeccion, 'Cliente', FCliente);
-    FSkuPorDefecto := Ini.ReadString(cSeccion, 'Sku', FSkuPorDefecto);
+    FCarpetaCliente := Ini.ReadString(cSeccion, 'CarpetaCliente',
+      FCarpetaCliente);
     SetResolucionMaxima(Ini.ReadInteger(cSeccion, 'ResolucionMaxima',
       FResolucionMaxima));
   finally
@@ -119,8 +118,7 @@ begin
   try
     Ini.WriteString(cSeccion, 'Url', FUrl);
     Ini.WriteString(cSeccion, 'ApiKey', FApiKey);
-    Ini.WriteString(cSeccion, 'Cliente', FCliente);
-    Ini.WriteString(cSeccion, 'Sku', FSkuPorDefecto);
+    Ini.WriteString(cSeccion, 'CarpetaCliente', FCarpetaCliente);
     Ini.WriteInteger(cSeccion, 'ResolucionMaxima', FResolucionMaxima);
     Ini.UpdateFile;
   finally

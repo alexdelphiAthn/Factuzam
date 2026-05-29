@@ -17,17 +17,17 @@ object frmPrincipal: TfrmPrincipal
     StyledSettings = [Family, Style, FontColor]
     TextSettings.Font.Size = 12.000000000000000000
     Align = Bottom
-    Height = 140.000000000000000000
-    Position.Y = 500.000000000000000000
+    Height = 130.000000000000000000
+    Position.Y = 510.000000000000000000
     Size.Width = 360.000000000000000000
-    Size.Height = 140.000000000000000000
+    Size.Height = 130.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
   end
   object TabControl1: TTabControl
     Align = Client
     Size.Width = 360.000000000000000000
-    Size.Height = 500.000000000000000000
+    Size.Height = 510.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 0
     TabOrder = 1
@@ -45,16 +45,66 @@ object frmPrincipal: TfrmPrincipal
       Text = 'Capturar'
       ExplicitSize.cx = 100.000000000000000000
       ExplicitSize.cy = 50.000000000000000000
-      object imgPrevia: TImage
+      object lblArticulo: TLabel
         Align = Top
-        Height = 180.000000000000000000
         Margins.Left = 6.000000000000000000
         Margins.Top = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Position.X = 6.000000000000000000
         Position.Y = 6.000000000000000000
         Size.Width = 348.000000000000000000
-        Size.Height = 180.000000000000000000
+        Size.Height = 18.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'C'#243'digo de art'#237'culo (obligatorio)'
+        TabOrder = 0
+      end
+      object edArticulo: TEdit
+        Align = Top
+        Margins.Left = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 24.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 40.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        TextPrompt = 'C'#243'digo de art'#237'culo'
+      end
+      object lblColor: TLabel
+        Align = Top
+        Margins.Left = 6.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 18.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Color (opcional)'
+        TabOrder = 2
+      end
+      object edColor: TEdit
+        Align = Top
+        Margins.Left = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 86.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 40.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        TextPrompt = 'Color'
+      end
+      object imgPrevia: TImage
+        Align = Top
+        Height = 140.000000000000000000
+        Margins.Left = 6.000000000000000000
+        Margins.Top = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 132.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 140.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Fit
       end
@@ -64,11 +114,11 @@ object frmPrincipal: TfrmPrincipal
         Margins.Top = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 192.000000000000000000
+        Position.Y = 278.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 44.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 0
+        TabOrder = 4
         Text = 'Hacer foto'
         OnClick = btnCamaraClick
       end
@@ -78,11 +128,11 @@ object frmPrincipal: TfrmPrincipal
         Margins.Top = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 242.000000000000000000
+        Position.Y = 328.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 44.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 1
+        TabOrder = 5
         Text = 'Elegir de galer'#237'a'
         OnClick = btnGaleriaClick
       end
@@ -93,11 +143,11 @@ object frmPrincipal: TfrmPrincipal
         Margins.Right = 6.000000000000000000
         Margins.Bottom = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 424.000000000000000000
+        Position.Y = 430.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 44.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 2
+        TabOrder = 6
         Text = 'Subir todas (0)'
         OnClick = btnSubirClick
       end
@@ -110,9 +160,9 @@ object frmPrincipal: TfrmPrincipal
         Margins.Left = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Size.Width = 348.000000000000000000
-        Size.Height = 132.000000000000000000
+        Size.Height = 102.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 3
+        TabOrder = 7
       end
     end
     object tabConfig: TTabItem
@@ -130,12 +180,12 @@ object frmPrincipal: TfrmPrincipal
       object cajaConfig: TVertScrollBox
         Align = Client
         Size.Width = 360.000000000000000000
-        Size.Height = 474.000000000000000000
+        Size.Height = 484.000000000000000000
         Size.PlatformDefault = False
         ShowScrollBars = True
         TabOrder = 0
         Viewport.Width = 360.000000000000000000
-        Viewport.Height = 474.000000000000000000
+        Viewport.Height = 484.000000000000000000
         object lblUrl: TLabel
           Align = Top
           Margins.Left = 6.000000000000000000
@@ -184,9 +234,9 @@ object frmPrincipal: TfrmPrincipal
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 3
-          TextPrompt = 'Clave de acceso'
+          TextPrompt = 'Clave de acceso (X-API-Key)'
         end
-        object lblCliente: TLabel
+        object lblCarpetaCliente: TLabel
           Align = Top
           Margins.Left = 6.000000000000000000
           Margins.Top = 6.000000000000000000
@@ -196,10 +246,10 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
-          Text = 'Cliente (obligatorio)'
+          Text = 'Carpeta de cliente (carpeta_cliente)'
           TabOrder = 4
         end
-        object edCliente: TEdit
+        object edCarpetaCliente: TEdit
           Align = Top
           Margins.Left = 6.000000000000000000
           Margins.Right = 6.000000000000000000
@@ -209,9 +259,9 @@ object frmPrincipal: TfrmPrincipal
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 5
-          TextPrompt = 'Identificador de cliente/empresa'
+          TextPrompt = 'Carpeta del cliente en el servidor'
         end
-        object lblSku: TLabel
+        object lblResolucion: TLabel
           Align = Top
           Margins.Left = 6.000000000000000000
           Margins.Top = 6.000000000000000000
@@ -221,10 +271,10 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
-          Text = 'SKU por defecto (opcional)'
+          Text = 'Resoluci'#243'n m'#225'xima en p'#237'xeles (lado mayor)'
           TabOrder = 6
         end
-        object edSku: TEdit
+        object edResolucion: TEdit
           Align = Top
           Margins.Left = 6.000000000000000000
           Margins.Right = 6.000000000000000000
@@ -233,33 +283,8 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 7
-          TextPrompt = 'SKU o referencia'
-        end
-        object lblResolucion: TLabel
-          Align = Top
-          Margins.Left = 6.000000000000000000
-          Margins.Top = 6.000000000000000000
-          Margins.Right = 6.000000000000000000
-          Position.X = 6.000000000000000000
-          Position.Y = 246.000000000000000000
-          Size.Width = 348.000000000000000000
-          Size.Height = 20.000000000000000000
-          Size.PlatformDefault = False
-          Text = 'Resoluci'#243'n m'#225'xima en p'#237'xeles (lado mayor)'
-          TabOrder = 8
-        end
-        object edResolucion: TEdit
-          Align = Top
-          Margins.Left = 6.000000000000000000
-          Margins.Right = 6.000000000000000000
-          Position.X = 6.000000000000000000
-          Position.Y = 266.000000000000000000
-          Size.Width = 348.000000000000000000
-          Size.Height = 40.000000000000000000
-          Size.PlatformDefault = False
           KeyboardType = NumberPad
-          TabOrder = 9
+          TabOrder = 7
           Text = '1000'
           TextPrompt = '1000'
         end
@@ -269,11 +294,11 @@ object frmPrincipal: TfrmPrincipal
           Margins.Top = 12.000000000000000000
           Margins.Right = 6.000000000000000000
           Position.X = 6.000000000000000000
-          Position.Y = 318.000000000000000000
+          Position.Y = 258.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 44.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 10
+          TabOrder = 8
           Text = 'Guardar configuraci'#243'n'
           OnClick = btnGuardarConfigClick
         end
@@ -283,7 +308,7 @@ object frmPrincipal: TfrmPrincipal
           Margins.Top = 6.000000000000000000
           Margins.Right = 6.000000000000000000
           Position.X = 6.000000000000000000
-          Position.Y = 362.000000000000000000
+          Position.Y = 302.000000000000000000
           Size.Width = 348.000000000000000000
           Size.Height = 32.000000000000000000
           Size.PlatformDefault = False
@@ -291,7 +316,7 @@ object frmPrincipal: TfrmPrincipal
           TextSettings.Font.Size = 11.000000000000000000
           TextSettings.WordWrap = True
           Text = 'INI:'
-          TabOrder = 11
+          TabOrder = 9
         end
       end
     end

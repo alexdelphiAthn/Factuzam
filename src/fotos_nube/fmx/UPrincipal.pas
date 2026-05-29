@@ -1,7 +1,7 @@
 {******************************************************************************}
 {                                                                              }
 {  Módulo:       UPrincipal                                                    }
-{    Tipo:       Formulario principal (FMX, multiplataforma)                   }
+{    Tipo:       Formulario principal (FMX, Android)                           }
 { Versión:       1.0.0                                                         }
 {   Fecha:       29/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
@@ -10,9 +10,11 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Pantalla principal de la app FMX de fotos a la nube. Permite hacer        }
-{    fotos con la cámara (o elegirlas de la galería), las reduce a la          }
-{    resolución máxima configurada (por defecto 1000 px), las acumula en una   }
-{    cola por lotes y las sube al webservice de Factuzam (fotosnube).          }
+{    fotos con la cámara (o elegirlas de la galería) asociándolas a un código  }
+{    de artículo y un color, las reduce a la resolución máxima configurada     }
+{    (por defecto 1000 px), las acumula en una cola por lotes y las sube al    }
+{    webservice de Factuzam (upload_foto.php / fotosnube). Si hay varias       }
+{    fotos del mismo artículo+color se les asigna un índice correlativo.       }
 {******************************************************************************}
 unit UPrincipal;
 
@@ -20,7 +22,7 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  System.Variants, System.IOUtils, System.Actions,
+  System.IOUtils, System.Actions,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
   FMX.StdCtrls, FMX.Controls.Presentation, FMX.Edit, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
@@ -33,6 +35,10 @@ type
     TabControl1: TTabControl;
     tabCapturar: TTabItem;
     tabConfig: TTabItem;
+    lblArticulo: TLabel;
+    edArticulo: TEdit;
+    lblColor: TLabel;
+    edColor: TEdit;
     imgPrevia: TImage;
     btnCamara: TButton;
     btnGaleria: TButton;
@@ -43,10 +49,8 @@ type
     edUrl: TEdit;
     lblApiKey: TLabel;
     edApiKey: TEdit;
-    lblCliente: TLabel;
-    edCliente: TEdit;
-    lblSku: TLabel;
-    edSku: TEdit;
+    lblCarpetaCliente: TLabel;
+    edCarpetaCliente: TEdit;
     lblResolucion: TLabel;
     edResolucion: TEdit;
     btnGuardarConfig: TButton;
@@ -72,6 +76,7 @@ type
     procedure RefrescarCola;
     procedure ProcesarImagen(const AImagen: TBitmap);
     procedure PedirPermisoCamara;
+    function ValidarArticulo: Boolean;
   public
   end;
 
@@ -120,8 +125,7 @@ procedure TfrmPrincipal.ConfigAUI;
 begin
   edUrl.Text := FConfig.Url;
   edApiKey.Text := FConfig.ApiKey;
-  edCliente.Text := FConfig.Cliente;
-  edSku.Text := FConfig.SkuPorDefecto;
+  edCarpetaCliente.Text := FConfig.CarpetaCliente;
   edResolucion.Text := IntToStr(FConfig.ResolucionMaxima);
   lblRutaIni.Text := 'INI: ' + FConfig.RutaIni;
 end;
@@ -132,8 +136,7 @@ var
 begin
   FConfig.Url := Trim(edUrl.Text);
   FConfig.ApiKey := Trim(edApiKey.Text);
-  FConfig.Cliente := Trim(edCliente.Text);
-  FConfig.SkuPorDefecto := Trim(edSku.Text);
+  FConfig.CarpetaCliente := Trim(edCarpetaCliente.Text);
   // Si el texto no es un entero válido usamos el valor por defecto.
   if not TryStrToInt(Trim(edResolucion.Text), Resol) then
     Resol := cResolucionMaximaDefecto;
@@ -167,19 +170,37 @@ begin
 {$ENDIF}
 end;
 
+function TfrmPrincipal.ValidarArticulo: Boolean;
+begin
+  // El artículo es obligatorio para identificar la foto en el servidor.
+  Result := Trim(edArticulo.Text) <> '';
+  if not Result then
+  begin
+    Log('Indica el código de artículo antes de hacer la foto');
+    TabControl1.ActiveTab := tabCapturar;
+    edArticulo.SetFocus;
+  end;
+end;
+
 procedure TfrmPrincipal.btnCamaraClick(Sender: TObject);
 begin
-  // Limitamos la resolución ya en la captura para gastar menos memoria.
-  actHacerFoto.MaxWidth := FConfig.ResolucionMaxima;
-  actHacerFoto.MaxHeight := FConfig.ResolucionMaxima;
-  actHacerFoto.ExecuteTarget(Self);
+  if ValidarArticulo then
+  begin
+    // Limitamos la resolución ya en la captura para gastar menos memoria.
+    actHacerFoto.MaxWidth := FConfig.ResolucionMaxima;
+    actHacerFoto.MaxHeight := FConfig.ResolucionMaxima;
+    actHacerFoto.ExecuteTarget(Self);
+  end;
 end;
 
 procedure TfrmPrincipal.btnGaleriaClick(Sender: TObject);
 begin
-  actElegirFoto.MaxWidth := FConfig.ResolucionMaxima;
-  actElegirFoto.MaxHeight := FConfig.ResolucionMaxima;
-  actElegirFoto.ExecuteTarget(Self);
+  if ValidarArticulo then
+  begin
+    actElegirFoto.MaxWidth := FConfig.ResolucionMaxima;
+    actElegirFoto.MaxHeight := FConfig.ResolucionMaxima;
+    actElegirFoto.ExecuteTarget(Self);
+  end;
 end;
 
 procedure TfrmPrincipal.actHacerFotoDidFinishTaking(Image: TBitmap);
@@ -198,17 +219,19 @@ var
   Ruta: string;
 begin
   // Aplicamos el tope de resolución (defensivo, además del de la
-  // captura) y guardamos la foto en JPG para encolarla.
+  // captura) y guardamos la foto en JPG para encolarla con su
+  // artículo+color.
   Reducida := RedimensionarMax(AImagen, FConfig.ResolucionMaxima);
   try
     imgPrevia.Bitmap.Assign(Reducida);
     Ruta := TPath.Combine(TPath.GetTempPath,
       'foto_' + FormatDateTime('yyyymmdd_hhnnsszzz', Now) + '.jpg');
     Reducida.SaveToFile(Ruta);
-    FCola.Add(Ruta, Trim(edSku.Text));
+    FCola.Add(Ruta, Trim(edArticulo.Text), Trim(edColor.Text));
     RefrescarCola;
-    Log(Format('Foto encolada %dx%d: %s',
-      [Reducida.Width, Reducida.Height, TPath.GetFileName(Ruta)]));
+    Log(Format('Foto encolada %dx%d: %s / %s',
+      [Reducida.Width, Reducida.Height, Trim(edArticulo.Text),
+       Trim(edColor.Text)]));
   finally
     Reducida.Free;
   end;
@@ -218,14 +241,18 @@ procedure TfrmPrincipal.RefrescarCola;
 var
   Item: TFotoItem;
   Fila: TListViewItem;
+  Etiqueta: string;
 begin
   lstCola.BeginUpdate;
   try
     lstCola.Items.Clear;
     for Item in FCola.Items do
     begin
+      Etiqueta := Item.Articulo;
+      if Item.Color <> '' then
+        Etiqueta := Etiqueta + ' / ' + Item.Color;
       Fila := lstCola.Items.Add;
-      Fila.Text := TPath.GetFileName(Item.Archivo);
+      Fila.Text := Etiqueta;
       Fila.Detail := EstadoTexto(Item.Estado);
     end;
   finally
@@ -241,9 +268,9 @@ begin
   begin
     Log('Falta la URL del webservice (pestaña Configuración)');
   end
-  else if FConfig.Cliente = '' then
+  else if FConfig.CarpetaCliente = '' then
   begin
-    Log('Falta el identificador de cliente (pestaña Configuración)');
+    Log('Falta la carpeta de cliente (pestaña Configuración)');
   end
   else if FCola.PendientesCount = 0 then
   begin
@@ -253,7 +280,7 @@ begin
   begin
     FCola.Url := FConfig.Url;
     FCola.ApiKey := FConfig.ApiKey;
-    FCola.Cliente := FConfig.Cliente;
+    FCola.CarpetaCliente := FConfig.CarpetaCliente;
     btnSubir.Enabled := False;
     Log('Subiendo lote de fotos...');
     FCola.SubirTodasAsync(
@@ -261,11 +288,9 @@ begin
       begin
         RefrescarCola;
         if AItem.Estado = esError then
-          Log('Error en ' + TPath.GetFileName(AItem.Archivo) + ': ' +
-            AItem.Mensaje)
+          Log('Error en ' + AItem.Articulo + ': ' + AItem.Mensaje)
         else if AItem.Estado = esOk then
-          Log('OK ' + TPath.GetFileName(AItem.Archivo) +
-            ' (hash ' + AItem.Hash + ')');
+          Log('OK ' + AItem.Articulo + ' (sha1 ' + AItem.Hash + ')');
       end,
       procedure(const AOk, AError: Integer)
       begin
