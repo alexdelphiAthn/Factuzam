@@ -90,6 +90,8 @@ type
     dbcEstadoSes             : TcxGridDBColumn;
     dbcCodigoEmpSes          : TcxGridDBColumn;
     dbcCodigoPrvSes          : TcxGridDBColumn;
+    dbcRazonSocialPrvSes     : TcxGridDBColumn;
+    dbcNombrePrvSes          : TcxGridDBColumn;
     dbcCodigoTarSes          : TcxGridDBColumn;
     dbcUsuarioAltaSes        : TcxGridDBColumn;
 
@@ -108,7 +110,8 @@ type
     lblEmpresa               : TcxLabel;
     cbbEmpresa               : TcxDBLookupComboBox;
     lblProveedor             : TcxLabel;
-    cbbProveedor             : TcxDBLookupComboBox;
+    btnProveedor             : TcxDBButtonEdit;
+    lblProveedorNombre       : TcxLabel;
     lblRefPrv                : TcxLabel;
     txtRefPrv                : TcxDBTextEdit;
     lblAlmacen               : TcxLabel;
@@ -250,6 +253,8 @@ type
     procedure AbrirDistribuidor;
     procedure CopiarCeldasDistribuidasOtroColor(ALineaOrigen,
                                                  ALineaDestino: Integer);
+    procedure btnProveedorPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
@@ -276,6 +281,8 @@ type
     function  Dmm: TdmComprasSesiones;
     procedure CargarBasicosColor;
     procedure CargarConjuntosTallas;
+    procedure BuscarProveedor;
+    procedure ActualizarLabelProveedor;
     function  DispararEditButtonLineaActiva: Boolean;
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
@@ -315,6 +322,7 @@ implementation
 uses
   inLibGlobalVar,
   inLibUser,
+  inLibGenBusq,
   inLibComprasSesiones,
   inMtoModalDistribuidor,
   inMtoModalDocsCreados,
@@ -399,7 +407,6 @@ begin
   pkFieldName := 'SERIE_SES;NUMERO_SES';
 
   cbbEmpresa.Properties.ListSource   := Dmm.dsEmpresas;
-  cbbProveedor.Properties.ListSource := Dmm.dsProveedores;
   cbbAlmacen.Properties.ListSource   := Dmm.dsAlmacenes;
   cbbTarifa.Properties.ListSource    := Dmm.dsTarifas;
   cbbTemporada.Properties.ListSource := Dmm.dsTemporadas;
@@ -449,11 +456,17 @@ begin
     FGestorTallas.CargarCantidadesTodasLineas;
     FGestorTallas.ActualizarCaptionsLineaActiva;
   end;
+  // Pintar el rotulo del proveedor de la sesion enfocada al abrir el form.
+  ActualizarLabelProveedor;
 end;
 
 procedure TfrmMtoComprasSesiones.dsTablaGDataChangeHook(Sender: TObject;
                                                           Field: TField);
 begin
+  // Refrescar el rotulo del proveedor al navegar entre sesiones (Field=nil)
+  // o al cambiar CODIGO_PRV_SES tecleado directamente en el ButtonEdit.
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_SES') then
+    ActualizarLabelProveedor;
   // Field = nil => cambio de record activo en el master (no es un cambio
   // puntual de un campo del registro actual). Es el momento de
   // recalcular columnas y volver a publicar las cantidades de las
@@ -768,6 +781,72 @@ begin
   finally
     FreeAndNil(q);
   end;
+end;
+
+// ===========================================================================
+//   Proveedor — busqueda (inMtoGenSearch sobre vi_proveedores) y rotulo
+// ===========================================================================
+// Sustituye al antiguo combo de proveedores por un ButtonEdit que abre el
+// buscador generico (TfrmMtoSearch / inMtoGenSearch) sobre vi_proveedores y
+// un rotulo que muestra nombre + razon social del proveedor seleccionado.
+
+procedure TfrmMtoComprasSesiones.btnProveedorPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  BuscarProveedor;
+end;
+
+procedure TfrmMtoComprasSesiones.BuscarProveedor;
+var
+  sCodigo : string;
+begin
+  // Abre inMtoGenSearch sobre vi_proveedores y vuelca el CODIGO_PRV_PRV
+  // elegido en CODIGO_PRV_SES de la cabecera de la sesion.
+  if Dmm.unqryTablaG.IsEmpty then
+    MessageDlg('Crea o selecciona una sesion antes de elegir el proveedor.',
+               mtInformation, [mbOk], 0)
+  else if TBusquedaUtils.EjecutarBusqueda(
+            'Busqueda de proveedores',
+            'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
+            'CODIGO_PRV_PRV', sCodigo, 'frmMtoSesProvSearch') then
+  begin
+    if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+      Dmm.unqryTablaG.Edit;
+    Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString := sCodigo;
+    ActualizarLabelProveedor;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.ActualizarLabelProveedor;
+var
+  sCodigo : string;
+  sNombre : string;
+  sRazon  : string;
+begin
+  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryProveedores) y
+  // los pinta en el rotulo para que se vea con claridad quien es el proveedor.
+  sCodigo := '';
+  if (Dmm <> nil) and Assigned(Dmm.unqryTablaG) and Dmm.unqryTablaG.Active and
+     (not Dmm.unqryTablaG.IsEmpty) then
+    sCodigo := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if sCodigo = '' then
+    lblProveedorNombre.Caption := ''
+  else if (Dmm.unqryProveedores <> nil) and Dmm.unqryProveedores.Active and
+          Dmm.unqryProveedores.Locate('CODIGO_PRV_PRV', sCodigo, []) then
+  begin
+    sRazon  := Dmm.unqryProveedores.FieldByName('RAZON_SOCIAL_PRV').AsString;
+    sNombre := Dmm.unqryProveedores.FieldByName('NOMBRE_PRV').AsString;
+    // Si hay nombre comercial distinto de la razon social, lo anadimos entre
+    // parentesis; si coinciden o no hay nombre, solo la razon social.
+    if (Trim(sNombre) <> '') and
+       (not SameText(Trim(sNombre), Trim(sRazon))) then
+      lblProveedorNombre.Caption :=
+        sCodigo + ' - ' + sRazon + '  (' + sNombre + ')'
+    else
+      lblProveedorNombre.Caption := sCodigo + ' - ' + sRazon;
+  end
+  else
+    lblProveedorNombre.Caption := sCodigo + ' - (proveedor no encontrado)';
 end;
 
 // ===========================================================================

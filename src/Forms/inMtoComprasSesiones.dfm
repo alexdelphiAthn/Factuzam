@@ -61,6 +61,16 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               DataBinding.FieldName = 'CODIGO_PRV_SES'
               Width = 100
             end
+            object dbcRazonSocialPrvSes: TcxGridDBColumn
+              Caption = 'Raz'#243'n social'
+              DataBinding.FieldName = 'RAZON_SOCIAL_PRV_SES'
+              Width = 200
+            end
+            object dbcNombrePrvSes: TcxGridDBColumn
+              Caption = 'Nombre'
+              DataBinding.FieldName = 'NOMBRE_PRV_SES'
+              Width = 160
+            end
             object dbcCodigoTarSes: TcxGridDBColumn
               Caption = 'Tarifa'
               DataBinding.FieldName = 'CODIGO_TAR_SES'
@@ -85,7 +95,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Align = alTop
           Caption = ' Cabecera '
           TabOrder = 0
-          Height = 200
+          Height = 224
           Width = 1096
           object lblSerie: TcxLabel
             Left = 12
@@ -185,25 +195,19 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 8
             Transparent = True
           end
-          object cbbProveedor: TcxDBLookupComboBox
+          object btnProveedor: TcxDBButtonEdit
             Left = 470
             Top = 63
             DataBinding.DataField = 'CODIGO_PRV_SES'
             DataBinding.DataSource = dsTablaG
-            Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
-            Properties.ListColumns = <
+            Properties.Buttons = <
               item
-                Caption = 'C'#243'digo'
-                Width = 60
-                FieldName = 'CODIGO_PRV_PRV'
-              end
-              item
-                Caption = 'Proveedor'
-                FieldName = 'RAZON_SOCIAL_PRV'
+                Default = True
+                Kind = bkEllipsis
               end>
-            Properties.ListOptions.ShowHeader = False
+            Properties.OnButtonClick = btnProveedorPropertiesButtonClick
             TabOrder = 9
-            Width = 280
+            Width = 160
           end
           object lblRefPrv: TcxLabel
             Left = 770
@@ -354,6 +358,16 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Properties.ValueType = vtFloat
             TabOrder = 17
             Width = 90
+          end
+          object lblProveedorNombre: TcxLabel
+            Left = 12
+            Top = 192
+            AutoSize = False
+            Caption = ''
+            TabOrder = 27
+            Transparent = True
+            Height = 20
+            Width = 1060
           end
         end
         object pnlLineasTop: TPanel
