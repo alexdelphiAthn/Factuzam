@@ -138,7 +138,11 @@ type
     FTallaColumns    : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
     FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
     FMostrarAtributos: Boolean;
-    FColColorPivot   : TcxGridDBColumn;
+    // "C. basico": nombre del color basico (VERDE, AZUL...) + swatch.
+  FColColorPivot          : TcxGridDBColumn;
+  // "Color" del proveedor: texto libre (p.ej. "011" o "Verde botella PRV-99").
+  // Sin swatch, solo texto. Visible junto a la C. basico en modo pivote.
+  FColColorProveedorPivot : TcxGridDBColumn;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
     // su Edit + set field + Post dispara OnDataChange tres veces, y entre
     // el Edit y el set la cabecera todavia tiene el ESPIVOTE viejo. Sin
@@ -187,10 +191,17 @@ begin
   // y atributos se crean ANTES del inherited.
   CrearColumnasTallas;
   CrearColumnasAtributos;
-  // Columna no-bound 'Color' solo visible en modo pivote.
+  // Columna 'Color' (proveedor): solo texto libre, sin swatch.
+  FColColorProveedorPivot := tvLineasPedido.CreateColumn;
+  FColColorProveedorPivot.Name    := 'colLinPedcColorProveedor';
+  FColColorProveedorPivot.Caption := 'Color';
+  FColColorProveedorPivot.Width   := 90;
+  FColColorProveedorPivot.Visible := False;
+  FColColorProveedorPivot.Options.Editing := False;
+  // Columna 'C. basico': nombre del color basico + cuadradito visual.
   FColColorPivot := tvLineasPedido.CreateColumn;
   FColColorPivot.Name    := 'colLinPedcColorPivot';
-  FColColorPivot.Caption := 'Color';
+  FColColorPivot.Caption := 'C. b'#225'sico';
   FColColorPivot.Width   := 110;
   FColColorPivot.Visible := False;
   FColColorPivot.Options.Editing := False;
@@ -332,7 +343,8 @@ begin
   cfgP.SourceMaster         := dsTablaG;
   cfgP.SourceLineas         := dmmPedidosCompra.unqryPedidosCompraLineas;
   cfgP.Gestor               := FGestorTallas;
-  cfgP.ColColorPivot        := FColColorPivot;
+  cfgP.ColColorPivot          := FColColorPivot;
+  cfgP.ColColorProveedorPivot := FColColorProveedorPivot;
   cfgP.ColumnasTallas       := arr;
   cfgP.MaxColumnasTallas    := CANT_TALLAS_MAX;
   cfgP.TablaLineas          := 'fza_pedidos_compra_lineas';
