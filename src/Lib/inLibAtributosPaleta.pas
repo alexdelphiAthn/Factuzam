@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibAtributosPaleta                                          }
 {    Tipo:       Librería                                                      }
@@ -37,7 +37,7 @@ const
   // del texto para el swatch (margen + cuadrado + hueco). Se expone para
   // que los consumidores puedan ensanchar las columnas tras un ApplyBestFit
   // que solo mide el texto.
-  ANCHO_SWATCH_PX = 20; // MARGEN_IZQ(4) + LADO_CUADRADO(12) + HUECO_TEXTO(4)
+  ANCHO_SWATCH_PX = 30; // MARGEN_IZQ(4) + LADO_CUADRADO(12) + HUECO_TEXTO(4)
 
 // Invalida la cache (llamar al refrescar fza_atributos_basicos).
 procedure InvalidarCachePaleta;
