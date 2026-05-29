@@ -414,6 +414,8 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                   OnFocusedRecordChanged = tvLineasPedidoFocusedRecordChanged
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.FocusFirstCellOnNewRecord = True
+                  OptionsBehavior.ImmediateEditor = True
+                  OptionsData.Editing = True
                   OptionsData.Appending = True
                   OptionsView.GroupByBox = False
                   object colLineaPedcLINEA: TcxGridDBColumn
@@ -456,6 +458,9 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Caption = 'A recibir'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.DisplayFormat = '#,##0.###'
+                    Options.Editing = True
+                    Options.Focusing = True
+                    Options.Tabstop = True
                     Width = 90
                   end
                   object colLineaPedcPRECIO_COMPRA: TcxGridDBColumn
