@@ -349,6 +349,7 @@ begin
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_PEDCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_PEDCLIN';
   cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_PEDC';
+  cfgP.FieldColorTexto      := 'COLOR_TEXTO_PEDCLIN';
   cfgP.CamposOcultosEnPivote := TArray<string>.Create(
     'CODIGO_UNIDAD_PEDCLIN',
     'CANTIDAD_PEDCLIN',
