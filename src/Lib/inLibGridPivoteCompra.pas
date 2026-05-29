@@ -1042,8 +1042,13 @@ begin
   estado    := GetEstadoFila(iLinea);
   if estado = efrIndefinido then Exit;
   ColorFila := GetColorEstadoFila(estado);
-  // Respetar highlight de seleccion.
-  if AViewInfo.GridRecord.Selected then Exit;
+  // En celdas NO-talla cedemos el control a cxGrid cuando el record
+  // esta seleccionado para que se respete el highlight de seleccion.
+  // En celdas talla SIEMPRE pintamos las 3 sub-secciones (Pedido /
+  // Recibida / A recibir) porque si no, al focusear / editar la fila
+  // las cantidades pintadas desaparecen y el usuario pierde la
+  // referencia visual mientras teclea las recepciones.
+  if (not bEsTalla) and AViewInfo.GridRecord.Selected then Exit;
 
   if bEsTalla then
   begin
