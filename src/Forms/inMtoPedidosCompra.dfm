@@ -406,6 +406,12 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Width = 80
                     Options.Editing = False
                   end
+                  object colLineaPedcARecibir: TcxGridDBColumn
+                    Caption = 'A recibir'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.###'
+                    Width = 90
+                  end
                   object colLineaPedcPRECIO_COMPRA: TcxGridDBColumn
                     Caption = 'Precio compra'
                     DataBinding.FieldName = 'PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN'

@@ -28,7 +28,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, Uni,
+  Forms, Dialogs, Uni, System.Generics.Collections,
   inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
@@ -101,6 +101,11 @@ type
     btnTallasHorizontal:  TcxButton;
     btnAtributosColumna:  TcxButton;
     btnCrearAlbaran:      TcxButton;
+    btnExpandirRecibidos:   TcxButton;
+    // Columna no-bound editable solo en modo vertical (pivote OFF).
+    // El usuario teclea aqui "A recibir" por linea SKU. Se oculta
+    // cuando entra en modo pivote.
+    colLineaPedcARecibir: TcxGridDBColumn;
     btnExpandirRecibidos: TcxButton;
 
     procedure FormCreate(Sender: TObject);
@@ -112,6 +117,7 @@ type
     procedure btnTallasHorizontalClick(Sender: TObject);
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
+    procedure btnExpandirRecibidosClick(Sender: TObject);
     procedure btnExpandirRecibidosClick(Sender: TObject);
     procedure tvLineasPedidoFocusedRecordChanged(
                 Sender: TcxCustomGridTableView;
@@ -150,6 +156,8 @@ type
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     procedure PersistirPreferenciaPivote;
+    function  RecogerCeldasARecibirVertical(
+                                const ACodigoAlm: string): TArray<TCeldaARecibir>;
   public
     dmmPedidosCompra: TdmPedidosCompra;
     procedure CrearTablaPrincipal; override;
@@ -328,8 +336,10 @@ begin
   cfgP.FieldSku             := 'CODIGO_UNIDAD_PEDCLIN';
   cfgP.FieldCantidad        := 'CANTIDAD_PEDCLIN';
   cfgP.FieldCantidadRecibida:= 'CANTIDAD_RECIBIDA_PEDCLIN';
+  cfgP.FieldCantidadRecibida:= 'CANTIDAD_RECIBIDA_PEDCLIN';
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_PEDCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_PEDCLIN';
+  cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_PEDC';
   cfgP.CamposOcultosEnPivote := TArray<string>.Create(
     'CODIGO_UNIDAD_PEDCLIN',
     'CANTIDAD_PEDCLIN',
@@ -439,6 +449,12 @@ begin
     end
     else
       FPivote.Desactivar;
+    // La columna no-bound "A recibir" se ve en modo vertical y se
+    // oculta en pivote (en horizontal la entrada de cantidades se
+    // hace celda a celda en las columnas talla, no en una columna
+    // aparte).
+    if Assigned(colLineaPedcARecibir) then
+      colLineaPedcARecibir.Visible := not FPivote.Activo;
     // Sender=nil: llamada automatica desde el data-change hook, no
     // re-escribir la preferencia en la cabecera.
     if Sender <> nil then
@@ -453,6 +469,39 @@ begin
   inherited;
   FMostrarAtributos := not FMostrarAtributos;
   RefrescarVisibilidadAtributos;
+end;
+
+// Toggle del modo "Expandir recibidos": solo aplica con el pivote
+// activo. Si no esta, lo activamos primero. Pivote inactivo -> activar
+// pivote primero y luego expandir.
+procedure TfrmMtoPedidosCompra.btnExpandirRecibidosClick(Sender: TObject);
+var
+  sMensaje: string;
+begin
+  inherited;
+  if (dmmPedidosCompra = nil) or (FPivote = nil) then Exit;
+  if not FPivote.PuedeExpandir then
+  begin
+    ShowMessage('El pedido no soporta expandir recibidos.');
+    Exit;
+  end;
+  if FPivote.Expandido then
+    FPivote.Contraer
+  else
+  begin
+    // Si el pivote no esta activo, lo activamos primero.
+    if not FPivote.Activo then
+    begin
+      if not FPivote.ValidarPivotePosible(sMensaje) then
+      begin
+        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        Exit;
+      end;
+      FPivote.Activar;
+      PersistirPreferenciaPivote;
+    end;
+    FPivote.Expandir;
+  end;
 end;
 
 // Toggle del modo "Expandir recibidos": solo aplica con el pivote activo.
@@ -596,12 +645,82 @@ begin
     dmmPedidosCompra.unqryPedidosCompraLineas.Delete;
 end;
 
+// Recoge las cantidades "A recibir" tecleadas en modo vertical (no
+// pivote). Lee la columna no-bound colLineaPedcARecibir para cada
+// linea del dataset, y devuelve las que tengan cantidad > 0.
+function TfrmMtoPedidosCompra.RecogerCeldasARecibirVertical(
+                                  const ACodigoAlm: string): TArray<TCeldaARecibir>;
+var
+  ds: TUniQuery;
+  res: TList<TCeldaARecibir>;
+  bk: TBookmark;
+  recIdx, idxCol: Integer;
+  vARec: Variant;
+  rARec: Double;
+  c: TCeldaARecibir;
+  sAlmLin, sAlmCab, sAlmEfe: string;
+begin
+  Result := nil;
+  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  sAlmCab := dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+  idxCol := colLineaPedcARecibir.Index;
+  res := TList<TCeldaARecibir>.Create;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    recIdx := 0;
+    ds.First;
+    while not ds.Eof do
+    begin
+      vARec := tvLineasPedido.DataController.Values[recIdx, idxCol];
+      rARec := 0;
+      if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
+      begin
+        if VarIsNumeric(vARec) then
+          rARec := vARec
+        else
+          rARec := StrToFloatDef(VarToStr(vARec), 0);
+      end;
+      if rARec > 0 then
+      begin
+        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
+        if Trim(sAlmLin) <> '' then
+          sAlmEfe := sAlmLin
+        else
+          sAlmEfe := sAlmCab;
+        if SameText(sAlmEfe, ACodigoAlm) then
+        begin
+          c.LineaPedido   := ds.FieldByName('LINEA_PEDCLIN').AsString;
+          c.CodigoSku     := ds.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
+          c.CodigoAlmacen := sAlmEfe;
+          c.Cantidad      := rARec;
+          res.Add(c);
+        end;
+      end;
+      Inc(recIdx);
+      ds.Next;
+    end;
+    Result := res.ToArray;
+  finally
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+    FreeAndNil(res);
+  end;
+end;
+
 procedure TfrmMtoPedidosCompra.btnCrearAlbaranClick(Sender: TObject);
 var
   form: TfrmModalSelAlmacenPedido;
   sSerie, sNumero, sNumAlb, sMsg: string;
   bOk: Boolean;
   bTxOwned: Boolean;
+  arrCeldas: TArray<TCeldaARecibir>;
+  bUsarCeldas: Boolean;
+  recIdx: Integer;
 begin
   inherited;
   if dmmPedidosCompra = nil then Exit;
@@ -627,18 +746,52 @@ begin
     form.ShowModal;
     if not form.Aceptado then Exit;
     if Trim(form.CodigoAlmacen) = '' then Exit;
+    // Decidir flujo: si el pivote esta expandido leemos celdas via lib;
+    // si no, miramos la columna "A recibir" del modo vertical. Si no
+    // hay tecleos en ninguno, caemos al flujo clasico (pendientes
+    // totales del almacen).
+    if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
+      arrCeldas := FPivote.IterarARecibirPorAlmacen(form.CodigoAlmacen)
+    else
+      arrCeldas := RecogerCeldasARecibirVertical(form.CodigoAlmacen);
+    bUsarCeldas := Length(arrCeldas) > 0;
     bTxOwned := not inLibGlobalVar.oConn.InTransaction;
     if bTxOwned then inLibGlobalVar.oConn.StartTransaction;
     try
-      bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
-              inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-              form.SerieAlbaran, oUser,
-              form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
-              sNumAlb, sMsg);
+      if bUsarCeldas then
+        bOk := inLibPedidosCompra.CrearAlbaranDesdePedidoConCantidades(
+                inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
+                form.SerieAlbaran, oUser,
+                form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
+                arrCeldas, sNumAlb, sMsg)
+      else
+        bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
+                inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
+                form.SerieAlbaran, oUser,
+                form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
+                sNumAlb, sMsg);
       if bOk then
       begin
         if bTxOwned then inLibGlobalVar.oConn.Commit;
         ShowMessage(sMsg);
+        // Limpiar las celdas "A recibir" tecleadas para el almacen
+        // procesado, para que el usuario pueda seguir con otro almacen
+        // sin tener que borrar manualmente.
+        if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
+          FPivote.LimpiarARecibirParaAlmacen(form.CodigoAlmacen)
+        else if Assigned(colLineaPedcARecibir) then
+        begin
+          // Modo vertical: poner a Null la columna A recibir de las
+          // lineas cuyo almacen efectivo es el procesado.
+          tvLineasPedido.DataController.BeginUpdate;
+          try
+            for recIdx := 0 to tvLineasPedido.DataController.RecordCount - 1 do
+              tvLineasPedido.DataController.Values[recIdx,
+                                  colLineaPedcARecibir.Index] := Null;
+          finally
+            tvLineasPedido.DataController.EndUpdate;
+          end;
+        end;
         dmmPedidosCompra.unqryTablaG.Refresh;
         dmmPedidosCompra.unqryPedidosCompraLineas.Refresh;
       end
