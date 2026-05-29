@@ -153,6 +153,7 @@ type
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure PersistirPreferenciaPivote;
     function  RecogerCeldasARecibirVertical(
                                 const ACodigoAlm: string): TArray<TCeldaARecibir>;
@@ -203,6 +204,12 @@ begin
   // controlador.
   dmmPedidosCompra.unqryPedidosCompraLineas.AfterPost :=
                                              unqryLineasAfterPostHook;
+  // Hook AfterOpen del detail: al abrir el cursor (al entrar al form y
+  // cada vez que cambia el pedido master) hacemos ApplyBestFit para que
+  // las columnas se ajusten al contenido y no salgan truncadas como
+  // "Verde botel..." o "MARRO chocolat...".
+  dmmPedidosCompra.unqryPedidosCompraLineas.AfterOpen :=
+                                             unqryLineasAfterOpenHook;
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
@@ -453,6 +460,11 @@ begin
     // aparte).
     if Assigned(colLineaPedcARecibir) then
       colLineaPedcARecibir.Visible := not FPivote.Activo;
+    // BestFit tras togglear: ajustamos automaticamente el ancho de
+    // todas las columnas al contenido. Sin esto algunas (Color con
+    // textos largos como "Verde botella", articulo, descripcion...)
+    // quedan truncadas.
+    tvLineasPedido.ApplyBestFit;
     // Sender=nil: llamada automatica desde el data-change hook, no
     // re-escribir la preferencia en la cabecera.
     if Sender <> nil then
@@ -497,9 +509,15 @@ begin
       end;
       FPivote.Activar;
       PersistirPreferenciaPivote;
+      // BestFit tras activar el pivote.
+      tvLineasPedido.ApplyBestFit;
     end;
     FPivote.Expandir;
   end;
+  // BestFit tras toggle de Expandir/Contraer: con la altura nueva las
+  // columnas a veces se rompen si el grid recalcula widths antes que
+  // heights. Forzamos el ajuste final aqui.
+  tvLineasPedido.ApplyBestFit;
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
@@ -561,6 +579,16 @@ begin
     dmmPedidosCompra.CalcularTotalesPedidoCompra;
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
+end;
+
+// Hook AfterOpen del detail: cada vez que se abre el cursor (entrar al
+// form o navegar a otro pedido) ajustamos el ancho de columnas al
+// contenido. Asi no salen textos truncados como "Verde botel" o
+// "rón choc" en la columna Color.
+procedure TfrmMtoPedidosCompra.unqryLineasAfterOpenHook(DataSet: TDataSet);
+begin
+  if tvLineasPedido <> nil then
+    tvLineasPedido.ApplyBestFit;
 end;
 
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
