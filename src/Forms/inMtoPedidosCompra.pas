@@ -136,6 +136,8 @@ type
                 AEdit: TcxCustomEdit);
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
+    procedure cxgrdLineasPedidoKeyDown(Sender: TObject;
+                var Key: Word; Shift: TShiftState);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -710,6 +712,23 @@ procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+end;
+
+// Captura de teclas para 'A recibir' en modo pivote expandido. El
+// editor inplace esta bloqueado para no tapar los sub-segmentos
+// pintados (Pedido / Recibida). Las pulsaciones de digitos, backspace
+// y delete se redirigen al controlador de pivote, que modifica
+// Values[] directamente y dispara repintado. Si la libreria consume
+// la tecla, anulamos Key para que cxGrid no la propague (asi no abre
+// el editor ni mueve foco).
+procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoKeyDown(Sender: TObject;
+                                                       var Key: Word;
+                                                       Shift: TShiftState);
+begin
+  inherited;
+  if not Assigned(FPivote) then Exit;
+  if FPivote.ProcesarTeclaCeldaTalla(Key) then
+    Key := 0;
 end;
 
 procedure TfrmMtoPedidosCompra.btnAnadirLineaClick(Sender: TObject);

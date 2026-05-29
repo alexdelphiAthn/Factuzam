@@ -181,11 +181,17 @@ type
                 ACanvas: TcxCanvas;
                 AViewInfo: TcxGridTableDataCellViewInfo;
                 var ADone: Boolean);
-    // Engancha al OnInitEdit del grid. Al entrar a editar una celda
-    // talla en modo expandido, posiciona el editor inplace solo en el
-    // tercio inferior de la celda (zona 'A recibir'), dejando visibles
-    // Pedido y Recibida pintados arriba. Selecciona el contenido al
-    // entrar (estilo Excel) para que una pulsacion lo sustituya.
+    // En modo pivote expandido, el editor inplace de las celdas talla
+    // esta bloqueado para que no tape los sub-segmentos pintados
+    // (Pedido / Recibida). La entrada de cantidades 'A recibir' se
+    // captura desde OnKeyDown del grid via este metodo, que actualiza
+    // Values[] y dispara repintado. Devuelve True si consumio la
+    // tecla (digito, backspace, delete, esc).
+    function ProcesarTeclaCeldaTalla(AKey: Word): Boolean;
+    // Engancha al OnInitEdit del grid. Mantenido por compatibilidad,
+    // ahora solo hace SelectAll estilo Excel — el ajuste de tamanyo
+    // del editor en talla expandida ya no aplica porque el editor
+    // queda bloqueado en EditingCeldaTalla.
     procedure InitEditCeldaTalla(Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
                 AEdit: TcxCustomEdit);
@@ -1159,6 +1165,16 @@ begin
   if AItem = nil then Exit;
   if (AItem.Tag < 1) or (AItem.Tag > FCfg.MaxColumnasTallas) then Exit;
   if FCfg.Gestor = nil then Exit;
+  // En modo pivote expandido bloqueamos el editor inplace en las celdas
+  // talla: si se abriera, taparia los 3 sub-segmentos pintados (Pedido,
+  // Recibida, A recibir). La entrada de cantidades se hace por
+  // captura de teclas en ProcesarTeclaCeldaTalla (llamado desde el form
+  // en OnKeyDown del grid).
+  if FExpandido and PuedeExpandir then
+  begin
+    AAllow := False;
+    Exit;
+  end;
   if (FCfg.SourceLineas = nil) or FCfg.SourceLineas.IsEmpty then Exit;
   iAc := FCfg.SourceLineas.FieldByName(FCfg.FieldIdAcPivot).AsInteger;
   if iAc <= 0 then Exit;
@@ -1167,47 +1183,105 @@ begin
     AAllow := False;
 end;
 
+// Captura de teclas en modo pivote expandido. El editor inplace esta
+// bloqueado en EditingCeldaTalla, asi que las pulsaciones del usuario
+// llegan al OnKeyDown del grid y se redirigen aqui. Modifica Values[]
+// de la celda focused y dispara repintado para que el nuevo valor
+// aparezca en el sub-segmento "A recibir". Devuelve True si consumio
+// la tecla.
+function TGridPivoteCompra.ProcesarTeclaCeldaTalla(AKey: Word): Boolean;
+var
+  rec      : TcxCustomGridRecord;
+  col      : TcxGridColumn;
+  colLinea : TcxGridColumn;
+  vLin     : Variant;
+  iLinea   : Integer;
+  iAc      : Integer;
+  arr      : TArrPosConjunto;
+  bEsTalla : Boolean;
+  vVal     : Variant;
+  s        : string;
+  recIdx   : Integer;
+  colIdx   : Integer;
+  ch       : Char;
+begin
+  Result := False;
+  if not (FActivo and FExpandido and PuedeExpandir) then Exit;
+  if FCfg.Grid = nil then Exit;
+  rec := FCfg.Grid.Controller.FocusedRecord;
+  col := FCfg.Grid.Controller.FocusedColumn;
+  if (rec = nil) or (col = nil) then Exit;
+  if (col.Tag < 1) or (col.Tag > FCfg.MaxColumnasTallas) then Exit;
+  bEsTalla := (col.Tag - 1 < Length(FCfg.ColumnasTallas)) and
+              (col = FCfg.ColumnasTallas[col.Tag - 1]);
+  if not bEsTalla then Exit;
+  // Solo celdas dentro del conjunto del articulo.
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then Exit;
+  vLin := rec.Values[colLinea.Index];
+  if VarIsNull(vLin) or VarIsEmpty(vLin) then Exit;
+  iLinea := StrToIntDef(VarToStr(vLin), 0);
+  if iLinea <= 0 then Exit;
+  if not FPivotIdAc.TryGetValue(iLinea, iAc) then Exit;
+  if iAc <= 0 then Exit;
+  arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+  if col.Tag > Length(arr) then Exit;
+  recIdx := rec.RecordIndex;
+  colIdx := col.Index;
+  vVal := FCfg.Grid.DataController.Values[recIdx, colIdx];
+  if VarIsNull(vVal) or VarIsEmpty(vVal) then
+    s := ''
+  else
+  begin
+    if VarIsNumeric(vVal) then
+      s := IntToStr(Round(Double(vVal)))
+    else
+      s := VarToStr(vVal);
+  end;
+  case AKey of
+    VK_BACK:
+      if s <> '' then s := Copy(s, 1, Length(s) - 1);
+    VK_DELETE, VK_ESCAPE:
+      s := '';
+    VK_0..VK_9:
+      begin
+        ch := Char(Ord('0') + (AKey - VK_0));
+        s := s + ch;
+      end;
+    VK_NUMPAD0..VK_NUMPAD9:
+      begin
+        ch := Char(Ord('0') + (AKey - VK_NUMPAD0));
+        s := s + ch;
+      end;
+  else
+    Exit;
+  end;
+  // BeginUpdate/EndUpdate envuelve el cambio para que cxGrid notifique
+  // el repintado tras EndUpdate. Sin esto el nuevo valor en Values[]
+  // no se refleja en el sub-segmento 'A recibir' hasta otro evento.
+  FCfg.Grid.DataController.BeginUpdate;
+  try
+    if s = '' then
+      FCfg.Grid.DataController.Values[recIdx, colIdx] := Null
+    else
+      FCfg.Grid.DataController.Values[recIdx, colIdx] := StrToIntDef(s, 0);
+  finally
+    FCfg.Grid.DataController.EndUpdate;
+  end;
+  Result := True;
+end;
+
 procedure TGridPivoteCompra.InitEditCeldaTalla(
                           Sender: TcxCustomGridTableView;
                           AItem: TcxCustomGridTableItem;
                           AEdit: TcxCustomEdit);
-var
-  bEsTalla : Boolean;
 begin
-  // Estilo Excel: seleccion total al entrar a la celda, asi una pulsacion
-  // sustituye el contenido en lugar de concatenarse.
+  // Estilo Excel: seleccion total al entrar a la celda. En modo
+  // expandido el editor de celdas talla esta bloqueado por
+  // EditingCeldaTalla, asi que aqui solo aplica a celdas no-talla y
+  // a modo vertical.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
-  // Solo manipulamos el editor en modo pivote expandido sobre celdas
-  // talla: ahi pintamos 3 sub-segmentos (Pedido/Recibida/A recibir) y el
-  // editor por defecto cubre los 3, ocultando Pedido y Recibida. Lo
-  // bajamos al tercio inferior para que el usuario siga viendo lo
-  // pedido / recibido mientras teclea A recibir. El reposicionado se
-  // difiere con TThread.ForceQueue porque cxGrid sobrescribe SetBounds
-  // tras OnInitEdit en su pase de layout.
-  if not (FActivo and FExpandido and PuedeExpandir) then Exit;
-  if AItem = nil then Exit;
-  if (AItem.Tag < 1) or (AItem.Tag > FCfg.MaxColumnasTallas) then Exit;
-  bEsTalla := (AItem.Tag - 1 < Length(FCfg.ColumnasTallas)) and
-              (AItem = FCfg.ColumnasTallas[AItem.Tag - 1]);
-  if not bEsTalla then Exit;
-  if AEdit = nil then Exit;
-  TThread.ForceQueue(nil,
-    procedure
-    var
-      r    : TRect;
-      newH : Integer;
-    begin
-      if AEdit = nil then Exit;
-      if not AEdit.HandleAllocated then Exit;
-      r    := AEdit.BoundsRect;
-      newH := (r.Bottom - r.Top) div 3;
-      if newH <= 0 then Exit;
-      AEdit.SetBounds(r.Left,
-                      r.Top + 2 * newH,
-                      r.Right - r.Left,
-                      newH);
-    end);
 end;
 
 procedure TGridPivoteCompra.CustomDrawColorCell(

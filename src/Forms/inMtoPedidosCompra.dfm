@@ -362,6 +362,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 0
                 OnEnter = cxgrdLineasPedidoEnter
                 OnExit = cxgrdLineasPedidoExit
+                OnKeyDown = cxgrdLineasPedidoKeyDown
                 object tvLineasPedido: TcxGridDBTableView
                   OnCustomDrawCell = tvLineasPedidoCustomDrawCell
                   OnEditing = tvLineasPedidoEditing
