@@ -40,8 +40,8 @@ interface
 
 uses
   Winapi.Windows,
-  System.SysUtils, System.Classes, System.Variants, System.UITypes,
-  System.Generics.Collections, System.Types,
+  System.SysUtils, System.StrUtils, System.Classes, System.Variants,
+  System.UITypes, System.Generics.Collections, System.Types,
   Data.DB, DBAccess, Uni,
   Vcl.Controls, Vcl.Graphics,
   cxClasses, cxGraphics, cxControls, cxCustomData,
@@ -83,6 +83,12 @@ type
     // fallback cuando una linea no lleva almacen propio. Vacio si la
     // cabecera no expone almacen (no aplica fallback).
     FieldAlmacenMaster   : string;   // CODIGO_ALM_PEDC / CODIGO_ALM_ALBC
+    // Campo de texto libre con el color del articulo del proveedor
+    // (espejo de COLOR_TEXTO_SESLIN en sesiones). Si esta seteado, su
+    // valor tiene PRIORIDAD sobre el nombre del atributo basico para la
+    // columna Color del grid (el usuario quiere ver "AZUL TURQUESA
+    // PROV-XYZ", no solo "Azul"). Vacio para albaranes (no tienen).
+    FieldColorTexto      : string;   // COLOR_TEXTO_PEDCLIN
     CamposOcultosEnPivote: TArray<string>;
   end;
 
@@ -704,11 +710,15 @@ begin
       '       L.' + FCfg.FieldArt + ' AS ART, ' +
       '       COALESCE(L.' + FCfg.FieldIdAcPivot + ', 0) AS ID_AC, ' +
       '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
-      // COLOR_TXT: priorizamos AVC.AV (valor especifico del articulo, p.ej.
-      // "Verde botella" o "Marron chocolate") sobre ATBC.NOMBRE_ATB (color
-      // basico tipo "Verde" o "Negro") — el usuario quiere ver el color
-      // del articulo, no solo el basico al que mapea.
-      '       COALESCE(NULLIF(AVC.AV, ''''), ATBC.NOMBRE_ATB, ' +
+      // COLOR_TXT: si el documento trae FieldColorTexto (p. ej. pedidos
+      // con COLOR_TEXTO_PEDCLIN heredado del COLOR_TEXTO_SESLIN), ese
+      // texto libre del color del articulo del proveedor tiene la
+      // MAXIMA prioridad. Luego AVC.AV (valor canonico), luego
+      // ATBC.NOMBRE_ATB (color basico), y por ultimo el parseado del SKU.
+      '       COALESCE(' +
+      IfThen(FCfg.FieldColorTexto <> '',
+             'NULLIF(L.' + FCfg.FieldColorTexto + ', ''''), ', '') +
+      'NULLIF(AVC.AV, ''''), ATBC.NOMBRE_ATB, ' +
       '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
       '                '''') AS COLOR_TXT, ' +
       '       COALESCE(ATBC.CODIGO_ATB, ' +

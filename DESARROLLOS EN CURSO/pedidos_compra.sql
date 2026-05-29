@@ -225,6 +225,47 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
+-- 2ter. Columna COLOR_TEXTO_PEDCLIN: texto libre del color del articulo
+-- del proveedor (espejo de COLOR_TEXTO_SESLIN). Imprescindible para que
+-- en el grid de lineas se vea "AZUL TURQUESA PROV-XYZ" y no solo el
+-- color basico ("AZUL").
+-- ----------------------------------------------------------------------------
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_pedidos_compra_lineas'
+     AND COLUMN_NAME  = 'COLOR_TEXTO_PEDCLIN'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_pedidos_compra_lineas` '
+  'ADD COLUMN `COLOR_TEXTO_PEDCLIN` varchar(100) NULL DEFAULT NULL '
+  '     COMMENT ''Texto libre del color del articulo del proveedor'' '
+  'AFTER `NOMBRE_FAM_PEDCLIN`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Backfill best-effort para pedidos ya materializados: rescata
+-- COLOR_TEXTO_SESLIN desde la sesion origen via
+-- fza_compras_sesiones_documentos. Solo escribe filas que ahora estan
+-- NULL para no pisar tecleos manuales.
+UPDATE fza_pedidos_compra_lineas P
+  JOIN fza_compras_sesiones_documentos D
+    ON D.TIPO_DOC_SESDOC = 'PEDC'
+   AND D.SERIE_SESDOC    = P.SERIE_PEDC_PEDCLIN
+   AND D.NUMERO_SESDOC   = P.NUMERO_PEDC_PEDCLIN
+  JOIN fza_compras_sesiones_lineas S
+    ON S.SERIE_SES_SESLIN  = D.SERIE_SES_SESDOC
+   AND S.NUMERO_SES_SESLIN = D.NUMERO_SES_SESDOC
+   AND ( S.CODIGO_ART_TENTATIVO_SESLIN = P.CODIGO_ART_PEDCLIN
+      OR S.CODIGO_ART_REUSAR_SESLIN    = P.CODIGO_ART_PEDCLIN )
+   SET P.COLOR_TEXTO_PEDCLIN = S.COLOR_TEXTO_SESLIN
+ WHERE P.COLOR_TEXTO_PEDCLIN IS NULL
+   AND S.COLOR_TEXTO_SESLIN IS NOT NULL
+   AND S.COLOR_TEXTO_SESLIN <> '';
+
+-- ----------------------------------------------------------------------------
 -- 2bis. fza_pedidos_compra_celdas: cantidad por (linea, fila, talla)
 -- Espejo de fza_albaranes_compra_celdas. Sufijo PEDCCEL. Soporta el modo
 -- 'Tallas en horizontal' del Mto: una celda por SKU dentro de la matriz
