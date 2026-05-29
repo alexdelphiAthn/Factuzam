@@ -83,6 +83,8 @@ type
     txtREF_PROVEEDOR_PEDC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
     txtCODIGO_ALM_PEDC: TcxDBTextEdit;
+    lblTemporada:       TcxLabel;
+    cbbTemporadaPedc:   TcxDBLookupComboBox;
 
     // Totales
     lblTotalBases:           TcxLabel;
@@ -102,6 +104,9 @@ type
     btnAtributosColumna:  TcxButton;
     btnCrearAlbaran:      TcxButton;
     btnExpandirRecibidos: TcxButton;
+    // Atajo: rellena 'A recibir' con el pendiente de TODAS las
+    // tallas de la fila focused. Activo solo en pivote expandido.
+    btnRecibirFilaEntera: TcxButton;
     // Label de contexto que muestra Pedido / Recibida de la celda
     // talla focused en modo expandido. Visible solo cuando aplica.
     lblContextoTalla:     TcxLabel;
@@ -120,6 +125,7 @@ type
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
     procedure btnExpandirRecibidosClick(Sender: TObject);
+    procedure btnRecibirFilaEnteraClick(Sender: TObject);
     procedure tvLineasPedidoFocusedRecordChanged(
                 Sender: TcxCustomGridTableView;
                 APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
@@ -226,6 +232,10 @@ begin
   // pivote expandido alimentamos el label de contexto con Pedido /
   // Recibida (que el editor inplace nativo tapa durante la edicion).
   tvLineasPedido.OnFocusedItemChanged := tvLineasPedidoFocusedItemChanged;
+  // ListSource del combo Temporada (no se puede asignar en DFM porque
+  // el dataset esta en el DM hijo y se instancia despues del form).
+  cbbTemporadaPedc.Properties.ListSource := dmmPedidosCompra.dsTemporadasPedc;
+  cbbTemporadaPedc.Properties.ListFieldNames := 'PV';
   // Hook OnDataChange del master: al cambiar de pedido activo, el
   // controlador recarga su cache y republica.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
@@ -556,6 +566,26 @@ begin
   BestFitConSwatch;
 end;
 
+// Rellena el sub-segmento 'A recibir' con el pendiente (Pedido -
+// Recibida) de TODAS las tallas de la fila focused. Solo aplica en
+// pivote expandido — si no, avisa al usuario.
+procedure TfrmMtoPedidosCompra.btnRecibirFilaEnteraClick(Sender: TObject);
+var
+  iCeldas: Integer;
+begin
+  inherited;
+  if (FPivote = nil) or (not FPivote.Activo) or (not FPivote.Expandido) then
+  begin
+    MessageDlg('Activa "Expandir recibidos" antes de usar este atajo.',
+               mtInformation, [mbOk], 0);
+    Exit;
+  end;
+  iCeldas := FPivote.RecibirFilaEntera;
+  if iCeldas = 0 then
+    MessageDlg('No hay tallas pendientes de recibir en la fila activa.',
+               mtInformation, [mbOk], 0);
+end;
+
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
 begin
   inherited;
@@ -867,7 +897,10 @@ begin
     form.SerieAlbDefecto      := sSerie;  // default = misma serie
     form.RefProveedorDefecto  :=
       dmmPedidosCompra.unqryTablaG.FieldByName('REF_PROVEEDOR_PEDC').AsString;
-    form.IdPvTemporadaDefecto := 0;
+    // La temporada del pedido se hereda en el modal. Si la cabecera no
+    // tiene (NULL) cae a 0 y el combo queda en blanco.
+    form.IdPvTemporadaDefecto :=
+      dmmPedidosCompra.unqryTablaG.FieldByName('ID_PV_TEMPORADA_PEDC').AsInteger;
     form.ShowModal;
     if not form.Aceptado then Exit;
     if Trim(form.CodigoAlmacen) = '' then Exit;
