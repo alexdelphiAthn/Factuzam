@@ -157,6 +157,9 @@ type
     procedure PersistirPreferenciaPivote;
     function  RecogerCeldasARecibirVertical(
                                 const ACodigoAlm: string): TArray<TCeldaARecibir>;
+    // ApplyBestFit + ensanche para la columna Color (el cuadradito de
+    // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
+    procedure BestFitConSwatch;
   public
     dmmPedidosCompra: TdmPedidosCompra;
     procedure CrearTablaPrincipal; override;
@@ -170,6 +173,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar,
+  inLibAtributosPaleta,
   inLibPedidosCompra,
   inMtoModalSelAlmacenPedido;
 
@@ -464,7 +468,7 @@ begin
     // todas las columnas al contenido. Sin esto algunas (Color con
     // textos largos como "Verde botella", articulo, descripcion...)
     // quedan truncadas.
-    tvLineasPedido.ApplyBestFit;
+    BestFitConSwatch;
     // Sender=nil: llamada automatica desde el data-change hook, no
     // re-escribir la preferencia en la cabecera.
     if Sender <> nil then
@@ -510,14 +514,14 @@ begin
       FPivote.Activar;
       PersistirPreferenciaPivote;
       // BestFit tras activar el pivote.
-      tvLineasPedido.ApplyBestFit;
+      BestFitConSwatch;
     end;
     FPivote.Expandir;
   end;
   // BestFit tras toggle de Expandir/Contraer: con la altura nueva las
   // columnas a veces se rompen si el grid recalcula widths antes que
   // heights. Forzamos el ajuste final aqui.
-  tvLineasPedido.ApplyBestFit;
+  BestFitConSwatch;
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
@@ -588,7 +592,20 @@ end;
 procedure TfrmMtoPedidosCompra.unqryLineasAfterOpenHook(DataSet: TDataSet);
 begin
   if tvLineasPedido <> nil then
-    tvLineasPedido.ApplyBestFit;
+    BestFitConSwatch;
+end;
+
+// ApplyBestFit estandar + ensanche manual de la columna Color: el
+// custom-draw de FColColorPivot pinta un cuadradito de color de
+// ANCHO_SWATCH_PX (~20 px) ANTES del texto, y ApplyBestFit solo mide
+// el ancho del texto. Sin este ajuste la columna Color queda recortada
+// (se ve "ERD" en vez de "VERDE", etc) cuando hay swatch.
+procedure TfrmMtoPedidosCompra.BestFitConSwatch;
+begin
+  if tvLineasPedido = nil then Exit;
+  tvLineasPedido.ApplyBestFit;
+  if Assigned(FColColorPivot) and FColColorPivot.Visible then
+    FColColorPivot.Width := FColColorPivot.Width + ANCHO_SWATCH_PX;
 end;
 
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
