@@ -102,6 +102,9 @@ type
     btnAtributosColumna:  TcxButton;
     btnCrearAlbaran:      TcxButton;
     btnExpandirRecibidos: TcxButton;
+    // Atajo: rellena 'A recibir' con el pendiente de TODAS las
+    // tallas de la fila focused. Activo solo en pivote expandido.
+    btnRecibirFilaEntera: TcxButton;
     // Label de contexto que muestra Pedido / Recibida de la celda
     // talla focused en modo expandido. Visible solo cuando aplica.
     lblContextoTalla:     TcxLabel;
@@ -120,6 +123,7 @@ type
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
     procedure btnExpandirRecibidosClick(Sender: TObject);
+    procedure btnRecibirFilaEnteraClick(Sender: TObject);
     procedure tvLineasPedidoFocusedRecordChanged(
                 Sender: TcxCustomGridTableView;
                 APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
@@ -554,6 +558,26 @@ begin
   // columnas a veces se rompen si el grid recalcula widths antes que
   // heights. Forzamos el ajuste final aqui.
   BestFitConSwatch;
+end;
+
+// Rellena el sub-segmento 'A recibir' con el pendiente (Pedido -
+// Recibida) de TODAS las tallas de la fila focused. Solo aplica en
+// pivote expandido — si no, avisa al usuario.
+procedure TfrmMtoPedidosCompra.btnRecibirFilaEnteraClick(Sender: TObject);
+var
+  iCeldas: Integer;
+begin
+  inherited;
+  if (FPivote = nil) or (not FPivote.Activo) or (not FPivote.Expandido) then
+  begin
+    MessageDlg('Activa "Expandir recibidos" antes de usar este atajo.',
+               mtInformation, [mbOk], 0);
+    Exit;
+  end;
+  iCeldas := FPivote.RecibirFilaEntera;
+  if iCeldas = 0 then
+    MessageDlg('No hay tallas pendientes de recibir en la fila activa.',
+               mtInformation, [mbOk], 0);
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);

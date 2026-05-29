@@ -275,8 +275,17 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          object lblContextoTalla: TcxLabel
+          object btnRecibirFilaEntera: TcxButton
             Left = 8
+            Top = 38
+            Width = 180
+            Height = 26
+            Caption = 'Recibir fila entera'
+            TabOrder = 6
+            OnClick = btnRecibirFilaEnteraClick
+          end
+          object lblContextoTalla: TcxLabel
+            Left = 200
             Top = 38
             Caption = ''
             Style.Font.Charset = DEFAULT_CHARSET
@@ -287,7 +296,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             Style.IsFontAssigned = True
             Visible = False
             Transparent = True
-            Width = 920
+            Width = 728
           end
           object btnAnadirLinea: TcxButton
             Left = 8

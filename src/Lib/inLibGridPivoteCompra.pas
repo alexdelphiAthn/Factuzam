@@ -196,6 +196,11 @@ type
     // de conjunto, etc).
     function GetInfoCeldaTallaActiva(out ATallaCaption: string;
                                       out APedido, ARecibida: Double): Boolean;
+    // Rellena 'A recibir' con el pendiente (Pedido - Recibida) en
+    // TODAS las celdas talla del conjunto de la fila focused. Para
+    // tallas ya totalmente recibidas o sin Pedido no escribe nada.
+    // Devuelve numero de celdas modificadas (0 si no aplica).
+    function RecibirFilaEntera: Integer;
     // Engancha al OnInitEdit del grid. Mantenido por compatibilidad,
     // ahora solo hace SelectAll estilo Excel — el ajuste de tamanyo
     // del editor en talla expandida ya no aplica porque el editor
@@ -1333,6 +1338,60 @@ begin
   FPivotCantidades.TryGetValue(iKey, APedido);
   FPivotCantidadesRecibidas.TryGetValue(iKey, ARecibida);
   Result := True;
+end;
+
+function TGridPivoteCompra.RecibirFilaEntera: Integer;
+var
+  rec      : TcxCustomGridRecord;
+  colLinea : TcxGridColumn;
+  vLin     : Variant;
+  iLinea   : Integer;
+  iAc      : Integer;
+  arr      : TArrPosConjunto;
+  i        : Integer;
+  iKey     : Int64;
+  rPed     : Double;
+  rRec     : Double;
+  rPdte    : Double;
+  recIdx   : Integer;
+  colTalla : TcxGridDBColumn;
+begin
+  Result := 0;
+  if not (FActivo and FExpandido and PuedeExpandir) then Exit;
+  if FCfg.Grid = nil then Exit;
+  rec := FCfg.Grid.Controller.FocusedRecord;
+  if rec = nil then Exit;
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then Exit;
+  vLin := rec.Values[colLinea.Index];
+  if VarIsNull(vLin) or VarIsEmpty(vLin) then Exit;
+  iLinea := StrToIntDef(VarToStr(vLin), 0);
+  if iLinea <= 0 then Exit;
+  if not FPivotIdAc.TryGetValue(iLinea, iAc) then Exit;
+  if iAc <= 0 then Exit;
+  arr    := FCfg.Gestor.GetPosicionesConjunto(iAc);
+  recIdx := rec.RecordIndex;
+  FCfg.Grid.DataController.BeginUpdate;
+  try
+    for i := 0 to High(arr) do
+    begin
+      if i >= FCfg.MaxColumnasTallas then Break;
+      if (i >= Length(FCfg.ColumnasTallas)) or
+         (FCfg.ColumnasTallas[i] = nil) then Continue;
+      colTalla := FCfg.ColumnasTallas[i];
+      iKey  := Int64(iLinea) * 100000 + arr[i].IdAv;
+      rPed  := 0;
+      rRec  := 0;
+      FPivotCantidades.TryGetValue(iKey, rPed);
+      FPivotCantidadesRecibidas.TryGetValue(iKey, rRec);
+      rPdte := rPed - rRec;
+      if rPdte <= 0 then Continue;
+      FCfg.Grid.DataController.Values[recIdx, colTalla.Index] := rPdte;
+      Inc(Result);
+    end;
+  finally
+    FCfg.Grid.DataController.EndUpdate;
+  end;
 end;
 
 procedure TGridPivoteCompra.CustomDrawColorCell(
