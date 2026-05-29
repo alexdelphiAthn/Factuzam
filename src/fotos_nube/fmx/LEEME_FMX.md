@@ -5,9 +5,9 @@ la cámara del dispositivo, las reduce a una resolución máxima configurable
 (por defecto **1000 px** en el lado mayor) y las sube **por lotes** al
 webservice de fotos de Factuzam (`upload_foto.php`, alias *fotosnube*).
 
-Cada foto se identifica por **código de artículo** y **color**; si se hacen
-varias fotos del mismo artículo+color se les asigna un **índice
-correlativo** automáticamente.
+Cada foto se identifica por **código de artículo** y **color** (ambos
+obligatorios); a cada foto se le asigna un **índice correlativo**
+automático dentro de su grupo artículo+color (1, 2, 3…).
 
 Es un proyecto Delphi **independiente** (`SubirFotosFmx.dpr`), igual que
 `utilnormbbdd` o `utilmigsqlsrv`: **no** se compila dentro de `fzam.dproj`.
@@ -36,7 +36,7 @@ fmx/
    carpeta de documentos de la app (sandbox). La ruta exacta se muestra en
    pantalla.
 2. **Capturar** (pestaña *Capturar*): se teclea el **código de artículo**
-   (obligatorio) y el **color** (opcional); *Hacer foto* abre la cámara y
+   y el **color** (ambos obligatorios); *Hacer foto* abre la cámara y
    *Elegir de galería* la toma del carrete. Cada foto se reduce al máximo
    configurado y se añade a la cola con su artículo+color y estado
    *Pendiente*.
@@ -46,10 +46,13 @@ fmx/
 
 ## Índice por artículo+color
 
-- Una sola foto de un artículo+color → se envía sin índice
-  (`indice` vacío); el servidor la nombra `ARTICULO-COLOR_real.png`.
-- Varias del mismo artículo+color → se envía `indice` = 1, 2, 3…; el
-  servidor las nombra `ARTICULO-COLOR_1_real.png`, `_2_…`, etc.
+El webservice nombra cada fichero como `ARTICULO_COLOR_INDICE` y exige los
+tres campos no vacíos, así que **siempre se envía un índice** (>= 1):
+
+- Una sola foto de un artículo+color → `indice` = 1
+  (`ARTICULO_COLOR_1_real.png`).
+- Varias del mismo artículo+color → `indice` = 1, 2, 3… en el orden de
+  la cola (`_1_…`, `_2_…`, etc.).
 
 El índice se calcula al subir, sobre el contenido final de la cola.
 
@@ -62,8 +65,8 @@ El índice se calcula al subir, sobre el contenido final de la cola.
 | `imagen`          | sí          | El JPG reducido.                       |
 | `articulo`        | sí          | Código de artículo.                    |
 | `carpeta_cliente` | sí          | Carpeta del cliente en el servidor.    |
-| `color`           | no          | Color.                                 |
-| `indice`          | no          | Sólo si hay varias del mismo art.+color. |
+| `color`           | sí          | Color.                                 |
+| `indice`          | sí          | Correlativo (1..n) por artículo+color. |
 | `nombre_original` | no          | Nombre del fichero local.              |
 | `osha1`           | no          | SHA1 local para verificación e2e.      |
 

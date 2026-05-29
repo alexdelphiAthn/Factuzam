@@ -55,8 +55,10 @@ type
     FApiKey: string;
     FCarpetaCliente: string;
     function SubirUno(const AItem: TFotoItem): Boolean;
-    // Índice a enviar: vacío si la foto es única para su artículo+color,
-    // o el ordinal (1..n) si hay varias del mismo artículo+color.
+    // Índice correlativo (1..n) de la foto dentro de su grupo
+    // artículo+color. Se envía siempre porque el webservice exige
+    // articulo+color+indice no vacíos para nombrar el fichero; cuando
+    // sólo hay una foto del grupo el índice es 1.
     function CalcularIndice(const AItem: TFotoItem): string;
     procedure NotificarItem(const AProgreso: TProgresoFotoProc;
       const AItem: TFotoItem);
@@ -136,28 +138,26 @@ end;
 function TColaFotos.CalcularIndice(const AItem: TFotoItem): string;
 var
   Otro: TFotoItem;
-  Total: Integer;
   Ordinal: Integer;
+  Encontrado: Boolean;
 begin
-  // Contamos cuántas fotos comparten artículo+color y la posición de
-  // ésta dentro de ese grupo (en el orden de la cola).
-  Total := 0;
+  // Posición (1..n) de esta foto dentro de su grupo artículo+color, en
+  // el orden de la cola. Siempre >= 1: el webservice nombra el fichero
+  // como ARTICULO_COLOR_INDICE y exige el índice no vacío.
   Ordinal := 0;
+  Encontrado := False;
   for Otro in FItems do
   begin
-    if SameText(Otro.Articulo, AItem.Articulo) and
+    if (not Encontrado) and
+       SameText(Otro.Articulo, AItem.Articulo) and
        SameText(Otro.Color, AItem.Color) then
     begin
-      Inc(Total);
+      Inc(Ordinal);
       if Otro = AItem then
-        Ordinal := Total;
+        Encontrado := True;
     end;
   end;
-  // Sólo añadimos índice cuando hay más de una del mismo artículo+color.
-  if Total <= 1 then
-    Result := ''
-  else
-    Result := IntToStr(Ordinal);
+  Result := IntToStr(Ordinal);
 end;
 
 function TColaFotos.SubirUno(const AItem: TFotoItem): Boolean;
