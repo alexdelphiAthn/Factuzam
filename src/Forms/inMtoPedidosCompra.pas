@@ -142,10 +142,12 @@ type
     FTallaColumns    : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
     FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
     FMostrarAtributos: Boolean;
-    // "C. basico": nombre del color basico (VERDE, AZUL...) + swatch.
+    // "Color": cuadradito del color basico + texto del color del SKU
+    // (AV.AV, p.ej. "VERDE"). Columna unica - antes habia 2 (Color
+    // proveedor + C. Basico) pero el usuario decidio unificarlas.
   FColColorPivot          : TcxGridDBColumn;
-  // "Color" del proveedor: texto libre (p.ej. "011" o "Verde botella PRV-99").
-  // Sin swatch, solo texto. Visible junto a la C. basico en modo pivote.
+  // Reservado por compatibilidad con la libreria. Siempre nil ahora
+  // que la columna Color es unica.
   FColColorProveedorPivot : TcxGridDBColumn;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
     // su Edit + set field + Post dispara OnDataChange tres veces, y entre
@@ -196,22 +198,18 @@ begin
   // y atributos se crean ANTES del inherited.
   CrearColumnasTallas;
   CrearColumnasAtributos;
-  // Columna 'Color' (proveedor): solo texto libre, sin swatch.
-  FColColorProveedorPivot := tvLineasPedido.CreateColumn;
-  FColColorProveedorPivot.Name    := 'colLinPedcColorProveedor';
-  FColColorProveedorPivot.Caption := 'Color';
-  FColColorProveedorPivot.Width   := 120;
-  FColColorProveedorPivot.Visible := False;
-  FColColorProveedorPivot.Options.Editing := False;
-  // Columna 'C. Basico': nombre del color basico + cuadradito visual.
-  // Caption sin tildes para evitar la 'a' como cuadradito que sale en
-  // cxGrid cuando la unidad .pas no tiene BOM UTF-8.
+  // Columna unica 'Color': cuadradito del color basico + texto del
+  // color del SKU (AV.AV, p.ej. "VERDE"). El cuadradito sale del HEX
+  // del basico, el texto del nombre del atributo en la jerarquia del
+  // SKU. Asi el usuario ve a la vez la etiqueta que el sistema usa
+  // ("VERDE") y el color real que la representa.
   FColColorPivot := tvLineasPedido.CreateColumn;
   FColColorPivot.Name    := 'colLinPedcColorPivot';
-  FColColorPivot.Caption := 'C. Basico';
+  FColColorPivot.Caption := 'Color';
   FColColorPivot.Width   := 130;
   FColColorPivot.Visible := False;
   FColColorPivot.Options.Editing := False;
+  FColColorProveedorPivot := nil;
   inherited;
   InicializarGestorYPivote;
   // Pintado del swatch de color en la columna no-bound: delegamos en el
