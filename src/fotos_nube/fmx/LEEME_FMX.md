@@ -94,6 +94,18 @@ plataforma **Android 64-bit** seleccionada):
 - `Read external storage` / `Read media images` — para *Elegir de
   galería* según versión de Android.
 
+(Los permisos también van declarados como `Android_*` en el `.dproj`, así
+que normalmente no hay que tocarlos a mano.)
+
+### Icono y splash de Android
+
+El proyecto **no incluye** icono ni splash propios: se generan desde el IDE
+en *Project ▸ Options ▸ Application ▸ Icons* y *Splash Images* (con
+**Android 64-bit** seleccionado), p. ej. con un texto convertido en imagen.
+El IDE añade los recursos y su despliegue al `.dproj` al guardarlos.
+El tema es `NoTitleBar` para no depender del icono de la ActionBar al
+arrancar (antes causaba un crash `Resources NotFoundException`).
+
 Si ya instalaste la app y denegaste el permiso, vuelve a concederlo en
 *Ajustes de Android ▸ Aplicaciones ▸ Factuzam Fotos Nube ▸ Permisos*.
 
