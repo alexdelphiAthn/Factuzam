@@ -55,10 +55,10 @@
     <PropertyGroup Condition="'$(Base_Android64)'!=''">
         <DCC_UsePackage>rtl;fmx;fmxase;fmxobj;xmlrtl;inet;$(DCC_UsePackage)</DCC_UsePackage>
         <BT_BuildType>Debug</BT_BuildType>
+        <Android_MinSdkVersion>23</Android_MinSdkVersion>
         <Android_TargetSdkVersion>34</Android_TargetSdkVersion>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <Manifest_File>$(BDS)\bin\Artwork\Android\MyAndroidApp.manifest.template.xml</Manifest_File>
-        <EnabledSysJars>android-support-v4.dex.jar;cloud-messaging.dex.jar;fmx.dex.jar;google-analytics-v2.dex.jar;google-play-billing.dex.jar;google-play-licensing.dex.jar;google-play-services-ads-base.dex.jar;google-play-services-base.dex.jar;google-play-services-basement.dex.jar;google-play-services-maps.dex.jar;play-services-location.dex.jar</EnabledSysJars>
+        <VerInfo_Keys>package=com.factuzam.fotosnube;label=Fotos Nube;versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;buildAPIKey=;minSdkVersion=23;targetSdkVersion=34;debuggable=True</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
