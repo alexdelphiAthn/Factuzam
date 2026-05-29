@@ -112,7 +112,7 @@ type
   public
     // Re-vincula la pantalla flotante de fotos (si esta abierta) al
     // Mto recibido y refresca el articulo / SKU activo. NO la abre
-    // automaticamente: para abrirla el usuario debe pulsar Ctrl+Alt+F
+    // automaticamente: para abrirla el usuario debe pulsar Ctrl+F
     // en el Mto activo. Llamado desde pcPrincipalChange (cambio de
     // pestana) y desde TfrmMtoGen.FormShow para mantener el contexto.
     procedure EngancharFotoAlMto(AMto: TObject);
@@ -1565,7 +1565,7 @@ end;
 // Foto flotante transversal: cuando el usuario cambia de pestana
 // (=Mto activo), si la pantalla flotante ya esta abierta la
 // re-vincula al nuevo Mto. Si no esta abierta no hacemos nada: el
-// usuario la abre manualmente con Ctrl+Alt+F cuando quiera.
+// usuario la abre manualmente con Ctrl+F cuando quiera.
 procedure TfrmMtoPrincipal.pcPrincipalChange(Sender: TObject);
 var
   ts: TcxTabSheet;
@@ -1596,7 +1596,7 @@ var
   sArt, sSku: string;
 begin
   // Solo re-vincula si la flotante YA esta abierta (el usuario la
-  // abrio con Ctrl+Alt+F en algun Mto y al cambiar a otro queremos
+  // abrio con Ctrl+F en algun Mto y al cambiar a otro queremos
   // que siga el contexto). NO la abrimos automaticamente: el usuario
   // decide cuando aparece.
   if not Assigned(frmFotoArticulo) then Exit;

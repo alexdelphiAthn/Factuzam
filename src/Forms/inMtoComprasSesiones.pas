@@ -137,6 +137,7 @@ type
     btnNuevoColor            : TcxButton;
     btnFoto                  : TcxButton;
     btnArbolFamilias         : TcxButton;
+    btnDescargarFotos        : TcxButton;
     dlgFoto                  : TOpenDialog;
     lblHint                  : TcxLabel;
 
@@ -228,6 +229,7 @@ type
     procedure actIrArticulosExecute(Sender: TObject);
     procedure actIrAlbaranesCompraExecute(Sender: TObject);
     procedure actIrPedidosCompraExecute(Sender: TObject);
+    procedure btnDescargarFotosClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
@@ -312,6 +314,11 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    // La foto flotante (Ctrl+F, atajo global heredado de TfrmMtoGen) y su
+    // auto-refresh deben seguir la LINEA activa de la sesion, no la
+    // cabecera; por eso sobreescribimos ambos hooks.
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -334,7 +341,8 @@ uses
   inLibtb,
   inMtoModalSelFamilia,
   inMtoModalImpSesion,
-  inMtoModalIncidencias;
+  inMtoModalIncidencias,
+  inLibFotosNube;
 
 const
   fIdVaColor = 'CO';
@@ -725,6 +733,82 @@ begin
   ShowMto(frmMtoPrincipal, 'PedidosCompra');
 end;
 
+procedure TfrmMtoComprasSesiones.btnDescargarFotosClick(Sender: TObject);
+var
+  sSerie, sNumero, sCodArt, sMsg, sFile: string;
+  iLinea  : Integer;
+  archivos: TArray<string>;
+  bOK     : Boolean;
+begin
+  inherited;
+  // Boton "Bajar fotos": descarga del servidor las fotos del articulo de
+  // la linea activa, las descomprime en appDirFotos y borra el ZIP.
+  // Integra ademas una foto representativa en la linea de la sesion, igual
+  // que "+ Foto" (oFotos.GuardarSesion con CODIGO_UNIDAD = ''). El atajo
+  // global Ctrl+F abre la foto flotante de esa misma linea.
+  if Dmm.unqryTablaG.IsEmpty then
+    ShowMessage('No hay sesion activa.')
+  else if Dmm.unqrySesionLin.IsEmpty then
+    ShowMessage('Selecciona o crea una linea antes de descargar fotos.')
+  else
+  begin
+    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+      Dmm.unqryTablaG.Post;
+    if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+      Dmm.unqrySesionLin.Post;
+    sSerie  := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    iLinea  := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+    sCodArt := Trim(Dmm.unqrySesionLin.FieldByName(
+                      'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+    if sCodArt = '' then
+      ShowMessage('La linea activa no tiene codigo de articulo.')
+    else
+    begin
+      Screen.Cursor := crHourGlass;
+      try
+        bOK := DescargarFotosArticulo(sCodArt, archivos, sMsg);
+      finally
+        Screen.Cursor := crDefault;
+      end;
+      if not bOK then
+        ShowMessage('No se pudieron descargar las fotos del articulo ' +
+                    sCodArt + ':' + sLineBreak + sMsg)
+      else
+      begin
+        sFile := ElegirFotoRepresentativa(archivos);
+        if sFile <> '' then
+          oFotos.GuardarSesion(sSerie, sNumero, iLinea, sCodArt, '', sFile);
+        ShowMessage(Format('Descargadas %d foto(s) del articulo %s en la ' +
+          'carpeta de fotos.', [Length(archivos), sCodArt]));
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.ResolverArtSkuActivo(out ACodArt,
+  ACodSku: string);
+begin
+  // Sin sku: la foto de sesion se guarda a nivel articulo (CODIGO_UNIDAD
+  // = ''); la foto flotante muestra ese fallback del articulo tentativo.
+  ACodArt := '';
+  ACodSku := '';
+  if (Dmm <> nil) and Assigned(Dmm.unqrySesionLin) and
+     Dmm.unqrySesionLin.Active and (not Dmm.unqrySesionLin.IsEmpty) then
+    ACodArt := Trim(Dmm.unqrySesionLin.FieldByName(
+                      'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+end;
+
+function TfrmMtoComprasSesiones.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  // La foto flotante se engancha al grid de lineas: al cambiar de fila la
+  // imagen sigue al articulo tentativo de la linea activa.
+  if (Dmm <> nil) and Assigned(Dmm.dsSesionLin) then
+    Result := [Dmm.dsSesionLin]
+  else
+    Result := inherited DataSourcesParaFoto;
+end;
+
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 begin
   // Cerrar la query del lookup y soltar la connection ANTES del
@@ -1027,7 +1111,7 @@ begin
   inherited;
   // Sube una foto y la asocia a la linea activa de la sesion (a nivel
   // articulo padre — CODIGO_UNIDAD = ''). Las fotos por SKU concreto se
-  // gestionan via Ctrl+Alt+F + frmFotoArticulo (no implementado aun en
+  // gestionan via Ctrl+F + frmFotoArticulo (no implementado aun en
   // modo sesion). Al materializar, MigrarFotosSesion las pasa a
   // fza_articulos_fotos.
   if Dmm.unqryTablaG.IsEmpty then

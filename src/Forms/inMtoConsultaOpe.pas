@@ -111,7 +111,7 @@ type
     procedure OnFacturaLinDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoConsulta;
     // Lee el ARTICULO / SKU de la linea activa en cxViewFacLin para
-    // alimentar la pantalla flotante de fotos (Ctrl + Alt + F).
+    // alimentar la pantalla flotante de fotos (Ctrl + F).
     procedure ResolverArtSkuDeFacLin(out ACodArt, ACodSku: string);
   public
     procedure PrepararValores(const AEmpresa,
@@ -212,7 +212,7 @@ procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
 var
   sArt, sSku: string;
 begin
-  // Ctrl + Alt + F -> Foto del articulo / SKU de la linea de factura
+  // Ctrl + F -> Foto del articulo / SKU de la linea de factura
   // activa en cxViewFacLin.
   if (Key = Ord('F')) and (ssCtrl in Shift) and (ssAlt in Shift) then
   begin

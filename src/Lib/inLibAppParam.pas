@@ -181,6 +181,17 @@ begin
   RegistrarParametro('Fotos', 'appNumAtributosFoto',
     'Atributos del SKU que componen la clave de foto (0 = solo artículo)',
     tpInteger, '1');
+  // Descarga de fotos desde el servidor web (download_foto.php). La
+  // carpeta local de destino es appDirFotos (ya definida arriba). Estos
+  // tres parametros los consume inLibFotosNube; vease Compras Sesiones
+  // (Ctrl+F) y la ficha de fotos del articulo.
+  RegistrarParametro('Fotos', 'appFotosUrlDescarga',
+    'URL del script download_foto.php del servidor de fotos', tpString, '');
+  RegistrarParametro('Fotos', 'appFotosApiKey',
+    'Clave X-API-Key del servidor de fotos', tpString, '');
+  RegistrarParametro('Fotos', 'appFotosCarpetaCliente',
+    'Carpeta de cliente en el servidor (parámetro carpeta_cliente)',
+    tpString, '');
   // --- Ventas ---
   RegistrarParametro('Ventas', 'appTarifaDefault',
     'Tarifa por defecto', tpString, '');

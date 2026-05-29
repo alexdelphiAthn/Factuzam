@@ -31,12 +31,21 @@ inherited frmFotoArticulo: TfrmFotoArticulo
       TabOrder = 0
       OnClick = btnToggleClick
     end
+    object btnDescargarNube: TcxButton
+      Left = 140
+      Top = 4
+      Width = 176
+      Height = 30
+      Caption = 'Bajar fotos del servidor'
+      TabOrder = 1
+      OnClick = btnDescargarNubeClick
+    end
     object lblOrigen: TcxLabel
-      Left = 144
+      Left = 324
       Top = 8
       Caption = 'Sin foto'
       Properties.WordWrap = True
-      TabOrder = 1
+      TabOrder = 2
       Visible = False
       Width = 69
       Transparent = True
