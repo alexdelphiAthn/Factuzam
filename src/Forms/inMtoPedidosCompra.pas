@@ -83,6 +83,8 @@ type
     txtREF_PROVEEDOR_PEDC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
     txtCODIGO_ALM_PEDC: TcxDBTextEdit;
+    lblTemporada:       TcxLabel;
+    cbbTemporadaPedc:   TcxDBLookupComboBox;
 
     // Totales
     lblTotalBases:           TcxLabel;
@@ -230,6 +232,10 @@ begin
   // pivote expandido alimentamos el label de contexto con Pedido /
   // Recibida (que el editor inplace nativo tapa durante la edicion).
   tvLineasPedido.OnFocusedItemChanged := tvLineasPedidoFocusedItemChanged;
+  // ListSource del combo Temporada (no se puede asignar en DFM porque
+  // el dataset esta en el DM hijo y se instancia despues del form).
+  cbbTemporadaPedc.Properties.ListSource := dmmPedidosCompra.dsTemporadasPedc;
+  cbbTemporadaPedc.Properties.ListFieldNames := 'PV';
   // Hook OnDataChange del master: al cambiar de pedido activo, el
   // controlador recarga su cache y republica.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
@@ -891,7 +897,10 @@ begin
     form.SerieAlbDefecto      := sSerie;  // default = misma serie
     form.RefProveedorDefecto  :=
       dmmPedidosCompra.unqryTablaG.FieldByName('REF_PROVEEDOR_PEDC').AsString;
-    form.IdPvTemporadaDefecto := 0;
+    // La temporada del pedido se hereda en el modal. Si la cabecera no
+    // tiene (NULL) cae a 0 y el combo queda en blanco.
+    form.IdPvTemporadaDefecto :=
+      dmmPedidosCompra.unqryTablaG.FieldByName('ID_PV_TEMPORADA_PEDC').AsInteger;
     form.ShowModal;
     if not form.Aceptado then Exit;
     if Trim(form.CodigoAlmacen) = '' then Exit;

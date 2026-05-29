@@ -100,4 +100,20 @@ inherited dmPedidosCompra: TdmPedidosCompra
         Value = nil
       end>
   end
+  object unqryTemporadasPedc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT ID_PV_ARTPROP, PV'
+      '  FROM fza_propiedades_valores'
+      ' WHERE ID_PROP_PV = '#39'TEMPORADA'#39
+      '   AND ESACTIVO_PV = '#39'S'#39
+      ' ORDER BY PV')
+    Left = 360
+    Top = 96
+  end
+  object dsTemporadasPedc: TDataSource
+    DataSet = unqryTemporadasPedc
+    Left = 360
+    Top = 160
+  end
 end
