@@ -395,25 +395,31 @@ begin
               'No existe el color basico CODIGO_ATB=%s. Crealo en Mto ' +
               'Atributos Basicos antes de materializar.', [ACodigoAtbColor]);
         end;
-        // Crear el AV, enlazado al basico (helper) cuando lo haya.
+        // Crear el AV: AV = token saneado (identidad que va al SKU);
+        // DESCRIPCION_AV = texto original del proveedor (conserva la
+        // referencia completa, util cuando el 'color' es una variacion de
+        // diseno con simbolos que el saneo elimina). Enlazado al basico
+        // (helper) cuando lo haya.
         if idAtb > 0 then
         begin
           q.SQL.Text :=
             'INSERT INTO fza_atributos_valores ' +
-            '  (ID_VA_AV, AV, ID_ATB_AV, ESACTIVO_AV, ORDEN_AV, ' +
-            '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-            'VALUES (''CO'', :v, :ia, ''S'', 0, NOW(), :u, NOW(), :u)';
+            '  (ID_VA_AV, AV, DESCRIPCION_AV, ID_ATB_AV, ESACTIVO_AV, ' +
+            '   ORDEN_AV, INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
+            '   USUARIO_MODIF) ' +
+            'VALUES (''CO'', :v, :d, :ia, ''S'', 0, NOW(), :u, NOW(), :u)';
           q.ParamByName('ia').AsInteger := idAtb;
         end
         else
         begin
           q.SQL.Text :=
             'INSERT INTO fza_atributos_valores ' +
-            '  (ID_VA_AV, AV, ESACTIVO_AV, ORDEN_AV, ' +
+            '  (ID_VA_AV, AV, DESCRIPCION_AV, ESACTIVO_AV, ORDEN_AV, ' +
             '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-            'VALUES (''CO'', :v, ''S'', 0, NOW(), :u, NOW(), :u)';
+            'VALUES (''CO'', :v, :d, ''S'', 0, NOW(), :u, NOW(), :u)';
         end;
         q.ParamByName('v').AsString := sAv;
+        q.ParamByName('d').AsString := Trim(AColorTexto);
         q.ParamByName('u').AsString := AUsuario;
         q.ExecSQL;
         q.SQL.Text :=

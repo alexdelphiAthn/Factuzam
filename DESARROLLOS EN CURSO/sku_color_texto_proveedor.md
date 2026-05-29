@@ -33,10 +33,16 @@ Ejemplo: el proveedor llama al color `011-AZ`; se clasifica como básico
    mismo básico generan AV/SKU distintos → **stock separado**. Aceptado.
 2. **Solo SKU nuevos**: no se migran los SKU existentes (seguían el modelo
    antiguo con el básico). Sin renombrado masivo.
-3. **El básico sigue importando**: si una línea referencia un `CODIGO_ATB`
-   que no existe en la paleta, la materialización **falla** (no se clasifica
-   mal en silencio). Si la línea no mapea ningún básico, el SKU sale con el
-   color del proveedor pero sin clasificar (`ID_ATB_AV` NULL).
+3. **Básico opcional (helper cuando aplica)**: a veces el "color" del
+   proveedor no es un color sino una **variación de diseño** que implica
+   varios colores (estampado, floral…) y no reduce a un único básico. Por eso
+   el básico NO es obligatorio: si la línea no mapea ninguno, el SKU sale con
+   la referencia del proveedor sin clasificar (`ID_ATB_AV` NULL). Cuando SÍ se
+   mapea uno, debe existir en la paleta o la materialización falla (no
+   clasificar mal en silencio); ahí aporta HEX/agrupado.
+4. **Se conserva la referencia original**: el `AV` lleva el token saneado
+   (identidad que va al SKU) y `DESCRIPCION_AV` guarda el texto original del
+   proveedor, para no perder símbolos/forma que el saneo elimina.
 
 ## Saneo del token de color
 
