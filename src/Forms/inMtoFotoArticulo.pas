@@ -176,6 +176,12 @@ begin
   FHooksDataSource := TList<TPair<TDataSource, TDataChangeEvent>>.Create;
   FPadreResolver   := nil;
   FGpImagen        := nil;
+  // El bitmap GDI+ ya viene al tamaño del control; que TImage NO lo reescale
+  // (si no, al cambiar el area -p.ej. colapsar el panel de controles- la foto
+  // sale pequeña hasta el siguiente repintado).
+  imgFoto.Stretch      := False;
+  imgFoto.Proportional := False;
+  imgFoto.Center       := False;
   // Por defecto el panel de controles esta encogido.
   pnlControles.Visible := False;
   AjustarBotonToggle;
@@ -297,6 +303,9 @@ procedure TfrmFotoArticulo.ToggleControles;
 begin
   pnlControles.Visible := not pnlControles.Visible;
   AjustarBotonToggle;
+  // Reencajar la foto: al cambiar la visibilidad del panel, imgFoto cambia de
+  // tamaño pero el Resize del form no salta (la ventana no cambia de tamaño).
+  PintarFotoGDIPlus;
 end;
 
 procedure TfrmFotoArticulo.AjustarBotonToggle;
