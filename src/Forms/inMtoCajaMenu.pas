@@ -290,6 +290,7 @@ procedure TfrmMtoMenuCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   case Key of
+    VK_F3:     lblTraspasosClick(Sender);
     VK_F5:     lblVentasClick(Sender);
     VK_F6:     lblEntradaCambioClick(Sender);
     VK_F7:     lblGastosCajaClick(Sender);

@@ -39,6 +39,12 @@ type
     procedure ConfigurarEstructuraCabecera;
     procedure ConfigurarEstructuraLineas;
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
+    // Serie del documento de traspaso (fza_empresas_series + fallback) y su
+    // siguiente número (PRC_GET_NEXT_CONT_FACT_SERIE, como la factura).
+    function ObtenerSerieDocumento(const AEmpresa, AAlmacen, ACaja,
+                             ATipoDoc: string): string;
+    function SiguienteNumeroDocumento(const ASerie, ATipoDoc, AEmpresa,
+                             AUsuario: string): string;
     // Replica autocontenida de los helpers de UniDataCaja (privados allí).
     function SiguienteOpCaja(const AEmpresa, AAlmacen, ACaja,
                              AEmpleado: string): string;
@@ -56,7 +62,7 @@ type
                              ATipoOp: string; AImporte: Currency;
                              const AEmpleado, AConcepto, ASerieOrigen,
                              ANroOrigen, AEmpresaContra, AAlmContra,
-                             AEsTraspaso: string);
+                             AEsTraspaso, ANroDoc, ASerieDoc: string);
     // Suma lo servido a las líneas de la solicitud y recalcula su estado.
     procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
                              const ANumero, ASerie: string);
@@ -177,6 +183,56 @@ begin
       Result := qryAux.FieldByName('CODIGO_EMP_ALM').AsString;
   finally
     qryAux.Close;
+  end;
+end;
+
+function TdmTraspaso.ObtenerSerieDocumento(const AEmpresa, AAlmacen, ACaja,
+                                           ATipoDoc: string): string;
+begin
+  // Serie configurada para este tipo de documento (prefiere la de la caja /
+  // almacén; si no, la de empresa). Fallback: el propio tipo de documento.
+  qryAux.SQL.Text :=
+    'SELECT EMPSER FROM fza_empresas_series' +
+    ' WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = :TIPO' +
+    '   AND (CODIGO_ALM_EMPSER = :ALM OR CODIGO_ALM_EMPSER IS NULL' +
+    '        OR CODIGO_ALM_EMPSER = '''')' +
+    '   AND (CODIGO_CAJA_EMPSER = :CAJA OR CODIGO_CAJA_EMPSER IS NULL' +
+    '        OR CODIGO_CAJA_EMPSER = '''')' +
+    ' ORDER BY (CODIGO_CAJA_EMPSER = :CAJA) DESC,' +
+    '          (CODIGO_ALM_EMPSER = :ALM) DESC LIMIT 1';
+  qryAux.ParamByName('EMP').AsString := AEmpresa;
+  qryAux.ParamByName('TIPO').AsString := ATipoDoc;
+  qryAux.ParamByName('ALM').AsString := AAlmacen;
+  qryAux.ParamByName('CAJA').AsString := ACaja;
+  qryAux.Open;
+  try
+    if qryAux.IsEmpty then
+      Result := ATipoDoc
+    else
+      Result := qryAux.FieldByName('EMPSER').AsString;
+  finally
+    qryAux.Close;
+  end;
+end;
+
+function TdmTraspaso.SiguienteNumeroDocumento(const ASerie, ATipoDoc, AEmpresa,
+                                              AUsuario: string): string;
+var
+  SpTrx: TUniStoredProc;
+begin
+  SpTrx := TUniStoredProc.Create(nil);
+  try
+    SpTrx.Connection := oConn;
+    SpTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+    SpTrx.Prepare;
+    SpTrx.ParamByName('pserie').AsString := ASerie;
+    SpTrx.ParamByName('pTipoDoc').AsString := ATipoDoc;
+    SpTrx.ParamByName('pEMPRESA_CONTADOR').AsString := AEmpresa;
+    SpTrx.ParamByName('pUSUARIOMODIF').AsString := AUsuario;
+    SpTrx.Execute;
+    Result := SpTrx.ParamByName('pcont').AsString;
+  finally
+    FreeAndNil(SpTrx);
   end;
 end;
 
@@ -370,11 +426,12 @@ procedure TdmTraspaso.InsertarOperacionCaja(QryTrx: TUniQuery;
                           ATipoOp: string; AImporte: Currency;
                           const AEmpleado, AConcepto, ASerieOrigen,
                           ANroOrigen, AEmpresaContra, AAlmContra,
-                          AEsTraspaso: string);
+                          AEsTraspaso, ANroDoc, ASerieDoc: string);
 begin
   QryTrx.SQL.Text :=
     'INSERT INTO fza_caja_operaciones (' +
     '  CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA, CODIGO_CAJA_OPCAJA,' +
+    '  NUMERO_FAC_OPCAJA, SERIE_FAC_OPCAJA,' +
     '  NUMERO_OPERACION_OPCAJA, TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA,' +
     '  FECHA_OPERACION_OPCAJA, FECHA_OP_DIA_OPCAJA, CODIGO_EMPLEADO_OPCAJA,' +
     '  CONCEPTO_GASTO_INGRESO_OPCAJA, SERIE_REF_ORIGEN_OPCAJA,' +
@@ -382,7 +439,9 @@ begin
     '  CODIGO_ALM_CONTRA_OPCAJA, ESTRASPASO_OPCAJA, ESTADO_DEVOLUCION_OPCAJA,' +
     '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
     'VALUES (' +
-    '  :EMP, :ALM, :CAJA, :NUMOP, :TIPOOP, :IMPORTE, NOW(), CURRENT_DATE,' +
+    '  :EMP, :ALM, :CAJA,' +
+    '  NULLIF(:NRODOC, ''''), NULLIF(:SERIEDOC, ''''),' +
+    '  :NUMOP, :TIPOOP, :IMPORTE, NOW(), CURRENT_DATE,' +
     '  :EMPLEADO, NULLIF(:CONCEPTO, ''''), NULLIF(:SERIEORIG, ''''),' +
     '  NULLIF(:NROORIG, ''''), NULLIF(:EMPCONTRA, ''''),' +
     '  NULLIF(:ALMCONTRA, ''''), :ESTRASPASO, ''N'',' +
@@ -400,6 +459,8 @@ begin
   QryTrx.ParamByName('EMPCONTRA').AsString := AEmpresaContra;
   QryTrx.ParamByName('ALMCONTRA').AsString := AAlmContra;
   QryTrx.ParamByName('ESTRASPASO').AsString := AEsTraspaso;
+  QryTrx.ParamByName('NRODOC').AsString := ANroDoc;
+  QryTrx.ParamByName('SERIEDOC').AsString := ASerieDoc;
   QryTrx.ParamByName('USUARIO').AsString := AEmpleado;
   QryTrx.Execute;
 end;
@@ -411,7 +472,7 @@ function TdmTraspaso.GrabarTraspaso(const AAlmacenDestino: string;
 var
   QryTrx: TUniQuery;
   sEmpresa, sAlmacenOrigen, sCaja, sUsuario, sEmpContra, sTipoDoc: string;
-  sSku, sArticulo, sLinea: string;
+  sSku, sArticulo, sLinea, sSerieDoc, sNumeroDoc: string;
   dCantidad: Double;
   cCoste, cTotal: Currency;
   iLinea: Integer;
@@ -435,10 +496,15 @@ begin
     sTipoDoc := 'TR'
   else
     sTipoDoc := 'TA';
+  // Serie del documento de traspaso (de fza_empresas_series, con fallback).
+  sSerieDoc := ObtenerSerieDocumento(sEmpresa, sAlmacenOrigen, sCaja, sTipoDoc);
   QryTrx := TUniQuery.Create(nil);
   try
     QryTrx.Connection := oConn;
     ANumOperacion := SiguienteOpCaja(sEmpresa, sAlmacenOrigen, sCaja, sUsuario);
+    // Número del documento dentro de la serie (mismo SP que la factura).
+    sNumeroDoc := SiguienteNumeroDocumento(sSerieDoc, sTipoDoc, sEmpresa,
+                                           sUsuario);
     oConn.StartTransaction;
     try
       cTotal := 0;
@@ -453,13 +519,15 @@ begin
         dCantidad := cdsLineas.FieldByName('CANTIDAD').AsFloat;
         cCoste := cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
         // Salida del origen hacia el destino.
-        InsertarMovimientoAlmacen(QryTrx, sTipoDoc, '', '', sLinea, sEmpresa,
-          sAlmacenOrigen, sCaja, AAlmacenDestino, 'S', sSku, dCantidad, cCoste,
-          sUsuario, sAlmacenOrigen, ANumOperacion, '', sArticulo);
+        InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
+          sLinea, sEmpresa, sAlmacenOrigen, sCaja, AAlmacenDestino, 'S', sSku,
+          dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion, '',
+          sArticulo);
         // Entrada en el destino desde el origen.
-        InsertarMovimientoAlmacen(QryTrx, sTipoDoc, '', '', sLinea, sEmpresa,
-          AAlmacenDestino, sCaja, sAlmacenOrigen, 'E', sSku, dCantidad, cCoste,
-          sUsuario, sAlmacenOrigen, ANumOperacion, '', sArticulo);
+        InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
+          sLinea, sEmpresa, AAlmacenDestino, sCaja, sAlmacenOrigen, 'E', sSku,
+          dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion, '',
+          sArticulo);
         cTotal := cTotal + cCoste * dCantidad;
         cdsLineas.Next;
       end;
@@ -468,7 +536,7 @@ begin
       InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,
         ANumOperacion, sTipoDoc, cTotal, sUsuario,
         'Traspaso a ' + AAlmacenDestino, ASerieSolicitud, ANumSolicitud,
-        sEmpContra, AAlmacenDestino, 'S');
+        sEmpContra, AAlmacenDestino, 'S', sNumeroDoc, sSerieDoc);
       if Trim(ANumSolicitud) <> '' then
         MarcarSolicitudAtendida(QryTrx, ANumSolicitud, ASerieSolicitud);
       oConn.Commit;
