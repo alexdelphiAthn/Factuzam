@@ -29,7 +29,8 @@ unit inLibGridArticulos;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB, Uni, Vcl.Controls,
+  System.SysUtils, System.Classes, System.Variants, Data.DB, Uni,
+  Vcl.Controls,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibArticulosValidador, inLibArticulosAtributosLookup;
