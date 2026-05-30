@@ -74,6 +74,7 @@ type
     function GenerarSku: string;
     procedure ActualizarColumnasAtributo(const ACodArt: string);
     procedure AutoCompletarAtributosUnicos(const ACodArt: string);
+    procedure RellenarAtributosDesdeSku(const ACodArt, ASku: string);
     function CdsEditando: Boolean;
   public
     constructor Create(AConn: TUniConnection; AView: TcxGridDBTableView;
@@ -281,6 +282,24 @@ begin
   end;
 end;
 
+// El SKU es CODIGO_ART/val1/val2...; vuelca val1..valN en ATTRn_VALOR para que
+// las columnas de talla/color muestren los valores de un SKU ya cerrado.
+procedure TGridArticulosLineas.RellenarAtributosDesdeSku(const ACodArt,
+                                                         ASku: string);
+var
+  sResto: string;
+  Partes: TArray<string>;
+  i: Integer;
+begin
+  if (ASku = '') or (not StartsText(ACodArt + '/', ASku)) then
+    Exit;
+  sResto := Copy(ASku, Length(ACodArt) + 2, MaxInt);
+  Partes := sResto.Split(['/']);
+  for i := 0 to High(Partes) do
+    if i < 5 then
+      FCds.FieldByName(FCampos.AttrValor[i + 1]).AsString := Partes[i];
+end;
+
 function TGridArticulosLineas.ResolverEntrada(const AEntrada: string): Boolean;
 var
   Val: TArticulosValidador;
@@ -308,16 +327,19 @@ begin
     FCds.Edit;
   FCds.FieldByName(FCampos.CodigoArt).AsString := sCodArt;
   FCds.FieldByName(FCampos.Descripcion).AsString := sDesc;
+  // Muestra SIEMPRE las columnas de talla/color del articulo (aunque el SKU
+  // venga ya cerrado, para que el usuario vea color/talla).
+  ActualizarColumnasAtributo(sCodArt);
   if bCompleto then
   begin
     FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
+    RellenarAtributosDesdeSku(sCodArt, sSku);
     if Assigned(FOnResuelto) then
       FOnResuelto(sCodArt, sSku, sDesc, True);
   end
   else
   begin
     FCds.FieldByName(FCampos.CodigoUnidad).AsString := sCodArt;
-    ActualizarColumnasAtributo(sCodArt);
     AutoCompletarAtributosUnicos(sCodArt);
   end;
   Result := True;
