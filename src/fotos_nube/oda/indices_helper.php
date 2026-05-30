@@ -20,6 +20,23 @@
 // ----------------------------------------------------------------------
 
 /**
+ * Sanea un texto de color para el token COLOR de los nombres de foto.
+ * FUENTE UNICA para upload_foto.php y download_foto.php. MISMA regla que
+ * SanearColorSku / SanearColorFoto del cliente Delphi: mayusculas; espacios
+ * -> '-'; solo se conservan [A-Za-z0-9_-]; el resto de simbolos (/, %, EUR
+ * ...) se prohibe; sin separadores repetidos ni en los extremos.
+ */
+function sanear_color(string $raw): string
+{
+    $c = strtoupper(trim($raw));
+    $c = str_replace(' ', '-', $c);
+    $c = preg_replace('/[^A-Za-z0-9_-]/', '', $c);
+    $c = preg_replace('/-+/', '-', $c);
+    $c = preg_replace('/_+/', '_', $c);
+    return trim($c, '-_');
+}
+
+/**
  * Devuelve la ruta absoluta del fichero índice y el sufijo del PNG al
  * que corresponde cada tipo (_real / _300 / _150).
  */

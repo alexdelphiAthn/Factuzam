@@ -72,16 +72,10 @@ if ($carpetaCliente === '') {
 
 // Componer nombre: prioridad a articulo+color+indice
 $articulo = preg_replace('/[^A-Za-z0-9_-]/', '_', $articuloRaw);
-// Color: misma regla que SanearColorSku/SanearColorFoto del cliente Delphi.
-// Mayusculas; espacios -> '-'; se PROHIBEN simbolos (/, %, EUR, ...); sin
-// separadores repetidos ni en los extremos. Imprescindible para que el token
-// COLOR del nombre case con el segmento de color del SKU (texto proveedor).
-$color    = strtoupper(trim($colorRaw));
-$color    = str_replace(' ', '-', $color);
-$color    = preg_replace('/[^A-Za-z0-9_-]/', '', $color);
-$color    = preg_replace('/-+/', '-', $color);
-$color    = preg_replace('/_+/', '_', $color);
-$color    = trim($color, '-_');
+// Color: fuente unica de saneo (sanear_color en indices_helper.php), misma
+// regla que el cliente Delphi. Imprescindible para que el token COLOR del
+// nombre case con el segmento de color del SKU (texto del proveedor).
+$color    = sanear_color($colorRaw);
 $indice   = preg_replace('/[^0-9]/',         '',  $indiceRaw);
 
 if ($articulo !== '' && $color !== '' && $indice !== '') {
