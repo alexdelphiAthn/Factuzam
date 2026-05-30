@@ -1383,7 +1383,7 @@ begin
   inherited;
   SendMessage(Self.Handle, WM_SETREDRAW, WPARAM(False), 0);
   // Si la pantalla flotante de fotos estaba enganchada a DataSources
-  // de este Mto (vinculados con Ctrl+Alt+F), la desenganchamos antes
+  // de este Mto (vinculados con Ctrl+F), la desenganchamos antes
   // de que sus DataSources se liberen con el data module. Asi no
   // quedan punteros colgando en FHooksDataSource.
   if Assigned(frmFotoArticulo) then
@@ -2187,9 +2187,9 @@ begin
   inherited;
   ResetForm;
   // Si la pantalla flotante de fotos ya esta abierta (el usuario
-  // pulso Ctrl+Alt+F en otro Mto), la re-vinculamos a este. Si no
+  // pulso Ctrl+F en otro Mto), la re-vinculamos a este. Si no
   // esta abierta, no la abrimos: que aparezca solo cuando el usuario
-  // lo pida con Ctrl+Alt+F.
+  // lo pida con Ctrl+F.
   if (Self.Owner is TfrmMtoPrincipal) then
     TfrmMtoPrincipal(Self.Owner).EngancharFotoAlMto(Self);
 end;

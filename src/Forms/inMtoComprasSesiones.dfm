@@ -429,13 +429,24 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 4
             OnClick = btnArbolFamiliasClick
           end
-          object lblHint: TcxLabel
+          object btnDescargarFotos: TcxButton
             Left = 770
+            Top = 5
+            Width = 120
+            Height = 28
+            Caption = 'Bajar fotos'
+            LookAndFeel.Kind = lfFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 5
+            OnClick = btnDescargarFotosClick
+          end
+          object lblHint: TcxLabel
+            Left = 898
             Top = 7
-            Caption = 
+            Caption =
               'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
               'oste.'
-            TabOrder = 5
+            TabOrder = 6
             Transparent = True
           end
         end

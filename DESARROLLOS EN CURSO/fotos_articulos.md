@@ -28,10 +28,16 @@ contiene `/` o `\` (que son frecuentes: `BLUS-SEDA/BLANCO/L`).
 
 Dado un par (CODIGO_ART, CODIGO_UNIDAD_SKU):
 
-1. Si existe fila con `CODIGO_UNIDAD_FOT = CODIGO_UNIDAD_SKU`, usar esa.
+1. Si existe fila con `CODIGO_UNIDAD_FOT = CODIGO_UNIDAD_SKU` (o un prefijo
+   del SKU partido por `/`, ganando el más específico), usar esa.
 2. En su defecto, fila con `CODIGO_UNIDAD_FOT = ''` y `CODIGO_ART_FOT =
    CODIGO_ART` (foto a nivel artículo).
-3. Si nada de lo anterior, no hay foto.
+3. En su defecto, si el artículo tiene **exactamente una** foto (aunque sea a
+   nivel color/SKU), usar esa. Con varias no se adivina. Es un fallback
+   aditivo: solo actúa donde antes no se mostraba nada, sin alterar las
+   resoluciones que ya funcionaban. Pensado para que una única foto por
+   color descargada del servidor se vea aunque mires el artículo desnudo.
+4. Si nada de lo anterior, no hay foto.
 
 ## Integración con FastReports
 
