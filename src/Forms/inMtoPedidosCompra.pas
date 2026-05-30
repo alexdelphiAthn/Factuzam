@@ -200,6 +200,8 @@ type
   public
     dmmPedidosCompra: TdmPedidosCompra;
     procedure CrearTablaPrincipal; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -210,6 +212,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar,
+  inLibFotos,
   inLibAtributosPaleta,
   inLibPedidosCompra,
   inMtoModalSelAlmacenPedido;
@@ -217,6 +220,34 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// dsTablaG apunta a la cabecera del pedido de compra. El articulo
+// activo vive en la fila del sub-grid tvLineasPedido
+// (CODIGO_ART_PEDCLIN / CODIGO_UNIDAD_PEDCLIN).
+procedure TfrmMtoPedidosCompra.ResolverArtSkuActivo(out ACodArt,
+                                                    ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvLineasPedido.DataController.DataSource) then
+  begin
+    ds := tvLineasPedido.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+// Para que la pantalla flotante refresque al moverse entre lineas del
+// pedido, ademas de dsTablaG (cabecera) enganchamos
+// dsPedidosCompraLineas.
+function TfrmMtoPedidosCompra.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmPedidosCompra) then
+    Result := [dsTablaG, dmmPedidosCompra.dsPedidosCompraLineas]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
 begin

@@ -426,6 +426,8 @@ type
     function  NombreCampoESACTIVO: string; override;
     function  ContarHijosActivos: Integer; override;
     function  DescripcionHijos: string; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -438,6 +440,7 @@ uses
   inLibWin,
   inLibUser,
   inLibShowMto,
+  inLibFotos,
   inMtoFacturasBase,
   inMtoEmpresas,
   inMtoArticulos,
@@ -451,6 +454,40 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// El cliente tiene articulo en dos pestanas: la historia de facturacion
+// (tsHistoriaFacturacion / tvLineasFacturacion, CODIGO_ART_FACLIN) y los
+// depositos (tsPrestamos / tvDepositosCliente, CODIGO_ART_DEP). Manda la
+// rejilla de la pestana visible.
+procedure TfrmMtoClientes.ResolverArtSkuActivo(out ACodArt, ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  ds := nil;
+  if pcPestanas.ActivePage = tsHistoriaFacturacion then
+  begin
+    if Assigned(tvLineasFacturacion.DataController.DataSource) then
+      ds := tvLineasFacturacion.DataController.DataSource.DataSet;
+  end
+  else if pcPestanas.ActivePage = tsPrestamos then
+  begin
+    if Assigned(tvDepositosCliente.DataController.DataSource) then
+      ds := tvDepositosCliente.DataController.DataSource.DataSet;
+  end;
+  if ds <> nil then
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+end;
+
+function TfrmMtoClientes.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmClientes) then
+    Result := [dsTablaG, dmmClientes.dsFacturasLineasClientes,
+               dmmClientes.dsDepositos]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoClientes.actArticulosExecute(Sender: TObject);
 begin

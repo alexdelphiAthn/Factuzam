@@ -199,6 +199,8 @@ type
     dmmFormasdePago: TdmFormasdePago;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -207,11 +209,35 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibDevExp, inLibShowMto, inMtoPrincipal;
+  inLibWin, inLibUser, inLibDevExp, inLibShowMto, inLibFotos, inMtoPrincipal;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// La pestana de ventas muestra lineas con articulo
+// (tvLineasFacturacion, CODIGO_ART_FACLIN); ese es el articulo activo.
+procedure TfrmMtoFormasdePago.ResolverArtSkuActivo(out ACodArt,
+                                                       ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvLineasFacturacion.DataController.DataSource) then
+  begin
+    ds := tvLineasFacturacion.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+function TfrmMtoFormasdePago.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmFormasdePago) then
+    Result := [dsTablaG, dmmFormasdePago.dsFacturasLineas]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoFormasdePago.actArticulosExecute(Sender: TObject);
 begin

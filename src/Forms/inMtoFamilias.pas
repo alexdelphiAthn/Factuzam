@@ -146,6 +146,8 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   private
     dmmFamilias : TdmFamilias;
   end;
@@ -161,6 +163,7 @@ implementation
 
 uses
   inLibWin,
+  inLibFotos,
   inLibUser,
   inLibDevExp,
   inMtoArticulos,
@@ -171,6 +174,29 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// El articulo activo es el de la rejilla de articulos de la familia
+// (tvArticulos, CODIGO_ART_ART).
+procedure TfrmMtoFamilias.ResolverArtSkuActivo(out ACodArt, ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvArticulos.DataController.DataSource) then
+  begin
+    ds := tvArticulos.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+function TfrmMtoFamilias.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmFamilias) then
+    Result := [dsTablaG, dmmFamilias.dsArticulosFamilias]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoFamilias.actArticulosExecute(Sender: TObject);
 begin
