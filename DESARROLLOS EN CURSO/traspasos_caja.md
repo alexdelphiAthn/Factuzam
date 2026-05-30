@@ -419,6 +419,11 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
   - `ResolverSku`, `AnadirLinea`, `GrabarTraspaso` (par S+E + operación
     `TR`/`TA` en una transacción, reusando
     `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` y `PRC_GET_NEXT_OP_CAJA`).
+  - El **documento se serializa**: serie de `fza_empresas_series`
+    (`TIPO_DOC_EMPSER` TR/TA, con fallback al propio tipo si no hay) + número
+    con `PRC_GET_NEXT_CONT_FACT_SERIE` (igual que la factura). Se guarda en
+    `SERIE_DOC_MOV`/`NUMERO_DOC_MOV` de los movimientos y, como nº de
+    documento, en `SERIE_FAC_OPCAJA`/`NUMERO_FAC_OPCAJA` de la operación.
   - `GrabarSolicitud` (petición PENDIENTE, sin mover stock),
     `CargarSolicitudesPendientes`, `CargarSolicitud` y
     `MarcarSolicitudAtendida` (al servir suma lo servido y deja la solicitud
