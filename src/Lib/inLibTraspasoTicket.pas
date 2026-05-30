@@ -44,13 +44,18 @@ var
   Ticket: TTicketTermico;
   Preview: TFormVisualizador;
   Q: TUniQuery;
-  ComandosESC, RutaPDF: string;
+  ComandosESC, RutaPDF, sImpresora: string;
   sOrigen, sDestino, sEmpleado, sEstado: string;
   dFecha: TDateTime;
   bExiste: Boolean;
 begin
   if (AConn = nil) or (not AConn.Connected) then
     Exit;
+  // Impresora parametrizada (vgerDefPrinter -> oNomImpresoraCaja); si viene
+  // vacia, preview.
+  sImpresora := ANombreImpresora;
+  if Trim(sImpresora) = '' then
+    sImpresora := 'DEBUG';
   sOrigen := '';
   sDestino := '';
   sEmpleado := '';
@@ -80,7 +85,7 @@ begin
     Q.Close;
     if bExiste then
     begin
-      Ticket := TTicketTermico.Create(ANombreImpresora);
+      Ticket := TTicketTermico.Create(sImpresora);
       try
         Ticket.Inicializar;
         Ticket.ConfigurarEspanol;
@@ -147,7 +152,7 @@ begin
           Preview.FRutaPDFReal := RutaPDF;
           Preview.CargarYMostrar(ComandosESC);
           Preview.ExportarAPDF(ComandosESC, RutaPDF);
-          if UpperCase(ANombreImpresora) = 'DEBUG' then
+          if UpperCase(sImpresora) = 'DEBUG' then
             Preview.ShowModal
           else
             Ticket.Imprimir;
