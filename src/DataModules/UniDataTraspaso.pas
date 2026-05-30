@@ -95,6 +95,9 @@ type
     procedure CargarSolicitudesPendientes(AItems, ACodigos: TStrings);
     // Carga una solicitud pendiente en cabecera/líneas para servirla.
     function CargarSolicitud(const ANumero, ASerie: string): Boolean;
+    // Valida el empleado responsable por su código o diminutivo de ticket.
+    function ValidarEmpleado(const ABusqueda: string;
+                             out ACodigo, ANombre: string): Boolean;
   end;
 
 var
@@ -123,6 +126,7 @@ begin
     Add('CODIGO_ALM_ORIGEN', ftString, 10);
     Add('CODIGO_ALM_DESTINO', ftString, 10);
     Add('CODIGO_CAJA', ftString, 10);
+    Add('CODIGO_EMPLEADO', ftString, 20);
     Add('NUMERO_SOL', ftString, 20);
     Add('SERIE_SOL', ftString, 20);
     Add('FECHA', ftDate, 0);
@@ -181,6 +185,30 @@ begin
       Result := ''
     else
       Result := qryAux.FieldByName('CODIGO_EMP_ALM').AsString;
+  finally
+    qryAux.Close;
+  end;
+end;
+
+function TdmTraspaso.ValidarEmpleado(const ABusqueda: string;
+                                     out ACodigo, ANombre: string): Boolean;
+begin
+  Result := False;
+  ACodigo := '';
+  ANombre := '';
+  qryAux.SQL.Text :=
+    'SELECT CODIGO_EMPLEADO_USU, DIMINUTIVO_TICKET_USU FROM fza_usuarios' +
+    ' WHERE (CODIGO_EMPLEADO_USU = :BUS OR DIMINUTIVO_TICKET_USU = :BUS)' +
+    '   AND ESACTIVO_USU = ''S'' LIMIT 1';
+  qryAux.ParamByName('BUS').AsString := ABusqueda;
+  qryAux.Open;
+  try
+    if not qryAux.IsEmpty then
+    begin
+      ACodigo := qryAux.FieldByName('CODIGO_EMPLEADO_USU').AsString;
+      ANombre := qryAux.FieldByName('DIMINUTIVO_TICKET_USU').AsString;
+      Result := True;
+    end;
   finally
     qryAux.Close;
   end;
@@ -461,7 +489,8 @@ begin
   QryTrx.ParamByName('ESTRASPASO').AsString := AEsTraspaso;
   QryTrx.ParamByName('NRODOC').AsString := ANroDoc;
   QryTrx.ParamByName('SERIEDOC').AsString := ASerieDoc;
-  QryTrx.ParamByName('USUARIO').AsString := AEmpleado;
+  // Auditoría con el usuario logueado; el empleado responsable va en EMPLEADO.
+  QryTrx.ParamByName('USUARIO').AsString := inLibGlobalVar.oUser;
   QryTrx.Execute;
 end;
 
@@ -472,7 +501,7 @@ function TdmTraspaso.GrabarTraspaso(const AAlmacenDestino: string;
 var
   QryTrx: TUniQuery;
   sEmpresa, sAlmacenOrigen, sCaja, sUsuario, sEmpContra, sTipoDoc: string;
-  sSku, sArticulo, sLinea, sSerieDoc, sNumeroDoc: string;
+  sSku, sArticulo, sLinea, sSerieDoc, sNumeroDoc, sEmpleado: string;
   dCantidad: Double;
   cCoste, cTotal: Currency;
   iLinea: Integer;
@@ -488,6 +517,7 @@ begin
   sAlmacenOrigen := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
   sUsuario := inLibGlobalVar.oUser;
+  sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
   if SameText(sAlmacenOrigen, AAlmacenDestino) then
     raise Exception.Create('Origen y destino no pueden ser el mismo almacén.');
   // TR = misma empresa (origen y destino); TA = entre empresas distintas.
@@ -534,7 +564,7 @@ begin
       // Operación de caja del traspaso (cabecera del documento). Si atiende
       // una solicitud, se enlaza por SERIE/NUMERO_REF_ORIGEN.
       InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,
-        ANumOperacion, sTipoDoc, cTotal, sUsuario,
+        ANumOperacion, sTipoDoc, cTotal, sEmpleado,
         'Traspaso a ' + AAlmacenDestino, ASerieSolicitud, ANumSolicitud,
         sEmpContra, AAlmacenDestino, 'S', sNumeroDoc, sSerieDoc);
       if Trim(ANumSolicitud) <> '' then
@@ -602,7 +632,8 @@ function TdmTraspaso.GrabarSolicitud(const AAlmacenOrigen: string;
                                      out ANumero, ASerie: string): Boolean;
 var
   QryTrx: TUniQuery;
-  sEmpresa, sAlmacenPropio, sCaja, sUsuario, sEmpContra, sLinea: string;
+  sEmpresa, sAlmacenPropio, sCaja, sUsuario, sEmpContra, sLinea,
+  sEmpleado: string;
   iLinea: Integer;
 begin
   Result := False;
@@ -617,6 +648,7 @@ begin
   sAlmacenPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
   sUsuario := inLibGlobalVar.oUser;
+  sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
   if SameText(sAlmacenPropio, AAlmacenOrigen) then
     raise Exception.Create('No puedes solicitarte a ti mismo.');
   sEmpContra := ObtenerEmpresaAlmacen(AAlmacenOrigen);
@@ -643,7 +675,7 @@ begin
       QryTrx.ParamByName('DES').AsString := sAlmacenPropio;
       QryTrx.ParamByName('EMPC').AsString := sEmpContra;
       QryTrx.ParamByName('CAJA').AsString := sCaja;
-      QryTrx.ParamByName('EMPLE').AsString := sUsuario;
+      QryTrx.ParamByName('EMPLE').AsString := sEmpleado;
       QryTrx.ParamByName('USU').AsString := sUsuario;
       QryTrx.Execute;
       iLinea := 0;
