@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibGridArticulos                                            }
 {    Tipo:       Libreria                                                      }
@@ -32,7 +32,7 @@ uses
   System.SysUtils, System.Classes, System.Variants, System.Types,
   System.Generics.Collections, Data.DB, Uni, Vcl.Controls, Vcl.Dialogs,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
-  cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView, system.StrUtils,
   inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
 
 type
