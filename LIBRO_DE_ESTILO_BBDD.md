@@ -102,6 +102,8 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_recibos`                        | `REC`     |
 | `fza_tarifas`                        | `TAR`     |
 | `fza_tipos_documentos`               | `TD`      |
+| `fza_traspasos_solicitudes`          | `TRSOL`   |
+| `fza_traspasos_solicitudes_lineas`   | `TRSOLLIN`|
 | `fza_usuarios`                       | `USU`     |
 | `fza_usuarios_grupos`                | `USUGRP`  |
 | `fza_usuarios_perfiles`              | `USUPER`  |

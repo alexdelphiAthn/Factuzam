@@ -274,6 +274,8 @@ begin
   AddSuf('fza_recibos',                         'REC');
   AddSuf('fza_tarifas',                         'TAR');
   AddSuf('fza_tipos_documentos',                'TD');
+  AddSuf('fza_traspasos_solicitudes',           'TRSOL');
+  AddSuf('fza_traspasos_solicitudes_lineas',    'TRSOLLIN');
   AddSuf('fza_usuarios',                        'USU');
   AddSuf('fza_usuarios_grupos',                 'USUGRP');
   AddSuf('fza_usuarios_perfiles',               'USUPER');
@@ -336,6 +338,8 @@ begin
   AddOwn('fza_facturas_lineas',                ['FACTURA','LINEA']);
   AddOwn('fza_inventarios_lineas',             ['INVENTARIO','LINEA']);
   AddOwn('fza_pedidos_lineas',                 ['PEDIDO','LINEA']);
+  AddOwn('fza_traspasos_solicitudes',          ['TRASPASO','SOLICITUD']);
+  AddOwn('fza_traspasos_solicitudes_lineas',   ['TRASPASO','SOLICITUD','LINEA']);
   AddOwn('fza_facturas_pagos',                 ['PAGO','FACTURA']);
   AddOwn('fza_pedidos_mensajes',               ['PEDIDO','MENSAJE','MENSAJES']);
   AddOwn('fza_proveedores_familias',           ['FAMILIA']);
