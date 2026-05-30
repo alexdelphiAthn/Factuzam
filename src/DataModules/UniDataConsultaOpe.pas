@@ -94,6 +94,9 @@ type
     function  TieneDepositos:   Boolean;
     function  TieneFactura:     Boolean;
     function  EsOperacionCaja: Boolean;
+    // True si la operacion seleccionada es un traspaso (TR misma empresa /
+    // TA entre empresas). Usado para reimprimir su ticket especifico.
+    function  EsTraspaso: Boolean;
   private
     procedure AbrirSeguro(q: TUniQuery; const sNombre: string);
   end;
@@ -141,8 +144,10 @@ begin
     '                    SEPARATOR '' | '')          AS CONCEPTOS, '      +
     '       COALESCE(MAX(f.TOTAL_LIQUIDO_FAC), '                          +
     '                SUM(o.IMPORTE_TOTAL_OPCAJA))    AS IMPORTE_TOTAL, '  +
-    '       MAX(f.SERIE_FAC)                     AS SERIE_FAC, '  +
-    '       MAX(f.NUMERO_FAC)                       AS NUMERO_FAC, '    +
+    '       COALESCE(MAX(f.SERIE_FAC), MAX(o.SERIE_FAC_OPCAJA)) '       +
+    '                                                AS SERIE_FAC, '     +
+    '       COALESCE(MAX(f.NUMERO_FAC), MAX(o.NUMERO_FAC_OPCAJA)) '      +
+    '                                                AS NUMERO_FAC, '     +
     '       MAX(COALESCE(f.CODIGO_CLI_FAC, o.CODIGO_CLI_OPCAJA)) ' +
     '                                                AS CLIENTE, '        +
     '       MAX(cli.RAZON_SOCIAL_CLI)             AS RAZON_SOCIAL_CLI,'+
@@ -625,6 +630,17 @@ begin
     Exit;
   sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
   Result := (Pos('EC', sTipos) > 0) or (Pos('GC', sTipos) > 0);
+end;
+
+function TdmConsultaOpe.EsTraspaso: Boolean;
+var
+  sTipos: string;
+begin
+  Result := False;
+  if qryMaestro.IsEmpty then
+    Exit;
+  sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
+  Result := (Pos('TR', sTipos) > 0) or (Pos('TA', sTipos) > 0);
 end;
 
 end.
