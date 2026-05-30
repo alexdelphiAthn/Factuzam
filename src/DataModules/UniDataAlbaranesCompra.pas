@@ -101,7 +101,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam, inLibLog, inLibtb,
+  inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics,
   inMtoAlbaranesCompra,
   inLibAlbaranesCompraMovimientos;
@@ -294,14 +294,44 @@ end;
 
 procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
+var
+  iNuevaLinea : Integer;
+  sSerie      : string;
+  sNumero     : string;
 begin
   inherited;
+  // Asignacion de LINEA_ALBCLIN (clave secundaria, NOT NULL sin default).
+  // Sin esto el Post fallaba con 'Field LINEA_ALBCLIN must have a value',
+  // incluso en el alta involuntaria que dispara el grid al navegar con
+  // flechas (OptionsData.Appending). Mismo patron que Sesiones de compra:
+  // el helper hace un UPDATE atomico de CONTADOR_LINEAS_ALBC +10 sobre la
+  // cabecera y devuelve el nuevo valor. Formato '0010','0020',... (4
+  // digitos LPAD) para casar con las lineas materializadas y respetar el
+  // ORDER BY LINEA_ALBCLIN (comparacion de texto).
+  sSerie  := unqryTablaG.FieldByName('SERIE_ALBC').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
+  iNuevaLinea := GetSiguienteLineaDoc(CONT_ALBARANES_COMPRA, sSerie, sNumero);
+  if iNuevaLinea = 0 then
+  begin
+    // Cabecera aun no persistida (albaran nuevo sin NUMERO real): fallback
+    // al contador en memoria +10. Lo dejamos sincronizado para que la
+    // siguiente linea incremente bien antes de grabar la cabecera.
+    // StrToIntDef y no AsInteger: el contador es varchar NULL en alta y
+    // AsInteger sobre '' lanzaria EConvertError.
+    iNuevaLinea := StrToIntDef(
+      unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString, 0) + 10;
+    if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+      unqryTablaG.Edit;
+    unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString :=
+      Format('%.8d', [iNuevaLinea]);
+  end;
   with unqryAlbaranesCompraLineas do
   begin
     FieldByName('NUMERO_ALBC_ALBCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
     FieldByName('SERIE_ALBC_ALBCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_ALBC').AsString;
+    FieldByName('LINEA_ALBCLIN').AsString := Format('%.4d', [iNuevaLinea]);
     FieldByName('CANTIDAD_ALBCLIN').AsFloat := 1;
     if FindField('ESFACTURADA_ALBCLIN') <> nil then
       FieldByName('ESFACTURADA_ALBCLIN').AsString := 'N';
@@ -321,6 +351,25 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
+  // hace Post automatico al navegar con flechas (OptionsData.Appending); si
+  // la linea es un placeholder vacio que el usuario creo sin querer, el Post
+  // fallaria con 'Field LINEA_ALBCLIN must have a value'. Cancel diferido +
+  // Abort la descarta sin molestar al usuario. Mismo patron que Sesiones.
+  if (Trim(unqryAlbaranesCompraLineas.FieldByName(
+             'CODIGO_ART_ALBCLIN').AsString) = '') and
+     (Trim(unqryAlbaranesCompraLineas.FieldByName(
+             'CODIGO_UNIDAD_ALBCLIN').AsString) = '') then
+  begin
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        if unqryAlbaranesCompraLineas.Active and
+           (unqryAlbaranesCompraLineas.State in [dsEdit, dsInsert]) then
+          unqryAlbaranesCompraLineas.Cancel;
+      end);
+    Abort;
+  end;
   with unqryAlbaranesCompraLineas do
   begin
     if (FindField('CANTIDAD_ALBCLIN') <> nil) and
