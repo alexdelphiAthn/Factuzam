@@ -177,13 +177,15 @@ Al grabar, **todo en una transacción** (espejo de
      del SKU en el **origen** (mueve a coste, no revaloriza).
    - Ambos apuntes comparten `NUMERO_OPERACION_DOC_MOV`, `CODIGO_ALM_DOC_MOV`
      y `CODIGO_CAJA_DOC_MOV` (la operación que los causó).
-   - (¹) `TR` = "TRASPASOS ALMACÉN" (mismo `CODIGO_EMP`); **`AT`** =
-     "TRASPASOS EMPRESA" cuando el destino pertenece a otra empresa
-     (`fza_tipos_documentos`). El código elige `TR`/`AT` comparando empresas.
+   - (¹) `TR` = traspaso entre almacenes de la **misma empresa**; **`TA`** =
+     traspaso entre **empresas distintas** (origen y destino de distinta
+     empresa). El código elige `TR`/`TA` comparando empresas. Nota: el
+     `fza_tipos_documentos` actual trae `'AT'` ("TRASPASOS EMPRESA") como
+     legacy; conviene añadir `'TA'` (ver §13).
 
 3. `InsertarOperacionCaja` (`UniDataCaja.pas:1832`) →
    `fza_caja_operaciones` con:
-   - `TIPO_OPERACION_OPCAJA = 'TR'` (o `'AT'`), `ESTRASPASO_OPCAJA = 'S'`.
+   - `TIPO_OPERACION_OPCAJA = 'TR'` (o `'TA'`), `ESTRASPASO_OPCAJA = 'S'`.
    - `CODIGO_ALM_OPCAJA` = origen propio, `CODIGO_ALM_CONTRA_OPCAJA` = destino,
      `CODIGO_EMP_CONTRA_OPCAJA` si es entre empresas.
    - `IMPORTE_TOTAL_OPCAJA` = importe de traspaso (Σ coste·uds, informativo).
@@ -191,12 +193,14 @@ Al grabar, **todo en una transacción** (espejo de
 4. `Commit` (o `Rollback` ante cualquier excepción).
 
 Los acumulados `CANTIDAD_ENT_TRASPASO_STK` / `CANTIDAD_SAL_TRASPASO_STK` los
-mantiene `PRC_FZA_AJUSTAR_ACUMULADO_STK` (ya contempla `TR`/`AT`,
-`stocks_sps_movimientos.sql:40-43`). **No hay que tocar SQL** para esto.
+mantiene `PRC_FZA_AJUSTAR_ACUMULADO_STK`. Para `TR` (misma empresa) **no hay
+que tocar SQL**. Para `TA` (entre empresas) ese SP y
+`PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` filtran hoy `IN ('TR','AT')`: hay que
+añadir `'TA'` para que sumen a los acumulados de traspaso (ver §13).
 
 ### 5.1 Editar / anular un traspaso ya grabado — Buscar/Modificar (F10)
 
-Un traspaso queda como una **operación `TR`/`AT`** del día, así que aparece
+Un traspaso queda como una **operación `TR`/`TA`** del día, así que aparece
 en **Buscar/Modificar** (`F10`, `inMtoConsultaOpe`/`TfrmConsultaOpe`,
 `menu_caja.md` §7) como una operación más; su par de apuntes S+E se ve en la
 pestaña **Movimientos**. Desde ahí se **edita** el traspaso:
@@ -250,7 +254,7 @@ parcialmente** ajustando `Uds`. `F12`/`F11` ejecutan el traspaso igual que
 Reparto de persistencia:
 
 - El **traspaso ejecutado** (§5) y la **atención** (§6) se graban **sólo** en
-  `fza_caja_operaciones` (operación `TR`/`AT`) + `fza_movimientos_almacen`
+  `fza_caja_operaciones` (operación `TR`/`TA`) + `fza_movimientos_almacen`
   (par S+E). **Sin tablas nuevas.**
 - La **solicitud pendiente** (petición que aún no mueve stock) vive en una
   **tabla nueva con estados**: necesita cabecera, líneas y estado propios
@@ -347,7 +351,7 @@ PRC_FZA_TRASPASO_EJECUTAR(
 ```
 
 Responsabilidad: por línea, llamar a `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`
-dos veces (S+E), insertar la `fza_caja_operaciones` `TR`/`AT`, y si viene
+dos veces (S+E), insertar la `fza_caja_operaciones` `TR`/`TA`, y si viene
 `p_NUM_SOLICITUD` actualizar `CANTIDAD_SERVIDA_TRSOLLIN` / `ESTADO_TRSOL` y
 enlazar por `REF_ORIGEN`. Ventaja: una sola
 verdad transaccional. **No es imprescindible**; el equivalente en Delphi es
@@ -378,7 +382,7 @@ igual de válido y reutiliza `InsertarMovimientoAlmacen`/`InsertarOperacionCaja`
 | `src/Forms/inMtoCajaMenu.pas:746`         | Implementar `lblTraspasosClick` → abre operativa|
 | `src/Forms/inMtoTraspasoOpe.pas/.dfm`     | **Nuevo** `TfrmMtoOpeTraspaso` (3 modos), hereda `TfrmBase` |
 | `src/DataModules/UniDataTraspaso.pas`     | **Nuevo** `TdmTraspaso` (cdsCabecera/cdsLineas, grabar) |
-| `src/Forms/inMtoConsultaOpe.pas`          | **Tocar**: editar/anular la operación `TR`/`AT` desde Buscar/Modificar F10 (§5.1) |
+| `src/Forms/inMtoConsultaOpe.pas`          | **Tocar**: editar/anular la operación `TR`/`TA` desde Buscar/Modificar F10 (§5.1) |
 | `src/Forms/inMtoTraspasoSolicitudes.pas`  | **Nuevo** `TfrmMtoTraspasoSolicitudes` (lista sobre `fza_traspasos_solicitudes`), hereda `TfrmMtoGen` |
 | `src/Lib/inLibCajaParam.pas`              | Registrar parámetros `vgerTraspaso*`            |
 | `fzam.dpr`                                | Alta de las units nuevas                        |
@@ -413,7 +417,7 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
   `LIBRO_DE_ESTILO_BBDD.md` §2 y en `UNormalizerEngine.pas`.
 - `src/DataModules/UniDataTraspaso.pas/.dfm` — `TdmTraspaso`:
   - `ResolverSku`, `AnadirLinea`, `GrabarTraspaso` (par S+E + operación
-    `TR`/`AT` en una transacción, reusando
+    `TR`/`TA` en una transacción, reusando
     `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` y `PRC_GET_NEXT_OP_CAJA`).
   - `GrabarSolicitud` (petición PENDIENTE, sin mover stock),
     `CargarSolicitudesPendientes`, `CargarSolicitud` y
@@ -439,3 +443,7 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
 - Edición / anulación desde Buscar/Modificar F10 (§5.1).
 - Parámetros `vgerTraspaso*` y permisos.
 - Tránsito (§8) y SP unificador (§9), opcionales.
+- Alinear `TA` (traspaso entre empresas): añadir `'TA'` a
+  `fza_tipos_documentos` y a los SP de acumulados de stock (hoy
+  `IN ('TR','AT')`), para que los traspasos entre empresas sumen a
+  `…_TRASPASO_STK`.
