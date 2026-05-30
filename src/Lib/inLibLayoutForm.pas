@@ -87,6 +87,7 @@ type
     procedure RestaurarDividerInspector(const AClave: string;
                                         AInspector: TJvInspector;
                                         AMinimo: Integer = 100);
+    function  RestaurarValor(const AClave, ADefault: string): string;
     property Disponible: Boolean read FDisponible;
   end;
 
@@ -109,6 +110,7 @@ type
                           AView: TcxGridDBTableView);
     procedure GuardarDividerInspector(const AClave: string;
                                       AInspector: TJvInspector);
+    procedure GuardarValor(const AClave, AValor: string);
     function  PreguntarYGrabar(const ADescripcion: string): Boolean;
   end;
 
@@ -172,6 +174,11 @@ begin
     GetPerfilValueDef(FPerfil, 'WindowState', '0'), 0));
   if Estado = wsMinimized then Estado := wsNormal;
   AForm.WindowState := Estado;
+end;
+
+function TLayoutLoader.RestaurarValor(const AClave, ADefault: string): string;
+begin
+  Result := GetPerfilValueDef(FPerfil, AClave, ADefault);
 end;
 
 procedure TLayoutLoader.RestaurarAlturaPanel(const AClave: string;
@@ -252,6 +259,11 @@ end;
 procedure TLayoutSaver.SetClave(const AClave, AValor: string);
 begin
   FClaves.Values[AClave] := AValor;
+end;
+
+procedure TLayoutSaver.GuardarValor(const AClave, AValor: string);
+begin
+  SetClave(AClave, AValor);
 end;
 
 procedure TLayoutSaver.GuardarGeometria(AForm: TForm);

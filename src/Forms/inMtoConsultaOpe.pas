@@ -212,17 +212,22 @@ procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
 var
   sArt, sSku: string;
 begin
-  // Ctrl + F -> Foto del articulo / SKU de la linea de factura
-  // activa en cxViewFacLin.
-  if (Key = Ord('F')) and (ssCtrl in Shift) and (ssAlt in Shift) then
+  // Ctrl + F -> Foto del articulo / SKU de la linea de factura activa.
+  // Toggle: si la foto ya esta visible, ocultarla.
+  if (Key = Ord('F')) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
-    ResolverArtSkuDeFacLin(sArt, sSku);
-    if sArt <> '' then
+    if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
+      frmFotoArticulo.Hide
+    else
     begin
-      MostrarFotoFlotante(Self, sArt, sSku);
-      if Assigned(frmFotoArticulo) then
-        frmFotoArticulo.VincularMtoPadre(FdmConsulta.dsFacturaLin,
-                                         ResolverArtSkuDeFacLin);
+      ResolverArtSkuDeFacLin(sArt, sSku);
+      if sArt <> '' then
+      begin
+        MostrarFotoFlotante(Self, sArt, sSku);
+        if Assigned(frmFotoArticulo) then
+          frmFotoArticulo.VincularMtoPadre(FdmConsulta.dsFacturaLin,
+                                           ResolverArtSkuDeFacLin);
+      end;
     end;
     Key := 0;
     Exit;
