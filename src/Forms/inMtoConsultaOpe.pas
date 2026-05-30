@@ -392,7 +392,8 @@ begin
   btnReimprimir.Enabled :=
     FdmConsulta.TieneFactura
     or FdmConsulta.TieneDepositos
-    or FdmConsulta.EsOperacionCaja;
+    or FdmConsulta.EsOperacionCaja
+    or FdmConsulta.EsTraspaso;
 end;
 
 // -----------------------------------------------------------------------------
@@ -434,7 +435,7 @@ end;
 
 procedure TfrmConsultaOpe.btnReimprimirClick(Sender: TObject);
 var
-  sEmp, sAlm, sCaja, sNumOp, sCliente, sTipoOp: string;
+  sEmp, sAlm, sCaja, sNumOp, sCliente: string;
 begin
   if FdmConsulta.qryMaestro.IsEmpty then
     Exit;
@@ -444,11 +445,9 @@ begin
   sNumOp   :=
     FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
   sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
-  sTipoOp  :=
-    FdmConsulta.qryMaestro.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
   // Traspaso (TR misma empresa / TA entre empresas): ticket especifico con
   // stock origen/destino, no el ticket generico de operacion de caja.
-  if (sTipoOp = 'TR') or (sTipoOp = 'TA') then
+  if FdmConsulta.EsTraspaso then
     TTraspasoTicket.ImprimirTraspasoDesdeBD(oConn, sEmp, sAlm, sCaja, sNumOp,
                                             oNomImpresoraCaja)
   else
