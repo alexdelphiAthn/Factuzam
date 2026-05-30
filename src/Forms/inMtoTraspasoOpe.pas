@@ -440,10 +440,14 @@ end;
 
 procedure TfrmMtoOpeTraspaso.EjecutarTraspaso(AConTicket: Boolean);
 var
-  sNumOp, sDestino, sNumSol, sSerSol: string;
+  sNumOp, sDestino, sOrigen, sEmpleado, sNumSol, sSerSol: string;
 begin
   if EmpleadoValido then
   begin
+    // Origen y empleado se capturan ya (la cabecera los tiene); el ticket se
+    // imprime ANTES de AplicarModo, que reinicia el cds.
+    sOrigen := FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+    sEmpleado := FDatos.cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
     if FModo = mtAtender then
     begin
       sDestino :=
@@ -456,6 +460,9 @@ begin
       begin
         ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
                            [sNumOp]));
+        if AConTicket then
+          TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
+            sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
         AplicarModo(mtAtender);
       end;
     end
@@ -467,6 +474,9 @@ begin
       else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
       begin
         ShowMessage(Format('Traspaso %s grabado correctamente.', [sNumOp]));
+        if AConTicket then
+          TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
+            sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
         AplicarModo(mtTraspaso);
       end;
     end;

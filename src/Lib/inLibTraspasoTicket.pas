@@ -30,6 +30,13 @@ type
     class procedure ImprimirSolicitud(AConn: TUniConnection;
                                       const ANumero, ASerie: string;
                                       const ANombreImpresora: string = 'DEBUG');
+    // Imprime/previsualiza el ticket de un traspaso ya ejecutado (F12 con
+    // ticket). Recorre las lineas en memoria (ALineas: campos CODIGO_UNIDAD y
+    // CANTIDAD) y por cada SKU calcula el stock en origen y en destino.
+    class procedure ImprimirTraspaso(AConn: TUniConnection;
+                                     const ADocRef, AOrigen, ADestino,
+                                     AEmpleado: string; ALineas: TDataSet;
+                                     const ANombreImpresora: string = 'DEBUG');
   end;
 
 implementation
@@ -165,6 +172,117 @@ begin
     end;
   finally
     FreeAndNil(Q);
+  end;
+end;
+
+class procedure TTraspasoTicket.ImprimirTraspaso(AConn: TUniConnection;
+                                   const ADocRef, AOrigen, ADestino,
+                                   AEmpleado: string; ALineas: TDataSet;
+                                   const ANombreImpresora: string);
+var
+  Ticket: TTicketTermico;
+  Preview: TFormVisualizador;
+  QStk: TUniQuery;
+  ComandosESC, RutaPDF, sImpresora, sRefArch, sSku: string;
+  dPed, dOrg, dDes: Double;
+  bm: TBookmark;
+  // Stock (suma de lotes) de un SKU en un almacen.
+  function StockEn(const AAlm, ASku: string): Double;
+  begin
+    QStk.Close;
+    QStk.ParamByName('ALM').AsString := AAlm;
+    QStk.ParamByName('SKU').AsString := ASku;
+    QStk.Open;
+    Result := QStk.Fields[0].AsFloat;
+    QStk.Close;
+  end;
+begin
+  if (AConn = nil) or (not AConn.Connected) or (ALineas = nil) then
+    Exit;
+  sImpresora := ANombreImpresora;
+  if Trim(sImpresora) = '' then
+    sImpresora := 'DEBUG';
+  QStk := TUniQuery.Create(nil);
+  try
+    QStk.Connection := AConn;
+    QStk.SQL.Text :=
+      'SELECT COALESCE(SUM(S.CANTIDAD_STK),0)' +
+      '  FROM fza_articulos_stockactual S' +
+      ' WHERE S.CODIGO_ALM_STK = :ALM' +
+      '   AND S.CODIGO_UNIDAD_STK = :SKU';
+    Ticket := TTicketTermico.Create(sImpresora);
+    try
+      Ticket.Inicializar;
+      Ticket.ConfigurarEspanol;
+      Ticket.Alinear(alCentro);
+      Ticket.Negrita(True);
+      Ticket.EscribirLinea('TRASPASO');
+      Ticket.EscribirLinea(ADocRef);
+      Ticket.Negrita(False);
+      Ticket.SaltarLineas(1);
+      Ticket.Alinear(alIzquierda);
+      Ticket.TextoColumnas('Origen:', AOrigen);
+      Ticket.TextoColumnas('Destino:', ADestino);
+      Ticket.TextoColumnas('Empleado:', AEmpleado);
+      Ticket.TextoColumnas('Fecha:', FormatDateTime('dd/mm/yyyy', Now));
+      Ticket.LineaSeparadora('-');
+      Ticket.EscribirLinea('SKU / Uds / Org(en) / Des(tino)');
+      Ticket.LineaSeparadora('-');
+      // Recorre las lineas en memoria sin perder el registro actual.
+      bm := ALineas.GetBookmark;
+      ALineas.DisableControls;
+      try
+        ALineas.First;
+        while not ALineas.Eof do
+        begin
+          sSku := ALineas.FieldByName('CODIGO_UNIDAD').AsString;
+          if Trim(sSku) <> '' then
+          begin
+            dPed := ALineas.FieldByName('CANTIDAD').AsFloat;
+            dOrg := StockEn(AOrigen, sSku);
+            dDes := StockEn(ADestino, sSku);
+            Ticket.EscribirLinea(sSku);
+            Ticket.EscribirLinea(Format('  Uds:%s  Org:%s  Des:%s',
+              [FormatFloat('0.###', dPed),
+               FormatFloat('0.###', dOrg),
+               FormatFloat('0.###', dDes)]));
+          end;
+          ALineas.Next;
+        end;
+      finally
+        ALineas.GotoBookmark(bm);
+        ALineas.FreeBookmark(bm);
+        ALineas.EnableControls;
+      end;
+      Ticket.LineaSeparadora('-');
+      Ticket.Alinear(alCentro);
+      Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
+      Ticket.SaltarLineas(2);
+      Ticket.CortarPapel;
+      // Vista previa (DEBUG) o impresion real. El nombre de archivo no puede
+      // llevar separadores: se sustituyen por '_'.
+      ComandosESC := Ticket.ObtenerComandos;
+      sRefArch := StringReplace(ADocRef, '/', '_', [rfReplaceAll]);
+      sRefArch := StringReplace(sRefArch, '\', '_', [rfReplaceAll]);
+      RutaPDF := GetUserFolderTickets + 'Traspaso_' + sRefArch + '.pdf';
+      Preview := TFormVisualizador.Create(nil);
+      try
+        Preview.Hide;
+        Preview.FRutaPDFReal := RutaPDF;
+        Preview.CargarYMostrar(ComandosESC);
+        Preview.ExportarAPDF(ComandosESC, RutaPDF);
+        if UpperCase(sImpresora) = 'DEBUG' then
+          Preview.ShowModal
+        else
+          Ticket.Imprimir;
+      finally
+        FreeAndNil(Preview);
+      end;
+    finally
+      FreeAndNil(Ticket);
+    end;
+  finally
+    FreeAndNil(QStk);
   end;
 end;
 
