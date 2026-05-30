@@ -33,7 +33,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 220
       Height = 28
-      Caption = 'Solicitar a otro almac'#233'n'
+      Caption = 'Solicitar a otro almacén'
       TabOrder = 1
       OnClick = btnModoClick
     end
@@ -60,7 +60,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     object lblOrigen: TcxLabel
       Left = 16
       Top = 18
-      Caption = 'ALMAC'#201'N ORIGEN'
+      Caption = 'ALMACÉN ORIGEN'
     end
     object txtOrigen: TcxTextEdit
       Left = 150
@@ -72,7 +72,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     object lblDestino: TcxLabel
       Left = 420
       Top = 18
-      Caption = 'ALMAC'#201'N DESTINO'
+      Caption = 'ALMACÉN DESTINO'
     end
     object cboDestino: TcxComboBox
       Left = 560
