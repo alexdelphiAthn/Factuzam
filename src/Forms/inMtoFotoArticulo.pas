@@ -100,6 +100,7 @@ type
     procedure OnPadreDataChange(Sender: TObject; Field: TField);
     procedure DescargarFotosDeNube;
     procedure PintarFotoGDIPlus;
+    procedure RestaurarGeometriaGuardada;
   protected
     procedure Resize; override;
     // Auto-limpieza si alguno de los DataSources hookeados se libera
@@ -145,6 +146,8 @@ implementation
 {$R *.dfm}
 
 procedure TfrmFotoArticulo.FormCreate(Sender: TObject);
+var
+  loaderRes: TLayoutLoader;
 begin
   inherited;
   // poDesigned (no poScreenCenter) para que Left/Top guardados con
@@ -158,7 +161,17 @@ begin
   // boton o el combo, la ventana se activa normalmente y necesita
   // procesar F11 / Alt+F12.
   Self.KeyPreview  := True;
-  rgResolucion.ItemIndex := 2;    // 'real' por defecto (mejor calidad)
+  // Restaura la resolución elegida guardada con el layout (default 'real').
+  loaderRes := TLayoutLoader.Create(Self.Name);
+  try
+    if loaderRes.Disponible then
+      rgResolucion.ItemIndex :=
+        StrToIntDef(loaderRes.RestaurarValor('Resolucion', '2'), 2)
+    else
+      rgResolucion.ItemIndex := 2;
+  finally
+    loaderRes.Free;
+  end;
   FUltimaInfo.Clear;
   FHooksDataSource := TList<TPair<TDataSource, TDataChangeEvent>>.Create;
   FPadreResolver   := nil;
@@ -171,10 +184,17 @@ end;
 procedure TfrmFotoArticulo.FormShow(Sender: TObject);
 begin
   inherited;
-  // Restaura geometria (Left/Top/Width/Height/WindowState) si el
-  // usuario la guardo previamente con Alt+F12. Si no hay layout,
-  // centramos manualmente en pantalla.
-  FLayoutLoader := TLayoutLoader.Create(Self.Name);
+  RestaurarGeometriaGuardada;
+end;
+
+procedure TfrmFotoArticulo.RestaurarGeometriaGuardada;
+begin
+  // Restaura geometria (Left/Top/Width/Height/WindowState) si el usuario la
+  // guardo con Alt+F12. Se llama desde FormShow y desde MostrarFotoFlotante
+  // (antes de mostrar) para que el tamaño se aplique de forma fiable aunque
+  // la ventana se muestre con SW_SHOWNOACTIVATE. Si no hay layout, centra.
+  if not Assigned(FLayoutLoader) then
+    FLayoutLoader := TLayoutLoader.Create(Self.Name);
   if FLayoutLoader.Disponible then
     FLayoutLoader.RestaurarGeometria(Self)
   else
@@ -262,6 +282,7 @@ begin
   saver := TLayoutSaver.Create(Self.Name);
   try
     saver.GuardarGeometria(Self);
+    saver.GuardarValor('Resolucion', IntToStr(rgResolucion.ItemIndex));
     saver.PreguntarYGrabar('Foto del artículo / SKU');
   finally
     FreeAndNil(saver);
@@ -743,6 +764,9 @@ begin
   frmFotoArticulo.SetArticuloSku(ACodArt, ACodSku);
   if not frmFotoArticulo.Visible then
   begin
+    // Restaurar tamaño/posición guardados ANTES de mostrar, de forma fiable
+    // (sin depender de que OnShow dispare con SW_SHOWNOACTIVATE).
+    frmFotoArticulo.RestaurarGeometriaGuardada;
     // SW_SHOWNOACTIVATE: muestra la ventana SIN activarla. A
     // diferencia de TForm.Show (que termina llamando SetActiveWindow
     // y roba el teclado al Mto), aqui la flotante aparece encima por
