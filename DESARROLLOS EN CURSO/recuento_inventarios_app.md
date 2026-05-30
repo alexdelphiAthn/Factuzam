@@ -28,6 +28,7 @@ servidor REST (PHP + MySQL) como **puente** entre Factuzam y los terminales.
 |---|---|
 | Plataforma de la app | **Android nativo en Delphi FMX** (offline + escáner) |
 | Modelo de recuento | **Evento por escaneo**, multi-operario, se agrega por SKU |
+| Traza en Factuzam | **Opción B**: tabla `fza_inventarios_recuentos` (INVREC) con cada escaneo |
 | Servidor | **Mismo host que las fotos (DreamHost)**, BBDD MySQL nueva |
 | Auth Factuzam ↔ servidor | `X-API-Key` (igual que fotos) |
 | Auth app ↔ servidor | **token por dispositivo** + `carpeta_cliente` |
@@ -180,22 +181,19 @@ CREATE TABLE inv_dispositivos (
 
 ### 5.2 Factuzam (MariaDB) — cambios de esquema
 
-Hay una elección aquí (ver §13.1). Como "recoger" es el import de Excel, **la
-opción mínima no añade ninguna tabla**:
+**Elegida la Opción B.** Además de meter `SKU=CANTIDAD` por
+`CargarDesdeListaSkus` (igual que el Excel), se guarda **cada escaneo** en una
+tabla nueva `fza_inventarios_recuentos`, para poder revisar más adelante el
+origen del recuento: qué código leyó el móvil, cuándo, quién y con qué terminal.
+(La alternativa A —sin tablas nuevas, solo el consolidado— queda descartada.)
 
-- **Opción A — mínima (= Excel)**: Factuzam NO añade tablas. "Recoger" mete
-  `SKU=CANTIDAD` por `CargarDesdeListaSkus` y pone `FECHA_RECUENTO_INVLIN` =
-  última lectura. El detalle escaneo-a-escaneo (día/hora por unidad) vive en el
-  servidor/app y se consulta allí. Es lo más parecido al Excel.
-- **Opción B — con traza dentro de Factuzam**: además, una tabla
-  `fza_inventarios_recuentos` que guarda cada escaneo con su día/hora dentro de
-  la MariaDB, para informes y auditoría sin depender del servidor.
+Cambios idempotentes, en `DESARROLLOS EN CURSO/`. **No** se toca
+`factuzam_original.sql`.
 
-Todo cambio (si lo hay) es idempotente, en `DESARROLLOS EN CURSO/`. **No** se
-toca `factuzam_original.sql`.
-
-**(Opción B) Nueva tabla `fza_inventarios_recuentos` (sufijo `INVREC`)** — una
-fila por escaneo. `CANTIDAD_FISICA_INVLIN` = **suma** de los INVREC de ese SKU.
+**Nueva tabla `fza_inventarios_recuentos` (sufijo `INVREC`)** — una fila por
+escaneo. `CANTIDAD_FISICA_INVLIN` = **suma** de los INVREC de ese SKU; cada
+evento conserva su día/hora, operario, terminal y el código de barras crudo
+leído.
 
 ```sql
 CREATE TABLE `fza_inventarios_recuentos` (
@@ -375,9 +373,9 @@ APLICAR  →  regularización de stock (flujo actual, sin cambios)
 
 ## 13. Decisiones abiertas (para verlo juntos)
 
-1. **Opción A vs B** (la principal): ¿te vale `SKU=CANTIDAD` como el Excel (A,
-   sin tablas nuevas en Factuzam) o quieres el detalle escaneo-a-escaneo con su
-   día/hora en `fza_inventarios_recuentos` (B)? Si B, confirma el sufijo `INVREC`.
+1. ✅ **DECIDIDO — Opción B**: se guarda cada escaneo en
+   `fza_inventarios_recuentos` (sufijo `INVREC`, a registrar en el normalizador y
+   en el libro de estilo BBDD §2) para revisar el origen del recuento.
 2. **Modo por defecto**: ¿dirigido (lista de SKUs) o ciego (todo el almacén)?
 3. **¿Una BBDD nueva** `factuzam_recuentos` en DreamHost, o tablas `inv_*`
    dentro de la BBDD que ya usa el servidor de fotos?
