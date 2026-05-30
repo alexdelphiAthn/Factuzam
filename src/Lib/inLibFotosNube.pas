@@ -33,12 +33,18 @@ uses
 function FotosNubeConfigurado(out AMensaje: string): Boolean;
 
 // Descarga del servidor todas las fotos del artículo ACodArt (resolución
-// real), las descomprime en appDirFotos y borra el ZIP temporal. Deja en
-// AArchivos las rutas de los PNG extraídos. Devuelve False con el mensaje
-// del servidor (o del error de red) en AMensaje.
+// real), las descomprime en una carpeta TEMPORAL (no en appDirFotos) y borra
+// el ZIP. Deja en AArchivos las rutas de los PNG extraídos; el llamante
+// integra la elegida y luego llama a LimpiarDescargaTemporal(AArchivos) para
+// borrar los temporales y no dejar huérfanos. False con el error en AMensaje.
 function DescargarFotosArticulo(const ACodArt: string;
                                 out AArchivos: TArray<string>;
                                 out AMensaje: string): Boolean;
+
+// Borra los PNG temporales extraídos por DescargarFotosArticulo y su carpeta
+// temporal (solo si es una "fzam_fotos_*"). Llamar tras integrar la foto
+// elegida para no dejar ficheros sueltos en disco.
+procedure LimpiarDescargaTemporal(const AArchivos: TArray<string>);
 
 // De la lista de PNG descargados elige uno representativo para integrarlo
 // como foto del artículo: prioriza los terminados en '_real' y, dentro de
@@ -148,7 +154,7 @@ function DescargarFotosArticulo(const ACodArt: string;
                                 out AArchivos: TArray<string>;
                                 out AMensaje: string): Boolean;
 var
-  sUrl, sKey, sCarpeta, sDir, sUrlFull, sZipTmp: string;
+  sUrl, sKey, sCarpeta, sDir, sUrlFull, sZipTmp, sTs: string;
   http   : THTTPClient;
   resp   : IHTTPResponse;
   cuerpo : TMemoryStream;
@@ -164,8 +170,6 @@ begin
     sUrl     := Trim(oAppParams.GetString(cParUrl));
     sKey     := Trim(oAppParams.GetString(cParApiKey));
     sCarpeta := Trim(oAppParams.GetString(cParCarpeta));
-    sDir := IncludeTrailingPathDelimiter(oAppParams.GetPath(cParDirFotos));
-    ForceDirectories(sDir);
     // Pedimos resolución 'real' (calidad original): el sistema de fotos
     // ya genera 300/600 al integrar la foto representativa.
     sUrlFull := sUrl +
@@ -190,9 +194,15 @@ begin
           AMensaje := MensajeErrorServidor(cuerpo, resp.StatusCode)
         else
         begin
+          sTs     := FormatDateTime('yyyymmdd_hhnnss_zzz', Now);
           sZipTmp := TPath.Combine(TPath.GetTempPath,
-            'fzam_fotos_' +
-            FormatDateTime('yyyymmdd_hhnnss_zzz', Now) + '.zip');
+                       'fzam_fotos_' + sTs + '.zip');
+          // Carpeta temporal unica (NO appDirFotos): el sistema de fotos
+          // copia la elegida a real/300/600 al integrar; el llamante borra
+          // esta temporal despues (LimpiarDescargaTemporal).
+          sDir := IncludeTrailingPathDelimiter(
+                    TPath.Combine(TPath.GetTempPath, 'fzam_fotos_' + sTs));
+          ForceDirectories(sDir);
           cuerpo.Position := 0;
           cuerpo.SaveToFile(sZipTmp);
           lista := TStringList.Create;
@@ -222,6 +232,28 @@ begin
       FreeAndNil(cuerpo);
       FreeAndNil(http);
     end;
+  end;
+end;
+
+procedure LimpiarDescargaTemporal(const AArchivos: TArray<string>);
+var
+  i    : Integer;
+  sDir : string;
+begin
+  for i := 0 to High(AArchivos) do
+  begin
+    if FileExists(AArchivos[i]) then
+      DeleteFile(AArchivos[i]);
+  end;
+  if Length(AArchivos) > 0 then
+  begin
+    sDir := ExtractFileDir(AArchivos[0]);
+    // Solo borramos la carpeta si es una temporal nuestra y queda vacia.
+    if (sDir <> '') and
+       (Pos('fzam_fotos_', LowerCase(ExtractFileName(sDir))) > 0) and
+       TDirectory.Exists(sDir) and
+       (Length(TDirectory.GetFiles(sDir)) = 0) then
+      TDirectory.Delete(sDir, False);
   end;
 end;
 
