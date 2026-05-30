@@ -113,6 +113,7 @@ uses
   inMtoTraspasoOpe in 'src\Forms\inMtoTraspasoOpe.pas' {frmMtoOpeTraspaso},
   UniDataTraspaso in 'src\DataModules\UniDataTraspaso.pas' {dmTraspaso: TDataModule},
   inLibTraspasoTicket in 'src\Lib\inLibTraspasoTicket.pas',
+  inLibGridArticulos in 'src\Lib\inLibGridArticulos.pas',
   inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
   inMtoCajaFormasPago in 'src\Forms\inMtoCajaFormasPago.pas' {frmMtoCajaFormasPago},
   UniDataCajaFormasPago in 'src\DataModules\UniDataCajaFormasPago.pas' {dmCajaFormasPago: TdmCajaFormasPago},
