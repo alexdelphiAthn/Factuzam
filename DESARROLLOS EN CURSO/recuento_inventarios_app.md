@@ -35,8 +35,9 @@ servidor REST (PHP + MySQL) como **puente** entre Factuzam y los terminales.
 | Opciones 1 y 2 | **recuento libre**: preguntan el **almacén** (no exigen plantilla) |
 | Opción 3 | **exige plantilla previa** (la que Factuzam envió) |
 | Al finalizar | la app **sube el recuento al webservice** y lo marca `RECONTADO` |
+| Cierre del recuento | **cualquier operario** (reversible: reabrir); el control real es **APLICAR** en Factuzam |
 | Lote/caducidad | Solo en artículos trazables (`ESTRAZABLE_ART='S'`) |
-| Servidor | **Mismo host que las fotos (DreamHost)**, BBDD MySQL nueva |
+| Servidor | **Mismo host que las fotos (DreamHost)**, BBDD MySQL nueva dedicada `factuzam_recuentos` |
 | Auth Factuzam ↔ servidor | `X-API-Key` (igual que fotos) |
 | Auth app ↔ servidor | **token por dispositivo** + `carpeta_cliente` |
 | Acceso a datos (cliente y app) | **UniDAC** (en la app, provider SQLite local) |
@@ -286,6 +287,10 @@ Servidor: PENDIENTE ─app recoge─▶ EN_RECUENTO ◀── escaneos ──┐
 APLICAR  →  regularización de stock (flujo actual, sin cambios)
 ```
 
+`RECONTADO` es **reversible**: cualquier operario puede finalizar y se puede
+reabrir a `EN_RECUENTO` si falta contar. El control de verdad es el permiso de
+**APLICAR** en Factuzam (no se regulariza stock sin él).
+
 ## 10. Seguridad
 
 - HTTPS siempre (Let's Encrypt en DreamHost).
@@ -317,16 +322,19 @@ APLICAR  →  regularización de stock (flujo actual, sin cambios)
 5. **Ampliaciones**: escaneo por cámara, zonas/ubicaciones, panel de progreso
    en vivo en Factuzam.
 
-## 13. Decisiones abiertas (para verlo juntos)
+## 13. Decisiones del diseño (cerradas)
 
 1. ✅ **Opción B**: cada escaneo en `fza_inventarios_recuentos` (INVREC).
 2. ✅ **Menú de la app**: (1) escanear =+1, (2) escanear + cantidad, (3) recoger
    plantilla.
-3. **BBDD del servidor**: asumo **una BBDD MySQL nueva dedicada** en DreamHost
-   (`factuzam_recuentos`). ¿Ok?
+3. ✅ **BBDD del servidor**: BBDD MySQL **nueva dedicada** `factuzam_recuentos`
+   en DreamHost (separa datos y credenciales del servidor de fotos).
 4. ✅ **Cantidad**: la fija el modo de menú (1 = +1; 2 = cantidad tecleada).
 5. ✅ **Lote/caducidad**: solo en artículos trazables (`ESTRAZABLE_ART='S'`).
-6. **Cierre de tarea**: ¿finaliza cualquier operario, o sólo un supervisor?
+6. ✅ **Cierre del recuento**: lo finaliza **cualquier operario** (`RECONTADO`);
+   reversible (reabrir a `EN_RECUENTO`) y Factuzam puede recoger parcial. El
+   control real es el permiso de **APLICAR** en Factuzam; `esadmin` en
+   `inv_dispositivos` queda reservado para restringirlo a supervisores.
 7. ✅ **Plantilla vs libre**: opción 3 exige plantilla; opciones 1/2 son
    recuento libre y preguntan el almacén.
 8. ✅ **PK de INVREC**: contador propio `ID_INVREC` (autoincremental) +
