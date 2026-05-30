@@ -93,7 +93,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     object lblSku: TcxLabel
       Left = 16
       Top = 16
-      Caption = 'Art'#237'culo / SKU'
+      Caption = 'Artículo / SKU'
     end
     object txtSku: TcxTextEdit
       Left = 130
@@ -119,7 +119,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 11
       Width = 130
       Height = 25
-      Caption = 'A'#241'adir (Intro)'
+      Caption = 'Añadir (Intro)'
       Default = True
       TabOrder = 2
       OnClick = btnAnadirClick
@@ -153,7 +153,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 10
       Width = 170
       Height = 40
-      Caption = 'F11 '#183' Sin ticket'
+      Caption = 'F11 · Sin ticket'
       TabOrder = 0
       OnClick = btnF11Click
     end
@@ -162,7 +162,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 10
       Width = 170
       Height = 40
-      Caption = 'F12 '#183' Con ticket'
+      Caption = 'F12 · Con ticket'
       TabOrder = 1
       OnClick = btnF12Click
     end
