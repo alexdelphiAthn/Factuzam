@@ -1,11 +1,11 @@
-﻿inherited frmMtoClientes: TfrmMtoClientes
+inherited frmMtoClientes: TfrmMtoClientes
   Caption = 'Clientes'
   ClientHeight = 703
   ClientWidth = 1141
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1141
   ExplicitHeight = 703
-  TextHeight = 19
+  TextHeight = 17
   inherited pButtonPage: TPanel
     Width = 1001
     Height = 703
@@ -17,22 +17,21 @@
       Width = 1001
       Height = 663
       TabOrder = 1
-      Properties.ActivePage = tsLista
       ExplicitWidth = 1001
       ExplicitHeight = 663
-      ClientRectBottom = 659
-      ClientRectRight = 997
+      ClientRectBottom = 661
+      ClientRectRight = 999
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 993
-        ExplicitHeight = 629
+        ExplicitLeft = 2
+        ExplicitTop = 27
+        ExplicitWidth = 997
+        ExplicitHeight = 634
         inherited cxGrdPrincipal: TcxGrid
-          Width = 993
-          Height = 629
+          Width = 997
+          Height = 634
           ParentFont = False
-          ExplicitWidth = 993
-          ExplicitHeight = 629
+          ExplicitWidth = 997
+          ExplicitHeight = 634
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_CLIENTE: TcxGridDBColumn
               Caption = 'C'#243'digo'
@@ -185,14 +184,14 @@
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 993
-        ExplicitHeight = 629
+        ExplicitLeft = 2
+        ExplicitTop = 27
+        ExplicitWidth = 997
+        ExplicitHeight = 634
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 993
+          Width = 997
           Height = 179
           Margins.Left = 4
           Margins.Top = 4
@@ -202,7 +201,7 @@
           BevelOuter = bvNone
           TabOrder = 0
           DesignSize = (
-            993
+            997
             179)
           object cxgrpbxObservaciones: TcxGroupBox
             AlignWithMargins = True
@@ -359,9 +358,9 @@
         end
         object pnlBodyFicha: TPanel
           Left = 0
-          Top = 187
-          Width = 993
-          Height = 442
+          Top = 189
+          Width = 997
+          Height = 445
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -372,20 +371,20 @@
           object pcPestanas: TcxPageControl
             Left = 0
             Top = 0
-            Width = 993
-            Height = 442
+            Width = 997
+            Height = 445
             Margins.Left = 4
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsDomicilioFiscal
+            Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 438
-            ClientRectLeft = 4
-            ClientRectRight = 989
-            ClientRectTop = 30
+            ClientRectBottom = 443
+            ClientRectLeft = 2
+            ClientRectRight = 995
+            ClientRectTop = 27
             object tsDomicilioFiscal: TcxTabSheet
               Margins.Left = 4
               Margins.Top = 4
@@ -394,8 +393,8 @@
               Caption = '&1_Domicilio fiscal'
               ImageIndex = 0
               DesignSize = (
-                985
-                408)
+                993
+                416)
               object cxgrpbxIdentificacion: TcxGroupBox
                 AlignWithMargins = True
                 Left = 18
@@ -403,10 +402,10 @@
                 TabStop = True
                 Anchors = [akLeft, akTop, akRight, akBottom]
                 TabOrder = 0
-                Height = 257
-                Width = 638
+                Height = 265
+                Width = 646
                 object lblDireccion1Texto: TcxLabel
-                  Left = 34
+                  Left = 47
                   Top = 25
                   Margins.Left = 4
                   Margins.Top = 4
@@ -431,7 +430,7 @@
                   Width = 303
                 end
                 object lblDireccion2Texto: TcxLabel
-                  Left = 34
+                  Left = 47
                   Top = 64
                   Margins.Left = 4
                   Margins.Top = 4
@@ -456,7 +455,7 @@
                   Width = 304
                 end
                 object lblCodPostal: TcxLabel
-                  Left = 14
+                  Left = 29
                   Top = 103
                   Margins.Left = 4
                   Margins.Top = 4
@@ -481,7 +480,7 @@
                   Width = 77
                 end
                 object lblPoblacion: TcxLabel
-                  Left = 48
+                  Left = 58
                   Top = 143
                   Margins.Left = 4
                   Margins.Top = 4
@@ -506,7 +505,7 @@
                   Width = 303
                 end
                 object lblProvincia: TcxLabel
-                  Left = 54
+                  Left = 63
                   Top = 182
                   Margins.Left = 4
                   Margins.Top = 4
@@ -531,7 +530,7 @@
                   Width = 303
                 end
                 object lblPais: TcxLabel
-                  Left = 98
+                  Left = 102
                   Top = 222
                   Margins.Left = 4
                   Margins.Top = 4
@@ -596,12 +595,13 @@
                 Caption = 'Tratamiento Fiscal'
                 TabOrder = 1
                 Height = 85
-                Width = 903
+                Width = 911
                 object chkREGIMENAGRICOLA: TcxDBCheckBox
                   Left = 6
                   Top = 24
                   Hint = 
-                    'S'#243'lo es importante para empresas que facturen de agricultor a agricultor'
+                    'S'#243'lo es importante para empresas que facturen de agricultor a ag' +
+                    'ricultor'
                   Caption = 'R'#233'gimen especial agricola/ganadero/pesca'
                   DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_CLI'
                   DataBinding.DataSource = dsTablaG
@@ -672,13 +672,9 @@
             object tsMasDatos: TcxTabSheet
               Caption = '&2_M'#225's datos'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               DesignSize = (
-                985
-                408)
+                993
+                416)
               object cxgrpbxDomicilio: TcxGroupBox
                 AlignWithMargins = True
                 Left = 21
@@ -686,10 +682,10 @@
                 TabStop = True
                 Anchors = [akLeft, akTop, akRight, akBottom]
                 TabOrder = 0
-                Height = 404
-                Width = 882
+                Height = 412
+                Width = 890
                 object lblContacto: TcxLabel
-                  Left = 84
+                  Left = 94
                   Top = 23
                   Margins.Left = 4
                   Margins.Top = 4
@@ -737,7 +733,7 @@
                   Width = 159
                 end
                 object lblReferencia: TcxLabel
-                  Left = 73
+                  Left = 81
                   Top = 66
                   Margins.Left = 4
                   Margins.Top = 4
@@ -762,7 +758,7 @@
                   Width = 537
                 end
                 object lblObservaciones: TcxLabel
-                  Left = 37
+                  Left = 52
                   Top = 101
                   Margins.Left = 4
                   Margins.Top = 4
@@ -814,7 +810,7 @@
                   Width = 263
                 end
                 object lblNroCuenta: TcxLabel
-                  Left = 42
+                  Left = 53
                   Top = 228
                   Margins.Left = 4
                   Margins.Top = 4
@@ -885,7 +881,7 @@
                   OnClick = btnValidarClick
                 end
                 object lblExtra1: TcxLabel
-                  Left = 401
+                  Left = 415
                   Top = 316
                   Margins.Left = 4
                   Margins.Top = 4
@@ -917,6 +913,7 @@
                   Properties.ValueUnchecked = 'N'
                   Style.TransparentBorder = False
                   TabOrder = 18
+                  Transparent = True
                 end
                 object curTOTAL_DEUDA_CLI: TcxDBCurrencyEdit
                   Left = 523
@@ -927,7 +924,7 @@
                   Width = 121
                 end
                 object lblExtra2: TcxLabel
-                  Left = 402
+                  Left = 415
                   Top = 351
                   Margins.Left = 4
                   Margins.Top = 4
@@ -944,23 +941,19 @@
             object tsHistoriaFacturacion: TcxTabSheet
               Caption = '&3_Historia Facturaci'#243'n'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlFacturaCli: TPanel
                 Left = 0
                 Top = 0
-                Width = 985
-                Height = 408
+                Width = 993
+                Height = 416
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
                 object cxgrdClientesFacturas: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 868
-                  Height = 408
+                  Width = 876
+                  Height = 416
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1178,9 +1171,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 115
                     end
@@ -1196,9 +1189,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -1220,9 +1213,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 133
                     end
@@ -1238,9 +1231,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 137
                     end
@@ -1262,9 +1255,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 186
                     end
@@ -1280,9 +1273,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 178
                     end
@@ -1303,9 +1296,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 112
                     end
@@ -1320,9 +1313,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -1509,10 +1502,10 @@
                   end
                 end
                 object pnlFacturaOpts: TPanel
-                  Left = 868
+                  Left = 876
                   Top = 0
                   Width = 117
-                  Height = 408
+                  Height = 416
                   Align = alRight
                   BevelOuter = bvNone
                   TabOrder = 1
@@ -1559,15 +1552,11 @@
               Caption = 'Historia Presupuestos'
               ImageIndex = 4
               TabVisible = False
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdPresupuestos: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 985
-                Height = 408
+                Width = 993
+                Height = 416
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1735,23 +1724,19 @@
             object tsPrestamos: TcxTabSheet
               Caption = '&4_Pr'#233'stamos Caja'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlPrestamosBody: TPanel
                 Left = 0
                 Top = 0
-                Width = 985
-                Height = 408
+                Width = 993
+                Height = 416
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
                 object cxgrdPrestamosCliente: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 868
-                  Height = 408
+                  Width = 876
+                  Height = 416
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1969,9 +1954,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 115
                     end
@@ -1987,9 +1972,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -2011,9 +1996,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 133
                     end
@@ -2029,9 +2014,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 137
                     end
@@ -2053,9 +2038,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 186
                     end
@@ -2071,9 +2056,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 178
                     end
@@ -2094,9 +2079,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 112
                     end
@@ -2111,9 +2096,9 @@
                       PropertiesClassName = 'TcxSpinEditProperties'
                       Properties.DisplayFormat = '0.00 %'
                       Properties.EditFormat = '0.00 %'
-                      Properties.Increment = 0.10000000000000000
-                      Properties.LargeIncrement = 1.00000000000000000
-                      Properties.MaxValue = 100.00000000000000000
+                      Properties.Increment = 0.100000000000000000
+                      Properties.LargeIncrement = 1.000000000000000000
+                      Properties.MaxValue = 100.000000000000000000
                       Properties.ValueType = vtFloat
                       Width = 107
                     end
@@ -2385,10 +2370,10 @@
                   end
                 end
                 object pnlPrestamosBotones: TPanel
-                  Left = 868
+                  Left = 876
                   Top = 0
                   Width = 117
-                  Height = 408
+                  Height = 416
                   Align = alRight
                   BevelOuter = bvNone
                   TabOrder = 1
@@ -2416,14 +2401,10 @@
             object tsOtros: TcxTabSheet
               Caption = '&5_Otros'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlUserInstantBottom: TPanel
                 Left = 0
-                Top = 329
-                Width = 985
+                Top = 337
+                Width = 993
                 Height = 79
                 Align = alBottom
                 BevelOuter = bvNone
@@ -2593,36 +2574,35 @@
         object splFicha: TcxSplitter
           Left = 0
           Top = 179
-          Width = 993
-          Height = 8
+          Width = 997
+          Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlTopFicha
-          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 993
-        ExplicitHeight = 629
+        ExplicitWidth = 997
+        ExplicitHeight = 634
         inherited pnlPerfilTop: TPanel
-          Width = 993
+          Width = 997
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 993
+          ExplicitWidth = 997
           inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
+            ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 993
-          Height = 572
+          Width = 997
+          Height = 577
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 993
-          ExplicitHeight = 572
+          ExplicitWidth = 997
+          ExplicitHeight = 577
           inherited cxgrdPerfil: TcxGrid
-            Width = 993
-            Height = 572
-            ExplicitWidth = 993
-            ExplicitHeight = 572
+            Width = 997
+            Height = 577
+            ExplicitWidth = 997
+            ExplicitHeight = 577
           end
         end
       end
@@ -2637,15 +2617,12 @@
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1001
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
         inherited nvNavegador: TcxDBNavigator
           Top = 5
-          Width = 310
           Height = 25
-          TabOrder = 3
           ExplicitTop = 5
-          ExplicitWidth = 310
           ExplicitHeight = 25
         end
         inherited lblTextoaBuscar: TcxLabel

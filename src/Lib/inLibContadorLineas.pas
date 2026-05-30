@@ -55,6 +55,18 @@ const
     ColSerieHdr  : 'SERIE_ALB';
     ColNumeroHdr : 'NUMERO_ALB'
   );
+  CONT_ALBARANES_COMPRA : TInfoContadorLineas = (
+    TablaHdr     : 'fza_albaranes_compra';
+    ColContador  : 'CONTADOR_LINEAS_ALBC';
+    ColSerieHdr  : 'SERIE_ALBC';
+    ColNumeroHdr : 'NUMERO_ALBC'
+  );
+  CONT_PEDIDOS_COMPRA : TInfoContadorLineas = (
+    TablaHdr     : 'fza_pedidos_compra';
+    ColContador  : 'CONTADOR_LINEAS_PEDC';
+    ColSerieHdr  : 'SERIE_PEDC';
+    ColNumeroHdr : 'NUMERO_PEDC'
+  );
 
 // Devuelve la siguiente LINEA libre para el documento (sSerie, sNumero) y
 // actualiza CONTADOR_LINEAS_X en BD atomicamente al mismo valor devuelto.
