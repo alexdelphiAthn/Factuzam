@@ -3,24 +3,26 @@
 Subsistema para recontar inventarios físicos con una app de mano, usando un
 servidor REST (PHP + MySQL) como **puente** entre Factuzam y los terminales.
 
-> Estado: **DISEÑO para revisar**. Nada aplicado, nada commiteado. Las DDL de
-> este documento son borradores; cuando demos el visto bueno se sacan a
-> scripts idempotentes en `DESARROLLOS EN CURSO/` (Factuzam) y a un `.sql`
-> aparte para el servidor. `factuzam_original.sql` NO se toca.
+> Estado: **DISEÑO para revisar**. Ficheros de este desarrollo:
+> - `recuento_inventarios_app.md` — este documento (diseño general).
+> - `recuento_inventarios_factuzam.sql` — DDL idempotente de Factuzam (INVREC +
+>   marcadores en `fza_inventarios`). `factuzam_original.sql` NO se toca.
+> - `recuento_inventarios_servidor.sql` — DDL de la BBDD MySQL del servidor.
+> - `recuento_inventarios_php.md` — contrato REST + esqueletos PHP.
 
 ---
 
 ## 1. Objetivo
 
 1. Desde Factuzam (`inMtoInventarios`) se **envía** un inventario a recontar al
-   servidor.
-2. La **app Android** se descarga la tarea y su catálogo, y **recuenta**
-   escaneando códigos de barras (uno o varios operarios a la vez).
+   servidor (una "plantilla").
+2. La **app Android** recoge la plantilla (o cuenta libre por almacén) y
+   **recuenta** escaneando códigos de barras (uno o varios operarios a la vez).
 3. Cada escaneo es un **evento con su día/hora** (la "unidad de recuento").
-4. La app **sube** los eventos al servidor (offline-first, por lotes).
+4. Al terminar, la app **sube** el recuento al servidor (offline-first, lotes).
 5. Factuzam **recoge** el recuento, rellena `CANTIDAD_FISICA_INVLIN` y guarda
-   el detalle escaneo a escaneo. A partir de ahí, el flujo de regularización
-   de stock que YA existe (`APLICAR`) no cambia.
+   el detalle escaneo a escaneo (INVREC). A partir de ahí, el flujo de
+   regularización de stock que YA existe (`APLICAR`) no cambia.
 
 ## 2. Decisiones ya tomadas
 
@@ -30,6 +32,9 @@ servidor REST (PHP + MySQL) como **puente** entre Factuzam y los terminales.
 | Modelo de recuento | **Evento por escaneo**, multi-operario, se agrega por SKU |
 | Traza en Factuzam | **Opción B**: tabla `fza_inventarios_recuentos` (INVREC) con cada escaneo |
 | App: menú | (1) escanear =+1 · (2) escanear + cantidad · (3) recoger plantilla |
+| Opciones 1 y 2 | **recuento libre**: preguntan el **almacén** (no exigen plantilla) |
+| Opción 3 | **exige plantilla previa** (la que Factuzam envió) |
+| Al finalizar | la app **sube el recuento al webservice** y lo marca `RECONTADO` |
 | Lote/caducidad | Solo en artículos trazables (`ESTRAZABLE_ART='S'`) |
 | Servidor | **Mismo host que las fotos (DreamHost)**, BBDD MySQL nueva |
 | Auth Factuzam ↔ servidor | `X-API-Key` (igual que fotos) |
@@ -45,12 +50,12 @@ servidor REST (PHP + MySQL) como **puente** entre Factuzam y los terminales.
  │  Factuzam VCL  ───────────────┼──HTTPS──┼─▶  API REST PHP               │
  │   inMtoInventarios            │ X-API-Key│    inv_*.php                  │
  │   inLibInventarioNube (nuevo) │◀─────────┼──  + MySQL "puente"          │
- │        │                      │         │       inv_tareas              │
- │        ▼ UniDAC               │         │       inv_catalogo            │
- │   MariaDB Factuzam            │         │       inv_eventos             │
+ │        │                      │         │       inv_recuentos           │
+ │        ▼ UniDAC               │         │       inv_catalogo / eventos  │
+ │   MariaDB Factuzam            │         │       inv_almacenes           │
  │   fza_inventarios / _lineas   │         └───────────▲──────────────────┘
  │   fza_inventarios_recuentos   │                     │ HTTPS, token disp.
- │        (nueva tabla)          │                     │
+ │        (tabla INVREC)         │                     │
  └──────────────────────────────┘         ┌───────────┴──────────────────┐
                                           │  App Android FMX             │
                                           │   SQLite local (cola offline)│
@@ -59,8 +64,8 @@ servidor REST (PHP + MySQL) como **puente** entre Factuzam y los terminales.
 ```
 
 El servidor es **un buzón/puente**, no una réplica de Factuzam. Solo guarda
-tareas de recuento, su catálogo y los eventos de escaneo. La verdad del stock
-sigue en la MariaDB de Factuzam.
+recuentos, su catálogo y los eventos de escaneo. La verdad del stock sigue en
+la MariaDB de Factuzam.
 
 ## 4. Qué se reutiliza (no se reinventa)
 
@@ -88,280 +93,193 @@ Factuzam; sólo cambia el transporte (HTTP en vez de fichero) y el "papel"
 |---|---|
 | `ExportarInventarioExcel` (cabecera + líneas → .xlsx) | `EnviarInventario` → `POST inv_enviar.php` (mismas columnas en JSON) |
 | El operario teclea "Uds. Físicas" en el Excel | El operario escanea en la app |
-| `ImportarInventarioDesdeSheet` → lista `SKU=CANTIDAD` (+ PMP nuevo) | `RecogerRecuento` → `GET inv_recoger.php` → misma lista `SKU=CANTIDAD` |
+| `ImportarInventarioDesdeSheet` → lista `SKU=CANTIDAD` | `RecogerRecuento` → `GET inv_recoger.php` → mismo `SKU=CANTIDAD` (campo `agregado`) |
 | `CargarDesdeListaSkus` escribe `CANTIDAD_FISICA_INVLIN` | **el MISMO** `CargarDesdeListaSkus` |
 
-O sea: en Factuzam, "recoger" reutiliza **exactamente** la tubería del import de
-Excel. Lo único que la app añade sobre el Excel es que **cada lectura lleva su
-día/hora**; el servidor las consolida a `SKU=CANTIDAD`, que es justo lo que
-Factuzam ya sabe ingerir. Esa diferencia es la que decide A vs B en §5.2.
+En Factuzam, "recoger" reutiliza **exactamente** la tubería del import de Excel.
+Lo único que la app añade sobre el Excel es que **cada lectura lleva su
+día/hora**; el servidor las consolida a `SKU=CANTIDAD` (eso es lo que Factuzam
+ingiere) y, además, guardamos el detalle por lectura en INVREC (Opción B).
 
 ## 5. Modelo de datos
 
 ### 5.1 Servidor puente (MySQL en DreamHost)
 
 BBDD independiente (p.ej. `factuzam_recuentos`). Es PHP-propia, **no** sigue el
-sufijo `fza_`/`_TABLA` del libro de estilo (ese gobierna la MariaDB de
-Factuzam). Convención propia: `inv_` + snake_case.
+sufijo `fza_`/`_TABLA` del libro de estilo. Convención propia: `inv_` +
+snake_case. **DDL completa y runnable en `recuento_inventarios_servidor.sql`.**
 
-```sql
--- Una tarea = un inventario enviado a recontar.
-CREATE TABLE inv_tareas (
-  id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  carpeta_cliente   VARCHAR(80)  NOT NULL,          -- tenant (igual que fotos)
-  codigo_emp        VARCHAR(10)  NOT NULL,          -- clave del fza_inventarios
-  codigo_alm        VARCHAR(10)  NOT NULL,
-  serie             VARCHAR(20)  NOT NULL,
-  numero            VARCHAR(20)  NOT NULL,
-  descripcion       VARCHAR(200) NULL,
-  modo              ENUM('DIRIGIDO','CIEGO') NOT NULL DEFAULT 'DIRIGIDO',
-  estado            ENUM('PENDIENTE','EN_RECUENTO','RECONTADO',
-                         'RECOGIDO','CANCELADO') NOT NULL DEFAULT 'PENDIENTE',
-  instante_envio    DATETIME NOT NULL,
-  instante_recogida DATETIME NULL,
-  usuario_envio     VARCHAR(100) NULL,
-  instante_alta     DATETIME NOT NULL,
-  instante_modif    DATETIME NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_tarea (carpeta_cliente, codigo_emp, codigo_alm, serie, numero),
-  KEY idx_tarea_estado (carpeta_cliente, estado)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Catálogo que necesita la app para resolver escaneos offline y dar feedback.
--- En modo CIEGO puede ser todo el catálogo del almacén; en DIRIGIDO, sólo los
--- SKUs a contar. Un SKU puede tener varios códigos de barras.
-CREATE TABLE inv_catalogo (
-  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  id_tarea        BIGINT UNSIGNED NOT NULL,
-  codigo_articulo VARCHAR(20)  NOT NULL,
-  codigo_unidad   VARCHAR(50)  NOT NULL,            -- SKU
-  descripcion     VARCHAR(200) NULL,
-  codigo_barras   VARCHAR(50)  NULL,                -- una fila por código
-  cantidad_teorica DECIMAL(19,6) NULL,             -- NULL si recuento ciego
-  PRIMARY KEY (id),
-  KEY idx_cat_tarea (id_tarea),
-  KEY idx_cat_barras (id_tarea, codigo_barras),
-  KEY idx_cat_sku (id_tarea, codigo_unidad)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- El corazón del "evento por escaneo". Una fila por lectura.
-CREATE TABLE inv_eventos (
-  id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  id_tarea          BIGINT UNSIGNED NOT NULL,
-  uuid_evento       CHAR(36) NOT NULL,             -- idempotencia (lo crea la app)
-  codigo_barras     VARCHAR(50) NULL,              -- código crudo leído
-  codigo_articulo   VARCHAR(20) NULL,              -- resuelto por la app (o NULL)
-  codigo_unidad     VARCHAR(50) NULL,              -- SKU resuelto (o NULL)
-  cantidad          DECIMAL(19,6) NOT NULL DEFAULT 1,
-  lote              VARCHAR(50) NULL,
-  fecha_caducidad   DATE NULL,
-  instante_recuento DATETIME NOT NULL,             -- día/hora de ESTA unidad
-  operario          VARCHAR(100) NULL,             -- quién contó
-  dispositivo       VARCHAR(100) NULL,             -- terminal
-  zona              VARCHAR(100) NULL,             -- pasillo/ubicación (opcional)
-  anulado           CHAR(1) NOT NULL DEFAULT 'N',  -- corregir una lectura mala
-  instante_recibido DATETIME NOT NULL,             -- hora servidor (clock-skew)
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_evento_uuid (uuid_evento),
-  KEY idx_evt_tarea (id_tarea, id),                -- cursor incremental
-  KEY idx_evt_sku (id_tarea, codigo_unidad)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Dispositivos/operarios dados de alta, con su token de acceso.
-CREATE TABLE inv_dispositivos (
-  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  carpeta_cliente VARCHAR(80)  NOT NULL,
-  nombre          VARCHAR(100) NOT NULL,
-  operario        VARCHAR(100) NULL,
-  token           CHAR(64) NOT NULL,
-  esactivo        CHAR(1) NOT NULL DEFAULT 'S',
-  instante_alta   DATETIME NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_disp_token (token)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
+| Tabla | Para qué |
+|---|---|
+| `inv_recuentos` | Cabecera de sesión. `origen` = FACTUZAM (plantilla, `modo`=DIRIGIDO) o APP (recuento LIBRE de un almacén). |
+| `inv_catalogo` | Líneas de la plantilla (solo DIRIGIDO): SKU, código de barras, descripción, teórica, trazable. |
+| `inv_eventos` | El "evento por escaneo": una fila por lectura, con su día/hora. Idempotente por `uuid_evento`. |
+| `inv_almacenes` | Lista de almacenes que Factuzam sincroniza, para el selector de almacén del recuento libre. |
+| `inv_dispositivos` | Terminales/operarios con su token de acceso. |
 
 ### 5.2 Factuzam (MariaDB) — cambios de esquema
 
-**Elegida la Opción B.** Además de meter `SKU=CANTIDAD` por
-`CargarDesdeListaSkus` (igual que el Excel), se guarda **cada escaneo** en una
-tabla nueva `fza_inventarios_recuentos`, para poder revisar más adelante el
-origen del recuento: qué código leyó el móvil, cuándo, quién y con qué terminal.
-(La alternativa A —sin tablas nuevas, solo el consolidado— queda descartada.)
-
-Cambios idempotentes, en `DESARROLLOS EN CURSO/`. **No** se toca
+**Opción B**: además de meter `SKU=CANTIDAD` por `CargarDesdeListaSkus` (igual
+que el Excel), se guarda **cada escaneo** en `fza_inventarios_recuentos`, para
+revisar el origen del recuento (qué leyó el móvil, cuándo, quién, qué terminal).
+Idempotente, en `recuento_inventarios_factuzam.sql`. **No** se toca
 `factuzam_original.sql`.
 
-**Nueva tabla `fza_inventarios_recuentos` (sufijo `INVREC`)** — una fila por
-escaneo. `CANTIDAD_FISICA_INVLIN` = **suma** de los INVREC de ese SKU; cada
-evento conserva su día/hora, operario, terminal y el código de barras crudo
-leído.
+**Tabla `fza_inventarios_recuentos` (sufijo `INVREC`)** — una fila por escaneo.
+La **PK es la misma clave del inventario** (empresa+almacén+serie+número) **+
+`UUID_INVREC`** como discriminador de cada lectura — el mismo patrón que
+`fza_inventarios_lineas` (que añade `LINEA_INVLIN` a esas 4 columnas). **Sin
+contador autoincremental**: el `UUID` (lo crea la app) ya identifica de forma
+única el escaneo y da idempotencia al recoger.
 
 ```sql
 CREATE TABLE `fza_inventarios_recuentos` (
-  `ID_INVREC`               bigint        NOT NULL AUTO_INCREMENT,
-  `UUID_INVREC`             varchar(36)   NOT NULL,
-  `CODIGO_EMP_INVREC`       varchar(10)   NOT NULL,
-  `CODIGO_ALM_INVREC`       varchar(10)   NOT NULL,
-  `SERIE_INV_INVREC`        varchar(20)   NOT NULL,
-  `NUMERO_INV_INVREC`       varchar(20)   NOT NULL,
-  `CODIGO_ART_INVREC`       varchar(20)   DEFAULT NULL,
-  `CODIGO_UNIDAD_INVREC`    varchar(50)   DEFAULT NULL,
-  `CODIGO_BARRAS_INVREC`    varchar(50)   DEFAULT NULL,
-  `CANTIDAD_INVREC`         decimal(19,6) NOT NULL DEFAULT 1.000000,
-  `LOTE_INVREC`             varchar(50)   DEFAULT '',
-  `FECHA_CADUCIDAD_INVREC`  date          DEFAULT NULL,
-  `INSTANTE_RECUENTO_INVREC` datetime     NOT NULL,
-  `OPERARIO_INVREC`         varchar(100)  DEFAULT NULL,
-  `DISPOSITIVO_INVREC`      varchar(100)  DEFAULT NULL,
-  `ZONA_INVREC`             varchar(100)  DEFAULT NULL,
-  `ESANULADO_INVREC`        char(1)       NOT NULL DEFAULT 'N',
-  `INSTANTE_ALTA`           datetime      NOT NULL,
-  `USUARIO_ALTA`            varchar(100)  NOT NULL,
-  `INSTANTE_MODIF`          datetime      DEFAULT NULL,
-  `USUARIO_MODIF`           varchar(100)  DEFAULT NULL,
-  PRIMARY KEY (`ID_INVREC`),
-  UNIQUE KEY `UQ_INVREC_UUID` (`UUID_INVREC`),
-  KEY `IDX_INVREC_DOC` (`CODIGO_EMP_INVREC`,`CODIGO_ALM_INVREC`,
-                        `SERIE_INV_INVREC`,`NUMERO_INV_INVREC`),
+  `CODIGO_EMP_INVREC`        varchar(10)   NOT NULL,
+  `CODIGO_ALM_INVREC`        varchar(10)   NOT NULL,
+  `SERIE_INV_INVREC`         varchar(20)   NOT NULL,
+  `NUMERO_INV_INVREC`        varchar(20)   NOT NULL,
+  `UUID_INVREC`              varchar(36)   NOT NULL,
+  `CODIGO_ART_INVREC`        varchar(20)   DEFAULT NULL,
+  `CODIGO_UNIDAD_INVREC`     varchar(50)   DEFAULT NULL,
+  `CODIGO_BARRAS_INVREC`     varchar(50)   DEFAULT NULL,
+  `CANTIDAD_INVREC`          decimal(19,6) NOT NULL DEFAULT 1.000000,
+  `LOTE_INVREC`              varchar(50)   DEFAULT '',
+  `FECHA_CADUCIDAD_INVREC`   date          DEFAULT NULL,
+  `INSTANTE_RECUENTO_INVREC` datetime      NOT NULL,
+  `OPERARIO_INVREC`          varchar(100)  DEFAULT NULL,
+  `DISPOSITIVO_INVREC`       varchar(100)  DEFAULT NULL,
+  `ZONA_INVREC`              varchar(100)  DEFAULT NULL,
+  `ESANULADO_INVREC`         char(1)       NOT NULL DEFAULT 'N',
+  `INSTANTE_ALTA`            datetime      NOT NULL,
+  `USUARIO_ALTA`             varchar(100)  NOT NULL,
+  `INSTANTE_MODIF`           datetime      DEFAULT NULL,
+  `USUARIO_MODIF`            varchar(100)  DEFAULT NULL,
+  PRIMARY KEY (`CODIGO_EMP_INVREC`,`CODIGO_ALM_INVREC`,`SERIE_INV_INVREC`,
+               `NUMERO_INV_INVREC`,`UUID_INVREC`),
   KEY `IDX_INVREC_UNIDAD` (`CODIGO_UNIDAD_INVREC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-Notas de estilo: `INSTANTE_RECUENTO_INVREC` lleva prefijo `INSTANTE_` por ser
-`datetime` (en INVLIN se llama `FECHA_RECUENTO_INVLIN`, nombre legacy). FKs
-lógicas con el patrón de INVLIN (`SERIE_INV_INVREC`, `NUMERO_INV_INVREC`,
-`CODIGO_UNIDAD_INVREC`). Booleano `ESANULADO_INVREC`. Auditoría sin sufijo.
-Hay que **registrar el sufijo `INVREC`** en `UNormalizerEngine.pas` y en el
-catálogo del libro de estilo BBDD §2.
+Estilo: `INSTANTE_RECUENTO_INVREC` lleva prefijo `INSTANTE_` por ser `datetime`
+(en INVLIN se llama `FECHA_RECUENTO_INVLIN`, nombre legacy). FKs lógicas con el
+patrón de INVLIN. Booleano `ESANULADO_INVREC`. Auditoría sin sufijo. Hay que
+**registrar el sufijo `INVREC`** en `UNormalizerEngine.pas` y en el libro de
+estilo BBDD §2.
 
-**Marcadores de ciclo en `fza_inventarios`** (ligero, útil en A y B; ALTER
-idempotente):
+**Marcadores de ciclo en `fza_inventarios`** (`ADD COLUMN IF NOT EXISTS`):
 
 ```sql
 ESRECUENTO_REMOTO_INV            char(1)  NOT NULL DEFAULT 'N'  -- enviado a la app
 INSTANTE_ENVIO_RECUENTO_INV      datetime DEFAULT NULL
 INSTANTE_RECOGIDA_RECUENTO_INV   datetime DEFAULT NULL
-ID_TAREA_REMOTA_INV              varchar(40) DEFAULT NULL       -- id en el puente
+ID_RECUENTO_REMOTO_INV           varchar(40) DEFAULT NULL       -- id en el puente
 ```
 
 `ESTADO_INV` se queda `ABIERTO` mientras el inventario está fuera contándose;
-al recoger, se rellenan físicas y el usuario revisa y **APLICA** como hoy. Así
-el flujo de regularización existente no cambia.
+al recoger, se rellenan físicas y el usuario revisa y **APLICA** como hoy.
 
-## 6. Contrato REST (PHP)
+## 6. Contrato REST
 
-Mismo estilo "script plano" del servidor de fotos (DreamHost compartido).
-Todo JSON; errores `{ "message": "..." }` + status HTTP correcto. HTTPS
-obligatorio.
+Resumen (detalle + esqueletos PHP en `recuento_inventarios_php.md`). Todo JSON;
+errores `{ "message": "..." }` + status HTTP. HTTPS obligatorio.
 
-**Factuzam ↔ servidor** (cabecera `X-API-Key`):
+**App ↔ servidor** (token de dispositivo + `carpeta_cliente`):
 
-| Método y script | Para qué |
+| Método · script | Para qué |
 |---|---|
-| `POST inv_enviar.php` | Crea/reemplaza una tarea + su catálogo. Idempotente por (carpeta, emp, alm, serie, numero). |
-| `GET  inv_estado.php?...` | Estado + progreso (nº eventos, nº SKUs, último escaneo). |
-| `GET  inv_recoger.php?...&desde=<id>` | Devuelve eventos (crudo) y/o agregado por SKU. Cursor incremental. Marca `RECOGIDO` al cerrar. |
+| `POST disp_registrar.php` | Alta de dispositivo → token. |
+| `GET inv_almacenes.php` | Almacenes para el selector (recuento libre 1/2). |
+| `GET inv_recuentos.php` | Plantillas pendientes (opción 3). |
+| `POST inv_recuentos.php` | Crea un recuento **libre** de un almacén (1/2). |
+| `GET inv_catalogo.php` | Catálogo de la plantilla (paginado). |
+| `POST inv_eventos.php` | Sube lote de escaneos. Idempotente por `uuid`. |
+| `POST inv_finalizar.php` | Marca el recuento `RECONTADO`. |
 
-**App ↔ servidor** (cabecera token de dispositivo + `carpeta_cliente`):
+**Factuzam ↔ servidor** (`X-API-Key`):
 
-| Método y script | Para qué |
+| Método · script | Para qué |
 |---|---|
-| `POST disp_registrar.php` | Alta de dispositivo, devuelve token. |
-| `GET  inv_tareas.php` | Lista de tareas `PENDIENTE`/`EN_RECUENTO` del tenant. |
-| `GET  inv_catalogo.php?id_tarea=..&desde=..` | Catálogo paginado. |
-| `POST inv_eventos.php` | Sube un lote de eventos. Idempotente por `uuid_evento`. Devuelve aceptados/duplicados. |
-| `POST inv_finalizar.php` | Marca la tarea `RECONTADO`. |
-
-Ejemplo de lote de eventos (`POST inv_eventos.php`):
-
-```json
-{ "id_tarea": 42, "dispositivo": "PDA-03", "operario": "MARTA",
-  "eventos": [
-    { "uuid": "f1c2...-...", "codigo_barras": "8412345000123",
-      "codigo_unidad": "CAMISA/AZUL/M", "cantidad": 1,
-      "instante_recuento": "2026-05-30T11:42:07" }
-  ] }
-```
+| `POST inv_enviar.php` | Crea/reemplaza plantilla + catálogo. Idempotente por la clave del inventario. |
+| `POST inv_almacenes_sync.php` | Sincroniza la lista de almacenes. |
+| `GET inv_pendientes.php` | Recuentos `RECONTADO` listos para recoger. |
+| `GET inv_recoger.php` | Eventos + `agregado` por SKU. Cursor incremental. Marca `RECOGIDO`. |
+| `GET inv_estado.php` | Estado + progreso. |
 
 ## 7. App Android (Delphi FMX)
 
 ### 7.1 Menú principal (3 opciones)
 
-Tal cual lo quieres:
-
-1. **Recontar códigos de barras** — escaneo rápido, cada lectura suma **+1**
-   (contar pieza a pieza).
-2. **Recontar códigos de barras + cantidad** — tras escanear, se **teclea la
-   cantidad** (cajas / múltiplos).
-3. **Recoger plantilla de recuento** — descarga del servidor la **plantilla**
-   (el inventario que Factuzam envió: SKUs + catálogo + códigos de barras +
-   teórica). Es la "tarea" del §6 (`inv_tareas` + `inv_catalogo`).
+1. **Recontar códigos de barras** — escaneo rápido, cada lectura suma **+1**.
+   No exige plantilla: **pregunta el almacén** (recuento libre) y a contar.
+2. **Recontar códigos de barras + cantidad** — igual que 1 pero tras escanear
+   se **teclea la cantidad** (cajas/múltiplos). También pregunta el almacén.
+3. **Recoger plantilla de recuento** — **exige** que Factuzam haya enviado una
+   plantilla: la descarga (SKUs + códigos de barras + descripción + teórica) y
+   cuenta contra ella (resuelve descripción/teórica y marca lo no esperado).
 
 Los modos 1 y 2 son la misma pantalla de conteo, cambiando solo si la cantidad
-es 1 fija o tecleada; ambos generan eventos `inv_eventos` (y, ya en Factuzam,
-filas `INVREC`). "Recoger plantilla" carga la sesión activa contra la que se
-cuenta: resuelve descripción/teórica y marca lo no esperado.
+es 1 fija o tecleada; todos generan eventos `inv_eventos` (y, ya en Factuzam,
+filas `INVREC`). El almacén del recuento libre sale de `inv_almacenes`.
 
 ### 7.2 Stack y mecánica
 
 - **Stack**: FMX + UniDAC (provider **SQLite** local para la cola offline) +
   `System.Net.HttpClient` + `System.JSON`. Misma familia que Factuzam; sin
   meter FireDAC.
-- **Offline-first**: todo escaneo se inserta primero en SQLite local
-  (con su `uuid` y su `instante_recuento` del reloj del terminal). La subida es
-  un proceso aparte que vacía la cola por lotes; reintenta con backoff. Como el
+- **Offline-first**: todo escaneo se inserta primero en SQLite local (con su
+  `uuid` y su `instante_recuento` del reloj del terminal). La subida es un
+  proceso aparte que vacía la cola por lotes; reintenta con backoff. Como el
   servidor deduplica por `uuid`, reenviar un lote no duplica.
 - **Escaneo** (dos vías, sin dependencia nueva pesada de inicio):
   1. **Lector hardware (keyboard-wedge / intent)**: los terminales de almacén
      (Zebra/Honeywell) emiten el código como texto a un campo con foco. Cero
      librerías. **Vía recomendada para arrancar.**
   2. **Cámara**: requiere un componente de decodificación de barras (ZXing
-     port o comercial). Se deja como ampliación para no añadir dependencia
-     ahora (regla "no deps nuevas sin justificación").
-- **Flujo**: login/registro de dispositivo → **Recoger plantilla** (opción 3)
-  → **Recontar** (opción 1 o 2): cada lectura va a la cola con su `uuid`,
-  `instante_recuento`, operario y terminal; feedback con la descripción del SKU,
-  y si el código no está en la plantilla se guarda crudo como "no identificado"
-  → sincronizar (manual o automático) → finalizar. **Lote/caducidad** solo se
-  piden si el artículo es trazable (`ESTRAZABLE_ART='S'`).
-- **Multi-operario**: varios terminales contra la misma tarea. El servidor
+     port o comercial). Ampliación futura (regla "no deps nuevas sin justificar").
+- **Flujo**:
+  - **Libre (1/2)**: elegir almacén → `POST inv_recuentos.php` (crea sesión) →
+    escanear → cola → sincronizar → **finalizar** (`POST inv_finalizar.php`).
+  - **Dirigido (3)**: recoger plantilla → escanear contra el catálogo → cola →
+    sincronizar → **finalizar**.
+  - **Lote/caducidad** solo si el artículo es trazable (`ESTRAZABLE_ART='S'`).
+- **Multi-operario**: varios terminales contra el mismo recuento. El servidor
   acumula todos los eventos; el SKU se agrega sumando.
 
 ## 8. Integración en Factuzam (VCL)
 
 - **Nueva unit `inLibInventarioNube.pas`** (en `src/Lib/`), gemela de
-  `inLibFotosNube`: `EnviarInventario`, `ConsultarEstado`, `RecogerRecuento`.
-  THTTPClient + JSON. Config en `oAppParams` (categoría nueva "Recuentos":
-  `appRecuentoUrl`, `appRecuentoApiKey`, `appRecuentoCarpetaCliente`).
-- **Dos botones en `inMtoInventarios`** (junto a `btnExportarInv` /
-  `btnCargarExcel`), preferentemente `TcxButton`:
-  - **"Enviar a recuento"**: arma el catálogo del inventario actual (SKUs de las
-    líneas + sus códigos de barras de `fza_codigos_barras` + descripción +
-    teórica de `fza_articulos_stockactual`; en modo ciego, el catálogo del
-    almacén) y hace `POST inv_enviar.php`. Marca `ESRECUENTO_REMOTO_INV='S'`.
+  `inLibFotosNube`: `EnviarInventario`, `SincronizarAlmacenes`, `ListarPendientes`,
+  `RecogerRecuento`. THTTPClient + JSON. Config en `oAppParams` (categoría nueva
+  "Recuentos": `appRecuentoUrl`, `appRecuentoApiKey`, `appRecuentoCarpetaCliente`).
+- **Botones en `inMtoInventarios`** (junto a `btnExportarInv`/`btnCargarExcel`),
+  preferentemente `TcxButton`:
+  - **"Enviar a recuento"**: arma el catálogo del inventario (SKUs de las líneas
+    + códigos de barras de `fza_codigos_barras` + descripción + teórica de
+    `fza_articulos_stockactual`) y hace `POST inv_enviar.php`. Marca
+    `ESRECUENTO_REMOTO_INV='S'` e `INSTANTE_ENVIO_RECUENTO_INV`.
   - **"Recoger recuento"**: `GET inv_recoger.php`, inserta los eventos en
     `fza_inventarios_recuentos`, recalcula `CANTIDAD_FISICA_INVLIN` = suma por
-    SKU (creando la línea si el SKU es nuevo, reutilizando
-    `CargarDesdeListaSkus`) y pone `FECHA_RECUENTO_INVLIN` = último escaneo.
-    Luego el usuario revisa y **APLICA** con el flujo actual.
+    SKU (reutilizando `CargarDesdeListaSkus`) y pone `FECHA_RECUENTO_INVLIN` =
+    último escaneo. Luego el usuario revisa y **APLICA** con el flujo actual.
+  - Para recuentos **libres** (origen APP), Factuzam los descubre con
+    `inv_pendientes.php` y los vuelca a un `fza_inventarios` nuevo/elegido de ese
+    almacén (igual que importar un Excel a un inventario nuevo).
 - **Pumpear versión** en `inLibGlobalVar.pas` al implementar (regla repo §6).
 
 ## 9. Ciclo de vida
 
 ```
-Factuzam: inventario ABIERTO
-   │  "Enviar a recuento"
-   ▼
-Servidor: tarea PENDIENTE ──app descarga──▶ EN_RECUENTO ──escaneos──▶ ...
-   │                                                  │ "Finalizar"
-   │                                                  ▼
-   │                                            RECONTADO
-   │  "Recoger recuento" (Factuzam)                   │
-   ▼                                                  ▼
-Factuzam: rellena físicas + INVREC            Servidor: RECOGIDO
-   │  (usuario revisa)
-   ▼
+DIRIGIDO (opción 3)                         LIBRE (opciones 1/2)
+Factuzam: inventario ABIERTO                App: elige almacén
+   │  "Enviar a recuento"                      │  crea recuento (origen APP)
+   ▼                                           ▼
+Servidor: PENDIENTE ─app recoge─▶ EN_RECUENTO ◀── escaneos ──┐
+                                      │  "Finalizar"          │
+                                      ▼                       │
+                                  RECONTADO                   │
+   Factuzam "Recoger" ◀── inv_pendientes / inv_recoger ───────┘
+   │  rellena físicas + INVREC            Servidor: RECOGIDO
+   ▼  (en libre: crea/elige el fza_inventarios del almacén)
 APLICAR  →  regularización de stock (flujo actual, sin cambios)
 ```
 
@@ -376,41 +294,40 @@ APLICAR  →  regularización de stock (flujo actual, sin cambios)
 
 ## 11. Idempotencia y sincronización
 
-- **Eventos**: `uuid_evento` único en servidor → reenvíos no duplican. La app
-  marca el evento como "subido" sólo tras 200 OK.
-- **Recogida en Factuzam**: `UUID_INVREC` único → recoger dos veces no duplica
-  filas; se hace `INSERT ... ON DUPLICATE KEY` / comprobación previa.
-- **Cursor incremental**: `inv_recoger.php?desde=<id>` y
-  `inv_catalogo.php?desde=<id>` permiten traer sólo lo nuevo.
+- **Eventos**: `uuid_evento` único en servidor (`ON DUPLICATE KEY`) → reenvíos
+  no duplican. La app marca el evento como "subido" sólo tras 200 OK.
+- **Recogida en Factuzam**: la PK de INVREC incluye `UUID_INVREC` → recoger dos
+  veces no duplica filas (`INSERT ... ON DUPLICATE KEY`).
+- **Cursor incremental**: `inv_recoger.php?desde=<cursor>` y
+  `inv_catalogo.php?desde=<id>` traen sólo lo nuevo.
 
-## 12. Fases de entrega (propuesta)
+## 12. Fases de entrega
 
-1. **Esquema**: scripts idempotentes Factuzam (INVREC + ALTERs) + `.sql` del
-   servidor puente. Registrar `INVREC` en el normalizador y libro de estilo.
-2. **Servidor PHP**: endpoints + auth, sobre la BBDD nueva en DreamHost.
-3. **Factuzam VCL**: `inLibInventarioNube` + los 2 botones en `inMtoInventarios`.
-4. **App Android FMX**: login, descarga de tarea/catálogo, escaneo
-   (keyboard-wedge), cola SQLite, sync, finalizar.
+1. **Esquema** ✅ borrador: `recuento_inventarios_factuzam.sql` (INVREC +
+   marcadores) y `recuento_inventarios_servidor.sql`. Falta registrar `INVREC`
+   en el normalizador y el libro de estilo.
+2. **Servidor PHP** ✅ diseño: `recuento_inventarios_php.md` (endpoints +
+   esqueletos). Falta subirlo a DreamHost con `config.php` real.
+3. **Factuzam VCL**: `inLibInventarioNube` + botones en `inMtoInventarios`.
+4. **App Android FMX**: menú (3 opciones), selector de almacén, recoger
+   plantilla, escaneo (keyboard-wedge), cola SQLite, sync, finalizar.
 5. **Ampliaciones**: escaneo por cámara, zonas/ubicaciones, panel de progreso
-   en vivo en Factuzam, recuento ciego de almacén completo.
+   en vivo en Factuzam.
 
 ## 13. Decisiones abiertas (para verlo juntos)
 
-1. ✅ **DECIDIDO — Opción B**: se guarda cada escaneo en
-   `fza_inventarios_recuentos` (sufijo `INVREC`, a registrar en el normalizador y
-   en el libro de estilo BBDD §2) para revisar el origen del recuento.
-2. ✅ **DECIDIDO — menú de la app**: (1) Recontar códigos de barras (=+1),
-   (2) Recontar códigos de barras + cantidad, (3) Recoger plantilla de recuento.
-3. **¿Una BBDD nueva** `factuzam_recuentos` en DreamHost, o tablas `inv_*`
-   dentro de la BBDD que ya usa el servidor de fotos? (Asumo BBDD nueva.)
-4. ✅ **DECIDIDO — cantidad**: la fija el modo de menú (1 = +1 por escaneo;
-   2 = cantidad tecleada).
-5. ✅ **DECIDIDO — lote/caducidad**: solo se piden en artículos trazables
-   (`ESTRAZABLE_ART='S'`).
-6. **Cierre de tarea**: ¿lo finaliza cualquier operario, o sólo un supervisor?
-7. **¿Recontar exige plantilla?**: ¿los modos 1 y 2 cuentan solo contra una
-   plantilla recogida (opción 3), o también permiten recuento libre sin
-   plantilla? (Asumo: se recoge plantilla y luego se recuenta.)
+1. ✅ **Opción B**: cada escaneo en `fza_inventarios_recuentos` (INVREC).
+2. ✅ **Menú de la app**: (1) escanear =+1, (2) escanear + cantidad, (3) recoger
+   plantilla.
+3. **BBDD del servidor**: asumo **una BBDD MySQL nueva dedicada** en DreamHost
+   (`factuzam_recuentos`). ¿Ok?
+4. ✅ **Cantidad**: la fija el modo de menú (1 = +1; 2 = cantidad tecleada).
+5. ✅ **Lote/caducidad**: solo en artículos trazables (`ESTRAZABLE_ART='S'`).
+6. **Cierre de tarea**: ¿finaliza cualquier operario, o sólo un supervisor?
+7. ✅ **Plantilla vs libre**: opción 3 exige plantilla; opciones 1/2 son
+   recuento libre y preguntan el almacén.
+8. ✅ **PK de INVREC**: clave del inventario + `UUID_INVREC` (sin contador
+   autoincremental), igual patrón que `fza_inventarios_lineas`.
 
 ## 14. Reglas del repo respetadas
 
@@ -419,4 +336,4 @@ APLICAR  →  regularización de stock (flujo actual, sin cambios)
 - Sufijo nuevo `INVREC` siguiendo el libro de estilo BBDD (a registrar).
 - Español en código/comentarios; UniDAC; THTTPClient+JSON como el resto.
 - Sin dependencias nuevas en el arranque (escaneo por keyboard-wedge).
-- Nada commiteado hasta que lo aprobemos; versión a pumpear al implementar.
+- Nada aplicado a producción; versión a pumpear al implementar.
