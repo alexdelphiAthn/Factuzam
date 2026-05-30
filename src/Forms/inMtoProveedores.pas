@@ -183,6 +183,8 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -195,6 +197,7 @@ uses
   inLibWin,
   inLibUser,
   inLibShowMto,
+  inLibFotos,
   inMtoPrincipal,
   inMtoArticulos,
   inMtoClientes,
@@ -203,6 +206,43 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+// El Mto de proveedores tiene articulo en dos pestanas: los articulos
+// del proveedor (tsArticulos / tvArticulos) y las lineas de venta
+// (tsVentas / tvLinFac). El articulo activo es el de la rejilla de la
+// pestana visible; ambas rejillas exponen CODIGO_ART_ART.
+procedure TfrmMtoProveedores.ResolverArtSkuActivo(out ACodArt,
+                                                  ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  ds := nil;
+  if pcPestanas.ActivePage = tsArticulos then
+  begin
+    if Assigned(tvArticulos.DataController.DataSource) then
+      ds := tvArticulos.DataController.DataSource.DataSet;
+  end
+  else if pcPestanas.ActivePage = tsVentas then
+  begin
+    if Assigned(tvLinFac.DataController.DataSource) then
+      ds := tvLinFac.DataController.DataSource.DataSet;
+  end;
+  if ds <> nil then
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+end;
+
+// Enganchamos los dos datasets de articulo para que la foto flotante
+// siga al cursor en cualquiera de las dos pestanas.
+function TfrmMtoProveedores.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmProveedores) then
+    Result := [dsTablaG, dmmProveedores.dsArticulos,
+               dmmProveedores.dsLinFacturasArticulos]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoProveedores.btnIraArticuloClick(Sender: TObject);
 begin
