@@ -39,6 +39,9 @@ type
     txtOrigen: TcxTextEdit;
     lblDestino: TcxLabel;
     cboDestino: TcxComboBox;
+    lblEmpleado: TcxLabel;
+    txtEmpleado: TcxTextEdit;
+    lblEmpleadoNombre: TcxLabel;
     pnlEntrada: TPanel;
     lblSku: TcxLabel;
     txtSku: TcxTextEdit;
@@ -60,6 +63,7 @@ type
     procedure btnQuitarClick(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
     procedure btnF12Click(Sender: TObject);
+    procedure txtEmpleadoExit(Sender: TObject);
   private
     FDatos: TdmTraspaso;
     FGrid: TcxGrid;
@@ -79,6 +83,7 @@ type
     procedure EjecutarTraspaso(AConTicket: Boolean);
     procedure EnviarSolicitud;
     procedure CargarSolicitudSeleccionada;
+    function EmpleadoValido: Boolean;
   public
     procedure PrepararValores(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
                               ACaja: string; AFecha: TDateTime);
@@ -304,13 +309,53 @@ procedure TfrmMtoOpeTraspaso.EnviarSolicitud;
 var
   sNum, sSer, sOrigen: string;
 begin
-  sOrigen := DestinoSeleccionado;
-  if sOrigen = '' then
-    ShowMessage('Selecciona el almacén al que solicitas.')
-  else if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
+  if EmpleadoValido then
   begin
-    ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
-    AplicarModo(mtSolicitar);
+    sOrigen := DestinoSeleccionado;
+    if sOrigen = '' then
+      ShowMessage('Selecciona el almacén al que solicitas.')
+    else if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
+    begin
+      ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
+      AplicarModo(mtSolicitar);
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.txtEmpleadoExit(Sender: TObject);
+var
+  sCod, sNom: string;
+begin
+  if Trim(txtEmpleado.Text) = '' then
+    lblEmpleadoNombre.Caption := ''
+  else if FDatos.ValidarEmpleado(Trim(txtEmpleado.Text), sCod, sNom) then
+    lblEmpleadoNombre.Caption := sNom
+  else
+    lblEmpleadoNombre.Caption := '(no encontrado)';
+end;
+
+function TfrmMtoOpeTraspaso.EmpleadoValido: Boolean;
+var
+  sCod, sNom: string;
+begin
+  if Trim(txtEmpleado.Text) = '' then
+  begin
+    ShowMessage('Indica el empleado responsable del traspaso.');
+    Result := False;
+  end
+  else if FDatos.ValidarEmpleado(Trim(txtEmpleado.Text), sCod, sNom) then
+  begin
+    lblEmpleadoNombre.Caption := sNom;
+    if FDatos.cdsCabecera.State = dsBrowse then
+      FDatos.cdsCabecera.Edit;
+    FDatos.cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString := sCod;
+    FDatos.cdsCabecera.Post;
+    Result := True;
+  end
+  else
+  begin
+    ShowMessage('Empleado no encontrado: ' + txtEmpleado.Text);
+    Result := False;
   end;
 end;
 
@@ -318,30 +363,33 @@ procedure TfrmMtoOpeTraspaso.EjecutarTraspaso(AConTicket: Boolean);
 var
   sNumOp, sDestino, sNumSol, sSerSol: string;
 begin
-  if FModo = mtAtender then
+  if EmpleadoValido then
   begin
-    sDestino := FDatos.cdsCabecera.FieldByName('CODIGO_ALM_DESTINO').AsString;
-    sNumSol := FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString;
-    sSerSol := FDatos.cdsCabecera.FieldByName('SERIE_SOL').AsString;
-    if sDestino = '' then
-      ShowMessage('Carga primero una solicitud (botón Cargar solicitud).')
-    else if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
+    if FModo = mtAtender then
     begin
-      // TODO: si AConTicket, imprimir el albarán de traspaso.
-      ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.', [sNumOp]));
-      AplicarModo(mtAtender);
-    end;
-  end
-  else
-  begin
-    sDestino := DestinoSeleccionado;
-    if sDestino = '' then
-      ShowMessage('Selecciona el almacén destino.')
-    else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
+      sDestino :=
+        FDatos.cdsCabecera.FieldByName('CODIGO_ALM_DESTINO').AsString;
+      sNumSol := FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString;
+      sSerSol := FDatos.cdsCabecera.FieldByName('SERIE_SOL').AsString;
+      if sDestino = '' then
+        ShowMessage('Carga primero una solicitud (botón Cargar solicitud).')
+      else if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
+      begin
+        ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
+                           [sNumOp]));
+        AplicarModo(mtAtender);
+      end;
+    end
+    else
     begin
-      // TODO: si AConTicket, imprimir el albarán de traspaso.
-      ShowMessage(Format('Traspaso %s grabado correctamente.', [sNumOp]));
-      AplicarModo(mtTraspaso);
+      sDestino := DestinoSeleccionado;
+      if sDestino = '' then
+        ShowMessage('Selecciona el almacén destino.')
+      else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
+      begin
+        ShowMessage(Format('Traspaso %s grabado correctamente.', [sNumOp]));
+        AplicarModo(mtTraspaso);
+      end;
     end;
   end;
 end;
