@@ -131,6 +131,8 @@ CREATE TABLE IF NOT EXISTS inv_dispositivos (
   operario        VARCHAR(100) NULL,
   token           CHAR(64) NOT NULL,
   esactivo        CHAR(1) NOT NULL DEFAULT 'S',
+  esadmin         CHAR(1) NOT NULL DEFAULT 'N',           -- reservado: limitar
+                                                          -- 'finalizar' a supervisores
   instante_alta   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_disp_token (token),

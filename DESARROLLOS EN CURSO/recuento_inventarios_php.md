@@ -21,6 +21,7 @@ PHP 8.x, PDO MySQL, HTTPS (Let's Encrypt), sin frameworks ni procesos largos.
   inv_catalogo.php      GET catálogo de una plantilla (paginado).
   inv_eventos.php       POST lote de escaneos (idempotente por uuid).
   inv_finalizar.php     POST marca el recuento como RECONTADO.
+  inv_reabrir.php       POST reabre el recuento (RECONTADO -> EN_RECUENTO).
   # --- Factuzam (auth: X-API-Key) ---
   inv_enviar.php        POST crea/reemplaza plantilla + catálogo (DIRIGIDO).
   inv_almacenes_sync.php POST sincroniza la lista de almacenes.
@@ -52,6 +53,7 @@ sobre HTTPS. Errores siempre `{ "message": "..." }` + status HTTP.
 | `GET inv_catalogo.php?id_recuento=..&desde=..` | — | `[{codigo_articulo, codigo_unidad, descripcion, codigo_barras, cantidad_teorica, estrazable}]` |
 | `POST inv_eventos.php` | `{id_recuento, dispositivo, operario, eventos:[...]}` | `{aceptados, duplicados}` |
 | `POST inv_finalizar.php` | `{id_recuento}` | `{estado:"RECONTADO"}` |
+| `POST inv_reabrir.php` | `{id_recuento}` | `{estado:"EN_RECUENTO"}` |
 
 ### Factuzam (X-API-Key)
 
@@ -340,3 +342,7 @@ mismo molde: `require comun.php` → auth → consulta PDO → `json_salida(...)
 - **Recuento libre** (opciones 1/2): no tiene `serie/numero`; al recoger,
   Factuzam crea/elige un `fza_inventarios` para ese almacén y vuelca el agregado
   (igual que importar un Excel a un inventario nuevo).
+- **Cierre**: `inv_finalizar.php` lo puede hacer cualquier dispositivo (campo
+  `esadmin` reservado para limitarlo a supervisores). Es **reversible**
+  (`inv_reabrir.php` → `EN_RECUENTO`); Factuzam puede recoger parcial en
+  cualquier estado. El control real es el permiso de APLICAR en Factuzam.
