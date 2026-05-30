@@ -98,6 +98,8 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -106,13 +108,37 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto, inMtoPrincipal;
+  inLibWin, inLibShowMto, inLibFotos, inMtoPrincipal;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoAtributosConjuntos }
+
+// El articulo activo es el de la rejilla de articulos del conjunto
+// (tvArticulos, CODIGO_ART_ART).
+procedure TfrmMtoAtributosConjuntos.ResolverArtSkuActivo(out ACodArt,
+                                                             ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvArticulos.DataController.DataSource) then
+  begin
+    ds := tvArticulos.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+function TfrmMtoAtributosConjuntos.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmAtributosConjuntos) then
+    Result := [dsTablaG, dmmAtributosConjuntos.dsArticulosConjunto]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoAtributosConjuntos.CrearTablaPrincipal;
 begin
