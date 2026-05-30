@@ -37,6 +37,13 @@ type
                                      const ADocRef, AOrigen, ADestino,
                                      AEmpleado: string; ALineas: TDataSet;
                                      const ANombreImpresora: string = 'DEBUG');
+    // Reimprime el ticket de un traspaso ya grabado leyendo la cabecera de la
+    // operacion de caja y sus lineas (movimientos de salida) de la BBDD. Lo usa
+    // el boton Reimprimir de la consulta de operaciones (TR/TA).
+    class procedure ImprimirTraspasoDesdeBD(AConn: TUniConnection;
+                                     const AEmpresa, AAlmacen, ACaja,
+                                     ANumOperacion: string;
+                                     const ANombreImpresora: string = 'DEBUG');
   end;
 
 implementation
@@ -283,6 +290,157 @@ begin
     end;
   finally
     FreeAndNil(QStk);
+  end;
+end;
+
+class procedure TTraspasoTicket.ImprimirTraspasoDesdeBD(AConn: TUniConnection;
+                                   const AEmpresa, AAlmacen, ACaja,
+                                   ANumOperacion: string;
+                                   const ANombreImpresora: string);
+var
+  Ticket: TTicketTermico;
+  Preview: TFormVisualizador;
+  Q, QStk: TUniQuery;
+  ComandosESC, RutaPDF, sImpresora, sRefArch: string;
+  sSerie, sNumDoc, sOrigen, sDestino, sEmpleado, sDocRef, sSku: string;
+  dPed, dOrg, dDes: Double;
+  bExiste: Boolean;
+  // Stock (suma de lotes) de un SKU en un almacen.
+  function StockEn(const AAlm, ASku: string): Double;
+  begin
+    QStk.Close;
+    QStk.ParamByName('ALM').AsString := AAlm;
+    QStk.ParamByName('SKU').AsString := ASku;
+    QStk.Open;
+    Result := QStk.Fields[0].AsFloat;
+    QStk.Close;
+  end;
+begin
+  if (AConn = nil) or (not AConn.Connected) then
+    Exit;
+  sImpresora := ANombreImpresora;
+  if Trim(sImpresora) = '' then
+    sImpresora := 'DEBUG';
+  sSerie := '';
+  sNumDoc := '';
+  sOrigen := '';
+  sDestino := '';
+  sEmpleado := '';
+  Q := TUniQuery.Create(nil);
+  QStk := TUniQuery.Create(nil);
+  try
+    Q.Connection := AConn;
+    QStk.Connection := AConn;
+    QStk.SQL.Text :=
+      'SELECT COALESCE(SUM(S.CANTIDAD_STK),0)' +
+      '  FROM fza_articulos_stockactual S' +
+      ' WHERE S.CODIGO_ALM_STK = :ALM' +
+      '   AND S.CODIGO_UNIDAD_STK = :SKU';
+    // Cabecera: la operacion de caja del traspaso.
+    Q.SQL.Text :=
+      'SELECT SERIE_FAC_OPCAJA, NUMERO_FAC_OPCAJA,' +
+      '       CODIGO_ALM_OPCAJA, CODIGO_ALM_CONTRA_OPCAJA,' +
+      '       CODIGO_EMPLEADO_OPCAJA' +
+      '  FROM fza_caja_operaciones' +
+      ' WHERE CODIGO_EMP_OPCAJA = :EMP AND CODIGO_ALM_OPCAJA = :ALM' +
+      '   AND CODIGO_CAJA_OPCAJA = :CAJA' +
+      '   AND NUMERO_OPERACION_OPCAJA = :NUMOP';
+    Q.ParamByName('EMP').AsString := AEmpresa;
+    Q.ParamByName('ALM').AsString := AAlmacen;
+    Q.ParamByName('CAJA').AsString := ACaja;
+    Q.ParamByName('NUMOP').AsString := ANumOperacion;
+    Q.Open;
+    bExiste := not Q.IsEmpty;
+    if bExiste then
+    begin
+      sSerie := Q.FieldByName('SERIE_FAC_OPCAJA').AsString;
+      sNumDoc := Q.FieldByName('NUMERO_FAC_OPCAJA').AsString;
+      sOrigen := Q.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+      sDestino := Q.FieldByName('CODIGO_ALM_CONTRA_OPCAJA').AsString;
+      sEmpleado := Q.FieldByName('CODIGO_EMPLEADO_OPCAJA').AsString;
+    end;
+    Q.Close;
+    if bExiste then
+    begin
+      if Trim(sSerie + sNumDoc) <> '' then
+        sDocRef := sSerie + '/' + sNumDoc
+      else
+        sDocRef := ANumOperacion;
+      Ticket := TTicketTermico.Create(sImpresora);
+      try
+        Ticket.Inicializar;
+        Ticket.ConfigurarEspanol;
+        Ticket.Alinear(alCentro);
+        Ticket.Negrita(True);
+        Ticket.EscribirLinea('TRASPASO');
+        Ticket.EscribirLinea(sDocRef);
+        Ticket.Negrita(False);
+        Ticket.SaltarLineas(1);
+        Ticket.Alinear(alIzquierda);
+        Ticket.TextoColumnas('Origen:', sOrigen);
+        Ticket.TextoColumnas('Destino:', sDestino);
+        Ticket.TextoColumnas('Empleado:', sEmpleado);
+        Ticket.TextoColumnas('Operacion:', ANumOperacion);
+        Ticket.LineaSeparadora('-');
+        Ticket.EscribirLinea('SKU / Uds / Org(en) / Des(tino)');
+        Ticket.LineaSeparadora('-');
+        // Lineas: movimientos de salida (la salida del origen).
+        Q.SQL.Text :=
+          'SELECT CODIGO_UNIDAD_MOV, CANTIDAD_MOV' +
+          '  FROM fza_movimientos_almacen' +
+          ' WHERE CODIGO_EMP_MOV = :EMP AND CODIGO_ALM_MOV = :ALM' +
+          '   AND CODIGO_CAJA_DOC_MOV = :CAJA' +
+          '   AND NUMERO_OPERACION_DOC_MOV = :NUMOP' +
+          '   AND TIPO_MOV = ''S''' +
+          ' ORDER BY LINEA_DOC_MOV';
+        Q.ParamByName('EMP').AsString := AEmpresa;
+        Q.ParamByName('ALM').AsString := AAlmacen;
+        Q.ParamByName('CAJA').AsString := ACaja;
+        Q.ParamByName('NUMOP').AsString := ANumOperacion;
+        Q.Open;
+        while not Q.Eof do
+        begin
+          sSku := Q.FieldByName('CODIGO_UNIDAD_MOV').AsString;
+          dPed := Q.FieldByName('CANTIDAD_MOV').AsFloat;
+          dOrg := StockEn(sOrigen, sSku);
+          dDes := StockEn(sDestino, sSku);
+          Ticket.EscribirLinea(sSku);
+          Ticket.EscribirLinea(Format('  Uds:%s  Org:%s  Des:%s',
+            [FormatFloat('0.###', dPed),
+             FormatFloat('0.###', dOrg),
+             FormatFloat('0.###', dDes)]));
+          Q.Next;
+        end;
+        Q.Close;
+        Ticket.LineaSeparadora('-');
+        Ticket.Alinear(alCentro);
+        Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
+        Ticket.SaltarLineas(2);
+        Ticket.CortarPapel;
+        ComandosESC := Ticket.ObtenerComandos;
+        sRefArch := StringReplace(sDocRef, '/', '_', [rfReplaceAll]);
+        sRefArch := StringReplace(sRefArch, '\', '_', [rfReplaceAll]);
+        RutaPDF := GetUserFolderTickets + 'Traspaso_' + sRefArch + '.pdf';
+        Preview := TFormVisualizador.Create(nil);
+        try
+          Preview.Hide;
+          Preview.FRutaPDFReal := RutaPDF;
+          Preview.CargarYMostrar(ComandosESC);
+          Preview.ExportarAPDF(ComandosESC, RutaPDF);
+          if UpperCase(sImpresora) = 'DEBUG' then
+            Preview.ShowModal
+          else
+            Ticket.Imprimir;
+        finally
+          FreeAndNil(Preview);
+        end;
+      finally
+        FreeAndNil(Ticket);
+      end;
+    end;
+  finally
+    FreeAndNil(QStk);
+    FreeAndNil(Q);
   end;
 end;
 

@@ -27,7 +27,7 @@ uses
   cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
-  inLibGridArticulos;
+  inLibGridArticulos, inLibPermisos;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -76,6 +76,7 @@ type
     FCaja: string;
     FFecha: TDateTime;
     FModo: TModoTraspaso;
+    FVerCoste: Boolean;
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -107,6 +108,10 @@ begin
   KeyPreview := True;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self);
+  // Permiso de ver coste/importe (global TPV). Admin siempre; por defecto S
+  // para no afectar instalaciones existentes hasta que se ponga a N por grupo.
+  FVerCoste := (not Assigned(oPermisos)) or
+               oPermisos.TienePermiso('caja.verCoste', True);
   ConstruirGrid;
 end;
 
@@ -164,6 +169,9 @@ begin
   Col.DataBinding.FieldName := 'PRECIO_COSTE';
   Col.Options.Editing := False;
   Col.Width := 70;
+  // Oculta el coste a empleados sin permiso (el valor se sigue calculando y
+  // guardando en el movimiento; solo se oculta de la vista).
+  Col.Visible := FVerCoste;
   Col := FView.CreateColumn;
   Col.Caption := 'Stock org';
   Col.DataBinding.FieldName := 'STOCK_ORIGEN';
@@ -328,7 +336,11 @@ begin
       FDatos.cdsLineas.EnableControls;
     end;
   end;
-  lblTotal.Caption := Format('Importe traspaso: %m', [cTotal]);
+  // Sin permiso de ver coste, no se muestra el importe (revela coste).
+  if FVerCoste then
+    lblTotal.Caption := Format('Importe traspaso: %m', [cTotal])
+  else
+    lblTotal.Caption := '';
 end;
 
 procedure TfrmMtoOpeTraspaso.btnAnadirClick(Sender: TObject);

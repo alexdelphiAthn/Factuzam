@@ -133,7 +133,8 @@ implementation
 {$R *.dfm}
 
 uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
-     inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo;
+     inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo,
+     inLibTraspasoTicket;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -433,32 +434,38 @@ end;
 
 procedure TfrmConsultaOpe.btnReimprimirClick(Sender: TObject);
 var
-  sEmp, sAlm, sCaja, sNumOp, sCliente: string;
+  sEmp, sAlm, sCaja, sNumOp, sCliente, sTipoOp: string;
 begin
-  if FdmConsulta.qryMaestro.IsEmpty then Exit;
-
+  if FdmConsulta.qryMaestro.IsEmpty then
+    Exit;
   sEmp     := FdmConsulta.qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
   sAlm     := FdmConsulta.qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
   sCaja    := FdmConsulta.qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
   sNumOp   :=
     FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
   sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
-  if FdmConsulta.TieneFactura then
-    ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
-  if FdmConsulta.TieneDepositos then
-    ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
-  if FdmConsulta.EsOperacionCaja then
-    ImprimirTicketOperacionCaja(sEmp, sAlm, sCaja, sNumOp,
-                                oNomImpresoraCaja);
-  if (not FdmConsulta.TieneFactura)
-     and (not FdmConsulta.TieneDepositos)
-     and (not FdmConsulta.EsOperacionCaja) then
+  sTipoOp  :=
+    FdmConsulta.qryMaestro.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+  // Traspaso (TR misma empresa / TA entre empresas): ticket especifico con
+  // stock origen/destino, no el ticket generico de operacion de caja.
+  if (sTipoOp = 'TR') or (sTipoOp = 'TA') then
+    TTraspasoTicket.ImprimirTraspasoDesdeBD(oConn, sEmp, sAlm, sCaja, sNumOp,
+                                            oNomImpresoraCaja)
+  else
   begin
-    ShowMessage('Esta operación no tiene ticket asociado.');
-    Exit;
+    if FdmConsulta.TieneFactura then
+      ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
+    if FdmConsulta.TieneDepositos then
+      ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
+    if FdmConsulta.EsOperacionCaja then
+      ImprimirTicketOperacionCaja(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
+    if (not FdmConsulta.TieneFactura)
+       and (not FdmConsulta.TieneDepositos)
+       and (not FdmConsulta.EsOperacionCaja) then
+      ShowMessage('Esta operación no tiene ticket asociado.')
+    else if Trim(sCliente) <> '' then
+      ImprimirRecordatorio(sCliente, oNomImpresoraCaja);
   end;
-  if Trim(sCliente) <> '' then
-    ImprimirRecordatorio(sCliente, oNomImpresoraCaja);
 end;
 
 procedure TfrmConsultaOpe.btnCerrarClick(Sender: TObject);
