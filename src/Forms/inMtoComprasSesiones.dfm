@@ -18,8 +18,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       Height = 680
       ExplicitWidth = 1100
       ExplicitHeight = 680
-      ClientRectBottom = 678
-      ClientRectRight = 1098
+      ClientRectBottom = 676
+      ClientRectRight = 1096
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 2
         ExplicitTop = 27
@@ -85,10 +85,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 1096
-        ExplicitHeight = 651
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1092
+        ExplicitHeight = 648
         object gbCabecera: TcxGroupBox
           Left = 0
           Top = 0
@@ -96,7 +96,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Caption = ' Cabecera '
           TabOrder = 0
           Height = 224
-          Width = 1096
+          Width = 1092
           object lblSerie: TcxLabel
             Left = 12
             Top = 24
@@ -363,7 +363,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Left = 12
             Top = 192
             AutoSize = False
-            Caption = ''
             TabOrder = 27
             Transparent = True
             Height = 20
@@ -372,8 +371,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
         object pnlLineasTop: TPanel
           Left = 0
-          Top = 200
-          Width = 1096
+          Top = 224
+          Width = 1092
           Height = 36
           Align = alTop
           BevelOuter = bvNone
@@ -443,7 +442,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           object lblHint: TcxLabel
             Left = 898
             Top = 7
-            Caption =
+            Caption = 
               'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
               'oste.'
             TabOrder = 6
@@ -452,13 +451,16 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
         object cxgrdLineas: TcxGrid
           Left = 0
-          Top = 236
-          Width = 1096
-          Height = 415
+          Top = 260
+          Width = 1092
+          Height = 388
           Align = alClient
           TabOrder = 2
           OnEnter = cxgrdLineasEnter
           OnExit = cxgrdLineasExit
+          ExplicitTop = 236
+          ExplicitWidth = 1096
+          ExplicitHeight = 415
           object tvLineas: TcxGridDBTableView
             Navigator.Buttons.ConfirmDelete = True
             Navigator.Buttons.PriorPage.Visible = False
@@ -588,19 +590,21 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 1094
-        ExplicitHeight = 649
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1092
+        ExplicitHeight = 648
         inherited pnlPerfilTop: TPanel
-          Width = 1096
+          Width = 1092
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1094
+          ExplicitWidth = 1092
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 1096
-          Height = 594
+          Width = 1092
+          Height = 591
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1096
           ExplicitHeight = 594
@@ -618,7 +622,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object pnlDocsTop: TPanel
           Left = 0
           Top = 0
-          Width = 1096
+          Width = 1092
           Height = 40
           Align = alTop
           BevelOuter = bvNone
@@ -647,10 +651,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         object cxgrdDocs: TcxGrid
           Left = 0
           Top = 40
-          Width = 1096
-          Height = 611
+          Width = 1092
+          Height = 608
           Align = alClient
           TabOrder = 1
+          ExplicitWidth = 1096
+          ExplicitHeight = 611
           object tvDocs: TcxGridDBTableView
             OnDblClick = tvDocsDblClick
             OptionsCustomize.ColumnHiding = True
@@ -697,6 +703,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       end
       object tsLog: TcxTabSheet
         Caption = 'Log'
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlLogTop: TPanel
           Left = 0
           Top = 0
@@ -732,8 +742,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Properties.ScrollBars = ssVertical
           Properties.WordWrap = False
           TabOrder = 1
-          Height = 615
-          Width = 1096
+          Height = 612
+          Width = 1092
         end
       end
     end

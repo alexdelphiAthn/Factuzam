@@ -1,6 +1,6 @@
 inherited dmComprasSesiones: TdmComprasSesiones
-  Height = 480
-  Width = 720
+  Height = 726
+  Width = 1127
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
@@ -64,8 +64,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '          D.NUMERO_SESDOC')
     MasterFields = 'SERIE_SES;NUMERO_SES'
     DetailFields = 'SERIE_SES_SESDOC;NUMERO_SES_SESDOC'
-    Left = 144
-    Top = 16
+    Left = 208
+    Top = 72
     ParamData = <
       item
         DataType = ftUnknown
@@ -80,8 +80,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsSesDocs: TDataSource
     DataSet = unqrySesDocs
-    Left = 144
-    Top = 72
+    Left = 208
+    Top = 128
   end
   object unqrySesionFil: TUniQuery
     SQL.Strings = (
@@ -93,8 +93,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
     MasterSource = dsSesionLin
     MasterFields = 'SERIE_SES_SESLIN;NUMERO_SES_SESLIN;LINEA_SESLIN'
     DetailFields = 'SERIE_SES_SESFIL;NUMERO_SES_SESFIL;LINEA_SES_SESFIL'
-    Left = 152
-    Top = 16
+    Left = 216
+    Top = 8
     ParamData = <
       item
         DataType = ftUnknown
@@ -114,7 +114,7 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsSesionFil: TDataSource
     DataSet = unqrySesionFil
-    Left = 152
+    Left = 264
     Top = 72
   end
   object unqrySesionFilAtr: TUniQuery
@@ -125,8 +125,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '  AND LINEA_SES_SESFILAT = :LINEA_SES_SESFIL'
       '  AND ID_FILA_SESFILAT = :ID_FILA_SESFIL')
     MasterSource = dsSesionFil
-    Left = 248
-    Top = 16
+    Left = 368
+    Top = 8
     ParamData = <
       item
         DataType = ftUnknown
@@ -151,8 +151,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsSesionFilAtr: TDataSource
     DataSet = unqrySesionFilAtr
-    Left = 248
-    Top = 72
+    Left = 368
+    Top = 64
   end
   object unqrySesionCel: TUniQuery
     SQL.Strings = (
@@ -164,8 +164,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
     MasterFields = 'SERIE_SES_SESLIN;NUMERO_SES_SESLIN;LINEA_SESLIN'
     DetailFields = 'SERIE_SES_SESCEL;NUMERO_SES_SESCEL;LINEA_SES_SESCEL'
     AfterPost = unqrySesionCelAfterPost
-    Left = 344
-    Top = 16
+    Left = 496
+    Top = 8
     ParamData = <
       item
         DataType = ftUnknown
@@ -185,8 +185,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsSesionCel: TDataSource
     DataSet = unqrySesionCel
-    Left = 344
-    Top = 72
+    Left = 496
+    Top = 64
   end
   object unqrySesionProps: TUniQuery
     SQL.Strings = (
@@ -197,8 +197,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE P.SERIE_SES_SESPROP = :SERIE_SES'
       '  AND P.NUMERO_SES_SESPROP = :NUMERO_SES'
       'ORDER BY P.ORDEN_SESPROP')
-    Left = 440
-    Top = 16
+    Left = 672
+    Top = 8
     ParamData = <
       item
         DataType = ftUnknown
@@ -213,8 +213,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsSesionProps: TDataSource
     DataSet = unqrySesionProps
-    Left = 440
-    Top = 72
+    Left = 672
+    Top = 64
   end
   object unqrySesionLinProps: TUniQuery
     SQL.Strings = (
@@ -223,8 +223,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '  AND NUMERO_SES_SESLPROP = :NUMERO_SES_SESLIN'
       '  AND LINEA_SES_SESLPROP = :LINEA_SESLIN')
     MasterSource = dsSesionLin
-    Left = 536
-    Top = 16
+    Left = 848
+    Top = 8
     ParamData = <
       item
         DataType = ftUnknown
@@ -244,8 +244,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsSesionLinProps: TDataSource
     DataSet = unqrySesionLinProps
-    Left = 536
-    Top = 72
+    Left = 848
+    Top = 64
   end
   object unqrySesionKits: TUniQuery
     SQL.Strings = (
@@ -280,8 +280,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '  AND CODIGO_SESKIT_SESKITD = :CODIGO_SESKIT'
       'ORDER BY ORDEN_SESKITD')
     MasterSource = dsSesionKits
-    Left = 152
-    Top = 128
+    Left = 216
+    Top = 184
     ParamData = <
       item
         DataType = ftUnknown
@@ -301,8 +301,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsSesionKitsDet: TDataSource
     DataSet = unqrySesionKitsDet
-    Left = 152
-    Top = 184
+    Left = 216
+    Top = 240
   end
   object unqryPreviewSkus: TUniQuery
     SQL.Strings = (
@@ -310,8 +310,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE SERIE = :SERIE_SES'
       '  AND NUMERO = :NUMERO_SES'
       'ORDER BY CODIGO_ALM, LINEA, ID_FILA, ID_AV_PIVOT')
-    Left = 248
-    Top = 128
+    Left = 368
+    Top = 120
     ParamData = <
       item
         DataType = ftUnknown
@@ -326,8 +326,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsPreviewSkus: TDataSource
     DataSet = unqryPreviewSkus
-    Left = 248
-    Top = 184
+    Left = 368
+    Top = 176
   end
   object unqryLineaSkusPrecios: TUniQuery
     SQL.Strings = (
@@ -361,8 +361,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       ' GROUP BY C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL'
       ' ORDER BY C.ID_FILA_SES_SESCEL, AVP.AV')
     MasterSource = dsSesionLin
-    Left = 632
-    Top = 16
+    Left = 1008
+    Top = 8
     ParamData = <
       item
         DataType = ftUnknown
@@ -382,8 +382,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsLineaSkusPrecios: TDataSource
     DataSet = unqryLineaSkusPrecios
-    Left = 632
-    Top = 72
+    Left = 1008
+    Top = 64
   end
   object unqryResumenAlmacen: TUniQuery
     SQL.Strings = (
@@ -395,8 +395,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       ' WHERE R.SERIE  = :SERIE_SES'
       '   AND R.NUMERO = :NUMERO_SES'
       ' ORDER BY R.CODIGO_ALM')
-    Left = 632
-    Top = 128
+    Left = 1008
+    Top = 120
     ParamData = <
       item
         DataType = ftUnknown
@@ -411,21 +411,21 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsResumenAlmacen: TDataSource
     DataSet = unqryResumenAlmacen
-    Left = 632
-    Top = 184
+    Left = 1008
+    Top = 176
   end
   object unqryProveedores: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_PRV_PRV, NOMBRE_PRV, RAZON_SOCIAL_PRV'
       '  FROM fza_proveedores'
       'ORDER BY RAZON_SOCIAL_PRV')
-    Left = 344
-    Top = 128
+    Left = 496
+    Top = 120
   end
   object dsProveedores: TDataSource
     DataSet = unqryProveedores
-    Left = 344
-    Top = 184
+    Left = 496
+    Top = 176
   end
   object unqryFamilias: TUniQuery
     SQL.Strings = (
@@ -434,25 +434,25 @@ inherited dmComprasSesiones: TdmComprasSesiones
         's'
       'WHERE ESACTIVO_FAM = '#39'S'#39
       'ORDER BY ORDEN_FAM, NOMBRE_FAM_FAM')
-    Left = 440
-    Top = 128
+    Left = 672
+    Top = 120
   end
   object dsFamilias: TDataSource
     DataSet = unqryFamilias
-    Left = 440
-    Top = 184
+    Left = 672
+    Top = 176
   end
   object unqryVariaciones: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_VAR, NOMBRE_VAR FROM fza_variaciones'
       'ORDER BY CODIGO_VAR')
-    Left = 536
-    Top = 128
+    Left = 848
+    Top = 120
   end
   object dsVariaciones: TDataSource
     DataSet = unqryVariaciones
-    Left = 536
-    Top = 184
+    Left = 848
+    Top = 176
   end
   object unqryVariacionesAtributos: TUniQuery
     SQL.Strings = (
@@ -482,25 +482,25 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '  FROM fza_atributos_conjuntos'
       'WHERE ESACTIVO_AC = '#39'S'#39
       'ORDER BY NOMBRE_AC')
-    Left = 152
-    Top = 240
+    Left = 216
+    Top = 296
   end
   object dsAtributosConjuntos: TDataSource
     DataSet = unqryAtributosConjuntos
-    Left = 152
-    Top = 296
+    Left = 216
+    Top = 352
   end
   object unqryAtributosValores: TUniQuery
     SQL.Strings = (
       'SELECT ID_AV, AV, ID_VA_AV FROM fza_atributos_valores'
       'ORDER BY ID_VA_AV, AV')
-    Left = 248
-    Top = 240
+    Left = 368
+    Top = 232
   end
   object dsAtributosValores: TDataSource
     DataSet = unqryAtributosValores
-    Left = 248
-    Top = 296
+    Left = 368
+    Top = 288
   end
   object unqryPropiedades: TUniQuery
     SQL.Strings = (
@@ -514,8 +514,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
         'OP_ARTPROP'
       'WHERE FA.CODIGO_FAM_FAM = :CODIGO_FAM_SES'
       'ORDER BY FA.ORDEN_MOSTRAR_FA')
-    Left = 344
-    Top = 240
+    Left = 496
+    Top = 232
     ParamData = <
       item
         DataType = ftUnknown
@@ -525,70 +525,70 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsPropiedades: TDataSource
     DataSet = unqryPropiedades
-    Left = 344
-    Top = 296
+    Left = 496
+    Top = 288
   end
   object unqryPropiedadesValores: TUniQuery
     SQL.Strings = (
       'SELECT ID_PV_ARTPROP, ID_PROP_PV, PV'
       '  FROM fza_propiedades_valores'
       'ORDER BY ID_PROP_PV, PV')
-    Left = 440
-    Top = 240
+    Left = 672
+    Top = 232
   end
   object dsPropiedadesValores: TDataSource
     DataSet = unqryPropiedadesValores
-    Left = 440
-    Top = 296
+    Left = 672
+    Top = 288
   end
   object unqryIvas: TUniQuery
     SQL.Strings = (
       'SELECT IVA_IVAGRP, DESCRIPCION_IVA_IVAGRP FROM fza_ivas_grupos'
       'ORDER BY IVA_IVAGRP')
-    Left = 536
-    Top = 240
+    Left = 848
+    Top = 232
   end
   object dsIvas: TDataSource
     DataSet = unqryIvas
-    Left = 536
-    Top = 296
+    Left = 848
+    Top = 288
   end
   object unqryAlmacenes: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM FROM fza_almacenes'
       'WHERE ESACTIVO_ALM = '#39'S'#39
       'ORDER BY NOMBRE_ALM_ALM')
-    Left = 56
-    Top = 352
+    Left = 40
+    Top = 392
   end
   object dsAlmacenes: TDataSource
     DataSet = unqryAlmacenes
-    Left = 56
-    Top = 408
+    Left = 48
+    Top = 464
   end
   object unqryTarifas: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR FROM vi_tarifas'
       'ORDER BY NOMBRE_TAR_TAR')
-    Left = 152
-    Top = 352
+    Left = 216
+    Top = 408
   end
   object dsTarifas: TDataSource
     DataSet = unqryTarifas
-    Left = 152
-    Top = 408
+    Left = 216
+    Top = 464
   end
   object unqryEmpresas: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP FROM fza_empresas'
       'ORDER BY RAZON_SOCIAL_EMP')
-    Left = 248
-    Top = 352
+    Left = 368
+    Top = 344
   end
   object dsEmpresas: TDataSource
     DataSet = unqryEmpresas
-    Left = 248
-    Top = 408
+    Left = 368
+    Top = 400
   end
   object unqryTemporadas: TUniQuery
     SQL.Strings = (
@@ -597,13 +597,13 @@ inherited dmComprasSesiones: TdmComprasSesiones
       ' WHERE ID_PROP_PV = '#39'TEMPORADA'#39
       '   AND ESACTIVO_PV = '#39'S'#39
       ' ORDER BY PV')
-    Left = 344
-    Top = 352
+    Left = 496
+    Top = 344
   end
   object dsTemporadas: TDataSource
     DataSet = unqryTemporadas
-    Left = 344
-    Top = 408
+    Left = 496
+    Top = 424
   end
   object unqryEmpresaSeries: TUniQuery
     SQL.Strings = (
@@ -614,8 +614,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '   AND (FECHA_HASTA_EMPSER IS NULL'
       '        OR FECHA_HASTA_EMPSER >= CURDATE())'
       ' ORDER BY EMPSER')
-    Left = 712
-    Top = 352
+    Left = 1056
+    Top = 584
     ParamData = <
       item
         DataType = ftUnknown
@@ -625,14 +625,14 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsEmpresaSeries: TDataSource
     DataSet = unqryEmpresaSeries
-    Left = 712
-    Top = 408
+    Left = 1056
+    Top = 640
   end
   object unqryArticuloExiste: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_ART_ART, DESCRIPCION_ART FROM fza_articulos'
       'WHERE CODIGO_ART_ART = :p')
-    Left = 344
+    Left = 496
     Top = 352
     ParamData = <
       item
@@ -647,8 +647,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       
         'CALL PRC_GET_NEXT_CONT_FACT_SERIE(:pserie, :pTipoDoc, :pEMPRESA_' +
         'CONTADOR, :pUSUARIOMODIF, @pcont); SELECT @pcont AS '#39'@pcont'#39)
-    Left = 440
-    Top = 352
+    Left = 672
+    Top = 344
     ParamData = <
       item
         DataType = ftUnknown
@@ -673,8 +673,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object unstrdprcValidarSesion: TUniStoredProc
     StoredProcName = 'PRC_SES_VALIDAR'
-    Left = 536
-    Top = 352
+    Left = 848
+    Top = 344
   end
   object unqryCabSesionPrint: TUniQuery
     Connection = dmConn.conUni
@@ -682,8 +682,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'SELECT * FROM vi_compras_sesiones_cab_print'
       'WHERE SERIE_SES = :SERIE_SES'
       '  AND NUMERO_SES = :NUMERO_SES')
-    Left = 56
-    Top = 392
+    Left = 48
+    Top = 544
     ParamData = <
       item
         DataType = ftUnknown
@@ -699,7 +699,7 @@ inherited dmComprasSesiones: TdmComprasSesiones
   object dsCabSesionPrint: TDataSource
     DataSet = unqryCabSesionPrint
     Left = 56
-    Top = 432
+    Top = 624
   end
   object unqryLinSesionPrint: TUniQuery
     Connection = dmConn.conUni
@@ -708,8 +708,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       'WHERE SERIE_SES = :SERIE_SES'
       '  AND NUMERO_SES = :NUMERO_SES'
       'ORDER BY LINEA_SES')
-    Left = 152
-    Top = 392
+    Left = 216
+    Top = 544
     ParamData = <
       item
         DataType = ftUnknown
@@ -724,8 +724,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsLinSesionPrint: TDataSource
     DataSet = unqryLinSesionPrint
-    Left = 152
-    Top = 432
+    Left = 216
+    Top = 624
   end
   object unqryGuiasSesionPrint: TUniQuery
     Connection = dmConn.conUni
@@ -747,8 +747,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
       '     AND lin.ID_AC_PIVOT_SESLIN IS NOT NULL'
       ')'
       'ORDER BY g.NOMBRE_CORTO_AC, g.ID_AC')
-    Left = 248
-    Top = 392
+    Left = 360
+    Top = 512
     ParamData = <
       item
         DataType = ftUnknown
@@ -763,8 +763,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object dsGuiasSesionPrint: TDataSource
     DataSet = unqryGuiasSesionPrint
-    Left = 248
-    Top = 432
+    Left = 360
+    Top = 584
   end
   object fxdsCabSesion: TfrxDBDataset
     Description = 'Sesiones'
@@ -773,8 +773,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
     DataSource = dsCabSesionPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 344
-    Top = 392
+    Left = 496
+    Top = 584
   end
   object fxdsLinSesion: TfrxDBDataset
     Description = 'LineasSesiones'
@@ -783,8 +783,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
     DataSource = dsLinSesionPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 344
-    Top = 432
+    Left = 496
+    Top = 512
   end
   object fxdsGuiasSesion: TfrxDBDataset
     Description = 'GuiasTallas'
@@ -793,7 +793,7 @@ inherited dmComprasSesiones: TdmComprasSesiones
     DataSource = dsGuiasSesionPrint
     BCDToCurrency = False
     DataSetOptions = []
-    Left = 440
-    Top = 392
+    Left = 672
+    Top = 432
   end
 end
