@@ -342,6 +342,24 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   TabOrder = 5
                   OnClick = btnExportarInvClick
                 end
+                object btnEnviarRecuento: TcxButton
+                  Left = 7
+                  Top = 45
+                  Width = 160
+                  Height = 30
+                  Caption = 'Enviar a recuento'
+                  TabOrder = 8
+                  OnClick = btnEnviarRecuentoClick
+                end
+                object btnRecogerRecuento: TcxButton
+                  Left = 173
+                  Top = 45
+                  Width = 160
+                  Height = 30
+                  Caption = 'Recoger recuento'
+                  TabOrder = 9
+                  OnClick = btnRecogerRecuentoClick
+                end
                 object btnIraArticulo: TcxButton
                   Left = 671
                   Top = 11

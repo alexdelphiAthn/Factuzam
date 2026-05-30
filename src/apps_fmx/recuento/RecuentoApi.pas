@@ -39,6 +39,8 @@ type
     function ListarPlantillas(out ALista: TArrPlantilla): Boolean;
     function CrearRecuentoLibre(const ACodigoEmp, ACodigoAlm,
       ADescripcion: string; out AIdRecuento: Int64): Boolean;
+    function CrearTraspaso(const ACodigoEmp, AOrigen, ADestino: string;
+      out AIdRecuento: Int64): Boolean;
     function DescargarCatalogo(AIdRecuento: Int64;
       out ALista: TArrCatalogo): Boolean;
     function SubirEventos(AIdRecuento: Int64; const AEventos: TArrEvento;
@@ -325,6 +327,43 @@ begin
     oReq.AddPair('codigo_emp', ACodigoEmp);
     oReq.AddPair('codigo_alm', ACodigoAlm);
     oReq.AddPair('descripcion', ADescripcion);
+    iStatus := PostJson('inv_recuentos.php', oReq.ToString, sResp);
+  finally
+    FreeAndNil(oReq);
+  end;
+  if iStatus = 200 then
+  begin
+    oRespJson := TJSONObject.ParseJSONValue(sResp);
+    try
+      if oRespJson is TJSONObject then
+        AIdRecuento := Trunc(JNum(TJSONObject(oRespJson), 'id_recuento'));
+    finally
+      FreeAndNil(oRespJson);
+    end;
+    Result := AIdRecuento > 0;
+    if not Result then
+      FUltimoError := 'El servidor no devolvió id_recuento';
+  end
+  else if iStatus <> 0 then
+    FUltimoError := MensajeError(sResp, iStatus);
+end;
+
+function TRecuentoApi.CrearTraspaso(const ACodigoEmp, AOrigen,
+  ADestino: string; out AIdRecuento: Int64): Boolean;
+var
+  oReq: TJSONObject;
+  sResp: string;
+  iStatus: Integer;
+  oRespJson: TJSONValue;
+begin
+  Result := False;
+  AIdRecuento := 0;
+  oReq := TJSONObject.Create;
+  try
+    oReq.AddPair('tipo', 'TRASPASO');
+    oReq.AddPair('codigo_emp', ACodigoEmp);
+    oReq.AddPair('codigo_alm', AOrigen);
+    oReq.AddPair('codigo_alm_destino', ADestino);
     iStatus := PostJson('inv_recuentos.php', oReq.ToString, sResp);
   finally
     FreeAndNil(oReq);

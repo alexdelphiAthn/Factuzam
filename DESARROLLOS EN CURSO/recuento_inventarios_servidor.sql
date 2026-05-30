@@ -32,8 +32,10 @@ CREATE TABLE IF NOT EXISTS inv_recuentos (
   carpeta_cliente   VARCHAR(80)  NOT NULL,                 -- tenant (igual fotos)
   origen            ENUM('FACTUZAM','APP') NOT NULL,       -- quién lo creó
   modo              ENUM('DIRIGIDO','LIBRE') NOT NULL DEFAULT 'DIRIGIDO',
+  tipo              ENUM('RECUENTO','TRASPASO') NOT NULL DEFAULT 'RECUENTO',
   codigo_emp        VARCHAR(10)  NULL,                     -- clave fza_inventarios
-  codigo_alm        VARCHAR(10)  NOT NULL,                 -- siempre hay almacén
+  codigo_alm        VARCHAR(10)  NOT NULL,                 -- almacén (origen)
+  codigo_alm_destino VARCHAR(10) NULL,                     -- destino (TRASPASO)
   serie             VARCHAR(20)  NULL,                     -- solo DIRIGIDO
   numero            VARCHAR(20)  NULL,                     -- solo DIRIGIDO
   descripcion       VARCHAR(200) NULL,
