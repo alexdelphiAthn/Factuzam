@@ -312,6 +312,8 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -398,6 +400,36 @@ end;
 function TfrmMtoComprasSesiones.Dmm: TdmComprasSesiones;
 begin
   Result := tdmDataModule as TdmComprasSesiones;
+end;
+
+// La foto sigue al articulo de la linea activa de la sesion
+// (CODIGO_ART_TENTATIVO_SESLIN; las sesiones trabajan a nivel articulo,
+// sin SKU). Las fotos propias de la sesion -mientras el articulo aun no
+// se ha materializado- se asignan con el boton "Foto" y viven en
+// fza_compras_sesiones_fotos; Ctrl+F muestra la foto estandar del
+// articulo si ya existe en fza_articulos_fotos.
+procedure TfrmMtoComprasSesiones.ResolverArtSkuActivo(out ACodArt,
+                                                      ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvLineas.DataController.DataSource) then
+  begin
+    ds := tvLineas.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+// Ademas de dsTablaG (cabecera de sesion) enganchamos dsSesionLin para
+// que la foto flotante refresque al moverse entre lineas.
+function TfrmMtoComprasSesiones.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(Dmm) then
+    Result := [dsTablaG, Dmm.dsSesionLin]
+  else
+    Result := [dsTablaG];
 end;
 
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
@@ -1026,10 +1058,10 @@ var
 begin
   inherited;
   // Sube una foto y la asocia a la linea activa de la sesion (a nivel
-  // articulo padre — CODIGO_UNIDAD = ''). Las fotos por SKU concreto se
-  // gestionan via Ctrl+Alt+F + frmFotoArticulo (no implementado aun en
-  // modo sesion). Al materializar, MigrarFotosSesion las pasa a
-  // fza_articulos_fotos.
+  // articulo padre — CODIGO_UNIDAD = ''). Ctrl+F + frmFotoArticulo
+  // muestra la foto estandar del articulo de la linea (si existe en
+  // fza_articulos_fotos). Al materializar, MigrarFotosSesion pasa esta
+  // foto de sesion a fza_articulos_fotos.
   if Dmm.unqryTablaG.IsEmpty then
   begin
     ShowMessage('No hay sesion activa.');
