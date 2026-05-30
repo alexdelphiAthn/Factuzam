@@ -52,6 +52,13 @@ uses
   Data.DB, DBAccess, Uni,
   UniDataComprasSesiones;
 
+// Sanea un texto de color libre del proveedor para usarlo como segmento del
+// CODIGO_UNIDAD_SKU y como valor (AV): mayusculas; espacios -> '-'; solo se
+// conservan [A-Z0-9_-], el resto de simbolos se prohibe; sin separadores
+// repetidos ni en los extremos. Expuesta para que el grid de compras la
+// aplique al confirmar el color (que el usuario vea ya el token real).
+function SanearColorSku(const ATexto: string): string;
+
 // Materializa la sesion. ASerieDocAlb / ASerieDocPed permiten elegir la
 // serie del documento generado (movimientos / pedido pendiente); si
 // llegan vacios se usa SERIE_SES como fallback. ANumPed/ASerieAlb/etc.
