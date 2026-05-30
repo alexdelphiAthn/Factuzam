@@ -300,7 +300,7 @@ begin
         FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
       ActualizarTotal;
       // Ticket de la solicitud recibida (stock origen / destino por SKU).
-      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer);
+      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer, oNomImpresoraCaja);
     end
     else
       ShowMessage('No se pudo cargar la solicitud.');
@@ -320,7 +320,7 @@ begin
     begin
       ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
       // Ticket de la solicitud: cada SKU con stock origen / destino.
-      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer);
+      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer, oNomImpresoraCaja);
       AplicarModo(mtSolicitar);
     end;
   end;
