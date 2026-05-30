@@ -23,7 +23,8 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, JvExControls, JvAnimatedImage,
   JvGIFCtrl, cxLabel, Vcl.ExtCtrls, math, cxStyles,
   UniProvider, MySQLUniProvider, Data.DB, DBAccess, Uni, Vcl.Menus,
-  Vcl.StdCtrls, cxButtons, inMtoCajaOpe, system.IOUtils, system.IniFiles,
+  Vcl.StdCtrls, cxButtons, inMtoCajaOpe, inMtoTraspasoOpe, UniDataTraspaso,
+  system.IOUtils, system.IniFiles,
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
   inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses, cxImage;
@@ -744,8 +745,26 @@ end;
 
 // F3 - Traspasos
 procedure TfrmMtoMenuCaja.lblTraspasosClick(Sender: TObject);
+var
+  frmTraspaso: TfrmMtoOpeTraspaso;
 begin
-  // TODO: implementar acción de Traspasos
+  if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
+    ShowMessage('No hay empresa/almacén/caja asignados. ' +
+                'Selecciona una caja antes de hacer traspasos.')
+  else
+  begin
+    frmTraspaso := TfrmMtoOpeTraspaso.Create(Application);
+    try
+      frmTraspaso.PopupParent := Self;
+      frmTraspaso.Caption := Format('Traspasos - (Almacén %s · Caja %s)',
+                                    [Self.FAlmacen, Self.FCaja]);
+      frmTraspaso.PrepararValores(mtTraspaso, Self.FEmpresa, Self.FAlmacen,
+                                  Self.FCaja, Self.FFechaCaja);
+      frmTraspaso.Show;
+    except
+      FreeAndNil(frmTraspaso);
+    end;
+  end;
 end;
 
 procedure TfrmMtoMenuCaja.lblTraspasosMouseEnter(Sender: TObject);
