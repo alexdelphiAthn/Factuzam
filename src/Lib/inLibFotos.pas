@@ -266,7 +266,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam;
+  inLibGlobalVar, inLibAppParam, Winapi.GDIPOBJ, Winapi.GDIPAPI;
 
 { TFotoInfo }
 
@@ -664,12 +664,13 @@ procedure TFotosArticulos.GuardarRedimensionado(const AOriginal: TGraphic;
 var
   iAncho, iAlto: Integer;
   oBitmap     : TBitmap;
+  oSrc        : TBitmap;
   oPng        : TPngImage;
-  rDst        : TRect;
   dEscala     : Double;
+  gpGfx       : TGPGraphics;
+  gpSrc       : TGPBitmap;
 begin
   if (AOriginal.Width = 0) or (AOriginal.Height = 0) then Exit;
-
   // Mantener proporciones, lado mayor = ALadoMayor.
   if AOriginal.Width >= AOriginal.Height then
   begin
@@ -685,17 +686,31 @@ begin
   end;
   if iAncho  < 1 then iAncho  := 1;
   if iAlto   < 1 then iAlto   := 1;
-
   oBitmap := TBitmap.Create;
+  oSrc    := TBitmap.Create;
   try
+    // Pasamos el origen a un TBitmap pf32 para envolverlo en GDI+ via su
+    // HBITMAP (TGPBitmap). El redimension lo hace GDI+ con interpolacion
+    // bicubica de alta calidad (mejor que el StretchBlt/HALFTONE de GDI).
+    oSrc.PixelFormat := pf32bit;
+    oSrc.SetSize(AOriginal.Width, AOriginal.Height);
+    oSrc.Canvas.Draw(0, 0, AOriginal);
     oBitmap.PixelFormat := pf32bit;
     oBitmap.SetSize(iAncho, iAlto);
-    // HALFTONE = mejor calidad de redimension via GDI+
-    SetStretchBltMode(oBitmap.Canvas.Handle, HALFTONE);
-    SetBrushOrgEx(oBitmap.Canvas.Handle, 0, 0, nil);
-    rDst := Rect(0, 0, iAncho, iAlto);
-    oBitmap.Canvas.StretchDraw(rDst, AOriginal);
-
+    gpSrc := TGPBitmap.Create(oSrc.Handle, 0);
+    try
+      gpGfx := TGPGraphics.Create(oBitmap.Canvas.Handle);
+      try
+        gpGfx.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+        gpGfx.SetPixelOffsetMode(PixelOffsetModeHighQuality);
+        gpGfx.SetSmoothingMode(SmoothingModeHighQuality);
+        gpGfx.DrawImage(gpSrc, 0, 0, iAncho, iAlto);
+      finally
+        gpGfx.Free;
+      end;
+    finally
+      gpSrc.Free;
+    end;
     oPng := TPngImage.Create;
     try
       oPng.Assign(oBitmap);
@@ -704,6 +719,7 @@ begin
       FreeAndNil(oPng);
     end;
   finally
+    FreeAndNil(oSrc);
     FreeAndNil(oBitmap);
   end;
 end;
