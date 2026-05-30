@@ -26,7 +26,7 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit,
   cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
-  cxGrid, Data.DB, Uni, inLibGlobalVar, UniDataTraspaso;
+  cxGrid, Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -299,6 +299,8 @@ begin
       txtOrigen.Text :=
         FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
       ActualizarTotal;
+      // Ticket de la solicitud recibida (stock origen / destino por SKU).
+      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer);
     end
     else
       ShowMessage('No se pudo cargar la solicitud.');
@@ -317,6 +319,8 @@ begin
     else if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
     begin
       ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
+      // Ticket de la solicitud: cada SKU con stock origen / destino.
+      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer);
       AplicarModo(mtSolicitar);
     end;
   end;
