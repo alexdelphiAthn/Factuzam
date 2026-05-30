@@ -280,7 +280,7 @@ type
     FOpcionesTallas  : TArray<TOpcionConjuntoTalla>;
     FNombresConjunto : TDictionary<Integer, string>;
     FBmpSwatch    : TBitmap;
-    function  Dmm: TdmComprasSesiones;
+    Dmm: TdmComprasSesiones;
     procedure CargarBasicosColor;
     procedure CargarConjuntosTallas;
     procedure BuscarProveedor;
@@ -314,12 +314,6 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
-<<<<<<< HEAD
-    // La foto flotante (Ctrl+F, atajo global heredado de TfrmMtoGen) y su
-    // auto-refresh deben seguir la LINEA activa de la sesion, no la
-    // cabecera; por eso sobreescribimos ambos hooks.
-=======
->>>>>>> ebedca661455afd9cf36bc2e4b9b5deb26d10744
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -406,10 +400,10 @@ end;
 //   Bootstrapping
 // ===========================================================================
 
-function TfrmMtoComprasSesiones.Dmm: TdmComprasSesiones;
-begin
-  Result := tdmDataModule as TdmComprasSesiones;
-end;
+//function TfrmMtoComprasSesiones.Dmm: TdmComprasSesiones;
+//begin
+//  Result := tdmDataModule as TdmComprasSesiones;
+//end;
 
 // La foto sigue al articulo de la linea activa de la sesion
 // (CODIGO_ART_TENTATIVO_SESLIN; las sesiones trabajan a nivel articulo,
@@ -435,8 +429,8 @@ end;
 // que la foto flotante refresque al moverse entre lineas.
 function TfrmMtoComprasSesiones.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(Dmm) then
-    Result := [dsTablaG, Dmm.dsSesionLin]
+  if Assigned(dmm) then
+    Result := [dsTablaG, dmm.dsSesionLin]
   else
     Result := [dsTablaG];
 end;
@@ -445,6 +439,7 @@ procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
   inherited;
   if tdmDataModule = nil then Exit;
+  dmm := tdmDataModule as TdmComprasSesiones;
   pkFieldName := 'SERIE_SES;NUMERO_SES';
 
   cbbEmpresa.Properties.ListSource   := Dmm.dsEmpresas;
@@ -821,29 +816,6 @@ begin
   end;
 end;
 
-procedure TfrmMtoComprasSesiones.ResolverArtSkuActivo(out ACodArt,
-  ACodSku: string);
-begin
-  // Sin sku: la foto de sesion se guarda a nivel articulo (CODIGO_UNIDAD
-  // = ''); la foto flotante muestra ese fallback del articulo tentativo.
-  ACodArt := '';
-  ACodSku := '';
-  if (Dmm <> nil) and Assigned(Dmm.unqrySesionLin) and
-     Dmm.unqrySesionLin.Active and (not Dmm.unqrySesionLin.IsEmpty) then
-    ACodArt := Trim(Dmm.unqrySesionLin.FieldByName(
-                      'CODIGO_ART_TENTATIVO_SESLIN').AsString);
-end;
-
-function TfrmMtoComprasSesiones.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  // La foto flotante se engancha al grid de lineas: al cambiar de fila la
-  // imagen sigue al articulo tentativo de la linea activa.
-  if (Dmm <> nil) and Assigned(Dmm.dsSesionLin) then
-    Result := [Dmm.dsSesionLin]
-  else
-    Result := inherited DataSourcesParaFoto;
-end;
-
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 begin
   // Cerrar la query del lookup y soltar la connection ANTES del
@@ -1145,17 +1117,10 @@ var
 begin
   inherited;
   // Sube una foto y la asocia a la linea activa de la sesion (a nivel
-<<<<<<< HEAD
-  // articulo padre — CODIGO_UNIDAD = ''). Las fotos por SKU concreto se
-  // gestionan via Ctrl+F + frmFotoArticulo (no implementado aun en
-  // modo sesion). Al materializar, MigrarFotosSesion las pasa a
-  // fza_articulos_fotos.
-=======
   // articulo padre — CODIGO_UNIDAD = ''). Ctrl+F + frmFotoArticulo
   // muestra la foto estandar del articulo de la linea (si existe en
   // fza_articulos_fotos). Al materializar, MigrarFotosSesion pasa esta
   // foto de sesion a fza_articulos_fotos.
->>>>>>> ebedca661455afd9cf36bc2e4b9b5deb26d10744
   if Dmm.unqryTablaG.IsEmpty then
   begin
     ShowMessage('No hay sesion activa.');
