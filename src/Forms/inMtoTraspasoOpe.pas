@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoTraspasoOpe                                              }
 {    Tipo:       Formulario (Mto)                                              }
@@ -145,24 +145,24 @@ begin
   case AModo of
     mtTraspaso:
     begin
-      lblOrigen.Caption := 'ALMAC' + #201 + 'N ORIGEN';
-      lblDestino.Caption := 'ALMAC' + #201 + 'N DESTINO';
-      btnAnadir.Caption := 'A' + #241 + 'adir (Intro)';
-      btnF12.Caption := 'F12 ' + #183 + ' Con ticket';
+      lblOrigen.Caption := 'ALMACÉN ORIGEN';
+      lblDestino.Caption := 'ALMACÉN DESTINO';
+      btnAnadir.Caption := 'Añadir (Intro)';
+      btnF12.Caption := 'F12 · Con ticket';
     end;
     mtSolicitar:
     begin
-      lblOrigen.Caption := 'ALMAC' + #201 + 'N DESTINO (yo)';
-      lblDestino.Caption := 'ALMAC' + #201 + 'N ORIGEN (a qui' + #233 + 'n pido)';
-      btnAnadir.Caption := 'A' + #241 + 'adir (Intro)';
-      btnF12.Caption := 'F12 ' + #183 + ' Enviar solicitud';
+      lblOrigen.Caption := 'ALMACÉN DESTINO (yo)';
+      lblDestino.Caption := 'ALMACÉN ORIGEN (a quién pido)';
+      btnAnadir.Caption := 'Añadir (Intro)';
+      btnF12.Caption := 'F12 · Enviar solicitud';
     end;
     mtAtender:
     begin
-      lblOrigen.Caption := 'ALMAC' + #201 + 'N ORIGEN (yo)';
+      lblOrigen.Caption := 'ALMACÉN ORIGEN (yo)';
       lblDestino.Caption := 'SOLICITUD A ATENDER';
       btnAnadir.Caption := 'Cargar solicitud';
-      btnF12.Caption := 'F12 ' + #183 + ' Servir con ticket';
+      btnF12.Caption := 'F12 · Servir con ticket';
     end;
   end;
   CargarCombo;

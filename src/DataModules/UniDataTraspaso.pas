@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataTraspaso                                               }
 {    Tipo:       Data Module                                                   }
@@ -429,12 +429,12 @@ begin
   sUsuario := inLibGlobalVar.oUser;
   if SameText(sAlmacenOrigen, AAlmacenDestino) then
     raise Exception.Create('Origen y destino no pueden ser el mismo almacén.');
-  // TR = mismo empresa; AT = entre empresas distintas.
+  // TR = misma empresa (origen y destino); TA = entre empresas distintas.
   sEmpContra := ObtenerEmpresaAlmacen(AAlmacenDestino);
   if (sEmpContra = '') or SameText(sEmpContra, sEmpresa) then
     sTipoDoc := 'TR'
   else
-    sTipoDoc := 'AT';
+    sTipoDoc := 'TA';
   QryTrx := TUniQuery.Create(nil);
   try
     QryTrx.Connection := oConn;
