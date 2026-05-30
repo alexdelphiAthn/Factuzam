@@ -399,3 +399,34 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
 3. **Tránsito** (§8): ¿entra en esta entrega o se pospone? Recomendado posponer.
 4. **SP unificador** (§9): ¿se hace en SP o en transacción Delphi? Indiferente
    funcionalmente.
+
+---
+
+## 13. Estado de implementación
+
+**Slice 1 (entregado): traspaso directo.**
+
+- `DESARROLLOS EN CURSO/traspasos_caja.sql` — tablas
+  `fza_traspasos_solicitudes` y `…_lineas` (idempotente, no destructivo).
+- `src/DataModules/UniDataTraspaso.pas/.dfm` — `TdmTraspaso`: cdsCabecera /
+  cdsLineas, `ResolverSku`, `AnadirLinea` y `GrabarTraspaso` (par S+E +
+  operación `TR`/`AT` en una transacción, reusando
+  `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` y `PRC_GET_NEXT_OP_CAJA`).
+- `src/Forms/inMtoTraspasoOpe.pas/.dfm` — `TfrmMtoOpeTraspaso`: ORIGEN
+  (propio, bloqueado) / DESTINO (sólo ESTANDAR), grid de líneas (montado en
+  código sobre `dsLineas`), F12 con ticket / F11 sin ticket, F3 quitar línea.
+- `inMtoCajaMenu.pas` — F3 abre la operativa en modo `mtTraspaso`.
+- `fzam.dpr` — units registradas.
+
+> Requiere abrir/compilar en el IDE Delphi (aquí no hay toolchain). El `.dfm`
+> del formulario lleva sólo controles estándar; el grid se construye en código
+> para minimizar el riesgo de un `.dfm` escrito a mano.
+
+**Pendiente (siguientes slices):**
+- Modos **Solicitar** y **Atender** (escritura/lectura de `fza_traspasos_*`).
+- Entrada en el propio grid con escáner y columnas dinámicas de atributos
+  (hoy: alta por panel SKU + Uds).
+- Impresión del albarán de traspaso en F12 (`inLibGenerarTicketBD`).
+- Edición / anulación desde Buscar/Modificar F10 (§5.1).
+- Parámetros `vgerTraspaso*` y permisos.
+- Tránsito (§8) y SP unificador (§9), opcionales.

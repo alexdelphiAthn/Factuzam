@@ -110,6 +110,8 @@ uses
   inMtoCajaMenu in 'src\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
   inMtoCajaOpe in 'src\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
   UniDataCaja in 'src\DataModules\UniDataCaja.pas' {dmCajaOpe},
+  inMtoTraspasoOpe in 'src\Forms\inMtoTraspasoOpe.pas' {frmMtoOpeTraspaso},
+  UniDataTraspaso in 'src\DataModules\UniDataTraspaso.pas' {dmTraspaso: TDataModule},
   inMtoCajaFaseCobro in 'src\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
   inMtoCajaFormasPago in 'src\Forms\inMtoCajaFormasPago.pas' {frmMtoCajaFormasPago},
   UniDataCajaFormasPago in 'src\DataModules\UniDataCajaFormasPago.pas' {dmCajaFormasPago: TdmCajaFormasPago},
