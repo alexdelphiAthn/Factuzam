@@ -89,6 +89,8 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -97,13 +99,36 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto, inLibGlobalVar, inMtoPrincipal;
+  inLibWin, inLibShowMto, inLibGlobalVar, inLibFotos, inMtoPrincipal;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoPropiedades }
+
+// El articulo activo es el de la rejilla de articulos de la propiedad
+// (tvArticulos, CODIGO_ART_ART).
+procedure TfrmMtoPropiedades.ResolverArtSkuActivo(out ACodArt, ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvArticulos.DataController.DataSource) then
+  begin
+    ds := tvArticulos.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+function TfrmMtoPropiedades.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmPropiedades) then
+    Result := [dsTablaG, dmmPropiedades.dsArticulos]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoPropiedades.CrearTablaPrincipal;
 begin

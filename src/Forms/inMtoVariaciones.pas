@@ -97,6 +97,8 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 var
@@ -105,13 +107,43 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inLibFotos, inMtoPrincipal;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoVariaciones }
+
+// Las variaciones afectan a articulos (tvArticulos) y a sus SKUs
+// (tvSkus). Manda el SKU enfocado (mas especifico); si no hay, el
+// articulo. Asi la foto sigue al registro activo en ambas rejillas.
+procedure TfrmMtoVariaciones.ResolverArtSkuActivo(out ACodArt, ACodSku: string);
+var
+  ds: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(tvSkus.DataController.DataSource) then
+  begin
+    ds := tvSkus.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+  if (ACodArt = '') and Assigned(tvArticulos.DataController.DataSource) then
+  begin
+    ds := tvArticulos.DataController.DataSource.DataSet;
+    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+function TfrmMtoVariaciones.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmVariaciones) then
+    Result := [dsTablaG, dmmVariaciones.dsArticulosVariacion,
+               dmmVariaciones.dsSkusArticulo]
+  else
+    Result := [dsTablaG];
+end;
 
 procedure TfrmMtoVariaciones.CrearTablaPrincipal;
 begin
