@@ -126,19 +126,20 @@ Idempotente, en `recuento_inventarios_factuzam.sql`. **No** se toca
 `factuzam_original.sql`.
 
 **Tabla `fza_inventarios_recuentos` (sufijo `INVREC`)** — una fila por escaneo.
-La **PK es la misma clave del inventario** (empresa+almacén+serie+número) **+
-`UUID_INVREC`** como discriminador de cada lectura — el mismo patrón que
-`fza_inventarios_lineas` (que añade `LINEA_INVLIN` a esas 4 columnas). **Sin
-contador autoincremental**: el `UUID` (lo crea la app) ya identifica de forma
-única el escaneo y da idempotencia al recoger.
+PK = contador propio **`ID_INVREC`** (clave estrecha, para no arrastrar la clave
+del inventario ni el UUID por los índices secundarios). **`UUID_INVREC` va como
+`UNIQUE`**: lo crea la app, identifica cada escaneo y da idempotencia al
+recoger. La clave del inventario (empresa+almacén+serie+número) va indexada
+(`IDX_INVREC_DOC`) para consultar y sumar por documento.
 
 ```sql
 CREATE TABLE `fza_inventarios_recuentos` (
+  `ID_INVREC`                bigint        NOT NULL AUTO_INCREMENT,
+  `UUID_INVREC`              varchar(36)   NOT NULL,
   `CODIGO_EMP_INVREC`        varchar(10)   NOT NULL,
   `CODIGO_ALM_INVREC`        varchar(10)   NOT NULL,
   `SERIE_INV_INVREC`         varchar(20)   NOT NULL,
   `NUMERO_INV_INVREC`        varchar(20)   NOT NULL,
-  `UUID_INVREC`              varchar(36)   NOT NULL,
   `CODIGO_ART_INVREC`        varchar(20)   DEFAULT NULL,
   `CODIGO_UNIDAD_INVREC`     varchar(50)   DEFAULT NULL,
   `CODIGO_BARRAS_INVREC`     varchar(50)   DEFAULT NULL,
@@ -154,8 +155,10 @@ CREATE TABLE `fza_inventarios_recuentos` (
   `USUARIO_ALTA`             varchar(100)  NOT NULL,
   `INSTANTE_MODIF`           datetime      DEFAULT NULL,
   `USUARIO_MODIF`            varchar(100)  DEFAULT NULL,
-  PRIMARY KEY (`CODIGO_EMP_INVREC`,`CODIGO_ALM_INVREC`,`SERIE_INV_INVREC`,
-               `NUMERO_INV_INVREC`,`UUID_INVREC`),
+  PRIMARY KEY (`ID_INVREC`),
+  UNIQUE KEY `UQ_INVREC_UUID` (`UUID_INVREC`),
+  KEY `IDX_INVREC_DOC` (`CODIGO_EMP_INVREC`,`CODIGO_ALM_INVREC`,
+                        `SERIE_INV_INVREC`,`NUMERO_INV_INVREC`),
   KEY `IDX_INVREC_UNIDAD` (`CODIGO_UNIDAD_INVREC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
@@ -296,8 +299,8 @@ APLICAR  →  regularización de stock (flujo actual, sin cambios)
 
 - **Eventos**: `uuid_evento` único en servidor (`ON DUPLICATE KEY`) → reenvíos
   no duplican. La app marca el evento como "subido" sólo tras 200 OK.
-- **Recogida en Factuzam**: la PK de INVREC incluye `UUID_INVREC` → recoger dos
-  veces no duplica filas (`INSERT ... ON DUPLICATE KEY`).
+- **Recogida en Factuzam**: `UQ_INVREC_UUID` (UNIQUE sobre `UUID_INVREC`) →
+  recoger dos veces no duplica filas (`INSERT ... ON DUPLICATE KEY`).
 - **Cursor incremental**: `inv_recoger.php?desde=<cursor>` y
   `inv_catalogo.php?desde=<id>` traen sólo lo nuevo.
 
@@ -326,8 +329,9 @@ APLICAR  →  regularización de stock (flujo actual, sin cambios)
 6. **Cierre de tarea**: ¿finaliza cualquier operario, o sólo un supervisor?
 7. ✅ **Plantilla vs libre**: opción 3 exige plantilla; opciones 1/2 son
    recuento libre y preguntan el almacén.
-8. ✅ **PK de INVREC**: clave del inventario + `UUID_INVREC` (sin contador
-   autoincremental), igual patrón que `fza_inventarios_lineas`.
+8. ✅ **PK de INVREC**: contador propio `ID_INVREC` (autoincremental) +
+   `UUID_INVREC` UNIQUE para idempotencia, y la clave del inventario indexada
+   (`IDX_INVREC_DOC`). Clave estrecha para no arrastrar 5 columnas por los índices.
 
 ## 14. Reglas del repo respetadas
 
