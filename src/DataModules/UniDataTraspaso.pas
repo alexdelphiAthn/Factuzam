@@ -284,17 +284,17 @@ end;
 
 function TdmTraspaso.ObtenerCosteMedio(const ASku, AAlmacen: string): Currency;
 begin
+  // PMP ponderado sobre todos los lotes del SKU en el almacen.
   qryAux.SQL.Text :=
-    'SELECT PRECIO_MEDIO_STK FROM fza_articulos_stockactual ' +
+    'SELECT IF(SUM(CANTIDAD_STK) > 0,' +
+    '          SUM(VALOR_TOTAL_STK) / SUM(CANTIDAD_STK), 0) AS PMP ' +
+    '  FROM fza_articulos_stockactual ' +
     ' WHERE CODIGO_ALM_STK = :ALM AND CODIGO_UNIDAD_STK = :SKU';
   qryAux.ParamByName('ALM').AsString := AAlmacen;
   qryAux.ParamByName('SKU').AsString := ASku;
   qryAux.Open;
   try
-    if qryAux.IsEmpty then
-      Result := 0
-    else
-      Result := qryAux.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
+    Result := qryAux.FieldByName('PMP').AsCurrency;
   finally
     qryAux.Close;
   end;
@@ -302,17 +302,16 @@ end;
 
 function TdmTraspaso.ObtenerStock(const ASku, AAlmacen: string): Double;
 begin
+  // Suma de todos los lotes del SKU en el almacen.
   qryAux.SQL.Text :=
-    'SELECT CANTIDAD_STK FROM fza_articulos_stockactual ' +
+    'SELECT COALESCE(SUM(CANTIDAD_STK),0) AS STK ' +
+    '  FROM fza_articulos_stockactual ' +
     ' WHERE CODIGO_ALM_STK = :ALM AND CODIGO_UNIDAD_STK = :SKU';
   qryAux.ParamByName('ALM').AsString := AAlmacen;
   qryAux.ParamByName('SKU').AsString := ASku;
   qryAux.Open;
   try
-    if qryAux.IsEmpty then
-      Result := 0
-    else
-      Result := qryAux.FieldByName('CANTIDAD_STK').AsFloat;
+    Result := qryAux.FieldByName('STK').AsFloat;
   finally
     qryAux.Close;
   end;

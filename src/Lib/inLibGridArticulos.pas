@@ -318,7 +318,7 @@ procedure TGridArticulosLineas.ViewInitEdit(Sender: TcxCustomGridTableView;
 var
   iTag: Integer;
   sCodArt: string;
-  Atribs: TArray<TArticuloAtributo>;
+  Avs: TArray<TArticuloAtributoValor>;
   Combo: TcxComboBox;
   j: Integer;
 begin
@@ -332,10 +332,12 @@ begin
   sCodArt := FCds.FieldByName(FCampos.CodigoArt).AsString;
   if sCodArt = '' then
     Exit;
-  Atribs := FLookup.ObtenerAtributos(sCodArt);
-  if iTag <= Length(Atribs) then
-    for j := 0 to High(Atribs[iTag - 1].Valores) do
-      Combo.Properties.Items.Add(Atribs[iTag - 1].Valores[j].Valor);
+  // Solo los AV que el articulo tiene en sus SKUs (orden visual = iTag), para
+  // que el desplegable no muestre colores/tallas de otros articulos y el SKU
+  // generado cuadre contra uno real.
+  Avs := FLookup.ObtenerAvsEnSkus(sCodArt, iTag);
+  for j := 0 to High(Avs) do
+    Combo.Properties.Items.Add(Avs[j].Valor);
 end;
 
 end.
