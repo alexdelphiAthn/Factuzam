@@ -142,6 +142,8 @@ begin
   txtSku.Enabled := AModo <> mtAtender;
   spnCantidad.Enabled := AModo <> mtAtender;
   btnF11.Visible := AModo <> mtSolicitar;
+  // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
+  // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
     mtTraspaso:
     begin
