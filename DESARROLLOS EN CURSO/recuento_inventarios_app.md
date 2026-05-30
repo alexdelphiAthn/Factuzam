@@ -29,6 +29,8 @@ servidor REST (PHP + MySQL) como **puente** entre Factuzam y los terminales.
 | Plataforma de la app | **Android nativo en Delphi FMX** (offline + escáner) |
 | Modelo de recuento | **Evento por escaneo**, multi-operario, se agrega por SKU |
 | Traza en Factuzam | **Opción B**: tabla `fza_inventarios_recuentos` (INVREC) con cada escaneo |
+| App: menú | (1) escanear =+1 · (2) escanear + cantidad · (3) recoger plantilla |
+| Lote/caducidad | Solo en artículos trazables (`ESTRAZABLE_ART='S'`) |
 | Servidor | **Mismo host que las fotos (DreamHost)**, BBDD MySQL nueva |
 | Auth Factuzam ↔ servidor | `X-API-Key` (igual que fotos) |
 | Auth app ↔ servidor | **token por dispositivo** + `carpeta_cliente` |
@@ -284,6 +286,25 @@ Ejemplo de lote de eventos (`POST inv_eventos.php`):
 
 ## 7. App Android (Delphi FMX)
 
+### 7.1 Menú principal (3 opciones)
+
+Tal cual lo quieres:
+
+1. **Recontar códigos de barras** — escaneo rápido, cada lectura suma **+1**
+   (contar pieza a pieza).
+2. **Recontar códigos de barras + cantidad** — tras escanear, se **teclea la
+   cantidad** (cajas / múltiplos).
+3. **Recoger plantilla de recuento** — descarga del servidor la **plantilla**
+   (el inventario que Factuzam envió: SKUs + catálogo + códigos de barras +
+   teórica). Es la "tarea" del §6 (`inv_tareas` + `inv_catalogo`).
+
+Los modos 1 y 2 son la misma pantalla de conteo, cambiando solo si la cantidad
+es 1 fija o tecleada; ambos generan eventos `inv_eventos` (y, ya en Factuzam,
+filas `INVREC`). "Recoger plantilla" carga la sesión activa contra la que se
+cuenta: resuelve descripción/teórica y marca lo no esperado.
+
+### 7.2 Stack y mecánica
+
 - **Stack**: FMX + UniDAC (provider **SQLite** local para la cola offline) +
   `System.Net.HttpClient` + `System.JSON`. Misma familia que Factuzam; sin
   meter FireDAC.
@@ -298,10 +319,12 @@ Ejemplo de lote de eventos (`POST inv_eventos.php`):
   2. **Cámara**: requiere un componente de decodificación de barras (ZXing
      port o comercial). Se deja como ampliación para no añadir dependencia
      ahora (regla "no deps nuevas sin justificación").
-- **Flujo**: login/registro de dispositivo → elegir tarea → descargar catálogo
-  → contar (escaneo = +1, cantidad editable; feedback con descripción del SKU;
-  si el código no está en catálogo, se guarda crudo como "no identificado") →
-  sincronizar (manual o automático) → finalizar.
+- **Flujo**: login/registro de dispositivo → **Recoger plantilla** (opción 3)
+  → **Recontar** (opción 1 o 2): cada lectura va a la cola con su `uuid`,
+  `instante_recuento`, operario y terminal; feedback con la descripción del SKU,
+  y si el código no está en la plantilla se guarda crudo como "no identificado"
+  → sincronizar (manual o automático) → finalizar. **Lote/caducidad** solo se
+  piden si el artículo es trazable (`ESTRAZABLE_ART='S'`).
 - **Multi-operario**: varios terminales contra la misma tarea. El servidor
   acumula todos los eventos; el SKU se agrega sumando.
 
@@ -376,13 +399,18 @@ APLICAR  →  regularización de stock (flujo actual, sin cambios)
 1. ✅ **DECIDIDO — Opción B**: se guarda cada escaneo en
    `fza_inventarios_recuentos` (sufijo `INVREC`, a registrar en el normalizador y
    en el libro de estilo BBDD §2) para revisar el origen del recuento.
-2. **Modo por defecto**: ¿dirigido (lista de SKUs) o ciego (todo el almacén)?
+2. ✅ **DECIDIDO — menú de la app**: (1) Recontar códigos de barras (=+1),
+   (2) Recontar códigos de barras + cantidad, (3) Recoger plantilla de recuento.
 3. **¿Una BBDD nueva** `factuzam_recuentos` en DreamHost, o tablas `inv_*`
-   dentro de la BBDD que ya usa el servidor de fotos?
-4. **Cantidad por escaneo**: ¿siempre +1, o permitir teclear cantidad (cajas)?
-5. **Lote/caducidad**: ¿la app los pide para artículos trazables
-   (`ESTRAZABLE_ART='S'`) o se ignoran de momento?
+   dentro de la BBDD que ya usa el servidor de fotos? (Asumo BBDD nueva.)
+4. ✅ **DECIDIDO — cantidad**: la fija el modo de menú (1 = +1 por escaneo;
+   2 = cantidad tecleada).
+5. ✅ **DECIDIDO — lote/caducidad**: solo se piden en artículos trazables
+   (`ESTRAZABLE_ART='S'`).
 6. **Cierre de tarea**: ¿lo finaliza cualquier operario, o sólo un supervisor?
+7. **¿Recontar exige plantilla?**: ¿los modos 1 y 2 cuentan solo contra una
+   plantilla recogida (opción 3), o también permiten recuento libre sin
+   plantilla? (Asumo: se recoge plantilla y luego se recuenta.)
 
 ## 14. Reglas del repo respetadas
 
