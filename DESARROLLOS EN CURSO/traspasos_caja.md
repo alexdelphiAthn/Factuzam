@@ -404,17 +404,23 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
 
 ## 13. Estado de implementación
 
-**Slice 1 (entregado): traspaso directo.**
+**Slices 1-2 (entregado): traspaso directo + ciclo de solicitudes.**
 
 - `DESARROLLOS EN CURSO/traspasos_caja.sql` — tablas
-  `fza_traspasos_solicitudes` y `…_lineas` (idempotente, no destructivo).
-- `src/DataModules/UniDataTraspaso.pas/.dfm` — `TdmTraspaso`: cdsCabecera /
-  cdsLineas, `ResolverSku`, `AnadirLinea` y `GrabarTraspaso` (par S+E +
-  operación `TR`/`AT` en una transacción, reusando
-  `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` y `PRC_GET_NEXT_OP_CAJA`).
-- `src/Forms/inMtoTraspasoOpe.pas/.dfm` — `TfrmMtoOpeTraspaso`: ORIGEN
-  (propio, bloqueado) / DESTINO (sólo ESTANDAR), grid de líneas (montado en
-  código sobre `dsLineas`), F12 con ticket / F11 sin ticket, F3 quitar línea.
+  `fza_traspasos_solicitudes` y `…_lineas` (idempotente, no destructivo) +
+  siembra del contador global `'TS'` en `fza_contadores`.
+- `src/DataModules/UniDataTraspaso.pas/.dfm` — `TdmTraspaso`:
+  - `ResolverSku`, `AnadirLinea`, `GrabarTraspaso` (par S+E + operación
+    `TR`/`AT` en una transacción, reusando
+    `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` y `PRC_GET_NEXT_OP_CAJA`).
+  - `GrabarSolicitud` (petición PENDIENTE, sin mover stock),
+    `CargarSolicitudesPendientes`, `CargarSolicitud` y
+    `MarcarSolicitudAtendida` (al servir suma lo servido y deja la solicitud
+    en `PARCIAL`/`ATENDIDA`; la operación enlaza por `SERIE/NUMERO_REF_ORIGEN`).
+- `src/Forms/inMtoTraspasoOpe.pas/.dfm` — `TfrmMtoOpeTraspaso` con **barra de
+  3 modos**: Traspaso (origen propio → destino ESTANDAR), Solicitar (pido a
+  otro almacén; F12 = enviar solicitud) y Atender (cargo una solicitud
+  pendiente y la sirvo con F12/F11). Grid montado en código sobre `dsLineas`.
 - `inMtoCajaMenu.pas` — F3 abre la operativa en modo `mtTraspaso`.
 - `fzam.dpr` — units registradas.
 
@@ -423,10 +429,12 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
 > para minimizar el riesgo de un `.dfm` escrito a mano.
 
 **Pendiente (siguientes slices):**
-- Modos **Solicitar** y **Atender** (escritura/lectura de `fza_traspasos_*`).
+- Servir **parcial por cantidad** (hoy: parcial por línea, quitando líneas con
+  F3; o servir completo lo pendiente).
 - Entrada en el propio grid con escáner y columnas dinámicas de atributos
   (hoy: alta por panel SKU + Uds).
 - Impresión del albarán de traspaso en F12 (`inLibGenerarTicketBD`).
 - Edición / anulación desde Buscar/Modificar F10 (§5.1).
 - Parámetros `vgerTraspaso*` y permisos.
 - Tránsito (§8) y SP unificador (§9), opcionales.
+- Registrar sufijos `TRSOL`/`TRSOLLIN` en `UNormalizerEngine.pas`.

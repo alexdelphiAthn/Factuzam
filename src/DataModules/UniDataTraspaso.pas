@@ -23,8 +23,8 @@ uses
   DBAccess, System.Math, System.StrUtils, inLibGlobalVar, inLibtb;
 
 type
-  // Modo de la operativa. El primer slice implementa mtTraspaso por completo;
-  // mtSolicitar / mtAtender quedan cableados para la siguiente iteración.
+  // Modo de la operativa: traspaso directo, solicitar a otro almacén o
+  // atender una solicitud que me han hecho.
   TModoTraspaso = (mtTraspaso, mtSolicitar, mtAtender);
 
   TdmTraspaso = class(TDataModule)
@@ -57,6 +57,9 @@ type
                              const AEmpleado, AConcepto, ASerieOrigen,
                              ANroOrigen, AEmpresaContra, AAlmContra,
                              AEsTraspaso: string);
+    // Suma lo servido a las líneas de la solicitud y recalcula su estado.
+    procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
+                             const ANumero, ASerie: string);
   public
     property Modo: TModoTraspaso read FModo write FModo;
     procedure PrepararNuevo(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
@@ -74,7 +77,18 @@ type
     // Graba el traspaso directo: par salida+entrada por línea + operación
     // de caja TR/AT, todo en una transacción. Devuelve el nº de operación.
     function GrabarTraspaso(const AAlmacenDestino: string;
-                            out ANumOperacion: string): Boolean;
+                            out ANumOperacion: string;
+                            const ANumSolicitud: string = '';
+                            const ASerieSolicitud: string = ''): Boolean;
+    // --- Ciclo de solicitudes (fza_traspasos_solicitudes) ---
+    // Solicitar: graba la petición (origen = a quién pido) en estado
+    // PENDIENTE, sin mover stock.
+    function GrabarSolicitud(const AAlmacenOrigen: string;
+                             out ANumero, ASerie: string): Boolean;
+    // Atender: lista las solicitudes pendientes que me tocan (yo, origen).
+    procedure CargarSolicitudesPendientes(AItems, ACodigos: TStrings);
+    // Carga una solicitud pendiente en cabecera/líneas para servirla.
+    function CargarSolicitud(const ANumero, ASerie: string): Boolean;
   end;
 
 var
@@ -103,6 +117,8 @@ begin
     Add('CODIGO_ALM_ORIGEN', ftString, 10);
     Add('CODIGO_ALM_DESTINO', ftString, 10);
     Add('CODIGO_CAJA', ftString, 10);
+    Add('NUMERO_SOL', ftString, 20);
+    Add('SERIE_SOL', ftString, 20);
     Add('FECHA', ftDate, 0);
     Add('CONTADOR_LINEAS', ftInteger, 0);
     Add('TOTAL', ftCurrency, 0);
@@ -389,7 +405,9 @@ begin
 end;
 
 function TdmTraspaso.GrabarTraspaso(const AAlmacenDestino: string;
-                                    out ANumOperacion: string): Boolean;
+                                    out ANumOperacion: string;
+                                    const ANumSolicitud: string;
+                                    const ASerieSolicitud: string): Boolean;
 var
   QryTrx: TUniQuery;
   sEmpresa, sAlmacenOrigen, sCaja, sUsuario, sEmpContra, sTipoDoc: string;
@@ -445,11 +463,14 @@ begin
         cTotal := cTotal + cCoste * dCantidad;
         cdsLineas.Next;
       end;
-      // Operación de caja del traspaso (cabecera del documento).
+      // Operación de caja del traspaso (cabecera del documento). Si atiende
+      // una solicitud, se enlaza por SERIE/NUMERO_REF_ORIGEN.
       InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,
         ANumOperacion, sTipoDoc, cTotal, sUsuario,
-        'Traspaso a ' + AAlmacenDestino, '', '', sEmpContra, AAlmacenDestino,
-        'S');
+        'Traspaso a ' + AAlmacenDestino, ASerieSolicitud, ANumSolicitud,
+        sEmpContra, AAlmacenDestino, 'S');
+      if Trim(ANumSolicitud) <> '' then
+        MarcarSolicitudAtendida(QryTrx, ANumSolicitud, ASerieSolicitud);
       oConn.Commit;
       Result := True;
     except
@@ -458,6 +479,269 @@ begin
     end;
   finally
     FreeAndNil(QryTrx);
+  end;
+end;
+
+procedure TdmTraspaso.MarcarSolicitudAtendida(QryTrx: TUniQuery;
+                          const ANumero, ASerie: string);
+var
+  sUsuario: string;
+begin
+  sUsuario := inLibGlobalVar.oUser;
+  // Suma lo servido (cantidad de cada línea del ticket) por SKU.
+  cdsLineas.First;
+  while not cdsLineas.Eof do
+  begin
+    QryTrx.SQL.Text :=
+      'UPDATE fza_traspasos_solicitudes_lineas' +
+      '   SET CANTIDAD_SERVIDA_TRSOLLIN =' +
+      '         CANTIDAD_SERVIDA_TRSOLLIN + :SERV,' +
+      '       ESATENDIDA_TRSOLLIN =' +
+      '         IF(CANTIDAD_SERVIDA_TRSOLLIN + :SERV >=' +
+      '            CANTIDAD_PEDIDA_TRSOLLIN, ''S'', ''N''),' +
+      '       USUARIO_MODIF = :USU' +
+      ' WHERE NUMERO_TRSOL_TRSOLLIN = :NUM' +
+      '   AND SERIE_TRSOL_TRSOLLIN = :SER' +
+      '   AND CODIGO_UNIDAD_TRSOLLIN = :SKU';
+    QryTrx.ParamByName('SERV').AsFloat :=
+      cdsLineas.FieldByName('CANTIDAD').AsFloat;
+    QryTrx.ParamByName('USU').AsString := sUsuario;
+    QryTrx.ParamByName('NUM').AsString := ANumero;
+    QryTrx.ParamByName('SER').AsString := ASerie;
+    QryTrx.ParamByName('SKU').AsString :=
+      cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+    QryTrx.Execute;
+    cdsLineas.Next;
+  end;
+  // ATENDIDA si no queda ninguna línea pendiente; si no, PARCIAL.
+  QryTrx.SQL.Text :=
+    'UPDATE fza_traspasos_solicitudes' +
+    '   SET ESTADO_TRSOL = IF((SELECT COUNT(*)' +
+    '         FROM fza_traspasos_solicitudes_lineas L' +
+    '        WHERE L.NUMERO_TRSOL_TRSOLLIN = :NUM' +
+    '          AND L.SERIE_TRSOL_TRSOLLIN = :SER' +
+    '          AND L.ESATENDIDA_TRSOLLIN = ''N'') = 0,' +
+    '        ''ATENDIDA'', ''PARCIAL''),' +
+    '       USUARIO_MODIF = :USU' +
+    ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
+  QryTrx.ParamByName('NUM').AsString := ANumero;
+  QryTrx.ParamByName('SER').AsString := ASerie;
+  QryTrx.ParamByName('USU').AsString := sUsuario;
+  QryTrx.Execute;
+end;
+
+function TdmTraspaso.GrabarSolicitud(const AAlmacenOrigen: string;
+                                     out ANumero, ASerie: string): Boolean;
+var
+  QryTrx: TUniQuery;
+  sEmpresa, sAlmacenPropio, sCaja, sUsuario, sEmpContra, sLinea: string;
+  iLinea: Integer;
+begin
+  Result := False;
+  if cdsLineas.State in [dsEdit, dsInsert] then
+    cdsLineas.Post;
+  if cdsLineas.IsEmpty then
+    raise Exception.Create('No hay líneas que solicitar.');
+  if Trim(AAlmacenOrigen) = '' then
+    raise Exception.Create('Selecciona el almacén al que solicitas.');
+  sEmpresa := cdsCabecera.FieldByName('CODIGO_EMP').AsString;
+  // En mtSolicitar el propio (CODIGO_ALM_ORIGEN) es el DESTINO de la petición.
+  sAlmacenPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
+  sUsuario := inLibGlobalVar.oUser;
+  if SameText(sAlmacenPropio, AAlmacenOrigen) then
+    raise Exception.Create('No puedes solicitarte a ti mismo.');
+  sEmpContra := ObtenerEmpresaAlmacen(AAlmacenOrigen);
+  ANumero := inLibtb.ObtenerSiguienteContador('TS');
+  ASerie := 'TS';
+  QryTrx := TUniQuery.Create(nil);
+  try
+    QryTrx.Connection := oConn;
+    oConn.StartTransaction;
+    try
+      QryTrx.SQL.Text :=
+        'INSERT INTO fza_traspasos_solicitudes (' +
+        '  NUMERO_TRSOL, SERIE_TRSOL, FECHA_TRSOL, ESTADO_TRSOL,' +
+        '  CODIGO_EMP_TRSOL, CODIGO_ALM_ORIGEN_TRSOL,' +
+        '  CODIGO_ALM_DESTINO_TRSOL, CODIGO_EMP_CONTRA_TRSOL,' +
+        '  CODIGO_CAJA_TRSOL, CODIGO_EMPLEADO_TRSOL,' +
+        '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
+        'VALUES (:NUM, :SER, CURRENT_DATE, ''PENDIENTE'', :EMP, :ORI, :DES,' +
+        '  NULLIF(:EMPC, ''''), :CAJA, :EMPLE, :USU, :USU, NOW())';
+      QryTrx.ParamByName('NUM').AsString := ANumero;
+      QryTrx.ParamByName('SER').AsString := ASerie;
+      QryTrx.ParamByName('EMP').AsString := sEmpresa;
+      QryTrx.ParamByName('ORI').AsString := AAlmacenOrigen;
+      QryTrx.ParamByName('DES').AsString := sAlmacenPropio;
+      QryTrx.ParamByName('EMPC').AsString := sEmpContra;
+      QryTrx.ParamByName('CAJA').AsString := sCaja;
+      QryTrx.ParamByName('EMPLE').AsString := sUsuario;
+      QryTrx.ParamByName('USU').AsString := sUsuario;
+      QryTrx.Execute;
+      iLinea := 0;
+      cdsLineas.First;
+      while not cdsLineas.Eof do
+      begin
+        iLinea := iLinea + 10;
+        sLinea := Format('%.4d', [iLinea]);
+        QryTrx.SQL.Text :=
+          'INSERT INTO fza_traspasos_solicitudes_lineas (' +
+          '  NUMERO_TRSOL_TRSOLLIN, SERIE_TRSOL_TRSOLLIN, LINEA_TRSOLLIN,' +
+          '  CODIGO_ART_TRSOLLIN, CODIGO_UNIDAD_TRSOLLIN,' +
+          '  DESCRIPCION_ARTICULO_TRSOLLIN, CANTIDAD_PEDIDA_TRSOLLIN,' +
+          '  CANTIDAD_SERVIDA_TRSOLLIN, ESATENDIDA_TRSOLLIN,' +
+          '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
+          'VALUES (:NUM, :SER, :LIN, :ART, :SKU, :DESC, :CANT, 0, ''N'',' +
+          '  :USU, :USU, NOW())';
+        QryTrx.ParamByName('NUM').AsString := ANumero;
+        QryTrx.ParamByName('SER').AsString := ASerie;
+        QryTrx.ParamByName('LIN').AsString := sLinea;
+        QryTrx.ParamByName('ART').AsString :=
+          cdsLineas.FieldByName('CODIGO_ART').AsString;
+        QryTrx.ParamByName('SKU').AsString :=
+          cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+        QryTrx.ParamByName('DESC').AsString :=
+          cdsLineas.FieldByName('DESCRIPCION').AsString;
+        QryTrx.ParamByName('CANT').AsFloat :=
+          cdsLineas.FieldByName('CANTIDAD').AsFloat;
+        QryTrx.ParamByName('USU').AsString := sUsuario;
+        QryTrx.Execute;
+        cdsLineas.Next;
+      end;
+      oConn.Commit;
+      Result := True;
+    except
+      oConn.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(QryTrx);
+  end;
+end;
+
+procedure TdmTraspaso.CargarSolicitudesPendientes(AItems, ACodigos: TStrings);
+var
+  sPropio: string;
+begin
+  AItems.Clear;
+  ACodigos.Clear;
+  sPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  qryAux.SQL.Text :=
+    'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.ESTADO_TRSOL,' +
+    '       S.CODIGO_ALM_DESTINO_TRSOL,' +
+    '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
+    '         WHERE L.NUMERO_TRSOL_TRSOLLIN = S.NUMERO_TRSOL' +
+    '           AND L.SERIE_TRSOL_TRSOLLIN = S.SERIE_TRSOL' +
+    '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS NLIN' +
+    '  FROM fza_traspasos_solicitudes S' +
+    ' WHERE S.CODIGO_ALM_ORIGEN_TRSOL = :PROPIO' +
+    '   AND S.ESTADO_TRSOL IN (''PENDIENTE'', ''PARCIAL'')' +
+    ' ORDER BY S.FECHA_TRSOL, S.NUMERO_TRSOL';
+  qryAux.ParamByName('PROPIO').AsString := sPropio;
+  qryAux.Open;
+  try
+    while not qryAux.Eof do
+    begin
+      AItems.Add(Format('%s/%s  ->  %s  ·  %d líneas  ·  %s',
+        [qryAux.FieldByName('SERIE_TRSOL').AsString,
+         qryAux.FieldByName('NUMERO_TRSOL').AsString,
+         qryAux.FieldByName('CODIGO_ALM_DESTINO_TRSOL').AsString,
+         qryAux.FieldByName('NLIN').AsInteger,
+         qryAux.FieldByName('ESTADO_TRSOL').AsString]));
+      ACodigos.Add(qryAux.FieldByName('NUMERO_TRSOL').AsString + '|' +
+                   qryAux.FieldByName('SERIE_TRSOL').AsString);
+      qryAux.Next;
+    end;
+  finally
+    qryAux.Close;
+  end;
+end;
+
+function TdmTraspaso.CargarSolicitud(const ANumero, ASerie: string): Boolean;
+var
+  bExiste: Boolean;
+  sPropio, sSolicitante: string;
+begin
+  bExiste := False;
+  sPropio := '';
+  sSolicitante := '';
+  qryAux.SQL.Text :=
+    'SELECT CODIGO_ALM_ORIGEN_TRSOL, CODIGO_ALM_DESTINO_TRSOL' +
+    '  FROM fza_traspasos_solicitudes' +
+    ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
+  qryAux.ParamByName('NUM').AsString := ANumero;
+  qryAux.ParamByName('SER').AsString := ASerie;
+  qryAux.Open;
+  try
+    bExiste := not qryAux.IsEmpty;
+    if bExiste then
+    begin
+      sPropio := qryAux.FieldByName('CODIGO_ALM_ORIGEN_TRSOL').AsString;
+      sSolicitante := qryAux.FieldByName('CODIGO_ALM_DESTINO_TRSOL').AsString;
+    end;
+  finally
+    qryAux.Close;
+  end;
+  Result := bExiste;
+  if bExiste then
+  begin
+    ConfigurarEstructuraLineas;
+    if cdsCabecera.State = dsBrowse then
+      cdsCabecera.Edit;
+    cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString := sPropio;
+    cdsCabecera.FieldByName('CODIGO_ALM_DESTINO').AsString := sSolicitante;
+    cdsCabecera.FieldByName('NUMERO_SOL').AsString := ANumero;
+    cdsCabecera.FieldByName('SERIE_SOL').AsString := ASerie;
+    cdsCabecera.Post;
+    // Pase 1: volcar SKU/uds pendientes (qryAux ocupado, sin coste todavía).
+    qryAux.SQL.Text :=
+      'SELECT CODIGO_ART_TRSOLLIN, CODIGO_UNIDAD_TRSOLLIN,' +
+      '       DESCRIPCION_ARTICULO_TRSOLLIN,' +
+      '       (CANTIDAD_PEDIDA_TRSOLLIN -' +
+      '        CANTIDAD_SERVIDA_TRSOLLIN) AS PENDIENTE' +
+      '  FROM fza_traspasos_solicitudes_lineas' +
+      ' WHERE NUMERO_TRSOL_TRSOLLIN = :NUM' +
+      '   AND SERIE_TRSOL_TRSOLLIN = :SER' +
+      '   AND (CANTIDAD_PEDIDA_TRSOLLIN -' +
+      '        CANTIDAD_SERVIDA_TRSOLLIN) > 0' +
+      ' ORDER BY LINEA_TRSOLLIN';
+    qryAux.ParamByName('NUM').AsString := ANumero;
+    qryAux.ParamByName('SER').AsString := ASerie;
+    qryAux.Open;
+    try
+      while not qryAux.Eof do
+      begin
+        cdsLineas.Append;
+        cdsLineas.FieldByName('CODIGO_ART').AsString :=
+          qryAux.FieldByName('CODIGO_ART_TRSOLLIN').AsString;
+        cdsLineas.FieldByName('CODIGO_UNIDAD').AsString :=
+          qryAux.FieldByName('CODIGO_UNIDAD_TRSOLLIN').AsString;
+        cdsLineas.FieldByName('DESCRIPCION').AsString :=
+          qryAux.FieldByName('DESCRIPCION_ARTICULO_TRSOLLIN').AsString;
+        cdsLineas.FieldByName('CANTIDAD').AsFloat :=
+          qryAux.FieldByName('PENDIENTE').AsFloat;
+        cdsLineas.Post;
+        qryAux.Next;
+      end;
+    finally
+      qryAux.Close;
+    end;
+    // Pase 2: rellenar coste y stock del almacén que sirve (el propio).
+    cdsLineas.First;
+    while not cdsLineas.Eof do
+    begin
+      cdsLineas.Edit;
+      cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
+        ObtenerCosteMedio(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString,
+                          sPropio);
+      cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+        ObtenerStock(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString, sPropio);
+      cdsLineas.FieldByName('TOTAL').AsCurrency :=
+        cdsLineas.FieldByName('CANTIDAD').AsFloat *
+        cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
+      cdsLineas.Post;
+      cdsLineas.Next;
+    end;
   end;
 end;
 

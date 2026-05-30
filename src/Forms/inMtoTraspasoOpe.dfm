@@ -1,6 +1,6 @@
 inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   Caption = 'Traspasos'
-  ClientHeight = 600
+  ClientHeight = 640
   ClientWidth = 900
   KeyPreview = True
   OnCreate = FormCreate
@@ -8,15 +8,55 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
-  object pnlTop: TPanel
+  object pnlModos: TPanel
     Left = 0
     Top = 0
+    Width = 900
+    Height = 40
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = ''
+    TabOrder = 0
+    object btnModoTraspaso: TcxButton
+      Tag = 0
+      Left = 8
+      Top = 6
+      Width = 200
+      Height = 28
+      Caption = 'Traspaso'
+      TabOrder = 0
+      OnClick = btnModoClick
+    end
+    object btnModoSolicitar: TcxButton
+      Tag = 1
+      Left = 216
+      Top = 6
+      Width = 220
+      Height = 28
+      Caption = 'Solicitar a otro almac'#233'n'
+      TabOrder = 1
+      OnClick = btnModoClick
+    end
+    object btnModoAtender: TcxButton
+      Tag = 2
+      Left = 444
+      Top = 6
+      Width = 200
+      Height = 28
+      Caption = 'Atender solicitudes'
+      TabOrder = 2
+      OnClick = btnModoClick
+    end
+  end
+  object pnlTop: TPanel
+    Left = 0
+    Top = 40
     Width = 900
     Height = 89
     Align = alTop
     BevelOuter = bvNone
     Caption = ''
-    TabOrder = 0
+    TabOrder = 1
     object lblOrigen: TcxLabel
       Left = 16
       Top = 18
@@ -38,18 +78,18 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Left = 560
       Top = 15
       TabOrder = 1
-      Width = 300
+      Width = 320
     end
   end
   object pnlEntrada: TPanel
     Left = 0
-    Top = 89
+    Top = 129
     Width = 900
     Height = 49
     Align = alTop
     BevelOuter = bvNone
     Caption = ''
-    TabOrder = 1
+    TabOrder = 2
     object lblSku: TcxLabel
       Left = 16
       Top = 16
@@ -77,7 +117,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     object btnAnadir: TcxButton
       Left = 580
       Top = 11
-      Width = 110
+      Width = 130
       Height = 25
       Caption = 'A'#241'adir (Intro)'
       Default = True
@@ -85,7 +125,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       OnClick = btnAnadirClick
     end
     object btnQuitar: TcxButton
-      Left = 700
+      Left = 720
       Top = 11
       Width = 110
       Height = 25
@@ -96,13 +136,13 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 540
+    Top = 580
     Width = 900
     Height = 60
     Align = alBottom
     BevelOuter = bvNone
     Caption = ''
-    TabOrder = 2
+    TabOrder = 3
     object lblTotal: TcxLabel
       Left = 16
       Top = 20
@@ -129,12 +169,12 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   end
   object pnlCentro: TPanel
     Left = 0
-    Top = 138
+    Top = 178
     Width = 900
     Height = 402
     Align = alClient
     BevelOuter = bvNone
     Caption = ''
-    TabOrder = 3
+    TabOrder = 4
   end
 end
