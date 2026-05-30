@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Formulario flotante (no modal, top-most) que muestra la foto del          }
-{    articulo o SKU activo en la pantalla que lo invoca con Ctrl+Alt+F.        }
+{    articulo o SKU activo en la pantalla que lo invoca con Ctrl+F.        }
 {    Render por GDI (TImage + Vcl.Imaging.PngImage).                           }
 {                                                                              }
 {    UI con panel de controles desplegable: por defecto solo se ve la imagen   }
@@ -38,7 +38,8 @@ uses
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
   JvComponentBase, JvEnterTab,
   Vcl.Menus, cxControls, cxMaskEdit,
-  inLibFotos, inLibLayoutForm, inLibAppParam, System.UITypes;
+  inLibFotos, inLibFotosNube, inLibLayoutForm, inLibAppParam,
+  System.UITypes;
 
 type
   TResolverArtSkuProc =
@@ -47,6 +48,7 @@ type
   TfrmFotoArticulo = class(TfrmBase)
     pnlTop           : TPanel;
     btnToggle        : TcxButton;
+    btnDescargarNube : TcxButton;
     lblOrigen        : TcxLabel;
     pnlControles     : TPanel;
     rgResolucion     : TcxRadioGroup;
@@ -68,6 +70,7 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure rgResolucionPropertiesEditValueChanged(Sender: TObject);
     procedure btnToggleClick(Sender: TObject);
+    procedure btnDescargarNubeClick(Sender: TObject);
     procedure btnCambiarArtClick(Sender: TObject);
     procedure btnCambiarSkuClick(Sender: TObject);
     procedure btnQuitarClick(Sender: TObject);
@@ -93,6 +96,7 @@ type
     procedure DesengancharDataChange;
     procedure DesengancharDataSource(ADataSource: TDataSource);
     procedure OnPadreDataChange(Sender: TObject; Field: TField);
+    procedure DescargarFotosDeNube;
   protected
     // Auto-limpieza si alguno de los DataSources hookeados se libera
     // antes que nosotros (al cerrar el Mto que los poseia). Usa el
@@ -128,7 +132,7 @@ var
 
 /// Atajo: abre `frmFotoArticulo` (lo crea si no existe) y carga el par
 /// pasado. Si el formulario ya estaba abierto, lo refresca y lo trae al
-/// frente. Llamar desde el handler de Ctrl+Alt+F de los Mtos.
+/// frente. Llamar desde el handler de Ctrl+F de los Mtos.
 procedure MostrarFotoFlotante(AOwner: TComponent;
                               const ACodArt, ACodSku: string);
 
@@ -195,7 +199,7 @@ begin
   FCodigoSku   := '';
   FUltimaInfo.Clear;
   // Si la instancia que se destruye es la singleton global, anulamos
-  // la variable para que el siguiente Ctrl+Alt+F cree una limpia.
+  // la variable para que el siguiente Ctrl+F cree una limpia.
   // (FormClose tambien lo hace, pero si el Owner libera el form sin
   // pasar por OnClose -- p.ej. al cerrar la app -- caemos aqui igual.)
   if Self = frmFotoArticulo then
@@ -212,7 +216,7 @@ begin
     Action := caFree
   else
   begin
-    // Cerramos pero conservamos la referencia: el siguiente Ctrl+Alt+F
+    // Cerramos pero conservamos la referencia: el siguiente Ctrl+F
     // crea una nueva instancia limpia.
     Action := caFree;
     frmFotoArticulo := nil;
@@ -280,6 +284,64 @@ procedure TfrmFotoArticulo.btnToggleClick(Sender: TObject);
 begin
   inherited;
   ToggleControles;
+end;
+
+procedure TfrmFotoArticulo.btnDescargarNubeClick(Sender: TObject);
+begin
+  inherited;
+  DescargarFotosDeNube;
+end;
+
+procedure TfrmFotoArticulo.DescargarFotosDeNube;
+var
+  archivos                   : TArray<string>;
+  sMsg, sFile, sClave, sColor: string;
+  iBarra                     : Integer;
+  bOK                        : Boolean;
+begin
+  // Descarga del servidor (download_foto.php) las fotos del articulo
+  // actual, las descomprime en appDirFotos y borra el ZIP. Integra la foto
+  // al nivel que muestra el combo (por defecto la profundidad de
+  // appNumAtributosFoto, p.ej. articulo/color), igual que "Cambiar foto
+  // del grupo": el color es el ultimo segmento del nivel y se elige el PNG
+  // de ese color. Los demas PNG quedan sueltos en appDirFotos.
+  if FCodigoArt = '' then
+    ShowMessage('No hay articulo activo para descargar fotos.')
+  else
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      bOK := DescargarFotosArticulo(FCodigoArt, archivos, sMsg);
+    finally
+      Screen.Cursor := crDefault;
+    end;
+    if not bOK then
+      ShowMessage('No se pudieron descargar las fotos del articulo ' +
+                  FCodigoArt + ':' + sLineBreak + sMsg)
+    else
+    begin
+      sClave := ClaveNivelSeleccionado;
+      iBarra := LastDelimiter('/', sClave);
+      if iBarra > 0 then
+        sColor := Copy(sClave, iBarra + 1, MaxInt)
+      else
+        sColor := '';
+      sFile := ElegirFotoNubePorColor(archivos, sColor);
+      if sFile <> '' then
+      begin
+        // Sentinela COLOR=NONE: si el PNG no es por color, lo guardamos a
+        // nivel articulo (CODIGO_UNIDAD = ''); si no, al nivel del combo.
+        if Pos('_NONE_', UpperCase(ExtractFileName(sFile))) > 0 then
+          oFotos.Guardar(FCodigoArt, '', sFile)
+        else
+          oFotos.Guardar(FCodigoArt, sClave, sFile);
+      end;
+      // Re-resolver y refrescar la imagen que se muestra ahora mismo.
+      SetArticuloSku(FCodigoArt, FCodigoSku);
+      ShowMessage(Format('Descargadas %d foto(s) del articulo %s.',
+                         [Length(archivos), FCodigoArt]));
+    end;
+  end;
 end;
 
 // ---------------------------------------------------------------------

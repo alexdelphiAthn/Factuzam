@@ -1,0 +1,324 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibFotosNube                                                }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       29/05/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Descarga de fotos de artículo desde el servidor web (download_foto.php).  }
+{    Pide el ZIP con las fotos del artículo, lo descomprime en appDirFotos     }
+{    dejando los PNG sueltos y borra el ZIP temporal. La integración en el     }
+{    sistema de fotos (oFotos.Guardar / GuardarSesion) la hace el formulario   }
+{    que invoca, según su contexto (sesión de compras o ficha de fotos).       }
+{                                                                              }
+{    Contrato de download_foto.php (idéntico a ver_foto.php / upload_foto):    }
+{      GET  ?carpeta_cliente=..&articulo=..&resolucion=real                    }
+{      Header X-API-Key con la clave.                                          }
+{      200 application/zip con los PNG; 4xx application/json {message}.        }
+{******************************************************************************}
+unit inLibFotosNube;
+
+interface
+
+uses
+  System.SysUtils, System.Classes;
+
+// Comprueba que los parámetros necesarios (URL del PHP, clave X-API-Key,
+// carpeta de cliente y carpeta de fotos) están configurados. Si falta
+// alguno devuelve False y deja en AMensaje la lista de lo que falta.
+function FotosNubeConfigurado(out AMensaje: string): Boolean;
+
+// Descarga del servidor todas las fotos del artículo ACodArt (resolución
+// real), las descomprime en appDirFotos y borra el ZIP temporal. Deja en
+// AArchivos las rutas de los PNG extraídos. Devuelve False con el mensaje
+// del servidor (o del error de red) en AMensaje.
+function DescargarFotosArticulo(const ACodArt: string;
+                                out AArchivos: TArray<string>;
+                                out AMensaje: string): Boolean;
+
+// De la lista de PNG descargados elige uno representativo para integrarlo
+// como foto del artículo: prioriza los terminados en '_real' y, dentro de
+// ellos, el primero por orden alfabético. Devuelve '' si la lista está
+// vacía.
+function ElegirFotoRepresentativa(const AArchivos: TArray<string>): string;
+
+// Elige el PNG descargado cuyo color (token <color> del nombre
+// ARTICULO_COLOR_INDICE_real.png) case con AColor. Si AColor = '' o no hay
+// coincidencia, cae en ElegirFotoRepresentativa. Sirve para integrar al
+// nivel artículo/color que muestra el visor de fotos.
+// AColor es el segmento de color del SKU, que es el TEXTO DEL PROVEEDOR
+// saneado (persistido como fza_atributos_valores.AV; el color básico es solo
+// un helper de clasificación). El servidor nombra el fichero con ese mismo
+// token saneado (misma regla que SanearColorFoto) para que case.
+function ElegirFotoNubePorColor(const AArchivos: TArray<string>;
+                                const AColor: string): string;
+
+implementation
+
+uses
+  System.IOUtils, System.StrUtils, System.JSON,
+  System.Net.HttpClient, System.Net.URLClient, System.NetEncoding,
+  System.Zip,
+  inLibAppParam;
+
+const
+  cParUrl      = 'appFotosUrlDescarga';
+  cParApiKey   = 'appFotosApiKey';
+  cParCarpeta  = 'appFotosCarpetaCliente';
+  cParDirFotos = 'appDirFotos';
+
+function FotosNubeConfigurado(out AMensaje: string): Boolean;
+var
+  faltan: TStringList;
+begin
+  AMensaje := '';
+  faltan := TStringList.Create;
+  try
+    if Trim(oAppParams.GetString(cParUrl)) = '' then
+      faltan.Add('  - URL del script download_foto.php (appFotosUrlDescarga)');
+    if Trim(oAppParams.GetString(cParApiKey)) = '' then
+      faltan.Add('  - Clave X-API-Key (appFotosApiKey)');
+    if Trim(oAppParams.GetString(cParCarpeta)) = '' then
+      faltan.Add('  - Carpeta de cliente (appFotosCarpetaCliente)');
+    if Trim(oAppParams.GetPath(cParDirFotos)) = '' then
+      faltan.Add('  - Carpeta de fotos (appDirFotos)');
+    Result := faltan.Count = 0;
+    if not Result then
+      AMensaje := 'Configura primero estos parámetros (Parámetros de la ' +
+                  'aplicación -> Fotos):' + sLineBreak + faltan.Text;
+  finally
+    FreeAndNil(faltan);
+  end;
+end;
+
+// Un ZIP empieza siempre por la firma 'PK' (0x50 0x4B). Lo usamos para
+// distinguir la respuesta binaria correcta del JSON de error 4xx.
+function ContenidoEsZip(AStream: TStream): Boolean;
+var
+  firma : array[0..1] of Byte;
+  leidos: Integer;
+begin
+  Result := False;
+  if AStream.Size >= 2 then
+  begin
+    AStream.Position := 0;
+    leidos := AStream.Read(firma, 2);
+    Result := (leidos = 2) and (firma[0] = Ord('P')) and (firma[1] = Ord('K'));
+    AStream.Position := 0;
+  end;
+end;
+
+// Extrae el campo "message" del JSON de error del servidor. Si no se puede
+// interpretar, devuelve un mensaje genérico con el código HTTP.
+function MensajeErrorServidor(AStream: TStream; AStatus: Integer): string;
+var
+  texto: TStringStream;
+  jval : TJSONValue;
+  jmsg : TJSONValue;
+begin
+  Result := '';
+  texto := TStringStream.Create('', TEncoding.UTF8);
+  try
+    AStream.Position := 0;
+    if AStream.Size > 0 then
+      texto.CopyFrom(AStream, AStream.Size);
+    jval := TJSONObject.ParseJSONValue(texto.DataString);
+    try
+      if jval <> nil then
+      begin
+        jmsg := jval.FindValue('message');
+        if jmsg <> nil then
+          Result := jmsg.Value;
+      end;
+    finally
+      FreeAndNil(jval);
+    end;
+  finally
+    FreeAndNil(texto);
+  end;
+  if Result = '' then
+    Result := Format('El servidor respondió con código %d.', [AStatus]);
+end;
+
+function DescargarFotosArticulo(const ACodArt: string;
+                                out AArchivos: TArray<string>;
+                                out AMensaje: string): Boolean;
+var
+  sUrl, sKey, sCarpeta, sDir, sUrlFull, sZipTmp: string;
+  http   : THTTPClient;
+  resp   : IHTTPResponse;
+  cuerpo : TMemoryStream;
+  zip    : TZipFile;
+  lista  : TStringList;
+  nombres: TArray<string>;
+  i      : Integer;
+begin
+  Result    := False;
+  AArchivos := nil;
+  if FotosNubeConfigurado(AMensaje) then
+  begin
+    sUrl     := Trim(oAppParams.GetString(cParUrl));
+    sKey     := Trim(oAppParams.GetString(cParApiKey));
+    sCarpeta := Trim(oAppParams.GetString(cParCarpeta));
+    sDir := IncludeTrailingPathDelimiter(oAppParams.GetPath(cParDirFotos));
+    ForceDirectories(sDir);
+    // Pedimos resolución 'real' (calidad original): el sistema de fotos
+    // ya genera 300/600 al integrar la foto representativa.
+    sUrlFull := sUrl +
+      '?carpeta_cliente=' + TNetEncoding.URL.Encode(sCarpeta) +
+      '&articulo=' + TNetEncoding.URL.Encode(ACodArt) +
+      '&resolucion=real';
+    http   := THTTPClient.Create;
+    cuerpo := TMemoryStream.Create;
+    try
+      http.CustomHeaders['X-API-Key'] := sKey;
+      resp := nil;
+      try
+        resp := http.Get(sUrlFull, cuerpo);
+      except
+        on E: Exception do
+          AMensaje := 'No se pudo conectar con el servidor de fotos: ' +
+                      E.Message;
+      end;
+      if resp <> nil then
+      begin
+        if (resp.StatusCode <> 200) or (not ContenidoEsZip(cuerpo)) then
+          AMensaje := MensajeErrorServidor(cuerpo, resp.StatusCode)
+        else
+        begin
+          sZipTmp := TPath.Combine(TPath.GetTempPath,
+            'fzam_fotos_' +
+            FormatDateTime('yyyymmdd_hhnnss_zzz', Now) + '.zip');
+          cuerpo.Position := 0;
+          cuerpo.SaveToFile(sZipTmp);
+          lista := TStringList.Create;
+          zip   := TZipFile.Create;
+          try
+            zip.Open(sZipTmp, zmRead);
+            zip.ExtractAll(sDir);
+            nombres := zip.FileNames;
+            for i := 0 to High(nombres) do
+            begin
+              if SameText(ExtractFileExt(nombres[i]), '.png') then
+                lista.Add(sDir + nombres[i]);
+            end;
+            zip.Close;
+            AArchivos := lista.ToStringArray;
+            Result    := True;
+          finally
+            FreeAndNil(zip);
+            FreeAndNil(lista);
+            // "Dejar las fotos, borrar el zip": eliminamos el temporal.
+            if FileExists(sZipTmp) then
+              DeleteFile(sZipTmp);
+          end;
+        end;
+      end;
+    finally
+      FreeAndNil(cuerpo);
+      FreeAndNil(http);
+    end;
+  end;
+end;
+
+function ElegirFotoRepresentativa(const AArchivos: TArray<string>): string;
+var
+  orden: TStringList;
+  i    : Integer;
+  sReal: string;
+begin
+  Result := '';
+  orden := TStringList.Create;
+  try
+    orden.Sorted := True;
+    orden.Duplicates := dupAccept;
+    for i := 0 to High(AArchivos) do
+      orden.Add(AArchivos[i]);
+    sReal := '';
+    for i := 0 to orden.Count - 1 do
+    begin
+      if (sReal = '') and EndsText('_real.png', orden[i]) then
+        sReal := orden[i];
+    end;
+    if sReal <> '' then
+      Result := sReal
+    else if orden.Count > 0 then
+      Result := orden[0];
+  finally
+    FreeAndNil(orden);
+  end;
+end;
+
+function SanearColorFoto(const AValor: string): string;
+var
+  i        : Integer;
+  sParcial : string;
+  c        : Char;
+begin
+  // Misma regla que SanearColorSku (inLibComprasSesionesMaterializar) y que
+  // debe usar el servidor de fotos al nombrar el token COLOR: mayusculas;
+  // espacios -> '-'; se conservan letras, digitos, '-' y '_'; el resto de
+  // simbolos (/, %, EUR, ...) se descarta. Asi el color del SKU y el de la
+  // foto casan exactamente.
+  sParcial := UpperCase(Trim(AValor));
+  Result := '';
+  for i := 1 to Length(sParcial) do
+  begin
+    c := sParcial[i];
+    if c = ' ' then
+      Result := Result + '-'
+    else if CharInSet(c, ['A'..'Z', '0'..'9', '-', '_']) then
+      Result := Result + c;
+  end;
+  while Pos('--', Result) > 0 do
+    Result := StringReplace(Result, '--', '-', [rfReplaceAll]);
+  while Pos('__', Result) > 0 do
+    Result := StringReplace(Result, '__', '_', [rfReplaceAll]);
+  while (Result <> '') and CharInSet(Result[1], ['-', '_']) do
+    Delete(Result, 1, 1);
+  while (Result <> '') and CharInSet(Result[Length(Result)], ['-', '_']) do
+    Delete(Result, Length(Result), 1);
+end;
+
+function ElegirFotoNubePorColor(const AArchivos: TArray<string>;
+                                const AColor: string): string;
+var
+  orden : TStringList;
+  i     : Integer;
+  sColor: string;
+  sBase : string;
+begin
+  Result := '';
+  sColor := SanearColorFoto(AColor);
+  if sColor = '' then
+    Result := ElegirFotoRepresentativa(AArchivos)
+  else
+  begin
+    orden := TStringList.Create;
+    try
+      orden.Sorted := True;
+      orden.Duplicates := dupAccept;
+      for i := 0 to High(AArchivos) do
+        orden.Add(AArchivos[i]);
+      // Buscamos un '_real' cuyo nombre contenga el token _COLOR_, donde
+      // COLOR es el color del SKU (texto del proveedor saneado).
+      for i := 0 to orden.Count - 1 do
+      begin
+        sBase := UpperCase(ExtractFileName(orden[i]));
+        if (Result = '') and EndsText('_REAL.PNG', sBase) and
+           (Pos('_' + sColor + '_', sBase) > 0) then
+          Result := orden[i];
+      end;
+      if Result = '' then
+        Result := ElegirFotoRepresentativa(AArchivos);
+    finally
+      FreeAndNil(orden);
+    end;
+  end;
+end;
+
+end.
