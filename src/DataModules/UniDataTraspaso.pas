@@ -38,6 +38,7 @@ type
     FModo: TModoTraspaso;
     procedure ConfigurarEstructuraCabecera;
     procedure ConfigurarEstructuraLineas;
+    procedure cdsLineasNewRecord(DataSet: TDataSet);
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
     // Serie del documento de traspaso (fza_empresas_series + fallback) y su
     // siguiente número (PRC_GET_NEXT_CONT_FACT_SERIE, como la factura).
@@ -112,6 +113,7 @@ begin
   qryAux.Connection := oConn;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
+  cdsLineas.OnNewRecord := cdsLineasNewRecord;
 end;
 
 procedure TdmTraspaso.ConfigurarEstructuraCabecera;
@@ -148,12 +150,28 @@ begin
     Add('CODIGO_ART', ftString, 20);
     Add('CODIGO_UNIDAD', ftString, 50);
     Add('DESCRIPCION', ftString, 100);
+    Add('NUM_ATRIBUTOS', ftInteger, 0);
+    Add('ATTR1_VALOR', ftString, 50);
+    Add('ATTR2_VALOR', ftString, 50);
+    Add('ATTR3_VALOR', ftString, 50);
+    Add('ATTR4_VALOR', ftString, 50);
+    Add('ATTR5_VALOR', ftString, 50);
+    Add('ATTR1_NOMBRE', ftString, 50);
+    Add('ATTR2_NOMBRE', ftString, 50);
+    Add('ATTR3_NOMBRE', ftString, 50);
+    Add('ATTR4_NOMBRE', ftString, 50);
+    Add('ATTR5_NOMBRE', ftString, 50);
     Add('CANTIDAD', ftFloat, 0);
     Add('PRECIO_COSTE', ftCurrency, 0);
     Add('TOTAL', ftCurrency, 0);
     Add('STOCK_ORIGEN', ftFloat, 0);
   end;
   cdsLineas.CreateDataSet;
+end;
+
+procedure TdmTraspaso.cdsLineasNewRecord(DataSet: TDataSet);
+begin
+  DataSet.FieldByName('CANTIDAD').AsFloat := 1;
 end;
 
 procedure TdmTraspaso.PrepararNuevo(AModo: TModoTraspaso; const AEmpresa,
@@ -542,25 +560,31 @@ begin
       cdsLineas.First;
       while not cdsLineas.Eof do
       begin
-        iLinea := iLinea + 10;
-        sLinea := Format('%.4d', [iLinea]);
         sSku := cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
-        sArticulo := cdsLineas.FieldByName('CODIGO_ART').AsString;
-        dCantidad := cdsLineas.FieldByName('CANTIDAD').AsFloat;
-        cCoste := cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
-        // Salida del origen hacia el destino.
-        InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
-          sLinea, sEmpresa, sAlmacenOrigen, sCaja, AAlmacenDestino, 'S', sSku,
-          dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion, '',
-          sArticulo);
-        // Entrada en el destino desde el origen.
-        InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
-          sLinea, sEmpresa, AAlmacenDestino, sCaja, sAlmacenOrigen, 'E', sSku,
-          dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion, '',
-          sArticulo);
-        cTotal := cTotal + cCoste * dCantidad;
+        // Salta la linea en blanco de entrada del grid.
+        if Trim(sSku) <> '' then
+        begin
+          iLinea := iLinea + 10;
+          sLinea := Format('%.4d', [iLinea]);
+          sArticulo := cdsLineas.FieldByName('CODIGO_ART').AsString;
+          dCantidad := cdsLineas.FieldByName('CANTIDAD').AsFloat;
+          cCoste := cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
+          // Salida del origen hacia el destino.
+          InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
+            sLinea, sEmpresa, sAlmacenOrigen, sCaja, AAlmacenDestino, 'S',
+            sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
+            '', sArticulo);
+          // Entrada en el destino desde el origen.
+          InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
+            sLinea, sEmpresa, AAlmacenDestino, sCaja, sAlmacenOrigen, 'E',
+            sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
+            '', sArticulo);
+          cTotal := cTotal + cCoste * dCantidad;
+        end;
         cdsLineas.Next;
       end;
+      if iLinea = 0 then
+        raise Exception.Create('No hay líneas que traspasar.');
       // Operación de caja del traspaso (cabecera del documento). Si atiende
       // una solicitud, se enlaza por SERIE/NUMERO_REF_ORIGEN.
       InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,
@@ -682,32 +706,38 @@ begin
       cdsLineas.First;
       while not cdsLineas.Eof do
       begin
-        iLinea := iLinea + 10;
-        sLinea := Format('%.4d', [iLinea]);
-        QryTrx.SQL.Text :=
-          'INSERT INTO fza_traspasos_solicitudes_lineas (' +
-          '  NUMERO_TRSOL_TRSOLLIN, SERIE_TRSOL_TRSOLLIN, LINEA_TRSOLLIN,' +
-          '  CODIGO_ART_TRSOLLIN, CODIGO_UNIDAD_TRSOLLIN,' +
-          '  DESCRIPCION_ARTICULO_TRSOLLIN, CANTIDAD_PEDIDA_TRSOLLIN,' +
-          '  CANTIDAD_SERVIDA_TRSOLLIN, ESATENDIDA_TRSOLLIN,' +
-          '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
-          'VALUES (:NUM, :SER, :LIN, :ART, :SKU, :DESC, :CANT, 0, ''N'',' +
-          '  :USU, :USU, NOW())';
-        QryTrx.ParamByName('NUM').AsString := ANumero;
-        QryTrx.ParamByName('SER').AsString := ASerie;
-        QryTrx.ParamByName('LIN').AsString := sLinea;
-        QryTrx.ParamByName('ART').AsString :=
-          cdsLineas.FieldByName('CODIGO_ART').AsString;
-        QryTrx.ParamByName('SKU').AsString :=
-          cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
-        QryTrx.ParamByName('DESC').AsString :=
-          cdsLineas.FieldByName('DESCRIPCION').AsString;
-        QryTrx.ParamByName('CANT').AsFloat :=
-          cdsLineas.FieldByName('CANTIDAD').AsFloat;
-        QryTrx.ParamByName('USU').AsString := sUsuario;
-        QryTrx.Execute;
+        // Salta la linea en blanco de entrada del grid.
+        if Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) <> '' then
+        begin
+          iLinea := iLinea + 10;
+          sLinea := Format('%.4d', [iLinea]);
+          QryTrx.SQL.Text :=
+            'INSERT INTO fza_traspasos_solicitudes_lineas (' +
+            '  NUMERO_TRSOL_TRSOLLIN, SERIE_TRSOL_TRSOLLIN, LINEA_TRSOLLIN,' +
+            '  CODIGO_ART_TRSOLLIN, CODIGO_UNIDAD_TRSOLLIN,' +
+            '  DESCRIPCION_ARTICULO_TRSOLLIN, CANTIDAD_PEDIDA_TRSOLLIN,' +
+            '  CANTIDAD_SERVIDA_TRSOLLIN, ESATENDIDA_TRSOLLIN,' +
+            '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
+            'VALUES (:NUM, :SER, :LIN, :ART, :SKU, :DESC, :CANT, 0, ''N'',' +
+            '  :USU, :USU, NOW())';
+          QryTrx.ParamByName('NUM').AsString := ANumero;
+          QryTrx.ParamByName('SER').AsString := ASerie;
+          QryTrx.ParamByName('LIN').AsString := sLinea;
+          QryTrx.ParamByName('ART').AsString :=
+            cdsLineas.FieldByName('CODIGO_ART').AsString;
+          QryTrx.ParamByName('SKU').AsString :=
+            cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+          QryTrx.ParamByName('DESC').AsString :=
+            cdsLineas.FieldByName('DESCRIPCION').AsString;
+          QryTrx.ParamByName('CANT').AsFloat :=
+            cdsLineas.FieldByName('CANTIDAD').AsFloat;
+          QryTrx.ParamByName('USU').AsString := sUsuario;
+          QryTrx.Execute;
+        end;
         cdsLineas.Next;
       end;
+      if iLinea = 0 then
+        raise Exception.Create('No hay líneas que solicitar.');
       oConn.Commit;
       Result := True;
     except
