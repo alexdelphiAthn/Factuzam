@@ -192,6 +192,15 @@ begin
   RegistrarParametro('Fotos', 'appFotosCarpetaCliente',
     'Carpeta de cliente en el servidor (parámetro carpeta_cliente)',
     tpString, '');
+  // --- Recuentos (app de recuento de inventarios) ---
+  // Los consume inLibInventarioNube (enviar/recoger recuentos). Mismo estilo
+  // que el servidor de fotos: X-API-Key + carpeta_cliente.
+  RegistrarParametro('Recuentos', 'appRecuentoUrl',
+    'URL base del servidor de recuentos (acaba en /)', tpString, '');
+  RegistrarParametro('Recuentos', 'appRecuentoApiKey',
+    'Clave X-API-Key del servidor de recuentos', tpString, '');
+  RegistrarParametro('Recuentos', 'appRecuentoCarpetaCliente',
+    'Carpeta de cliente en el servidor de recuentos', tpString, '');
   // --- Ventas ---
   RegistrarParametro('Ventas', 'appTarifaDefault',
     'Tarifa por defecto', tpString, '');

@@ -30,7 +30,9 @@ eventos a un servidor PHP que hace de puente con Factuzam.
    abre la pantalla de conteo (modo +1 o +cantidad).
 3. **Opción 3** → elige una **plantilla** que envió Factuzam y cuenta contra su
    catálogo.
-4. En conteo: cada Intro en el campo de escaneo encola un evento con su día/hora.
+4. **Opción 4 (Traspaso)** → elige **origen** y **destino** y cuenta por cantidad
+   lo que se mueve (parte del cliente; Factuzam generaría el traspaso al recoger).
+5. En conteo: cada Intro en el campo de escaneo encola un evento con su día/hora.
    **Sincronizar** sube la cola; **Finalizar** sube lo pendiente y marca el
    recuento `RECONTADO`.
 
