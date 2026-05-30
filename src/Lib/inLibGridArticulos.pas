@@ -281,7 +281,10 @@ procedure TGridArticulosLineas.ArticuloValidate(Sender: TObject;
                                   var DisplayValue: Variant;
                                   var ErrorText: TCaption; var Error: Boolean);
 begin
-  ResolverEntrada(VarToStr(DisplayValue));
+  // Al resolver, dejamos en la celda el codigo de articulo (padre) resuelto,
+  // para que el editor no vuelva a volcar lo tecleado (p.ej. un codigo barras).
+  if ResolverEntrada(VarToStr(DisplayValue)) then
+    DisplayValue := FCds.FieldByName(FCampos.CodigoArt).AsString;
 end;
 
 procedure TGridArticulosLineas.AtributoChange(Sender: TObject);

@@ -26,7 +26,8 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit,
   cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
-  cxGrid, Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket;
+  cxGrid, Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
+  inLibGridArticulos;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -68,6 +69,7 @@ type
     FDatos: TdmTraspaso;
     FGrid: TcxGrid;
     FView: TcxGridDBTableView;
+    FGridCtrl: TGridArticulosLineas;
     FComboCodigos: TStringList;
     FEmpresa: string;
     FAlmacen: string;
@@ -75,6 +77,9 @@ type
     FFecha: TDateTime;
     FModo: TModoTraspaso;
     procedure ConstruirGrid;
+    procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
+                           ACompleto: Boolean);
+    procedure AsegurarLineaNueva;
     procedure AplicarModo(AModo: TModoTraspaso);
     procedure CargarCombo;
     procedure CargarAlmacenesDestino;
@@ -107,12 +112,17 @@ end;
 
 procedure TfrmMtoOpeTraspaso.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FGridCtrl);
   FreeAndNil(FComboCodigos);
   // FDatos lo libera el Owner (Self) automáticamente.
   inherited;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirGrid;
+var
+  Campos: TCamposGridArt;
+  Col: TcxGridDBColumn;
+  i: Integer;
 begin
   FGrid := TcxGrid.Create(Self);
   FGrid.Parent := pnlCentro;
@@ -120,12 +130,73 @@ begin
   FView := FGrid.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
   FGrid.Levels.Add.GridView := FView;
   FView.DataController.DataSource := FDatos.dsLineas;
-  FView.DataController.CreateAllItems;
-  // El grid es de sólo lectura: el alta se hace por el panel de entrada.
-  FView.OptionsData.Editing := False;
-  FView.OptionsData.Deleting := False;
-  FView.OptionsData.Inserting := False;
+  FView.OptionsData.Editing := True;
+  FView.OptionsData.Inserting := True;
+  FView.OptionsData.Deleting := True;
   FView.OptionsView.GroupByBox := False;
+  Campos.CodigoArt := 'CODIGO_ART';
+  Campos.CodigoUnidad := 'CODIGO_UNIDAD';
+  Campos.Descripcion := 'DESCRIPCION';
+  Campos.Cantidad := 'CANTIDAD';
+  Campos.NumAtributos := 'NUM_ATRIBUTOS';
+  for i := 1 to 5 do
+  begin
+    Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR';
+    Campos.AttrNombre[i] := 'ATTR' + IntToStr(i) + '_NOMBRE';
+  end;
+  // La controladora crea la columna de artículo + las de talla/color.
+  FGridCtrl := TGridArticulosLineas.Create(oConn, FView, FDatos.cdsLineas,
+                                           Campos);
+  FGridCtrl.OnResuelto := GridResuelto;
+  FGridCtrl.Construir;
+  // Columnas propias del traspaso.
+  Col := FView.CreateColumn;
+  Col.Caption := 'Descripción';
+  Col.DataBinding.FieldName := 'DESCRIPCION';
+  Col.Options.Editing := False;
+  Col.Width := 200;
+  Col := FView.CreateColumn;
+  Col.Caption := 'Uds';
+  Col.DataBinding.FieldName := 'CANTIDAD';
+  Col.Width := 50;
+  Col := FView.CreateColumn;
+  Col.Caption := 'Coste';
+  Col.DataBinding.FieldName := 'PRECIO_COSTE';
+  Col.Options.Editing := False;
+  Col.Width := 70;
+  Col := FView.CreateColumn;
+  Col.Caption := 'Stock org';
+  Col.DataBinding.FieldName := 'STOCK_ORIGEN';
+  Col.Options.Editing := False;
+  Col.Width := 70;
+end;
+
+procedure TfrmMtoOpeTraspaso.GridResuelto(const ACodArt, ASku,
+                                          ADescripcion: string;
+                                          ACompleto: Boolean);
+var
+  sAlmacenOrigen: string;
+begin
+  if ACompleto and (FDatos.cdsLineas.State in [dsEdit, dsInsert]) then
+  begin
+    sAlmacenOrigen :=
+      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+    FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
+      FDatos.ObtenerCosteMedio(ASku, sAlmacenOrigen);
+    FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+      FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+  end;
+  ActualizarTotal;
+end;
+
+procedure TfrmMtoOpeTraspaso.AsegurarLineaNueva;
+begin
+  // Deja una linea en blanco para teclear/escanear el articulo en el grid.
+  if FDatos.cdsLineas.IsEmpty then
+  begin
+    FDatos.cdsLineas.Append;
+    FDatos.cdsLineas.Post;
+  end;
 end;
 
 procedure TfrmMtoOpeTraspaso.PrepararValores(AModo: TModoTraspaso;
@@ -174,6 +245,8 @@ begin
   end;
   CargarCombo;
   cboDestino.ItemIndex := -1;
+  if AModo in [mtTraspaso, mtSolicitar] then
+    AsegurarLineaNueva;
   ActualizarTotal;
 end;
 
@@ -244,7 +317,9 @@ begin
       FDatos.cdsLineas.First;
       while not FDatos.cdsLineas.Eof do
       begin
-        cTotal := cTotal + FDatos.cdsLineas.FieldByName('TOTAL').AsCurrency;
+        cTotal := cTotal +
+          FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat *
+          FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
         FDatos.cdsLineas.Next;
       end;
     finally
