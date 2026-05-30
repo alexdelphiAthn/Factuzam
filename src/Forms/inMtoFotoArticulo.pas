@@ -191,6 +191,14 @@ procedure TfrmFotoArticulo.FormShow(Sender: TObject);
 begin
   inherited;
   RestaurarGeometriaGuardada;
+  // En el PRIMER show, imgFoto aun no tiene su tamano final cuando se pinto la
+  // foto (sale en blanco). Diferimos un repintado a cuando el layout cuaje.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
+        frmFotoArticulo.PintarFotoGDIPlus;
+    end);
 end;
 
 procedure TfrmFotoArticulo.RestaurarGeometriaGuardada;
