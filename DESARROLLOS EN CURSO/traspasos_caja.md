@@ -407,8 +407,10 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
 **Slices 1-2 (entregado): traspaso directo + ciclo de solicitudes.**
 
 - `DESARROLLOS EN CURSO/traspasos_caja.sql` — tablas
-  `fza_traspasos_solicitudes` y `…_lineas` (idempotente, no destructivo) +
-  siembra del contador global `'TS'` en `fza_contadores`.
+  `fza_traspasos_solicitudes` y `…_lineas` (idempotente vía
+  `INFORMATION_SCHEMA`) + siembra del contador global `'TS'` en
+  `fza_contadores`. Sufijos `TRSOL`/`TRSOLLIN` dados de alta en
+  `LIBRO_DE_ESTILO_BBDD.md` §2 y en `UNormalizerEngine.pas`.
 - `src/DataModules/UniDataTraspaso.pas/.dfm` — `TdmTraspaso`:
   - `ResolverSku`, `AnadirLinea`, `GrabarTraspaso` (par S+E + operación
     `TR`/`AT` en una transacción, reusando
@@ -437,4 +439,3 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
 - Edición / anulación desde Buscar/Modificar F10 (§5.1).
 - Parámetros `vgerTraspaso*` y permisos.
 - Tránsito (§8) y SP unificador (§9), opcionales.
-- Registrar sufijos `TRSOL`/`TRSOLLIN` en `UNormalizerEngine.pas`.
