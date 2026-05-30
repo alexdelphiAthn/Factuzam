@@ -220,6 +220,11 @@ errores `{ "message": "..." }` + status HTTP. HTTPS obligatorio.
 3. **Recoger plantilla de recuento** — **exige** que Factuzam haya enviado una
    plantilla: la descarga (SKUs + códigos de barras + descripción + teórica) y
    cuenta contra ella (resuelve descripción/teórica y marca lo no esperado).
+4. **Traspaso entre almacenes** — pregunta **origen** y **destino** y cuenta por
+   cantidad lo que se mueve. En el servidor es un recuento `tipo='TRASPASO'` con
+   `codigo_alm_destino`; Factuzam lo recogería y generaría el traspaso. (De
+   momento implementada **la parte del cliente**; la recogida en Factuzam queda
+   como siguiente paso.)
 
 Los modos 1 y 2 son la misma pantalla de conteo, cambiando solo si la cantidad
 es 1 fija o tecleada; todos generan eventos `inv_eventos` (y, ya en Factuzam,
@@ -311,16 +316,21 @@ reabrir a `EN_RECUENTO` si falta contar. El control de verdad es el permiso de
 
 ## 12. Fases de entrega
 
-1. **Esquema** ✅ borrador: `recuento_inventarios_factuzam.sql` (INVREC +
-   marcadores) y `recuento_inventarios_servidor.sql`. Falta registrar `INVREC`
-   en el normalizador y el libro de estilo.
-2. **Servidor PHP** ✅ diseño: `recuento_inventarios_php.md` (endpoints +
-   esqueletos). Falta subirlo a DreamHost con `config.php` real.
-3. **Factuzam VCL**: `inLibInventarioNube` + botones en `inMtoInventarios`.
-4. **App Android FMX**: menú (3 opciones), selector de almacén, recoger
-   plantilla, escaneo (keyboard-wedge), cola SQLite, sync, finalizar.
-5. **Ampliaciones**: escaneo por cámara, zonas/ubicaciones, panel de progreso
-   en vivo en Factuzam.
+1. **Esquema** ✅: `recuento_inventarios_factuzam.sql` (INVREC + marcadores) y
+   `recuento_inventarios_servidor.sql`. Falta registrar `INVREC` en el
+   normalizador y el libro de estilo.
+2. **Servidor PHP** ✅: ficheros reales en `recuento_servidor/` (todos los
+   endpoints + `comun.php` / `config.php`). Falta subirlo a DreamHost y poner
+   `config.php` con credenciales reales.
+3. **Factuzam VCL** ✅: `inLibInventarioNube` + botones "Enviar a recuento" /
+   "Recoger recuento" en `inMtoInventarios`, y parámetros "Recuentos" en
+   `inLibAppParam`.
+4. **App Android FMX** ✅: menú (4 opciones, incluido **traspaso**), selector de
+   almacén, recoger plantilla, escaneo (keyboard-wedge), cola SQLite, sync,
+   finalizar. Sin compilar aún (ver LEEME).
+5. **Ampliaciones**: red en hilo (`TTask`), lote/caducidad en trazables, escaneo
+   por cámara, **recogida de traspasos en Factuzam** (generar movimientos), panel
+   de progreso en vivo.
 
 ## 13. Decisiones del diseño (cerradas)
 

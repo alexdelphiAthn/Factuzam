@@ -76,6 +76,8 @@ type
     btnRecalcularDetalle: TcxButton;
     btnCargarExcel: TcxButton;
     btnExportarInv: TcxButton;
+    btnEnviarRecuento: TcxButton;
+    btnRecogerRecuento: TcxButton;
     cxgrdLineas: TcxGrid;
     tvLineas: TcxGridDBTableView;
     tvLineasLINEA: TcxGridDBColumn;
@@ -192,6 +194,8 @@ type
     // Movs Regularizados
     procedure btnEliminarRegularizacionClick(Sender: TObject);
     procedure btnExportarInvClick(Sender: TObject);
+    procedure btnEnviarRecuentoClick(Sender: TObject);
+    procedure btnRecogerRecuentoClick(Sender: TObject);
 
     // Cargas masivas
     procedure btnCargarPorFamiliaClick(Sender: TObject);
@@ -305,6 +309,7 @@ uses
   inLibLog,
   inLibAppParam,
   inLibInventarioExcel,
+  inLibInventarioNube,
   inMtoPreviewExcel,
   System.Diagnostics,
   inMtoPrincipal, inMtoModalAddBlockInventario;
@@ -2334,6 +2339,114 @@ begin
     Screen.Cursor := crDefault;
     FreeAndNil(Lista);
     FreeAndNil(ListaNuevos);
+  end;
+end;
+
+// ============================================================================
+//   RECUENTO REMOTO CON LA APP (servidor PHP, ver inLibInventarioNube)
+// ============================================================================
+
+procedure TfrmMtoInventarios.btnEnviarRecuentoClick(Sender: TObject);
+var
+  sEmp, sAlm, sSerie, sNumero, sDesc, sMsg: string;
+  idRec: Int64;
+begin
+  if dmmInventarios.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay inventario activo.');
+    Exit;
+  end;
+  if dmmInventarios.unqryTablaG.FieldByName('ESTADO_INV').AsString <>
+     'ABIERTO' then
+  begin
+    ShowMessage('Solo se puede enviar a recuento un inventario ABIERTO.');
+    Exit;
+  end;
+  sEmp    := dmmInventarios.unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString;
+  sAlm    := dmmInventarios.unqryTablaG.FieldByName('CODIGO_ALM_INV').AsString;
+  sSerie  := dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString;
+  sNumero := dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
+  sDesc   := dmmInventarios.unqryTablaG.FieldByName('DESCRIPCION_INV').AsString;
+  if MessageDlg('Se enviará este inventario al servidor para recontarlo con ' +
+       'la app. ¿Continuar?', mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    if EnviarInventario(sEmp, sAlm, sSerie, sNumero, sDesc, 'DIRIGIDO',
+                        idRec, sMsg) then
+    begin
+      oConn.ExecSQL(
+        ' UPDATE fza_inventarios SET ESRECUENTO_REMOTO_INV = ''S'',' +
+        '   INSTANTE_ENVIO_RECUENTO_INV = NOW(),' +
+        '   ID_RECUENTO_REMOTO_INV = :ID' +
+        ' WHERE CODIGO_EMP_INV = :E AND CODIGO_ALM_INV = :A' +
+        '   AND SERIE_INV = :S AND NUMERO_INV = :N',
+        [IntToStr(idRec), sEmp, sAlm, sSerie, sNumero]);
+      dmmInventarios.unqryTablaG.Refresh;
+      ShowMessage('Inventario enviado a recuento (referencia ' +
+                  IntToStr(idRec) + ').');
+    end
+    else
+      ShowMessage('No se pudo enviar: ' + sMsg);
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TfrmMtoInventarios.btnRecogerRecuentoClick(Sender: TObject);
+var
+  sEmp, sAlm, sSerie, sNumero, sMsg: string;
+  idRec: Int64;
+  Lista: TStringList;
+  iNumEv: Integer;
+begin
+  if dmmInventarios.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay inventario activo.');
+    Exit;
+  end;
+  idRec := StrToInt64Def(dmmInventarios.unqryTablaG.FieldByName(
+                           'ID_RECUENTO_REMOTO_INV').AsString, 0);
+  if idRec <= 0 then
+  begin
+    ShowMessage('Este inventario no se ha enviado a recuento todavía.');
+    Exit;
+  end;
+  if dmmInventarios.unqryTablaG.FieldByName('ESTADO_INV').AsString <>
+     'ABIERTO' then
+  begin
+    ShowMessage('Solo se puede recoger sobre un inventario ABIERTO.');
+    Exit;
+  end;
+  sEmp    := dmmInventarios.unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString;
+  sAlm    := dmmInventarios.unqryTablaG.FieldByName('CODIGO_ALM_INV').AsString;
+  sSerie  := dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString;
+  sNumero := dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
+  Screen.Cursor := crHourGlass;
+  Lista := TStringList.Create;
+  try
+    if RecogerRecuento(sEmp, sAlm, sSerie, sNumero, oUser, idRec, Lista,
+                       iNumEv, sMsg) then
+    begin
+      // Volcamos el agregado SKU=CANTIDAD a las físicas, igual que el Excel.
+      if Lista.Count > 0 then
+        dmmInventarios.CargarDesdeListaSkus(Lista);
+      oConn.ExecSQL(
+        ' UPDATE fza_inventarios SET INSTANTE_RECOGIDA_RECUENTO_INV = NOW()' +
+        ' WHERE CODIGO_EMP_INV = :E AND CODIGO_ALM_INV = :A' +
+        '   AND SERIE_INV = :S AND NUMERO_INV = :N',
+        [sEmp, sAlm, sSerie, sNumero]);
+      dmmInventarios.CargarLineasInventario;
+      dmmInventarios.unqryTablaG.Refresh;
+      ShowMessage(Format('Recuento recogido: %d lecturas, %d SKUs. ' +
+        'Revisa las físicas y APLICA cuando quieras.',
+        [iNumEv, Lista.Count]));
+    end
+    else
+      ShowMessage('No se pudo recoger: ' + sMsg);
+  finally
+    FreeAndNil(Lista);
+    Screen.Cursor := crDefault;
   end;
 end;
 

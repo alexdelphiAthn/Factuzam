@@ -38,6 +38,10 @@ type
     procedure AccionLibre(AModo: TModoRecuento);
     procedure IniciarLibre(AModo: TModoRecuento; const AValor: string);
     procedure IniciarPlantilla(AId: Int64);
+    procedure AccionTraspaso;
+    procedure ElegirDestinoTraspaso(const AOrigen: string);
+    procedure IniciarTraspaso(const AOrigen, ADestino: string);
+    procedure OnTraspasoClick(Sender: TObject);
     procedure OnModo1Click(Sender: TObject);
     procedure OnModo2Click(Sender: TObject);
     procedure OnModo3Click(Sender: TObject);
@@ -79,16 +83,17 @@ var
   lblTitulo: TLabel;
 begin
   Self.Caption := 'Recuento Factuzam';
-  // Creados en orden inverso al deseado: Align=Top apila el primero arriba.
-  NuevoBoton('Configuración', OnConfigClick);
-  NuevoBoton('3 · Recoger plantilla de recuento', OnModo3Click);
-  NuevoBoton('2 · Recontar códigos de barras + cantidad', OnModo2Click);
-  NuevoBoton('1 · Recontar códigos de barras', OnModo1Click);
+  // Align=Top: el primero creado queda arriba; este es el orden visible.
   lblTitulo := TLabel.Create(Self);
   lblTitulo.Parent := Self;
   lblTitulo.Align := TAlignLayout.Top;
   lblTitulo.Height := 48;
   lblTitulo.Text := 'Recuento de inventarios';
+  NuevoBoton('1 · Recontar códigos de barras', OnModo1Click);
+  NuevoBoton('2 · Recontar códigos de barras + cantidad', OnModo2Click);
+  NuevoBoton('3 · Recoger plantilla de recuento', OnModo3Click);
+  NuevoBoton('4 · Traspaso entre almacenes', OnTraspasoClick);
+  NuevoBoton('Configuración', OnConfigClick);
 end;
 
 function TfrmMenu.ComprobarConfig: Boolean;
@@ -236,6 +241,106 @@ end;
 procedure TfrmMenu.OnConfigClick(Sender: TObject);
 begin
   TfrmConfig.EditarAsync(Self, nil);
+end;
+
+// ============================================================================
+//   TRASPASO ENTRE ALMACENES (parte del cliente)
+// ============================================================================
+
+procedure TfrmMenu.OnTraspasoClick(Sender: TObject);
+begin
+  AccionTraspaso;
+end;
+
+procedure TfrmMenu.AccionTraspaso;
+var
+  oApi: TRecuentoApi;
+  aCaptions, aValores: TArray<string>;
+  i: Integer;
+begin
+  if ComprobarConfig then
+  begin
+    // TODO: mover la llamada de red a un hilo (TTask) para no bloquear la UI.
+    oApi := TRecuentoApi.Create;
+    try
+      if not oApi.ListarAlmacenes(FAlmacenes) then
+        TDialogService.ShowMessage('Error: ' + oApi.UltimoError)
+      else if Length(FAlmacenes) = 0 then
+        TDialogService.ShowMessage('No hay almacenes sincronizados en el ' +
+          'servidor.')
+      else
+      begin
+        SetLength(aCaptions, Length(FAlmacenes));
+        SetLength(aValores, Length(FAlmacenes));
+        for i := 0 to High(FAlmacenes) do
+        begin
+          aCaptions[i] := FAlmacenes[i].CodigoAlm + ' - ' +
+                          FAlmacenes[i].Nombre;
+          aValores[i] := FAlmacenes[i].CodigoEmp + '|' + FAlmacenes[i].CodigoAlm;
+        end;
+        TfrmSelector.ElegirAsync(Self, 'Almacén ORIGEN', aCaptions, aValores,
+          procedure(AOk: Boolean; AValor: string)
+          begin
+            if AOk and (AValor <> '') then
+              ElegirDestinoTraspaso(AValor);
+          end);
+      end;
+    finally
+      FreeAndNil(oApi);
+    end;
+  end;
+end;
+
+procedure TfrmMenu.ElegirDestinoTraspaso(const AOrigen: string);
+var
+  aCaptions, aValores: TArray<string>;
+  i: Integer;
+begin
+  // Reutilizamos FAlmacenes ya cargado en AccionTraspaso.
+  SetLength(aCaptions, Length(FAlmacenes));
+  SetLength(aValores, Length(FAlmacenes));
+  for i := 0 to High(FAlmacenes) do
+  begin
+    aCaptions[i] := FAlmacenes[i].CodigoAlm + ' - ' + FAlmacenes[i].Nombre;
+    aValores[i] := FAlmacenes[i].CodigoEmp + '|' + FAlmacenes[i].CodigoAlm;
+  end;
+  TfrmSelector.ElegirAsync(Self, 'Almacén DESTINO', aCaptions, aValores,
+    procedure(AOk: Boolean; AValor: string)
+    begin
+      if AOk and (AValor <> '') then
+        IniciarTraspaso(AOrigen, AValor);
+    end);
+end;
+
+procedure TfrmMenu.IniciarTraspaso(const AOrigen, ADestino: string);
+var
+  oApi: TRecuentoApi;
+  aOri, aDes: TArray<string>;
+  idRec: Int64;
+begin
+  aOri := AOrigen.Split(['|']);
+  aDes := ADestino.Split(['|']);
+  if (Length(aOri) = 2) and (Length(aDes) = 2) then
+  begin
+    if SameText(aOri[1], aDes[1]) then
+      TDialogService.ShowMessage('El origen y el destino no pueden ser el ' +
+        'mismo almacén.')
+    else
+    begin
+      oApi := TRecuentoApi.Create;
+      try
+        // El traspaso se cuenta por cantidad (cajas/unidades a mover).
+        if oApi.CrearTraspaso(aOri[0], aOri[1], aDes[1], idRec) then
+          TfrmConteo.IniciarAsync(Self, mrCodigosCantidad, idRec, [],
+            'Traspaso ' + aOri[1] + ' -> ' + aDes[1])
+        else
+          TDialogService.ShowMessage('No se pudo crear el traspaso: ' +
+            oApi.UltimoError);
+      finally
+        FreeAndNil(oApi);
+      end;
+    end;
+  end;
 end;
 
 end.
