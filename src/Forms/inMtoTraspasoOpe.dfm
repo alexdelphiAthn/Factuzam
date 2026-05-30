@@ -80,6 +80,23 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       TabOrder = 1
       Width = 320
     end
+    object lblEmpleado: TcxLabel
+      Left = 16
+      Top = 56
+      Caption = 'Empleado (responsable)'
+    end
+    object txtEmpleado: TcxTextEdit
+      Left = 200
+      Top = 53
+      TabOrder = 2
+      OnExit = txtEmpleadoExit
+      Width = 120
+    end
+    object lblEmpleadoNombre: TcxLabel
+      Left = 330
+      Top = 56
+      Caption = ''
+    end
   end
   object pnlEntrada: TPanel
     Left = 0
