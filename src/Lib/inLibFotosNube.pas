@@ -18,7 +18,7 @@
 {    Contrato de download_foto.php (idéntico a ver_foto.php / upload_foto):    }
 {      GET  ?carpeta_cliente=..&articulo=..&resolucion=real                    }
 {      Header X-API-Key con la clave.                                          }
-{      200 application/zip con los PNG; 4xx application/json {message}.        }
+{      200 application/zip con los PNG; 4xx application/json [message].        }
 {******************************************************************************}
 unit inLibFotosNube;
 
