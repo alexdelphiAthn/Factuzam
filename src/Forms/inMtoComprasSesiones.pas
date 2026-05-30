@@ -779,8 +779,10 @@ begin
         sFile := ElegirFotoRepresentativa(archivos);
         if sFile <> '' then
           oFotos.GuardarSesion(sSerie, sNumero, iLinea, sCodArt, '', sFile);
-        ShowMessage(Format('Descargadas %d foto(s) del articulo %s en la ' +
-          'carpeta de fotos.', [Length(archivos), sCodArt]));
+        // Borrar los PNG temporales extraidos (no dejar huerfanos).
+        LimpiarDescargaTemporal(archivos);
+        ShowMessage(Format('Descargadas %d foto(s) del articulo %s.',
+          [Length(archivos), sCodArt]));
       end;
     end;
   end;

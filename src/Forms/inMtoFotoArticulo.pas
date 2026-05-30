@@ -304,7 +304,7 @@ begin
   // al nivel que muestra el combo (por defecto la profundidad de
   // appNumAtributosFoto, p.ej. articulo/color), igual que "Cambiar foto
   // del grupo": el color es el ultimo segmento del nivel y se elige el PNG
-  // de ese color. Los demas PNG quedan sueltos en appDirFotos.
+  // de ese color. Los demas PNG (y el temporal) se borran tras integrar.
   if FCodigoArt = '' then
     ShowMessage('No hay articulo activo para descargar fotos.')
   else
@@ -338,6 +338,8 @@ begin
       end;
       // Re-resolver y refrescar la imagen que se muestra ahora mismo.
       SetArticuloSku(FCodigoArt, FCodigoSku);
+      // Borrar los PNG temporales extraidos (no dejar huerfanos).
+      LimpiarDescargaTemporal(archivos);
       ShowMessage(Format('Descargadas %d foto(s) del articulo %s.',
                          [Length(archivos), FCodigoArt]));
     end;
