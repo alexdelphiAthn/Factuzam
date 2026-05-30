@@ -32,7 +32,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.StrUtils, System.Generics.Collections, Data.DB,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Imaging.PngImage,
+  Vcl.StdCtrls, Vcl.Imaging.PngImage, Winapi.GDIPOBJ, Winapi.GDIPAPI,
   inMtoFrmBase, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
@@ -89,6 +89,8 @@ type
     // OnDataChange(Field = nil) se recarga la foto via FPadreResolver.
     FHooksDataSource        : TList<TPair<TDataSource, TDataChangeEvent>>;
     FPadreResolver          : TResolverArtSkuProc;
+    FGpImagen               : TGPImage;
+    FRutaFotoActual         : string;
     procedure CargarFotoActual;
     function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
@@ -97,7 +99,9 @@ type
     procedure DesengancharDataSource(ADataSource: TDataSource);
     procedure OnPadreDataChange(Sender: TObject; Field: TField);
     procedure DescargarFotosDeNube;
+    procedure PintarFotoGDIPlus;
   protected
+    procedure Resize; override;
     // Auto-limpieza si alguno de los DataSources hookeados se libera
     // antes que nosotros (al cerrar el Mto que los poseia). Usa el
     // mecanismo nativo FreeNotification de la VCL.
@@ -154,10 +158,11 @@ begin
   // boton o el combo, la ventana se activa normalmente y necesita
   // procesar F11 / Alt+F12.
   Self.KeyPreview  := True;
-  rgResolucion.ItemIndex := 0;    // 300 por defecto
+  rgResolucion.ItemIndex := 2;    // 'real' por defecto (mejor calidad)
   FUltimaInfo.Clear;
   FHooksDataSource := TList<TPair<TDataSource, TDataChangeEvent>>.Create;
   FPadreResolver   := nil;
+  FGpImagen        := nil;
   // Por defecto el panel de controles esta encogido.
   pnlControles.Visible := False;
   AjustarBotonToggle;
@@ -182,6 +187,7 @@ end;
 procedure TfrmFotoArticulo.FormDestroy(Sender: TObject);
 begin
   DesengancharDataChange;
+  FreeAndNil(FGpImagen);
   FreeAndNil(FHooksDataSource);
   if Assigned(FLayoutLoader) then
     FreeAndNil(FLayoutLoader);
@@ -453,22 +459,73 @@ begin
 end;
 
 procedure TfrmFotoArticulo.CargarFotoActual;
-var
-  sRuta : string;
-  png   : TPngImage;
 begin
+  FreeAndNil(FGpImagen);
+  FRutaFotoActual := '';
   imgFoto.Picture.Assign(nil);
   if not FUltimaInfo.Encontrada then Exit;
-  sRuta := oFotos.RutaFoto(FUltimaInfo, ResolucionElegida);
-  if sRuta = '' then Exit;
-  // Las tres copias son siempre PNG.
-  png := TPngImage.Create;
-  try
-    png.LoadFromFile(sRuta);
-    imgFoto.Picture.Assign(png);
-  finally
-    FreeAndNil(png);
+  FRutaFotoActual := oFotos.RutaFoto(FUltimaInfo, ResolucionElegida);
+  if FRutaFotoActual = '' then Exit;
+  // Las tres copias son PNG. Cargamos via GDI+ y pintamos con remuestreo
+  // bicubico de alta calidad (escala a la medida del control sin pixelar).
+  FGpImagen := TGPImage.Create(FRutaFotoActual);
+  if (FGpImagen = nil) or (FGpImagen.GetLastStatus <> Ok) then
+  begin
+    FreeAndNil(FGpImagen);
+    Exit;
   end;
+  PintarFotoGDIPlus;
+end;
+
+procedure TfrmFotoArticulo.PintarFotoGDIPlus;
+var
+  bmp    : TBitmap;
+  gpGfx  : TGPGraphics;
+  cw, ch, iw, ih, dw, dh, dx, dy: Integer;
+  rEscala: Double;
+begin
+  if FGpImagen = nil then Exit;
+  cw := imgFoto.Width;
+  ch := imgFoto.Height;
+  iw := Integer(FGpImagen.GetWidth);
+  ih := Integer(FGpImagen.GetHeight);
+  if (cw < 1) or (ch < 1) or (iw < 1) or (ih < 1) then Exit;
+  // Encaje proporcional dentro del control, centrado (sin recortar).
+  if (cw / iw) <= (ch / ih) then
+    rEscala := cw / iw
+  else
+    rEscala := ch / ih;
+  dw := Round(iw * rEscala);
+  if dw < 1 then dw := 1;
+  dh := Round(ih * rEscala);
+  if dh < 1 then dh := 1;
+  dx := (cw - dw) div 2;
+  dy := (ch - dh) div 2;
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(cw, ch);
+    bmp.Canvas.Brush.Color := clBtnFace;
+    bmp.Canvas.FillRect(Rect(0, 0, cw, ch));
+    gpGfx := TGPGraphics.Create(bmp.Canvas.Handle);
+    try
+      gpGfx.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+      gpGfx.SetPixelOffsetMode(PixelOffsetModeHighQuality);
+      gpGfx.SetSmoothingMode(SmoothingModeHighQuality);
+      gpGfx.DrawImage(FGpImagen, dx, dy, dw, dh);
+    finally
+      gpGfx.Free;
+    end;
+    imgFoto.Picture.Assign(bmp);
+  finally
+    bmp.Free;
+  end;
+end;
+
+procedure TfrmFotoArticulo.Resize;
+begin
+  inherited;
+  PintarFotoGDIPlus;
 end;
 
 procedure TfrmFotoArticulo.rgResolucionPropertiesEditValueChanged(
