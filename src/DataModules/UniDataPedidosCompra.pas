@@ -60,7 +60,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, inLibtb,
+  inLibGlobalVar, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics,
   inMtoPedidosCompra,
   inLibPedidosCompra;
@@ -212,36 +212,43 @@ end;
 procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
 var
-  qMax: TUniQuery;
-  iMax: Integer;
+  iNuevaLinea : Integer;
+  sSerie      : string;
+  sNumero     : string;
 begin
   inherited;
+  // Asignacion de LINEA_PEDCLIN (clave secundaria, NOT NULL sin default).
+  // Sin esto, cxGrid disparaba Post al navegar fuera de la nueva fila y
+  // CheckRequiredFields lanzaba 'LINEA_PEDCLIN must have a value'. Mismo
+  // patron que albaranes / sesiones de compra: el helper hace un UPDATE
+  // atomico de CONTADOR_LINEAS_PEDC +10 sobre la cabecera y devuelve el
+  // nuevo valor, sin la condicion de carrera del MAX()+10 (dos altas en
+  // memoria sin Post intermedio repetian linea). La materializacion ya
+  // mantiene el contador, asi que ambos caminos quedan coherentes. Formato
+  // '0010','0020',... (4 digitos LPAD) para casar con las lineas
+  // materializadas y respetar el ORDER BY LINEA_PEDCLIN (texto).
+  sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+  sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+  iNuevaLinea := GetSiguienteLineaDoc(CONT_PEDIDOS_COMPRA, sSerie, sNumero);
+  if iNuevaLinea = 0 then
+  begin
+    // Cabecera aun no persistida (pedido nuevo sin NUMERO real): fallback
+    // al contador en memoria +10. StrToIntDef y no AsInteger: el contador
+    // es varchar NULL en alta y AsInteger sobre '' lanzaria EConvertError.
+    iNuevaLinea := StrToIntDef(
+      unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString, 0) + 10;
+    if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+      unqryTablaG.Edit;
+    unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString :=
+      Format('%.8d', [iNuevaLinea]);
+  end;
   with unqryPedidosCompraLineas do
   begin
     FieldByName('NUMERO_PEDC_PEDCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     FieldByName('SERIE_PEDC_PEDCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-    // Auto-asignar LINEA_PEDCLIN al siguiente multiplo de 10 sobre el
-    // maximo actual del pedido. Sin esto, cxGrid disparaba Post al
-    // navegar fuera de la nueva fila y CheckRequiredFields lanzaba
-    // 'LINEA_PEDCLIN must have a value'.
-    qMax := TUniQuery.Create(nil);
-    try
-      qMax.Connection := inLibGlobalVar.oConn;
-      qMax.SQL.Text :=
-        'SELECT IFNULL(MAX(CAST(LINEA_PEDCLIN AS UNSIGNED)),0) AS M ' +
-        '  FROM fza_pedidos_compra_lineas ' +
-        ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
-        '   AND NUMERO_PEDC_PEDCLIN = :n';
-      qMax.ParamByName('s').AsString := FieldByName('SERIE_PEDC_PEDCLIN').AsString;
-      qMax.ParamByName('n').AsString := FieldByName('NUMERO_PEDC_PEDCLIN').AsString;
-      qMax.Open;
-      iMax := qMax.FieldByName('M').AsInteger;
-    finally
-      FreeAndNil(qMax);
-    end;
-    FieldByName('LINEA_PEDCLIN').AsString := Format('%.4d', [iMax + 10]);
+    FieldByName('LINEA_PEDCLIN').AsString := Format('%.4d', [iNuevaLinea]);
     FieldByName('CANTIDAD_PEDCLIN').AsFloat := 1;
     FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat := 0;
     // Por defecto la linea hereda el almacen de la cabecera; el usuario
@@ -262,6 +269,26 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
+  // hace Post automatico al navegar con flechas (OptionsData.Appending); si
+  // la linea es un placeholder vacio que el usuario creo sin querer, se
+  // descarta con Cancel diferido + Abort en vez de grabar una linea basura
+  // (y disparar en AfterPost un pendiente-de-recibir bogus). Mismo patron
+  // que albaranes / sesiones de compra.
+  if (Trim(unqryPedidosCompraLineas.FieldByName(
+             'CODIGO_ART_PEDCLIN').AsString) = '') and
+     (Trim(unqryPedidosCompraLineas.FieldByName(
+             'CODIGO_UNIDAD_PEDCLIN').AsString) = '') then
+  begin
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        if unqryPedidosCompraLineas.Active and
+           (unqryPedidosCompraLineas.State in [dsEdit, dsInsert]) then
+          unqryPedidosCompraLineas.Cancel;
+      end);
+    Abort;
+  end;
   with unqryPedidosCompraLineas do
   begin
     if (FindField('CANTIDAD_PEDCLIN') <> nil) and
