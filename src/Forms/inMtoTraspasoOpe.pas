@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoTraspasoOpe                                              }
 {    Tipo:       Formulario (Mto)                                              }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {   Fecha:       30/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -10,8 +10,9 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Operativa de traspasos entre almacenes (TPV, F3 del menú de caja).        }
-{    Arriba ALMACÉN ORIGEN / ALMACÉN DESTINO; debajo el grid de líneas;        }
-{    F12 graba con ticket y F11 sin ticket. Primer slice: traspaso directo.    }
+{    Tres modos en una barra superior: Traspaso (origen propio -> destino      }
+{    ESTANDAR), Solicitar (pido a otro almacén) y Atender (sirvo una           }
+{    solicitud que me han hecho). F12 con ticket / F11 sin ticket.             }
 {    Ver DESARROLLOS EN CURSO/traspasos_caja.md.                               }
 {******************************************************************************}
 unit inMtoTraspasoOpe;
@@ -29,6 +30,10 @@ uses
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
+    pnlModos: TPanel;
+    btnModoTraspaso: TcxButton;
+    btnModoSolicitar: TcxButton;
+    btnModoAtender: TcxButton;
     pnlTop: TPanel;
     lblOrigen: TcxLabel;
     txtOrigen: TcxTextEdit;
@@ -50,6 +55,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
                           Shift: TShiftState);
+    procedure btnModoClick(Sender: TObject);
     procedure btnAnadirClick(Sender: TObject);
     procedure btnQuitarClick(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
@@ -58,16 +64,21 @@ type
     FDatos: TdmTraspaso;
     FGrid: TcxGrid;
     FView: TcxGridDBTableView;
-    FAlmDestinoCodigos: TStringList;
+    FComboCodigos: TStringList;
     FEmpresa: string;
     FAlmacen: string;
     FCaja: string;
+    FFecha: TDateTime;
     FModo: TModoTraspaso;
     procedure ConstruirGrid;
+    procedure AplicarModo(AModo: TModoTraspaso);
+    procedure CargarCombo;
     procedure CargarAlmacenesDestino;
     function DestinoSeleccionado: string;
     procedure ActualizarTotal;
     procedure EjecutarTraspaso(AConTicket: Boolean);
+    procedure EnviarSolicitud;
+    procedure CargarSolicitudSeleccionada;
   public
     procedure PrepararValores(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
                               ACaja: string; AFecha: TDateTime);
@@ -84,14 +95,14 @@ procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
   inherited;
   KeyPreview := True;
-  FAlmDestinoCodigos := TStringList.Create;
+  FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self);
   ConstruirGrid;
 end;
 
 procedure TfrmMtoOpeTraspaso.FormDestroy(Sender: TObject);
 begin
-  FreeAndNil(FAlmDestinoCodigos);
+  FreeAndNil(FComboCodigos);
   // FDatos lo libera el Owner (Self) automáticamente.
   inherited;
 end;
@@ -116,25 +127,69 @@ procedure TfrmMtoOpeTraspaso.PrepararValores(AModo: TModoTraspaso;
                           const AEmpresa, AAlmacen, ACaja: string;
                           AFecha: TDateTime);
 begin
-  FModo := AModo;
   FEmpresa := AEmpresa;
   FAlmacen := AAlmacen;
   FCaja := ACaja;
-  FDatos.PrepararNuevo(AModo, AEmpresa, AAlmacen, ACaja, AFecha);
-  txtOrigen.Text := AAlmacen;
-  CargarAlmacenesDestino;
+  FFecha := AFecha;
+  AplicarModo(AModo);
+end;
+
+procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
+begin
+  FModo := AModo;
+  FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
+  txtOrigen.Text := FAlmacen;
+  txtSku.Enabled := AModo <> mtAtender;
+  spnCantidad.Enabled := AModo <> mtAtender;
+  btnF11.Visible := AModo <> mtSolicitar;
+  case AModo of
+    mtTraspaso:
+    begin
+      lblOrigen.Caption := 'ALMAC' + #201 + 'N ORIGEN';
+      lblDestino.Caption := 'ALMAC' + #201 + 'N DESTINO';
+      btnAnadir.Caption := 'A' + #241 + 'adir (Intro)';
+      btnF12.Caption := 'F12 ' + #183 + ' Con ticket';
+    end;
+    mtSolicitar:
+    begin
+      lblOrigen.Caption := 'ALMAC' + #201 + 'N DESTINO (yo)';
+      lblDestino.Caption := 'ALMAC' + #201 + 'N ORIGEN (a qui' + #233 + 'n pido)';
+      btnAnadir.Caption := 'A' + #241 + 'adir (Intro)';
+      btnF12.Caption := 'F12 ' + #183 + ' Enviar solicitud';
+    end;
+    mtAtender:
+    begin
+      lblOrigen.Caption := 'ALMAC' + #201 + 'N ORIGEN (yo)';
+      lblDestino.Caption := 'SOLICITUD A ATENDER';
+      btnAnadir.Caption := 'Cargar solicitud';
+      btnF12.Caption := 'F12 ' + #183 + ' Servir con ticket';
+    end;
+  end;
+  CargarCombo;
   cboDestino.ItemIndex := -1;
   ActualizarTotal;
-  if txtSku.CanFocus then
-    txtSku.SetFocus;
+end;
+
+procedure TfrmMtoOpeTraspaso.btnModoClick(Sender: TObject);
+begin
+  AplicarModo(TModoTraspaso((Sender as TComponent).Tag));
+end;
+
+procedure TfrmMtoOpeTraspaso.CargarCombo;
+begin
+  cboDestino.Properties.Items.Clear;
+  FComboCodigos.Clear;
+  if FModo = mtAtender then
+    FDatos.CargarSolicitudesPendientes(cboDestino.Properties.Items,
+                                       FComboCodigos)
+  else
+    CargarAlmacenesDestino;
 end;
 
 procedure TfrmMtoOpeTraspaso.CargarAlmacenesDestino;
 var
   q: TUniQuery;
 begin
-  cboDestino.Properties.Items.Clear;
-  FAlmDestinoCodigos.Clear;
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
@@ -148,7 +203,7 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      FAlmDestinoCodigos.Add(q.FieldByName('CODIGO_ALM_ALM').AsString);
+      FComboCodigos.Add(q.FieldByName('CODIGO_ALM_ALM').AsString);
       cboDestino.Properties.Items.Add(
         q.FieldByName('CODIGO_ALM_ALM').AsString + ' - ' +
         q.FieldByName('NOMBRE_ALM_ALM').AsString);
@@ -162,8 +217,8 @@ end;
 function TfrmMtoOpeTraspaso.DestinoSeleccionado: string;
 begin
   if (cboDestino.ItemIndex >= 0) and
-     (cboDestino.ItemIndex < FAlmDestinoCodigos.Count) then
-    Result := FAlmDestinoCodigos[cboDestino.ItemIndex]
+     (cboDestino.ItemIndex < FComboCodigos.Count) then
+    Result := FComboCodigos[cboDestino.ItemIndex]
   else
     Result := '';
 end;
@@ -199,19 +254,94 @@ var
   sSku: string;
   dCantidad: Double;
 begin
-  sSku := Trim(txtSku.Text);
-  dCantidad := spnCantidad.Value;
-  if (sSku = '') or (dCantidad <= 0) then
-    ShowMessage('Indica un SKU y una cantidad mayor que cero.')
-  else if FDatos.AnadirLinea(sSku, dCantidad) then
+  if FModo = mtAtender then
+    CargarSolicitudSeleccionada
+  else
   begin
-    txtSku.Clear;
-    ActualizarTotal;
-    if txtSku.CanFocus then
-      txtSku.SetFocus;
+    sSku := Trim(txtSku.Text);
+    dCantidad := spnCantidad.Value;
+    if (sSku = '') or (dCantidad <= 0) then
+      ShowMessage('Indica un SKU y una cantidad mayor que cero.')
+    else if FDatos.AnadirLinea(sSku, dCantidad) then
+    begin
+      txtSku.Clear;
+      ActualizarTotal;
+      if txtSku.CanFocus then
+        txtSku.SetFocus;
+    end
+    else
+      ShowMessage('Artículo no encontrado o no es de stock: ' + sSku);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.CargarSolicitudSeleccionada;
+var
+  sCod, sNum, sSer: string;
+  iSep: Integer;
+begin
+  sCod := DestinoSeleccionado;
+  if sCod = '' then
+    ShowMessage('Selecciona una solicitud pendiente.')
+  else
+  begin
+    iSep := Pos('|', sCod);
+    sNum := Copy(sCod, 1, iSep - 1);
+    sSer := Copy(sCod, iSep + 1, Length(sCod));
+    if FDatos.CargarSolicitud(sNum, sSer) then
+    begin
+      txtOrigen.Text :=
+        FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+      ActualizarTotal;
+    end
+    else
+      ShowMessage('No se pudo cargar la solicitud.');
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.EnviarSolicitud;
+var
+  sNum, sSer, sOrigen: string;
+begin
+  sOrigen := DestinoSeleccionado;
+  if sOrigen = '' then
+    ShowMessage('Selecciona el almacén al que solicitas.')
+  else if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
+  begin
+    ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
+    AplicarModo(mtSolicitar);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.EjecutarTraspaso(AConTicket: Boolean);
+var
+  sNumOp, sDestino, sNumSol, sSerSol: string;
+begin
+  if FModo = mtAtender then
+  begin
+    sDestino := FDatos.cdsCabecera.FieldByName('CODIGO_ALM_DESTINO').AsString;
+    sNumSol := FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString;
+    sSerSol := FDatos.cdsCabecera.FieldByName('SERIE_SOL').AsString;
+    if sDestino = '' then
+      ShowMessage('Carga primero una solicitud (botón Cargar solicitud).')
+    else if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
+    begin
+      // TODO: si AConTicket, imprimir el albarán de traspaso.
+      ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.', [sNumOp]));
+      AplicarModo(mtAtender);
+    end;
   end
   else
-    ShowMessage('Artículo no encontrado o no es de stock: ' + sSku);
+  begin
+    sDestino := DestinoSeleccionado;
+    if sDestino = '' then
+      ShowMessage('Selecciona el almacén destino.')
+    else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
+    begin
+      // TODO: si AConTicket, imprimir el albarán de traspaso.
+      ShowMessage(Format('Traspaso %s grabado correctamente.', [sNumOp]));
+      AplicarModo(mtTraspaso);
+    end;
+  end;
 end;
 
 procedure TfrmMtoOpeTraspaso.btnQuitarClick(Sender: TObject);
@@ -223,30 +353,18 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeTraspaso.EjecutarTraspaso(AConTicket: Boolean);
-var
-  sNumOp, sDestino: string;
-begin
-  sDestino := DestinoSeleccionado;
-  if sDestino = '' then
-    ShowMessage('Selecciona el almacén destino.')
-  else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
-  begin
-    // TODO: si AConTicket, imprimir el albarán de traspaso
-    // (inLibGenerarTicketBD), igual que el ticket de venta.
-    ShowMessage(Format('Traspaso %s grabado correctamente.', [sNumOp]));
-    PrepararValores(FModo, FEmpresa, FAlmacen, FCaja, Date);
-  end;
-end;
-
 procedure TfrmMtoOpeTraspaso.btnF11Click(Sender: TObject);
 begin
-  EjecutarTraspaso(False);
+  if FModo <> mtSolicitar then
+    EjecutarTraspaso(False);
 end;
 
 procedure TfrmMtoOpeTraspaso.btnF12Click(Sender: TObject);
 begin
-  EjecutarTraspaso(True);
+  if FModo = mtSolicitar then
+    EnviarSolicitud
+  else
+    EjecutarTraspaso(True);
 end;
 
 procedure TfrmMtoOpeTraspaso.FormKeyDown(Sender: TObject; var Key: Word;

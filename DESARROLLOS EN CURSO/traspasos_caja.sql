@@ -79,3 +79,20 @@ CREATE TABLE IF NOT EXISTS `fza_traspasos_solicitudes_lineas` (
   PRIMARY KEY (`NUMERO_TRSOL_TRSOLLIN`,`SERIE_TRSOL_TRSOLLIN`,`LINEA_TRSOLLIN`),
   INDEX `IDX_TRSOLLIN_SKU` (`CODIGO_UNIDAD_TRSOLLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------------------------------------------------------
+-- Contador global de solicitudes de traspaso (TIPO_DOC = 'TS')
+-- Lo consume inLibtb.ObtenerSiguienteContador('TS') (SP PRC_GET_NEXT_CONT).
+-- Idempotente: sólo se siembra si no existe ya la fila global ('TS','-','-').
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_contadores`
+  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`,
+   `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_ALTA`, `USUARIO_ALTA`,
+   `USUARIO_MODIF`)
+SELECT 'TS', '-', '-', 0, 10, 'S', 'S', NOW(), 'SISTEMA', 'SISTEMA'
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_contadores`
+    WHERE `TIPO_DOC_CON` = 'TS'
+      AND `EMPRESA_CON` = '-'
+      AND `SERIE_CON` = '-');
+
