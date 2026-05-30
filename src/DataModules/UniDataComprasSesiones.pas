@@ -166,6 +166,7 @@ uses
   inLibAppParam,
   inLibtb,
   inLibComprasSesiones,
+  inLibComprasSesionesMaterializar,
   inLibContadorLineas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -431,6 +432,12 @@ begin
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'KIT'
   else
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'ESTANDAR';
+  // Saneo del color del proveedor al confirmar la linea: el usuario ve ya el
+  // token real que ira al SKU (mayusculas, espacios->'-', simbolos prohibidos).
+  // Misma regla que aplica el materializador (SanearColorSku) y la foto.
+  if Trim(unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString) <> '' then
+    unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString :=
+      SanearColorSku(unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString);
   // Detección de duplicado
   if unqrySesionLin.FieldByName(
     'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
