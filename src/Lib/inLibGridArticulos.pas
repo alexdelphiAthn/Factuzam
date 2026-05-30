@@ -29,11 +29,11 @@ unit inLibGridArticulos;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Variants, Data.DB, Uni,
-  Vcl.Controls,
+  System.SysUtils, System.Classes, System.Variants, System.Types,
+  System.Generics.Collections, Data.DB, Uni, Vcl.Controls, Vcl.Dialogs,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
-  inLibArticulosValidador, inLibArticulosAtributosLookup;
+  inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
 
 type
   // Nombres de los campos del cds que usa la controladora. Cada host los
@@ -68,13 +68,12 @@ type
     procedure CrearColumnasAtributo;
     procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
                                var ErrorText: TCaption; var Error: Boolean);
-    procedure AtributoChange(Sender: TObject);
-    procedure ViewInitEdit(Sender: TcxCustomGridTableView;
-                           AItem: TcxCustomGridTableItem;
-                           AEdit: TcxCustomEdit);
+    procedure AtributoButtonClick(Sender: TObject; AButtonIndex: Integer);
+    procedure AplicarSkuYAvisar;
     function ColumnaPorTag(ATag: Integer): TcxGridDBColumn;
     function GenerarSku: string;
     procedure ActualizarColumnasAtributo(const ACodArt: string);
+    procedure AutoCompletarAtributosUnicos(const ACodArt: string);
     function CdsEditando: Boolean;
   public
     constructor Create(AConn: TUniConnection; AView: TcxGridDBTableView;
@@ -128,7 +127,6 @@ begin
   finally
     FView.EndUpdate;
   end;
-  FView.OnInitEdit := ViewInitEdit;
 end;
 
 procedure TGridArticulosLineas.CrearColumnaArticulo;
@@ -161,11 +159,20 @@ begin
     Col.Caption := '-';
     Col.Visible := False;
     Col.Width := 90;
-    Col.PropertiesClass := TcxComboBoxProperties;
-    with TcxComboBoxProperties(Col.Properties) do
+    // Boton en la celda que abre la paleta (listbox con swatches), como la
+    // caja. No usamos combo: el editor combo in-place del cxGrid se desparenta
+    // y lanza EInvalidOperation.
+    Col.PropertiesClass := TcxButtonEditProperties;
+    with TcxButtonEditProperties(Col.Properties) do
     begin
-      DropDownListStyle := lsFixedList;
-      OnChange := AtributoChange;
+      ReadOnly := True;
+      Buttons.Clear;
+      with Buttons.Add do
+      begin
+        Default := True;
+        Kind := bkEllipsis;
+      end;
+      OnButtonClick := AtributoButtonClick;
     end;
     FColAtributo[i] := Col;
   end;
@@ -238,6 +245,42 @@ begin
   end;
 end;
 
+// Si algun atributo (talla/color) tiene un unico valor en los SKUs del
+// articulo, lo fija solo; si con eso quedan todos resueltos, cierra el SKU y
+// avisa al host (igual que la caja resuelve un articulo de una sola variante).
+procedure TGridArticulosLineas.AutoCompletarAtributosUnicos(
+  const ACodArt: string);
+var
+  i, n: Integer;
+  Avs: TArray<TArticuloAtributoValor>;
+  sSku: string;
+  bTodos: Boolean;
+begin
+  n := FCds.FieldByName(FCampos.NumAtributos).AsInteger;
+  if n = 0 then
+    Exit;
+  bTodos := True;
+  for i := 1 to n do
+  begin
+    if FCds.FieldByName(FCampos.AttrValor[i]).AsString = '' then
+    begin
+      Avs := FLookup.ObtenerAvsEnSkus(ACodArt, i);
+      if Length(Avs) = 1 then
+        FCds.FieldByName(FCampos.AttrValor[i]).AsString := Avs[0].Valor
+      else
+        bTodos := False;
+    end;
+  end;
+  if bTodos then
+  begin
+    sSku := GenerarSku;
+    FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
+    if Assigned(FOnResuelto) then
+      FOnResuelto(ACodArt, sSku,
+                  FCds.FieldByName(FCampos.Descripcion).AsString, True);
+  end;
+end;
+
 function TGridArticulosLineas.ResolverEntrada(const AEntrada: string): Boolean;
 var
   Val: TArticulosValidador;
@@ -266,14 +309,17 @@ begin
   FCds.FieldByName(FCampos.CodigoArt).AsString := sCodArt;
   FCds.FieldByName(FCampos.Descripcion).AsString := sDesc;
   if bCompleto then
-    FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku
+  begin
+    FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
+    if Assigned(FOnResuelto) then
+      FOnResuelto(sCodArt, sSku, sDesc, True);
+  end
   else
+  begin
     FCds.FieldByName(FCampos.CodigoUnidad).AsString := sCodArt;
-  // Columnas de talla/color segun el articulo
-  ActualizarColumnasAtributo(sCodArt);
-  if Assigned(FOnResuelto) then
-    FOnResuelto(sCodArt, FCds.FieldByName(FCampos.CodigoUnidad).AsString,
-                sDesc, bCompleto);
+    ActualizarColumnasAtributo(sCodArt);
+    AutoCompletarAtributosUnicos(sCodArt);
+  end;
   Result := True;
 end;
 
@@ -287,17 +333,12 @@ begin
     DisplayValue := FCds.FieldByName(FCampos.CodigoArt).AsString;
 end;
 
-procedure TGridArticulosLineas.AtributoChange(Sender: TObject);
+procedure TGridArticulosLineas.AplicarSkuYAvisar;
 var
-  Edit: TcxCustomEdit;
   sSku, sCodArt, sDesc: string;
   n: Integer;
   bCompleto: Boolean;
 begin
-  Edit := Sender as TcxCustomEdit;
-  if not CdsEditando then
-    Exit;
-  Edit.PostEditValue;
   sCodArt := FCds.FieldByName(FCampos.CodigoArt).AsString;
   sDesc := FCds.FieldByName(FCampos.Descripcion).AsString;
   sSku := GenerarSku;
@@ -310,34 +351,74 @@ begin
     FOnResuelto(sCodArt, sSku, sDesc, bCompleto);
 end;
 
-// Carga, por fila, los valores del desplegable de cada columna de atributo
-// con los AV validos del articulo de esa fila.
-procedure TGridArticulosLineas.ViewInitEdit(Sender: TcxCustomGridTableView;
-                                            AItem: TcxCustomGridTableItem;
-                                            AEdit: TcxCustomEdit);
+// Click en el boton de una columna de atributo: abre la paleta (listbox con
+// swatches) con los AV validos del articulo y aplica el elegido. Mismo flujo
+// que inMtoCajaOpe.tvLineasOpeAvButtonClick (sin combo in-place, que se
+// desparenta y lanza EInvalidOperation).
+procedure TGridArticulosLineas.AtributoButtonClick(Sender: TObject;
+                                                   AButtonIndex: Integer);
 var
-  iTag: Integer;
-  sCodArt: string;
+  Col: TcxGridColumn;
+  Orden, i, ScrX, ScrY, WidHint: Integer;
+  sArtPadre, sAvActual, sNombreAtb, sIdVa, sAvNuevo: string;
   Avs: TArray<TArticuloAtributoValor>;
-  Combo: TcxComboBox;
-  j: Integer;
+  AvsStr: TArray<string>;
+  Mapa: TDictionary<string, string>;
 begin
-  iTag := AItem.Tag;
-  if (iTag < 1) or (iTag > 5) then
+  Col := FView.Controller.FocusedColumn;
+  if Col = nil then
     Exit;
-  if not (AEdit is TcxComboBox) then
+  Orden := Col.Tag;
+  if (Orden < 1) or (Orden > 5) then
     Exit;
-  Combo := TcxComboBox(AEdit);
-  Combo.Properties.Items.Clear;
-  sCodArt := FCds.FieldByName(FCampos.CodigoArt).AsString;
-  if sCodArt = '' then
+  if (not FCds.Active) or FCds.IsEmpty then
     Exit;
-  // Solo los AV que el articulo tiene en sus SKUs (orden visual = iTag), para
-  // que el desplegable no muestre colores/tallas de otros articulos y el SKU
-  // generado cuadre contra uno real.
-  Avs := FLookup.ObtenerAvsEnSkus(sCodArt, iTag);
-  for j := 0 to High(Avs) do
-    Combo.Properties.Items.Add(Avs[j].Valor);
+  sArtPadre := FCds.FieldByName(FCampos.CodigoArt).AsString;
+  sAvActual := FCds.FieldByName(FCampos.AttrValor[Orden]).AsString;
+  sNombreAtb := FCds.FieldByName(FCampos.AttrNombre[Orden]).AsString;
+  Avs := FLookup.ObtenerAvsEnSkus(sArtPadre, Orden);
+  if Length(Avs) = 0 then
+  begin
+    ShowMessage('No hay valores definidos para este atributo.');
+    Exit;
+  end;
+  SetLength(AvsStr, Length(Avs));
+  for i := 0 to High(Avs) do
+    AvsStr[i] := Avs[i].Valor;
+  sIdVa := '';
+  Mapa := ObtenerMapaAtributosGlobal;
+  if Mapa <> nil then
+    Mapa.TryGetValue(UpperCase(Trim(sNombreAtb)), sIdVa);
+  // Posicion bajo el editor; si el editor in-place llega sin Parent,
+  // auto-centrar (evita EInvalidOperation en ClientToScreen).
+  ScrX := -1;
+  ScrY := -1;
+  WidHint := 120;
+  if (Sender is TWinControl) and TWinControl(Sender).HasParent then
+    try
+      ScrX := TWinControl(Sender).ClientToScreen(
+                Point(0, TWinControl(Sender).Height)).X;
+      ScrY := TWinControl(Sender).ClientToScreen(
+                Point(0, TWinControl(Sender).Height)).Y;
+      WidHint := TWinControl(Sender).Width;
+    except
+      on E: EInvalidOperation do
+      begin
+        ScrX := -1;
+        ScrY := -1;
+        WidHint := 120;
+      end;
+    end;
+  if not SeleccionarAvConPaleta(sIdVa, AvsStr, sAvActual, sAvNuevo,
+                                ScrX, ScrY, WidHint) then
+    Exit;
+  if FCds.State = dsBrowse then
+    FCds.Edit;
+  if FCds.State in [dsEdit, dsInsert] then
+  begin
+    FCds.FieldByName(FCampos.AttrValor[Orden]).AsString := sAvNuevo;
+    AplicarSkuYAvisar;
+  end;
 end;
 
 end.
