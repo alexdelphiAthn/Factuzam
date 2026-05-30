@@ -5,8 +5,9 @@ API REST en PHP plano (estilo `download_foto.php`) sobre la BBDD MySQL de
 PHP 8.x, PDO MySQL, HTTPS (Let's Encrypt), sin frameworks ni procesos largos.
 
 > Acompaña a `recuento_inventarios_app.md` (diseño general) y a
-> `recuento_inventarios_servidor.sql` (esquema). Esto es el contrato + los
-> esqueletos; cuando se apruebe se sube a una carpeta del hosting.
+> `recuento_inventarios_servidor.sql` (esquema). Este `.md` es el contrato; los
+> **ficheros reales y deployables están en `recuento_servidor/`** (incluye
+> `inv_reabrir.php` y soporte de traspaso vía `tipo` en `inv_recuentos`).
 
 ## 1. Estructura de ficheros
 
