@@ -294,7 +294,7 @@ begin
     '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
     ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
     '   AND a.TIPO_ART = ''ESTANDAR''' +
-    ' ORDER BY s.CODIGO_UNIDAD_SKU';
+    ' ORDER BY STOCK DESC, s.CODIGO_UNIDAD_SKU';
   FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
   FBusqDs := TDataSource.Create(nil);
   FBusqDs.DataSet := FBusqQry;
@@ -440,7 +440,7 @@ begin
       '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
       '  FROM fza_articulos a' +
       ' WHERE a.ESACTIVO_ART = ''S'' AND a.TIPO_ART = ''ESTANDAR''' +
-      ' ORDER BY a.CODIGO_ART_ART';
+      ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
     Q.ParamByName('ALM').AsString := FAlmacenStock;
     Q.Open;
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de artículos', Q,
