@@ -388,11 +388,11 @@ begin
         Q.SQL.Text :=
           'SELECT CODIGO_UNIDAD_MOV, CANTIDAD_MOV' +
           '  FROM fza_movimientos_almacen' +
-          ' WHERE CODIGO_EMP_MOV = :EMP AND CODIGO_ALM_MOV = :ALM' +
+          ' WHERE CODIGO_EMP_MOV = :EMP AND CODIGO_ALM_DOC_MOV = :ALM' +
           '   AND CODIGO_CAJA_DOC_MOV = :CAJA' +
           '   AND NUMERO_OPERACION_DOC_MOV = :NUMOP' +
           '   AND TIPO_MOV = ''S''' +
-          ' ORDER BY LINEA_DOC_MOV';
+          ' ORDER BY LINEA_MOV';
         Q.ParamByName('EMP').AsString := AEmpresa;
         Q.ParamByName('ALM').AsString := AAlmacen;
         Q.ParamByName('CAJA').AsString := ACaja;

@@ -114,4 +114,5 @@ VALUES
   ('Todos', 'caja.devolverArticulo',     'S', 'Realizar devolución de artículo',           NOW(), 'SISTEMA'),
   ('Todos', 'caja.abrirCajon',           'S', 'Abrir cajón sin venta',                     NOW(), 'SISTEMA'),
   ('Todos', 'caja.entradaCambio',        'S', 'Realizar entrada de cambio',                NOW(), 'SISTEMA'),
-  ('Todos', 'caja.gastoCaja',            'S', 'Registrar gasto de caja',                   NOW(), 'SISTEMA');
+  ('Todos', 'caja.gastoCaja',            'S', 'Registrar gasto de caja',                   NOW(), 'SISTEMA'),
+  ('Todos', 'caja.verCoste',             'S', 'Ver coste/importe en traspasos y caja',     NOW(), 'SISTEMA');
