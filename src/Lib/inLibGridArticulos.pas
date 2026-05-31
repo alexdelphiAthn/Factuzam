@@ -277,23 +277,24 @@ end;
 // query de SKU + datasource + view en su propio repositorio + item de edicion.
 procedure TGridArticulosLineas.CrearLookupBusqueda;
 begin
-  // 1. Query con la lista de SKU (codigo, descripcion y stock en origen). Se
-  //    carga entera; el filtrado mientras tecleas es en cliente
+  // 1. Query con la lista de ARTICULOS (no SKU, como inMtoCajaOpe): codigo,
+  //    descripcion y stock total en origen (suma de los SKUs del articulo).
+  //    Se carga entera; el filtrado mientras tecleas es en cliente
   //    (IncrementalFiltering). El stock depende del almacen (param :ALM).
   FBusqQry := TUniQuery.Create(nil);
   FBusqQry.Connection := FConn;
   FBusqQry.SQL.Text :=
-    'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
+    'SELECT a.CODIGO_ART_ART AS ARTICULO,' +
     '       a.DESCRIPCION_ART AS DESCRIPCION,' +
     '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
     '                   FROM fza_articulos_stockactual st' +
-    '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
+    '                   JOIN fza_articulos_skus sk' +
+    '                     ON sk.CODIGO_UNIDAD_SKU = st.CODIGO_UNIDAD_STK' +
+    '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
     '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
-    '  FROM fza_articulos_skus s' +
-    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
-    ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
-    '   AND a.TIPO_ART = ''ESTANDAR''' +
-    ' ORDER BY s.CODIGO_UNIDAD_SKU';
+    '  FROM fza_articulos a' +
+    ' WHERE a.ESACTIVO_ART = ''S'' AND a.TIPO_ART = ''ESTANDAR''' +
+    ' ORDER BY a.CODIGO_ART_ART';
   FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
   FBusqDs := TDataSource.Create(nil);
   FBusqDs.DataSet := FBusqQry;
@@ -301,19 +302,19 @@ begin
   FBusqRepo := TcxGridViewRepository.Create(nil);
   FBusqView := FBusqRepo.CreateItem(TcxGridDBTableView) as TcxGridDBTableView;
   FBusqView.DataController.DataSource := FBusqDs;
-  FBusqView.DataController.KeyFieldNames := 'SKU';
+  FBusqView.DataController.KeyFieldNames := 'ARTICULO';
   FBusqView.OptionsView.GroupByBox := False;
   FBusqView.OptionsSelection.CellSelect := False;
   FBusqView.OptionsBehavior.IncSearch := False;
   FBusqColSku := FBusqView.CreateColumn;
-  FBusqColSku.Caption := 'SKU';
-  FBusqColSku.DataBinding.FieldName := 'SKU';
-  FBusqColSku.Width := 200;
+  FBusqColSku.Caption := 'Artículo';
+  FBusqColSku.DataBinding.FieldName := 'ARTICULO';
+  FBusqColSku.Width := 160;
   with FBusqView.CreateColumn do
   begin
     Caption := 'Descripción';
     DataBinding.FieldName := 'DESCRIPCION';
-    Width := 240;
+    Width := 280;
   end;
   with FBusqView.CreateColumn do
   begin
@@ -328,7 +329,7 @@ begin
   with FRepCombo.Properties do
   begin
     View := FBusqView;
-    KeyFieldNames := 'SKU';
+    KeyFieldNames := 'ARTICULO';
     ListFieldItem := FBusqColSku;
     DropDownListStyle := lsEditList;
     IncrementalFiltering := True;
@@ -382,8 +383,9 @@ begin
     AProperties := FRepCombo.Properties;
 end;
 
-// Al cerrar el desplegable con una seleccion: resolvemos el SKU elegido. Se
-// difiere (timer 1ms) para no tocar el cds mientras el editor se cierra.
+// Al cerrar el desplegable con una seleccion: resolvemos el articulo elegido
+// (ResolverEntrada acepta articulo o SKU). Se difiere (timer 1ms) para no
+// tocar el cds mientras el editor se cierra.
 procedure TGridArticulosLineas.ComboBusqCloseUp(Sender: TObject);
 begin
   if not (Sender is TcxCustomEdit) then
@@ -408,40 +410,39 @@ begin
 end;
 
 // Click en el boton de la columna de articulo: abre el buscador generico
-// (TfrmMtoSearch) con la lista de SKU (codigo, descripcion y stock en el
-// almacen origen). Al elegir uno, se resuelve la linea como si se hubiera
-// tecleado/escaneado ese SKU.
+// (TfrmMtoSearch) con la lista de ARTICULOS (codigo, descripcion y stock en
+// el almacen origen). Al elegir uno, se resuelve la linea como si se hubiera
+// tecleado el articulo (color/talla se eligen luego con la paleta).
 procedure TGridArticulosLineas.ArticuloButtonClick(Sender: TObject;
                                                    AButtonIndex: Integer);
 var
   Q: TUniQuery;
-  sSku: string;
+  sArt: string;
 begin
   Q := TUniQuery.Create(nil);
   try
     Q.Connection := FConn;
-    // SKU activos de articulos de stock; stock = suma de lotes en el almacen
-    // origen (0 si no hay o no se fijo almacen).
+    // Articulos (no SKU, como inMtoCajaOpe). Stock = suma de los SKUs del
+    // articulo en el almacen origen (0 si no hay o no se fijo almacen).
     Q.SQL.Text :=
-      'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
-      '       s.CODIGO_ART_SKU AS ARTICULO,' +
+      'SELECT a.CODIGO_ART_ART AS ARTICULO,' +
       '       a.DESCRIPCION_ART AS DESCRIPCION,' +
       '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
       '                   FROM fza_articulos_stockactual st' +
-      '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
+      '                   JOIN fza_articulos_skus sk' +
+      '                     ON sk.CODIGO_UNIDAD_SKU = st.CODIGO_UNIDAD_STK' +
+      '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
       '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
-      '  FROM fza_articulos_skus s' +
-      '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
-      ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
-      '   AND a.TIPO_ART = ''ESTANDAR''' +
-      ' ORDER BY s.CODIGO_ART_SKU, s.CODIGO_UNIDAD_SKU';
+      '  FROM fza_articulos a' +
+      ' WHERE a.ESACTIVO_ART = ''S'' AND a.TIPO_ART = ''ESTANDAR''' +
+      ' ORDER BY a.CODIGO_ART_ART';
     Q.ParamByName('ALM').AsString := FAlmacenStock;
     Q.Open;
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de SKU', Q,
-                                       'frmMtoSkuTraspasoSearch') then
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de artículos', Q,
+                                       'frmMtoArtTraspasoSearch') then
     begin
-      sSku := Q.FieldByName('SKU').AsString;
-      if ResolverEntrada(sSku) then
+      sArt := Q.FieldByName('ARTICULO').AsString;
+      if ResolverEntrada(sArt) then
         // Refresca la celda desde el cds (descarta el texto del editor).
         if FView.Controller.EditingController.IsEditing then
           try
