@@ -71,10 +71,14 @@ type
     // terminado de parentar y ClientToScreen lanzaria EInvalidOperation.
     FTimerPopup: TTimer;
     FOrdenPopupPend: Integer;
+    // Almacen cuyo stock se muestra en el buscador de SKU (lo fija el host;
+    // en traspaso, el almacen origen). Vacio = no muestra stock.
+    FAlmacenStock: string;
     procedure CrearColumnaArticulo;
     procedure CrearColumnasAtributo;
     procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
                                var ErrorText: TCaption; var Error: Boolean);
+    procedure ArticuloButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure ViewInitEdit(Sender: TcxCustomGridTableView;
                            AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
     procedure AtributoCustomDrawCell(Sender: TcxCustomGridTableView;
@@ -103,12 +107,14 @@ type
     // de proveedor) y rellena la linea. Devuelve False si no se encontro.
     function ResolverEntrada(const AEntrada: string): Boolean;
     property OnResuelto: TArtResueltoEvent read FOnResuelto write FOnResuelto;
+    // Almacen para la columna de stock del buscador de SKU (origen).
+    property AlmacenStock: string read FAlmacenStock write FAlmacenStock;
   end;
 
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibGenBusq;
 
 constructor TGridArticulosLineas.Create(AConn: TUniConnection;
                                         AView: TcxGridDBTableView;
@@ -222,6 +228,57 @@ begin
     with Buttons.Add do
       Kind := bkEllipsis;
     OnValidate := ArticuloValidate;
+    // El boton (ellipsis) abre el buscador de SKU.
+    OnButtonClick := ArticuloButtonClick;
+  end;
+end;
+
+// Click en el boton de la columna de articulo: abre el buscador generico
+// (TfrmMtoSearch) con la lista de SKU (codigo, descripcion y stock en el
+// almacen origen). Al elegir uno, se resuelve la linea como si se hubiera
+// tecleado/escaneado ese SKU.
+procedure TGridArticulosLineas.ArticuloButtonClick(Sender: TObject;
+                                                   AButtonIndex: Integer);
+var
+  Q: TUniQuery;
+  sSku: string;
+begin
+  Q := TUniQuery.Create(nil);
+  try
+    Q.Connection := FConn;
+    // SKU activos de articulos de stock; stock = suma de lotes en el almacen
+    // origen (0 si no hay o no se fijo almacen).
+    Q.SQL.Text :=
+      'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
+      '       s.CODIGO_ART_SKU AS ARTICULO,' +
+      '       a.DESCRIPCION_ART AS DESCRIPCION,' +
+      '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
+      '                   FROM fza_articulos_stockactual st' +
+      '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
+      '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
+      '  FROM fza_articulos_skus s' +
+      '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
+      ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+      '   AND a.TIPO_ART = ''ESTANDAR''' +
+      ' ORDER BY s.CODIGO_ART_SKU, s.CODIGO_UNIDAD_SKU';
+    Q.ParamByName('ALM').AsString := FAlmacenStock;
+    Q.Open;
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de SKU', Q,
+                                       'frmMtoSkuTraspasoSearch') then
+    begin
+      sSku := Q.FieldByName('SKU').AsString;
+      if ResolverEntrada(sSku) then
+        // Refresca la celda desde el cds (descarta el texto del editor).
+        if FView.Controller.EditingController.IsEditing then
+          try
+            FView.Controller.EditingController.HideEdit(False);
+          except
+            on E: EInvalidOperation do
+              ;
+          end;
+    end;
+  finally
+    FreeAndNil(Q);
   end;
 end;
 
