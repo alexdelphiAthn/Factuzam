@@ -419,6 +419,11 @@ var
   Q: TUniQuery;
   sArt: string;
 begin
+  // Si se pulso el "..." estando en el desplegable incremental
+  // (ExtLookupComboBox), su lista queda desplegada detras del buscador. La
+  // cerramos antes para no tener los dos buscadores a la vez.
+  if Sender is TcxExtLookupComboBox then
+    TcxExtLookupComboBox(Sender).DroppedDown := False;
   Q := TUniQuery.Create(nil);
   try
     Q.Connection := FConn;
