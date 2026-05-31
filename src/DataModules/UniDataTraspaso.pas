@@ -324,10 +324,16 @@ end;
 
 function TdmTraspaso.ObtenerCosteMedio(const ASku, AAlmacen: string): Currency;
 begin
-  // PMP ponderado sobre todos los lotes del SKU en el almacen.
+  // El coste es el PMP almacenado (PRECIO_MEDIO_STK), igual que usa el SP
+  // PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT para valorar la salida y que muestra
+  // la ficha del articulo. NO se recalcula con VALOR_TOTAL_STK (que puede
+  // estar a 0 aunque el PMP exista). Con varios lotes: media ponderada por
+  // cantidad; si no hay stock pero hay PMP guardado, se toma ese (MAX).
   qryAux.SQL.Text :=
-    'SELECT IF(SUM(CANTIDAD_STK) > 0,' +
-    '          SUM(VALOR_TOTAL_STK) / SUM(CANTIDAD_STK), 0) AS PMP ' +
+    'SELECT CASE WHEN SUM(CANTIDAD_STK) > 0' +
+    '            THEN SUM(PRECIO_MEDIO_STK * CANTIDAD_STK)' +
+    '                 / SUM(CANTIDAD_STK)' +
+    '            ELSE MAX(PRECIO_MEDIO_STK) END AS PMP ' +
     '  FROM fza_articulos_stockactual ' +
     ' WHERE CODIGO_ALM_STK = :ALM AND CODIGO_UNIDAD_STK = :SKU';
   qryAux.ParamByName('ALM').AsString := AAlmacen;
