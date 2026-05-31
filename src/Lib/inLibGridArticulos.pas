@@ -33,7 +33,7 @@ uses
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
   Vcl.Dialogs, Vcl.ExtCtrls, cxGraphics,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
-  cxGridCustomTableView, cxGridTableView, cxGridDBTableView, system.StrUtils,
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
 
 type
