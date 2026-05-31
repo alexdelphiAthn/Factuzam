@@ -33,6 +33,7 @@ uses
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
   Vcl.Dialogs, Vcl.ExtCtrls, cxGraphics,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
+  cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
 
@@ -74,6 +75,28 @@ type
     // Almacen cuyo stock se muestra en el buscador de SKU (lo fija el host;
     // en traspaso, el almacen origen). Vacio = no muestra stock.
     FAlmacenStock: string;
+    // Busqueda incremental embebida (ExtLookupComboBox) de la columna de
+    // articulo: query de SKU + datasource + view en su repositorio + el item
+    // de edicion combo. Se crean en runtime (la lib no tiene .dfm).
+    FBusqQry: TUniQuery;
+    FBusqDs: TDataSource;
+    FBusqRepo: TcxGridViewRepository;
+    FBusqView: TcxGridDBTableView;
+    FBusqColSku: TcxGridDBColumn;
+    FEditRepo: TcxEditRepository;
+    FRepCombo: TcxEditRepositoryExtLookupComboBoxItem;
+    // Resolucion diferida al elegir del desplegable (timer 1ms): evita tocar
+    // el cds mientras el editor in-place se esta cerrando.
+    FTimerResolve: TTimer;
+    FSkuPend: string;
+    procedure CrearLookupBusqueda;
+    procedure RecargarBusqueda;
+    procedure ArticuloGetProperties(Sender: TcxCustomGridTableItem;
+                           ARecord: TcxCustomGridRecord;
+                           var AProperties: TcxCustomEditProperties);
+    procedure ComboBusqCloseUp(Sender: TObject);
+    procedure TimerResolveTimer(Sender: TObject);
+    procedure SetAlmacenStock(const AValue: string);
     procedure CrearColumnaArticulo;
     procedure CrearColumnasAtributo;
     procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
@@ -107,8 +130,9 @@ type
     // de proveedor) y rellena la linea. Devuelve False si no se encontro.
     function ResolverEntrada(const AEntrada: string): Boolean;
     property OnResuelto: TArtResueltoEvent read FOnResuelto write FOnResuelto;
-    // Almacen para la columna de stock del buscador de SKU (origen).
-    property AlmacenStock: string read FAlmacenStock write FAlmacenStock;
+    // Almacen para la columna de stock del buscador de SKU (origen). Al
+    // cambiarlo se recarga el desplegable de busqueda incremental.
+    property AlmacenStock: string read FAlmacenStock write SetAlmacenStock;
   end;
 
 implementation
@@ -132,11 +156,20 @@ begin
   FTimerPopup.Enabled := False;
   FTimerPopup.Interval := 1;
   FTimerPopup.OnTimer := TimerPopupTimer;
+  FTimerResolve := TTimer.Create(nil);
+  FTimerResolve.Enabled := False;
+  FTimerResolve.Interval := 1;
+  FTimerResolve.OnTimer := TimerResolveTimer;
 end;
 
 destructor TGridArticulosLineas.Destroy;
 begin
+  FreeAndNil(FTimerResolve);
   FreeAndNil(FTimerPopup);
+  FreeAndNil(FEditRepo);
+  FreeAndNil(FBusqRepo);
+  FreeAndNil(FBusqDs);
+  FreeAndNil(FBusqQry);
   FreeAndNil(FLookup);
   inherited;
 end;
@@ -148,6 +181,9 @@ end;
 
 procedure TGridArticulosLineas.Construir;
 begin
+  // El desplegable de busqueda incremental debe existir antes de crear la
+  // columna de articulo (que engancha su OnGetProperties).
+  CrearLookupBusqueda;
   FView.BeginUpdate;
   try
     FView.ClearItems;
@@ -231,6 +267,144 @@ begin
     // El boton (ellipsis) abre el buscador de SKU.
     OnButtonClick := ArticuloButtonClick;
   end;
+  // Editor por registro: si la celda esta vacia y enfocada, se usa el
+  // ExtLookupComboBox con busqueda incremental; si no, el ButtonEdit de
+  // arriba. Mismo patron que inMtoCajaOpe.tvArticuloGetProperties.
+  FColArticulo.OnGetProperties := ArticuloGetProperties;
+end;
+
+// Crea el desplegable de busqueda incremental (ExtLookupComboBox) en runtime:
+// query de SKU + datasource + view en su propio repositorio + item de edicion.
+procedure TGridArticulosLineas.CrearLookupBusqueda;
+begin
+  // 1. Query con la lista de SKU (codigo, descripcion y stock en origen). Se
+  //    carga entera; el filtrado mientras tecleas es en cliente
+  //    (IncrementalFiltering). El stock depende del almacen (param :ALM).
+  FBusqQry := TUniQuery.Create(nil);
+  FBusqQry.Connection := FConn;
+  FBusqQry.SQL.Text :=
+    'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
+    '       a.DESCRIPCION_ART AS DESCRIPCION,' +
+    '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
+    '                   FROM fza_articulos_stockactual st' +
+    '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
+    '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
+    '  FROM fza_articulos_skus s' +
+    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
+    ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+    '   AND a.TIPO_ART = ''ESTANDAR''' +
+    ' ORDER BY s.CODIGO_UNIDAD_SKU';
+  FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
+  FBusqDs := TDataSource.Create(nil);
+  FBusqDs.DataSet := FBusqQry;
+  // 2. View del desplegable, dentro de su repositorio (no en pantalla).
+  FBusqRepo := TcxGridViewRepository.Create(nil);
+  FBusqView := FBusqRepo.CreateItem(TcxGridDBTableView) as TcxGridDBTableView;
+  FBusqView.DataController.DataSource := FBusqDs;
+  FBusqView.DataController.KeyFieldNames := 'SKU';
+  FBusqView.OptionsView.GroupByBox := False;
+  FBusqView.OptionsSelection.CellSelect := False;
+  FBusqView.OptionsBehavior.IncSearch := False;
+  FBusqColSku := FBusqView.CreateColumn;
+  FBusqColSku.Caption := 'SKU';
+  FBusqColSku.DataBinding.FieldName := 'SKU';
+  FBusqColSku.Width := 200;
+  with FBusqView.CreateColumn do
+  begin
+    Caption := 'Descripción';
+    DataBinding.FieldName := 'DESCRIPCION';
+    Width := 240;
+  end;
+  with FBusqView.CreateColumn do
+  begin
+    Caption := 'Stock';
+    DataBinding.FieldName := 'STOCK';
+    Width := 60;
+  end;
+  // 3. Item de edicion ExtLookupComboBox que usa ese view.
+  FEditRepo := TcxEditRepository.Create(nil);
+  FRepCombo := FEditRepo.CreateItem(TcxEditRepositoryExtLookupComboBoxItem)
+                 as TcxEditRepositoryExtLookupComboBoxItem;
+  with FRepCombo.Properties do
+  begin
+    View := FBusqView;
+    KeyFieldNames := 'SKU';
+    ListFieldItem := FBusqColSku;
+    DropDownListStyle := lsEditList;
+    IncrementalFiltering := True;
+    DropDownRows := 15;
+    DropDownAutoWidth := True;
+    ImmediateDropDownWhenKeyPressed := True;
+    OnCloseUp := ComboBusqCloseUp;
+    // Boton para el buscador completo (mismo que el ButtonEdit).
+    Buttons.Clear;
+    with Buttons.Add do
+      Kind := bkEllipsis;
+    OnButtonClick := ArticuloButtonClick;
+  end;
+  FBusqQry.Open;
+end;
+
+// Recarga el desplegable con el stock del almacen actual (al cambiar de modo).
+procedure TGridArticulosLineas.RecargarBusqueda;
+begin
+  if FBusqQry = nil then
+    Exit;
+  FBusqQry.Close;
+  FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
+  FBusqQry.Open;
+end;
+
+procedure TGridArticulosLineas.SetAlmacenStock(const AValue: string);
+begin
+  if FAlmacenStock = AValue then
+    Exit;
+  FAlmacenStock := AValue;
+  RecargarBusqueda;
+end;
+
+// Editor por registro: celda vacia y enfocada -> ExtLookupComboBox (busqueda
+// incremental); en otro caso, el ButtonEdit por defecto de la columna.
+procedure TGridArticulosLineas.ArticuloGetProperties(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AProperties: TcxCustomEditProperties);
+var
+  vVal: Variant;
+  bVacia, bEnfocada: Boolean;
+begin
+  if (ARecord = nil) or (FRepCombo = nil) then
+    Exit;
+  vVal := ARecord.Values[Sender.Index];
+  bVacia := VarIsNull(vVal) or (Trim(VarToStr(vVal)) = '');
+  bEnfocada := (FView.Controller.FocusedRecord = ARecord) and
+               (FView.Controller.FocusedItem = Sender);
+  if bVacia and bEnfocada then
+    AProperties := FRepCombo.Properties;
+end;
+
+// Al cerrar el desplegable con una seleccion: resolvemos el SKU elegido. Se
+// difiere (timer 1ms) para no tocar el cds mientras el editor se cierra.
+procedure TGridArticulosLineas.ComboBusqCloseUp(Sender: TObject);
+begin
+  if not (Sender is TcxCustomEdit) then
+    Exit;
+  FSkuPend := VarToStr(TcxCustomEdit(Sender).EditValue);
+  if Trim(FSkuPend) <> '' then
+  begin
+    FTimerResolve.Enabled := False;
+    FTimerResolve.Enabled := True;
+  end;
+end;
+
+procedure TGridArticulosLineas.TimerResolveTimer(Sender: TObject);
+var
+  sSku: string;
+begin
+  FTimerResolve.Enabled := False;
+  sSku := FSkuPend;
+  FSkuPend := '';
+  if Trim(sSku) <> '' then
+    ResolverEntrada(sSku);
 end;
 
 // Click en el boton de la columna de articulo: abre el buscador generico
