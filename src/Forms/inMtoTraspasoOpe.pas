@@ -72,7 +72,6 @@ type
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
-    procedure AsegurarLineaNueva;
     procedure AplicarModo(AModo: TModoTraspaso);
     procedure CargarCombo;
     procedure CargarAlmacenesDestino;
@@ -192,16 +191,6 @@ begin
   ActualizarTotal;
 end;
 
-procedure TfrmMtoOpeTraspaso.AsegurarLineaNueva;
-begin
-  // Deja una linea en blanco para teclear/escanear el articulo en el grid.
-  if FDatos.cdsLineas.IsEmpty then
-  begin
-    FDatos.cdsLineas.Append;
-    FDatos.cdsLineas.Post;
-  end;
-end;
-
 procedure TfrmMtoOpeTraspaso.PrepararValores(AModo: TModoTraspaso;
                           const AEmpresa, AAlmacen, ACaja: string;
                           AFecha: TDateTime);
@@ -248,8 +237,8 @@ begin
   end;
   CargarCombo;
   cboDestino.ItemIndex := -1;
-  if AModo in [mtTraspaso, mtSolicitar] then
-    AsegurarLineaNueva;
+  // La fila nueva del grid (NewItemRow) ya da la linea de entrada; no se
+  // hace Append manual (creaba una linea en blanco extra que competia).
   ActualizarTotal;
 end;
 
