@@ -158,8 +158,8 @@ begin
   // poder anyadir tecleando sin botones.
   FView.OptionsBehavior.GoToNextCellOnEnter := True;
   FView.OptionsBehavior.FocusFirstCellOnNewRecord := True;
-  FView.OptionsView.NewItemRow.Visible := True;
-  FView.OptionsView.NewItemRow.InfoText := 'Teclea aquí un artículo / SKU…';
+  FView.NewItemRow.Visible := True;
+  FView.NewItemRow.InfoText := 'Teclea aquí un artículo / SKU…';
 end;
 
 // Cuando el cxGrid crea el editor in-place de una celda: si es una columna de
