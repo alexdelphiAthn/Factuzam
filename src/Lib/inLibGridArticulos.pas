@@ -31,7 +31,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Variants, System.Types,
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
-  Vcl.Dialogs,
+  Vcl.Dialogs, Vcl.ExtCtrls,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
@@ -65,11 +65,22 @@ type
     FColAtributo: array[1..5] of TcxGridDBColumn;
     FLookup: TArticulosAtributosLookup;
     FOnResuelto: TArtResueltoEvent;
+    // Timer single-shot para abrir la paleta al entrar en una celda de
+    // atributo vacia (listbox incrustado, como la caja). Diferimos la
+    // apertura fuera del OnEnter: el editor in-place del cxGrid aun no ha
+    // terminado de parentar y ClientToScreen lanzaria EInvalidOperation.
+    FTimerPopup: TTimer;
+    FOrdenPopupPend: Integer;
     procedure CrearColumnaArticulo;
     procedure CrearColumnasAtributo;
     procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
                                var ErrorText: TCaption; var Error: Boolean);
+    procedure ViewInitEdit(Sender: TcxCustomGridTableView;
+                           AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
     procedure AtributoButtonClick(Sender: TObject; AButtonIndex: Integer);
+    procedure AtributoEnter(Sender: TObject);
+    procedure TimerPopupTimer(Sender: TObject);
+    procedure AbrirPaletaOrden(AOrden: Integer);
     procedure AplicarSkuYAvisar;
     function ColumnaPorTag(ATag: Integer): TcxGridDBColumn;
     function GenerarSku: string;
@@ -106,10 +117,16 @@ begin
   FCds := ACds;
   FCampos := ACampos;
   FLookup := TArticulosAtributosLookup.Create(AConn);
+  FOrdenPopupPend := 0;
+  FTimerPopup := TTimer.Create(nil);
+  FTimerPopup.Enabled := False;
+  FTimerPopup.Interval := 1;
+  FTimerPopup.OnTimer := TimerPopupTimer;
 end;
 
 destructor TGridArticulosLineas.Destroy;
 begin
+  FreeAndNil(FTimerPopup);
   FreeAndNil(FLookup);
   inherited;
 end;
@@ -129,6 +146,56 @@ begin
   finally
     FView.EndUpdate;
   end;
+  // Al entrar en una celda de atributo vacia, abre la paleta (listbox de
+  // swatches) automaticamente, como la caja. Se engancha en OnInitEdit.
+  FView.OnInitEdit := ViewInitEdit;
+end;
+
+// Cuando el cxGrid crea el editor in-place de una celda: si es una columna de
+// atributo (Tag 1..5) y la celda esta vacia, ponemos OnEnter para abrir la
+// paleta sola (el "listbox incrustado"). Si ya tiene valor, no molestamos.
+procedure TGridArticulosLineas.ViewInitEdit(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  AEdit: TcxCustomEdit);
+var
+  BE: TcxButtonEdit;
+begin
+  if (AItem = nil) or (AItem.Tag < 1) or (AItem.Tag > 5) then
+    Exit;
+  if not (AEdit is TcxButtonEdit) then
+    Exit;
+  BE := TcxButtonEdit(AEdit);
+  BE.Tag := AItem.Tag;
+  if (not FCds.Active) or FCds.IsEmpty then
+    BE.OnEnter := nil
+  else if Trim(FCds.FieldByName(FCampos.AttrValor[AItem.Tag]).AsString) = ''
+  then
+    BE.OnEnter := AtributoEnter
+  else
+    BE.OnEnter := nil;
+end;
+
+// OnEnter single-shot de una celda de atributo vacia: difiere la apertura de
+// la paleta (timer 1ms) para que el editor in-place termine de parentar.
+procedure TGridArticulosLineas.AtributoEnter(Sender: TObject);
+begin
+  if not (Sender is TcxButtonEdit) then
+    Exit;
+  TcxButtonEdit(Sender).OnEnter := nil;
+  FOrdenPopupPend := TcxButtonEdit(Sender).Tag;
+  FTimerPopup.Enabled := False;
+  FTimerPopup.Enabled := True;
+end;
+
+procedure TGridArticulosLineas.TimerPopupTimer(Sender: TObject);
+var
+  iOrden: Integer;
+begin
+  FTimerPopup.Enabled := False;
+  iOrden := FOrdenPopupPend;
+  FOrdenPopupPend := 0;
+  if (iOrden >= 1) and (iOrden <= 5) then
+    AbrirPaletaOrden(iOrden);
 end;
 
 procedure TGridArticulosLineas.CrearColumnaArticulo;
@@ -382,24 +449,34 @@ procedure TGridArticulosLineas.AtributoButtonClick(Sender: TObject;
                                                    AButtonIndex: Integer);
 var
   Col: TcxGridColumn;
-  Orden, i, ScrX, ScrY, WidHint: Integer;
+begin
+  Col := FView.Controller.FocusedColumn;
+  if Col = nil then
+    Exit;
+  if (Col.Tag >= 1) and (Col.Tag <= 5) then
+    AbrirPaletaOrden(Col.Tag);
+end;
+
+// Abre la paleta (listbox de swatches) con los AV validos del atributo AOrden
+// del articulo de la linea y aplica el elegido. La usan tanto el click en el
+// boton (ellipsis) como la apertura automatica al entrar en la celda vacia.
+procedure TGridArticulosLineas.AbrirPaletaOrden(AOrden: Integer);
+var
+  Edit: TcxCustomEdit;
+  i, ScrX, ScrY, WidHint: Integer;
   sArtPadre, sAvActual, sNombreAtb, sIdVa, sAvNuevo: string;
   Avs: TArray<TArticuloAtributoValor>;
   AvsStr: TArray<string>;
   Mapa: TDictionary<string, string>;
 begin
-  Col := FView.Controller.FocusedColumn;
-  if Col = nil then
-    Exit;
-  Orden := Col.Tag;
-  if (Orden < 1) or (Orden > 5) then
+  if (AOrden < 1) or (AOrden > 5) then
     Exit;
   if (not FCds.Active) or FCds.IsEmpty then
     Exit;
   sArtPadre := FCds.FieldByName(FCampos.CodigoArt).AsString;
-  sAvActual := FCds.FieldByName(FCampos.AttrValor[Orden]).AsString;
-  sNombreAtb := FCds.FieldByName(FCampos.AttrNombre[Orden]).AsString;
-  Avs := FLookup.ObtenerAvsEnSkus(sArtPadre, Orden);
+  sAvActual := FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString;
+  sNombreAtb := FCds.FieldByName(FCampos.AttrNombre[AOrden]).AsString;
+  Avs := FLookup.ObtenerAvsEnSkus(sArtPadre, AOrden);
   if Length(Avs) = 0 then
   begin
     ShowMessage('No hay valores definidos para este atributo.');
@@ -412,18 +489,19 @@ begin
   Mapa := ObtenerMapaAtributosGlobal;
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(sNombreAtb)), sIdVa);
-  // Posicion bajo el editor; si el editor in-place llega sin Parent,
-  // auto-centrar (evita EInvalidOperation en ClientToScreen).
+  // Posicion bajo el editor in-place; si aun no esta parentado, auto-centrar
+  // (evita EInvalidOperation en ClientToScreen).
   ScrX := -1;
   ScrY := -1;
   WidHint := 120;
-  if (Sender is TWinControl) and TWinControl(Sender).HasParent then
+  Edit := nil;
+  if FView.Controller.EditingController.IsEditing then
+    Edit := FView.Controller.EditingController.Edit;
+  if (Edit <> nil) and Edit.HasParent then
     try
-      ScrX := TWinControl(Sender).ClientToScreen(
-                Point(0, TWinControl(Sender).Height)).X;
-      ScrY := TWinControl(Sender).ClientToScreen(
-                Point(0, TWinControl(Sender).Height)).Y;
-      WidHint := TWinControl(Sender).Width;
+      ScrX := Edit.ClientToScreen(Point(0, Edit.Height)).X;
+      ScrY := Edit.ClientToScreen(Point(0, Edit.Height)).Y;
+      WidHint := Edit.Width;
     except
       on E: EInvalidOperation do
       begin
@@ -439,7 +517,7 @@ begin
     FCds.Edit;
   if FCds.State in [dsEdit, dsInsert] then
   begin
-    FCds.FieldByName(FCampos.AttrValor[Orden]).AsString := sAvNuevo;
+    FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString := sAvNuevo;
     AplicarSkuYAvisar;
   end;
 end;
