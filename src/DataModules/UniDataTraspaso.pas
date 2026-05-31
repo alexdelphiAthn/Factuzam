@@ -40,14 +40,11 @@ type
     procedure ConfigurarEstructuraLineas;
     procedure cdsLineasNewRecord(DataSet: TDataSet);
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
-    // True si la linea actual del cds es traspasable: tiene articulo Y un SKU
-    // coherente (el SKU es el propio articulo, sin variantes, o empieza por
-    // 'ARTICULO/'). Descarta la linea en blanco de entrada y la "fantasma"
-    // (codigo padre suelto, sin articulo) que el editor in-place del grid
-    // puede dejar al refrescar las columnas de atributo.
-    function EsLineaTraspasable: Boolean;
-    // Borra del cds las lineas en blanco / incompletas antes de grabar o
-    // imprimir, para que ni se muevan ni salgan en el ticket.
+    // True si el SKU existe y esta activo en fza_articulos_skus (SKU completo).
+    function SkuExiste(const ASku: string): Boolean;
+    // Recorre el cds antes de grabar/imprimir: descarta lineas en blanco
+    // (sin articulo) y aborta con error si una linea tiene articulo pero el
+    // SKU no esta cerrado (falta color/talla).
     procedure LimpiarLineasIncompletas;
     // Serie del documento de traspaso (fza_empresas_series + fallback) y su
     // siguiente número (PRC_GET_NEXT_CONT_FACT_SERIE, como la factura).
@@ -209,31 +206,45 @@ begin
   end;
 end;
 
-function TdmTraspaso.EsLineaTraspasable: Boolean;
-var
-  sArt, sSku: string;
+function TdmTraspaso.SkuExiste(const ASku: string): Boolean;
 begin
-  sArt := Trim(cdsLineas.FieldByName('CODIGO_ART').AsString);
-  sSku := Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
-  // Sin articulo o sin SKU no es una linea real (blanca o fantasma).
-  if (sArt = '') or (sSku = '') then
-    Result := False
-  // El SKU es el propio articulo (sin variantes) o una variante 'ART/...'.
-  else
-    Result := SameText(sSku, sArt) or StartsText(sArt + '/', sSku);
+  // Un SKU es valido solo si existe (activo) en fza_articulos_skus. Asi se
+  // bloquea grabar un SKU incompleto tipo 'ART/COLOR' al que le falta la talla
+  // (existe 'ART/COLOR/TALLA' pero no 'ART/COLOR').
+  qryAux.SQL.Text :=
+    'SELECT 1 FROM fza_articulos_skus' +
+    ' WHERE CODIGO_UNIDAD_SKU = :SKU AND ESACTIVO_SKU = ''S'' LIMIT 1';
+  qryAux.ParamByName('SKU').AsString := ASku;
+  qryAux.Open;
+  try
+    Result := not qryAux.IsEmpty;
+  finally
+    qryAux.Close;
+  end;
 end;
 
 procedure TdmTraspaso.LimpiarLineasIncompletas;
+var
+  sArt, sSku: string;
 begin
   if cdsLineas.State in [dsEdit, dsInsert] then
     cdsLineas.Post;
   cdsLineas.First;
   while not cdsLineas.Eof do
   begin
-    if EsLineaTraspasable then
-      cdsLineas.Next
+    sArt := Trim(cdsLineas.FieldByName('CODIGO_ART').AsString);
+    sSku := Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+    // Linea en blanco / fantasma (sin articulo): se descarta en silencio.
+    if sArt = '' then
+      cdsLineas.Delete
+    // Articulo tecleado pero SKU sin cerrar (falta color/talla): es un intento
+    // real, no se graba a medias -> avisamos y abortamos.
+    else if (sSku = '') or (not SkuExiste(sSku)) then
+      raise Exception.CreateFmt(
+        'El artículo "%s" no tiene el SKU completo (elige color/talla). ' +
+        'SKU: "%s"', [sArt, sSku])
     else
-      cdsLineas.Delete;
+      cdsLineas.Next;
   end;
 end;
 
