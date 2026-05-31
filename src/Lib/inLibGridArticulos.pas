@@ -30,7 +30,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Variants, System.Types,
-  System.Generics.Collections, Data.DB, Uni, Vcl.Controls, Vcl.Dialogs,
+  System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
+  Vcl.Dialogs,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, system.StrUtils,
   inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
