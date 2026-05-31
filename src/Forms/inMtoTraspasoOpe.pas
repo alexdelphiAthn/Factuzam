@@ -43,13 +43,6 @@ type
     lblEmpleado: TcxLabel;
     txtEmpleado: TcxTextEdit;
     lblEmpleadoNombre: TcxLabel;
-    pnlEntrada: TPanel;
-    lblSku: TcxLabel;
-    txtSku: TcxTextEdit;
-    lblCantidad: TcxLabel;
-    spnCantidad: TcxSpinEdit;
-    btnAnadir: TcxButton;
-    btnQuitar: TcxButton;
     pnlCentro: TPanel;
     pnlBottom: TPanel;
     lblTotal: TcxLabel;
@@ -60,11 +53,10 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word;
                           Shift: TShiftState);
     procedure btnModoClick(Sender: TObject);
-    procedure btnAnadirClick(Sender: TObject);
-    procedure btnQuitarClick(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
     procedure btnF12Click(Sender: TObject);
     procedure txtEmpleadoExit(Sender: TObject);
+    procedure cboDestinoPropertiesChange(Sender: TObject);
   private
     FDatos: TdmTraspaso;
     FGrid: TcxGrid;
@@ -86,6 +78,7 @@ type
     procedure CargarAlmacenesDestino;
     function DestinoSeleccionado: string;
     procedure ActualizarTotal;
+    procedure QuitarLinea;
     procedure EjecutarTraspaso(AConTicket: Boolean);
     procedure EnviarSolicitud;
     procedure CargarSolicitudSeleccionada;
@@ -113,6 +106,8 @@ begin
   FVerCoste := (not Assigned(oPermisos)) or
                oPermisos.TienePermiso('caja.verCoste', True);
   ConstruirGrid;
+  // Elegir una solicitud en el desplegable (modo Atender) la carga sola.
+  cboDestino.Properties.OnChange := cboDestinoPropertiesChange;
 end;
 
 procedure TfrmMtoOpeTraspaso.FormDestroy(Sender: TObject);
@@ -223,9 +218,12 @@ begin
   FModo := AModo;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
   txtOrigen.Text := FAlmacen;
-  txtSku.Enabled := AModo <> mtAtender;
-  spnCantidad.Enabled := AModo <> mtAtender;
   btnF11.Visible := AModo <> mtSolicitar;
+  // El grid solo es editable cuando se teclean lineas (traspaso / solicitar);
+  // al atender, las lineas vienen de la solicitud y no se teclean a mano.
+  FView.OptionsData.Editing := AModo <> mtAtender;
+  FView.OptionsData.Inserting := AModo <> mtAtender;
+  FView.OptionsView.NewItemRow.Visible := AModo <> mtAtender;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -233,21 +231,18 @@ begin
     begin
       lblOrigen.Caption := 'ALMACÉN ORIGEN';
       lblDestino.Caption := 'ALMACÉN DESTINO';
-      btnAnadir.Caption := 'Añadir (Intro)';
       btnF12.Caption := 'F12 · Con ticket';
     end;
     mtSolicitar:
     begin
       lblOrigen.Caption := 'ALMACÉN DESTINO (yo)';
       lblDestino.Caption := 'ALMACÉN ORIGEN (a quién pido)';
-      btnAnadir.Caption := 'Añadir (Intro)';
       btnF12.Caption := 'F12 · Enviar solicitud';
     end;
     mtAtender:
     begin
       lblOrigen.Caption := 'ALMACÉN ORIGEN (yo)';
       lblDestino.Caption := 'SOLICITUD A ATENDER';
-      btnAnadir.Caption := 'Cargar solicitud';
       btnF12.Caption := 'F12 · Servir con ticket';
     end;
   end;
@@ -343,29 +338,12 @@ begin
     lblTotal.Caption := '';
 end;
 
-procedure TfrmMtoOpeTraspaso.btnAnadirClick(Sender: TObject);
-var
-  sSku: string;
-  dCantidad: Double;
+procedure TfrmMtoOpeTraspaso.cboDestinoPropertiesChange(Sender: TObject);
 begin
+  // Al atender, elegir una solicitud del desplegable la carga directamente
+  // (antes habia un boton "Cargar solicitud"; ahora es automatico).
   if FModo = mtAtender then
-    CargarSolicitudSeleccionada
-  else
-  begin
-    sSku := Trim(txtSku.Text);
-    dCantidad := spnCantidad.Value;
-    if (sSku = '') or (dCantidad <= 0) then
-      ShowMessage('Indica un SKU y una cantidad mayor que cero.')
-    else if FDatos.AnadirLinea(sSku, dCantidad) then
-    begin
-      txtSku.Clear;
-      ActualizarTotal;
-      if txtSku.CanFocus then
-        txtSku.SetFocus;
-    end
-    else
-      ShowMessage('Artículo no encontrado o no es de stock: ' + sSku);
-  end;
+    CargarSolicitudSeleccionada;
 end;
 
 procedure TfrmMtoOpeTraspaso.CargarSolicitudSeleccionada;
@@ -374,9 +352,8 @@ var
   iSep: Integer;
 begin
   sCod := DestinoSeleccionado;
-  if sCod = '' then
-    ShowMessage('Selecciona una solicitud pendiente.')
-  else
+  // Sin seleccion (p.ej. al resetear el desplegable) no hace nada.
+  if sCod <> '' then
   begin
     iSep := Pos('|', sCod);
     sNum := Copy(sCod, 1, iSep - 1);
@@ -495,9 +472,11 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeTraspaso.btnQuitarClick(Sender: TObject);
+procedure TfrmMtoOpeTraspaso.QuitarLinea;
 begin
-  if not FDatos.cdsLineas.IsEmpty then
+  // Borra la linea enfocada del grid (F3). No se borra al atender: las
+  // lineas vienen de la solicitud.
+  if (FModo <> mtAtender) and (not FDatos.cdsLineas.IsEmpty) then
   begin
     FDatos.cdsLineas.Delete;
     ActualizarTotal;
@@ -523,7 +502,7 @@ procedure TfrmMtoOpeTraspaso.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   case Key of
     VK_F3:
-      btnQuitarClick(nil);
+      QuitarLinea;
     VK_F11:
       btnF11Click(nil);
     VK_F12:
