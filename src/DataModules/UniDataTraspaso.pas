@@ -82,14 +82,6 @@ type
                             ACaja: string; AFecha: TDateTime);
     function ObtenerCosteMedio(const ASku, AAlmacen: string): Currency;
     function ObtenerStock(const ASku, AAlmacen: string): Double;
-    // Resuelve el SKU contra el almacén origen; devuelve descripción, padre,
-    // coste medio y stock disponible. False si el artículo no existe.
-    function ResolverSku(const ASku, AAlmacen: string;
-                         out ADescripcion, ACodArticulo: string;
-                         out ACoste: Currency; out AStock: Double): Boolean;
-    // Añade (o consolida) una línea al ticket de traspaso. False si el SKU
-    // no es válido.
-    function AnadirLinea(const ASku: string; ACantidad: Double): Boolean;
     // Graba el traspaso directo: par salida+entrada por línea + operación
     // de caja TR/AT, todo en una transacción. Devuelve el nº de operación.
     function GrabarTraspaso(const AAlmacenDestino: string;
@@ -352,83 +344,6 @@ begin
   finally
     qryAux.Close;
   end;
-end;
-
-function TdmTraspaso.ResolverSku(const ASku, AAlmacen: string;
-                                 out ADescripcion, ACodArticulo: string;
-                                 out ACoste: Currency;
-                                 out AStock: Double): Boolean;
-var
-  sPadre: string;
-begin
-  Result := False;
-  ADescripcion := '';
-  ACodArticulo := '';
-  ACoste := 0;
-  AStock := 0;
-  // El padre es el primer tramo del SKU (PADRE/COLOR/TALLA).
-  sPadre := ASku;
-  if Pos('/', ASku) > 0 then
-    sPadre := Copy(ASku, 1, Pos('/', ASku) - 1);
-  qryAux.SQL.Text :=
-    'SELECT CODIGO_ART_ART, DESCRIPCION_ART, TIPO_ART FROM fza_articulos ' +
-    ' WHERE CODIGO_ART_ART = :ART AND ESACTIVO_ART = ''S''';
-  qryAux.ParamByName('ART').AsString := sPadre;
-  qryAux.Open;
-  try
-    if not qryAux.IsEmpty then
-    begin
-      // Sólo se traspasan artículos físicos con control de stock.
-      if SameText(qryAux.FieldByName('TIPO_ART').AsString, 'ESTANDAR') then
-      begin
-        ACodArticulo := qryAux.FieldByName('CODIGO_ART_ART').AsString;
-        ADescripcion := qryAux.FieldByName('DESCRIPCION_ART').AsString;
-        Result := True;
-      end;
-    end;
-  finally
-    qryAux.Close;
-  end;
-  if Result then
-  begin
-    ACoste := ObtenerCosteMedio(ASku, AAlmacen);
-    AStock := ObtenerStock(ASku, AAlmacen);
-  end;
-end;
-
-function TdmTraspaso.AnadirLinea(const ASku: string; ACantidad: Double): Boolean;
-var
-  sDescripcion, sArticulo: string;
-  cCoste: Currency;
-  dStock: Double;
-  sAlmacenOrigen: string;
-begin
-  sAlmacenOrigen := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-  Result := ResolverSku(ASku, sAlmacenOrigen, sDescripcion, sArticulo,
-                        cCoste, dStock);
-  if not Result then
-    Exit;
-  // Consolida si el SKU ya está en el ticket.
-  if cdsLineas.Locate('CODIGO_UNIDAD', ASku, []) then
-  begin
-    cdsLineas.Edit;
-    cdsLineas.FieldByName('CANTIDAD').AsFloat :=
-      cdsLineas.FieldByName('CANTIDAD').AsFloat + ACantidad;
-  end
-  else
-  begin
-    cdsLineas.Append;
-    cdsLineas.FieldByName('CODIGO_ART').AsString := sArticulo;
-    cdsLineas.FieldByName('CODIGO_UNIDAD').AsString := ASku;
-    cdsLineas.FieldByName('DESCRIPCION').AsString := sDescripcion;
-    cdsLineas.FieldByName('CANTIDAD').AsFloat := ACantidad;
-    cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency := cCoste;
-    cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat := dStock;
-  end;
-  cdsLineas.FieldByName('TOTAL').AsCurrency :=
-    cdsLineas.FieldByName('CANTIDAD').AsFloat *
-    cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
-  cdsLineas.Post;
 end;
 
 function TdmTraspaso.SiguienteOpCaja(const AEmpresa, AAlmacen, ACaja,

@@ -98,59 +98,6 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Caption = ''
     end
   end
-  object pnlEntrada: TPanel
-    Left = 0
-    Top = 129
-    Width = 900
-    Height = 49
-    Align = alTop
-    BevelOuter = bvNone
-    Caption = ''
-    TabOrder = 2
-    object lblSku: TcxLabel
-      Left = 16
-      Top = 16
-      Caption = 'Artículo / SKU'
-    end
-    object txtSku: TcxTextEdit
-      Left = 130
-      Top = 13
-      TabOrder = 0
-      Width = 300
-    end
-    object lblCantidad: TcxLabel
-      Left = 450
-      Top = 16
-      Caption = 'Uds'
-    end
-    object spnCantidad: TcxSpinEdit
-      Left = 490
-      Top = 13
-      Properties.MinValue = 1.000000000000000000
-      TabOrder = 1
-      Value = 1
-      Width = 70
-    end
-    object btnAnadir: TcxButton
-      Left = 580
-      Top = 11
-      Width = 130
-      Height = 25
-      Caption = 'Añadir (Intro)'
-      Default = True
-      TabOrder = 2
-      OnClick = btnAnadirClick
-    end
-    object btnQuitar: TcxButton
-      Left = 720
-      Top = 11
-      Width = 110
-      Height = 25
-      Caption = 'Quitar (F3)'
-      TabOrder = 3
-      OnClick = btnQuitarClick
-    end
-  end
   object pnlBottom: TPanel
     Left = 0
     Top = 580
@@ -186,9 +133,9 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   end
   object pnlCentro: TPanel
     Left = 0
-    Top = 178
+    Top = 129
     Width = 900
-    Height = 402
+    Height = 451
     Align = alClient
     BevelOuter = bvNone
     Caption = ''
