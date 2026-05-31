@@ -223,7 +223,7 @@ begin
   // al atender, las lineas vienen de la solicitud y no se teclean a mano.
   FView.OptionsData.Editing := AModo <> mtAtender;
   FView.OptionsData.Inserting := AModo <> mtAtender;
-  FView.OptionsView.NewItemRow.Visible := AModo <> mtAtender;
+  FView.NewItemRow.Visible := AModo <> mtAtender;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
