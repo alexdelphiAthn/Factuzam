@@ -31,7 +31,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Variants, System.Types,
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
-  Vcl.Dialogs, Vcl.ExtCtrls,
+  Vcl.Dialogs, Vcl.ExtCtrls, cxGraphics,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
@@ -77,6 +77,10 @@ type
                                var ErrorText: TCaption; var Error: Boolean);
     procedure ViewInitEdit(Sender: TcxCustomGridTableView;
                            AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+    procedure AtributoCustomDrawCell(Sender: TcxCustomGridTableView;
+                           ACanvas: TcxCanvas;
+                           AViewInfo: TcxGridTableDataCellViewInfo;
+                           var ADone: Boolean);
     procedure AtributoButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure AtributoEnter(Sender: TObject);
     procedure TimerPopupTimer(Sender: TObject);
@@ -149,6 +153,13 @@ begin
   // Al entrar en una celda de atributo vacia, abre la paleta (listbox de
   // swatches) automaticamente, como la caja. Se engancha en OnInitEdit.
   FView.OnInitEdit := ViewInitEdit;
+  // Flujo tipo Excel: Enter pasa a la siguiente celda y al llegar al final
+  // de la fila salta a la siguiente; fila nueva siempre visible arriba para
+  // poder anyadir tecleando sin botones.
+  FView.OptionsBehavior.GoToNextCellOnEnter := True;
+  FView.OptionsBehavior.FocusFirstCellOnNewRecord := True;
+  FView.OptionsView.NewItemRow.Visible := True;
+  FView.OptionsView.NewItemRow.InfoText := 'Teclea aquí un artículo / SKU…';
 end;
 
 // Cuando el cxGrid crea el editor in-place de una celda: si es una columna de
@@ -243,8 +254,20 @@ begin
       end;
       OnButtonClick := AtributoButtonClick;
     end;
+    // Pinta el cuadradito de color en la celda (como caja/inventario).
+    Col.OnCustomDrawCell := AtributoCustomDrawCell;
     FColAtributo[i] := Col;
   end;
+end;
+
+// Pinta el swatch de color en la celda de atributo si el valor casa con la
+// paleta basica. Usa el helper "todo en uno" de inLibAtributosPaleta.
+procedure TGridArticulosLineas.AtributoCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+begin
+  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+    ADone := True;
 end;
 
 function TGridArticulosLineas.ColumnaPorTag(ATag: Integer): TcxGridDBColumn;
