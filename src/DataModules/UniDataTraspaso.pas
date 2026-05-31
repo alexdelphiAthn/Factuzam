@@ -40,6 +40,15 @@ type
     procedure ConfigurarEstructuraLineas;
     procedure cdsLineasNewRecord(DataSet: TDataSet);
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
+    // True si la linea actual del cds es traspasable: tiene articulo Y un SKU
+    // coherente (el SKU es el propio articulo, sin variantes, o empieza por
+    // 'ARTICULO/'). Descarta la linea en blanco de entrada y la "fantasma"
+    // (codigo padre suelto, sin articulo) que el editor in-place del grid
+    // puede dejar al refrescar las columnas de atributo.
+    function EsLineaTraspasable: Boolean;
+    // Borra del cds las lineas en blanco / incompletas antes de grabar o
+    // imprimir, para que ni se muevan ni salgan en el ticket.
+    procedure LimpiarLineasIncompletas;
     // Serie del documento de traspaso (fza_empresas_series + fallback) y su
     // siguiente número (PRC_GET_NEXT_CONT_FACT_SERIE, como la factura).
     function ObtenerSerieDocumento(const AEmpresa, AAlmacen, ACaja,
@@ -205,6 +214,34 @@ begin
       Result := qryAux.FieldByName('CODIGO_EMP_ALM').AsString;
   finally
     qryAux.Close;
+  end;
+end;
+
+function TdmTraspaso.EsLineaTraspasable: Boolean;
+var
+  sArt, sSku: string;
+begin
+  sArt := Trim(cdsLineas.FieldByName('CODIGO_ART').AsString);
+  sSku := Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+  // Sin articulo o sin SKU no es una linea real (blanca o fantasma).
+  if (sArt = '') or (sSku = '') then
+    Result := False
+  // El SKU es el propio articulo (sin variantes) o una variante 'ART/...'.
+  else
+    Result := SameText(sSku, sArt) or StartsText(sArt + '/', sSku);
+end;
+
+procedure TdmTraspaso.LimpiarLineasIncompletas;
+begin
+  if cdsLineas.State in [dsEdit, dsInsert] then
+    cdsLineas.Post;
+  cdsLineas.First;
+  while not cdsLineas.Eof do
+  begin
+    if EsLineaTraspasable then
+      cdsLineas.Next
+    else
+      cdsLineas.Delete;
   end;
 end;
 
@@ -524,8 +561,8 @@ var
   iLinea: Integer;
 begin
   Result := False;
-  if cdsLineas.State in [dsEdit, dsInsert] then
-    cdsLineas.Post;
+  // Quita la linea en blanco y la fantasma antes de mover stock.
+  LimpiarLineasIncompletas;
   if cdsLineas.IsEmpty then
     raise Exception.Create('No hay líneas que traspasar.');
   if Trim(AAlmacenDestino) = '' then
@@ -660,8 +697,8 @@ var
   iLinea: Integer;
 begin
   Result := False;
-  if cdsLineas.State in [dsEdit, dsInsert] then
-    cdsLineas.Post;
+  // Quita la linea en blanco y la fantasma antes de grabar la solicitud.
+  LimpiarLineasIncompletas;
   if cdsLineas.IsEmpty then
     raise Exception.Create('No hay líneas que solicitar.');
   if Trim(AAlmacenOrigen) = '' then
