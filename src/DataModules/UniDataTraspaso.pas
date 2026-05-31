@@ -46,6 +46,9 @@ type
     // (sin articulo) y aborta con error si una linea tiene articulo pero el
     // SKU no esta cerrado (falta color/talla).
     procedure LimpiarLineasIncompletas;
+    // Aborta (raise) si alguna linea pide mas unidades de las que hay en el
+    // almacen origen. Evita traspasar sin stock (dejaria stock negativo).
+    procedure ValidarStockOrigen(const AAlmacenOrigen: string);
     // Serie del documento de traspaso (fza_empresas_series + fallback) y su
     // siguiente número (PRC_GET_NEXT_CONT_FACT_SERIE, como la factura).
     function ObtenerSerieDocumento(const AEmpresa, AAlmacen, ACaja,
@@ -246,6 +249,35 @@ begin
     else
       cdsLineas.Next;
   end;
+end;
+
+procedure TdmTraspaso.ValidarStockOrigen(const AAlmacenOrigen: string);
+var
+  sSku, sFalta: string;
+  dCant, dStock: Double;
+begin
+  // No se puede traspasar mas de lo que hay en origen (dejaria stock
+  // negativo). Recorremos las lineas y acumulamos las que se pasan; si hay
+  // alguna, abortamos con un mensaje que las lista (no se mueve nada).
+  sFalta := '';
+  cdsLineas.First;
+  while not cdsLineas.Eof do
+  begin
+    sSku := Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+    if sSku <> '' then
+    begin
+      dCant := cdsLineas.FieldByName('CANTIDAD').AsFloat;
+      dStock := ObtenerStock(sSku, AAlmacenOrigen);
+      if dCant > dStock then
+        sFalta := sFalta + Format('  %s: pides %s, hay %s'#13#10,
+          [sSku, FormatFloat('0.###', dCant), FormatFloat('0.###', dStock)]);
+    end;
+    cdsLineas.Next;
+  end;
+  if sFalta <> '' then
+    raise Exception.Create(
+      'No hay stock suficiente en el almacén origen (' + AAlmacenOrigen +
+      '):'#13#10 + sFalta);
 end;
 
 function TdmTraspaso.ValidarEmpleado(const ABusqueda: string;
@@ -506,6 +538,9 @@ begin
   sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
   if SameText(sAlmacenOrigen, AAlmacenDestino) then
     raise Exception.Create('Origen y destino no pueden ser el mismo almacén.');
+  // No traspasar sin stock: aborta antes de mover nada si alguna linea se
+  // pasa de lo disponible en origen (evita el stock negativo).
+  ValidarStockOrigen(sAlmacenOrigen);
   // TR = misma empresa (origen y destino); TA = entre empresas distintas.
   sEmpContra := ObtenerEmpresaAlmacen(AAlmacenDestino);
   if (sEmpContra = '') or SameText(sEmpContra, sEmpresa) then
