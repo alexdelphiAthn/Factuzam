@@ -277,24 +277,24 @@ end;
 // query de SKU + datasource + view en su propio repositorio + item de edicion.
 procedure TGridArticulosLineas.CrearLookupBusqueda;
 begin
-  // 1. Query con la lista de ARTICULOS (no SKU, como inMtoCajaOpe): codigo,
-  //    descripcion y stock total en origen (suma de los SKUs del articulo).
-  //    Se carga entera; el filtrado mientras tecleas es en cliente
+  // 1. Query con la lista de SKU (codigo, descripcion y stock en origen). Se
+  //    carga entera; el filtrado mientras tecleas es en cliente
   //    (IncrementalFiltering). El stock depende del almacen (param :ALM).
+  //    (El boton buscador lista articulos; aqui en el desplegable, SKU.)
   FBusqQry := TUniQuery.Create(nil);
   FBusqQry.Connection := FConn;
   FBusqQry.SQL.Text :=
-    'SELECT a.CODIGO_ART_ART AS ARTICULO,' +
+    'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
     '       a.DESCRIPCION_ART AS DESCRIPCION,' +
     '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
     '                   FROM fza_articulos_stockactual st' +
-    '                   JOIN fza_articulos_skus sk' +
-    '                     ON sk.CODIGO_UNIDAD_SKU = st.CODIGO_UNIDAD_STK' +
-    '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
+    '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
     '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
-    '  FROM fza_articulos a' +
-    ' WHERE a.ESACTIVO_ART = ''S'' AND a.TIPO_ART = ''ESTANDAR''' +
-    ' ORDER BY a.CODIGO_ART_ART';
+    '  FROM fza_articulos_skus s' +
+    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
+    ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+    '   AND a.TIPO_ART = ''ESTANDAR''' +
+    ' ORDER BY s.CODIGO_UNIDAD_SKU';
   FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
   FBusqDs := TDataSource.Create(nil);
   FBusqDs.DataSet := FBusqQry;
@@ -302,19 +302,19 @@ begin
   FBusqRepo := TcxGridViewRepository.Create(nil);
   FBusqView := FBusqRepo.CreateItem(TcxGridDBTableView) as TcxGridDBTableView;
   FBusqView.DataController.DataSource := FBusqDs;
-  FBusqView.DataController.KeyFieldNames := 'ARTICULO';
+  FBusqView.DataController.KeyFieldNames := 'SKU';
   FBusqView.OptionsView.GroupByBox := False;
   FBusqView.OptionsSelection.CellSelect := False;
   FBusqView.OptionsBehavior.IncSearch := False;
   FBusqColSku := FBusqView.CreateColumn;
-  FBusqColSku.Caption := 'Artículo';
-  FBusqColSku.DataBinding.FieldName := 'ARTICULO';
-  FBusqColSku.Width := 160;
+  FBusqColSku.Caption := 'SKU';
+  FBusqColSku.DataBinding.FieldName := 'SKU';
+  FBusqColSku.Width := 200;
   with FBusqView.CreateColumn do
   begin
     Caption := 'Descripción';
     DataBinding.FieldName := 'DESCRIPCION';
-    Width := 280;
+    Width := 240;
   end;
   with FBusqView.CreateColumn do
   begin
@@ -329,7 +329,7 @@ begin
   with FRepCombo.Properties do
   begin
     View := FBusqView;
-    KeyFieldNames := 'ARTICULO';
+    KeyFieldNames := 'SKU';
     ListFieldItem := FBusqColSku;
     DropDownListStyle := lsEditList;
     IncrementalFiltering := True;
