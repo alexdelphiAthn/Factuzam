@@ -359,6 +359,9 @@ begin
   FBusqView := FBusqRepo.CreateItem(TcxGridDBTableView) as TcxGridDBTableView;
   FBusqView.DataController.DataSource := FBusqDs;
   FBusqView.DataController.KeyFieldNames := 'SKU';
+  // GridMode: el view trae las filas bajo demanda (no materializa todo el
+  // dataset al abrir), mas agil con muchos SKU.
+  FBusqView.DataController.DataModeController.GridMode := True;
   FBusqView.OptionsView.GroupByBox := False;
   FBusqView.OptionsSelection.CellSelect := False;
   FBusqView.OptionsBehavior.IncSearch := False;
@@ -411,22 +414,31 @@ begin
       Kind := bkEllipsis;
     OnButtonClick := ArticuloButtonClick;
   end;
-  FBusqQry.Open;
+  // No se abre aqui: se abriria con ALM='' (en FormCreate aun no hay almacen)
+  // y luego AplicarModo lo reabriria con el almacen real -> doble ejecucion
+  // del query (cada una ~1,2 s). Se abre una sola vez en RecargarBusqueda,
+  // ya con el almacen fijado.
 end;
 
-// Recarga el desplegable con el stock del almacen actual (al cambiar de modo).
+// (Re)abre el desplegable con el stock del almacen actual. Se llama al fijar
+// el almacen (SetAlmacenStock) y al cambiar de modo, una sola vez con el
+// almacen real.
 procedure TGridArticulosLineas.RecargarBusqueda;
 begin
   if FBusqQry = nil then
     Exit;
-  FBusqQry.Close;
+  if FBusqQry.Active then
+    FBusqQry.Close;
   FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
   FBusqQry.Open;
 end;
 
 procedure TGridArticulosLineas.SetAlmacenStock(const AValue: string);
 begin
-  if FAlmacenStock = AValue then
+  // Recarga si cambia el almacen O si el query aun no se ha abierto (la
+  // primera vez: en CrearLookupBusqueda ya no se abre, para no ejecutarlo
+  // con almacen vacio).
+  if (FAlmacenStock = AValue) and (FBusqQry <> nil) and FBusqQry.Active then
     Exit;
   FAlmacenStock := AValue;
   RecargarBusqueda;
