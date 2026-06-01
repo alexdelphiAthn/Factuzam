@@ -2645,7 +2645,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         end
         object mnuPermisos: TMenuItem
           Caption = 'Permisos'
-          ShortCut = 16469
+          ShortCut = 16465
           OnClick = mnuPermisosClick
         end
       end

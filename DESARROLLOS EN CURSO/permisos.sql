@@ -152,6 +152,9 @@ INSERT IGNORE INTO fza_winforms
   (CALL_WINF, CAPTION_WINF, MENUITEM_WINF, UNITF_WINF, SHORTCUT_WINF,
    DATAMODULE_WINF, NUM_VENTANAS_WINF)
 VALUES
+  -- SHORTCUT_WINF vacío a propósito: el atajo Ctrl+Q de Permisos se define
+  -- en el menú principal (mnuPermisos.ShortCut). No se registra aquí para no
+  -- chocar con 'FormasdePago' (Ctrl+Q) en el OnShortCut del TPV de Caja.
   ('Permisos', 'Permisos', 'mnuPermisos',
-   'inMtoPermisos.TfrmMtoPermisos', 'Ctrl+U',
+   'inMtoPermisos.TfrmMtoPermisos', '',
    'UniDataPermisosGrupo.TdmPermisosGrupo', 1);
