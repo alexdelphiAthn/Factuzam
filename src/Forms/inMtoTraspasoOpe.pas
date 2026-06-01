@@ -246,19 +246,19 @@ begin
     begin
       lblOrigen.Caption := 'ALMACÉN ORIGEN';
       lblDestino.Caption := 'ALMACÉN DESTINO';
-      btnF12.Caption := 'F12 · Con ticket';
+      btnF12.Caption := 'F12 Con ticket';
     end;
     mtSolicitar:
     begin
       lblOrigen.Caption := 'ALMACÉN DESTINO (yo)';
       lblDestino.Caption := 'ALMACÉN ORIGEN (a quién pido)';
-      btnF12.Caption := 'F12 · Enviar solicitud';
+      btnF12.Caption := 'F12 Enviar solicitud';
     end;
     mtAtender:
     begin
       lblOrigen.Caption := 'ALMACÉN ORIGEN (yo)';
       lblDestino.Caption := 'SOLICITUD A ATENDER';
-      btnF12.Caption := 'F12 · Servir con ticket';
+      btnF12.Caption := 'F12 Servir con ticket';
     end;
   end;
   CargarCombo;
@@ -426,15 +426,16 @@ var
   Q: TUniQuery;
   sNum, sSer: string;
 begin
-  // Modal con las solicitudes ABIERTAS (pendientes/parciales). Al elegir una
-  // se carga para servirla y sale su ticket. Las cerradas no aparecen.
+  // Modal con las solicitudes ABIERTAS (pendientes/parciales). Los titulos de
+  // columna los pone el formateador (fza_config_campos), no se hardcodean. Al
+  // elegir una se carga para servirla y sale su ticket. Las cerradas no salen.
   Q := FDatos.QuerySolicitudesAbiertas;
   try
     if TBusquedaUtils.EjecutarBusqueda('Solicitudes abiertas', Q,
                                        'frmMtoSolicitudesSearch') then
     begin
-      sNum := Q.FieldByName('NUMERO').AsString;
-      sSer := Q.FieldByName('SERIE').AsString;
+      sNum := Q.FieldByName('NUMERO_TRSOL').AsString;
+      sSer := Q.FieldByName('SERIE_TRSOL').AsString;
       if FDatos.CargarSolicitud(sNum, sSer) then
       begin
         txtOrigen.Text :=
