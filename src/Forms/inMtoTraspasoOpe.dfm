@@ -33,7 +33,11 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 220
       Height = 28
+<<<<<<< HEAD
       Caption = 'Solicitar a otro almac'#233'n'
+=======
+      Caption = 'F6 · Solicitar a otro almacén'
+>>>>>>> 4c33df66c5f8fea51fcf2478d927968ccb57bbfa
       TabOrder = 1
       OnClick = btnModoClick
     end
@@ -43,7 +47,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 200
       Height = 28
-      Caption = 'Atender solicitudes'
+      Caption = 'F8 · Atender solicitudes'
       TabOrder = 2
       OnClick = btnModoClick
     end

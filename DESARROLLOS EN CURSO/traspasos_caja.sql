@@ -49,7 +49,7 @@ SET @ddl := IF(@tab_exists = 0,
   '  `USUARIO_ALTA`             varchar(100)  NOT NULL,'
   '  `USUARIO_MODIF`            varchar(100)  NOT NULL,'
   '  PRIMARY KEY (`NUMERO_TRSOL`,`SERIE_TRSOL`)'
-  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci',
   'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
@@ -140,7 +140,7 @@ SET @ddl := IF(@tab_exists = 0,
   '  `USUARIO_MODIF`                 varchar(100)  NOT NULL,'
   '  PRIMARY KEY (`NUMERO_TRSOL_TRSOLLIN`,`SERIE_TRSOL_TRSOLLIN`,'
   '               `LINEA_TRSOLLIN`)'
-  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci',
   'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
@@ -175,3 +175,34 @@ SELECT 'TS', '-', '-', 0, 10, 'S', 'S', NOW(), 'SISTEMA', 'SISTEMA'
     WHERE `TIPO_DOC_CON` = 'TS'
       AND `EMPRESA_CON` = '-'
       AND `SERIE_CON` = '-');
+
+-- ---------------------------------------------------------------------------
+-- 4. Alinear la colacion de las tablas con la del resto del modelo
+--    (utf8mb4_spanish_ci). Si MariaDB las creo con su colacion por defecto
+--    (utf8mb4_uca1400_ai_ci), los JOIN/'=' contra fza_articulos_* fallan con
+--    "Illegal mix of collations". Solo se convierte si la tabla no esta ya
+--    en spanish_ci (idempotente).
+-- ---------------------------------------------------------------------------
+SET @col := (
+  SELECT TABLE_COLLATION FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_traspasos_solicitudes');
+SET @ddl := IF(@col IS NOT NULL AND @col <> 'utf8mb4_spanish_ci',
+  'ALTER TABLE `fza_traspasos_solicitudes` '
+  'CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col := (
+  SELECT TABLE_COLLATION FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_traspasos_solicitudes_lineas');
+SET @ddl := IF(@col IS NOT NULL AND @col <> 'utf8mb4_spanish_ci',
+  'ALTER TABLE `fza_traspasos_solicitudes_lineas` '
+  'CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
