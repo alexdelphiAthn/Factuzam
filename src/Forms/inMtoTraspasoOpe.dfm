@@ -34,7 +34,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 220
       Height = 28
-      Caption = 'F6 · Solicitar a otro almacén'
+      Caption = 'F6 Solicitar a otro almacén'
       TabOrder = 1
       OnClick = btnModoClick
     end
@@ -44,7 +44,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 200
       Height = 28
-      Caption = 'F8 · Atender solicitudes'
+      Caption = 'F8 Atender solicitudes'
       TabOrder = 2
       OnClick = btnModoClick
     end
@@ -118,7 +118,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 10
       Width = 170
       Height = 40
-      Caption = 'F11 · Sin ticket'
+      Caption = 'F11 Sin ticket'
       TabOrder = 0
       OnClick = btnF11Click
     end
@@ -127,7 +127,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 10
       Width = 170
       Height = 40
-      Caption = 'F12 · Con ticket'
+      Caption = 'F12 Con ticket'
       TabOrder = 1
       OnClick = btnF12Click
     end
