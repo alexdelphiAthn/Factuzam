@@ -267,6 +267,18 @@ SELECT * FROM (SELECT
  WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
    WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
      AND OBJETIVO_CC = 'LINEAS_PEND_TRSOL');
+-- Almacen ORIGEN: a quien pedi. Lo usa el historico "Mis peticiones" (F7),
+-- donde yo soy el destino. Mismo slot (orden 4) que el Solicitante, ya que
+-- nunca aparecen juntos en el mismo buscador.
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes' AS t, 'CODIGO_ALM_ORIGEN_TRSOL' AS o,
+  'Pedido a' AS v, 110 AS a, 4 AS ord, 'S' AS vis) x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'CODIGO_ALM_ORIGEN_TRSOL');
 
 -- ---------------------------------------------------------------------------
 -- 6. Perfil del buscador de solicitudes (frmMtoSolicitudesSearch): activar
