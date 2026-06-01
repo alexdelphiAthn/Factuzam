@@ -212,12 +212,13 @@ type
     procedure MostrarDetalleExcepcion(const ATexto: string);
     procedure CopiarExceptionDialogClick(Sender: TObject);
     procedure AplicarPermisosMenu;
-    // Precarga de caches de arranque en paralelo (experimental).
-    procedure PrecargarParalelo;
+    // Precarga de caches de arranque. El modo (serie / paralelo) lo decide
+    // el parametro appArranqueEnParalelo.
+    procedure PrecargarCachesSerie;
+    procedure PrecargarCachesParalelo;
+    function CrearConexionPrecarga: TUniConnection;
     function EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
                                  out AError: string): Int64;
-    function CrearConexionPrecarga: TUniConnection;
-    function MedirMs(ACarga: TProc): Int64;
     function CopiaSeguridad: Boolean;
     procedure WorkerProgreso(const AEtapa: string;
                               APaso, ATotal: Integer;
@@ -471,11 +472,19 @@ begin
   oConn           := FDmConn.conUni;
   odmConn         := FDmConn;
   ofrmMto2        := Self;
-  // Precarga de caches de arranque en paralelo (experimental). Lo pesado
-  // (perfiles, informes-guias, config-campos, permisos) corre en tareas con
-  // conexion propia; Charge (toca VCL) y los parametros de caja/app se quedan
-  // en el hilo principal. Ver TfrmMtoPrincipal.PrecargarParalelo.
-  PrecargarParalelo;
+  oFzaWinf := TfzaWinF.Create(Self);
+  oFzaWinf.Charge(oConn);
+  // AppParams primero: define y lee appArranqueEnParalelo, que decide como
+  // se precargan las caches pesadas (perfiles, informes-guias, config-campos
+  // y permisos). Charge se queda siempre en el hilo principal (toca VCL).
+  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');
+  oAppParams.InicializarParametrosApp(oUser, oGroup);
+  if oAppParams.GetBool('appArranqueEnParalelo', False) then
+    PrecargarCachesParalelo
+  else
+    PrecargarCachesSerie;
+  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
+  oCajaParams.InicializarParametrosCaja(oUser, oGroup);
   oNomImpresoraCaja := GetImpresoraCaja;
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
@@ -750,13 +759,20 @@ end;
 // validar iban online https://www.iban.com
 // validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
 
-function TfrmMtoPrincipal.MedirMs(ACarga: TProc): Int64;
+procedure TfrmMtoPrincipal.PrecargarCachesSerie;
 var
-  sw: TStopwatch;
+  swTotal: TStopwatch;
 begin
-  sw := TStopwatch.StartNew;
-  ACarga();
-  Result := sw.ElapsedMilliseconds;
+  swTotal := TStopwatch.StartNew;
+  Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
+  odmPerfiles.PrecargarPerfilesUsuario;
+  oInfGuiasCache := TInformesGuiasCache.Create;
+  oInfGuiasCache.Precargar;
+  oConfigCampos := TConfigCamposCache.Create;
+  oConfigCampos.Precargar;
+  oPermisos := TPermisosCache.Create;
+  oPermisos.Precargar(oConn, oUser, oGroup, oRootGroup = 'S');
+  Log.LogInfo(Format('PrecargaSerie: total=%d ms', [swTotal.ElapsedMilliseconds]));
 end;
 
 function TfrmMtoPrincipal.CrearConexionPrecarga: TUniConnection;
@@ -817,17 +833,16 @@ begin
   Result := sw.ElapsedMilliseconds;
 end;
 
-procedure TfrmMtoPrincipal.PrecargarParalelo;
+procedure TfrmMtoPrincipal.PrecargarCachesParalelo;
 var
   swTotal: TStopwatch;
   bEsAdmin: Boolean;
-  msWinf, msCaja, msApp: Int64;
   msPerfiles, msInfGuias, msConfig, msPermisos: Int64;
   errPerfiles, errInfGuias, errConfig, errPermisos: string;
   t1, t2, t3, t4: ITask;
 begin
   swTotal := TStopwatch.StartNew;
-  Log.LogInfo('Arranque: PrecargarParalelo INICIO');
+  Log.LogInfo('Arranque: PrecargarCachesParalelo INICIO');
   bEsAdmin := (oRootGroup = 'S');
   msPerfiles := 0;
   msInfGuias := 0;
@@ -837,16 +852,11 @@ begin
   errInfGuias := '';
   errConfig := '';
   errPermisos := '';
-  // --- Hilo principal: lo que toca VCL y la creacion de los objetos cache.
-  // Charge enlaza cada item de menu via FindComponent (arbol VCL) -> aqui.
-  oFzaWinf := TfzaWinF.Create(Self);
-  msWinf := MedirMs(procedure begin oFzaWinf.Charge(oConn) end);
   oInfGuiasCache := TInformesGuiasCache.Create;
   oConfigCampos  := TConfigCamposCache.Create;
   oPermisos      := TPermisosCache.Create;
-  // --- Cargas pesadas en paralelo, cada una con su propia conexion. Cada
-  // tarea escribe solo en SUS variables (sin estado compartido) y captura su
-  // excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
+  // Cada tarea escribe solo en SUS variables (sin estado compartido) y captura
+  // su excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
   t1 := TTask.Run(
     procedure
     begin
@@ -884,13 +894,9 @@ begin
         end, errPermisos);
     end);
   TTask.WaitForAll([t1, t2, t3, t4]);
-  // --- Cargas ligeras en el hilo principal (usan oConn, ya sin tareas vivas).
-  msCaja := MedirMs(procedure begin oCajaParams.InicializarParametrosCaja(oUser, oGroup) end);
-  msApp := MedirMs(procedure begin oAppParams.InicializarParametrosApp(oUser, oGroup) end);
-  // --- Resultados (hilo principal). Tiempos por etapa para comparar.
-  Log.LogInfo(Format('PrecargaParalela: total=%d ms || principal: winf=%d ' +
-    'caja=%d app=%d || paralelo: perfiles=%d infguias=%d config=%d permisos=%d',
-    [swTotal.ElapsedMilliseconds, msWinf, msCaja, msApp,
+  Log.LogInfo(Format('PrecargaParalela: total=%d ms || ' +
+    'perfiles=%d infguias=%d config=%d permisos=%d',
+    [swTotal.ElapsedMilliseconds,
      msPerfiles, msInfGuias, msConfig, msPermisos]));
   if (errPerfiles <> '') or (errInfGuias <> '') or
      (errConfig <> '') or (errPermisos <> '') then
