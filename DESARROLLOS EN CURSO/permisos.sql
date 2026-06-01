@@ -153,5 +153,5 @@ INSERT IGNORE INTO fza_winforms
    DATAMODULE_WINF, NUM_VENTANAS_WINF)
 VALUES
   ('Permisos', 'Permisos', 'mnuPermisos',
-   'inMtoPermisos.TfrmMtoPermisos', '',
+   'inMtoPermisos.TfrmMtoPermisos', 'Ctrl+U',
    'UniDataPermisosGrupo.TdmPermisosGrupo', 1);
