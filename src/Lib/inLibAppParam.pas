@@ -222,6 +222,17 @@ begin
     'Temporada por defecto (ID de fza_propiedades_valores)',
     tpString, '');
 
+  // --- Arranque ---
+  // Precarga de caches de login en paralelo (perfiles, informes-guias,
+  // config-campos, permisos), cada una con su propia conexion del pool.
+  // Medido MAS LENTO que en serie en instalaciones locales: levantar hilos
+  // + conexiones frias del pool cuesta mas que el trabajo real (pequeno).
+  // Util solo si la latencia a BBDD fuese muy alta. Por defecto OFF.
+  RegistrarParametro('Arranque', 'appArranqueEnParalelo',
+    'Precargar las caches de login en paralelo (experimental, normalmente ' +
+    'más lento; dejar en False salvo BBDD de muy alta latencia)',
+    tpBoolean, 'False');
+
   // --- Log --- (los 4 switches de depuración y traza, agrupados)
   // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en
   // el popup de error de conUniError. Implica también el modo SQL.
