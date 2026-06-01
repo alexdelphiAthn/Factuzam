@@ -53,8 +53,10 @@ type
     cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
     btnExportarExcel: TcxButton;
+    btnImprimirInforme: TcxButton;
     dlgGuardar: TFileSaveDialog;
     procedure btnExportarExcelClick(Sender: TObject);
+    procedure btnImprimirInformeClick(Sender: TObject);
   private
     dmmCajaArqueosHist: TdmCajaArqueosHist;
   public
@@ -68,7 +70,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inMtoModalImpArqueos;
 
 {$R *.dfm}
 
@@ -96,6 +98,21 @@ begin
     FormatDateTime('yyyymmdd', Now) + '.xlsx';
   if dlgGuardar.Execute then
     ExportGridToXLSX(dlgGuardar.FileName, cxGrdPrincipal);
+end;
+
+procedure TfrmMtoCajaArqueosHist.btnImprimirInformeClick(Sender: TObject);
+var
+  frm: TfrmPrintArqueos;
+begin
+  inherited;
+  // Informe A4 horizontal (FastReport). El usuario puede retocar el formato
+  // con el botón Editar del propio modal y guardarlo como formato propio.
+  frm := TfrmPrintArqueos.Create(Application);
+  try
+    frm.ShowModal;
+  finally
+    FreeAndNil(frm);
+  end;
 end;
 
 initialization

@@ -92,6 +92,15 @@ inherited frmModalArqueo: TfrmModalArqueo
       TabOrder = 3
       OnClick = btnImprimirClick
     end
+    object btnHistorico: TcxButton
+      Left = 876
+      Top = 22
+      Width = 124
+      Height = 35
+      Caption = 'Hist'#243'rico (F8)'
+      TabOrder = 8
+      OnClick = btnHistoricoClick
+    end
   end
   object pnlBody: TPanel [1]
     Left = 0
@@ -1157,6 +1166,11 @@ inherited frmModalArqueo: TfrmModalArqueo
       Caption = 'Desplegar Hasta'
       ShortCut = 117
       OnExecute = actDesplegarHastaExecute
+    end
+    object actHistorico: TAction
+      Caption = 'Hist'#243'rico'
+      ShortCut = 119
+      OnExecute = actHistoricoExecute
     end
   end
   object dsResEmpleado: TDataSource

@@ -138,6 +138,8 @@ uses
   inLibArqueoPersistencia in 'src\Lib\inLibArqueoPersistencia.pas',
   inLibGenerarTicketCaja in 'src\Lib\inLibGenerarTicketCaja.pas',
   inMtoModalArqueo in 'src\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
+  inMtoModalArqueosHistCaja in 'src\Modals\inMtoModalArqueosHistCaja.pas' {frmModalArqueosHistCaja},
+  inMtoModalImpArqueos in 'src\Modals\inMtoModalImpArqueos.pas' {frmPrintArqueos},
   inMtoModalEntradaCambio in 'src\Modals\inMtoModalEntradaCambio.pas' {frmModalEntradaCambio},
   inMtoModalGastoCaja in 'src\Modals\inMtoModalGastoCaja.pas' {frmModalGastoCaja},
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
