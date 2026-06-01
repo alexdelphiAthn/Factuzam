@@ -22,15 +22,15 @@ F5 Recuento, ese flujo persistirá una fila en `fza_caja_arqueos` y marcará
 | Archivo | Contenido |
 |---|---|
 | `DESARROLLOS EN CURSO/arqueo_caja.sql` | Script DDL: crea `fza_caja_arqueos` con sus índices. Idempotente. |
-| `src/Lib/inLibArqueo.pas` | `TArqueoCalculadora.Calcular` — record `TArqueoCaja` con todos los importes calculados a partir de la BBDD. |
-| `src/Modals/inMtoModalArqueo.pas` + `.dfm` | `TfrmModalArqueo` — pantalla modal con el detalle de cuadre. `class function Ejecutar(...)` siguiendo el patrón del libro de estilo. |
+| `src/Caja/Lib/inLibArqueo.pas` | `TArqueoCalculadora.Calcular` — record `TArqueoCaja` con todos los importes calculados a partir de la BBDD. |
+| `src/Caja/Modals/inMtoModalArqueo.pas` + `.dfm` | `TfrmModalArqueo` — pantalla modal con el detalle de cuadre. `class function Ejecutar(...)` siguiendo el patrón del libro de estilo. |
 
 ## 2. Archivos modificados
 
 | Archivo | Cambio |
 |---|---|
 | `LIBRO_DE_ESTILO_BBDD.md` | Registra el sufijo `ARQ` en el catálogo de la sección 2. |
-| `src/Forms/inMtoCajaMenu.pas` | `lblArqueoClick` deja de ser TODO: lanza `TfrmModalArqueo.Ejecutar` con la empresa/almacén/caja actuales y `FFechaCaja` como rango por defecto. |
+| `src/Caja/Forms/inMtoCajaMenu.pas` | `lblArqueoClick` deja de ser TODO: lanza `TfrmModalArqueo.Ejecutar` con la empresa/almacén/caja actuales y `FFechaCaja` como rango por defecto. |
 | `fzam.dpr` | Registra `inLibArqueo` y `inMtoModalArqueo`. |
 | `DESARROLLOS EN CURSO/menu_caja.md` | F11 deja de figurar como TODO. |
 

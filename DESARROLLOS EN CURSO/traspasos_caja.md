@@ -112,7 +112,7 @@ En **modo Atender** aparece primero la lista de solicitudes pendientes (§6).
 ## 4. El grid de líneas (reutiliza el de `inMtoCajaOpe`)
 
 Se reutiliza el patrón de `TfrmMtoOpeCaja` / `TdmCajaOpe`
-(`src/Forms/inMtoCajaOpe.pas`, `src/DataModules/UniDataCaja.pas`), descrito
+(`src/Caja/Forms/inMtoCajaOpe.pas`, `src/Caja/DataModules/UniDataCaja.pas`), descrito
 en `menu_caja.md` §4.3, **quitando lo de venta** (tarifa, descuento, precio
 de venta, depósitos) y dejando lo de stock:
 
@@ -379,12 +379,12 @@ igual de válido y reutiliza `InsertarMovimientoAlmacen`/`InsertarOperacionCaja`
 
 | Archivo                                   | Qué                                            |
 |-------------------------------------------|------------------------------------------------|
-| `src/Forms/inMtoCajaMenu.pas:746`         | Implementar `lblTraspasosClick` → abre operativa|
+| `src/Caja/Forms/inMtoCajaMenu.pas:746`         | Implementar `lblTraspasosClick` → abre operativa|
 | `src/Forms/inMtoTraspasoOpe.pas/.dfm`     | **Nuevo** `TfrmMtoOpeTraspaso` (3 modos), hereda `TfrmBase` |
 | `src/DataModules/UniDataTraspaso.pas`     | **Nuevo** `TdmTraspaso` (cdsCabecera/cdsLineas, grabar) |
 | `src/Forms/inMtoConsultaOpe.pas`          | **Tocar**: editar/anular la operación `TR`/`TA` desde Buscar/Modificar F10 (§5.1) |
 | `src/Forms/inMtoTraspasoSolicitudes.pas`  | **Nuevo** `TfrmMtoTraspasoSolicitudes` (lista sobre `fza_traspasos_solicitudes`), hereda `TfrmMtoGen` |
-| `src/Lib/inLibCajaParam.pas`              | Registrar parámetros `vgerTraspaso*`            |
+| `src/Caja/Lib/inLibCajaParam.pas`              | Registrar parámetros `vgerTraspaso*`            |
 | `fzam.dpr`                                | Alta de las units nuevas                        |
 | `DESARROLLOS EN CURSO/traspasos_caja.sql` | **Nuevo** (idempotente): `fza_traspasos_solicitudes` + `…_lineas` (§7) |
 
