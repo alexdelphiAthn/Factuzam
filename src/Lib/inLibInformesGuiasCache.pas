@@ -50,7 +50,7 @@ type
   public
     constructor Create;
     destructor  Destroy; override;
-    procedure   Precargar;
+    procedure   Precargar(AConn: TUniConnection = nil);
     procedure   Invalidar;
     // Devuelve las guias activas que aplican al (Informe, Formato) dado,
     // replicando el filtro del SELECT original: FORMATO_INFGUI = '' (guia
@@ -85,7 +85,7 @@ begin
   FCargada := False;
 end;
 
-procedure TInformesGuiasCache.Precargar;
+procedure TInformesGuiasCache.Precargar(AConn: TUniConnection = nil);
 var
   qry:         TUniQuery;
   item:        TInformeGuiaItem;
@@ -94,12 +94,14 @@ var
 begin
   FPorInforme.Clear;
   FCargada := False;
-  if (oConn = nil) or (not oConn.Connected) then
+  if AConn = nil then
+    AConn := oConn;
+  if (AConn = nil) or (not AConn.Connected) then
     Exit;
   try
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := AConn;
       // Cargamos solo las guias activas. ORDER BY (INFORME, ORDEN, CODIGO)
       // permite que Obtener pueda devolver el slice ya ordenado sin tener
       // que reordenar en memoria.
