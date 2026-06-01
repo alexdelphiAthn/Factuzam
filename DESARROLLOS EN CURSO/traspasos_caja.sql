@@ -132,6 +132,8 @@ SET @ddl := IF(@tab_exists = 0,
   '  `CANTIDAD_SERVIDA_TRSOLLIN`     decimal(19,6) NOT NULL DEFAULT ''0.000000'''
   '       COMMENT ''Unidades ya atendidas (para estado PARCIAL)'','
   '  `ESATENDIDA_TRSOLLIN`           varchar(1)    NOT NULL DEFAULT ''N'','
+  '  `MOTIVO_RECHAZO_TRSOLLIN`       varchar(255)  NULL DEFAULT NULL'
+  '       COMMENT ''Motivo si la linea se deniega (servida=0)'','
   '  `INSTANTE_MODIF`                timestamp     NOT NULL'
   '       DEFAULT current_timestamp() ON UPDATE current_timestamp(),'
   '  `INSTANTE_ALTA`                 timestamp     NOT NULL'
@@ -155,6 +157,25 @@ SET @idx_exists := (
 SET @ddl := IF(@idx_exists = 0,
   'ALTER TABLE `fza_traspasos_solicitudes_lineas` '
   'ADD INDEX `IDX_TRSOLLIN_SKU` (`CODIGO_UNIDAD_TRSOLLIN`)',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Columna MOTIVO_RECHAZO_TRSOLLIN: anadida despues de la creacion original,
+-- por eso va con guarda idempotente (sirve para BBDD ya existentes y para las
+-- nuevas). Guarda el motivo cuando se deniega una linea (cantidad servida = 0).
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_traspasos_solicitudes_lineas'
+     AND COLUMN_NAME  = 'MOTIVO_RECHAZO_TRSOLLIN'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_traspasos_solicitudes_lineas` '
+  'ADD COLUMN `MOTIVO_RECHAZO_TRSOLLIN` varchar(255) NULL DEFAULT NULL '
+  'COMMENT ''Motivo si la linea se deniega (servida=0)'' '
+  'AFTER `ESATENDIDA_TRSOLLIN`',
   'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
@@ -267,6 +288,18 @@ SELECT * FROM (SELECT
  WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
    WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
      AND OBJETIVO_CC = 'LINEAS_PEND_TRSOL');
+-- Almacen ORIGEN: a quien pedi. Lo usa el historico "Mis peticiones" (F7),
+-- donde yo soy el destino. Mismo slot (orden 4) que el Solicitante, ya que
+-- nunca aparecen juntos en el mismo buscador.
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes' AS t, 'CODIGO_ALM_ORIGEN_TRSOL' AS o,
+  'Pedido a' AS v, 110 AS a, 4 AS ord, 'S' AS vis) x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'CODIGO_ALM_ORIGEN_TRSOL');
 
 -- ---------------------------------------------------------------------------
 -- 6. Perfil del buscador de solicitudes (frmMtoSolicitudesSearch): activar

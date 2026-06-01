@@ -26,8 +26,10 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit,
   cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
-  cxGrid, Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
-  inLibGridArticulos, inLibPermisos, inLibGenBusq;
+  cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
+  Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
+  inLibGridArticulos, inLibPermisos, inLibGenBusq, inLibFotos,
+  inLibAtributosPaleta;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -70,6 +72,19 @@ type
     FFecha: TDateTime;
     FModo: TModoTraspaso;
     FVerCoste: Boolean;
+    FStockPanel: TPanel;
+    FStockSplitter: TcxSplitter;
+    FFotoPanel: TPanel;
+    FFotoSplitter: TcxSplitter;
+    FFotoImg: TImage;
+    FStockGrid: TcxGrid;
+    FStockView: TcxGridDBTableView;
+    FStockQry: TUniQuery;
+    FStockDs: TDataSource;
+    FNavDs: TDataSource;
+    FColUds: TcxGridDBColumn;
+    FColPedidas: TcxGridDBColumn;
+    FColMotivo: TcxGridDBColumn;
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -77,6 +92,8 @@ type
     procedure EnfocarSegunModo;
     procedure AbrirModalSolicitudes;
     procedure CerrarSolicitudCargada;
+    procedure DenegarSolicitudCargada;
+    procedure AbrirMisPeticiones;
     procedure AplicarModo(AModo: TModoTraspaso);
     procedure CargarCombo;
     procedure CargarAlmacenesDestino;
@@ -87,6 +104,17 @@ type
     procedure EnviarSolicitud;
     procedure CargarSolicitudSeleccionada;
     function EmpleadoValido: Boolean;
+    // Consulta rapida de stock (banda inferior, igual que inMtoCajaOpe): una
+    // rejilla pivotada (almacenes en filas, tallas en columnas) + foto del
+    // articulo enfocado. Se refresca al resolver un SKU o al cambiar de linea.
+    procedure ConstruirPanelStock;
+    procedure ConsultarStock(const ACodigo: string);
+    procedure RefrescarFotoStock(const ACodArt, ACodSku: string);
+    procedure ActualizarStockYFoto;
+    procedure NavDataChange(Sender: TObject; Field: TField);
+    procedure StockViewCustomDrawCell(Sender: TcxCustomGridTableView;
+              ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+              var ADone: Boolean);
   public
     procedure PrepararValores(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
                               ACaja: string; AFecha: TDateTime);
@@ -110,15 +138,20 @@ begin
   FVerCoste := (not Assigned(oPermisos)) or
                oPermisos.TienePermiso('caja.verCoste', True);
   ConstruirGrid;
+  ConstruirPanelStock;
   // Elegir una solicitud en el desplegable (modo Atender) la carga sola.
   cboDestino.Properties.OnChange := cboDestinoPropertiesChange;
 end;
 
 procedure TfrmMtoOpeTraspaso.FormDestroy(Sender: TObject);
 begin
+  // Evitar callbacks de stock/foto durante el desmontaje.
+  if Assigned(FNavDs) then
+    FNavDs.OnDataChange := nil;
   FreeAndNil(FGridCtrl);
   FreeAndNil(FComboCodigos);
-  // FDatos lo libera el Owner (Self) automáticamente.
+  // FDatos y los componentes runtime (grid/foto/datasources) los libera el
+  // Owner (Self) automáticamente.
   inherited;
 end;
 
@@ -176,6 +209,8 @@ begin
   Col.Caption := 'Uds';
   Col.DataBinding.FieldName := 'CANTIDAD';
   Col.Width := 50;
+  // Al atender pasa a ser "lo que sirvo" (editable); 0 = denegar esa linea.
+  FColUds := Col;
   Col := FView.CreateColumn;
   Col.Caption := 'Coste';
   Col.DataBinding.FieldName := 'PRECIO_COSTE';
@@ -189,6 +224,208 @@ begin
   Col.DataBinding.FieldName := 'STOCK_ORIGEN';
   Col.Options.Editing := False;
   Col.Width := 70;
+  // Columnas que solo se usan al ATENDER (ocultas en traspaso/solicitar; las
+  // muestra AplicarModo): lo pedido (referencia) y el motivo si se deniega.
+  Col := FView.CreateColumn;
+  Col.Caption := 'Pedidas';
+  Col.DataBinding.FieldName := 'CANTIDAD_PEDIDA';
+  Col.Options.Editing := False;
+  Col.Width := 60;
+  Col.Visible := False;
+  FColPedidas := Col;
+  Col := FView.CreateColumn;
+  Col.Caption := 'Motivo rechazo';
+  Col.DataBinding.FieldName := 'MOTIVO';
+  Col.Width := 180;
+  Col.Visible := False;
+  FColMotivo := Col;
+end;
+
+procedure TfrmMtoOpeTraspaso.ConstruirPanelStock;
+var
+  Lvl: TcxGridLevel;
+begin
+  // Banda inferior dentro de pnlCentro (la rejilla de lineas FGrid, alClient,
+  // queda encima). Construida en codigo igual que FGrid, para no tocar el dfm.
+  FStockPanel := TPanel.Create(Self);
+  FStockPanel.Parent := pnlCentro;
+  FStockPanel.Align := alBottom;
+  FStockPanel.Height := 170;
+  FStockPanel.BevelOuter := bvNone;
+  FStockPanel.Caption := '';
+  // Splitter para redimensionar la banda (entre lineas y stock).
+  FStockSplitter := TcxSplitter.Create(Self);
+  FStockSplitter.Parent := pnlCentro;
+  FStockSplitter.AlignSplitter := salBottom;
+  // Foto del articulo a la derecha de la banda.
+  FFotoPanel := TPanel.Create(Self);
+  FFotoPanel.Parent := FStockPanel;
+  FFotoPanel.Align := alRight;
+  FFotoPanel.Width := 160;
+  FFotoPanel.BevelOuter := bvNone;
+  FFotoPanel.Caption := '';
+  FFotoImg := TImage.Create(Self);
+  FFotoImg.Parent := FFotoPanel;
+  FFotoImg.Align := alClient;
+  FFotoImg.Proportional := True;
+  FFotoImg.Center := True;
+  FFotoImg.Stretch := False;
+  FFotoSplitter := TcxSplitter.Create(Self);
+  FFotoSplitter.Parent := FStockPanel;
+  FFotoSplitter.AlignSplitter := salRight;
+  // Rejilla de stock pivotado (rellena el resto de la banda).
+  FStockGrid := TcxGrid.Create(Self);
+  FStockGrid.Parent := FStockPanel;
+  FStockGrid.Align := alClient;
+  FStockView := FStockGrid.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
+  Lvl := FStockGrid.Levels.Add;
+  Lvl.GridView := FStockView;
+  FStockView.OptionsData.Editing := False;
+  FStockView.OptionsData.Inserting := False;
+  FStockView.OptionsData.Deleting := False;
+  FStockView.OptionsSelection.CellSelect := False;
+  FStockView.OptionsView.GroupByBox := False;
+  FStockView.OptionsView.ColumnAutoWidth := True;
+  FStockView.OptionsCustomize.ColumnFiltering := False;
+  FStockView.OnCustomDrawCell := StockViewCustomDrawCell;
+  // Query del SP pivotado (mismo que usa caja: almacenes en filas, tallas en
+  // columnas). Acepta codigo de articulo o SKU como entrada.
+  FStockQry := TUniQuery.Create(Self);
+  FStockQry.Connection := oConn;
+  FStockQry.SQL.Text := 'CALL PRC_GET_CAJA_STOCK_PIVOTADO(:ARTICULO)';
+  FStockDs := TDataSource.Create(Self);
+  FStockDs.DataSet := FStockQry;
+  FStockView.DataController.DataSource := FStockDs;
+  // Refrescar stock+foto al moverse por las lineas (cambio de registro).
+  FNavDs := TDataSource.Create(Self);
+  FNavDs.DataSet := FDatos.cdsLineas;
+  FNavDs.OnDataChange := NavDataChange;
+end;
+
+procedure TfrmMtoOpeTraspaso.ConsultarStock(const ACodigo: string);
+var
+  i: Integer;
+  Mapa: TDictionary<string, string>;
+begin
+  // Misma logica que inMtoCajaOpe.ConsultarStock: abrir el SP, construir las
+  // columnas dinamicas, alinear cabeceras y ajustar anchos (con swatch en la
+  // primera columna). Se omiten los cronometros de perf.
+  if (ACodigo <> '') and Assigned(FStockView) then
+  begin
+    FStockView.BeginUpdate;
+    try
+      FStockQry.Close;
+      FStockView.ClearItems;
+      FStockQry.ParamByName('ARTICULO').AsString := ACodigo;
+      FStockQry.Open;
+      if not FStockQry.IsEmpty then
+      begin
+        FStockView.DataController.CreateAllItems;
+        for i := 0 to FStockView.ColumnCount - 1 do
+        begin
+          if i <= 1 then
+            FStockView.Columns[i].HeaderAlignmentHorz := taLeftJustify
+          else
+            FStockView.Columns[i].HeaderAlignmentHorz := taRightJustify;
+        end;
+      end;
+    finally
+      FStockView.EndUpdate;
+    end;
+    if FStockQry.Active and (not FStockQry.IsEmpty) then
+    begin
+      FStockView.BeginUpdate;
+      try
+        try
+          FStockView.ApplyBestFit;
+        except
+          // ApplyBestFit puede fallar si no hay columnas; lo ignoramos.
+        end;
+        // La primera columna (codigo CODART/COLOR) lleva swatch de color: le
+        // sumamos el ancho del cuadradito para que no recorte el texto.
+        Mapa := ObtenerMapaAtributosGlobal;
+        if (Mapa <> nil) and (Mapa.Count > 0) and
+           (FStockView.ColumnCount > 0) then
+          AjustarAnchoColumnaParaSwatch(FStockView.Columns[0], Mapa);
+      finally
+        FStockView.EndUpdate;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.RefrescarFotoStock(const ACodArt, ACodSku: string);
+var
+  info: TFotoInfo;
+  sRuta: string;
+  png: TPngImage;
+begin
+  if Assigned(FFotoImg) then
+  begin
+    FFotoImg.Picture.Assign(nil);
+    if ACodArt <> '' then
+    begin
+      info := oFotos.Resolver(ACodArt, ACodSku);
+      sRuta := oFotos.RutaFoto(info, frPx300);
+      if sRuta <> '' then
+      begin
+        png := TPngImage.Create;
+        try
+          png.LoadFromFile(sRuta);
+          FFotoImg.Picture.Assign(png);
+        finally
+          FreeAndNil(png);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.ActualizarStockYFoto;
+var
+  sArt, sSku: string;
+begin
+  if (FDatos = nil) or (FDatos.cdsLineas = nil) or
+     (not FDatos.cdsLineas.Active) or FDatos.cdsLineas.IsEmpty then
+  begin
+    // Sin lineas: vaciar stock y foto.
+    RefrescarFotoStock('', '');
+    if Assigned(FStockQry) then
+      FStockQry.Close;
+    if Assigned(FStockView) then
+      FStockView.ClearItems;
+  end
+  else
+  begin
+    sArt := Trim(FDatos.cdsLineas.FieldByName('CODIGO_ART').AsString);
+    sSku := Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+    // Consultamos por el articulo padre para ver todas las tallas/colores en
+    // todos los almacenes; la foto usa el SKU concreto si existe. Si la linea
+    // esta en blanco (linea nueva tras resolver) dejamos lo ultimo mostrado en
+    // vez de parpadear a vacio.
+    if sArt <> '' then
+    begin
+      ConsultarStock(sArt);
+      RefrescarFotoStock(sArt, sSku);
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.NavDataChange(Sender: TObject; Field: TField);
+begin
+  // Solo al cambiar de registro (Field = nil), no en cada cambio de columna.
+  if Field = nil then
+    ActualizarStockYFoto;
+end;
+
+procedure TfrmMtoOpeTraspaso.StockViewCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+begin
+  // Pinta el cuadradito de color en la columna del codigo (CODART/COLOR),
+  // igual que la rejilla de stock de caja.
+  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+    ADone := True;
 end;
 
 procedure TfrmMtoOpeTraspaso.GridResuelto(const ACodArt, ASku,
@@ -207,6 +444,13 @@ begin
       FDatos.ObtenerStock(ASku, sAlmacenOrigen);
   end;
   ActualizarTotal;
+  // Refrescar la consulta de stock y la foto del articulo recien resuelto
+  // (el cambio de campos en la misma fila no dispara NavDataChange).
+  if ACompleto then
+  begin
+    ConsultarStock(ACodArt);
+    RefrescarFotoStock(ACodArt, ASku);
+  end;
   // Al completar un SKU, deja otra linea en blanco para seguir metiendo
   // (sustituye a la NewItemRow); solo en traspaso/solicitar.
   if ACompleto and (FModo <> mtAtender) then
@@ -225,6 +469,8 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
+var
+  i: Integer;
 begin
   FModo := AModo;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
@@ -234,11 +480,33 @@ begin
   FGridCtrl.AlmacenStock :=
     FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   btnF11.Visible := AModo <> mtSolicitar;
-  // El grid solo es editable cuando se teclean lineas (traspaso / solicitar);
-  // al atender, las lineas vienen de la solicitud y no se teclean a mano.
-  FView.OptionsData.Editing := AModo <> mtAtender;
+  // Edicion del grid por modo. Al teclear lineas (traspaso / solicitar) todo el
+  // grid es editable. Al atender, las lineas vienen de la solicitud: solo se
+  // editan las uds a servir y, si se deniega (0), el motivo; el resto bloqueado.
   FView.OptionsData.Inserting := AModo <> mtAtender;
   FView.OptionsData.Deleting := AModo <> mtAtender;
+  FView.OptionsData.Editing := True;
+  for i := 0 to FView.ColumnCount - 1 do
+  begin
+    if AModo = mtAtender then
+      FView.Columns[i].Options.Editing :=
+        (FView.Columns[i] = FColUds) or (FView.Columns[i] = FColMotivo)
+    else
+      FView.Columns[i].Options.Editing := True;
+  end;
+  // Pedidas/Motivo solo al atender; "Uds" pasa a "Sirvo" para dejar claro que
+  // ahi se teclea lo que se sirve (0 = denegar la linea).
+  if Assigned(FColPedidas) then
+    FColPedidas.Visible := AModo = mtAtender;
+  if Assigned(FColMotivo) then
+    FColMotivo.Visible := AModo = mtAtender;
+  if Assigned(FColUds) then
+  begin
+    if AModo = mtAtender then
+      FColUds.Caption := 'Sirvo'
+    else
+      FColUds.Caption := 'Uds';
+  end;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -474,6 +742,73 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeTraspaso.DenegarSolicitudCargada;
+var
+  sMotivo: string;
+begin
+  // Deniega TODA la solicitud cargada (atajo F4): pide un motivo, lo marca en
+  // cada linea (servir 0) y la resuelve como DENEGADO TOTAL sin mover stock. El
+  // solicitante lo vera en su historico (F7). Para denegar solo algunas lineas,
+  // sirve unas con cantidad y deja otras a 0 con su motivo, y pulsa F12.
+  if FModo <> mtAtender then
+    ShowMessage('Denegar solo aplica al atender una solicitud.')
+  else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
+    ShowMessage('Trae primero una solicitud (F8) para denegarla.')
+  else
+  begin
+    sMotivo := '';
+    if InputQuery('Denegar petición',
+                  'Motivo del rechazo (lo verá quien la pidió):', sMotivo) then
+    begin
+      if Trim(sMotivo) = '' then
+        ShowMessage('Debes indicar un motivo para denegar.')
+      else
+      begin
+        FDatos.cdsLineas.DisableControls;
+        try
+          FDatos.cdsLineas.First;
+          while not FDatos.cdsLineas.Eof do
+          begin
+            if Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString)
+               <> '' then
+            begin
+              FDatos.cdsLineas.Edit;
+              FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat := 0;
+              FDatos.cdsLineas.FieldByName('MOTIVO').AsString := sMotivo;
+              FDatos.cdsLineas.Post;
+            end;
+            FDatos.cdsLineas.Next;
+          end;
+        finally
+          FDatos.cdsLineas.EnableControls;
+        end;
+        if FDatos.GrabarDenegacion then
+        begin
+          ShowMessage('Petición denegada (DENEGADO TOTAL).');
+          AplicarModo(mtAtender);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.AbrirMisPeticiones;
+var
+  Q: TUniQuery;
+begin
+  // Historico (solo consulta) de las peticiones que YO he hecho (soy el
+  // destino que pide): numero, serie, fecha, a quien pedi (origen) y estado,
+  // para saber si se han servido/denegado. Reutiliza el buscador de
+  // solicitudes; los titulos los pone el formateador (fza_config_campos).
+  Q := FDatos.QueryMisPeticiones(FAlmacen);
+  try
+    TBusquedaUtils.EjecutarBusqueda('Mis peticiones', Q,
+                                    'frmMtoSolicitudesSearch');
+  finally
+    FreeAndNil(Q);
+  end;
+end;
+
 procedure TfrmMtoOpeTraspaso.EnviarSolicitud;
 var
   sNum, sSer, sOrigen: string;
@@ -533,6 +868,8 @@ end;
 procedure TfrmMtoOpeTraspaso.EjecutarTraspaso(AConTicket: Boolean);
 var
   sNumOp, sDestino, sOrigen, sEmpleado, sNumSol, sSerSol: string;
+  iServidas: Integer;
+  bFaltaMotivo: Boolean;
 begin
   if EmpleadoValido then
   begin
@@ -548,14 +885,58 @@ begin
       sSerSol := FDatos.cdsCabecera.FieldByName('SERIE_SOL').AsString;
       if sDestino = '' then
         ShowMessage('Carga primero una solicitud (botón Cargar solicitud).')
-      else if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
+      else
       begin
-        ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
-                           [sNumOp]));
-        if AConTicket then
-          TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
-            sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
-        AplicarModo(mtAtender);
+        // Reparto por linea: cuenta lo que se sirve (CANTIDAD>0) y exige motivo
+        // en las que se deniegan (servir 0).
+        iServidas := 0;
+        bFaltaMotivo := False;
+        FDatos.cdsLineas.DisableControls;
+        try
+          FDatos.cdsLineas.First;
+          while not FDatos.cdsLineas.Eof do
+          begin
+            if Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString)
+               <> '' then
+            begin
+              if FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat > 0 then
+                Inc(iServidas)
+              else if Trim(FDatos.cdsLineas.FieldByName('MOTIVO').AsString)
+                      = '' then
+                bFaltaMotivo := True;
+            end;
+            FDatos.cdsLineas.Next;
+          end;
+        finally
+          FDatos.cdsLineas.EnableControls;
+        end;
+        if bFaltaMotivo then
+          ShowMessage('Indica el motivo en las líneas que deniegas ' +
+                      '(las que sirves a 0).')
+        else if iServidas > 0 then
+        begin
+          // Hay algo que servir: traspaso de lo servido; lo denegado queda
+          // registrado con su motivo. Estado COMPLETADO TOTAL/PARCIAL.
+          if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
+          begin
+            ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
+                               [sNumOp]));
+            if AConTicket then
+              TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
+                sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
+            AplicarModo(mtAtender);
+          end;
+        end
+        else if MessageDlg('No has marcado nada para servir. ¿Denegar toda ' +
+                  'la petición?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        begin
+          // Todo a 0: denegacion total (con el motivo por linea), sin traspaso.
+          if FDatos.GrabarDenegacion then
+          begin
+            ShowMessage('Petición denegada (DENEGADO TOTAL).');
+            AplicarModo(mtAtender);
+          end;
+        end;
       end;
     end
     else
@@ -606,8 +987,12 @@ begin
   case Key of
     VK_F3:
       QuitarLinea;
+    VK_F4:
+      DenegarSolicitudCargada;
     VK_F6:
       AplicarModo(mtSolicitar);
+    VK_F7:
+      AbrirMisPeticiones;
     VK_F8:
       if FModo = mtAtender then
         AbrirModalSolicitudes
