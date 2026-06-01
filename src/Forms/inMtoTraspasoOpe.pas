@@ -246,19 +246,19 @@ begin
     begin
       lblOrigen.Caption := 'ALMACÉN ORIGEN';
       lblDestino.Caption := 'ALMACÉN DESTINO';
-      btnF12.Caption := 'F12 · Con ticket';
+      btnF12.Caption := 'F12 Con ticket';
     end;
     mtSolicitar:
     begin
       lblOrigen.Caption := 'ALMACÉN DESTINO (yo)';
       lblDestino.Caption := 'ALMACÉN ORIGEN (a quién pido)';
-      btnF12.Caption := 'F12 · Enviar solicitud';
+      btnF12.Caption := 'F12 Enviar solicitud';
     end;
     mtAtender:
     begin
       lblOrigen.Caption := 'ALMACÉN ORIGEN (yo)';
       lblDestino.Caption := 'SOLICITUD A ATENDER';
-      btnF12.Caption := 'F12 · Servir con ticket';
+      btnF12.Caption := 'F12 Servir con ticket';
     end;
   end;
   CargarCombo;
