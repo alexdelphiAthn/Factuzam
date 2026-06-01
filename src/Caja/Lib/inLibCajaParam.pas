@@ -75,7 +75,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar; // Asumo que aquí tienes oConn
+  System.StrUtils, inLibGlobalVar; // Asumo que aquí tienes oConn
 
 { TParamDef }
 
@@ -147,20 +147,28 @@ begin
     begin
       KeyDB := qry.FieldByName('SUBKEY_USUPER').AsString;
       ValueDB := qry.FieldByName('VALUE_USUPER').AsString;
-      if FParams.TryGetValue(KeyDB, ParamObj) then
+      // Las claves de geometría/layout (WindowState, Left, Top, Width,
+      // Height, Divider) se persisten bajo el mismo KEY_USUPER que los
+      // parámetros (véase inLibLayoutForm.TLayoutSaver). No son parámetros
+      // configurables: las saltamos para que no aparezcan como huérfanas.
+      if not MatchText(KeyDB, ['WindowState', 'Left', 'Top', 'Width',
+                               'Height', 'Divider']) then
       begin
-        ParamObj.ValorActual := ValueDB;
-      end
-      else
-      begin
-        // Si hay un parámetro huérfano en la BD que no hemos registrado,
-        // lo metemos en una categoría genérica para que siga viéndose.
-        RegistrarParametro('Otros (Heredados de BD)',
-                           KeyDB,
-                           'Parámetro sin descripción',
-                           tpString,
-                           ValueDB);
-        FParams.Items[KeyDB].ValorActual := ValueDB;
+        if FParams.TryGetValue(KeyDB, ParamObj) then
+        begin
+          ParamObj.ValorActual := ValueDB;
+        end
+        else
+        begin
+          // Si hay un parámetro huérfano en la BD que no hemos registrado,
+          // lo metemos en una categoría genérica para que siga viéndose.
+          RegistrarParametro('Otros (Heredados de BD)',
+                             KeyDB,
+                             'Parámetro sin descripción',
+                             tpString,
+                             ValueDB);
+          FParams.Items[KeyDB].ValorActual := ValueDB;
+        end;
       end;
       qry.Next;
     end;
