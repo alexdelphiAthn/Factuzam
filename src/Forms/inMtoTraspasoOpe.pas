@@ -207,6 +207,10 @@ begin
   FModo := AModo;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
   txtOrigen.Text := FAlmacen;
+  // El buscador/desplegable de SKU muestra el stock del almacen origen y
+  // ordena por stock (los que tienen, primero). Recarga al cambiar de modo.
+  FGridCtrl.AlmacenStock :=
+    FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   btnF11.Visible := AModo <> mtSolicitar;
   // El grid solo es editable cuando se teclean lineas (traspaso / solicitar);
   // al atender, las lineas vienen de la solicitud y no se teclean a mano.
