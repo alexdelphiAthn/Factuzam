@@ -89,14 +89,25 @@ type
     // el cds mientras el editor in-place se esta cerrando.
     FTimerResolve: TTimer;
     FSkuPend: string;
+    // Lectura con pistola en la celda de articulo: el lector envia STX(#2) +
+    // codigo + ETX(#3). Acumulamos el codigo entre ambos y al recibir ETX lo
+    // resolvemos (como si llegara un Enter). FEnScanner indica que estamos
+    // entre STX y ETX.
+    FEnScanner: Boolean;
+    FScanBuffer: string;
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
     procedure ArticuloGetProperties(Sender: TcxCustomGridTableItem;
                            ARecord: TcxCustomGridRecord;
                            var AProperties: TcxCustomEditProperties);
+    procedure ArticuloKeyPress(Sender: TObject; var Key: Char);
     procedure ComboBusqCloseUp(Sender: TObject);
     procedure TimerResolveTimer(Sender: TObject);
     procedure SetAlmacenStock(const AValue: string);
+    // Limpia una entrada leida con pistola: el lector envia STX(#2) prefijo y
+    // ETX(#3) sufijo (y a veces CR/LF). Se quitan para no ensuciar la
+    // resolucion ni el filtrado incremental.
+    function LimpiarEntradaScan(const AEntrada: string): string;
     procedure CrearColumnaArticulo;
     procedure CrearColumnasAtributo;
     procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
@@ -213,6 +224,13 @@ procedure TGridArticulosLineas.ViewInitEdit(
 var
   BE: TcxButtonEdit;
 begin
+  // Celda de articulo: enganchamos OnKeyPress para capturar el lector de
+  // codigo de barras (STX...ETX) y resolver al recibir ETX.
+  if (AItem = FColArticulo) and (AEdit is TcxCustomTextEdit) then
+  begin
+    TcxCustomTextEdit(AEdit).OnKeyPress := ArticuloKeyPress;
+    Exit;
+  end;
   if (AItem = nil) or (AItem.Tag < 1) or (AItem.Tag > 5) then
     Exit;
   if not (AEdit is TcxButtonEdit) then
@@ -410,6 +428,43 @@ begin
     AProperties := FRepCombo.Properties;
 end;
 
+// Lector de codigo de barras en la celda de articulo: el lector manda STX(#2)
+// + codigo + ETX(#3). Capturamos el codigo entre ambos (sin dejar que esos
+// controles entren en el editor) y al recibir ETX lo resolvemos como si
+// llegara un Enter (via FTimerResolve). Mismo patron que inMtoCajaOpe.
+procedure TGridArticulosLineas.ArticuloKeyPress(Sender: TObject;
+                                                var Key: Char);
+begin
+  if Key = #2 then
+  begin
+    FEnScanner := True;
+    FScanBuffer := '';
+    Key := #0;
+    Exit;
+  end;
+  if FEnScanner then
+  begin
+    if Key = #3 then
+    begin
+      FEnScanner := False;
+      Key := #0;
+      // Resolvemos lo escaneado (diferido, como el desplegable).
+      FSkuPend := FScanBuffer;
+      FScanBuffer := '';
+      if Trim(FSkuPend) <> '' then
+      begin
+        FTimerResolve.Enabled := False;
+        FTimerResolve.Enabled := True;
+      end;
+    end
+    else
+    begin
+      FScanBuffer := FScanBuffer + Key;
+      Key := #0;
+    end;
+  end;
+end;
+
 // Al cerrar el desplegable con una seleccion: resolvemos el articulo elegido
 // (ResolverEntrada acepta articulo o SKU). Se difiere (timer 1ms) para no
 // tocar el cds mientras el editor se cierra.
@@ -432,8 +487,18 @@ begin
   FTimerResolve.Enabled := False;
   sSku := FSkuPend;
   FSkuPend := '';
-  if Trim(sSku) <> '' then
-    ResolverEntrada(sSku);
+  if Trim(sSku) = '' then
+    Exit;
+  if ResolverEntrada(sSku) then
+    // Cierra el editor para que la celda muestre lo resuelto (descarta el
+    // texto crudo escaneado/elegido que quedo en el editor).
+    if FView.Controller.EditingController.IsEditing then
+      try
+        FView.Controller.EditingController.HideEdit(False);
+      except
+        on E: EInvalidOperation do
+          ;
+      end;
 end;
 
 // Click en el boton de la columna de articulo: abre el buscador generico
@@ -661,19 +726,39 @@ begin
       FCds.FieldByName(FCampos.AttrValor[i + 1]).AsString := Partes[i];
 end;
 
+function TGridArticulosLineas.LimpiarEntradaScan(
+  const AEntrada: string): string;
+var
+  i: Integer;
+  c: Char;
+begin
+  // El lector envia STX(#2) + codigo + ETX(#3), a veces con CR/LF. Quitamos
+  // esos controles y recortamos espacios; el codigo en si queda intacto.
+  Result := '';
+  for i := 1 to Length(AEntrada) do
+  begin
+    c := AEntrada[i];
+    if (c <> #2) and (c <> #3) and (c <> #13) and (c <> #10) then
+      Result := Result + c;
+  end;
+  Result := Trim(Result);
+end;
+
 function TGridArticulosLineas.ResolverEntrada(const AEntrada: string): Boolean;
 var
   Val: TArticulosValidador;
   R: TArtResolucionEntrada;
-  sCodArt, sSku, sDesc: string;
+  sCodArt, sSku, sDesc, sEntrada: string;
   bCompleto: Boolean;
 begin
   Result := False;
-  if Trim(AEntrada) = '' then
+  // Quita STX/ETX/CR/LF que mete el lector de codigo de barras.
+  sEntrada := LimpiarEntradaScan(AEntrada);
+  if sEntrada = '' then
     Exit;
   Val := TArticulosValidador.Create(FConn);
   try
-    R := Val.Resolver(Trim(AEntrada));
+    R := Val.Resolver(sEntrada);
   finally
     FreeAndNil(Val);
   end;
