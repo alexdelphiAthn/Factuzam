@@ -123,6 +123,10 @@ type
     procedure AtributoEnter(Sender: TObject);
     procedure TimerPopupTimer(Sender: TObject);
     procedure AbrirPaletaOrden(AOrden: Integer);
+    // Tras elegir un atributo, si quedan atributos sin rellenar enfoca el
+    // siguiente y abre su paleta (no deja pasar a la siguiente fila con el
+    // SKU a medias). Devuelve True si quedaba alguno pendiente.
+    function AvanzarSiguienteAtributo: Boolean;
     procedure AplicarSkuYAvisar;
     function ColumnaPorTag(ATag: Integer): TcxGridDBColumn;
     function GenerarSku: string;
@@ -897,6 +901,38 @@ begin
   begin
     FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString := sAvNuevo;
     AplicarSkuYAvisar;
+    // Si quedan atributos por elegir, salta al siguiente y abre su paleta;
+    // asi no se pasa a la siguiente fila con el SKU incompleto.
+    AvanzarSiguienteAtributo;
+  end;
+end;
+
+function TGridArticulosLineas.AvanzarSiguienteAtributo: Boolean;
+var
+  i, n: Integer;
+  Col: TcxGridDBColumn;
+begin
+  Result := False;
+  if (not FCds.Active) or FCds.IsEmpty then
+    Exit;
+  n := FCds.FieldByName(FCampos.NumAtributos).AsInteger;
+  for i := 1 to n do
+  begin
+    if Trim(FCds.FieldByName(FCampos.AttrValor[i]).AsString) = '' then
+    begin
+      Col := ColumnaPorTag(i);
+      if (Col <> nil) and Col.Visible then
+      begin
+        FView.Controller.FocusedColumn := Col;
+        // Diferimos abrir la paleta (timer 1ms): la modal anterior aun se
+        // esta cerrando y el editor de la nueva celda no esta parentado.
+        FOrdenPopupPend := i;
+        FTimerPopup.Enabled := False;
+        FTimerPopup.Enabled := True;
+        Result := True;
+      end;
+      Break;
+    end;
   end;
 end;
 
