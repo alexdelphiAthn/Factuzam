@@ -132,6 +132,8 @@ SET @ddl := IF(@tab_exists = 0,
   '  `CANTIDAD_SERVIDA_TRSOLLIN`     decimal(19,6) NOT NULL DEFAULT ''0.000000'''
   '       COMMENT ''Unidades ya atendidas (para estado PARCIAL)'','
   '  `ESATENDIDA_TRSOLLIN`           varchar(1)    NOT NULL DEFAULT ''N'','
+  '  `MOTIVO_RECHAZO_TRSOLLIN`       varchar(255)  NULL DEFAULT NULL'
+  '       COMMENT ''Motivo si la linea se deniega (servida=0)'','
   '  `INSTANTE_MODIF`                timestamp     NOT NULL'
   '       DEFAULT current_timestamp() ON UPDATE current_timestamp(),'
   '  `INSTANTE_ALTA`                 timestamp     NOT NULL'
@@ -155,6 +157,25 @@ SET @idx_exists := (
 SET @ddl := IF(@idx_exists = 0,
   'ALTER TABLE `fza_traspasos_solicitudes_lineas` '
   'ADD INDEX `IDX_TRSOLLIN_SKU` (`CODIGO_UNIDAD_TRSOLLIN`)',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Columna MOTIVO_RECHAZO_TRSOLLIN: anadida despues de la creacion original,
+-- por eso va con guarda idempotente (sirve para BBDD ya existentes y para las
+-- nuevas). Guarda el motivo cuando se deniega una linea (cantidad servida = 0).
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_traspasos_solicitudes_lineas'
+     AND COLUMN_NAME  = 'MOTIVO_RECHAZO_TRSOLLIN'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_traspasos_solicitudes_lineas` '
+  'ADD COLUMN `MOTIVO_RECHAZO_TRSOLLIN` varchar(255) NULL DEFAULT NULL '
+  'COMMENT ''Motivo si la linea se deniega (servida=0)'' '
+  'AFTER `ESATENDIDA_TRSOLLIN`',
   'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
