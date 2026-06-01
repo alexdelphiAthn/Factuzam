@@ -264,3 +264,30 @@ SELECT * FROM (SELECT
  WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
    WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
      AND OBJETIVO_CC = 'LINEAS_PEND_TRSOL');
+
+-- ---------------------------------------------------------------------------
+-- 6. Perfil del buscador de solicitudes (frmMtoSolicitudesSearch): activar
+--    oApplyWidth para que aplique anchos/orden de columna desde el perfil
+--    (igual que el resto de buscadores). Se siembra para el grupo 'Todos'.
+--    Idempotente (PK USUARIO_GRUPO+KEY+SUBKEY; INSERT ... WHERE NOT EXISTS).
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_usuarios_perfiles`
+  (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+SELECT * FROM (SELECT
+  'Todos' AS g, 'frmMtoSolicitudesSearch' AS k, 'oApplyWidth' AS s,
+  'True' AS v, NOW() AS ia, 'SISTEMA' AS ua, 'SISTEMA' AS um) x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_usuarios_perfiles`
+   WHERE USUARIO_GRUPO_USUPER = 'Todos'
+     AND KEY_USUPER = 'frmMtoSolicitudesSearch'
+     AND SUBKEY_USUPER = 'oApplyWidth');
+INSERT INTO `fza_usuarios_perfiles`
+  (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+SELECT * FROM (SELECT
+  'Todos', 'frmMtoSolicitudesSearch', 'cxGrdDBTabPrin__oApplyWidth',
+  'True', NOW(), 'SISTEMA', 'SISTEMA') x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_usuarios_perfiles`
+   WHERE USUARIO_GRUPO_USUPER = 'Todos'
+     AND KEY_USUPER = 'frmMtoSolicitudesSearch'
+     AND SUBKEY_USUPER = 'cxGrdDBTabPrin__oApplyWidth');
