@@ -50,6 +50,7 @@ type
     btnF12: TcxButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
                           Shift: TShiftState);
     procedure btnModoClick(Sender: TObject);
@@ -72,6 +73,7 @@ type
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
+    procedure AsegurarLineaNueva;
     procedure AplicarModo(AModo: TModoTraspaso);
     procedure CargarCombo;
     procedure CargarAlmacenesDestino;
@@ -115,6 +117,13 @@ begin
   FreeAndNil(FComboCodigos);
   // FDatos lo libera el Owner (Self) automáticamente.
   inherited;
+end;
+
+procedure TfrmMtoOpeTraspaso.FormShow(Sender: TObject);
+begin
+  // Al abrir, el foco va al almacén destino (lo primero que se elige).
+  if cboDestino.CanFocus then
+    cboDestino.SetFocus;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirGrid;
@@ -189,6 +198,10 @@ begin
       FDatos.ObtenerStock(ASku, sAlmacenOrigen);
   end;
   ActualizarTotal;
+  // Al completar un SKU, deja otra linea en blanco para seguir metiendo
+  // (sustituye a la NewItemRow); solo en traspaso/solicitar.
+  if ACompleto and (FModo <> mtAtender) then
+    AsegurarLineaNueva;
 end;
 
 procedure TfrmMtoOpeTraspaso.PrepararValores(AModo: TModoTraspaso;
@@ -216,7 +229,7 @@ begin
   // al atender, las lineas vienen de la solicitud y no se teclean a mano.
   FView.OptionsData.Editing := AModo <> mtAtender;
   FView.OptionsData.Inserting := AModo <> mtAtender;
-  FView.NewItemRow.Visible := AModo <> mtAtender;
+  FView.OptionsData.Deleting := AModo <> mtAtender;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -241,9 +254,25 @@ begin
   end;
   CargarCombo;
   cboDestino.ItemIndex := -1;
-  // La fila nueva del grid (NewItemRow) ya da la linea de entrada; no se
-  // hace Append manual (creaba una linea en blanco extra que competia).
+  // Sin NewItemRow: dejamos una linea en blanco para teclear (estilo Excel);
+  // al completar un SKU el grid anyade otra (GridResuelto). Al atender no.
+  if AModo <> mtAtender then
+    AsegurarLineaNueva;
   ActualizarTotal;
+end;
+
+procedure TfrmMtoOpeTraspaso.AsegurarLineaNueva;
+begin
+  // Deja una linea en blanco al final para teclear/escanear el siguiente
+  // articulo en el grid (sustituye a la NewItemRow).
+  if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
+    FDatos.cdsLineas.Post;
+  if FDatos.cdsLineas.IsEmpty or
+     (Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) <> '') then
+  begin
+    FDatos.cdsLineas.Append;
+    FDatos.cdsLineas.Post;
+  end;
 end;
 
 procedure TfrmMtoOpeTraspaso.btnModoClick(Sender: TObject);

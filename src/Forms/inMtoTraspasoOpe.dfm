@@ -5,6 +5,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   KeyPreview = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
