@@ -32,9 +32,9 @@ inMtoCajaMenu (F11 Arqueo)
 
 | Archivo | Cambio |
 |---|---|
-| `src/Modals/inMtoModalArqueosHistCaja.pas` + `.dfm` | **Nuevo.** Pantalla TPV de histórico (grid + botones). Patrón `class procedure Ejecutar(...)` y teclado F2/F3/ESC como el resto de modales de caja. |
-| `src/Lib/inLibArqueoTicket.pas` | `Imprimir` e `ImprimirCierre` admiten `ADuplicado` (imprime banda `*** DUPLICADO ***`). Nuevos `ImprimirDesdeHistorico` (recalcula la tira, marcada) e `ImprimirCierreDesdeHistorico` (reconstruye el cierre desde BBDD sin recalcular). |
-| `src/Modals/inMtoModalArqueo.pas` + `.dfm` | Botón `btnHistorico` + acción `actHistorico` (F8) que abre la pantalla de histórico. |
+| `src/Caja/Modals/inMtoModalArqueosHistCaja.pas` + `.dfm` | **Nuevo.** Pantalla TPV de histórico (grid + botones). Patrón `class procedure Ejecutar(...)` y teclado F2/F3/ESC como el resto de modales de caja. |
+| `src/Caja/Lib/inLibArqueoTicket.pas` | `Imprimir` e `ImprimirCierre` admiten `ADuplicado` (imprime banda `*** DUPLICADO ***`). Nuevos `ImprimirDesdeHistorico` (recalcula la tira, marcada) e `ImprimirCierreDesdeHistorico` (reconstruye el cierre desde BBDD sin recalcular). |
+| `src/Caja/Modals/inMtoModalArqueo.pas` + `.dfm` | Botón `btnHistorico` + acción `actHistorico` (F8) que abre la pantalla de histórico. |
 | `fzam.dpr` | Registra `inMtoModalArqueosHistCaja`. |
 
 ### Notas de diseño
@@ -72,8 +72,8 @@ Menú «Caja → Histórico de Arqueos» (Ctrl+Alt+A)
 
 | Archivo | Cambio |
 |---|---|
-| `src/Modals/inMtoModalImpArqueos.pas` + `.dfm` | **Nuevo.** Descendiente de `TfrmPrint` (base FastReport de `inMtoModalGenImp`). **Autocontenido**: `unqryArqueosPrint` + `dsArqueosPrint` + `fxdsArqueos` (`UserName='Arqueos'`) viven en el propio form (sin data module externo). Informe en `poLandscape`. |
-| `src/Forms/inMtoCajaArqueosHist.pas` + `.dfm` | Botón `btnImprimirInforme` que abre el modal de impresión. |
+| `src/Caja/Modals/inMtoModalImpArqueos.pas` + `.dfm` | **Nuevo.** Descendiente de `TfrmPrint` (base FastReport de `inMtoModalGenImp`). **Autocontenido**: `unqryArqueosPrint` + `dsArqueosPrint` + `fxdsArqueos` (`UserName='Arqueos'`) viven en el propio form (sin data module externo). Informe en `poLandscape`. |
+| `src/Caja/Forms/inMtoCajaArqueosHist.pas` + `.dfm` | Botón `btnImprimirInforme` que abre el modal de impresión. |
 | `fzam.dpr` | Registra `inMtoModalImpArqueos`. |
 
 ### Por qué autocontenido

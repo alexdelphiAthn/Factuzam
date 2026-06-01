@@ -225,7 +225,7 @@ la consulta exacta.
 
 `IDX_DEP_OP_FECHA (CODIGO_EMP_DEP, CODIGO_ALM_DEP, CODIGO_CAJA_DEP, FECHA_CREACION_DEP)`
 
-El calculo del arqueo de caja (`src/Lib/inLibArqueo.pas:378-383`,
+El calculo del arqueo de caja (`src/Caja/Lib/inLibArqueo.pas:378-383`,
 `CalcularDepositos`) suma los prestamos del rango:
 
 ```sql
@@ -300,7 +300,7 @@ consulta ahora usa exactamente ese indice como cobertura completa.
 
 ### 5.2 `DATE(FECHA_EMISION_VL)` y `DATE(FECHA_REDENCION_VL)` en arqueo — CORREGIDO
 
-**Archivo:** `src/Lib/inLibArqueo.pas:444-445, 468-469`
+**Archivo:** `src/Caja/Lib/inLibArqueo.pas:444-445, 468-469`
 
 **Antes:**
 
@@ -430,5 +430,5 @@ operaciones.
 | # | Archivo                                       | Patron corregido                                                       | Estado    |
 |---|-----------------------------------------------|------------------------------------------------------------------------|-----------|
 | A | `src/DataModules/UniDataConsultaOpe.pas:144`  | `DATE(FECHA_OPERACION_OPCAJA)` → `FECHA_OP_DIA_OPCAJA`                 | hecho     |
-| B | `src/Lib/inLibArqueo.pas:444-445, 468-469`    | `DATE(FECHA_EMISION_VL/REDENCION_VL)` → `>= :desde AND < :hasta + 1 d` | hecho     |
+| B | `src/Caja/Lib/inLibArqueo.pas:444-445, 468-469`    | `DATE(FECHA_EMISION_VL/REDENCION_VL)` → `>= :desde AND < :hasta + 1 d` | hecho     |
 | C | `src/DataModules/UniDataInventarios.pas:412`  | `(FECHA IS NULL OR FECHA <= NOW())` → repensar logica vigencia         | pendiente |
