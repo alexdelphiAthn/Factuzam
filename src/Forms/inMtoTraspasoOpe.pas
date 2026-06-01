@@ -22,7 +22,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ExtCtrls, inMtoFrmBase, cxGraphics, cxControls, cxLookAndFeels,
+  Vcl.ExtCtrls, Vcl.StdCtrls, inMtoFrmBase, cxGraphics, cxControls,
+  cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit,
   cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
@@ -85,12 +86,14 @@ type
     FColUds: TcxGridDBColumn;
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
+    FQModalSolic: TUniQuery;
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
     procedure AsegurarLineaNueva;
     procedure EnfocarSegunModo;
     procedure AbrirModalSolicitudes;
+    procedure ModalImprimirClick(Sender: TObject);
     procedure CerrarSolicitudCargada;
     procedure DenegarSolicitudCargada;
     procedure AbrirMisPeticiones;
@@ -306,6 +309,8 @@ procedure TfrmMtoOpeTraspaso.ConsultarStock(const ACodigo: string);
 var
   i: Integer;
   Mapa: TDictionary<string, string>;
+  Fld: TField;
+  bTodoCero: Boolean;
 begin
   // Misma logica que inMtoCajaOpe.ConsultarStock: abrir el SP, construir las
   // columnas dinamicas, alinear cabeceras y ajustar anchos (con swatch en la
@@ -347,6 +352,39 @@ begin
         if (Mapa <> nil) and (Mapa.Count > 0) and
            (FStockView.ColumnCount > 0) then
           AjustarAnchoColumnaParaSwatch(FStockView.Columns[0], Mapa);
+        // Mostrar solo las tallas con existencias: ocultamos las columnas de
+        // talla que esten a cero en todos los almacenes (el SP devuelve una
+        // columna por cada talla del articulo, tenga o no stock). No se tocan
+        // Codigo/Almacen (texto) ni el Total.
+        FStockQry.DisableControls;
+        try
+          for i := 0 to FStockView.ColumnCount - 1 do
+          begin
+            Fld := FStockQry.FindField(
+              FStockView.Columns[i].DataBinding.FieldName);
+            if (Fld <> nil) and
+               (Fld.DataType in [ftSmallint, ftInteger, ftWord, ftLargeint,
+                ftFloat, ftCurrency, ftBCD, ftFMTBcd]) and
+               (not SameText(Fld.FieldName, 'Total')) and
+               (not SameText(Fld.FieldName, 'Stock_Total')) and
+               (not SameText(Fld.FieldName, 'Stock Total')) then
+            begin
+              bTodoCero := True;
+              FStockQry.First;
+              while (not FStockQry.Eof) and bTodoCero do
+              begin
+                if Fld.AsFloat <> 0 then
+                  bTodoCero := False;
+                FStockQry.Next;
+              end;
+              if bTodoCero then
+                FStockView.Columns[i].Visible := False;
+            end;
+          end;
+          FStockQry.First;
+        finally
+          FStockQry.EnableControls;
+        end;
       finally
         FStockView.EndUpdate;
       end;
@@ -691,32 +729,139 @@ end;
 
 procedure TfrmMtoOpeTraspaso.AbrirModalSolicitudes;
 var
-  Q: TUniQuery;
-  sNum, sSer: string;
+  Dlg: TForm;
+  Grid: TcxGrid;
+  View: TcxGridDBTableView;
+  Ds: TDataSource;
+  pnlBot: TPanel;
+  btnAt, btnNo, btnImp, btnSalir: TButton;
+  sNum, sSer, sFld: string;
+  iRes, i: Integer;
 begin
-  // Modal con las solicitudes ABIERTAS (pendientes/parciales). Los titulos de
-  // columna los pone el formateador (fza_config_campos), no se hardcodean. Al
-  // elegir una se carga para servirla y sale su ticket. Las cerradas no salen.
-  Q := FDatos.QuerySolicitudesAbiertas;
+  // Modal de solicitudes PENDIENTES que me toca atender. Tres acciones:
+  //   Atender    -> trae la peticion con las cantidades pedidas (editables).
+  //   No atender -> trae la peticion y la deniega entera (pide motivo).
+  //   Imprimir   -> saca el ticket de la peticion seleccionada (sin cerrar).
+  // Se construye en codigo (sin .dfm) porque el buscador generico no admite
+  // botones de accion. FQModalSolic vive durante el modal para el boton
+  // Imprimir y se libera al final.
+  FQModalSolic := FDatos.QuerySolicitudesAbiertas;
   try
-    if TBusquedaUtils.EjecutarBusqueda('Solicitudes abiertas', Q,
-                                       'frmMtoSolicitudesSearch') then
+    if not FQModalSolic.Active then
+      FQModalSolic.Open;
+    if FQModalSolic.IsEmpty then
+      ShowMessage('No hay solicitudes pendientes de atender.')
+    else
     begin
-      sNum := Q.FieldByName('NUMERO_TRSOL').AsString;
-      sSer := Q.FieldByName('SERIE_TRSOL').AsString;
-      if FDatos.CargarSolicitud(sNum, sSer) then
+      iRes := mrCancel;
+      Dlg := TForm.CreateNew(Self);
+      try
+        Dlg.Caption := 'Solicitudes pendientes de atender';
+        Dlg.Position := poOwnerFormCenter;
+        Dlg.BorderStyle := bsDialog;
+        Dlg.ClientWidth := 760;
+        Dlg.ClientHeight := 440;
+        pnlBot := TPanel.Create(Dlg);
+        pnlBot.Parent := Dlg;
+        pnlBot.Align := alBottom;
+        pnlBot.Height := 60;
+        pnlBot.BevelOuter := bvNone;
+        Grid := TcxGrid.Create(Dlg);
+        Grid.Parent := Dlg;
+        Grid.Align := alClient;
+        View := Grid.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
+        Grid.Levels.Add.GridView := View;
+        Ds := TDataSource.Create(Dlg);
+        Ds.DataSet := FQModalSolic;
+        View.DataController.DataSource := Ds;
+        View.OptionsData.Editing := False;
+        View.OptionsData.Inserting := False;
+        View.OptionsData.Deleting := False;
+        View.OptionsSelection.CellSelect := False;
+        View.OptionsView.GroupByBox := False;
+        View.OptionsView.ColumnAutoWidth := True;
+        View.DataController.CreateAllItems;
+        // Titulos legibles para las columnas conocidas de la consulta.
+        for i := 0 to View.ColumnCount - 1 do
+        begin
+          sFld := View.Columns[i].DataBinding.FieldName;
+          if SameText(sFld, 'NUMERO_TRSOL') then
+            View.Columns[i].Caption := 'Número'
+          else if SameText(sFld, 'SERIE_TRSOL') then
+            View.Columns[i].Caption := 'Serie'
+          else if SameText(sFld, 'FECHA_TRSOL') then
+            View.Columns[i].Caption := 'Fecha'
+          else if SameText(sFld, 'CODIGO_ALM_DESTINO_TRSOL') then
+            View.Columns[i].Caption := 'Pide (almacén)'
+          else if SameText(sFld, 'ESTADO_TRSOL') then
+            View.Columns[i].Caption := 'Estado'
+          else if SameText(sFld, 'LINEAS_PEND_TRSOL') then
+            View.Columns[i].Caption := 'Líneas';
+        end;
+        btnAt := TButton.Create(Dlg);
+        btnAt.Parent := pnlBot;
+        btnAt.SetBounds(14, 12, 160, 36);
+        btnAt.Caption := 'Atender';
+        btnAt.ModalResult := mrYes;
+        btnAt.Default := True;
+        btnNo := TButton.Create(Dlg);
+        btnNo.Parent := pnlBot;
+        btnNo.SetBounds(186, 12, 160, 36);
+        btnNo.Caption := 'No atender';
+        btnNo.ModalResult := mrNo;
+        btnImp := TButton.Create(Dlg);
+        btnImp.Parent := pnlBot;
+        btnImp.SetBounds(358, 12, 160, 36);
+        btnImp.Caption := 'Imprimir';
+        btnImp.OnClick := ModalImprimirClick;
+        btnSalir := TButton.Create(Dlg);
+        btnSalir.Parent := pnlBot;
+        btnSalir.SetBounds(606, 12, 140, 36);
+        btnSalir.Caption := 'Salir';
+        btnSalir.Cancel := True;
+        btnSalir.ModalResult := mrCancel;
+        Dlg.ActiveControl := Grid;
+        iRes := Dlg.ShowModal;
+        // La rejilla navega el dataset, asi que la fila enfocada es el registro
+        // actual del query. Lo leemos antes de liberar el dialogo.
+        sNum := FQModalSolic.FieldByName('NUMERO_TRSOL').AsString;
+        sSer := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
+      finally
+        FreeAndNil(Dlg);
+      end;
+      if (sNum <> '') and ((iRes = mrYes) or (iRes = mrNo)) then
       begin
-        txtOrigen.Text :=
-          FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-        ActualizarTotal;
-        TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer,
-                                          oNomImpresoraCaja);
-      end
-      else
-        ShowMessage('No se pudo cargar la solicitud.');
+        if FDatos.CargarSolicitud(sNum, sSer) then
+        begin
+          txtOrigen.Text :=
+            FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+          ActualizarTotal;
+          // No atender: deniega la peticion entera (pide motivo y la resuelve
+          // como DENEGADO TOTAL). Atender: se queda en pantalla para servir.
+          if iRes = mrNo then
+            DenegarSolicitudCargada;
+        end
+        else
+          ShowMessage('No se pudo cargar la solicitud.');
+      end;
     end;
   finally
-    FreeAndNil(Q);
+    FreeAndNil(FQModalSolic);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.ModalImprimirClick(Sender: TObject);
+var
+  sNum, sSer: string;
+begin
+  // Imprime el ticket de la solicitud seleccionada en el modal, sin cerrarlo.
+  if Assigned(FQModalSolic) and FQModalSolic.Active and
+     (not FQModalSolic.IsEmpty) then
+  begin
+    sNum := FQModalSolic.FieldByName('NUMERO_TRSOL').AsString;
+    sSer := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
+    if sNum <> '' then
+      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer, oNomImpresoraCaja);
   end;
 end;
 
