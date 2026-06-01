@@ -283,9 +283,24 @@ begin
   //    (El boton buscador lista articulos; aqui en el desplegable, SKU.)
   FBusqQry := TUniQuery.Create(nil);
   FBusqQry.Connection := FConn;
+  // Ademas del SKU se traen el/los codigo(s) de barras y la(s) referencia(s)
+  // de proveedor del articulo, para poder filtrarlos al teclear (igual que el
+  // validador resuelve por barras o modelo de proveedor). El valor elegido
+  // sigue siendo el SKU.
   FBusqQry.SQL.Text :=
     'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
     '       a.DESCRIPCION_ART AS DESCRIPCION,' +
+    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT cb.CODIGO_BARRAS_CB' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_codigos_barras cb' +
+    '                  WHERE cb.CODIGO_UNIDAD_CB = s.CODIGO_UNIDAD_SKU),' +
+    '                '''') AS CODBARRAS,' +
+    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_articulos_proveedores ap' +
+    '                  WHERE ap.CODIGO_ART_AP = s.CODIGO_ART_SKU' +
+    '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
+    '         AS REFPRV,' +
     '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
     '                   FROM fza_articulos_stockactual st' +
     '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
@@ -314,7 +329,19 @@ begin
   begin
     Caption := 'Descripción';
     DataBinding.FieldName := 'DESCRIPCION';
-    Width := 240;
+    Width := 220;
+  end;
+  with FBusqView.CreateColumn do
+  begin
+    Caption := 'Cód. barras';
+    DataBinding.FieldName := 'CODBARRAS';
+    Width := 110;
+  end;
+  with FBusqView.CreateColumn do
+  begin
+    Caption := 'Ref. prov.';
+    DataBinding.FieldName := 'REFPRV';
+    Width := 110;
   end;
   with FBusqView.CreateColumn do
   begin
@@ -432,6 +459,12 @@ begin
     Q.SQL.Text :=
       'SELECT a.CODIGO_ART_ART AS ARTICULO,' +
       '       a.DESCRIPCION_ART AS DESCRIPCION,' +
+      '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
+      '                                     SEPARATOR '' '')' +
+      '                   FROM fza_articulos_proveedores ap' +
+      '                  WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART' +
+      '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
+      '         AS REFPRV,' +
       '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
       '                   FROM fza_articulos_stockactual st' +
       '                   JOIN fza_articulos_skus sk' +
