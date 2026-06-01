@@ -153,6 +153,7 @@ type
     mnuUsuarios: TMenuItem;
     mnuGrupos: TMenuItem;
     mnuPerfiles: TMenuItem;
+    mnuPermisos: TMenuItem;
     Acercade1: TMenuItem;
     Listados1: TMenuItem;
     mnuLisVentas: TMenuItem;
@@ -177,6 +178,7 @@ type
     procedure mnuUsuariosClick(Sender: TObject);
     procedure mnuGruposClick(Sender: TObject);
     procedure mnuPerfilesClick(Sender: TObject);
+    procedure mnuPermisosClick(Sender: TObject);
     procedure CopiasdeSeguridad1Click(Sender: TObject);
     procedure mnuEjecutarScriptClick(Sender: TObject);
     procedure mnuGeneradorProcesosClick(Sender: TObject);
@@ -1463,6 +1465,12 @@ begin
   if (mnuPerfiles.Visible) then
     ShowMto(Self,
             'UsuariosPerfiles');
+end;
+
+procedure TfrmMtoPrincipal.mnuPermisosClick(Sender: TObject);
+begin
+  if (mnuPermisos.Visible) then
+    ShowMto(Self, 'Permisos');
 end;
 
 procedure TfrmMtoPrincipal.mnuProveedoresClick(Sender: TObject);

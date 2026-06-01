@@ -59,6 +59,7 @@ uses
   inMtoTarifas in 'src\Forms\inMtoTarifas.pas' {frmMtoTarifas},
   inMtoUsuarios in 'src\Forms\inMtoUsuarios.pas' {frmMtoUsuarios},
   inMtoUsuariosPerfiles in 'src\Forms\inMtoUsuariosPerfiles.pas' {frmMtoUsuariosPerfiles},
+  inMtoPermisos in 'src\Forms\inMtoPermisos.pas' {frmMtoPermisos},
   inMtoModalArtTar in 'src\Modals\inMtoModalArtTar.pas' {frmMtoModalArtTar},
   inMtoModalFacRec in 'src\Modals\inMtoModalFacRec.pas' {frmGenFacRec},
   inMtoModalGenFilter in 'src\Modals\inMtoModalGenFilter.pas' {frmModalGenFilter},

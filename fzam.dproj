@@ -256,6 +256,9 @@
         <DCCReference Include="src\Forms\inMtoUsuariosPerfiles.pas">
             <Form>frmMtoUsuariosPerfiles</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPermisos.pas">
+            <Form>frmMtoPermisos</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalArtTar.pas">
             <Form>frmMtoModalArtTar</Form>
         </DCCReference>
