@@ -422,6 +422,16 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.AbrirModalSolicitudes;
+  // Pone un titulo legible a un campo del query (igual que la caja en
+  // BuscarArticulo); el buscador generico usa DisplayLabel como cabecera.
+  procedure Titulo(AQ: TUniQuery; const ACampo, ALabel: string);
+  var
+    F: TField;
+  begin
+    F := AQ.FindField(ACampo);
+    if F <> nil then
+      F.DisplayLabel := ALabel;
+  end;
 var
   Q: TUniQuery;
   sNum, sSer: string;
@@ -430,6 +440,14 @@ begin
   // se carga para servirla y sale su ticket. Las cerradas no aparecen.
   Q := FDatos.QuerySolicitudesAbiertas;
   try
+    // Titulos legibles de las columnas (el query trae alias en mayusculas).
+    Q.Open;
+    Titulo(Q, 'NUMERO', 'Número');
+    Titulo(Q, 'SERIE', 'Serie');
+    Titulo(Q, 'FECHA', 'Fecha');
+    Titulo(Q, 'SOLICITANTE', 'Solicitante');
+    Titulo(Q, 'ESTADO', 'Estado');
+    Titulo(Q, 'LINEAS_PEND', 'Líneas pend.');
     if TBusquedaUtils.EjecutarBusqueda('Solicitudes abiertas', Q,
                                        'frmMtoSolicitudesSearch') then
     begin
