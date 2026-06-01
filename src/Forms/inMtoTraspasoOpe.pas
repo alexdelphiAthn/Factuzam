@@ -27,7 +27,7 @@ uses
   cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
-  inLibGridArticulos, inLibPermisos;
+  inLibGridArticulos, inLibPermisos, inLibGenBusq;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -74,6 +74,9 @@ type
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
     procedure AsegurarLineaNueva;
+    procedure EnfocarSegunModo;
+    procedure AbrirModalSolicitudes;
+    procedure CerrarSolicitudCargada;
     procedure AplicarModo(AModo: TModoTraspaso);
     procedure CargarCombo;
     procedure CargarAlmacenesDestino;
@@ -259,6 +262,7 @@ begin
   if AModo <> mtAtender then
     AsegurarLineaNueva;
   ActualizarTotal;
+  EnfocarSegunModo;
 end;
 
 procedure TfrmMtoOpeTraspaso.AsegurarLineaNueva;
@@ -275,6 +279,22 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeTraspaso.EnfocarSegunModo;
+begin
+  // Solicitar: foco en ALMACEN ORIGEN (a quien pido = cboDestino). Atender:
+  // abre el modal de solicitudes abiertas. Traspaso: a teclear en el grid.
+  case FModo of
+    mtSolicitar:
+      if cboDestino.CanFocus then
+        cboDestino.SetFocus;
+    mtAtender:
+      AbrirModalSolicitudes;
+    mtTraspaso:
+      if (FGrid <> nil) and FGrid.CanFocus then
+        FGrid.SetFocus;
+  end;
+end;
+
 procedure TfrmMtoOpeTraspaso.btnModoClick(Sender: TObject);
 begin
   AplicarModo(TModoTraspaso((Sender as TComponent).Tag));
@@ -284,10 +304,9 @@ procedure TfrmMtoOpeTraspaso.CargarCombo;
 begin
   cboDestino.Properties.Items.Clear;
   FComboCodigos.Clear;
-  if FModo = mtAtender then
-    FDatos.CargarSolicitudesPendientes(cboDestino.Properties.Items,
-                                       FComboCodigos)
-  else
+  // En Atender la solicitud se elige por el modal (F8); el desplegable solo
+  // lista almacenes destino en Traspaso/Solicitar.
+  if FModo <> mtAtender then
     CargarAlmacenesDestino;
 end;
 
@@ -362,10 +381,8 @@ end;
 
 procedure TfrmMtoOpeTraspaso.cboDestinoPropertiesChange(Sender: TObject);
 begin
-  // Al atender, elegir una solicitud del desplegable la carga directamente
-  // (antes habia un boton "Cargar solicitud"; ahora es automatico).
-  if FModo = mtAtender then
-    CargarSolicitudSeleccionada;
+  // En Atender la solicitud se elige en el modal (F8), no por el desplegable.
+  // Aqui no se hace nada; el combo solo se usa en Traspaso/Solicitar.
 end;
 
 procedure TfrmMtoOpeTraspaso.CargarSolicitudSeleccionada;
@@ -390,6 +407,58 @@ begin
     end
     else
       ShowMessage('No se pudo cargar la solicitud.');
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.AbrirModalSolicitudes;
+var
+  Q: TUniQuery;
+  sNum, sSer: string;
+begin
+  // Modal con las solicitudes ABIERTAS (pendientes/parciales). Al elegir una
+  // se carga para servirla y sale su ticket. Las cerradas no aparecen.
+  Q := FDatos.QuerySolicitudesAbiertas;
+  try
+    if TBusquedaUtils.EjecutarBusqueda('Solicitudes abiertas', Q,
+                                       'frmMtoSolicitudesSearch') then
+    begin
+      sNum := Q.FieldByName('NUMERO').AsString;
+      sSer := Q.FieldByName('SERIE').AsString;
+      if FDatos.CargarSolicitud(sNum, sSer) then
+      begin
+        txtOrigen.Text :=
+          FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+        ActualizarTotal;
+        TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer,
+                                          oNomImpresoraCaja);
+      end
+      else
+        ShowMessage('No se pudo cargar la solicitud.');
+    end;
+  finally
+    FreeAndNil(Q);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.CerrarSolicitudCargada;
+begin
+  // Cierra la solicitud cargada (parcial) dejando lineas sin atender. Solo
+  // tiene sentido en modo Atender con una solicitud traida.
+  if FModo <> mtAtender then
+    Exit;
+  if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
+  begin
+    ShowMessage('Trae primero una solicitud (F8) para cerrarla.');
+    Exit;
+  end;
+  if MessageDlg('¿Cerrar la solicitud dejando las líneas sin servir como ' +
+                'no atendidas?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    if FDatos.CerrarSolicitud then
+    begin
+      ShowMessage('Solicitud cerrada.');
+      AplicarModo(mtAtender);
+    end;
   end;
 end;
 
@@ -525,6 +594,15 @@ begin
   case Key of
     VK_F3:
       QuitarLinea;
+    VK_F6:
+      AplicarModo(mtSolicitar);
+    VK_F8:
+      if FModo = mtAtender then
+        AbrirModalSolicitudes
+      else
+        AplicarModo(mtAtender);
+    VK_F9:
+      CerrarSolicitudCargada;
     VK_F11:
       btnF11Click(nil);
     VK_F12:

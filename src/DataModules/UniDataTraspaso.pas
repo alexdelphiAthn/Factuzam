@@ -95,8 +95,14 @@ type
                              out ANumero, ASerie: string): Boolean;
     // Atender: lista las solicitudes pendientes que me tocan (yo, origen).
     procedure CargarSolicitudesPendientes(AItems, ACodigos: TStrings);
+    // Igual pero en un TUniQuery (para el modal de busqueda de solicitudes
+    // abiertas: PENDIENTE/PARCIAL). El llamante lo libera.
+    function QuerySolicitudesAbiertas: TUniQuery;
     // Carga una solicitud pendiente en cabecera/líneas para servirla.
     function CargarSolicitud(const ANumero, ASerie: string): Boolean;
+    // Cierra (estado CERRADA) la solicitud cargada aunque queden lineas sin
+    // atender. Devuelve False si no hay solicitud cargada.
+    function CerrarSolicitud: Boolean;
     // Valida el empleado responsable por su código o diminutivo de ticket.
     function ValidarEmpleado(const ABusqueda: string;
                              out ACodigo, ANombre: string): Boolean;
@@ -788,6 +794,53 @@ begin
   finally
     qryAux.Close;
   end;
+end;
+
+function TdmTraspaso.QuerySolicitudesAbiertas: TUniQuery;
+var
+  sPropio: string;
+begin
+  // Solicitudes ABIERTAS (PENDIENTE/PARCIAL) que me tocan a mi (yo soy el
+  // origen al que se pide). Las CERRADAS/ATENDIDAS no salen. Cada fila lleva
+  // el resumen para el modal y el NUMERO/SERIE para cargarla.
+  sPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  Result := TUniQuery.Create(nil);
+  Result.Connection := oConn;
+  Result.SQL.Text :=
+    'SELECT S.NUMERO_TRSOL AS NUMERO, S.SERIE_TRSOL AS SERIE,' +
+    '       S.FECHA_TRSOL AS FECHA,' +
+    '       S.CODIGO_ALM_DESTINO_TRSOL AS SOLICITANTE,' +
+    '       S.ESTADO_TRSOL AS ESTADO,' +
+    '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
+    '         WHERE L.NUMERO_TRSOL_TRSOLLIN = S.NUMERO_TRSOL' +
+    '           AND L.SERIE_TRSOL_TRSOLLIN = S.SERIE_TRSOL' +
+    '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS LINEAS_PEND' +
+    '  FROM fza_traspasos_solicitudes S' +
+    ' WHERE S.CODIGO_ALM_ORIGEN_TRSOL = :PROPIO' +
+    '   AND S.ESTADO_TRSOL IN (''PENDIENTE'', ''PARCIAL'')' +
+    ' ORDER BY S.FECHA_TRSOL, S.NUMERO_TRSOL';
+  Result.ParamByName('PROPIO').AsString := sPropio;
+end;
+
+function TdmTraspaso.CerrarSolicitud: Boolean;
+var
+  sNum, sSer: string;
+begin
+  // Cierra la solicitud cargada (CERRADA) aunque queden lineas sin servir.
+  sNum := cdsCabecera.FieldByName('NUMERO_SOL').AsString;
+  sSer := cdsCabecera.FieldByName('SERIE_SOL').AsString;
+  Result := False;
+  if (Trim(sNum) = '') or (Trim(sSer) = '') then
+    Exit;
+  qryAux.SQL.Text :=
+    'UPDATE fza_traspasos_solicitudes' +
+    '   SET ESTADO_TRSOL = ''CERRADA'', USUARIO_MODIF = :USU' +
+    ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
+  qryAux.ParamByName('USU').AsString := inLibGlobalVar.oUser;
+  qryAux.ParamByName('NUM').AsString := sNum;
+  qryAux.ParamByName('SER').AsString := sSer;
+  qryAux.ExecSQL;
+  Result := True;
 end;
 
 function TdmTraspaso.CargarSolicitud(const ANumero, ASerie: string): Boolean;
