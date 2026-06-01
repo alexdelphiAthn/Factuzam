@@ -2,23 +2,24 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   Caption = 'Traspasos'
   ClientHeight = 640
   ClientWidth = 900
-  StyleElements = [seFont, seClient, seBorder]
+  KeyPreview = True
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
   OnKeyDown = FormKeyDown
-  ExplicitWidth = 916
-  ExplicitHeight = 679
-  TextHeight = 17
-  object pnlModos: TPanel [0]
+  PixelsPerInch = 96
+  TextHeight = 13
+  object pnlModos: TPanel
     Left = 0
     Top = 0
     Width = 900
     Height = 40
     Align = alTop
     BevelOuter = bvNone
+    Caption = ''
     TabOrder = 0
-    ExplicitWidth = 898
     object btnModoTraspaso: TcxButton
+      Tag = 0
       Left = 8
       Top = 6
       Width = 200
@@ -33,11 +34,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 220
       Height = 28
-<<<<<<< HEAD
-      Caption = 'Solicitar a otro almac'#233'n'
-=======
-      Caption = 'F6 · Solicitar a otro almacén'
->>>>>>> 4c33df66c5f8fea51fcf2478d927968ccb57bbfa
+      Caption = 'F6 Solicitar a otro almacén'
       TabOrder = 1
       OnClick = btnModoClick
     end
@@ -47,50 +44,47 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 200
       Height = 28
-      Caption = 'F8 · Atender solicitudes'
+      Caption = 'F8 Atender solicitudes'
       TabOrder = 2
       OnClick = btnModoClick
     end
   end
-  object pnlTop: TPanel [1]
+  object pnlTop: TPanel
     Left = 0
     Top = 40
     Width = 900
     Height = 89
     Align = alTop
     BevelOuter = bvNone
+    Caption = ''
     TabOrder = 1
-    ExplicitWidth = 898
     object lblOrigen: TcxLabel
       Left = 16
       Top = 18
-      Caption = 'ALMAC'#201'N ORIGEN'
-      TabOrder = 3
+      Caption = 'ALMACÉN ORIGEN'
     end
     object txtOrigen: TcxTextEdit
-      Left = 157
+      Left = 150
       Top = 15
       Properties.ReadOnly = True
       TabOrder = 0
-      Width = 213
+      Width = 220
     end
     object lblDestino: TcxLabel
       Left = 420
       Top = 18
-      Caption = 'ALMAC'#201'N DESTINO'
-      TabOrder = 4
+      Caption = 'ALMACÉN DESTINO'
     end
     object cboDestino: TcxComboBox
-      Left = 568
+      Left = 560
       Top = 15
       TabOrder = 1
-      Width = 312
+      Width = 320
     end
     object lblEmpleado: TcxLabel
       Left = 16
       Top = 56
       Caption = 'Empleado (responsable)'
-      TabOrder = 5
     end
     object txtEmpleado: TcxTextEdit
       Left = 200
@@ -102,31 +96,29 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     object lblEmpleadoNombre: TcxLabel
       Left = 330
       Top = 56
-      TabOrder = 6
+      Caption = ''
     end
   end
-  object pnlBottom: TPanel [2]
+  object pnlBottom: TPanel
     Left = 0
     Top = 580
     Width = 900
     Height = 60
     Align = alBottom
     BevelOuter = bvNone
+    Caption = ''
     TabOrder = 3
-    ExplicitTop = 572
-    ExplicitWidth = 898
     object lblTotal: TcxLabel
       Left = 16
       Top = 20
       Caption = 'Importe traspaso: 0,00'
-      TabOrder = 2
     end
     object btnF11: TcxButton
       Left = 520
       Top = 10
       Width = 170
       Height = 40
-      Caption = 'F11 '#183' Sin ticket'
+      Caption = 'F11 Sin ticket'
       TabOrder = 0
       OnClick = btnF11Click
     end
@@ -135,20 +127,19 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 10
       Width = 170
       Height = 40
-      Caption = 'F12 '#183' Con ticket'
+      Caption = 'F12 Con ticket'
       TabOrder = 1
       OnClick = btnF12Click
     end
   end
-  object pnlCentro: TPanel [3]
+  object pnlCentro: TPanel
     Left = 0
     Top = 129
     Width = 900
     Height = 451
     Align = alClient
     BevelOuter = bvNone
-    TabOrder = 2
-    ExplicitWidth = 898
-    ExplicitHeight = 443
+    Caption = ''
+    TabOrder = 4
   end
 end

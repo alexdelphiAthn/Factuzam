@@ -806,15 +806,17 @@ begin
   sPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   Result := TUniQuery.Create(nil);
   Result.Connection := oConn;
+  // Devolvemos los nombres reales de columna (sin alias) para que el
+  // formateador (fza_config_campos / oConfigCampos) ponga los titulos, igual
+  // que el resto de buscadores. El conteo de lineas pendientes es calculado,
+  // con sufijo de la tabla para poder titularlo en config.
   Result.SQL.Text :=
-    'SELECT S.NUMERO_TRSOL AS NUMERO, S.SERIE_TRSOL AS SERIE,' +
-    '       S.FECHA_TRSOL AS FECHA,' +
-    '       S.CODIGO_ALM_DESTINO_TRSOL AS SOLICITANTE,' +
-    '       S.ESTADO_TRSOL AS ESTADO,' +
+    'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.FECHA_TRSOL,' +
+    '       S.CODIGO_ALM_DESTINO_TRSOL, S.ESTADO_TRSOL,' +
     '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
     '         WHERE L.NUMERO_TRSOL_TRSOLLIN = S.NUMERO_TRSOL' +
     '           AND L.SERIE_TRSOL_TRSOLLIN = S.SERIE_TRSOL' +
-    '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS LINEAS_PEND' +
+    '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS LINEAS_PEND_TRSOL' +
     '  FROM fza_traspasos_solicitudes S' +
     ' WHERE S.CODIGO_ALM_ORIGEN_TRSOL = :PROPIO' +
     '   AND S.ESTADO_TRSOL IN (''PENDIENTE'', ''PARCIAL'')' +
