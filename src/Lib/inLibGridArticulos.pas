@@ -211,12 +211,31 @@ begin
   // swatches) automaticamente, como la caja. Se engancha en OnInitEdit.
   FView.OnInitEdit := ViewInitEdit;
   // Flujo tipo Excel: Enter pasa a la siguiente celda y al llegar al final
-  // de la fila salta a la siguiente; fila nueva siempre visible arriba para
-  // poder anyadir tecleando sin botones.
+  // de la fila salta a la siguiente. NO usamos NewItemRow: la linea nueva se
+  // anyade sola al completar un SKU (lo hace el host en OnResuelto).
   FView.OptionsBehavior.GoToNextCellOnEnter := True;
   FView.OptionsBehavior.FocusFirstCellOnNewRecord := True;
-  FView.NewItemRow.Visible := True;
-  FView.NewItemRow.InfoText := 'Teclea aquí un artículo / SKU…';
+  // dbNavigator pequeno embebido: navegar + insertar + borrar (el resto
+  // oculto). Insertar/borrar lineas tambien desde aqui.
+  FView.Navigator.Visible := True;
+  with FView.Navigator.Buttons do
+  begin
+    First.Visible := True;
+    Prior.Visible := True;
+    Next.Visible := True;
+    Last.Visible := True;
+    Insert.Visible := True;
+    Delete.Visible := True;
+    PriorPage.Visible := False;
+    NextPage.Visible := False;
+    Edit.Visible := False;
+    Post.Visible := False;
+    Cancel.Visible := False;
+    Refresh.Visible := False;
+    SaveBookmark.Visible := False;
+    GotoBookmark.Visible := False;
+    Filter.Visible := False;
+  end;
 end;
 
 // Cuando el cxGrid crea el editor in-place de una celda: si es una columna de
