@@ -97,6 +97,10 @@ type
     procedure ComboBusqCloseUp(Sender: TObject);
     procedure TimerResolveTimer(Sender: TObject);
     procedure SetAlmacenStock(const AValue: string);
+    // Limpia una entrada leida con pistola: el lector envia STX(#2) prefijo y
+    // ETX(#3) sufijo (y a veces CR/LF). Se quitan para no ensuciar la
+    // resolucion ni el filtrado incremental.
+    function LimpiarEntradaScan(const AEntrada: string): string;
     procedure CrearColumnaArticulo;
     procedure CrearColumnasAtributo;
     procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
@@ -661,19 +665,39 @@ begin
       FCds.FieldByName(FCampos.AttrValor[i + 1]).AsString := Partes[i];
 end;
 
+function TGridArticulosLineas.LimpiarEntradaScan(
+  const AEntrada: string): string;
+var
+  i: Integer;
+  c: Char;
+begin
+  // El lector envia STX(#2) + codigo + ETX(#3), a veces con CR/LF. Quitamos
+  // esos controles y recortamos espacios; el codigo en si queda intacto.
+  Result := '';
+  for i := 1 to Length(AEntrada) do
+  begin
+    c := AEntrada[i];
+    if (c <> #2) and (c <> #3) and (c <> #13) and (c <> #10) then
+      Result := Result + c;
+  end;
+  Result := Trim(Result);
+end;
+
 function TGridArticulosLineas.ResolverEntrada(const AEntrada: string): Boolean;
 var
   Val: TArticulosValidador;
   R: TArtResolucionEntrada;
-  sCodArt, sSku, sDesc: string;
+  sCodArt, sSku, sDesc, sEntrada: string;
   bCompleto: Boolean;
 begin
   Result := False;
-  if Trim(AEntrada) = '' then
+  // Quita STX/ETX/CR/LF que mete el lector de codigo de barras.
+  sEntrada := LimpiarEntradaScan(AEntrada);
+  if sEntrada = '' then
     Exit;
   Val := TArticulosValidador.Create(FConn);
   try
-    R := Val.Resolver(Trim(AEntrada));
+    R := Val.Resolver(sEntrada);
   finally
     FreeAndNil(Val);
   end;
