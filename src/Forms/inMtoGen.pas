@@ -2192,6 +2192,20 @@ begin
   // lo pida con Ctrl+F.
   if (Self.Owner is TfrmMtoPrincipal) then
     TfrmMtoPrincipal(Self.Owner).EngancharFotoAlMto(Self);
+  // Foco inicial en la busqueda global del Mto. Se difiere con ForceQueue
+  // porque el Mto se acaba de embeber en su TcxTabSheet (inLibFormManager)
+  // y la cadena de foco aun no esta asentada: un SetFocus sincrono aqui no
+  // "pega" (por eso seguia desactivado en ResetForm). La carga async de la
+  // lista no roba el foco de ventana, asi que al drenar la cola el foco
+  // queda en la busqueda. CanFocus salta la instancia de busqueda (Ctrl+A),
+  // donde edtBusqGlobal va oculto.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if (not (csDestroying in ComponentState)) and
+         edtBusqGlobal.CanFocus then
+        edtBusqGlobal.SetFocus;
+    end);
 end;
 
 procedure TfrmMtoGen.pcPantallaPageChanging(Sender: TObject;
@@ -2251,8 +2265,6 @@ procedure TfrmMtoGen.ResetForm;
 begin
   if ((pcPantalla.ActivePage <> tsLista) and (tsLista.TabVisible = true)) then
     pcPantalla.ActivePage := tsLista;
-//  if edtBusqGlobal.CanFocus then
-//    edtBusqGlobal.SetFocus;
 end;
 
 procedure TfrmMtoGen.edtBusqGlobalPropertiesChange(Sender: TObject);
