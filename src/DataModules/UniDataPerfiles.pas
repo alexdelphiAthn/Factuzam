@@ -72,7 +72,7 @@ type
     // Caché en memoria de perfiles de formulario (KEY_USUPER -> SUBKEY -> Value)
     // resueltos por prioridad user > group > Todos. Se precarga al login para
     // que GetFormUserProfile no llame a PRC_GETPERFILFORMULARIO en cada apertura.
-    procedure PrecargarPerfilesUsuario(AConn: TUniConnection = nil);
+    procedure PrecargarPerfilesUsuario;
     function ObtenerPerfilFormCache(const AFormName: string;
                                     out APerfilDic: TProfileDicc): Boolean;
     procedure ResincronizarCachePerfilForm(const AFormName: string);
@@ -225,7 +225,7 @@ begin
   end;
 end;
 
-procedure TdmPerfiles.PrecargarPerfilesUsuario(AConn: TUniConnection = nil);
+procedure TdmPerfiles.PrecargarPerfilesUsuario;
 var
   qry: TUniQuery;
   sKeyForm, sSubKey: string;
@@ -233,19 +233,17 @@ var
   PerfilDic: TProfileDicc;
   iFilas, iForms: Integer;
 begin
-  if AConn = nil then
-    AConn := oConn;
   Log.LogInfo(Format('PrecargarPerfilesUsuario: INICIO ' +
                      'oUser="%s" oGroup="%s" oAll="%s" ' +
-                     'connAssigned=%s connConnected=%s',
+                     'oConnAssigned=%s oConnConnected=%s',
                      [oUser, oGroup, oAll,
-                      BoolToStr(AConn <> nil, True),
-                      BoolToStr((AConn <> nil) and AConn.Connected, True)]));
+                      BoolToStr(oConn <> nil, True),
+                      BoolToStr((oConn <> nil) and oConn.Connected, True)]));
   FCachePerfilesForm.Clear;
   FCachePrecargada := False;
-  if (AConn = nil) or (not AConn.Connected) then
+  if (oConn = nil) or (not oConn.Connected) then
   begin
-    Log.LogWarning('PrecargarPerfilesUsuario: ABORTADA, conexion no disponible. ' +
+    Log.LogWarning('PrecargarPerfilesUsuario: ABORTADA, oConn no disponible. ' +
                    'FCachePrecargada queda False');
     Exit;
   end;
@@ -253,7 +251,7 @@ begin
   try
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := AConn;
+      qry.Connection := oConn;
       qry.SQL.Text :=
         'SELECT KEY_USUPER, SUBKEY_USUPER, VALUE_USUPER, VALUE_TEXT_USUPER ' +
         '  FROM fza_usuarios_perfiles ' +
