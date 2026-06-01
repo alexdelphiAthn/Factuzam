@@ -68,7 +68,8 @@ type
                              const ACaja: string;
                              AFechaDesde: TDate;
                              AFechaHasta: TDate;
-                             const ANombreImpresora: string = 'DEBUG');
+                             const ANombreImpresora: string = 'DEBUG';
+                             ADuplicado: Boolean = False);
     class procedure ImprimirCierre(
       AConn: TUniConnection;
       const AArqueo: TArqueoCaja;
@@ -81,6 +82,20 @@ type
       AEfectivoDejado: Currency;
       const ADesgloseBilletes: string;
       const AObservaciones: string;
+      const ANombreImpresora: string = 'DEBUG';
+      ADuplicado: Boolean = False);
+    // Reimpresión (duplicado) del ticket de arqueo a partir de un arqueo ya
+    // grabado en fza_caja_arqueos. Recalcula la tira en vivo (las operaciones
+    // del rango son inmutables tras el cierre) y la marca como DUPLICADO.
+    class procedure ImprimirDesdeHistorico(
+      AConn: TUniConnection;
+      const ACodigoArqueo: string;
+      const ANombreImpresora: string = 'DEBUG');
+    // Reimpresión (duplicado) del justificante de cierre reconstruido desde
+    // fza_caja_arqueos + fza_caja_arqueos_recuento (sin recalcular nada).
+    class procedure ImprimirCierreDesdeHistorico(
+      AConn: TUniConnection;
+      const ACodigoArqueo: string;
       const ANombreImpresora: string = 'DEBUG');
   end;
 
@@ -557,7 +572,8 @@ class procedure TArqueoTicket.Imprimir(AConn: TUniConnection;
                                       const ACaja: string;
                                       AFechaDesde: TDate;
                                       AFechaHasta: TDate;
-                                      const ANombreImpresora: string = 'DEBUG');
+                                      const ANombreImpresora: string = 'DEBUG';
+                                      ADuplicado: Boolean = False);
 var
   Arqueo: TArqueoCaja;
   Ticket: TTicketTermico;
@@ -585,6 +601,13 @@ begin
       [FormatDateTime('dd/mm/yy', AFechaDesde),
        FormatDateTime('dd/mm/yy', AFechaHasta)]));
     Ticket.Negrita(False);
+    // Marca de reimpresión: el arqueo original ya se emitió en su día
+    if ADuplicado then
+    begin
+      Ticket.Negrita(True);
+      Ticket.EscribirLinea('*** DUPLICADO ***');
+      Ticket.Negrita(False);
+    end;
     Ticket.SaltarLineas(1);
 
     // Contadores
@@ -648,7 +671,8 @@ class procedure TArqueoTicket.ImprimirCierre(
   AEfectivoDejado: Currency;
   const ADesgloseBilletes: string;
   const AObservaciones: string;
-  const ANombreImpresora: string = 'DEBUG');
+  const ANombreImpresora: string = 'DEBUG';
+  ADuplicado: Boolean = False);
 var
   Ticket: TTicketTermico;
   Preview: TFormVisualizador;
@@ -668,6 +692,13 @@ begin
     Ticket.Negrita(True);
     Ticket.EscribirLinea('CIERRE DE CAJA ' + AArqueo.Caja);
     Ticket.Negrita(False);
+    // Marca de reimpresión del justificante de cierre
+    if ADuplicado then
+    begin
+      Ticket.Negrita(True);
+      Ticket.EscribirLinea('*** DUPLICADO ***');
+      Ticket.Negrita(False);
+    end;
     { Datos del cierre }
     Ticket.Alinear(alIzquierda);
     Ticket.TextoColumnas('Inicio:',
@@ -798,6 +829,161 @@ begin
     end;
   finally
     FreeAndNil(Ticket);
+  end;
+end;
+
+// =============================================================================
+//   Reimpresión de duplicados desde el histórico (fza_caja_arqueos)
+// =============================================================================
+
+class procedure TArqueoTicket.ImprimirDesdeHistorico(
+  AConn: TUniConnection;
+  const ACodigoArqueo: string;
+  const ANombreImpresora: string = 'DEBUG');
+var
+  Q: TUniQuery;
+  sEmp, sAlm, sCaja: string;
+  dDesde, dHasta: TDate;
+  bOk: Boolean;
+begin
+  if (AConn = nil) or (not AConn.Connected) then Exit;
+  bOk    := False;
+  dDesde := 0;
+  dHasta := 0;
+  Q := TUniQuery.Create(nil);
+  try
+    Q.Connection := AConn;
+    Q.SQL.Text :=
+      ' SELECT CODIGO_EMP_ARQ, CODIGO_ALM_ARQ, CODIGO_CAJA_ARQ,             ' +
+      '        FECHA_DESDE_ARQ, FECHA_HASTA_ARQ                             ' +
+      '   FROM fza_caja_arqueos                                            ' +
+      '  WHERE CODIGO_ARQ = :pARQ                                          ';
+    Q.ParamByName('pARQ').AsString := ACodigoArqueo;
+    Q.Open;
+    if not Q.IsEmpty then
+    begin
+      sEmp   := Q.FieldByName('CODIGO_EMP_ARQ').AsString;
+      sAlm   := Q.FieldByName('CODIGO_ALM_ARQ').AsString;
+      sCaja  := Q.FieldByName('CODIGO_CAJA_ARQ').AsString;
+      dDesde := Q.FieldByName('FECHA_DESDE_ARQ').AsDateTime;
+      dHasta := Q.FieldByName('FECHA_HASTA_ARQ').AsDateTime;
+      bOk    := True;
+    end;
+  finally
+    FreeAndNil(Q);
+  end;
+  // El arqueo cubre el día entero: hasta = 23:59:59 del FECHA_HASTA grabado.
+  if bOk then
+    Imprimir(AConn, sEmp, sAlm, sCaja,
+             dDesde, dHasta + EncodeTime(23, 59, 59, 0),
+             ANombreImpresora, True);
+end;
+
+class procedure TArqueoTicket.ImprimirCierreDesdeHistorico(
+  AConn: TUniConnection;
+  const ACodigoArqueo: string;
+  const ANombreImpresora: string = 'DEBUG');
+var
+  Q: TUniQuery;
+  Arqueo: TArqueoCaja;
+  Lineas: TArray<TArqueoRecuentoLinea>;
+  dTotalSistema, dTotalRecuento, dDiferencia: Currency;
+  dRetirada, dEfectivoDejado: Currency;
+  sConcepto, sDesglose, sObs: string;
+  bOk: Boolean;
+begin
+  if (AConn = nil) or (not AConn.Connected) then Exit;
+  bOk := False;
+  dTotalSistema   := 0;
+  dTotalRecuento  := 0;
+  dDiferencia     := 0;
+  dRetirada       := 0;
+  dEfectivoDejado := 0;
+  // Cabecera del arqueo: solo se rellenan los campos que usa ImprimirCierre.
+  Q := TUniQuery.Create(nil);
+  try
+    Q.Connection := AConn;
+    Q.SQL.Text :=
+      ' SELECT * FROM fza_caja_arqueos WHERE CODIGO_ARQ = :pARQ           ';
+    Q.ParamByName('pARQ').AsString := ACodigoArqueo;
+    Q.Open;
+    if not Q.IsEmpty then
+    begin
+      Arqueo.Empresa        := Q.FieldByName('CODIGO_EMP_ARQ').AsString;
+      Arqueo.Almacen        := Q.FieldByName('CODIGO_ALM_ARQ').AsString;
+      Arqueo.Caja           := Q.FieldByName('CODIGO_CAJA_ARQ').AsString;
+      Arqueo.FechaDesde     := Q.FieldByName('FECHA_DESDE_ARQ').AsDateTime;
+      Arqueo.FechaHasta     := Q.FieldByName('FECHA_HASTA_ARQ').AsDateTime;
+      Arqueo.CantidadVentas := Q.FieldByName('CANTIDAD_VENTAS_ARQ').AsInteger;
+      Arqueo.EfectivoIngresos :=
+        Q.FieldByName('TOTAL_EFECTIVO_INGRESOS_ARQ').AsCurrency;
+      Arqueo.EfectivoEntradas :=
+        Q.FieldByName('TOTAL_EFECTIVO_ENTRADAS_ARQ').AsCurrency;
+      Arqueo.EfectivoSalidas  :=
+        Q.FieldByName('TOTAL_EFECTIVO_SALIDAS_ARQ').AsCurrency;
+      Arqueo.EfectivoAnterior :=
+        Q.FieldByName('TOTAL_EFECTIVO_ANTERIOR_ARQ').AsCurrency;
+      Arqueo.EfectivoCaja     :=
+        Q.FieldByName('TOTAL_EFECTIVO_CAJA_ARQ').AsCurrency;
+      sObs := Q.FieldByName('OBSERVACIONES_ARQ').AsString;
+      // Columnas añadidas por arqueo_recuento.sql: leer contra FindField por
+      // si la BBDD todavía no tiene la migración del cierre Z aplicada.
+      if Q.FindField('TOTAL_RECUENTO_ARQ') <> nil then
+        dTotalRecuento := Q.FieldByName('TOTAL_RECUENTO_ARQ').AsCurrency;
+      if Q.FindField('DIFERENCIA_TOTAL_ARQ') <> nil then
+        dDiferencia := Q.FieldByName('DIFERENCIA_TOTAL_ARQ').AsCurrency;
+      dTotalSistema := dTotalRecuento - dDiferencia;
+      if Q.FindField('IMPORTE_RETIRADA_ARQ') <> nil then
+        dRetirada := Q.FieldByName('IMPORTE_RETIRADA_ARQ').AsCurrency;
+      if Q.FindField('CONCEPTO_RETIRADA_ARQ') <> nil then
+        sConcepto := Q.FieldByName('CONCEPTO_RETIRADA_ARQ').AsString;
+      if Q.FindField('EFECTIVO_DEJADO_CAJA_ARQ') <> nil then
+        dEfectivoDejado := Q.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
+      if Q.FindField('DESGLOSE_BILLETES_ARQ') <> nil then
+        sDesglose := Q.FieldByName('DESGLOSE_BILLETES_ARQ').AsString;
+      bOk := True;
+    end;
+  finally
+    FreeAndNil(Q);
+  end;
+  if bOk then
+  begin
+    // Detalle por forma de pago grabado en el cierre.
+    Q := TUniQuery.Create(nil);
+    try
+      Q.Connection := AConn;
+      Q.SQL.Text :=
+        ' SELECT CODIGO_FP_CFP_ARQR, DESCRIPCION_FP_ARQR, ESCAJON_ARQR,     ' +
+        '        IMPORTE_SISTEMA_ARQR, IMPORTE_RECUENTO_ARQR, DIFERENCIA_ARQR' +
+        '   FROM fza_caja_arqueos_recuento                                  ' +
+        '  WHERE CODIGO_ARQ_ARQR = :pARQ                                    ' +
+        '  ORDER BY ESCAJON_ARQR DESC, CODIGO_FP_CFP_ARQR                   ';
+      Q.ParamByName('pARQ').AsString := ACodigoArqueo;
+      Q.Open;
+      while not Q.Eof do
+      begin
+        SetLength(Lineas, Length(Lineas) + 1);
+        Lineas[High(Lineas)].CodigoFP    :=
+          Q.FieldByName('CODIGO_FP_CFP_ARQR').AsString;
+        Lineas[High(Lineas)].Descripcion :=
+          Q.FieldByName('DESCRIPCION_FP_ARQR').AsString;
+        Lineas[High(Lineas)].EsCajon     :=
+          Q.FieldByName('ESCAJON_ARQR').AsString;
+        Lineas[High(Lineas)].Sistema     :=
+          Q.FieldByName('IMPORTE_SISTEMA_ARQR').AsCurrency;
+        Lineas[High(Lineas)].Recuento    :=
+          Q.FieldByName('IMPORTE_RECUENTO_ARQR').AsCurrency;
+        Lineas[High(Lineas)].Diferencia  :=
+          Q.FieldByName('DIFERENCIA_ARQR').AsCurrency;
+        Q.Next;
+      end;
+    finally
+      FreeAndNil(Q);
+    end;
+    ImprimirCierre(AConn, Arqueo, Lineas,
+                   dTotalSistema, dTotalRecuento, dDiferencia,
+                   dRetirada, sConcepto, dEfectivoDejado,
+                   sDesglose, sObs, ANombreImpresora, True);
   end;
 end;
 

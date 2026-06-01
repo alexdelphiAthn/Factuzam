@@ -119,6 +119,7 @@ type
     lblVentas: TcxLabel;
     btnRecalcular: TcxButton;
     btnImprimir: TcxButton;
+    btnHistorico: TcxButton;
 
     // Sección Líneas artículos
     pnlLineas: TPanel;
@@ -228,16 +229,19 @@ type
     actGrabar: TAction;
     actDesplegarDesde: TAction;
     actDesplegarHasta: TAction;
+    actHistorico: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAtrasClick(Sender: TObject);
     procedure btnRecalcularClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
+    procedure btnHistoricoClick(Sender: TObject);
     procedure btnGrabarArqueoClick(Sender: TObject);
     procedure actEscapeExecute(Sender: TObject);
     procedure actRecalcularExecute(Sender: TObject);
     procedure actImprimirExecute(Sender: TObject);
+    procedure actHistoricoExecute(Sender: TObject);
     procedure actGrabarExecute(Sender: TObject);
     procedure actDesplegarDesdeExecute(Sender: TObject);
     procedure actDesplegarHastaExecute(Sender: TObject);
@@ -289,7 +293,7 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar, inLibPermisos, inLibLog;
+uses inLibGlobalVar, inLibPermisos, inLibLog, inMtoModalArqueosHistCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -386,6 +390,22 @@ begin
   finally
     Screen.Cursor := crDefault;
   end;
+end;
+
+procedure TfrmModalArqueo.btnHistoricoClick(Sender: TObject);
+begin
+  inherited;
+  actHistoricoExecute(Sender);
+end;
+
+procedure TfrmModalArqueo.actHistoricoExecute(Sender: TObject);
+begin
+  inherited;
+  // Pantalla de histórico de arqueos de esta caja: reemite duplicados del
+  // ticket o del cierre ya grabados, sin recalcular.
+  if (FConn = nil) or (not FConn.Connected) then
+    Exit;
+  TfrmModalArqueosHistCaja.Ejecutar(Self, FConn, FEmpresa, FAlmacen, FCaja);
 end;
 
 procedure TfrmModalArqueo.actEscapeExecute(Sender: TObject);
