@@ -124,9 +124,15 @@ end;
 
 procedure TfrmMtoOpeTraspaso.FormShow(Sender: TObject);
 begin
-  // Al abrir, el foco va al almacén destino (lo primero que se elige).
-  if cboDestino.CanFocus then
-    cboDestino.SetFocus;
+  // El foco inicial segun el modo (ya somos visibles aqui). En Traspaso
+  // (modo de arranque) el foco va al ALMACEN DESTINO para empezar a elegir.
+  if FModo = mtTraspaso then
+  begin
+    if cboDestino.CanFocus then
+      cboDestino.SetFocus;
+  end
+  else
+    EnfocarSegunModo;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirGrid;
@@ -283,6 +289,11 @@ procedure TfrmMtoOpeTraspaso.EnfocarSegunModo;
 begin
   // Solicitar: foco en ALMACEN ORIGEN (a quien pido = cboDestino). Atender:
   // abre el modal de solicitudes abiertas. Traspaso: a teclear en el grid.
+  // Solo si el form ya es visible: AplicarModo se llama tambien desde
+  // PrepararValores (antes del ShowModal), y enfocar/abrir modal sobre una
+  // ventana invisible lanza EInvalidOperation.
+  if not Showing then
+    Exit;
   case FModo of
     mtSolicitar:
       if cboDestino.CanFocus then
