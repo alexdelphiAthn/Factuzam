@@ -67,7 +67,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibPathTokens, inLibLog;
+  System.StrUtils, inLibGlobalVar, inLibPathTokens, inLibLog;
 
 { TAppParamDef }
 
@@ -135,14 +135,23 @@ begin
     begin
       KeyDB   := qry.FieldByName('SUBKEY_USUPER').AsString;
       ValueDB := qry.FieldByName('VALUE_USUPER').AsString;
-      if FParams.TryGetValue(KeyDB, ParamObj) then
-        ParamObj.ValorActual := ValueDB
-      else
+      // Las claves de geometría/layout (WindowState, Left, Top, Width,
+      // Height, Divider) se persisten bajo el mismo KEY_USUPER que los
+      // parámetros (véase inLibLayoutForm.TLayoutSaver). No son parámetros
+      // configurables: las saltamos para que no aparezcan como huérfanas en
+      // la categoría "Otros (Heredados de BD)".
+      if not MatchText(KeyDB, ['WindowState', 'Left', 'Top', 'Width',
+                               'Height', 'Divider']) then
       begin
-        // Parámetro huérfano en BD → lo registramos para que siga visible
-        RegistrarParametro('Otros (Heredados de BD)', KeyDB,
-                           'Parámetro sin descripción', tpString, ValueDB);
-        FParams.Items[KeyDB].ValorActual := ValueDB;
+        if FParams.TryGetValue(KeyDB, ParamObj) then
+          ParamObj.ValorActual := ValueDB
+        else
+        begin
+          // Parámetro huérfano en BD → lo registramos para que siga visible
+          RegistrarParametro('Otros (Heredados de BD)', KeyDB,
+                             'Parámetro sin descripción', tpString, ValueDB);
+          FParams.Items[KeyDB].ValorActual := ValueDB;
+        end;
       end;
       qry.Next;
     end;
