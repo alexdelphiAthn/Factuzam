@@ -25,6 +25,16 @@ uses
 
 type
   TTraspasoTicket = class
+  private
+    // Imprime el bloque de una linea: SKU (en negrita), descripcion del
+    // articulo y las tres magnitudes (unidades + stock origen/destino) con
+    // etiquetas claras. El ticket no lleva precios a proposito.
+    class procedure ImprimirLineaSku(ATicket: TTicketTermico;
+                                     const ASku, ADescripcion,
+                                     AEtiqUds: string; AUds: Double;
+                                     const AEtiqOrigen: string; AOrigen: Double;
+                                     const AEtiqDestino: string;
+                                     ADestino: Double);
   public
     // Imprime/previsualiza el ticket de una solicitud de traspaso ya grabada.
     class procedure ImprimirSolicitud(AConn: TUniConnection;
@@ -50,6 +60,32 @@ implementation
 
 uses
   inLibGlobalVar;
+
+class procedure TTraspasoTicket.ImprimirLineaSku(ATicket: TTicketTermico;
+                                   const ASku, ADescripcion,
+                                   AEtiqUds: string; AUds: Double;
+                                   const AEtiqOrigen: string; AOrigen: Double;
+                                   const AEtiqDestino: string;
+                                   ADestino: Double);
+var
+  sDesc: string;
+begin
+  // SKU destacado para identificar la unidad.
+  ATicket.Negrita(True);
+  ATicket.EscribirLinea(ASku);
+  ATicket.Negrita(False);
+  // Descripcion del articulo, recortada al ancho del ticket para no desbordar.
+  sDesc := Trim(ADescripcion);
+  if Length(sDesc) > N_CHAR_LIN then
+    sDesc := Copy(sDesc, 1, N_CHAR_LIN);
+  if sDesc <> '' then
+    ATicket.EscribirLinea(sDesc);
+  // Unidades movidas/pedidas y stock resultante en origen y destino. Sin
+  // precios: el coste no aparece en el ticket.
+  ATicket.TextoColumnas(AEtiqUds, FormatFloat('0.###', AUds));
+  ATicket.TextoColumnas(AEtiqOrigen, FormatFloat('0.###', AOrigen));
+  ATicket.TextoColumnas(AEtiqDestino, FormatFloat('0.###', ADestino));
+end;
 
 class procedure TTraspasoTicket.ImprimirSolicitud(AConn: TUniConnection;
                                      const ANumero, ASerie: string;
@@ -116,11 +152,15 @@ begin
         Ticket.TextoColumnas('Estado:', sEstado);
         Ticket.TextoColumnas('Fecha:', FormatDateTime('dd/mm/yyyy', dFecha));
         Ticket.LineaSeparadora('-');
-        Ticket.EscribirLinea('SKU / Ped(idas) / Org(en) / Des(tino)');
+        Ticket.EscribirLinea('ARTICULOS');
         Ticket.LineaSeparadora('-');
-        // Lineas: por SKU, cantidad pedida y stock en origen y destino
+        // Lineas: por SKU, descripcion del articulo (denormalizada en la
+        // propia linea, igual que en los movimientos), cantidad pedida y stock
+        // disponible en origen y destino.
         Q.SQL.Text :=
           'SELECT L.CODIGO_UNIDAD_TRSOLLIN AS SKU,' +
+          '       COALESCE(L.DESCRIPCION_ARTICULO_TRSOLLIN, '''')' +
+          '         AS DESCRIPCION,' +
           '       L.CANTIDAD_PEDIDA_TRSOLLIN AS PED,' +
           '       (SELECT COALESCE(SUM(S.CANTIDAD_STK),0)' +
           '          FROM fza_articulos_stockactual S' +
@@ -143,11 +183,14 @@ begin
         Q.Open;
         while not Q.Eof do
         begin
-          Ticket.EscribirLinea(Q.FieldByName('SKU').AsString);
-          Ticket.EscribirLinea(Format('  Ped:%s  Org:%s  Des:%s',
-            [FormatFloat('0.###', Q.FieldByName('PED').AsFloat),
-             FormatFloat('0.###', Q.FieldByName('STK_ORI').AsFloat),
-             FormatFloat('0.###', Q.FieldByName('STK_DES').AsFloat)]));
+          // Solicitud: nada se ha movido aun, el stock es la disponibilidad
+          // actual en cada almacen (no lleva "tras traspaso").
+          ImprimirLineaSku(Ticket,
+            Q.FieldByName('SKU').AsString,
+            Q.FieldByName('DESCRIPCION').AsString,
+            '  Unidades pedidas:', Q.FieldByName('PED').AsFloat,
+            '  Stock origen:', Q.FieldByName('STK_ORI').AsFloat,
+            '  Stock destino:', Q.FieldByName('STK_DES').AsFloat);
           Q.Next;
         end;
         Q.Close;
@@ -233,9 +276,11 @@ begin
       Ticket.TextoColumnas('Empleado:', AEmpleado);
       Ticket.TextoColumnas('Fecha:', FormatDateTime('dd/mm/yyyy', Now));
       Ticket.LineaSeparadora('-');
-      Ticket.EscribirLinea('SKU / Uds / Org(en) / Des(tino)');
+      Ticket.EscribirLinea('ARTICULOS');
       Ticket.LineaSeparadora('-');
-      // Recorre las lineas en memoria sin perder el registro actual.
+      // Recorre las lineas en memoria sin perder el registro actual. El ticket
+      // se imprime DESPUES de grabar, asi que el stock leido ya es el estado
+      // resultante del traspaso (por eso "tras traspaso").
       bm := ALineas.GetBookmark;
       ALineas.DisableControls;
       try
@@ -248,11 +293,11 @@ begin
             dPed := ALineas.FieldByName('CANTIDAD').AsFloat;
             dOrg := StockEn(AOrigen, sSku);
             dDes := StockEn(ADestino, sSku);
-            Ticket.EscribirLinea(sSku);
-            Ticket.EscribirLinea(Format('  Uds:%s  Org:%s  Des:%s',
-              [FormatFloat('0.###', dPed),
-               FormatFloat('0.###', dOrg),
-               FormatFloat('0.###', dDes)]));
+            ImprimirLineaSku(Ticket, sSku,
+              ALineas.FieldByName('DESCRIPCION').AsString,
+              '  Unidades:', dPed,
+              '  Stock origen tras traspaso:', dOrg,
+              '  Stock destino tras traspaso:', dDes);
           end;
           ALineas.Next;
         end;
@@ -382,11 +427,13 @@ begin
         Ticket.TextoColumnas('Empleado:', sEmpleado);
         Ticket.TextoColumnas('Operacion:', ANumOperacion);
         Ticket.LineaSeparadora('-');
-        Ticket.EscribirLinea('SKU / Uds / Org(en) / Des(tino)');
+        Ticket.EscribirLinea('ARTICULOS');
         Ticket.LineaSeparadora('-');
-        // Lineas: movimientos de salida (la salida del origen).
+        // Lineas: movimientos de salida (la salida del origen). La descripcion
+        // viene denormalizada en el propio movimiento (DESCRIPCION_ARTICULO_MOV).
         Q.SQL.Text :=
-          'SELECT CODIGO_UNIDAD_MOV, CANTIDAD_MOV' +
+          'SELECT CODIGO_UNIDAD_MOV, CANTIDAD_MOV,' +
+          '       COALESCE(DESCRIPCION_ARTICULO_MOV, '''') AS DESCRIPCION' +
           '  FROM fza_movimientos_almacen' +
           ' WHERE CODIGO_EMP_MOV = :EMP AND CODIGO_ALM_DOC_MOV = :ALM' +
           '   AND CODIGO_CAJA_DOC_MOV = :CAJA' +
@@ -404,11 +451,13 @@ begin
           dPed := Q.FieldByName('CANTIDAD_MOV').AsFloat;
           dOrg := StockEn(sOrigen, sSku);
           dDes := StockEn(sDestino, sSku);
-          Ticket.EscribirLinea(sSku);
-          Ticket.EscribirLinea(Format('  Uds:%s  Org:%s  Des:%s',
-            [FormatFloat('0.###', dPed),
-             FormatFloat('0.###', dOrg),
-             FormatFloat('0.###', dDes)]));
+          // Reimpresion: el stock es el actual de cada almacen (puede haber
+          // variado por movimientos posteriores), por eso "actual".
+          ImprimirLineaSku(Ticket, sSku,
+            Q.FieldByName('DESCRIPCION').AsString,
+            '  Unidades:', dPed,
+            '  Stock origen actual:', dOrg,
+            '  Stock destino actual:', dDes);
           Q.Next;
         end;
         Q.Close;
