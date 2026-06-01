@@ -106,9 +106,9 @@ type
     // Cierra (estado CERRADA) la solicitud cargada aunque queden lineas sin
     // atender. Devuelve False si no hay solicitud cargada.
     function CerrarSolicitud: Boolean;
-    // Deniega (estado DENEGADA) la solicitud cargada: el origen la rechaza.
-    // Devuelve False si no hay solicitud cargada.
-    function DenegarSolicitud: Boolean;
+    // Resuelve la solicitud cargada sin mover stock (usa cdsLineas: CANTIDAD y
+    // MOTIVO por linea). Denegacion total/parcial con motivo; no crea traspaso.
+    function GrabarDenegacion: Boolean;
     // Valida el empleado responsable por su código o diminutivo de ticket.
     function ValidarEmpleado(const ABusqueda: string;
                              out ACodigo, ANombre: string): Boolean;
@@ -175,9 +175,13 @@ begin
     Add('ATTR4_NOMBRE', ftString, 50);
     Add('ATTR5_NOMBRE', ftString, 50);
     Add('CANTIDAD', ftFloat, 0);
+    // CANTIDAD_PEDIDA: lo que se pidio (referencia al atender; CANTIDAD pasa a
+    // ser lo que se sirve). MOTIVO: razon del rechazo si se deniega (sirve 0).
+    Add('CANTIDAD_PEDIDA', ftFloat, 0);
     Add('PRECIO_COSTE', ftCurrency, 0);
     Add('TOTAL', ftCurrency, 0);
     Add('STOCK_ORIGEN', ftFloat, 0);
+    Add('MOTIVO', ftString, 255);
   end;
   cdsLineas.CreateDataSet;
 end;
@@ -576,13 +580,15 @@ begin
       while not cdsLineas.Eof do
       begin
         sSku := cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
-        // Salta la linea en blanco de entrada del grid.
-        if Trim(sSku) <> '' then
+        dCantidad := cdsLineas.FieldByName('CANTIDAD').AsFloat;
+        // Salta la linea en blanco y las denegadas (servir 0): no mueven stock.
+        // Al atender, esas lineas quedan registradas (con motivo) en
+        // MarcarSolicitudAtendida, pero sin movimiento de almacen.
+        if (Trim(sSku) <> '') and (dCantidad > 0) then
         begin
           iLinea := iLinea + 10;
           sLinea := Format('%.4d', [iLinea]);
           sArticulo := cdsLineas.FieldByName('CODIGO_ART').AsString;
-          dCantidad := cdsLineas.FieldByName('CANTIDAD').AsFloat;
           cCoste := cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
           // Salida del origen hacia el destino.
           InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
@@ -625,40 +631,59 @@ var
   sUsuario: string;
 begin
   sUsuario := inLibGlobalVar.oUser;
-  // Suma lo servido (cantidad de cada línea del ticket) por SKU.
+  // Resolucion por linea: registra lo servido (CANTIDAD) y, si se deniega
+  // (servir 0), el motivo. CANTIDAD_SERVIDA suma; ESATENDIDA = 'S' cuando se
+  // cubre lo pedido. El motivo solo se guarda en las lineas denegadas.
   cdsLineas.First;
   while not cdsLineas.Eof do
   begin
-    QryTrx.SQL.Text :=
-      'UPDATE fza_traspasos_solicitudes_lineas' +
-      '   SET CANTIDAD_SERVIDA_TRSOLLIN =' +
-      '         CANTIDAD_SERVIDA_TRSOLLIN + :SERV,' +
-      '       ESATENDIDA_TRSOLLIN =' +
-      '         IF(CANTIDAD_SERVIDA_TRSOLLIN + :SERV >=' +
-      '            CANTIDAD_PEDIDA_TRSOLLIN, ''S'', ''N''),' +
-      '       USUARIO_MODIF = :USU' +
-      ' WHERE NUMERO_TRSOL_TRSOLLIN = :NUM' +
-      '   AND SERIE_TRSOL_TRSOLLIN = :SER' +
-      '   AND CODIGO_UNIDAD_TRSOLLIN = :SKU';
-    QryTrx.ParamByName('SERV').AsFloat :=
-      cdsLineas.FieldByName('CANTIDAD').AsFloat;
-    QryTrx.ParamByName('USU').AsString := sUsuario;
-    QryTrx.ParamByName('NUM').AsString := ANumero;
-    QryTrx.ParamByName('SER').AsString := ASerie;
-    QryTrx.ParamByName('SKU').AsString :=
-      cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
-    QryTrx.Execute;
+    if Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) <> '' then
+    begin
+      QryTrx.SQL.Text :=
+        'UPDATE fza_traspasos_solicitudes_lineas' +
+        '   SET CANTIDAD_SERVIDA_TRSOLLIN =' +
+        '         CANTIDAD_SERVIDA_TRSOLLIN + :SERV,' +
+        '       ESATENDIDA_TRSOLLIN =' +
+        '         IF(CANTIDAD_SERVIDA_TRSOLLIN + :SERV >=' +
+        '            CANTIDAD_PEDIDA_TRSOLLIN, ''S'', ''N''),' +
+        '       MOTIVO_RECHAZO_TRSOLLIN = IF(:SERV = 0, :MOT, NULL),' +
+        '       USUARIO_MODIF = :USU' +
+        ' WHERE NUMERO_TRSOL_TRSOLLIN = :NUM' +
+        '   AND SERIE_TRSOL_TRSOLLIN = :SER' +
+        '   AND CODIGO_UNIDAD_TRSOLLIN = :SKU';
+      QryTrx.ParamByName('SERV').AsFloat :=
+        cdsLineas.FieldByName('CANTIDAD').AsFloat;
+      QryTrx.ParamByName('MOT').AsString :=
+        cdsLineas.FieldByName('MOTIVO').AsString;
+      QryTrx.ParamByName('USU').AsString := sUsuario;
+      QryTrx.ParamByName('NUM').AsString := ANumero;
+      QryTrx.ParamByName('SER').AsString := ASerie;
+      QryTrx.ParamByName('SKU').AsString :=
+        cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+      QryTrx.Execute;
+    end;
     cdsLineas.Next;
   end;
-  // ATENDIDA si no queda ninguna línea pendiente; si no, PARCIAL.
+  // Estado de la cabecera segun el reparto servido/denegado por linea:
+  //   todo servido (>0)  -> COMPLETADO TOTAL
+  //   todo denegado (=0) -> DENEGADO TOTAL
+  //   mezcla             -> COMPLETADO PARCIAL
   QryTrx.SQL.Text :=
     'UPDATE fza_traspasos_solicitudes' +
-    '   SET ESTADO_TRSOL = IF((SELECT COUNT(*)' +
-    '         FROM fza_traspasos_solicitudes_lineas L' +
-    '        WHERE L.NUMERO_TRSOL_TRSOLLIN = :NUM' +
-    '          AND L.SERIE_TRSOL_TRSOLLIN = :SER' +
-    '          AND L.ESATENDIDA_TRSOLLIN = ''N'') = 0,' +
-    '        ''ATENDIDA'', ''PARCIAL''),' +
+    '   SET ESTADO_TRSOL = CASE' +
+    '         WHEN (SELECT COUNT(*)' +
+    '                 FROM fza_traspasos_solicitudes_lineas L' +
+    '                WHERE L.NUMERO_TRSOL_TRSOLLIN = :NUM' +
+    '                  AND L.SERIE_TRSOL_TRSOLLIN = :SER' +
+    '                  AND L.CANTIDAD_SERVIDA_TRSOLLIN > 0) = 0' +
+    '           THEN ''DENEGADO TOTAL''' +
+    '         WHEN (SELECT COUNT(*)' +
+    '                 FROM fza_traspasos_solicitudes_lineas L' +
+    '                WHERE L.NUMERO_TRSOL_TRSOLLIN = :NUM' +
+    '                  AND L.SERIE_TRSOL_TRSOLLIN = :SER' +
+    '                  AND L.CANTIDAD_SERVIDA_TRSOLLIN = 0) = 0' +
+    '           THEN ''COMPLETADO TOTAL''' +
+    '         ELSE ''COMPLETADO PARCIAL'' END,' +
     '       USUARIO_MODIF = :USU' +
     ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
   QryTrx.ParamByName('NUM').AsString := ANumero;
@@ -780,7 +805,7 @@ begin
     '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS NLIN' +
     '  FROM fza_traspasos_solicitudes S' +
     ' WHERE S.CODIGO_ALM_ORIGEN_TRSOL = :PROPIO' +
-    '   AND S.ESTADO_TRSOL IN (''PENDIENTE'', ''PARCIAL'')' +
+    '   AND S.ESTADO_TRSOL = ''PENDIENTE''' +
     ' ORDER BY S.FECHA_TRSOL, S.NUMERO_TRSOL';
   qryAux.ParamByName('PROPIO').AsString := sPropio;
   qryAux.Open;
@@ -806,9 +831,9 @@ function TdmTraspaso.QuerySolicitudesAbiertas: TUniQuery;
 var
   sPropio: string;
 begin
-  // Solicitudes ABIERTAS (PENDIENTE/PARCIAL) que me tocan a mi (yo soy el
-  // origen al que se pide). Las CERRADAS/ATENDIDAS no salen. Cada fila lleva
-  // el resumen para el modal y el NUMERO/SERIE para cargarla.
+  // Solicitudes ABIERTAS (PENDIENTE) que me tocan a mi (yo soy el origen al que
+  // se pide). Una vez resueltas (COMPLETADO/DENEGADO/CERRADA) no vuelven a
+  // salir. Cada fila lleva el resumen para el modal y el NUMERO/SERIE.
   sPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   Result := TUniQuery.Create(nil);
   Result.Connection := oConn;
@@ -825,7 +850,7 @@ begin
     '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS LINEAS_PEND_TRSOL' +
     '  FROM fza_traspasos_solicitudes S' +
     ' WHERE S.CODIGO_ALM_ORIGEN_TRSOL = :PROPIO' +
-    '   AND S.ESTADO_TRSOL IN (''PENDIENTE'', ''PARCIAL'')' +
+    '   AND S.ESTADO_TRSOL = ''PENDIENTE''' +
     ' ORDER BY S.FECHA_TRSOL, S.NUMERO_TRSOL';
   Result.ParamByName('PROPIO').AsString := sPropio;
 end;
@@ -833,8 +858,9 @@ end;
 function TdmTraspaso.QueryMisPeticiones(const APropio: string): TUniQuery;
 begin
   // Historico de MIS peticiones: yo soy el DESTINO que pidio. Salen TODOS los
-  // estados (PENDIENTE/PARCIAL/ATENDIDA/CERRADA/DENEGADA) para saber si se han
-  // servido o denegado. Devolvemos los nombres reales de columna (sin alias)
+  // estados (PENDIENTE / COMPLETADO TOTAL / COMPLETADO PARCIAL / DENEGADO TOTAL
+  // / CERRADA) para saber si se han servido o denegado. Devolvemos los nombres
+  // reales de columna (sin alias)
   // para que el formateador (fza_config_campos) ponga los titulos; el origen
   // es a quien pedi. El llamante libera el query.
   Result := TUniQuery.Create(nil);
@@ -873,26 +899,34 @@ begin
   Result := True;
 end;
 
-function TdmTraspaso.DenegarSolicitud: Boolean;
+function TdmTraspaso.GrabarDenegacion: Boolean;
 var
+  QryTrx: TUniQuery;
   sNum, sSer: string;
 begin
-  // Deniega la solicitud cargada (DENEGADA): el origen rechaza servirla. El
-  // solicitante lo vera en su historico de peticiones.
+  // Resuelve la solicitud cargada SIN movimiento de stock, usando lo que haya
+  // en cdsLineas (CANTIDAD por linea y MOTIVO). Si todo va a 0 el estado queda
+  // DENEGADO TOTAL; si alguna lleva cantidad, COMPLETADO TOTAL/PARCIAL. Lo usa
+  // el atender cuando no se sirve nada (denegacion total con motivo por linea).
+  Result := False;
   sNum := cdsCabecera.FieldByName('NUMERO_SOL').AsString;
   sSer := cdsCabecera.FieldByName('SERIE_SOL').AsString;
-  Result := False;
-  if (Trim(sNum) <> '') and (Trim(sSer) <> '') then
-  begin
-    qryAux.SQL.Text :=
-      'UPDATE fza_traspasos_solicitudes' +
-      '   SET ESTADO_TRSOL = ''DENEGADA'', USUARIO_MODIF = :USU' +
-      ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
-    qryAux.ParamByName('USU').AsString := inLibGlobalVar.oUser;
-    qryAux.ParamByName('NUM').AsString := sNum;
-    qryAux.ParamByName('SER').AsString := sSer;
-    qryAux.ExecSQL;
-    Result := True;
+  if (Trim(sNum) = '') or (Trim(sSer) = '') then
+    raise Exception.Create('No hay solicitud cargada que denegar.');
+  QryTrx := TUniQuery.Create(nil);
+  try
+    QryTrx.Connection := oConn;
+    oConn.StartTransaction;
+    try
+      MarcarSolicitudAtendida(QryTrx, sNum, sSer);
+      oConn.Commit;
+      Result := True;
+    except
+      oConn.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(QryTrx);
   end;
 end;
 
@@ -959,6 +993,11 @@ begin
           qryAux.FieldByName('DESCRIPCION_ARTICULO_TRSOLLIN').AsString;
         cdsLineas.FieldByName('CANTIDAD').AsFloat :=
           qryAux.FieldByName('PENDIENTE').AsFloat;
+        // Lo pendiente es lo que se ofrece servir; el que atiende baja CANTIDAD
+        // (o la deja en 0 para denegar, indicando MOTIVO).
+        cdsLineas.FieldByName('CANTIDAD_PEDIDA').AsFloat :=
+          qryAux.FieldByName('PENDIENTE').AsFloat;
+        cdsLineas.FieldByName('MOTIVO').AsString := '';
         cdsLineas.Post;
         qryAux.Next;
       end;

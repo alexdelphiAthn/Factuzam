@@ -82,6 +82,9 @@ type
     FStockQry: TUniQuery;
     FStockDs: TDataSource;
     FNavDs: TDataSource;
+    FColUds: TcxGridDBColumn;
+    FColPedidas: TcxGridDBColumn;
+    FColMotivo: TcxGridDBColumn;
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -206,6 +209,8 @@ begin
   Col.Caption := 'Uds';
   Col.DataBinding.FieldName := 'CANTIDAD';
   Col.Width := 50;
+  // Al atender pasa a ser "lo que sirvo" (editable); 0 = denegar esa linea.
+  FColUds := Col;
   Col := FView.CreateColumn;
   Col.Caption := 'Coste';
   Col.DataBinding.FieldName := 'PRECIO_COSTE';
@@ -219,6 +224,21 @@ begin
   Col.DataBinding.FieldName := 'STOCK_ORIGEN';
   Col.Options.Editing := False;
   Col.Width := 70;
+  // Columnas que solo se usan al ATENDER (ocultas en traspaso/solicitar; las
+  // muestra AplicarModo): lo pedido (referencia) y el motivo si se deniega.
+  Col := FView.CreateColumn;
+  Col.Caption := 'Pedidas';
+  Col.DataBinding.FieldName := 'CANTIDAD_PEDIDA';
+  Col.Options.Editing := False;
+  Col.Width := 60;
+  Col.Visible := False;
+  FColPedidas := Col;
+  Col := FView.CreateColumn;
+  Col.Caption := 'Motivo rechazo';
+  Col.DataBinding.FieldName := 'MOTIVO';
+  Col.Width := 180;
+  Col.Visible := False;
+  FColMotivo := Col;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirPanelStock;
@@ -449,6 +469,8 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
+var
+  i: Integer;
 begin
   FModo := AModo;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
@@ -458,11 +480,33 @@ begin
   FGridCtrl.AlmacenStock :=
     FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   btnF11.Visible := AModo <> mtSolicitar;
-  // El grid solo es editable cuando se teclean lineas (traspaso / solicitar);
-  // al atender, las lineas vienen de la solicitud y no se teclean a mano.
-  FView.OptionsData.Editing := AModo <> mtAtender;
+  // Edicion del grid por modo. Al teclear lineas (traspaso / solicitar) todo el
+  // grid es editable. Al atender, las lineas vienen de la solicitud: solo se
+  // editan las uds a servir y, si se deniega (0), el motivo; el resto bloqueado.
   FView.OptionsData.Inserting := AModo <> mtAtender;
   FView.OptionsData.Deleting := AModo <> mtAtender;
+  FView.OptionsData.Editing := True;
+  for i := 0 to FView.ColumnCount - 1 do
+  begin
+    if AModo = mtAtender then
+      FView.Columns[i].Options.Editing :=
+        (FView.Columns[i] = FColUds) or (FView.Columns[i] = FColMotivo)
+    else
+      FView.Columns[i].Options.Editing := True;
+  end;
+  // Pedidas/Motivo solo al atender; "Uds" pasa a "Sirvo" para dejar claro que
+  // ahi se teclea lo que se sirve (0 = denegar la linea).
+  if Assigned(FColPedidas) then
+    FColPedidas.Visible := AModo = mtAtender;
+  if Assigned(FColMotivo) then
+    FColMotivo.Visible := AModo = mtAtender;
+  if Assigned(FColUds) then
+  begin
+    if AModo = mtAtender then
+      FColUds.Caption := 'Sirvo'
+    else
+      FColUds.Caption := 'Uds';
+  end;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -699,21 +743,51 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.DenegarSolicitudCargada;
+var
+  sMotivo: string;
 begin
-  // Deniega (rechaza) la solicitud cargada -> estado DENEGADA. Solo en modo
-  // Atender con una solicitud traida (F8). El solicitante lo vera en su
-  // historico de peticiones (F7).
+  // Deniega TODA la solicitud cargada (atajo F4): pide un motivo, lo marca en
+  // cada linea (servir 0) y la resuelve como DENEGADO TOTAL sin mover stock. El
+  // solicitante lo vera en su historico (F7). Para denegar solo algunas lineas,
+  // sirve unas con cantidad y deja otras a 0 con su motivo, y pulsa F12.
   if FModo <> mtAtender then
     ShowMessage('Denegar solo aplica al atender una solicitud.')
   else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
     ShowMessage('Trae primero una solicitud (F8) para denegarla.')
-  else if MessageDlg('¿Denegar la solicitud? El solicitante la verá como ' +
-                     'DENEGADA.', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  else
   begin
-    if FDatos.DenegarSolicitud then
+    sMotivo := '';
+    if InputQuery('Denegar petición',
+                  'Motivo del rechazo (lo verá quien la pidió):', sMotivo) then
     begin
-      ShowMessage('Solicitud denegada.');
-      AplicarModo(mtAtender);
+      if Trim(sMotivo) = '' then
+        ShowMessage('Debes indicar un motivo para denegar.')
+      else
+      begin
+        FDatos.cdsLineas.DisableControls;
+        try
+          FDatos.cdsLineas.First;
+          while not FDatos.cdsLineas.Eof do
+          begin
+            if Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString)
+               <> '' then
+            begin
+              FDatos.cdsLineas.Edit;
+              FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat := 0;
+              FDatos.cdsLineas.FieldByName('MOTIVO').AsString := sMotivo;
+              FDatos.cdsLineas.Post;
+            end;
+            FDatos.cdsLineas.Next;
+          end;
+        finally
+          FDatos.cdsLineas.EnableControls;
+        end;
+        if FDatos.GrabarDenegacion then
+        begin
+          ShowMessage('Petición denegada (DENEGADO TOTAL).');
+          AplicarModo(mtAtender);
+        end;
+      end;
     end;
   end;
 end;
@@ -794,6 +868,8 @@ end;
 procedure TfrmMtoOpeTraspaso.EjecutarTraspaso(AConTicket: Boolean);
 var
   sNumOp, sDestino, sOrigen, sEmpleado, sNumSol, sSerSol: string;
+  iServidas: Integer;
+  bFaltaMotivo: Boolean;
 begin
   if EmpleadoValido then
   begin
@@ -809,14 +885,58 @@ begin
       sSerSol := FDatos.cdsCabecera.FieldByName('SERIE_SOL').AsString;
       if sDestino = '' then
         ShowMessage('Carga primero una solicitud (botón Cargar solicitud).')
-      else if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
+      else
       begin
-        ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
-                           [sNumOp]));
-        if AConTicket then
-          TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
-            sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
-        AplicarModo(mtAtender);
+        // Reparto por linea: cuenta lo que se sirve (CANTIDAD>0) y exige motivo
+        // en las que se deniegan (servir 0).
+        iServidas := 0;
+        bFaltaMotivo := False;
+        FDatos.cdsLineas.DisableControls;
+        try
+          FDatos.cdsLineas.First;
+          while not FDatos.cdsLineas.Eof do
+          begin
+            if Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString)
+               <> '' then
+            begin
+              if FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat > 0 then
+                Inc(iServidas)
+              else if Trim(FDatos.cdsLineas.FieldByName('MOTIVO').AsString)
+                      = '' then
+                bFaltaMotivo := True;
+            end;
+            FDatos.cdsLineas.Next;
+          end;
+        finally
+          FDatos.cdsLineas.EnableControls;
+        end;
+        if bFaltaMotivo then
+          ShowMessage('Indica el motivo en las líneas que deniegas ' +
+                      '(las que sirves a 0).')
+        else if iServidas > 0 then
+        begin
+          // Hay algo que servir: traspaso de lo servido; lo denegado queda
+          // registrado con su motivo. Estado COMPLETADO TOTAL/PARCIAL.
+          if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
+          begin
+            ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
+                               [sNumOp]));
+            if AConTicket then
+              TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
+                sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
+            AplicarModo(mtAtender);
+          end;
+        end
+        else if MessageDlg('No has marcado nada para servir. ¿Denegar toda ' +
+                  'la petición?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        begin
+          // Todo a 0: denegacion total (con el motivo por linea), sin traspaso.
+          if FDatos.GrabarDenegacion then
+          begin
+            ShowMessage('Petición denegada (DENEGADO TOTAL).');
+            AplicarModo(mtAtender);
+          end;
+        end;
       end;
     end
     else
