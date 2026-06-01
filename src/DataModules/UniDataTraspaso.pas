@@ -98,11 +98,17 @@ type
     // Igual pero en un TUniQuery (para el modal de busqueda de solicitudes
     // abiertas: PENDIENTE/PARCIAL). El llamante lo libera.
     function QuerySolicitudesAbiertas: TUniQuery;
+    // Historico de MIS peticiones (yo soy el destino que pide), todos los
+    // estados, para saber si se han servido/denegado. El llamante lo libera.
+    function QueryMisPeticiones(const APropio: string): TUniQuery;
     // Carga una solicitud pendiente en cabecera/líneas para servirla.
     function CargarSolicitud(const ANumero, ASerie: string): Boolean;
     // Cierra (estado CERRADA) la solicitud cargada aunque queden lineas sin
     // atender. Devuelve False si no hay solicitud cargada.
     function CerrarSolicitud: Boolean;
+    // Deniega (estado DENEGADA) la solicitud cargada: el origen la rechaza.
+    // Devuelve False si no hay solicitud cargada.
+    function DenegarSolicitud: Boolean;
     // Valida el empleado responsable por su código o diminutivo de ticket.
     function ValidarEmpleado(const ABusqueda: string;
                              out ACodigo, ANombre: string): Boolean;
@@ -824,6 +830,28 @@ begin
   Result.ParamByName('PROPIO').AsString := sPropio;
 end;
 
+function TdmTraspaso.QueryMisPeticiones(const APropio: string): TUniQuery;
+begin
+  // Historico de MIS peticiones: yo soy el DESTINO que pidio. Salen TODOS los
+  // estados (PENDIENTE/PARCIAL/ATENDIDA/CERRADA/DENEGADA) para saber si se han
+  // servido o denegado. Devolvemos los nombres reales de columna (sin alias)
+  // para que el formateador (fza_config_campos) ponga los titulos; el origen
+  // es a quien pedi. El llamante libera el query.
+  Result := TUniQuery.Create(nil);
+  Result.Connection := oConn;
+  Result.SQL.Text :=
+    'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.FECHA_TRSOL,' +
+    '       S.CODIGO_ALM_ORIGEN_TRSOL, S.ESTADO_TRSOL,' +
+    '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
+    '         WHERE L.NUMERO_TRSOL_TRSOLLIN = S.NUMERO_TRSOL' +
+    '           AND L.SERIE_TRSOL_TRSOLLIN = S.SERIE_TRSOL' +
+    '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS LINEAS_PEND_TRSOL' +
+    '  FROM fza_traspasos_solicitudes S' +
+    ' WHERE S.CODIGO_ALM_DESTINO_TRSOL = :PROPIO' +
+    ' ORDER BY S.FECHA_TRSOL DESC, S.NUMERO_TRSOL DESC';
+  Result.ParamByName('PROPIO').AsString := APropio;
+end;
+
 function TdmTraspaso.CerrarSolicitud: Boolean;
 var
   sNum, sSer: string;
@@ -843,6 +871,29 @@ begin
   qryAux.ParamByName('SER').AsString := sSer;
   qryAux.ExecSQL;
   Result := True;
+end;
+
+function TdmTraspaso.DenegarSolicitud: Boolean;
+var
+  sNum, sSer: string;
+begin
+  // Deniega la solicitud cargada (DENEGADA): el origen rechaza servirla. El
+  // solicitante lo vera en su historico de peticiones.
+  sNum := cdsCabecera.FieldByName('NUMERO_SOL').AsString;
+  sSer := cdsCabecera.FieldByName('SERIE_SOL').AsString;
+  Result := False;
+  if (Trim(sNum) <> '') and (Trim(sSer) <> '') then
+  begin
+    qryAux.SQL.Text :=
+      'UPDATE fza_traspasos_solicitudes' +
+      '   SET ESTADO_TRSOL = ''DENEGADA'', USUARIO_MODIF = :USU' +
+      ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
+    qryAux.ParamByName('USU').AsString := inLibGlobalVar.oUser;
+    qryAux.ParamByName('NUM').AsString := sNum;
+    qryAux.ParamByName('SER').AsString := sSer;
+    qryAux.ExecSQL;
+    Result := True;
+  end;
 end;
 
 function TdmTraspaso.CargarSolicitud(const ANumero, ASerie: string): Boolean;

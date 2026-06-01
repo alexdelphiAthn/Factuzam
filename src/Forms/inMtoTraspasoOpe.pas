@@ -89,6 +89,8 @@ type
     procedure EnfocarSegunModo;
     procedure AbrirModalSolicitudes;
     procedure CerrarSolicitudCargada;
+    procedure DenegarSolicitudCargada;
+    procedure AbrirMisPeticiones;
     procedure AplicarModo(AModo: TModoTraspaso);
     procedure CargarCombo;
     procedure CargarAlmacenesDestino;
@@ -696,6 +698,43 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeTraspaso.DenegarSolicitudCargada;
+begin
+  // Deniega (rechaza) la solicitud cargada -> estado DENEGADA. Solo en modo
+  // Atender con una solicitud traida (F8). El solicitante lo vera en su
+  // historico de peticiones (F7).
+  if FModo <> mtAtender then
+    ShowMessage('Denegar solo aplica al atender una solicitud.')
+  else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
+    ShowMessage('Trae primero una solicitud (F8) para denegarla.')
+  else if MessageDlg('¿Denegar la solicitud? El solicitante la verá como ' +
+                     'DENEGADA.', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    if FDatos.DenegarSolicitud then
+    begin
+      ShowMessage('Solicitud denegada.');
+      AplicarModo(mtAtender);
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.AbrirMisPeticiones;
+var
+  Q: TUniQuery;
+begin
+  // Historico (solo consulta) de las peticiones que YO he hecho (soy el
+  // destino que pide): numero, serie, fecha, a quien pedi (origen) y estado,
+  // para saber si se han servido/denegado. Reutiliza el buscador de
+  // solicitudes; los titulos los pone el formateador (fza_config_campos).
+  Q := FDatos.QueryMisPeticiones(FAlmacen);
+  try
+    TBusquedaUtils.EjecutarBusqueda('Mis peticiones', Q,
+                                    'frmMtoSolicitudesSearch');
+  finally
+    FreeAndNil(Q);
+  end;
+end;
+
 procedure TfrmMtoOpeTraspaso.EnviarSolicitud;
 var
   sNum, sSer, sOrigen: string;
@@ -828,8 +867,12 @@ begin
   case Key of
     VK_F3:
       QuitarLinea;
+    VK_F4:
+      DenegarSolicitudCargada;
     VK_F6:
       AplicarModo(mtSolicitar);
+    VK_F7:
+      AbrirMisPeticiones;
     VK_F8:
       if FModo = mtAtender then
         AbrirModalSolicitudes
