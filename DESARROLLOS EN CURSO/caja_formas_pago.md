@@ -8,8 +8,8 @@ divisa, cripto, bono…) con sus flags de comportamiento.
 
 | Archivo | Función |
 |---|---|
-| `src/Forms/inMtoCajaFormasPago.pas/.dfm` | `TfrmMtoCajaFormasPago`. Lista + Ficha sobre `fza_caja_formas_pago`. |
-| `src/DataModules/UniDataCajaFormasPago.pas/.dfm` | `TdmCajaFormasPago`. `unqryTablaG` con `SELECT * FROM fza_caja_formas_pago`. |
+| `src/Caja/Forms/inMtoCajaFormasPago.pas/.dfm` | `TfrmMtoCajaFormasPago`. Lista + Ficha sobre `fza_caja_formas_pago`. |
+| `src/Caja/DataModules/UniDataCajaFormasPago.pas/.dfm` | `TdmCajaFormasPago`. `unqryTablaG` con `SELECT * FROM fza_caja_formas_pago`. |
 
 ## Cableado
 
