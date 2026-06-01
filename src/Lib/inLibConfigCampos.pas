@@ -43,7 +43,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Precargar;
+    procedure Precargar(AConn: TUniConnection = nil);
     procedure Invalidar;
     // Busca primero por tabla+campo exacto; si no encuentra, por campo solo.
     function ObtenerTitulo(const aCampo: string;
@@ -85,7 +85,7 @@ begin
   FCargada := False;
 end;
 
-procedure TConfigCamposCache.Precargar;
+procedure TConfigCamposCache.Precargar(AConn: TUniConnection = nil);
 var
   qry: TUniQuery;
   item: TConfigCampoItem;
@@ -94,12 +94,14 @@ begin
   FPorCampo.Clear;
   FPorTablaCampo.Clear;
   FCargada := False;
-  if (oConn = nil) or (not oConn.Connected) then
+  if AConn = nil then
+    AConn := oConn;
+  if (AConn = nil) or (not AConn.Connected) then
     Exit;
   try
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := AConn;
       qry.SQL.Text :=
         'SELECT TABLA_OBJETIVO_CC, OBJETIVO_CC, TITULO_VISUAL_CC, ' +
         '       ANCHO_COLUMNA_CC, ORDEN_VISUAL_CC, VISIBLE_CC '    +

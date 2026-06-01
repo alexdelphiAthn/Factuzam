@@ -48,6 +48,7 @@ uses
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
   ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
+  System.Threading,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage;
 
 const
@@ -211,6 +212,12 @@ type
     procedure MostrarDetalleExcepcion(const ATexto: string);
     procedure CopiarExceptionDialogClick(Sender: TObject);
     procedure AplicarPermisosMenu;
+    // Precarga de caches de arranque en paralelo (experimental).
+    procedure PrecargarParalelo;
+    function EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
+                                 out AError: string): Int64;
+    function CrearConexionPrecarga: TUniConnection;
+    function MedirMs(ACarga: TProc): Int64;
     function CopiaSeguridad: Boolean;
     procedure WorkerProgreso(const AEtapa: string;
                               APaso, ATotal: Integer;
@@ -464,26 +471,11 @@ begin
   oConn           := FDmConn.conUni;
   odmConn         := FDmConn;
   ofrmMto2        := Self;
-  oFzaWinf := TfzaWinF.Create(Self);
-  oFzaWinf.Charge(oConn);
-  inLibLog.Log.LogInfo(Format('Arranque: pre-PrecargarPerfilesUsuario ' +
-                              'oUser="%s" oGroup="%s"', [oUser, oGroup]));
-  odmPerfiles.PrecargarPerfilesUsuario;
-  inLibLog.Log.LogInfo('Arranque: pre-PrecargarInformesGuias');
-  // Precarga en memoria de fza_informes_guias para que AbrirGuiasRuntime
-  // en los TfrmPrint no vaya a BBDD en cada click (mataba 8 s por print).
-  oInfGuiasCache := TInformesGuiasCache.Create;
-  oInfGuiasCache.Precargar;
-  inLibLog.Log.LogInfo('Arranque: pre-PrecargarConfigCampos');
-  oConfigCampos := TConfigCamposCache.Create;
-  oConfigCampos.Precargar;
-  inLibLog.Log.LogInfo('Arranque: pre-PrecargarPermisos');
-  oPermisos := TPermisosCache.Create;
-  oPermisos.Precargar(oConn, oUser, oGroup, oRootGroup = 'S');
-  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
-  oCajaParams.InicializarParametrosCaja(oUser, oGroup);
-  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');
-  oAppParams.InicializarParametrosApp(oUser, oGroup);
+  // Precarga de caches de arranque en paralelo (experimental). Lo pesado
+  // (perfiles, informes-guias, config-campos, permisos) corre en tareas con
+  // conexion propia; Charge (toca VCL) y los parametros de caja/app se quedan
+  // en el hilo principal. Ver TfrmMtoPrincipal.PrecargarParalelo.
+  PrecargarParalelo;
   oNomImpresoraCaja := GetImpresoraCaja;
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
@@ -757,6 +749,155 @@ end;
 
 // validar iban online https://www.iban.com
 // validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
+
+function TfrmMtoPrincipal.MedirMs(ACarga: TProc): Int64;
+var
+  sw: TStopwatch;
+begin
+  sw := TStopwatch.StartNew;
+  ACarga();
+  Result := sw.ElapsedMilliseconds;
+end;
+
+function TfrmMtoPrincipal.CrearConexionPrecarga: TUniConnection;
+begin
+  // Conexion efimera para una tarea de precarga, creada y usada en SU hilo.
+  // Mismos parametros que oConn (salen del mismo pool) pero SIN cablear
+  // OnError/AfterConnect: el AfterConnect global ejecuta SQL sobre el conUni
+  // global por nombre, y llamarlo desde un worker seria una carrera; el SET
+  // wait_timeout no aporta a una conexion de un solo uso. Leer aqui las
+  // propiedades de oConn es seguro: en la fase paralela el hilo principal
+  // esta en WaitForAll y nadie las modifica.
+  Result := TUniConnection.Create(nil);
+  try
+    Result.LoginPrompt  := False;
+    Result.ProviderName := oConn.ProviderName;
+    Result.Server       := oConn.Server;
+    Result.Port         := oConn.Port;
+    Result.Database     := oConn.Database;
+    Result.Username     := oConn.Username;
+    Result.Password     := oConn.Password;
+    Result.Pooling      := True;
+    Result.PoolingOptions.ConnectionLifetime := 0;
+    Result.PoolingOptions.Validate := True;
+    Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
+    Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
+    Result.Options.LocalFailover    := True;
+    Result.Options.DisconnectedMode := True;
+    Result.Connect;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+function TfrmMtoPrincipal.EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
+                                              out AError: string): Int64;
+var
+  sw: TStopwatch;
+  c: TUniConnection;
+begin
+  AError := '';
+  sw := TStopwatch.StartNew;
+  c := nil;
+  try
+    try
+      c := CrearConexionPrecarga;
+      ACarga(c);
+    except
+      // Capturamos la excepcion en la tarea para que NO aborte el WaitForAll.
+      // La cache afectada queda sin cargar y degrada sola (FCargada=False).
+      on E: Exception do
+        AError := E.ClassName + ': ' + E.Message;
+    end;
+  finally
+    if c <> nil then
+      FreeAndNil(c);
+  end;
+  Result := sw.ElapsedMilliseconds;
+end;
+
+procedure TfrmMtoPrincipal.PrecargarParalelo;
+var
+  swTotal: TStopwatch;
+  bEsAdmin: Boolean;
+  msWinf, msCaja, msApp: Int64;
+  msPerfiles, msInfGuias, msConfig, msPermisos: Int64;
+  errPerfiles, errInfGuias, errConfig, errPermisos: string;
+  t1, t2, t3, t4: ITask;
+begin
+  swTotal := TStopwatch.StartNew;
+  Log.LogInfo('Arranque: PrecargarParalelo INICIO');
+  bEsAdmin := (oRootGroup = 'S');
+  msPerfiles := 0;
+  msInfGuias := 0;
+  msConfig := 0;
+  msPermisos := 0;
+  errPerfiles := '';
+  errInfGuias := '';
+  errConfig := '';
+  errPermisos := '';
+  // --- Hilo principal: lo que toca VCL y la creacion de los objetos cache.
+  // Charge enlaza cada item de menu via FindComponent (arbol VCL) -> aqui.
+  oFzaWinf := TfzaWinF.Create(Self);
+  msWinf := MedirMs(procedure begin oFzaWinf.Charge(oConn) end);
+  oInfGuiasCache := TInformesGuiasCache.Create;
+  oConfigCampos  := TConfigCamposCache.Create;
+  oPermisos      := TPermisosCache.Create;
+  // --- Cargas pesadas en paralelo, cada una con su propia conexion. Cada
+  // tarea escribe solo en SUS variables (sin estado compartido) y captura su
+  // excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
+  t1 := TTask.Run(
+    procedure
+    begin
+      msPerfiles := EjecutarCargaWorker(
+        procedure(c: TUniConnection)
+        begin
+          odmPerfiles.PrecargarPerfilesUsuario(c);
+        end, errPerfiles);
+    end);
+  t2 := TTask.Run(
+    procedure
+    begin
+      msInfGuias := EjecutarCargaWorker(
+        procedure(c: TUniConnection)
+        begin
+          oInfGuiasCache.Precargar(c);
+        end, errInfGuias);
+    end);
+  t3 := TTask.Run(
+    procedure
+    begin
+      msConfig := EjecutarCargaWorker(
+        procedure(c: TUniConnection)
+        begin
+          oConfigCampos.Precargar(c);
+        end, errConfig);
+    end);
+  t4 := TTask.Run(
+    procedure
+    begin
+      msPermisos := EjecutarCargaWorker(
+        procedure(c: TUniConnection)
+        begin
+          oPermisos.Precargar(c, oUser, oGroup, bEsAdmin);
+        end, errPermisos);
+    end);
+  TTask.WaitForAll([t1, t2, t3, t4]);
+  // --- Cargas ligeras en el hilo principal (usan oConn, ya sin tareas vivas).
+  msCaja := MedirMs(procedure begin oCajaParams.InicializarParametrosCaja(oUser, oGroup) end);
+  msApp := MedirMs(procedure begin oAppParams.InicializarParametrosApp(oUser, oGroup) end);
+  // --- Resultados (hilo principal). Tiempos por etapa para comparar.
+  Log.LogInfo(Format('PrecargaParalela: total=%d ms || principal: winf=%d ' +
+    'caja=%d app=%d || paralelo: perfiles=%d infguias=%d config=%d permisos=%d',
+    [swTotal.ElapsedMilliseconds, msWinf, msCaja, msApp,
+     msPerfiles, msInfGuias, msConfig, msPermisos]));
+  if (errPerfiles <> '') or (errInfGuias <> '') or
+     (errConfig <> '') or (errPermisos <> '') then
+    Log.LogError(Format('PrecargaParalela errores -> perfiles=[%s] ' +
+      'infguias=[%s] config=[%s] permisos=[%s]',
+      [errPerfiles, errInfGuias, errConfig, errPermisos]));
+end;
 
 procedure TfrmMtoPrincipal.AplicarPermisosMenu;
 var
