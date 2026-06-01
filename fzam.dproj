@@ -419,22 +419,22 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibCertificates.pas"/>
         <DCCReference Include="src\Modals\inMtoModalEmpCer.pas"/>
-        <DCCReference Include="src\Forms\inMtoCajaMenu.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaMenu.pas">
             <Form>frmMtoMenuCaja</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaOpe.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaOpe.pas">
             <Form>frmMtoOpeCaja</Form>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCaja.pas">
+        <DCCReference Include="src\Caja\DataModules\UniDataCaja.pas">
             <Form>dmCajaOpe</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaFaseCobro.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaFaseCobro.pas">
             <Form>frmMtoCajaFaseCobro</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaFormasPago.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaFormasPago.pas">
             <Form>frmMtoCajaFormasPago</Form>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaFormasPago.pas">
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaFormasPago.pas">
             <Form>dmCajaFormasPago</Form>
             <DesignClass>TdmCajaFormasPago</DesignClass>
         </DCCReference>
@@ -456,30 +456,30 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDevExcel.pas"/>
         <DCCReference Include="src\Lib\inLibdxSpreadSheetStrs_ESP.pas"/>
-        <DCCReference Include="src\Forms\inMtoCajaReferenciaPago.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaReferenciaPago.pas">
             <Form>frmCajaReferenciaPago</Form>
         </DCCReference>
-        <DCCReference Include="src\Lib\inLibFaseCobro.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibFaseCobro.pas"/>
         <DCCReference Include="src\Lib\inLibCriptoCurr.pas"/>
         <DCCReference Include="src\Lib\inLibDivCurr.pas"/>
-        <DCCReference Include="src\Forms\inMtoCajaSeleccionVale.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaSeleccionVale.pas">
             <Form>frmMtoCajaSeleccionVale</Form>
         </DCCReference>
-        <DCCReference Include="src\Core\inMtoCajaParam.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaParam.pas">
             <Form>frmMtoCajaParam</Form>
         </DCCReference>
-        <DCCReference Include="src\Lib\inLibCajaParam.pas"/>
-        <DCCReference Include="src\Lib\inLibArqueo.pas"/>
-        <DCCReference Include="src\Lib\inLibArqueoTicket.pas"/>
-        <DCCReference Include="src\Lib\inLibArqueoPersistencia.pas"/>
-        <DCCReference Include="src\Lib\inLibGenerarTicketCaja.pas"/>
-        <DCCReference Include="src\Modals\inMtoModalArqueo.pas">
+        <DCCReference Include="src\Caja\Lib\inLibCajaParam.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibArqueo.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibArqueoTicket.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibArqueoPersistencia.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibGenerarTicketCaja.pas"/>
+        <DCCReference Include="src\Caja\Modals\inMtoModalArqueo.pas">
             <Form>frmModalArqueo</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEntradaCambio.pas">
             <Form>frmModalEntradaCambio</Form>
         </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalGastoCaja.pas">
+        <DCCReference Include="src\Caja\Modals\inMtoModalGastoCaja.pas">
             <Form>frmModalGastoCaja</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
@@ -618,31 +618,31 @@
         <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
             <Form>frmModalFacturarAlbaranesFechas</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaOperacionesHist.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaOperacionesHist.pas">
             <Form>frmMtoCajaOperacionesHist</Form>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaOperacionesHist.pas">
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaOperacionesHist.pas">
             <Form>dmCajaOperacionesHist</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaArqueosHist.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaArqueosHist.pas">
             <Form>frmMtoCajaArqueosHist</Form>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaArqueosHist.pas">
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaArqueosHist.pas">
             <Form>dmCajaArqueosHist</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaPagosHist.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaPagosHist.pas">
             <Form>frmMtoCajaPagosHist</Form>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaPagosHist.pas">
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaPagosHist.pas">
             <Form>dmCajaPagosHist</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoCajaValesHist.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoCajaValesHist.pas">
             <Form>frmMtoCajaValesHist</Form>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataCajaValesHist.pas">
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaValesHist.pas">
             <Form>dmCajaValesHist</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>

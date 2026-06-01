@@ -26,30 +26,30 @@ Una vez abierto el menú, todos los flujos siguientes salen de `frmMtoMenuCaja`.
 
 | Archivo (`.pas` + `.dfm`) | Clase | Función |
 |---|---|---|
-| `src/Forms/inMtoCajaMenu` | `TfrmMtoMenuCaja` | Menú principal del TPV (F5/F10/F3/F6/F7/F11/ESC) y calendario de ventas. |
+| `src/Caja/Forms/inMtoCajaMenu` | `TfrmMtoMenuCaja` | Menú principal del TPV (F5/F10/F3/F6/F7/F11/ESC) y calendario de ventas. |
 | `src/Modals/inMtoModalCajDef` | `TfrmMtoModalCajDef` | Modal de selección de Empresa/Almacén/Caja al entrar. |
-| `src/Forms/inMtoCajaOpe` | `TfrmMtoOpeCaja` | Operativa de venta: líneas, atributos, búsqueda de artículos, depósitos. |
-| `src/Forms/inMtoCajaFaseCobro` | `TfrmMtoCajaFaseCobro` | Fase de cobro: formas de pago, vales, descuentos, dejar a cuenta. |
-| `src/Forms/inMtoCajaReferenciaPago` | `TfrmCajaReferenciaPago` | Referencia/divisa/cripto para pagos no efectivo. |
-| `src/Forms/inMtoCajaSeleccionVale` | `TfrmMtoCajaSeleccionVale` | Buscar y aplicar un vale pendiente en la fase de cobro. |
+| `src/Caja/Forms/inMtoCajaOpe` | `TfrmMtoOpeCaja` | Operativa de venta: líneas, atributos, búsqueda de artículos, depósitos. |
+| `src/Caja/Forms/inMtoCajaFaseCobro` | `TfrmMtoCajaFaseCobro` | Fase de cobro: formas de pago, vales, descuentos, dejar a cuenta. |
+| `src/Caja/Forms/inMtoCajaReferenciaPago` | `TfrmCajaReferenciaPago` | Referencia/divisa/cripto para pagos no efectivo. |
+| `src/Caja/Forms/inMtoCajaSeleccionVale` | `TfrmMtoCajaSeleccionVale` | Buscar y aplicar un vale pendiente en la fase de cobro. |
 | `src/Forms/inMtoConsultaOpe` | `TfrmConsultaOpe` | **Buscar / Modificar** (F10): maestro-detalle de operaciones del día. |
-| `src/Forms/inMtoCajaOperacionesHist` | `TfrmMtoCajaOperacionesHist` | Mantenimiento histórico de `fza_caja_operaciones` (vista admin). |
-| `src/Forms/inMtoCajaPagosHist` | `TfrmMtoCajaPagosHist` | Mantenimiento histórico de `fza_caja_pagos`. |
-| `src/Forms/inMtoCajaValesHist` | `TfrmMtoCajaValesHist` | Mantenimiento histórico de `fza_caja_vales`. |
-| `src/DataModules/UniDataCaja` | `TdmCajaOpe` | Data module de la operativa (cdsCabecera, cdsLineas, grabar factura). |
-| `src/DataModules/UniDataCajaOperacionesHist` | `TdmCajaOperacionesHist` | Data module del mantenimiento histórico de operaciones. |
-| `src/DataModules/UniDataCajaPagosHist` | `TdmCajaPagosHist` | Data module del mantenimiento histórico de pagos. |
-| `src/DataModules/UniDataCajaValesHist` | `TdmCajaValesHist` | Data module del mantenimiento histórico de vales. |
-| `src/Lib/inLibCajaParam` | `TCajaParams` (`oCajaParams`) | Parámetros de comportamiento del TPV (vger*). |
+| `src/Caja/Forms/inMtoCajaOperacionesHist` | `TfrmMtoCajaOperacionesHist` | Mantenimiento histórico de `fza_caja_operaciones` (vista admin). |
+| `src/Caja/Forms/inMtoCajaPagosHist` | `TfrmMtoCajaPagosHist` | Mantenimiento histórico de `fza_caja_pagos`. |
+| `src/Caja/Forms/inMtoCajaValesHist` | `TfrmMtoCajaValesHist` | Mantenimiento histórico de `fza_caja_vales`. |
+| `src/Caja/DataModules/UniDataCaja` | `TdmCajaOpe` | Data module de la operativa (cdsCabecera, cdsLineas, grabar factura). |
+| `src/Caja/DataModules/UniDataCajaOperacionesHist` | `TdmCajaOperacionesHist` | Data module del mantenimiento histórico de operaciones. |
+| `src/Caja/DataModules/UniDataCajaPagosHist` | `TdmCajaPagosHist` | Data module del mantenimiento histórico de pagos. |
+| `src/Caja/DataModules/UniDataCajaValesHist` | `TdmCajaValesHist` | Data module del mantenimiento histórico de vales. |
+| `src/Caja/Lib/inLibCajaParam` | `TCajaParams` (`oCajaParams`) | Parámetros de comportamiento del TPV (vger*). |
 | `src/Lib/inLibVentasCalendario` | `TVentasCalendarioCache` | Caché de días con ventas para pintar el calendario. |
-| `src/Lib/inLibFaseCobro` | `TDatosFaseCobro` y records | Lógica de totales/validación de la fase de cobro. |
+| `src/Caja/Lib/inLibFaseCobro` | `TDatosFaseCobro` y records | Lógica de totales/validación de la fase de cobro. |
 | `src/Lib/inLibFacturas` | `TFacturaTotales`, `TLinFac` | Cálculo de IVA / totales sobre cabecera y líneas. |
 
 ---
 
 ## 3. `inMtoCajaMenu` — menú principal (TPV)
 
-Archivo: `src/Forms/inMtoCajaMenu.pas` (`src/Forms/inMtoCajaMenu.dfm`).
+Archivo: `src/Caja/Forms/inMtoCajaMenu.pas` (`src/Caja/Forms/inMtoCajaMenu.dfm`).
 
 Pantalla con 6 opciones + ESC, todas accesibles por teclado (F-keys) y con
 navegación arriba/abajo (flechas) + Enter. El estado actual está siempre en
@@ -114,7 +114,7 @@ estado maximizado al salir.
 
 ## 4. `inMtoCajaOpe` — operativa de venta (F5)
 
-Archivo: `src/Forms/inMtoCajaOpe.pas` (~2 680 líneas, el más grande del módulo).
+Archivo: `src/Caja/Forms/inMtoCajaOpe.pas` (~2 680 líneas, el más grande del módulo).
 Es donde se construye el ticket línea a línea. Tiene su propio data module:
 `DatosCaja: TdmCajaOpe` creado en `FormCreate:2527`.
 
@@ -244,7 +244,7 @@ descuentos editados a mano.
 
 ## 5. `inMtoCajaFaseCobro` — fase de cobro
 
-Archivo: `src/Forms/inMtoCajaFaseCobro.pas`.
+Archivo: `src/Caja/Forms/inMtoCajaFaseCobro.pas`.
 
 Se invoca desde `inMtoCajaOpe.btnF12Click:2276`. Recibe:
 - `TFacturaTotales` con cabecera + líneas y totales ya calculados.
@@ -252,7 +252,7 @@ Se invoca desde `inMtoCajaOpe.btnF12Click:2276`. Recibe:
 
 ### 5.1 Estado interno
 
-- `FDatosCobro: TDatosFaseCobro` (definido en `src/Lib/inLibFaseCobro.pas`)
+- `FDatosCobro: TDatosFaseCobro` (definido en `src/Caja/Lib/inLibFaseCobro.pas`)
   contiene la lógica pura: importes pendientes, vale recogido/emitido,
   dejar a cuenta, devolución económica, etc.
 - `FMemTablePagos: TVirtualTable` es la rejilla de formas de pago. Cada fila
@@ -321,7 +321,7 @@ Si `ImporteDescuentoGlobal > 0`, se reparte línea a línea por
 
 ## 6. Persistencia — `UniDataCaja.TdmCajaOpe`
 
-Archivo: `src/DataModules/UniDataCaja.pas` (~2 650 líneas).
+Archivo: `src/Caja/DataModules/UniDataCaja.pas` (~2 650 líneas).
 
 ### 6.1 Estructura
 
@@ -448,7 +448,7 @@ Suelen colgar del menú de mantenimientos, no del menú de caja del TPV.
 
 ## 8. Parámetros de comportamiento (`oCajaParams`)
 
-Definidos y leídos en `src/Lib/inLibCajaParam.pas`. Se cargan al iniciar la
+Definidos y leídos en `src/Caja/Lib/inLibCajaParam.pas`. Se cargan al iniciar la
 aplicación. Usar siempre los getters: `GetBool`, `GetString`, `GetInt`.
 
 | Clave | Default | Dónde se lee | Efecto |
@@ -516,8 +516,8 @@ marcados como TODO en `inMtoCajaMenu.pas` y siguen sin implementar:
 - F3 — Traspasos (`lblTraspasosClick:728`).
 
 F11 Arqueo ya está enganchado a `TfrmModalArqueo.Ejecutar`
-(`src/Modals/inMtoModalArqueo.pas`, librería de cálculo
-`src/Lib/inLibArqueo.pas`). En su primer paso muestra los totales del rango
+(`src/Caja/Modals/inMtoModalArqueo.pas`, librería de cálculo
+`src/Caja/Lib/inLibArqueo.pas`). En su primer paso muestra los totales del rango
 seleccionado en modo solo lectura, sin recuento manual ni cierre Z; el
 desglose por forma de pago se devuelve en `TArqueoCaja.PagosPorForma` pero
 no se persiste todavía (tabla hija pendiente para el cierre Z futuro).
