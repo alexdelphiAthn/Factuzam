@@ -422,37 +422,20 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.AbrirModalSolicitudes;
-  // Pone un titulo legible a un campo del query (igual que la caja en
-  // BuscarArticulo); el buscador generico usa DisplayLabel como cabecera.
-  procedure Titulo(AQ: TUniQuery; const ACampo, ALabel: string);
-  var
-    F: TField;
-  begin
-    F := AQ.FindField(ACampo);
-    if F <> nil then
-      F.DisplayLabel := ALabel;
-  end;
 var
   Q: TUniQuery;
   sNum, sSer: string;
 begin
-  // Modal con las solicitudes ABIERTAS (pendientes/parciales). Al elegir una
-  // se carga para servirla y sale su ticket. Las cerradas no aparecen.
+  // Modal con las solicitudes ABIERTAS (pendientes/parciales). Los titulos de
+  // columna los pone el formateador (fza_config_campos), no se hardcodean. Al
+  // elegir una se carga para servirla y sale su ticket. Las cerradas no salen.
   Q := FDatos.QuerySolicitudesAbiertas;
   try
-    // Titulos legibles de las columnas (el query trae alias en mayusculas).
-    Q.Open;
-    Titulo(Q, 'NUMERO', 'Número');
-    Titulo(Q, 'SERIE', 'Serie');
-    Titulo(Q, 'FECHA', 'Fecha');
-    Titulo(Q, 'SOLICITANTE', 'Solicitante');
-    Titulo(Q, 'ESTADO', 'Estado');
-    Titulo(Q, 'LINEAS_PEND', 'Líneas pend.');
     if TBusquedaUtils.EjecutarBusqueda('Solicitudes abiertas', Q,
                                        'frmMtoSolicitudesSearch') then
     begin
-      sNum := Q.FieldByName('NUMERO').AsString;
-      sSer := Q.FieldByName('SERIE').AsString;
+      sNum := Q.FieldByName('NUMERO_TRSOL').AsString;
+      sSer := Q.FieldByName('SERIE_TRSOL').AsString;
       if FDatos.CargarSolicitud(sNum, sSer) then
       begin
         txtOrigen.Text :=

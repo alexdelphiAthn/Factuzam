@@ -206,3 +206,61 @@ SET @ddl := IF(@col IS NOT NULL AND @col <> 'utf8mb4_spanish_ci',
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 5. Titulos de columna para el formateador (fza_config_campos), usados por
+--    el buscador de solicitudes abiertas (frmMtoSolicitudesSearch). Asi no se
+--    hardcodean captions: el buscador titula via oConfigCampos. Idempotente
+--    (INSERT ... WHERE NOT EXISTS por PK TABLA_OBJETIVO_CC+OBJETIVO_CC).
+-- ---------------------------------------------------------------------------
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes' AS t, 'NUMERO_TRSOL' AS o, 'Número' AS v,
+  90 AS a, 1 AS ord, 'S' AS vis) x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'NUMERO_TRSOL');
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes', 'SERIE_TRSOL', 'Serie', 60, 2, 'S') x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'SERIE_TRSOL');
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes', 'FECHA_TRSOL', 'Fecha', 90, 3, 'S') x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'FECHA_TRSOL');
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes', 'CODIGO_ALM_DESTINO_TRSOL', 'Solicitante',
+  110, 4, 'S') x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'CODIGO_ALM_DESTINO_TRSOL');
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes', 'ESTADO_TRSOL', 'Estado', 90, 5, 'S') x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'ESTADO_TRSOL');
+INSERT INTO `fza_config_campos`
+  (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VISUAL_CC`,
+   `ANCHO_COLUMNA_CC`, `ORDEN_VISUAL_CC`, `VISIBLE_CC`)
+SELECT * FROM (SELECT
+  'fza_traspasos_solicitudes', 'LINEAS_PEND_TRSOL', 'Líneas pend.',
+  90, 6, 'S') x
+ WHERE NOT EXISTS (SELECT 1 FROM `fza_config_campos`
+   WHERE TABLA_OBJETIVO_CC = 'fza_traspasos_solicitudes'
+     AND OBJETIVO_CC = 'LINEAS_PEND_TRSOL');
