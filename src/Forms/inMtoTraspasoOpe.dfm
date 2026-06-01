@@ -4,6 +4,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   ClientWidth = 900
   StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
+  OnShow = FormShow
   OnKeyDown = FormKeyDown
   ExplicitWidth = 916
   ExplicitHeight = 679
