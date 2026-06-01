@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripcion:                                                                }
 {    Cache y consulta de permisos (fza_permisos).                              }
-{    Resolucion: administradores siempre S, luego grupo, luego Todos.          }
+{    Resolucion: administradores siempre S; luego usuario, grupo y Todos.      }
 {    Se precarga al login.                                                     }
 {******************************************************************************}
 unit inLibPermisos;
@@ -95,17 +95,18 @@ begin
     try
       qry.Connection := AConn;
       qry.SQL.Text :=
-        'SELECT GRUPO_PERM, CODIGO_PERM, VALOR_PERM ' +
+        'SELECT USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM ' +
         '  FROM fza_permisos ' +
-        ' WHERE GRUPO_PERM IN (:g, :a) ' +
-        ' ORDER BY GRUPO_PERM';
+        ' WHERE USUARIO_GRUPO_PERM IN (:u, :g, :a) ' +
+        ' ORDER BY USUARIO_GRUPO_PERM';
+      qry.ParamByName('u').AsString := AUser;
       qry.ParamByName('g').AsString := AGroup;
       qry.ParamByName('a').AsString := 'Todos';
       qry.Open;
       while not qry.Eof do
       begin
         FPermisos.AddOrSetValue(
-          Clave(qry.FieldByName('GRUPO_PERM').AsString,
+          Clave(qry.FieldByName('USUARIO_GRUPO_PERM').AsString,
                 qry.FieldByName('CODIGO_PERM').AsString),
           qry.FieldByName('VALOR_PERM').AsString);
         qry.Next;
@@ -141,12 +142,12 @@ begin
     Result := ADefault;
     Exit;
   end;
-  // Buscar por grupo del usuario (prioridad sobre 'Todos')
-  // La precarga trae ambos; como AddOrSetValue sobreescribe,
-  // el grupo específico queda si existe (cargado después de Todos
-  // por el ORDER BY)
-  // Pero para resolución correcta: buscar grupo primero, luego Todos
-  if FPermisos.TryGetValue(Clave(inLibGlobalVar.oGroup, ACodigo), sValor) then
+  // Resolucion por prioridad: usuario > grupo > Todos. La precarga trae las
+  // tres si existen; aqui consultamos en ese orden y nos quedamos con el
+  // primero que aparezca (el de mayor prioridad).
+  if FPermisos.TryGetValue(Clave(inLibGlobalVar.oUser, ACodigo), sValor) then
+    Result := (sValor = 'S')
+  else if FPermisos.TryGetValue(Clave(inLibGlobalVar.oGroup, ACodigo), sValor) then
     Result := (sValor = 'S')
   else if FPermisos.TryGetValue(Clave('Todos', ACodigo), sValor) then
     Result := (sValor = 'S')

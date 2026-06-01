@@ -4,6 +4,6 @@ inherited dmPermisosGrupo: TdmPermisosGrupo
   inherited unqryTablaG: TUniQuery
     SQL.Strings = (
       'SELECT * FROM fza_permisos'
-      ' ORDER BY GRUPO_PERM, CODIGO_PERM')
+      ' ORDER BY USUARIO_GRUPO_PERM, CODIGO_PERM')
   end
 end
