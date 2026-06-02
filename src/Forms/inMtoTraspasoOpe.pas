@@ -25,12 +25,12 @@ uses
   Vcl.ExtCtrls, Vcl.StdCtrls, inMtoFrmBase, cxGraphics, cxControls,
   cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit,
-  cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
+  cxButtonEdit, cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
   Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
   inLibGridArticulos, inLibPermisos, inLibGenBusq, inLibFotos,
-  inLibAtributosPaleta;
+  inLibAtributosPaleta, inLibCajaParam;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -44,7 +44,7 @@ type
     lblDestino: TcxLabel;
     cboDestino: TcxComboBox;
     lblEmpleado: TcxLabel;
-    txtEmpleado: TcxTextEdit;
+    txtEmpleado: TcxButtonEdit;
     lblEmpleadoNombre: TcxLabel;
     pnlCentro: TPanel;
     pnlBottom: TPanel;
@@ -60,6 +60,7 @@ type
     procedure btnF11Click(Sender: TObject);
     procedure btnF12Click(Sender: TObject);
     procedure txtEmpleadoExit(Sender: TObject);
+    procedure txtEmpleadoButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure cboDestinoPropertiesChange(Sender: TObject);
   private
     FDatos: TdmTraspaso;
@@ -107,6 +108,7 @@ type
     procedure EnviarSolicitud;
     procedure CargarSolicitudSeleccionada;
     function EmpleadoValido: Boolean;
+    procedure BuscarEmpleado;
     // Consulta rapida de stock (banda inferior, igual que inMtoCajaOpe): una
     // rejilla pivotada (almacenes en filas, tallas en columnas) + foto del
     // articulo enfocado. Se refresca al resolver un SKU o al cambiar de linea.
@@ -131,15 +133,22 @@ implementation
 {$R *.dfm}
 
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
+var
+  i: Integer;
 begin
   inherited;
   KeyPreview := True;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self);
-  // Permiso de ver coste/importe (global TPV). Admin siempre; por defecto S
-  // para no afectar instalaciones existentes hasta que se ponga a N por grupo.
-  FVerCoste := (not Assigned(oPermisos)) or
-               oPermisos.TienePermiso('caja.verCoste', True);
+  // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
+  // admin; al resto, oculto por defecto (default False) salvo permiso explicito
+  // 'caja.verCoste'. Sin sistema de permisos, oculto.
+  FVerCoste := Assigned(oPermisos) and
+               oPermisos.TienePermiso('caja.verCoste', False);
+  // Todos los labels de la pantalla, transparentes (sin fondo solido).
+  for i := 0 to ComponentCount - 1 do
+    if Components[i] is TcxLabel then
+      TcxLabel(Components[i]).Transparent := True;
   ConstruirGrid;
   ConstruirPanelStock;
   // Elegir una solicitud en el desplegable (modo Atender) la carga sola.
@@ -508,6 +517,15 @@ begin
   FCaja := ACaja;
   FFecha := AFecha;
   AplicarModo(AModo);
+  // Empleado responsable por defecto desde parametros de caja (igual que
+  // inMtoCajaOpe): si esta activado, se rellena al abrir la pantalla.
+  if Assigned(oCajaParams) and
+     oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
+  begin
+    txtEmpleado.Text := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
+    if Trim(txtEmpleado.Text) <> '' then
+      txtEmpleadoExit(nil);
+  end;
 end;
 
 procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
@@ -1008,6 +1026,40 @@ begin
     lblEmpleadoNombre.Caption := sNom
   else
     lblEmpleadoNombre.Caption := '(no encontrado)';
+end;
+
+procedure TfrmMtoOpeTraspaso.txtEmpleadoButtonClick(Sender: TObject;
+                                                    AButtonIndex: Integer);
+begin
+  // El boton "..." del editor abre el buscador de empleados.
+  BuscarEmpleado;
+end;
+
+procedure TfrmMtoOpeTraspaso.BuscarEmpleado;
+var
+  Q: TUniQuery;
+begin
+  // Buscador de empleados (mismos datos y rejilla que la caja). Al elegir uno,
+  // su codigo va al campo y se valida para mostrar el nombre.
+  Q := TUniQuery.Create(nil);
+  try
+    Q.Connection := oConn;
+    Q.SQL.Text :=
+      'SELECT CODIGO_EMPLEADO_USU AS `Código de Empleado`,' +
+      '       DIMINUTIVO_TICKET_USU AS `Nombre de Empleado`' +
+      '  FROM fza_usuarios' +
+      ' WHERE ESACTIVO_USU = ''S''' +
+      '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
+      ' ORDER BY CODIGO_EMPLEADO_USU';
+    if TBusquedaUtils.EjecutarBusqueda('Buscar empleado', Q,
+                                       'frmMtoEmpCajSearch') then
+    begin
+      txtEmpleado.Text := Q.Fields[0].AsString;
+      txtEmpleadoExit(nil);
+    end;
+  finally
+    FreeAndNil(Q);
+  end;
 end;
 
 function TfrmMtoOpeTraspaso.EmpleadoValido: Boolean;
