@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoModalImpMultiFiltro                                      }
 {    Tipo:       Formulario base (Modal de impresión)                          }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {   Fecha:       02/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -10,23 +10,21 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Formulario BASE para informes (FastReport) con filtros múltiples en       }
-{    pestañas. Hereda de TfrmPrint (inMtoModalGenImp) y, al mostrarse, crea    }
-{    por código un TcxPageControl con una pestaña por filtro:                  }
-{      - Fechas      : rango desde / hasta.                                    }
-{      - Almacenes   : checklist multi-selección.                             }
-{      - Familias    : checklist multi-selección.                             }
-{      - Proveedores : checklist multi-selección.                             }
-{      - Temporadas  : checklist multi-selección.                             }
+{    pestañas. Hereda de TfrmPrint y, al mostrarse, crea por código un         }
+{    TcxPageControl con una pestaña por filtro: Fechas (rango) y, como         }
+{    checklists multi-selección CON BUSCADOR, Almacenes / Familias /           }
+{    Proveedores / Temporadas.                                                 }
 {                                                                              }
-{    Cada informe concreto hereda de esta clase, indica con FiltrosUsados      }
-{    qué pestañas quiere y, en preparar_consulta, lee los filtros con          }
-{    CSVAlmacenes / CSVFamilias / CSVProveedores / CSVTemporadas y             }
-{    FechaDesde / FechaHasta. Convención: checklist sin nada marcado = todos   }
-{    (CSV vacío). Los códigos viajan como CSV (FIND_IN_SET en el servidor).    }
+{    Cada checklist de filtro guarda su lista completa (Fuente) y el conjunto  }
+{    de códigos marcados (Marcados); el buscador re-filtra las filas visibles  }
+{    sin perder lo marcado. Convención: sin nada marcado = todos. El CSV       }
+{    devuelto sale de Marcados (no de las filas visibles), así un filtro de    }
+{    búsqueda no descarta selecciones ocultas.                                 }
 {                                                                              }
-{    La UI se construye por código (no por DFM) para que los descendientes     }
-{    no tengan que rehacer la herencia visual; solo añaden su informe y, si    }
-{    procede, controles propios sobre la pestaña Fechas (TabFechas).           }
+{    Los descendientes indican con FiltrosUsados qué pestañas quieren y leen   }
+{    CSVAlmacenes / CSVFamilias / CSVProveedores / CSVTemporadas y FechaDesde  }
+{    / FechaHasta. Para checklists propios sin buscador (p. ej. bandas)        }
+{    disponen de CrearTabChecklist + SeleccionadosCSV.                         }
 {******************************************************************************}
 unit inMtoModalImpMultiFiltro;
 
@@ -34,8 +32,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ExtCtrls, Vcl.StdCtrls,
+  System.Classes, System.Generics.Collections, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
   inMtoModalGenImp, Data.DB, DBAccess, Uni,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar,
@@ -47,6 +45,18 @@ type
                    frTemporadas);
   TFiltrosReport = set of TFiltroReport;
 
+  // Checklist de filtro con buscador. Fuente = todos los ítems ("COD - NOM");
+  // Marcados = códigos marcados (se conservan aunque el buscador oculte filas).
+  TFiltroChecklist = class
+  public
+    Clb     : TcxCheckListBox;
+    Edt     : TcxTextEdit;
+    Fuente  : TStringList;
+    Marcados: TStringList;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
   TfrmPrintMultiFiltro = class(TfrmPrint)
   private
     FFiltrosCreados : Boolean;
@@ -54,29 +64,40 @@ type
     FtsFechas       : TcxTabSheet;
     FdteDesde       : TcxDateEdit;
     FdteHasta       : TcxDateEdit;
-    FclbAlmacenes   : TcxCheckListBox;
-    FclbFamilias    : TcxCheckListBox;
-    FclbProveedores : TcxCheckListBox;
-    FclbTemporadas  : TcxCheckListBox;
+    FFiltros        : TObjectList<TFiltroChecklist>;
+    FfcAlmacenes    : TFiltroChecklist;
+    FfcFamilias     : TFiltroChecklist;
+    FfcProveedores  : TFiltroChecklist;
+    FfcTemporadas   : TFiltroChecklist;
     procedure CrearUIFiltros;
     procedure CrearTabFechas;
-    procedure CargarChecklist(AClb: TcxCheckListBox;
-                              const ASQL, ACampoCod, ACampoNom: string);
+    function  CrearTabFiltro(const ACaption: string): TFiltroChecklist;
+    procedure CargarFiltro(AFc: TFiltroChecklist;
+                           const ASQL, ACampoCod, ACampoNom: string);
+    procedure RefiltrarChecklist(AFc: TFiltroChecklist);
     procedure CargarFiltros;
+    function  CodigoDeItem(const AText: string): string;
+    function  FiltroPorClb(AClb: TObject): TFiltroChecklist;
+    function  FiltroPorEdt(AEdt: TObject): TFiltroChecklist;
+    function  CSVDe(AFc: TFiltroChecklist): string;
+    procedure ClbFiltroClickCheck(Sender: TObject; AIndex: Integer;
+                                   APrevState, ANewState: TcxCheckBoxState);
+    procedure SearchChange(Sender: TObject);
   protected
     // Los descendientes redefinen esto para elegir qué pestañas mostrar.
     function FiltrosUsados: TFiltrosReport; virtual;
     procedure DoShow; override;
-    // Helpers reutilizables: el descendiente puede crear pestañas de
-    // checklist propias (p. ej. "Bandas") y leer su selección como CSV.
+    // Helpers para checklists "planos" SIN buscador (p. ej. la pestaña de
+    // bandas del balance, pequeña): se crea uno y se lee su selección.
     function  CrearTabChecklist(const ACaption: string): TcxCheckListBox;
     function  SeleccionadosCSV(AClb: TcxCheckListBox): string;
-    // Expuestos para que el descendiente añada controles propios (p. ej.
-    // modo/detalle) sobre la pestaña de fechas o gestione su habilitado.
+    // Para que el descendiente añada controles propios (modo/detalle) sobre
+    // la pestaña de fechas o gestione su habilitado.
     property TabFechas: TcxTabSheet read FtsFechas;
     property DteDesde : TcxDateEdit read FdteDesde;
     property DteHasta : TcxDateEdit read FdteHasta;
   public
+    destructor Destroy; override;
     function CSVAlmacenes  : string;
     function CSVFamilias   : string;
     function CSVProveedores: string;
@@ -93,21 +114,44 @@ implementation
 {$R *.dfm}
 
 uses
-  System.DateUtils, System.StrUtils;
+  System.DateUtils;
+
+{ TFiltroChecklist }
+
+constructor TFiltroChecklist.Create;
+begin
+  inherited Create;
+  Fuente := TStringList.Create;
+  Marcados := TStringList.Create;
+  Marcados.Sorted := True;
+  Marcados.Duplicates := dupIgnore;
+end;
+
+destructor TFiltroChecklist.Destroy;
+begin
+  Fuente.Free;
+  Marcados.Free;
+  inherited Destroy;
+end;
 
 { TfrmPrintMultiFiltro }
 
+destructor TfrmPrintMultiFiltro.Destroy;
+begin
+  // Libera los TFiltroChecklist (y sus TStringList). Los controles (clb/edt)
+  // son propiedad del form y los libera el inherited.
+  FreeAndNil(FFiltros);
+  inherited Destroy;
+end;
+
 function TfrmPrintMultiFiltro.FiltrosUsados: TFiltrosReport;
 begin
-  // Por defecto, todas las pestañas de filtro.
   Result := [frFechas, frAlmacenes, frFamilias, frProveedores, frTemporadas];
 end;
 
 procedure TfrmPrintMultiFiltro.DoShow;
 begin
   inherited;
-  // La UI de filtros se crea una sola vez (el padre hace Hide/Show en los
-  // botones Imprimir/PDF/..., que reentran en DoShow).
   if not FFiltrosCreados then
   begin
     CrearUIFiltros;
@@ -120,22 +164,21 @@ procedure TfrmPrintMultiFiltro.CrearUIFiltros;
 var
   fs: TFiltrosReport;
 begin
+  FFiltros := TObjectList<TFiltroChecklist>.Create(True);
   fs := FiltrosUsados;
   FpcFiltros := TcxPageControl.Create(Self);
   FpcFiltros.Parent := Self;
-  // El panel de botones del padre (pnl1) es alRight; el page control ocupa
-  // el resto a la izquierda.
   FpcFiltros.Align := alClient;
   if frFechas in fs then
     CrearTabFechas;
   if frAlmacenes in fs then
-    FclbAlmacenes := CrearTabChecklist('Almacenes');
+    FfcAlmacenes := CrearTabFiltro('Almacenes');
   if frFamilias in fs then
-    FclbFamilias := CrearTabChecklist('Familias');
+    FfcFamilias := CrearTabFiltro('Familias');
   if frProveedores in fs then
-    FclbProveedores := CrearTabChecklist('Proveedores');
+    FfcProveedores := CrearTabFiltro('Proveedores');
   if frTemporadas in fs then
-    FclbTemporadas := CrearTabChecklist('Temporadas');
+    FfcTemporadas := CrearTabFiltro('Temporadas');
   if FpcFiltros.PageCount > 0 then
     FpcFiltros.ActivePageIndex := 0;
 end;
@@ -173,6 +216,41 @@ begin
   FdteHasta.Date := Date;
 end;
 
+// Pestaña de filtro con buscador (TcxTextEdit alTop) + checklist (alClient).
+function TfrmPrintMultiFiltro.CrearTabFiltro(
+  const ACaption: string): TFiltroChecklist;
+var
+  ts : TcxTabSheet;
+  edt: TcxTextEdit;
+  clb: TcxCheckListBox;
+begin
+  ts := TcxTabSheet.Create(FpcFiltros);
+  ts.PageControl := FpcFiltros;
+  ts.Caption := ACaption;
+  edt := TcxTextEdit.Create(Self);
+  edt.Parent := ts;
+  edt.Align  := alTop;
+  edt.Hint     := 'Escriba y pulse Intro para filtrar (sin marcar nada = todos)';
+  edt.ShowHint := True;
+  // OnEditValueChanged (evento confirmado en cx): filtra al postear el texto
+  // (Intro / salir del cuadro). Para filtrar en cada tecla habría que usar
+  // Properties.OnChange si la versión lo expone.
+  edt.Properties.OnEditValueChanged := SearchChange;
+  clb := TcxCheckListBox.Create(Self);
+  clb.Parent := ts;
+  clb.Align  := alClient;
+  // cvfStatesString: sin esto (cvfInteger) el checklist limita a 64 ítems.
+  clb.EditValueFormat := cvfStatesString;
+  clb.OnClickCheck := ClbFiltroClickCheck;
+  Result := TFiltroChecklist.Create;
+  Result.Clb := clb;
+  Result.Edt := edt;
+  FFiltros.Add(Result);
+end;
+
+// Checklist "plano" sin buscador (para descendientes). Mantiene la etiqueta
+// de ayuda y el cvfStatesString, pero no lleva fuente/marcados ni OnClickCheck:
+// SeleccionadosCSV lee directamente el State de cada ítem.
 function TfrmPrintMultiFiltro.CrearTabChecklist(
   const ACaption: string): TcxCheckListBox;
 var
@@ -191,22 +269,30 @@ begin
   Result := TcxCheckListBox.Create(Self);
   Result.Parent := ts;
   Result.Align  := alClient;
-  // Por defecto (cvfInteger) el checklist usa una máscara de 64 bits y limita
-  // a 64 ítems; con muchos proveedores/familias se supera. cvfString quita el
-  // tope (no usamos el EditValue: leemos el State de cada ítem).
-  Result.EditValueFormat := cvfString;
+  Result.EditValueFormat := cvfStatesString;
 end;
 
-procedure TfrmPrintMultiFiltro.CargarChecklist(AClb: TcxCheckListBox;
+function TfrmPrintMultiFiltro.CodigoDeItem(const AText: string): string;
+var
+  p: Integer;
+begin
+  p := Pos(' - ', AText);
+  if p > 0 then
+    Result := Copy(AText, 1, p - 1)
+  else
+    Result := AText;
+end;
+
+procedure TfrmPrintMultiFiltro.CargarFiltro(AFc: TFiltroChecklist;
   const ASQL, ACampoCod, ACampoNom: string);
 var
-  q   : TUniQuery;
-  item: TcxCheckListBoxItem;
-  sCod, sNom: string;
+  q: TUniQuery;
+  sCod, sNom, sLinea: string;
 begin
-  if AClb <> nil then
+  if AFc <> nil then
   begin
-    AClb.Items.Clear;
+    AFc.Fuente.Clear;
+    AFc.Marcados.Clear;
     q := TUniQuery.Create(nil);
     try
       q.Connection := inLibGlobalVar.oConn;
@@ -219,40 +305,75 @@ begin
           sNom := q.FieldByName(ACampoNom).AsString
         else
           sNom := '';
-        item := AClb.Items.Add;
         if (sNom <> '') and (sNom <> sCod) then
-          item.Text := sCod + ' - ' + sNom
+          sLinea := sCod + ' - ' + sNom
         else
-          item.Text := sCod;
-        item.State := cbsUnchecked;
+          sLinea := sCod;
+        AFc.Fuente.Add(sLinea);
         q.Next;
       end;
     finally
       FreeAndNil(q);
+    end;
+    RefiltrarChecklist(AFc);
+  end;
+end;
+
+// Repuebla las filas visibles del checklist según el texto del buscador,
+// remarcando las que estén en Marcados (las selecciones se conservan).
+procedure TfrmPrintMultiFiltro.RefiltrarChecklist(AFc: TFiltroChecklist);
+var
+  i: Integer;
+  sFil, sLinea: string;
+  item: TcxCheckListBoxItem;
+begin
+  if AFc <> nil then
+  begin
+    sFil := LowerCase(Trim(AFc.Edt.Text));
+    AFc.Clb.Items.BeginUpdate;
+    try
+      AFc.Clb.Items.Clear;
+      for i := 0 to AFc.Fuente.Count - 1 do
+      begin
+        sLinea := AFc.Fuente[i];
+        if (sFil = '') or (Pos(sFil, LowerCase(sLinea)) > 0) then
+        begin
+          item := AFc.Clb.Items.Add;
+          item.Text := sLinea;
+          if AFc.Marcados.IndexOf(CodigoDeItem(sLinea)) >= 0 then
+            item.State := cbsChecked
+          else
+            item.State := cbsUnchecked;
+        end;
+      end;
+    finally
+      AFc.Clb.Items.EndUpdate;
     end;
   end;
 end;
 
 procedure TfrmPrintMultiFiltro.CargarFiltros;
 begin
-  CargarChecklist(FclbAlmacenes,
+  CargarFiltro(FfcAlmacenes,
     'SELECT CODIGO_ALM_ALM AS COD, NOMBRE_ALM_ALM AS NOM ' +
     '  FROM fza_almacenes ' +
     ' WHERE ESACTIVO_ALM = ''S'' ' +
     ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM', 'COD', 'NOM');
-  CargarChecklist(FclbFamilias,
+  CargarFiltro(FfcFamilias,
     'SELECT CODIGO_FAM_FAM AS COD, ' +
     '       COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, CODIGO_FAM_FAM) AS NOM ' +
     '  FROM fza_articulos_familias ' +
     ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
     ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM', 'COD', 'NOM');
-  CargarChecklist(FclbProveedores,
-    'SELECT CODIGO_PRV_PRV AS COD, RAZON_SOCIAL_PRV AS NOM ' +
-    '  FROM fza_proveedores ' +
-    ' ORDER BY RAZON_SOCIAL_PRV, CODIGO_PRV_PRV', 'COD', 'NOM');
-  // Temporada = valor de la propiedad de artículo 'TEMPORADA'. El código y
-  // el nombre coinciden (el propio valor), por eso ACampoNom va vacío.
-  CargarChecklist(FclbTemporadas,
+  // Solo proveedores con al menos un artículo: la lista es relevante y corta.
+  CargarFiltro(FfcProveedores,
+    'SELECT p.CODIGO_PRV_PRV AS COD, p.RAZON_SOCIAL_PRV AS NOM ' +
+    '  FROM fza_proveedores p ' +
+    ' WHERE EXISTS (SELECT 1 FROM fza_articulos_proveedores ap ' +
+    '                WHERE ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV) ' +
+    ' ORDER BY p.RAZON_SOCIAL_PRV, p.CODIGO_PRV_PRV', 'COD', 'NOM');
+  // Temporada = valor de la propiedad de artículo 'TEMPORADA' (código=nombre).
+  CargarFiltro(FfcTemporadas,
     'SELECT PV AS COD ' +
     '  FROM fza_propiedades_valores ' +
     ' WHERE ID_PROP_PV = ''TEMPORADA'' ' +
@@ -260,48 +381,112 @@ begin
     ' ORDER BY PV', 'COD', '');
 end;
 
-// Devuelve el CSV de los códigos marcados. El código es el texto anterior
-// a ' - ' (o el texto completo si no hay separador, p. ej. temporadas).
+function TfrmPrintMultiFiltro.FiltroPorClb(AClb: TObject): TFiltroChecklist;
+var
+  i: Integer;
+begin
+  Result := nil;
+  if FFiltros <> nil then
+    for i := 0 to FFiltros.Count - 1 do
+      if (Result = nil) and (FFiltros[i].Clb = AClb) then
+        Result := FFiltros[i];
+end;
+
+function TfrmPrintMultiFiltro.FiltroPorEdt(AEdt: TObject): TFiltroChecklist;
+var
+  i: Integer;
+begin
+  Result := nil;
+  if FFiltros <> nil then
+    for i := 0 to FFiltros.Count - 1 do
+      if (Result = nil) and (FFiltros[i].Edt = AEdt) then
+        Result := FFiltros[i];
+end;
+
+// Al marcar/desmarcar un ítem, se actualiza el conjunto de códigos marcados
+// (fuente de verdad para el CSV, independiente del filtro de búsqueda).
+procedure TfrmPrintMultiFiltro.ClbFiltroClickCheck(Sender: TObject;
+  AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
+var
+  fc : TFiltroChecklist;
+  cod: string;
+  idx: Integer;
+begin
+  fc := FiltroPorClb(Sender);
+  if (fc <> nil) and (AIndex >= 0) and (AIndex < fc.Clb.Items.Count) then
+  begin
+    cod := CodigoDeItem(fc.Clb.Items[AIndex].Text);
+    if ANewState = cbsChecked then
+    begin
+      if fc.Marcados.IndexOf(cod) < 0 then
+        fc.Marcados.Add(cod);
+    end
+    else
+    begin
+      idx := fc.Marcados.IndexOf(cod);
+      if idx >= 0 then
+        fc.Marcados.Delete(idx);
+    end;
+  end;
+end;
+
+procedure TfrmPrintMultiFiltro.SearchChange(Sender: TObject);
+var
+  fc: TFiltroChecklist;
+begin
+  fc := FiltroPorEdt(Sender);
+  if fc <> nil then
+    RefiltrarChecklist(fc);
+end;
+
+function TfrmPrintMultiFiltro.CSVDe(AFc: TFiltroChecklist): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  if AFc <> nil then
+    for i := 0 to AFc.Marcados.Count - 1 do
+    begin
+      if Result <> '' then
+        Result := Result + ',';
+      Result := Result + AFc.Marcados[i];
+    end;
+end;
+
+// CSV de un checklist "plano" (sin Marcados): se lee el State de cada ítem.
 function TfrmPrintMultiFiltro.SeleccionadosCSV(AClb: TcxCheckListBox): string;
 var
-  i, p: Integer;
-  s, sCod: string;
+  i: Integer;
 begin
   Result := '';
   if AClb <> nil then
     for i := 0 to AClb.Items.Count - 1 do
       if AClb.Items[i].State = cbsChecked then
       begin
-        s := AClb.Items[i].Text;
-        p := Pos(' - ', s);
-        if p > 0 then
-          sCod := Copy(s, 1, p - 1)
-        else
-          sCod := s;
         if Result <> '' then
           Result := Result + ',';
-        Result := Result + sCod;
+        Result := Result + CodigoDeItem(AClb.Items[i].Text);
       end;
 end;
 
 function TfrmPrintMultiFiltro.CSVAlmacenes: string;
 begin
-  Result := SeleccionadosCSV(FclbAlmacenes);
+  Result := CSVDe(FfcAlmacenes);
 end;
 
 function TfrmPrintMultiFiltro.CSVFamilias: string;
 begin
-  Result := SeleccionadosCSV(FclbFamilias);
+  Result := CSVDe(FfcFamilias);
 end;
 
 function TfrmPrintMultiFiltro.CSVProveedores: string;
 begin
-  Result := SeleccionadosCSV(FclbProveedores);
+  Result := CSVDe(FfcProveedores);
 end;
 
 function TfrmPrintMultiFiltro.CSVTemporadas: string;
 begin
-  Result := SeleccionadosCSV(FclbTemporadas);
+  Result := CSVDe(FfcTemporadas);
 end;
 
 function TfrmPrintMultiFiltro.FechaDesde: TDateTime;

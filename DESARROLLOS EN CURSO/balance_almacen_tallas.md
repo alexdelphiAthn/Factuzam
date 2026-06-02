@@ -210,8 +210,11 @@ que devuelva `FiltrosUsados` (por defecto todas):
 
 - **Fechas**: rango desde / hasta.
 - **Almacenes**, **Familias**, **Proveedores**, **Temporadas**: un
-  `TcxCheckListBox` de multi-selección cada una. Convención: sin nada
-  marcado = todos.
+  `TcxCheckListBox` de multi-selección cada una, **con cuadro de búsqueda**
+  encima (filtra las filas visibles; las marcas se conservan aunque la
+  búsqueda las oculte, porque el código marcado se guarda aparte). Convención:
+  sin nada marcado = todos. `EditValueFormat = cvfStatesString` para no topar
+  en 64 ítems. **Proveedores** lista solo los que tienen artículos.
 
 Expone a los descendientes: `CSVAlmacenes`, `CSVFamilias`, `CSVProveedores`,
 `CSVTemporadas`, `FechaDesde`, `FechaHasta`, y (protegido) `TabFechas` /
