@@ -29,7 +29,8 @@ uses
   Vcl.Menus, frxDesgn, Data.DB, MemDS, DBAccess, Uni,
   frxExportXLSX, frxClass, frxDBSet, frxExportBaseDialog, frxExportPDF,
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
-  cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxDateUtils,
+  cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxButtonEdit,
+  cxDateUtils,
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
@@ -40,16 +41,31 @@ type
     unqryArqueosPrint: TUniQuery;
     dsArqueosPrint: TDataSource;
     fxdsArqueos: TfrxDBDataset;
-    lblTitulo: TcxLabel;
+    lblFechas: TcxLabel;
     lblDesde: TcxLabel;
     dteDesde: TcxDateEdit;
     lblHasta: TcxLabel;
     dteHasta: TcxDateEdit;
+    lblCajaTit: TcxLabel;
+    lblEmpresa: TcxLabel;
+    edtEmpresa: TcxTextEdit;
+    lblAlmacen: TcxLabel;
+    bedAlmacen: TcxButtonEdit;
+    lblCaja: TcxLabel;
+    bedCaja: TcxButtonEdit;
+    procedure bedAlmacenPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
+    procedure bedCajaPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
   private
-    // Fija el rango por defecto una sola vez al abrir el modal; evita
-    // pisar lo que elija el usuario en el ciclo Hide/Show que hacen los
-    // botones del padre (Imprimir / PDF / Vista Preliminar / Excel).
-    FFechasInicializadas: Boolean;
+    // Fija los valores por defecto (rango de fechas y empresa/almacen/caja
+    // del usuario) una sola vez al abrir; evita pisarlos en el ciclo
+    // Hide/Show que hacen los botones del padre (Imprimir / PDF / etc.).
+    FInicializado: Boolean;
+    // Abre el selector estandar de caja (inMtoModalCajDef sobre la vista
+    // vi_cajasdef) acotado a la empresa del usuario y vuelca el almacen y
+    // la caja elegidos en bedAlmacen / bedCaja.
+    procedure SeleccionarAlmacenCaja;
   protected
     procedure DoShow; override;
   public
@@ -63,27 +79,74 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inMtoModalCajDef;
+
 { TfrmPrintArqueos }
 
 procedure TfrmPrintArqueos.DoShow;
 begin
   inherited;
-  // Por defecto el rango va del primer dia del mes en curso hasta hoy.
-  // El usuario puede ampliarlo antes de imprimir / previsualizar.
-  if not FFechasInicializadas then
+  // Por defecto: rango del primer dia del mes en curso hasta hoy, y la
+  // empresa / almacen / caja activos del usuario. El usuario puede ampliar
+  // las fechas y cambiar almacen / caja con el boton '...' antes de imprimir.
+  if not FInicializado then
   begin
-    dteDesde.Date := EncodeDate(YearOf(Date), MonthOf(Date), 1);
-    dteHasta.Date := Date;
-    FFechasInicializadas := True;
+    dteDesde.Date   := EncodeDate(YearOf(Date), MonthOf(Date), 1);
+    dteHasta.Date   := Date;
+    edtEmpresa.Text := oEmpresa;
+    bedAlmacen.Text := oAlmacen;
+    bedCaja.Text    := oCaja;
+    FInicializado   := True;
   end;
+end;
+
+procedure TfrmPrintArqueos.SeleccionarAlmacenCaja;
+var
+  frm: TfrmMtoModalCajDef;
+begin
+  // No se permite cambiar de empresa: acotamos el selector a la empresa
+  // del usuario. De la fila elegida tomamos almacen y caja.
+  frm := TfrmMtoModalCajDef.Create(Self);
+  try
+    frm.qrySeleccion.Connection := oConn;
+    frm.qrySeleccion.SQL.Text :=
+      ' SELECT * FROM vi_cajasdef WHERE Empresa = :pEMP ' +
+      ' ORDER BY Almacen, Caja ';
+    frm.qrySeleccion.ParamByName('pEMP').AsString := edtEmpresa.Text;
+    frm.qrySeleccion.Open;
+    frm.sEmpresa := edtEmpresa.Text;
+    frm.sAlmacen := bedAlmacen.Text;
+    frm.sCaja    := bedCaja.Text;
+    frm.ShowModal;
+    if frm.sFicha = 'S' then
+    begin
+      bedAlmacen.Text := frm.qrySeleccion.FieldByName('Almacen').AsString;
+      bedCaja.Text    := frm.qrySeleccion.FieldByName('Caja').AsString;
+    end;
+  finally
+    FreeAndNil(frm);
+  end;
+end;
+
+procedure TfrmPrintArqueos.bedAlmacenPropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+begin
+  SeleccionarAlmacenCaja;
+end;
+
+procedure TfrmPrintArqueos.bedCajaPropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+begin
+  SeleccionarAlmacenCaja;
 end;
 
 procedure TfrmPrintArqueos.preparar_consulta;
 begin
   inherited;
-  // Filtramos por la fecha de inicio del arqueo (FECHA_DESDE_ARQ es la
-  // columna que muestra la rejilla y por la que se ordena). Al ser tipo
-  // DATE el BETWEEN incluye ambos extremos del rango elegido.
+  // Filtro por empresa / almacen / caja (los tres exactos) y por la fecha
+  // de inicio del arqueo (FECHA_DESDE_ARQ, la columna que muestra la
+  // rejilla). Al ser DATE el BETWEEN incluye ambos extremos del rango.
   with unqryArqueosPrint do
   begin
     Close;
@@ -91,8 +154,14 @@ begin
     SQL.Text :=
       ' SELECT *                                                          ' +
       '   FROM fza_caja_arqueos                                           ' +
-      '  WHERE FECHA_DESDE_ARQ BETWEEN :pDESDE AND :pHASTA                ' +
+      '  WHERE CODIGO_EMP_ARQ  = :pEMP                                    ' +
+      '    AND CODIGO_ALM_ARQ  = :pALM                                    ' +
+      '    AND CODIGO_CAJA_ARQ = :pCAJA                                   ' +
+      '    AND FECHA_DESDE_ARQ BETWEEN :pDESDE AND :pHASTA                ' +
       '  ORDER BY FECHA_DESDE_ARQ DESC, CODIGO_ARQ DESC                   ';
+    ParamByName('pEMP').AsString     := edtEmpresa.Text;
+    ParamByName('pALM').AsString     := bedAlmacen.Text;
+    ParamByName('pCAJA').AsString    := bedCaja.Text;
     ParamByName('pDESDE').AsDateTime := dteDesde.Date;
     ParamByName('pHASTA').AsDateTime := dteHasta.Date;
     Open;
