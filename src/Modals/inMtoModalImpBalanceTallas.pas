@@ -132,9 +132,17 @@ begin
       ' WHERE ESACTIVO_ALM = ''S'' ' +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
     q.Open;
-    if TBusquedaUtils.EjecutarBusqueda('Selección de almacén', q,
-                                       'frmBalanceTallasAlmSearch') then
-      bedAlmacen.Text := q.FieldByName('CODIGO_ALM_ALM').AsString;
+    // El modal es fsStayOnTop (heredado de TfrmPrint); si no nos ocultamos,
+    // el selector de búsqueda saldría por detrás. Mismo patrón que el padre
+    // al abrir el selector de formatos (Self.Hide / Self.Show).
+    Self.Hide;
+    try
+      if TBusquedaUtils.EjecutarBusqueda('Selección de almacén', q,
+                                         'frmBalanceTallasAlmSearch') then
+        bedAlmacen.Text := q.FieldByName('CODIGO_ALM_ALM').AsString;
+    finally
+      Self.Show;
+    end;
   finally
     FreeAndNil(q);
   end;
@@ -155,9 +163,16 @@ begin
       ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
       ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM';
     q.Open;
-    if TBusquedaUtils.EjecutarBusqueda('Selección de familia', q,
-                                       'frmBalanceTallasFamSearch') then
-      bedFamilia.Text := q.FieldByName('CODIGO_FAM_FAM').AsString;
+    // Mismo motivo que en el selector de almacén: ocultar el modal
+    // fsStayOnTop mientras se muestra el buscador.
+    Self.Hide;
+    try
+      if TBusquedaUtils.EjecutarBusqueda('Selección de familia', q,
+                                         'frmBalanceTallasFamSearch') then
+        bedFamilia.Text := q.FieldByName('CODIGO_FAM_FAM').AsString;
+    finally
+      Self.Show;
+    end;
   finally
     FreeAndNil(q);
   end;
