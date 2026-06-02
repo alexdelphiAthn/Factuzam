@@ -72,6 +72,9 @@ type
     // terminado de parentar y ClientToScreen lanzaria EInvalidOperation.
     FTimerPopup: TTimer;
     FOrdenPopupPend: Integer;
+    // True mientras AbrirPaletaOrden esta mostrando el editor/paleta, para que
+    // el OnEnter del editor (AtributoEnter) no reprograme otra apertura.
+    FEnPaleta: Boolean;
     // Almacen cuyo stock se muestra en el buscador de SKU (lo fija el host;
     // en traspaso, el almacen origen). Vacio = no muestra stock.
     FAlmacenStock: string;
@@ -274,6 +277,10 @@ end;
 procedure TGridArticulosLineas.AtributoEnter(Sender: TObject);
 begin
   if not (Sender is TcxButtonEdit) then
+    Exit;
+  // Si la paleta ya se esta abriendo (el propio AbrirPaletaOrden ha hecho
+  // ShowEdit para posicionarse), no reprogramar otra apertura.
+  if FEnPaleta then
     Exit;
   TcxButtonEdit(Sender).OnEnter := nil;
   FOrdenPopupPend := TcxButtonEdit(Sender).Tag;
@@ -876,6 +883,7 @@ end;
 procedure TGridArticulosLineas.AbrirPaletaOrden(AOrden: Integer);
 var
   Edit: TcxCustomEdit;
+  Col: TcxGridDBColumn;
   i, ScrX, ScrY, WidHint: Integer;
   sArtPadre, sAvActual, sNombreAtb, sIdVa, sAvNuevo: string;
   Avs: TArray<TArticuloAtributoValor>;
@@ -902,39 +910,58 @@ begin
   Mapa := ObtenerMapaAtributosGlobal;
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(sNombreAtb)), sIdVa);
-  // Posicion bajo el editor in-place; si aun no esta parentado, auto-centrar
-  // (evita EInvalidOperation en ClientToScreen).
-  ScrX := -1;
-  ScrY := -1;
-  WidHint := 120;
-  Edit := nil;
-  if FView.Controller.EditingController.IsEditing then
-    Edit := FView.Controller.EditingController.Edit;
-  if (Edit <> nil) and Edit.HasParent then
-    try
-      ScrX := Edit.ClientToScreen(Point(0, Edit.Height)).X;
-      ScrY := Edit.ClientToScreen(Point(0, Edit.Height)).Y;
-      WidHint := Edit.Width;
-    except
-      on E: EInvalidOperation do
-      begin
-        ScrX := -1;
-        ScrY := -1;
-        WidHint := 120;
+  // Asegura el editor in-place visible en la celda del atributo para situar la
+  // paleta justo debajo. La apertura automatica (al avanzar desde el atributo
+  // anterior) solo enfoca la columna, sin abrir editor, y entonces la paleta
+  // salia centrada/lejos. Forzamos FocusedColumn + ShowEdit; FEnPaleta evita
+  // que el OnEnter del editor (AtributoEnter) reprograme otra apertura.
+  FEnPaleta := True;
+  try
+    Col := ColumnaPorTag(AOrden);
+    if (Col <> nil) and (FView.Controller.FocusedColumn <> Col) then
+      FView.Controller.FocusedColumn := Col;
+    if not FView.Controller.EditingController.IsEditing then
+      try
+        FView.Controller.EditingController.ShowEdit;
+      except
+        // Si aun no puede parentarse el editor, seguimos: se auto-centrara.
       end;
+    // Posicion bajo el editor in-place; si aun no esta parentado, auto-centrar
+    // (evita EInvalidOperation en ClientToScreen).
+    ScrX := -1;
+    ScrY := -1;
+    WidHint := 120;
+    Edit := nil;
+    if FView.Controller.EditingController.IsEditing then
+      Edit := FView.Controller.EditingController.Edit;
+    if (Edit <> nil) and Edit.HasParent then
+      try
+        ScrX := Edit.ClientToScreen(Point(0, Edit.Height)).X;
+        ScrY := Edit.ClientToScreen(Point(0, Edit.Height)).Y;
+        WidHint := Edit.Width;
+      except
+        on E: EInvalidOperation do
+        begin
+          ScrX := -1;
+          ScrY := -1;
+          WidHint := 120;
+        end;
+      end;
+    if not SeleccionarAvConPaleta(sIdVa, AvsStr, sAvActual, sAvNuevo,
+                                  ScrX, ScrY, WidHint) then
+      Exit;
+    if FCds.State = dsBrowse then
+      FCds.Edit;
+    if FCds.State in [dsEdit, dsInsert] then
+    begin
+      FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString := sAvNuevo;
+      AplicarSkuYAvisar;
+      // Si quedan atributos por elegir, salta al siguiente y abre su paleta;
+      // asi no se pasa a la siguiente fila con el SKU incompleto.
+      AvanzarSiguienteAtributo;
     end;
-  if not SeleccionarAvConPaleta(sIdVa, AvsStr, sAvActual, sAvNuevo,
-                                ScrX, ScrY, WidHint) then
-    Exit;
-  if FCds.State = dsBrowse then
-    FCds.Edit;
-  if FCds.State in [dsEdit, dsInsert] then
-  begin
-    FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString := sAvNuevo;
-    AplicarSkuYAvisar;
-    // Si quedan atributos por elegir, salta al siguiente y abre su paleta;
-    // asi no se pasa a la siguiente fila con el SKU incompleto.
-    AvanzarSiguienteAtributo;
+  finally
+    FEnPaleta := False;
   end;
 end;
 
