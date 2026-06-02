@@ -120,9 +120,10 @@ procedure TfrmPrintBalanceTallas.bedAlmacenPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
   q: TUniQuery;
+  sCod, sActual: string;
 begin
-  // Selección de un almacén activo. Vacío = todos (el SP usa todos los
-  // almacenes estándar cuando el parámetro llega vacío).
+  // Selección de almacenes. Vacío = todos los almacenes estándar (lo
+  // resuelve el SP). Se pueden elegir uno o varios.
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
@@ -139,7 +140,20 @@ begin
     try
       if TBusquedaUtils.EjecutarBusqueda('Selección de almacén', q,
                                          'frmBalanceTallasAlmSearch') then
-        bedAlmacen.Text := q.FieldByName('CODIGO_ALM_ALM').AsString;
+      begin
+        // Cada selección se añade a la lista separada por comas (sin
+        // duplicar); el campo queda editable para teclear o quitar códigos
+        // a mano. El SP filtra con FIND_IN_SET sobre esa lista.
+        sCod    := Trim(q.FieldByName('CODIGO_ALM_ALM').AsString);
+        sActual := Trim(bedAlmacen.Text);
+        if sCod <> '' then
+        begin
+          if sActual = '' then
+            bedAlmacen.Text := sCod
+          else if Pos(',' + sCod + ',', ',' + sActual + ',') = 0 then
+            bedAlmacen.Text := sActual + ',' + sCod;
+        end;
+      end;
     finally
       Self.Show;
     end;
@@ -197,7 +211,10 @@ begin
       ParamByName('pMODO').AsString := 'A';
     ParamByName('pDESDE').AsDateTime := dteDesde.Date;
     ParamByName('pHASTA').AsDateTime := dteHasta.Date;
-    ParamByName('pALM').AsString     := Trim(bedAlmacen.Text);
+    // Lista CSV de almacenes (uno o varios). Se quitan espacios para que
+    // FIND_IN_SET case aunque se hayan tecleado con espacios tras la coma.
+    ParamByName('pALM').AsString     :=
+      StringReplace(Trim(bedAlmacen.Text), ' ', '', [rfReplaceAll]);
     ParamByName('pFAM').AsString     := Trim(bedFamilia.Text);
     ParamByName('pTAR').AsString     :=
       oAppParams.GetString('appTarifaDefecto', 'PVP');
