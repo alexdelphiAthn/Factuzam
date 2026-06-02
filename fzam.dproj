@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -190,6 +190,7 @@
         <DCCReference Include="src\Lib\inLibGridColumnChooser.pas"/>
         <DCCReference Include="src\Lib\inLibConfigCampos.pas"/>
         <DCCReference Include="src\Lib\inLibPermisos.pas"/>
+        <DCCReference Include="src\Lib\inLibPermisosAdmin.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
         </DCCReference>
@@ -259,6 +260,9 @@
         <DCCReference Include="src\Forms\inMtoPermisos.pas">
             <Form>frmMtoPermisos</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPermisosArbol.pas">
+            <Form>frmMtoPermisosArbol</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalArtTar.pas">
             <Form>frmMtoModalArtTar</Form>
         </DCCReference>
@@ -323,6 +327,12 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEtiqArt.pas">
             <Form>frmPrintEtiqArt</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpMultiFiltro.pas">
+            <Form>frmPrintMultiFiltro</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpBalanceTallas.pas">
+            <Form>frmPrintBalanceTallas</Form>
         </DCCReference>
         <DCCReference Include="src\Core\inMtoSplash.pas">
             <Form>frmSplash</Form>
@@ -494,11 +504,14 @@
         <DCCReference Include="src\Caja\Modals\inMtoModalImpArqueos.pas">
             <Form>frmPrintArqueos</Form>
         </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalImpMultiFiltro.pas">
-            <Form>frmPrintMultiFiltro</Form>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImpOperaciones.pas">
+            <Form>frmPrintOperaciones</Form>
         </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalImpBalanceTallas.pas">
-            <Form>frmPrintBalanceTallas</Form>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImpPagos.pas">
+            <Form>frmPrintPagos</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImpDepositos.pas">
+            <Form>frmPrintDepositos</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEntradaCambio.pas">
             <Form>frmModalEntradaCambio</Form>
