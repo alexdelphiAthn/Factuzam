@@ -1013,7 +1013,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
     Description = 'Balance'
     UserName = 'Balance'
     CloseDataSource = False
-    DataSource = dsBalancePrint
+    DataSet = unqryBalancePrint
     BCDToCurrency = False
     DataSetOptions = []
     Left = 96
