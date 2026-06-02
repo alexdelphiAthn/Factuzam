@@ -74,12 +74,23 @@ begin
 end;
 
 procedure TdmUsuarios.unqryTablaGAfterInsert(DataSet: TDataSet);
+var
+  fld: TField;
 begin
   inherited;
-//  with unqryTablaG do
-//  begin
-//    FieldByName()
-//  end;
+  // Campos traidos por el JOIN de vi_usuarios (fza_usuarios_grupos y
+  // vi_empresas): son de solo lectura y no forman parte del INSERT sobre
+  // fza_usuarios. UniDAC los marca Required por ser NOT NULL en su tabla
+  // origen, lo que bloquea el alta. Se desactiva la obligatoriedad.
+  fld := unqryTablaG.FindField('GRUPO_USUGRP');
+  if (fld <> nil) then
+    fld.Required := False;
+  fld := unqryTablaG.FindField('ESGRUPOADMINISTRADOR_USUGRP');
+  if (fld <> nil) then
+    fld.Required := False;
+  fld := unqryTablaG.FindField('RAZON_SOCIAL_EMP');
+  if (fld <> nil) then
+    fld.Required := False;
 end;
 
 procedure TdmUsuarios.unqryTablaGBeforePost(DataSet: TDataSet);
