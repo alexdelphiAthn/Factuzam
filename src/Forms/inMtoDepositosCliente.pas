@@ -54,8 +54,10 @@ type
     splFotoDep: TcxSplitter;
     pnlFotoDep: TPanel;
     imgFotoDep: TImage;
+    btnImprimirInforme: TcxButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure btnImprimirInformeClick(Sender: TObject);
   private
     dmmDepositosCliente: TdmDepositosCliente;
     FFotoEmb: TFotoEmbebida;
@@ -70,7 +72,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inMtoModalImpDepositos;
 
 {$R *.dfm}
 
@@ -101,6 +103,21 @@ end;
 procedure TfrmMtoDepositosCliente.ResetForm;
 begin
   inherited;
+end;
+
+procedure TfrmMtoDepositosCliente.btnImprimirInformeClick(Sender: TObject);
+var
+  frm: TfrmPrintDepositos;
+begin
+  inherited;
+  // Informe A4 horizontal (FastReport) de los depositos de clientes. El
+  // usuario filtra empresa / almacen / caja y rango de fechas en el modal.
+  frm := TfrmPrintDepositos.Create(Application);
+  try
+    frm.ShowModal;
+  finally
+    FreeAndNil(frm);
+  end;
 end;
 
 initialization

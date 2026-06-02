@@ -51,6 +51,8 @@ type
     cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
     cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
+    btnImprimirInforme: TcxButton;
+    procedure btnImprimirInformeClick(Sender: TObject);
   private
     dmmCajaPagosHist: TdmCajaPagosHist;
   public
@@ -64,13 +66,28 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inMtoModalImpPagos;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaPagosHist }
+
+procedure TfrmMtoCajaPagosHist.btnImprimirInformeClick(Sender: TObject);
+var
+  frm: TfrmPrintPagos;
+begin
+  inherited;
+  // Informe A4 horizontal (FastReport) de los pagos de caja. El usuario
+  // filtra empresa / almacen / caja y rango de fechas en el modal.
+  frm := TfrmPrintPagos.Create(Application);
+  try
+    frm.ShowModal;
+  finally
+    FreeAndNil(frm);
+  end;
+end;
 
 procedure TfrmMtoCajaPagosHist.CrearTablaPrincipal;
 begin
