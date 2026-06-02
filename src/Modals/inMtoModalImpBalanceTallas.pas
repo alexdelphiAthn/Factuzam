@@ -70,6 +70,7 @@ type
     procedure DoShow; override;
   public
     procedure preparar_consulta; override;
+    procedure AfterReportLoaded; override;
   end;
 
 var
@@ -225,6 +226,19 @@ begin
     Open;
   end;
   fxdsBalance.UpdateBounds;
+end;
+
+procedure TfrmPrintBalanceTallas.AfterReportLoaded;
+begin
+  inherited;
+  // El TfrxDBDataset debe enlazar la query por DataSet directo (no por
+  // DataSource): la resolución de la foto lee TfrxDBDataset.DataSet en
+  // inLibFotos.ObtenerDataSetDeBandaPadre, que es nil si solo se fija el
+  // DataSource. Reafirmamos el enlace y el registro en el report tras el
+  // AssignAll / cargar formato (mismo criterio que las etiquetas).
+  fxdsBalance.DataSet := unqryBalancePrint;
+  frxrprt1.DataSets.Clear;
+  frxrprt1.DataSets.Add(fxdsBalance);
 end;
 
 end.
