@@ -28,9 +28,9 @@ interface
 uses
   System.SysUtils, System.Variants, System.Classes,
   System.Generics.Collections, Data.DB, cxGraphics, Vcl.Graphics,
-  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
+  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetContainers,
   dxSpreadSheetGraphics, dxCoreGraphics, dxSpreadSheetStyles, dxHashUtils,
-  inLibDevExcel;
+  dxSmartImage, inLibDevExcel, inLibFotos;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
                                      const QDatos: TDataSet);
@@ -120,16 +120,36 @@ var
       end;
   end;
 
-  // Incrustar la foto 300px del artículo en la zona libre de la derecha,
-  // empezando en la misma fila del artículo.
-  // PENDIENTE: la API de imágenes de dxSpreadSheet de esta versión NO expone
-  // Containers.AddImage. En cuanto se confirme el método correcto (p. ej.
-  // Containers.Add(TdxSpreadSheetPictureContainer) + Picture.LoadFromFile +
-  // anclaje a celdas) se reactiva aquí la inserción usando
-  // oFotos.RutaFoto(oFotos.Resolver(ACodArt, ''), frPx300) y AFilaArt/COL_FOTO.
+  // Incrusta la foto 300px del artículo en la zona libre de la derecha,
+  // anclada (catTwoCell) entre la fila del artículo y unas filas más abajo,
+  // así se alinea con el bloque del artículo. Si no hay foto, no hace nada.
   procedure IncrustarFoto(const ACodArt: string; AFilaArt: Integer);
+  var
+    info : TFotoInfo;
+    sRuta: string;
+    img  : TdxSmartImage;
+    Pic  : TdxSpreadSheetPictureContainer;
   begin
-    // Stub temporal: sin incrustar foto (ver nota arriba).
+    if oFotos <> nil then
+    begin
+      info  := oFotos.Resolver(ACodArt, '');
+      sRuta := oFotos.RutaFoto(info, frPx300);
+      if (sRuta <> '') and FileExists(sRuta) then
+      begin
+        img := TdxSmartImage.Create;
+        try
+          img.LoadFromFile(sRuta);
+          Pic := Sheet.Containers.Add(TdxSpreadSheetPictureContainer)
+                   as TdxSpreadSheetPictureContainer;
+          Pic.Picture.Image := img;   // el contenedor copia la imagen
+          Pic.AnchorType := catTwoCell;
+          Pic.AnchorPoint1.Cell := Sheet.CreateCell(AFilaArt, COL_FOTO);
+          Pic.AnchorPoint2.Cell := Sheet.CreateCell(AFilaArt + 6, COL_FOTO + 2);
+        finally
+          img.Free;
+        end;
+      end;
+    end;
   end;
 
   // Suma la fila actual (un color) al acumulador de su banda.

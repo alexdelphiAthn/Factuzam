@@ -247,11 +247,12 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   tallas en columnas → bandas en filas) y la muestra en `TfrmMtoPreviewExcel`
   para guardar a `.xlsx`. Al cerrar cada artículo emite una fila **TOTAL por
   banda** con **fórmulas** `=SUM(...)` sobre las filas de detalle
-  (recalculables, no números fijos). Como usa el dataset del SP ya filtrado,
-  respeta el filtrado de bandas (y de almacenes/familias/proveedores/
-  temporadas). La **incrustación de la foto 300px** queda *pendiente*
-  (`IncrustarFoto` es un stub): la API de imágenes de `dxSpreadSheet` de esta
-  versión no es `Containers.AddImage`; se reactivará al confirmar el método.
+  (recalculables, no números fijos). Además **incrusta la foto 300px** del
+  artículo, anclada (`catTwoCell`) a la fila del artículo, vía
+  `Sheet.Containers.Add(TdxSpreadSheetPictureContainer)` + `Picture.Image`
+  (un `TdxSmartImage` de `dxSmartImage`). Como usa el dataset del SP ya
+  filtrado, respeta el filtrado de bandas (y de almacenes/familias/
+  proveedores/temporadas).
 
 > En el `.dfm` de `inMtoModalImpBalanceTallas` se deja un `CALL` de diseño
 > con literales (9 argumentos) en el `SQL.Text` de `unqryBalancePrint` para
