@@ -30,7 +30,7 @@ uses
   System.Generics.Collections, Data.DB, cxGraphics, Vcl.Graphics,
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetContainers,
   dxSpreadSheetGraphics, dxCoreGraphics, dxSpreadSheetStyles, dxHashUtils,
-  dxGDIPlusClasses, inLibDevExcel, inLibFotos;
+  dxGDIPlusClasses, dxSmartImage, inLibDevExcel, inLibFotos;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
                                      const QDatos: TDataSet);
