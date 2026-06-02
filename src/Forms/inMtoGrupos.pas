@@ -75,7 +75,7 @@ begin
   dmmGrupos :=  tdmDataModule as TdmGrupos;
   dsTablaG.DataSet := dmmGrupos.unqryTablaG;
   tvUsuarios.DataController.DataSource := dmmGrupos.dsUsuariosGrupo;
-  pkFieldName := 'GRUPO_USU';
+  pkFieldName := 'GRUPO_USUGRP';
 end;
 
 procedure TfrmMtoGrupos.ResetForm;

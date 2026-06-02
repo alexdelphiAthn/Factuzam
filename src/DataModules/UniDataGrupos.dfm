@@ -20,10 +20,10 @@ inherited dmGrupos: TdmGrupos
     SQL.Strings = (
       'SELECT *  '
       'FROM fza_usuarios'
-      'WHERE GRUPO_USU = :GRUPO_USU'
+      'WHERE GRUPO_USU = :GRUPO_USUGRP'
       '')
     MasterSource = frmMtoGrupos.dsTablaG
-    MasterFields = 'GRUPO_USU'
+    MasterFields = 'GRUPO_USUGRP'
     DetailFields = 'GRUPO_USU'
     BeforePost = unqryTablaGBeforePost
     Left = 224
@@ -31,9 +31,9 @@ inherited dmGrupos: TdmGrupos
     ParamData = <
       item
         DataType = ftWideString
-        Name = 'GRUPO_USU'
+        Name = 'GRUPO_USUGRP'
         ParamType = ptInput
-        Value = 'Administradores'
+        Value = nil
       end>
   end
   object dsUsuariosGrupo: TDataSource
