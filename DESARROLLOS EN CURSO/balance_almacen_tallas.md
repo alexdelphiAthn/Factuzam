@@ -251,7 +251,7 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   para guardar a `.xlsx`. Al cerrar cada artículo emite una fila **TOTAL por
   banda** con **fórmulas** `=SUM(...)` sobre las filas de detalle
   (recalculables, no números fijos). Además **incrusta la foto 300px** del
-  artículo, anclada (`catTwoCell`) a la fila del artículo, vía
+  artículo, anclada a la celda del artículo (ancho de columna fijo y alto de fila según el aspecto, para no deformar), vía
   `Sheet.Containers.Add(TdxSpreadSheetPictureContainer)` + `Picture.Image`
   (un `TdxSmartImage` de `dxSmartImage` / `dxGDIPlusClasses`). Como usa el dataset del SP ya
   filtrado, respeta el filtrado de bandas (y de almacenes/familias/
