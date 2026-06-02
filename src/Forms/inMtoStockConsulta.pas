@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.5.2                                                         }
+{ Version:       0.5.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -28,11 +28,6 @@
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
 {          checklist opuesto.                                                  }
 {                                                                              }
-{    v0.5.2: la cabecera muestra todas las propiedades del articulo y, por    }
-{    cada tarifa, su precio vigente hoy (filtrado por fechas desde/hasta).     }
-{    v0.5.1: el combo "Todos los estados" ya no sale en blanco; en modo       }
-{    desglosado se ocultan los totales Entradas/Salidas (solo subtipos) y      }
-{    el coste de proveedor se oculta sin permiso 'caja.verCoste'.              }
 {    v0.5: estado "Todo a la vez" en el combo + colores por estado. Cada      }
 {    estado pinta las celdas de datos con un color distintivo (azul para      }
 {    existencias, rojo para ventas, naranja para pte. recibir, etc.) y el     }
