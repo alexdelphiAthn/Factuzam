@@ -84,6 +84,11 @@ type
    function GetShortCutListString:string;
    function Count: Integer;
    function Item(AIndex: Integer): TfzaForm;
+   // Codigo de permiso de un item de menu. Si el item esta registrado
+   // (mnMenuItem) devuelve 'menu.<CALL>'; si no, 'menu.<Name>' para que
+   // tambien sea controlable. '' si el item no tiene Name. Lo usan la
+   // pantalla de permisos y AplicarPermisosMenu (misma regla en ambos).
+   function CodigoMenu(AItem: TMenuItem): string;
  end;
 
 
@@ -250,6 +255,23 @@ end;
 function TfzaWinF.Item(AIndex: Integer): TfzaForm;
 begin
   Result := FList[AIndex];
+end;
+
+function TfzaWinF.CodigoMenu(AItem: TMenuItem): string;
+var
+  i: Integer;
+  sCall: string;
+begin
+  sCall := '';
+  for i := 0 to FList.Count - 1 do
+    if (sCall = '') and (FList[i].mnMenuItem = AItem) then
+      sCall := FList[i].Call;
+  if sCall <> '' then
+    Result := 'menu.' + sCall
+  else if AItem.Name <> '' then
+    Result := 'menu.' + AItem.Name
+  else
+    Result := '';
 end;
 
 constructor TfzaWinF.Create(Owner:TComponent);

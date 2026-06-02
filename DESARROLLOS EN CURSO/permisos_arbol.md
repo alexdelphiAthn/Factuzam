@@ -9,8 +9,21 @@ rejilla simple de permisos como entrada principal del menú. Acompaña a
 
 - **Pinta el menú como un árbol.** Recorre el `TMainMenu` real del
   Principal (`jvMnMenuPrin`) y, vía el registro `oFzaWinf`
-  (`inLibUnitForm`), mapea cada item de menú a su `CALL` y al permiso
-  `menu.<CALL>`. Mantiene la jerarquía (Archivo, Ventas, Caja…).
+  (`inLibUnitForm`), mapea cada item de menú a su permiso. Mantiene la
+  jerarquía (Archivo, Ventas, Caja…).
+- **Controla TODO el menú, no solo lo registrado.** El código de cada
+  hoja lo da `TfzaWinF.CodigoMenu`: `menu.<CALL>` si el item está en
+  `fza_winforms`, o `menu.<Name>` si no (items que abren su formulario
+  directamente sin pasar por `fza_winforms`/`ShowMto`, p.ej. *Parámetros
+  de Caja*, las entradas de *Compras*, *Formas de pago* / *Listados* de
+  *Ventas Mayor*, *Copias de Seguridad*…). Antes esos items no eran
+  parametrizables; ahora sí. La misma regla la usa `AplicarPermisosMenu`,
+  así que árbol y runtime quedan sincronizados.
+- **Respeta los atajos de teclado.** Al denegar un item,
+  `AplicarPermisosMenu` hace `Visible:=False` **y `Enabled:=False`**;
+  esto último evita que su `ShortCut` (p.ej. *Ctrl+F5* de Parámetros de
+  Caja) siga abriendo el formulario con el menú oculto. Además, un
+  submenú se oculta si todas sus hojas quedan denegadas.
 - **Añade categorías** para el resto de permisos de `fza_permisos`
   agrupados por prefijo: `accion.*` → *Acciones*, `caja.*` → *Caja
   (TPV)*, `arqueo.*` → *Arqueo*, `menu.*` no visibles → *Menús no
