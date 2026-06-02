@@ -1,106 +1,8 @@
 inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
   Caption = 'Balance de almac'#233'n por tallas'
-  ClientHeight = 344
+  ClientHeight = 440
+  ClientWidth = 560
   TextHeight = 19
-  object lblDesde: TcxLabel
-    Left = 12
-    Top = 140
-    Caption = 'Fecha inicio:'
-    TabOrder = 2
-    Transparent = True
-  end
-  object dteDesde: TcxDateEdit
-    Left = 12
-    Top = 158
-    TabOrder = 3
-    Width = 172
-  end
-  object lblHasta: TcxLabel
-    Left = 12
-    Top = 186
-    Caption = 'Fecha fin:'
-    TabOrder = 4
-    Transparent = True
-  end
-  object dteHasta: TcxDateEdit
-    Left = 12
-    Top = 204
-    TabOrder = 5
-    Width = 172
-  end
-  object lblAlmacen: TcxLabel
-    Left = 12
-    Top = 232
-    Caption = 'Almac'#233'n/es (vac'#237'o = todos):'
-    TabOrder = 6
-    Transparent = True
-  end
-  object bedAlmacen: TcxButtonEdit
-    Left = 12
-    Top = 250
-    Hint = 'A'#241'ada uno o varios almacenes (separados por coma). Vac'#237'o = todos.'
-    Properties.Buttons = <
-      item
-        Default = True
-        Kind = bkEllipsis
-      end>
-    Properties.OnButtonClick = bedAlmacenPropertiesButtonClick
-    ShowHint = True
-    TabOrder = 7
-    Width = 172
-  end
-  object lblFamilia: TcxLabel
-    Left = 12
-    Top = 278
-    Caption = 'Familia (vac'#237'o = todas):'
-    TabOrder = 8
-    Transparent = True
-  end
-  object bedFamilia: TcxButtonEdit
-    Left = 12
-    Top = 296
-    Properties.Buttons = <
-      item
-        Default = True
-        Kind = bkEllipsis
-      end>
-    Properties.OnButtonClick = bedFamiliaPropertiesButtonClick
-    TabOrder = 9
-    Width = 172
-  end
-  object rgModo: TcxRadioGroup
-    Left = 12
-    Top = 8
-    Caption = ' Modo '
-    Properties.Items = <
-      item
-        Caption = 'Entre fechas'
-      end
-      item
-        Caption = 'Por acumulados'
-      end>
-    Properties.OnEditValueChanged = rgModoPropertiesEditValueChanged
-    ItemIndex = 0
-    TabOrder = 0
-    Height = 60
-    Width = 172
-  end
-  object rgDetalle: TcxRadioGroup
-    Left = 12
-    Top = 72
-    Caption = ' Detalle (entre fechas) '
-    Properties.Items = <
-      item
-        Caption = 'Simplificado'
-      end
-      item
-        Caption = 'Desglosado'
-      end>
-    ItemIndex = 0
-    TabOrder = 1
-    Height = 60
-    Width = 172
-  end
   inherited frxrprt1: TfrxReport
     Datasets = <
       item
@@ -1000,14 +902,9 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
   object unqryBalancePrint: TUniQuery
     SQL.Strings = (
       'CALL PRC_GET_BALANCE_ALMACEN_TALLAS('
-      '  '#39'A'#39', NULL, NULL, '#39#39', '#39#39', '#39'PVP'#39', '#39'N'#39')')
+      '  '#39'A'#39', NULL, NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39'PVP'#39', '#39'N'#39')')
     Left = 96
     Top = 16
-  end
-  object dsBalancePrint: TDataSource
-    DataSet = unqryBalancePrint
-    Left = 96
-    Top = 72
   end
   object fxdsBalance: TfrxDBDataset
     Description = 'Balance'
