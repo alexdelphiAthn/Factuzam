@@ -123,6 +123,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnArtPropertiesButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure btnArtPropertiesEditValueChanged(Sender: TObject);
     procedure cbbEstadoPropertiesEditValueChanged(Sender: TObject);
@@ -180,6 +181,7 @@ type
     procedure ReconstruirColumnas(const ATallas: TArray<TInfoColumna>;
                                    AEsColor: Boolean);
     procedure RecargarConsulta;
+    procedure MostrarError(const AMsg: string);
   public
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
@@ -261,19 +263,18 @@ end;
 // ---------------------------------------------------------------------------
 procedure MostrarStockConsulta(AOwner: TComponent;
                                const ACodArt, ACodSku: string);
-var
-  hwndPrev: HWND;
 begin
-  hwndPrev := GetForegroundWindow;
   if frmStockConsulta = nil then
     frmStockConsulta := TfrmStockConsulta.Create(Application);
   frmStockConsulta.SetArticuloSku(ACodArt, ACodSku);
-  if not frmStockConsulta.Visible then
-  begin
-    ShowWindow(frmStockConsulta.Handle, SW_SHOWNOACTIVATE);
-    frmStockConsulta.Visible := True;
-  end;
-  if hwndPrev <> 0 then SetForegroundWindow(hwndPrev);
+  if frmStockConsulta.WindowState = wsMinimized then
+    frmStockConsulta.WindowState := wsNormal;
+  // Mostrar CON foco para que ESC cierre la ventana sin tener que pinchar
+  // antes. Antes se mostraba con SW_SHOWNOACTIVATE y devolvia el foco a la
+  // ventana anterior, lo que dejaba la consulta imposible de cerrar con ESC.
+  frmStockConsulta.Visible := True;
+  frmStockConsulta.BringToFront;
+  SetForegroundWindow(frmStockConsulta.Handle);
 end;
 
 // ---------------------------------------------------------------------------
@@ -283,6 +284,10 @@ procedure TfrmStockConsulta.FormCreate(Sender: TObject);
 begin
   Self.Position := poDesigned;
   Self.FormStyle := fsStayOnTop;
+  // ESC cierra la ventana; KeyPreview para capturarlo aunque el foco este
+  // en el grid o el combo.
+  Self.KeyPreview := True;
+  Self.OnKeyDown := FormKeyDown;
   // Coste (ultimo precio de compra del proveedor) solo para quien tenga
   // permiso: TienePermiso devuelve True siempre a admin; al resto, oculto
   // por defecto salvo permiso explicito 'caja.verCoste'.
@@ -472,6 +477,27 @@ begin
   Action := caHide;
 end;
 
+// ESC oculta la ventana flotante. KeyPreview=True (FormCreate) garantiza que
+// el form vea la tecla aunque el foco este en el grid, el combo o un check.
+procedure TfrmStockConsulta.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+  begin
+    Key := 0;
+    Close;
+  end;
+end;
+
+// Muestra un mensaje de error por ENCIMA de la ventana. Como el form es
+// fsStayOnTop, un dialogo normal saldria por detras y la app pareceria
+// colgada; MB_TOPMOST + MB_SETFOREGROUND fuerzan el aviso al frente.
+procedure TfrmStockConsulta.MostrarError(const AMsg: string);
+begin
+  Application.MessageBox(PChar(AMsg), 'Consulta de stock',
+    MB_OK or MB_ICONERROR or MB_TOPMOST or MB_SETFOREGROUND);
+end;
+
 // ---------------------------------------------------------------------------
 //  Almacenes (check-list)
 // ---------------------------------------------------------------------------
@@ -648,9 +674,15 @@ begin
     end;
   end;
 
-  CargarFoto;
-  CargarInfoCabecera;
-  CargarColores;
+  // Errores de carga (foto / cabecera / colores) por encima de la ventana.
+  try
+    CargarFoto;
+    CargarInfoCabecera;
+    CargarColores;
+  except
+    on E: Exception do
+      MostrarError(E.Message);
+  end;
   RecargarConsulta;
 end;
 
@@ -839,7 +871,7 @@ end;
 // TALLA, ALM, CANTIDAD). El pivote SQL exterior agrupa por TALLA y mete
 // CASE-WHEN por COLOR o ALM en cada columna.
 // Subselect base parametrizado por estado. Cada bloque devuelve filas con
-// el mismo shape (CODIGO_UNIDAD_SKU, COLOR_AV, TALLA_AV, ORDEN_TALLA, ALM,
+// el mismo shape (CODIGO_UNIDAD_SKU, COLOR_AV, TALLA_AV, ALM,
 // CANTIDAD) + un literal ESTADO_NUM que identifica el estado origen para
 // que en modo "Todo a la vez" podamos hacer UNION ALL y agrupar tambien
 // por ESTADO_NUM en el pivote exterior.
@@ -883,11 +915,7 @@ const
     '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
     '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
     '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-    '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ' +
-    '       (SELECT AV.ORDEN_AV FROM fza_atributos_sku ST ' +
-    '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-    '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-    '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS ORDEN_TALLA, ';
+    '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ';
 var
   sAlms, sEstadoNum, sCampo: string;
 begin
@@ -915,7 +943,6 @@ begin
       'SELECT ''''       AS CODIGO_UNIDAD_SKU, ' +
       '       NULL       AS COLOR_AV, ' +
       '       NULL       AS TALLA_AV, ' +
-      '       0          AS ORDEN_TALLA, ' +
       '       ''''       AS ALM, ' +
       '       0          AS CANTIDAD, ' +
       '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
@@ -1360,20 +1387,37 @@ var
 begin
   if FQry.Active then FQry.Close;
   bEsColor := pcVistas.ActivePage = tsPorColor;
-
-  if Trim(FCodArt) = '' then
-  begin
-    ReconstruirColumnas([], bEsColor);
-    FQry.SQL.Text := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN, ' +
-                     '0 AS TOTAL FROM dual WHERE 0';
-    FQry.Open;
-    Exit;
+  // Cursor de espera: el pivote en modo "Todos los estados" puede tardar y
+  // bloquea el hilo de UI; al menos el usuario ve que esta trabajando y no
+  // parece que la ventana se haya colgado.
+  Screen.Cursor := crHourGlass;
+  try
+    try
+      if Trim(FCodArt) = '' then
+      begin
+        ReconstruirColumnas([], bEsColor);
+        FQry.SQL.Text := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN, ' +
+                         '0 AS TOTAL FROM dual WHERE 0';
+      end
+      else
+      begin
+        tallas := TallasArticulo;
+        ReconstruirColumnas(tallas, bEsColor);
+        FQry.SQL.Text := ConstruirSQLPivot(tallas, bEsColor);
+      end;
+      FQry.Open;
+    except
+      on E: Exception do
+      begin
+        if FQry.Active then
+          FQry.Close;
+        // El error sale por encima de la ventana (fsStayOnTop).
+        MostrarError(E.Message);
+      end;
+    end;
+  finally
+    Screen.Cursor := crDefault;
   end;
-
-  tallas := TallasArticulo;
-  ReconstruirColumnas(tallas, bEsColor);
-  FQry.SQL.Text := ConstruirSQLPivot(tallas, bEsColor);
-  FQry.Open;
 end;
 
 // ---------------------------------------------------------------------------
