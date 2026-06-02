@@ -906,39 +906,51 @@ end;
 
 function TfrmStockConsulta.EstadoBaseSelectFor(AEstado: TEstadoStock): string;
 const
-  CSelectSkuAttrs =
+  // Columnas de atributos del SKU. El color y la talla salen de un JOIN a la
+  // derivada agregada ATR (ver sAtrJoin), no de subconsultas correladas por
+  // fila: asi se calculan de una pasada y no se multiplican por cada estado
+  // del UNION ALL. MAX() porque ATR es 1:1 con el SKU (cumple
+  // ONLY_FULL_GROUP_BY sin tocar el GROUP BY).
+  CSelSku =
     'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
-    '       (SELECT AV.AV FROM fza_atributos_sku SC ' +
-    '          JOIN fza_atributos_valores AV ON AV.ID_AV = SC.ID_AV_SA ' +
-    '         WHERE SC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-    '           AND AV.ID_VA_AV = ''CO'' LIMIT 1) AS COLOR_AV, ' +
-    '       (SELECT AV.AV FROM fza_atributos_sku ST ' +
-    '          JOIN fza_atributos_valores AV ON AV.ID_AV = ST.ID_AV_SA ' +
-    '         WHERE ST.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-    '           AND AV.ID_VA_AV <> ''CO'' LIMIT 1) AS TALLA_AV, ';
+    '       MAX(ATR.COLOR_AV) AS COLOR_AV, ' +
+    '       MAX(ATR.TALLA_AV) AS TALLA_AV, ';
 var
-  sAlms, sEstadoNum, sCampo: string;
+  sAlms, sEstadoNum, sCampo, sAtrJoin: string;
 begin
   sAlms      := AlmacenesSeleccionadosSQL;
   sEstadoNum := IntToStr(Ord(AEstado));
-  // Pdte. recibir: viene de tabla aparte, no del acumulado
+  // Color y talla de cada SKU del articulo, calculados una sola vez.
+  // MAX(CASE...) deduplica si un SKU tuviera varios atributos del mismo tipo
+  // (equivale al LIMIT 1 anterior). Antes esto eran dos subconsultas
+  // correladas evaluadas por fila y repetidas en cada estado del UNION, que
+  // es lo que disparaba el tiempo del pivote "Todos los estados".
+  sAtrJoin :=
+    '  LEFT JOIN (SELECT SKU2.CODIGO_UNIDAD_SKU, ' +
+    '          MAX(CASE WHEN AV2.ID_VA_AV =  ''CO'' THEN AV2.AV END) AS COLOR_AV, ' +
+    '          MAX(CASE WHEN AV2.ID_VA_AV <> ''CO'' THEN AV2.AV END) AS TALLA_AV ' +
+    '     FROM fza_articulos_skus SKU2 ' +
+    '     LEFT JOIN fza_atributos_sku SA2 ' +
+    '       ON SA2.CODIGO_UNIDAD_SKU_SA = SKU2.CODIGO_UNIDAD_SKU ' +
+    '     LEFT JOIN fza_atributos_valores AV2 ON AV2.ID_AV = SA2.ID_AV_SA ' +
+    '    WHERE SKU2.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+    '    GROUP BY SKU2.CODIGO_UNIDAD_SKU) ATR ' +
+    '    ON ATR.CODIGO_UNIDAD_SKU = SKU.CODIGO_UNIDAD_SKU ';
   if AEstado = esPdteRecibir then
-  begin
-    Result := CSelectSkuAttrs +
+    // Pdte. recibir: viene de tabla aparte, no del acumulado.
+    Result := CSelSku +
       '       PDR.CODIGO_ALM_PDR AS ALM, ' +
       '       SUM(PDR.CANTIDAD_PDR) AS CANTIDAD, ' +
       '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
       '  FROM fza_articulos_skus SKU ' +
       '  JOIN fza_articulos_pdte_recibir PDR ' +
       '    ON PDR.CODIGO_UNIDAD_PDR = SKU.CODIGO_UNIDAD_SKU ' +
+      sAtrJoin +
       ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
       '   AND PDR.CODIGO_ALM_PDR IN (' + sAlms + ') ' +
-      ' GROUP BY SKU.CODIGO_UNIDAD_SKU, PDR.CODIGO_ALM_PDR';
-    Exit;
-  end;
-  // esPrestadas: stub. esTodoAlaVez: lo agrega EstadoBaseSelect.
-  if (AEstado = esPrestadas) or (AEstado = esTodoAlaVez) then
-  begin
+      ' GROUP BY SKU.CODIGO_UNIDAD_SKU, PDR.CODIGO_ALM_PDR'
+  else if (AEstado = esPrestadas) or (AEstado = esTodoAlaVez) then
+    // esPrestadas: stub. esTodoAlaVez: lo agrega EstadoBaseSelect.
     Result :=
       'SELECT ''''       AS CODIGO_UNIDAD_SKU, ' +
       '       NULL       AS COLOR_AV, ' +
@@ -946,21 +958,23 @@ begin
       '       ''''       AS ALM, ' +
       '       0          AS CANTIDAD, ' +
       '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
-      '  FROM dual WHERE 0';
-    Exit;
+      '  FROM dual WHERE 0'
+  else
+  begin
+    // Resto: lectura directa del acumulado en fza_articulos_stockactual.
+    sCampo := CampoCantidadStock(AEstado);
+    Result := CSelSku +
+      '       STK.CODIGO_ALM_STK AS ALM, ' +
+      '       SUM(' + sCampo + ') AS CANTIDAD, ' +
+      '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_articulos_stockactual STK ' +
+      '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
+      sAtrJoin +
+      ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+      '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
+      ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
   end;
-  // Resto: lectura directa del acumulado en fza_articulos_stockactual
-  sCampo := CampoCantidadStock(AEstado);
-  Result := CSelectSkuAttrs +
-    '       STK.CODIGO_ALM_STK AS ALM, ' +
-    '       SUM(' + sCampo + ') AS CANTIDAD, ' +
-    '       ' + sEstadoNum + ' AS ESTADO_NUM ' +
-    '  FROM fza_articulos_skus SKU ' +
-    '  JOIN fza_articulos_stockactual STK ' +
-    '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
-    ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
-    '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
-    ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
 end;
 
 // En modo "Todo a la vez" hace UNION ALL de los estados con datos.
