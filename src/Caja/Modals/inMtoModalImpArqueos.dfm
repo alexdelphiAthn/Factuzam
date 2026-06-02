@@ -1,38 +1,98 @@
 inherited frmPrintArqueos: TfrmPrintArqueos
   Caption = 'Imprimir Hist'#243'rico de Arqueos'
+  ClientHeight = 320
   TextHeight = 19
-  object lblTitulo: TcxLabel
+  object lblFechas: TcxLabel
     Left = 12
-    Top = 16
+    Top = 10
     Caption = 'Rango de fechas:'
-    TabOrder = 3
+    TabOrder = 6
     Transparent = True
   end
   object lblDesde: TcxLabel
     Left = 12
-    Top = 52
+    Top = 34
     Caption = 'Fecha inicio:'
-    TabOrder = 4
+    TabOrder = 7
     Transparent = True
   end
   object dteDesde: TcxDateEdit
     Left = 12
-    Top = 72
+    Top = 52
     TabOrder = 1
-    Width = 170
+    Width = 172
   end
   object lblHasta: TcxLabel
     Left = 12
-    Top = 108
+    Top = 80
     Caption = 'Fecha fin:'
-    TabOrder = 5
+    TabOrder = 8
     Transparent = True
   end
   object dteHasta: TcxDateEdit
     Left = 12
-    Top = 128
+    Top = 98
     TabOrder = 2
-    Width = 170
+    Width = 172
+  end
+  object lblCajaTit: TcxLabel
+    Left = 12
+    Top = 130
+    Caption = 'Caja a imprimir:'
+    TabOrder = 9
+    Transparent = True
+  end
+  object lblEmpresa: TcxLabel
+    Left = 12
+    Top = 154
+    Caption = 'Empresa:'
+    TabOrder = 10
+    Transparent = True
+  end
+  object edtEmpresa: TcxTextEdit
+    Left = 12
+    Top = 172
+    Properties.ReadOnly = True
+    TabOrder = 3
+    Width = 172
+  end
+  object lblAlmacen: TcxLabel
+    Left = 12
+    Top = 200
+    Caption = 'Almac'#233'n:'
+    TabOrder = 11
+    Transparent = True
+  end
+  object bedAlmacen: TcxButtonEdit
+    Left = 12
+    Top = 218
+    Properties.Buttons = <
+      item
+        Default = True
+        Kind = bkEllipsis
+      end>
+    Properties.OnButtonClick = bedAlmacenPropertiesButtonClick
+    TabOrder = 4
+    Width = 172
+  end
+  object lblCaja: TcxLabel
+    Left = 12
+    Top = 246
+    Caption = 'Caja:'
+    TabOrder = 12
+    Transparent = True
+  end
+  object bedCaja: TcxButtonEdit
+    Left = 12
+    Top = 264
+    Properties.Buttons = <
+      item
+        Default = True
+        Kind = bkEllipsis
+      end>
+    Properties.OnButtonClick = bedCajaPropertiesButtonClick
+    TabOrder = 5
+    Width = 172
   end
   inherited frxrprt1: TfrxReport
     Datasets = <
