@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibBalanceTallasExcel                                       }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.1.0                                                         }
+{ Versión:       1.2.0                                                         }
 {   Fecha:       02/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -12,14 +12,14 @@
 {    Exportación a Excel (dxSpreadSheet) del balance de almacén por tallas,    }
 {    con un formato parecido al informe: agrupado por familia y artículo, con  }
 {    las tallas como columnas (T01..T14) y una fila por color/banda. Al cerrar  }
-{    cada artículo se emite una fila de TOTAL por banda (suma de colores).     }
-{    Consume directamente el resultado del SP PRC_GET_BALANCE_ALMACEN_TALLAS    }
-{    (el mismo dataset filtrado que alimenta el informe; respeta por tanto el  }
-{    filtrado de bandas, almacenes, familias, proveedores y temporadas).       }
+{    cada artículo se emite una fila de TOTAL por banda, calculada con         }
+{    FÓRMULAS de Excel (=SUM(...)) sobre las filas de detalle (no números      }
+{    fijos), de modo que recalculan si se editan las celdas. Se incrusta       }
+{    además la foto 300px del artículo a la derecha del bloque.                }
 {                                                                              }
-{    Se rellena una hoja del TdxSpreadSheet que se le pasa; el guardado a      }
-{    .xlsx y la previsualización los hace TfrmMtoPreviewExcel (igual patrón    }
-{    que la exportación de inventario, inLibInventarioExcel).                  }
+{    Consume directamente el resultado del SP PRC_GET_BALANCE_ALMACEN_TALLAS    }
+{    (mismo dataset filtrado que alimenta el informe; respeta el filtrado de   }
+{    bandas, almacenes, familias, proveedores y temporadas).                   }
 {******************************************************************************}
 unit inLibBalanceTallasExcel;
 
@@ -28,9 +28,9 @@ interface
 uses
   System.SysUtils, System.Variants, System.Classes,
   System.Generics.Collections, Data.DB, cxGraphics, Vcl.Graphics,
-  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
+  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetContainers,
   dxSpreadSheetGraphics, dxCoreGraphics, dxSpreadSheetStyles, dxHashUtils,
-  inLibDevExcel;
+  inLibDevExcel, inLibFotos;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
                                      const QDatos: TDataSet);
@@ -38,15 +38,16 @@ procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
 implementation
 
 type
-  // Acumulador de totales de una banda dentro de un artículo (suma de
-  // colores). El precio es constante por banda (coste o PVP del artículo).
+  // Acumulador de una banda dentro de un artículo: el rótulo, el precio
+  // (constante por banda) y los índices de las filas de detalle (un color
+  // cada una) para construir las fórmulas de total con =SUM(celdas).
   TBandaTot = class
   public
     Etiqueta: string;
     Precio  : Double;
-    Cantidad: Double;
-    Importe : Double;
-    T       : array[1..14] of Double;
+    Filas   : TList<Integer>;
+    constructor Create;
+    destructor Destroy; override;
   end;
 
 const
@@ -58,11 +59,28 @@ const
   COL_PRECIO  = COL_CDAD + 1;       // 17
   COL_IMPORTE = COL_CDAD + 2;       // 18
   COL_MAX     = COL_IMPORTE;        // 18
+  COL_FOTO    = COL_IMPORTE + 2;    // 20: zona libre a la derecha del dato
   FMT_NUM     = '#,##0';
   FMT_EUR     = '#,##0.00';
-  CL_CABECERA = $00EEEEEE;          // gris claro (cabecera de tallas)
-  CL_FAMILIA  = $00D9D9D9;          // gris (familia)
-  CL_TOTALES  = $00F2F2F2;          // gris muy claro (fila de totales)
+  // Formatos que ocultan el cero (sección de cero vacía), para que las
+  // fórmulas de total no muestren 0 (como el HideZeros del informe).
+  FMT_NUM_HZ  = '#,##0;-#,##0;';
+  FMT_EUR_HZ  = '#,##0.00;-#,##0.00;';
+  CL_CABECERA = $00EEEEEE;
+  CL_FAMILIA  = $00D9D9D9;
+  CL_TOTALES  = $00F2F2F2;
+
+constructor TBandaTot.Create;
+begin
+  inherited Create;
+  Filas := TList<Integer>.Create;
+end;
+
+destructor TBandaTot.Destroy;
+begin
+  Filas.Free;
+  inherited Destroy;
+end;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
                                      const QDatos: TDataSet);
@@ -73,8 +91,6 @@ var
   dictBandas : TObjectDictionary<string, TBandaTot>;
   ordenBandas: TStringList;
 
-  // Escribe un número; si AOcultarCero y vale 0, deja la celda vacía
-  // (replica el HideZeros del informe para no llenar de ceros).
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
                    AOcultarCero: Boolean);
   begin
@@ -85,7 +101,6 @@ var
     end;
   end;
 
-  // Cabecera de tallas del artículo en curso (rótulos ETIQ_T01..ETIQ_T14).
   procedure CabeceraTallas;
   var
     k: Integer;
@@ -105,12 +120,34 @@ var
       end;
   end;
 
+  // Incrusta la foto 300px del artículo en la zona libre de la derecha,
+  // empezando en la misma fila del artículo (catTwoCell para ajustar el
+  // tamaño al bloque de celdas). Si no hay foto, no hace nada.
+  procedure IncrustarFoto(const ACodArt: string; AFilaArt: Integer);
+  var
+    info : TFotoInfo;
+    sRuta: string;
+    Pic  : TdxSpreadSheetPictureContainer;
+  begin
+    if oFotos <> nil then
+    begin
+      info  := oFotos.Resolver(ACodArt, '');
+      sRuta := oFotos.RutaFoto(info, frPx300);
+      if sRuta <> '' then
+      begin
+        Pic := Sheet.Containers.AddImage(sRuta);
+        Pic.AnchorType := catTwoCell;
+        Pic.AnchorPoint1.Cell := Sheet.CreateCell(AFilaArt, COL_FOTO);
+        Pic.AnchorPoint2.Cell := Sheet.CreateCell(AFilaArt + 6, COL_FOTO + 2);
+      end;
+    end;
+  end;
+
   // Suma la fila actual (un color) al acumulador de su banda.
   procedure AcumularBanda;
   var
     cod: string;
     bt : TBandaTot;
-    k  : Integer;
   begin
     cod := QDatos.FieldByName('BANDA').AsString;
     if not dictBandas.TryGetValue(cod, bt) then
@@ -121,14 +158,27 @@ var
       dictBandas.Add(cod, bt);
       ordenBandas.Add(cod);
     end;
-    for k := 1 to N_TALLAS do
-      bt.T[k] := bt.T[k] + QDatos.FieldByName(Format('T%.2d', [k])).AsFloat;
-    bt.Cantidad := bt.Cantidad + QDatos.FieldByName('CANTIDAD').AsFloat;
-    bt.Importe  := bt.Importe  + QDatos.FieldByName('IMPORTE').AsFloat;
+    bt.Filas.Add(iRow);   // fila de detalle de este color
   end;
 
-  // Emite una fila de TOTAL por banda (en el orden en que aparecieron) y
-  // vacía el acumulador para el siguiente artículo.
+  // Construye '=SUM(celda1,celda2,...)' para una columna sobre las filas de
+  // detalle de la banda. Las celdas vacías (ceros omitidos) suman 0.
+  function SumaFormula(AFilas: TList<Integer>; ACol: Integer): string;
+  var
+    j: Integer;
+    s: string;
+  begin
+    s := '';
+    for j := 0 to AFilas.Count - 1 do
+    begin
+      if s <> '' then
+        s := s + ',';
+      s := s + GetRef(AFilas[j], ACol);
+    end;
+    Result := '=SUM(' + s + ')';
+  end;
+
+  // Emite una fila de TOTAL por banda (con fórmulas) y vacía el acumulador.
   procedure EmitirTotalesArticulo;
   var
     i, k: Integer;
@@ -140,10 +190,13 @@ var
       W(Sheet, iRow, COL_BANDA, bt.Etiqueta, True, ssahLeft);
       W(Sheet, iRow, COL_COLOR, 'TOTAL', True, ssahLeft);
       for k := 1 to N_TALLAS do
-        EscNum(COL_T1 + k - 1, bt.T[k], FMT_NUM, True);
-      EscNum(COL_CDAD,    bt.Cantidad, FMT_NUM, True);
-      EscNum(COL_PRECIO,  bt.Precio,   FMT_EUR, False);
-      EscNum(COL_IMPORTE, bt.Importe,  FMT_EUR, False);
+        WFormula(Sheet, iRow, COL_T1 + k - 1,
+          SumaFormula(bt.Filas, COL_T1 + k - 1), FMT_NUM_HZ);
+      WFormula(Sheet, iRow, COL_CDAD, SumaFormula(bt.Filas, COL_CDAD), FMT_NUM_HZ);
+      W(Sheet, iRow, COL_PRECIO, bt.Precio, False, ssahRight);
+      Sheet.Cells[iRow, COL_PRECIO].Style.DataFormat.FormatCode := FMT_EUR;
+      WFormula(Sheet, iRow, COL_IMPORTE,
+        SumaFormula(bt.Filas, COL_IMPORTE), FMT_EUR_HZ);
       for c := 0 to COL_MAX do
         if Sheet.Cells[iRow, c] <> nil then
         begin
@@ -170,7 +223,7 @@ begin
     W(Sheet, iRow, 0, 'BALANCE DE ALMAC'#201'N POR TALLAS', True);
     Sheet.Cells[iRow, 0].Style.Font.Size := 14;
     Inc(iRow, 2);
-    sFamAct := #1;   // fuerza el primer salto de familia/artículo
+    sFamAct := #1;
     sArtAct := #1;
     if (QDatos <> nil) and QDatos.Active and (not QDatos.IsEmpty) then
     begin
@@ -194,9 +247,9 @@ begin
                 Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := CL_FAMILIA;
             Inc(iRow);
             sFamAct := sFam;
-            sArtAct := #1;   // fuerza cabecera de artículo dentro de la familia
+            sArtAct := #1;
           end;
-          // Salto de artículo: cabecera del artículo + cabecera de tallas.
+          // Salto de artículo: cabecera + foto + cabecera de tallas.
           if sArt <> sArtAct then
           begin
             W(Sheet, iRow, 0, 'ART'#205'CULO  ' + sArt + '  ' +
@@ -204,6 +257,7 @@ begin
             if QDatos.FindField('REF_PRV') <> nil then
               W(Sheet, iRow, COL_IMPORTE,
                 QDatos.FieldByName('REF_PRV').AsString, False, ssahRight);
+            IncrustarFoto(sArt, iRow);
             Inc(iRow);
             CabeceraTallas;
             Inc(iRow);

@@ -246,8 +246,11 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   `dxSpreadSheet` con el mismo layout que el informe (familia → artículo →
   tallas en columnas → bandas en filas) y la muestra en `TfrmMtoPreviewExcel`
   para guardar a `.xlsx`. Al cerrar cada artículo emite una fila **TOTAL por
-  banda** (suma de colores). Como usa el dataset del SP ya filtrado, respeta
-  el filtrado de bandas (y de almacenes/familias/proveedores/temporadas).
+  banda** con **fórmulas** `=SUM(...)` sobre las filas de detalle
+  (recalculables, no números fijos) e **incrusta la foto 300px** del artículo
+  a la derecha del bloque (vía `Sheet.Containers.AddImage`). Como usa el
+  dataset del SP ya filtrado, respeta el filtrado de bandas (y de
+  almacenes/familias/proveedores/temporadas).
 
 > En el `.dfm` de `inMtoModalImpBalanceTallas` se deja un `CALL` de diseño
 > con literales (9 argumentos) en el `SQL.Text` de `unqryBalancePrint` para
