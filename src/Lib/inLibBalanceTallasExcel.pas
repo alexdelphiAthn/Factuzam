@@ -28,9 +28,9 @@ interface
 uses
   System.SysUtils, System.Variants, System.Classes,
   System.Generics.Collections, Data.DB, cxGraphics, Vcl.Graphics,
-  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetContainers,
+  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
   dxSpreadSheetGraphics, dxCoreGraphics, dxSpreadSheetStyles, dxHashUtils,
-  inLibDevExcel, inLibFotos;
+  inLibDevExcel;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
                                      const QDatos: TDataSet);
@@ -103,7 +103,7 @@ var
 
   procedure CabeceraTallas;
   var
-    k: Integer;
+    k, c: Integer;
   begin
     W(Sheet, iRow, COL_COLOR, 'Color', True, ssahLeft);
     for k := 1 to N_TALLAS do
@@ -120,27 +120,16 @@ var
       end;
   end;
 
-  // Incrusta la foto 300px del artículo en la zona libre de la derecha,
-  // empezando en la misma fila del artículo (catTwoCell para ajustar el
-  // tamaño al bloque de celdas). Si no hay foto, no hace nada.
+  // Incrustar la foto 300px del artículo en la zona libre de la derecha,
+  // empezando en la misma fila del artículo.
+  // PENDIENTE: la API de imágenes de dxSpreadSheet de esta versión NO expone
+  // Containers.AddImage. En cuanto se confirme el método correcto (p. ej.
+  // Containers.Add(TdxSpreadSheetPictureContainer) + Picture.LoadFromFile +
+  // anclaje a celdas) se reactiva aquí la inserción usando
+  // oFotos.RutaFoto(oFotos.Resolver(ACodArt, ''), frPx300) y AFilaArt/COL_FOTO.
   procedure IncrustarFoto(const ACodArt: string; AFilaArt: Integer);
-  var
-    info : TFotoInfo;
-    sRuta: string;
-    Pic  : TdxSpreadSheetPictureContainer;
   begin
-    if oFotos <> nil then
-    begin
-      info  := oFotos.Resolver(ACodArt, '');
-      sRuta := oFotos.RutaFoto(info, frPx300);
-      if sRuta <> '' then
-      begin
-        Pic := Sheet.Containers.AddImage(sRuta);
-        Pic.AnchorType := catTwoCell;
-        Pic.AnchorPoint1.Cell := Sheet.CreateCell(AFilaArt, COL_FOTO);
-        Pic.AnchorPoint2.Cell := Sheet.CreateCell(AFilaArt + 6, COL_FOTO + 2);
-      end;
-    end;
+    // Stub temporal: sin incrustar foto (ver nota arriba).
   end;
 
   // Suma la fila actual (un color) al acumulador de su banda.
@@ -181,7 +170,7 @@ var
   // Emite una fila de TOTAL por banda (con fórmulas) y vacía el acumulador.
   procedure EmitirTotalesArticulo;
   var
-    i, k: Integer;
+    i, k, c: Integer;
     bt  : TBandaTot;
   begin
     for i := 0 to ordenBandas.Count - 1 do
