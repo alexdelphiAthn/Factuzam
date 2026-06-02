@@ -60,6 +60,7 @@ type
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
     mnuAlmacenes: TMenuItem;
+    mnuInvocarLogin: TMenuItem;
     mnuCajaParam: TMenuItem;
     JvStatusBar1: TJvStatusBar;
     saveDialog: TFileSaveDialog;
@@ -93,6 +94,7 @@ type
     mnuBalanceAlmacenHorizontal: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
+    procedure mnuInvocarLoginClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
     procedure mnuFormaPagoVentaClick(Sender: TObject);
@@ -280,6 +282,7 @@ var
 implementation
 
 uses inLibUser,
+  inMtoLogon,
   inLibWin,
   inLibShowMto,
   inLibtb,
@@ -1653,6 +1656,21 @@ begin
   if (mnuEmpresas.Visible) then
     ShowMto(Self,
             'Empresas');
+end;
+
+procedure TfrmMtoPrincipal.mnuInvocarLoginClick(Sender: TObject);
+var
+  frm: TfrmLogon;
+begin
+  // Relanza la pantalla de login (inMtoLogon) con Fzam ya abierto, para
+  // reidentificarse sin cerrar la aplicacion. Usa su propia conexion de
+  // validacion (ucConexion), no la conexion global de la sesion.
+  frm := TfrmLogon.Create(Application);
+  try
+    frm.ShowModal;
+  finally
+    frm.Free;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.mnuPaisesClick(Sender: TObject);
