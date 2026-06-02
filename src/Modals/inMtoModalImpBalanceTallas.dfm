@@ -1,7 +1,7 @@
 inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
   Caption = 'Balance de almac'#233'n por tallas'
-  ClientHeight = 440
-  ClientWidth = 560
+  ClientHeight = 470
+  ClientWidth = 620
   TextHeight = 19
   inherited frxrprt1: TfrxReport
     Datasets = <
@@ -902,7 +902,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
   object unqryBalancePrint: TUniQuery
     SQL.Strings = (
       'CALL PRC_GET_BALANCE_ALMACEN_TALLAS('
-      '  '#39'A'#39', NULL, NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39'PVP'#39', '#39'N'#39')')
+      '  '#39'A'#39', NULL, NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39'PVP'#39', '#39'N'#39', '#39#39')')
     Left = 96
     Top = 16
   end
