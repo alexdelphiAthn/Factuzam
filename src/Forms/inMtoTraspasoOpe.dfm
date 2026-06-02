@@ -86,9 +86,15 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 56
       Caption = 'Empleado (responsable)'
     end
-    object txtEmpleado: TcxTextEdit
+    object txtEmpleado: TcxButtonEdit
       Left = 200
       Top = 53
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
+      Properties.OnButtonClick = txtEmpleadoButtonClick
       TabOrder = 2
       OnExit = txtEmpleadoExit
       Width = 120
