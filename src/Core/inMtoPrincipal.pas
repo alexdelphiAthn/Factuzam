@@ -89,6 +89,8 @@ type
     mnuDepositosCliente: TMenuItem;
     mnuFacturasSimplif: TMenuItem;
     mnuCajaArqueosHist: TMenuItem;
+    mnuAlmacenInformes: TMenuItem;
+    mnuBalanceAlmacenHorizontal: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -108,6 +110,7 @@ type
     procedure FormasdePagoCaja1Click(Sender: TObject);
     procedure mnuFacturasSimplifClick(Sender: TObject);
     procedure Movimientosdealmacn1Click(Sender: TObject);
+    procedure mnuBalanceAlmacenHorizontalClick(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
     procedure pcPrincipalChange(Sender: TObject);
   public
@@ -286,6 +289,7 @@ uses inLibUser,
   inMtoCajaParam,
   inMtoModalGenFilter,
   inMtoModalScriptLog,
+  inMtoModalImpBalanceTallas,
   inLibCajaParam,
   inLibAppParam,
   inLibBuscarImpresora,
@@ -1709,6 +1713,24 @@ procedure TfrmMtoPrincipal.Movimientosdealmacn1Click(Sender: TObject);
 begin
   if (Movimientosdealmacn1.Visible) then
     ShowMto(Self, 'MovimientosAlmacen');
+end;
+
+procedure TfrmMtoPrincipal.mnuBalanceAlmacenHorizontalClick(Sender: TObject);
+var
+  frm: TfrmPrintBalanceTallas;
+begin
+  // Informe A4 horizontal (FastReport) del balance de almacén por tallas
+  // con foto. El usuario filtra modo (entre fechas / acumulados), nivel de
+  // detalle, fechas, almacén y familia en el propio modal.
+  if mnuBalanceAlmacenHorizontal.Visible then
+  begin
+    frm := TfrmPrintBalanceTallas.Create(Application);
+    try
+      frm.ShowModal;
+    finally
+      FreeAndNil(frm);
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.mnuDepositosClienteClick(Sender: TObject);
