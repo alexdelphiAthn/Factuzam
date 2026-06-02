@@ -910,21 +910,49 @@ end;
 procedure TfrmMtoPrincipal.AplicarPermisosMenu;
 var
   i: Integer;
-  ofzaF: TfzaForm;
-begin
-  if (oPermisos = nil) or (not oPermisos.Cargada) then
-    Exit;
-  for i := 0 to oFzaWinf.Count - 1 do
+  // Procesa un item y sus hijos. Devuelve True si queda visible. Una hoja
+  // se oculta y deshabilita cuando su permiso (oFzaWinf.CodigoMenu, que
+  // resuelve 'menu.<CALL>' si esta registrado o 'menu.<Name>' si no) esta
+  // denegado. Enabled:=False ademas neutraliza el atajo de teclado del
+  // item (un menu solo invisible seguiria disparando su ShortCut). Un
+  // contenedor se oculta si ninguno de sus hijos queda visible.
+  function ProcesarItem(AItem: TMenuItem): Boolean;
+  var
+    j: Integer;
+    sCodigo: string;
+    bHayHijoVisible: Boolean;
   begin
-    ofzaF := oFzaWinf.Item(i);
-    if (ofzaF.mnMenuItem <> nil) and
-       (not oPermisos.TienePermiso('menu.' + ofzaF.Call)) then
+    if AItem.Caption = '-' then
+      Result := AItem.Visible
+    else if AItem.Count > 0 then
     begin
-      ofzaF.mnMenuItem.Visible := False;
-      Log.LogInfo(Format('Permiso menu.%s denegado: menú oculto',
-        [ofzaF.Call]));
+      bHayHijoVisible := False;
+      for j := 0 to AItem.Count - 1 do
+        if ProcesarItem(AItem.Items[j]) then
+          bHayHijoVisible := True;
+      if not bHayHijoVisible then
+      begin
+        AItem.Visible := False;
+        AItem.Enabled := False;
+      end;
+      Result := AItem.Visible;
+    end
+    else
+    begin
+      sCodigo := oFzaWinf.CodigoMenu(AItem);
+      if (sCodigo <> '') and (not oPermisos.TienePermiso(sCodigo)) then
+      begin
+        AItem.Visible := False;
+        AItem.Enabled := False;
+        Log.LogInfo(Format('Permiso %s denegado: menu oculto', [sCodigo]));
+      end;
+      Result := AItem.Visible;
     end;
   end;
+begin
+  if (oPermisos <> nil) and (oPermisos.Cargada) and (Menu <> nil) then
+    for i := 0 to Menu.Items.Count - 1 do
+      ProcesarItem(Menu.Items[i]);
 end;
 
 procedure TfrmMtoPrincipal.WorkerProgreso(const AEtapa: string;

@@ -31,7 +31,7 @@ uses
   cxRadioGroup, cxDropDownEdit, cxPC, cxInplaceContainer, cxTL, cxTLData,
   dxSkinsCore, dxSkinsDefaultPainters, dxSkinsForm, dxScrollbarAnnotations,
   dxCore, dxDateRanges,
-  inMtoGen, inLibPermisosAdmin;
+  inMtoGen, inLibUnitForm, inLibPermisosAdmin;
 
 type
   TfrmMtoPermisosArbol = class(TfrmMtoGen)
@@ -76,7 +76,7 @@ type
     procedure ConstruirInterfaz;
     procedure ConstruirArbol;
     procedure AgregarNodosMenu(AParent: TcxTreeListNode; AItem: TMenuItem;
-                               AMapa: TDictionary<TMenuItem, string>);
+                               AWinf: TfzaWinF);
     procedure AgregarCategorias;
     function  NuevoNodo(AParent: TcxTreeListNode;
                         const ANombre, ACodigo: string): TcxTreeListNode;
@@ -118,7 +118,7 @@ var
 implementation
 
 uses
-  System.StrUtils, inLibGlobalVar, inMtoPrincipal, inLibUnitForm;
+  System.StrUtils, inLibGlobalVar, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -220,7 +220,7 @@ begin
 end;
 
 procedure TfrmMtoPermisosArbol.AgregarNodosMenu(AParent: TcxTreeListNode;
-  AItem: TMenuItem; AMapa: TDictionary<TMenuItem, string>);
+  AItem: TMenuItem; AWinf: TfzaWinF);
 var
   nombre, code: string;
   node: TcxTreeListNode;
@@ -230,11 +230,15 @@ begin
   begin
     nombre := Trim(StringReplace(AItem.Caption, '&', '', [rfReplaceAll]));
     code := '';
-    if AMapa.ContainsKey(AItem) then
-      code := 'menu.' + AMapa[AItem];
+    // Solo las hojas (sin submenu) son permisos editables. Para cada hoja
+    // el codigo lo da CodigoMenu: 'menu.<CALL>' si el item esta en
+    // fza_winforms, o 'menu.<Name>' si no (items abiertos directamente,
+    // p.ej. Parametros de Caja, Compras, copias de seguridad...).
+    if (AItem.Count = 0) and Assigned(AWinf) then
+      code := AWinf.CodigoMenu(AItem);
     node := NuevoNodo(AParent, nombre, code);
     for i := 0 to AItem.Count - 1 do
-      AgregarNodosMenu(node, AItem.Items[i], AMapa);
+      AgregarNodosMenu(node, AItem.Items[i], AWinf);
   end;
 end;
 
@@ -293,31 +297,21 @@ end;
 procedure TfrmMtoPermisosArbol.ConstruirArbol;
 var
   frmPrin: TfrmMtoPrincipal;
-  mapa: TDictionary<TMenuItem, string>;
   i: Integer;
-  f: TfzaForm;
 begin
   FtlPermisos.Clear;
   FColocados.Clear;
   if (Self.Owner is TfrmMtoPrincipal) then
   begin
     frmPrin := TfrmMtoPrincipal(Self.Owner);
-    mapa := TDictionary<TMenuItem, string>.Create;
     FtlPermisos.BeginUpdate;
     try
-      for i := 0 to frmPrin.oFzaWinf.Count - 1 do
-      begin
-        f := frmPrin.oFzaWinf.Item(i);
-        if f.mnMenuItem <> nil then
-          mapa.AddOrSetValue(f.mnMenuItem, f.Call);
-      end;
       if frmPrin.Menu <> nil then
         for i := 0 to frmPrin.Menu.Items.Count - 1 do
-          AgregarNodosMenu(nil, frmPrin.Menu.Items[i], mapa);
+          AgregarNodosMenu(nil, frmPrin.Menu.Items[i], frmPrin.oFzaWinf);
       AgregarCategorias;
     finally
       FtlPermisos.EndUpdate;
-      FreeAndNil(mapa);
     end;
   end;
 end;
