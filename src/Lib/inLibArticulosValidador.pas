@@ -365,7 +365,18 @@ begin
   if Result.Encontrado and Result.RequiereSku then
     Result.Mensaje :=
       'El artículo "' + Result.CodigoArticulo + '" tiene SKUs (talla/color). ' +
-      'Indica un SKU concreto antes de continuar.';
+      'Indica un SKU concreto antes de continuar.'
+  else if Result.Encontrado and (not Result.TieneSku) then
+  begin
+    // Localizado y activo pero sin ninguna unidad (SKU) activa que vender:
+    // p. ej. variación sin tallas/colores. Motivo exacto, no "no encontrado".
+    if Result.EsVariacion then
+      Result.Mensaje := 'El artículo "' + Result.CodigoArticulo +
+        '" no tiene tallas/colores (SKU) activos para vender.'
+    else
+      Result.Mensaje := 'El artículo "' + Result.CodigoArticulo +
+        '" no tiene ninguna unidad (SKU) activa para vender.';
+  end;
 end;
 
 function TArticulosValidador.ResolverConSku(const AEntrada,
