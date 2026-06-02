@@ -2640,6 +2640,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           ShortCut = 16465
           OnClick = mnuPermisosClick
         end
+        object mnuPermisosTabla: TMenuItem
+          Caption = 'Permisos (tabla)'
+          OnClick = mnuPermisosTablaClick
+        end
       end
       object HacerCopiadeSeguridad1: TMenuItem
         Bitmap.Data = {
