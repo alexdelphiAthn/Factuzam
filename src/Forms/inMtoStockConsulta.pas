@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.5.1                                                         }
+{ Version:       0.5.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -28,9 +28,6 @@
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
 {          checklist opuesto.                                                  }
 {                                                                              }
-{    v0.5.1: el combo "Todos los estados" ya no sale en blanco; en modo       }
-{    desglosado se ocultan los totales Entradas/Salidas (solo subtipos) y      }
-{    el coste de proveedor se oculta sin permiso 'caja.verCoste'.              }
 {    v0.5: estado "Todo a la vez" en el combo + colores por estado. Cada      }
 {    estado pinta las celdas de datos con un color distintivo (azul para      }
 {    existencias, rojo para ventas, naranja para pte. recibir, etc.) y el     }
@@ -677,16 +674,20 @@ begin
   end;
 end;
 
-// Pinta el bloque de info de la cabecera (temporada + tarifas + proveedores).
-// Las tarifas se listan de la por defecto a las demas (ORDER BY ESDEFAULT
-// DESC, ORDEN_TAR con NULLs al final). Los proveedores van con el principal
-// primero. Se ignoran tarifas/proveedores con SKU especifico — aqui solo
-// mostramos el dato a nivel de articulo.
+// Pinta el bloque de info de la cabecera (propiedades + tarifas vigentes +
+// proveedores). Las propiedades del articulo se listan todas, compactas y
+// separadas por " · ". Las tarifas muestran la fila vigente hoy de cada
+// tarifa (PVP, VENTA MAYOR…), ordenadas por ORDEN_TAR. Los proveedores van
+// con el principal primero. Se ignoran tarifas/proveedores con SKU
+// especifico — aqui solo mostramos el dato a nivel de articulo.
 procedure TfrmStockConsulta.CargarInfoCabecera;
 var
   q : TUniQuery;
   sb: TStringList;
   sLinea: string;
+  sProps: string;
+  sTipo : string;
+  sValor: string;
 begin
   lblInfo.Caption := '';
   if Trim(FCodArt) = '' then Exit;
@@ -696,21 +697,53 @@ begin
   try
     q.Connection := inLibGlobalVar.oConn;
 
-    // ---- Temporada (fza_articulos_propiedades, prop TEMPORADA) ----
+    // ---- Propiedades del articulo (todas las activas) ----
+    // El valor mostrado depende del tipo: LISTA -> texto del valor en
+    // fza_propiedades_valores; BOOLEANO -> Si/No; resto (TEXTO/NUMERO) ->
+    // VALOR_LIBRE_ARTPROP. Se listan compactas separadas por " · ".
     q.SQL.Text :=
-      'SELECT PV.PV ' +
+      'SELECT P.NOMBRE_PROP_PROP, P.TIPO_VALOR_PROP, ' +
+      '       AP.VALOR_LIBRE_ARTPROP, PV.PV ' +
       '  FROM fza_articulos_propiedades AP ' +
+      '  JOIN fza_propiedades P ' +
+      '    ON P.CODIGO_PROP_ARTPROP = AP.CODIGO_PROP_ARTPROP ' +
       '  LEFT JOIN fza_propiedades_valores PV ' +
       '    ON PV.ID_PV_ARTPROP = AP.ID_PV_ARTPROP ' +
       ' WHERE AP.CODIGO_ART_ART = :art ' +
-      '   AND AP.CODIGO_PROP_ARTPROP = ''TEMPORADA''';
+      '   AND IFNULL(P.ESACTIVO_PROP, ''S'') = ''S'' ' +
+      ' ORDER BY P.NOMBRE_PROP_PROP';
     q.ParamByName('art').AsString := FCodArt;
     q.Open;
-    if (not q.IsEmpty) and (Trim(q.FieldByName('PV').AsString) <> '') then
-      sb.Add('Temporada: ' + q.FieldByName('PV').AsString);
+    sProps := '';
+    while not q.Eof do
+    begin
+      sTipo := q.FieldByName('TIPO_VALOR_PROP').AsString;
+      if SameText(sTipo, 'LISTA') then
+        sValor := Trim(q.FieldByName('PV').AsString)
+      else if SameText(sTipo, 'BOOLEANO') then
+        sValor := IfThen(SameText(Trim(
+                    q.FieldByName('VALOR_LIBRE_ARTPROP').AsString), 'S'),
+                    'Sí', 'No')
+      else
+        sValor := Trim(q.FieldByName('VALOR_LIBRE_ARTPROP').AsString);
+      if sValor <> '' then
+      begin
+        if sProps <> '' then
+          sProps := sProps + '   ·   ';
+        sProps := sProps +
+                  q.FieldByName('NOMBRE_PROP_PROP').AsString + ': ' + sValor;
+      end;
+      q.Next;
+    end;
     q.Close;
+    if sProps <> '' then
+      sb.Add(sProps);
 
-    // ---- Tarifas del articulo (sin SKU especifico) ----
+    // ---- Tarifas vigentes del articulo (sin SKU especifico) ----
+    // Por cada tarifa (PVP, VENTA MAYOR…) se coge la fila vigente hoy:
+    // activa, FECHA_DESDE nula o <= hoy y FECHA_HASTA nula o >= hoy. Si hay
+    // varias vigentes para la misma tarifa, gana la de FECHA_DESDE mas
+    // reciente (subconsulta correlada por CODIGO_UNICO_ARTTAR).
     q.SQL.Text :=
       'SELECT AT.CODIGO_TAR_ARTTAR, T.NOMBRE_TAR_TAR, ' +
       '       AT.PRECIO_FINAL_ARTTAR ' +
@@ -720,6 +753,24 @@ begin
       ' WHERE AT.CODIGO_ART_ARTTAR = :art ' +
       '   AND IFNULL(AT.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
       '   AND AT.ESACTIVO_ARTTAR = ''S'' ' +
+      '   AND (AT.FECHA_DESDE_ARTTAR IS NULL ' +
+      '        OR AT.FECHA_DESDE_ARTTAR <= CURRENT_DATE) ' +
+      '   AND (AT.FECHA_HASTA_ARTTAR IS NULL ' +
+      '        OR AT.FECHA_HASTA_ARTTAR >= CURRENT_DATE) ' +
+      '   AND AT.CODIGO_UNICO_ARTTAR = ( ' +
+      '         SELECT AT2.CODIGO_UNICO_ARTTAR ' +
+      '           FROM fza_articulos_tarifas AT2 ' +
+      '          WHERE AT2.CODIGO_ART_ARTTAR = AT.CODIGO_ART_ARTTAR ' +
+      '            AND IFNULL(AT2.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
+      '            AND AT2.CODIGO_TAR_ARTTAR = AT.CODIGO_TAR_ARTTAR ' +
+      '            AND AT2.ESACTIVO_ARTTAR = ''S'' ' +
+      '            AND (AT2.FECHA_DESDE_ARTTAR IS NULL ' +
+      '                 OR AT2.FECHA_DESDE_ARTTAR <= CURRENT_DATE) ' +
+      '            AND (AT2.FECHA_HASTA_ARTTAR IS NULL ' +
+      '                 OR AT2.FECHA_HASTA_ARTTAR >= CURRENT_DATE) ' +
+      '          ORDER BY AT2.FECHA_DESDE_ARTTAR DESC, ' +
+      '                   AT2.CODIGO_UNICO_ARTTAR DESC ' +
+      '          LIMIT 1) ' +
       ' ORDER BY COALESCE(T.ORDEN_TAR, 999999), T.NOMBRE_TAR_TAR';
     q.ParamByName('art').AsString := FCodArt;
     q.Open;
