@@ -468,13 +468,14 @@ var
 begin
   ConstruirInspector;
   cmbGrupoUsuario.Properties.Items.Clear;
+  // Todo usuario gestiona sus propios parametros (oUser) y los de su
+  // grupo (oGroup), y puede consultar los de 'Todos' (oAll) en modo
+  // solo lectura (lo aplica cmbGrupoUsuarioPropertiesChange).
   cmbGrupoUsuario.Properties.Items.Add(oUser);
   cmbGrupoUsuario.Properties.Items.Add(oGroup);
   cmbGrupoUsuario.Properties.Items.Add(oAll);
-  // El selector solo lo ven los administradores (oRootGroup = 'S'); para
-  // ellos se llena con todos los usuarios y grupos del sistema. Un usuario
-  // normal no lo ve y solo gestiona sus propios parametros.
-  cmbGrupoUsuario.Visible := (oRootGroup = 'S');
+  // Solo los administradores ven ademas la lista completa de usuarios y
+  // grupos del sistema (y pueden editarla).
   if oRootGroup = 'S' then
   begin
     qry := TUniQuery.Create(nil);
@@ -497,6 +498,7 @@ begin
       FreeAndNil(qry);
     end;
   end;
+  cmbGrupoUsuario.Visible := True;
   cmbGrupoUsuario.ItemIndex := 0;
   btnChangeId.Visible := False;
   RestaurarLayout;
@@ -546,6 +548,7 @@ end;
 procedure TfrmMtoCajaParam.cmbGrupoUsuarioPropertiesChange(Sender: TObject);
 var
   sUsuario, sGrupo: string;
+  bSoloLectura: Boolean;
 begin
   if cmbGrupoUsuario.ItemIndex >= 0 then
   begin
@@ -555,13 +558,22 @@ begin
       2: begin sUsuario := '';     sGrupo := oAll;    end;
     else
       begin
-        // Sujeto anyadido por el boton Cambiar usuario (cualquier usuario
-        // o grupo): se carga por su nombre tal cual.
+        // Sujeto del desplegable completo (solo visible a administradores):
+        // se carga por su nombre tal cual.
         sUsuario := cmbGrupoUsuario.Text;
         sGrupo   := '';
       end;
     end;
     CargarParametros(JvInspector1, sUsuario, sGrupo);
+    // Un usuario normal edita lo suyo y lo de su grupo; los parametros de
+    // 'Todos' (y cualquier otro sujeto) solo los ve en modo lectura. Los
+    // administradores editan todo.
+    bSoloLectura := (oRootGroup <> 'S') and
+                    (not SameText(cmbGrupoUsuario.Text, oUser)) and
+                    (not SameText(cmbGrupoUsuario.Text, oGroup));
+    JvInspector1.ReadOnly := bSoloLectura;
+    btnGuardar.Enabled    := not bSoloLectura;
+    actGuardar.Enabled    := not bSoloLectura;
   end;
 end;
 
