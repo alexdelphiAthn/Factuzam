@@ -57,6 +57,7 @@ type
     btnSetPass: TcxButton;
     cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinESGRUPOADMINISTRADOR_GRUPO: TcxGridDBColumn;
+    cxGrdDBTabPrinDIMINUTIVO_USUARIO: TcxGridDBColumn;
     procedure btnSetPassClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
   private
