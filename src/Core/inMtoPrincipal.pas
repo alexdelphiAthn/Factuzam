@@ -18,7 +18,8 @@ unit inMtoPrincipal;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  Winapi.Windows, Winapi.Messages, Winapi.ShellAPI, System.SysUtils,
+  System.Variants,
   System.Classes, Vcl.Graphics, System.Generics.Collections, Vcl.ActnList,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, SynEditHighlighter,
   SynHighlighterSQL,
@@ -214,6 +215,7 @@ type
     FEnOperacionLarga: Boolean;
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
+    FReiniciando: Boolean;
     procedure AppException(Sender: TObject; E: Exception);
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
     procedure MostrarDetalleExcepcion(const ATexto: string);
@@ -278,7 +280,6 @@ var
 implementation
 
 uses inLibUser,
-  inMtoLogon,
   inLibWin,
   inLibShowMto,
   inLibtb,
@@ -1155,7 +1156,10 @@ procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
   inherited;
-  if (pcPrincipal.PageCount = 0) then
+  // Cierre por reinicio de sesion ('Invocar login'): no preguntar.
+  if (FReiniciando) then
+    CanClose := True
+  else if (pcPrincipal.PageCount = 0) then
   begin
     if MessageDlg('¿Quiere salir de la aplicación Fzam?',
                   mtConfirmation, [mbYes, mbNo], 0) = mrNo then
@@ -1610,18 +1614,18 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuInvocarLoginClick(Sender: TObject);
-var
-  frm: TfrmLogon;
 begin
-  // Relanza la pantalla de login (inMtoLogon) con Fzam ya abierto, para
-  // reidentificarse sin cerrar la aplicacion. Usa su propia conexion de
-  // validacion (ucConexion), no la conexion global de la sesion.
-  frm := TfrmLogon.Create(Application);
-  try
-    frm.ShowModal;
-  finally
-    frm.Free;
-  end;
+  // Cerrar sesion: relanza Fzam con el conmutador /relogin (que ignora el
+  // auto-login y la contrasena recordada para forzar la reidentificacion)
+  // y cierra esta instancia.
+  FReiniciando := True;
+  ShellExecute(0,
+               'open',
+               PChar(Application.ExeName),
+               PChar('/relogin'),
+               nil,
+               SW_SHOWNORMAL);
+  Close;
 end;
 
 procedure TfrmMtoPrincipal.mnuPaisesClick(Sender: TObject);
