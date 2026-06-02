@@ -91,6 +91,11 @@ begin
   fld := unqryTablaG.FindField('RAZON_SOCIAL_EMP');
   if (fld <> nil) then
     fld.Required := False;
+  // Usuario nuevo activo por defecto: caja y traspasos solo listan
+  // empleados con ESACTIVO_USU = 'S'.
+  fld := unqryTablaG.FindField('ESACTIVO_USU');
+  if (fld <> nil) then
+    fld.AsString := 'S';
 end;
 
 procedure TdmUsuarios.unqryTablaGBeforePost(DataSet: TDataSet);

@@ -58,8 +58,14 @@ type
     cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinESGRUPOADMINISTRADOR_GRUPO: TcxGridDBColumn;
     cxGrdDBTabPrinDIMINUTIVO_USUARIO: TcxGridDBColumn;
+    cxGrdDBTabPrinESACTIVO_USUARIO: TcxGridDBColumn;
+    cxGrdDBTabPrinCODEMPLEADO_USUARIO: TcxGridDBColumn;
+    cxGrdDBTabPrinALMACENDEF_USUARIO: TcxGridDBColumn;
+    cxGrdDBTabPrinCAJADEF_USUARIO: TcxGridDBColumn;
+    btnSetCaja: TcxButton;
     procedure btnSetPassClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
+    procedure btnSetCajaClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -74,7 +80,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoModalGenPass, inMtoPrincipal;
+  inLibWin, inMtoModalGenPass, inMtoPrincipal, inMtoModalCajDef;
 
 {$R *.dfm}
 
@@ -101,6 +107,39 @@ begin
      dmmUSuarios.unqryTablaG.Post;
   end;
   FreeAndNil(formulario);
+end;
+
+procedure TfrmMtoUsuarios.btnSetCajaClick(Sender: TObject);
+var
+  frm: TfrmMtoModalCajDef;
+begin
+  inherited;
+  // Selector Empresa/Almacen/Caja por defecto del usuario (el mismo dialogo
+  // que F5 en el menu de caja). Rellena los tres campos de forma coherente.
+  frm := TfrmMtoModalCajDef.Create(Application);
+  try
+    frm.qrySeleccion.Connection := dmmUsuarios.unqryTablaG.Connection;
+    frm.qrySeleccion.Open;
+    frm.sEmpresa := dmmUsuarios.unqryTablaG.FieldByName('EMPRESA_DEFECTO_USU').AsString;
+    frm.sAlmacen := dmmUsuarios.unqryTablaG.FieldByName('ALMACEN_DEFECTO_USU').AsString;
+    frm.sCaja    := dmmUsuarios.unqryTablaG.FieldByName('CAJA_DEFECTO_USU').AsString;
+    frm.ShowModal;
+    if (frm.sFicha = 'S') then
+    begin
+      if ((dsTablaG.DataSet.State <> dsInsert) and
+          (dsTablaG.DataSet.State <> dsEdit)) then
+        dsTablaG.DataSet.Edit;
+      dmmUsuarios.unqryTablaG.FieldByName('EMPRESA_DEFECTO_USU').AsString :=
+                            frm.qrySeleccion.FieldByName('Empresa').AsString;
+      dmmUsuarios.unqryTablaG.FieldByName('ALMACEN_DEFECTO_USU').AsString :=
+                            frm.qrySeleccion.FieldByName('Almacen').AsString;
+      dmmUsuarios.unqryTablaG.FieldByName('CAJA_DEFECTO_USU').AsString :=
+                            frm.qrySeleccion.FieldByName('Caja').AsString;
+      dmmUsuarios.unqryTablaG.Post;
+    end;
+  finally
+    FreeAndNil(frm);
+  end;
 end;
 
 procedure TfrmMtoUsuarios.CrearTablaPrincipal;
