@@ -101,7 +101,7 @@ begin
   bCargado := False;
   FimgLogo := TImage.Create(Self);
   FimgLogo.Parent := Panel1;
-  FimgLogo.SetBounds(Panel2.Left, Panel2.Top,
+  FimgLogo.SetBounds(Panel2.Left+10, Panel2.Top,
                      Panel2.Width, Panel2.Height);
   FimgLogo.Proportional := True;
   FimgLogo.Stretch      := True;

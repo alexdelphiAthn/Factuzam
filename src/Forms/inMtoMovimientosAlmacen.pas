@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoMovimientosAlmacen                                       }
 {    Tipo:       Formulario (Mto)                                              }
@@ -29,7 +29,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataMovimientosAlmacen,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoMovimientosAlmacen = class(TfrmMtoGen)
@@ -63,6 +63,11 @@ type
     cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
+    ActionList1: TActionList;
+    Action1: TAction;
+    btnIraArticulo: TcxButton;
+    procedure Action1Execute(Sender: TObject);
+    procedure btnIraArticuloClick(Sender: TObject);
   private
     dmmMovimientosAlmacen: TdmMovimientosAlmacen;
   public
@@ -76,13 +81,42 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inLibShowMto;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoMovimientosAlmacen }
+
+procedure TfrmMtoMovimientosAlmacen.Action1Execute(Sender: TObject);
+begin
+  inherited;
+    btnIraArticuloClick(Sender)
+end;
+
+procedure TfrmMtoMovimientosAlmacen.btnIraArticuloClick(Sender: TObject);
+var
+  sCodArt: string;
+  vw: TcxCustomGridView;
+  dbView: TcxGridDBTableView;
+  colArticulo: TcxGridDBColumn;
+begin
+  inherited;
+  sCodArt := '';
+  vw := cxGrdPrincipal.FocusedView;
+  if (vw <> nil) and (vw is TcxGridDBTableView) then
+  begin
+    dbView := TcxGridDBTableView(vw);
+    colArticulo := dbView.GetColumnByFieldName('CODIGO_ART_MOV');
+    if Assigned(colArticulo) and
+       Assigned(dbView.Controller.FocusedRecord) then
+      sCodArt := VarToStr(
+        dbView.Controller.FocusedRecord.Values[colArticulo.Index]);
+  end;
+  if sCodArt <> '' then
+    ShowMto(Self.Owner, 'Articulos', sCodArt);
+end;
 
 procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;
 begin
