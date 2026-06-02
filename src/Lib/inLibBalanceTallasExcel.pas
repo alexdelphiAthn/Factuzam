@@ -30,7 +30,7 @@ uses
   System.Generics.Collections, Data.DB, cxGraphics, Vcl.Graphics,
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetContainers,
   dxSpreadSheetGraphics, dxCoreGraphics, dxSpreadSheetStyles, dxHashUtils,
-  dxGDIPlusClasses, inLibDevExcel, inLibFotos;
+  dxGDIPlusClasses, dxSmartImage, inLibDevExcel, inLibFotos;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
                                      const QDatos: TDataSet);
@@ -60,6 +60,8 @@ const
   COL_IMPORTE = COL_CDAD + 2;       // 18
   COL_MAX     = COL_IMPORTE;        // 18
   COL_FOTO    = COL_IMPORTE + 2;    // 20: zona libre a la derecha del dato
+  FOTO_W      = 110;                // ancho fijo de la columna de la foto (px)
+  FOTO_H_MAX  = 170;                // alto máximo de la fila de la foto (px)
   FMT_NUM     = '#,##0';
   FMT_EUR     = '#,##0.00';
   // Formatos que ocultan el cero (sección de cero vacía), para que las
@@ -90,6 +92,8 @@ var
   sFamAct, sArtAct, sFam, sArt: string;
   dictBandas : TObjectDictionary<string, TBandaTot>;
   ordenBandas: TStringList;
+  dictFotos  : TDictionary<string, TFotoInfo>;   // foto por artículo (1 query)
+  slCod      : TStringList;
 
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
                    AOcultarCero: Boolean);
@@ -129,10 +133,13 @@ var
     sRuta: string;
     img  : TdxSmartImage;
     Pic  : TdxSpreadSheetPictureContainer;
+    iAlto: Integer;
   begin
-    if oFotos <> nil then
+    // La foto ya viene pre-resuelta en dictFotos (una sola consulta para todo
+    // el informe). RutaFoto solo construye la ruta del fichero (sin consulta).
+    if (dictFotos <> nil) and dictFotos.TryGetValue(ACodArt, info) and
+       info.Encontrada then
     begin
-      info  := oFotos.Resolver(ACodArt, '');
       sRuta := oFotos.RutaFoto(info, frPx300);
       if (sRuta <> '') and FileExists(sRuta) then
       begin
@@ -142,9 +149,23 @@ var
           Pic := Sheet.Containers.Add(TdxSpreadSheetPictureContainer)
                    as TdxSpreadSheetPictureContainer;
           Pic.Picture.Image := img;   // el contenedor copia la imagen
+          // Anclada a UNA celda (la del artículo en COL_FOTO). Para no
+          // deformar: la columna de la foto tiene ancho fijo (FOTO_W) y la
+          // altura de la fila del artículo se ajusta al aspecto de la imagen,
+          // de modo que la celda tiene la misma proporción que la foto.
           Pic.AnchorType := catTwoCell;
           Pic.AnchorPoint1.Cell := Sheet.CreateCell(AFilaArt, COL_FOTO);
-          Pic.AnchorPoint2.Cell := Sheet.CreateCell(AFilaArt + 6, COL_FOTO + 2);
+          Pic.AnchorPoint2.Cell := Sheet.CreateCell(AFilaArt + 1, COL_FOTO + 1);
+          if (img.Width > 0) and (img.Height > 0) then
+          begin
+            Sheet.Columns[COL_FOTO].Size := FOTO_W;
+            iAlto := Round(FOTO_W * img.Height / img.Width);
+            if iAlto > FOTO_H_MAX then
+              iAlto := FOTO_H_MAX;
+            if iAlto < 1 then
+              iAlto := 1;
+            Sheet.Rows[AFilaArt].Size := iAlto;
+          end;
         finally
           img.Free;
         end;
@@ -226,10 +247,36 @@ begin
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   dictBandas  := TObjectDictionary<string, TBandaTot>.Create([doOwnsValues]);
   ordenBandas := TStringList.Create;
+  // Pre-carga de fotos (a nivel artículo) en UNA sola consulta, evitando un
+  // SELECT por artículo dentro del bucle (N+1). El bucle solo construirá la
+  // ruta del fichero, que no consulta a BBDD.
+  dictFotos := nil;
+  if (QDatos <> nil) and QDatos.Active and (not QDatos.IsEmpty) then
+  begin
+    slCod := TStringList.Create;
+    try
+      slCod.Sorted := True;
+      slCod.Duplicates := dupIgnore;
+      QDatos.DisableControls;
+      try
+        QDatos.First;
+        while not QDatos.Eof do
+        begin
+          slCod.Add(QDatos.FieldByName('CODIGO_ART_ART').AsString);
+          QDatos.Next;
+        end;
+      finally
+        QDatos.EnableControls;
+      end;
+      dictFotos := oFotos.ResolverArticulosLote(slCod.ToStringArray);
+    finally
+      FreeAndNil(slCod);
+    end;
+  end;
   Sheet.BeginUpdate;
   try
     iRow := 1;
-    W(Sheet, iRow, 0, 'BALANCE DE ALMAC'#201'N POR TALLAS', True);
+    W(Sheet, iRow, 0, 'BALANCE DE ALMACEN POR TALLAS', True);
     Sheet.Cells[iRow, 0].Style.Font.Size := 14;
     Inc(iRow, 2);
     sFamAct := #1;
@@ -261,7 +308,7 @@ begin
           // Salto de artículo: cabecera + foto + cabecera de tallas.
           if sArt <> sArtAct then
           begin
-            W(Sheet, iRow, 0, 'ART'#205'CULO  ' + sArt + '  ' +
+            W(Sheet, iRow, 0, 'ARTICULO  ' + sArt + '  ' +
               QDatos.FieldByName('DESCRIPCION_ART').AsString, True);
             if QDatos.FindField('REF_PRV') <> nil then
               W(Sheet, iRow, COL_IMPORTE,
@@ -305,6 +352,7 @@ begin
     Sheet.EndUpdate;
     FreeAndNil(ordenBandas);
     FreeAndNil(dictBandas);
+    FreeAndNil(dictFotos);
   end;
 end;
 

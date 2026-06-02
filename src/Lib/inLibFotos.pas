@@ -50,6 +50,7 @@ interface
 uses
   Winapi.Windows,
   System.SysUtils, System.Classes, System.StrUtils, System.IOUtils,
+  System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, Vcl.Imaging.PngImage,
   Vcl.Imaging.Jpeg, Vcl.Imaging.GIFImg,
   Data.DB, DBAccess, Uni,
@@ -131,6 +132,14 @@ type
     /// Resuelve la foto aplicable a (articulo, sku) con fallback al padre.
     /// Si ACodSku = '' busca solo a nivel articulo.
     function Resolver(const ACodArt, ACodSku: string): TFotoInfo;
+
+    /// Resuelve en UNA sola consulta la foto a nivel articulo de una lista
+    /// de articulos (evita el N+1 de llamar a Resolver por cada uno). El
+    /// diccionario resultante lo libera el llamador. Aplica el mismo criterio
+    /// que Resolver(art, '') sin SKU: foto de articulo (CODIGO_UNIDAD_FOT='')
+    /// y, si no la hay, la unica foto del articulo.
+    function ResolverArticulosLote(
+      const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
 
     /// Importa una foto desde un fichero de origen, generando las tres
     /// resoluciones bajo appDirFotos. Inserta/actualiza la fila en
@@ -500,6 +509,115 @@ begin
     end;
   finally
     FreeAndNil(q);
+  end;
+end;
+
+function TFotosArticulos.ResolverArticulosLote(
+  const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
+var
+  q: TUniQuery;
+  i, cnt: Integer;
+  sIn, sArtCur, sArt, sUni: string;
+  artFound: Boolean;
+  artNom, artExt, uniClave, uniNom, uniExt: string;
+  dict: TDictionary<string, TFotoInfo>;
+
+  // Cierra el artículo en curso: decide su foto (artículo o única) y la
+  // mete en el diccionario. Usa los acumuladores del bucle.
+  procedure Finalizar(const APrevArt: string);
+  var
+    info: TFotoInfo;
+  begin
+    if APrevArt <> '' then
+    begin
+      info.Clear;
+      info.CodigoArt := APrevArt;
+      if artFound then
+      begin
+        info.Encontrada      := True;
+        info.Origen          := foArticulo;
+        info.ClaveResuelta   := '';
+        info.NombreBase      := artNom;
+        info.ExtensionOrigen := artExt;
+      end
+      else if cnt = 1 then
+      begin
+        info.Encontrada    := True;
+        if uniClave = '' then
+          info.Origen := foArticulo
+        else
+          info.Origen := foSkuPrefijo;
+        info.ClaveResuelta   := uniClave;
+        info.NombreBase      := uniNom;
+        info.ExtensionOrigen := uniExt;
+      end;
+      if info.Encontrada then
+        dict.AddOrSetValue(APrevArt, info);
+    end;
+  end;
+
+begin
+  dict := TDictionary<string, TFotoInfo>.Create;
+  Result := dict;
+  if Length(ACodigos) > 0 then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := oConn;
+      sIn := '';
+      for i := 0 to High(ACodigos) do
+      begin
+        if sIn <> '' then
+          sIn := sIn + ', ';
+        sIn := sIn + ':A' + IntToStr(i);
+      end;
+      q.SQL.Text :=
+        ' SELECT ' + fcodartfot + ', ' + fcodunidadfot + ', ' +
+                     fnomfot + ', ' + fextfot +
+        '   FROM fza_articulos_fotos ' +
+        '  WHERE ' + fcodartfot + ' IN (' + sIn + ') ' +
+        '  ORDER BY ' + fcodartfot;
+      for i := 0 to High(ACodigos) do
+        q.ParamByName('A' + IntToStr(i)).AsString := ACodigos[i];
+      q.Open;
+      sArtCur  := '';
+      cnt      := 0;
+      artFound := False;
+      uniClave := '';
+      uniNom   := '';
+      uniExt   := '';
+      artNom   := '';
+      artExt   := '';
+      while not q.Eof do
+      begin
+        sArt := q.FieldByName(fcodartfot).AsString;
+        sUni := q.FieldByName(fcodunidadfot).AsString;
+        if sArt <> sArtCur then
+        begin
+          Finalizar(sArtCur);
+          sArtCur  := sArt;
+          cnt      := 0;
+          artFound := False;
+        end;
+        Inc(cnt);
+        if cnt = 1 then
+        begin
+          uniClave := sUni;
+          uniNom   := q.FieldByName(fnomfot).AsString;
+          uniExt   := q.FieldByName(fextfot).AsString;
+        end;
+        if sUni = '' then
+        begin
+          artFound := True;
+          artNom   := q.FieldByName(fnomfot).AsString;
+          artExt   := q.FieldByName(fextfot).AsString;
+        end;
+        q.Next;
+      end;
+      Finalizar(sArtCur);
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 
