@@ -81,6 +81,7 @@ uses
   inMtoModalDocsCreados in 'src\Modals\inMtoModalDocsCreados.pas' {frmModalDocsCreados},
   inMtoModalCliEti in 'src\Modals\inMtoModalCliEti.pas' {frmPrintCliEti},
   inMtoModalEtiqArt in 'src\Modals\inMtoModalEtiqArt.pas' {frmPrintEtiqArt},
+  inMtoModalImpBalanceTallas in 'src\Modals\inMtoModalImpBalanceTallas.pas' {frmPrintBalanceTallas},
   inMtoSplash in 'src\Core\inMtoSplash.pas' {frmSplash},
   UniDataConn in 'src\DataModules\UniDataConn.pas' {dmConn: TDataModule},
   UniDataGen in 'src\DataModules\UniDataGen.pas' {dmBase: TDataModule},

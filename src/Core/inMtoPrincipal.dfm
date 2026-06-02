@@ -1672,6 +1672,13 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         ShortCut = 49225
         OnClick = mnuInventariosClick
       end
+      object mnuAlmacenInformes: TMenuItem
+        Caption = 'Informes'
+        object mnuBalanceAlmacenHorizontal: TMenuItem
+          Caption = 'Balance de Almac'#233'n Horizontal'
+          OnClick = mnuBalanceAlmacenHorizontalClick
+        end
+      end
     end
     object Utilidades1: TMenuItem
       Caption = 'Otros'

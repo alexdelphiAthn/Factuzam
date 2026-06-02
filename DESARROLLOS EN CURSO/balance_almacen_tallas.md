@@ -5,9 +5,13 @@ por tallas" de OdaGest+ (ver mock `balance_almacen_con_tallas_oda.pdf`),
 añadiendo la **foto** del artículo. Agrupado por familia → artículo, con
 las tallas como columnas y los colores/estados como bandas (filas).
 
-Estado: **WIP**. La capa de datos (SP idempotente) está terminada en
-`balance_almacen_tallas.sql`. Falta la plantilla FastReport y el modal
-Delphi, que se rematan en el IDE (ver §6 y §7).
+Estado: **Implementado** (pendiente de compilar/ajustar en el IDE). Están
+creados: la capa de datos (`balance_almacen_tallas.sql`), el modal
+`inMtoModalImpBalanceTallas` (`.pas`/`.dfm` con plantilla FastReport y el
+`TfrxPictureView` `foto300`), la entrada de menú **Almacén → Informes →
+"Balance de Almacén Horizontal"** y el registro en `fzam.dpr`/`fzam.dproj`.
+Falta aplicar el SQL a las BBDD y, opcionalmente, refinar la maqueta en el
+diseñador (ver §7).
 
 ---
 
@@ -293,17 +297,26 @@ end.
 
 ---
 
-## 7. Pendiente (rematar en el IDE)
+## 7. Pendiente
+
+Ya hecho: SP, modal `inMtoModalImpBalanceTallas` (`.pas`/`.dfm` con
+plantilla y `foto300`), entrada de menú Almacén → Informes, registro en
+`fzam.dpr`/`fzam.dproj`, pump de versión en `inLibGlobalVar.pas` y el
+fallback en `inLibFotos.ObtenerDataSetDeBandaPadre` para que la foto se
+resuelva en cabeceras de grupo (no solo en bandas de datos).
+
+Queda:
 
 1. Aplicar `balance_almacen_tallas.sql` a las BBDD existentes (crea el SP;
    no toca esquema). Idempotente.
-2. Crear `src/Modals/inMtoModalImpBalanceTallas.pas` + `.dfm` con el
-   esqueleto de §6 y diseñar la plantilla base (§5) con el
-   `TfrxPictureView` `foto300`.
-3. Registrarlo en `fzam.dpr` / `fzam.dproj` y colgar el lanzador del menú
-   (Informes → "Balance de almacén por tallas") con su permiso.
-4. Pumpear versión en `inLibGlobalVar.pas` al integrar el modal (regla 6
-   de `CLAUDE.md`).
+2. Compilar `fzam.dproj` en el IDE y verificar el modal y la plantilla.
+3. (Opcional) Refinar la maqueta en el diseñador FastReport: subtotales
+   por banda (TOT.ART), TOT.NIV. por familia, swatch de color con
+   `COLOR_HEX` y ajuste fino de anchos de columna.
+4. (Opcional) Gatear por permisos: la entrada de menú se lanza directa
+   (siempre visible). Si se quiere ocultar por permiso, registrar el ítem
+   en el sistema de ventanas (`oFzaWinf`) o añadir un `TienePermiso` en
+   `mnuBalanceAlmacenHorizontalClick`.
 5. Verificar que los SPs de reversión decrementan los acumulados (ya
    anotado como pendiente en `stocks_acumulados.md`) para que el modo
    acumulados cuadre con el de fechas.
@@ -315,4 +328,10 @@ end.
 - `balance_almacen_tallas.sql` — SP `PRC_GET_BALANCE_ALMACEN_TALLAS`
   (idempotente, no toca esquema).
 - `balance_almacen_tallas.md` — este documento.
+- `src/Modals/inMtoModalImpBalanceTallas.pas` / `.dfm` — modal de
+  impresión (FastReport) con la plantilla base y `foto300`.
+- `src/Core/inMtoPrincipal.pas` / `.dfm` — entrada de menú Almacén →
+  Informes → "Balance de Almacén Horizontal".
+- `src/Lib/inLibFotos.pas` — fallback de foto en cabeceras de grupo.
+- `fzam.dpr` / `fzam.dproj` — registro de la unidad.
 - Mock de referencia: `balance_almacen_con_tallas_oda.pdf` (OdaGest+).
