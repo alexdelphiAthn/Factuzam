@@ -262,8 +262,13 @@ begin
   ucConexion.PoolingOptions.MaxPoolSize := 50;
   ucConexion.PoolingOptions.ConnectionLifeTime := 3 * 60;
   UniSQLMonitor1.Active := False;
-  Self.Width := 375;
-  Self.ClientHeight := 353;
+  // Tamano compacto del login (panel BBDD oculto) calculado desde las
+  // coordenadas ya escaladas de los controles, para que los botones no se
+  // recorten con escalado DPI (el .dfm no trae PixelsPerInch y el tamano
+  // fijo anterior no se reescalaba).
+  pnlBBDD.Visible := False;
+  Self.ClientWidth  := pnlButtons.Left + pnlButtons.Width + pnlButtons.Left;
+  Self.ClientHeight := pnlButtons.Top + pnlButtons.Height + pnlLogin.Top;
   {$IFDEF DEBUG}
     inliblog.Log.LogInfo('Arrancando en modo Debug');
   {$ENDIF}
@@ -397,12 +402,12 @@ begin
   if (pnlBBDD.Visible = True) then
   begin
     pnlBBDD.Visible := False;
-    ClientWidth := 375;
+    ClientWidth := pnlButtons.Left + pnlButtons.Width + pnlButtons.Left;
   end
   else
   begin
     pnlBBDD.Visible := True;
-    ClientWidth := 800;
+    ClientWidth := pnlBBDD.Left + pnlBBDD.Width + pnlButtons.Left;
   end;
 end;
 
