@@ -19,13 +19,13 @@
     Left = 0
     Top = 0
     Width = 898
-    Height = 200
+    Height = 256
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     DesignSize = (
       898
-      200)
+      256)
     object imgFoto: TImage
       Left = 740
       Top = 12
