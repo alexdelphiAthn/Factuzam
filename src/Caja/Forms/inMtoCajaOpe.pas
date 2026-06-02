@@ -247,6 +247,7 @@ type
     procedure WMAbrirPopupAv(var Msg: TMessage);
                                        message WM_ABRIR_POPUP_AV;
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
+    procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -3028,15 +3029,21 @@ end;
 // los mantenimientos via TfrmMtoGen.ResolverArtSkuActivo (CODIGO_ART_FACLIN
 // y CODIGO_UNIDAD_FACLIN estan entre sus alias). Si la linea aun no tiene
 // articulo resuelto, abre la consulta vacia con su buscador.
+procedure TfrmMtoOpeCaja.ResolverArtSkuStock(out ACodArt, ACodSku: string);
+begin
+  // Articulo/sku de la linea de caja en foco (vacio si aun no hay).
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(DatosCaja) and Assigned(DatosCaja.cdsLineas) then
+    inLibFotos.LeerArtSkuDeDataSet(DatosCaja.cdsLineas, ACodArt, ACodSku);
+end;
+
 procedure TfrmMtoOpeCaja.actConsultaStockExecute(Sender: TObject);
 var
   sArt: string;
   sSku: string;
 begin
-  sArt := '';
-  sSku := '';
-  if Assigned(DatosCaja) and Assigned(DatosCaja.cdsLineas) then
-    inLibFotos.LeerArtSkuDeDataSet(DatosCaja.cdsLineas, sArt, sSku);
+  ResolverArtSkuStock(sArt, sSku);
   inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
 end;
 

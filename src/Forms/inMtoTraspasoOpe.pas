@@ -1220,7 +1220,9 @@ begin
         AbrirModalSolicitudes
       else
         AplicarModo(mtAtender);
-    VK_F9:
+    // F9 queda reservada en caja para abrir el cajon; cerrar la solicitud
+    // cargada pasa de F9 a F10.
+    VK_F10:
       CerrarSolicitudCargada;
     VK_F11:
       btnF11Click(nil);

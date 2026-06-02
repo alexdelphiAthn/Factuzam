@@ -55,6 +55,10 @@ type
     procedure DoClose(var Action: TCloseAction); override;
   public
     { Public declarations }
+    // Articulo/sku del registro/linea en foco, para la consulta de stock
+    // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
+    // formularios con articulo activo lo sobreescriben.
+    procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); virtual;
   end;
 
 var
@@ -86,6 +90,13 @@ begin
   if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, Self.ClassName, 'Close', Self.Name);
   inherited;
+end;
+
+procedure TfrmBase.ResolverArtSkuStock(out ACodArt, ACodSku: string);
+begin
+  // Por defecto un formulario no aporta articulo en foco para Ctrl+U.
+  ACodArt := '';
+  ACodSku := '';
 end;
 
 {

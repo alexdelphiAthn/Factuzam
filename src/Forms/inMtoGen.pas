@@ -269,6 +269,9 @@ type
     // `inLibFotos.LeerArtSkuDeDataSet` pasando el DataSet del grid de
     // detalle.
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); virtual;
+    // Hook de la consulta de stock global (Ctrl+U): en un Mto el articulo en
+    // foco es el del grid, que ya resuelve ResolverArtSkuActivo.
+    procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
     // Lista de DataSources que la pantalla flotante de fotos debe
     // engancharse para refrescar al cambiar de registro activo. Default
     // = [dsTablaG]. Los Mtos con sub-grids (lineas, SKUs, stock,
@@ -2144,6 +2147,11 @@ begin
   ACodSku := '';
   if (dsTablaG <> nil) and (dsTablaG.DataSet <> nil) then
     inLibFotos.LeerArtSkuDeDataSet(dsTablaG.DataSet, ACodArt, ACodSku);
+end;
+
+procedure TfrmMtoGen.ResolverArtSkuStock(out ACodArt, ACodSku: string);
+begin
+  ResolverArtSkuActivo(ACodArt, ACodSku);
 end;
 
 function TfrmMtoGen.DataSourcesParaFoto: TArray<TDataSource>;
