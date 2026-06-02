@@ -37,10 +37,10 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Divider = 300
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -12
+      Font.Height = -14
       Font.Name = 'Lucida Sans'
       Font.Style = []
-      ItemHeight = 20
+      ItemHeight = 22
       Painter = JvInspectorDotNETPainter1
       TabStop = True
       TabOrder = 0
@@ -134,17 +134,17 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   object JvInspectorDotNETPainter1: TJvInspectorDotNETPainter
     CategoryFont.Charset = DEFAULT_CHARSET
     CategoryFont.Color = clBtnText
-    CategoryFont.Height = -13
+    CategoryFont.Height = -15
     CategoryFont.Name = 'Lucida Sans'
     CategoryFont.Style = []
     NameFont.Charset = DEFAULT_CHARSET
     NameFont.Color = clWindowText
-    NameFont.Height = -13
+    NameFont.Height = -15
     NameFont.Name = 'Lucida Sans'
     NameFont.Style = []
     ValueFont.Charset = DEFAULT_CHARSET
     ValueFont.Color = clWindowText
-    ValueFont.Height = -13
+    ValueFont.Height = -15
     ValueFont.Name = 'Lucida Sans'
     ValueFont.Style = []
     DrawNameEndEllipsis = False
