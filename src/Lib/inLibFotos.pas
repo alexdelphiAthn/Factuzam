@@ -1128,6 +1128,8 @@ function ObtenerDataSetDeBandaPadre(AObj: TfrxComponent): TDataSet;
 var
   oParent: TfrxComponent;
   oBand  : TfrxDataBand;
+  oReport: TfrxReport;
+  i      : Integer;
 begin
   Result := nil;
   oParent := AObj.Parent;
@@ -1143,6 +1145,18 @@ begin
     end;
     oParent := oParent.Parent;
   end;
+  // Fallback para Picture en bandas sin DataSet (p.ej. cabecera de grupo):
+  // al pintar la cabecera, el registro activo del primer TfrxDBDataset del
+  // report es la primera fila del grupo (el articulo cuya foto queremos).
+  // Solo se ejecuta si la subida por bandas no encontro DataSet, asi que no
+  // altera el comportamiento de los informes que llevan la foto en una
+  // banda de datos (etiquetas, tickets).
+  oReport := AObj.Report;
+  if oReport <> nil then
+    for i := 0 to oReport.Datasets.Count - 1 do
+      if (oReport.Datasets[i].DataSet is TfrxDBDataset) and
+         Assigned(TfrxDBDataset(oReport.Datasets[i].DataSet).DataSet) then
+        Exit(TfrxDBDataset(oReport.Datasets[i].DataSet).DataSet);
 end;
 
 procedure SustituirFotoEnPicture(APic: TfrxPictureView;
