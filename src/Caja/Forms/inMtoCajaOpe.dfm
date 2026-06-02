@@ -885,5 +885,10 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       ShortCut = 16449
       OnExecute = actAbrirArticulosExecute
     end
+    object actConsultaStock: TAction
+      Caption = 'Consulta stock'
+      ShortCut = 16469
+      OnExecute = actConsultaStockExecute
+    end
   end
 end
