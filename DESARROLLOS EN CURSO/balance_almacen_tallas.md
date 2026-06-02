@@ -99,7 +99,7 @@ CALL PRC_GET_BALANCE_ALMACEN_TALLAS(
      p_MODO,        -- 'F' entre fechas | 'A' acumulados
      p_DESDE,       -- DATE inclusive (solo 'F')
      p_HASTA,       -- DATE inclusive (solo 'F')
-     p_ALMACENES,   -- CSV "01,50" o '' = todos los activos estándar
+     p_ALMACENES,   -- CSV "01,50" o '' = todos los almacenes activos
      p_FAMILIAS,    -- CSV; '' = todas. Una familia padre incluye sus hijas
      p_PROVEEDORES, -- CSV de códigos de proveedor; '' = todos
      p_TEMPORADAS,  -- CSV de valores de temporada; '' = todas
