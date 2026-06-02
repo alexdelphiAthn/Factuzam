@@ -61,6 +61,8 @@ type
     chkAuto: TcxCheckBox;
     UniSQLMonitor1: TUniSQLMonitor;
     pnlBBDD: TPanel;
+    pnlLogin: TPanel;
+    pnlButtons: TPanel;
     lblBBDDConfig: TcxLabel;
     lblHostBBDD: TcxLabel;
     lblPortHost: TcxLabel;
