@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.5.0                                                         }
+{ Version:       0.5.1                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -28,6 +28,9 @@
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
 {          checklist opuesto.                                                  }
 {                                                                              }
+{    v0.5.1: el combo "Todos los estados" ya no sale en blanco; en modo       }
+{    desglosado se ocultan los totales Entradas/Salidas (solo subtipos) y      }
+{    el coste de proveedor se oculta sin permiso 'caja.verCoste'.              }
 {    v0.5: estado "Todo a la vez" en el combo + colores por estado. Cada      }
 {    estado pinta las celdas de datos con un color distintivo (azul para      }
 {    existencias, rojo para ventas, naranja para pte. recibir, etc.) y el     }
@@ -153,6 +156,7 @@ type
     FStyEstado  : array[TEstadoStock] of TcxStyle; // un estilo por estado
     FEstadosCombo : TList<TEstadoStock>; // mapeo combo.ItemIndex -> estado
     FModoDesglosado : Boolean;
+    FVerCoste       : Boolean;   // permiso para ver el coste (precio compra)
     FrbSimplificado : TcxRadioButton;
     FrbDesglosado   : TcxRadioButton;
     procedure   PoblarComboEstados;
@@ -196,7 +200,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar, inLibAppParam, inLibFotos, inLibAtributosPaleta,
-  inLibGenBusq, inLibUser, UniDataPerfiles;
+  inLibGenBusq, inLibUser, UniDataPerfiles, inLibPermisos;
 
 {$R *.dfm}
 
@@ -244,6 +248,7 @@ begin
     esPdteRecibir:        Result := 'Pte. recibir';
     esPdteServir:         Result := 'Pte. servir';
     esPrestadas:          Result := 'Prestadas';
+    esTodoAlaVez:         Result := 'Todos los estados';
     esEntradaCompra:      Result := 'Ent. compra';
     esEntradaDeposito:    Result := 'Ent. depósito';
     esSalidaDeposito:     Result := 'Sal. depósito';
@@ -281,7 +286,11 @@ procedure TfrmStockConsulta.FormCreate(Sender: TObject);
 begin
   Self.Position := poDesigned;
   Self.FormStyle := fsStayOnTop;
-
+  // Coste (ultimo precio de compra del proveedor) solo para quien tenga
+  // permiso: TienePermiso devuelve True siempre a admin; al resto, oculto
+  // por defecto salvo permiso explicito 'caja.verCoste'.
+  FVerCoste := Assigned(oPermisos) and
+               oPermisos.TienePermiso('caja.verCoste', False);
   FQry := TUniQuery.Create(Self);
   FQry.Connection := inLibGlobalVar.oConn;
   FDs  := TDataSource.Create(Self);
@@ -335,10 +344,15 @@ begin
   try
     cbbEstado.Properties.Items.Clear;
     FEstadosCombo.Clear;
-    // Siempre presentes (modo simplificado)
     AddEstado(esExistencias);
-    AddEstado(esEntradas);
-    AddEstado(esSalidas);
+    // Los totales agregados de entradas/salidas solo en modo simplificado;
+    // en desglosado se sustituyen por sus subtipos para no mezclar el
+    // agregado con su propio desglose.
+    if not FModoDesglosado then
+    begin
+      AddEstado(esEntradas);
+      AddEstado(esSalidas);
+    end;
     AddEstado(esPdteServir);
     AddEstado(esPdteRecibir);
     AddEstado(esTodoAlaVez);
@@ -672,6 +686,7 @@ procedure TfrmStockConsulta.CargarInfoCabecera;
 var
   q : TUniQuery;
   sb: TStringList;
+  sLinea: string;
 begin
   lblInfo.Caption := '';
   if Trim(FCodArt) = '' then Exit;
@@ -741,7 +756,7 @@ begin
       sb.Add('');
     while not q.Eof do
     begin
-      sb.Add(Format('%s%s%s: %s',
+      sLinea := Format('%s%s%s',
         [IfThen(q.FieldByName('ESPROVEEDORPRINCIPAL_AP').AsString = 'S',
                 'Proveedor ppal. - ', 'Proveedor - '),
          IfThen(Trim(q.FieldByName('RAZON_SOCIAL_PRV').AsString) <> '',
@@ -749,10 +764,13 @@ begin
                 q.FieldByName('CODIGO_PRV_AP').AsString),
          IfThen(Trim(q.FieldByName('REF_PROVEEDOR_AP').AsString) <> '',
                 ' (ref ' + q.FieldByName('REF_PROVEEDOR_AP').AsString + ')',
-                ''),
-         FormatFloat('#,##0.00',
-                     q.FieldByName('PRECIO_ULT_COMPRA_AP').AsFloat) + ' '#8364
-        ]));
+                '')]);
+      // El coste (ultimo precio de compra) solo si hay permiso de verlo.
+      if FVerCoste then
+        sLinea := sLinea + ': ' +
+          FormatFloat('#,##0.00',
+                      q.FieldByName('PRECIO_ULT_COMPRA_AP').AsFloat) + ' '#8364;
+      sb.Add(sLinea);
       q.Next;
     end;
 
@@ -867,18 +885,20 @@ begin
     ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
 end;
 
-// En modo "Todo a la vez" hace UNION ALL de los 7 estados con datos
-// reales (existencias, entradas, salidas, ventas, regularizadas, pte.
-// recibir, pte. servir). esPrestadas queda fuera por ser stub.
+// En modo "Todo a la vez" hace UNION ALL de los estados con datos.
+// Simplificado: existencias, entradas (total), salidas (total), pte. servir
+// y pte. recibir. Desglosado: existencias + pendientes + los subtipos de
+// entrada/salida, sin los totales esEntradas/esSalidas (serian redundantes
+// con su propio desglose). esPrestadas es stub y siempre devuelve 0.
 function TfrmStockConsulta.EstadoBaseSelect: string;
 const
   // Modo simplificado: solo totales y pendientes
   ESTADOS_TODO_SIMPLE: array[0..4] of TEstadoStock = (
     esExistencias, esEntradas, esSalidas,
     esPdteServir, esPdteRecibir);
-  // Modo desglosado: añade subtipos
-  ESTADOS_TODO_FULL: array[0..14] of TEstadoStock = (
-    esExistencias, esEntradas, esSalidas,
+  // Modo desglosado: subtipos en vez de los totales esEntradas/esSalidas
+  ESTADOS_TODO_FULL: array[0..12] of TEstadoStock = (
+    esExistencias,
     esPdteServir, esPdteRecibir,
     esEntradaCompra,
     esEntradaTraspaso, esSalidaTraspaso,
