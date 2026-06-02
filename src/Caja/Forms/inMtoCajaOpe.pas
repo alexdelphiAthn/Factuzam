@@ -265,6 +265,11 @@ type
     FInicializandoCombo: Boolean;
     FUltimoArticuloPadre: string;
     FActualizandoDepositos: Boolean;
+    // Motivo por el que RellenarDatosArticuloEnDataset rechazó el último
+    // artículo (existe y activo, pero sin SKU vendible). Lo consume el
+    // validador de caja para dar un mensaje exacto en vez del genérico
+    // "no encontrado o descatalogado".
+    FMotivoRechazoArticulo: string;
   private
     FNumeroCajaActual: Integer;
     // Bitmap reusable para pintar el cuadradito del color actual en el boton
@@ -1084,7 +1089,10 @@ begin
   begin
     msRellenar := swStep.ElapsedMilliseconds;
     Error := True;
-    ErrorText := 'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
+    if FMotivoRechazoArticulo <> '' then
+      ErrorText := FMotivoRechazoArticulo
+    else
+      ErrorText := 'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
 //    LogPerfCaja('CajaOpe.ArticuloValidate',
 //      Format('art=%s | NO ENCONTRADO | Rellenar=%d | total=%d ms',
 //             [CodigoInput, msRellenar, sw.ElapsedMilliseconds]));
@@ -1232,6 +1240,7 @@ var
   msResolver, msStock, msPrecio, msResolverDatos: Int64;
 begin
   Result := False;
+  FMotivoRechazoArticulo := '';
   CodigoLimpio := UpperCase(Trim(Codigo));
   if CodigoLimpio = '' then Exit;
   sw := TStopwatch.StartNew;
@@ -1325,6 +1334,14 @@ begin
           DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsCurrency := 1;
         end;
         Result := True;
+      end
+      else
+      begin
+        // Artículo localizado y activo, pero sin SKU vendible (p. ej. una
+        // variación que se quedó sin tallas/colores). Guardamos el motivo
+        // para que el validador de caja muestre un mensaje exacto en vez
+        // del genérico "no encontrado o descatalogado".
+        FMotivoRechazoArticulo := Resolucion.Mensaje;
       end;
     finally
       DatosCaja.cdsLineas.EnableControls;
@@ -1678,7 +1695,10 @@ begin
         AEdit.EditValue := sCodigo;
         if not RellenarDatosArticuloEnDataset(sCodigo) then
         begin
-          ShowMessage('Artículo no encontrado');
+          if FMotivoRechazoArticulo <> '' then
+            ShowMessage(FMotivoRechazoArticulo)
+          else
+            ShowMessage('Artículo no encontrado');
           Key := 0;
           Exit;
         end;
