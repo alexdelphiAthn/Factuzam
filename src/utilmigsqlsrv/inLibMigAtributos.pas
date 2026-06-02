@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMigAtributos                                             }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Migra los CATÁLOGOS MAESTROS de colores y tallas del ERP "Herreras"      }
@@ -344,24 +344,33 @@ const
   // Sin el UNION, las tallas "exoticas" no estarian en
   // fza_atributos_valores y la migracion de tallajes y de
   // articulos_tallas fallaria con "no esta en fza_atributos_valores".
+  // ORDEN: las tallas se numeran (ORDEN_AV = 10,20,30...) en el orden
+  // que tienen en el tallaje del legacy (ocgrptalnor.Columna), NO
+  // alfabeticamente. El ORDER BY Talla anterior volcaba ORDEN_AV como
+  // L,M,S,XL... y dejaba las tallas desordenadas en SKUs, dropdowns y
+  // descripciones (GROUP_CONCAT ... ORDER BY ORDEN_AV). Tomamos
+  // MIN(Columna): si una talla esta en varios tallajes gana su primera
+  // posicion; las que solo estan en ocarttal (ningun tallaje las
+  // define) reciben 9000 y caen al final, desempatadas por nombre.
   cSelectSrc =
-    'SELECT DISTINCT Talla FROM (' +
-    '  SELECT Talla FROM dbo.ocarttal ' +
+    'SELECT X.Talla, MIN(X.Orden) AS Orden FROM (' +
+    '  SELECT LTRIM(RTRIM(Talla)) AS Talla, ISNULL(Columna, 9000) AS Orden ' +
+    '    FROM dbo.ocgrptalnor ' +
     '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
-    '  UNION ' +
-    '  SELECT Talla FROM dbo.ocgrptalnor ' +
+    '  UNION ALL ' +
+    '  SELECT LTRIM(RTRIM(Talla)) AS Talla, 9000 AS Orden ' +
+    '    FROM dbo.ocarttal ' +
     '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
     ') X ' +
-    'ORDER BY Talla';
+    'GROUP BY X.Talla ' +
+    'ORDER BY MIN(X.Orden), X.Talla';
   cCount =
     'SELECT COUNT(*) FROM (' +
-    '  SELECT DISTINCT Talla FROM (' +
-    '    SELECT Talla FROM dbo.ocarttal ' +
-    '     WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
-    '    UNION ' +
-    '    SELECT Talla FROM dbo.ocgrptalnor ' +
-    '     WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
-    '  ) X ' +
+    '  SELECT LTRIM(RTRIM(Talla)) AS Talla FROM dbo.ocarttal ' +
+    '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
+    '  UNION ' +
+    '  SELECT LTRIM(RTRIM(Talla)) AS Talla FROM dbo.ocgrptalnor ' +
+    '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
     ') Y';
 var
   qSrc:           TUniQuery;
