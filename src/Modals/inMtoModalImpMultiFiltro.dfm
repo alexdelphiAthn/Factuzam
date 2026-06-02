@@ -1,8 +1,8 @@
 inherited frmPrintMultiFiltro: TfrmPrintMultiFiltro
   Caption = 'Informe con filtros'
-  ClientHeight = 440
-  ClientWidth = 560
-  ExplicitWidth = 576
-  ExplicitHeight = 479
+  ClientHeight = 470
+  ClientWidth = 620
+  ExplicitWidth = 636
+  ExplicitHeight = 509
   TextHeight = 19
 end

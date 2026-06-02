@@ -60,15 +60,17 @@ type
     FclbTemporadas  : TcxCheckListBox;
     procedure CrearUIFiltros;
     procedure CrearTabFechas;
-    function  CrearTabChecklist(const ACaption: string): TcxCheckListBox;
     procedure CargarChecklist(AClb: TcxCheckListBox;
                               const ASQL, ACampoCod, ACampoNom: string);
     procedure CargarFiltros;
-    function  SeleccionadosCSV(AClb: TcxCheckListBox): string;
   protected
     // Los descendientes redefinen esto para elegir qué pestañas mostrar.
     function FiltrosUsados: TFiltrosReport; virtual;
     procedure DoShow; override;
+    // Helpers reutilizables: el descendiente puede crear pestañas de
+    // checklist propias (p. ej. "Bandas") y leer su selección como CSV.
+    function  CrearTabChecklist(const ACaption: string): TcxCheckListBox;
+    function  SeleccionadosCSV(AClb: TcxCheckListBox): string;
     // Expuestos para que el descendiente añada controles propios (p. ej.
     // modo/detalle) sobre la pestaña de fechas o gestione su habilitado.
     property TabFechas: TcxTabSheet read FtsFechas;

@@ -50,7 +50,8 @@ CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_TALLAS`(
     IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '' = todos
     IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '' = todas
     IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
-    IN `p_DESGLOSADO`   VARCHAR(1)    -- 'S'/'N' (solo aplica a modo 'F')
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- 'S'/'N' (solo aplica a modo 'F')
+    IN `p_BANDAS`       TEXT          -- CSV de códigos de banda; '' = todas
 )
 BEGIN
     DECLARE v_alms   TEXT;
@@ -63,6 +64,7 @@ BEGIN
     SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '');
     SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '');
     SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '');
     SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''), 'PVP');
     SET v_desde      = IFNULL(p_DESDE, '1900-01-01');
     SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
@@ -474,6 +476,11 @@ BEGIN
     SELECT `CODIGO_ART`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`, `POSICION`,
            'EXIFIN', 90, 'Existencias finales', 1, `EXI_FIN`
       FROM `tmp_bat_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración
+    -- (modo/detalle). FIND_IN_SET sobre el código de banda.
+    IF p_BANDAS <> '' THEN
+        DELETE FROM `tmp_bat_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
 
     -- -----------------------------------------------------------------
     -- 5) Pivote final por (artículo, color, banda) y enriquecido con
@@ -583,14 +590,18 @@ DELIMITER ;
 
 -- ---------------------------------------------------------------------
 -- Parámetros: (p_MODO, p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS,
---              p_PROVEEDORES, p_TEMPORADAS, p_COD_TARIFA, p_DESGLOSADO).
--- Todos los filtros multi-valor son CSV; '' = sin filtro (todos).
+--              p_PROVEEDORES, p_TEMPORADAS, p_COD_TARIFA, p_DESGLOSADO,
+--              p_BANDAS).
+-- Todos los filtros multi-valor son CSV; '' = sin filtro (todos). p_BANDAS
+-- limita qué bandas salen (códigos EXIINI/ENT/SAL/VEN/EXIFIN y, en
+-- desglosado, ENTCMP/ENTALB/ENTTRA/ENTDEP/ENTREG/SALTRA/SALDEP/SALALB).
 -- Ejemplos de uso (desde el modal de impresión preparar_consulta):
---   -- Entre fechas, simplificado, todos los almacenes, tarifa PVP
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','','','','','PVP','N');
+--   -- Entre fechas, simplificado, todos los almacenes, todas las bandas
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','','','','','PVP','N','');
 --   -- Entre fechas, desglosado, almacenes 01 y 50, familias 0103 y 0104
---   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','01,50','0103,0104','PRV001','V26','PVP','S');
---   -- Por acumulados (sin existencias iniciales)
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('A',NULL,NULL,'','','','','PVP','N');
+--   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26,
+--   -- solo las bandas de existencias y ventas
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','01,50','0103,0104','PRV001','V26','PVP','S','EXIINI,VEN,EXIFIN');
+--   -- Por acumulados (sin existencias iniciales), todas las bandas
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('A',NULL,NULL,'','','','','PVP','N','');
 -- ---------------------------------------------------------------------
