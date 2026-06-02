@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibBalanceTallasExcel                                       }
 {    Tipo:       Librería                                                      }
@@ -97,7 +97,7 @@ var
     W(Sheet, iRow, COL_CDAD,    'Cdad.',   True, ssahRight);
     W(Sheet, iRow, COL_PRECIO,  'Precio',  True, ssahRight);
     W(Sheet, iRow, COL_IMPORTE, 'Importe', True, ssahRight);
-    for c := 0 to COL_MAX do
+    for var c := 0 to COL_MAX do
       if Sheet.Cells[iRow, c] <> nil then
       begin
         Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := CL_CABECERA;
@@ -144,7 +144,7 @@ var
       EscNum(COL_CDAD,    bt.Cantidad, FMT_NUM, True);
       EscNum(COL_PRECIO,  bt.Precio,   FMT_EUR, False);
       EscNum(COL_IMPORTE, bt.Importe,  FMT_EUR, False);
-      for c := 0 to COL_MAX do
+      for var c := 0 to COL_MAX do
         if Sheet.Cells[iRow, c] <> nil then
         begin
           Sheet.Cells[iRow, c].Style.Font.Style := [fsBold];
