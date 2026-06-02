@@ -2991,6 +2991,11 @@ begin
   var PermiteDescuentos := oCajaParams.GetBool('vgerDescuentos', True);
   tvDescuento.Options.Editing := PermiteDescuentos;
   tvDescuentoMenos.Options.Editing := PermiteDescuentos;
+  // El Total tambien es editable y, al bajarlo, aplica un descuento
+  // implicito (GridRecalc recalcula % y Menos a partir del total). Si no
+  // se permiten descuentos hay que bloquearlo igual que % y Menos; de lo
+  // contrario seria una via para saltarse el control editando el total.
+  tvTotal.Options.Editing := PermiteDescuentos;
   with dbtvBusq.DataController do
   begin
     DataModeController.GridMode := True;
