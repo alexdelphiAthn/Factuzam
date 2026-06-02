@@ -835,11 +835,31 @@ begin
         begin
           txtOrigen.Text :=
             FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-          ActualizarTotal;
-          // No atender: deniega la peticion entera (pide motivo y la resuelve
-          // como DENEGADO TOTAL). Atender: se queda en pantalla para servir.
+          // No atender: arranca con todo a 0 (denegar por defecto). El usuario
+          // pone el motivo por linea y, si quiere, sube alguna cantidad para
+          // servirla, y confirma con F12 (que reparte servido/denegado).
+          // Atender: arranca con las cantidades pedidas.
           if iRes = mrNo then
-            DenegarSolicitudCargada;
+          begin
+            FDatos.cdsLineas.DisableControls;
+            try
+              FDatos.cdsLineas.First;
+              while not FDatos.cdsLineas.Eof do
+              begin
+                if Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString)
+                   <> '' then
+                begin
+                  FDatos.cdsLineas.Edit;
+                  FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat := 0;
+                  FDatos.cdsLineas.Post;
+                end;
+                FDatos.cdsLineas.Next;
+              end;
+            finally
+              FDatos.cdsLineas.EnableControls;
+            end;
+          end;
+          ActualizarTotal;
         end
         else
           ShowMessage('No se pudo cargar la solicitud.');
