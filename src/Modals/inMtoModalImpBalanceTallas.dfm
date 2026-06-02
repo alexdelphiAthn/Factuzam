@@ -31,19 +31,21 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
   object lblAlmacen: TcxLabel
     Left = 12
     Top = 232
-    Caption = 'Almac'#233'n (vac'#237'o = todos):'
+    Caption = 'Almac'#233'n/es (vac'#237'o = todos):'
     TabOrder = 6
     Transparent = True
   end
   object bedAlmacen: TcxButtonEdit
     Left = 12
     Top = 250
+    Hint = 'A'#241'ada uno o varios almacenes (separados por coma). Vac'#237'o = todos.'
     Properties.Buttons = <
       item
         Default = True
         Kind = bkEllipsis
       end>
     Properties.OnButtonClick = bedAlmacenPropertiesButtonClick
+    ShowHint = True
     TabOrder = 7
     Width = 172
   end
@@ -260,10 +262,10 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
         end
         object foto300: TfrxPictureView
           AllowVectorExport = True
-          Left = 900.000000000000000000
+          Left = 983.000000000000000000
           Top = 2.000000000000000000
-          Width = 110.000000000000000000
-          Height = 46.000000000000000000
+          Width = 64.000000000000000000
+          Height = 48.000000000000000000
           Frame.Typ = []
           HightQuality = False
           Transparent = False
