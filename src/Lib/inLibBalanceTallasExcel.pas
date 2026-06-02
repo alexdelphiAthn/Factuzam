@@ -92,6 +92,8 @@ var
   sFamAct, sArtAct, sFam, sArt: string;
   dictBandas : TObjectDictionary<string, TBandaTot>;
   ordenBandas: TStringList;
+  dictFotos  : TDictionary<string, TFotoInfo>;   // foto por artículo (1 query)
+  slCod      : TStringList;
 
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
                    AOcultarCero: Boolean);
@@ -133,9 +135,11 @@ var
     Pic  : TdxSpreadSheetPictureContainer;
     iAlto: Integer;
   begin
-    if oFotos <> nil then
+    // La foto ya viene pre-resuelta en dictFotos (una sola consulta para todo
+    // el informe). RutaFoto solo construye la ruta del fichero (sin consulta).
+    if (dictFotos <> nil) and dictFotos.TryGetValue(ACodArt, info) and
+       info.Encontrada then
     begin
-      info  := oFotos.Resolver(ACodArt, '');
       sRuta := oFotos.RutaFoto(info, frPx300);
       if (sRuta <> '') and FileExists(sRuta) then
       begin
@@ -243,6 +247,32 @@ begin
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   dictBandas  := TObjectDictionary<string, TBandaTot>.Create([doOwnsValues]);
   ordenBandas := TStringList.Create;
+  // Pre-carga de fotos (a nivel artículo) en UNA sola consulta, evitando un
+  // SELECT por artículo dentro del bucle (N+1). El bucle solo construirá la
+  // ruta del fichero, que no consulta a BBDD.
+  dictFotos := nil;
+  if (QDatos <> nil) and QDatos.Active and (not QDatos.IsEmpty) then
+  begin
+    slCod := TStringList.Create;
+    try
+      slCod.Sorted := True;
+      slCod.Duplicates := dupIgnore;
+      QDatos.DisableControls;
+      try
+        QDatos.First;
+        while not QDatos.Eof do
+        begin
+          slCod.Add(QDatos.FieldByName('CODIGO_ART_ART').AsString);
+          QDatos.Next;
+        end;
+      finally
+        QDatos.EnableControls;
+      end;
+      dictFotos := oFotos.ResolverArticulosLote(slCod.ToStringArray);
+    finally
+      FreeAndNil(slCod);
+    end;
+  end;
   Sheet.BeginUpdate;
   try
     iRow := 1;
@@ -322,6 +352,7 @@ begin
     Sheet.EndUpdate;
     FreeAndNil(ordenBandas);
     FreeAndNil(dictBandas);
+    FreeAndNil(dictFotos);
   end;
 end;
 
