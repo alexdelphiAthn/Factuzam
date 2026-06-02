@@ -66,6 +66,29 @@
               DataBinding.FieldName = 'RAZON_SOCIAL_EMP'
               Width = 218
             end
+            object cxGrdDBTabPrinESACTIVO_USUARIO: TcxGridDBColumn
+              Caption = 'Activo'
+              DataBinding.FieldName = 'ESACTIVO_USU'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 70
+            end
+            object cxGrdDBTabPrinCODEMPLEADO_USUARIO: TcxGridDBColumn
+              Caption = 'C'#243'digo Empleado'
+              DataBinding.FieldName = 'CODIGO_EMPLEADO_USU'
+              Width = 140
+            end
+            object cxGrdDBTabPrinALMACENDEF_USUARIO: TcxGridDBColumn
+              Caption = 'Almac'#233'n por defecto'
+              DataBinding.FieldName = 'ALMACEN_DEFECTO_USU'
+              Width = 150
+            end
+            object cxGrdDBTabPrinCAJADEF_USUARIO: TcxGridDBColumn
+              Caption = 'Caja por defecto'
+              DataBinding.FieldName = 'CAJA_DEFECTO_USU'
+              Width = 130
+            end
             object cxGrdDBTabPrinPASSWORD_USUARIO: TcxGridDBColumn
               Caption = 'Password Encriptado'
               DataBinding.FieldName = 'PASSWORD_USU'
@@ -114,6 +137,16 @@
       TabOrder = 2
       WordWrap = True
       OnClick = btnSetPassClick
+    end
+    object btnSetCaja: TcxButton
+      Left = 4
+      Top = 189
+      Width = 130
+      Height = 57
+      Caption = 'Almac'#233'n / Caja'
+      TabOrder = 3
+      WordWrap = True
+      OnClick = btnSetCajaClick
     end
   end
   inherited dsTablaG: TDataSource
