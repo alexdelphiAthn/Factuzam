@@ -134,9 +134,11 @@ type
     actCargarCta: TAction;
     actGuardarLayout: TAction;
     actAbrirArticulos: TAction;
+    actConsultaStock: TAction;
     pnlTotal: TPanel;
     pnlBotones: TPanel;
     procedure actAbrirArticulosExecute(Sender: TObject);
+    procedure actConsultaStockExecute(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -301,6 +303,7 @@ uses
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
   inLibShowMto, inMtoPrincipal,
+  inMtoStockConsulta,
   System.StrUtils;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
@@ -3018,6 +3021,23 @@ begin
     ResetearLayout(Self.Name);
     Key := 0;
   end;
+end;
+
+// Ctrl+U: consulta de stock del articulo de la linea que se esta metiendo.
+// Lee el (articulo, sku) de la linea enfocada con el mismo helper que usan
+// los mantenimientos via TfrmMtoGen.ResolverArtSkuActivo (CODIGO_ART_FACLIN
+// y CODIGO_UNIDAD_FACLIN estan entre sus alias). Si la linea aun no tiene
+// articulo resuelto, abre la consulta vacia con su buscador.
+procedure TfrmMtoOpeCaja.actConsultaStockExecute(Sender: TObject);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := '';
+  sSku := '';
+  if Assigned(DatosCaja) and Assigned(DatosCaja.cdsLineas) then
+    inLibFotos.LeerArtSkuDeDataSet(DatosCaja.cdsLineas, sArt, sSku);
+  inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
 end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);
