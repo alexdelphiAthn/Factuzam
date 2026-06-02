@@ -42,13 +42,15 @@
 DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_TALLAS`;
 DELIMITER ;;
 CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_TALLAS`(
-    IN `p_MODO`       VARCHAR(1),   -- 'F' entre fechas, 'A' por acumulados
-    IN `p_DESDE`      DATE,         -- inclusive (solo modo 'F')
-    IN `p_HASTA`      DATE,         -- inclusive (solo modo 'F')
-    IN `p_ALMACENES`  TEXT,         -- CSV "01,50" o '' = todos los activos
-    IN `p_FAMILIA`    VARCHAR(20),  -- '' = todas las familias
-    IN `p_COD_TARIFA` VARCHAR(20),  -- tarifa para valorar ventas/salidas
-    IN `p_DESGLOSADO` VARCHAR(1)    -- 'S'/'N' (solo aplica a modo 'F')
+    IN `p_MODO`         VARCHAR(1),   -- 'F' entre fechas, 'A' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo 'F')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo 'F')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '' = todas
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1)    -- 'S'/'N' (solo aplica a modo 'F')
 )
 BEGIN
     DECLARE v_alms   TEXT;
@@ -57,9 +59,11 @@ BEGIN
     DECLARE v_hasta  DATE;
     -- Normalización de parámetros.
     SET p_MODO       = IFNULL(NULLIF(p_MODO, ''), 'A');
-    SET p_DESGLOSADO = IFNULL(NULLIF(p_DESGLOSADO, ''), 'N');
-    SET p_FAMILIA    = IFNULL(p_FAMILIA, '');
-    SET v_tarifa     = IFNULL(NULLIF(p_COD_TARIFA, ''), 'PVP');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''), 'N');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '');
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''), 'PVP');
     SET v_desde      = IFNULL(p_DESDE, '1900-01-01');
     SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
     -- Lista efectiva de almacenes (CSV sin comillas, para FIND_IN_SET).
@@ -74,6 +78,54 @@ BEGIN
            AND `TIPO_USO_ALM` IN ('ESTANDAR', 'ESTANDARD');
     END IF;
     SET v_alms = IFNULL(v_alms, '');
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo: familias (con su descendencia), proveedores y
+    -- temporadas. Se materializa en tmp_bat_arts el conjunto de artículos
+    -- que pasan los tres filtros; el resto del SP se restringe a él.
+    -- -----------------------------------------------------------------
+    -- Familias elegidas expandidas a TODA su descendencia: si se filtra una
+    -- familia padre, entran también sus hijas (CTE recursivo por
+    -- CODIGO_PADRE_FAM). Con p_FAMILIAS vacío sale vacía y no se aplica.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = 'S'
+       AND (p_FAMILIAS = ''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bat_fam`))
+       AND (p_PROVEEDORES = ''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
 
     -- -----------------------------------------------------------------
     -- 1) Posiciones de talla por artículo (T01..T14).
@@ -102,7 +154,7 @@ BEGIN
                 ON asa.`CODIGO_ART_ACA` = a.`CODIGO_ART_ART`
                AND asa.`ID_VA_ACA` <> 'CO'
              WHERE a.`ESACTIVO_ART` = 'S'
-               AND (p_FAMILIA = '' OR a.`CODIGO_FAM_ART` = p_FAMILIA)
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
              GROUP BY a.`CODIGO_ART_ART`) asg
       JOIN `fza_atributos_conjuntos_det` acd ON acd.`ID_AC_ACD` = asg.`ID_AC`
       JOIN `fza_atributos_valores` av ON av.`ID_AV` = acd.`ID_AV_ACD`;
@@ -129,7 +181,7 @@ BEGIN
               JOIN `fza_atributos_valores` av
                 ON av.`ID_AV` = sa.`ID_AV_SA` AND av.`ID_VA_AV` <> 'CO'
              WHERE a.`ESACTIVO_ART` = 'S'
-               AND (p_FAMILIA = '' OR a.`CODIGO_FAM_ART` = p_FAMILIA)
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
                AND a.`CODIGO_ART_ART` NOT IN
                    (SELECT `CODIGO_ART` FROM `tmp_bat_pos_arts`)) x;
 
@@ -177,7 +229,6 @@ BEGIN
       JOIN `fza_articulos` a
         ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
        AND a.`ESACTIVO_ART` = 'S'
-       AND (p_FAMILIA = '' OR a.`CODIGO_FAM_ART` = p_FAMILIA)
       JOIN `fza_atributos_sku` sat
         ON sat.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
       JOIN `fza_atributos_valores` ta
@@ -518,22 +569,28 @@ BEGIN
      ORDER BY COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
               p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
 
-    -- Limpieza de temporales (MEMORY) para no arrastrarlas en la sesión.
+    -- Limpieza de temporales para no arrastrarlas en la sesión.
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
 END ;;
 DELIMITER ;
 
 -- ---------------------------------------------------------------------
+-- Parámetros: (p_MODO, p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS,
+--              p_PROVEEDORES, p_TEMPORADAS, p_COD_TARIFA, p_DESGLOSADO).
+-- Todos los filtros multi-valor son CSV; '' = sin filtro (todos).
 -- Ejemplos de uso (desde el modal de impresión preparar_consulta):
---   -- Entre fechas, simplificado, todos los almacenes estándar, tarifa PVP
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','','','PVP','N');
---   -- Entre fechas, desglosado, almacenes 01 y 50, familia 0103
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','01,50','0103','PVP','S');
+--   -- Entre fechas, simplificado, todos los almacenes, tarifa PVP
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','','','','','PVP','N');
+--   -- Entre fechas, desglosado, almacenes 01 y 50, familias 0103 y 0104
+--   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','01,50','0103,0104','PRV001','V26','PVP','S');
 --   -- Por acumulados (sin existencias iniciales)
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('A',NULL,NULL,'','','PVP','N');
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('A',NULL,NULL,'','','','','PVP','N');
 -- ---------------------------------------------------------------------

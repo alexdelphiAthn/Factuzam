@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoModalImpBalanceTallas                                    }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {   Fecha:       02/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -15,11 +15,11 @@
 {    bandas. Se apoya en el SP PRC_GET_BALANCE_ALMACEN_TALLAS (ver             }
 {    DESARROLLOS EN CURSO/balance_almacen_tallas.sql).                         }
 {                                                                              }
-{    Dos modos: entre fechas (con nivel simplificado / desglosado) o por       }
-{    acumulados. El usuario filtra además por almacén y familia.               }
-{                                                                              }
-{    Es autocontenido: la consulta, el datasource y el TfrxDBDataset viven     }
-{    en este propio formulario, sin depender de un data module externo.        }
+{    Hereda de TfrmPrintMultiFiltro, que aporta las pestañas de filtros        }
+{    múltiples (almacenes, familias, proveedores, temporadas y fechas). Este   }
+{    modal solo añade el modo (entre fechas / acumulados) y el nivel de        }
+{    detalle (simplificado / desglosado) sobre la pestaña de fechas, y la      }
+{    plantilla del informe + la consulta.                                      }
 {******************************************************************************}
 unit inMtoModalImpBalanceTallas;
 
@@ -29,47 +29,32 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.DateUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs,
-  inMtoModalGenImp, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
+  inMtoModalImpMultiFiltro, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
   Vcl.Menus, frxDesgn, Data.DB, MemDS, DBAccess, Uni,
   frxExportXLSX, frxClass, frxDBSet, frxExportBaseDialog, frxExportPDF,
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
-  cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxButtonEdit,
-  cxDateUtils, cxRadioGroup, Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm,
-  cxClasses, cxLocalization, JvComponentBase, JvEnterTab, System.Actions,
-  Vcl.ActnList, frxSmartMemo, frLocalization, frLanguageSpanish,
-  frxExportBaseImageSettingsDialog, frCoreClasses, inLibGlobalVar;
+  cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxRadioGroup,
+  cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
+  frLocalization, frLanguageSpanish, frCoreClasses, inLibGlobalVar;
 
 type
-  TfrmPrintBalanceTallas = class(TfrmPrint)
+  TfrmPrintBalanceTallas = class(TfrmPrintMultiFiltro)
     unqryBalancePrint: TUniQuery;
-    dsBalancePrint: TDataSource;
     fxdsBalance: TfrxDBDataset;
-    rgModo: TcxRadioGroup;
-    rgDetalle: TcxRadioGroup;
-    lblDesde: TcxLabel;
-    dteDesde: TcxDateEdit;
-    lblHasta: TcxLabel;
-    dteHasta: TcxDateEdit;
-    lblAlmacen: TcxLabel;
-    bedAlmacen: TcxButtonEdit;
-    lblFamilia: TcxLabel;
-    bedFamilia: TcxButtonEdit;
-    procedure rgModoPropertiesEditValueChanged(Sender: TObject);
-    procedure bedAlmacenPropertiesButtonClick(Sender: TObject;
-      AButtonIndex: Integer);
-    procedure bedFamiliaPropertiesButtonClick(Sender: TObject;
-      AButtonIndex: Integer);
   private
-    // Fija los valores por defecto una sola vez al abrir; evita pisarlos en
-    // el ciclo Hide/Show que hacen los botones del padre (Imprimir/PDF...).
     FInicializado: Boolean;
-    // Habilita/inhabilita fechas y nivel de detalle según el modo (las
-    // fechas y el desglosado solo aplican a "Entre fechas").
+    FrgModo: TcxRadioGroup;       // 0 = Entre fechas, 1 = Por acumulados
+    FrgDetalle: TcxRadioGroup;    // 0 = Simplificado, 1 = Desglosado
+    // Crea los radios de modo/detalle sobre la pestaña de fechas del base.
+    procedure CrearControlesModo;
     procedure ActualizarHabilitacion;
+    procedure rgModoChange(Sender: TObject);
   protected
+    function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
   public
     procedure preparar_consulta; override;
+    procedure AfterReportLoaded; override;
   end;
 
 var
@@ -80,23 +65,54 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inLibAppParam, inLibGenBusq;
+  System.StrUtils, inLibAppParam;
 
 { TfrmPrintBalanceTallas }
+
+function TfrmPrintBalanceTallas.FiltrosUsados: TFiltrosReport;
+begin
+  // El balance usa todas las pestañas de filtro.
+  Result := [frFechas, frAlmacenes, frFamilias, frProveedores, frTemporadas];
+end;
 
 procedure TfrmPrintBalanceTallas.DoShow;
 begin
   inherited;
-  // Por defecto: entre fechas, simplificado, del primer día del mes en curso
-  // hasta hoy, todos los almacenes y todas las familias.
+  // El base ya ha creado las pestañas de filtro (incluida Fechas). Añadimos
+  // una sola vez los radios de modo/detalle sobre la pestaña de fechas.
   if not FInicializado then
   begin
-    dteDesde.Date       := EncodeDate(YearOf(Date), MonthOf(Date), 1);
-    dteHasta.Date       := Date;
-    rgModo.ItemIndex    := 0;
-    rgDetalle.ItemIndex := 0;
-    FInicializado       := True;
+    CrearControlesModo;
+    FInicializado := True;
     ActualizarHabilitacion;
+  end;
+end;
+
+procedure TfrmPrintBalanceTallas.CrearControlesModo;
+begin
+  if TabFechas <> nil then
+  begin
+    FrgModo := TcxRadioGroup.Create(Self);
+    FrgModo.Parent  := TabFechas;
+    FrgModo.Left    := 210;
+    FrgModo.Top     := 8;
+    FrgModo.Width   := 190;
+    FrgModo.Height  := 56;
+    FrgModo.Caption := ' Modo ';
+    FrgModo.Properties.Items.Add.Caption := 'Entre fechas';
+    FrgModo.Properties.Items.Add.Caption := 'Por acumulados';
+    FrgModo.ItemIndex := 0;
+    FrgModo.Properties.OnEditValueChanged := rgModoChange;
+    FrgDetalle := TcxRadioGroup.Create(Self);
+    FrgDetalle.Parent  := TabFechas;
+    FrgDetalle.Left    := 210;
+    FrgDetalle.Top     := 70;
+    FrgDetalle.Width   := 190;
+    FrgDetalle.Height  := 56;
+    FrgDetalle.Caption := ' Detalle (entre fechas) ';
+    FrgDetalle.Properties.Items.Add.Caption := 'Simplificado';
+    FrgDetalle.Properties.Items.Add.Caption := 'Desglosado';
+    FrgDetalle.ItemIndex := 0;
   end;
 end;
 
@@ -104,127 +120,64 @@ procedure TfrmPrintBalanceTallas.ActualizarHabilitacion;
 var
   bFechas: Boolean;
 begin
-  bFechas := rgModo.ItemIndex = 0;
-  dteDesde.Enabled  := bFechas;
-  dteHasta.Enabled  := bFechas;
-  rgDetalle.Enabled := bFechas;
+  bFechas := (FrgModo = nil) or (FrgModo.ItemIndex = 0);
+  if DteDesde <> nil then
+    DteDesde.Enabled := bFechas;
+  if DteHasta <> nil then
+    DteHasta.Enabled := bFechas;
+  if FrgDetalle <> nil then
+    FrgDetalle.Enabled := bFechas;
 end;
 
-procedure TfrmPrintBalanceTallas.rgModoPropertiesEditValueChanged(
-  Sender: TObject);
+procedure TfrmPrintBalanceTallas.rgModoChange(Sender: TObject);
 begin
   ActualizarHabilitacion;
-end;
-
-procedure TfrmPrintBalanceTallas.bedAlmacenPropertiesButtonClick(
-  Sender: TObject; AButtonIndex: Integer);
-var
-  q: TUniQuery;
-  sCod, sActual: string;
-begin
-  // Selección de almacenes. Vacío = todos los almacenes estándar (lo
-  // resuelve el SP). Se pueden elegir uno o varios.
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := oConn;
-    q.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
-      '  FROM fza_almacenes ' +
-      ' WHERE ESACTIVO_ALM = ''S'' ' +
-      ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
-    q.Open;
-    // El modal es fsStayOnTop (heredado de TfrmPrint); si no nos ocultamos,
-    // el selector de búsqueda saldría por detrás. Mismo patrón que el padre
-    // al abrir el selector de formatos (Self.Hide / Self.Show).
-    Self.Hide;
-    try
-      if TBusquedaUtils.EjecutarBusqueda('Selección de almacén', q,
-                                         'frmBalanceTallasAlmSearch') then
-      begin
-        // Cada selección se añade a la lista separada por comas (sin
-        // duplicar); el campo queda editable para teclear o quitar códigos
-        // a mano. El SP filtra con FIND_IN_SET sobre esa lista.
-        sCod    := Trim(q.FieldByName('CODIGO_ALM_ALM').AsString);
-        sActual := Trim(bedAlmacen.Text);
-        if sCod <> '' then
-        begin
-          if sActual = '' then
-            bedAlmacen.Text := sCod
-          else if Pos(',' + sCod + ',', ',' + sActual + ',') = 0 then
-            bedAlmacen.Text := sActual + ',' + sCod;
-        end;
-      end;
-    finally
-      Self.Show;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
-end;
-
-procedure TfrmPrintBalanceTallas.bedFamiliaPropertiesButtonClick(
-  Sender: TObject; AButtonIndex: Integer);
-var
-  q: TUniQuery;
-begin
-  // Selección de una familia. Vacío = todas.
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := oConn;
-    q.SQL.Text :=
-      'SELECT CODIGO_FAM_FAM, DESCRIPCION_FAM ' +
-      '  FROM fza_articulos_familias ' +
-      ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
-      ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM';
-    q.Open;
-    // Mismo motivo que en el selector de almacén: ocultar el modal
-    // fsStayOnTop mientras se muestra el buscador.
-    Self.Hide;
-    try
-      if TBusquedaUtils.EjecutarBusqueda('Selección de familia', q,
-                                         'frmBalanceTallasFamSearch') then
-        bedFamilia.Text := q.FieldByName('CODIGO_FAM_FAM').AsString;
-    finally
-      Self.Show;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
 end;
 
 procedure TfrmPrintBalanceTallas.preparar_consulta;
 begin
   inherited;
-  // Llamada al SP que devuelve el balance ya pivotado por talla y
-  // desdoblado en bandas. La tarifa de valoración de salidas/ventas es la
-  // tarifa por defecto del entorno.
+  // Llamada al SP con los filtros múltiples (CSV) del base y el modo/detalle
+  // propios. La tarifa de valoración es la tarifa por defecto del entorno.
   with unqryBalancePrint do
   begin
     Close;
     Connection := oConn;
     SQL.Text :=
       'CALL PRC_GET_BALANCE_ALMACEN_TALLAS(' +
-      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pTAR, :pDESG)';
-    if rgModo.ItemIndex = 0 then
-      ParamByName('pMODO').AsString := 'F'
+      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pTAR, :pDESG)';
+    if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
+      ParamByName('pMODO').AsString := 'A'
     else
-      ParamByName('pMODO').AsString := 'A';
-    ParamByName('pDESDE').AsDateTime := dteDesde.Date;
-    ParamByName('pHASTA').AsDateTime := dteHasta.Date;
-    // Lista CSV de almacenes (uno o varios). Se quitan espacios para que
-    // FIND_IN_SET case aunque se hayan tecleado con espacios tras la coma.
-    ParamByName('pALM').AsString     :=
-      StringReplace(Trim(bedAlmacen.Text), ' ', '', [rfReplaceAll]);
-    ParamByName('pFAM').AsString     := Trim(bedFamilia.Text);
-    ParamByName('pTAR').AsString     :=
+      ParamByName('pMODO').AsString := 'F';
+    ParamByName('pDESDE').AsDateTime := FechaDesde;
+    ParamByName('pHASTA').AsDateTime := FechaHasta;
+    ParamByName('pALM').AsString := CSVAlmacenes;
+    ParamByName('pFAM').AsString := CSVFamilias;
+    ParamByName('pPRV').AsString := CSVProveedores;
+    ParamByName('pTMP').AsString := CSVTemporadas;
+    ParamByName('pTAR').AsString :=
       oAppParams.GetString('appTarifaDefecto', 'PVP');
-    if (rgModo.ItemIndex = 0) and (rgDetalle.ItemIndex = 1) then
+    if (FrgModo <> nil) and (FrgModo.ItemIndex = 0) and
+       (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
       ParamByName('pDESG').AsString := 'S'
     else
       ParamByName('pDESG').AsString := 'N';
     Open;
   end;
   fxdsBalance.UpdateBounds;
+end;
+
+procedure TfrmPrintBalanceTallas.AfterReportLoaded;
+begin
+  inherited;
+  // El TfrxDBDataset debe enlazar la query por DataSet directo (no por
+  // DataSource): la resolución de la foto lee TfrxDBDataset.DataSet en
+  // inLibFotos.ObtenerDataSetDeBandaPadre, que es nil si solo se fija el
+  // DataSource. Reafirmamos el enlace y el registro en el report.
+  fxdsBalance.DataSet := unqryBalancePrint;
+  frxrprt1.DataSets.Clear;
+  frxrprt1.DataSets.Add(fxdsBalance);
 end;
 
 end.
