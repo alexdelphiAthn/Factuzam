@@ -24,11 +24,16 @@ procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string = 'DEBUG');
 
+// Apertura manual del cajon portamonedas sin venta asociada (tecla F9 en
+// caja). Comprueba el permiso 'caja.abrirCajon' y manda el pulso de apertura
+// por la impresora de tickets de parametros (vgerDefPrinter -> oNomImpresoraCaja).
+procedure AbrirCajonSinVenta;
+
 implementation
 
 uses
-  Data.DB, Uni, DBAccess,
-  inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir;
+  Data.DB, Uni, DBAccess, Vcl.Dialogs,
+  inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir, inLibPermisos;
 
 procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
@@ -132,6 +137,31 @@ begin
       Ticket.Imprimir;
   finally
     FreeAndNil(Ticket);
+  end;
+end;
+
+procedure AbrirCajonSinVenta;
+var
+  Ticket: TTicketTermico;
+  sImpresora: string;
+begin
+  // Reservada a F9 en caja. Si no hay permiso o impresora valida, avisa y no
+  // hace nada; en otro caso manda solo el pulso de apertura del cajon.
+  sImpresora := oNomImpresoraCaja;
+  if Assigned(oPermisos) and (not oPermisos.TienePermiso('caja.abrirCajon')) then
+    ShowMessage('No tiene permiso para abrir el cajón.')
+  else if (Trim(sImpresora) = '') or (UpperCase(sImpresora) = 'DEBUG') then
+    ShowMessage('No hay impresora de tickets configurada en parámetros ' +
+                '(vgerDefPrinter); no se puede abrir el cajón.')
+  else
+  begin
+    Ticket := TTicketTermico.Create(sImpresora);
+    try
+      Ticket.AbrirCajon;
+      Ticket.Imprimir;
+    finally
+      FreeAndNil(Ticket);
+    end;
   end;
 end;
 
