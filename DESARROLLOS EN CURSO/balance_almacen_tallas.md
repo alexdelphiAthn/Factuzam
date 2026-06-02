@@ -100,11 +100,19 @@ CALL PRC_GET_BALANCE_ALMACEN_TALLAS(
      p_DESDE,       -- DATE inclusive (solo 'F')
      p_HASTA,       -- DATE inclusive (solo 'F')
      p_ALMACENES,   -- CSV "01,50" o '' = todos los activos estándar
-     p_FAMILIA,     -- '' = todas
+     p_FAMILIAS,    -- CSV; '' = todas. Una familia padre incluye sus hijas
+     p_PROVEEDORES, -- CSV de códigos de proveedor; '' = todos
+     p_TEMPORADAS,  -- CSV de valores de temporada; '' = todas
      p_COD_TARIFA,  -- '' = 'PVP'
      p_DESGLOSADO   -- 'S'/'N' (solo 'F')
 );
 ```
+
+Todos los filtros multi-valor son CSV y se resuelven con `FIND_IN_SET`. Las
+familias se expanden a su descendencia con un CTE recursivo sobre
+`CODIGO_PADRE_FAM` (elegir una padre arrastra sus hijas). Proveedores filtra
+por `fza_articulos_proveedores`; temporadas por la propiedad de artículo
+`TEMPORADA` (`fza_articulos_propiedades` → `fza_propiedades_valores.PV`).
 
 Devuelve **una fila por (artículo, color, banda)**, ya pivotada por talla.
 Columnas del resultado (las consume el `TfrxDBDataset` del informe):
@@ -186,114 +194,47 @@ Notas de plantilla:
 
 ---
 
-## 6. Modal de impresión `inMtoModalImpBalanceTallas`
+## 6. Formulario base `TfrmPrintMultiFiltro` + modal del balance
 
-Hereda de `TfrmPrint` (`inMtoModalGenImp`), igual que
-`inMtoModalImpOperaciones`. La plantilla base + la query + el
-`TfrxDBDataset` viven en su propio `.dfm` (autocontenido).
+### 6.1 Base reutilizable `inMtoModalImpMultiFiltro`
 
-Controles de filtro (sobre el panel del modal):
+`TfrmPrintMultiFiltro` hereda de `TfrmPrint` y, al mostrarse, construye **por
+código** un `TcxPageControl` con una pestaña por filtro, según el conjunto
+que devuelva `FiltrosUsados` (por defecto todas):
 
-- Radio **Modo**: `Entre fechas` / `Por acumulados`.
-- `dteDesde` / `dteHasta` (habilitados solo en "Entre fechas"; por
-  defecto, primer día del mes en curso → hoy).
-- `bedAlmacen` (multi-selección; vacío = todos los estándar).
-- `bedFamilia` (opcional; vacío = todas).
-- Radio **Detalle**: `Simplificado` / `Desglosado` (solo en "Entre
-  fechas").
+- **Fechas**: rango desde / hasta.
+- **Almacenes**, **Familias**, **Proveedores**, **Temporadas**: un
+  `TcxCheckListBox` de multi-selección cada una. Convención: sin nada
+  marcado = todos.
 
-Esqueleto de la unidad (la lógica real es mínima; el grueso es el `.dfm`):
+Expone a los descendientes: `CSVAlmacenes`, `CSVFamilias`, `CSVProveedores`,
+`CSVTemporadas`, `FechaDesde`, `FechaHasta`, y (protegido) `TabFechas` /
+`DteDesde` / `DteHasta` para añadir controles propios.
 
-```pascal
-unit inMtoModalImpBalanceTallas;
-interface
-uses
-  Winapi.Windows, System.SysUtils, System.DateUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, inMtoModalGenImp, Data.DB, DBAccess, Uni,
-  frxClass, frxDBSet, cxCalendar, cxButtonEdit, cxLabel, cxRadioGroup,
-  inLibGlobalVar;
-type
-  TfrmPrintBalanceTallas = class(TfrmPrint)
-    unqryBalancePrint: TUniQuery;
-    dsBalancePrint: TDataSource;
-    fxdsBalance: TfrxDBDataset;
-    rgModo: TcxRadioGroup;        // 0=Entre fechas, 1=Acumulados
-    rgDetalle: TcxRadioGroup;     // 0=Simplificado, 1=Desglosado
-    dteDesde: TcxDateEdit;
-    dteHasta: TcxDateEdit;
-    bedAlmacen: TcxButtonEdit;    // CSV de almacenes
-    bedFamilia: TcxButtonEdit;
-    procedure rgModoPropertiesEditValueChanged(Sender: TObject);
-  private
-    FInicializado: Boolean;
-  protected
-    procedure DoShow; override;
-  public
-    procedure preparar_consulta; override;
-  end;
-implementation
-{$R *.dfm}
+La UI se crea por código (no por DFM) a propósito: los informes que hereden
+no rehacen la herencia visual, solo añaden su informe y, si procede,
+controles sobre la pestaña Fechas. Es la pieza pensada para "más informes de
+este estilo".
 
-procedure TfrmPrintBalanceTallas.DoShow;
-begin
-  inherited;
-  if not FInicializado then
-  begin
-    dteDesde.Date := EncodeDate(YearOf(Date), MonthOf(Date), 1);
-    dteHasta.Date := Date;
-    rgModo.ItemIndex    := 0;
-    rgDetalle.ItemIndex := 0;
-    FInicializado := True;
-  end;
-end;
+### 6.2 Modal `inMtoModalImpBalanceTallas`
 
-procedure TfrmPrintBalanceTallas.rgModoPropertiesEditValueChanged(
-  Sender: TObject);
-var
-  bFechas: Boolean;
-begin
-  bFechas := rgModo.ItemIndex = 0;
-  dteDesde.Enabled  := bFechas;
-  dteHasta.Enabled  := bFechas;
-  rgDetalle.Enabled := bFechas;
-end;
+Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
 
-procedure TfrmPrintBalanceTallas.preparar_consulta;
-begin
-  inherited;
-  with unqryBalancePrint do
-  begin
-    Close;
-    Connection := oConn;
-    SQL.Text :=
-      'CALL PRC_GET_BALANCE_ALMACEN_TALLAS(' +
-      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pTAR, :pDESG)';
-    if rgModo.ItemIndex = 0 then
-      ParamByName('pMODO').AsString := 'F'
-    else
-      ParamByName('pMODO').AsString := 'A';
-    ParamByName('pDESDE').AsDate := dteDesde.Date;
-    ParamByName('pHASTA').AsDate := dteHasta.Date;
-    ParamByName('pALM').AsString := Trim(bedAlmacen.Text);
-    ParamByName('pFAM').AsString := Trim(bedFamilia.Text);
-    ParamByName('pTAR').AsString :=
-      oAppParams.GetString('appTarifaDefecto', 'PVP');
-    if rgDetalle.ItemIndex = 1 then
-      ParamByName('pDESG').AsString := 'S'
-    else
-      ParamByName('pDESG').AsString := 'N';
-    Open;
-  end;
-  fxdsBalance.UpdateBounds;
-end;
-end.
-```
+- `FiltrosUsados` = las cinco pestañas.
+- Los radios **Modo** (Entre fechas / Por acumulados) y **Detalle**
+  (Simplificado / Desglosado), creados por código sobre `TabFechas`; en
+  acumulados se inhabilitan fechas y detalle.
+- `preparar_consulta`: arma el `CALL PRC_GET_BALANCE_ALMACEN_TALLAS(...)` con
+  los cuatro CSV del base + fechas + modo/detalle.
+- `AfterReportLoaded`: enlaza `fxdsBalance.DataSet := unqryBalancePrint` (la
+  foto necesita el `DataSet` directo, ver §5) y registra el dataset.
+- En su `.dfm`: la plantilla FastReport (con `foto300`) + `unqryBalancePrint`
+  + `fxdsBalance`. Sin controles de filtro (los pone el base).
 
-> Nota: `preparar_consulta` deja el `CALL …` en el `SQL.Text` (versión
-> runtime). El convenio del proyecto pide dejar una consulta válida de
-> diseño en el `.dfm`; usar un `CALL` con literales de ejemplo (ver el pie
-> de `balance_almacen_tallas.sql`) para que el diseñador FastReport vea
-> los campos.
+> En el `.dfm` de `inMtoModalImpBalanceTallas` se deja un `CALL` de diseño
+> con literales (9 argumentos) en el `SQL.Text` de `unqryBalancePrint` para
+> que el diseñador FastReport vea los campos; `preparar_consulta` lo
+> sustituye en runtime por la versión con parámetros.
 
 ---
 
@@ -329,8 +270,11 @@ Queda:
 - `balance_almacen_tallas.sql` — SP `PRC_GET_BALANCE_ALMACEN_TALLAS`
   (idempotente, no toca esquema).
 - `balance_almacen_tallas.md` — este documento.
+- `src/Modals/inMtoModalImpMultiFiltro.pas` / `.dfm` — formulario BASE
+  reutilizable con las pestañas de filtros múltiples (almacenes, familias,
+  proveedores, temporadas, fechas) construidas por código.
 - `src/Modals/inMtoModalImpBalanceTallas.pas` / `.dfm` — modal de
-  impresión (FastReport) con la plantilla base y `foto300`.
+  impresión (FastReport) con la plantilla base y `foto300`; hereda del base.
 - `src/Core/inMtoPrincipal.pas` / `.dfm` — entrada de menú Almacén →
   Informes → "Balance de Almacén Horizontal".
 - `src/Lib/inLibFotos.pas` — fallback de foto en cabeceras de grupo.
