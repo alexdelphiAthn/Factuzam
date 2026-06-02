@@ -500,6 +500,9 @@
         <DCCReference Include="src\Modals\inMtoModalImpBalanceTallas.pas">
             <Form>frmPrintBalanceTallas</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpBalanceSinTallas.pas">
+            <Form>frmPrintBalanceSinTallas</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEntradaCambio.pas">
             <Form>frmModalEntradaCambio</Form>
         </DCCReference>
@@ -510,6 +513,7 @@
         <DCCReference Include="src\Lib\inLibDocCompraExcel.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceTallasExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibBalanceSinTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioNube.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlparser.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlscanner.pas"/>
