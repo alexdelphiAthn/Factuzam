@@ -681,14 +681,22 @@ procedure TfrmMtoAppParam.cmbGrupoUsuarioPropertiesChange(Sender: TObject);
 var
   sUsuario, sGrupo: string;
 begin
-  case cmbGrupoUsuario.ItemIndex of
-    0: begin sUsuario := oUser;  sGrupo := '';     end;
-    1: begin sUsuario := '';     sGrupo := oGroup; end;
-    2: begin sUsuario := '';     sGrupo := oAll;   end;
-  else
-    Exit;
+  if cmbGrupoUsuario.ItemIndex >= 0 then
+  begin
+    case cmbGrupoUsuario.ItemIndex of
+      0: begin sUsuario := oUser;  sGrupo := '';     end;
+      1: begin sUsuario := '';     sGrupo := oGroup; end;
+      2: begin sUsuario := '';     sGrupo := oAll;   end;
+    else
+      begin
+        // Sujeto anyadido por el boton Cambiar usuario (cualquier usuario
+        // o grupo): se carga por su nombre tal cual.
+        sUsuario := cmbGrupoUsuario.Text;
+        sGrupo   := '';
+      end;
+    end;
+    CargarParametros(JvInspector1, sUsuario, sGrupo);
   end;
-  CargarParametros(JvInspector1, sUsuario, sGrupo);
 end;
 
 procedure TfrmMtoAppParam.actGuardarExecute(Sender: TObject);
@@ -773,10 +781,10 @@ begin
   try
     qry.Connection := oConn;
     qry.SQL.Text   :=
-      'SELECT DISTINCT USUARIO_GRUPO_USUPER ' +
-      '  FROM fza_usuarios_perfiles ' +
-      ' WHERE KEY_USUPER = ''frmMtoAppParam'' ' +
-      ' ORDER BY USUARIO_GRUPO_USUPER';
+      'SELECT ''Todos'' AS S ' +
+      ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
+      ' UNION SELECT USUARIO_USU FROM fza_usuarios ' +
+      ' ORDER BY S';
     qry.Open;
     while not qry.Eof do
     begin
