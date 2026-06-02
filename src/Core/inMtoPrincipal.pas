@@ -93,6 +93,7 @@ type
     mnuCajaArqueosHist: TMenuItem;
     mnuAlmacenInformes: TMenuItem;
     mnuBalanceAlmacenHorizontal: TMenuItem;
+    mnuBalanceAlmacenSinTallas: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure mnuInvocarLoginClick(Sender: TObject);
@@ -114,6 +115,7 @@ type
     procedure mnuFacturasSimplifClick(Sender: TObject);
     procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuBalanceAlmacenHorizontalClick(Sender: TObject);
+    procedure mnuBalanceAlmacenSinTallasClick(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
     procedure pcPrincipalChange(Sender: TObject);
   public
@@ -302,6 +304,7 @@ uses inLibUser,
   inMtoModalGenFilter,
   inMtoModalScriptLog,
   inMtoModalImpBalanceTallas,
+  inMtoModalImpBalanceSinTallas,
   inLibCajaParam,
   inLibAppParam,
   inLibBuscarImpresora,
@@ -1832,6 +1835,25 @@ begin
   if mnuBalanceAlmacenHorizontal.Visible then
   begin
     frm := TfrmPrintBalanceTallas.Create(Application);
+    try
+      frm.ShowModal;
+    finally
+      FreeAndNil(frm);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuBalanceAlmacenSinTallasClick(Sender: TObject);
+var
+  frm: TfrmPrintBalanceSinTallas;
+begin
+  // Informe vertical (FastReport) del balance de almacén SIN tallas: una fila
+  // por (artículo, color, banda). Incluye todos los artículos, también los no
+  // tallables que el informe horizontal deja fuera. Mismos filtros, modos,
+  // bandas y agrupaciones.
+  if mnuBalanceAlmacenSinTallas.Visible then
+  begin
+    frm := TfrmPrintBalanceSinTallas.Create(Application);
     try
       frm.ShowModal;
     finally
