@@ -662,15 +662,45 @@ end;
 // -----------------------------------------------------------------------
 
 procedure TfrmMtoAppParam.FormShow(Sender: TObject);
+var
+  qry: TUniQuery;
+  s: string;
 begin
   ConstruirInspector;
-
   cmbGrupoUsuario.Properties.Items.Clear;
+  // Todo usuario gestiona sus propios parametros (oUser) y los de su
+  // grupo (oGroup), y puede consultar los de 'Todos' (oAll) en modo
+  // solo lectura (lo aplica cmbGrupoUsuarioPropertiesChange).
   cmbGrupoUsuario.Properties.Items.Add(oUser);
   cmbGrupoUsuario.Properties.Items.Add(oGroup);
   cmbGrupoUsuario.Properties.Items.Add(oAll);
+  // Solo los administradores ven ademas la lista completa de usuarios y
+  // grupos del sistema (y pueden editarla).
+  if oRootGroup = 'S' then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT ''Todos'' AS S ' +
+        ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
+        ' UNION SELECT USUARIO_USU FROM fza_usuarios ' +
+        ' ORDER BY S';
+      qry.Open;
+      while not qry.Eof do
+      begin
+        s := qry.Fields[0].AsString;
+        if cmbGrupoUsuario.Properties.Items.IndexOf(s) < 0 then
+          cmbGrupoUsuario.Properties.Items.Add(s);
+        qry.Next;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+  cmbGrupoUsuario.Visible := True;
   cmbGrupoUsuario.ItemIndex := 0;
-  btnChangeId.Visible := (oRootGroup = 'S');
+  btnChangeId.Visible := False;
   CargarParametros(JvInspector1, oUser, '');
   RestaurarLayout;
   if edtBusqueda.CanFocus then
@@ -680,15 +710,33 @@ end;
 procedure TfrmMtoAppParam.cmbGrupoUsuarioPropertiesChange(Sender: TObject);
 var
   sUsuario, sGrupo: string;
+  bSoloLectura: Boolean;
 begin
-  case cmbGrupoUsuario.ItemIndex of
-    0: begin sUsuario := oUser;  sGrupo := '';     end;
-    1: begin sUsuario := '';     sGrupo := oGroup; end;
-    2: begin sUsuario := '';     sGrupo := oAll;   end;
-  else
-    Exit;
+  if cmbGrupoUsuario.ItemIndex >= 0 then
+  begin
+    case cmbGrupoUsuario.ItemIndex of
+      0: begin sUsuario := oUser;  sGrupo := '';     end;
+      1: begin sUsuario := '';     sGrupo := oGroup; end;
+      2: begin sUsuario := '';     sGrupo := oAll;   end;
+    else
+      begin
+        // Sujeto del desplegable completo (solo visible a administradores):
+        // se carga por su nombre tal cual.
+        sUsuario := cmbGrupoUsuario.Text;
+        sGrupo   := '';
+      end;
+    end;
+    CargarParametros(JvInspector1, sUsuario, sGrupo);
+    // Un usuario normal edita lo suyo y lo de su grupo; los parametros de
+    // 'Todos' (y cualquier otro sujeto) solo los ve en modo lectura. Los
+    // administradores editan todo.
+    bSoloLectura := (oRootGroup <> 'S') and
+                    (not SameText(cmbGrupoUsuario.Text, oUser)) and
+                    (not SameText(cmbGrupoUsuario.Text, oGroup));
+    JvInspector1.ReadOnly := bSoloLectura;
+    btnGuardar.Enabled    := not bSoloLectura;
+    actGuardar.Enabled    := not bSoloLectura;
   end;
-  CargarParametros(JvInspector1, sUsuario, sGrupo);
 end;
 
 procedure TfrmMtoAppParam.actGuardarExecute(Sender: TObject);
@@ -773,10 +821,10 @@ begin
   try
     qry.Connection := oConn;
     qry.SQL.Text   :=
-      'SELECT DISTINCT USUARIO_GRUPO_USUPER ' +
-      '  FROM fza_usuarios_perfiles ' +
-      ' WHERE KEY_USUPER = ''frmMtoAppParam'' ' +
-      ' ORDER BY USUARIO_GRUPO_USUPER';
+      'SELECT ''Todos'' AS S ' +
+      ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
+      ' UNION SELECT USUARIO_USU FROM fza_usuarios ' +
+      ' ORDER BY S';
     qry.Open;
     while not qry.Eof do
     begin
