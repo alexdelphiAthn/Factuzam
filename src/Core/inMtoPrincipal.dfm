@@ -1678,6 +1678,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           Caption = 'Balance de Almac'#233'n Horizontal'
           OnClick = mnuBalanceAlmacenHorizontalClick
         end
+        object mnuBalanceAlmacenSinTallas: TMenuItem
+          Caption = 'Balance de Almac'#233'n sin tallas'
+          OnClick = mnuBalanceAlmacenSinTallasClick
+        end
       end
     end
     object Utilidades1: TMenuItem
