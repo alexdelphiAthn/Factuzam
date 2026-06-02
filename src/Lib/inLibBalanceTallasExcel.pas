@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibBalanceTallasExcel                                       }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.2.0                                                         }
+{ Versión:       1.3.0                                                         }
 {   Fecha:       02/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -16,6 +16,10 @@
 {    FÓRMULAS de Excel (=SUM(...)) sobre las filas de detalle (no números      }
 {    fijos), de modo que recalculan si se editan las celdas. Se incrusta       }
 {    además la foto 300px del artículo a la derecha del bloque.                }
+{                                                                              }
+{    Si el SP devuelve agrupaciones (GRUPO1..GRUPO3), dibuja una cabecera por  }
+{    grupo y una línea de resumen (TOTAL del grupo, =SUM de cantidad e         }
+{    importe) en cada corte, con el mismo criterio que el informe FastReport.  }
 {                                                                              }
 {    Consume directamente el resultado del SP PRC_GET_BALANCE_ALMACEN_TALLAS    }
 {    (mismo dataset filtrado que alimenta el informe; respeta el filtrado de   }
@@ -71,6 +75,9 @@ const
   CL_CABECERA = $00EEEEEE;
   CL_FAMILIA  = $00D9D9D9;
   CL_TOTALES  = $00F2F2F2;
+  CL_GRUPO_H  = $00EED7BD;   // cabecera de grupo (azul medio claro)
+  CL_GRUPO_T  = $00F7EBDD;   // resumen/total de grupo (azul muy claro)
+  N_NIVELES   = 3;           // GRUPO1..GRUPO3
 
 constructor TBandaTot.Create;
 begin
@@ -94,6 +101,14 @@ var
   ordenBandas: TStringList;
   dictFotos  : TDictionary<string, TFotoInfo>;   // foto por artículo (1 query)
   slCod      : TStringList;
+  // Estado de las agrupaciones (GRUPO1..GRUPO3). grpCods/grpEtqs = grupo actual
+  // por nivel; grpUsado = nivel activo (etiqueta no vacía); grpFilas = filas de
+  // detalle del grupo abierto (para el =SUM del resumen).
+  grpCods    : array[1..N_NIVELES] of string;
+  grpEtqs    : array[1..N_NIVELES] of string;
+  grpUsado   : array[1..N_NIVELES] of Boolean;
+  grpFilas   : array[1..N_NIVELES] of TList<Integer>;
+  lvl, nivelCambio: Integer;
 
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
                    AOcultarCero: Boolean);
@@ -241,12 +256,78 @@ var
     ordenBandas.Clear;
   end;
 
+  // Valor de un campo de grupo (defensivo: '' si el SP no expone la columna).
+  function CampoStr(const AName: string): string;
+  var
+    fld: TField;
+  begin
+    fld := QDatos.FindField(AName);
+    if fld <> nil then
+      Result := fld.AsString
+    else
+      Result := '';
+  end;
+
+  // Cabecera de un nivel de grupo (p. ej. "Proveedor: ACME"). Sangra según el
+  // nivel para que se vea la jerarquía. Reinicia las filas acumuladas.
+  procedure AbrirGrupo(ANivel: Integer);
+  var
+    c: Integer;
+  begin
+    if grpUsado[ANivel] then
+    begin
+      W(Sheet, iRow, 0, StringOfChar(' ', (ANivel - 1) * 2) + grpEtqs[ANivel],
+        True, ssahLeft);
+      Sheet.Cells[iRow, 0].Style.Font.Size := 12;
+      for c := 0 to COL_MAX do
+        if Sheet.Cells[iRow, c] <> nil then
+        begin
+          Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := CL_GRUPO_H;
+          Sheet.Cells[iRow, c].Style.Borders[bBottom].Style := sscbsThin;
+        end;
+      Inc(iRow);
+    end;
+    grpFilas[ANivel].Clear;
+  end;
+
+  // Resumen (grand total) de un nivel de grupo: una sola línea con la suma de
+  // cantidad e importe de TODAS las filas de detalle del grupo (=SUM en vivo).
+  procedure EmitirResumenGrupo(ANivel: Integer);
+  var
+    c: Integer;
+  begin
+    if grpUsado[ANivel] and (grpFilas[ANivel].Count > 0) then
+    begin
+      W(Sheet, iRow, 0, 'TOTAL ' + grpEtqs[ANivel], True, ssahLeft);
+      WFormula(Sheet, iRow, COL_CDAD,
+        SumaFormula(grpFilas[ANivel], COL_CDAD), FMT_NUM_HZ);
+      WFormula(Sheet, iRow, COL_IMPORTE,
+        SumaFormula(grpFilas[ANivel], COL_IMPORTE), FMT_EUR_HZ);
+      for c := 0 to COL_MAX do
+        if Sheet.Cells[iRow, c] <> nil then
+        begin
+          Sheet.Cells[iRow, c].Style.Font.Style := [fsBold];
+          Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := CL_GRUPO_T;
+          Sheet.Cells[iRow, c].Style.Borders[bTop].Style := sscbsThin;
+        end;
+      Inc(iRow);
+    end;
+    grpFilas[ANivel].Clear;
+  end;
+
 begin
   ASheetControl.ClearAll;
   Sheet := ASheetControl.AddSheet('Balance',
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   dictBandas  := TObjectDictionary<string, TBandaTot>.Create([doOwnsValues]);
   ordenBandas := TStringList.Create;
+  for lvl := 1 to N_NIVELES do
+  begin
+    grpFilas[lvl] := TList<Integer>.Create;
+    grpCods[lvl]  := #1;     // centinela: la 1ª fila siempre "abre" grupo
+    grpEtqs[lvl]  := '';
+    grpUsado[lvl] := False;
+  end;
   // Pre-carga de fotos (a nivel artículo) en UNA sola consulta, evitando un
   // SELECT por artículo dentro del bucle (N+1). El bucle solo construirá la
   // ruta del fichero, que no consulta a BBDD.
@@ -293,6 +374,33 @@ begin
           // Cambio de artículo: cerrar el anterior con sus totales por banda.
           if (sArt <> sArtAct) and (sArtAct <> #1) then
             EmitirTotalesArticulo;
+          // Agrupaciones: detectar el nivel de corte, cerrar los grupos que
+          // terminan (con su resumen) y abrir los que empiezan (con cabecera).
+          grpUsado[1] := CampoStr('GRUPO1_ETIQ') <> '';
+          grpUsado[2] := CampoStr('GRUPO2_ETIQ') <> '';
+          grpUsado[3] := CampoStr('GRUPO3_ETIQ') <> '';
+          nivelCambio := N_NIVELES + 1;
+          for lvl := 1 to N_NIVELES do
+            if (nivelCambio > N_NIVELES) and grpUsado[lvl] and
+               (CampoStr(Format('GRUPO%d_COD', [lvl])) <> grpCods[lvl]) then
+              nivelCambio := lvl;
+          if nivelCambio <= N_NIVELES then
+          begin
+            // Cerrar de dentro hacia fuera (salvo en la primera fila).
+            if grpCods[1] <> #1 then
+              for lvl := N_NIVELES downto nivelCambio do
+                EmitirResumenGrupo(lvl);
+            // Abrir de fuera hacia dentro los grupos nuevos.
+            for lvl := nivelCambio to N_NIVELES do
+            begin
+              grpCods[lvl] := CampoStr(Format('GRUPO%d_COD', [lvl]));
+              grpEtqs[lvl] := CampoStr(Format('GRUPO%d_ETIQ', [lvl]));
+              AbrirGrupo(lvl);
+            end;
+            // Re-emitir cabecera de familia y artículo bajo el grupo nuevo.
+            sFamAct := #1;
+            sArtAct := #1;
+          end;
           // Salto de familia.
           if sFam <> sFamAct then
           begin
@@ -330,12 +438,19 @@ begin
           EscNum(COL_PRECIO,  QDatos.FieldByName('PRECIO').AsFloat,   FMT_EUR, False);
           EscNum(COL_IMPORTE, QDatos.FieldByName('IMPORTE').AsFloat,  FMT_EUR, False);
           AcumularBanda;
+          // La fila de detalle entra en el =SUM de cada grupo abierto.
+          for lvl := 1 to N_NIVELES do
+            if grpUsado[lvl] then
+              grpFilas[lvl].Add(iRow);
           Inc(iRow);
           QDatos.Next;
         end;
-        // Totales del último artículo.
+        // Totales del último artículo y cierre de los grupos pendientes.
         if sArtAct <> #1 then
           EmitirTotalesArticulo;
+        if grpCods[1] <> #1 then
+          for lvl := N_NIVELES downto 1 do
+            EmitirResumenGrupo(lvl);
       finally
         QDatos.EnableControls;
       end;
@@ -353,6 +468,8 @@ begin
     FreeAndNil(ordenBandas);
     FreeAndNil(dictBandas);
     FreeAndNil(dictFotos);
+    for lvl := 1 to N_NIVELES do
+      FreeAndNil(grpFilas[lvl]);
   end;
 end;
 

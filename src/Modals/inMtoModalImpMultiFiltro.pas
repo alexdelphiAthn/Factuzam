@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoModalImpMultiFiltro                                      }
 {    Tipo:       Formulario base (Modal de impresión)                          }
-{ Versión:       1.1.0                                                         }
+{ Versión:       1.2.0                                                         }
 {   Fecha:       02/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -38,7 +38,7 @@ uses
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxPC, cxCheckListBox, cxCheckBox, cxCustomListBox, cxClasses,
-  dxSkinsCore, dxSkinsForm, inLibGlobalVar;
+  cxButtons, cxSpinEdit, dxSkinsCore, dxSkinsForm, inLibGlobalVar;
 
 type
   TFiltroReport = (frFechas, frAlmacenes, frFamilias, frProveedores,
@@ -57,6 +57,16 @@ type
     destructor Destroy; override;
   end;
 
+  // Dimensión de agrupación (proveedor / familia / temporada...). El orden en
+  // la lista marca la prioridad (la primera = grupo más externo); Marcado
+  // indica si entra en la jerarquía.
+  TItemAgrup = class
+  public
+    Codigo  : string;
+    Etiqueta: string;
+    Marcado : Boolean;
+  end;
+
   TfrmPrintMultiFiltro = class(TfrmPrint)
   private
     FFiltrosCreados : Boolean;
@@ -69,6 +79,11 @@ type
     FfcFamilias     : TFiltroChecklist;
     FfcProveedores  : TFiltroChecklist;
     FfcTemporadas   : TFiltroChecklist;
+    // Pestaña de agrupaciones (reordenable). FAgrupItems es el orden actual de
+    // las dimensiones; FclbAgrup el checklist; FseNivelFam el nivel de familia.
+    FAgrupItems     : TObjectList<TItemAgrup>;
+    FclbAgrup       : TcxCheckListBox;
+    FseNivelFam     : TcxSpinEdit;
     procedure CrearUIFiltros;
     procedure CrearTabFechas;
     function  CrearTabFiltro(const ACaption: string): TFiltroChecklist;
@@ -83,6 +98,12 @@ type
     procedure ClbFiltroClickCheck(Sender: TObject; AIndex: Integer;
                                    APrevState, ANewState: TcxCheckBoxState);
     procedure SearchChange(Sender: TObject);
+    // Soporte de la pestaña de agrupaciones reordenable.
+    procedure AgrupRefrescar;
+    procedure AgrupClickCheck(Sender: TObject; AIndex: Integer;
+                              APrevState, ANewState: TcxCheckBoxState);
+    procedure AgrupSubirClick(Sender: TObject);
+    procedure AgrupBajarClick(Sender: TObject);
   protected
     // Los descendientes redefinen esto para elegir qué pestañas mostrar.
     function FiltrosUsados: TFiltrosReport; virtual;
@@ -91,6 +112,15 @@ type
     // bandas del balance, pequeña): se crea uno y se lee su selección.
     function  CrearTabChecklist(const ACaption: string): TcxCheckListBox;
     function  SeleccionadosCSV(AClb: TcxCheckListBox): string;
+    // Pestaña de agrupaciones: dimensiones (código + etiqueta) que se pueden
+    // marcar y reordenar. AConNivelFamilia añade un spin de nivel de familia.
+    // NivelesAgrupacion devuelve los códigos marcados en el orden elegido (el
+    // primero = grupo más externo). NivelFamilia da el valor del spin (0 si no).
+    function  CrearTabAgrupacion(const ACaption: string;
+                                 const ACods, AEtiqs: array of string;
+                                 AConNivelFamilia: Boolean = False): TcxCheckListBox;
+    function  NivelesAgrupacion: TArray<string>;
+    function  NivelFamilia: Integer;
     // Para que el descendiente añada controles propios (modo/detalle) sobre
     // la pestaña de fechas o gestione su habilitado.
     property TabFechas: TcxTabSheet read FtsFechas;
@@ -141,6 +171,7 @@ begin
   // Libera los TFiltroChecklist (y sus TStringList). Los controles (clb/edt)
   // son propiedad del form y los libera el inherited.
   FreeAndNil(FFiltros);
+  FreeAndNil(FAgrupItems);
   inherited Destroy;
 end;
 
@@ -467,6 +498,189 @@ begin
           Result := Result + ',';
         Result := Result + CodigoDeItem(AClb.Items[i].Text);
       end;
+end;
+
+// Crea la pestaña de agrupaciones: un checklist con las dimensiones (en el
+// orden recibido) más botones Subir/Bajar para reordenarlas y, opcionalmente,
+// un spin con el nivel de familia.
+function TfrmPrintMultiFiltro.CrearTabAgrupacion(const ACaption: string;
+  const ACods, AEtiqs: array of string;
+  AConNivelFamilia: Boolean): TcxCheckListBox;
+var
+  ts      : TcxTabSheet;
+  lbl     : TcxLabel;
+  lblNivel: TcxLabel;
+  pnl     : TPanel;
+  btnSubir: TcxButton;
+  btnBajar: TcxButton;
+  i       : Integer;
+  it      : TItemAgrup;
+begin
+  if FAgrupItems = nil then
+    FAgrupItems := TObjectList<TItemAgrup>.Create(True);
+  ts := TcxTabSheet.Create(FpcFiltros);
+  ts.PageControl := FpcFiltros;
+  ts.Caption := ACaption;
+  lbl := TcxLabel.Create(Self);
+  lbl.Parent      := ts;
+  lbl.Align       := alTop;
+  lbl.Transparent := True;
+  lbl.Caption :=
+    'Marque por qu' + #233 + ' agrupar y ordene los niveles con Subir/Bajar ' +
+    '(el primero es el grupo m' + #225 + 's externo). Sin marcar = sin agrupar.';
+  pnl := TPanel.Create(Self);
+  pnl.Parent     := ts;
+  pnl.Align      := alRight;
+  pnl.Width      := 100;
+  pnl.BevelOuter := bvNone;
+  btnSubir := TcxButton.Create(Self);
+  btnSubir.Parent  := pnl;
+  btnSubir.Left    := 10;
+  btnSubir.Top     := 10;
+  btnSubir.Width   := 80;
+  btnSubir.Caption := 'Subir';
+  btnSubir.OnClick := AgrupSubirClick;
+  btnBajar := TcxButton.Create(Self);
+  btnBajar.Parent  := pnl;
+  btnBajar.Left    := 10;
+  btnBajar.Top     := 42;
+  btnBajar.Width   := 80;
+  btnBajar.Caption := 'Bajar';
+  btnBajar.OnClick := AgrupBajarClick;
+  if AConNivelFamilia then
+  begin
+    lblNivel := TcxLabel.Create(Self);
+    lblNivel.Parent      := pnl;
+    lblNivel.Transparent := True;
+    lblNivel.Left        := 10;
+    lblNivel.Top         := 86;
+    lblNivel.Caption     := 'Nivel familia:';
+    FseNivelFam := TcxSpinEdit.Create(Self);
+    FseNivelFam.Parent             := pnl;
+    FseNivelFam.Left               := 10;
+    FseNivelFam.Top                := 106;
+    FseNivelFam.Width              := 80;
+    FseNivelFam.Properties.MinValue := 0;
+    FseNivelFam.Properties.MaxValue := 20;
+    FseNivelFam.Value              := 1;
+    FseNivelFam.Hint :=
+      'Al agrupar por familia: 0 = familia del art' + #237 +
+      'culo; 1 = familia ra' + #237 + 'z; 2, 3... niveles intermedios.';
+    FseNivelFam.ShowHint := True;
+  end;
+  FclbAgrup := TcxCheckListBox.Create(Self);
+  FclbAgrup.Parent         := ts;
+  FclbAgrup.Align          := alClient;
+  FclbAgrup.EditValueFormat := cvfStatesString;
+  FclbAgrup.OnClickCheck   := AgrupClickCheck;
+  for i := Low(ACods) to High(ACods) do
+  begin
+    it := TItemAgrup.Create;
+    it.Codigo := ACods[i];
+    if i <= High(AEtiqs) then
+      it.Etiqueta := AEtiqs[i]
+    else
+      it.Etiqueta := ACods[i];
+    it.Marcado := False;
+    FAgrupItems.Add(it);
+  end;
+  AgrupRefrescar;
+  Result := FclbAgrup;
+end;
+
+// Repinta el checklist desde FAgrupItems (orden + marcas), conservando la fila
+// seleccionada para que Subir/Bajar sean cómodos.
+procedure TfrmPrintMultiFiltro.AgrupRefrescar;
+var
+  i, sel: Integer;
+  item  : TcxCheckListBoxItem;
+begin
+  if (FclbAgrup <> nil) and (FAgrupItems <> nil) then
+  begin
+    sel := FclbAgrup.ItemIndex;
+    FclbAgrup.Items.BeginUpdate;
+    try
+      FclbAgrup.Items.Clear;
+      for i := 0 to FAgrupItems.Count - 1 do
+      begin
+        item := FclbAgrup.Items.Add;
+        item.Text := FAgrupItems[i].Etiqueta;
+        if FAgrupItems[i].Marcado then
+          item.State := cbsChecked
+        else
+          item.State := cbsUnchecked;
+      end;
+    finally
+      FclbAgrup.Items.EndUpdate;
+    end;
+    if (sel >= 0) and (sel < FclbAgrup.Items.Count) then
+      FclbAgrup.ItemIndex := sel;
+  end;
+end;
+
+procedure TfrmPrintMultiFiltro.AgrupClickCheck(Sender: TObject;
+  AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
+begin
+  if (FAgrupItems <> nil) and (AIndex >= 0) and (AIndex < FAgrupItems.Count) then
+    FAgrupItems[AIndex].Marcado := (ANewState = cbsChecked);
+end;
+
+procedure TfrmPrintMultiFiltro.AgrupSubirClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  if (FclbAgrup <> nil) and (FAgrupItems <> nil) then
+  begin
+    i := FclbAgrup.ItemIndex;
+    if i > 0 then
+    begin
+      FAgrupItems.Exchange(i, i - 1);
+      AgrupRefrescar;
+      FclbAgrup.ItemIndex := i - 1;
+    end;
+  end;
+end;
+
+procedure TfrmPrintMultiFiltro.AgrupBajarClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  if (FclbAgrup <> nil) and (FAgrupItems <> nil) then
+  begin
+    i := FclbAgrup.ItemIndex;
+    if (i >= 0) and (i < FAgrupItems.Count - 1) then
+    begin
+      FAgrupItems.Exchange(i, i + 1);
+      AgrupRefrescar;
+      FclbAgrup.ItemIndex := i + 1;
+    end;
+  end;
+end;
+
+// Códigos marcados en el orden elegido (el primero = grupo más externo).
+function TfrmPrintMultiFiltro.NivelesAgrupacion: TArray<string>;
+var
+  i  : Integer;
+  lst: TList<string>;
+begin
+  lst := TList<string>.Create;
+  try
+    if FAgrupItems <> nil then
+      for i := 0 to FAgrupItems.Count - 1 do
+        if FAgrupItems[i].Marcado then
+          lst.Add(FAgrupItems[i].Codigo);
+    Result := lst.ToArray;
+  finally
+    lst.Free;
+  end;
+end;
+
+function TfrmPrintMultiFiltro.NivelFamilia: Integer;
+begin
+  if (FseNivelFam <> nil) and (not VarIsNull(FseNivelFam.Value)) then
+    Result := FseNivelFam.Value
+  else
+    Result := 0;
 end;
 
 function TfrmPrintMultiFiltro.CSVAlmacenes: string;
