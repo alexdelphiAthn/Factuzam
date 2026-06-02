@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoSplash                                                   }
 {    Tipo:       Formulario (Core)                                             }
@@ -27,12 +27,12 @@ uses
 type
   TfrmSplash = class(TForm)
     Panel1: TPanel;
-    JvGIFAnimator1: TJvGIFAnimator;
     Panel3: TPanel;
     cxLabel1: TcxLabel;
     hlEmail: TcxHyperLinkEdit;
     cxLabel2: TcxLabel;
     btnAceptar: TcxButton;
+    Panel2: TPanel;
     procedure JvGIFAnimator1Click(Sender: TObject);
     procedure cxLabel1Click(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
@@ -101,8 +101,8 @@ begin
   bCargado := False;
   FimgLogo := TImage.Create(Self);
   FimgLogo.Parent := Panel1;
-  FimgLogo.SetBounds(JvGIFAnimator1.Left, JvGIFAnimator1.Top,
-                     JvGIFAnimator1.Width, JvGIFAnimator1.Height);
+  FimgLogo.SetBounds(Panel2.Left, Panel2.Top,
+                     Panel2.Width, Panel2.Height);
   FimgLogo.Proportional := True;
   FimgLogo.Stretch      := True;
   FimgLogo.Center       := True;
@@ -141,14 +141,14 @@ begin
       end;
     end;
   end;
-  if bCargado then
-    JvGIFAnimator1.Visible := False
-  else
-  begin
-    FreeAndNil(FimgLogo);
-    inLibLog.Log.LogWarning(
-      'Splash: no se encontro fondo (recurso ni fichero); GIF heredado.');
-  end;
+//  if bCargado then
+//    JvGIFAnimator1.Visible := False
+//  else
+//  begin
+//    FreeAndNil(FimgLogo);
+//    inLibLog.Log.LogWarning(
+//      'Splash: no se encontro fondo (recurso ni fichero); GIF heredado.');
+//  end;
   // Nombre del autor superpuesto al GIF (banda inferior del area de
   // imagen, justo encima del panel de creditos).
   FlblNombre := TcxLabel.Create(Self);
