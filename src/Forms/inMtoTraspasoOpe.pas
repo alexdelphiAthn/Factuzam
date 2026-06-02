@@ -638,12 +638,13 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
+    // Destinos: cualquier almacen ESTANDAR activo (excepto el propio), de la
+    // misma empresa o de otra (el traspaso entre empresas se graba como TA).
     q.SQL.Text :=
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM FROM fza_almacenes ' +
       ' WHERE ESACTIVO_ALM = ''S'' AND TIPO_USO_ALM = ''ESTANDAR'' ' +
-      '   AND CODIGO_EMP_ALM = :EMP AND CODIGO_ALM_ALM <> :PROPIO ' +
+      '   AND CODIGO_ALM_ALM <> :PROPIO ' +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
-    q.ParamByName('EMP').AsString := FEmpresa;
     q.ParamByName('PROPIO').AsString := FAlmacen;
     q.Open;
     while not q.Eof do

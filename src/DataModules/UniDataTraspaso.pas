@@ -535,6 +535,7 @@ function TdmTraspaso.GrabarTraspaso(const AAlmacenDestino: string;
 var
   QryTrx: TUniQuery;
   sEmpresa, sAlmacenOrigen, sCaja, sUsuario, sEmpContra, sTipoDoc: string;
+  sEmpDestino: string;
   sSku, sArticulo, sLinea, sSerieDoc, sNumeroDoc, sEmpleado: string;
   dCantidad: Double;
   cCoste, cTotal: Currency;
@@ -563,6 +564,12 @@ begin
     sTipoDoc := 'TR'
   else
     sTipoDoc := 'TA';
+  // Empresa del almacen destino (para que su movimiento de entrada quede en su
+  // empresa cuando es un traspaso entre empresas; si no se resuelve, la propia).
+  if Trim(sEmpContra) <> '' then
+    sEmpDestino := sEmpContra
+  else
+    sEmpDestino := sEmpresa;
   // Serie del documento de traspaso (de fza_empresas_series, con fallback).
   sSerieDoc := ObtenerSerieDocumento(sEmpresa, sAlmacenOrigen, sCaja, sTipoDoc);
   QryTrx := TUniQuery.Create(nil);
@@ -595,9 +602,9 @@ begin
             sLinea, sEmpresa, sAlmacenOrigen, sCaja, AAlmacenDestino, 'S',
             sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
             '', sArticulo);
-          // Entrada en el destino desde el origen.
+          // Entrada en el destino desde el origen (en la empresa del destino).
           InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
-            sLinea, sEmpresa, AAlmacenDestino, sCaja, sAlmacenOrigen, 'E',
+            sLinea, sEmpDestino, AAlmacenDestino, sCaja, sAlmacenOrigen, 'E',
             sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
             '', sArticulo);
           cTotal := cTotal + cCoste * dCantidad;
