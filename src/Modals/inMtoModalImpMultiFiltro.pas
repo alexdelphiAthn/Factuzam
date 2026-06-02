@@ -191,6 +191,10 @@ begin
   Result := TcxCheckListBox.Create(Self);
   Result.Parent := ts;
   Result.Align  := alClient;
+  // Por defecto (cvfInteger) el checklist usa una máscara de 64 bits y limita
+  // a 64 ítems; con muchos proveedores/familias se supera. cvfString quita el
+  // tope (no usamos el EditValue: leemos el State de cada ítem).
+  Result.EditValueFormat := cvfString;
 end;
 
 procedure TfrmPrintMultiFiltro.CargarChecklist(AClb: TcxCheckListBox;
