@@ -443,11 +443,17 @@
                 TabOrder = 4
                 Transparent = True
               end
-              object cxdbtxtdtTIPO_USO_ALM: TcxDBTextEdit
+              object cxdbtxtdtTIPO_USO_ALM: TcxDBComboBox
                 Left = 199
                 Top = 40
                 DataBinding.DataField = 'TIPO_USO_ALM'
                 DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.Items.Strings = (
+                  'ESTANDAR'
+                  'TARAS'
+                  'DEP'#211'SITO'
+                  'TR'#193'NSITO')
                 TabOrder = 5
                 Width = 150
               end
