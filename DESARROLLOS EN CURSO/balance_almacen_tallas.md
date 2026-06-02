@@ -99,14 +99,20 @@ CALL PRC_GET_BALANCE_ALMACEN_TALLAS(
      p_MODO,        -- 'F' entre fechas | 'A' acumulados
      p_DESDE,       -- DATE inclusive (solo 'F')
      p_HASTA,       -- DATE inclusive (solo 'F')
-     p_ALMACENES,   -- CSV "01,50" o '' = todos los activos estándar
+     p_ALMACENES,   -- CSV "01,50" o '' = todos los almacenes activos
      p_FAMILIAS,    -- CSV; '' = todas. Una familia padre incluye sus hijas
      p_PROVEEDORES, -- CSV de códigos de proveedor; '' = todos
      p_TEMPORADAS,  -- CSV de valores de temporada; '' = todas
      p_COD_TARIFA,  -- '' = 'PVP'
-     p_DESGLOSADO   -- 'S'/'N' (solo 'F')
+     p_DESGLOSADO,  -- 'S'/'N' (solo 'F')
+     p_BANDAS       -- CSV de códigos de banda; '' = todas
 );
 ```
+
+`p_BANDAS` limita qué bandas salen (códigos `EXIINI`, `ENT`, `SAL`, `VEN`,
+`EXIFIN` y, en desglosado, `ENTCMP`/`ENTALB`/`ENTTRA`/`ENTDEP`/`ENTREG`/
+`SALTRA`/`SALDEP`/`SALALB`). Vacío = todas las de la configuración de
+modo/detalle. Se aplica con un `DELETE` final sobre las bandas no elegidas.
 
 Todos los filtros multi-valor son CSV y se resuelven con `FIND_IN_SET`. Las
 familias se expanden a su descendencia con un CTE recursivo sobre
@@ -224,6 +230,10 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
 - Los radios **Modo** (Entre fechas / Por acumulados) y **Detalle**
   (Simplificado / Desglosado), creados por código sobre `TabFechas`; en
   acumulados se inhabilitan fechas y detalle.
+- Una pestaña **Bandas** (vía `CrearTabChecklist` del base) con las bandas
+  que se pueden mostrar; se rellena según modo/detalle (las bandas cambian)
+  y se refresca al cambiarlos. Sin marcar nada = todas. Se pasa como
+  `p_BANDAS`.
 - `preparar_consulta`: arma el `CALL PRC_GET_BALANCE_ALMACEN_TALLAS(...)` con
   los cuatro CSV del base + fechas + modo/detalle.
 - `AfterReportLoaded`: enlaza `fxdsBalance.DataSet := unqryBalancePrint` (la

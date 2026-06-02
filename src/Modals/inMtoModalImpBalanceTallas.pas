@@ -34,6 +34,7 @@ uses
   frxExportXLSX, frxClass, frxDBSet, frxExportBaseDialog, frxExportPDF,
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxRadioGroup,
+  cxCheckListBox, cxCheckBox, cxCustomListBox,
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frCoreClasses, inLibGlobalVar;
 
@@ -45,10 +46,12 @@ type
     FInicializado: Boolean;
     FrgModo: TcxRadioGroup;       // 0 = Entre fechas, 1 = Por acumulados
     FrgDetalle: TcxRadioGroup;    // 0 = Simplificado, 1 = Desglosado
-    // Crea los radios de modo/detalle sobre la pestaña de fechas del base.
+    FclbBandas: TcxCheckListBox;  // qué bandas mostrar (sin marcar = todas)
+    // Crea los radios de modo/detalle y la pestaña de bandas.
     procedure CrearControlesModo;
+    procedure CargarBandas;
     procedure ActualizarHabilitacion;
-    procedure rgModoChange(Sender: TObject);
+    procedure rgConfigChange(Sender: TObject);
   protected
     function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
@@ -94,26 +97,31 @@ begin
   begin
     FrgModo := TcxRadioGroup.Create(Self);
     FrgModo.Parent  := TabFechas;
-    FrgModo.Left    := 210;
-    FrgModo.Top     := 8;
-    FrgModo.Width   := 190;
-    FrgModo.Height  := 56;
+    FrgModo.Left    := 220;
+    FrgModo.Top     := 12;
+    FrgModo.Width   := 210;
+    FrgModo.Height  := 80;
     FrgModo.Caption := ' Modo ';
     FrgModo.Properties.Items.Add.Caption := 'Entre fechas';
     FrgModo.Properties.Items.Add.Caption := 'Por acumulados';
     FrgModo.ItemIndex := 0;
-    FrgModo.Properties.OnEditValueChanged := rgModoChange;
+    FrgModo.Properties.OnEditValueChanged := rgConfigChange;
     FrgDetalle := TcxRadioGroup.Create(Self);
     FrgDetalle.Parent  := TabFechas;
-    FrgDetalle.Left    := 210;
-    FrgDetalle.Top     := 70;
-    FrgDetalle.Width   := 190;
-    FrgDetalle.Height  := 56;
-    FrgDetalle.Caption := ' Detalle (entre fechas) ';
+    FrgDetalle.Left    := 220;
+    FrgDetalle.Top     := 100;
+    FrgDetalle.Width   := 210;
+    FrgDetalle.Height  := 80;
+    FrgDetalle.Caption := ' Detalle ';
     FrgDetalle.Properties.Items.Add.Caption := 'Simplificado';
     FrgDetalle.Properties.Items.Add.Caption := 'Desglosado';
     FrgDetalle.ItemIndex := 0;
+    FrgDetalle.Properties.OnEditValueChanged := rgConfigChange;
   end;
+  // Pestaña "Bandas": qué bandas mostrar. Se rellena según modo/detalle y se
+  // refresca al cambiarlos (las bandas disponibles cambian).
+  FclbBandas := CrearTabChecklist('Bandas');
+  CargarBandas;
 end;
 
 procedure TfrmPrintBalanceTallas.ActualizarHabilitacion;
@@ -129,9 +137,60 @@ begin
     FrgDetalle.Enabled := bFechas;
 end;
 
-procedure TfrmPrintBalanceTallas.rgModoChange(Sender: TObject);
+procedure TfrmPrintBalanceTallas.rgConfigChange(Sender: TObject);
 begin
   ActualizarHabilitacion;
+  CargarBandas;
+end;
+
+procedure TfrmPrintBalanceTallas.CargarBandas;
+
+  procedure Agregar(const ACod, AEtiq: string);
+  var
+    item: TcxCheckListBoxItem;
+  begin
+    item := FclbBandas.Items.Add;
+    item.Text  := ACod + ' - ' + AEtiq;
+    item.State := cbsUnchecked;
+  end;
+
+begin
+  if FclbBandas <> nil then
+  begin
+    FclbBandas.Items.Clear;
+    if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
+    begin
+      // Por acumulados.
+      Agregar('ENT',    'Entradas');
+      Agregar('SAL',    'Salidas');
+      Agregar('VEN',    'Ventas');
+      Agregar('EXIFIN', 'Existencias finales');
+    end
+    else if (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
+    begin
+      // Entre fechas, desglosado (subtipos de la consulta Ctrl+U).
+      Agregar('EXIINI', 'Existencias iniciales');
+      Agregar('ENTCMP', 'Ent. compra');
+      Agregar('ENTALB', 'Alb. entrada');
+      Agregar('ENTTRA', 'Ent. traspaso');
+      Agregar('ENTDEP', 'Ent. dep'#243'sito');
+      Agregar('ENTREG', 'Regulariz.');
+      Agregar('SALTRA', 'Sal. traspaso');
+      Agregar('SALDEP', 'Sal. dep'#243'sito');
+      Agregar('SALALB', 'Alb. venta');
+      Agregar('VEN',    'Ventas');
+      Agregar('EXIFIN', 'Existencias finales');
+    end
+    else
+    begin
+      // Entre fechas, simplificado.
+      Agregar('EXIINI', 'Existencias iniciales');
+      Agregar('ENT',    'Entradas');
+      Agregar('SAL',    'Salidas');
+      Agregar('VEN',    'Ventas');
+      Agregar('EXIFIN', 'Existencias finales');
+    end;
+  end;
 end;
 
 procedure TfrmPrintBalanceTallas.preparar_consulta;
@@ -145,7 +204,8 @@ begin
     Connection := oConn;
     SQL.Text :=
       'CALL PRC_GET_BALANCE_ALMACEN_TALLAS(' +
-      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pTAR, :pDESG)';
+      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pTAR, ' +
+      ':pDESG, :pBND)';
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
       ParamByName('pMODO').AsString := 'A'
     else
@@ -163,6 +223,7 @@ begin
       ParamByName('pDESG').AsString := 'S'
     else
       ParamByName('pDESG').AsString := 'N';
+    ParamByName('pBND').AsString := SeleccionadosCSV(FclbBandas);
     Open;
   end;
   fxdsBalance.UpdateBounds;
