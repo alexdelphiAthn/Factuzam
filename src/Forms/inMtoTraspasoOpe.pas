@@ -460,9 +460,13 @@ procedure TfrmMtoOpeTraspaso.StockViewCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
 begin
-  // Pinta el cuadradito de color en la columna del codigo (CODART/COLOR),
-  // igual que la rejilla de stock de caja.
-  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+  // El swatch de color solo aplica a la primera columna visible (Codigo, que
+  // lleva "CODART/COLOR"). En las demas (almacen, tallas) el texto — p.ej. el
+  // "0" de una talla — podia colar como valor de atributo y pintar cuadraditos
+  // donde no toca. Mismo criterio que la rejilla de stock de caja.
+  if (AViewInfo <> nil) and (AViewInfo.Item <> nil) and
+     (AViewInfo.Item.VisibleIndex = 0) and
+     PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
 
