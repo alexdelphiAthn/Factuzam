@@ -141,6 +141,7 @@ uses
   inMtoModalArqueo in 'src\Caja\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
   inMtoModalArqueosHistCaja in 'src\Caja\Modals\inMtoModalArqueosHistCaja.pas' {frmModalArqueosHistCaja},
   inMtoModalImpArqueos in 'src\Caja\Modals\inMtoModalImpArqueos.pas' {frmPrintArqueos},
+  inMtoModalImpOperaciones in 'src\Caja\Modals\inMtoModalImpOperaciones.pas' {frmPrintOperaciones},
   inMtoModalEntradaCambio in 'src\Modals\inMtoModalEntradaCambio.pas' {frmModalEntradaCambio},
   inMtoModalGastoCaja in 'src\Caja\Modals\inMtoModalGastoCaja.pas' {frmModalGastoCaja},
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',

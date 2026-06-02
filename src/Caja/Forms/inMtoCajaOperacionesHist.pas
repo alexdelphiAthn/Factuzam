@@ -58,6 +58,8 @@ type
     cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
+    btnImprimirInforme: TcxButton;
+    procedure btnImprimirInformeClick(Sender: TObject);
   private
     dmmCajaOperacionesHist: TdmCajaOperacionesHist;
   public
@@ -71,13 +73,28 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inMtoModalImpOperaciones;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaOperacionesHist }
+
+procedure TfrmMtoCajaOperacionesHist.btnImprimirInformeClick(Sender: TObject);
+var
+  frm: TfrmPrintOperaciones;
+begin
+  inherited;
+  // Informe A4 horizontal (FastReport) de las operaciones de caja. El
+  // usuario filtra empresa / almacen / caja y rango de fechas en el modal.
+  frm := TfrmPrintOperaciones.Create(Application);
+  try
+    frm.ShowModal;
+  finally
+    FreeAndNil(frm);
+  end;
+end;
 
 procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;
 begin
