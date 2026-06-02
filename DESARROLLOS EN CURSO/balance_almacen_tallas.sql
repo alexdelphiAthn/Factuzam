@@ -67,15 +67,15 @@ BEGIN
     SET v_desde      = IFNULL(p_DESDE, '1900-01-01');
     SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
     -- Lista efectiva de almacenes (CSV sin comillas, para FIND_IN_SET).
-    -- Vacío -> todos los almacenes activos de uso estándar.
+    -- Sin selección = TODOS los almacenes activos (igual que la lista del
+    -- checklist), no solo los de uso estándar: "nada marcado = todos".
     IF IFNULL(p_ALMACENES, '') <> '' THEN
         SET v_alms = p_ALMACENES;
     ELSE
         SELECT GROUP_CONCAT(`CODIGO_ALM_ALM`)
           INTO v_alms
           FROM `fza_almacenes`
-         WHERE `ESACTIVO_ALM` = 'S'
-           AND `TIPO_USO_ALM` IN ('ESTANDAR', 'ESTANDARD');
+         WHERE `ESACTIVO_ALM` = 'S';
     END IF;
     SET v_alms = IFNULL(v_alms, '');
 
