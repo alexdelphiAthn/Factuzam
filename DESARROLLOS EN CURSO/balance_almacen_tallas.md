@@ -253,7 +253,7 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   (recalculables, no números fijos). Además **incrusta la foto 300px** del
   artículo, anclada (`catTwoCell`) a la fila del artículo, vía
   `Sheet.Containers.Add(TdxSpreadSheetPictureContainer)` + `Picture.Image`
-  (un `TdxSmartImage` de `dxGDIPlusClasses`). Como usa el dataset del SP ya
+  (un `TdxSmartImage` de `dxSmartImage` / `dxGDIPlusClasses`). Como usa el dataset del SP ya
   filtrado, respeta el filtrado de bandas (y de almacenes/familias/
   proveedores/temporadas).
 
