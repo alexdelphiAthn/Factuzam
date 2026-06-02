@@ -240,6 +240,12 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   foto necesita el `DataSet` directo, ver §5) y registra el dataset.
 - En su `.dfm`: la plantilla FastReport (con `foto300`) + `unqryBalancePrint`
   + `fxdsBalance`. Sin controles de filtro (los pone el base).
+- **Excel**: redirige el botón Excel del base (que exporta el FastReport a
+  XLSX, farragoso) a una exportación propia `ExportarBalanceTallasExcel`
+  (`inLibBalanceTallasExcel`), que vuelca el resultado del SP en una hoja
+  `dxSpreadSheet` con el mismo layout que el informe (familia → artículo →
+  tallas en columnas → bandas en filas) y la muestra en `TfrmMtoPreviewExcel`
+  para guardar a `.xlsx`.
 
 > En el `.dfm` de `inMtoModalImpBalanceTallas` se deja un `CALL` de diseño
 > con literales (9 argumentos) en el `SQL.Text` de `unqryBalancePrint` para
@@ -285,6 +291,9 @@ Queda:
   proveedores, temporadas, fechas) construidas por código.
 - `src/Modals/inMtoModalImpBalanceTallas.pas` / `.dfm` — modal de
   impresión (FastReport) con la plantilla base y `foto300`; hereda del base.
+- `src/Lib/inLibBalanceTallasExcel.pas` — exportación a Excel
+  (`dxSpreadSheet`) con el mismo layout que el informe; la lanza el botón
+  Excel del modal a través de `TfrmMtoPreviewExcel`.
 - `src/Core/inMtoPrincipal.pas` / `.dfm` — entrada de menú Almacén →
   Informes → "Balance de Almacén Horizontal".
 - `src/Lib/inLibFotos.pas` — fallback de foto en cabeceras de grupo.

@@ -52,6 +52,8 @@ type
     procedure CargarBandas;
     procedure ActualizarHabilitacion;
     procedure rgConfigChange(Sender: TObject);
+    // Exportación a Excel propia (sustituye al export FastReport del base).
+    procedure ExportarExcelBalance(Sender: TObject);
   protected
     function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
@@ -68,7 +70,8 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inLibAppParam;
+  System.StrUtils, inLibAppParam, inMtoPreviewExcel, inLibBalanceTallasExcel,
+  dxSpreadSheet;
 
 { TfrmPrintBalanceTallas }
 
@@ -86,6 +89,10 @@ begin
   if not FInicializado then
   begin
     CrearControlesModo;
+    // El botón Excel del base exporta el FastReport a XLSX (queda farragoso
+    // con un informe agrupado). Lo redirigimos a una exportación limpia con
+    // el mismo layout que el informe.
+    btnExcel.OnClick := ExportarExcelBalance;
     FInicializado := True;
     ActualizarHabilitacion;
   end;
@@ -239,6 +246,31 @@ begin
   fxdsBalance.DataSet := unqryBalancePrint;
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsBalance);
+end;
+
+procedure TfrmPrintBalanceTallas.ExportarExcelBalance(Sender: TObject);
+var
+  fPreview: TfrmMtoPreviewExcel;
+begin
+  // Ejecuta el SP con los filtros actuales y vuelca el resultado en una hoja
+  // con el mismo layout que el informe (familia / artículo / tallas en
+  // columnas / bandas en filas). El visor permite guardar a .xlsx. Como el
+  // modal es fsStayOnTop, nos ocultamos mientras se muestra el visor.
+  preparar_consulta;
+  Self.Hide;
+  try
+    fPreview := TfrmMtoPreviewExcel.Create(Self);
+    try
+      fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+      fPreview.DialogoGuardar.FileName := 'Balance_almacen_tallas';
+      ExportarBalanceTallasExcel(fPreview.dxSpreadSheet1, unqryBalancePrint);
+      fPreview.ShowModal;
+    finally
+      FreeAndNil(fPreview);
+    end;
+  finally
+    Self.Show;
+  end;
 end;
 
 end.
