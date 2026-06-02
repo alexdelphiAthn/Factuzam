@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoModalImpBalanceTallas                                    }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       1.1.0                                                         }
+{ Versión:       1.2.0                                                         }
 {   Fecha:       02/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -54,6 +54,9 @@ type
     procedure rgConfigChange(Sender: TObject);
     // Exportación a Excel propia (sustituye al export FastReport del base).
     procedure ExportarExcelBalance(Sender: TObject);
+    // Handler de OnBeforePrint del report: mantiene el refresco de fotos del
+    // base y oculta las bandas de grupo de los niveles no usados.
+    procedure ReportBeforePrint(Component: TfrxReportComponent);
   protected
     function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
@@ -71,7 +74,7 @@ implementation
 
 uses
   System.StrUtils, inLibAppParam, inMtoPreviewExcel, inLibBalanceTallasExcel,
-  dxSpreadSheet;
+  dxSpreadSheet, inLibFotos;
 
 { TfrmPrintBalanceTallas }
 
@@ -129,6 +132,12 @@ begin
   // refresca al cambiarlos (las bandas disponibles cambian).
   FclbBandas := CrearTabChecklist('Bandas');
   CargarBandas;
+  // Pestaña "Agrupaciones": agrupa (con resumen por grupo) por almacén,
+  // proveedor, familia y/o temporada, en el orden elegido. El spin de nivel de
+  // familia permite agrupar por la familia raíz o por un nivel intermedio.
+  CrearTabAgrupacion('Agrupaciones',
+    ['ALM', 'PRV', 'FAM', 'TMP'],
+    ['Almac' + #233 + 'n', 'Proveedor', 'Familia', 'Temporada'], True);
 end;
 
 procedure TfrmPrintBalanceTallas.ActualizarHabilitacion;
@@ -201,8 +210,19 @@ begin
 end;
 
 procedure TfrmPrintBalanceTallas.preparar_consulta;
+var
+  niveles: TArray<string>;
+  function NivelN(idx: Integer): string;
+  begin
+    if (idx >= 0) and (idx < Length(niveles)) then
+      Result := niveles[idx]
+    else
+      Result := '';
+  end;
 begin
   inherited;
+  // Niveles de agrupación marcados (en el orden elegido) y nivel de familia.
+  niveles := NivelesAgrupacion;
   // Llamada al SP con los filtros múltiples (CSV) del base y el modo/detalle
   // propios. La tarifa de valoración es la tarifa por defecto del entorno.
   with unqryBalancePrint do
@@ -212,7 +232,7 @@ begin
     SQL.Text :=
       'CALL PRC_GET_BALANCE_ALMACEN_TALLAS(' +
       ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pTAR, ' +
-      ':pDESG, :pBND)';
+      ':pDESG, :pBND, :pN1, :pN2, :pN3, :pNFAM)';
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
       ParamByName('pMODO').AsString := 'A'
     else
@@ -231,6 +251,10 @@ begin
     else
       ParamByName('pDESG').AsString := 'N';
     ParamByName('pBND').AsString := SeleccionadosCSV(FclbBandas);
+    ParamByName('pN1').AsString := NivelN(0);
+    ParamByName('pN2').AsString := NivelN(1);
+    ParamByName('pN3').AsString := NivelN(2);
+    ParamByName('pNFAM').AsInteger := NivelFamilia;
     Open;
   end;
   fxdsBalance.UpdateBounds;
@@ -246,6 +270,36 @@ begin
   fxdsBalance.DataSet := unqryBalancePrint;
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsBalance);
+  // El base ha enganchado el OnBeforePrint a las fotos. Lo sustituimos por el
+  // nuestro, que encadena las fotos y además oculta las bandas de grupo de los
+  // niveles inactivos (sin esto, FastReport pinta una banda vacía por nivel).
+  frxrprt1.OnBeforePrint := ReportBeforePrint;
+end;
+
+procedure TfrmPrintBalanceTallas.ReportBeforePrint(
+  Component: TfrxReportComponent);
+var
+  sNom : string;
+  nivel: Integer;
+begin
+  // 1) Mantener el refresco de la foto del artículo (foto300/600/real) que
+  //    hace el base a través de oFotos.
+  oFotos.HandlerReportBeforePrint(Component);
+  // 2) Ocultar las bandas de grupo (cabecera y pie) cuyo nivel no está activo:
+  //    el SP devuelve GRUPOn_ETIQ vacío para los niveles no usados. Como los
+  //    niveles inactivos van siempre al final (el modal los manda compactados),
+  //    su condición es constante y FastReport pintaría una banda vacía.
+  if Component is TfrxBand then
+  begin
+    sNom := Component.Name;
+    nivel := 0;
+    if (Pos('GroupHeaderG', sNom) = 1) or (Pos('GroupFooterG', sNom) = 1) then
+      nivel := StrToIntDef(Copy(sNom, Length(sNom), 1), 0);
+    if (nivel >= 1) and (nivel <= 3) and unqryBalancePrint.Active then
+      TfrxBand(Component).Visible :=
+        unqryBalancePrint.FieldByName(
+          Format('GRUPO%d_ETIQ', [nivel])).AsString <> '';
+  end;
 end;
 
 procedure TfrmPrintBalanceTallas.ExportarExcelBalance(Sender: TObject);

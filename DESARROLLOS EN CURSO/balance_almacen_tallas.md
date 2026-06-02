@@ -105,8 +105,12 @@ CALL PRC_GET_BALANCE_ALMACEN_TALLAS(
      p_TEMPORADAS,  -- CSV de valores de temporada; '' = todas
      p_COD_TARIFA,  -- '' = 'PVP'
      p_DESGLOSADO,  -- 'S'/'N' (solo 'F')
-     p_BANDAS       -- CSV de códigos de banda; '' = todas
-);
+     p_BANDAS,      -- CSV de códigos de banda; '' = todas
+     p_NIVEL1,      -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/'' (ver §3.1)
+     p_NIVEL2,      -- 2º nivel de agrupación
+     p_NIVEL3,      -- 3er nivel de agrupación
+     p_NIVEL_FAM    -- nivel del árbol de familias al agrupar por FAM
+);                  --   (1 = raíz; <1 o NULL = familia hoja del artículo)
 ```
 
 `p_BANDAS` limita qué bandas salen (códigos `EXIINI`, `ENT`, `SAL`, `VEN`,
@@ -134,9 +138,51 @@ Columnas del resultado (las consume el `TfrxDBDataset` del informe):
 | `ETIQ_T01..ETIQ_T14`            | Rótulos de cabecera de talla (XS, S, M… / 34, 36…) |
 | `T01..T14`                      | Cantidades por talla (posicional, ver §4)          |
 | `CANTIDAD`,`PRECIO`,`IMPORTE`   | Totales de la banda (Cdad. / Precio / Importe)     |
+| `CODIGO_ALM`,`NOMBRE_ALM`       | Almacén (solo informativo si no se agrupa por ALM) |
+| `GRUPO1_COD`,`GRUPO1_ETIQ` … `GRUPO3_*` | Agrupaciones configurables (ver §3.1)      |
 
-Orden de salida: `ORDEN_FAM, CODIGO_FAM, CODIGO_ART_ART, ORDEN_COLOR,
-COLOR, ORDEN_BANDA`.
+Orden de salida: `GRUPO1_COD, GRUPO2_COD, GRUPO3_COD, ORDEN_FAM, CODIGO_FAM,
+CODIGO_ART_ART, ORDEN_COLOR, COLOR, ORDEN_BANDA`.
+
+---
+
+## 3.1 Agrupaciones con resumen por grupo
+
+`p_NIVEL1/2/3` definen una **jerarquía de agrupación** configurable y
+**reordenable**, con una **línea de resumen (grand total) por grupo**. Cada
+nivel puede ser:
+
+| Código | Agrupa por                                                        |
+|--------|-------------------------------------------------------------------|
+| `PRV`  | Proveedor principal del artículo (`fza_articulos_proveedores`)    |
+| `FAM`  | Familia (al nivel del árbol que indique `p_NIVEL_FAM`)            |
+| `TMP`  | Temporada (propiedad `TEMPORADA`)                                |
+| `ALM`  | Almacén                                                           |
+| `''`   | Nivel inactivo                                                    |
+
+El **orden importa**: `NIVEL1` es el grupo más externo. Ej. `PRV,FAM` agrupa
+por proveedor y, dentro de cada proveedor, por familia; el nivel de artículo
+queda siempre al final (el detalle). El SP añade `GRUPOn_COD` (para el corte
+y el orden) y `GRUPOn_ETIQ` (etiqueta "Proveedor: …" / "Familia: …" / etc.) y
+**ordena** por los `GRUPOn_COD`. Los niveles inactivos devuelven `''` en
+ambas columnas y el cliente no dibuja banda a ese nivel.
+
+- **Resumen por grupo**: una sola línea por corte de grupo con la **suma de
+  cantidad e importe de todas las filas** del grupo (el "grand total"). En
+  FastReport son `SUM()` con reinicio por grupo; en Excel son `=SUM()` en
+  vivo sobre las filas de detalle. Nota: al sumar todas las bandas, la cifra
+  es un total bruto; si se quiere el total de una sola banda (p. ej. solo
+  existencias finales), filtrar por esa banda en la pestaña Bandas.
+- **Nivel de familia** (`p_NIVEL_FAM`): si el árbol de familias tiene
+  padres-hijos, permite agrupar por la familia **raíz** (1), un nivel
+  intermedio (2, 3…) o la familia **hoja** del artículo (<1 / NULL). Se
+  resuelve construyendo el camino raíz→familia con un CTE recursivo y
+  tomando el código del nivel pedido (`tmp_bat_fam_grp`).
+- **Grano por almacén**: si **algún** nivel es `ALM`, los cálculos (stock y
+  movimientos) se **desglosan por almacén** (`tmp_bat_base` lleva
+  `CODIGO_ALM`). Si **no** se agrupa por almacén, se agregan todos los
+  almacenes filtrados en uno (comportamiento clásico). El desglose se hace
+  con un `UNION ALL` de stock + movimientos por `(unidad, almacén)`.
 
 ---
 
@@ -166,16 +212,42 @@ cabecera del grupo de artículo lo pinte (el tallaje cambia por artículo).
 ## 5. Maqueta del informe (estructura de bandas FastReport)
 
 ```
-ReportTitle      "Balance de almacén por tallas"  + filtros (fechas/almacén)
-GroupHeader[FAM] FAMILIA  <CODIGO_FAM>  <DESCRIPCION_FAM>
-GroupHeader[ART] ARTÍCULO <CODIGO_ART_ART> <DESCRIPCION_ART> <REF_PRV>
-                 + cabecera de tallas: [ETIQ_T01]..[ETIQ_T14]  Cdad Precio Importe
-                 + PictureView "foto300"   (foto del artículo, automática)
+ReportTitle       "Balance de almacén por tallas"  + filtros (fechas/almacén)
+GroupHeader[G1]   [GRUPO1_ETIQ]            (Condition = GRUPO1_COD)
+GroupHeader[G2]     [GRUPO2_ETIQ]          (Condition = GRUPO2_COD)
+GroupHeader[G3]       [GRUPO3_ETIQ]        (Condition = GRUPO3_COD)
+GroupHeader[FAM]  FAMILIA  <CODIGO_FAM>  <DESCRIPCION_FAM>
+GroupHeader[ART]  ARTÍCULO <CODIGO_ART_ART> <DESCRIPCION_ART> <REF_PRV>
+                  + cabecera de tallas: [ETIQ_T01]..[ETIQ_T14]  Cdad Precio Importe
+                  + PictureView "foto300"   (foto del artículo, automática)
 MasterData[BANDA] [ETIQUETA_BANDA] [COLOR] [T01]..[T14] [CANTIDAD] [PRECIO] [IMPORTE]
-GroupFooter[ART] TOT.ART por banda: SUM([T01])..SUM([T14]) agrupado por BANDA
-GroupFooter[FAM] TOT.NIV. <familia>
-ReportSummary    TOT.GRP.
+GroupFooter[ART]  (vacío, alto 2; estructural, ver abajo)
+GroupFooter[FAM]  (vacío, alto 2; estructural)
+GroupFooter[G3]   TOT. [GRUPO3_ETIQ]   SUM(CANTIDAD)  SUM(IMPORTE)
+GroupFooter[G2]   TOT. [GRUPO2_ETIQ]   SUM(CANTIDAD)  SUM(IMPORTE)
+GroupFooter[G1]   TOT. [GRUPO1_ETIQ]   SUM(CANTIDAD)  SUM(IMPORTE)
+PageFooter        Página x de y  ·  Impreso el …
 ```
+
+Notas de implementación de las agrupaciones en FastReport:
+
+- Las bandas `G1/G2/G3` (cabecera y pie) existen siempre en la plantilla; los
+  niveles **inactivos** se ocultan en runtime: `TfrmPrintBalanceTallas`
+  engancha `frxrprt1.OnBeforePrint` con un handler que (a) encadena el refresco
+  de la foto del base (`oFotos.HandlerReportBeforePrint`) y (b) pone
+  `Visible := (GRUPOn_ETIQ <> '')` en cada banda `GroupHeaderG#/GroupFooterG#`.
+- Los `SUM()` de los pies se reinician por grupo automáticamente (agregado en
+  GroupFooter).
+- **Pies estructurales ART/FAM**: FastReport empareja los GroupFooter con los
+  GroupHeader por anidamiento, de dentro hacia fuera. Como los grupos (de fuera
+  a dentro) son G1, G2, G3, FAM, ART, para que los pies de G3/G2/G1 emparejen
+  con su grupo hace falta que existan también los pies de ART y FAM (si no, los
+  3 pies caerían sobre ART/FAM/G3). Por eso hay un `GroupFooterArt` y un
+  `GroupFooterFam` vacíos (alto 2) antes de los de grupo. Cuando se añadan los
+  subtotales por banda del artículo (TOT.ART, §7) se rellenará el pie de ART.
+- **Verificar en el diseñador**: estas bandas se añadieron editando la
+  plantilla `.dfm` sin diseñador delante; conviene abrir el informe y
+  comprobar posiciones, el emparejado de pies y el corte de grupos.
 
 Notas de plantilla:
 
@@ -220,6 +292,14 @@ Expone a los descendientes: `CSVAlmacenes`, `CSVFamilias`, `CSVProveedores`,
 `CSVTemporadas`, `FechaDesde`, `FechaHasta`, y (protegido) `TabFechas` /
 `DteDesde` / `DteHasta` para añadir controles propios.
 
+- **Agrupaciones** (reutilizable): `CrearTabAgrupacion(caption, codigos,
+  etiquetas, conNivelFamilia)` crea una pestaña con un checklist de
+  dimensiones **reordenable** (botones Subir/Bajar) y, opcional, un spin de
+  **nivel de familia**. `NivelesAgrupacion` devuelve los códigos marcados en
+  el orden elegido (el 1º = grupo más externo); `NivelFamilia` da el valor del
+  spin. Pensado para que cualquier informo de este estilo añada agrupaciones
+  sin recodificar la mecánica.
+
 La UI se crea por código (no por DFM) a propósito: los informes que hereden
 no rehacen la herencia visual, solo añaden su informe y, si procede,
 controles sobre la pestaña Fechas. Es la pieza pensada para "más informes de
@@ -237,8 +317,14 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   que se pueden mostrar; se rellena según modo/detalle (las bandas cambian)
   y se refresca al cambiarlos. Sin marcar nada = todas. Se pasa como
   `p_BANDAS`.
+- Una pestaña **Agrupaciones** (vía `CrearTabAgrupacion` del base) con las
+  dimensiones `ALM`/`PRV`/`FAM`/`TMP` reordenables + spin de nivel de familia.
+  Se mapea a `p_NIVEL1/2/3` (códigos marcados en orden) y `p_NIVEL_FAM`.
 - `preparar_consulta`: arma el `CALL PRC_GET_BALANCE_ALMACEN_TALLAS(...)` con
-  los cuatro CSV del base + fechas + modo/detalle.
+  los cuatro CSV del base + fechas + modo/detalle + bandas + agrupaciones.
+- `AfterReportLoaded`: además de enlazar el dataset, sustituye
+  `frxrprt1.OnBeforePrint` por `ReportBeforePrint` (fotos + ocultar niveles
+  de grupo inactivos, ver §5).
 - `AfterReportLoaded`: enlaza `fxdsBalance.DataSet := unqryBalancePrint` (la
   foto necesita el `DataSet` directo, ver §5) y registra el dataset.
 - En su `.dfm`: la plantilla FastReport (con `foto300`) + `unqryBalancePrint`
@@ -255,10 +341,13 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   `Sheet.Containers.Add(TdxSpreadSheetPictureContainer)` + `Picture.Image`
   (un `TdxSmartImage` de `dxSmartImage` / `dxGDIPlusClasses`). Como usa el dataset del SP ya
   filtrado, respeta el filtrado de bandas (y de almacenes/familias/
-  proveedores/temporadas).
+  proveedores/temporadas). Si hay **agrupaciones**, dibuja una **cabecera**
+  por grupo (`GRUPOn_ETIQ`, sangrada por nivel) y una **línea de resumen**
+  (TOTAL del grupo con `=SUM()` de cantidad e importe sobre las filas de
+  detalle del grupo), con el mismo corte que el informe.
 
 > En el `.dfm` de `inMtoModalImpBalanceTallas` se deja un `CALL` de diseño
-> con literales (9 argumentos) en el `SQL.Text` de `unqryBalancePrint` para
+> con literales (14 argumentos) en el `SQL.Text` de `unqryBalancePrint` para
 > que el diseñador FastReport vea los campos; `preparar_consulta` lo
 > sustituye en runtime por la versión con parámetros.
 
@@ -278,9 +367,13 @@ Queda:
 1. Aplicar `balance_almacen_tallas.sql` a las BBDD existentes (crea el SP;
    no toca esquema). Idempotente.
 2. Compilar `fzam.dproj` en el IDE y verificar el modal y la plantilla.
-3. (Opcional) Refinar la maqueta en el diseñador FastReport: subtotales
-   por banda (TOT.ART), TOT.NIV. por familia, swatch de color con
-   `COLOR_HEX` y ajuste fino de anchos de columna.
+3. Verificar en el diseñador FastReport las bandas de grupo nuevas
+   (`G1/G2/G3` cabecera y pie) y el ocultado de niveles inactivos
+   (`ReportBeforePrint`): el alta de bandas se hizo editando la plantilla
+   embebida en el `.dfm` sin compilador/diseñador delante, así que conviene
+   abrir el informe y revisar posiciones, anchos y el corte de grupos.
+   (Opcional) subtotales por banda dentro del artículo (TOT.ART) y swatch de
+   color con `COLOR_HEX`.
 4. (Opcional) Gatear por permisos: la entrada de menú se lanza directa
    (siempre visible). Si se quiere ocultar por permiso, registrar el ítem
    en el sistema de ventanas (`oFzaWinf`) o añadir un `TienePermiso` en
