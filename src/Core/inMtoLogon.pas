@@ -362,6 +362,11 @@ begin
     end;
   end;
 
+  // --- /relogin: reinicio desde 'Invocar login'. Vacia la contrasena
+  // recordada para forzar que se introduzca de nuevo (el auto-login ya
+  // queda neutralizado en IsInitializeAuto). ---
+  if FindCmdLineSwitch('relogin', True) then
+    edtPass.Text := '';
   // --- 4. Auto-login protegido ---
   if IsInitializeAuto then
   begin
@@ -959,7 +964,13 @@ end;
 
 function TfrmLogon.IsInitializeAuto: Boolean;
 begin
-  Result := chkAuto.Checked;
+  // El conmutador /relogin (reinicio desde 'Invocar login' del menu
+  // principal) ignora el auto-login para forzar la reidentificacion
+  // manual, sin alterar la configuracion guardada del auto-login.
+  if FindCmdLineSwitch('relogin', True) then
+    Result := False
+  else
+    Result := chkAuto.Checked;
   {$IFDEF DEBUG}
     //Result := False;
   {$ENDIF }
