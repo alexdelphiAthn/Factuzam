@@ -662,15 +662,44 @@ end;
 // -----------------------------------------------------------------------
 
 procedure TfrmMtoAppParam.FormShow(Sender: TObject);
+var
+  qry: TUniQuery;
+  s: string;
 begin
   ConstruirInspector;
-
   cmbGrupoUsuario.Properties.Items.Clear;
   cmbGrupoUsuario.Properties.Items.Add(oUser);
   cmbGrupoUsuario.Properties.Items.Add(oGroup);
   cmbGrupoUsuario.Properties.Items.Add(oAll);
+  // El selector de usuario/grupo solo lo ven los administradores
+  // (oRootGroup = 'S'); para ellos se llena con todos los usuarios y
+  // grupos del sistema. Un usuario normal no lo ve y solo gestiona sus
+  // propios parametros.
+  cmbGrupoUsuario.Visible := (oRootGroup = 'S');
+  if oRootGroup = 'S' then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT ''Todos'' AS S ' +
+        ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
+        ' UNION SELECT USUARIO_USU FROM fza_usuarios ' +
+        ' ORDER BY S';
+      qry.Open;
+      while not qry.Eof do
+      begin
+        s := qry.Fields[0].AsString;
+        if cmbGrupoUsuario.Properties.Items.IndexOf(s) < 0 then
+          cmbGrupoUsuario.Properties.Items.Add(s);
+        qry.Next;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
   cmbGrupoUsuario.ItemIndex := 0;
-  btnChangeId.Visible := (oRootGroup = 'S');
+  btnChangeId.Visible := False;
   CargarParametros(JvInspector1, oUser, '');
   RestaurarLayout;
   if edtBusqueda.CanFocus then
