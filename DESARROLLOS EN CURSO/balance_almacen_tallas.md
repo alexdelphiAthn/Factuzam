@@ -301,9 +301,10 @@ end.
 
 Ya hecho: SP, modal `inMtoModalImpBalanceTallas` (`.pas`/`.dfm` con
 plantilla y `foto300`), entrada de menú Almacén → Informes, registro en
-`fzam.dpr`/`fzam.dproj`, pump de versión en `inLibGlobalVar.pas` y el
-fallback en `inLibFotos.ObtenerDataSetDeBandaPadre` para que la foto se
-resuelva en cabeceras de grupo (no solo en bandas de datos).
+`fzam.dpr`/`fzam.dproj` y el fallback en
+`inLibFotos.ObtenerDataSetDeBandaPadre` para que la foto se resuelva en
+cabeceras de grupo (no solo en bandas de datos). El selector de almacén
+admite uno o varios (lista CSV; el SP filtra con `FIND_IN_SET`).
 
 Queda:
 
