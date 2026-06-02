@@ -1,0 +1,532 @@
+inherited frmPrintPagos: TfrmPrintPagos
+  Caption = 'Imprimir Hist'#243'rico de Pagos'
+  ClientHeight = 320
+  TextHeight = 19
+  object lblFechas: TcxLabel
+    Left = 12
+    Top = 10
+    Caption = 'Rango de fechas:'
+    TabOrder = 6
+    Transparent = True
+  end
+  object lblDesde: TcxLabel
+    Left = 12
+    Top = 34
+    Caption = 'Fecha inicio:'
+    TabOrder = 7
+    Transparent = True
+  end
+  object dteDesde: TcxDateEdit
+    Left = 12
+    Top = 52
+    TabOrder = 1
+    Width = 172
+  end
+  object lblHasta: TcxLabel
+    Left = 12
+    Top = 80
+    Caption = 'Fecha fin:'
+    TabOrder = 8
+    Transparent = True
+  end
+  object dteHasta: TcxDateEdit
+    Left = 12
+    Top = 98
+    TabOrder = 2
+    Width = 172
+  end
+  object lblCajaTit: TcxLabel
+    Left = 12
+    Top = 130
+    Caption = 'Caja a imprimir:'
+    TabOrder = 9
+    Transparent = True
+  end
+  object lblEmpresa: TcxLabel
+    Left = 12
+    Top = 154
+    Caption = 'Empresa:'
+    TabOrder = 10
+    Transparent = True
+  end
+  object edtEmpresa: TcxTextEdit
+    Left = 12
+    Top = 172
+    Properties.ReadOnly = True
+    TabOrder = 3
+    Width = 172
+  end
+  object lblAlmacen: TcxLabel
+    Left = 12
+    Top = 200
+    Caption = 'Almac'#233'n:'
+    TabOrder = 11
+    Transparent = True
+  end
+  object bedAlmacen: TcxButtonEdit
+    Left = 12
+    Top = 218
+    Properties.Buttons = <
+      item
+        Default = True
+        Kind = bkEllipsis
+      end>
+    Properties.OnButtonClick = bedAlmacenPropertiesButtonClick
+    TabOrder = 4
+    Width = 172
+  end
+  object lblCaja: TcxLabel
+    Left = 12
+    Top = 246
+    Caption = 'Caja:'
+    TabOrder = 12
+    Transparent = True
+  end
+  object bedCaja: TcxButtonEdit
+    Left = 12
+    Top = 264
+    Properties.Buttons = <
+      item
+        Default = True
+        Kind = bkEllipsis
+      end>
+    Properties.OnButtonClick = bedCajaPropertiesButtonClick
+    TabOrder = 5
+    Width = 172
+  end
+  inherited frxrprt1: TfrxReport
+    Datasets = <
+      item
+        DataSet = fxdsPagos
+        DataSetName = 'Pagos'
+      end>
+    Variables = <>
+    Style = <>
+    inherited Page1: TfrxReportPage
+      Orientation = poLandscape
+      PaperWidth = 297.000000000000000000
+      PaperHeight = 210.000000000000000000
+      LeftMargin = 10.000000000000000000
+      RightMargin = 10.000000000000000000
+      TopMargin = 10.000000000000000000
+      BottomMargin = 10.000000000000000000
+    end
+  end
+  inherited frxReportOrigen: TfrxReport
+    Datasets = <
+      item
+        DataSet = fxdsPagos
+        DataSetName = 'Pagos'
+      end>
+    Variables = <>
+    Style = <>
+    inherited Page1: TfrxReportPage
+      Orientation = poLandscape
+      PaperWidth = 297.000000000000000000
+      PaperHeight = 210.000000000000000000
+      LeftMargin = 10.000000000000000000
+      RightMargin = 10.000000000000000000
+      TopMargin = 10.000000000000000000
+      BottomMargin = 10.000000000000000000
+      object ReportTitle1: TfrxReportTitle
+        Height = 54.000000000000000000
+        Top = 0.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+        object MemoTitulo: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 4.000000000000000000
+          Width = 1047.000000000000000000
+          Height = 26.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -18
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haCenter
+          Memo.UTF8W = (
+            'PAGOS DE CAJA')
+          ParentFont = False
+        end
+        object MemoSubtitulo: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 32.000000000000000000
+          Width = 1047.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haCenter
+          Memo.UTF8W = (
+            'Listado de pagos de caja - [Date]')
+          ParentFont = False
+        end
+      end
+      object PageHeader1: TfrxPageHeader
+        Height = 22.000000000000000000
+        Top = 58.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+        object MemoHSerie: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 2.000000000000000000
+          Width = 80.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            'Serie')
+          ParentFont = False
+        end
+        object MemoHOperacion: TfrxMemoView
+          Left = 80.000000000000000000
+          Top = 2.000000000000000000
+          Width = 100.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            'Operaci'#243'n')
+          ParentFont = False
+        end
+        object MemoHLinea: TfrxMemoView
+          Left = 180.000000000000000000
+          Top = 2.000000000000000000
+          Width = 45.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            'L'#237'n.')
+          ParentFont = False
+        end
+        object MemoHFecha: TfrxMemoView
+          Left = 225.000000000000000000
+          Top = 2.000000000000000000
+          Width = 125.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            'Fecha')
+          ParentFont = False
+        end
+        object MemoHFormaPago: TfrxMemoView
+          Left = 350.000000000000000000
+          Top = 2.000000000000000000
+          Width = 85.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            'Forma pago')
+          ParentFont = False
+        end
+        object MemoHDivisa: TfrxMemoView
+          Left = 435.000000000000000000
+          Top = 2.000000000000000000
+          Width = 70.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            'Divisa')
+          ParentFont = False
+        end
+        object MemoHEntregado: TfrxMemoView
+          Left = 505.000000000000000000
+          Top = 2.000000000000000000
+          Width = 130.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            'Entregado')
+          ParentFont = False
+        end
+        object MemoHCambio: TfrxMemoView
+          Left = 635.000000000000000000
+          Top = 2.000000000000000000
+          Width = 120.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            'Cambio')
+          ParentFont = False
+        end
+        object MemoHReferencia: TfrxMemoView
+          Left = 755.000000000000000000
+          Top = 2.000000000000000000
+          Width = 292.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            'Referencia')
+          ParentFont = False
+        end
+      end
+      object MasterData1: TfrxMasterData
+        FillType = ftBrush
+        Height = 20.000000000000000000
+        Top = 84.000000000000000000
+        Width = 1047.000000000000000000
+        DataSet = fxdsPagos
+        DataSetName = 'Pagos'
+        RowCount = 0
+        Frame.Typ = []
+        object MemoSerie: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 1.000000000000000000
+          Width = 80.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Pagos."SERIE_OPERACION_PAGO"]')
+          ParentFont = False
+        end
+        object MemoOperacion: TfrxMemoView
+          Left = 80.000000000000000000
+          Top = 1.000000000000000000
+          Width = 100.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Pagos."NUMERO_OPERACION_PAGO"]')
+          ParentFont = False
+        end
+        object MemoLinea: TfrxMemoView
+          Left = 180.000000000000000000
+          Top = 1.000000000000000000
+          Width = 45.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[Pagos."NUMERO_LINEA_PAGO"]')
+          ParentFont = False
+        end
+        object MemoFecha: TfrxMemoView
+          Left = 225.000000000000000000
+          Top = 1.000000000000000000
+          Width = 125.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          DisplayFormat.FormatStr = 'dd/mm/yyyy hh:nn'
+          DisplayFormat.Kind = fkDateTime
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Pagos."FECHA_PAGO"]')
+          ParentFont = False
+        end
+        object MemoFormaPago: TfrxMemoView
+          Left = 350.000000000000000000
+          Top = 1.000000000000000000
+          Width = 85.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Pagos."CODIGO_FP_CFP"]')
+          ParentFont = False
+        end
+        object MemoDivisa: TfrxMemoView
+          Left = 435.000000000000000000
+          Top = 1.000000000000000000
+          Width = 70.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Pagos."CODIGO_DIVISA_PAGO"]')
+          ParentFont = False
+        end
+        object MemoEntregado: TfrxMemoView
+          Left = 505.000000000000000000
+          Top = 1.000000000000000000
+          Width = 130.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[Pagos."IMPORTE_ENTREGADO_PAGO"]')
+          ParentFont = False
+        end
+        object MemoCambio: TfrxMemoView
+          Left = 635.000000000000000000
+          Top = 1.000000000000000000
+          Width = 120.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[Pagos."IMPORTE_CAMBIO_PAGO"]')
+          ParentFont = False
+        end
+        object MemoReferencia: TfrxMemoView
+          Left = 755.000000000000000000
+          Top = 1.000000000000000000
+          Width = 292.000000000000000000
+          Height = 18.000000000000000000
+          DataSet = fxdsPagos
+          DataSetName = 'Pagos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Pagos."REFERENCIA_FACPAG"]')
+          ParentFont = False
+        end
+      end
+      object PageFooter1: TfrxPageFooter
+        Height = 18.000000000000000000
+        Top = 110.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+        object MemoFooter: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 2.000000000000000000
+          Width = 1047.000000000000000000
+          Height = 14.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            'P'#225'gina [Page#]')
+          ParentFont = False
+        end
+      end
+    end
+  end
+  object unqryPagosPrint: TUniQuery
+    SQL.Strings = (
+      'SELECT * FROM vi_caja_pagos')
+    Left = 96
+    Top = 16
+  end
+  object dsPagosPrint: TDataSource
+    DataSet = unqryPagosPrint
+    Left = 96
+    Top = 72
+  end
+  object fxdsPagos: TfrxDBDataset
+    Description = 'Pagos'
+    UserName = 'Pagos'
+    CloseDataSource = False
+    DataSource = dsPagosPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 96
+    Top = 128
+  end
+end
