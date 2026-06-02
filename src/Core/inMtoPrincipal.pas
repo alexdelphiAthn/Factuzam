@@ -234,6 +234,10 @@ type
     procedure ActualizarFondoLogo;
     procedure CargarFondoLogo;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+    // Atajos globales capturados a nivel de aplicacion (las ventanas de caja
+    // son top-level y no pasan por IsShortCut): F9 abre cajon en caja y
+    // Ctrl+U abre la consulta de stock en cualquier pantalla.
+    procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
     procedure ScriptAfterExecute(Sender: TObject;
@@ -284,6 +288,8 @@ uses inLibUser,
   inMtoAppParam,
   inMtoCajaMenu,
   inMtoCajaParam,
+  inLibGenerarTicketCaja,
+  inMtoStockConsulta,
   inMtoModalGenFilter,
   inMtoModalScriptLog,
   inLibCajaParam,
@@ -446,6 +452,7 @@ begin
   Application.OnException := AppException;
   FSavedNCMValid := False;
   Application.OnIdle := ApplicationEvents1Idle;
+  Application.OnMessage := AppMessage;
   sDis := '';
   oMemoSQL := cxMemo1;
   // Splash no-modal al arrancar. Lo mantenemos visible mientras corre el
@@ -1121,6 +1128,7 @@ procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 //  I: Integer;
 begin
   Application.OnException := nil;
+  Application.OnMessage := nil;
   inherited;
   try
     inLibLog.Log.LogInfo('Cerrando ventana principal');
@@ -1179,6 +1187,47 @@ begin
   // sigue nil y ActualizarFondoLogo deja Visible=False).
   imgFondoLogo.BringToFront;
   ActualizarFondoLogo;
+end;
+
+procedure TfrmMtoPrincipal.AppMessage(var Msg: TMsg; var Handled: Boolean);
+var
+  LForm: TForm;
+  ts: TcxTabSheet;
+  sArt, sSku: string;
+begin
+  // Solo pulsaciones de tecla y descartando la autorrepeticion (bit 30).
+  if (Msg.message = WM_KEYDOWN) and ((Msg.lParam and $40000000) = 0) then
+  begin
+    // F9: abrir el cajon en caja. Solo con sesion de caja abierta
+    // (frmMtoMenuCaja vivo) y F9 sola, sin Ctrl/Alt/Mayus.
+    if (Msg.wParam = WPARAM(VK_F9)) and Assigned(frmMtoMenuCaja) and
+       (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
+       (GetKeyState(VK_SHIFT) >= 0) then
+    begin
+      AbrirCajonSinVenta;
+      Handled := True;
+    end
+    // Ctrl+U: consulta de stock global, precargando el articulo en foco.
+    else if (Msg.wParam = WPARAM(Ord('U'))) and (GetKeyState(VK_CONTROL) < 0) and
+            (GetKeyState(VK_MENU) >= 0) and (GetKeyState(VK_SHIFT) >= 0) then
+    begin
+      // Si el principal esta activo, el form logico es el de la pestaña activa.
+      LForm := Screen.ActiveForm;
+      if (LForm = Self) and (pcPrincipal.PageCount > 0) and
+         (pcPrincipal.ActivePageIndex >= 0) then
+      begin
+        ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
+        if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
+          LForm := TForm(ts.Controls[0]);
+      end;
+      sArt := '';
+      sSku := '';
+      if LForm is TfrmBase then
+        TfrmBase(LForm).ResolverArtSkuStock(sArt, sSku);
+      MostrarStockConsulta(LForm, sArt, sSku);
+      Handled := True;
+    end;
+  end;
 end;
 
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;

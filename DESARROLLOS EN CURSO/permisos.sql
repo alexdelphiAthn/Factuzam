@@ -139,10 +139,17 @@ VALUES
   ('Todos', 'caja.cambiarFecha',         'N', 'Cambiar fecha de operación en caja',        NOW(), 'SISTEMA'),
   ('Todos', 'caja.anularOperacion',      'S', 'Anular una operación de caja',              NOW(), 'SISTEMA'),
   ('Todos', 'caja.devolverArticulo',     'S', 'Realizar devolución de artículo',           NOW(), 'SISTEMA'),
-  ('Todos', 'caja.abrirCajon',           'S', 'Abrir cajón sin venta',                     NOW(), 'SISTEMA'),
+  ('Todos', 'caja.abrirCajon',           'S', 'Abrir cajón sin venta (F9)',                NOW(), 'SISTEMA'),
   ('Todos', 'caja.entradaCambio',        'S', 'Realizar entrada de cambio',                NOW(), 'SISTEMA'),
   ('Todos', 'caja.gastoCaja',            'S', 'Registrar gasto de caja',                   NOW(), 'SISTEMA'),
   ('Todos', 'caja.verCoste',             'S', 'Ver coste/importe en traspasos y caja',     NOW(), 'SISTEMA');
+
+-- Refresca la descripcion de caja.abrirCajon para reflejar el atajo F9 en
+-- instalaciones que ya tuvieran la fila (INSERT IGNORE no actualiza filas).
+UPDATE fza_permisos
+   SET DESCRIPCION_PERM = 'Abrir cajón sin venta (F9)'
+ WHERE CODIGO_PERM      = 'caja.abrirCajon'
+   AND DESCRIPCION_PERM = 'Abrir cajón sin venta';
 
 -- =====================================================================
 -- 6. Alta de la pantalla de Permisos en el menú (fza_winforms).
