@@ -1,15 +1,19 @@
 inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
   Caption = 'Movimientos de Almac'#233'n'
-  TextHeight = 19
+  StyleElements = [seFont, seClient, seBorder]
+  TextHeight = 17
   inherited pButtonPage: TPanel
+    StyleElements = [seFont, seClient, seBorder]
     inherited pcPantalla: TcxPageControl
       Properties.ActivePage = tsLista
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 943
-        ExplicitHeight = 484
+        ExplicitLeft = 2
+        ExplicitTop = 27
+        ExplicitWidth = 947
+        ExplicitHeight = 489
         inherited cxGrdPrincipal: TcxGrid
+          Height = 489
+          ExplicitHeight = 489
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             OptionsData.Editing = True
             object cxGrdDBTabPrinNUMERO_MOV: TcxGridDBColumn
@@ -95,20 +99,20 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
             object cxGrdDBTabPrinCODIGO_ALMACEN_CONTRA_MOV: TcxGridDBColumn
               Caption = 'Almac'#233'n Contra'
               DataBinding.FieldName = 'CODIGO_ALM_CONTRA_MOV'
-              Width = 130
               Visible = False
+              Width = 130
             end
             object cxGrdDBTabPrinCODIGO_CLIENTE_MOV: TcxGridDBColumn
               Caption = 'Cliente'
               DataBinding.FieldName = 'CODIGO_CLI_MOV'
-              Width = 120
               Visible = False
+              Width = 120
             end
             object cxGrdDBTabPrinCODIGO_PROVEEDOR_MOV: TcxGridDBColumn
               Caption = 'Proveedor'
               DataBinding.FieldName = 'CODIGO_PRV_MOV'
-              Width = 120
               Visible = False
+              Width = 120
             end
             object cxGrdDBTabPrinESACTIVO_MOV: TcxGridDBColumn
               Caption = 'Activo'
@@ -121,38 +125,38 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
             object cxGrdDBTabPrinTIPO_DOC_REF_MOV: TcxGridDBColumn
               Caption = 'Tipo Ref.'
               DataBinding.FieldName = 'TIPO_DOC_REF_MOV'
-              Width = 90
               Visible = False
+              Width = 90
             end
             object cxGrdDBTabPrinSERIE_DOC_REF_MOV: TcxGridDBColumn
               Caption = 'Serie Ref.'
               DataBinding.FieldName = 'SERIE_DOC_REF_MOV'
-              Width = 100
               Visible = False
+              Width = 100
             end
             object cxGrdDBTabPrinNRO_DOC_REF_MOV: TcxGridDBColumn
               Caption = 'Nro. Ref.'
               DataBinding.FieldName = 'NUMERO_DOC_REF_MOV'
-              Width = 100
               Visible = False
+              Width = 100
             end
             object cxGrdDBTabPrinLINEA_REF_MOV: TcxGridDBColumn
               Caption = 'L'#237'nea Ref.'
               DataBinding.FieldName = 'LINEA_REF_MOV'
-              Width = 90
               Visible = False
+              Width = 90
             end
             object cxGrdDBTabPrinLOTE_MOV: TcxGridDBColumn
               Caption = 'Lote'
               DataBinding.FieldName = 'LOTE_MOV'
-              Width = 110
               Visible = False
+              Width = 110
             end
             object cxGrdDBTabPrinFECHA_CADUCIDAD_MOV: TcxGridDBColumn
               Caption = 'F. Caducidad'
               DataBinding.FieldName = 'FECHA_CADUCIDAD_MOV'
-              Width = 120
               Visible = False
+              Width = 120
             end
             object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
               Caption = 'Instante Alta'
@@ -163,8 +167,8 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               Caption = 'Instante Modif'
               DataBinding.FieldName = 'INSTANTE_MODIF'
-              Options.Editing = False
               Visible = False
+              Options.Editing = False
               Width = 150
             end
             object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
@@ -176,8 +180,8 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
             object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
               Caption = 'Usuario Modif'
               DataBinding.FieldName = 'USUARIO_MODIF'
-              Options.Editing = False
               Visible = False
+              Options.Editing = False
               Width = 130
             end
           end
@@ -185,23 +189,34 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
       end
       inherited tsFicha: TcxTabSheet
         TabVisible = False
-        ExplicitLeft = 4
-        ExplicitTop = 30
-        ExplicitWidth = 943
-        ExplicitHeight = 484
+        ExplicitLeft = 2
+        ExplicitTop = 27
+        ExplicitWidth = 947
+        ExplicitHeight = 489
       end
       inherited tsPerfil: TcxTabSheet
         inherited pnlPerfilTop: TPanel
+          StyleElements = [seFont, seClient, seBorder]
           inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
+            ExplicitHeight = 25
+          end
+        end
+        inherited pnlPerfilDetail: TPanel
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitHeight = 432
+          inherited cxgrdPerfil: TcxGrid
+            Height = 432
+            ExplicitHeight = 432
           end
         end
       end
     end
     inherited pnlTopPage: TPanel
+      StyleElements = [seFont, seClient, seBorder]
       inherited pnlTopGrid: TPanel
+        StyleElements = [seFont, seClient, seBorder]
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 240
@@ -210,7 +225,40 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
       end
     end
   end
+  inherited pButtonRightBar: TPanel
+    StyleElements = [seFont, seClient, seBorder]
+    inherited pButtonGen: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+    end
+    object btnIraArticulo: TcxButton
+      Left = -1
+      Top = 240
+      Width = 138
+      Height = 34
+      Caption = '&Ir a Art'#237'culo'
+      TabOrder = 2
+      OnClick = btnIraArticuloClick
+    end
+  end
   inherited dsTablaG: TDataSource
     DataSet = dmMovimientosAlmacen.unqryTablaG
+  end
+  object ActionList1: TActionList
+    Left = 528
+    Top = 264
+    object Action1: TAction
+      Caption = 'Art'#237'culos'
+      ShortCut = 16449
+      OnExecute = Action1Execute
+    end
   end
 end
