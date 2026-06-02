@@ -530,6 +530,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             PropertiesClassName = 'TcxTextEditProperties'
             Properties.OnEditValueChanged = tvUdsPropertiesEditValueChanged
             Properties.OnValidate = tvUdsPropertiesValidate
+            HeaderAlignmentHorz = taRightJustify
             BestFitMaxWidth = 50
           end
           object tvPrecioUni: TcxGridDBColumn
@@ -556,6 +557,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             DataBinding.FieldName = 'PRECIO_DTO_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.OnEditValueChanged = tvDescuentoMenosPropertiesEditValueChanged
+            HeaderAlignmentHorz = taRightJustify
             Width = 152
           end
           object tvTotal: TcxGridDBColumn
@@ -564,6 +566,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.ReadOnly = False
             Properties.OnEditValueChanged = tvTotalPropertiesEditValueChanged
+            HeaderAlignmentHorz = taRightJustify
             Width = 137
           end
         end
