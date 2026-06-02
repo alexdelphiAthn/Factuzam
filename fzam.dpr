@@ -149,6 +149,7 @@ uses
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
   inLibDocCompraExcel in 'src\Lib\inLibDocCompraExcel.pas',
   inLibInventarioExcel in 'src\Lib\inLibInventarioExcel.pas',
+  inLibBalanceTallasExcel in 'src\Lib\inLibBalanceTallasExcel.pas',
   inLibInventarioNube in 'src\Lib\inLibInventarioNube.pas',
   ts.core.sqlparser in 'src\Lib\sqlformatter\ts.core.sqlparser.pas',
   ts.core.sqlscanner in 'src\Lib\sqlformatter\ts.core.sqlscanner.pas',
