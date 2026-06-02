@@ -351,24 +351,33 @@ begin
       Calculador.TipoIva := VarToStr(NuevoValor) // El Tipo IVA es string
     else if SameText(NombreCampo, 'TOTAL_FACLIN') then
     begin
+      // El usuario teclea el total liquido de la linea: calculamos el
+      // descuento UNITARIO necesario para alcanzarlo (de ahi la division
+      // por la cantidad) y dejamos que el calculador propague %, precios
+      // y totales.
       TotalBruto := Calculador.PrecioSal * Calculador.Cant;
-      if TotalBruto <> 0 then
-        Diferencia := TotalBruto - ValorCurrency
+      if (TotalBruto <> 0) and (Calculador.Cant <> 0) then
+        Diferencia := (TotalBruto - ValorCurrency) / Calculador.Cant
       else
         Diferencia := 0;
       Calculador.Dto := Diferencia;
     end
     else if SameText(NombreCampo, 'TOTAL_FAC_SIVA_FACLIN') then
     begin
+      // Mismo criterio que TOTAL_FACLIN: el descuento se aplica por unidad.
       TotalBruto := Calculador.PrecioSal * Calculador.Cant;
-      if TotalBruto <> 0 then
-        Diferencia := TotalBruto - ValorCurrency
+      if (TotalBruto <> 0) and (Calculador.Cant <> 0) then
+        Diferencia := (TotalBruto - ValorCurrency) / Calculador.Cant
       else
         Diferencia := 0;
       Calculador.Dto := Diferencia;
     end;
+    // Volcamos al dataset el resultado del calculo (%, descuento, precios
+    // y totales) para que ProcesarFacturaCompleta parta de estos valores
+    // y no vuelva a derivar el descuento desde el precio anterior.
+    Calculador.CopyToDataSetLin;
   finally
-    FreeAndNil(Calculador); // Vuelca cambios al dataset de líneas
+    FreeAndNil(Calculador);
   end;
   Totales := TFacturaTotales.Create(cdsCabecera, cdsLineas);
   try
