@@ -74,9 +74,75 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           ParentFont = False
         end
       end
+      object GroupHeaderG1: TfrxGroupHeader
+        Height = 20.000000000000000000
+        Top = 46.000000000000000000
+        Width = 1047.000000000000000000
+        Condition = 'Balance."GRUPO1_COD"'
+        Frame.Typ = []
+        object MemoGrupo1: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 2.000000000000000000
+          Width = 1047.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -12
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            '[Balance."GRUPO1_ETIQ"]')
+          ParentFont = False
+        end
+      end
+      object GroupHeaderG2: TfrxGroupHeader
+        Height = 20.000000000000000000
+        Top = 68.000000000000000000
+        Width = 1047.000000000000000000
+        Condition = 'Balance."GRUPO2_COD"'
+        Frame.Typ = []
+        object MemoGrupo2: TfrxMemoView
+          Left = 14.000000000000000000
+          Top = 2.000000000000000000
+          Width = 1033.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            '[Balance."GRUPO2_ETIQ"]')
+          ParentFont = False
+        end
+      end
+      object GroupHeaderG3: TfrxGroupHeader
+        Height = 20.000000000000000000
+        Top = 90.000000000000000000
+        Width = 1047.000000000000000000
+        Condition = 'Balance."GRUPO3_COD"'
+        Frame.Typ = []
+        object MemoGrupo3: TfrxMemoView
+          Left = 28.000000000000000000
+          Top = 2.000000000000000000
+          Width = 1019.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            '[Balance."GRUPO3_ETIQ"]')
+          ParentFont = False
+        end
+      end
       object GroupHeaderFam: TfrxGroupHeader
         Height = 22.000000000000000000
-        Top = 48.000000000000000000
+        Top = 112.000000000000000000
         Width = 1047.000000000000000000
         Condition = 'Balance."CODIGO_FAM"'
         Frame.Typ = []
@@ -98,7 +164,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
       end
       object GroupHeaderArt: TfrxGroupHeader
         Height = 74.000000000000000000
-        Top = 74.000000000000000000
+        Top = 136.000000000000000000
         Width = 1047.000000000000000000
         Condition = 'Balance."CODIGO_ART_ART"'
         Frame.Typ = []
@@ -464,7 +530,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
       object MasterData1: TfrxMasterData
         FillType = ftBrush
         Height = 18.000000000000000000
-        Top = 152.000000000000000000
+        Top = 212.000000000000000000
         Width = 1047.000000000000000000
         DataSet = fxdsBalance
         DataSetName = 'Balance'
@@ -860,9 +926,201 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           ParentFont = False
         end
       end
+      object GroupFooterArt: TfrxGroupFooter
+        Height = 2.000000000000000000
+        Top = 226.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+      end
+      object GroupFooterFam: TfrxGroupFooter
+        Height = 2.000000000000000000
+        Top = 230.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+      end
+      object GroupFooterG3: TfrxGroupFooter
+        Height = 18.000000000000000000
+        Top = 240.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+        object MemoGF3Lbl: TfrxMemoView
+          Left = 28.000000000000000000
+          Top = 1.000000000000000000
+          Width = 806.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          Memo.UTF8W = (
+            'TOTAL [Balance."GRUPO3_ETIQ"]')
+          ParentFont = False
+        end
+        object MemoGF3Cdad: TfrxMemoView
+          Left = 834.000000000000000000
+          Top = 1.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF3Imp: TfrxMemoView
+          Left = 972.000000000000000000
+          Top = 1.000000000000000000
+          Width = 75.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+          ParentFont = False
+        end
+      end
+      object GroupFooterG2: TfrxGroupFooter
+        Height = 18.000000000000000000
+        Top = 262.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+        object MemoGF2Lbl: TfrxMemoView
+          Left = 14.000000000000000000
+          Top = 1.000000000000000000
+          Width = 820.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          Memo.UTF8W = (
+            'TOTAL [Balance."GRUPO2_ETIQ"]')
+          ParentFont = False
+        end
+        object MemoGF2Cdad: TfrxMemoView
+          Left = 834.000000000000000000
+          Top = 1.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF2Imp: TfrxMemoView
+          Left = 972.000000000000000000
+          Top = 1.000000000000000000
+          Width = 75.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+          ParentFont = False
+        end
+      end
+      object GroupFooterG1: TfrxGroupFooter
+        Height = 20.000000000000000000
+        Top = 284.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+        object MemoGF1Lbl: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 2.000000000000000000
+          Width = 834.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'TOTAL [Balance."GRUPO1_ETIQ"]')
+          ParentFont = False
+        end
+        object MemoGF1Cdad: TfrxMemoView
+          Left = 834.000000000000000000
+          Top = 2.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF1Imp: TfrxMemoView
+          Left = 972.000000000000000000
+          Top = 2.000000000000000000
+          Width = 75.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+          ParentFont = False
+        end
+      end
       object PageFooter1: TfrxPageFooter
         Height = 18.000000000000000000
-        Top = 174.000000000000000000
+        Top = 308.000000000000000000
         Width = 1047.000000000000000000
         Frame.Typ = []
         object MemoPag: TfrxMemoView
@@ -902,7 +1160,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
   object unqryBalancePrint: TUniQuery
     SQL.Strings = (
       'CALL PRC_GET_BALANCE_ALMACEN_TALLAS('
-      '  '#39'A'#39', NULL, NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39'PVP'#39', '#39'N'#39', '#39#39')')
+      '  '#39'A'#39', NULL, NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39'PVP'#39', '#39'N'#39', '#39#39', '#39#39', '#39#39', '#39#39', 0)')
     Left = 96
     Top = 16
   end
