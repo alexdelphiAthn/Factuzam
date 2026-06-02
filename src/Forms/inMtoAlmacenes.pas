@@ -29,7 +29,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataAlmacenes, cxCheckBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
-  cxSplitter, cxMaskEdit, cxDBEdit;
+  cxSplitter, cxMaskEdit, cxDBEdit, cxDropDownEdit;
 
 type
   TfrmMtoAlmacenes = class(TfrmMtoGen)
@@ -85,7 +85,7 @@ type
     cxdbtxtdtALMACEN_ORIGEN_ACTUAL_ALM: TcxDBTextEdit;
     cxdbtxtdtALMACEN_DESTINO_ACTUAL_ALM: TcxDBTextEdit;
     lblTipoUso: TcxLabel;
-    cxdbtxtdtTIPO_USO_ALM: TcxDBTextEdit;
+    cxdbtxtdtTIPO_USO_ALM: TcxDBComboBox;
     lblCodigoPadre: TcxLabel;
     cxdbtxtdtCODIGO_PADRE_ALM: TcxDBTextEdit;
     tsDireccion: TcxTabSheet;
