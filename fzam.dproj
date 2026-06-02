@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -431,6 +431,15 @@
         <DCCReference Include="src\Caja\DataModules\UniDataCaja.pas">
             <Form>dmCajaOpe</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoTraspasoOpe.pas">
+            <Form>frmMtoOpeTraspaso</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataTraspaso.pas">
+            <Form>dmTraspaso</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Lib\inLibTraspasoTicket.pas"/>
+        <DCCReference Include="src\Lib\inLibGridArticulos.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaFaseCobro.pas">
             <Form>frmMtoCajaFaseCobro</Form>
         </DCCReference>
@@ -478,6 +487,12 @@
         <DCCReference Include="src\Caja\Lib\inLibGenerarTicketCaja.pas"/>
         <DCCReference Include="src\Caja\Modals\inMtoModalArqueo.pas">
             <Form>frmModalArqueo</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalArqueosHistCaja.pas">
+            <Form>frmModalArqueosHistCaja</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImpArqueos.pas">
+            <Form>frmPrintArqueos</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEntradaCambio.pas">
             <Form>frmModalEntradaCambio</Form>
