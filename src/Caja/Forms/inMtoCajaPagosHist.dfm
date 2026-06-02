@@ -133,6 +133,15 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
           Width = 240
           ExplicitWidth = 240
         end
+        object btnImprimirInforme: TcxButton
+          Left = 848
+          Top = 2
+          Width = 150
+          Height = 30
+          Caption = 'Imprimir Informe A4'
+          TabOrder = 6
+          OnClick = btnImprimirInformeClick
+        end
       end
     end
   end
