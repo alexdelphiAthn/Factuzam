@@ -17,6 +17,11 @@
               DataBinding.FieldName = 'USUARIO_USU'
               Width = 189
             end
+            object cxGrdDBTabPrinDIMINUTIVO_USUARIO: TcxGridDBColumn
+              Caption = 'Diminutivo Caja'
+              DataBinding.FieldName = 'DIMINUTIVO_TICKET_USU'
+              Width = 140
+            end
             object cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn
               Caption = 'Grupo'
               DataBinding.FieldName = 'GRUPO_USU'
