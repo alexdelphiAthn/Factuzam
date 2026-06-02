@@ -62,11 +62,26 @@ Menú «Caja → Histórico de Arqueos» (Ctrl+Alt+A)
    └── TfrmMtoCajaArqueosHist (inMtoCajaArqueosHist)
          └── botón «Imprimir Informe A4» ──> TfrmPrintArqueos.Create(Application).ShowModal
                └── TfrmPrintArqueos (inMtoModalImpArqueos : TfrmPrint)
-                     ├── preparar_consulta → unqryArqueosPrint (SELECT * fza_caja_arqueos)
+                     ├── dteDesde / dteHasta: rango de fechas a imprimir
+                     │     (por defecto: primer dia del mes en curso → hoy)
+                     ├── preparar_consulta → unqryArqueosPrint
+                     │     (SELECT fza_caja_arqueos WHERE FECHA_DESDE_ARQ
+                     │      BETWEEN :pDESDE AND :pHASTA)
                      └── frxReportOrigen: A4 apaisado (poLandscape) con los
                          principales números (código, fechas, total ventas,
                          efectivo caja, recuento, diferencia).
 ```
+
+### Filtro por rango de fechas
+
+El modal pide **fecha inicio** y **fecha fin** (`dteDesde` / `dteHasta`,
+`TcxDateEdit`) en la zona libre a la izquierda de los botones. El rango por
+defecto se fija en `DoShow` la primera vez que se abre (del primer día del mes
+en curso a hoy) y no se pisa en el ciclo Hide/Show de los botones del padre.
+`preparar_consulta` filtra `fza_caja_arqueos` por `FECHA_DESDE_ARQ BETWEEN
+:pDESDE AND :pHASTA` (columna `DATE`, BETWEEN inclusivo), y todos los botones
+del padre (Vista Preliminar / PDF / Imprimir / Excel) usan ese rango porque
+todos pasan por `preparar_consulta`.
 
 ### Archivos
 

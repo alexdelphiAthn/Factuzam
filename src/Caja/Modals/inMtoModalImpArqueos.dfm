@@ -1,6 +1,39 @@
 inherited frmPrintArqueos: TfrmPrintArqueos
   Caption = 'Imprimir Hist'#243'rico de Arqueos'
   TextHeight = 19
+  object lblTitulo: TcxLabel
+    Left = 12
+    Top = 16
+    Caption = 'Rango de fechas:'
+    TabOrder = 3
+    Transparent = True
+  end
+  object lblDesde: TcxLabel
+    Left = 12
+    Top = 52
+    Caption = 'Fecha inicio:'
+    TabOrder = 4
+    Transparent = True
+  end
+  object dteDesde: TcxDateEdit
+    Left = 12
+    Top = 72
+    TabOrder = 1
+    Width = 170
+  end
+  object lblHasta: TcxLabel
+    Left = 12
+    Top = 108
+    Caption = 'Fecha fin:'
+    TabOrder = 5
+    Transparent = True
+  end
+  object dteHasta: TcxDateEdit
+    Left = 12
+    Top = 128
+    TabOrder = 2
+    Width = 170
+  end
   inherited frxrprt1: TfrxReport
     Datasets = <
       item
