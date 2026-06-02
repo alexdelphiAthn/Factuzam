@@ -1294,6 +1294,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           OnClick = mnuAtributosBasicosClick
         end
       end
+      object mnuInvocarLogin: TMenuItem
+        Caption = 'Invocar login'
+        ShortCut = 24652
+        OnClick = mnuInvocarLoginClick
+      end
       object Salir1: TMenuItem
         Bitmap.Data = {
           36100000424D3610000000000000360000002800000020000000200000000100
