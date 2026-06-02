@@ -116,10 +116,44 @@ var
   sSetOpcional: string;
   Query: TUniQuery;
   i: Integer;
+  SpNum: TUniStoredProc;
+  sNumOpRetirada: string;
 begin
   sCodigo := GenerarCodigoArqueo(AConn,
     AArqueo.Empresa, AArqueo.Almacen, AArqueo.Caja,
     AArqueo.FechaDesde);
+  // Si hay retirada, reservamos su numero de operacion con el contador
+  // centralizado (PRC_GET_NEXT_OP_CAJA, serie 'OV') igual que el resto de
+  // operaciones de caja: asi es correlativo y formateado (8 digitos) y no
+  // colisiona. Se hace ANTES de StartTransaction porque el SP gestiona su
+  // propia transaccion (START TRANSACTION / COMMIT) y llamarlo dentro
+  // provocaria un commit implicito. Si el cierre se revierte despues, el
+  // unico efecto es un hueco en la numeracion, como en cualquier operacion
+  // anulada.
+  sNumOpRetirada := '';
+  if AImporteRetirada > 0 then
+  begin
+    SpNum := TUniStoredProc.Create(nil);
+    try
+      SpNum.Connection := AConn;
+      SpNum.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
+      SpNum.Params.CreateParam(ftString, 'pEmpresa', ptInput).AsString :=
+        AArqueo.Empresa;
+      SpNum.Params.CreateParam(ftString, 'pAlmacen', ptInput).AsString :=
+        AArqueo.Almacen;
+      SpNum.Params.CreateParam(ftString, 'pCaja', ptInput).AsString :=
+        AArqueo.Caja;
+      SpNum.Params.CreateParam(ftString, 'pUsuario', ptInput).AsString :=
+        AUsuario;
+      SpNum.Params.CreateParam(ftString, 'pSerie', ptOutput).Size := 12;
+      SpNum.Params.CreateParam(ftString, 'pcont', ptOutput).Size := 20;
+      SpNum.Prepare;
+      SpNum.Execute;
+      sNumOpRetirada := SpNum.ParamByName('pcont').AsString;
+    finally
+      FreeAndNil(SpNum);
+    end;
+  end;
   AConn.StartTransaction;
   try
     { -- Cabecera: solo columnas del esquema base (factuzam_original)
@@ -406,22 +440,14 @@ begin
           '  CODIGO_ARQUEO_OPCAJA,' +
           '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
           ') VALUES (' +
-          '  :EMP, :ALM, :CAJA,' +
-          '  (SELECT IFNULL(MAX(CAST(NUMERO_OPERACION_OPCAJA' +
-          '     AS UNSIGNED)),0)+1' +
-          '     FROM fza_caja_operaciones o2' +
-          '    WHERE o2.CODIGO_EMP_OPCAJA  = :EMP2' +
-          '      AND o2.CODIGO_ALM_OPCAJA  = :ALM2' +
-          '      AND o2.CODIGO_CAJA_OPCAJA = :CAJA2),' +
+          '  :EMP, :ALM, :CAJA, :NUMOP,' +
           '  ''GC'', :IMP, NOW(), CURRENT_DATE,' +
           '  :USR, :CONCEPTO, ''N'', :ARQ,' +
           '  :USR2, :USR3, NOW())';
         Query.ParamByName('EMP').AsString   := AArqueo.Empresa;
         Query.ParamByName('ALM').AsString   := AArqueo.Almacen;
         Query.ParamByName('CAJA').AsString  := AArqueo.Caja;
-        Query.ParamByName('EMP2').AsString  := AArqueo.Empresa;
-        Query.ParamByName('ALM2').AsString  := AArqueo.Almacen;
-        Query.ParamByName('CAJA2').AsString := AArqueo.Caja;
+        Query.ParamByName('NUMOP').AsString := sNumOpRetirada;
         Query.ParamByName('IMP').AsCurrency := AImporteRetirada;
         Query.ParamByName('USR').AsString   := AUsuario;
         Query.ParamByName('CONCEPTO').AsString := AConceptoRetirada;
