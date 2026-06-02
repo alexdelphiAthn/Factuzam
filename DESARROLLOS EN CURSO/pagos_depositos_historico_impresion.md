@@ -17,19 +17,32 @@ Menú «Caja → Histórico de Pagos»
    └── TfrmMtoCajaPagosHist (inMtoCajaPagosHist)
          └── botón «Imprimir Informe A4» ──> TfrmPrintPagos.ShowModal
                └── inMtoModalImpPagos : TfrmPrint
+                     ├── clbFormasPago: listbox (checks) con las formas de
+                     │     pago presentes en el periodo / caja
                      └── preparar_consulta → vi_caja_pagos, filtrado por
                          CODIGO_EMP/ALM/CAJA_PAGO + DATE(FECHA_PAGO) BETWEEN
+                         (+ CODIGO_FP_CFP IN (...) si la seleccion es parcial)
 ```
 
 `fza_caja_pagos` **no tiene columna de fecha propia** (solo `INSTANTE_ALTA`, el
-instante de grabación). Por eso se lee de la vista **`vi_caja_pagos`**
-(`DESARROLLOS EN CURSO/vista_caja_pagos.sql`), que añade `FECHA_PAGO`: la fecha
-de la operación de caja asociada (`fza_caja_operaciones`) o, si no se localiza,
-`INSTANTE_ALTA`. La fecha se resuelve con subconsulta `MIN` (no JOIN) para no
-multiplicar filas si una operación tiene varias líneas.
+instante de grabación) **ni número de factura**. Por eso se lee de la vista
+**`vi_caja_pagos`** (`DESARROLLOS EN CURSO/vista_caja_pagos.sql`), que enriquece
+cada pago con datos de la operación de caja asociada (`fza_caja_operaciones`):
+`FECHA_PAGO` (o `INSTANTE_ALTA` como respaldo), `NUMERO_FAC_PAGO` y
+`SERIE_FAC_PAGO`. Se enlaza con una subconsulta agregada (`GROUP BY`) para no
+multiplicar filas si una operación tiene varias líneas (venta + vale comparten
+`NUMERO_OPERACION`).
 
-Columnas del informe: serie, operación, línea, fecha, forma de pago, divisa,
-importe entregado, importe cambio, referencia.
+**Filtro por forma de pago:** un `TcxCheckListBox` (`clbFormasPago`) se rellena
+con las formas de pago **distintas presentes en el periodo / caja** elegidos
+(`SELECT DISTINCT CODIGO_FP_CFP` sobre la vista, con su descripción de
+`fza_formas_pago`). Se recarga al abrir, al cambiar las fechas
+(`OnEditValueChanged`) y al cambiar la caja. Todas marcadas por defecto;
+`preparar_consulta` añade `CODIGO_FP_CFP IN (...)` solo si la selección es
+**parcial** (si están todas o ninguna marcadas no filtra, para no listar vacío).
+
+Columnas del informe: operación, línea, fecha, serie factura, **nº factura**,
+forma de pago, divisa, importe entregado, importe cambio, referencia.
 
 > **Aplicar en BBDD existentes:** ejecutar `vista_caja_pagos.sql` (idempotente,
 > `CREATE OR REPLACE VIEW`). Sin la vista, el informe de pagos no abre.
