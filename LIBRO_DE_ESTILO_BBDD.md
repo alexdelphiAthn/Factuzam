@@ -70,6 +70,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_config_campos`                  | `CC`      |
 | `fza_contadores`                     | `CON`     |
 | `fza_depositos_cliente`              | `DEP`     |
+| `fza_empleados`                      | `EMPL`    |
 | `fza_empresas`                       | `EMP`     |
 | `fza_empresas_retenciones`           | `EMPRET`  |
 | `fza_empresas_series`                | `EMPSER`  |
