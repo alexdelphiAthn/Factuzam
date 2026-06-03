@@ -78,6 +78,8 @@ type
     procedure AgregarNodosMenu(AParent: TcxTreeListNode; AItem: TMenuItem;
                                AWinf: TfzaWinF);
     procedure AgregarCategorias;
+    procedure AnadirAccionesPantalla(AParent: TcxTreeListNode;
+                                     const ACall: string);
     function  NuevoNodo(AParent: TcxTreeListNode;
                         const ANombre, ACodigo: string): TcxTreeListNode;
     function  TituloCategoria(const ACodigo: string): string;
@@ -222,7 +224,7 @@ end;
 procedure TfrmMtoPermisosArbol.AgregarNodosMenu(AParent: TcxTreeListNode;
   AItem: TMenuItem; AWinf: TfzaWinF);
 var
-  nombre, code: string;
+  nombre, code, sCall: string;
   node: TcxTreeListNode;
   i: Integer;
 begin
@@ -237,6 +239,14 @@ begin
     if (AItem.Count = 0) and Assigned(AWinf) then
       code := AWinf.CodigoMenu(AItem);
     node := NuevoNodo(AParent, nombre, code);
+    // Si la hoja es una pantalla registrada (Mto), cuelgan de ella sus
+    // permisos de accion por pantalla (<CALL>.consultar / insertar / ...).
+    if (AItem.Count = 0) and Assigned(AWinf) then
+    begin
+      sCall := AWinf.CallRegistrado(AItem);
+      if sCall <> '' then
+        AnadirAccionesPantalla(node, sCall);
+    end;
     for i := 0 to AItem.Count - 1 do
       AgregarNodosMenu(node, AItem.Items[i], AWinf);
   end;
@@ -270,6 +280,17 @@ begin
   finally
     FreeAndNil(catNodes);
   end;
+end;
+
+procedure TfrmMtoPermisosArbol.AnadirAccionesPantalla(
+  AParent: TcxTreeListNode; const ACall: string);
+begin
+  NuevoNodo(AParent, 'Consultar / buscar',  ACall + '.consultar');
+  NuevoNodo(AParent, 'Alta de registros',   ACall + '.insertar');
+  NuevoNodo(AParent, 'Modificar registros', ACall + '.modificar');
+  NuevoNodo(AParent, 'Borrar registros',    ACall + '.borrar');
+  NuevoNodo(AParent, 'Exportar a Excel',    ACall + '.excel');
+  NuevoNodo(AParent, 'Imprimir informes',   ACall + '.imprimir');
 end;
 
 function TfrmMtoPermisosArbol.TituloCategoria(const ACodigo: string): string;
@@ -655,7 +676,6 @@ begin
     FInicializando := False;
   end;
   CargarValoresSujeto;
-  FtlPermisos.FullExpand;
 end;
 
 procedure TfrmMtoPermisosArbol.btnExpandirClick(Sender: TObject);
@@ -770,7 +790,6 @@ begin
   CargarValoresSujeto;
   if (pcPantalla <> nil) and (tsGestion <> nil) then
     pcPantalla.ActivePage := tsGestion;
-  FtlPermisos.FullExpand;
 end;
 
 procedure TfrmMtoPermisosArbol.ResetForm;
