@@ -21,8 +21,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxClasses, cxLocalization, cxContainer,
-  cxEdit, dxSkinsCore, dxSkinsDefaultPainters, cxLookAndFeels, dxSkinsForm,
-  dxSkinBlack, dxSkinBlue, dxSkinBlueprint, dxSkinDarkRoom,
+  cxEdit, cxLabel, dxSkinsCore, dxSkinsDefaultPainters, cxLookAndFeels,
+  dxSkinsForm, dxSkinBlack, dxSkinBlue, dxSkinBlueprint, dxSkinDarkRoom,
   dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,
   dxSkinHighContrast, dxSkinMetropolis, dxSkinMetropolisDark,
   dxSkinOffice2010Black, dxSkinOffice2010Blue, dxSkinOffice2010Silver,
@@ -73,9 +73,17 @@ uses
 {$R CXLOCALIZATION.res}
 
 procedure TfrmBase.FormCreate(Sender: TObject);
+var
+  i: Integer;
 begin
   Localizer1.Locale := 1034;
   Localizer1.Active := True;
+  // Etiquetas TcxLabel transparentes (sin fondo solido) en toda la jerarquia
+  // que herede de TfrmBase. Centralizado aqui para no repetirlo pantalla a
+  // pantalla y cubrir tambien los labels que se anadan en el futuro.
+  for i := 0 to ComponentCount - 1 do
+    if Components[i] is TcxLabel then
+      TcxLabel(Components[i]).Transparent := True;
 end;
 
 procedure TfrmBase.DoShow;

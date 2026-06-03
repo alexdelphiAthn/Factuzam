@@ -2214,6 +2214,7 @@ begin
 
   lbl := TcxLabel.Create(Self);
   lbl.Parent  := FPnlTopVariaciones;
+  lbl.Transparent := True;
   lbl.Left    := 8;
   lbl.Top     := 10;
   lbl.Caption := 'Tipo de variación: ';
