@@ -57,9 +57,7 @@ type
     btnSetPass: TcxButton;
     cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinESGRUPOADMINISTRADOR_GRUPO: TcxGridDBColumn;
-    cxGrdDBTabPrinDIMINUTIVO_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinESACTIVO_USUARIO: TcxGridDBColumn;
-    cxGrdDBTabPrinCODEMPLEADO_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinALMACENDEF_USUARIO: TcxGridDBColumn;
     cxGrdDBTabPrinCAJADEF_USUARIO: TcxGridDBColumn;
     btnSetCaja: TcxButton;

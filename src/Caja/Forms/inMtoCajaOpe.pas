@@ -2557,23 +2557,23 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
-    qry.SQL.Text := 'SELECT CODIGO_EMPLEADO_USU, DIMINUTIVO_TICKET_USU ' +
-                    '  FROM fza_usuarios ' +
-                    ' WHERE ESACTIVO_USU = ''S'' ' +
-                    '   AND CODIGO_EMPLEADO_USU IS NOT NULL ';
+    qry.SQL.Text := 'SELECT CODIGO_EMPL, DIMINUTIVO_TICKET_EMPL ' +
+                    '  FROM fza_empleados ' +
+                    ' WHERE ESACTIVO_EMPL = ''S'' ' +
+                    '   AND CODIGO_EMPL IS NOT NULL ';
     if Trim(sCodigo) <> '' then
     begin
       qry.SQL.Add(
-        'AND (CODIGO_EMPLEADO_USU LIKE :TOKEN OR DIMINUTIVO_TICKET_USU LIKE ' +
+        'AND (CODIGO_EMPL LIKE :TOKEN OR DIMINUTIVO_TICKET_EMPL LIKE ' +
         ':TOKEN) ');
       qry.ParamByName('TOKEN').AsString := '%' + sCodigo + '%';
     end;
-    qry.SQL.Add('ORDER BY CODIGO_EMPLEADO_USU ASC LIMIT 1');
+    qry.SQL.Add('ORDER BY CODIGO_EMPL ASC LIMIT 1');
     qry.Open;
     if not qry.IsEmpty then
     begin
-      sCodigo := qry.FieldByName('CODIGO_EMPLEADO_USU').AsString;
-      sNomEmpleado := qry.FieldByName('DIMINUTIVO_TICKET_USU').AsString;
+      sCodigo := qry.FieldByName('CODIGO_EMPL').AsString;
+      sNomEmpleado := qry.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString;
       DisplayValue := sCodigo;
       lblNombreEmpleado.Caption := sNomEmpleado;
       DatosCaja.cdsCabecera.Edit;
@@ -2919,14 +2919,14 @@ begin
   unqryEmpleados := TUniQuery.Create(nil);
   try
     unqryEmpleados.Connection := oConn;
-    unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPLEADO_USU ' +
+    unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPL ' +
                                                     'as `Código de Empleado`,' +
-                               '       DIMINUTIVO_TICKET_USU ' +
+                               '       DIMINUTIVO_TICKET_EMPL ' +
                                                      'as `Nombre de Empleado`' +
-                               '  FROM fza_usuarios ' +
-                               ' WHERE ESACTIVO_USU =' +QuotedStr('S') +
-                               '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
-                               ' ORDER BY CODIGO_EMPLEADO_USU ';
+                               '  FROM fza_empleados ' +
+                               ' WHERE ESACTIVO_EMPL =' +QuotedStr('S') +
+                               '   AND CODIGO_EMPL IS NOT NULL' +
+                               ' ORDER BY CODIGO_EMPL ';
     formulario := TfrmMtoSearch.Create(nil);
     try
       formulario.Name := 'frmMtoEmpCajSearch';
