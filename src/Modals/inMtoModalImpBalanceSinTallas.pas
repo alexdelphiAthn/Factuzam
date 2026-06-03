@@ -278,13 +278,11 @@ begin
       TfrxBand(Component).Visible :=
         unqryBalancePrint.FieldByName(
           Format('GRUPO%d_ETIQ', [nivel])).AsString <> ''
-    else if ((sNom = 'GroupHeaderFam') or (sNom = 'GroupFooterFam'))
-            and unqryBalancePrint.Active then
-      // La familia solo agrupa por sí sola cuando NO hay agrupaciones activas
-      // (GRUPO1 vacío). Si hay alguna agrupación, manda esa (incluida FAM si se
-      // eligió) y no se duplica la cabecera de familia.
-      TfrxBand(Component).Visible :=
-        unqryBalancePrint.FieldByName('GRUPO1_ETIQ').AsString = '';
+    else if (sNom = 'GroupHeaderFam') or (sNom = 'GroupFooterFam') then
+      // La familia NO agrupa por sí sola: solo se agrupa por familia si se
+      // elige FAM en la pestaña Agrupaciones (sale como "Familia: ..."). La
+      // cabecera fija de familia queda siempre oculta.
+      TfrxBand(Component).Visible := False;
   end;
 end;
 
