@@ -252,9 +252,7 @@ VALUES
   ('fza_usuarios', 'EMPRESA_DEFECTO_USU',   'Empresa Def.',       80,  4, 'S'),
   ('fza_usuarios', 'ALMACEN_DEFECTO_USU',   'Almacén Def.',       80,  5, 'N'),
   ('fza_usuarios', 'CAJA_DEFECTO_USU',      'Caja Def.',          80,  6, 'N'),
-  ('fza_usuarios', 'DIMINUTIVO_TICKET_USU', 'Abrev. Ticket',      80,  7, 'N'),
-  ('fza_usuarios', 'CODIGO_EMPLEADO_USU',   'Cód. Empleado',     100,  8, 'N'),
-  ('fza_usuarios', 'ULTIMO_LOGIN_USU',      'Último Login',      130,  9, 'N');
+  ('fza_usuarios', 'ULTIMO_LOGIN_USU',      'Último Login',      130,  7, 'N');
 
 -- -----------------------------------------------------------------
 -- Grupos de usuarios

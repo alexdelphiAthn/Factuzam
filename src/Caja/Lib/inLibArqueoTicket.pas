@@ -403,17 +403,20 @@ begin
     Q.Connection := AConn;
     Q.SQL.Text :=
       ' SELECT                                                              ' +
-      '   COALESCE(o.CODIGO_EMPLEADO_OPCAJA, ''?'')   AS EMPLEADO,          ' +
+      '   COALESCE(e.DIMINUTIVO_TICKET_EMPL,                                ' +
+      '            o.CODIGO_EMPLEADO_OPCAJA, ''?'') AS EMPLEADO,            ' +
       '   COUNT(DISTINCT o.NUMERO_OPERACION_OPCAJA)  AS OPS,                ' +
       '   COALESCE(SUM(o.IMPORTE_TOTAL_OPCAJA), 0)   AS NETO                ' +
       '   FROM fza_caja_operaciones o                                       ' +
+      '   LEFT JOIN fza_empleados e                                         ' +
+      '     ON e.CODIGO_EMPL = o.CODIGO_EMPLEADO_OPCAJA                     ' +
       '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
       '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
       '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
       '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ' +
-      '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA                                  ' +
+      '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
       '  ORDER BY NETO DESC                                                 ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;

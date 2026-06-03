@@ -1749,10 +1749,10 @@ begin
     Exit;
   if TipoEntidad = 'EMPLEADOS' then
   begin
-    SQLStr := 'SELECT DIMINUTIVO_TICKET_USU ' +
-              '  FROM fza_usuarios ' +
-              ' WHERE CODIGO_EMPLEADO_USU = :COD';
-    FieldToGet := 'DIMINUTIVO_TICKET_USU';
+    SQLStr := 'SELECT DIMINUTIVO_TICKET_EMPL ' +
+              '  FROM fza_empleados ' +
+              ' WHERE CODIGO_EMPL = :COD';
+    FieldToGet := 'DIMINUTIVO_TICKET_EMPL';
   end
   else if TipoEntidad = 'CLIENTES' then
   begin
