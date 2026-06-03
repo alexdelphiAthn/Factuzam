@@ -242,6 +242,13 @@ type
     procedure AplicarEtiquetas;     virtual;
     procedure CrearTablaPrincipal;  virtual;
     procedure ResetForm;  virtual;
+    // Aplica los permisos por pantalla (<CALL>.consultar / insertar /
+    // modificar / borrar / excel) ocultando o deshabilitando los
+    // controles correspondientes. Las pantallas sin CALL no se tocan.
+    procedure AplicarPermisosPantalla;
+    // True si el usuario puede imprimir informes de esta pantalla. Los
+    // Mtos con boton de impresion la consultan antes de imprimir.
+    function PuedeImprimir: Boolean;
     procedure AbrirPerfiles(bTabVisible:Boolean);
     procedure CargarPerfilesParticulares; virtual;
     // Hook que cada Mto puede sobreescribir para añadir entradas extra al
@@ -325,6 +332,8 @@ implementation
 
 uses inMtoGenSearch,
      inLibGlobalVar,
+     inLibPermisos,
+     inLibUnitForm,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
@@ -918,6 +927,10 @@ begin
   nvNavegador.Buttons.SaveBookmark.Visible := False;
   nvNavegador.Buttons.GotoBookmark.Visible := False;
   nvNavegador.Buttons.Filter.Visible       := False;
+  // Re-aplicar permisos de pantalla: este metodo acaba de volver a mostrar
+  // Insert/Delete/Edit/Post, asi que hay que ocultarlos de nuevo si el
+  // usuario no tiene insertar/modificar/borrar.
+  AplicarPermisosPantalla;
 end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
@@ -969,6 +982,74 @@ begin
     Format('CrearDM=%d ms | FConn.Connect=%d ms | ReasignarConexion=%d ms',
            [msCrearDM, msFConn, msReasignar]),
     swTotal.ElapsedMilliseconds);
+end;
+
+procedure TfrmMtoGen.AplicarPermisosPantalla;
+var
+  sCall: string;
+  function Puede(const ASufijo: string): Boolean;
+  begin
+    Result := (oPermisos = nil) or
+              oPermisos.TienePermiso(sCall + '.' + ASufijo, True);
+  end;
+begin
+  // CALL de la pantalla (Clientes, Articulos...). Los Mtos sin registro
+  // en fza_winforms (p.ej. cajas de busqueda) no tienen CALL: todo activo.
+  sCall := '';
+  if (Self.Owner is TfrmMtoPrincipal) then
+    sCall := (Self.Owner as TfrmMtoPrincipal).oFzaWinf.CallDeUnit(
+               Self.UnitName + '.' + Self.ClassName);
+  if sCall <> '' then
+  begin
+    // Consultar/buscar: solo se quita el buscador global. NO se bloquea la
+    // apertura ni la carga, asi se puede llegar a una ficha navegando
+    // desde otro Mto (Ctrl+A, ir a factura...).
+    if not Puede('consultar') then
+    begin
+      edtBusqGlobal.Visible   := False;
+      lblTextoaBuscar.Visible := False;
+      rbBBDD.Visible          := False;
+      rbGrid.Visible          := False;
+    end;
+    // Alta. Enabled:=False en la accion neutraliza tambien su atajo.
+    if not Puede('insertar') then
+    begin
+      actInsertarRegistro.Enabled        := False;
+      nvNavegador.Buttons.Insert.Visible := False;
+      nvNavegador.Buttons.Append.Visible := False;
+    end;
+    // Modificacion.
+    if not Puede('modificar') then
+    begin
+      actEditarRegistro.Enabled        := False;
+      actGrabarRegistro.Enabled        := False;
+      nvNavegador.Buttons.Edit.Visible := False;
+      nvNavegador.Buttons.Post.Visible := False;
+    end;
+    // Borrado.
+    if not Puede('borrar') then
+    begin
+      actEliminarRegistro.Enabled        := False;
+      nvNavegador.Buttons.Delete.Visible := False;
+    end;
+    // Exportar a Excel.
+    if not Puede('excel') then
+      sbExportExcel.Visible := False;
+  end;
+end;
+
+function TfrmMtoGen.PuedeImprimir: Boolean;
+var
+  sCall: string;
+begin
+  sCall := '';
+  if (Self.Owner is TfrmMtoPrincipal) then
+    sCall := (Self.Owner as TfrmMtoPrincipal).oFzaWinf.CallDeUnit(
+               Self.UnitName + '.' + Self.ClassName);
+  if (sCall = '') or (oPermisos = nil) then
+    Result := True
+  else
+    Result := oPermisos.TienePermiso(sCall + '.imprimir', True);
 end;
 
 procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
@@ -2249,6 +2330,9 @@ begin
           FColumnasVisiblesGuia.IndexOf(sFld) >= 0;
     end;
   end;
+  // Permisos por pantalla: ocultan/deshabilitan los controles segun
+  // <CALL>.consultar / insertar / modificar / borrar / excel.
+  AplicarPermisosPantalla;
 end;
 
 procedure TfrmMtoGen.rbBBDDClick(Sender: TObject);
