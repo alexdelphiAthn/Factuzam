@@ -80,6 +80,7 @@ type
     procedure AgregarCategorias;
     procedure AnadirAccionesPantalla(AParent: TcxTreeListNode;
                                      const ACall: string);
+    function  EsPantallaMto(const AUnitForm: string): Boolean;
     function  NuevoNodo(AParent: TcxTreeListNode;
                         const ANombre, ACodigo: string): TcxTreeListNode;
     function  TituloCategoria(const ACodigo: string): string;
@@ -120,7 +121,7 @@ var
 implementation
 
 uses
-  System.StrUtils, inLibGlobalVar, inMtoPrincipal;
+  System.StrUtils, System.Rtti, inLibGlobalVar, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -226,6 +227,7 @@ procedure TfrmMtoPermisosArbol.AgregarNodosMenu(AParent: TcxTreeListNode;
 var
   nombre, code, sCall: string;
   node: TcxTreeListNode;
+  ofza: TfzaForm;
   i: Integer;
 begin
   if AItem.Caption <> '-' then
@@ -239,13 +241,19 @@ begin
     if (AItem.Count = 0) and Assigned(AWinf) then
       code := AWinf.CodigoMenu(AItem);
     node := NuevoNodo(AParent, nombre, code);
-    // Si la hoja es una pantalla registrada (Mto), cuelgan de ella sus
-    // permisos de accion por pantalla (<CALL>.consultar / insertar / ...).
+    // Los permisos de accion por pantalla (consultar / insertar / ...)
+    // solo aplican a las pantallas que derivan de TfrmMtoGen. Las de caja
+    // y demas (que NO son Mtos) solo tienen sus permisos especiales
+    // (caja.*, arqueo.*...), que aparecen en las categorias.
     if (AItem.Count = 0) and Assigned(AWinf) then
     begin
       sCall := AWinf.CallRegistrado(AItem);
       if sCall <> '' then
-        AnadirAccionesPantalla(node, sCall);
+      begin
+        ofza := AWinf.GetElement(sCall);
+        if (ofza <> nil) and EsPantallaMto(ofza.UnitForm) then
+          AnadirAccionesPantalla(node, sCall);
+      end;
     end;
     for i := 0 to AItem.Count - 1 do
       AgregarNodosMenu(node, AItem.Items[i], AWinf);
@@ -291,6 +299,28 @@ begin
   NuevoNodo(AParent, 'Borrar registros',    ACall + '.borrar');
   NuevoNodo(AParent, 'Exportar a Excel',    ACall + '.excel');
   NuevoNodo(AParent, 'Imprimir informes',   ACall + '.imprimir');
+end;
+
+function TfrmMtoPermisosArbol.EsPantallaMto(const AUnitForm: string): Boolean;
+var
+  ctx: TRttiContext;
+  lType: TRttiType;
+begin
+  // Resuelve la clase del formulario por RTTI y comprueba si hereda de
+  // TfrmMtoGen. Asi solo los mantenimientos reciben los permisos de
+  // accion; las pantallas de caja, menus y demas quedan fuera.
+  Result := False;
+  if AUnitForm <> '' then
+  begin
+    ctx := TRttiContext.Create;
+    try
+      lType := ctx.FindType(AUnitForm);
+      if (lType <> nil) and (lType.IsInstance) then
+        Result := lType.AsInstance.MetaclassType.InheritsFrom(TfrmMtoGen);
+    finally
+      ctx.Free;
+    end;
+  end;
 end;
 
 function TfrmMtoPermisosArbol.TituloCategoria(const ACodigo: string): string;
