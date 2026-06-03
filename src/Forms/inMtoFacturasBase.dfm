@@ -1,4 +1,4 @@
-﻿inherited frmMtoFacturasBase: TfrmMtoFacturasBase
+inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
@@ -8,9 +8,10 @@
   ClientHeight = 844
   ClientWidth = 1231
   StyleElements = [seFont, seClient, seBorder]
+  ExplicitTop = -369
   ExplicitWidth = 1231
   ExplicitHeight = 844
-  TextHeight = 19
+  TextHeight = 17
   object shpSeparador6: TShape [0]
     Left = 76
     Top = 79
@@ -48,16 +49,16 @@
         Margins.Right = 5
         Margins.Bottom = 5
         ExplicitWidth = 1083
-        ExplicitHeight = 773
+        ExplicitHeight = 775
         inherited cxGrdPrincipal: TcxGrid
           Width = 1083
-          Height = 773
+          Height = 775
           Margins.Left = 5
           Margins.Top = 5
           Margins.Right = 5
           Margins.Bottom = 5
           ExplicitWidth = 1083
-          ExplicitHeight = 773
+          ExplicitHeight = 775
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_EMPRESA_FACTURA: TcxGridDBColumn
               Caption = 'C'#243'digo Empresa'
@@ -663,14 +664,14 @@
         Margins.Right = 5
         Margins.Bottom = 5
         ExplicitLeft = 2
-        ExplicitTop = 29
+        ExplicitTop = 27
         ExplicitWidth = 1083
-        ExplicitHeight = 773
+        ExplicitHeight = 775
         object pnlVerifactu: TPanel
           Left = 0
           Top = 347
           Width = 1083
-          Height = 426
+          Height = 428
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -683,19 +684,19 @@
             Left = 0
             Top = 0
             Width = 1083
-            Height = 426
+            Height = 428
             Margins.Left = 4
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasFactura
+            Properties.ActivePage = tsTotales
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 424
+            ClientRectBottom = 426
             ClientRectLeft = 2
             ClientRectRight = 1081
-            ClientRectTop = 29
+            ClientRectTop = 27
             object tsLineasFactura: TcxTabSheet
               Margins.Left = 4
               Margins.Top = 4
@@ -703,15 +704,11 @@
               Margins.Bottom = 4
               Caption = '&1_Lineas de Factura - '
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 899
-                Height = 395
+                Height = 399
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1022,7 +1019,7 @@
                 Left = 899
                 Top = 0
                 Width = 180
-                Height = 395
+                Height = 399
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1528,7 +1525,6 @@
                   Top = 78
                   DataBinding.DataField = 'PORCENTAJE_IVAN_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0 %'
                   Properties.EditFormat = '0 %'
@@ -1544,7 +1540,6 @@
                   Top = 132
                   DataBinding.DataField = 'PORCENTAJE_IVAR_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0 %'
                   Properties.EditFormat = '0 %'
@@ -1560,7 +1555,6 @@
                   Top = 180
                   DataBinding.DataField = 'PORCENTAJE_IVAS_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0 %'
                   Properties.EditFormat = '0 %'
@@ -1576,7 +1570,6 @@
                   Top = 228
                   DataBinding.DataField = 'PORCENTAJE_IVAE_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0 %'
                   Properties.EditFormat = '0 %'
@@ -1592,7 +1585,6 @@
                   Top = 132
                   DataBinding.DataField = 'PORCENTAJE_RER_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0.00 %'
                   Properties.EditFormat = '0.00 %'
@@ -1608,7 +1600,6 @@
                   Top = 78
                   DataBinding.DataField = 'PORCENTAJE_REN_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0.00 %'
                   Properties.EditFormat = '0.00 %'
@@ -1624,7 +1615,6 @@
                   Top = 180
                   DataBinding.DataField = 'PORCENTAJE_RES_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0.00 %'
                   Properties.EditFormat = '0.00 %'
@@ -1640,7 +1630,6 @@
                   Top = 228
                   DataBinding.DataField = 'PORCENTAJE_REE_FAC'
                   DataBinding.DataSource = dsTablaG
-                  ParentColor = True
                   Properties.AssignedValues.MinValue = True
                   Properties.DisplayFormat = '0.00 %'
                   Properties.EditFormat = '0.00 %'
@@ -1680,15 +1669,11 @@
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 926
                 Top = 0
                 Width = 153
-                Height = 395
+                Height = 399
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1749,7 +1734,7 @@
                 Left = 0
                 Top = 0
                 Width = 926
-                Height = 395
+                Height = 399
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -1757,7 +1742,7 @@
                   Left = 0
                   Top = 0
                   Width = 926
-                  Height = 395
+                  Height = 399
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1926,10 +1911,6 @@
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -1953,7 +1934,7 @@
               end
               object pnlUserInstantBottom: TPanel
                 Left = 0
-                Top = 316
+                Top = 320
                 Width = 1079
                 Height = 79
                 Align = alBottom
@@ -2060,15 +2041,11 @@
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object scrlbxVerifactu: TScrollBox
                 Left = 0
                 Top = 0
                 Width = 1079
-                Height = 395
+                Height = 399
                 HorzScrollBar.Position = 11
                 VertScrollBar.ButtonSize = 20
                 Align = alClient
@@ -2077,16 +2054,16 @@
                 object lblPETICION_COMPLETA: TLabel
                   Left = 33
                   Top = 612
-                  Width = 176
-                  Height = 19
+                  Width = 157
+                  Height = 17
                   Caption = 'PETICION_COMPLETA'
                   Transparent = True
                 end
                 object lblRESPUESTA_COMPLETA: TLabel
                   Left = 32
                   Top = 60
-                  Width = 188
-                  Height = 19
+                  Width = 173
+                  Height = 17
                   Caption = 'RESPUESTA_COMPLETA'
                   FocusControl = cxdbmRESPUESTA_COMPLETA
                   Transparent = True
@@ -2094,8 +2071,8 @@
                 object lblQRCODE_BASE64: TLabel
                   Left = 63
                   Top = 543
-                  Width = 140
-                  Height = 19
+                  Width = 127
+                  Height = 17
                   Caption = 'QRCODE_BASE64'
                   FocusControl = cxdbmQRCODE_BASE64
                   Transparent = True
@@ -2103,8 +2080,8 @@
                 object lblVERIFACTU_URL: TLabel
                   Left = 69
                   Top = 476
-                  Width = 134
-                  Height = 19
+                  Width = 124
+                  Height = 17
                   Caption = 'VERIFACTU_URL'
                   FocusControl = cxdbmVERIFACTU_URL
                   Transparent = True
@@ -2112,8 +2089,8 @@
                 object lblCHAIN_HASH: TLabel
                   Left = 90
                   Top = 410
-                  Width = 109
-                  Height = 19
+                  Width = 101
+                  Height = 17
                   Caption = 'CHAIN_HASH'
                   FocusControl = txtCHAIN_HASH
                   Transparent = True
@@ -2121,8 +2098,8 @@
                 object lblCHAIN_NUMBER: TLabel
                   Left = 81
                   Top = 361
-                  Width = 136
-                  Height = 19
+                  Width = 123
+                  Height = 17
                   Caption = 'CHAIN_NUMBER'
                   FocusControl = txtCHAIN_NUMBER
                   Transparent = True
@@ -2130,8 +2107,8 @@
                 object lblISSUED_TIME: TLabel
                   Left = 110
                   Top = 313
-                  Width = 109
-                  Height = 19
+                  Width = 96
+                  Height = 17
                   Caption = 'ISSUED_TIME'
                   FocusControl = dteISSUED_TIME
                   Transparent = True
@@ -2139,8 +2116,8 @@
                 object lblISSUER_IRS_ID: TLabel
                   Left = 97
                   Top = 264
-                  Width = 118
-                  Height = 19
+                  Width = 109
+                  Height = 17
                   Caption = 'ISSUER_IRS_ID'
                   FocusControl = txtISSUER_IRS_ID
                   Transparent = True
@@ -2148,8 +2125,8 @@
                 object lblQUEUE_ID: TLabel
                   Left = 131
                   Top = 216
-                  Width = 84
-                  Height = 19
+                  Width = 75
+                  Height = 17
                   Caption = 'QUEUE_ID'
                   FocusControl = spQUEUE_ID
                   Transparent = True
@@ -2157,8 +2134,8 @@
                 object lblREQUEST_ID: TLabel
                   Left = 114
                   Top = 167
-                  Width = 101
-                  Height = 19
+                  Width = 92
+                  Height = 17
                   Caption = 'REQUEST_ID'
                   FocusControl = txtREQUEST_ID
                   Transparent = True
@@ -2166,8 +2143,8 @@
                 object lbl: TLabel
                   Left = 50
                   Top = 20
-                  Width = 98
-                  Height = 19
+                  Width = 87
+                  Height = 17
                   Caption = 'ID_FACCON'
                   FocusControl = spID_CONSOLIDACION
                   Transparent = True
@@ -2175,8 +2152,8 @@
                 object lblFECHA_PROCESAMIENTO: TLabel
                   Left = 435
                   Top = 224
-                  Width = 205
-                  Height = 19
+                  Width = 186
+                  Height = 17
                   Caption = 'FECHA_PROCESAMIENTO'
                   FocusControl = dteFECHA_PROCESAMIENTO
                   Transparent = True
@@ -2184,8 +2161,8 @@
                 object lblESTADO: TLabel
                   Left = 375
                   Top = 20
-                  Width = 65
-                  Height = 19
+                  Width = 60
+                  Height = 17
                   Caption = 'ESTADO'
                   FocusControl = txtESTADO
                   Transparent = True
@@ -2361,15 +2338,11 @@
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdLogVerifactu: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 1079
-                Height = 395
+                Height = 399
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -2457,15 +2430,11 @@
             object tsMovimientosFac: TcxTabSheet
               Caption = '&7_Movimientos'
               ImageIndex = 5
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrdMovimientosFac: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 1079
-                Height = 395
+                Height = 399
                 Align = alClient
                 TabOrder = 0
                 object tvMovimientosFac: TcxGridDBTableView
@@ -2577,7 +2546,7 @@
               ClientRectBottom = 335
               ClientRectLeft = 2
               ClientRectRight = 1081
-              ClientRectTop = 29
+              ClientRectTop = 27
               object tsCabecera: TcxTabSheet
                 Margins.Left = 4
                 Margins.Top = 4
@@ -2777,9 +2746,8 @@
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
                   Style.TransparentBorder = False
-                  TabOrder = 13
+                  TabOrder = 20
                   Transparent = True
-                  Width = 280
                 end
                 object txtINSTANTECONSOLIDACION: TcxDBTextEdit
                   Left = 325
@@ -2863,10 +2831,6 @@
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
@@ -3075,7 +3039,7 @@
                     Properties.OnChange = chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURAPropertiesChange
                     TabOrder = 16
                     Transparent = True
-                    Width = 295
+                    Width = 262
                   end
                   object chkRETENCION_EMPRESA_FACTURA: TcxDBCheckBox
                     Left = 372
@@ -3566,12 +3530,11 @@
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnlVerifactu
-          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
         ExplicitWidth = 1083
-        ExplicitHeight = 773
+        ExplicitHeight = 775
         inherited pnlPerfilTop: TPanel
           Width = 1083
           StyleElements = [seFont, seClient, seBorder]
@@ -3579,15 +3542,15 @@
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1083
-          Height = 716
+          Height = 718
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1083
-          ExplicitHeight = 716
+          ExplicitHeight = 718
           inherited cxgrdPerfil: TcxGrid
             Width = 1083
-            Height = 716
+            Height = 718
             ExplicitWidth = 1083
-            ExplicitHeight = 716
+            ExplicitHeight = 718
           end
         end
       end
@@ -3605,7 +3568,7 @@
           ParentFont = True
         end
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 338
