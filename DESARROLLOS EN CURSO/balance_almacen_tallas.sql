@@ -33,8 +33,9 @@
 --     nocional de todo lo que sale.
 --   - Ventas (VEN)   -> PRECIO REAL de venta (con descuentos, con IVA) de
 --     fza_facturas_lineas; NO la tarifa. IMPORTE = importe real facturado.
---   GANANCIA: solo en la banda de ventas = importe real - (uds. facturadas
---   x PMP). 0 en el resto. Sumada por grupo/total da el margen comercial.
+--   VENTAS: columna con el importe real de venta SOLO en la banda VEN (0 en
+--   el resto), para acumular las ventas por artículo/grupo/total (en los
+--   totales se muestran las ventas, no el margen).
 --   IMPORTE = CANTIDAD * PRECIO de la banda (salvo VEN, importe real).
 --
 -- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
@@ -628,15 +629,12 @@ BEGIN
                  p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
                    COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
-        -- Ganancia (margen) solo de la banda de ventas (VEN): importe real de
-        -- venta - (uds. facturadas x coste medio ponderado). 0 en el resto de
-        -- bandas, para que la suma por grupo/total dé el margen comercial.
-        -- Existencias y entradas ya van valoradas a PMP (ES_COSTE=1).
-        ROUND(IF(p.`BANDA` = 'VEN',
-                 COALESCE(vt.`VEN_IMPORTE`, 0)
-                   - COALESCE(vt.`VEN_QTY`, 0)
-                     * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
-                 0), 2)                               AS `GANANCIA`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = 'VEN', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
         -- Niveles de agrupación configurables. GRUPOn_COD identifica el grupo
         -- (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en
         -- la cabecera/resumen. Si el nivel no está activo (''), salen vacíos y

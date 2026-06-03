@@ -452,7 +452,7 @@ inherited frmPrintBalanceSinTallas: TfrmPrintBalanceSinTallas
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
           Memo.UTF8W = (
-            'TOTAL [Balance."GRUPO3_ETIQ"]   Gan.: [SUM(<Balance."GANANCIA">,M' +
+            'TOTAL [Balance."GRUPO3_ETIQ"]   Ventas: [SUM(<Balance."VENTAS">,M' +
             'asterData1)]')
           ParentFont = False
         end
@@ -513,7 +513,7 @@ inherited frmPrintBalanceSinTallas: TfrmPrintBalanceSinTallas
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
           Memo.UTF8W = (
-            'TOTAL [Balance."GRUPO2_ETIQ"]   Gan.: [SUM(<Balance."GANANCIA">,M' +
+            'TOTAL [Balance."GRUPO2_ETIQ"]   Ventas: [SUM(<Balance."VENTAS">,M' +
             'asterData1)]')
           ParentFont = False
         end
@@ -574,7 +574,7 @@ inherited frmPrintBalanceSinTallas: TfrmPrintBalanceSinTallas
           Font.Style = [fsBold]
           Frame.Typ = [ftTop, ftBottom]
           Memo.UTF8W = (
-            'TOTAL [Balance."GRUPO1_ETIQ"]   Gan.: [SUM(<Balance."GANANCIA">,M' +
+            'TOTAL [Balance."GRUPO1_ETIQ"]   Ventas: [SUM(<Balance."VENTAS">,M' +
             'asterData1)]')
           ParentFont = False
         end
@@ -635,7 +635,7 @@ inherited frmPrintBalanceSinTallas: TfrmPrintBalanceSinTallas
           Font.Style = [fsBold]
           Frame.Typ = [ftTop, ftBottom]
           Memo.UTF8W = (
-            'TOTAL GENERAL   Gan.: [SUM(<Balance."GANANCIA">,MasterData1)]')
+            'TOTAL GENERAL   Ventas: [SUM(<Balance."VENTAS">,MasterData1)]')
           ParentFont = False
         end
         object MemoRSCdad: TfrxMemoView
