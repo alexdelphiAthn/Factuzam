@@ -58,8 +58,9 @@ const
   COL_CDAD    = 2;
   COL_PRECIO  = 3;
   COL_IMPORTE = 4;
-  COL_MAX     = COL_IMPORTE;        // 4
-  COL_FOTO    = COL_IMPORTE + 2;    // 6: hueco a la derecha del dato
+  COL_GANANCIA = 5;                 // ganancia (solo en líneas de total)
+  COL_MAX     = COL_GANANCIA;       // 5
+  COL_FOTO    = COL_GANANCIA + 2;   // 7: hueco a la derecha del dato
   FOTO_W      = 110;                // ancho fijo de la columna de la foto (px)
   FOTO_H_MAX  = 170;                // alto máximo de la fila de la foto (px)
   FMT_NUM     = '#,##0';
@@ -99,6 +100,9 @@ var
   grpEtqs    : array[1..N_NIVELES] of string;
   grpUsado   : array[1..N_NIVELES] of Boolean;
   grpFilas   : array[1..N_NIVELES] of TList<Integer>;
+  grpGanancia: array[1..N_NIVELES] of Double;   // ganancia acumulada por grupo
+  gananciaFila: Double;                         // ganancia de la fila actual
+  totCdad, totImporte, totGanancia: Double;     // acumulados del total general
   lvl, nivelCambio: Integer;
 
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
@@ -115,11 +119,12 @@ var
   var
     cc: Integer;
   begin
-    W(Sheet, iRow, COL_BANDA,   'Concepto', True, ssahLeft);
-    W(Sheet, iRow, COL_COLOR,   'Color',    True, ssahLeft);
-    W(Sheet, iRow, COL_CDAD,    'Cantidad', True, ssahRight);
-    W(Sheet, iRow, COL_PRECIO,  'Precio',   True, ssahRight);
-    W(Sheet, iRow, COL_IMPORTE, 'Importe',  True, ssahRight);
+    W(Sheet, iRow, COL_BANDA,    'Concepto', True, ssahLeft);
+    W(Sheet, iRow, COL_COLOR,    'Color',    True, ssahLeft);
+    W(Sheet, iRow, COL_CDAD,     'Cantidad', True, ssahRight);
+    W(Sheet, iRow, COL_PRECIO,   'Precio',   True, ssahRight);
+    W(Sheet, iRow, COL_IMPORTE,  'Importe',  True, ssahRight);
+    W(Sheet, iRow, COL_GANANCIA, 'Ganancia', True, ssahRight);
     for cc := 0 to COL_MAX do
       if Sheet.Cells[iRow, cc] <> nil then
       begin
@@ -265,6 +270,7 @@ var
       Inc(iRow);
     end;
     grpFilas[ANivel].Clear;
+    grpGanancia[ANivel] := 0;
   end;
 
   // Resumen (grand total) de un nivel: una línea con la suma de cantidad e
@@ -280,6 +286,7 @@ var
         SumaFormula(grpFilas[ANivel], COL_CDAD), FMT_NUM_HZ);
       WFormula(Sheet, iRow, COL_IMPORTE,
         SumaFormula(grpFilas[ANivel], COL_IMPORTE), FMT_EUR_HZ);
+      EscNum(COL_GANANCIA, grpGanancia[ANivel], FMT_EUR_HZ, False);
       for cc := 0 to COL_MAX do
         if Sheet.Cells[iRow, cc] <> nil then
         begin
@@ -290,6 +297,7 @@ var
       Inc(iRow);
     end;
     grpFilas[ANivel].Clear;
+    grpGanancia[ANivel] := 0;
   end;
 
 begin
@@ -304,7 +312,11 @@ begin
     grpCods[lvl]  := #1;
     grpEtqs[lvl]  := '';
     grpUsado[lvl] := False;
+    grpGanancia[lvl] := 0;
   end;
+  totCdad := 0;
+  totImporte := 0;
+  totGanancia := 0;
   // Pre-carga de fotos a nivel artículo en UNA consulta (evita el N+1).
   dictFotos := nil;
   if (QDatos <> nil) and QDatos.Active and (not QDatos.IsEmpty) then
@@ -406,9 +418,19 @@ begin
           EscNum(COL_PRECIO,  QDatos.FieldByName('PRECIO').AsFloat,   FMT_EUR, False);
           EscNum(COL_IMPORTE, QDatos.FieldByName('IMPORTE').AsFloat,  FMT_EUR, False);
           AcumularBanda;
+          // Acumular cantidad/importe/ganancia para los totales. La ganancia
+          // solo es <> 0 en las ventas; se muestra en los totales (resumen por
+          // grupo y total general), no en el detalle.
+          gananciaFila := QDatos.FieldByName('GANANCIA').AsFloat;
+          totCdad      := totCdad + QDatos.FieldByName('CANTIDAD').AsFloat;
+          totImporte   := totImporte + QDatos.FieldByName('IMPORTE').AsFloat;
+          totGanancia  := totGanancia + gananciaFila;
           for lvl := 1 to N_NIVELES do
             if grpUsado[lvl] then
+            begin
               grpFilas[lvl].Add(iRow);
+              grpGanancia[lvl] := grpGanancia[lvl] + gananciaFila;
+            end;
           Inc(iRow);
           QDatos.Next;
         end;
@@ -417,6 +439,20 @@ begin
         if grpCods[1] <> #1 then
           for lvl := N_NIVELES downto 1 do
             EmitirResumenGrupo(lvl);
+        // Total general (cantidad, importe y ganancia).
+        W(Sheet, iRow, 0, 'TOTAL GENERAL', True, ssahLeft);
+        EscNum(COL_CDAD,     totCdad,     FMT_NUM_HZ, False);
+        EscNum(COL_IMPORTE,  totImporte,  FMT_EUR_HZ, False);
+        EscNum(COL_GANANCIA, totGanancia, FMT_EUR_HZ, False);
+        for c := 0 to COL_MAX do
+          if Sheet.Cells[iRow, c] <> nil then
+          begin
+            Sheet.Cells[iRow, c].Style.Font.Style := [fsBold];
+            Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := CL_GRUPO_H;
+            Sheet.Cells[iRow, c].Style.Borders[bTop].Style := sscbsThin;
+            Sheet.Cells[iRow, c].Style.Borders[bBottom].Style := sscbsThin;
+          end;
+        Inc(iRow);
       finally
         QDatos.EnableControls;
       end;
@@ -424,9 +460,10 @@ begin
     // Anchos de columna.
     Sheet.Columns[COL_BANDA].Size   := 140;
     Sheet.Columns[COL_COLOR].Size   := 120;
-    Sheet.Columns[COL_CDAD].Size    := 70;
-    Sheet.Columns[COL_PRECIO].Size  := 75;
-    Sheet.Columns[COL_IMPORTE].Size := 90;
+    Sheet.Columns[COL_CDAD].Size     := 70;
+    Sheet.Columns[COL_PRECIO].Size   := 75;
+    Sheet.Columns[COL_IMPORTE].Size  := 90;
+    Sheet.Columns[COL_GANANCIA].Size := 90;
   finally
     Sheet.EndUpdate;
     FreeAndNil(ordenBandas);

@@ -78,12 +78,29 @@ Por acumulados no hay "existencias iniciales": el acumulado de
 
 | Banda                          | Precio unitario        |
 |--------------------------------|------------------------|
-| Existencias (ini/fin), Entradas| **Coste** (precio medio ponderado del stock actual; respaldo: último precio de compra del proveedor principal) |
-| Salidas, Ventas                | **PVP** (tarifa por defecto vigente hoy) |
+| Existencias (ini/fin), Entradas| **Coste = PMP** (precio medio ponderado del stock actual; respaldo: último precio de compra del proveedor principal) |
+| Salidas                        | **PVP** (tarifa por defecto vigente hoy) — valoración nocional de todo lo que sale |
+| **Ventas (VEN)**               | **Precio REAL de venta** (con descuentos, con IVA = `TOTAL_FACLIN`) de `fza_facturas_lineas`, enlazado por SKU/almacén; **no** la tarifa |
 
-`IMPORTE = CANTIDAD · PRECIO` por banda. Coincide con el mock: ent. a
-coste (12,00), sal./ventas a PVP (39,95). La tarifa se pasa como
-parámetro (`p_COD_TARIFA`, por defecto `PVP` vía `appTarifaDefecto`).
+`IMPORTE = CANTIDAD · PRECIO` por banda (salvo Ventas, que toma el importe
+real facturado). La tarifa se pasa como parámetro (`p_COD_TARIFA`, por
+defecto `PVP` vía `appTarifaDefecto`).
+
+#### Ganancia (margen)
+
+Columna `GANANCIA` del SP, **distinta de 0 solo en la banda de ventas**:
+`GANANCIA = importe real de venta − (uds. facturadas · PMP)`. Al ser 0 en el
+resto de bandas, **sumada por grupo y total da el margen comercial**. Se
+muestra en las líneas de total: **resumen por grupo** y **total general**
+(banda `ReportSummary` en FastReport; fila `TOTAL GENERAL` en Excel). El
+ingreso es **con IVA** (decisión del usuario), así que el margen incluye el
+IVA del lado de la venta.
+
+> Ventas reales por periodo: entre fechas se filtra por `FECHA_FAC`; en
+> acumulados se suma el histórico de facturas. Las unidades de la banda
+> Ventas siguen siendo las del movimiento; el importe y la ganancia salen de
+> las líneas de factura (facturas/tickets VE/FC). Albaranes de venta no
+> facturados no tienen precio de línea (no suman ingreso real).
 
 > Simplificación asumida: las entradas y existencias se valoran al coste
 > medio **actual** del artículo, no al coste histórico de cada

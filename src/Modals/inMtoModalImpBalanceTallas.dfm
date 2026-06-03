@@ -955,7 +955,8 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
           Memo.UTF8W = (
-            'TOTAL [Balance."GRUPO3_ETIQ"]')
+            'TOTAL [Balance."GRUPO3_ETIQ"]    Ganancia: [SUM(<Balance."GANANCI' +
+            'A">,MasterData1)]')
           ParentFont = False
         end
         object MemoGF3Cdad: TfrxMemoView
@@ -1015,7 +1016,8 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
           Memo.UTF8W = (
-            'TOTAL [Balance."GRUPO2_ETIQ"]')
+            'TOTAL [Balance."GRUPO2_ETIQ"]    Ganancia: [SUM(<Balance."GANANCI' +
+            'A">,MasterData1)]')
           ParentFont = False
         end
         object MemoGF2Cdad: TfrxMemoView
@@ -1075,7 +1077,8 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           Font.Style = [fsBold]
           Frame.Typ = [ftTop, ftBottom]
           Memo.UTF8W = (
-            'TOTAL [Balance."GRUPO1_ETIQ"]')
+            'TOTAL [Balance."GRUPO1_ETIQ"]    Ganancia: [SUM(<Balance."GANANCI' +
+            'A">,MasterData1)]')
           ParentFont = False
         end
         object MemoGF1Cdad: TfrxMemoView
@@ -1118,9 +1121,70 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           ParentFont = False
         end
       end
+      object ReportSummary1: TfrxReportSummary
+        Height = 20.000000000000000000
+        Top = 306.000000000000000000
+        Width = 1047.000000000000000000
+        Frame.Typ = []
+        object MemoRSLbl: TfrxMemoView
+          Left = 0.000000000000000000
+          Top = 2.000000000000000000
+          Width = 834.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'TOTAL GENERAL    Ganancia: [SUM(<Balance."GANANCIA">,MasterData1)' +
+            ']')
+          ParentFont = False
+        end
+        object MemoRSCdad: TfrxMemoView
+          Left = 834.000000000000000000
+          Top = 2.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoRSImp: TfrxMemoView
+          Left = 972.000000000000000000
+          Top = 2.000000000000000000
+          Width = 75.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          HideZeros = True
+          Memo.UTF8W = (
+            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+          ParentFont = False
+        end
+      end
       object PageFooter1: TfrxPageFooter
         Height = 18.000000000000000000
-        Top = 308.000000000000000000
+        Top = 332.000000000000000000
         Width = 1047.000000000000000000
         Frame.Typ = []
         object MemoPag: TfrxMemoView

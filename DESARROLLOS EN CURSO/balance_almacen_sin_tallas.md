@@ -31,7 +31,11 @@ Todo el "armazón" es común (mismo formulario base `TfrmPrintMultiFiltro`):
 - **Agrupaciones**: pestaña reordenable (Almacén / Proveedor / Familia /
   Temporada) + nivel de familia, con **resumen (grand total) por grupo**
   (suma de cantidad e importe de todas las filas del grupo).
-- **Valoración**: entradas/existencias a coste, salidas/ventas a PVP.
+- **Valoración**: entradas/existencias (ini/fin) a **PMP**; salidas a PVP;
+  **ventas al precio REAL** (con descuentos, con IVA) de `fza_facturas_lineas`.
+- **Ganancia** (margen) en las líneas de total (resumen por grupo + total
+  general): `ventas reales − uds. facturadas · PMP`. Ver
+  `balance_almacen_tallas.md §2`.
 - **Excel** y **FastReport**, con foto y ocultado de niveles de grupo
   inactivos (mismo `ReportBeforePrint` que el horizontal).
 
