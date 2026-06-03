@@ -19,10 +19,10 @@
 -- agrupa por (artículo, color) en vez de por (artículo, color, talla), y
 -- no hay tabla de posiciones/etiquetas de talla.
 --
--- Ventas y ganancia: la banda de ventas (VEN) se valora al PRECIO REAL de
--- venta (con descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no
--- a tarifa. GANANCIA (solo en VEN) = importe real - (uds. facturadas x PMP);
--- 0 en el resto. Existencias iniciales/finales y entradas, a PMP.
+-- Ventas: la banda de ventas (VEN) se valora al PRECIO REAL de venta (con
+-- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no a tarifa.
+-- Columna VENTAS (importe real solo en VEN, 0 en el resto) para acumular las
+-- ventas por artículo/grupo/total. Existencias ini/fin y entradas, a PMP.
 --
 -- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
 -- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
@@ -487,14 +487,12 @@ BEGIN
                  p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
                    COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
-        -- Ganancia (margen) solo de la banda de ventas (VEN): importe real de
-        -- venta - (uds. facturadas x coste medio ponderado). 0 en el resto de
-        -- bandas, para que la suma por grupo/total dé el margen comercial.
-        ROUND(IF(p.`BANDA` = 'VEN',
-                 COALESCE(vt.`VEN_IMPORTE`, 0)
-                   - COALESCE(vt.`VEN_QTY`, 0)
-                     * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
-                 0), 2)                               AS `GANANCIA`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = 'VEN', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
         CASE p_NIVEL1
             WHEN 'PRV' THEN COALESCE(prov.`CODIGO_PRV`, '')
             WHEN 'FAM' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
