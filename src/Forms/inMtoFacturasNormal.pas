@@ -21,7 +21,17 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  inMtoFacturasBase;
+  inMtoFacturasBase, cxGraphics, cxControls, cxLookAndFeels,
+  cxLookAndFeelPainters, cxStyles, Data.DB, cxDBData, cxCalendar,
+  cxCurrencyEdit, cxTextEdit, cxCheckBox, cxSpinEdit, cxButtonEdit,
+  cxDropDownEdit, cxMemo, cxDBLookupComboBox, cxBlobEdit, cxContainer, cxEdit,
+  Vcl.Menus, JvBaseDlg, JvCalc, Vcl.ExtCtrls, dxShellDialogs, System.Actions,
+  Vcl.ActnList, JvComponentBase, JvEnterTab, cxLocalization, Vcl.StdCtrls,
+  cxRadioGroup, cxNavigator, cxDBNavigator, cxSplitter, cxGroupBox, cxDBLabel,
+  cxDBEdit, cxImage, Vcl.Buttons, cxLookupEdit, cxDBLookupEdit, cxMaskEdit,
+  cxLabel, cxButtons, cxGridBandedTableView, cxGridDBBandedTableView,
+  cxGridLevel, cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
+  cxClasses, cxGridCustomView, cxGrid, cxPC;
 
 type
   TfrmMtoFacturasNormal = class(TfrmMtoFacturasBase)

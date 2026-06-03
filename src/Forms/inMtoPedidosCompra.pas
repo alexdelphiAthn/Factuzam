@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoPedidosCompra                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -43,7 +43,7 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
-  UniDataPedidosCompra;
+  UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList, dxShellDialogs;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -102,7 +102,6 @@ type
     btnBorrarLinea:       TcxButton;
     btnTallasHorizontal:  TcxButton;
     btnAtributosColumna:  TcxButton;
-    btnCrearAlbaran:      TcxButton;
     btnExpandirRecibidos: TcxButton;
     // Atajo: rellena 'A recibir' con el pendiente de TODAS las
     // tallas de la fila focused. Activo solo en pivote expandido.
@@ -114,6 +113,7 @@ type
     // El usuario teclea aqui "A recibir" por linea SKU. Se oculta
     // cuando entra en modo pivote.
     colLineaPedcARecibir: TcxGridDBColumn;
+    btnCrearAlbaran: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);

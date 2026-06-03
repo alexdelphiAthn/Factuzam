@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -334,6 +334,9 @@
         <DCCReference Include="src\Modals\inMtoModalImpBalanceTallas.pas">
             <Form>frmPrintBalanceTallas</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpBalanceSinTallas.pas">
+            <Form>frmPrintBalanceSinTallas</Form>
+        </DCCReference>
         <DCCReference Include="src\Core\inMtoSplash.pas">
             <Form>frmSplash</Form>
         </DCCReference>
@@ -512,9 +515,6 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Modals\inMtoModalImpDepositos.pas">
             <Form>frmPrintDepositos</Form>
-        </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalImpBalanceSinTallas.pas">
-            <Form>frmPrintBalanceSinTallas</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEntradaCambio.pas">
             <Form>frmModalEntradaCambio</Form>

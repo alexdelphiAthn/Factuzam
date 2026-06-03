@@ -67,7 +67,7 @@ uses
   inMtoModalCrearAlbaranSesion,
   inLibGridTallasInline,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
-  dxDateRanges;
+  dxDateRanges, cxSplitter;
 
 const
   // Numero maximo de columnas de talla inline. Subido a 20 a peticion
@@ -127,67 +127,10 @@ type
     spnMultiploRedondeo      : TcxDBSpinEdit;
     lblAjusteFinal           : TcxLabel;
     spnAjusteFinal           : TcxDBSpinEdit;
-
-    // ------------------------------------------------------------------
-    // Ficha — botones de linea
-    // ------------------------------------------------------------------
-    pnlLineasTop             : TPanel;
-    btnAddLinea              : TcxButton;
-    btnDelLinea              : TcxButton;
-    btnNuevoColor            : TcxButton;
-    btnFoto                  : TcxButton;
-    btnArbolFamilias         : TcxButton;
-    btnDescargarFotos        : TcxButton;
     dlgFoto                  : TOpenDialog;
-    lblHint                  : TcxLabel;
-
-    // ------------------------------------------------------------------
-    // Ficha — grid de lineas con tallas inline
-    // ------------------------------------------------------------------
-    cxgrdLineas              : TcxGrid;
-    tvLineas                 : TcxGridDBTableView;
-    glLineas                 : TcxGridLevel;
-    dbcLinFamilia            : TcxGridDBColumn;
-    dbcLinCodArt             : TcxGridDBColumn;
-    dbcLinRefPrv             : TcxGridDBColumn;
-    dbcLinDescripcion        : TcxGridDBColumn;
-    dbcLinColor              : TcxGridDBColumn;
-    dbcLinColorBasico        : TcxGridDBColumn;
-    dbcLinPrecioCompra       : TcxGridDBColumn;
-    dbcLinPrecioVenta        : TcxGridDBColumn;
-    dbcLinTallas             : TcxGridDBColumn;
-    // Las columnas de talla (CANT_TALLAS_MAX) se crean en runtime en
-    // CrearColumnasTallas y se exponen via FTallaColumns. Predefinirlas
-    // en DFM disparaba RLINK32 'Unsupported 16bit resource' al compilar
-    // los descendientes (linker se atragantaba con muchos nodos cx
-    // repetidos). El orden visual contiguo entre dbcLinTallas y
-    // dbcLinTotalTallas se garantiza asignando Col.Index al final del
-    // bucle (patron heredado de inMtoCajaOpe.ConstruirColumnasDinamicas).
-    dbcLinTotalTallas        : TcxGridDBColumn;
-    dbcLinImporteTotal       : TcxGridDBColumn;
-    dbcLinNumero             : TcxGridDBColumn;
     btnImprimir: TcxButton;
     btnCrear: TcxButton;
     btnRevertir: TcxButton;
-
-    // ------------------------------------------------------------------
-    // Pestania Documentos — pedidos / albaranes generados al materializar.
-    // El grid es solo lectura; doble-click o F12 ('Ir a documento') hace
-    // ShowMto al doc seleccionado.
-    // ------------------------------------------------------------------
-    tsDocumentos : TcxTabSheet;
-    pnlDocsTop   : TPanel;
-    btnIrADoc    : TcxButton;
-    lblDocsInfo  : TcxLabel;
-    cxgrdDocs    : TcxGrid;
-    tvDocs       : TcxGridDBTableView;
-    glDocs       : TcxGridLevel;
-    dbcDocTipo   : TcxGridDBColumn;
-    dbcDocSerie  : TcxGridDBColumn;
-    dbcDocNumero : TcxGridDBColumn;
-    dbcDocAlmacen: TcxGridDBColumn;
-    dbcDocInstante: TcxGridDBColumn;
-    dbcDocUsuario: TcxGridDBColumn;
 
     // ------------------------------------------------------------------
     // Navegacion rapida via TActionList. Los shortcuts SOLO disparan
@@ -199,15 +142,46 @@ type
     actIrArticulos       : TAction;
     actIrAlbaranesCompra : TAction;
     actIrPedidosCompra   : TAction;
-
-    // ------------------------------------------------------------------
-    // Pestania Log (trazas de depuracion del flujo de sesion)
-    // ------------------------------------------------------------------
-    tsLog        : TcxTabSheet;
-    pnlLogTop    : TPanel;
-    btnLogClear  : TcxButton;
-    btnLogCopy   : TcxButton;
-    mLog         : TcxMemo;
+    pnlBottFich: TPanel;
+    splSplitterFicha: TcxSplitter;
+    cxPageControl2: TcxPageControl;
+    cxTabSheet1: TcxTabSheet;
+    cxgrdLineas: TcxGrid;
+    tvLineas: TcxGridDBTableView;
+    dbcLinFamilia: TcxGridDBColumn;
+    dbcLinCodArt: TcxGridDBColumn;
+    dbcLinRefPrv: TcxGridDBColumn;
+    dbcLinDescripcion: TcxGridDBColumn;
+    dbcLinColor: TcxGridDBColumn;
+    dbcLinColorBasico: TcxGridDBColumn;
+    dbcLinPrecioCompra: TcxGridDBColumn;
+    dbcLinPrecioVenta: TcxGridDBColumn;
+    dbcLinTallas: TcxGridDBColumn;
+    dbcLinTotalTallas: TcxGridDBColumn;
+    dbcLinImporteTotal: TcxGridDBColumn;
+    dbcLinNumero: TcxGridDBColumn;
+    glLineas: TcxGridLevel;
+    pnlLineasTop: TPanel;
+    btnAddLinea: TcxButton;
+    btnDelLinea: TcxButton;
+    btnNuevoColor: TcxButton;
+    btnFoto: TcxButton;
+    btnArbolFamilias: TcxButton;
+    btnDescargarFotos: TcxButton;
+    lblHint: TcxLabel;
+    tsDocumentos: TcxTabSheet;
+    pnlDocsTop: TPanel;
+    btnIrADoc: TcxButton;
+    lblDocsInfo: TcxLabel;
+    cxgrdDocs: TcxGrid;
+    tvDocs: TcxGridDBTableView;
+    dbcDocTipo: TcxGridDBColumn;
+    dbcDocSerie: TcxGridDBColumn;
+    dbcDocNumero: TcxGridDBColumn;
+    dbcDocAlmacen: TcxGridDBColumn;
+    dbcDocInstante: TcxGridDBColumn;
+    dbcDocUsuario: TcxGridDBColumn;
+    glDocs: TcxGridLevel;
 
     // ------------------------------------------------------------------
     // Eventos
@@ -690,26 +664,26 @@ begin
   // Vuelca al memo de la pestania 'Log'. Limite blando de 5000 lineas
   // para que el memo no engorde indefinidamente en sesiones largas;
   // cuando se pasa, se recorta la mitad inicial.
-  if not Assigned(mLog) then Exit;
-  mLog.Lines.BeginUpdate;
-  try
-    mLog.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' ' + S);
-    if mLog.Lines.Count > 5000 then
-      while mLog.Lines.Count > 2500 do
-        mLog.Lines.Delete(0);
-  finally
-    mLog.Lines.EndUpdate;
-  end;
+//  if not Assigned(mLog) then Exit;
+//  mLog.Lines.BeginUpdate;
+//  try
+//    mLog.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' ' + S);
+//    if mLog.Lines.Count > 5000 then
+//      while mLog.Lines.Count > 2500 do
+//        mLog.Lines.Delete(0);
+//  finally
+//    mLog.Lines.EndUpdate;
+//  end;
 end;
 
 procedure TfrmMtoComprasSesiones.btnLogClearClick(Sender: TObject);
 begin
-  if Assigned(mLog) then mLog.Lines.Clear;
+//  if Assigned(mLog) then mLog.Lines.Clear;
 end;
 
 procedure TfrmMtoComprasSesiones.btnLogCopyClick(Sender: TObject);
 begin
-  if Assigned(mLog) then Clipboard.AsText := mLog.Lines.Text;
+//  if Assigned(mLog) then Clipboard.AsText := mLog.Lines.Text;
 end;
 
 procedure TfrmMtoComprasSesiones.btnIrADocClick(Sender: TObject);
