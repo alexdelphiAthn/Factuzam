@@ -8,7 +8,8 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   ClientHeight = 844
   ClientWidth = 1231
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitTop = -369
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 17
