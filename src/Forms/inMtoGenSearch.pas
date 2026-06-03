@@ -251,6 +251,7 @@ begin
     begin
       lbl := TcxLabel.Create(frm);
       lbl.Parent  := frm.ScrollBox;
+      lbl.Transparent := True;
       lbl.Caption := StringReplace(FConfigAlta.ValoresDefecto[i].NombreCampo,
                                                  '_', ' ', [rfReplaceAll]);
       lbl.Left := TfrmMtoModalAltaRapida.ColMargin;
