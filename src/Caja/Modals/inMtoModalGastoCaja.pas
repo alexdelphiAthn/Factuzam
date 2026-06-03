@@ -163,12 +163,12 @@ begin
   try
     unqry.Connection := FConn;
     unqry.SQL.Text :=
-      'SELECT CODIGO_EMPLEADO_USU AS `Código`,' +
-      '       DIMINUTIVO_TICKET_USU AS `Nombre`' +
-      '  FROM fza_usuarios' +
-      ' WHERE ESACTIVO_USU = ''S''' +
-      '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
-      ' ORDER BY CODIGO_EMPLEADO_USU';
+      'SELECT CODIGO_EMPL AS `Código`,' +
+      '       DIMINUTIVO_TICKET_EMPL AS `Nombre`' +
+      '  FROM fza_empleados' +
+      ' WHERE ESACTIVO_EMPL = ''S''' +
+      '   AND CODIGO_EMPL IS NOT NULL' +
+      ' ORDER BY CODIGO_EMPL';
     formulario := TfrmMtoSearch.Create(nil);
     try
       formulario.Caption := 'Búsqueda de Empleados';
@@ -200,16 +200,16 @@ begin
   try
     Q.Connection := FConn;
     Q.SQL.Text :=
-      'SELECT DIMINUTIVO_TICKET_USU' +
-      '  FROM fza_usuarios' +
-      ' WHERE (USUARIO_USU = :pCOD' +
-      '    OR CODIGO_EMPLEADO_USU = :pCOD2)';
+      'SELECT DIMINUTIVO_TICKET_EMPL' +
+      '  FROM fza_empleados' +
+      ' WHERE (CODIGO_EMPL = :pCOD' +
+      '    OR DIMINUTIVO_TICKET_EMPL = :pCOD2)';
     Q.ParamByName('pCOD').AsString  := Trim(btnEmpleado.Text);
     Q.ParamByName('pCOD2').AsString := Trim(btnEmpleado.Text);
     Q.Open;
     if not Q.Eof then
       lblEmpleadoNombre.Caption :=
-        Q.FieldByName('DIMINUTIVO_TICKET_USU').AsString;
+        Q.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString;
   finally
     FreeAndNil(Q);
   end;

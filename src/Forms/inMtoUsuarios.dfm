@@ -17,11 +17,6 @@
               DataBinding.FieldName = 'USUARIO_USU'
               Width = 189
             end
-            object cxGrdDBTabPrinDIMINUTIVO_USUARIO: TcxGridDBColumn
-              Caption = 'Diminutivo Caja'
-              DataBinding.FieldName = 'DIMINUTIVO_TICKET_USU'
-              Width = 140
-            end
             object cxGrdDBTabPrinGRUPO_USUARIO: TcxGridDBColumn
               Caption = 'Grupo'
               DataBinding.FieldName = 'GRUPO_USU'
@@ -73,11 +68,6 @@
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
               Width = 70
-            end
-            object cxGrdDBTabPrinCODEMPLEADO_USUARIO: TcxGridDBColumn
-              Caption = 'C'#243'digo Empleado'
-              DataBinding.FieldName = 'CODIGO_EMPLEADO_USU'
-              Width = 140
             end
             object cxGrdDBTabPrinALMACENDEF_USUARIO: TcxGridDBColumn
               Caption = 'Almac'#233'n por defecto'
