@@ -236,6 +236,9 @@
         <DCCReference Include="src\Forms\inMtoGenSearch.pas">
             <Form>frmMtoSearch</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoEmpleados.pas">
+            <Form>frmMtoEmpleados</Form>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoGrupos.pas">
             <Form>frmMtoGrupos</Form>
         </DCCReference>
@@ -397,6 +400,10 @@
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataTarifas.pas">
             <Form>dmTarifas</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataEmpleados.pas">
+            <Form>dmEmpleados</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataUsuarios.pas">
