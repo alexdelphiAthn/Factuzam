@@ -18,8 +18,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       Height = 680
       ExplicitWidth = 1100
       ExplicitHeight = 680
-      ClientRectBottom = 676
-      ClientRectRight = 1096
+      ClientRectBottom = 678
+      ClientRectRight = 1098
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 2
         ExplicitTop = 27
@@ -85,18 +85,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 28
-        ExplicitWidth = 1092
-        ExplicitHeight = 648
+        ExplicitLeft = 2
+        ExplicitTop = 27
+        ExplicitWidth = 1096
+        ExplicitHeight = 651
         object gbCabecera: TcxGroupBox
           Left = 0
           Top = 0
           Align = alTop
           Caption = ' Cabecera '
           TabOrder = 0
-          Height = 224
-          Width = 1092
+          Height = 201
+          Width = 1096
           object lblSerie: TcxLabel
             Left = 12
             Top = 24
@@ -210,14 +210,14 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Width = 160
           end
           object lblRefPrv: TcxLabel
-            Left = 770
+            Left = 645
             Top = 67
             Caption = 'Ref. prov.'
             TabOrder = 10
             Transparent = True
           end
           object txtRefPrv: TcxDBTextEdit
-            Left = 850
+            Left = 725
             Top = 63
             DataBinding.DataField = 'REF_PRV_SES'
             DataBinding.DataSource = dsTablaG
@@ -297,8 +297,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Width = 220
           end
           object chkFormatoDistribuido: TcxDBCheckBox
-            Left = 940
-            Top = 107
+            Left = 656
+            Top = 153
             Caption = 'Formato distribuido (por almac'#233'n)'
             DataBinding.DataField = 'ESFORMATO_DISTRIBUIDO_SES'
             DataBinding.DataSource = dsTablaG
@@ -369,242 +369,377 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Width = 1060
           end
         end
-        object pnlLineasTop: TPanel
+        object pnlBottFich: TPanel
           Left = 0
-          Top = 224
-          Width = 1092
-          Height = 36
-          Align = alTop
-          BevelOuter = bvNone
+          Top = 211
+          Width = 1096
+          Height = 440
+          Align = alClient
           TabOrder = 1
-          object btnAddLinea: TcxButton
-            Left = 12
-            Top = 4
-            Width = 136
-            Height = 28
-            Caption = '+ A'#241'adir l'#237'nea'
+          ExplicitTop = 272
+          ExplicitHeight = 379
+          object cxPageControl2: TcxPageControl
+            Left = 1
+            Top = 1
+            Width = 1094
+            Height = 438
+            Align = alClient
             TabOrder = 0
-            OnClick = btnAddLineaClick
-          end
-          object btnDelLinea: TcxButton
-            Left = 154
-            Top = 5
-            Width = 137
-            Height = 28
-            Caption = '- Borrar l'#237'nea'
-            TabOrder = 1
-            OnClick = btnDelLineaClick
-          end
-          object btnNuevoColor: TcxButton
-            Left = 296
-            Top = 5
-            Width = 170
-            Height = 28
-            Caption = 'Otro color'
-            Colors.Default = 14346982
-            Colors.Normal = 14346982
-            LookAndFeel.Kind = lfFlat
-            LookAndFeel.NativeStyle = False
-            TabOrder = 2
-            OnClick = btnNuevoColorClick
-          end
-          object btnFoto: TcxButton
-            Left = 472
-            Top = 5
-            Width = 120
-            Height = 28
-            Caption = '+ Foto'
-            LookAndFeel.Kind = lfFlat
-            LookAndFeel.NativeStyle = False
-            TabOrder = 3
-            OnClick = btnFotoClick
-          end
-          object btnArbolFamilias: TcxButton
-            Left = 600
-            Top = 5
-            Width = 164
-            Height = 28
-            Caption = #193'rbol familias (F3)'
-            TabOrder = 4
-            OnClick = btnArbolFamiliasClick
-          end
-          object btnDescargarFotos: TcxButton
-            Left = 770
-            Top = 5
-            Width = 120
-            Height = 28
-            Caption = 'Bajar fotos'
-            LookAndFeel.Kind = lfFlat
-            LookAndFeel.NativeStyle = False
-            TabOrder = 5
-            OnClick = btnDescargarFotosClick
-          end
-          object lblHint: TcxLabel
-            Left = 898
-            Top = 7
-            Caption = 
-              'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
-              'oste.'
-            TabOrder = 6
-            Transparent = True
+            Properties.ActivePage = tsDocumentos
+            Properties.CustomButtons.Buttons = <>
+            ExplicitLeft = 408
+            ExplicitTop = 112
+            ExplicitWidth = 289
+            ExplicitHeight = 193
+            ClientRectBottom = 436
+            ClientRectLeft = 2
+            ClientRectRight = 1092
+            ClientRectTop = 27
+            object cxTabSheet1: TcxTabSheet
+              Caption = '&1_Lineas de Art'#237'culos'
+              ImageIndex = 0
+              ExplicitHeight = 350
+              object cxgrdLineas: TcxGrid
+                Left = 0
+                Top = 36
+                Width = 1090
+                Height = 373
+                Align = alClient
+                TabOrder = 0
+                OnEnter = cxgrdLineasEnter
+                OnExit = cxgrdLineasExit
+                ExplicitLeft = 2
+                ExplicitTop = 2
+                ExplicitWidth = 1094
+                ExplicitHeight = 415
+                object tvLineas: TcxGridDBTableView
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Buttons.PriorPage.Visible = False
+                  Navigator.Buttons.NextPage.Visible = False
+                  Navigator.Buttons.Append.Visible = False
+                  Navigator.Buttons.Edit.Visible = False
+                  Navigator.Buttons.SaveBookmark.Visible = False
+                  Navigator.Buttons.GotoBookmark.Visible = False
+                  Navigator.Buttons.Filter.Visible = False
+                  Navigator.Visible = True
+                  OnCustomDrawCell = tvLineasCustomDrawCell
+                  OnEditing = tvLineasEditing
+                  OnEditKeyDown = tvLineasEditKeyDown
+                  OnFocusedRecordChanged = tvLineasFocusedRecordChanged
+                  OnInitEdit = tvLineasInitEdit
+                  DataController.Summary.FooterSummaryItems = <
+                    item
+                      Format = '#,##0'
+                      Kind = skSum
+                      Column = dbcLinTotalTallas
+                    end>
+                  OptionsBehavior.FocusCellOnTab = True
+                  OptionsBehavior.GoToNextCellOnEnter = True
+                  OptionsData.Appending = True
+                  OptionsView.Footer = True
+                  OptionsView.GroupByBox = False
+                  object dbcLinFamilia: TcxGridDBColumn
+                    Caption = 'Familia (F3)'
+                    DataBinding.FieldName = 'CODIGO_FAM_SESLIN'
+                    PropertiesClassName = 'TcxTextEditProperties'
+                    Properties.CharCase = ecUpperCase
+                    Properties.OnEditValueChanged = dbcLinFamiliaPropertiesEditValueChanged
+                    Width = 110
+                  end
+                  object dbcLinCodArt: TcxGridDBColumn
+                    Caption = 'C'#243'd. art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_TENTATIVO_SESLIN'
+                    PropertiesClassName = 'TcxTextEditProperties'
+                    Properties.CharCase = ecUpperCase
+                    Properties.OnEditValueChanged = dbcLinCodArtPropertiesEditValueChanged
+                    Width = 130
+                  end
+                  object dbcLinRefPrv: TcxGridDBColumn
+                    Caption = 'Modelo prov.'
+                    DataBinding.FieldName = 'REF_PRV_SESLIN'
+                    PropertiesClassName = 'TcxTextEditProperties'
+                    Properties.OnEditValueChanged = dbcLinRefPrvPropertiesEditValueChanged
+                    Width = 130
+                  end
+                  object dbcLinDescripcion: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_SESLIN'
+                    Width = 341
+                  end
+                  object dbcLinColor: TcxGridDBColumn
+                    Caption = 'Color'
+                    DataBinding.FieldName = 'COLOR_TEXTO_SESLIN'
+                    Width = 140
+                  end
+                  object dbcLinColorBasico: TcxGridDBColumn
+                    Caption = 'C. b'#225'sico'
+                    DataBinding.FieldName = 'CODIGO_ATB_COLOR_SESLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = dbcLinColorBasicoPropertiesButtonClick
+                    Width = 110
+                  end
+                  object dbcLinPrecioCompra: TcxGridDBColumn
+                    Caption = 'Pr. compra'
+                    DataBinding.FieldName = 'PRECIO_COMPRA_SESLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.OnEditValueChanged = dbcLinPrecioCompraPropertiesEditValueChanged
+                    Width = 136
+                  end
+                  object dbcLinPrecioVenta: TcxGridDBColumn
+                    Caption = 'Pr. venta'
+                    DataBinding.FieldName = 'PRECIO_VENTA_SESLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Width = 90
+                  end
+                  object dbcLinTallas: TcxGridDBColumn
+                    Caption = 'Sistema tallas'
+                    DataBinding.FieldName = 'ID_AC_PIVOT_SESLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = dbcLinTallasPropertiesButtonClick
+                    Width = 170
+                  end
+                  object dbcLinTotalTallas: TcxGridDBColumn
+                    Caption = 'Total tallas'
+                    DataBinding.FieldName = 'TOTAL_UNIDADES_SESLIN'
+                    PropertiesClassName = 'TcxSpinEditProperties'
+                    Properties.Alignment.Horz = taRightJustify
+                    HeaderAlignmentHorz = taRightJustify
+                    Options.Editing = False
+                    Width = 100
+                  end
+                  object dbcLinImporteTotal: TcxGridDBColumn
+                    Caption = 'Importe s/IVA'
+                    DataBinding.FieldName = 'TOTAL_LINEA_SESLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.Alignment.Horz = taRightJustify
+                    HeaderAlignmentHorz = taRightJustify
+                    Options.Editing = False
+                    Width = 110
+                  end
+                  object dbcLinNumero: TcxGridDBColumn
+                    Caption = 'L'#237'nea'
+                    DataBinding.FieldName = 'LINEA_SESLIN'
+                    PropertiesClassName = 'TcxSpinEditProperties'
+                    Properties.Increment = 10.000000000000000000
+                    Properties.MinValue = 1.000000000000000000
+                    Width = 70
+                  end
+                end
+                object glLineas: TcxGridLevel
+                  GridView = tvLineas
+                end
+              end
+              object pnlLineasTop: TPanel
+                Left = 0
+                Top = 0
+                Width = 1090
+                Height = 36
+                Align = alTop
+                BevelOuter = bvNone
+                TabOrder = 1
+                ExplicitTop = 8
+                object btnAddLinea: TcxButton
+                  Left = 12
+                  Top = 4
+                  Width = 136
+                  Height = 28
+                  Caption = '+ A'#241'adir l'#237'nea'
+                  TabOrder = 0
+                  OnClick = btnAddLineaClick
+                end
+                object btnDelLinea: TcxButton
+                  Left = 154
+                  Top = 5
+                  Width = 137
+                  Height = 28
+                  Caption = '- Borrar l'#237'nea'
+                  TabOrder = 1
+                  OnClick = btnDelLineaClick
+                end
+                object btnNuevoColor: TcxButton
+                  Left = 296
+                  Top = 5
+                  Width = 170
+                  Height = 28
+                  Caption = 'Otro color'
+                  Colors.Default = 14346982
+                  Colors.Normal = 14346982
+                  LookAndFeel.Kind = lfFlat
+                  LookAndFeel.NativeStyle = False
+                  TabOrder = 2
+                  OnClick = btnNuevoColorClick
+                end
+                object btnFoto: TcxButton
+                  Left = 472
+                  Top = 5
+                  Width = 120
+                  Height = 28
+                  Caption = '+ Foto'
+                  LookAndFeel.Kind = lfFlat
+                  LookAndFeel.NativeStyle = False
+                  TabOrder = 3
+                  OnClick = btnFotoClick
+                end
+                object btnArbolFamilias: TcxButton
+                  Left = 600
+                  Top = 5
+                  Width = 164
+                  Height = 28
+                  Caption = #193'rbol familias (F3)'
+                  TabOrder = 4
+                  OnClick = btnArbolFamiliasClick
+                end
+                object btnDescargarFotos: TcxButton
+                  Left = 770
+                  Top = 5
+                  Width = 120
+                  Height = 28
+                  Caption = 'Bajar fotos'
+                  LookAndFeel.Kind = lfFlat
+                  LookAndFeel.NativeStyle = False
+                  TabOrder = 5
+                  OnClick = btnDescargarFotosClick
+                end
+                object lblHint: TcxLabel
+                  Left = 898
+                  Top = 7
+                  Caption = 
+                    'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
+                    'oste.'
+                  TabOrder = 6
+                  Transparent = True
+                end
+              end
+            end
+            object tsDocumentos: TcxTabSheet
+              Caption = '&2_Documentos creados'
+              ImageIndex = 1
+              object pnlDocsTop: TPanel
+                Left = 0
+                Top = 0
+                Width = 1090
+                Height = 40
+                Align = alTop
+                BevelOuter = bvNone
+                TabOrder = 0
+                ExplicitTop = 8
+                object btnIrADoc: TcxButton
+                  Left = 12
+                  Top = 6
+                  Width = 200
+                  Height = 28
+                  Caption = 'Ir a documento (F12)'
+                  LookAndFeel.Kind = lfFlat
+                  LookAndFeel.NativeStyle = False
+                  TabOrder = 0
+                  OnClick = btnIrADocClick
+                end
+                object lblDocsInfo: TcxLabel
+                  Left = 224
+                  Top = 10
+                  Caption = 
+                    'Pedidos y albaranes generados al materializar la sesi'#243'n. Doble c' +
+                    'lick o F12 navega al documento.'
+                  TabOrder = 1
+                  Transparent = True
+                end
+              end
+              object cxgrdDocs: TcxGrid
+                Left = 0
+                Top = 40
+                Width = 1090
+                Height = 369
+                Align = alClient
+                TabOrder = 1
+                ExplicitWidth = 1096
+                ExplicitHeight = 611
+                object tvDocs: TcxGridDBTableView
+                  OnDblClick = tvDocsDblClick
+                  OptionsCustomize.ColumnHiding = True
+                  OptionsData.Deleting = False
+                  OptionsData.DeletingConfirmation = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.GroupByBox = False
+                  object dbcDocTipo: TcxGridDBColumn
+                    Caption = 'Tipo'
+                    DataBinding.FieldName = 'TIPO'
+                    Width = 80
+                  end
+                  object dbcDocSerie: TcxGridDBColumn
+                    Caption = 'Serie'
+                    DataBinding.FieldName = 'SERIE'
+                    Width = 80
+                  end
+                  object dbcDocNumero: TcxGridDBColumn
+                    Caption = 'N'#250'mero'
+                    DataBinding.FieldName = 'NUMERO'
+                    Width = 120
+                  end
+                  object dbcDocAlmacen: TcxGridDBColumn
+                    Caption = 'Almac'#233'n'
+                    DataBinding.FieldName = 'ALMACEN'
+                    Width = 140
+                  end
+                  object dbcDocInstante: TcxGridDBColumn
+                    Caption = 'Fecha alta'
+                    DataBinding.FieldName = 'INSTANTE'
+                    Width = 150
+                  end
+                  object dbcDocUsuario: TcxGridDBColumn
+                    Caption = 'Usuario'
+                    DataBinding.FieldName = 'USUARIO'
+                    Width = 120
+                  end
+                end
+                object glDocs: TcxGridLevel
+                  GridView = tvDocs
+                end
+              end
+            end
           end
         end
-        object cxgrdLineas: TcxGrid
+        object splSplitterFicha: TcxSplitter
           Left = 0
-          Top = 260
-          Width = 1092
-          Height = 388
-          Align = alClient
-          TabOrder = 2
-          OnEnter = cxgrdLineasEnter
-          OnExit = cxgrdLineasExit
-          ExplicitTop = 236
-          ExplicitWidth = 1096
-          ExplicitHeight = 415
-          object tvLineas: TcxGridDBTableView
-            Navigator.Buttons.ConfirmDelete = True
-            Navigator.Buttons.PriorPage.Visible = False
-            Navigator.Buttons.NextPage.Visible = False
-            Navigator.Buttons.Append.Visible = False
-            Navigator.Buttons.Edit.Visible = False
-            Navigator.Buttons.SaveBookmark.Visible = False
-            Navigator.Buttons.GotoBookmark.Visible = False
-            Navigator.Buttons.Filter.Visible = False
-            Navigator.Visible = True
-            OnCustomDrawCell = tvLineasCustomDrawCell
-            OnEditing = tvLineasEditing
-            OnEditKeyDown = tvLineasEditKeyDown
-            OnFocusedRecordChanged = tvLineasFocusedRecordChanged
-            OnInitEdit = tvLineasInitEdit
-            DataController.Summary.FooterSummaryItems = <
-              item
-                Format = '#,##0'
-                Kind = skSum
-                Column = dbcLinTotalTallas
-              end>
-            OptionsBehavior.FocusCellOnTab = True
-            OptionsBehavior.GoToNextCellOnEnter = True
-            OptionsData.Appending = True
-            OptionsView.Footer = True
-            OptionsView.GroupByBox = False
-            object dbcLinFamilia: TcxGridDBColumn
-              Caption = 'Familia (F3)'
-              DataBinding.FieldName = 'CODIGO_FAM_SESLIN'
-              PropertiesClassName = 'TcxTextEditProperties'
-              Properties.CharCase = ecUpperCase
-              Properties.OnEditValueChanged = dbcLinFamiliaPropertiesEditValueChanged
-              Width = 110
-            end
-            object dbcLinCodArt: TcxGridDBColumn
-              Caption = 'C'#243'd. art'#237'culo'
-              DataBinding.FieldName = 'CODIGO_ART_TENTATIVO_SESLIN'
-              PropertiesClassName = 'TcxTextEditProperties'
-              Properties.CharCase = ecUpperCase
-              Properties.OnEditValueChanged = dbcLinCodArtPropertiesEditValueChanged
-              Width = 130
-            end
-            object dbcLinRefPrv: TcxGridDBColumn
-              Caption = 'Modelo prov.'
-              DataBinding.FieldName = 'REF_PRV_SESLIN'
-              PropertiesClassName = 'TcxTextEditProperties'
-              Properties.OnEditValueChanged = dbcLinRefPrvPropertiesEditValueChanged
-              Width = 130
-            end
-            object dbcLinDescripcion: TcxGridDBColumn
-              Caption = 'Descripci'#243'n'
-              DataBinding.FieldName = 'DESCRIPCION_SESLIN'
-              Width = 341
-            end
-            object dbcLinColor: TcxGridDBColumn
-              Caption = 'Color'
-              DataBinding.FieldName = 'COLOR_TEXTO_SESLIN'
-              Width = 140
-            end
-            object dbcLinColorBasico: TcxGridDBColumn
-              Caption = 'C. b'#225'sico'
-              DataBinding.FieldName = 'CODIGO_ATB_COLOR_SESLIN'
-              PropertiesClassName = 'TcxButtonEditProperties'
-              Properties.Buttons = <
-                item
-                  Default = True
-                  Kind = bkEllipsis
-                end>
-              Properties.OnButtonClick = dbcLinColorBasicoPropertiesButtonClick
-              Width = 110
-            end
-            object dbcLinPrecioCompra: TcxGridDBColumn
-              Caption = 'Pr. compra'
-              DataBinding.FieldName = 'PRECIO_COMPRA_SESLIN'
-              PropertiesClassName = 'TcxCurrencyEditProperties'
-              Properties.OnEditValueChanged = dbcLinPrecioCompraPropertiesEditValueChanged
-              Width = 136
-            end
-            object dbcLinPrecioVenta: TcxGridDBColumn
-              Caption = 'Pr. venta'
-              DataBinding.FieldName = 'PRECIO_VENTA_SESLIN'
-              PropertiesClassName = 'TcxCurrencyEditProperties'
-              Width = 90
-            end
-            object dbcLinTallas: TcxGridDBColumn
-              Caption = 'Sistema tallas'
-              DataBinding.FieldName = 'ID_AC_PIVOT_SESLIN'
-              PropertiesClassName = 'TcxButtonEditProperties'
-              Properties.Buttons = <
-                item
-                  Default = True
-                  Kind = bkEllipsis
-                end>
-              Properties.OnButtonClick = dbcLinTallasPropertiesButtonClick
-              Width = 170
-            end
-            object dbcLinTotalTallas: TcxGridDBColumn
-              Caption = 'Total tallas'
-              DataBinding.FieldName = 'TOTAL_UNIDADES_SESLIN'
-              PropertiesClassName = 'TcxSpinEditProperties'
-              Properties.Alignment.Horz = taRightJustify
-              HeaderAlignmentHorz = taRightJustify
-              Options.Editing = False
-              Width = 100
-            end
-            object dbcLinImporteTotal: TcxGridDBColumn
-              Caption = 'Importe s/IVA'
-              DataBinding.FieldName = 'TOTAL_LINEA_SESLIN'
-              PropertiesClassName = 'TcxCurrencyEditProperties'
-              Properties.Alignment.Horz = taRightJustify
-              HeaderAlignmentHorz = taRightJustify
-              Options.Editing = False
-              Width = 110
-            end
-            object dbcLinNumero: TcxGridDBColumn
-              Caption = 'L'#237'nea'
-              DataBinding.FieldName = 'LINEA_SESLIN'
-              PropertiesClassName = 'TcxSpinEditProperties'
-              Properties.Increment = 10.000000000000000000
-              Properties.MinValue = 1.000000000000000000
-              Width = 70
-            end
-          end
-          object glLineas: TcxGridLevel
-            GridView = tvLineas
-          end
+          Top = 201
+          Width = 1096
+          Height = 10
+          Cursor = crSizeNS
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
+          HotZoneClassName = 'TcxMediaPlayer9Style'
+          HotZone.SizePercent = 50
+          AlignSplitter = salTop
+          ExplicitTop = 224
+          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 28
-        ExplicitWidth = 1092
-        ExplicitHeight = 648
+        ExplicitWidth = 1096
+        ExplicitHeight = 651
         inherited pnlPerfilTop: TPanel
-          Width = 1092
+          Width = 1096
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1092
+          ExplicitWidth = 1096
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 1092
-          Height = 591
+          Width = 1096
+          Height = 594
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1096
           ExplicitHeight = 594
@@ -614,136 +749,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             ExplicitWidth = 1096
             ExplicitHeight = 594
           end
-        end
-      end
-      object tsDocumentos: TcxTabSheet
-        Caption = 'Documentos'
-        ImageIndex = 0
-        object pnlDocsTop: TPanel
-          Left = 0
-          Top = 0
-          Width = 1092
-          Height = 40
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 0
-          object btnIrADoc: TcxButton
-            Left = 12
-            Top = 6
-            Width = 200
-            Height = 28
-            Caption = 'Ir a documento (F12)'
-            LookAndFeel.Kind = lfFlat
-            LookAndFeel.NativeStyle = False
-            TabOrder = 0
-            OnClick = btnIrADocClick
-          end
-          object lblDocsInfo: TcxLabel
-            Left = 224
-            Top = 10
-            Caption = 
-              'Pedidos y albaranes generados al materializar la sesi'#243'n. Doble c' +
-              'lick o F12 navega al documento.'
-            TabOrder = 1
-            Transparent = True
-          end
-        end
-        object cxgrdDocs: TcxGrid
-          Left = 0
-          Top = 40
-          Width = 1092
-          Height = 608
-          Align = alClient
-          TabOrder = 1
-          ExplicitWidth = 1096
-          ExplicitHeight = 611
-          object tvDocs: TcxGridDBTableView
-            OnDblClick = tvDocsDblClick
-            OptionsCustomize.ColumnHiding = True
-            OptionsData.Deleting = False
-            OptionsData.DeletingConfirmation = False
-            OptionsData.Editing = False
-            OptionsData.Inserting = False
-            OptionsView.GroupByBox = False
-            object dbcDocTipo: TcxGridDBColumn
-              Caption = 'Tipo'
-              DataBinding.FieldName = 'TIPO'
-              Width = 80
-            end
-            object dbcDocSerie: TcxGridDBColumn
-              Caption = 'Serie'
-              DataBinding.FieldName = 'SERIE'
-              Width = 80
-            end
-            object dbcDocNumero: TcxGridDBColumn
-              Caption = 'N'#250'mero'
-              DataBinding.FieldName = 'NUMERO'
-              Width = 120
-            end
-            object dbcDocAlmacen: TcxGridDBColumn
-              Caption = 'Almac'#233'n'
-              DataBinding.FieldName = 'ALMACEN'
-              Width = 140
-            end
-            object dbcDocInstante: TcxGridDBColumn
-              Caption = 'Fecha alta'
-              DataBinding.FieldName = 'INSTANTE'
-              Width = 150
-            end
-            object dbcDocUsuario: TcxGridDBColumn
-              Caption = 'Usuario'
-              DataBinding.FieldName = 'USUARIO'
-              Width = 120
-            end
-          end
-          object glDocs: TcxGridLevel
-            GridView = tvDocs
-          end
-        end
-      end
-      object tsLog: TcxTabSheet
-        Caption = 'Log'
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
-        object pnlLogTop: TPanel
-          Left = 0
-          Top = 0
-          Width = 1096
-          Height = 36
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 0
-          object btnLogClear: TcxButton
-            Left = 8
-            Top = 4
-            Width = 110
-            Height = 28
-            Caption = 'Limpiar log'
-            TabOrder = 0
-            OnClick = btnLogClearClick
-          end
-          object btnLogCopy: TcxButton
-            Left = 124
-            Top = 4
-            Width = 110
-            Height = 28
-            Caption = 'Copiar al portapapeles'
-            TabOrder = 1
-            OnClick = btnLogCopyClick
-          end
-        end
-        object mLog: TcxMemo
-          Left = 0
-          Top = 36
-          Align = alClient
-          Properties.ReadOnly = True
-          Properties.ScrollBars = ssVertical
-          Properties.WordWrap = False
-          TabOrder = 1
-          Height = 612
-          Width = 1092
         end
       end
     end
