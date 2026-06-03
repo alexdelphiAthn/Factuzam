@@ -160,6 +160,7 @@ type
     mnuEjecutarScript: TMenuItem;
     mnuGeneradorProcesos: TMenuItem;
     mnuUsuarios: TMenuItem;
+    mnuEmpleados: TMenuItem;
     mnuGrupos: TMenuItem;
     mnuPerfiles: TMenuItem;
     mnuPermisos: TMenuItem;
@@ -186,6 +187,7 @@ type
     procedure mnuIvasClick(Sender: TObject);
     procedure mnuContadoresClick(Sender: TObject);
     procedure mnuUsuariosClick(Sender: TObject);
+    procedure mnuEmpleadosClick(Sender: TObject);
     procedure mnuGruposClick(Sender: TObject);
     procedure mnuPerfilesClick(Sender: TObject);
     procedure mnuPermisosClick(Sender: TObject);
@@ -1744,6 +1746,12 @@ procedure TfrmMtoPrincipal.mnuUsuariosClick(Sender: TObject);
 begin
   if (mnuUsuarios.Visible) then
     ShowMto(Self, 'Usuarios');
+end;
+
+procedure TfrmMtoPrincipal.mnuEmpleadosClick(Sender: TObject);
+begin
+  if (mnuEmpleados.Visible) then
+    ShowMto(Self, 'Empleados');
 end;
 
 procedure TfrmMtoPrincipal.mnuParmetrosdeEntornoClick(Sender: TObject);
