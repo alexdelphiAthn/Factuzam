@@ -258,6 +258,11 @@ Notas de implementación de las agrupaciones en FastReport:
   `Visible := (GRUPOn_ETIQ <> '')` en cada banda `GroupHeaderG#/GroupFooterG#`.
 - Los `SUM()` de los pies se reinician por grupo automáticamente (agregado en
   GroupFooter).
+- **La familia NO agrupa por sí sola**: el handler oculta siempre
+  `GroupHeaderFam`/`GroupFooterFam` (`Visible := False`). Solo se agrupa por
+  familia si se elige FAM en la pestaña Agrupaciones (sale como "Familia: …").
+  El árbol de grupos de FastReport mantiene la familia como nivel (sigue
+  ordenando), pero invisible.
 - **Pies estructurales ART/FAM**: FastReport empareja los GroupFooter con los
   GroupHeader por anidamiento, de dentro hacia fuera. Como los grupos (de fuera
   a dentro) son G1, G2, G3, FAM, ART, para que los pies de G3/G2/G1 emparejen
