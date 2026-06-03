@@ -26,11 +26,16 @@
 --     ver stocks_acumulados.sql) y CANTIDAD_STK.
 --
 -- Valoración (columnas Precio / Importe del informe):
---   - Entradas y existencias -> coste (precio medio ponderado del stock
---     actual del artículo; si es 0 se usa el último precio de compra del
---     proveedor principal).
---   - Salidas y ventas        -> PVP (tarifa por defecto vigente hoy).
---   IMPORTE = CANTIDAD * PRECIO de la banda.
+--   - Entradas y existencias (ini/fin) -> coste = precio medio ponderado
+--     (PMP) del stock actual del artículo; si es 0 se usa el último precio
+--     de compra del proveedor principal.
+--   - Salidas        -> PVP (tarifa por defecto vigente hoy), valoración
+--     nocional de todo lo que sale.
+--   - Ventas (VEN)   -> PRECIO REAL de venta (con descuentos, con IVA) de
+--     fza_facturas_lineas; NO la tarifa. IMPORTE = importe real facturado.
+--   GANANCIA: solo en la banda de ventas = importe real - (uds. facturadas
+--   x PMP). 0 en el resto. Sumada por grupo/total da el margen comercial.
+--   IMPORTE = CANTIDAD * PRECIO de la banda (salvo VEN, importe real).
 --
 -- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
 -- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
@@ -609,12 +614,29 @@ BEGIN
         p.`T01`, p.`T02`, p.`T03`, p.`T04`, p.`T05`, p.`T06`, p.`T07`,
         p.`T08`, p.`T09`, p.`T10`, p.`T11`, p.`T12`, p.`T13`, p.`T14`,
         p.`CANTIDAD`,
-        ROUND(IF(p.`ES_COSTE` = 1,
-                 COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
-                 COALESCE(pvp.`PVP`, 0)), 2)          AS `PRECIO`,
-        ROUND(p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
-                 COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
-                 COALESCE(pvp.`PVP`, 0)), 2)          AS `IMPORTE`,
+        ROUND(IF(p.`BANDA` = 'VEN',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = 'VEN',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ganancia (margen) solo de la banda de ventas (VEN): importe real de
+        -- venta - (uds. facturadas x coste medio ponderado). 0 en el resto de
+        -- bandas, para que la suma por grupo/total dé el margen comercial.
+        -- Existencias y entradas ya van valoradas a PMP (ES_COSTE=1).
+        ROUND(IF(p.`BANDA` = 'VEN',
+                 COALESCE(vt.`VEN_IMPORTE`, 0)
+                   - COALESCE(vt.`VEN_QTY`, 0)
+                     * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `GANANCIA`,
         -- Niveles de agrupación configurables. GRUPOn_COD identifica el grupo
         -- (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en
         -- la cabecera/resumen. Si el nivel no está activo (''), salen vacíos y
@@ -758,6 +780,31 @@ BEGIN
              WHERE tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
              GROUP BY tp.`CODIGO_ART_ART`
            ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados). Se enlaza el SKU
+            -- de la línea a tmp_bat_sku para resolver artículo/color y restringir
+            -- a los artículos filtrados.
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bat_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE FIND_IN_SET(fl.`CODIGO_ALM_FACLIN`, v_alms)
+               AND (p_MODO = 'A'
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
      ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
               COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
               p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
