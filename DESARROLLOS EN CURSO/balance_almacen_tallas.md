@@ -86,21 +86,24 @@ Por acumulados no hay "existencias iniciales": el acumulado de
 real facturado). La tarifa se pasa como parámetro (`p_COD_TARIFA`, por
 defecto `PVP` vía `appTarifaDefecto`).
 
-#### Ganancia (margen)
+#### Ventas acumuladas (en los totales)
 
-Columna `GANANCIA` del SP, **distinta de 0 solo en la banda de ventas**:
-`GANANCIA = importe real de venta − (uds. facturadas · PMP)`. Al ser 0 en el
-resto de bandas, **sumada por grupo y total da el margen comercial**. Se
-muestra en las líneas de total: **resumen por grupo** y **total general**
-(banda `ReportSummary` en FastReport; fila `TOTAL GENERAL` en Excel). El
-ingreso es **con IVA** (decisión del usuario), así que el margen incluye el
-IVA del lado de la venta.
+Columna `VENTAS` del SP, **igual al importe real de venta solo en la banda
+VEN** (0 en el resto). Al ser 0 fuera de ventas, **sumada da el acumulado de
+ventas** a cada nivel. Se muestra (con `=SUM` en vivo en Excel; `SUM()` en
+FastReport) en los **totales de artículo**, en el **resumen por grupo** y en
+el **total general** (banda `ReportSummary` / fila `TOTAL GENERAL`). El
+importe es **con IVA con descuento** (`TOTAL_FACLIN`).
+
+Se muestran las **ventas**, no el margen: las existencias se leen banda a
+banda, pero las ventas hay que irlas sumando, y la cifra de ganancia no
+ayudaba.
 
 > Ventas reales por periodo: entre fechas se filtra por `FECHA_FAC`; en
 > acumulados se suma el histórico de facturas. Las unidades de la banda
-> Ventas siguen siendo las del movimiento; el importe y la ganancia salen de
-> las líneas de factura (facturas/tickets VE/FC). Albaranes de venta no
-> facturados no tienen precio de línea (no suman ingreso real).
+> Ventas siguen siendo las del movimiento; el importe sale de las líneas de
+> factura (facturas/tickets VE/FC). Albaranes de venta no facturados no
+> tienen precio de línea (no suman ingreso real).
 
 > Simplificación asumida: las entradas y existencias se valoran al coste
 > medio **actual** del artículo, no al coste histórico de cada

@@ -62,9 +62,9 @@ const
   COL_CDAD    = COL_T1 + N_TALLAS;  // 16
   COL_PRECIO  = COL_CDAD + 1;       // 17
   COL_IMPORTE = COL_CDAD + 2;       // 18
-  COL_GANANCIA = COL_IMPORTE + 1;   // 19: ganancia (solo en líneas de total)
-  COL_MAX     = COL_GANANCIA;       // 19
-  COL_FOTO    = COL_GANANCIA + 2;   // 21: zona libre a la derecha del dato
+  COL_VENTAS  = COL_IMPORTE + 1;   // 19: ventas reales (importe real de venta)
+  COL_MAX     = COL_VENTAS;        // 19
+  COL_FOTO    = COL_VENTAS + 2;    // 21: zona libre a la derecha del dato
   FOTO_W      = 110;                // ancho fijo de la columna de la foto (px)
   FOTO_H_MAX  = 170;                // alto máximo de la fila de la foto (px)
   FMT_NUM     = '#,##0';
@@ -109,9 +109,8 @@ var
   grpEtqs    : array[1..N_NIVELES] of string;
   grpUsado   : array[1..N_NIVELES] of Boolean;
   grpFilas   : array[1..N_NIVELES] of TList<Integer>;
-  grpGanancia: array[1..N_NIVELES] of Double;   // ganancia acumulada por grupo
-  gananciaFila: Double;                         // ganancia de la fila actual
-  totCdad, totImporte, totGanancia: Double;     // acumulados del total general
+  ventasFila : Double;                          // ventas reales de la fila actual
+  totCdad, totImporte, totVentas: Double;       // acumulados del total general
   lvl, nivelCambio: Integer;
 
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
@@ -135,7 +134,7 @@ var
     W(Sheet, iRow, COL_CDAD,     'Cdad.',    True, ssahRight);
     W(Sheet, iRow, COL_PRECIO,   'Precio',   True, ssahRight);
     W(Sheet, iRow, COL_IMPORTE,  'Importe',  True, ssahRight);
-    W(Sheet, iRow, COL_GANANCIA, 'Ganancia', True, ssahRight);
+    W(Sheet, iRow, COL_VENTAS,   'Ventas',   True, ssahRight);
     for c := 0 to COL_MAX do
       if Sheet.Cells[iRow, c] <> nil then
       begin
@@ -247,6 +246,8 @@ var
       Sheet.Cells[iRow, COL_PRECIO].Style.DataFormat.FormatCode := FMT_EUR;
       WFormula(Sheet, iRow, COL_IMPORTE,
         SumaFormula(bt.Filas, COL_IMPORTE), FMT_EUR_HZ);
+      WFormula(Sheet, iRow, COL_VENTAS,
+        SumaFormula(bt.Filas, COL_VENTAS), FMT_EUR_HZ);
       for c := 0 to COL_MAX do
         if Sheet.Cells[iRow, c] <> nil then
         begin
@@ -293,7 +294,6 @@ var
       Inc(iRow);
     end;
     grpFilas[ANivel].Clear;
-    grpGanancia[ANivel] := 0;
   end;
 
   // Resumen (grand total) de un nivel de grupo: una sola línea con la suma de
@@ -309,7 +309,8 @@ var
         SumaFormula(grpFilas[ANivel], COL_CDAD), FMT_NUM_HZ);
       WFormula(Sheet, iRow, COL_IMPORTE,
         SumaFormula(grpFilas[ANivel], COL_IMPORTE), FMT_EUR_HZ);
-      EscNum(COL_GANANCIA, grpGanancia[ANivel], FMT_EUR_HZ, False);
+      WFormula(Sheet, iRow, COL_VENTAS,
+        SumaFormula(grpFilas[ANivel], COL_VENTAS), FMT_EUR_HZ);
       for c := 0 to COL_MAX do
         if Sheet.Cells[iRow, c] <> nil then
         begin
@@ -320,7 +321,6 @@ var
       Inc(iRow);
     end;
     grpFilas[ANivel].Clear;
-    grpGanancia[ANivel] := 0;
   end;
 
 begin
@@ -335,11 +335,10 @@ begin
     grpCods[lvl]  := #1;     // centinela: la 1ª fila siempre "abre" grupo
     grpEtqs[lvl]  := '';
     grpUsado[lvl] := False;
-    grpGanancia[lvl] := 0;
   end;
   totCdad := 0;
   totImporte := 0;
-  totGanancia := 0;
+  totVentas := 0;
   // Pre-carga de fotos (a nivel artículo) en UNA sola consulta, evitando un
   // SELECT por artículo dentro del bucle (N+1). El bucle solo construirá la
   // ruta del fichero, que no consulta a BBDD.
@@ -449,21 +448,19 @@ begin
           EscNum(COL_CDAD,    QDatos.FieldByName('CANTIDAD').AsFloat, FMT_NUM, True);
           EscNum(COL_PRECIO,  QDatos.FieldByName('PRECIO').AsFloat,   FMT_EUR, False);
           EscNum(COL_IMPORTE, QDatos.FieldByName('IMPORTE').AsFloat,  FMT_EUR, False);
+          // Ventas reales: solo <> 0 en la banda de ventas. Se escribe en el
+          // detalle (oculta el cero) para poder sumarlas con =SUM en vivo en
+          // los totales de artículo, grupo y total general.
+          ventasFila := QDatos.FieldByName('VENTAS').AsFloat;
+          EscNum(COL_VENTAS, ventasFila, FMT_EUR, True);
           AcumularBanda;
-          // Acumular cantidad/importe/ganancia para los totales. La ganancia
-          // solo es <> 0 en las ventas; no se pinta en el detalle, solo en los
-          // totales (resumen por grupo y total general).
-          gananciaFila := QDatos.FieldByName('GANANCIA').AsFloat;
-          totCdad      := totCdad + QDatos.FieldByName('CANTIDAD').AsFloat;
-          totImporte   := totImporte + QDatos.FieldByName('IMPORTE').AsFloat;
-          totGanancia  := totGanancia + gananciaFila;
+          totCdad     := totCdad + QDatos.FieldByName('CANTIDAD').AsFloat;
+          totImporte  := totImporte + QDatos.FieldByName('IMPORTE').AsFloat;
+          totVentas   := totVentas + ventasFila;
           // La fila de detalle entra en el =SUM de cada grupo abierto.
           for lvl := 1 to N_NIVELES do
             if grpUsado[lvl] then
-            begin
               grpFilas[lvl].Add(iRow);
-              grpGanancia[lvl] := grpGanancia[lvl] + gananciaFila;
-            end;
           Inc(iRow);
           QDatos.Next;
         end;
@@ -473,11 +470,11 @@ begin
         if grpCods[1] <> #1 then
           for lvl := N_NIVELES downto 1 do
             EmitirResumenGrupo(lvl);
-        // Total general (cantidad, importe y ganancia).
+        // Total general (cantidad, importe y ventas).
         W(Sheet, iRow, 0, 'TOTAL GENERAL', True, ssahLeft);
         EscNum(COL_CDAD,     totCdad,     FMT_NUM_HZ, False);
         EscNum(COL_IMPORTE,  totImporte,  FMT_EUR_HZ, False);
-        EscNum(COL_GANANCIA, totGanancia, FMT_EUR_HZ, False);
+        EscNum(COL_VENTAS,   totVentas,   FMT_EUR_HZ, False);
         for c := 0 to COL_MAX do
           if Sheet.Cells[iRow, c] <> nil then
           begin
@@ -499,7 +496,7 @@ begin
     Sheet.Columns[COL_CDAD].Size     := 60;
     Sheet.Columns[COL_PRECIO].Size   := 70;
     Sheet.Columns[COL_IMPORTE].Size  := 80;
-    Sheet.Columns[COL_GANANCIA].Size := 80;
+    Sheet.Columns[COL_VENTAS].Size := 80;
   finally
     Sheet.EndUpdate;
     FreeAndNil(ordenBandas);
