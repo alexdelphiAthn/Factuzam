@@ -298,7 +298,14 @@ begin
     if (nivel >= 1) and (nivel <= 3) and unqryBalancePrint.Active then
       TfrxBand(Component).Visible :=
         unqryBalancePrint.FieldByName(
-          Format('GRUPO%d_ETIQ', [nivel])).AsString <> '';
+          Format('GRUPO%d_ETIQ', [nivel])).AsString <> ''
+    else if ((sNom = 'GroupHeaderFam') or (sNom = 'GroupFooterFam'))
+            and unqryBalancePrint.Active then
+      // 3) La familia solo agrupa por sí sola cuando NO hay agrupaciones
+      //    activas (GRUPO1 vacío). Si hay alguna agrupación, manda esa
+      //    (incluida FAM si se eligió) y no se duplica la cabecera de familia.
+      TfrxBand(Component).Visible :=
+        unqryBalancePrint.FieldByName('GRUPO1_ETIQ').AsString = '';
   end;
 end;
 
