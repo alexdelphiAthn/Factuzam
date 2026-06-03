@@ -1045,12 +1045,12 @@ begin
   try
     Q.Connection := oConn;
     Q.SQL.Text :=
-      'SELECT CODIGO_EMPLEADO_USU AS `Código de Empleado`,' +
-      '       DIMINUTIVO_TICKET_USU AS `Nombre de Empleado`' +
-      '  FROM fza_usuarios' +
-      ' WHERE ESACTIVO_USU = ''S''' +
-      '   AND CODIGO_EMPLEADO_USU IS NOT NULL' +
-      ' ORDER BY CODIGO_EMPLEADO_USU';
+      'SELECT CODIGO_EMPL AS `Código de Empleado`,' +
+      '       DIMINUTIVO_TICKET_EMPL AS `Nombre de Empleado`' +
+      '  FROM fza_empleados' +
+      ' WHERE ESACTIVO_EMPL = ''S''' +
+      '   AND CODIGO_EMPL IS NOT NULL' +
+      ' ORDER BY CODIGO_EMPL';
     if TBusquedaUtils.EjecutarBusqueda('Buscar empleado', Q,
                                        'frmMtoEmpCajSearch') then
     begin

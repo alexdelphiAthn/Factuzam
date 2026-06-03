@@ -303,16 +303,16 @@ begin
   ACodigo := '';
   ANombre := '';
   qryAux.SQL.Text :=
-    'SELECT CODIGO_EMPLEADO_USU, DIMINUTIVO_TICKET_USU FROM fza_usuarios' +
-    ' WHERE (CODIGO_EMPLEADO_USU = :BUS OR DIMINUTIVO_TICKET_USU = :BUS)' +
-    '   AND ESACTIVO_USU = ''S'' LIMIT 1';
+    'SELECT CODIGO_EMPL, DIMINUTIVO_TICKET_EMPL FROM fza_empleados' +
+    ' WHERE (CODIGO_EMPL = :BUS OR DIMINUTIVO_TICKET_EMPL = :BUS)' +
+    '   AND ESACTIVO_EMPL = ''S'' LIMIT 1';
   qryAux.ParamByName('BUS').AsString := ABusqueda;
   qryAux.Open;
   try
     if not qryAux.IsEmpty then
     begin
-      ACodigo := qryAux.FieldByName('CODIGO_EMPLEADO_USU').AsString;
-      ANombre := qryAux.FieldByName('DIMINUTIVO_TICKET_USU').AsString;
+      ACodigo := qryAux.FieldByName('CODIGO_EMPL').AsString;
+      ANombre := qryAux.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString;
       Result := True;
     end;
   finally
