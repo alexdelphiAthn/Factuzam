@@ -217,6 +217,7 @@ begin
       Left    := MARGEN_H;
       Top     := MARGEN_V;
       Caption := 'Este artículo no tiene variaciones activadas.';
+      Transparent := True;
     end;
     Exit;
   end;
@@ -339,6 +340,7 @@ begin
   lbl.Caption := 'Tipo de variación: ' + FTipoVariacion + ' — ' +
                                                                FNombreVariacion;
   lbl.Style.Font.Style := [fsBold];
+  lbl.Transparent := True;
   //lbl.AutoSize := True;
 
   Top := MARGEN_V + ALTO_FILA + MARGEN_V;
@@ -369,6 +371,7 @@ begin
   lbl.Height   := ALTO_FILA;
 //  lbl.AutoSize := False;
   lbl.Caption  := S.NombreAtributo;
+  lbl.Transparent := True;
   cb := TcxComboBox.Create(FPanelAtributos);
   cb.Parent  := FPanelAtributos;
   cb.Left    := MARGEN_H + ANCHO_LABEL + 6;

@@ -133,8 +133,6 @@ implementation
 {$R *.dfm}
 
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
-var
-  i: Integer;
 begin
   inherited;
   KeyPreview := True;
@@ -145,10 +143,7 @@ begin
   // 'caja.verCoste'. Sin sistema de permisos, oculto.
   FVerCoste := Assigned(oPermisos) and
                oPermisos.TienePermiso('caja.verCoste', False);
-  // Todos los labels de la pantalla, transparentes (sin fondo solido).
-  for i := 0 to ComponentCount - 1 do
-    if Components[i] is TcxLabel then
-      TcxLabel(Components[i]).Transparent := True;
+  // Los labels los pone transparentes TfrmBase.FormCreate (via inherited).
   ConstruirGrid;
   ConstruirPanelStock;
   // Elegir una solicitud en el desplegable (modo Atender) la carga sola.
