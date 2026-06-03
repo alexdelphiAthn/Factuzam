@@ -89,6 +89,11 @@ type
    // tambien sea controlable. '' si el item no tiene Name. Lo usan la
    // pantalla de permisos y AplicarPermisosMenu (misma regla en ambos).
    function CodigoMenu(AItem: TMenuItem): string;
+   // CALL de la pantalla cuyo formulario es AUnit ('unit.Clase'); '' si
+   // no esta registrada. Lo usa inMtoGen para los permisos por pantalla.
+   function CallDeUnit(const AUnit: string): string;
+   // CALL del item de menu si esta registrado (mnMenuItem); '' si no.
+   function CallRegistrado(AItem: TMenuItem): string;
  end;
 
 
@@ -272,6 +277,26 @@ begin
     Result := 'menu.' + AItem.Name
   else
     Result := '';
+end;
+
+function TfzaWinF.CallDeUnit(const AUnit: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 0 to FList.Count - 1 do
+    if (Result = '') and SameText(FList[i].UnitForm, AUnit) then
+      Result := FList[i].Call;
+end;
+
+function TfzaWinF.CallRegistrado(AItem: TMenuItem): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 0 to FList.Count - 1 do
+    if (Result = '') and (FList[i].mnMenuItem = AItem) then
+      Result := FList[i].Call;
 end;
 
 constructor TfzaWinF.Create(Owner:TComponent);

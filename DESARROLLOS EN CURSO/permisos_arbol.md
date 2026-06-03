@@ -24,6 +24,16 @@ rejilla simple de permisos como entrada principal del menú. Acompaña a
   esto último evita que su `ShortCut` (p.ej. *Ctrl+F5* de Parámetros de
   Caja) siga abriendo el formulario con el menú oculto. Además, un
   submenú se oculta si todas sus hojas quedan denegadas.
+- **Permisos por pantalla.** Bajo cada pantalla (Mto registrado) cuelgan
+  6 sub-permisos: `<CALL>.consultar`, `.insertar`, `.modificar`,
+  `.borrar`, `.excel`, `.imprimir`. `inMtoGen.AplicarPermisosPantalla`
+  los aplica al abrir cada Mto: *consultar* solo oculta el buscador
+  global (no impide ver una ficha navegando desde otro Mto); *insertar /
+  modificar / borrar* ocultan los botones del navegador y deshabilitan
+  sus acciones (neutraliza también los atajos); *excel* oculta el botón
+  de exportar. *imprimir* se expone como `TfrmMtoGen.PuedeImprimir` para
+  que cada pantalla con botón de informes lo consulte. El `CALL` se
+  resuelve con `TfzaWinF.CallDeUnit`. Todo activo por defecto.
 - **Añade categorías** para el resto de permisos de `fza_permisos`
   agrupados por prefijo: `accion.*` → *Acciones*, `caja.*` → *Caja
   (TPV)*, `arqueo.*` → *Arqueo*, `menu.*` no visibles → *Menús no
