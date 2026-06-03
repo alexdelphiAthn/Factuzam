@@ -583,6 +583,7 @@ function TGestorMatrizCompras.CrearLabel(AParent: TWinControl;
 begin
   Result := TcxLabel.Create(AParent);
   Result.Parent  := AParent;
+  Result.Transparent := True;
   Result.Left    := ALeft;
   Result.Top     := ATop;
   Result.Width   := AWidth;

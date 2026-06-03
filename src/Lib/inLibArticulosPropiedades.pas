@@ -586,6 +586,7 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption := S.NombrePropiedad;
+  lbl.Transparent := True;
   cb := TcxComboBox.Create(FScrollBox);
   cb.Parent  := FScrollBox;
   cb.Left    := MARGEN_H + ANCHO_LABEL + 6;
@@ -624,6 +625,7 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
+  lbl.Transparent := True;
   ed := TcxTextEdit.Create(FScrollBox);
   ed.Parent := FScrollBox;
   ed.Left   := MARGEN_H + ANCHO_LABEL + 6;
@@ -648,6 +650,7 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
+  lbl.Transparent := True;
   sp := TcxSpinEdit.Create(FScrollBox);
   sp.Parent  := FScrollBox;
   sp.Left    := MARGEN_H + ANCHO_LABEL + 6;
@@ -674,6 +677,7 @@ begin
   if S.EsRequerido then
     lbl.Style.Font.Style := [fsBold];
   lbl.Caption  := S.NombrePropiedad;
+  lbl.Transparent := True;
   chk := TcxCheckBox.Create(FScrollBox);
   chk.Parent   := FScrollBox;
   chk.Left     := MARGEN_H + ANCHO_LABEL + 6;
