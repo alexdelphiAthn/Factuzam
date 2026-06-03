@@ -242,6 +242,7 @@ begin
   AddSuf('fza_config_campos',                   'CC');
   AddSuf('fza_contadores',                      'CON');
   AddSuf('fza_depositos_cliente',               'DEP');
+  AddSuf('fza_empleados',                       'EMPL');
   AddSuf('fza_empresas',                        'EMP');
   AddSuf('fza_empresas_retenciones',            'EMPRET');
   AddSuf('fza_empresas_series',                 'EMPSER');
@@ -291,6 +292,7 @@ begin
   FConceptToSuffix.AddOrSetValue('CLIENTE',   'CLI');
   FConceptToSuffix.AddOrSetValue('PROVEEDOR', 'PRV');
   FConceptToSuffix.AddOrSetValue('EMPRESA',   'EMP');
+  FConceptToSuffix.AddOrSetValue('EMPLEADO',  'EMPL');
   FConceptToSuffix.AddOrSetValue('FAMILIA',   'FAM');
   FConceptToSuffix.AddOrSetValue('TARIFA',    'TAR');
   FConceptToSuffix.AddOrSetValue('PROPIEDAD', 'PROP');
@@ -314,6 +316,7 @@ begin
   AddOwn('fza_clientes',                       ['CLIENTE']);
   AddOwn('fza_proveedores',                    ['PROVEEDOR']);
   AddOwn('fza_empresas',                       ['EMPRESA']);
+  AddOwn('fza_empleados',                      ['EMPLEADO']);
   AddOwn('fza_propiedades',                    ['PROPIEDAD']);
   AddOwn('fza_contadores',                     ['CONTADOR']);
   AddOwn('fza_usuarios',                       ['USUARIO']);
