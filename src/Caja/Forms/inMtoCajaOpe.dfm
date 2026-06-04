@@ -1,7 +1,7 @@
 inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 429
-  ClientWidth = 1359
+  ClientHeight = 421
+  ClientWidth = 1357
   Font.Charset = ANSI_CHARSET
   Font.Height = -19
   StyleElements = [seFont, seClient, seBorder]
@@ -15,11 +15,11 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp: TPanel [0]
     Left = 0
     Top = 0
-    Width = 1359
+    Width = 1357
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1357
+    ExplicitWidth = 1359
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -179,12 +179,12 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli: TPanel [1]
     Left = 0
     Top = 89
-    Width = 1359
-    Height = 340
+    Width = 1357
+    Height = 332
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1357
-    ExplicitHeight = 332
+    ExplicitWidth = 1359
+    ExplicitHeight = 340
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 241
@@ -192,8 +192,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 233
-      ExplicitWidth = 1355
       object pnlTotal: TPanel
         Left = 928
         Top = 1
@@ -202,7 +200,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitLeft = 926
         object lblTotal: TcxLabel
           Left = 0
           Top = 0
@@ -236,12 +233,12 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object pnlBotones: TPanel
         Left = 1
         Top = 1
-        Width = 927
+        Width = 925
         Height = 96
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 925
+        ExplicitWidth = 927
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -458,17 +455,17 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     object pnlAccionesDer: TPanel
       Left = 1
       Top = 1
-      Width = 1357
-      Height = 240
+      Width = 1355
+      Height = 232
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 1355
-      ExplicitHeight = 232
+      ExplicitWidth = 1357
+      ExplicitHeight = 240
       object cxgrdLineasOpe: TcxGrid
         Left = 1
         Top = 1
         Width = 1355
-        Height = 112
+        Height = 114
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -481,8 +478,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
-        ExplicitWidth = 1353
-        ExplicitHeight = 104
         object tvLineasOpe: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
@@ -530,8 +525,8 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             PropertiesClassName = 'TcxTextEditProperties'
             Properties.OnEditValueChanged = tvUdsPropertiesEditValueChanged
             Properties.OnValidate = tvUdsPropertiesValidate
-            HeaderAlignmentHorz = taRightJustify
             BestFitMaxWidth = 50
+            HeaderAlignmentHorz = taRightJustify
           end
           object tvPrecioUni: TcxGridDBColumn
             Caption = 'Precio'
@@ -581,8 +576,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Height = 116
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 115
-        ExplicitWidth = 1353
         object pnlFotoStock: TPanel
           Left = 1234
           Top = 1
@@ -591,7 +584,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Align = alRight
           BevelOuter = bvLowered
           TabOrder = 1
-          ExplicitLeft = 1232
           object imgFotoStock: TImage
             Left = 1
             Top = 1
@@ -610,7 +602,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Height = 114
           AlignSplitter = salRight
           Control = pnlFotoStock
-          ExplicitLeft = 1222
         end
         object cxgrdStock: TcxGrid
           Left = 1
@@ -629,7 +620,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
-          ExplicitWidth = 1221
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnCustomDrawCell = dbtvStockCustomDrawCell
@@ -657,14 +647,12 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object splOpe: TcxSplitter
         Left = 1
-        Top = 113
+        Top = 115
         Width = 1355
-        Height = 10
+        Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
-        ExplicitTop = 105
-        ExplicitWidth = 1353
       end
     end
   end

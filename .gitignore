@@ -10,6 +10,7 @@
 fzam.res
 *.identcache
 *.tvsconfig
+*.stat
 *.dproj.local
 *.vlb
 *.7z
@@ -47,3 +48,6 @@ database.cfg
 *.key
 *.lic
 herreras.sql
+
+# Archivos temporales o de backup de Delphi
+*.~*
