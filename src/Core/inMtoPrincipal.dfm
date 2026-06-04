@@ -1,7 +1,7 @@
 inherited frmMtoPrincipal: TfrmMtoPrincipal
   Caption = 'Fzam'
-  ClientHeight = 541
-  ClientWidth = 1122
+  ClientHeight = 533
+  ClientWidth = 1120
   Menu = jvMnMenuPrin
   Position = poScreenCenter
   WindowState = wsMaximized
@@ -18,18 +18,16 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   object Panel1: TPanel [0]
     Left = 0
     Top = 0
-    Width = 1122
-    Height = 522
+    Width = 1120
+    Height = 514
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1120
-    ExplicitHeight = 514
     DesignSize = (
-      1122
-      522)
+      1120
+      514)
     object imgFondoLogo: TImage
-      Left = 542
+      Left = 540
       Top = 16
       Width = 624
       Height = 130
@@ -313,30 +311,26 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     object pcPrincipal: TcxPageControl
       Left = 0
       Top = 0
-      Width = 1122
-      Height = 451
+      Width = 1120
+      Height = 443
       Align = alClient
       TabOrder = 0
       Properties.CloseButtonMode = cbmActiveTab
       Properties.CustomButtons.Buttons = <>
       Properties.Options = [pcoAlwaysShowGoDialogButton, pcoCloseButton, pcoGradient, pcoGradientClientArea, pcoRedrawOnResize]
       OnChange = pcPrincipalChange
-      ExplicitWidth = 1120
-      ExplicitHeight = 443
-      ClientRectBottom = 449
+      ClientRectBottom = 441
       ClientRectLeft = 2
-      ClientRectRight = 1120
+      ClientRectRight = 1118
       ClientRectTop = 2
     end
     object pnlPPBottom: TPanel
       Left = 0
-      Top = 451
-      Width = 1122
+      Top = 443
+      Width = 1120
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 443
-      ExplicitWidth = 1120
       object cxMemo1: TcxMemo
         Left = 1
         Top = 1
@@ -347,16 +341,15 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1118
         Height = 69
-        Width = 1120
+        Width = 1118
       end
     end
   end
   object JvStatusBar1: TJvStatusBar [1]
     Left = 0
-    Top = 522
-    Width = 1122
+    Top = 514
+    Width = 1120
     Height = 19
     Panels = <
       item
@@ -379,8 +372,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end>
     ParentFont = True
     UseSystemFont = False
-    ExplicitTop = 514
-    ExplicitWidth = 1120
   end
   inherited Localizer1: TcxLocalizer
     Left = 504

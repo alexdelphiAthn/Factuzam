@@ -19,7 +19,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1359
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -183,17 +182,15 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 332
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1359
-    ExplicitHeight = 340
     object pnlAccionesIzq: TPanel
       Left = 1
-      Top = 241
-      Width = 1357
+      Top = 233
+      Width = 1355
       Height = 98
       Align = alBottom
       TabOrder = 1
       object pnlTotal: TPanel
-        Left = 928
+        Left = 926
         Top = 1
         Width = 428
         Height = 96
@@ -647,9 +644,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       end
       object splOpe: TcxSplitter
         Left = 1
-        Top = 115
+        Top = 114
         Width = 1355
-        Height = 8
+        Height = 10
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True

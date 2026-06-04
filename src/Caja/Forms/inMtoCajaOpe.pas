@@ -974,7 +974,8 @@ begin
 
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
                                        unqryBusq,
-                                       'frmMtoArtFacSearch') then
+                                       'frmMtoArtFacSearch',
+                                       Self) then
       Result := unqryBusq.FieldByName('CODIGO_ART_ART').AsString
     else
       Result := '';
