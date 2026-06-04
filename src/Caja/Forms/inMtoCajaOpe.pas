@@ -634,7 +634,7 @@ begin
       DatosCaja.cdsLineas.Delete;
   end;
 
-  dbtvStock.ClearItems;
+  //dbtvStock.ClearItems;
   GridRecalc(nil,
              tvLineasOpe,
              DatosCaja.cdsLineas,
@@ -3255,7 +3255,7 @@ begin
                       'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo) then
         DatosCaja.cdsLineas.Delete;
       DatosCaja.cdsLineas.EnableControls;
-      dbtvStock.ClearItems;
+      //dbtvStock.ClearItems;
       DatosCaja.cdsLineas.Append;
       tvLineasOpe.Controller.FocusedColumn := tvArticulo;
       tvLineasOpe.Controller.EditingController.ShowEdit;

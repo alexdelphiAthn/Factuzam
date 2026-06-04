@@ -1,4 +1,4 @@
-unit inLibComprasSesionesMaterializar;
+﻿unit inLibComprasSesionesMaterializar;
 
 {
   Unidad: inLibComprasSesionesMaterializar
@@ -172,7 +172,7 @@ begin
       'L.CODIGO_ART_TENTATIVO_SESLIN), ' +
       '       ''S'', L.TIPO_ART_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '       COALESCE(L.CODIGO_FAM_SESLIN, S.CODIGO_FAM_SES), ' +
-      '       COALESCE(L.TIPO_IVA_SESLIN, S.TIPO_IVA_SES), ' +
+      '       COALESCE(L.TIPO_IVA_SESLIN, S.TIPO_IVA_SES, ''N''), ' +
       '       L.TIPO_CANTIDAD_SESLIN, ' +
       '       CASE WHEN L.TIPO_LINEA_SESLIN = ''MATRIZ'' THEN ''S'' ELSE ' +
       '''N'' END, ' +

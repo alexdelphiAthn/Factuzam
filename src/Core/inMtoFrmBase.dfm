@@ -14,7 +14,7 @@ object frmBase: TfrmBase
   Font.Quality = fqClearTypeNatural
   KeyPreview = True
   OnCreate = FormCreate
-  TextHeight = 19
+  TextHeight = 17
   object Localizer1: TcxLocalizer
     Active = True
     FileName = 'CXLOCALIZATION.res'

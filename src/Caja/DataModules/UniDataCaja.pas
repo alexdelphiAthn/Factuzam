@@ -1868,11 +1868,21 @@ end;
 
 procedure TdmCajaOpe.cdsLineasAfterPost(DataSet: TDataSet);
 begin
-//         GridRecalc(nil,
-//             (Owner as TfrmMtoOpeCaja).tvLineasOpe,
-//             cdsLineas,
-//             cdsCabecera,
-//             OnUpdateTotal);
+if not DataSet.ControlsDisabled then
+  begin
+    // 1. Desenganchamos el evento para evitar el bucle infinito
+    cdsLineas.AfterPost := nil;
+    try
+      GridRecalc(nil,
+                 (Owner as TfrmMtoOpeCaja).tvLineasOpe,
+                 cdsLineas,
+                 cdsCabecera,
+                 OnUpdateTotal);
+    finally
+      // 2. Lo volvemos a enganchar al terminar
+      cdsLineas.AfterPost := cdsLineasAfterPost;
+    end;
+  end;
 end;
 
 procedure TdmCajaOpe.cdsLineasBeforePost(DataSet: TDataSet);
