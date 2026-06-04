@@ -3,8 +3,6 @@ inherited frmPrintSesion: TfrmPrintSesion
   ClientHeight = 249
   ClientWidth = 460
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 476
   ExplicitHeight = 288
   TextHeight = 17
@@ -13,13 +11,10 @@ inherited frmPrintSesion: TfrmPrintSesion
     Height = 249
     StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 314
-    ExplicitHeight = 212
+    ExplicitHeight = 241
     inherited btnSalir: TcxButton
       Top = 223
-      ExplicitTop = 186
-    end
-    inherited btnExcel: TcxButton
-      OnClick = btnExcelClick
+      ExplicitTop = 215
     end
   end
   object lblSerie: TcxLabel [1]
@@ -76,6 +71,7 @@ inherited frmPrintSesion: TfrmPrintSesion
       Orientation = poLandscape
       PaperWidth = 297.000000000000000000
       PaperHeight = 210.000000000000000000
+      PaperSize = 256
       LeftMargin = 10.000000000000000000
       RightMargin = 10.000000000000000000
       TopMargin = 10.000000000000000000
@@ -107,12 +103,14 @@ inherited frmPrintSesion: TfrmPrintSesion
         end
         object MemoEmpLbl: TfrxMemoView
           AllowVectorExport = True
-          Top = 30.236240000000000000
+          Top = 27.236240000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -125,6 +123,8 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 45.354360000000000000
           Width = 340.157700000000000000
           Height = 18.897650000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
@@ -142,11 +142,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 64.252010000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -159,11 +161,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 79.370130000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -178,11 +182,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 94.488250000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -193,12 +199,14 @@ inherited frmPrintSesion: TfrmPrintSesion
         object MemoPrvLbl: TfrxMemoView
           AllowVectorExport = True
           Left = 355.275820000000000000
-          Top = 30.236240000000000000
+          Top = 27.236240000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -230,11 +238,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 64.252010000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -248,11 +258,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 79.370130000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -268,11 +280,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 94.488250000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -283,12 +297,14 @@ inherited frmPrintSesion: TfrmPrintSesion
         object MemoSesLbl: TfrxMemoView
           AllowVectorExport = True
           Left = 710.551640000000000000
-          Top = 30.236240000000000000
+          Top = 27.236240000000000000
           Width = 336.378170000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -302,11 +318,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 45.354360000000000000
           Width = 336.378170000000000000
           Height = 22.677180000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -321,9 +339,11 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 71.811070000000000000
           Width = 100.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -337,13 +357,15 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 71.811070000000000000
           Width = 233.386210000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           DisplayFormat.FormatStr = 'dd/mm/yyyy'
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -357,9 +379,11 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 86.929190000000000000
           Width = 100.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -373,11 +397,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 86.929190000000000000
           Width = 233.386210000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -391,9 +417,11 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 102.047310000000000000
           Width = 100.157700000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clGray
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -407,11 +435,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Top = 102.047310000000000000
           Width = 233.386210000000000000
           Height = 15.118120000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsCabSesion
           DataSetName = 'Sesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
@@ -1119,11 +1149,13 @@ inherited frmPrintSesion: TfrmPrintSesion
           Left = 360.000000000000000000
           Width = 50.000000000000000000
           Height = 22.677180000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataSet = dmComprasSesiones.fxdsLinSesion
           DataSetName = 'LineasSesiones'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -14
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1712,6 +1744,7 @@ inherited frmPrintSesion: TfrmPrintSesion
       Orientation = poLandscape
       PaperWidth = 297.000000000000000000
       PaperHeight = 210.000000000000000000
+      PaperSize = 256
       LeftMargin = 10.000000000000000000
       RightMargin = 10.000000000000000000
       TopMargin = 10.000000000000000000
