@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -378,6 +378,10 @@
             <Form>dmGeneradorProcesos</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataEmpleados.pas">
+            <Form>dmEmpleados</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\DataModules\UniDataGrupos.pas">
             <Form>dmGrupos</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -400,10 +404,6 @@
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataTarifas.pas">
             <Form>dmTarifas</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataEmpleados.pas">
-            <Form>dmEmpleados</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataUsuarios.pas">
