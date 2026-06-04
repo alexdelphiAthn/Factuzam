@@ -28,26 +28,26 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
 type
   TBusquedaUtils = class
   public
-    class function EjecutarBusqueda(
-      const ACaption: string;
-      ADataSet: TCustomDADataSet;
-      const AName:String
-    ): Boolean; overload;
+  class function EjecutarBusqueda(const ACaption: string;
+                                ADataSet: TCustomDADataSet;
+                                const AName: String;
+                             AParentForm: TCustomForm = nil): Boolean; overload;
 
-    class function EjecutarBusqueda(
-      const ACaption: string;
-      const ASql: string;
-      const CampoResultado: string;
-      out ValorDevuelto: string;
-      const AName:String
-    ): Boolean; overload;
-  end;
+  class function EjecutarBusqueda(const ACaption: string;
+                                const ASql: string;
+                                const CampoResultado: string;
+                                out ValorDevuelto: string;
+                                const AName: String;
+                                AParentForm: TCustomForm = nil
+                               ): Boolean; overload;
+end;
 
 implementation
 
 class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
-                                               ADataSet: TCustomDADataSet;
-                                               const AName:String): Boolean;
+                                ADataSet: TCustomDADataSet;
+                                const AName: String;
+                             AParentForm: TCustomForm = nil): Boolean;
 var
   formulario: TfrmMtoSearch;
 begin
@@ -55,6 +55,8 @@ begin
   try
     formulario.Caption := ACaption;
     formulario.Name := AName;
+    if Assigned(AParentForm) then
+      formulario.PopupParent := AParentForm;
     ADataSet.Connection := oConn;
     formulario.dsTablaG.DataSet := ADataSet;
     if not ADataSet.Active then
@@ -67,12 +69,12 @@ begin
   end;
 end;
 
-class function TBusquedaUtils.EjecutarBusqueda( const ACaption: string;
-                                                const ASql: string;
-                                                const CampoResultado: string;
-                                                out ValorDevuelto: string;
-                                                const AName:String
-                                              ): Boolean;
+class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
+                                               const ASql: string;
+                                               const CampoResultado: string;
+                                               out ValorDevuelto: string;
+                                               const AName: String;
+                                               AParentForm: TCustomForm = nil): Boolean;
 var
   formulario: TfrmMtoSearch;
   QueryTemp: TUniQuery;
@@ -83,12 +85,19 @@ begin
   try
     formulario.Caption := ACaption;
     formulario.Name := AName;
+
+    // --- NUEVO: Asignar el PopupParent si se ha pasado como parámetro ---
+    if Assigned(AParentForm) then
+      formulario.PopupParent := AParentForm;
+    // --------------------------------------------------------------------
+
     QueryTemp.Connection := oConn;
     QueryTemp.SQL.Text := ASql;
     formulario.dsTablaG.DataSet := QueryTemp;
     QueryTemp.Open;
     formulario.ProcesarPerfiles;
     formulario.ShowModal;
+
     if ((formulario.sFicha = 'S') and (QueryTemp.RecordCount > 0)) then
     begin
       ValorDevuelto := QueryTemp.FieldByName(CampoResultado).AsString;
