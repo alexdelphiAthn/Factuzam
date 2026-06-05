@@ -96,6 +96,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Align = alTop
           Caption = ' Cabecera '
           TabOrder = 0
+          ExplicitTop = 1
           Height = 217
           Width = 1092
           object lblSerie: TcxLabel
@@ -185,6 +186,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Caption = 'Empresa'
                 FieldName = 'RAZON_SOCIAL_EMP'
               end>
+            Properties.ListFieldIndex = 1
             Properties.ListOptions.ShowHeader = False
             TabOrder = 7
             Width = 268
@@ -211,15 +213,15 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Width = 160
           end
           object lblRefPrv: TcxLabel
-            Left = 645
-            Top = 67
+            Left = 695
+            Top = 24
             Caption = 'Ref. prov.'
             TabOrder = 10
             Transparent = True
           end
           object txtRefPrv: TcxDBTextEdit
-            Left = 725
-            Top = 63
+            Left = 775
+            Top = 20
             DataBinding.DataField = 'REF_PRV_SES'
             DataBinding.DataSource = dsTablaG
             Properties.MaxLength = 100
@@ -361,13 +363,17 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Width = 90
           end
           object lblProveedorNombre: TcxLabel
-            Left = 12
-            Top = 179
-            AutoSize = False
+            Left = 639
+            Top = 67
+            ParentFont = False
+            Style.Font.Charset = ANSI_CHARSET
+            Style.Font.Color = clWindowText
+            Style.Font.Height = -15
+            Style.Font.Name = 'Lucida Sans'
+            Style.Font.Style = [fsBold]
+            Style.IsFontAssigned = True
             TabOrder = 27
             Transparent = True
-            Height = 33
-            Width = 1060
           end
         end
         object pnlBottFich: TPanel

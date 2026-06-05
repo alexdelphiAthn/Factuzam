@@ -232,7 +232,7 @@ procedure CargarCache;
 var
   q    : TUniQuery;
   Info : TInfoBasico;
-  sIdVa, sCod, sNom, sAv: string;
+  sIdVa, sCod, sNom, sAv, sDesc: string;
 begin
   GCache.Clear;
   GCacheCargado := False;
@@ -240,10 +240,11 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
-    // Hacemos JOIN con fza_atributos_valores para cachear también los textos reales
-    // (AV) que los usuarios han escrito y que son los que viajan en los Grids.
+    // Hacemos JOIN con fza_atributos_valores para cachear también los textos reales (AV y DESCRIPCION)
+    // que los usuarios han escrito libremente y que son los que viajan en los SKUs de los Grids.
     q.SQL.Text :=
-      'SELECT B.ID_VA_ATB, B.CODIGO_ATB, B.NOMBRE_ATB, B.HEX_ATB, V.AV ' +
+      'SELECT B.ID_VA_ATB, ' +
+      '       B.CODIGO_ATB, B.NOMBRE_ATB, B.HEX_ATB, V.AV, V.DESCRIPCION_AV ' +
       '  FROM fza_atributos_basicos B ' +
       '  LEFT JOIN fza_atributos_valores V ON V.ID_ATB_AV = B.ID_ATB ' +
       ' WHERE B.ESACTIVO_ATB = ''S'' ' +
@@ -263,18 +264,19 @@ begin
         sIdVa := q.FieldByName('ID_VA_ATB').AsString;
         sCod  := q.FieldByName('CODIGO_ATB').AsString;
         sNom  := q.FieldByName('NOMBRE_ATB').AsString;
-        sAv   := q.FieldByName('AV').AsString; // Texto real del valor
-
-        // 1. Cachear por código (ej. "01")
+        sAv   := q.FieldByName('AV').AsString;
+        sDesc := q.FieldByName('DESCRIPCION_AV').AsString;
+        // Cacheamos por el Código del color básico (ej. "01")
         GCache.AddOrSetValue(ClaveCache(sIdVa, sCod), Info);
-
-        // 2. Cachear por nombre básico (ej. "Rojo Básico")
+        // Cacheamos por el Nombre del color básico (ej. "Rojo Básico")
         if Trim(sNom) <> '' then
           GCache.AddOrSetValue(ClaveCache(sIdVa, sNom), Info);
-
-        // 3. Cachear por el texto real mostrado en los grids (ej. "ROJO", "ROJO FUEGO")
+        // Cacheamos por el Valor/Token del proveedor que compone el SKU (ej. "ROJO-FUEGO")
         if Trim(sAv) <> '' then
           GCache.AddOrSetValue(ClaveCache(sIdVa, sAv), Info);
+        // Cacheamos por el texto libre exacto por si un grid lo muestra crudo (ej. "Rojo Fuego")
+        if Trim(sDesc) <> '' then
+          GCache.AddOrSetValue(ClaveCache(sIdVa, sDesc), Info);
       end;
       q.Next;
     end;
@@ -511,27 +513,38 @@ function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
 var
-  Texto, Sufijo, IdVa : string;
-  PosBarra : Integer;
+  Texto, IdVa, Segmento: string;
+  Segmentos: TArray<string>;
+  i: Integer;
 begin
   AInfo  := Default(TInfoBasico);
   Result := False;
   if ADict = nil then Exit;
   Texto := Trim(ATexto);
   if Texto = '' then Exit;
+
   // 1) Probamos con el texto entero
   for IdVa in ADict.Values do
     if ObtenerInfoBasico(IdVa, Texto, AInfo) then
       Exit(True);
-  // 2) Si hay '/' probamos con el ultimo segmento (caja: "CODART/COLOR")
-  PosBarra := LastDelimiter('/', Texto);
-  if PosBarra > 0 then
+
+  // 2) Si el texto es un SKU compuesto (ej: ART/COLOR/TALLA),
+  // extraemos CADA segmento y lo comprobamos.
+  if Pos('/', Texto) > 0 then
   begin
-    Sufijo := Trim(Copy(Texto, PosBarra + 1, MaxInt));
-    if (Sufijo <> '') and (Sufijo <> Texto) then
-      for IdVa in ADict.Values do
-        if ObtenerInfoBasico(IdVa, Sufijo, AInfo) then
-          Exit(True);
+    Segmentos := Texto.Split(['/']);
+    // Empezamos desde el final hacia el principio, pero ahora
+    // revisamos todos (el color suele estar en el medio).
+    for i := High(Segmentos) downto 0 do
+    begin
+      Segmento := Trim(Segmentos[i]);
+      if Segmento <> '' then
+      begin
+        for IdVa in ADict.Values do
+          if ObtenerInfoBasico(IdVa, Segmento, AInfo) then
+            Exit(True);
+      end;
+    end;
   end;
 end;
 
