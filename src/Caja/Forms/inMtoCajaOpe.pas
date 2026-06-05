@@ -85,6 +85,7 @@ type
     tvArticulo: TcxGridDBColumn;
     tvDescripcion: TcxGridDBColumn;
     tvUds: TcxGridDBColumn;
+    tvTipoCantidad: TcxGridDBColumn;
     tvPrecioUni: TcxGridDBColumn;
     tvDescuento: TcxGridDBColumn;
     tvDescuentoMenos: TcxGridDBColumn;
@@ -314,6 +315,7 @@ implementation
 
 uses
   inMtoCajaMenu,
+  inLibGridCantidad,
   inLibGlobalVar,
   inLibUser,
   inLibLog,
@@ -3159,6 +3161,8 @@ begin
   dsStock.DataSet := DatosCaja.qryStock;
   dsLineas.OnDataChange := DsLineasDataChange;
   ConstruirColumnasDinamicas;
+  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
+  VincularCantidadGrid(tvUds, tvTipoCantidad);
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   DatosCaja.OnRellenarArticulo  := RellenarDatosArticuloEnDataset;
   DatosCaja.OnRellenarAtributos := RellenarAtributosDesdeSku;
