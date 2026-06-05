@@ -10,9 +10,11 @@
 -- fuera. Mismos filtros, modos, bandas, agrupaciones y valoración.
 --
 -- Modos (parámetro p_MODO):
---   'F' = entre fechas (existencias iniciales, entradas, salidas, ventas,
---         existencias finales; desglosado abre los subtipos Ctrl+U).
---   'A' = por acumulados (entradas, salidas, ventas, existencias finales).
+--   'F' = entre fechas (existencias iniciales, entradas, ventas, existencias
+--         finales; desglosado abre los subtipos Ctrl+U). Sin banda Salidas:
+--         los traspasos se netean en Entradas y los depósitos quedan fuera.
+--   'A' = por acumulados (entradas, ventas, existencias finales).
+--   Balance: Ex.ini + Entradas - Ventas = Ex.final.
 --
 -- Origen de datos y valoración: idénticos al balance por tallas (ver
 -- balance_almacen_tallas.sql §). La única diferencia es el grano: aquí se
@@ -393,22 +395,25 @@ BEGIN
                'EXIINI', 10, 'Existencias iniciales', 1, `EXI_INI`
           FROM `tmp_bst_base`;
     END IF;
-    -- Entradas / Salidas agregadas: simplificado (F) o acumulados (A).
+    -- Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb.
+    -- entrada) + recuentos + traspasos NETOS (entrada - salida). SIN depósitos
+    -- y SIN banda Salidas: las ventas van en su banda. Balance: Ex.ini +
+    -- Entradas - Ventas = Ex.final (los depósitos quedan fuera).
     IF (p_MODO = 'F' AND p_DESGLOSADO = 'N') OR p_MODO = 'A' THEN
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENT', 20, 'Entradas', 1, `ENT`
-          FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SAL', 40, 'Salidas', 0, `SAL`
+               'ENT', 20, 'Entradas', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'VEN', 50, 'Ventas', 0, `VEN`
           FROM `tmp_bst_base`;
     END IF;
-    -- Entradas / Salidas desglosadas: solo modo entre fechas desglosado.
+    -- Entradas desglosadas: solo modo entre fechas desglosado. Traspasos y
+    -- depósitos netos (entrada - salida), sin bandas de salida salvo alb.
+    -- venta. Mismos subtipos que la consulta de stock (Ctrl+U).
     IF p_MODO = 'F' AND p_DESGLOSADO = 'S' THEN
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
@@ -420,24 +425,20 @@ BEGIN
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENTTRA', 23, 'Ent. traspaso', 1, `ENT_TRASPASO`
+               'ENTTRA', 23, 'Traspasos (neto)', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENTDEP', 24, 'Ent. depósito', 1, `ENT_DEPOSITO`
+               'ENTDEP', 24, 'Depósitos (neto)', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'ENTREG', 25, 'Regulariz.', 1, `ENT_REGULAR`
           FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SALTRA', 41, 'Sal. traspaso', 0, `SAL_TRASPASO`
-          FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SALDEP', 42, 'Sal. depósito', 0, `SAL_DEPOSITO`
-          FROM `tmp_bst_base`;
+        -- Sal. traspaso / Sal. depósito ya no salen: neteadas en sus bandas de
+        -- entrada. Albarán de venta sí se mantiene (es una venta).
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'SALALB', 43, 'Alb. venta', 0, `SAL_ALBVENTA`
