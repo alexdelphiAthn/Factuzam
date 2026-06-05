@@ -269,6 +269,10 @@ type
     // Activo mientras resolvemos una lectura con pistola: fuerza a
     // RellenarDatosArticuloEnDataset a buscar SOLO en codigos de barras.
     FResolviendoPorScanner: Boolean;
+    // Activo durante TODO ProcesarLecturaScanner. Lo consultan los validadores
+    // de cliente/empleado para no validar su texto (que pudo ensuciarse con la
+    // rafaga) cuando el escaneo mueve el foco a la rejilla.
+    FProcesandoLecturaScanner: Boolean;
     // Codigo leido pendiente de procesar (lo consume WMProcesarScanner).
     FCodigoScanPend: string;
     // Detector de lectura por VELOCIDAD de tecleo (codigo de barras + CR sin
@@ -807,6 +811,11 @@ var
 begin
   if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
   begin
+   // Activo durante todo el procesado: evita que, al mover el foco a la
+   // rejilla, los validadores de cliente/empleado intenten validar el texto
+   // que la rafaga pudo dejar en esos campos.
+   FProcesandoLecturaScanner := True;
+   try
     // Precondicion: sin vendedor dado de alta no se admiten lecturas.
     if Trim(DatosCaja.cdsCabecera.FieldByName(
                                        'CODIGO_CAJERO_FAC').AsString) = '' then
@@ -892,6 +901,9 @@ begin
       AsegurarLineaNueva;
       tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
+   finally
+     FProcesandoLecturaScanner := False;
+   end;
   end;
 end;
 
@@ -2591,6 +2603,13 @@ var
   sCodigo: string;
   Totales: TFacturaTotales;
 begin
+  // Durante un escaneo no validamos el cliente: el foco se mueve a la rejilla
+  // y el campo pudo quedar con la rafaga; lo da por bueno y no molesta.
+  if FProcesandoLecturaScanner then
+  begin
+    Error := False;
+    Exit;
+  end;
   if FValidandoCliente then
     Exit;
   FValidandoCliente := True;
@@ -2815,6 +2834,12 @@ var
   sCodigo: string;
   qry: TUniQuery;
 begin
+  // Durante un escaneo no validamos el empleado (mismo motivo que en cliente).
+  if FProcesandoLecturaScanner then
+  begin
+    Error := False;
+    Exit;
+  end;
   sCodigo := VarToStr(DisplayValue);
   if (Trim(sCodigo) <> '') and DatosCaja.BuscarYMostrarNombre('EMPLEADOS',
     sCodigo,
