@@ -1,4 +1,4 @@
-﻿object frmStockConsulta: TfrmStockConsulta
+object frmStockConsulta: TfrmStockConsulta
   Left = 0
   Top = 0
   Caption = 'Consulta de stock (Ctrl+U)'
@@ -14,7 +14,7 @@
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  TextHeight = 19
+  TextHeight = 17
   object pnlCabecera: TPanel
     Left = 0
     Top = 0
@@ -23,11 +23,12 @@
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 896
     DesignSize = (
       898
       256)
     object imgFoto: TImage
-      Left = 740
+      Left = 738
       Top = 12
       Width = 138
       Height = 133
@@ -60,10 +61,8 @@
     object lblDescr: TcxLabel
       Left = 16
       Top = 46
-      Properties.WordWrap = False
       TabOrder = 2
       Transparent = True
-      Width = 720
     end
     object lblInfo: TcxLabel
       Left = 16
@@ -72,17 +71,19 @@
       Properties.WordWrap = True
       TabOrder = 3
       Transparent = True
-      Width = 734
+      ExplicitWidth = 730
+      Width = 732
     end
   end
   object pnlFiltros: TPanel
     Left = 0
-    Top = 200
+    Top = 256
     Width = 898
     Height = 44
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 896
     object lblEstado: TcxLabel
       Left = 16
       Top = 12
@@ -101,63 +102,91 @@
   end
   object pnlBody: TPanel
     Left = 0
-    Top = 244
+    Top = 300
     Width = 898
-    Height = 368
+    Height = 284
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitWidth = 896
+    ExplicitHeight = 276
+    object splVert: TSplitter
+      Left = 280
+      Top = 0
+      Height = 284
+      ExplicitHeight = 368
+    end
     object pnlIzq: TPanel
       Left = 0
       Top = 0
       Width = 280
-      Height = 368
+      Height = 284
       Align = alLeft
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitHeight = 276
       object pcFiltros: TcxPageControl
         Left = 0
         Top = 0
         Width = 280
-        Height = 368
+        Height = 284
         Align = alClient
         TabOrder = 0
         Properties.ActivePage = tsColores
         Properties.CustomButtons.Buttons = <>
+        ExplicitHeight = 276
+        ClientRectBottom = 280
+        ClientRectLeft = 4
+        ClientRectRight = 276
+        ClientRectTop = 28
         object tsColores: TcxTabSheet
           Caption = '1 Colores'
           ImageIndex = 0
+          ExplicitHeight = 244
+          DesignSize = (
+            272
+            252)
           object lblColores: TcxLabel
             Left = 8
             Top = 4
             Caption = 'Colores del art'#237'culo'
+            TabOrder = 1
             Transparent = True
           end
           object clbColores: TcxCheckListBox
             Left = 8
             Top = 32
-            Width = 260
-            Height = 301
+            Width = 252
+            Height = 269
             Anchors = [akLeft, akTop, akRight, akBottom]
             Items = <>
             TabOrder = 0
             OnClickCheck = clbColoresClickCheck
+            ExplicitHeight = 261
           end
         end
         object tsAlmacenes: TcxTabSheet
           Caption = '2 Almacenes'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
+          DesignSize = (
+            272
+            252)
           object lblAlmacenes: TcxLabel
             Left = 8
             Top = 4
             Caption = 'Almacenes'
+            TabOrder = 1
             Transparent = True
           end
           object clbAlmacenes: TcxCheckListBox
             Left = 8
             Top = 32
-            Width = 260
-            Height = 301
+            Width = 252
+            Height = 269
             Anchors = [akLeft, akTop, akRight, akBottom]
             Items = <>
             TabOrder = 0
@@ -166,22 +195,16 @@
         end
       end
     end
-    object splVert: TSplitter
-      Left = 280
-      Top = 0
-      Height = 368
-      ExplicitLeft = 280
-      ExplicitTop = 0
-      ExplicitHeight = 368
-    end
     object pnlDer: TPanel
       Left = 283
       Top = 0
       Width = 615
-      Height = 368
+      Height = 284
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 613
+      ExplicitHeight = 276
       object pcVistas: TcxPageControl
         Left = 0
         Top = 0
@@ -192,22 +215,33 @@
         Properties.ActivePage = tsPorAlmacen
         Properties.CustomButtons.Buttons = <>
         OnChange = pcVistasChange
+        ExplicitWidth = 613
+        ClientRectBottom = 28
+        ClientRectLeft = 4
+        ClientRectRight = 611
+        ClientRectTop = 28
         object tsPorAlmacen: TcxTabSheet
           Caption = '3 Por almacenes'
           ImageIndex = 0
+          ExplicitWidth = 605
         end
         object tsPorColor: TcxTabSheet
           Caption = '4 Por colores'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
         end
       end
       object grdStock: TcxGrid
         Left = 0
         Top = 30
         Width = 615
-        Height = 338
+        Height = 254
         Align = alClient
         TabOrder = 1
+        ExplicitWidth = 613
+        ExplicitHeight = 246
         object tvStock: TcxGridDBTableView
           OptionsCustomize.ColumnMoving = False
           OptionsData.Editing = False
@@ -227,5 +261,7 @@
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitTop = 576
+    ExplicitWidth = 896
   end
 end
