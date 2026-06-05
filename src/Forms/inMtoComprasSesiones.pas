@@ -477,6 +477,11 @@ begin
   // o al cambiar CODIGO_PRV_SES tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_SES') then
     ActualizarLabelProveedor;
+  // FIX: El formato distribuido solo se puede cambiar al crear la sesión.
+  // Si el estado no es dsInsert, ponemos el check como ReadOnly.
+  if (Field = nil) and (Dmm <> nil) and (Dmm.unqryTablaG <> nil) then
+    chkFormatoDistribuido.Properties.ReadOnly :=
+                                            (Dmm.unqryTablaG.State <> dsInsert);
   // Field = nil => cambio de record activo en el master (no es un cambio
   // puntual de un campo del registro actual). Es el momento de
   // recalcular columnas y volver a publicar las cantidades de las
