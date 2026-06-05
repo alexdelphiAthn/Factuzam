@@ -92,18 +92,20 @@ BEGIN
     SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''), 'PVP');
     SET v_desde      = IFNULL(p_DESDE, '1900-01-01');
     SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
-    -- Lista efectiva de almacenes (CSV sin comillas, para FIND_IN_SET).
-    -- Sin selección = TODOS los almacenes activos (igual que la lista del
-    -- checklist), no solo los de uso estándar: "nada marcado = todos".
-    IF IFNULL(p_ALMACENES, '') <> '' THEN
-        SET v_alms = p_ALMACENES;
-    ELSE
-        SELECT GROUP_CONCAT(`CODIGO_ALM_ALM`)
-          INTO v_alms
-          FROM `fza_almacenes`
-         WHERE `ESACTIVO_ALM` = 'S';
-    END IF;
-    SET v_alms = IFNULL(v_alms, '');
+    -- Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar
+    -- por IN en vez de FIND_IN_SET sobre las tablas grandes: FIND_IN_SET no es
+    -- sargable y obliga a escanear (p. ej. fza_articulos_stockactual, cuyo PK
+    -- empieza por CODIGO_ALM_STK). Con el IN, MariaDB puede usar el índice.
+    -- Sin selección = todos los almacenes activos ("nada marcado = todos").
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+    CREATE TEMPORARY TABLE `tmp_bat_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '') = '',
+              `ESACTIVO_ALM` = 'S',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
 
     -- -----------------------------------------------------------------
     -- Filtros de artículo: familias (con su descendencia), proveedores y
@@ -357,7 +359,7 @@ BEGIN
           FROM `tmp_bat_sku` s
           JOIN `fza_articulos_stockactual` st
             ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
-           AND FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
          GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''),
                   s.`POSICION`, s.`COLOR`;
     ELSE
@@ -421,7 +423,7 @@ BEGIN
                                0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
                                0 AS `DELTA_HASTA`
                           FROM `fza_articulos_stockactual` st2
-                         WHERE FIND_IN_SET(st2.`CODIGO_ALM_STK`, v_alms)
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
                         UNION ALL
                         SELECT m.`CODIGO_UNIDAD_MOV`,
                                IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
@@ -471,7 +473,7 @@ BEGIN
                                      -m.`CANTIDAD_MOV`), 0)
                           FROM `fza_movimientos_almacen` m
                          WHERE m.`ESACTIVO_MOV` = 'S'
-                           AND FIND_IN_SET(m.`CODIGO_ALM_MOV`, v_alms)
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
                        ) u
                  GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
                ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
@@ -762,7 +764,7 @@ BEGIN
               FROM `fza_articulos_stockactual` st
               JOIN `fza_articulos_skus` sk
                 ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
-             WHERE FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
              GROUP BY sk.`CODIGO_ART_SKU`
            ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
       LEFT JOIN (
@@ -803,7 +805,7 @@ BEGIN
                AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
               JOIN `tmp_bat_sku` s
                 ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
-             WHERE FIND_IN_SET(fl.`CODIGO_ALM_FACLIN`, v_alms)
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
                AND (p_MODO = 'A'
                     OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
              GROUP BY s.`CODIGO_ART`,
@@ -825,6 +827,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
 END ;;
 DELIMITER ;
 
