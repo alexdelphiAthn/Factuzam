@@ -163,7 +163,7 @@ var
 implementation
 
 uses
-  inMtoModalImportarPedidosPS, inLibFotos;
+  inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad;
 
 {$R *.dfm}
 
@@ -205,6 +205,10 @@ begin
   dmmPedidos := TdmPedidos.Create(Self);
   dsTablaG.DataSet := dmmPedidos.unqryTablaG;
   tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
+  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
+  VincularCantidadGrid(
+    tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PEDLIN'),
+    tvPedidosLineas.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDLIN'));
   tvAlbaranes.DataController.DataSource     := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource      := dmmPedidos.dsMensajes;
   // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
