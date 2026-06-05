@@ -311,6 +311,7 @@ uses inLibUser,
   inMtoModalImpBalanceSinTallas,
   inLibCajaParam,
   inLibAppParam,
+  inLibUnidadesMedida,
   inLibBuscarImpresora,
   inMtoGen,
   inMtoFotoArticulo,
@@ -509,6 +510,9 @@ begin
     PrecargarCachesSerie;
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
   oCajaParams.InicializarParametrosCaja(oUser, oGroup);
+  // Cache de unidades de medida: decimales por unidad y factores de
+  // conversion. La usan ficha de articulo, lineas de documento e informes.
+  oUnidades.Cargar;
   oNomImpresoraCaja := GetImpresoraCaja;
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
