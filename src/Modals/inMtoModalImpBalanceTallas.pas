@@ -57,10 +57,13 @@ type
     // Handler de OnBeforePrint del report: mantiene el refresco de fotos del
     // base y oculta las bandas de grupo de los niveles no usados.
     procedure ReportBeforePrint(Component: TfrxReportComponent);
+    // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
+    procedure PrecargarFotosArticulos;
   protected
     function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
   public
+    destructor Destroy; override;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
   end;
@@ -274,6 +277,45 @@ begin
   // nuestro, que encadena las fotos y además oculta las bandas de grupo de los
   // niveles inactivos (sin esto, FastReport pinta una banda vacía por nivel).
   frxrprt1.OnBeforePrint := ReportBeforePrint;
+  // Precarga de fotos a nivel artículo en UNA consulta: el handler de fotos
+  // (oFotos.Resolver) las toma de la caché y no hace un SELECT por artículo
+  // (antes era un N+1 con muchas fotos).
+  PrecargarFotosArticulos;
+end;
+
+destructor TfrmPrintBalanceTallas.Destroy;
+begin
+  // Vaciar la caché de precarga de fotos (vive durante el modal).
+  oFotos.LimpiarPrecargaFotos;
+  inherited Destroy;
+end;
+
+procedure TfrmPrintBalanceTallas.PrecargarFotosArticulos;
+var
+  slCod: TStringList;
+begin
+  if unqryBalancePrint.Active and (not unqryBalancePrint.IsEmpty) then
+  begin
+    slCod := TStringList.Create;
+    try
+      slCod.Sorted := True;
+      slCod.Duplicates := dupIgnore;
+      unqryBalancePrint.DisableControls;
+      try
+        unqryBalancePrint.First;
+        while not unqryBalancePrint.Eof do
+        begin
+          slCod.Add(unqryBalancePrint.FieldByName('CODIGO_ART_ART').AsString);
+          unqryBalancePrint.Next;
+        end;
+      finally
+        unqryBalancePrint.EnableControls;
+      end;
+      oFotos.PrecargarFotosLote(slCod.ToStringArray);
+    finally
+      FreeAndNil(slCod);
+    end;
+  end;
 end;
 
 procedure TfrmPrintBalanceTallas.ReportBeforePrint(

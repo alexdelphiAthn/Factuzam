@@ -284,6 +284,11 @@ Notas de plantilla:
   `EngancharFotosEnReport` (`inLibFotos`), que en cada iteración resuelve
   la foto leyendo `CODIGO_ART_ART` de la banda. Sin código extra. (Usar
   `foto600` o `fotoReal` para más resolución.)
+  - **Sin N+1**: `AfterReportLoaded` del modal llama a
+    `oFotos.PrecargarFotosLote` con los códigos del resultado (UNA consulta);
+    `oFotos.Resolver(art, '')` toma la foto de esa caché y no hace un `SELECT`
+    por artículo. El modal vacía la caché en su `destructor`
+    (`oFotos.LimpiarPrecargaFotos`).
 - **Cabecera de tallas por artículo**: como el tallaje cambia por
   artículo, los rótulos `[ETIQ_T01]..[ETIQ_T14]` van en el GroupHeader de
   artículo (no en PageHeader).
