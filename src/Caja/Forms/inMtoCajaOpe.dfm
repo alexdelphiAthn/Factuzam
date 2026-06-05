@@ -534,6 +534,11 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             BestFitMaxWidth = 50
             HeaderAlignmentHorz = taRightJustify
           end
+          object tvTipoCantidad: TcxGridDBColumn
+            DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
+            Visible = False
+            VisibleForCustomization = False
+          end
           object tvPrecioUni: TcxGridDBColumn
             Caption = 'Precio'
             DataBinding.FieldName = 'PRECIO_SALIDA_FACLIN'

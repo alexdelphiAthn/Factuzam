@@ -54,8 +54,9 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
       (usa `OnGetDisplayText` + spin a `vtFloat`).
       - [x] Facturas (`inMtoFacturasBase`) — PROOF: validar que muestra
             decimales por linea antes de replicar.
-      - [ ] Caja (`inMtoCajaOpe`) — la unidad no esta como columna del grid;
-            requiere exponerla (columna invisible) o resolver por dataset.
+      - [x] Caja / venta (`inMtoCajaOpe`) — anadida columna invisible
+            tvTipoCantidad (TIPO_CANTIDAD_ARTICULO_FACLIN) y vinculada en
+            FormCreate.
       - [ ] Albaranes venta/compra, Pedidos venta/compra.
       - [ ] Traspasos, Compras-sesiones (matriz).
       - [ ] Inventarios/Movimientos: sin unidad por linea; tomar la del
