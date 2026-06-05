@@ -469,6 +469,10 @@ begin
                                    GetDefaultValue('vi_articulos_familias_list',
                                                    'CODIGO_FAM_FAM',
                                                    'ESDEFAULT_FAM');
+  // Por defecto los articulos van en Unidades (sin decimales). Solo los que
+  // se cambien a metros/kilos... mostraran decimales segun la unidad.
+  if Trim(unqryTablaG.FindField('TIPO_CANTIDAD_ART').AsString) = '' then
+    unqryTablaG.FindField('TIPO_CANTIDAD_ART').AsString := 'Uds';
 end;
 
 procedure TdmArticulos.CopiarProveedoraArticulo(dtProveedores: TDataset);

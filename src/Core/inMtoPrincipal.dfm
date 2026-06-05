@@ -1264,6 +1264,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           ShortCut = 16460
           OnClick = mnuPaisesClick
         end
+        object mnuUnidadesMedida: TMenuItem
+          Caption = 'Unidades de Medida'
+          OnClick = mnuUnidadesMedidaClick
+        end
         object mnuPropiedades: TMenuItem
           Caption = 'Propiedades'
           ShortCut = 16473
