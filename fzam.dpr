@@ -113,6 +113,8 @@ uses
   UniDataPedidos in 'src\DataModules\UniDataPedidos.pas' {/cxButtonHelper in 'cxButtonHelper.pas';: TdmPedidos},
   inMtoPaises in 'src\Forms\inMtoPaises.pas' {frmMtoPaises},
   UniDataPaises in 'src\DataModules\UniDataPaises.pas' {dmPaises: TDataModule},
+  inMtoUnidadesMedida in 'src\Forms\inMtoUnidadesMedida.pas' {frmMtoUnidadesMedida},
+  UniDataUnidadesMedida in 'src\DataModules\UniDataUnidadesMedida.pas' {dmUnidadesMedida: TDataModule},
   inLibCertificates in 'src\Lib\inLibCertificates.pas',
   inMtoModalEmpCer in 'src\Modals\inMtoModalEmpCer.pas',
   inMtoCajaMenu in 'src\Caja\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},

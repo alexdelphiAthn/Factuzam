@@ -154,6 +154,7 @@ type
     mnuIvas: TMenuItem;
     mnuContadores: TMenuItem;
     mnuPaises: TMenuItem;
+    mnuUnidadesMedida: TMenuItem;
     N1: TMenuItem;
     UsuariosGruposyPerfiles1: TMenuItem;
     HacerCopiadeSeguridad1: TMenuItem;
@@ -196,6 +197,7 @@ type
     procedure mnuEjecutarScriptClick(Sender: TObject);
     procedure mnuGeneradorProcesosClick(Sender: TObject);
     procedure mnuPaisesClick(Sender: TObject);
+    procedure mnuUnidadesMedidaClick(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1715,6 +1717,13 @@ begin
   inherited;
   if (mnuPaises.Visible) then
     ShowMto(Self, 'Paises');
+end;
+
+procedure TfrmMtoPrincipal.mnuUnidadesMedidaClick(Sender: TObject);
+begin
+  inherited;
+  if (mnuUnidadesMedida.Visible) then
+    ShowMto(Self, 'UnidadesMedida');
 end;
 
 procedure TfrmMtoPrincipal.mnuPerfilesClick(Sender: TObject);

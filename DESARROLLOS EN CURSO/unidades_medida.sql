@@ -71,3 +71,24 @@ SELECT DISTINCT
   FROM `fza_articulos`
  WHERE `TIPO_CANTIDAD_ART` IS NOT NULL
    AND TRIM(`TIPO_CANTIDAD_ART`) <> '';
+
+-- 4) Registro del formulario de mantenimiento --------------------------------
+-- fza_winforms es el catalogo que usa ShowMto para resolver el formulario por
+-- su CALL. Sin esta fila el menu "Unidades de Medida" no abriria nada.
+INSERT IGNORE INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  ('UnidadesMedida', 'Unidades de Medida', 'mnuUnidadesMedida',
+   'inMtoUnidadesMedida.TfrmMtoUnidadesMedida', NULL,
+   'UniDataUnidadesMedida.TdmUnidadesMedida', 1);
+
+-- 5) Permiso de menu (visible para Todos) ------------------------------------
+-- Sin permiso explicito el item de menu se podria ocultar. Lo dejamos visible
+-- para el grupo Todos; el administrador puede restringirlo luego.
+INSERT IGNORE INTO `fza_permisos`
+  (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  ('Todos', 'menu.UnidadesMedida', 'S', 'Unidades de Medida',
+   current_timestamp(), 'SISTEMA', 'SISTEMA');
