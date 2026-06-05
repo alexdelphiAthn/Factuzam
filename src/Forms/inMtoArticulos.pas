@@ -1715,15 +1715,24 @@ begin
       item := lst.Items[i];
       if item.Checked then
       begin
-        Insert;
-        FieldByName('CODIGO_TAR_ARTTAR').AsString := item.Caption;
-        FieldByName('ESACTIVO_ARTTAR').AsString := 'S';
-        FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := Now;
-        FieldByName('PRECIO_SALIDA_ARTTAR').AsInteger := 0;
-        FieldByName('PRECIO_FINAL_ARTTAR').AsInteger := 0;
-        FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := '';
-        Post;
-        bAdded := True;
+        // Evita duplicar: el modal consulta la BBDD y no ve las tarifas aun
+        // pendientes de grabar, asi que en cada clic volvia a ofrecer (y
+        // anadir) la misma. Si el articulo ya tiene esa tarifa a nivel padre
+        // (CODIGO_UNIDAD_ARTTAR vacio), incluso pendiente, no la insertamos.
+        if not Locate('CODIGO_TAR_ARTTAR;CODIGO_UNIDAD_ARTTAR',
+                      VarArrayOf([item.Caption, '']),
+                      [loCaseInsensitive]) then
+        begin
+          Insert;
+          FieldByName('CODIGO_TAR_ARTTAR').AsString := item.Caption;
+          FieldByName('ESACTIVO_ARTTAR').AsString := 'S';
+          FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := Now;
+          FieldByName('PRECIO_SALIDA_ARTTAR').AsInteger := 0;
+          FieldByName('PRECIO_FINAL_ARTTAR').AsInteger := 0;
+          FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := '';
+          Post;
+          bAdded := True;
+        end;
       end;
     end;
     Refresh;
