@@ -96,24 +96,20 @@ type
 
     // Observaciones
     memObservaciones: TcxDBMemo;
-
-    // Botones de accion
-    btnAnadirLinea:       TcxButton;
-    btnBorrarLinea:       TcxButton;
     btnTallasHorizontal:  TcxButton;
     btnAtributosColumna:  TcxButton;
     btnExpandirRecibidos: TcxButton;
     // Atajo: rellena 'A recibir' con el pendiente de TODAS las
     // tallas de la fila focused. Activo solo en pivote expandido.
     btnRecibirFilaEntera: TcxButton;
-    // Label de contexto que muestra Pedido / Recibida de la celda
-    // talla focused en modo expandido. Visible solo cuando aplica.
-    lblContextoTalla:     TcxLabel;
     // Columna no-bound editable solo en modo vertical (pivote OFF).
     // El usuario teclea aqui "A recibir" por linea SKU. Se oculta
     // cuando entra en modo pivote.
     colLineaPedcARecibir: TcxGridDBColumn;
     btnCrearAlbaran: TcxButton;
+    lblContextoTalla: TcxLabel;
+    ActionList1: TActionList;
+    actArticulos: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -148,6 +144,7 @@ type
                 APrevFocusedItem, AFocusedItem: TcxCustomGridTableItem);
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
+    procedure actArticulosExecute(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -215,7 +212,7 @@ uses
   inLibFotos,
   inLibAtributosPaleta,
   inLibPedidosCompra,
-  inMtoModalSelAlmacenPedido;
+  inMtoModalSelAlmacenPedido, inLibShowMto;
 
 {$R *.dfm}
 
@@ -740,6 +737,15 @@ begin
   finally
     FreeAndNil(q);
   end;
+end;
+
+procedure TfrmMtoPedidosCompra.actArticulosExecute(Sender: TObject);
+begin
+  inherited;
+    with tvLineasPedido.DataController.DataSet do
+      ShowMto(Self.Owner,
+              'Articulos',
+              FieldByName('CODIGO_ART_PEDCLIN').AsString);
 end;
 
 function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(

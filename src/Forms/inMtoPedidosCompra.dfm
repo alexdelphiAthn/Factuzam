@@ -18,18 +18,18 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
       Height = 725
       ExplicitWidth = 945
       ExplicitHeight = 725
-      ClientRectBottom = 723
-      ClientRectRight = 943
+      ClientRectBottom = 721
+      ClientRectRight = 941
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 941
-        ExplicitHeight = 696
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 937
+        ExplicitHeight = 693
         inherited cxGrdPrincipal: TcxGrid
-          Width = 941
-          Height = 696
-          ExplicitWidth = 941
-          ExplicitHeight = 696
+          Width = 937
+          Height = 693
+          ExplicitWidth = 937
+          ExplicitHeight = 693
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcGrdPedcNUMERO_PEDC: TcxGridDBColumn
               Caption = 'N'#250'mero'
@@ -90,14 +90,14 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 941
-        ExplicitHeight = 696
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 937
+        ExplicitHeight = 693
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 941
+          Width = 937
           Height = 161
           Align = alTop
           BevelOuter = bvNone
@@ -105,20 +105,18 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
           object pcCab: TcxPageControl
             Left = 0
             Top = 0
-            Width = 941
+            Width = 937
             Height = 161
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsCabecera
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 200
-            ClientRectBottom = 159
-            ClientRectLeft = 2
-            ClientRectRight = 939
-            ClientRectTop = 27
+            ClientRectBottom = 157
+            ClientRectLeft = 4
+            ClientRectRight = 933
+            ClientRectTop = 28
             object tsCabecera: TcxTabSheet
               Caption = 'Cabecera'
-              ExplicitHeight = 142
               object lblNroPedido: TcxLabel
                 Left = 8
                 Top = 12
@@ -294,62 +292,36 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
         object pnlBotonesAcciones: TPanel
           Left = 0
           Top = 161
-          Width = 941
-          Height = 41
+          Width = 937
+          Height = 40
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitTop = 200
           object btnRecibirFilaEntera: TcxButton
-            Left = 592
+            Left = 582
             Top = 6
             Width = 180
             Height = 26
             Caption = 'Recibir fila entera'
-            TabOrder = 5
+            TabOrder = 3
             OnClick = btnRecibirFilaEnteraClick
           end
-          object lblContextoTalla: TcxLabel
-            Left = 200
-            Top = 38
-            TabOrder = 6
-            Transparent = True
-            Visible = False
-          end
-          object btnAnadirLinea: TcxButton
-            Left = 8
-            Top = 6
-            Width = 110
-            Height = 26
-            Caption = 'A'#241'adir l'#237'nea'
-            TabOrder = 0
-            OnClick = btnAnadirLineaClick
-          end
-          object btnBorrarLinea: TcxButton
-            Left = 124
-            Top = 6
-            Width = 110
-            Height = 26
-            Caption = 'Borrar l'#237'nea'
-            TabOrder = 1
-            OnClick = btnBorrarLineaClick
-          end
           object btnTallasHorizontal: TcxButton
-            Left = 240
-            Top = 6
+            Left = 12
+            Top = 8
             Width = 170
             Height = 26
             Caption = 'Tallas en horizontal'
-            TabOrder = 2
+            TabOrder = 0
             OnClick = btnTallasHorizontalClick
           end
           object btnAtributosColumna: TcxButton
-            Left = 416
-            Top = 6
+            Left = 200
+            Top = 8
             Width = 170
             Height = 26
             Caption = 'Atributo por columna'
-            TabOrder = 3
+            TabOrder = 1
             OnClick = btnAtributosColumnaClick
           end
           object btnExpandirRecibidos: TcxButton
@@ -358,47 +330,47 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             Width = 160
             Height = 26
             Caption = 'Expandir recibidos'
-            TabOrder = 4
+            TabOrder = 2
             OnClick = btnExpandirRecibidosClick
           end
         end
         object pnlBodyFicha: TPanel
           Left = 0
-          Top = 202
-          Width = 941
-          Height = 418
+          Top = 201
+          Width = 937
+          Height = 416
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitTop = 270
-          ExplicitHeight = 350
+          ExplicitTop = 202
+          ExplicitHeight = 415
           object pcPedido: TcxPageControl
             Left = 0
             Top = 0
-            Width = 941
-            Height = 418
+            Width = 937
+            Height = 416
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsLineasPedido
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 350
-            ClientRectBottom = 416
-            ClientRectLeft = 2
-            ClientRectRight = 939
-            ClientRectTop = 27
+            ExplicitHeight = 415
+            ClientRectBottom = 412
+            ClientRectLeft = 4
+            ClientRectRight = 933
+            ClientRectTop = 28
             object tsLineasPedido: TcxTabSheet
               Caption = 'L'#237'neas'
-              ExplicitHeight = 321
+              ExplicitHeight = 383
               object cxgrdLineasPedido: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 937
-                Height = 389
+                Width = 929
+                Height = 384
                 Align = alClient
                 TabOrder = 0
                 OnEnter = cxgrdLineasPedidoEnter
                 OnExit = cxgrdLineasPedidoExit
-                ExplicitHeight = 321
+                ExplicitHeight = 383
                 object tvLineasPedido: TcxGridDBTableView
                   OnCustomDrawCell = tvLineasPedidoCustomDrawCell
                   OnEditing = tvLineasPedidoEditing
@@ -478,7 +450,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             end
             object tsObservaciones: TcxTabSheet
               Caption = 'Observaciones'
-              ExplicitHeight = 321
+              ExplicitHeight = 383
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
@@ -486,17 +458,17 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 DataBinding.DataField = 'OBSERVACIONES_PEDC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                ExplicitHeight = 321
-                Height = 389
-                Width = 937
+                ExplicitHeight = 383
+                Height = 384
+                Width = 929
               end
             end
           end
         end
         object pnlBottomTotales: TPanel
           Left = 0
-          Top = 620
-          Width = 941
+          Top = 617
+          Width = 937
           Height = 76
           Align = alBottom
           BevelOuter = bvNone
@@ -549,30 +521,39 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             TabOrder = 5
             Width = 160
           end
+          object lblContextoTalla: TcxLabel
+            Left = 560
+            Top = 8
+            TabOrder = 6
+            Transparent = True
+            Visible = False
+          end
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 941
-        ExplicitHeight = 696
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 937
+        ExplicitHeight = 693
         inherited pnlPerfilTop: TPanel
-          Width = 941
+          Width = 937
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 941
+          ExplicitWidth = 937
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 941
-          Height = 639
+          Width = 937
+          Height = 636
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 941
-          ExplicitHeight = 639
+          ExplicitWidth = 937
+          ExplicitHeight = 636
           inherited cxgrdPerfil: TcxGrid
-            Width = 941
-            Height = 639
-            ExplicitWidth = 941
-            ExplicitHeight = 639
+            Width = 937
+            Height = 636
+            ExplicitWidth = 937
+            ExplicitHeight = 636
           end
         end
       end
@@ -619,6 +600,15 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
       Caption = 'Crear albar'#225'n'
       TabOrder = 2
       OnClick = btnCrearAlbaranClick
+    end
+  end
+  object ActionList1: TActionList
+    Left = 528
+    Top = 368
+    object actArticulos: TAction
+      Caption = 'actArticulos'
+      ShortCut = 16449
+      OnExecute = actArticulosExecute
     end
   end
 end
