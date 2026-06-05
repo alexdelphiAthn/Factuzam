@@ -103,6 +103,11 @@ type
   /// `oAppParams`. Reutiliza la conexion global `inLibGlobalVar.oConn`.
   TFotosArticulos = class
   private
+    // Caché de precarga a nivel artículo (código artículo -> foto resuelta).
+    // Cuando está activa, Resolver(art, '') la consulta en vez de ir a BBDD,
+    // evitando el N+1 en informes con muchas fotos. La llena PrecargarFotosLote
+    // (una sola consulta) y la vacía LimpiarPrecargaFotos.
+    FCachePrecarga: TDictionary<string, TFotoInfo>;
     function DirBase: string;
     function SubdirDe(AResolucion: TFotoResolucion): string;
     // Nombre base SIN el sufijo _NNN: codigo de SKU si lo hay, en su
@@ -140,6 +145,15 @@ type
     /// y, si no la hay, la unica foto del articulo.
     function ResolverArticulosLote(
       const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
+
+    /// Precarga en UNA consulta las fotos a nivel artículo de la lista y deja
+    /// la caché activa: las siguientes llamadas a Resolver(art, '') la usan en
+    /// vez de ir a BBDD (evita el N+1 en informes con muchas fotos). Llamar
+    /// antes de PrepareReport y vaciar con LimpiarPrecargaFotos al terminar.
+    procedure PrecargarFotosLote(const ACodigos: TArray<string>);
+    /// Vacía la caché de precarga (vuelve a resolución directa por consulta).
+    procedure LimpiarPrecargaFotos;
+    destructor Destroy; override;
 
     /// Importa una foto desde un fichero de origen, generando las tres
     /// resoluciones bajo appDirFotos. Inserta/actualiza la fila en
@@ -417,6 +431,12 @@ begin
   Result.CodigoSku := ACodSku;
   if ACodArt = '' then Exit;
 
+  // Caché de precarga (solo nivel artículo, sin SKU): si está activa y el
+  // artículo se precargó, se devuelve sin tocar la BBDD (evita el N+1).
+  if (FCachePrecarga <> nil) and (ACodSku = '') and
+     FCachePrecarga.TryGetValue(ACodArt, Result) then
+    Exit;
+
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
@@ -619,6 +639,38 @@ begin
       FreeAndNil(q);
     end;
   end;
+end;
+
+procedure TFotosArticulos.PrecargarFotosLote(const ACodigos: TArray<string>);
+var
+  i   : Integer;
+  info: TFotoInfo;
+begin
+  FreeAndNil(FCachePrecarga);
+  // ResolverArticulosLote hace UNA consulta y devuelve solo los artículos CON
+  // foto. La caché se queda con ese diccionario y, para los códigos SIN foto,
+  // se añade una entrada "no encontrada": así un acierto de caché significa
+  // "ya consultado" (con o sin foto) y Resolver no vuelve a la BBDD.
+  FCachePrecarga := ResolverArticulosLote(ACodigos);
+  for i := 0 to High(ACodigos) do
+    if (ACodigos[i] <> '') and
+       (not FCachePrecarga.ContainsKey(ACodigos[i])) then
+    begin
+      info.Clear;
+      info.CodigoArt := ACodigos[i];
+      FCachePrecarga.AddOrSetValue(ACodigos[i], info);
+    end;
+end;
+
+procedure TFotosArticulos.LimpiarPrecargaFotos;
+begin
+  FreeAndNil(FCachePrecarga);
+end;
+
+destructor TFotosArticulos.Destroy;
+begin
+  FreeAndNil(FCachePrecarga);
+  inherited Destroy;
 end;
 
 function TFotosArticulos.RutaFoto(const AInfo: TFotoInfo;
