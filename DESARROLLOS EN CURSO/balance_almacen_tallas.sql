@@ -34,8 +34,10 @@
 --     de compra del proveedor principal.
 --   - Alb. venta     -> PVP (tarifa por defecto vigente hoy), valoración
 --     nocional de la salida por albarán de venta (solo en desglosado).
---   - Ventas (VEN)   -> PRECIO REAL de venta (con descuentos, con IVA) de
---     fza_facturas_lineas; NO la tarifa. IMPORTE = importe real facturado.
+--   - Ventas (VEN)   -> CANTIDAD e IMPORTE REALES de venta (con descuentos,
+--     con IVA) de fza_facturas_lineas; NO el acumulado de stock ni la tarifa.
+--     La cantidad por talla sale de las líneas de factura (tmp_bat_ven),
+--     porque el acumulado CANTIDAD_SAL_VENTA_STK puede no estar mantenido.
 --   VENTAS: columna con el importe real de venta SOLO en la banda VEN (0 en
 --   el resto), para acumular las ventas por artículo/grupo/total (en los
 --   totales se muestran las ventas, no el margen).
@@ -492,6 +494,44 @@ BEGIN
     END IF;
 
     -- -----------------------------------------------------------------
+    -- 3b) Ventas REALES por (artículo, almacén, color, posición) desde las
+    --     líneas de factura. Es la fuente de verdad de las ventas (cantidad
+    --     E importe): los acumulados de stock (CANTIDAD_SAL_VENTA_STK) pueden
+    --     no estar mantenidos y dar cantidad 0 aunque haya venta. La banda VEN
+    --     toma de aquí su CANTIDAD por talla (antes salía del acumulado y no
+    --     cuadraba con el importe, que ya venía de facturas). Mismo filtro de
+    --     almacén/periodo y mismo conjunto de SKUs (tmp_bat_sku) que la
+    --     valoración de ventas (vt) del SELECT final, para que cantidad e
+    --     importe sean coherentes.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_ven`;
+    CREATE TEMPORARY TABLE `tmp_bat_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
+        `COLOR`      VARCHAR(100)  NOT NULL DEFAULT '',
+        `POSICION`   INT           NOT NULL,
+        `VEN_QTY`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `POSICION`)
+    );
+    INSERT INTO `tmp_bat_ven`
+    SELECT s.`CODIGO_ART`,
+           IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''),
+           s.`COLOR`, s.`POSICION`,
+           SUM(fl.`CANTIDAD_FACLIN`)
+      FROM `fza_facturas_lineas` fl
+      JOIN `fza_facturas` f
+        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+      JOIN `tmp_bat_sku` s
+        ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+     WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+       AND (p_MODO = 'A'
+            OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+     GROUP BY s.`CODIGO_ART`,
+              IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''),
+              s.`COLOR`, s.`POSICION`;
+
+    -- -----------------------------------------------------------------
     -- 4) Desdoblar en bandas (forma larga). Cada banda es un INSERT
     --    independiente (referencia tmp_bat_base una sola vez) y se filtra
     --    por modo/desglosado. ES_COSTE marca cómo se valora la banda.
@@ -534,11 +574,19 @@ BEGIN
                `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
                  + `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bat_base`;
+        -- Cantidad de la banda de ventas: de facturas (tmp_bat_ven) por talla,
+        -- no del acumulado de stock. LEFT JOIN sobre la base para conservar la
+        -- fila de ventas de cada color (0 si no hubo venta).
         INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'VEN', 50, 'Ventas', 0, `VEN`
-          FROM `tmp_bat_base`;
+        SELECT b.`CODIGO_ART`, b.`CODIGO_ALM`, b.`COLOR`, b.`COLOR_HEX`,
+               b.`ORDEN_COLOR`, b.`POSICION`,
+               'VEN', 50, 'Ventas', 0, COALESCE(v.`VEN_QTY`, 0)
+          FROM `tmp_bat_base` b
+          LEFT JOIN `tmp_bat_ven` v
+            ON v.`CODIGO_ART` = b.`CODIGO_ART`
+           AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+           AND v.`COLOR` = b.`COLOR`
+           AND v.`POSICION` = b.`POSICION`;
     END IF;
     -- Entradas desglosadas: solo modo entre fechas desglosado. Mismos
     -- subtipos que la consulta de stock (Ctrl+U), con traspasos y depósitos
@@ -579,11 +627,18 @@ BEGIN
                `POSICION`,
                'SALALB', 43, 'Alb. venta', 0, `SAL_ALBVENTA`
           FROM `tmp_bat_base`;
+        -- Cantidad de ventas: de facturas (tmp_bat_ven) por talla, igual que
+        -- en simplificado/acumulados (no del acumulado SAL_VENTA del stock).
         INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'VEN', 50, 'Ventas', 0, `SAL_VENTA`
-          FROM `tmp_bat_base`;
+        SELECT b.`CODIGO_ART`, b.`CODIGO_ALM`, b.`COLOR`, b.`COLOR_HEX`,
+               b.`ORDEN_COLOR`, b.`POSICION`,
+               'VEN', 50, 'Ventas', 0, COALESCE(v.`VEN_QTY`, 0)
+          FROM `tmp_bat_base` b
+          LEFT JOIN `tmp_bat_ven` v
+            ON v.`CODIGO_ART` = b.`CODIGO_ART`
+           AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+           AND v.`COLOR` = b.`COLOR`
+           AND v.`POSICION` = b.`POSICION`;
     END IF;
     -- Existencias finales: siempre.
     INSERT INTO `tmp_bat_medidas`
@@ -826,6 +881,7 @@ BEGIN
 
     -- Limpieza de temporales para no arrastrarlas en la sesión.
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_ven`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
