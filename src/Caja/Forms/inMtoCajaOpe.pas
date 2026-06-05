@@ -719,6 +719,7 @@ procedure TfrmMtoOpeCaja.ProcesarLecturaScanner(const ACodigo: string);
 var
   CodArticulo : string;
   SkuDetectado: string;
+  bmTrabajo   : TBookmark;
 begin
   if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
   begin
@@ -781,17 +782,39 @@ begin
             EliminarLineaPorValidacion
           else
           begin
-            if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) then
-              RellenarAtributosDesdeSku(SkuDetectado);
-            // Si el SKU ya estaba en otra linea sumamos cantidad y descartamos
-            // la linea en curso; si no, la confirmamos con Post.
-            if ConsolidarSiExiste(SkuDetectado) then
-            begin
-              if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-                DatosCaja.cdsLineas.Cancel;
-            end
-            else if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-              DatosCaja.cdsLineas.Post;
+            // OJO: RellenarDatosArticuloEnDataset ya CONFIRMA (Post) la linea
+            // de trabajo, porque su recalculo fiscal interno postea las lineas
+            // con articulo. Por eso, si hay que consolidar, un Cancel no la
+            // quita (ya esta grabada): hay que BORRARLA. Guardamos su marcador
+            // para localizarla con seguridad tras consolidar.
+            bmTrabajo := DatosCaja.cdsLineas.GetBookmark;
+            try
+              if ConsolidarSiExiste(SkuDetectado) then
+              begin
+                // Su unidad ya se sumo a la linea existente: eliminamos la
+                // duplicada para no contarla dos veces.
+                if DatosCaja.cdsLineas.BookmarkValid(bmTrabajo) then
+                begin
+                  DatosCaja.cdsLineas.GotoBookmark(bmTrabajo);
+                  if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+                    DatosCaja.cdsLineas.Cancel;
+                  if not DatosCaja.cdsLineas.IsEmpty then
+                    DatosCaja.cdsLineas.Delete;
+                end;
+              end
+              else
+              begin
+                // Articulo nuevo en el ticket: completamos atributos (talla/
+                // color para mostrar) y confirmamos la linea.
+                if (Trim(SkuDetectado) <> '') and
+                   (SkuDetectado <> CodArticulo) then
+                  RellenarAtributosDesdeSku(SkuDetectado);
+                if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+                  DatosCaja.cdsLineas.Post;
+              end;
+            finally
+              DatosCaja.cdsLineas.FreeBookmark(bmTrabajo);
+            end;
             GridRecalc(nil,
                        tvLineasOpe,
                        DatosCaja.cdsLineas,
