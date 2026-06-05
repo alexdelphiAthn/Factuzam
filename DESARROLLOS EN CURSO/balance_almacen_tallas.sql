@@ -635,6 +635,14 @@ BEGIN
         -- ventas hay que irlas sumando).
         ROUND(IF(p.`BANDA` = 'VEN', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
                                                       AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto. Permite que el total por grupo/general
+        -- muestre SOLO el stock final, sin mezclar entradas/salidas/ventas.
+        IF(p.`BANDA` = 'EXIFIN', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = 'EXIFIN',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
         -- Niveles de agrupación configurables. GRUPOn_COD identifica el grupo
         -- (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en
         -- la cabecera/resumen. Si el nivel no está activo (''), salen vacíos y
