@@ -1571,7 +1571,10 @@ begin
         Datos.DescripcionSku;
     Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
       Datos.DescripcionArticulo;
-    Lin.FindField('TIPO_ARTICULO_FACLIN').AsString       := Datos.TipoArticulo;
+    // TIPO_ARTICULO_FACLIN existe en la tabla base pero vi_facturas_lineas no
+    // lo expone: asignacion defensiva (mismo motivo que CODIGO_UNIDAD_FACLIN).
+    if Assigned(Lin.FindField('TIPO_ARTICULO_FACLIN')) then
+      Lin.FindField('TIPO_ARTICULO_FACLIN').AsString     := Datos.TipoArticulo;
     Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
       Datos.TipoCantidad;
     Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString   := Datos.TipoIVA;
