@@ -298,8 +298,15 @@ BEGIN
         ON ta.`ID_AV` = sat.`ID_AV_SA` AND ta.`ID_VA_AV` <> 'CO'
       JOIN `tmp_bat_pos` p
         ON p.`CODIGO_ART` = sku.`CODIGO_ART_SKU` AND p.`ID_AV` = ta.`ID_AV`
+      -- Color del SKU: SOLO su fila de atributo de color. El discriminante
+      -- ID_VA_AV='CO' DEBE ir también en el ON de `sac`; si solo se filtra en
+      -- `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera
+      -- dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar
+      -- y el SKU podía quedar SIN color (banda "sin color" fantasma).
       LEFT JOIN `fza_atributos_sku` sac
         ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = 'CO')
       LEFT JOIN `fza_atributos_valores` co
         ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = 'CO'
       LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
