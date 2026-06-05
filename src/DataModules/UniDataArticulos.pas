@@ -54,6 +54,8 @@ type
     dsDetallesAtributos: TDataSource;
     unqryAtributosBasicosLookup: TUniQuery;
     dsAtributosBasicosLookup: TDataSource;
+    unqryUnidadesMedidaLookup: TUniQuery;
+    dsUnidadesMedidaLookup: TDataSource;
     unqryArtPrint: TUniQuery;
     dtstprvEtiquetasArt: TDataSetProvider;
     cdsEtiquetasArt: TClientDataSet;
@@ -513,6 +515,7 @@ begin
   unqryMovimientosArticulos.Connection := oConn;
   unqryDetallesAtributos.Connection := oConn;
   unqryAtributosBasicosLookup.Connection := oConn;
+  unqryUnidadesMedidaLookup.Connection := oConn;
   // Las MasterSource solo aplican cuando el DM se instancia desde el
   // Mto de Articulos (Owner = TfrmMtoArticulos). Si lo crea otro
   // contexto puntual (p.ej. el boton 'Pegatinas' del Mto de Albaranes
@@ -582,6 +585,7 @@ begin
     AbrirConTiempo(unqryFamiliaArticulos,       'unqryFamiliaArticulos');
     AbrirConTiempo(unqryVariaciones,            'unqryVariaciones');
     AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
+    AbrirConTiempo(unqryUnidadesMedidaLookup,   'unqryUnidadesMedidaLookup');
     // unqryTarifasArticulos NO se abre aqui: la vista tarda ~6s
     // (subqueries DEPENDENT, ver EXPLAIN). Se abre solo cuando el
     // usuario va a la pestaña tsTarifas, via AsegurarTarifasAbiertas.

@@ -168,7 +168,7 @@ type
     rgTipoIVA: TcxDBRadioGroup;
     cxGroupBox2: TcxGroupBox;
     lblNombre1: TcxLabel;
-    cxdbtxtdtTIPO_CANTIDAD_ARTICULO: TcxDBTextEdit;
+    cbbTipoCantidad: TcxDBLookupComboBox;
     lblTipoArticulo: TcxLabel;
     cbbTIPO_ART: TcxDBComboBox;
     tvProveedoresREF_PROVEEDOR: TcxGridDBColumn;
@@ -1814,6 +1814,7 @@ begin
     FAtributosStock := TDictionary<string, string>.Create;
   dmmArticulos := tdmDataModule as TdmArticulos;
   cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
+  cbbTipoCantidad.Properties.ListSource := dmmArticulos.dsUnidadesMedidaLookup;
   tvTarifas.DataController.DataSource := dmmArticulos.dsTarifasArticulos;
   tvProveedores.DataController.DataSource :=
                                             dmmArticulos.dsProveedoresArticulos;

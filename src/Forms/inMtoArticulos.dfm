@@ -355,11 +355,22 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   TabOrder = 0
                   Transparent = True
                 end
-                object cxdbtxtdtTIPO_CANTIDAD_ARTICULO: TcxDBTextEdit
+                object cbbTipoCantidad: TcxDBLookupComboBox
                   Left = 180
                   Top = 71
                   DataBinding.DataField = 'TIPO_CANTIDAD_ART'
                   DataBinding.DataSource = dsTablaG
+                  Properties.KeyFieldNames = 'CODIGO_UNIMED'
+                  Properties.ListColumns = <
+                    item
+                      Fixed = True
+                      Width = 80
+                      FieldName = 'CODIGO_UNIMED'
+                    end
+                    item
+                      FieldName = 'DESCRIPCION_UNIMED'
+                    end>
+                  Properties.ListOptions.ShowHeader = False
                   TabOrder = 1
                   Width = 130
                 end

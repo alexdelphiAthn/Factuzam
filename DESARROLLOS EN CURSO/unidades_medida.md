@@ -40,8 +40,12 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
 - [ ] **Fase 3 - Helper** `inLibUnidadesMedida.pas`: cache unidad->(decimales,
       magnitud, factor); `DecimalesDeUnidad`, `FormatearCantidad`,
       `MascaraCantidad`, `ConvertirEntreUnidades`. Carga al arrancar.
-- [ ] **Fase 4 - Articulo**: "Tipo de Cantidad" de texto libre a desplegable
-      del catalogo (`inMtoArticulos`).
+- [x] **Fase 4 - Articulo**: "Tipo de Cantidad" pasa de texto libre a
+      desplegable (`TcxDBLookupComboBox cbbTipoCantidad`) contra
+      `fza_unidades_medida`. Lookup `unqryUnidadesMedidaLookup` +
+      `dsUnidadesMedidaLookup` en `UniDataArticulos`, ListSource asignado en
+      `CrearTablaPrincipal`. Pendiente (Fase 5): columnas "Tipo Cantidad" de
+      las lineas de documento (hoy se autorrellenan desde el articulo).
 - [ ] **Fase 5 - Documentos**: formato decimal por fila (via
       `OnGetCellProperties` segun la unidad de la linea) y spin-edits a float
       en facturas, caja, albaranes (venta/compra), pedidos (venta/compra),
