@@ -32,8 +32,11 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
 ## Plan por fases
 - [x] **Fase 1 - Esquema**: `unidades_medida.sql` idempotente (tabla + semilla
       + alta automatica de las unidades de texto libre existentes).
-- [ ] **Fase 2 - Maestro**: `UniDataUnidadesMedida` + form `inMtoUnidadesMedida`
-      (hereda `TfrmMtoGen`) + entrada en menu (`inMtoPrincipal`).
+- [x] **Fase 2 - Maestro**: `UniDataUnidadesMedida` + form `inMtoUnidadesMedida`
+      (hereda `TfrmMtoGen`) + entrada en menu (`inMtoPrincipal`, bajo Articulos),
+      alta en `fzam.dpr`, registro en `fza_winforms` + permiso de menu, y sufijo
+      `UNIMED` registrado en `LIBRO_DE_ESTILO_BBDD.md` y `UNormalizerEngine.pas`.
+      Ademas, los articulos nuevos arrancan en `Uds` (0 decimales) por defecto.
 - [ ] **Fase 3 - Helper** `inLibUnidadesMedida.pas`: cache unidad->(decimales,
       magnitud, factor); `DecimalesDeUnidad`, `FormatearCantidad`,
       `MascaraCantidad`, `ConvertirEntreUnidades`. Carga al arrancar.

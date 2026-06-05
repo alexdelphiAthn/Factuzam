@@ -277,6 +277,7 @@ begin
   AddSuf('fza_tipos_documentos',                'TD');
   AddSuf('fza_traspasos_solicitudes',           'TRSOL');
   AddSuf('fza_traspasos_solicitudes_lineas',    'TRSOLLIN');
+  AddSuf('fza_unidades_medida',                 'UNIMED');
   AddSuf('fza_usuarios',                        'USU');
   AddSuf('fza_usuarios_grupos',                 'USUGRP');
   AddSuf('fza_usuarios_perfiles',               'USUPER');
