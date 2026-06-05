@@ -37,19 +37,29 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
       alta en `fzam.dpr`, registro en `fza_winforms` + permiso de menu, y sufijo
       `UNIMED` registrado en `LIBRO_DE_ESTILO_BBDD.md` y `UNormalizerEngine.pas`.
       Ademas, los articulos nuevos arrancan en `Uds` (0 decimales) por defecto.
-- [ ] **Fase 3 - Helper** `inLibUnidadesMedida.pas`: cache unidad->(decimales,
-      magnitud, factor); `DecimalesDeUnidad`, `FormatearCantidad`,
-      `MascaraCantidad`, `ConvertirEntreUnidades`. Carga al arrancar.
+- [x] **Fase 3 - Helper** `inLibUnidadesMedida.pas`: singleton `oUnidades` con
+      cache unidad->(decimales, magnitud, factor). Metodos `Decimales`,
+      `Mascara`, `Formatear`, `MismaMagnitud`, `Convertir`. Se carga al arrancar
+      (`inMtoPrincipal`, tras los parametros) y se refresca al guardar en el
+      maestro. Tolera tabla ausente/conexion cerrada (cache vacia -> defaults).
+      `DecimalesPorDefecto` = 0 (unidad vacia/desconocida sin decimales).
 - [x] **Fase 4 - Articulo**: "Tipo de Cantidad" pasa de texto libre a
       desplegable (`TcxDBLookupComboBox cbbTipoCantidad`) contra
       `fza_unidades_medida`. Lookup `unqryUnidadesMedidaLookup` +
       `dsUnidadesMedidaLookup` en `UniDataArticulos`, ListSource asignado en
       `CrearTablaPrincipal`. Pendiente (Fase 5): columnas "Tipo Cantidad" de
       las lineas de documento (hoy se autorrellenan desde el articulo).
-- [ ] **Fase 5 - Documentos**: formato decimal por fila (via
-      `OnGetCellProperties` segun la unidad de la linea) y spin-edits a float
-      en facturas, caja, albaranes (venta/compra), pedidos (venta/compra),
-      traspasos, inventarios, compras-sesiones.
+- [~] **Fase 5 - Documentos** (EN CURSO): formato decimal por fila via
+      helper `inLibGridCantidad.VincularCantidadGrid(colCant, colUnidad)`
+      (usa `OnGetDisplayText` + spin a `vtFloat`).
+      - [x] Facturas (`inMtoFacturasBase`) — PROOF: validar que muestra
+            decimales por linea antes de replicar.
+      - [ ] Caja (`inMtoCajaOpe`) — la unidad no esta como columna del grid;
+            requiere exponerla (columna invisible) o resolver por dataset.
+      - [ ] Albaranes venta/compra, Pedidos venta/compra.
+      - [ ] Traspasos, Compras-sesiones (matriz).
+      - [ ] Inventarios/Movimientos: sin unidad por linea; tomar la del
+            articulo (ajuste de query) o decimales por defecto.
 - [ ] **Fase 6 - Tickets/informes/Excel**: sustituir formato entero/`FloatToStr`
       por `FormatearCantidad(valor, unidad)` en `inLibGenerarTicket(BD)`,
       `inLibFacturaExcel`, `inLibDocCompraExcel`, `inLibInventarioExcel`,

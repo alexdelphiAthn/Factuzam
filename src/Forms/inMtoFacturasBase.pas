@@ -543,6 +543,7 @@ uses
   inLibGenBusq,
   inLibShowMto,
   inLibFacturas,
+  inLibGridCantidad,
   inLibFotos,
   inLibDefaultValues,
   inLibArticulosValidador,
@@ -1266,6 +1267,9 @@ begin
   //tvIVA.DataController.DataSource := dsTablaG;
   (ctbTIPOIVA_ARTICULO_FACTURA_LINEA.Properties as
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
+  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
+  VincularCantidadGrid(ctbCANTIDAD_FACTURA_LINEA,
+                       ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA);
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   // El check de mover stock solo aplica a facturas NORMAL: en SIMPLIFICADA

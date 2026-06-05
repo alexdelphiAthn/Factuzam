@@ -52,6 +52,7 @@ inherited dmUnidadesMedida: TdmUnidadesMedida
       '')
     Active = True
     AfterInsert = unqryTablaGAfterInsert
+    AfterPost = unqryTablaGAfterPost
     Left = 24
   end
 end
