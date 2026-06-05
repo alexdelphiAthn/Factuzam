@@ -232,6 +232,7 @@ procedure CargarCache;
 var
   q    : TUniQuery;
   Info : TInfoBasico;
+  sIdVa, sCod, sNom, sAv: string;
 begin
   GCache.Clear;
   GCacheCargado := False;
@@ -239,12 +240,15 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := oConn;
+    // Hacemos JOIN con fza_atributos_valores para cachear también los textos reales
+    // (AV) que los usuarios han escrito y que son los que viajan en los Grids.
     q.SQL.Text :=
-      'SELECT ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, HEX_ATB '     +
-      '  FROM fza_atributos_basicos '                          +
-      ' WHERE ESACTIVO_ATB = ''S'' '                           +
-      '   AND HEX_ATB IS NOT NULL '                            +
-      '   AND HEX_ATB <> '''' ';
+      'SELECT B.ID_VA_ATB, B.CODIGO_ATB, B.NOMBRE_ATB, B.HEX_ATB, V.AV ' +
+      '  FROM fza_atributos_basicos B ' +
+      '  LEFT JOIN fza_atributos_valores V ON V.ID_ATB_AV = B.ID_ATB ' +
+      ' WHERE B.ESACTIVO_ATB = ''S'' ' +
+      '   AND B.HEX_ATB IS NOT NULL ' +
+      '   AND B.HEX_ATB <> '''' ';
     q.Open;
     while not q.Eof do
     begin
@@ -253,11 +257,25 @@ begin
       Info.Color    := HexToColor(Info.HexColor);
       Info.Nombre   := q.FieldByName('NOMBRE_ATB').AsString;
       Info.EsValido := Info.Color <> clNone;
+
       if Info.EsValido then
-        GCache.AddOrSetValue(
-          ClaveCache(q.FieldByName('ID_VA_ATB').AsString,
-                     q.FieldByName('CODIGO_ATB').AsString),
-          Info);
+      begin
+        sIdVa := q.FieldByName('ID_VA_ATB').AsString;
+        sCod  := q.FieldByName('CODIGO_ATB').AsString;
+        sNom  := q.FieldByName('NOMBRE_ATB').AsString;
+        sAv   := q.FieldByName('AV').AsString; // Texto real del valor
+
+        // 1. Cachear por código (ej. "01")
+        GCache.AddOrSetValue(ClaveCache(sIdVa, sCod), Info);
+
+        // 2. Cachear por nombre básico (ej. "Rojo Básico")
+        if Trim(sNom) <> '' then
+          GCache.AddOrSetValue(ClaveCache(sIdVa, sNom), Info);
+
+        // 3. Cachear por el texto real mostrado en los grids (ej. "ROJO", "ROJO FUEGO")
+        if Trim(sAv) <> '' then
+          GCache.AddOrSetValue(ClaveCache(sIdVa, sAv), Info);
+      end;
       q.Next;
     end;
     GCacheCargado := True;
@@ -467,18 +485,29 @@ function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
                                    AViewInfo: TcxGridTableDataCellViewInfo;
                                    ADict: TDictionary<string, string>): Boolean;
 var
-  Dict : TDictionary<string, string>;
-  Info : TInfoBasico;
+  Dict   : TDictionary<string, string>;
+  Info   : TInfoBasico;
+  sTexto : string;
 begin
   Result := False;
   if (ACanvas = nil) or (AViewInfo = nil) then Exit;
+
+  // Rescatar el texto de forma segura
+  sTexto := AViewInfo.Text;
+  if (sTexto = '') and (AViewInfo.GridRecord <> nil) and (AViewInfo.Item <> nil) then
+    sTexto := VarToStr(AViewInfo.GridRecord.Values[AViewInfo.Item.Index]);
+
   if ADict <> nil then
     Dict := ADict
   else
     Dict := ObtenerMapaAtributosGlobal;
+
   if (Dict = nil) or (Dict.Count = 0) then Exit;
-  if not BuscarInfoBasicoEnArticulo(AViewInfo.Text, Dict, Info) then Exit;
-  Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info);
+
+  if not BuscarInfoBasicoEnArticulo(sTexto, Dict, Info) then Exit;
+
+  // Pasamos sTexto explicitly a la función de pintado
+  Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
 
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
