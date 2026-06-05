@@ -751,6 +751,21 @@ inherited dmArticulos: TdmArticulos
     Left = 1160
     Top = 264
   end
+  object unqryUnidadesMedidaLookup: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_UNIMED, DESCRIPCION_UNIMED, DECIMALES_UNIMED'
+      '  FROM fza_unidades_medida'
+      ' WHERE ESACTIVO_UNIMED = '#39'S'#39
+      ' ORDER BY ORDEN_UNIMED, MAGNITUD_UNIMED, CODIGO_UNIMED')
+    Left = 1280
+    Top = 184
+  end
+  object dsUnidadesMedidaLookup: TDataSource
+    DataSet = unqryUnidadesMedidaLookup
+    Left = 1280
+    Top = 264
+  end
   object dsDetallesAtributos: TDataSource
     DataSet = unqryDetallesAtributos
     Left = 1040
