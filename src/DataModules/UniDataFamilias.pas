@@ -109,6 +109,9 @@ begin
   unqryTablaG.FindField('ORDEN_FAM').AsString := '0';
   unqryTablaG.FindField('ESACTIVO_FAM').AsString := 'S';
   unqryTablaG.FindField('ESDEFAULT_FAM').AsString := 'N';
+  // PAD_ART_FAM es NOT NULL en BBDD; sin valor el INSERT manda NULL
+  // explicito y falla (el DEFAULT solo aplica si se omite la columna)
+  unqryTablaG.FindField('PAD_ART_FAM').AsInteger := 5;
 end;
 
 procedure TdmFamilias.DataModuleCreate(Sender: TObject);
