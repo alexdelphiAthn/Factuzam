@@ -49,10 +49,17 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
       `dsUnidadesMedidaLookup` en `UniDataArticulos`, ListSource asignado en
       `CrearTablaPrincipal`. Pendiente (Fase 5): columnas "Tipo Cantidad" de
       las lineas de documento (hoy se autorrellenan desde el articulo).
-- [ ] **Fase 5 - Documentos**: formato decimal por fila (via
-      `OnGetCellProperties` segun la unidad de la linea) y spin-edits a float
-      en facturas, caja, albaranes (venta/compra), pedidos (venta/compra),
-      traspasos, inventarios, compras-sesiones.
+- [~] **Fase 5 - Documentos** (EN CURSO): formato decimal por fila via
+      helper `inLibGridCantidad.VincularCantidadGrid(colCant, colUnidad)`
+      (usa `OnGetDisplayText` + spin a `vtFloat`).
+      - [x] Facturas (`inMtoFacturasBase`) — PROOF: validar que muestra
+            decimales por linea antes de replicar.
+      - [ ] Caja (`inMtoCajaOpe`) — la unidad no esta como columna del grid;
+            requiere exponerla (columna invisible) o resolver por dataset.
+      - [ ] Albaranes venta/compra, Pedidos venta/compra.
+      - [ ] Traspasos, Compras-sesiones (matriz).
+      - [ ] Inventarios/Movimientos: sin unidad por linea; tomar la del
+            articulo (ajuste de query) o decimales por defecto.
 - [ ] **Fase 6 - Tickets/informes/Excel**: sustituir formato entero/`FloatToStr`
       por `FormatearCantidad(valor, unidad)` en `inLibGenerarTicket(BD)`,
       `inLibFacturaExcel`, `inLibDocCompraExcel`, `inLibInventarioExcel`,
