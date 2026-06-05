@@ -256,6 +256,7 @@ type
     procedure WMProcesarScanner(var Msg: TMessage);
                                        message WM_PROCESAR_SCANNER;
     procedure ProcesarLecturaScanner(const ACodigo: string);
+    procedure DescartarLineaTrabajo(const ABookmark: TBookmark);
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   public
@@ -775,52 +776,42 @@ begin
                                               'CODIGO_ART_FACLIN').AsString;
           SkuDetectado := DatosCaja.cdsLineas.FieldByName(
                                               'CODIGO_UNIDAD_FACLIN').AsString;
-          // El codigo de barras apunta siempre a un SKU concreto; validamos
-          // que sea vendible (existe y, si procede, tiene stock).
-          if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
-             not ValidarSkuParaVenta(SkuDetectado) then
-            EliminarLineaPorValidacion
-          else
-          begin
-            // OJO: RellenarDatosArticuloEnDataset ya CONFIRMA (Post) la linea
-            // de trabajo, porque su recalculo fiscal interno postea las lineas
-            // con articulo. Por eso, si hay que consolidar, un Cancel no la
-            // quita (ya esta grabada): hay que BORRARLA. Guardamos su marcador
-            // para localizarla con seguridad tras consolidar.
-            bmTrabajo := DatosCaja.cdsLineas.GetBookmark;
-            try
-              if ConsolidarSiExiste(SkuDetectado) then
-              begin
-                // Su unidad ya se sumo a la linea existente: eliminamos la
-                // duplicada para no contarla dos veces.
-                if DatosCaja.cdsLineas.BookmarkValid(bmTrabajo) then
-                begin
-                  DatosCaja.cdsLineas.GotoBookmark(bmTrabajo);
-                  if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-                    DatosCaja.cdsLineas.Cancel;
-                  if not DatosCaja.cdsLineas.IsEmpty then
-                    DatosCaja.cdsLineas.Delete;
-                end;
-              end
-              else
-              begin
-                // Articulo nuevo en el ticket: completamos atributos (talla/
-                // color para mostrar) y confirmamos la linea.
-                if (Trim(SkuDetectado) <> '') and
-                   (SkuDetectado <> CodArticulo) then
-                  RellenarAtributosDesdeSku(SkuDetectado);
-                if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-                  DatosCaja.cdsLineas.Post;
-              end;
-            finally
-              DatosCaja.cdsLineas.FreeBookmark(bmTrabajo);
+          // OJO: RellenarDatosArticuloEnDataset ya CONFIRMA (Post) la linea de
+          // trabajo, porque su recalculo fiscal interno postea las lineas con
+          // articulo. Por eso, cuando hay que descartarla (SKU no vendible o
+          // consolidacion), un Cancel no la quita: hay que BORRARLA. Guardamos
+          // su marcador ANTES de decidir para localizarla con seguridad.
+          bmTrabajo := DatosCaja.cdsLineas.GetBookmark;
+          try
+            // El codigo de barras apunta siempre a un SKU concreto; validamos
+            // que sea vendible (existe y, si procede, tiene stock).
+            if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
+               not ValidarSkuParaVenta(SkuDetectado) then
+              // No vendible (inactivo, o sin stock con bloqueo activo): la
+              // linea ya esta grabada, asi que la descartamos por marcador.
+              DescartarLineaTrabajo(bmTrabajo)
+            else if ConsolidarSiExiste(SkuDetectado) then
+              // Su unidad ya se sumo a la linea existente: quitamos la
+              // duplicada para no contarla dos veces.
+              DescartarLineaTrabajo(bmTrabajo)
+            else
+            begin
+              // Articulo nuevo en el ticket: completamos atributos (talla/
+              // color para mostrar) y confirmamos la linea.
+              if (Trim(SkuDetectado) <> '') and
+                 (SkuDetectado <> CodArticulo) then
+                RellenarAtributosDesdeSku(SkuDetectado);
+              if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+                DatosCaja.cdsLineas.Post;
             end;
-            GridRecalc(nil,
-                       tvLineasOpe,
-                       DatosCaja.cdsLineas,
-                       DatosCaja.cdsCabecera,
-                       ActualizarLabelTotal);
+          finally
+            DatosCaja.cdsLineas.FreeBookmark(bmTrabajo);
           end;
+          GridRecalc(nil,
+                     tvLineasOpe,
+                     DatosCaja.cdsLineas,
+                     DatosCaja.cdsCabecera,
+                     ActualizarLabelTotal);
         end;
       finally
         FResolviendoPorScanner := False;
@@ -831,6 +822,25 @@ begin
       tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
   end;
+end;
+
+// Descarta la linea de trabajo de un escaneo. Como RellenarDatosArticuloEn-
+// Dataset ya la confirmo (Post) en su recalculo fiscal interno, un Cancel no
+// la elimina: la localizamos por su marcador y la BORRAMOS (Cancel previo solo
+// si por algun motivo siguiera en edicion). Si el marcador no es valido (linea
+// aun sin confirmar), cancelamos la insercion en curso.
+procedure TfrmMtoOpeCaja.DescartarLineaTrabajo(const ABookmark: TBookmark);
+begin
+  if DatosCaja.cdsLineas.BookmarkValid(ABookmark) then
+  begin
+    DatosCaja.cdsLineas.GotoBookmark(ABookmark);
+    if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+      DatosCaja.cdsLineas.Cancel;
+    if not DatosCaja.cdsLineas.IsEmpty then
+      DatosCaja.cdsLineas.Delete;
+  end
+  else if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+    DatosCaja.cdsLineas.Cancel;
 end;
 
 procedure TfrmMtoOpeCaja.WMCancelarLinea(var Msg: TMessage);
