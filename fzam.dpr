@@ -190,6 +190,7 @@ uses
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibData in 'src\Lib\inLibData.pas',
   inLibAppParam in 'src\Lib\inLibAppParam.pas',
+  inLibUnidadesMedida in 'src\Lib\inLibUnidadesMedida.pas',
   inMtoAppParam in 'src\Core\inMtoAppParam.pas' {frmMtoAppParam},
   inLibPathTokens in 'src\Lib\inLibPathTokens.pas',
   uGenericIfThen in 'src\Lib\uGenericIfThen.pas',

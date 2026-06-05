@@ -24,6 +24,7 @@ uses
 type
   TdmUnidadesMedida = class(TdmBase)
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
   private
     { Private declarations }
   public
@@ -31,6 +32,9 @@ type
   end;
 
 implementation
+
+uses
+  inLibUnidadesMedida;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -49,6 +53,15 @@ begin
   unqryTablaG.FindField('FACTOR_BASE_UNIMED').AsFloat := 1;
   unqryTablaG.FindField('ORDEN_UNIMED').AsInteger := 0;
   unqryTablaG.FindField('ESACTIVO_UNIMED').AsString := 'S';
+end;
+
+procedure TdmUnidadesMedida.unqryTablaGAfterPost(DataSet: TDataSet);
+begin
+  inherited;
+  // Tras alta/modificacion refrescamos la cache para que los nuevos decimales
+  // se apliquen en documentos e informes sin reiniciar el programa.
+  if oUnidades <> nil then
+    oUnidades.Cargar;
 end;
 
 initialization
