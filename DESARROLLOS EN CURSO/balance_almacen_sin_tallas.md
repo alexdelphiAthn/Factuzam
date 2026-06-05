@@ -33,9 +33,11 @@ Todo el "armazón" es común (mismo formulario base `TfrmPrintMultiFiltro`):
   (suma de cantidad e importe de todas las filas del grupo).
 - **Valoración**: entradas/existencias (ini/fin) a **PMP**; salidas a PVP;
   **ventas al precio REAL** (con descuentos, con IVA) de `fza_facturas_lineas`.
-- **Ventas acumuladas** en las líneas de total (artículo, resumen por grupo y
-  total general): columna `VENTAS` = importe real de venta (con IVA), sumado.
-  Se muestran las ventas (no el margen). Ver `balance_almacen_tallas.md §2`.
+- **Totales** (resumen por grupo y total general): Cantidad/Importe = **solo
+  existencias finales** (`EXIFIN_CANT`/`EXIFIN_IMP`); **Ventas** aparte
+  (`VENTAS`, importe real con IVA), acumuladas. No se mezclan las bandas. Los
+  totales por banda del artículo sí desglosan cada concepto. Ver
+  `balance_almacen_tallas.md §2`.
 - **Excel** y **FastReport**, con foto y ocultado de niveles de grupo
   inactivos (mismo `ReportBeforePrint` que el horizontal).
 

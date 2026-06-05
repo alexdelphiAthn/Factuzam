@@ -86,18 +86,21 @@ Por acumulados no hay "existencias iniciales": el acumulado de
 real facturado). La tarifa se pasa como parámetro (`p_COD_TARIFA`, por
 defecto `PVP` vía `appTarifaDefecto`).
 
-#### Ventas acumuladas (en los totales)
+#### Totales: existencias finales + ventas
 
-Columna `VENTAS` del SP, **igual al importe real de venta solo en la banda
-VEN** (0 en el resto). Al ser 0 fuera de ventas, **sumada da el acumulado de
-ventas** a cada nivel. Se muestra (con `=SUM` en vivo en Excel; `SUM()` en
-FastReport) en los **totales de artículo**, en el **resumen por grupo** y en
-el **total general** (banda `ReportSummary` / fila `TOTAL GENERAL`). El
-importe es **con IVA con descuento** (`TOTAL_FACLIN`).
+En las líneas de total (resumen por grupo y total general) **no se suman las
+bandas** (no tendría sentido mezclar existencias + compras + ventas):
 
-Se muestran las **ventas**, no el margen: las existencias se leen banda a
-banda, pero las ventas hay que irlas sumando, y la cifra de ganancia no
-ayudaba.
+- **Cantidad / Importe** del total = **solo existencias finales** (uds + valor
+  a PMP). El SP expone `EXIFIN_CANT` / `EXIFIN_IMP` (= cantidad/valor solo en
+  la banda `EXIFIN`, 0 en el resto); el total los suma. Si se filtran las
+  bandas y no se incluye existencias finales, el total sale 0.
+- **Ventas** (columna aparte) = `VENTAS` del SP (importe real de venta, con
+  IVA y descuento de `TOTAL_FACLIN`, solo en la banda `VEN`, 0 en el resto),
+  acumulado. En Excel con `=SUM` en vivo; en FastReport con `SUM()`.
+
+Los **totales por banda del artículo** (Excel) sí desglosan cada banda
+(existencias, entradas, salidas, ventas) con su propio subtotal.
 
 > Ventas reales por periodo: entre fechas se filtra por `FECHA_FAC`; en
 > acumulados se suma el histórico de facturas. Las unidades de la banda

@@ -493,6 +493,14 @@ BEGIN
         -- ventas hay que irlas sumando).
         ROUND(IF(p.`BANDA` = 'VEN', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
                                                       AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto, para que el total por grupo/general
+        -- muestre SOLO el stock final.
+        IF(p.`BANDA` = 'EXIFIN', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = 'EXIFIN',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
         CASE p_NIVEL1
             WHEN 'PRV' THEN COALESCE(prov.`CODIGO_PRV`, '')
             WHEN 'FAM' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
