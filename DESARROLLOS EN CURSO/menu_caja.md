@@ -152,8 +152,13 @@ Se llama:
 
 #### 4.3.1 Búsqueda / scanner
 
-- `txtEntradaArticuloKeyPress:408` detecta tramas de scanner de código de barras (STX/ETX) y
-  vuelca el código directamente en la celda `tvArticulo`.
+- `FormKeyPress` (hook a nivel de formulario, `KeyPreview` heredado de `TfrmBase`)
+  detecta tramas de scanner de código de barras (STX/ETX) venga de donde venga
+  el foco. Difiere el alta vía `WM_PROCESAR_SCANNER` → `ProcesarLecturaScanner`,
+  que resuelve SOLO contra códigos de barras (`TArticulosValidador.ResolverCodigoBarras`)
+  y da de alta la línea de venta automáticamente (siempre, sin depender de
+  `vgerMoverLineaIdentif`); única precondición: vendedor (`CODIGO_CAJERO_FAC`)
+  dado de alta.
 - `tvArticuloPropertiesChange:559` lanza el temporizador `tmrBusq` (debounce).
 - `tmrBusqTimer:481` rellena `qryBusq` con `INPUT_BUSQUEDA LIKE %token%` y
   despliega el combo de búsqueda inline.

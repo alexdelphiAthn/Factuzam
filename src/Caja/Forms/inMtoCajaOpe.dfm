@@ -8,6 +8,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   OnClose = FormClose
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
+  OnKeyPress = FormKeyPress
   OnShow = FormShow
   ExplicitWidth = 1373
   ExplicitHeight = 460
