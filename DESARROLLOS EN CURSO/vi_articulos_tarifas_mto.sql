@@ -53,7 +53,6 @@ SELECT
   at.FECHA_HASTA_ARTTAR                       AS FECHA_HASTA_ARTTAR,
   t.ESACTIVO_ARTTAR                           AS ESACTIVO_ARTTAR,
   t.ESIMP_INCL_TAR                            AS ESIMP_INCL_TAR,
-  t.ESDEFAULT_TAR                             AS ESDEFAULT_TAR,
   a.DESCRIPCION_ART                           AS DESCRIPCION_ART,
   a.TIPO_CANTIDAD_ART                         AS TIPO_CANTIDAD_ART,
   a.ESVARIACION_ART                           AS ESVARIACION_ART,
