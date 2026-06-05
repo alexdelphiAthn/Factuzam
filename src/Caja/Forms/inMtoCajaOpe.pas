@@ -875,7 +875,11 @@ begin
         // vacio). Si no esta -> rellenamos la linea de trabajo y la grabamos.
         if (Trim(sSku) <> '') and ConsolidarSiExiste(sSku) then
         begin
-          // Consolidado: nada mas que hacer; la unidad ya se sumo.
+          // Consolidado: la unidad ya se sumo. El incremento se hizo via un
+          // CLON del dataset, que no notifica al grid principal, asi que la
+          // cantidad no se repintaria hasta mover el cursor. Forzamos el
+          // refresco para que se vea de inmediato.
+          tvLineasOpe.DataController.UpdateItems(True);
         end
         else
         begin
