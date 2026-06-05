@@ -143,7 +143,7 @@ inherited dmArticulos: TdmArticulos
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
-      'from vi_articulos_tarifas')
+      'from vi_articulos_tarifas_mto')
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_ARTTAR'
     BeforePost = unqryTarifasArticulosBeforePost
