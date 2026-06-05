@@ -268,6 +268,14 @@ type
     FResolviendoPorScanner: Boolean;
     // Codigo leido pendiente de procesar (lo consume WMProcesarScanner).
     FCodigoScanPend: string;
+    // Detector de lectura por VELOCIDAD de tecleo (codigo de barras + CR sin
+    // STX/ETX): el lector teclea en rafaga. FScanVelBuffer acumula los
+    // caracteres rapidos y consecutivos, FScanVelTick guarda el instante de la
+    // ultima tecla y FScanVelComido marca que el Enter ya se consumio en
+    // FormKeyDown (para tragar su #13 en FormKeyPress).
+    FScanVelBuffer: string;
+    FScanVelTick: Cardinal;
+    FScanVelComido: Boolean;
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -659,16 +667,22 @@ begin
 end;
 
 // Hook de lectura con pistola a nivel de FORMULARIO (KeyPreview heredado de
-// TfrmBase = True): da igual que control tenga el foco. Al recibir el prefijo
-// STX(#2) entramos en modo scanner, acumulamos el codigo y al llegar el
-// sufijo ETX(#3) lo procesamos (alta de linea de venta). Los caracteres entre
-// STX y ETX se consumen (Key:=#0) para que no ensucien el control enfocado.
+// TfrmBase = True): da igual que control tenga el foco. Hay DOS detectores:
+//   1) Trama STX(#2)+codigo+ETX(#3): el lector envuelve el codigo. Acumulamos
+//      entre STX y ETX consumiendo las teclas (no ensucian el control).
+//   2) Por VELOCIDAD de tecleo (codigo de barras + CR, sin STX/ETX): el lector
+//      teclea en rafaga. Aqui solo acumulamos la rafaga con su cadencia; la
+//      decision (rafaga + Enter) se toma en FormKeyDown, para adelantarse al
+//      editor del grid y a jvEnterTab.
 procedure TfrmMtoOpeCaja.FormKeyPress(Sender: TObject; var Key: Char);
+var
+  ahora, delta: Cardinal;
 begin
   if Key = #2 then
   begin
     FLeyendoScanner := True;
     FScanBuffer := '';
+    FScanVelBuffer := '';
     tmrBusq.Enabled := False;
     Key := #0;
     Exit;
@@ -698,6 +712,32 @@ begin
     end;
     Exit;
   end;
+  // --- Detector 2: acumulacion por velocidad de tecleo ----------------------
+  if not oCajaParams.GetBool('vgerScanVelActivo', True) then
+    Exit;
+  ahora := GetTickCount;
+  delta := ahora - FScanVelTick;
+  FScanVelTick := ahora;
+  // El #13 del Enter ya consumido en FormKeyDown: lo tragamos para que no
+  // llegue al control enfocado.
+  if FScanVelComido and (Key = #13) then
+  begin
+    FScanVelComido := False;
+    Key := #0;
+    Exit;
+  end;
+  // El buffer SOLO crece con caracteres imprimibles rapidos y consecutivos
+  // (firma del lector). Cualquier caracter lento o de control lo reinicia, asi
+  // que el tecleo humano nunca acumula longitud.
+  if Key >= ' ' then
+  begin
+    if delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40)) then
+      FScanVelBuffer := FScanVelBuffer + Key
+    else
+      FScanVelBuffer := Key;
+  end
+  else
+    FScanVelBuffer := '';
 end;
 
 procedure TfrmMtoOpeCaja.WMProcesarScanner(var Msg: TMessage);
@@ -3193,7 +3233,13 @@ end;
 
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  delta: Cardinal;
 begin
+  // Reseteamos el flag de "Enter ya consumido" en cada pulsacion; solo lo
+  // dejamos activo de forma transitoria entre el VK_RETURN consumido y su #13
+  // de KeyPress. Asi nunca queda obsoleto y se traga un Enter manual posterior.
+  FScanVelComido := False;
   if (Key = VK_F5) then
     btnF5.Click;
   // Ctrl+F12 -> resetear layout
@@ -3201,6 +3247,26 @@ begin
   begin
     ResetearLayout(Self.Name);
     Key := 0;
+  end;
+  // Cierre del detector 2 (codigo de barras + CR por velocidad de tecleo). Lo
+  // resolvemos en KeyDown (no en KeyPress) para adelantarnos al editor del grid
+  // (que procesa VK_RETURN) y a jvEnterTab (Enter->Tab): el FormKeyDown con
+  // KeyPreview corre antes que ambos. Si el buffer es una rafaga del lector y
+  // el Enter llega igual de rapido, lo tratamos como lectura y lo encaminamos
+  // al mismo procesado que la trama STX/ETX.
+  if (Key = VK_RETURN) and oCajaParams.GetBool('vgerScanVelActivo', True) then
+  begin
+    delta := GetTickCount - FScanVelTick;
+    if (Length(FScanVelBuffer) >=
+                              oCajaParams.GetInt('vgerScanMinLong', 4)) and
+       (delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40))) then
+    begin
+      FCodigoScanPend := Trim(FScanVelBuffer);
+      FScanVelBuffer  := '';
+      FScanVelComido  := True;  // tragaremos el #13 que vendra por KeyPress
+      Key := 0;                 // ni el grid ni jvEnterTab procesan este Enter
+      PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
+    end;
   end;
 end;
 

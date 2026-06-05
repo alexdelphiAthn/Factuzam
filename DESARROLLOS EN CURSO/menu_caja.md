@@ -152,13 +152,19 @@ Se llama:
 
 #### 4.3.1 Búsqueda / scanner
 
-- `FormKeyPress` (hook a nivel de formulario, `KeyPreview` heredado de `TfrmBase`)
-  detecta tramas de scanner de código de barras (STX/ETX) venga de donde venga
-  el foco. Difiere el alta vía `WM_PROCESAR_SCANNER` → `ProcesarLecturaScanner`,
-  que resuelve SOLO contra códigos de barras (`TArticulosValidador.ResolverCodigoBarras`)
-  y da de alta la línea de venta automáticamente (siempre, sin depender de
-  `vgerMoverLineaIdentif`); única precondición: vendedor (`CODIGO_CAJERO_FAC`)
-  dado de alta.
+- Hook de lector a nivel de formulario (`KeyPreview` heredado de `TfrmBase`),
+  venga de donde venga el foco. DOS detectores que confluyen en
+  `WM_PROCESAR_SCANNER` → `ProcesarLecturaScanner` (resuelve SOLO contra códigos
+  de barras vía `TArticulosValidador.ResolverCodigoBarras` y da de alta la línea
+  automáticamente; única precondición: vendedor `CODIGO_CAJERO_FAC` dado de alta):
+  1. **Trama STX/ETX**: `FormKeyPress` acumula entre `STX(#2)` y `ETX(#3)`
+     consumiendo las teclas.
+  2. **Por velocidad de tecleo (código de barras + CR, sin STX/ETX)**:
+     `FormKeyPress` acumula la ráfaga (el buffer solo crece con caracteres
+     rápidos y consecutivos; cualquier carácter lento lo reinicia) y `FormKeyDown`
+     cierra en `VK_RETURN` si fue ráfaga + Enter rápido (se adelanta al editor del
+     grid y a `jvEnterTab`). Parámetros: `vgerScanVelActivo` (bool, def. True),
+     `vgerScanVelMs` (def. 40 ms entre teclas) y `vgerScanMinLong` (def. 4).
 - `tvArticuloPropertiesChange:559` lanza el temporizador `tmrBusq` (debounce).
 - `tmrBusqTimer:481` rellena `qryBusq` con `INPUT_BUSQUEDA LIKE %token%` y
   despliega el combo de búsqueda inline.
