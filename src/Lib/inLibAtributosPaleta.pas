@@ -491,21 +491,18 @@ var
 begin
   Result := False;
   if (ACanvas = nil) or (AViewInfo = nil) then Exit;
-
   // Rescatar el texto de forma segura
   sTexto := AViewInfo.Text;
-  if (sTexto = '') and (AViewInfo.GridRecord <> nil) and (AViewInfo.Item <> nil) then
+  if (sTexto = '') and
+     (AViewInfo.GridRecord <> nil) and
+     (AViewInfo.Item <> nil) then
     sTexto := VarToStr(AViewInfo.GridRecord.Values[AViewInfo.Item.Index]);
-
   if ADict <> nil then
     Dict := ADict
   else
     Dict := ObtenerMapaAtributosGlobal;
-
   if (Dict = nil) or (Dict.Count = 0) then Exit;
-
   if not BuscarInfoBasicoEnArticulo(sTexto, Dict, Info) then Exit;
-
   // Pasamos sTexto explicitly a la función de pintado
   Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
