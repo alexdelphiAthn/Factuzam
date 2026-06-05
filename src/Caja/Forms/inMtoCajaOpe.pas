@@ -155,7 +155,7 @@ type
     procedure btnCodigoClientePropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure FormShow(Sender: TObject);
-    procedure txtEntradaArticuloKeyPress(Sender: TObject; var Key: Char);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure cxGrid1Enter(Sender: TObject);
     procedure tvArticuloPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
@@ -658,8 +658,12 @@ begin
   AsegurarLineaNueva;
 end;
 
-procedure TfrmMtoOpeCaja.txtEntradaArticuloKeyPress(Sender: TObject;
-                                                    var Key: Char);
+// Hook de lectura con pistola a nivel de FORMULARIO (KeyPreview heredado de
+// TfrmBase = True): da igual que control tenga el foco. Al recibir el prefijo
+// STX(#2) entramos en modo scanner, acumulamos el codigo y al llegar el
+// sufijo ETX(#3) lo procesamos (alta de linea de venta). Los caracteres entre
+// STX y ETX se consumen (Key:=#0) para que no ensucien el control enfocado.
+procedure TfrmMtoOpeCaja.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if Key = #2 then
   begin
@@ -705,11 +709,12 @@ begin
   end;
 end;
 
-// Procesa un codigo leido con pistola: lo resuelve SOLO contra codigos de
-// barras y, si es vendible, da de alta la linea automaticamente y deja una
-// nueva linea lista para el siguiente escaneo. El alta de linea es SIEMPRE,
-// con independencia del parametro vgerMoverLineaIdentif (que solo gobierna la
-// entrada manual).
+// Procesa un codigo leido con pistola desde cualquier punto del formulario:
+// lo resuelve SOLO contra codigos de barras y, si es vendible, da de alta la
+// linea de venta automaticamente y deja una nueva linea lista para el
+// siguiente escaneo. El alta de linea es SIEMPRE, con independencia del
+// parametro vgerMoverLineaIdentif (que solo gobierna la entrada manual).
+// Unica precondicion: el vendedor (cajero) debe estar dado de alta.
 procedure TfrmMtoOpeCaja.ProcesarLecturaScanner(const ACodigo: string);
 var
   CodArticulo : string;
@@ -717,62 +722,91 @@ var
 begin
   if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
   begin
-    tmrBusq.Enabled := False;
-    // Cerramos el editor in-place sin volcar su contenido: el codigo leido se
-    // resuelve directamente sobre el dataset, no a traves del editor.
-    if tvLineasOpe.Controller.EditingController.IsEditing then
-      tvLineasOpe.Controller.EditingController.HideEdit(False);
-    if DatosCaja.cdsLineas.State = dsBrowse then
-      DatosCaja.cdsLineas.Edit;
-    // El flag fuerza a RellenarDatosArticuloEnDataset a buscar solo EAN.
-    FResolviendoPorScanner := True;
-    try
-      if not RellenarDatosArticuloEnDataset(ACodigo) then
+    // Precondicion: sin vendedor dado de alta no se admiten lecturas.
+    if Trim(DatosCaja.cdsCabecera.FieldByName(
+                                       'CODIGO_CAJERO_FAC').AsString) = '' then
+    begin
+      ShowMessage('Da de alta el vendedor antes de leer artículos.');
+      if btnCodigoEmpleado.CanFocus then
+        btnCodigoEmpleado.SetFocus;
+    end
+    else
+    begin
+      tmrBusq.Enabled := False;
+      // Cerramos el editor in-place (si lo hubiera) sin volcar su contenido:
+      // el codigo leido se resuelve sobre el dataset, no a traves del editor.
+      if tvLineasOpe.Controller.EditingController.IsEditing then
+        tvLineasOpe.Controller.EditingController.HideEdit(False);
+      // Garantizamos una linea NUEVA en insercion donde volcar el articulo
+      // leido, sin pisar ninguna linea ya confirmada (la lectura puede llegar
+      // con el foco en cualquier control: cliente, empleado, un boton...).
+      if DatosCaja.cdsLineas.State = dsInsert then
       begin
-        if FMotivoRechazoArticulo <> '' then
-          ShowMessage(FMotivoRechazoArticulo)
-        else
-          ShowMessage('Código de barras no encontrado: ' + ACodigo);
+        if Trim(DatosCaja.cdsLineas.FieldByName(
+                                      'CODIGO_ART_FACLIN').AsString) <> '' then
+        begin
+          DatosCaja.cdsLineas.Post;
+          DatosCaja.cdsLineas.Append;
+        end;
       end
       else
       begin
-        CodArticulo  := DatosCaja.cdsLineas.FieldByName(
-                                            'CODIGO_ART_FACLIN').AsString;
-        SkuDetectado := DatosCaja.cdsLineas.FieldByName(
-                                            'CODIGO_UNIDAD_FACLIN').AsString;
-        // El codigo de barras apunta siempre a un SKU concreto; validamos que
-        // sea vendible (existe y, si procede, tiene stock) antes de confirmar.
-        if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
-           not ValidarSkuParaVenta(SkuDetectado) then
-          EliminarLineaPorValidacion
+        if DatosCaja.cdsLineas.State = dsEdit then
+          DatosCaja.cdsLineas.Post;
+        DatosCaja.cdsLineas.Append;
+      end;
+      // El flag fuerza a RellenarDatosArticuloEnDataset a buscar solo EAN.
+      FResolviendoPorScanner := True;
+      try
+        if not RellenarDatosArticuloEnDataset(ACodigo) then
+        begin
+          // Codigo invalido: descartamos la linea vacia que abrimos.
+          if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+            DatosCaja.cdsLineas.Cancel;
+          if FMotivoRechazoArticulo <> '' then
+            ShowMessage(FMotivoRechazoArticulo)
+          else
+            ShowMessage('Código de barras no encontrado: ' + ACodigo);
+        end
         else
         begin
-          if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) then
-            RellenarAtributosDesdeSku(SkuDetectado);
-          // Si el SKU ya estaba en otra linea sumamos cantidad y descartamos
-          // la linea en curso; si no, la confirmamos. En ambos casos dejamos
-          // una linea nueva lista para encadenar lecturas.
-          if ConsolidarSiExiste(SkuDetectado) then
+          CodArticulo  := DatosCaja.cdsLineas.FieldByName(
+                                              'CODIGO_ART_FACLIN').AsString;
+          SkuDetectado := DatosCaja.cdsLineas.FieldByName(
+                                              'CODIGO_UNIDAD_FACLIN').AsString;
+          // El codigo de barras apunta siempre a un SKU concreto; validamos
+          // que sea vendible (existe y, si procede, tiene stock).
+          if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
+             not ValidarSkuParaVenta(SkuDetectado) then
+            EliminarLineaPorValidacion
+          else
           begin
-            if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-              DatosCaja.cdsLineas.Cancel;
-          end
-          else if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-            DatosCaja.cdsLineas.Post;
-          DatosCaja.cdsLineas.Append;
-          GridRecalc(nil,
-                     tvLineasOpe,
-                     DatosCaja.cdsLineas,
-                     DatosCaja.cdsCabecera,
-                     ActualizarLabelTotal);
+            if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) then
+              RellenarAtributosDesdeSku(SkuDetectado);
+            // Si el SKU ya estaba en otra linea sumamos cantidad y descartamos
+            // la linea en curso; si no, la confirmamos con Post.
+            if ConsolidarSiExiste(SkuDetectado) then
+            begin
+              if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+                DatosCaja.cdsLineas.Cancel;
+            end
+            else if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+              DatosCaja.cdsLineas.Post;
+            GridRecalc(nil,
+                       tvLineasOpe,
+                       DatosCaja.cdsLineas,
+                       DatosCaja.cdsCabecera,
+                       ActualizarLabelTotal);
+          end;
         end;
+      finally
+        FResolviendoPorScanner := False;
       end;
-    finally
-      FResolviendoPorScanner := False;
+      // Dejamos una linea editable y el foco en la celda de articulo de la
+      // rejilla, lista para encadenar lecturas venga de donde venga el foco.
+      AsegurarLineaNueva;
+      tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
-    // Reabrimos el editor de la celda de articulo para encadenar lecturas.
-    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-    tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
 end;
 
@@ -1982,14 +2016,8 @@ begin
   if AItem = tvArticulo then
   begin
     if AEdit is TcxCustomTextEdit then
-    begin
       TcxCustomTextEdit(AEdit).Properties.OnChange :=
                                                      tvArticuloPropertiesChange;
-      // Lectura con pistola: capturamos STX(#2)/ETX(#3) en la celda de
-      // articulo para resolver contra codigos de barras y dar de alta la
-      // linea automaticamente (ver txtEntradaArticuloKeyPress).
-      TcxCustomTextEdit(AEdit).OnKeyPress := txtEntradaArticuloKeyPress;
-    end;
     var ValorActual :=
                     AItem.GridView.Controller.FocusedRecord.Values[AItem.Index];
     if (not VarIsNull(ValorActual)) and (Trim(VarToStr(ValorActual)) <> '') then
