@@ -975,7 +975,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_CANT">,MasterData1)]')
           ParentFont = False
         end
         object MemoGF3Imp: TfrxMemoView
@@ -995,7 +995,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_IMP">,MasterData1)]')
           ParentFont = False
         end
       end
@@ -1036,7 +1036,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_CANT">,MasterData1)]')
           ParentFont = False
         end
         object MemoGF2Imp: TfrxMemoView
@@ -1056,7 +1056,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_IMP">,MasterData1)]')
           ParentFont = False
         end
       end
@@ -1097,7 +1097,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_CANT">,MasterData1)]')
           ParentFont = False
         end
         object MemoGF1Imp: TfrxMemoView
@@ -1117,7 +1117,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_IMP">,MasterData1)]')
           ParentFont = False
         end
       end
@@ -1157,7 +1157,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."CANTIDAD">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_CANT">,MasterData1)]')
           ParentFont = False
         end
         object MemoRSImp: TfrxMemoView
@@ -1177,7 +1177,7 @@ inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
           HAlign = haRight
           HideZeros = True
           Memo.UTF8W = (
-            '[SUM(<Balance."IMPORTE">,MasterData1)]')
+            '[SUM(<Balance."EXIFIN_IMP">,MasterData1)]')
           ParentFont = False
         end
       end
