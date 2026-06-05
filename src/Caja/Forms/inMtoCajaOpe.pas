@@ -284,6 +284,16 @@ type
     // habria ensuciado ese campo).
     FScanVelControl: TWinControl;
     FScanVelTextoPrevio: string;
+    // Anti-eco del editor del cxGrid: al teclear la 1a letra sobre una celda
+    // que no estaba en edicion, el grid arranca la edicion y REENVIA ese primer
+    // caracter, que llegaria duplicado al buffer. FScanVelInicioChar guarda el
+    // 1er caracter; FScanVelEsperaReplay indica que el grid va a arrancar
+    // edicion (foco en rejilla y no editaba) y por tanto la siguiente tecla
+    // identica es el eco a descartar; FScanVelGridEditaba recuerda si el grid
+    // ya estaba editando ANTES de la tecla (se captura en FormKeyDown).
+    FScanVelInicioChar: Char;
+    FScanVelEsperaReplay: Boolean;
+    FScanVelGridEditaba: Boolean;
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -691,6 +701,7 @@ begin
     FLeyendoScanner := True;
     FScanBuffer := '';
     FScanVelBuffer := '';
+    FScanVelEsperaReplay := False;
     tmrBusq.Enabled := False;
     Key := #0;
     Exit;
@@ -740,7 +751,18 @@ begin
   if Key >= ' ' then
   begin
     if delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40)) then
-      FScanVelBuffer := FScanVelBuffer + Key
+    begin
+      // Anti-eco del editor del grid: si esperabamos el eco del 1er caracter y
+      // esta tecla lo repite, la descartamos (el grid la reenvio al arrancar la
+      // edicion). En cualquier otro caso, acumulamos normal.
+      if FScanVelEsperaReplay and (Key = FScanVelInicioChar) then
+        FScanVelEsperaReplay := False
+      else
+      begin
+        FScanVelEsperaReplay := False;
+        FScanVelBuffer := FScanVelBuffer + Key;
+      end;
+    end
     else
     begin
       // Inicio de una posible rafaga: KeyPreview corre ANTES de que el control
@@ -748,10 +770,18 @@ begin
       // por si hay que restaurarlo (lectura con el foco fuera de la rejilla).
       FScanVelBuffer := Key;
       CapturarControlScanVel;
+      FScanVelInicioChar := Key;
+      // Solo esperamos eco si la rafaga arranca en la rejilla y el grid NO
+      // estaba editando: ahi es donde el cxGrid reenvia el primer caracter.
+      FScanVelEsperaReplay := EsControlDeRejilla(FScanVelControl) and
+                              (not FScanVelGridEditaba);
     end;
   end
   else
+  begin
     FScanVelBuffer := '';
+    FScanVelEsperaReplay := False;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.WMProcesarScanner(var Msg: TMessage);
@@ -3293,6 +3323,11 @@ begin
   // dejamos activo de forma transitoria entre el VK_RETURN consumido y su #13
   // de KeyPress. Asi nunca queda obsoleto y se traga un Enter manual posterior.
   FScanVelComido := False;
+  // Estado de edicion del grid ANTES de procesar esta tecla (KeyPreview corre
+  // antes que el KeyDown del grid). Lo usa el anti-eco: solo hay eco si el grid
+  // NO estaba editando y arranca la edicion con esta tecla.
+  FScanVelGridEditaba := (tvLineasOpe.Controller.EditingController <> nil) and
+                         tvLineasOpe.Controller.EditingController.IsEditing;
   if (Key = VK_F5) then
     btnF5.Click;
   // Ctrl+F12 -> resetear layout
