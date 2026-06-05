@@ -9,12 +9,15 @@
 --
 -- Modos (parámetro p_MODO):
 --   'F' = entre fechas. Bandas (simplificado): Existencias iniciales,
---         Entradas, Salidas, Ventas, Existencias finales. En desglosado
---         las entradas/salidas se abren en los subtipos de la consulta
---         Ctrl+U (compra, traspaso, depósito, regulariz., albaranes...).
---   'A' = por acumulados. Bandas: Entradas, Salidas, Ventas, Existencias
---         finales (sin existencias iniciales: el acumulado es "desde
---         siempre"). El desglosado no aplica.
+--         Entradas, Ventas, Existencias finales. NO hay banda Salidas: los
+--         traspasos se netean (entrada - salida) dentro de Entradas y los
+--         depósitos quedan fuera de la ecuación. En desglosado las entradas
+--         se abren en los subtipos de la consulta Ctrl+U (compra, alb.
+--         entrada, traspasos neto, depósitos neto, regulariz., alb. venta).
+--   'A' = por acumulados. Bandas: Entradas, Ventas, Existencias finales
+--         (sin existencias iniciales: el acumulado es "desde siempre"). El
+--         desglosado no aplica.
+--   Balance en todos los modos: Ex.ini + Entradas - Ventas = Ex.final.
 --
 -- Origen de datos:
 --   - Modo 'F': se reconstruye desde fza_movimientos_almacen. Las
@@ -29,8 +32,8 @@
 --   - Entradas y existencias (ini/fin) -> coste = precio medio ponderado
 --     (PMP) del stock actual del artículo; si es 0 se usa el último precio
 --     de compra del proveedor principal.
---   - Salidas        -> PVP (tarifa por defecto vigente hoy), valoración
---     nocional de todo lo que sale.
+--   - Alb. venta     -> PVP (tarifa por defecto vigente hoy), valoración
+--     nocional de la salida por albarán de venta (solo en desglosado).
 --   - Ventas (VEN)   -> PRECIO REAL de venta (con descuentos, con IVA) de
 --     fza_facturas_lineas; NO la tarifa. IMPORTE = importe real facturado.
 --   VENTAS: columna con el importe real de venta SOLO en la banda VEN (0 en
@@ -511,17 +514,18 @@ BEGIN
                'EXIINI', 10, 'Existencias iniciales', 1, `EXI_INI`
           FROM `tmp_bat_base`;
     END IF;
-    -- Entradas / Salidas agregadas: simplificado (F) o acumulados (A).
+    -- Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb.
+    -- entrada) + recuentos (regularizaciones) + traspasos NETOS (entrada -
+    -- salida). SIN depósitos y SIN banda Salidas: las ventas van en su banda.
+    -- Balance: Ex.ini + Entradas - Ventas = Ex.final (los depósitos quedan
+    -- fuera de la ecuación, según lo pedido).
     IF (p_MODO = 'F' AND p_DESGLOSADO = 'N') OR p_MODO = 'A' THEN
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
-               'ENT', 20, 'Entradas', 1, `ENT`
-          FROM `tmp_bat_base`;
-        INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'SAL', 40, 'Salidas', 0, `SAL`
+               'ENT', 20, 'Entradas', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bat_base`;
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
@@ -529,8 +533,9 @@ BEGIN
                'VEN', 50, 'Ventas', 0, `VEN`
           FROM `tmp_bat_base`;
     END IF;
-    -- Entradas / Salidas desglosadas: solo modo entre fechas desglosado.
-    -- Mismos subtipos que la consulta de stock (Ctrl+U).
+    -- Entradas desglosadas: solo modo entre fechas desglosado. Mismos
+    -- subtipos que la consulta de stock (Ctrl+U), con traspasos y depósitos
+    -- netos (entrada - salida) y sin bandas de salida salvo alb. venta.
     IF p_MODO = 'F' AND p_DESGLOSADO = 'S' THEN
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
@@ -545,28 +550,23 @@ BEGIN
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
-               'ENTTRA', 23, 'Ent. traspaso', 1, `ENT_TRASPASO`
+               'ENTTRA', 23, 'Traspasos (neto)', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bat_base`;
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
-               'ENTDEP', 24, 'Ent. depósito', 1, `ENT_DEPOSITO`
+               'ENTDEP', 24, 'Depósitos (neto)', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
           FROM `tmp_bat_base`;
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
                'ENTREG', 25, 'Regulariz.', 1, `ENT_REGULAR`
           FROM `tmp_bat_base`;
-        INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'SALTRA', 41, 'Sal. traspaso', 0, `SAL_TRASPASO`
-          FROM `tmp_bat_base`;
-        INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'SALDEP', 42, 'Sal. depósito', 0, `SAL_DEPOSITO`
-          FROM `tmp_bat_base`;
+        -- Sal. traspaso / Sal. depósito ya no salen: se han neteado en sus
+        -- bandas de entrada (Traspasos/Depósitos neto). Albarán de venta sí se
+        -- mantiene (es una venta).
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
