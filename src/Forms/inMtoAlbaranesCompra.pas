@@ -41,7 +41,8 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
-  UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs;
+  UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
+  Vcl.ActnList;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -99,6 +100,8 @@ type
     btnImprimirH: TcxButton;
     btnImprimirV: TcxButton;
     btnPegatinas: TcxButton;
+    ActionList1: TActionList;
+    actArticulos: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -129,6 +132,7 @@ type
                 var AAllow: Boolean);
     procedure cxgrdLineasAlbaranEnter(Sender: TObject);
     procedure cxgrdLineasAlbaranExit(Sender: TObject);
+    procedure actArticulosExecute(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -169,7 +173,7 @@ uses
   UniDataArticulos,
   inMtoModalImpAlbCompra,
   inMtoModalImpAlbCompraV,
-  inMtoModalEtiqAlb;
+  inMtoModalEtiqAlb, inLibShowMto;
 
 {$R *.dfm}
 
@@ -739,6 +743,15 @@ procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranExit(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+end;
+
+procedure TfrmMtoAlbaranesCompra.actArticulosExecute(Sender: TObject);
+begin
+  inherited;
+  with tvLineasAlbaran.DataController.DataSet do
+    ShowMto(Self.Owner,
+            'Articulos',
+            FieldByName('CODIGO_ART_ALBCLIN').AsString);
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnAnadirLineaClick(Sender: TObject);

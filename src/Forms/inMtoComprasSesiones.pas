@@ -719,7 +719,10 @@ begin
   // ShortCut Ctrl+A. El TActionList scope a este form garantiza que el
   // shortcut solo se procesa cuando esta pestania esta activa; otras
   // instancias o Mtos abiertos no reciben el evento.
-  ShowMto(frmMtoPrincipal, 'Articulos');
+  with tvLineas.DataController.DataSet do
+  ShowMto(Self.Owner,
+          'Articulos',
+          FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
 end;
 
 procedure TfrmMtoComprasSesiones.actIrAlbaranesCompraExecute(Sender: TObject);

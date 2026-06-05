@@ -1,4 +1,4 @@
-﻿inherited frmPrint: TfrmPrint
+inherited frmPrint: TfrmPrint
   Left = 506
   Top = 279
   HorzScrollBar.Visible = False
@@ -11,7 +11,7 @@
   OnClose = FormClose
   ExplicitWidth = 357
   ExplicitHeight = 279
-  TextHeight = 19
+  TextHeight = 17
   object pnl1: TPanel [0]
     Left = 197
     Top = 0
