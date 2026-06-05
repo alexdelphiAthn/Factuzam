@@ -256,6 +256,9 @@ type
     procedure WMProcesarScanner(var Msg: TMessage);
                                        message WM_PROCESAR_SCANNER;
     procedure ProcesarLecturaScanner(const ACodigo: string);
+    procedure CapturarControlScanVel;
+    procedure RestaurarControlScanVel;
+    function  EsControlDeRejilla(AControl: TControl): Boolean;
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   public
@@ -276,6 +279,11 @@ type
     FScanVelBuffer: string;
     FScanVelTick: Cardinal;
     FScanVelComido: Boolean;
+    // Control enfocado y su texto al iniciar una rafaga, para restaurarlo si la
+    // lectura entra con el foco FUERA de la rejilla (la rafaga no consumida
+    // habria ensuciado ese campo).
+    FScanVelControl: TWinControl;
+    FScanVelTextoPrevio: string;
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -734,7 +742,13 @@ begin
     if delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40)) then
       FScanVelBuffer := FScanVelBuffer + Key
     else
+    begin
+      // Inicio de una posible rafaga: KeyPreview corre ANTES de que el control
+      // enfocado reciba este caracter, asi que aqui guardamos su texto original
+      // por si hay que restaurarlo (lectura con el foco fuera de la rejilla).
       FScanVelBuffer := Key;
+      CapturarControlScanVel;
+    end;
   end
   else
     FScanVelBuffer := '';
@@ -848,6 +862,45 @@ begin
       AsegurarLineaNueva;
       tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
+  end;
+end;
+
+// Recuerda el control enfocado y su texto al iniciar una rafaga del detector
+// por velocidad. Se llama desde FormKeyPress ANTES de que el control reciba el
+// caracter (KeyPreview), por lo que el texto guardado es el previo a la rafaga.
+procedure TfrmMtoOpeCaja.CapturarControlScanVel;
+begin
+  FScanVelControl := Screen.ActiveControl;
+  FScanVelTextoPrevio := '';
+  if (FScanVelControl <> nil) and (FScanVelControl is TcxCustomTextEdit) then
+    FScanVelTextoPrevio := TcxCustomTextEdit(FScanVelControl).Text;
+end;
+
+// Restaura el control enfocado a su texto previo si la lectura entro con el
+// foco FUERA de la rejilla (en la rejilla el editor in-place se descarta solo
+// via HideEdit, asi que ahi no tocamos nada).
+procedure TfrmMtoOpeCaja.RestaurarControlScanVel;
+begin
+  if (FScanVelControl <> nil) and (FScanVelControl is TcxCustomTextEdit)
+     and (not EsControlDeRejilla(FScanVelControl)) then
+    TcxCustomTextEdit(FScanVelControl).Text := FScanVelTextoPrevio;
+  FScanVelControl := nil;
+  FScanVelTextoPrevio := '';
+end;
+
+// True si AControl es la rejilla de lineas o esta contenido en ella (p.ej. el
+// editor in-place de una celda).
+function TfrmMtoOpeCaja.EsControlDeRejilla(AControl: TControl): Boolean;
+var
+  C: TControl;
+begin
+  Result := False;
+  C := AControl;
+  while (C <> nil) and (not Result) do
+  begin
+    if C = cxgrdLineasOpe then
+      Result := True;
+    C := C.Parent;
   end;
 end;
 
@@ -3265,6 +3318,11 @@ begin
       FScanVelBuffer  := '';
       FScanVelComido  := True;  // tragaremos el #13 que vendra por KeyPress
       Key := 0;                 // ni el grid ni jvEnterTab procesan este Enter
+      // Si el foco estaba fuera de la rejilla, la rafaga (no consumida) habra
+      // ensuciado ese campo: lo restauramos a su texto previo ANTES de que
+      // ProcesarLecturaScanner mueva el foco a la rejilla (asi no se valida el
+      // codigo como, p.ej., un empleado).
+      RestaurarControlScanVel;
       PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
     end;
   end;
