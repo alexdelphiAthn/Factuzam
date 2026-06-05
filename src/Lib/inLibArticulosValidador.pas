@@ -102,12 +102,22 @@ type
   private
     FConexion: TUniConnection;
     procedure RellenarDatosArticulo(var R: TArtResolucionEntrada);
-    function  ContarCoincidencias(const sEntrada: string): Integer;
+    function  ContarCoincidencias(const sEntrada: string;
+                                  ASoloCodigoBarras: Boolean = False): Integer;
     procedure RellenarProveedorMatch(var R: TArtResolucionEntrada;
                                      const sEntrada: string);
+    // Nucleo de resolucion. ASoloCodigoBarras restringe la busqueda a la
+    // fila EAN de la vista unificada (lectura con pistola).
+    function ResolverInterno(const AEntrada: string;
+                             ASoloCodigoBarras: Boolean): TArtResolucionEntrada;
   public
     constructor Create(AConexion: TUniConnection);
     function Resolver(const AEntrada: string): TArtResolucionEntrada;
+    // Resuelve buscando UNICAMENTE en codigos de barras (TIPO_COINCIDENCIA
+    // = 'EAN'). Pensado para la lectura con pistola en caja: ignora codigos
+    // de articulo, SKU y modelos de proveedor aunque coincidan.
+    function ResolverCodigoBarras(const AEntrada: string):
+                                                       TArtResolucionEntrada;
     function ResolverConSku(const AEntrada, ACodigoSkuPreferido: string):
                                                        TArtResolucionEntrada;
     function EsValido(const AEntrada: string): Boolean;
@@ -161,15 +171,23 @@ begin
 end;
 
 function TArticulosValidador.ContarCoincidencias(
-  const sEntrada: string): Integer;
-var q: TUniQuery;
+  const sEntrada: string; ASoloCodigoBarras: Boolean): Integer;
+var
+  q: TUniQuery;
+  sFiltroTipo: string;
 begin
+  // Si solo contamos codigos de barras, restringimos a la fila EAN para que
+  // NumCoincidencias refleje las coincidencias reales de la lectura.
+  if ASoloCodigoBarras then
+    sFiltroTipo := ' AND TIPO_COINCIDENCIA = ''EAN'' '
+  else
+    sFiltroTipo := '';
   q := TUniQuery.Create(nil);
   try
     q.Connection := FConexion;
     q.SQL.Text   :=
       'SELECT COUNT(*) AS N FROM vi_caja_busqueda_unificada ' +
-      ' WHERE INPUT_BUSQUEDA = :inp';
+      ' WHERE INPUT_BUSQUEDA = :inp' + sFiltroTipo;
     q.ParamByName('inp').AsString := sEntrada;
     q.Open;
     Result := q.FieldByName('N').AsInteger;
@@ -294,10 +312,23 @@ end;
 
 function TArticulosValidador.Resolver(
   const AEntrada: string): TArtResolucionEntrada;
+begin
+  Result := ResolverInterno(AEntrada, False);
+end;
+
+function TArticulosValidador.ResolverCodigoBarras(
+  const AEntrada: string): TArtResolucionEntrada;
+begin
+  Result := ResolverInterno(AEntrada, True);
+end;
+
+function TArticulosValidador.ResolverInterno(const AEntrada: string;
+  ASoloCodigoBarras: Boolean): TArtResolucionEntrada;
 var
-  q     : TUniQuery;
-  sEnt  : string;
-  sTipo : string;
+  q          : TUniQuery;
+  sEnt       : string;
+  sTipo      : string;
+  sFiltroTipo: string;
 begin
   Result.Clear;
   Result.EntradaOriginal := AEntrada;
@@ -307,7 +338,13 @@ begin
     Result.Mensaje := 'Entrada vacía.';
     Exit;
   end;
-
+  // Lectura con pistola: restringimos a la fila EAN de la vista para que solo
+  // resuelva contra fza_codigos_barras (ignora codigo de articulo, SKU y
+  // modelo de proveedor aunque coincidan con la cadena leida).
+  if ASoloCodigoBarras then
+    sFiltroTipo := ' AND TIPO_COINCIDENCIA = ''EAN'' '
+  else
+    sFiltroTipo := '';
   // Orden de prioridad: SKU > CODIGO > EAN > MODELO_PROV
   q := TUniQuery.Create(nil);
   try
@@ -316,7 +353,7 @@ begin
       'SELECT TIPO_COINCIDENCIA, CODIGO_PADRE, CODIGO_SKU, ' +
       '       DESCRIPCION_ART, TIPO_ART, INPUT_BUSQUEDA ' +
       '  FROM vi_caja_busqueda_unificada ' +
-      ' WHERE INPUT_BUSQUEDA = :inp ' +
+      ' WHERE INPUT_BUSQUEDA = :inp ' + sFiltroTipo +
       ' ORDER BY CASE TIPO_COINCIDENCIA ' +
       '            WHEN ''SKU''         THEN 1 ' +
       '            WHEN ''CODIGO''      THEN 2 ' +
@@ -325,15 +362,17 @@ begin
       '            ELSE 5 END LIMIT 1';
     q.ParamByName('inp').AsString := sEnt;
     q.Open;
-
     if q.IsEmpty then
     begin
-      Result.Mensaje :=
-        'No se encontró "' + sEnt + '" como artículo, SKU, código de barras ' +
-        'ni modelo de proveedor.';
+      if ASoloCodigoBarras then
+        Result.Mensaje :=
+          'No se encontró "' + sEnt + '" como código de barras.'
+      else
+        Result.Mensaje :=
+          'No se encontró "' + sEnt + '" como artículo, SKU, código de barras ' +
+          'ni modelo de proveedor.';
       Exit;
     end;
-
     Result.CodigoArticulo      := q.FieldByName('CODIGO_PADRE').AsString;
     Result.CodigoSku           := q.FieldByName('CODIGO_SKU').AsString;
     Result.DescripcionArticulo := q.FieldByName('DESCRIPCION_ART').AsString;
@@ -355,7 +394,7 @@ begin
   end;
 
   Result.Encontrado       := Result.CodigoArticulo <> '';
-  Result.NumCoincidencias := ContarCoincidencias(sEnt);
+  Result.NumCoincidencias := ContarCoincidencias(sEnt, ASoloCodigoBarras);
 
   RellenarDatosArticulo(Result);
 

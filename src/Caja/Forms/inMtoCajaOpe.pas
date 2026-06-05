@@ -54,6 +54,13 @@ const
   // Con PostMessage, OnEnter retorna, cxGrid termina de parentar, y solo
   // entonces abrimos el popup.
   WM_ABRIR_POPUP_AV       = WM_USER + 104;
+  // Lectura con pistola (STX...ETX): diferimos el alta de la linea fuera del
+  // OnKeyPress del editor in-place. Si resolviesemos y reestructurasemos el
+  // dataset dentro del propio KeyPress, cxGrid mantiene la referencia al
+  // editor que esta procesando la tecla y Append/HideEdit lo desparentan
+  // (EInvalidOperation). Con PostMessage el KeyPress retorna, cxGrid limpia
+  // su estado y solo entonces procesamos el codigo leido.
+  WM_PROCESAR_SCANNER     = WM_USER + 105;
 type
   TfrmMtoOpeCaja = class(TfrmBase)
     pnlUp: TPanel;
@@ -246,6 +253,9 @@ type
                                        message WM_AVANZAR_ATRIB_CAJA;
     procedure WMAbrirPopupAv(var Msg: TMessage);
                                        message WM_ABRIR_POPUP_AV;
+    procedure WMProcesarScanner(var Msg: TMessage);
+                                       message WM_PROCESAR_SCANNER;
+    procedure ProcesarLecturaScanner(const ACodigo: string);
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   public
@@ -253,6 +263,11 @@ type
   private
     FScanBuffer: string;
     FLeyendoScanner: Boolean;
+    // Activo mientras resolvemos una lectura con pistola: fuerza a
+    // RellenarDatosArticuloEnDataset a buscar SOLO en codigos de barras.
+    FResolviendoPorScanner: Boolean;
+    // Codigo leido pendiente de procesar (lo consume WMProcesarScanner).
+    FCodigoScanPend: string;
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -661,17 +676,14 @@ begin
       tmrBusq.Enabled := False;
       FLeyendoScanner := False;
       Key := #0;
+      // Diferimos la resolucion y el alta de linea: dentro del propio
+      // KeyPress no podemos reestructurar el dataset (cxGrid aun referencia
+      // el editor in-place). Guardamos el codigo y lo procesa
+      // WMProcesarScanner cuando el KeyPress haya retornado.
       if Trim(FScanBuffer) <> '' then
       begin
-        tmrBusq.Enabled := False;
-        tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-        tvLineasOpe.Controller.EditingController.ShowEdit;
-        if tvLineasOpe.Controller.EditingController.IsEditing then
-        begin
-          tvLineasOpe.Controller.EditingController.Edit.EditValue :=
-                                                                    FScanBuffer;
-          tvLineasOpe.Controller.EditingController.Edit.PostEditValue;
-        end;
+        FCodigoScanPend := Trim(FScanBuffer);
+        PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
       end;
       FScanBuffer := '';
     end
@@ -681,6 +693,86 @@ begin
       Key := #0;
     end;
     Exit;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.WMProcesarScanner(var Msg: TMessage);
+begin
+  if FCodigoScanPend <> '' then
+  begin
+    ProcesarLecturaScanner(FCodigoScanPend);
+    FCodigoScanPend := '';
+  end;
+end;
+
+// Procesa un codigo leido con pistola: lo resuelve SOLO contra codigos de
+// barras y, si es vendible, da de alta la linea automaticamente y deja una
+// nueva linea lista para el siguiente escaneo. El alta de linea es SIEMPRE,
+// con independencia del parametro vgerMoverLineaIdentif (que solo gobierna la
+// entrada manual).
+procedure TfrmMtoOpeCaja.ProcesarLecturaScanner(const ACodigo: string);
+var
+  CodArticulo : string;
+  SkuDetectado: string;
+begin
+  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
+  begin
+    tmrBusq.Enabled := False;
+    // Cerramos el editor in-place sin volcar su contenido: el codigo leido se
+    // resuelve directamente sobre el dataset, no a traves del editor.
+    if tvLineasOpe.Controller.EditingController.IsEditing then
+      tvLineasOpe.Controller.EditingController.HideEdit(False);
+    if DatosCaja.cdsLineas.State = dsBrowse then
+      DatosCaja.cdsLineas.Edit;
+    // El flag fuerza a RellenarDatosArticuloEnDataset a buscar solo EAN.
+    FResolviendoPorScanner := True;
+    try
+      if not RellenarDatosArticuloEnDataset(ACodigo) then
+      begin
+        if FMotivoRechazoArticulo <> '' then
+          ShowMessage(FMotivoRechazoArticulo)
+        else
+          ShowMessage('Código de barras no encontrado: ' + ACodigo);
+      end
+      else
+      begin
+        CodArticulo  := DatosCaja.cdsLineas.FieldByName(
+                                            'CODIGO_ART_FACLIN').AsString;
+        SkuDetectado := DatosCaja.cdsLineas.FieldByName(
+                                            'CODIGO_UNIDAD_FACLIN').AsString;
+        // El codigo de barras apunta siempre a un SKU concreto; validamos que
+        // sea vendible (existe y, si procede, tiene stock) antes de confirmar.
+        if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
+           not ValidarSkuParaVenta(SkuDetectado) then
+          EliminarLineaPorValidacion
+        else
+        begin
+          if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) then
+            RellenarAtributosDesdeSku(SkuDetectado);
+          // Si el SKU ya estaba en otra linea sumamos cantidad y descartamos
+          // la linea en curso; si no, la confirmamos. En ambos casos dejamos
+          // una linea nueva lista para encadenar lecturas.
+          if ConsolidarSiExiste(SkuDetectado) then
+          begin
+            if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+              DatosCaja.cdsLineas.Cancel;
+          end
+          else if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+            DatosCaja.cdsLineas.Post;
+          DatosCaja.cdsLineas.Append;
+          GridRecalc(nil,
+                     tvLineasOpe,
+                     DatosCaja.cdsLineas,
+                     DatosCaja.cdsCabecera,
+                     ActualizarLabelTotal);
+        end;
+      end;
+    finally
+      FResolviendoPorScanner := False;
+    end;
+    // Reabrimos el editor de la celda de articulo para encadenar lecturas.
+    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+    tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
 end;
 
@@ -1252,7 +1344,12 @@ begin
   Resolver  := TArticulosResolver.Create(inLibGlobalVar.oConn);
   try
     swStep := TStopwatch.StartNew;
-    Resolucion := Validador.Resolver(CodigoLimpio);
+    // Si la entrada viene de la pistola (STX...ETX), resolvemos UNICAMENTE
+    // contra codigos de barras; en cualquier otro caso, busqueda unificada.
+    if FResolviendoPorScanner then
+      Resolucion := Validador.ResolverCodigoBarras(CodigoLimpio)
+    else
+      Resolucion := Validador.Resolver(CodigoLimpio);
     msResolver := swStep.ElapsedMilliseconds;
     if not Resolucion.Encontrado then
     begin
@@ -1885,8 +1982,14 @@ begin
   if AItem = tvArticulo then
   begin
     if AEdit is TcxCustomTextEdit then
+    begin
       TcxCustomTextEdit(AEdit).Properties.OnChange :=
                                                      tvArticuloPropertiesChange;
+      // Lectura con pistola: capturamos STX(#2)/ETX(#3) en la celda de
+      // articulo para resolver contra codigos de barras y dar de alta la
+      // linea automaticamente (ver txtEntradaArticuloKeyPress).
+      TcxCustomTextEdit(AEdit).OnKeyPress := txtEntradaArticuloKeyPress;
+    end;
     var ValorActual :=
                     AItem.GridView.Controller.FocusedRecord.Values[AItem.Index];
     if (not VarIsNull(ValorActual)) and (Trim(VarToStr(ValorActual)) <> '') then
