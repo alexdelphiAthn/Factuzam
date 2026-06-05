@@ -21,8 +21,10 @@
 -- agrupa por (artículo, color) en vez de por (artículo, color, talla), y
 -- no hay tabla de posiciones/etiquetas de talla.
 --
--- Ventas: la banda de ventas (VEN) se valora al PRECIO REAL de venta (con
--- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no a tarifa.
+-- Ventas: la banda de ventas (VEN) toma CANTIDAD e IMPORTE REALES (con
+-- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no del acumulado
+-- de stock ni de la tarifa. La cantidad se sobrescribe (tmp_bst_ven) antes del
+-- descarte, porque el acumulado CANTIDAD_SAL_VENTA_STK puede no estar al día.
 -- Columna VENTAS (importe real solo en VEN, 0 en el resto) para acumular las
 -- ventas por artículo/grupo/total. Existencias ini/fin y entradas, a PMP.
 --
@@ -368,6 +370,45 @@ BEGIN
          GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''), s.`COLOR`;
     END IF;
 
+    -- Ventas REALES por (artículo, almacén, color) desde las líneas de
+    -- factura: fuente de verdad de las ventas (cantidad e importe). Los
+    -- acumulados de stock (CANTIDAD_SAL_VENTA_STK) pueden no estar mantenidos
+    -- y dar 0 aunque haya venta. Se sobrescribe VEN ANTES del descarte para
+    -- que (a) la banda de ventas muestre la cantidad real y (b) no se borre un
+    -- color que solo tiene ventas (existencias netas 0). Mismo filtro de
+    -- almacén/periodo y mismos SKUs (tmp_bst_sku) que la valoración vt.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_ven`;
+    CREATE TEMPORARY TABLE `tmp_bst_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
+        `COLOR`      VARCHAR(100)  NOT NULL DEFAULT '',
+        `VEN_QTY`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`)
+    );
+    INSERT INTO `tmp_bst_ven`
+    SELECT s.`CODIGO_ART`,
+           IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''),
+           s.`COLOR`,
+           SUM(fl.`CANTIDAD_FACLIN`)
+      FROM `fza_facturas_lineas` fl
+      JOIN `fza_facturas` f
+        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+      JOIN `tmp_bst_sku` s
+        ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+     WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+       AND (p_MODO = 'A'
+            OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+     GROUP BY s.`CODIGO_ART`,
+              IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''), s.`COLOR`;
+    -- Sobrescribir la cantidad de ventas del stock con la real de facturas.
+    UPDATE `tmp_bst_base` b
+      JOIN `tmp_bst_ven` v
+        ON v.`CODIGO_ART` = b.`CODIGO_ART`
+       AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+       AND v.`COLOR` = b.`COLOR`
+       SET b.`VEN` = v.`VEN_QTY`;
+
     -- Descartar (artículo, color) sin existencias ni movimientos: cubrir todo
     -- el catálogo si no llenaría el informe de artículos inactivos a cero.
     DELETE FROM `tmp_bst_base`
@@ -450,9 +491,11 @@ BEGIN
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'SALALB', 43, 'Alb. venta', 0, `SAL_ALBVENTA`
           FROM `tmp_bst_base`;
+        -- Cantidad de ventas = VEN (ya sobrescrito con la cantidad real de
+        -- facturas), igual que en simplificado/acumulados.
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'VEN', 50, 'Ventas', 0, `SAL_VENTA`
+               'VEN', 50, 'Ventas', 0, `VEN`
           FROM `tmp_bst_base`;
     END IF;
     -- Existencias finales: siempre.
@@ -663,6 +706,7 @@ BEGIN
 
     -- Limpieza de temporales.
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_ven`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
