@@ -54,10 +54,13 @@ type
     procedure ExportarExcelBalance(Sender: TObject);
     // Handler de OnBeforePrint: fotos + ocultar bandas de grupo inactivas.
     procedure ReportBeforePrint(Component: TfrxReportComponent);
+    // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
+    procedure PrecargarFotosArticulos;
   protected
     function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
   public
+    destructor Destroy; override;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
   end;
@@ -259,6 +262,42 @@ begin
   // Sustituimos el OnBeforePrint del base (fotos) por el nuestro, que encadena
   // las fotos y oculta las bandas de grupo de los niveles inactivos.
   frxrprt1.OnBeforePrint := ReportBeforePrint;
+  // Precarga de fotos a nivel artículo en UNA consulta (evita el N+1).
+  PrecargarFotosArticulos;
+end;
+
+destructor TfrmPrintBalanceSinTallas.Destroy;
+begin
+  oFotos.LimpiarPrecargaFotos;
+  inherited Destroy;
+end;
+
+procedure TfrmPrintBalanceSinTallas.PrecargarFotosArticulos;
+var
+  slCod: TStringList;
+begin
+  if unqryBalancePrint.Active and (not unqryBalancePrint.IsEmpty) then
+  begin
+    slCod := TStringList.Create;
+    try
+      slCod.Sorted := True;
+      slCod.Duplicates := dupIgnore;
+      unqryBalancePrint.DisableControls;
+      try
+        unqryBalancePrint.First;
+        while not unqryBalancePrint.Eof do
+        begin
+          slCod.Add(unqryBalancePrint.FieldByName('CODIGO_ART_ART').AsString);
+          unqryBalancePrint.Next;
+        end;
+      finally
+        unqryBalancePrint.EnableControls;
+      end;
+      oFotos.PrecargarFotosLote(slCod.ToStringArray);
+    finally
+      FreeAndNil(slCod);
+    end;
+  end;
 end;
 
 procedure TfrmPrintBalanceSinTallas.ReportBeforePrint(
