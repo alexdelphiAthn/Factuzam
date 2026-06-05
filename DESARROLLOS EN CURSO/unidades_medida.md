@@ -57,10 +57,15 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
       - [x] Caja / venta (`inMtoCajaOpe`) — anadida columna invisible
             tvTipoCantidad (TIPO_CANTIDAD_ARTICULO_FACLIN) y vinculada en
             FormCreate.
-      - [ ] Albaranes venta/compra, Pedidos venta/compra.
+      - [x] Albaranes venta (`inMtoAlbaranes`) y Pedidos venta
+            (`inMtoPedidos`): columna invisible de unidad + VincularCantidadGrid
+            via GetColumnByFieldName en FormCreate.
+      - [ ] Albaranes compra / Pedidos compra: sus vistas NO exponen el
+            TIPO_CANTIDAD de la linea; hay que anadirlo a la vista antes.
       - [ ] Traspasos, Compras-sesiones (matriz).
-      - [ ] Inventarios/Movimientos: sin unidad por linea; tomar la del
-            articulo (ajuste de query) o decimales por defecto.
+      - [ ] Inventarios/Movimientos/Stock: sin unidad por linea; tomar la del
+            articulo (ajuste de vista) o decimales por defecto. Stock es
+            pivotado por tallas (mas complejo).
 - [ ] **Fase 6 - Tickets/informes/Excel**: sustituir formato entero/`FloatToStr`
       por `FormatearCantidad(valor, unidad)` en `inLibGenerarTicket(BD)`,
       `inLibFacturaExcel`, `inLibDocCompraExcel`, `inLibInventarioExcel`,

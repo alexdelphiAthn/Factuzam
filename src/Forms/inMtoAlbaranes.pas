@@ -160,7 +160,7 @@ var
 implementation
 
 uses
-  inMtoModalFacturarAlbaranesFechas, inLibFotos;
+  inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad;
 
 {$R *.dfm}
 
@@ -202,6 +202,10 @@ begin
   dmmAlbaranes := TdmAlbaranes.Create(Self);
   dsTablaG.DataSet := dmmAlbaranes.unqryTablaG;
   tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
+  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
+  VincularCantidadGrid(
+    tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBLIN'),
+    tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
