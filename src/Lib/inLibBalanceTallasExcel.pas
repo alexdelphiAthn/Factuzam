@@ -109,8 +109,10 @@ var
   grpEtqs    : array[1..N_NIVELES] of string;
   grpUsado   : array[1..N_NIVELES] of Boolean;
   grpFilas   : array[1..N_NIVELES] of TList<Integer>;
-  ventasFila : Double;                          // ventas reales de la fila actual
-  totCdad, totImporte, totVentas: Double;       // acumulados del total general
+  grpExifCant: array[1..N_NIVELES] of Double;   // existencias finales (uds) por grupo
+  grpExifImp : array[1..N_NIVELES] of Double;   // existencias finales (valor) por grupo
+  ventasFila, exifCantFila, exifImpFila: Double; // valores de la fila actual
+  totExifCant, totExifImp, totVentas: Double;   // acumulados del total general
   lvl, nivelCambio: Integer;
 
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
@@ -294,6 +296,8 @@ var
       Inc(iRow);
     end;
     grpFilas[ANivel].Clear;
+    grpExifCant[ANivel] := 0;
+    grpExifImp[ANivel]  := 0;
   end;
 
   // Resumen (grand total) de un nivel de grupo: una sola línea con la suma de
@@ -305,10 +309,10 @@ var
     if grpUsado[ANivel] and (grpFilas[ANivel].Count > 0) then
     begin
       W(Sheet, iRow, 0, 'TOTAL ' + grpEtqs[ANivel], True, ssahLeft);
-      WFormula(Sheet, iRow, COL_CDAD,
-        SumaFormula(grpFilas[ANivel], COL_CDAD), FMT_NUM_HZ);
-      WFormula(Sheet, iRow, COL_IMPORTE,
-        SumaFormula(grpFilas[ANivel], COL_IMPORTE), FMT_EUR_HZ);
+      // Cantidad/Importe del total = SOLO existencias finales (stock); las
+      // ventas van aparte en su columna.
+      EscNum(COL_CDAD,    grpExifCant[ANivel], FMT_NUM_HZ, False);
+      EscNum(COL_IMPORTE, grpExifImp[ANivel],  FMT_EUR_HZ, False);
       WFormula(Sheet, iRow, COL_VENTAS,
         SumaFormula(grpFilas[ANivel], COL_VENTAS), FMT_EUR_HZ);
       for c := 0 to COL_MAX do
@@ -321,6 +325,8 @@ var
       Inc(iRow);
     end;
     grpFilas[ANivel].Clear;
+    grpExifCant[ANivel] := 0;
+    grpExifImp[ANivel]  := 0;
   end;
 
 begin
@@ -335,9 +341,11 @@ begin
     grpCods[lvl]  := #1;     // centinela: la 1ª fila siempre "abre" grupo
     grpEtqs[lvl]  := '';
     grpUsado[lvl] := False;
+    grpExifCant[lvl] := 0;
+    grpExifImp[lvl]  := 0;
   end;
-  totCdad := 0;
-  totImporte := 0;
+  totExifCant := 0;
+  totExifImp := 0;
   totVentas := 0;
   // Pre-carga de fotos (a nivel artículo) en UNA sola consulta, evitando un
   // SELECT por artículo dentro del bucle (N+1). El bucle solo construirá la
@@ -454,13 +462,22 @@ begin
           ventasFila := QDatos.FieldByName('VENTAS').AsFloat;
           EscNum(COL_VENTAS, ventasFila, FMT_EUR, True);
           AcumularBanda;
-          totCdad     := totCdad + QDatos.FieldByName('CANTIDAD').AsFloat;
-          totImporte  := totImporte + QDatos.FieldByName('IMPORTE').AsFloat;
+          // Totales por grupo / general: SOLO existencias finales (uds + valor)
+          // y ventas. EXIFIN_CANT/IMP solo son <> 0 en la banda de exist. fin.
+          exifCantFila := QDatos.FieldByName('EXIFIN_CANT').AsFloat;
+          exifImpFila  := QDatos.FieldByName('EXIFIN_IMP').AsFloat;
+          totExifCant := totExifCant + exifCantFila;
+          totExifImp  := totExifImp + exifImpFila;
           totVentas   := totVentas + ventasFila;
-          // La fila de detalle entra en el =SUM de cada grupo abierto.
+          // La fila de detalle entra en el =SUM de ventas de cada grupo abierto;
+          // las existencias finales se acumulan aparte por nivel.
           for lvl := 1 to N_NIVELES do
             if grpUsado[lvl] then
+            begin
               grpFilas[lvl].Add(iRow);
+              grpExifCant[lvl] := grpExifCant[lvl] + exifCantFila;
+              grpExifImp[lvl]  := grpExifImp[lvl] + exifImpFila;
+            end;
           Inc(iRow);
           QDatos.Next;
         end;
@@ -472,8 +489,8 @@ begin
             EmitirResumenGrupo(lvl);
         // Total general (cantidad, importe y ventas).
         W(Sheet, iRow, 0, 'TOTAL GENERAL', True, ssahLeft);
-        EscNum(COL_CDAD,     totCdad,     FMT_NUM_HZ, False);
-        EscNum(COL_IMPORTE,  totImporte,  FMT_EUR_HZ, False);
+        EscNum(COL_CDAD,     totExifCant, FMT_NUM_HZ, False);
+        EscNum(COL_IMPORTE,  totExifImp,  FMT_EUR_HZ, False);
         EscNum(COL_VENTAS,   totVentas,   FMT_EUR_HZ, False);
         for c := 0 to COL_MAX do
           if Sheet.Cells[iRow, c] <> nil then
