@@ -19,12 +19,15 @@
 {      vale (Tipo='L') → 'VL'  (vale emitido)                                  }
 {      resto (ventas)  → 'VE'                                                  }
 {    Regla del usuario: "las operaciones AL se convierten en depósitos y los   }
-{    CB contiguos en adelantos". El AL abre el depósito (DE) y los cobros      }
-{    (CB) del MISMO CLIENTE que vienen después se enlazan a ese depósito vía   }
-{    ID_DEPOSITO_OPCAJA (heurística "contiguo" = último depósito abierto del   }
-{    cliente). Limitación: en el histórico antiguo los cobros suelen venir     }
-{    SIN cliente y las columnas CtaCli vienen vacías, así que ese enlace es    }
-{    best-effort; cuando no se puede resolver, el CB queda sin depósito.       }
+{    CB contiguos en adelantos". El AL abre UN depósito POR LÍNEA de artículo  }
+{    (multilínea); el DE se enlaza al primero. Los cobros (CB) del MISMO       }
+{    CLIENTE posteriores se enlazan a ese depósito (heurística "contiguo" =    }
+{    último depósito abierto del cliente), ACUMULAN su importe en              }
+{    IMPORTE_ANTICIPO_DEP y dejan el depósito CERRADO cuando el anticipo       }
+{    alcanza el precio de venta. Limitación: en el histórico antiguo los       }
+{    cobros suelen venir SIN cliente y las columnas CtaCli vacías, así que el  }
+{    enlace/acumulación es best-effort; sin cliente, el CB queda suelto. En    }
+{    AL multilínea el anticipo se acumula en el primer depósito.               }
 {                                                                              }
 {    Formas de pago: el legacy guarda el desglose en COLUMNAS de occaj         }
 {    (Efectivo, Tarjeta, ValeTienda, ValePromocion). Cada columna no nula      }
@@ -196,18 +199,22 @@ begin
   end;
 end;
 
-// Resuelve el artículo/SKU/precio de la PRIMERA línea real de una operación
-// AL para poder crear el depósito (que exige CODIGO_ART/CODIGO_UNIDAD). Usa
-// la misma resolución del slot de color que SKUs/Movimientos. Devuelve False
-// si la operación no tiene una línea de artículo aprovechable.
-function LeerPrimeraLineaAlbaran(Eng: TMigEngine;
-                                 const iEmp, iAlm, iCaja, iOpe: Integer;
-                                 out sArt, sSku: string;
-                                 out fPrecio: Double): Boolean;
+// Crea un depósito por CADA línea de artículo del albarán (AL): una prenda
+// por línea (soporte multilínea). PENDIENTE con anticipo 0; los cobros lo van
+// acumulando. Usa la misma resolución del slot de color que SKUs/Movimientos.
+// Devuelve el ID del PRIMER depósito (para enlazarlo a la operación DE), o
+// '' si la operación no tiene líneas de artículo aprovechables. El INSERT se
+// hace sobre qDep (preparado por el llamante con cInsDep).
+function CrearDepositosAlbaran(Eng: TMigEngine;
+                               const iEmp, iAlm, iCaja, iOpe: Integer;
+                               const sEmp, sAlm, sCli, sCaja, sNum: string;
+                               const dtCrea: TDateTime;
+                               qDep: TUniQuery): string;
 const
-  cSql =
-    'SELECT TOP 1 l.Articulo, l.Talla, ' +
+  cLineas =
+    'SELECT l.NroLinea, l.Articulo, l.Talla, ' +
     '       ISNULL(l.PrecioCIva, 0) AS PrecioCIva, ' +
+    '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
     '       CASE ' +
     '         WHEN co.Descripcion IS NULL ' +
     '           OR LTRIM(RTRIM(co.Descripcion)) = '''' ' +
@@ -224,30 +231,75 @@ const
     '  AND LTRIM(RTRIM(l.Articulo)) <> '''' AND l.Articulo <> ''0'' ' +
     'ORDER BY l.NroLinea';
 var
+  qLin:      TUniQuery;
+  sArt, sId: string;
+begin
+  Result := '';
+  qLin := TUniQuery.Create(nil);
+  try
+    qLin.Connection := Eng.ConSrv;
+    qLin.SQL.Text   := cLineas;
+    qLin.ParamByName('e').AsInteger := iEmp;
+    qLin.ParamByName('a').AsInteger := iAlm;
+    qLin.ParamByName('c').AsInteger := iCaja;
+    qLin.ParamByName('o').AsInteger := iOpe;
+    qLin.Open;
+    while not qLin.Eof do
+    begin
+      sArt := Trim(qLin.FieldByName('Articulo').AsString);
+      sId  := Format('DM%d-%d-%d-%d',
+                [iEmp, iCaja, iOpe, qLin.FieldByName('NroLinea').AsInteger]);
+      qDep.ParamByName('id').AsString    := sId;
+      qDep.ParamByName('emp').AsString   := sEmp;
+      if sCli <> '' then
+        qDep.ParamByName('cli').AsString := sCli
+      else
+        qDep.ParamByName('cli').AsString := '0';
+      qDep.ParamByName('art').AsString   := sArt;
+      qDep.ParamByName('uni').AsString   := ConstruirCodigoUnidad(sArt,
+        Trim(qLin.FieldByName('DescColor').AsString),
+        Trim(qLin.FieldByName('Talla').AsString));
+      qDep.ParamByName('alm').AsString   := sAlm;
+      qDep.ParamByName('precio').AsFloat := qLin.FieldByName('PrecioCIva').AsFloat;
+      qDep.ParamByName('cant').AsFloat   := qLin.FieldByName('Cantidad').AsFloat;
+      qDep.ParamByName('fcrea').AsDateTime := dtCrea;
+      qDep.ParamByName('caja').AsString  := sCaja;
+      qDep.ParamByName('num').AsString   := sNum;
+      RellenarAuditoria(qDep, Eng.Usuario);
+      qDep.ExecSQL;
+      if Result = '' then
+        Result := sId;
+      qLin.Next;
+    end;
+  finally
+    qLin.Free;
+  end;
+end;
+
+// Acumula un cobro a cuenta en el anticipo del depósito y lo cierra si el
+// anticipo alcanza el precio de venta. MySQL evalúa los SET de izquierda a
+// derecha, así que el IF de ESTADO ya ve el IMPORTE_ANTICIPO_DEP actualizado.
+procedure AcumularAnticipo(Eng: TMigEngine; const sIdDep: string;
+                           const fImporte: Double);
+const
+  cUpd =
+    'UPDATE fza_depositos_cliente ' +
+    '   SET IMPORTE_ANTICIPO_DEP = IMPORTE_ANTICIPO_DEP + :amt, ' +
+    '       ESTADO_DEP = IF(PRECIO_VENTA_DEP > 0 ' +
+    '                       AND IMPORTE_ANTICIPO_DEP >= PRECIO_VENTA_DEP, ' +
+    '                       ''CERRADO'', ESTADO_DEP), ' +
+    '       INSTANTE_MODIF = NOW() ' +
+    ' WHERE ID_DEPOSITO_DEP = :id';
+var
   q: TUniQuery;
 begin
-  Result  := False;
-  sArt    := '';
-  sSku    := '';
-  fPrecio := 0;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConSrv;
-    q.SQL.Text   := cSql;
-    q.ParamByName('e').AsInteger := iEmp;
-    q.ParamByName('a').AsInteger := iAlm;
-    q.ParamByName('c').AsInteger := iCaja;
-    q.ParamByName('o').AsInteger := iOpe;
-    q.Open;
-    if not q.IsEmpty then
-    begin
-      sArt    := Trim(q.FieldByName('Articulo').AsString);
-      sSku    := ConstruirCodigoUnidad(sArt,
-                   Trim(q.FieldByName('DescColor').AsString),
-                   Trim(q.FieldByName('Talla').AsString));
-      fPrecio := q.FieldByName('PrecioCIva').AsFloat;
-      Result  := sArt <> '';
-    end;
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   := cUpd;
+    q.ParamByName('amt').AsFloat := fImporte;
+    q.ParamByName('id').AsString := sIdDep;
+    q.ExecSQL;
   finally
     q.Free;
   end;
@@ -311,7 +363,7 @@ const
     '   CANTIDAD_PENDIENTE_DEP, CODIGO_CAJA_DEP, NUMERO_OPERACION_DEP, ' +
     '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES (:id, :emp, :cli, :art, :uni, :alm, :precio, 0, ''PENDIENTE'', ' +
-    '        :fcrea, ''N'', 0, ''S'', 1, :caja, :num, ' +
+    '        :fcrea, ''N'', 0, ''S'', :cant, :caja, :num, ' +
     '        :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 var
   qSrc, qOp, qPago, qDep:    TUniQuery;
@@ -320,9 +372,9 @@ var
   iLineaPago:                Integer;
   sEmp, sAlm, sCaja, sNum:   string;
   sTipoOp, sCli, sConcepto:  string;
-  sDepArt, sDepSku, sIdDep:  string;
+  sDepSku, sIdDep:           string;
   dtInstante:                TDateTime;
-  fNeto, fDepPrecio:         Double;
+  fNeto:                     Double;
 
   // Inserta una línea de pago si el importe no es ~0.
   procedure AddPago(const sFp: string; fImporte: Double);
@@ -389,42 +441,27 @@ begin
         dtInstante := Now;
       dtInstante := ComponerInstante(dtInstante,
                       qSrc.FieldByName('Hora').AsString);
-      // Depósito: si es AL (→DE) intentamos crear el depósito ANTES de la
-      // operación para enlazar ID_DEPOSITO_OPCAJA.
+      // Depósito: si es AL (→DE) creamos un depósito por línea ANTES de la
+      // operación para enlazar ID_DEPOSITO_OPCAJA al primero.
       sIdDep := '';
       if sTipoOp = 'DE' then
       begin
-        if LeerPrimeraLineaAlbaran(Eng, iEmp, iAlm, iCaja, iOpe,
-                                   sDepArt, sDepSku, fDepPrecio) then
-        begin
-          sIdDep := Format('DM%d-%d-%d', [iEmp, iCaja, iOpe]);
-          qDep.ParamByName('id').AsString     := sIdDep;
-          qDep.ParamByName('emp').AsString    := sEmp;
-          if sCli <> '' then
-            qDep.ParamByName('cli').AsString  := sCli
-          else
-            qDep.ParamByName('cli').AsString  := '0';
-          qDep.ParamByName('art').AsString    := sDepArt;
-          qDep.ParamByName('uni').AsString    := sDepSku;
-          qDep.ParamByName('alm').AsString    := sAlm;
-          qDep.ParamByName('precio').AsFloat  := fDepPrecio;
-          qDep.ParamByName('fcrea').AsDateTime := dtInstante;
-          qDep.ParamByName('caja').AsString   := sCaja;
-          qDep.ParamByName('num').AsString    := sNum;
-          RellenarAuditoria(qDep, Eng.Usuario);
-          qDep.ExecSQL;
-          // "Contiguo": registramos el depósito abierto del cliente para
-          // enlazar los cobros (CB) posteriores del mismo cliente.
-          if sCli <> '' then
-            mapDepCliente.AddOrSetValue(sCli, sIdDep);
-        end;
+        sIdDep := CrearDepositosAlbaran(Eng, iEmp, iAlm, iCaja, iOpe,
+                    sEmp, sAlm, sCli, sCaja, sNum, dtInstante, qDep);
+        // "Contiguo": registramos el depósito abierto del cliente para
+        // enlazar y acumular los cobros (CB) posteriores del mismo cliente.
+        if (sIdDep <> '') and (sCli <> '') then
+          mapDepCliente.AddOrSetValue(sCli, sIdDep);
       end
       else if sTipoOp = 'CB' then
       begin
-        // Cobro a cuenta (adelanto): lo enlazamos al último depósito
-        // abierto del cliente, si lo conocemos.
+        // Cobro a cuenta (adelanto): lo enlazamos al último depósito abierto
+        // del cliente y acumulamos el importe (cierra si llega al precio).
         if (sCli <> '') and mapDepCliente.ContainsKey(sCli) then
+        begin
           sIdDep := mapDepCliente.Items[sCli];
+          AcumularAnticipo(Eng, sIdDep, fNeto);
+        end;
       end;
       // Cabecera de operación.
       qOp.ParamByName('emp').AsString  := sEmp;

@@ -51,10 +51,13 @@ Cada **línea** enlaza:
 - `FECHA_FAC` = `FechaOpe` (o `Fecha`).
 - `CODIGO_CLI_FAC` = `Cliente` (o `'0'` público).
 - `CODIGO_CAJERO_FAC` = `Vendedor`; `CODIGO_ALM/CAJA_FAC` + `NUMERO_OPERACION_FAC`.
-- **IVA (aproximado, primera versión):** se trata como UNA banda "Normal"
-  derivada del total y del % del legacy (`occaj.PorcenIva1`):
-  `base = Neto/(1+%/100)`, `cuota = Neto-base`. `TOTAL_LIQUIDO_FAC=Neto`.
-  Las **líneas** sí llevan su IVA real por fila.
+- **IVA por bandas N/R/S/E:** se usan las 4 bandas que el legacy trae en
+  `occaj` (`BaseImp1-4`/`PorcenIva1-4`/`CuotaIVA1-4`), clasificando cada una
+  por su % (`0`=Exento, `<6`=Super, `<13`=Reducido, resto=Normal) y
+  acumulando base+cuota en su banda. La cuota se calcula si el legacy no la
+  trae (filas antiguas con `CuotaIVA` NULL). Si no hay bandas pero sí `Neto`,
+  se deriva una banda única del total. `TOTAL_LIQUIDO_FAC=Neto`. Las **líneas**
+  llevan además su IVA real por fila (`occajarp.PorIva`).
 
 ## Idempotencia
 
@@ -70,7 +73,8 @@ Clientes y SKUs migrados. Coherente con "Ventas / Caja" (comparten
 
 ## Pendiente / a revisar
 
-- Desglose de IVA en bandas N/R/S/E reales (hoy todo va a "Normal").
+- Recargo de equivalencia (RE) en la cabecera: hoy no se mapea (las bandas
+  RE quedan a NULL). El desglose de IVA N/R/S/E ya está hecho.
 - Estado fiscal de la cabecera (`FASE_FAC`, Verifactu, XML): se deja
   `SIMPLIFICADA`/consolidada sin firma. Decidir política para histórico.
 - Datos denormalizados de empresa/cliente en la cabecera (razón social,

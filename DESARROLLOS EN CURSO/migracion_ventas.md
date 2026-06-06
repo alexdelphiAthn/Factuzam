@@ -48,15 +48,16 @@ depósitos y los CB contiguos en adelantos"**.
   cliente** (heurística de "contiguo"), manteniendo en memoria un mapa
   cliente→depósito durante el barrido cronológico.
 
-**Limitaciones conocidas (datos del histórico):**
-- En el histórico antiguo los **cobros vienen SIN cliente** y las columnas
-  `…CtaCli` (que enlazarían el cobro con su albarán) vienen **vacías**, así
-  que el enlace cobro→depósito es *best-effort*: si no hay cliente, el `CB`
-  queda sin `ID_DEPOSITO_OPCAJA`.
-- No se detecta el **cierre** del depósito en el legacy, así que un depósito
-  queda `PENDIENTE` y `IMPORTE_ANTICIPO_DEP=0` (no se acumulan los cobros).
-- Un `AL` con varias líneas crea **un solo depósito** (primera línea); el
-  modelo de Factuzam es un depósito por artículo.
+**Comportamiento y limitaciones:**
+- `AL` multilínea: se crea **un depósito por línea de artículo** (ID
+  `DM<emp>-<caja>-<op>-<linea>`); el `DE` se enlaza al primero.
+- Los cobros (`CB`) del mismo cliente **acumulan** en `IMPORTE_ANTICIPO_DEP`
+  y dejan el depósito **`CERRADO`** cuando el anticipo alcanza
+  `PRECIO_VENTA_DEP`.
+- Limitación de datos: en el histórico antiguo los **cobros vienen SIN
+  cliente** y las columnas `…CtaCli` vacías, así que el enlace/acumulación es
+  *best-effort*; sin cliente, el `CB` queda suelto. En `AL` multilínea el
+  anticipo se acumula en el **primer** depósito.
 
 Todo esto es afinable en una segunda pasada cuando se decida la política
 exacta de reconstrucción de depósitos.
@@ -121,8 +122,10 @@ referencia `CODIGO_UNIDAD`).
 - Catálogo real de `occaj.Tipo`/`TipoDoc` para afinar `MapearTipoOp`
   (hoy: heurística basada en los datos vistos: V/P→VE, C→CB, A/AL→DE,
   L→VL, TR/AT→traspaso).
-- Política de depósitos: acumular `IMPORTE_ANTICIPO_DEP` con los cobros,
-  detectar cierres, y soportar AL multilínea (un depósito por artículo).
+- Política de depósitos: implementada (multilínea = un depósito por línea,
+  acumulación de anticipos con los cobros y cierre al alcanzar el precio).
+  Pendiente: enlazar cobros que vienen SIN cliente (CtaCli vacío en el
+  histórico) y repartir el anticipo entre las líneas en AL multilínea.
 - Fase 2 hecha en `inLibMigFacturas.pas` (detalle de venta como factura
   SIMPLIFICADA). Queda afinar las bandas de IVA N/R/S/E y el estado
   fiscal/Verifactu de la cabecera.
