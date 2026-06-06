@@ -35,6 +35,9 @@ src/utilmigsqlsrv/
 │                                                   fza_inventarios_lineas
 ├── inLibMigMovimientos.pas        dbo.ocmovarp   → fza_movimientos_almacen
 │                                                   (+ reconstruye stockactual)
+├── inLibMigVentas.pas             dbo.occaj      → fza_caja_operaciones +
+│                                                   fza_caja_pagos +
+│                                                   fza_depositos_cliente
 ├── inLibMigTallajes.pas           dbo.ocgrptal + ocgrptalnor →
 │                                                  fza_atributos_conjuntos
 │                                                  + _det
@@ -157,7 +160,7 @@ workers de la actual han terminado.
 | 0 | formas_pago · ivas_grupos · ivas · empresas · proveedores · familias · colores_maestros · tallas_maestras | — |
 | 1 | almacenes · clientes · articulos · tallajes | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
-| 3 | inventarios · movimientos | Wave 2 |
+| 3 | inventarios · movimientos · ventas | Wave 2 |
 
 `Parallel.ForEach<string>(aDeWave).Execute(...)` levanta `N` workers
 (por defecto OmniThread elige según los núcleos disponibles) y los
