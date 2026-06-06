@@ -69,9 +69,18 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
             TIPO_CANTIDAD), columna invisible + VincularCantidadGrid.
       - [x] Movimientos: costes (Coste Unit./Total Coste/Precio Medio) en
             formato moneda.
-      - [ ] Traspasos, Compras-sesiones (matriz).
-- [ ] **Fase 6 - Tickets/informes/Excel**: sustituir formato entero/`FloatToStr`
-      por `FormatearCantidad(valor, unidad)` en `inLibGenerarTicket(BD)`,
-      `inLibFacturaExcel`, `inLibDocCompraExcel`, `inLibInventarioExcel`,
-      balances y `.fr3`.
-- [ ] **Fase 7 - Cierre**: pump de version en `inLibGlobalVar.pas` y compilar.
+      - [x] Traspasos: la cantidad es ftFloat con columna por defecto -> ya
+            muestra decimales.
+      - [x] Compras-sesiones (matriz): el spin de celda (CrearSpin) pasa a
+            vtFloat con formato '0.######'; e indicativo de la unidad del
+            articulo en la cabecera de la matriz (DibujarCabecera).
+- [~] **Fase 6 - Tickets/informes/Excel**:
+      - [x] Tickets (`inLibGenerarTicket` / `inLibGenerarTicketBD`): cantidad
+            con `oUnidades.Formatear(cant, TIPO_CANTIDAD_ARTICULO_FACLIN)`.
+      - [x] Excel: escriben la cantidad como numero (AsFloat) -> Excel muestra
+            los decimales naturalmente; no requiere cambio.
+      - [ ] Informes `.fr3` (FastReport): el DisplayFormat de la cantidad esta
+            en el diseno del informe; hay que ajustarlo en el editor de
+            FastReport (no por codigo). PENDIENTE de diseno.
+- [x] **Fase 7 - Cierre**: pump de version en `inLibGlobalVar.pas`
+      (1.0.15.202606060000.alpha). Falta compilar/validar el conjunto.
