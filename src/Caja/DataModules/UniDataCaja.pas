@@ -1403,11 +1403,24 @@ begin
       if (Abs(ImporteFP) > 0.001) and (CodigoFP <> 'VALE') then
       begin
         Inc(NumLineaPago);
+        // La referencia (código de bono, autorización de tarjeta, TxID…) y
+        // los datos de divisa se capturan en memoria durante la fase de cobro
+        // (inLibFaseCobro). Hay que pasarlos aquí o no llegan a la BD y el
+        // histórico de pagos los muestra vacíos.
+        var DivisaFP  :=
+          DatosCobro.MemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
+        var FactorFP  :=
+          DatosCobro.MemTablePagos.FieldByName('FACTOR_CAMBIO').AsFloat;
+        var ImpDivFP  :=
+          DatosCobro.MemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat;
+        var ReferenFP :=
+          DatosCobro.MemTablePagos.FieldByName('REFERENCIA').AsString;
         InsertarPagoCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
           NumLineaPago,
           CodigoFP, ImporteFP,
-          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency);
+          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency,
+          DivisaFP, '', FactorFP, ImpDivFP, ReferenFP);
       end;
       DatosCobro.MemTablePagos.Next;
     end;
