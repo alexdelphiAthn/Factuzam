@@ -152,6 +152,7 @@ uses
   inLibMigArticulosAtributos,
   inLibMigArticulosSkus,
   inLibMigInventarios,
+  inLibMigMovimientos,
   inLibMigTallajes,
   inLibMigArticulosTallajes,
   inLibMigArticulosProveedores,
@@ -311,6 +312,11 @@ begin
   FEngine.Registrar('inventarios', 'Inventario inicial (stock)',
     'dbo.ocartacp → fza_inventarios + fza_inventarios_lineas',
     MigrarInventarios);
+  // ALTERNATIVA a "Inventario inicial": migra el histórico de movimientos
+  // y reconstruye el stock desde él. Ejecuta una u otra, no ambas.
+  FEngine.Registrar('movimientos', 'Movimientos histórico (stock)',
+    'dbo.ocmovarp → fza_movimientos_almacen + reconstruye stockactual',
+    MigrarMovimientos);
   FEngine.Registrar('articulos_proveedores',
     'Proveedor y modelo por artículo',
     'ocartp.Proveedor + Modelo → fza_articulos_proveedores',
@@ -853,7 +859,7 @@ begin
      (sCodigo = 'articulos_propiedades')    or
      (sCodigo = 'articulos_tarifas')        or
      (sCodigo = 'skus')                     then Exit(2);
-  if sCodigo = 'inventarios' then Exit(3);
+  if (sCodigo = 'inventarios') or (sCodigo = 'movimientos') then Exit(3);
   // Default: wave 0 (conservador, sin deps conocidas)
   Result := 0;
 end;
