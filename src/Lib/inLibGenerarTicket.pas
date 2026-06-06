@@ -32,7 +32,7 @@ uses
 implementation
 
 uses
-  inLibDir;
+  inLibDir, inLibUnidadesMedida;
 
 procedure ImprimirT(const ACodigoEmpresa,
                           ACodigoAlmacen,
@@ -121,8 +121,12 @@ begin
       begin
         var sArt := Format('%-26s', [Copy(dLin.FieldByName(
                               'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
+        var sUni := '';
+        if dLin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN') <> nil then
+          sUni := dLin.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
         var sUds := Format('%4s',
-             [FloatToStr(dLin.FieldByName('CANTIDAD_FACLIN').AsFloat)]);
+             [oUnidades.Formatear(
+                dLin.FieldByName('CANTIDAD_FACLIN').AsFloat, sUni)]);
         var Des := Format('%-38s', [Copy(dLin.FieldByName(
                             'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 38)]);
         var sPre := FormatFloat('#,##0.00',
