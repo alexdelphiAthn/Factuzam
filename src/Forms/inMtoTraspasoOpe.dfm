@@ -7,6 +7,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   OnDestroy = FormDestroy
   OnShow = FormShow
   OnKeyDown = FormKeyDown
+  OnKeyPress = FormKeyPress
   PixelsPerInch = 96
   TextHeight = 13
   object pnlModos: TPanel
