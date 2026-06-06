@@ -29,13 +29,29 @@ realidad son de otra tabla (lineas de factura -> `FACLIN`, movimientos ->
   fue aplicarla de mas, no la regla.
 - `src/utilnormbbdd/cambios3/*`: logs/historico de la migracion.
 
+## Por que recompilar no basta (prioridad del caption)
+Al abrir un formulario, `inLibDevExp` restaura el layout de la rejilla con esta
+prioridad (ver `RestaurarColumnas`, ~linea 723):
+
+> **perfil de usuario (`fza_usuarios_perfiles`) > `fza_config_campos` > DFM**
+
+El caption visible viene del **perfil de usuario**, que **pisa** al DFM. Por eso
+el fix en los `.dfm` solo afecta a instalaciones nuevas / usuarios sin perfil
+guardado; en una BBDD viva hay que actualizar `fza_usuarios_perfiles`. El caso
+de **facturas** (`inMtoFacturasBase` / `frmMtoFacturasNormal`) ni siquiera tiene
+el caption en el DFM: es 100% perfil/BBDD.
+
 ## Este script (`fix_caption_cantidad_artvin.sql`)
 Las rejillas guardan su layout por usuario en `fza_usuarios_perfiles`
 (`SUBKEY_USUPER` = `tvXxx_COLUMNA_Caption`, valor en `VALUE_USUPER`). El dump
 modelo trae 5 filas con el caption malo, pero cada BBDD de produccion acumula
-una copia por usuario/grupo que haya abierto esos formularios. El `UPDATE`
-filtra por el valor erroneo, asi que corrige todas las copias de una pasada.
+una copia por usuario/grupo que haya abierto esos formularios. Un unico
+`UPDATE ... REPLACE(VALUE_USUPER, 'CANTIDAD_ARTVIN', 'Cantidad')` filtrado por
+`SUBKEY` de caption corrige **todas** las variantes y copias de una pasada.
 Idempotente.
+
+Tras ejecutarlo, **reabrir el formulario** (o la pestania) para que recargue el
+perfil; ya se vera `Cantidad` / `Tipo Cantidad`.
 
 ## Pendiente cosmetico (sin accion)
 El SP que declara el cursor `CUR_LINEAS` (en `factuzam_original.sql`) usa
