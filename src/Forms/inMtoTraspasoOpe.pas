@@ -503,8 +503,15 @@ begin
     sKey := Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
     if (sKey <> '') and ConsolidarSiExiste(sKey) then
     begin
+      // Descartamos la linea recien resuelta para no duplicar. Cancel si sigue
+      // en edicion; si el clon ya la dejo grabada con esa misma SKU, la
+      // borramos (mismo patron que caja). Luego garantizamos una linea blanca.
       if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
         FDatos.cdsLineas.Cancel;
+      if (not FDatos.cdsLineas.IsEmpty) and
+         (Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) = sKey) then
+        FDatos.cdsLineas.Delete;
+      AsegurarLineaNueva;
       ActualizarTotal;
     end
     else
