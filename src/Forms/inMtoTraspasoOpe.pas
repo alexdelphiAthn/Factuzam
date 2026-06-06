@@ -28,9 +28,17 @@ uses
   cxButtonEdit, cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
-  Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
-  inLibGridArticulos, inLibPermisos, inLibGenBusq, inLibFotos,
-  inLibAtributosPaleta, inLibCajaParam;
+  Data.DB, Datasnap.DBClient, Uni, inLibGlobalVar, UniDataTraspaso,
+  inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
+  inLibPermisos, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
+  inLibCajaParam, Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
+  cxLocalization;
+
+const
+  // Mensaje para diferir el alta de la linea fuera del KeyPress del lector
+  // (dentro del KeyPress no se puede reestructurar el cds; cxGrid aun
+  // referencia el editor in-place). Igual patron que inMtoCajaOpe.
+  WM_PROCESAR_SCANNER = WM_USER + 117;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -56,6 +64,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
                           Shift: TShiftState);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure btnModoClick(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
     procedure btnF12Click(Sender: TObject);
@@ -88,6 +97,15 @@ type
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
     FQModalSolic: TUniQuery;
+    // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe):
+    // KeyPreview + STX(#2)..ETX(#3). Se lee desde cualquier campo; los
+    // caracteres se consumen para no ensuciar el control enfocado.
+    FLeyendoScanner: Boolean;
+    FScanBuffer: string;
+    FCodigoScanPend: string;
+    procedure WMProcesarScanner(var Msg: TMessage); message WM_PROCESAR_SCANNER;
+    procedure ProcesarLecturaScanner(const ACodigo: string);
+    function ConsolidarSiExiste(const ASku: string): Boolean;
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -164,15 +182,10 @@ end;
 
 procedure TfrmMtoOpeTraspaso.FormShow(Sender: TObject);
 begin
-  // El foco inicial segun el modo (ya somos visibles aqui). En Traspaso
-  // (modo de arranque) el foco va al ALMACEN DESTINO para empezar a elegir.
-  if FModo = mtTraspaso then
-  begin
-    if cboDestino.CanFocus then
-      cboDestino.SetFocus;
-  end
-  else
-    EnfocarSegunModo;
+  // Foco inicial segun el modo. En Traspaso dejamos el grid en modo edicion
+  // (editor de articulo abierto) para poder escanear directamente sin pulsar
+  // Enter; el almacen destino trae su valor por defecto y se valida al grabar.
+  EnfocarSegunModo;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirGrid;
@@ -478,29 +491,49 @@ procedure TfrmMtoOpeTraspaso.GridResuelto(const ACodArt, ASku,
                                           ADescripcion: string;
                                           ACompleto: Boolean);
 var
-  sAlmacenOrigen: string;
+  sAlmacenOrigen, sKey: string;
 begin
-  if ACompleto and (FDatos.cdsLineas.State in [dsEdit, dsInsert]) then
+  if not ACompleto then
+    ActualizarTotal
+  else
   begin
-    sAlmacenOrigen :=
-      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-    FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
-      FDatos.ObtenerCosteMedio(ASku, sAlmacenOrigen);
-    FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
-      FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+    // Punto comun de resolucion (escaneo Codigo+CR via celda, STX/ETX o
+    // teclado). Si la SKU/articulo ya esta en otra linea, sumamos alli y
+    // descartamos esta (consolidacion, como en caja). La clave es lo que se
+    // acaba de guardar en CODIGO_UNIDAD de la linea actual.
+    sKey := Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+    if (sKey <> '') and ConsolidarSiExiste(sKey) then
+    begin
+      // Descartamos la linea recien resuelta para no duplicar. Cancel si sigue
+      // en edicion; si el clon ya la dejo grabada con esa misma SKU, la
+      // borramos (mismo patron que caja). Luego garantizamos una linea blanca.
+      if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
+        FDatos.cdsLineas.Cancel;
+      if (not FDatos.cdsLineas.IsEmpty) and
+         (Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) = sKey) then
+        FDatos.cdsLineas.Delete;
+      AsegurarLineaNueva;
+      ActualizarTotal;
+    end
+    else
+    begin
+      if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
+      begin
+        sAlmacenOrigen :=
+          FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+        FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
+          FDatos.ObtenerCosteMedio(ASku, sAlmacenOrigen);
+        FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+          FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+      end;
+      ActualizarTotal;
+      ConsultarStock(ACodArt);
+      RefrescarFotoStock(ACodArt, ASku);
+      // Otra linea en blanco para seguir metiendo (solo traspaso/solicitar).
+      if FModo <> mtAtender then
+        AsegurarLineaNueva;
+    end;
   end;
-  ActualizarTotal;
-  // Refrescar la consulta de stock y la foto del articulo recien resuelto
-  // (el cambio de campos en la misma fila no dispara NavDataChange).
-  if ACompleto then
-  begin
-    ConsultarStock(ACodArt);
-    RefrescarFotoStock(ACodArt, ASku);
-  end;
-  // Al completar un SKU, deja otra linea en blanco para seguir metiendo
-  // (sustituye a la NewItemRow); solo en traspaso/solicitar.
-  if ACompleto and (FModo <> mtAtender) then
-    AsegurarLineaNueva;
 end;
 
 procedure TfrmMtoOpeTraspaso.PrepararValores(AModo: TModoTraspaso;
@@ -605,6 +638,102 @@ begin
   begin
     FDatos.cdsLineas.Append;
     FDatos.cdsLineas.Post;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  // Igual que inMtoCajaOpe: el lector envia STX(#2) + codigo + ETX(#3). Con
+  // KeyPreview (heredado de TfrmBase) llega aqui tenga el foco quien tenga.
+  // Acumulamos y consumimos (Key:=#0) para no ensuciar el control enfocado;
+  // al ETX diferimos el alta con WM_PROCESAR_SCANNER.
+  if Key = #2 then
+  begin
+    FLeyendoScanner := True;
+    FScanBuffer := '';
+    Key := #0;
+  end
+  else if FLeyendoScanner then
+  begin
+    if Key = #3 then
+    begin
+      FLeyendoScanner := False;
+      Key := #0;
+      if Trim(FScanBuffer) <> '' then
+      begin
+        FCodigoScanPend := Trim(FScanBuffer);
+        PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
+      end;
+      FScanBuffer := '';
+    end
+    else
+    begin
+      FScanBuffer := FScanBuffer + Key;
+      Key := #0;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.WMProcesarScanner(var Msg: TMessage);
+begin
+  if FCodigoScanPend <> '' then
+  begin
+    ProcesarLecturaScanner(FCodigoScanPend);
+    FCodigoScanPend := '';
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.ProcesarLecturaScanner(const ACodigo: string);
+begin
+  // Alta por lectura de pistola con framing STX/ETX. La consolidacion (sumar
+  // si la SKU ya esta) la hace GridResuelto, que es el punto comun para todas
+  // las vias de resolucion (celda Codigo+CR, STX/ETX o teclado).
+  if (Trim(ACodigo) <> '') and Assigned(FDatos) and
+     Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
+  begin
+    AsegurarLineaNueva;
+    FDatos.cdsLineas.Last;
+    FGridCtrl.ResolverEntrada(Trim(ACodigo));
+    // Dejamos el grid enfocado y el editor de articulo abierto para encadenar
+    // lecturas sin tener que pulsar Enter (el grid queda en modo edicion).
+    if (FGrid <> nil) and FGrid.CanFocus then
+      FGrid.SetFocus;
+    FGridCtrl.MostrarEditorArticulo;
+  end;
+end;
+
+function TfrmMtoOpeTraspaso.ConsolidarSiExiste(const ASku: string): Boolean;
+var
+  Clon: TClientDataSet;
+begin
+  // Si la SKU ya esta en una linea, le sumamos 1 a la cantidad y no creamos
+  // otra (mismo comportamiento que caja). Clon para no mover el cursor visible.
+  Result := False;
+  if Trim(ASku) <> '' then
+  begin
+    Clon := TClientDataSet.Create(nil);
+    try
+      Clon.CloneCursor(FDatos.cdsLineas, True);
+      Clon.First;
+      while (not Clon.Eof) and (not Result) do
+      begin
+        // Saltamos la linea actual (la que se acaba de resolver) por RecNo:
+        // solo sumamos sobre OTRA linea con la misma SKU ya grabada.
+        if (Clon.FieldByName('CODIGO_UNIDAD').AsString = ASku) and
+           (Clon.RecNo <> FDatos.cdsLineas.RecNo) then
+        begin
+          Clon.Edit;
+          Clon.FieldByName('CANTIDAD').AsFloat :=
+            Clon.FieldByName('CANTIDAD').AsFloat + 1;
+          Clon.Post;
+          ActualizarTotal;
+          Result := True;
+        end;
+        Clon.Next;
+      end;
+    finally
+      FreeAndNil(Clon);
+    end;
   end;
 end;
 

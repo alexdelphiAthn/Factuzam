@@ -193,6 +193,7 @@
         <DCCReference Include="inLibMigInventarios.pas"/>
         <DCCReference Include="inLibMigMovimientos.pas"/>
         <DCCReference Include="inLibMigVentas.pas"/>
+        <DCCReference Include="inLibMigFacturas.pas"/>
         <DCCReference Include="inLibMigTallajes.pas"/>
         <DCCReference Include="inLibMigArticulosTallajes.pas"/>
         <DCCReference Include="inLibMigArticulosProveedores.pas"/>

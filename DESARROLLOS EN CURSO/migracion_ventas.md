@@ -14,11 +14,11 @@ líneas) a Factuzam. Nuevo dominio del migrador Delphi
 | columnas de pago de `occaj` | `fza_caja_pagos` (formas de pago) |
 | operaciones `AL` | `fza_depositos_cliente` + operación `DE` |
 
-**Fuera de alcance (fase 2):** reconstrucción de las líneas de venta de
-`occajarp` como `fza_facturas` / `fza_facturas_lineas`. El stock de esas
-ventas YA entra por la migración de **Movimientos** (`ocmovarp`), así que
-aquí solo se migra la capa de caja (operaciones + pagos + depósitos). La
-factura como documento (con sus fases/Verifactu) es un subsistema aparte.
+**Fase 2 (implementada aparte en `inLibMigFacturas.pas`):** reconstrucción
+de las líneas de venta de `occajarp` como `fza_facturas` /
+`fza_facturas_lineas`. El stock de esas ventas YA entra por la migración de
+**Movimientos** (`ocmovarp`); este dominio (ventas) solo migra la capa de
+caja (operaciones + pagos + depósitos). Ver `migracion_facturas.md`.
 
 ---
 
@@ -48,15 +48,16 @@ depósitos y los CB contiguos en adelantos"**.
   cliente** (heurística de "contiguo"), manteniendo en memoria un mapa
   cliente→depósito durante el barrido cronológico.
 
-**Limitaciones conocidas (datos del histórico):**
-- En el histórico antiguo los **cobros vienen SIN cliente** y las columnas
-  `…CtaCli` (que enlazarían el cobro con su albarán) vienen **vacías**, así
-  que el enlace cobro→depósito es *best-effort*: si no hay cliente, el `CB`
-  queda sin `ID_DEPOSITO_OPCAJA`.
-- No se detecta el **cierre** del depósito en el legacy, así que un depósito
-  queda `PENDIENTE` y `IMPORTE_ANTICIPO_DEP=0` (no se acumulan los cobros).
-- Un `AL` con varias líneas crea **un solo depósito** (primera línea); el
-  modelo de Factuzam es un depósito por artículo.
+**Comportamiento:**
+- `AL` multilínea: se crea **un depósito por línea de artículo** (ID
+  `DM<emp>-<caja>-<op>-<linea>`); el `DE` se enlaza al primero.
+- Los cobros (`CB`) **reparten** su importe (waterfall) entre los depósitos
+  `PENDIENTE` del cliente —en orden de creación, rellenando cada uno hasta su
+  `PRECIO_VENTA_DEP`—, **acumulan** en `IMPORTE_ANTICIPO_DEP` y dejan cada
+  depósito **`CERRADO`** al alcanzar su precio.
+- **Cobro sin cliente**: hereda el cliente del **documento adyacente** (último
+  documento con cliente en la misma caja), que es como el legacy enlaza el
+  cobro con su albarán/cuenta. Si aun así no hay cliente, el `CB` queda suelto.
 
 Todo esto es afinable en una segunda pasada cuando se decida la política
 exacta de reconstrucción de depósitos.
@@ -121,9 +122,12 @@ referencia `CODIGO_UNIDAD`).
 - Catálogo real de `occaj.Tipo`/`TipoDoc` para afinar `MapearTipoOp`
   (hoy: heurística basada en los datos vistos: V/P→VE, C→CB, A/AL→DE,
   L→VL, TR/AT→traspaso).
-- Política de depósitos: acumular `IMPORTE_ANTICIPO_DEP` con los cobros,
-  detectar cierres, y soportar AL multilínea (un depósito por artículo).
-- Fase 2: `occajarp` → `fza_facturas` / `fza_facturas_lineas` si se quiere
-  el detalle de venta como factura (con IVA por línea, fases, Verifactu).
+- Política de depósitos: **completa** — multilínea (un depósito por línea),
+  reparto del cobro (waterfall) entre los depósitos del cliente, cierre al
+  alcanzar el precio, y herencia del cliente del **documento adyacente** para
+  los cobros sin cliente.
+- Fase 2 hecha en `inLibMigFacturas.pas` (detalle de venta como factura
+  SIMPLIFICADA). Queda afinar las bandas de IVA N/R/S/E y el estado
+  fiscal/Verifactu de la cabecera.
 - Rendimiento: hoy inserta fila a fila (claro y con enlace de depósitos).
   Si el volumen de caja lo exige, pasar operaciones+pagos a `TBulkInsert`.
