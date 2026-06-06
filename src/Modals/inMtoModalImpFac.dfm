@@ -1624,7 +1624,7 @@
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            'CANTIDAD_ARTVIN')
+            'Cantidad')
           ParentFont = False
         end
         object Memo11: TfrxMemoView

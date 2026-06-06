@@ -1228,7 +1228,7 @@ begin
 end;
 
 function AnsiOccurs(const str: string; const substr: string): integer;
-// Devuelve la cantidad_artvin de veces que una subcadena está en una cadena
+// Devuelve la cantidad de veces que una subcadena está en una cadena
 // Versión ANSI
 var
  p, q: PChar;

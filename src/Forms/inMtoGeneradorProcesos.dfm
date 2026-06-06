@@ -514,12 +514,12 @@
                           Width = 162
                         end
                         object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA1: TcxGridDBColumn
-                          Caption = 'CANTIDAD_ARTVIN'
+                          Caption = 'Cantidad'
                           DataBinding.FieldName = 'CANTIDAD_FACLIN'
                           Width = 84
                         end
                         object cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
-                          Caption = 'Tipo CANTIDAD_ARTVIN'
+                          Caption = 'Tipo Cantidad'
                           DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                         end
                         object cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn
@@ -725,12 +725,12 @@
                     Width = 162
                   end
                   object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA11: TcxGridDBColumn
-                    Caption = 'CANTIDAD_ARTVIN'
+                    Caption = 'Cantidad'
                     DataBinding.FieldName = 'CANTIDAD_FACLIN'
                     Width = 84
                   end
                   object cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn
-                    Caption = 'Tipo CANTIDAD_ARTVIN'
+                    Caption = 'Tipo Cantidad'
                     DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                   end
                   object cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn

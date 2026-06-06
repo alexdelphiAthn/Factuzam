@@ -1473,7 +1473,7 @@ begin
     begin
       Error := True;
       ErrorText := 'En artículos de depósito solo está permitido cambiar el ' +
-                   'signo de la cantidad_artvin.';
+                   'signo de la cantidad.';
     end
     else
     begin
@@ -1919,7 +1919,7 @@ begin
     // Si la línea es la prenda base del depósito
     if DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
     begin
-      // Solo permitimos editar la columna de CANTIDAD_ARTVIN/Unidades
+      // Solo permitimos editar la columna de Cantidad/Unidades
       if AItem <> tvUds then
         AAllow := False;
     end
@@ -2375,7 +2375,7 @@ begin
           else
           begin
             // Si el parámetro está desactivado, el cajero decide. Lo normal es
-            // dejarle en CANTIDAD_ARTVIN.
+            // dejarle en Cantidad.
           end;
         end;
       end;
@@ -2405,7 +2405,7 @@ begin
     begin
       ShowMessage(
         'No se puede eliminar una línea vinculada a un depósito.' + sLineBreak +
-                  'Cambie la cantidad_artvin a negativo si necesita ' +
+                  'Cambie la cantidad a negativo si necesita ' +
                   'revertirla.');
       Exit;
     end;
@@ -2906,7 +2906,7 @@ var
   Proporcion: Double;
   DescuentoAplicarLinea: Currency;
   DescuentoAcumulado: Currency;
-  CANTIDAD_ARTVIN: Double;
+  Cantidad: Double;
   PrecioSalida: Currency;
   DescuentoUnitario: Currency;
   Bkm: TBookmark;
@@ -2936,15 +2936,15 @@ begin
     begin
       DatosCaja.cdsLineas.Edit;
 
-      CANTIDAD_ARTVIN :=
+      Cantidad :=
         DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
-      if CANTIDAD_ARTVIN = 0 then CANTIDAD_ARTVIN := 1; // Protección matemática
+      if Cantidad = 0 then Cantidad := 1; // Protección matemática
 
       PrecioSalida :=
         DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
 
       // Calculamos el % de peso de esta línea sobre el total del ticket
-      Proporcion := (CANTIDAD_ARTVIN * PrecioSalida) / TotalBrutoVenta;
+      Proporcion := (Cantidad * PrecioSalida) / TotalBrutoVenta;
 
       // Asignamos el descuento total que le toca a esta fila
       // (Si es la última línea, le damos el resto para que cuadre exactamente
@@ -2959,7 +2959,7 @@ begin
       DatosCaja.cdsLineas.Prior; // Volvemos a la línea actual
 
       // --- LÓGICA DE CAMPOS REALES DE LA BASE DE DATOS ---
-      DescuentoUnitario := DescuentoAplicarLinea / CANTIDAD_ARTVIN;
+      DescuentoUnitario := DescuentoAplicarLinea / Cantidad;
 
       // 1. Guardar el nuevo Precio con Descuento Unitario (PRECIO_DTO_FACLIN)
       DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency :=
