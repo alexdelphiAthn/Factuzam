@@ -604,9 +604,11 @@ end;
 
 procedure TGridArticulosLineas.MostrarEditorArticulo;
 begin
-  if (FView <> nil) and (FColArticulo <> nil) and FView.CanFocus then
+  // El foco del control del grid lo da quien llama (form: FGrid.SetFocus, o
+  // estamos ya dentro del flujo de edicion del grid). Aqui solo enfocamos la
+  // columna de articulo y abrimos su editor in-place.
+  if (FView <> nil) and (FColArticulo <> nil) then
   begin
-    FView.SetFocus;
     FColArticulo.Focused := True;
     try
       FView.Controller.EditingController.ShowEdit;
