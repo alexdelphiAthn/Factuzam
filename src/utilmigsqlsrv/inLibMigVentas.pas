@@ -20,14 +20,13 @@
 {      resto (ventas)  → 'VE'                                                  }
 {    Regla del usuario: "las operaciones AL se convierten en depósitos y los   }
 {    CB contiguos en adelantos". El AL abre UN depósito POR LÍNEA de artículo  }
-{    (multilínea); el DE se enlaza al primero. Los cobros (CB) del MISMO       }
-{    CLIENTE posteriores se enlazan a ese depósito (heurística "contiguo" =    }
-{    último depósito abierto del cliente), ACUMULAN su importe en              }
-{    IMPORTE_ANTICIPO_DEP y dejan el depósito CERRADO cuando el anticipo       }
-{    alcanza el precio de venta. Limitación: en el histórico antiguo los       }
-{    cobros suelen venir SIN cliente y las columnas CtaCli vacías, así que el  }
-{    enlace/acumulación es best-effort; sin cliente, el CB queda suelto. En    }
-{    AL multilínea el anticipo se acumula en el primer depósito.               }
+{    (multilínea); el DE se enlaza al primero. Los cobros (CB) REPARTEN su     }
+{    importe (waterfall) entre los depósitos PENDIENTES del cliente —en orden  }
+{    de creación, rellenando cada uno hasta su precio— acumulando en           }
+{    IMPORTE_ANTICIPO_DEP y dejándolos CERRADO al alcanzar el precio.          }
+{    Un CB SIN cliente hereda el del DOCUMENTO ADYACENTE (último documento     }
+{    con cliente en la misma caja), que es como el legacy enlaza el cobro con  }
+{    su albarán/cuenta. Si aún así no hay cliente, el CB queda suelto.         }
 {                                                                              }
 {    Formas de pago: el legacy guarda el desglose en COLUMNAS de occaj         }
 {    (Efectivo, Tarjeta, ValeTienda, ValePromocion). Cada columna no nula      }
@@ -66,7 +65,7 @@ procedure MigrarVentas(Eng: TMigEngine; var Stats: TMigStats);
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections,
+  System.SysUtils,
   Data.DB, Uni;
 
 // =========================================================================
@@ -305,6 +304,76 @@ begin
   end;
 end;
 
+// Reparte un cobro a cuenta entre los depósitos PENDIENTES del cliente
+// (waterfall: rellena cada uno hasta su precio, en orden de creación, y los
+// cierra al llegar). Cubre el caso de AL multilínea (varios depósitos por
+// operación). Devuelve el ID del PRIMER depósito tocado (para enlazar el CB).
+// Primero leemos los depósitos a memoria y luego actualizamos, para no tener
+// un cursor abierto mientras lanzamos los UPDATE sobre la misma conexión.
+function AplicarCobroADepositos(Eng: TMigEngine; const sCli: string;
+                                const fImporte: Double): string;
+const
+  cSel =
+    'SELECT ID_DEPOSITO_DEP, ' +
+    '       (PRECIO_VENTA_DEP - IMPORTE_ANTICIPO_DEP) AS HUECO ' +
+    'FROM fza_depositos_cliente ' +
+    'WHERE CODIGO_CLI_DEP = :c AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '  AND USUARIO_ALTA = :u ' +
+    'ORDER BY FECHA_CREACION_DEP, ID_DEPOSITO_DEP';
+var
+  q:                  TUniQuery;
+  aId:                TArray<string>;
+  aHueco:             TArray<Double>;
+  i, n:               Integer;
+  fRest, fPago, fHueco: Double;
+begin
+  Result := '';
+  n := 0;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   := cSel;
+    q.ParamByName('c').AsString := sCli;
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.Open;
+    while not q.Eof do
+    begin
+      SetLength(aId, n + 1);
+      SetLength(aHueco, n + 1);
+      aId[n]    := q.FieldByName('ID_DEPOSITO_DEP').AsString;
+      aHueco[n] := q.FieldByName('HUECO').AsFloat;
+      Inc(n);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+  fRest := fImporte;
+  i := 0;
+  while (i < n) and (fRest > 0.005) do
+  begin
+    fHueco := aHueco[i];
+    // Depósito sin precio (hueco <= 0): absorbe lo que quede del cobro.
+    if fHueco <= 0 then
+      fHueco := fRest;
+    fPago := fRest;
+    if fPago > fHueco then
+      fPago := fHueco;
+    AcumularAnticipo(Eng, aId[i], fPago);
+    if Result = '' then
+      Result := aId[i];
+    fRest := fRest - fPago;
+    Inc(i);
+  end;
+  // Sobrante (cobro mayor que el hueco total): lo dejamos en el primero.
+  if (fRest > 0.005) and (n > 0) then
+  begin
+    AcumularAnticipo(Eng, aId[0], fRest);
+    if Result = '' then
+      Result := aId[0];
+  end;
+end;
+
 // =========================================================================
 //  Migrador principal
 // =========================================================================
@@ -367,12 +436,13 @@ const
     '        :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 var
   qSrc, qOp, qPago, qDep:    TUniQuery;
-  mapDepCliente:             TDictionary<string, string>;
   iEmp, iAlm, iCaja, iOpe:   Integer;
   iLineaPago:                Integer;
   sEmp, sAlm, sCaja, sNum:   string;
   sTipoOp, sCli, sConcepto:  string;
   sDepSku, sIdDep:           string;
+  sCajaKey, sUltimaCaja:     string;
+  sUltimoCli:                string;
   dtInstante:                TDateTime;
   fNeto:                     Double;
 
@@ -397,7 +467,6 @@ var
 begin
   AsegurarFormaPagoVale(Eng);
   LimpiarMigracionPrevia(Eng);
-  mapDepCliente := TDictionary<string, string>.Create;
   qSrc  := NuevoQOrigen(Eng, cSelectSrc);
   qOp   := TUniQuery.Create(nil);
   qPago := TUniQuery.Create(nil);
@@ -427,9 +496,22 @@ begin
       sAlm  := UpperCase(Trim(qSrc.FieldByName('AbrevAlm').AsString));
       if sAlm = '' then
         sAlm := IntToStr(iAlm);
+      // El "documento adyacente" solo vale dentro de la misma caja: al
+      // cambiar de caja olvidamos el último cliente.
+      sCajaKey := Format('%d|%d|%d', [iEmp, iAlm, iCaja]);
+      if sCajaKey <> sUltimaCaja then
+      begin
+        sUltimaCaja := sCajaKey;
+        sUltimoCli  := '';
+      end;
       sTipoOp := MapearTipoOp(qSrc.FieldByName('TipoDoc').AsString,
                               qSrc.FieldByName('Tipo').AsString);
       sCli  := Trim(qSrc.FieldByName('Cliente').AsString);
+      // Cobro SIN cliente: hereda el del documento adyacente (último
+      // documento con cliente en la misma caja). Ese cliente es el que nos
+      // permite localizar y enlazar su depósito abierto.
+      if (sTipoOp = 'CB') and (sCli = '') and (sUltimoCli <> '') then
+        sCli := sUltimoCli;
       fNeto := qSrc.FieldByName('Neto').AsFloat;
       sConcepto := Trim(qSrc.FieldByName('Descripcion').AsString);
       // Instante de la operación: FechaOpe (o Fecha) + Hora.
@@ -448,20 +530,14 @@ begin
       begin
         sIdDep := CrearDepositosAlbaran(Eng, iEmp, iAlm, iCaja, iOpe,
                     sEmp, sAlm, sCli, sCaja, sNum, dtInstante, qDep);
-        // "Contiguo": registramos el depósito abierto del cliente para
-        // enlazar y acumular los cobros (CB) posteriores del mismo cliente.
-        if (sIdDep <> '') and (sCli <> '') then
-          mapDepCliente.AddOrSetValue(sCli, sIdDep);
       end
       else if sTipoOp = 'CB' then
       begin
-        // Cobro a cuenta (adelanto): lo enlazamos al último depósito abierto
-        // del cliente y acumulamos el importe (cierra si llega al precio).
-        if (sCli <> '') and mapDepCliente.ContainsKey(sCli) then
-        begin
-          sIdDep := mapDepCliente.Items[sCli];
-          AcumularAnticipo(Eng, sIdDep, fNeto);
-        end;
+        // Cobro a cuenta (adelanto): se reparte (waterfall) entre los
+        // depósitos PENDIENTES del cliente, cerrándolos al alcanzar su
+        // precio. sIdDep apunta al primero tocado.
+        if sCli <> '' then
+          sIdDep := AplicarCobroADepositos(Eng, sCli, fNeto);
       end;
       // Cabecera de operación.
       qOp.ParamByName('emp').AsString  := sEmp;
@@ -535,6 +611,10 @@ begin
       AddPago('TARJ', qSrc.FieldByName('Tarjeta').AsFloat);
       AddPago('VALE', qSrc.FieldByName('ValeTienda').AsFloat);
       AddPago('VALE', qSrc.FieldByName('ValePromocion').AsFloat);
+      // Recordamos el cliente (real o heredado) para el siguiente documento
+      // adyacente de la misma caja.
+      if sCli <> '' then
+        sUltimoCli := sCli;
       qSrc.Next;
     end;
   finally
@@ -542,7 +622,6 @@ begin
     qPago.Free;
     qOp.Free;
     qSrc.Free;
-    mapDepCliente.Free;
   end;
 end;
 

@@ -58,6 +58,10 @@ Cada **línea** enlaza:
   trae (filas antiguas con `CuotaIVA` NULL). Si no hay bandas pero sí `Neto`,
   se deriva una banda única del total. `TOTAL_LIQUIDO_FAC=Neto`. Las **líneas**
   llevan además su IVA real por fila (`occajarp.PorIva`).
+- **Recargo de equivalencia (RE):** se acumula en la **misma banda** que su
+  IVA, desde `occaj.PorcenRecargo1-4`/`CuotaRE1-4` (cuota calculada si viene
+  NULL). `TOTAL_IMPUESTOS_FAC` = IVA + RE de todas las bandas. En venta
+  minorista el RE suele ser 0.
 
 ## Idempotencia
 
@@ -73,8 +77,9 @@ Clientes y SKUs migrados. Coherente con "Ventas / Caja" (comparten
 
 ## Pendiente / a revisar
 
-- Recargo de equivalencia (RE) en la cabecera: hoy no se mapea (las bandas
-  RE quedan a NULL). El desglose de IVA N/R/S/E ya está hecho.
+- IVA y RE por bandas N/R/S/E en la cabecera: **hechos** (desde las 4 bandas
+  del legacy). Queda como afinado opcional el resto del estado fiscal
+  (`FASE_FAC`/Verifactu/XML) y los datos denormalizados de empresa/cliente.
 - Estado fiscal de la cabecera (`FASE_FAC`, Verifactu, XML): se deja
   `SIMPLIFICADA`/consolidada sin firma. Decidir política para histórico.
 - Datos denormalizados de empresa/cliente en la cabecera (razón social,
