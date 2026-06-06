@@ -669,7 +669,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Width = 200
                   end
                   object tvMovsCANTIDAD: TcxGridDBColumn
-                    Caption = 'CANTIDAD_ARTVIN'
+                    Caption = 'Cantidad'
                     DataBinding.FieldName = 'CANTIDAD_MOV'
                     HeaderAlignmentHorz = taRightJustify
                     Width = 100
