@@ -2,6 +2,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   Caption = 'Traspasos'
   ClientHeight = 639
   ClientWidth = 896
+  StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
@@ -17,6 +18,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 894
     object btnModoTraspaso: TcxButton
       Left = 8
       Top = 6
@@ -55,6 +57,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 894
     object lblOrigen: TcxLabel
       Left = 16
       Top = 18
@@ -113,6 +116,8 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitTop = 571
+    ExplicitWidth = 894
     object lblTotal: TcxLabel
       Left = 16
       Top = 20
@@ -146,6 +151,8 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitWidth = 894
+    ExplicitHeight = 442
     object FGrid: TcxGrid
       Left = 0
       Top = 0
@@ -153,7 +160,12 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Height = 272
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 894
+      ExplicitHeight = 264
       object FView: TcxGridDBTableView
+        OptionsBehavior.FocusCellOnTab = True
+        OptionsBehavior.FocusFirstCellOnNewRecord = True
+        OptionsBehavior.GoToNextCellOnEnter = True
       end
       object lvlLineas: TcxGridLevel
         GridView = FView
@@ -167,6 +179,8 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitTop = 272
+      ExplicitWidth = 894
       object FFotoPanel: TPanel
         Left = 736
         Top = 0
@@ -175,6 +189,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitLeft = 734
         object FFotoImg: TImage
           Left = 0
           Top = 0
@@ -192,6 +207,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
         Height = 170
         AlignSplitter = salRight
         Control = FFotoPanel
+        ExplicitLeft = 726
       end
       object FStockGrid: TcxGrid
         Left = 0
@@ -200,6 +216,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
         Height = 170
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 726
         object FStockView: TcxGridDBTableView
         end
         object lvlStock: TcxGridLevel
@@ -213,6 +230,8 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Width = 896
       Height = 8
       AlignSplitter = salBottom
+      ExplicitTop = 264
+      ExplicitWidth = 894
     end
   end
 end
