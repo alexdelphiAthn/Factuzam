@@ -67,6 +67,7 @@ type
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterDelete(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
     procedure unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
     procedure unqryTarifasArticulosBeforePost(DataSet: TDataSet);
     procedure unqryStockArticulosAfterScroll(DataSet: TDataSet);
@@ -76,6 +77,7 @@ type
     procedure unqrySkusBeforeDelete(DataSet: TDataSet);
     procedure unqryDetallesAtributosBeforePost(DataSet: TDataSet);
   private
+    procedure AsegurarSkuBase(const ACodArt: string);
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
     procedure UpsertCosteSku(const aSku: string;
@@ -475,6 +477,50 @@ begin
   // se cambien a metros/kilos... mostraran decimales segun la unidad.
   if Trim(unqryTablaG.FindField('TIPO_CANTIDAD_ART').AsString) = '' then
     unqryTablaG.FindField('TIPO_CANTIDAD_ART').AsString := 'Uds';
+end;
+
+procedure TdmArticulos.unqryTablaGAfterPost(DataSet: TDataSet);
+var
+  sArt: string;
+begin
+  inherited;
+  // Articulo simple (sin variaciones): garantizar una unidad/SKU base con
+  // CODIGO_UNIDAD_SKU = CODIGO_ART_ART para que pueda llevar stock y aparezca
+  // en la consulta (Ctrl+U), movimientos, etc. sin tener que crear SKUs a mano.
+  if SameText(unqryTablaG.FindField('ESVARIACION_ART').AsString, 'N') then
+  begin
+    sArt := Trim(unqryTablaG.FindField('CODIGO_ART_ART').AsString);
+    if sArt <> '' then
+      AsegurarSkuBase(sArt);
+  end;
+end;
+
+procedure TdmArticulos.AsegurarSkuBase(const ACodArt: string);
+var
+  qry: TUniQuery;
+begin
+  // Crea el SKU base solo si el articulo aun no tiene NINGUN SKU. El marcador
+  // de "sin variacion" en CODIGO_VAR_SKU es '-' (convencion ya usada en la
+  // BBDD, p.ej. el SKU 'BOLSO-PIEL'). Idempotente: NOT EXISTS + INSERT IGNORE.
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'INSERT IGNORE INTO fza_articulos_skus ' +
+      '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'SELECT :cod, :art, ''-'', ''S'', CURRENT_TIMESTAMP, :usr, :usr ' +
+      '  FROM DUAL ' +
+      ' WHERE NOT EXISTS (SELECT 1 FROM fza_articulos_skus ' +
+      '                    WHERE CODIGO_ART_SKU = :art2)';
+    qry.ParamByName('cod').AsString  := ACodArt;
+    qry.ParamByName('art').AsString  := ACodArt;
+    qry.ParamByName('art2').AsString := ACodArt;
+    qry.ParamByName('usr').AsString  := oUser;
+    qry.ExecSQL;
+  finally
+    FreeAndNil(qry);
+  end;
 end;
 
 procedure TdmArticulos.CopiarProveedoraArticulo(dtProveedores: TDataset);

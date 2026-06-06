@@ -57,6 +57,7 @@ inherited dmArticulos: TdmArticulos
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     AfterDelete = unqryTablaGAfterDelete
+    AfterPost = unqryTablaGAfterPost
     Left = 48
   end
   inherited unqryPerfiles: TUniQuery

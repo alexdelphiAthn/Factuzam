@@ -41,6 +41,19 @@ stock. Creando un SKU base se resuelve de raíz.
 - Revisar si hay que crear tambien fila en `fza_articulos_stockactual` o si se
   crea sola con el primer movimiento (probablemente lo segundo).
 
+## Estado: IMPLEMENTADO
+- `CODIGO_VAR_SKU` para SKU base = **'-'** (convencion ya usada en BBDD,
+  p.ej. el SKU 'BOLSO-PIEL').
+- Alta automatica: `UniDataArticulos.unqryTablaGAfterPost` ->
+  `AsegurarSkuBase` (solo si ESVARIACION_ART='N' y el articulo no tiene
+  ningun SKU). Idempotente (NOT EXISTS + INSERT IGNORE).
+- Backfill existentes: `sku_base_articulo.sql`.
+- NOTA: la consulta de stock (Ctrl+U) hace INNER JOIN a
+  fza_articulos_stockactual, asi que la linea aparece cuando el SKU tenga
+  fila de stock (se crea con el primer movimiento/entrada). Si se quiere ver
+  el "0" antes de cualquier movimiento, habria que crear la fila de stock a 0
+  o pasar ese JOIN a LEFT JOIN (pendiente, decidir si hace falta).
+
 ## Verificacion
 - Crear un articulo simple (sin variaciones) -> debe nacer con SKU base.
 - Ctrl+U sobre ese articulo -> muestra una linea de stock (a 0) en lugar de
