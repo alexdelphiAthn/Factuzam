@@ -148,6 +148,11 @@ type
     // Crea la columna de articulo + las 5 columnas de atributo y engancha el
     // OnInitEdit del View. El host anade sus columnas DESPUES sobre el View.
     procedure Construir;
+    // Deja el editor de la celda de articulo ABIERTO, listo para teclear o
+    // escanear. Imprescindible para el lector: si la celda no esta ya en
+    // edicion, la primera tecla abre el editor y las siguientes (muy rapidas)
+    // se pierden -> solo se leeria la primera cifra.
+    procedure MostrarEditorArticulo;
     // Resuelve una entrada (codigo de articulo, SKU, codigo de barras o ref
     // de proveedor) y rellena la linea. Devuelve False si no se encontro.
     function ResolverEntrada(const AEntrada: string): Boolean;
@@ -581,6 +586,7 @@ begin
   if Trim(sSku) = '' then
     Exit;
   if ResolverEntrada(sSku) then
+  begin
     // Cierra el editor para que la celda muestre lo resuelto (descarta el
     // texto crudo escaneado/elegido que quedo en el editor).
     if FView.Controller.EditingController.IsEditing then
@@ -590,6 +596,25 @@ begin
         on E: EInvalidOperation do
           ;
       end;
+    // Reabrimos el editor de articulo en la (nueva) linea para encadenar
+    // lecturas sin perder la primera cifra de la siguiente.
+    MostrarEditorArticulo;
+  end;
+end;
+
+procedure TGridArticulosLineas.MostrarEditorArticulo;
+begin
+  if (FView <> nil) and (FColArticulo <> nil) and FView.CanFocus then
+  begin
+    FView.SetFocus;
+    FColArticulo.Focused := True;
+    try
+      FView.Controller.EditingController.ShowEdit;
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  end;
 end;
 
 // Click en el boton de la columna de articulo: abre el buscador generico
