@@ -684,8 +684,13 @@ begin
     finally
       FreeAndNil(Validador);
     end;
-    sSku := Resolucion.CodigoSku;
-    if Resolucion.Encontrado and (Trim(sSku) <> '') and
+    // Clave de consolidacion = lo que ResolverEntrada guarda en CODIGO_UNIDAD:
+    // el SKU si viene completo; si no (articulo sin variacion / SKU base), el
+    // codigo de articulo. Asi coincide con las lineas ya metidas.
+    sSku := Trim(Resolucion.CodigoSku);
+    if sSku = '' then
+      sSku := Trim(Resolucion.CodigoArticulo);
+    if Resolucion.Encontrado and (sSku <> '') and
        ConsolidarSiExiste(sSku) then
     begin
       // Consolidado: la cantidad se sumo en la linea existente.
