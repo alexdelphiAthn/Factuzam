@@ -362,6 +362,11 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                     DataBinding.FieldName = 'CANTIDAD_ALBCLIN'
                     Width = 80
                   end
+                  object colLineaAlbcTipoCant: TcxGridDBColumn
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_ALBCLIN'
+                    Visible = False
+                    VisibleForCustomization = False
+                  end
                   object colLineaAlbcPRECIO_COMPRA: TcxGridDBColumn
                     Caption = 'Precio compra'
                     DataBinding.FieldName = 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN'
