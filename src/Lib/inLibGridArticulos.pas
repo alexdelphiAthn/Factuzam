@@ -98,8 +98,12 @@ type
     // entre STX y ETX.
     FEnScanner: Boolean;
     FScanBuffer: string;
+    // Deteccion del lector por RAPIDEZ (lectores que envian Codigo+CR sin
+    // STX/ETX): si las teclas llegan muy seguidas son del lector.
+    FLastKeyTick: Cardinal;
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
+    procedure DispararResolucionScan(const ACodigo: string);
     procedure ArticuloGetProperties(Sender: TcxCustomGridTableItem;
                            ARecord: TcxCustomGridRecord;
                            var AProperties: TcxCustomEditProperties);
@@ -474,36 +478,82 @@ end;
 // + codigo + ETX(#3). Capturamos el codigo entre ambos (sin dejar que esos
 // controles entren en el editor) y al recibir ETX lo resolvemos como si
 // llegara un Enter (via FTimerResolve). Mismo patron que inMtoCajaOpe.
+procedure TGridArticulosLineas.DispararResolucionScan(const ACodigo: string);
+begin
+  // Resuelve lo leido de forma diferida (timer 1ms), como hace el desplegable,
+  // para no reestructurar el cds dentro del propio evento de teclado.
+  FSkuPend := Trim(ACodigo);
+  if FSkuPend <> '' then
+  begin
+    FTimerResolve.Enabled := False;
+    FTimerResolve.Enabled := True;
+  end;
+end;
+
 procedure TGridArticulosLineas.ArticuloKeyPress(Sender: TObject;
                                                 var Key: Char);
+const
+  // Las pulsaciones del lector llegan mucho mas rapido que las de un humano.
+  SCAN_UMBRAL_MS = 50;
+  // Longitud minima del codigo para tratarlo como lectura.
+  SCAN_MIN_LEN   = 4;
+var
+  nTick: Cardinal;
 begin
+  nTick := TThread.GetTickCount;
   if Key = #2 then
   begin
+    // Lector con framing STX/ETX: acumulamos entre STX(#2) y ETX(#3).
     FEnScanner := True;
     FScanBuffer := '';
     Key := #0;
-    Exit;
-  end;
-  if FEnScanner then
+  end
+  else if FEnScanner then
   begin
     if Key = #3 then
     begin
       FEnScanner := False;
       Key := #0;
-      // Resolvemos lo escaneado (diferido, como el desplegable).
-      FSkuPend := FScanBuffer;
+      DispararResolucionScan(FScanBuffer);
       FScanBuffer := '';
-      if Trim(FSkuPend) <> '' then
-      begin
-        FTimerResolve.Enabled := False;
-        FTimerResolve.Enabled := True;
-      end;
     end
     else
     begin
       FScanBuffer := FScanBuffer + Key;
       Key := #0;
     end;
+  end
+  else if Key = #13 then
+  begin
+    // CR final. Si veniamos de una rafaga rapida (lector Codigo+CR) lo
+    // resolvemos; si no, es un Enter manual y lo dejamos al control (selecciona
+    // del desplegable / valida lo tecleado).
+    if Length(FScanBuffer) >= SCAN_MIN_LEN then
+    begin
+      Key := #0;
+      DispararResolucionScan(FScanBuffer);
+    end;
+    FScanBuffer := '';
+    FLastKeyTick := nTick;
+  end
+  else if Key >= ' ' then
+  begin
+    // Deteccion por RAPIDEZ: si la tecla llega muy seguida de la anterior es
+    // parte de una lectura -> acumulamos, la consumimos (no llega a la busqueda
+    // incremental) y cerramos el desplegable para que no capture el Enter.
+    if (FScanBuffer <> '') and ((nTick - FLastKeyTick) <= SCAN_UMBRAL_MS) then
+    begin
+      FScanBuffer := FScanBuffer + Key;
+      Key := #0;
+      if (Sender is TcxCustomDropDownEdit) and
+         TcxCustomDropDownEdit(Sender).DroppedDown then
+        TcxCustomDropDownEdit(Sender).DroppedDown := False;
+    end
+    else
+      // Primer caracter o tecleo humano: arrancamos buffer y lo dejamos pasar
+      // (busqueda incremental normal).
+      FScanBuffer := Key;
+    FLastKeyTick := nTick;
   end;
 end;
 
