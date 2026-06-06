@@ -587,7 +587,8 @@
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
           VAlign = vaCenter
-          Memo.UTF8W = ('[LineasAlbaranSku."CANTIDAD_ALBCLIN"]')
+          Memo.UTF8W = (
+            '[FormatFloat('#39'0.######'#39', <LineasAlbaranSku."CANTIDAD_ALBCLIN">)]')
           ParentFont = False
         end
         object LinPrecV: TfrxMemoView

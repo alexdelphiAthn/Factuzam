@@ -1045,9 +1045,9 @@
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[Lineas Facturas."CANTIDAD_FACLIN"] [Lineas Facturas."TIPO_CANTI' +
-              'DAD_ARTICULO_FACLIN"]')
+
+              '[FormatFloat('#39'0.######'#39', <Lineas Facturas."CANTIDAD_FACLIN' +
+              '">)] [Lineas Facturas."TIPO_CANTIDAD_ARTICULO_FACLIN"]')
           ParentFont = False
           Formats = <
             item
