@@ -168,6 +168,7 @@ implementation
 
 uses
   System.StrUtils,
+  inLibGridCantidad,
   inLibGlobalVar,
   inLibFotos,
   UniDataArticulos,
@@ -265,6 +266,10 @@ begin
   end;
   tvLineasAlbaran.DataController.DataSource :=
     dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
+  VincularCantidadGrid(
+    tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBCLIN'),
+    tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBCLIN'));
   // MasterSource se enlaza en DataModuleCreate del DM, pero lo
   // re-aseguramos por idempotencia.
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
