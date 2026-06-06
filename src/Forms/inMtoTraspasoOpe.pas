@@ -806,7 +806,13 @@ begin
       AbrirModalSolicitudes;
     mtTraspaso:
       if (FGrid <> nil) and FGrid.CanFocus then
+      begin
         FGrid.SetFocus;
+        // Dejar el editor de articulo abierto para que el lector no pierda la
+        // primera cifra (la celda ya esta en edicion al empezar a escanear).
+        if FGridCtrl <> nil then
+          FGridCtrl.MostrarEditorArticulo;
+      end;
   end;
 end;
 
