@@ -79,8 +79,14 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
             con `oUnidades.Formatear(cant, TIPO_CANTIDAD_ARTICULO_FACLIN)`.
       - [x] Excel: escriben la cantidad como numero (AsFloat) -> Excel muestra
             los decimales naturalmente; no requiere cambio.
-      - [ ] Informes `.fr3` (FastReport): el DisplayFormat de la cantidad esta
-            en el diseno del informe; hay que ajustarlo en el editor de
-            FastReport (no por codigo). PENDIENTE de diseno.
+      - [x] Informes FastReport embebidos en los .dfm:
+            * Factura (`inMtoModalImpFac.dfm`): cantidad envuelta en
+              FormatFloat('0.######') + la unidad (TIPO_CANTIDAD_ARTICULO_FACLIN).
+            * Albaran compra vertical (`inMtoModalImpAlbCompraV.dfm`):
+              CANTIDAD_ALBCLIN envuelta en FormatFloat('0.######').
+      - [ ] Informes "Guias de tallas" pivotados (`inMtoModalImpAlbCompra.dfm`,
+            `inMtoModalImpSesion.dfm`): la cantidad va en columnas dinamicas por
+            talla (cross-tab), tipico de articulos CON tallas (cantidades
+            enteras). Pendiente solo si se necesitan decimales por talla.
 - [x] **Fase 7 - Cierre**: pump de version en `inLibGlobalVar.pas`
       (1.0.15.202606060000.alpha). Falta compilar/validar el conjunto.
