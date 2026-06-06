@@ -715,6 +715,11 @@
                     DataBinding.FieldName = 'CANTIDAD_ALBLIN'
                     Width = 80
                   end
+                  object colTipoCantAlb: TcxGridDBColumn
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_ALBLIN'
+                    Visible = False
+                    VisibleForCustomization = False
+                  end
                   object cxgrdcPSivaAlb: TcxGridDBColumn
                     Caption = 'PVP S/IVA'
                     DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN'
