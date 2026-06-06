@@ -25,6 +25,7 @@ uses
   inLibFTicket,        // Donde está tu TTicketTermico
   inMtoPreviewTicket,  // Donde está tu TFormVisualizador
   inLibData,
+  inLibUnidadesMedida, // Decimales por unidad en la cantidad
   inLibDir;            // Para GetUserFolderTickets
 
   /// <summary>
@@ -529,8 +530,11 @@ begin
         begin
           var sArt := Format('%-26s', [Copy(QryLin.FieldByName(
                               'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
-          var sUds := Format('%4s', [FloatToStr(QryLin.FieldByName(
-                                           'CANTIDAD_FACLIN').AsFloat)]);
+          var sUni := '';
+          if QryLin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN') <> nil then
+            sUni := QryLin.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
+          var sUds := Format('%4s', [oUnidades.Formatear(QryLin.FieldByName(
+                                           'CANTIDAD_FACLIN').AsFloat, sUni)]);
           var sPre := FormatFloat('#,##0.00',
                    QryLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
           Ticket.TextoColumnas(sArt + sUds, sPre);
