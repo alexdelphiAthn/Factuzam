@@ -19,11 +19,10 @@
 -- vi_proveedores se ordena en su propio script (vi_proveedores_nombre.sql) para
 -- no duplicar la definicion ni pelearse por cual CREATE OR REPLACE gana.
 --
--- Vistas que NO se tocan a proposito (exponen ORDEN pero se filtran por
--- articulo contra tablas grandes -> el ORDER BY las materializaria entera;
--- el cliente ya ordena con su propio LIMIT/ORDER BY): vi_atributos_nombres,
--- vi_atributos_sku_basico, vi_articulos_conjuntos_slots,
--- vi_articulos_propiedades_slots.
+-- Las vistas de atributos/slots que tambien exponen ORDEN pero se filtran por
+-- articulo contra tablas grandes (vi_atributos_nombres, vi_atributos_sku_basico,
+-- vi_articulos_conjuntos_slots, vi_articulos_propiedades_slots) se ordenan en
+-- vistas_orden_atributos.sql, donde se documenta el coste de rendimiento.
 --
 -- Idempotente: CREATE OR REPLACE VIEW reescribe la definicion sin error al
 -- repetir. No se toca factuzam_original.sql.
