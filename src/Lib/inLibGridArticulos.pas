@@ -417,7 +417,11 @@ begin
     IncrementalFiltering := True;
     DropDownRows := 15;
     DropDownAutoWidth := True;
-    ImmediateDropDownWhenKeyPressed := True;
+    // NO abrir el desplegable al teclear: si se abre, las teclas siguientes van
+    // al edit interno del desplegable y NO a ArticuloKeyPress, y la deteccion
+    // del lector (rapidez / STX-ETX) no recibe el codigo. El usuario abre el
+    // desplegable con F4 o el boton de busqueda cuando quiera buscar a mano.
+    ImmediateDropDownWhenKeyPressed := False;
     OnCloseUp := ComboBusqCloseUp;
     // Boton para el buscador completo (mismo que el ButtonEdit).
     Buttons.Clear;
