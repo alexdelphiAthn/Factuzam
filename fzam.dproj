@@ -451,14 +451,14 @@
         <DCCReference Include="src\Caja\DataModules\UniDataCaja.pas">
             <Form>dmCajaOpe</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoTraspasoOpe.pas">
+        <DCCReference Include="src\Caja\Forms\inMtoTraspasoOpe.pas">
             <Form>frmMtoOpeTraspaso</Form>
         </DCCReference>
-        <DCCReference Include="src\DataModules\UniDataTraspaso.pas">
+        <DCCReference Include="src\Caja\DataModules\UniDataTraspaso.pas">
             <Form>dmTraspaso</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="src\Lib\inLibTraspasoTicket.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibTraspasoTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGridArticulos.pas"/>
         <DCCReference Include="src\Lib\inLibLectorScanner.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaFaseCobro.pas">

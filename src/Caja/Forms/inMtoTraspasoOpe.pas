@@ -53,6 +53,21 @@ type
     lblTotal: TcxLabel;
     btnF11: TcxButton;
     btnF12: TcxButton;
+    // Rejillas y panel de stock sacados al dfm (antes se creaban en codigo):
+    // la rejilla de lineas (FGrid/FView) y la de stock pivotado
+    // (FStockGrid/FStockView) dentro de FStockPanel, con la foto del articulo
+    // (FFotoImg) y los splitters. Las columnas siguen creandose en runtime.
+    FGrid: TcxGrid;
+    FView: TcxGridDBTableView;
+    lvlLineas: TcxGridLevel;
+    FStockPanel: TPanel;
+    FFotoPanel: TPanel;
+    FFotoImg: TImage;
+    FFotoSplitter: TcxSplitter;
+    FStockGrid: TcxGrid;
+    FStockView: TcxGridDBTableView;
+    lvlStock: TcxGridLevel;
+    FStockSplitter: TcxSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -67,8 +82,6 @@ type
     procedure cboDestinoPropertiesChange(Sender: TObject);
   private
     FDatos: TdmTraspaso;
-    FGrid: TcxGrid;
-    FView: TcxGridDBTableView;
     FGridCtrl: TGridArticulosLineas;
     FComboCodigos: TStringList;
     FEmpresa: string;
@@ -77,13 +90,6 @@ type
     FFecha: TDateTime;
     FModo: TModoTraspaso;
     FVerCoste: Boolean;
-    FStockPanel: TPanel;
-    FStockSplitter: TcxSplitter;
-    FFotoPanel: TPanel;
-    FFotoSplitter: TcxSplitter;
-    FFotoImg: TImage;
-    FStockGrid: TcxGrid;
-    FStockView: TcxGridDBTableView;
     FStockQry: TUniQuery;
     FStockDs: TDataSource;
     FNavDs: TDataSource;
@@ -198,11 +204,11 @@ var
   Col: TcxGridDBColumn;
   i: Integer;
 begin
-  FGrid := TcxGrid.Create(Self);
-  FGrid.Parent := pnlCentro;
-  FGrid.Align := alClient;
-  FView := FGrid.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
-  FGrid.Levels.Add.GridView := FView;
+  // FGrid/FView/lvlLineas viven ya en el dfm; aqui solo se cablea el origen de
+  // datos (el cds esta en un data module creado en runtime) y se construyen las
+  // columnas: primero las dinamicas (articulo + tallas/colores, via la
+  // controladora, que hace ClearItems) y despues las fijas del traspaso, para
+  // respetar ese orden.
   FView.DataController.DataSource := FDatos.dsLineas;
   FView.OptionsData.Editing := True;
   FView.OptionsData.Inserting := True;
@@ -266,44 +272,12 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirPanelStock;
-var
-  Lvl: TcxGridLevel;
 begin
-  // Banda inferior dentro de pnlCentro (la rejilla de lineas FGrid, alClient,
-  // queda encima). Construida en codigo igual que FGrid, para no tocar el dfm.
-  FStockPanel := TPanel.Create(Self);
-  FStockPanel.Parent := pnlCentro;
-  FStockPanel.Align := alBottom;
-  FStockPanel.Height := 170;
-  FStockPanel.BevelOuter := bvNone;
-  FStockPanel.Caption := '';
-  // Splitter para redimensionar la banda (entre lineas y stock).
-  FStockSplitter := TcxSplitter.Create(Self);
-  FStockSplitter.Parent := pnlCentro;
-  FStockSplitter.AlignSplitter := salBottom;
-  // Foto del articulo a la derecha de la banda.
-  FFotoPanel := TPanel.Create(Self);
-  FFotoPanel.Parent := FStockPanel;
-  FFotoPanel.Align := alRight;
-  FFotoPanel.Width := 160;
-  FFotoPanel.BevelOuter := bvNone;
-  FFotoPanel.Caption := '';
-  FFotoImg := TImage.Create(Self);
-  FFotoImg.Parent := FFotoPanel;
-  FFotoImg.Align := alClient;
-  FFotoImg.Proportional := True;
-  FFotoImg.Center := True;
-  FFotoImg.Stretch := False;
-  FFotoSplitter := TcxSplitter.Create(Self);
-  FFotoSplitter.Parent := FStockPanel;
-  FFotoSplitter.AlignSplitter := salRight;
-  // Rejilla de stock pivotado (rellena el resto de la banda).
-  FStockGrid := TcxGrid.Create(Self);
-  FStockGrid.Parent := FStockPanel;
-  FStockGrid.Align := alClient;
-  FStockView := FStockGrid.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
-  Lvl := FStockGrid.Levels.Add;
-  Lvl.GridView := FStockView;
+  // El panel de stock, los splitters, la foto y la rejilla pivotada viven ya en
+  // el dfm (FStockPanel/FFotoPanel/FFotoImg/FStockGrid/FStockView). Aqui solo
+  // queda lo que no se puede fijar en diseno: las opciones de la vista, el
+  // dibujo del swatch y el cableado de datos (la rejilla cuelga de una query y
+  // un data module creados en runtime).
   FStockView.OptionsData.Editing := False;
   FStockView.OptionsData.Inserting := False;
   FStockView.OptionsData.Deleting := False;
