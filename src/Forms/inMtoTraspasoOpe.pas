@@ -28,10 +28,9 @@ uses
   cxButtonEdit, cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
-  Data.DB, Datasnap.DBClient, Uni, inLibGlobalVar, UniDataTraspaso,
-  inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
-  inLibPermisos, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
-  inLibCajaParam;
+  Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
+  inLibGridArticulos, inLibPermisos, inLibGenBusq, inLibFotos,
+  inLibAtributosPaleta, inLibCajaParam;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -89,18 +88,6 @@ type
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
     FQModalSolic: TUniQuery;
-    // Lectura global por codigo de barras (pistola STX...ETX), como en caja:
-    // se escanea desde cualquier parte del formulario, no solo en la celda.
-    FScanBuffer: string;
-    FScanPend: string;
-    FLeyendoScanner: Boolean;
-    FEscaneando: Boolean;
-    FLastKeyTick: Cardinal;
-    FScanTimer: TTimer;
-    procedure FormKeyPress(Sender: TObject; var Key: Char);
-    procedure ScanTimerTimer(Sender: TObject);
-    procedure ProcesarScan(const ACodigo: string);
-    function ConsolidarSiExiste(const ASku: string): Boolean;
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -149,13 +136,6 @@ procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
   inherited;
   KeyPreview := True;
-  // Lectura global por codigo de barras (igual que en caja): el formulario
-  // captura STX..ETX de la pistola con KeyPreview y lo procesa diferido.
-  OnKeyPress := FormKeyPress;
-  FScanTimer := TTimer.Create(Self);
-  FScanTimer.Enabled := False;
-  FScanTimer.Interval := 1;
-  FScanTimer.OnTimer := ScanTimerTimer;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self);
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
@@ -512,10 +492,7 @@ begin
   ActualizarTotal;
   // Refrescar la consulta de stock y la foto del articulo recien resuelto
   // (el cambio de campos en la misma fila no dispara NavDataChange).
-  // Durante el escaneo (FEscaneando) NO refrescamos el panel pivotado ni la
-  // foto: es lo que ralentizaba/atascaba la lectura rapida. El panel se
-  // actualiza al navegar a una linea (NavDataChange).
-  if ACompleto and (not FEscaneando) then
+  if ACompleto then
   begin
     ConsultarStock(ACodArt);
     RefrescarFotoStock(ACodArt, ASku);
@@ -631,164 +608,6 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeTraspaso.FormKeyPress(Sender: TObject; var Key: Char);
-const
-  // Umbral (ms) entre teclas para considerar que viene de la pistola: las
-  // pulsaciones del lector llegan muy seguidas (mucho mas rapido que un humano)
-  SCAN_UMBRAL_MS = 50;
-  // Longitud minima del codigo para tratarlo como lectura (evita falsos
-  // positivos al teclear rapido cosas cortas).
-  SCAN_MIN_LEN   = 4;
-var
-  nTick: Cardinal;
-begin
-  nTick := GetTickCount;
-  if Key = #2 then
-  begin
-    // Lector con framing STX (#2): empezamos a acumular hasta ETX (#3).
-    FLeyendoScanner := True;
-    FScanBuffer := '';
-    Key := #0;
-  end
-  else if Key = #3 then
-  begin
-    // Fin del framing STX/ETX.
-    if FLeyendoScanner and (Trim(FScanBuffer) <> '') then
-    begin
-      FScanPend := Trim(FScanBuffer);
-      FScanTimer.Enabled := True;
-    end;
-    FLeyendoScanner := False;
-    FScanBuffer := '';
-    Key := #0;
-  end
-  else if FLeyendoScanner then
-  begin
-    // Dentro del framing STX/ETX: acumular y no dejar pasar a la celda.
-    FScanBuffer := FScanBuffer + Key;
-    Key := #0;
-  end
-  else if Key = #13 then
-  begin
-    // CR final. Si venimos de una rafaga rapida (pistola Codigo+CR) lo
-    // procesamos como lectura; si no, es un Enter manual y lo dejamos pasar.
-    if Length(FScanBuffer) >= SCAN_MIN_LEN then
-    begin
-      FScanPend := FScanBuffer;
-      FScanBuffer := '';
-      Key := #0;
-      FScanTimer.Enabled := True;
-    end
-    else
-      FScanBuffer := '';
-    FLastKeyTick := nTick;
-  end
-  else if Key >= ' ' then
-  begin
-    // Deteccion por RAPIDEZ (lector sin STX/ETX): si la tecla llega muy seguida
-    // de la anterior, es parte de una lectura -> acumulamos y la consumimos
-    // para que NO entre en la busqueda incremental de la celda.
-    if (FScanBuffer <> '') and ((nTick - FLastKeyTick) <= SCAN_UMBRAL_MS) then
-    begin
-      FScanBuffer := FScanBuffer + Key;
-      Key := #0;
-    end
-    else
-      // Primer caracter o tecleo humano: arrancamos buffer y lo dejamos pasar.
-      FScanBuffer := Key;
-    FLastKeyTick := nTick;
-  end;
-end;
-
-procedure TfrmMtoOpeTraspaso.ScanTimerTimer(Sender: TObject);
-begin
-  // Diferido: procesamos fuera del evento de teclado para no chocar con el
-  // editor in-place ni con el cds en medio de una pulsacion.
-  FScanTimer.Enabled := False;
-  if FScanPend <> '' then
-  begin
-    ProcesarScan(FScanPend);
-    FScanPend := '';
-  end;
-end;
-
-procedure TfrmMtoOpeTraspaso.ProcesarScan(const ACodigo: string);
-var
-  Validador: TArticulosValidador;
-  Resolucion: TArtResolucionEntrada;
-  sSku: string;
-begin
-  if (Trim(ACodigo) <> '') and Assigned(FDatos) and
-     Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
-  begin
-    // Cierra el editor in-place (si lo hubiera) sin volcar su contenido.
-    FView.Controller.EditingController.HideEdit(False);
-    // Igual que caja (ProcesarLecturaScanner): resolvemos SOLO contra codigos
-    // de barras (rapido, una sola consulta) ANTES de tocar lineas, para decidir
-    // si hay que consolidar (el SKU ya esta) sin crear linea de trabajo.
-    Validador := TArticulosValidador.Create(oConn);
-    try
-      Resolucion := Validador.ResolverCodigoBarras(ACodigo);
-    finally
-      FreeAndNil(Validador);
-    end;
-    sSku := Resolucion.CodigoSku;
-    if not Resolucion.Encontrado then
-      ShowMessage('Código de barras no encontrado: ' + ACodigo)
-    else if (Trim(sSku) <> '') and ConsolidarSiExiste(sSku) then
-    begin
-      // Consolidado: la cantidad ya se sumo en la linea existente.
-    end
-    else
-    begin
-      // Alta de linea nueva. FEscaneando hace que GridResuelto NO refresque el
-      // panel de stock pivotado ni la foto en cada lectura -> escaneo rapido
-      // fluido (el panel se actualiza al navegar a una linea).
-      AsegurarLineaNueva;
-      FDatos.cdsLineas.Last;
-      FEscaneando := True;
-      try
-        FGridCtrl.ResolverEntrada(ACodigo);
-      finally
-        FEscaneando := False;
-      end;
-    end;
-  end;
-end;
-
-function TfrmMtoOpeTraspaso.ConsolidarSiExiste(const ASku: string): Boolean;
-var
-  Clon: TClientDataSet;
-  OldQty: Double;
-begin
-  // Si el SKU ya esta en una linea, sumamos 1 a su cantidad y no creamos otra
-  // (mismo comportamiento que caja). Usamos un clon para no mover el cursor.
-  Result := False;
-  if Trim(ASku) <> '' then
-  begin
-    Clon := TClientDataSet.Create(nil);
-    try
-      Clon.CloneCursor(FDatos.cdsLineas, True);
-      Clon.First;
-      while (not Clon.Eof) and (not Result) do
-      begin
-        if Clon.FieldByName('CODIGO_UNIDAD').AsString = ASku then
-        begin
-          OldQty := Clon.FieldByName('CANTIDAD').AsFloat;
-          Clon.Edit;
-          Clon.FieldByName('CANTIDAD').AsFloat := OldQty + 1;
-          Clon.Post;
-          ActualizarTotal;
-          Result := True;
-        end;
-        Clon.Next;
-      end;
-    finally
-      FreeAndNil(Clon);
-    end;
-  end;
-end;
-
 procedure TfrmMtoOpeTraspaso.EnfocarSegunModo;
 begin
   // Solicitar: foco en ALMACEN ORIGEN (a quien pido = cboDestino). Atender:
@@ -806,7 +625,13 @@ begin
       AbrirModalSolicitudes;
     mtTraspaso:
       if (FGrid <> nil) and FGrid.CanFocus then
+      begin
         FGrid.SetFocus;
+        // Dejar el editor de articulo abierto para que el lector no pierda la
+        // primera cifra (la celda ya esta en edicion al empezar a escanear).
+        if FGridCtrl <> nil then
+          FGridCtrl.MostrarEditorArticulo;
+      end;
   end;
 end;
 
