@@ -29,7 +29,7 @@ unit inLibGridArticulos;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Variants, System.Types,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Variants, System.Types,
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
   Vcl.Dialogs, Vcl.ExtCtrls, cxGraphics,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
@@ -98,9 +98,6 @@ type
     // entre STX y ETX.
     FEnScanner: Boolean;
     FScanBuffer: string;
-    // Deteccion del lector por RAPIDEZ (lectores que envian Codigo+CR sin
-    // STX/ETX): si las teclas llegan muy seguidas son del lector.
-    FLastKeyTick: Cardinal;
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
     procedure DispararResolucionScan(const ACodigo: string);
@@ -122,6 +119,9 @@ type
     procedure ArticuloButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure ViewInitEdit(Sender: TcxCustomGridTableView;
                            AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+    procedure ViewEditKeyDown(Sender: TcxCustomGridTableView;
+                           AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit;
+                           var Key: Word; Shift: TShiftState);
     procedure AtributoCustomDrawCell(Sender: TcxCustomGridTableView;
                            ACanvas: TcxCanvas;
                            AViewInfo: TcxGridTableDataCellViewInfo;
@@ -217,6 +217,9 @@ begin
   // Al entrar en una celda de atributo vacia, abre la paleta (listbox de
   // swatches) automaticamente, como la caja. Se engancha en OnInitEdit.
   FView.OnInitEdit := ViewInitEdit;
+  // OnEditKeyDown del grid: resuelve el codigo en la celda al pulsar Enter
+  // (lector Codigo+CR o tecleo manual). Es el evento fiable para la celda.
+  FView.OnEditKeyDown := ViewEditKeyDown;
   // Flujo tipo Excel: Enter pasa a la siguiente celda y al llegar al final
   // de la fila salta a la siguiente. NO usamos NewItemRow: la linea nueva se
   // anyade sola al completar un SKU (lo hace el host en OnResuelto).
@@ -496,18 +499,13 @@ end;
 
 procedure TGridArticulosLineas.ArticuloKeyPress(Sender: TObject;
                                                 var Key: Char);
-const
-  // Las pulsaciones del lector llegan mucho mas rapido que las de un humano.
-  SCAN_UMBRAL_MS = 50;
-  // Longitud minima del codigo para tratarlo como lectura.
-  SCAN_MIN_LEN   = 4;
-var
-  nTick: Cardinal;
 begin
-  nTick := TThread.GetTickCount;
+  // Lector con framing STX/ETX: acumulamos el codigo entre STX(#2) y ETX(#3)
+  // y al recibir ETX lo resolvemos. Los lectores que envian Codigo+CR (sin
+  // framing) se resuelven en ViewEditKeyDown al recibir el Enter (VK_RETURN),
+  // que es el evento que SI llega de forma fiable a la celda del grid.
   if Key = #2 then
   begin
-    // Lector con framing STX/ETX: acumulamos entre STX(#2) y ETX(#3).
     FEnScanner := True;
     FScanBuffer := '';
     Key := #0;
@@ -526,38 +524,35 @@ begin
       FScanBuffer := FScanBuffer + Key;
       Key := #0;
     end;
-  end
-  else if Key = #13 then
+  end;
+end;
+
+procedure TGridArticulosLineas.ViewEditKeyDown(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
+var
+  s: string;
+begin
+  // Igual que caja (cxGrid1DBTableView1EditKeyDown): el Enter del lector
+  // (Codigo+CR) o del usuario en la celda de articulo resuelve el codigo que
+  // hay en el editor. Este evento del grid SI recibe el Enter aunque el editor
+  // sea un ExtLookupComboBox.
+  if (AItem = FColArticulo) and (Key = VK_RETURN) then
   begin
-    // CR final. Si veniamos de una rafaga rapida (lector Codigo+CR) lo
-    // resolvemos; si no, es un Enter manual y lo dejamos al control (selecciona
-    // del desplegable / valida lo tecleado).
-    if Length(FScanBuffer) >= SCAN_MIN_LEN then
-    begin
-      Key := #0;
-      DispararResolucionScan(FScanBuffer);
-    end;
-    FScanBuffer := '';
-    FLastKeyTick := nTick;
-  end
-  else if Key >= ' ' then
-  begin
-    // Deteccion por RAPIDEZ: si la tecla llega muy seguida de la anterior es
-    // parte de una lectura -> acumulamos, la consumimos (no llega a la busqueda
-    // incremental) y cerramos el desplegable para que no capture el Enter.
-    if (FScanBuffer <> '') and ((nTick - FLastKeyTick) <= SCAN_UMBRAL_MS) then
-    begin
-      FScanBuffer := FScanBuffer + Key;
-      Key := #0;
-      if (Sender is TcxCustomDropDownEdit) and
-         TcxCustomDropDownEdit(Sender).DroppedDown then
-        TcxCustomDropDownEdit(Sender).DroppedDown := False;
-    end
+    // Si el desplegable esta abierto, lo cerramos (selecciona la fila) para que
+    // el Enter no se quede "consumido" en el dropdown.
+    if (AEdit is TcxCustomDropDownEdit) and
+       TcxCustomDropDownEdit(AEdit).DroppedDown then
+      TcxCustomDropDownEdit(AEdit).DroppedDown := False;
+    if AEdit is TcxCustomTextEdit then
+      s := Trim(TcxCustomTextEdit(AEdit).Text)
     else
-      // Primer caracter o tecleo humano: arrancamos buffer y lo dejamos pasar
-      // (busqueda incremental normal).
-      FScanBuffer := Key;
-    FLastKeyTick := nTick;
+      s := Trim(VarToStr(AEdit.EditValue));
+    if s <> '' then
+    begin
+      Key := 0;
+      DispararResolucionScan(s);
+    end;
   end;
 end;
 
