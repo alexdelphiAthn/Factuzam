@@ -14,11 +14,11 @@ líneas) a Factuzam. Nuevo dominio del migrador Delphi
 | columnas de pago de `occaj` | `fza_caja_pagos` (formas de pago) |
 | operaciones `AL` | `fza_depositos_cliente` + operación `DE` |
 
-**Fuera de alcance (fase 2):** reconstrucción de las líneas de venta de
-`occajarp` como `fza_facturas` / `fza_facturas_lineas`. El stock de esas
-ventas YA entra por la migración de **Movimientos** (`ocmovarp`), así que
-aquí solo se migra la capa de caja (operaciones + pagos + depósitos). La
-factura como documento (con sus fases/Verifactu) es un subsistema aparte.
+**Fase 2 (implementada aparte en `inLibMigFacturas.pas`):** reconstrucción
+de las líneas de venta de `occajarp` como `fza_facturas` /
+`fza_facturas_lineas`. El stock de esas ventas YA entra por la migración de
+**Movimientos** (`ocmovarp`); este dominio (ventas) solo migra la capa de
+caja (operaciones + pagos + depósitos). Ver `migracion_facturas.md`.
 
 ---
 
@@ -123,7 +123,8 @@ referencia `CODIGO_UNIDAD`).
   L→VL, TR/AT→traspaso).
 - Política de depósitos: acumular `IMPORTE_ANTICIPO_DEP` con los cobros,
   detectar cierres, y soportar AL multilínea (un depósito por artículo).
-- Fase 2: `occajarp` → `fza_facturas` / `fza_facturas_lineas` si se quiere
-  el detalle de venta como factura (con IVA por línea, fases, Verifactu).
+- Fase 2 hecha en `inLibMigFacturas.pas` (detalle de venta como factura
+  SIMPLIFICADA). Queda afinar las bandas de IVA N/R/S/E y el estado
+  fiscal/Verifactu de la cabecera.
 - Rendimiento: hoy inserta fila a fila (claro y con enlace de depósitos).
   Si el volumen de caja lo exige, pasar operaciones+pagos a `TBulkInsert`.
