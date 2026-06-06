@@ -32,7 +32,9 @@ uses
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
   inLibPermisos, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   inLibCajaParam, Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
-  cxLocalization, inLibLectorScanner;
+  cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
+  cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
+  dxScrollbarAnnotations;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
