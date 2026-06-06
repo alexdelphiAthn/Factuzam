@@ -7,31 +7,23 @@
 --  ese literal pegado como TEXTO de caption en sitios que pertenecen a otra
 --  tabla (lineas de factura -> FACLIN, movimientos -> MOV, etc.).
 --
---  El binding por DataBinding.FieldName es correcto (CANTIDAD_FACLIN,
---  CANTIDAD_MOV...); lo unico erroneo es el Caption visible al usuario.
---  En el codigo (.dfm/.pas) ya se corrige; aqui se arreglan las copias que
---  cada usuario tiene persistidas en fza_usuarios_perfiles (las rejillas
---  guardan su layout: Caption, Width, Index, Visible... por SUBKEY_USUPER).
+--  IMPORTANTE: al abrir un formulario, inLibDevExp restaura el layout de la
+--  rejilla con prioridad  perfil de usuario > fza_config_campos > DFM. El
+--  caption que ve el usuario vive en fza_usuarios_perfiles (SUBKEY_USUPER
+--  = 'tvXxx_COLUMNA_Caption', valor en VALUE_USUPER) y PISA al DFM. Por eso
+--  recompilar no cambia lo que se ve: hay que corregir la BBDD.
 --
---  Se filtra por el VALUE erroneo y por SUBKEY terminada en 'Caption' para
---  no tocar nada mas. Cubre a todos los usuarios/formularios de la BBDD,
---  no solo los del dump modelo.
+--  Un unico UPDATE con REPLACE sobre la subcadena cubre todas las variantes
+--  ('CANTIDAD_ARTVIN', 'Tipo CANTIDAD_ARTVIN', 'Tipo de CANTIDAD_ARTVIN'...)
+--  y todos los usuarios/formularios de la BBDD, no solo los del dump modelo.
 --
---  Idempotente: re-ejecutable. Tras la primera pasada el VALUE ya es
---  'Cantidad' y el WHERE no machea ninguna fila.
+--  Idempotente: re-ejecutable. Tras la primera pasada ya no queda la
+--  subcadena 'CANTIDAD_ARTVIN' y el WHERE no machea ninguna fila.
 -- ============================================================================
 UPDATE fza_usuarios_perfiles
-   SET VALUE_USUPER = 'Cantidad'
- WHERE VALUE_USUPER = 'CANTIDAD_ARTVIN'
-   AND SUBKEY_USUPER LIKE '%Caption';
-UPDATE fza_usuarios_perfiles
-   SET VALUE_USUPER = 'Tipo Cantidad'
- WHERE VALUE_USUPER = 'Tipo CANTIDAD_ARTVIN'
-   AND SUBKEY_USUPER LIKE '%Caption';
-UPDATE fza_usuarios_perfiles
-   SET VALUE_USUPER = 'Tipo de Cantidad'
- WHERE VALUE_USUPER = 'Tipo de CANTIDAD_ARTVIN'
-   AND SUBKEY_USUPER LIKE '%Caption';
+   SET VALUE_USUPER = REPLACE(VALUE_USUPER, 'CANTIDAD_ARTVIN', 'Cantidad')
+ WHERE SUBKEY_USUPER LIKE '%Caption'
+   AND VALUE_USUPER  LIKE '%CANTIDAD_ARTVIN%';
 -- Verificacion (opcional, ejecutar despues): no debe devolver filas.
 -- SELECT KEY_USUPER, SUBKEY_USUPER, VALUE_USUPER
 --   FROM fza_usuarios_perfiles
