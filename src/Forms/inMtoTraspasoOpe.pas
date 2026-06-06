@@ -32,6 +32,12 @@ uses
   inLibGridArticulos, inLibPermisos, inLibGenBusq, inLibFotos,
   inLibAtributosPaleta, inLibCajaParam;
 
+const
+  // Mensaje para diferir el alta de la linea fuera del KeyPress del lector
+  // (dentro del KeyPress no se puede reestructurar el cds; cxGrid aun
+  // referencia el editor in-place). Igual patron que inMtoCajaOpe.
+  WM_PROCESAR_SCANNER = WM_USER + 117;
+
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
     pnlModos: TPanel;
@@ -56,6 +62,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
                           Shift: TShiftState);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure btnModoClick(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
     procedure btnF12Click(Sender: TObject);
@@ -88,6 +95,14 @@ type
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
     FQModalSolic: TUniQuery;
+    // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe):
+    // KeyPreview + STX(#2)..ETX(#3). Se lee desde cualquier campo; los
+    // caracteres se consumen para no ensuciar el control enfocado.
+    FLeyendoScanner: Boolean;
+    FScanBuffer: string;
+    FCodigoScanPend: string;
+    procedure WMProcesarScanner(var Msg: TMessage); message WM_PROCESAR_SCANNER;
+    procedure ProcesarLecturaScanner(const ACodigo: string);
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -605,6 +620,62 @@ begin
   begin
     FDatos.cdsLineas.Append;
     FDatos.cdsLineas.Post;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  // Igual que inMtoCajaOpe: el lector envia STX(#2) + codigo + ETX(#3). Con
+  // KeyPreview (heredado de TfrmBase) llega aqui tenga el foco quien tenga.
+  // Acumulamos y consumimos (Key:=#0) para no ensuciar el control enfocado;
+  // al ETX diferimos el alta con WM_PROCESAR_SCANNER.
+  if Key = #2 then
+  begin
+    FLeyendoScanner := True;
+    FScanBuffer := '';
+    Key := #0;
+  end
+  else if FLeyendoScanner then
+  begin
+    if Key = #3 then
+    begin
+      FLeyendoScanner := False;
+      Key := #0;
+      if Trim(FScanBuffer) <> '' then
+      begin
+        FCodigoScanPend := Trim(FScanBuffer);
+        PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
+      end;
+      FScanBuffer := '';
+    end
+    else
+    begin
+      FScanBuffer := FScanBuffer + Key;
+      Key := #0;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.WMProcesarScanner(var Msg: TMessage);
+begin
+  if FCodigoScanPend <> '' then
+  begin
+    ProcesarLecturaScanner(FCodigoScanPend);
+    FCodigoScanPend := '';
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.ProcesarLecturaScanner(const ACodigo: string);
+begin
+  // Alta de linea por lectura, desde cualquier campo: garantizamos una linea
+  // en blanco y resolvemos el codigo en ella (ResolverEntrada acepta codigo de
+  // barras / codigo / SKU). GridResuelto rellena coste/stock y deja otra linea.
+  if (Trim(ACodigo) <> '') and Assigned(FDatos) and
+     Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
+  begin
+    AsegurarLineaNueva;
+    FDatos.cdsLineas.Last;
+    FGridCtrl.ResolverEntrada(Trim(ACodigo));
   end;
 end;
 
