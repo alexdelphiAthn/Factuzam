@@ -126,35 +126,48 @@ end;
 // hay bandas pero sí Neto, se deriva una banda única del total.
 procedure FijarIvaCabecera(qSrc, qFac: TUniQuery; const fNeto: Double);
 var
-  aBase, aCuota, aRate: array[0..3] of Double;
-  i, b:                 Integer;
-  base, rate, cuota:    Double;
-  fBases, fImp:         Double;
+  aBase, aCuota, aRate:    array[0..3] of Double;
+  aReCuota, aReRate:       array[0..3] of Double;
+  i, b:                    Integer;
+  base, rate, cuota:       Double;
+  porcRe, cuotaRe:         Double;
+  fBases, fImp, fReTot:    Double;
 begin
   for b := 0 to 3 do
   begin
-    aBase[b]  := 0;
-    aCuota[b] := 0;
-    aRate[b]  := 0;
+    aBase[b]    := 0;
+    aCuota[b]   := 0;
+    aRate[b]    := 0;
+    aReCuota[b] := 0;
+    aReRate[b]  := 0;
   end;
   for i := 1 to 4 do
   begin
-    base  := qSrc.FieldByName('BaseImp'  + IntToStr(i)).AsFloat;
-    rate  := qSrc.FieldByName('PorcenIva' + IntToStr(i)).AsFloat;
-    cuota := qSrc.FieldByName('CuotaIVA' + IntToStr(i)).AsFloat;
+    base    := qSrc.FieldByName('BaseImp'   + IntToStr(i)).AsFloat;
+    rate    := qSrc.FieldByName('PorcenIva' + IntToStr(i)).AsFloat;
+    cuota   := qSrc.FieldByName('CuotaIVA'  + IntToStr(i)).AsFloat;
+    porcRe  := qSrc.FieldByName('PorcenRecargo' + IntToStr(i)).AsFloat;
+    cuotaRe := qSrc.FieldByName('CuotaRE'   + IntToStr(i)).AsFloat;
     if (base <> 0) or (cuota <> 0) then
     begin
       if (cuota = 0) and (rate > 0) then
         cuota := base * rate / 100;
+      if (cuotaRe = 0) and (porcRe > 0) then
+        cuotaRe := base * porcRe / 100;
+      // El recargo de equivalencia (RE) cae en la misma banda que su IVA.
       b := BandaIva(rate);
-      aBase[b]  := aBase[b]  + base;
-      aCuota[b] := aCuota[b] + cuota;
+      aBase[b]    := aBase[b]    + base;
+      aCuota[b]   := aCuota[b]   + cuota;
+      aReCuota[b] := aReCuota[b] + cuotaRe;
       if rate > aRate[b] then
         aRate[b] := rate;
+      if porcRe > aReRate[b] then
+        aReRate[b] := porcRe;
     end;
   end;
   fBases := aBase[0] + aBase[1] + aBase[2] + aBase[3];
   fImp   := aCuota[0] + aCuota[1] + aCuota[2] + aCuota[3];
+  fReTot := aReCuota[0] + aReCuota[1] + aReCuota[2] + aReCuota[3];
   // Fallback: sin bandas pero con total → una banda derivada del Neto.
   if (fBases = 0) and (fNeto <> 0) then
   begin
@@ -173,17 +186,26 @@ begin
   qFac.ParamByName('pivan').AsFloat  := aRate[0];
   qFac.ParamByName('tivan').AsFloat  := aCuota[0];
   qFac.ParamByName('basein').AsFloat := aBase[0];
+  qFac.ParamByName('pren').AsFloat   := aReRate[0];
+  qFac.ParamByName('tren').AsFloat   := aReCuota[0];
   qFac.ParamByName('pivar').AsFloat  := aRate[1];
   qFac.ParamByName('tivar').AsFloat  := aCuota[1];
   qFac.ParamByName('basier').AsFloat := aBase[1];
+  qFac.ParamByName('prer').AsFloat   := aReRate[1];
+  qFac.ParamByName('trer').AsFloat   := aReCuota[1];
   qFac.ParamByName('pivas').AsFloat  := aRate[2];
   qFac.ParamByName('tivas').AsFloat  := aCuota[2];
   qFac.ParamByName('baseis').AsFloat := aBase[2];
+  qFac.ParamByName('pres').AsFloat   := aReRate[2];
+  qFac.ParamByName('tres').AsFloat   := aReCuota[2];
   qFac.ParamByName('pivae').AsFloat  := aRate[3];
   qFac.ParamByName('tivae').AsFloat  := aCuota[3];
   qFac.ParamByName('baseie').AsFloat := aBase[3];
+  qFac.ParamByName('pree').AsFloat   := aReRate[3];
+  qFac.ParamByName('tree').AsFloat   := aReCuota[3];
   qFac.ParamByName('bases').AsFloat  := fBases;
-  qFac.ParamByName('imp').AsFloat    := fImp;
+  // TOTAL_IMPUESTOS = IVA + RE de todas las bandas.
+  qFac.ParamByName('imp').AsFloat    := fImp + fReTot;
 end;
 
 // =========================================================================
@@ -213,6 +235,14 @@ const
     '       ISNULL(c.BaseImp4, 0) AS BaseImp4, ' +
     '       ISNULL(c.PorcenIva4, 0) AS PorcenIva4, ' +
     '       ISNULL(c.CuotaIVA4, 0) AS CuotaIVA4, ' +
+    '       ISNULL(c.PorcenRecargo1, 0) AS PorcenRecargo1, ' +
+    '       ISNULL(c.CuotaRE1, 0) AS CuotaRE1, ' +
+    '       ISNULL(c.PorcenRecargo2, 0) AS PorcenRecargo2, ' +
+    '       ISNULL(c.CuotaRE2, 0) AS CuotaRE2, ' +
+    '       ISNULL(c.PorcenRecargo3, 0) AS PorcenRecargo3, ' +
+    '       ISNULL(c.CuotaRE3, 0) AS CuotaRE3, ' +
+    '       ISNULL(c.PorcenRecargo4, 0) AS PorcenRecargo4, ' +
+    '       ISNULL(c.CuotaRE4, 0) AS CuotaRE4, ' +
     '       l.NroLinea, l.Articulo, l.Talla, l.Vendedor AS VendedorLin, ' +
     '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
     '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ' +
@@ -246,19 +276,23 @@ const
     '  (NUMERO_FAC, SERIE_FAC, FECHA_FAC, TIPO_FAC, ESCONSOLIDADA_FAC, ' +
     '   CODIGO_EMP_FAC, CODIGO_CLI_FAC, ' +
     '   PORCENTAJE_IVAN_FAC, TOTAL_IVAN_FAC, TOTAL_BASEI_IVAN_FAC, ' +
+    '   PORCENTAJE_REN_FAC, TOTAL_REN_FAC, ' +
     '   PORCENTAJE_IVAR_FAC, TOTAL_IVAR_FAC, TOTAL_BASEI_IVAR_FAC, ' +
+    '   PORCENTAJE_RER_FAC, TOTAL_RER_FAC, ' +
     '   PORCENTAJE_IVAS_FAC, TOTAL_IVAS_FAC, TOTAL_BASEI_IVAS_FAC, ' +
+    '   PORCENTAJE_RES_FAC, TOTAL_RES_FAC, ' +
     '   PORCENTAJE_IVAE_FAC, TOTAL_IVAE_FAC, TOTAL_BASEI_IVAE_FAC, ' +
+    '   PORCENTAJE_REE_FAC, TOTAL_REE_FAC, ' +
     '   TOTAL_BASES_FAC, TOTAL_IMPUESTOS_FAC, TOTAL_LIQUIDO_FAC, ' +
     '   FORMA_PAGO_FAC, CODIGO_CAJERO_FAC, CODIGO_ALM_FAC, CODIGO_CAJA_FAC, ' +
     '   NUMERO_OPERACION_FAC, ' +
     '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES (:num, :serie, :fecha, ''SIMPLIFICADA'', ''S'', ' +
     '        :emp, :cli, ' +
-    '        :pivan, :tivan, :basein, ' +
-    '        :pivar, :tivar, :basier, ' +
-    '        :pivas, :tivas, :baseis, ' +
-    '        :pivae, :tivae, :baseie, ' +
+    '        :pivan, :tivan, :basein, :pren, :tren, ' +
+    '        :pivar, :tivar, :basier, :prer, :trer, ' +
+    '        :pivas, :tivas, :baseis, :pres, :tres, ' +
+    '        :pivae, :tivae, :baseie, :pree, :tree, ' +
     '        :bases, :imp, :liq, ' +
     '        ''CONTADO'', :cajero, :alm, :caja, :numop, ' +
     '        :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';

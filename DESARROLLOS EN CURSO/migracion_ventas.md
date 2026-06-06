@@ -48,16 +48,16 @@ depósitos y los CB contiguos en adelantos"**.
   cliente** (heurística de "contiguo"), manteniendo en memoria un mapa
   cliente→depósito durante el barrido cronológico.
 
-**Comportamiento y limitaciones:**
+**Comportamiento:**
 - `AL` multilínea: se crea **un depósito por línea de artículo** (ID
   `DM<emp>-<caja>-<op>-<linea>`); el `DE` se enlaza al primero.
-- Los cobros (`CB`) del mismo cliente **acumulan** en `IMPORTE_ANTICIPO_DEP`
-  y dejan el depósito **`CERRADO`** cuando el anticipo alcanza
-  `PRECIO_VENTA_DEP`.
-- Limitación de datos: en el histórico antiguo los **cobros vienen SIN
-  cliente** y las columnas `…CtaCli` vacías, así que el enlace/acumulación es
-  *best-effort*; sin cliente, el `CB` queda suelto. En `AL` multilínea el
-  anticipo se acumula en el **primer** depósito.
+- Los cobros (`CB`) **reparten** su importe (waterfall) entre los depósitos
+  `PENDIENTE` del cliente —en orden de creación, rellenando cada uno hasta su
+  `PRECIO_VENTA_DEP`—, **acumulan** en `IMPORTE_ANTICIPO_DEP` y dejan cada
+  depósito **`CERRADO`** al alcanzar su precio.
+- **Cobro sin cliente**: hereda el cliente del **documento adyacente** (último
+  documento con cliente en la misma caja), que es como el legacy enlaza el
+  cobro con su albarán/cuenta. Si aun así no hay cliente, el `CB` queda suelto.
 
 Todo esto es afinable en una segunda pasada cuando se decida la política
 exacta de reconstrucción de depósitos.
@@ -122,10 +122,10 @@ referencia `CODIGO_UNIDAD`).
 - Catálogo real de `occaj.Tipo`/`TipoDoc` para afinar `MapearTipoOp`
   (hoy: heurística basada en los datos vistos: V/P→VE, C→CB, A/AL→DE,
   L→VL, TR/AT→traspaso).
-- Política de depósitos: implementada (multilínea = un depósito por línea,
-  acumulación de anticipos con los cobros y cierre al alcanzar el precio).
-  Pendiente: enlazar cobros que vienen SIN cliente (CtaCli vacío en el
-  histórico) y repartir el anticipo entre las líneas en AL multilínea.
+- Política de depósitos: **completa** — multilínea (un depósito por línea),
+  reparto del cobro (waterfall) entre los depósitos del cliente, cierre al
+  alcanzar el precio, y herencia del cliente del **documento adyacente** para
+  los cobros sin cliente.
 - Fase 2 hecha en `inLibMigFacturas.pas` (detalle de venta como factura
   SIMPLIFICADA). Queda afinar las bandas de IVA N/R/S/E y el estado
   fiscal/Verifactu de la cabecera.
