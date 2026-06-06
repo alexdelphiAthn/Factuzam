@@ -146,5 +146,73 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 2
+    object FGrid: TcxGrid
+      Left = 0
+      Top = 0
+      Width = 896
+      Height = 272
+      Align = alClient
+      TabOrder = 0
+      object FView: TcxGridDBTableView
+      end
+      object lvlLineas: TcxGridLevel
+        GridView = FView
+      end
+    end
+    object FStockPanel: TPanel
+      Left = 0
+      Top = 280
+      Width = 896
+      Height = 170
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 1
+      object FFotoPanel: TPanel
+        Left = 736
+        Top = 0
+        Width = 160
+        Height = 170
+        Align = alRight
+        BevelOuter = bvNone
+        TabOrder = 1
+        object FFotoImg: TImage
+          Left = 0
+          Top = 0
+          Width = 160
+          Height = 170
+          Align = alClient
+          Center = True
+          Proportional = True
+        end
+      end
+      object FFotoSplitter: TcxSplitter
+        Left = 728
+        Top = 0
+        Width = 8
+        Height = 170
+        AlignSplitter = salRight
+        Control = FFotoPanel
+      end
+      object FStockGrid: TcxGrid
+        Left = 0
+        Top = 0
+        Width = 728
+        Height = 170
+        Align = alClient
+        TabOrder = 0
+        object FStockView: TcxGridDBTableView
+        end
+        object lvlStock: TcxGridLevel
+          GridView = FStockView
+        end
+      end
+    end
+    object FStockSplitter: TcxSplitter
+      Left = 0
+      Top = 272
+      Width = 896
+      Height = 8
+      AlignSplitter = salBottom
+    end
   end
 end
