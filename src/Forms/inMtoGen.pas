@@ -1134,6 +1134,10 @@ var
 begin
   if not Assigned(AccionBG) then
     Exit;
+  // Si la app se esta cerrando no arrancamos trabajo nuevo: la tarea quedaria
+  // huerfana usando una conexion que el cierre esta a punto de liberar.
+  if inLibGlobalVar.oCerrandoApp then
+    Exit;
   if FTareasActivas = nil then
     FTareasActivas := TList<ITask>.Create;
   BloquearTabPorOcupado(True);
@@ -1163,6 +1167,12 @@ begin
         procedure
         begin
           try
+            // Si la app se esta cerrando, este callback puede llegar a
+            // ejecutarse (via CheckSynchronize) cuando el form ya esta
+            // liberado. Salimos sin tocar nada: leer oCerrandoApp es seguro
+            // porque es una global, no un campo del form muerto.
+            if inLibGlobalVar.oCerrandoApp then
+              Exit;
             // Quitar esta tarea de la lista ANTES del callback (si el
             // callback lanza otra task, no queremos contar esta vez).
             // Si el form se esta destruyendo, FTareasActivas puede ser nil.
@@ -1407,7 +1417,19 @@ begin
   begin
     try
       if FTareasActivas.Count > 0 then
-        TTask.WaitForAll(FTareasActivas.ToArray, 5000);
+      begin
+        if inLibGlobalVar.oCerrandoApp then
+          // Apagado de la app: esperamos a que las tareas terminen del todo.
+          // Si abandonaramos aqui (timeout) y liberasemos FConn / el data
+          // module, la tarea quedaria viva usando objetos ya liberados y el
+          // pool de TTask se colgaria al finalizar el proceso, dejando la app
+          // sin devolver el control. Las consultas en curso terminan solas.
+          TTask.WaitForAll(FTareasActivas.ToArray)
+        else
+          // Cierre de una sola pestaña: si MySQL no responde en 5s asumimos
+          // tarea muerta antes que dejar la app colgada cerrando un tab.
+          TTask.WaitForAll(FTareasActivas.ToArray, 5000);
+      end;
     except
       // WaitForAll puede lanzar si alguna tarea fallo — lo ignoramos
       // porque solo queremos drenar, no propagar.
