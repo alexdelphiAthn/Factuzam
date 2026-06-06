@@ -2105,7 +2105,7 @@ begin
 
   if MessageDlg(
        'Esto añadirá al inventario todos los SKUs con stock que NO ' + #13#10 +
-       'estén ya en el inventario, con cantidad_artvin física = 0.' + #13#10
+       'estén ya en el inventario, con cantidad física = 0.' + #13#10
          + #13#10 +
        'Útil para detectar artículos que faltó contar.' + #13#10 + #13#10 +
        '¿Continuar?',
@@ -2130,7 +2130,7 @@ begin
 
   if MessageDlg(
        'Esto cargará TODOS los SKUs con stock al inventario, ' + #13#10 +
-       'con cantidad_artvin física = teórica. ¿Continuar?',
+       'con cantidad física = teórica. ¿Continuar?',
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;

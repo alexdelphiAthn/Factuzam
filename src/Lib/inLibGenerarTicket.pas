@@ -182,7 +182,7 @@ begin
                                                  DatosCobro.CodigoValeEmitido );
       Ticket.Negrita(False);
     end;
-//    Ticket.TextoColumnas('CANTIDAD_ARTVIN DE ARTICULOS', Format('%.2f',
+//    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',
 //                                                        [CantidadTotal]), 42);
     Ticket.SaltarLineas(1);
     // Mostrar desglose de base e IVA (N = Normal, R = Reducido, etc.)
