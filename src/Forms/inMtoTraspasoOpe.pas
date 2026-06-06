@@ -31,7 +31,8 @@ uses
   Data.DB, Datasnap.DBClient, Uni, inLibGlobalVar, UniDataTraspaso,
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
   inLibPermisos, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
-  inLibCajaParam;
+  inLibCajaParam, Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
+  cxLocalization;
 
 const
   // Mensaje para diferir el alta de la linea fuera del KeyPress del lector

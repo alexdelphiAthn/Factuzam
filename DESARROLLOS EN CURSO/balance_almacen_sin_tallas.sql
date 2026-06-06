@@ -10,17 +10,21 @@
 -- fuera. Mismos filtros, modos, bandas, agrupaciones y valoración.
 --
 -- Modos (parámetro p_MODO):
---   'F' = entre fechas (existencias iniciales, entradas, salidas, ventas,
---         existencias finales; desglosado abre los subtipos Ctrl+U).
---   'A' = por acumulados (entradas, salidas, ventas, existencias finales).
+--   'F' = entre fechas (existencias iniciales, entradas, ventas, existencias
+--         finales; desglosado abre los subtipos Ctrl+U). Sin banda Salidas:
+--         los traspasos se netean en Entradas y los depósitos quedan fuera.
+--   'A' = por acumulados (entradas, ventas, existencias finales).
+--   Balance: Ex.ini + Entradas - Ventas = Ex.final.
 --
 -- Origen de datos y valoración: idénticos al balance por tallas (ver
 -- balance_almacen_tallas.sql §). La única diferencia es el grano: aquí se
 -- agrupa por (artículo, color) en vez de por (artículo, color, talla), y
 -- no hay tabla de posiciones/etiquetas de talla.
 --
--- Ventas: la banda de ventas (VEN) se valora al PRECIO REAL de venta (con
--- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no a tarifa.
+-- Ventas: la banda de ventas (VEN) toma CANTIDAD e IMPORTE REALES (con
+-- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no del acumulado
+-- de stock ni de la tarifa. La cantidad se sobrescribe (tmp_bst_ven) antes del
+-- descarte, porque el acumulado CANTIDAD_SAL_VENTA_STK puede no estar al día.
 -- Columna VENTAS (importe real solo en VEN, 0 en el resto) para acumular las
 -- ventas por artículo/grupo/total. Existencias ini/fin y entradas, a PMP.
 --
@@ -188,8 +192,15 @@ BEGIN
         ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
        AND a.`ESACTIVO_ART` = 'S'
        AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+      -- Color del SKU: SOLO su fila de atributo de color. El discriminante
+      -- ID_VA_AV='CO' DEBE ir también en el ON de `sac`; si solo se filtra en
+      -- `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera
+      -- dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar
+      -- y el SKU podía quedar SIN color (banda "sin color" fantasma).
       LEFT JOIN `fza_atributos_sku` sac
         ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = 'CO')
       LEFT JOIN `fza_atributos_valores` co
         ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = 'CO'
       LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
@@ -359,6 +370,45 @@ BEGIN
          GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''), s.`COLOR`;
     END IF;
 
+    -- Ventas REALES por (artículo, almacén, color) desde las líneas de
+    -- factura: fuente de verdad de las ventas (cantidad e importe). Los
+    -- acumulados de stock (CANTIDAD_SAL_VENTA_STK) pueden no estar mantenidos
+    -- y dar 0 aunque haya venta. Se sobrescribe VEN ANTES del descarte para
+    -- que (a) la banda de ventas muestre la cantidad real y (b) no se borre un
+    -- color que solo tiene ventas (existencias netas 0). Mismo filtro de
+    -- almacén/periodo y mismos SKUs (tmp_bst_sku) que la valoración vt.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_ven`;
+    CREATE TEMPORARY TABLE `tmp_bst_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
+        `COLOR`      VARCHAR(100)  NOT NULL DEFAULT '',
+        `VEN_QTY`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`)
+    );
+    INSERT INTO `tmp_bst_ven`
+    SELECT s.`CODIGO_ART`,
+           IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''),
+           s.`COLOR`,
+           SUM(fl.`CANTIDAD_FACLIN`)
+      FROM `fza_facturas_lineas` fl
+      JOIN `fza_facturas` f
+        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+      JOIN `tmp_bst_sku` s
+        ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+     WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+       AND (p_MODO = 'A'
+            OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+     GROUP BY s.`CODIGO_ART`,
+              IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''), s.`COLOR`;
+    -- Sobrescribir la cantidad de ventas del stock con la real de facturas.
+    UPDATE `tmp_bst_base` b
+      JOIN `tmp_bst_ven` v
+        ON v.`CODIGO_ART` = b.`CODIGO_ART`
+       AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+       AND v.`COLOR` = b.`COLOR`
+       SET b.`VEN` = v.`VEN_QTY`;
+
     -- Descartar (artículo, color) sin existencias ni movimientos: cubrir todo
     -- el catálogo si no llenaría el informe de artículos inactivos a cero.
     DELETE FROM `tmp_bst_base`
@@ -393,22 +443,25 @@ BEGIN
                'EXIINI', 10, 'Existencias iniciales', 1, `EXI_INI`
           FROM `tmp_bst_base`;
     END IF;
-    -- Entradas / Salidas agregadas: simplificado (F) o acumulados (A).
+    -- Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb.
+    -- entrada) + recuentos + traspasos NETOS (entrada - salida). SIN depósitos
+    -- y SIN banda Salidas: las ventas van en su banda. Balance: Ex.ini +
+    -- Entradas - Ventas = Ex.final (los depósitos quedan fuera).
     IF (p_MODO = 'F' AND p_DESGLOSADO = 'N') OR p_MODO = 'A' THEN
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENT', 20, 'Entradas', 1, `ENT`
-          FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SAL', 40, 'Salidas', 0, `SAL`
+               'ENT', 20, 'Entradas', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'VEN', 50, 'Ventas', 0, `VEN`
           FROM `tmp_bst_base`;
     END IF;
-    -- Entradas / Salidas desglosadas: solo modo entre fechas desglosado.
+    -- Entradas desglosadas: solo modo entre fechas desglosado. Traspasos y
+    -- depósitos netos (entrada - salida), sin bandas de salida salvo alb.
+    -- venta. Mismos subtipos que la consulta de stock (Ctrl+U).
     IF p_MODO = 'F' AND p_DESGLOSADO = 'S' THEN
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
@@ -420,31 +473,29 @@ BEGIN
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENTTRA', 23, 'Ent. traspaso', 1, `ENT_TRASPASO`
+               'ENTTRA', 23, 'Traspasos (neto)', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENTDEP', 24, 'Ent. depósito', 1, `ENT_DEPOSITO`
+               'ENTDEP', 24, 'Depósitos (neto)', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'ENTREG', 25, 'Regulariz.', 1, `ENT_REGULAR`
           FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SALTRA', 41, 'Sal. traspaso', 0, `SAL_TRASPASO`
-          FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SALDEP', 42, 'Sal. depósito', 0, `SAL_DEPOSITO`
-          FROM `tmp_bst_base`;
+        -- Sal. traspaso / Sal. depósito ya no salen: neteadas en sus bandas de
+        -- entrada. Albarán de venta sí se mantiene (es una venta).
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'SALALB', 43, 'Alb. venta', 0, `SAL_ALBVENTA`
           FROM `tmp_bst_base`;
+        -- Cantidad de ventas = VEN (ya sobrescrito con la cantidad real de
+        -- facturas), igual que en simplificado/acumulados.
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'VEN', 50, 'Ventas', 0, `SAL_VENTA`
+               'VEN', 50, 'Ventas', 0, `VEN`
           FROM `tmp_bst_base`;
     END IF;
     -- Existencias finales: siempre.
@@ -655,6 +706,7 @@ BEGIN
 
     -- Limpieza de temporales.
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_ven`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;

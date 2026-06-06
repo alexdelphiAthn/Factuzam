@@ -194,7 +194,7 @@ begin
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := dmDataCaja.UniConnection1; // Tu conexión
-    // Consulta para obtener fecha y cantidad_artvin de ventas
+    // Consulta para obtener fecha y cantidad de ventas
     Query.SQL.Text :=
       ' SELECT FECHA, '+
       '        TOTAL_VENTAS, '+

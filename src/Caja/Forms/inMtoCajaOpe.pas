@@ -257,6 +257,9 @@ type
     procedure WMProcesarScanner(var Msg: TMessage);
                                        message WM_PROCESAR_SCANNER;
     procedure ProcesarLecturaScanner(const ACodigo: string);
+    procedure CapturarControlScanVel;
+    procedure RestaurarControlScanVel;
+    function  EsControlDeRejilla(AControl: TControl): Boolean;
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   public
@@ -267,8 +270,35 @@ type
     // Activo mientras resolvemos una lectura con pistola: fuerza a
     // RellenarDatosArticuloEnDataset a buscar SOLO en codigos de barras.
     FResolviendoPorScanner: Boolean;
+    // Activo durante TODO ProcesarLecturaScanner. Lo consultan los validadores
+    // de cliente/empleado para no validar su texto (que pudo ensuciarse con la
+    // rafaga) cuando el escaneo mueve el foco a la rejilla.
+    FProcesandoLecturaScanner: Boolean;
     // Codigo leido pendiente de procesar (lo consume WMProcesarScanner).
     FCodigoScanPend: string;
+    // Detector de lectura por VELOCIDAD de tecleo (codigo de barras + CR sin
+    // STX/ETX): el lector teclea en rafaga. FScanVelBuffer acumula los
+    // caracteres rapidos y consecutivos, FScanVelTick guarda el instante de la
+    // ultima tecla y FScanVelComido marca que el Enter ya se consumio en
+    // FormKeyDown (para tragar su #13 en FormKeyPress).
+    FScanVelBuffer: string;
+    FScanVelTick: Cardinal;
+    FScanVelComido: Boolean;
+    // Control enfocado y su texto al iniciar una rafaga, para restaurarlo si la
+    // lectura entra con el foco FUERA de la rejilla (la rafaga no consumida
+    // habria ensuciado ese campo).
+    FScanVelControl: TWinControl;
+    FScanVelTextoPrevio: string;
+    // Anti-eco del editor del cxGrid: al teclear la 1a letra sobre una celda
+    // que no estaba en edicion, el grid arranca la edicion y REENVIA ese primer
+    // caracter, que llegaria duplicado al buffer. FScanVelInicioChar guarda el
+    // 1er caracter; FScanVelEsperaReplay indica que el grid va a arrancar
+    // edicion (foco en rejilla y no editaba) y por tanto la siguiente tecla
+    // identica es el eco a descartar; FScanVelGridEditaba recuerda si el grid
+    // ya estaba editando ANTES de la tecla (se captura en FormKeyDown).
+    FScanVelInicioChar: Char;
+    FScanVelEsperaReplay: Boolean;
+    FScanVelGridEditaba: Boolean;
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -661,16 +691,23 @@ begin
 end;
 
 // Hook de lectura con pistola a nivel de FORMULARIO (KeyPreview heredado de
-// TfrmBase = True): da igual que control tenga el foco. Al recibir el prefijo
-// STX(#2) entramos en modo scanner, acumulamos el codigo y al llegar el
-// sufijo ETX(#3) lo procesamos (alta de linea de venta). Los caracteres entre
-// STX y ETX se consumen (Key:=#0) para que no ensucien el control enfocado.
+// TfrmBase = True): da igual que control tenga el foco. Hay DOS detectores:
+//   1) Trama STX(#2)+codigo+ETX(#3): el lector envuelve el codigo. Acumulamos
+//      entre STX y ETX consumiendo las teclas (no ensucian el control).
+//   2) Por VELOCIDAD de tecleo (codigo de barras + CR, sin STX/ETX): el lector
+//      teclea en rafaga. Aqui solo acumulamos la rafaga con su cadencia; la
+//      decision (rafaga + Enter) se toma en FormKeyDown, para adelantarse al
+//      editor del grid y a jvEnterTab.
 procedure TfrmMtoOpeCaja.FormKeyPress(Sender: TObject; var Key: Char);
+var
+  ahora, delta: Cardinal;
 begin
   if Key = #2 then
   begin
     FLeyendoScanner := True;
     FScanBuffer := '';
+    FScanVelBuffer := '';
+    FScanVelEsperaReplay := False;
     tmrBusq.Enabled := False;
     Key := #0;
     Exit;
@@ -700,6 +737,57 @@ begin
     end;
     Exit;
   end;
+  // --- Detector 2: acumulacion por velocidad de tecleo ----------------------
+  if not oCajaParams.GetBool('vgerScanVelActivo', True) then
+    Exit;
+  ahora := GetTickCount;
+  delta := ahora - FScanVelTick;
+  FScanVelTick := ahora;
+  // El #13 del Enter ya consumido en FormKeyDown: lo tragamos para que no
+  // llegue al control enfocado.
+  if FScanVelComido and (Key = #13) then
+  begin
+    FScanVelComido := False;
+    Key := #0;
+    Exit;
+  end;
+  // El buffer SOLO crece con caracteres imprimibles rapidos y consecutivos
+  // (firma del lector). Cualquier caracter lento o de control lo reinicia, asi
+  // que el tecleo humano nunca acumula longitud.
+  if Key >= ' ' then
+  begin
+    if delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40)) then
+    begin
+      // Anti-eco del editor del grid: si esperabamos el eco del 1er caracter y
+      // esta tecla lo repite, la descartamos (el grid la reenvio al arrancar la
+      // edicion). En cualquier otro caso, acumulamos normal.
+      if FScanVelEsperaReplay and (Key = FScanVelInicioChar) then
+        FScanVelEsperaReplay := False
+      else
+      begin
+        FScanVelEsperaReplay := False;
+        FScanVelBuffer := FScanVelBuffer + Key;
+      end;
+    end
+    else
+    begin
+      // Inicio de una posible rafaga: KeyPreview corre ANTES de que el control
+      // enfocado reciba este caracter, asi que aqui guardamos su texto original
+      // por si hay que restaurarlo (lectura con el foco fuera de la rejilla).
+      FScanVelBuffer := Key;
+      CapturarControlScanVel;
+      FScanVelInicioChar := Key;
+      // Solo esperamos eco si la rafaga arranca en la rejilla y el grid NO
+      // estaba editando: ahi es donde el cxGrid reenvia el primer caracter.
+      FScanVelEsperaReplay := EsControlDeRejilla(FScanVelControl) and
+                              (not FScanVelGridEditaba);
+    end;
+  end
+  else
+  begin
+    FScanVelBuffer := '';
+    FScanVelEsperaReplay := False;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.WMProcesarScanner(var Msg: TMessage);
@@ -725,6 +813,11 @@ var
 begin
   if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
   begin
+   // Activo durante todo el procesado: evita que, al mover el foco a la
+   // rejilla, los validadores de cliente/empleado intenten validar el texto
+   // que la rafaga pudo dejar en esos campos.
+   FProcesandoLecturaScanner := True;
+   try
     // Precondicion: sin vendedor dado de alta no se admiten lecturas.
     if Trim(DatosCaja.cdsCabecera.FieldByName(
                                        'CODIGO_CAJERO_FAC').AsString) = '' then
@@ -784,7 +877,11 @@ begin
         // vacio). Si no esta -> rellenamos la linea de trabajo y la grabamos.
         if (Trim(sSku) <> '') and ConsolidarSiExiste(sSku) then
         begin
-          // Consolidado: nada mas que hacer; la unidad ya se sumo.
+          // Consolidado: la unidad ya se sumo. El incremento se hizo via un
+          // CLON del dataset, que no notifica al grid principal, asi que la
+          // cantidad no se repintaria hasta mover el cursor. Forzamos el
+          // refresco para que se vea de inmediato.
+          tvLineasOpe.DataController.UpdateItems(True);
         end
         else
         begin
@@ -810,6 +907,48 @@ begin
       AsegurarLineaNueva;
       tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
+   finally
+     FProcesandoLecturaScanner := False;
+   end;
+  end;
+end;
+
+// Recuerda el control enfocado y su texto al iniciar una rafaga del detector
+// por velocidad. Se llama desde FormKeyPress ANTES de que el control reciba el
+// caracter (KeyPreview), por lo que el texto guardado es el previo a la rafaga.
+procedure TfrmMtoOpeCaja.CapturarControlScanVel;
+begin
+  FScanVelControl := Screen.ActiveControl;
+  FScanVelTextoPrevio := '';
+  if (FScanVelControl <> nil) and (FScanVelControl is TcxCustomTextEdit) then
+    FScanVelTextoPrevio := TcxCustomTextEdit(FScanVelControl).Text;
+end;
+
+// Restaura el control enfocado a su texto previo si la lectura entro con el
+// foco FUERA de la rejilla (en la rejilla el editor in-place se descarta solo
+// via HideEdit, asi que ahi no tocamos nada).
+procedure TfrmMtoOpeCaja.RestaurarControlScanVel;
+begin
+  if (FScanVelControl <> nil) and (FScanVelControl is TcxCustomTextEdit)
+     and (not EsControlDeRejilla(FScanVelControl)) then
+    TcxCustomTextEdit(FScanVelControl).Text := FScanVelTextoPrevio;
+  FScanVelControl := nil;
+  FScanVelTextoPrevio := '';
+end;
+
+// True si AControl es la rejilla de lineas o esta contenido en ella (p.ej. el
+// editor in-place de una celda).
+function TfrmMtoOpeCaja.EsControlDeRejilla(AControl: TControl): Boolean;
+var
+  C: TControl;
+begin
+  Result := False;
+  C := AControl;
+  while (C <> nil) and (not Result) do
+  begin
+    if C = cxgrdLineasOpe then
+      Result := True;
+    C := C.Parent;
   end;
 end;
 
@@ -1334,7 +1473,7 @@ begin
     begin
       Error := True;
       ErrorText := 'En artículos de depósito solo está permitido cambiar el ' +
-                   'signo de la cantidad_artvin.';
+                   'signo de la cantidad.';
     end
     else
     begin
@@ -1780,7 +1919,7 @@ begin
     // Si la línea es la prenda base del depósito
     if DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
     begin
-      // Solo permitimos editar la columna de CANTIDAD_ARTVIN/Unidades
+      // Solo permitimos editar la columna de Cantidad/Unidades
       if AItem <> tvUds then
         AAllow := False;
     end
@@ -2236,7 +2375,7 @@ begin
           else
           begin
             // Si el parámetro está desactivado, el cajero decide. Lo normal es
-            // dejarle en CANTIDAD_ARTVIN.
+            // dejarle en Cantidad.
           end;
         end;
       end;
@@ -2266,7 +2405,7 @@ begin
     begin
       ShowMessage(
         'No se puede eliminar una línea vinculada a un depósito.' + sLineBreak +
-                  'Cambie la cantidad_artvin a negativo si necesita ' +
+                  'Cambie la cantidad a negativo si necesita ' +
                   'revertirla.');
       Exit;
     end;
@@ -2470,6 +2609,13 @@ var
   sCodigo: string;
   Totales: TFacturaTotales;
 begin
+  // Durante un escaneo no validamos el cliente: el foco se mueve a la rejilla
+  // y el campo pudo quedar con la rafaga; lo da por bueno y no molesta.
+  if FProcesandoLecturaScanner then
+  begin
+    Error := False;
+    Exit;
+  end;
   if FValidandoCliente then
     Exit;
   FValidandoCliente := True;
@@ -2694,6 +2840,12 @@ var
   sCodigo: string;
   qry: TUniQuery;
 begin
+  // Durante un escaneo no validamos el empleado (mismo motivo que en cliente).
+  if FProcesandoLecturaScanner then
+  begin
+    Error := False;
+    Exit;
+  end;
   sCodigo := VarToStr(DisplayValue);
   if (Trim(sCodigo) <> '') and DatosCaja.BuscarYMostrarNombre('EMPLEADOS',
     sCodigo,
@@ -2754,7 +2906,7 @@ var
   Proporcion: Double;
   DescuentoAplicarLinea: Currency;
   DescuentoAcumulado: Currency;
-  CANTIDAD_ARTVIN: Double;
+  Cantidad: Double;
   PrecioSalida: Currency;
   DescuentoUnitario: Currency;
   Bkm: TBookmark;
@@ -2784,15 +2936,15 @@ begin
     begin
       DatosCaja.cdsLineas.Edit;
 
-      CANTIDAD_ARTVIN :=
+      Cantidad :=
         DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
-      if CANTIDAD_ARTVIN = 0 then CANTIDAD_ARTVIN := 1; // Protección matemática
+      if Cantidad = 0 then Cantidad := 1; // Protección matemática
 
       PrecioSalida :=
         DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
 
       // Calculamos el % de peso de esta línea sobre el total del ticket
-      Proporcion := (CANTIDAD_ARTVIN * PrecioSalida) / TotalBrutoVenta;
+      Proporcion := (Cantidad * PrecioSalida) / TotalBrutoVenta;
 
       // Asignamos el descuento total que le toca a esta fila
       // (Si es la última línea, le damos el resto para que cuadre exactamente
@@ -2807,7 +2959,7 @@ begin
       DatosCaja.cdsLineas.Prior; // Volvemos a la línea actual
 
       // --- LÓGICA DE CAMPOS REALES DE LA BASE DE DATOS ---
-      DescuentoUnitario := DescuentoAplicarLinea / CANTIDAD_ARTVIN;
+      DescuentoUnitario := DescuentoAplicarLinea / Cantidad;
 
       // 1. Guardar el nuevo Precio con Descuento Unitario (PRECIO_DTO_FACLIN)
       DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency :=
@@ -3197,7 +3349,18 @@ end;
 
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  delta: Cardinal;
 begin
+  // Reseteamos el flag de "Enter ya consumido" en cada pulsacion; solo lo
+  // dejamos activo de forma transitoria entre el VK_RETURN consumido y su #13
+  // de KeyPress. Asi nunca queda obsoleto y se traga un Enter manual posterior.
+  FScanVelComido := False;
+  // Estado de edicion del grid ANTES de procesar esta tecla (KeyPreview corre
+  // antes que el KeyDown del grid). Lo usa el anti-eco: solo hay eco si el grid
+  // NO estaba editando y arranca la edicion con esta tecla.
+  FScanVelGridEditaba := (tvLineasOpe.Controller.EditingController <> nil) and
+                         tvLineasOpe.Controller.EditingController.IsEditing;
   if (Key = VK_F5) then
     btnF5.Click;
   // Ctrl+F12 -> resetear layout
@@ -3205,6 +3368,31 @@ begin
   begin
     ResetearLayout(Self.Name);
     Key := 0;
+  end;
+  // Cierre del detector 2 (codigo de barras + CR por velocidad de tecleo). Lo
+  // resolvemos en KeyDown (no en KeyPress) para adelantarnos al editor del grid
+  // (que procesa VK_RETURN) y a jvEnterTab (Enter->Tab): el FormKeyDown con
+  // KeyPreview corre antes que ambos. Si el buffer es una rafaga del lector y
+  // el Enter llega igual de rapido, lo tratamos como lectura y lo encaminamos
+  // al mismo procesado que la trama STX/ETX.
+  if (Key = VK_RETURN) and oCajaParams.GetBool('vgerScanVelActivo', True) then
+  begin
+    delta := GetTickCount - FScanVelTick;
+    if (Length(FScanVelBuffer) >=
+                              oCajaParams.GetInt('vgerScanMinLong', 4)) and
+       (delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40))) then
+    begin
+      FCodigoScanPend := Trim(FScanVelBuffer);
+      FScanVelBuffer  := '';
+      FScanVelComido  := True;  // tragaremos el #13 que vendra por KeyPress
+      Key := 0;                 // ni el grid ni jvEnterTab procesan este Enter
+      // Si el foco estaba fuera de la rejilla, la rafaga (no consumida) habra
+      // ensuciado ese campo: lo restauramos a su texto previo ANTES de que
+      // ProcesarLecturaScanner mueva el foco a la rejilla (asi no se valida el
+      // codigo como, p.ej., un empleado).
+      RestaurarControlScanVel;
+      PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
+    end;
   end;
 end;
 
