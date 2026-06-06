@@ -182,15 +182,10 @@ end;
 
 procedure TfrmMtoOpeTraspaso.FormShow(Sender: TObject);
 begin
-  // El foco inicial segun el modo (ya somos visibles aqui). En Traspaso
-  // (modo de arranque) el foco va al ALMACEN DESTINO para empezar a elegir.
-  if FModo = mtTraspaso then
-  begin
-    if cboDestino.CanFocus then
-      cboDestino.SetFocus;
-  end
-  else
-    EnfocarSegunModo;
+  // Foco inicial segun el modo. En Traspaso dejamos el grid en modo edicion
+  // (editor de articulo abierto) para poder escanear directamente sin pulsar
+  // Enter; el almacen destino trae su valor por defecto y se valida al grabar.
+  EnfocarSegunModo;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirGrid;
@@ -496,29 +491,42 @@ procedure TfrmMtoOpeTraspaso.GridResuelto(const ACodArt, ASku,
                                           ADescripcion: string;
                                           ACompleto: Boolean);
 var
-  sAlmacenOrigen: string;
+  sAlmacenOrigen, sKey: string;
 begin
-  if ACompleto and (FDatos.cdsLineas.State in [dsEdit, dsInsert]) then
+  if not ACompleto then
+    ActualizarTotal
+  else
   begin
-    sAlmacenOrigen :=
-      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-    FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
-      FDatos.ObtenerCosteMedio(ASku, sAlmacenOrigen);
-    FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
-      FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+    // Punto comun de resolucion (escaneo Codigo+CR via celda, STX/ETX o
+    // teclado). Si la SKU/articulo ya esta en otra linea, sumamos alli y
+    // descartamos esta (consolidacion, como en caja). La clave es lo que se
+    // acaba de guardar en CODIGO_UNIDAD de la linea actual.
+    sKey := Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+    if (sKey <> '') and ConsolidarSiExiste(sKey) then
+    begin
+      if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
+        FDatos.cdsLineas.Cancel;
+      ActualizarTotal;
+    end
+    else
+    begin
+      if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
+      begin
+        sAlmacenOrigen :=
+          FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+        FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
+          FDatos.ObtenerCosteMedio(ASku, sAlmacenOrigen);
+        FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+          FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+      end;
+      ActualizarTotal;
+      ConsultarStock(ACodArt);
+      RefrescarFotoStock(ACodArt, ASku);
+      // Otra linea en blanco para seguir metiendo (solo traspaso/solicitar).
+      if FModo <> mtAtender then
+        AsegurarLineaNueva;
+    end;
   end;
-  ActualizarTotal;
-  // Refrescar la consulta de stock y la foto del articulo recien resuelto
-  // (el cambio de campos en la misma fila no dispara NavDataChange).
-  if ACompleto then
-  begin
-    ConsultarStock(ACodArt);
-    RefrescarFotoStock(ACodArt, ASku);
-  end;
-  // Al completar un SKU, deja otra linea en blanco para seguir metiendo
-  // (sustituye a la NewItemRow); solo en traspaso/solicitar.
-  if ACompleto and (FModo <> mtAtender) then
-    AsegurarLineaNueva;
 end;
 
 procedure TfrmMtoOpeTraspaso.PrepararValores(AModo: TModoTraspaso;
@@ -669,40 +677,21 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.ProcesarLecturaScanner(const ACodigo: string);
-var
-  Validador: TArticulosValidador;
-  Resolucion: TArtResolucionEntrada;
-  sSku: string;
 begin
-  // Igual que inMtoCajaOpe: resolvemos el codigo ANTES de tocar lineas para
-  // decidir si consolidar (la SKU ya esta -> sumamos 1) o anadir linea nueva.
+  // Alta por lectura de pistola con framing STX/ETX. La consolidacion (sumar
+  // si la SKU ya esta) la hace GridResuelto, que es el punto comun para todas
+  // las vias de resolucion (celda Codigo+CR, STX/ETX o teclado).
   if (Trim(ACodigo) <> '') and Assigned(FDatos) and
      Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
   begin
-    Validador := TArticulosValidador.Create(oConn);
-    try
-      Resolucion := Validador.Resolver(Trim(ACodigo));
-    finally
-      FreeAndNil(Validador);
-    end;
-    // Clave de consolidacion = lo que ResolverEntrada guarda en CODIGO_UNIDAD:
-    // el SKU si viene completo; si no (articulo sin variacion / SKU base), el
-    // codigo de articulo. Asi coincide con las lineas ya metidas.
-    sSku := Trim(Resolucion.CodigoSku);
-    if sSku = '' then
-      sSku := Trim(Resolucion.CodigoArticulo);
-    if Resolucion.Encontrado and (sSku <> '') and
-       ConsolidarSiExiste(sSku) then
-    begin
-      // Consolidado: la cantidad se sumo en la linea existente.
-    end
-    else
-    begin
-      // Alta de linea nueva: resolvemos el codigo en una linea en blanco.
-      AsegurarLineaNueva;
-      FDatos.cdsLineas.Last;
-      FGridCtrl.ResolverEntrada(Trim(ACodigo));
-    end;
+    AsegurarLineaNueva;
+    FDatos.cdsLineas.Last;
+    FGridCtrl.ResolverEntrada(Trim(ACodigo));
+    // Dejamos el grid enfocado y el editor de articulo abierto para encadenar
+    // lecturas sin tener que pulsar Enter (el grid queda en modo edicion).
+    if (FGrid <> nil) and FGrid.CanFocus then
+      FGrid.SetFocus;
+    FGridCtrl.MostrarEditorArticulo;
   end;
 end;
 
@@ -721,7 +710,10 @@ begin
       Clon.First;
       while (not Clon.Eof) and (not Result) do
       begin
-        if Clon.FieldByName('CODIGO_UNIDAD').AsString = ASku then
+        // Saltamos la linea actual (la que se acaba de resolver) por RecNo:
+        // solo sumamos sobre OTRA linea con la misma SKU ya grabada.
+        if (Clon.FieldByName('CODIGO_UNIDAD').AsString = ASku) and
+           (Clon.RecNo <> FDatos.cdsLineas.RecNo) then
         begin
           Clon.Edit;
           Clon.FieldByName('CANTIDAD').AsFloat :=
