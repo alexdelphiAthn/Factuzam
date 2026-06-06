@@ -96,7 +96,7 @@ type
   end;
 implementation
 uses
-  Forms, SysUtils, cxTextEdit;
+  Forms, SysUtils, cxTextEdit, cxEdit;
 const
   // Mensaje interno para diferir el procesado fuera del KeyPress/KeyDown.
   WM_LECTOR_PROCESAR = WM_USER + 200;
@@ -158,7 +158,15 @@ procedure TLectorScanner.RestaurarControl;
 begin
   if (FControl <> nil) and (FControl is TcxCustomTextEdit)
      and (not EsControlRejilla(FControl)) then
+  begin
     TcxCustomTextEdit(FControl).Text := FTextoPrevio;
+    // El cambio de foco al cerrar la lectura es ASINCRONO: para cuando el
+    // control pierde el foco, el flag de escaneo del form ya no esta activo y
+    // el cxEdit validaria su contenido al salir (p.ej. "el codigo de cliente
+    // no existe"). Marcandolo como NO modificado, ni el OnExit ni la
+    // validacion interna del cxEdit se disparan al perder el foco.
+    TcxCustomEdit(FControl).EditModified := False;
+  end;
   FControl := nil;
   FTextoPrevio := '';
 end;
