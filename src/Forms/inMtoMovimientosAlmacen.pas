@@ -81,7 +81,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibShowMto;
+  inLibWin, inMtoPrincipal, inLibShowMto, inLibGridCantidad;
 
 {$R *.dfm}
 
@@ -122,6 +122,10 @@ procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;
 begin
   inherited;
   dmmMovimientosAlmacen := tdmDataModule as TdmMovimientosAlmacen;
+  // Cantidad del movimiento con decimales segun la unidad del articulo.
+  VincularCantidadGrid(
+    cxGrdDBTabPrin.GetColumnByFieldName('CANTIDAD_MOV'),
+    cxGrdDBTabPrin.GetColumnByFieldName('TIPO_CANTIDAD_ART'));
   pkFieldName := 'NUMERO_MOV';
 end;
 

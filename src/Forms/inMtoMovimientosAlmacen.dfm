@@ -81,6 +81,11 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
               DataBinding.FieldName = 'CANTIDAD_MOV'
               Width = 100
             end
+            object colMovTipoCantidad: TcxGridDBColumn
+              DataBinding.FieldName = 'TIPO_CANTIDAD_ART'
+              Visible = False
+              VisibleForCustomization = False
+            end
             object cxGrdDBTabPrinPRECIO_COSTE_UNITARIO_MOV: TcxGridDBColumn
               Caption = 'Coste Unit.'
               DataBinding.FieldName = 'PRECIO_COSTE_UNITARIO_MOV'
