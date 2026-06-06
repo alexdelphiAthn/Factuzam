@@ -91,5 +91,5 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
             `inMtoModalImpSesion.dfm`): la cantidad va en columnas dinamicas por
             talla (cross-tab), tipico de articulos CON tallas (cantidades
             enteras). Pendiente solo si se necesitan decimales por talla.
-- [x] **Fase 7 - Cierre**: pump de version en `inLibGlobalVar.pas`
-      (1.0.15.202606060000.alpha). Falta compilar/validar el conjunto.
+- [ ] **Fase 7 - Cierre**: pump de version NO (el usuario lo gestiona aparte).
+      Falta compilar/validar el conjunto.
