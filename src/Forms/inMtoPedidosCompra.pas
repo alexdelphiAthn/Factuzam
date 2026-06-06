@@ -208,7 +208,6 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGridCantidad,
   inLibGlobalVar,
   inLibFotos,
   inLibAtributosPaleta,
@@ -317,10 +316,6 @@ begin
   end;
   tvLineasPedido.DataController.DataSource :=
     dmmPedidosCompra.dsPedidosCompraLineas;
-  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
-  VincularCantidadGrid(
-    tvLineasPedido.GetColumnByFieldName('CANTIDAD_PEDCLIN'),
-    tvLineasPedido.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDCLIN'));
   dmmPedidosCompra.unqryPedidosCompraLineas.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
 end;

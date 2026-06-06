@@ -410,11 +410,6 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     DataBinding.FieldName = 'CANTIDAD_PEDCLIN'
                     Width = 80
                   end
-                  object colLineaPedcTipoCant: TcxGridDBColumn
-                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_PEDCLIN'
-                    Visible = False
-                    VisibleForCustomization = False
-                  end
                   object colLineaPedcRECIBIDA: TcxGridDBColumn
                     Caption = 'Recibida'
                     DataBinding.FieldName = 'CANTIDAD_RECIBIDA_PEDCLIN'
