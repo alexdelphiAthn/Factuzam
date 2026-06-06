@@ -1053,12 +1053,12 @@
                       Width = 162
                     end
                     object tvLineasFacturacionCANTIDAD_LINEA: TcxGridDBColumn
-                      Caption = 'CANTIDAD_ARTVIN'
+                      Caption = 'Cantidad'
                       DataBinding.FieldName = 'CANTIDAD_FACLIN'
                       Width = 84
                     end
                     object tvLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
-                      Caption = 'Tipo CANTIDAD_ARTVIN'
+                      Caption = 'Tipo Cantidad'
                       DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                     end
                     object tvLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
