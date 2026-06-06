@@ -307,8 +307,7 @@ const
     '       ISNULL(m.UnidadesStock, 0) AS UnidadesStock, ' +
     '       ISNULL(m.Tipo, '''')    AS Tipo, ' +
     '       ISNULL(m.TipoDoc, '''') AS TipoDoc, ' +
-    '       ISNULL(m.PrecioMedio, 0) AS PrecioMedio, ' +
-    '       ISNULL(m.PrecioCoste, 0) AS PrecioCoste, ' +
+    '       ISNULL(m.PrecioMedioSIva, 0) AS PrecioMedioSIva, ' +
     '       m.FechaOpe, m.Fecha, ' +
     '       ISNULL(m.Serie, '''') AS Serie, m.NroDoc, ' +
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
@@ -428,21 +427,21 @@ begin
               sContra := IntToStr(iAlmDes);
           end;
         end;
-        // Coste unitario: PrecioCoste y, si viene 0, el PrecioMedio. Es el
-        // semilla del coste por fila. El PMP se conserva aparte.
-        fCoste := qSrc.FieldByName('PrecioCoste').AsFloat;
-        if fCoste = 0 then
-          fCoste := qSrc.FieldByName('PrecioMedio').AsFloat;
-        fPmp   := qSrc.FieldByName('PrecioMedio').AsFloat;
-        // Salvaguarda 15%: si el coste del movimiento se aleja más de un
-        // 15% del precio real del último albarán de entrada, damos por
-        // poco fiable el dato del legacy y tomamos el del albarán (coste
-        // y PMP). Cubre además el caso de coste 0 con albarán conocido.
+        // PMP/coste SIN IVA: usamos PrecioMedioSIva (no PrecioMedio, que
+        // en el legacy viene CON IVA) para cuadrar con las columnas de
+        // coste de Factuzam y con ocalbproarp.PrecioSIva. El coste por
+        // fila arranca igual al PMP conservado.
+        fPmp   := qSrc.FieldByName('PrecioMedioSIva').AsFloat;
+        fCoste := fPmp;
+        // Salvaguarda 15%: si el PMP (sin IVA) se aleja más de un 15% del
+        // precio real (sin IVA) del último albarán de entrada, damos por
+        // poco fiable el dato del legacy y tomamos el del albarán (coste y
+        // PMP). Cubre además el caso de PMP 0 con albarán conocido.
         fRefAlb := qSrc.FieldByName('PrecioUltAlbaran').AsFloat;
-        if (fRefAlb > 0) and (Abs(fCoste - fRefAlb) > 0.15 * fRefAlb) then
+        if (fRefAlb > 0) and (Abs(fPmp - fRefAlb) > 0.15 * fRefAlb) then
         begin
-          fCoste := fRefAlb;
           fPmp   := fRefAlb;
+          fCoste := fRefAlb;
           Inc(iCorregidos);
         end;
         fTotal := fCantMov * fCoste;

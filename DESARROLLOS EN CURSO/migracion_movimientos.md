@@ -14,9 +14,16 @@ y `fza_articulos_stockactual` ya existen con todas las columnas necesarias.
 
 ## Decisiones tomadas (usuario)
 
-1. **Coste/PMP por fila = el del propio movimiento** (`ocmovarp`):
-   - `PrecioMedio` → `PRECIO_MEDIO_MOV`
-   - `PrecioCoste` → `PRECIO_COSTE_UNITARIO_MOV` (si viene 0, usa `PrecioMedio`)
+1. **Coste/PMP por fila = el del propio movimiento** (`ocmovarp`), SIN IVA:
+   - `PrecioMedioSIva` → `PRECIO_MEDIO_MOV` y `PRECIO_COSTE_UNITARIO_MOV`
+   - Se usa `PrecioMedioSIva` (sin IVA), NO `PrecioMedio` (que en el legacy
+     viene CON IVA), para cuadrar con las columnas de coste de Factuzam y con
+     `ocalbproarp.PrecioSIva`. Confirmado con datos reales: en `ocmovarp`,
+     `PrecioMedio`=13,3335 (con IVA) vs `PrecioMedioSIva`=11,4944 (sin IVA),
+     ratio 1,16 (16%). `PrecioCoste` no se usa: base de IVA ambigua.
+   - Nota de datos: `UnidadesStock` y `FechaOpe` vienen NULL en el histórico
+     antiguo → la cantidad cae a `Cantidad`, la fecha a `Fecha` y la dirección
+     a `Tipo` ('E'/'S'). Esos fallbacks son los que sostienen la migración.
 
 2. **Salvaguarda del 15% contra `ocalbproarp`**: si el coste del
    movimiento se desvía **más de un 15%** del precio real del **último
@@ -84,8 +91,8 @@ subtipo replica la de `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` para que
 | `DESCRIPCION_ARTICULO_MOV` | `ocartp.DescripcionLarga`/`Corta` |
 | `TIPO_MOV` | `DeducirTipoMov` (`E`/`S`) |
 | `CANTIDAD_MOV` | `ABS(UnidadesStock)`; si 0, `ABS(Cantidad)` |
-| `PRECIO_COSTE_UNITARIO_MOV` | `PrecioCoste` (fallback `PrecioMedio`), corregido por salvaguarda 15% |
-| `PRECIO_MEDIO_MOV` | `PrecioMedio`, corregido por salvaguarda 15% |
+| `PRECIO_COSTE_UNITARIO_MOV` | `PrecioMedioSIva` (sin IVA), corregido por salvaguarda 15% |
+| `PRECIO_MEDIO_MOV` | `PrecioMedioSIva` (sin IVA), corregido por salvaguarda 15% |
 | `TOTAL_COSTE_MOV` | `CANTIDAD_MOV * PRECIO_COSTE_UNITARIO_MOV` |
 | `CODIGO_CLI_MOV` | `Cliente` |
 | `ESACTIVO_MOV` | `'S'` |
