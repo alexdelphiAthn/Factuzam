@@ -54,12 +54,18 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
       (usa `OnGetDisplayText` + spin a `vtFloat`).
       - [x] Facturas (`inMtoFacturasBase`) — PROOF: validar que muestra
             decimales por linea antes de replicar.
-      - [ ] Caja (`inMtoCajaOpe`) — la unidad no esta como columna del grid;
-            requiere exponerla (columna invisible) o resolver por dataset.
-      - [ ] Albaranes venta/compra, Pedidos venta/compra.
+      - [x] Caja / venta (`inMtoCajaOpe`) — anadida columna invisible
+            tvTipoCantidad (TIPO_CANTIDAD_ARTICULO_FACLIN) y vinculada en
+            FormCreate.
+      - [x] Albaranes venta (`inMtoAlbaranes`) y Pedidos venta
+            (`inMtoPedidos`): columna invisible de unidad + VincularCantidadGrid
+            via GetColumnByFieldName en FormCreate.
+      - [ ] Albaranes compra / Pedidos compra: sus vistas NO exponen el
+            TIPO_CANTIDAD de la linea; hay que anadirlo a la vista antes.
       - [ ] Traspasos, Compras-sesiones (matriz).
-      - [ ] Inventarios/Movimientos: sin unidad por linea; tomar la del
-            articulo (ajuste de query) o decimales por defecto.
+      - [ ] Inventarios/Movimientos/Stock: sin unidad por linea; tomar la del
+            articulo (ajuste de vista) o decimales por defecto. Stock es
+            pivotado por tallas (mas complejo).
 - [ ] **Fase 6 - Tickets/informes/Excel**: sustituir formato entero/`FloatToStr`
       por `FormatearCantidad(valor, unidad)` en `inLibGenerarTicket(BD)`,
       `inLibFacturaExcel`, `inLibDocCompraExcel`, `inLibInventarioExcel`,

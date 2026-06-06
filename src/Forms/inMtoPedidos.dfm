@@ -685,6 +685,11 @@
                     DataBinding.FieldName = 'CANTIDAD_PEDLIN'
                     Width = 80
                   end
+                  object colTipoCantPed: TcxGridDBColumn
+                    DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_PEDLIN'
+                    Visible = False
+                    VisibleForCustomization = False
+                  end
                   object cxgrdcPedLinENT: TcxGridDBColumn
                     Caption = 'Entregada'
                     DataBinding.FieldName = 'CANTIDAD_ENTREGADA_PEDLIN'
