@@ -95,6 +95,7 @@ type
     FScanPend: string;
     FLeyendoScanner: Boolean;
     FEscaneando: Boolean;
+    FLastKeyTick: Cardinal;
     FScanTimer: TTimer;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure ScanTimerTimer(Sender: TObject);
@@ -631,32 +632,71 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.FormKeyPress(Sender: TObject; var Key: Char);
+const
+  // Umbral (ms) entre teclas para considerar que viene de la pistola: las
+  // pulsaciones del lector llegan muy seguidas (mucho mas rapido que un humano)
+  SCAN_UMBRAL_MS = 50;
+  // Longitud minima del codigo para tratarlo como lectura (evita falsos
+  // positivos al teclear rapido cosas cortas).
+  SCAN_MIN_LEN   = 4;
+var
+  nTick: Cardinal;
 begin
-  // STX (#2) de la pistola: empieza la lectura; acumulamos hasta ETX (#3).
+  nTick := GetTickCount;
   if Key = #2 then
   begin
+    // Lector con framing STX (#2): empezamos a acumular hasta ETX (#3).
     FLeyendoScanner := True;
+    FScanBuffer := '';
+    Key := #0;
+  end
+  else if Key = #3 then
+  begin
+    // Fin del framing STX/ETX.
+    if FLeyendoScanner and (Trim(FScanBuffer) <> '') then
+    begin
+      FScanPend := Trim(FScanBuffer);
+      FScanTimer.Enabled := True;
+    end;
+    FLeyendoScanner := False;
     FScanBuffer := '';
     Key := #0;
   end
   else if FLeyendoScanner then
   begin
-    if Key = #3 then
+    // Dentro del framing STX/ETX: acumular y no dejar pasar a la celda.
+    FScanBuffer := FScanBuffer + Key;
+    Key := #0;
+  end
+  else if Key = #13 then
+  begin
+    // CR final. Si venimos de una rafaga rapida (pistola Codigo+CR) lo
+    // procesamos como lectura; si no, es un Enter manual y lo dejamos pasar.
+    if Length(FScanBuffer) >= SCAN_MIN_LEN then
     begin
-      FLeyendoScanner := False;
-      Key := #0;
-      if Trim(FScanBuffer) <> '' then
-      begin
-        FScanPend := Trim(FScanBuffer);
-        FScanTimer.Enabled := True;
-      end;
+      FScanPend := FScanBuffer;
       FScanBuffer := '';
+      Key := #0;
+      FScanTimer.Enabled := True;
     end
     else
+      FScanBuffer := '';
+    FLastKeyTick := nTick;
+  end
+  else if Key >= ' ' then
+  begin
+    // Deteccion por RAPIDEZ (lector sin STX/ETX): si la tecla llega muy seguida
+    // de la anterior, es parte de una lectura -> acumulamos y la consumimos
+    // para que NO entre en la busqueda incremental de la celda.
+    if (FScanBuffer <> '') and ((nTick - FLastKeyTick) <= SCAN_UMBRAL_MS) then
     begin
       FScanBuffer := FScanBuffer + Key;
       Key := #0;
-    end;
+    end
+    else
+      // Primer caracter o tecleo humano: arrancamos buffer y lo dejamos pasar.
+      FScanBuffer := Key;
+    FLastKeyTick := nTick;
   end;
 end;
 
