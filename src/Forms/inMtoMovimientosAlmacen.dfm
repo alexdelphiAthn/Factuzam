@@ -89,16 +89,19 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
             object cxGrdDBTabPrinPRECIO_COSTE_UNITARIO_MOV: TcxGridDBColumn
               Caption = 'Coste Unit.'
               DataBinding.FieldName = 'PRECIO_COSTE_UNITARIO_MOV'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
               Width = 110
             end
             object cxGrdDBTabPrinTOTAL_COSTE_MOV: TcxGridDBColumn
               Caption = 'Total Coste'
               DataBinding.FieldName = 'TOTAL_COSTE_MOV'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
               Width = 110
             end
             object cxGrdDBTabPrinPRECIO_MEDIO_MOV: TcxGridDBColumn
               Caption = 'Precio Medio'
               DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
               Width = 110
             end
             object cxGrdDBTabPrinCODIGO_ALMACEN_CONTRA_MOV: TcxGridDBColumn
