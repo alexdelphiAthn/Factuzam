@@ -32,13 +32,7 @@ uses
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
   inLibPermisos, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   inLibCajaParam, Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
-  cxLocalization;
-
-const
-  // Mensaje para diferir el alta de la linea fuera del KeyPress del lector
-  // (dentro del KeyPress no se puede reestructurar el cds; cxGrid aun
-  // referencia el editor in-place). Igual patron que inMtoCajaOpe.
-  WM_PROCESAR_SCANNER = WM_USER + 117;
+  cxLocalization, inLibLectorScanner;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase)
@@ -97,13 +91,13 @@ type
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
     FQModalSolic: TUniQuery;
-    // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe):
-    // KeyPreview + STX(#2)..ETX(#3). Se lee desde cualquier campo; los
-    // caracteres se consumen para no ensuciar el control enfocado.
-    FLeyendoScanner: Boolean;
-    FScanBuffer: string;
-    FCodigoScanPend: string;
-    procedure WMProcesarScanner(var Msg: TMessage); message WM_PROCESAR_SCANNER;
+    // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe): la
+    // mecanica (trama STX/ETX + rafaga por velocidad) la lleva TLectorScanner.
+    // En modo "consumir" y pasivo dentro de la rejilla (ahi resuelve la celda
+    // via inLibGridArticulos); el detector por velocidad cubre el foco fuera.
+    FLector: TLectorScanner;
+    procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
+    function  LectorEsControlRejilla(AControl: TControl): Boolean;
     procedure ProcesarLecturaScanner(const ACodigo: string);
     function ConsolidarSiExiste(const ASku: string): Boolean;
     procedure ConstruirGrid;
@@ -154,6 +148,15 @@ procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
   inherited;
   KeyPreview := True;
+  // Detector del lector de codigo de barras (trama STX/ETX + rafaga por
+  // velocidad). Modo "consumir" y pasivo en la rejilla: la lectura en la celda
+  // de articulo la resuelve inLibGridArticulos; el detector por velocidad solo
+  // actua con el foco fuera de la rejilla.
+  FLector := TLectorScanner.Create;
+  FLector.ConsumirRafaga := True;
+  FLector.OmitirEnRejilla := True;
+  FLector.OnCodigoLeido := LectorCodigoLeido;
+  FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self);
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
@@ -170,6 +173,7 @@ end;
 
 procedure TfrmMtoOpeTraspaso.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FLector);
   // Evitar callbacks de stock/foto durante el desmontaje.
   if Assigned(FNavDs) then
     FNavDs.OnDataChange := nil;
@@ -643,43 +647,30 @@ end;
 
 procedure TfrmMtoOpeTraspaso.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  // Igual que inMtoCajaOpe: el lector envia STX(#2) + codigo + ETX(#3). Con
-  // KeyPreview (heredado de TfrmBase) llega aqui tenga el foco quien tenga.
-  // Acumulamos y consumimos (Key:=#0) para no ensuciar el control enfocado;
-  // al ETX diferimos el alta con WM_PROCESAR_SCANNER.
-  if Key = #2 then
-  begin
-    FLeyendoScanner := True;
-    FScanBuffer := '';
-    Key := #0;
-  end
-  else if FLeyendoScanner then
-  begin
-    if Key = #3 then
-    begin
-      FLeyendoScanner := False;
-      Key := #0;
-      if Trim(FScanBuffer) <> '' then
-      begin
-        FCodigoScanPend := Trim(FScanBuffer);
-        PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
-      end;
-      FScanBuffer := '';
-    end
-    else
-    begin
-      FScanBuffer := FScanBuffer + Key;
-      Key := #0;
-    end;
-  end;
+  // Toda la deteccion (trama STX/ETX + rafaga por velocidad) la lleva el
+  // lector; el codigo leido llega luego por OnCodigoLeido.
+  FLector.KeyPress(Key);
 end;
 
-procedure TfrmMtoOpeTraspaso.WMProcesarScanner(var Msg: TMessage);
+procedure TfrmMtoOpeTraspaso.LectorCodigoLeido(Sender: TObject;
+  const ACodigo: string);
 begin
-  if FCodigoScanPend <> '' then
+  ProcesarLecturaScanner(ACodigo);
+end;
+
+// El lector permanece pasivo si el foco esta en la rejilla de lineas (ahi la
+// lectura la resuelve inLibGridArticulos a nivel de celda).
+function TfrmMtoOpeTraspaso.LectorEsControlRejilla(AControl: TControl): Boolean;
+var
+  C: TControl;
+begin
+  Result := False;
+  C := AControl;
+  while (C <> nil) and (not Result) do
   begin
-    ProcesarLecturaScanner(FCodigoScanPend);
-    FCodigoScanPend := '';
+    if C = FGrid then
+      Result := True;
+    C := C.Parent;
   end;
 end;
 
@@ -1336,6 +1327,9 @@ end;
 procedure TfrmMtoOpeTraspaso.FormKeyDown(Sender: TObject; var Key: Word;
                                          Shift: TShiftState);
 begin
+  // El lector cierra la lectura por velocidad (rafaga + Enter rapido) y consume
+  // el VK_RETURN si procede, antes de la gestion de teclas de funcion.
+  FLector.KeyDown(Key, Shift);
   case Key of
     VK_F3:
       QuitarLinea;

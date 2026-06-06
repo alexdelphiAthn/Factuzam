@@ -124,6 +124,7 @@ uses
   UniDataTraspaso in 'src\DataModules\UniDataTraspaso.pas' {dmTraspaso: TDataModule},
   inLibTraspasoTicket in 'src\Lib\inLibTraspasoTicket.pas',
   inLibGridArticulos in 'src\Lib\inLibGridArticulos.pas',
+  inLibLectorScanner in 'src\Lib\inLibLectorScanner.pas',
   inMtoCajaFaseCobro in 'src\Caja\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
   inMtoCajaFormasPago in 'src\Caja\Forms\inMtoCajaFormasPago.pas' {frmMtoCajaFormasPago},
   UniDataCajaFormasPago in 'src\Caja\DataModules\UniDataCajaFormasPago.pas' {dmCajaFormasPago: TdmCajaFormasPago},
