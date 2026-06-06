@@ -31,7 +31,8 @@ uses
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
-  System.Generics.Collections, System.Diagnostics, cxLocalization;
+  System.Generics.Collections, System.Diagnostics, cxLocalization,
+  inLibLectorScanner;
 
 const
   WM_CANCELAR_LINEA = WM_USER + 100;
@@ -54,13 +55,6 @@ const
   // Con PostMessage, OnEnter retorna, cxGrid termina de parentar, y solo
   // entonces abrimos el popup.
   WM_ABRIR_POPUP_AV       = WM_USER + 104;
-  // Lectura con pistola (STX...ETX): diferimos el alta de la linea fuera del
-  // OnKeyPress del editor in-place. Si resolviesemos y reestructurasemos el
-  // dataset dentro del propio KeyPress, cxGrid mantiene la referencia al
-  // editor que esta procesando la tecla y Append/HideEdit lo desparentan
-  // (EInvalidOperation). Con PostMessage el KeyPress retorna, cxGrid limpia
-  // su estado y solo entonces procesamos el codigo leido.
-  WM_PROCESAR_SCANNER     = WM_USER + 105;
 type
   TfrmMtoOpeCaja = class(TfrmBase)
     pnlUp: TPanel;
@@ -254,19 +248,20 @@ type
                                        message WM_AVANZAR_ATRIB_CAJA;
     procedure WMAbrirPopupAv(var Msg: TMessage);
                                        message WM_ABRIR_POPUP_AV;
-    procedure WMProcesarScanner(var Msg: TMessage);
-                                       message WM_PROCESAR_SCANNER;
     procedure ProcesarLecturaScanner(const ACodigo: string);
-    procedure CapturarControlScanVel;
-    procedure RestaurarControlScanVel;
-    function  EsControlDeRejilla(AControl: TControl): Boolean;
+    procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
+    function  LectorRejillaEditando: Boolean;
+    function  LectorEsControlRejilla(AControl: TControl): Boolean;
+    procedure LectorLecturaIniciada(Sender: TObject);
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   public
     DatosCaja: TdmCajaOpe;
   private
-    FScanBuffer: string;
-    FLeyendoScanner: Boolean;
+    // Detector reutilizable del lector de codigo de barras (trama STX/ETX +
+    // rafaga por velocidad). La mecanica vive en TLectorScanner; aqui solo
+    // queda el negocio (ProcesarLecturaScanner y los flags de abajo).
+    FLector: TLectorScanner;
     // Activo mientras resolvemos una lectura con pistola: fuerza a
     // RellenarDatosArticuloEnDataset a buscar SOLO en codigos de barras.
     FResolviendoPorScanner: Boolean;
@@ -274,31 +269,6 @@ type
     // de cliente/empleado para no validar su texto (que pudo ensuciarse con la
     // rafaga) cuando el escaneo mueve el foco a la rejilla.
     FProcesandoLecturaScanner: Boolean;
-    // Codigo leido pendiente de procesar (lo consume WMProcesarScanner).
-    FCodigoScanPend: string;
-    // Detector de lectura por VELOCIDAD de tecleo (codigo de barras + CR sin
-    // STX/ETX): el lector teclea en rafaga. FScanVelBuffer acumula los
-    // caracteres rapidos y consecutivos, FScanVelTick guarda el instante de la
-    // ultima tecla y FScanVelComido marca que el Enter ya se consumio en
-    // FormKeyDown (para tragar su #13 en FormKeyPress).
-    FScanVelBuffer: string;
-    FScanVelTick: Cardinal;
-    FScanVelComido: Boolean;
-    // Control enfocado y su texto al iniciar una rafaga, para restaurarlo si la
-    // lectura entra con el foco FUERA de la rejilla (la rafaga no consumida
-    // habria ensuciado ese campo).
-    FScanVelControl: TWinControl;
-    FScanVelTextoPrevio: string;
-    // Anti-eco del editor del cxGrid: al teclear la 1a letra sobre una celda
-    // que no estaba en edicion, el grid arranca la edicion y REENVIA ese primer
-    // caracter, que llegaria duplicado al buffer. FScanVelInicioChar guarda el
-    // 1er caracter; FScanVelEsperaReplay indica que el grid va a arrancar
-    // edicion (foco en rejilla y no editaba) y por tanto la siguiente tecla
-    // identica es el eco a descartar; FScanVelGridEditaba recuerda si el grid
-    // ya estaba editando ANTES de la tecla (se captura en FormKeyDown).
-    FScanVelInicioChar: Char;
-    FScanVelEsperaReplay: Boolean;
-    FScanVelGridEditaba: Boolean;
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -691,112 +661,46 @@ begin
 end;
 
 // Hook de lectura con pistola a nivel de FORMULARIO (KeyPreview heredado de
-// TfrmBase = True): da igual que control tenga el foco. Hay DOS detectores:
-//   1) Trama STX(#2)+codigo+ETX(#3): el lector envuelve el codigo. Acumulamos
-//      entre STX y ETX consumiendo las teclas (no ensucian el control).
-//   2) Por VELOCIDAD de tecleo (codigo de barras + CR, sin STX/ETX): el lector
-//      teclea en rafaga. Aqui solo acumulamos la rafaga con su cadencia; la
-//      decision (rafaga + Enter) se toma en FormKeyDown, para adelantarse al
-//      editor del grid y a jvEnterTab.
+// TfrmBase = True): da igual que control tenga el foco. Delegamos toda la
+// deteccion (trama STX/ETX + rafaga por velocidad) en TLectorScanner; el codigo
+// leido llega luego por OnCodigoLeido (LectorCodigoLeido).
 procedure TfrmMtoOpeCaja.FormKeyPress(Sender: TObject; var Key: Char);
-var
-  ahora, delta: Cardinal;
 begin
-  if Key = #2 then
+  FLector.KeyPress(Key);
+end;
+
+procedure TfrmMtoOpeCaja.LectorCodigoLeido(Sender: TObject;
+  const ACodigo: string);
+begin
+  ProcesarLecturaScanner(ACodigo);
+end;
+
+// El lector consulta si la rejilla estaba editando (anti-eco) y si un control
+// pertenece a la rejilla (restauracion del campo solo fuera de la rejilla).
+function TfrmMtoOpeCaja.LectorRejillaEditando: Boolean;
+begin
+  Result := (tvLineasOpe.Controller.EditingController <> nil) and
+            tvLineasOpe.Controller.EditingController.IsEditing;
+end;
+
+function TfrmMtoOpeCaja.LectorEsControlRejilla(AControl: TControl): Boolean;
+var
+  C: TControl;
+begin
+  Result := False;
+  C := AControl;
+  while (C <> nil) and (not Result) do
   begin
-    FLeyendoScanner := True;
-    FScanBuffer := '';
-    FScanVelBuffer := '';
-    FScanVelEsperaReplay := False;
-    tmrBusq.Enabled := False;
-    Key := #0;
-    Exit;
-  end;
-  if FLeyendoScanner then
-  begin
-    if (Key = #3) then
-    begin
-      tmrBusq.Enabled := False;
-      FLeyendoScanner := False;
-      Key := #0;
-      // Diferimos la resolucion y el alta de linea: dentro del propio
-      // KeyPress no podemos reestructurar el dataset (cxGrid aun referencia
-      // el editor in-place). Guardamos el codigo y lo procesa
-      // WMProcesarScanner cuando el KeyPress haya retornado.
-      if Trim(FScanBuffer) <> '' then
-      begin
-        FCodigoScanPend := Trim(FScanBuffer);
-        PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
-      end;
-      FScanBuffer := '';
-    end
-    else
-    begin
-      FScanBuffer := FScanBuffer + Key;
-      Key := #0;
-    end;
-    Exit;
-  end;
-  // --- Detector 2: acumulacion por velocidad de tecleo ----------------------
-  if not oCajaParams.GetBool('vgerScanVelActivo', True) then
-    Exit;
-  ahora := GetTickCount;
-  delta := ahora - FScanVelTick;
-  FScanVelTick := ahora;
-  // El #13 del Enter ya consumido en FormKeyDown: lo tragamos para que no
-  // llegue al control enfocado.
-  if FScanVelComido and (Key = #13) then
-  begin
-    FScanVelComido := False;
-    Key := #0;
-    Exit;
-  end;
-  // El buffer SOLO crece con caracteres imprimibles rapidos y consecutivos
-  // (firma del lector). Cualquier caracter lento o de control lo reinicia, asi
-  // que el tecleo humano nunca acumula longitud.
-  if Key >= ' ' then
-  begin
-    if delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40)) then
-    begin
-      // Anti-eco del editor del grid: si esperabamos el eco del 1er caracter y
-      // esta tecla lo repite, la descartamos (el grid la reenvio al arrancar la
-      // edicion). En cualquier otro caso, acumulamos normal.
-      if FScanVelEsperaReplay and (Key = FScanVelInicioChar) then
-        FScanVelEsperaReplay := False
-      else
-      begin
-        FScanVelEsperaReplay := False;
-        FScanVelBuffer := FScanVelBuffer + Key;
-      end;
-    end
-    else
-    begin
-      // Inicio de una posible rafaga: KeyPreview corre ANTES de que el control
-      // enfocado reciba este caracter, asi que aqui guardamos su texto original
-      // por si hay que restaurarlo (lectura con el foco fuera de la rejilla).
-      FScanVelBuffer := Key;
-      CapturarControlScanVel;
-      FScanVelInicioChar := Key;
-      // Solo esperamos eco si la rafaga arranca en la rejilla y el grid NO
-      // estaba editando: ahi es donde el cxGrid reenvia el primer caracter.
-      FScanVelEsperaReplay := EsControlDeRejilla(FScanVelControl) and
-                              (not FScanVelGridEditaba);
-    end;
-  end
-  else
-  begin
-    FScanVelBuffer := '';
-    FScanVelEsperaReplay := False;
+    if C = cxgrdLineasOpe then
+      Result := True;
+    C := C.Parent;
   end;
 end;
 
-procedure TfrmMtoOpeCaja.WMProcesarScanner(var Msg: TMessage);
+// Al iniciar una trama del lector paramos el timer de busqueda incremental.
+procedure TfrmMtoOpeCaja.LectorLecturaIniciada(Sender: TObject);
 begin
-  if FCodigoScanPend <> '' then
-  begin
-    ProcesarLecturaScanner(FCodigoScanPend);
-    FCodigoScanPend := '';
-  end;
+  tmrBusq.Enabled := False;
 end;
 
 // Procesa un codigo leido con pistola desde cualquier punto del formulario:
@@ -910,45 +814,6 @@ begin
    finally
      FProcesandoLecturaScanner := False;
    end;
-  end;
-end;
-
-// Recuerda el control enfocado y su texto al iniciar una rafaga del detector
-// por velocidad. Se llama desde FormKeyPress ANTES de que el control reciba el
-// caracter (KeyPreview), por lo que el texto guardado es el previo a la rafaga.
-procedure TfrmMtoOpeCaja.CapturarControlScanVel;
-begin
-  FScanVelControl := Screen.ActiveControl;
-  FScanVelTextoPrevio := '';
-  if (FScanVelControl <> nil) and (FScanVelControl is TcxCustomTextEdit) then
-    FScanVelTextoPrevio := TcxCustomTextEdit(FScanVelControl).Text;
-end;
-
-// Restaura el control enfocado a su texto previo si la lectura entro con el
-// foco FUERA de la rejilla (en la rejilla el editor in-place se descarta solo
-// via HideEdit, asi que ahi no tocamos nada).
-procedure TfrmMtoOpeCaja.RestaurarControlScanVel;
-begin
-  if (FScanVelControl <> nil) and (FScanVelControl is TcxCustomTextEdit)
-     and (not EsControlDeRejilla(FScanVelControl)) then
-    TcxCustomTextEdit(FScanVelControl).Text := FScanVelTextoPrevio;
-  FScanVelControl := nil;
-  FScanVelTextoPrevio := '';
-end;
-
-// True si AControl es la rejilla de lineas o esta contenido en ella (p.ej. el
-// editor in-place de una celda).
-function TfrmMtoOpeCaja.EsControlDeRejilla(AControl: TControl): Boolean;
-var
-  C: TControl;
-begin
-  Result := False;
-  C := AControl;
-  while (C <> nil) and (not Result) do
-  begin
-    if C = cxgrdLineasOpe then
-      Result := True;
-    C := C.Parent;
   end;
 end;
 
@@ -1112,7 +977,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvArticuloPropertiesChange(Sender: TObject);
 begin
-  if not FLeyendoScanner then
+  if not FLector.LeyendoTrama then
   begin
     tmrBusq.Enabled := False;
     tmrBusq.Enabled := True;
@@ -3263,6 +3128,7 @@ end;
 
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FLector);
   FreeAndNil(FBmpSwatchBoton);
 end;
 
@@ -3304,6 +3170,16 @@ end;
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
+  // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
+  // la rejilla editable). Los parametros salen de la configuracion de caja.
+  FLector := TLectorScanner.Create;
+  FLector.Activo := oCajaParams.GetBool('vgerScanVelActivo', True);
+  FLector.UmbralMs := oCajaParams.GetInt('vgerScanVelMs', 40);
+  FLector.LongitudMinima := oCajaParams.GetInt('vgerScanMinLong', 4);
+  FLector.OnCodigoLeido := LectorCodigoLeido;
+  FLector.OnLecturaIniciada := LectorLecturaIniciada;
+  FLector.OnRejillaEditando := LectorRejillaEditando;
+  FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FBmpSwatchBoton := TBitmap.Create;
   // FswArtAPopup es un record (TStopwatch) — se inicializa a cero por
   // defecto, IsRunning sera False hasta que se arranque en
@@ -3349,18 +3225,10 @@ end;
 
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-  delta: Cardinal;
 begin
-  // Reseteamos el flag de "Enter ya consumido" en cada pulsacion; solo lo
-  // dejamos activo de forma transitoria entre el VK_RETURN consumido y su #13
-  // de KeyPress. Asi nunca queda obsoleto y se traga un Enter manual posterior.
-  FScanVelComido := False;
-  // Estado de edicion del grid ANTES de procesar esta tecla (KeyPreview corre
-  // antes que el KeyDown del grid). Lo usa el anti-eco: solo hay eco si el grid
-  // NO estaba editando y arranca la edicion con esta tecla.
-  FScanVelGridEditaba := (tvLineasOpe.Controller.EditingController <> nil) and
-                         tvLineasOpe.Controller.EditingController.IsEditing;
+  // El lector resetea su estado, captura si la rejilla editaba y cierra la
+  // lectura por velocidad (consume el VK_RETURN si era una rafaga del lector).
+  FLector.KeyDown(Key, Shift);
   if (Key = VK_F5) then
     btnF5.Click;
   // Ctrl+F12 -> resetear layout
@@ -3368,31 +3236,6 @@ begin
   begin
     ResetearLayout(Self.Name);
     Key := 0;
-  end;
-  // Cierre del detector 2 (codigo de barras + CR por velocidad de tecleo). Lo
-  // resolvemos en KeyDown (no en KeyPress) para adelantarnos al editor del grid
-  // (que procesa VK_RETURN) y a jvEnterTab (Enter->Tab): el FormKeyDown con
-  // KeyPreview corre antes que ambos. Si el buffer es una rafaga del lector y
-  // el Enter llega igual de rapido, lo tratamos como lectura y lo encaminamos
-  // al mismo procesado que la trama STX/ETX.
-  if (Key = VK_RETURN) and oCajaParams.GetBool('vgerScanVelActivo', True) then
-  begin
-    delta := GetTickCount - FScanVelTick;
-    if (Length(FScanVelBuffer) >=
-                              oCajaParams.GetInt('vgerScanMinLong', 4)) and
-       (delta <= Cardinal(oCajaParams.GetInt('vgerScanVelMs', 40))) then
-    begin
-      FCodigoScanPend := Trim(FScanVelBuffer);
-      FScanVelBuffer  := '';
-      FScanVelComido  := True;  // tragaremos el #13 que vendra por KeyPress
-      Key := 0;                 // ni el grid ni jvEnterTab procesan este Enter
-      // Si el foco estaba fuera de la rejilla, la rafaga (no consumida) habra
-      // ensuciado ese campo: lo restauramos a su texto previo ANTES de que
-      // ProcesarLecturaScanner mueva el foco a la rejilla (asi no se valida el
-      // codigo como, p.ej., un empleado).
-      RestaurarControlScanVel;
-      PostMessage(Handle, WM_PROCESAR_SCANNER, 0, 0);
-    end;
   end;
 end;
 

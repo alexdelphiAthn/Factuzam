@@ -460,6 +460,7 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibTraspasoTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGridArticulos.pas"/>
+        <DCCReference Include="src\Lib\inLibLectorScanner.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaFaseCobro.pas">
             <Form>frmMtoCajaFaseCobro</Form>
         </DCCReference>
