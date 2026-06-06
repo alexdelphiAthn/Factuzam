@@ -63,9 +63,11 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
       - [ ] Albaranes compra / Pedidos compra: sus vistas NO exponen el
             TIPO_CANTIDAD de la linea; hay que anadirlo a la vista antes.
       - [ ] Traspasos, Compras-sesiones (matriz).
-      - [ ] Inventarios/Movimientos/Stock: sin unidad por linea; tomar la del
-            articulo (ajuste de vista) o decimales por defecto. Stock es
-            pivotado por tallas (mas complejo).
+      - [x] Movimientos de almacen (`inMtoMovimientosAlmacen`): SELECT con JOIN
+            a fza_articulos para TIPO_CANTIDAD_ART + columna invisible +
+            VincularCantidadGrid. (Stock/Ctrl+U ya mostraba decimales.)
+      - [ ] Inventarios; Albaranes/Pedidos de COMPRA (anadir unidad a vistas);
+            Traspasos; Compras-sesiones (matriz).
 - [ ] **Fase 6 - Tickets/informes/Excel**: sustituir formato entero/`FloatToStr`
       por `FormatearCantidad(valor, unidad)` en `inLibGenerarTicket(BD)`,
       `inLibFacturaExcel`, `inLibDocCompraExcel`, `inLibInventarioExcel`,
