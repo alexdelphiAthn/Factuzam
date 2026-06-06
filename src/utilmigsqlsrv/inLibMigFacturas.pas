@@ -104,6 +104,88 @@ begin
   end;
 end;
 
+// Clasifica un % de IVA en banda Factuzam: 0=Normal, 1=Reducido,
+// 2=Superreducido, 3=Exento. Umbrales pensados para cubrir los tipos
+// históricos españoles (general 16/18/21, reducido 7/8/10, super 4, 0=exento).
+function BandaIva(const rate: Double): Integer;
+begin
+  if rate <= 0 then
+    Result := 3
+  else if rate < 6 then
+    Result := 2
+  else if rate < 13 then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+// Rellena en la cabecera el desglose de IVA por bandas N/R/S/E a partir de
+// las 4 bandas que el legacy trae en occaj (BaseImp/PorcenIva/CuotaIVA 1-4).
+// Cada banda legacy se clasifica por su % (BandaIva) y se acumula. La cuota
+// se calcula si el legacy no la trae (filas antiguas: CuotaIVA NULL). Si no
+// hay bandas pero sí Neto, se deriva una banda única del total.
+procedure FijarIvaCabecera(qSrc, qFac: TUniQuery; const fNeto: Double);
+var
+  aBase, aCuota, aRate: array[0..3] of Double;
+  i, b:                 Integer;
+  base, rate, cuota:    Double;
+  fBases, fImp:         Double;
+begin
+  for b := 0 to 3 do
+  begin
+    aBase[b]  := 0;
+    aCuota[b] := 0;
+    aRate[b]  := 0;
+  end;
+  for i := 1 to 4 do
+  begin
+    base  := qSrc.FieldByName('BaseImp'  + IntToStr(i)).AsFloat;
+    rate  := qSrc.FieldByName('PorcenIva' + IntToStr(i)).AsFloat;
+    cuota := qSrc.FieldByName('CuotaIVA' + IntToStr(i)).AsFloat;
+    if (base <> 0) or (cuota <> 0) then
+    begin
+      if (cuota = 0) and (rate > 0) then
+        cuota := base * rate / 100;
+      b := BandaIva(rate);
+      aBase[b]  := aBase[b]  + base;
+      aCuota[b] := aCuota[b] + cuota;
+      if rate > aRate[b] then
+        aRate[b] := rate;
+    end;
+  end;
+  fBases := aBase[0] + aBase[1] + aBase[2] + aBase[3];
+  fImp   := aCuota[0] + aCuota[1] + aCuota[2] + aCuota[3];
+  // Fallback: sin bandas pero con total → una banda derivada del Neto.
+  if (fBases = 0) and (fNeto <> 0) then
+  begin
+    rate := qSrc.FieldByName('PorcenIva1').AsFloat;
+    if rate > 0 then
+      base := fNeto / (1 + rate / 100)
+    else
+      base := fNeto;
+    b := BandaIva(rate);
+    aBase[b]  := base;
+    aRate[b]  := rate;
+    aCuota[b] := fNeto - base;
+    fBases    := base;
+    fImp      := fNeto - base;
+  end;
+  qFac.ParamByName('pivan').AsFloat  := aRate[0];
+  qFac.ParamByName('tivan').AsFloat  := aCuota[0];
+  qFac.ParamByName('basein').AsFloat := aBase[0];
+  qFac.ParamByName('pivar').AsFloat  := aRate[1];
+  qFac.ParamByName('tivar').AsFloat  := aCuota[1];
+  qFac.ParamByName('basier').AsFloat := aBase[1];
+  qFac.ParamByName('pivas').AsFloat  := aRate[2];
+  qFac.ParamByName('tivas').AsFloat  := aCuota[2];
+  qFac.ParamByName('baseis').AsFloat := aBase[2];
+  qFac.ParamByName('pivae').AsFloat  := aRate[3];
+  qFac.ParamByName('tivae').AsFloat  := aCuota[3];
+  qFac.ParamByName('baseie').AsFloat := aBase[3];
+  qFac.ParamByName('bases').AsFloat  := fBases;
+  qFac.ParamByName('imp').AsFloat    := fImp;
+end;
+
 // =========================================================================
 //  Migrador principal
 // =========================================================================
@@ -119,7 +201,18 @@ const
     '       c.FechaOpe, c.Fecha, c.Vendedor AS VendedorCab, ' +
     '       ISNULL(c.Cliente, '''') AS Cliente, ' +
     '       ISNULL(c.Neto, 0) AS Neto, ' +
+    '       ISNULL(c.BaseImp1, 0) AS BaseImp1, ' +
     '       ISNULL(c.PorcenIva1, 0) AS PorcenIva1, ' +
+    '       ISNULL(c.CuotaIVA1, 0) AS CuotaIVA1, ' +
+    '       ISNULL(c.BaseImp2, 0) AS BaseImp2, ' +
+    '       ISNULL(c.PorcenIva2, 0) AS PorcenIva2, ' +
+    '       ISNULL(c.CuotaIVA2, 0) AS CuotaIVA2, ' +
+    '       ISNULL(c.BaseImp3, 0) AS BaseImp3, ' +
+    '       ISNULL(c.PorcenIva3, 0) AS PorcenIva3, ' +
+    '       ISNULL(c.CuotaIVA3, 0) AS CuotaIVA3, ' +
+    '       ISNULL(c.BaseImp4, 0) AS BaseImp4, ' +
+    '       ISNULL(c.PorcenIva4, 0) AS PorcenIva4, ' +
+    '       ISNULL(c.CuotaIVA4, 0) AS CuotaIVA4, ' +
     '       l.NroLinea, l.Articulo, l.Talla, l.Vendedor AS VendedorLin, ' +
     '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
     '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ' +
@@ -153,12 +246,20 @@ const
     '  (NUMERO_FAC, SERIE_FAC, FECHA_FAC, TIPO_FAC, ESCONSOLIDADA_FAC, ' +
     '   CODIGO_EMP_FAC, CODIGO_CLI_FAC, ' +
     '   PORCENTAJE_IVAN_FAC, TOTAL_IVAN_FAC, TOTAL_BASEI_IVAN_FAC, ' +
+    '   PORCENTAJE_IVAR_FAC, TOTAL_IVAR_FAC, TOTAL_BASEI_IVAR_FAC, ' +
+    '   PORCENTAJE_IVAS_FAC, TOTAL_IVAS_FAC, TOTAL_BASEI_IVAS_FAC, ' +
+    '   PORCENTAJE_IVAE_FAC, TOTAL_IVAE_FAC, TOTAL_BASEI_IVAE_FAC, ' +
     '   TOTAL_BASES_FAC, TOTAL_IMPUESTOS_FAC, TOTAL_LIQUIDO_FAC, ' +
     '   FORMA_PAGO_FAC, CODIGO_CAJERO_FAC, CODIGO_ALM_FAC, CODIGO_CAJA_FAC, ' +
     '   NUMERO_OPERACION_FAC, ' +
     '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES (:num, :serie, :fecha, ''SIMPLIFICADA'', ''S'', ' +
-    '        :emp, :cli, :piva, :tiva, :base, :base2, :imp, :liq, ' +
+    '        :emp, :cli, ' +
+    '        :pivan, :tivan, :basein, ' +
+    '        :pivar, :tivar, :basier, ' +
+    '        :pivas, :tivas, :baseis, ' +
+    '        :pivae, :tivae, :baseie, ' +
+    '        :bases, :imp, :liq, ' +
     '        ''CONTADO'', :cajero, :alm, :caja, :numop, ' +
     '        :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
   cInsLin =
@@ -184,7 +285,7 @@ var
   sNumFac, sSerieFac:      string;
   sOpKey, sLastOpKey:      string;
   sArt, sUni, sTipoArt:    string;
-  fNeto, fRate, fBase, fIva: Double;
+  fNeto:                   Double;
   dtFecha:                 TDateTime;
 begin
   LimpiarMigracionPrevia(Eng);
@@ -235,13 +336,6 @@ begin
         else
           dtFecha := Now;
         fNeto := qSrc.FieldByName('Neto').AsFloat;
-        fRate := qSrc.FieldByName('PorcenIva1').AsFloat;
-        // Base e IVA autoconsistentes desde el total y el % del legacy.
-        if fRate > 0 then
-          fBase := fNeto / (1 + fRate / 100)
-        else
-          fBase := fNeto;
-        fIva := fNeto - fBase;
         qFac.ParamByName('num').AsString    := sNumFac;
         qFac.ParamByName('serie').AsString  := sSerieFac;
         qFac.ParamByName('fecha').AsDateTime := Trunc(dtFecha);
@@ -251,11 +345,8 @@ begin
             Trim(qSrc.FieldByName('Cliente').AsString)
         else
           qFac.ParamByName('cli').AsString  := '0';
-        qFac.ParamByName('piva').AsFloat  := fRate;
-        qFac.ParamByName('tiva').AsFloat  := fIva;
-        qFac.ParamByName('base').AsFloat  := fBase;
-        qFac.ParamByName('base2').AsFloat := fBase;
-        qFac.ParamByName('imp').AsFloat   := fIva;
+        // Desglose de IVA por bandas N/R/S/E desde las bandas del legacy.
+        FijarIvaCabecera(qSrc, qFac, fNeto);
         qFac.ParamByName('liq').AsFloat   := fNeto;
         qFac.ParamByName('cajero').AsString :=
           IntToStr(qSrc.FieldByName('VendedorCab').AsInteger);
