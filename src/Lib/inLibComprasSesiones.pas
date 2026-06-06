@@ -612,11 +612,7 @@ begin
   Result.Top    := ATop;
   Result.Width  := AWidth;
   Result.Properties.MinValue := 0;
-  // Admitir decimales en las cantidades (telas por metros...). Formato que
-  // muestra los decimales solo cuando existen (enteros quedan limpios).
-  Result.Properties.ValueType := vtFloat;
-  Result.Properties.DisplayFormat := '0.######';
-  Result.Properties.EditFormat := '0.######';
+  // Las compras se hacen en unidades enteras (80, 50 metros...), sin decimales.
 end;
 
 procedure TGestorMatrizCompras.AddFila;

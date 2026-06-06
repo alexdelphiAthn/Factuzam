@@ -71,9 +71,12 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
             formato moneda.
       - [x] Traspasos: la cantidad es ftFloat con columna por defecto -> ya
             muestra decimales.
-      - [x] Compras-sesiones (matriz): el spin de celda (CrearSpin) pasa a
-            vtFloat con formato '0.######'; e indicativo de la unidad del
-            articulo en la cabecera de la matriz (DibujarCabecera).
+      - [x] Compras-sesiones (matriz): las COMPRAS se hacen en unidades enteras
+            (80, 50 metros... sin decimales), asi que el spin de celda se deja
+            ENTERO. Se mantiene el indicativo de la unidad del articulo en la
+            cabecera de la matriz (DibujarCabecera).
+      - NOTA alcance: decimales solo en VENTAS (caja, facturas, albaranes/
+            pedidos de venta) y stock; las COMPRAS van en enteros.
 - [~] **Fase 6 - Tickets/informes/Excel**:
       - [x] Tickets (`inLibGenerarTicket` / `inLibGenerarTicketBD`): cantidad
             con `oUnidades.Formatear(cant, TIPO_CANTIDAD_ARTICULO_FACLIN)`.
