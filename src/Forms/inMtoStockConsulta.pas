@@ -1263,7 +1263,9 @@ begin
       '  FROM fza_almacenes ALM ' +
       '  LEFT JOIN (' + sBase + ') B ' +
       '    ON B.ALM = ALM.CODIGO_ALM_ALM ' +
-      '   AND B.COLOR_AV IN (' + sFiltroColores + ') ' +
+      // Articulos sin color: COLOR_AV es NULL y no entraba en el IN, dejando
+      // el Total vacio. Admitimos tambien las filas sin color.
+      '   AND (B.COLOR_AV IN (' + sFiltroColores + ') OR B.COLOR_AV IS NULL) ' +
       ' WHERE ALM.CODIGO_ALM_ALM IN (' + AlmacenesSeleccionadosSQL + ') ' +
       IfThen(bEsTodo, '   AND B.ESTADO_NUM IS NOT NULL ', '') +
       ' GROUP BY ALM.CODIGO_ALM_ALM, ALM.ORDEN_ALM' + sExtraGroup + ' ' +
