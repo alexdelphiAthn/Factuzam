@@ -51,6 +51,11 @@ var
   oVersion   :String;
   oAll       :string;
   oLogSesion :TLogSesionProc;
+  // Se pone a True cuando la ventana principal empieza a cerrarse. Las
+  // tareas en segundo plano (TTask de los mantenimientos) lo consultan para
+  // no arrancar trabajo nuevo ni tocar formularios que se estan destruyendo
+  // durante el apagado.
+  oCerrandoApp :Boolean;
 
 // Helper: emite un mensaje al log de sesiones si esta enganchado. No-op
 // si nadie tiene un memo activo.
@@ -66,7 +71,7 @@ end;
 
 initialization
   oAppName         := 'Fzam';
-  oVersion         := '1.0.15.202606050040.alpha';
+  oVersion         := '1.0.15.202606060040.alpha';
   oUser            := 'No definido';
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
@@ -77,4 +82,5 @@ initialization
   oConn            := nil;
   oAll             := 'Todos';
   oLogSesion       := nil;
+  oCerrandoApp     := False;
 end.

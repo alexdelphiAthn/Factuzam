@@ -117,7 +117,7 @@ type
     LineaFacturaLinea: string;
     CodigoArticulo: string;
     DescripcionArticulo: string;
-    CANTIDAD_ARTVIN: Double;
+    Cantidad: Double;
     PrecioUnitario: Double;
     TotalLinea: Double;
     PorcentajeIVA: Double;

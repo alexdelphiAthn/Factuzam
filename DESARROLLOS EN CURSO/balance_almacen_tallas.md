@@ -35,9 +35,17 @@ Dos ejes de configuración:
 
 | Configuración                | Bandas (de arriba a abajo)                                                                 |
 |------------------------------|--------------------------------------------------------------------------------------------|
-| Entre fechas · Simplificado  | Existencias iniciales · Entradas · Salidas · Ventas · Existencias finales                  |
-| Entre fechas · Desglosado    | Existencias iniciales · Ent. compra · Alb. entrada · Ent. traspaso · Ent. depósito · Regulariz. · Sal. traspaso · Sal. depósito · Alb. venta · Ventas · Existencias finales |
-| Por acumulados               | Entradas · Salidas · Ventas · Existencias finales                                          |
+| Entre fechas · Simplificado  | Existencias iniciales · Entradas · Ventas · Existencias finales                            |
+| Entre fechas · Desglosado    | Existencias iniciales · Ent. compra · Alb. entrada · Traspasos (neto) · Depósitos (neto) · Regulariz. · Alb. venta · Ventas · Existencias finales |
+| Por acumulados               | Entradas · Ventas · Existencias finales                                                     |
+
+> **Nota (revisión de bandas).** Se eliminó la banda **Salidas**: los
+> traspasos se netean (entrada − salida) dentro de **Entradas** y los
+> depósitos quedan fuera de la ecuación. En desglosado, `Ent. traspaso` y
+> `Ent. depósito` pasan a ser **`Traspasos (neto)`** y **`Depósitos
+> (neto)`**, y desaparecen `Sal. traspaso` / `Sal. depósito` (el `Alb.
+> venta` sí se mantiene). Balance en todos los modos:
+> `Ex.ini + Entradas − Ventas = Ex.final`.
 
 El modo **desglosado** reutiliza exactamente los subtipos de
 `TfrmStockConsulta` (Ctrl+U, `inMtoStockConsulta.pas`): compra (`AC`),
@@ -79,7 +87,7 @@ Por acumulados no hay "existencias iniciales": el acumulado de
 | Banda                          | Precio unitario        |
 |--------------------------------|------------------------|
 | Existencias (ini/fin), Entradas| **Coste = PMP** (precio medio ponderado del stock actual; respaldo: último precio de compra del proveedor principal) |
-| Salidas                        | **PVP** (tarifa por defecto vigente hoy) — valoración nocional de todo lo que sale |
+| Alb. venta (SALALB, desglosado)| **PVP** (tarifa por defecto vigente hoy) — valoración nocional de la salida por albarán de venta |
 | **Ventas (VEN)**               | **Precio REAL de venta** (con descuentos, con IVA = `TOTAL_FACLIN`) de `fza_facturas_lineas`, enlazado por SKU/almacén; **no** la tarifa |
 
 `IMPORTE = CANTIDAD · PRECIO` por banda (salvo Ventas, que toma el importe
@@ -136,10 +144,10 @@ CALL PRC_GET_BALANCE_ALMACEN_TALLAS(
 );                  --   (1 = raíz; <1 o NULL = familia hoja del artículo)
 ```
 
-`p_BANDAS` limita qué bandas salen (códigos `EXIINI`, `ENT`, `SAL`, `VEN`,
+`p_BANDAS` limita qué bandas salen (códigos `EXIINI`, `ENT`, `VEN`,
 `EXIFIN` y, en desglosado, `ENTCMP`/`ENTALB`/`ENTTRA`/`ENTDEP`/`ENTREG`/
-`SALTRA`/`SALDEP`/`SALALB`). Vacío = todas las de la configuración de
-modo/detalle. Se aplica con un `DELETE` final sobre las bandas no elegidas.
+`SALALB`). Vacío = todas las de la configuración de modo/detalle. Se
+aplica con un `DELETE` final sobre las bandas no elegidas.
 
 Todos los filtros multi-valor son CSV y se resuelven con `FIND_IN_SET`. Las
 familias se expanden a su descendencia con un CTE recursivo sobre

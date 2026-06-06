@@ -13,7 +13,7 @@
 {    - ExportarInventarioExcel: vuelca cabecera + lineas a una hoja con        }
 {      preview editable (mismo patron que inLibDocCompraExcel).                }
 {    - ImportarInventarioExcel: lee un .xlsx y devuelve una lista de pares     }
-{      SKU=CANTIDAD_ARTVIN para que el DM los cargue via CargarDesdeListaSkus. }
+{      SKU=CANTIDAD para que el DM los cargue via CargarDesdeListaSkus. }
 {******************************************************************************}
 unit inLibInventarioExcel;
 
@@ -283,7 +283,7 @@ begin
     if (sHdr = 'SKU') or (sHdr = 'CODIGO_UNIDAD') or
        (sHdr = 'CODIGO UNIDAD') or (sHdr = 'UNIDAD') then
       iColSku := c
-    else if (sHdr = 'CANTIDAD') or (sHdr = 'CANTIDAD_ARTVIN') or
+    else if (sHdr = 'CANTIDAD') or
             (sHdr = 'UDS') or (sHdr = 'UDS. FISICAS') or
             (sHdr = 'FISICAS') or (sHdr = 'QTY') then
       iColCant := c

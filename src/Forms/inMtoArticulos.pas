@@ -27,7 +27,7 @@ uses
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
   cxPC, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel, inLibArticulosPropiedades,
-  cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
+  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
   dxBevel, cxDBNavigator, UniDataArticulos, UniDataPerfiles,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
@@ -76,7 +76,7 @@ type
     cxgrdbclmnGrdDBTabPrinTIPOIVA_ARTICULO: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinDESCRIPCION_FAMILIA: TcxGridDBColumn;
     cxgrdTarifas: TcxGrid;
-    tvTarifas: TcxGridDBBandedTableView;
+    tvTarifas: TcxGridDBTableView;
     cxgrdlvlTarifas: TcxGridLevel;
     chkACTIVO_ARTICULO: TcxDBCheckBox;
     tsProveedores: TcxTabSheet;
@@ -127,30 +127,30 @@ type
     btnAddProveedor: TcxButton;
     cxgrdbclmnProveedoresESPROVEEDORPRINCIPAL: TcxGridDBColumn;
     splSplitterFicha: TcxSplitter;
-    cxgrdbclmnTarifasCODIGO_ARTICULO_TARIFA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasDESCRIPCION_ARTICULO: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasTIPO_CANTIDAD_ARTICULO: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasTIPO_IVA_ARTICULO: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasACTIVO_TARIFA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasCODIGO_TARIFA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasFECHA_DESDE_TARIFA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasFECHA_HASTA_TARIFA: TcxGridDBBandedColumn;
-    dbcTarifasPRECIOFINAL: TcxGridDBBandedColumn;
-    dbcTarifasMARGEN: TcxGridDBBandedColumn;
-    dbcTarifasPRECIOSALIDA: TcxGridDBBandedColumn;
-    dbcTarifasPORCEN_DTO_TARIFA: TcxGridDBBandedColumn;
-    dbcTarifasPRECIO_DTO_TARIFA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasCODIGO_PROVEEDOR: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasRAZONSOCIAL_PROVEEDOR: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasPRECIO_ULT_COMPRA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasFECHA_VALIDEZ: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasCODIGO_FAMILIA_ARTICULO: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasDESCRIPCION_FAMILIA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasINSTANTEALTA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasINSTANTEMODIF: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasUSUARIOALTA: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasUSUARIOMODIF: TcxGridDBBandedColumn;
-    cxgrdbclmnTarifasNOMBRE_TARIFA: TcxGridDBBandedColumn;
+    cxgrdbclmnTarifasCODIGO_ARTICULO_TARIFA: TcxGridDBColumn;
+    cxgrdbclmnTarifasDESCRIPCION_ARTICULO: TcxGridDBColumn;
+    cxgrdbclmnTarifasTIPO_CANTIDAD_ARTICULO: TcxGridDBColumn;
+    cxgrdbclmnTarifasTIPO_IVA_ARTICULO: TcxGridDBColumn;
+    cxgrdbclmnTarifasACTIVO_TARIFA: TcxGridDBColumn;
+    cxgrdbclmnTarifasCODIGO_TARIFA: TcxGridDBColumn;
+    cxgrdbclmnTarifasFECHA_DESDE_TARIFA: TcxGridDBColumn;
+    cxgrdbclmnTarifasFECHA_HASTA_TARIFA: TcxGridDBColumn;
+    dbcTarifasPRECIOFINAL: TcxGridDBColumn;
+    dbcTarifasMARGEN: TcxGridDBColumn;
+    dbcTarifasPRECIOSALIDA: TcxGridDBColumn;
+    dbcTarifasPORCEN_DTO_TARIFA: TcxGridDBColumn;
+    dbcTarifasPRECIO_DTO_TARIFA: TcxGridDBColumn;
+    cxgrdbclmnTarifasCODIGO_PROVEEDOR: TcxGridDBColumn;
+    cxgrdbclmnTarifasRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn;
+    cxgrdbclmnTarifasPRECIO_ULT_COMPRA: TcxGridDBColumn;
+    cxgrdbclmnTarifasFECHA_VALIDEZ: TcxGridDBColumn;
+    cxgrdbclmnTarifasCODIGO_FAMILIA_ARTICULO: TcxGridDBColumn;
+    cxgrdbclmnTarifasDESCRIPCION_FAMILIA: TcxGridDBColumn;
+    cxgrdbclmnTarifasINSTANTEALTA: TcxGridDBColumn;
+    cxgrdbclmnTarifasINSTANTEMODIF: TcxGridDBColumn;
+    cxgrdbclmnTarifasUSUARIOALTA: TcxGridDBColumn;
+    cxgrdbclmnTarifasUSUARIOMODIF: TcxGridDBColumn;
+    cxgrdbclmnTarifasNOMBRE_TARIFA: TcxGridDBColumn;
     lblTextoLegal11: TcxLabel;
     cxdbspndtORDEN_CLIENTE: TcxDBSpinEdit;
     btnNuevoArticulo: TcxButton;
@@ -160,8 +160,8 @@ type
     actClientes: TAction;
     actProveedores: TAction;
     actTarifas: TAction;
-    dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBBandedColumn;
-    dbcTarifasESIMP_INCL_TARIFA: TcxGridDBBandedColumn;
+    dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBColumn;
+    dbcTarifasESIMP_INCL_TARIFA: TcxGridDBColumn;
     dbcDESCRIPCION_FAM: TcxDBLabel;
     dbcNOMBRE_FAM_FAM: TcxDBLabel;
     tsGeneral: TcxTabSheet;
@@ -277,9 +277,9 @@ type
     tvMovimientosRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn;
     tsPropiedades: TcxTabSheet;
     chkESTRAZABLE_ART: TcxDBCheckBox;
-    tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBBandedColumn;
-    tvTarifasESVARIACION_ARTICULO: TcxGridDBBandedColumn;
-    tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBBandedColumn;
+    tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBColumn;
+    tvTarifasESVARIACION_ARTICULO: TcxGridDBColumn;
+    tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBColumn;
     btnAddSKU: TcxButton;
     tvLinFacNOMBRE_TIPO_IVA_IVATIP: TcxGridDBColumn;
     tvLinFacCODIGO_TAR_FACLIN: TcxGridDBColumn;

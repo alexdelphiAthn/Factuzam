@@ -268,6 +268,23 @@ begin
                      tpBoolean,
                      'False');
 
+  // --- Lector de Código de Barras ---
+  RegistrarParametro('Lector de Código de Barras',
+                     'vgerScanVelActivo',
+                     'Detectar lecturas por velocidad de tecleo (código + CR)',
+                     tpBoolean,
+                     'True');
+  RegistrarParametro('Lector de Código de Barras',
+                     'vgerScanVelMs',
+                     'Máx. ms entre teclas para considerarlo lectura',
+                     tpInteger,
+                     '40');
+  RegistrarParametro('Lector de Código de Barras',
+                     'vgerScanMinLong',
+                     'Longitud mínima del código para aceptar la lectura',
+                     tpInteger,
+                     '4');
+
   // --- Impresión ---
   RegistrarParametro('Impresión',
                      'vgerDefPrinter',

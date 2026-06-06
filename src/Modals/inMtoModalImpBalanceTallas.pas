@@ -179,33 +179,30 @@ begin
     FclbBandas.Items.Clear;
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
     begin
-      // Por acumulados.
+      // Por acumulados (sin Salidas: traspasos neteados en Entradas).
       Agregar('ENT',    'Entradas');
-      Agregar('SAL',    'Salidas');
       Agregar('VEN',    'Ventas');
       Agregar('EXIFIN', 'Existencias finales');
     end
     else if (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
     begin
-      // Entre fechas, desglosado (subtipos de la consulta Ctrl+U).
+      // Entre fechas, desglosado (subtipos Ctrl+U; traspasos/depósitos netos,
+      // sin bandas de salida salvo alb. venta).
       Agregar('EXIINI', 'Existencias iniciales');
       Agregar('ENTCMP', 'Ent. compra');
       Agregar('ENTALB', 'Alb. entrada');
-      Agregar('ENTTRA', 'Ent. traspaso');
-      Agregar('ENTDEP', 'Ent. dep'#243'sito');
+      Agregar('ENTTRA', 'Traspasos (neto)');
+      Agregar('ENTDEP', 'Dep'#243'sitos (neto)');
       Agregar('ENTREG', 'Regulariz.');
-      Agregar('SALTRA', 'Sal. traspaso');
-      Agregar('SALDEP', 'Sal. dep'#243'sito');
       Agregar('SALALB', 'Alb. venta');
       Agregar('VEN',    'Ventas');
       Agregar('EXIFIN', 'Existencias finales');
     end
     else
     begin
-      // Entre fechas, simplificado.
+      // Entre fechas, simplificado (sin Salidas).
       Agregar('EXIINI', 'Existencias iniciales');
       Agregar('ENT',    'Entradas');
-      Agregar('SAL',    'Salidas');
       Agregar('VEN',    'Ventas');
       Agregar('EXIFIN', 'Existencias finales');
     end;

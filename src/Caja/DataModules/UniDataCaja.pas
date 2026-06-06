@@ -102,7 +102,7 @@ type
     NombreFamilia:       string;
     TipoArticulo:        string;
     TipoCantidad:        string;
-    CANTIDAD_ARTVIN:            Double;
+    Cantidad:            Double;
     Tarifa:              string;
     EsImpIncl:           string;
     PrecioSalida:        Currency;
@@ -470,7 +470,7 @@ begin
     Result.TipoArticulo        := FieldByName('TIPO_ARTICULO_FACLIN').AsString;
     Result.TipoCantidad        :=
       FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
-    Result.CANTIDAD_ARTVIN            := FieldByName('CANTIDAD_FACLIN').AsFloat;
+    Result.Cantidad            := FieldByName('CANTIDAD_FACLIN').AsFloat;
     Result.Tarifa              := FieldByName('CODIGO_TAR_FACLIN').AsString;
     Result.EsImpIncl := FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString;
     Result.PrecioSalida := FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
@@ -1235,7 +1235,7 @@ begin
               QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
               Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
               Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad,
-              Lin.CANTIDAD_ARTVIN, Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida,
+              Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida,
               Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva,
               UsuarioCaja, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '',
@@ -1275,7 +1275,7 @@ begin
               QryTrx, AEmpresa, Cab.CodigoCliente, Lin.Articulo, Lin.Sku,
               UsuarioCaja,
               Lin.PrecioOriginalDep, Lin.TotalCIva, AAlmacen, AlmacenDeposito,
-              Lin.CANTIDAD_ARTVIN, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl,
+              Lin.Cantidad, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl,
               ACaja,
               sOpeCaja, IdDepGenerado);
             InsertarOperacionCaja(
@@ -1323,7 +1323,7 @@ begin
             TotalDevolucionesNormales :=
               TotalDevolucionesNormales + Abs(Lin.TotalCIva);
         end;
-        if Lin.CANTIDAD_ARTVIN < 0 then
+        if Lin.Cantidad < 0 then
           TipoMov := 'E'
         else
           TipoMov := 'S';
@@ -1333,7 +1333,7 @@ begin
             QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
             Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
             Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad,
-            Lin.CANTIDAD_ARTVIN,
+            Lin.Cantidad,
             Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida, Lin.PorcDto,
             Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva, Lin.TipoIva,
             Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja, AEmpresa,
@@ -1343,7 +1343,7 @@ begin
           InsertarMovimientoAlmacen(
             QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
-            Lin.CANTIDAD_ARTVIN, 0, UsuarioCaja, AAlmacen, NumOperacionVE,
+            Lin.Cantidad, 0, UsuarioCaja, AAlmacen, NumOperacionVE,
             Cab.CodigoCliente, Lin.Articulo);
         cdsLineas.Next;
       end;
@@ -1403,11 +1403,24 @@ begin
       if (Abs(ImporteFP) > 0.001) and (CodigoFP <> 'VALE') then
       begin
         Inc(NumLineaPago);
+        // La referencia (código de bono, autorización de tarjeta, TxID…) y
+        // los datos de divisa se capturan en memoria durante la fase de cobro
+        // (inLibFaseCobro). Hay que pasarlos aquí o no llegan a la BD y el
+        // histórico de pagos los muestra vacíos.
+        var DivisaFP  :=
+          DatosCobro.MemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
+        var FactorFP  :=
+          DatosCobro.MemTablePagos.FieldByName('FACTOR_CAMBIO').AsFloat;
+        var ImpDivFP  :=
+          DatosCobro.MemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat;
+        var ReferenFP :=
+          DatosCobro.MemTablePagos.FieldByName('REFERENCIA').AsString;
         InsertarPagoCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
           NumLineaPago,
           CodigoFP, ImporteFP,
-          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency);
+          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency,
+          DivisaFP, '', FactorFP, ImpDivFP, ReferenFP);
       end;
       DatosCobro.MemTablePagos.Next;
     end;

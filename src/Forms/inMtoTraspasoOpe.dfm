@@ -1,26 +1,23 @@
 inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   Caption = 'Traspasos'
-  ClientHeight = 640
-  ClientWidth = 900
-  KeyPreview = True
-  OnCreate = FormCreate
+  ClientHeight = 639
+  ClientWidth = 896
   OnDestroy = FormDestroy
-  OnShow = FormShow
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
-  PixelsPerInch = 96
-  TextHeight = 13
-  object pnlModos: TPanel
+  OnShow = FormShow
+  ExplicitWidth = 912
+  ExplicitHeight = 678
+  TextHeight = 17
+  object pnlModos: TPanel [0]
     Left = 0
     Top = 0
-    Width = 900
+    Width = 896
     Height = 40
     Align = alTop
     BevelOuter = bvNone
-    Caption = ''
     TabOrder = 0
     object btnModoTraspaso: TcxButton
-      Tag = 0
       Left = 8
       Top = 6
       Width = 200
@@ -35,7 +32,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Top = 6
       Width = 220
       Height = 28
-      Caption = 'F6 Solicitar a otro almacén'
+      Caption = 'F6 Solicitar a otro almac'#233'n'
       TabOrder = 1
       OnClick = btnModoClick
     end
@@ -50,19 +47,19 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       OnClick = btnModoClick
     end
   end
-  object pnlTop: TPanel
+  object pnlTop: TPanel [1]
     Left = 0
     Top = 40
-    Width = 900
+    Width = 896
     Height = 89
     Align = alTop
     BevelOuter = bvNone
-    Caption = ''
     TabOrder = 1
     object lblOrigen: TcxLabel
       Left = 16
       Top = 18
-      Caption = 'ALMACÉN ORIGEN'
+      Caption = 'ALMAC'#201'N ORIGEN'
+      TabOrder = 3
     end
     object txtOrigen: TcxTextEdit
       Left = 150
@@ -74,7 +71,8 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     object lblDestino: TcxLabel
       Left = 420
       Top = 18
-      Caption = 'ALMACÉN DESTINO'
+      Caption = 'ALMAC'#201'N DESTINO'
+      TabOrder = 4
     end
     object cboDestino: TcxComboBox
       Left = 560
@@ -86,6 +84,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       Left = 16
       Top = 56
       Caption = 'Empleado (responsable)'
+      TabOrder = 5
     end
     object txtEmpleado: TcxButtonEdit
       Left = 200
@@ -103,22 +102,22 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     object lblEmpleadoNombre: TcxLabel
       Left = 330
       Top = 56
-      Caption = ''
+      TabOrder = 6
     end
   end
-  object pnlBottom: TPanel
+  object pnlBottom: TPanel [2]
     Left = 0
-    Top = 580
-    Width = 900
+    Top = 579
+    Width = 896
     Height = 60
     Align = alBottom
     BevelOuter = bvNone
-    Caption = ''
     TabOrder = 3
     object lblTotal: TcxLabel
       Left = 16
       Top = 20
       Caption = 'Importe traspaso: 0,00'
+      TabOrder = 2
     end
     object btnF11: TcxButton
       Left = 520
@@ -139,14 +138,13 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       OnClick = btnF12Click
     end
   end
-  object pnlCentro: TPanel
+  object pnlCentro: TPanel [3]
     Left = 0
     Top = 129
-    Width = 900
-    Height = 451
+    Width = 896
+    Height = 450
     Align = alClient
     BevelOuter = bvNone
-    Caption = ''
-    TabOrder = 4
+    TabOrder = 2
   end
 end

@@ -212,8 +212,10 @@ var
     bt.Filas.Add(iRow);   // fila de detalle de este color
   end;
 
-  // Construye '=SUM(celda1,celda2,...)' para una columna sobre las filas de
-  // detalle de la banda. Las celdas vacías (ceros omitidos) suman 0.
+  // Construye '=SUM(celda1;celda2;...)' para una columna sobre las filas de
+  // detalle de la banda, con el separador de argumentos del locale
+  // (SepFormula): en español es ';'; con ',' dxSpreadSheet lo interpreta
+  // como rango en la vista previa. Las celdas vacías (ceros omitidos) suman 0.
   function SumaFormula(AFilas: TList<Integer>; ACol: Integer): string;
   var
     j: Integer;
@@ -223,7 +225,7 @@ var
     for j := 0 to AFilas.Count - 1 do
     begin
       if s <> '' then
-        s := s + ',';
+        s := s + SepFormula;
       s := s + GetRef(AFilas[j], ACol);
     end;
     Result := '=SUM(' + s + ')';

@@ -502,7 +502,7 @@
             Width = 89
           end
           object colMovCantidad: TcxGridDBColumn
-            Caption = 'CANTIDAD_ARTVIN'
+            Caption = 'Cantidad'
             DataBinding.FieldName = 'CANTIDAD_MOV'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00'
@@ -673,7 +673,7 @@
             Width = 91
           end
           object colDepCant: TcxGridDBColumn
-            Caption = 'CANTIDAD_ARTVIN pdte.'
+            Caption = 'Cantidad pdte.'
             DataBinding.FieldName = 'CANTIDAD_PENDIENTE_DEP'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.DisplayFormat = '#,##0.00'

@@ -1176,6 +1176,11 @@ procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 //var
 //  I: Integer;
 begin
+  // Señalar a las tareas de segundo plano que la app se esta cerrando, ANTES
+  // de empezar a liberar formularios y conexiones. Asi no arrancan trabajo
+  // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
+  // y el destructor de TfrmMtoGen).
+  inLibGlobalVar.oCerrandoApp := True;
   Application.OnException := nil;
   Application.OnMessage := nil;
   inherited;

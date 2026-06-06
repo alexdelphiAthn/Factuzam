@@ -37,6 +37,7 @@ uses
                          DxStyle: TdxSpreadSheetCellBorderStyle);
   function GetRef(R, C: Integer; Absolute: Boolean = False): string;
   function ColToLetras(C: Integer): string;
+  function SepFormula: string;
 
 implementation
   procedure Merge(Sheet: TdxSpreadSheetTableView;
@@ -141,6 +142,21 @@ implementation
       Result := '$' + ColStr + '$' + IntToStr(R + 1)
     else
       Result := ColStr + IntToStr(R + 1);
+  end;
+
+  // Separador de argumentos de fórmula que espera dxSpreadSheet según el
+  // locale. Con la coma como separador decimal (España) el separador de
+  // argumentos es ';'. Emitir ',' en ese caso hace que dxSpreadSheet
+  // interprete SUM(A1,A2) como el RANGO SUM(A1:A2) y sume las celdas
+  // intermedias (totales contaminados con bandas vecinas). El .xlsx
+  // exportado se ve bien igualmente porque OOXML usa siempre la coma; el
+  // fallo es solo en la previsualización.
+  function SepFormula: string;
+  begin
+    if FormatSettings.DecimalSeparator = ',' then
+      Result := ';'
+    else
+      Result := ',';
   end;
 
 
