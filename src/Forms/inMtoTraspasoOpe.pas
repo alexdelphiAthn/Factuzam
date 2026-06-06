@@ -28,9 +28,10 @@ uses
   cxButtonEdit, cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
-  Data.DB, Uni, inLibGlobalVar, UniDataTraspaso, inLibTraspasoTicket,
-  inLibGridArticulos, inLibPermisos, inLibGenBusq, inLibFotos,
-  inLibAtributosPaleta, inLibCajaParam;
+  Data.DB, Datasnap.DBClient, Uni, inLibGlobalVar, UniDataTraspaso,
+  inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
+  inLibPermisos, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
+  inLibCajaParam;
 
 const
   // Mensaje para diferir el alta de la linea fuera del KeyPress del lector
@@ -103,6 +104,7 @@ type
     FCodigoScanPend: string;
     procedure WMProcesarScanner(var Msg: TMessage); message WM_PROCESAR_SCANNER;
     procedure ProcesarLecturaScanner(const ACodigo: string);
+    function ConsolidarSiExiste(const ASku: string): Boolean;
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -666,16 +668,67 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.ProcesarLecturaScanner(const ACodigo: string);
+var
+  Validador: TArticulosValidador;
+  Resolucion: TArtResolucionEntrada;
+  sSku: string;
 begin
-  // Alta de linea por lectura, desde cualquier campo: garantizamos una linea
-  // en blanco y resolvemos el codigo en ella (ResolverEntrada acepta codigo de
-  // barras / codigo / SKU). GridResuelto rellena coste/stock y deja otra linea.
+  // Igual que inMtoCajaOpe: resolvemos el codigo ANTES de tocar lineas para
+  // decidir si consolidar (la SKU ya esta -> sumamos 1) o anadir linea nueva.
   if (Trim(ACodigo) <> '') and Assigned(FDatos) and
      Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
   begin
-    AsegurarLineaNueva;
-    FDatos.cdsLineas.Last;
-    FGridCtrl.ResolverEntrada(Trim(ACodigo));
+    Validador := TArticulosValidador.Create(oConn);
+    try
+      Resolucion := Validador.Resolver(Trim(ACodigo));
+    finally
+      FreeAndNil(Validador);
+    end;
+    sSku := Resolucion.CodigoSku;
+    if Resolucion.Encontrado and (Trim(sSku) <> '') and
+       ConsolidarSiExiste(sSku) then
+    begin
+      // Consolidado: la cantidad se sumo en la linea existente.
+    end
+    else
+    begin
+      // Alta de linea nueva: resolvemos el codigo en una linea en blanco.
+      AsegurarLineaNueva;
+      FDatos.cdsLineas.Last;
+      FGridCtrl.ResolverEntrada(Trim(ACodigo));
+    end;
+  end;
+end;
+
+function TfrmMtoOpeTraspaso.ConsolidarSiExiste(const ASku: string): Boolean;
+var
+  Clon: TClientDataSet;
+begin
+  // Si la SKU ya esta en una linea, le sumamos 1 a la cantidad y no creamos
+  // otra (mismo comportamiento que caja). Clon para no mover el cursor visible.
+  Result := False;
+  if Trim(ASku) <> '' then
+  begin
+    Clon := TClientDataSet.Create(nil);
+    try
+      Clon.CloneCursor(FDatos.cdsLineas, True);
+      Clon.First;
+      while (not Clon.Eof) and (not Result) do
+      begin
+        if Clon.FieldByName('CODIGO_UNIDAD').AsString = ASku then
+        begin
+          Clon.Edit;
+          Clon.FieldByName('CANTIDAD').AsFloat :=
+            Clon.FieldByName('CANTIDAD').AsFloat + 1;
+          Clon.Post;
+          ActualizarTotal;
+          Result := True;
+        end;
+        Clon.Next;
+      end;
+    finally
+      FreeAndNil(Clon);
+    end;
   end;
 end;
 
