@@ -88,6 +88,15 @@ type
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
     FQModalSolic: TUniQuery;
+    // Lectura global por codigo de barras (pistola STX...ETX), como en caja:
+    // se escanea desde cualquier parte del formulario, no solo en la celda.
+    FScanBuffer: string;
+    FScanPend: string;
+    FLeyendoScanner: Boolean;
+    FScanTimer: TTimer;
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure ScanTimerTimer(Sender: TObject);
+    procedure ProcesarScan(const ACodigo: string);
     procedure ConstruirGrid;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
@@ -136,6 +145,13 @@ procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
   inherited;
   KeyPreview := True;
+  // Lectura global por codigo de barras (igual que en caja): el formulario
+  // captura STX..ETX de la pistola con KeyPreview y lo procesa diferido.
+  OnKeyPress := FormKeyPress;
+  FScanTimer := TTimer.Create(Self);
+  FScanTimer.Enabled := False;
+  FScanTimer.Interval := 1;
+  FScanTimer.OnTimer := ScanTimerTimer;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self);
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
@@ -605,6 +621,64 @@ begin
   begin
     FDatos.cdsLineas.Append;
     FDatos.cdsLineas.Post;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  // STX (#2) de la pistola: empieza la lectura; acumulamos hasta ETX (#3).
+  if Key = #2 then
+  begin
+    FLeyendoScanner := True;
+    FScanBuffer := '';
+    Key := #0;
+  end
+  else if FLeyendoScanner then
+  begin
+    if Key = #3 then
+    begin
+      FLeyendoScanner := False;
+      Key := #0;
+      if Trim(FScanBuffer) <> '' then
+      begin
+        FScanPend := Trim(FScanBuffer);
+        FScanTimer.Enabled := True;
+      end;
+      FScanBuffer := '';
+    end
+    else
+    begin
+      FScanBuffer := FScanBuffer + Key;
+      Key := #0;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.ScanTimerTimer(Sender: TObject);
+begin
+  // Diferido: procesamos fuera del evento de teclado para no chocar con el
+  // editor in-place ni con el cds en medio de una pulsacion.
+  FScanTimer.Enabled := False;
+  if FScanPend <> '' then
+  begin
+    ProcesarScan(FScanPend);
+    FScanPend := '';
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.ProcesarScan(const ACodigo: string);
+begin
+  if (Trim(ACodigo) <> '') and Assigned(FDatos) and
+     Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
+  begin
+    // Cierra cualquier editor in-place abierto para no chocar con el cds.
+    FView.Controller.EditingController.HideEdit(True);
+    // Aseguramos una linea en blanco al final y nos posicionamos en ella.
+    AsegurarLineaNueva;
+    FDatos.cdsLineas.Last;
+    // ResolverEntrada rellena la linea; si el SKU viene completo (caso tipico
+    // del codigo de barras) dispara GridResuelto (coste/stock + nueva linea).
+    FGridCtrl.ResolverEntrada(ACodigo);
   end;
 end;
 
