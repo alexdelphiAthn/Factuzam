@@ -690,6 +690,26 @@ begin
     sSku := Trim(Resolucion.CodigoSku);
     if sSku = '' then
       sSku := Trim(Resolucion.CodigoArticulo);
+    // DIAGNOSTICO TEMPORAL: ver que SKU detecta y los CODIGO_UNIDAD de cada
+    // linea para comparar.
+    if Resolucion.Encontrado then
+    begin
+      var sDiag := '';
+      var Cl := TClientDataSet.Create(nil);
+      try
+        Cl.CloneCursor(FDatos.cdsLineas, True);
+        Cl.First;
+        while not Cl.Eof do
+        begin
+          sDiag := sDiag + '[' + Cl.FieldByName('CODIGO_UNIDAD').AsString + ']';
+          Cl.Next;
+        end;
+      finally
+        FreeAndNil(Cl);
+      end;
+      ShowMessage(Format('DIAG: busco=[%s] (art=[%s] sku=[%s])  lineas: %s',
+        [sSku, Resolucion.CodigoArticulo, Resolucion.CodigoSku, sDiag]));
+    end;
     if Resolucion.Encontrado and (sSku <> '') and
        ConsolidarSiExiste(sSku) then
     begin
