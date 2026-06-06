@@ -9,6 +9,15 @@
 -- bien quien es el proveedor. Recreamos la vista anadiendo NOMBRE_PRV justo
 -- detras de RAZON_SOCIAL_PRV (mismo orden que en la tabla).
 --
+-- Ademas se ordena la vista por ORDEN_PRV (el orden visual que el usuario fija
+-- en el mantenimiento de proveedores) para que los lookups/combos que leen
+-- `SELECT * FROM vi_proveedores` sin ORDER BY propio (p.ej. el combo de
+-- proveedores de inMtoInventarios) salgan en el orden del usuario. El buscador
+-- de Sesiones de Compra usa su propio `ORDER BY RAZON_SOCIAL_PRV`, que al ser
+-- externo prevalece, asi que ese caso no cambia. La vista es de una sola tabla,
+-- por lo que el ORDER BY no penaliza como en las vistas con joins grandes (ver
+-- fix_vi_atributos_nombres_sin_orderby.sql).
+--
 -- Idempotente:
 --   - El bloque que anade NOMBRE_PRV solo crea la columna si no existe
 --     (mismo patron que proveedores_nombre.sql), por lo que este script se
@@ -34,7 +43,7 @@ PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 2. Recrear la vista incluyendo NOMBRE_PRV.
+-- 2. Recrear la vista incluyendo NOMBRE_PRV y ordenada por ORDEN_PRV.
 CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_proveedores` AS
 SELECT `fza_proveedores`.`CODIGO_PRV_PRV`         AS `CODIGO_PRV_PRV`,
        `fza_proveedores`.`ESACTIVO_PRV`           AS `ESACTIVO_PRV`,
@@ -60,4 +69,5 @@ SELECT `fza_proveedores`.`CODIGO_PRV_PRV`         AS `CODIGO_PRV_PRV`,
        `fza_proveedores`.`INSTANTE_ALTA`          AS `INSTANTE_ALTA`,
        `fza_proveedores`.`USUARIO_ALTA`           AS `USUARIO_ALTA`,
        `fza_proveedores`.`USUARIO_MODIF`          AS `USUARIO_MODIF`
-  FROM `fza_proveedores`;
+  FROM `fza_proveedores`
+ ORDER BY `ORDEN_PRV`;
