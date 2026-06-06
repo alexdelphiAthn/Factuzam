@@ -40,9 +40,10 @@ inherited dmMovimientosAlmacen: TdmMovimientosAlmacen
       'SELECT COUNT(*) FROM fza_movimientos_almacen')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT *'
-      'FROM fza_movimientos_almacen'
-      'ORDER BY FECHA_MOV DESC'
+      'SELECT m.*, a.TIPO_CANTIDAD_ART'
+      'FROM fza_movimientos_almacen m'
+      'LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = m.CODIGO_ART_MOV'
+      'ORDER BY m.FECHA_MOV DESC'
       '')
     Active = True
     Left = 24
