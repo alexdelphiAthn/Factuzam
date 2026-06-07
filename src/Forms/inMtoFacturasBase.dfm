@@ -2488,11 +2488,13 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   object cxgrdcMovFacPMP: TcxGridDBColumn
                     Caption = 'PMP'
                     DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 90
                   end
                   object cxgrdcMovFacTot: TcxGridDBColumn
                     Caption = 'Total Coste'
                     DataBinding.FieldName = 'TOTAL_COSTE_MOV'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
                     Width = 100
                   end
                 end

@@ -32,7 +32,7 @@ uses
   UniDataCajaOperacionesHist, UniDataPerfiles, MemDS, DBAccess, Uni,
   cxCheckBox, cxCheckComboBox, cxCurrencyEdit, cxSpinEdit, cxBlobEdit,
   dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
-  JvEnterTab, dxShellDialogs;
+  JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoCajaOperacionesHist = class(TfrmMtoGen)
@@ -69,11 +69,14 @@ type
     ccbFiltroAnyo: TcxCheckComboBox;
     lblFiltroAlmacen: TcxLabel;
     ccbFiltroAlmacen: TcxCheckComboBox;
+    alOperaciones: TActionList;
+    actIrFacturaSimplif: TAction;
     procedure btnImprimirInformeClick(Sender: TObject);
     procedure btnToggleFiltrosCajaClick(Sender: TObject);
     procedure ccbFiltroAnyoPropertiesCloseUp(Sender: TObject);
     procedure ccbFiltroAlmacenPropertiesCloseUp(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure actIrFacturaSimplifExecute(Sender: TObject);
   private
     // Guarda contra reentrada: bloquea el OnCloseUp de los combos mientras
     // inicializamos sus estados desde el perfil (si no, cada marca dispara
@@ -116,7 +119,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inMtoPrincipal, inMtoModalImpOperaciones;
+  inLibWin, inLibUser, inLibShowMto, inMtoPrincipal, inMtoModalImpOperaciones;
 
 {$R *.dfm}
 
@@ -137,6 +140,36 @@ begin
   finally
     FreeAndNil(frm);
   end;
+end;
+
+procedure TfrmMtoCajaOperacionesHist.actIrFacturaSimplifExecute(
+                                                            Sender: TObject);
+var
+  ds: TDataSet;
+  sSerie, sNumero: string;
+begin
+  inherited;
+  // Ctrl+Shift+F: ir a la factura simplificada de la operacion enfocada.
+  // La operacion guarda SERIE_FAC_OPCAJA / NUMERO_FAC_OPCAJA; navegamos a
+  // 'FacturasSimplif' por PK (NUMERO_FAC; SERIE_FAC) via ShowMto. Si la
+  // operacion no tiene factura, abrimos el listado sin localizar.
+  sSerie := '';
+  sNumero := '';
+  if Assigned(dmmCajaOperacionesHist) and
+     Assigned(dmmCajaOperacionesHist.unqryTablaG) and
+     dmmCajaOperacionesHist.unqryTablaG.Active then
+  begin
+    ds := dmmCajaOperacionesHist.unqryTablaG;
+    if not ds.IsEmpty then
+    begin
+      sSerie := Trim(ds.FieldByName('SERIE_FAC_OPCAJA').AsString);
+      sNumero := Trim(ds.FieldByName('NUMERO_FAC_OPCAJA').AsString);
+    end;
+  end;
+  if (sSerie <> '') and (sNumero <> '') then
+    ShowMto(Self.Owner, 'FacturasSimplif', sNumero + ',' + sSerie)
+  else
+    ShowMto(Self.Owner, 'FacturasSimplif');
 end;
 
 procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;

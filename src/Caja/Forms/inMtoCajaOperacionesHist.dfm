@@ -259,4 +259,13 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
   inherited dsTablaG: TDataSource
     DataSet = dmCajaOperacionesHist.unqryTablaG
   end
+  object alOperaciones: TActionList
+    Left = 640
+    Top = 16
+    object actIrFacturaSimplif: TAction
+      Caption = 'Ir a Factura Simplificada'
+      ShortCut = 24646
+      OnExecute = actIrFacturaSimplifExecute
+    end
+  end
 end
