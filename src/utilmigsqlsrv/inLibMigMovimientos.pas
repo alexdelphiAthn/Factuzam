@@ -120,6 +120,15 @@ begin
   Result := sArt + '/' + sC + '/' + sT;
 end;
 
+// Una fecha es "real" si no es el cero de SQL Server. El proveedor OLE DB
+// materializa las fechas vacías de datetime/smalldatetime como 1900-01-01,
+// que IsNull NO detecta; sin este filtro FECHA_MOV salía siempre 01/01/1900
+// cuando el legacy traía la fecha preferida a cero.
+function FechaReal(const dt: TDateTime): Boolean;
+begin
+  Result := dt > EncodeDate(1900, 1, 2);
+end;
+
 // Dirección del movimiento. Preferimos el flag Tipo del origen cuando es
 // explícito ('E'/'S'); si no, el signo de las unidades de stock; como
 // último recurso, el signo de Cantidad. Por defecto entrada.
@@ -454,15 +463,17 @@ begin
           Inc(iCorregidos);
         end;
         fTotal := fCantMov * fCoste;
-        // FECHA_MOV: FechaOpe y, si falta, Fecha; si ambas faltan, NULL.
-        if not qSrc.FieldByName('FechaOpe').IsNull then
+        // FECHA_MOV: primera fecha REAL entre Fecha y FechaOpe. El legacy
+        // suele traer FechaOpe a 1900-01-01 (cero de SQL Server) en los
+        // movimientos, y eso IsNull no lo detecta: antes FECHA_MOV salía
+        // siempre 01/01/1900. Preferimos Fecha (fecha del documento) y
+        // caemos a FechaOpe; si ninguna es válida, NULL.
+        sFechaSql := 'NULL';
+        if FechaReal(qSrc.FieldByName('Fecha').AsDateTime) then
+          sFechaSql := DateTimeASQL(qSrc.FieldByName('Fecha').AsDateTime)
+        else if FechaReal(qSrc.FieldByName('FechaOpe').AsDateTime) then
           sFechaSql := DateTimeASQL(
-                         qSrc.FieldByName('FechaOpe').AsDateTime)
-        else if not qSrc.FieldByName('Fecha').IsNull then
-          sFechaSql := DateTimeASQL(
-                         qSrc.FieldByName('Fecha').AsDateTime)
-        else
-          sFechaSql := 'NULL';
+                         qSrc.FieldByName('FechaOpe').AsDateTime);
         sSerie   := Trim(qSrc.FieldByName('Serie').AsString);
         sNroDoc  := Trim(qSrc.FieldByName('NroDoc').AsString);
         sCliente := Trim(qSrc.FieldByName('Cliente').AsString);
