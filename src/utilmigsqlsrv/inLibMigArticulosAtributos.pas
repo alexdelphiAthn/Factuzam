@@ -224,6 +224,10 @@ begin
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
     qSrc   := NuevoQOrigen(Eng, cSelectSrc);
+    // UniDirectional: NO cachea las ~81k filas en memoria (solo lectura
+    // hacia delante). Reduce la presion de memoria que, en paralelo con los
+    // otros mappers pesados, puede provocar AccessViolation en el .exe 32b.
+    qSrc.UniDirectional := True;
     bulk   := TBulkInsert.Create(Eng.ConDst,
                                   'fza_articulos_atributos_basicos',
                                   cCols, BATCH_SIZE);
@@ -343,6 +347,10 @@ begin
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
     qSrc   := NuevoQOrigen(Eng, cSelectSrc);
+    // UniDirectional: NO cachea las ~266k filas en memoria (solo lectura
+    // hacia delante). Reduce la presion de memoria que, en paralelo con los
+    // otros mappers pesados, puede provocar AccessViolation en el .exe 32b.
+    qSrc.UniDirectional := True;
     bulk   := TBulkInsert.Create(Eng.ConDst,
                                   'fza_articulos_atributos_basicos',
                                   cCols, BATCH_SIZE);
