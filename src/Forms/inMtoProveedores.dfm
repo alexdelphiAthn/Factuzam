@@ -782,12 +782,12 @@
                     Width = 96
                   end
                   object cxgrdbclmnLinFacCANTIDAD_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'CANTIDAD_ARTVIN'
+                    Caption = 'Cantidad'
                     DataBinding.FieldName = 'CANTIDAD_FACLIN'
                     Width = 89
                   end
                   object cxgrdbclmnLinFacTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
-                    Caption = 'Tipo CANTIDAD_ARTVIN'
+                    Caption = 'Tipo Cantidad'
                     DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                     Width = 93
                   end

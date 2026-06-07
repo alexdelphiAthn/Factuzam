@@ -1,13 +1,16 @@
 object dmMig: TdmMig
-  Height = 240
-  Width = 420
-  PixelsPerInch = 96
+  Height = 300
+  Width = 525
+  PixelsPerInch = 120
   object conSrv: TUniConnection
     ProviderName = 'SQL Server'
     Port = 1433
+    SpecificOptions.Strings = (
+      'SQL Server.Provider=prMSOLEDB'
+      'SQL Server.Authentication=auWindows')
     LoginPrompt = False
-    Left = 80
-    Top = 40
+    Left = 100
+    Top = 50
   end
   object conDst: TUniConnection
     ProviderName = 'MySQL'
@@ -15,15 +18,15 @@ object dmMig: TdmMig
     SpecificOptions.Strings = (
       'MySQL.UseUnicode=True')
     LoginPrompt = False
-    Left = 80
-    Top = 120
+    Left = 100
+    Top = 150
   end
   object prvSqlServer: TSQLServerUniProvider
-    Left = 240
-    Top = 40
+    Left = 300
+    Top = 50
   end
   object prvMySQL: TMySQLUniProvider
-    Left = 240
-    Top = 120
+    Left = 300
+    Top = 150
   end
 end

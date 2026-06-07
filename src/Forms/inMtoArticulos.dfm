@@ -868,7 +868,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
-                object tvTarifas: TcxGridDBBandedTableView
+                object tvTarifas: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
@@ -914,91 +914,59 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OptionsData.Inserting = False
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
-                  Bands = <
-                    item
-                      FixedKind = fkLeft
-                      Width = 280
-                    end
-                    item
-                      Width = 2764
-                    end>
-                  object cxgrdbclmnTarifasCODIGO_TARIFA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasCODIGO_TARIFA: TcxGridDBColumn
                     Caption = 'C'#243'digo Tarifa'
                     DataBinding.FieldName = 'CODIGO_TAR_ARTTAR'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
                     Width = 129
-                    Position.BandIndex = 0
-                    Position.ColIndex = 0
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasNOMBRE_TARIFA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasNOMBRE_TARIFA: TcxGridDBColumn
                     Caption = 'Nombre Tarifa'
                     DataBinding.FieldName = 'NOMBRE_TAR_TAR'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
                     Width = 145
-                    Position.BandIndex = 0
-                    Position.ColIndex = 1
-                    Position.RowIndex = 0
                   end
-                  object dbcTarifasESIMP_INCL_TARIFA: TcxGridDBBandedColumn
+                  object dbcTarifasESIMP_INCL_TARIFA: TcxGridDBColumn
                     Caption = 'Imp. Incl.'
                     DataBinding.FieldName = 'ESIMP_INCL_TAR'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
                     Width = 95
-                    Position.BandIndex = 1
-                    Position.ColIndex = 0
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasCODIGO_ARTICULO_TARIFA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasCODIGO_ARTICULO_TARIFA: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_ARTTAR'
                     Visible = False
                     VisibleForCustomization = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 1
-                    Position.RowIndex = 0
                   end
-                  object tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBBandedColumn
+                  object tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBColumn
                     Caption = 'Sku'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_ARTTAR'
                     Width = 237
-                    Position.BandIndex = 1
-                    Position.ColIndex = 2
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasDESCRIPCION_ARTICULO: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasDESCRIPCION_ARTICULO: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
                     DataBinding.FieldName = 'DESCRIPCION_ART'
                     Visible = False
                     VisibleForCustomization = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 3
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasTIPO_CANTIDAD_ARTICULO: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasTIPO_CANTIDAD_ARTICULO: TcxGridDBColumn
                     Caption = 'Tipo Cantidad'
                     DataBinding.FieldName = 'TIPO_CANTIDAD_ART'
                     Visible = False
                     VisibleForCustomization = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 4
-                    Position.RowIndex = 0
                   end
-                  object dbcTarifasPRECIOSALIDA: TcxGridDBBandedColumn
+                  object dbcTarifasPRECIOSALIDA: TcxGridDBColumn
                     Caption = 'Precio Salida'
                     DataBinding.FieldName = 'PRECIO_SALIDA_ARTTAR'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = dbcTarifasPRECIOSALIDAPropertiesEditValueChanged
                     Width = 125
-                    Position.BandIndex = 1
-                    Position.ColIndex = 5
-                    Position.RowIndex = 0
                   end
-                  object dbcTarifasPORCEN_DTO_TARIFA: TcxGridDBBandedColumn
+                  object dbcTarifasPORCEN_DTO_TARIFA: TcxGridDBColumn
                     Caption = '% Descuento'
                     DataBinding.FieldName = 'PORCENTAJE_DTO_ARTTAR'
                     PropertiesClassName = 'TcxSpinEditProperties'
@@ -1006,31 +974,22 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Properties.EditFormat = '#,## %'
                     Properties.OnEditValueChanged = dbcTarifasPORCEN_DTO_TARIFAPropertiesEditValueChanged
                     Width = 137
-                    Position.BandIndex = 1
-                    Position.ColIndex = 6
-                    Position.RowIndex = 0
                   end
-                  object dbcTarifasPRECIO_DTO_TARIFA: TcxGridDBBandedColumn
+                  object dbcTarifasPRECIO_DTO_TARIFA: TcxGridDBColumn
                     Caption = 'Euros descuento'
                     DataBinding.FieldName = 'PRECIO_DTO_ARTTAR'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = dbcTarifasPRECIO_DTO_TARIFAPropertiesEditValueChanged
                     Width = 155
-                    Position.BandIndex = 1
-                    Position.ColIndex = 7
-                    Position.RowIndex = 0
                   end
-                  object dbcTarifasPRECIOFINAL: TcxGridDBBandedColumn
+                  object dbcTarifasPRECIOFINAL: TcxGridDBColumn
                     Caption = 'Precio Final'
                     DataBinding.FieldName = 'PRECIO_FINAL_ARTTAR'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = dbcTarifasPRECIOFINALPropertiesEditValueChanged
                     Width = 144
-                    Position.BandIndex = 1
-                    Position.ColIndex = 8
-                    Position.RowIndex = 0
                   end
-                  object dbcTarifasMARGEN: TcxGridDBBandedColumn
+                  object dbcTarifasMARGEN: TcxGridDBColumn
                     Caption = 'Margen'
                     DataBinding.FieldName = 'CODIGO_UNICO_ARTTAR'
                     PropertiesClassName = 'TcxButtonEditProperties'
@@ -1043,163 +1002,109 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Properties.OnButtonClick = dbcTarifasMARGENButtonClick
                     OnGetDisplayText = dbcTarifasMARGENGetDisplayText
                     Width = 90
-                    Position.BandIndex = 1
-                    Position.ColIndex = 9
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasTIPO_IVA_ARTICULO: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasTIPO_IVA_ARTICULO: TcxGridDBColumn
                     Caption = 'Tipo IVA'
                     DataBinding.FieldName = 'TIPO_IVA_ARTICULO'
                     Visible = False
                     VisibleForCustomization = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 26
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasACTIVO_TARIFA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasACTIVO_TARIFA: TcxGridDBColumn
                     Caption = 'Tarifa Activa'
                     DataBinding.FieldName = 'ESACTIVO_ARTTAR'
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
                     Width = 125
-                    Position.BandIndex = 1
-                    Position.ColIndex = 10
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasFECHA_DESDE_TARIFA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasFECHA_DESDE_TARIFA: TcxGridDBColumn
                     Caption = 'Fecha Desde'
                     DataBinding.FieldName = 'FECHA_DESDE_ARTTAR'
                     Width = 127
-                    Position.BandIndex = 1
-                    Position.ColIndex = 11
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasFECHA_HASTA_TARIFA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasFECHA_HASTA_TARIFA: TcxGridDBColumn
                     Caption = 'Fecha Hasta'
                     DataBinding.FieldName = 'FECHA_HASTA_ARTTAR'
                     Width = 119
-                    Position.BandIndex = 1
-                    Position.ColIndex = 12
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasCODIGO_PROVEEDOR: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasCODIGO_PROVEEDOR: TcxGridDBColumn
                     Caption = 'C'#243'digo Proveedor'
                     DataBinding.FieldName = 'CODIGO_PRV_PRV'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
                     Width = 175
-                    Position.BandIndex = 1
-                    Position.ColIndex = 13
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasRAZONSOCIAL_PROVEEDOR: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn
                     Caption = 'Nombre Proveedor'
                     DataBinding.FieldName = 'RAZON_SOCIAL_PRV'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
                     Width = 260
-                    Position.BandIndex = 1
-                    Position.ColIndex = 14
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasPRECIO_ULT_COMPRA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasPRECIO_ULT_COMPRA: TcxGridDBColumn
                     Caption = 'Precio '#218'lt Compra'
                     DataBinding.FieldName = 'PRECIO_ULT_COMPRA'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.ReadOnly = True
                     Width = 176
-                    Position.BandIndex = 1
-                    Position.ColIndex = 15
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasFECHA_VALIDEZ: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasFECHA_VALIDEZ: TcxGridDBColumn
                     Caption = 'Fecha Validez'
                     DataBinding.FieldName = 'FECHA_VALIDEZ'
                     PropertiesClassName = 'TcxDateEditProperties'
                     Properties.ReadOnly = True
                     Width = 136
-                    Position.BandIndex = 1
-                    Position.ColIndex = 16
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasCODIGO_FAMILIA_ARTICULO: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasCODIGO_FAMILIA_ARTICULO: TcxGridDBColumn
                     Caption = 'Familia'
                     DataBinding.FieldName = 'CODIGO_FAM_ART'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
                     Visible = False
                     Width = 252
-                    Position.BandIndex = 1
-                    Position.ColIndex = 17
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasDESCRIPCION_FAMILIA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasDESCRIPCION_FAMILIA: TcxGridDBColumn
                     Caption = 'Descripci'#243'n Familia'
                     DataBinding.FieldName = 'DESCRIPCION_FAM'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
                     Visible = False
                     Width = 339
-                    Position.BandIndex = 1
-                    Position.ColIndex = 18
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasINSTANTEALTA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasINSTANTEALTA: TcxGridDBColumn
                     Caption = 'Fecha Alta'
                     DataBinding.FieldName = 'INSTANTE_ALTA'
                     Visible = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 19
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasINSTANTEMODIF: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasINSTANTEMODIF: TcxGridDBColumn
                     Caption = 'Fecha Modif.'
                     DataBinding.FieldName = 'INSTANTE_MODIF'
                     Visible = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 20
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasUSUARIOALTA: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasUSUARIOALTA: TcxGridDBColumn
                     Caption = 'Usuario Alta'
                     DataBinding.FieldName = 'USUARIO_ALTA'
                     Visible = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 21
-                    Position.RowIndex = 0
                   end
-                  object cxgrdbclmnTarifasUSUARIOMODIF: TcxGridDBBandedColumn
+                  object cxgrdbclmnTarifasUSUARIOMODIF: TcxGridDBColumn
                     Caption = 'Usuario Modif.'
                     DataBinding.FieldName = 'USUARIO_MODIF'
                     Visible = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 22
-                    Position.RowIndex = 0
                   end
-                  object dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBBandedColumn
+                  object dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBColumn
                     Caption = 'C'#243'd. '#218'nico'
                     DataBinding.FieldName = 'CODIGO_UNICO_ARTTAR'
                     Visible = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 23
-                    Position.RowIndex = 0
                   end
-                  object tvTarifasESVARIACION_ARTICULO: TcxGridDBBandedColumn
+                  object tvTarifasESVARIACION_ARTICULO: TcxGridDBColumn
                     Caption = 'Variaci'#243'n'
                     DataBinding.FieldName = 'ESVARIACION_ART'
                     Visible = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 24
-                    Position.RowIndex = 0
                   end
-                  object tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBBandedColumn
+                  object tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBColumn
                     Caption = 'N'#186' Atributos'
                     DataBinding.FieldName = 'NUM_ATRIBUTOS_REQ'
                     Visible = False
-                    Position.BandIndex = 1
-                    Position.ColIndex = 25
-                    Position.RowIndex = 0
                   end
                 end
                 object cxgrdlvlTarifas: TcxGridLevel

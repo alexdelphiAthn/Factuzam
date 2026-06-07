@@ -1137,7 +1137,7 @@ begin
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
-      '       IFNULL(stk.CANTIDAD_STK, 0)        AS CANTIDAD_ARTVIN, ' +
+      '       IFNULL(stk.CANTIDAD_STK, 0)        AS CANTIDAD, ' +
       '       IFNULL(stk.PRECIO_MEDIO_STK, 0)    AS PMP ' +
       '  FROM fza_articulos_skus s ' +
       '  JOIN fza_articulos a ' +
@@ -1171,10 +1171,10 @@ begin
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString :=
             qry.FieldByName('DESCRIPCION_ART').AsString;
           cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   :=
-            qry.FieldByName('CANTIDAD_ARTVIN').AsCurrency;
+            qry.FieldByName('CANTIDAD').AsCurrency;
           // por defecto = teórica
           cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    :=
-            qry.FieldByName('CANTIDAD_ARTVIN').AsCurrency;
+            qry.FieldByName('CANTIDAD').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       :=
             qry.FieldByName('PMP').AsCurrency;
           // por defecto = anterior
@@ -1209,7 +1209,7 @@ begin
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
-      '       IFNULL(stk.CANTIDAD_STK, 0)     AS CANTIDAD_ARTVIN, ' +
+      '       IFNULL(stk.CANTIDAD_STK, 0)     AS CANTIDAD, ' +
       '       IFNULL(stk.PRECIO_MEDIO_STK, 0) AS PMP ' +
       '  FROM fza_articulos_proveedores ap ' +
       '  JOIN fza_articulos a ' +
@@ -1244,9 +1244,9 @@ begin
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString :=
             qry.FieldByName('DESCRIPCION_ART').AsString;
           cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   :=
-            qry.FieldByName('CANTIDAD_ARTVIN').AsCurrency;
+            qry.FieldByName('CANTIDAD').AsCurrency;
           cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    :=
-            qry.FieldByName('CANTIDAD_ARTVIN').AsCurrency;
+            qry.FieldByName('CANTIDAD').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       :=
             qry.FieldByName('PMP').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
@@ -1280,7 +1280,7 @@ begin
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
-      '       stk.CANTIDAD_STK     AS CANTIDAD_ARTVIN, ' +
+      '       stk.CANTIDAD_STK     AS CANTIDAD, ' +
       '       stk.PRECIO_MEDIO_STK AS PMP ' +
       '  FROM fza_articulos_skus s ' +
       '  JOIN fza_articulos a ' +
@@ -1312,9 +1312,9 @@ begin
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString :=
             qry.FieldByName('DESCRIPCION_ART').AsString;
           cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   :=
-            qry.FieldByName('CANTIDAD_ARTVIN').AsCurrency;
+            qry.FieldByName('CANTIDAD').AsCurrency;
           cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    :=
-            qry.FieldByName('CANTIDAD_ARTVIN').AsCurrency;
+            qry.FieldByName('CANTIDAD').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       :=
             qry.FieldByName('PMP').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
@@ -1339,7 +1339,7 @@ var
   NumLinea: Integer;
 begin
   // "Completar" significa: traer al inventario todos los SKUs con stock que NO
-  // estén ya en el inventario actual, asignándoles cantidad_artvin física = 0
+  // estén ya en el inventario actual, asignándoles cantidad física = 0
   // (porque NO se han contado / son los que faltan).
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create('Solo se puede completar un inventario ABIERTO');
@@ -1350,7 +1350,7 @@ begin
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
-      '       stk.CANTIDAD_STK     AS CANTIDAD_ARTVIN, ' +
+      '       stk.CANTIDAD_STK     AS CANTIDAD, ' +
       '       stk.PRECIO_MEDIO_STK AS PMP ' +
       '  FROM fza_articulos_skus s ' +
       '  JOIN fza_articulos a ' +
@@ -1389,8 +1389,8 @@ begin
         cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString :=
           qry.FieldByName('DESCRIPCION_ART').AsString;
         cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   :=
-          qry.FieldByName('CANTIDAD_ARTVIN').AsCurrency;
-        // OJO: en COMPLETAR, la cantidad_artvin física es 0 — porque por
+          qry.FieldByName('CANTIDAD').AsCurrency;
+        // OJO: en COMPLETAR, la cantidad física es 0 — porque por
         // definición no se ha contado
         cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    := 0;
         cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       :=
@@ -1634,11 +1634,11 @@ procedure TdmInventarios.CargarDesdeListaSkus(ALista: TStringList);
 var
   i, NumLinea: Integer;
   Sku, ArticuloPadre: string;
-  CANTIDAD_ARTVIN, PMP: Currency;
+  CANTIDAD, PMP: Currency;
   qry: TUniQuery;
 begin
   // Cada línea de la lista debe tener: SKU;CANTIDAD_FISICA  (separador ; o tab)
-  // O bien solo el SKU (cantidad_artvin física = 1)
+  // O bien solo el SKU (cantidad física = 1)
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create(
       'Solo se pueden cargar artículos en un inventario ABIERTO');
@@ -1662,7 +1662,7 @@ begin
           Sku := Trim(ALista[i]);
         if Sku = '' then Continue;
 
-        CANTIDAD_ARTVIN := StrToCurrDef(ALista.ValueFromIndex[i], 1);
+        CANTIDAD := StrToCurrDef(ALista.ValueFromIndex[i], 1);
 
         qry.Close;
         qry.ParamByName('SKU').AsString := Sku;
@@ -1677,7 +1677,7 @@ begin
         unqryStockActual.ParamByName('SKU').AsString     := Sku;
         unqryStockActual.Open;
 
-        // Si el SKU ya existe en el inventario, sumamos cantidad_artvin
+        // Si el SKU ya existe en el inventario, sumamos cantidad
         if ExisteLineaConSku(Sku) then
         begin
           if cdsLineas.Locate('CODIGO_UNIDAD_INVLIN',
@@ -1687,7 +1687,7 @@ begin
             cdsLineas.Edit;
             cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency :=
               cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency
-                + CANTIDAD_ARTVIN;
+                + CANTIDAD;
             cdsLineas.Post;
           end;
         end
@@ -1703,7 +1703,7 @@ begin
           cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   :=
             unqryStockActual.FieldByName('CANTIDAD_STK').AsCurrency;
           cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    :=
-            CANTIDAD_ARTVIN;
+            CANTIDAD;
           cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       :=
             unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=

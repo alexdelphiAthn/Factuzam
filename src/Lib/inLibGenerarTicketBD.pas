@@ -25,6 +25,7 @@ uses
   inLibFTicket,        // Donde está tu TTicketTermico
   inMtoPreviewTicket,  // Donde está tu TFormVisualizador
   inLibData,
+  inLibUnidadesMedida, // Decimales por unidad en la cantidad
   inLibDir;            // Para GetUserFolderTickets
 
   /// <summary>
@@ -529,8 +530,11 @@ begin
         begin
           var sArt := Format('%-26s', [Copy(QryLin.FieldByName(
                               'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
-          var sUds := Format('%4s', [FloatToStr(QryLin.FieldByName(
-                                           'CANTIDAD_FACLIN').AsFloat)]);
+          var sUni := '';
+          if QryLin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN') <> nil then
+            sUni := QryLin.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
+          var sUds := Format('%4s', [oUnidades.Formatear(QryLin.FieldByName(
+                                           'CANTIDAD_FACLIN').AsFloat, sUni)]);
           var sPre := FormatFloat('#,##0.00',
                    QryLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
           Ticket.TextoColumnas(sArt + sUds, sPre);
@@ -769,10 +773,10 @@ begin
                                'FECHA_CREACION_DEP').AsDateTime);
             var SkuDep   := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
             var Precio   := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
-            var CANTIDAD_ARTVIN :=
+            var Cantidad :=
               QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
-            if CANTIDAD_ARTVIN = 0 then CANTIDAD_ARTVIN := 1;
-            var TotalDep  := Precio * CANTIDAD_ARTVIN;
+            if Cantidad = 0 then Cantidad := 1;
+            var TotalDep  := Precio * Cantidad;
             var Anticipo  :=
               QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
             var Pendiente := TotalDep - Anticipo;
