@@ -399,6 +399,7 @@ const
     '       ISNULL(c.ValePromocion, 0) AS ValePromocion, ' +
     '       ISNULL(c.Descripcion, '''') AS Descripcion, ' +
     '       c.NroFactura, ISNULL(c.SerieFactura, '''') AS SerieFactura, ' +
+    '       ISNULL(c.NroDoc, 0) AS NroDoc, ' +
     '       c.Ejercicio, ISNULL(c.Serie, '''') AS Serie, ' +
     '       c.EmpresaDes, c.AlmacenDes ' +
     'FROM dbo.occaj c ' +
@@ -443,6 +444,7 @@ const
 var
   qSrc, qOp, qPago, qDep:    TUniQuery;
   iEmp, iAlm, iCaja, iOpe:   Integer;
+  iNroDoc:                   Integer;
   iLineaPago:                Integer;
   sEmp, sAlm, sCaja, sNum:   string;
   sTipoOp, sCli, sConcepto:  string;
@@ -498,6 +500,7 @@ begin
       iAlm  := qSrc.FieldByName('Almacen').AsInteger;
       iCaja := qSrc.FieldByName('Caja').AsInteger;
       iOpe  := qSrc.FieldByName('Operacion').AsInteger;
+      iNroDoc := qSrc.FieldByName('NroDoc').AsInteger;
       sEmp  := IntToStr(iEmp);
       sCaja := IntToStr(iCaja);
       sNum  := Format('%.8d', [iOpe]);
@@ -554,10 +557,11 @@ begin
       qOp.ParamByName('num').AsString  := sNum;
       // SERIE_FAC_OPCAJA / NUMERO_FAC_OPCAJA deben CUADRAR con la clave que
       // genera la migracion de facturas (SERIE = '<Ejercicio>.<Serie>',
-      // NUMERO = '<Alm>-<Caja>-<Op>'), porque el ticket y la consulta de
-      // operaciones enlazan operacion -> factura por esas columnas. Solo las
-      // VENTA (TipoDoc='VE' y Tipo<>'C') generan factura; el resto la deja
-      // vacia. (Antes se copiaba NroFactura/SerieFactura del legacy y no
+      // NUMERO = '<Alm>-<Caja>-<NroDoc>'), porque el ticket y la consulta de
+      // operaciones enlazan operacion -> factura por esas columnas. NroDoc es
+      // el nº de documento/ticket del legacy (NO la Operacion, id interno).
+      // Solo las VENTA (TipoDoc='VE' y Tipo<>'C') generan factura; el resto la
+      // deja vacia. (Antes se copiaba NroFactura/SerieFactura del legacy y no
       // casaba, asi que el ticket reimpreso salia sin detalle.)
       if (UpperCase(Trim(qSrc.FieldByName('TipoDoc').AsString)) = 'VE')
       and (UpperCase(Trim(qSrc.FieldByName('Tipo').AsString)) <> 'C') then
@@ -566,7 +570,7 @@ begin
           Format('%d.%s', [qSrc.FieldByName('Ejercicio').AsInteger,
                  Trim(qSrc.FieldByName('Serie').AsString)]);
         qOp.ParamByName('nfac').AsString :=
-          Format('%d-%d-%d', [iAlm, iCaja, iOpe]);
+          Format('%d-%d-%d', [iAlm, iCaja, iNroDoc]);
       end
       else
       begin

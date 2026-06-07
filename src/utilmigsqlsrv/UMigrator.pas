@@ -156,7 +156,8 @@ uses
   inLibMigArticulosProveedores,
   inLibMigArticulosPropiedades,
   inLibMigArticulosTarifas,
-  inLibMigEntorno;
+  inLibMigEntorno,
+  inLibMigCompras;
 
 // =========================================================================
 //  Lifecycle
@@ -360,6 +361,14 @@ begin
   FEngine.Registrar('entorno_series', 'Series por empresa (ocseract)',
     'dbo.ocseract → fza_empresas_series',
     MigrarEntornoSeries);
+  // Compras: pedidos y albaranes de entrada (modelo plano, sin celdas; ver
+  // inLibMigCompras / migracion_compras.md).
+  FEngine.Registrar('pedidos_compra', 'Pedidos de compra (ocped)',
+    'dbo.ocped → fza_pedidos_compra + lineas',
+    MigrarPedidosCompra);
+  FEngine.Registrar('albaranes_compra', 'Albaranes de compra (ocalbpro)',
+    'dbo.ocalbpro → fza_albaranes_compra + lineas',
+    MigrarAlbaranesCompra);
 end;
 
 procedure TFormMigrator.RecargarListado;
@@ -898,8 +907,11 @@ begin
      (sCodigo = 'entorno_cajas')            or
      (sCodigo = 'entorno_series')           or
      (sCodigo = 'skus')                     then Exit(2);
-  if (sCodigo = 'inventarios') or (sCodigo = 'movimientos')
-  or (sCodigo = 'ventas') then Exit(3);
+  // Compras (pedidos/albaranes) solo necesitan empresas, almacenes,
+  // proveedores y SKUs (waves 0-2); no dependen de movimientos ni facturas.
+  if (sCodigo = 'inventarios')      or (sCodigo = 'movimientos')
+  or (sCodigo = 'ventas')           or (sCodigo = 'pedidos_compra')
+  or (sCodigo = 'albaranes_compra') then Exit(3);
   // facturas va DESPUES de movimientos: al terminar enlaza cada movimiento
   // con su factura (REF_MOV) y necesita los movimientos ya migrados.
   if (sCodigo = 'facturas') then Exit(4);
