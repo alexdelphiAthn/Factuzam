@@ -17,16 +17,18 @@ depósito) y traspasos (`TR`/`AT`).
 
 ## Numeración (determinista, trazable)
 
-- `SERIE_FAC` = `'<Ejercicio>.<Serie>'` (p.ej. `2001.B1`).
-- `NUMERO_FAC` = `'<Almacen>-<Caja>-<NroDoc>'` (p.ej. `12-1-61258`).
+- `SERIE_FAC` = `'<Ejercicio>.<Serie>'` (p.ej. `2007.A1`).
+- `NUMERO_FAC` = `NroDoc` (el **nº de factura** del legacy, p.ej. `61258`).
 
-`NroDoc` es el **nº de documento/ticket** del legacy (`occaj.NroDoc`), el que
-ve el usuario en el ticket — **no** la `Operacion` (id interno, otro contador).
-Antes se usaba `Operacion` y el número no coincidía con el del ticket original.
-Único por almacén/caja dentro de su `SERIE_FAC` (= ejercicio.serie); si el
-legacy reusara `NroDoc` dentro de la misma serie/ejercicio, el `INSERT IGNORE`
-descartaría el duplicado (poco probable, pero a vigilar). En instalación
-**multiempresa** habría que prefijar la empresa.
+En `occaj` el **número de factura es `NroDoc`** (correlativo por serie para las
+ventas) — **no** la `Operacion` (id interno) ni un compuesto con almacén/caja, y
+**no** `NroFactura`/`SerieFactura` (vienen vacíos en venta detalle). El número
+queda limpio, tal como lo ve el usuario. La identidad es
+`(CODIGO_EMP_FAC, SERIE_FAC, NUMERO_FAC)`: `SERIE_FAC` (ejercicio.serie)
+discrimina, así que dos ejercicios/series con el mismo `NroDoc` no chocan.
+**Supuesto**: `NroDoc` es único dentro de su `(empresa, ejercicio, serie)` para
+las ventas (requisito fiscal). Si una instalación reusara `NroDoc` entre
+almacenes que comparten serie, habría colisión de PK — a vigilar al migrar.
 
 Cada **línea** enlaza:
 - con su operación de caja: `NUMERO_OPERACION_FACLIN` = `Operacion` a 8 dígitos
@@ -115,8 +117,7 @@ Tras las dos pasadas, `EnlazarFacturas` ejecuta dos `UPDATE` set-based:
 El **ticket** reimpreso enlaza operación → factura por
 `fza_caja_operaciones.SERIE_FAC_OPCAJA`/`NUMERO_FAC_OPCAJA`; por eso la
 migración de **Ventas** rellena esas columnas con la MISMA clave de factura
-(`'<Ejercicio>.<Serie>'` / `'<Alm>-<Caja>-<NroDoc>'`) en las operaciones de
-venta.
+(`'<Ejercicio>.<Serie>'` / `NroDoc`) en las operaciones de venta.
 
 La pestaña **"Movimientos"** de la factura lista `vi_movimientos` filtrando por
 `TIPO_DOC_REF_MOV='FC'` + `SERIE/NUMERO_DOC_REF_MOV`, y **muestra y ordena por
