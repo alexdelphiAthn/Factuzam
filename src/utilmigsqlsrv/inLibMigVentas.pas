@@ -399,6 +399,7 @@ const
     '       ISNULL(c.ValePromocion, 0) AS ValePromocion, ' +
     '       ISNULL(c.Descripcion, '''') AS Descripcion, ' +
     '       c.NroFactura, ISNULL(c.SerieFactura, '''') AS SerieFactura, ' +
+    '       c.Ejercicio, ISNULL(c.Serie, '''') AS Serie, ' +
     '       c.EmpresaDes, c.AlmacenDes ' +
     'FROM dbo.occaj c ' +
     'LEFT JOIN dbo.ocalm alm ON alm.Empresa = c.Empresa ' +
@@ -551,12 +552,21 @@ begin
       qOp.ParamByName('alm').AsString  := sAlm;
       qOp.ParamByName('caja').AsString := sCaja;
       qOp.ParamByName('num').AsString  := sNum;
-      if qSrc.FieldByName('NroFactura').AsInteger > 0 then
+      // SERIE_FAC_OPCAJA / NUMERO_FAC_OPCAJA deben CUADRAR con la clave que
+      // genera la migracion de facturas (SERIE = '<Ejercicio>.<Serie>',
+      // NUMERO = '<Alm>-<Caja>-<Op>'), porque el ticket y la consulta de
+      // operaciones enlazan operacion -> factura por esas columnas. Solo las
+      // VENTA (TipoDoc='VE' y Tipo<>'C') generan factura; el resto la deja
+      // vacia. (Antes se copiaba NroFactura/SerieFactura del legacy y no
+      // casaba, asi que el ticket reimpreso salia sin detalle.)
+      if (UpperCase(Trim(qSrc.FieldByName('TipoDoc').AsString)) = 'VE')
+      and (UpperCase(Trim(qSrc.FieldByName('Tipo').AsString)) <> 'C') then
       begin
-        qOp.ParamByName('nfac').AsString :=
-          IntToStr(qSrc.FieldByName('NroFactura').AsInteger);
         qOp.ParamByName('sfac').AsString :=
-          Trim(qSrc.FieldByName('SerieFactura').AsString);
+          Format('%d.%s', [qSrc.FieldByName('Ejercicio').AsInteger,
+                 Trim(qSrc.FieldByName('Serie').AsString)]);
+        qOp.ParamByName('nfac').AsString :=
+          Format('%d-%d-%d', [iAlm, iCaja, iOpe]);
       end
       else
       begin

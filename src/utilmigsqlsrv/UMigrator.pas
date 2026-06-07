@@ -899,7 +899,10 @@ begin
      (sCodigo = 'entorno_series')           or
      (sCodigo = 'skus')                     then Exit(2);
   if (sCodigo = 'inventarios') or (sCodigo = 'movimientos')
-  or (sCodigo = 'ventas') or (sCodigo = 'facturas') then Exit(3);
+  or (sCodigo = 'ventas') then Exit(3);
+  // facturas va DESPUES de movimientos: al terminar enlaza cada movimiento
+  // con su factura (REF_MOV) y necesita los movimientos ya migrados.
+  if (sCodigo = 'facturas') then Exit(4);
   // Default: wave 0 (conservador, sin deps conocidas)
   Result := 0;
 end;
@@ -947,7 +950,7 @@ begin
       iMaxHilos := task.Param['MaxHilos'].AsInteger;
       if iMaxHilos < 1 then iMaxHilos := 1;
 
-      for iWave := 0 to 3 do
+      for iWave := 0 to 4 do
       begin
         if task.CancellationToken.IsSignalled then Break;
 
