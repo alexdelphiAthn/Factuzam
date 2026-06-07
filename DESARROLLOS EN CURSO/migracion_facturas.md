@@ -85,11 +85,32 @@ arranca al instante y la barra avanza desde la primera fila; la cabecera ya no
 necesita deduplicar (sale una por fila de `occaj`). Se ven dos fases en el log:
 `facturas 1/2: cabeceras` y `facturas 2/2: lineas`.
 
+## Enlaces post-inserción (al final del dominio)
+
+Tras las dos pasadas, `EnlazarFacturas` ejecuta dos `UPDATE` set-based:
+
+1. **Empresa emisora + flags**: rellena en la cabecera los datos del emisor
+   (`RAZON_SOCIAL_EMPRESA_FAC`, `NIF_EMPRESA_FAC`, dirección, población…) desde
+   `fza_empresas` (`LEFT JOIN` por `CODIGO_EMP`), que antes quedaban vacíos
+   (pestaña "Datos Empresa Emisora" en blanco). Además fija
+   `ESFECHADEENTREGA_FAC`, `ESDESCRIPCIONES_AMP_FAC` y `ESCREARARTICULOS_FAC`
+   a `'N'`.
+2. **Movimiento → factura**: pone `TIPO_DOC_REF_MOV='FC'` y
+   `SERIE/NUMERO/LINEA_DOC_REF_MOV` en `fza_movimientos_almacen` uniendo por
+   `NUMERO_MOV` (= `fza_facturas_lineas.NUMERO_MOV_FACLIN`). Sin esto la
+   pestaña "Movimientos" de la factura sale vacía (la app filtra por esas
+   columnas `*_DOC_REF_MOV`).
+
+El **ticket** reimpreso enlaza operación → factura por
+`fza_caja_operaciones.SERIE_FAC_OPCAJA`/`NUMERO_FAC_OPCAJA`; por eso la
+migración de **Ventas** rellena esas columnas con la MISMA clave de factura
+(`'<Ejercicio>.<Serie>'` / `'<Alm>-<Caja>-<Op>'`) en las operaciones de venta.
+
 ## Cómo ejecutarlo
 
-Dominio **"Facturas de venta (occajarp)"** (wave 3). Requisitos: Almacenes,
-Clientes y SKUs migrados. Coherente con "Ventas / Caja" (comparten
-`NUMERO_OPERACION`) y con "Movimientos" (comparten `NUMERO_MOV`).
+Dominio **"Facturas de venta (occajarp)"** (**wave 4**, después de Movimientos
+de la wave 3: el enlace `*_DOC_REF_MOV` necesita los movimientos ya migrados).
+Requisitos: Almacenes, Empresas, Clientes, SKUs y Movimientos migrados.
 
 ## Pendiente / a revisar
 

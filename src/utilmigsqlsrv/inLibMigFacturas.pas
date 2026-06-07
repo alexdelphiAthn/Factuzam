@@ -219,6 +219,62 @@ begin
 end;
 
 // =========================================================================
+//  Enlaces post-insercion (empresa emisora, flags y referencia de
+//  movimientos). Corren al final, ya con cabeceras, lineas y movimientos
+//  presentes (por eso facturas va en una wave posterior a movimientos).
+// =========================================================================
+procedure EnlazarFacturas(Eng: TMigEngine);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    // 1) Datos de la EMPRESA EMISORA denormalizados en la cabecera (estaban
+    //    vacios) + flags por defecto a 'N' (fecha entrega, descripcion
+    //    ampliada, crear articulos). LEFT JOIN: si la empresa no se migro,
+    //    los datos quedan NULL pero los flags se fijan igual.
+    q.SQL.Text :=
+      'UPDATE fza_facturas f ' +
+      'LEFT JOIN fza_empresas e ON e.CODIGO_EMP_EMP = f.CODIGO_EMP_FAC ' +
+      'SET f.ESFECHADEENTREGA_FAC      = ''N'', ' +
+      '    f.ESDESCRIPCIONES_AMP_FAC   = ''N'', ' +
+      '    f.ESCREARARTICULOS_FAC      = ''N'', ' +
+      '    f.RAZON_SOCIAL_EMPRESA_FAC  = e.RAZON_SOCIAL_EMP, ' +
+      '    f.NIF_EMPRESA_FAC           = e.NIF_EMP, ' +
+      '    f.MOVIL_EMPRESA_FAC         = e.MOVIL_EMP, ' +
+      '    f.EMAIL_EMPRESA_FAC         = e.EMAIL_EMP, ' +
+      '    f.DIRECCION1_EMPRESA_FAC    = e.DIRECCION1_EMP, ' +
+      '    f.DIRECCION2_EMPRESA_FAC    = e.DIRECCION2_EMP, ' +
+      '    f.POBLACION_EMPRESA_FAC     = e.POBLACION_EMP, ' +
+      '    f.PROVINCIA_EMPRESA_FAC     = e.PROVINCIA_EMP, ' +
+      '    f.CODIGO_POSTAL_EMPRESA_FAC = e.CODIGO_POSTAL_EMP ' +
+      'WHERE f.USUARIO_ALTA = :u';
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.ExecSQL;
+    Eng.Log('  facturas: datos de empresa emisora y flags (N) rellenados.');
+    // 2) Enlace MOVIMIENTO -> FACTURA por NUMERO_MOV. Sin esto, la pestana
+    //    "Movimientos" de la factura y el detalle del ticket no encuentran
+    //    los movimientos (la app filtra por TIPO/SERIE/NUMERO/LINEA _DOC_REF).
+    q.SQL.Text :=
+      'UPDATE fza_movimientos_almacen m ' +
+      'JOIN fza_facturas_lineas l ON l.NUMERO_MOV_FACLIN = m.NUMERO_MOV ' +
+      'SET m.TIPO_DOC_REF_MOV   = ''FC'', ' +
+      '    m.SERIE_DOC_REF_MOV  = l.SERIE_FAC_FACLIN, ' +
+      '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +
+      '    m.LINEA_REF_MOV      = l.LINEA_FACLIN ' +
+      'WHERE l.USUARIO_ALTA = :u ' +
+      '  AND l.NUMERO_MOV_FACLIN IS NOT NULL ' +
+      '  AND l.NUMERO_MOV_FACLIN <> ''''';
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.ExecSQL;
+    Eng.Log('  facturas: movimientos enlazados a su factura (REF_MOV).');
+  finally
+    q.Free;
+  end;
+end;
+
+// =========================================================================
 //  Migrador principal
 // =========================================================================
 
@@ -526,6 +582,11 @@ begin
     bulkLin.Free;
     qLin.Free;
   end;
+  // Post-proceso: empresa emisora + flags en la cabecera y enlace de
+  // movimientos a la factura. Requiere movimientos ya migrados (facturas
+  // corre en una wave posterior).
+  if not Eng.IsCancelado then
+    EnlazarFacturas(Eng);
 end;
 
 end.
