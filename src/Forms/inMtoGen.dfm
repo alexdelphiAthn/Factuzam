@@ -753,5 +753,17 @@ inherited frmMtoGen: TfrmMtoGen
       ShortCut = 16469
       OnExecute = actConsultaStockExecute
     end
+    object actRetrocederBloque: TAction
+      Caption = 'Retroceder bloque'
+      ShortCut = 16417
+      OnExecute = actRetrocederBloqueExecute
+      OnUpdate = actNavBrowseUpdate
+    end
+    object actAvanzarBloque: TAction
+      Caption = 'Avanzar bloque'
+      ShortCut = 16418
+      OnExecute = actAvanzarBloqueExecute
+      OnUpdate = actNavBrowseUpdate
+    end
   end
 end
