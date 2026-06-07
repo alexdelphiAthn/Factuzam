@@ -151,6 +151,8 @@ uses
   inLibMigMovimientos,
   inLibMigVentas,
   inLibMigFacturas,
+  inLibMigVales,
+  inLibMigArqueos,
   inLibMigTallajes,
   inLibMigArticulosTallajes,
   inLibMigArticulosProveedores,
@@ -344,6 +346,12 @@ begin
   FEngine.Registrar('facturas', 'Facturas de venta (occajarp)',
     'dbo.occaj/occajarp → fza_facturas + fza_facturas_lineas',
     MigrarFacturas);
+  FEngine.Registrar('vales', 'Vales de tienda (occajvale)',
+    'dbo.occajvale → fza_caja_vales',
+    MigrarVales);
+  FEngine.Registrar('arqueos', 'Arqueos / cierres Z (ocarqueonew)',
+    'dbo.ocarqueonew → fza_caja_arqueos + fza_caja_arqueos_recuento',
+    MigrarArqueos);
   FEngine.Registrar('articulos_proveedores',
     'Proveedor y modelo por artículo',
     'ocartp.Proveedor + Modelo → fza_articulos_proveedores',

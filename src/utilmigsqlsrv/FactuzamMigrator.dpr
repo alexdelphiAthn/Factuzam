@@ -19,6 +19,8 @@ uses
   inLibMigMovimientos in 'inLibMigMovimientos.pas',
   inLibMigVentas in 'inLibMigVentas.pas',
   inLibMigFacturas in 'inLibMigFacturas.pas',
+  inLibMigVales in 'inLibMigVales.pas',
+  inLibMigArqueos in 'inLibMigArqueos.pas',
   inLibMigTallajes in 'inLibMigTallajes.pas',
   inLibMigArticulosTallajes in 'inLibMigArticulosTallajes.pas',
   inLibMigArticulosProveedores in 'inLibMigArticulosProveedores.pas',
