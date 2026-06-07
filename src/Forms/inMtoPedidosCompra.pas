@@ -48,6 +48,12 @@ uses
 const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
+  // Ancho (px) de cada columna talla en modo pivote. Tambien actua de
+  // suelo tras ApplyBestFit: el BestFit mide solo el Value numerico corto
+  // de la celda y, al ignorar el custom-draw (rotulo de talla + sub-cifras
+  // Pedido/Recibido/A recibir), dejaria las columnas tan estrechas que el
+  // rotulo de 2 digitos (p.ej. "36") se corta a "3".
+  ANCHO_TALLA_PX  = 50;
 
 type
   TfrmMtoPedidosCompra = class(TfrmMtoGen)
@@ -331,7 +337,7 @@ begin
     col := tvLineasPedido.CreateColumn;
     col.Name    := 'dbcLinPedcTalla' + Format('%.2d', [i + 1]);
     col.Caption := '';
-    col.Width   := 50;
+    col.Width   := ANCHO_TALLA_PX;
     col.Tag     := i + 1;
     col.Visible := False;
     col.DataBinding.ValueTypeClass := TcxFloatValueType;
@@ -713,11 +719,22 @@ end;
 // el ancho del texto. Sin este ajuste la columna Color queda recortada
 // (se ve "ERD" en vez de "VERDE", etc) cuando hay swatch.
 procedure TfrmMtoPedidosCompra.BestFitConSwatch;
+var
+  i: Integer;
 begin
   if tvLineasPedido = nil then Exit;
   tvLineasPedido.ApplyBestFit;
   if Assigned(FColColorPivot) and FColColorPivot.Visible then
     FColColorPivot.Width := FColColorPivot.Width + ANCHO_SWATCH_PX;
+  // Suelo de ancho para las columnas talla: ApplyBestFit las mide por el
+  // Value numerico corto e ignora el custom-draw (rotulo de talla +
+  // sub-cifras), dejandolas tan estrechas que el rotulo "36"/"38" se corta
+  // a "3". Restauramos el ancho minimo legible sin impedir que BestFit las
+  // ensanche cuando el contenido lo pida.
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    if Assigned(FTallaColumns[i]) and FTallaColumns[i].Visible and
+       (FTallaColumns[i].Width < ANCHO_TALLA_PX) then
+      FTallaColumns[i].Width := ANCHO_TALLA_PX;
 end;
 
 // Comprueba via INFORMATION_SCHEMA si una columna existe en

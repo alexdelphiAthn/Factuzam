@@ -365,6 +365,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   object colLineaAlbcPRECIO_COMPRA: TcxGridDBColumn
                     Caption = 'Precio compra'
                     DataBinding.FieldName = 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = ',0.00 '#8364';-,0.00 '#8364
                     Width = 110
                   end
                   object colLineaAlbcPORCENTAJE_IVA: TcxGridDBColumn
