@@ -28,6 +28,11 @@ type
     conDst:        TUniConnection;
     prvSqlServer:  TSQLServerUniProvider;
     prvMySQL:      TMySQLUniProvider;
+  private
+    // Pone el origen (SQL Server) en READ UNCOMMITTED tras conectar, para
+    // que la migracion (solo lectura) no se bloquee por escrituras de otra
+    // sesion (el ERP legacy en marcha). Equivale a WITH (NOLOCK) global.
+    procedure SrvAfterConnect(Sender: TObject);
   public
     procedure ConfigurarOrigen(const sHost, sPort, sBase, sUser,
                                sPwd: string; bWindowsAuth: Boolean = False);
@@ -94,6 +99,19 @@ implementation
 
 {$R *.dfm}
 
+// Lectura sucia en TODO el origen: ningun SELECT/COUNT se queda bloqueado
+// esperando a un lock de escritura de otra sesion. Se asigna como
+// AfterConnect tanto en conSrv como en los clones de los workers.
+procedure TdmMig.SrvAfterConnect(Sender: TObject);
+begin
+  try
+    (Sender as TUniConnection).ExecSQL(
+      'SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED');
+  except
+    // Si el provider no lo soporta, seguimos con el nivel por defecto.
+  end;
+end;
+
 procedure TdmMig.ConfigurarOrigen(const sHost, sPort, sBase, sUser,
                                   sPwd: string;
                                   bWindowsAuth: Boolean = False);
@@ -107,7 +125,11 @@ begin
     conSrv.Port := 1433;
   conSrv.Database    := sBase;
   conSrv.LoginPrompt := False;
+<<<<<<< HEAD
   coInitialize(nil);
+=======
+  conSrv.AfterConnect := SrvAfterConnect;  // READ UNCOMMITTED al conectar
+>>>>>>> 707895cfbda34616d6bf8bb44fbc801cd3615714
   // Provider: dejamos el default de UniDAC (en general escoge OLE DB
   // nativo si esta el cliente de SQL Server instalado, o protocolo TDS
   // interno si no). Si tu version de UniDAC necesita uno concreto se
@@ -241,6 +263,7 @@ begin
   Result.Username     := conSrv.Username;
   Result.Password     := conSrv.Password;
   Result.LoginPrompt  := False;
+  Result.AfterConnect := SrvAfterConnect;  // READ UNCOMMITTED tambien aqui
   // Preservar el modo de autenticacion (Windows / SQL).
   sAuth := conSrv.SpecificOptions.Values['Authentication'];
   if sAuth <> '' then
