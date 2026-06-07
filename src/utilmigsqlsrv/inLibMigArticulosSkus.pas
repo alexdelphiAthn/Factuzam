@@ -125,9 +125,14 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := Eng.ConDst;
+    // ORDER BY ID_AV DESC + AddOrSetValue (gana la ultima fila) => el
+    // MIN(ID_AV) queda como canonico, igual que BuscarIdAV. Asi el tag de
+    // talla del SKU coincide con el detalle del conjunto aunque el catalogo
+    // tenga AV duplicados (mismo texto, distinto ID_AV).
     q.SQL.Text   :=
       'SELECT AV, ID_AV FROM fza_atributos_valores ' +
-      'WHERE ID_VA_AV = :v';
+      'WHERE ID_VA_AV = :v ' +
+      'ORDER BY ID_AV DESC';
     q.ParamByName('v').AsString := sIdVa;
     q.Open;
     while not q.Eof do

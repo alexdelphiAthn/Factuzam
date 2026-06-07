@@ -32,7 +32,7 @@
 {    (Efectivo, Tarjeta, ValeTienda, ValePromocion). Cada columna no nula      }
 {    genera una línea en fza_caja_pagos con su CODIGO_FP_CFP:                  }
 {      Efectivo      → 'EFE'                                                   }
-{      Tarjeta       → 'TARJ'                                                  }
+{      Tarjeta       → 'TARJ'+TipoTarjeta (TARJETA n; sin tipo: 'TARJ')        }
 {      ValeTienda    → 'VALE'  (se asegura la forma de pago 'VALE')           }
 {      ValePromocion → 'VALE'                                                  }
 {                                                                              }
@@ -146,6 +146,76 @@ begin
   end;
 end;
 
+// Codigo de forma de pago para un TipoTarjeta del legacy: 'TARJ'+n (TARJETA n).
+// TipoTarjeta=0 (sin tipo) cae en la 'TARJ' generica del seed.
+function CodigoTarjeta(iTipo: Integer): string;
+begin
+  if iTipo > 0 then
+    Result := 'TARJ' + IntToStr(iTipo)
+  else
+    Result := 'TARJ';
+end;
+// Asegura las formas de pago de caja que usa la migracion: 'EFE' (Efectivo) y
+// una 'TARJ<n>' / 'TARJETA <n>' por cada TipoTarjeta distinto del legacy
+// (occaj.TipoTarjeta). Idempotente via INSERT IGNORE.
+procedure AsegurarFormasPagoCaja(Eng: TMigEngine);
+const
+  cInsFP =
+    'INSERT IGNORE INTO fza_caja_formas_pago ' +
+    '  (CODIGO_FP_CFP, DESCRIPCION_FORMA_PAGO_CFP, ' +
+    '   ESREQ_REFERENCIA_FORMA_PAGO_CFP, ESCRIPTO_FORMA_PAGO_CFP, ' +
+    '   ESDIVISA_FORMA_PAGO_CFP, ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP, ' +
+    '   ESABRE_CAJON_FORMA_PAGO_CFP, ESACTIVO_FORMA_PAGO_CFP, ' +
+    '   ORDEN_VISUAL_FORMA_PAGO_CFP, ' +
+    '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'VALUES (:cod, :desc, ''N'', ''N'', ''N'', :cambio, :cajon, ''S'', ' +
+    '        :orden, NOW(), NOW(), :ua, :um)';
+  cSelTar =
+    'SELECT DISTINCT TipoTarjeta FROM dbo.occaj ' +
+    'WHERE TipoTarjeta IS NOT NULL AND TipoTarjeta <> 0 ' +
+    'ORDER BY TipoTarjeta';
+var
+  qDst: TUniQuery;
+  qTar: TUniQuery;
+  iTipo: Integer;
+  procedure InsertarFP(const sCod, sDesc, sCambio, sCajon: string;
+    iOrden: Integer);
+  begin
+    qDst.ParamByName('cod').AsString    := sCod;
+    qDst.ParamByName('desc').AsString   := sDesc;
+    qDst.ParamByName('cambio').AsString := sCambio;
+    qDst.ParamByName('cajon').AsString  := sCajon;
+    qDst.ParamByName('orden').AsInteger := iOrden;
+    qDst.ParamByName('ua').AsString     := Eng.Usuario;
+    qDst.ParamByName('um').AsString     := Eng.Usuario;
+    qDst.ExecSQL;
+  end;
+begin
+  qDst := TUniQuery.Create(nil);
+  try
+    qDst.Connection := Eng.ConDst;
+    qDst.SQL.Text   := cInsFP;
+    // Efectivo: da cambio y abre cajon. Orden 1 (primer boton en F12).
+    InsertarFP('EFE', 'Efectivo', 'S', 'S', 1);
+    // Una forma de pago por cada TipoTarjeta del legacy: TARJETA 1, 2, ...
+    // (las tarjetas no dan cambio ni abren cajon).
+    qTar := NuevoQOrigen(Eng, cSelTar);
+    try
+      qTar.Open;
+      while not qTar.Eof do
+      begin
+        iTipo := qTar.FieldByName('TipoTarjeta').AsInteger;
+        InsertarFP(CodigoTarjeta(iTipo), 'TARJETA ' + IntToStr(iTipo),
+          'N', 'N', 10 + iTipo);
+        qTar.Next;
+      end;
+    finally
+      qTar.Free;
+    end;
+  finally
+    qDst.Free;
+  end;
+end;
 // Asegura que exista la forma de pago 'VALE' (vales de tienda migrados).
 // Idempotente vía INSERT IGNORE.
 procedure AsegurarFormaPagoVale(Eng: TMigEngine);
@@ -395,6 +465,7 @@ const
     '       ISNULL(c.Neto, 0) AS Neto, ' +
     '       ISNULL(c.Efectivo, 0) AS Efectivo, ' +
     '       ISNULL(c.Tarjeta, 0) AS Tarjeta, ' +
+    '       ISNULL(c.TipoTarjeta, 0) AS TipoTarjeta, ' +
     '       ISNULL(c.ValeTienda, 0) AS ValeTienda, ' +
     '       ISNULL(c.ValePromocion, 0) AS ValePromocion, ' +
     '       ISNULL(c.Descripcion, '''') AS Descripcion, ' +
@@ -474,6 +545,7 @@ var
 
 begin
   AsegurarFormaPagoVale(Eng);
+  AsegurarFormasPagoCaja(Eng);
   LimpiarMigracionPrevia(Eng);
   qSrc  := NuevoQOrigen(Eng, cSelectSrc);
   // Streaming: occaj puede ser enorme; no cacheamos todo en memoria.
@@ -627,7 +699,8 @@ begin
       // Líneas de pago desde las columnas de occaj.
       iLineaPago := 0;
       AddPago('EFE',  qSrc.FieldByName('Efectivo').AsFloat);
-      AddPago('TARJ', qSrc.FieldByName('Tarjeta').AsFloat);
+      AddPago(CodigoTarjeta(qSrc.FieldByName('TipoTarjeta').AsInteger),
+              qSrc.FieldByName('Tarjeta').AsFloat);
       AddPago('VALE', qSrc.FieldByName('ValeTienda').AsFloat);
       AddPago('VALE', qSrc.FieldByName('ValePromocion').AsFloat);
       // Recordamos el cliente (real o heredado) para el siguiente documento
