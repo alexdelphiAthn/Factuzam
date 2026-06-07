@@ -45,6 +45,11 @@ src/utilmigsqlsrv/
 │                                                  + _det
 ├── inLibMigArticulosTallajes.pas  ocartp.NroTallaje →
 │                                                fza_articulos_conjuntos_asign
+├── inLibMigEntorno.pas            occajas/ocseract/occtador/ocnivnro →
+│                                                fza_almacenes_cajas +
+│                                                fza_empresas_series +
+│                                                fza_contadores +
+│                                                CONTADOR_ART_FAM (familias)
 └── resultados/                    CSVs de muestra exportados desde SSMS
 ```
 

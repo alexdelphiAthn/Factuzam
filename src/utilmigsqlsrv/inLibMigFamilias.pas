@@ -89,6 +89,7 @@ var
   iNivel, iNivelHoja: Integer;
   iNivelDet:          Integer;
   iLenHoja, iLenPadre:Integer;
+  iPad:               Integer;
   iOrden:             Integer;
   bPrimero:           Boolean;
 begin
@@ -115,6 +116,20 @@ begin
   iLenHoja   := iNivelHoja;             // codigo Nivel=hoja -> N chars
   iLenPadre  := iNivelHoja - 2;         // Nivel=hoja-2 -> N-2 chars (seccion)
   if iLenPadre < 1 then iLenPadre := 1;
+  // El ancho del contador por familia (PAD_ART_FAM) ya NO es un parametro
+  // del migrador: se deduce de la longitud REAL de los codigos de articulo
+  // numericos del legacy menos la longitud del codigo de familia. Ej:
+  // articulo '101010006' (9 chars) menos familia '10101' (5) = 4 digitos de
+  // contador. Si no se puede deducir (sin codigos numericos), 4 por defecto.
+  iPad := Eng.ContarOrigen(
+    'SELECT TOP 1 LEN(LTRIM(RTRIM(Articulo))) FROM dbo.ocartp WITH (NOLOCK) ' +
+    'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
+    '  AND LTRIM(RTRIM(Articulo)) NOT LIKE ''%[^0-9]%'' ' +
+    'GROUP BY LEN(LTRIM(RTRIM(Articulo))) ' +
+    'ORDER BY COUNT(*) DESC') - iLenHoja;
+  if iPad < 1 then
+    iPad := 4;
+  Eng.Log('  familias: ancho de contador por familia deducido = %d', [iPad]);
   // Migramos los dos niveles: el "hoja" y su seccion padre. Si el
   // legacy usa otra convencion, el setting NivelFamiliasHoja lo
   // ajusta y aqui derivamos los dos niveles afectados.
@@ -200,8 +215,7 @@ begin
       bPrimero := False;
       qIns.ParamByName('NOMBRE_FAM_FAM').AsString  := sDescripcion;
       qIns.ParamByName('DESCRIPCION_FAM').AsString := sDescripcion;
-      qIns.ParamByName('PAD_ART_FAM').AsInteger    :=
-        Eng.DigitosContadorArt;
+      qIns.ParamByName('PAD_ART_FAM').AsInteger    := iPad;
       // Solo las familias del nivel "hoja" (parametrizado) crean
       // articulos directos. Las secciones padre son agrupadores: el
       // contador queda desactivado por defecto.
