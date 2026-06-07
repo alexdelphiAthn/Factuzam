@@ -12,35 +12,7 @@ object FormMigrator: TFormMigrator
   Font.Style = []
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-<<<<<<< HEAD
-  TextHeight = 15
-=======
   TextHeight = 17
-  object SplitterErrores: TSplitter
-    Left = 0
-    Top = 564
-    Width = 1024
-    Height = 6
-    Cursor = crVSplit
-    Align = alBottom
-    AutoSnap = False
-    MinSize = 50
-    ResizeStyle = rsUpdate
-    ExplicitTop = 460
-  end
-  object SplitterProgreso: TSplitter
-    Left = 0
-    Top = 570
-    Width = 1024
-    Height = 6
-    Cursor = crVSplit
-    Align = alBottom
-    AutoSnap = False
-    MinSize = 50
-    ResizeStyle = rsUpdate
-    ExplicitTop = 540
-  end
->>>>>>> 2385a14e62d01bf50f3a99997d9b47739becb058
   object PanelTop: TPanel
     Left = 0
     Top = 0
@@ -53,7 +25,6 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 0
-    ExplicitWidth = 1022
     object PanelOrigen: TGroupBox
       Left = 8
       Top = 8
@@ -257,8 +228,7 @@ object FormMigrator: TFormMigrator
     Padding.Top = 4
     Padding.Right = 8
     Padding.Bottom = 4
-    TabOrder = 3
-    ExplicitWidth = 1022
+    TabOrder = 1
     object GroupSetup: TGroupBox
       Left = 8
       Top = 4
@@ -267,7 +237,6 @@ object FormMigrator: TFormMigrator
       Align = alClient
       Caption = ' Preparar BBDD destino '
       TabOrder = 0
-      ExplicitWidth = 1006
       object btnDumpEsqueleto: TButton
         Left = 16
         Top = 18
@@ -340,8 +309,7 @@ object FormMigrator: TFormMigrator
     Padding.Left = 8
     Padding.Right = 8
     Padding.Bottom = 8
-    TabOrder = 1
-    ExplicitWidth = 1022
+    TabOrder = 2
     object lblUsuario: TLabel
       Left = 16
       Top = 14
@@ -383,7 +351,7 @@ object FormMigrator: TFormMigrator
       Top = 11
       Width = 40
       Height = 25
-      TabOrder = 2
+      TabOrder = 1
       Text = '4'
     end
     object edDigitosArt: TEdit
@@ -391,7 +359,7 @@ object FormMigrator: TFormMigrator
       Top = 11
       Width = 40
       Height = 25
-      TabOrder = 3
+      TabOrder = 2
       Text = '4'
     end
     object edHilos: TEdit
@@ -399,7 +367,7 @@ object FormMigrator: TFormMigrator
       Top = 11
       Width = 40
       Height = 25
-      TabOrder = 4
+      TabOrder = 3
       Text = '4'
     end
     object GroupListado: TGroupBox
@@ -408,7 +376,7 @@ object FormMigrator: TFormMigrator
       Width = 1008
       Height = 200
       Caption = ' Migraciones disponibles (orden de ejecuci'#243'n) '
-      TabOrder = 1
+      TabOrder = 4
       object listMigs: TCheckListBox
         Left = 16
         Top = 24
@@ -459,8 +427,7 @@ object FormMigrator: TFormMigrator
     Height = 371
     ActivePage = TabProgreso
     Align = alClient
-    TabOrder = 2
-<<<<<<< HEAD
+    TabOrder = 3
     object TabProgreso: TTabSheet
       Caption = 'Progreso (dominios activos)'
       object MemoProgreso: TMemo
@@ -480,16 +447,6 @@ object FormMigrator: TFormMigrator
         ScrollBars = ssVertical
         TabOrder = 0
       end
-=======
-    ExplicitWidth = 1022
-    ExplicitHeight = 16
-    object lblLog: TLabel
-      Left = 16
-      Top = 0
-      Width = 31
-      Height = 17
-      Caption = 'Log:'
->>>>>>> 2385a14e62d01bf50f3a99997d9b47739becb058
     end
     object TabLog: TTabSheet
       Caption = 'Log acumulado'
@@ -512,7 +469,6 @@ object FormMigrator: TFormMigrator
         TabOrder = 0
       end
     end
-<<<<<<< HEAD
     object TabErrores: TTabSheet
       Caption = 'Errores y avisos (! del log)'
       ImageIndex = 2
@@ -523,7 +479,7 @@ object FormMigrator: TFormMigrator
         Width = 1010
         Height = 333
         Align = alClient
-        Color = clGhostwhite
+        Color = clGhostWhite
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clMaroon
         Font.Height = -12
@@ -534,102 +490,6 @@ object FormMigrator: TFormMigrator
         ScrollBars = ssVertical
         TabOrder = 0
       end
-=======
-  end
-  object PanelErrores: TPanel
-    Left = 0
-    Top = 576
-    Width = 1024
-    Height = 80
-    Align = alBottom
-    BevelOuter = bvNone
-    Constraints.MinHeight = 40
-    Padding.Left = 8
-    Padding.Right = 8
-    Padding.Bottom = 4
-    TabOrder = 5
-    ExplicitTop = 568
-    ExplicitWidth = 1022
-    object lblErrores: TLabel
-      Left = 8
-      Top = 0
-      Width = 315
-      Height = 17
-      Caption = 'Errores y avisos (filtrado de los ! del log):'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clMaroon
-      Font.Height = -15
-      Font.Name = 'Lucida Sans'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object MemoErrores: TMemo
-      AlignWithMargins = True
-      Left = 16
-      Top = 18
-      Width = 992
-      Height = 54
-      Margins.Left = 8
-      Margins.Top = 18
-      Margins.Right = 8
-      Margins.Bottom = 4
-      Align = alClient
-      Color = clGhostwhite
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clMaroon
-      Font.Height = -12
-      Font.Name = 'Consolas'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      ScrollBars = ssVertical
-      TabOrder = 0
-      ExplicitWidth = 990
-    end
-  end
-  object PanelProgreso: TPanel
-    Left = 0
-    Top = 656
-    Width = 1024
-    Height = 255
-    Align = alBottom
-    BevelOuter = bvNone
-    Constraints.MinHeight = 50
-    Padding.Left = 8
-    Padding.Right = 8
-    Padding.Bottom = 4
-    TabOrder = 4
-    ExplicitTop = 648
-    ExplicitWidth = 1022
-    object lblProgreso: TLabel
-      Left = 8
-      Top = 0
-      Width = 207
-      Height = 17
-      Caption = 'Progreso (dominios activos):'
-    end
-    object MemoProgreso: TMemo
-      AlignWithMargins = True
-      Left = 16
-      Top = 18
-      Width = 992
-      Height = 229
-      Margins.Left = 8
-      Margins.Top = 18
-      Margins.Right = 8
-      Margins.Bottom = 4
-      Align = alClient
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Consolas'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      ScrollBars = ssVertical
-      TabOrder = 0
-      ExplicitWidth = 990
->>>>>>> 2385a14e62d01bf50f3a99997d9b47739becb058
     end
   end
   object StatusBar: TStatusBar

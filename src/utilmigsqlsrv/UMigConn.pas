@@ -20,7 +20,7 @@ interface
 uses
   Winapi.ActiveX,
   System.SysUtils, System.Classes,
-  Data.DB, ActiveX,
+  Data.DB,
   Uni, UniScript, UniProvider, MySQLUniProvider, SQLServerUniProvider, DBAccess;
 
 type
