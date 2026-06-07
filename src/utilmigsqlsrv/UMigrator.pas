@@ -204,13 +204,17 @@ begin
 end;
 
 procedure TFormMigrator.FormDestroy(Sender: TObject);
+var
+  bTerminado: Boolean;
 begin
   // Si hay una migracion corriendo, pedirle que pare y esperar un
   // poco a que termine el dominio actual.
   if Assigned(FCancel) then FCancel.Signal;
+  if Assigned(FEngine) then FEngine.Cancelar;
+  bTerminado := True;
   if Assigned(FTask) then
   begin
-    FTask.Terminate(5000);  // espera hasta 5s al worker
+    bTerminado := FTask.Terminate(5000);  // True si termino dentro de 5s
     FTask := nil;
   end;
   try
@@ -219,7 +223,12 @@ begin
     // no podemos hacer nada en destroy, ignoramos
   end;
   FLineasProgreso.Free;
-  FEngine.Free;
+  // Solo liberamos el motor si el worker TERMINO. Si sigue vivo (atascado
+  // en una query larga que no chequea cancelacion), liberar FEngine
+  // provocaria AccessViolation cuando el clon del worker lea FMaster
+  // (IsCancelado/OnLog). Preferimos una fuga inocua al cerrar la app.
+  if bTerminado then
+    FEngine.Free;
 end;
 
 procedure TFormMigrator.ActualizarProgreso(const sDominio: string;
