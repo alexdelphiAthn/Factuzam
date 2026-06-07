@@ -324,6 +324,7 @@ object FormMigrator: TFormMigrator
       Height = 17
       Caption = 'Nivel familias hoja:'
     end
+<<<<<<< HEAD
     object lblDigitosArt: TLabel
       Left = 580
       Top = 14
@@ -331,6 +332,8 @@ object FormMigrator: TFormMigrator
       Height = 17
       Caption = 'D'#237'gitos contador art.:'
     end
+=======
+>>>>>>> 882d8675f7cf4513994d8ab6ddea39a2fcc16eff
     object lblHilos: TLabel
       Left = 780
       Top = 14
@@ -354,6 +357,7 @@ object FormMigrator: TFormMigrator
       TabOrder = 1
       Text = '4'
     end
+<<<<<<< HEAD
     object edDigitosArt: TEdit
       Left = 720
       Top = 11
@@ -362,6 +366,8 @@ object FormMigrator: TFormMigrator
       TabOrder = 2
       Text = '4'
     end
+=======
+>>>>>>> 882d8675f7cf4513994d8ab6ddea39a2fcc16eff
     object edHilos: TEdit
       Left = 890
       Top = 11
