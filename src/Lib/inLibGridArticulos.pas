@@ -134,6 +134,13 @@ type
     // siguiente y abre su paleta (no deja pasar a la siguiente fila con el
     // SKU a medias). Devuelve True si quedaba alguno pendiente.
     function AvanzarSiguienteAtributo: Boolean;
+    // True si la linea actual aun tiene color/talla por elegir (NUM_ATRIBUTOS
+    // > 0 y algun ATTRn_VALOR vacio).
+    function HayAtributosPendientes: Boolean;
+    // Tras resolver un articulo decide el foco como la caja: si faltan
+    // atributos salta al primero y abre su paleta; si el SKU ya esta cerrado
+    // deja el editor de articulo listo para la siguiente entrada.
+    procedure AvanzarTrasResolver;
     procedure AplicarSkuYAvisar;
     function ColumnaPorTag(ATag: Integer): TcxGridDBColumn;
     function GenerarSku: string;
@@ -596,9 +603,11 @@ begin
         on E: EInvalidOperation do
           ;
       end;
-    // Reabrimos el editor de articulo en la (nueva) linea para encadenar
-    // lecturas sin perder la primera cifra de la siguiente.
-    MostrarEditorArticulo;
+    // Igual que la caja: si el articulo necesita color/talla, saltamos a la
+    // primera columna de atributo y abrimos su paleta; si el SKU ya quedo
+    // cerrado, dejamos el editor de articulo listo para encadenar lecturas sin
+    // perder la primera cifra de la siguiente.
+    AvanzarTrasResolver;
   end;
 end;
 
@@ -617,6 +626,39 @@ begin
         ;
     end;
   end;
+end;
+
+// True si la linea actual aun tiene atributos (color/talla) por elegir. Lo usa
+// AvanzarTrasResolver para decidir si abrir la paleta o pasar a la siguiente
+// entrada de articulo.
+function TGridArticulosLineas.HayAtributosPendientes: Boolean;
+var
+  i, n: Integer;
+begin
+  Result := False;
+  if FCds.Active and (not FCds.IsEmpty) then
+  begin
+    n := FCds.FieldByName(FCampos.NumAtributos).AsInteger;
+    i := 1;
+    while (i <= n) and (not Result) do
+    begin
+      if Trim(FCds.FieldByName(FCampos.AttrValor[i]).AsString) = '' then
+        Result := True;
+      Inc(i);
+    end;
+  end;
+end;
+
+// Tras resolver un articulo decide el foco igual que la caja: si la linea aun
+// necesita color/talla, salta a la primera columna de atributo pendiente y abre
+// su paleta; si el SKU ya quedo cerrado, deja el editor de articulo listo para
+// la siguiente entrada.
+procedure TGridArticulosLineas.AvanzarTrasResolver;
+begin
+  if HayAtributosPendientes then
+    AvanzarSiguienteAtributo
+  else
+    MostrarEditorArticulo;
 end;
 
 // Click en el boton de la columna de articulo: abre el buscador generico
@@ -1033,8 +1075,11 @@ begin
       FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString := sAvNuevo;
       AplicarSkuYAvisar;
       // Si quedan atributos por elegir, salta al siguiente y abre su paleta;
-      // asi no se pasa a la siguiente fila con el SKU incompleto.
-      AvanzarSiguienteAtributo;
+      // asi no se pasa a la siguiente fila con el SKU incompleto. Si ya estan
+      // todos (SKU cerrado y el host anyadio una linea nueva), deja el editor
+      // de articulo abierto para encadenar la siguiente entrada, como en caja.
+      if not AvanzarSiguienteAtributo then
+        MostrarEditorArticulo;
     end;
   finally
     FEnPaleta := False;
