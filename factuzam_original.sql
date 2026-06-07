@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 04/06/2026 21:05:40
+-- Backup generado: 07/06/2026 7:53:05
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -898,12 +898,14 @@ ALTER TABLE `fza_articulos_familias` ADD INDEX `IDX_FAM_PADRE` (`CODIGO_PADRE_FA
 -- Datos de fza_articulos_familias
 INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `CODIGO_PADRE_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `CONTADOR_ART_FAM`, `ESCONTADOR_ART_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `PAD_ART_FAM`) VALUES
   ('BOLSOS', NULL, 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 13, 'S', '2026-05-28 23:04:21', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
+  ('CALV', NULL, 'S', 0, 'N', 'CALZADO', 'CALZADO VESTIR', NULL, NULL, 'S', '2026-06-05 18:26:27', '2026-06-05 18:26:27', 'Administrador', 'Administrador', 5),
   ('CALZADO', NULL, 'S', 2, 'N', NULL, 'Calzado Elegante', 'Calzado Todo tiempo', 6, 'S', '2026-06-04 20:57:54', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
   ('COMPLEMENTOS', NULL, 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 3, 'S', '2026-05-28 19:15:37', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 3),
   ('DEPORTIVO', NULL, 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 11, 'S', '2026-05-28 22:14:49', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 3),
+  ('LIM', NULL, 'S', 0, 'N', NULL, 'PRODUCTOS DE LIMPIEZA', NULL, NULL, 'S', '2026-06-05 19:38:15', '2026-06-05 19:38:15', 'Administrador', 'Administrador', 5),
   ('OTR', NULL, 'S', 6, 'S', NULL, 'Otros articulos agrícolas', 'Otros articulos agrícolas', 0, 'N', '2026-05-12 18:38:02', '2022-11-02 16:06:31', 'Administrador', 'Administrador', 5),
   ('ROPA', NULL, 'S', 1, 'N', NULL, 'Ropa de Vestir', 'Ropa de Vestir a la moda', 0, 'N', '2026-05-12 18:34:25', '2026-03-11 22:27:51', 'Adminnistrador', 'Administrador', 5);
--- 6 registros exportados
+-- 8 registros exportados
 
 
 -- Tabla: fza_articulos_fotos
@@ -1930,7 +1932,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'BOLSOS00011/VERDE/XXXL', '', NULL, 6, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, -1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, -1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, -2, '2026-06-06 06:00:19', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0),
   ('GEN', 'CALZADO00003/ROSA/L', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'CALZADO00003/ROSA/M', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'CALZADO00003/ROSA/S', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -3373,9 +3375,10 @@ INSERT INTO `fza_caja_operaciones` (`ID_OPCAJA`, `CODIGO_EMP_OPCAJA`, `CODIGO_AL
   (166, '012', 'GEN', '1', '00000165', '000001', 'TR', '2026-06-02 06:44:23', '1', 'TR', 12, NULL, 'N', 0, 'Traspaso a ALE', NULL, NULL, NULL, '012', 'ALE', 'S', NULL, '2026-06-02 06:44:23', '2026-06-02 06:44:23', 'Administrador', 'Administrador', NULL, '2026-06-02 00:00:00'),
   (167, '012', 'GEN', '1', '00000166', '000001', 'TA', '2026-06-02 07:19:14', '1', 'TA', 7, NULL, 'N', 0, 'Traspaso a BCN', NULL, NULL, NULL, '1', 'BCN', 'S', NULL, '2026-06-02 07:19:14', '2026-06-02 07:19:14', 'Administrador', 'Administrador', NULL, '2026-06-02 00:00:00'),
   (168, '012', 'GEN', '1', '00000167', '000002', 'TA', '2026-06-02 08:05:16', '1', 'TA', 7, NULL, 'N', 0, 'Traspaso a BCN', NULL, NULL, NULL, '1', 'BCN', 'S', NULL, '2026-06-02 08:05:16', '2026-06-02 08:05:16', 'Administrador', 'Administrador', NULL, '2026-06-02 00:00:00'),
-  (169, '012', 'GEN', '1', '00000168', '000142', '2026.A1', '2026-06-04 20:38:15', '1', 'VE', 35.01, '0', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', 'Administrador', 'Administrador', '', '2026-06-04 00:00:00');
+  (169, '012', 'GEN', '1', '00000168', '000142', '2026.A1', '2026-06-04 20:38:15', '1', 'VE', 35.01, '0', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', 'Administrador', 'Administrador', '', '2026-06-04 00:00:00'),
+  (170, '012', 'GEN', '1', '00000169', '000143', '2026.A1', '2026-06-06 06:00:19', '1', 'VE', 79.9, '0', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-06-06 06:00:19', '2026-06-06 06:00:19', 'Administrador', 'Administrador', '', '2026-06-06 00:00:00');
 /*!40000 ALTER TABLE `fza_caja_operaciones` ENABLE KEYS */;
--- 47 registros exportados
+-- 48 registros exportados
 
 
 -- Tabla: fza_caja_pagos
@@ -3541,8 +3544,10 @@ INSERT INTO `fza_caja_pagos` (`CODIGO_EMP_PAGO`, `CODIGO_ALM_PAGO`, `CODIGO_CAJA
   ('012', 'GEN', '1', '2026.A1', '00000158', 1, 'EFE', NULL, NULL, 1, 0, 200, 0, NULL, NULL, '2026-05-24 17:05:53', '2026-05-24 17:05:53', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000159', 1, 'TARJ', NULL, NULL, 1, 0, 120, 0, NULL, NULL, '2026-05-24 19:46:24', '2026-05-24 19:46:24', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000164', 1, 'EFE', NULL, NULL, 1, 0, 12.95, 0, NULL, NULL, '2026-05-27 06:11:27', '2026-05-27 06:11:27', 'Administrador'),
-  ('012', 'GEN', '1', '2026.A1', '00000168', 1, 'TARJ', NULL, NULL, 1, 0, 35.01, 0, NULL, NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', 'Administrador');
--- 136 registros exportados
+  ('012', 'GEN', '1', '2026.A1', '00000168', 1, 'TARJ', NULL, NULL, 1, 0, 35.01, 0, NULL, NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000169', 1, 'EFE', NULL, NULL, 1, 0, 59.9, 0, NULL, NULL, '2026-06-06 06:00:19', '2026-06-06 06:00:19', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000169', 2, 'BONO', NULL, NULL, 1, 0, 20, 0, NULL, NULL, '2026-06-06 06:00:19', '2026-06-06 06:00:19', 'Administrador');
+-- 138 registros exportados
 
 
 -- Tabla: fza_caja_vales
@@ -4137,14 +4142,13 @@ ALTER TABLE `fza_compras_sesiones` ADD INDEX `IDX_SES_TEMPORADA` (`ID_PV_TEMPORA
 
 -- Datos de fza_compras_sesiones
 INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `ESTADO_SES`, `CODIGO_EMP_SES`, `CODIGO_PRV_SES`, `REF_PRV_SES`, `CODIGO_FAM_SES`, `CODIGO_ALM_SES`, `MONEDA_SES`, `TIPO_IVA_SES`, `PORCENTAJE_MARGEN_SES`, `CODIGO_TAR_SES`, `ESPRECIOS_SIN_IVA_SES`, `ESREDONDEO_VENTA_SES`, `MULTIPLO_REDONDEO_SES`, `AJUSTE_FINAL_SES`, `CODIGO_VAR_SES`, `ID_VA_PIVOT_SES`, `ID_AC_PIVOT_SES`, `ID_VA_FILA_SES`, `ID_AC_FILA_SES`, `ESVAR_FIJA_SES`, `PREFIJO_EAN_SES`, `INSTANTE_MATERIALIZA_SES`, `USUARIO_MATERIALIZA_SES`, `ESGENERA_PEDIDO_SES`, `ESGENERA_ALBARAN_SES`, `ESFORMATO_DISTRIBUIDO_SES`, `SERIE_PEDC_SES`, `NUMERO_PEDC_SES`, `SERIE_ALBC_SES`, `NUMERO_ALBC_SES`, `MENSAJE_ERROR_SES`, `CONTADOR_LINEAS_SES`, `COMENTARIOS_SES`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`, `ESPRECIO_POR_SKU_SES`, `ID_PV_TEMPORADA_SES`) VALUES
-  ('A1', '000002', '2026-05-12 00:00:00', 'CERRADA', '012', 'ANGEL', 'xdr4565', NULL, 'GEN', 'EUR', '1', 250, 'PVP', 'S', 'S', 1, 0.01, 'TC', NULL, 2, NULL, 4, 'S', NULL, '2026-05-23 09:21:13', 'Administrador', 'N', 'S', 'N', '', '', 'A1', '006', NULL, 130, NULL, '2026-05-12 19:56:12', 'Administrador', '2026-05-23 09:21:13', 'Administrador', 'N', 12),
   ('A1', '000004', '2026-05-23 00:00:00', 'CERRADA', '012', '20', 'dasdfa', NULL, 'GEN', 'EUR', 'N', 240, 'PVP', 'S', 'N', 1, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-24 17:50:17', 'Administrador', 'N', 'S', 'S', '', '', 'A1', '024', NULL, 40, NULL, '2026-05-23 22:04:01', 'Administrador', '2026-05-24 17:50:17', 'Administrador', 'N', 12),
   ('A1', '000005', '2026-05-24 00:00:00', 'CERRADA', '012', '000', '33222', NULL, 'GEN', 'EUR', 'N', 240, 'PVP', 'S', 'N', 1, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-24 17:23:24', 'Administrador', 'N', 'S', 'S', '', '', 'A1', '018', NULL, 10, NULL, '2026-05-24 06:56:47', 'Administrador', '2026-05-24 17:23:24', 'Administrador', 'N', 11),
   ('A1', '000006', '2026-05-24 00:00:00', 'CERRADA', '012', 'FER', '322323', NULL, 'GEN', 'EUR', 'N', 250, 'PVP', 'S', 'N', 1, 0.05, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-26 06:57:16', 'Administrador', 'N', 'S', 'S', '', '', 'A1', '026', NULL, 40, NULL, '2026-05-24 06:59:49', 'Administrador', '2026-05-26 06:57:16', 'Administrador', 'N', 11),
   ('A1', '000007', '2026-05-26 00:00:00', 'CERRADA', '012', 'PEPI', '398383', NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 1, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-28 19:52:49', 'Administrador', 'S', 'N', 'N', 'A1', '000001', '', '', NULL, 170, NULL, '2026-05-26 06:47:47', 'Administrador', '2026-05-28 19:52:49', 'Administrador', 'N', 11),
   ('A1', '000008', '2026-05-26 00:00:00', 'CERRADA', '012', '000', '32323', NULL, 'GEN', 'EUR', 'N', NULL, 'PVP', 'S', 'N', 0, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-29 08:33:40', 'Administrador', 'S', 'N', 'N', 'A1', '000003', '', '', NULL, 180, NULL, '2026-05-26 07:36:28', 'Administrador', '2026-05-29 08:33:40', 'Administrador', 'N', 11),
   ('A1', '000011', '2026-06-04 00:00:00', 'BORRADOR', '012', '22', '112211', NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 0, 1, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, 'N', 'N', 'N', NULL, NULL, NULL, NULL, NULL, 10, NULL, '2026-06-04 20:57:48', 'Administrador', '2026-06-04 20:59:06', 'Administrador', 'N', 11);
--- 7 registros exportados
+-- 6 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_celdas
@@ -4997,7 +5001,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '008', 'ANA/2023', 1, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
-  ('FC', '012', '2026.A1', 143, 6, 'S', 'N', '2026-06-04 20:38:15', '2026-02-01 07:03:46', 'Administrador', '1'),
+  ('FC', '012', '2026.A1', 144, 6, 'S', 'N', '2026-06-06 06:00:19', '2026-02-01 07:03:46', 'Administrador', '1'),
   ('FC', '012', '2026.AN1', 2, 6, 'S', 'N', '2026-05-10 19:44:03', '2026-05-10 19:44:03', 'Administrador', 'Administrador'),
   ('FC', '012', 'TICKA1', 2, 6, 'S', 'N', '2026-03-27 17:33:04', '2026-03-27 17:33:04', 'Administrador', 'Administrador'),
   ('FC', '1', 'A1', 35, 8, 'S', 'N', '2026-02-17 06:21:32', '2022-09-13 15:47:45', 'Administrador', 'Administrador'),
@@ -5008,12 +5012,12 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '1', 'TICKA1', 0, 4, 'S', 'S', '2025-09-07 17:00:51', '2025-09-07 17:00:40', 'Administrador', 'Administrador'),
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 319, 3, 'S', 'S', '2026-06-03 17:01:52', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 328, 3, 'S', 'S', '2026-06-05 22:43:42', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 22, 2, 'S', 'S', '2026-05-26 08:44:59', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 736, 10, 'S', 'S', '2026-06-04 20:38:15', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
-  ('OV', '012', 'OV', 169, 8, 'S', 'S', '2026-06-04 20:38:15', '2026-04-02 20:05:59', '1', '1'),
+  ('MV', '-', '-', 738, 10, 'S', 'S', '2026-06-06 06:00:19', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('OV', '012', 'OV', 170, 8, 'S', 'S', '2026-06-06 06:00:19', '2026-04-02 20:05:59', '1', '1'),
   ('PC', '-', '-', 4, 6, 'S', 'S', '2026-05-29 08:33:39', '2026-05-28 19:21:38', 'SISTEMA', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
@@ -5458,8 +5462,9 @@ INSERT INTO `fza_facturas` (`NUMERO_FAC`, `SERIE_FAC`, `FECHA_FAC`, `ESCONSOLIDA
   ('000139', '2026.A1', '2026-05-27 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '325', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'N', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'CONTADO', 15, 0, 0, NULL, NULL, NULL, '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-05-27 20:51:00', '2026-05-27 20:17:03', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000140', '2026.A1', '2026-05-27 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '326', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'N', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 31.24, 5.2, 0, 148.76, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 148.76, 31.24, 'CONTADO', 15, 0, 180, NULL, NULL, NULL, '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-05-27 20:23:54', '2026-05-27 20:23:54', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000141', '2026.A1', '2026-05-27 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '327', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'N', 'PVP', 'S', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'CONTADO', 15, 0, 0, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-05-27 21:00:08', '2026-05-27 21:00:08', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000142', '2026.A1', '2026-06-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 6.08, 5.2, 0, 28.93, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 28.93, 6.08, NULL, 0, 0, 35.01, NULL, NULL, '', '', NULL, NULL, '010', NULL, 'S', NULL, NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', '1', 'GEN', '1', '00000168');
--- 142 registros exportados
+  ('000142', '2026.A1', '2026-06-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 6.08, 5.2, 0, 28.93, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 28.93, 6.08, NULL, 0, 0, 35.01, NULL, NULL, '', '', NULL, NULL, '010', NULL, 'S', NULL, NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', '1', 'GEN', '1', '00000168'),
+  ('000143', '2026.A1', '2026-06-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 13.87, 5.2, 0, 66.03, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 66.03, 13.87, NULL, 0, 0, 79.9, NULL, NULL, '', '', NULL, NULL, '010', NULL, 'S', NULL, NULL, '2026-06-06 06:00:19', '2026-06-06 06:00:19', '1', '1', '1', 'GEN', '1', '00000169');
+-- 143 registros exportados
 
 
 -- Tabla: fza_facturas_consolidaciones
@@ -5725,8 +5730,9 @@ INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `COD
   ('000137', '2026.A1', '012', '0030', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 12.95, 0, 0, 10.7025, 'N', 21, 12.95, 12.95, 10.7025, '1', '2026-05-27 06:11:27', '2026-05-27 06:11:27', '1', '1', 'GEN', '1', '00000164', '0000000719'),
   ('000138', '2026.A1', NULL, '010', 'DEMO-CAMISA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 8, '010', 'RODRIGO ANTON', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Camisa Lino Demo', NULL, 'PVP', 'S', 28.95, 0, 0, 23.9256, 'N', 21, 28.95, 28.95, 23.9256, NULL, '2026-05-27 20:03:38', '2026-05-27 20:03:38', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000140', '2026.A1', NULL, '010', 'ABRIGO-PAÑO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '20', 'Bigfoot Breweries', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Abrigo de Paño Caballero', NULL, 'PVP', 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, NULL, '2026-05-27 20:26:45', '2026-05-27 20:26:45', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000142', '2026.A1', '012', '0010', 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolsos y Mochilas', NULL, NULL, 'S', 35.01, 0, 0, 28.9339, 'N', 21, 35.01, 35.01, 28.9339, '1', '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', 'GEN', '1', '00000168', '0000000734');
--- 182 registros exportados
+  ('000142', '2026.A1', '012', '0010', 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolsos y Mochilas', NULL, NULL, 'S', 35.01, 0, 0, 28.9339, 'N', 21, 35.01, 35.01, 28.9339, '1', '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', 'GEN', '1', '00000168', '0000000734'),
+  ('000143', '2026.A1', '012', '0010', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Botín Ante Mujer', NULL, NULL, 'S', 79.9, 0, 0, 66.0331, 'N', 21, 79.9, 79.9, 66.0331, '1', '2026-06-06 06:00:19', '2026-06-06 06:00:19', '1', '1', 'GEN', '1', '00000169', '0000000736');
+-- 183 registros exportados
 
 
 -- Tabla: fza_facturas_pagos
@@ -24277,8 +24283,4952 @@ VALUES
   (''fza_movimientos_almacen'', ''CODIGO_CLI_MOV'',                ''Cliente'',            100, 17, ''N''),
   (''fza_movimientos_almacen'', ''CODIGO_PRV_MOV'',                ''Proveedor'',          100, 18, ''N''),
   (''fza_movimientos_almacen'', ''ESACTIVO_MOV'',                  ''Activo'',              50, 19, ''N'');
-', '2026-06-03 17:01:52', '2026-06-03 17:01:52', 'Administrador', 'Administrador');
--- 114 registros exportados
+', '2026-06-03 17:01:52', '2026-06-03 17:01:52', 'Administrador', 'Administrador'),
+  ('319', 'balance_almacen_tallas', '-- =====================================================================
+-- Balance de almacén por tallas (informe horizontal con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_TALLAS: devuelve las filas del
+-- informe ya pivotadas por talla (columnas fijas T01..T14, igual que
+-- vi_compras_sesiones_lin_print) y desdobladas en bandas. Una fila por
+-- (artículo, color, banda). El informe FastReport agrupa por familia y
+-- artículo y dibuja cada banda como una sub-línea (ent. / sal. / ex.).
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas. Bandas (simplificado): Existencias iniciales,
+--         Entradas, Salidas, Ventas, Existencias finales. En desglosado
+--         las entradas/salidas se abren en los subtipos de la consulta
+--         Ctrl+U (compra, traspaso, depósito, regulariz., albaranes...).
+--   ''A'' = por acumulados. Bandas: Entradas, Salidas, Ventas, Existencias
+--         finales (sin existencias iniciales: el acumulado es "desde
+--         siempre"). El desglosado no aplica.
+--
+-- Origen de datos:
+--   - Modo ''F'': se reconstruye desde fza_movimientos_almacen. Las
+--     existencias a una fecha se calculan partiendo del stock actual
+--     (fza_articulos_stockactual.CANTIDAD_STK) y restando los
+--     movimientos firmados posteriores a esa fecha.
+--   - Modo ''A'': se leen los acumulados denormalizados de
+--     fza_articulos_stockactual (CANTIDAD_ENT_*_STK / CANTIDAD_SAL_*_STK,
+--     ver stocks_acumulados.sql) y CANTIDAD_STK.
+--
+-- Valoración (columnas Precio / Importe del informe):
+--   - Entradas y existencias (ini/fin) -> coste = precio medio ponderado
+--     (PMP) del stock actual del artículo; si es 0 se usa el último precio
+--     de compra del proveedor principal.
+--   - Salidas        -> PVP (tarifa por defecto vigente hoy), valoración
+--     nocional de todo lo que sale.
+--   - Ventas (VEN)   -> PRECIO REAL de venta (con descuentos, con IVA) de
+--     fza_facturas_lineas; NO la tarifa. IMPORTE = importe real facturado.
+--   VENTAS: columna con el importe real de venta SOLO en la banda VEN (0 en
+--   el resto), para acumular las ventas por artículo/grupo/total (en los
+--   totales se muestran las ventas, no el margen).
+--   IMPORTE = CANTIDAD * PRECIO de la banda (salvo VEN, importe real).
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    -- Si algún nivel es ALM hay que conservar el almacén en el grano de los
+    -- cálculos (si no, se agregan todos los almacenes filtrados en uno).
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    -- Nivel del árbol de familias para agrupar por FAM. <1 (o NULL) = familia
+    -- hoja del artículo (comportamiento clásico); 1 = familia raíz, etc.
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Lista efectiva de almacenes (CSV sin comillas, para FIND_IN_SET).
+    -- Sin selección = TODOS los almacenes activos (igual que la lista del
+    -- checklist), no solo los de uso estándar: "nada marcado = todos".
+    IF IFNULL(p_ALMACENES, '''') <> '''' THEN
+        SET v_alms = p_ALMACENES;
+    ELSE
+        SELECT GROUP_CONCAT(`CODIGO_ALM_ALM`)
+          INTO v_alms
+          FROM `fza_almacenes`
+         WHERE `ESACTIVO_ALM` = ''S'';
+    END IF;
+    SET v_alms = IFNULL(v_alms, '''');
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo: familias (con su descendencia), proveedores y
+    -- temporadas. Se materializa en tmp_bat_arts el conjunto de artículos
+    -- que pasan los tres filtros; el resto del SP se restringe a él.
+    -- -----------------------------------------------------------------
+    -- Familias elegidas expandidas a TODA su descendencia: si se filtra una
+    -- familia padre, entran también sus hijas (CTE recursivo por
+    -- CODIGO_PADRE_FAM). Con p_FAMILIAS vacío sale vacía y no se aplica.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa de cada familia a su ancestro al nivel pedido (v_nivel_fam), para
+    -- agrupar por FAM "por nivel": si el árbol tiene padres-hijos se puede
+    -- agrupar por la familia raíz (nivel 1), la de 2º nivel, etc. Se construye
+    -- el camino raíz->familia y se toma el código del nivel solicitado (o la
+    -- propia familia si es menos profunda que el nivel pedido).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bat_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    -- Descripción del grupo (familia ancestro elegida).
+    UPDATE `tmp_bat_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bat_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- 1) Posiciones de talla por artículo (T01..T14).
+    --    Mismo criterio que TfrmStockConsulta.TallasArticulo: el conjunto
+    --    pivote del artículo (atributo no-color asignado) define el orden
+    --    de las columnas; si el artículo no tiene asignación, se usan las
+    --    tallas presentes en sus SKUs como respaldo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos` (
+        `CODIGO_ART` VARCHAR(20)  NOT NULL,
+        `ID_AV`      INT          NOT NULL,
+        `ETIQ`       VARCHAR(100) NULL,
+        `POSICION`   INT          NOT NULL,
+        PRIMARY KEY (`CODIGO_ART`, `ID_AV`)
+    );
+    -- 1a) Artículos con conjunto pivote asignado.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT asg.`CODIGO_ART`, acd.`ID_AV_ACD`, av.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY asg.`CODIGO_ART`
+                              ORDER BY acd.`ORDEN_ACD`, acd.`ID_AV_ACD`)
+      FROM (SELECT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MIN(asa.`ID_AC_ACA`) AS `ID_AC`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_conjuntos_asign` asa
+                ON asa.`CODIGO_ART_ACA` = a.`CODIGO_ART_ART`
+               AND asa.`ID_VA_ACA` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+             GROUP BY a.`CODIGO_ART_ART`) asg
+      JOIN `fza_atributos_conjuntos_det` acd ON acd.`ID_AC_ACD` = asg.`ID_AC`
+      JOIN `fza_atributos_valores` av ON av.`ID_AV` = acd.`ID_AV_ACD`;
+    -- Artículos ya resueltos (para excluirlos del respaldo sin
+    -- autorreferenciar tmp_bat_pos en el mismo statement).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_pos_arts`
+    SELECT DISTINCT `CODIGO_ART` FROM `tmp_bat_pos`;
+    -- 1b) Respaldo: artículos sin asignación -> tallas de sus SKUs.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT x.`CODIGO_ART`, x.`ID_AV`, x.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY x.`CODIGO_ART`
+                              ORDER BY x.`ORDEN_AV`, x.`AV`)
+      FROM (SELECT DISTINCT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   av.`ID_AV`, av.`AV`, COALESCE(av.`ORDEN_AV`, 0) AS `ORDEN_AV`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_skus` sku
+                ON sku.`CODIGO_ART_SKU` = a.`CODIGO_ART_ART`
+              JOIN `fza_atributos_sku` sa
+                ON sa.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+              JOIN `fza_atributos_valores` av
+                ON av.`ID_AV` = sa.`ID_AV_SA` AND av.`ID_VA_AV` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+               AND a.`CODIGO_ART_ART` NOT IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_pos_arts`)) x;
+
+    -- Etiquetas de cabecera por artículo (ETIQ_T01..ETIQ_T14).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    CREATE TEMPORARY TABLE `tmp_bat_etiq` AS
+    SELECT `CODIGO_ART`,
+           MAX(CASE WHEN `POSICION` =  1 THEN `ETIQ` END) AS `ETIQ_T01`,
+           MAX(CASE WHEN `POSICION` =  2 THEN `ETIQ` END) AS `ETIQ_T02`,
+           MAX(CASE WHEN `POSICION` =  3 THEN `ETIQ` END) AS `ETIQ_T03`,
+           MAX(CASE WHEN `POSICION` =  4 THEN `ETIQ` END) AS `ETIQ_T04`,
+           MAX(CASE WHEN `POSICION` =  5 THEN `ETIQ` END) AS `ETIQ_T05`,
+           MAX(CASE WHEN `POSICION` =  6 THEN `ETIQ` END) AS `ETIQ_T06`,
+           MAX(CASE WHEN `POSICION` =  7 THEN `ETIQ` END) AS `ETIQ_T07`,
+           MAX(CASE WHEN `POSICION` =  8 THEN `ETIQ` END) AS `ETIQ_T08`,
+           MAX(CASE WHEN `POSICION` =  9 THEN `ETIQ` END) AS `ETIQ_T09`,
+           MAX(CASE WHEN `POSICION` = 10 THEN `ETIQ` END) AS `ETIQ_T10`,
+           MAX(CASE WHEN `POSICION` = 11 THEN `ETIQ` END) AS `ETIQ_T11`,
+           MAX(CASE WHEN `POSICION` = 12 THEN `ETIQ` END) AS `ETIQ_T12`,
+           MAX(CASE WHEN `POSICION` = 13 THEN `ETIQ` END) AS `ETIQ_T13`,
+           MAX(CASE WHEN `POSICION` = 14 THEN `ETIQ` END) AS `ETIQ_T14`
+      FROM `tmp_bat_pos`
+     GROUP BY `CODIGO_ART`;
+    ALTER TABLE `tmp_bat_etiq` ADD PRIMARY KEY (`CODIGO_ART`);
+
+    -- -----------------------------------------------------------------
+    -- 2) SKUs en juego: artículo + color + posición de talla. Solo las
+    --    tallas que están en el conjunto pivote (POSICION 1..14).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    CREATE TEMPORARY TABLE `tmp_bat_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        KEY `IDX_BAT_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bat_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0), p.`POSICION`
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+      JOIN `fza_atributos_sku` sat
+        ON sat.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      JOIN `fza_atributos_valores` ta
+        ON ta.`ID_AV` = sat.`ID_AV_SA` AND ta.`ID_VA_AV` <> ''CO''
+      JOIN `tmp_bat_pos` p
+        ON p.`CODIGO_ART` = sku.`CODIGO_ART_SKU` AND p.`ID_AV` = ta.`ID_AV`
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- 3) Base de medidas por (artículo, color, posición). Se rellena con
+    --    ramas distintas según el modo para no calcular ventanas de
+    --    movimientos cuando se pide acumulados.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    CREATE TEMPORARY TABLE `tmp_bat_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `POSICION`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bat_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    ELSE
+        -- Entre fechas: movimientos del periodo + existencias
+        -- reconstruidas desde el stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               -- Existencias iniciales: stock actual menos movimientos
+               -- firmados desde p_DESDE (inclusive).
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               -- Existencias finales: stock actual menos movimientos
+               -- firmados posteriores a p_HASTA.
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bat_sku` s
+          LEFT JOIN (
+                -- Stock actual y movimientos firmados unificados por unidad y
+                -- almacén (UNION ALL para sumarlos en el mismo grano). Si no se
+                -- agrupa por almacén, ALM = '''' y todo colapsa en un único
+                -- bucket (resultado idéntico al cálculo agregado anterior).
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE FIND_IN_SET(st2.`CODIGO_ALM_STK`, v_alms)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND FIND_IN_SET(m.`CODIGO_ALM_MOV`, v_alms)
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 4) Desdoblar en bandas (forma larga). Cada banda es un INSERT
+    --    independiente (referencia tmp_bat_base una sola vez) y se filtra
+    --    por modo/desglosado. ES_COSTE marca cómo se valora la banda.
+    --    ORDEN_BANDA fija el orden vertical del informe.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bat_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `POSICION`       INT          NOT NULL,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BAT_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Entradas / Salidas agregadas: simplificado (F) o acumulados (A).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENT'', 20, ''Entradas'', 1, `ENT`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SAL'', 40, ''Salidas'', 0, `SAL`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Entradas / Salidas desglosadas: solo modo entre fechas desglosado.
+    -- Mismos subtipos que la consulta de stock (Ctrl+U).
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTTRA'', 23, ''Ent. traspaso'', 1, `ENT_TRASPASO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTDEP'', 24, ''Ent. depósito'', 1, `ENT_DEPOSITO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALTRA'', 41, ''Sal. traspaso'', 0, `SAL_TRASPASO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALDEP'', 42, ''Sal. depósito'', 0, `SAL_DEPOSITO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, `SAL_VENTA`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bat_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           `POSICION`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bat_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración
+    -- (modo/detalle). FIND_IN_SET sobre el código de banda.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bat_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 5) Pivote final por (artículo, color, banda) y enriquecido con
+    --    familia, etiquetas de cabecera, foto y valoración. El pivote
+    --    va en una subconsulta para no mezclar agregados con columnas
+    --    de adorno (ONLY_FULL_GROUP_BY-safe).
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        et.`ETIQ_T01`, et.`ETIQ_T02`, et.`ETIQ_T03`, et.`ETIQ_T04`,
+        et.`ETIQ_T05`, et.`ETIQ_T06`, et.`ETIQ_T07`, et.`ETIQ_T08`,
+        et.`ETIQ_T09`, et.`ETIQ_T10`, et.`ETIQ_T11`, et.`ETIQ_T12`,
+        et.`ETIQ_T13`, et.`ETIQ_T14`,
+        p.`T01`, p.`T02`, p.`T03`, p.`T04`, p.`T05`, p.`T06`, p.`T07`,
+        p.`T08`, p.`T09`, p.`T10`, p.`T11`, p.`T12`, p.`T13`, p.`T14`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto. Permite que el total por grupo/general
+        -- muestre SOLO el stock final, sin mezclar entradas/salidas/ventas.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        -- Niveles de agrupación configurables. GRUPOn_COD identifica el grupo
+        -- (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en
+        -- la cabecera/resumen. Si el nivel no está activo (''''), salen vacíos y
+        -- el cliente no dibuja banda de grupo a ese nivel.
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(IF(m.`POSICION` =  1, m.`CANTIDAD`, 0)) AS `T01`,
+                   SUM(IF(m.`POSICION` =  2, m.`CANTIDAD`, 0)) AS `T02`,
+                   SUM(IF(m.`POSICION` =  3, m.`CANTIDAD`, 0)) AS `T03`,
+                   SUM(IF(m.`POSICION` =  4, m.`CANTIDAD`, 0)) AS `T04`,
+                   SUM(IF(m.`POSICION` =  5, m.`CANTIDAD`, 0)) AS `T05`,
+                   SUM(IF(m.`POSICION` =  6, m.`CANTIDAD`, 0)) AS `T06`,
+                   SUM(IF(m.`POSICION` =  7, m.`CANTIDAD`, 0)) AS `T07`,
+                   SUM(IF(m.`POSICION` =  8, m.`CANTIDAD`, 0)) AS `T08`,
+                   SUM(IF(m.`POSICION` =  9, m.`CANTIDAD`, 0)) AS `T09`,
+                   SUM(IF(m.`POSICION` = 10, m.`CANTIDAD`, 0)) AS `T10`,
+                   SUM(IF(m.`POSICION` = 11, m.`CANTIDAD`, 0)) AS `T11`,
+                   SUM(IF(m.`POSICION` = 12, m.`CANTIDAD`, 0)) AS `T12`,
+                   SUM(IF(m.`POSICION` = 13, m.`CANTIDAD`, 0)) AS `T13`,
+                   SUM(IF(m.`POSICION` = 14, m.`CANTIDAD`, 0)) AS `T14`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bat_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bat_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN `tmp_bat_etiq` et ON et.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   SUM(st.`VALOR_TOTAL_STK`) AS `VAL`,
+                   SUM(st.`CANTIDAD_STK`)    AS `CAN`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `fza_articulos_propiedades` tp
+              LEFT JOIN `fza_propiedades_valores` tpv
+                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+             WHERE tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY tp.`CODIGO_ART_ART`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados). Se enlaza el SKU
+            -- de la línea a tmp_bat_sku para resolver artículo/color y restringir
+            -- a los artículos filtrados.
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bat_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE FIND_IN_SET(fl.`CODIGO_ALM_FACLIN`, v_alms)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales para no arrastrarlas en la sesión.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: (p_MODO, p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS,
+--              p_PROVEEDORES, p_TEMPORADAS, p_COD_TARIFA, p_DESGLOSADO,
+--              p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3, p_NIVEL_FAM).
+-- Todos los filtros multi-valor son CSV; '''' = sin filtro (todos). p_BANDAS
+-- limita qué bandas salen (códigos EXIINI/ENT/SAL/VEN/EXIFIN y, en
+-- desglosado, ENTCMP/ENTALB/ENTTRA/ENTDEP/ENTREG/SALTRA/SALDEP/SALALB).
+-- p_NIVEL1/2/3 definen la jerarquía de agrupación con resumen por grupo:
+-- PRV (proveedor), FAM (familia), TMP (temporada), ALM (almacén) o ''''
+-- (nivel inactivo). El orden importa: NIVEL1 es el grupo más externo. La
+-- salida añade GRUPO1_COD/GRUPO1_ETIQ..GRUPO3_COD/GRUPO3_ETIQ y ordena por
+-- ellas; el cliente (FastReport / Excel) dibuja las cabeceras y la línea
+-- de resumen (cantidad + importe) en cada corte de grupo. Si algún nivel es
+-- ALM, los cálculos se desglosan por almacén (si no, se agregan todos los
+-- almacenes filtrados). p_NIVEL_FAM elige el nivel del árbol de familias al
+-- agrupar por FAM (1 = familia raíz; <1 o NULL = familia hoja del artículo).
+-- Ejemplos de uso (desde el modal de impresión preparar_consulta):
+--   -- Entre fechas, simplificado, todos los almacenes, todas las bandas,
+--   -- sin agrupación adicional
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Entre fechas, desglosado, almacenes 01 y 50, familias 0103 y 0104
+--   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26,
+--   -- solo las bandas de existencias y ventas, agrupando por proveedor y
+--   -- dentro de cada proveedor por la familia raíz (nivel 1 del árbol)
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'',''01,50'',''0103,0104'',''PRV001'',''V26'',''PVP'',''S'',''EXIINI,VEN,EXIFIN'',''PRV'',''FAM'','''',1);
+--   -- Por acumulados, todas las bandas, agrupado por almacén y temporada
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''A'',NULL,NULL,'''','''','''','''',''PVP'',''N'','''',''ALM'',''TMP'','''',0);
+-- ---------------------------------------------------------------------
+', '2026-06-05 19:31:53', '2026-06-05 19:31:53', 'Administrador', 'Administrador'),
+  ('320', 'balance_almacen_sin_tallas', '-- =====================================================================
+-- Balance de almacén SIN tallas (informe vertical con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_SIN_TALLAS: variante del balance
+-- por tallas (PRC_GET_BALANCE_ALMACEN_TALLAS) que NO pivota por talla. Es
+-- el informe "normal" (vertical): una fila por (artículo, color, banda)
+-- con Cantidad / Precio / Importe, sin las columnas T01..T14. Por eso
+-- incluye TODOS los artículos, también los que no son "tallables" (sin
+-- conjunto pivote ni tallas en sus SKUs), que el informe horizontal deja
+-- fuera. Mismos filtros, modos, bandas, agrupaciones y valoración.
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas (existencias iniciales, entradas, salidas, ventas,
+--         existencias finales; desglosado abre los subtipos Ctrl+U).
+--   ''A'' = por acumulados (entradas, salidas, ventas, existencias finales).
+--
+-- Origen de datos y valoración: idénticos al balance por tallas (ver
+-- balance_almacen_tallas.sql §). La única diferencia es el grano: aquí se
+-- agrupa por (artículo, color) en vez de por (artículo, color, talla), y
+-- no hay tabla de posiciones/etiquetas de talla.
+--
+-- Ventas: la banda de ventas (VEN) se valora al PRECIO REAL de venta (con
+-- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no a tarifa.
+-- Columna VENTAS (importe real solo en VEN, 0 en el resto) para acumular las
+-- ventas por artículo/grupo/total. Existencias ini/fin y entradas, a PMP.
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Filas todo-a-cero: se descartan los (artículo, color) sin existencias ni
+-- movimientos en el periodo (si no, al cubrir todo el catálogo saldría
+-- ruido de artículos inactivos).
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Lista efectiva de almacenes (CSV sin comillas, para FIND_IN_SET).
+    IF IFNULL(p_ALMACENES, '''') <> '''' THEN
+        SET v_alms = p_ALMACENES;
+    ELSE
+        SELECT GROUP_CONCAT(`CODIGO_ALM_ALM`)
+          INTO v_alms
+          FROM `fza_almacenes`
+         WHERE `ESACTIVO_ALM` = ''S'';
+    END IF;
+    SET v_alms = IFNULL(v_alms, '''');
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo (familias con descendencia, proveedores,
+    -- temporadas) + mapa de familia por nivel del árbol. Igual que el
+    -- balance por tallas.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa familia -> ancestro al nivel pedido (para agrupar por FAM "por
+    -- nivel"). Ver balance_almacen_tallas.sql para el detalle.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bst_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    UPDATE `tmp_bst_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    CREATE TEMPORARY TABLE `tmp_bst_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bst_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- SKUs en juego: unidad -> (artículo, color). SIN posición de talla:
+    -- entra cualquier SKU de los artículos filtrados (con o sin tallas),
+    -- por eso el informe cubre todo el catálogo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    CREATE TEMPORARY TABLE `tmp_bst_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        KEY `IDX_BST_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bst_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0)
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+       AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- Base de medidas por (artículo, almacén, color). Igual lógica que el
+    -- balance por tallas pero agrupando por color (no por talla).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    CREATE TEMPORARY TABLE `tmp_bst_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bst_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`COLOR`;
+    ELSE
+        -- Entre fechas: stock actual + movimientos firmados unificados por
+        -- (unidad, almacén). Si no se agrupa por almacén, ALM = '''' y colapsa.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bst_sku` s
+          LEFT JOIN (
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE FIND_IN_SET(st2.`CODIGO_ALM_STK`, v_alms)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND FIND_IN_SET(m.`CODIGO_ALM_MOV`, v_alms)
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''), s.`COLOR`;
+    END IF;
+
+    -- Descartar (artículo, color) sin existencias ni movimientos: cubrir todo
+    -- el catálogo si no llenaría el informe de artículos inactivos a cero.
+    DELETE FROM `tmp_bst_base`
+     WHERE `EXI_INI` = 0 AND `ENT` = 0 AND `SAL` = 0 AND `VEN` = 0
+       AND `EXI_FIN` = 0 AND `ENT_COMPRA` = 0 AND `ENT_ALBENTRADA` = 0
+       AND `ENT_TRASPASO` = 0 AND `ENT_DEPOSITO` = 0 AND `ENT_REGULAR` = 0
+       AND `SAL_TRASPASO` = 0 AND `SAL_DEPOSITO` = 0 AND `SAL_ALBVENTA` = 0
+       AND `SAL_VENTA` = 0;
+
+    -- -----------------------------------------------------------------
+    -- Desdoblar en bandas (forma larga), igual que el balance por tallas
+    -- pero sin posición de talla.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bst_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BST_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Entradas / Salidas agregadas: simplificado (F) o acumulados (A).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENT'', 20, ''Entradas'', 1, `ENT`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SAL'', 40, ''Salidas'', 0, `SAL`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Entradas / Salidas desglosadas: solo modo entre fechas desglosado.
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTTRA'', 23, ''Ent. traspaso'', 1, `ENT_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTDEP'', 24, ''Ent. depósito'', 1, `ENT_DEPOSITO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALTRA'', 41, ''Sal. traspaso'', 0, `SAL_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALDEP'', 42, ''Sal. depósito'', 0, `SAL_DEPOSITO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `SAL_VENTA`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bst_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bst_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bst_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- Salida final: una fila por (artículo, color, banda), enriquecida con
+    -- familia, foto, valoración y columnas de agrupación.
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto, para que el total por grupo/general
+        -- muestre SOLO el stock final.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bst_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bst_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `fza_articulos_propiedades` tp
+              LEFT JOIN `fza_propiedades_valores` tpv
+                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+             WHERE tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY tp.`CODIGO_ART_ART`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados).
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bst_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE FIND_IN_SET(fl.`CODIGO_ALM_FACLIN`, v_alms)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: idénticos a PRC_GET_BALANCE_ALMACEN_TALLAS (p_MODO, p_DESDE,
+-- p_HASTA, p_ALMACENES, p_FAMILIAS, p_PROVEEDORES, p_TEMPORADAS,
+-- p_COD_TARIFA, p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
+-- p_NIVEL_FAM). La salida NO trae columnas de talla (T01..T14 / ETIQ_T*):
+-- una fila por (artículo, color, banda) con CANTIDAD / PRECIO / IMPORTE.
+-- Ejemplos:
+--   -- Entre fechas, simplificado, sin agrupación
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Acumulados agrupado por proveedor y, dentro, por familia raíz
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''A'',NULL,NULL,'''','''','''','''',''PVP'',''N'','''',''PRV'',''FAM'','''',1);
+-- ---------------------------------------------------------------------
+', '2026-06-05 19:32:00', '2026-06-05 19:32:00', 'Administrador', 'Administrador'),
+  ('321', 'balance_almacen_tallas', '-- =====================================================================
+-- Balance de almacén por tallas (informe horizontal con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_TALLAS: devuelve las filas del
+-- informe ya pivotadas por talla (columnas fijas T01..T14, igual que
+-- vi_compras_sesiones_lin_print) y desdobladas en bandas. Una fila por
+-- (artículo, color, banda). El informe FastReport agrupa por familia y
+-- artículo y dibuja cada banda como una sub-línea (ent. / sal. / ex.).
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas. Bandas (simplificado): Existencias iniciales,
+--         Entradas, Salidas, Ventas, Existencias finales. En desglosado
+--         las entradas/salidas se abren en los subtipos de la consulta
+--         Ctrl+U (compra, traspaso, depósito, regulariz., albaranes...).
+--   ''A'' = por acumulados. Bandas: Entradas, Salidas, Ventas, Existencias
+--         finales (sin existencias iniciales: el acumulado es "desde
+--         siempre"). El desglosado no aplica.
+--
+-- Origen de datos:
+--   - Modo ''F'': se reconstruye desde fza_movimientos_almacen. Las
+--     existencias a una fecha se calculan partiendo del stock actual
+--     (fza_articulos_stockactual.CANTIDAD_STK) y restando los
+--     movimientos firmados posteriores a esa fecha.
+--   - Modo ''A'': se leen los acumulados denormalizados de
+--     fza_articulos_stockactual (CANTIDAD_ENT_*_STK / CANTIDAD_SAL_*_STK,
+--     ver stocks_acumulados.sql) y CANTIDAD_STK.
+--
+-- Valoración (columnas Precio / Importe del informe):
+--   - Entradas y existencias (ini/fin) -> coste = precio medio ponderado
+--     (PMP) del stock actual del artículo; si es 0 se usa el último precio
+--     de compra del proveedor principal.
+--   - Salidas        -> PVP (tarifa por defecto vigente hoy), valoración
+--     nocional de todo lo que sale.
+--   - Ventas (VEN)   -> PRECIO REAL de venta (con descuentos, con IVA) de
+--     fza_facturas_lineas; NO la tarifa. IMPORTE = importe real facturado.
+--   VENTAS: columna con el importe real de venta SOLO en la banda VEN (0 en
+--   el resto), para acumular las ventas por artículo/grupo/total (en los
+--   totales se muestran las ventas, no el margen).
+--   IMPORTE = CANTIDAD * PRECIO de la banda (salvo VEN, importe real).
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    -- Si algún nivel es ALM hay que conservar el almacén en el grano de los
+    -- cálculos (si no, se agregan todos los almacenes filtrados en uno).
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    -- Nivel del árbol de familias para agrupar por FAM. <1 (o NULL) = familia
+    -- hoja del artículo (comportamiento clásico); 1 = familia raíz, etc.
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar
+    -- por IN en vez de FIND_IN_SET sobre las tablas grandes: FIND_IN_SET no es
+    -- sargable y obliga a escanear (p. ej. fza_articulos_stockactual, cuyo PK
+    -- empieza por CODIGO_ALM_STK). Con el IN, MariaDB puede usar el índice.
+    -- Sin selección = todos los almacenes activos ("nada marcado = todos").
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+    CREATE TEMPORARY TABLE `tmp_bat_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '''') = '''',
+              `ESACTIVO_ALM` = ''S'',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo: familias (con su descendencia), proveedores y
+    -- temporadas. Se materializa en tmp_bat_arts el conjunto de artículos
+    -- que pasan los tres filtros; el resto del SP se restringe a él.
+    -- -----------------------------------------------------------------
+    -- Familias elegidas expandidas a TODA su descendencia: si se filtra una
+    -- familia padre, entran también sus hijas (CTE recursivo por
+    -- CODIGO_PADRE_FAM). Con p_FAMILIAS vacío sale vacía y no se aplica.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa de cada familia a su ancestro al nivel pedido (v_nivel_fam), para
+    -- agrupar por FAM "por nivel": si el árbol tiene padres-hijos se puede
+    -- agrupar por la familia raíz (nivel 1), la de 2º nivel, etc. Se construye
+    -- el camino raíz->familia y se toma el código del nivel solicitado (o la
+    -- propia familia si es menos profunda que el nivel pedido).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bat_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    -- Descripción del grupo (familia ancestro elegida).
+    UPDATE `tmp_bat_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bat_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- 1) Posiciones de talla por artículo (T01..T14).
+    --    Mismo criterio que TfrmStockConsulta.TallasArticulo: el conjunto
+    --    pivote del artículo (atributo no-color asignado) define el orden
+    --    de las columnas; si el artículo no tiene asignación, se usan las
+    --    tallas presentes en sus SKUs como respaldo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos` (
+        `CODIGO_ART` VARCHAR(20)  NOT NULL,
+        `ID_AV`      INT          NOT NULL,
+        `ETIQ`       VARCHAR(100) NULL,
+        `POSICION`   INT          NOT NULL,
+        PRIMARY KEY (`CODIGO_ART`, `ID_AV`)
+    );
+    -- 1a) Artículos con conjunto pivote asignado.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT asg.`CODIGO_ART`, acd.`ID_AV_ACD`, av.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY asg.`CODIGO_ART`
+                              ORDER BY acd.`ORDEN_ACD`, acd.`ID_AV_ACD`)
+      FROM (SELECT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MIN(asa.`ID_AC_ACA`) AS `ID_AC`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_conjuntos_asign` asa
+                ON asa.`CODIGO_ART_ACA` = a.`CODIGO_ART_ART`
+               AND asa.`ID_VA_ACA` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+             GROUP BY a.`CODIGO_ART_ART`) asg
+      JOIN `fza_atributos_conjuntos_det` acd ON acd.`ID_AC_ACD` = asg.`ID_AC`
+      JOIN `fza_atributos_valores` av ON av.`ID_AV` = acd.`ID_AV_ACD`;
+    -- Artículos ya resueltos (para excluirlos del respaldo sin
+    -- autorreferenciar tmp_bat_pos en el mismo statement).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_pos_arts`
+    SELECT DISTINCT `CODIGO_ART` FROM `tmp_bat_pos`;
+    -- 1b) Respaldo: artículos sin asignación -> tallas de sus SKUs.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT x.`CODIGO_ART`, x.`ID_AV`, x.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY x.`CODIGO_ART`
+                              ORDER BY x.`ORDEN_AV`, x.`AV`)
+      FROM (SELECT DISTINCT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   av.`ID_AV`, av.`AV`, COALESCE(av.`ORDEN_AV`, 0) AS `ORDEN_AV`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_skus` sku
+                ON sku.`CODIGO_ART_SKU` = a.`CODIGO_ART_ART`
+              JOIN `fza_atributos_sku` sa
+                ON sa.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+              JOIN `fza_atributos_valores` av
+                ON av.`ID_AV` = sa.`ID_AV_SA` AND av.`ID_VA_AV` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+               AND a.`CODIGO_ART_ART` NOT IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_pos_arts`)) x;
+
+    -- Etiquetas de cabecera por artículo (ETIQ_T01..ETIQ_T14).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    CREATE TEMPORARY TABLE `tmp_bat_etiq` AS
+    SELECT `CODIGO_ART`,
+           MAX(CASE WHEN `POSICION` =  1 THEN `ETIQ` END) AS `ETIQ_T01`,
+           MAX(CASE WHEN `POSICION` =  2 THEN `ETIQ` END) AS `ETIQ_T02`,
+           MAX(CASE WHEN `POSICION` =  3 THEN `ETIQ` END) AS `ETIQ_T03`,
+           MAX(CASE WHEN `POSICION` =  4 THEN `ETIQ` END) AS `ETIQ_T04`,
+           MAX(CASE WHEN `POSICION` =  5 THEN `ETIQ` END) AS `ETIQ_T05`,
+           MAX(CASE WHEN `POSICION` =  6 THEN `ETIQ` END) AS `ETIQ_T06`,
+           MAX(CASE WHEN `POSICION` =  7 THEN `ETIQ` END) AS `ETIQ_T07`,
+           MAX(CASE WHEN `POSICION` =  8 THEN `ETIQ` END) AS `ETIQ_T08`,
+           MAX(CASE WHEN `POSICION` =  9 THEN `ETIQ` END) AS `ETIQ_T09`,
+           MAX(CASE WHEN `POSICION` = 10 THEN `ETIQ` END) AS `ETIQ_T10`,
+           MAX(CASE WHEN `POSICION` = 11 THEN `ETIQ` END) AS `ETIQ_T11`,
+           MAX(CASE WHEN `POSICION` = 12 THEN `ETIQ` END) AS `ETIQ_T12`,
+           MAX(CASE WHEN `POSICION` = 13 THEN `ETIQ` END) AS `ETIQ_T13`,
+           MAX(CASE WHEN `POSICION` = 14 THEN `ETIQ` END) AS `ETIQ_T14`
+      FROM `tmp_bat_pos`
+     GROUP BY `CODIGO_ART`;
+    ALTER TABLE `tmp_bat_etiq` ADD PRIMARY KEY (`CODIGO_ART`);
+
+    -- -----------------------------------------------------------------
+    -- 2) SKUs en juego: artículo + color + posición de talla. Solo las
+    --    tallas que están en el conjunto pivote (POSICION 1..14).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    CREATE TEMPORARY TABLE `tmp_bat_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        KEY `IDX_BAT_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bat_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0), p.`POSICION`
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+      JOIN `fza_atributos_sku` sat
+        ON sat.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      JOIN `fza_atributos_valores` ta
+        ON ta.`ID_AV` = sat.`ID_AV_SA` AND ta.`ID_VA_AV` <> ''CO''
+      JOIN `tmp_bat_pos` p
+        ON p.`CODIGO_ART` = sku.`CODIGO_ART_SKU` AND p.`ID_AV` = ta.`ID_AV`
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- 3) Base de medidas por (artículo, color, posición). Se rellena con
+    --    ramas distintas según el modo para no calcular ventanas de
+    --    movimientos cuando se pide acumulados.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    CREATE TEMPORARY TABLE `tmp_bat_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `POSICION`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bat_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    ELSE
+        -- Entre fechas: movimientos del periodo + existencias
+        -- reconstruidas desde el stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               -- Existencias iniciales: stock actual menos movimientos
+               -- firmados desde p_DESDE (inclusive).
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               -- Existencias finales: stock actual menos movimientos
+               -- firmados posteriores a p_HASTA.
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bat_sku` s
+          LEFT JOIN (
+                -- Stock actual y movimientos firmados unificados por unidad y
+                -- almacén (UNION ALL para sumarlos en el mismo grano). Si no se
+                -- agrupa por almacén, ALM = '''' y todo colapsa en un único
+                -- bucket (resultado idéntico al cálculo agregado anterior).
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 4) Desdoblar en bandas (forma larga). Cada banda es un INSERT
+    --    independiente (referencia tmp_bat_base una sola vez) y se filtra
+    --    por modo/desglosado. ES_COSTE marca cómo se valora la banda.
+    --    ORDEN_BANDA fija el orden vertical del informe.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bat_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `POSICION`       INT          NOT NULL,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BAT_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Entradas / Salidas agregadas: simplificado (F) o acumulados (A).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENT'', 20, ''Entradas'', 1, `ENT`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SAL'', 40, ''Salidas'', 0, `SAL`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Entradas / Salidas desglosadas: solo modo entre fechas desglosado.
+    -- Mismos subtipos que la consulta de stock (Ctrl+U).
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTTRA'', 23, ''Ent. traspaso'', 1, `ENT_TRASPASO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTDEP'', 24, ''Ent. depósito'', 1, `ENT_DEPOSITO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALTRA'', 41, ''Sal. traspaso'', 0, `SAL_TRASPASO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALDEP'', 42, ''Sal. depósito'', 0, `SAL_DEPOSITO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, `SAL_VENTA`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bat_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           `POSICION`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bat_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración
+    -- (modo/detalle). FIND_IN_SET sobre el código de banda.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bat_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 5) Pivote final por (artículo, color, banda) y enriquecido con
+    --    familia, etiquetas de cabecera, foto y valoración. El pivote
+    --    va en una subconsulta para no mezclar agregados con columnas
+    --    de adorno (ONLY_FULL_GROUP_BY-safe).
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        et.`ETIQ_T01`, et.`ETIQ_T02`, et.`ETIQ_T03`, et.`ETIQ_T04`,
+        et.`ETIQ_T05`, et.`ETIQ_T06`, et.`ETIQ_T07`, et.`ETIQ_T08`,
+        et.`ETIQ_T09`, et.`ETIQ_T10`, et.`ETIQ_T11`, et.`ETIQ_T12`,
+        et.`ETIQ_T13`, et.`ETIQ_T14`,
+        p.`T01`, p.`T02`, p.`T03`, p.`T04`, p.`T05`, p.`T06`, p.`T07`,
+        p.`T08`, p.`T09`, p.`T10`, p.`T11`, p.`T12`, p.`T13`, p.`T14`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto. Permite que el total por grupo/general
+        -- muestre SOLO el stock final, sin mezclar entradas/salidas/ventas.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        -- Niveles de agrupación configurables. GRUPOn_COD identifica el grupo
+        -- (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en
+        -- la cabecera/resumen. Si el nivel no está activo (''''), salen vacíos y
+        -- el cliente no dibuja banda de grupo a ese nivel.
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(IF(m.`POSICION` =  1, m.`CANTIDAD`, 0)) AS `T01`,
+                   SUM(IF(m.`POSICION` =  2, m.`CANTIDAD`, 0)) AS `T02`,
+                   SUM(IF(m.`POSICION` =  3, m.`CANTIDAD`, 0)) AS `T03`,
+                   SUM(IF(m.`POSICION` =  4, m.`CANTIDAD`, 0)) AS `T04`,
+                   SUM(IF(m.`POSICION` =  5, m.`CANTIDAD`, 0)) AS `T05`,
+                   SUM(IF(m.`POSICION` =  6, m.`CANTIDAD`, 0)) AS `T06`,
+                   SUM(IF(m.`POSICION` =  7, m.`CANTIDAD`, 0)) AS `T07`,
+                   SUM(IF(m.`POSICION` =  8, m.`CANTIDAD`, 0)) AS `T08`,
+                   SUM(IF(m.`POSICION` =  9, m.`CANTIDAD`, 0)) AS `T09`,
+                   SUM(IF(m.`POSICION` = 10, m.`CANTIDAD`, 0)) AS `T10`,
+                   SUM(IF(m.`POSICION` = 11, m.`CANTIDAD`, 0)) AS `T11`,
+                   SUM(IF(m.`POSICION` = 12, m.`CANTIDAD`, 0)) AS `T12`,
+                   SUM(IF(m.`POSICION` = 13, m.`CANTIDAD`, 0)) AS `T13`,
+                   SUM(IF(m.`POSICION` = 14, m.`CANTIDAD`, 0)) AS `T14`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bat_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bat_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN `tmp_bat_etiq` et ON et.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   SUM(st.`VALOR_TOTAL_STK`) AS `VAL`,
+                   SUM(st.`CANTIDAD_STK`)    AS `CAN`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `fza_articulos_propiedades` tp
+              LEFT JOIN `fza_propiedades_valores` tpv
+                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+             WHERE tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY tp.`CODIGO_ART_ART`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados). Se enlaza el SKU
+            -- de la línea a tmp_bat_sku para resolver artículo/color y restringir
+            -- a los artículos filtrados.
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bat_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales para no arrastrarlas en la sesión.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: (p_MODO, p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS,
+--              p_PROVEEDORES, p_TEMPORADAS, p_COD_TARIFA, p_DESGLOSADO,
+--              p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3, p_NIVEL_FAM).
+-- Todos los filtros multi-valor son CSV; '''' = sin filtro (todos). p_BANDAS
+-- limita qué bandas salen (códigos EXIINI/ENT/SAL/VEN/EXIFIN y, en
+-- desglosado, ENTCMP/ENTALB/ENTTRA/ENTDEP/ENTREG/SALTRA/SALDEP/SALALB).
+-- p_NIVEL1/2/3 definen la jerarquía de agrupación con resumen por grupo:
+-- PRV (proveedor), FAM (familia), TMP (temporada), ALM (almacén) o ''''
+-- (nivel inactivo). El orden importa: NIVEL1 es el grupo más externo. La
+-- salida añade GRUPO1_COD/GRUPO1_ETIQ..GRUPO3_COD/GRUPO3_ETIQ y ordena por
+-- ellas; el cliente (FastReport / Excel) dibuja las cabeceras y la línea
+-- de resumen (cantidad + importe) en cada corte de grupo. Si algún nivel es
+-- ALM, los cálculos se desglosan por almacén (si no, se agregan todos los
+-- almacenes filtrados). p_NIVEL_FAM elige el nivel del árbol de familias al
+-- agrupar por FAM (1 = familia raíz; <1 o NULL = familia hoja del artículo).
+-- Ejemplos de uso (desde el modal de impresión preparar_consulta):
+--   -- Entre fechas, simplificado, todos los almacenes, todas las bandas,
+--   -- sin agrupación adicional
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Entre fechas, desglosado, almacenes 01 y 50, familias 0103 y 0104
+--   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26,
+--   -- solo las bandas de existencias y ventas, agrupando por proveedor y
+--   -- dentro de cada proveedor por la familia raíz (nivel 1 del árbol)
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'',''01,50'',''0103,0104'',''PRV001'',''V26'',''PVP'',''S'',''EXIINI,VEN,EXIFIN'',''PRV'',''FAM'','''',1);
+--   -- Por acumulados, todas las bandas, agrupado por almacén y temporada
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''A'',NULL,NULL,'''','''','''','''',''PVP'',''N'','''',''ALM'',''TMP'','''',0);
+-- ---------------------------------------------------------------------
+', '2026-06-05 19:40:53', '2026-06-05 19:40:53', 'Administrador', 'Administrador'),
+  ('322', 'balance_almacen_sin_tallas', '-- =====================================================================
+-- Balance de almacén SIN tallas (informe vertical con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_SIN_TALLAS: variante del balance
+-- por tallas (PRC_GET_BALANCE_ALMACEN_TALLAS) que NO pivota por talla. Es
+-- el informe "normal" (vertical): una fila por (artículo, color, banda)
+-- con Cantidad / Precio / Importe, sin las columnas T01..T14. Por eso
+-- incluye TODOS los artículos, también los que no son "tallables" (sin
+-- conjunto pivote ni tallas en sus SKUs), que el informe horizontal deja
+-- fuera. Mismos filtros, modos, bandas, agrupaciones y valoración.
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas (existencias iniciales, entradas, salidas, ventas,
+--         existencias finales; desglosado abre los subtipos Ctrl+U).
+--   ''A'' = por acumulados (entradas, salidas, ventas, existencias finales).
+--
+-- Origen de datos y valoración: idénticos al balance por tallas (ver
+-- balance_almacen_tallas.sql §). La única diferencia es el grano: aquí se
+-- agrupa por (artículo, color) en vez de por (artículo, color, talla), y
+-- no hay tabla de posiciones/etiquetas de talla.
+--
+-- Ventas: la banda de ventas (VEN) se valora al PRECIO REAL de venta (con
+-- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no a tarifa.
+-- Columna VENTAS (importe real solo en VEN, 0 en el resto) para acumular las
+-- ventas por artículo/grupo/total. Existencias ini/fin y entradas, a PMP.
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Filas todo-a-cero: se descartan los (artículo, color) sin existencias ni
+-- movimientos en el periodo (si no, al cubrir todo el catálogo saldría
+-- ruido de artículos inactivos).
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar
+    -- por IN en vez de FIND_IN_SET sobre las tablas grandes (no es sargable y
+    -- obliga a escanear; fza_articulos_stockactual tiene CODIGO_ALM_STK como
+    -- 1ª columna del PK). Sin selección = todos los almacenes activos.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
+    CREATE TEMPORARY TABLE `tmp_bst_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '''') = '''',
+              `ESACTIVO_ALM` = ''S'',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo (familias con descendencia, proveedores,
+    -- temporadas) + mapa de familia por nivel del árbol. Igual que el
+    -- balance por tallas.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa familia -> ancestro al nivel pedido (para agrupar por FAM "por
+    -- nivel"). Ver balance_almacen_tallas.sql para el detalle.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bst_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    UPDATE `tmp_bst_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    CREATE TEMPORARY TABLE `tmp_bst_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bst_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- SKUs en juego: unidad -> (artículo, color). SIN posición de talla:
+    -- entra cualquier SKU de los artículos filtrados (con o sin tallas),
+    -- por eso el informe cubre todo el catálogo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    CREATE TEMPORARY TABLE `tmp_bst_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        KEY `IDX_BST_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bst_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0)
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+       AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- Base de medidas por (artículo, almacén, color). Igual lógica que el
+    -- balance por tallas pero agrupando por color (no por talla).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    CREATE TEMPORARY TABLE `tmp_bst_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bst_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`COLOR`;
+    ELSE
+        -- Entre fechas: stock actual + movimientos firmados unificados por
+        -- (unidad, almacén). Si no se agrupa por almacén, ALM = '''' y colapsa.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bst_sku` s
+          LEFT JOIN (
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''), s.`COLOR`;
+    END IF;
+
+    -- Descartar (artículo, color) sin existencias ni movimientos: cubrir todo
+    -- el catálogo si no llenaría el informe de artículos inactivos a cero.
+    DELETE FROM `tmp_bst_base`
+     WHERE `EXI_INI` = 0 AND `ENT` = 0 AND `SAL` = 0 AND `VEN` = 0
+       AND `EXI_FIN` = 0 AND `ENT_COMPRA` = 0 AND `ENT_ALBENTRADA` = 0
+       AND `ENT_TRASPASO` = 0 AND `ENT_DEPOSITO` = 0 AND `ENT_REGULAR` = 0
+       AND `SAL_TRASPASO` = 0 AND `SAL_DEPOSITO` = 0 AND `SAL_ALBVENTA` = 0
+       AND `SAL_VENTA` = 0;
+
+    -- -----------------------------------------------------------------
+    -- Desdoblar en bandas (forma larga), igual que el balance por tallas
+    -- pero sin posición de talla.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bst_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BST_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Entradas / Salidas agregadas: simplificado (F) o acumulados (A).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENT'', 20, ''Entradas'', 1, `ENT`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SAL'', 40, ''Salidas'', 0, `SAL`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Entradas / Salidas desglosadas: solo modo entre fechas desglosado.
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTTRA'', 23, ''Ent. traspaso'', 1, `ENT_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTDEP'', 24, ''Ent. depósito'', 1, `ENT_DEPOSITO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALTRA'', 41, ''Sal. traspaso'', 0, `SAL_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALDEP'', 42, ''Sal. depósito'', 0, `SAL_DEPOSITO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `SAL_VENTA`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bst_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bst_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bst_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- Salida final: una fila por (artículo, color, banda), enriquecida con
+    -- familia, foto, valoración y columnas de agrupación.
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto, para que el total por grupo/general
+        -- muestre SOLO el stock final.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bst_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bst_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `fza_articulos_propiedades` tp
+              LEFT JOIN `fza_propiedades_valores` tpv
+                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+             WHERE tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY tp.`CODIGO_ART_ART`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados).
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bst_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: idénticos a PRC_GET_BALANCE_ALMACEN_TALLAS (p_MODO, p_DESDE,
+-- p_HASTA, p_ALMACENES, p_FAMILIAS, p_PROVEEDORES, p_TEMPORADAS,
+-- p_COD_TARIFA, p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
+-- p_NIVEL_FAM). La salida NO trae columnas de talla (T01..T14 / ETIQ_T*):
+-- una fila por (artículo, color, banda) con CANTIDAD / PRECIO / IMPORTE.
+-- Ejemplos:
+--   -- Entre fechas, simplificado, sin agrupación
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Acumulados agrupado por proveedor y, dentro, por familia raíz
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''A'',NULL,NULL,'''','''','''','''',''PVP'',''N'','''',''PRV'',''FAM'','''',1);
+-- ---------------------------------------------------------------------
+', '2026-06-05 19:41:02', '2026-06-05 19:41:02', 'Administrador', 'Administrador'),
+  ('323', 'balance_almacen_tallas', '-- =====================================================================
+-- Balance de almacén por tallas (informe horizontal con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_TALLAS: devuelve las filas del
+-- informe ya pivotadas por talla (columnas fijas T01..T14, igual que
+-- vi_compras_sesiones_lin_print) y desdobladas en bandas. Una fila por
+-- (artículo, color, banda). El informe FastReport agrupa por familia y
+-- artículo y dibuja cada banda como una sub-línea (ent. / sal. / ex.).
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas. Bandas (simplificado): Existencias iniciales,
+--         Entradas, Ventas, Existencias finales. NO hay banda Salidas: los
+--         traspasos se netean (entrada - salida) dentro de Entradas y los
+--         depósitos quedan fuera de la ecuación. En desglosado las entradas
+--         se abren en los subtipos de la consulta Ctrl+U (compra, alb.
+--         entrada, traspasos neto, depósitos neto, regulariz., alb. venta).
+--   ''A'' = por acumulados. Bandas: Entradas, Ventas, Existencias finales
+--         (sin existencias iniciales: el acumulado es "desde siempre"). El
+--         desglosado no aplica.
+--   Balance en todos los modos: Ex.ini + Entradas - Ventas = Ex.final.
+--
+-- Origen de datos:
+--   - Modo ''F'': se reconstruye desde fza_movimientos_almacen. Las
+--     existencias a una fecha se calculan partiendo del stock actual
+--     (fza_articulos_stockactual.CANTIDAD_STK) y restando los
+--     movimientos firmados posteriores a esa fecha.
+--   - Modo ''A'': se leen los acumulados denormalizados de
+--     fza_articulos_stockactual (CANTIDAD_ENT_*_STK / CANTIDAD_SAL_*_STK,
+--     ver stocks_acumulados.sql) y CANTIDAD_STK.
+--
+-- Valoración (columnas Precio / Importe del informe):
+--   - Entradas y existencias (ini/fin) -> coste = precio medio ponderado
+--     (PMP) del stock actual del artículo; si es 0 se usa el último precio
+--     de compra del proveedor principal.
+--   - Alb. venta     -> PVP (tarifa por defecto vigente hoy), valoración
+--     nocional de la salida por albarán de venta (solo en desglosado).
+--   - Ventas (VEN)   -> PRECIO REAL de venta (con descuentos, con IVA) de
+--     fza_facturas_lineas; NO la tarifa. IMPORTE = importe real facturado.
+--   VENTAS: columna con el importe real de venta SOLO en la banda VEN (0 en
+--   el resto), para acumular las ventas por artículo/grupo/total (en los
+--   totales se muestran las ventas, no el margen).
+--   IMPORTE = CANTIDAD * PRECIO de la banda (salvo VEN, importe real).
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    -- Si algún nivel es ALM hay que conservar el almacén en el grano de los
+    -- cálculos (si no, se agregan todos los almacenes filtrados en uno).
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    -- Nivel del árbol de familias para agrupar por FAM. <1 (o NULL) = familia
+    -- hoja del artículo (comportamiento clásico); 1 = familia raíz, etc.
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar
+    -- por IN en vez de FIND_IN_SET sobre las tablas grandes: FIND_IN_SET no es
+    -- sargable y obliga a escanear (p. ej. fza_articulos_stockactual, cuyo PK
+    -- empieza por CODIGO_ALM_STK). Con el IN, MariaDB puede usar el índice.
+    -- Sin selección = todos los almacenes activos ("nada marcado = todos").
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+    CREATE TEMPORARY TABLE `tmp_bat_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '''') = '''',
+              `ESACTIVO_ALM` = ''S'',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo: familias (con su descendencia), proveedores y
+    -- temporadas. Se materializa en tmp_bat_arts el conjunto de artículos
+    -- que pasan los tres filtros; el resto del SP se restringe a él.
+    -- -----------------------------------------------------------------
+    -- Familias elegidas expandidas a TODA su descendencia: si se filtra una
+    -- familia padre, entran también sus hijas (CTE recursivo por
+    -- CODIGO_PADRE_FAM). Con p_FAMILIAS vacío sale vacía y no se aplica.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa de cada familia a su ancestro al nivel pedido (v_nivel_fam), para
+    -- agrupar por FAM "por nivel": si el árbol tiene padres-hijos se puede
+    -- agrupar por la familia raíz (nivel 1), la de 2º nivel, etc. Se construye
+    -- el camino raíz->familia y se toma el código del nivel solicitado (o la
+    -- propia familia si es menos profunda que el nivel pedido).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bat_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    -- Descripción del grupo (familia ancestro elegida).
+    UPDATE `tmp_bat_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bat_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- 1) Posiciones de talla por artículo (T01..T14).
+    --    Mismo criterio que TfrmStockConsulta.TallasArticulo: el conjunto
+    --    pivote del artículo (atributo no-color asignado) define el orden
+    --    de las columnas; si el artículo no tiene asignación, se usan las
+    --    tallas presentes en sus SKUs como respaldo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos` (
+        `CODIGO_ART` VARCHAR(20)  NOT NULL,
+        `ID_AV`      INT          NOT NULL,
+        `ETIQ`       VARCHAR(100) NULL,
+        `POSICION`   INT          NOT NULL,
+        PRIMARY KEY (`CODIGO_ART`, `ID_AV`)
+    );
+    -- 1a) Artículos con conjunto pivote asignado.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT asg.`CODIGO_ART`, acd.`ID_AV_ACD`, av.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY asg.`CODIGO_ART`
+                              ORDER BY acd.`ORDEN_ACD`, acd.`ID_AV_ACD`)
+      FROM (SELECT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MIN(asa.`ID_AC_ACA`) AS `ID_AC`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_conjuntos_asign` asa
+                ON asa.`CODIGO_ART_ACA` = a.`CODIGO_ART_ART`
+               AND asa.`ID_VA_ACA` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+             GROUP BY a.`CODIGO_ART_ART`) asg
+      JOIN `fza_atributos_conjuntos_det` acd ON acd.`ID_AC_ACD` = asg.`ID_AC`
+      JOIN `fza_atributos_valores` av ON av.`ID_AV` = acd.`ID_AV_ACD`;
+    -- Artículos ya resueltos (para excluirlos del respaldo sin
+    -- autorreferenciar tmp_bat_pos en el mismo statement).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_pos_arts`
+    SELECT DISTINCT `CODIGO_ART` FROM `tmp_bat_pos`;
+    -- 1b) Respaldo: artículos sin asignación -> tallas de sus SKUs.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT x.`CODIGO_ART`, x.`ID_AV`, x.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY x.`CODIGO_ART`
+                              ORDER BY x.`ORDEN_AV`, x.`AV`)
+      FROM (SELECT DISTINCT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   av.`ID_AV`, av.`AV`, COALESCE(av.`ORDEN_AV`, 0) AS `ORDEN_AV`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_skus` sku
+                ON sku.`CODIGO_ART_SKU` = a.`CODIGO_ART_ART`
+              JOIN `fza_atributos_sku` sa
+                ON sa.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+              JOIN `fza_atributos_valores` av
+                ON av.`ID_AV` = sa.`ID_AV_SA` AND av.`ID_VA_AV` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+               AND a.`CODIGO_ART_ART` NOT IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_pos_arts`)) x;
+
+    -- Etiquetas de cabecera por artículo (ETIQ_T01..ETIQ_T14).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    CREATE TEMPORARY TABLE `tmp_bat_etiq` AS
+    SELECT `CODIGO_ART`,
+           MAX(CASE WHEN `POSICION` =  1 THEN `ETIQ` END) AS `ETIQ_T01`,
+           MAX(CASE WHEN `POSICION` =  2 THEN `ETIQ` END) AS `ETIQ_T02`,
+           MAX(CASE WHEN `POSICION` =  3 THEN `ETIQ` END) AS `ETIQ_T03`,
+           MAX(CASE WHEN `POSICION` =  4 THEN `ETIQ` END) AS `ETIQ_T04`,
+           MAX(CASE WHEN `POSICION` =  5 THEN `ETIQ` END) AS `ETIQ_T05`,
+           MAX(CASE WHEN `POSICION` =  6 THEN `ETIQ` END) AS `ETIQ_T06`,
+           MAX(CASE WHEN `POSICION` =  7 THEN `ETIQ` END) AS `ETIQ_T07`,
+           MAX(CASE WHEN `POSICION` =  8 THEN `ETIQ` END) AS `ETIQ_T08`,
+           MAX(CASE WHEN `POSICION` =  9 THEN `ETIQ` END) AS `ETIQ_T09`,
+           MAX(CASE WHEN `POSICION` = 10 THEN `ETIQ` END) AS `ETIQ_T10`,
+           MAX(CASE WHEN `POSICION` = 11 THEN `ETIQ` END) AS `ETIQ_T11`,
+           MAX(CASE WHEN `POSICION` = 12 THEN `ETIQ` END) AS `ETIQ_T12`,
+           MAX(CASE WHEN `POSICION` = 13 THEN `ETIQ` END) AS `ETIQ_T13`,
+           MAX(CASE WHEN `POSICION` = 14 THEN `ETIQ` END) AS `ETIQ_T14`
+      FROM `tmp_bat_pos`
+     GROUP BY `CODIGO_ART`;
+    ALTER TABLE `tmp_bat_etiq` ADD PRIMARY KEY (`CODIGO_ART`);
+
+    -- -----------------------------------------------------------------
+    -- 2) SKUs en juego: artículo + color + posición de talla. Solo las
+    --    tallas que están en el conjunto pivote (POSICION 1..14).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    CREATE TEMPORARY TABLE `tmp_bat_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        KEY `IDX_BAT_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bat_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0), p.`POSICION`
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+      JOIN `fza_atributos_sku` sat
+        ON sat.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      JOIN `fza_atributos_valores` ta
+        ON ta.`ID_AV` = sat.`ID_AV_SA` AND ta.`ID_VA_AV` <> ''CO''
+      JOIN `tmp_bat_pos` p
+        ON p.`CODIGO_ART` = sku.`CODIGO_ART_SKU` AND p.`ID_AV` = ta.`ID_AV`
+      -- Color del SKU: SOLO su fila de atributo de color. El discriminante
+      -- ID_VA_AV=''CO'' DEBE ir también en el ON de `sac`; si solo se filtra en
+      -- `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera
+      -- dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar
+      -- y el SKU podía quedar SIN color (banda "sin color" fantasma).
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = ''CO'')
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- 3) Base de medidas por (artículo, color, posición). Se rellena con
+    --    ramas distintas según el modo para no calcular ventanas de
+    --    movimientos cuando se pide acumulados.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    CREATE TEMPORARY TABLE `tmp_bat_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `POSICION`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bat_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    ELSE
+        -- Entre fechas: movimientos del periodo + existencias
+        -- reconstruidas desde el stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               -- Existencias iniciales: stock actual menos movimientos
+               -- firmados desde p_DESDE (inclusive).
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               -- Existencias finales: stock actual menos movimientos
+               -- firmados posteriores a p_HASTA.
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bat_sku` s
+          LEFT JOIN (
+                -- Stock actual y movimientos firmados unificados por unidad y
+                -- almacén (UNION ALL para sumarlos en el mismo grano). Si no se
+                -- agrupa por almacén, ALM = '''' y todo colapsa en un único
+                -- bucket (resultado idéntico al cálculo agregado anterior).
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 4) Desdoblar en bandas (forma larga). Cada banda es un INSERT
+    --    independiente (referencia tmp_bat_base una sola vez) y se filtra
+    --    por modo/desglosado. ES_COSTE marca cómo se valora la banda.
+    --    ORDEN_BANDA fija el orden vertical del informe.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bat_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `POSICION`       INT          NOT NULL,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BAT_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb.
+    -- entrada) + recuentos (regularizaciones) + traspasos NETOS (entrada -
+    -- salida). SIN depósitos y SIN banda Salidas: las ventas van en su banda.
+    -- Balance: Ex.ini + Entradas - Ventas = Ex.final (los depósitos quedan
+    -- fuera de la ecuación, según lo pedido).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENT'', 20, ''Entradas'', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Entradas desglosadas: solo modo entre fechas desglosado. Mismos
+    -- subtipos que la consulta de stock (Ctrl+U), con traspasos y depósitos
+    -- netos (entrada - salida) y sin bandas de salida salvo alb. venta.
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTTRA'', 23, ''Traspasos (neto)'', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTDEP'', 24, ''Depósitos (neto)'', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bat_base`;
+        -- Sal. traspaso / Sal. depósito ya no salen: se han neteado en sus
+        -- bandas de entrada (Traspasos/Depósitos neto). Albarán de venta sí se
+        -- mantiene (es una venta).
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, `SAL_VENTA`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bat_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           `POSICION`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bat_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración
+    -- (modo/detalle). FIND_IN_SET sobre el código de banda.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bat_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 5) Pivote final por (artículo, color, banda) y enriquecido con
+    --    familia, etiquetas de cabecera, foto y valoración. El pivote
+    --    va en una subconsulta para no mezclar agregados con columnas
+    --    de adorno (ONLY_FULL_GROUP_BY-safe).
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        et.`ETIQ_T01`, et.`ETIQ_T02`, et.`ETIQ_T03`, et.`ETIQ_T04`,
+        et.`ETIQ_T05`, et.`ETIQ_T06`, et.`ETIQ_T07`, et.`ETIQ_T08`,
+        et.`ETIQ_T09`, et.`ETIQ_T10`, et.`ETIQ_T11`, et.`ETIQ_T12`,
+        et.`ETIQ_T13`, et.`ETIQ_T14`,
+        p.`T01`, p.`T02`, p.`T03`, p.`T04`, p.`T05`, p.`T06`, p.`T07`,
+        p.`T08`, p.`T09`, p.`T10`, p.`T11`, p.`T12`, p.`T13`, p.`T14`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto. Permite que el total por grupo/general
+        -- muestre SOLO el stock final, sin mezclar entradas/salidas/ventas.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        -- Niveles de agrupación configurables. GRUPOn_COD identifica el grupo
+        -- (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en
+        -- la cabecera/resumen. Si el nivel no está activo (''''), salen vacíos y
+        -- el cliente no dibuja banda de grupo a ese nivel.
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(IF(m.`POSICION` =  1, m.`CANTIDAD`, 0)) AS `T01`,
+                   SUM(IF(m.`POSICION` =  2, m.`CANTIDAD`, 0)) AS `T02`,
+                   SUM(IF(m.`POSICION` =  3, m.`CANTIDAD`, 0)) AS `T03`,
+                   SUM(IF(m.`POSICION` =  4, m.`CANTIDAD`, 0)) AS `T04`,
+                   SUM(IF(m.`POSICION` =  5, m.`CANTIDAD`, 0)) AS `T05`,
+                   SUM(IF(m.`POSICION` =  6, m.`CANTIDAD`, 0)) AS `T06`,
+                   SUM(IF(m.`POSICION` =  7, m.`CANTIDAD`, 0)) AS `T07`,
+                   SUM(IF(m.`POSICION` =  8, m.`CANTIDAD`, 0)) AS `T08`,
+                   SUM(IF(m.`POSICION` =  9, m.`CANTIDAD`, 0)) AS `T09`,
+                   SUM(IF(m.`POSICION` = 10, m.`CANTIDAD`, 0)) AS `T10`,
+                   SUM(IF(m.`POSICION` = 11, m.`CANTIDAD`, 0)) AS `T11`,
+                   SUM(IF(m.`POSICION` = 12, m.`CANTIDAD`, 0)) AS `T12`,
+                   SUM(IF(m.`POSICION` = 13, m.`CANTIDAD`, 0)) AS `T13`,
+                   SUM(IF(m.`POSICION` = 14, m.`CANTIDAD`, 0)) AS `T14`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bat_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bat_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN `tmp_bat_etiq` et ON et.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   SUM(st.`VALOR_TOTAL_STK`) AS `VAL`,
+                   SUM(st.`CANTIDAD_STK`)    AS `CAN`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `fza_articulos_propiedades` tp
+              LEFT JOIN `fza_propiedades_valores` tpv
+                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+             WHERE tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY tp.`CODIGO_ART_ART`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados). Se enlaza el SKU
+            -- de la línea a tmp_bat_sku para resolver artículo/color y restringir
+            -- a los artículos filtrados.
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bat_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales para no arrastrarlas en la sesión.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: (p_MODO, p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS,
+--              p_PROVEEDORES, p_TEMPORADAS, p_COD_TARIFA, p_DESGLOSADO,
+--              p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3, p_NIVEL_FAM).
+-- Todos los filtros multi-valor son CSV; '''' = sin filtro (todos). p_BANDAS
+-- limita qué bandas salen (códigos EXIINI/ENT/SAL/VEN/EXIFIN y, en
+-- desglosado, ENTCMP/ENTALB/ENTTRA/ENTDEP/ENTREG/SALTRA/SALDEP/SALALB).
+-- p_NIVEL1/2/3 definen la jerarquía de agrupación con resumen por grupo:
+-- PRV (proveedor), FAM (familia), TMP (temporada), ALM (almacén) o ''''
+-- (nivel inactivo). El orden importa: NIVEL1 es el grupo más externo. La
+-- salida añade GRUPO1_COD/GRUPO1_ETIQ..GRUPO3_COD/GRUPO3_ETIQ y ordena por
+-- ellas; el cliente (FastReport / Excel) dibuja las cabeceras y la línea
+-- de resumen (cantidad + importe) en cada corte de grupo. Si algún nivel es
+-- ALM, los cálculos se desglosan por almacén (si no, se agregan todos los
+-- almacenes filtrados). p_NIVEL_FAM elige el nivel del árbol de familias al
+-- agrupar por FAM (1 = familia raíz; <1 o NULL = familia hoja del artículo).
+-- Ejemplos de uso (desde el modal de impresión preparar_consulta):
+--   -- Entre fechas, simplificado, todos los almacenes, todas las bandas,
+--   -- sin agrupación adicional
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Entre fechas, desglosado, almacenes 01 y 50, familias 0103 y 0104
+--   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26,
+--   -- solo las bandas de existencias y ventas, agrupando por proveedor y
+--   -- dentro de cada proveedor por la familia raíz (nivel 1 del árbol)
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'',''01,50'',''0103,0104'',''PRV001'',''V26'',''PVP'',''S'',''EXIINI,VEN,EXIFIN'',''PRV'',''FAM'','''',1);
+--   -- Por acumulados, todas las bandas, agrupado por almacén y temporada
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''A'',NULL,NULL,'''','''','''','''',''PVP'',''N'','''',''ALM'',''TMP'','''',0);
+-- ---------------------------------------------------------------------
+', '2026-06-05 20:45:22', '2026-06-05 20:45:22', 'Administrador', 'Administrador'),
+  ('324', 'balance_almacen_sin_tallas', '-- =====================================================================
+-- Balance de almacén SIN tallas (informe vertical con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_SIN_TALLAS: variante del balance
+-- por tallas (PRC_GET_BALANCE_ALMACEN_TALLAS) que NO pivota por talla. Es
+-- el informe "normal" (vertical): una fila por (artículo, color, banda)
+-- con Cantidad / Precio / Importe, sin las columnas T01..T14. Por eso
+-- incluye TODOS los artículos, también los que no son "tallables" (sin
+-- conjunto pivote ni tallas en sus SKUs), que el informe horizontal deja
+-- fuera. Mismos filtros, modos, bandas, agrupaciones y valoración.
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas (existencias iniciales, entradas, ventas, existencias
+--         finales; desglosado abre los subtipos Ctrl+U). Sin banda Salidas:
+--         los traspasos se netean en Entradas y los depósitos quedan fuera.
+--   ''A'' = por acumulados (entradas, ventas, existencias finales).
+--   Balance: Ex.ini + Entradas - Ventas = Ex.final.
+--
+-- Origen de datos y valoración: idénticos al balance por tallas (ver
+-- balance_almacen_tallas.sql §). La única diferencia es el grano: aquí se
+-- agrupa por (artículo, color) en vez de por (artículo, color, talla), y
+-- no hay tabla de posiciones/etiquetas de talla.
+--
+-- Ventas: la banda de ventas (VEN) se valora al PRECIO REAL de venta (con
+-- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no a tarifa.
+-- Columna VENTAS (importe real solo en VEN, 0 en el resto) para acumular las
+-- ventas por artículo/grupo/total. Existencias ini/fin y entradas, a PMP.
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Filas todo-a-cero: se descartan los (artículo, color) sin existencias ni
+-- movimientos en el periodo (si no, al cubrir todo el catálogo saldría
+-- ruido de artículos inactivos).
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar
+    -- por IN en vez de FIND_IN_SET sobre las tablas grandes (no es sargable y
+    -- obliga a escanear; fza_articulos_stockactual tiene CODIGO_ALM_STK como
+    -- 1ª columna del PK). Sin selección = todos los almacenes activos.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
+    CREATE TEMPORARY TABLE `tmp_bst_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '''') = '''',
+              `ESACTIVO_ALM` = ''S'',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo (familias con descendencia, proveedores,
+    -- temporadas) + mapa de familia por nivel del árbol. Igual que el
+    -- balance por tallas.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa familia -> ancestro al nivel pedido (para agrupar por FAM "por
+    -- nivel"). Ver balance_almacen_tallas.sql para el detalle.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bst_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    UPDATE `tmp_bst_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    CREATE TEMPORARY TABLE `tmp_bst_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bst_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- SKUs en juego: unidad -> (artículo, color). SIN posición de talla:
+    -- entra cualquier SKU de los artículos filtrados (con o sin tallas),
+    -- por eso el informe cubre todo el catálogo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    CREATE TEMPORARY TABLE `tmp_bst_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        KEY `IDX_BST_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bst_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0)
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+       AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+      -- Color del SKU: SOLO su fila de atributo de color. El discriminante
+      -- ID_VA_AV=''CO'' DEBE ir también en el ON de `sac`; si solo se filtra en
+      -- `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera
+      -- dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar
+      -- y el SKU podía quedar SIN color (banda "sin color" fantasma).
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = ''CO'')
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- Base de medidas por (artículo, almacén, color). Igual lógica que el
+    -- balance por tallas pero agrupando por color (no por talla).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    CREATE TEMPORARY TABLE `tmp_bst_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bst_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`COLOR`;
+    ELSE
+        -- Entre fechas: stock actual + movimientos firmados unificados por
+        -- (unidad, almacén). Si no se agrupa por almacén, ALM = '''' y colapsa.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bst_sku` s
+          LEFT JOIN (
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''), s.`COLOR`;
+    END IF;
+
+    -- Descartar (artículo, color) sin existencias ni movimientos: cubrir todo
+    -- el catálogo si no llenaría el informe de artículos inactivos a cero.
+    DELETE FROM `tmp_bst_base`
+     WHERE `EXI_INI` = 0 AND `ENT` = 0 AND `SAL` = 0 AND `VEN` = 0
+       AND `EXI_FIN` = 0 AND `ENT_COMPRA` = 0 AND `ENT_ALBENTRADA` = 0
+       AND `ENT_TRASPASO` = 0 AND `ENT_DEPOSITO` = 0 AND `ENT_REGULAR` = 0
+       AND `SAL_TRASPASO` = 0 AND `SAL_DEPOSITO` = 0 AND `SAL_ALBVENTA` = 0
+       AND `SAL_VENTA` = 0;
+
+    -- -----------------------------------------------------------------
+    -- Desdoblar en bandas (forma larga), igual que el balance por tallas
+    -- pero sin posición de talla.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bst_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BST_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb.
+    -- entrada) + recuentos + traspasos NETOS (entrada - salida). SIN depósitos
+    -- y SIN banda Salidas: las ventas van en su banda. Balance: Ex.ini +
+    -- Entradas - Ventas = Ex.final (los depósitos quedan fuera).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENT'', 20, ''Entradas'', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Entradas desglosadas: solo modo entre fechas desglosado. Traspasos y
+    -- depósitos netos (entrada - salida), sin bandas de salida salvo alb.
+    -- venta. Mismos subtipos que la consulta de stock (Ctrl+U).
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTTRA'', 23, ''Traspasos (neto)'', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTDEP'', 24, ''Depósitos (neto)'', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bst_base`;
+        -- Sal. traspaso / Sal. depósito ya no salen: neteadas en sus bandas de
+        -- entrada. Albarán de venta sí se mantiene (es una venta).
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `SAL_VENTA`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bst_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bst_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bst_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- Salida final: una fila por (artículo, color, banda), enriquecida con
+    -- familia, foto, valoración y columnas de agrupación.
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto, para que el total por grupo/general
+        -- muestre SOLO el stock final.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bst_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bst_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `fza_articulos_propiedades` tp
+              LEFT JOIN `fza_propiedades_valores` tpv
+                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+             WHERE tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY tp.`CODIGO_ART_ART`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados).
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bst_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: idénticos a PRC_GET_BALANCE_ALMACEN_TALLAS (p_MODO, p_DESDE,
+-- p_HASTA, p_ALMACENES, p_FAMILIAS, p_PROVEEDORES, p_TEMPORADAS,
+-- p_COD_TARIFA, p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
+-- p_NIVEL_FAM). La salida NO trae columnas de talla (T01..T14 / ETIQ_T*):
+-- una fila por (artículo, color, banda) con CANTIDAD / PRECIO / IMPORTE.
+-- Ejemplos:
+--   -- Entre fechas, simplificado, sin agrupación
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Acumulados agrupado por proveedor y, dentro, por familia raíz
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''A'',NULL,NULL,'''','''','''','''',''PVP'',''N'','''',''PRV'',''FAM'','''',1);
+-- ---------------------------------------------------------------------
+', '2026-06-05 20:45:29', '2026-06-05 20:45:29', 'Administrador', 'Administrador'),
+  ('325', 'unidades_medida', '-- =============================================================================
+-- Catalogo de unidades de medida: fza_unidades_medida (sufijo UNIMED)
+-- =============================================================================
+-- Un cliente que maneja telas por metros necesita cantidades con decimales
+-- en todo el programa (entradas, ventas, informes). La BBDD ya guarda las
+-- cantidades como DECIMAL(19,6), asi que el dato decimal ya cabe; lo que
+-- faltaba es decidir CUANTOS decimales mostrar/teclear, y eso depende de la
+-- unidad de medida del articulo (Uds = 0, metros = 2, kilos = 3...).
+--
+-- Hasta ahora la unidad (TIPO_CANTIDAD_ART y los TIPO_CANTIDAD_* de las
+-- lineas) era texto libre. Esta tabla la convierte en un catalogo con:
+--   - DECIMALES_UNIMED : cuantos decimales usa esa unidad.
+--   - MAGNITUD/ESBASE/FACTOR_BASE : conversion a la unidad estandar de su
+--     magnitud (cm/mm -> metros, g -> kilos...). valor_base = valor * FACTOR.
+--
+-- Sigue el libro de estilo: sufijo de tabla UNIMED tras el nucleo del
+-- concepto; las cuatro columnas de auditoria van sin sufijo (ver §3.7).
+--
+-- Idempotente: se puede ejecutar varias veces.
+--   - La tabla se crea solo si no existe (CREATE TABLE IF NOT EXISTS).
+--   - La semilla usa INSERT IGNORE: no pisa filas ya editadas por el usuario.
+-- NO toca factuzam_original.sql (regla dura n.1 de CLAUDE.md).
+-- =============================================================================
+
+-- 1) Tabla -------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_unidades_medida` (
+  `CODIGO_UNIMED` varchar(20) NOT NULL COMMENT ''Clave de la unidad: Uds, m, cm, kg, g, rollo...'',
+  `DESCRIPCION_UNIMED` varchar(100) NOT NULL COMMENT ''Nombre legible: Metros, Kilogramos...'',
+  `DECIMALES_UNIMED` int(11) NOT NULL DEFAULT 2 COMMENT ''Numero de decimales a mostrar/teclear para esta unidad'',
+  `MAGNITUD_UNIMED` varchar(20) NOT NULL DEFAULT ''OTROS'' COMMENT ''Familia fisica: UNIDAD, LONGITUD, MASA, VOLUMEN... Solo se convierten entre si unidades de la misma magnitud'',
+  `ESBASE_UNIMED` varchar(1) NOT NULL DEFAULT ''N'' COMMENT ''S = unidad estandar/base de su magnitud (metro, kilo...)'',
+  `FACTOR_BASE_UNIMED` decimal(19,6) NOT NULL DEFAULT 1.000000 COMMENT ''Factor a la unidad base: valor_base = valor * FACTOR (cm->m = 0.01, g->kg = 0.001)'',
+  `ORDEN_UNIMED` int(11) NULL DEFAULT 0 COMMENT ''Orden de presentacion en desplegables'',
+  `ESACTIVO_UNIMED` varchar(1) NOT NULL DEFAULT ''S'' COMMENT ''S/N: unidad activa'',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  PRIMARY KEY (`CODIGO_UNIMED`)
+);
+
+-- 2) Semilla estandar --------------------------------------------------------
+-- INSERT IGNORE: si la unidad ya existe (misma PK) se respeta lo que haya.
+INSERT IGNORE INTO `fza_unidades_medida`
+  (`CODIGO_UNIMED`, `DESCRIPCION_UNIMED`, `DECIMALES_UNIMED`,
+   `MAGNITUD_UNIMED`, `ESBASE_UNIMED`, `FACTOR_BASE_UNIMED`, `ORDEN_UNIMED`,
+   `ESACTIVO_UNIMED`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  (''Uds'', ''Unidades'',    0, ''UNIDAD'',   ''S'', 1.000000, 10, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''m'',   ''Metros'',      2, ''LONGITUD'', ''S'', 1.000000, 20, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''cm'',  ''Centimetros'', 2, ''LONGITUD'', ''N'', 0.010000, 21, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''mm'',  ''Milimetros'',  2, ''LONGITUD'', ''N'', 0.001000, 22, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''kg'',  ''Kilogramos'',  3, ''MASA'',     ''S'', 1.000000, 30, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''g'',   ''Gramos'',      3, ''MASA'',     ''N'', 0.001000, 31, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''l'',   ''Litros'',      3, ''VOLUMEN'',  ''S'', 1.000000, 40, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''ml'',  ''Mililitros'',  3, ''VOLUMEN'',  ''N'', 0.001000, 41, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA'');
+
+-- 3) Alta automatica de las unidades de texto libre ya existentes ------------
+-- Los articulos actuales tienen TIPO_CANTIDAD_ART como texto libre. Para que
+-- el desplegable no deje huerfanos, se dan de alta las que no esten ya en el
+-- catalogo, con 2 decimales por defecto y magnitud OTROS (el usuario las
+-- afina luego en el mantenimiento). INSERT IGNORE evita duplicar.
+INSERT IGNORE INTO `fza_unidades_medida`
+  (`CODIGO_UNIMED`, `DESCRIPCION_UNIMED`, `DECIMALES_UNIMED`,
+   `MAGNITUD_UNIMED`, `ESBASE_UNIMED`, `FACTOR_BASE_UNIMED`,
+   `ESACTIVO_UNIMED`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+SELECT DISTINCT
+       TRIM(`TIPO_CANTIDAD_ART`), TRIM(`TIPO_CANTIDAD_ART`), 2,
+       ''OTROS'', ''N'', 1.000000,
+       ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''
+  FROM `fza_articulos`
+ WHERE `TIPO_CANTIDAD_ART` IS NOT NULL
+   AND TRIM(`TIPO_CANTIDAD_ART`) <> '''';
+
+-- 4) Registro del formulario de mantenimiento --------------------------------
+-- fza_winforms es el catalogo que usa ShowMto para resolver el formulario por
+-- su CALL. Sin esta fila el menu "Unidades de Medida" no abriria nada.
+INSERT IGNORE INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''UnidadesMedida'', ''Unidades de Medida'', ''mnuUnidadesMedida'',
+   ''inMtoUnidadesMedida.TfrmMtoUnidadesMedida'', NULL,
+   ''UniDataUnidadesMedida.TdmUnidadesMedida'', 1);
+
+-- 5) Permiso de menu (visible para Todos) ------------------------------------
+-- Sin permiso explicito el item de menu se podria ocultar. Lo dejamos visible
+-- para el grupo Todos; el administrador puede restringirlo luego.
+INSERT IGNORE INTO `fza_permisos`
+  (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  (''Todos'', ''menu.UnidadesMedida'', ''S'', ''Unidades de Medida'',
+   current_timestamp(), ''SISTEMA'', ''SISTEMA'');
+', '2026-06-05 20:45:39', '2026-06-05 20:45:39', 'Administrador', 'Administrador'),
+  ('326', 'unidades_medida', '-- =============================================================================
+-- Catalogo de unidades de medida: fza_unidades_medida (sufijo UNIMED)
+-- =============================================================================
+-- Un cliente que maneja telas por metros necesita cantidades con decimales
+-- en todo el programa (entradas, ventas, informes). La BBDD ya guarda las
+-- cantidades como DECIMAL(19,6), asi que el dato decimal ya cabe; lo que
+-- faltaba es decidir CUANTOS decimales mostrar/teclear, y eso depende de la
+-- unidad de medida del articulo (Uds = 0, metros = 2, kilos = 3...).
+--
+-- Hasta ahora la unidad (TIPO_CANTIDAD_ART y los TIPO_CANTIDAD_* de las
+-- lineas) era texto libre. Esta tabla la convierte en un catalogo con:
+--   - DECIMALES_UNIMED : cuantos decimales usa esa unidad.
+--   - MAGNITUD/ESBASE/FACTOR_BASE : conversion a la unidad estandar de su
+--     magnitud (cm/mm -> metros, g -> kilos...). valor_base = valor * FACTOR.
+--
+-- Sigue el libro de estilo: sufijo de tabla UNIMED tras el nucleo del
+-- concepto; las cuatro columnas de auditoria van sin sufijo (ver §3.7).
+--
+-- Idempotente: se puede ejecutar varias veces.
+--   - La tabla se crea solo si no existe (CREATE TABLE IF NOT EXISTS).
+--   - La semilla usa INSERT IGNORE: no pisa filas ya editadas por el usuario.
+-- NO toca factuzam_original.sql (regla dura n.1 de CLAUDE.md).
+-- =============================================================================
+
+-- 1) Tabla -------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_unidades_medida` (
+  `CODIGO_UNIMED` varchar(20) NOT NULL COMMENT ''Clave de la unidad: Uds, m, cm, kg, g, rollo...'',
+  `DESCRIPCION_UNIMED` varchar(100) NOT NULL COMMENT ''Nombre legible: Metros, Kilogramos...'',
+  `DECIMALES_UNIMED` int(11) NOT NULL DEFAULT 2 COMMENT ''Numero de decimales a mostrar/teclear para esta unidad'',
+  `MAGNITUD_UNIMED` varchar(20) NOT NULL DEFAULT ''OTROS'' COMMENT ''Familia fisica: UNIDAD, LONGITUD, MASA, VOLUMEN... Solo se convierten entre si unidades de la misma magnitud'',
+  `ESBASE_UNIMED` varchar(1) NOT NULL DEFAULT ''N'' COMMENT ''S = unidad estandar/base de su magnitud (metro, kilo...)'',
+  `FACTOR_BASE_UNIMED` decimal(19,6) NOT NULL DEFAULT 1.000000 COMMENT ''Factor a la unidad base: valor_base = valor * FACTOR (cm->m = 0.01, g->kg = 0.001)'',
+  `ORDEN_UNIMED` int(11) NULL DEFAULT 0 COMMENT ''Orden de presentacion en desplegables'',
+  `ESACTIVO_UNIMED` varchar(1) NOT NULL DEFAULT ''S'' COMMENT ''S/N: unidad activa'',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  PRIMARY KEY (`CODIGO_UNIMED`)
+);
+
+-- 2) Semilla estandar --------------------------------------------------------
+-- INSERT IGNORE: si la unidad ya existe (misma PK) se respeta lo que haya.
+INSERT IGNORE INTO `fza_unidades_medida`
+  (`CODIGO_UNIMED`, `DESCRIPCION_UNIMED`, `DECIMALES_UNIMED`,
+   `MAGNITUD_UNIMED`, `ESBASE_UNIMED`, `FACTOR_BASE_UNIMED`, `ORDEN_UNIMED`,
+   `ESACTIVO_UNIMED`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  (''Uds'', ''Unidades'',    0, ''UNIDAD'',   ''S'', 1.000000, 10, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''m'',   ''Metros'',      2, ''LONGITUD'', ''S'', 1.000000, 20, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''cm'',  ''Centimetros'', 2, ''LONGITUD'', ''N'', 0.010000, 21, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''mm'',  ''Milimetros'',  2, ''LONGITUD'', ''N'', 0.001000, 22, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''kg'',  ''Kilogramos'',  3, ''MASA'',     ''S'', 1.000000, 30, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''g'',   ''Gramos'',      3, ''MASA'',     ''N'', 0.001000, 31, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''l'',   ''Litros'',      3, ''VOLUMEN'',  ''S'', 1.000000, 40, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''),
+  (''ml'',  ''Mililitros'',  3, ''VOLUMEN'',  ''N'', 0.001000, 41, ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA'');
+
+-- 3) Alta automatica de las unidades de texto libre ya existentes ------------
+-- Los articulos actuales tienen TIPO_CANTIDAD_ART como texto libre. Para que
+-- el desplegable no deje huerfanos, se dan de alta las que no esten ya en el
+-- catalogo, con 2 decimales por defecto y magnitud OTROS (el usuario las
+-- afina luego en el mantenimiento). INSERT IGNORE evita duplicar.
+INSERT IGNORE INTO `fza_unidades_medida`
+  (`CODIGO_UNIMED`, `DESCRIPCION_UNIMED`, `DECIMALES_UNIMED`,
+   `MAGNITUD_UNIMED`, `ESBASE_UNIMED`, `FACTOR_BASE_UNIMED`,
+   `ESACTIVO_UNIMED`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+SELECT DISTINCT
+       TRIM(`TIPO_CANTIDAD_ART`), TRIM(`TIPO_CANTIDAD_ART`), 2,
+       ''OTROS'', ''N'', 1.000000,
+       ''S'', current_timestamp(), ''SISTEMA'', ''SISTEMA''
+  FROM `fza_articulos`
+ WHERE `TIPO_CANTIDAD_ART` IS NOT NULL
+   AND TRIM(`TIPO_CANTIDAD_ART`) <> '''';
+
+-- 4) Registro del formulario de mantenimiento --------------------------------
+-- fza_winforms es el catalogo que usa ShowMto para resolver el formulario por
+-- su CALL. Sin esta fila el menu "Unidades de Medida" no abriria nada.
+INSERT IGNORE INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''UnidadesMedida'', ''Unidades de Medida'', ''mnuUnidadesMedida'',
+   ''inMtoUnidadesMedida.TfrmMtoUnidadesMedida'', NULL,
+   ''UniDataUnidadesMedida.TdmUnidadesMedida'', 1);
+
+-- 5) Permiso de menu (visible para Todos) ------------------------------------
+-- Sin permiso explicito el item de menu se podria ocultar. Lo dejamos visible
+-- para el grupo Todos; el administrador puede restringirlo luego.
+INSERT IGNORE INTO `fza_permisos`
+  (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)
+VALUES
+  (''Todos'', ''menu.UnidadesMedida'', ''S'', ''Unidades de Medida'',
+   current_timestamp(), ''SISTEMA'', ''SISTEMA'');
+', '2026-06-05 20:58:08', '2026-06-05 20:58:08', 'Administrador', 'Administrador'),
+  ('327', 'vi_articulos_tarifas_mto', '-- ============================================================================
+--  vi_articulos_tarifas_mto — Vista para el GRID DE MANTENIMIENTO de tarifas
+--  del articulo (pestana Tarifas de TfrmMtoArticulos)
+-- ----------------------------------------------------------------------------
+--  Problema:
+--    Al pulsar "crear tarifa" la linea se inserta con precio 0; el BeforePost
+--    (unqryTarifasArticulosBeforePost) marca como inactiva (ESACTIVO_ARTTAR=''N'')
+--    toda tarifa que nace a 0. La vista de ventas `vi_articulos_tarifas` filtra
+--    `WHERE at.ESACTIVO_ARTTAR=''S''`, asi que esa fila recien creada NO aparece
+--    en el grid (parece que "no anade nada", aunque si esta en la BBDD).
+--
+--  Solucion:
+--    Vista gemela SOLO para el mantenimiento, identica en columnas a
+--    vi_articulos_tarifas pero SIN ocultar inactivas ni expiradas: asi el grid
+--    muestra la tarifa recien anadida para poder ponerle precio y activarla.
+--    La vista de ventas (vi_articulos_tarifas) NO se toca: el resolver de
+--    precios sigue viendo solo las activas y vigentes.
+--
+--  Idempotente: CREATE OR REPLACE VIEW.
+--  NO toca factuzam_original.sql.
+-- ============================================================================
+CREATE OR REPLACE VIEW vi_articulos_tarifas_mto AS
+SELECT
+  at.CODIGO_ART_ARTTAR                        AS CODIGO_ART_ARTTAR,
+  COALESCE(at.CODIGO_UNIDAD_ARTTAR, '''')       AS CODIGO_UNIDAD_ARTTAR,
+  at.CODIGO_TAR_ARTTAR                        AS CODIGO_TAR_ARTTAR,
+  t.NOMBRE_TAR_TAR                            AS NOMBRE_TAR_TAR,
+  at.CODIGO_UNICO_ARTTAR                      AS CODIGO_UNICO_ARTTAR,
+  CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+       THEN at.CODIGO_UNICO_ARTTAR
+       END                                    AS CODIGO_UNICO_TARIFA_SKU,
+  CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') = ''''
+       THEN at.CODIGO_UNICO_ARTTAR
+       END                                    AS CODIGO_UNICO_TARIFA_PADRE,
+  CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+       THEN ''ESPECIFICO_SKU''
+       ELSE ''PADRE''
+       END                                    AS ORIGEN_PRECIO,
+  at.PRECIO_SALIDA_ARTTAR                     AS PRECIO_SALIDA_ARTTAR,
+  at.PRECIO_FINAL_ARTTAR                      AS PRECIO_FINAL_ARTTAR,
+  at.PRECIO_DTO_ARTTAR                        AS PRECIO_DTO_ARTTAR,
+  at.PORCENTAJE_DTO_ARTTAR                    AS PORCENTAJE_DTO_ARTTAR,
+  at.PORCENTAJE_MARGEN_ARTTAR                 AS PORCENTAJE_MARGEN_ARTTAR,
+  at.VALOR_MULTIPLO_AJUSTE_ARTTAR             AS VALOR_MULTIPLO_AJUSTE_ARTTAR,
+  at.VALOR_MENOS_AJUSTE_ARTTAR                AS VALOR_MENOS_AJUSTE_ARTTAR,
+  COALESCE(at.PORCENTAJE_MARGEN_ARTTAR,
+           t.PORCENTAJE_MARGEN_TAR)            AS PORCENTAJE_MARGEN_EFECTIVO,
+  COALESCE(at.VALOR_MULTIPLO_AJUSTE_ARTTAR,
+           t.VALOR_MULTIPLO_AJUSTE_TAR)        AS VALOR_MULTIPLO_AJUSTE_EFECTIVO,
+  COALESCE(at.VALOR_MENOS_AJUSTE_ARTTAR,
+           t.VALOR_MENOS_AJUSTE_TAR)           AS VALOR_MENOS_AJUSTE_EFECTIVO,
+  at.FECHA_DESDE_ARTTAR                       AS FECHA_DESDE_ARTTAR,
+  at.FECHA_HASTA_ARTTAR                       AS FECHA_HASTA_ARTTAR,
+  t.ESACTIVO_ARTTAR                           AS ESACTIVO_ARTTAR,
+  t.ESIMP_INCL_TAR                            AS ESIMP_INCL_TAR,
+  a.DESCRIPCION_ART                           AS DESCRIPCION_ART,
+  a.TIPO_CANTIDAD_ART                         AS TIPO_CANTIDAD_ART,
+  a.ESVARIACION_ART                           AS ESVARIACION_ART,
+  iv.CODIGO_ABREVIATURA_IVA_IVATIP            AS TIPO_IVA_ARTICULO,
+  CASE WHEN tiene_sku.CODIGO_ART_SKU IS NOT NULL
+       THEN ''S'' ELSE ''N''
+       END                                    AS TIENE_SKU,
+  sku.ESACTIVO_SKU                            AS ESACTIVO_SKU,
+  (SELECT GROUP_CONCAT(av.AV
+                       ORDER BY av.ORDEN_AV ASC
+                       SEPARATOR '' / '')
+   FROM fza_atributos_sku sa
+   JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA
+   WHERE sa.CODIGO_UNIDAD_SKU_SA = at.CODIGO_UNIDAD_ARTTAR
+  )                                            AS DESCRIPCION_SKU,
+  ap.CODIGO_PRV_AP                             AS CODIGO_PRV_PRV,
+  p.RAZON_SOCIAL_PRV                           AS RAZON_SOCIAL_PRV,
+  CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+       THEN skuc.PRECIO_ULT_COMPRA_SKUC
+       ELSE ap.PRECIO_ULT_COMPRA_AP
+       END                                    AS PRECIO_ULT_COMPRA,
+  CASE WHEN COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+       THEN skuc.FECHA_ULT_COMPRA_SKUC
+       ELSE ap.FECHA_VALIDEZ_AP
+       END                                    AS FECHA_VALIDEZ,
+  a.CODIGO_FAM_ART                            AS CODIGO_FAM_ART,
+  af.DESCRIPCION_FAM                          AS DESCRIPCION_FAM,
+  COALESCE(num_atr.NUM_ATRIBUTOS_REQ, 0)      AS NUM_ATRIBUTOS_REQ,
+  at.INSTANTE_MODIF                           AS INSTANTE_MODIF,
+  at.INSTANTE_ALTA                            AS INSTANTE_ALTA,
+  at.USUARIO_ALTA                             AS USUARIO_ALTA,
+  at.USUARIO_MODIF                            AS USUARIO_MODIF
+FROM fza_articulos_tarifas at
+  JOIN fza_articulos a ON a.CODIGO_ART_ART = at.CODIGO_ART_ARTTAR
+  JOIN fza_tarifas    t ON t.CODIGO_TAR_ARTTAR = at.CODIGO_TAR_ARTTAR
+  LEFT JOIN fza_articulos_skus sku
+         ON sku.CODIGO_UNIDAD_SKU = at.CODIGO_UNIDAD_ARTTAR
+        AND COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+  LEFT JOIN fza_articulos_skus_costes skuc
+         ON skuc.CODIGO_UNIDAD_SKU_SKUC = at.CODIGO_UNIDAD_ARTTAR
+        AND COALESCE(at.CODIGO_UNIDAD_ARTTAR,'''') <> ''''
+  LEFT JOIN fza_articulos_proveedores ap
+         ON ap.CODIGO_ART_AP = a.CODIGO_ART_ART
+        AND ap.ESPROVEEDORPRINCIPAL_AP = ''S''
+  LEFT JOIN fza_proveedores p
+         ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP
+  LEFT JOIN fza_articulos_familias af
+         ON af.CODIGO_FAM_FAM = a.CODIGO_FAM_ART
+  LEFT JOIN fza_ivas_tipos iv
+         ON iv.CODIGO_ABREVIATURA_IVA_IVATIP = a.TIPO_IVA_ART
+  LEFT JOIN (
+    SELECT DISTINCT CODIGO_ART_SKU
+    FROM fza_articulos_skus
+    WHERE ESACTIVO_SKU = ''S''
+  ) tiene_sku ON tiene_sku.CODIGO_ART_SKU = a.CODIGO_ART_ART
+  LEFT JOIN (
+    SELECT sk.CODIGO_ART_SKU,
+           COUNT(DISTINCT va.ID_ATB_VA) AS NUM_ATRIBUTOS_REQ
+    FROM fza_articulos_skus sk
+    JOIN fza_variaciones_atributos va ON va.ID_VAR_VA = sk.CODIGO_VAR_SKU
+    GROUP BY sk.CODIGO_ART_SKU
+  ) num_atr ON num_atr.CODIGO_ART_SKU = a.CODIGO_ART_ART
+-- Diferencia clave con vi_articulos_tarifas: NO se filtra por
+-- at.ESACTIVO_ARTTAR ni por fechas, para que el mantenimiento muestre tambien
+-- las tarifas inactivas / a precio 0 / expiradas y se puedan editar.
+WHERE t.ESACTIVO_ARTTAR = ''S''
+ORDER BY t.ORDEN_TAR, a.ORDEN_ART, at.CODIGO_UNIDAD_ARTTAR;
+', '2026-06-05 22:43:42', '2026-06-05 22:43:42', 'Administrador', 'Administrador');
+-- 123 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -25402,6 +30352,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000000732', 'TA', 'TA', '000002', '0010', '012', 'GEN', '2026-06-02 08:05:16', 'CAMI-BASICA', 'CAMI-BASICA/ROJO/L', NULL, 'S', 1, 7, 7, 7, 'BCN', '', NULL, 'S', '2026-06-02 08:05:16', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000167', '1'),
   ('0000000733', 'TA', 'TA', '000002', '0010', '1', 'BCN', '2026-06-02 08:05:16', 'CAMI-BASICA', 'CAMI-BASICA/ROJO/L', NULL, 'E', 1, 7, 7, 7, 'GEN', '', NULL, 'S', '2026-06-02 08:05:16', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000167', '1'),
   ('0000000735', 'VE', '2026.A1', '000142', '0010', '012', 'GEN', '2026-06-04 20:38:15', 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/39', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-04 20:38:15', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000168', '1'),
+  ('0000000737', 'VE', '2026.A1', '000143', '0010', '012', 'GEN', '2026-06-06 06:00:19', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-06 06:00:19', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000169', '1'),
   ('1', 'IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8, 40, 320, 40, NULL, NULL, NULL, 'S', '2026-05-26 07:51:58', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('100', 'IN', 'A1', '2026001', '100', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'Polo Blanco S', 'E', 15, 12, 180, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('101', 'IN', 'A1', '2026001', '101', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'Polo Blanco M', 'E', 20, 12, 240, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -25416,9 +30367,9 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('110', 'IN', 'A1', '2026001', '110', '1', 'GEN', '2026-01-10 08:00:00', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/41', 'Bota Montana Neg 41', 'E', 8, 42, 336, 42, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('111', 'IN', 'A1', '2026001', '111', '1', 'GEN', '2026-01-10 08:00:00', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', 'Bota Montana Neg 42', 'E', 10, 42, 420, 42, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('112', 'IN', 'A1', '2026001', '112', '1', 'GEN', '2026-01-10 08:00:00', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/MARRON/43', 'Bota Montana Mrn 43', 'E', 6, 42, 252, 42, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
-  ('113', 'IN', 'A1', '2026001', '113', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/S', 'Legging Negro S', 'E', 20, 8, 160, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
-  ('114', 'IN', 'A1', '2026001', '114', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/M', 'Legging Negro M', 'E', 20, 8, 160, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL);
+  ('113', 'IN', 'A1', '2026001', '113', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/S', 'Legging Negro S', 'E', 20, 8, 160, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL);
 INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_MOV`, `NUMERO_DOC_MOV`, `LINEA_MOV`, `CODIGO_EMP_MOV`, `CODIGO_ALM_MOV`, `FECHA_MOV`, `CODIGO_ART_MOV`, `CODIGO_UNIDAD_MOV`, `DESCRIPCION_ARTICULO_MOV`, `TIPO_MOV`, `CANTIDAD_MOV`, `PRECIO_COSTE_UNITARIO_MOV`, `TOTAL_COSTE_MOV`, `PRECIO_MEDIO_MOV`, `CODIGO_ALM_CONTRA_MOV`, `CODIGO_CLI_MOV`, `CODIGO_PRV_MOV`, `ESACTIVO_MOV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `TIPO_DOC_REF_MOV`, `SERIE_DOC_REF_MOV`, `NUMERO_DOC_REF_MOV`, `LINEA_REF_MOV`, `LOTE_MOV`, `FECHA_CADUCIDAD_MOV`, `CODIGO_ALM_DOC_MOV`, `NUMERO_OPERACION_DOC_MOV`, `CODIGO_CAJA_DOC_MOV`) VALUES
+  ('114', 'IN', 'A1', '2026001', '114', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/M', 'Legging Negro M', 'E', 20, 8, 160, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('115', 'IN', 'A1', '2026001', '115', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/ROSA/S', 'Legging Rosa S', 'E', 15, 8, 120, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('116', 'IN', 'A1', '2026001', '116', '1', 'GEN', '2026-01-10 08:00:00', 'SUDADERA-HOOD', 'SUDADERA-HOOD/GRIS/S', 'Sudadera Gris S', 'E', 12, 20, 240, 20, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('117', 'IN', 'A1', '2026001', '117', '1', 'GEN', '2026-01-10 08:00:00', 'SUDADERA-HOOD', 'SUDADERA-HOOD/GRIS/M', 'Sudadera Gris M', 'E', 15, 20, 300, 20, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -25530,7 +30481,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-3-0003S', 'IN', 'A1', '3', '0003', '012', 'GEN', '2026-05-05 23:59:58', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, 'S', 7, 0, 90, 15, NULL, NULL, NULL, 'S', '2026-05-06 08:15:17', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001E', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:25', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 5, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001S', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:24', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 0, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL);
--- 611 registros exportados
+-- 612 registros exportados
 
 
 -- Tabla: fza_paises
@@ -26317,6 +31268,7 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Todos', 'menu.PropiedadesValores', 'S', 'Valores de Propiedades', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.Proveedores', 'S', 'Proveedores', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.Tarifas', 'S', 'Tarifas', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
+  ('Todos', 'menu.UnidadesMedida', 'S', 'Unidades de Medida', NULL, '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
   ('Todos', 'menu.Usuarios', 'S', 'Usuarios', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.UsuariosPerfiles', 'S', 'Perfiles de Usuarios', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.Variaciones', 'S', 'Variaciones', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
@@ -26388,7 +31340,7 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Vendedores', 'menu.Usuarios', 'N', 'Usuarios', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.UsuariosPerfiles', 'N', 'Perfiles', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.Variaciones', 'N', 'Tipos de Variaciones', NULL, '2026-06-02 19:49:58', 'Administrador', NULL);
--- 128 registros exportados
+-- 129 registros exportados
 
 
 -- Tabla: fza_propiedades
@@ -26787,6 +31739,38 @@ CREATE TABLE `fza_traspasos_solicitudes_lineas` (
 ALTER TABLE `fza_traspasos_solicitudes_lineas` ADD INDEX `IDX_TRSOLLIN_SKU` (`CODIGO_UNIDAD_TRSOLLIN`);
 
 
+-- Tabla: fza_unidades_medida
+
+DROP TABLE IF EXISTS `fza_unidades_medida`;
+CREATE TABLE `fza_unidades_medida` (
+  `CODIGO_UNIMED` varchar(20) NOT NULL COMMENT 'Clave de la unidad: Uds, m, cm, kg, g, rollo...',
+  `DESCRIPCION_UNIMED` varchar(100) NOT NULL COMMENT 'Nombre legible: Metros, Kilogramos...',
+  `DECIMALES_UNIMED` int(11) NOT NULL DEFAULT '2' COMMENT 'Numero de decimales a mostrar/teclear para esta unidad',
+  `MAGNITUD_UNIMED` varchar(20) NOT NULL DEFAULT 'OTROS' COMMENT 'Familia fisica: UNIDAD, LONGITUD, MASA, VOLUMEN... Solo se convierten entre si unidades de la misma magnitud',
+  `ESBASE_UNIMED` varchar(1) NOT NULL DEFAULT 'N' COMMENT 'S = unidad estandar/base de su magnitud (metro, kilo...)',
+  `FACTOR_BASE_UNIMED` decimal(19,6) NOT NULL DEFAULT '1.000000' COMMENT 'Factor a la unidad base: valor_base = valor * FACTOR (cm->m = 0.01, g->kg = 0.001)',
+  `ORDEN_UNIMED` int(11) NULL DEFAULT '0' COMMENT 'Orden de presentacion en desplegables',
+  `ESACTIVO_UNIMED` varchar(1) NOT NULL DEFAULT 'S' COMMENT 'S/N: unidad activa',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  PRIMARY KEY (`CODIGO_UNIMED`)
+);
+
+-- Datos de fza_unidades_medida
+INSERT INTO `fza_unidades_medida` (`CODIGO_UNIMED`, `DESCRIPCION_UNIMED`, `DECIMALES_UNIMED`, `MAGNITUD_UNIMED`, `ESBASE_UNIMED`, `FACTOR_BASE_UNIMED`, `ORDEN_UNIMED`, `ESACTIVO_UNIMED`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('cm', 'Centimetros', 2, 'LONGITUD', 'N', 0.01, 21, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
+  ('g', 'Gramos', 3, 'MASA', 'N', 0.001, 31, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
+  ('kg', 'Kilogramos', 3, 'MASA', 'S', 1, 30, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
+  ('l', 'Litros', 3, 'VOLUMEN', 'S', 1, 40, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
+  ('m', 'Metros', 2, 'LONGITUD', 'S', 1, 20, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
+  ('ml', 'Mililitros', 3, 'VOLUMEN', 'N', 0.001, 41, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
+  ('mm', 'Milimetros', 2, 'LONGITUD', 'N', 0.001, 22, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA'),
+  ('Uds', 'Unidades', 0, 'UNIDAD', 'S', 1, 10, 'S', '2026-06-05 20:45:40', '2026-06-05 20:45:40', 'SISTEMA', 'SISTEMA');
+-- 8 registros exportados
+
+
 -- Tabla: fza_usuarios
 
 DROP TABLE IF EXISTS `fza_usuarios`;
@@ -26808,7 +31792,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-04 20:57:26', '2026-06-04 20:57:26', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-07 07:52:57', '2026-06-07 07:52:57', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-03 16:59:33', '2026-06-03 16:59:33', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -38116,10 +43100,11 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('PropiedadesValores', 'Valores de Propiedades', 'mnuPropiedadesValores', 'inMtoPropiedadesValores.TfrmMtoPropiedadesValores', 'Ctrl+Alt+Y', 'UniDataPropiedadesValores.TdmPropiedadesValores', 5),
   ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores', 5),
   ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas', 5),
+  ('UnidadesMedida', 'Unidades de Medida', 'mnuUnidadesMedida', 'inMtoUnidadesMedida.TfrmMtoUnidadesMedida', NULL, 'UniDataUnidadesMedida.TdmUnidadesMedida', 1),
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 5),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 5),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 5);
--- 42 registros exportados
+-- 43 registros exportados
 
 
 -- ========================================
@@ -38209,6 +43194,10 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`
 -- Vista: vi_articulos_tarifas
 DROP VIEW IF EXISTS `vi_articulos_tarifas`;
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas` AS select `at`.`CODIGO_ART_ARTTAR` AS `CODIGO_ART_ARTTAR`,coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') AS `CODIGO_UNIDAD_ARTTAR`,`at`.`CODIGO_TAR_ARTTAR` AS `CODIGO_TAR_ARTTAR`,`t`.`NOMBRE_TAR_TAR` AS `NOMBRE_TAR_TAR`,`at`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_ARTTAR`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `at`.`CODIGO_UNICO_ARTTAR` end AS `CODIGO_UNICO_TARIFA_SKU`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') = '' then `at`.`CODIGO_UNICO_ARTTAR` end AS `CODIGO_UNICO_TARIFA_PADRE`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then 'ESPECIFICO_SKU' else 'PADRE' end AS `ORIGEN_PRECIO`,`at`.`PRECIO_SALIDA_ARTTAR` AS `PRECIO_SALIDA_ARTTAR`,`at`.`PRECIO_FINAL_ARTTAR` AS `PRECIO_FINAL_ARTTAR`,`at`.`PRECIO_DTO_ARTTAR` AS `PRECIO_DTO_ARTTAR`,`at`.`PORCENTAJE_DTO_ARTTAR` AS `PORCENTAJE_DTO_ARTTAR`,`at`.`PORCENTAJE_MARGEN_ARTTAR` AS `PORCENTAJE_MARGEN_ARTTAR`,`at`.`VALOR_MULTIPLO_AJUSTE_ARTTAR` AS `VALOR_MULTIPLO_AJUSTE_ARTTAR`,`at`.`VALOR_MENOS_AJUSTE_ARTTAR` AS `VALOR_MENOS_AJUSTE_ARTTAR`,coalesce(`at`.`PORCENTAJE_MARGEN_ARTTAR`,`t`.`PORCENTAJE_MARGEN_TAR`) AS `PORCENTAJE_MARGEN_EFECTIVO`,coalesce(`at`.`VALOR_MULTIPLO_AJUSTE_ARTTAR`,`t`.`VALOR_MULTIPLO_AJUSTE_TAR`) AS `VALOR_MULTIPLO_AJUSTE_EFECTIVO`,coalesce(`at`.`VALOR_MENOS_AJUSTE_ARTTAR`,`t`.`VALOR_MENOS_AJUSTE_TAR`) AS `VALOR_MENOS_AJUSTE_EFECTIVO`,`at`.`FECHA_DESDE_ARTTAR` AS `FECHA_DESDE_ARTTAR`,`at`.`FECHA_HASTA_ARTTAR` AS `FECHA_HASTA_ARTTAR`,`t`.`ESACTIVO_ARTTAR` AS `ESACTIVO_ARTTAR`,`t`.`ESIMP_INCL_TAR` AS `ESIMP_INCL_TAR`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`a`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` AS `TIPO_IVA_ARTICULO`,case when `tiene_sku`.`CODIGO_ART_SKU` is not null then 'S' else 'N' end AS `TIENE_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,(select group_concat(`av`.`AV` order by `av`.`ORDEN_AV` ASC separator ' / ') from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) where `sa`.`CODIGO_UNIDAD_SKU_SA` = `at`.`CODIGO_UNIDAD_ARTTAR`) AS `DESCRIPCION_SKU`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `skuc`.`PRECIO_ULT_COMPRA_SKUC` else `ap`.`PRECIO_ULT_COMPRA_AP` end AS `PRECIO_ULT_COMPRA`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `skuc`.`FECHA_ULT_COMPRA_SKUC` else `ap`.`FECHA_VALIDEZ_AP` end AS `FECHA_VALIDEZ`,`a`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`af`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,coalesce(`num_atr`.`NUM_ATRIBUTOS_REQ`,0) AS `NUM_ATRIBUTOS_REQ`,`at`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`at`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`at`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`at`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((((((((((`fza_articulos_tarifas` `at` join `fza_articulos` `a` on(`a`.`CODIGO_ART_ART` = `at`.`CODIGO_ART_ARTTAR`)) join `fza_tarifas` `t` on(`t`.`CODIGO_TAR_ARTTAR` = `at`.`CODIGO_TAR_ARTTAR`)) left join `fza_articulos_skus` `sku` on(`sku`.`CODIGO_UNIDAD_SKU` = `at`.`CODIGO_UNIDAD_ARTTAR` and coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '')) left join `fza_articulos_skus_costes` `skuc` on(`skuc`.`CODIGO_UNIDAD_SKU_SKUC` = `at`.`CODIGO_UNIDAD_ARTTAR` and coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '')) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `p` on(`p`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `fza_articulos_familias` `af` on(`af`.`CODIGO_FAM_FAM` = `a`.`CODIGO_FAM_ART`)) left join `fza_ivas_tipos` `iv` on(`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` = `a`.`TIPO_IVA_ART`)) left join (select distinct `fza_articulos_skus`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU` from `fza_articulos_skus` where `fza_articulos_skus`.`ESACTIVO_SKU` = 'S') `tiene_sku` on(`tiene_sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`)) left join (select `sk`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,count(distinct `va`.`ID_ATB_VA`) AS `NUM_ATRIBUTOS_REQ` from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sk`.`CODIGO_VAR_SKU`)) group by `sk`.`CODIGO_ART_SKU`) `num_atr` on(`num_atr`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`)) where `at`.`ESACTIVO_ARTTAR` = 'S' and `t`.`ESACTIVO_ARTTAR` = 'S' and (`at`.`FECHA_HASTA_ARTTAR` is null or `at`.`FECHA_HASTA_ARTTAR` >= curdate()) order by `t`.`ORDEN_TAR`,`a`.`ORDEN_ART`,`at`.`CODIGO_UNIDAD_ARTTAR`;
+
+-- Vista: vi_articulos_tarifas_mto
+DROP VIEW IF EXISTS `vi_articulos_tarifas_mto`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_tarifas_mto` AS select `at`.`CODIGO_ART_ARTTAR` AS `CODIGO_ART_ARTTAR`,coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') AS `CODIGO_UNIDAD_ARTTAR`,`at`.`CODIGO_TAR_ARTTAR` AS `CODIGO_TAR_ARTTAR`,`t`.`NOMBRE_TAR_TAR` AS `NOMBRE_TAR_TAR`,`at`.`CODIGO_UNICO_ARTTAR` AS `CODIGO_UNICO_ARTTAR`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `at`.`CODIGO_UNICO_ARTTAR` end AS `CODIGO_UNICO_TARIFA_SKU`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') = '' then `at`.`CODIGO_UNICO_ARTTAR` end AS `CODIGO_UNICO_TARIFA_PADRE`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then 'ESPECIFICO_SKU' else 'PADRE' end AS `ORIGEN_PRECIO`,`at`.`PRECIO_SALIDA_ARTTAR` AS `PRECIO_SALIDA_ARTTAR`,`at`.`PRECIO_FINAL_ARTTAR` AS `PRECIO_FINAL_ARTTAR`,`at`.`PRECIO_DTO_ARTTAR` AS `PRECIO_DTO_ARTTAR`,`at`.`PORCENTAJE_DTO_ARTTAR` AS `PORCENTAJE_DTO_ARTTAR`,`at`.`PORCENTAJE_MARGEN_ARTTAR` AS `PORCENTAJE_MARGEN_ARTTAR`,`at`.`VALOR_MULTIPLO_AJUSTE_ARTTAR` AS `VALOR_MULTIPLO_AJUSTE_ARTTAR`,`at`.`VALOR_MENOS_AJUSTE_ARTTAR` AS `VALOR_MENOS_AJUSTE_ARTTAR`,coalesce(`at`.`PORCENTAJE_MARGEN_ARTTAR`,`t`.`PORCENTAJE_MARGEN_TAR`) AS `PORCENTAJE_MARGEN_EFECTIVO`,coalesce(`at`.`VALOR_MULTIPLO_AJUSTE_ARTTAR`,`t`.`VALOR_MULTIPLO_AJUSTE_TAR`) AS `VALOR_MULTIPLO_AJUSTE_EFECTIVO`,coalesce(`at`.`VALOR_MENOS_AJUSTE_ARTTAR`,`t`.`VALOR_MENOS_AJUSTE_TAR`) AS `VALOR_MENOS_AJUSTE_EFECTIVO`,`at`.`FECHA_DESDE_ARTTAR` AS `FECHA_DESDE_ARTTAR`,`at`.`FECHA_HASTA_ARTTAR` AS `FECHA_HASTA_ARTTAR`,`t`.`ESACTIVO_ARTTAR` AS `ESACTIVO_ARTTAR`,`t`.`ESIMP_INCL_TAR` AS `ESIMP_INCL_TAR`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ART`,`a`.`ESVARIACION_ART` AS `ESVARIACION_ART`,`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` AS `TIPO_IVA_ARTICULO`,case when `tiene_sku`.`CODIGO_ART_SKU` is not null then 'S' else 'N' end AS `TIENE_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,(select group_concat(`av`.`AV` order by `av`.`ORDEN_AV` ASC separator ' / ') from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) where `sa`.`CODIGO_UNIDAD_SKU_SA` = `at`.`CODIGO_UNIDAD_ARTTAR`) AS `DESCRIPCION_SKU`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `skuc`.`PRECIO_ULT_COMPRA_SKUC` else `ap`.`PRECIO_ULT_COMPRA_AP` end AS `PRECIO_ULT_COMPRA`,case when coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '' then `skuc`.`FECHA_ULT_COMPRA_SKUC` else `ap`.`FECHA_VALIDEZ_AP` end AS `FECHA_VALIDEZ`,`a`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`af`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,coalesce(`num_atr`.`NUM_ATRIBUTOS_REQ`,0) AS `NUM_ATRIBUTOS_REQ`,`at`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`at`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`at`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`at`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((((((((((`fza_articulos_tarifas` `at` join `fza_articulos` `a` on(`a`.`CODIGO_ART_ART` = `at`.`CODIGO_ART_ARTTAR`)) join `fza_tarifas` `t` on(`t`.`CODIGO_TAR_ARTTAR` = `at`.`CODIGO_TAR_ARTTAR`)) left join `fza_articulos_skus` `sku` on(`sku`.`CODIGO_UNIDAD_SKU` = `at`.`CODIGO_UNIDAD_ARTTAR` and coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '')) left join `fza_articulos_skus_costes` `skuc` on(`skuc`.`CODIGO_UNIDAD_SKU_SKUC` = `at`.`CODIGO_UNIDAD_ARTTAR` and coalesce(`at`.`CODIGO_UNIDAD_ARTTAR`,'') <> '')) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `p` on(`p`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `fza_articulos_familias` `af` on(`af`.`CODIGO_FAM_FAM` = `a`.`CODIGO_FAM_ART`)) left join `fza_ivas_tipos` `iv` on(`iv`.`CODIGO_ABREVIATURA_IVA_IVATIP` = `a`.`TIPO_IVA_ART`)) left join (select distinct `fza_articulos_skus`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU` from `fza_articulos_skus` where `fza_articulos_skus`.`ESACTIVO_SKU` = 'S') `tiene_sku` on(`tiene_sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`)) left join (select `sk`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,count(distinct `va`.`ID_ATB_VA`) AS `NUM_ATRIBUTOS_REQ` from (`fza_articulos_skus` `sk` join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sk`.`CODIGO_VAR_SKU`)) group by `sk`.`CODIGO_ART_SKU`) `num_atr` on(`num_atr`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`)) where `t`.`ESACTIVO_ARTTAR` = 'S' order by `t`.`ORDEN_TAR`,`a`.`ORDEN_ART`,`at`.`CODIGO_UNIDAD_ARTTAR`;
 
 -- Vista: vi_art_busquedas
 DROP VIEW IF EXISTS `vi_art_busquedas`;
@@ -41134,16 +46123,19 @@ BEGIN
     SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''), 'PVP');
     SET v_desde      = IFNULL(p_DESDE, '1900-01-01');
     SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
-    /* Lista efectiva de almacenes (CSV sin comillas, para FIND_IN_SET). */
-    IF IFNULL(p_ALMACENES, '') <> '' THEN
-        SET v_alms = p_ALMACENES;
-    ELSE
-        SELECT GROUP_CONCAT(`CODIGO_ALM_ALM`)
-          INTO v_alms
-          FROM `fza_almacenes`
-         WHERE `ESACTIVO_ALM` = 'S';
-    END IF;
-    SET v_alms = IFNULL(v_alms, '');
+    /* Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar */
+    /* por IN en vez de FIND_IN_SET sobre las tablas grandes (no es sargable y */
+    /* obliga a escanear; fza_articulos_stockactual tiene CODIGO_ALM_STK como */
+    /* 1ª columna del PK). Sin selección = todos los almacenes activos. */
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
+    CREATE TEMPORARY TABLE `tmp_bst_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '') = '',
+              `ESACTIVO_ALM` = 'S',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
 
     /* ----------------------------------------------------------------- */
     /* Filtros de artículo (familias con descendencia, proveedores, */
@@ -41241,8 +46233,15 @@ BEGIN
         ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
        AND a.`ESACTIVO_ART` = 'S'
        AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+      /* Color del SKU: SOLO su fila de atributo de color. El discriminante */
+      /* ID_VA_AV='CO' DEBE ir también en el ON de `sac`; si solo se filtra en */
+      /* `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera */
+      /* dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar */
+      /* y el SKU podía quedar SIN color (banda "sin color" fantasma). */
       LEFT JOIN `fza_atributos_sku` sac
         ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = 'CO')
       LEFT JOIN `fza_atributos_valores` co
         ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = 'CO'
       LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
@@ -41301,7 +46300,7 @@ BEGIN
           FROM `tmp_bst_sku` s
           JOIN `fza_articulos_stockactual` st
             ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
-           AND FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
          GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''),
                   s.`COLOR`;
     ELSE
@@ -41355,7 +46354,7 @@ BEGIN
                                0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
                                0 AS `DELTA_HASTA`
                           FROM `fza_articulos_stockactual` st2
-                         WHERE FIND_IN_SET(st2.`CODIGO_ALM_STK`, v_alms)
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
                         UNION ALL
                         SELECT m.`CODIGO_UNIDAD_MOV`,
                                IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
@@ -41405,7 +46404,7 @@ BEGIN
                                      -m.`CANTIDAD_MOV`), 0)
                           FROM `fza_movimientos_almacen` m
                          WHERE m.`ESACTIVO_MOV` = 'S'
-                           AND FIND_IN_SET(m.`CODIGO_ALM_MOV`, v_alms)
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
                        ) u
                  GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
                ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
@@ -41446,22 +46445,25 @@ BEGIN
                'EXIINI', 10, 'Existencias iniciales', 1, `EXI_INI`
           FROM `tmp_bst_base`;
     END IF;
-    /* Entradas / Salidas agregadas: simplificado (F) o acumulados (A). */
+    /* Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb. */
+    /* entrada) + recuentos + traspasos NETOS (entrada - salida). SIN depósitos */
+    /* y SIN banda Salidas: las ventas van en su banda. Balance: Ex.ini + */
+    /* Entradas - Ventas = Ex.final (los depósitos quedan fuera). */
     IF (p_MODO = 'F' AND p_DESGLOSADO = 'N') OR p_MODO = 'A' THEN
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENT', 20, 'Entradas', 1, `ENT`
-          FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SAL', 40, 'Salidas', 0, `SAL`
+               'ENT', 20, 'Entradas', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'VEN', 50, 'Ventas', 0, `VEN`
           FROM `tmp_bst_base`;
     END IF;
-    /* Entradas / Salidas desglosadas: solo modo entre fechas desglosado. */
+    /* Entradas desglosadas: solo modo entre fechas desglosado. Traspasos y */
+    /* depósitos netos (entrada - salida), sin bandas de salida salvo alb. */
+    /* venta. Mismos subtipos que la consulta de stock (Ctrl+U). */
     IF p_MODO = 'F' AND p_DESGLOSADO = 'S' THEN
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
@@ -41473,24 +46475,20 @@ BEGIN
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENTTRA', 23, 'Ent. traspaso', 1, `ENT_TRASPASO`
+               'ENTTRA', 23, 'Traspasos (neto)', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'ENTDEP', 24, 'Ent. depósito', 1, `ENT_DEPOSITO`
+               'ENTDEP', 24, 'Depósitos (neto)', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
           FROM `tmp_bst_base`;
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'ENTREG', 25, 'Regulariz.', 1, `ENT_REGULAR`
           FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SALTRA', 41, 'Sal. traspaso', 0, `SAL_TRASPASO`
-          FROM `tmp_bst_base`;
-        INSERT INTO `tmp_bst_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               'SALDEP', 42, 'Sal. depósito', 0, `SAL_DEPOSITO`
-          FROM `tmp_bst_base`;
+        /* Sal. traspaso / Sal. depósito ya no salen: neteadas en sus bandas de */
+        /* entrada. Albarán de venta sí se mantiene (es una venta). */
         INSERT INTO `tmp_bst_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                'SALALB', 43, 'Alb. venta', 0, `SAL_ALBVENTA`
@@ -41549,6 +46547,14 @@ BEGIN
         /* ventas hay que irlas sumando). */
         ROUND(IF(p.`BANDA` = 'VEN', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
                                                       AS `VENTAS`,
+        /* Existencias finales aisladas (cantidad y valor a PMP) solo en la */
+        /* banda EXIFIN, 0 en el resto, para que el total por grupo/general */
+        /* muestre SOLO el stock final. */
+        IF(p.`BANDA` = 'EXIFIN', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = 'EXIFIN',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
         CASE p_NIVEL1
             WHEN 'PRV' THEN COALESCE(prov.`CODIGO_PRV`, '')
             WHEN 'FAM' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
@@ -41647,7 +46653,7 @@ BEGIN
               FROM `fza_articulos_stockactual` st
               JOIN `fza_articulos_skus` sk
                 ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
-             WHERE FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
              GROUP BY sk.`CODIGO_ART_SKU`
            ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
       LEFT JOIN (
@@ -41686,7 +46692,7 @@ BEGIN
                AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
               JOIN `tmp_bst_sku` s
                 ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
-             WHERE FIND_IN_SET(fl.`CODIGO_ALM_FACLIN`, v_alms)
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
                AND (p_MODO = 'A'
                     OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
              GROUP BY s.`CODIGO_ART`,
@@ -41705,6 +46711,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
 END ;;
 DELIMITER ;
 
@@ -41756,18 +46763,20 @@ BEGIN
     SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''), 'PVP');
     SET v_desde      = IFNULL(p_DESDE, '1900-01-01');
     SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
-    /* Lista efectiva de almacenes (CSV sin comillas, para FIND_IN_SET). */
-    /* Sin selección = TODOS los almacenes activos (igual que la lista del */
-    /* checklist), no solo los de uso estándar: "nada marcado = todos". */
-    IF IFNULL(p_ALMACENES, '') <> '' THEN
-        SET v_alms = p_ALMACENES;
-    ELSE
-        SELECT GROUP_CONCAT(`CODIGO_ALM_ALM`)
-          INTO v_alms
-          FROM `fza_almacenes`
-         WHERE `ESACTIVO_ALM` = 'S';
-    END IF;
-    SET v_alms = IFNULL(v_alms, '');
+    /* Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar */
+    /* por IN en vez de FIND_IN_SET sobre las tablas grandes: FIND_IN_SET no es */
+    /* sargable y obliga a escanear (p. ej. fza_articulos_stockactual, cuyo PK */
+    /* empieza por CODIGO_ALM_STK). Con el IN, MariaDB puede usar el índice. */
+    /* Sin selección = todos los almacenes activos ("nada marcado = todos"). */
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+    CREATE TEMPORARY TABLE `tmp_bat_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '') = '',
+              `ESACTIVO_ALM` = 'S',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
 
     /* ----------------------------------------------------------------- */
     /* Filtros de artículo: familias (con su descendencia), proveedores y */
@@ -41957,8 +46966,15 @@ BEGIN
         ON ta.`ID_AV` = sat.`ID_AV_SA` AND ta.`ID_VA_AV` <> 'CO'
       JOIN `tmp_bat_pos` p
         ON p.`CODIGO_ART` = sku.`CODIGO_ART_SKU` AND p.`ID_AV` = ta.`ID_AV`
+      /* Color del SKU: SOLO su fila de atributo de color. El discriminante */
+      /* ID_VA_AV='CO' DEBE ir también en el ON de `sac`; si solo se filtra en */
+      /* `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera */
+      /* dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar */
+      /* y el SKU podía quedar SIN color (banda "sin color" fantasma). */
       LEFT JOIN `fza_atributos_sku` sac
         ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = 'CO')
       LEFT JOIN `fza_atributos_valores` co
         ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = 'CO'
       LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
@@ -42021,7 +47037,7 @@ BEGIN
           FROM `tmp_bat_sku` s
           JOIN `fza_articulos_stockactual` st
             ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
-           AND FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
          GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''),
                   s.`POSICION`, s.`COLOR`;
     ELSE
@@ -42085,7 +47101,7 @@ BEGIN
                                0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
                                0 AS `DELTA_HASTA`
                           FROM `fza_articulos_stockactual` st2
-                         WHERE FIND_IN_SET(st2.`CODIGO_ALM_STK`, v_alms)
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
                         UNION ALL
                         SELECT m.`CODIGO_UNIDAD_MOV`,
                                IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
@@ -42135,7 +47151,7 @@ BEGIN
                                      -m.`CANTIDAD_MOV`), 0)
                           FROM `fza_movimientos_almacen` m
                          WHERE m.`ESACTIVO_MOV` = 'S'
-                           AND FIND_IN_SET(m.`CODIGO_ALM_MOV`, v_alms)
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
                        ) u
                  GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
                ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
@@ -42173,17 +47189,18 @@ BEGIN
                'EXIINI', 10, 'Existencias iniciales', 1, `EXI_INI`
           FROM `tmp_bat_base`;
     END IF;
-    /* Entradas / Salidas agregadas: simplificado (F) o acumulados (A). */
+    /* Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb. */
+    /* entrada) + recuentos (regularizaciones) + traspasos NETOS (entrada - */
+    /* salida). SIN depósitos y SIN banda Salidas: las ventas van en su banda. */
+    /* Balance: Ex.ini + Entradas - Ventas = Ex.final (los depósitos quedan */
+    /* fuera de la ecuación, según lo pedido). */
     IF (p_MODO = 'F' AND p_DESGLOSADO = 'N') OR p_MODO = 'A' THEN
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
-               'ENT', 20, 'Entradas', 1, `ENT`
-          FROM `tmp_bat_base`;
-        INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'SAL', 40, 'Salidas', 0, `SAL`
+               'ENT', 20, 'Entradas', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bat_base`;
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
@@ -42191,8 +47208,9 @@ BEGIN
                'VEN', 50, 'Ventas', 0, `VEN`
           FROM `tmp_bat_base`;
     END IF;
-    /* Entradas / Salidas desglosadas: solo modo entre fechas desglosado. */
-    /* Mismos subtipos que la consulta de stock (Ctrl+U). */
+    /* Entradas desglosadas: solo modo entre fechas desglosado. Mismos */
+    /* subtipos que la consulta de stock (Ctrl+U), con traspasos y depósitos */
+    /* netos (entrada - salida) y sin bandas de salida salvo alb. venta. */
     IF p_MODO = 'F' AND p_DESGLOSADO = 'S' THEN
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
@@ -42207,28 +47225,23 @@ BEGIN
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
-               'ENTTRA', 23, 'Ent. traspaso', 1, `ENT_TRASPASO`
+               'ENTTRA', 23, 'Traspasos (neto)', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
           FROM `tmp_bat_base`;
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
-               'ENTDEP', 24, 'Ent. depósito', 1, `ENT_DEPOSITO`
+               'ENTDEP', 24, 'Depósitos (neto)', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
           FROM `tmp_bat_base`;
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
                'ENTREG', 25, 'Regulariz.', 1, `ENT_REGULAR`
           FROM `tmp_bat_base`;
-        INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'SALTRA', 41, 'Sal. traspaso', 0, `SAL_TRASPASO`
-          FROM `tmp_bat_base`;
-        INSERT INTO `tmp_bat_medidas`
-        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
-               `POSICION`,
-               'SALDEP', 42, 'Sal. depósito', 0, `SAL_DEPOSITO`
-          FROM `tmp_bat_base`;
+        /* Sal. traspaso / Sal. depósito ya no salen: se han neteado en sus */
+        /* bandas de entrada (Traspasos/Depósitos neto). Albarán de venta sí se */
+        /* mantiene (es una venta). */
         INSERT INTO `tmp_bat_medidas`
         SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
                `POSICION`,
@@ -42299,6 +47312,14 @@ BEGIN
         /* ventas hay que irlas sumando). */
         ROUND(IF(p.`BANDA` = 'VEN', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
                                                       AS `VENTAS`,
+        /* Existencias finales aisladas (cantidad y valor a PMP) solo en la */
+        /* banda EXIFIN, 0 en el resto. Permite que el total por grupo/general */
+        /* muestre SOLO el stock final, sin mezclar entradas/salidas/ventas. */
+        IF(p.`BANDA` = 'EXIFIN', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = 'EXIFIN',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
         /* Niveles de agrupación configurables. GRUPOn_COD identifica el grupo */
         /* (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en */
         /* la cabecera/resumen. Si el nivel no está activo (''), salen vacíos y */
@@ -42418,7 +47439,7 @@ BEGIN
               FROM `fza_articulos_stockactual` st
               JOIN `fza_articulos_skus` sk
                 ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
-             WHERE FIND_IN_SET(st.`CODIGO_ALM_STK`, v_alms)
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
              GROUP BY sk.`CODIGO_ART_SKU`
            ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
       LEFT JOIN (
@@ -42459,7 +47480,7 @@ BEGIN
                AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
               JOIN `tmp_bat_sku` s
                 ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
-             WHERE FIND_IN_SET(fl.`CODIGO_ALM_FACLIN`, v_alms)
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
                AND (p_MODO = 'A'
                     OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
              GROUP BY s.`CODIGO_ART`,
@@ -42481,6 +47502,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
 END ;;
 DELIMITER ;
 
@@ -44081,4 +49103,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 04/06/2026 21:05:42
+-- Backup completado: 07/06/2026 7:53:07
