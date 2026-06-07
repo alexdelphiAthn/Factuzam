@@ -618,6 +618,12 @@ procedure TfrmMtoMovimientosAlmacen.AplicarLayoutInstanciaBusqueda;
 begin
   inherited;
   pnlFiltros.Visible := False;
+  // Movimientos es una lista SIN ficha (tsFicha oculta). La instancia de
+  // busqueda externa oculta la lista para ir a la ficha; como aqui no hay
+  // ficha, volvemos a mostrar la lista: el grid queda filtrado a la PK
+  // (un solo movimiento) por PrepararBusquedaExterna.
+  tsLista.TabVisible := True;
+  pcPantalla.ActivePage := tsLista;
 end;
 
 procedure TfrmMtoMovimientosAlmacen.FormDestroy(Sender: TObject);
