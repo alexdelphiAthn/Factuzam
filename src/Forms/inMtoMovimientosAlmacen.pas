@@ -434,6 +434,7 @@ end;
 procedure TfrmMtoMovimientosAlmacen.AbrirConProgreso;
 const
   TAM_BLOQUE = 2000;
+  MAX_FILAS_CARGA = 200000;
 var
   qry: TUniQuery;
   nTotal, nLeidos: Integer;
@@ -454,26 +455,41 @@ begin
     qry.DisableControls;
     try
       nTotal := ContarMovimientos;
-      if Assigned(FbarProgreso) then
+      // Tope de seguridad: cargar cientos de miles de filas de golpe
+      // bloquea el grid. Si la seleccion es enorme (p.ej. el año "1900" de
+      // fechas vacias, o todos), avisamos y NO cargamos.
+      if nTotal > MAX_FILAS_CARGA then
       begin
-        if nTotal > 0 then
-          FbarProgreso.Max := nTotal
-        else
-          FbarProgreso.Max := 1;
-      end;
-      qry.Close;
-      qry.FetchRows := TAM_BLOQUE;
-      qry.Open;
-      nLeidos := 0;
-      qry.First;
-      while not qry.Eof do
+        OcultarProgresoCarga;
+        Screen.Cursor := cursorPrev;
+        MessageDlg(Format('La selección cargaría %s registros, demasiados ' +
+          'para mostrarlos de una vez.' + sLineBreak +
+          'Acota los filtros (años / almacenes) y vuelve a intentarlo.',
+          [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
+      end
+      else
       begin
-        Inc(nLeidos);
-        if (nLeidos mod 200) = 0 then
-          ActualizarProgresoCarga(nLeidos, nTotal);
-        qry.Next;
+        if Assigned(FbarProgreso) then
+        begin
+          if nTotal > 0 then
+            FbarProgreso.Max := nTotal
+          else
+            FbarProgreso.Max := 1;
+        end;
+        qry.Close;
+        qry.FetchRows := TAM_BLOQUE;
+        qry.Open;
+        nLeidos := 0;
+        qry.First;
+        while not qry.Eof do
+        begin
+          Inc(nLeidos);
+          if (nLeidos mod 200) = 0 then
+            ActualizarProgresoCarga(nLeidos, nTotal);
+          qry.Next;
+        end;
+        qry.First;
       end;
-      qry.First;
     finally
       qry.EnableControls;
       OcultarProgresoCarga;
