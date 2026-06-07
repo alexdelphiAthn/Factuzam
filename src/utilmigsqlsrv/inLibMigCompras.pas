@@ -54,7 +54,7 @@ procedure MigrarAlbaranesCompra(Eng: TMigEngine; var Stats: TMigStats);
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Generics.Collections,
   Data.DB, Uni;
 
 const
@@ -212,6 +212,46 @@ begin
     Result := 'RECIBIDO';
 end;
 
+// Mapa articulo -> ID_AC del tallaje (conjunto pivote de tallas), desde
+// fza_articulos_conjuntos_asign. Cada linea lleva ese ID_AC_PIVOT para que
+// el Mto ofrezca la rejilla de "tallas en horizontal" — igual que hace la
+// materializacion nativa de una sesion de compra, que tambien guarda una
+// linea por SKU (no celdas) con su ID_AC_PIVOT.
+procedure CargarMapaTallaje(Eng: TMigEngine;
+                            oMap: TDictionary<string, Integer>);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'SELECT CODIGO_ART_ACA, ID_AC_ACA FROM fza_articulos_conjuntos_asign ' +
+      'WHERE ID_VA_ACA = ''TAL''';
+    q.Open;
+    while not q.Eof do
+    begin
+      oMap.AddOrSetValue(
+        UpperCase(Trim(q.FieldByName('CODIGO_ART_ACA').AsString)),
+        q.FieldByName('ID_AC_ACA').AsInteger);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+end;
+
+// Token SQL del ID_AC_PIVOT de un articulo: el numero si tiene tallaje, NULL
+// si no (articulo escalar sin tallas).
+function AcPivotToken(oMap: TDictionary<string, Integer>;
+                      const sArt: string): string;
+var iIdAc: Integer;
+begin
+  if oMap.TryGetValue(UpperCase(Trim(sArt)), iIdAc) and (iIdAc > 0) then
+    Result := IntToStr(iIdAc)
+  else
+    Result := 'NULL';
+end;
+
 // =========================================================================
 //  1. Pedidos de compra
 // =========================================================================
@@ -292,7 +332,8 @@ const
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
   cColsLin =
     'NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN, LINEA_PEDCLIN, CODIGO_ART_PEDCLIN, ' +
-    'CODIGO_UNIDAD_PEDCLIN, COLOR_TEXTO_PEDCLIN, DESCRIPCION_ARTICULO_PEDCLIN, ' +
+    'CODIGO_UNIDAD_PEDCLIN, ID_AC_PIVOT_PEDCLIN, COLOR_TEXTO_PEDCLIN, ' +
+    'DESCRIPCION_ARTICULO_PEDCLIN, ' +
     'CANTIDAD_PEDCLIN, CANTIDAD_RECIBIDA_PEDCLIN, TIPO_IVA_ARTICULO_PEDCLIN, ' +
     'PORCENTAJE_IVA_PEDCLIN, PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
     'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, TOTAL_PEDCLIN, CODIGO_ALMACEN_PEDCLIN, ' +
@@ -300,6 +341,7 @@ const
 var
   qCab, qLin:        TUniQuery;
   bCab, bLin:        TBulkInsert;
+  oMapTal:           TDictionary<string, Integer>;
   sAhora, sUser:     string;
   sNum, sSerie, sAlm, sArt, sUni: string;
   iva:               TIvaCompra;
@@ -376,6 +418,8 @@ begin
     qCab.Free;
   end;
   // --- PASO 2: líneas (ocpedarp) ---
+  oMapTal := TDictionary<string, Integer>.Create;
+  CargarMapaTallaje(Eng, oMapTal);
   bLin := TBulkInsert.Create(Eng.ConDst, 'fza_pedidos_compra_lineas',
                              cColsLin, BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
@@ -409,11 +453,12 @@ begin
         sAlm := IntToStr(qLin.FieldByName('AlmLin').AsInteger);
       try
         bLin.Add(Format(
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, ' +
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, ' +
           '%s, %s, %s, %s',
           [ValorOrNull(sNum), ValorOrNull(sSerie),
            ValorOrNull(Format('%.4d', [qLin.FieldByName('Orden').AsInteger])),
            ValorOrNull(sArt), ValorOrNull(sUni),
+           AcPivotToken(oMapTal, sArt),
            ValorOrNull(Copy(Trim(qLin.FieldByName('Color').AsString), 1, 100)),
            ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
            F(qLin.FieldByName('CantidadPedida').AsFloat),
@@ -439,6 +484,7 @@ begin
   finally
     bLin.Free;
     qLin.Free;
+    oMapTal.Free;
   end;
   if not Eng.IsCancelado then
   begin
@@ -526,6 +572,7 @@ const
   cColsLin =
     'NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, NUMERO_PEDC_ALBCLIN, ' +
     'SERIE_PEDC_ALBCLIN, CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
+    'ID_AC_PIVOT_ALBCLIN, ' +
     'DESCRIPCION_ARTICULO_ALBCLIN, CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
     'PORCENTAJE_IVA_ALBCLIN, PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
     'PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ' +
@@ -533,6 +580,7 @@ const
 var
   qCab, qLin:       TUniQuery;
   bCab, bLin:       TBulkInsert;
+  oMapTal:          TDictionary<string, Integer>;
   sAhora, sUser:    string;
   sNum, sSerie, sAlm, sArt, sUni, sEstado, sNumPed, sSeriePed: string;
   iva:              TIvaCompra;
@@ -625,6 +673,8 @@ begin
     qCab.Free;
   end;
   // --- PASO 2: líneas (ocalbproarp) ---
+  oMapTal := TDictionary<string, Integer>.Create;
+  CargarMapaTallaje(Eng, oMapTal);
   bLin := TBulkInsert.Create(Eng.ConDst, 'fza_albaranes_compra_lineas',
                              cColsLin, BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
@@ -671,12 +721,13 @@ begin
       end;
       try
         bLin.Add(Format(
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, ' +
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, ' +
           '%s, %s, %s, %s',
           [ValorOrNull(sNum), ValorOrNull(sSerie),
            ValorOrNull(Format('%.4d', [qLin.FieldByName('Orden').AsInteger])),
            sNumPed, sSeriePed,
            ValorOrNull(sArt), ValorOrNull(sUni),
+           AcPivotToken(oMapTal, sArt),
            ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
            F(qLin.FieldByName('Cantidad').AsFloat),
            F(qLin.FieldByName('PorIVA').AsFloat),
@@ -700,6 +751,7 @@ begin
   finally
     bLin.Free;
     qLin.Free;
+    oMapTal.Free;
   end;
   if not Eng.IsCancelado then
   begin
