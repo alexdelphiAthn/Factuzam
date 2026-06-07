@@ -129,16 +129,25 @@ begin
   Result := dt > EncodeDate(1900, 1, 2);
 end;
 
-// Dirección del movimiento. Preferimos el flag Tipo del origen cuando es
-// explícito ('E'/'S'); si no, el signo de las unidades de stock; como
-// último recurso, el signo de Cantidad. Por defecto entrada.
-function DeducirTipoMov(const sTipo: string;
+// Dirección del movimiento. TipoMov del legacy es la fuente AUTORITATIVA: la
+// app graba ahi 'E'/'S' (ver UniDataTraspaso, que por cada linea mete una
+// salida 'S' en el origen y una entrada 'E' en el destino). Es lo unico
+// fiable en traspasos, donde el flag Tipo NO distingue el sentido y antes
+// todo salia como 'E' (stock descuadrado y el ticket de traspaso, que filtra
+// TIPO_MOV='S', sin lineas). Sin TipoMov caemos al flag Tipo, luego al signo
+// de las unidades y de la cantidad. Por defecto entrada.
+function DeducirTipoMov(const sTipoMov, sTipo: string;
                         fUnidades, fCantidad: Double): string;
 var
-  u: string;
+  mv, u: string;
 begin
-  u := UpperCase(Trim(sTipo));
-  if u = 'E' then
+  mv := UpperCase(Trim(sTipoMov));
+  u  := UpperCase(Trim(sTipo));
+  if mv = 'E' then
+    Result := 'E'
+  else if mv = 'S' then
+    Result := 'S'
+  else if u = 'E' then
     Result := 'E'
   else if u = 'S' then
     Result := 'S'
@@ -331,6 +340,7 @@ const
     '       ISNULL(m.Cantidad, 0)      AS Cantidad, ' +
     '       ISNULL(m.UnidadesStock, 0) AS UnidadesStock, ' +
     '       ISNULL(m.Tipo, '''')    AS Tipo, ' +
+    '       ISNULL(m.TipoMov, '''') AS TipoMov, ' +
     '       ISNULL(m.TipoDoc, '''') AS TipoDoc, ' +
     '       ISNULL(m.PrecioMedioSIva, 0) AS PrecioMedioSIva, ' +
     '       m.FechaOpe, m.Fecha, ' +
@@ -424,7 +434,8 @@ begin
       sTipoRaw   := Trim(qSrc.FieldByName('Tipo').AsString);
       fUnidades  := qSrc.FieldByName('UnidadesStock').AsFloat;
       fCantidad  := qSrc.FieldByName('Cantidad').AsFloat;
-      sTipoMov   := DeducirTipoMov(sTipoRaw, fUnidades, fCantidad);
+      sTipoMov   := DeducirTipoMov(Trim(qSrc.FieldByName('TipoMov').AsString),
+                                   sTipoRaw, fUnidades, fCantidad);
       sTipoDoc   := MapearTipoDoc(qSrc.FieldByName('TipoDoc').AsString,
                                   sTipoMov);
       // Cantidad que afecta a stock: preferimos UnidadesStock; si es 0,
