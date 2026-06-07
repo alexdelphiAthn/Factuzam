@@ -294,6 +294,8 @@ begin
   // "BERENG" — codigos locales que el JOIN a occolor deja fuera.
   // Sin esto, articulos_colores falla con
   //   "color X no esta en fza_atributos_valores".
+  Eng.Log('  segunda pasada: colores de uso local en ocartcol/ocartbap ' +
+          '(puede tardar en BBDD grandes)...');
   qSrc := NuevoQOrigen(Eng,
     'SELECT DISTINCT UPPER(LTRIM(RTRIM( ' +
     '    CASE WHEN c.Descripcion IS NOT NULL ' +
