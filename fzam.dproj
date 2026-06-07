@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -440,6 +440,13 @@
             <Form>dmPaises</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoUnidadesMedida.pas">
+            <Form>frmMtoUnidadesMedida</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataUnidadesMedida.pas">
+            <Form>dmUnidadesMedida</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibCertificates.pas"/>
         <DCCReference Include="src\Modals\inMtoModalEmpCer.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaMenu.pas">
@@ -569,6 +576,8 @@
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
         <DCCReference Include="src\Lib\inLibData.pas"/>
         <DCCReference Include="src\Lib\inLibAppParam.pas"/>
+        <DCCReference Include="src\Lib\inLibUnidadesMedida.pas"/>
+        <DCCReference Include="src\Lib\inLibGridCantidad.pas"/>
         <DCCReference Include="src\Core\inMtoAppParam.pas">
             <Form>frmMtoAppParam</Form>
         </DCCReference>
