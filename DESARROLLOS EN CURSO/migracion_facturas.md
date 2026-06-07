@@ -63,11 +63,18 @@ Cada **línea** enlaza:
   NULL). `TOTAL_IMPUESTOS_FAC` = IVA + RE de todas las bandas. En venta
   minorista el RE suele ser 0.
 
-## Idempotencia
+## Idempotencia y rendimiento
 
-`fza_facturas` tiene PK `(NUMERO_FAC, SERIE_FAC)`, pero por consistencia con
-ventas la migración borra al arrancar lo migrado por el usuario
-(`USUARIO_ALTA`) en `fza_facturas_lineas` y `fza_facturas` y reinserta.
+`fza_facturas` tiene PK `(NUMERO_FAC, SERIE_FAC)` y `fza_facturas_lineas`
+`(NUMERO_FAC, SERIE_FAC, LINEA)`. La migración borra al arrancar lo migrado
+por el usuario (`USUARIO_ALTA`) en ambas tablas y reinserta.
+
+Cabeceras y líneas se vuelcan con **`INSERT IGNORE` por lotes** (`TBulkInsert`,
+2000 filas/lote), no fila a fila: con ~774k líneas el round-trip por fila era
+inviable (se quedaba en `0 / 774223`). No hay FK física entre líneas y
+cabecera (es FK *lógica*), así que cada buffer se vuelca por su cuenta. Un
+fallo de lote se registra y la migración continúa (antes un único error
+abortaba el dominio entero con un `raise`).
 
 ## Cómo ejecutarlo
 

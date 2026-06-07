@@ -317,10 +317,11 @@ end;
 procedure TMigEngine.IncRow(iCount: Integer = 1);
 begin
   Inc(FCurrentRow, iCount);
-  // Reportamos cada 200 filas o en la ultima. Suficientemente
-  // frecuente para que la barra parezca viva y lo bastante laxo para
-  // no machacar la UI con 266k callbacks.
-  if (FCurrentRow mod 200 = 0)
+  // Reportamos cada 2000 filas o en la ultima. Con dominios de 1,3M+
+  // filas (SKUs, movimientos) reportar cada 200 son miles de callbacks
+  // marshalleados a UI por segundo que atascan el interfaz; 2000 deja
+  // la barra viva sin machacar el hilo de UI.
+  if (FCurrentRow mod 2000 = 0)
   or ((FCurrentTotal > 0) and (FCurrentRow >= FCurrentTotal)) then
     DoProgress;
 end;
