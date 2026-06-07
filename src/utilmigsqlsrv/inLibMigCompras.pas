@@ -252,6 +252,44 @@ begin
     Result := 'NULL';
 end;
 
+// Mapa de valores de la propiedad TEMPORADA: NOMBRE (UPPER) -> ID_PV_ARTPROP,
+// para enlazar la temporada de la cabecera del pedido con su valor de catalogo.
+procedure CargarMapaTemporada(Eng: TMigEngine;
+                              oMap: TDictionary<string, Integer>);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'SELECT PV, ID_PV_ARTPROP FROM fza_propiedades_valores ' +
+      'WHERE ID_PROP_PV = ''TEMPORADA''';
+    q.Open;
+    while not q.Eof do
+    begin
+      oMap.AddOrSetValue(
+        UpperCase(Trim(q.FieldByName('PV').AsString)),
+        q.FieldByName('ID_PV_ARTPROP').AsInteger);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+end;
+
+// Token SQL del ID_PV de TEMPORADA por su nombre: el numero si existe, NULL si
+// el documento no trae temporada o no esta en el catalogo de propiedades.
+function TempPvToken(oMap: TDictionary<string, Integer>;
+                     const sNombre: string): string;
+var iId: Integer;
+begin
+  if (Trim(sNombre) <> '')
+  and oMap.TryGetValue(UpperCase(Trim(sNombre)), iId) and (iId > 0) then
+    Result := IntToStr(iId)
+  else
+    Result := 'NULL';
+end;
+
 // =========================================================================
 //  1. Pedidos de compra
 // =========================================================================
@@ -286,10 +324,13 @@ const
     '       ISNULL(p.PorIVA4, 0) AS PorIVA4, ISNULL(p.CuotaIVA4, 0) AS CuotaIVA4, ' +
     '       ISNULL(p.ImpBaseImp, 0) AS ImpBaseImp, ' +
     '       ISNULL(p.TotalIVA, 0) AS TotalIVA, ' +
-    '       ISNULL(p.ImpPedido, 0) AS ImpPedido ' +
+    '       ISNULL(p.ImpPedido, 0) AS ImpPedido, ' +
+    '       ISNULL(NULLIF(LTRIM(RTRIM(te.Nombre)), ''''), ' +
+    '              ISNULL(p.Temporada, '''')) AS TemporadaNombre ' +
     'FROM dbo.ocped p ' +
     'LEFT JOIN dbo.ocalm alm ON alm.Empresa = p.Empresa ' +
     '                       AND alm.Almacen = p.Almacen ' +
+    'LEFT JOIN dbo.octem te ON te.Temporada = p.Temporada ' +
     cWhere;
   cSelLin =
     'SELECT l.Empresa, l.Ejercicio, ISNULL(l.Serie, '''') AS Serie, ' +
@@ -308,7 +349,9 @@ const
     '           OR UPPER(LTRIM(RTRIM(co.Descripcion))) = ''INDEFINIDO'' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
     '         ELSE UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
-    '       END AS DescColor ' +
+    '       END AS DescColor, ' +
+    '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
+    '         WHERE ap.Articulo = l.Articulo) AS Modelo ' +
     'FROM dbo.ocpedarp l ' +
     'INNER JOIN dbo.ocped p ON p.Empresa = l.Empresa ' +
     '                      AND p.Ejercicio = l.Ejercicio ' +
@@ -329,6 +372,7 @@ const
     'PORCENTAJE_IVAR_PEDC, TOTAL_IVAR_PEDC, PORCENTAJE_IVAS_PEDC, ' +
     'TOTAL_IVAS_PEDC, PORCENTAJE_IVAE_PEDC, TOTAL_IVAE_PEDC, TOTAL_BASES_PEDC, ' +
     'TOTAL_IMPUESTOS_PEDC, TOTAL_LIQUIDO_PEDC, FORMA_PAGO_PEDC, ' +
+    'ID_PV_TEMPORADA_PEDC, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
   cColsLin =
     'NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN, LINEA_PEDCLIN, CODIGO_ART_PEDCLIN, ' +
@@ -337,11 +381,12 @@ const
     'CANTIDAD_PEDCLIN, CANTIDAD_RECIBIDA_PEDCLIN, TIPO_IVA_ARTICULO_PEDCLIN, ' +
     'PORCENTAJE_IVA_PEDCLIN, PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
     'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, TOTAL_PEDCLIN, CODIGO_ALMACEN_PEDCLIN, ' +
+    'REF_PRV_PEDCLIN, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
   qCab, qLin:        TUniQuery;
   bCab, bLin:        TBulkInsert;
-  oMapTal:           TDictionary<string, Integer>;
+  oMapTal, oMapTemp: TDictionary<string, Integer>;
   sAhora, sUser:     string;
   sNum, sSerie, sAlm, sArt, sUni: string;
   iva:               TIvaCompra;
@@ -355,6 +400,8 @@ begin
   bCab := TBulkInsert.Create(Eng.ConDst, 'fza_pedidos_compra', cColsCab, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
+  oMapTemp := TDictionary<string, Integer>.Create;
+  CargarMapaTemporada(Eng, oMapTemp);
   try
     Eng.Log('  compras 1/2: cabeceras de pedido (ocped)...');
     Eng.SetTotal(Eng.ContarOrigen(
@@ -399,7 +446,9 @@ begin
            F(qCab.FieldByName('ImpBaseImp').AsFloat),
            F(qCab.FieldByName('TotalIVA').AsFloat),
            F(qCab.FieldByName('ImpPedido').AsFloat),
-           ValorOrNull(Copy(Trim(qCab.FieldByName('FormaPago').AsString), 1, 200)),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('FormaPago').AsString), 1, 200)) +
+             ', ' + TempPvToken(oMapTemp,
+                                qCab.FieldByName('TemporadaNombre').AsString),
            sAhora, sAhora, sUser, sUser]));
         Inc(Stats.Insertadas);
       except
@@ -416,6 +465,7 @@ begin
   finally
     bCab.Free;
     qCab.Free;
+    oMapTemp.Free;
   end;
   // --- PASO 2: líneas (ocpedarp) ---
   oMapTal := TDictionary<string, Integer>.Create;
@@ -467,7 +517,8 @@ begin
            F(qLin.FieldByName('PrecioSIva').AsFloat),
            F(qLin.FieldByName('PrecioCIva').AsFloat),
            F(qLin.FieldByName('ImpNetoSIva').AsFloat),
-           ValorOrNull(sAlm),
+           ValorOrNull(sAlm) +
+             ', ' + ValorOrNull(Trim(qLin.FieldByName('Modelo').AsString)),
            sAhora, sAhora, sUser, sUser]));
         Inc(Stats.Insertadas);
       except
@@ -548,7 +599,9 @@ const
     '           OR UPPER(LTRIM(RTRIM(co.Descripcion))) = ''INDEFINIDO'' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
     '         ELSE UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
-    '       END AS DescColor ' +
+    '       END AS DescColor, ' +
+    '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
+    '         WHERE ap.Articulo = l.Articulo) AS Modelo ' +
     'FROM dbo.ocalbproarp l ' +
     'INNER JOIN dbo.ocalbpro a ON a.Empresa = l.Empresa ' +
     '                        AND a.Ejercicio = l.Ejercicio ' +
@@ -576,6 +629,7 @@ const
     'DESCRIPCION_ARTICULO_ALBCLIN, CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
     'PORCENTAJE_IVA_ALBCLIN, PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
     'PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ' +
+    'REF_PRV_ALBCLIN, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
   qCab, qLin:       TUniQuery;
@@ -734,7 +788,8 @@ begin
            F(qLin.FieldByName('PrecioSIva').AsFloat),
            F(qLin.FieldByName('PrecioCIva').AsFloat),
            F(qLin.FieldByName('ImpNetoSIva').AsFloat),
-           ValorOrNull(sAlm),
+           ValorOrNull(sAlm) +
+             ', ' + ValorOrNull(Trim(qLin.FieldByName('Modelo').AsString)),
            sAhora, sAhora, sUser, sUser]));
         Inc(Stats.Insertadas);
       except
