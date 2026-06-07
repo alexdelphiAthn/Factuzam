@@ -29,7 +29,7 @@ unit inLibGridArticulos;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Variants, System.Types,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Variants, System.Types,
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
   Vcl.Dialogs, Vcl.ExtCtrls, cxGraphics,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
@@ -98,12 +98,23 @@ type
     // entre STX y ETX.
     FEnScanner: Boolean;
     FScanBuffer: string;
+    // Debounce de busqueda incremental (como el tmrBusq de inMtoCajaOpe): al
+    // teclear en la celda de articulo, tras una breve pausa abre el desplegable
+    // ya filtrado. No se arma durante una trama del lector (rafaga STX/ETX).
+    FTimerBusq: TTimer;
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
+    procedure DispararResolucionScan(const ACodigo: string);
     procedure ArticuloGetProperties(Sender: TcxCustomGridTableItem;
                            ARecord: TcxCustomGridRecord;
                            var AProperties: TcxCustomEditProperties);
     procedure ArticuloKeyPress(Sender: TObject; var Key: Char);
+    // OnChange del editor de articulo: rearma el debounce de busqueda (salvo
+    // durante una lectura de pistola) para abrir el desplegable de sugerencias.
+    procedure ArticuloChange(Sender: TObject);
+    // Al saltar el debounce, abre el desplegable de busqueda ya filtrado por lo
+    // tecleado, como inMtoCajaOpe.tmrBusqTimer.
+    procedure TimerBusqTimer(Sender: TObject);
     procedure ComboBusqCloseUp(Sender: TObject);
     procedure TimerResolveTimer(Sender: TObject);
     procedure SetAlmacenStock(const AValue: string);
@@ -118,6 +129,9 @@ type
     procedure ArticuloButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure ViewInitEdit(Sender: TcxCustomGridTableView;
                            AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+    procedure ViewEditKeyDown(Sender: TcxCustomGridTableView;
+                           AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit;
+                           var Key: Word; Shift: TShiftState);
     procedure AtributoCustomDrawCell(Sender: TcxCustomGridTableView;
                            ACanvas: TcxCanvas;
                            AViewInfo: TcxGridTableDataCellViewInfo;
@@ -130,6 +144,13 @@ type
     // siguiente y abre su paleta (no deja pasar a la siguiente fila con el
     // SKU a medias). Devuelve True si quedaba alguno pendiente.
     function AvanzarSiguienteAtributo: Boolean;
+    // True si la linea actual aun tiene color/talla por elegir (NUM_ATRIBUTOS
+    // > 0 y algun ATTRn_VALOR vacio).
+    function HayAtributosPendientes: Boolean;
+    // Tras resolver un articulo decide el foco como la caja: si faltan
+    // atributos salta al primero y abre su paleta; si el SKU ya esta cerrado
+    // deja el editor de articulo listo para la siguiente entrada.
+    procedure AvanzarTrasResolver;
     procedure AplicarSkuYAvisar;
     function ColumnaPorTag(ATag: Integer): TcxGridDBColumn;
     function GenerarSku: string;
@@ -144,6 +165,11 @@ type
     // Crea la columna de articulo + las 5 columnas de atributo y engancha el
     // OnInitEdit del View. El host anade sus columnas DESPUES sobre el View.
     procedure Construir;
+    // Deja el editor de la celda de articulo ABIERTO, listo para teclear o
+    // escanear. Imprescindible para el lector: si la celda no esta ya en
+    // edicion, la primera tecla abre el editor y las siguientes (muy rapidas)
+    // se pierden -> solo se leeria la primera cifra.
+    procedure MostrarEditorArticulo;
     // Resuelve una entrada (codigo de articulo, SKU, codigo de barras o ref
     // de proveedor) y rellena la linea. Devuelve False si no se encontro.
     function ResolverEntrada(const AEntrada: string): Boolean;
@@ -178,10 +204,15 @@ begin
   FTimerResolve.Enabled := False;
   FTimerResolve.Interval := 1;
   FTimerResolve.OnTimer := TimerResolveTimer;
+  FTimerBusq := TTimer.Create(nil);
+  FTimerBusq.Enabled := False;
+  FTimerBusq.Interval := 350;
+  FTimerBusq.OnTimer := TimerBusqTimer;
 end;
 
 destructor TGridArticulosLineas.Destroy;
 begin
+  FreeAndNil(FTimerBusq);
   FreeAndNil(FTimerResolve);
   FreeAndNil(FTimerPopup);
   FreeAndNil(FEditRepo);
@@ -213,11 +244,21 @@ begin
   // Al entrar en una celda de atributo vacia, abre la paleta (listbox de
   // swatches) automaticamente, como la caja. Se engancha en OnInitEdit.
   FView.OnInitEdit := ViewInitEdit;
+  // OnEditKeyDown del grid: resuelve el codigo en la celda al pulsar Enter
+  // (lector Codigo+CR o tecleo manual). Es el evento fiable para la celda.
+  FView.OnEditKeyDown := ViewEditKeyDown;
   // Flujo tipo Excel: Enter pasa a la siguiente celda y al llegar al final
   // de la fila salta a la siguiente. NO usamos NewItemRow: la linea nueva se
   // anyade sola al completar un SKU (lo hace el host en OnResuelto).
   FView.OptionsBehavior.GoToNextCellOnEnter := True;
   FView.OptionsBehavior.FocusFirstCellOnNewRecord := True;
+  // Mismos parametros de comportamiento/vista que el grid de ventas de
+  // inMtoCajaOpe (tvLineasOpe): el ciclo de foco vuelve a la primera celda de
+  // la fila siguiente, las columnas reparten el ancho del grid y se muestra un
+  // aviso cuando no hay articulos.
+  FView.OptionsBehavior.FocusCellOnCycle := True;
+  FView.OptionsView.ColumnAutoWidth := True;
+  FView.OptionsView.NoDataToDisplayInfoText := 'No hay artículos';
   // dbNavigator pequeno embebido: navegar + insertar + borrar (el resto
   // oculto). Insertar/borrar lineas tambien desde aqui.
   FView.Navigator.Visible := True;
@@ -255,6 +296,10 @@ begin
   if (AItem = FColArticulo) and (AEdit is TcxCustomTextEdit) then
   begin
     TcxCustomTextEdit(AEdit).OnKeyPress := ArticuloKeyPress;
+    // Sugerencias en vivo: al teclear se rearma el debounce que abre el
+    // desplegable filtrado (igual que inMtoCajaOpe). El lector (STX/ETX)
+    // consume sus teclas en ArticuloKeyPress, asi que no dispara el OnChange.
+    TcxCustomTextEdit(AEdit).Properties.OnChange := ArticuloChange;
     Exit;
   end;
   if (AItem = nil) or (AItem.Tag < 1) or (AItem.Tag > 5) then
@@ -413,7 +458,11 @@ begin
     IncrementalFiltering := True;
     DropDownRows := 15;
     DropDownAutoWidth := True;
-    ImmediateDropDownWhenKeyPressed := True;
+    // NO abrir el desplegable al teclear: si se abre, las teclas siguientes van
+    // al edit interno del desplegable y NO a ArticuloKeyPress, y la deteccion
+    // del lector (rapidez / STX-ETX) no recibe el codigo. El usuario abre el
+    // desplegable con F4 o el boton de busqueda cuando quiera buscar a mano.
+    ImmediateDropDownWhenKeyPressed := False;
     OnCloseUp := ComboBusqCloseUp;
     // Boton para el buscador completo (mismo que el ButtonEdit).
     Buttons.Clear;
@@ -474,35 +523,110 @@ end;
 // + codigo + ETX(#3). Capturamos el codigo entre ambos (sin dejar que esos
 // controles entren en el editor) y al recibir ETX lo resolvemos como si
 // llegara un Enter (via FTimerResolve). Mismo patron que inMtoCajaOpe.
+procedure TGridArticulosLineas.DispararResolucionScan(const ACodigo: string);
+begin
+  // Resuelve lo leido de forma diferida (timer 1ms), como hace el desplegable,
+  // para no reestructurar el cds dentro del propio evento de teclado.
+  FSkuPend := Trim(ACodigo);
+  if FSkuPend <> '' then
+  begin
+    FTimerResolve.Enabled := False;
+    FTimerResolve.Enabled := True;
+  end;
+end;
+
 procedure TGridArticulosLineas.ArticuloKeyPress(Sender: TObject;
                                                 var Key: Char);
 begin
+  // Lector con framing STX/ETX: acumulamos el codigo entre STX(#2) y ETX(#3)
+  // y al recibir ETX lo resolvemos. Los lectores que envian Codigo+CR (sin
+  // framing) se resuelven en ViewEditKeyDown al recibir el Enter (VK_RETURN),
+  // que es el evento que SI llega de forma fiable a la celda del grid.
   if Key = #2 then
   begin
     FEnScanner := True;
     FScanBuffer := '';
+    // Un escaneo no debe abrir el desplegable de sugerencias: cancela el
+    // debounce que pudiera haber quedado armado de un tecleo previo.
+    FTimerBusq.Enabled := False;
     Key := #0;
-    Exit;
-  end;
-  if FEnScanner then
+  end
+  else if FEnScanner then
   begin
     if Key = #3 then
     begin
       FEnScanner := False;
       Key := #0;
-      // Resolvemos lo escaneado (diferido, como el desplegable).
-      FSkuPend := FScanBuffer;
+      DispararResolucionScan(FScanBuffer);
       FScanBuffer := '';
-      if Trim(FSkuPend) <> '' then
-      begin
-        FTimerResolve.Enabled := False;
-        FTimerResolve.Enabled := True;
-      end;
     end
     else
     begin
       FScanBuffer := FScanBuffer + Key;
       Key := #0;
+    end;
+  end;
+end;
+
+// OnChange del editor de articulo: rearma el debounce salvo durante una trama
+// del lector (la rafaga STX/ETX consume sus teclas y no llega aqui). Asi las
+// sugerencias se abren al teclear a mano, no al escanear.
+procedure TGridArticulosLineas.ArticuloChange(Sender: TObject);
+begin
+  if not FEnScanner then
+  begin
+    FTimerBusq.Enabled := False;
+    FTimerBusq.Enabled := True;
+  end;
+end;
+
+// Al saltar el debounce abre el desplegable de busqueda ya filtrado por lo
+// tecleado (IncrementalFiltering), como inMtoCajaOpe.tmrBusqTimer. Solo si
+// seguimos editando la celda de articulo con el combo y hay texto.
+procedure TGridArticulosLineas.TimerBusqTimer(Sender: TObject);
+var
+  Edit: TcxCustomEdit;
+  Combo: TcxExtLookupComboBox;
+begin
+  FTimerBusq.Enabled := False;
+  if FView.Controller.EditingController.IsEditing then
+  begin
+    Edit := FView.Controller.EditingController.Edit;
+    if Edit is TcxExtLookupComboBox then
+    begin
+      Combo := TcxExtLookupComboBox(Edit);
+      if (Trim(VarToStr(Combo.EditingValue)) <> '') and
+         (not Combo.DroppedDown) then
+        Combo.DroppedDown := True;
+    end;
+  end;
+end;
+
+procedure TGridArticulosLineas.ViewEditKeyDown(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
+var
+  s: string;
+begin
+  // Igual que caja (cxGrid1DBTableView1EditKeyDown): el Enter del lector
+  // (Codigo+CR) o del usuario en la celda de articulo resuelve el codigo que
+  // hay en el editor. Este evento del grid SI recibe el Enter aunque el editor
+  // sea un ExtLookupComboBox.
+  if (AItem = FColArticulo) and (Key = VK_RETURN) then
+  begin
+    // Si el desplegable esta abierto, lo cerramos (selecciona la fila) para que
+    // el Enter no se quede "consumido" en el dropdown.
+    if (AEdit is TcxCustomDropDownEdit) and
+       TcxCustomDropDownEdit(AEdit).DroppedDown then
+      TcxCustomDropDownEdit(AEdit).DroppedDown := False;
+    if AEdit is TcxCustomTextEdit then
+      s := Trim(TcxCustomTextEdit(AEdit).Text)
+    else
+      s := Trim(VarToStr(AEdit.EditValue));
+    if s <> '' then
+    begin
+      Key := 0;
+      DispararResolucionScan(s);
     end;
   end;
 end;
@@ -532,6 +656,7 @@ begin
   if Trim(sSku) = '' then
     Exit;
   if ResolverEntrada(sSku) then
+  begin
     // Cierra el editor para que la celda muestre lo resuelto (descarta el
     // texto crudo escaneado/elegido que quedo en el editor).
     if FView.Controller.EditingController.IsEditing then
@@ -541,6 +666,62 @@ begin
         on E: EInvalidOperation do
           ;
       end;
+    // Igual que la caja: si el articulo necesita color/talla, saltamos a la
+    // primera columna de atributo y abrimos su paleta; si el SKU ya quedo
+    // cerrado, dejamos el editor de articulo listo para encadenar lecturas sin
+    // perder la primera cifra de la siguiente.
+    AvanzarTrasResolver;
+  end;
+end;
+
+procedure TGridArticulosLineas.MostrarEditorArticulo;
+begin
+  // El foco del control del grid lo da quien llama (form: FGrid.SetFocus, o
+  // estamos ya dentro del flujo de edicion del grid). Aqui solo enfocamos la
+  // columna de articulo y abrimos su editor in-place.
+  if (FView <> nil) and (FColArticulo <> nil) then
+  begin
+    FColArticulo.Focused := True;
+    try
+      FView.Controller.EditingController.ShowEdit;
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  end;
+end;
+
+// True si la linea actual aun tiene atributos (color/talla) por elegir. Lo usa
+// AvanzarTrasResolver para decidir si abrir la paleta o pasar a la siguiente
+// entrada de articulo.
+function TGridArticulosLineas.HayAtributosPendientes: Boolean;
+var
+  i, n: Integer;
+begin
+  Result := False;
+  if FCds.Active and (not FCds.IsEmpty) then
+  begin
+    n := FCds.FieldByName(FCampos.NumAtributos).AsInteger;
+    i := 1;
+    while (i <= n) and (not Result) do
+    begin
+      if Trim(FCds.FieldByName(FCampos.AttrValor[i]).AsString) = '' then
+        Result := True;
+      Inc(i);
+    end;
+  end;
+end;
+
+// Tras resolver un articulo decide el foco igual que la caja: si la linea aun
+// necesita color/talla, salta a la primera columna de atributo pendiente y abre
+// su paleta; si el SKU ya quedo cerrado, deja el editor de articulo listo para
+// la siguiente entrada.
+procedure TGridArticulosLineas.AvanzarTrasResolver;
+begin
+  if HayAtributosPendientes then
+    AvanzarSiguienteAtributo
+  else
+    MostrarEditorArticulo;
 end;
 
 // Click en el boton de la columna de articulo: abre el buscador generico
@@ -957,8 +1138,11 @@ begin
       FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString := sAvNuevo;
       AplicarSkuYAvisar;
       // Si quedan atributos por elegir, salta al siguiente y abre su paleta;
-      // asi no se pasa a la siguiente fila con el SKU incompleto.
-      AvanzarSiguienteAtributo;
+      // asi no se pasa a la siguiente fila con el SKU incompleto. Si ya estan
+      // todos (SKU cerrado y el host anyadio una linea nueva), deja el editor
+      // de articulo abierto para encadenar la siguiente entrada, como en caja.
+      if not AvanzarSiguienteAtributo then
+        MostrarEditorArticulo;
     end;
   finally
     FEnPaleta := False;

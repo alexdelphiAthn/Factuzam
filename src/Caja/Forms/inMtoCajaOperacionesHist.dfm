@@ -1,5 +1,6 @@
 inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
   Caption = 'Hist'#243'rico de Operaciones de Caja'
+  OnDestroy = FormDestroy
   TextHeight = 19
   inherited pButtonPage: TPanel
     inherited pcPantalla: TcxPageControl
@@ -50,6 +51,7 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
             object cxGrdDBTabPrinIMPORTE_TOTAL_OPCAJA: TcxGridDBColumn
               Caption = 'Importe Total'
               DataBinding.FieldName = 'IMPORTE_TOTAL_OPCAJA'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
               Width = 130
             end
             object cxGrdDBTabPrinCODIGO_CLIENTE_OPCAJA: TcxGridDBColumn
@@ -150,6 +152,70 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
               Options.Editing = False
               Visible = False
               Width = 130
+            end
+          end
+        end
+        object pnlFiltrosCaja: TPanel
+          Left = 0
+          Top = 0
+          Width = 943
+          Height = 60
+          Align = alTop
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 1
+          object btnToggleFiltrosCaja: TcxButton
+            Left = 0
+            Top = 0
+            Width = 943
+            Height = 22
+            Align = alTop
+            Caption = #9654'  Filtros de carga'
+            LookAndFeel.Kind = lfUltraFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 0
+            OnClick = btnToggleFiltrosCajaClick
+          end
+          object pnlContFiltrosCaja: TPanel
+            Left = 0
+            Top = 22
+            Width = 943
+            Height = 38
+            Align = alClient
+            BevelOuter = bvNone
+            ParentBackground = False
+            TabOrder = 1
+            object lblFiltroAnyo: TcxLabel
+              Left = 16
+              Top = 8
+              Caption = 'A'#241'os:'
+              TabOrder = 2
+              Transparent = True
+            end
+            object ccbFiltroAnyo: TcxCheckComboBox
+              Left = 80
+              Top = 5
+              Properties.EmptySelectionText = 'Todos'
+              Properties.Items = <>
+              Properties.OnCloseUp = ccbFiltroAnyoPropertiesCloseUp
+              TabOrder = 0
+              Width = 210
+            end
+            object lblFiltroAlmacen: TcxLabel
+              Left = 320
+              Top = 8
+              Caption = 'Almacenes:'
+              TabOrder = 3
+              Transparent = True
+            end
+            object ccbFiltroAlmacen: TcxCheckComboBox
+              Left = 416
+              Top = 5
+              Properties.EmptySelectionText = 'Todos'
+              Properties.Items = <>
+              Properties.OnCloseUp = ccbFiltroAlmacenPropertiesCloseUp
+              TabOrder = 1
+              Width = 340
             end
           end
         end

@@ -62,12 +62,9 @@ uses
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
-  cxRadioGroup;
+  cxRadioGroup, inLibLectorScanner;
 
 const
-  // Procesado diferido de una lectura con pistola (fuera del propio evento de
-  // tecla, para no reentrar en el control que la esta procesando).
-  WM_PROCESAR_SCANNER_STOCK = WM_USER + 77;
   // Detector por velocidad de tecleo (codigo de barras + CR, sin STX/ETX).
   SCAN_VEL_MS   = 40;   // max. ms entre teclas para considerarlo lector
   SCAN_MIN_LONG = 4;    // longitud minima del codigo
@@ -169,16 +166,10 @@ type
     // STX/ETX y deteccion por velocidad de tecleo. Resuelve el codigo SOLO
     // contra codigos de barras y carga el articulo via SetArticuloSku, este
     // donde este el foco.
-    FScanBuffer     : string;
-    FLeyendoScanner : Boolean;
-    FScanVelBuffer  : string;
-    FScanVelTick    : Cardinal;
-    FScanVelComido  : Boolean;
-    FCodigoScanPend : string;
+    FLector: TLectorScanner;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure AplicarLecturaCodigoBarras(const ACodigo: string);
-    procedure WMProcesarScannerStock(var Msg: TMessage);
-                                       message WM_PROCESAR_SCANNER_STOCK;
+    procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
     procedure   PoblarComboEstados;
     procedure   GuardarModoUsuario;
     procedure   CargarModoUsuario;
@@ -314,6 +305,13 @@ begin
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
   Self.OnKeyPress := FormKeyPress;
+  // Detector del lector. Modo "consumir": las teclas de la rafaga no llegan a
+  // btnArt (evita disparar SetArticuloSku en cada tecla del escaneo).
+  FLector := TLectorScanner.Create;
+  FLector.UmbralMs := SCAN_VEL_MS;
+  FLector.LongitudMinima := SCAN_MIN_LONG;
+  FLector.ConsumirRafaga := True;
+  FLector.OnCodigoLeido := LectorCodigoLeido;
   // Coste (ultimo precio de compra del proveedor) solo para quien tenga
   // permiso: TienePermiso devuelve True siempre a admin; al resto, oculto
   // por defecto salvo permiso explicito 'caja.verCoste'.
@@ -488,6 +486,7 @@ end;
 
 procedure TfrmStockConsulta.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FLector);
   if Assigned(FQry) then
   begin
     if FQry.Active then FQry.Close;
@@ -507,105 +506,29 @@ end;
 // el form vea la tecla aunque el foco este en el grid, el combo o un check.
 procedure TfrmStockConsulta.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-  delta: Cardinal;
 begin
-  // Solo activo de forma transitoria entre el VK_RETURN consumido como lectura
-  // y su #13 de KeyPress; lo reseteamos en cada tecla para que no se quede
-  // obsoleto y se trague un Enter normal.
-  FScanVelComido := False;
+  // El detector cierra la lectura por velocidad (rafaga + Enter rapido) y
+  // consume el VK_RETURN si procede.
+  FLector.KeyDown(Key, Shift);
   if Key = VK_ESCAPE then
   begin
     Key := 0;
     Close;
-  end
-  else if Key = VK_RETURN then
-  begin
-    // Cierre del detector por velocidad: si el buffer es una rafaga del lector
-    // y el Enter llega igual de rapido, lo tratamos como codigo de barras.
-    delta := GetTickCount - FScanVelTick;
-    if (Length(FScanVelBuffer) >= SCAN_MIN_LONG) and (delta <= SCAN_VEL_MS) then
-    begin
-      FCodigoScanPend := Trim(FScanVelBuffer);
-      FScanVelBuffer  := '';
-      FScanVelComido  := True;  // tragaremos el #13 que vendra por KeyPress
-      Key := 0;
-      PostMessage(Handle, WM_PROCESAR_SCANNER_STOCK, 0, 0);
-    end;
   end;
 end;
 
-// Hook del lector a nivel de formulario. Trama STX/ETX (teclas consumidas) y
-// deteccion por velocidad (la rafaga rapida se consume para no disparar el
-// EditValueChanged de btnArt en cada tecla; el primer caracter, lento, no se
-// consume para no romper el tecleo manual). La decision final del detector por
-// velocidad se cierra en FormKeyDown (VK_RETURN).
+// Hook del lector a nivel de formulario: delegamos en TLectorScanner, que
+// detecta la trama STX/ETX y la rafaga por velocidad. El codigo leido llega
+// luego por OnCodigoLeido (LectorCodigoLeido).
 procedure TfrmStockConsulta.FormKeyPress(Sender: TObject; var Key: Char);
-var
-  ahora, delta: Cardinal;
 begin
-  if Key = #2 then
-  begin
-    FLeyendoScanner := True;
-    FScanBuffer := '';
-    FScanVelBuffer := '';
-    Key := #0;
-    Exit;
-  end;
-  if FLeyendoScanner then
-  begin
-    if Key = #3 then
-    begin
-      FLeyendoScanner := False;
-      Key := #0;
-      if Trim(FScanBuffer) <> '' then
-      begin
-        FCodigoScanPend := Trim(FScanBuffer);
-        PostMessage(Handle, WM_PROCESAR_SCANNER_STOCK, 0, 0);
-      end;
-      FScanBuffer := '';
-    end
-    else
-    begin
-      FScanBuffer := FScanBuffer + Key;
-      Key := #0;
-    end;
-    Exit;
-  end;
-  // Detector por velocidad de tecleo.
-  ahora := GetTickCount;
-  delta := ahora - FScanVelTick;
-  FScanVelTick := ahora;
-  if FScanVelComido and (Key = #13) then
-  begin
-    FScanVelComido := False;
-    Key := #0;
-    Exit;
-  end;
-  if Key >= ' ' then
-  begin
-    if delta <= SCAN_VEL_MS then
-    begin
-      // Tecla rapida (parte de la rafaga): la acumulamos y la consumimos para
-      // que no llegue a btnArt y dispare SetArticuloSku en cada pulsacion.
-      FScanVelBuffer := FScanVelBuffer + Key;
-      Key := #0;
-    end
-    else
-      // Primer caracter (lento): no se consume; podria ser tecleo manual.
-      FScanVelBuffer := Key;
-  end
-  else
-    FScanVelBuffer := '';
+  FLector.KeyPress(Key);
 end;
 
-procedure TfrmStockConsulta.WMProcesarScannerStock(var Msg: TMessage);
+procedure TfrmStockConsulta.LectorCodigoLeido(Sender: TObject;
+  const ACodigo: string);
 begin
-  if FCodigoScanPend <> '' then
-  begin
-    AplicarLecturaCodigoBarras(FCodigoScanPend);
-    FCodigoScanPend := '';
-  end;
+  AplicarLecturaCodigoBarras(ACodigo);
 end;
 
 // Resuelve el codigo SOLO contra codigos de barras y carga el articulo/SKU en

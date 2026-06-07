@@ -643,7 +643,7 @@ begin
         if Abs(CambioCalculado) < 0.01 then
           CambioCalculado := 0;
         // REGLA MATEMÁTICA ANTI-BLANQUEO:
-        // El cajón NUNCA devolverá en Cambio (efectivo) más cantidad_artvin
+        // El cajón NUNCA devolverá en Cambio (efectivo) más cantidad
         // de la que el cliente puso físicamente en la mesa.
         if CambioCalculado > TotalEntregadoConCambio then
         begin

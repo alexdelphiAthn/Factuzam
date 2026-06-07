@@ -33,7 +33,7 @@ procedure ExportarFacturaADevExpress(ASheetControl: TdxSpreadSheet;
 const
   // Columnas Visibles
   COL_DESC   = 0; // A: Descripción / Base Imponible (en tabla inferior)
-  COL_CANT   = 1; // B: CANTIDAD_ARTVIN / Tipo IVA (en tabla inferior)
+  COL_CANT   = 1; // B: CANTIDAD / Tipo IVA (en tabla inferior)
   COL_PRECIO = 2; // C: Precio / Cuota IVA (en tabla inferior)
   COL_PIVA   = 3; // D: % IVA / % RE (en tabla inferior)
   COL_TOTAL  = 4; // E: Total Línea / Total RE (en tabla inferior)
@@ -130,7 +130,7 @@ begin
   Merge(Sheet, 8, COL_PIVA, 2, 1);
   iRow := 11;
   W(Sheet, iRow, COL_DESC,   'Descripción', True);
-  W(Sheet, iRow, COL_CANT,   'CANTIDAD_ARTVIN',    True, ssahRight);
+  W(Sheet, iRow, COL_CANT,   'Cantidad',    True, ssahRight);
   W(Sheet, iRow, COL_PRECIO, 'Precio',      True, ssahRight);
   W(Sheet, iRow, COL_PIVA,   '% IVA',       True, ssahRight);
   W(Sheet, iRow, COL_TOTAL,  'Total',       True, ssahRight);

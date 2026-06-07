@@ -63,13 +63,33 @@ Pendiente de registrar (libro de estilo): sufijo `UNIMED` en
       - [ ] Albaranes compra / Pedidos compra: sus vistas NO exponen el
             TIPO_CANTIDAD de la linea; hay que anadirlo a la vista antes.
       - [ ] Traspasos, Compras-sesiones (matriz).
-      - [x] Movimientos de almacen (`inMtoMovimientosAlmacen`): SELECT con JOIN
-            a fza_articulos para TIPO_CANTIDAD_ART + columna invisible +
-            VincularCantidadGrid. (Stock/Ctrl+U ya mostraba decimales.)
-      - [ ] Inventarios; Albaranes/Pedidos de COMPRA (anadir unidad a vistas);
-            Traspasos; Compras-sesiones (matriz).
-- [ ] **Fase 6 - Tickets/informes/Excel**: sustituir formato entero/`FloatToStr`
-      por `FormatearCantidad(valor, unidad)` en `inLibGenerarTicket(BD)`,
-      `inLibFacturaExcel`, `inLibDocCompraExcel`, `inLibInventarioExcel`,
-      balances y `.fr3`.
-- [ ] **Fase 7 - Cierre**: pump de version en `inLibGlobalVar.pas` y compilar.
+      - [x] Inventarios: ya mostraba decimales (validado por el usuario).
+      - [x] Albaranes compra (`inMtoAlbaranesCompra`) y Pedidos compra
+            (`inMtoPedidosCompra`): leen de la tabla base (tienen el
+            TIPO_CANTIDAD), columna invisible + VincularCantidadGrid.
+      - [x] Movimientos: costes (Coste Unit./Total Coste/Precio Medio) en
+            formato moneda.
+      - [x] Traspasos: la cantidad es ftFloat con columna por defecto -> ya
+            muestra decimales.
+      - [x] Compras-sesiones (matriz): las COMPRAS se hacen en unidades enteras
+            (80, 50 metros... sin decimales), asi que el spin de celda se deja
+            ENTERO. Se mantiene el indicativo de la unidad del articulo en la
+            cabecera de la matriz (DibujarCabecera).
+      - NOTA alcance: decimales solo en VENTAS (caja, facturas, albaranes/
+            pedidos de venta) y stock; las COMPRAS van en enteros.
+- [~] **Fase 6 - Tickets/informes/Excel**:
+      - [x] Tickets (`inLibGenerarTicket` / `inLibGenerarTicketBD`): cantidad
+            con `oUnidades.Formatear(cant, TIPO_CANTIDAD_ARTICULO_FACLIN)`.
+      - [x] Excel: escriben la cantidad como numero (AsFloat) -> Excel muestra
+            los decimales naturalmente; no requiere cambio.
+      - [x] Informes FastReport embebidos en los .dfm:
+            * Factura (`inMtoModalImpFac.dfm`): cantidad envuelta en
+              FormatFloat('0.######') + la unidad (TIPO_CANTIDAD_ARTICULO_FACLIN).
+            * Albaran compra vertical (`inMtoModalImpAlbCompraV.dfm`):
+              CANTIDAD_ALBCLIN envuelta en FormatFloat('0.######').
+      - [ ] Informes "Guias de tallas" pivotados (`inMtoModalImpAlbCompra.dfm`,
+            `inMtoModalImpSesion.dfm`): la cantidad va en columnas dinamicas por
+            talla (cross-tab), tipico de articulos CON tallas (cantidades
+            enteras). Pendiente solo si se necesitan decimales por talla.
+- [ ] **Fase 7 - Cierre**: pump de version NO (el usuario lo gestiona aparte).
+      Falta compilar/validar el conjunto.

@@ -142,7 +142,7 @@ begin
           LineaFactura.CodigoArticulo := FieldByName(fcodart).AsString;
           LineaFactura.DescripcionArticulo :=
                                              FieldByName(fdescripcion).AsString;
-          LineaFactura.CANTIDAD_ARTVIN := FieldByName(fcant).AsFloat;
+          LineaFactura.Cantidad := FieldByName(fcant).AsFloat;
           LineaFactura.PrecioUnitario := FieldByName(fpresiva).AsFloat;
           LineaFactura.TotalLinea := FieldByName(ftotciva).AsFloat;
           LineaFactura.PorcentajeIVA := FieldByName(fporiva).AsFloat;
@@ -382,7 +382,7 @@ begin
     begin
       AddChild('ItemDescription').Text := LineaFactura.DescripcionArticulo;
       AddChild('Quantity').Text := FormatFloat('0.000000',
-                                                         LineaFactura.CANTIDAD_ARTVIN);
+                                                         LineaFactura.Cantidad);
       AddChild('UnitOfMeasure').Text := '01';  // Asumiendo unidades
       AddChild('UnitPriceWithoutTax').Text := FormatFloat('0.000000',
                                                    LineaFactura.PrecioUnitario);
