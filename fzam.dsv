@@ -427,7 +427,6 @@ LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=Borland.FormDesignerView
-
 [ClosedView_QzpcRElTQ09fRFVST1xwcm95ZWN0b3NcRmFjdHV6YW1cc3JjXENhamFcRm9ybXNcaW5NdG9UcmFz
 cGFzb09wZS5wYXM=]
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas
@@ -438,4 +437,24 @@ LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=Borland.FormDesignerView
+[ClosedView_QzpcRElTQ09fRFVST1xwcm95ZWN0b3NcRmFjdHV6YW1cc3JjXEZvcm1zXGluTXRvRmFjdHVyYXNT
+aW1wbGlmLnBhcw==]
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas
+CursorX=32
+CursorY=395
+TopLine=387
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas
+[ClosedView_QzpcRElTQ09fRFVST1xwcm95ZWN0b3NcRmFjdHV6YW1cc3JjXEZvcm1zXGluTXRvRmFjdHVyYXNT
+aW1wbGlmLnBhcw==]
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas
+CursorX=32
+CursorY=395
+TopLine=387
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas
 
