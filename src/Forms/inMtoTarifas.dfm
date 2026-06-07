@@ -366,7 +366,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                       Width = 195
                     end
                     object cxgrdbclmnArticulosTIPO_CANTIDAD_ARTICULO: TcxGridDBColumn
-                      Caption = 'Tipo CANTIDAD_ARTVIN'
+                      Caption = 'Tipo Cantidad'
                       DataBinding.FieldName = 'TIPO_CANTIDAD_ART'
                       Width = 129
                     end
@@ -508,7 +508,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                       DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                     end
                     object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA: TcxGridDBColumn
-                      Caption = 'CANTIDAD_ARTVIN'
+                      Caption = 'Cantidad'
                       DataBinding.FieldName = 'CANTIDAD_FACLIN'
                       Width = 84
                     end

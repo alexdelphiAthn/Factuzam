@@ -1457,7 +1457,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                       DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                     end
                     object cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA: TcxGridDBColumn
-                      Caption = 'CANTIDAD_ARTVIN'
+                      Caption = 'Cantidad'
                       DataBinding.FieldName = 'CANTIDAD_FACLIN'
                       Width = 84
                     end
@@ -1698,7 +1698,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                     Width = 84
                   end
                   object tvLineasPresupuestoCANTIDAD_LINEA: TcxGridDBColumn
-                    Caption = 'CANTIDAD_ARTVIN'
+                    Caption = 'Cantidad'
                     DataBinding.FieldName = 'CANTIDAD_LINEA'
                     Width = 84
                   end
@@ -2240,7 +2240,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                       DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
                     end
                     object tvLineasFacturaClienteCANTIDAD_FACLIN: TcxGridDBColumn
-                      Caption = 'CANTIDAD_ARTVIN'
+                      Caption = 'Cantidad'
                       DataBinding.FieldName = 'CANTIDAD_FACLIN'
                       Width = 84
                     end

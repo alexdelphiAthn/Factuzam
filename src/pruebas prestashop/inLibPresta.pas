@@ -740,7 +740,7 @@ begin
          s := s + '_______________________________________________________' + sLineBreak;
          s:= s +sLineBreak + 'Id Linea Pedido: ' + lp.idLinea + sLineBreak;
          s := s + 'Id Producto Interna PS: ' + lp.idProducto + sLineBreak;
-         s := s + 'CANTIDAD_ARTVIN Pedida: ' + lp.sCantidad + sLineBreak;
+         s := s + 'Cantidad Pedida: ' + lp.sCantidad + sLineBreak;
          s := s + 'Descripci�n Producto: ' + lp.sDescripcion + sLineBreak;
          s := s + 'C�digo Producto: '+ lp.sRefProd + sLineBreak;
          s := s + 'Referencia Atributos: ' + lp.sRefAtrib + sLineBreak;

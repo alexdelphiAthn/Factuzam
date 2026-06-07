@@ -470,9 +470,18 @@ procedure TGestorMatrizCompras.DibujarCabecera;
 var
   i, x: Integer;
   C   : TColumnaMatriz;
+  sUni, sTotal: string;
 begin
-  // Cabecera de fila (etiqueta del eje fila)
-  CrearLabel(FContenedor, 'Color / Atributo', PAD_X, 4, COL_FILA_WIDTH);
+  // Unidad de medida del articulo de la linea actual (indicativo en cabecera).
+  sUni := '';
+  if FDM.unqrySesionLin.FindField('TIPO_CANTIDAD_SESLIN') <> nil then
+    sUni := Trim(FDM.unqrySesionLin.FieldByName('TIPO_CANTIDAD_SESLIN').AsString);
+  // Cabecera de fila (etiqueta del eje fila); muestra la unidad de medida.
+  if sUni <> '' then
+    CrearLabel(FContenedor, 'Color / Atributo  ·  Ud: ' + sUni,
+               PAD_X, 4, COL_FILA_WIDTH)
+  else
+    CrearLabel(FContenedor, 'Color / Atributo', PAD_X, 4, COL_FILA_WIDTH);
   x := PAD_X + COL_FILA_WIDTH;
   for i := 0 to FColumnas.Count - 1 do
   begin
@@ -481,7 +490,11 @@ begin
     Inc(x, COL_WIDTH);
     FColumnas[i] := C;
   end;
-  CrearLabel(FContenedor, 'Total', x, 4, COL_WIDTH);
+  if sUni <> '' then
+    sTotal := 'Total (' + sUni + ')'
+  else
+    sTotal := 'Total';
+  CrearLabel(FContenedor, sTotal, x, 4, COL_WIDTH);
   Inc(x, COL_WIDTH);
   CrearLabel(FContenedor, 'Kit', x, 4, COL_BTN_WIDTH);
 end;
@@ -599,6 +612,7 @@ begin
   Result.Top    := ATop;
   Result.Width  := AWidth;
   Result.Properties.MinValue := 0;
+  // Las compras se hacen en unidades enteras (80, 50 metros...), sin decimales.
 end;
 
 procedure TGestorMatrizCompras.AddFila;

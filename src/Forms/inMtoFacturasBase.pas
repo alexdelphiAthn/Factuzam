@@ -514,6 +514,11 @@ type
     function NombreVistaListado: string; virtual;
     // TIPO_FAC que el descendiente quiere por defecto en los inserts
     function TipoFacturaFiltro: string; virtual;
+    // Si el descendiente precarga la lista con filtros propios (p.ej.
+    // simplificadas por año/almacen), devuelve False para que
+    // CrearTablaPrincipal NO abra la vista completa; el descendiente la
+    // abre ya filtrada y con barra de progreso en ResetForm.
+    function AbrirListadoAlCrear: Boolean; virtual;
     //procedure CalcularLinea;
   private
     procedure CheckConsolidacion;
@@ -1296,7 +1301,11 @@ begin
       try
         Close;
         SQL.Text := 'SELECT * FROM ' + sVista;
-        Open;
+        // Los descendientes que precargan con filtros propios devuelven
+        // False y abren ellos la lista (filtrada, con progreso) en
+        // ResetForm; asi evitamos el SELECT completo de la vista.
+        if AbrirListadoAlCrear then
+          Open;
       finally
         EnableControls;
       end;
@@ -1313,6 +1322,11 @@ end;
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
 begin
   Result := '';
+end;
+
+function TfrmMtoFacturasBase.AbrirListadoAlCrear: Boolean;
+begin
+  Result := True;
 end;
 
 procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
