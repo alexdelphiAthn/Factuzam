@@ -18,7 +18,7 @@
 {      Provincia                   → PROVINCIA_EMP                             }
 {      Telefono1                   → MOVIL_EMP   (mejor que dejar NULL)        }
 {      Email                       → EMAIL_EMP                                 }
-{      Estado='S'                  → ESACTIVO_EMP = 'S', else 'N'              }
+{      Estado (<>'B')              → ESACTIVO_EMP = 'S' por defecto ('B'→'N')   }
 {      IBAN                        → IBAN_EMP                                  }
 {                                                                              }
 {    Idempotente: si la empresa ya existe (mismo CODIGO_EMP_EMP) se salta.    }
@@ -61,6 +61,16 @@ const
       ':CODIGO_PAI_EMP, :NOMBRE_PAI_EMP, :IBAN_EMP, :GRUPO_ZONA_IVA_EMP, ' +
       ':ESRETENCIONES_EMP, :ESREGIMENESPECIALAGRICOLA_EMP, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
+  // Activo por defecto: en el legacy 'B' = baja; cualquier otro valor
+  // (incluido vacio o 'A') se considera ACTIVO. Antes se usaba BoolSN, que
+  // exige 'S', y como ocemp.Estado no usa 'S' todas las empresas salian 'N'.
+  function DeducirActivo(const sEstado: string): string;
+  begin
+    if UpperCase(Trim(sEstado)) = 'B' then
+      Result := 'N'
+    else
+      Result := 'S';
+  end;
 var
   qSrc, qIns, qChk: TUniQuery;
   sCod, sRazon, sRazonDst: string;
@@ -108,7 +118,7 @@ begin
 
       qIns.ParamByName('CODIGO_EMP_EMP').AsString  := sCod;
       qIns.ParamByName('ESACTIVO_EMP').AsString    :=
-        BoolSN(qSrc.FieldByName('Estado').AsString, 'S', 'N');
+        DeducirActivo(qSrc.FieldByName('Estado').AsString);
       qIns.ParamByName('RAZON_SOCIAL_EMP').AsString := sRazon;
       qIns.ParamByName('NIF_EMP').AsString          :=
         Trim(qSrc.FieldByName('NIF').AsString);
