@@ -1,6 +1,7 @@
 inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
   Caption = 'Movimientos de Almac'#233'n'
   StyleElements = [seFont, seClient, seBorder]
+  OnDestroy = FormDestroy
   TextHeight = 17
   inherited pButtonPage: TPanel
     StyleElements = [seFont, seClient, seBorder]
@@ -191,6 +192,70 @@ inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
               Visible = False
               Options.Editing = False
               Width = 130
+            end
+          end
+        end
+        object pnlFiltros: TPanel
+          Left = 0
+          Top = 0
+          Width = 947
+          Height = 60
+          Align = alTop
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 1
+          object btnToggleFiltros: TcxButton
+            Left = 0
+            Top = 0
+            Width = 947
+            Height = 22
+            Align = alTop
+            Caption = #9654'  Filtros de carga'
+            LookAndFeel.Kind = lfUltraFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 0
+            OnClick = btnToggleFiltrosClick
+          end
+          object pnlContFiltros: TPanel
+            Left = 0
+            Top = 22
+            Width = 947
+            Height = 38
+            Align = alClient
+            BevelOuter = bvNone
+            ParentBackground = False
+            TabOrder = 1
+            object lblFiltroAnyo: TcxLabel
+              Left = 16
+              Top = 8
+              Caption = 'A'#241'os:'
+              TabOrder = 2
+              Transparent = True
+            end
+            object ccbFiltroAnyo: TcxCheckComboBox
+              Left = 80
+              Top = 5
+              Properties.EmptySelectionText = 'Todos'
+              Properties.Items = <>
+              Properties.OnCloseUp = ccbFiltroAnyoPropertiesCloseUp
+              TabOrder = 0
+              Width = 210
+            end
+            object lblFiltroAlmacen: TcxLabel
+              Left = 320
+              Top = 8
+              Caption = 'Almacenes:'
+              TabOrder = 3
+              Transparent = True
+            end
+            object ccbFiltroAlmacen: TcxCheckComboBox
+              Left = 416
+              Top = 5
+              Properties.EmptySelectionText = 'Todos'
+              Properties.Items = <>
+              Properties.OnCloseUp = ccbFiltroAlmacenPropertiesCloseUp
+              TabOrder = 1
+              Width = 340
             end
           end
         end

@@ -45,7 +45,7 @@ inherited dmMovimientosAlmacen: TdmMovimientosAlmacen
       'LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = m.CODIGO_ART_MOV'
       'ORDER BY m.FECHA_MOV DESC'
       '')
-    Active = True
+    Active = False
     Left = 24
   end
 end
