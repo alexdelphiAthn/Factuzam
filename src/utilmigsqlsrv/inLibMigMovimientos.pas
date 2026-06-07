@@ -129,25 +129,20 @@ begin
   Result := dt > EncodeDate(1900, 1, 2);
 end;
 
-// Dirección del movimiento. TipoMov del legacy es la fuente AUTORITATIVA: la
-// app graba ahi 'E'/'S' (ver UniDataTraspaso, que por cada linea mete una
-// salida 'S' en el origen y una entrada 'E' en el destino). Es lo unico
-// fiable en traspasos, donde el flag Tipo NO distingue el sentido y antes
-// todo salia como 'E' (stock descuadrado y el ticket de traspaso, que filtra
-// TIPO_MOV='S', sin lineas). Sin TipoMov caemos al flag Tipo, luego al signo
-// de las unidades y de la cantidad. Por defecto entrada.
-function DeducirTipoMov(const sTipoMov, sTipo: string;
+// Dirección del movimiento para documentos que NO son traspaso. El flag Tipo
+// del legacy es fiable aqui ('S' en ventas/albaranes de salida, 'E' en
+// albaranes de entrada); si no es explicito, caemos al signo de las unidades
+// de stock y por ultimo al de Cantidad. Por defecto entrada.
+// OJO traspasos (TR/AT): aqui Tipo viene 'E' en las DOS patas y TipoMov trae
+// 'SE', asi que NO sirven; su sentido se decide por estructura en el bucle
+// (almacen del movimiento == almacen destino -> entrada; si no, salida).
+function DeducirTipoMov(const sTipo: string;
                         fUnidades, fCantidad: Double): string;
 var
-  mv, u: string;
+  u: string;
 begin
-  mv := UpperCase(Trim(sTipoMov));
-  u  := UpperCase(Trim(sTipo));
-  if mv = 'E' then
-    Result := 'E'
-  else if mv = 'S' then
-    Result := 'S'
-  else if u = 'E' then
+  u := UpperCase(Trim(sTipo));
+  if u = 'E' then
     Result := 'E'
   else if u = 'S' then
     Result := 'S'
@@ -434,10 +429,30 @@ begin
       sTipoRaw   := Trim(qSrc.FieldByName('Tipo').AsString);
       fUnidades  := qSrc.FieldByName('UnidadesStock').AsFloat;
       fCantidad  := qSrc.FieldByName('Cantidad').AsFloat;
-      sTipoMov   := DeducirTipoMov(Trim(qSrc.FieldByName('TipoMov').AsString),
-                                   sTipoRaw, fUnidades, fCantidad);
+      sTipoMov   := DeducirTipoMov(sTipoRaw, fUnidades, fCantidad);
       sTipoDoc   := MapearTipoDoc(qSrc.FieldByName('TipoDoc').AsString,
                                   sTipoMov);
+      // Traspaso: el legacy marca las DOS patas igual (Tipo='E', TipoMov='SE')
+      // y NO distingue el sentido en esos flags. El legacy YA trae dos filas
+      // (una por almacen), asi que no hay que duplicar: basta etiquetar cada
+      // una. La direccion real esta en la estructura: la pata cuyo almacen es
+      // el DESTINO del traspaso es la ENTRADA; la del ORIGEN es la SALIDA. Asi
+      // el origen se descuenta y el stock cuadra (antes ambas salian 'E',
+      // inflaban el origen y el ticket de traspaso -filtra TIPO_MOV='S'-
+      // quedaba vacio). El signo de Cantidad (+entra/-sale) corrobora;
+      // UnidadesStock no vale (viene 0 en la salida).
+      if (UpperCase(Trim(qSrc.FieldByName('TipoMov').AsString)) = 'SE')
+      or (sTipoDoc = 'TR') or (sTipoDoc = 'AT') then
+      begin
+        iAlmDes := qSrc.FieldByName('AlmacenDes').AsInteger;
+        if iAlmDes > 0 then
+        begin
+          if qSrc.FieldByName('Almacen').AsInteger = iAlmDes then
+            sTipoMov := 'E'
+          else
+            sTipoMov := 'S';
+        end;
+      end;
       // Cantidad que afecta a stock: preferimos UnidadesStock; si es 0,
       // caemos a Cantidad. Guardamos el valor absoluto (la dirección la
       // marca TIPO_MOV).
