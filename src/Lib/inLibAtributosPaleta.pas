@@ -39,7 +39,7 @@ const
   // que solo mide el texto. Desglose: 20 geometrico (MARGEN_IZQ 4 +
   // LADO_CUADRADO 12 + HUECO_TEXTO 4) + holgura para que el texto no salga
   // pegado al cuadradito ni recortado (p.ej. "MARRON" en la columna Color).
-  ANCHO_SWATCH_PX = 40;
+  ANCHO_SWATCH_PX = 50;
 
 // Invalida la cache (llamar al refrescar fza_atributos_basicos).
 procedure InvalidarCachePaleta;
