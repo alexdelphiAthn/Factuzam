@@ -535,7 +535,12 @@ begin
     begin
       if not FPivote.ValidarPivotePosible(sMensaje) then
       begin
-        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        // Sender=nil => apertura automatica con la preferencia por
+        // defecto (horizontal). Si el documento no es pivotable dejamos
+        // la vista vertical en silencio; solo avisamos cuando el usuario
+        // pulsa el boton expresamente (Sender<>nil).
+        if Sender <> nil then
+          MessageDlg(sMensaje, mtWarning, [mbOk], 0);
         Exit;
       end;
       FPivote.Activar;
@@ -664,8 +669,11 @@ begin
      (not dsTablaG.DataSet.IsEmpty) and
      (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) then
   begin
+    // Por defecto la vista es horizontal: solo un 'N' explicito
+    // (excepcion que el usuario guardo a mano) la mantiene vertical.
+    // NULL / vacio / 'S' abren en horizontal.
     bDeberiaEstarActivo :=
-      dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString = 'S';
+      dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString <> 'N';
     if bDeberiaEstarActivo and (not FPivote.Activo) then
       btnTallasHorizontalClick(nil)
     else if (not bDeberiaEstarActivo) and FPivote.Activo then
