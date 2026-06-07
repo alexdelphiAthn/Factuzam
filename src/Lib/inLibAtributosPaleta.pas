@@ -36,8 +36,10 @@ const
   // Pixeles horizontales que reserva PintarCeldaConCuadradoColor delante
   // del texto para el swatch (margen + cuadrado + hueco). Se expone para
   // que los consumidores puedan ensanchar las columnas tras un ApplyBestFit
-  // que solo mide el texto.
-  ANCHO_SWATCH_PX = 30; // MARGEN_IZQ(4) + LADO_CUADRADO(12) + HUECO_TEXTO(4)
+  // que solo mide el texto. Desglose: 20 geometrico (MARGEN_IZQ 4 +
+  // LADO_CUADRADO 12 + HUECO_TEXTO 4) + holgura para que el texto no salga
+  // pegado al cuadradito ni recortado (p.ej. "MARRON" en la columna Color).
+  ANCHO_SWATCH_PX = 40;
 
 // Invalida la cache (llamar al refrescar fza_atributos_basicos).
 procedure InvalidarCachePaleta;
@@ -321,8 +323,9 @@ const
   LADO_CUADRADO = 12;
   MARGEN_IZQ    = 4;
   HUECO_TEXTO   = 4;
-  // OJO: si tocas alguno de estos tres, actualiza ANCHO_SWATCH_PX en la
-  // interface (debe ser MARGEN_IZQ + LADO_CUADRADO + HUECO_TEXTO).
+  // OJO: si tocas alguno de estos tres, revisa ANCHO_SWATCH_PX en la
+  // interface (debe ser >= MARGEN_IZQ + LADO_CUADRADO + HUECO_TEXTO, mas la
+  // holgura que se quiera dar al texto a la derecha del cuadradito).
 var
   Bounds, Cuadrado, TxtRect : TRect;
   Texto : string;
