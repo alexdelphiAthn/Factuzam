@@ -296,8 +296,9 @@ procedure MigrarMovimientos(Eng: TMigEngine; var Stats: TMigStats);
 const
   // Resolvemos el slot de color (Descripcion canónica o código legacy) con
   // el mismo CASE que SKUs/Inventarios, y la abreviatura de almacén origen
-  // y contra-almacén (destino del traspaso). Excluimos movimientos
-  // anulados (Invalido='S').
+  // y contra-almacén (destino del traspaso). Importamos TODOS los
+  // movimientos, incluidos los anulados (Invalido='S'): el legacy a veces
+  // anula una pata del traspaso y excluirla descuadraba el stock.
   cSelectSrc =
     // Precomputamos el coste del ÚLTIMO albarán de entrada por artículo
     // (PrecioSIva, sin IVA) con ROW_NUMBER(): se calcula una sola vez y
@@ -369,7 +370,6 @@ const
     '                    AND opc.Serie = m.Serie ' +
     '                    AND opc.NroDoc = m.NroDoc ' +
     'WHERE LTRIM(RTRIM(m.Articulo)) <> '''' ' +
-    '  AND ISNULL(m.Invalido, ''N'') <> ''S'' ' +
     'ORDER BY m.Empresa, m.Almacen, m.Articulo, m.Color, m.Talla, ' +
     '         m.FechaOpe, m.Numero';
   cCols =
@@ -417,8 +417,7 @@ begin
     sUser  := ValorOrNull(Eng.Usuario);
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocmovarp ' +
-      'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
-      '  AND ISNULL(Invalido, ''N'') <> ''S'''));
+      'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
