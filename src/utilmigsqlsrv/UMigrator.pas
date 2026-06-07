@@ -234,10 +234,15 @@ procedure TFormMigrator.ActualizarProgreso(const sDominio: string;
 var
   i, iIdx: Integer;
   sLinea, sPrefijo: string;
+  bCompletado: Boolean;
 begin
-  // Una linea por dominio activo en MemoProgreso. Si ya existe la
-  // entrada para sDominio la actualizamos; si es nueva la anadimos.
+  // La pestana "Progreso (dominios activos)" muestra SOLO lo que se esta
+  // procesando AHORA: una linea por dominio en curso. Cuando un dominio
+  // llega al 100% se quita de la lista (su resumen final queda en el
+  // "Log acumulado"), asi la linea activa no se entierra bajo decenas de
+  // dominios ya migrados y siempre se ve lo que corre ahora mismo.
   sPrefijo := Format('[%-22s]', [sDominio]);
+  bCompletado := (iTotal > 0) and (iRow >= iTotal);
   if iTotal > 0 then
     sLinea := Format('%s  %7d / %7d  (%5.1f%%)',
       [sPrefijo, iRow, iTotal, iRow * 100.0 / iTotal])
@@ -252,7 +257,13 @@ begin
       iIdx := i;
       Break;
     end;
-  if iIdx >= 0 then
+  if bCompletado then
+  begin
+    // Dominio terminado: fuera de la lista de activos.
+    if iIdx >= 0 then
+      FLineasProgreso.Delete(iIdx);
+  end
+  else if iIdx >= 0 then
     FLineasProgreso[iIdx] := sLinea
   else
     FLineasProgreso.Add(sLinea);
@@ -572,10 +583,10 @@ begin
   end;
   if MessageDlg(Format(
        'Se van a BORRAR del destino "%s" todas las filas demo del'#13#10 +
-       'seed factuzam_original.sql en 50 tablas (articulos, SKUs,'#13#10 +
+       'seed factuzam_original.sql en 56 tablas (articulos, SKUs,'#13#10 +
        'tarifas, codigos_barras, atributos, propiedades, clientes,'#13#10 +
        'proveedores, almacenes, empresas, inventarios, facturas,'#13#10 +
-       'pedidos, albaranes, recibos, caja, stock, movimientos...).'#13#10 +
+       'pedidos, albaranes, compras, arqueos, caja, movimientos...).'#13#10 +
        #13#10 +
        'Filtro: USUARIO_ALTA IN (DEMO, Administrador, Sistema,'#13#10 +
        'SISTEMA, Admin, ADMIN, SCRIPT_DEMO, SCRIPT_FIX,'#13#10 +
@@ -623,8 +634,9 @@ begin
   if MessageDlg(Format(
        'Se van a BORRAR del destino "%s" todas las filas que haya '#13#10 +
        'creado una migracion previa (USUARIO_ALTA = "%s") en las '#13#10 +
-       '20 tablas que toca el migrador (inventarios, skus, articulos, '#13#10 +
-       'clientes, proveedores, almacenes, empresas, familias,...).'#13#10#13#10 +
+       '41 tablas que toca el migrador: facturas, movimientos, compras '#13#10 +
+       '(pedidos y albaranes), caja, inventarios, skus, articulos, '#13#10 +
+       'clientes, proveedores, almacenes, empresas, contadores,...).'#13#10#13#10 +
        'NO se tocan tablas de SISTEMA ni filas creadas por otros '#13#10 +
        'usuarios (demo, Administrador, etc.).'#13#10#13#10 +
        'Util para volver a ejecutar la migracion desde cero.'#13#10 +
