@@ -113,10 +113,10 @@ begin
     qIns.SQL.Text   :=
       'INSERT INTO fza_tarifas (' +
         'CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, ORDEN_TAR, ' +
-        'NOMBRE_TAR_TAR, ESIMP_INCL_TAR, ESDEFAULT_TAR, ' +
+        'NOMBRE_TAR_TAR, ESIMP_INCL_TAR, ' +
         'INSTANTE_ALTA, INSTANTE_MODIF, ' +
         'USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:c, :a, :o, :n, :ii, ''N'', ' +
+      'VALUES (:c, :a, :o, :n, :ii, ' +
               ':INSTANTE_ALTA, :INSTANTE_MODIF, ' +
               ':USUARIO_ALTA, :USUARIO_MODIF)';
 
