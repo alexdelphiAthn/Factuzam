@@ -24,7 +24,8 @@ uses
   inLibMigArticulosProveedores in 'inLibMigArticulosProveedores.pas',
   inLibMigArticulosPropiedades in 'inLibMigArticulosPropiedades.pas',
   inLibMigArticulosTarifas in 'inLibMigArticulosTarifas.pas',
-  inLibMigEntorno in 'inLibMigEntorno.pas';
+  inLibMigEntorno in 'inLibMigEntorno.pas',
+  inLibMigCompras in 'inLibMigCompras.pas';
 
 {$R *.res}
 
