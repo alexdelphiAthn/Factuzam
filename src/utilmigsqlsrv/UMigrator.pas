@@ -234,10 +234,15 @@ procedure TFormMigrator.ActualizarProgreso(const sDominio: string;
 var
   i, iIdx: Integer;
   sLinea, sPrefijo: string;
+  bCompletado: Boolean;
 begin
-  // Una linea por dominio activo en MemoProgreso. Si ya existe la
-  // entrada para sDominio la actualizamos; si es nueva la anadimos.
+  // La pestana "Progreso (dominios activos)" muestra SOLO lo que se esta
+  // procesando AHORA: una linea por dominio en curso. Cuando un dominio
+  // llega al 100% se quita de la lista (su resumen final queda en el
+  // "Log acumulado"), asi la linea activa no se entierra bajo decenas de
+  // dominios ya migrados y siempre se ve lo que corre ahora mismo.
   sPrefijo := Format('[%-22s]', [sDominio]);
+  bCompletado := (iTotal > 0) and (iRow >= iTotal);
   if iTotal > 0 then
     sLinea := Format('%s  %7d / %7d  (%5.1f%%)',
       [sPrefijo, iRow, iTotal, iRow * 100.0 / iTotal])
@@ -252,7 +257,13 @@ begin
       iIdx := i;
       Break;
     end;
-  if iIdx >= 0 then
+  if bCompletado then
+  begin
+    // Dominio terminado: fuera de la lista de activos.
+    if iIdx >= 0 then
+      FLineasProgreso.Delete(iIdx);
+  end
+  else if iIdx >= 0 then
     FLineasProgreso[iIdx] := sLinea
   else
     FLineasProgreso.Add(sLinea);
