@@ -44,7 +44,7 @@ inherited dmCajaOperacionesHist: TdmCajaOperacionesHist
       'FROM fza_caja_operaciones'
       'ORDER BY FECHA_OPERACION_OPCAJA DESC'
       '')
-    Active = True
+    Active = False
     Left = 24
   end
 end
