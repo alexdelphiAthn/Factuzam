@@ -437,7 +437,6 @@ const
 var
   qry: TUniQuery;
   nTotal, nLeidos, nFetchRowsPrev: Integer;
-  bFetchAllPrev: Boolean;
   cursorPrev: TCursor;
 begin
   if Assigned(dmmMovimientosAlmacen) and
@@ -447,10 +446,10 @@ begin
     cursorPrev := Screen.Cursor;
     Screen.Cursor := crHourGlass;
     MostrarProgresoCarga(0);
-    // FetchAll=False + FetchRows grande: traemos el primer bloque y luego
-    // recorremos en bloques avanzando la barra. DisableControls evita que
-    // el grid fuerce el fetch completo de golpe.
-    bFetchAllPrev := qry.FetchAll;
+    // FetchRows define el tamaño de bloque; al recorrer, UniDAC trae los
+    // registros por bloques (FetchAll por defecto es False) y vamos
+    // avanzando la barra. DisableControls evita que el grid fuerce el
+    // fetch completo de golpe.
     nFetchRowsPrev := qry.FetchRows;
     qry.DisableControls;
     try
@@ -463,7 +462,6 @@ begin
           FbarProgreso.Max := 1;
       end;
       qry.Close;
-      qry.FetchAll := False;
       qry.FetchRows := TAM_BLOQUE;
       qry.Open;
       nLeidos := 0;
@@ -478,7 +476,6 @@ begin
       qry.First;
     finally
       qry.FetchRows := nFetchRowsPrev;
-      qry.FetchAll := bFetchAllPrev;
       qry.EnableControls;
       OcultarProgresoCarga;
       Screen.Cursor := cursorPrev;
