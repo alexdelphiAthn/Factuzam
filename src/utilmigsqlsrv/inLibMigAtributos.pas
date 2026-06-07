@@ -294,8 +294,11 @@ begin
   // "BERENG" — codigos locales que el JOIN a occolor deja fuera.
   // Sin esto, articulos_colores falla con
   //   "color X no esta en fza_atributos_valores".
-  Eng.Log('  segunda pasada: colores de uso local en ocartcol/ocartbap ' +
-          '(puede tardar en BBDD grandes)...');
+  // ANTES esta pasada hacia UNION con dbo.ocartbap (codigos de barras, tabla
+  // ENORME) y se colgaba/tardaba muchisimo. Los colores de los barcodes son
+  // un SUBCONJUNTO de los de ocartcol (un barcode es de un articulo+color que
+  // ya esta en ocartcol), asi que basta con ocartcol: mucho mas ligero.
+  Eng.Log('  segunda pasada: colores de uso local en ocartcol...');
   qSrc := NuevoQOrigen(Eng,
     'SELECT DISTINCT UPPER(LTRIM(RTRIM( ' +
     '    CASE WHEN c.Descripcion IS NOT NULL ' +
@@ -304,10 +307,6 @@ begin
     'FROM dbo.ocartcol ac ' +
     'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE LTRIM(RTRIM(ISNULL(ac.Color, ''''))) <> '''' ' +
-    'UNION ' +
-    'SELECT DISTINCT UPPER(LTRIM(RTRIM(Color))) AS DescColor ' +
-    'FROM dbo.ocartbap ' +
-    'WHERE LTRIM(RTRIM(ISNULL(Color, ''''))) <> '''' ' +
     'ORDER BY DescColor');
   try
     qSrc.Open;
