@@ -930,38 +930,79 @@ begin
   IntercambiarPosicionColorAlmacen(AModoPivot);
 end;
 
+// Coloca ACol inmediatamente ANTES de ARef en el orden de columnas del
+// grid. Idempotente y valido venga ACol de antes o de despues de ARef:
+// asignar Index reordena la coleccion, asi que hay que compensar el
+// desplazamiento segun la direccion del movimiento (si ACol viene de un
+// indice menor, al sacarla ARef baja una posicion -> destino ARef.Index-1).
+procedure MoverColumnaJustoAntes(ACol, ARef: TcxGridColumn);
+begin
+  if (ACol <> nil) and (ARef <> nil) and (ACol <> ARef) then
+  begin
+    if ACol.Index < ARef.Index then
+      ACol.Index := ARef.Index - 1
+    else
+      ACol.Index := ARef.Index;
+  end;
+end;
+
+// Coloca ACol inmediatamente DESPUES de ARef. Misma compensacion que
+// MoverColumnaJustoAntes pero al otro lado.
+procedure MoverColumnaJustoDespues(ACol, ARef: TcxGridColumn);
+begin
+  if (ACol <> nil) and (ARef <> nil) and (ACol <> ARef) then
+  begin
+    if ACol.Index < ARef.Index then
+      ACol.Index := ARef.Index
+    else
+      ACol.Index := ARef.Index + 1;
+  end;
+end;
+
 procedure TGridPivoteCompra.IntercambiarPosicionColorAlmacen(
                                                        AModoPivot: Boolean);
 var
-  colAlm : TcxGridDBColumn;
-  iTmp   : Integer;
+  colAlm          : TcxGridDBColumn;
+  colPrimeraTalla : TcxGridDBColumn;
+  colUltimaTalla  : TcxGridDBColumn;
 begin
   if not Assigned(FCfg.ColColorPivot) then Exit;
   if FCfg.FieldAlmacen = '' then Exit;
   colAlm := FCfg.Grid.GetColumnByFieldName(FCfg.FieldAlmacen);
   if colAlm = nil then Exit;
+  if Length(FCfg.ColumnasTallas) = 0 then Exit;
+  colPrimeraTalla := FCfg.ColumnasTallas[0];
+  colUltimaTalla  := FCfg.ColumnasTallas[High(FCfg.ColumnasTallas)];
+  if (colPrimeraTalla = nil) or (colUltimaTalla = nil) then Exit;
   if AModoPivot then
   begin
+    // Guardamos las posiciones originales una sola vez para restaurarlas
+    // al salir del pivote (vista plana).
     if FOrigColIndexAlm < 0 then FOrigColIndexAlm := colAlm.Index;
     if FOrigColIndexCol < 0 then FOrigColIndexCol := FCfg.ColColorPivot.Index;
-    iTmp := colAlm.Index;
-    colAlm.Index := FCfg.ColColorPivot.Index;
-    FCfg.ColColorPivot.Index := iTmp;
-    // Coloca 'Color' (proveedor) inmediatamente antes de 'C. Basico'.
-    // Sin esto, queda al final del grid (tras todas las tallas) y el
-    // usuario no lo encuentra. Ponerla en C.Basico.Index empuja
-    // C.Basico una posicion a la derecha, quedando Color | C. Basico.
+    // 'Color' JUSTO ANTES de la primera columna talla. Antes esto se hacia
+    // con un intercambio Color<->Almacen por indices, fragil: si la rutina
+    // corria un numero PAR de veces (apertura por preferencia + toggles /
+    // eventos del grid) el intercambio se deshacia y 'Color' reaparecia al
+    // final del grid (tras el almacen). El posicionamiento idempotente lo
+    // evita: llamarlo N veces deja siempre el mismo orden.
+    MoverColumnaJustoAntes(FCfg.ColColorPivot, colPrimeraTalla);
+    // Color del proveedor (si la config lo trae) pegado antes de 'Color'.
     if Assigned(FCfg.ColColorProveedorPivot) then
     begin
       if FOrigColIndexColProv < 0 then
         FOrigColIndexColProv := FCfg.ColColorProveedorPivot.Index;
-      FCfg.ColColorProveedorPivot.Index := FCfg.ColColorPivot.Index;
+      MoverColumnaJustoAntes(FCfg.ColColorProveedorPivot, FCfg.ColColorPivot);
     end;
+    // 'Almacen' JUSTO DESPUES de la ultima columna talla (al final del
+    // bloque de tallas).
+    MoverColumnaJustoDespues(colAlm, colUltimaTalla);
   end
   else
   begin
-    if FOrigColIndexAlm >= 0 then colAlm.Index := FOrigColIndexAlm;
+    // Restaurar el orden original de la vista plana.
     if FOrigColIndexCol >= 0 then FCfg.ColColorPivot.Index := FOrigColIndexCol;
+    if FOrigColIndexAlm >= 0 then colAlm.Index := FOrigColIndexAlm;
     if Assigned(FCfg.ColColorProveedorPivot) and
        (FOrigColIndexColProv >= 0) then
       FCfg.ColColorProveedorPivot.Index := FOrigColIndexColProv;
