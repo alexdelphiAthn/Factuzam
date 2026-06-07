@@ -66,7 +66,6 @@ type
     FCurrentTotal:        Integer;
     FCurrentRow:          Integer;
     FNivelFamiliasHoja:   Integer;
-    FDigitosContadorArt:  Integer;
     // Flag de cancelacion atomico. Vive en el master engine; los
     // clones reenvian Cancelar/IsCancelado a su master.
     FCancelado:           Integer;
@@ -78,8 +77,8 @@ type
     // Constructor "clon" para hilos de trabajo. Reutiliza la lista de
     // items y las callbacks del motor maestro (que vive en la UI),
     // pero usa CONEXIONES propias — pensado para que cada hilo tenga
-    // su pareja origen/destino. Settings (Usuario, NivelFamilias,
-    // DigitosContador) se copian del maestro en este momento.
+    // su pareja origen/destino. Settings (Usuario, NivelFamilias)
+    // se copian del maestro en este momento.
     constructor CreateClone(ConSrv, ConDst: TUniConnection;
                             Master: TMigEngine);
     destructor  Destroy; override;
@@ -121,14 +120,13 @@ type
     //  - NivelFamiliasHoja: Nivel en ocniv que se considera familia
     //    "hoja" (la que puede tener articulos directos). Por defecto
     //    4 (formato "1401" = 4 chars). Algunos clientes usaran 3 o 5.
-    //  - DigitosContadorArt: ancho del contador para autogenerar
-    //    codigo de articulo desde la familia (PAD_ART_FAM destino).
+    //  El ancho del contador de articulo por familia (PAD_ART_FAM)
+    //  ya NO es un parametro: se deduce automaticamente en
+    //  MigrarFamilias de la longitud real de los codigos de articulo
+    //  numericos del legacy.
     property NivelFamiliasHoja:  Integer
                                  read FNivelFamiliasHoja
                                  write FNivelFamiliasHoja;
-    property DigitosContadorArt: Integer
-                                 read FDigitosContadorArt
-                                 write FDigitosContadorArt;
 
     procedure Log(const sMensaje: string); overload;
     procedure Log(const sFormato: string;
@@ -241,7 +239,6 @@ begin
   FItemsCompartidos    := False;
   FUsuario             := 'MIGRADOR';
   FNivelFamiliasHoja   := 4;
-  FDigitosContadorArt  := 4;
 end;
 
 constructor TMigEngine.CreateClone(ConSrv, ConDst: TUniConnection;
@@ -258,7 +255,6 @@ begin
   FOnProgress          := Master.FOnProgress;
   FUsuario             := Master.FUsuario;
   FNivelFamiliasHoja   := Master.FNivelFamiliasHoja;
-  FDigitosContadorArt  := Master.FDigitosContadorArt;
   // Apuntamos al master para que Cancelar/IsCancelado lean su
   // estado compartido.
   FMaster              := Master;

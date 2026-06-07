@@ -73,8 +73,6 @@ type
     edUsuario:         TEdit;
     lblNivelFam:       TLabel;
     edNivelFam:        TEdit;
-    lblDigitosArt:     TLabel;
-    edDigitosArt:      TEdit;
     lblHilos:          TLabel;
     edHilos:           TEdit;
     GroupListado:      TGroupBox;
@@ -157,7 +155,8 @@ uses
   inLibMigArticulosTallajes,
   inLibMigArticulosProveedores,
   inLibMigArticulosPropiedades,
-  inLibMigArticulosTarifas;
+  inLibMigArticulosTarifas,
+  inLibMigEntorno;
 
 // =========================================================================
 //  Lifecycle
@@ -346,6 +345,21 @@ begin
     'Precios PVP por artículo',
     'dbo.ocarttap → fza_articulos_tarifas',
     MigrarArticulosTarifas);
+  // Ajuste del entorno: numeración, series y cajas para dejar la instalación
+  // lista para operar (ver inLibMigEntorno / migracion_entorno.md).
+  FEngine.Registrar('entorno_contadores', 'Contadores (occtador)',
+    'dbo.occtador → fza_contadores (numeración de documentos y globales)',
+    MigrarEntornoContadores);
+  FEngine.Registrar('entorno_contadores_familia',
+    'Contador por familia (ocnivnro)',
+    'dbo.ocnivnro → fza_articulos_familias.CONTADOR_ART_FAM',
+    MigrarEntornoContadoresFamilia);
+  FEngine.Registrar('entorno_cajas', 'Cajas de almacén (occajas)',
+    'dbo.occajas → fza_almacenes_cajas',
+    MigrarEntornoCajas);
+  FEngine.Registrar('entorno_series', 'Series por empresa (ocseract)',
+    'dbo.ocseract → fza_empresas_series',
+    MigrarEntornoSeries);
 end;
 
 procedure TFormMigrator.RecargarListado;
@@ -821,7 +835,6 @@ begin
   if FEngine.Usuario = '' then
     FEngine.Usuario := 'MIGRADOR';
   FEngine.NivelFamiliasHoja  := StrToIntDef(edNivelFam.Text, 4);
-  FEngine.DigitosContadorArt := StrToIntDef(edDigitosArt.Text, 4);
 
   try
     dmMig.conSrv.Open;
@@ -873,13 +886,17 @@ begin
   if (sCodigo = 'almacenes')   or
      (sCodigo = 'clientes')    or
      (sCodigo = 'articulos')   or
-     (sCodigo = 'tallajes')   then Exit(1);
+     (sCodigo = 'tallajes')    or
+     (sCodigo = 'entorno_contadores')         or
+     (sCodigo = 'entorno_contadores_familia') then Exit(1);
   if (sCodigo = 'articulos_colores')        or
      (sCodigo = 'articulos_tallas')         or
      (sCodigo = 'articulos_tallajes_asign') or
      (sCodigo = 'articulos_proveedores')    or
      (sCodigo = 'articulos_propiedades')    or
      (sCodigo = 'articulos_tarifas')        or
+     (sCodigo = 'entorno_cajas')            or
+     (sCodigo = 'entorno_series')           or
      (sCodigo = 'skus')                     then Exit(2);
   if (sCodigo = 'inventarios') or (sCodigo = 'movimientos')
   or (sCodigo = 'ventas') or (sCodigo = 'facturas') then Exit(3);
@@ -1148,8 +1165,6 @@ begin
       oIni.ReadString ('General', 'Usuario', 'MIGRADOR');
     edNivelFam.Text   :=
       IntToStr(oIni.ReadInteger('General', 'NivelFamHoja', 4));
-    edDigitosArt.Text :=
-      IntToStr(oIni.ReadInteger('General', 'DigitosContadorArt', 4));
     edHilos.Text      :=
       IntToStr(oIni.ReadInteger('General', 'MaxHilos', 4));
   finally
@@ -1174,8 +1189,6 @@ begin
     oIni.WriteString ('General', 'Usuario',            edUsuario.Text);
     oIni.WriteInteger('General', 'NivelFamHoja',
                       StrToIntDef(edNivelFam.Text,   4));
-    oIni.WriteInteger('General', 'DigitosContadorArt',
-                      StrToIntDef(edDigitosArt.Text, 4));
     oIni.WriteInteger('General', 'MaxHilos',
                       StrToIntDef(edHilos.Text, 4));
   finally

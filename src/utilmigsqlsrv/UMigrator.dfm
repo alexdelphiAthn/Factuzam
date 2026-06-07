@@ -328,13 +328,6 @@
       Height = 15
       Caption = 'Nivel familias hoja:'
     end
-    object lblDigitosArt: TLabel
-      Left = 580
-      Top = 14
-      Width = 111
-      Height = 15
-      Caption = 'D'#237'gitos contador art.:'
-    end
     object lblHilos: TLabel
       Left = 780
       Top = 14
@@ -356,14 +349,6 @@
       Width = 40
       Height = 23
       TabOrder = 2
-      Text = '4'
-    end
-    object edDigitosArt: TEdit
-      Left = 720
-      Top = 11
-      Width = 40
-      Height = 23
-      TabOrder = 3
       Text = '4'
     end
     object edHilos: TEdit
