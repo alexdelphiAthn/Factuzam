@@ -370,7 +370,7 @@ const
   TAM_BLOQUE = 2000;
 var
   qry: TUniQuery;
-  nTotal, nLeidos, nFetchRowsPrev: Integer;
+  nTotal, nLeidos: Integer;
   cursorPrev: TCursor;
 begin
   if Assigned(dmmFacturas) and Assigned(dmmFacturas.unqryTablaG) then
@@ -382,8 +382,8 @@ begin
     // FetchRows define el tamaño de bloque; al recorrer, UniDAC trae los
     // registros por bloques (FetchAll por defecto es False) y vamos
     // avanzando la barra. DisableControls evita que el grid fuerce el
-    // fetch completo de golpe.
-    nFetchRowsPrev := qry.FetchRows;
+    // fetch completo de golpe. FetchRows solo se puede fijar con la query
+    // cerrada, asi que lo dejamos puesto (no se restaura).
     qry.DisableControls;
     try
       nTotal := ContarFacturas;
@@ -408,7 +408,6 @@ begin
       end;
       qry.First;
     finally
-      qry.FetchRows := nFetchRowsPrev;
       qry.EnableControls;
       OcultarProgresoCarga;
       Screen.Cursor := cursorPrev;
