@@ -87,20 +87,43 @@ var
   sCodPadre:          string;
   sSelectSrc:         string;
   iNivel, iNivelHoja: Integer;
+  iNivelDet:          Integer;
   iLenHoja, iLenPadre:Integer;
   iOrden:             Integer;
   bPrimero:           Boolean;
 begin
-  iNivelHoja := Eng.NivelFamiliasHoja;  // default 4 (Herreras: "1401")
-  iLenHoja   := iNivelHoja;             // codigo Nivel=4 -> 4 chars
-  iLenPadre  := iNivelHoja - 2;         // Nivel=2 -> 2 chars (seccion)
+  iNivelHoja := Eng.NivelFamiliasHoja;  // pista (default 4)
+  // Auto-deteccion del nivel "hoja" real: el ocniv de cada cliente puede
+  // usar niveles 2/4 (Herreras) o 1/3/5 u otros. Si el nivel configurado no
+  // tiene filas, tomamos el nivel MAXIMO con codigo como hoja. Sin esto el
+  // filtro no casa con ningun nivel, salen 0 familias y la barra se queda en
+  // "0 / ? (contando...)" (parece colgada, pero el total es 0).
+  if Eng.ContarOrigen(Format(
+       'SELECT COUNT(*) FROM dbo.ocniv WITH (NOLOCK) WHERE Nivel = %d',
+       [iNivelHoja])) = 0 then
+  begin
+    iNivelDet := Eng.ContarOrigen(
+      'SELECT ISNULL(MAX(Nivel), 0) FROM dbo.ocniv WITH (NOLOCK) ' +
+      'WHERE LTRIM(RTRIM(Codigo)) <> ''''');
+    if iNivelDet > 0 then
+    begin
+      Eng.Log('  familias: nivel %d sin filas; uso nivel hoja detectado %d',
+              [iNivelHoja, iNivelDet]);
+      iNivelHoja := iNivelDet;
+    end;
+  end;
+  iLenHoja   := iNivelHoja;             // codigo Nivel=hoja -> N chars
+  iLenPadre  := iNivelHoja - 2;         // Nivel=hoja-2 -> N-2 chars (seccion)
   if iLenPadre < 1 then iLenPadre := 1;
   // Migramos los dos niveles: el "hoja" y su seccion padre. Si el
   // legacy usa otra convencion, el setting NivelFamiliasHoja lo
   // ajusta y aqui derivamos los dos niveles afectados.
+  // WITH (NOLOCK): lectura sucia. Sin esto el COUNT/SELECT sobre ocniv se
+  // queda colgado ("contando...") si otra sesion tiene la tabla bloqueada
+  // (p.ej. SSMS abierto en edicion). Es una migracion de solo-lectura.
   sSelectSrc :=
     Format('SELECT Codigo, Nivel, Descripcion, Estado ' +
-           'FROM dbo.ocniv ' +
+           'FROM dbo.ocniv WITH (NOLOCK) ' +
            'WHERE Nivel IN (%d, %d) ' +
            '  AND LTRIM(RTRIM(Codigo)) <> '''' ' +
            'ORDER BY CASE WHEN Nivel = %d THEN 0 ELSE 1 END, Codigo',
@@ -117,7 +140,8 @@ begin
       'SELECT 1 FROM fza_articulos_familias WHERE CODIGO_FAM_FAM = :c';
 
     Eng.SetTotal(Eng.ContarOrigen(
-      Format('SELECT COUNT(*) FROM dbo.ocniv WHERE Nivel IN (%d, %d)',
+      Format('SELECT COUNT(*) FROM dbo.ocniv WITH (NOLOCK) ' +
+             'WHERE Nivel IN (%d, %d)',
              [iNivelHoja - 2, iNivelHoja])));
     iOrden   := 10;
     bPrimero := True;
