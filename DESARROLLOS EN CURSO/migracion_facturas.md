@@ -71,10 +71,19 @@ por el usuario (`USUARIO_ALTA`) en ambas tablas y reinserta.
 
 Cabeceras y líneas se vuelcan con **`INSERT IGNORE` por lotes** (`TBulkInsert`,
 2000 filas/lote), no fila a fila: con ~774k líneas el round-trip por fila era
-inviable (se quedaba en `0 / 774223`). No hay FK física entre líneas y
-cabecera (es FK *lógica*), así que cada buffer se vuelca por su cuenta. Un
-fallo de lote se registra y la migración continúa (antes un único error
-abortaba el dominio entero con un `raise`).
+inviable. No hay FK física entre líneas y cabecera (es FK *lógica*), así que
+cada buffer se vuelca por su cuenta. Un fallo de lote se registra y la
+migración continúa (antes un único error abortaba el dominio entero con un
+`raise`).
+
+**Dos pasadas, sin `ORDER BY`:** las cabeceras se leen de `occaj` (una fila por
+operación) y las líneas de `occajarp`, en cursores separados. El `ORDER BY` que
+antes agrupaba las líneas por operación obligaba a SQL Server a **ordenar las
+~774k filas anchas del JOIN antes de devolver la primera**, y el `Open` del
+cursor se quedaba minutos "petado" en `0 / 774223`. Sin orden, cada cursor
+arranca al instante y la barra avanza desde la primera fila; la cabecera ya no
+necesita deduplicar (sale una por fila de `occaj`). Se ven dos fases en el log:
+`facturas 1/2: cabeceras` y `facturas 2/2: lineas`.
 
 ## Cómo ejecutarlo
 
