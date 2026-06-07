@@ -1,4 +1,4 @@
-﻿object FormMigrator: TFormMigrator
+object FormMigrator: TFormMigrator
   Left = 0
   Top = 0
   Caption = 'Factuzam Migrator SQL Server'
@@ -12,7 +12,7 @@
   Font.Style = []
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  TextHeight = 15
+  TextHeight = 17
   object SplitterErrores: TSplitter
     Left = 0
     Top = 564
@@ -60,50 +60,50 @@
       object lblSrcHost: TLabel
         Left = 16
         Top = 28
-        Width = 82
-        Height = 15
+        Width = 116
+        Height = 17
         Caption = 'Host / Servidor:'
       end
       object lblSrcPort: TLabel
         Left = 16
         Top = 58
-        Width = 38
-        Height = 15
+        Width = 51
+        Height = 17
         Caption = 'Puerto:'
       end
       object lblSrcBase: TLabel
         Left = 16
         Top = 88
-        Width = 75
-        Height = 15
+        Width = 105
+        Height = 17
         Caption = 'Base de datos:'
       end
       object lblSrcUser: TLabel
         Left = 16
         Top = 118
-        Width = 43
-        Height = 15
+        Width = 60
+        Height = 17
         Caption = 'Usuario:'
       end
       object lblSrcPwd: TLabel
         Left = 16
         Top = 148
-        Width = 63
-        Height = 15
+        Width = 84
+        Height = 17
         Caption = 'Contrase'#241'a:'
       end
       object edSrcHost: TEdit
         Left = 130
         Top = 25
         Width = 340
-        Height = 23
+        Height = 25
         TabOrder = 0
       end
       object edSrcPort: TEdit
         Left = 130
         Top = 55
         Width = 80
-        Height = 23
+        Height = 25
         TabOrder = 1
         Text = '1433'
       end
@@ -111,14 +111,14 @@
         Left = 130
         Top = 85
         Width = 200
-        Height = 23
+        Height = 25
         TabOrder = 2
       end
       object edSrcUser: TEdit
         Left = 130
         Top = 115
         Width = 200
-        Height = 23
+        Height = 25
         TabOrder = 3
         Text = 'sa'
       end
@@ -126,14 +126,14 @@
         Left = 130
         Top = 145
         Width = 200
-        Height = 23
+        Height = 25
         PasswordChar = '*'
         TabOrder = 4
       end
       object btnProbarSrc: TButton
         Left = 350
         Top = 144
-        Width = 120
+        Width = 140
         Height = 25
         Caption = 'Probar conexi'#243'n'
         TabOrder = 5
@@ -159,43 +159,43 @@
       object lblDstHost: TLabel
         Left = 16
         Top = 28
-        Width = 82
-        Height = 15
+        Width = 116
+        Height = 17
         Caption = 'Host / Servidor:'
       end
       object lblDstPort: TLabel
         Left = 16
         Top = 58
-        Width = 38
-        Height = 15
+        Width = 51
+        Height = 17
         Caption = 'Puerto:'
       end
       object lblDstBase: TLabel
         Left = 16
         Top = 88
-        Width = 75
-        Height = 15
+        Width = 105
+        Height = 17
         Caption = 'Base de datos:'
       end
       object lblDstUser: TLabel
         Left = 16
         Top = 118
-        Width = 43
-        Height = 15
+        Width = 60
+        Height = 17
         Caption = 'Usuario:'
       end
       object lblDstPwd: TLabel
         Left = 16
         Top = 148
-        Width = 63
-        Height = 15
+        Width = 84
+        Height = 17
         Caption = 'Contrase'#241'a:'
       end
       object edDstHost: TEdit
         Left = 130
         Top = 25
         Width = 340
-        Height = 23
+        Height = 25
         TabOrder = 0
         Text = '127.0.0.1'
       end
@@ -203,7 +203,7 @@
         Left = 130
         Top = 55
         Width = 80
-        Height = 23
+        Height = 25
         TabOrder = 1
         Text = '3306'
       end
@@ -211,7 +211,7 @@
         Left = 130
         Top = 85
         Width = 200
-        Height = 23
+        Height = 25
         TabOrder = 2
         Text = 'factuzam'
       end
@@ -219,7 +219,7 @@
         Left = 130
         Top = 115
         Width = 200
-        Height = 23
+        Height = 25
         TabOrder = 3
         Text = 'root'
       end
@@ -227,14 +227,14 @@
         Left = 130
         Top = 145
         Width = 200
-        Height = 23
+        Height = 25
         PasswordChar = '*'
         TabOrder = 4
       end
       object btnProbarDst: TButton
         Left = 350
         Top = 144
-        Width = 120
+        Width = 147
         Height = 25
         Caption = 'Probar conexi'#243'n'
         TabOrder = 5
@@ -276,15 +276,15 @@
       object btnCrearBBDD: TButton
         Left = 310
         Top = 18
-        Width = 240
+        Width = 317
         Height = 25
         Caption = 'Crear BBDD destino (utf8mb4_spanish_ci)'
         TabOrder = 1
         OnClick = btnCrearBBDDClick
       end
       object btnCargarEsquema: TButton
-        Left = 564
-        Top = 18
+        Left = 646
+        Top = 17
         Width = 240
         Height = 25
         Caption = 'Cargar esqueleto en destino'#8230
@@ -303,16 +303,16 @@
       object btnResetearMig: TButton
         Left = 220
         Top = 48
-        Width = 240
+        Width = 362
         Height = 25
         Caption = 'Reset migracion (USUARIO_ALTA=MIGRADOR)'
         TabOrder = 4
         OnClick = btnResetearMigClick
       end
       object btnBorrarBBDD: TButton
-        Left = 464
+        Left = 598
         Top = 48
-        Width = 220
+        Width = 288
         Height = 25
         Caption = 'Borrar BBDD destino (DROP)...'
         Font.Charset = DEFAULT_CHARSET
@@ -341,36 +341,36 @@
     object lblUsuario: TLabel
       Left = 16
       Top = 14
-      Width = 119
-      Height = 15
+      Width = 164
+      Height = 17
       Caption = 'Usuario para auditor'#237'a:'
     end
     object lblNivelFam: TLabel
       Left = 380
       Top = 14
-      Width = 100
-      Height = 15
+      Width = 142
+      Height = 17
       Caption = 'Nivel familias hoja:'
     end
     object lblDigitosArt: TLabel
       Left = 580
       Top = 14
-      Width = 111
-      Height = 15
+      Width = 152
+      Height = 17
       Caption = 'D'#237'gitos contador art.:'
     end
     object lblHilos: TLabel
       Left = 780
       Top = 14
-      Width = 80
-      Height = 15
+      Width = 114
+      Height = 17
       Caption = 'Hilos paralelos:'
     end
     object edUsuario: TEdit
       Left = 160
       Top = 11
       Width = 200
-      Height = 23
+      Height = 25
       TabOrder = 0
       Text = 'MIGRADOR'
     end
@@ -378,7 +378,7 @@
       Left = 520
       Top = 11
       Width = 40
-      Height = 23
+      Height = 25
       TabOrder = 2
       Text = '4'
     end
@@ -386,7 +386,7 @@
       Left = 720
       Top = 11
       Width = 40
-      Height = 23
+      Height = 25
       TabOrder = 3
       Text = '4'
     end
@@ -394,7 +394,7 @@
       Left = 890
       Top = 11
       Width = 40
-      Height = 23
+      Height = 25
       TabOrder = 4
       Text = '4'
     end
@@ -410,7 +410,7 @@
         Top = 24
         Width = 800
         Height = 165
-        ItemHeight = 15
+        ItemHeight = 17
         TabOrder = 0
       end
       object btnMarcarTodas: TButton
@@ -434,7 +434,7 @@
       object btnEjecutar: TButton
         Left = 830
         Top = 130
-        Width = 160
+        Width = 175
         Height = 35
         Caption = 'Ejecutar migraciones'
         Font.Charset = DEFAULT_CHARSET
@@ -464,8 +464,8 @@
     object lblLog: TLabel
       Left = 16
       Top = 0
-      Width = 23
-      Height = 15
+      Width = 31
+      Height = 17
       Caption = 'Log:'
     end
     object MemoLog: TMemo
@@ -508,8 +508,8 @@
     object lblErrores: TLabel
       Left = 8
       Top = 0
-      Width = 222
-      Height = 15
+      Width = 315
+      Height = 17
       Caption = 'Errores y avisos (filtrado de los ! del log):'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clMaroon
@@ -559,8 +559,8 @@
     object lblProgreso: TLabel
       Left = 8
       Top = 0
-      Width = 151
-      Height = 15
+      Width = 207
+      Height = 17
       Caption = 'Progreso (dominios activos):'
     end
     object MemoProgreso: TMemo
@@ -595,7 +595,5 @@
       item
         Width = 800
       end>
-    ExplicitTop = 903
-    ExplicitWidth = 1022
   end
 end
