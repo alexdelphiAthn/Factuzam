@@ -226,7 +226,7 @@ procedure MigrarFacturas(Eng: TMigEngine; var Stats: TMigStats);
 const
   cWhere =
     'WHERE c.TipoDoc = ''VE'' AND ISNULL(c.Tipo, '''') <> ''C''';
-  cSelectSrc =
+  cSelCab =
     'SELECT c.Empresa, c.Almacen, c.Caja, c.Operacion, ' +
     '       ISNULL(alm.Abreviatura, '''') AS AbrevAlm, ' +
     '       c.Ejercicio, ISNULL(c.Serie, '''') AS Serie, ' +
@@ -252,7 +252,15 @@ const
     '       ISNULL(c.PorcenRecargo3, 0) AS PorcenRecargo3, ' +
     '       ISNULL(c.CuotaRE3, 0) AS CuotaRE3, ' +
     '       ISNULL(c.PorcenRecargo4, 0) AS PorcenRecargo4, ' +
-    '       ISNULL(c.CuotaRE4, 0) AS CuotaRE4, ' +
+    '       ISNULL(c.CuotaRE4, 0) AS CuotaRE4 ' +
+    'FROM dbo.occaj c ' +
+    'LEFT JOIN dbo.ocalm alm ON alm.Empresa = c.Empresa ' +
+    '                       AND alm.Almacen = c.Almacen ' +
+    cWhere;
+  cSelLin =
+    'SELECT c.Empresa, c.Almacen, c.Caja, c.Operacion, ' +
+    '       ISNULL(alm.Abreviatura, '''') AS AbrevAlm, ' +
+    '       c.Ejercicio, ISNULL(c.Serie, '''') AS Serie, ' +
     '       l.NroLinea, l.Articulo, l.Talla, l.Vendedor AS VendedorLin, ' +
     '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
     '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ' +
@@ -279,8 +287,7 @@ const
     'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = l.Articulo ' +
     '                         AND ac.Color    = l.Color ' +
     'LEFT JOIN dbo.occolor co ON co.ColorBasico = ac.ColorBasico ' +
-    cWhere + ' ' +
-    'ORDER BY c.Empresa, c.Almacen, c.Caja, c.Operacion, l.NroLinea';
+    cWhere;
   cColsFac =
     'NUMERO_FAC, SERIE_FAC, FECHA_FAC, TIPO_FAC, ESCONSOLIDADA_FAC, ' +
     'CODIGO_EMP_FAC, CODIGO_CLI_FAC, ' +
@@ -308,13 +315,12 @@ const
     'NUMERO_MOV_FACLIN, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
-  qSrc:                    TUniQuery;
+  qCab, qLin:              TUniQuery;
   bulkFac, bulkLin:        TBulkInsert;
   fs:                      TFormatSettings;
   iEmp, iAlm, iCaja, iOpe: Integer;
   sEmp, sAlm, sNumOp:      string;
   sNumFac, sSerieFac:      string;
-  sOpKey, sLastOpKey:      string;
   sArt, sUni, sTipoArt:    string;
   sCli, sLinea, sNmov:     string;
   sAhora, sUser, sFecha:   string;
@@ -330,109 +336,137 @@ var
 begin
   fs := TFormatSettings.Create('en-US');
   LimpiarMigracionPrevia(Eng);
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
-  // Streaming: con cientos de miles de lineas (occajarp), NO cachear todo el
-  // resultado en memoria — si no, qSrc.Open se queda en 0/N "sin arrancar"
-  // (o revienta el .exe 32b). Leemos hacia delante.
-  qSrc.UniDirectional := True;
-  // INSERT masivo (INSERT IGNORE por lotes): cabecera y líneas en buffers
-  // separados. No hay FK física entre fza_facturas_lineas y fza_facturas
-  // (es FK lógica), así que volcar cada buffer por su cuenta es seguro.
-  // Lote de 2000 por el ancho de fila (cabecera = 39 columnas).
+  sAhora := DateTimeASQL(Now);
+  sUser  := ValorOrNull(Eng.Usuario);
+  // DOS PASADAS, sin ORDER BY. El ORDER BY que agrupaba las líneas por
+  // operación obligaba a SQL Server a ORDENAR ~774k filas anchas del JOIN
+  // occaj⨝occajarp ANTES de devolver la primera fila: el .Open del cursor
+  // se quedaba "petado" en 0/N varios minutos. Separando cabeceras (occaj,
+  // una por operación, sin agrupar) de líneas (occajarp, cada una
+  // independiente) ningún cursor ordena y la barra avanza desde la fila 1.
+  // --- PASO 1: cabeceras (occaj → fza_facturas) ---
   bulkFac := TBulkInsert.Create(Eng.ConDst, 'fza_facturas', cColsFac, 2000);
+  qCab := NuevoQOrigen(Eng, cSelCab);
+  qCab.UniDirectional := True;
+  try
+    Eng.Log('  facturas 1/2: cabeceras (occaj)...');
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(*) FROM dbo.occaj c ' + cWhere));
+    qCab.Open;
+    while not qCab.Eof do
+    begin
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada en Facturas (cabeceras)...');
+        Break;
+      end;
+      Inc(Stats.Leidas);
+      Eng.IncRow;
+      iEmp  := qCab.FieldByName('Empresa').AsInteger;
+      iAlm  := qCab.FieldByName('Almacen').AsInteger;
+      iCaja := qCab.FieldByName('Caja').AsInteger;
+      iOpe  := qCab.FieldByName('Operacion').AsInteger;
+      sEmp  := IntToStr(iEmp);
+      sAlm  := UpperCase(Trim(qCab.FieldByName('AbrevAlm').AsString));
+      if sAlm = '' then
+        sAlm := IntToStr(iAlm);
+      sNumOp    := Format('%.8d', [iOpe]);
+      sSerieFac := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
+                     Trim(qCab.FieldByName('Serie').AsString)]);
+      sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iOpe]);
+      if not qCab.FieldByName('FechaOpe').IsNull then
+        dtFecha := qCab.FieldByName('FechaOpe').AsDateTime
+      else if not qCab.FieldByName('Fecha').IsNull then
+        dtFecha := qCab.FieldByName('Fecha').AsDateTime
+      else
+        dtFecha := Now;
+      sFecha := DateTimeASQL(Trunc(dtFecha));
+      fNeto  := qCab.FieldByName('Neto').AsFloat;
+      sCli   := Trim(qCab.FieldByName('Cliente').AsString);
+      if sCli = '' then
+        sCli := '0';
+      // Desglose de IVA por bandas N/R/S/E desde las bandas del legacy.
+      CalcularIvaCabecera(qCab, fNeto, iva);
+      // 39 columnas en cColsFac. TIPO_FAC ('SIMPLIFICADA'),
+      // ESCONSOLIDADA_FAC ('S') y FORMA_PAGO_FAC ('CONTADO') son literales.
+      sFila := Format(
+        '%s, %s, %s, ''SIMPLIFICADA'', ''S'', %s, %s, ' +
+        '%s, %s, %s, %s, %s, ' +
+        '%s, %s, %s, %s, %s, ' +
+        '%s, %s, %s, %s, %s, ' +
+        '%s, %s, %s, %s, %s, ' +
+        '%s, %s, %s, ' +
+        '''CONTADO'', %s, %s, %s, %s, ' +
+        '%s, %s, %s, %s',
+        [ValorOrNull(sNumFac), ValorOrNull(sSerieFac), sFecha,
+         ValorOrNull(sEmp), ValorOrNull(sCli),
+         F(iva.Pivan), F(iva.Tivan), F(iva.Basein),
+         F(iva.Pren),  F(iva.Tren),
+         F(iva.Pivar), F(iva.Tivar), F(iva.Basier),
+         F(iva.Prer),  F(iva.Trer),
+         F(iva.Pivas), F(iva.Tivas), F(iva.Baseis),
+         F(iva.Pres),  F(iva.Tres),
+         F(iva.Pivae), F(iva.Tivae), F(iva.Baseie),
+         F(iva.Pree),  F(iva.Tree),
+         F(iva.Bases), F(iva.Imp),  F(fNeto),
+         ValorOrNull(IntToStr(qCab.FieldByName('VendedorCab').AsInteger)),
+         ValorOrNull(sAlm), ValorOrNull(IntToStr(iCaja)),
+         ValorOrNull(sNumOp),
+         sAhora, sAhora, sUser, sUser]);
+      try
+        bulkFac.Add(sFila);
+        Inc(Stats.Insertadas);
+      except
+        on E: Exception do
+        begin
+          Inc(Stats.Errores);
+          Eng.LogError('factura', sSerieFac + '/' + sNumFac, E.Message,
+            '', 'requiere Almacenes/Clientes migrados');
+        end;
+      end;
+      qCab.Next;
+    end;
+    bulkFac.FlushPendiente;
+  finally
+    bulkFac.Free;
+    qCab.Free;
+  end;
+  // --- PASO 2: líneas (occajarp → fza_facturas_lineas) ---
   bulkLin := TBulkInsert.Create(Eng.ConDst, 'fza_facturas_lineas',
                                 cColsLin, 2000);
+  qLin := NuevoQOrigen(Eng, cSelLin);
+  qLin.UniDirectional := True;
   try
-    sAhora := DateTimeASQL(Now);
-    sUser  := ValorOrNull(Eng.Usuario);
+    Eng.Log('  facturas 2/2: lineas (occajarp)...');
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.occajarp l ' +
       'INNER JOIN dbo.occaj c ON c.Empresa = l.Empresa ' +
       '                      AND c.Almacen = l.Almacen ' +
       '                      AND c.Caja    = l.Caja ' +
       '                      AND c.Operacion = l.Operacion ' + cWhere));
-    sLastOpKey := '';
-    qSrc.Open;
-    while not qSrc.Eof do
+    qLin.Open;
+    while not qLin.Eof do
     begin
       if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
       begin
-        Eng.Log('  Cancelacion detectada en Facturas, saliendo...');
+        Eng.Log('  Cancelacion detectada en Facturas (lineas)...');
         Break;
       end;
       Inc(Stats.Leidas);
       Eng.IncRow;
-      iEmp  := qSrc.FieldByName('Empresa').AsInteger;
-      iAlm  := qSrc.FieldByName('Almacen').AsInteger;
-      iCaja := qSrc.FieldByName('Caja').AsInteger;
-      iOpe  := qSrc.FieldByName('Operacion').AsInteger;
+      iEmp  := qLin.FieldByName('Empresa').AsInteger;
+      iAlm  := qLin.FieldByName('Almacen').AsInteger;
+      iCaja := qLin.FieldByName('Caja').AsInteger;
+      iOpe  := qLin.FieldByName('Operacion').AsInteger;
       sEmp  := IntToStr(iEmp);
-      sAlm  := UpperCase(Trim(qSrc.FieldByName('AbrevAlm').AsString));
+      sAlm  := UpperCase(Trim(qLin.FieldByName('AbrevAlm').AsString));
       if sAlm = '' then
         sAlm := IntToStr(iAlm);
       sNumOp    := Format('%.8d', [iOpe]);
-      sSerieFac := Format('%d.%s', [qSrc.FieldByName('Ejercicio').AsInteger,
-                     Trim(qSrc.FieldByName('Serie').AsString)]);
+      sSerieFac := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
+                     Trim(qLin.FieldByName('Serie').AsString)]);
       sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iOpe]);
-      // Cabecera: una por operación (primera línea que vemos del grupo). El
-      // INSERT IGNORE descartaría la repetida igualmente, pero solo la
-      // encolamos una vez para no inflar el lote.
-      sOpKey := Format('%d|%d|%d|%d', [iEmp, iAlm, iCaja, iOpe]);
-      if sOpKey <> sLastOpKey then
-      begin
-        sLastOpKey := sOpKey;
-        if not qSrc.FieldByName('FechaOpe').IsNull then
-          dtFecha := qSrc.FieldByName('FechaOpe').AsDateTime
-        else if not qSrc.FieldByName('Fecha').IsNull then
-          dtFecha := qSrc.FieldByName('Fecha').AsDateTime
-        else
-          dtFecha := Now;
-        sFecha := DateTimeASQL(Trunc(dtFecha));
-        fNeto  := qSrc.FieldByName('Neto').AsFloat;
-        sCli   := Trim(qSrc.FieldByName('Cliente').AsString);
-        if sCli = '' then
-          sCli := '0';
-        // Desglose de IVA por bandas N/R/S/E desde las bandas del legacy.
-        CalcularIvaCabecera(qSrc, fNeto, iva);
-        // 39 columnas en cColsFac. TIPO_FAC ('SIMPLIFICADA'),
-        // ESCONSOLIDADA_FAC ('S') y FORMA_PAGO_FAC ('CONTADO') son literales.
-        sFila := Format(
-          '%s, %s, %s, ''SIMPLIFICADA'', ''S'', %s, %s, ' +
-          '%s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, ' +
-          '''CONTADO'', %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s',
-          [ValorOrNull(sNumFac), ValorOrNull(sSerieFac), sFecha,
-           ValorOrNull(sEmp), ValorOrNull(sCli),
-           F(iva.Pivan), F(iva.Tivan), F(iva.Basein),
-           F(iva.Pren),  F(iva.Tren),
-           F(iva.Pivar), F(iva.Tivar), F(iva.Basier),
-           F(iva.Prer),  F(iva.Trer),
-           F(iva.Pivas), F(iva.Tivas), F(iva.Baseis),
-           F(iva.Pres),  F(iva.Tres),
-           F(iva.Pivae), F(iva.Tivae), F(iva.Baseie),
-           F(iva.Pree),  F(iva.Tree),
-           F(iva.Bases), F(iva.Imp),  F(fNeto),
-           ValorOrNull(IntToStr(qSrc.FieldByName('VendedorCab').AsInteger)),
-           ValorOrNull(sAlm), ValorOrNull(IntToStr(iCaja)),
-           ValorOrNull(sNumOp),
-           sAhora, sAhora, sUser, sUser]);
-        try
-          bulkFac.Add(sFila);
-        except
-          on E: Exception do
-          begin
-            Inc(Stats.Errores);
-            Eng.LogError('factura', sSerieFac + '/' + sNumFac, E.Message,
-              '', 'requiere Almacenes/Clientes migrados');
-          end;
-        end;
-      end;
-      // Línea de factura desde la línea de caja.
-      sArt := Trim(qSrc.FieldByName('Articulo').AsString);
+      sArt := Trim(qLin.FieldByName('Articulo').AsString);
       if EsArticuloGenerico(sArt) then
       begin
         sTipoArt := 'SERVICIO';
@@ -443,14 +477,14 @@ begin
       begin
         sTipoArt := 'ESTANDAR';
         sUni     := ConstruirCodigoUnidad(sArt,
-                      Trim(qSrc.FieldByName('DescColor').AsString),
-                      Trim(qSrc.FieldByName('Talla').AsString));
+                      Trim(qLin.FieldByName('DescColor').AsString),
+                      Trim(qLin.FieldByName('Talla').AsString));
       end;
-      sLinea := Format('%.4d', [qSrc.FieldByName('NroLinea').AsInteger]);
+      sLinea := Format('%.4d', [qLin.FieldByName('NroLinea').AsInteger]);
       // Enlace al movimiento de almacén migrado (mismo prefijo 'MH').
-      if qSrc.FieldByName('NumeroMovArt').AsInteger > 0 then
+      if qLin.FieldByName('NumeroMovArt').AsInteger > 0 then
         sNmov := 'MH' + Format('%.10d',
-                   [qSrc.FieldByName('NumeroMovArt').AsInteger])
+                   [qLin.FieldByName('NumeroMovArt').AsInteger])
       else
         sNmov := '';
       // 25 columnas en cColsLin. TIPO_IVA_ARTICULO_FACLIN es literal 'N'.
@@ -460,16 +494,16 @@ begin
         [ValorOrNull(sNumFac), ValorOrNull(sSerieFac), ValorOrNull(sEmp),
          ValorOrNull(sLinea), ValorOrNull(sArt), ValorOrNull(sUni),
          ValorOrNull(sTipoArt),
-         F(qSrc.FieldByName('Cantidad').AsFloat),
-         ValorOrNull(Copy(Trim(qSrc.FieldByName('Descripcion').AsString),
+         F(qLin.FieldByName('Cantidad').AsFloat),
+         ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString),
                           1, 100)),
-         F(qSrc.FieldByName('PorDto').AsFloat),
-         F(qSrc.FieldByName('PrecioSIva').AsFloat),
-         F(qSrc.FieldByName('PorIva').AsFloat),
-         F(qSrc.FieldByName('PrecioCIva').AsFloat),
-         F(qSrc.FieldByName('NetoCIva').AsFloat),
-         F(qSrc.FieldByName('NetoSIva').AsFloat),
-         ValorOrNull(IntToStr(qSrc.FieldByName('VendedorLin').AsInteger)),
+         F(qLin.FieldByName('PorDto').AsFloat),
+         F(qLin.FieldByName('PrecioSIva').AsFloat),
+         F(qLin.FieldByName('PorIva').AsFloat),
+         F(qLin.FieldByName('PrecioCIva').AsFloat),
+         F(qLin.FieldByName('NetoCIva').AsFloat),
+         F(qLin.FieldByName('NetoSIva').AsFloat),
+         ValorOrNull(IntToStr(qLin.FieldByName('VendedorLin').AsInteger)),
          ValorOrNull(sAlm), ValorOrNull(IntToStr(iCaja)),
          ValorOrNull(sNumOp), ValorOrNull(sNmov),
          sAhora, sAhora, sUser, sUser]);
@@ -482,18 +516,15 @@ begin
           Inc(Stats.Errores);
           Eng.LogError('factura_linea', sSerieFac + '/' + sNumFac,
             E.Message, Format('linea=%d',
-              [qSrc.FieldByName('NroLinea').AsInteger]), '');
+              [qLin.FieldByName('NroLinea').AsInteger]), '');
         end;
       end;
-      qSrc.Next;
+      qLin.Next;
     end;
-    // Soltar lo que quede en los buffers (cabecera primero, líneas después).
-    bulkFac.FlushPendiente;
     bulkLin.FlushPendiente;
   finally
     bulkLin.Free;
-    bulkFac.Free;
-    qSrc.Free;
+    qLin.Free;
   end;
 end;
 
