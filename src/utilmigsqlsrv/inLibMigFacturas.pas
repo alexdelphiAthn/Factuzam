@@ -16,7 +16,7 @@
 {                                                                              }
 {    Numeración (determinista y trazable al legacy):                           }
 {      SERIE_FAC  = '<Ejercicio>.<Serie>'      (p.ej. '2001.B1')               }
-{      NUMERO_FAC = '<Almacen>-<Caja>-<Operacion>'                             }
+{      NUMERO_FAC = NroDoc (nº de factura del legacy, correlativo por Serie)   }
 {    Único por empresa/serie. En instalación multiempresa habría que           }
 {    prefijar la empresa. Cada línea enlaza con su operación de caja           }
 {    (NUMERO_OPERACION_FACLIN) y con su movimiento de almacén                  }
@@ -462,10 +462,12 @@ begin
       sNumOp    := Format('%.8d', [iOpe]);
       sSerieFac := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
                      Trim(qCab.FieldByName('Serie').AsString)]);
-      // NUMERO_FAC = Almacen-Caja-NroDoc (el nº de documento/ticket del
-      // legacy), NO la Operacion (id interno). Asi coincide con el numero
-      // que ve el usuario y con SERIE/NUMERO_FAC_OPCAJA de Ventas.
-      sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iNroDoc]);
+      // NUMERO_FAC = NroDoc: en occaj el nº de FACTURA es NroDoc (correlativo
+      // por Serie para las ventas), NO la Operacion (id interno) ni un
+      // compuesto con Almacen/Caja. SERIE_FAC = Ejercicio.Serie discrimina, asi
+      // (CODIGO_EMP, SERIE, NUMERO) identifica la factura. Debe coincidir con
+      // SERIE/NUMERO_FAC_OPCAJA de Ventas (mismo NroDoc).
+      sNumFac   := IntToStr(iNroDoc);
       if not qCab.FieldByName('FechaOpe').IsNull then
         dtFecha := qCab.FieldByName('FechaOpe').AsDateTime
       else if not qCab.FieldByName('Fecha').IsNull then
@@ -558,9 +560,9 @@ begin
       sNumOp    := Format('%.8d', [iOpe]);
       sSerieFac := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
                      Trim(qLin.FieldByName('Serie').AsString)]);
-      // NUMERO_FAC = Almacen-Caja-NroDoc (igual que la cabecera) para que la
-      // linea enlace con su factura.
-      sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iNroDoc]);
+      // NUMERO_FAC = NroDoc (igual que la cabecera) para que la linea enlace
+      // con su factura. NroDoc llega del JOIN a occaj (occajarp no lo tiene).
+      sNumFac   := IntToStr(iNroDoc);
       sArt := Trim(qLin.FieldByName('Articulo').AsString);
       if EsArticuloGenerico(sArt) then
       begin
