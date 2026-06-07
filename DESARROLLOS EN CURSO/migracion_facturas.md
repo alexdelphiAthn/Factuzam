@@ -99,7 +99,8 @@ Tras las dos pasadas, `EnlazarFacturas` ejecuta dos `UPDATE` set-based:
    `fza_empresas` (`LEFT JOIN` por `CODIGO_EMP`), que antes quedaban vacíos
    (pestaña "Datos Empresa Emisora" en blanco). Además fija
    `ESFECHADEENTREGA_FAC`, `ESDESCRIPCIONES_AMP_FAC` y `ESCREARARTICULOS_FAC`
-   a `'N'`.
+   a `'N'`, y `ESRETENCIONES_CLIENTE_FAC` a `'N'` (venta detalle: el cliente no
+   tiene IRPF/retención; la columna trae `DEFAULT 'S'` en el esquema).
 1b. **Datos del cliente**: rellena `RAZON_SOCIAL_CLIENTE_FAC`,
    `NIF_CLIENTE_FAC`, contacto y dirección (`*_CLIENTE_FAC`) desde
    `fza_clientes` con `JOIN` (no `LEFT`) por `CODIGO_CLI_FAC`: las facturas a
