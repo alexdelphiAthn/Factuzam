@@ -421,7 +421,7 @@ const
   TAM_BLOQUE = 2000;
 var
   qry: TUniQuery;
-  nTotal, nLeidos, nFetchRowsPrev: Integer;
+  nTotal, nLeidos: Integer;
   cursorPrev: TCursor;
 begin
   if Assigned(dmmCajaOperacionesHist) and
@@ -437,8 +437,8 @@ begin
     // registros por bloques (FetchAll por defecto es False) y vamos
     // avanzando la barra. Un FetchRows grande evita miles de round-trips
     // (el valor por defecto de 25 seria lento). DisableControls evita que
-    // el grid fuerce el fetch completo y nos quite el progreso.
-    nFetchRowsPrev := qry.FetchRows;
+    // el grid fuerce el fetch completo y nos quite el progreso. FetchRows
+    // solo se puede fijar con la query cerrada, asi que no se restaura.
     qry.DisableControls;
     try
       nTotal := ContarOperaciones;
@@ -463,7 +463,6 @@ begin
       end;
       qry.First;
     finally
-      qry.FetchRows := nFetchRowsPrev;
       qry.EnableControls;
       OcultarProgresoCarga;
       Screen.Cursor := cursorPrev;
