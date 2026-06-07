@@ -3712,6 +3712,11 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
       ShortCut = 16459
       OnExecute = actClienteExecute
     end
+    object actMovimiento: TAction
+      Caption = 'actMovimiento'
+      ShortCut = 16461
+      OnExecute = actMovimientoExecute
+    end
   end
   inherited dsTablaG: TDataSource
     DataSet = dmFacturas.unqryTablaG
