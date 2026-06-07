@@ -67,9 +67,13 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := Eng.ConDst;
+    // ORDER BY ID_AV DESC + AddOrSetValue (gana la ultima fila) => MIN(ID_AV)
+    // canonico, igual que BuscarIdAV / los SKUs, para que con AV duplicados
+    // todos los paths apunten al mismo valor.
     q.SQL.Text   :=
       'SELECT AV, ID_AV FROM fza_atributos_valores ' +
-      'WHERE ID_VA_AV = :v';
+      'WHERE ID_VA_AV = :v ' +
+      'ORDER BY ID_AV DESC';
     q.ParamByName('v').AsString := sIdVa;
     q.Open;
     while not q.Eof do

@@ -555,8 +555,12 @@ begin
   try
     qLook.Connection := Eng.ConDst;
     qLook.SQL.Text   :=
+      // ORDER BY ID_AV: con valores duplicados (mismo ID_VA+AV, p.ej. tallas
+      // del lote "limpio" y del "deducido") elige SIEMPRE el MIN(ID_AV) como
+      // canonico, para que todos los paths (conjunto y tag de SKU) coincidan.
       'SELECT ID_AV FROM fza_atributos_valores ' +
-      'WHERE ID_VA_AV = :v AND AV = :av LIMIT 1';
+      'WHERE ID_VA_AV = :v AND AV = :av ' +
+      'ORDER BY ID_AV LIMIT 1';
     qLook.ParamByName('v').AsString  := sIdVa;
     qLook.ParamByName('av').AsString := sAv;
     qLook.Open;
