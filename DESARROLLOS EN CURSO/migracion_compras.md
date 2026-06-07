@@ -12,14 +12,24 @@ esquema: las tablas destino ya existen (ver `pedidos_compra.sql` y
 | `dbo.ocalbpro` (TipoDoc `'AE'`) | `fza_albaranes_compra` (cabecera) |
 | `dbo.ocalbproarp`               | `fza_albaranes_compra_lineas` |
 
-## Modelo PLANO (decisión del usuario)
+## Modelo: una línea por SKU + `ID_AC_PIVOT` (como el nativo)
 
 Una línea Factuzam por cada fila del legacy (un SKU concreto
-`Articulo/Color/Talla`), con su almacén en la propia línea. **No** se generan
-celdas (`fza_*_compra_celdas`, la rejilla pivotada de tallas): estos pedidos y
-albaranes **no traen distribución** por tallas, así que la cantidad queda en la
-línea y su almacén. Las celdas se dejan para una migración futura con
-distribución incluida.
+`Articulo/Color/Talla`), con su almacén y su cantidad en la propia línea.
+**Esto NO es una simplificación: es exactamente como Factuzam materializa
+una compra.** La materialización nativa de una sesión de compra
+(`inLibComprasSesionesMaterializar.InsertarLineaPedidoCompra`) inserta también
+**una línea por SKU** y **no** rellena las tablas de celdas
+(`fza_*_compra_celdas`) — las celdas son solo una ayuda transitoria del Mto
+para editar en modo "tallas en horizontal", no el almacenamiento canónico.
+
+Lo que hace que la rejilla de tallas del Mto esté disponible es el
+**`ID_AC_PIVOT_*LIN`** de la línea (el conjunto/tallaje del artículo). Por eso
+cada línea lleva su `ID_AC_PIVOT`, resuelto del tallaje asignado al artículo
+(`fza_articulos_conjuntos_asign` con `ID_VA_ACA='TAL'`, cargado en un mapa
+artículo→`ID_AC` una sola vez). Artículo sin tallaje (escalar) → `ID_AC_PIVOT`
+queda a `NULL`. Resultado: un pedido/albarán migrado se comporta en el Mto
+**igual** que uno creado por la aplicación.
 
 ## Numeración (determinista, trazable)
 
@@ -102,8 +112,10 @@ corren en paralelo con ellos.
 
 ## Pendiente / a revisar
 
-- **Distribución por tallas (celdas)**: no se generan
-  `fza_*_compra_celdas`. Pendiente para migraciones con distribución.
+- **Celdas (`fza_*_compra_celdas`)**: no se generan **a propósito** — la
+  materialización nativa tampoco las crea (almacena una línea por SKU con su
+  `ID_AC_PIVOT`). El Mto las construye al editar en modo pivote. No es una
+  carencia de la migración.
 - **Facturas de compra**: no se migran en esta pasada; por eso los albaranes
   quedan `CERRADO` y no `FACTURADO`, y no se rellena `NUMERO_FAC_ALBC`.
 - **Enlace movimiento ↔ albarán (`REF_MOV`)**: la línea de albarán legacy no
