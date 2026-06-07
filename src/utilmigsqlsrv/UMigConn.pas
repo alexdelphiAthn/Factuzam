@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UMigConn                                                      }
 {    Tipo:       Data Module                                                   }
@@ -20,8 +20,8 @@ interface
 uses
   Winapi.ActiveX,
   System.SysUtils, System.Classes,
-  Data.DB,
-  Uni, UniScript, UniProvider, MySQLUniProvider, SQLServerUniProvider;
+  Data.DB, ActiveX,
+  Uni, UniScript, UniProvider, MySQLUniProvider, SQLServerUniProvider, DBAccess;
 
 type
   TdmMig = class(TDataModule)
@@ -130,6 +130,7 @@ begin
     conSrv.Port := 1433;
   conSrv.Database    := sBase;
   conSrv.LoginPrompt := False;
+  coInitialize(nil);
   conSrv.AfterConnect := SrvAfterConnect;  // READ UNCOMMITTED al conectar
   // Provider: dejamos el default de UniDAC (en general escoge OLE DB
   // nativo si esta el cliente de SQL Server instalado, o protocolo TDS
