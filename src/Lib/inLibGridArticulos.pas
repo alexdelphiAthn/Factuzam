@@ -98,6 +98,10 @@ type
     // entre STX y ETX.
     FEnScanner: Boolean;
     FScanBuffer: string;
+    // Debounce de busqueda incremental (como el tmrBusq de inMtoCajaOpe): al
+    // teclear en la celda de articulo, tras una breve pausa abre el desplegable
+    // ya filtrado. No se arma durante una trama del lector (rafaga STX/ETX).
+    FTimerBusq: TTimer;
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
     procedure DispararResolucionScan(const ACodigo: string);
@@ -105,6 +109,12 @@ type
                            ARecord: TcxCustomGridRecord;
                            var AProperties: TcxCustomEditProperties);
     procedure ArticuloKeyPress(Sender: TObject; var Key: Char);
+    // OnChange del editor de articulo: rearma el debounce de busqueda (salvo
+    // durante una lectura de pistola) para abrir el desplegable de sugerencias.
+    procedure ArticuloChange(Sender: TObject);
+    // Al saltar el debounce, abre el desplegable de busqueda ya filtrado por lo
+    // tecleado, como inMtoCajaOpe.tmrBusqTimer.
+    procedure TimerBusqTimer(Sender: TObject);
     procedure ComboBusqCloseUp(Sender: TObject);
     procedure TimerResolveTimer(Sender: TObject);
     procedure SetAlmacenStock(const AValue: string);
@@ -194,10 +204,15 @@ begin
   FTimerResolve.Enabled := False;
   FTimerResolve.Interval := 1;
   FTimerResolve.OnTimer := TimerResolveTimer;
+  FTimerBusq := TTimer.Create(nil);
+  FTimerBusq.Enabled := False;
+  FTimerBusq.Interval := 350;
+  FTimerBusq.OnTimer := TimerBusqTimer;
 end;
 
 destructor TGridArticulosLineas.Destroy;
 begin
+  FreeAndNil(FTimerBusq);
   FreeAndNil(FTimerResolve);
   FreeAndNil(FTimerPopup);
   FreeAndNil(FEditRepo);
@@ -237,6 +252,13 @@ begin
   // anyade sola al completar un SKU (lo hace el host en OnResuelto).
   FView.OptionsBehavior.GoToNextCellOnEnter := True;
   FView.OptionsBehavior.FocusFirstCellOnNewRecord := True;
+  // Mismos parametros de comportamiento/vista que el grid de ventas de
+  // inMtoCajaOpe (tvLineasOpe): el ciclo de foco vuelve a la primera celda de
+  // la fila siguiente, las columnas reparten el ancho del grid y se muestra un
+  // aviso cuando no hay articulos.
+  FView.OptionsBehavior.FocusCellOnCycle := True;
+  FView.OptionsView.ColumnAutoWidth := True;
+  FView.OptionsView.NoDataToDisplayInfoText := 'No hay artículos';
   // dbNavigator pequeno embebido: navegar + insertar + borrar (el resto
   // oculto). Insertar/borrar lineas tambien desde aqui.
   FView.Navigator.Visible := True;
@@ -274,6 +296,10 @@ begin
   if (AItem = FColArticulo) and (AEdit is TcxCustomTextEdit) then
   begin
     TcxCustomTextEdit(AEdit).OnKeyPress := ArticuloKeyPress;
+    // Sugerencias en vivo: al teclear se rearma el debounce que abre el
+    // desplegable filtrado (igual que inMtoCajaOpe). El lector (STX/ETX)
+    // consume sus teclas en ArticuloKeyPress, asi que no dispara el OnChange.
+    TcxCustomTextEdit(AEdit).Properties.OnChange := ArticuloChange;
     Exit;
   end;
   if (AItem = nil) or (AItem.Tag < 1) or (AItem.Tag > 5) then
@@ -520,6 +546,9 @@ begin
   begin
     FEnScanner := True;
     FScanBuffer := '';
+    // Un escaneo no debe abrir el desplegable de sugerencias: cancela el
+    // debounce que pudiera haber quedado armado de un tecleo previo.
+    FTimerBusq.Enabled := False;
     Key := #0;
   end
   else if FEnScanner then
@@ -535,6 +564,40 @@ begin
     begin
       FScanBuffer := FScanBuffer + Key;
       Key := #0;
+    end;
+  end;
+end;
+
+// OnChange del editor de articulo: rearma el debounce salvo durante una trama
+// del lector (la rafaga STX/ETX consume sus teclas y no llega aqui). Asi las
+// sugerencias se abren al teclear a mano, no al escanear.
+procedure TGridArticulosLineas.ArticuloChange(Sender: TObject);
+begin
+  if not FEnScanner then
+  begin
+    FTimerBusq.Enabled := False;
+    FTimerBusq.Enabled := True;
+  end;
+end;
+
+// Al saltar el debounce abre el desplegable de busqueda ya filtrado por lo
+// tecleado (IncrementalFiltering), como inMtoCajaOpe.tmrBusqTimer. Solo si
+// seguimos editando la celda de articulo con el combo y hay texto.
+procedure TGridArticulosLineas.TimerBusqTimer(Sender: TObject);
+var
+  Edit: TcxCustomEdit;
+  Combo: TcxExtLookupComboBox;
+begin
+  FTimerBusq.Enabled := False;
+  if FView.Controller.EditingController.IsEditing then
+  begin
+    Edit := FView.Controller.EditingController.Edit;
+    if Edit is TcxExtLookupComboBox then
+    begin
+      Combo := TcxExtLookupComboBox(Edit);
+      if (Trim(VarToStr(Combo.EditingValue)) <> '') and
+         (not Combo.DroppedDown) then
+        Combo.DroppedDown := True;
     end;
   end;
 end;
