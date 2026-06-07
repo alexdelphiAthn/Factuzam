@@ -422,7 +422,6 @@ const
 var
   qry: TUniQuery;
   nTotal, nLeidos, nFetchRowsPrev: Integer;
-  bFetchAllPrev: Boolean;
   cursorPrev: TCursor;
 begin
   if Assigned(dmmCajaOperacionesHist) and
@@ -434,12 +433,11 @@ begin
     // Mostramos el overlay antes del COUNT para que el usuario tenga
     // feedback tambien durante el conteo previo.
     MostrarProgresoCarga(0);
-    // FetchAll=False + FetchRows grande: abrimos trayendo el primer bloque
-    // y luego recorremos en bloques de TAM_BLOQUE avanzando la barra. Un
-    // FetchRows grande evita miles de round-trips (con el valor por defecto
-    // de 25 seria mas lento que traerlo todo de golpe). DisableControls
-    // evita que el grid fuerce el fetch completo y nos quite el progreso.
-    bFetchAllPrev := qry.FetchAll;
+    // FetchRows define el tamaño de bloque; al recorrer, UniDAC trae los
+    // registros por bloques (FetchAll por defecto es False) y vamos
+    // avanzando la barra. Un FetchRows grande evita miles de round-trips
+    // (el valor por defecto de 25 seria lento). DisableControls evita que
+    // el grid fuerce el fetch completo y nos quite el progreso.
     nFetchRowsPrev := qry.FetchRows;
     qry.DisableControls;
     try
@@ -452,7 +450,6 @@ begin
           FbarProgreso.Max := 1;
       end;
       qry.Close;
-      qry.FetchAll := False;
       qry.FetchRows := TAM_BLOQUE;
       qry.Open;
       nLeidos := 0;
@@ -467,7 +464,6 @@ begin
       qry.First;
     finally
       qry.FetchRows := nFetchRowsPrev;
-      qry.FetchAll := bFetchAllPrev;
       qry.EnableControls;
       OcultarProgresoCarga;
       Screen.Cursor := cursorPrev;
