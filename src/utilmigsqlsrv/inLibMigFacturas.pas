@@ -253,6 +253,27 @@ begin
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
     Eng.Log('  facturas: datos de empresa emisora y flags (N) rellenados.');
+    // 1b) Datos del CLIENTE denormalizados en la cabecera (razon social,
+    //     NIF, contacto y direccion), desde fza_clientes. JOIN (no LEFT):
+    //     las facturas a publico/anonimo (cliente '0' o inexistente) no
+    //     casan y quedan con los datos de cliente vacios, que es lo correcto
+    //     para un ticket simplificado sin cliente nominal.
+    q.SQL.Text :=
+      'UPDATE fza_facturas f ' +
+      'JOIN fza_clientes c ON c.CODIGO_CLI_CLI = f.CODIGO_CLI_FAC ' +
+      'SET f.RAZON_SOCIAL_CLIENTE_FAC  = c.RAZON_SOCIAL_CLI, ' +
+      '    f.NIF_CLIENTE_FAC           = c.NIF_CLI, ' +
+      '    f.MOVIL_CLIENTE_FAC         = c.MOVIL_CLI, ' +
+      '    f.EMAIL_CLIENTE_FAC         = c.EMAIL_CLI, ' +
+      '    f.DIRECCION1_CLIENTE_FAC    = c.DIRECCION1_CLI, ' +
+      '    f.DIRECCION2_CLIENTE_FAC    = c.DIRECCION2_CLI, ' +
+      '    f.POBLACION_CLIENTE_FAC     = c.POBLACION_CLI, ' +
+      '    f.PROVINCIA_CLIENTE_FAC     = c.PROVINCIA_CLI, ' +
+      '    f.CODIGO_POSTAL_CLIENTE_FAC = c.CODIGO_POSTAL_CLI ' +
+      'WHERE f.USUARIO_ALTA = :u';
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.ExecSQL;
+    Eng.Log('  facturas: datos de cliente rellenados.');
     // 2) Enlace MOVIMIENTO -> FACTURA por NUMERO_MOV. Sin esto, la pestana
     //    "Movimientos" de la factura y el detalle del ticket no encuentran
     //    los movimientos (la app filtra por TIPO/SERIE/NUMERO/LINEA _DOC_REF).

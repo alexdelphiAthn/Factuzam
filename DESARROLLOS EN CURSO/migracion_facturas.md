@@ -100,6 +100,11 @@ Tras las dos pasadas, `EnlazarFacturas` ejecuta dos `UPDATE` set-based:
    (pestaña "Datos Empresa Emisora" en blanco). Además fija
    `ESFECHADEENTREGA_FAC`, `ESDESCRIPCIONES_AMP_FAC` y `ESCREARARTICULOS_FAC`
    a `'N'`.
+1b. **Datos del cliente**: rellena `RAZON_SOCIAL_CLIENTE_FAC`,
+   `NIF_CLIENTE_FAC`, contacto y dirección (`*_CLIENTE_FAC`) desde
+   `fza_clientes` con `JOIN` (no `LEFT`) por `CODIGO_CLI_FAC`: las facturas a
+   público/anónimo (cliente `'0'` o inexistente) no casan y se dejan sin datos
+   de cliente, que es lo correcto para un ticket simplificado.
 2. **Movimiento → factura**: pone `TIPO_DOC_REF_MOV='FC'` y
    `SERIE/NUMERO/LINEA_DOC_REF_MOV` en `fza_movimientos_almacen` uniendo por
    `NUMERO_MOV` (= `fza_facturas_lineas.NUMERO_MOV_FACLIN`). Sin esto la
