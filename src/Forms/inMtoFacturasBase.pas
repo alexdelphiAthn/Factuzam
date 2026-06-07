@@ -289,6 +289,7 @@ type
     actArticulo: TAction;
     actEmpresa: TAction;
     actCliente: TAction;
+    actMovimiento: TAction;
     lbldbCODIGO_CLIENTE_FACTURA: TcxDBLabel;
     lbldbCODIGO_CLIENTE: TcxDBLabel;
     chkImpIncl: TcxDBCheckBox;
@@ -472,6 +473,7 @@ type
     procedure btnExportarLineasClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
+    procedure actMovimientoExecute(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
     procedure actClienteExecute(Sender: TObject);
     procedure actEmpresaExecute(Sender: TObject);
@@ -718,6 +720,29 @@ procedure TfrmMtoFacturasBase.actEmpresaExecute(Sender: TObject);
 begin
   inherited;
   btnIrAEmpresaClick(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.actMovimientoExecute(Sender: TObject);
+var
+  ds: TDataSet;
+  sNumMov: string;
+begin
+  inherited;
+  // Ctrl+M: ir al movimiento de almacen seleccionado en la pestaña
+  // Movimientos. Navegamos a 'MovimientosAlmacen' por PK (NUMERO_MOV) via
+  // ShowMto. Fuera de esa pestaña, abrimos el listado sin localizar.
+  sNumMov := '';
+  if (pcDetail.ActivePage = tsMovimientosFac) and
+     Assigned(tvMovimientosFac.DataController.DataSet) then
+  begin
+    ds := tvMovimientosFac.DataController.DataSet;
+    if ds.Active and (not ds.IsEmpty) then
+      sNumMov := Trim(ds.FieldByName('NUMERO_MOV').AsString);
+  end;
+  if sNumMov <> '' then
+    ShowMto(Self.Owner, 'MovimientosAlmacen', sNumMov)
+  else
+    ShowMto(Self.Owner, 'MovimientosAlmacen');
 end;
 
 procedure TfrmMtoFacturasBase.ActualizarComboSeries;
