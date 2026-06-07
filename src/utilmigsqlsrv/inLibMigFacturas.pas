@@ -324,6 +324,10 @@ var
 begin
   LimpiarMigracionPrevia(Eng);
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  // Streaming: con cientos de miles de lineas (occajarp), NO cachear todo el
+  // resultado en memoria — si no, qSrc.Open se queda en 0/N "sin arrancar"
+  // (o revienta el .exe 32b). Leemos hacia delante.
+  qSrc.UniDirectional := True;
   qFac := TUniQuery.Create(nil);
   qLin := TUniQuery.Create(nil);
   try

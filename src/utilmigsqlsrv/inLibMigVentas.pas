@@ -468,6 +468,8 @@ begin
   AsegurarFormaPagoVale(Eng);
   LimpiarMigracionPrevia(Eng);
   qSrc  := NuevoQOrigen(Eng, cSelectSrc);
+  // Streaming: occaj puede ser enorme; no cacheamos todo en memoria.
+  qSrc.UniDirectional := True;
   qOp   := TUniQuery.Create(nil);
   qPago := TUniQuery.Create(nil);
   qDep  := TUniQuery.Create(nil);

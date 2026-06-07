@@ -361,6 +361,9 @@ begin
   fs := TFormatSettings.Create('en-US');
   iCorregidos := 0;
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  // Streaming: ocmovarp puede tener cientos de miles de filas; no las
+  // cacheamos en memoria (lectura hacia delante).
+  qSrc.UniDirectional := True;
   bulk := TBulkInsert.Create(Eng.ConDst, 'fza_movimientos_almacen',
                              cCols, BATCH_SIZE);
   try
