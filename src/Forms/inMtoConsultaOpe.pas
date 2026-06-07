@@ -113,6 +113,13 @@ type
     // Lee el ARTICULO / SKU de la linea activa en cxViewFacLin para
     // alimentar la pantalla flotante de fotos (Ctrl + F).
     procedure ResolverArtSkuDeFacLin(out ACodArt, ACodSku: string);
+    // Ctrl+A / Ctrl+M (pestana Movimientos) y Ctrl+Shift+F (pestana
+    // Factura): saltan a la ficha del articulo, del movimiento de almacen o
+    // de la factura del registro activo, abriendola como pestana en el
+    // formulario principal via ShowMto.
+    procedure AbrirArticuloDeMovimiento;
+    procedure AbrirMovimientoActivo;
+    procedure AbrirFacturaActiva;
   public
     procedure PrepararValores(const AEmpresa,
                                     AAlmacen,
@@ -134,7 +141,7 @@ implementation
 
 uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo,
-     inLibTraspasoTicket;
+     inLibTraspasoTicket, inLibShowMto, inMtoPrincipal;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -213,9 +220,35 @@ procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
 var
   sArt, sSku: string;
 begin
-  // Ctrl + F -> Foto del articulo / SKU de la linea de factura activa.
-  // Toggle: si la foto ya esta visible, ocultarla.
-  if (Key = Ord('F')) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  // Ctrl + Shift + F -> ficha de la factura (normal o simplificada) que se
+  // muestra en la pestana Factura.
+  if (Key = Ord('F')) and (ssCtrl in Shift) and (ssShift in Shift) and
+     not (ssAlt in Shift) then
+  begin
+    AbrirFacturaActiva;
+    Key := 0;
+    Exit;
+  end;
+  // Ctrl + A -> ficha del articulo del movimiento activo (pestana Movimientos).
+  if (Key = Ord('A')) and (ssCtrl in Shift) and not (ssShift in Shift) and
+     not (ssAlt in Shift) then
+  begin
+    AbrirArticuloDeMovimiento;
+    Key := 0;
+    Exit;
+  end;
+  // Ctrl + M -> ficha del movimiento de almacen activo (pestana Movimientos).
+  if (Key = Ord('M')) and (ssCtrl in Shift) and not (ssShift in Shift) and
+     not (ssAlt in Shift) then
+  begin
+    AbrirMovimientoActivo;
+    Key := 0;
+    Exit;
+  end;
+  // Ctrl + F (sin Shift) -> Foto del articulo / SKU de la linea de factura
+  // activa. Toggle: si la foto ya esta visible, ocultarla.
+  if (Key = Ord('F')) and (ssCtrl in Shift) and not (ssShift in Shift) and
+     not (ssAlt in Shift) then
   begin
     if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
       frmFotoArticulo.Hide
@@ -251,6 +284,54 @@ begin
   ACodSku := '';
   if not Assigned(FdmConsulta) then Exit;
   LeerArtSkuDeDataSet(FdmConsulta.dsFacturaLin.DataSet, ACodArt, ACodSku);
+end;
+
+// Ctrl + A: abre la ficha del articulo (Mto Articulos) del movimiento
+// activo en la pestana Movimientos, como pestana del formulario principal.
+procedure TfrmConsultaOpe.AbrirArticuloDeMovimiento;
+var
+  ds  : TDataSet;
+  sArt: string;
+begin
+  if not Assigned(FdmConsulta) then Exit;
+  ds := FdmConsulta.dsMovimientos.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  sArt := ds.FieldByName('CODIGO_ART_MOV').AsString;
+  if sArt <> '' then
+    ShowMto(frmMtoPrincipal, 'Articulos', sArt);
+end;
+
+// Ctrl + M: abre el Mto de Movimientos de Almacen posicionado en el
+// movimiento (NUMERO_MOV) activo en la pestana Movimientos.
+procedure TfrmConsultaOpe.AbrirMovimientoActivo;
+var
+  ds     : TDataSet;
+  sNumMov: string;
+begin
+  if not Assigned(FdmConsulta) then Exit;
+  ds := FdmConsulta.dsMovimientos.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  sNumMov := ds.FieldByName('NUMERO_MOV').AsString;
+  if sNumMov <> '' then
+    ShowMto(frmMtoPrincipal, 'MovimientosAlmacen', sNumMov);
+end;
+
+// Ctrl + Shift + F: abre la factura SIMPLIFICADA que se muestra en la
+// pestana Factura. En la consulta de operaciones de caja las facturas son
+// siempre simplificadas, asi que vamos directos a 'FacturasSimplif'.
+procedure TfrmConsultaOpe.AbrirFacturaActiva;
+var
+  ds  : TDataSet;
+  sNum: string;
+  sSer: string;
+begin
+  if not Assigned(FdmConsulta) then Exit;
+  ds := FdmConsulta.dsFactura.DataSet;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  sNum := ds.FieldByName('NUMERO_FAC').AsString;
+  sSer := ds.FieldByName('SERIE_FAC').AsString;
+  if (sNum <> '') and (sSer <> '') then
+    ShowMto(frmMtoPrincipal, 'FacturasSimplif', sNum + ',' + sSer);
 end;
 
 // Recarga imgFotoConsulta con la foto a 300 px del articulo / SKU de
