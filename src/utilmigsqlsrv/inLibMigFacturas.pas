@@ -240,6 +240,9 @@ begin
       'SET f.ESFECHADEENTREGA_FAC      = ''N'', ' +
       '    f.ESDESCRIPCIONES_AMP_FAC   = ''N'', ' +
       '    f.ESCREARARTICULOS_FAC      = ''N'', ' +
+      // Venta detalle: el cliente no tiene IRPF/retencion (en el esquema la
+      // columna trae DEFAULT 'S'; en este tipo de negocio nunca aplica).
+      '    f.ESRETENCIONES_CLIENTE_FAC = ''N'', ' +
       '    f.RAZON_SOCIAL_EMPRESA_FAC  = e.RAZON_SOCIAL_EMP, ' +
       '    f.NIF_EMPRESA_FAC           = e.NIF_EMP, ' +
       '    f.MOVIL_EMPRESA_FAC         = e.MOVIL_EMP, ' +
