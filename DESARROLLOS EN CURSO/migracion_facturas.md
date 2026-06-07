@@ -18,10 +18,15 @@ depósito) y traspasos (`TR`/`AT`).
 ## Numeración (determinista, trazable)
 
 - `SERIE_FAC` = `'<Ejercicio>.<Serie>'` (p.ej. `2001.B1`).
-- `NUMERO_FAC` = `'<Almacen>-<Caja>-<Operacion>'`.
+- `NUMERO_FAC` = `'<Almacen>-<Caja>-<NroDoc>'` (p.ej. `12-1-61258`).
 
-Único por empresa/serie (la `Operacion` es única dentro de empresa/almacén/
-caja). En instalación **multiempresa** habría que prefijar la empresa.
+`NroDoc` es el **nº de documento/ticket** del legacy (`occaj.NroDoc`), el que
+ve el usuario en el ticket — **no** la `Operacion` (id interno, otro contador).
+Antes se usaba `Operacion` y el número no coincidía con el del ticket original.
+Único por almacén/caja dentro de su `SERIE_FAC` (= ejercicio.serie); si el
+legacy reusara `NroDoc` dentro de la misma serie/ejercicio, el `INSERT IGNORE`
+descartaría el duplicado (poco probable, pero a vigilar). En instalación
+**multiempresa** habría que prefijar la empresa.
 
 Cada **línea** enlaza:
 - con su operación de caja: `NUMERO_OPERACION_FACLIN` = `Operacion` a 8 dígitos
@@ -95,6 +100,11 @@ Tras las dos pasadas, `EnlazarFacturas` ejecuta dos `UPDATE` set-based:
    (pestaña "Datos Empresa Emisora" en blanco). Además fija
    `ESFECHADEENTREGA_FAC`, `ESDESCRIPCIONES_AMP_FAC` y `ESCREARARTICULOS_FAC`
    a `'N'`.
+1b. **Datos del cliente**: rellena `RAZON_SOCIAL_CLIENTE_FAC`,
+   `NIF_CLIENTE_FAC`, contacto y dirección (`*_CLIENTE_FAC`) desde
+   `fza_clientes` con `JOIN` (no `LEFT`) por `CODIGO_CLI_FAC`: las facturas a
+   público/anónimo (cliente `'0'` o inexistente) no casan y se dejan sin datos
+   de cliente, que es lo correcto para un ticket simplificado.
 2. **Movimiento → factura**: pone `TIPO_DOC_REF_MOV='FC'` y
    `SERIE/NUMERO/LINEA_DOC_REF_MOV` en `fza_movimientos_almacen` uniendo por
    `NUMERO_MOV` (= `fza_facturas_lineas.NUMERO_MOV_FACLIN`). Sin esto la
@@ -104,7 +114,15 @@ Tras las dos pasadas, `EnlazarFacturas` ejecuta dos `UPDATE` set-based:
 El **ticket** reimpreso enlaza operación → factura por
 `fza_caja_operaciones.SERIE_FAC_OPCAJA`/`NUMERO_FAC_OPCAJA`; por eso la
 migración de **Ventas** rellena esas columnas con la MISMA clave de factura
-(`'<Ejercicio>.<Serie>'` / `'<Alm>-<Caja>-<Op>'`) en las operaciones de venta.
+(`'<Ejercicio>.<Serie>'` / `'<Alm>-<Caja>-<NroDoc>'`) en las operaciones de
+venta.
+
+La pestaña **"Movimientos"** de la factura lista `vi_movimientos` filtrando por
+`TIPO_DOC_REF_MOV='FC'` + `SERIE/NUMERO_DOC_REF_MOV`, y **muestra y ordena por
+`LINEA_MOV`** (no por `LINEA_REF_MOV`). Por eso `EnlazarFacturas` fija, además
+de las columnas `*_DOC_REF_MOV`, `m.LINEA_MOV = l.LINEA_FACLIN`: así cada
+movimiento de venta queda alineado con su línea de factura (en la migración
+`LINEA_MOV` nacía siempre `'0001'`).
 
 ## Cómo ejecutarlo
 

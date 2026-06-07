@@ -253,16 +253,42 @@ begin
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
     Eng.Log('  facturas: datos de empresa emisora y flags (N) rellenados.');
+    // 1b) Datos del CLIENTE denormalizados en la cabecera (razon social,
+    //     NIF, contacto y direccion), desde fza_clientes. JOIN (no LEFT):
+    //     las facturas a publico/anonimo (cliente '0' o inexistente) no
+    //     casan y quedan con los datos de cliente vacios, que es lo correcto
+    //     para un ticket simplificado sin cliente nominal.
+    q.SQL.Text :=
+      'UPDATE fza_facturas f ' +
+      'JOIN fza_clientes c ON c.CODIGO_CLI_CLI = f.CODIGO_CLI_FAC ' +
+      'SET f.RAZON_SOCIAL_CLIENTE_FAC  = c.RAZON_SOCIAL_CLI, ' +
+      '    f.NIF_CLIENTE_FAC           = c.NIF_CLI, ' +
+      '    f.MOVIL_CLIENTE_FAC         = c.MOVIL_CLI, ' +
+      '    f.EMAIL_CLIENTE_FAC         = c.EMAIL_CLI, ' +
+      '    f.DIRECCION1_CLIENTE_FAC    = c.DIRECCION1_CLI, ' +
+      '    f.DIRECCION2_CLIENTE_FAC    = c.DIRECCION2_CLI, ' +
+      '    f.POBLACION_CLIENTE_FAC     = c.POBLACION_CLI, ' +
+      '    f.PROVINCIA_CLIENTE_FAC     = c.PROVINCIA_CLI, ' +
+      '    f.CODIGO_POSTAL_CLIENTE_FAC = c.CODIGO_POSTAL_CLI ' +
+      'WHERE f.USUARIO_ALTA = :u';
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.ExecSQL;
+    Eng.Log('  facturas: datos de cliente rellenados.');
     // 2) Enlace MOVIMIENTO -> FACTURA por NUMERO_MOV. Sin esto, la pestana
     //    "Movimientos" de la factura y el detalle del ticket no encuentran
     //    los movimientos (la app filtra por TIPO/SERIE/NUMERO/LINEA _DOC_REF).
+    //    Ademas fijamos LINEA_MOV = linea de la factura: la rejilla de
+    //    movimientos de la factura MUESTRA y ORDENA por LINEA_MOV (no por
+    //    LINEA_REF_MOV), y en la migracion nacia siempre '0001'; asi cada
+    //    movimiento de venta queda alineado con su linea de factura.
     q.SQL.Text :=
       'UPDATE fza_movimientos_almacen m ' +
       'JOIN fza_facturas_lineas l ON l.NUMERO_MOV_FACLIN = m.NUMERO_MOV ' +
       'SET m.TIPO_DOC_REF_MOV   = ''FC'', ' +
       '    m.SERIE_DOC_REF_MOV  = l.SERIE_FAC_FACLIN, ' +
       '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +
-      '    m.LINEA_REF_MOV      = l.LINEA_FACLIN ' +
+      '    m.LINEA_REF_MOV      = l.LINEA_FACLIN, ' +
+      '    m.LINEA_MOV          = l.LINEA_FACLIN ' +
       'WHERE l.USUARIO_ALTA = :u ' +
       '  AND l.NUMERO_MOV_FACLIN IS NOT NULL ' +
       '  AND l.NUMERO_MOV_FACLIN <> ''''';
@@ -287,6 +313,7 @@ const
     '       ISNULL(alm.Abreviatura, '''') AS AbrevAlm, ' +
     '       c.Ejercicio, ISNULL(c.Serie, '''') AS Serie, ' +
     '       c.FechaOpe, c.Fecha, c.Vendedor AS VendedorCab, ' +
+    '       ISNULL(c.NroDoc, 0) AS NroDoc, ' +
     '       ISNULL(c.Cliente, '''') AS Cliente, ' +
     '       ISNULL(c.Neto, 0) AS Neto, ' +
     '       ISNULL(c.BaseImp1, 0) AS BaseImp1, ' +
@@ -317,6 +344,7 @@ const
     'SELECT c.Empresa, c.Almacen, c.Caja, c.Operacion, ' +
     '       ISNULL(alm.Abreviatura, '''') AS AbrevAlm, ' +
     '       c.Ejercicio, ISNULL(c.Serie, '''') AS Serie, ' +
+    '       ISNULL(c.NroDoc, 0) AS NroDoc, ' +
     '       l.NroLinea, l.Articulo, l.Talla, l.Vendedor AS VendedorLin, ' +
     '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
     '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ' +
@@ -375,6 +403,7 @@ var
   bulkFac, bulkLin:        TBulkInsert;
   fs:                      TFormatSettings;
   iEmp, iAlm, iCaja, iOpe: Integer;
+  iNroDoc:                 Integer;
   sEmp, sAlm, sNumOp:      string;
   sNumFac, sSerieFac:      string;
   sArt, sUni, sTipoArt:    string;
@@ -422,6 +451,7 @@ begin
       iAlm  := qCab.FieldByName('Almacen').AsInteger;
       iCaja := qCab.FieldByName('Caja').AsInteger;
       iOpe  := qCab.FieldByName('Operacion').AsInteger;
+      iNroDoc := qCab.FieldByName('NroDoc').AsInteger;
       sEmp  := IntToStr(iEmp);
       sAlm  := UpperCase(Trim(qCab.FieldByName('AbrevAlm').AsString));
       if sAlm = '' then
@@ -429,7 +459,10 @@ begin
       sNumOp    := Format('%.8d', [iOpe]);
       sSerieFac := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
                      Trim(qCab.FieldByName('Serie').AsString)]);
-      sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iOpe]);
+      // NUMERO_FAC = Almacen-Caja-NroDoc (el nº de documento/ticket del
+      // legacy), NO la Operacion (id interno). Asi coincide con el numero
+      // que ve el usuario y con SERIE/NUMERO_FAC_OPCAJA de Ventas.
+      sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iNroDoc]);
       if not qCab.FieldByName('FechaOpe').IsNull then
         dtFecha := qCab.FieldByName('FechaOpe').AsDateTime
       else if not qCab.FieldByName('Fecha').IsNull then
@@ -514,6 +547,7 @@ begin
       iAlm  := qLin.FieldByName('Almacen').AsInteger;
       iCaja := qLin.FieldByName('Caja').AsInteger;
       iOpe  := qLin.FieldByName('Operacion').AsInteger;
+      iNroDoc := qLin.FieldByName('NroDoc').AsInteger;
       sEmp  := IntToStr(iEmp);
       sAlm  := UpperCase(Trim(qLin.FieldByName('AbrevAlm').AsString));
       if sAlm = '' then
@@ -521,7 +555,9 @@ begin
       sNumOp    := Format('%.8d', [iOpe]);
       sSerieFac := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
                      Trim(qLin.FieldByName('Serie').AsString)]);
-      sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iOpe]);
+      // NUMERO_FAC = Almacen-Caja-NroDoc (igual que la cabecera) para que la
+      // linea enlace con su factura.
+      sNumFac   := Format('%d-%d-%d', [iAlm, iCaja, iNroDoc]);
       sArt := Trim(qLin.FieldByName('Articulo').AsString);
       if EsArticuloGenerico(sArt) then
       begin
