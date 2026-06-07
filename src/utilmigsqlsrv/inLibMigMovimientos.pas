@@ -263,8 +263,14 @@ const
     '                            s.CANTIDAD_STK * last.pmp, 0), ' +
     '    s.INSTANTE_MODIF   = NOW()';
 begin
-  Eng.Log('  reconstruyendo stockactual desde movimientos activos...');
+  // Dos sentencias set-based sobre TODO el histórico activo (1,6M+ filas):
+  // pueden tardar. Logueamos cada fase para que se vea el avance aunque la
+  // barra de filas ya esté al 100%.
+  Eng.Log('  stockactual 1/2: agregando cantidades y acumuladores ' +
+          'por SKU/almacen...');
   EjecutarSQL(Eng, cAgregado);
+  Eng.Log('  stockactual 2/2: fijando PMP del ultimo movimiento de ' +
+          'cada SKU...');
   EjecutarSQL(Eng, cPmpUltimo);
   Eng.Log('  stockactual reconstruido (cantidad + acumuladores + PMP).');
 end;

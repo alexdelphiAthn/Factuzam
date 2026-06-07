@@ -13,30 +13,6 @@
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object SplitterErrores: TSplitter
-    Left = 0
-    Top = 564
-    Width = 1024
-    Height = 6
-    Cursor = crVSplit
-    Align = alBottom
-    AutoSnap = False
-    MinSize = 50
-    ResizeStyle = rsUpdate
-    ExplicitTop = 460
-  end
-  object SplitterProgreso: TSplitter
-    Left = 0
-    Top = 570
-    Width = 1024
-    Height = 6
-    Cursor = crVSplit
-    Align = alBottom
-    AutoSnap = False
-    MinSize = 50
-    ResizeStyle = rsUpdate
-    ExplicitTop = 540
-  end
   object PanelTop: TPanel
     Left = 0
     Top = 0
@@ -448,142 +424,76 @@
       end
     end
   end
-  object PanelLog: TPanel
+  object PageInferior: TPageControl
     Left = 0
     Top = 540
     Width = 1024
-    Height = 24
+    Height = 371
+    ActivePage = TabProgreso
     Align = alClient
-    BevelOuter = bvNone
-    Padding.Left = 8
-    Padding.Right = 8
-    Padding.Bottom = 8
     TabOrder = 2
-    ExplicitWidth = 1022
-    ExplicitHeight = 16
-    object lblLog: TLabel
-      Left = 16
-      Top = 0
-      Width = 23
-      Height = 15
-      Caption = 'Log:'
+    object TabProgreso: TTabSheet
+      Caption = 'Progreso (dominios activos)'
+      object MemoProgreso: TMemo
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 1010
+        Height = 333
+        Align = alClient
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Consolas'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssVertical
+        TabOrder = 0
+      end
     end
-    object MemoLog: TMemo
-      AlignWithMargins = True
-      Left = 16
-      Top = 18
-      Width = 992
-      Height = 0
-      Margins.Left = 8
-      Margins.Top = 18
-      Margins.Right = 8
-      Margins.Bottom = 8
-      Align = alClient
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Consolas'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      ScrollBars = ssVertical
-      TabOrder = 0
-      ExplicitWidth = 990
+    object TabLog: TTabSheet
+      Caption = 'Log acumulado'
+      ImageIndex = 1
+      object MemoLog: TMemo
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 1010
+        Height = 333
+        Align = alClient
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Consolas'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssVertical
+        TabOrder = 0
+      end
     end
-  end
-  object PanelErrores: TPanel
-    Left = 0
-    Top = 576
-    Width = 1024
-    Height = 80
-    Align = alBottom
-    BevelOuter = bvNone
-    Constraints.MinHeight = 40
-    Padding.Left = 8
-    Padding.Right = 8
-    Padding.Bottom = 4
-    TabOrder = 5
-    ExplicitTop = 568
-    ExplicitWidth = 1022
-    object lblErrores: TLabel
-      Left = 8
-      Top = 0
-      Width = 222
-      Height = 15
-      Caption = 'Errores y avisos (filtrado de los ! del log):'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clMaroon
-      Font.Height = -15
-      Font.Name = 'Lucida Sans'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object MemoErrores: TMemo
-      AlignWithMargins = True
-      Left = 16
-      Top = 18
-      Width = 992
-      Height = 54
-      Margins.Left = 8
-      Margins.Top = 18
-      Margins.Right = 8
-      Margins.Bottom = 4
-      Align = alClient
-      Color = clGhostwhite
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clMaroon
-      Font.Height = -12
-      Font.Name = 'Consolas'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      ScrollBars = ssVertical
-      TabOrder = 0
-      ExplicitWidth = 990
-    end
-  end
-  object PanelProgreso: TPanel
-    Left = 0
-    Top = 656
-    Width = 1024
-    Height = 255
-    Align = alBottom
-    BevelOuter = bvNone
-    Constraints.MinHeight = 50
-    Padding.Left = 8
-    Padding.Right = 8
-    Padding.Bottom = 4
-    TabOrder = 4
-    ExplicitTop = 648
-    ExplicitWidth = 1022
-    object lblProgreso: TLabel
-      Left = 8
-      Top = 0
-      Width = 151
-      Height = 15
-      Caption = 'Progreso (dominios activos):'
-    end
-    object MemoProgreso: TMemo
-      AlignWithMargins = True
-      Left = 16
-      Top = 18
-      Width = 992
-      Height = 229
-      Margins.Left = 8
-      Margins.Top = 18
-      Margins.Right = 8
-      Margins.Bottom = 4
-      Align = alClient
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Consolas'
-      Font.Style = []
-      ParentFont = False
-      ReadOnly = True
-      ScrollBars = ssVertical
-      TabOrder = 0
-      ExplicitWidth = 990
+    object TabErrores: TTabSheet
+      Caption = 'Errores y avisos (! del log)'
+      ImageIndex = 2
+      object MemoErrores: TMemo
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 1010
+        Height = 333
+        Align = alClient
+        Color = clGhostwhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clMaroon
+        Font.Height = -12
+        Font.Name = 'Consolas'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssVertical
+        TabOrder = 0
+      end
     end
   end
   object StatusBar: TStatusBar

@@ -82,17 +82,13 @@ type
     btnMarcarTodas:    TButton;
     btnDesmarcarTodas: TButton;
     btnEjecutar:       TButton;
-    PanelLog:          TPanel;
-    lblLog:            TLabel;
-    MemoLog:           TMemo;
-    SplitterErrores:   TSplitter;
-    PanelErrores:      TPanel;
-    lblErrores:        TLabel;
-    MemoErrores:       TMemo;
-    SplitterProgreso:  TSplitter;
-    PanelProgreso:     TPanel;
-    lblProgreso:       TLabel;
+    PageInferior:      TPageControl;
+    TabProgreso:       TTabSheet;
     MemoProgreso:      TMemo;
+    TabLog:            TTabSheet;
+    MemoLog:           TMemo;
+    TabErrores:        TTabSheet;
+    MemoErrores:       TMemo;
     StatusBar:         TStatusBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -116,9 +112,11 @@ type
     // Mapa dominio → linea de progreso, accedido SOLO desde el UI
     // thread (vive en el memo MemoProgreso).
     FLineasProgreso: TStringList;
-    // Ruta del fichero .log de errores de la corrida actual.
-    // Se calcula al pulsar Ejecutar; queda vacio fuera de migracion.
+    // Rutas de los .log de la corrida actual (errores filtrados y log
+    // completo). Se calculan al pulsar Ejecutar; vacias fuera de migracion.
     FRutaLogErrores: string;
+    FRutaLogCompleto: string;
+    procedure AnexarLinea(const sRuta, sTexto: string);
     procedure Log(const sMsg: string);
     procedure RegistrarMigraciones;
     procedure RecargarListado;
@@ -743,6 +741,8 @@ begin
   if bValue then
   begin
     btnEjecutar.Caption := 'Cancelar';
+    // Saltar a la pestana de progreso en vivo al arrancar.
+    PageInferior.ActivePage := TabProgreso;
     // Bloquear otras acciones mientras corre la migracion. Solo
     // dejamos el Cancelar (el propio boton Ejecutar).
     btnProbarSrc.Enabled     := False;
@@ -771,7 +771,6 @@ begin
     btnMarcarTodas.Enabled   := True;
     btnDesmarcarTodas.Enabled:= True;
     listMigs.Enabled         := True;
-    lblProgreso.Caption      := 'Progreso (dominios activos):';
   end;
 end;
 
@@ -841,9 +840,14 @@ begin
     TPath.Combine(TPath.GetHomePath, 'Factuzam'),
     'migrator_errores_' +
     FormatDateTime('yyyymmdd_hhnnss', Now) + '.log');
+  FRutaLogCompleto := TPath.Combine(
+    TPath.Combine(TPath.GetHomePath, 'Factuzam'),
+    'migrator_log_' +
+    FormatDateTime('yyyymmdd_hhnnss', Now) + '.log');
   if not TDirectory.Exists(ExtractFilePath(FRutaLogErrores)) then
     TDirectory.CreateDirectory(ExtractFilePath(FRutaLogErrores));
   MemoErrores.Lines.Clear;
+  Log('Log completo de esta corrida: ' + FRutaLogCompleto);
   Log('Errores de esta corrida se guardaran en: ' + FRutaLogErrores);
 
   SetEjecutando(True);
@@ -1068,16 +1072,38 @@ end;
 //  Log + persistencia
 // =========================================================================
 
+procedure TFormMigrator.AnexarLinea(const sRuta, sTexto: string);
+var oFile: TextFile;
+begin
+  // Anexa una linea a un .log (lo crea si no existe). Tolerante a fallos:
+  // si el disco falla no abortamos la migracion (la copia en los memos
+  // sigue visible). Sin Exit, para cumplir el libro de estilo.
+  if sRuta <> '' then
+  try
+    AssignFile(oFile, sRuta);
+    if FileExists(sRuta) then Append(oFile)
+                         else Rewrite(oFile);
+    try
+      Writeln(oFile, sTexto);
+    finally
+      CloseFile(oFile);
+    end;
+  except
+    // ignoramos el fallo de disco
+  end;
+end;
+
 procedure TFormMigrator.Log(const sMsg: string);
 var
   sLinea:   string;
   bEsError: Boolean;
-  oFile:    TextFile;
 begin
   sLinea := FormatDateTime('hh:nn:ss ', Now) + sMsg;
   MemoLog.Lines.Add(sLinea);
   StatusBar.Panels[0].Text := sMsg;
-
+  // El log COMPLETO se persiste a disco linea a linea, para poder seguir
+  // la migracion desde fuera (tail) o revisarla despues.
+  AnexarLinea(FRutaLogCompleto, sLinea);
   // Detectar lineas de error / aviso por el marcador "!" del engine
   // (LogError emite "  ! ERROR ..." y los mappers viejos hacen
   // "  ! mensaje"). Tambien capturamos "FALLO TOTAL".
@@ -1085,25 +1111,11 @@ begin
            or (Pos('! error', sMsg) > 0)
            or (Pos('FALLO TOTAL', sMsg) > 0)
            or (Pos('  ! ', sMsg) > 0);
-  if not bEsError then Exit;
-
-  // Volcar al panel de errores
-  MemoErrores.Lines.Add(sLinea);
-
-  // Persistir en fichero .log (si ya esta configurado)
-  if FRutaLogErrores <> '' then
-  try
-    AssignFile(oFile, FRutaLogErrores);
-    if FileExists(FRutaLogErrores) then Append(oFile)
-                                    else Rewrite(oFile);
-    try
-      Writeln(oFile, sLinea);
-    finally
-      CloseFile(oFile);
-    end;
-  except
-    // Si el log a fichero falla no abortamos la migracion. La copia
-    // visible en MemoErrores y MemoLog sigue ahi.
+  if bEsError then
+  begin
+    // Volcar al panel de errores y al .log de errores filtrados.
+    MemoErrores.Lines.Add(sLinea);
+    AnexarLinea(FRutaLogErrores, sLinea);
   end;
 end;
 
