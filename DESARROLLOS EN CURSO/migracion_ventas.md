@@ -50,7 +50,8 @@ depósitos y los CB contiguos en adelantos"**.
 
 **Comportamiento:**
 - `AL` multilínea: se crea **un depósito por línea de artículo** (ID
-  `DM<emp>-<caja>-<op>-<linea>`); el `DE` se enlaza al primero.
+  `DM<emp>-<alm>-<caja>-<op>-<linea>`, con el almacén porque `Operacion` se
+  numera por empresa/almacén/caja); el `DE` se enlaza al primero.
 - Los cobros (`CB`) **reparten** su importe (waterfall) entre los depósitos
   `PENDIENTE` del cliente —en orden de creación, rellenando cada uno hasta su
   `PRECIO_VENTA_DEP`—, **acumulan** en `IMPORTE_ANTICIPO_DEP` y dejan cada

@@ -246,8 +246,13 @@ begin
     while not qLin.Eof do
     begin
       sArt := Trim(qLin.FieldByName('Articulo').AsString);
-      sId  := Format('DM%d-%d-%d-%d',
-                [iEmp, iCaja, iOpe, qLin.FieldByName('NroLinea').AsInteger]);
+      // El ALMACEN va en el ID: occaj.Operacion se numera por (Empresa,
+      // Almacen, Caja), asi que el mismo nº de operacion existe en varios
+      // almacenes. Sin el almacen, DM<emp>-<caja>-<op>-<linea> colisiona
+      // entre tiendas (Duplicate entry para la PK del deposito).
+      sId  := Format('DM%d-%d-%d-%d-%d',
+                [iEmp, iAlm, iCaja, iOpe,
+                 qLin.FieldByName('NroLinea').AsInteger]);
       qDep.ParamByName('id').AsString    := sId;
       qDep.ParamByName('emp').AsString   := sEmp;
       if sCli <> '' then
