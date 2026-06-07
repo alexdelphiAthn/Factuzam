@@ -312,6 +312,16 @@ const
     '         AND cab.Serie      = alp.Serie ' +
     '         AND cab.NroAlbaran = alp.NroAlbaran ' +
     '  WHERE ISNULL(alp.PrecioSIva, 0) > 0 ' +
+    '), ' +
+    // Mapa (documento de caja) -> Operacion: recupera la Operacion de occaj
+    // por la identidad del documento (Empresa, Caja, TipoDoc, Ejercicio,
+    // Serie, NroDoc). Se agrega una sola vez y MIN garantiza una fila por
+    // clave, asi el LEFT JOIN no multiplica filas de movimiento.
+    'cte_op AS ( ' +
+    '  SELECT Empresa, Caja, TipoDoc, Ejercicio, Serie, NroDoc, ' +
+    '         MIN(Operacion) AS Operacion ' +
+    '  FROM dbo.occaj ' +
+    '  GROUP BY Empresa, Caja, TipoDoc, Ejercicio, Serie, NroDoc ' +
     ') ' +
     'SELECT m.Numero, m.Empresa, m.Almacen, ' +
     '       ISNULL(alm.Abreviatura, '''')    AS AbreviaturaAlm, ' +
@@ -326,6 +336,7 @@ const
     '       m.FechaOpe, m.Fecha, ' +
     '       ISNULL(m.Serie, '''') AS Serie, m.NroDoc, ' +
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
+    '       ISNULL(m.NroCaja, 0) AS NroCaja, opc.Operacion AS OpeCaja, ' +
     '       CASE ' +
     '         WHEN c.Descripcion IS NULL ' +
     '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
@@ -346,6 +357,12 @@ const
     'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'LEFT JOIN dbo.ocartp art ON art.Articulo = m.Articulo ' +
     'LEFT JOIN cte_alb ulc ON ulc.Articulo = m.Articulo AND ulc.rn = 1 ' +
+    'LEFT JOIN cte_op opc ON opc.Empresa = m.Empresa ' +
+    '                    AND opc.Caja = m.NroCaja ' +
+    '                    AND opc.TipoDoc = m.TipoDoc ' +
+    '                    AND opc.Ejercicio = m.Ejercicio ' +
+    '                    AND opc.Serie = m.Serie ' +
+    '                    AND opc.NroDoc = m.NroDoc ' +
     'WHERE LTRIM(RTRIM(m.Articulo)) <> '''' ' +
     '  AND ISNULL(m.Invalido, ''N'') <> ''S'' ' +
     'ORDER BY m.Empresa, m.Almacen, m.Articulo, m.Color, m.Talla, ' +
@@ -356,7 +373,7 @@ const
     'CODIGO_UNIDAD_MOV, DESCRIPCION_ARTICULO_MOV, TIPO_MOV, CANTIDAD_MOV, ' +
     'PRECIO_COSTE_UNITARIO_MOV, TOTAL_COSTE_MOV, PRECIO_MEDIO_MOV, ' +
     'CODIGO_ALM_CONTRA_MOV, CODIGO_CLI_MOV, ESACTIVO_MOV, ' +
-    'CODIGO_ALM_DOC_MOV, ' +
+    'CODIGO_ALM_DOC_MOV, CODIGO_CAJA_DOC_MOV, NUMERO_OPERACION_DOC_MOV, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
   qSrc:                           TUniQuery;
@@ -368,6 +385,7 @@ var
   sTipoRaw, sTipoMov, sTipoDoc:   string;
   sSerie, sNroDoc, sCliente:      string;
   sContra, sFechaSql, sFila:      string;
+  sCajaDoc, sNumOpDoc:            string;
   fUnidades, fCantidad, fEfect:   Double;
   fCantMov, fCoste, fPmp, fTotal: Double;
   fRefAlb:                        Double;
@@ -477,10 +495,23 @@ begin
         sSerie   := Trim(qSrc.FieldByName('Serie').AsString);
         sNroDoc  := Trim(qSrc.FieldByName('NroDoc').AsString);
         sCliente := Trim(qSrc.FieldByName('Cliente').AsString);
-        // 24 columnas en cCols. ESACTIVO_MOV es literal 'S'.
+        // Enlace con la operacion de caja que genero el movimiento. Si el
+        // documento casa con una operacion de occaj rellenamos caja y numero
+        // de operacion (8 digitos, igual que NUMERO_OPERACION_OPCAJA); si no,
+        // el movimiento no es de caja y queda sin enlace (NULL).
+        sCajaDoc  := 'NULL';
+        sNumOpDoc := 'NULL';
+        if not qSrc.FieldByName('OpeCaja').IsNull then
+        begin
+          sCajaDoc  := ValorOrNull(
+                         IntToStr(qSrc.FieldByName('NroCaja').AsInteger));
+          sNumOpDoc := ValorOrNull(Format('%.8d',
+                         [qSrc.FieldByName('OpeCaja').AsInteger]));
+        end;
+        // 26 columnas en cCols. ESACTIVO_MOV es literal 'S'.
         sFila := Format(
           '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, %s, ''S'', %s, %s, %s, %s, %s',
+          '%s, %s, %s, %s, %s, %s, ''S'', %s, %s, %s, %s, %s, %s, %s',
           [ValorOrNull(PREFIJO_NUM + Format('%.10d',
              [qSrc.FieldByName('Numero').AsInteger])),   // NUMERO_MOV
            ValorOrNull(sTipoDoc),                        // TIPO_DOC_MOV
@@ -502,6 +533,8 @@ begin
            ValorOrNull(sCliente),                        // CODIGO_CLI_MOV
                                                          // 'S' ESACTIVO_MOV
            ValorOrNull(sAlm),                            // CODIGO_ALM_DOC_MOV
+           sCajaDoc,                                     // CODIGO_CAJA_DOC_MOV
+           sNumOpDoc,                                    // NUMERO_OPERACION_DOC
            sAhora, sAhora,                               // INSTANTE_ALTA/MODIF
            sUser, sUser]);                               // USUARIO_ALTA/MODIF
         try
