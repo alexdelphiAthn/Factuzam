@@ -52,8 +52,8 @@
 {        el destino (AC/AV/TR/AT/IN/DP/VE/AE); sinónimos frecuentes mapeados;  }
 {        desconocido se clasifica por dirección (E→IN, S→VE).                  }
 {                                                                              }
-{    Idempotente: PK NUMERO_MOV + INSERT IGNORE en el bulk. La reconstrucción  }
-{    de stock es determinista (recalcula desde cero por UPSERT), re-ejecutable.}
+{    Reimport por REEMPLAZO: al arrancar borra su volcado 'MH' y recarga;      }
+{    el INSERT IGNORE solo cubre duplicados intra-pasada. Stock por UPSERT.    }
 {******************************************************************************}
 unit inLibMigMovimientos;
 
@@ -398,6 +398,14 @@ var
 begin
   fs := TFormatSettings.Create('en-US');
   iCorregidos := 0;
+  // Reimport limpio: esto es un volcado COMPLETO del historico y el bulk usa
+  // INSERT IGNORE (no actualiza filas ya existentes). Antes de recargar
+  // borramos lo que crea ESTA migracion (prefijo 'MH'), para que los cambios
+  // de cada pasada (sentido E/S, enlace de caja...) se apliquen de verdad sin
+  // tener que vaciar la tabla a mano. No toca los 'MV' que genere la app.
+  Eng.Log('  movimientos: limpiando volcado historico anterior (MH*)...');
+  EjecutarSQL(Eng,
+    'DELETE FROM fza_movimientos_almacen WHERE NUMERO_MOV LIKE ''MH%''');
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   // Streaming: ocmovarp puede tener cientos de miles de filas; no las
   // cacheamos en memoria (lectura hacia delante).
