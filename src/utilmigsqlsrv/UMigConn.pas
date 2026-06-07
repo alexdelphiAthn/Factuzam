@@ -18,6 +18,7 @@ unit UMigConn;
 interface
 
 uses
+  Winapi.ActiveX,
   System.SysUtils, System.Classes,
   Data.DB,
   Uni, UniScript, UniProvider, MySQLUniProvider, SQLServerUniProvider;
@@ -116,6 +117,10 @@ procedure TdmMig.ConfigurarOrigen(const sHost, sPort, sBase, sUser,
                                   sPwd: string;
                                   bWindowsAuth: Boolean = False);
 begin
+  // COM/OLE DB del provider SQL Server: el hilo principal necesita COM
+  // inicializado antes de abrir la conexion (si no: "CoInitialize has not
+  // been called"). Los workers hacen su propio CoInitializeEx.
+  CoInitialize(nil);
   conSrv.Close;
   conSrv.ProviderName := 'SQL Server';
   conSrv.Server       := sHost;
