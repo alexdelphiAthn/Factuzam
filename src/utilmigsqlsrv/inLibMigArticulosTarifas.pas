@@ -81,6 +81,12 @@ begin
   end;
   if Result = '' then
     Result := Format('TAR%d', [iTarifa]);
+  // CODIGO_TAR_ARTTAR es varchar(10) tanto en fza_tarifas como en
+  // fza_articulos_tarifas: truncamos para evitar "Data too long". Como este
+  // codigo alimenta oMapaTarifas (que usa MapearTarifa al insertar precios),
+  // el valor truncado queda consistente en ambas tablas.
+  if Length(Result) > 10 then
+    Result := Copy(Result, 1, 10);
 end;
 
 // Lee `dbo.octar` (las tarifas reales del legacy) y por cada una
