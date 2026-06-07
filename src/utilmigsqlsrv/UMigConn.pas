@@ -324,12 +324,31 @@ function TdmMig.ResetearMigracionAnterior(
 const
   // Orden INVERSO de dependencias (hijos primero, padres despues)
   // para que los DELETE no dejen huerfanos en otras tablas.
-  aTablas: array[0..24] of string = (
+  // Cubre TODO lo que escribe el migrador bajo USUARIO_ALTA: documentos
+  // (facturas, compras), caja, movimientos, articulos y maestros. Solo
+  // tablas con columna USUARIO_ALTA (el DELETE filtra por ella).
+  aTablas: array[0..40] of string = (
+    // Documentos comerciales, caja y movimientos (hojas primero)
+    'fza_facturas_lineas',
+    'fza_facturas',
+    'fza_albaranes_compra_lineas',
+    'fza_albaranes_compra',
+    'fza_pedidos_compra_lineas',
+    'fza_pedidos_compra',
+    'fza_movimientos_almacen',
+    'fza_caja_pagos',
+    'fza_caja_operaciones',
+    'fza_depositos_cliente',
+    'fza_caja_formas_pago',
+    // Inventarios
     'fza_inventarios_lineas',
     'fza_inventarios',
+    // Cadena de articulos (hijos primero)
     'fza_codigos_barras',
     'fza_articulos_tarifas',
+    'fza_tarifas',
     'fza_atributos_sku',
+    'fza_articulos_skus_costes',
     'fza_articulos_skus',
     'fza_articulos_atributos_basicos',
     'fza_articulos_conjuntos_asign',
@@ -339,10 +358,14 @@ const
     'fza_propiedades',
     'fza_atributos_conjuntos_det',
     'fza_atributos_conjuntos',
+    'fza_variaciones',
     'fza_articulos',
     'fza_articulos_familias',
     'fza_atributos_basicos',
     'fza_atributos_valores',
+    // Entorno / maestros
+    'fza_empresas_series',
+    'fza_contadores',
     'fza_clientes',
     'fza_proveedores',
     'fza_almacenes',
@@ -393,7 +416,7 @@ const
   // Tablas con USUARIO_ALTA: DELETE por filtro de usuario demo.
   // Orden hijos -> padres para minimizar problemas de FK (aunque
   // el esquema usa FKs LOGICAS, no fisicas).
-  aConAudit: array[0..43] of string = (
+  aConAudit: array[0..49] of string = (
     // Cadena de articulos (hijos primero)
     'fza_codigos_barras',
     'fza_atributos_sku',
@@ -423,11 +446,17 @@ const
     'fza_albaranes',
     'fza_pedidos_lineas',
     'fza_pedidos',
+    'fza_albaranes_compra_lineas',
+    'fza_albaranes_compra',
+    'fza_pedidos_compra_lineas',
+    'fza_pedidos_compra',
     'fza_compras_sesiones',
     // Caja
     'fza_caja_pagos',
     'fza_caja_vales',
     'fza_caja_operaciones',
+    'fza_caja_arqueos_recuento',
+    'fza_caja_arqueos',
     'fza_caja_formas_pago',
     // Stock / inventario / movimientos
     'fza_movimientos_almacen',
