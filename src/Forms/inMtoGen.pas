@@ -115,6 +115,8 @@ type
     actGrabarRegistro: TAction;
     actFotoArticulo: TAction;
     actConsultaStock: TAction;
+    actRetrocederBloque: TAction;
+    actAvanzarBloque: TAction;
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -152,6 +154,8 @@ type
     procedure actGrabarRegistroUpdate(Sender: TObject);
     procedure actFotoArticuloExecute(Sender: TObject);
     procedure actConsultaStockExecute(Sender: TObject);
+    procedure actAvanzarBloqueExecute(Sender: TObject);
+    procedure actRetrocederBloqueExecute(Sender: TObject);
   private
     // Conexion propia del Mto (Fase 1 multithreading). Se clona de `oConn`
     // global al crear el data module y se reasigna a todas las queries/SPs
@@ -194,6 +198,9 @@ type
     // Decide que dialogo mostrar al ejecutar actEliminarRegistro segun
     // NombreCampoESACTIVO y ContarHijosActivos.
     function PreguntarAccionBorrado: TAccionBorrado;
+    // Mueve el foco del grid principal un bloque de filas (Ctrl+AvPag /
+    // Ctrl+RePag). AAvanzar=True baja el bloque, False lo sube.
+    procedure MoverFocoGridBloque(AAvanzar: Boolean);
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
 //                                        const sProfile: string;
@@ -2190,6 +2197,50 @@ end;
 procedure TfrmMtoGen.actUltimoRegistroExecute(Sender: TObject);
 begin
   dsTablaG.DataSet.Last;
+end;
+
+// Ctrl+AvPag / Ctrl+RePag: salto de bloque en el grid principal. Las teclas
+// AvPag / RePag sueltas ya mueven de registro en registro
+// (actRegistroSiguiente / actRegistroAnterior); con Ctrl saltan un bloque de
+// SALTO_BLOQUE filas de una vez.
+procedure TfrmMtoGen.actAvanzarBloqueExecute(Sender: TObject);
+begin
+  MoverFocoGridBloque(True);
+end;
+
+procedure TfrmMtoGen.actRetrocederBloqueExecute(Sender: TObject);
+begin
+  MoverFocoGridBloque(False);
+end;
+
+// Mueve el foco del grid principal un bloque de filas respetando la
+// ordenacion visual del grid via FocusedRowIndex (igual que Ctrl+Inicio /
+// Ctrl+Fin). Clampa a [0, ultima fila] para no salirse del dataset.
+procedure TfrmMtoGen.MoverFocoGridBloque(AAvanzar: Boolean);
+const
+  SALTO_BLOQUE = 10;  // filas por pulsacion de Ctrl+AvPag / Ctrl+RePag
+var
+  iDelta  : Integer;
+  iNuevo  : Integer;
+  iUltimo : Integer;
+begin
+  if AAvanzar then
+    iDelta := SALTO_BLOQUE
+  else
+    iDelta := -SALTO_BLOQUE;
+  if Assigned(cxGrdDBTabPrin) then
+  begin
+    iUltimo := cxGrdDBTabPrin.DataController.RowCount - 1;
+    if iUltimo >= 0 then
+    begin
+      iNuevo := cxGrdDBTabPrin.DataController.FocusedRowIndex + iDelta;
+      if iNuevo < 0 then
+        iNuevo := 0;
+      if iNuevo > iUltimo then
+        iNuevo := iUltimo;
+      cxGrdDBTabPrin.DataController.FocusedRowIndex := iNuevo;
+    end;
+  end;
 end;
 
 procedure TfrmMtoGen.actEditarRegistroExecute(Sender: TObject);
