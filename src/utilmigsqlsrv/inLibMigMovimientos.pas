@@ -8,16 +8,17 @@
 {    Incorpora el HISTÓRICO de movimientos de almacén del legacy               }
 {    (`dbo.ocmovarp`, SQL Server) a `fza_movimientos_almacen` (MariaDB).       }
 {                                                                              }
-{    Estrategia de coste (decisión del usuario): se CONSERVA el PMP del        }
-{    propio movimiento origen, con salvaguarda contra los albaranes de         }
-{    entrada.                                                                   }
-{      ocmovarp.PrecioMedio → PRECIO_MEDIO_MOV                                 }
-{      ocmovarp.PrecioCoste → PRECIO_COSTE_UNITARIO_MOV (fallback PrecioMedio) }
-{    SALVAGUARDA 15%: si el coste del movimiento se desvía MÁS DE UN 15% del   }
-{    precio real del ÚLTIMO albarán de entrada del artículo (ocalbproarp,      }
-{    PrecioSIva sin IVA), se considera poco fiable el dato del legacy y se     }
-{    toma el coste del albarán para esa fila (coste y PMP). Si no hay albarán  }
-{    de referencia (precio > 0) se conserva el dato del movimiento.           }
+{    Estrategia de coste (decision del usuario): PMP RODANTE por almacen,      }
+{    alimentado por los precios reales de las entradas de albaran              }
+{    (ocalbproarp.PrecioSIva, sin IVA). Sustituye al PMP del legacy y a la     }
+{    salvaguarda del 15%. Reglas:                                              }
+{      - Entrada de albaran de compra: coste = precio de su linea; recalcula   }
+{        el PMP ponderado: (stock*PMP + uds*precio) / (stock + uds).           }
+{      - Entrada de traspaso: arrastra el PMP del almacen ORIGEN.              }
+{      - Regularizaciones de entrada y TODAS las salidas: usan el PMP vigente. }
+{      - Semilla: hasta el 1er albaran del SKU se valora con el precio de      }
+{        ese primer albaran (cte_alb1), para no valorar a coste 0.             }
+{    PRECIO_MEDIO_MOV = PMP tras cada movimiento; orden por SKU + NUMERO_MOV.   }
 {                                                                              }
 {    Impacto en stock (decisión del usuario): los movimientos se migran        }
 {    ACTIVOS (ESACTIVO_MOV='S') y RECALCULAN el stock. Tras el volcado se      }
@@ -25,12 +26,12 @@
 {    movimientos activos:                                                      }
 {      CANTIDAD_STK        = Σ(entradas) − Σ(salidas)                          }
 {      acumuladores _STK   = Σ por subtipo (compra, traspaso, venta, ...)     }
-{      PRECIO_MEDIO_STK    = PMP del ÚLTIMO movimiento del SKU (legacy)        }
+{      PRECIO_MEDIO_STK    = PMP del ÚLTIMO movimiento del SKU (rodante)       }
 {      VALOR_TOTAL_STK     = CANTIDAD_STK * PRECIO_MEDIO_STK                    }
-{    Importante: NO se usa SP_RECALCULAR_PMP_LOTE_ALMACEN porque ese SP        }
-{    DERIVA el PMP del coste de las entradas y SOBRESCRIBE PRECIO_MEDIO_MOV    }
-{    fila a fila — destruiría el PMP que aquí queremos conservar. Por eso la   }
-{    reconstrucción de stock es propia y respeta el PMP del legacy.            }
+{    Importante: el PMP rodante se calcula AQUI (una vez, durante la           }
+{    migracion) y NO con SP_RECALCULAR_PMP_LOTE_ALMACEN: asi controlamos el    }
+{    arrastre origen->destino en traspasos y la semilla del primer albaran.    }
+{    La reconstruccion de stock toma el PMP del ultimo movimiento del SKU.     }
 {                                                                              }
 {    Como esta migración reconstruye el stock desde el histórico completo,     }
 {    es ALTERNATIVA a "Inventario inicial" (inLibMigInventarios): ejecuta      }
@@ -52,8 +53,8 @@
 {        el destino (AC/AV/TR/AT/IN/DP/VE/AE); sinónimos frecuentes mapeados;  }
 {        desconocido se clasifica por dirección (E→IN, S→VE).                  }
 {                                                                              }
-{    Idempotente: PK NUMERO_MOV + INSERT IGNORE en el bulk. La reconstrucción  }
-{    de stock es determinista (recalcula desde cero por UPSERT), re-ejecutable.}
+{    Reimport por REEMPLAZO: al arrancar borra su volcado 'MH' y recarga;      }
+{    el INSERT IGNORE solo cubre duplicados intra-pasada. Stock por UPSERT.    }
 {******************************************************************************}
 unit inLibMigMovimientos;
 
@@ -68,6 +69,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.Generics.Collections,
   Data.DB, Uni;
 
 const
@@ -129,25 +131,20 @@ begin
   Result := dt > EncodeDate(1900, 1, 2);
 end;
 
-// Dirección del movimiento. TipoMov del legacy es la fuente AUTORITATIVA: la
-// app graba ahi 'E'/'S' (ver UniDataTraspaso, que por cada linea mete una
-// salida 'S' en el origen y una entrada 'E' en el destino). Es lo unico
-// fiable en traspasos, donde el flag Tipo NO distingue el sentido y antes
-// todo salia como 'E' (stock descuadrado y el ticket de traspaso, que filtra
-// TIPO_MOV='S', sin lineas). Sin TipoMov caemos al flag Tipo, luego al signo
-// de las unidades y de la cantidad. Por defecto entrada.
-function DeducirTipoMov(const sTipoMov, sTipo: string;
+// Dirección del movimiento para documentos que NO son traspaso. El flag Tipo
+// del legacy es fiable aqui ('S' en ventas/albaranes de salida, 'E' en
+// albaranes de entrada); si no es explicito, caemos al signo de las unidades
+// de stock y por ultimo al de Cantidad. Por defecto entrada.
+// OJO traspasos (TR/AT): aqui Tipo viene 'E' en las DOS patas y TipoMov trae
+// 'SE', asi que NO sirven; su sentido se decide por estructura en el bucle
+// (almacen del movimiento == almacen destino -> entrada; si no, salida).
+function DeducirTipoMov(const sTipo: string;
                         fUnidades, fCantidad: Double): string;
 var
-  mv, u: string;
+  u: string;
 begin
-  mv := UpperCase(Trim(sTipoMov));
-  u  := UpperCase(Trim(sTipo));
-  if mv = 'E' then
-    Result := 'E'
-  else if mv = 'S' then
-    Result := 'S'
-  else if u = 'E' then
+  u := UpperCase(Trim(sTipo));
+  if u = 'E' then
     Result := 'E'
   else if u = 'S' then
     Result := 'S'
@@ -251,9 +248,9 @@ const
     '   CANTIDAD_SAL_ALBVENTA_STK = VALUES(CANTIDAD_SAL_ALBVENTA_STK), ' +
     '   CANTIDAD_ENT_ALBENTRADA_STK = VALUES(CANTIDAD_ENT_ALBENTRADA_STK), ' +
     '   INSTANTE_MODIF = NOW()';
-  // 2) PMP actual = PMP del último movimiento del SKU (orden por fecha y,
-  //    a igualdad, por NUMERO_MOV). La clave compuesta evita funciones
-  //    ventana para máxima compatibilidad. VALOR_TOTAL = cantidad * PMP.
+  // 2) PMP actual = PMP del ULTIMO movimiento del SKU por NUMERO_MOV (mismo
+  //    orden cronológico que el cálculo rodante). NUMERO_MOV ('MH'+10 díg.)
+  //    es de ancho fijo, así que MAX() ya da el último. VALOR_TOTAL=cant*PMP.
   cPmpUltimo =
     'UPDATE fza_articulos_stockactual s ' +
     'JOIN ( ' +
@@ -262,18 +259,12 @@ const
     '   FROM fza_movimientos_almacen x ' +
     '   JOIN ( ' +
     '       SELECT CODIGO_ALM_MOV AS alm, CODIGO_UNIDAD_MOV AS sku, ' +
-    '              MAX(CONCAT( ' +
-    '                 DATE_FORMAT(COALESCE(FECHA_MOV, ''1900-01-01''), ' +
-    '                             ''%Y%m%d%H%i%s''), ' +
-    '                 LPAD(NUMERO_MOV, 20, ''0''))) AS clave ' +
+    '              MAX(NUMERO_MOV) AS clave ' +
     '       FROM fza_movimientos_almacen ' +
     '       WHERE ESACTIVO_MOV=''S'' ' +
     '       GROUP BY CODIGO_ALM_MOV, CODIGO_UNIDAD_MOV) mx ' +
     '     ON mx.alm = x.CODIGO_ALM_MOV AND mx.sku = x.CODIGO_UNIDAD_MOV ' +
-    '    AND CONCAT( ' +
-    '          DATE_FORMAT(COALESCE(x.FECHA_MOV, ''1900-01-01''), ' +
-    '                      ''%Y%m%d%H%i%s''), ' +
-    '          LPAD(x.NUMERO_MOV, 20, ''0'')) = mx.clave ' +
+    '    AND x.NUMERO_MOV = mx.clave ' +
     '   WHERE x.ESACTIVO_MOV=''S'') last ' +
     '  ON last.alm = s.CODIGO_ALM_STK AND last.sku = s.CODIGO_UNIDAD_STK ' +
     'SET s.PRECIO_MEDIO_STK = last.pmp, ' +
@@ -301,19 +292,29 @@ procedure MigrarMovimientos(Eng: TMigEngine; var Stats: TMigStats);
 const
   // Resolvemos el slot de color (Descripcion canónica o código legacy) con
   // el mismo CASE que SKUs/Inventarios, y la abreviatura de almacén origen
-  // y contra-almacén (destino del traspaso). Excluimos movimientos
-  // anulados (Invalido='S').
+  // y contra-almacén (destino del traspaso). Importamos TODOS los
+  // movimientos, incluidos los anulados (Invalido='S'): el legacy a veces
+  // anula una pata del traspaso y excluirla descuadraba el stock.
   cSelectSrc =
-    // Precomputamos el coste del ÚLTIMO albarán de entrada por artículo
-    // (PrecioSIva, sin IVA) con ROW_NUMBER(): se calcula una sola vez y
-    // luego se cruza por LEFT JOIN. Mismo patrón que
-    // inLibMigArticulosProveedores. Sirve de referencia para la
-    // salvaguarda del 15%.
-    'WITH cte_alb AS ( ' +
-    '  SELECT alp.Articulo, alp.PrecioSIva, ' +
+    // PMP rodante por almacen alimentado por los precios reales de los
+    // albaranes de entrada (ocalbproarp.PrecioSIva, sin IVA). Dos CTEs:
+    //  - cte_alblin: precio de la LINEA de albaran (por documento+sku), para
+    //    poner el coste exacto a cada entrada de albaran.
+    //  - cte_alb1: precio del PRIMER albaran de cada sku (semilla para los
+    //    movimientos anteriores al primer albaran).
+    'WITH cte_alblin AS ( ' +
+    '  SELECT Empresa, Ejercicio, Serie, NroAlbaran, ' +
+    '         Articulo, Color, Talla, AVG(PrecioSIva) AS Precio ' +
+    '  FROM dbo.ocalbproarp ' +
+    '  WHERE ISNULL(PrecioSIva, 0) > 0 ' +
+    '  GROUP BY Empresa, Ejercicio, Serie, NroAlbaran, ' +
+    '           Articulo, Color, Talla ' +
+    '), ' +
+    'cte_alb1 AS ( ' +
+    '  SELECT alp.Articulo, alp.Color, alp.Talla, alp.PrecioSIva, ' +
     '         ROW_NUMBER() OVER ( ' +
-    '           PARTITION BY alp.Articulo ' +
-    '           ORDER BY cab.Fecha DESC) AS rn ' +
+    '           PARTITION BY alp.Articulo, alp.Color, alp.Talla ' +
+    '           ORDER BY cab.Fecha ASC, alp.NroAlbaran ASC) AS rn ' +
     '  FROM dbo.ocalbproarp alp ' +
     '  INNER JOIN dbo.ocalbpro cab ' +
     '          ON cab.Empresa    = alp.Empresa ' +
@@ -335,7 +336,7 @@ const
     'SELECT m.Numero, m.Empresa, m.Almacen, ' +
     '       ISNULL(alm.Abreviatura, '''')    AS AbreviaturaAlm, ' +
     '       ISNULL(almdes.Abreviatura, '''') AS AbreviaturaAlmDes, ' +
-    '       m.EmpresaDes, m.AlmacenDes, ' +
+    '       m.EmpresaDes, m.AlmacenDes, m.AlmacenOri, ' +
     '       m.Articulo, m.Color, m.Talla, ' +
     '       ISNULL(m.Cantidad, 0)      AS Cantidad, ' +
     '       ISNULL(m.UnidadesStock, 0) AS UnidadesStock, ' +
@@ -348,13 +349,17 @@ const
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
     '       ISNULL(m.NroCaja, 0) AS NroCaja, opc.Operacion AS OpeCaja, ' +
     '       CASE ' +
-    '         WHEN c.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN m.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(m.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(m.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         WHEN c.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
-    '       ISNULL(ulc.PrecioSIva, 0) AS PrecioUltAlbaran, ' +
+    '       ISNULL(alb.Precio, 0)      AS PrecioAlbaranLinea, ' +
+    '       ISNULL(seed.PrecioSIva, 0) AS SeedPrecio, ' +
+    '       ISNULL(almori.Abreviatura, '''') AS AbreviaturaAlmOri, ' +
     '       ISNULL(art.DescripcionLarga, ' +
     '              ISNULL(art.DescripcionCorta, '''')) AS DescArt ' +
     'FROM dbo.ocmovarp m ' +
@@ -366,7 +371,18 @@ const
     '                         AND ac.Color    = m.Color ' +
     'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'LEFT JOIN dbo.ocartp art ON art.Articulo = m.Articulo ' +
-    'LEFT JOIN cte_alb ulc ON ulc.Articulo = m.Articulo AND ulc.rn = 1 ' +
+    'LEFT JOIN cte_alblin alb ON alb.Empresa = m.Empresa ' +
+    '                        AND alb.Ejercicio = m.Ejercicio ' +
+    '                        AND alb.Serie = m.Serie ' +
+    '                        AND alb.NroAlbaran = m.NroDoc ' +
+    '                        AND alb.Articulo = m.Articulo ' +
+    '                        AND alb.Color = m.Color ' +
+    '                        AND alb.Talla = m.Talla ' +
+    'LEFT JOIN cte_alb1 seed ON seed.Articulo = m.Articulo ' +
+    '                       AND seed.Color = m.Color ' +
+    '                       AND seed.Talla = m.Talla AND seed.rn = 1 ' +
+    'LEFT JOIN dbo.ocalm almori ON almori.Empresa = m.Empresa ' +
+    '                          AND almori.Almacen = m.AlmacenOri ' +
     'LEFT JOIN cte_op opc ON opc.Empresa = m.Empresa ' +
     '                    AND opc.Caja = m.NroCaja ' +
     '                    AND opc.TipoDoc = m.TipoDoc ' +
@@ -374,9 +390,7 @@ const
     '                    AND opc.Serie = m.Serie ' +
     '                    AND opc.NroDoc = m.NroDoc ' +
     'WHERE LTRIM(RTRIM(m.Articulo)) <> '''' ' +
-    '  AND ISNULL(m.Invalido, ''N'') <> ''S'' ' +
-    'ORDER BY m.Empresa, m.Almacen, m.Articulo, m.Color, m.Talla, ' +
-    '         m.FechaOpe, m.Numero';
+    'ORDER BY m.Empresa, m.Articulo, DescColor, m.Talla, m.Numero';
   cCols =
     'NUMERO_MOV, TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV, ' +
     'CODIGO_EMP_MOV, CODIGO_ALM_MOV, FECHA_MOV, CODIGO_ART_MOV, ' +
@@ -398,11 +412,24 @@ var
   sCajaDoc, sNumOpDoc:            string;
   fUnidades, fCantidad, fEfect:   Double;
   fCantMov, fCoste, fPmp, fTotal: Double;
-  fRefAlb:                        Double;
-  iAlmDes, iCorregidos:           Integer;
+  fPmpAlm, fSeed, fPrecAlb:       Double;
+  fStkAlm, fValAlm, fStkOri, fValOri: Double;
+  iAlmDes:                        Integer;
+  sSkuKey, sSkuActual, sAlmOri:   string;
+  oStock, oValor:                 TDictionary<string, Double>;
 begin
   fs := TFormatSettings.Create('en-US');
-  iCorregidos := 0;
+  oStock := TDictionary<string, Double>.Create;
+  oValor := TDictionary<string, Double>.Create;
+  sSkuActual := '';
+  // Reimport limpio: esto es un volcado COMPLETO del historico y el bulk usa
+  // INSERT IGNORE (no actualiza filas ya existentes). Antes de recargar
+  // borramos lo que crea ESTA migracion (prefijo 'MH'), para que los cambios
+  // de cada pasada (sentido E/S, enlace de caja...) se apliquen de verdad sin
+  // tener que vaciar la tabla a mano. No toca los 'MV' que genere la app.
+  Eng.Log('  movimientos: limpiando volcado historico anterior (MH*)...');
+  EjecutarSQL(Eng,
+    'DELETE FROM fza_movimientos_almacen WHERE NUMERO_MOV LIKE ''MH%''');
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   // Streaming: ocmovarp puede tener cientos de miles de filas; no las
   // cacheamos en memoria (lectura hacia delante).
@@ -414,8 +441,7 @@ begin
     sUser  := ValorOrNull(Eng.Usuario);
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocmovarp ' +
-      'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
-      '  AND ISNULL(Invalido, ''N'') <> ''S'''));
+      'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
@@ -434,16 +460,38 @@ begin
       sTipoRaw   := Trim(qSrc.FieldByName('Tipo').AsString);
       fUnidades  := qSrc.FieldByName('UnidadesStock').AsFloat;
       fCantidad  := qSrc.FieldByName('Cantidad').AsFloat;
-      sTipoMov   := DeducirTipoMov(Trim(qSrc.FieldByName('TipoMov').AsString),
-                                   sTipoRaw, fUnidades, fCantidad);
+      sTipoMov   := DeducirTipoMov(sTipoRaw, fUnidades, fCantidad);
       sTipoDoc   := MapearTipoDoc(qSrc.FieldByName('TipoDoc').AsString,
                                   sTipoMov);
-      // Cantidad que afecta a stock: preferimos UnidadesStock; si es 0,
-      // caemos a Cantidad. Guardamos el valor absoluto (la dirección la
-      // marca TIPO_MOV).
-      fEfect := fUnidades;
+      // Traspaso: el legacy marca las DOS patas igual (Tipo='E', TipoMov='SE')
+      // y NO distingue el sentido en esos flags. El legacy YA trae dos filas
+      // (una por almacen), asi que no hay que duplicar: basta etiquetar cada
+      // una. La direccion real esta en la estructura: la pata cuyo almacen es
+      // el DESTINO del traspaso es la ENTRADA; la del ORIGEN es la SALIDA. Asi
+      // el origen se descuenta y el stock cuadra (antes ambas salian 'E',
+      // inflaban el origen y el ticket de traspaso -filtra TIPO_MOV='S'-
+      // quedaba vacio). El signo de Cantidad (+entra/-sale) corrobora;
+      // UnidadesStock no vale (viene 0 en la salida).
+      if (UpperCase(Trim(qSrc.FieldByName('TipoMov').AsString)) = 'SE')
+      or (sTipoDoc = 'TR') or (sTipoDoc = 'AT') then
+      begin
+        iAlmDes := qSrc.FieldByName('AlmacenDes').AsInteger;
+        if iAlmDes > 0 then
+        begin
+          if qSrc.FieldByName('Almacen').AsInteger = iAlmDes then
+            sTipoMov := 'E'
+          else
+            sTipoMov := 'S';
+        end;
+      end;
+      // Cantidad que afecta a stock: la Cantidad del documento es la fuente
+      // fiable (unidades reales del albaran/ticket). UnidadesStock del legacy
+      // viene inconsistente (a veces 2-3 en ventas de 1 ud, o 1 en entradas
+      // de 2 uds), asi que solo la usamos de respaldo si Cantidad es 0.
+      // Guardamos el valor absoluto (la direccion la marca TIPO_MOV).
+      fEfect := fCantidad;
       if fEfect = 0 then
-        fEfect := fCantidad;
+        fEfect := fUnidades;
       fCantMov := Abs(fEfect);
       // Movimiento sin impacto de stock (0 unidades): no aporta nada al
       // histórico de stock — lo saltamos para no ensuciar.
@@ -474,23 +522,72 @@ begin
               sContra := IntToStr(iAlmDes);
           end;
         end;
-        // PMP/coste SIN IVA: usamos PrecioMedioSIva (no PrecioMedio, que
-        // en el legacy viene CON IVA) para cuadrar con las columnas de
-        // coste de Factuzam y con ocalbproarp.PrecioSIva. El coste por
-        // fila arranca igual al PMP conservado.
-        fPmp   := qSrc.FieldByName('PrecioMedioSIva').AsFloat;
-        fCoste := fPmp;
-        // Salvaguarda 15%: si el PMP (sin IVA) se aleja más de un 15% del
-        // precio real (sin IVA) del último albarán de entrada, damos por
-        // poco fiable el dato del legacy y tomamos el del albarán (coste y
-        // PMP). Cubre además el caso de PMP 0 con albarán conocido.
-        fRefAlb := qSrc.FieldByName('PrecioUltAlbaran').AsFloat;
-        if (fRefAlb > 0) and (Abs(fPmp - fRefAlb) > 0.15 * fRefAlb) then
+        // === PMP rodante por almacen (coste SIN IVA) ===
+        // Al cambiar de SKU reiniciamos el estado por almacen y leemos la
+        // semilla (precio del PRIMER albaran del SKU) para valorar los
+        // movimientos anteriores al primer albaran.
+        sSkuKey := sEmp + '|' + sArt + '|' + sDescColor + '|' +
+                   Trim(qSrc.FieldByName('Talla').AsString);
+        if sSkuKey <> sSkuActual then
         begin
-          fPmp   := fRefAlb;
-          fCoste := fRefAlb;
-          Inc(iCorregidos);
+          oStock.Clear;
+          oValor.Clear;
+          sSkuActual := sSkuKey;
+          fSeed := qSrc.FieldByName('SeedPrecio').AsFloat;
         end;
+        // PMP vigente del almacen del movimiento (semilla si aun sin stock).
+        if not oStock.TryGetValue(sAlm, fStkAlm) then
+          fStkAlm := 0;
+        if not oValor.TryGetValue(sAlm, fValAlm) then
+          fValAlm := 0;
+        if fStkAlm > 0 then
+          fPmpAlm := fValAlm / fStkAlm
+        else
+          fPmpAlm := fSeed;
+        // Coste de la fila segun el tipo de movimiento:
+        fPrecAlb := qSrc.FieldByName('PrecioAlbaranLinea').AsFloat;
+        if (sTipoMov = 'E') and (fPrecAlb > 0)
+        and (sTipoDoc <> 'TR') and (sTipoDoc <> 'AT') then
+          // Entrada que casa con una linea de albaran: su precio real.
+          fCoste := fPrecAlb
+        else if (sTipoMov = 'E')
+        and ((sTipoDoc = 'TR') or (sTipoDoc = 'AT')) then
+        begin
+          // Entrada de traspaso: arrastra el PMP del almacen ORIGEN.
+          sAlmOri := UpperCase(Trim(
+                       qSrc.FieldByName('AbreviaturaAlmOri').AsString));
+          if sAlmOri = '' then
+            sAlmOri := IntToStr(qSrc.FieldByName('AlmacenOri').AsInteger);
+          if not oStock.TryGetValue(sAlmOri, fStkOri) then
+            fStkOri := 0;
+          if not oValor.TryGetValue(sAlmOri, fValOri) then
+            fValOri := 0;
+          if fStkOri > 0 then
+            fCoste := fValOri / fStkOri
+          else
+            fCoste := fSeed;
+        end
+        else
+          // Regularizaciones de entrada y TODAS las salidas: PMP vigente.
+          fCoste := fPmpAlm;
+        // Actualizamos stock y valor del almacen del movimiento.
+        if sTipoMov = 'E' then
+        begin
+          fValAlm := fValAlm + fCantMov * fCoste;
+          fStkAlm := fStkAlm + fCantMov;
+        end
+        else
+        begin
+          fValAlm := fValAlm - fCantMov * fCoste;
+          fStkAlm := fStkAlm - fCantMov;
+        end;
+        oStock.AddOrSetValue(sAlm, fStkAlm);
+        oValor.AddOrSetValue(sAlm, fValAlm);
+        // PMP tras el movimiento (si el stock queda <=0, mantenemos el ult.).
+        if fStkAlm > 0 then
+          fPmp := fValAlm / fStkAlm
+        else
+          fPmp := fPmpAlm;
         fTotal := fCantMov * fCoste;
         // FECHA_MOV: primera fecha REAL entre Fecha y FechaOpe. El legacy
         // suele traer FechaOpe a 1900-01-01 (cero de SQL Server) en los
@@ -567,15 +664,14 @@ begin
       end;
     end;
     bulk.FlushPendiente;
-    if iCorregidos > 0 then
-      Eng.Log('  coste tomado del ultimo albaran (desvio >15%%) en %d ' +
-              'movimientos', [iCorregidos]);
     // Stock activo: reconstruimos stockactual desde el histórico volcado.
     if not Eng.IsCancelado then
       ReconstruirStockDesdeMovimientos(Eng);
   finally
     bulk.Free;
     qSrc.Free;
+    oStock.Free;
+    oValor.Free;
   end;
 end;
 

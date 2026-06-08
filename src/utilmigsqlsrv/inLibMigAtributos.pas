@@ -42,6 +42,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.Generics.Collections,
   Data.DB, Uni;
 
 // =========================================================================
@@ -225,9 +226,11 @@ const
     'FROM dbo.occolor ' +
     'ORDER BY ColorBasico';
 var
-  qSrc:                       TUniQuery;
+  qSrc, qExist:               TUniQuery;
+  bulkCol:                    TBulkInsert;
+  oColExist:                  TDictionary<string, Boolean>;
   sCodOrigen, sCodAtb, sDesc: string;
-  sHex:                       string;
+  sHex, sAhora, sUser:        string;
   iColorRGB, iOrden:          Integer;
   bInsertoValor:              Boolean;
 begin
@@ -288,45 +291,69 @@ begin
     qSrc.Free;
   end;
 
-  // Segunda pasada: incluir CUALQUIER otro color que aparezca como
-  // texto en ocartcol u ocartbap pero que no haya sido resuelto a un
-  // canonico de occolor. Esto cubre fallbacks como "26", "16 VER",
-  // "BERENG" — codigos locales que el JOIN a occolor deja fuera.
-  // Sin esto, articulos_colores falla con
+  // Segunda pasada: el color que usan SKUs/movimientos/tarifas/etc. es el
+  // TEXTO del proveedor (ac.Color, ver el CASE de slot), asi que TODO color
+  // de ocartcol debe existir como valor de atributo — no solo los que el JOIN
+  // a occolor deja fuera. Tomamos ac.Color en crudo (DISTINCT, mayusculas),
+  // que es justo lo que produce el slot cuando ac.Color no es vacio. Sin
+  // esto, articulos_colores/skus fallan con
   //   "color X no esta en fza_atributos_valores".
-  // ANTES esta pasada hacia UNION con dbo.ocartbap (codigos de barras, tabla
-  // ENORME) y se colgaba/tardaba muchisimo. Los colores de los barcodes son
-  // un SUBCONJUNTO de los de ocartcol (un barcode es de un articulo+color que
-  // ya esta en ocartcol), asi que basta con ocartcol: mucho mas ligero.
-  Eng.Log('  segunda pasada: colores de uso local en ocartcol...');
+  // Solo ocartcol (no ocartbap): los colores de los barcodes son un
+  // SUBCONJUNTO de los de ocartcol, asi que basta y es mucho mas ligero.
+  // RENDIMIENTO: precargamos en memoria los colores ya existentes (1 consulta)
+  // e insertamos los nuevos en LOTE. Antes se hacia un SELECT de comprobacion
+  // por cada color (miles): tardaba minutos y, con la transaccion abierta,
+  // bloqueaba el resto de la migracion (Lock wait timeout en tallas).
+  Eng.Log('  segunda pasada: colores del proveedor (ac.Color) de ocartcol...');
+  oColExist := TDictionary<string, Boolean>.Create;
+  qExist    := TUniQuery.Create(nil);
+  bulkCol   := TBulkInsert.Create(Eng.ConDst, 'fza_atributos_valores',
+    'ID_VA_AV, AV, ORDEN_AV, DESCRIPCION_AV, ESACTIVO_AV, ' +
+    'FACTOR_CONVERSION_AV, INSTANTE_ALTA, INSTANTE_MODIF, ' +
+    'USUARIO_ALTA, USUARIO_MODIF', 500);
   qSrc := NuevoQOrigen(Eng,
-    'SELECT DISTINCT UPPER(LTRIM(RTRIM( ' +
-    '    CASE WHEN c.Descripcion IS NOT NULL ' +
-    '    THEN c.Descripcion ELSE ac.Color END ' +
-    '  ))) AS DescColor ' +
+    'SELECT DISTINCT UPPER(LTRIM(RTRIM(ac.Color))) AS DescColor ' +
     'FROM dbo.ocartcol ac ' +
-    'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE LTRIM(RTRIM(ISNULL(ac.Color, ''''))) <> '''' ' +
     'ORDER BY DescColor');
   try
+    sAhora := DateTimeASQL(Now);
+    sUser  := ValorOrNull(Eng.Usuario);
+    // Set O(1) con los colores ya existentes (incluye los de la 1a pasada).
+    qExist.Connection := Eng.ConDst;
+    qExist.SQL.Text   :=
+      'SELECT AV FROM fza_atributos_valores WHERE ID_VA_AV = ''CO''';
+    qExist.Open;
+    while not qExist.Eof do
+    begin
+      oColExist.AddOrSetValue(
+        UpperCase(Trim(qExist.FieldByName('AV').AsString)), True);
+      qExist.Next;
+    end;
+    qExist.Close;
     qSrc.Open;
     while not qSrc.Eof do
     begin
       sDesc := Trim(qSrc.FieldByName('DescColor').AsString);
-      if sDesc <> '' then
+      if (sDesc <> '') and (not oColExist.ContainsKey(sDesc)) then
       begin
-        if InsertarValorAtributo(Eng, 'CO', sDesc,
-                                  'Color ' + sDesc + ' (uso local)',
-                                  iOrden) then
-        begin
-          Inc(Stats.Insertadas);
-          Inc(iOrden, 10);
-        end;
+        oColExist.AddOrSetValue(sDesc, True);
+        bulkCol.Add(Format(
+          '''CO'', %s, %d, %s, ''S'', 1, %s, %s, %s, %s',
+          [ValorOrNull(sDesc), iOrden,
+           ValorOrNull('Color ' + sDesc + ' (proveedor)'),
+           sAhora, sAhora, sUser, sUser]));
+        Inc(iOrden, 10);
+        Inc(Stats.Insertadas);
       end;
       qSrc.Next;
     end;
+    bulkCol.FlushPendiente;
   finally
+    bulkCol.Free;
     qSrc.Free;
+    qExist.Free;
+    oColExist.Free;
   end;
 end;
 

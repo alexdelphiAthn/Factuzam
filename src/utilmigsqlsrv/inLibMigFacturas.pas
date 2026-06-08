@@ -358,11 +358,13 @@ const
     '       ISNULL(l.NumeroMovArt, 0) AS NumeroMovArt, ' +
     '       ISNULL(l.Descripcion, '''') AS Descripcion, ' +
     '       CASE ' +
-    '         WHEN co.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(co.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(co.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN l.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         WHEN co.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor ' +
     'FROM dbo.occajarp l ' +
     'INNER JOIN dbo.occaj c ON c.Empresa = l.Empresa ' +

@@ -344,11 +344,13 @@ const
     '       ISNULL(l.ImpNetoSIva, 0) AS ImpNetoSIva, ' +
     '       ISNULL(l.PorIva, 0) AS PorIva, ' +
     '       CASE ' +
-    '         WHEN co.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(co.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(co.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN l.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         WHEN co.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
     '         WHERE ap.Articulo = l.Articulo) AS Modelo ' +
@@ -594,11 +596,13 @@ const
     '       l.EjercicioPedido, ISNULL(l.SeriePedido, '''') AS SeriePedido, ' +
     '       ISNULL(l.NroPedido, 0) AS NroPedido, ' +
     '       CASE ' +
-    '         WHEN co.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(co.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(co.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN l.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         WHEN co.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
     '         WHERE ap.Articulo = l.Articulo) AS Modelo ' +
