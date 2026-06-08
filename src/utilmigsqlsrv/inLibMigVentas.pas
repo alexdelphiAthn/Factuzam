@@ -154,6 +154,10 @@ begin
     Result := 'TARJ' + IntToStr(iTipo)
   else
     Result := 'TARJ';
+  // CODIGO_FP_CFP en los pagos es varchar(10): un TipoTarjeta anomalo muy
+  // grande (>6 digitos) desbordaria, asi que esos caen en la 'TARJ' generica.
+  if Length(Result) > 10 then
+    Result := 'TARJ';
 end;
 // Asegura las formas de pago de caja que usa la migracion: 'EFE' (Efectivo) y
 // una 'TARJ<n>' / 'TARJETA <n>' por cada TipoTarjeta distinto del legacy
@@ -197,6 +201,9 @@ begin
     qDst.SQL.Text   := cInsFP;
     // Efectivo: da cambio y abre cajon. Orden 1 (primer boton en F12).
     InsertarFP('EFE', 'Efectivo', 'S', 'S', 1);
+    // Tarjeta generica: respaldo para pagos con tarjeta sin tipo (TipoTarjeta
+    // 0) o con un tipo anomalo demasiado largo (ver CodigoTarjeta).
+    InsertarFP('TARJ', 'TARJETA', 'N', 'N', 9);
     // Una forma de pago por cada TipoTarjeta del legacy: TARJETA 1, 2, ...
     // (las tarjetas no dan cambio ni abren cajon).
     qTar := NuevoQOrigen(Eng, cSelTar);
