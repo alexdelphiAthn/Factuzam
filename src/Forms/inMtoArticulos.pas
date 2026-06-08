@@ -366,6 +366,18 @@ type
     lblFiltroTemporadaArt: TcxLabel;
     ccbFiltroTemporadaArt: TcxCheckComboBox;
     actFamilias: TAction;
+    tvTarifasCODIGO_UNICO_TARIFA_SKU: TcxGridDBColumn;
+    tvTarifasCODIGO_UNICO_TARIFA_PADRE: TcxGridDBColumn;
+    tvTarifasORIGEN_PRECIO: TcxGridDBColumn;
+    tvTarifasPORCENTAJE_MARGEN_ARTTAR: TcxGridDBColumn;
+    tvTarifasVALOR_MULTIPLO_AJUSTE_ARTTAR: TcxGridDBColumn;
+    tvTarifasVALOR_MENOS_AJUSTE_ARTTAR: TcxGridDBColumn;
+    tvTarifasPORCENTAJE_MARGEN_EFECTIVO: TcxGridDBColumn;
+    tvTarifasVALOR_MULTIPLO_AJUSTE_EFECTIVO: TcxGridDBColumn;
+    tvTarifasVALOR_MENOS_AJUSTE_EFECTIVO: TcxGridDBColumn;
+    tvTarifasTIENE_SKU: TcxGridDBColumn;
+    tvTarifasESACTIVO_SKU: TcxGridDBColumn;
+    tvTarifasDESCRIPCION_SKU: TcxGridDBColumn;
     procedure btnToggleFiltrosArtClick(Sender: TObject);
     procedure cbbFiltroEstadoArtPropertiesEditValueChanged(Sender: TObject);
     procedure chkFiltroConStockArtPropertiesEditValueChanged(Sender: TObject);

@@ -20,23 +20,22 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       Width = 1077
       Height = 671
       TabOrder = 1
-      Properties.ActivePage = tsLista
       ExplicitWidth = 1077
       ExplicitHeight = 671
-      ClientRectBottom = 669
-      ClientRectRight = 1075
+      ClientRectBottom = 667
+      ClientRectRight = 1073
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 1073
-        ExplicitHeight = 642
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1069
+        ExplicitHeight = 639
         inherited cxGrdPrincipal: TcxGrid
           Top = 60
-          Width = 1073
-          Height = 582
+          Width = 1069
+          Height = 579
           ExplicitTop = 60
-          ExplicitWidth = 1073
-          ExplicitHeight = 582
+          ExplicitWidth = 1069
+          ExplicitHeight = 579
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_ARTICULO: TcxGridDBColumn
               Caption = 'C'#243'digo Art'#237'culo'
@@ -96,7 +95,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         object pnlFiltrosArt: TPanel
           Left = 0
           Top = 0
-          Width = 1073
+          Width = 1069
           Height = 60
           Align = alTop
           BevelOuter = bvNone
@@ -105,7 +104,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           object btnToggleFiltrosArt: TcxButton
             Left = 0
             Top = 0
-            Width = 1073
+            Width = 1069
             Height = 22
             Align = alTop
             Caption = #9654'  Filtros de carga'
@@ -117,7 +116,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           object pnlContFiltrosArt: TPanel
             Left = 0
             Top = 22
-            Width = 1073
+            Width = 1069
             Height = 38
             Align = alClient
             BevelOuter = bvNone
@@ -171,14 +170,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 1073
-        ExplicitHeight = 642
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1069
+        ExplicitHeight = 639
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 1073
+          Width = 1069
           Height = 174
           Align = alTop
           BevelOuter = bvNone
@@ -186,7 +185,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
           object pnlBodyFicha: TPanel
             Left = 0
             Top = 0
-            Width = 1073
+            Width = 1069
             Height = 174
             Align = alClient
             BevelOuter = bvNone
@@ -292,25 +291,25 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         end
         object pnlButtonFicha: TPanel
           Left = 0
-          Top = 184
-          Width = 1073
-          Height = 458
+          Top = 182
+          Width = 1069
+          Height = 457
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
-            Width = 1073
-            Height = 458
+            Width = 1069
+            Height = 457
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsTarifas
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 456
-            ClientRectLeft = 2
-            ClientRectRight = 1071
-            ClientRectTop = 27
+            ClientRectBottom = 453
+            ClientRectLeft = 4
+            ClientRectRight = 1065
+            ClientRectTop = 28
             object tsGeneral: TcxTabSheet
               Caption = '&1_General'
               ImageIndex = 4
@@ -426,13 +425,13 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object pnlTopSkus: TPanel
                 Left = 0
                 Top = 0
-                Width = 1069
+                Width = 1061
                 Height = 257
                 Align = alTop
                 BevelOuter = bvNone
                 TabOrder = 0
                 object pnlSkuMto: TPanel
-                  Left = 948
+                  Left = 940
                   Top = 0
                   Width = 121
                   Height = 257
@@ -451,7 +450,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 object cxgrdSkuMto: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 948
+                  Width = 940
                   Height = 257
                   Align = alClient
                   TabOrder = 1
@@ -516,7 +515,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object splSkuAtributosBasicos: TcxSplitter
                 Left = 0
                 Top = 257
-                Width = 1069
+                Width = 1061
                 Height = 10
                 AlignSplitter = salTop
                 Control = pnlTopSkus
@@ -527,13 +526,13 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 Align = alClient
                 Caption = ' Atributos del SKU + Atributo b'#225'sico (helper) '
                 TabOrder = 2
-                Height = 162
-                Width = 1069
+                Height = 158
+                Width = 1061
                 object cxgrdSkuAtributosBasicos: TcxGrid
-                  Left = 4
-                  Top = 20
-                  Width = 1061
-                  Height = 126
+                  Left = 2
+                  Top = 22
+                  Width = 1057
+                  Height = 134
                   Align = alClient
                   TabOrder = 0
                   object tvSkuAtributosBasicos: TcxGridDBTableView
@@ -688,10 +687,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Caption = '&4_CB'
               ImageIndex = 6
               object pnlBotonesCB: TPanel
-                Left = 948
+                Left = 940
                 Top = 0
                 Width = 121
-                Height = 429
+                Height = 425
                 Align = alRight
                 TabOrder = 0
                 object btnExportarExcelCB: TcxButton
@@ -725,8 +724,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdSkus: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 948
-                Height = 429
+                Width = 940
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -860,8 +859,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 936
-                Height = 429
+                Width = 928
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -919,13 +918,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'CODIGO_TAR_ARTTAR'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
-                    Width = 129
+                    Width = 109
                   end
                   object cxgrdbclmnTarifasNOMBRE_TARIFA: TcxGridDBColumn
                     Caption = 'Nombre Tarifa'
                     DataBinding.FieldName = 'NOMBRE_TAR_TAR'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
+                    Visible = False
                     Width = 145
                   end
                   object dbcTarifasESIMP_INCL_TARIFA: TcxGridDBColumn
@@ -934,7 +934,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
-                    Width = 95
+                    Width = 72
                   end
                   object cxgrdbclmnTarifasCODIGO_ARTICULO_TARIFA: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
@@ -945,7 +945,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   object tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBColumn
                     Caption = 'Sku'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_ARTTAR'
-                    Width = 237
+                    Width = 139
                   end
                   object cxgrdbclmnTarifasDESCRIPCION_ARTICULO: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
@@ -980,14 +980,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'PRECIO_DTO_ARTTAR'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = dbcTarifasPRECIO_DTO_TARIFAPropertiesEditValueChanged
-                    Width = 155
+                    Width = 81
                   end
                   object dbcTarifasPRECIOFINAL: TcxGridDBColumn
                     Caption = 'Precio Final'
                     DataBinding.FieldName = 'PRECIO_FINAL_ARTTAR'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = dbcTarifasPRECIOFINALPropertiesEditValueChanged
-                    Width = 144
+                    Width = 90
                   end
                   object dbcTarifasMARGEN: TcxGridDBColumn
                     Caption = 'Margen'
@@ -1001,7 +1001,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     Properties.ReadOnly = True
                     Properties.OnButtonClick = dbcTarifasMARGENButtonClick
                     OnGetDisplayText = dbcTarifasMARGENGetDisplayText
-                    Width = 90
+                    Width = 71
                   end
                   object cxgrdbclmnTarifasTIPO_IVA_ARTICULO: TcxGridDBColumn
                     Caption = 'Tipo IVA'
@@ -1015,6 +1015,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
+                    Visible = False
                     Width = 125
                   end
                   object cxgrdbclmnTarifasFECHA_DESDE_TARIFA: TcxGridDBColumn
@@ -1032,6 +1033,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'CODIGO_PRV_PRV'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
+                    Visible = False
                     Width = 175
                   end
                   object cxgrdbclmnTarifasRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn
@@ -1039,14 +1041,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'RAZON_SOCIAL_PRV'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
-                    Width = 260
+                    Width = 175
                   end
                   object cxgrdbclmnTarifasPRECIO_ULT_COMPRA: TcxGridDBColumn
                     Caption = 'Precio '#218'lt Compra'
                     DataBinding.FieldName = 'PRECIO_ULT_COMPRA'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.ReadOnly = True
-                    Width = 176
+                    Width = 86
                   end
                   object cxgrdbclmnTarifasFECHA_VALIDEZ: TcxGridDBColumn
                     Caption = 'Fecha Validez'
@@ -1106,16 +1108,64 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'NUM_ATRIBUTOS_REQ'
                     Visible = False
                   end
+                  object tvTarifasCODIGO_UNICO_TARIFA_SKU: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_UNICO_TARIFA_SKU'
+                    Visible = False
+                  end
+                  object tvTarifasCODIGO_UNICO_TARIFA_PADRE: TcxGridDBColumn
+                    DataBinding.FieldName = 'CODIGO_UNICO_TARIFA_PADRE'
+                    Visible = False
+                  end
+                  object tvTarifasORIGEN_PRECIO: TcxGridDBColumn
+                    DataBinding.FieldName = 'ORIGEN_PRECIO'
+                    Visible = False
+                  end
+                  object tvTarifasPORCENTAJE_MARGEN_ARTTAR: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_MARGEN_ARTTAR'
+                    Visible = False
+                  end
+                  object tvTarifasVALOR_MULTIPLO_AJUSTE_ARTTAR: TcxGridDBColumn
+                    DataBinding.FieldName = 'VALOR_MULTIPLO_AJUSTE_ARTTAR'
+                    Visible = False
+                  end
+                  object tvTarifasVALOR_MENOS_AJUSTE_ARTTAR: TcxGridDBColumn
+                    DataBinding.FieldName = 'VALOR_MENOS_AJUSTE_ARTTAR'
+                    Visible = False
+                  end
+                  object tvTarifasPORCENTAJE_MARGEN_EFECTIVO: TcxGridDBColumn
+                    DataBinding.FieldName = 'PORCENTAJE_MARGEN_EFECTIVO'
+                    Visible = False
+                  end
+                  object tvTarifasVALOR_MULTIPLO_AJUSTE_EFECTIVO: TcxGridDBColumn
+                    DataBinding.FieldName = 'VALOR_MULTIPLO_AJUSTE_EFECTIVO'
+                    Visible = False
+                  end
+                  object tvTarifasVALOR_MENOS_AJUSTE_EFECTIVO: TcxGridDBColumn
+                    DataBinding.FieldName = 'VALOR_MENOS_AJUSTE_EFECTIVO'
+                    Visible = False
+                  end
+                  object tvTarifasTIENE_SKU: TcxGridDBColumn
+                    DataBinding.FieldName = 'TIENE_SKU'
+                    Visible = False
+                  end
+                  object tvTarifasESACTIVO_SKU: TcxGridDBColumn
+                    DataBinding.FieldName = 'ESACTIVO_SKU'
+                    Visible = False
+                  end
+                  object tvTarifasDESCRIPCION_SKU: TcxGridDBColumn
+                    DataBinding.FieldName = 'DESCRIPCION_SKU'
+                    Visible = False
+                  end
                 end
                 object cxgrdlvlTarifas: TcxGridLevel
                   GridView = tvTarifas
                 end
               end
               object pnlFacturaOpts2: TPanel
-                Left = 936
+                Left = 928
                 Top = 0
                 Width = 133
-                Height = 429
+                Height = 425
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1154,8 +1204,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 948
-                Height = 429
+                Width = 940
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1282,10 +1332,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlFacturaOpts1: TPanel
-                Left = 948
+                Left = 940
                 Top = 0
                 Width = 121
-                Height = 429
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object btnIraProveedor: TcxButton
@@ -1323,8 +1373,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 956
-                Height = 429
+                Width = 948
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1798,10 +1848,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlFacturaOpts: TPanel
-                Left = 956
+                Left = 948
                 Top = 0
                 Width = 113
-                Height = 429
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object btnIraFactura: TcxButton
@@ -1847,8 +1897,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxGrdStock: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 888
-                Height = 429
+                Width = 880
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1939,10 +1989,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlBotonesTarifas: TPanel
-                Left = 888
+                Left = 880
                 Top = 0
                 Width = 181
-                Height = 429
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object btnStockExportarExcel: TcxButton
@@ -1980,8 +2030,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 948
-                Height = 429
+                Width = 940
+                Height = 425
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -2206,10 +2256,10 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 end
               end
               object pnlBotonesStock: TPanel
-                Left = 948
+                Left = 940
                 Top = 0
                 Width = 121
-                Height = 429
+                Height = 425
                 Align = alRight
                 TabOrder = 1
                 object btnExportarExcelStock: TcxButton
@@ -2228,8 +2278,8 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
-                Top = 350
-                Width = 1069
+                Top = 346
+                Width = 1061
                 Height = 79
                 Align = alBottom
                 TabOrder = 3
@@ -2366,35 +2416,37 @@ inherited frmMtoArticulos: TfrmMtoArticulos
         object splSplitterFicha: TcxSplitter
           Left = 0
           Top = 174
-          Width = 1073
-          Height = 10
+          Width = 1069
+          Height = 8
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 1073
-        ExplicitHeight = 642
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1069
+        ExplicitHeight = 639
         inherited pnlPerfilTop: TPanel
-          Width = 1073
+          Width = 1069
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1073
+          ExplicitWidth = 1069
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 1073
-          Height = 585
+          Width = 1069
+          Height = 582
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1073
-          ExplicitHeight = 585
+          ExplicitWidth = 1069
+          ExplicitHeight = 582
           inherited cxgrdPerfil: TcxGrid
-            Width = 1073
-            Height = 585
-            ExplicitWidth = 1073
-            ExplicitHeight = 585
+            Width = 1069
+            Height = 582
+            ExplicitWidth = 1069
+            ExplicitHeight = 582
           end
         end
       end
