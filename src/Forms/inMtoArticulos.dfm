@@ -926,7 +926,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'NOMBRE_TAR_TAR'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
-                    Visible = False
                     Width = 145
                   end
                   object dbcTarifasESIMP_INCL_TARIFA: TcxGridDBColumn
@@ -935,7 +934,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Properties.ValueChecked = 'S'
                     Properties.ValueUnchecked = 'N'
-                    Visible = False
                     Width = 95
                   end
                   object cxgrdbclmnTarifasCODIGO_ARTICULO_TARIFA: TcxGridDBColumn
@@ -1034,6 +1032,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'CODIGO_PRV_PRV'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
+                    Visible = False
                     Width = 175
                   end
                   object cxgrdbclmnTarifasRAZONSOCIAL_PROVEEDOR: TcxGridDBColumn
