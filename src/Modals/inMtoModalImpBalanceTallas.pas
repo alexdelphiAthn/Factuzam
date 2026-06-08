@@ -84,7 +84,8 @@ uses
 function TfrmPrintBalanceTallas.FiltrosUsados: TFiltrosReport;
 begin
   // El balance usa todas las pestañas de filtro.
-  Result := [frFechas, frAlmacenes, frFamilias, frProveedores, frTemporadas];
+  Result := [frFechas, frAlmacenes, frFamilias, frProveedores, frTemporadas,
+             frArticulos];
 end;
 
 procedure TfrmPrintBalanceTallas.DoShow;
@@ -231,7 +232,7 @@ begin
     Connection := oConn;
     SQL.Text :=
       'CALL PRC_GET_BALANCE_ALMACEN_TALLAS(' +
-      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pTAR, ' +
+      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pART, :pTAR, ' +
       ':pDESG, :pBND, :pN1, :pN2, :pN3, :pNFAM)';
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
       ParamByName('pMODO').AsString := 'A'
@@ -243,6 +244,8 @@ begin
     ParamByName('pFAM').AsString := CSVFamilias;
     ParamByName('pPRV').AsString := CSVProveedores;
     ParamByName('pTMP').AsString := CSVTemporadas;
+    // Filtro de artículos (CSV; vacío = todos), nuevo en la pestaña Artículos.
+    ParamByName('pART').AsString := CSVArticulos;
     ParamByName('pTAR').AsString :=
       oAppParams.GetString('appTarifaDefecto', 'PVP');
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 0) and

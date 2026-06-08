@@ -13,7 +13,7 @@
 {    pestañas. Hereda de TfrmPrint y, al mostrarse, crea por código un         }
 {    TcxPageControl con una pestaña por filtro: Fechas (rango) y, como         }
 {    checklists multi-selección CON BUSCADOR, Almacenes / Familias /           }
-{    Proveedores / Temporadas.                                                 }
+{    Proveedores / Temporadas / Artículos.                                     }
 {                                                                              }
 {    Cada checklist de filtro guarda su lista completa (Fuente) y el conjunto  }
 {    de códigos marcados (Marcados); el buscador re-filtra las filas visibles  }
@@ -22,9 +22,10 @@
 {    búsqueda no descarta selecciones ocultas.                                 }
 {                                                                              }
 {    Los descendientes indican con FiltrosUsados qué pestañas quieren y leen   }
-{    CSVAlmacenes / CSVFamilias / CSVProveedores / CSVTemporadas y FechaDesde  }
-{    / FechaHasta. Para checklists propios sin buscador (p. ej. bandas)        }
-{    disponen de CrearTabChecklist + SeleccionadosCSV.                         }
+{    CSVAlmacenes / CSVFamilias / CSVProveedores / CSVTemporadas /             }
+{    CSVArticulos y FechaDesde / FechaHasta. Para checklists propios sin       }
+{    buscador (p. ej. bandas) disponen de CrearTabChecklist +                  }
+{    SeleccionadosCSV.                                                         }
 {******************************************************************************}
 unit inMtoModalImpMultiFiltro;
 
@@ -42,7 +43,7 @@ uses
 
 type
   TFiltroReport = (frFechas, frAlmacenes, frFamilias, frProveedores,
-                   frTemporadas);
+                   frTemporadas, frArticulos);
   TFiltrosReport = set of TFiltroReport;
 
   // Checklist de filtro con buscador. Fuente = todos los ítems ("COD - NOM");
@@ -79,6 +80,7 @@ type
     FfcFamilias     : TFiltroChecklist;
     FfcProveedores  : TFiltroChecklist;
     FfcTemporadas   : TFiltroChecklist;
+    FfcArticulos    : TFiltroChecklist;
     // Pestaña de agrupaciones (reordenable). FAgrupItems es el orden actual de
     // las dimensiones; FclbAgrup el checklist; FseNivelFam el nivel de familia.
     FAgrupItems     : TObjectList<TItemAgrup>;
@@ -132,6 +134,7 @@ type
     function CSVFamilias   : string;
     function CSVProveedores: string;
     function CSVTemporadas : string;
+    function CSVArticulos  : string;
     function FechaDesde    : TDateTime;
     function FechaHasta    : TDateTime;
   end;
@@ -210,6 +213,8 @@ begin
     FfcProveedores := CrearTabFiltro('Proveedores');
   if frTemporadas in fs then
     FfcTemporadas := CrearTabFiltro('Temporadas');
+  if frArticulos in fs then
+    FfcArticulos := CrearTabFiltro('Art' + #237 + 'culos');
   if FpcFiltros.PageCount > 0 then
     FpcFiltros.ActivePageIndex := 0;
 end;
@@ -410,6 +415,13 @@ begin
     ' WHERE ID_PROP_PV = ''TEMPORADA'' ' +
     '   AND IFNULL(ESACTIVO_PV, ''S'') = ''S'' ' +
     ' ORDER BY PV', 'COD', '');
+  // Artículos activos (código + descripción). La lista puede ser larga: el
+  // buscador de la pestaña acota las filas visibles. Sin marcar nada = todos.
+  CargarFiltro(FfcArticulos,
+    'SELECT CODIGO_ART_ART AS COD, DESCRIPCION_ART AS NOM ' +
+    '  FROM fza_articulos ' +
+    ' WHERE ESACTIVO_ART = ''S'' ' +
+    ' ORDER BY CODIGO_ART_ART', 'COD', 'NOM');
 end;
 
 function TfrmPrintMultiFiltro.FiltroPorClb(AClb: TObject): TFiltroChecklist;
@@ -701,6 +713,11 @@ end;
 function TfrmPrintMultiFiltro.CSVTemporadas: string;
 begin
   Result := CSVDe(FfcTemporadas);
+end;
+
+function TfrmPrintMultiFiltro.CSVArticulos: string;
+begin
+  Result := CSVDe(FfcArticulos);
 end;
 
 function TfrmPrintMultiFiltro.FechaDesde: TDateTime;
