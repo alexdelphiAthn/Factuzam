@@ -1893,15 +1893,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OnCustomDrawCell = tvStockCustomDrawCell
                   DataController.DataSource = dmArticulos.dsStockArticulos
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
-                  DataController.Summary.FooterSummaryItems = <
-                    item
-                      Format = '#.##'
-                      Kind = skSum
-                    end
-                    item
-                      Format = '##,##.00 '#8364
-                      Kind = skSum
-                    end>
                   OptionsBehavior.AlwaysShowEditor = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.IncSearch = True
@@ -1911,7 +1902,6 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OptionsData.DeletingConfirmation = False
                   OptionsData.Editing = False
                   OptionsData.Inserting = False
-                  OptionsView.Footer = True
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
                   object tvStockAlmacen: TcxGridDBColumn
