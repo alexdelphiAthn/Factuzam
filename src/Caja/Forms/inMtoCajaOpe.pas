@@ -885,7 +885,10 @@ begin
         else
           TextoBusqueda := VarToStr(EditActivo.EditingValue);
         TextoBusqueda := Trim(TextoBusqueda);
-        if Length(TextoBusqueda) >= 1 then
+        // Longitud minima 3: con 1-2 caracteres el LIKE '%x%' sobre
+        // vi_art_busquedas recorre casi todo el catalogo y congela la
+        // caja. Por debajo de 3 cerramos qryBusq para no dejar resultados.
+        if Length(TextoBusqueda) >= 3 then
         begin
           qryBusq.Connection := oConn;
           qryBusq.Close;
@@ -932,7 +935,9 @@ begin
           end;
           dbtvBusq.DataController.DataSource := dsBusq;
           dbtvBusq.DataController.Refresh;
-        end;
+        end
+        else
+          qryBusq.Close;
       end;
     end;
   finally
