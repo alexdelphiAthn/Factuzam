@@ -120,6 +120,15 @@ begin
     qChk.SQL.Text   :=
       'SELECT RAZON_SOCIAL_CLI FROM fza_clientes ' +
       'WHERE CODIGO_CLI_CLI = :c';
+    // Re-ejecutable: en una BBDD ya migrada borramos SOLO los clientes que
+    // migro este usuario (USUARIO_ALTA) y los recreamos con los datos
+    // actuales. El seed demo (otro USUARIO_ALTA) lo sigue conservando el
+    // chequeo de PK de mas abajo, asi que no se toca. Sin esto, re-correr
+    // 'clientes' solo saltaba los ya existentes (no refrescaba). OJO: la
+    // deuda (TOTAL_DEUDA_CLI) la rellena 'ventas' despues, asi que el orden
+    // de re-migracion es clientes -> ventas.
+    EjecutarSQL(Eng, 'DELETE FROM fza_clientes WHERE USUARIO_ALTA = ' +
+      ValorOrNull(Eng.Usuario));
 
     Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.occli'));
     qSrc.Open;
