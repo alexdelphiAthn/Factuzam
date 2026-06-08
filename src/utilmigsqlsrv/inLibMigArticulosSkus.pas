@@ -190,11 +190,13 @@ const
     '  SELECT bap.Articulo, bap.Color, bap.Talla, bap.Cantidad, ' +
     '         bap.CodigoBarras, ' +
     '         CASE ' +
-    '           WHEN c.Descripcion IS NULL ' +
-    '             OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '             OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '           WHEN bap.Color IS NOT NULL ' +
+    '             AND LTRIM(RTRIM(bap.Color)) <> '''' ' +
     '             THEN UPPER(LTRIM(RTRIM(bap.Color))) ' +
-    '           ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '           WHEN c.Descripcion IS NOT NULL ' +
+    '             AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '             THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '           ELSE ''0'' ' +
     '         END AS ColorSlot, ' +
     '         1 AS FuentePrior ' +
     '  FROM dbo.ocartbap bap ' +
@@ -209,11 +211,13 @@ const
     '         1 AS Cantidad, ' +
     '         '''' AS CodigoBarras, ' +
     '         CASE ' +
-    '           WHEN c.Descripcion IS NULL ' +
-    '             OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '             OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '           WHEN acp.Color IS NOT NULL ' +
+    '             AND LTRIM(RTRIM(acp.Color)) <> '''' ' +
     '             THEN UPPER(LTRIM(RTRIM(acp.Color))) ' +
-    '           ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '           WHEN c.Descripcion IS NOT NULL ' +
+    '             AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '             THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '           ELSE ''0'' ' +
     '         END AS ColorSlot, ' +
     '         2 AS FuentePrior ' +
     '  FROM dbo.ocartacp acp ' +

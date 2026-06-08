@@ -349,11 +349,13 @@ const
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
     '       ISNULL(m.NroCaja, 0) AS NroCaja, opc.Operacion AS OpeCaja, ' +
     '       CASE ' +
-    '         WHEN c.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN m.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(m.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(m.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         WHEN c.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       ISNULL(alb.Precio, 0)      AS PrecioAlbaranLinea, ' +
     '       ISNULL(seed.PrecioSIva, 0) AS SeedPrecio, ' +
@@ -482,12 +484,14 @@ begin
             sTipoMov := 'S';
         end;
       end;
-      // Cantidad que afecta a stock: preferimos UnidadesStock; si es 0,
-      // caemos a Cantidad. Guardamos el valor absoluto (la dirección la
-      // marca TIPO_MOV).
-      fEfect := fUnidades;
+      // Cantidad que afecta a stock: la Cantidad del documento es la fuente
+      // fiable (unidades reales del albaran/ticket). UnidadesStock del legacy
+      // viene inconsistente (a veces 2-3 en ventas de 1 ud, o 1 en entradas
+      // de 2 uds), asi que solo la usamos de respaldo si Cantidad es 0.
+      // Guardamos el valor absoluto (la direccion la marca TIPO_MOV).
+      fEfect := fCantidad;
       if fEfect = 0 then
-        fEfect := fCantidad;
+        fEfect := fUnidades;
       fCantMov := Abs(fEfect);
       // Movimiento sin impacto de stock (0 unidades): no aporta nada al
       // histórico de stock — lo saltamos para no ensuciar.

@@ -285,11 +285,13 @@ const
     '       ISNULL(l.PrecioCIva, 0) AS PrecioCIva, ' +
     '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
     '       CASE ' +
-    '         WHEN co.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(co.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(co.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN l.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         WHEN co.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor ' +
     'FROM dbo.occajarp l ' +
     'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = l.Articulo ' +
