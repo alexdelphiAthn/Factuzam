@@ -349,11 +349,13 @@ const
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
     '       ISNULL(m.NroCaja, 0) AS NroCaja, opc.Operacion AS OpeCaja, ' +
     '       CASE ' +
-    '         WHEN c.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN m.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(m.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(m.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         WHEN c.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       ISNULL(alb.Precio, 0)      AS PrecioAlbaranLinea, ' +
     '       ISNULL(seed.PrecioSIva, 0) AS SeedPrecio, ' +

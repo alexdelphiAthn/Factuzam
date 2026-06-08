@@ -189,11 +189,13 @@ const
   cSelectSrc =
     'SELECT ac.Articulo, ' +
     '       CASE ' +
-    '         WHEN c.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         WHEN c.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor ' +
     'FROM dbo.ocartcol ac ' +
     'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
