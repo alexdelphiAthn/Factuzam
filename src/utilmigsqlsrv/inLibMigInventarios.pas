@@ -21,7 +21,7 @@
 {          PRECIO_MEDIO_INVLIN = PrecioMedio origen                           }
 {                                                                             }
 {    Al estar el inventario en ESTADO='APLICADO' (lo dejamos directamente     }
-{    aplicado), el motor de Factuzam ya ajusta el stock real del SKU.        }
+{    aplicado), generamos los movimientos de regularizacion 'IN'.        }
 {                                                                             }
 {    Solo se incluyen filas con UnidadesStock <> 0. Si el usuario quiere      }
 {    mantener las filas con stock 0 (utiles para forzar la creacion del      }
@@ -51,7 +51,8 @@ implementation
 
 uses
   System.SysUtils,
-  Data.DB, Uni;
+  Data.DB, Uni,
+  inLibMigMovimientos;
 
 // =========================================================================
 //  Helpers locales
@@ -216,6 +217,18 @@ const
     '  AND LTRIM(RTRIM(acp.Articulo)) <> '''' ' +
     'ORDER BY acp.Empresa, acp.Almacen, acp.Articulo, ' +
     '         acp.Color, acp.Talla';
+  // Columnas de fza_movimientos_almacen para el bulk de regularizacion.
+  // Mismo juego (26 columnas) que usa inLibMigMovimientos, asi stockactual
+  // se reconstruye con identico criterio.
+  cColsMov =
+    'NUMERO_MOV, TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV, ' +
+    'CODIGO_EMP_MOV, CODIGO_ALM_MOV, FECHA_MOV, CODIGO_ART_MOV, ' +
+    'CODIGO_UNIDAD_MOV, DESCRIPCION_ARTICULO_MOV, TIPO_MOV, CANTIDAD_MOV, ' +
+    'PRECIO_COSTE_UNITARIO_MOV, TOTAL_COSTE_MOV, PRECIO_MEDIO_MOV, ' +
+    'CODIGO_ALM_CONTRA_MOV, CODIGO_CLI_MOV, ESACTIVO_MOV, ' +
+    'CODIGO_ALM_DOC_MOV, CODIGO_CAJA_DOC_MOV, NUMERO_OPERACION_DOC_MOV, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+  BATCH_MOV = 5000;
 var
   qSrc:                 TUniQuery;
   iEmp, iAlm:           Integer;
@@ -227,10 +240,30 @@ var
   sDesc:                string;
   sNumero:              string;
   fCantidad, fPrecio:   Double;
-  fAcumDif:             Double;
+  fAcumDif, fImporte:   Double;
   bCabecera:            Boolean;
+  bulkMov:              TBulkInsert;
+  fs:                   TFormatSettings;
+  sLineaPad:            string;
+  sNumeroMov, sFilaMov: string;
+  sAhora, sUser:        string;
 begin
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  fs     := TFormatSettings.Create('en-US');
+  sAhora := DateTimeASQL(Now);
+  sUser  := ValorOrNull(Eng.Usuario);
+  // Re-ejecutable: borramos el inventario migrado por ESTE usuario y sus
+  // movimientos de regularizacion (prefijo 'IV-MIG', exclusivo del migrador
+  // — no toca las regularizaciones que la app genere con su propia
+  // numeracion) para recrearlos limpios y no duplicar stock en cada pasada.
+  EjecutarSQL(Eng, 'DELETE FROM fza_inventarios_lineas WHERE USUARIO_ALTA = '
+    + sUser);
+  EjecutarSQL(Eng, 'DELETE FROM fza_inventarios WHERE USUARIO_ALTA = ' +
+    sUser);
+  EjecutarSQL(Eng, 'DELETE FROM fza_movimientos_almacen ' +
+    'WHERE NUMERO_MOV LIKE ''IV-MIG%''');
+  qSrc    := NuevoQOrigen(Eng, cSelectSrc);
+  bulkMov := TBulkInsert.Create(Eng.ConDst, 'fza_movimientos_almacen',
+                                cColsMov, BATCH_MOV);
   try
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartacp ' +
@@ -294,16 +327,37 @@ begin
       Inc(iLinea);
       sCodUnidad := ConstruirCodigoUnidad(sArt, UpperCase(sDescColor),
         UpperCase(Trim(qSrc.FieldByName('Talla').AsString)));
-
+      // LINEA_INVLIN tras widen_linea_invlin.sql es varchar(8). Padding a 8
+      // digitos para que el orden lexicografico coincida con el numerico
+      // (linea 9 < linea 10 < linea 100).
+      sLineaPad := Format('%.8d', [iLinea]);
       try
-        // LINEA_INVLIN tras widen_linea_invlin.sql es varchar(8).
-        // Padding a 8 digitos para que el orden lexicografico
-        // coincida con el numerico (linea 9 < linea 10 < linea 100).
-        InsertarLinea(Eng, sEmp, sAlm, 'IN', sNumero,
-                      Format('%.8d', [iLinea]),
+        InsertarLinea(Eng, sEmp, sAlm, 'IN', sNumero, sLineaPad,
                       sArt, sCodUnidad, sDesc, fCantidad, fPrecio);
         Inc(Stats.Insertadas);
         fAcumDif := fAcumDif + fCantidad;
+        // Movimiento de regularizacion (entrada) que CUADRA el stock: la
+        // misma fila que generaria PRC_FZA_INVENTARIOS_APLICAR al regularizar
+        // en la app (TIPO_DOC='IN', TIPO_MOV='E'). En migracion la teorica es
+        // 0, por eso solo hay entrada. NUMERO_MOV 'IV-MIG....-NNNNNNNNE' (<=20)
+        // identifica el origen migrador y lo separa de las regularizaciones
+        // que haga luego la app. ESACTIVO_MOV literal 'S'.
+        sNumeroMov := 'IV-' + sNumero + '-' + sLineaPad + 'E';
+        fImporte   := fCantidad * fPrecio;
+        sFilaMov := Format(
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
+          '%s, %s, %s, %s, NULL, NULL, ''S'', %s, NULL, NULL, ' +
+          '%s, %s, %s, %s',
+          [ValorOrNull(sNumeroMov), ValorOrNull('IN'),
+           ValorOrNull('IN'), ValorOrNull(sNumero),
+           ValorOrNull(sLineaPad), ValorOrNull(sEmp),
+           ValorOrNull(sAlm), sAhora, ValorOrNull(sArt),
+           ValorOrNull(sCodUnidad), ValorOrNull(sDesc),
+           ValorOrNull('E'), FloatToStr(fCantidad, fs),
+           FloatToStr(fPrecio, fs), FloatToStr(fImporte, fs),
+           FloatToStr(fPrecio, fs), ValorOrNull(sAlm),
+           sAhora, sAhora, sUser, sUser]);
+        bulkMov.Add(sFilaMov);
       except
         on E: Exception do
         begin
@@ -317,7 +371,15 @@ begin
       end;
       qSrc.Next;
     end;
+    bulkMov.FlushPendiente;
+    // Stock activo: lo reconstruimos desde los movimientos (incluidas las
+    // regularizaciones 'IV' recien creadas), igual que hace 'movimientos'.
+    // OJO: inventarios y movimientos son ALTERNATIVOS — si corres ambos el
+    // stock se duplica (cada uno reconstruye desde TODO el historico activo).
+    if not Eng.IsCancelado then
+      ReconstruirStockDesdeMovimientos(Eng);
   finally
+    bulkMov.Free;
     qSrc.Free;
   end;
 end;
