@@ -458,6 +458,52 @@ begin
   end;
 end;
 
+// Netea las devoluciones de deposito (-1) con su prestamo (+1) del mismo
+// cliente y SKU (FIFO por fecha): cierra AMBOS. Las lineas AL de devolucion
+// creaban un deposito -1 PENDIENTE que no cerraba su +1 original; aqui se
+// cuadran. Idempotente (re-ejecutar no encuentra devoluciones PENDIENTE).
+// ORDEN: primero cerramos los +1 (mientras las -1 siguen PENDIENTE para poder
+// contarlas) y luego las -1 (incluidas las huerfanas sin +1).
+procedure NetearDevolucionesDeposito(Eng: TMigEngine);
+var
+  sU: string;
+begin
+  sU := ValorOrNull(Eng.Usuario);
+  // 1) Cerrar los N prestamos +1 mas antiguos por (cliente, SKU), donde
+  //    N = nº de devoluciones de ese SKU.
+  EjecutarSQL(Eng,
+    'UPDATE fza_depositos_cliente d ' +
+    'JOIN ( ' +
+    '  SELECT p.ID_DEPOSITO_DEP ' +
+    '  FROM ( ' +
+    '    SELECT ID_DEPOSITO_DEP, CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP, ' +
+    '           ROW_NUMBER() OVER ( ' +
+    '             PARTITION BY CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP ' +
+    '             ORDER BY FECHA_CREACION_DEP, ID_DEPOSITO_DEP) AS rn ' +
+    '    FROM fza_depositos_cliente ' +
+    '    WHERE CANTIDAD_PENDIENTE_DEP > 0 AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '      AND USUARIO_ALTA = ' + sU + ' ' +
+    '  ) p ' +
+    '  JOIN ( ' +
+    '    SELECT CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP, COUNT(*) AS n_ret ' +
+    '    FROM fza_depositos_cliente ' +
+    '    WHERE CANTIDAD_PENDIENTE_DEP < 0 AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '      AND USUARIO_ALTA = ' + sU + ' ' +
+    '    GROUP BY CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP ' +
+    '  ) r ON r.CODIGO_CLI_DEP = p.CODIGO_CLI_DEP ' +
+    '     AND r.CODIGO_UNIDAD_DEP = p.CODIGO_UNIDAD_DEP ' +
+    '  WHERE p.rn <= r.n_ret ' +
+    ') m ON m.ID_DEPOSITO_DEP = d.ID_DEPOSITO_DEP ' +
+    'SET d.ESTADO_DEP = ''CERRADO'', d.INSTANTE_MODIF = NOW()');
+  // 2) Cerrar todas las devoluciones -1 (incluidas las huerfanas sin +1).
+  EjecutarSQL(Eng,
+    'UPDATE fza_depositos_cliente ' +
+    'SET ESTADO_DEP = ''CERRADO'', INSTANTE_MODIF = NOW() ' +
+    'WHERE CANTIDAD_PENDIENTE_DEP < 0 AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '  AND USUARIO_ALTA = ' + sU);
+  Eng.Log('  depositos: devoluciones (-1) neteadas con su prestamo (FIFO).');
+end;
+
 // =========================================================================
 //  Migrador principal
 // =========================================================================
@@ -718,6 +764,9 @@ begin
         sUltimoCli := sCli;
       qSrc.Next;
     end;
+    // Cuadrar depositos: netear las devoluciones (-1) con su prestamo (+1)
+    // del mismo cliente y SKU, dejando ambos CERRADO.
+    NetearDevolucionesDeposito(Eng);
   finally
     qDep.Free;
     qPago.Free;
