@@ -504,6 +504,31 @@ begin
   Eng.Log('  depositos: devoluciones (-1) neteadas con su prestamo (FIFO).');
 end;
 
+// Calcula la deuda actual de cada cliente = suma de (precio - anticipo) de sus
+// prestamos PENDIENTE (positivos) y la guarda en fza_clientes.TOTAL_DEUDA_CLI.
+// Va DESPUES de NetearDevolucionesDeposito (asi los PENDIENTE son solo
+// prestamos reales abiertos). Requiere que el dominio 'clientes' ya este
+// migrado; si no, no actualiza nada (join vacio).
+procedure ActualizarDeudaClientes(Eng: TMigEngine);
+var
+  sU: string;
+begin
+  sU := ValorOrNull(Eng.Usuario);
+  EjecutarSQL(Eng,
+    'UPDATE fza_clientes c ' +
+    'LEFT JOIN ( ' +
+    '  SELECT CODIGO_CLI_DEP, ' +
+    '         SUM(PRECIO_VENTA_DEP - IMPORTE_ANTICIPO_DEP) AS deuda ' +
+    '  FROM fza_depositos_cliente ' +
+    '  WHERE ESTADO_DEP = ''PENDIENTE'' AND CANTIDAD_PENDIENTE_DEP > 0 ' +
+    '    AND USUARIO_ALTA = ' + sU + ' ' +
+    '  GROUP BY CODIGO_CLI_DEP ' +
+    ') d ON d.CODIGO_CLI_DEP = c.CODIGO_CLI_CLI ' +
+    'SET c.TOTAL_DEUDA_CLI = COALESCE(d.deuda, 0), c.INSTANTE_MODIF = NOW() ' +
+    'WHERE c.USUARIO_ALTA = ' + sU);
+  Eng.Log('  clientes: deuda actual (prestamos abiertos) actualizada.');
+end;
+
 // =========================================================================
 //  Migrador principal
 // =========================================================================
@@ -765,8 +790,10 @@ begin
       qSrc.Next;
     end;
     // Cuadrar depositos: netear las devoluciones (-1) con su prestamo (+1)
-    // del mismo cliente y SKU, dejando ambos CERRADO.
+    // del mismo cliente y SKU, dejando ambos CERRADO; luego volcar la deuda
+    // (prestamos abiertos) a la ficha del cliente (TOTAL_DEUDA_CLI).
     NetearDevolucionesDeposito(Eng);
+    ActualizarDeudaClientes(Eng);
   finally
     qDep.Free;
     qPago.Free;
