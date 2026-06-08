@@ -402,6 +402,7 @@ const
     '       (PRECIO_VENTA_DEP - IMPORTE_ANTICIPO_DEP) AS HUECO ' +
     'FROM fza_depositos_cliente ' +
     'WHERE CODIGO_CLI_DEP = :c AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '  AND CANTIDAD_PENDIENTE_DEP > 0 ' +
     '  AND USUARIO_ALTA = :u ' +
     'ORDER BY FECHA_CREACION_DEP, ID_DEPOSITO_DEP';
 var
@@ -437,24 +438,22 @@ begin
   while (i < n) and (fRest > 0.005) do
   begin
     fHueco := aHueco[i];
-    // Depósito sin precio (hueco <= 0): absorbe lo que quede del cobro.
-    if fHueco <= 0 then
-      fHueco := fRest;
-    fPago := fRest;
-    if fPago > fHueco then
-      fPago := fHueco;
-    AcumularAnticipo(Eng, aId[i], fPago);
-    if Result = '' then
-      Result := aId[i];
-    fRest := fRest - fPago;
+    // Solo acreditamos hasta el HUECO real del deposito (precio - anticipo).
+    // Si no tiene hueco (precio 0 o ya cubierto) lo saltamos: nunca dejamos
+    // anticipo > precio. Y el SOBRANTE (cobro mayor que la deuda de los
+    // depositos del cliente) se DESCARTA — antes se volcaba en el primer
+    // deposito sobre-acreditandolo. El cobro sigue registrado como pago.
+    if fHueco > 0 then
+    begin
+      fPago := fRest;
+      if fPago > fHueco then
+        fPago := fHueco;
+      AcumularAnticipo(Eng, aId[i], fPago);
+      if Result = '' then
+        Result := aId[i];
+      fRest := fRest - fPago;
+    end;
     Inc(i);
-  end;
-  // Sobrante (cobro mayor que el hueco total): lo dejamos en el primero.
-  if (fRest > 0.005) and (n > 0) then
-  begin
-    AcumularAnticipo(Eng, aId[0], fRest);
-    if Result = '' then
-      Result := aId[0];
   end;
 end;
 
