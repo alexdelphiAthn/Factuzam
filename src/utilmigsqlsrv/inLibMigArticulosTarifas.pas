@@ -218,11 +218,13 @@ const
     // para '00'); en ese caso usamos el codigo legacy como suffix.
     // Si Descripcion existe y no es 'INDEFINIDO', se usa como suffix.
     '         CASE ' +
-    '           WHEN c.Descripcion IS NULL ' +
-    '             OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '             OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '           WHEN t.Color IS NOT NULL ' +
+    '             AND LTRIM(RTRIM(t.Color)) <> '''' ' +
     '             THEN UPPER(LTRIM(RTRIM(t.Color))) ' +
-    '           ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '           WHEN c.Descripcion IS NOT NULL ' +
+    '             AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '             THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '           ELSE ''0'' ' +
     '         END AS ColorNorm ' +
     '  FROM dbo.ocarttap t WITH (NOLOCK) ' +
     '  LEFT JOIN dbo.ocartcol ac WITH (NOLOCK) ' +
