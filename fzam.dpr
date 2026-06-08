@@ -223,6 +223,7 @@ uses
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},
+  inMtoModalSelAlmacenAlbaran in 'src\Modals\inMtoModalSelAlmacenAlbaran.pas' {frmModalSelAlmacenAlbaran},
   inLibPedidosCompra in 'src\Lib\inLibPedidosCompra.pas',
   inLibGridPivoteCompra in 'src\Lib\inLibGridPivoteCompra.pas',
   inMtoModalFacturarAlbaranesFechas in 'src\Modals\inMtoModalFacturarAlbaranesFechas.pas' {frmModalFacturarAlbaranesFechas},
