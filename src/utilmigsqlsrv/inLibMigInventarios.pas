@@ -194,11 +194,13 @@ const
     // Mismo criterio que SKUs: si Descripcion es 'INDEFINIDO'/vacia,
     // usar el codigo legacy ('0', '00'...) como slot de color.
     '       CASE ' +
-    '         WHEN c.Descripcion IS NULL ' +
-    '           OR LTRIM(RTRIM(c.Descripcion)) = '''' ' +
-    '           OR UPPER(LTRIM(RTRIM(c.Descripcion))) = ''INDEFINIDO'' ' +
+    '         WHEN acp.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(acp.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(acp.Color))) ' +
-    '         ELSE UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         WHEN c.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       ISNULL(art.DescripcionLarga, ' +
     '              ISNULL(art.DescripcionCorta, '''')) AS DescArt ' +

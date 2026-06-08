@@ -288,24 +288,19 @@ begin
     qSrc.Free;
   end;
 
-  // Segunda pasada: incluir CUALQUIER otro color que aparezca como
-  // texto en ocartcol u ocartbap pero que no haya sido resuelto a un
-  // canonico de occolor. Esto cubre fallbacks como "26", "16 VER",
-  // "BERENG" — codigos locales que el JOIN a occolor deja fuera.
-  // Sin esto, articulos_colores falla con
+  // Segunda pasada: el color que usan SKUs/movimientos/tarifas/etc. es el
+  // TEXTO del proveedor (ac.Color, ver el CASE de slot), asi que TODO color
+  // de ocartcol debe existir como valor de atributo — no solo los que el JOIN
+  // a occolor deja fuera. Tomamos ac.Color en crudo (DISTINCT, mayusculas),
+  // que es justo lo que produce el slot cuando ac.Color no es vacio. Sin
+  // esto, articulos_colores/skus fallan con
   //   "color X no esta en fza_atributos_valores".
-  // ANTES esta pasada hacia UNION con dbo.ocartbap (codigos de barras, tabla
-  // ENORME) y se colgaba/tardaba muchisimo. Los colores de los barcodes son
-  // un SUBCONJUNTO de los de ocartcol (un barcode es de un articulo+color que
-  // ya esta en ocartcol), asi que basta con ocartcol: mucho mas ligero.
-  Eng.Log('  segunda pasada: colores de uso local en ocartcol...');
+  // Solo ocartcol (no ocartbap): los colores de los barcodes son un
+  // SUBCONJUNTO de los de ocartcol, asi que basta y es mucho mas ligero.
+  Eng.Log('  segunda pasada: colores del proveedor (ac.Color) de ocartcol...');
   qSrc := NuevoQOrigen(Eng,
-    'SELECT DISTINCT UPPER(LTRIM(RTRIM( ' +
-    '    CASE WHEN c.Descripcion IS NOT NULL ' +
-    '    THEN c.Descripcion ELSE ac.Color END ' +
-    '  ))) AS DescColor ' +
+    'SELECT DISTINCT UPPER(LTRIM(RTRIM(ac.Color))) AS DescColor ' +
     'FROM dbo.ocartcol ac ' +
-    'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE LTRIM(RTRIM(ISNULL(ac.Color, ''''))) <> '''' ' +
     'ORDER BY DescColor');
   try
@@ -316,7 +311,7 @@ begin
       if sDesc <> '' then
       begin
         if InsertarValorAtributo(Eng, 'CO', sDesc,
-                                  'Color ' + sDesc + ' (uso local)',
+                                  'Color ' + sDesc + ' (proveedor)',
                                   iOrden) then
         begin
           Inc(Stats.Insertadas);
