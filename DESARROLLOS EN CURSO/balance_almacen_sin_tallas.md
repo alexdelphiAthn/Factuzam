@@ -24,7 +24,7 @@ Agrupaciones del formulario base).
 Todo el "armazón" es común (mismo formulario base `TfrmPrintMultiFiltro`):
 
 - **Filtros** en pestañas: almacén, familias (padre→hijas), proveedor,
-  temporada (todos multi-selección con buscador), y fechas.
+  temporada, artículos (todos multi-selección con buscador), y fechas.
 - **Modos**: entre fechas (`F`) / por acumulados (`A`); **detalle**
   simplificado / desglosado (subtipos Ctrl+U).
 - **Bandas**: pestaña para elegir qué bandas salen.
@@ -69,10 +69,11 @@ talla. Salida: las mismas columnas que el horizontal **menos** `T01..T14` y
 
 ## 3. Contrato del SP
 
-Parámetros **idénticos** a `PRC_GET_BALANCE_ALMACEN_TALLAS` (14): `p_MODO,
+Parámetros **idénticos** a `PRC_GET_BALANCE_ALMACEN_TALLAS` (15): `p_MODO,
 p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS, p_PROVEEDORES, p_TEMPORADAS,
-p_COD_TARIFA, p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
-p_NIVEL_FAM`. Ver `balance_almacen_tallas.md §3 / §3.1` para el detalle de
+p_ARTICULOS, p_COD_TARIFA, p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2,
+p_NIVEL3, p_NIVEL_FAM`. `p_ARTICULOS` (CSV; '' = todos) restringe a una lista
+de artículos. Ver `balance_almacen_tallas.md §3 / §3.1` para el detalle de
 filtros, bandas y agrupaciones.
 
 Salida: una fila por (artículo, color, banda) con `CANTIDAD`, `PRECIO`,
