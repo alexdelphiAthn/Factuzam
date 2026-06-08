@@ -60,6 +60,7 @@ CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_TALLAS`(
     IN `p_FAMILIAS`     TEXT,         -- CSV; '' = todas. Una padre incluye sus hijas
     IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '' = todos
     IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '' = todas
+    IN `p_ARTICULOS`    TEXT,         -- CSV de códigos de artículo; '' = todos
     IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
     IN `p_DESGLOSADO`   VARCHAR(1),   -- 'S'/'N' (solo aplica a modo 'F')
     IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '' = todas
@@ -81,6 +82,7 @@ BEGIN
     SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '');
     SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '');
     SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '');
+    SET p_ARTICULOS   = IFNULL(p_ARTICULOS, '');
     SET p_BANDAS      = IFNULL(p_BANDAS, '');
     -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
     -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
@@ -176,6 +178,8 @@ BEGIN
     SELECT a.`CODIGO_ART_ART`
       FROM `fza_articulos` a
      WHERE a.`ESACTIVO_ART` = 'S'
+       AND (p_ARTICULOS = ''
+            OR FIND_IN_SET(a.`CODIGO_ART_ART`, p_ARTICULOS))
        AND (p_FAMILIAS = ''
             OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bat_fam`))
        AND (p_PROVEEDORES = ''
@@ -896,11 +900,14 @@ DELIMITER ;
 
 -- ---------------------------------------------------------------------
 -- Parámetros: (p_MODO, p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS,
---              p_PROVEEDORES, p_TEMPORADAS, p_COD_TARIFA, p_DESGLOSADO,
---              p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3, p_NIVEL_FAM).
--- Todos los filtros multi-valor son CSV; '' = sin filtro (todos). p_BANDAS
--- limita qué bandas salen (códigos EXIINI/ENT/SAL/VEN/EXIFIN y, en
--- desglosado, ENTCMP/ENTALB/ENTTRA/ENTDEP/ENTREG/SALTRA/SALDEP/SALALB).
+--              p_PROVEEDORES, p_TEMPORADAS, p_ARTICULOS, p_COD_TARIFA,
+--              p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
+--              p_NIVEL_FAM).
+-- Todos los filtros multi-valor son CSV; '' = sin filtro (todos). p_ARTICULOS
+-- restringe el informe a una lista de códigos de artículo (FIND_IN_SET sobre
+-- CODIGO_ART_ART). p_BANDAS limita qué bandas salen (códigos
+-- EXIINI/ENT/SAL/VEN/EXIFIN y, en desglosado,
+-- ENTCMP/ENTALB/ENTTRA/ENTDEP/ENTREG/SALTRA/SALDEP/SALALB).
 -- p_NIVEL1/2/3 definen la jerarquía de agrupación con resumen por grupo:
 -- PRV (proveedor), FAM (familia), TMP (temporada), ALM (almacén) o ''
 -- (nivel inactivo). El orden importa: NIVEL1 es el grupo más externo. La
@@ -913,12 +920,15 @@ DELIMITER ;
 -- Ejemplos de uso (desde el modal de impresión preparar_consulta):
 --   -- Entre fechas, simplificado, todos los almacenes, todas las bandas,
 --   -- sin agrupación adicional
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','','','','','PVP','N','','','','',0);
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','','','','','','PVP','N','','','','',0);
 --   -- Entre fechas, desglosado, almacenes 01 y 50, familias 0103 y 0104
 --   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26,
 --   -- solo las bandas de existencias y ventas, agrupando por proveedor y
 --   -- dentro de cada proveedor por la familia raíz (nivel 1 del árbol)
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','01,50','0103,0104','PRV001','V26','PVP','S','EXIINI,VEN,EXIFIN','PRV','FAM','',1);
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('F','2026-05-01','2026-05-21','01,50','0103,0104','PRV001','V26','','PVP','S','EXIINI,VEN,EXIFIN','PRV','FAM','',1);
 --   -- Por acumulados, todas las bandas, agrupado por almacén y temporada
---   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('A',NULL,NULL,'','','','','PVP','N','','ALM','TMP','',0);
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('A',NULL,NULL,'','','','','','PVP','N','','ALM','TMP','',0);
+--   -- Acumulados restringido a dos artículos concretos (resto de filtros
+--   -- vacíos = todos)
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS('A',NULL,NULL,'','','','','ART001,ART002','PVP','N','','','','',0);
 -- ---------------------------------------------------------------------

@@ -49,6 +49,7 @@ CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`(
     IN `p_FAMILIAS`     TEXT,         -- CSV; '' = todas. Una padre incluye sus hijas
     IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '' = todos
     IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '' = todas
+    IN `p_ARTICULOS`    TEXT,         -- CSV de códigos de artículo; '' = todos
     IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
     IN `p_DESGLOSADO`   VARCHAR(1),   -- 'S'/'N' (solo aplica a modo 'F')
     IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '' = todas
@@ -70,6 +71,7 @@ BEGIN
     SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '');
     SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '');
     SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '');
+    SET p_ARTICULOS   = IFNULL(p_ARTICULOS, '');
     SET p_BANDAS      = IFNULL(p_BANDAS, '');
     -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
     -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
@@ -153,6 +155,8 @@ BEGIN
     SELECT a.`CODIGO_ART_ART`
       FROM `fza_articulos` a
      WHERE a.`ESACTIVO_ART` = 'S'
+       AND (p_ARTICULOS = ''
+            OR FIND_IN_SET(a.`CODIGO_ART_ART`, p_ARTICULOS))
        AND (p_FAMILIAS = ''
             OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bst_fam`))
        AND (p_PROVEEDORES = ''
@@ -718,13 +722,16 @@ DELIMITER ;
 
 -- ---------------------------------------------------------------------
 -- Parámetros: idénticos a PRC_GET_BALANCE_ALMACEN_TALLAS (p_MODO, p_DESDE,
--- p_HASTA, p_ALMACENES, p_FAMILIAS, p_PROVEEDORES, p_TEMPORADAS,
+-- p_HASTA, p_ALMACENES, p_FAMILIAS, p_PROVEEDORES, p_TEMPORADAS, p_ARTICULOS,
 -- p_COD_TARIFA, p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
--- p_NIVEL_FAM). La salida NO trae columnas de talla (T01..T14 / ETIQ_T*):
+-- p_NIVEL_FAM). p_ARTICULOS restringe a una lista de códigos de artículo
+-- (CSV; '' = todos). La salida NO trae columnas de talla (T01..T14 / ETIQ_T*):
 -- una fila por (artículo, color, banda) con CANTIDAD / PRECIO / IMPORTE.
 -- Ejemplos:
 --   -- Entre fechas, simplificado, sin agrupación
---   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS('F','2026-05-01','2026-05-21','','','','','PVP','N','','','','',0);
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS('F','2026-05-01','2026-05-21','','','','','','PVP','N','','','','',0);
 --   -- Acumulados agrupado por proveedor y, dentro, por familia raíz
---   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS('A',NULL,NULL,'','','','','PVP','N','','PRV','FAM','',1);
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS('A',NULL,NULL,'','','','','','PVP','N','','PRV','FAM','',1);
+--   -- Entre fechas restringido a un artículo concreto
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS('F','2026-05-01','2026-05-21','','','','','ART001','PVP','N','','','','',0);
 -- ---------------------------------------------------------------------

@@ -134,6 +134,7 @@ CALL PRC_GET_BALANCE_ALMACEN_TALLAS(
      p_FAMILIAS,    -- CSV; '' = todas. Una familia padre incluye sus hijas
      p_PROVEEDORES, -- CSV de códigos de proveedor; '' = todos
      p_TEMPORADAS,  -- CSV de valores de temporada; '' = todas
+     p_ARTICULOS,   -- CSV de códigos de artículo; '' = todos
      p_COD_TARIFA,  -- '' = 'PVP'
      p_DESGLOSADO,  -- 'S'/'N' (solo 'F')
      p_BANDAS,      -- CSV de códigos de banda; '' = todas
@@ -154,6 +155,8 @@ familias se expanden a su descendencia con un CTE recursivo sobre
 `CODIGO_PADRE_FAM` (elegir una padre arrastra sus hijas). Proveedores filtra
 por `fza_articulos_proveedores`; temporadas por la propiedad de artículo
 `TEMPORADA` (`fza_articulos_propiedades` → `fza_propiedades_valores.PV`).
+**Artículos** (`p_ARTICULOS`) restringe el informe a una lista concreta de
+códigos de artículo (`FIND_IN_SET` sobre `CODIGO_ART_ART`).
 
 Devuelve **una fila por (artículo, color, banda)**, ya pivotada por talla.
 Columnas del resultado (las consume el `TfrxDBDataset` del informe):
@@ -322,16 +325,16 @@ código** un `TcxPageControl` con una pestaña por filtro, según el conjunto
 que devuelva `FiltrosUsados` (por defecto todas):
 
 - **Fechas**: rango desde / hasta.
-- **Almacenes**, **Familias**, **Proveedores**, **Temporadas**: un
-  `TcxCheckListBox` de multi-selección cada una, **con cuadro de búsqueda**
+- **Almacenes**, **Familias**, **Proveedores**, **Temporadas**, **Artículos**:
+  un `TcxCheckListBox` de multi-selección cada una, **con cuadro de búsqueda**
   encima (filtra las filas visibles; las marcas se conservan aunque la
   búsqueda las oculte, porque el código marcado se guarda aparte). Convención:
   sin nada marcado = todos. `EditValueFormat = cvfStatesString` para no topar
   en 64 ítems. **Proveedores** lista solo los que tienen artículos.
 
 Expone a los descendientes: `CSVAlmacenes`, `CSVFamilias`, `CSVProveedores`,
-`CSVTemporadas`, `FechaDesde`, `FechaHasta`, y (protegido) `TabFechas` /
-`DteDesde` / `DteHasta` para añadir controles propios.
+`CSVTemporadas`, `CSVArticulos`, `FechaDesde`, `FechaHasta`, y (protegido)
+`TabFechas` / `DteDesde` / `DteHasta` para añadir controles propios.
 
 - **Agrupaciones** (reutilizable): `CrearTabAgrupacion(caption, codigos,
   etiquetas, conNivelFamilia)` crea una pestaña con un checklist de
@@ -350,7 +353,7 @@ este estilo".
 
 Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
 
-- `FiltrosUsados` = las cinco pestañas.
+- `FiltrosUsados` = las seis pestañas (incluida la nueva de Artículos).
 - Los radios **Modo** (Entre fechas / Por acumulados) y **Detalle**
   (Simplificado / Desglosado), creados por código sobre `TabFechas`; en
   acumulados se inhabilitan fechas y detalle.
@@ -362,7 +365,7 @@ Hereda de `TfrmPrintMultiFiltro`. Solo aporta:
   dimensiones `ALM`/`PRV`/`FAM`/`TMP` reordenables + spin de nivel de familia.
   Se mapea a `p_NIVEL1/2/3` (códigos marcados en orden) y `p_NIVEL_FAM`.
 - `preparar_consulta`: arma el `CALL PRC_GET_BALANCE_ALMACEN_TALLAS(...)` con
-  los cuatro CSV del base + fechas + modo/detalle + bandas + agrupaciones.
+  los cinco CSV del base + fechas + modo/detalle + bandas + agrupaciones.
 - `AfterReportLoaded`: además de enlazar el dataset, sustituye
   `frxrprt1.OnBeforePrint` por `ReportBeforePrint` (fotos + ocultar niveles
   de grupo inactivos, ver §5).
