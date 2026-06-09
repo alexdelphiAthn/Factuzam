@@ -230,6 +230,70 @@ momento el `BeforePost` invoca `ResolverCodigoFamilia` que expande al
 código numérico final (`BOLSOS00001`), incrementa el contador y
 sustituye el código tentativo.
 
+### 2.4-ter Modelo de proveedor: reusar artículos existentes (filtro incremental)
+
+La sesión sirve tanto para **dar de alta modelos nuevos** como para
+**reaprovisionar modelos que ya existen** en la BBDD. El identificador que
+maneja el usuario en estos casos es el **modelo del proveedor**
+(`REF_PRV_SESLIN`, columna «Modelo prov.»), no el código interno del
+artículo — que normalmente desconoce.
+
+#### Desplegable in-cell de búsqueda incremental
+
+La columna «Modelo prov.» (`dbcLinRefPrv`) usa, en celda **vacía y
+enfocada**, un `TcxExtLookupComboBox` montado en runtime
+(`CrearLookupModelo`, mismo patrón probado de `inLibGridArticulos`):
+
+- `FModeloBusqQry` lista **un modelo por fila** del proveedor de la
+  cabecera (`CODIGO_PRV_SES`): `REF_PROVEEDOR_AP`, código de artículo,
+  descripción, **sistema de tallas**, **colores ya existentes**
+  (`GROUP_CONCAT` de los AV `'CO'` de sus SKUs) y **último precio de
+  compra** — para que el usuario vea de un vistazo lo que ya hay.
+- `IncrementalFiltering := True` (sin `ifoUseContainsOperator`) → filtra
+  **«empieza por»** mientras se teclea, que es justo lo pedido: los modelos
+  cuyo comienzo coincide. La lista está acotada al proveedor por el `:prv`
+  del query, que `RecargarModelos` reabre al navegar de sesión o cambiar
+  `CODIGO_PRV_SES` (hook `dsTablaGDataChangeHook`).
+- `DropDownListStyle = lsEditList`: si lo tecleado **no** es un modelo
+  existente, se acepta como texto → la línea es un **alta nueva** normal
+  (comportamiento de siempre).
+
+Al elegir un modelo de la lista, `ModeloComboCloseUp` difiere la
+resolución (timer 1 ms) y `ModeloTimerResolveTimer` invoca
+`ResolverDuplicadoSesion` (rama `REF`) + `AplicarDuplicadoEnLinea`: la
+línea queda marcada **`ACCION_DUPLICADO_SESLIN = 'REUSAR'`** apuntando al
+artículo existente, con descripción, familia, **sistema de tallas**,
+**coste** y **PVP** precargados como referencia.
+
+#### Qué se puede cambiar y qué no al reusar
+
+| Elemento            | Al reusar un modelo existente                                  |
+|---------------------|----------------------------------------------------------------|
+| Sistema de tallas   | **Fijo** al del artículo. El selector de tallas rechaza el cambio en líneas `REUSAR` (descuadraría los SKUs ya creados). |
+| Colores             | Se pueden **añadir nuevos** (color libre y/o color básico nuevo) como líneas adicionales del mismo modelo. |
+| Tallas              | Solo se incorporan las **nuevas** del mismo sistema.            |
+| Precio de compra    | Se propone el último (`PRECIO_ULT_COMPRA_AP`); editable.       |
+| PVP / tarifa        | Se propone el actual de la tarifa de cabecera (`ObtenerPvpArticulo`) como referencia «por si no ha cambiado»; editable. |
+
+#### Materialización aditiva (sin tratamiento especial extra)
+
+Las líneas `REUSAR` ya se materializan de forma **aditiva** con la lógica
+existente (`inLibComprasSesionesMaterializar`):
+
+- `InsertarArticulo` **no** se ejecuta (el artículo no se recrea).
+- `InsertarSkusYBarras` / `InsertarConjuntosAtributos` usan `INSERT
+  IGNORE` → **solo se crean los colores/tallas que antes no existían**;
+  los EAN13 solo se generan para SKUs sin código de barras.
+- `UpsertArticuloProveedor` actualiza `PRECIO_ULT_COMPRA_AP` (precio de
+  compra del documento) y `REF_PROVEEDOR_AP`.
+- `UpsertArticuloTarifa` graba el PVP de la línea: si el usuario no tocó
+  el valor propuesto, queda igual («no cambia»); si lo editó, actualiza la
+  tarifa.
+
+Por eso esta funcionalidad **no requiere cambios de esquema** ni un camino
+de materialización aparte: reutiliza la infraestructura `REUSAR` y la
+idempotencia de los `INSERT IGNORE` / upserts.
+
 ### 2.5 Precio de coste y precio de venta (tarifa)
 
 La sesión maneja **dos precios** por línea:
