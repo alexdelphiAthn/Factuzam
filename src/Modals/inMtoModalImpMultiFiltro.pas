@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inMtoModalImpMultiFiltro                                      }
 {    Tipo:       Formulario base (Modal de impresión)                          }
-{ Versión:       1.2.0                                                         }
-{   Fecha:       02/06/2026                                                    }
+{ Versión:       1.3.0                                                         }
+{   Fecha:       09/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -12,8 +12,13 @@
 {    Formulario BASE para informes (FastReport) con filtros múltiples en       }
 {    pestañas. Hereda de TfrmPrint y, al mostrarse, crea por código un         }
 {    TcxPageControl con una pestaña por filtro: Fechas (rango) y, como         }
-{    checklists multi-selección CON BUSCADOR, Almacenes / Familias /           }
-{    Proveedores / Temporadas / Artículos.                                     }
+{    checklists multi-selección CON BUSCADOR, Almacenes / Proveedores /        }
+{    Temporadas / Artículos.                                                   }
+{                                                                              }
+{    Familias se muestra como ÁRBOL jerárquico (no como lista plana): se       }
+{    pinta la jerarquía padre→subfamilias (CODIGO_SUBFAMILIA_FAM) y marcar     }
+{    una familia incluye en cascada todas sus subfamilias, de modo que el      }
+{    usuario elige el padre o el hijo según convenga. Ver CrearTabFamiliasArbol}
 {                                                                              }
 {    Cada checklist de filtro guarda su lista completa (Fuente) y el conjunto  }
 {    de códigos marcados (Marcados); el buscador re-filtra las filas visibles  }
@@ -39,6 +44,7 @@ uses
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxPC, cxCheckListBox, cxCheckBox, cxCustomListBox, cxClasses,
+  cxTL, cxTLData, cxInplaceContainer,
   cxButtons, cxSpinEdit, dxSkinsCore, dxSkinsForm, inLibGlobalVar;
 
 type
@@ -77,10 +83,16 @@ type
     FdteHasta       : TcxDateEdit;
     FFiltros        : TObjectList<TFiltroChecklist>;
     FfcAlmacenes    : TFiltroChecklist;
-    FfcFamilias     : TFiltroChecklist;
     FfcProveedores  : TFiltroChecklist;
     FfcTemporadas   : TFiltroChecklist;
     FfcArticulos    : TFiltroChecklist;
+    // Familias va como árbol jerárquico (no checklist plano): marcar una
+    // familia incluye sus subfamilias. Construido en CrearTabFamiliasArbol.
+    FtlFamilias     : TcxTreeList;
+    FedtFamilias    : TcxTextEdit;
+    FcolFamNombre   : TcxTreeListColumn;
+    FcolFamMarcado  : TcxTreeListColumn;
+    FcolFamCodigo   : TcxTreeListColumn;
     // Pestaña de agrupaciones (reordenable). FAgrupItems es el orden actual de
     // las dimensiones; FclbAgrup el checklist; FseNivelFam el nivel de familia.
     FAgrupItems     : TObjectList<TItemAgrup>;
@@ -106,6 +118,18 @@ type
                               APrevState, ANewState: TcxCheckBoxState);
     procedure AgrupSubirClick(Sender: TObject);
     procedure AgrupBajarClick(Sender: TObject);
+    // Soporte de la pestaña de familias en árbol (jerárquico, con cascada).
+    procedure CrearTabFamiliasArbol;
+    procedure CargarFamiliasArbol;
+    function  NuevoNodoFam(AParent: TcxTreeListNode;
+                           const ACodigo, ANombre: string): TcxTreeListNode;
+    procedure MarcarRamaFam(ANode: TcxTreeListNode; AValor: Boolean);
+    procedure AlternarNodoFam(ANode: TcxTreeListNode);
+    procedure FiltrarArbolFam(const ATexto: string);
+    procedure FamiliasDblClick(Sender: TObject);
+    procedure FamiliasKeyDown(Sender: TObject; var Key: Word;
+                              Shift: TShiftState);
+    procedure FamiliasSearchChange(Sender: TObject);
   protected
     // Los descendientes redefinen esto para elegir qué pestañas mostrar.
     function FiltrosUsados: TFiltrosReport; virtual;
@@ -208,7 +232,7 @@ begin
   if frAlmacenes in fs then
     FfcAlmacenes := CrearTabFiltro('Almacenes');
   if frFamilias in fs then
-    FfcFamilias := CrearTabFiltro('Familias');
+    CrearTabFamiliasArbol;
   if frProveedores in fs then
     FfcProveedores := CrearTabFiltro('Proveedores');
   if frTemporadas in fs then
@@ -395,12 +419,8 @@ begin
     '  FROM fza_almacenes ' +
     ' WHERE ESACTIVO_ALM = ''S'' ' +
     ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM', 'COD', 'NOM');
-  CargarFiltro(FfcFamilias,
-    'SELECT CODIGO_FAM_FAM AS COD, ' +
-    '       COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, CODIGO_FAM_FAM) AS NOM ' +
-    '  FROM fza_articulos_familias ' +
-    ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
-    ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM', 'COD', 'NOM');
+  // Familias va como árbol (jerarquía padre→subfamilias), no como checklist.
+  CargarFamiliasArbol;
   // Solo proveedores con al menos un artículo: la lista es relevante y corta.
   CargarFiltro(FfcProveedores,
     'SELECT p.CODIGO_PRV_PRV AS COD, p.RAZON_SOCIAL_PRV AS NOM ' +
@@ -695,14 +715,321 @@ begin
     Result := 0;
 end;
 
+// ===========================================================================
+//   Pestaña de familias como árbol jerárquico (no como lista plana)
+// ===========================================================================
+// Índices de columna del árbol de familias (orden de creación).
+const
+  cFamNombre  = 0;
+  cFamMarcado = 1;
+  cFamCodigo  = 2;
+
+// Crea la pestaña "Familias" con un TcxTreeList no ligado (nombre + checkbox
+// "Incluir" + código) y un buscador. El árbol y el checkbox se editan por
+// código (doble clic / barra espaciadora), igual que en inMtoPermisosArbol.
+procedure TfrmPrintMultiFiltro.CrearTabFamiliasArbol;
+var
+  ts    : TcxTabSheet;
+  pnlTop: TPanel;
+  lbl   : TcxLabel;
+begin
+  ts := TcxTabSheet.Create(FpcFiltros);
+  ts.PageControl := FpcFiltros;
+  ts.Caption := 'Familias';
+  // Cabecera fija con la ayuda y el buscador (panel para fijar el orden).
+  pnlTop := TPanel.Create(Self);
+  pnlTop.Parent     := ts;
+  pnlTop.Align      := alTop;
+  pnlTop.Height     := 58;
+  pnlTop.BevelOuter := bvNone;
+  lbl := TcxLabel.Create(Self);
+  lbl.Parent      := pnlTop;
+  lbl.Transparent := True;
+  lbl.Left        := 4;
+  lbl.Top         := 4;
+  lbl.Caption     :=
+    'Doble clic o barra espaciadora marca/desmarca. Marcar una ' +
+    'familia incluye sus subfamilias. Sin marcar = todas.';
+  FedtFamilias := TcxTextEdit.Create(Self);
+  FedtFamilias.Parent   := pnlTop;
+  FedtFamilias.Left     := 4;
+  FedtFamilias.Top      := 28;
+  FedtFamilias.Width    := 420;
+  FedtFamilias.Hint     := 'Escriba para buscar una familia';
+  FedtFamilias.ShowHint := True;
+  FedtFamilias.Properties.OnEditValueChanged := FamiliasSearchChange;
+  FtlFamilias := TcxTreeList.Create(Self);
+  FtlFamilias.Parent := ts;
+  FtlFamilias.Align  := alClient;
+  FtlFamilias.OptionsBehavior.Sorting      := False;
+  FtlFamilias.OptionsData.Editing          := False;
+  FtlFamilias.OptionsData.Deleting         := False;
+  FtlFamilias.OptionsData.Inserting        := False;
+  FtlFamilias.OptionsSelection.MultiSelect := False;
+  FtlFamilias.OptionsView.Buttons          := True;
+  FtlFamilias.OptionsView.Headers          := True;
+  FtlFamilias.OptionsView.ShowRoot         := True;
+  if FtlFamilias.Bands.Count = 0 then
+    FtlFamilias.Bands.Add;
+  FcolFamNombre := FtlFamilias.CreateColumn;
+  FcolFamNombre.Position.BandIndex := 0;
+  FcolFamNombre.Caption.Text       := 'Familia';
+  FcolFamNombre.Width              := 320;
+  FcolFamNombre.Options.Editing    := False;
+  FcolFamMarcado := FtlFamilias.CreateColumn;
+  FcolFamMarcado.Position.BandIndex    := 0;
+  FcolFamMarcado.Caption.Text          := 'Incluir';
+  FcolFamMarcado.Width                 := 70;
+  FcolFamMarcado.DataBinding.ValueType := 'Boolean';
+  FcolFamMarcado.PropertiesClass       := TcxCheckBoxProperties;
+  FcolFamMarcado.Options.Editing       := False;
+  FcolFamCodigo := FtlFamilias.CreateColumn;
+  FcolFamCodigo.Position.BandIndex := 0;
+  FcolFamCodigo.Caption.Text       := 'C' + #243 + 'digo';
+  FcolFamCodigo.Width              := 120;
+  FcolFamCodigo.Options.Editing    := False;
+  FtlFamilias.OnDblClick := FamiliasDblClick;
+  FtlFamilias.OnKeyDown  := FamiliasKeyDown;
+end;
+
+// Carga las familias activas y construye el árbol respetando la jerarquía
+// padre→hijo (CODIGO_SUBFAMILIA_FAM). Una familia cuelga de la raíz si no
+// tiene padre o si su padre no existe. Guarda anticíclica por código colocado.
+procedure TfrmPrintMultiFiltro.CargarFamiliasArbol;
+var
+  q        : TUniQuery;
+  i        : Integer;
+  sClave   : string;
+  slCod    : TStringList;
+  slNom    : TStringList;
+  slPad    : TStringList;
+  conocidos: TStringList;
+  colocados: TStringList;
+  hijosDe  : TObjectDictionary<string, TList<Integer>>;
+  lst      : TList<Integer>;
+  procedure AnadirHijos(AParent: TcxTreeListNode; const AClave: string);
+  var
+    j   : Integer;
+    sub : TList<Integer>;
+    node: TcxTreeListNode;
+    idx : Integer;
+  begin
+    if hijosDe.TryGetValue(AClave, sub) then
+      for j := 0 to sub.Count - 1 do
+      begin
+        idx := sub[j];
+        if colocados.IndexOf(slCod[idx]) < 0 then
+        begin
+          colocados.Add(slCod[idx]);
+          node := NuevoNodoFam(AParent, slCod[idx], slNom[idx]);
+          AnadirHijos(node, slCod[idx]);
+        end;
+      end;
+  end;
+begin
+  if FtlFamilias <> nil then
+  begin
+    slCod     := TStringList.Create;
+    slNom     := TStringList.Create;
+    slPad     := TStringList.Create;
+    conocidos := TStringList.Create;
+    colocados := TStringList.Create;
+    hijosDe   :=
+      TObjectDictionary<string, TList<Integer>>.Create([doOwnsValues]);
+    try
+      conocidos.Sorted := True;
+      colocados.Sorted := True;
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := inLibGlobalVar.oConn;
+        q.SQL.Text :=
+          'SELECT CODIGO_FAM_FAM AS COD, ' +
+          '       COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, ' +
+          '                CODIGO_FAM_FAM) AS NOM, ' +
+          '       COALESCE(CODIGO_SUBFAMILIA_FAM, '''') AS PADRE ' +
+          '  FROM fza_articulos_familias ' +
+          ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
+          ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM';
+        q.Open;
+        while not q.Eof do
+        begin
+          slCod.Add(q.FieldByName('COD').AsString);
+          slNom.Add(q.FieldByName('NOM').AsString);
+          slPad.Add(q.FieldByName('PADRE').AsString);
+          conocidos.Add(q.FieldByName('COD').AsString);
+          q.Next;
+        end;
+      finally
+        FreeAndNil(q);
+      end;
+      // Mapa clave(padre)→índices de hijos. Clave vacía = familias raíz.
+      for i := 0 to slCod.Count - 1 do
+      begin
+        sClave := slPad[i];
+        if (sClave = '') or (conocidos.IndexOf(sClave) < 0) then
+          sClave := '';
+        if not hijosDe.TryGetValue(sClave, lst) then
+        begin
+          lst := TList<Integer>.Create;
+          hijosDe.Add(sClave, lst);
+        end;
+        lst.Add(i);
+      end;
+      FtlFamilias.BeginUpdate;
+      try
+        FtlFamilias.Clear;
+        AnadirHijos(nil, '');
+      finally
+        FtlFamilias.EndUpdate;
+      end;
+    finally
+      FreeAndNil(slCod);
+      FreeAndNil(slNom);
+      FreeAndNil(slPad);
+      FreeAndNil(conocidos);
+      FreeAndNil(colocados);
+      FreeAndNil(hijosDe);
+    end;
+  end;
+end;
+
+function TfrmPrintMultiFiltro.NuevoNodoFam(AParent: TcxTreeListNode;
+  const ACodigo, ANombre: string): TcxTreeListNode;
+begin
+  if AParent = nil then
+    Result := FtlFamilias.Root.AddChild
+  else
+    Result := AParent.AddChild;
+  Result.Texts[cFamNombre]   := ANombre;
+  Result.Texts[cFamCodigo]   := ACodigo;
+  Result.Values[cFamMarcado] := False;
+end;
+
+// Fija la marca del nodo y la propaga en cascada a todas sus subfamilias.
+procedure TfrmPrintMultiFiltro.MarcarRamaFam(ANode: TcxTreeListNode;
+  AValor: Boolean);
+var
+  i: Integer;
+begin
+  if ANode <> nil then
+  begin
+    ANode.Values[cFamMarcado] := AValor;
+    for i := 0 to ANode.Count - 1 do
+      MarcarRamaFam(ANode.Items[i], AValor);
+  end;
+end;
+
+// Alterna la marca del nodo enfocado; marcar el padre incluye a los hijos
+// (y desmarcarlo los excluye), de ahí la cascada hacia abajo.
+procedure TfrmPrintMultiFiltro.AlternarNodoFam(ANode: TcxTreeListNode);
+var
+  bNuevo: Boolean;
+begin
+  if ANode <> nil then
+  begin
+    bNuevo := not (ANode.Values[cFamMarcado] = True);
+    FtlFamilias.BeginUpdate;
+    try
+      MarcarRamaFam(ANode, bNuevo);
+    finally
+      FtlFamilias.EndUpdate;
+    end;
+  end;
+end;
+
+// Filtra el árbol por texto (nombre o código): un nodo queda visible si él o
+// algún descendiente coincide. No toca las marcas, así una búsqueda no
+// descarta selecciones ocultas.
+procedure TfrmPrintMultiFiltro.FiltrarArbolFam(const ATexto: string);
+var
+  lt: string;
+  i : Integer;
+  function Coincide(N: TcxTreeListNode): Boolean;
+  var
+    j   : Integer;
+    hijo: Boolean;
+    vis : Boolean;
+    nom : string;
+    code: string;
+  begin
+    hijo := False;
+    for j := 0 to N.Count - 1 do
+      if Coincide(N.Items[j]) then
+        hijo := True;
+    nom  := LowerCase(N.Texts[cFamNombre]);
+    code := LowerCase(N.Texts[cFamCodigo]);
+    vis := hijo or (lt = '') or (Pos(lt, nom) > 0) or (Pos(lt, code) > 0);
+    N.Visible := vis;
+    Result := vis;
+  end;
+begin
+  if FtlFamilias <> nil then
+  begin
+    lt := LowerCase(Trim(ATexto));
+    FtlFamilias.BeginUpdate;
+    try
+      for i := 0 to FtlFamilias.Root.Count - 1 do
+        Coincide(FtlFamilias.Root.Items[i]);
+    finally
+      FtlFamilias.EndUpdate;
+    end;
+    if lt <> '' then
+      FtlFamilias.FullExpand;
+  end;
+end;
+
+procedure TfrmPrintMultiFiltro.FamiliasDblClick(Sender: TObject);
+begin
+  if FtlFamilias <> nil then
+    AlternarNodoFam(FtlFamilias.FocusedNode);
+end;
+
+procedure TfrmPrintMultiFiltro.FamiliasKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (FtlFamilias <> nil) and (Key = VK_SPACE) then
+  begin
+    AlternarNodoFam(FtlFamilias.FocusedNode);
+    Key := 0;
+  end;
+end;
+
+procedure TfrmPrintMultiFiltro.FamiliasSearchChange(Sender: TObject);
+begin
+  FiltrarArbolFam(FedtFamilias.Text);
+end;
+
 function TfrmPrintMultiFiltro.CSVAlmacenes: string;
 begin
   Result := CSVDe(FfcAlmacenes);
 end;
 
+// CSV de las familias marcadas en el árbol (incluye las marcadas en cascada
+// al marcar un padre). Recorre todos los nodos, no solo los visibles, para no
+// perder selecciones ocultas por el buscador.
 function TfrmPrintMultiFiltro.CSVFamilias: string;
+var
+  sb: string;
+  k : Integer;
+  procedure Recorrer(N: TcxTreeListNode);
+  var
+    i: Integer;
+  begin
+    if N.Values[cFamMarcado] = True then
+    begin
+      if sb <> '' then
+        sb := sb + ',';
+      sb := sb + N.Texts[cFamCodigo];
+    end;
+    for i := 0 to N.Count - 1 do
+      Recorrer(N.Items[i]);
+  end;
 begin
-  Result := CSVDe(FfcFamilias);
+  sb := '';
+  if FtlFamilias <> nil then
+    for k := 0 to FtlFamilias.Root.Count - 1 do
+      Recorrer(FtlFamilias.Root.Items[k]);
+  Result := sb;
 end;
 
 function TfrmPrintMultiFiltro.CSVProveedores: string;
