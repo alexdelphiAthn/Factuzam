@@ -67,10 +67,14 @@ type
     // evitando la necesidad de DELIMITER (que TUniScript no entiende).
     procedure InstalarProcedimientos;
 
-    // Crear albarán a partir de las cantidades entregadas pendientes
+    // Crear albarán a partir de las cantidades entregadas pendientes.
+    // ACodigoAlmacen: almacén (único) del que sale la mercancía del
+    // albarán. Se fija en todas las líneas del albarán generado,
+    // sobreescribiendo el almacén que cada línea heredaba del pedido.
     function CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
                                      aLineas: TList<TPair<string,
-                                     Currency>>): Boolean;
+                                     Currency>>;
+                                     const ACodigoAlmacen: string): Boolean;
 
     // Importación PrestaShop
     function ImportarPedidoPrestaShop(aOrder: TOrder): Boolean;
@@ -465,11 +469,14 @@ end;
 
 function TdmPedidos.CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
                                             aLineas: TList<TPair<string,
-                                            Currency>>): Boolean;
+                                            Currency>>;
+                                            const ACodigoAlmacen: string)
+                                            : Boolean;
 var
   i: Integer;
   sNumeroPed, sSeriePed: string;
   par: TPair<string, Currency>;
+  qAlm: TUniQuery;
 begin
   Result := False;
   sNumeroAlb := ''; sSerieAlb := '';
@@ -521,6 +528,32 @@ begin
       ParamByName('p_CANTIDAD').AsCurrency := par.Value;
       ParamByName('p_USUARIO').AsString    := oUser;
       ExecProc;
+    end;
+  end;
+
+  // 2b) Fijar el almacén elegido en todas las líneas del albarán. La SP
+  //     PRC_PED_CREAR_ALBARAN_LINEA copia el almacén de cada línea del
+  //     pedido; aquí lo unificamos al almacén único escogido al emitir
+  //     (también los movimientos de salida salen de ese almacén).
+  if Trim(ACodigoAlmacen) <> '' then
+  begin
+    qAlm := TUniQuery.Create(nil);
+    try
+      qAlm.Connection := inLibGlobalVar.oConn;
+      qAlm.SQL.Text :=
+        'UPDATE fza_albaranes_lineas ' +
+        '   SET CODIGO_ALMACEN_ALBLIN = :alm, ' +
+        '       INSTANTE_MODIF        = NOW(), ' +
+        '       USUARIO_MODIF         = :u ' +
+        ' WHERE NUMERO_ALB_ALBLIN = :n ' +
+        '   AND SERIE_ALB_ALBLIN  = :s';
+      qAlm.ParamByName('alm').AsString := ACodigoAlmacen;
+      qAlm.ParamByName('u').AsString   := oUser;
+      qAlm.ParamByName('n').AsString   := sNumeroAlb;
+      qAlm.ParamByName('s').AsString   := sSerieAlb;
+      qAlm.ExecSQL;
+    finally
+      FreeAndNil(qAlm);
     end;
   end;
 
