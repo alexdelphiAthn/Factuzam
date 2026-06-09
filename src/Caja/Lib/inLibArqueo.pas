@@ -504,12 +504,24 @@ begin
       // Partimos de TODAS las formas de pago activas y LEFT JOIN a los
       // pagos del periodo. Asi las que no tuvieron movimiento aparecen
       // con importe 0 y el usuario puede rellenar el recuento.
+      // El rango de fechas filtra la operacion (o) en el ON del LEFT JOIN,
+      // nunca en un WHERE: un WHERE sobre o.FECHA convertiria el LEFT JOIN
+      // en INNER y se perderian las formas sin movimiento. Por eso el
+      // importe se acumula con SUM(CASE WHEN o.NUMERO... IS NOT NULL ...):
+      // suma el pago SOLO cuando su operacion cae dentro del rango. Un
+      // SUM(p.IMPORTE_ENTREGADO_PAGO) directo acumulaba TODOS los pagos
+      // historicos de la caja (el LEFT JOIN conserva la fila de p aunque
+      // o sea NULL) y disparaba Efectivo/Otros/Saldo a cifras de millones.
       Query.SQL.Text :=
         ' SELECT                                                              ' +
         '   fp.CODIGO_FP_CFP                              AS CODIGO,          ' +
         '   fp.DESCRIPCION_FORMA_PAGO_CFP                 AS DESCRIPCION,     ' +
         '   fp.ESABRE_CAJON_FORMA_PAGO_CFP                AS ESCAJON,         ' +
-        '   COALESCE(SUM(p.IMPORTE_ENTREGADO_PAGO), 0)    AS IMPORTE          ' +
+        '   COALESCE(SUM(CASE                                                 ' +
+        '                  WHEN o.NUMERO_OPERACION_OPCAJA IS NOT NULL         ' +
+        '                  THEN p.IMPORTE_ENTREGADO_PAGO                      ' +
+        '                  ELSE 0                                             ' +
+        '                END), 0)                         AS IMPORTE          ' +
         '   FROM fza_caja_formas_pago fp                                      ' +
         '   LEFT JOIN fza_caja_pagos p                                        ' +
         '     ON p.CODIGO_FP_CFP = fp.CODIGO_FP_CFP                           ' +
