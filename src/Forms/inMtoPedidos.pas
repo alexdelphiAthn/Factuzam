@@ -380,11 +380,27 @@ begin
                                                  sAlmDefecto);
       if res.Aceptado then
       begin
-        if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst,
-                                              res.CodigoAlmacen) then
-          ShowMessageFmt('Albarán creado: %s / %s', [sSerieAlb, sNumeroAlb])
+        // Segun lo elegido en el modal: crear albaran nuevo o anadir las
+        // lineas a un albaran ya existente del propio pedido.
+        if res.EsExistente then
+        begin
+          if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst,
+                                                res.CodigoAlmacen,
+                                                res.NumeroAlb,
+                                                res.SerieAlb) then
+            ShowMessageFmt('Líneas añadidas al albarán %s / %s',
+                           [sSerieAlb, sNumeroAlb])
+          else
+            ShowMessage('No se pudo añadir al albarán.');
+        end
         else
-          ShowMessage('No se pudo crear el albarán.');
+        begin
+          if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst,
+                                                res.CodigoAlmacen) then
+            ShowMessageFmt('Albarán creado: %s / %s', [sSerieAlb, sNumeroAlb])
+          else
+            ShowMessage('No se pudo crear el albarán.');
+        end;
       end;
     end;
   finally

@@ -1,16 +1,16 @@
 inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
   Caption = 'Crear albar'#225'n desde pedido'
-  ClientHeight = 200
+  ClientHeight = 280
   ClientWidth = 560
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnShow = FormShow
   ExplicitWidth = 576
-  ExplicitHeight = 239
+  ExplicitHeight = 319
   TextHeight = 19
   object pnlButton: TPanel [0]
     Left = 0
-    Top = 141
+    Top = 221
     Width = 560
     Height = 59
     Align = alBottom
@@ -39,7 +39,7 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
     Left = 0
     Top = 0
     Width = 560
-    Height = 141
+    Height = 221
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
@@ -57,15 +57,64 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
       Font.Style = [fsBold]
       ParentFont = False
     end
+    object chkAnadirExistente: TcxCheckBox
+      Left = 16
+      Top = 44
+      Caption = 'A'#241'adir a un albar'#225'n ya existente de este pedido'
+      TabOrder = 0
+      OnClick = chkAnadirExistenteClick
+    end
+    object lblAlbaran: TcxLabel
+      Left = 16
+      Top = 78
+      Caption = 'Albar'#225'n destino:'
+      Transparent = True
+    end
+    object cbbAlbaran: TcxLookupComboBox
+      Left = 16
+      Top = 104
+      Properties.DropDownAutoSize = True
+      Properties.DropDownListStyle = lsFixedList
+      Properties.DropDownSizeable = True
+      Properties.KeyFieldNames = 'NUMERO_ALB'
+      Properties.ListColumns = <
+        item
+          Caption = 'N'#250'mero'
+          Width = 90
+          FieldName = 'NUMERO_ALB'
+        end
+        item
+          Caption = 'Serie'
+          Width = 70
+          FieldName = 'SERIE_ALB'
+        end
+        item
+          Caption = 'Fecha'
+          Width = 100
+          FieldName = 'FECHA_ALB'
+        end
+        item
+          Caption = 'Estado'
+          Width = 90
+          FieldName = 'ESTADO_ALB'
+        end
+        item
+          Caption = 'Total'
+          Width = 100
+          FieldName = 'TOTAL_LIQUIDO_ALB'
+        end>
+      TabOrder = 1
+      Width = 460
+    end
     object lblAlmacen: TcxLabel
       Left = 16
-      Top = 48
+      Top = 148
       Caption = 'Almac'#233'n del albar'#225'n:'
       Transparent = True
     end
     object cbbAlmacen: TcxLookupComboBox
       Left = 16
-      Top = 74
+      Top = 174
       Properties.DropDownAutoSize = True
       Properties.DropDownListStyle = lsFixedList
       Properties.DropDownSizeable = True
@@ -81,7 +130,7 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
           Width = 320
           FieldName = 'NOMBRE_ALM_ALM'
         end>
-      TabOrder = 0
+      TabOrder = 2
       Width = 460
     end
   end
@@ -107,5 +156,33 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
     DataSet = unqryAlmacenes
     Left = 408
     Top = 16
+  end
+  object unqryAlbaranesPed: TUniQuery
+    SQL.Strings = (
+      'SELECT NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB, '
+      '       TOTAL_LIQUIDO_ALB'
+      '  FROM fza_albaranes'
+      ' WHERE NUMERO_PED_ALB = :np'
+      '   AND SERIE_PED_ALB  = :sp'
+      '   AND IFNULL(ESTADO_ALB, '#39#39') <> '#39'FACTURADO'#39
+      ' ORDER BY FECHA_ALB DESC, NUMERO_ALB DESC')
+    Left = 360
+    Top = 72
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'np'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'sp'
+        Value = nil
+      end>
+  end
+  object dsAlbaranesPed: TDataSource
+    DataSet = unqryAlbaranesPed
+    Left = 408
+    Top = 72
   end
 end
