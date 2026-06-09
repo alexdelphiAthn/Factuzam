@@ -69,6 +69,12 @@ type
     property Params: TObjectDictionary<string, TParamDef> read FParams;
   end;
 
+// Niveles de la jerarquía de familias (padre→hijo→nieto…) que el resumen
+// por sección del arqueo debe desglosar. Devuelve el valor saneado al
+// rango [1..9]. Configurable en Parámetros de Caja, clave
+// 'vgerArqueoNivelesFamilia' (1 = solo la sección raíz).
+function NivelesFamiliaArqueo: Integer;
+
 var
   oCajaParams: TCajaParams;
 
@@ -331,6 +337,13 @@ begin
                      tpBoolean,
                      'True');
 
+  // --- Arqueo ---
+  RegistrarParametro('Arqueo',
+                     'vgerArqueoNivelesFamilia',
+                     'Niveles de familia en resumen por sección (1=sección)',
+                     tpInteger,
+                     '2');
+
   // ----------------------------------------------------------------------------------
   // Una vez registrada toda la estructura en memoria, le decimos a la librería
   // que se conecte a la base de datos y cargue los valores reales del usuario.
@@ -381,6 +394,15 @@ begin
   end
   else
     Result := ADefault;
+end;
+
+function NivelesFamiliaArqueo: Integer;
+begin
+  Result := oCajaParams.GetInt('vgerArqueoNivelesFamilia', 2);
+  if Result < 1 then
+    Result := 1;
+  if Result > 9 then
+    Result := 9;
 end;
 
 initialization

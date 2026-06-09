@@ -293,7 +293,8 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar, inLibPermisos, inLibLog, inMtoModalArqueosHistCaja;
+uses inLibGlobalVar, inLibPermisos, inLibLog, inMtoModalArqueosHistCaja,
+     inLibCajaParam;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -462,7 +463,11 @@ end;
 // =============================================================================
 
 procedure TfrmModalArqueo.ConfigurarResumenes;
+var
+  sNiveles: string;
 begin
+  // Niveles de familia a desglosar en el resumen por sección (Par. Caja).
+  sNiveles := IntToStr(NivelesFamiliaArqueo);
   // Empleado: 1 fila por CODIGO_EMPLEADO_OPCAJA. Mide unidades de venta
   // (operaciones distintas) y el neto vendido.
   qryResEmpleado.SQL.Text :=
@@ -504,42 +509,58 @@ begin
     '  GROUP BY p.CODIGO_FP_CFP                                           ' +
     '  ORDER BY p.CODIGO_FP_CFP                                           ';
 
-  // Familia: nombre = "PADRE-HIJO" si la familia tiene padre (vía
-  // CODIGO_SUBFAMILIA_FAM = código del padre), si no = nombre de la familia.
-  // Las líneas de factura no siempre tienen CODIGO_FAM_FACLIN poblado, así
-  // que tiramos también de fza_articulos.CODIGO_FAM_ART como fallback.
+  // Familia: ruta jerárquica raíz→hoja recortada a los primeros N niveles
+  // configurados en Parámetros de Caja (vgerArqueoNivelesFamilia). N=1 deja
+  // solo la sección raíz; N=2 sección-familia; N=3 +subfamilia… La jerarquía
+  // se recorre por CODIGO_SUBFAMILIA_FAM (= código del padre). Las líneas de
+  // factura no siempre tienen CODIGO_FAM_FACLIN poblado, así que tiramos
+  // también de fza_articulos.CODIGO_FAM_ART como fallback.
   qryResFam.SQL.Text :=
-    ' SELECT                                                              ' +
-    '   CASE                                                              ' +
-    '     WHEN p.NOMBRE_FAM_FAM IS NOT NULL                               ' +
-    '     THEN CONCAT(p.NOMBRE_FAM_FAM, ''-'', f.NOMBRE_FAM_FAM)          ' +
-    '     ELSE COALESCE(f.NOMBRE_FAM_FAM, l.NOMBRE_FAM_FACLIN,            ' +
-    '                   l.CODIGO_FAM_FACLIN, a.CODIGO_FAM_ART,            ' +
-    '                   ''(sin familia)'')                                ' +
-    '   END                                       AS FAMILIA,             ' +
-    '   COUNT(*)                                  AS UDS,                 ' +
-    '   COALESCE(SUM(l.TOTAL_FACLIN), 0)          AS NETO                 ' +
-    '   FROM fza_caja_operaciones o                                       ' +
-    '   JOIN fza_facturas_lineas  l                                       ' +
-    '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA             ' +
-    '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA             ' +
-    '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA            ' +
-    '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA       ' +
-    '   LEFT JOIN fza_articulos a                                         ' +
-    '     ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN                       ' +
-    '   LEFT JOIN fza_articulos_familias f                                ' +
-    '     ON f.CODIGO_FAM_FAM = COALESCE(l.CODIGO_FAM_FACLIN,             ' +
-    '                                    a.CODIGO_FAM_ART)                ' +
-    '   LEFT JOIN fza_articulos_familias p                                ' +
-    '     ON p.CODIGO_FAM_FAM = f.CODIGO_SUBFAMILIA_FAM                   ' +
-    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
-    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
-    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
-    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-    '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-    '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ' +
-    '  GROUP BY FAMILIA                                                   ' +
-    '  ORDER BY FAMILIA                                                   ';
+    ' WITH RECURSIVE fam_ruta AS (                                  ' +
+    '   SELECT CODIGO_FAM_FAM,                                      ' +
+    '          CAST(COALESCE(NOMBRE_FAM_FAM, CODIGO_FAM_FAM)        ' +
+    '               AS CHAR(2000)) AS RUTA                          ' +
+    '     FROM fza_articulos_familias                               ' +
+    '    WHERE CODIGO_SUBFAMILIA_FAM IS NULL                        ' +
+    '       OR CODIGO_SUBFAMILIA_FAM = ''''                         ' +
+    '   UNION ALL                                                   ' +
+    '   SELECT h.CODIGO_FAM_FAM,                                    ' +
+    '          CONCAT(r.RUTA, ''|'',                                ' +
+    '                 COALESCE(h.NOMBRE_FAM_FAM, h.CODIGO_FAM_FAM)) ' +
+    '     FROM fza_articulos_familias h                             ' +
+    '     JOIN fam_ruta r                                           ' +
+    '       ON h.CODIGO_SUBFAMILIA_FAM = r.CODIGO_FAM_FAM           ' +
+    ' )                                                             ' +
+    ' SELECT                                                        ' +
+    '   COALESCE(                                                   ' +
+    '     REPLACE(SUBSTRING_INDEX(fr.RUTA, ''|'', ' + sNiveles + '),' +
+    '             ''|'', ''-''),                                    ' +
+    '     f.NOMBRE_FAM_FAM, l.NOMBRE_FAM_FACLIN,                    ' +
+    '     l.CODIGO_FAM_FACLIN, a.CODIGO_FAM_ART,                    ' +
+    '     ''(sin familia)'') AS FAMILIA,                            ' +
+    '   COUNT(*)                         AS UDS,                    ' +
+    '   COALESCE(SUM(l.TOTAL_FACLIN), 0) AS NETO                    ' +
+    '   FROM fza_caja_operaciones o                                 ' +
+    '   JOIN fza_facturas_lineas  l                                 ' +
+    '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA       ' +
+    '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA       ' +
+    '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA      ' +
+    '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA ' +
+    '   LEFT JOIN fza_articulos a                                   ' +
+    '     ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN                 ' +
+    '   LEFT JOIN fza_articulos_familias f                          ' +
+    '     ON f.CODIGO_FAM_FAM = COALESCE(l.CODIGO_FAM_FACLIN,       ' +
+    '                                    a.CODIGO_FAM_ART)          ' +
+    '   LEFT JOIN fam_ruta fr                                       ' +
+    '     ON fr.CODIGO_FAM_FAM = f.CODIGO_FAM_FAM                   ' +
+    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                     ' +
+    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                  ' +
+    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                  ' +
+    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                     ' +
+    '    AND o.FECHA_OPERACION_OPCAJA  >= :pFDESDE                  ' +
+    '    AND o.FECHA_OPERACION_OPCAJA  <= :pFHASTA                  ' +
+    '  GROUP BY FAMILIA                                             ' +
+    '  ORDER BY FAMILIA                                             ';
 
   // IVA (pestaña Más datos): 4 filas, una por tipo de IVA (Normal, Reducido,
   // Super Reducido, Exento). Se toma de fza_facturas SOLO las
