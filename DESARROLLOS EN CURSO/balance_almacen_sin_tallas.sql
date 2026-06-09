@@ -672,15 +672,21 @@ BEGIN
              WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = 'S'
              GROUP BY ap.`CODIGO_ART_AP`
            ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      -- Temporada EFECTIVA por color (Fase 4): la vista de propiedades
+      -- efectivas resuelve color -> articulo; tmp_bst_sku da el color del
+      -- SKU. Los SKU de un mismo color comparten temporada (el MAX colapsa
+      -- sin ambiguedad). Sin datos de color resuelve al valor de articulo.
       LEFT JOIN (
-            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
-                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
-              FROM `fza_articulos_propiedades` tp
-              LEFT JOIN `fza_propiedades_valores` tpv
-                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
-             WHERE tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
-             GROUP BY tp.`CODIGO_ART_ART`
+            SELECT s.`CODIGO_ART` AS `CODIGO_ART`, s.`COLOR` AS `COLOR`,
+                   MAX(COALESCE(e.`VALOR_PV`,
+                                e.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `tmp_bst_sku` s
+              JOIN `vi_articulos_propiedades_efectivas` e
+                ON e.`CODIGO_UNIDAD_SKU` = s.`CODIGO_UNIDAD`
+               AND e.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
+             GROUP BY s.`CODIGO_ART`, s.`COLOR`
            ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+                AND tmp.`COLOR` = p.`COLOR`
       LEFT JOIN (
             -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
             -- color), de las líneas de factura/ticket. Periodo por fecha de

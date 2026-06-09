@@ -1,7 +1,7 @@
 # Propiedades por unidad (artículo / color / SKU)
 
-Estado: **Fase 1 (modelo) + Fase 2 (edición) + Fase 3 (lectura) aplicadas**.
-Fase 4 pendiente.
+Estado: **Fases 1-4 aplicadas** (modelo, edición, lectura y propagación).
+Funcionalidad completa; queda solo el extra opcional de la grilla de stock.
 
 ## Objetivo
 
@@ -99,10 +99,38 @@ destructiva y la aplicación sigue funcionando sin tocar nada tras la Fase 1.
     si **alguno** de sus niveles (artículo/color/SKU) casa la temporada pedida.
   Retrocompatible: sin datos de color todo resuelve al valor de artículo. Pumpa
   versión (toca forms reales).
-- **Fase 4 — Propagación compras + pulido.** Las sesiones de compra (ya llevan
-  `ID_PV_TEMPORADA_SES`) propagan a nivel color al materializar; revisión de
-  otros lectores de temporada; documentación. Opcional: columna de temporada
-  efectiva por color en la grilla de `inMtoStockConsulta`.
+- **Fase 4 — Propagación compras + pulido.** *(hecho)*
+  - **Propagación al materializar** (`inLibComprasSesionesMaterializar`): al
+    crear los SKUs de una sesión, cada **color** comprado recibe la temporada
+    de cabecera (`ID_PV_TEMPORADA_SES`) en su propio `CODIGO_UNIDAD_ARTPROP`
+    (= `ART/COLOR`, los dos primeros segmentos del SKU, idéntico a
+    `SUBSTRING_INDEX(sku,'/',2)` de la vista efectiva). `INSERT IGNORE`: no
+    pisa el color ya fijado en una sesión anterior y **convive** con la
+    temporada de artículo (`InsertarTemporadaCabecera`, que se mantiene). Así,
+    al re-comprar la misma prenda en otra temporada, los colores nuevos llevan
+    la nueva y los viejos conservan la suya. El helper `PrefijoColorSku`
+    calcula el prefijo igual que la vista (sin color → SKU `ART/TALLA` → se
+    queda a nivel artículo).
+  - **Revisión de otros lectores de temporada** (lo que la Fase 3 no cubrió):
+    - **`vi_articulos`** (`vi_articulos_nombre_proveedor.sql`): su JOIN a
+      `fza_articulos_propiedades` para `TEMPORADA_ART` **no** filtraba unidad y
+      **duplicaba cada fila de artículo** (Mto de Artículos, `frmMtoArtFacSearch`)
+      en cuanto hay temporadas de color. Ahora filtra `CODIGO_UNIDAD_ARTPROP =
+      ''`. **Reaplicar el script** (es `CREATE OR REPLACE VIEW`). OJO: hay otros
+      `.sql` que también redefinen `vi_articulos` (`vi_articulos_add_codigo_prv`,
+      `desactivar_articulos_sin_stock`); si alguno de esos fuese el vigente,
+      aplicarle el mismo filtro.
+    - **`PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`**: hermano del balance por tallas y
+      también por color; reapuntado a la temporada efectiva por (artículo,
+      color) vía `vi_articulos_propiedades_efectivas` + `tmp_bst_sku`.
+    - **`inLibPedidosCompra`** (temporada al recibir albarán): ya escribía a
+      nivel artículo (`ON DUPLICATE KEY` sobre la PK ampliada apunta a
+      `(art,'TEMPORADA','')`); correcto, ajusta el **default** de artículo sin
+      tocar los colores. Sin cambios.
+    - Filtros de temporada de informes (`inMtoModalImpMultiFiltro`): listan los
+      valores maestros de `fza_propiedades_valores`; sin duplicación. Sin cambios.
+  - **Pendiente opcional:** columna de temporada efectiva por color en la grilla
+    de `inMtoStockConsulta` (hoy la cabecera muestra la de artículo).
 
 ## Rollback
 
