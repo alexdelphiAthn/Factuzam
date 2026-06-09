@@ -73,11 +73,15 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_devoluciones_compra`            | `DEVC`    |
 | `fza_devoluciones_compra_celdas`     | `DEVCCEL` |
 | `fza_devoluciones_compra_lineas`     | `DEVCLIN` |
+| `fza_efectos_compra`                 | `EFEC`    |
+| `fza_efectos_compra_pagos`           | `EFECPAG` |
 | `fza_empleados`                      | `EMPL`    |
 | `fza_empresas`                       | `EMP`     |
 | `fza_empresas_retenciones`           | `EMPRET`  |
 | `fza_empresas_series`                | `EMPSER`  |
 | `fza_facturas`                       | `FAC`     |
+| `fza_facturas_compra`                | `FACC`    |
+| `fza_facturas_compra_lineas`         | `FACCLIN` |
 | `fza_facturas_consolidaciones`       | `FACCON`  |
 | `fza_facturas_lineas`                | `FACLIN`  |
 | `fza_facturas_pagos`                 | `FACPAG`  |
@@ -104,8 +108,10 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_proveedores_familias`           | `PF`      |
 | `fza_proveedores_familias_conjuntos` | `PFC`     |
 | `fza_recibos`                        | `REC`     |
+| `fza_remesas_compra`                 | `REMC`    |
 | `fza_tarifas`                        | `TAR`     |
 | `fza_tipos_documentos`               | `TD`      |
+| `fza_tipos_efecto`                   | `TEFE`    |
 | `fza_traspasos_solicitudes`          | `TRSOL`   |
 | `fza_traspasos_solicitudes_lineas`   | `TRSOLLIN`|
 | `fza_unidades_medida`                | `UNIMED`  |
