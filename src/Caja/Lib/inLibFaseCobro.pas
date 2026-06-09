@@ -735,7 +735,11 @@ begin
     FMemTablePagos.First;
     while not FMemTablePagos.Eof do
     begin
-      if FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString = 'VALE' then
+      // Solo validamos líneas VALE realmente usadas como pago (importe <> 0).
+      // La línea fija de forma de pago VALE sin importe es una entrada vacía
+      // del grid: validarla provocaba el error con código vacío al pulsar F12.
+      if (FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString = 'VALE') and
+         (FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency <> 0) then
       begin
         CodigoVale := FMemTablePagos.FieldByName('REFERENCIA').AsString;
         qry.Close;
