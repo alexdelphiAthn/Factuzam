@@ -319,6 +319,17 @@
             <FormType>TfrmPrintEtiqAlb</FormType>
             <DesignClass>TfrmPrintEtiqAlb</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpDevCompra.pas">
+            <Form>frmPrintDevCompra</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpDevCompraV.pas">
+            <Form>frmPrintDevCompraV</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalEtiqDev.pas">
+            <Form>frmPrintEtiqArt</Form>
+            <FormType>TfrmPrintEtiqDev</FormType>
+            <DesignClass>TfrmPrintEtiqDev</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalDistribuidor.pas">
             <Form>frmModalDistribuidor</Form>
         </DCCReference>
@@ -666,6 +677,13 @@
             <Form>dmAlbaranesCompra</Form>
             <DesignClass>TdmAlbaranesCompra</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoDevolucionesCompra.pas">
+            <Form>frmMtoDevolucionesCompra</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataDevolucionesCompra.pas">
+            <Form>dmDevolucionesCompra</Form>
+            <DesignClass>TdmDevolucionesCompra</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoPedidosCompra.pas">
             <Form>frmMtoPedidosCompra</Form>
         </DCCReference>
@@ -746,6 +764,7 @@
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializar.pas"/>
         <DCCReference Include="src\Lib\inLibAlbaranesCompraMovimientos.pas"/>
+        <DCCReference Include="src\Lib\inLibDevolucionesCompraMovimientos.pas"/>
         <DCCReference Include="src\Lib\inLibContadorLineas.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAltaRapida.pas">
             <Form>frmMtoModalAltaRapida</Form>

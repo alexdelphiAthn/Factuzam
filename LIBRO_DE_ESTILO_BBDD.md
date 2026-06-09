@@ -70,6 +70,9 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_config_campos`                  | `CC`      |
 | `fza_contadores`                     | `CON`     |
 | `fza_depositos_cliente`              | `DEP`     |
+| `fza_devoluciones_compra`            | `DEVC`    |
+| `fza_devoluciones_compra_celdas`     | `DEVCCEL` |
+| `fza_devoluciones_compra_lineas`     | `DEVCLIN` |
 | `fza_empleados`                      | `EMPL`    |
 | `fza_empresas`                       | `EMP`     |
 | `fza_empresas_retenciones`           | `EMPRET`  |
