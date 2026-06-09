@@ -1,6 +1,7 @@
 # Propiedades por unidad (artículo / color / SKU)
 
-Estado: **Fase 1 (modelo) + Fase 2 (edición) aplicadas**. Fases 3-4 pendientes.
+Estado: **Fase 1 (modelo) + Fase 2 (edición) + Fase 3 (lectura) aplicadas**.
+Fase 4 pendiente.
 
 ## Objetivo
 
@@ -74,20 +75,34 @@ destructiva y la aplicación sigue funcionando sin tocar nada tras la Fase 1.
   para no duplicar filas tras la PK ampliada de Fase 1 (`CargarPropiedades` y el
   lookup `inLibArticulosAtributosLookup.ObtenerPropiedades` filtran
   `CODIGO_UNIDAD_ARTPROP = ''`).
-  - **OJO (lo arregla la Fase 3):** en cuanto se fije una temporada a nivel
-    color, los lectores que aún hacen `JOIN fza_articulos_propiedades` por
-    `(artículo, 'TEMPORADA')` sin filtrar `CODIGO_UNIDAD_ARTPROP` **duplicarán
-    filas** (`inMtoStockConsulta`, `inMtoCajaOpe`, `inMtoInventarios`, y los SP
-    de informes). Conviene encadenar la Fase 3 antes de meter datos de color en
-    producción.
-- **Fase 3 — Lectura.** Reapuntar a la temporada efectiva por color:
-  - `inMtoStockConsulta` (consulta de stock).
-  - `inMtoCajaOpe`, `inMtoInventarios` (búsquedas).
-  - SP de informes `PRC_GET_BALANCE_ALMACEN_TALLAS`, `PRC_GET_MOV_VENTAS_ART`.
-  Retrocompatible: sin datos de color, resuelve al valor de artículo.
+  - El riesgo de **duplicado de filas** que esto abría (lectores que hacían
+    `JOIN fza_articulos_propiedades` por `(artículo, 'TEMPORADA')` sin filtrar
+    `CODIGO_UNIDAD_ARTPROP`) lo cierra la Fase 3.
+- **Fase 3 — Lectura.** *(hecho)* La temporada de **artículo** y la de **color
+  conviven**: la de color solo sobrescribe donde está fijada; si no, hereda la
+  de artículo (mismo `COALESCE` por especificidad de
+  `vi_articulos_propiedades_efectivas`). Ningún lector duplica filas.
+  - **`PRC_GET_BALANCE_ALMACEN_TALLAS`** (balance por tallas, grano por color):
+    la temporada se resuelve **por (artículo, color)** uniendo la vista efectiva
+    a `tmp_bat_sku`. Cada color cae en su temporada efectiva (color, o artículo
+    si el color no la fija) y la agrupación por temporada (`TMP`) reparte cada
+    color en su bucket.
+  - **`PRC_GET_MOV_VENTAS_ART`** (grano por artículo, sin desglose de color):
+    muestra la temporada de **nivel artículo** (`CODIGO_UNIDAD_ARTPROP = ''`);
+    el desglose por color vive en el balance de tallas.
+  - **`inMtoStockConsulta`** (cabecera de propiedades) y las **búsquedas** de
+    `inMtoStockConsulta` / `inMtoCajaOpe` / `inMtoInventarios`: filtran
+    `CODIGO_UNIDAD_ARTPROP = ''` (temporada de artículo, sin duplicar): son
+    listas/cabeceras por artículo, sin grano de color donde resolver.
+  - **Filtro de temporada de los informes**: el `EXISTS` sobre
+    `fza_articulos_propiedades` ya considera cualquier nivel; un artículo entra
+    si **alguno** de sus niveles (artículo/color/SKU) casa la temporada pedida.
+  Retrocompatible: sin datos de color todo resuelve al valor de artículo. Pumpa
+  versión (toca forms reales).
 - **Fase 4 — Propagación compras + pulido.** Las sesiones de compra (ya llevan
   `ID_PV_TEMPORADA_SES`) propagan a nivel color al materializar; revisión de
-  otros lectores de temporada; documentación.
+  otros lectores de temporada; documentación. Opcional: columna de temporada
+  efectiva por color en la grilla de `inMtoStockConsulta`.
 
 ## Rollback
 
