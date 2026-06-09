@@ -474,13 +474,51 @@ type
     // mismo patron que el resto de preferencias del Mto. Claves:
     // oFiltroEstado, oFiltroConStock, oFiltroTemporadas.
     FFiltrosArtCargando: Boolean;
+    // Filtros adicionales que aporta el dialogo de precarga (proveedor y
+    // familia). Son de sesion: arrancan vacios en cada apertura del Mto y
+    // no se persisten en el perfil (a diferencia de estado/stock/temporada).
+    // CSV separado por ';' alineado con la convencion de oFiltroTemporadas.
+    FFiltroProvCsv: string;
+    FFiltroFamCsv: string;
+    // True cuando CrearTablaPrincipal detecta que la lista con los filtros
+    // por defecto (solo activos + solo stock) supera UMBRAL_PRECARGA y, en
+    // vez de abrir el set completo, abre la lista vacia (LIMIT 0). Lo
+    // consume TrasPrecargaAsync para lanzar el dialogo de filtrado y
+    // reabrir ya acotado, sin congelar la apertura del Mto.
+    FPrecargaPendiente: Boolean;
     procedure CargarTemporadasFiltro;
     procedure LeerFiltrosPerfil;
+    // Construye el WHERE de vi_articulos a partir de los controles de
+    // estado/stock y de los CSV de temporada/proveedor/familia recibidos.
+    // Lo comparten ConstruirSqlArticulos (SELECT) y ContarArticulos (COUNT)
+    // para que la cuenta y la carga apliquen exactamente el mismo filtro.
+    function  ConstruirWhereArticulos(const aTempCsv, aPrvCsv,
+                                      aFamCsv: string): string;
     function  ConstruirSqlArticulos: string;
+    // Convierte un CSV ';' en lista IN (...) ya entrecomillada, o '' si
+    // viene vacio.
+    function  CsvAInList(const aCsv: string): string;
+    // Lee/escribe el estado marcado del ccbFiltroTemporadaArt como CSV ';'.
+    function  CsvTemporadasControl: string;
+    procedure MarcarTemporadasControl(const aCsv: string);
+    // COUNT(*) sobre vi_articulos con el mismo WHERE que la carga. Devuelve
+    // el numero de articulos que saldrian con esos filtros.
+    function  ContarArticulos(const aTempCsv, aPrvCsv,
+                              aFamCsv: string): Integer;
+    // Reabre unqryTablaG con el SQL filtrado actual. aVacia=True añade
+    // LIMIT 0 (apertura instantanea para el caso "demasiados articulos").
+    procedure AbrirListaArticulos(aVacia: Boolean = False);
+    // Carga propiedades/variaciones/atributos del articulo en foco tras
+    // (re)abrir la lista. Equivale a la cola de CrearTablaPrincipal.
+    procedure CargarArticuloActual;
+    // Muestra el dialogo modal de filtrado (temporada/proveedor/familia) y
+    // vuelca la seleccion del usuario a los filtros del Mto.
+    procedure MostrarDialogoRefinar;
     procedure AplicarFiltrosArticulos;
   public
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
                                           const sPermisos: string); override;
+    procedure TrasPrecargaAsync; override;
   private
     FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
@@ -550,6 +588,7 @@ uses
   inMtoModalAddPreciosTar,
   inMtoModalCalcularMargen,
   inMtoModalEtiqArt,
+  inMtoModalFiltroArt,
   inLibEAN13,
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
@@ -557,6 +596,13 @@ uses
   inLibtb;
 
 {$R *.dfm}
+
+const
+  // Tope de filas para la precarga de la lista de articulos. Si con los
+  // filtros por defecto (solo activos + solo stock) salen mas, no se carga
+  // el set completo: aparece el dialogo de filtrado por temporada/
+  // proveedor/familia para acotar antes de abrir la lista.
+  UMBRAL_PRECARGA = 50000;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -1860,35 +1906,30 @@ begin
   btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
   CargarTemporadasFiltro;
   LeerFiltrosPerfil;
-  AplicarFiltrosArticulos;
-  // Codigo del articulo activo. Defensivo: la lista puede llegar aqui
-  // cerrada o vacia (p.ej. cuando el AbrirTablaPrincipalAsync esta
-  // todavia cargando, o si el DFM tiene Active=False). FindField evita
-  // el "Field not found" cuando el dataset no esta abierto.
-  FArticuloCargado := '';
-  if dmmArticulos.unqryTablaG.Active
-     and (not dmmArticulos.unqryTablaG.IsEmpty)
-     and (dmmArticulos.unqryTablaG.FindField('CODIGO_ART_ART') <> nil) then
-    FArticuloCargado :=
-      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-  FGestorProp.CargarPropiedades(FArticuloCargado);
-  FGestorVar.CargarVariaciones(FArticuloCargado);
-  ActualizarVisibilidadVariaciones;
-  ActualizarVisibilidadColumnaSku;
-  // Carga el mapa de atributos para el articulo inicial -- OnAfterScrollArticulos
-  // no se dispara en el primer focused record y el grid de stock no coloreaba
-  // hasta que el usuario navegaba a otro registro.
-  if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
-    CargarMapaAtributosArticulo(FArticuloCargado, FAtributosStock);
-  // Stock lazy: solo refrescar si la pestaña Stock esta activa al
-  // abrir el Mto. Si no, AsegurarStockAlDia lo hara cuando el usuario
-  // la abra.
-  if (FArticuloCargado <> '') and Assigned(dmmArticulos)
-     and (pcDetail.ActivePage = cxTabSheet3) then
+  // Filtros de sesion del dialogo de precarga (proveedor/familia): arrancan
+  // vacios en cada apertura del Mto.
+  FFiltroProvCsv := '';
+  FFiltroFamCsv  := '';
+  // Precarga con limite. Con los filtros por defecto (solo activos + solo
+  // stock) un catalogo grande puede dejar decenas de miles de filas:
+  // contamos primero y, si superan UMBRAL_PRECARGA, NO abrimos el set
+  // completo (congelaria la apertura del Mto). Abrimos la lista vacia
+  // (LIMIT 0, instantanea) y marcamos FPrecargaPendiente para que
+  // TrasPrecargaAsync -ya en main thread y solo en la apertura normal, no
+  // en la instancia de busqueda- muestre el dialogo de filtrado por
+  // temporada/proveedor/familia y reabra la lista acotada.
+  FPrecargaPendiente := False;
+  if ContarArticulos(CsvTemporadasControl, FFiltroProvCsv, FFiltroFamCsv)
+       > UMBRAL_PRECARGA then
   begin
-    dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
-    FStockArticuloCargado := FArticuloCargado;
-  end;
+    FPrecargaPendiente := True;
+    AbrirListaArticulos(True);
+  end
+  else
+    AbrirListaArticulos(False);
+  // Ficha del articulo en foco. Con la lista vacia (precarga pendiente)
+  // queda en blanco hasta que TrasPrecargaAsync la reabra acotada.
+  CargarArticuloActual;
 end;
 
 procedure TfrmMtoArticulos.CargarTemporadasFiltro;
@@ -1932,8 +1973,12 @@ begin
   // abrir el Mto).
   FFiltrosArtCargando := True;
   try
+    // Precarga por defecto: solo activos ('S') y solo con stock ('S'). Con
+    // catalogos de 100.000+ articulos, cargar todo (o solo-activos) es
+    // demasiado pesado; el cliente arranca viendo solo lo vivo y con
+    // existencias. El usuario puede ampliar desde los filtros de carga.
     sEstado  := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroEstado',     'S'));
-    sStock   := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroConStock',   'N'));
+    sStock   := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroConStock',   'S'));
     sTempCsv := GetPerfilValueDef(oPerfilDic, 'oFiltroTemporadas', '');
 
     if SameText(sEstado, 'T') then
@@ -2017,16 +2062,81 @@ begin
   oList.Add(item);
 end;
 
-function TfrmMtoArticulos.ConstruirSqlArticulos: string;
+function TfrmMtoArticulos.CsvAInList(const aCsv: string): string;
+var
+  lst: TStringList;
+  i: Integer;
+begin
+  // CSV ';' -> 'a', 'b', 'c'  (entrecomillado para el IN). Vacio si no hay
+  // nada. Duplicamos comillas via QuotedStr aunque los valores vengan de
+  // listas controladas (temporadas/codigos), por higiene anti-inyeccion.
+  Result := '';
+  if Trim(aCsv) = '' then Exit;
+  lst := TStringList.Create;
+  try
+    lst.Delimiter := ';';
+    lst.StrictDelimiter := True;
+    lst.DelimitedText := aCsv;
+    for i := 0 to lst.Count - 1 do
+      if Trim(lst[i]) <> '' then
+      begin
+        if Result <> '' then Result := Result + ', ';
+        Result := Result + QuotedStr(Trim(lst[i]));
+      end;
+  finally
+    FreeAndNil(lst);
+  end;
+end;
+
+function TfrmMtoArticulos.CsvTemporadasControl: string;
+var
+  i: Integer;
+begin
+  // Estado marcado del ccbFiltroTemporadaArt como CSV ';'.
+  Result := '';
+  for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
+    if ccbFiltroTemporadaArt.States[i] = cbsChecked then
+    begin
+      if Result <> '' then Result := Result + ';';
+      Result := Result + ccbFiltroTemporadaArt.Properties.Items[i].Description;
+    end;
+end;
+
+procedure TfrmMtoArticulos.MarcarTemporadasControl(const aCsv: string);
+var
+  lst: TStringList;
+  i: Integer;
+begin
+  // Marca en el ccbFiltroTemporadaArt las temporadas presentes en aCsv. No
+  // dispara la reaplicacion (FFiltrosArtCargando) porque el llamador ya
+  // controla el ciclo de reapertura.
+  FFiltrosArtCargando := True;
+  lst := TStringList.Create;
+  try
+    lst.Delimiter := ';';
+    lst.StrictDelimiter := True;
+    lst.DelimitedText := aCsv;
+    for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
+      if lst.IndexOf(
+              ccbFiltroTemporadaArt.Properties.Items[i].Description) >= 0 then
+        ccbFiltroTemporadaArt.States[i] := cbsChecked
+      else
+        ccbFiltroTemporadaArt.States[i] := cbsUnchecked;
+  finally
+    FreeAndNil(lst);
+    FFiltrosArtCargando := False;
+  end;
+end;
+
+function TfrmMtoArticulos.ConstruirWhereArticulos(const aTempCsv, aPrvCsv,
+                                                  aFamCsv: string): string;
 var
   sb: TStringBuilder;
-  sEstado, sTemp: string;
-  i, nTemp: Integer;
+  sEstado, sIn: string;
 begin
   sb := TStringBuilder.Create;
   try
-    sb.AppendLine('SELECT * FROM vi_articulos WHERE 1 = 1');
-
+    sb.AppendLine('WHERE 1 = 1');
     // Filtro estado: ItemIndex 0=Todos, 1=Solo activos, 2=Solo inactivos
     case cbbFiltroEstadoArt.ItemIndex of
       1: sEstado := 'S';
@@ -2036,7 +2146,6 @@ begin
     end;
     if sEstado <> '' then
       sb.AppendLine('  AND vi_articulos.ESACTIVO_ART = ' + QuotedStr(sEstado));
-
     // Filtro stock: existencia > 0 en al menos un SKU/almacen
     if chkFiltroConStockArt.Checked then
       sb.AppendLine(
@@ -2045,30 +2154,58 @@ begin
                       '   ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU ' +
                       ' WHERE sk.CODIGO_ART_SKU = vi_articulos.CODIGO_ART_ART ' +
                       '   AND stk.CANTIDAD_STK > 0)');
-
-    // Filtro temporadas: lista IN. Si no hay nada marcado no se aplica.
-    sTemp := '';
-    nTemp := 0;
-    for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
-      if ccbFiltroTemporadaArt.States[i] = cbsChecked then
-      begin
-        if sTemp <> '' then sTemp := sTemp + ', ';
-        sTemp := sTemp + QuotedStr(
-                         ccbFiltroTemporadaArt.Properties.Items[i].Description);
-        Inc(nTemp);
-      end;
-    if nTemp > 0 then
-      sb.AppendLine(
-        '  AND vi_articulos.TEMPORADA_ART IN (' + sTemp + ')');
-
-    sb.AppendLine('ORDER BY vi_articulos.ORDEN_ART');
+    // Filtro temporadas (CSV del control o del dialogo)
+    sIn := CsvAInList(aTempCsv);
+    if sIn <> '' then
+      sb.AppendLine('  AND vi_articulos.TEMPORADA_ART IN (' + sIn + ')');
+    // Filtro proveedores (codigo del proveedor principal del articulo)
+    sIn := CsvAInList(aPrvCsv);
+    if sIn <> '' then
+      sb.AppendLine('  AND vi_articulos.CODIGO_PRV_AP IN (' + sIn + ')');
+    // Filtro familias
+    sIn := CsvAInList(aFamCsv);
+    if sIn <> '' then
+      sb.AppendLine('  AND vi_articulos.CODIGO_FAM_ART IN (' + sIn + ')');
     Result := sb.ToString;
   finally
     FreeAndNil(sb);
   end;
 end;
 
-procedure TfrmMtoArticulos.AplicarFiltrosArticulos;
+function TfrmMtoArticulos.ConstruirSqlArticulos: string;
+begin
+  Result := 'SELECT * FROM vi_articulos' + sLineBreak +
+            ConstruirWhereArticulos(CsvTemporadasControl,
+                                    FFiltroProvCsv, FFiltroFamCsv) +
+            'ORDER BY vi_articulos.ORDEN_ART';
+end;
+
+function TfrmMtoArticulos.ContarArticulos(const aTempCsv, aPrvCsv,
+                                          aFamCsv: string): Integer;
+var
+  qry: TUniQuery;
+  cn: TUniConnection;
+begin
+  Result := 0;
+  if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
+  // Misma conexion (propia del Mto) que usara la carga real.
+  cn := dmmArticulos.unqryTablaG.Connection;
+  if cn = nil then
+    cn := oConn;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := cn;
+    qry.SQL.Text := 'SELECT COUNT(*) AS N FROM vi_articulos ' +
+                    ConstruirWhereArticulos(aTempCsv, aPrvCsv, aFamCsv);
+    qry.Open;
+    Result := qry.FieldByName('N').AsInteger;
+    qry.Close;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TfrmMtoArticulos.AbrirListaArticulos(aVacia: Boolean = False);
 var
   qry: TUniQuery;
   sSql: string;
@@ -2077,7 +2214,10 @@ begin
   qry := dmmArticulos.unqryTablaG;
   if qry = nil then Exit;
   sSql := ConstruirSqlArticulos;
-  if Trim(qry.SQL.Text) = Trim(sSql) then Exit;
+  // aVacia: apertura instantanea (sin traer filas) para el caso
+  // "demasiados articulos"; el dialogo de filtrado la reabrira acotada.
+  if aVacia then
+    sSql := sSql + ' LIMIT 0';
   qry.DisableControls;
   try
     qry.Close;
@@ -2086,6 +2226,93 @@ begin
   finally
     qry.EnableControls;
   end;
+end;
+
+procedure TfrmMtoArticulos.CargarArticuloActual;
+begin
+  // Cola comun tras (re)abrir la lista: resolver el articulo en foco y
+  // cargar su ficha (propiedades, variaciones, mapa de atributos y stock
+  // si la pestaña Stock esta activa). Defensivo ante lista cerrada/vacia.
+  FArticuloCargado := '';
+  if dmmArticulos.unqryTablaG.Active
+     and (not dmmArticulos.unqryTablaG.IsEmpty)
+     and (dmmArticulos.unqryTablaG.FindField('CODIGO_ART_ART') <> nil) then
+    FArticuloCargado :=
+      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  if Assigned(FGestorProp) then
+    FGestorProp.CargarPropiedades(FArticuloCargado);
+  if Assigned(FGestorVar) then
+    FGestorVar.CargarVariaciones(FArticuloCargado);
+  ActualizarVisibilidadVariaciones;
+  ActualizarVisibilidadColumnaSku;
+  if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
+    CargarMapaAtributosArticulo(FArticuloCargado, FAtributosStock);
+  if (FArticuloCargado <> '') and Assigned(dmmArticulos)
+     and (pcDetail.ActivePage = cxTabSheet3) then
+  begin
+    dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
+    FStockArticuloCargado := FArticuloCargado;
+  end;
+end;
+
+procedure TfrmMtoArticulos.MostrarDialogoRefinar;
+var
+  cn: TUniConnection;
+  sTempIn, sPrvIn, sFamIn, sTempOut, sPrvOut, sFamOut: string;
+begin
+  if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
+  cn := dmmArticulos.unqryTablaG.Connection;
+  if cn = nil then
+    cn := oConn;
+  sTempIn := CsvTemporadasControl;
+  sPrvIn  := FFiltroProvCsv;
+  sFamIn  := FFiltroFamCsv;
+  if TfrmModalFiltroArt.Ejecutar(Self, cn, UMBRAL_PRECARGA,
+       sTempIn, sPrvIn, sFamIn,
+       function(const t, p, f: string): Integer
+       begin
+         Result := ContarArticulos(t, p, f);
+       end,
+       sTempOut, sPrvOut, sFamOut) then
+  begin
+    MarcarTemporadasControl(sTempOut);
+    FFiltroProvCsv := sPrvOut;
+    FFiltroFamCsv  := sFamOut;
+  end;
+end;
+
+procedure TfrmMtoArticulos.AplicarFiltrosArticulos;
+begin
+  // Cambio manual de filtros (estado/stock/temporada del panel). Si el
+  // nuevo filtro deja mas de UMBRAL_PRECARGA articulos, ofrecemos el
+  // dialogo para acotar antes de cargar; si no, abrimos directamente.
+  if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
+  if ContarArticulos(CsvTemporadasControl, FFiltroProvCsv,
+                     FFiltroFamCsv) > UMBRAL_PRECARGA then
+    MostrarDialogoRefinar;
+  AbrirListaArticulos(False);
+  CargarArticuloActual;
+end;
+
+procedure TfrmMtoArticulos.TrasPrecargaAsync;
+begin
+  inherited;
+  // Solo actua si CrearTablaPrincipal dejo la precarga pendiente por
+  // superar el umbral (abrio la lista vacia). La instancia de busqueda
+  // (Ctrl+A) carga de forma sincrona y no pasa por este hook.
+  if not FPrecargaPendiente then Exit;
+  FPrecargaPendiente := False;
+  if EsInstanciaBusqueda then Exit;
+  MostrarDialogoRefinar;
+  AbrirListaArticulos(False);
+  // unqrySkus ya esta abierta (AbrirDetalles corrio antes en el callback),
+  // asi que el AfterScroll completo si puede cargar la ficha del primero.
+  // Si la reapertura ya disparo el AfterScroll, FArticuloCargado quedo
+  // fijado y no repetimos; si no, lo forzamos para el primer registro.
+  if dmmArticulos.unqryTablaG.Active
+     and (not dmmArticulos.unqryTablaG.IsEmpty)
+     and (FArticuloCargado = '') then
+    OnAfterScrollArticulos(dmmArticulos.unqryTablaG);
 end;
 
 procedure TfrmMtoArticulos.PrepararBusquedaExterna(const ABusq: string);
@@ -2104,6 +2331,11 @@ begin
   finally
     FFiltrosArtCargando := False;
   end;
+  // Tambien los filtros de sesion del dialogo y la bandera de precarga: la
+  // busqueda externa va sin acotar (el WHERE lo impone el parser de Ctrl+A).
+  FFiltroProvCsv := '';
+  FFiltroFamCsv  := '';
+  FPrecargaPendiente := False;
   if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG <> nil) then
   begin
     dmmArticulos.unqryTablaG.Close;
