@@ -67,6 +67,12 @@ const
     ColSerieHdr  : 'SERIE_PEDC';
     ColNumeroHdr : 'NUMERO_PEDC'
   );
+  CONT_DEVOLUCIONES_COMPRA : TInfoContadorLineas = (
+    TablaHdr     : 'fza_devoluciones_compra';
+    ColContador  : 'CONTADOR_LINEAS_DEVC';
+    ColSerieHdr  : 'SERIE_DEVC';
+    ColNumeroHdr : 'NUMERO_DEVC'
+  );
 
 // Devuelve la siguiente LINEA libre para el documento (sSerie, sNumero) y
 // actualiza CONTADOR_LINEAS_X en BD atomicamente al mismo valor devuelto.

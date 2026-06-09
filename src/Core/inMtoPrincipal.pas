@@ -73,6 +73,7 @@ type
     mnuFormaPagoVenta: TMenuItem;
     Pedidos1: TMenuItem;
     Albaranes1: TMenuItem;
+    Devoluciones1: TMenuItem;
     Facturas1: TMenuItem;
     Sesiones1: TMenuItem;
     mnuCrearArtculosyunpedidoounalbarn: TMenuItem;
@@ -177,6 +178,7 @@ type
     procedure mnuAlbaranesVentaClick(Sender: TObject);
     procedure Sesiones1Click(Sender: TObject);
     procedure Albaranes1Click(Sender: TObject);
+    procedure Devoluciones1Click(Sender: TObject);
     procedure Pedidos1Click(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
@@ -1662,6 +1664,13 @@ begin
   inherited;
   if Albaranes1.Visible then
     ShowMto(Self, 'AlbaranesCompra');
+end;
+
+procedure TfrmMtoPrincipal.Devoluciones1Click(Sender: TObject);
+begin
+  inherited;
+  if Devoluciones1.Visible then
+    ShowMto(Self, 'DevolucionesCompra');
 end;
 
 procedure TfrmMtoPrincipal.Pedidos1Click(Sender: TObject);
