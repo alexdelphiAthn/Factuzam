@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
+  Uni, inLibUser, UniDataConn, inLibLog, cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
   System.Generics.Collections,
@@ -1216,9 +1216,54 @@ const
 var
   qryHex: TUniQuery;
   oHexMap: TDictionary<string, string>;
-  fldDef: TFieldDef;
-  sCodSku, sHex: string;
+  fldDef, fdOrig: TFieldDef;
+  sCodSku, sHex, sDiag: string;
   k, iCodSkuIdxOrig: Integer;
+  // Mapea cualquier TFieldType al subconjunto que el motor MIDAS del
+  // TClientDataSet admite en CreateDataSet. Las columnas calculadas desde
+  // parametros y ciertos tipos de MariaDB (ftSingle, ftExtended, ftShortint,
+  // ftByte, ftTimeStampOffset, ftUnknown...) hacen que CreateDataSet lance
+  // 'Invalid field type'; aqui los reconducimos a un equivalente seguro.
+  function TipoSeguroCds(aTipo: TFieldType): TFieldType;
+  begin
+    case aTipo of
+      ftString, ftFixedChar:
+        Result := ftString;
+      ftWideString, ftFixedWideChar:
+        Result := ftWideString;
+      ftBoolean:
+        Result := ftBoolean;
+      ftShortint, ftByte, ftSmallint:
+        Result := ftSmallint;
+      ftWord, ftInteger, ftAutoInc:
+        Result := ftInteger;
+      ftLongWord, ftLargeint:
+        Result := ftLargeint;
+      ftSingle, ftFloat, ftExtended:
+        Result := ftFloat;
+      ftCurrency:
+        Result := ftCurrency;
+      ftBCD, ftFMTBcd:
+        Result := ftFMTBcd;
+      ftDate:
+        Result := ftDate;
+      ftTime:
+        Result := ftTime;
+      ftDateTime, ftTimeStamp, ftTimeStampOffset:
+        Result := ftDateTime;
+      ftMemo, ftWideMemo, ftFmtMemo:
+        Result := ftWideString;
+      ftBlob, ftGraphic, ftBytes, ftVarBytes:
+        Result := ftBlob;
+      ftGuid:
+        Result := ftGuid;
+    else
+      // ftUnknown y tipos exoticos (ftADT, ftArray, ftCursor, ftVariant,
+      // ftDataSet...): el disenyador solo necesita el nombre del campo, asi
+      // que lo exponemos como texto.
+      Result := ftWideString;
+    end;
+  end;
 begin
   // 1) Mapa CODIGO_UNIDAD_SKU -> HEX_ATB en memoria. Una sola query.
   oHexMap := TDictionary<string, string>.Create;
@@ -1258,29 +1303,46 @@ begin
     if unqryArtPrint.Active then
     begin
       unqryArtPrint.FieldDefs.Update;
-      cdsEtiquetasArt.FieldDefs.Assign(unqryArtPrint.FieldDefs);
-    end;
-    // Quitamos Required/AutoInc/etc para que Append no se queje despues.
-    // Ademas normalizamos el tipo de cada FieldDef: las columnas calculadas
-    // desde parametros (p.ej. :CODIGO_TAR_ARTTAR AS CODIGO_TAR_ARTTAR) llegan
-    // de MariaDB como ftUnknown o como cadena de tamanyo 0 cuando el parametro
-    // va vacio: es lo que ocurre al Editar el formato, que abre la query con
-    // tarifa ''. CreateDataSet rechazaba esos FieldDef con 'Invalid field
-    // type'. Los pasamos a string con un tamanyo minimo.
-    for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do
-    begin
-      fldDef            := cdsEtiquetasArt.FieldDefs[k];
-      fldDef.Required   := False;
-      fldDef.Attributes := [];
-      if fldDef.DataType = ftUnknown then
+      // Copiamos FieldDef a FieldDef (en vez de FieldDefs.Assign) para poder
+      // reconducir cada tipo al subconjunto que admite CreateDataSet. Las
+      // columnas calculadas desde parametros (p.ej. :CODIGO_TAR_ARTTAR) y
+      // algunos tipos de MariaDB llegan como tipos que el motor MIDAS no
+      // soporta, y CreateDataSet abortaba con 'Invalid field type'.
+      for k := 0 to unqryArtPrint.FieldDefs.Count - 1 do
       begin
-        fldDef.DataType := ftString;
-        fldDef.Size     := 50;
-      end
-      else if (fldDef.DataType in [ftString, ftFixedChar, ftWideString,
-               ftFixedWideChar, ftBytes, ftVarBytes]) and
-              (fldDef.Size <= 0) then
-        fldDef.Size := 50;
+        fdOrig            := unqryArtPrint.FieldDefs[k];
+        fldDef            := cdsEtiquetasArt.FieldDefs.AddFieldDef;
+        fldDef.Name       := fdOrig.Name;
+        fldDef.DataType   := TipoSeguroCds(fdOrig.DataType);
+        fldDef.Required   := False;
+        fldDef.Attributes := [];
+        case fldDef.DataType of
+          ftString, ftFixedChar, ftWideString, ftFixedWideChar:
+          begin
+            // Texto largo (GROUP_CONCAT/TEXT) -> tamanyo holgado. Para el
+            // resto usamos el del origen, pero acotado: las columnas de
+            // parametros vacios vuelven con tamanyo 0 o desmesurado, y un
+            // ftWideString gigante tambien hace fallar CreateDataSet.
+            if fdOrig.DataType in [ftMemo, ftWideMemo, ftFmtMemo] then
+              fldDef.Size := 8192
+            else if (fdOrig.Size > 0) and (fdOrig.Size <= 8192) then
+              fldDef.Size := fdOrig.Size
+            else
+              fldDef.Size := 255;
+          end;
+          ftFMTBcd:
+          begin
+            if fdOrig.Precision > 0 then
+              fldDef.Precision := fdOrig.Precision
+            else
+              fldDef.Precision := 18;
+            if (fdOrig.Size > 0) and (fdOrig.Size <= fldDef.Precision) then
+              fldDef.Size := fdOrig.Size
+            else
+              fldDef.Size := 4;
+          end;
+        end;
+      end;
     end;
     iCodSkuIdxOrig := cdsEtiquetasArt.FieldDefs.IndexOf('CODIGO_UNIDAD_SKU');
     if cdsEtiquetasArt.FieldDefs.IndexOf('HEX_ATR_CO') < 0 then
@@ -1290,7 +1352,31 @@ begin
       fldDef.DataType := ftString;
       fldDef.Size     := 7;
     end;
-    cdsEtiquetasArt.CreateDataSet;
+    // Red de seguridad: si pese al saneo MIDAS aun rechaza algun tipo,
+    // dejamos constancia del esquema exacto en el log y reconstruimos todo
+    // como texto para que el disenyador / impresion abran igualmente.
+    try
+      cdsEtiquetasArt.CreateDataSet;
+    except
+      on E: Exception do
+      begin
+        cdsEtiquetasArt.Close;
+        sDiag := '';
+        for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do
+          sDiag := sDiag + cdsEtiquetasArt.FieldDefs[k].Name + ':' +
+                   IntToStr(Ord(cdsEtiquetasArt.FieldDefs[k].DataType)) +
+                   '(' + IntToStr(cdsEtiquetasArt.FieldDefs[k].Size) + ') ';
+        if Assigned(Log) then
+          Log.LogError('PoblarCdsEtiquetasArt: CreateDataSet fallo (' +
+                       E.Message + '). Esquema: ' + sDiag);
+        for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do
+        begin
+          cdsEtiquetasArt.FieldDefs[k].DataType := ftWideString;
+          cdsEtiquetasArt.FieldDefs[k].Size     := 255;
+        end;
+        cdsEtiquetasArt.CreateDataSet;
+      end;
+    end;
     cdsEtiquetasArt.LogChanges := False;
     for k := 0 to cdsEtiquetasArt.FieldCount - 1 do
     begin
