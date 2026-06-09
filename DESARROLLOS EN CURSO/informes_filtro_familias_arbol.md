@@ -35,7 +35,7 @@ descendencia con un CTE recursivo sobre **`CODIGO_PADRE_FAM`**. Devolver
 la rama completa desde la UI hace que el filtro sea correcto tanto si
 `CODIGO_PADRE_FAM` está poblado como si no, sin tocar los SP.
 
-## Inconsistencia detectada (pendiente, fuera de este cambio)
+## Inconsistencia entre columnas de padre (la asume la migración legacy)
 
 La app modela la jerarquía de familias en `CODIGO_SUBFAMILIA_FAM`, pero
 los SP de informes recorren la descendencia y agrupan "por nivel de
@@ -43,13 +43,18 @@ familia" usando `CODIGO_PADRE_FAM`, que en el dump actual está a NULL.
 Resultado: la *expansión de descendencia* del SP es hoy un no-op y la
 *agrupación por familia por nivel* no refleja la jerarquía real.
 
-Este cambio de UI ya deja el **filtrado** correcto (manda la rama
-explícita). Para que la **agrupación por nivel** funcione habría que, en
-un script idempotente aparte:
+**El poblado de `CODIGO_PADRE_FAM` lo asume la migración legacy** (lo
+corrige el usuario allí); aquí no se prepara script de sincronización.
 
-1. Poblar `CODIGO_PADRE_FAM` desde `CODIGO_SUBFAMILIA_FAM`
-   (y mantenerlo sincronizado), o
-2. Cambiar los CTE de los SP para que usen `CODIGO_SUBFAMILIA_FAM`.
+Este cambio de UI es independiente y robusto frente a esa corrección:
 
-Se deja anotado para decidirlo; no se toca aquí para no mezclar un
-cambio de SP/datos con un cambio de pantalla.
+- El árbol lee `CODIGO_SUBFAMILIA_FAM` (lo que edita el mantenimiento de
+  familias), así que refleja la jerarquía real se pueble o no
+  `CODIGO_PADRE_FAM`.
+- El **filtrado** queda correcto porque `CSVFamilias` manda la rama
+  explícita (padre + subfamilias). Cuando la migración pueble
+  `CODIGO_PADRE_FAM`, el CTE del SP además expandirá la descendencia,
+  pero la unión es `DISTINCT` / `INSERT IGNORE`: idempotente, sin doble
+  conteo.
+- La **agrupación por nivel de familia** de los SP empieza a reflejar la
+  jerarquía en cuanto la migración deja `CODIGO_PADRE_FAM` poblado.
