@@ -46,6 +46,12 @@ uses
   UMigEngine;
 
 procedure MigrarInventarios(Eng: TMigEngine; var Stats: TMigStats);
+// Migra los inventarios/recuentos REALES del legacy (dbo.ocinv + ocinvarp)
+// como documentos en fza_inventarios + lineas. Sus movimientos de
+// regularizacion NO se generan aqui: ya estan en ocmovarp y los trae el
+// dominio 'movimientos', enlazados por Serie + Numero. Complementario, no
+// alternativo, al inventario inicial sintetico de arriba.
+procedure MigrarInventariosLegacy(Eng: TMigEngine; var Stats: TMigStats);
 
 implementation
 
@@ -251,14 +257,14 @@ begin
   fs     := TFormatSettings.Create('en-US');
   sAhora := DateTimeASQL(Now);
   sUser  := ValorOrNull(Eng.Usuario);
-  // Re-ejecutable: borramos el inventario migrado por ESTE usuario y sus
-  // movimientos de regularizacion (prefijo 'IV-MIG', exclusivo del migrador
-  // — no toca las regularizaciones que la app genere con su propia
-  // numeracion) para recrearlos limpios y no duplicar stock en cada pasada.
+  // Re-ejecutable: borramos SOLO el inventario sintetico de ESTE usuario
+  // (NUMERO_INV 'MIG%', exclusivo de este dominio — no toca los inventarios
+  // legacy de ocinv ni las regularizaciones de la app) y sus movimientos
+  // 'IV-MIG%', para recrearlos limpios y no duplicar stock en cada pasada.
   EjecutarSQL(Eng, 'DELETE FROM fza_inventarios_lineas WHERE USUARIO_ALTA = '
-    + sUser);
+    + sUser + ' AND NUMERO_INV_INVLIN LIKE ''MIG%''');
   EjecutarSQL(Eng, 'DELETE FROM fza_inventarios WHERE USUARIO_ALTA = ' +
-    sUser);
+    sUser + ' AND NUMERO_INV LIKE ''MIG%''');
   EjecutarSQL(Eng, 'DELETE FROM fza_movimientos_almacen ' +
     'WHERE NUMERO_MOV LIKE ''IV-MIG%''');
   qSrc    := NuevoQOrigen(Eng, cSelectSrc);
@@ -380,6 +386,243 @@ begin
       ReconstruirStockDesdeMovimientos(Eng);
   finally
     bulkMov.Free;
+    qSrc.Free;
+  end;
+end;
+
+// =========================================================================
+//  Inventarios LEGACY (recuentos reales: dbo.ocinv + dbo.ocinvarp)
+// =========================================================================
+// A diferencia del inventario inicial sintetico (ocartacp), aqui migramos
+// los inventarios que REALMENTE existieron en el legacy. Solo el DOCUMENTO
+// (cabecera + lineas): los movimientos de regularizacion ya viven en
+// ocmovarp y los trae 'movimientos', enlazados por Serie + Numero.
+
+// Inserta la cabecera del inventario legacy si no existe. Devuelve True si
+// la inserto (False = ya existia, se omite el inventario entero).
+function InsertarCabeceraLegacy(Eng: TMigEngine; const sEmp, sAlm, sSerie,
+                                sNumero, sDesc: string;
+                                dFecha: TDateTime): Boolean;
+var qChk, qIns: TUniQuery;
+begin
+  qChk := TUniQuery.Create(nil);
+  qIns := TUniQuery.Create(nil);
+  try
+    qChk.Connection := Eng.ConDst;
+    qChk.SQL.Text   :=
+      'SELECT 1 FROM fza_inventarios ' +
+      'WHERE CODIGO_EMP_INV = :e AND CODIGO_ALM_INV = :a ' +
+      '  AND SERIE_INV = :s AND NUMERO_INV = :n';
+    qChk.ParamByName('e').AsString := sEmp;
+    qChk.ParamByName('a').AsString := sAlm;
+    qChk.ParamByName('s').AsString := sSerie;
+    qChk.ParamByName('n').AsString := sNumero;
+    qChk.Open;
+    Result := qChk.IsEmpty;
+    qChk.Close;
+    if Result then
+    begin
+      qIns.Connection := Eng.ConDst;
+      qIns.SQL.Text   :=
+        'INSERT INTO fza_inventarios (' +
+          'CODIGO_EMP_INV, CODIGO_ALM_INV, SERIE_INV, NUMERO_INV, ' +
+          'TIPO_DOC_INV, FECHA_INV, ESTADO_INV, DESCRIPCION_INV, ' +
+          'TOTAL_UNIDADES_DIFERENCIA_INV, TOTAL_EUROS_DIFERENCIA_INV, ' +
+          'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:e, :a, :s, :n, ''IN'', :f, ''APLICADO'', :d, 0, 0, ' +
+                ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
+                ':USUARIO_MODIF)';
+      qIns.ParamByName('e').AsString   := sEmp;
+      qIns.ParamByName('a').AsString   := sAlm;
+      qIns.ParamByName('s').AsString   := sSerie;
+      qIns.ParamByName('n').AsString   := sNumero;
+      qIns.ParamByName('f').AsDateTime := dFecha;
+      qIns.ParamByName('d').AsString   := sDesc;
+      RellenarAuditoria(qIns, Eng.Usuario);
+      qIns.ExecSQL;
+    end;
+  finally
+    qIns.Free;
+    qChk.Free;
+  end;
+end;
+
+procedure InsertarLineaLegacy(Eng: TMigEngine; const sEmp, sAlm, sSerie,
+                              sNumero, sLinea, sCodArt, sCodUnidad,
+                              sDesc: string;
+                              fTeorica, fFisica, fDif, fPre,
+                              fPreNue: Double);
+var qIns: TUniQuery;
+begin
+  qIns := TUniQuery.Create(nil);
+  try
+    qIns.Connection := Eng.ConDst;
+    qIns.SQL.Text   :=
+      'INSERT INTO fza_inventarios_lineas (' +
+        'CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN, SERIE_INV_INVLIN, ' +
+        'NUMERO_INV_INVLIN, LINEA_INVLIN, ' +
+        'CODIGO_ART_INVLIN, CODIGO_UNIDAD_INVLIN, ' +
+        'DESCRIPCION_ARTICULO_INVLIN, ' +
+        'CANTIDAD_TEORICA_INVLIN, CANTIDAD_FISICA_INVLIN, ' +
+        'CANTIDAD_DIFERENCIA_INVLIN, PRECIO_MEDIO_INVLIN, ' +
+        'PRECIO_MEDIO_NUEVO_INVLIN, ' +
+        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'VALUES (:e, :a, :s, :n, :l, :ca, :u, :d, ' +
+              ':ct, :cf, :cd, :pm, :pn, ' +
+              ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
+              ':USUARIO_MODIF)';
+    qIns.ParamByName('e').AsString  := sEmp;
+    qIns.ParamByName('a').AsString  := sAlm;
+    qIns.ParamByName('s').AsString  := sSerie;
+    qIns.ParamByName('n').AsString  := sNumero;
+    qIns.ParamByName('l').AsString  := sLinea;
+    qIns.ParamByName('ca').AsString := sCodArt;
+    qIns.ParamByName('u').AsString  := sCodUnidad;
+    qIns.ParamByName('d').AsString  := sDesc;
+    qIns.ParamByName('ct').AsFloat  := fTeorica;
+    qIns.ParamByName('cf').AsFloat  := fFisica;
+    qIns.ParamByName('cd').AsFloat  := fDif;
+    qIns.ParamByName('pm').AsFloat  := fPre;
+    qIns.ParamByName('pn').AsFloat  := fPreNue;
+    RellenarAuditoria(qIns, Eng.Usuario);
+    qIns.ExecSQL;
+  finally
+    qIns.Free;
+  end;
+end;
+
+procedure MigrarInventariosLegacy(Eng: TMigEngine; var Stats: TMigStats);
+const
+  // Cabecera (ocinv) + lineas (ocinvarp). Unidades = stock teorico al
+  // recuento; UnidadesNuevas = recuento fisico. Resolvemos el color con el
+  // mismo criterio que el resto (literal del proveedor primero).
+  cSel =
+    'SELECT inv.Empresa, inv.Serie, inv.NroInventario, ' +
+    '       ISNULL(arp.Almacen, inv.Almacen) AS Almacen, ' +
+    '       inv.Fecha, ' +
+    '       ISNULL(CAST(inv.Observaciones AS nvarchar(200)), '''') AS Obs, ' +
+    '       ISNULL(alm.Abreviatura, '''') AS AbreviaturaAlm, ' +
+    '       arp.Articulo, arp.Color, arp.Talla, ' +
+    '       ISNULL(arp.Unidades, 0)        AS Unidades, ' +
+    '       ISNULL(arp.UnidadesNuevas, 0)  AS UnidadesNuevas, ' +
+    '       ISNULL(arp.Precio, 0)          AS Precio, ' +
+    '       ISNULL(arp.PrecioNuevo, 0)     AS PrecioNuevo, ' +
+    '       CASE ' +
+    '         WHEN arp.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(arp.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(arp.Color))) ' +
+    '         WHEN c.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         ELSE ''0'' ' +
+    '       END AS DescColor, ' +
+    '       ISNULL(art.DescripcionLarga, ' +
+    '              ISNULL(art.DescripcionCorta, '''')) AS DescArt ' +
+    'FROM dbo.ocinvarp arp ' +
+    'JOIN dbo.ocinv inv ON inv.Empresa = arp.Empresa ' +
+    '                  AND inv.Ejercicio = arp.Ejercicio ' +
+    '                  AND inv.Serie = arp.Serie ' +
+    '                  AND inv.NroInventario = arp.NroInventario ' +
+    'LEFT JOIN dbo.ocalm alm ON alm.Empresa = arp.Empresa ' +
+    '                       AND alm.Almacen = ISNULL(arp.Almacen, ' +
+    '                                                inv.Almacen) ' +
+    'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = arp.Articulo ' +
+    '                         AND ac.Color = arp.Color ' +
+    'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
+    'LEFT JOIN dbo.ocartp art ON art.Articulo = arp.Articulo ' +
+    'WHERE LTRIM(RTRIM(arp.Articulo)) <> '''' ' +
+    'ORDER BY arp.Empresa, arp.Serie, arp.NroInventario, ' +
+    '         arp.Articulo, arp.Color, arp.Talla';
+var
+  qSrc:                    TUniQuery;
+  iEmp, iNro, iAlm:        Integer;
+  iLinea:                  Integer;
+  sEmp, sAlm, sSerie:      string;
+  sNumero, sKey, sKeyAnt:  string;
+  sArt, sDescColor:        string;
+  sCodUnidad, sDesc, sObs: string;
+  dFecha:                  TDateTime;
+  fTeorica, fFisica:       Double;
+  fDif, fPre, fPreNue:     Double;
+  bCab:                    Boolean;
+begin
+  qSrc := NuevoQOrigen(Eng, cSel);
+  try
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(*) FROM dbo.ocinvarp ' +
+      'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
+    qSrc.Open;
+    sKeyAnt := '';
+    iLinea  := 0;
+    bCab    := False;
+    while not qSrc.Eof do
+    begin
+      Inc(Stats.Leidas);
+      Eng.IncRow;
+      iEmp       := qSrc.FieldByName('Empresa').AsInteger;
+      sSerie     := Trim(qSrc.FieldByName('Serie').AsString);
+      iNro       := qSrc.FieldByName('NroInventario').AsInteger;
+      iAlm       := qSrc.FieldByName('Almacen').AsInteger;
+      sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
+      sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
+      sDesc      := Trim(qSrc.FieldByName('DescArt').AsString);
+      fTeorica   := qSrc.FieldByName('Unidades').AsFloat;
+      fFisica    := qSrc.FieldByName('UnidadesNuevas').AsFloat;
+      fPre       := qSrc.FieldByName('Precio').AsFloat;
+      fPreNue    := qSrc.FieldByName('PrecioNuevo').AsFloat;
+      fDif       := fFisica - fTeorica;
+      sKey       := IntToStr(iEmp) + '|' + sSerie + '|' + IntToStr(iNro);
+      // Cambio de inventario (Empresa+Serie+Nro) → cabecera nueva.
+      if sKey <> sKeyAnt then
+      begin
+        sKeyAnt := sKey;
+        iLinea  := 0;
+        sEmp    := IntToStr(iEmp);
+        sNumero := IntToStr(iNro);
+        sAlm    := UpperCase(Trim(
+                     qSrc.FieldByName('AbreviaturaAlm').AsString));
+        if sAlm = '' then
+          sAlm := IntToStr(iAlm);
+        sObs := Trim(qSrc.FieldByName('Obs').AsString);
+        if sObs = '' then
+          sObs := Format('Inventario legacy %s/%d migrado', [sSerie, iNro]);
+        if qSrc.FieldByName('Fecha').IsNull then
+          dFecha := Now
+        else
+          dFecha := qSrc.FieldByName('Fecha').AsDateTime;
+        bCab := InsertarCabeceraLegacy(Eng, sEmp, sAlm, sSerie, sNumero,
+                                       sObs, dFecha);
+        if not bCab then
+          Eng.LogSalto('inventario_legacy',
+            sEmp + '/' + sSerie + '/' + sNumero,
+            'cabecera ya existe, se omite el inventario', '', sNumero);
+      end;
+      if bCab then
+      begin
+        Inc(iLinea);
+        sCodUnidad := ConstruirCodigoUnidad(sArt, UpperCase(sDescColor),
+          UpperCase(Trim(qSrc.FieldByName('Talla').AsString)));
+        try
+          InsertarLineaLegacy(Eng, sEmp, sAlm, sSerie, sNumero,
+            Format('%.8d', [iLinea]), sArt, sCodUnidad, sDesc,
+            fTeorica, fFisica, fDif, fPre, fPreNue);
+          Inc(Stats.Insertadas);
+        except
+          on E: Exception do
+          begin
+            Inc(Stats.Errores);
+            Eng.LogError('inventario_legacy_linea', sCodUnidad, E.Message,
+              Format('emp=%s serie=%s nro=%s', [sEmp, sSerie, sNumero]),
+              'la linea requiere que el almacen y el SKU ya esten ' +
+              'migrados — corre antes Almacenes y SKUs');
+          end;
+        end;
+      end
+      else
+        Inc(Stats.Saltadas);
+      qSrc.Next;
+    end;
+  finally
     qSrc.Free;
   end;
 end;
