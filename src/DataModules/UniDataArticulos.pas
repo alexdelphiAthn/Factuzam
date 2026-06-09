@@ -20,6 +20,7 @@ uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn,  cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
+  cxCustomData, cxFilter, inLibAppParam,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
   System.Generics.Collections,
   frxClass, frxDBSet, frCoreClasses, System.UITypes;
@@ -370,6 +371,8 @@ const
 var
   tvArticulosStock: TcxGridDBTableView;
   col: TcxGridDBColumn;
+  colGrupo, colTotal: TcxGridDBColumn;
+  bOcultarCeros: Boolean;
   nombre, sArt: string;
   i: Integer;
   swTotal, swTramo: TStopwatch;
@@ -427,6 +430,41 @@ begin
       // ahora ANCHO_COLOR ya incluye espacio para el swatch, no hace
       // falta llamarlo. La funcion sigue viva por si la usas en otro
       // sitio (la mantenemos como utilidad).
+      // Filtro de presentacion: las filas de grupo '-' (almacen sin desglose
+      // por color y el duplicado de sumatorio que devuelve el SP) se ocultan
+      // siempre. Las lineas a cero solo si el parametro general
+      // appStockOcultarCeros esta activo. El SP no se toca.
+      colGrupo := nil;
+      colTotal := nil;
+      for i := 0 to tvArticulosStock.ColumnCount - 1 do
+      begin
+        col := tvArticulosStock.Columns[i] as TcxGridDBColumn;
+        nombre := col.DataBinding.FieldName;
+        if SameText(nombre, 'Total') or SameText(nombre, 'Stock Total') then
+          colTotal := col
+        else if not SameText(nombre, 'Almacen')
+                and (col.DataBinding.Field <> nil)
+                and (col.DataBinding.Field.DataType in [ftString, ftWideString,
+                                                        ftMemo, ftWideMemo]) then
+          colGrupo := col;
+      end;
+      bOcultarCeros := Assigned(oAppParams)
+                       and oAppParams.GetBool('appStockOcultarCeros', True);
+      with tvArticulosStock.DataController.Filter do
+      begin
+        BeginUpdate;
+        try
+          Root.Clear;
+          Root.BoolOperatorKind := fboAnd;
+          if colGrupo <> nil then
+            Root.AddItem(colGrupo as TObject, foNotEqual, '-', '-');
+          if bOcultarCeros and (colTotal <> nil) then
+            Root.AddItem(colTotal as TObject, foNotEqual, 0, '0');
+        finally
+          EndUpdate;
+        end;
+        Active := (colGrupo <> nil) or (bOcultarCeros and (colTotal <> nil));
+      end;
     end;
   end;
   inLibLog.Log.LogPerf('Articulos.StockAfterScroll',

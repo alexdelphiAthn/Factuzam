@@ -223,6 +223,16 @@ begin
   RegistrarParametro('Apariencia', 'appPaleta',
     'Paleta de color del tema', tpString, 'Default');
 
+  // --- Consulta de Stock ---
+  // Aplica a la pestaña 8_Stock de la ficha de artículo y a la consulta de
+  // stock (Ctrl+U). Oculta las líneas a cero para ver sólo lo que hay en
+  // stock. En la ficha de artículo, las filas de grupo '-' (almacén sin
+  // desglose / duplicado de sumatorio) se ocultan siempre, independientemente
+  // de este parámetro.
+  RegistrarParametro('Consulta de Stock', 'appStockOcultarCeros',
+    'Ocultar líneas a cero en las consultas de stock',
+    tpBoolean, 'True');
+
   // --- Valores por defecto ---
   RegistrarParametro('Valores por defecto', 'appTarifaDefecto',
     'Tarifa por defecto del sistema (código de tarifa)',
