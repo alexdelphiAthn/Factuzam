@@ -328,8 +328,9 @@ begin
       '  LEFT JOIN fza_familias_atributos fa ' +
       '    ON fa.CODIGO_PROP_ARTPROP = ap.CODIGO_PROP_ARTPROP ' +
       '   AND fa.CODIGO_FAM_FAM      = art.CODIGO_FAM_ART ' +
-      ' WHERE ap.CODIGO_ART_ART = :art ' +
-      '   AND p.ESACTIVO_PROP   = ''S'' ' +
+      ' WHERE ap.CODIGO_ART_ART        = :art ' +
+      '   AND ap.CODIGO_UNIDAD_ARTPROP = '''' ' +
+      '   AND p.ESACTIVO_PROP          = ''S'' ' +
       ' ORDER BY ORDEN_MOSTRAR_FA, p.NOMBRE_PROP_PROP';
     q.ParamByName('art').AsString := ACodigoArticulo;
     q.Open;
