@@ -1261,10 +1261,26 @@ begin
       cdsEtiquetasArt.FieldDefs.Assign(unqryArtPrint.FieldDefs);
     end;
     // Quitamos Required/AutoInc/etc para que Append no se queje despues.
+    // Ademas normalizamos el tipo de cada FieldDef: las columnas calculadas
+    // desde parametros (p.ej. :CODIGO_TAR_ARTTAR AS CODIGO_TAR_ARTTAR) llegan
+    // de MariaDB como ftUnknown o como cadena de tamanyo 0 cuando el parametro
+    // va vacio: es lo que ocurre al Editar el formato, que abre la query con
+    // tarifa ''. CreateDataSet rechazaba esos FieldDef con 'Invalid field
+    // type'. Los pasamos a string con un tamanyo minimo.
     for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do
     begin
-      cdsEtiquetasArt.FieldDefs[k].Required := False;
-      cdsEtiquetasArt.FieldDefs[k].Attributes := [];
+      fldDef            := cdsEtiquetasArt.FieldDefs[k];
+      fldDef.Required   := False;
+      fldDef.Attributes := [];
+      if fldDef.DataType = ftUnknown then
+      begin
+        fldDef.DataType := ftString;
+        fldDef.Size     := 50;
+      end
+      else if (fldDef.DataType in [ftString, ftFixedChar, ftWideString,
+               ftFixedWideChar, ftBytes, ftVarBytes]) and
+              (fldDef.Size <= 0) then
+        fldDef.Size := 50;
     end;
     iCodSkuIdxOrig := cdsEtiquetasArt.FieldDefs.IndexOf('CODIGO_UNIDAD_SKU');
     if cdsEtiquetasArt.FieldDefs.IndexOf('HEX_ATR_CO') < 0 then
