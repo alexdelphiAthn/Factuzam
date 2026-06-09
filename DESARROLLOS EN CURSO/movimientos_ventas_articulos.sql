@@ -442,6 +442,10 @@ BEGIN
              WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = 'S'
              GROUP BY ap.`CODIGO_ART_AP`
            ) prov ON prov.`CODIGO_ART` = b.`CODIGO_ART`
+      -- Temporada a nivel ARTICULO (Fase 3): este informe es por articulo,
+      -- sin desglose de color, asi que usa la temporada del articulo. El
+      -- filtro CODIGO_UNIDAD_ARTPROP = '' evita mezclar/duplicar con las
+      -- temporadas de color (el color se ve en el balance de tallas).
       LEFT JOIN (
             SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
                    MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
@@ -449,6 +453,7 @@ BEGIN
               LEFT JOIN `fza_propiedades_valores` tpv
                 ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
              WHERE tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
+               AND tp.`CODIGO_UNIDAD_ARTPROP` = ''
              GROUP BY tp.`CODIGO_ART_ART`
            ) tmp ON tmp.`CODIGO_ART` = b.`CODIGO_ART`
      ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,

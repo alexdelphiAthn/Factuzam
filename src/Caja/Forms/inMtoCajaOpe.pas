@@ -1062,6 +1062,8 @@ begin
       'LEFT JOIN fza_articulos_propiedades ap'                      + sLineBreak +
       '       ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART'              + sLineBreak +
       '      AND ap.CODIGO_PROP_ARTPROP = ''TEMPORADA'''            + sLineBreak +
+      // Nivel articulo: evita duplicar el articulo por temporadas de color
+      '      AND ap.CODIGO_UNIDAD_ARTPROP = '''''                   + sLineBreak +
       'LEFT JOIN fza_propiedades_valores pv'                        + sLineBreak +
       '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'               + sLineBreak +
       'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA'                        + sLineBreak +
