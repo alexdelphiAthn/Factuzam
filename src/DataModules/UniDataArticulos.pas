@@ -1265,6 +1265,10 @@ var
     end;
   end;
 begin
+  // Marcador de build: si esta linea NO aparece en el log, el .exe en uso
+  // no incluye este saneo de tipos (build/exe antiguo).
+  if Assigned(Log) then
+    Log.LogInfo('PoblarCdsEtiquetasArt: saneo de tipos MIDAS activo');
   // 1) Mapa CODIGO_UNIDAD_SKU -> HEX_ATB en memoria. Una sola query.
   oHexMap := TDictionary<string, string>.Create;
   try
