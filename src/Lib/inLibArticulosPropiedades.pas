@@ -49,6 +49,7 @@ type
     CodigoPropiedad : string;
     NombrePropiedad : string;
     TipoValor       : TTipoValorProp;
+    Nivel           : string;
     EsRequerido     : Boolean;
     IdValorPV       : Integer;
     ValorLibre      : string;
@@ -96,6 +97,9 @@ type
     procedure UpsertSlot(const S: TSlotProp);
     procedure DeleteSlot(const CodigoPropiedad: string);
     function IndexOfCodigo(const ACod: string): Integer;
+    procedure CrearBtnPorUnidad(ASlotIdx, ATop: Integer);
+    procedure BtnPorUnidadClick(Sender: TObject);
+    procedure AbrirEditorPorUnidad(const S: TSlotProp);
   public
     constructor Create(AScrollBox: TScrollBox;
                        AConexion: TUniConnection;
@@ -107,6 +111,54 @@ type
     function GuardarPropiedades: Boolean;
     function Validar: string;
     property Modificado: Boolean read FModificado;
+  end;
+
+  TFilaUnidadProp = record
+    Unidad : string;
+    Nombre : string;
+    Ctrl   : TControl;
+  end;
+
+  TValUnidadProp = record
+    IdValor    : Integer;
+    ValorLibre : string;
+  end;
+
+  // Modal "propiedad por color/SKU": lista las unidades (colores o SKUs) del
+  // articulo y fija el valor de UNA propiedad a ese nivel. Persiste directo en
+  // fza_articulos_propiedades con CODIGO_UNIDAD_ARTPROP (mismo mecanismo que
+  // tarifas/fotos). Construido en codigo, sin .dfm propio.
+  TfrmPropPorUnidad = class(TFrmModalAceptCancel)
+  private
+    FConexion   : TUniConnection;
+    FUsuario    : string;
+    FArticulo   : string;
+    FCodigoProp : string;
+    FNombreProp : string;
+    FTipoValor  : TTipoValorProp;
+    FNivel      : string;
+    FScroll     : TScrollBox;
+    FFilas      : TList<TFilaUnidadProp>;
+    FOpciones   : TList<TPair<Integer, string>>;
+    FActuales   : TDictionary<string, TValUnidadProp>;
+    procedure CargarOpciones;
+    procedure CargarUnidades;
+    procedure CargarValoresActuales;
+    procedure ConstruirFilas;
+    procedure CrearControlFila(var F: TFilaUnidadProp; ATop, AIdValor: Integer;
+                               const AValorLibre: string);
+    procedure UpsertUnidad(const AUnidad: string; AIdValor: Integer;
+                           const AValorLibre: string);
+    procedure DeleteUnidad(const AUnidad: string);
+    procedure BtnAceptarClick(Sender: TObject);
+    procedure BtnCancelarClick(Sender: TObject);
+  public
+    constructor Create(AOwner: TComponent; AConexion: TUniConnection;
+                       const AUsuario, AArticulo, ACodigoProp,
+                       ANombreProp: string; ATipoValor: TTipoValorProp;
+                       const ANivel: string); reintroduce;
+    destructor Destroy; override;
+    function IsShortCut(var Message: TWMKey): Boolean; override;
   end;
 
 implementation
@@ -325,20 +377,31 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := FConexion;
+    // Una fila por propiedad que el articulo tenga a CUALQUIER nivel (DISTINCT
+    // sobre la PK ampliada de Fase 1). El valor que se edita en esta pestaña es
+    // el de nivel ARTICULO (apz, CODIGO_UNIDAD_ARTPROP = ''); el desglose por
+    // color/SKU se gestiona en el modal TfrmPropPorUnidad.
     q.SQL.Text :=
       'SELECT p.CODIGO_PROP_ARTPROP, p.NOMBRE_PROP_PROP, p.TIPO_VALOR_PROP, ' +
-      '       ap.ID_PV_ARTPROP, ap.VALOR_LIBRE_ARTPROP, ' +
+      '       p.NIVEL_PROP, ' +
+      '       apz.ID_PV_ARTPROP, apz.VALOR_LIBRE_ARTPROP, ' +
       '       COALESCE(fa.ESREQUERIDO_FA, ''N'') AS ESREQUERIDO_FA, ' +
       '       COALESCE(fa.ORDEN_MOSTRAR_FA, 999) AS ORDEN_MOSTRAR_FA ' +
-      'FROM   fza_articulos_propiedades ap ' +
-      'JOIN   fza_propiedades p ON p.CODIGO_PROP_ARTPROP = ' +
-      'ap.CODIGO_PROP_ARTPROP ' +
-      'LEFT JOIN fza_articulos art ON art.CODIGO_ART_ART = ap.CODIGO_ART_ART ' +
+      'FROM   (SELECT DISTINCT CODIGO_ART_ART, CODIGO_PROP_ARTPROP ' +
+      '          FROM fza_articulos_propiedades ' +
+      '         WHERE CODIGO_ART_ART = :art) d ' +
+      'JOIN   fza_propiedades p ' +
+      '       ON p.CODIGO_PROP_ARTPROP = d.CODIGO_PROP_ARTPROP ' +
+      'LEFT JOIN fza_articulos_propiedades apz ' +
+      '       ON apz.CODIGO_ART_ART        = d.CODIGO_ART_ART ' +
+      '      AND apz.CODIGO_PROP_ARTPROP   = d.CODIGO_PROP_ARTPROP ' +
+      '      AND apz.CODIGO_UNIDAD_ARTPROP = '''' ' +
+      'LEFT JOIN fza_articulos art ' +
+      '       ON art.CODIGO_ART_ART = d.CODIGO_ART_ART ' +
       'LEFT JOIN fza_familias_atributos fa ' +
-      '       ON fa.CODIGO_PROP_ARTPROP = ap.CODIGO_PROP_ARTPROP ' +
-      '      AND fa.CODIGO_FAM_FAM   = art.CODIGO_FAM_ART ' +
-      'WHERE  ap.CODIGO_ART_ART = :art ' +
-      '  AND  p.ESACTIVO_PROP = ''S'' ' +
+      '       ON fa.CODIGO_PROP_ARTPROP = d.CODIGO_PROP_ARTPROP ' +
+      '      AND fa.CODIGO_FAM_FAM      = art.CODIGO_FAM_ART ' +
+      'WHERE  p.ESACTIVO_PROP = ''S'' ' +
       'ORDER  BY COALESCE(fa.ORDEN_MOSTRAR_FA, 999), p.NOMBRE_PROP_PROP';
     q.ParamByName('art').AsString := ACodigoArticulo;
     q.Open;
@@ -352,6 +415,7 @@ begin
       S.CodigoPropiedad := q.FieldByName('CODIGO_PROP_ARTPROP').AsString;
       S.NombrePropiedad := q.FieldByName('NOMBRE_PROP_PROP').AsString;
       S.TipoValor := TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
+      S.Nivel           := q.FieldByName('NIVEL_PROP').AsString;
       S.EsRequerido     := q.FieldByName('ESREQUERIDO_FA').AsString = 'S';
       S.IdValorPV       := q.FieldByName('ID_PV_ARTPROP').AsInteger;
       S.ValorLibre      := q.FieldByName('VALOR_LIBRE_ARTPROP').AsString;
@@ -465,8 +529,7 @@ begin
     qProp.Connection := FConexion;
     qProp.SQL.Text   :=
       'SELECT p.CODIGO_PROP_ARTPROP, p.NOMBRE_PROP_PROP, p.TIPO_VALOR_PROP, ' +
-                                                            'fa.ESREQUERIDO_FA '
-                                                              +
+      '       p.NIVEL_PROP, fa.ESREQUERIDO_FA ' +
       'FROM fza_familias_atributos fa ' +
       'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = ' +
       'fa.CODIGO_PROP_ARTPROP ' +
@@ -494,6 +557,7 @@ begin
         S.TipoValor       :=
                       TipoDesdeCadena(qProp.FieldByName(
                         'TIPO_VALOR_PROP').AsString);
+        S.Nivel           := qProp.FieldByName('NIVEL_PROP').AsString;
         S.EsRequerido     := qProp.FieldByName('ESREQUERIDO_FA').AsString = 'S';
         S.IdValorPV       := 0;
         S.ValorLibre      := '';
@@ -564,6 +628,8 @@ begin
       tvpBooleano   : CrearFilaBooleano(S, Top);
     end;
     CrearBtnEliminar(i, Top);
+    if (S.Nivel = 'COLOR') or (S.Nivel = 'SKU') then
+      CrearBtnPorUnidad(i, Top);
     FSlots[i] := S;
     Inc(Top, ALTO_FILA + MARGEN_V);
   end;
@@ -732,6 +798,56 @@ begin
   );
 end;
 
+procedure TGestorPropiedades.CrearBtnPorUnidad(ASlotIdx, ATop: Integer);
+var
+  btn: TcxButton;
+  S  : TSlotProp;
+begin
+  S := FSlots[ASlotIdx];
+  btn := TcxButton.Create(FScrollBox);
+  btn.Parent := FScrollBox;
+  btn.Left   := MARGEN_H + ANCHO_LABEL + 6 + ANCHO_CTRL + 6 + ANCHO_BTN_DEL + 6;
+  btn.Top    := ATop;
+  btn.Width  := 110;
+  btn.Height := ALTO_FILA;
+  if S.Nivel = 'SKU' then
+    btn.Caption := 'Por color/SKU…'
+  else
+    btn.Caption := 'Por color…';
+  btn.Tag      := ASlotIdx;
+  btn.Hint     := 'Fijar ' + S.NombrePropiedad + ' por color/SKU';
+  btn.ShowHint := True;
+  btn.OnClick  := BtnPorUnidadClick;
+end;
+
+procedure TGestorPropiedades.BtnPorUnidadClick(Sender: TObject);
+var
+  idx: Integer;
+begin
+  idx := (Sender as TcxButton).Tag;
+  if (idx >= 0) and (idx < FSlots.Count) then
+  begin
+    if FCodigoArticulo = '' then
+      ShowMessage('Primero guarde el artículo antes de fijar valores por ' +
+                  'color.')
+    else
+      AbrirEditorPorUnidad(FSlots[idx]);
+  end;
+end;
+
+procedure TGestorPropiedades.AbrirEditorPorUnidad(const S: TSlotProp);
+var
+  dlg: TfrmPropPorUnidad;
+begin
+  dlg := TfrmPropPorUnidad.Create(nil, FConexion, FUsuario, FCodigoArticulo,
+           S.CodigoPropiedad, S.NombrePropiedad, S.TipoValor, S.Nivel);
+  try
+    dlg.ShowModal;
+  finally
+    FreeAndNil(dlg);
+  end;
+end;
+
 procedure TGestorPropiedades.AbrirSelectorPropiedades;
 var
   dlg          : TfrmSelPropiedades;
@@ -761,7 +877,8 @@ begin
       try
         qProp.Connection := FConexion;
         qProp.SQL.Text   :=
-          'SELECT CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP, TIPO_VALOR_PROP ' +
+          'SELECT CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP, TIPO_VALOR_PROP, ' +
+          '       NIVEL_PROP ' +
           'FROM   fza_propiedades ' +
           'WHERE  CODIGO_PROP_ARTPROP = :cod';
         qOpc.Connection := FConexion;
@@ -785,6 +902,7 @@ begin
           S.TipoValor       :=
                       TipoDesdeCadena(qProp.FieldByName(
                         'TIPO_VALOR_PROP').AsString);
+          S.Nivel           := qProp.FieldByName('NIVEL_PROP').AsString;
           S.EsRequerido     := False;
           S.IdValorPV       := 0;
           S.ValorLibre      := '';
@@ -966,6 +1084,409 @@ begin
   finally
     FreeAndNil(q);
   end;
+end;
+
+{ ═══════════════════════════════════════════════════════════════════════════ }
+{ TfrmPropPorUnidad — editor de una propiedad por color/SKU                    }
+{ ═══════════════════════════════════════════════════════════════════════════ }
+
+constructor TfrmPropPorUnidad.Create(AOwner: TComponent;
+  AConexion: TUniConnection; const AUsuario, AArticulo, ACodigoProp,
+  ANombreProp: string; ATipoValor: TTipoValorProp; const ANivel: string);
+begin
+  inherited Create(AOwner);
+  FConexion   := AConexion;
+  FUsuario    := AUsuario;
+  FArticulo   := AArticulo;
+  FCodigoProp := ACodigoProp;
+  FNombreProp := ANombreProp;
+  FTipoValor  := ATipoValor;
+  FNivel      := ANivel;
+  FFilas      := TList<TFilaUnidadProp>.Create;
+  FOpciones   := TList<TPair<Integer, string>>.Create;
+  FActuales   := TDictionary<string, TValUnidadProp>.Create;
+  if FNivel = 'SKU' then
+    Caption := FNombreProp + ' por SKU'
+  else
+    Caption := FNombreProp + ' por color';
+  Width       := 560;
+  Height      := 460;
+  Position    := poOwnerFormCenter;
+  BorderStyle := bsDialog;
+  Font.Name   := 'Lucida Sans';
+  FScroll := TScrollBox.Create(Self);
+  FScroll.Parent      := pnlBody;
+  FScroll.Align       := alClient;
+  FScroll.BorderStyle := bsNone;
+  FScroll.Color       := clWindow;
+  FScroll.AutoScroll  := True;
+  if FTipoValor = tvpLista then
+    CargarOpciones;
+  CargarUnidades;
+  CargarValoresActuales;
+  ConstruirFilas;
+  if Assigned(btnAceptar) then
+    btnAceptar.OnClick := BtnAceptarClick;
+  if Assigned(btnCancelar) then
+    btnCancelar.OnClick := BtnCancelarClick;
+end;
+
+destructor TfrmPropPorUnidad.Destroy;
+begin
+  FreeAndNil(FFilas);
+  FreeAndNil(FOpciones);
+  FreeAndNil(FActuales);
+  inherited;
+end;
+
+function TfrmPropPorUnidad.IsShortCut(var Message: TWMKey): Boolean;
+begin
+  if Message.CharCode = VK_ESCAPE then
+  begin
+    BtnCancelarClick(Self);
+    Result := True;
+  end
+  else
+    Result := inherited IsShortCut(Message);
+end;
+
+procedure TfrmPropPorUnidad.CargarOpciones;
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    q.SQL.Text :=
+      'SELECT ID_PV_ARTPROP, PV ' +
+      'FROM   fza_propiedades_valores ' +
+      'WHERE  ID_PROP_PV = :cod ' +
+      '  AND  ESACTIVO_PV = ''S'' ' +
+      'ORDER  BY PV';
+    q.ParamByName('cod').AsString := FCodigoProp;
+    q.Open;
+    while not q.Eof do
+    begin
+      FOpciones.Add(TPair<Integer, string>.Create(
+        q.FieldByName('ID_PV_ARTPROP').AsInteger,
+        q.FieldByName('PV').AsString));
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmPropPorUnidad.CargarUnidades;
+var
+  q      : TUniQuery;
+  F      : TFilaUnidadProp;
+  partes : TArray<string>;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    if FNivel = 'SKU' then
+      q.SQL.Text :=
+        'SELECT sk.CODIGO_UNIDAD_SKU AS UNIDAD, ' +
+        '       COALESCE((SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV ' +
+        '                          SEPARATOR '' / '') ' +
+        '                   FROM fza_atributos_sku sa ' +
+        '                   JOIN fza_atributos_valores av ' +
+        '                     ON av.ID_AV = sa.ID_AV_SA ' +
+        '                  WHERE sa.CODIGO_UNIDAD_SKU_SA = ' +
+        '                        sk.CODIGO_UNIDAD_SKU), ' +
+        '                sk.CODIGO_UNIDAD_SKU) AS NOMBRE ' +
+        'FROM   fza_articulos_skus sk ' +
+        'WHERE  sk.CODIGO_ART_SKU = :art ' +
+        '  AND  sk.ESACTIVO_SKU = ''S'' ' +
+        'ORDER  BY sk.CODIGO_UNIDAD_SKU'
+    else
+      q.SQL.Text :=
+        'SELECT DISTINCT ' +
+        '       SUBSTRING_INDEX(CODIGO_UNIDAD_SKU, ''/'', 2) AS UNIDAD ' +
+        'FROM   fza_articulos_skus ' +
+        'WHERE  CODIGO_ART_SKU = :art ' +
+        '  AND  ESACTIVO_SKU = ''S'' ' +
+        '  AND  CHAR_LENGTH(CODIGO_UNIDAD_SKU) ' +
+        '     - CHAR_LENGTH(REPLACE(CODIGO_UNIDAD_SKU, ''/'', '''')) >= 2 ' +
+        'ORDER  BY UNIDAD';
+    q.ParamByName('art').AsString := FArticulo;
+    q.Open;
+    while not q.Eof do
+    begin
+      F := Default(TFilaUnidadProp);
+      F.Unidad := q.FieldByName('UNIDAD').AsString;
+      if FNivel = 'SKU' then
+        F.Nombre := q.FieldByName('NOMBRE').AsString
+      else
+      begin
+        partes := F.Unidad.Split(['/']);
+        if Length(partes) > 0 then
+          F.Nombre := partes[High(partes)]
+        else
+          F.Nombre := F.Unidad;
+      end;
+      F.Ctrl := nil;
+      FFilas.Add(F);
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmPropPorUnidad.CargarValoresActuales;
+var
+  q: TUniQuery;
+  V: TValUnidadProp;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    q.SQL.Text :=
+      'SELECT CODIGO_UNIDAD_ARTPROP, ID_PV_ARTPROP, VALOR_LIBRE_ARTPROP ' +
+      'FROM   fza_articulos_propiedades ' +
+      'WHERE  CODIGO_ART_ART = :art ' +
+      '  AND  CODIGO_PROP_ARTPROP = :prop ' +
+      '  AND  CODIGO_UNIDAD_ARTPROP <> ''''';
+    q.ParamByName('art').AsString  := FArticulo;
+    q.ParamByName('prop').AsString := FCodigoProp;
+    q.Open;
+    while not q.Eof do
+    begin
+      V.IdValor    := q.FieldByName('ID_PV_ARTPROP').AsInteger;
+      V.ValorLibre := q.FieldByName('VALOR_LIBRE_ARTPROP').AsString;
+      FActuales.AddOrSetValue(
+        q.FieldByName('CODIGO_UNIDAD_ARTPROP').AsString, V);
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmPropPorUnidad.ConstruirFilas;
+var
+  i        : Integer;
+  Top      : Integer;
+  F        : TFilaUnidadProp;
+  V        : TValUnidadProp;
+  lblVacio : TcxLabel;
+begin
+  if FFilas.Count = 0 then
+  begin
+    lblVacio := TcxLabel.Create(FScroll);
+    lblVacio.Parent      := FScroll;
+    lblVacio.Left        := MARGEN_H;
+    lblVacio.Top         := MARGEN_V;
+    lblVacio.Caption     := 'El artículo no tiene colores/SKU definidos aún.';
+    lblVacio.Transparent := True;
+  end;
+  Top := MARGEN_V;
+  for i := 0 to FFilas.Count - 1 do
+  begin
+    F := FFilas[i];
+    if FActuales.TryGetValue(F.Unidad, V) then
+      CrearControlFila(F, Top, V.IdValor, V.ValorLibre)
+    else
+      CrearControlFila(F, Top, 0, '');
+    FFilas[i] := F;
+    Inc(Top, ALTO_FILA + MARGEN_V);
+  end;
+end;
+
+procedure TfrmPropPorUnidad.CrearControlFila(var F: TFilaUnidadProp;
+  ATop, AIdValor: Integer; const AValorLibre: string);
+var
+  lbl : TcxLabel;
+  cb  : TcxComboBox;
+  ed  : TcxTextEdit;
+  sp  : TcxSpinEdit;
+  chk : TcxCheckBox;
+  par : TPair<Integer, string>;
+  Idx : Integer;
+begin
+  lbl := TcxLabel.Create(FScroll);
+  lbl.Parent      := FScroll;
+  lbl.Left        := MARGEN_H;
+  lbl.Top         := ATop + 4;
+  lbl.Width       := ANCHO_LABEL;
+  lbl.AutoSize    := True;
+  lbl.Caption     := F.Nombre;
+  lbl.Transparent := True;
+  case FTipoValor of
+    tvpLista:
+    begin
+      cb := TcxComboBox.Create(FScroll);
+      cb.Parent := FScroll;
+      cb.Left   := MARGEN_H + ANCHO_LABEL + 6;
+      cb.Top    := ATop;
+      cb.Width  := ANCHO_CTRL;
+      cb.Height := ALTO_FILA;
+      cb.Properties.DropDownListStyle := lsFixedList;
+      cb.Properties.Items.Add('');
+      for par in FOpciones do
+        cb.Properties.Items.AddObject(par.Value, TObject(par.Key));
+      if AIdValor > 0 then
+        for Idx := 1 to cb.Properties.Items.Count - 1 do
+          if Integer(cb.Properties.Items.Objects[Idx]) = AIdValor then
+            cb.ItemIndex := Idx;
+      F.Ctrl := cb;
+    end;
+    tvpTextoLibre:
+    begin
+      ed := TcxTextEdit.Create(FScroll);
+      ed.Parent := FScroll;
+      ed.Left   := MARGEN_H + ANCHO_LABEL + 6;
+      ed.Top    := ATop;
+      ed.Width  := ANCHO_CTRL;
+      ed.Height := ALTO_FILA;
+      ed.Text   := AValorLibre;
+      F.Ctrl := ed;
+    end;
+    tvpNumero:
+    begin
+      sp := TcxSpinEdit.Create(FScroll);
+      sp.Parent := FScroll;
+      sp.Left   := MARGEN_H + ANCHO_LABEL + 6;
+      sp.Top    := ATop;
+      sp.Width  := 120;
+      sp.Height := ALTO_FILA;
+      sp.Properties.EditFormat := '0.00';
+      if AValorLibre <> '' then
+        sp.Value := StrToFloatDef(
+          StringReplace(AValorLibre, ',', '.', []), 0);
+      F.Ctrl := sp;
+    end;
+    tvpBooleano:
+    begin
+      chk := TcxCheckBox.Create(FScroll);
+      chk.Parent := FScroll;
+      chk.Left   := MARGEN_H + ANCHO_LABEL + 6;
+      chk.Top    := ATop + 4;
+      chk.Width  := ALTO_FILA;
+      chk.Height := ALTO_FILA;
+      chk.Caption := '';
+      chk.Properties.DisplayChecked   := '';
+      chk.Properties.DisplayUnchecked := '';
+      chk.Properties.DisplayGrayed    := '';
+      chk.Checked := (AValorLibre = 'S') or (AValorLibre = '1');
+      F.Ctrl := chk;
+    end;
+  end;
+end;
+
+procedure TfrmPropPorUnidad.UpsertUnidad(const AUnidad: string;
+  AIdValor: Integer; const AValorLibre: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    q.SQL.Text :=
+      'INSERT INTO fza_articulos_propiedades ' +
+      '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, CODIGO_UNIDAD_ARTPROP, ' +
+      '   ID_PV_ARTPROP, VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA) ' +
+      'VALUES ' +
+      '  (:art, :prop, :uni, :idval, :libre, NOW(), :usr) ' +
+      'ON DUPLICATE KEY UPDATE ' +
+      '  ID_PV_ARTPROP       = VALUES(ID_PV_ARTPROP), ' +
+      '  VALOR_LIBRE_ARTPROP = VALUES(VALOR_LIBRE_ARTPROP)';
+    q.ParamByName('art').AsString  := FArticulo;
+    q.ParamByName('prop').AsString := FCodigoProp;
+    q.ParamByName('uni').AsString  := AUnidad;
+    if AIdValor > 0 then
+      q.ParamByName('idval').AsInteger := AIdValor
+    else
+      q.ParamByName('idval').Clear;
+    if AValorLibre <> '' then
+      q.ParamByName('libre').AsString := AValorLibre
+    else
+      q.ParamByName('libre').Clear;
+    q.ParamByName('usr').AsString := FUsuario;
+    q.Execute;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmPropPorUnidad.DeleteUnidad(const AUnidad: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := FConexion;
+    q.SQL.Text :=
+      'DELETE FROM fza_articulos_propiedades ' +
+      'WHERE CODIGO_ART_ART        = :art ' +
+      '  AND CODIGO_PROP_ARTPROP   = :prop ' +
+      '  AND CODIGO_UNIDAD_ARTPROP = :uni';
+    q.ParamByName('art').AsString  := FArticulo;
+    q.ParamByName('prop').AsString := FCodigoProp;
+    q.ParamByName('uni').AsString  := AUnidad;
+    q.Execute;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmPropPorUnidad.BtnAceptarClick(Sender: TObject);
+var
+  i     : Integer;
+  F     : TFilaUnidadProp;
+  idVal : Integer;
+  libre : string;
+  vacio : Boolean;
+begin
+  for i := 0 to FFilas.Count - 1 do
+  begin
+    F := FFilas[i];
+    if Assigned(F.Ctrl) then
+    begin
+      idVal := 0;
+      libre := '';
+      vacio := True;
+      case FTipoValor of
+        tvpLista:
+          if (F.Ctrl as TcxComboBox).ItemIndex > 0 then
+          begin
+            idVal := Integer((F.Ctrl as TcxComboBox).Properties.Items.Objects[
+                       (F.Ctrl as TcxComboBox).ItemIndex]);
+            vacio := False;
+          end;
+        tvpTextoLibre:
+        begin
+          libre := Trim((F.Ctrl as TcxTextEdit).Text);
+          vacio := libre = '';
+        end;
+        tvpNumero:
+          if Trim((F.Ctrl as TcxSpinEdit).Text) <> '' then
+          begin
+            libre := FloatToStr((F.Ctrl as TcxSpinEdit).Value);
+            vacio := False;
+          end;
+        tvpBooleano:
+          if (F.Ctrl as TcxCheckBox).Checked then
+          begin
+            libre := 'S';
+            vacio := False;
+          end;
+      end;
+      if vacio then
+        DeleteUnidad(F.Unidad)
+      else
+        UpsertUnidad(F.Unidad, idVal, libre);
+    end;
+  end;
+  ModalResult := mrOk;
+end;
+
+procedure TfrmPropPorUnidad.BtnCancelarClick(Sender: TObject);
+begin
+  ModalResult := mrCancel;
 end;
 
 end.

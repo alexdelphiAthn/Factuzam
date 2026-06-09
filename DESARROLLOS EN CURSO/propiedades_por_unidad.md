@@ -1,6 +1,6 @@
 # Propiedades por unidad (artículo / color / SKU)
 
-Estado: **Fase 1 aplicada (modelo de datos)**. Fases 2-4 pendientes.
+Estado: **Fase 1 (modelo) + Fase 2 (edición) aplicadas**. Fases 3-4 pendientes.
 
 ## Objetivo
 
@@ -62,10 +62,24 @@ destructiva y la aplicación sigue funcionando sin tocar nada tras la Fase 1.
 ## Roadmap
 
 - **Fase 1 — Modelo (BBDD).** Este script. *(hecho)*
-- **Fase 2 — Edición (app).** En `inMtoArticulos` / `UniDataArticulos`, permitir
-  asignar la temporada a nivel color/SKU, replicando el grid de tarifas-por-SKU
-  y su modal (`inMtoModalAddPreciosTar`). La UI ofrece el desglose según
-  `NIVEL_PROP`.
+- **Fase 2 — Edición (app).** *(hecho)* En la pestaña Propiedades de
+  `inMtoArticulos`, cada propiedad con `NIVEL_PROP` = `COLOR`/`SKU` muestra un
+  botón **"Por color…"** que abre el modal `TfrmPropPorUnidad`: un combo (o
+  texto/número/check según `TIPO_VALOR_PROP`) por cada color (`ART/COLOR`) o
+  SKU del artículo, prefijado con lo ya fijado. Al aceptar, persiste en
+  `fza_articulos_propiedades` con su `CODIGO_UNIDAD_ARTPROP` (upsert si hay
+  valor, delete si se deja en blanco → hereda del nivel superior). Todo vive en
+  `inLibArticulosPropiedades.pas`, construido en código (sin `.dfm`, sin tocar
+  el form, el DataModule ni la versión). El editor de nivel artículo se ajustó
+  para no duplicar filas tras la PK ampliada de Fase 1 (`CargarPropiedades` y el
+  lookup `inLibArticulosAtributosLookup.ObtenerPropiedades` filtran
+  `CODIGO_UNIDAD_ARTPROP = ''`).
+  - **OJO (lo arregla la Fase 3):** en cuanto se fije una temporada a nivel
+    color, los lectores que aún hacen `JOIN fza_articulos_propiedades` por
+    `(artículo, 'TEMPORADA')` sin filtrar `CODIGO_UNIDAD_ARTPROP` **duplicarán
+    filas** (`inMtoStockConsulta`, `inMtoCajaOpe`, `inMtoInventarios`, y los SP
+    de informes). Conviene encadenar la Fase 3 antes de meter datos de color en
+    producción.
 - **Fase 3 — Lectura.** Reapuntar a la temporada efectiva por color:
   - `inMtoStockConsulta` (consulta de stock).
   - `inMtoCajaOpe`, `inMtoInventarios` (búsquedas).
