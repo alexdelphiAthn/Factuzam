@@ -94,6 +94,7 @@ type
     mnuAlmacenInformes: TMenuItem;
     mnuBalanceAlmacenHorizontal: TMenuItem;
     mnuBalanceAlmacenSinTallas: TMenuItem;
+    mnuMovVentasArt: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure mnuInvocarLoginClick(Sender: TObject);
@@ -116,6 +117,7 @@ type
     procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuBalanceAlmacenHorizontalClick(Sender: TObject);
     procedure mnuBalanceAlmacenSinTallasClick(Sender: TObject);
+    procedure mnuMovVentasArtClick(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
     procedure pcPrincipalChange(Sender: TObject);
   public
@@ -309,6 +311,7 @@ uses inLibUser,
   inMtoModalScriptLog,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
+  inMtoModalImpMovVentasArt,
   inLibCajaParam,
   inLibAppParam,
   inLibUnidadesMedida,
@@ -1880,6 +1883,25 @@ begin
   if mnuBalanceAlmacenSinTallas.Visible then
   begin
     frm := TfrmPrintBalanceSinTallas.Create(Application);
+    try
+      frm.ShowModal;
+    finally
+      FreeAndNil(frm);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuMovVentasArtClick(Sender: TObject);
+var
+  frm: TfrmPrintMovVentasArt;
+begin
+  // Informe A4 horizontal (FastReport) del ranking de ventas por artículos y
+  // fechas: una fila por artículo (o por artículo+almacén si se agrupa por
+  // almacén) con las magnitudes de compra/venta del periodo y dos márgenes.
+  // Mismos filtros que el balance más la fecha "Inicio compras".
+  if mnuMovVentasArt.Visible then
+  begin
+    frm := TfrmPrintMovVentasArt.Create(Application);
     try
       frm.ShowModal;
     finally

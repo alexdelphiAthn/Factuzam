@@ -340,6 +340,9 @@
         <DCCReference Include="src\Modals\inMtoModalImpBalanceSinTallas.pas">
             <Form>frmPrintBalanceSinTallas</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpMovVentasArt.pas">
+            <Form>frmPrintMovVentasArt</Form>
+        </DCCReference>
         <DCCReference Include="src\Core\inMtoSplash.pas">
             <Form>frmSplash</Form>
         </DCCReference>
@@ -542,6 +545,7 @@
         <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceSinTallasExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibMovVentasArtExcel.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioNube.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlparser.pas"/>
         <DCCReference Include="src\Lib\sqlformatter\ts.core.sqlscanner.pas"/>

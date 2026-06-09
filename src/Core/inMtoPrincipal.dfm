@@ -1691,6 +1691,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           Caption = 'Balance de Almac'#233'n sin tallas'
           OnClick = mnuBalanceAlmacenSinTallasClick
         end
+        object mnuMovVentasArt: TMenuItem
+          Caption = 'Movimientos de ventas por art'#237'culos y fechas'
+          OnClick = mnuMovVentasArtClick
+        end
       end
     end
     object Utilidades1: TMenuItem
