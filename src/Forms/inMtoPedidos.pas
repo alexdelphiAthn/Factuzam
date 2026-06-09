@@ -163,7 +163,8 @@ var
 implementation
 
 uses
-  inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad;
+  inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad,
+  inMtoModalSelAlmacenAlbaran;
 
 {$R *.dfm}
 
@@ -308,6 +309,9 @@ var
   par: TPair<string, Currency>;
   fEntrPend: Double;
   sNumeroAlb, sSerieAlb: string;
+  sSerie, sNumero, sAlm, sAlmComun, sAlmDefecto: string;
+  EsAlmacenUnico, bAlmInit: Boolean;
+  res: TSelAlmacenAlbaranResult;
 begin
   inherited;
   // Antes de crear, asegurar que el pedido esté guardado
@@ -321,6 +325,11 @@ begin
   end;
   lst := TList<TPair<string, Currency>>.Create;
   try
+    // Mientras recogemos las líneas a entregar, vamos comprobando si
+    // todas comparten almacén (CODIGO_ALMACEN_PEDLIN).
+    EsAlmacenUnico := True;
+    bAlmInit       := False;
+    sAlmComun      := '';
     ds.DisableControls;
     try
       ds.First;
@@ -339,6 +348,14 @@ begin
           par.Key   := ds.FieldByName('LINEA_PEDLIN').AsString;
           par.Value := fEntrPend;
           lst.Add(par);
+          sAlm := Trim(ds.FieldByName('CODIGO_ALMACEN_PEDLIN').AsString);
+          if not bAlmInit then
+          begin
+            sAlmComun := sAlm;
+            bAlmInit  := True;
+          end
+          else if sAlm <> sAlmComun then
+            EsAlmacenUnico := False;
         end;
         ds.Next;
       end;
@@ -346,15 +363,30 @@ begin
       ds.EnableControls;
     end;
     if lst.Count = 0 then
-    begin
       ShowMessage(
-        'No hay líneas con cantidad entregada para crear el albarán.');
-      Exit;
-    end;
-    if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst) then
-      ShowMessageFmt('Albarán creado: %s / %s', [sSerieAlb, sNumeroAlb])
+        'No hay líneas con cantidad entregada para crear el albarán.')
     else
-      ShowMessage('No se pudo crear el albarán.');
+    begin
+      sSerie  := dmmPedidos.unqryTablaG.FieldByName('SERIE_PED').AsString;
+      sNumero := dmmPedidos.unqryTablaG.FieldByName('NUMERO_PED').AsString;
+      // Si todas las líneas a entregar son del mismo almacén, ese sale
+      // preseleccionado en el modal; si no, el combo va vacío y obliga
+      // a elegir el almacén del albarán.
+      if EsAlmacenUnico and (Trim(sAlmComun) <> '') then
+        sAlmDefecto := sAlmComun
+      else
+        sAlmDefecto := '';
+      res := TfrmModalSelAlmacenAlbaran.Ejecutar(Self, sSerie, sNumero,
+                                                 sAlmDefecto);
+      if res.Aceptado then
+      begin
+        if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst,
+                                              res.CodigoAlmacen) then
+          ShowMessageFmt('Albarán creado: %s / %s', [sSerieAlb, sNumeroAlb])
+        else
+          ShowMessage('No se pudo crear el albarán.');
+      end;
+    end;
   finally
     FreeAndNil(lst);
   end;

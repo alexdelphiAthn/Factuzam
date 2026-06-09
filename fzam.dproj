@@ -676,6 +676,9 @@
         <DCCReference Include="src\Modals\inMtoModalSelAlmacenPedido.pas">
             <Form>frmModalSelAlmacenPedido</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalSelAlmacenAlbaran.pas">
+            <Form>frmModalSelAlmacenAlbaran</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibPedidosCompra.pas"/>
         <DCCReference Include="src\Lib\inLibGridPivoteCompra.pas"/>
         <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
