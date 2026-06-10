@@ -20,10 +20,16 @@
 --     de la ventana, así que las entradas totales no necesitan recorte.
 --
 -- Origen de datos:
---   - Entradas (compras): fza_movimientos_almacen con TIPO_MOV='E' y
---     TIPO_DOC_MOV='AC'. Unidades = SUM(CANTIDAD_MOV); importe (coste) =
---     SUM(TOTAL_COSTE_MOV) (= cantidad * coste unitario capturado en la
---     compra). Es el coste REAL de lo comprado.
+--   - Entradas: fza_movimientos_almacen con TIPO_MOV='E' y TIPO_DOC_MOV IN
+--     ('AC','AE','IN') = adquisición real de género (compra, albarán de
+--     entrada y regularización/inventario). Se EXCLUYEN los traspasos
+--     (TR/AT/TA), que son movimientos internos entre almacenes (no es género
+--     nuevo), y los depósitos (DP), que no son gasto hasta venderse.
+--     Unidades = SUM(CANTIDAD_MOV); importe (coste) = SUM(TOTAL_COSTE_MOV).
+--     OJO: contar solo 'AC' dejaba fuera el stock que entró por inventario
+--     inicial ('IN'), que en muchas instalaciones es la vía principal; por
+--     eso se incluyen AE/IN. El filtro "Inicio compras" sí mira solo la
+--     primera COMPRA real ('AC').
 --   - Ventas: fza_facturas_lineas (líneas de factura/ticket) por fecha de
 --     factura. Uds = SUM(CANTIDAD_FACLIN); importe = SUM(TOTAL_FACLIN)
 --     (venta real, con descuento y con IVA).
@@ -155,25 +161,47 @@ BEGIN
        SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
                                    g.`COD_GRP`);
 
-    -- Compras (entradas AC) por artículo y, si procede, almacén: primera
-    -- compra (para el filtro Inicio compras) y totales de unidades/coste.
-    -- El artículo del movimiento se resuelve por su SKU (CODIGO_UNIDAD_MOV)
-    -- para no depender de CODIGO_ART_MOV, que puede venir nulo.
+    -- Entradas de stock por artículo y, si procede, almacén: totales de
+    -- unidades y coste. Se cuentan las entradas que representan adquisición
+    -- REAL de género: compra (AC), albarán de entrada (AE) y regularización /
+    -- inventario (IN). Se EXCLUYEN los traspasos (TR/AT/TA), que son
+    -- movimientos internos entre almacenes y no son género nuevo (doble
+    -- conteo), y los depósitos (DP), que no son gasto hasta venderse. El
+    -- artículo del movimiento se resuelve por su SKU (CODIGO_UNIDAD_MOV) para
+    -- no depender de CODIGO_ART_MOV, que puede venir nulo.
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
     CREATE TEMPORARY TABLE `tmp_mva_ent` (
         `CODIGO_ART` VARCHAR(20)   NOT NULL,
         `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
         `UNI_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
         `IMP_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
-        `PRIMERA`    DATE          NULL,
         PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
     );
     INSERT INTO `tmp_mva_ent`
     SELECT sk.`CODIGO_ART_SKU`,
            IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
            SUM(m.`CANTIDAD_MOV`),
-           SUM(m.`TOTAL_COSTE_MOV`),
-           MIN(DATE(m.`FECHA_MOV`))
+           SUM(m.`TOTAL_COSTE_MOV`)
+      FROM `fza_movimientos_almacen` m
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
+     WHERE m.`ESACTIVO_MOV` = 'S'
+       AND m.`TIPO_MOV` = 'E'
+       AND m.`TIPO_DOC_MOV` IN ('AC', 'AE', 'IN')
+       AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '');
+
+    -- Primera COMPRA (AC) por artículo, para el filtro Inicio compras: el
+    -- artículo entra solo si su primera compra real (global a los almacenes
+    -- filtrados) es >= v_ini_cmp. Se calcula aparte de tmp_mva_ent porque el
+    -- filtro es específicamente sobre compras, no sobre cualquier entrada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
+    CREATE TEMPORARY TABLE `tmp_mva_primera` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY,
+        `PRIMERA`    DATE        NULL
+    );
+    INSERT INTO `tmp_mva_primera`
+    SELECT sk.`CODIGO_ART_SKU`, MIN(DATE(m.`FECHA_MOV`))
       FROM `fza_movimientos_almacen` m
       JOIN `fza_articulos_skus` sk
         ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
@@ -181,20 +209,7 @@ BEGIN
        AND m.`TIPO_MOV` = 'E'
        AND m.`TIPO_DOC_MOV` = 'AC'
        AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
-     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '');
-
-    -- Primera compra por artículo (sin desglose de almacén), para el filtro
-    -- Inicio compras: el artículo entra solo si su primera compra (global a
-    -- los almacenes filtrados) es >= v_ini_cmp.
-    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
-    CREATE TEMPORARY TABLE `tmp_mva_primera` (
-        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY,
-        `PRIMERA`    DATE        NULL
-    );
-    INSERT INTO `tmp_mva_primera`
-    SELECT `CODIGO_ART`, MIN(`PRIMERA`)
-      FROM `tmp_mva_ent`
-     GROUP BY `CODIGO_ART`;
+     GROUP BY sk.`CODIGO_ART_SKU`;
 
     -- Ventas del periodo por artículo y, si procede, almacén (líneas de
     -- factura/ticket por fecha de factura). El artículo se resuelve por SKU.
@@ -206,9 +221,13 @@ BEGIN
         `IMP_VEN`    DECIMAL(19,6) NOT NULL DEFAULT 0,
         PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
     );
+    -- El almacén de la venta puede venir vacío en la línea
+    -- (CODIGO_ALM_FACLIN nulo); se cae a la cabecera de la factura
+    -- (CODIGO_ALM_FAC). Sin esto las líneas sin almacén de línea quedan fuera
+    -- del filtro de almacenes y la venta no cuenta.
     INSERT INTO `tmp_mva_ven`
     SELECT sk.`CODIGO_ART_SKU`,
-           IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''),
+           IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), ''),
            SUM(fl.`CANTIDAD_FACLIN`),
            SUM(fl.`TOTAL_FACLIN`)
       FROM `fza_facturas_lineas` fl
@@ -217,9 +236,11 @@ BEGIN
        AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
       JOIN `fza_articulos_skus` sk
         ON sk.`CODIGO_UNIDAD_SKU` = fl.`CODIGO_UNIDAD_FACLIN`
-     WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+     WHERE COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`)
+           IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
        AND DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta
-     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '');
+     GROUP BY sk.`CODIGO_ART_SKU`,
+              IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), '');
 
     -- Conjunto de artículos activos que pasan familia, proveedor, temporada,
     -- lista de artículos e Inicio compras (primera compra >= v_ini_cmp).
