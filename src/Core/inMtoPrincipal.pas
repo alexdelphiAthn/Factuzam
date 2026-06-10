@@ -536,6 +536,16 @@ begin
   inLibLog.AplicarModosDepuracion;
   AplicarTema;
   CargarFondoLogo;
+  // pcPrincipal tiene Align=alClient en Panel1 y repinta su area cliente
+  // encima de cualquier hermano. Reparentamos imgFondoLogo al propio
+  // pcPrincipal: queda como hijo directo del PageControl (no en una
+  // TabSheet), asi se pinta sobre su area cliente cuando no hay pestanas
+  // y queda tapado automaticamente por el TcxTabSheet activo cuando si
+  // las hay (sin invadir zonas fuera del PageControl).
+  imgFondoLogo.Parent := pcPrincipal;
+  imgFondoLogo.Anchors := [akTop, akRight];
+  imgFondoLogo.Left := pcPrincipal.ClientWidth - imgFondoLogo.Width - 16;
+  imgFondoLogo.Top := 16;
   imgFondoLogo.BringToFront;
   // Logo de fondo via TImage + labels dinamicos (replica del splash).
   // El imgFondoLogo del .dfm no termina de pintar por culpa del wrapper
@@ -660,16 +670,12 @@ end;
 
 // El Picture.Data del .dfm trae un envoltorio TdxSmartImage que el TImage
 // de VCL no sabe deserializar (queda vacio al cargar el form). Cargamos
-// 'fondo.png' desde disco en runtime probando rutas candidatas relativas
-// al .exe (Debug queda en Win32\Debug, Release al lado de los assets).
+// fondo.png desde un recurso RCDATA incrustado en el .exe (ver fondo.rc
+// + directiva $R en fzam.dpr) para no depender de archivos en disco.
 procedure TfrmMtoPrincipal.CargarFondoLogo;
 const
-  CRutas: array[0..3] of string = (
-    'fondo.png',
-    '..\..\fondo.png',
-    'logo_art\icon-256.png',
-    '..\..\logo_art\icon-256.png'
-  );
+  // Rutas relativas al .exe donde buscar fondo.png si no hay recurso
+  CRutas: array[0..1] of string = ('fondo.png', '..\..\fondo.png');
 var
   sBase, sRuta: string;
   i: Integer;
@@ -702,7 +708,7 @@ begin
                            '(' + E.Message + '); pruebo disco');
   end;
   // 2) Fallback a fichero suelto: para builds Debug donde fondo.png
-  //    vive en la raiz del repo (..\..\fondo.png desde Win32/Debug).
+  //    vive en la raiz del repo (..\..ondo.png desde Win32/Debug).
   sBase := inLibDir.DirApp;
   inLibLog.Log.LogInfo('CargarFondoLogo: base="' + sBase + '"');
   for i := 0 to High(CRutas) do
@@ -723,7 +729,6 @@ begin
     else
       inLibLog.Log.LogInfo('CargarFondoLogo: no existe "' + sRuta + '"');
   end;
-  inLibLog.Log.LogWarning('No se encontro imagen de fondo (fondo.png).');
 end;
 
 procedure TfrmMtoPrincipal.ActualizarFondoLogo;
