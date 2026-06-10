@@ -174,7 +174,8 @@ implementation
 uses
   inLibGlobalVar, inLibCajaParam, inLibPermisos,
   DateUtils, inMtoConsultaOpe, inMtoPrincipal,
-  inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja;
+  inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja,
+  UniDataConn;
 
 {$R *.dfm}
 
@@ -357,6 +358,9 @@ begin
   try
     frm.qrySeleccion.Connection := inLibGlobalVar.oConn;
     frm.qrySeleccion.Open;
+    // Cierra el cronometro del monitor SQL antes del ShowModal (vease
+    // TdmConn.CerrarSQLPendiente).
+    dmConn.CerrarSQLPendiente;
     frm.sEmpresa := oEmpresa;
     frm.sAlmacen := oAlmacen;
     frm.sCaja    := oCaja;

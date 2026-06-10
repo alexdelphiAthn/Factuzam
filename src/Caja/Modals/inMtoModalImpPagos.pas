@@ -89,7 +89,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoModalCajDef;
+  inMtoModalCajDef, UniDataConn;
 
 { TfrmPrintPagos }
 
@@ -185,6 +185,9 @@ begin
       ' ORDER BY Almacen, Caja ';
     frm.qrySeleccion.ParamByName('pEMP').AsString := edtEmpresa.Text;
     frm.qrySeleccion.Open;
+    // Cierra el cronometro del monitor SQL antes del ShowModal (vease
+    // TdmConn.CerrarSQLPendiente).
+    dmConn.CerrarSQLPendiente;
     frm.sEmpresa := edtEmpresa.Text;
     frm.sAlmacen := bedAlmacen.Text;
     frm.sCaja    := bedCaja.Text;
