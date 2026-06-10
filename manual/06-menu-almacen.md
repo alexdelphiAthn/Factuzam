@@ -27,6 +27,9 @@ Almacén
 
 ## Movimientos de almacén
 
+![Movimientos de almacén](img/06-movimientos.png)
+*▢ Captura pendiente — Movimientos de almacén.*
+
 Consulta y mantenimiento de los **movimientos de stock**: cada entrada o
 salida de un SKU en un almacén, con su fecha, cantidad, motivo y documento
 de origen.
@@ -44,6 +47,9 @@ Sirve para:
 ---
 
 ## Inventarios
+
+![Inventario con su detalle de recuento](img/06-inventarios.png)
+*▢ Captura pendiente — Inventario con su detalle de recuento.*
 
 Mantenimiento de **Inventarios** (recuentos físicos). Permite contar el
 stock real y **regularizar** las diferencias frente a lo que dice el
@@ -67,6 +73,9 @@ Sub-pestañas:
 ## Informes
 
 ### Balance de Almacén Horizontal
+
+![Filtros e informe del balance con tallas](img/06-balance-horizontal.png)
+*▢ Captura pendiente — Filtros e informe del balance con tallas.*
 
 Informe de existencias **con desglose por tallas** en columnas
 (horizontal). Muestra el stock de cada artículo repartido por sus

@@ -39,6 +39,9 @@ Archivo
 
 ## Empresas
 
+![Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado)](img/02-empresas.png)
+*▢ Captura pendiente — Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado).*
+
 Mantiene las **empresas emisoras** que facturan desde Factuzam (puede haber
 más de una). Cada empresa concentra sus datos fiscales y la configuración
 de facturación.
@@ -68,6 +71,9 @@ completa (dirección, población, provincia, código postal), Móvil, Email.
 
 ## Almacenes
 
+![Ficha de Almacenes](img/02-almacenes.png)
+*▢ Captura pendiente — Ficha de Almacenes.*
+
 Mantiene los **almacenes** físicos o lógicos donde se ubica el stock. Cada
 movimiento de stock, inventario o documento de mercancía referencia un
 almacén.
@@ -83,6 +89,9 @@ Sub-pestañas de la ficha:
 ---
 
 ## Clientes
+
+![Ficha de Clientes con los indicadores fiscales](img/02-clientes.png)
+*▢ Captura pendiente — Ficha de Clientes con los indicadores fiscales.*
 
 Mantiene la **ficha de clientes** a quienes se vende y factura.
 
@@ -110,6 +119,9 @@ Contacto y teléfono de contacto, Nº de cuenta.
 
 ## Proveedores
 
+![Ficha de Proveedores](img/02-proveedores.png)
+*▢ Captura pendiente — Ficha de Proveedores.*
+
 Mantiene la **ficha de proveedores** a quienes se compra mercancía.
 Estructura análoga a Clientes, orientada a compras.
 
@@ -124,6 +136,9 @@ Sub-pestañas de la ficha:
 ---
 
 ## Artículos
+
+![Ficha de Artículos con la pestaña SKUs](img/02-articulos.png)
+*▢ Captura pendiente — Ficha de Artículos con la pestaña SKUs.*
 
 Es la pantalla central del catálogo. Mantiene los **artículos** y sus
 variantes (las distintas tallas/colores se denominan **SKU**).
@@ -158,6 +173,9 @@ artículos.
 
 ### Tarifas
 
+![Mantenimiento de Tarifas con los precios por artículo](img/02-tarifas.png)
+*▢ Captura pendiente — Mantenimiento de Tarifas con los precios por artículo.*
+
 Define las **listas de precios** (tarifa general, ofertas, mayoristas…).
 Cada tarifa contiene los precios de los artículos.
 
@@ -166,6 +184,9 @@ Cada tarifa contiene los precios de los artículos.
 - **Otros** — parámetros de la tarifa (vigencia, redondeos, etc.).
 
 ### Familias
+
+![Mantenimiento de Familias](img/02-familias.png)
+*▢ Captura pendiente — Mantenimiento de Familias.*
 
 **Clasificación jerárquica** de los artículos (familias y subfamilias).
 Permite agrupar el catálogo para informes, filtros y precios.
