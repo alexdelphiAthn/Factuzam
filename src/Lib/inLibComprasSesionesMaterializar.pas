@@ -467,13 +467,42 @@ begin
   end;
 end;
 
+// Devuelve el prefijo de COLOR (los dos primeros segmentos, ART/COLOR) de
+// un CODIGO_UNIDAD_SKU, EXACTAMENTE como lo calcula la vista
+// vi_articulos_propiedades_efectivas (SUBSTRING_INDEX(sku,'/',2)). Sirve
+// para fijar la temporada a nivel color en la propagacion de la sesion.
+// Devuelve '' si el SKU no llega a dos '/' (no tiene nivel color: el SKU
+// es ART/TALLA y la temporada se queda a nivel articulo).
+function PrefijoColorSku(const ASku: string): string;
+var
+  i, nBarras, posSegunda: Integer;
+begin
+  nBarras    := 0;
+  posSegunda := 0;
+  for i := 1 to Length(ASku) do
+  begin
+    if (ASku[i] = '/') and (posSegunda = 0) then
+    begin
+      Inc(nBarras);
+      if nBarras = 2 then
+        posSegunda := i;
+    end;
+  end;
+  if posSegunda > 0 then
+    Result := Copy(ASku, 1, posSegunda - 1)
+  else
+    Result := '';
+end;
+
 procedure InsertarSkusYBarras(AConn: TUniConnection;
                               const ASerieSes, ANumSes, ACodigoArt,
                                     AUsuario, APrefijoEAN: string;
-                              ALinea: Integer);
+                              ALinea: Integer;
+                              AIdPvTemporada: Integer);
 var
   qC, qIns, qBar, qLin: TUniQuery;
   sCodigoSKU : string;
+  sPrefColor : string;
   sEAN13     : string;
   sValPivot, sValFila: string;
   iAvPivot, iAvFila: Integer;
@@ -629,6 +658,28 @@ begin
       qIns.ParamByName('av').AsInteger := iAvPivot;
       qIns.ParamByName('u').AsString   := AUsuario;
       qIns.ExecSQL;
+
+      // Propagacion de temporada a nivel COLOR (Fase 4): cada color
+      // comprado en la sesion recibe la temporada de cabecera en su
+      // propio CODIGO_UNIDAD_ARTPROP (= ART/COLOR, los dos primeros
+      // segmentos del SKU, igual que la vista efectiva). INSERT IGNORE:
+      // no pisa la temporada de un color ya fijado en una sesion previa
+      // y convive con la del articulo (InsertarTemporadaCabecera).
+      sPrefColor := PrefijoColorSku(sCodigoSKU);
+      if (AIdPvTemporada > 0) and (sPrefColor <> '') then
+      begin
+        qIns.SQL.Text :=
+          'INSERT IGNORE INTO fza_articulos_propiedades ' +
+          '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, CODIGO_UNIDAD_ARTPROP, ' +
+          '   ID_PV_ARTPROP, VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, ' +
+          '   USUARIO_ALTA) ' +
+          'VALUES (:art, ''TEMPORADA'', :uni, :pv, NULL, NOW(), :u)';
+        qIns.ParamByName('art').AsString := ACodigoArt;
+        qIns.ParamByName('uni').AsString := sPrefColor;
+        qIns.ParamByName('pv').AsInteger := AIdPvTemporada;
+        qIns.ParamByName('u').AsString   := AUsuario;
+        qIns.ExecSQL;
+      end;
 
       // EAN13 — solo si el SKU no tiene ya un codigo de barras EAN13
       // (idempotencia entre materializaciones tras un Revertir).
@@ -1827,7 +1878,7 @@ begin
             InsertarConjuntosAtributos(conn, sSerieSes, sNumSes,
                                        sCodigoArt, AUsuario, iLin);
             InsertarSkusYBarras(conn, sSerieSes, sNumSes, sCodigoArt,
-                                AUsuario, sPrefijoEAN, iLin);
+                                AUsuario, sPrefijoEAN, iLin, iIdPvTemporada);
           end;
           InsertarPropiedadesFijas(conn, sSerieSes, sNumSes,
                                    sCodigoArt, AUsuario);
