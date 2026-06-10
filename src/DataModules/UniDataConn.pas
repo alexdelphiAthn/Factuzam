@@ -40,10 +40,6 @@ type
     FSQLPendiente : Boolean;
     procedure VolcarSQLPendiente(AOk: Boolean; const AError: string);
   public
-    // Vuelca ya la sentencia pendiente del monitor. Llamar tras un Open
-    // seguido de espera de usuario (ShowModal): si no, el cronometro sigue
-    // corriendo hasta el siguiente evento SQL y el log atribuye la espera
-    // del usuario a la SELECT (p.ej. vi_cajasdef marcaba ~900 ms falsos).
     procedure CerrarSQLPendiente;
     procedure ActualizarUserTimeModif(DataSet:TDataSet);
   end;
@@ -63,6 +59,11 @@ uses inLibDir,
      Winapi.Windows;
 
 {$R *.dfm}
+
+procedure TdmConn.CerrarSQLPendiente;
+begin
+  VolcarSQLPendiente(True, '');
+end;
 
 procedure TdmConn.connBeforeConnect(Sender: TObject);
 var
@@ -187,11 +188,6 @@ begin
   // inLibLog.AplicarModosDepuracion cuando se cargan/cambian los flags.
   UniSQLMonitor1.Active := True;
   FSQLPendiente := False;
-end;
-
-procedure TdmConn.CerrarSQLPendiente;
-begin
-  VolcarSQLPendiente(True, '');
 end;
 
 procedure TdmConn.VolcarSQLPendiente(AOk: Boolean; const AError: string);
