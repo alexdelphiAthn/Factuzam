@@ -10,6 +10,12 @@
 -- Solo se modifica la proyeccion: se mantienen JOINs, ESPROVEEDORPRINCIPAL_AP
 -- = 'S' y el ORDER BY originales.
 --
+-- Fase 4 (propiedades por unidad): el JOIN a fza_articulos_propiedades para
+-- TEMPORADA_ART filtra ahora CODIGO_UNIDAD_ARTPROP = '' (nivel articulo). Sin
+-- ese filtro, las temporadas por color/SKU de la PK ampliada duplicarian cada
+-- fila de articulo en el Mto de Articulos y demas consumidores de vi_articulos.
+-- Reaplica este script tras desplegar la Fase 1.
+--
 -- Idempotente: CREATE OR REPLACE VIEW.
 -- =============================================================================
 
@@ -51,6 +57,9 @@ FROM fza_articulos art
   LEFT JOIN fza_articulos_propiedades atemp
     ON art.CODIGO_ART_ART          = atemp.CODIGO_ART_ART
    AND atemp.CODIGO_PROP_ARTPROP   = 'TEMPORADA'
+   -- Solo el nivel ARTICULO: sin este filtro, las temporadas por color
+   -- (CODIGO_UNIDAD_ARTPROP <> '') multiplican las filas del articulo.
+   AND atemp.CODIGO_UNIDAD_ARTPROP = ''
   LEFT JOIN fza_propiedades_valores pv
     ON atemp.ID_PV_ARTPROP = pv.ID_PV_ARTPROP
 ORDER BY art.ORDEN_ART;
