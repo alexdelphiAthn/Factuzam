@@ -1107,7 +1107,7 @@ function TfrmStockConsulta.ConstruirSQLPivot(
   const ATallas: TArray<TInfoColumna>; AEsColor: Boolean): string;
 var
   sBase, sCols, sOuter, sJoin, sGroup, sOrder, sWhere: string;
-  sFiltroColores: string;
+  sFiltroColores, sHaving: string;
   sExtraSel, sExtraGroup, sExtraOrder: string;
   bEsTodo: Boolean;
   i: Integer;
@@ -1120,6 +1120,12 @@ begin
     sCols := sCols + Format(', SUM(CASE WHEN B.TALLA_AV = %s THEN B.CANTIDAD ELSE 0 END) AS T%d',
                             [QuotedStr(ATallas[i].Codigo), i]);
   sFiltroColores := ColoresSeleccionadosSQL;
+  // "No mostrar ceros" (parametro general appStockOcultarCeros): oculta los
+  // grupos (almacen o color) cuyo total es cero o NULL (LEFT JOIN sin stock).
+  // Se aplica como HAVING sobre el SUM para descartar tambien los NULL.
+  sHaving := '';
+  if Assigned(oAppParams) and oAppParams.GetBool('appStockOcultarCeros', True) then
+    sHaving := ' HAVING COALESCE(SUM(B.CANTIDAD), 0) <> 0 ';
 
   // En modo "Todo a la vez" el pivote agrupa ademas por ESTADO_NUM:
   // cada fila de grupo (almacen o color) se desdobla en una fila por
@@ -1167,7 +1173,7 @@ begin
       'SELECT C.AV AS GRUPO, COALESCE(ATB.HEX_ATB, '''') AS HEX, ' +
       '       C.ORDEN_AV AS ORDEN' + sExtraSel + sCols +
       ', SUM(B.CANTIDAD) AS TOTAL ' +
-      '  FROM ' + sOuter + sJoin + sWhere + sGroup + sOrder;
+      '  FROM ' + sOuter + sJoin + sWhere + sGroup + sHaving + sOrder;
   end
   else
   begin
@@ -1194,6 +1200,7 @@ begin
       ' WHERE ALM.CODIGO_ALM_ALM IN (' + AlmacenesSeleccionadosSQL + ') ' +
       IfThen(bEsTodo, '   AND B.ESTADO_NUM IS NOT NULL ', '') +
       ' GROUP BY ALM.CODIGO_ALM_ALM, ALM.ORDEN_ALM' + sExtraGroup + ' ' +
+      sHaving +
       ' ORDER BY ALM.ORDEN_ALM, ALM.CODIGO_ALM_ALM' + sExtraOrder;
   end;
 end;
