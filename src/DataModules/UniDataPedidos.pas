@@ -68,13 +68,18 @@ type
     procedure InstalarProcedimientos;
 
     // Crear albarán a partir de las cantidades entregadas pendientes.
-    // ACodigoAlmacen: almacén (único) del que sale la mercancía del
-    // albarán. Se fija en todas las líneas del albarán generado,
-    // sobreescribiendo el almacén que cada línea heredaba del pedido.
+    // ACodigoAlmacen: almacén (único) del que sale la mercancía; se fija
+    // en las líneas que se añaden ahora, sobreescribiendo el almacén que
+    // cada línea heredaba del pedido.
+    // AAlbExistenteNum/AAlbExistenteSerie: si se indican, las líneas se
+    // añaden a ese albarán existente en lugar de crear uno nuevo.
     function CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
                                      aLineas: TList<TPair<string,
                                      Currency>>;
-                                     const ACodigoAlmacen: string): Boolean;
+                                     const ACodigoAlmacen: string;
+                                     const AAlbExistenteNum: string = '';
+                                     const AAlbExistenteSerie: string = ''
+                                    ): Boolean;
 
     // Importación PrestaShop
     function ImportarPedidoPrestaShop(aOrder: TOrder): Boolean;
@@ -470,13 +475,16 @@ end;
 function TdmPedidos.CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
                                             aLineas: TList<TPair<string,
                                             Currency>>;
-                                            const ACodigoAlmacen: string)
+                                            const ACodigoAlmacen: string;
+                                            const AAlbExistenteNum: string;
+                                            const AAlbExistenteSerie: string)
                                             : Boolean;
 var
   i: Integer;
   sNumeroPed, sSeriePed: string;
   par: TPair<string, Currency>;
   qAlm: TUniQuery;
+  nMaxLineaPrev: Int64;
 begin
   Result := False;
   sNumeroAlb := ''; sSerieAlb := '';
@@ -488,21 +496,52 @@ begin
   sNumeroPed := unqryTablaG.FieldByName('NUMERO_PED').AsString;
   sSeriePed  := unqryTablaG.FieldByName('SERIE_PED').AsString;
 
-  // 1) Cabecera del albarán a partir del pedido
-  with unstrdprcCrearAlbaranInicio do
+  // 1) Cabecera del albarán. Si el llamador pasa un albarán existente
+  //    (AAlbExistenteNum), las líneas se añaden a ese albarán y se omite
+  //    crear cabecera; si no, se crea uno nuevo desde el pedido.
+  if Trim(AAlbExistenteNum) <> '' then
   begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'p_NUMERO_PED', ptInput);
-    Params.CreateParam(ftString, 'p_SERIE_PED',  ptInput);
-    Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-    Params.CreateParam(ftString, 'p_NUMERO_ALB', ptOutput);
-    Params.CreateParam(ftString, 'p_SERIE_ALB',  ptOutput);
-    ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
-    ParamByName('p_SERIE_PED').AsString  := sSeriePed;
-    ParamByName('p_USUARIO').AsString    := oUser;
-    ExecProc;
-    sNumeroAlb := ParamByName('p_NUMERO_ALB').AsString;
-    sSerieAlb  := ParamByName('p_SERIE_ALB').AsString;
+    sNumeroAlb := AAlbExistenteNum;
+    sSerieAlb  := AAlbExistenteSerie;
+  end
+  else
+  begin
+    with unstrdprcCrearAlbaranInicio do
+    begin
+      Params.Clear;
+      Params.CreateParam(ftString, 'p_NUMERO_PED', ptInput);
+      Params.CreateParam(ftString, 'p_SERIE_PED',  ptInput);
+      Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+      Params.CreateParam(ftString, 'p_NUMERO_ALB', ptOutput);
+      Params.CreateParam(ftString, 'p_SERIE_ALB',  ptOutput);
+      ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
+      ParamByName('p_SERIE_PED').AsString  := sSeriePed;
+      ParamByName('p_USUARIO').AsString    := oUser;
+      ExecProc;
+      sNumeroAlb := ParamByName('p_NUMERO_ALB').AsString;
+      sSerieAlb  := ParamByName('p_SERIE_ALB').AsString;
+    end;
+  end;
+
+  // Mayor número de línea ya presente en el albarán destino. En un
+  // albarán nuevo es 0; al añadir a uno existente sirve para fijar el
+  // almacén sólo en las líneas que añadimos ahora (paso 2b).
+  nMaxLineaPrev := 0;
+  qAlm := TUniQuery.Create(nil);
+  try
+    qAlm.Connection := inLibGlobalVar.oConn;
+    qAlm.SQL.Text :=
+      'SELECT IFNULL(MAX(CAST(LINEA_ALBLIN AS UNSIGNED)), 0) AS MAXLIN ' +
+      '  FROM fza_albaranes_lineas ' +
+      ' WHERE NUMERO_ALB_ALBLIN = :n ' +
+      '   AND SERIE_ALB_ALBLIN  = :s';
+    qAlm.ParamByName('n').AsString := sNumeroAlb;
+    qAlm.ParamByName('s').AsString := sSerieAlb;
+    qAlm.Open;
+    nMaxLineaPrev := qAlm.FieldByName('MAXLIN').AsLargeInt;
+    qAlm.Close;
+  finally
+    FreeAndNil(qAlm);
   end;
 
   // 2) Por cada línea con cantidad > 0 generamos línea de albarán
@@ -531,10 +570,12 @@ begin
     end;
   end;
 
-  // 2b) Fijar el almacén elegido en todas las líneas del albarán. La SP
+  // 2b) Fijar el almacén elegido en las líneas recién añadidas. La SP
   //     PRC_PED_CREAR_ALBARAN_LINEA copia el almacén de cada línea del
   //     pedido; aquí lo unificamos al almacén único escogido al emitir
-  //     (también los movimientos de salida salen de ese almacén).
+  //     (de ahí salen también los movimientos de salida). Sólo tocamos
+  //     las líneas nuevas (LINEA_ALBLIN > nMaxLineaPrev) para no alterar
+  //     el almacén de las que ya hubiera en un albarán existente.
   if Trim(ACodigoAlmacen) <> '' then
   begin
     qAlm := TUniQuery.Create(nil);
@@ -546,11 +587,13 @@ begin
         '       INSTANTE_MODIF        = NOW(), ' +
         '       USUARIO_MODIF         = :u ' +
         ' WHERE NUMERO_ALB_ALBLIN = :n ' +
-        '   AND SERIE_ALB_ALBLIN  = :s';
-      qAlm.ParamByName('alm').AsString := ACodigoAlmacen;
-      qAlm.ParamByName('u').AsString   := oUser;
-      qAlm.ParamByName('n').AsString   := sNumeroAlb;
-      qAlm.ParamByName('s').AsString   := sSerieAlb;
+        '   AND SERIE_ALB_ALBLIN  = :s ' +
+        '   AND CAST(LINEA_ALBLIN AS UNSIGNED) > :maxlin';
+      qAlm.ParamByName('alm').AsString      := ACodigoAlmacen;
+      qAlm.ParamByName('u').AsString        := oUser;
+      qAlm.ParamByName('n').AsString        := sNumeroAlb;
+      qAlm.ParamByName('s').AsString        := sSerieAlb;
+      qAlm.ParamByName('maxlin').AsLargeInt := nMaxLineaPrev;
       qAlm.ExecSQL;
     finally
       FreeAndNil(qAlm);
