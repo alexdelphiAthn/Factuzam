@@ -78,8 +78,10 @@ CREATE PROCEDURE `PRC_GET_MOV_VENTAS_ART`(
     IN `p_NIVEL1`         VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''
     IN `p_NIVEL2`         VARCHAR(3),   -- 2o nivel de agrupación
     IN `p_NIVEL3`         VARCHAR(3),   -- 3er nivel de agrupación
-    IN `p_NIVEL_FAM`      INT           -- nivel del árbol de familias al agrupar
-)                                       -- por FAM (1 = raíz; <1 = familia hoja)
+    IN `p_NIVEL_FAM`      INT,          -- nivel del árbol de familias al agrupar
+                                        -- por FAM (1 = raíz; <1 = familia hoja)
+    IN `p_SOLO_VENTAS`    VARCHAR(1)    -- 'S' = solo artículos con ventas en el
+)                                       -- periodo; 'N'/'' = todos (con actividad)
 BEGIN
     DECLARE v_desde     DATE;
     DECLARE v_hasta     DATE;
@@ -92,6 +94,7 @@ BEGIN
     SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '');
     SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '');
     SET p_ARTICULOS   = IFNULL(p_ARTICULOS, '');
+    SET p_SOLO_VENTAS = IFNULL(NULLIF(p_SOLO_VENTAS, ''), 'N');
     SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''));
     SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''));
     SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''));
@@ -473,6 +476,10 @@ BEGIN
              WHERE tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
              GROUP BY tp.`CODIGO_ART_ART`
            ) tmp ON tmp.`CODIGO_ART` = b.`CODIGO_ART`
+     -- "Solo artículos con ventas": descarta las filas sin ventas en el
+     -- periodo (las que solo tienen entradas). Sin marcar = todos los que
+     -- tengan actividad (entradas o ventas).
+     WHERE (p_SOLO_VENTAS <> 'S' OR COALESCE(v.`UDS_VEN`, 0) <> 0)
      ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
               COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
               b.`CODIGO_ART`, b.`CODIGO_ALM`;
@@ -493,16 +500,17 @@ DELIMITER ;
 -- ---------------------------------------------------------------------
 -- Parámetros: (p_DESDE, p_HASTA, p_INICIO_COMPRAS, p_ALMACENES, p_FAMILIAS,
 --              p_PROVEEDORES, p_TEMPORADAS, p_ARTICULOS, p_NIVEL1, p_NIVEL2,
---              p_NIVEL3, p_NIVEL_FAM).
+--              p_NIVEL3, p_NIVEL_FAM, p_SOLO_VENTAS).
 -- p_DESDE/p_HASTA = periodo de ventas (fecha de factura). p_INICIO_COMPRAS
--- filtra los artículos por su primera compra (NULL = sin filtro). El resto
--- de filtros multi-valor son CSV; '' = todos. p_NIVEL1/2/3 = jerarquía de
--- agrupación (PRV/FAM/TMP/ALM/''); el orden importa. p_NIVEL_FAM = nivel del
--- árbol de familias al agrupar por FAM.
+-- filtra los artículos por su primera entrada AC/AE (NULL = sin filtro). El
+-- resto de filtros multi-valor son CSV; '' = todos. p_NIVEL1/2/3 = jerarquía
+-- de agrupación (PRV/FAM/TMP/ALM/''); el orden importa. p_NIVEL_FAM = nivel
+-- del árbol de familias al agrupar por FAM. p_SOLO_VENTAS='S' deja solo los
+-- artículos con ventas en el periodo (oculta los que solo tienen entradas).
 -- Ejemplos:
 --   -- Ventas de 2026 de todos los artículos, sin agrupación
---   CALL PRC_GET_MOV_VENTAS_ART('2026-01-01','2026-12-31',NULL,'','','','','','','','',0);
+--   CALL PRC_GET_MOV_VENTAS_ART('2026-01-01','2026-12-31',NULL,'','','','','','','','',0,'N');
 --   -- Artículos comprados desde 01/01/2026, ventas de mayo, almacén 01,
---   -- agrupando por proveedor y, dentro, por familia raíz
---   CALL PRC_GET_MOV_VENTAS_ART('2026-05-01','2026-05-31','2026-01-01','01','','','','','PRV','FAM','',1);
+--   -- agrupando por proveedor y, dentro, por familia raíz, solo con ventas
+--   CALL PRC_GET_MOV_VENTAS_ART('2026-05-01','2026-05-31','2026-01-01','01','','','','','PRV','FAM','',1,'S');
 -- ---------------------------------------------------------------------
