@@ -117,6 +117,13 @@ type
                             const ACaja    : string;
                             AFechaDesde    : TDate;
                             AFechaHasta    : TDate): TArqueoCaja;
+    // SQL del "Resumen neto por sección": agrupa las líneas vendidas por
+    // la ruta de familias raíz→hoja recortada a ANiveles niveles (1..9).
+    // Comparte la consulta el ticket (ORDER BY NETO DESC) y la pantalla
+    // (ORDER BY FAMILIA). Parámetros esperados: :pEMPRESA, :pALMACEN,
+    // :pCAJA, :pFDESDE y :pFHASTA.
+    class function SQLResumenSeccion(ANiveles: Integer;
+                                     const AOrden: string): string;
   end;
 
 implementation
@@ -157,6 +164,68 @@ begin
   CalcularPagos(AConn, Result);
   CalcularEfectivoAnterior(AConn, Result);
   CalcularDerivados(Result);
+end;
+
+class function TArqueoCalculadora.SQLResumenSeccion(
+  ANiveles: Integer; const AOrden: string): string;
+var
+  sRuta, sJoins, sPadre: string;
+  i: Integer;
+begin
+  // La jerarquía se resuelve con 8 LEFT JOIN estáticos (a1=padre,
+  // a2=abuelo, …) en vez de un CTE recursivo: las columnas del CTE
+  // heredan la colación de la conexión (utf8mb4_uca1400_ai_ci en
+  // MariaDB moderno) y al compararlas con las columnas spanish_ci de
+  // las tablas salta [1267] Illegal mix of collations. Con joins solo
+  // se comparan columnas reales entre sí. Profundidad máx.: 9 niveles.
+  // Ruta raíz→hoja 'NOMBRE|NOMBRE|…'; CONCAT_WS ignora ancestros NULL.
+  sRuta := 'CONCAT_WS(''|''';
+  for i := 8 downto 1 do
+    sRuta := sRuta + Format(', COALESCE(a%d.NOMBRE_FAM_FAM,' +
+                            ' a%d.CODIGO_FAM_FAM)', [i, i]);
+  sRuta := sRuta + ', COALESCE(f.NOMBRE_FAM_FAM, f.CODIGO_FAM_FAM))';
+  sJoins := '';
+  sPadre := 'f';
+  for i := 1 to 8 do
+  begin
+    sJoins := sJoins + Format(
+      ' LEFT JOIN fza_articulos_familias a%d' +
+      ' ON a%d.CODIGO_FAM_FAM = %s.CODIGO_SUBFAMILIA_FAM ',
+      [i, i, sPadre]);
+    sPadre := Format('a%d', [i]);
+  end;
+  // NULLIF: si la línea no tiene familia CONCAT_WS devuelve '' (no
+  // NULL) y sin él no caería a los fallback del COALESCE.
+  Result :=
+    ' SELECT                                                        ' +
+    '   COALESCE(                                                   ' +
+    '     REPLACE(SUBSTRING_INDEX(NULLIF(' + sRuta + ', ''''),      ' +
+    '             ''|'', ' + IntToStr(ANiveles) + '), ''|'', ''-''),' +
+    '     l.NOMBRE_FAM_FACLIN, l.CODIGO_FAM_FACLIN,                 ' +
+    '     a.CODIGO_FAM_ART, ''(sin familia)'') AS FAMILIA,          ' +
+    '   COUNT(*)                         AS UDS,                    ' +
+    '   COALESCE(SUM(l.TOTAL_FACLIN), 0) AS NETO                    ' +
+    '   FROM fza_caja_operaciones o                                 ' +
+    '   JOIN fza_facturas_lineas  l                                 ' +
+    '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA       ' +
+    '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA       ' +
+    '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA      ' +
+    '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA ' +
+    '   LEFT JOIN fza_articulos a                                   ' +
+    '     ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN                 ' +
+    '   LEFT JOIN fza_articulos_familias f                          ' +
+    '     ON f.CODIGO_FAM_FAM = COALESCE(l.CODIGO_FAM_FACLIN,       ' +
+    '                                    a.CODIGO_FAM_ART)          ' +
+    sJoins +
+    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                     ' +
+    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                  ' +
+    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                  ' +
+    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                     ' +
+    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                   ' +
+    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA,          ' +
+    '                                            INTERVAL 1 DAY)    ' +
+    '  GROUP BY FAMILIA                                             ' +
+    '  ORDER BY ' + AOrden;
 end;
 
 // =============================================================================
