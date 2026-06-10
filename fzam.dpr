@@ -277,6 +277,7 @@ uses
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
   inMtoStockConsulta in 'src\Forms\inMtoStockConsulta.pas' {frmStockConsulta},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
+  inMtoModalFiltroArt in 'src\Modals\inMtoModalFiltroArt.pas',
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones};
 
 {$R *.res}

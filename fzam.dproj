@@ -800,6 +800,7 @@
             <Form>frmStockConsulta</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalFiltroArt.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
             <Form>frmMtoComprasSesiones</Form>
         </DCCReference>
