@@ -32,4 +32,4 @@ donde la parte central refleja la **fecha y hora de la compilación**.
 
 ---
 
-[◀ Menú Otros](07-menu-otros.md) · [Índice](README.md)
+[◀ Menú Otros](07-menu-otros.md) · [Índice](README.md) · [Siguiente ▶ Instalación en Windows](09-instalacion-windows.md)
