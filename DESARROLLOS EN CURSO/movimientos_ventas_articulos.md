@@ -58,9 +58,21 @@ Decisiones confirmadas con el usuario:
 
 ### Origen de datos
 
-- **Entradas (compras)**: `fza_movimientos_almacen` con `TIPO_MOV='E'` y
-  `TIPO_DOC_MOV='AC'`. Unidades = `SUM(CANTIDAD_MOV)`; coste =
-  `SUM(TOTAL_COSTE_MOV)` (coste real capturado en la compra).
+- **Entradas**: `fza_movimientos_almacen` con `TIPO_MOV='E'` y
+  `TIPO_DOC_MOV IN ('AC','AE','IN')` = adquisición real de género (compra,
+  albarán de entrada e inventario/regularización). Unidades =
+  `SUM(CANTIDAD_MOV)`; coste = `SUM(TOTAL_COSTE_MOV)`. Se **excluyen** los
+  traspasos (TR/AT/TA — movimientos internos, no género nuevo) y los
+  depósitos (DP — no son gasto hasta venderse).
+  > **Importante (verificado con el dump real):** contar solo `AC` dejaba
+  > las entradas a 0 en los artículos cuyo stock entró por **inventario
+  > inicial** (`IN`), que es la vía principal en `factuzam_original.sql`
+  > (614 uds / 10.505 € por `IN` vs 402 uds / 5.380 € por `AC`). Por eso se
+  > incluyen `AE`/`IN`. El filtro **Inicio compras** sí mira solo la primera
+  > **compra** real (`AC`).
+- **Almacén de la venta**: `COALESCE(CODIGO_ALM_FACLIN, CODIGO_ALM_FAC)` —
+  si la línea no trae almacén se usa el de la cabecera de la factura (si no,
+  las ventas sin almacén de línea quedaban fuera del filtro).
 - **Ventas**: `fza_facturas_lineas` por fecha de factura. Uds =
   `SUM(CANTIDAD_FACLIN)`; importe = `SUM(TOTAL_FACLIN)` (venta real, con
   descuento y con IVA).
