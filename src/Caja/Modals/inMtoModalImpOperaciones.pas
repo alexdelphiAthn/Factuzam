@@ -80,7 +80,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoModalCajDef, UniDataConn;
+  inMtoModalCajDef;
 
 { TfrmPrintOperaciones }
 
@@ -116,8 +116,10 @@ begin
     frm.qrySeleccion.ParamByName('pEMP').AsString := edtEmpresa.Text;
     frm.qrySeleccion.Open;
     // Cierra el cronometro del monitor SQL antes del ShowModal (vease
-    // TdmConn.CerrarSQLPendiente).
-    dmConn.CerrarSQLPendiente;
+    // TdmConn.CerrarSQLPendiente). La instancia viva es odmConn: la
+    // variable global dmConn de UniDataConn no se asigna nunca.
+    if Assigned(odmConn) then
+      odmConn.CerrarSQLPendiente;
     frm.sEmpresa := edtEmpresa.Text;
     frm.sAlmacen := bedAlmacen.Text;
     frm.sCaja    := bedCaja.Text;
