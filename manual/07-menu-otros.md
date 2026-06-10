@@ -157,20 +157,80 @@ Permite **restaurar** la base de datos a partir de un fichero de copia o
 ![Generador de Procesos con la pestaña Código SQL](img/07-generador-procesos.png)
 *▢ Captura pendiente — Generador de Procesos con la pestaña Código SQL.*
 
-Herramienta **avanzada** para administradores: permite definir y ejecutar
-**procesos SQL** parametrizados sobre la base de datos (consultas,
-correcciones masivas, informes a medida).
+Herramienta **avanzada** para administradores: permite escribir, guardar y
+ejecutar **procesos SQL** sobre la base de datos — desde un **listado a
+medida** que no exista en los menús hasta una **corrección masiva** de
+datos o la llamada a un procedimiento almacenado.
 
-Sub-pestañas:
+Cada proceso se guarda como un registro más (con **Código** y **Nombre de
+proceso**), de modo que los listados habituales quedan en una **biblioteca
+reutilizable**: se localizan en la Lista, se abren y se vuelven a ejecutar.
 
-- **Código SQL** — la sentencia/proceso a ejecutar.
-- **Metadatos** — parámetros y descripción del proceso.
-- **VistaDatos** — previsualización del resultado.
-- **Otros** — opciones complementarias.
+### Las pestañas de la pantalla
+
+| Pestaña | Contenido |
+|---------|-----------|
+| **1_Código SQL** | Editor SQL con coloreado de sintaxis donde se escribe el proceso. El botón **Bonito** reformatea/indenta la sentencia. |
+| **2_Metadatos** | Árbol con los objetos de la base de datos (tablas, vistas y procedimientos) para apoyarse al escribir. Con sub-pestañas **Estructura Metadato** (DDL del objeto) y **Vista Contenido** (datos del objeto). |
+| **3_VistaDatos** | Rejilla con el **resultado** de la última ejecución. |
+| **4_Otros** | Auditoría del proceso (quién y cuándo lo creó/modificó). |
+
+**Botones principales:** **Ejecutar (F5)** y **Script (F3)** (carga un
+fichero `.sql`/`.txt` del disco como proceso nuevo, tomando su nombre del
+fichero). El menú contextual del editor ofrece además *Seleccionar Todo*,
+*Ejecutar*, *Comentar* y *Abrir Script*.
+
+### Cómo sacar un listado
+
+1. Pulsa **Insertar registro** y da **Código** y **Nombre** al proceso
+   (p. ej. `L001 — Ventas por familia`).
+2. En **1_Código SQL** escribe la consulta `SELECT …`. Ayudas:
+   - En **2_Metadatos**, el árbol muestra todas las tablas y vistas;
+     **doble clic** sobre una tabla/vista enseña su contenido en *Vista
+     Contenido*, y con el foco en el árbol **`[Ctrl]+[A]`** envía la
+     estructura del objeto al editor.
+   - **Bonito** reformatea el SQL para hacerlo legible.
+3. Pulsa **Ejecutar (F5)**:
+   - Si hay **texto seleccionado** en el editor, se ejecuta **solo la
+     selección**; si no, se ejecuta todo el contenido.
+   - El resultado se abre en **3_VistaDatos**, con el número de registros
+     y el tiempo de ejecución en el panel de resultados.
+4. Trabaja el resultado en la rejilla (ordenar, agrupar, filtrar) y
+   sácalo con **Exp. Excel** (exporta a Excel) o **Copiar Datos**
+   (al portapapeles).
+5. Pulsa **Grabar** para conservar el proceso y repetir el listado cuando
+   haga falta.
+
+![Resultado de un listado en VistaDatos](img/07-generador-listado.png)
+*▢ Captura pendiente — Pestaña VistaDatos con un resultado y el botón Exp. Excel.*
+
+> El botón **Editar Grid** habilita la edición directa del resultado sobre
+> la base de datos. Es útil para correcciones puntuales, pero **modifica
+> datos reales**: úsalo con la misma cautela que un UPDATE.
+
+### Cómo ejecutar un proceso (comandos y procedimientos)
+
+- **Comandos** (`UPDATE`, `INSERT`, `DELETE`…): se escriben igual y se
+  lanzan con **Ejecutar (F5)**. En lugar de rejilla, el panel de
+  resultados muestra las **filas afectadas** y el tiempo.
+- **Procedimientos almacenados**: en el árbol de **2_Metadatos**, haz
+  **doble clic** sobre el procedimiento: la aplicación genera en el editor
+  la plantilla `CALL procedimiento(…)` con sus **parámetros comentados**
+  (nombre y tipo de cada uno). Sustituye los comentarios por los valores y
+  pulsa **Ejecutar (F5)**. Si el procedimiento devuelve filas, se muestran
+  en **VistaDatos**; si no, se informa como comando.
+- **Varias sentencias a la vez**: si el editor contiene varias sentencias
+  separadas por `;`, cada una se ejecuta en su **propia pestaña de
+  resultado** (una rejilla por consulta, un registro de filas afectadas
+  por comando).
+- **Ejecutar por partes**: selecciona una sentencia concreta y pulsa F5
+  para lanzar **solo esa parte** — la forma más segura de probar un
+  proceso largo paso a paso.
 
 > Pensado para usuarios técnicos. Una sentencia mal escrita puede modificar
-> o borrar datos. Pruébala siempre sobre datos de prueba antes de ejecutarla
-> en producción.
+> o borrar datos: **haz copia de seguridad antes de un proceso masivo**,
+> prueba primero con un `SELECT` que muestre las filas que vas a tocar, y
+> ejecuta por selección antes que el script completo.
 
 ---
 
