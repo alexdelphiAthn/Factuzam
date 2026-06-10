@@ -64,6 +64,11 @@ cura del todo. Con joins estáticos solo se comparan columnas reales entre
 sí y el problema desaparece por construcción (y además funciona en
 servidores sin soporte de CTE).
 
+Como defensa adicional, `UniDataConn.conUniAfterConnect` fija ahora la
+colación de la sesión a la de la BBDD (`SET NAMES utf8mb4 COLLATE
+utf8mb4_spanish_ci`) en cada conexión/reconexión, también en las
+conexiones clonadas que reutilizan el handler.
+
 El nivel saneado lo entrega `inLibCajaParam.NivelesFamiliaArqueo` y se
 inyecta como literal entero en el SQL (no como parámetro, porque
 `qryResFam` comparte el binder `AbrirQryConParams` con el resto de
