@@ -707,11 +707,22 @@ procedure TGridArticulosLineas.ViewEditKeyDown(
 var
   s: string;
 begin
+  // Ctrl+Enter en una celda con boton "...": equivale a pulsarlo. En la
+  // celda de articulo abre el buscador completo; en una celda de atributo,
+  // su paleta de valores (mismos handlers que el boton).
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    Key := 0;
+    if AItem = FColArticulo then
+      ArticuloButtonClick(AEdit, 0)
+    else if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
+      AbrirPaletaOrden(AItem.Tag);
+  end
   // Igual que caja (cxGrid1DBTableView1EditKeyDown): el Enter del lector
   // (Codigo+CR) o del usuario en la celda de articulo resuelve el codigo que
   // hay en el editor. Este evento del grid SI recibe el Enter aunque el editor
   // sea un ExtLookupComboBox.
-  if (AItem = FColArticulo) and (Key = VK_RETURN) then
+  else if (AItem = FColArticulo) and (Key = VK_RETURN) then
   begin
     // Si el desplegable esta abierto, lo cerramos (selecciona la fila) para que
     // el Enter no se quede "consumido" en el dropdown.
