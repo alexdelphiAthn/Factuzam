@@ -130,7 +130,6 @@ uses
   inMtoArticulos,
   inLibGlobalVar,
   inLibAppParam,
-  inLibLog,
   System.Diagnostics,
   inLibtb;
 
