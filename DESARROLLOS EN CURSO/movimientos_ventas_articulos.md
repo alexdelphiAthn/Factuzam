@@ -59,17 +59,17 @@ Decisiones confirmadas con el usuario:
 ### Origen de datos
 
 - **Entradas**: `fza_movimientos_almacen` con `TIPO_MOV='E'` y
-  `TIPO_DOC_MOV IN ('AC','AE','IN')` = adquisición real de género (compra,
-  albarán de entrada e inventario/regularización). Unidades =
-  `SUM(CANTIDAD_MOV)`; coste = `SUM(TOTAL_COSTE_MOV)`. Se **excluyen** los
-  traspasos (TR/AT/TA — movimientos internos, no género nuevo) y los
-  depósitos (DP — no son gasto hasta venderse).
-  > **Importante (verificado con el dump real):** contar solo `AC` dejaba
-  > las entradas a 0 en los artículos cuyo stock entró por **inventario
-  > inicial** (`IN`), que es la vía principal en `factuzam_original.sql`
-  > (614 uds / 10.505 € por `IN` vs 402 uds / 5.380 € por `AC`). Por eso se
-  > incluyen `AE`/`IN`. El filtro **Inicio compras** sí mira solo la primera
-  > **compra** real (`AC`).
+  `TIPO_DOC_MOV IN ('AC','AE')` = adquisición real de género (compra y
+  albarán de entrada). Unidades = `SUM(CANTIDAD_MOV)`; coste =
+  `SUM(TOTAL_COSTE_MOV)`. Se **excluyen** los traspasos (TR/AT/TA —
+  movimientos internos), los depósitos (DP — no son gasto hasta venderse) y
+  el inventario/regularización (`IN` — es un ajuste, no una compra). El
+  filtro **Inicio compras** usa los mismos tipos (`AC`/`AE`).
+  > **Nota sobre el documento de entrada:** en producción las entradas de
+  > género son `AC` (compra) y `AE` (albarán de entrada). El dump de pruebas
+  > `factuzam_original.sql` **no tiene `AE`** y carga el stock inicial por
+  > `IN`, así que en ese dump algunos artículos saldrán con Entradas = 0
+  > (es normal; con datos reales `AE` los recoge).
 - **Almacén de la venta**: `COALESCE(CODIGO_ALM_FACLIN, CODIGO_ALM_FAC)` —
   si la línea no trae almacén se usa el de la cabecera de la factura (si no,
   las ventas sin almacén de línea quedaban fuera del filtro).
