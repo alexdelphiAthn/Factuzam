@@ -1,28 +1,30 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataConn.pas',0,1,1,1,1,0,0,,
-File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoArticulos.pas',0,1,1,1,1,0,0,,
-File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.pas',0,1,62,33,75,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,121,29,136,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\DataModules\UniDataCaja.pas',0,1,1414,28,1424,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,546,86,556,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,215,40,215,0,0,,
-File_9=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,21,27,35,0,0,{{67,0}
-File_10=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,387,32,395,0,0,,
-File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas',0,1,1,1,1,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTraspasoOpe.pas',0,1,1313,1,1315,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',0,1,470,33,478,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.pas',0,1,62,33,75,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\DataModules\UniDataCaja.pas',0,1,1414,28,1424,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,546,86,556,0,0,,
+File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,215,40,215,0,0,,
+File_6=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,21,27,35,0,0,{{67,0}
+File_7=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,387,32,395,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas',0,1,1,1,1,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTraspasoOpe.pas',0,1,1313,1,1315,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',0,1,470,33,478,0,0,,
 
 [Modules]
-Count=0
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas
+Count=1
 EditWindowCount=1
 
+[C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas]
+ModuleType=TSourceModule
+
 [EditWindow0]
-ViewCount=1
-CurrentView=0
+ViewCount=2
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas
 View0=0
+View1=1
 PercentageSizes=1
 Create=1
 Visible=1
@@ -59,6 +61,17 @@ BottomMiddelPanelData=0000080001020200000009000000446F636B5369746530100000004772
 [View0]
 CustomEditViewType=TOTACustomEditView
 OTAEditViewType=WelcomePage.MainPage
+
+[View1]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas
+CursorX=38
+CursorY=138
+TopLine=121
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas
 
 [Watches]
 Count=0
@@ -208,11 +221,6 @@ LRDockWidth=1526
 Dockable=1
 StayOnTop=0
 SplitPos=135
-
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=Name,
-ExpandedItems=Anchors=0,BorderIcons=0,"LiveBindings Designer=0"
 
 [frmDesignPreview]
 PercentageSizes=1

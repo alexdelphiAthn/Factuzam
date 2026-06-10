@@ -1,8 +1,20 @@
 inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
   Caption = 'Movimientos de ventas por art'#237'culos y fechas'
-  ClientHeight = 470
   ClientWidth = 700
-  TextHeight = 19
+  StyleElements = [seFont, seClient, seBorder]
+  ExplicitWidth = 716
+  ExplicitHeight = 509
+  TextHeight = 17
+  inherited pnl1: TPanel
+    Left = 556
+    StyleElements = [seFont, seClient, seBorder]
+    ExplicitLeft = 554
+    ExplicitHeight = 462
+    inherited btnSalir: TcxButton
+      Top = 444
+      ExplicitTop = 436
+    end
+  end
   inherited frxrprt1: TfrxReport
     Datasets = <
       item
@@ -15,6 +27,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
       Orientation = poLandscape
       PaperWidth = 297.000000000000000000
       PaperHeight = 210.000000000000000000
+      PaperSize = 256
       LeftMargin = 10.000000000000000000
       RightMargin = 10.000000000000000000
       TopMargin = 10.000000000000000000
@@ -33,17 +46,22 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
       Orientation = poLandscape
       PaperWidth = 297.000000000000000000
       PaperHeight = 210.000000000000000000
+      PaperSize = 256
       LeftMargin = 10.000000000000000000
       RightMargin = 10.000000000000000000
       TopMargin = 10.000000000000000000
       BottomMargin = 10.000000000000000000
       object ReportTitle1: TfrxReportTitle
-        Height = 34.000000000000000000
-        Top = 0.000000000000000000
-        Width = 1046.000000000000000000
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
         Frame.Typ = []
+        Height = 34.000000000000000000
+        Width = 1046.000000000000000000
         object MemoTitulo: TfrxMemoView
-          Left = 0.000000000000000000
+          AllowVectorExport = True
           Top = 2.000000000000000000
           Width = 600.000000000000000000
           Height = 22.000000000000000000
@@ -58,6 +76,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoImpreso: TfrxMemoView
+          AllowVectorExport = True
           Left = 700.000000000000000000
           Top = 8.000000000000000000
           Width = 346.000000000000000000
@@ -75,11 +94,17 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
         end
       end
       object PageHeader1: TfrxPageHeader
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 20.000000000000000000
         Top = 38.000000000000000000
         Width = 1046.000000000000000000
-        Frame.Typ = []
         object MemoHDesc: TfrxMemoView
+          AllowVectorExport = True
           Left = 46.000000000000000000
           Top = 2.000000000000000000
           Width = 234.000000000000000000
@@ -95,6 +120,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHUniEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 280.000000000000000000
           Top = 2.000000000000000000
           Width = 50.000000000000000000
@@ -111,6 +137,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHImpEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 330.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -127,6 +154,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHUdsVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 394.000000000000000000
           Top = 2.000000000000000000
           Width = 48.000000000000000000
@@ -143,6 +171,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHImpVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 442.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -159,6 +188,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHImpCos: TfrxMemoView
+          AllowVectorExport = True
           Left = 506.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -175,6 +205,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHBenef: TfrxMemoView
+          AllowVectorExport = True
           Left = 570.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -191,6 +222,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHPctBnf: TfrxMemoView
+          AllowVectorExport = True
           Left = 634.000000000000000000
           Top = 2.000000000000000000
           Width = 44.000000000000000000
@@ -207,6 +239,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHVtaEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 678.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -223,6 +256,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHVentEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 742.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -239,6 +273,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHMarg1: TfrxMemoView
+          AllowVectorExport = True
           Left = 794.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -255,6 +290,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHMarg2: TfrxMemoView
+          AllowVectorExport = True
           Left = 846.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -271,6 +307,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHPctVdto: TfrxMemoView
+          AllowVectorExport = True
           Left = 898.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -287,6 +324,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoHPctVlast: TfrxMemoView
+          AllowVectorExport = True
           Left = 950.000000000000000000
           Top = 2.000000000000000000
           Width = 56.000000000000000000
@@ -304,13 +342,18 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
         end
       end
       object GroupHeaderG1: TfrxGroupHeader
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 20.000000000000000000
         Top = 62.000000000000000000
         Width = 1046.000000000000000000
         Condition = 'MovVentas."GRUPO1_COD"'
-        Frame.Typ = []
         object MemoGrupo1: TfrxMemoView
-          Left = 0.000000000000000000
+          AllowVectorExport = True
           Top = 2.000000000000000000
           Width = 1046.000000000000000000
           Height = 16.000000000000000000
@@ -326,12 +369,18 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
         end
       end
       object GroupHeaderG2: TfrxGroupHeader
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 20.000000000000000000
         Top = 84.000000000000000000
         Width = 1046.000000000000000000
         Condition = 'MovVentas."GRUPO2_COD"'
-        Frame.Typ = []
         object MemoGrupo2: TfrxMemoView
+          AllowVectorExport = True
           Left = 14.000000000000000000
           Top = 2.000000000000000000
           Width = 1032.000000000000000000
@@ -348,12 +397,18 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
         end
       end
       object GroupHeaderG3: TfrxGroupHeader
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 20.000000000000000000
         Top = 106.000000000000000000
         Width = 1046.000000000000000000
         Condition = 'MovVentas."GRUPO3_COD"'
-        Frame.Typ = []
         object MemoGrupo3: TfrxMemoView
+          AllowVectorExport = True
           Left = 28.000000000000000000
           Top = 2.000000000000000000
           Width = 1018.000000000000000000
@@ -371,16 +426,19 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
       end
       object MasterData1: TfrxMasterData
         FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 34.000000000000000000
         Top = 130.000000000000000000
         Width = 1046.000000000000000000
         DataSet = fxdsMovVentas
         DataSetName = 'MovVentas'
         RowCount = 0
-        Frame.Typ = []
         object foto300: TfrxPictureView
           AllowVectorExport = True
-          Left = 0.000000000000000000
           Top = 1.000000000000000000
           Width = 44.000000000000000000
           Height = 32.000000000000000000
@@ -390,6 +448,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           TransparentColor = clWhite
         end
         object MemoArtDesc: TfrxMemoView
+          AllowVectorExport = True
           Left = 46.000000000000000000
           Top = 1.000000000000000000
           Width = 234.000000000000000000
@@ -406,6 +465,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoUniEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 280.000000000000000000
           Top = 1.000000000000000000
           Width = 50.000000000000000000
@@ -421,12 +481,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."UNI_ENT_TOT"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoImpEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 330.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -443,12 +504,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."IMP_ENT_TOT"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoUdsVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 394.000000000000000000
           Top = 1.000000000000000000
           Width = 48.000000000000000000
@@ -464,12 +526,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."UDS_VENTA"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoImpVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 442.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -486,12 +549,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."IMP_VENTA"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoImpCos: TfrxMemoView
+          AllowVectorExport = True
           Left = 506.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -508,12 +572,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."IMP_COSTE"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoBenef: TfrxMemoView
+          AllowVectorExport = True
           Left = 570.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -530,12 +595,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."BENEFICIO"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoPctBnf: TfrxMemoView
+          AllowVectorExport = True
           Left = 634.000000000000000000
           Top = 1.000000000000000000
           Width = 44.000000000000000000
@@ -552,12 +618,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."PCT_BNFCO"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoVtaEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 678.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -574,12 +641,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."VENTA_ENT"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoVentEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 742.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -596,12 +664,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."VENT_ENT"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoMarg1: TfrxMemoView
+          AllowVectorExport = True
           Left = 794.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -618,12 +687,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."MARGEN1"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoMarg2: TfrxMemoView
+          AllowVectorExport = True
           Left = 846.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -640,12 +710,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."MARGEN2"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoPctVdto: TfrxMemoView
+          AllowVectorExport = True
           Left = 898.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -662,12 +733,13 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."PCT_VDTO"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object MemoPctVlast: TfrxMemoView
+          AllowVectorExport = True
           Left = 950.000000000000000000
           Top = 1.000000000000000000
           Width = 56.000000000000000000
@@ -684,18 +756,24 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           HAlign = haRight
-          VAlign = vaCenter
           Memo.UTF8W = (
             '[MovVentas."PCT_VLAST"]')
           ParentFont = False
+          VAlign = vaCenter
         end
       end
       object GroupFooterG3: TfrxGroupFooter
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 18.000000000000000000
         Top = 172.000000000000000000
         Width = 1046.000000000000000000
-        Frame.Typ = []
         object MemoGF3Lbl: TfrxMemoView
+          AllowVectorExport = True
           Left = 28.000000000000000000
           Top = 1.000000000000000000
           Width = 252.000000000000000000
@@ -711,6 +789,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3UniEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 280.000000000000000000
           Top = 1.000000000000000000
           Width = 50.000000000000000000
@@ -729,6 +808,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3ImpEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 330.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -748,6 +828,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3UdsVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 394.000000000000000000
           Top = 1.000000000000000000
           Width = 48.000000000000000000
@@ -766,6 +847,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3ImpVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 442.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -785,6 +867,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3ImpCos: TfrxMemoView
+          AllowVectorExport = True
           Left = 506.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -804,6 +887,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3Benef: TfrxMemoView
+          AllowVectorExport = True
           Left = 570.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -823,6 +907,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3PctBnf: TfrxMemoView
+          AllowVectorExport = True
           Left = 634.000000000000000000
           Top = 1.000000000000000000
           Width = 44.000000000000000000
@@ -838,12 +923,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,SUM(<MovVentas."B' +
-            'ENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_COSTE">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_COSTE">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3VtaEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 678.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -863,6 +950,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF3VentEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 742.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -878,12 +966,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVentas.' +
-            '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,MasterData' +
-            '1)*100,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3Marg1: TfrxMemoView
+          AllowVectorExport = True
           Left = 794.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -899,12 +989,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."B' +
-            'ENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3Marg2: TfrxMemoView
+          AllowVectorExport = True
           Left = 846.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -920,12 +1012,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."V' +
-            'ENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3PctVdto: TfrxMemoView
+          AllowVectorExport = True
           Left = 898.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -941,12 +1035,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)<>0,SUM(<MovVentas.' +
-            '"UDS_VENTA">,MasterData1)/SUM(<MovVentas."UNI_ENT_TOT">,MasterData' +
-            '1)*100,0)]')
+            
+              '[IIF(SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."UDS_VENTA">,MasterData1)/SUM(<MovVentas."UNI_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3PctVlast: TfrxMemoView
+          AllowVectorExport = True
           Left = 950.000000000000000000
           Top = 1.000000000000000000
           Width = 56.000000000000000000
@@ -962,18 +1058,25 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVentas.' +
-            '"IMP_VENTA">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,MasterData' +
-            '1)*100,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."IMP_VENTA">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
           ParentFont = False
         end
       end
       object GroupFooterG2: TfrxGroupFooter
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 18.000000000000000000
         Top = 194.000000000000000000
         Width = 1046.000000000000000000
-        Frame.Typ = []
         object MemoGF2Lbl: TfrxMemoView
+          AllowVectorExport = True
           Left = 14.000000000000000000
           Top = 1.000000000000000000
           Width = 266.000000000000000000
@@ -989,6 +1092,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF2ImpEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 330.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -1008,6 +1112,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF2ImpVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 442.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -1027,6 +1132,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF2Benef: TfrxMemoView
+          AllowVectorExport = True
           Left = 570.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -1046,6 +1152,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF2VtaEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 678.000000000000000000
           Top = 1.000000000000000000
           Width = 64.000000000000000000
@@ -1065,6 +1172,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF2Marg1: TfrxMemoView
+          AllowVectorExport = True
           Left = 794.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -1080,12 +1188,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."B' +
-            'ENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoGF2Marg2: TfrxMemoView
+          AllowVectorExport = True
           Left = 846.000000000000000000
           Top = 1.000000000000000000
           Width = 52.000000000000000000
@@ -1101,19 +1211,25 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."V' +
-            'ENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
       end
       object GroupFooterG1: TfrxGroupFooter
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 20.000000000000000000
         Top = 216.000000000000000000
         Width = 1046.000000000000000000
-        Frame.Typ = []
         object MemoGF1Lbl: TfrxMemoView
-          Left = 0.000000000000000000
+          AllowVectorExport = True
           Top = 2.000000000000000000
           Width = 280.000000000000000000
           Height = 16.000000000000000000
@@ -1128,6 +1244,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF1ImpEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 330.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1147,6 +1264,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF1ImpVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 442.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1166,6 +1284,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF1Benef: TfrxMemoView
+          AllowVectorExport = True
           Left = 570.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1185,6 +1304,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF1VtaEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 678.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1204,6 +1324,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoGF1Marg1: TfrxMemoView
+          AllowVectorExport = True
           Left = 794.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -1219,12 +1340,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."B' +
-            'ENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoGF1Marg2: TfrxMemoView
+          AllowVectorExport = True
           Left = 846.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -1240,19 +1363,25 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."V' +
-            'ENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
       end
       object ReportSummary1: TfrxReportSummary
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 20.000000000000000000
         Top = 238.000000000000000000
         Width = 1046.000000000000000000
-        Frame.Typ = []
         object MemoRSLbl: TfrxMemoView
-          Left = 0.000000000000000000
+          AllowVectorExport = True
           Top = 2.000000000000000000
           Width = 280.000000000000000000
           Height = 16.000000000000000000
@@ -1267,6 +1396,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSUniEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 280.000000000000000000
           Top = 2.000000000000000000
           Width = 50.000000000000000000
@@ -1285,6 +1415,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSImpEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 330.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1304,6 +1435,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSUdsVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 394.000000000000000000
           Top = 2.000000000000000000
           Width = 48.000000000000000000
@@ -1322,6 +1454,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSImpVta: TfrxMemoView
+          AllowVectorExport = True
           Left = 442.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1341,6 +1474,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSImpCos: TfrxMemoView
+          AllowVectorExport = True
           Left = 506.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1360,6 +1494,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSBenef: TfrxMemoView
+          AllowVectorExport = True
           Left = 570.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1379,6 +1514,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSPctBnf: TfrxMemoView
+          AllowVectorExport = True
           Left = 634.000000000000000000
           Top = 2.000000000000000000
           Width = 44.000000000000000000
@@ -1394,12 +1530,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,SUM(<MovVentas."B' +
-            'ENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_COSTE">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_COSTE">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoRSVtaEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 678.000000000000000000
           Top = 2.000000000000000000
           Width = 64.000000000000000000
@@ -1419,6 +1557,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoRSVentEnt: TfrxMemoView
+          AllowVectorExport = True
           Left = 742.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -1434,12 +1573,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVentas.' +
-            '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,MasterData' +
-            '1)*100,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
           ParentFont = False
         end
         object MemoRSMarg1: TfrxMemoView
+          AllowVectorExport = True
           Left = 794.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -1455,12 +1596,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."B' +
-            'ENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoRSMarg2: TfrxMemoView
+          AllowVectorExport = True
           Left = 846.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -1476,12 +1619,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas."V' +
-            'ENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData1)*1' +
-            '00,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
+              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
+              '1)*100,0)]')
           ParentFont = False
         end
         object MemoRSPctVdto: TfrxMemoView
+          AllowVectorExport = True
           Left = 898.000000000000000000
           Top = 2.000000000000000000
           Width = 52.000000000000000000
@@ -1497,12 +1642,14 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)<>0,SUM(<MovVentas.' +
-            '"UDS_VENTA">,MasterData1)/SUM(<MovVentas."UNI_ENT_TOT">,MasterData' +
-            '1)*100,0)]')
+            
+              '[IIF(SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."UDS_VENTA">,MasterData1)/SUM(<MovVentas."UNI_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
           ParentFont = False
         end
         object MemoRSPctVlast: TfrxMemoView
+          AllowVectorExport = True
           Left = 950.000000000000000000
           Top = 2.000000000000000000
           Width = 56.000000000000000000
@@ -1518,19 +1665,25 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVentas.' +
-            '"IMP_VENTA">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,MasterData' +
-            '1)*100,0)]')
+            
+              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."IMP_VENTA">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
           ParentFont = False
         end
       end
       object PageFooter1: TfrxPageFooter
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
         Height = 18.000000000000000000
         Top = 260.000000000000000000
         Width = 1046.000000000000000000
-        Frame.Typ = []
         object MemoPag: TfrxMemoView
-          Left = 0.000000000000000000
+          AllowVectorExport = True
           Top = 2.000000000000000000
           Width = 520.000000000000000000
           Height = 14.000000000000000000
@@ -1545,6 +1698,7 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           ParentFont = False
         end
         object MemoPie: TfrxMemoView
+          AllowVectorExport = True
           Left = 526.000000000000000000
           Top = 2.000000000000000000
           Width = 520.000000000000000000
@@ -1566,9 +1720,9 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
   object unqryMovVentasPrint: TUniQuery
     SQL.Strings = (
       'CALL PRC_GET_MOV_VENTAS_ART('
-
-        '  '#39'2026-01-01'#39', '#39'2026-12-31'#39', NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39 +
-        #39', 0, '#39'N'#39')')
+      
+        '  '#39'2026-01-01'#39', '#39'2026-12-31'#39', NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', ' +
+        #39#39', 0, '#39'N'#39')')
     Left = 96
     Top = 16
   end
