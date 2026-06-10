@@ -15,6 +15,9 @@ Ayuda
 
 ## Acerca de
 
+![Pantalla Acerca de con la versión](img/08-acerca-de.png)
+*▢ Captura pendiente — Pantalla Acerca de con la versión.*
+
 Muestra la **pantalla de presentación** con el logotipo, la información del
 producto y, sobre todo, el **número de versión** instalada.
 

@@ -28,6 +28,9 @@ Ventas Mayor
 
 ## Facturas
 
+![Factura de venta: cabecera, líneas y totales](img/04-facturas.png)
+*▢ Captura pendiente — Factura de venta: cabecera, líneas y totales.*
+
 Mantenimiento de **Facturas de Venta (Venta Mayor)**. Es el documento
 fiscal de venta. Cada factura lleva:
 
@@ -60,6 +63,9 @@ pago por defecto que se propone a los clientes.
 
 ## Pedidos
 
+![Pedidos de venta](img/04-pedidos.png)
+*▢ Captura pendiente — Pedidos de venta.*
+
 Mantenimiento de **Pedidos de Venta**. Registra lo que un cliente
 **encarga** (reserva de género). No mueve stock; sirve de base para generar
 el **albarán** de salida cuando se sirve el pedido.
@@ -68,6 +74,9 @@ el **albarán** de salida cuando se sirve el pedido.
 
 ## Albaranes
 
+![Albaranes de venta](img/04-albaranes.png)
+*▢ Captura pendiente — Albaranes de venta.*
+
 Mantenimiento de **Albaranes de Venta**. Registra la **salida real** de
 mercancía hacia el cliente: al confirmarlo **resta stock** del almacén. Es
 el documento que después se **factura**.
@@ -75,6 +84,9 @@ el documento que después se **factura**.
 ---
 
 ## Listados ▸ Ventas
+
+![Filtros del listado de ventas](img/04-listado-ventas.png)
+*▢ Captura pendiente — Filtros del listado de ventas.*
 
 Abre el **generador de listados de ventas**. Mediante un cuadro de
 **filtros** (rango de fechas, cliente, artículo, familia, serie…) genera un

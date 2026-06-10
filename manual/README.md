@@ -57,3 +57,18 @@ Salir
   *Archivo ▸ Tablas Auxiliares ▸ Tarifas*.
 - Las teclas se muestran entre corchetes, p. ej. `[F12]`, `[Esc]`,
   `[Ctrl]+[A]`.
+
+## Capturas de pantalla
+
+Los capítulos incluyen **huecos para capturas** marcados así:
+
+```
+![Descripción](img/NN-nombre.png)
+*▢ Captura pendiente — Descripción de lo que debe verse.*
+```
+
+Para completar un hueco basta con **guardar la captura en `manual/img/`**
+con el nombre indicado (formato PNG); la imagen se mostrará automáticamente.
+Una vez colocada, puede borrarse la línea *«▢ Captura pendiente…»* o
+sustituirse por un pie de foto definitivo. Para localizar los huecos que
+faltan: buscar `Captura pendiente` en los `.md`.

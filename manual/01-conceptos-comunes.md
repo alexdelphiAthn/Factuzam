@@ -13,6 +13,9 @@ añaden lo específico de cada pantalla.
 
 Una pantalla de mantenimiento típica tiene **dos pestañas principales**:
 
+![Pestaña Lista de un mantenimiento](img/01-lista.png)
+*▢ Captura pendiente — Pestaña Lista (rejilla) de un mantenimiento cualquiera.*
+
 ### Pestaña **Lista**
 
 Muestra una **rejilla (grid)** con todos los registros de la tabla (clientes,
@@ -30,6 +33,9 @@ Muestra el **detalle de un único registro** con todos sus campos
 organizados en sub-pestañas (Datos principales, Más datos, etc.). Es donde
 se **da de alta, se consulta y se edita** un registro concreto.
 
+![Pestaña Ficha de un mantenimiento](img/01-ficha.png)
+*▢ Captura pendiente — Pestaña Ficha con sus sub-pestañas.*
+
 > Algunas pantallas tienen además una pestaña **Perfil** (visible solo para
 > administradores) para configurar columnas, captions y comportamiento de
 > la propia pantalla por usuario/perfil.
@@ -40,6 +46,9 @@ se **da de alta, se consulta y se edita** un registro concreto.
 
 En la parte inferior (o lateral) de la pantalla hay una **barra de
 navegación** con los botones estándar. Sus acciones son siempre las mismas:
+
+![Barra del navegador de registros](img/01-navegador.png)
+*▢ Captura pendiente — Barra de navegación con sus botones.*
 
 | Botón | Acción |
 |-------|--------|

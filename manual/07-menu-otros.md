@@ -31,6 +31,9 @@ Otros
 
 ## Parámetros del entorno
 
+![Parámetros Generales de la Aplicación](img/07-parametros.png)
+*▢ Captura pendiente — Parámetros Generales de la Aplicación.*
+
 Pantalla de **Parámetros Generales de la Aplicación**. Centraliza la
 configuración global de Factuzam: comportamiento por defecto, rutas,
 opciones de impresión y de documentos, valores predeterminados de la
@@ -52,6 +55,9 @@ que les corresponde (p. ej. IVA peninsular frente a otros regímenes).
 
 ## Impuesto IVA
 
+![Tipos de IVA y recargo de equivalencia](img/07-iva.png)
+*▢ Captura pendiente — Tipos de IVA y recargo de equivalencia.*
+
 Mantiene los **tipos de IVA** concretos y sus porcentajes (general,
 reducido, superreducido…), junto con el **recargo de equivalencia**
 asociado a cada uno. Es la base del cálculo de impuestos en compras y
@@ -63,6 +69,9 @@ ventas.
 ---
 
 ## Contadores
+
+![Contadores de numeración por serie](img/07-contadores.png)
+*▢ Captura pendiente — Contadores de numeración por serie.*
 
 Gestiona los **contadores de numeración** de los documentos (facturas,
 albaranes, pedidos…) por **serie** y empresa. Cada documento toma su número
@@ -103,6 +112,9 @@ para un usuario o grupo.
 
 ### Permisos
 
+![Gestión de Permisos en árbol](img/07-permisos.png)
+*▢ Captura pendiente — Gestión de Permisos en árbol.*
+
 Pantalla de **Gestión de Permisos** en forma de **árbol**: activa o
 desactiva, por grupo/usuario, el acceso a cada **menú y acción** de la
 aplicación. Es la forma recomendada de configurar la seguridad de forma
@@ -116,6 +128,9 @@ para edición masiva o revisión rápida de muchos permisos a la vez.
 ---
 
 ## Hacer Copia de Seguridad
+
+![Diálogo de copia de seguridad](img/07-copia-seguridad.png)
+*▢ Captura pendiente — Diálogo de copia de seguridad.*
 
 Lanza una **copia de seguridad** de la base de datos. Genera un fichero de
 respaldo con todos los datos (clientes, artículos, documentos, stock…).
@@ -138,6 +153,9 @@ Permite **restaurar** la base de datos a partir de un fichero de copia o
 ---
 
 ## Generador de Procesos
+
+![Generador de Procesos con la pestaña Código SQL](img/07-generador-procesos.png)
+*▢ Captura pendiente — Generador de Procesos con la pestaña Código SQL.*
 
 Herramienta **avanzada** para administradores: permite definir y ejecutar
 **procesos SQL** parametrizados sobre la base de datos (consultas,
