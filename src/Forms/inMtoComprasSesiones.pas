@@ -59,7 +59,7 @@ uses
   cxButtons, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLookupEdit,
   cxDBLookupEdit, cxDBLookupComboBox, cxSpinEdit, cxCurrencyEdit, cxNavigator,
   cxDBNavigator, cxMemo, cxCheckBox, cxGroupBox, cxLocalization, cxGraphics,
-  cxButtonEdit,
+  cxButtonEdit, cxEditRepositoryItems, cxDBExtLookupComboBox,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxSkinsDefaultPainters,
   dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab,
@@ -255,6 +255,27 @@ type
     FNombresConjunto : TDictionary<Integer, string>;
     FBmpSwatch    : TBitmap;
     Dmm: TdmComprasSesiones;
+    // --- Busqueda incremental in-cell de la columna "Modelo prov." ---
+    // Desplegable (ExtLookupComboBox) que lista los modelos
+    // (REF_PROVEEDOR_AP) ya existentes del proveedor de la cabecera cuyo
+    // comienzo coincide con lo tecleado. Al elegir uno, la linea se marca
+    // REUSAR del articulo correspondiente: el sistema de tallas queda fijo y
+    // solo se incorporan colores/tallas nuevos al materializar. Mismo patron
+    // runtime que inLibGridArticulos (la lib/form no tiene estos objetos en
+    // el dfm). FModeloPrvCargado guarda el proveedor con el que se cargo la
+    // lista para no relanzar el query si no cambia; FModeloRefPend es el
+    // modelo elegido pendiente de resolver (resolucion diferida 1ms).
+    FModeloBusqQry      : TUniQuery;
+    FModeloBusqDs       : TDataSource;
+    FModeloRepo         : TcxGridViewRepository;
+    FModeloView         : TcxGridDBTableView;
+    FModeloColRef       : TcxGridDBColumn;
+    FModeloEditRepo     : TcxEditRepository;
+    FModeloCombo        : TcxEditRepositoryExtLookupComboBoxItem;
+    FModeloTimerBusq    : TTimer;
+    FModeloTimerResolve : TTimer;
+    FModeloPrvCargado   : string;
+    FModeloRefPend      : string;
     procedure CargarBasicosColor;
     procedure CargarConjuntosTallas;
     procedure BuscarProveedor;
@@ -279,6 +300,18 @@ type
                                       out ASerPed, ANumPed,
                                           ASerAlb, ANumAlb,
                                           AErr: string): Boolean;
+    // Busqueda incremental in-cell de modelos del proveedor (columna
+    // "Modelo prov."): crea el desplegable, lo recarga al cambiar de
+    // proveedor y resuelve la eleccion como linea REUSAR.
+    procedure CrearLookupModelo;
+    procedure RecargarModelos;
+    procedure ModeloGetProperties(Sender: TcxCustomGridTableItem;
+                ARecord: TcxCustomGridRecord;
+                var AProperties: TcxCustomEditProperties);
+    procedure ModeloComboChange(Sender: TObject);
+    procedure ModeloComboCloseUp(Sender: TObject);
+    procedure ModeloTimerBusqTimer(Sender: TObject);
+    procedure ModeloTimerResolveTimer(Sender: TObject);
   protected
     // Interceptamos a nivel de form (KeyPreview heredado = True) para
     // que Ctrl+Enter abra el selector de la columna editbutton enfocada
@@ -453,6 +486,12 @@ begin
 
   InicializarGestorTallas;
 
+  // Desplegable in-cell de busqueda de modelos del proveedor sobre la
+  // columna "Modelo prov." (se crea una vez; se recarga al posicionarse
+  // en una sesion / cambiar de proveedor en dsTablaGDataChangeHook).
+  if FModeloCombo = nil then CrearLookupModelo;
+  RecargarModelos;
+
   // Hook OnDataChange del master: cuando el usuario navega de una
   // sesion a otra (o se posiciona en la primera tras abrir el form),
   // re-cargamos las cantidades de tallas. Sin esto, las celdas no-bound
@@ -476,7 +515,11 @@ begin
   // Refrescar el rotulo del proveedor al navegar entre sesiones (Field=nil)
   // o al cambiar CODIGO_PRV_SES tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_SES') then
+  begin
     ActualizarLabelProveedor;
+    // Lista de modelos del desplegable "Modelo prov." acotada al proveedor.
+    RecargarModelos;
+  end;
   // FIX: El formato distribuido solo se puede cambiar al crear la sesión.
   // Si el estado no es dsInsert, ponemos el check como ReadOnly.
   if (Field = nil) and (Dmm <> nil) and (Dmm.unqryTablaG <> nil) then
@@ -825,6 +868,14 @@ begin
   FreeAndNil(FNombresConjunto);
   FreeAndNil(FGestorTallas);
   FreeAndNil(FBmpSwatch);
+  // Objetos runtime del desplegable "Modelo prov." (orden inverso a su
+  // creacion en CrearLookupModelo).
+  FreeAndNil(FModeloTimerResolve);
+  FreeAndNil(FModeloTimerBusq);
+  FreeAndNil(FModeloEditRepo);
+  FreeAndNil(FModeloRepo);
+  FreeAndNil(FModeloBusqDs);
+  FreeAndNil(FModeloBusqQry);
   inherited;
 end;
 
@@ -1046,6 +1097,244 @@ begin
     if FTallaColumns[i] <> nil then
       TcxCurrencyEditProperties(FTallaColumns[i].Properties).OnEditValueChanged
                                        := FGestorTallas.PersistirCeldaActiva;
+end;
+
+// ===========================================================================
+//   Busqueda incremental de modelos del proveedor (columna "Modelo prov.")
+// ===========================================================================
+// Monta en runtime un ExtLookupComboBox in-cell (mismo patron probado en
+// inLibGridArticulos) que, al teclear en "Modelo prov.", lista los modelos
+// (REF_PROVEEDOR_AP) ya existentes del proveedor de la cabecera cuyo
+// comienzo coincide. Al elegir uno, la linea se marca REUSAR del articulo:
+// el sistema de tallas queda fijo y al materializar solo se incorporan los
+// colores/tallas nuevos (los precios anteriores se proponen como referencia).
+procedure TfrmMtoComprasSesiones.CrearLookupModelo;
+begin
+  // 1. Query con un modelo por fila: descripcion, sistema de tallas, colores
+  //    ya dados de alta y ultimo precio de compra (referencia visible). El
+  //    filtrado "empieza por" mientras tecleas lo hace IncrementalFiltering
+  //    en cliente; :prv lo fija RecargarModelos.
+  FModeloBusqQry := TUniQuery.Create(nil);
+  FModeloBusqQry.Connection := inLibGlobalVar.oConn;
+  FModeloBusqQry.SQL.Text :=
+    'SELECT ap.REF_PROVEEDOR_AP AS REFPRV,' +
+    '       ap.CODIGO_ART_AP    AS CODART,' +
+    '       a.DESCRIPCION_ART   AS DESCRIPCION,' +
+    '       ap.PRECIO_ULT_COMPRA_AP AS PCOMPRA,' +
+    '       COALESCE((SELECT acn.NOMBRE_AC' +
+    '                   FROM fza_articulos_conjuntos_asign aca' +
+    '                   JOIN fza_atributos_conjuntos acn' +
+    '                     ON acn.ID_AC = aca.ID_AC_ACA' +
+    '                  WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART' +
+    '                    AND aca.ID_VA_ACA <> ''CO''' +
+    '                  ORDER BY aca.ID_VA_ACA LIMIT 1), '''') AS SISTEMA,' +
+    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT av.AV ORDER BY av.AV' +
+    '                                     SEPARATOR '', '')' +
+    '                   FROM fza_articulos_skus sk' +
+    '                   JOIN fza_atributos_sku sa' +
+    '                     ON sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU' +
+    '                   JOIN fza_atributos_valores av' +
+    '                     ON av.ID_AV = sa.ID_AV_SA AND av.ID_VA_AV = ''CO''' +
+    '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
+    '                    AND sk.ESACTIVO_SKU = ''S''), '''') AS COLORES' +
+    '  FROM fza_articulos_proveedores ap' +
+    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = ap.CODIGO_ART_AP' +
+    '                       AND a.ESACTIVO_ART = ''S''' +
+    ' WHERE ap.CODIGO_PRV_AP = :prv' +
+    '   AND ap.REF_PROVEEDOR_AP IS NOT NULL' +
+    '   AND ap.REF_PROVEEDOR_AP <> ''''' +
+    ' GROUP BY ap.REF_PROVEEDOR_AP, ap.CODIGO_ART_AP, a.DESCRIPCION_ART,' +
+    '          ap.PRECIO_ULT_COMPRA_AP' +
+    ' ORDER BY ap.REF_PROVEEDOR_AP';
+  FModeloBusqDs := TDataSource.Create(nil);
+  FModeloBusqDs.DataSet := FModeloBusqQry;
+  // 2. View del desplegable, en su propio repositorio (no en pantalla).
+  FModeloRepo := TcxGridViewRepository.Create(nil);
+  FModeloView := FModeloRepo.CreateItem(TcxGridDBTableView)
+                   as TcxGridDBTableView;
+  FModeloView.DataController.DataSource := FModeloBusqDs;
+  FModeloView.DataController.KeyFieldNames := 'REFPRV';
+  FModeloView.OptionsView.GroupByBox := False;
+  FModeloView.OptionsSelection.CellSelect := False;
+  FModeloView.OptionsBehavior.IncSearch := False;
+  FModeloColRef := FModeloView.CreateColumn;
+  FModeloColRef.Caption := 'Modelo';
+  FModeloColRef.DataBinding.FieldName := 'REFPRV';
+  FModeloColRef.Width := 130;
+  with FModeloView.CreateColumn do
+  begin
+    Caption := 'Descripcion';
+    DataBinding.FieldName := 'DESCRIPCION';
+    Width := 220;
+  end;
+  with FModeloView.CreateColumn do
+  begin
+    Caption := 'Tallas';
+    DataBinding.FieldName := 'SISTEMA';
+    Width := 110;
+  end;
+  with FModeloView.CreateColumn do
+  begin
+    Caption := 'Colores';
+    DataBinding.FieldName := 'COLORES';
+    Width := 180;
+  end;
+  with FModeloView.CreateColumn do
+  begin
+    Caption := 'Ult. compra';
+    DataBinding.FieldName := 'PCOMPRA';
+    Width := 80;
+  end;
+  // 3. Item de edicion ExtLookupComboBox que usa ese view.
+  FModeloEditRepo := TcxEditRepository.Create(nil);
+  FModeloCombo := FModeloEditRepo.CreateItem(
+                    TcxEditRepositoryExtLookupComboBoxItem)
+                    as TcxEditRepositoryExtLookupComboBoxItem;
+  with FModeloCombo.Properties do
+  begin
+    View := FModeloView;
+    KeyFieldNames := 'REFPRV';
+    ListFieldItem := FModeloColRef;
+    DropDownListStyle := lsEditList;     // permite teclear modelos nuevos
+    IncrementalFiltering := True;        // por defecto filtra "empieza por"
+    DropDownRows := 15;
+    DropDownAutoWidth := True;
+    // No abrir el desplegable en cada tecla: lo abre el debounce ya filtrado.
+    ImmediateDropDownWhenKeyPressed := False;
+    OnCloseUp := ModeloComboCloseUp;
+  end;
+  // 4. La columna "Modelo prov." usa el desplegable solo en celda vacia y
+  //    enfocada; con valor escrito usa el editor de texto del dfm (que
+  //    conserva el match exacto en OnEditValueChanged).
+  dbcLinRefPrv.OnGetProperties := ModeloGetProperties;
+  // 5. Timers: debounce para abrir el desplegable al teclear y resolucion
+  //    diferida al elegir (no tocar el dataset mientras se cierra el editor).
+  FModeloTimerBusq := TTimer.Create(nil);
+  FModeloTimerBusq.Enabled := False;
+  FModeloTimerBusq.Interval := 350;
+  FModeloTimerBusq.OnTimer := ModeloTimerBusqTimer;
+  FModeloTimerResolve := TTimer.Create(nil);
+  FModeloTimerResolve.Enabled := False;
+  FModeloTimerResolve.Interval := 1;
+  FModeloTimerResolve.OnTimer := ModeloTimerResolveTimer;
+  // Sentinela que no casa con ningun proveedor real: fuerza la 1a carga.
+  FModeloPrvCargado := #1;
+end;
+
+// (Re)abre el query del desplegable acotado al proveedor de la cabecera.
+// Solo relanza si cambia el proveedor (o aun no se habia abierto).
+procedure TfrmMtoComprasSesiones.RecargarModelos;
+var
+  sPrv: string;
+begin
+  if FModeloBusqQry = nil then Exit;
+  sPrv := '';
+  if (Dmm <> nil) and (Dmm.unqryTablaG <> nil) and
+     (not Dmm.unqryTablaG.IsEmpty) then
+    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if (sPrv = FModeloPrvCargado) and FModeloBusqQry.Active then Exit;
+  FModeloPrvCargado := sPrv;
+  if FModeloBusqQry.Active then FModeloBusqQry.Close;
+  FModeloBusqQry.ParamByName('prv').AsString := sPrv;
+  FModeloBusqQry.Open;
+end;
+
+// Editor por celda: celda vacia y enfocada -> ExtLookupComboBox (busqueda
+// incremental); en otro caso, el editor de texto por defecto de la columna.
+procedure TfrmMtoComprasSesiones.ModeloGetProperties(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AProperties: TcxCustomEditProperties);
+var
+  vVal: Variant;
+  bVacia, bEnfocada: Boolean;
+begin
+  if (ARecord = nil) or (FModeloCombo = nil) then Exit;
+  vVal := ARecord.Values[Sender.Index];
+  bVacia := VarIsNull(vVal) or (Trim(VarToStr(vVal)) = '');
+  bEnfocada := (tvLineas.Controller.FocusedRecord = ARecord) and
+               (tvLineas.Controller.FocusedItem = Sender);
+  if bVacia and bEnfocada then
+    AProperties := FModeloCombo.Properties;
+end;
+
+// OnChange del editor del combo: rearma el debounce que abre el desplegable
+// filtrado por lo tecleado (se engancha en tvLineasInitEdit).
+procedure TfrmMtoComprasSesiones.ModeloComboChange(Sender: TObject);
+begin
+  FModeloTimerBusq.Enabled := False;
+  FModeloTimerBusq.Enabled := True;
+end;
+
+// Al saltar el debounce abre el desplegable ya filtrado por lo tecleado,
+// como inLibGridArticulos.TimerBusqTimer.
+procedure TfrmMtoComprasSesiones.ModeloTimerBusqTimer(Sender: TObject);
+var
+  Edit  : TcxCustomEdit;
+  Combo : TcxExtLookupComboBox;
+begin
+  FModeloTimerBusq.Enabled := False;
+  if not tvLineas.Controller.EditingController.IsEditing then Exit;
+  Edit := tvLineas.Controller.EditingController.Edit;
+  if not (Edit is TcxExtLookupComboBox) then Exit;
+  Combo := TcxExtLookupComboBox(Edit);
+  if (Trim(VarToStr(Combo.EditingValue)) <> '') and
+     (not Combo.DroppedDown) then
+    Combo.DroppedDown := True;
+end;
+
+// Al cerrar el desplegable con una eleccion: guardamos el modelo y diferimos
+// la resolucion (timer 1ms) para no tocar el dataset mientras se cierra el
+// editor in-place.
+procedure TfrmMtoComprasSesiones.ModeloComboCloseUp(Sender: TObject);
+begin
+  if not (Sender is TcxCustomEdit) then Exit;
+  FModeloRefPend := VarToStr(TcxCustomEdit(Sender).EditValue);
+  if Trim(FModeloRefPend) <> '' then
+  begin
+    FModeloTimerResolve.Enabled := False;
+    FModeloTimerResolve.Enabled := True;
+  end;
+end;
+
+// Resuelve el modelo elegido. El valor es un REF_PROVEEDOR existente del
+// proveedor: ResolverDuplicadoSesion lo localiza por su rama REF y
+// AplicarDuplicadoEnLinea marca la linea REUSAR + precarga descripcion,
+// familia, sistema de tallas (fijo), coste y PVP de referencia. Si no casa
+// (modelo nuevo tecleado a mano) se deja como linea normal (alta nueva).
+procedure TfrmMtoComprasSesiones.ModeloTimerResolveTimer(Sender: TObject);
+var
+  sRef, sPrv : string;
+  rDup       : TResolverDuplicadoSesion;
+  ds         : TDataSet;
+begin
+  FModeloTimerResolve.Enabled := False;
+  sRef := Trim(FModeloRefPend);
+  FModeloRefPend := '';
+  if sRef = '' then Exit;
+  if Dmm.unqryTablaG.IsEmpty then Exit;
+  sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if sPrv = '' then Exit;
+  ds := Dmm.unqrySesionLin;
+  if ds.IsEmpty then Exit;
+  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sRef, sPrv);
+  if not rDup.Encontrado then Exit;
+  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+  // El modelo tecleado se conserva como REF de la linea (rama REF no la toca).
+  ds.FieldByName('REF_PRV_SESLIN').AsString := sRef;
+  AplicarDuplicadoEnLinea(Dmm, rDup);
+  if Assigned(FGestorTallas) then
+  begin
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
+  end;
+  // Cierra el editor para que la celda muestre el modelo resuelto.
+  if tvLineas.Controller.EditingController.IsEditing then
+    try
+      tvLineas.Controller.EditingController.HideEdit(True);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
 end;
 
 // Toda la logica reusable de tallas pivotadas (cache de conjuntos,
@@ -1748,6 +2037,16 @@ begin
   end;
   ds := Dmm.unqrySesionLin;
   if ds.IsEmpty then Exit;
+  // Al reusar un modelo ya existente el sistema de tallas queda fijado al
+  // del articulo: cambiarlo descuadraria los SKUs ya creados. Solo se
+  // permite anadir colores o tallas nuevos sobre ese mismo sistema.
+  if SameText(ds.FieldByName('ACCION_DUPLICADO_SESLIN').AsString, 'REUSAR') then
+  begin
+    MessageDlg('El sistema de tallas no se puede cambiar en un modelo que ' +
+               'ya existe: queda fijado al del articulo. Solo puedes anadir ' +
+               'colores o tallas nuevos.', mtInformation, [mbOk], 0);
+    Exit;
+  end;
   IdActual := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
   // Posicionar el popup justo debajo del editor (igual que color basico).
   ScrPt.X := -1;
@@ -2026,6 +2325,14 @@ begin
   // asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
+  // 'Modelo prov.': cuando el editor es el desplegable de busqueda
+  // incremental (celda vacia), enganchamos OnChange para abrir el
+  // desplegable filtrado al teclear (debounce), igual que inLibGridArticulos.
+  if (AItem = dbcLinRefPrv) and (AEdit is TcxExtLookupComboBox) then
+  begin
+    TcxExtLookupComboBox(AEdit).Properties.OnChange := ModeloComboChange;
+    Exit;
+  end;
   // 'Sistema tallas' ya no es un combo: es un TcxButtonEdit con ellipsis
   // que abre el listbox de 3 columnas (dbcLinTallasPropertiesButtonClick),
   // igual que el selector de color basico. No hay popup que auto-desplegar

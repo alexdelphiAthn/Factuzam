@@ -1577,11 +1577,47 @@ begin
   end;
 end;
 
+// Devuelve el PVP "padre" (CODIGO_UNIDAD_ARTTAR='') del articulo en la
+// tarifa indicada; si no hay tarifa o esa fila no existe, cae a cualquier
+// tarifa activa del articulo. 0 si el articulo no tiene tarifa. Se usa para
+// proponer en la linea el PVP anterior como referencia al reusar un modelo
+// ya existente (el usuario solo lo cambia si el documento trae otro precio).
+function ObtenerPvpArticulo(AConn: TUniConnection;
+                            const ACodArt, ACodTar: string): Double;
+var
+  q: TUniQuery;
+begin
+  Result := 0;
+  if Trim(ACodArt) = '' then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'SELECT t.PRECIO_FINAL_ARTTAR ' +
+      '  FROM fza_articulos_tarifas t ' +
+      ' WHERE t.CODIGO_ART_ARTTAR    = :art ' +
+      '   AND t.CODIGO_UNIDAD_ARTTAR = '''' ' +
+      '   AND (:tar = '''' OR t.CODIGO_TAR_ARTTAR = :tar) ' +
+      ' ORDER BY (t.CODIGO_TAR_ARTTAR = :tar) DESC, ' +
+      '          t.ESACTIVO_ARTTAR DESC ' +
+      ' LIMIT 1';
+    q.ParamByName('art').AsString := ACodArt;
+    q.ParamByName('tar').AsString := ACodTar;
+    q.Open;
+    if not q.IsEmpty then
+      Result := q.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 procedure AplicarDuplicadoEnLinea(ADM: TdmComprasSesiones;
                                    const AResul: TResolverDuplicadoSesion);
 var
   ds: TDataSet;
   sTipoLinea: string;
+  sTar: string;
+  rPvp: Double;
 begin
   if not AResul.Encontrado then Exit;
   if ADM = nil then Exit;
@@ -1630,6 +1666,22 @@ begin
   // Coste sugerido = ultimo precio de compra del proveedor (si hay).
   if AResul.UltimoCoste > 0 then
     ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat := AResul.UltimoCoste;
+
+  // PVP de referencia: precio de la tarifa de venta de la cabecera para el
+  // articulo reusado. Solo se propone si la linea aun no trae PVP, para que
+  // el usuario vea el precio anterior y solo lo cambie si el documento trae
+  // otro. Al materializar, UpsertArticuloTarifa graba este PVP (si no se
+  // toca, queda igual = "no cambia"; si se edita, actualiza la tarifa).
+  sTar := '';
+  rPvp := 0;
+  if (ADM.unqryTablaG <> nil) and (not ADM.unqryTablaG.IsEmpty) then
+  begin
+    sTar := Trim(ADM.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString);
+    rPvp := ObtenerPvpArticulo(ADM.unqryTablaG.Connection,
+                               AResul.CodigoArt, sTar);
+  end;
+  if (rPvp > 0) and (ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat <= 0) then
+    ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat := rPvp;
 
   // Si el match vino por CODIGO_ART y conocemos la REF del proveedor
   // de la cabecera, rellenamos REF_PRV_SESLIN para la traza.
