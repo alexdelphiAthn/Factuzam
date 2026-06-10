@@ -402,6 +402,7 @@ const
     '       (PRECIO_VENTA_DEP - IMPORTE_ANTICIPO_DEP) AS HUECO ' +
     'FROM fza_depositos_cliente ' +
     'WHERE CODIGO_CLI_DEP = :c AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '  AND CANTIDAD_PENDIENTE_DEP > 0 ' +
     '  AND USUARIO_ALTA = :u ' +
     'ORDER BY FECHA_CREACION_DEP, ID_DEPOSITO_DEP';
 var
@@ -437,25 +438,94 @@ begin
   while (i < n) and (fRest > 0.005) do
   begin
     fHueco := aHueco[i];
-    // Depósito sin precio (hueco <= 0): absorbe lo que quede del cobro.
-    if fHueco <= 0 then
-      fHueco := fRest;
-    fPago := fRest;
-    if fPago > fHueco then
-      fPago := fHueco;
-    AcumularAnticipo(Eng, aId[i], fPago);
-    if Result = '' then
-      Result := aId[i];
-    fRest := fRest - fPago;
+    // Solo acreditamos hasta el HUECO real del deposito (precio - anticipo).
+    // Si no tiene hueco (precio 0 o ya cubierto) lo saltamos: nunca dejamos
+    // anticipo > precio. Y el SOBRANTE (cobro mayor que la deuda de los
+    // depositos del cliente) se DESCARTA — antes se volcaba en el primer
+    // deposito sobre-acreditandolo. El cobro sigue registrado como pago.
+    if fHueco > 0 then
+    begin
+      fPago := fRest;
+      if fPago > fHueco then
+        fPago := fHueco;
+      AcumularAnticipo(Eng, aId[i], fPago);
+      if Result = '' then
+        Result := aId[i];
+      fRest := fRest - fPago;
+    end;
     Inc(i);
   end;
-  // Sobrante (cobro mayor que el hueco total): lo dejamos en el primero.
-  if (fRest > 0.005) and (n > 0) then
-  begin
-    AcumularAnticipo(Eng, aId[0], fRest);
-    if Result = '' then
-      Result := aId[0];
-  end;
+end;
+
+// Netea las devoluciones de deposito (-1) con su prestamo (+1) del mismo
+// cliente y SKU (FIFO por fecha): cierra AMBOS. Las lineas AL de devolucion
+// creaban un deposito -1 PENDIENTE que no cerraba su +1 original; aqui se
+// cuadran. Idempotente (re-ejecutar no encuentra devoluciones PENDIENTE).
+// ORDEN: primero cerramos los +1 (mientras las -1 siguen PENDIENTE para poder
+// contarlas) y luego las -1 (incluidas las huerfanas sin +1).
+procedure NetearDevolucionesDeposito(Eng: TMigEngine);
+var
+  sU: string;
+begin
+  sU := ValorOrNull(Eng.Usuario);
+  // 1) Cerrar los N prestamos +1 mas antiguos por (cliente, SKU), donde
+  //    N = nº de devoluciones de ese SKU.
+  EjecutarSQL(Eng,
+    'UPDATE fza_depositos_cliente d ' +
+    'JOIN ( ' +
+    '  SELECT p.ID_DEPOSITO_DEP ' +
+    '  FROM ( ' +
+    '    SELECT ID_DEPOSITO_DEP, CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP, ' +
+    '           ROW_NUMBER() OVER ( ' +
+    '             PARTITION BY CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP ' +
+    '             ORDER BY FECHA_CREACION_DEP, ID_DEPOSITO_DEP) AS rn ' +
+    '    FROM fza_depositos_cliente ' +
+    '    WHERE CANTIDAD_PENDIENTE_DEP > 0 AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '      AND USUARIO_ALTA = ' + sU + ' ' +
+    '  ) p ' +
+    '  JOIN ( ' +
+    '    SELECT CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP, COUNT(*) AS n_ret ' +
+    '    FROM fza_depositos_cliente ' +
+    '    WHERE CANTIDAD_PENDIENTE_DEP < 0 AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '      AND USUARIO_ALTA = ' + sU + ' ' +
+    '    GROUP BY CODIGO_CLI_DEP, CODIGO_UNIDAD_DEP ' +
+    '  ) r ON r.CODIGO_CLI_DEP = p.CODIGO_CLI_DEP ' +
+    '     AND r.CODIGO_UNIDAD_DEP = p.CODIGO_UNIDAD_DEP ' +
+    '  WHERE p.rn <= r.n_ret ' +
+    ') m ON m.ID_DEPOSITO_DEP = d.ID_DEPOSITO_DEP ' +
+    'SET d.ESTADO_DEP = ''CERRADO'', d.INSTANTE_MODIF = NOW()');
+  // 2) Cerrar todas las devoluciones -1 (incluidas las huerfanas sin +1).
+  EjecutarSQL(Eng,
+    'UPDATE fza_depositos_cliente ' +
+    'SET ESTADO_DEP = ''CERRADO'', INSTANTE_MODIF = NOW() ' +
+    'WHERE CANTIDAD_PENDIENTE_DEP < 0 AND ESTADO_DEP = ''PENDIENTE'' ' +
+    '  AND USUARIO_ALTA = ' + sU);
+  Eng.Log('  depositos: devoluciones (-1) neteadas con su prestamo (FIFO).');
+end;
+
+// Calcula la deuda actual de cada cliente = suma de (precio - anticipo) de sus
+// prestamos PENDIENTE (positivos) y la guarda en fza_clientes.TOTAL_DEUDA_CLI.
+// Va DESPUES de NetearDevolucionesDeposito (asi los PENDIENTE son solo
+// prestamos reales abiertos). Requiere que el dominio 'clientes' ya este
+// migrado; si no, no actualiza nada (join vacio).
+procedure ActualizarDeudaClientes(Eng: TMigEngine);
+var
+  sU: string;
+begin
+  sU := ValorOrNull(Eng.Usuario);
+  EjecutarSQL(Eng,
+    'UPDATE fza_clientes c ' +
+    'LEFT JOIN ( ' +
+    '  SELECT CODIGO_CLI_DEP, ' +
+    '         SUM(PRECIO_VENTA_DEP - IMPORTE_ANTICIPO_DEP) AS deuda ' +
+    '  FROM fza_depositos_cliente ' +
+    '  WHERE ESTADO_DEP = ''PENDIENTE'' AND CANTIDAD_PENDIENTE_DEP > 0 ' +
+    '    AND USUARIO_ALTA = ' + sU + ' ' +
+    '  GROUP BY CODIGO_CLI_DEP ' +
+    ') d ON d.CODIGO_CLI_DEP = c.CODIGO_CLI_CLI ' +
+    'SET c.TOTAL_DEUDA_CLI = COALESCE(d.deuda, 0), c.INSTANTE_MODIF = NOW() ' +
+    'WHERE c.USUARIO_ALTA = ' + sU);
+  Eng.Log('  clientes: deuda actual (prestamos abiertos) actualizada.');
 end;
 
 // =========================================================================
@@ -718,6 +788,11 @@ begin
         sUltimoCli := sCli;
       qSrc.Next;
     end;
+    // Cuadrar depositos: netear las devoluciones (-1) con su prestamo (+1)
+    // del mismo cliente y SKU, dejando ambos CERRADO; luego volcar la deuda
+    // (prestamos abiertos) a la ficha del cliente (TOTAL_DEUDA_CLI).
+    NetearDevolucionesDeposito(Eng);
+    ActualizarDeudaClientes(Eng);
   finally
     qDep.Free;
     qPago.Free;

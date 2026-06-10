@@ -332,8 +332,15 @@ begin
     'fza_codigos_barras',
     MigrarArticulosSkus);
   FEngine.Registrar('inventarios', 'Inventario inicial (stock)',
-    'dbo.ocartacp → fza_inventarios + fza_inventarios_lineas',
+    'dbo.ocartacp → fza_inventarios + movs regularizacion (IN) + stock',
     MigrarInventarios);
+  // Inventarios REALES del legacy (recuentos): documentos ocinv/ocinvarp →
+  // fza_inventarios + lineas. Sus movimientos de regularizacion ya los trae
+  // 'movimientos' (estan en ocmovarp), enlazados por Serie + Numero. Es
+  // COMPLEMENTARIO (no alternativo): puedes correrlo junto a movimientos.
+  FEngine.Registrar('inventarios_legacy', 'Inventarios legacy (recuentos)',
+    'dbo.ocinv/ocinvarp → fza_inventarios + fza_inventarios_lineas',
+    MigrarInventariosLegacy);
   // ALTERNATIVA a "Inventario inicial": migra el histórico de movimientos
   // y reconstruye el stock desde él. Ejecuta una u otra, no ambas.
   FEngine.Registrar('movimientos', 'Movimientos histórico (stock)',

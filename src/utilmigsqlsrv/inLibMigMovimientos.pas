@@ -64,6 +64,12 @@ uses
   UMigEngine;
 
 procedure MigrarMovimientos(Eng: TMigEngine; var Stats: TMigStats);
+// Reconstruye fza_articulos_stockactual agregando TODOS los movimientos
+// activos (cantidad neta + acumuladores por subtipo + PMP del ultimo). Se
+// exporta para que el inventario inicial — que ahora genera sus propios
+// movimientos de regularizacion 'IV' — cuadre el stock con el mismo
+// criterio sin duplicar el SQL.
+procedure ReconstruirStockDesdeMovimientos(Eng: TMigEngine);
 
 implementation
 
