@@ -130,7 +130,6 @@ implementation
 uses
   inMtoArticulos,
   inLibGlobalVar,
-  inLibAppParam,
   System.Diagnostics,
   inLibtb;
 
