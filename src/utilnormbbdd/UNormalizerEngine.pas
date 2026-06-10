@@ -242,11 +242,15 @@ begin
   AddSuf('fza_config_campos',                   'CC');
   AddSuf('fza_contadores',                      'CON');
   AddSuf('fza_depositos_cliente',               'DEP');
+  AddSuf('fza_efectos_compra',                  'EFEC');
+  AddSuf('fza_efectos_compra_pagos',            'EFECPAG');
   AddSuf('fza_empleados',                       'EMPL');
   AddSuf('fza_empresas',                        'EMP');
   AddSuf('fza_empresas_retenciones',            'EMPRET');
   AddSuf('fza_empresas_series',                 'EMPSER');
   AddSuf('fza_facturas',                        'FAC');
+  AddSuf('fza_facturas_compra',                 'FACC');
+  AddSuf('fza_facturas_compra_lineas',          'FACCLIN');
   AddSuf('fza_facturas_consolidaciones',        'FACCON');
   AddSuf('fza_facturas_lineas',                 'FACLIN');
   AddSuf('fza_facturas_pagos',                  'FACPAG');
@@ -273,8 +277,10 @@ begin
   AddSuf('fza_proveedores_familias',            'PF');
   AddSuf('fza_proveedores_familias_conjuntos',  'PFC');
   AddSuf('fza_recibos',                         'REC');
+  AddSuf('fza_remesas_compra',                  'REMC');
   AddSuf('fza_tarifas',                         'TAR');
   AddSuf('fza_tipos_documentos',                'TD');
+  AddSuf('fza_tipos_efecto',                    'TEFE');
   AddSuf('fza_traspasos_solicitudes',           'TRSOL');
   AddSuf('fza_traspasos_solicitudes_lineas',    'TRSOLLIN');
   AddSuf('fza_unidades_medida',                 'UNIMED');
@@ -307,6 +313,8 @@ begin
   FConceptToSuffix.AddOrSetValue('BASICO',    'ATB');
   FConceptToSuffix.AddOrSetValue('TIPODOCUMENTO', 'TD');
   FConceptToSuffix.AddOrSetValue('GENERADORPROCESO', 'GP');
+  FConceptToSuffix.AddOrSetValue('EFECTO',    'EFEC');
+  FConceptToSuffix.AddOrSetValue('REMESA',    'REMC');
 
   // ========== Concepto propio por tabla (palabras a barrer del nombre) ==========
   // Tablas con sufijo SIMPLE (concepto = una palabra):
@@ -368,6 +376,12 @@ begin
   AddOwn('fza_codigos_barras',                 ['BARRAS','CODIGO_BARRAS']);
   AddOwn('fza_config_campos',                  ['CAMPO']);
   AddOwn('fza_valores_defecto',                ['DEFECTO']);
+  AddOwn('fza_facturas_compra',                ['FACTURA','COMPRA']);
+  AddOwn('fza_facturas_compra_lineas',         ['FACTURA','COMPRA','LINEA']);
+  AddOwn('fza_efectos_compra',                 ['EFECTO','COMPRA']);
+  AddOwn('fza_efectos_compra_pagos',           ['EFECTO','COMPRA','PAGO']);
+  AddOwn('fza_remesas_compra',                 ['REMESA','COMPRA']);
+  AddOwn('fza_tipos_efecto',                   ['TIPO','EFECTO']);
 
   // ========== Auditoría ==========
   FAuditRenames.AddOrSetValue('INSTANTEALTA',  'INSTANTE_ALTA');
