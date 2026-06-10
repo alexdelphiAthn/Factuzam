@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpMovVentasArt                                     }
 {    Tipo:       Formulario (Modal)                                            }
@@ -38,7 +38,8 @@ uses
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxRadioGroup,
   cxCheckListBox, cxCheckBox, cxCustomListBox,
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
-  frLocalization, frLanguageSpanish, frCoreClasses, inLibGlobalVar;
+  frLocalization, frLanguageSpanish, frCoreClasses, inLibGlobalVar,
+  frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab, cxLocalization;
 
 type
   TfrmPrintMovVentasArt = class(TfrmPrintMultiFiltro)
@@ -132,13 +133,13 @@ begin
     FchkSoloVentas.Left    := 220;
     FchkSoloVentas.Top     := 72;
     FchkSoloVentas.Width   := 210;
-    FchkSoloVentas.Caption := 'Solo art' + #237 + 'culos con ventas';
+    FchkSoloVentas.Caption := 'Solo artículos con ventas';
   end;
   // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada reordenables
   // + spin de nivel de familia (igual que el balance de almacén).
   CrearTabAgrupacion('Agrupaciones',
     ['ALM', 'PRV', 'FAM', 'TMP'],
-    ['Almac' + #233 + 'n', 'Proveedor', 'Familia', 'Temporada'], True);
+    ['Almacén', 'Proveedor', 'Familia', 'Temporada'], True);
 end;
 
 procedure TfrmPrintMovVentasArt.chkIniComprasChange(Sender: TObject);

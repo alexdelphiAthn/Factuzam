@@ -17,6 +17,7 @@ unit inLibLectorScanner;
   OnCreate, asignar OnCodigoLeido, llamar a KeyDown/KeyPress desde los eventos
   OnKeyDown/OnKeyPress del form (que debe tener KeyPreview := True) y liberar la
   instancia en el OnDestroy. }
+
 interface
 uses
   Windows, Messages, Classes, Controls;
@@ -94,12 +95,15 @@ type
     property OnEsControlRejilla: TConsultaControl read FOnEsControlRejilla
                                                   write FOnEsControlRejilla;
   end;
+
 implementation
+
 uses
   Forms, SysUtils, cxTextEdit, cxEdit;
 const
   // Mensaje interno para diferir el procesado fuera del KeyPress/KeyDown.
   WM_LECTOR_PROCESAR = WM_USER + 200;
+
 constructor TLectorScanner.Create;
 begin
   inherited Create;
@@ -110,12 +114,14 @@ begin
   FConsumirRafaga := False;
   FOmitirEnRejilla := False;
 end;
+
 destructor TLectorScanner.Destroy;
 begin
   if FHandle <> 0 then
     Classes.DeallocateHWnd(FHandle);
   inherited Destroy;
 end;
+
 // Recibe el mensaje diferido y dispara el procesado de negocio ya fuera del
 // flujo de teclas (cxGrid / jvEnterTab han terminado de procesar la tecla).
 procedure TLectorScanner.WndProc(var Msg: TMessage);
@@ -131,6 +137,7 @@ begin
   else
     Msg.Result := DefWindowProc(FHandle, Msg.Msg, Msg.WParam, Msg.LParam);
 end;
+
 // True si el control es (o esta dentro de) la rejilla que el form declara como
 // suya. Sin callback no hay rejilla -> False.
 function TLectorScanner.EsControlRejilla(AControl: TControl): Boolean;
@@ -140,10 +147,12 @@ begin
   else
     Result := False;
 end;
+
 function TLectorScanner.EnRejilla: Boolean;
 begin
   Result := EsControlRejilla(Screen.ActiveControl);
 end;
+
 // Guarda el control con foco y su texto al iniciar una rafaga, para poder
 // restaurarlo si la lectura entro con el foco fuera de la rejilla. Se llama en
 // KeyPress (KeyPreview), antes de que el control reciba el caracter.
@@ -154,6 +163,7 @@ begin
   if (FControl <> nil) and (FControl is TcxCustomTextEdit) then
     FTextoPrevio := TcxCustomTextEdit(FControl).Text;
 end;
+
 procedure TLectorScanner.RestaurarControl;
 begin
   if (FControl <> nil) and (FControl is TcxCustomTextEdit)
@@ -170,6 +180,7 @@ begin
   FControl := nil;
   FTextoPrevio := '';
 end;
+
 // Acumula la rafaga y la cadencia; la decision final (rafaga + Enter rapido) se
 // toma en KeyDown, para adelantarse al editor del grid y a jvEnterTab.
 procedure TLectorScanner.KeyPress(var Key: Char);
@@ -260,6 +271,7 @@ begin
     end;
   end;
 end;
+
 // Cierra el detector por velocidad: si hay rafaga acumulada y el Enter llega
 // igual de rapido, lo tratamos como lectura y lo encaminamos al procesado.
 procedure TLectorScanner.KeyDown(var Key: Word; Shift: TShiftState);
@@ -291,4 +303,5 @@ begin
     end;
   end;
 end;
+
 end.
