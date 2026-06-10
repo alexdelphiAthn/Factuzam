@@ -798,6 +798,15 @@
                   TabOrder = 1
                   OnClick = btnEditarClick
                 end
+                object btnCopiarDatos: TcxButton
+                  Left = 6
+                  Top = 88
+                  Width = 106
+                  Height = 34
+                  Caption = 'Copiar &Datos'
+                  TabOrder = 2
+                  OnClick = btnCopiarDatosClick
+                end
               end
             end
             object tsOtros: TcxTabSheet
