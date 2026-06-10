@@ -24,6 +24,8 @@ más relevantes.
 | [06 · Menú Almacén](06-menu-almacen.md) | Movimientos de almacén, Inventarios e Informes de stock. |
 | [07 · Menú Otros](07-menu-otros.md) | Parámetros del entorno, IVA, Contadores, Usuarios/Permisos, Copias de seguridad y Generador de procesos. |
 | [08 · Menú Ayuda](08-menu-ayuda.md) | Acerca de y datos de versión. |
+| [09 · Instalación en Windows](09-instalacion-windows.md) | MariaDB, base de datos inicial, instalación por puesto y puesta en marcha. |
+| [10 · Migración desde software legacy](10-migracion-legacy.md) | Traslado de datos del ERP anterior (SQL Server) con el Factuzam Migrator. |
 
 ---
 
