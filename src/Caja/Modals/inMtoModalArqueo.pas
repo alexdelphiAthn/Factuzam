@@ -484,7 +484,7 @@ begin
     '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
     '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-    '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ' +
+    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
     '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
     '  ORDER BY o.CODIGO_EMPLEADO_OPCAJA                                  ';
 
@@ -505,7 +505,7 @@ begin
     '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
     '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
-    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                            ' +
+    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
     '  GROUP BY p.CODIGO_FP_CFP                                           ' +
     '  ORDER BY p.CODIGO_FP_CFP                                           ';
 
@@ -558,7 +558,7 @@ begin
     '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                  ' +
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                     ' +
     '    AND o.FECHA_OPERACION_OPCAJA  >= :pFDESDE                  ' +
-    '    AND o.FECHA_OPERACION_OPCAJA  <= :pFHASTA                  ' +
+    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
     '  GROUP BY FAMILIA                                             ' +
     '  ORDER BY FAMILIA                                             ';
 
@@ -657,7 +657,7 @@ begin
     '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
     '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-    '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ' +
+    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
     '  GROUP BY ap.CODIGO_PROP_ARTPROP, VALOR                             ' +
     '  ORDER BY ap.CODIGO_PROP_ARTPROP, VALOR                             ';
 end;
