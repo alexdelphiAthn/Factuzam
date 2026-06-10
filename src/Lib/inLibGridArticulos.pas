@@ -380,36 +380,32 @@ begin
   // de proveedor del articulo, para poder filtrarlos al teclear (igual que el
   // validador resuelve por barras o modelo de proveedor). El valor elegido
   // sigue siendo el SKU.
-  // Rendimiento: barras / referencias / stock se agregan en derivadas con
-  // GROUP BY (una pasada por tabla) en vez de subconsultas correladas, que
-  // MariaDB re-ejecutaba por cada SKU (~9 s con catalogos grandes).
+  // Rendimiento: subconsultas correladas A PROPOSITO. Con los indices de
+  // apoyo (DESARROLLOS EN CURSO/indices_busqueda_skus.sql: IDX_UNIDAD_CB,
+  // IDX_AP_ART_PRINC y la PK de stockactual) cada una es un lookup puntual
+  // y el plan es estable. La variante con LEFT JOIN de derivadas agregadas
+  // se descarto: el optimizador de la instalacion real no indexaba las
+  // tablas materializadas y tardaba ~30 s (vs ~9 s sin indices).
   FBusqQry.SQL.Text :=
     'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
     '       a.DESCRIPCION_ART AS DESCRIPCION,' +
-    '       COALESCE(cb.CODBARRAS, '''') AS CODBARRAS,' +
-    '       COALESCE(rp.REFPRV, '''') AS REFPRV,' +
-    '       COALESCE(stk.STOCK, 0) AS STOCK' +
+    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT cb.CODIGO_BARRAS_CB' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_codigos_barras cb' +
+    '                  WHERE cb.CODIGO_UNIDAD_CB = s.CODIGO_UNIDAD_SKU),' +
+    '                '''') AS CODBARRAS,' +
+    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_articulos_proveedores ap' +
+    '                  WHERE ap.CODIGO_ART_AP = s.CODIGO_ART_SKU' +
+    '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
+    '         AS REFPRV,' +
+    '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
+    '                   FROM fza_articulos_stockactual st' +
+    '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
+    '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
     '  FROM fza_articulos_skus s' +
     '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
-    '  LEFT JOIN (SELECT CODIGO_UNIDAD_CB,' +
-    '                    GROUP_CONCAT(DISTINCT CODIGO_BARRAS_CB' +
-    '                                 SEPARATOR '' '') AS CODBARRAS' +
-    '               FROM fza_codigos_barras' +
-    '              GROUP BY CODIGO_UNIDAD_CB) cb' +
-    '         ON cb.CODIGO_UNIDAD_CB = s.CODIGO_UNIDAD_SKU' +
-    '  LEFT JOIN (SELECT CODIGO_ART_AP,' +
-    '                    GROUP_CONCAT(DISTINCT REF_PROVEEDOR_AP' +
-    '                                 SEPARATOR '' '') AS REFPRV' +
-    '               FROM fza_articulos_proveedores' +
-    '              WHERE REF_PROVEEDOR_AP IS NOT NULL' +
-    '              GROUP BY CODIGO_ART_AP) rp' +
-    '         ON rp.CODIGO_ART_AP = s.CODIGO_ART_SKU' +
-    '  LEFT JOIN (SELECT CODIGO_UNIDAD_STK,' +
-    '                    SUM(CANTIDAD_STK) AS STOCK' +
-    '               FROM fza_articulos_stockactual' +
-    '              WHERE CODIGO_ALM_STK = :ALM' +
-    '              GROUP BY CODIGO_UNIDAD_STK) stk' +
-    '         ON stk.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
     ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
     '   AND a.TIPO_ART = ''ESTANDAR''' +
     ' ORDER BY STOCK DESC, s.CODIGO_UNIDAD_SKU';
@@ -754,29 +750,25 @@ begin
     Q.Connection := FConn;
     // Articulos (no SKU, como inMtoCajaOpe). Stock = suma de los SKUs del
     // articulo en el almacen origen (0 si no hay o no se fijo almacen).
-    // Rendimiento: referencias y stock agregados en derivadas con GROUP BY
-    // (una pasada por tabla) en vez de subconsultas correladas por articulo.
+    // Rendimiento: correladas a proposito, como el desplegable (vease el
+    // comentario de CrearLookupBusqueda). Requieren los indices de
+    // DESARROLLOS EN CURSO/indices_busqueda_skus.sql.
     Q.SQL.Text :=
       'SELECT a.CODIGO_ART_ART AS ARTICULO,' +
       '       a.DESCRIPCION_ART AS DESCRIPCION,' +
-      '       COALESCE(rp.REFPRV, '''') AS REFPRV,' +
-      '       COALESCE(stk.STOCK, 0) AS STOCK' +
+      '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
+      '                                     SEPARATOR '' '')' +
+      '                   FROM fza_articulos_proveedores ap' +
+      '                  WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART' +
+      '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
+      '         AS REFPRV,' +
+      '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
+      '                   FROM fza_articulos_stockactual st' +
+      '                   JOIN fza_articulos_skus sk' +
+      '                     ON sk.CODIGO_UNIDAD_SKU = st.CODIGO_UNIDAD_STK' +
+      '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
+      '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
       '  FROM fza_articulos a' +
-      '  LEFT JOIN (SELECT CODIGO_ART_AP,' +
-      '                    GROUP_CONCAT(DISTINCT REF_PROVEEDOR_AP' +
-      '                                 SEPARATOR '' '') AS REFPRV' +
-      '               FROM fza_articulos_proveedores' +
-      '              WHERE REF_PROVEEDOR_AP IS NOT NULL' +
-      '              GROUP BY CODIGO_ART_AP) rp' +
-      '         ON rp.CODIGO_ART_AP = a.CODIGO_ART_ART' +
-      '  LEFT JOIN (SELECT sk.CODIGO_ART_SKU,' +
-      '                    SUM(st.CANTIDAD_STK) AS STOCK' +
-      '               FROM fza_articulos_stockactual st' +
-      '               JOIN fza_articulos_skus sk' +
-      '                 ON sk.CODIGO_UNIDAD_SKU = st.CODIGO_UNIDAD_STK' +
-      '              WHERE st.CODIGO_ALM_STK = :ALM' +
-      '              GROUP BY sk.CODIGO_ART_SKU) stk' +
-      '         ON stk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
       ' WHERE a.ESACTIVO_ART = ''S'' AND a.TIPO_ART = ''ESTANDAR''' +
       ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
     Q.ParamByName('ALM').AsString := FAlmacenStock;
