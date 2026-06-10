@@ -102,9 +102,11 @@ type
     // teclear en la celda de articulo, tras una breve pausa abre el desplegable
     // ya filtrado. No se arma durante una trama del lector (rafaga STX/ETX).
     FTimerBusq: TTimer;
+    // Ultimo texto consultado en el desplegable (evita reabrir igual).
+    FUltimoFiltro: string;
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
-    procedure AsegurarBusquedaAbierta;
+    procedure AbrirBusquedaFiltrada(const ATexto: string);
     procedure ComboBusqInitPopup(Sender: TObject);
     procedure DispararResolucionScan(const ACodigo: string);
     procedure ArticuloGetProperties(Sender: TcxCustomGridTableItem;
@@ -372,47 +374,17 @@ end;
 // query de SKU + datasource + view en su propio repositorio + item de edicion.
 procedure TGridArticulosLineas.CrearLookupBusqueda;
 begin
-  // 1. Query con la lista de SKU (codigo, descripcion y stock en origen). Se
-  //    carga entera pero de forma perezosa (primer despliegue); el filtrado
-  //    mientras tecleas es en cliente (IncrementalFiltering). El stock
-  //    depende del almacen (param :ALM).
+  // 1. Query del desplegable de SKU. El filtrado es EN SERVIDOR: cada
+  //    tecleo (>= 3 letras, con debounce) consulta el top-100 que coincide
+  //    por SKU / barras / referencia (prefijo) o descripcion (contenido).
+  //    El stock depende del almacen (param :ALM).
   //    (El boton buscador lista articulos; aqui en el desplegable, SKU.)
   FBusqQry := TUniQuery.Create(nil);
   FBusqQry.Connection := FConn;
-  // Ademas del SKU se traen el/los codigo(s) de barras y la(s) referencia(s)
-  // de proveedor del articulo, para poder filtrarlos al teclear (igual que el
-  // validador resuelve por barras o modelo de proveedor). El valor elegido
-  // sigue siendo el SKU.
-  // Rendimiento: subconsultas correladas A PROPOSITO. Con los indices de
-  // apoyo (DESARROLLOS EN CURSO/indices_busqueda_skus.sql: IDX_UNIDAD_CB,
-  // IDX_AP_ART_PRINC y la PK de stockactual) cada una es un lookup puntual
-  // y el plan es estable. La variante con LEFT JOIN de derivadas agregadas
-  // se descarto: el optimizador de la instalacion real no indexaba las
-  // tablas materializadas y tardaba ~30 s (vs ~9 s sin indices).
-  FBusqQry.SQL.Text :=
-    'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
-    '       a.DESCRIPCION_ART AS DESCRIPCION,' +
-    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT cb.CODIGO_BARRAS_CB' +
-    '                                     SEPARATOR '' '')' +
-    '                   FROM fza_codigos_barras cb' +
-    '                  WHERE cb.CODIGO_UNIDAD_CB = s.CODIGO_UNIDAD_SKU),' +
-    '                '''') AS CODBARRAS,' +
-    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
-    '                                     SEPARATOR '' '')' +
-    '                   FROM fza_articulos_proveedores ap' +
-    '                  WHERE ap.CODIGO_ART_AP = s.CODIGO_ART_SKU' +
-    '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
-    '         AS REFPRV,' +
-    '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
-    '                   FROM fza_articulos_stockactual st' +
-    '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
-    '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
-    '  FROM fza_articulos_skus s' +
-    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
-    ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
-    '   AND a.TIPO_ART = ''ESTANDAR''' +
-    ' ORDER BY STOCK DESC, s.CODIGO_UNIDAD_SKU';
-  FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
+  // El SQL se fija en cada busqueda (AbrirBusquedaFiltrada): con catalogos
+  // de cientos de miles de SKU (FAUSTINO: ~700k activos) precargar entero
+  // es inviable; se consulta en servidor el top-100 que coincide con lo
+  // tecleado y se calculan barras / referencias / stock solo de esos 100.
   FBusqDs := TDataSource.Create(nil);
   FBusqDs.DataSet := FBusqQry;
   // 2. View del desplegable, dentro de su repositorio (no en pantalla).
@@ -464,7 +436,11 @@ begin
     KeyFieldNames := 'SKU';
     ListFieldItem := FBusqColSku;
     DropDownListStyle := lsEditList;
-    IncrementalFiltering := True;
+    // El filtrado es en servidor (AbrirBusquedaFiltrada): el dataset ya
+    // contiene solo coincidencias. El filtro incremental cliente se
+    // desactiva porque filtra por la columna SKU y ocultaria filas
+    // halladas por descripcion / barras / referencia.
+    IncrementalFiltering := False;
     DropDownRows := 15;
     DropDownAutoWidth := True;
     // NO abrir el desplegable al teclear: si se abre, las teclas siguientes van
@@ -472,8 +448,8 @@ begin
     // del lector (rapidez / STX-ETX) no recibe el codigo. El usuario abre el
     // desplegable con F4 o el boton de busqueda cuando quiera buscar a mano.
     ImmediateDropDownWhenKeyPressed := False;
-    // Carga perezosa: el dataset de sugerencias se abre la primera vez que
-    // se despliega de verdad (F4 / debounce / boton del combo).
+    // El dataset de sugerencias se consulta al desplegar (F4 / debounce /
+    // boton del combo), filtrado en servidor por lo tecleado.
     OnInitPopup := ComboBusqInitPopup;
     OnCloseUp := ComboBusqCloseUp;
     // Boton para el buscador completo (mismo que el ButtonEdit).
@@ -482,42 +458,129 @@ begin
       Kind := bkEllipsis;
     OnButtonClick := ArticuloButtonClick;
   end;
-  // No se abre aqui ni al fijar el almacen: cargar el catalogo completo
-  // (3 subconsultas por SKU) cuesta varios segundos con catalogos grandes
-  // y bloqueaba la entrada al formulario (LOG FAUSTINO 10/06/2026: 7-9 s).
-  // Se abre de forma perezosa en AsegurarBusquedaAbierta al desplegar.
+  // No se abre nada aqui ni al fijar el almacen: la consulta se lanza al
+  // desplegar la busqueda (AbrirBusquedaFiltrada), acotada a 100 filas.
+  // Precargar el catalogo completo bloqueaba la entrada al formulario
+  // (LOG FAUSTINO 10/06/2026: 7-9 s con ~700k SKUs activos).
 end;
 
 // Invalida el desplegable (cierra el dataset si estaba abierto). Se llama
 // al cambiar el almacen origen: el stock mostrado depende de el. La
-// reapertura es perezosa (AsegurarBusquedaAbierta, via OnInitPopup).
+// reapertura llega con la proxima busqueda (AbrirBusquedaFiltrada).
 procedure TGridArticulosLineas.RecargarBusqueda;
 begin
   if (FBusqQry <> nil) and FBusqQry.Active then
     FBusqQry.Close;
 end;
 
-// Abre el dataset de sugerencias si aun no lo esta, con el stock del
-// almacen actual. Solo lo paga quien despliega la busqueda manual: el
-// flujo de pistola / Enter resuelve por el validador y no pasa por aqui.
-procedure TGridArticulosLineas.AsegurarBusquedaAbierta;
+// Consulta en servidor el top-100 de SKUs que coincide con ATexto: por
+// prefijo en SKU / codigo de barras / referencia de proveedor (cada rama
+// del UNION ataca su indice) y por contenido en la descripcion. Barras,
+// referencias y stock se calculan solo para esas <=100 filas. Con ATexto
+// vacio (F4 sin teclear) lista los 100 primeros SKUs por codigo. El flujo
+// de pistola / Enter resuelve por el validador y no pasa por aqui.
+procedure TGridArticulosLineas.AbrirBusquedaFiltrada(const ATexto: string);
+const
+  SQL_CABECERA =
+    'SELECT x.SKU,' +
+    '       x.DESCRIPCION,' +
+    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT cb.CODIGO_BARRAS_CB' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_codigos_barras cb' +
+    '                  WHERE cb.CODIGO_UNIDAD_CB = x.SKU), '''')' +
+    '         AS CODBARRAS,' +
+    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_articulos_proveedores ap' +
+    '                  WHERE ap.CODIGO_ART_AP = x.ART' +
+    '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
+    '         AS REFPRV,' +
+    '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
+    '                   FROM fza_articulos_stockactual st' +
+    '                  WHERE st.CODIGO_UNIDAD_STK = x.SKU' +
+    '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
+    '  FROM ';
+  SQL_SIN_FILTRO =
+    '(SELECT s.CODIGO_UNIDAD_SKU AS SKU, s.CODIGO_ART_SKU AS ART,' +
+    '        a.DESCRIPCION_ART AS DESCRIPCION' +
+    '   FROM fza_articulos_skus s' +
+    '   JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
+    '  WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+    '    AND a.TIPO_ART = ''ESTANDAR''' +
+    '  ORDER BY s.CODIGO_UNIDAD_SKU LIMIT 100) x';
+  SQL_CON_FILTRO =
+    '((SELECT s.CODIGO_UNIDAD_SKU AS SKU, s.CODIGO_ART_SKU AS ART,' +
+    '         a.DESCRIPCION_ART AS DESCRIPCION' +
+    '    FROM fza_articulos_skus s' +
+    '    JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
+    '   WHERE s.CODIGO_UNIDAD_SKU LIKE :TPREF' +
+    '     AND s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+    '     AND a.TIPO_ART = ''ESTANDAR'' LIMIT 100)' +
+    '  UNION' +
+    '  (SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, a.DESCRIPCION_ART' +
+    '     FROM fza_articulos a' +
+    '     JOIN fza_articulos_skus s' +
+    '       ON s.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
+    '    WHERE a.DESCRIPCION_ART LIKE :TDESC' +
+    '      AND s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+    '      AND a.TIPO_ART = ''ESTANDAR'' LIMIT 100)' +
+    '  UNION' +
+    '  (SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, a.DESCRIPCION_ART' +
+    '     FROM fza_codigos_barras cb' +
+    '     JOIN fza_articulos_skus s' +
+    '       ON s.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB' +
+    '     JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
+    '    WHERE cb.CODIGO_BARRAS_CB LIKE :TPREF' +
+    '      AND s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+    '      AND a.TIPO_ART = ''ESTANDAR'' LIMIT 100)' +
+    '  UNION' +
+    '  (SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, a.DESCRIPCION_ART' +
+    '     FROM fza_articulos_proveedores ap' +
+    '     JOIN fza_articulos_skus s' +
+    '       ON s.CODIGO_ART_SKU = ap.CODIGO_ART_AP' +
+    '     JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
+    '    WHERE ap.REF_PROVEEDOR_AP LIKE :TPREF' +
+    '      AND s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
+    '      AND a.TIPO_ART = ''ESTANDAR'' LIMIT 100)' +
+    ' ) x';
+  SQL_ORDEN = ' ORDER BY STOCK DESC, x.SKU LIMIT 100';
 begin
-  if (FBusqQry <> nil) and (not FBusqQry.Active) then
+  // Reabre solo si cambia el texto o el dataset esta invalidado (cambio
+  // de almacen / primera vez).
+  if (FBusqQry <> nil) and
+     not (FBusqQry.Active and (FUltimoFiltro = ATexto)) then
   begin
     Screen.Cursor := crHourGlass;
     try
+      if FBusqQry.Active then
+        FBusqQry.Close;
+      if ATexto = '' then
+        FBusqQry.SQL.Text := SQL_CABECERA + SQL_SIN_FILTRO + SQL_ORDEN
+      else
+      begin
+        FBusqQry.SQL.Text := SQL_CABECERA + SQL_CON_FILTRO + SQL_ORDEN;
+        FBusqQry.ParamByName('TPREF').AsString := ATexto + '%';
+        FBusqQry.ParamByName('TDESC').AsString := '%' + ATexto + '%';
+      end;
       FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
       FBusqQry.Open;
+      FUltimoFiltro := ATexto;
     finally
       Screen.Cursor := crDefault;
     end;
   end;
 end;
 
-// Primer despliegue del combo de busqueda (F4 / debounce / boton).
+// Despliegue del combo de busqueda (F4 / boton / debounce): consulta con
+// el texto que haya en el editor ('' = top-100 por codigo).
 procedure TGridArticulosLineas.ComboBusqInitPopup(Sender: TObject);
+var
+  sTexto: string;
 begin
-  AsegurarBusquedaAbierta;
+  sTexto := '';
+  if Sender is TcxExtLookupComboBox then
+    sTexto := Trim(VarToStr(TcxExtLookupComboBox(Sender).EditingValue));
+  AbrirBusquedaFiltrada(sTexto);
 end;
 
 procedure TGridArticulosLineas.SetAlmacenStock(const AValue: string);
@@ -611,13 +674,14 @@ begin
   end;
 end;
 
-// Al saltar el debounce abre el desplegable de busqueda ya filtrado por lo
-// tecleado (IncrementalFiltering), como inMtoCajaOpe.tmrBusqTimer. Solo si
-// seguimos editando la celda de articulo con el combo y hay texto.
+// Al saltar el debounce consulta en servidor lo tecleado y abre el
+// desplegable con las coincidencias. Minimo 3 caracteres: con prefijos
+// mas cortos un catalogo de cientos de miles de SKU devuelve demasiado.
 procedure TGridArticulosLineas.TimerBusqTimer(Sender: TObject);
 var
   Edit: TcxCustomEdit;
   Combo: TcxExtLookupComboBox;
+  sTexto: string;
 begin
   FTimerBusq.Enabled := False;
   if FView.Controller.EditingController.IsEditing then
@@ -626,9 +690,13 @@ begin
     if Edit is TcxExtLookupComboBox then
     begin
       Combo := TcxExtLookupComboBox(Edit);
-      if (Trim(VarToStr(Combo.EditingValue)) <> '') and
-         (not Combo.DroppedDown) then
-        Combo.DroppedDown := True;
+      sTexto := Trim(VarToStr(Combo.EditingValue));
+      if Length(sTexto) >= 3 then
+      begin
+        AbrirBusquedaFiltrada(sTexto);
+        if not Combo.DroppedDown then
+          Combo.DroppedDown := True;
+      end;
     end;
   end;
 end;
