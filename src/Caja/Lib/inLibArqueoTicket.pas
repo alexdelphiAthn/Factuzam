@@ -344,7 +344,7 @@ begin
       ' WITH RECURSIVE fam_ruta AS (                                  ' +
       '   SELECT CODIGO_FAM_FAM,                                      ' +
       '          CAST(COALESCE(NOMBRE_FAM_FAM, CODIGO_FAM_FAM)        ' +
-      '               AS CHAR(2000)) AS RUTA                          ' +
+      '               AS CHAR(2000)) COLLATE utf8mb4_spanish_ci AS RUTA' +
       '     FROM fza_articulos_familias                               ' +
       '    WHERE CODIGO_SUBFAMILIA_FAM IS NULL                        ' +
       '       OR CODIGO_SUBFAMILIA_FAM = ''''                         ' +
