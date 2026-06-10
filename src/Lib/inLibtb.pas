@@ -171,16 +171,30 @@ end;
 function ExtraerTablaDeSQL(const aSQL: string): string;
 var
   sUp: string;
-  iFrom, iEnd, i: Integer;
+  iFrom, iEnd, i, nNivel: Integer;
 begin
   Result := '';
   sUp := UpperCase(Trim(aSQL));
-  iFrom := Pos('FROM ', sUp);
-  if iFrom = 0 then
-    iFrom := Pos('FROM'#9, sUp);
+  // FROM del SELECT principal: palabra completa y fuera de parentesis, para
+  // no confundirlo con el FROM de un subquery en la lista de campos
+  iFrom := 0;
+  nNivel := 0;
+  i := 1;
+  while (i <= Length(sUp) - 3) and (iFrom = 0) do
+  begin
+    if sUp[i] = '(' then
+      Inc(nNivel);
+    if sUp[i] = ')' then
+      Dec(nNivel);
+    if (nNivel = 0) and (Copy(sUp, i, 4) = 'FROM') and
+       ((i = 1) or (sUp[i - 1] <= ' ')) and
+       ((i + 4 > Length(sUp)) or (sUp[i + 4] <= ' ')) then
+      iFrom := i;
+    Inc(i);
+  end;
   if iFrom = 0 then
     Exit;
-  i := iFrom + 5;
+  i := iFrom + 4;
   while (i <= Length(sUp)) and (sUp[i] <= ' ') do
     Inc(i);
   iEnd := i;
@@ -197,6 +211,33 @@ var
   i: Integer;
   sTabla: string;
   qry: TUniQuery;
+  // La clave solo sirve si TODOS sus campos estan en el dataset: un SELECT
+  // que no traiga la PK completa haria saltar "Key Field not found" en
+  // DevExpress al asignarla a KeyFieldNames y enfocar una fila
+  function ClaveEnDataSet(const sClave: string): Boolean;
+  var
+    slCampos: TStringList;
+    j: Integer;
+  begin
+    Result := sClave <> '';
+    if Result then
+    begin
+      slCampos := TStringList.Create;
+      try
+        slCampos.Delimiter := ';';
+        slCampos.StrictDelimiter := True;
+        slCampos.DelimitedText := StringReplace(sClave, ',', ';',
+                                                [rfReplaceAll]);
+        for j := 0 to slCampos.Count - 1 do
+        begin
+          if ADataSet.FindField(Trim(slCampos[j])) = nil then
+            Result := False;
+        end;
+      finally
+        FreeAndNil(slCampos);
+      end;
+    end;
+  end;
 begin
   Result := '';
   if not Assigned(ADataSet) or not ADataSet.Active then
@@ -205,6 +246,8 @@ begin
   if ADataSet is TUniQuery then
   begin
     Result := TUniQuery(ADataSet).KeyFields;
+    if not ClaveEnDataSet(Result) then
+      Result := '';
     if Result <> '' then
       Exit;
   end;
@@ -251,6 +294,9 @@ begin
     finally
       FreeAndNil(qry);
     end;
+    // La PK real puede no estar completa en el SELECT (consultas parciales)
+    if not ClaveEnDataSet(Result) then
+      Result := '';
   end;
 end;
 
