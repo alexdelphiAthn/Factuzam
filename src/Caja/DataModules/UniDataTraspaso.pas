@@ -27,6 +27,11 @@ type
   // atender una solicitud que me han hecho.
   TModoTraspaso = (mtTraspaso, mtSolicitar, mtAtender);
 
+  // Validación de negocio (stock insuficiente, líneas incompletas, destino
+  // sin elegir...). El formulario la captura y la muestra como aviso
+  // (ShowMessage); no debe llegar al diálogo de error no controlado.
+  EValidacionTraspaso = class(Exception);
+
   TdmTraspaso = class(TDataModule)
     cdsCabecera: TClientDataSet;
     cdsLineas: TClientDataSet;
@@ -259,7 +264,7 @@ begin
     // Articulo tecleado pero SKU sin cerrar (falta color/talla): es un intento
     // real, no se graba a medias -> avisamos y abortamos.
     else if (sSku = '') or (not SkuExiste(sSku)) then
-      raise Exception.CreateFmt(
+      raise EValidacionTraspaso.CreateFmt(
         'El artículo "%s" no tiene el SKU completo (elige color/talla). ' +
         'SKU: "%s"', [sArt, sSku])
     else
@@ -291,7 +296,7 @@ begin
     cdsLineas.Next;
   end;
   if sFalta <> '' then
-    raise Exception.Create(
+    raise EValidacionTraspaso.Create(
       'No hay stock suficiente en el almacén origen (' + AAlmacenOrigen +
       '):'#13#10 + sFalta);
 end;
@@ -545,16 +550,16 @@ begin
   // Quita la linea en blanco y la fantasma antes de mover stock.
   LimpiarLineasIncompletas;
   if cdsLineas.IsEmpty then
-    raise Exception.Create('No hay líneas que traspasar.');
+    raise EValidacionTraspaso.Create('No hay líneas que traspasar.');
   if Trim(AAlmacenDestino) = '' then
-    raise Exception.Create('Selecciona el almacén destino.');
+    raise EValidacionTraspaso.Create('Selecciona el almacén destino.');
   sEmpresa := cdsCabecera.FieldByName('CODIGO_EMP').AsString;
   sAlmacenOrigen := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
   sUsuario := inLibGlobalVar.oUser;
   sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
   if SameText(sAlmacenOrigen, AAlmacenDestino) then
-    raise Exception.Create('Origen y destino no pueden ser el mismo almacén.');
+    raise EValidacionTraspaso.Create('Origen y destino no pueden ser el mismo almacén.');
   // No traspasar sin stock: aborta antes de mover nada si alguna linea se
   // pasa de lo disponible en origen (evita el stock negativo).
   ValidarStockOrigen(sAlmacenOrigen);
@@ -612,7 +617,7 @@ begin
         cdsLineas.Next;
       end;
       if iLinea = 0 then
-        raise Exception.Create('No hay líneas que traspasar.');
+        raise EValidacionTraspaso.Create('No hay líneas que traspasar.');
       // Operación de caja del traspaso (cabecera del documento). Si atiende
       // una solicitud, se enlaza por SERIE/NUMERO_REF_ORIGEN.
       InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,
@@ -711,9 +716,9 @@ begin
   // Quita la linea en blanco y la fantasma antes de grabar la solicitud.
   LimpiarLineasIncompletas;
   if cdsLineas.IsEmpty then
-    raise Exception.Create('No hay líneas que solicitar.');
+    raise EValidacionTraspaso.Create('No hay líneas que solicitar.');
   if Trim(AAlmacenOrigen) = '' then
-    raise Exception.Create('Selecciona el almacén al que solicitas.');
+    raise EValidacionTraspaso.Create('Selecciona el almacén al que solicitas.');
   sEmpresa := cdsCabecera.FieldByName('CODIGO_EMP').AsString;
   // En mtSolicitar el propio (CODIGO_ALM_ORIGEN) es el DESTINO de la petición.
   sAlmacenPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
@@ -721,7 +726,7 @@ begin
   sUsuario := inLibGlobalVar.oUser;
   sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
   if SameText(sAlmacenPropio, AAlmacenOrigen) then
-    raise Exception.Create('No puedes solicitarte a ti mismo.');
+    raise EValidacionTraspaso.Create('No puedes solicitarte a ti mismo.');
   sEmpContra := ObtenerEmpresaAlmacen(AAlmacenOrigen);
   ANumero := inLibtb.ObtenerSiguienteContador('TS');
   ASerie := 'TS';
@@ -784,7 +789,7 @@ begin
         cdsLineas.Next;
       end;
       if iLinea = 0 then
-        raise Exception.Create('No hay líneas que solicitar.');
+        raise EValidacionTraspaso.Create('No hay líneas que solicitar.');
       oConn.Commit;
       Result := True;
     except
@@ -919,7 +924,7 @@ begin
   sNum := cdsCabecera.FieldByName('NUMERO_SOL').AsString;
   sSer := cdsCabecera.FieldByName('SERIE_SOL').AsString;
   if (Trim(sNum) = '') or (Trim(sSer) = '') then
-    raise Exception.Create('No hay solicitud cargada que denegar.');
+    raise EValidacionTraspaso.Create('No hay solicitud cargada que denegar.');
   QryTrx := TUniQuery.Create(nil);
   try
     QryTrx.Connection := oConn;
