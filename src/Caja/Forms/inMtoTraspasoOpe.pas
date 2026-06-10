@@ -125,6 +125,7 @@ type
     procedure ActualizarTotal;
     procedure QuitarLinea;
     procedure EjecutarTraspaso(AConTicket: Boolean);
+    procedure EjecutarTraspasoInterno(AConTicket: Boolean);
     procedure EnviarSolicitud;
     procedure CargarSolicitudSeleccionada;
     function EmpleadoValido: Boolean;
@@ -1067,10 +1068,16 @@ begin
         finally
           FDatos.cdsLineas.EnableControls;
         end;
-        if FDatos.GrabarDenegacion then
-        begin
-          ShowMessage('Petición denegada (DENEGADO TOTAL).');
-          AplicarModo(mtAtender);
+        try
+          if FDatos.GrabarDenegacion then
+          begin
+            ShowMessage('Petición denegada (DENEGADO TOTAL).');
+            AplicarModo(mtAtender);
+          end;
+        except
+          // Validaciones de negocio: aviso normal (EValidacionTraspaso).
+          on E: EValidacionTraspaso do
+            ShowMessage(E.Message);
         end;
       end;
     end;
@@ -1103,12 +1110,22 @@ begin
     sOrigen := DestinoSeleccionado;
     if sOrigen = '' then
       ShowMessage('Selecciona el almacén al que solicitas.')
-    else if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
+    else
     begin
-      ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
-      // Ticket de la solicitud: cada SKU con stock origen / destino.
-      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer, oNomImpresoraCaja);
-      AplicarModo(mtSolicitar);
+      try
+        if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
+        begin
+          ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
+          // Ticket de la solicitud: cada SKU con stock origen / destino.
+          TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer,
+                                            oNomImpresoraCaja);
+          AplicarModo(mtSolicitar);
+        end;
+      except
+        // Validaciones de negocio: aviso normal (vease EValidacionTraspaso).
+        on E: EValidacionTraspaso do
+          ShowMessage(E.Message);
+      end;
     end;
   end;
 end;
@@ -1184,7 +1201,21 @@ begin
   end;
 end;
 
+// Envoltorio de la grabación: las validaciones de negocio del data module
+// (stock insuficiente, líneas incompletas...) llegan como
+// EValidacionTraspaso y se muestran como aviso normal, no como error no
+// controlado.
 procedure TfrmMtoOpeTraspaso.EjecutarTraspaso(AConTicket: Boolean);
+begin
+  try
+    EjecutarTraspasoInterno(AConTicket);
+  except
+    on E: EValidacionTraspaso do
+      ShowMessage(E.Message);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.EjecutarTraspasoInterno(AConTicket: Boolean);
 var
   sNumOp, sDestino, sOrigen, sEmpleado, sNumSol, sSerSol: string;
   iServidas: Integer;
