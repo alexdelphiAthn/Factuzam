@@ -185,7 +185,7 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
       '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-      '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ';
+      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
@@ -290,7 +290,7 @@ begin
       '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
       '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
       '    AND o.TIPO_OPERACION_OPCAJA = ''DV''                             ' +
       '  GROUP BY p.CODIGO_FP_CFP                                           ' +
       '  ORDER BY p.CODIGO_FP_CFP                                           ';
@@ -383,7 +383,7 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                  ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                     ' +
       '    AND o.FECHA_OPERACION_OPCAJA  >= :pFDESDE                  ' +
-      '    AND o.FECHA_OPERACION_OPCAJA  <= :pFHASTA                  ' +
+      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
       '  GROUP BY FAMILIA                                             ' +
       '  ORDER BY NETO DESC                                           ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
@@ -436,7 +436,7 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
       '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-      '    AND o.FECHA_OPERACION_OPCAJA    <= :pFHASTA                         ' +
+      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
       '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
       '  ORDER BY NETO DESC                                                 ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
@@ -492,7 +492,7 @@ begin
       '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
       '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
       '  GROUP BY p.CODIGO_FP_CFP, fp.DESCRIPCION_FORMA_PAGO_CFP            ' +
       '  ORDER BY IMP DESC                                                  ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
@@ -547,7 +547,7 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                          ' +
       '    AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                             ' +
       '    AND o.FECHA_OPERACION_OPCAJA  >= :pFDESDE                           ' +
-      '    AND o.FECHA_OPERACION_OPCAJA  <= :pFHASTA                           ' +
+      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
       '  GROUP BY f.SERIE_FAC                                               ' +
       '  ORDER BY f.SERIE_FAC                                               ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
