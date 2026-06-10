@@ -41,6 +41,8 @@ uses
 const
   ecSelColumnMode = 2577;
   ecSelLineMode = 2578;
+  // Tag que marca las pestañas de resultados creadas al ejecutar un script
+  TAG_PESTANA_RESULTADO = 777;
 
 type
   TfrmMtoGeneradorProcesos = class(TfrmMtoGen)
@@ -219,6 +221,21 @@ type
                               SQL: string;
                               var Action: TErrorAction);
     procedure ScriptAfterExecute(Sender: TObject; SQL: string);
+    function PrimeraLineaUtil(const ASQL: string): string;
+    function SentenciaDevuelveFilas(const ASQL: string): Boolean;
+    procedure TrocearScript(const ASQL: string;
+                            slSentencias: TStrings);
+    procedure LimpiarPestanasResultado;
+    function CrearPestanaResultado(const ACaption: string): TcxTabSheet;
+    function CrearPestanaVistaDatos(const ACaption: string;
+                                    AQuery: TUniQuery): TcxTabSheet;
+    function CrearPestanaComando(const ACaption: string;
+                                 const ATexto: string): TcxTabSheet;
+    function EjecutarSentenciaEnPestana(const ASQL: string;
+                                        var AVistas: Integer;
+                                        var AComandos: Integer;
+                                        var ASeguir: Boolean): TcxTabSheet;
+    procedure EjecutarScriptPorPestanas(slSentencias: TStrings);
   end;
 
 var
@@ -768,20 +785,296 @@ begin
   tvMetadatostvVista.OptionsData.Appending := True;
 end;
 
+function TfrmMtoGeneradorProcesos.PrimeraLineaUtil(const ASQL: string): string;
+var
+  i: Integer;
+  sLinea: string;
+  slLineas: TStringList;
+begin
+  // Primera linea con contenido que no sea comentario '--': sirve para
+  // clasificar la sentencia y para descartar fragmentos solo-comentario
+  Result := '';
+  slLineas := TStringList.Create;
+  try
+    slLineas.Text := ASQL;
+    for i := 0 to slLineas.Count - 1 do
+    begin
+      sLinea := Trim(slLineas[i]);
+      if ((Result = '') and (sLinea <> '') and (Pos('--', sLinea) <> 1)) then
+        Result := sLinea;
+    end;
+  finally
+    FreeAndNil(slLineas);
+  end;
+end;
+
+function TfrmMtoGeneradorProcesos.SentenciaDevuelveFilas(
+  const ASQL: string): Boolean;
+var
+  sUpper: string;
+begin
+  // EXPLAIN / DESCRIBE / DESC devuelven resultset igual que un SELECT, asi
+  // que los tratamos como tal para que el usuario pueda inspeccionar el plan
+  // de ejecucion desde el generador.
+  sUpper := UpperCase(PrimeraLineaUtil(ASQL));
+  Result := (Pos('SELECT', sUpper) = 1) or
+            (Pos('CALL', sUpper) = 1) or
+            (Pos('SHOW', sUpper) = 1) or
+            (Pos('EXPLAIN ', sUpper) = 1) or
+            (Pos('DESCRIBE ', sUpper) = 1) or
+            (Pos('DESC ', sUpper) = 1);
+end;
+
+procedure TfrmMtoGeneradorProcesos.TrocearScript(const ASQL: string;
+                                                 slSentencias: TStrings);
+var
+  uScript: TUniScript;
+  i: Integer;
+  sSentencia: string;
+begin
+  slSentencias.Clear;
+  // Los scripts con DELIMITER (procedimientos) no se trocean: los ejecuta
+  // enteros TUniScript por el camino clasico de comandos
+  if Pos('DELIMITER ', UpperCase(ASQL)) > 0 then
+    slSentencias.Add(ASQL)
+  else
+  begin
+    uScript := TUniScript.Create(nil);
+    try
+      try
+        uScript.Connection := oConn;
+        uScript.SQL.Text := ASQL;
+        // El parser de TUniScript respeta comentarios y literales al trocear
+        for i := 0 to uScript.Statements.Count - 1 do
+        begin
+          sSentencia := Trim(uScript.Statements[i].SQL);
+          if PrimeraLineaUtil(sSentencia) <> '' then
+            slSentencias.Add(sSentencia);
+        end;
+      except
+        // Si el parser no puede trocear, ejecutamos el script entero
+        slSentencias.Clear;
+        slSentencias.Add(ASQL);
+      end;
+    finally
+      FreeAndNil(uScript);
+    end;
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.LimpiarPestanasResultado;
+var
+  i: Integer;
+begin
+  // Reset automatico: eliminamos las pestañas de resultados de la ejecucion
+  // anterior; cada pestaña libera su grid y su query al destruirse
+  for i := pcPestana.PageCount - 1 downto 0 do
+  begin
+    if pcPestana.Pages[i].Tag = TAG_PESTANA_RESULTADO then
+    begin
+      if pcPestana.ActivePage = pcPestana.Pages[i] then
+        pcPestana.ActivePage := tsSQL;
+      pcPestana.Pages[i].Free;
+    end;
+  end;
+end;
+
+function TfrmMtoGeneradorProcesos.CrearPestanaResultado(
+  const ACaption: string): TcxTabSheet;
+begin
+  Result := TcxTabSheet.Create(Self);
+  Result.PageControl := pcPestana;
+  Result.Caption := ACaption;
+  // Marca para que LimpiarPestanasResultado las localice
+  Result.Tag := TAG_PESTANA_RESULTADO;
+end;
+
+function TfrmMtoGeneradorProcesos.CrearPestanaVistaDatos(
+  const ACaption: string;
+  AQuery: TUniQuery): TcxTabSheet;
+var
+  dsDatos: TDataSource;
+  grdDatos: TcxGrid;
+  tvDatos: TcxGridDBTableView;
+  lvDatos: TcxGridLevel;
+begin
+  Result := CrearPestanaResultado(ACaption);
+  // La pestaña pasa a ser propietaria de la query y la libera con ella
+  Result.InsertComponent(AQuery);
+  dsDatos := TDataSource.Create(Result);
+  dsDatos.DataSet := AQuery;
+  grdDatos := TcxGrid.Create(Result);
+  grdDatos.Parent := Result;
+  grdDatos.Align := alClient;
+  tvDatos := grdDatos.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
+  tvDatos.Navigator.Visible := True;
+  tvDatos.DataController.DataSource := dsDatos;
+  tvDatos.OptionsData.Editing := False;
+  tvDatos.OptionsData.Inserting := False;
+  tvDatos.OptionsData.Deleting := False;
+  tvDatos.OptionsView.GroupByBox := False;
+  tvDatos.OptionsView.NoDataToDisplayInfoText := '<No hay datos a mostrar>';
+  lvDatos := grdDatos.Levels.Add;
+  lvDatos.GridView := tvDatos;
+  tvDatos.DataController.CreateAllItems();
+  tvDatos.ApplyBestFit();
+end;
+
+function TfrmMtoGeneradorProcesos.CrearPestanaComando(
+  const ACaption: string;
+  const ATexto: string): TcxTabSheet;
+var
+  memSalida: TcxMemo;
+begin
+  Result := CrearPestanaResultado(ACaption);
+  memSalida := TcxMemo.Create(Result);
+  memSalida.Parent := Result;
+  memSalida.Align := alClient;
+  memSalida.Properties.ReadOnly := True;
+  memSalida.Properties.ScrollBars := ssBoth;
+  memSalida.Lines.Text := ATexto;
+end;
+
+function TfrmMtoGeneradorProcesos.EjecutarSentenciaEnPestana(
+  const ASQL: string;
+  var AVistas: Integer;
+  var AComandos: Integer;
+  var ASeguir: Boolean): TcxTabSheet;
+var
+  qryDatos: TUniQuery;
+  startTime: TDateTime;
+  sFormatteddt, sError, sCaption: string;
+  bConResultado, bConFilas: Boolean;
+begin
+  Result := nil;
+  bConResultado := SentenciaDevuelveFilas(ASQL);
+  bConFilas := False;
+  sError := '';
+  qryDatos := TUniQuery.Create(nil);
+  try
+    qryDatos.Connection := oConn;
+    qryDatos.SQL.Text := ASQL;
+    startTime := Now;
+    try
+      if bConResultado then
+      begin
+        qryDatos.Open;
+        bConFilas := qryDatos.FieldCount > 0;
+      end
+      else
+        qryDatos.Execute;
+    except on E: Exception do
+      sError := E.Message;
+    end;
+    // Si el Open fallo por no devolver filas, reintentamos como comando,
+    // igual que hace el caso de sentencia unica
+    if ((sError <> '') and bConResultado) then
+    begin
+      try
+        qryDatos.Execute;
+        sError := '';
+      except on E: Exception do
+        sError := E.Message;
+      end;
+    end;
+    DateTimeToString(sFormatteddt, 'ss:zzz', (Now - startTime));
+    if sError <> '' then
+    begin
+      Inc(AComandos);
+      sCaption := 'Command' + IntToStr(AComandos);
+      cxmResul.Lines.Add('-- [ERROR] ' + sCaption + ': ' + sError);
+      Result := CrearPestanaComando(sCaption,
+                                    ASQL + sLineBreak + sLineBreak +
+                                    '-- [ERROR] ' + sError);
+      var sMsgCorta := sError;
+      if Length(sMsgCorta) > 60 then
+        sMsgCorta := Copy(sMsgCorta, 1, 60) + '...';
+      // Preguntamos si seguimos con el resto del script
+      ASeguir := MessageDlg('Ocurrió un error ejecutando ' + sCaption + '.' +
+                            sLineBreak + 'Detalle: ' + sMsgCorta +
+                            sLineBreak + sLineBreak +
+                            '¿Desea ignorar el error y continuar con el ' +
+                            'script?',
+                            mtError, [mbYes, mbNo], 0) = mrYes;
+    end
+    else
+    begin
+      if bConFilas then
+      begin
+        Inc(AVistas);
+        sCaption := 'VistaDatos' + IntToStr(AVistas);
+        cxmResul.Lines.Add(sCaption + ': ' +
+                           IntToStr(qryDatos.RecordCount) +
+                           ' registros en ' + sFormatteddt + ' seg:ms');
+        Result := CrearPestanaVistaDatos(sCaption, qryDatos);
+        // La query ya pertenece a la pestaña: no liberarla en el finally
+        qryDatos := nil;
+      end
+      else
+      begin
+        Inc(AComandos);
+        sCaption := 'Command' + IntToStr(AComandos);
+        cxmResul.Lines.Add(sCaption + ': ' +
+                           IntToStr(qryDatos.RowsAffected) +
+                           ' filas afectadas en ' + sFormatteddt + ' seg:ms');
+        Result := CrearPestanaComando(sCaption,
+                                      ASQL + sLineBreak + sLineBreak +
+                                      '-- [OK] Filas afectadas: ' +
+                                      IntToStr(qryDatos.RowsAffected) +
+                                      ' en ' + sFormatteddt + ' seg:ms');
+      end;
+    end;
+  finally
+    FreeAndNil(qryDatos);
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.EjecutarScriptPorPestanas(
+  slSentencias: TStrings);
+var
+  i, iVistas, iComandos: Integer;
+  bSeguir: Boolean;
+  tsPrimera, tsNueva: TcxTabSheet;
+begin
+  iVistas := 0;
+  iComandos := 0;
+  bSeguir := True;
+  tsPrimera := nil;
+  cxmResul.Lines.Add('-- Script con ' + IntToStr(slSentencias.Count) +
+                     ' sentencias (' +
+                     FormatDateTime('hh:nn:ss.zzz', Now) + ')');
+  for i := 0 to slSentencias.Count - 1 do
+  begin
+    if bSeguir then
+    begin
+      tsNueva := EjecutarSentenciaEnPestana(slSentencias[i],
+                                            iVistas,
+                                            iComandos,
+                                            bSeguir);
+      if ((tsPrimera = nil) and (tsNueva <> nil)) then
+        tsPrimera := tsNueva;
+    end;
+  end;
+  cxmResul.Lines.Add('--------------------------------------------------');
+  // Mostramos la primera pestaña de resultados creada
+  if tsPrimera <> nil then
+    pcPestana.ActivePage := tsPrimera;
+end;
+
 procedure TfrmMtoGeneradorProcesos.btnEjecutarClick(Sender: TObject);
 var
   startTime: TDateTime;
   iRowsAffected: Integer;
   sFormatteddt, sSQL: String;
   bIsSelect: Boolean;
-  uScript:TUniScript;
+  uScript: TUniScript;
+  slSentencias: TStringList;
 begin
   inherited;
   if ((
     dsTablaG.DataSet.State = dsInsert) or (
       dsTablaG.DataSet.State = dsEdit)) then
     dsTablaG.DataSet.Post;
-
   with dmmGeneradorProcesos do
   begin
     // 1. Editor activo: el que tiene el foco si es uno de los SynEdit; si no,
@@ -792,7 +1085,6 @@ begin
       ActiveEditor := syndtEstructura
     else
       ActiveEditor := DBSynEdit1;
-
     // 2. Si hay seleccion en el editor activo, ejecutamos solo eso.
     //    Si no, ejecutamos todo el texto VISIBLE de ese editor (no el del
     //    campo del dataset, que puede estar desfasado respecto a lo escrito).
@@ -800,113 +1092,115 @@ begin
       sSQL := ActiveEditor.SelText
     else
       sSQL := ActiveEditor.Lines.Text;
-
     sSQL := Trim(sSQL);
-
     // Si está totalmente vacío, salimos para evitar errores de base de datos
     if sSQL = '' then
       Exit;
-
-    // Determinamos si es una consulta que espera filas.
-    // EXPLAIN / DESCRIBE / DESC devuelven resultset igual que un SELECT, asi
-    // que los tratamos como tal para que el usuario pueda inspeccionar el plan
-    // de ejecucion desde el generador.
-    var sSQLUpper: String;
-    sSQLUpper := UpperCase(sSQL);
-    bIsSelect := (Pos('SELECT', sSQLUpper) = 1) or
-                 (Pos('CALL', sSQLUpper) = 1) or
-                 (Pos('SHOW', sSQLUpper) = 1) or
-                 (Pos('EXPLAIN ', sSQLUpper) = 1) or
-                 (Pos('DESCRIBE ', sSQLUpper) = 1) or
-                 (Pos('DESC ', sSQLUpper) = 1);
-
-    if bIsSelect then
-    begin
-      unqryVista.Close;
-      tvVista.ClearItems;
-      unqryVista.SQL.Text := sSQL;
-      try
-        startTime := Now;
-        unqryVista.Open; // Intentamos abrir como Dataset
-
-        // Verificamos si realmente devolvió columnas (útil para CALLs que no
-        // devuelven nada)
-        if unqryVista.FieldCount > 0 then
+    // Reset automatico: quitamos las pestañas de la ejecucion anterior
+    LimpiarPestanasResultado;
+    // Con varias sentencias, cada una se ejecuta en su propia pestaña
+    // (VistaDatosN / CommandN); con una sola se mantiene el comportamiento
+    // clasico sobre la pestaña fija VistaDatos
+    slSentencias := TStringList.Create;
+    try
+      TrocearScript(sSQL, slSentencias);
+      if slSentencias.Count > 1 then
+        EjecutarScriptPorPestanas(slSentencias)
+      else
+      begin
+        bIsSelect := SentenciaDevuelveFilas(sSQL);
+        if bIsSelect then
         begin
-          DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
-          cxmResul.Lines.Add('Procedimiento/Consulta ejecutada. ' +
-                             IntToStr(unqryVista.RecordCount) +
-                             ' registros en ' + sformatteddt + ' seg:ms');
-          if (tvVista.DataController.DataSource.dataset.RecordCount > 0) then
-          begin
-            pcPestana.ActivePage := tsVistaDatos;
-            tvVista.DataController.CreateAllItems();
-            tvVista.ApplyBestFit();
+          unqryVista.Close;
+          tvVista.ClearItems;
+          unqryVista.SQL.Text := sSQL;
+          try
+            startTime := Now;
+            unqryVista.Open; // Intentamos abrir como Dataset
+            // Verificamos si realmente devolvió columnas (útil para CALLs
+            // que no devuelven nada)
+            if unqryVista.FieldCount > 0 then
+            begin
+              DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
+              cxmResul.Lines.Add('Procedimiento/Consulta ejecutada. ' +
+                                 IntToStr(unqryVista.RecordCount) +
+                                 ' registros en ' + sformatteddt +
+                                 ' seg:ms');
+              if unqryVista.RecordCount > 0 then
+              begin
+                pcPestana.ActivePage := tsVistaDatos;
+                tvVista.DataController.CreateAllItems();
+                tvVista.ApplyBestFit();
+              end;
+            end
+            else
+            begin
+              // Si es un CALL que no devuelve filas, actua como comando
+              iRowsAffected := unqryVista.RowsAffected;
+              cxmResul.Lines.Add('-- Comando(' +
+                                 FormatDateTime('hh:nn:ss.zzz', Now) +
+                                 '): ' + sLineBreak + sSQL + sLineBreak +
+                                 ' -- ejecutado con éxito. ' +
+                                 'Filas afectadas: ' +
+                                 IntToStr(iRowsAffected));
+            end;
+          except on E: Exception do
+            begin
+              // Si falla el Open por no ser un SELECT/Resultset,
+              // reintentamos como comando
+              try
+                unqryVista.Execute;
+                cxmResul.Lines.Add('-- Comando(' +
+                                   FormatDateTime('hh:nn:ss.zzz', Now) +
+                                   '): ' + sLineBreak + sSQL + sLineBreak +
+                                   ' -- ejecutado correctamente ' +
+                                   '(sin filas de retorno).');
+              except on E2: Exception do
+                begin
+                  cxmResul.Lines.Add('-- Error(' +
+                                     FormatDateTime('hh:nn:ss.zzz', Now) +
+                                     '): ' + sLineBreak + sSQL + sLineBreak +
+                                     '-- ' + E2.Message);
+                  ShowMessage('Error en ejecución: ' + E2.Message);
+                end;
+              end;
+            end;
           end;
         end
         else
         begin
-          // Si es un CALL que no devuelve filas, se comporta como comando
-          iRowsAffected := unqryVista.RowsAffected;
-          cxmResul.Lines.Add('-- Comando('+FormatDateTime('hh:nn:ss.zzz',
-                                                          Now)+'): '
-                             +sLineBreak + sSQL + sLineBreak +
-           ' -- ejecutado con éxito. Filas afectadas: '
-             + IntToStr(iRowsAffected));
-        end;
-      except on E: Exception do
-        begin
-          // Si falla el Open por no ser un SELECT/Resultset, reintentamos con
-          // ExecSQL
+          uScript := TUniScript.Create(nil);
+          uScript.Connection := oConn;
+          uScript.OnError := UniScript1Error;
+          uScript.AfterExecute := ScriptAfterExecute;
           try
-            unqryVista.Execute;
-            cxmResul.Lines.Add('-- Comando('+
-                                       FormatDateTime('hh:nn:ss.zzz', Now)+'): '
-                               + sLineBreak + sSQL + sLineBreak +
-                         ' -- ejecutado correctamente (sin filas de retorno).');
-          except on E2: Exception do
-            begin
-              cxmResul.Lines.Add('-- Error('+FormatDateTime('hh:nn:ss.zzz',
-                                                            Now)+
-                                 '): ' + sLineBreak+ sSQL+ sLineBreak
-                                 + '-- '+ E2.Message);
-              ShowMessage('Error en ejecución: ' + E2.Message);
+            // Comandos directos (INSERT, UPDATE, DELETE)
+            uScript.SQL.Text := sSQL;
+            try
+              startTime := Now;
+              uScript.Execute;
+              iRowsAffected := uScript.RowsAffected;
+              DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
+              var sCommand := Copy(sSQL, 1, 20);
+              if sSQL.Length > 20 then
+                sCommand := sCommand + '...';
+              cxmResul.Lines.Add('Comando:' + sCommand + ' ejecutado. ' +
+                                 IntToStr(iRowsAffected) +
+                                 ' registros afectados en ' + sformatteddt +
+                                 ' seg:ms');
+            except on E: Exception do
+              begin
+                cxmResul.Lines.Add(E.Message);
+                ShowMessage('Error en comando SQL: ' + E.Message);
+              end;
             end;
+          finally
+            FreeAndNil(uScript);
           end;
         end;
       end;
-    end
-    else
-    begin
-      uScript := TUniScript.Create(nil);
-      uScript.Connection := oConn;
-      showMessage(oConn.Database);
-      uScript.OnError := UniScript1Error;
-      uScript.AfterExecute := ScriptAfterExecute;
-      try
-        // Comandos directos (INSERT, UPDATE, DELETE)
-        uScript.SQL.Text := sSQL;
-        try
-          startTime := Now;
-          uScript.Execute;
-          iRowsAffected := uScript.RowsAffected;
-          DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
-          var sCommand := Copy(sSQL,1,20);
-          if sSQL.Length > 20 then
-            sCommand := sCommand + '...';
-          cxmResul.Lines.Add('Comando:'+sCommand+ ' ejecutado. ' + IntToStr(
-            iRowsAffected) +
-                             ' registros afectados en ' + sformatteddt
-                               + ' seg:ms');
-        except on E: Exception do
-          begin
-            cxmResul.Lines.Add(E.Message);
-            ShowMessage('Error en comando SQL: ' + E.Message);
-          end;
-        end;
-      finally
-        FreeAndNil(uScript);
-      end;
+    finally
+      FreeAndNil(slSentencias);
     end;
   end;
 end;
@@ -1070,6 +1364,8 @@ end;
 procedure TfrmMtoGeneradorProcesos.ResetForm;
 begin
   inherited;
+  // Reset automatico de las pestañas de resultados al volver a mostrar el Mto
+  LimpiarPestanasResultado;
 end;
 
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(
