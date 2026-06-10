@@ -1,7 +1,7 @@
 inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 421
-  ClientWidth = 1357
+  ClientHeight = 413
+  ClientWidth = 1355
   Font.Charset = ANSI_CHARSET
   Font.Height = -19
   StyleElements = [seFont, seClient, seBorder]
@@ -16,11 +16,10 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlUp: TPanel [0]
     Left = 0
     Top = 0
-    Width = 1357
+    Width = 1355
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1355
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -180,12 +179,10 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   object pnlCli: TPanel [1]
     Left = 0
     Top = 89
-    Width = 1357
-    Height = 332
+    Width = 1355
+    Height = 324
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1355
-    ExplicitHeight = 324
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 233
@@ -237,12 +234,11 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object pnlBotones: TPanel
         Left = 1
         Top = 1
-        Width = 925
+        Width = 923
         Height = 96
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 923
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -459,12 +455,10 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     object pnlAccionesDer: TPanel
       Left = 1
       Top = 1
-      Width = 1355
-      Height = 232
+      Width = 1353
+      Height = 224
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 1353
-      ExplicitHeight = 224
       object cxgrdLineasOpe: TcxGrid
         Left = 1
         Top = 1

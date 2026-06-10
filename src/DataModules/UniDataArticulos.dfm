@@ -8,14 +8,14 @@ inherited dmArticulos: TdmArticulos
       
         '  (`CODIGO_ART_ART`, `ESACTIVO_ART`, `ORDEN_ART`, `DESCRIPCION_A' +
         'RT`, `CODIGO_FAM_ART`, `TIPO_IVA_ART`, `ESACTIVO_FIJO_ART`, `TIP' +
-        'O_CANTIDAD_ART`, `ESVARIACION_ART`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALT' +
-        'A`, `USUARIO_MODIF`)'
+        'O_CANTIDAD_ART`, `ESVARIACION_ART`, `INSTANTE_MODIF`, `INSTANTE_' +
+        'ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
       
         '  (:`CODIGO_ART_ART`, :`ESACTIVO_ART`, :`ORDEN_ART`, :`DESCRIPCI' +
         'ON_ART`, :`CODIGO_FAM_ART`, :`TIPO_IVA_ART`, :`ESACTIVO_FIJO_ART' +
-        '`, :`TIPO_CANTIDAD_ART`, :`ESVARIACION_ART`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`' +
-        'USUARIO_ALTA`, :`USUARIO_MODIF`)')
+        '`, :`TIPO_CANTIDAD_ART`, :`ESVARIACION_ART`, :`INSTANTE_MODIF`, ' +
+        ':`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_articulos`'
       'WHERE'
@@ -28,9 +28,10 @@ inherited dmArticulos: TdmArticulos
         'IVO_ART`, `ORDEN_ART` = :`ORDEN_ART`, `DESCRIPCION_ART` = :`DESC' +
         'RIPCION_ART`, `CODIGO_FAM_ART` = :`CODIGO_FAM_ART`, `TIPO_IVA_AR' +
         'T` = :`TIPO_IVA_ART`, `ESACTIVO_FIJO_ART` = :`ESACTIVO_FIJO_ART`' +
-        ', `TIPO_CANTIDAD_ART` = :`TIPO_CANTIDAD_ART`, `ESVARIACION_ART` = :`ESVARIACION_ART`, `INSTANTE_MODIF` =' +
-        ' :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO' +
-        '_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
+        ', `TIPO_CANTIDAD_ART` = :`TIPO_CANTIDAD_ART`, `ESVARIACION_ART` ' +
+        '= :`ESVARIACION_ART`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INS' +
+        'TANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`' +
+        ', `USUARIO_MODIF` = :`USUARIO_MODIF`'
       'WHERE'
       '  `CODIGO_ART_ART` = :`Old_CODIGO_ART_ART`')
     SQLLock.Strings = (
@@ -56,8 +57,8 @@ inherited dmArticulos: TdmArticulos
     Active = True
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
-    AfterDelete = unqryTablaGAfterDelete
     AfterPost = unqryTablaGAfterPost
+    AfterDelete = unqryTablaGAfterDelete
     Left = 48
   end
   inherited unqryPerfiles: TUniQuery
