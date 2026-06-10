@@ -31,7 +31,7 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants, System.Types,
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
-  Vcl.Dialogs, Vcl.ExtCtrls, cxGraphics,
+  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Forms, cxGraphics,
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
@@ -104,6 +104,8 @@ type
     FTimerBusq: TTimer;
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
+    procedure AsegurarBusquedaAbierta;
+    procedure ComboBusqInitPopup(Sender: TObject);
     procedure DispararResolucionScan(const ACodigo: string);
     procedure ArticuloGetProperties(Sender: TcxCustomGridTableItem;
                            ARecord: TcxCustomGridRecord;
@@ -371,8 +373,9 @@ end;
 procedure TGridArticulosLineas.CrearLookupBusqueda;
 begin
   // 1. Query con la lista de SKU (codigo, descripcion y stock en origen). Se
-  //    carga entera; el filtrado mientras tecleas es en cliente
-  //    (IncrementalFiltering). El stock depende del almacen (param :ALM).
+  //    carga entera pero de forma perezosa (primer despliegue); el filtrado
+  //    mientras tecleas es en cliente (IncrementalFiltering). El stock
+  //    depende del almacen (param :ALM).
   //    (El boton buscador lista articulos; aqui en el desplegable, SKU.)
   FBusqQry := TUniQuery.Create(nil);
   FBusqQry.Connection := FConn;
@@ -469,6 +472,9 @@ begin
     // del lector (rapidez / STX-ETX) no recibe el codigo. El usuario abre el
     // desplegable con F4 o el boton de busqueda cuando quiera buscar a mano.
     ImmediateDropDownWhenKeyPressed := False;
+    // Carga perezosa: el dataset de sugerencias se abre la primera vez que
+    // se despliega de verdad (F4 / debounce / boton del combo).
+    OnInitPopup := ComboBusqInitPopup;
     OnCloseUp := ComboBusqCloseUp;
     // Boton para el buscador completo (mismo que el ButtonEdit).
     Buttons.Clear;
@@ -476,34 +482,53 @@ begin
       Kind := bkEllipsis;
     OnButtonClick := ArticuloButtonClick;
   end;
-  // No se abre aqui: se abriria con ALM='' (en FormCreate aun no hay almacen)
-  // y luego AplicarModo lo reabriria con el almacen real -> doble ejecucion
-  // del query (cada una ~1,2 s). Se abre una sola vez en RecargarBusqueda,
-  // ya con el almacen fijado.
+  // No se abre aqui ni al fijar el almacen: cargar el catalogo completo
+  // (3 subconsultas por SKU) cuesta varios segundos con catalogos grandes
+  // y bloqueaba la entrada al formulario (LOG FAUSTINO 10/06/2026: 7-9 s).
+  // Se abre de forma perezosa en AsegurarBusquedaAbierta al desplegar.
 end;
 
-// (Re)abre el desplegable con el stock del almacen actual. Se llama al fijar
-// el almacen (SetAlmacenStock) y al cambiar de modo, una sola vez con el
-// almacen real.
+// Invalida el desplegable (cierra el dataset si estaba abierto). Se llama
+// al cambiar el almacen origen: el stock mostrado depende de el. La
+// reapertura es perezosa (AsegurarBusquedaAbierta, via OnInitPopup).
 procedure TGridArticulosLineas.RecargarBusqueda;
 begin
-  if FBusqQry = nil then
-    Exit;
-  if FBusqQry.Active then
+  if (FBusqQry <> nil) and FBusqQry.Active then
     FBusqQry.Close;
-  FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
-  FBusqQry.Open;
+end;
+
+// Abre el dataset de sugerencias si aun no lo esta, con el stock del
+// almacen actual. Solo lo paga quien despliega la busqueda manual: el
+// flujo de pistola / Enter resuelve por el validador y no pasa por aqui.
+procedure TGridArticulosLineas.AsegurarBusquedaAbierta;
+begin
+  if (FBusqQry <> nil) and (not FBusqQry.Active) then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
+      FBusqQry.Open;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  end;
+end;
+
+// Primer despliegue del combo de busqueda (F4 / debounce / boton).
+procedure TGridArticulosLineas.ComboBusqInitPopup(Sender: TObject);
+begin
+  AsegurarBusquedaAbierta;
 end;
 
 procedure TGridArticulosLineas.SetAlmacenStock(const AValue: string);
 begin
-  // Recarga si cambia el almacen O si el query aun no se ha abierto (la
-  // primera vez: en CrearLookupBusqueda ya no se abre, para no ejecutarlo
-  // con almacen vacio).
-  if (FAlmacenStock = AValue) and (FBusqQry <> nil) and FBusqQry.Active then
-    Exit;
-  FAlmacenStock := AValue;
-  RecargarBusqueda;
+  // Si cambia el almacen origen, invalida el desplegable; la recarga real
+  // se difiere hasta el proximo despliegue.
+  if FAlmacenStock <> AValue then
+  begin
+    FAlmacenStock := AValue;
+    RecargarBusqueda;
+  end;
 end;
 
 // Editor por registro: celda vacia y enfocada -> ExtLookupComboBox (busqueda
