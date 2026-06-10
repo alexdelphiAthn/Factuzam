@@ -325,6 +325,12 @@ type
     // los datos. La usa ShowMto cuando se invoca con parametro de
     // busqueda — BuscarTabla.Locate necesita la query activa al volver.
     procedure AbrirTablaPrincipalSincrono;
+    // Hook que corre en el MAIN THREAD al terminar AbrirTablaPrincipalAsync
+    // (es decir, solo en la apertura normal; la instancia de busqueda usa la
+    // via sincrona y no pasa por aqui). Por defecto no hace nada. Articulos
+    // lo usa para, si la precarga supero el umbral de filas, mostrar el
+    // dialogo de filtrado y reabrir la lista ya acotada.
+    procedure TrasPrecargaAsync; virtual;
   public
     destructor Destroy; override;
   end;
@@ -1313,7 +1319,16 @@ begin
         RestaurarFocoGrid(cxGrdDBTabPrin, oPerfilDic);
       // (f) Hook de borrar (Delete -> Desactivar). Idempotente.
       InstalarGuardianBorrado;
+      // (g) Hook post-precarga (main thread): los Mtos que necesiten
+      // intervenir tras la carga normal (p.ej. Articulos: dialogo de
+      // filtrado si se supero el umbral de filas) lo hacen aqui.
+      TrasPrecargaAsync;
     end);
+end;
+
+procedure TfrmMtoGen.TrasPrecargaAsync;
+begin
+  // Default: nada. Los Mtos que lo necesiten lo sobreescriben.
 end;
 
 procedure TfrmMtoGen.AbrirTablaPrincipalSincrono;
