@@ -152,6 +152,7 @@ type
     actComentar: TAction;
     btnAbrirScript: TcxButton;
     actAbrirScript: TAction;
+    btnCopiarDatos: TcxButton;
     procedure btnRefreshClick(Sender: TObject);
     procedure cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender: TObject);
     procedure btnVerDatosClick(Sender: TObject);
@@ -162,6 +163,7 @@ type
     procedure btnEditarClick(Sender: TObject);
     procedure btnEditarMetaClick(Sender: TObject);
     procedure btnExportarExcelMetaClick(Sender: TObject);
+    procedure btnCopiarDatosClick(Sender: TObject);
     procedure TreeView1DblClick(Sender: TObject);
 //    procedure TreeView1Click(Sender: TObject);
     procedure btnBonitoClick(Sender: TObject);
@@ -236,6 +238,8 @@ type
                                         var AComandos: Integer;
                                         var ASeguir: Boolean): TcxTabSheet;
     procedure EjecutarScriptPorPestanas(slSentencias: TStrings);
+    procedure CopiarVistaPortapapeles(AVista: TcxGridDBTableView);
+    procedure btnCopiarDatosDinClick(Sender: TObject);
   end;
 
 var
@@ -251,6 +255,7 @@ uses
   inLibDevExp,
   inLibGlobalVar,
   inLibDir,
+  Vcl.Clipbrd,
   ts.Editor.CodeFormatters, inMtoPrincipal;
 
 {$R *.dfm}
@@ -897,6 +902,8 @@ var
   grdDatos: TcxGrid;
   tvDatos: TcxGridDBTableView;
   lvDatos: TcxGridLevel;
+  pnlLateral: TPanel;
+  btnCopiar: TcxButton;
 begin
   Result := CrearPestanaResultado(ACaption);
   // La pestaña pasa a ser propietaria de la query y la libera con ella
@@ -916,6 +923,18 @@ begin
   tvDatos.OptionsView.NoDataToDisplayInfoText := '<No hay datos a mostrar>';
   lvDatos := grdDatos.Levels.Add;
   lvDatos.GridView := tvDatos;
+  // Botonera lateral con el copiado al portapapeles, como en la pestaña fija
+  pnlLateral := TPanel.Create(Result);
+  pnlLateral.Parent := Result;
+  pnlLateral.Width := 117;
+  pnlLateral.Align := alRight;
+  btnCopiar := TcxButton.Create(Result);
+  btnCopiar.Parent := pnlLateral;
+  btnCopiar.SetBounds(6, 8, 106, 34);
+  btnCopiar.Caption := 'Copiar datos';
+  // El Tag guarda la vista que copiara el manejador compartido
+  btnCopiar.Tag := NativeInt(tvDatos);
+  btnCopiar.OnClick := btnCopiarDatosDinClick;
   tvDatos.DataController.CreateAllItems();
   tvDatos.ApplyBestFit();
 end;
@@ -933,6 +952,79 @@ begin
   memSalida.Properties.ReadOnly := True;
   memSalida.Properties.ScrollBars := ssBoth;
   memSalida.Lines.Text := ATexto;
+end;
+
+procedure TfrmMtoGeneradorProcesos.CopiarVistaPortapapeles(
+  AVista: TcxGridDBTableView);
+var
+  sbTexto: TStringBuilder;
+  sLinea, sCelda: string;
+  i, j, iFilas: Integer;
+  bContinuar: Boolean;
+begin
+  iFilas := AVista.DataController.RecordCount;
+  bContinuar := iFilas > 0;
+  if not bContinuar then
+    ShowMessage('No hay datos que copiar.');
+  // Aviso para volcados muy grandes al portapapeles
+  if ((bContinuar) and (iFilas > 50000)) then
+    bContinuar := MessageDlg('Vas a copiar ' + IntToStr(iFilas) +
+                             ' filas al portapapeles. ¿Continuar?',
+                             mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+  if bContinuar then
+  begin
+    Screen.Cursor := crHourGlass;
+    sbTexto := TStringBuilder.Create;
+    try
+      // Cabecera con los titulos de las columnas visibles
+      sLinea := '';
+      for j := 0 to AVista.VisibleColumnCount - 1 do
+      begin
+        if j > 0 then
+          sLinea := sLinea + #9;
+        sLinea := sLinea + AVista.VisibleColumns[j].Caption;
+      end;
+      sbTexto.AppendLine(sLinea);
+      // Filas separadas por tabulador: pega directo en Excel y es legible
+      // para un asistente tipo Claude
+      for i := 0 to iFilas - 1 do
+      begin
+        sLinea := '';
+        for j := 0 to AVista.VisibleColumnCount - 1 do
+        begin
+          sCelda := AVista.DataController.DisplayTexts[i,
+                      AVista.VisibleColumns[j].Index];
+          sCelda := StringReplace(sCelda, #9, ' ', [rfReplaceAll]);
+          sCelda := StringReplace(sCelda, #13, ' ', [rfReplaceAll]);
+          sCelda := StringReplace(sCelda, #10, ' ', [rfReplaceAll]);
+          if j > 0 then
+            sLinea := sLinea + #9;
+          sLinea := sLinea + sCelda;
+        end;
+        sbTexto.AppendLine(sLinea);
+      end;
+      Clipboard.AsText := sbTexto.ToString;
+    finally
+      FreeAndNil(sbTexto);
+      Screen.Cursor := crDefault;
+    end;
+    cxmResul.Lines.Add('Copiadas ' + IntToStr(iFilas) + ' filas y ' +
+                       IntToStr(AVista.VisibleColumnCount) +
+                       ' columnas al portapapeles.');
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.btnCopiarDatosDinClick(Sender: TObject);
+begin
+  // El Tag del boton guarda la vista de su misma pestaña
+  CopiarVistaPortapapeles(
+    TcxGridDBTableView(Pointer((Sender as TComponent).Tag)));
+end;
+
+procedure TfrmMtoGeneradorProcesos.btnCopiarDatosClick(Sender: TObject);
+begin
+  inherited;
+  CopiarVistaPortapapeles(tvVista);
 end;
 
 function TfrmMtoGeneradorProcesos.EjecutarSentenciaEnPestana(
