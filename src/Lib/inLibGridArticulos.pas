@@ -1075,6 +1075,7 @@ var
   R: TArtResolucionEntrada;
   sCodArt, sSku, sDesc, sEntrada: string;
   bCompleto: Boolean;
+  i: Integer;
 begin
   Result := False;
   // Quita STX/ETX/CR/LF que mete el lector de codigo de barras.
@@ -1096,6 +1097,15 @@ begin
   bCompleto := (sSku <> '') and (not R.RequiereSku);
   if not CdsEditando then
     FCds.Edit;
+  // Si la linea tenia OTRO articulo, sus valores de talla/color no valen
+  // para el nuevo: se limpian para no heredar atributos (generarian un SKU
+  // cruzado tipo ART_NUEVO/COLOR_VIEJO, que existe pero sin stock).
+  if not SameText(Trim(FCds.FieldByName(FCampos.CodigoArt).AsString),
+                  sCodArt) then
+  begin
+    for i := 1 to 5 do
+      FCds.FieldByName(FCampos.AttrValor[i]).AsString := '';
+  end;
   FCds.FieldByName(FCampos.CodigoArt).AsString := sCodArt;
   FCds.FieldByName(FCampos.Descripcion).AsString := sDesc;
   // Muestra SIEMPRE las columnas de talla/color del articulo (aunque el SKU
