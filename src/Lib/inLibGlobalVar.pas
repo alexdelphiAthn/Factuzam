@@ -71,11 +71,7 @@ end;
 
 initialization
   oAppName         := 'Fzam';
-<<<<<<< HEAD
   oVersion         := '1.0.15.202606090010.alpha';
-=======
-  oVersion         := '1.0.15.202605210000.alpha';
->>>>>>> origin/claude/fix-shopping-sizes-display-0oO1C
   oUser            := 'No definido';
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
