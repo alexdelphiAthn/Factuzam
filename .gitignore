@@ -50,4 +50,4 @@ database.cfg
 herreras.sql
 
 # Archivos temporales o de backup de Delphi
-*.~*
+*.~**.dsv
