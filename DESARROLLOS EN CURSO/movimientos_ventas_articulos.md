@@ -129,7 +129,8 @@ CALL PRC_GET_MOV_VENTAS_ART(
      p_NIVEL1,         -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''
      p_NIVEL2,         -- 2o nivel
      p_NIVEL3,         -- 3er nivel
-     p_NIVEL_FAM       -- nivel del árbol de familias al agrupar por FAM
+     p_NIVEL_FAM,      -- nivel del árbol de familias al agrupar por FAM
+     p_SOLO_VENTAS     -- 'S' = solo artículos con ventas; 'N'/'' = todos
 );
 ```
 
@@ -146,9 +147,14 @@ mismo criterio PRV/FAM/TMP/ALM, resumen por corte de grupo). Idempotente:
 ## 4. Formulario y maqueta
 
 - `inMtoModalImpMovVentasArt` hereda de `TfrmPrintMultiFiltro` (mismas
-  pestañas de filtro que el balance). Solo añade el control **Inicio
-  compras** (check + fecha) sobre la pestaña Fechas y la pestaña
-  **Agrupaciones** (`ALM`/`PRV`/`FAM`/`TMP` reordenables + nivel de familia).
+  pestañas de filtro que el balance). Añade sobre la pestaña Fechas: el
+  control **Inicio compras** (check + fecha, desmarcado por defecto) y la
+  casilla **Solo artículos con ventas** (oculta los que solo tienen
+  entradas); y la pestaña **Agrupaciones** (`ALM`/`PRV`/`FAM`/`TMP`
+  reordenables + nivel de familia).
+- **Fecha por defecto**: el ranking arranca con `Desde fecha = 1 de enero
+  del año en curso` (no el 1 del mes, como el base), porque las entradas son
+  de siempre y un periodo corto deja casi todo a cero.
 - Maqueta FastReport (A4 apaisado): ReportTitle, PageHeader (cabecera de
   columnas), GroupHeader `G1/G2/G3` (agrupaciones, se ocultan los niveles
   inactivos en `ReportBeforePrint`), MasterData (una fila por artículo con

@@ -48,6 +48,7 @@ type
     FInicializado: Boolean;
     FchkIniCompras: TcxCheckBox;   // activa el filtro de inicio de compras
     FdteIniCompras: TcxDateEdit;   // fecha de primera compra a partir de la cual
+    FchkSoloVentas: TcxCheckBox;   // 'solo artículos con ventas' en el periodo
     // Crea el control de "Inicio compras" sobre la pestaña de fechas.
     procedure CrearControlesPropios;
     procedure chkIniComprasChange(Sender: TObject);
@@ -102,8 +103,14 @@ procedure TfrmPrintMovVentasArt.CrearControlesPropios;
 begin
   if TabFechas <> nil then
   begin
-    // "Inicio compras": filtra los artículos por su primera compra. El check
-    // permite desactivarlo (sin filtro = todos los artículos con actividad).
+    // Por defecto el ranking mira las ventas del AÑO en curso (no del mes):
+    // las entradas son de siempre, así que un periodo corto deja casi todo a
+    // cero. El base pone el 1 del mes; aquí lo ampliamos al 1 de enero.
+    if DteDesde <> nil then
+      DteDesde.Date := EncodeDate(YearOf(Date), 1, 1);
+    // "Inicio compras": filtra los artículos por su primera entrada (AC/AE).
+    // El check permite desactivarlo (sin filtro = todos los que tengan
+    // actividad). Arranca DESMARCADO para no ocultar artículos sin querer.
     FchkIniCompras := TcxCheckBox.Create(Self);
     FchkIniCompras.Parent    := TabFechas;
     FchkIniCompras.Left      := 220;
@@ -118,6 +125,14 @@ begin
     FdteIniCompras.Width   := 160;
     FdteIniCompras.Date    := EncodeDate(YearOf(Date), 1, 1);
     FdteIniCompras.Enabled := False;
+    // "Solo artículos con ventas": oculta los que solo tienen entradas (lo
+    // típico de un ranking de ventas). Arranca DESMARCADO = salen todos.
+    FchkSoloVentas := TcxCheckBox.Create(Self);
+    FchkSoloVentas.Parent  := TabFechas;
+    FchkSoloVentas.Left    := 220;
+    FchkSoloVentas.Top     := 72;
+    FchkSoloVentas.Width   := 210;
+    FchkSoloVentas.Caption := 'Solo art' + #237 + 'culos con ventas';
   end;
   // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada reordenables
   // + spin de nivel de familia (igual que el balance de almacén).
@@ -153,7 +168,7 @@ begin
     SQL.Text :=
       'CALL PRC_GET_MOV_VENTAS_ART(' +
       ':pDESDE, :pHASTA, :pINICMP, :pALM, :pFAM, :pPRV, :pTMP, :pART, ' +
-      ':pN1, :pN2, :pN3, :pNFAM)';
+      ':pN1, :pN2, :pN3, :pNFAM, :pSOLOVEN)';
     ParamByName('pDESDE').AsDateTime := FechaDesde;
     ParamByName('pHASTA').AsDateTime := FechaHasta;
     // Inicio compras: solo si el check está marcado; si no, NULL = sin filtro.
@@ -171,6 +186,10 @@ begin
     ParamByName('pN2').AsString := NivelN(1);
     ParamByName('pN3').AsString := NivelN(2);
     ParamByName('pNFAM').AsInteger := NivelFamilia;
+    if (FchkSoloVentas <> nil) and FchkSoloVentas.Checked then
+      ParamByName('pSOLOVEN').AsString := 'S'
+    else
+      ParamByName('pSOLOVEN').AsString := 'N';
     Open;
   end;
   fxdsMovVentas.UpdateBounds;
