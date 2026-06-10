@@ -123,8 +123,12 @@ procedure MigrarEntornoSeries(Eng: TMigEngine; var Stats: TMigStats);
 const
   // ocseract asigna a CADA tipo de documento la misma serie por tienda
   // (almacén 11→A1, 21→E1, 44→K1, 51→G1...). Con DISTINCT colapsamos a una
-  // sola serie por (empresa, almacén): el INSERT IGNORE descarta repetidas.
-  // TIPO_DOC queda a NULL (la serie sirve para cualquier tipo).
+  // sola serie por (empresa, almacén). Son las series de VENTA (factura
+  // simplificada / ticket de caja): se fija TIPO_DOC='FC',
+  // SUBTIPO='SIMPLIFICADA', CAJA='1' (la serie es por empresa/almacen/caja y
+  // la caja suele ser la 1) y FECHA_DESDE fija temprana (2000-01-01) para que
+  // la serie cubra TODO el historico migrado (la app/Verifactu busca la serie
+  // por empresa+tipo_doc+fecha; con la de hoy las facturas antiguas fallarian).
   cSelect =
     'SELECT DISTINCT sr.Empresa, sr.Almacen, ' +
     '       LTRIM(RTRIM(sr.SerieCIva)) AS Serie, ' +
@@ -136,9 +140,11 @@ const
   cInsert =
     'INSERT IGNORE INTO fza_empresas_series ' +
     '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, ' +
-    '   CODIGO_CAJA_EMPSER, EMPSER, TIPO_DOC_EMPSER, ' +
+    '   CODIGO_CAJA_EMPSER, EMPSER, TIPO_DOC_EMPSER, SUBTIPO_EMPSER, ' +
+    '   FECHA_DESDE_EMPSER, ' +
     '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-    'VALUES (:cod, :emp, :alm, NULL, :ser, NULL, ' +
+    'VALUES (:cod, :emp, :alm, ''1'', :ser, ''FC'', ''SIMPLIFICADA'', ' +
+    '        ''2000-01-01'', ' +
     '        :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 var
   qSrc, qIns:    TUniQuery;
@@ -149,6 +155,11 @@ begin
   try
     qIns.Connection := Eng.ConDst;
     qIns.SQL.Text   := cInsert;
+    // Re-ejecutable: borramos las series migradas previas (INSERT IGNORE NO
+    // refresca filas ya existentes), asi al re-correr se vuelven a crear con
+    // los valores correctos (CAJA, TIPO_DOC, SUBTIPO, FECHA_DESDE).
+    EjecutarSQL(Eng, 'DELETE FROM fza_empresas_series ' +
+      'WHERE USUARIO_ALTA = ' + ValorOrNull(Eng.Usuario));
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM (SELECT DISTINCT Empresa, Almacen, SerieCIva ' +
       'FROM dbo.ocseract WHERE LTRIM(RTRIM(SerieCIva)) <> '''') t'));
