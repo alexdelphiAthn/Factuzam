@@ -41,6 +41,14 @@ sobre `fza_articulos_familias`, construyendo la ruta raíz→hoja como
 `NOMBRE|NOMBRE|…`. `SUBSTRING_INDEX(ruta, '|', N)` recorta a los N primeros
 niveles y un `REPLACE` cambia el separador interno `|` por el visual `-`.
 
+**OJO con la colación (no quitar el `COLLATE`).** El ancla del CTE hace
+`CAST(... AS CHAR(2000)) COLLATE utf8mb4_spanish_ci`. El `CAST` produce la
+colación por defecto del servidor (en MariaDB moderno `utf8mb4_uca1400_ai_ci`),
+que choca con las columnas de la BBDD (`utf8mb4_spanish_ci`) dentro del
+`CONCAT`/recursión y lanza `[1267] Illegal mix of collations` al comparar.
+El `COLLATE` fuerza la ruta a la colación de las tablas. Si algún día se
+regenera la BBDD con otra colación, hay que ajustar este `COLLATE`.
+
 Tocado en dos sitios (ambos comparten la misma consulta):
 
 - `src/Caja/Lib/inLibArqueoTicket.pas` — `EscribirResumenSeccion` (ticket
