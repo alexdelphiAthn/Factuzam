@@ -21,15 +21,14 @@
 --
 -- Origen de datos:
 --   - Entradas: fza_movimientos_almacen con TIPO_MOV='E' y TIPO_DOC_MOV IN
---     ('AC','AE','IN') = adquisición real de género (compra, albarán de
---     entrada y regularización/inventario). Se EXCLUYEN los traspasos
---     (TR/AT/TA), que son movimientos internos entre almacenes (no es género
---     nuevo), y los depósitos (DP), que no son gasto hasta venderse.
---     Unidades = SUM(CANTIDAD_MOV); importe (coste) = SUM(TOTAL_COSTE_MOV).
---     OJO: contar solo 'AC' dejaba fuera el stock que entró por inventario
---     inicial ('IN'), que en muchas instalaciones es la vía principal; por
---     eso se incluyen AE/IN. El filtro "Inicio compras" sí mira solo la
---     primera COMPRA real ('AC').
+--     ('AC','AE') = adquisición real de género (compra y albarán de entrada).
+--     Se EXCLUYEN: los traspasos (TR/AT/TA), movimientos internos entre
+--     almacenes (no es género nuevo); los depósitos (DP), que no son gasto
+--     hasta venderse; y el inventario/regularización ('IN'), que es un ajuste,
+--     no una compra. Unidades = SUM(CANTIDAD_MOV); importe (coste) =
+--     SUM(TOTAL_COSTE_MOV). El filtro "Inicio compras" usa los mismos tipos
+--     (AC/AE). (Nota: el dump factuzam_original usa 'IN' para el stock inicial
+--     y no tiene 'AE'; en producción las entradas son AC/AE.)
 --   - Ventas: fza_facturas_lineas (líneas de factura/ticket) por fecha de
 --     factura. Uds = SUM(CANTIDAD_FACLIN); importe = SUM(TOTAL_FACLIN)
 --     (venta real, con descuento y con IVA).
@@ -163,10 +162,10 @@ BEGIN
 
     -- Entradas de stock por artículo y, si procede, almacén: totales de
     -- unidades y coste. Se cuentan las entradas que representan adquisición
-    -- REAL de género: compra (AC), albarán de entrada (AE) y regularización /
-    -- inventario (IN). Se EXCLUYEN los traspasos (TR/AT/TA), que son
-    -- movimientos internos entre almacenes y no son género nuevo (doble
-    -- conteo), y los depósitos (DP), que no son gasto hasta venderse. El
+    -- REAL de género: compra (AC) y albarán de entrada (AE). Se EXCLUYEN los
+    -- traspasos (TR/AT/TA), movimientos internos entre almacenes (doble
+    -- conteo); los depósitos (DP), que no son gasto hasta venderse; y el
+    -- inventario/regularización (IN), que es un ajuste, no una compra. El
     -- artículo del movimiento se resuelve por su SKU (CODIGO_UNIDAD_MOV) para
     -- no depender de CODIGO_ART_MOV, que puede venir nulo.
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
@@ -187,14 +186,16 @@ BEGIN
         ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
      WHERE m.`ESACTIVO_MOV` = 'S'
        AND m.`TIPO_MOV` = 'E'
-       AND m.`TIPO_DOC_MOV` IN ('AC', 'AE', 'IN')
+       AND m.`TIPO_DOC_MOV` IN ('AC', 'AE')
        AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
      GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '');
 
-    -- Primera COMPRA (AC) por artículo, para el filtro Inicio compras: el
-    -- artículo entra solo si su primera compra real (global a los almacenes
-    -- filtrados) es >= v_ini_cmp. Se calcula aparte de tmp_mva_ent porque el
-    -- filtro es específicamente sobre compras, no sobre cualquier entrada.
+    -- Primera ENTRADA por artículo, para el filtro Inicio compras: el artículo
+    -- entra solo si su primera entrada de género (global a los almacenes
+    -- filtrados) es >= v_ini_cmp. Usa los MISMOS tipos que las entradas
+    -- (AC compra, AE albarán de entrada): si mirara solo 'AC', los artículos
+    -- que entran por albarán de entrada se caerían del informe aunque tengan
+    -- entradas y ventas.
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
     CREATE TEMPORARY TABLE `tmp_mva_primera` (
         `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY,
@@ -207,7 +208,7 @@ BEGIN
         ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
      WHERE m.`ESACTIVO_MOV` = 'S'
        AND m.`TIPO_MOV` = 'E'
-       AND m.`TIPO_DOC_MOV` = 'AC'
+       AND m.`TIPO_DOC_MOV` IN ('AC', 'AE')
        AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
      GROUP BY sk.`CODIGO_ART_SKU`;
 
