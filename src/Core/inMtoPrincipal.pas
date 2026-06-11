@@ -263,8 +263,9 @@ type
     procedure CargarFondoLogo;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     // Atajos globales capturados a nivel de aplicacion (las ventanas de caja
-    // son top-level y no pasan por IsShortCut): F9 abre cajon en caja y
-    // Ctrl+U abre la consulta de stock en cualquier pantalla.
+    // son top-level y no pasan por IsShortCut): F9 abre el cajon desde
+    // cualquier ventana si hay impresora de tickets asignada y Ctrl+U abre
+    // la consulta de stock en cualquier pantalla.
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -1276,9 +1277,13 @@ begin
   // Solo pulsaciones de tecla y descartando la autorrepeticion (bit 30).
   if (Msg.message = WM_KEYDOWN) and ((Msg.lParam and $40000000) = 0) then
   begin
-    // F9: abrir el cajon en caja. Solo con sesion de caja abierta
-    // (frmMtoMenuCaja vivo) y F9 sola, sin Ctrl/Alt/Mayus.
-    if (Msg.wParam = WPARAM(VK_F9)) and Assigned(frmMtoMenuCaja) and
+    // F9: abrir el cajon portamonedas desde cualquier ventana del programa
+    // (caja, mantenimientos o el propio principal) si hay impresora de
+    // tickets asignada. Sin impresora solo responde con la sesion de caja
+    // abierta (frmMtoMenuCaja vivo), para avisar de la falta de
+    // configuracion. F9 sola, sin Ctrl/Alt/Mayus.
+    if (Msg.wParam = WPARAM(VK_F9)) and
+       (ImpresoraCajaAsignada or Assigned(frmMtoMenuCaja)) and
        (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
        (GetKeyState(VK_SHIFT) >= 0) then
     begin
