@@ -36,14 +36,30 @@ la rejilla):
 
 | Atajo | Acción | Qué hace |
 |-------|--------|----------|
-| `[Alt]+[F12]` | **Guardar layout** | Guarda la disposición actual de la rejilla en el perfil. Pide a qué **permiso/grupo** se aplica, de modo que todos los usuarios de ese grupo la verán igual. |
-| `[Ctrl]+[F12]` | **Resetear layout** | Borra la personalización guardada y vuelve a la disposición por defecto. |
-| `[Ctrl]+[F10]` | **Ajustar anchos** | Ajusta automáticamente el ancho de las columnas a su contenido (*best fit*). |
+| `[Alt]+[F12]` | **Guardar layout** | Guarda la disposición actual de la rejilla. Al pulsarlo aparece un diálogo donde eliges el **alcance** de la grabación (ver abajo). |
+| `[Ctrl]+[F12]` | **Resetear layout** | Borra la personalización guardada y vuelve a la disposición por defecto. También pregunta el **alcance** (a quién se le resetea). |
+| `[Ctrl]+[F10]` | **Ajustar anchos** | Ajusta automáticamente el ancho de las columnas a su contenido (*best fit*). Es local y no guarda nada hasta que pulses `[Alt]+[F12]`. |
 
-> **Guardar layout** afecta a **todo el grupo de permisos** que indiques en
-> el diálogo, no solo a tu usuario. Úsalo cuando quieras fijar una vista
-> estándar para un grupo (p. ej. *Cajeros*). `[Ctrl]+[F10]` (ajustar
-> anchos) es local y no guarda nada hasta que pulses `[Alt]+[F12]`.
+**Alcance de la grabación (campo «Permiso» del diálogo).** Tanto al guardar
+como al resetear, el diálogo te deja elegir **a quién afecta** el cambio:
+
+| Opción | Alcance |
+|--------|---------|
+| **Usuario** *(por defecto)* | Solo a **ti**. Tu vista personalizada; el resto de usuarios no la ven. |
+| **Grupo** | A **todos los usuarios de tu grupo** de permisos (p. ej. *Cajeros*). Útil para fijar una vista estándar del equipo. |
+| **Todos** | A **todos los usuarios** de la aplicación. Solo disponible si eres **administrador** (grupo root). |
+
+![Diálogo de Guardar layout con el selector de alcance](img/01-guardar-layout.png)
+*▢ Captura pendiente — Diálogo «Guardar Objeto Editado» con el campo Permiso (Usuario / Grupo / Todos).*
+
+![Diálogo de Resetear layout](img/01-resetear-layout.png)
+*▢ Captura pendiente — Diálogo de reseteo de la rejilla con el selector de alcance.*
+
+> Por defecto se guarda **solo para tu usuario**, así que puedes ajustar tu
+> rejilla sin afectar a nadie. Elige **Grupo** o **Todos** únicamente cuando
+> quieras imponer la misma vista a más gente; ten en cuenta que **Todos**
+> sobrescribe la disposición de todos los usuarios y solo lo puede hacer un
+> administrador.
 
 ### Pestaña **Ficha**
 
