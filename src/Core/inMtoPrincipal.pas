@@ -74,7 +74,10 @@ type
     Pedidos1: TMenuItem;
     Albaranes1: TMenuItem;
     Devoluciones1: TMenuItem;
+    FacturarAlbaranes1: TMenuItem;
     Facturas1: TMenuItem;
+    EfectosCompra1: TMenuItem;
+    RemesasCompra1: TMenuItem;
     Sesiones1: TMenuItem;
     mnuCrearArtculosyunpedidoounalbarn: TMenuItem;
     Formasdepago2: TMenuItem;
