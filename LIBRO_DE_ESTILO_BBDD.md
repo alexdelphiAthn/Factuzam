@@ -81,6 +81,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_empresas_series`                | `EMPSER`  |
 | `fza_facturas`                       | `FAC`     |
 | `fza_facturas_compra`                | `FACC`    |
+| `fza_facturas_compra_celdas`         | `FACCCEL` |
 | `fza_facturas_compra_lineas`         | `FACCLIN` |
 | `fza_facturas_consolidaciones`       | `FACCON`  |
 | `fza_facturas_lineas`                | `FACLIN`  |

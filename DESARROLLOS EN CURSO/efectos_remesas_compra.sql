@@ -702,3 +702,37 @@ BEGIN
    WHERE SERIE_REMC = p_SERIE AND NUMERO_REMC = p_NUMERO;
 END ;;
 DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------
+-- 12. Registrar los Mtos de efectos y remesas en fza_winforms (idempotente).
+--     Cablean 'Compras -> Efectos de pago' (EfectosCompra1) y
+--     'Compras -> Remesas de pago' (RemesasCompra1).
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT 'EfectosCompra',
+       'Efectos de Pago a Proveedor',
+       'EfectosCompra1',
+       'inMtoEfectosCompra.TfrmMtoEfectosCompra',
+       'Ctrl+Alt+E',
+       'UniDataEfectosCompra.TdmEfectosCompra',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = 'EfectosCompra'
+ );
+
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT 'RemesasCompra',
+       'Remesas de Pago',
+       'RemesasCompra1',
+       'inMtoRemesasCompra.TfrmMtoRemesasCompra',
+       'Ctrl+Alt+R',
+       'UniDataRemesasCompra.TdmRemesasCompra',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = 'RemesasCompra'
+ );

@@ -73,6 +73,12 @@ const
     ColSerieHdr  : 'SERIE_DEVC';
     ColNumeroHdr : 'NUMERO_DEVC'
   );
+  CONT_FACTURAS_COMPRA : TInfoContadorLineas = (
+    TablaHdr     : 'fza_facturas_compra';
+    ColContador  : 'CONTADOR_LINEAS_FACC';
+    ColSerieHdr  : 'SERIE_FACC';
+    ColNumeroHdr : 'NUMERO_FACC'
+  );
 
 // Devuelve la siguiente LINEA libre para el documento (sSerie, sNumero) y
 // actualiza CONTADOR_LINEAS_X en BD atomicamente al mismo valor devuelto.
