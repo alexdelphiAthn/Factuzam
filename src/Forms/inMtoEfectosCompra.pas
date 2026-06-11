@@ -42,6 +42,10 @@ type
     dbcGrdDBTabPrinESTADO_EFEC: TcxGridDBColumn;
     dbcGrdDBTabPrinFECHA_PAGO_EFEC: TcxGridDBColumn;
     dbcGrdDBTabPrinNUMERO_REMC_EFEC: TcxGridDBColumn;
+    btnRegistrarPago: TcxButton;
+    btnVerPagos: TcxButton;
+    procedure btnRegistrarPagoClick(Sender: TObject);
+    procedure btnVerPagosClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -56,7 +60,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago, inMtoModalVerPagosEfecto;
 
 {$R *.dfm}
 
@@ -72,6 +76,68 @@ end;
 procedure TfrmMtoEfectosCompra.ResetForm;
 begin
   inherited;
+end;
+
+procedure TfrmMtoEfectosCompra.btnRegistrarPagoClick(Sender: TObject);
+var
+  frm: TfrmModalRegistrarPago;
+  q: TDataSet;
+  iEfe, iRes: Integer;
+  fPend: Double;
+begin
+  inherited;
+  if Assigned(dmmEfectosCompra) and dmmEfectosCompra.unqryTablaG.Active and
+     (not dmmEfectosCompra.unqryTablaG.IsEmpty) then
+  begin
+    q     := dmmEfectosCompra.unqryTablaG;
+    iEfe  := q.FieldByName('NUMERO_EFEC').AsInteger;
+    fPend := q.FieldByName('IMPORTE_PENDIENTE_EFEC').AsFloat;
+    frm := TfrmModalRegistrarPago.Create(nil);
+    try
+      frm.SetDatos(Format('Efecto %d - pendiente %.2f', [iEfe, fPend]), fPend);
+      if frm.ShowModal = mrOk then
+      begin
+        iRes := dmmEfectosCompra.RegistrarPago(
+          q.FieldByName('SERIE_FACC_EFEC').AsString,
+          q.FieldByName('NUMERO_FACC_EFEC').AsString,
+          iEfe, frm.Fecha, frm.Importe, frm.Tipo, frm.Referencia);
+        if iRes > 0 then
+          ShowMessage('Pago registrado.')
+        else
+          ShowMessage('No se pudo registrar el pago.');
+      end;
+    finally
+      frm.Free;
+    end;
+  end
+  else
+    ShowMessage('Selecciona un efecto en la rejilla.');
+end;
+
+procedure TfrmMtoEfectosCompra.btnVerPagosClick(Sender: TObject);
+var
+  frm: TfrmModalVerPagosEfecto;
+  q: TDataSet;
+  iEfe: Integer;
+begin
+  inherited;
+  if Assigned(dmmEfectosCompra) and dmmEfectosCompra.unqryTablaG.Active and
+     (not dmmEfectosCompra.unqryTablaG.IsEmpty) then
+  begin
+    q    := dmmEfectosCompra.unqryTablaG;
+    iEfe := q.FieldByName('NUMERO_EFEC').AsInteger;
+    frm := TfrmModalVerPagosEfecto.Create(nil);
+    try
+      frm.Cargar(q.FieldByName('SERIE_FACC_EFEC').AsString,
+                 q.FieldByName('NUMERO_FACC_EFEC').AsString, iEfe,
+                 Format('Pagos del efecto %d', [iEfe]));
+      frm.ShowModal;
+    finally
+      frm.Free;
+    end;
+  end
+  else
+    ShowMessage('Selecciona un efecto en la rejilla.');
 end;
 
 initialization
