@@ -364,9 +364,9 @@ begin
     'ocartp.Proveedor + Modelo → fza_articulos_proveedores',
     MigrarArticulosProveedores);
   FEngine.Registrar('articulos_propiedades',
-    'Propiedad TEMPORADA por artículo',
-    'ocartp.Temporada → fza_propiedades + valores + ' +
-    'fza_articulos_propiedades',
+    'Propiedad TEMPORADA por artículo y color',
+    'ocartp.Temporada (artículo) + ocartcol.Temporada (color, solo ' +
+    'overrides) → fza_propiedades + valores + fza_articulos_propiedades',
     MigrarArticulosPropiedades);
   FEngine.Registrar('articulos_tarifas',
     'Precios PVP por artículo',
