@@ -82,6 +82,7 @@ type
       AEfectivoDejado: Currency;
       const ADesgloseBilletes: string;
       const AObservaciones: string;
+      const AVendedor: string;
       const ANombreImpresora: string = 'DEBUG';
       ADuplicado: Boolean = False);
     // Reimpresión (duplicado) del ticket de arqueo a partir de un arqueo ya
@@ -644,6 +645,7 @@ class procedure TArqueoTicket.ImprimirCierre(
   AEfectivoDejado: Currency;
   const ADesgloseBilletes: string;
   const AObservaciones: string;
+  const AVendedor: string;
   const ANombreImpresora: string = 'DEBUG';
   ADuplicado: Boolean = False);
 var
@@ -682,6 +684,10 @@ begin
       IntToStr(AArqueo.CantidadVentas));
     Ticket.TextoColumnas('Cierre por:',
       inLibGlobalVar.oUser);
+    // Vendedor (empleado de caja) que estampa el cierre; los arqueos
+    // grabados antes de exigirlo pueden venir sin él
+    if AVendedor <> '' then
+      Ticket.TextoColumnas('Vendedor:', AVendedor);
     Ticket.LineaSeparadora('=');
     { Desglose de billetes y monedas }
     if ADesgloseBilletes <> '' then
@@ -863,6 +869,7 @@ var
   dTotalSistema, dTotalRecuento, dDiferencia: Currency;
   dRetirada, dEfectivoDejado: Currency;
   sConcepto, sDesglose, sObs: string;
+  sVendedor, sNombreVendedor: string;
   bOk: Boolean;
 begin
   if (AConn = nil) or (not AConn.Connected) then Exit;
@@ -877,7 +884,13 @@ begin
   try
     Q.Connection := AConn;
     Q.SQL.Text :=
-      ' SELECT * FROM fza_caja_arqueos WHERE CODIGO_ARQ = :pARQ           ';
+      ' SELECT a.*,                                                       ' +
+      '        COALESCE(e.NOMBRE_EMPL, e.DIMINUTIVO_TICKET_EMPL,          ' +
+      '                 '''') AS NOMBRE_VENDEDOR                          ' +
+      '   FROM fza_caja_arqueos a                                         ' +
+      '   LEFT JOIN fza_empleados e                                       ' +
+      '     ON e.CODIGO_EMPL = a.CODIGO_EMPLEADO_ARQ                      ' +
+      '  WHERE a.CODIGO_ARQ = :pARQ                                       ';
     Q.ParamByName('pARQ').AsString := ACodigoArqueo;
     Q.Open;
     if not Q.IsEmpty then
@@ -899,6 +912,11 @@ begin
       Arqueo.EfectivoCaja     :=
         Q.FieldByName('TOTAL_EFECTIVO_CAJA_ARQ').AsCurrency;
       sObs := Q.FieldByName('OBSERVACIONES_ARQ').AsString;
+      // Vendedor estampado al cerrar; arqueos antiguos pueden no llevarlo
+      sVendedor       := Trim(Q.FieldByName('CODIGO_EMPLEADO_ARQ').AsString);
+      sNombreVendedor := Trim(Q.FieldByName('NOMBRE_VENDEDOR').AsString);
+      if (sVendedor <> '') and (sNombreVendedor <> '') then
+        sVendedor := sVendedor + ' - ' + sNombreVendedor;
       // Columnas añadidas por arqueo_recuento.sql: leer contra FindField por
       // si la BBDD todavía no tiene la migración del cierre Z aplicada.
       if Q.FindField('TOTAL_RECUENTO_ARQ') <> nil then
@@ -956,7 +974,7 @@ begin
     ImprimirCierre(AConn, Arqueo, Lineas,
                    dTotalSistema, dTotalRecuento, dDiferencia,
                    dRetirada, sConcepto, dEfectivoDejado,
-                   sDesglose, sObs, ANombreImpresora, True);
+                   sDesglose, sObs, sVendedor, ANombreImpresora, True);
   end;
 end;
 

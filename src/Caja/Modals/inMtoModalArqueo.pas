@@ -215,6 +215,9 @@ type
     lblDejoImporte: TcxLabel;
     txtObservaciones: TcxTextEdit;
     lblObservacionesLbl: TcxLabel;
+    lblVendedorLbl: TcxLabel;
+    txtVendedorCodigo: TcxTextEdit;
+    lblVendedorNombre: TcxLabel;
     btnGrabarArqueo: TcxButton;
 
     // Pie
@@ -258,6 +261,7 @@ type
     procedure tvRecuentoKeyDown(Sender: TObject;
       var Key: Word; Shift: TShiftState);
     procedure txtRetiradaImportePropertiesChange(Sender: TObject);
+    procedure txtVendedorCodigoExit(Sender: TObject);
   private
     FConn         : TUniConnection;
     FEmpresa      : string;
@@ -278,6 +282,7 @@ type
     function  ObtenerDesgloseBilletes: string;
     function  ObtenerTotalEfectivoBilletes: Currency;
     function  ObtenerConceptoRetirada: string;
+    function  BuscarNombreVendedor(const ACodigo: string): string;
     procedure GrabarArqueo;
   public
     class procedure Ejecutar(AOwner       : TComponent;
@@ -1011,6 +1016,41 @@ begin
   end;
 end;
 
+// Nombre del empleado de caja activo en fza_empleados ('' si no existe).
+// El vendedor que cierra el arqueo debe estar dado de alta como empleado.
+function TfrmModalArqueo.BuscarNombreVendedor(const ACodigo: string): string;
+var
+  Q: TUniQuery;
+begin
+  Result := '';
+  if (FConn <> nil) and FConn.Connected and (Trim(ACodigo) <> '') then
+  begin
+    Q := TUniQuery.Create(nil);
+    try
+      Q.Connection := FConn;
+      Q.SQL.Text :=
+        'SELECT COALESCE(NOMBRE_EMPL, DIMINUTIVO_TICKET_EMPL, ' +
+        '                CODIGO_EMPL) AS NOMBRE ' +
+        '  FROM fza_empleados ' +
+        ' WHERE CODIGO_EMPL   = :pCODIGO ' +
+        '   AND ESACTIVO_EMPL = ''S''';
+      Q.ParamByName('pCODIGO').AsString := Trim(ACodigo);
+      Q.Open;
+      if not Q.IsEmpty then
+        Result := Q.FieldByName('NOMBRE').AsString;
+    finally
+      FreeAndNil(Q);
+    end;
+  end;
+end;
+
+procedure TfrmModalArqueo.txtVendedorCodigoExit(Sender: TObject);
+begin
+  // Feedback inmediato: nombre del empleado (vacío si el código no vale)
+  lblVendedorNombre.Caption :=
+    BuscarNombreVendedor(txtVendedorCodigo.Text);
+end;
+
 procedure TfrmModalArqueo.btnGrabarArqueoClick(Sender: TObject);
 begin
   inherited;
@@ -1042,10 +1082,35 @@ var
   dTotalSistema: Currency;
   dEfectivoRecontado, dRetirada, dDejo: Currency;
   sObs, sDesglose, sConceptoRet: string;
+  sVendedor, sNombreVendedor: string;
   v: Variant;
 begin
   if (FConn = nil) or (not FConn.Connected) then
     Exit;
+  // Vendedor obligatorio: quien cierra estampa su número de empleado de
+  // caja (fza_empleados), sea o no el usuario logado en el programa
+  sVendedor := Trim(txtVendedorCodigo.Text);
+  if sVendedor = '' then
+  begin
+    Application.MessageBox(
+      'Debe indicar el número de empleado de caja del vendedor que ' +
+      'realiza el cierre.',
+      'Vendedor obligatorio', MB_OK or MB_ICONWARNING);
+    pcArqueo.ActivePage := tsRecuento;
+    txtVendedorCodigo.SetFocus;
+    Exit;
+  end;
+  sNombreVendedor := BuscarNombreVendedor(sVendedor);
+  if sNombreVendedor = '' then
+  begin
+    Application.MessageBox(
+      'El número de empleado indicado no existe o no está activo.',
+      'Vendedor no válido', MB_OK or MB_ICONWARNING);
+    pcArqueo.ActivePage := tsRecuento;
+    txtVendedorCodigo.SetFocus;
+    Exit;
+  end;
+  lblVendedorNombre.Caption := sNombreVendedor;
   // Comprobar doble cierre
   var qryChk := TUniQuery.Create(nil);
   try
@@ -1149,6 +1214,7 @@ begin
       sConceptoRet,
       sDesglose,
       sObs,
+      sVendedor,
       oUser);
   finally
     Screen.Cursor := crDefault;
@@ -1166,6 +1232,7 @@ begin
     dDejo,
     sDesglose,
     sObs,
+    sVendedor + ' - ' + sNombreVendedor,
     oNomImpresoraCaja);
 end;
 

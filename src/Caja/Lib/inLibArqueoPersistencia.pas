@@ -50,6 +50,7 @@ type
       const AConceptoRetirada: string;
       const ADesgloseBilletes: string;
       const AObservaciones: string;
+      const ACodigoEmpleado: string;
       const AUsuario: string);
   end;
 
@@ -110,6 +111,7 @@ class procedure TArqueoPersistencia.GrabarArqueo(
   const AConceptoRetirada: string;
   const ADesgloseBilletes: string;
   const AObservaciones: string;
+  const ACodigoEmpleado: string;
   const AUsuario: string);
 var
   sCodigo: string;
@@ -174,6 +176,7 @@ begin
         '  FECHA_DESDE_ARQ,' +
         '  FECHA_HASTA_ARQ,' +
         '  FASE_ARQ,' +
+        '  CODIGO_EMPLEADO_ARQ,' +
         '  CANTIDAD_VENTAS_ARQ,' +
         '  CANTIDAD_OPERACIONES_ARQ,' +
         '  TOTAL_BRUTO_LINEAS_ARQ,' +
@@ -205,6 +208,7 @@ begin
         '  :pFDESDE,' +
         '  :pFHASTA,' +
         '  ''CERRADO'',' +
+        '  :pEMPLEADO,' +
         '  :pCNT_VENTAS,' +
         '  :pCNT_OPE,' +
         '  :pBRUTO_LIN,' +
@@ -235,6 +239,7 @@ begin
       Query.ParamByName('pCAJA').AsString        := AArqueo.Caja;
       Query.ParamByName('pFDESDE').AsDate        := AArqueo.FechaDesde;
       Query.ParamByName('pFHASTA').AsDate        := AArqueo.FechaHasta;
+      Query.ParamByName('pEMPLEADO').AsString    := ACodigoEmpleado;
       Query.ParamByName('pCNT_VENTAS').AsInteger := AArqueo.CantidadVentas;
       Query.ParamByName('pCNT_OPE').AsInteger    := AArqueo.CantidadOperaciones;
       Query.ParamByName('pBRUTO_LIN').AsCurrency := AArqueo.BrutoLineas;
