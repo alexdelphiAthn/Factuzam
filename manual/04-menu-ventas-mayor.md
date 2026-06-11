@@ -31,6 +31,8 @@ Ventas Mayor
 ![Factura de venta: cabecera, líneas y totales](img/04-facturas.png)
 *▢ Captura pendiente — Factura de venta: cabecera, líneas y totales.*
 
+**Atajo de menú:** `[Ctrl]+[Alt]+[F]`
+
 Mantenimiento de **Facturas de Venta (Venta Mayor)**. Es el documento
 fiscal de venta. Cada factura lleva:
 
@@ -54,6 +56,8 @@ configuración de certificado de la empresa (ver
 
 ## Formas de pago
 
+**Atajo de menú:** `[Ctrl]+[Alt]+[G]`
+
 Acceso al catálogo de **formas de pago** (el mismo descrito en
 [Compras ▸ Formas de pago](03-menu-compras.md#formas-de-pago)), aquí
 enfocado a su uso en ventas: condiciones de cobro, vencimientos y forma de
@@ -66,6 +70,8 @@ pago por defecto que se propone a los clientes.
 ![Pedidos de venta](img/04-pedidos.png)
 *▢ Captura pendiente — Pedidos de venta.*
 
+**Atajo de menú:** `[Ctrl]+[Alt]+[P]`
+
 Mantenimiento de **Pedidos de Venta**. Registra lo que un cliente
 **encarga** (reserva de género). No mueve stock; sirve de base para generar
 el **albarán** de salida cuando se sirve el pedido.
@@ -77,6 +83,8 @@ el **albarán** de salida cuando se sirve el pedido.
 ![Albaranes de venta](img/04-albaranes.png)
 *▢ Captura pendiente — Albaranes de venta.*
 
+**Atajo de menú:** `[Ctrl]+[Alt]+[A]`
+
 Mantenimiento de **Albaranes de Venta**. Registra la **salida real** de
 mercancía hacia el cliente: al confirmarlo **resta stock** del almacén. Es
 el documento que después se **factura**.
@@ -87,6 +95,8 @@ el documento que después se **factura**.
 
 ![Filtros del listado de ventas](img/04-listado-ventas.png)
 *▢ Captura pendiente — Filtros del listado de ventas.*
+
+**Atajo de menú:** `[Ctrl]+[Alt]+[V]`
 
 Abre el **generador de listados de ventas**. Mediante un cuadro de
 **filtros** (rango de fechas, cliente, artículo, familia, serie…) genera un

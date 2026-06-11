@@ -42,6 +42,8 @@ Archivo
 ![Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado)](img/02-empresas.png)
 *▢ Captura pendiente — Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado).*
 
+**Atajo de menú:** `[Ctrl]+[E]`
+
 Mantiene las **empresas emisoras** que facturan desde Factuzam (puede haber
 más de una). Cada empresa concentra sus datos fiscales y la configuración
 de facturación. Todas ellas comparten artículos/familias/clientes...
@@ -74,6 +76,8 @@ completa (dirección, población, provincia, código postal), Móvil, Email.
 ![Ficha de Almacenes](img/02-almacenes.png)
 *▢ Captura pendiente — Ficha de Almacenes.*
 
+**Atajo de menú:** `[Ctrl]+[L]`
+
 Mantiene los **almacenes** físicos o lógicos donde se ubica el stock. Cada
 movimiento de stock, inventario o documento de mercancía referencia un
 almacén.
@@ -92,6 +96,8 @@ Sub-pestañas de la ficha:
 
 ![Ficha de Clientes con los indicadores fiscales](img/02-clientes.png)
 *▢ Captura pendiente — Ficha de Clientes con los indicadores fiscales.*
+
+**Atajo de menú:** `[Ctrl]+[K]`
 
 Mantiene la **ficha de clientes** a quienes se vende y factura.
 
@@ -121,6 +127,8 @@ Contacto y teléfono de contacto, Nº de cuenta.
 
 ![Ficha de Proveedores](img/02-proveedores.png)
 *▢ Captura pendiente — Ficha de Proveedores.*
+
+**Atajo de menú:** `[Ctrl]+[P]`
 
 Mantiene la **ficha de proveedores** a quienes se compra mercancía.
 Estructura análoga a Clientes, orientada a compras.
@@ -186,6 +194,8 @@ de presentación.
 ![Ficha de Artículos con la pestaña SKUs](img/02-articulos.png)
 *▢ Captura pendiente — Ficha de Artículos con la pestaña SKUs.*
 
+**Atajo de menú:** `[Ctrl]+[A]`
+
 Es la pantalla central del catálogo. Mantiene los **artículos** y sus
 variantes (las distintas tallas/colores se denominan **SKU**).
 
@@ -222,6 +232,8 @@ artículos.
 ![Mantenimiento de Tarifas con los precios por artículo](img/02-tarifas.png)
 *▢ Captura pendiente — Mantenimiento de Tarifas con los precios por artículo.*
 
+**Atajo de menú:** `[Ctrl]+[T]`
+
 Define las **listas de precios** (tarifa general, ofertas, mayoristas…).
 Cada tarifa contiene los precios de los artículos.
 
@@ -234,6 +246,8 @@ Cada tarifa contiene los precios de los artículos.
 ![Mantenimiento de Familias](img/02-familias.png)
 *▢ Captura pendiente — Mantenimiento de Familias.*
 
+**Atajo de menú:** `[Ctrl]+[N]`
+
 **Clasificación jerárquica** de los artículos (familias y subfamilias).
 Permite agrupar el catálogo para informes, filtros y precios.
 
@@ -245,15 +259,21 @@ Permite agrupar el catálogo para informes, filtros y precios.
 
 ### Paises
 
+*(Sin atajo de menú; se abre desde el menú.)*
+
 Catálogo de **países** usado en las direcciones de clientes, proveedores y
 empresas (y para la clasificación fiscal intracomunitaria/extracomunitaria).
 
 ### Unidades de Medida
 
+*(Sin atajo de menú; se abre desde el menú.)*
+
 Catálogo de **unidades** en que se compran/venden los artículos (unidad,
 par, caja, metro, kilo…).
 
 ### Propiedades
+
+**Atajo de menú:** `[Ctrl]+[Y]`
 
 Define **propiedades descriptivas** de artículos (p. ej. *Material*,
 *Temporada*) y sus **valores disponibles**.
@@ -262,6 +282,8 @@ Define **propiedades descriptivas** de artículos (p. ej. *Material*,
 - **Artículos** — artículos que usan esta propiedad.
 
 ### Tipos de Variaciones
+
+**Atajo de menú:** `[Ctrl]+[Alt]+[T]`
 
 Define los **ejes de variación** que generan SKUs (p. ej. *Talla*,
 *Color*) y sus atributos.
@@ -273,6 +295,8 @@ Define los **ejes de variación** que generan SKUs (p. ej. *Talla*,
 
 ### Colecciones de Atributos
 
+**Atajo de menú:** `[Ctrl]+[Alt]+[S]`
+
 Define **conjuntos reutilizables de atributos** (p. ej. una colección de
 tallas estándar) que luego se aplican a varios artículos para generar sus
 SKUs sin redefinirlos cada vez.
@@ -282,6 +306,8 @@ SKUs sin redefinirlos cada vez.
 - **Otros**.
 
 ### Atributos básicos
+
+**Atajo de menú:** `[Ctrl]+[Alt]+[B]`
 
 Catálogo de los **atributos elementales** (los valores individuales de
 talla, color, etc.) que componen las variaciones y colecciones.
@@ -295,6 +321,8 @@ talla, color, etc.) que componen las variaciones y colecciones.
 
 ## Invocar login
 
+**Atajo de menú:** `[Shift]+[Ctrl]+[L]`
+
 Vuelve a mostrar la ventana de **Login** sin cerrar la aplicación. Sirve
 para **cambiar de usuario** (por ejemplo, que entre otra persona con su
 perfil) sin reiniciar el programa.
@@ -302,6 +330,8 @@ perfil) sin reiniciar el programa.
 ---
 
 ## Salir
+
+**Atajo de menú:** `[Alt]+[F4]`
 
 **Cierra la aplicación.** Si hay cambios sin guardar, la aplicación avisará
 antes de salir.

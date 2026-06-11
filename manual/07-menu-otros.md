@@ -34,6 +34,8 @@ Otros
 ![Parámetros Generales de la Aplicación](img/07-parametros.png)
 *▢ Captura pendiente — Parámetros Generales de la Aplicación.*
 
+**Atajo de menú:** `[Ctrl]+[F10]`
+
 Pantalla de **Parámetros Generales de la Aplicación**. Centraliza la
 configuración global de Factuzam: comportamiento por defecto, rutas,
 opciones de impresión y de documentos, valores predeterminados de la
@@ -47,6 +49,8 @@ empresa de trabajo, etc.
 
 ## Grupos de IVA
 
+**Atajo de menú:** `[Ctrl]+[O]`
+
 Define **agrupaciones de tipos de IVA** (zonas/regímenes de IVA). Sirve para
 asociar a empresas, clientes y artículos el conjunto de tipos impositivos
 que les corresponde (p. ej. IVA peninsular frente a otros regímenes).
@@ -57,6 +61,8 @@ que les corresponde (p. ej. IVA peninsular frente a otros regímenes).
 
 ![Tipos de IVA y recargo de equivalencia](img/07-iva.png)
 *▢ Captura pendiente — Tipos de IVA y recargo de equivalencia.*
+
+**Atajo de menú:** `[Ctrl]+[I]`
 
 Mantiene los **tipos de IVA** concretos y sus porcentajes (general,
 reducido, superreducido…), junto con el **recargo de equivalencia**
@@ -72,6 +78,8 @@ ventas.
 
 ![Contadores de numeración por serie](img/07-contadores.png)
 *▢ Captura pendiente — Contadores de numeración por serie.*
+
+**Atajo de menú:** `[Ctrl]+[R]`
 
 Gestiona los **contadores de numeración** de los documentos (facturas,
 albaranes, pedidos…) por **serie** y empresa. Cada documento toma su número
@@ -89,6 +97,8 @@ hacer.
 
 ### Usuarios
 
+**Atajo de menú:** `[Ctrl]+[H]`
+
 Alta y mantenimiento de los **usuarios** que acceden a Factuzam (los que
 introducen credenciales en el [login](00-acceso-y-primeros-pasos.md)).
 Incluye su contraseña, estado y el **perfil/grupo** que determina sus
@@ -96,15 +106,21 @@ permisos.
 
 ### Empleados
 
+*(Sin atajo de menú; se abre desde el menú.)*
+
 Ficha de **empleados** del negocio (datos de personal). Puede vincularse a
 usuarios y a operaciones de caja para saber **quién** realiza cada venta.
 
 ### Grupos
 
+**Atajo de menú:** `[Ctrl]+[J]`
+
 **Grupos de usuarios** para asignar permisos en bloque (p. ej. *Cajeros*,
 *Administración*, *Encargados*). Un usuario hereda los permisos de su grupo.
 
 ### Perfiles
+
+**Atajo de menú:** `[Ctrl]+[W]`
 
 **Perfiles de configuración** que personalizan la apariencia y el
 comportamiento de las pantallas (columnas visibles, captions, opciones)
@@ -115,12 +131,16 @@ para un usuario o grupo.
 ![Gestión de Permisos en árbol](img/07-permisos.png)
 *▢ Captura pendiente — Gestión de Permisos en árbol.*
 
+**Atajo de menú:** `[Ctrl]+[Q]`
+
 Pantalla de **Gestión de Permisos** en forma de **árbol**: activa o
 desactiva, por grupo/usuario, el acceso a cada **menú y acción** de la
 aplicación. Es la forma recomendada de configurar la seguridad de forma
 visual.
 
 ### Permisos (tabla)
+
+*(Sin atajo de menú; se abre desde el menú.)*
 
 La misma información de permisos presentada en **formato tabla** (rejilla),
 para edición masiva o revisión rápida de muchos permisos a la vez.
@@ -132,6 +152,8 @@ para edición masiva o revisión rápida de muchos permisos a la vez.
 ![Diálogo de copia de seguridad](img/07-copia-seguridad.png)
 *▢ Captura pendiente — Diálogo de copia de seguridad.*
 
+**Atajo de menú:** `[Ctrl]+[Y]`
+
 Lanza una **copia de seguridad** de la base de datos. Genera un fichero de
 respaldo con todos los datos (clientes, artículos, documentos, stock…).
 
@@ -142,6 +164,8 @@ respaldo con todos los datos (clientes, artículos, documentos, stock…).
 ---
 
 ## Recuperar Copia de Seguridad
+
+**Atajo de menú:** `[Ctrl]+[Z]`
 
 Permite **restaurar** la base de datos a partir de un fichero de copia o
 **ejecutar un script** de mantenimiento sobre la base de datos.
@@ -156,6 +180,8 @@ Permite **restaurar** la base de datos a partir de un fichero de copia o
 
 ![Generador de Procesos con la pestaña Código SQL](img/07-generador-procesos.png)
 *▢ Captura pendiente — Generador de Procesos con la pestaña Código SQL.*
+
+**Atajo de menú:** `[Ctrl]+[G]`
 
 Herramienta **avanzada** para administradores: permite escribir, guardar y
 ejecutar **procesos SQL** sobre la base de datos — desde un **listado a
