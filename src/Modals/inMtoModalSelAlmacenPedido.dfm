@@ -83,6 +83,54 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
       TabOrder = 0
       Width = 460
     end
+    object chkIncorporar: TcxCheckBox
+      Left = 16
+      Top = 96
+      Caption = 'Incorporar a un albar'#225'n ya existente de este pedido'
+      TabOrder = 5
+      OnClick = chkIncorporarClick
+    end
+    object cxgrdAlbExist: TcxGrid
+      Left = 16
+      Top = 122
+      Width = 628
+      Height = 150
+      TabOrder = 6
+      object tvAlbExist: TcxGridDBTableView
+        OptionsData.Deleting = False
+        OptionsData.Editing = False
+        OptionsData.Inserting = False
+        OptionsView.GroupByBox = False
+        object colAlbExistNUMERO: TcxGridDBColumn
+          Caption = 'N'#250'mero'
+          DataBinding.FieldName = 'NUMERO_ALBC'
+          Width = 90
+        end
+        object colAlbExistSERIE: TcxGridDBColumn
+          Caption = 'Serie'
+          DataBinding.FieldName = 'SERIE_ALBC'
+          Width = 90
+        end
+        object colAlbExistFECHA: TcxGridDBColumn
+          Caption = 'Fecha'
+          DataBinding.FieldName = 'FECHA_ALBC'
+          Width = 110
+        end
+        object colAlbExistESTADO: TcxGridDBColumn
+          Caption = 'Estado'
+          DataBinding.FieldName = 'ESTADO_ALBC'
+          Width = 110
+        end
+        object colAlbExistTOTAL: TcxGridDBColumn
+          Caption = 'Total'
+          DataBinding.FieldName = 'TOTAL_LIQUIDO_ALBC'
+          Width = 120
+        end
+      end
+      object cxgrdlvlAlbExist: TcxGridLevel
+        GridView = tvAlbExist
+      end
+    end
     object lblSerieAlb: TcxLabel
       Left = 16
       Top = 280
@@ -177,5 +225,35 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
     DataSet = unqryAlmacenes
     Left = 504
     Top = 16
+  end
+  object unqryAlbExist: TUniQuery
+    SQL.Strings = (
+      'SELECT NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ESTADO_ALBC,'
+      '       TOTAL_LIQUIDO_ALBC'
+      '  FROM fza_albaranes_compra'
+      ' WHERE NUMERO_PED_ALBC = :np'
+      '   AND SERIE_PED_ALBC  = :sp'
+      '   AND IFNULL(ESTADO_ALBC, '#39#39') NOT IN ('#39'FACTURADO'#39', '#39'CANCELADO'#39')'
+      ' ORDER BY FECHA_ALBC DESC, NUMERO_ALBC DESC')
+    Left = 320
+    Top = 80
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'np'
+        ParamType = ptInput
+        Value = nil
+      end
+      item
+        DataType = ftWideString
+        Name = 'sp'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsAlbExist: TDataSource
+    DataSet = unqryAlbExist
+    Left = 392
+    Top = 80
   end
 end
