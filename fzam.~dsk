@@ -1,19 +1,19 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,1679,21,1690,0,0,,
-File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas',0,1,24,69,27,0,0,,
-File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,639,31,639,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas',0,1,255,31,274,0,0,,
-File_4=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,111,1,123,0,0,{{67,0}
-File_5=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas',0,1,83,28,95,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpMovVentasArt.pas',0,1,1,39,1,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,121,38,142,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,351,8,363,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.pas',0,1,62,33,75,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
-File_12=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,387,32,395,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas',0,1,1,1,1,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalDistribuidor.pas',0,1,258,9,270,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,1679,21,1690,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas',0,1,24,69,27,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,639,31,639,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas',0,1,255,31,274,0,0,,
+File_5=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,111,1,123,0,0,{{67,0}
+File_6=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas',0,1,83,28,95,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpMovVentasArt.pas',0,1,1,39,1,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,121,38,142,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,351,8,363,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.pas',0,1,62,33,75,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
+File_13=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
+File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,387,32,395,0,0,,
 
 [Modules]
 Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj

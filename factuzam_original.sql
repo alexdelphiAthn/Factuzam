@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 11/06/2026 7:24:48
+-- Backup generado: 11/06/2026 16:52:43
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -253,8 +253,11 @@ INSERT INTO `fza_albaranes_compra` (`NUMERO_ALBC`, `SERIE_ALBC`, `FECHA_ALBC`, `
   ('025', 'A1', '2026-05-24 00:00:00', 'CERRADO', NULL, NULL, NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'FER', 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '322323', 'ALE', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 288, 60.48, 348.48, NULL, '00000240', '', '', 'S', NULL, '2026-06-09 17:17:40', '2026-05-26 06:57:15', 'Administrador', 'Administrador'),
   ('026', 'A1', '2026-05-24 00:00:00', 'CERRADO', NULL, NULL, NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'FER', 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '322323', 'GEN', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 288, 60.48, 348.48, NULL, '00000240', '', '', 'S', NULL, '2026-06-09 17:17:40', '2026-05-26 06:57:15', 'Administrador', 'Administrador'),
   ('027', 'A1', '2026-05-29 00:00:00', 'CERRADO', '000000', 'A1', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 240, 50.4, 290.4, NULL, '0', '', '', 'S', NULL, '2026-06-09 17:17:40', '2026-05-29 08:11:16', 'Administrador', 'Administrador'),
-  ('028', 'A1', '2026-05-29 00:00:00', 'CERRADO', '000000', 'A1', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, 1.05, 6.05, NULL, '0', '', '', 'S', NULL, '2026-06-09 17:17:40', '2026-05-29 08:46:45', 'Administrador', 'Administrador');
--- 18 registros exportados
+  ('028', 'A1', '2026-05-29 00:00:00', 'CERRADO', '000000', 'A1', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, 1.05, 6.05, NULL, '0', '', '', 'S', NULL, '2026-06-09 17:17:40', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
+  ('029', 'A1', '2026-06-11 00:00:00', 'CERRADO', NULL, NULL, NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '000', 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, 'E00303', 'ALE', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 801, 168.21, 969.21, NULL, '00000060', '', '', 'S', NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('030', 'A1', '2026-06-11 00:00:00', 'CERRADO', NULL, NULL, NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '000', 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, 'E00303', 'GEN', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 801, 168.21, 969.21, NULL, '00000060', '', '', 'S', NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('031', 'A1', '2026-06-11 00:00:00', 'CERRADO', '000000', 'A1', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 81, 17.01, 98.01, NULL, '0', '', '', 'S', NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador');
+-- 21 registros exportados
 
 
 -- Tabla: fza_albaranes_compra_celdas
@@ -608,8 +611,31 @@ INSERT INTO `fza_albaranes_compra_lineas` (`NUMERO_ALBC_ALBCLIN`, `SERIE_ALBC_AL
   ('027', 'A1', '0040', '000000', 'A1', '0040', 'BOLSOS00011', 'BOLSOS00011/VERDE/XL', '923', 1, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 4, 0, 'N', 21, 10, 12.1, 40, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-29 08:11:16', '2026-05-29 08:11:16', 'Administrador', 'Administrador'),
   ('027', 'A1', '0050', '000000', 'A1', '0050', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXL', '923', 1, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 6, 0, 'N', 21, 10, 12.1, 60, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-29 08:11:16', '2026-05-29 08:11:16', 'Administrador', 'Administrador'),
   ('027', 'A1', '0060', '000000', 'A1', '0060', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXXL', '923', 1, 'BOLSOS', '', 'Bolsos y Mochilas', 'Uds', 6, 0, 'N', 21, 10, 12.1, 60, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-29 08:11:16', '2026-05-29 08:11:16', 'Administrador', 'Administrador'),
-  ('028', 'A1', '0010', '000000', 'A1', '0070', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/S', '877', 3, 'COMPLEMENTOS', '', 'VCartera de lujo', 'Uds', 1, 0, 'N', 21, 5, 6.05, 5, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador');
--- 288 registros exportados
+  ('028', 'A1', '0010', '000000', 'A1', '0070', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/S', '877', 3, 'COMPLEMENTOS', '', 'VCartera de lujo', 'Uds', 1, 0, 'N', 21, 5, 6.05, 5, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
+  ('029', 'A1', '0010', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/42', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 2, 0, 'N', 21, 89, 107.69, 178, 'ALE', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('029', 'A1', '0020', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/43', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 1, 0, 'N', 21, 89, 107.69, 89, 'ALE', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('029', 'A1', '0030', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/41', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 2, 0, 'N', 21, 89, 107.69, 178, 'ALE', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('029', 'A1', '0040', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/40', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 2, 0, 'N', 21, 89, 107.69, 178, 'ALE', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('029', 'A1', '0050', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/44', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 1, 0, 'N', 21, 89, 107.69, 89, 'ALE', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('029', 'A1', '0060', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/39', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 1, 0, 'N', 21, 89, 107.69, 89, 'ALE', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('030', 'A1', '0010', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/42', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 2, 0, 'N', 21, 89, 107.69, 178, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('030', 'A1', '0020', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/43', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 1, 0, 'N', 21, 89, 107.69, 89, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('030', 'A1', '0030', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/41', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 2, 0, 'N', 21, 89, 107.69, 178, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('030', 'A1', '0040', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/40', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 2, 0, 'N', 21, 89, 107.69, 178, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('030', 'A1', '0050', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/44', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 1, 0, 'N', 21, 89, 107.69, 89, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('030', 'A1', '0060', NULL, NULL, NULL, 'CALV00001', 'CALV00001/3838/39', '89798', 4, 'CALV', '', 'CALZADO VESTIR', 'Uds', 1, 0, 'N', 21, 89, 107.69, 89, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0010', '000000', 'A1', '0080', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/S', '989', 1, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0020', '000000', 'A1', '0090', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/M', '989', 1, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0030', '000000', 'A1', '0100', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/L', '989', 1, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0040', '000000', 'A1', '0110', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XL', '989', 1, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0050', '000000', 'A1', '0120', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XXL', '989', 1, 'DEPORTIVO', '', 'Ropa Deportiva', 'Uds', 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0060', '000000', 'A1', '0130', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/S', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0070', '000000', 'A1', '0140', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0080', '000000', 'A1', '0150', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0090', '000000', 'A1', '0160', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XL', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0100', '000000', 'A1', '0170', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXL', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador'),
+  ('031', 'A1', '0110', '000000', 'A1', '0180', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXXL', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-11 16:39:15', '2026-06-11 16:39:15', 'Administrador', 'Administrador');
+-- 311 registros exportados
 
 
 -- Tabla: fza_albaranes_lineas
@@ -754,6 +780,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
   ('BOLSOS00012', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador', 'TC'),
   ('BOLSOS00013', 'S', 'ESTANDAR', 'Bolsos y Mochilas', 'BOLSOS', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador', 'TC'),
   ('BOTIN-ANIT', 'S', 'ESTANDAR', 'Botín Ante Mujer', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:58:05', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
+  ('CALV00001', 'S', 'ESTANDAR', 'CALZADO VESTIR', 'CALV', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador', 'TC'),
   ('CALZADO00001', 'S', 'ESTANDAR', 'Calzado Elegante', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador', 'TC'),
   ('CALZADO00002', 'S', 'ESTANDAR', 'Calzado Elegante', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 20:33:41', '2026-05-23 20:33:41', 'Administrador', 'Administrador', 'TC'),
   ('CALZADO00003', 'S', 'ESTANDAR', 'Calzado Elegante', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-05-23 20:50:06', '2026-05-23 20:50:06', 'Administrador', 'Administrador', 'TC'),
@@ -794,7 +821,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
   ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-OXFORD', 'S', 'ESTANDAR', 'Zapato Oxford Piel Hombre', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:33', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
   ('ZAP-TACÓN', 'S', 'ESTANDAR', 'Zapato Tacón Alto Señora', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:34', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC');
--- 50 registros exportados
+-- 51 registros exportados
 
 
 -- Tabla: fza_articulos_atributos_basicos
@@ -822,6 +849,7 @@ INSERT INTO `fza_articulos_atributos_basicos` (`CODIGO_ART_AAB`, `ID_AV_AAB`, `I
   ('BOLSOS00011', 102, 7, '2026-05-28 19:42:22', '2026-05-28 19:42:22', 'Administrador', 'Administrador'),
   ('BOLSOS00012', 218, 4, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('BOLSOS00013', 9215, 5, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
+  ('CALV00001', 9217, 3, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
   ('CALZADO00001', 221, 12, '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
   ('CALZADO00002', 221, 12, '2026-05-23 20:20:13', '2026-05-23 20:20:13', 'Administrador', 'Administrador'),
   ('CALZADO00003', 221, 12, '2026-05-23 20:34:36', '2026-05-23 20:34:36', 'Administrador', 'Administrador'),
@@ -859,7 +887,7 @@ INSERT INTO `fza_articulos_atributos_basicos` (`CODIGO_ART_AAB`, `ID_AV_AAB`, `I
   ('VEST-FLOR', 9104, 149, '2026-05-15 18:06:11', '2026-05-15 18:06:03', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 9204, 170, '2026-05-16 18:21:49', '2026-05-16 18:05:32', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 9207, 169, '2026-05-16 14:31:55', '2026-05-16 14:31:46', 'Administrador', 'Administrador');
--- 44 registros exportados
+-- 45 registros exportados
 
 
 -- Tabla: fza_articulos_conjuntos_asign
@@ -893,6 +921,7 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('BOLSOS00013', 4, 'TAL', 0, 'S', '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('BOTIN-ANIT', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('BOTIN-ANIT', 5, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  ('CALV00001', 4, 'TAL', 0, 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
   ('CALZADO00001', 1, 'TAL', 0, 'S', '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
   ('CALZADO00002', 1, 'TAL', 0, 'S', '2026-05-23 20:33:41', '2026-05-23 20:33:41', 'Administrador', 'Administrador'),
   ('CALZADO00003', 1, 'TAL', 0, 'S', '2026-05-23 20:50:06', '2026-05-23 20:50:06', 'Administrador', 'Administrador'),
@@ -938,7 +967,7 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('ZAP-OXFORD', 4, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN', 5, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO');
--- 57 registros exportados
+-- 58 registros exportados
 
 
 -- Tabla: fza_articulos_familias
@@ -967,7 +996,7 @@ ALTER TABLE `fza_articulos_familias` ADD INDEX `IDX_FAM_PADRE` (`CODIGO_PADRE_FA
 -- Datos de fza_articulos_familias
 INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `CODIGO_PADRE_FAM`, `ESACTIVO_FAM`, `ORDEN_FAM`, `ESDEFAULT_FAM`, `CODIGO_SUBFAMILIA_FAM`, `NOMBRE_FAM_FAM`, `DESCRIPCION_FAM`, `CONTADOR_ART_FAM`, `ESCONTADOR_ART_FAM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `PAD_ART_FAM`) VALUES
   ('BOLSOS', NULL, 'S', 5, 'N', NULL, 'Bolsos y Mochilas', 'Bolsos, bolsas y mochilas de señora', 13, 'S', '2026-05-28 23:04:21', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 5),
-  ('CALV', NULL, 'S', 0, 'N', 'CALZADO', 'CALZADO VESTIR', NULL, NULL, 'S', '2026-06-05 18:26:27', '2026-06-05 18:26:27', 'Administrador', 'Administrador', 5),
+  ('CALV', NULL, 'S', 0, 'N', 'CALZADO', 'CALZADO VESTIR', NULL, 1, 'S', '2026-06-11 13:48:21', '2026-06-05 18:26:27', 'Administrador', 'Administrador', 5),
   ('CALZADO', NULL, 'S', 2, 'N', NULL, 'Calzado Elegante', 'Calzado Todo tiempo', 6, 'S', '2026-06-04 20:57:54', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 5),
   ('COMPLEMENTOS', NULL, 'S', 3, 'N', NULL, 'Complementos Accesorios', 'Complementos para el buen vestir', 3, 'S', '2026-05-28 19:15:37', '2026-03-11 22:27:51', 'Administrador', 'Administrador', 3),
   ('DEPORTIVO', NULL, 'S', 4, 'N', NULL, 'Ropa Deportiva', 'Ropa y calzado deportivo', 11, 'S', '2026-05-28 22:14:49', '2026-01-01 08:00:00', 'DEMO', 'Administrador', 3),
@@ -1076,15 +1105,10 @@ INSERT INTO `fza_articulos_pdte_recibir` (`CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`,
   ('BOLSOS00013/AZUL_CIELO/XXL', 'GEN', 'A1', '000003', 140, 'BOLSOS00013', '000', '012', 1, 32, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
   ('BOLSOS00013/AZUL_CIELO/XXXL', 'GEN', 'A1', '000003', 140, 'BOLSOS00013', '000', '012', 1, 32, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
   ('COMPLEMENTOS003/MARRON/S', 'GEN', 'A1', '000001', 70, 'COMPLEMENTOS003', 'PEPI', '012', 1, 5, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO006/AZUL/L', 'GEN', 'A1', '000000', 100, 'DEPORTIVO006', 'PEPI', '012', 2, 9, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO006/AZUL/L', 'GEN', 'A1', '000001', 100, 'DEPORTIVO006', 'PEPI', '012', 2, 9, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO006/AZUL/M', 'GEN', 'A1', '000000', 90, 'DEPORTIVO006', 'PEPI', '012', 2, 9, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO006/AZUL/M', 'GEN', 'A1', '000001', 90, 'DEPORTIVO006', 'PEPI', '012', 2, 9, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO006/AZUL/S', 'GEN', 'A1', '000000', 80, 'DEPORTIVO006', 'PEPI', '012', 1, 9, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO006/AZUL/S', 'GEN', 'A1', '000001', 80, 'DEPORTIVO006', 'PEPI', '012', 1, 9, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO006/AZUL/XL', 'GEN', 'A1', '000000', 110, 'DEPORTIVO006', 'PEPI', '012', 1, 9, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO006/AZUL/XL', 'GEN', 'A1', '000001', 110, 'DEPORTIVO006', 'PEPI', '012', 1, 9, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO006/AZUL/XXL', 'GEN', 'A1', '000000', 120, 'DEPORTIVO006', 'PEPI', '012', 1, 9, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO006/AZUL/XXL', 'GEN', 'A1', '000001', 120, 'DEPORTIVO006', 'PEPI', '012', 1, 9, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
   ('DEPORTIVO007/AZUL MARINO/37', 'GEN', 'A1', '000003', 20, 'DEPORTIVO007', '000', '012', 1, 10, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
   ('DEPORTIVO007/AZUL MARINO/38', 'GEN', 'A1', '000003', 20, 'DEPORTIVO007', '000', '012', 1, 10, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
@@ -1122,17 +1146,11 @@ INSERT INTO `fza_articulos_pdte_recibir` (`CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`,
   ('DEPORTIVO008/BEIGE/41', 'GEN', 'A1', '000003', 40, 'DEPORTIVO008', '000', '012', 2, 12, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
   ('DEPORTIVO008/BEIGE/42', 'GEN', 'A1', '000002', 40, 'DEPORTIVO008', '18', '012', 2, 12, '2026-05-26 00:00:00', NULL, '2026-05-28 19:54:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
   ('DEPORTIVO008/BEIGE/42', 'GEN', 'A1', '000003', 40, 'DEPORTIVO008', '000', '012', 2, 12, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
-  ('DEPORTIVO009/NEGRO/L', 'GEN', 'A1', '000000', 150, 'DEPORTIVO009', 'PEPI', '012', 1, 2, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO009/NEGRO/L', 'GEN', 'A1', '000001', 150, 'DEPORTIVO009', 'PEPI', '012', 1, 2, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO009/NEGRO/M', 'GEN', 'A1', '000000', 140, 'DEPORTIVO009', 'PEPI', '012', 1, 2, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO009/NEGRO/M', 'GEN', 'A1', '000001', 140, 'DEPORTIVO009', 'PEPI', '012', 1, 2, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO009/NEGRO/S', 'GEN', 'A1', '000000', 130, 'DEPORTIVO009', 'PEPI', '012', 1, 2, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO009/NEGRO/S', 'GEN', 'A1', '000001', 130, 'DEPORTIVO009', 'PEPI', '012', 1, 2, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO009/NEGRO/XL', 'GEN', 'A1', '000000', 160, 'DEPORTIVO009', 'PEPI', '012', 2, 2, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO009/NEGRO/XL', 'GEN', 'A1', '000001', 160, 'DEPORTIVO009', 'PEPI', '012', 2, 2, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO009/NEGRO/XXL', 'GEN', 'A1', '000000', 170, 'DEPORTIVO009', 'PEPI', '012', 2, 2, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO009/NEGRO/XXL', 'GEN', 'A1', '000001', 170, 'DEPORTIVO009', 'PEPI', '012', 2, 2, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
-  ('DEPORTIVO009/NEGRO/XXXL', 'GEN', 'A1', '000000', 180, 'DEPORTIVO009', 'PEPI', '012', 2, 2, '2026-05-26 00:00:00', NULL, '2026-05-29 08:46:45', '2026-05-29 08:46:45', 'Administrador', 'Administrador'),
   ('DEPORTIVO009/NEGRO/XXXL', 'GEN', 'A1', '000001', 180, 'DEPORTIVO009', 'PEPI', '012', 2, 2, '2026-05-26 00:00:00', NULL, '2026-05-28 22:33:53', '2026-05-28 22:33:53', 'Administrador', 'Administrador'),
   ('DEPORTIVO010/AMARILLO/39', 'GEN', 'A1', '000003', 60, 'DEPORTIVO010', '000', '012', 1, 3, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
   ('DEPORTIVO010/AMARILLO/40', 'GEN', 'A1', '000003', 60, 'DEPORTIVO010', '000', '012', 1, 3, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
@@ -1155,7 +1173,7 @@ INSERT INTO `fza_articulos_pdte_recibir` (`CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`,
   ('DEPORTIVO011/MARRON/XL', 'GEN', 'A1', '000003', 70, 'DEPORTIVO011', '000', '012', 1, 4, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
   ('DEPORTIVO011/MARRON/XXL', 'GEN', 'A1', '000003', 70, 'DEPORTIVO011', '000', '012', 1, 4, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador'),
   ('DEPORTIVO011/MARRON/XXXL', 'GEN', 'A1', '000003', 70, 'DEPORTIVO011', '000', '012', 1, 4, '2026-05-26 00:00:00', NULL, '2026-05-29 08:33:40', '2026-05-29 08:33:40', 'Administrador', 'Administrador');
--- 104 registros exportados
+-- 93 registros exportados
 
 
 -- Tabla: fza_articulos_propiedades
@@ -1184,6 +1202,8 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('ABRIGO-PAÑO', 'MATERIAL', '', 26, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('ABRIGO-PAÑO', 'ORIGEN', '', NULL, 'Portugal', '2026-03-22 18:32:14', 'DEMO'),
   ('ABRIGO-PAÑO', 'TEMPORADA', '', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('ABRIGO-PAÑO', 'TEMPORADA', 'ABRIGO-PAÑO/CAMEL', 10, NULL, '2026-06-11 14:10:34', 'Administrador'),
+  ('ABRIGO-PAÑO', 'TEMPORADA', 'ABRIGO-PAÑO/NEGRO', 9, NULL, '2026-06-11 14:10:34', 'Administrador'),
   ('BLUS-SEDA', 'COMPOSICION', '', NULL, '100% Seda natural', '2026-03-22 18:32:14', 'DEMO'),
   ('BLUS-SEDA', 'ES_ECO', '', NULL, 'N', '2026-03-22 18:32:14', 'DEMO'),
   ('BLUS-SEDA', 'ESTILO', '', 34, NULL, '2026-03-22 18:32:14', 'DEMO'),
@@ -1214,6 +1234,8 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('BOTIN-ANIT', 'ORIGEN', '', NULL, 'España', '2026-03-22 18:32:14', 'DEMO'),
   ('BOTIN-ANIT', 'TEMPORADA', '', 10, NULL, '2026-03-22 18:32:14', 'DEMO'),
   ('BOTIN-ANIT', 'TIPO_SUELA', '', 45, NULL, '2026-03-22 18:32:14', 'DEMO'),
+  ('CALV00001', 'TEMPORADA', '', 11, NULL, '2026-06-11 13:50:22', 'Administrador'),
+  ('CALV00001', 'TEMPORADA', 'CALV00001/3838', 11, NULL, '2026-06-11 13:50:22', 'Administrador'),
   ('CALZADO00001', 'TEMPORADA', '', 12, NULL, '2026-05-23 20:17:07', 'Administrador'),
   ('CALZADO00002', 'TEMPORADA', '', 12, NULL, '2026-05-23 20:33:41', 'Administrador'),
   ('CALZADO00003', 'TEMPORADA', '', 12, NULL, '2026-05-23 20:50:06', 'Administrador'),
@@ -1330,7 +1352,7 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
   ('ZAP-TACÓN', 'ORIGEN', '', NULL, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TEMPORADA', '', 10, NULL, '2026-03-24 07:06:54', 'Administrador'),
   ('ZAP-TACÓN', 'TIPO_SUELA', '', 49, NULL, '2026-03-24 07:06:54', 'Administrador');
--- 154 registros exportados
+-- 158 registros exportados
 
 
 -- Tabla: fza_articulos_proveedores
@@ -1359,6 +1381,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('000', '016', NULL, 2, NULL, 'S', '2025-04-12 16:27:40', '2024-10-06 20:27:00', 'Administrador', 'Administrador'),
   ('000', 'BOLSOS00012', '', 33, '2026-05-29 08:33:38', 'S', '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('000', 'BOLSOS00013', '', 32, '2026-05-29 08:33:39', 'S', '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador'),
+  ('000', 'CALV00001', '89798', 89, '2026-06-11 13:50:22', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
   ('000', 'CALZADO00001', '334', 13, '2026-05-23 20:17:07', 'S', '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
   ('000', 'CALZADO00002', '334', 13, '2026-05-23 20:33:41', 'S', '2026-05-23 20:33:41', '2026-05-23 20:33:41', 'Administrador', 'Administrador'),
   ('000', 'CALZADO00003', '334', 13, '2026-05-23 20:50:06', 'S', '2026-05-23 20:50:06', '2026-05-23 20:50:06', 'Administrador', 'Administrador'),
@@ -1406,7 +1429,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('PEPI', 'DEPORTIVO006', '989', 9, '2026-05-28 19:52:48', 'S', '2026-05-28 19:52:48', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
   ('PEPI', 'DEPORTIVO009', '222', 2, '2026-05-28 19:52:48', 'S', '2026-05-28 19:52:48', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
   ('PEPI', 'PAPAFRITA', NULL, 0.2, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
--- 52 registros exportados
+-- 53 registros exportados
 
 
 -- Tabla: fza_articulos_skus
@@ -1490,6 +1513,12 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('BOTIN-ANIT/NEGRO/37', 'BOTIN-ANIT', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('BOTIN-ANIT/NEGRO/38', 'BOTIN-ANIT', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('BOTIN-ANIT/NEGRO/40', 'BOTIN-ANIT', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
+  ('CALV00001/3838/39', 'CALV00001', 'TC', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/40', 'CALV00001', 'TC', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/41', 'CALV00001', 'TC', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/42', 'CALV00001', 'TC', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/43', 'CALV00001', 'TC', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/44', 'CALV00001', 'TC', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
   ('CALZADO00001/ROSA/L', 'CALZADO00001', 'TC', 'S', '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
   ('CALZADO00001/ROSA/M', 'CALZADO00001', 'TC', 'S', '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
   ('CALZADO00001/ROSA/S', 'CALZADO00001', 'TC', 'S', '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
@@ -1753,7 +1782,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 325 registros exportados
+-- 331 registros exportados
 
 
 -- Tabla: fza_articulos_skus_costes
@@ -1856,6 +1885,12 @@ ALTER TABLE `fza_articulos_stockactual` ADD INDEX `IDX_STK_UNIDAD` (`CODIGO_UNID
 
 -- Datos de fza_articulos_stockactual
 INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, `LOTE_STK`, `FECHA_CADUCIDAD_STK`, `CANTIDAD_STK`, `INSTANTE_MODIF`, `VALOR_TOTAL_STK`, `PRECIO_MEDIO_STK`, `CANTIDAD_PTE_RECIBIR_STK`, `CANTIDAD_PTE_SERVIR_STK`, `CANTIDAD_PTE_TRASPASAR_STK`, `CANTIDAD_PTE_RECTRASPASAR_STK`, `CANTIDAD_ENT_COMPRA_STK`, `CANTIDAD_ENT_TRASPASO_STK`, `CANTIDAD_SAL_TRASPASO_STK`, `CANTIDAD_ENT_DEPOSITO_STK`, `CANTIDAD_SAL_DEPOSITO_STK`, `CANTIDAD_SAL_VENTA_STK`, `CANTIDAD_ENT_REGULAR_STK`, `CANTIDAD_SAL_ALBVENTA_STK`, `CANTIDAD_ENT_ALBENTRADA_STK`) VALUES
+  ('ALE', 'CALV00001/3838/39', '', NULL, 1, '2026-06-11 13:50:22', 89, 89, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('ALE', 'CALV00001/3838/40', '', NULL, 2, '2026-06-11 13:50:22', 178, 89, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('ALE', 'CALV00001/3838/41', '', NULL, 2, '2026-06-11 13:50:22', 178, 89, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('ALE', 'CALV00001/3838/42', '', NULL, 2, '2026-06-11 13:50:22', 178, 89, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('ALE', 'CALV00001/3838/43', '', NULL, 1, '2026-06-11 13:50:22', 89, 89, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('ALE', 'CALV00001/3838/44', '', NULL, 1, '2026-06-11 13:50:22', 89, 89, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
   ('ALE', 'CALZADO00005/AMARILLO/39', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('ALE', 'CALZADO00005/AMARILLO/40', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('ALE', 'CALZADO00005/AMARILLO/41', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2004,6 +2039,12 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'BOTIN-ANIT/MARRON/38', '', NULL, -1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 5, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, -2, '2026-06-06 06:00:19', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0),
+  ('GEN', 'CALV00001/3838/39', '', NULL, 1, '2026-06-11 13:50:22', 89, 89, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CALV00001/3838/40', '', NULL, 2, '2026-06-11 13:50:22', 178, 89, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CALV00001/3838/41', '', NULL, 2, '2026-06-11 13:50:22', 178, 89, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CALV00001/3838/42', '', NULL, 2, '2026-06-11 13:50:22', 178, 89, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CALV00001/3838/43', '', NULL, 1, '2026-06-11 13:50:22', 89, 89, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'CALV00001/3838/44', '', NULL, 1, '2026-06-11 13:50:22', 89, 89, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'CALZADO00003/ROSA/L', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'CALZADO00003/ROSA/M', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'CALZADO00003/ROSA/S', '', NULL, 2, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2119,6 +2160,17 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'DEPORTIVO005/VERDE/42', '', NULL, 1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO005/VERDE/43', '', NULL, 1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO005/VERDE/44', '', NULL, 1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO006/AZUL/L', '', NULL, 2, '2026-06-11 16:39:15', 18, 9, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO006/AZUL/M', '', NULL, 2, '2026-06-11 16:39:15', 18, 9, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO006/AZUL/S', '', NULL, 1, '2026-06-11 16:39:15', 9, 9, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO006/AZUL/XL', '', NULL, 1, '2026-06-11 16:39:15', 9, 9, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO006/AZUL/XXL', '', NULL, 1, '2026-06-11 16:39:15', 9, 9, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/L', '', NULL, 1, '2026-06-11 16:39:15', 2, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/M', '', NULL, 1, '2026-06-11 16:39:15', 2, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/S', '', NULL, 1, '2026-06-11 16:39:15', 2, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/XL', '', NULL, 2, '2026-06-11 16:39:15', 4, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/XXL', '', NULL, 2, '2026-06-11 16:39:15', 4, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/XXXL', '', NULL, 2, '2026-06-11 16:39:15', 4, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'FALD-JEAN/VAQUERO/L', '', NULL, 1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'FALD-PLIS/BLANCO/L', '', NULL, 0, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'FALD-PLIS/VERDE/S', '', NULL, 1, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2146,7 +2198,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-06-02 09:09:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
--- 290 registros exportados
+-- 313 registros exportados
 
 
 -- Tabla: fza_articulos_tarifas
@@ -2268,9 +2320,10 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
   ('DEPORTIVO010', 150, '', 'PVP', 'S', 78, 78, NULL, NULL, NULL, NULL, NULL, '2026-05-29 00:00:00', NULL, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO011', 151, '', 'PVP', 'S', 65, 65, NULL, NULL, NULL, NULL, NULL, '2026-05-29 00:00:00', NULL, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('BOLSOS00012', 152, '', 'PVP', 'S', 90, 90, NULL, NULL, NULL, NULL, NULL, '2026-05-29 00:00:00', NULL, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
-  ('BOLSOS00013', 153, '', 'PVP', 'S', 100, 100, NULL, NULL, NULL, NULL, NULL, '2026-05-29 00:00:00', NULL, '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador');
+  ('BOLSOS00013', 153, '', 'PVP', 'S', 100, 100, NULL, NULL, NULL, NULL, NULL, '2026-05-29 00:00:00', NULL, '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador'),
+  ('CALV00001', 154, '', 'PVP', 'S', 249.2, 249.2, NULL, NULL, NULL, NULL, NULL, '2026-06-11 00:00:00', NULL, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
--- 89 registros exportados
+-- 90 registros exportados
 
 
 -- Tabla: fza_articulos_vinculos
@@ -2603,6 +2656,18 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('BOTIN-ANIT/NEGRO/38', 122, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BOTIN-ANIT/NEGRO/40', 100, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
   ('BOTIN-ANIT/NEGRO/40', 225, '2026-02-22 06:31:28', '2026-02-22 06:31:28', 'SCRIPT_FIX', 'SCRIPT_FIX'),
+  ('CALV00001/3838/39', 227, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/39', 9217, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/40', 225, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/40', 9217, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/41', 224, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/41', 9217, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/42', 126, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/42', 9217, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/43', 127, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/43', 9217, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/44', 226, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  ('CALV00001/3838/44', 9217, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
   ('CALZADO00001/ROSA/L', 221, '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
   ('CALZADO00001/ROSA/L', 9103, '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
   ('CALZADO00001/ROSA/M', 221, '2026-05-23 20:17:07', '2026-05-23 20:17:07', 'Administrador', 'Administrador'),
@@ -2968,7 +3033,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('DEPORTIVO010/AMARILLO/L', 9204, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO010/AMARILLO/M', 9102, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO010/AMARILLO/M', 9204, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
-  ('DEPORTIVO010/AMARILLO/S', 9101, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
+  ('DEPORTIVO010/AMARILLO/S', 9101, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador');
+INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('DEPORTIVO010/AMARILLO/S', 9204, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO010/AMARILLO/XL', 9104, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO010/AMARILLO/XL', 9204, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
@@ -2980,8 +3046,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('DEPORTIVO011/MARRON/39', 227, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO011/MARRON/40', 103, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO011/MARRON/40', 225, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
-  ('DEPORTIVO011/MARRON/41', 103, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador');
-INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('DEPORTIVO011/MARRON/41', 103, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO011/MARRON/41', 224, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO011/MARRON/42', 103, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
   ('DEPORTIVO011/MARRON/42', 126, '2026-05-29 08:33:38', '2026-05-29 08:33:38', 'Administrador', 'Administrador'),
@@ -3121,7 +3186,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 639 registros exportados
+-- 651 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -3197,9 +3262,10 @@ INSERT INTO `fza_atributos_valores` (`ID_AV`, `ID_VA_AV`, `AV`, `ORDEN_AV`, `DES
   (9212, 'TAL', 'XXXL', 60, NULL, 'S', 1, NULL, NULL, 22, '2026-05-14 19:34:42', '2026-04-28 17:28:02', 'SISTEMA', 'SISTEMA'),
   (9213, 'TAL', '3XL', 60, NULL, 'S', 1, NULL, NULL, NULL, '2026-05-11 19:19:29', '2026-05-11 19:19:29', 'SISTEMA', 'SISTEMA'),
   (9215, 'CO', 'AZUL_CIELO', 0, NULL, 'S', 1, NULL, NULL, 5, '2026-05-22 19:56:38', '2026-05-22 19:56:38', 'Administrador', 'Administrador'),
-  (9216, 'CO', 'COLORADITO', 0, NULL, 'S', 1, NULL, NULL, 172, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador');
+  (9216, 'CO', 'COLORADITO', 0, NULL, 'S', 1, NULL, NULL, 172, '2026-05-22 19:56:39', '2026-05-22 19:56:39', 'Administrador', 'Administrador'),
+  (9217, 'CO', '3838', 0, '3838', 'S', 1, NULL, NULL, 3, '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
--- 47 registros exportados
+-- 48 registros exportados
 
 
 -- Tabla: fza_atributos_valores_info
@@ -4087,9 +4153,15 @@ INSERT INTO `fza_codigos_barras` (`ID_CB`, `CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB
   (762, '2100000003174', 'BOLSOS00013/AZUL_CIELO/L', 'EAN13', 'S', '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador'),
   (763, '2100000003181', 'BOLSOS00013/AZUL_CIELO/XL', 'EAN13', 'S', '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador'),
   (764, '2100000003198', 'BOLSOS00013/AZUL_CIELO/XXL', 'EAN13', 'S', '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador'),
-  (765, '2100000003204', 'BOLSOS00013/AZUL_CIELO/XXXL', 'EAN13', 'S', '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador');
+  (765, '2100000003204', 'BOLSOS00013/AZUL_CIELO/XXXL', 'EAN13', 'S', '2026-05-29 08:33:39', '2026-05-29 08:33:39', 'Administrador', 'Administrador'),
+  (766, '2100000003211', 'CALV00001/3838/42', 'EAN13', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  (767, '2100000003228', 'CALV00001/3838/43', 'EAN13', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  (768, '2100000003235', 'CALV00001/3838/41', 'EAN13', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  (769, '2100000003242', 'CALV00001/3838/40', 'EAN13', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  (770, '2100000003259', 'CALV00001/3838/44', 'EAN13', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador'),
+  (771, '2100000003266', 'CALV00001/3838/39', 'EAN13', 'S', '2026-06-11 13:50:22', '2026-06-11 13:50:22', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_codigos_barras` ENABLE KEYS */;
--- 308 registros exportados
+-- 314 registros exportados
 
 
 -- Tabla: fza_compras_plantillas
@@ -4219,8 +4291,11 @@ INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `EST
   ('A1', '000006', '2026-05-24 00:00:00', 'CERRADA', '012', 'FER', '322323', NULL, 'GEN', 'EUR', 'N', 250, 'PVP', 'S', 'N', 1, 0.05, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-26 06:57:16', 'Administrador', 'N', 'S', 'S', '', '', 'A1', '026', NULL, 40, NULL, '2026-05-24 06:59:49', 'Administrador', '2026-05-26 06:57:16', 'Administrador', 'N', 11),
   ('A1', '000007', '2026-05-26 00:00:00', 'CERRADA', '012', 'PEPI', '398383', NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 1, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-28 19:52:49', 'Administrador', 'S', 'N', 'N', 'A1', '000001', '', '', NULL, 170, NULL, '2026-05-26 06:47:47', 'Administrador', '2026-05-28 19:52:49', 'Administrador', 'N', 11),
   ('A1', '000008', '2026-05-26 00:00:00', 'CERRADA', '012', '000', '32323', NULL, 'GEN', 'EUR', 'N', NULL, 'PVP', 'S', 'N', 0, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-05-29 08:33:40', 'Administrador', 'S', 'N', 'N', 'A1', '000003', '', '', NULL, 180, NULL, '2026-05-26 07:36:28', 'Administrador', '2026-05-29 08:33:40', 'Administrador', 'N', 11),
-  ('A1', '000011', '2026-06-04 00:00:00', 'BORRADOR', '012', '22', '112211', NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 0, 1, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, 'N', 'N', 'N', NULL, NULL, NULL, NULL, NULL, 10, NULL, '2026-06-04 20:57:48', 'Administrador', '2026-06-04 20:59:06', 'Administrador', 'N', 11);
--- 6 registros exportados
+  ('A1', '000011', '2026-06-04 00:00:00', 'BORRADOR', '012', '22', '112211', NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 0.05, 1, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, 'N', 'N', 'N', NULL, NULL, NULL, NULL, NULL, 10, NULL, '2026-06-04 20:57:48', 'Administrador', '2026-06-11 08:12:32', 'Administrador', 'N', 11),
+  ('A1', '000012', '2026-06-11 00:00:00', 'BORRADOR', '012', '000', NULL, NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 0, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, 'N', 'N', 'N', NULL, NULL, NULL, NULL, NULL, 20, NULL, '2026-06-11 13:46:43', 'Administrador', '2026-06-11 13:48:04', 'Administrador', 'N', 11),
+  ('A1', '000013', '2026-06-11 00:00:00', 'CERRADA', '012', '000', 'E00303', NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 0, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, '2026-06-11 13:50:22', 'Administrador', 'N', 'S', 'S', '', '', 'A1', '030', NULL, 10, NULL, '2026-06-11 13:48:12', 'Administrador', '2026-06-11 13:50:22', 'Administrador', 'N', 11),
+  ('A1', '000014', '2026-06-11 00:00:00', 'BORRADOR', '012', '000', NULL, NULL, 'GEN', 'EUR', 'N', 280, 'PVP', 'S', 'N', 0, 0, 'TC', NULL, NULL, NULL, NULL, 'N', NULL, NULL, NULL, 'N', 'N', 'S', NULL, NULL, NULL, NULL, NULL, 10, NULL, '2026-06-11 16:10:03', 'Administrador', '2026-06-11 16:10:03', 'Administrador', 'N', 11);
+-- 9 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_celdas
@@ -4531,11 +4606,29 @@ INSERT INTO `fza_compras_sesiones_celdas` (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCE
   ('A1', '000008', 140, 1, 9212, '', 1, '2026-05-28 23:57:29', 'Administrador', '2026-05-28 23:57:29', 'Administrador'),
   ('A1', '000011', 10, 1, 121, '', 1, '2026-06-04 20:58:37', 'Administrador', '2026-06-04 20:58:37', 'Administrador'),
   ('A1', '000011', 10, 1, 122, '', 2, '2026-06-04 20:58:38', 'Administrador', '2026-06-04 20:58:38', 'Administrador'),
-  ('A1', '000011', 10, 1, 126, '', 1, '2026-06-04 20:58:39', 'Administrador', '2026-06-04 20:58:39', 'Administrador'),
-  ('A1', '000011', 10, 1, 224, '', 1, '2026-06-04 20:58:39', 'Administrador', '2026-06-04 20:58:39', 'Administrador'),
-  ('A1', '000011', 10, 1, 225, '', 2, '2026-06-04 20:58:38', 'Administrador', '2026-06-04 20:58:38', 'Administrador'),
-  ('A1', '000011', 10, 1, 227, '', 2, '2026-06-04 20:58:38', 'Administrador', '2026-06-04 20:58:38', 'Administrador');
--- 290 registros exportados
+  ('A1', '000011', 10, 1, 126, '', 1, '2026-06-04 20:58:39', 'Administrador', '2026-06-11 07:46:05', 'Administrador'),
+  ('A1', '000011', 10, 1, 224, '', 2, '2026-06-04 20:58:39', 'Administrador', '2026-06-11 07:46:05', 'Administrador'),
+  ('A1', '000011', 10, 1, 225, '', 2, '2026-06-04 20:58:38', 'Administrador', '2026-06-11 07:46:05', 'Administrador'),
+  ('A1', '000011', 10, 1, 227, '', 1, '2026-06-04 20:58:38', 'Administrador', '2026-06-11 07:46:05', 'Administrador'),
+  ('A1', '000012', 10, 1, 126, '', 2, '2026-06-11 13:47:19', 'Administrador', '2026-06-11 13:47:19', 'Administrador'),
+  ('A1', '000012', 10, 1, 127, '', 1, '2026-06-11 13:47:19', 'Administrador', '2026-06-11 13:47:19', 'Administrador'),
+  ('A1', '000012', 10, 1, 224, '', 2, '2026-06-11 13:47:19', 'Administrador', '2026-06-11 13:47:19', 'Administrador'),
+  ('A1', '000012', 10, 1, 225, '', 2, '2026-06-11 13:47:19', 'Administrador', '2026-06-11 13:47:19', 'Administrador'),
+  ('A1', '000012', 10, 1, 226, '', 1, '2026-06-11 13:47:19', 'Administrador', '2026-06-11 13:47:19', 'Administrador'),
+  ('A1', '000012', 10, 1, 227, '', 1, '2026-06-11 13:47:19', 'Administrador', '2026-06-11 13:47:19', 'Administrador'),
+  ('A1', '000013', 10, 1, 126, 'ALE', 2, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 126, 'GEN', 2, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 127, 'ALE', 1, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 127, 'GEN', 1, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 224, 'ALE', 2, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 224, 'GEN', 2, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 225, 'ALE', 2, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 225, 'GEN', 2, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 226, 'ALE', 1, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 226, 'GEN', 1, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 227, 'ALE', 1, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador'),
+  ('A1', '000013', 10, 1, 227, 'GEN', 1, '2026-06-11 13:49:32', 'Administrador', '2026-06-11 13:49:32', 'Administrador');
+-- 308 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_documentos
@@ -4560,8 +4653,10 @@ INSERT INTO `fza_compras_sesiones_documentos` (`SERIE_SES_SESDOC`, `NUMERO_SES_S
   ('A1', '000006', 'ALBC', 'ALE', '012', 'A1', '025', '2026-05-26 06:57:15', 'Administrador'),
   ('A1', '000006', 'ALBC', 'GEN', '012', 'A1', '026', '2026-05-26 06:57:16', 'Administrador'),
   ('A1', '000007', 'PEDC', 'GEN', '012', 'A1', '000001', '2026-05-28 19:52:49', 'Administrador'),
-  ('A1', '000008', 'PEDC', 'GEN', '012', 'A1', '000003', '2026-05-29 08:33:40', 'Administrador');
--- 4 registros exportados
+  ('A1', '000008', 'PEDC', 'GEN', '012', 'A1', '000003', '2026-05-29 08:33:40', 'Administrador'),
+  ('A1', '000013', 'ALBC', 'ALE', '012', 'A1', '029', '2026-06-11 13:50:22', 'Administrador'),
+  ('A1', '000013', 'ALBC', 'GEN', '012', 'A1', '030', '2026-06-11 13:50:22', 'Administrador');
+-- 6 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_fotos
@@ -4694,8 +4789,11 @@ INSERT INTO `fza_compras_sesiones_lineas` (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLI
   ('A1', '000008', 70, 'DEPORTIVO011', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 4, NULL, 65, '1788', 11, 44, '2026-05-28 22:14:41', 'Administrador', '2026-05-29 05:34:26', 'Administrador', 'MARRON', 'MARRON'),
   ('A1', '000008', 110, 'BOLSOS00012', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 1, NULL, NULL, NULL, 'N', NULL, NULL, 33, NULL, 90, NULL, 8, 264, '2026-05-28 22:25:55', 'Administrador', '2026-05-29 05:34:07', 'Administrador', 'AZUL', 'AZUL'),
   ('A1', '000008', 140, 'BOLSOS00013', 'Bolsos y Mochilas', 'BOLSOS', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 32, NULL, 100, NULL, 14, 448, '2026-05-28 23:04:13', 'Administrador', '2026-05-29 05:23:02', 'Administrador', 'CIELO', 'AZUL_CIELO'),
-  ('A1', '000011', 10, 'CALZADO00006', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 5, NULL, NULL, NULL, 'N', NULL, NULL, 10, NULL, 27, '142311-B', 9, 90, '2026-06-04 20:57:48', 'Administrador', '2026-06-04 20:59:06', 'Administrador', '11', 'AMARILLOCHILLON');
--- 33 registros exportados
+  ('A1', '000011', 10, 'CALZADO00006', 'Calzado Elegante', 'CALZADO', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 5, NULL, NULL, NULL, 'N', NULL, NULL, 10, NULL, 27, '142311-B', 9, 90, '2026-06-04 20:57:48', 'Administrador', '2026-06-04 20:59:06', 'Administrador', '11', 'AMARILLOCHILLON'),
+  ('A1', '000012', 10, 'DEPORTIVO004', 'Ropa Deportiva', 'DEPORTIVO', 'MATRIZ', 'ESTANDAR', 'N', 'Uds', 'N', 'TC', 'TAL', 4, NULL, NULL, NULL, 'S', 'REUSAR', 'DEPORTIVO004', 13, NULL, 90, '32122', 9, 117, '2026-06-11 13:46:43', 'Administrador', '2026-06-11 13:47:23', 'Administrador', '0908', 'VERDE'),
+  ('A1', '000013', 10, 'CALV00001', 'CALZADO VESTIR', 'CALV', 'MATRIZ', 'ESTANDAR', NULL, 'Uds', 'N', NULL, NULL, 4, NULL, NULL, NULL, 'N', NULL, NULL, 89, NULL, 249.2, '89798', 18, 1602, '2026-06-11 13:48:12', 'Administrador', '2026-06-11 13:49:32', 'Administrador', '3838', 'ROJO'),
+  ('A1', '000014', 10, 'CALV00001', 'CALZADO VESTIR', 'CALV', 'MATRIZ', 'ESTANDAR', 'N', 'Uds', 'N', 'TC', 'TAL', 4, NULL, NULL, NULL, 'S', 'REUSAR', 'CALV00001', 89, NULL, 249.2, '89798', 0, 0, '2026-06-11 16:10:03', 'Administrador', '2026-06-11 16:10:29', 'Administrador', '9829', 'VERDE');
+-- 36 registros exportados
 
 
 -- Tabla: fza_compras_sesiones_lineas_filas
@@ -5057,7 +5155,7 @@ CREATE TABLE `fza_contadores` (
 
 -- Datos de fza_contadores
 INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('AB', '-', '-', 29, 3, 'S', 'S', '2026-05-29 08:46:45', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
+  ('AB', '-', '-', 32, 3, 'S', 'S', '2026-06-11 16:39:15', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
   ('AO', '-', '-', 38, 3, 'S', 'S', '2025-04-18 12:05:44', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
   ('BA', '-', '-', 79, 10, 'S', 'S', '2026-05-22 20:56:22', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
@@ -5085,20 +5183,20 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 349, 3, 'S', 'S', '2026-06-11 07:18:45', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 355, 3, 'S', 'S', '2026-06-11 16:37:00', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 22, 2, 'S', 'S', '2026-05-26 08:44:59', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 738, 10, 'S', 'S', '2026-06-06 06:00:19', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('MV', '-', '-', 761, 10, 'S', 'S', '2026-06-11 16:39:15', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
   ('OV', '012', 'OV', 170, 8, 'S', 'S', '2026-06-06 06:00:19', '2026-04-02 20:05:59', '1', '1'),
   ('PC', '-', '-', 4, 6, 'S', 'S', '2026-05-29 08:33:39', '2026-05-28 19:21:38', 'SISTEMA', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador'),
-  ('RP', '-', '-', 0, 6, 'S', 'S', '2026-06-11 07:18:45', '2026-06-11 07:18:45', 'SISTEMA', 'SISTEMA'),
+  ('RP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 08:08:43', '2026-06-11 07:18:45', 'SISTEMA', 'SISTEMA'),
   ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador'),
   ('SE', '-', '-', 0, 6, 'S', 'S', '2026-05-12 18:38:25', '2026-05-12 18:38:25', 'Administrador', 'Administrador'),
-  ('SE', '012', 'A1', 12, 6, 'S', 'N', '2026-06-04 20:57:48', '2026-05-12 19:52:18', 'Administrador', 'Administrador'),
+  ('SE', '012', 'A1', 15, 6, 'S', 'N', '2026-06-11 16:10:03', '2026-05-12 19:52:18', 'Administrador', 'Administrador'),
   ('TA', '012', 'TA', 3, 6, 'S', 'N', '2026-06-02 08:05:16', '2026-06-02 07:19:14', 'Administrador', 'Administrador'),
   ('TR', '012', 'TR', 2, 6, 'S', 'N', '2026-06-02 06:44:23', '2026-06-02 06:44:23', 'Administrador', 'Administrador'),
   ('TS', '-', '-', 0, 10, 'S', 'S', '2026-05-30 16:56:51', '2026-05-30 16:56:51', 'SISTEMA', 'SISTEMA');
@@ -5323,6 +5421,11 @@ ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_PROVEEDOR` (`CODIGO_PRV_EFE
 ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_REMESA` (`SERIE_REMC_EFEC`, `NUMERO_REMC_EFEC`);
 ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFEC`);
 
+-- Datos de fza_efectos_compra
+INSERT INTO `fza_efectos_compra` (`SERIE_FACC_EFEC`, `NUMERO_FACC_EFEC`, `NUMERO_EFEC`, `CODIGO_EMP_EFEC`, `CODIGO_PRV_EFEC`, `RAZON_SOCIAL_PRV_EFEC`, `NIF_PRV_EFEC`, `CODIGO_TEFE_EFEC`, `ESTADO_EFEC`, `ORDEN_PLAZO_EFEC`, `FECHA_EMISION_EFEC`, `FECHA_VENCIMIENTO_EFEC`, `FECHA_PAGO_EFEC`, `IMPORTE_EFEC`, `IMPORTE_PAGADO_EFEC`, `IMPORTE_PENDIENTE_EFEC`, `SERIE_REMC_EFEC`, `NUMERO_REMC_EFEC`, `ENTIDAD_EFEC`, `OFICINA_EFEC`, `DIGITO_CONTROL_EFEC`, `CUENTA_EFEC`, `IBAN_EFEC`, `DOC_EXTERNO_EFEC`, `OBSERVACIONES_EFEC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('-', '000000', 1, '012', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, 'RECIBO', 'PAGADO', 1, '2026-06-11 00:00:00', '2026-08-10 00:00:00', '2026-06-11 00:00:00', 282, 282, 0, '-', '000000', NULL, NULL, NULL, NULL, NULL, NULL, '', '2026-06-11 16:16:23', '2026-06-11 07:51:39', 'Administrador', 'Administrador');
+-- 1 registros exportados
+
 
 -- Tabla: fza_efectos_compra_pagos
 
@@ -5347,6 +5450,11 @@ CREATE TABLE `fza_efectos_compra_pagos` (
   PRIMARY KEY (`SERIE_FACC_EFECPAG`,`NUMERO_FACC_EFECPAG`,`NUMERO_EFEC_EFECPAG`,`NUMERO_PAGO_EFECPAG`)
 );
 ALTER TABLE `fza_efectos_compra_pagos` ADD INDEX `IDX_EFECPAG_FECHA` (`FECHA_EFECPAG`);
+
+-- Datos de fza_efectos_compra_pagos
+INSERT INTO `fza_efectos_compra_pagos` (`SERIE_FACC_EFECPAG`, `NUMERO_FACC_EFECPAG`, `NUMERO_EFEC_EFECPAG`, `NUMERO_PAGO_EFECPAG`, `FECHA_EFECPAG`, `IMPORTE_EFECPAG`, `TIPO_EFECPAG`, `CODIGO_FP_EFECPAG`, `REFERENCIA_EFECPAG`, `ENTIDAD_PAGO_EFECPAG`, `ESCONCILIADO_EFECPAG`, `OBSERVACIONES_EFECPAG`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('-', '000000', 1, 1, '2026-06-11 00:00:00', 282, 'TRANSFERENCIA', NULL, '98798', '', 'N', '', '2026-06-11 16:16:23', '2026-06-11 16:16:23', 'Administrador', 'Administrador');
+-- 1 registros exportados
 
 
 -- Tabla: fza_empleados
@@ -5829,7 +5937,7 @@ ALTER TABLE `fza_facturas_compra` ADD INDEX `IDX_FACC_PROVEEDOR_FECHA` (`CODIGO_
 
 -- Datos de fza_facturas_compra
 INSERT INTO `fza_facturas_compra` (`NUMERO_FACC`, `SERIE_FACC`, `FECHA_FACC`, `FECHA_VALOR_FACC`, `ESTADO_FACC`, `DOC_EXTERNO_FACC`, `REF_PROVEEDOR_FACC`, `CODIGO_EMP_FACC`, `RAZON_SOCIAL_EMPRESA_FACC`, `NIF_EMPRESA_FACC`, `MOVIL_EMPRESA_FACC`, `EMAIL_EMPRESA_FACC`, `DIRECCION1_EMPRESA_FACC`, `DIRECCION2_EMPRESA_FACC`, `POBLACION_EMPRESA_FACC`, `PROVINCIA_EMPRESA_FACC`, `CODIGO_PAI_EMPRESA_FACC`, `NOMBRE_PAI_EMPRESA_FACC`, `CODIGO_POSTAL_EMPRESA_FACC`, `CODIGO_PRV_FACC`, `RAZON_SOCIAL_PRV_FACC`, `NIF_PRV_FACC`, `MOVIL_PRV_FACC`, `EMAIL_PRV_FACC`, `DIRECCION1_PRV_FACC`, `DIRECCION2_PRV_FACC`, `POBLACION_PRV_FACC`, `PROVINCIA_PRV_FACC`, `CODIGO_PAI_PRV_FACC`, `NOMBRE_PAI_PRV_FACC`, `CODIGO_POSTAL_PRV_FACC`, `CODIGO_ALM_FACC`, `CODIGO_IVA_FACC`, `PORCENTAJE_IVAN_FACC`, `TOTAL_BASEI_IVAN_FACC`, `TOTAL_IVAN_FACC`, `PORCENTAJE_IVAR_FACC`, `TOTAL_BASEI_IVAR_FACC`, `TOTAL_IVAR_FACC`, `PORCENTAJE_IVAS_FACC`, `TOTAL_BASEI_IVAS_FACC`, `TOTAL_IVAS_FACC`, `PORCENTAJE_IVAE_FACC`, `TOTAL_BASEI_IVAE_FACC`, `TOTAL_IVAE_FACC`, `PORCENTAJE_DTO_COMERCIAL_FACC`, `TOTAL_DTO_COMERCIAL_FACC`, `PORCENTAJE_PRONTO_PAGO_FACC`, `TOTAL_PRONTO_PAGO_FACC`, `PORCENTAJE_RAPPEL_FACC`, `TOTAL_RAPPEL_FACC`, `PORCENTAJE_FINANCIACION_FACC`, `TOTAL_FINANCIACION_FACC`, `TOTAL_PORTES_FACC`, `PORCENTAJE_RETENCION_FACC`, `TOTAL_RETENCION_FACC`, `TOTAL_BRUTO_FACC`, `TOTAL_BASES_FACC`, `TOTAL_IMPUESTOS_FACC`, `TOTAL_FACC`, `TOTAL_LIQUIDO_FACC`, `FORMA_PAGO_FACC`, `ESAGRUPAR_ALBARANES_FACC`, `ENTIDAD_FACC`, `OFICINA_FACC`, `DIGITO_CONTROL_FACC`, `CUENTA_FACC`, `IBAN_FACC`, `CONTADOR_LINEAS_FACC`, `COMENTARIOS_FACC`, `OBSERVACIONES_FACC`, `ESPIVOTE_HORIZONTAL_FACC`, `INSTANTE_CONTABILIZACION_FACC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000000', '-', '2026-06-11 00:00:00', NULL, 'ABIERTA', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, 'GEN', NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1471, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1471, 1471, 0, 1471, 1471, NULL, 'S', NULL, NULL, NULL, NULL, NULL, '530', '', '', 'S', NULL, '2026-06-11 07:20:03', '2026-06-11 07:20:03', 'Administrador', 'Administrador');
+  ('000000', '-', '2026-06-11 00:00:00', NULL, 'ABIERTA', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, 'GEN', NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1471, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1471, 282, 0, 1471, 282, '60DIAS', 'S', NULL, NULL, NULL, NULL, NULL, '530', '', '', 'S', NULL, '2026-06-11 07:39:42', '2026-06-11 07:20:03', 'Administrador', 'Administrador');
 -- 1 registros exportados
 
 
@@ -35771,8 +35879,1681 @@ SELECT ''RemesasCompra'',
  WHERE NOT EXISTS (
    SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''RemesasCompra''
  );
-', '2026-06-11 07:18:45', '2026-06-11 07:18:45', 'Administrador', 'Administrador');
--- 144 registros exportados
+', '2026-06-11 07:18:45', '2026-06-11 07:18:45', 'Administrador', 'Administrador'),
+  ('349', 'facturas_compra', '-- ============================================================================
+-- Facturas de Compra (factura de proveedor) — esquema base (hito 1)
+--
+-- Crea las tablas `fza_facturas_compra` (cabecera) y
+-- `fza_facturas_compra_lineas` (lineas), destino de la AGRUPACION de
+-- albaranes de compra en una factura. Es el espejo de compra de
+-- `fza_facturas` / `fza_facturas_lineas` (venta), reutilizando la forma
+-- de linea de `fza_albaranes_compra_lineas` (proveedor + precio de
+-- compra) y anyadiendo los campos de factura de proveedor del legacy
+-- `ocfacpro` (documento externo, descuentos, retencion, domiciliacion).
+--
+-- Cierra el hueco que ya anticipaban `fza_albaranes_compra` y
+-- `fza_devoluciones_compra`: ambas tienen `NUMERO_FAC_*` / `SERIE_FAC_*`
+-- comentadas como "FK logica a fza_facturas_compras" (plural) hacia una
+-- tabla que nunca se creo. Aqui se materializa en SINGULAR
+-- (`fza_facturas_compra`), igual que el resto de documentos de compra
+-- (`fza_pedidos_compra`, `fza_albaranes_compra`, `fza_devoluciones_compra`).
+--
+-- El codigo de tipo de documento ''FP'' ("FACTURA DE COMPRAS") ya existe en
+-- `fza_tipos_documentos`; este script lo realinea a la tabla singular y
+-- provisiona su contador, igual que hizo `pedidos_compra.sql` con ''PC''.
+--
+-- Sufijos de columna: `_FACC` cabecera, `_FACCLIN` lineas (registrados en
+-- LIBRO_DE_ESTILO_BBDD.md §2 y en UNormalizerEngine.pas / InitDefaults).
+--
+-- Idempotente: comprueba INFORMATION_SCHEMA antes de cada DDL para que el
+-- script pueda volver a ejecutarse sin error si las tablas / indices /
+-- filas ya existen. Las stored procedures usan DROP ... IF EXISTS, asi que
+-- requieren un cliente que entienda DELIMITER (mysql CLI, HeidiSQL,
+-- DBeaver), igual que el propio dump factuzam_original.sql.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. fza_facturas_compra: cabecera
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_facturas_compra` (''
+  ''  `NUMERO_FACC` varchar(20) NOT NULL,''
+  ''  `SERIE_FACC`  varchar(20) NOT NULL,''
+  ''  `FECHA_FACC`  date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha de la factura del proveedor'''',''
+  ''  `FECHA_VALOR_FACC` date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha valor / contable (legacy FechaValor)'''',''
+  ''  `ESTADO_FACC` varchar(20) NULL DEFAULT ''''ABIERTA''''''
+  ''       COMMENT ''''ABIERTA, CERRADA, CONTABILIZADA, PAGADA, CANCELADA'''',''
+  ''  `DOC_EXTERNO_FACC` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro de factura segun el proveedor (legacy DocExterno)'''',''
+  ''  `CODIGO_EMP_FACC` varchar(8) NULL DEFAULT NULL,''
+  ''  `RAZON_SOCIAL_EMPRESA_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_EMPRESA_FACC`        varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_EMPRESA_FACC`      varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_EMPRESA_FACC`      varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_EMPRESA_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_EMPRESA_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_EMPRESA_FACC`  varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_EMPRESA_FACC`  varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_EMPRESA_FACC` varchar(3)   NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_EMPRESA_FACC` varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_EMPRESA_FACC` varchar(15) NULL DEFAULT NULL,''
+  ''  `CODIGO_PRV_FACC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_proveedores'''',''
+  ''  `RAZON_SOCIAL_PRV_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_PRV_FACC`          varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_PRV_FACC`        varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_PRV_FACC`        varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_PRV_FACC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_PRV_FACC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_PRV_FACC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_PRV_FACC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_PRV_FACC`   varchar(3)   NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_PRV_FACC`   varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_PRV_FACC` varchar(15) NULL DEFAULT NULL,''
+  ''  `CODIGO_ALM_FACC` varchar(10) NULL DEFAULT NULL,''
+  ''  `CODIGO_IVA_FACC` varchar(20) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAN_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAN_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAN_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAR_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAR_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAR_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAS_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAS_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAS_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAE_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAE_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAE_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_DTO_COMERCIAL_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_DTO_COMERCIAL_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_PRONTO_PAGO_FACC`   decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_PRONTO_PAGO_FACC`        decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_RAPPEL_FACC`        decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_RAPPEL_FACC`             decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_FINANCIACION_FACC`  decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_FINANCIACION_FACC`       decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_PORTES_FACC`             decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_RETENCION_FACC`     decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_RETENCION_FACC`          decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BRUTO_FACC`     decimal(18,6) NULL DEFAULT NULL''
+  ''       COMMENT ''''Suma de lineas antes de descuentos'''',''
+  ''  `TOTAL_BASES_FACC`     decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IMPUESTOS_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_FACC`           decimal(18,6) NULL DEFAULT NULL''
+  ''       COMMENT ''''Total factura = bases + impuestos'''',''
+  ''  `TOTAL_LIQUIDO_FACC`   decimal(18,6) NULL DEFAULT NULL''
+  ''       COMMENT ''''A pagar al proveedor (con retencion / descuentos)'''',''
+  ''  `FORMA_PAGO_FACC`      varchar(200)  NULL DEFAULT NULL''
+  ''       COMMENT ''''Codigo de forma de pago (fza_formas_pago)'''',''
+  ''  `ESAGRUPAR_ALBARANES_FACC` varchar(1) NULL DEFAULT ''''S''''''
+  ''       COMMENT ''''S/N — agrupa varios albaranes en esta factura'''',''
+  ''  `ENTIDAD_FACC`         varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_FACC`         varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_FACC`  varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_FACC`          varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_FACC`            varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta del proveedor para domiciliar el pago'''',''
+  ''  `CONTADOR_LINEAS_FACC` varchar(8)    NULL DEFAULT NULL,''
+  ''  `COMENTARIOS_FACC`     varchar(1000) NULL DEFAULT '''''''',''
+  ''  `OBSERVACIONES_FACC`   varchar(2000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_CONTABILIZACION_FACC` datetime NULL DEFAULT NULL''
+  ''       COMMENT ''''Control contable: cuando se contabilizo la factura'''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_FACC`,`SERIE_FACC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Indices de cabecera
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_PROVEEDOR_FECHA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_PROVEEDOR_FECHA` ''
+  ''(`CODIGO_PRV_FACC`,`FECHA_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_EMPRESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_EMPRESA` (`CODIGO_EMP_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_ESTADO` (`ESTADO_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_DOC_EXTERNO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_DOC_EXTERNO` (`CODIGO_PRV_FACC`,`DOC_EXTERNO_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2. fza_facturas_compra_lineas: detalle (snapshot de las lineas de albaran)
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_lineas''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_facturas_compra_lineas` (''
+  ''  `NUMERO_FACC_FACCLIN` varchar(20) NOT NULL,''
+  ''  `SERIE_FACC_FACCLIN`  varchar(20) NOT NULL,''
+  ''  `LINEA_FACCLIN`       varchar(4)  NOT NULL,''
+  ''  `NUMERO_ALBC_FACCLIN` varchar(20) NULL DEFAULT NULL,''
+  ''  `SERIE_ALBC_FACCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `LINEA_ALBC_FACCLIN`  varchar(4)  NULL DEFAULT NULL''
+  ''       COMMENT ''''Linea de origen en fza_albaranes_compra_lineas'''',''
+  ''  `CODIGO_ART_FACCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `CODIGO_UNIDAD_FACCLIN` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''SKU del articulo'''',''
+  ''  `REF_PRV_FACCLIN`     varchar(100) NULL DEFAULT NULL,''
+  ''  `ID_AC_PIVOT_FACCLIN` int(11)      NULL DEFAULT NULL''
+  ''       COMMENT ''''Conjunto de atributos pivot (fza_atributos_conjuntos)'''',''
+  ''  `CODIGO_FAM_FACCLIN`  varchar(20)  NULL DEFAULT NULL,''
+  ''  `NOMBRE_FAM_FACCLIN`  varchar(200) NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_ARTICULO_FACCLIN` varchar(100) NULL DEFAULT NULL,''
+  ''  `TIPO_CANTIDAD_ARTICULO_FACCLIN` varchar(20) NULL DEFAULT ''''Uds'''',''
+  ''  `CANTIDAD_FACCLIN` decimal(19,6) NULL DEFAULT ''''1.000000'''',''
+  ''  `TOTAL_UNIDADES_FACCLIN` decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TIPO_IVA_ARTICULO_FACCLIN` varchar(2) NULL DEFAULT ''''N'''',''
+  ''  `PORCENTAJE_IVA_FACCLIN`    decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_CIVA_ARTICULO_FACCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_FACCLIN` decimal(19,6) NULL DEFAULT ''''0.000000''''''
+  ''       COMMENT ''''Base imponible de la linea (precio compra siva x cantidad)'''',''
+  ''  `CODIGO_ALMACEN_FACCLIN` varchar(10) NULL DEFAULT NULL,''
+  ''  `LOTE_FACCLIN`           varchar(50) NULL DEFAULT NULL,''
+  ''  `FECHA_CADUCIDAD_FACCLIN` date       NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_VARIACION_FACCLIN` varchar(200) NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_FACC_FACCLIN`,`SERIE_FACC_FACCLIN`,''
+  ''               `LINEA_FACCLIN`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_lineas''
+     AND INDEX_NAME   = ''IDX_FACCLIN_ARTICULO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra_lineas` ''
+  ''ADD INDEX `IDX_FACCLIN_ARTICULO` (`CODIGO_ART_FACCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_lineas''
+     AND INDEX_NAME   = ''IDX_FACCLIN_ALBARAN''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra_lineas` ''
+  ''ADD INDEX `IDX_FACCLIN_ALBARAN` ''
+  ''(`SERIE_ALBC_FACCLIN`,`NUMERO_ALBC_FACCLIN`,`LINEA_ALBC_FACCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2bis. fza_facturas_compra_celdas (FACCCEL): cantidad por (linea, fila, talla)
+-- Espejo de fza_albaranes_compra_celdas. Soporta el modo "Tallas en
+-- horizontal" del Mto sobre el snapshot pivotado de las lineas del albaran.
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_celdas''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_facturas_compra_celdas` (''
+  ''  `SERIE_FACC_FACCCEL`   varchar(20)   NOT NULL,''
+  ''  `NUMERO_FACC_FACCCEL`  varchar(20)   NOT NULL,''
+  ''  `LINEA_FACC_FACCCEL`   varchar(4)    NOT NULL,''
+  ''  `ID_FILA_FACC_FACCCEL` int(11)       NOT NULL DEFAULT 1,''
+  ''  `ID_AV_PIVOT_FACCCEL`  int(11)       NOT NULL''
+  ''       COMMENT ''''ID del valor de atributo (talla) que pivota'''',''
+  ''  `CANTIDAD_FACCCEL`     decimal(19,6) NOT NULL DEFAULT 0,''
+  ''  `CODIGO_ALM_FACCCEL`   varchar(10)   NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`SERIE_FACC_FACCCEL`,`NUMERO_FACC_FACCCEL`,''
+  ''               `LINEA_FACC_FACCCEL`,`ID_FILA_FACC_FACCCEL`,''
+  ''               `ID_AV_PIVOT_FACCCEL`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_celdas''
+     AND INDEX_NAME   = ''IDX_FACCCEL_LINEA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra_celdas` ''
+  ''ADD INDEX `IDX_FACCCEL_LINEA` ''
+  ''(`SERIE_FACC_FACCCEL`,`NUMERO_FACC_FACCCEL`,`LINEA_FACC_FACCCEL`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2ter. Columnas que usa el Mto (espejo de devoluciones):
+--   REF_PROVEEDOR_FACC      : nro de albaran/ref del proveedor (cabecera).
+--   ESPIVOTE_HORIZONTAL_FACC : recordar la vista pivote de tallas al reabrir.
+-- ----------------------------------------------------------------------------
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = ''fza_facturas_compra''
+              AND COLUMN_NAME  = ''REF_PROVEEDOR_FACC'');
+SET @s := IF(@c = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD COLUMN `REF_PROVEEDOR_FACC` varchar(50) NULL DEFAULT NULL ''
+  ''AFTER `DOC_EXTERNO_FACC`'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = ''fza_facturas_compra''
+              AND COLUMN_NAME  = ''ESPIVOTE_HORIZONTAL_FACC'');
+SET @s := IF(@c = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD COLUMN `ESPIVOTE_HORIZONTAL_FACC` varchar(1) NOT NULL DEFAULT ''''S'''' ''
+  ''AFTER `OBSERVACIONES_FACC`'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- Re-crear la vista para exponer las columnas recien anyadidas (MariaDB
+-- congela la lista de columnas de `f.*` al crear la vista).
+CREATE OR REPLACE VIEW `vi_facturas_compra` AS
+SELECT  f.*,
+        prv.NOMBRE_PRV         AS NOMBRE_PRV_VIEW_FACC,
+        emp.RAZON_SOCIAL_EMP   AS RAZON_SOCIAL_EMPRESA_VIEW_FACC
+  FROM  fza_facturas_compra f
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = f.CODIGO_PRV_FACC
+  LEFT  JOIN fza_empresas    emp
+         ON emp.CODIGO_EMP_EMP = f.CODIGO_EMP_FACC;
+
+-- ----------------------------------------------------------------------------
+-- 3. Realinear fza_tipos_documentos: el codigo ''FP'' (FACTURA DE COMPRAS)
+--    apunta a la tabla singular. El dump lo trae apuntando a
+--    ''fza_facturas_compras'' (plural) que no existe; mismo arreglo que
+--    pedidos_compra.sql hizo con ''PC''.
+-- ----------------------------------------------------------------------------
+UPDATE `fza_tipos_documentos`
+   SET `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` = ''fza_facturas_compra''
+ WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''FP''
+   AND `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` <> ''fza_facturas_compra'';
+
+INSERT INTO `fza_tipos_documentos`
+  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`,
+   `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
+SELECT ''FP'', ''FACTURA DE COMPRAS'', ''fza_facturas_compra''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_documentos`
+    WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''FP''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 3bis. Provisionar contador ''FP'' en fza_contadores si no existe.
+--    SERIE_CON=''-'' y DEFAULT_CON=''S'' para que PRC_FNC_GET_NEXT_NRO_DOC lo
+--    localice (mismo patron que el resto de documentos).
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_contadores`
+  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
+   `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT ''FP'', ''-'', ''-'', 0, 6, ''S'', ''S'',
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_contadores`
+    WHERE `TIPO_DOC_CON` = ''FP'' AND `SERIE_CON` = ''-''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 4. Vista basica vi_facturas_compra (lectura para tsLista)
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_facturas_compra` AS
+SELECT  f.*,
+        prv.NOMBRE_PRV         AS NOMBRE_PRV_VIEW_FACC,
+        emp.RAZON_SOCIAL_EMP   AS RAZON_SOCIAL_EMPRESA_VIEW_FACC
+  FROM  fza_facturas_compra f
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = f.CODIGO_PRV_FACC
+  LEFT  JOIN fza_empresas    emp
+         ON emp.CODIGO_EMP_EMP = f.CODIGO_EMP_FACC;
+
+-- ----------------------------------------------------------------------------
+-- 5. PRC_FACC_RECALCULAR_TOTALES: recalcula bandas de IVA y totales de la
+--    cabecera a partir de las lineas. Clasifica cada linea por su % de IVA:
+--      <= 0   -> Exento (E)
+--      < 6    -> Superreducido (S)
+--      < 13   -> Reducido (R)
+--      resto  -> Normal (N)
+--    (mismo criterio que la migracion de compras). En compra no hay RE.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_FACC_RECALCULAR_TOTALES`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_FACC_RECALCULAR_TOTALES`(
+    IN p_SERIE  varchar(20),
+    IN p_NUMERO varchar(20))
+BEGIN
+  DECLARE v_baseN, v_baseR, v_baseSR, v_baseE decimal(18,6) DEFAULT 0;
+  DECLARE v_cuoN, v_cuoR, v_cuoS             decimal(18,6) DEFAULT 0;
+  DECLARE v_pN, v_pR, v_pS                   decimal(19,6) DEFAULT 0;
+  DECLARE v_bases, v_impuestos, v_total      decimal(18,6) DEFAULT 0;
+  DECLARE v_reten, v_liquido, v_pRet         decimal(18,6) DEFAULT 0;
+  DECLARE v_dto, v_pp, v_rap, v_fin, v_por   decimal(18,6) DEFAULT 0;
+  SELECT
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 13
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 6
+                       AND PORCENTAJE_IVA_FACCLIN < 13
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN > 0
+                       AND PORCENTAJE_IVA_FACCLIN < 6
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN <= 0
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 13
+                      THEN TOTAL_FACCLIN * PORCENTAJE_IVA_FACCLIN / 100
+                 END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 6
+                       AND PORCENTAJE_IVA_FACCLIN < 13
+                      THEN TOTAL_FACCLIN * PORCENTAJE_IVA_FACCLIN / 100
+                 END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN > 0
+                       AND PORCENTAJE_IVA_FACCLIN < 6
+                      THEN TOTAL_FACCLIN * PORCENTAJE_IVA_FACCLIN / 100
+                 END), 0),
+    COALESCE(MAX(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 13
+                      THEN PORCENTAJE_IVA_FACCLIN END), 0),
+    COALESCE(MAX(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 6
+                       AND PORCENTAJE_IVA_FACCLIN < 13
+                      THEN PORCENTAJE_IVA_FACCLIN END), 0),
+    COALESCE(MAX(CASE WHEN PORCENTAJE_IVA_FACCLIN > 0
+                       AND PORCENTAJE_IVA_FACCLIN < 6
+                      THEN PORCENTAJE_IVA_FACCLIN END), 0)
+    INTO v_baseN, v_baseR, v_baseSR, v_baseE,
+         v_cuoN, v_cuoR, v_cuoS, v_pN, v_pR, v_pS
+    FROM fza_facturas_compra_lineas
+   WHERE SERIE_FACC_FACCLIN  = p_SERIE
+     AND NUMERO_FACC_FACCLIN = p_NUMERO;
+  -- Descuentos/cargos ya tecleados en la cabecera (el Mto los fija).
+  SELECT COALESCE(PORCENTAJE_RETENCION_FACC, 0),
+         COALESCE(TOTAL_DTO_COMERCIAL_FACC, 0),
+         COALESCE(TOTAL_PRONTO_PAGO_FACC, 0),
+         COALESCE(TOTAL_RAPPEL_FACC, 0),
+         COALESCE(TOTAL_FINANCIACION_FACC, 0),
+         COALESCE(TOTAL_PORTES_FACC, 0)
+    INTO v_pRet, v_dto, v_pp, v_rap, v_fin, v_por
+    FROM fza_facturas_compra
+   WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
+  SET v_bases     = v_baseN + v_baseR + v_baseSR + v_baseE;
+  SET v_impuestos = v_cuoN + v_cuoR + v_cuoS;
+  SET v_total     = v_bases + v_impuestos;
+  SET v_reten     = ROUND(v_bases * v_pRet / 100, 2);
+  SET v_liquido   = v_total - v_reten - v_dto - v_pp - v_rap + v_fin + v_por;
+  UPDATE fza_facturas_compra
+     SET PORCENTAJE_IVAN_FACC  = v_pN,
+         TOTAL_BASEI_IVAN_FACC = v_baseN,
+         TOTAL_IVAN_FACC       = v_cuoN,
+         PORCENTAJE_IVAR_FACC  = v_pR,
+         TOTAL_BASEI_IVAR_FACC = v_baseR,
+         TOTAL_IVAR_FACC       = v_cuoR,
+         PORCENTAJE_IVAS_FACC  = v_pS,
+         TOTAL_BASEI_IVAS_FACC = v_baseSR,
+         TOTAL_IVAS_FACC       = v_cuoS,
+         PORCENTAJE_IVAE_FACC  = 0,
+         TOTAL_BASEI_IVAE_FACC = v_baseE,
+         TOTAL_IVAE_FACC       = 0,
+         TOTAL_BRUTO_FACC      = v_bases,
+         TOTAL_BASES_FACC      = v_bases,
+         TOTAL_IMPUESTOS_FACC  = v_impuestos,
+         TOTAL_FACC            = v_total,
+         TOTAL_RETENCION_FACC  = v_reten,
+         TOTAL_LIQUIDO_FACC    = v_liquido
+   WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 6. PRC_FACC_FACTURAR_ALBARAN: AGRUPA un albaran de compra en una factura
+--    de compra. Llamando una vez por cada albaran seleccionado (con la
+--    misma factura destino) se consigue la agrupacion de N albaranes en 1
+--    factura. Si p_NUMERO_FAC viene vacio/NULL crea una factura nueva
+--    (numerada con el contador ''FP''); si viene informada anyade a esa
+--    factura validando que sea el mismo proveedor y empresa.
+--
+--    Efectos:
+--      - copia las lineas del albaran a fza_facturas_compra_lineas
+--        (continuando el contador de lineas, de 10 en 10),
+--      - marca el albaran ESTADO_ALBC=''FACTURADO'' y rellena
+--        NUMERO_FAC_ALBC / SERIE_FAC_ALBC (y a nivel de linea
+--        ESFACTURADA_ALBCLIN=''S'' + NUMERO_FAC_ALBCLIN / SERIE_FAC_ALBCLIN),
+--      - recalcula los totales de la factura.
+--    p_RESULTADO: 1 ok, 0 nada que hacer (albaran inexistente / ya
+--    facturado / cabecera destino incompatible), -1 error.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_FACC_FACTURAR_ALBARAN`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_FACC_FACTURAR_ALBARAN`(
+    IN  p_SERIE_ALB    varchar(20),
+    IN  p_NUMERO_ALB   varchar(20),
+    IN  p_SERIE_FAC    varchar(20),
+    IN  p_NUMERO_FAC   varchar(20),
+    IN  p_USUARIO      varchar(100),
+    OUT p_SERIE_FAC_OUT  varchar(20),
+    OUT p_NUMERO_FAC_OUT varchar(20),
+    OUT p_RESULTADO    int)
+BEGIN
+  DECLARE v_existe       int DEFAULT 0;
+  DECLARE v_prv_alb      varchar(20);
+  DECLARE v_emp_alb      varchar(8);
+  DECLARE v_prv_fac      varchar(20);
+  DECLARE v_emp_fac      varchar(8);
+  DECLARE v_cont         bigint DEFAULT 0;
+  DECLARE v_nlineas      int DEFAULT 0;
+  DECLARE v_nro          bigint DEFAULT 0;
+  DECLARE v_serie        varchar(3);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  -- ¿El albaran existe y es facturable?
+  SELECT COUNT(*), MAX(CODIGO_PRV_ALBC), MAX(CODIGO_EMP_ALBC)
+    INTO v_existe, v_prv_alb, v_emp_alb
+    FROM fza_albaranes_compra
+   WHERE SERIE_ALBC  = p_SERIE_ALB
+     AND NUMERO_ALBC = p_NUMERO_ALB
+     AND COALESCE(ESTADO_ALBC, '''') NOT IN (''FACTURADO'', ''CANCELADO'');
+  IF v_existe > 0 THEN
+    START TRANSACTION;
+    IF p_NUMERO_FAC IS NULL OR p_NUMERO_FAC = '''' THEN
+      -- Crear factura nueva numerada con el contador ''FP''.
+      CALL PRC_FNC_GET_NEXT_NRO_DOC(''FP'', v_nro);
+      CALL PRC_FNC_GET_SERIE_TIPODOC(''FP'', v_serie);
+      SET p_NUMERO_FAC_OUT = LPAD(v_nro, 6, ''0'');
+      SET p_SERIE_FAC_OUT  = v_serie;
+      INSERT INTO fza_facturas_compra
+        (NUMERO_FACC, SERIE_FACC, FECHA_FACC, ESTADO_FACC,
+         CODIGO_EMP_FACC, RAZON_SOCIAL_EMPRESA_FACC, NIF_EMPRESA_FACC,
+         MOVIL_EMPRESA_FACC, EMAIL_EMPRESA_FACC, DIRECCION1_EMPRESA_FACC,
+         DIRECCION2_EMPRESA_FACC, POBLACION_EMPRESA_FACC,
+         PROVINCIA_EMPRESA_FACC, CODIGO_PAI_EMPRESA_FACC,
+         NOMBRE_PAI_EMPRESA_FACC, CODIGO_POSTAL_EMPRESA_FACC,
+         CODIGO_PRV_FACC, RAZON_SOCIAL_PRV_FACC, NIF_PRV_FACC,
+         MOVIL_PRV_FACC, EMAIL_PRV_FACC, DIRECCION1_PRV_FACC,
+         DIRECCION2_PRV_FACC, POBLACION_PRV_FACC, PROVINCIA_PRV_FACC,
+         CODIGO_PAI_PRV_FACC, NOMBRE_PAI_PRV_FACC, CODIGO_POSTAL_PRV_FACC,
+         CODIGO_ALM_FACC, CODIGO_IVA_FACC, FORMA_PAGO_FACC,
+         ESAGRUPAR_ALBARANES_FACC, CONTADOR_LINEAS_FACC,
+         INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT p_NUMERO_FAC_OUT, p_SERIE_FAC_OUT, CURDATE(), ''ABIERTA'',
+         CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, NIF_EMPRESA_ALBC,
+         MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, DIRECCION1_EMPRESA_ALBC,
+         DIRECCION2_EMPRESA_ALBC, POBLACION_EMPRESA_ALBC,
+         PROVINCIA_EMPRESA_ALBC, CODIGO_PAI_EMPRESA_ALBC,
+         NOMBRE_PAI_EMPRESA_ALBC, CODIGO_POSTAL_EMPRESA_ALBC,
+         CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, NIF_PRV_ALBC,
+         MOVIL_PRV_ALBC, EMAIL_PRV_ALBC, DIRECCION1_PRV_ALBC,
+         DIRECCION2_PRV_ALBC, POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC,
+         CODIGO_PAI_PRV_ALBC, NOMBRE_PAI_PRV_ALBC, CODIGO_POSTAL_PRV_ALBC,
+         CODIGO_ALM_ALBC, CODIGO_IVA_ALBC, FORMA_PAGO_ALBC,
+         ''S'', ''0'',
+         NOW(), p_USUARIO, NOW(), p_USUARIO
+        FROM fza_albaranes_compra
+       WHERE SERIE_ALBC = p_SERIE_ALB AND NUMERO_ALBC = p_NUMERO_ALB;
+      SET v_existe = 1;
+    ELSE
+      -- Anyadir a una factura existente: validar mismo proveedor+empresa.
+      SELECT COUNT(*), MAX(CODIGO_PRV_FACC), MAX(CODIGO_EMP_FACC)
+        INTO v_existe, v_prv_fac, v_emp_fac
+        FROM fza_facturas_compra
+       WHERE SERIE_FACC  = p_SERIE_FAC
+         AND NUMERO_FACC = p_NUMERO_FAC;
+      IF v_existe > 0
+         AND COALESCE(v_prv_fac, '''') = COALESCE(v_prv_alb, '''')
+         AND COALESCE(v_emp_fac, '''') = COALESCE(v_emp_alb, '''') THEN
+        SET p_SERIE_FAC_OUT  = p_SERIE_FAC;
+        SET p_NUMERO_FAC_OUT = p_NUMERO_FAC;
+      ELSE
+        SET v_existe = 0;
+      END IF;
+    END IF;
+    IF v_existe > 0 THEN
+      -- Contador de lineas actual de la factura destino.
+      SELECT CAST(COALESCE(NULLIF(CONTADOR_LINEAS_FACC, ''''), ''0'')
+                  AS UNSIGNED)
+        INTO v_cont
+        FROM fza_facturas_compra
+       WHERE SERIE_FACC = p_SERIE_FAC_OUT AND NUMERO_FACC = p_NUMERO_FAC_OUT;
+      -- Copiar lineas del albaran (numerando de 10 en 10 desde v_cont).
+      INSERT INTO fza_facturas_compra_lineas
+        (NUMERO_FACC_FACCLIN, SERIE_FACC_FACCLIN, LINEA_FACCLIN,
+         NUMERO_ALBC_FACCLIN, SERIE_ALBC_FACCLIN, LINEA_ALBC_FACCLIN,
+         CODIGO_ART_FACCLIN, CODIGO_UNIDAD_FACCLIN, REF_PRV_FACCLIN,
+         ID_AC_PIVOT_FACCLIN, CODIGO_FAM_FACCLIN, NOMBRE_FAM_FACCLIN,
+         DESCRIPCION_ARTICULO_FACCLIN, TIPO_CANTIDAD_ARTICULO_FACCLIN,
+         CANTIDAD_FACCLIN, TOTAL_UNIDADES_FACCLIN,
+         TIPO_IVA_ARTICULO_FACCLIN, PORCENTAJE_IVA_FACCLIN,
+         PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN,
+         PRECIO_COMPRA_CIVA_ARTICULO_FACCLIN, TOTAL_FACCLIN,
+         CODIGO_ALMACEN_FACCLIN, LOTE_FACCLIN, FECHA_CADUCIDAD_FACCLIN,
+         DESCRIPCION_VARIACION_FACCLIN,
+         INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT p_NUMERO_FAC_OUT, p_SERIE_FAC_OUT,
+         LPAD(v_cont + 10 * ROW_NUMBER() OVER (ORDER BY LINEA_ALBCLIN),
+              4, ''0''),
+         NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN,
+         CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN,
+         ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN,
+         DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN,
+         CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN,
+         TIPO_IVA_ARTICULO_ALBCLIN, PORCENTAJE_IVA_ALBCLIN,
+         PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN,
+         PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, TOTAL_ALBCLIN,
+         CODIGO_ALMACEN_ALBCLIN, LOTE_ALBCLIN, FECHA_CADUCIDAD_ALBCLIN,
+         DESCRIPCION_VARIACION_ALBCLIN,
+         NOW(), p_USUARIO, NOW(), p_USUARIO
+        FROM fza_albaranes_compra_lineas
+       WHERE SERIE_ALBC_ALBCLIN = p_SERIE_ALB
+         AND NUMERO_ALBC_ALBCLIN = p_NUMERO_ALB;
+      SET v_nlineas = ROW_COUNT();
+      -- Avanzar el contador de lineas de la cabecera.
+      UPDATE fza_facturas_compra
+         SET CONTADOR_LINEAS_FACC = CAST(v_cont + 10 * v_nlineas AS CHAR),
+             USUARIO_MODIF        = p_USUARIO
+       WHERE SERIE_FACC = p_SERIE_FAC_OUT
+         AND NUMERO_FACC = p_NUMERO_FAC_OUT;
+      -- Marcar las lineas del albaran como facturadas.
+      UPDATE fza_albaranes_compra_lineas
+         SET ESFACTURADA_ALBCLIN = ''S'',
+             NUMERO_FAC_ALBCLIN  = p_NUMERO_FAC_OUT,
+             SERIE_FAC_ALBCLIN   = p_SERIE_FAC_OUT,
+             USUARIO_MODIF       = p_USUARIO
+       WHERE SERIE_ALBC_ALBCLIN = p_SERIE_ALB
+         AND NUMERO_ALBC_ALBCLIN = p_NUMERO_ALB;
+      -- Marcar la cabecera del albaran como facturada.
+      UPDATE fza_albaranes_compra
+         SET ESTADO_ALBC     = ''FACTURADO'',
+             NUMERO_FAC_ALBC = p_NUMERO_FAC_OUT,
+             SERIE_FAC_ALBC  = p_SERIE_FAC_OUT,
+             USUARIO_MODIF   = p_USUARIO
+       WHERE SERIE_ALBC = p_SERIE_ALB AND NUMERO_ALBC = p_NUMERO_ALB;
+      -- Recalcular bandas de IVA y totales de la factura.
+      CALL PRC_FACC_RECALCULAR_TOTALES(p_SERIE_FAC_OUT, p_NUMERO_FAC_OUT);
+      SET p_RESULTADO = 1;
+    END IF;
+    COMMIT;
+  END IF;
+END ;;
+DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------
+-- 7. Registrar el Mto de facturas de compra en fza_winforms (idempotente).
+--    Cablea el menu ''Compras -> Facturas'' (objeto Facturas1) con la pantalla.
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''FacturasCompra'',
+       ''Facturas de Compra'',
+       ''Facturas1'',
+       ''inMtoFacturasCompra.TfrmMtoFacturasCompra'',
+       ''Ctrl+Alt+F'',
+       ''UniDataFacturasCompra.TdmFacturasCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''FacturasCompra''
+ );
+', '2026-06-11 07:26:26', '2026-06-11 07:26:26', 'Administrador', 'Administrador'),
+  ('350', 'facturas_compra', '-- ============================================================================
+-- Facturas de Compra (factura de proveedor) — esquema base (hito 1)
+--
+-- Crea las tablas `fza_facturas_compra` (cabecera) y
+-- `fza_facturas_compra_lineas` (lineas), destino de la AGRUPACION de
+-- albaranes de compra en una factura. Es el espejo de compra de
+-- `fza_facturas` / `fza_facturas_lineas` (venta), reutilizando la forma
+-- de linea de `fza_albaranes_compra_lineas` (proveedor + precio de
+-- compra) y anyadiendo los campos de factura de proveedor del legacy
+-- `ocfacpro` (documento externo, descuentos, retencion, domiciliacion).
+--
+-- Cierra el hueco que ya anticipaban `fza_albaranes_compra` y
+-- `fza_devoluciones_compra`: ambas tienen `NUMERO_FAC_*` / `SERIE_FAC_*`
+-- comentadas como "FK logica a fza_facturas_compras" (plural) hacia una
+-- tabla que nunca se creo. Aqui se materializa en SINGULAR
+-- (`fza_facturas_compra`), igual que el resto de documentos de compra
+-- (`fza_pedidos_compra`, `fza_albaranes_compra`, `fza_devoluciones_compra`).
+--
+-- El codigo de tipo de documento ''FP'' ("FACTURA DE COMPRAS") ya existe en
+-- `fza_tipos_documentos`; este script lo realinea a la tabla singular y
+-- provisiona su contador, igual que hizo `pedidos_compra.sql` con ''PC''.
+--
+-- Sufijos de columna: `_FACC` cabecera, `_FACCLIN` lineas (registrados en
+-- LIBRO_DE_ESTILO_BBDD.md §2 y en UNormalizerEngine.pas / InitDefaults).
+--
+-- Idempotente: comprueba INFORMATION_SCHEMA antes de cada DDL para que el
+-- script pueda volver a ejecutarse sin error si las tablas / indices /
+-- filas ya existen. Las stored procedures usan DROP ... IF EXISTS, asi que
+-- requieren un cliente que entienda DELIMITER (mysql CLI, HeidiSQL,
+-- DBeaver), igual que el propio dump factuzam_original.sql.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. fza_facturas_compra: cabecera
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_facturas_compra` (''
+  ''  `NUMERO_FACC` varchar(20) NOT NULL,''
+  ''  `SERIE_FACC`  varchar(20) NOT NULL,''
+  ''  `FECHA_FACC`  date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha de la factura del proveedor'''',''
+  ''  `FECHA_VALOR_FACC` date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha valor / contable (legacy FechaValor)'''',''
+  ''  `ESTADO_FACC` varchar(20) NULL DEFAULT ''''ABIERTA''''''
+  ''       COMMENT ''''ABIERTA, CERRADA, CONTABILIZADA, PAGADA, CANCELADA'''',''
+  ''  `DOC_EXTERNO_FACC` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro de factura segun el proveedor (legacy DocExterno)'''',''
+  ''  `CODIGO_EMP_FACC` varchar(8) NULL DEFAULT NULL,''
+  ''  `RAZON_SOCIAL_EMPRESA_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_EMPRESA_FACC`        varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_EMPRESA_FACC`      varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_EMPRESA_FACC`      varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_EMPRESA_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_EMPRESA_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_EMPRESA_FACC`  varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_EMPRESA_FACC`  varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_EMPRESA_FACC` varchar(3)   NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_EMPRESA_FACC` varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_EMPRESA_FACC` varchar(15) NULL DEFAULT NULL,''
+  ''  `CODIGO_PRV_FACC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_proveedores'''',''
+  ''  `RAZON_SOCIAL_PRV_FACC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_PRV_FACC`          varchar(50)  NULL DEFAULT NULL,''
+  ''  `MOVIL_PRV_FACC`        varchar(40)  NULL DEFAULT NULL,''
+  ''  `EMAIL_PRV_FACC`        varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION1_PRV_FACC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `DIRECCION2_PRV_FACC`   varchar(200) NULL DEFAULT NULL,''
+  ''  `POBLACION_PRV_FACC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `PROVINCIA_PRV_FACC`    varchar(200) NULL DEFAULT NULL,''
+  ''  `CODIGO_PAI_PRV_FACC`   varchar(3)   NULL DEFAULT ''''724'''',''
+  ''  `NOMBRE_PAI_PRV_FACC`   varchar(150) NULL DEFAULT ''''Espana'''',''
+  ''  `CODIGO_POSTAL_PRV_FACC` varchar(15) NULL DEFAULT NULL,''
+  ''  `CODIGO_ALM_FACC` varchar(10) NULL DEFAULT NULL,''
+  ''  `CODIGO_IVA_FACC` varchar(20) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAN_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAN_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAN_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAR_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAR_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAR_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAS_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAS_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAS_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_IVAE_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BASEI_IVAE_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IVAE_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_DTO_COMERCIAL_FACC` decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_DTO_COMERCIAL_FACC`      decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_PRONTO_PAGO_FACC`   decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_PRONTO_PAGO_FACC`        decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_RAPPEL_FACC`        decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_RAPPEL_FACC`             decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_FINANCIACION_FACC`  decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_FINANCIACION_FACC`       decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_PORTES_FACC`             decimal(18,6) NULL DEFAULT NULL,''
+  ''  `PORCENTAJE_RETENCION_FACC`     decimal(19,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_RETENCION_FACC`          decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_BRUTO_FACC`     decimal(18,6) NULL DEFAULT NULL''
+  ''       COMMENT ''''Suma de lineas antes de descuentos'''',''
+  ''  `TOTAL_BASES_FACC`     decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_IMPUESTOS_FACC` decimal(18,6) NULL DEFAULT NULL,''
+  ''  `TOTAL_FACC`           decimal(18,6) NULL DEFAULT NULL''
+  ''       COMMENT ''''Total factura = bases + impuestos'''',''
+  ''  `TOTAL_LIQUIDO_FACC`   decimal(18,6) NULL DEFAULT NULL''
+  ''       COMMENT ''''A pagar al proveedor (con retencion / descuentos)'''',''
+  ''  `FORMA_PAGO_FACC`      varchar(200)  NULL DEFAULT NULL''
+  ''       COMMENT ''''Codigo de forma de pago (fza_formas_pago)'''',''
+  ''  `ESAGRUPAR_ALBARANES_FACC` varchar(1) NULL DEFAULT ''''S''''''
+  ''       COMMENT ''''S/N — agrupa varios albaranes en esta factura'''',''
+  ''  `ENTIDAD_FACC`         varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_FACC`         varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_FACC`  varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_FACC`          varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_FACC`            varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta del proveedor para domiciliar el pago'''',''
+  ''  `CONTADOR_LINEAS_FACC` varchar(8)    NULL DEFAULT NULL,''
+  ''  `COMENTARIOS_FACC`     varchar(1000) NULL DEFAULT '''''''',''
+  ''  `OBSERVACIONES_FACC`   varchar(2000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_CONTABILIZACION_FACC` datetime NULL DEFAULT NULL''
+  ''       COMMENT ''''Control contable: cuando se contabilizo la factura'''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_FACC`,`SERIE_FACC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Indices de cabecera
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_PROVEEDOR_FECHA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_PROVEEDOR_FECHA` ''
+  ''(`CODIGO_PRV_FACC`,`FECHA_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_EMPRESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_EMPRESA` (`CODIGO_EMP_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_ESTADO` (`ESTADO_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_DOC_EXTERNO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_DOC_EXTERNO` (`CODIGO_PRV_FACC`,`DOC_EXTERNO_FACC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2. fza_facturas_compra_lineas: detalle (snapshot de las lineas de albaran)
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_lineas''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_facturas_compra_lineas` (''
+  ''  `NUMERO_FACC_FACCLIN` varchar(20) NOT NULL,''
+  ''  `SERIE_FACC_FACCLIN`  varchar(20) NOT NULL,''
+  ''  `LINEA_FACCLIN`       varchar(4)  NOT NULL,''
+  ''  `NUMERO_ALBC_FACCLIN` varchar(20) NULL DEFAULT NULL,''
+  ''  `SERIE_ALBC_FACCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `LINEA_ALBC_FACCLIN`  varchar(4)  NULL DEFAULT NULL''
+  ''       COMMENT ''''Linea de origen en fza_albaranes_compra_lineas'''',''
+  ''  `CODIGO_ART_FACCLIN`  varchar(20) NULL DEFAULT NULL,''
+  ''  `CODIGO_UNIDAD_FACCLIN` varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''SKU del articulo'''',''
+  ''  `REF_PRV_FACCLIN`     varchar(100) NULL DEFAULT NULL,''
+  ''  `ID_AC_PIVOT_FACCLIN` int(11)      NULL DEFAULT NULL''
+  ''       COMMENT ''''Conjunto de atributos pivot (fza_atributos_conjuntos)'''',''
+  ''  `CODIGO_FAM_FACCLIN`  varchar(20)  NULL DEFAULT NULL,''
+  ''  `NOMBRE_FAM_FACCLIN`  varchar(200) NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_ARTICULO_FACCLIN` varchar(100) NULL DEFAULT NULL,''
+  ''  `TIPO_CANTIDAD_ARTICULO_FACCLIN` varchar(20) NULL DEFAULT ''''Uds'''',''
+  ''  `CANTIDAD_FACCLIN` decimal(19,6) NULL DEFAULT ''''1.000000'''',''
+  ''  `TOTAL_UNIDADES_FACCLIN` decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TIPO_IVA_ARTICULO_FACCLIN` varchar(2) NULL DEFAULT ''''N'''',''
+  ''  `PORCENTAJE_IVA_FACCLIN`    decimal(19,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `PRECIO_COMPRA_CIVA_ARTICULO_FACCLIN` decimal(19,6)''
+  ''       NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_FACCLIN` decimal(19,6) NULL DEFAULT ''''0.000000''''''
+  ''       COMMENT ''''Base imponible de la linea (precio compra siva x cantidad)'''',''
+  ''  `CODIGO_ALMACEN_FACCLIN` varchar(10) NULL DEFAULT NULL,''
+  ''  `LOTE_FACCLIN`           varchar(50) NULL DEFAULT NULL,''
+  ''  `FECHA_CADUCIDAD_FACCLIN` date       NULL DEFAULT NULL,''
+  ''  `DESCRIPCION_VARIACION_FACCLIN` varchar(200) NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_FACC_FACCLIN`,`SERIE_FACC_FACCLIN`,''
+  ''               `LINEA_FACCLIN`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_lineas''
+     AND INDEX_NAME   = ''IDX_FACCLIN_ARTICULO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra_lineas` ''
+  ''ADD INDEX `IDX_FACCLIN_ARTICULO` (`CODIGO_ART_FACCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_lineas''
+     AND INDEX_NAME   = ''IDX_FACCLIN_ALBARAN''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra_lineas` ''
+  ''ADD INDEX `IDX_FACCLIN_ALBARAN` ''
+  ''(`SERIE_ALBC_FACCLIN`,`NUMERO_ALBC_FACCLIN`,`LINEA_ALBC_FACCLIN`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2bis. fza_facturas_compra_celdas (FACCCEL): cantidad por (linea, fila, talla)
+-- Espejo de fza_albaranes_compra_celdas. Soporta el modo "Tallas en
+-- horizontal" del Mto sobre el snapshot pivotado de las lineas del albaran.
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_celdas''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_facturas_compra_celdas` (''
+  ''  `SERIE_FACC_FACCCEL`   varchar(20)   NOT NULL,''
+  ''  `NUMERO_FACC_FACCCEL`  varchar(20)   NOT NULL,''
+  ''  `LINEA_FACC_FACCCEL`   varchar(4)    NOT NULL,''
+  ''  `ID_FILA_FACC_FACCCEL` int(11)       NOT NULL DEFAULT 1,''
+  ''  `ID_AV_PIVOT_FACCCEL`  int(11)       NOT NULL''
+  ''       COMMENT ''''ID del valor de atributo (talla) que pivota'''',''
+  ''  `CANTIDAD_FACCCEL`     decimal(19,6) NOT NULL DEFAULT 0,''
+  ''  `CODIGO_ALM_FACCCEL`   varchar(10)   NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`SERIE_FACC_FACCCEL`,`NUMERO_FACC_FACCCEL`,''
+  ''               `LINEA_FACC_FACCCEL`,`ID_FILA_FACC_FACCCEL`,''
+  ''               `ID_AV_PIVOT_FACCCEL`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra_celdas''
+     AND INDEX_NAME   = ''IDX_FACCCEL_LINEA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra_celdas` ''
+  ''ADD INDEX `IDX_FACCCEL_LINEA` ''
+  ''(`SERIE_FACC_FACCCEL`,`NUMERO_FACC_FACCCEL`,`LINEA_FACC_FACCCEL`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2ter. Columnas que usa el Mto (espejo de devoluciones):
+--   REF_PROVEEDOR_FACC      : nro de albaran/ref del proveedor (cabecera).
+--   ESPIVOTE_HORIZONTAL_FACC : recordar la vista pivote de tallas al reabrir.
+-- ----------------------------------------------------------------------------
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = ''fza_facturas_compra''
+              AND COLUMN_NAME  = ''REF_PROVEEDOR_FACC'');
+SET @s := IF(@c = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD COLUMN `REF_PROVEEDOR_FACC` varchar(50) NULL DEFAULT NULL ''
+  ''AFTER `DOC_EXTERNO_FACC`'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = ''fza_facturas_compra''
+              AND COLUMN_NAME  = ''ESPIVOTE_HORIZONTAL_FACC'');
+SET @s := IF(@c = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD COLUMN `ESPIVOTE_HORIZONTAL_FACC` varchar(1) NOT NULL DEFAULT ''''S'''' ''
+  ''AFTER `OBSERVACIONES_FACC`'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- Re-crear la vista para exponer las columnas recien anyadidas (MariaDB
+-- congela la lista de columnas de `f.*` al crear la vista).
+CREATE OR REPLACE VIEW `vi_facturas_compra` AS
+SELECT  f.*,
+        prv.NOMBRE_PRV         AS NOMBRE_PRV_VIEW_FACC,
+        emp.RAZON_SOCIAL_EMP   AS RAZON_SOCIAL_EMPRESA_VIEW_FACC
+  FROM  fza_facturas_compra f
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = f.CODIGO_PRV_FACC
+  LEFT  JOIN fza_empresas    emp
+         ON emp.CODIGO_EMP_EMP = f.CODIGO_EMP_FACC;
+
+-- ----------------------------------------------------------------------------
+-- 3. Realinear fza_tipos_documentos: el codigo ''FP'' (FACTURA DE COMPRAS)
+--    apunta a la tabla singular. El dump lo trae apuntando a
+--    ''fza_facturas_compras'' (plural) que no existe; mismo arreglo que
+--    pedidos_compra.sql hizo con ''PC''.
+-- ----------------------------------------------------------------------------
+UPDATE `fza_tipos_documentos`
+   SET `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` = ''fza_facturas_compra''
+ WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''FP''
+   AND `TABLA_ORIGEN_TIPO_DOCUMENTO_TD` <> ''fza_facturas_compra'';
+
+INSERT INTO `fza_tipos_documentos`
+  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`,
+   `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
+SELECT ''FP'', ''FACTURA DE COMPRAS'', ''fza_facturas_compra''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_documentos`
+    WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''FP''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 3bis. Provisionar contador ''FP'' en fza_contadores si no existe.
+--    SERIE_CON=''-'' y DEFAULT_CON=''S'' para que PRC_FNC_GET_NEXT_NRO_DOC lo
+--    localice (mismo patron que el resto de documentos).
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_contadores`
+  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
+   `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT ''FP'', ''-'', ''-'', 0, 6, ''S'', ''S'',
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_contadores`
+    WHERE `TIPO_DOC_CON` = ''FP'' AND `SERIE_CON` = ''-''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 4. Vista basica vi_facturas_compra (lectura para tsLista)
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_facturas_compra` AS
+SELECT  f.*,
+        prv.NOMBRE_PRV         AS NOMBRE_PRV_VIEW_FACC,
+        emp.RAZON_SOCIAL_EMP   AS RAZON_SOCIAL_EMPRESA_VIEW_FACC
+  FROM  fza_facturas_compra f
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = f.CODIGO_PRV_FACC
+  LEFT  JOIN fza_empresas    emp
+         ON emp.CODIGO_EMP_EMP = f.CODIGO_EMP_FACC;
+
+-- ----------------------------------------------------------------------------
+-- 5. PRC_FACC_RECALCULAR_TOTALES: recalcula bandas de IVA y totales de la
+--    cabecera a partir de las lineas. Clasifica cada linea por su % de IVA:
+--      <= 0   -> Exento (E)
+--      < 6    -> Superreducido (S)
+--      < 13   -> Reducido (R)
+--      resto  -> Normal (N)
+--    (mismo criterio que la migracion de compras). En compra no hay RE.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_FACC_RECALCULAR_TOTALES`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_FACC_RECALCULAR_TOTALES`(
+    IN p_SERIE  varchar(20),
+    IN p_NUMERO varchar(20))
+BEGIN
+  DECLARE v_baseN, v_baseR, v_baseSR, v_baseE decimal(18,6) DEFAULT 0;
+  DECLARE v_cuoN, v_cuoR, v_cuoS             decimal(18,6) DEFAULT 0;
+  DECLARE v_pN, v_pR, v_pS                   decimal(19,6) DEFAULT 0;
+  DECLARE v_bases, v_impuestos, v_total      decimal(18,6) DEFAULT 0;
+  DECLARE v_reten, v_liquido, v_pRet         decimal(18,6) DEFAULT 0;
+  DECLARE v_dto, v_pp, v_rap, v_fin, v_por   decimal(18,6) DEFAULT 0;
+  SELECT
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 13
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 6
+                       AND PORCENTAJE_IVA_FACCLIN < 13
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN > 0
+                       AND PORCENTAJE_IVA_FACCLIN < 6
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN <= 0
+                      THEN TOTAL_FACCLIN END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 13
+                      THEN TOTAL_FACCLIN * PORCENTAJE_IVA_FACCLIN / 100
+                 END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 6
+                       AND PORCENTAJE_IVA_FACCLIN < 13
+                      THEN TOTAL_FACCLIN * PORCENTAJE_IVA_FACCLIN / 100
+                 END), 0),
+    COALESCE(SUM(CASE WHEN PORCENTAJE_IVA_FACCLIN > 0
+                       AND PORCENTAJE_IVA_FACCLIN < 6
+                      THEN TOTAL_FACCLIN * PORCENTAJE_IVA_FACCLIN / 100
+                 END), 0),
+    COALESCE(MAX(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 13
+                      THEN PORCENTAJE_IVA_FACCLIN END), 0),
+    COALESCE(MAX(CASE WHEN PORCENTAJE_IVA_FACCLIN >= 6
+                       AND PORCENTAJE_IVA_FACCLIN < 13
+                      THEN PORCENTAJE_IVA_FACCLIN END), 0),
+    COALESCE(MAX(CASE WHEN PORCENTAJE_IVA_FACCLIN > 0
+                       AND PORCENTAJE_IVA_FACCLIN < 6
+                      THEN PORCENTAJE_IVA_FACCLIN END), 0)
+    INTO v_baseN, v_baseR, v_baseSR, v_baseE,
+         v_cuoN, v_cuoR, v_cuoS, v_pN, v_pR, v_pS
+    FROM fza_facturas_compra_lineas
+   WHERE SERIE_FACC_FACCLIN  = p_SERIE
+     AND NUMERO_FACC_FACCLIN = p_NUMERO;
+  -- Descuentos/cargos ya tecleados en la cabecera (el Mto los fija).
+  SELECT COALESCE(PORCENTAJE_RETENCION_FACC, 0),
+         COALESCE(TOTAL_DTO_COMERCIAL_FACC, 0),
+         COALESCE(TOTAL_PRONTO_PAGO_FACC, 0),
+         COALESCE(TOTAL_RAPPEL_FACC, 0),
+         COALESCE(TOTAL_FINANCIACION_FACC, 0),
+         COALESCE(TOTAL_PORTES_FACC, 0)
+    INTO v_pRet, v_dto, v_pp, v_rap, v_fin, v_por
+    FROM fza_facturas_compra
+   WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
+  SET v_bases     = v_baseN + v_baseR + v_baseSR + v_baseE;
+  SET v_impuestos = v_cuoN + v_cuoR + v_cuoS;
+  SET v_total     = v_bases + v_impuestos;
+  SET v_reten     = ROUND(v_bases * v_pRet / 100, 2);
+  SET v_liquido   = v_total - v_reten - v_dto - v_pp - v_rap + v_fin + v_por;
+  UPDATE fza_facturas_compra
+     SET PORCENTAJE_IVAN_FACC  = v_pN,
+         TOTAL_BASEI_IVAN_FACC = v_baseN,
+         TOTAL_IVAN_FACC       = v_cuoN,
+         PORCENTAJE_IVAR_FACC  = v_pR,
+         TOTAL_BASEI_IVAR_FACC = v_baseR,
+         TOTAL_IVAR_FACC       = v_cuoR,
+         PORCENTAJE_IVAS_FACC  = v_pS,
+         TOTAL_BASEI_IVAS_FACC = v_baseSR,
+         TOTAL_IVAS_FACC       = v_cuoS,
+         PORCENTAJE_IVAE_FACC  = 0,
+         TOTAL_BASEI_IVAE_FACC = v_baseE,
+         TOTAL_IVAE_FACC       = 0,
+         TOTAL_BRUTO_FACC      = v_bases,
+         TOTAL_BASES_FACC      = v_bases,
+         TOTAL_IMPUESTOS_FACC  = v_impuestos,
+         TOTAL_FACC            = v_total,
+         TOTAL_RETENCION_FACC  = v_reten,
+         TOTAL_LIQUIDO_FACC    = v_liquido
+   WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 6. PRC_FACC_FACTURAR_ALBARAN: AGRUPA un albaran de compra en una factura
+--    de compra. Llamando una vez por cada albaran seleccionado (con la
+--    misma factura destino) se consigue la agrupacion de N albaranes en 1
+--    factura. Si p_NUMERO_FAC viene vacio/NULL crea una factura nueva
+--    (numerada con el contador ''FP''); si viene informada anyade a esa
+--    factura validando que sea el mismo proveedor y empresa.
+--
+--    Efectos:
+--      - copia las lineas del albaran a fza_facturas_compra_lineas
+--        (continuando el contador de lineas, de 10 en 10),
+--      - marca el albaran ESTADO_ALBC=''FACTURADO'' y rellena
+--        NUMERO_FAC_ALBC / SERIE_FAC_ALBC (y a nivel de linea
+--        ESFACTURADA_ALBCLIN=''S'' + NUMERO_FAC_ALBCLIN / SERIE_FAC_ALBCLIN),
+--      - recalcula los totales de la factura.
+--    p_RESULTADO: 1 ok, 0 nada que hacer (albaran inexistente / ya
+--    facturado / cabecera destino incompatible), -1 error.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_FACC_FACTURAR_ALBARAN`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_FACC_FACTURAR_ALBARAN`(
+    IN  p_SERIE_ALB    varchar(20),
+    IN  p_NUMERO_ALB   varchar(20),
+    IN  p_SERIE_FAC    varchar(20),
+    IN  p_NUMERO_FAC   varchar(20),
+    IN  p_USUARIO      varchar(100),
+    OUT p_SERIE_FAC_OUT  varchar(20),
+    OUT p_NUMERO_FAC_OUT varchar(20),
+    OUT p_RESULTADO    int)
+BEGIN
+  DECLARE v_existe       int DEFAULT 0;
+  DECLARE v_prv_alb      varchar(20);
+  DECLARE v_emp_alb      varchar(8);
+  DECLARE v_prv_fac      varchar(20);
+  DECLARE v_emp_fac      varchar(8);
+  DECLARE v_cont         bigint DEFAULT 0;
+  DECLARE v_nlineas      int DEFAULT 0;
+  DECLARE v_nro          bigint DEFAULT 0;
+  DECLARE v_serie        varchar(3);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  -- ¿El albaran existe y es facturable?
+  SELECT COUNT(*), MAX(CODIGO_PRV_ALBC), MAX(CODIGO_EMP_ALBC)
+    INTO v_existe, v_prv_alb, v_emp_alb
+    FROM fza_albaranes_compra
+   WHERE SERIE_ALBC  = p_SERIE_ALB
+     AND NUMERO_ALBC = p_NUMERO_ALB
+     AND COALESCE(ESTADO_ALBC, '''') NOT IN (''FACTURADO'', ''CANCELADO'');
+  IF v_existe > 0 THEN
+    START TRANSACTION;
+    IF p_NUMERO_FAC IS NULL OR p_NUMERO_FAC = '''' THEN
+      -- Crear factura nueva numerada con el contador ''FP''.
+      CALL PRC_FNC_GET_NEXT_NRO_DOC(''FP'', v_nro);
+      CALL PRC_FNC_GET_SERIE_TIPODOC(''FP'', v_serie);
+      SET p_NUMERO_FAC_OUT = LPAD(v_nro, 6, ''0'');
+      SET p_SERIE_FAC_OUT  = v_serie;
+      INSERT INTO fza_facturas_compra
+        (NUMERO_FACC, SERIE_FACC, FECHA_FACC, ESTADO_FACC,
+         CODIGO_EMP_FACC, RAZON_SOCIAL_EMPRESA_FACC, NIF_EMPRESA_FACC,
+         MOVIL_EMPRESA_FACC, EMAIL_EMPRESA_FACC, DIRECCION1_EMPRESA_FACC,
+         DIRECCION2_EMPRESA_FACC, POBLACION_EMPRESA_FACC,
+         PROVINCIA_EMPRESA_FACC, CODIGO_PAI_EMPRESA_FACC,
+         NOMBRE_PAI_EMPRESA_FACC, CODIGO_POSTAL_EMPRESA_FACC,
+         CODIGO_PRV_FACC, RAZON_SOCIAL_PRV_FACC, NIF_PRV_FACC,
+         MOVIL_PRV_FACC, EMAIL_PRV_FACC, DIRECCION1_PRV_FACC,
+         DIRECCION2_PRV_FACC, POBLACION_PRV_FACC, PROVINCIA_PRV_FACC,
+         CODIGO_PAI_PRV_FACC, NOMBRE_PAI_PRV_FACC, CODIGO_POSTAL_PRV_FACC,
+         CODIGO_ALM_FACC, CODIGO_IVA_FACC, FORMA_PAGO_FACC,
+         ESAGRUPAR_ALBARANES_FACC, CONTADOR_LINEAS_FACC,
+         INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT p_NUMERO_FAC_OUT, p_SERIE_FAC_OUT, CURDATE(), ''ABIERTA'',
+         CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, NIF_EMPRESA_ALBC,
+         MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, DIRECCION1_EMPRESA_ALBC,
+         DIRECCION2_EMPRESA_ALBC, POBLACION_EMPRESA_ALBC,
+         PROVINCIA_EMPRESA_ALBC, CODIGO_PAI_EMPRESA_ALBC,
+         NOMBRE_PAI_EMPRESA_ALBC, CODIGO_POSTAL_EMPRESA_ALBC,
+         CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, NIF_PRV_ALBC,
+         MOVIL_PRV_ALBC, EMAIL_PRV_ALBC, DIRECCION1_PRV_ALBC,
+         DIRECCION2_PRV_ALBC, POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC,
+         CODIGO_PAI_PRV_ALBC, NOMBRE_PAI_PRV_ALBC, CODIGO_POSTAL_PRV_ALBC,
+         CODIGO_ALM_ALBC, CODIGO_IVA_ALBC, FORMA_PAGO_ALBC,
+         ''S'', ''0'',
+         NOW(), p_USUARIO, NOW(), p_USUARIO
+        FROM fza_albaranes_compra
+       WHERE SERIE_ALBC = p_SERIE_ALB AND NUMERO_ALBC = p_NUMERO_ALB;
+      SET v_existe = 1;
+    ELSE
+      -- Anyadir a una factura existente: validar mismo proveedor+empresa.
+      SELECT COUNT(*), MAX(CODIGO_PRV_FACC), MAX(CODIGO_EMP_FACC)
+        INTO v_existe, v_prv_fac, v_emp_fac
+        FROM fza_facturas_compra
+       WHERE SERIE_FACC  = p_SERIE_FAC
+         AND NUMERO_FACC = p_NUMERO_FAC;
+      IF v_existe > 0
+         AND COALESCE(v_prv_fac, '''') = COALESCE(v_prv_alb, '''')
+         AND COALESCE(v_emp_fac, '''') = COALESCE(v_emp_alb, '''') THEN
+        SET p_SERIE_FAC_OUT  = p_SERIE_FAC;
+        SET p_NUMERO_FAC_OUT = p_NUMERO_FAC;
+      ELSE
+        SET v_existe = 0;
+      END IF;
+    END IF;
+    IF v_existe > 0 THEN
+      -- Contador de lineas actual de la factura destino.
+      SELECT CAST(COALESCE(NULLIF(CONTADOR_LINEAS_FACC, ''''), ''0'')
+                  AS UNSIGNED)
+        INTO v_cont
+        FROM fza_facturas_compra
+       WHERE SERIE_FACC = p_SERIE_FAC_OUT AND NUMERO_FACC = p_NUMERO_FAC_OUT;
+      -- Copiar lineas del albaran (numerando de 10 en 10 desde v_cont).
+      INSERT INTO fza_facturas_compra_lineas
+        (NUMERO_FACC_FACCLIN, SERIE_FACC_FACCLIN, LINEA_FACCLIN,
+         NUMERO_ALBC_FACCLIN, SERIE_ALBC_FACCLIN, LINEA_ALBC_FACCLIN,
+         CODIGO_ART_FACCLIN, CODIGO_UNIDAD_FACCLIN, REF_PRV_FACCLIN,
+         ID_AC_PIVOT_FACCLIN, CODIGO_FAM_FACCLIN, NOMBRE_FAM_FACCLIN,
+         DESCRIPCION_ARTICULO_FACCLIN, TIPO_CANTIDAD_ARTICULO_FACCLIN,
+         CANTIDAD_FACCLIN, TOTAL_UNIDADES_FACCLIN,
+         TIPO_IVA_ARTICULO_FACCLIN, PORCENTAJE_IVA_FACCLIN,
+         PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN,
+         PRECIO_COMPRA_CIVA_ARTICULO_FACCLIN, TOTAL_FACCLIN,
+         CODIGO_ALMACEN_FACCLIN, LOTE_FACCLIN, FECHA_CADUCIDAD_FACCLIN,
+         DESCRIPCION_VARIACION_FACCLIN,
+         INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT p_NUMERO_FAC_OUT, p_SERIE_FAC_OUT,
+         LPAD(v_cont + 10 * ROW_NUMBER() OVER (ORDER BY LINEA_ALBCLIN),
+              4, ''0''),
+         NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN,
+         CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN,
+         ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN,
+         DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN,
+         CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN,
+         TIPO_IVA_ARTICULO_ALBCLIN, PORCENTAJE_IVA_ALBCLIN,
+         PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN,
+         PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, TOTAL_ALBCLIN,
+         CODIGO_ALMACEN_ALBCLIN, LOTE_ALBCLIN, FECHA_CADUCIDAD_ALBCLIN,
+         DESCRIPCION_VARIACION_ALBCLIN,
+         NOW(), p_USUARIO, NOW(), p_USUARIO
+        FROM fza_albaranes_compra_lineas
+       WHERE SERIE_ALBC_ALBCLIN = p_SERIE_ALB
+         AND NUMERO_ALBC_ALBCLIN = p_NUMERO_ALB;
+      SET v_nlineas = ROW_COUNT();
+      -- Avanzar el contador de lineas de la cabecera.
+      UPDATE fza_facturas_compra
+         SET CONTADOR_LINEAS_FACC = CAST(v_cont + 10 * v_nlineas AS CHAR),
+             USUARIO_MODIF        = p_USUARIO
+       WHERE SERIE_FACC = p_SERIE_FAC_OUT
+         AND NUMERO_FACC = p_NUMERO_FAC_OUT;
+      -- Marcar las lineas del albaran como facturadas.
+      UPDATE fza_albaranes_compra_lineas
+         SET ESFACTURADA_ALBCLIN = ''S'',
+             NUMERO_FAC_ALBCLIN  = p_NUMERO_FAC_OUT,
+             SERIE_FAC_ALBCLIN   = p_SERIE_FAC_OUT,
+             USUARIO_MODIF       = p_USUARIO
+       WHERE SERIE_ALBC_ALBCLIN = p_SERIE_ALB
+         AND NUMERO_ALBC_ALBCLIN = p_NUMERO_ALB;
+      -- Marcar la cabecera del albaran como facturada.
+      UPDATE fza_albaranes_compra
+         SET ESTADO_ALBC     = ''FACTURADO'',
+             NUMERO_FAC_ALBC = p_NUMERO_FAC_OUT,
+             SERIE_FAC_ALBC  = p_SERIE_FAC_OUT,
+             USUARIO_MODIF   = p_USUARIO
+       WHERE SERIE_ALBC = p_SERIE_ALB AND NUMERO_ALBC = p_NUMERO_ALB;
+      -- Recalcular bandas de IVA y totales de la factura.
+      CALL PRC_FACC_RECALCULAR_TOTALES(p_SERIE_FAC_OUT, p_NUMERO_FAC_OUT);
+      SET p_RESULTADO = 1;
+    END IF;
+    COMMIT;
+  END IF;
+END ;;
+DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------
+-- 7. Registrar el Mto de facturas de compra en fza_winforms (idempotente).
+--    Cablea el menu ''Compras -> Facturas'' (objeto Facturas1) con la pantalla.
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''FacturasCompra'',
+       ''Facturas de Compra'',
+       ''Facturas1'',
+       ''inMtoFacturasCompra.TfrmMtoFacturasCompra'',
+       ''Ctrl+Alt+F'',
+       ''UniDataFacturasCompra.TdmFacturasCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''FacturasCompra''
+ );
+', '2026-06-11 07:27:59', '2026-06-11 07:27:59', 'Administrador', 'Administrador'),
+  ('351', 'proveedores_compras_defectos', '-- =============================================================================
+-- Proveedores: defectos para Sesiones de Compra (margen, tallas) + kits
+-- =============================================================================
+-- El proveedor pasa a almacenar el valor que las Sesiones de Compra
+-- (inMtoComprasSesiones) copian a la cabecera al seleccionarlo:
+--
+--   1. PORCENTAJE_MARGEN_PRV  -> PORCENTAJE_MARGEN_SES (margen comercial).
+--
+-- Ademas se crea la biblioteca de KITS del proveedor: patrones de cantidades
+-- por talla (CURVA-STD: 38=1, 39=2, 40=3...). Cada kit lleva su propio
+-- sistema de tallas (ID_AC_TALLAS_PRVKIT); el boton "Anadir todas" del
+-- mantenimiento vuelca las tallas de ese sistema con cantidad 0 para que el
+-- usuario solo rellene cantidades. Estando sobre una linea de la sesion,
+-- "Aplicar kit" copia las cantidades a las celdas de talla de esa linea
+-- casando VALOR_DESTINO_PRVKITD contra los valores del sistema de tallas de
+-- la linea. Es el equivalente persistente y por-proveedor de los kits de
+-- sesion (fza_compras_sesiones_kits, sufijo SESKIT) descritos en
+-- compras_sesiones.md §2.2.
+--
+-- Sufijos nuevos (registrados en LIBRO_DE_ESTILO_BBDD.md §2):
+--   fza_proveedores_kits     -> PRVKIT
+--   fza_proveedores_kits_det -> PRVKITD
+--
+-- Idempotente: columna via INFORMATION_SCHEMA, tablas via IF NOT EXISTS.
+-- NO tocar factuzam_original.sql (regla del repo); este script se aplica
+-- por separado a las BBDD existentes.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Columna nueva en fza_proveedores (margen comercial por defecto)
+-- ---------------------------------------------------------------------------
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_proveedores''
+     AND COLUMN_NAME  = ''PORCENTAJE_MARGEN_PRV''
+);
+SET @sSql := IF(@sExisteCol = 0,
+  ''ALTER TABLE fza_proveedores
+     ADD COLUMN PORCENTAJE_MARGEN_PRV decimal(7,4) NULL DEFAULT NULL
+       COMMENT ''''Margen comercial defecto: se copia a PORCENTAJE_MARGEN_SES''''
+     AFTER IBAN_PRV'',
+  ''SELECT ''''PORCENTAJE_MARGEN_PRV ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 2. Kits del proveedor (cabecera + detalle)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_proveedores_kits` (
+  `CODIGO_PRV_PRVKIT`     varchar(20)   NOT NULL
+                            COMMENT ''FK logica a fza_proveedores'',
+  `CODIGO_PRVKIT`         varchar(20)   NOT NULL
+                            COMMENT ''CURVA-STD, MUESTRA, etc.'',
+  `NOMBRE_PRVKIT`         varchar(100)  NOT NULL,
+  `DESCRIPCION_PRVKIT`    varchar(255)  DEFAULT NULL,
+  `ID_AC_TALLAS_PRVKIT`   int(11)       DEFAULT NULL
+                            COMMENT ''FK logica fza_atributos_conjuntos: sistema de tallas para el que se definio el kit (informativo; el casado real es por texto de talla)'',
+  `ORDEN_PRVKIT`          int(11)       NOT NULL DEFAULT 0,
+  `INSTANTE_ALTA`         datetime      NOT NULL,
+  `USUARIO_ALTA`          varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`        datetime      DEFAULT NULL,
+  `USUARIO_MODIF`         varchar(50)   DEFAULT NULL,
+  PRIMARY KEY (`CODIGO_PRV_PRVKIT`, `CODIGO_PRVKIT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE IF NOT EXISTS `fza_proveedores_kits_det` (
+  `CODIGO_PRV_PRVKITD`    varchar(20)   NOT NULL,
+  `CODIGO_PRVKIT_PRVKITD` varchar(20)   NOT NULL,
+  `VALOR_DESTINO_PRVKITD` varchar(50)   NOT NULL
+                            COMMENT ''Valor de la talla destino: "38", "M", etc. Se casa contra fza_atributos_valores.AV del sistema de la linea'',
+  `CANTIDAD_PRVKITD`      decimal(19,6) NOT NULL DEFAULT 0,
+  `ORDEN_PRVKITD`         int(11)       NOT NULL DEFAULT 0,
+  `INSTANTE_ALTA`         datetime      NOT NULL,
+  `USUARIO_ALTA`          varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`        datetime      DEFAULT NULL,
+  `USUARIO_MODIF`         varchar(50)   DEFAULT NULL,
+  PRIMARY KEY (`CODIGO_PRV_PRVKITD`, `CODIGO_PRVKIT_PRVKITD`,
+               `VALOR_DESTINO_PRVKITD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+', '2026-06-11 07:42:20', '2026-06-11 07:42:20', 'Administrador', 'Administrador'),
+  ('352', 'proveedores_compras_defectos', '-- =============================================================================
+-- Proveedores: defectos para Sesiones de Compra (margen, tallas) + kits
+-- =============================================================================
+-- El proveedor pasa a almacenar el valor que las Sesiones de Compra
+-- (inMtoComprasSesiones) copian a la cabecera al seleccionarlo:
+--
+--   1. PORCENTAJE_MARGEN_PRV  -> PORCENTAJE_MARGEN_SES (margen comercial).
+--
+-- Ademas se crea la biblioteca de KITS del proveedor: patrones de cantidades
+-- por talla (CURVA-STD: 38=1, 39=2, 40=3...). Cada kit lleva su propio
+-- sistema de tallas (ID_AC_TALLAS_PRVKIT); el boton "Anadir todas" del
+-- mantenimiento vuelca las tallas de ese sistema con cantidad 0 para que el
+-- usuario solo rellene cantidades. Estando sobre una linea de la sesion,
+-- "Aplicar kit" exige que el tallaje del kit COINCIDA con el de la linea
+-- (si no, advertencia y no se aplica) y copia las cantidades a las celdas
+-- de talla casando VALOR_DESTINO_PRVKITD contra los valores del sistema.
+-- Es el equivalente persistente y por-proveedor de los kits de sesion
+-- (fza_compras_sesiones_kits, sufijo SESKIT) descritos en
+-- compras_sesiones.md §2.2.
+--
+-- Sufijos nuevos (registrados en LIBRO_DE_ESTILO_BBDD.md §2):
+--   fza_proveedores_kits     -> PRVKIT
+--   fza_proveedores_kits_det -> PRVKITD
+--
+-- Idempotente: columna via INFORMATION_SCHEMA, tablas via IF NOT EXISTS.
+-- NO tocar factuzam_original.sql (regla del repo); este script se aplica
+-- por separado a las BBDD existentes.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Columna nueva en fza_proveedores (margen comercial por defecto)
+-- ---------------------------------------------------------------------------
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_proveedores''
+     AND COLUMN_NAME  = ''PORCENTAJE_MARGEN_PRV''
+);
+SET @sSql := IF(@sExisteCol = 0,
+  ''ALTER TABLE fza_proveedores
+     ADD COLUMN PORCENTAJE_MARGEN_PRV decimal(7,4) NULL DEFAULT NULL
+       COMMENT ''''Margen comercial defecto: se copia a PORCENTAJE_MARGEN_SES''''
+     AFTER IBAN_PRV'',
+  ''SELECT ''''PORCENTAJE_MARGEN_PRV ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ---------------------------------------------------------------------------
+-- 2. Kits del proveedor (cabecera + detalle)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_proveedores_kits` (
+  `CODIGO_PRV_PRVKIT`     varchar(20)   NOT NULL
+                            COMMENT ''FK logica a fza_proveedores'',
+  `CODIGO_PRVKIT`         varchar(20)   NOT NULL
+                            COMMENT ''CURVA-STD, MUESTRA, etc.'',
+  `NOMBRE_PRVKIT`         varchar(100)  NOT NULL,
+  `DESCRIPCION_PRVKIT`    varchar(255)  DEFAULT NULL,
+  `ID_AC_TALLAS_PRVKIT`   int(11)       DEFAULT NULL
+                            COMMENT ''FK logica fza_atributos_conjuntos: sistema de tallas del kit. Al aplicar debe coincidir con el de la linea (ID_AC_PIVOT_SESLIN) o se advierte y no se aplica'',
+  `ORDEN_PRVKIT`          int(11)       NOT NULL DEFAULT 0,
+  `INSTANTE_ALTA`         datetime      NOT NULL,
+  `USUARIO_ALTA`          varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`        datetime      DEFAULT NULL,
+  `USUARIO_MODIF`         varchar(50)   DEFAULT NULL,
+  PRIMARY KEY (`CODIGO_PRV_PRVKIT`, `CODIGO_PRVKIT`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+CREATE TABLE IF NOT EXISTS `fza_proveedores_kits_det` (
+  `CODIGO_PRV_PRVKITD`    varchar(20)   NOT NULL,
+  `CODIGO_PRVKIT_PRVKITD` varchar(20)   NOT NULL,
+  `VALOR_DESTINO_PRVKITD` varchar(50)   NOT NULL
+                            COMMENT ''Valor de la talla destino: "38", "M", etc. Se casa contra fza_atributos_valores.AV del sistema de la linea'',
+  `CANTIDAD_PRVKITD`      decimal(19,6) NOT NULL DEFAULT 0,
+  `ORDEN_PRVKITD`         int(11)       NOT NULL DEFAULT 0,
+  `INSTANTE_ALTA`         datetime      NOT NULL,
+  `USUARIO_ALTA`          varchar(50)   NOT NULL,
+  `INSTANTE_MODIF`        datetime      DEFAULT NULL,
+  `USUARIO_MODIF`         varchar(50)   DEFAULT NULL,
+  PRIMARY KEY (`CODIGO_PRV_PRVKITD`, `CODIGO_PRVKIT_PRVKITD`,
+               `VALOR_DESTINO_PRVKITD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+', '2026-06-11 07:57:18', '2026-06-11 07:57:18', 'Administrador', 'Administrador'),
+  ('353', 'reubicar_shortcuts_menu', '-- =============================================================================
+-- Reubicar shortcuts de menu: Arqueos, Paises, Unidades, Empleados y Efectos
+-- =============================================================================
+-- Sincroniza fza_winforms con los aceleradores definidos en inMtoPrincipal.dfm.
+-- Da un atajo unico a opciones que antes chocaban o no tenian, y resuelve de
+-- paso el conflicto de Ctrl+Alt+E moviendo Efectos de pago a Ctrl+Alt+C.
+--
+-- Cambios (CALL_WINF: antiguo -> nuevo):
+--   EfectosCompra:    Ctrl+Alt+E   -> Ctrl+Alt+C   (antes era un valor
+--                     huerfano sin atajo real; ahora con ShortCut en el DFM)
+--   Empleados:        (sin atajo)  -> Ctrl+Alt+E
+--   CajaArqueosHist:  Ctrl+Shift+A -> Ctrl+Shift+H (Ctrl+Shift+A lo usaba
+--                     tambien Albaranes de compra)
+--   Paises:           Ctrl+L       -> Ctrl+Alt+L   (Ctrl+L lo usa Almacenes)
+--   UnidadesMedida:   (sin atajo)  -> Ctrl+Alt+U
+--
+-- Idempotente: cada UPDATE solo actua si el valor actual difiere del nuevo;
+-- COALESCE cubre los casos NULL / cadena vacia (Unidades y Empleados).
+-- =============================================================================
+-- Efectos de pago: Ctrl+Alt+C (libera Ctrl+Alt+E para Empleados)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+C''
+ WHERE CALL_WINF = ''EfectosCompra''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+C'';
+-- Empleados: Ctrl+Alt+E (antes sin atajo)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+E''
+ WHERE CALL_WINF = ''Empleados''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+E'';
+-- Historico de Arqueos: Ctrl+Shift+H (libera Ctrl+Shift+A de Albaranes compra)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Shift+H''
+ WHERE CALL_WINF = ''CajaArqueosHist''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Shift+H'';
+-- Paises: Ctrl+Alt+L (libera Ctrl+L de Almacenes)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+L''
+ WHERE CALL_WINF = ''Paises''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+L'';
+-- Unidades de Medida: Ctrl+Alt+U (antes sin atajo)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+U''
+ WHERE CALL_WINF = ''UnidadesMedida''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+U'';
+', '2026-06-11 13:56:16', '2026-06-11 13:56:16', 'Administrador', 'Administrador'),
+  ('354', 'reubicar_shortcuts_menu', '-- =============================================================================
+-- Reubicar shortcuts de menu: Arqueos, Paises, Unidades, Empleados y Efectos
+-- =============================================================================
+-- Sincroniza fza_winforms con los aceleradores definidos en inMtoPrincipal.dfm.
+-- Da un atajo unico a opciones que antes chocaban o no tenian, y resuelve de
+-- paso el conflicto de Ctrl+Alt+E moviendo Efectos de pago a Ctrl+Alt+C.
+--
+-- Cambios (CALL_WINF: antiguo -> nuevo):
+--   EfectosCompra:    Ctrl+Alt+E   -> Ctrl+Alt+C   (antes era un valor
+--                     huerfano sin atajo real; ahora con ShortCut en el DFM)
+--   Empleados:        (sin atajo)  -> Ctrl+Alt+E
+--   CajaArqueosHist:  Ctrl+Shift+A -> Ctrl+Shift+H (Ctrl+Shift+A lo usaba
+--                     tambien Albaranes de compra)
+--   Paises:           Ctrl+L       -> Ctrl+Alt+L   (Ctrl+L lo usa Almacenes)
+--   UnidadesMedida:   (sin atajo)  -> Ctrl+Alt+U
+--
+-- Idempotente: cada UPDATE solo actua si el valor actual difiere del nuevo;
+-- COALESCE cubre los casos NULL / cadena vacia (Unidades y Empleados).
+-- =============================================================================
+-- Efectos de pago: Ctrl+Alt+C (libera Ctrl+Alt+E para Empleados)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+C''
+ WHERE CALL_WINF = ''EfectosCompra''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+C'';
+-- Empleados: Ctrl+Alt+E (antes sin atajo)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+E''
+ WHERE CALL_WINF = ''Empleados''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+E'';
+-- Historico de Arqueos: Ctrl+Shift+H (libera Ctrl+Shift+A de Albaranes compra)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Shift+H''
+ WHERE CALL_WINF = ''CajaArqueosHist''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Shift+H'';
+-- Paises: Ctrl+Alt+L (libera Ctrl+L de Almacenes)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+L''
+ WHERE CALL_WINF = ''Paises''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+L'';
+-- Unidades de Medida: Ctrl+Alt+U (antes sin atajo)
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = ''Ctrl+Alt+U''
+ WHERE CALL_WINF = ''UnidadesMedida''
+   AND COALESCE(SHORTCUT_WINF, '''') <> ''Ctrl+Alt+U'';
+', '2026-06-11 16:37:00', '2026-06-11 16:37:00', 'Administrador', 'Administrador');
+-- 150 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -36121,110 +37902,123 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (1, 'Tablas', '-1'),
   (2, 'Vistas', '-1'),
   (3, 'Procedimientos', '-1'),
-  (4, 'fza_albaranes', '1'),
-  (5, 'fza_albaranes_compra', '1'),
-  (6, 'fza_albaranes_compra_celdas', '1'),
-  (7, 'fza_albaranes_compra_lineas', '1'),
-  (8, 'fza_albaranes_lineas', '1'),
-  (9, 'fza_almacenes', '1'),
-  (10, 'fza_almacenes_cajas', '1'),
-  (11, 'fza_articulos', '1'),
-  (12, 'fza_articulos_atributos_basicos', '1'),
-  (13, 'fza_articulos_conjuntos_asign', '1'),
-  (14, 'fza_articulos_familias', '1'),
-  (15, 'fza_articulos_fotos', '1'),
-  (16, 'fza_articulos_pdte_recibir', '1'),
-  (17, 'fza_articulos_propiedades', '1'),
-  (18, 'fza_articulos_proveedores', '1'),
-  (19, 'fza_articulos_skus', '1'),
-  (20, 'fza_articulos_skus_costes', '1'),
-  (21, 'fza_articulos_stockactual', '1'),
-  (22, 'fza_articulos_tarifas', '1'),
-  (23, 'fza_articulos_vinculos', '1'),
-  (24, 'fza_atributos_basicos', '1'),
-  (25, 'fza_atributos_conjuntos', '1'),
-  (26, 'fza_atributos_conjuntos_det', '1'),
-  (27, 'fza_atributos_sku', '1'),
-  (28, 'fza_atributos_valores', '1'),
-  (29, 'fza_atributos_valores_info', '1'),
-  (30, 'fza_caja_arqueos', '1'),
-  (31, 'fza_caja_arqueos_recuento', '1'),
-  (32, 'fza_caja_formas_pago', '1'),
-  (33, 'fza_caja_operaciones', '1'),
-  (34, 'fza_caja_pagos', '1'),
-  (35, 'fza_caja_vales', '1'),
-  (36, 'fza_clientes', '1'),
-  (37, 'fza_codigos_barras', '1'),
-  (38, 'fza_compras_plantillas', '1'),
-  (39, 'fza_compras_plantillas_kits', '1'),
-  (40, 'fza_compras_plantillas_kits_det', '1'),
-  (41, 'fza_compras_plantillas_props', '1'),
-  (42, 'fza_compras_sesiones', '1'),
-  (43, 'fza_compras_sesiones_celdas', '1'),
-  (44, 'fza_compras_sesiones_documentos', '1'),
-  (45, 'fza_compras_sesiones_fotos', '1'),
-  (46, 'fza_compras_sesiones_kits', '1'),
-  (47, 'fza_compras_sesiones_kits_det', '1'),
-  (48, 'fza_compras_sesiones_lineas', '1'),
-  (49, 'fza_compras_sesiones_lineas_filas', '1'),
-  (50, 'fza_compras_sesiones_lineas_filas_atr', '1'),
-  (51, 'fza_compras_sesiones_lineas_props', '1'),
-  (52, 'fza_compras_sesiones_lineas_skus_precios', '1'),
-  (53, 'fza_compras_sesiones_props', '1'),
-  (54, 'fza_config_campos', '1'),
-  (55, 'fza_contadores', '1'),
-  (56, 'fza_depositos_cliente', '1'),
-  (57, 'fza_empleados', '1'),
-  (58, 'fza_empresas', '1'),
-  (59, 'fza_empresas_retenciones', '1'),
-  (60, 'fza_empresas_series', '1'),
-  (61, 'fza_facturas', '1'),
-  (62, 'fza_facturas_consolidaciones', '1'),
-  (63, 'fza_facturas_lineas', '1'),
-  (64, 'fza_facturas_pagos', '1'),
-  (65, 'fza_familias_atributos', '1'),
-  (66, 'fza_familias_atributos_defecto', '1'),
-  (67, 'fza_familias_claves_info_defecto', '1'),
-  (68, 'fza_formas_pago', '1'),
-  (69, 'fza_generadorprocesos', '1'),
-  (70, 'fza_informes_guias', '1'),
-  (71, 'fza_inventarios', '1'),
-  (72, 'fza_inventarios_lineas', '1'),
-  (73, 'fza_inventarios_recuentos', '1'),
-  (74, 'fza_ivas', '1'),
-  (75, 'fza_ivas_grupos', '1'),
-  (76, 'fza_ivas_tipos', '1'),
-  (77, 'fza_ivas_zonas', '1'),
-  (78, 'fza_metadatos', '1'),
-  (79, 'fza_movimientos_almacen', '1'),
-  (80, 'fza_paises', '1'),
-  (81, 'fza_pedidos', '1'),
-  (82, 'fza_pedidos_compra', '1'),
-  (83, 'fza_pedidos_compra_celdas', '1'),
-  (84, 'fza_pedidos_compra_lineas', '1'),
-  (85, 'fza_pedidos_lineas', '1'),
-  (86, 'fza_pedidos_mensajes', '1'),
-  (87, 'fza_permisos', '1'),
-  (88, 'fza_propiedades', '1'),
-  (89, 'fza_propiedades_valores', '1'),
-  (90, 'fza_proveedores', '1'),
-  (91, 'fza_proveedores_familias', '1'),
-  (92, 'fza_proveedores_familias_conjuntos', '1'),
-  (93, 'fza_recibos', '1'),
-  (94, 'fza_tarifas', '1'),
-  (95, 'fza_tipos_documentos', '1'),
-  (96, 'fza_traspasos_solicitudes', '1'),
-  (97, 'fza_traspasos_solicitudes_lineas', '1'),
-  (98, 'fza_unidades_medida', '1'),
-  (99, 'fza_usuarios', '1'),
-  (100, 'fza_usuarios_empl_bak', '1'),
-  (101, 'fza_usuarios_grupos', '1'),
-  (102, 'fza_usuarios_perfiles', '1'),
-  (103, 'fza_valores_defecto', '1'),
-  (104, 'fza_variaciones', '1'),
-  (105, 'fza_variaciones_atributos', '1'),
-  (106, 'fza_verifactu_eventos', '1'),
-  (107, 'fza_winforms', '1'),
+  (4, 'bak_atributos_sku_tallas_dup', '1'),
+  (5, 'fza_albaranes', '1'),
+  (6, 'fza_albaranes_compra', '1'),
+  (7, 'fza_albaranes_compra_celdas', '1'),
+  (8, 'fza_albaranes_compra_lineas', '1'),
+  (9, 'fza_albaranes_lineas', '1'),
+  (10, 'fza_almacenes', '1'),
+  (11, 'fza_almacenes_cajas', '1'),
+  (12, 'fza_articulos', '1'),
+  (13, 'fza_articulos_atributos_basicos', '1'),
+  (14, 'fza_articulos_conjuntos_asign', '1'),
+  (15, 'fza_articulos_familias', '1'),
+  (16, 'fza_articulos_fotos', '1'),
+  (17, 'fza_articulos_pdte_recibir', '1'),
+  (18, 'fza_articulos_propiedades', '1'),
+  (19, 'fza_articulos_proveedores', '1'),
+  (20, 'fza_articulos_skus', '1'),
+  (21, 'fza_articulos_skus_costes', '1'),
+  (22, 'fza_articulos_stockactual', '1'),
+  (23, 'fza_articulos_tarifas', '1'),
+  (24, 'fza_articulos_vinculos', '1'),
+  (25, 'fza_atributos_basicos', '1'),
+  (26, 'fza_atributos_conjuntos', '1'),
+  (27, 'fza_atributos_conjuntos_det', '1'),
+  (28, 'fza_atributos_sku', '1'),
+  (29, 'fza_atributos_valores', '1'),
+  (30, 'fza_atributos_valores_info', '1'),
+  (31, 'fza_caja_arqueos', '1'),
+  (32, 'fza_caja_arqueos_recuento', '1'),
+  (33, 'fza_caja_formas_pago', '1'),
+  (34, 'fza_caja_operaciones', '1'),
+  (35, 'fza_caja_pagos', '1'),
+  (36, 'fza_caja_vales', '1'),
+  (37, 'fza_clientes', '1'),
+  (38, 'fza_codigos_barras', '1'),
+  (39, 'fza_compras_plantillas', '1'),
+  (40, 'fza_compras_plantillas_kits', '1'),
+  (41, 'fza_compras_plantillas_kits_det', '1'),
+  (42, 'fza_compras_plantillas_props', '1'),
+  (43, 'fza_compras_sesiones', '1'),
+  (44, 'fza_compras_sesiones_celdas', '1'),
+  (45, 'fza_compras_sesiones_documentos', '1'),
+  (46, 'fza_compras_sesiones_fotos', '1'),
+  (47, 'fza_compras_sesiones_kits', '1'),
+  (48, 'fza_compras_sesiones_kits_det', '1'),
+  (49, 'fza_compras_sesiones_lineas', '1'),
+  (50, 'fza_compras_sesiones_lineas_filas', '1'),
+  (51, 'fza_compras_sesiones_lineas_filas_atr', '1'),
+  (52, 'fza_compras_sesiones_lineas_props', '1'),
+  (53, 'fza_compras_sesiones_lineas_skus_precios', '1'),
+  (54, 'fza_compras_sesiones_props', '1'),
+  (55, 'fza_config_campos', '1'),
+  (56, 'fza_contadores', '1'),
+  (57, 'fza_depositos_cliente', '1'),
+  (58, 'fza_devoluciones_compra', '1'),
+  (59, 'fza_devoluciones_compra_celdas', '1'),
+  (60, 'fza_devoluciones_compra_lineas', '1'),
+  (61, 'fza_efectos_compra', '1'),
+  (62, 'fza_efectos_compra_pagos', '1'),
+  (63, 'fza_empleados', '1'),
+  (64, 'fza_empresas', '1'),
+  (65, 'fza_empresas_retenciones', '1'),
+  (66, 'fza_empresas_series', '1'),
+  (67, 'fza_facturas', '1'),
+  (68, 'fza_facturas_compra', '1'),
+  (69, 'fza_facturas_compra_celdas', '1'),
+  (70, 'fza_facturas_compra_lineas', '1'),
+  (71, 'fza_facturas_consolidaciones', '1'),
+  (72, 'fza_facturas_lineas', '1'),
+  (73, 'fza_facturas_pagos', '1'),
+  (74, 'fza_familias_atributos', '1'),
+  (75, 'fza_familias_atributos_defecto', '1'),
+  (76, 'fza_familias_claves_info_defecto', '1'),
+  (77, 'fza_formas_pago', '1'),
+  (78, 'fza_generadorprocesos', '1'),
+  (79, 'fza_informes_guias', '1'),
+  (80, 'fza_inventarios', '1'),
+  (81, 'fza_inventarios_lineas', '1'),
+  (82, 'fza_inventarios_recuentos', '1'),
+  (83, 'fza_ivas', '1'),
+  (84, 'fza_ivas_grupos', '1'),
+  (85, 'fza_ivas_tipos', '1'),
+  (86, 'fza_ivas_zonas', '1'),
+  (87, 'fza_metadatos', '1'),
+  (88, 'fza_movimientos_almacen', '1'),
+  (89, 'fza_paises', '1'),
+  (90, 'fza_pedidos', '1'),
+  (91, 'fza_pedidos_compra', '1'),
+  (92, 'fza_pedidos_compra_celdas', '1'),
+  (93, 'fza_pedidos_compra_lineas', '1'),
+  (94, 'fza_pedidos_lineas', '1'),
+  (95, 'fza_pedidos_mensajes', '1'),
+  (96, 'fza_permisos', '1'),
+  (97, 'fza_propiedades', '1'),
+  (98, 'fza_propiedades_valores', '1'),
+  (99, 'fza_proveedores', '1'),
+  (100, 'fza_proveedores_familias', '1'),
+  (101, 'fza_proveedores_familias_conjuntos', '1'),
+  (102, 'fza_proveedores_kits', '1'),
+  (103, 'fza_proveedores_kits_det', '1'),
+  (104, 'fza_recibos', '1'),
+  (105, 'fza_remesas_compra', '1'),
+  (106, 'fza_tarifas', '1'),
+  (107, 'fza_tipos_documentos', '1'),
+  (108, 'fza_tipos_efecto', '1'),
+  (109, 'fza_traspasos_solicitudes', '1'),
+  (110, 'fza_traspasos_solicitudes_lineas', '1'),
+  (111, 'fza_unidades_medida', '1'),
+  (112, 'fza_usuarios', '1'),
+  (113, 'fza_usuarios_empl_bak', '1'),
+  (114, 'fza_usuarios_grupos', '1'),
+  (115, 'fza_usuarios_perfiles', '1'),
+  (116, 'fza_valores_defecto', '1'),
+  (117, 'fza_variaciones', '1'),
+  (118, 'fza_variaciones_atributos', '1'),
+  (119, 'fza_verifactu_eventos', '1'),
+  (120, 'fza_winforms', '1'),
   (131, 'fza_caja_depositos_view', '2'),
   (132, 'vi_albaranes', '2'),
   (133, 'vi_albaranes_compra', '2'),
@@ -36239,68 +38033,77 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (142, 'vi_articulos_fotos', '2'),
   (143, 'vi_articulos_list', '2'),
   (144, 'vi_articulos_pdte_recibir', '2'),
-  (145, 'vi_articulos_propiedades_slots', '2'),
-  (146, 'vi_articulos_proveedores', '2'),
-  (147, 'vi_articulos_skus', '2'),
-  (148, 'vi_articulos_skus_con_coste', '2'),
-  (149, 'vi_articulos_skus_etiquetas', '2'),
-  (150, 'vi_articulos_skus_extendida', '2'),
-  (151, 'vi_articulos_tarifas', '2'),
-  (152, 'vi_articulos_tarifas_mto', '2'),
-  (153, 'vi_art_busquedas', '2'),
-  (154, 'vi_atributos_nombres', '2'),
-  (155, 'vi_atributos_sku_basico', '2'),
-  (156, 'vi_cajasdef', '2'),
-  (157, 'vi_caja_busqueda_unificada', '2'),
-  (158, 'vi_caja_pagos', '2'),
-  (159, 'vi_caja_tarifa_sku_articulos', '2'),
-  (160, 'vi_caja_totalventas', '2'),
-  (161, 'vi_caja_vales_ptes', '2'),
-  (162, 'vi_clientes', '2'),
-  (163, 'vi_cli_busquedas', '2'),
-  (164, 'vi_compras_sesiones', '2'),
-  (165, 'vi_compras_sesiones_cab_print', '2'),
-  (166, 'vi_compras_sesiones_guias_print', '2'),
-  (167, 'vi_compras_sesiones_lin_print', '2'),
-  (168, 'vi_contadores', '2'),
-  (169, 'vi_depositos_cliente', '2'),
-  (170, 'vi_empleados', '2'),
-  (171, 'vi_empresas', '2'),
-  (172, 'vi_empresas_retenciones', '2'),
-  (173, 'vi_empresas_series', '2'),
-  (174, 'vi_emp_busquedas', '2'),
-  (175, 'vi_facturas', '2'),
-  (176, 'vi_facturas_lineas', '2'),
-  (177, 'vi_facturas_lineas_print', '2'),
-  (178, 'vi_facturas_normales', '2'),
-  (179, 'vi_facturas_print', '2'),
-  (180, 'vi_facturas_simplificadas', '2'),
-  (181, 'vi_fac_busquedas', '2'),
-  (182, 'vi_fac_lin_busquedas', '2'),
-  (183, 'vi_formapago', '2'),
-  (184, 'vi_info_tpv_completa', '2'),
-  (185, 'vi_ivas', '2'),
-  (186, 'vi_ivas_empresa', '2'),
-  (187, 'vi_ivas_grupos', '2'),
-  (188, 'vi_ivas_zonas', '2'),
-  (189, 'vi_movimientos', '2'),
-  (190, 'vi_paises', '2'),
-  (191, 'vi_pedidos', '2'),
-  (192, 'vi_pedidos_compra', '2'),
-  (193, 'vi_pedidos_lineas', '2'),
-  (194, 'vi_proveedores', '2'),
-  (195, 'vi_proveedores_articulos', '2'),
-  (196, 'vi_proveedores_busquedas', '2'),
-  (197, 'vi_recibos', '2'),
-  (198, 'vi_ses_preview_skus', '2'),
-  (199, 'vi_ses_resumen', '2'),
-  (200, 'vi_ses_resumen_almacen', '2'),
-  (201, 'vi_tarifas', '2'),
-  (202, 'vi_usuarios', '2'),
-  (203, 'vi_usuarios_grupos', '2'),
-  (204, 'vi_usuarios_perfiles', '2'),
-  (205, 'vi_variaciones', '2'),
-  (206, 'v_articulos_stock_barras', '2'),
+  (145, 'vi_articulos_propiedades_efectivas', '2'),
+  (146, 'vi_articulos_propiedades_slots', '2'),
+  (147, 'vi_articulos_proveedores', '2'),
+  (148, 'vi_articulos_skus', '2'),
+  (149, 'vi_articulos_skus_con_coste', '2'),
+  (150, 'vi_articulos_skus_etiquetas', '2'),
+  (151, 'vi_articulos_skus_extendida', '2'),
+  (152, 'vi_articulos_tarifas', '2'),
+  (153, 'vi_articulos_tarifas_mto', '2'),
+  (154, 'vi_art_busquedas', '2'),
+  (155, 'vi_atributos_nombres', '2'),
+  (156, 'vi_atributos_sku_basico', '2'),
+  (157, 'vi_cajasdef', '2'),
+  (158, 'vi_caja_busqueda_unificada', '2'),
+  (159, 'vi_caja_pagos', '2'),
+  (160, 'vi_caja_tarifa_sku_articulos', '2'),
+  (161, 'vi_caja_totalventas', '2'),
+  (162, 'vi_caja_vales_ptes', '2'),
+  (163, 'vi_clientes', '2'),
+  (164, 'vi_cli_busquedas', '2'),
+  (165, 'vi_compras_sesiones', '2'),
+  (166, 'vi_compras_sesiones_cab_print', '2'),
+  (167, 'vi_compras_sesiones_guias_print', '2'),
+  (168, 'vi_compras_sesiones_lin_print', '2'),
+  (169, 'vi_contadores', '2'),
+  (170, 'vi_depositos_cliente', '2'),
+  (171, 'vi_devoluciones_compra', '2'),
+  (172, 'vi_devoluciones_compra_cab_print', '2'),
+  (173, 'vi_devoluciones_compra_guias_print', '2'),
+  (174, 'vi_devoluciones_compra_lin_print', '2'),
+  (175, 'vi_efectos_compra', '2'),
+  (176, 'vi_efectos_compra_pendientes', '2'),
+  (177, 'vi_empleados', '2'),
+  (178, 'vi_empresas', '2'),
+  (179, 'vi_empresas_retenciones', '2'),
+  (180, 'vi_empresas_series', '2'),
+  (181, 'vi_emp_busquedas', '2'),
+  (182, 'vi_facturas', '2'),
+  (183, 'vi_facturas_compra', '2'),
+  (184, 'vi_facturas_lineas', '2'),
+  (185, 'vi_facturas_lineas_print', '2'),
+  (186, 'vi_facturas_normales', '2'),
+  (187, 'vi_facturas_print', '2'),
+  (188, 'vi_facturas_simplificadas', '2'),
+  (189, 'vi_fac_busquedas', '2'),
+  (190, 'vi_fac_lin_busquedas', '2'),
+  (191, 'vi_formapago', '2'),
+  (192, 'vi_info_tpv_completa', '2'),
+  (193, 'vi_ivas', '2'),
+  (194, 'vi_ivas_empresa', '2'),
+  (195, 'vi_ivas_grupos', '2'),
+  (196, 'vi_ivas_zonas', '2'),
+  (197, 'vi_movimientos', '2'),
+  (198, 'vi_paises', '2'),
+  (199, 'vi_pedidos', '2'),
+  (200, 'vi_pedidos_compra', '2'),
+  (201, 'vi_pedidos_lineas', '2'),
+  (202, 'vi_proveedores', '2'),
+  (203, 'vi_proveedores_articulos', '2'),
+  (204, 'vi_proveedores_busquedas', '2'),
+  (205, 'vi_recibos', '2'),
+  (206, 'vi_remesas_compra', '2'),
+  (207, 'vi_ses_preview_skus', '2'),
+  (208, 'vi_ses_resumen', '2'),
+  (209, 'vi_ses_resumen_almacen', '2'),
+  (210, 'vi_tarifas', '2'),
+  (211, 'vi_usuarios', '2'),
+  (212, 'vi_usuarios_grupos', '2'),
+  (213, 'vi_usuarios_perfiles', '2'),
+  (214, 'vi_variaciones', '2'),
+  (215, 'v_articulos_stock_barras', '2'),
   (258, 'PRC_ADD_INDEX_IF_NOT_EXISTS', '3'),
   (259, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
   (260, 'PRC_ALB_CREAR_FACTURA_FIN', '3'),
@@ -36322,46 +38125,54 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (276, 'PRC_CREAR_METADATOS', '3'),
   (277, 'PRC_CREAR_RECIBOS_FACTURA', '3'),
   (278, 'PRC_CREAR_TRASPASO', '3'),
-  (279, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
-  (280, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
-  (281, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
-  (282, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
-  (283, 'PRC_FZA_AJUSTAR_ACUMULADO_STK', '3'),
-  (284, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
-  (285, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
-  (286, 'PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO', '3'),
-  (287, 'PRC_FZA_INVENTARIOS_APLICAR', '3'),
-  (288, 'PRC_FZA_INVENTARIOS_ELIMINAR_REGUL', '3'),
-  (289, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE', '3'),
-  (290, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC', '3'),
-  (291, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
-  (292, 'PRC_FZA_MOVIMIENTOS_ALMACEN_UPDATE', '3'),
-  (293, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (294, 'PRC_GETPERFILFORMULARIO', '3'),
-  (295, 'PRC_GET_BALANCE_ALMACEN_SIN_TALLAS', '3'),
-  (296, 'PRC_GET_BALANCE_ALMACEN_TALLAS', '3'),
-  (297, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (298, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (299, 'PRC_GET_CREAR_VALOR', '3'),
-  (300, 'PRC_GET_DATA_ARTICULO', '3'),
-  (301, 'PRC_GET_DATA_CLIENTE', '3'),
-  (302, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (303, 'PRC_GET_NEXT_CONT', '3'),
-  (304, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (305, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (306, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (307, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (308, 'PRC_PED_CREAR_ALBARAN_FIN', '3'),
-  (309, 'PRC_PED_CREAR_ALBARAN_INICIO', '3'),
-  (310, 'PRC_PED_CREAR_ALBARAN_LINEA', '3'),
-  (311, 'PRC_REALIZAR_TRASPASO', '3'),
-  (312, 'PRC_RECALCULAR_STOCK', '3'),
-  (313, 'PRC_SETPERFILFORMULARIO', '3'),
-  (314, 'SP_RECALCULAR_PMP_LOTE_ALMACEN', '3'),
-  (315, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (316, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (279, 'PRC_EFEC_GENERAR_DESDE_FACTURA', '3'),
+  (280, 'PRC_EFEC_REGISTRAR_PAGO', '3'),
+  (281, 'PRC_FACC_FACTURAR_ALBARAN', '3'),
+  (282, 'PRC_FACC_RECALCULAR_TOTALES', '3'),
+  (283, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
+  (284, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
+  (285, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
+  (286, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
+  (287, 'PRC_FZA_AJUSTAR_ACUMULADO_STK', '3'),
+  (288, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
+  (289, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
+  (290, 'PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO', '3'),
+  (291, 'PRC_FZA_INVENTARIOS_APLICAR', '3'),
+  (292, 'PRC_FZA_INVENTARIOS_ELIMINAR_REGUL', '3'),
+  (293, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE', '3'),
+  (294, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC', '3'),
+  (295, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
+  (296, 'PRC_FZA_MOVIMIENTOS_ALMACEN_UPDATE', '3'),
+  (297, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (298, 'PRC_GETPERFILFORMULARIO', '3'),
+  (299, 'PRC_GET_BALANCE_ALMACEN_SIN_TALLAS', '3'),
+  (300, 'PRC_GET_BALANCE_ALMACEN_TALLAS', '3'),
+  (301, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (302, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (303, 'PRC_GET_CREAR_VALOR', '3'),
+  (304, 'PRC_GET_DATA_ARTICULO', '3'),
+  (305, 'PRC_GET_DATA_CLIENTE', '3'),
+  (306, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (307, 'PRC_GET_MOV_VENTAS_ART', '3'),
+  (308, 'PRC_GET_NEXT_CONT', '3'),
+  (309, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (310, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (311, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (312, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (313, 'PRC_PED_CREAR_ALBARAN_FIN', '3'),
+  (314, 'PRC_PED_CREAR_ALBARAN_INICIO', '3'),
+  (315, 'PRC_PED_CREAR_ALBARAN_LINEA', '3'),
+  (316, 'PRC_REALIZAR_TRASPASO', '3'),
+  (317, 'PRC_RECALCULAR_STOCK', '3'),
+  (318, 'PRC_REMC_ANYADIR_EFECTO', '3'),
+  (319, 'PRC_REMC_CREAR', '3'),
+  (320, 'PRC_REMC_RECALCULAR', '3'),
+  (321, 'PRC_SETPERFILFORMULARIO', '3'),
+  (322, 'SP_RECALCULAR_PMP_LOTE_ALMACEN', '3'),
+  (323, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (324, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 242 registros exportados
+-- 272 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -36898,6 +38709,30 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000000733', 'TA', 'TA', '000002', '0010', '1', 'BCN', '2026-06-02 08:05:16', 'CAMI-BASICA', 'CAMI-BASICA/ROJO/L', NULL, 'E', 1, 7, 7, 7, 'GEN', '', NULL, 'S', '2026-06-02 08:05:16', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000167', '1'),
   ('0000000735', 'VE', '2026.A1', '000142', '0010', '012', 'GEN', '2026-06-04 20:38:15', 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/39', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-04 20:38:15', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000168', '1'),
   ('0000000737', 'VE', '2026.A1', '000143', '0010', '012', 'GEN', '2026-06-06 06:00:19', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-06 06:00:19', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000169', '1'),
+  ('0000000738', 'AC', 'A1', '029', '0010', '012', 'ALE', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/42', NULL, 'E', 2, 89, 178, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'ALE', '', ''),
+  ('0000000739', 'AC', 'A1', '029', '0020', '012', 'ALE', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/43', NULL, 'E', 1, 89, 89, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'ALE', '', ''),
+  ('0000000740', 'AC', 'A1', '029', '0030', '012', 'ALE', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/41', NULL, 'E', 2, 89, 178, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'ALE', '', ''),
+  ('0000000741', 'AC', 'A1', '029', '0040', '012', 'ALE', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/40', NULL, 'E', 2, 89, 178, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'ALE', '', ''),
+  ('0000000742', 'AC', 'A1', '029', '0050', '012', 'ALE', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/44', NULL, 'E', 1, 89, 89, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'ALE', '', ''),
+  ('0000000743', 'AC', 'A1', '029', '0060', '012', 'ALE', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/39', NULL, 'E', 1, 89, 89, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'ALE', '', ''),
+  ('0000000744', 'AC', 'A1', '030', '0010', '012', 'GEN', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/42', NULL, 'E', 2, 89, 178, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000745', 'AC', 'A1', '030', '0020', '012', 'GEN', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/43', NULL, 'E', 1, 89, 89, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000746', 'AC', 'A1', '030', '0030', '012', 'GEN', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/41', NULL, 'E', 2, 89, 178, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000747', 'AC', 'A1', '030', '0040', '012', 'GEN', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/40', NULL, 'E', 2, 89, 178, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000748', 'AC', 'A1', '030', '0050', '012', 'GEN', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/44', NULL, 'E', 1, 89, 89, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000749', 'AC', 'A1', '030', '0060', '012', 'GEN', '2026-06-11 13:50:22', 'CALV00001', 'CALV00001/3838/39', NULL, 'E', 1, 89, 89, 89, NULL, '', NULL, 'S', '2026-06-11 13:50:22', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000750', 'AC', 'A1', '031', '0010', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/S', NULL, 'E', 1, 9, 9, 9, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000751', 'AC', 'A1', '031', '0020', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/M', NULL, 'E', 2, 9, 18, 9, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000752', 'AC', 'A1', '031', '0030', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/L', NULL, 'E', 2, 9, 18, 9, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', '');
+INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_MOV`, `NUMERO_DOC_MOV`, `LINEA_MOV`, `CODIGO_EMP_MOV`, `CODIGO_ALM_MOV`, `FECHA_MOV`, `CODIGO_ART_MOV`, `CODIGO_UNIDAD_MOV`, `DESCRIPCION_ARTICULO_MOV`, `TIPO_MOV`, `CANTIDAD_MOV`, `PRECIO_COSTE_UNITARIO_MOV`, `TOTAL_COSTE_MOV`, `PRECIO_MEDIO_MOV`, `CODIGO_ALM_CONTRA_MOV`, `CODIGO_CLI_MOV`, `CODIGO_PRV_MOV`, `ESACTIVO_MOV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `TIPO_DOC_REF_MOV`, `SERIE_DOC_REF_MOV`, `NUMERO_DOC_REF_MOV`, `LINEA_REF_MOV`, `LOTE_MOV`, `FECHA_CADUCIDAD_MOV`, `CODIGO_ALM_DOC_MOV`, `NUMERO_OPERACION_DOC_MOV`, `CODIGO_CAJA_DOC_MOV`) VALUES
+  ('0000000753', 'AC', 'A1', '031', '0040', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XL', NULL, 'E', 1, 9, 9, 9, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000754', 'AC', 'A1', '031', '0050', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XXL', NULL, 'E', 1, 9, 9, 9, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000755', 'AC', 'A1', '031', '0060', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/S', NULL, 'E', 1, 2, 2, 2, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000756', 'AC', 'A1', '031', '0070', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', NULL, 'E', 1, 2, 2, 2, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000757', 'AC', 'A1', '031', '0080', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', NULL, 'E', 1, 2, 2, 2, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000758', 'AC', 'A1', '031', '0090', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XL', NULL, 'E', 2, 2, 4, 2, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000759', 'AC', 'A1', '031', '0100', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXL', NULL, 'E', 2, 2, 4, 2, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000000760', 'AC', 'A1', '031', '0110', '012', 'GEN', '2026-06-11 16:39:15', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXXL', NULL, 'E', 2, 2, 4, 2, NULL, '', NULL, 'S', '2026-06-11 16:39:15', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('1', 'IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8, 40, 320, 40, NULL, NULL, NULL, 'S', '2026-05-26 07:51:58', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('100', 'IN', 'A1', '2026001', '100', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'Polo Blanco S', 'E', 15, 12, 180, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('101', 'IN', 'A1', '2026001', '101', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'Polo Blanco M', 'E', 20, 12, 240, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -36912,8 +38747,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('110', 'IN', 'A1', '2026001', '110', '1', 'GEN', '2026-01-10 08:00:00', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/41', 'Bota Montana Neg 41', 'E', 8, 42, 336, 42, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('111', 'IN', 'A1', '2026001', '111', '1', 'GEN', '2026-01-10 08:00:00', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', 'Bota Montana Neg 42', 'E', 10, 42, 420, 42, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('112', 'IN', 'A1', '2026001', '112', '1', 'GEN', '2026-01-10 08:00:00', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/MARRON/43', 'Bota Montana Mrn 43', 'E', 6, 42, 252, 42, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
-  ('113', 'IN', 'A1', '2026001', '113', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/S', 'Legging Negro S', 'E', 20, 8, 160, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL);
-INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_MOV`, `NUMERO_DOC_MOV`, `LINEA_MOV`, `CODIGO_EMP_MOV`, `CODIGO_ALM_MOV`, `FECHA_MOV`, `CODIGO_ART_MOV`, `CODIGO_UNIDAD_MOV`, `DESCRIPCION_ARTICULO_MOV`, `TIPO_MOV`, `CANTIDAD_MOV`, `PRECIO_COSTE_UNITARIO_MOV`, `TOTAL_COSTE_MOV`, `PRECIO_MEDIO_MOV`, `CODIGO_ALM_CONTRA_MOV`, `CODIGO_CLI_MOV`, `CODIGO_PRV_MOV`, `ESACTIVO_MOV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `TIPO_DOC_REF_MOV`, `SERIE_DOC_REF_MOV`, `NUMERO_DOC_REF_MOV`, `LINEA_REF_MOV`, `LOTE_MOV`, `FECHA_CADUCIDAD_MOV`, `CODIGO_ALM_DOC_MOV`, `NUMERO_OPERACION_DOC_MOV`, `CODIGO_CAJA_DOC_MOV`) VALUES
+  ('113', 'IN', 'A1', '2026001', '113', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/S', 'Legging Negro S', 'E', 20, 8, 160, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('114', 'IN', 'A1', '2026001', '114', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/M', 'Legging Negro M', 'E', 20, 8, 160, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('115', 'IN', 'A1', '2026001', '115', '1', 'GEN', '2026-01-10 08:00:00', 'LEGGING-SPORT', 'LEGGING-SPORT/ROSA/S', 'Legging Rosa S', 'E', 15, 8, 120, 8, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('116', 'IN', 'A1', '2026001', '116', '1', 'GEN', '2026-01-10 08:00:00', 'SUDADERA-HOOD', 'SUDADERA-HOOD/GRIS/S', 'Sudadera Gris S', 'E', 12, 20, 240, 20, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -37026,7 +38860,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-3-0003S', 'IN', 'A1', '3', '0003', '012', 'GEN', '2026-05-05 23:59:58', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, 'S', 7, 0, 90, 15, NULL, NULL, NULL, 'S', '2026-05-06 08:15:17', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001E', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:25', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 5, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001S', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:24', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 0, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL);
--- 612 registros exportados
+-- 635 registros exportados
 
 
 -- Tabla: fza_paises
@@ -37476,7 +39310,7 @@ ALTER TABLE `fza_pedidos_compra` ADD INDEX `IDX_PEDC_TEMPORADA` (`ID_PV_TEMPORAD
 
 -- Datos de fza_pedidos_compra
 INSERT INTO `fza_pedidos_compra` (`NUMERO_PEDC`, `SERIE_PEDC`, `FECHA_PEDC`, `FECHA_PREVISTA_PEDC`, `ESTADO_PEDC`, `CODIGO_EMP_PEDC`, `RAZON_SOCIAL_EMPRESA_PEDC`, `NIF_EMPRESA_PEDC`, `MOVIL_EMPRESA_PEDC`, `EMAIL_EMPRESA_PEDC`, `DIRECCION1_EMPRESA_PEDC`, `DIRECCION2_EMPRESA_PEDC`, `POBLACION_EMPRESA_PEDC`, `PROVINCIA_EMPRESA_PEDC`, `CODIGO_PAI_EMPRESA_PEDC`, `NOMBRE_PAI_EMPRESA_PEDC`, `CODIGO_POSTAL_EMPRESA_PEDC`, `CODIGO_PRV_PEDC`, `RAZON_SOCIAL_PRV_PEDC`, `NIF_PRV_PEDC`, `MOVIL_PRV_PEDC`, `EMAIL_PRV_PEDC`, `DIRECCION1_PRV_PEDC`, `DIRECCION2_PRV_PEDC`, `POBLACION_PRV_PEDC`, `PROVINCIA_PRV_PEDC`, `CODIGO_PAI_PRV_PEDC`, `NOMBRE_PAI_PRV_PEDC`, `CODIGO_POSTAL_PRV_PEDC`, `REF_PROVEEDOR_PEDC`, `CODIGO_ALM_PEDC`, `TRANSPORTISTA_PEDC`, `CODIGO_IVA_PEDC`, `PORCENTAJE_IVAN_PEDC`, `TOTAL_IVAN_PEDC`, `PORCENTAJE_IVAR_PEDC`, `TOTAL_IVAR_PEDC`, `PORCENTAJE_IVAS_PEDC`, `TOTAL_IVAS_PEDC`, `PORCENTAJE_IVAE_PEDC`, `TOTAL_IVAE_PEDC`, `TOTAL_BASES_PEDC`, `TOTAL_IMPUESTOS_PEDC`, `TOTAL_LIQUIDO_PEDC`, `FORMA_PAGO_PEDC`, `CONTADOR_LINEAS_PEDC`, `COMENTARIOS_PEDC`, `OBSERVACIONES_PEDC`, `ESPIVOTE_HORIZONTAL_PEDC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ID_PV_TEMPORADA_PEDC`) VALUES
-  ('000000', 'A1', '2026-05-26 00:00:00', NULL, 'PARCIAL', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 26, 5.46, 31.46, NULL, '00000180', '', '', 'S', '2026-05-29 08:11:16', '2026-05-28 19:42:23', 'Administrador', 'Administrador', NULL),
+  ('000000', 'A1', '2026-05-26 00:00:00', NULL, 'RECIBIDO', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 26, 5.46, 31.46, NULL, '00000180', '', '', 'S', '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador', NULL),
   ('000001', 'A1', '2026-05-26 00:00:00', NULL, 'ABIERTO', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 206, 43.26, 249.26, NULL, '00000180', '', '', 'S', '2026-06-09 17:17:40', '2026-05-28 19:52:48', 'Administrador', 'Administrador', NULL),
   ('000002', 'A1', '2026-05-26 00:00:00', NULL, 'ABIERTO', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '18', 'Formaggi Fortini s.r.l.', NULL, '(0544) 60323', NULL, 'Viale Dante, 75', NULL, 'Ravenna', '', '724', 'Espana', '48100', '32323', 'GEN', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 210, 44.1, 254.1, NULL, '00000120', '', '', 'S', '2026-06-09 17:17:40', '2026-05-28 19:54:41', 'Administrador', 'Administrador', NULL),
   ('000003', 'A1', '2026-05-26 00:00:00', NULL, 'ABIERTO', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '000', 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '32323', 'GEN', NULL, '1', 21, NULL, 10, NULL, 4, NULL, 0, NULL, 1118, 234.78, 1352.78, NULL, '00000630', '', '', 'S', '2026-06-09 17:17:40', '2026-05-29 08:33:39', 'Administrador', 'Administrador', 11);
@@ -37562,17 +39396,17 @@ INSERT INTO `fza_pedidos_compra_lineas` (`NUMERO_PEDC_PEDCLIN`, `SERIE_PEDC_PEDC
   ('000000', 'A1', '0050', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXL', 1, 'BOLSOS', '', NULL, 'Bolsos y Mochilas', 'Uds', 3, 6, 0, 'N', 21, 10, 12.1, 30, 'GEN', '923', NULL, NULL, '2026-05-29 08:11:16', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
   ('000000', 'A1', '0060', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXXL', 1, 'BOLSOS', '', NULL, 'Bolsos y Mochilas', 'Uds', 3, 6, 0, 'N', 21, 10, 12.1, 30, 'GEN', '923', NULL, NULL, '2026-05-29 08:11:16', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
   ('000000', 'A1', '0070', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/S', 3, 'COMPLEMENTOS', '', NULL, 'VCartera de lujo', 'Uds', 1, 1, 8, 'N', 21, 5, 6.05, 5, 'GEN', '877', NULL, NULL, '2026-05-29 08:46:45', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0080', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/S', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 0, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0090', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/M', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0100', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/L', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0110', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 0, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0120', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XXL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 0, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0130', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/S', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 1, 0, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0140', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 1, 0, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0150', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 1, 0, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0160', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XL', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 2, 0, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0170', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXL', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 2, 0, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
-  ('000000', 'A1', '0180', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXXL', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 2, 0, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-05-28 19:42:23', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0080', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/S', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0090', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/M', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0100', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/L', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0110', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0120', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XXL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0130', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/S', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0140', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0150', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0160', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XL', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0170', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXL', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
+  ('000000', 'A1', '0180', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXXL', 1, 'DEPORTIVO', '', NULL, 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-06-11 16:39:15', '2026-05-28 19:42:23', 'Administrador', 'Administrador'),
   ('000001', 'A1', '0010', 'BOLSOS00011', 'BOLSOS00011/VERDE/S', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 1, 0, 0, 'N', 21, 10, 12.1, 10, 'GEN', '923', NULL, NULL, '2026-05-29 06:17:41', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
   ('000001', 'A1', '0020', 'BOLSOS00011', 'BOLSOS00011/VERDE/M', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 1, 0, 0, 'N', 21, 10, 12.1, 10, 'GEN', '923', NULL, NULL, '2026-05-29 06:17:41', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
   ('000001', 'A1', '0030', 'BOLSOS00011', 'BOLSOS00011/VERDE/L', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 2, 0, 0, 'N', 21, 10, 12.1, 20, 'GEN', '923', NULL, NULL, '2026-05-29 06:17:41', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
@@ -38046,7 +39880,7 @@ ALTER TABLE `fza_proveedores` ADD INDEX `IDX_PROVEEDORES_LISTADO` (`CODIGO_PRV_P
 
 -- Datos de fza_proveedores
 INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `RAZON_SOCIAL_PRV`, `NOMBRE_PRV`, `NIF_PRV`, `MOVIL_PRV`, `EMAIL_PRV`, `DIRECCION1_PRV`, `DIRECCION2_PRV`, `POBLACION_PRV`, `PROVINCIA_PRV`, `CODIGO_POSTAL_PRV`, `PAIS_PRV`, `OBSERVACIONES_PRV`, `REFERENCIA_PRV`, `CONTACTO_PRV`, `TELEFONO_CONTACTO_PRV`, `TELEFONO_PRV`, `IBAN_PRV`, `PORCENTAJE_MARGEN_PRV`, `ID_AC_TALLAS_PRV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000', 'S', NULL, 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-04-18 12:05:44', '2024-10-06 20:26:38', 'Administrador', 'Administrador'),
+  ('000', 'S', NULL, 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 280, NULL, '2026-06-11 13:45:12', '2024-10-06 20:26:38', 'Administrador', 'Administrador'),
   ('010', 'S', NULL, 'RODRIGO ANTON', NULL, NULL, '32332233', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-26 18:08:25', '2024-10-06 21:17:37', 'Administrador', 'Administrador'),
   ('10', 'S', NULL, 'Gai pâturage', NULL, NULL, '38.76.98.06', NULL, 'Bat. B 3, rue des Alpes', NULL, 'Annecy', '', '74000', 'France', NULL, NULL, 'Eliane Noz', NULL, NULL, NULL, NULL, NULL, '2024-10-06 20:13:41', '2021-06-10 19:36:20', 'Administrador', 'Administrador'),
   ('11', 'S', NULL, 'Escargots Nouveaux', NULL, NULL, '85.57.00.07', NULL, '22, rue H. Voiron', NULL, 'Montceau', '', '71300', 'France', NULL, NULL, 'Marie Delamare', NULL, NULL, NULL, NULL, NULL, '2021-06-10 19:36:25', '2021-06-10 19:36:25', 'Administrador', 'Administrador'),
@@ -38060,7 +39894,7 @@ INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `R
   ('19', 'S', NULL, 'Norske Meierier', NULL, NULL, '(0)2-953010', NULL, 'Hatlevegen 5', NULL, 'Sandvika', '', '1320', 'Norway', NULL, NULL, 'Beate Vileid', NULL, NULL, NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
   ('20', 'S', NULL, 'Bigfoot Breweries', NULL, NULL, '(503) 555-9931', NULL, '3400 - 8th Avenue Suite 210', NULL, 'Bend', 'OR', '97101', 'USA', NULL, NULL, 'Cheryl Saylor', NULL, NULL, NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
   ('21', 'S', NULL, 'Svensk Sjöföda AB', NULL, NULL, '08-123 45 67', NULL, 'Brovallavägen 231', NULL, 'Stockholm', '', 'S-123 45', 'Sweden', NULL, NULL, 'Michael Björn', NULL, NULL, NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('22', 'S', NULL, 'Aux joyeux ecclésiastiques', NULL, NULL, '(1) 03.83.00.68', NULL, '203, Rue des Francs-Bourgeois', NULL, 'Paris', '', '75004', 'France', NULL, NULL, 'Guylène Nodier', NULL, NULL, NULL, NULL, NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('22', 'S', NULL, 'Aux joyeux ecclésiastiques', NULL, NULL, '(1) 03.83.00.68', NULL, '203, Rue des Francs-Bourgeois', NULL, 'Paris', '', '75004', 'France', NULL, NULL, 'Guylène Nodier', NULL, NULL, NULL, 280, NULL, '2026-06-11 07:45:42', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
   ('23', 'S', NULL, 'New England Seafood Cannery', NULL, NULL, '(617) 555-3267', NULL, 'Order Processing Dept. 2100 Paul Revere Blvd.', NULL, 'Boston', 'MA', '02134', 'USA', NULL, NULL, 'Robb Merchant', NULL, NULL, NULL, NULL, NULL, '2021-06-15 19:40:07', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
   ('3', 'S', NULL, 'Exotic Liquids', NULL, NULL, '(171) 555-2222', NULL, '49 Gilbert St.', NULL, 'London', '', 'EC1 4SD', 'UK', NULL, NULL, 'Charlotte Cooper', NULL, NULL, NULL, NULL, NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
   ('4', 'S', NULL, 'New Orleans Cajun Delights', NULL, NULL, '(100) 555-4822', NULL, 'P.O. Box 78934', NULL, 'New Orleans', 'LA', '70117', 'USA', NULL, NULL, 'Shelley Burke', NULL, NULL, NULL, NULL, NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
@@ -38124,8 +39958,9 @@ CREATE TABLE `fza_proveedores_kits` (
 
 -- Datos de fza_proveedores_kits
 INSERT INTO `fza_proveedores_kits` (`CODIGO_PRV_PRVKIT`, `CODIGO_PRVKIT`, `NOMBRE_PRVKIT`, `DESCRIPCION_PRVKIT`, `ID_AC_TALLAS_PRVKIT`, `ORDEN_PRVKIT`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
-  ('000', 'A', 'OPC A', 'A', 4, 0, '2026-06-11 06:51:05', 'Administrador', '2026-06-11 06:51:31', 'Administrador');
--- 1 registros exportados
+  ('000', 'A', 'OPC A', 'A', 4, 0, '2026-06-11 06:51:05', 'Administrador', '2026-06-11 06:51:31', 'Administrador'),
+  ('22', 'A', 'OPC A', NULL, 4, 0, '2026-06-11 07:44:53', 'Administrador', '2026-06-11 07:45:15', 'Administrador');
+-- 2 registros exportados
 
 
 -- Tabla: fza_proveedores_kits_det
@@ -38143,6 +39978,22 @@ CREATE TABLE `fza_proveedores_kits_det` (
   `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
   PRIMARY KEY (`CODIGO_PRV_PRVKITD`,`CODIGO_PRVKIT_PRVKITD`,`VALOR_DESTINO_PRVKITD`)
 );
+
+-- Datos de fza_proveedores_kits_det
+INSERT INTO `fza_proveedores_kits_det` (`CODIGO_PRV_PRVKITD`, `CODIGO_PRVKIT_PRVKITD`, `VALOR_DESTINO_PRVKITD`, `CANTIDAD_PRVKITD`, `ORDEN_PRVKITD`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
+  ('000', 'A', '39', 1, 10, '2026-06-11 13:45:16', 'Administrador', '2026-06-11 13:45:19', 'Administrador'),
+  ('000', 'A', '40', 2, 20, '2026-06-11 13:45:16', 'Administrador', '2026-06-11 13:45:20', 'Administrador'),
+  ('000', 'A', '41', 2, 30, '2026-06-11 13:45:16', 'Administrador', '2026-06-11 13:45:20', 'Administrador'),
+  ('000', 'A', '42', 2, 40, '2026-06-11 13:45:16', 'Administrador', '2026-06-11 13:45:20', 'Administrador'),
+  ('000', 'A', '43', 1, 50, '2026-06-11 13:45:16', 'Administrador', '2026-06-11 13:45:21', 'Administrador'),
+  ('000', 'A', '44', 1, 60, '2026-06-11 13:45:16', 'Administrador', '2026-06-11 13:45:22', 'Administrador'),
+  ('22', 'A', '39', 1, 10, '2026-06-11 07:45:15', 'Administrador', '2026-06-11 07:45:18', 'Administrador'),
+  ('22', 'A', '40', 2, 20, '2026-06-11 07:45:15', 'Administrador', '2026-06-11 07:45:19', 'Administrador'),
+  ('22', 'A', '41', 2, 30, '2026-06-11 07:45:15', 'Administrador', '2026-06-11 07:45:19', 'Administrador'),
+  ('22', 'A', '42', 1, 40, '2026-06-11 07:45:15', 'Administrador', '2026-06-11 07:45:20', 'Administrador'),
+  ('22', 'A', '43', 1, 50, '2026-06-11 07:45:15', 'Administrador', '2026-06-11 07:45:21', 'Administrador'),
+  ('22', 'A', '44', 1, 60, '2026-06-11 07:45:15', 'Administrador', '2026-06-11 07:45:23', 'Administrador');
+-- 12 registros exportados
 
 
 -- Tabla: fza_recibos
@@ -38233,6 +40084,11 @@ CREATE TABLE `fza_remesas_compra` (
 );
 ALTER TABLE `fza_remesas_compra` ADD INDEX `IDX_REMC_EMPRESA` (`CODIGO_EMP_REMC`);
 ALTER TABLE `fza_remesas_compra` ADD INDEX `IDX_REMC_ESTADO` (`ESTADO_REMC`);
+
+-- Datos de fza_remesas_compra
+INSERT INTO `fza_remesas_compra` (`NUMERO_REMC`, `SERIE_REMC`, `FECHA_REMC`, `ESTADO_REMC`, `CODIGO_EMP_REMC`, `TIPO_REMC`, `NORMA_REMC`, `ENTIDAD_REMC`, `OFICINA_REMC`, `DIGITO_CONTROL_REMC`, `CUENTA_REMC`, `IBAN_REMC`, `CONTADOR_EFECTOS_REMC`, `TOTAL_REMC`, `TOTAL_GASTOS_REMC`, `TOTAL_COMISION_REMC`, `FECHA_CARGO_REMC`, `ARCHIVO_REMC`, `OBSERVACIONES_REMC`, `INSTANTE_CONTABILIZACION_REMC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('000000', '-', '2026-06-11 00:00:00', 'ABIERTA', '012', 'NORMA34', NULL, NULL, NULL, NULL, NULL, '', 1, 282, 0, 0, NULL, NULL, '', NULL, '2026-06-11 08:08:43', '2026-06-11 08:08:43', 'Administrador', 'Administrador');
+-- 1 registros exportados
 
 
 -- Tabla: fza_tarifas
@@ -38443,7 +40299,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-11 07:23:23', '2026-06-11 07:23:23', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-11 16:52:34', '2026-06-11 16:52:34', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-09 09:48:50', '2026-06-09 09:48:50', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -46665,6 +48521,141 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_4', 'tvRecibos_SERIE_FAC_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvRecibos_SERIE_FAC_REC_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvRecibos_SERIE_FAC_REC_Width', '136', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin__oCreateItems', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_ALM_FACC_Caption', 'Almacén', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_ALM_FACC_Index', '8', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_ALM_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_ALM_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_ALM_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_ALM_FACC_Width', '125', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_EMP_FACC_Caption', 'Empresa', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_EMP_FACC_Index', '4', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_EMP_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_EMP_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_EMP_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_EMP_FACC_Width', '125', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_PRV_FACC_Caption', 'Proveedor', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_PRV_FACC_Index', '5', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_PRV_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_PRV_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_PRV_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_CODIGO_PRV_FACC_Width', '125', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_ESTADO_FACC_Caption', 'Estado', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_ESTADO_FACC_Index', '3', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_ESTADO_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_ESTADO_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_ESTADO_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_ESTADO_FACC_Width', '138', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_FECHA_FACC_Caption', 'Fecha', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_FECHA_FACC_Index', '2', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_FECHA_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_FECHA_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_FECHA_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_FECHA_FACC_Width', '125', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_Filtro', '', '', NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_NUMERO_FACC_Caption', 'Número', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_NUMERO_FACC_Index', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_NUMERO_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_NUMERO_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_NUMERO_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_NUMERO_FACC_Width', '113', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_RAZON_SOCIAL_PRV_FACC_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_RAZON_SOCIAL_PRV_FACC_Index', '6', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_RAZON_SOCIAL_PRV_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_RAZON_SOCIAL_PRV_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_RAZON_SOCIAL_PRV_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_RAZON_SOCIAL_PRV_FACC_Width', '275', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_REF_PROVEEDOR_FACC_Caption', 'Ref. proveedor', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_REF_PROVEEDOR_FACC_Index', '7', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_REF_PROVEEDOR_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_REF_PROVEEDOR_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_REF_PROVEEDOR_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_REF_PROVEEDOR_FACC_Width', '163', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_SERIE_FACC_Caption', 'Serie', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_SERIE_FACC_Index', '1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_SERIE_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_SERIE_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_SERIE_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_SERIE_FACC_Width', '100', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACC_Caption', 'Total líquido', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACC_Index', '9', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACC_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACC_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'cxGrdDBTabPrin_TOTAL_LIQUIDO_FACC_Width', '150', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'oBusqGlobal', 'Grid', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'oCreateItems', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'oGetSQLFromDB', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura__oApplyWidth', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura__oCreateItems', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Caption', 'Cantidad', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Index', '5', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Visible', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Width', '100', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Caption', 'Almacén', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Index', '30', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Width', '113', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Caption', 'Artículo', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Index', '1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Width', '125', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Caption', 'SKU', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Index', '2', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Visible', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Width', '150', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Caption', 'Descripción', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Index', '4', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Width', '300', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_Filtro', '', '', NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_FocusedID', '000000|-|0010', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Caption', 'Línea', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Index', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Width', '75', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Index', '7', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Width', '88', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Caption', 'Precio compra', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Index', '6', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Width', '138', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Caption', 'Ref. prov.', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Index', '3', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Width', '125', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Caption', 'Total', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Index', '8', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Visible', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Width', '125', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvPerfil__oCreateItems', 'False', NULL, NULL, NULL, '2026-06-11 07:28:52', '2026-06-11 07:28:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_CODIGO_CLI_FAC_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
@@ -46984,7 +48975,8 @@ AAAA8AVAAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAR_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAR_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAR_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAR_FAC_Width', '145', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAR_FAC_Width', '145', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Caption', '% IVA SuperReducido', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Index', '40', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
@@ -47119,8 +49111,7 @@ AAAA8AVAAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAE_FAC_Width', '116', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAN_FAC_Caption', 'Total IVA Normal', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAN_FAC_Index', '29', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAN_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAN_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasNormal', 'cxGrdDBTabPrin_TOTAL_IVAN_FAC_Width', '159', NULL, NULL, NULL, '2026-05-27 19:46:12', '2026-05-27 19:46:12', 'Administrador', 'Administrador'),
@@ -47485,7 +49476,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_FECHA_INV_SortOrder', '0', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_FECHA_INV_Visible', 'True', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_FECHA_INV_Width', '127', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_Filtro', '', '', NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_Filtro', '', '', NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_NUMERO_INV_Caption', 'Número', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_NUMERO_INV_Index', '3', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'cxGrdDBTabPrin_NUMERO_INV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
@@ -47620,8 +49612,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoInventarios', 'tvLineas_PRECIO_MEDIO_NUEVO_INVLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'tvLineas_PRECIO_MEDIO_NUEVO_INVLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'tvLineas_PRECIO_MEDIO_NUEVO_INVLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoInventarios', 'tvLineas_PRECIO_MEDIO_NUEVO_INVLIN_Width', '128', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoInventarios', 'tvLineas_PRECIO_MEDIO_NUEVO_INVLIN_Width', '128', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'tvLineas_TOTAL_COSTE_DIFERENCIA_INVLIN_Caption', 'Dif. coste', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'tvLineas_TOTAL_COSTE_DIFERENCIA_INVLIN_Index', '16', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoInventarios', 'tvLineas_TOTAL_COSTE_DIFERENCIA_INVLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-10 16:52:30', '2026-05-10 16:52:30', 'Administrador', 'Administrador'),
@@ -47986,7 +49977,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_MOVIL_PROVEEDOR_Visible', 'True', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_MOVIL_PROVEEDOR_Width', '168', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_NIF_PROVEEDOR_Caption', 'Nif', '', NULL, NULL, '2023-05-25 13:02:43', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_NIF_PROVEEDOR_Index', '3', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
+  ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_NIF_PROVEEDOR_Index', '3', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_NIF_PROVEEDOR_Visible', 'True', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_NIF_PROVEEDOR_Width', '141', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_OBSERVACIONES_PROVEEDOR_Caption', 'Observaciones', '', NULL, NULL, '2023-05-25 13:02:47', '2023-05-25 13:00:05', 'Administrador', 'Administrador'),
@@ -48121,8 +50113,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_DIRECCION1_CLIENTE_Visible', 'True', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_DIRECCION1_CLIENTE_Width', '312', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_DIRECCION2_CLIENTE_Caption', 'Dirección 2', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_DIRECCION2_CLIENTE_Index', '7', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_DIRECCION2_CLIENTE_Index', '7', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_DIRECCION2_CLIENTE_Visible', 'True', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_DIRECCION2_CLIENTE_Width', '86', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_EMAIL_CLIENTE_Caption', 'Email', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
@@ -48348,7 +50339,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Vendedores', 'frmMtoOpeCaja', 'Lineas_Col_TOTAL_FACLIN', '171', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'StockPanelHeight', '304', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'WindowState', '2', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo');
--- 9725 registros exportados
+-- 9860 registros exportados
 
 
 -- Tabla: fza_valores_defecto
@@ -48505,7 +50496,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 5),
   ('AtributosBasicos', 'Atributos básicos', 'mnuAtributosBasicos', 'inMtoAtributosBasicos.TfrmMtoAtributosBasicos', 'Ctrl+Alt+B', 'UniDataAtributosBasicos.TdmAtributosBasicos', 5),
   ('AtributosConjuntos', 'Colecciones de Atributos', 'mnuAtributosConjuntos', 'inMtoAtributosConjuntos.TfrmMtoAtributosConjuntos', 'Ctrl+Alt+S', 'UniDataAtributosConjuntos.TdmAtributosConjuntos', 5),
-  ('CajaArqueosHist', 'Histórico de Arqueos de Caja', 'mnuCajaArqueosHist', 'inMtoCajaArqueosHist.TfrmMtoCajaArqueosHist', 'Ctrl+Shift+A', 'UniDataCajaArqueosHist.TdmCajaArqueosHist', 5),
+  ('CajaArqueosHist', 'Histórico de Arqueos de Caja', 'mnuCajaArqueosHist', 'inMtoCajaArqueosHist.TfrmMtoCajaArqueosHist', 'Ctrl+Shift+H', 'UniDataCajaArqueosHist.TdmCajaArqueosHist', 5),
   ('CajaFormasPago', 'Formas de Pago Caja', 'FormasdePagoCaja1', 'inMtoCajaFormasPago.TfrmMtoCajaFormasPago', 'Ctrl+Shift+Q', 'UniDataCajaFormasPago.TdmCajaFormasPago', 5),
   ('CajaOperacionesHist', 'Histórico de Operaciones de Caja', 'mnuCajaOperacionesHist', 'inMtoCajaOperacionesHist.TfrmMtoCajaOperacionesHist', 'Ctrl+Shift+O', 'UniDataCajaOperacionesHist.TdmCajaOperacionesHist', 5),
   ('CajaPagosHist', 'Histórico de Pagos de Caja', 'mnuCajaPagosHist', 'inMtoCajaPagosHist.TfrmMtoCajaPagosHist', 'Ctrl+Shift+P', 'UniDataCajaPagosHist.TdmCajaPagosHist', 5),
@@ -48516,8 +50507,8 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Contadores', 'Contadores', 'mnuContadores', 'inMtoContadores.TfrmMtoContadores', 'Ctrl+R', 'UniDataContadores.TdmContadores', 5),
   ('DepositosCliente', 'Depósitos de Clientes', 'mnuDepositosCliente', 'inMtoDepositosCliente.TfrmMtoDepositosCliente', 'Ctrl+D', 'UniDataDepositosCliente.TdmDepositosCliente', 5),
   ('DevolucionesCompra', 'Devoluciones a Proveedor', 'Devoluciones1', 'inMtoDevolucionesCompra.TfrmMtoDevolucionesCompra', 'Ctrl+Alt+D', 'UniDataDevolucionesCompra.TdmDevolucionesCompra', 5),
-  ('EfectosCompra', 'Efectos de Pago a Proveedor', 'EfectosCompra1', 'inMtoEfectosCompra.TfrmMtoEfectosCompra', 'Ctrl+Alt+E', 'UniDataEfectosCompra.TdmEfectosCompra', 5),
-  ('Empleados', 'Empleados', 'mnuEmpleados', 'inMtoEmpleados.TfrmMtoEmpleados', '', 'UniDataEmpleados.TdmEmpleados', 5),
+  ('EfectosCompra', 'Efectos de Pago a Proveedor', 'EfectosCompra1', 'inMtoEfectosCompra.TfrmMtoEfectosCompra', 'Ctrl+Alt+C', 'UniDataEfectosCompra.TdmEfectosCompra', 5),
+  ('Empleados', 'Empleados', 'mnuEmpleados', 'inMtoEmpleados.TfrmMtoEmpleados', 'Ctrl+Alt+E', 'UniDataEmpleados.TdmEmpleados', 5),
   ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+E', 'UniDataEmpresas.TdmEmpresas', 5),
   ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturasNormal.TfrmMtoFacturasNormal', 'Ctrl+Alt+F', 'UniDataFacturas.TdmFacturas', 5),
   ('FacturasCompra', 'Facturas de Compra', 'Facturas1', 'inMtoFacturasCompra.TfrmMtoFacturasCompra', 'Ctrl+Alt+F', 'UniDataFacturasCompra.TdmFacturasCompra', 5),
@@ -48531,7 +50522,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('IvasGrupos', 'Grupos de Impuestos IVA', 'mnuGruposdeIVA', 'inMtoIvasGrupos.TfrmMtoIvasGrupos', 'Ctrl+O', 'UniDataIvasGrupos.TdmIvasGrupos', 5),
   ('MenuCaja', 'Menú de Caja', 'mnuMenuCaja', 'inMtoCajaMenu.TfrmMtoMenuCaja', 'F5', NULL, 1),
   ('MovimientosAlmacen', 'Movimientos de Almacén', 'Movimientosdealmacn1', 'inMtoMovimientosAlmacen.TfrmMtoMovimientosAlmacen', 'Ctrl+M', 'UniDataMovimientosAlmacen.TdmMovimientosAlmacen', 5),
-  ('Paises', 'Países', 'mnuPaises', 'inMtoPaises.TfrmMtoPaises', 'Ctrl+L', 'UniDataPaises.TdmPaises', 5),
+  ('Paises', 'Países', 'mnuPaises', 'inMtoPaises.TfrmMtoPaises', 'Ctrl+Alt+L', 'UniDataPaises.TdmPaises', 5),
   ('Pedidos', 'Pedidos', 'mnuPedidosVenta', 'inMtoPedidos.TfrmMtoPedidos', 'Ctrl+Alt+P', 'UniDataPedidos.TdmPedidos', 5),
   ('PedidosCompra', 'Pedidos de Compra', 'Pedidos1', 'inMtoPedidosCompra.TfrmMtoPedidosCompra', 'Ctrl+Alt+P', 'UniDataPedidosCompra.TdmPedidosCompra', 5),
   ('Permisos', 'Gestión de Permisos', 'mnuPermisos', 'inMtoPermisosArbol.TfrmMtoPermisosArbol', '', '', 1),
@@ -48541,7 +50532,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Proveedores', 'Proveedores', 'mnuProveedores', 'inMtoProveedores.TfrmMtoProveedores', 'Ctrl+P', 'UniDataProveedores.TdmProveedores', 5),
   ('RemesasCompra', 'Remesas de Pago', 'RemesasCompra1', 'inMtoRemesasCompra.TfrmMtoRemesasCompra', 'Ctrl+Alt+R', 'UniDataRemesasCompra.TdmRemesasCompra', 5),
   ('Tarifas', 'Tarifas', 'mnuTarifas', 'inMtoTarifas.TfrmMtoTarifas', 'Ctrl+T', 'UniDataTarifas.TdmTarifas', 5),
-  ('UnidadesMedida', 'Unidades de Medida', 'mnuUnidadesMedida', 'inMtoUnidadesMedida.TfrmMtoUnidadesMedida', NULL, 'UniDataUnidadesMedida.TdmUnidadesMedida', 1),
+  ('UnidadesMedida', 'Unidades de Medida', 'mnuUnidadesMedida', 'inMtoUnidadesMedida.TfrmMtoUnidadesMedida', 'Ctrl+Alt+U', 'UniDataUnidadesMedida.TdmUnidadesMedida', 1),
   ('Usuarios', 'Usuarios', 'mnuUsuarios', 'inMtoUsuarios.TfrmMtoUsuarios', 'Ctrl+H', 'UniDataUsuarios.TdmUsuarios', 5),
   ('UsuariosPerfiles', 'Perfiles de Usuarios', 'mnuPerfiles', 'inMtoUsuariosPerfiles.TfrmMtoUsuariosPerfiles', 'Ctrl+W', 'UniDataUsuariosPerfiles.TdmUsuariosPerfiles', 5),
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 5);
@@ -55626,4 +57617,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 11/06/2026 7:24:49
+-- Backup completado: 11/06/2026 16:52:45
