@@ -20,53 +20,47 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
       Caption = 'Empresa'
       Transparent = True
     end
-    object txtEmpresa: TcxTextEdit
+    object btnEmpresa: TcxButtonEdit
       Left = 90
       Top = 14
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
       Properties.CharCase = ecUpperCase
       Properties.MaxLength = 8
+      Properties.OnButtonClick = btnEmpresaPropertiesButtonClick
       TabOrder = 0
-      Width = 60
-    end
-    object btnBuscarEmpresa: TBitBtn
-      Left = 152
-      Top = 12
-      Width = 28
-      Height = 27
-      Caption = '...'
-      TabOrder = 1
-      OnClick = btnBuscarEmpresaClick
+      Width = 90
     end
     object lblProveedor: TcxLabel
-      Left = 192
+      Left = 200
       Top = 16
       Caption = 'Proveedor'
       Transparent = True
     end
-    object txtProveedor: TcxTextEdit
-      Left = 272
+    object btnProveedor: TcxButtonEdit
+      Left = 280
       Top = 14
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
       Properties.CharCase = ecUpperCase
       Properties.MaxLength = 20
-      TabOrder = 2
-      Width = 100
-    end
-    object btnBuscarProveedor: TBitBtn
-      Left = 374
-      Top = 12
-      Width = 28
-      Height = 27
-      Caption = '...'
-      TabOrder = 3
-      OnClick = btnBuscarProveedorClick
+      Properties.OnButtonClick = btnProveedorPropertiesButtonClick
+      TabOrder = 1
+      Width = 140
     end
     object btnCargar: TcxButton
-      Left = 414
+      Left = 440
       Top = 10
       Width = 110
       Height = 30
       Caption = 'Cargar'
-      TabOrder = 4
+      TabOrder = 2
       OnClick = btnCargarClick
     end
     object lblNombrePrv: TcxLabel
