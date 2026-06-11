@@ -50,32 +50,43 @@ navegación** con los botones estándar. Sus acciones son siempre las mismas:
 ![Barra del navegador de registros](img/01-navegador.png)
 *▢ Captura pendiente — Barra de navegación con sus botones.*
 
-| Botón | Acción |
-|-------|--------|
-| **Primer registro** | Va al primer registro de la lista. |
-| **Registro anterior** | Retrocede un registro. |
-| **Registro siguiente** | Avanza un registro. |
-| **Último registro** | Va al último registro. |
-| **Insertar registro** | Crea un registro nuevo en blanco para rellenar. |
-| **Editar registro** | Pone en modo edición el registro actual. |
-| **Eliminar registro** | Borra el registro actual (pide confirmación). |
-| **Grabar registro** | Confirma y guarda los cambios en la base de datos. |
-| **Retroceder / Avanzar bloque** | Navega por bloques de registros (paginación). |
+| Botón | Atajo | Acción |
+|-------|-------|--------|
+| **Primer registro** | `[Inicio]` | Va al primer registro de la lista. |
+| **Registro anterior** | `[RePág]` | Retrocede un registro. |
+| **Registro siguiente** | `[AvPág]` | Avanza un registro. |
+| **Último registro** | `[Fin]` | Va al último registro. |
+| **Insertar registro** | `[Insert]` | Crea un registro nuevo en blanco para rellenar. |
+| **Editar registro** | `[F2]` | Pone en modo edición el registro actual. |
+| **Eliminar registro** | `[Ctrl]+[Supr]` | Borra el registro actual (pide confirmación). |
+| **Grabar registro** | `[F12]` | Confirma y guarda los cambios en la base de datos. |
+| **Retroceder bloque** | `[Ctrl]+[RePág]` | Retrocede un bloque de registros (paginación). |
+| **Avanzar bloque** | `[Ctrl]+[AvPág]` | Avanza un bloque de registros (paginación). |
 
-En artículos y documentos aparecen además botones específicos como **Foto
-artículo** o **Consulta stock**.
+En artículos y documentos aparecen además botones específicos:
+
+| Botón | Atajo | Acción |
+|-------|-------|--------|
+| **Foto artículo** | `[Ctrl]+[F]` | Muestra la foto del artículo. |
+| **Consulta stock** | `[Ctrl]+[U]` | Consulta el stock del artículo actual. |
+
+> Los atajos del navegador funcionan cuando la pantalla de mantenimiento
+> tiene el foco. **Grabar** dispone de dos atajos equivalentes: `[F12]`
+> (botón **Grabar registro** del navegador) y `[Alt]+[G]` (botón
+> **Grabar** de acción, ver abajo).
 
 ---
 
 ## 3. Botones de acción
 
 Independientemente del navegador, las pantallas suelen mostrar tres botones
-de acción principales:
+de acción principales. La letra subrayada es su **mnemónico** (`[Alt]` +
+esa letra):
 
-- **Grabar** — guarda los cambios del registro en edición.
-- **Cancelar** — descarta los cambios no guardados y vuelve al estado
-  anterior.
-- **Salir** — cierra la pestaña de la pantalla.
+- **Grabar** (`[Alt]+[G]`) — guarda los cambios del registro en edición.
+- **Cancelar** (`[Alt]+[C]`) — descarta los cambios no guardados y vuelve
+  al estado anterior.
+- **Salir** (`[Alt]+[S]`) — cierra la pestaña de la pantalla.
 
 ---
 
