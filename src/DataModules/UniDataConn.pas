@@ -99,12 +99,36 @@ begin
 end;
 
 procedure TdmConn.conUniAfterConnect(Sender: TObject);
+var
+  Con: TUniConnection;
 begin
+  // Este handler lo reutilizan las conexiones clonadas (inMtoGen), así
+  // que los SET de sesión se aplican a la conexión que dispara el
+  // evento, no siempre a conUni.
+  if Sender is TUniConnection then
+    Con := TUniConnection(Sender)
+  else
+    Con := conUni;
+  // Colación de la sesión = la de la BBDD (utf8mb4_spanish_ci). UniDAC
+  // negocia SET NAMES utf8mb4 con la colación por defecto del servidor
+  // (en MariaDB moderno utf8mb4_uca1400_ai_ci) y cualquier SQL que cree
+  // temporales/derivadas (CTEs, CAST, UNION...) hereda esa colación y
+  // lanza [1267] Illegal mix of collations al compararla con las
+  // columnas spanish_ci de las tablas. Se reaplica en cada reconexión.
+  try
+    Con.ExecSQL('SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci');
+  except
+    on E: Exception do
+      {$IFDEF DEBUG}
+      ShowMessage(
+        'No se pudo fijar la colación de la sesión: ' + E.Message);
+      {$ENDIF}
+  end;
   // Ejecutamos un comando SQL directo al servidor nada más conectar.
   // 28800 segundos = 8 horas.
   try
-    conUni.ExecSQL('SET SESSION wait_timeout = 28800, '+
-                   'session interactive_timeout = 28800');
+    Con.ExecSQL('SET SESSION wait_timeout = 28800, '+
+                'session interactive_timeout = 28800');
   except
     // Si falla (por permisos), no bloqueamos la app, pero queda registrado.
     on E: Exception do
