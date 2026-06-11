@@ -1059,7 +1059,11 @@ begin
   try
     form.SeriePedc            := sSerie;
     form.NumPedc              := sNumero;
-    form.SerieAlbDefecto      := sSerie;  // default = misma serie
+    // Empresa del pedido: el modal carga con ella el combo de series
+    // 'AB' y propone la serie que lleve el almacen elegido.
+    form.CodigoEmpresa        :=
+      dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString;
+    form.SerieAlbDefecto      := sSerie;  // fallback = misma serie
     form.RefProveedorDefecto  :=
       dmmPedidosCompra.unqryTablaG.FieldByName('REF_PROVEEDOR_PEDC').AsString;
     // La temporada del pedido se hereda en el modal. Si la cabecera no
