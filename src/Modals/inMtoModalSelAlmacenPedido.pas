@@ -40,7 +40,9 @@ uses
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxNavigator, cxTextEdit, cxLabel, cxCalendar,
   cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit,
-  cxDBLookupComboBox,
+  cxDBLookupComboBox, cxCheckBox,
+  cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
+  cxGridTableView, cxGridDBTableView, cxGrid,
   System.Actions, Vcl.ActnList,
   Data.DB, MemDS, DBAccess, Uni;
 
@@ -68,15 +70,25 @@ type
     ActionList1: TActionList;
     actAceptar:  TAction;
     actCancelar: TAction;
+    // Modo "incorporar a un albaran existente del pedido".
+    chkIncorporar:    TcxCheckBox;
+    cxgrdAlbExist:    TcxGrid;
+    tvAlbExist:       TcxGridDBTableView;
+    cxgrdlvlAlbExist: TcxGridLevel;
+    unqryAlbExist:    TUniQuery;
+    dsAlbExist:       TDataSource;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAceptarClick(Sender: TObject);
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
+    procedure chkIncorporarClick(Sender: TObject);
   private
     procedure CargarAlmacenes;
     procedure ConfigurarLookupTemporada;
+    procedure CargarAlbaranesExistentes;
+    procedure ActualizarModoIncorporar;
   public
     SeriePedc, NumPedc      : string;
     SerieAlbDefecto         : string;  // default texto serie
@@ -90,6 +102,12 @@ type
     IdPvTemporada           : Integer;
     FechaRecepcion          : TDateTime;
     Aceptado                : Boolean;
+    // Modo incorporar: si Incorporar=True, las lineas se anaden al
+    // albaran (AlbaranSerieDestino / AlbaranNumDestino) en vez de crear
+    // uno nuevo.
+    Incorporar              : Boolean;
+    AlbaranSerieDestino     : string;
+    AlbaranNumDestino       : string;
   end;
 
 implementation
@@ -110,8 +128,12 @@ begin
   RefProveedor         := '';
   IdPvTemporada        := 0;
   FechaRecepcion       := Date;
-  // Conexion de la query de temporadas (esta unica que la lib usa).
+  Incorporar           := False;
+  AlbaranSerieDestino  := '';
+  AlbaranNumDestino    := '';
+  // Conexion de las queries que usa el modal.
   unqryTemporadas.Connection := inLibGlobalVar.oConn;
+  unqryAlbExist.Connection   := inLibGlobalVar.oConn;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);
@@ -122,6 +144,10 @@ begin
     [SeriePedc, NumPedc]);
   CargarAlmacenes;
   ConfigurarLookupTemporada;
+  CargarAlbaranesExistentes;
+  // Por defecto se crea un albaran nuevo; el usuario decide si incorpora.
+  chkIncorporar.Checked := False;
+  ActualizarModoIncorporar;
   // Defaults.
   txtSerieAlb.Text := SerieAlbDefecto;
   txtRefPrv.Text   := RefProveedorDefecto;
@@ -186,6 +212,46 @@ begin
   end;
 end;
 
+procedure TfrmModalSelAlmacenPedido.CargarAlbaranesExistentes;
+begin
+  // Albaranes de compra ya creados desde ESTE pedido y no facturados ni
+  // cancelados: son los unicos destinos validos para incorporar lineas.
+  unqryAlbExist.Connection := inLibGlobalVar.oConn;
+  if unqryAlbExist.Active then
+    unqryAlbExist.Close;
+  unqryAlbExist.ParamByName('np').AsString := NumPedc;
+  unqryAlbExist.ParamByName('sp').AsString := SeriePedc;
+  unqryAlbExist.Open;
+  tvAlbExist.DataController.DataSource := dsAlbExist;
+end;
+
+procedure TfrmModalSelAlmacenPedido.ActualizarModoIncorporar;
+var
+  bHay: Boolean;
+begin
+  // Solo se puede incorporar si el pedido tiene algun albaran elegible.
+  bHay := unqryAlbExist.Active and (unqryAlbExist.RecordCount > 0);
+  chkIncorporar.Enabled := bHay;
+  if not bHay then
+    chkIncorporar.Checked := False;
+  // El grid solo se usa en modo incorporar.
+  cxgrdAlbExist.Enabled := chkIncorporar.Checked;
+  // En modo incorporar, la serie / ref / fecha del albaran nuevo no
+  // aplican (el destino ya existe); se deshabilitan. La temporada si se
+  // mantiene (aplica a las lineas que se anaden).
+  txtSerieAlb.Enabled := not chkIncorporar.Checked;
+  txtRefPrv.Enabled   := not chkIncorporar.Checked;
+  dteFecha.Enabled    := not chkIncorporar.Checked;
+end;
+
+procedure TfrmModalSelAlmacenPedido.chkIncorporarClick(Sender: TObject);
+begin
+  inherited;
+  ActualizarModoIncorporar;
+  if chkIncorporar.Checked and cxgrdAlbExist.CanFocus then
+    cxgrdAlbExist.SetFocus;
+end;
+
 procedure TfrmModalSelAlmacenPedido.actAceptarExecute(Sender: TObject);
 begin
   inherited;
@@ -205,7 +271,7 @@ var
   vTmp: Variant;
 begin
   inherited;
-  // Validaciones minimas.
+  // Almacen siempre obligatorio (define que lineas se reciben).
   vAlm := cbbAlmacen.EditValue;
   if VarIsNull(vAlm) or VarIsEmpty(vAlm) or (Trim(VarToStr(vAlm)) = '') then
   begin
@@ -213,24 +279,46 @@ begin
     if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
     Exit;
   end;
-  if Trim(txtSerieAlb.Text) = '' then
-  begin
-    MessageDlg('Indica la serie del albaran.', mtInformation, [mbOk], 0);
-    if txtSerieAlb.CanFocus then txtSerieAlb.SetFocus;
-    Exit;
-  end;
-  // Captura resultado.
-  CodigoAlmacen := VarToStr(vAlm);
-  SerieAlbaran  := Trim(txtSerieAlb.Text);
-  RefProveedor  := Trim(txtRefPrv.Text);
+  // Temporada: aplica a las lineas tanto si se crea como si se incorpora.
   vTmp := cbbTemporada.EditValue;
   if VarIsNull(vTmp) or VarIsEmpty(vTmp) then
     IdPvTemporada := 0
   else
     IdPvTemporada := StrToIntDef(VarToStr(vTmp), 0);
-  FechaRecepcion := dteFecha.Date;
-  Aceptado := True;
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+  if chkIncorporar.Checked then
+  begin
+    // Modo incorporar: hace falta el albaran destino seleccionado en el
+    // grid (el cursor del dataset sigue a la fila con foco).
+    if unqryAlbExist.IsEmpty then
+    begin
+      MessageDlg('No hay albaranes a los que incorporar; crea uno nuevo.',
+                 mtInformation, [mbOk], 0);
+      Exit;
+    end;
+    AlbaranSerieDestino := unqryAlbExist.FieldByName('SERIE_ALBC').AsString;
+    AlbaranNumDestino   := unqryAlbExist.FieldByName('NUMERO_ALBC').AsString;
+    Incorporar    := True;
+    CodigoAlmacen := VarToStr(vAlm);
+    Aceptado      := True;
+    PostMessage(Handle, WM_CLOSE, 0, 0);
+  end
+  else
+  begin
+    // Modo clasico: crear albaran nuevo (requiere serie).
+    if Trim(txtSerieAlb.Text) = '' then
+    begin
+      MessageDlg('Indica la serie del albaran.', mtInformation, [mbOk], 0);
+      if txtSerieAlb.CanFocus then txtSerieAlb.SetFocus;
+      Exit;
+    end;
+    Incorporar     := False;
+    CodigoAlmacen  := VarToStr(vAlm);
+    SerieAlbaran   := Trim(txtSerieAlb.Text);
+    RefProveedor   := Trim(txtRefPrv.Text);
+    FechaRecepcion := dteFecha.Date;
+    Aceptado       := True;
+    PostMessage(Handle, WM_CLOSE, 0, 0);
+  end;
 end;
 
 end.
