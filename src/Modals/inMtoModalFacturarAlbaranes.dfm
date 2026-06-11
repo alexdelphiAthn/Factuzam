@@ -26,29 +26,47 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
       Properties.CharCase = ecUpperCase
       Properties.MaxLength = 8
       TabOrder = 0
-      Width = 70
+      Width = 60
+    end
+    object btnBuscarEmpresa: TBitBtn
+      Left = 152
+      Top = 12
+      Width = 28
+      Height = 27
+      Caption = '...'
+      TabOrder = 1
+      OnClick = btnBuscarEmpresaClick
     end
     object lblProveedor: TcxLabel
-      Left = 180
+      Left = 192
       Top = 16
       Caption = 'Proveedor'
       Transparent = True
     end
     object txtProveedor: TcxTextEdit
-      Left = 270
+      Left = 272
       Top = 14
       Properties.CharCase = ecUpperCase
       Properties.MaxLength = 20
-      TabOrder = 1
-      Width = 110
+      TabOrder = 2
+      Width = 100
+    end
+    object btnBuscarProveedor: TBitBtn
+      Left = 374
+      Top = 12
+      Width = 28
+      Height = 27
+      Caption = '...'
+      TabOrder = 3
+      OnClick = btnBuscarProveedorClick
     end
     object btnCargar: TcxButton
-      Left = 400
+      Left = 414
       Top = 10
-      Width = 120
+      Width = 110
       Height = 30
       Caption = 'Cargar'
-      TabOrder = 2
+      TabOrder = 4
       OnClick = btnCargarClick
     end
     object lblNombrePrv: TcxLabel
@@ -72,7 +90,7 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
         end>
       Properties.OnEditValueChanged = rgModoPropertiesEditValueChanged
       ItemIndex = 0
-      TabOrder = 3
+      TabOrder = 5
       Height = 64
       Width = 520
     end
@@ -86,7 +104,7 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
       Left = 160
       Top = 148
       Properties.DropDownListStyle = lsFixedList
-      TabOrder = 4
+      TabOrder = 6
       Width = 400
     end
   end
