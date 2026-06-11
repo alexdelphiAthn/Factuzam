@@ -167,6 +167,15 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               TabOrder = 2
               Width = 280
             end
+            object btnGuardarPrecargaArt: TcxButton
+              Left = 905
+              Top = 4
+              Width = 140
+              Height = 25
+              Caption = 'Guardar precarga'
+              TabOrder = 5
+              OnClick = btnGuardarPrecargaArtClick
+            end
           end
         end
       end
