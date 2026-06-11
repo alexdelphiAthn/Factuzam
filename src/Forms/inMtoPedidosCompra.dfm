@@ -465,6 +465,57 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 Width = 929
               end
             end
+            object tsAlbaranesPedc: TcxTabSheet
+              Caption = 'Albaranes'
+              ExplicitHeight = 383
+              object cxgrdAlbaranesPedc: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 929
+                Height = 384
+                Align = alClient
+                TabOrder = 0
+                object tvAlbaranesPedc: TcxGridDBTableView
+                  OptionsData.Deleting = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.GroupByBox = False
+                  object colAlbcPedcNUMERO: TcxGridDBColumn
+                    Caption = 'N'#250'mero'
+                    DataBinding.FieldName = 'NUMERO_ALBC'
+                    Width = 90
+                  end
+                  object colAlbcPedcSERIE: TcxGridDBColumn
+                    Caption = 'Serie'
+                    DataBinding.FieldName = 'SERIE_ALBC'
+                    Width = 80
+                  end
+                  object colAlbcPedcFECHA: TcxGridDBColumn
+                    Caption = 'Fecha'
+                    DataBinding.FieldName = 'FECHA_ALBC'
+                    Width = 100
+                  end
+                  object colAlbcPedcESTADO: TcxGridDBColumn
+                    Caption = 'Estado'
+                    DataBinding.FieldName = 'ESTADO_ALBC'
+                    Width = 100
+                  end
+                  object colAlbcPedcREFPRV: TcxGridDBColumn
+                    Caption = 'Ref. prov.'
+                    DataBinding.FieldName = 'REF_PROVEEDOR_ALBC'
+                    Width = 140
+                  end
+                  object colAlbcPedcTOTAL: TcxGridDBColumn
+                    Caption = 'Total'
+                    DataBinding.FieldName = 'TOTAL_LIQUIDO_ALBC'
+                    Width = 110
+                  end
+                end
+                object cxgrdlvlAlbaranesPedc: TcxGridLevel
+                  GridView = tvAlbaranesPedc
+                end
+              end
+            end
           end
         end
         object pnlBottomTotales: TPanel

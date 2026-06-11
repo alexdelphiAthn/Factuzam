@@ -40,6 +40,8 @@ type
     unqryDefArticuloPedc:     TUniQuery;
     unqryTemporadasPedc:      TUniQuery;
     dsTemporadasPedc:         TDataSource;
+    unqryAlbaranesPedc:       TUniQuery;
+    dsAlbaranesPedc:          TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -83,6 +85,11 @@ begin
   unqryTemporadasPedc.Open;
   unqryPedidosCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
+  // Albaranes de compra creados desde este pedido (master-detail por
+  // NUMERO_PED_ALBC / SERIE_PED_ALBC). Solo lectura, para la pestania.
+  unqryAlbaranesPedc.Connection := inLibGlobalVar.oConn;
+  unqryAlbaranesPedc.MasterSource :=
+    (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
 end;
 
 procedure TdmPedidosCompra.DataModuleDestroy(Sender: TObject);
@@ -118,6 +125,23 @@ begin
       begin
         inLibLog.Log.LogPerf(TAG,
           'unqryPedidosCompraLineas ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
+  end;
+  if not unqryAlbaranesPedc.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      unqryAlbaranesPedc.Open;
+      inLibLog.Log.LogPerf(TAG, 'unqryAlbaranesPedc OK',
+                            swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf(TAG,
+          'unqryAlbaranesPedc ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
       end;

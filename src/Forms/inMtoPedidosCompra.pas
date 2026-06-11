@@ -69,6 +69,12 @@ type
     cxgrdLineasPedido:   TcxGrid;
     tvLineasPedido:      TcxGridDBTableView;
     cxgrdlvlLineasPedido: TcxGridLevel;
+    // Pestania "Albaranes": lista (solo lectura) de los albaranes de
+    // compra ya creados desde este pedido.
+    tsAlbaranesPedc:       TcxTabSheet;
+    cxgrdAlbaranesPedc:    TcxGrid;
+    tvAlbaranesPedc:       TcxGridDBTableView;
+    cxgrdlvlAlbaranesPedc: TcxGridLevel;
 
     // Cabecera
     lblNroPedido:    TcxLabel;
@@ -323,6 +329,9 @@ begin
   tvLineasPedido.DataController.DataSource :=
     dmmPedidosCompra.dsPedidosCompraLineas;
   dmmPedidosCompra.unqryPedidosCompraLineas.MasterSource := dsTablaG;
+  tvAlbaranesPedc.DataController.DataSource :=
+    dmmPedidosCompra.dsAlbaranesPedc;
+  dmmPedidosCompra.unqryAlbaranesPedc.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
 end;
 
