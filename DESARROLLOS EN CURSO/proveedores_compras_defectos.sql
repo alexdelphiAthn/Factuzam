@@ -11,10 +11,11 @@
 -- sistema de tallas (ID_AC_TALLAS_PRVKIT); el boton "Anadir todas" del
 -- mantenimiento vuelca las tallas de ese sistema con cantidad 0 para que el
 -- usuario solo rellene cantidades. Estando sobre una linea de la sesion,
--- "Aplicar kit" copia las cantidades a las celdas de talla de esa linea
--- casando VALOR_DESTINO_PRVKITD contra los valores del sistema de tallas de
--- la linea. Es el equivalente persistente y por-proveedor de los kits de
--- sesion (fza_compras_sesiones_kits, sufijo SESKIT) descritos en
+-- "Aplicar kit" exige que el tallaje del kit COINCIDA con el de la linea
+-- (si no, advertencia y no se aplica) y copia las cantidades a las celdas
+-- de talla casando VALOR_DESTINO_PRVKITD contra los valores del sistema.
+-- Es el equivalente persistente y por-proveedor de los kits de sesion
+-- (fza_compras_sesiones_kits, sufijo SESKIT) descritos en
 -- compras_sesiones.md §2.2.
 --
 -- Sufijos nuevos (registrados en LIBRO_DE_ESTILO_BBDD.md §2):
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `fza_proveedores_kits` (
   `NOMBRE_PRVKIT`         varchar(100)  NOT NULL,
   `DESCRIPCION_PRVKIT`    varchar(255)  DEFAULT NULL,
   `ID_AC_TALLAS_PRVKIT`   int(11)       DEFAULT NULL
-                            COMMENT 'FK logica fza_atributos_conjuntos: sistema de tallas para el que se definio el kit (informativo; el casado real es por texto de talla)',
+                            COMMENT 'FK logica fza_atributos_conjuntos: sistema de tallas del kit. Al aplicar debe coincidir con el de la linea (ID_AC_PIVOT_SESLIN) o se advierte y no se aplica',
   `ORDEN_PRVKIT`          int(11)       NOT NULL DEFAULT 0,
   `INSTANTE_ALTA`         datetime      NOT NULL,
   `USUARIO_ALTA`          varchar(50)   NOT NULL,

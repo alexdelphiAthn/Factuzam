@@ -37,9 +37,11 @@ Un kit es un patrón de cantidades sobre tallas predefinidas (ver
   pero ya no se muestra ni se rellena: con código y nombre basta.)
 - Detalle (`fza_proveedores_kits_det`): `VALOR_DESTINO_PRVKITD` (texto de la
   talla: «38», «M»…) y `CANTIDAD_PRVKITD`.
-- El casado al aplicar es **por texto de talla** contra los valores del
-  sistema de la línea (`fza_atributos_valores.AV`), así un kit definido para
-  «38-46 Caballero» también sirve en otro sistema que comparta tallas.
+- Para aplicar un kit, su tallaje **debe coincidir** con el de la línea
+  (`ID_AC_TALLAS_PRVKIT = ID_AC_PIVOT_SESLIN`); si no, se muestra una
+  advertencia y no se aplica nada. Una vez validado, cada talla del kit se
+  casa por texto contra los valores del sistema (`fza_atributos_valores.AV`)
+  para mapear su columna.
 
 ## 2. Pantalla Proveedores (`inMtoProveedores`)
 
@@ -119,15 +121,20 @@ Lógica en `inLibComprasSesiones.AplicarKitProveedorALinea`:
 
 - La línea debe tener **sistema de tallas** (`ID_AC_PIVOT_SESLIN`); si no, se
   avisa para que el usuario lo asigne primero.
-- Lee `fza_proveedores_kits_det` del kit y casa cada `VALOR_DESTINO_PRVKITD`
-  **por texto** contra los valores del sistema de la línea
-  (`TGestorGridTallas.GetPosicionesConjunto`).
+- **Validación de tallaje**: el sistema del kit (`ID_AC_TALLAS_PRVKIT`) debe
+  coincidir con el de la línea. Si el kit no tiene sistema o es distinto, se
+  muestra una **advertencia** con ambos nombres («kit = X, línea = Y») y no
+  se aplica nada.
+- Validado el tallaje, lee `fza_proveedores_kits_det` y casa cada
+  `VALOR_DESTINO_PRVKITD` por texto contra los valores del sistema
+  (`TGestorGridTallas.GetPosicionesConjunto`) para mapear su columna.
 - Cada talla casada se persiste con `TGestorGridTallas.PersistirCantidad`
   (mismo UPSERT/DELETE que el tecleo manual en la celda; cantidad 0 borra).
 - Refresca totales y vuelve a pintar la fila
   (`RefrescarTotalesLineaActual` + `CargarCantidadesUnaLinea`).
-- Si alguna talla del kit no existe en el sistema de la línea, se informa
-  con el detalle de las no casadas (las demás sí se aplican).
+- Red de seguridad: si una talla tecleada a mano en el kit no existe en el
+  conjunto, se informa con el detalle de las no casadas (las demás sí se
+  aplican).
 
 ## 4. Archivos tocados
 
