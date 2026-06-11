@@ -1196,35 +1196,13 @@
                   TabOrder = 1
                   Width = 92
                 end
-                object lblTallasPrv: TcxLabel
-                  Left = 230
-                  Top = 30
-                  Caption = 'Sistema de tallas'
-                  TabOrder = 2
-                  Transparent = True
-                end
-                object cbbTallasPrv: TcxDBLookupComboBox
-                  Left = 366
-                  Top = 26
-                  DataBinding.DataField = 'ID_AC_TALLAS_PRV'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'ID_AC'
-                  Properties.ListColumns = <
-                    item
-                      Caption = 'Sistema'
-                      FieldName = 'NOMBRE_AC'
-                    end>
-                  Properties.ListOptions.ShowHeader = False
-                  TabOrder = 3
-                  Width = 250
-                end
                 object lblDefectosInfo: TcxLabel
                   Left = 16
                   Top = 60
                   Caption =
-                    'Se copian a la cabecera al elegir este proveedor en una sesi'#243'n ' +
-                    'de compra.'
-                  TabOrder = 4
+                    'El margen % se copia a la cabecera al elegir este proveedor en u' +
+                    'na sesi'#243'n de compra.'
+                  TabOrder = 2
                   Transparent = True
                 end
               end
@@ -1267,7 +1245,7 @@
                     Top = 3
                     Width = 150
                     Height = 26
-                    Caption = 'Tallas del sistema'
+                    Caption = 'A'#241'adir todas las tallas'
                     TabOrder = 2
                     OnClick = btnGenerarTallasKitClick
                   end
@@ -1313,7 +1291,7 @@
                       DataBinding.FieldName = 'NOMBRE_PRVKIT'
                       PropertiesClassName = 'TcxTextEditProperties'
                       Properties.MaxLength = 100
-                      Width = 130
+                      Width = 160
                     end
                     object dbcKitSistema: TcxGridDBColumn
                       Caption = 'Sistema tallas'
@@ -1326,14 +1304,7 @@
                           FieldName = 'NOMBRE_AC'
                         end>
                       Properties.ListOptions.ShowHeader = False
-                      Width = 130
-                    end
-                    object dbcKitDescripcion: TcxGridDBColumn
-                      Caption = 'Descripci'#243'n'
-                      DataBinding.FieldName = 'DESCRIPCION_PRVKIT'
-                      PropertiesClassName = 'TcxTextEditProperties'
-                      Properties.MaxLength = 255
-                      Width = 160
+                      Width = 150
                     end
                   end
                   object glKits: TcxGridLevel
