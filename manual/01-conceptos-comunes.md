@@ -195,7 +195,7 @@ junto a cada opción en los capítulos siguientes.
 | Artículos | `[Ctrl]+[A]` |
 | Tarifas | `[Ctrl]+[T]` |
 | Familias | `[Ctrl]+[N]` |
-| Propiedades | `[Ctrl]+[Y]` |
+| Propiedades | `[Ctrl]+[Alt]+[Y]` |
 | Tipos de Variaciones | `[Ctrl]+[Alt]+[T]` |
 | Colecciones de Atributos | `[Ctrl]+[Alt]+[S]` |
 | Atributos básicos | `[Ctrl]+[Alt]+[B]` |
@@ -258,8 +258,6 @@ junto a cada opción en los capítulos siguientes.
 | Hacer Copia de Seguridad | `[Ctrl]+[Y]` |
 | Recuperar Copia de Seguridad | `[Ctrl]+[Z]` |
 | Generador de Procesos | `[Ctrl]+[G]` |
-
----
 
 ## 7. Campos de auditoría
 

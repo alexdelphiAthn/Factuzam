@@ -1271,7 +1271,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         end
         object mnuPropiedades: TMenuItem
           Caption = 'Propiedades'
-          ShortCut = 16473
+          ShortCut = 49241
           OnClick = mnuPropiedadesClick
         end
         object mnuVariaciones: TMenuItem
