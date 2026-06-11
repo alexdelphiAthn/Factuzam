@@ -317,15 +317,8 @@ object FormMigrator: TFormMigrator
       Height = 17
       Caption = 'Usuario para auditor'#237'a:'
     end
-    object lblNivelFam: TLabel
-      Left = 380
-      Top = 14
-      Width = 142
-      Height = 17
-      Caption = 'Nivel familias hoja:'
-    end
     object lblHilos: TLabel
-      Left = 780
+      Left = 380
       Top = 14
       Width = 114
       Height = 17
@@ -339,20 +332,12 @@ object FormMigrator: TFormMigrator
       TabOrder = 0
       Text = 'MIGRADOR'
     end
-    object edNivelFam: TEdit
+    object edHilos: TEdit
       Left = 520
       Top = 11
       Width = 40
       Height = 25
       TabOrder = 1
-      Text = '4'
-    end
-    object edHilos: TEdit
-      Left = 890
-      Top = 11
-      Width = 40
-      Height = 25
-      TabOrder = 3
       Text = '4'
     end
     object GroupListado: TGroupBox

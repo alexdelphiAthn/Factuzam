@@ -122,8 +122,8 @@ begin
     'ORDER BY COUNT(*) DESC');
   // Cargamos TODA la jerarquia de ocniv (todos los niveles con codigo). El
   // padre se decide por PREFIJO, no por longitud fija del nivel, asi que ya
-  // no filtramos por Nivel ni dependemos de NivelFamiliasHoja: cada cliente
-  // (codigos 2/4, 3/7, etc.) migra su jerarquia completa.
+  // no filtramos por Nivel ni dependemos de un nivel de hoja configurable:
+  // cada cliente (codigos 2/4, 3/7, etc.) migra su jerarquia completa.
   // WITH (NOLOCK): lectura sucia, evita que el SELECT se quede colgado si otra
   // sesion tiene ocniv bloqueada (p.ej. SSMS en edicion). Es solo-lectura.
   qSrc := NuevoQOrigen(Eng,
