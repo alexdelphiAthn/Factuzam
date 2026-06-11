@@ -80,6 +80,8 @@ type
     txtREF_PROVEEDOR_ALBC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
     txtCODIGO_ALM_ALBC: TcxDBTextEdit;
+    // Check informativo: el albaran es mercancia en deposito.
+    chkESDEPOSITO_ALBC: TcxDBCheckBox;
 
     // Totales
     lblTotalBases:        TcxLabel;

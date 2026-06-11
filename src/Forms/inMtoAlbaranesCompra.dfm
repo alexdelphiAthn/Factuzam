@@ -81,6 +81,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
               DataBinding.FieldName = 'TOTAL_LIQUIDO_ALBC'
               Width = 120
             end
+            object dbcGrdAlbcESDEPOSITO_ALBC: TcxGridDBColumn
+              Caption = 'Dep'#243'sito'
+              DataBinding.FieldName = 'ESDEPOSITO_ALBC'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 80
+            end
           end
         end
       end
@@ -243,6 +251,17 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 15
                 Width = 120
+              end
+              object chkESDEPOSITO_ALBC: TcxDBCheckBox
+                Left = 656
+                Top = 92
+                Caption = 'Dep'#243'sito'
+                DataBinding.DataField = 'ESDEPOSITO_ALBC'
+                DataBinding.DataSource = dsTablaG
+                Properties.ValueChecked = 'S'
+                Properties.ValueUnchecked = 'N'
+                TabOrder = 16
+                Width = 100
               end
             end
           end
