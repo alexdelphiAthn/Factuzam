@@ -64,6 +64,27 @@ pestaña Series (la columna de almacén ya era editable).
 - `src/Forms/inMtoComprasSesiones.pas`
 - `src/Forms/inMtoPedidosCompra.pas`
 
+## Ampliación (junio 2026): combos de serie en los Mtos + alta masiva
+
+- Los campos Serie de las cabeceras de **Sesiones de compra**
+  (`SERIE_SES`), **Pedidos de compra** (`SERIE_PEDC`) y **Albaranes de
+  compra** (`SERIE_ALBC`) pasan de `TcxDBTextEdit` a `TcxDBComboBox`
+  editable (`lsEditList`). Al desplegar (`OnInitPopup`) se recargan las
+  series vigentes de la empresa por tipo de documento (`SE` / `PC` /
+  `AB`) vía `CargarSeriesEmpresa`.
+- Si la empresa no tiene ninguna serie del tipo, el combo avisa y
+  ofrece abrir el Mto de Empresas (pestaña Series) para crearlas.
+- En Empresas → Series hay un botón nuevo **"Crear series doc /
+  almacén"** (`btnCrearSeriesDoc`): crea de golpe las series vigentes
+  que falten para la empresa activa — una genérica por tipo (`SE1`,
+  `PC1`, `AB1`, `DC1`, `FP1`, `IN1`) y una por almacén activo para los
+  tipos que proponen serie por almacén (`AB-<ALM>`, `PC-<ALM>`).
+  Idempotente; usa el contador `ES` para la PK, igual que el alta
+  manual.
+
+Ficheros: `inMtoComprasSesiones.pas/.dfm`, `inMtoPedidosCompra.pas/.dfm`,
+`inMtoAlbaranesCompra.pas/.dfm`, `inMtoEmpresas.pas/.dfm`.
+
 ## Fuera de alcance
 
 - Albaranes de venta desde pedidos de venta (`fza_albaranes` /
@@ -71,4 +92,5 @@ pestaña Series (la columna de almacén ya era editable).
   propio y no se ha tocado.
 - Series por defecto al insertar documentos a mano en los Mtos de
   albaranes/pedidos de compra: el almacén aún no se conoce en el
-  AfterInsert, se mantiene la serie genérica.
+  AfterInsert, se mantiene la serie genérica (el combo permite
+  cambiarla después).

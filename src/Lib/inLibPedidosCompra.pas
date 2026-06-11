@@ -33,7 +33,7 @@ unit inLibPedidosCompra;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, DBAccess, Uni,
   inLibGridPivoteCompra;
 
@@ -697,6 +697,8 @@ var
   iLineaAlbc: Integer;
   sLineaAlbc: string;
   rTotalCeldas: Double;
+  dPdteLinea: TDictionary<string,Double>;
+  rCantidad, rPdteLin: Double;
 begin
   Result   := False;
   AMensaje := '';
@@ -795,6 +797,7 @@ begin
   //    de albaran con la cantidad tecleada. UPDATE de CANTIDAD_RECIBIDA.
   q    := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
+  dPdteLinea := TDictionary<string,Double>.Create;
   iLineaAlbc := 0;
   try
     q.Connection    := AConn;
@@ -813,7 +816,8 @@ begin
         '       L.TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
         '       L.TIPO_IVA_ARTICULO_PEDCLIN, L.PORCENTAJE_IVA_PEDCLIN, ' +
         '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
-        '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN ' +
+        '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
+        '       L.CANTIDAD_PEDCLIN, L.CANTIDAD_RECIBIDA_PEDCLIN ' +
         '  FROM fza_pedidos_compra_lineas L ' +
         ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
         '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
@@ -823,6 +827,25 @@ begin
       q.ParamByName('l').AsString := c.LineaPedido;
       q.Open;
       if q.Eof then Continue;
+      // Tope de seguridad: no recibir mas que el pendiente real de la
+      // linea (CANTIDAD - RECIBIDA). El dict reparte el pendiente entre
+      // varias celdas de la misma linea (una por talla en el pivote).
+      if not dPdteLinea.TryGetValue(c.LineaPedido, rPdteLin) then
+      begin
+        rPdteLin := q.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+                    q.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+        if rPdteLin < 0 then
+          rPdteLin := 0;
+      end;
+      rCantidad := c.Cantidad;
+      if rCantidad > rPdteLin then
+        rCantidad := rPdteLin;
+      dPdteLinea.AddOrSetValue(c.LineaPedido, rPdteLin - rCantidad);
+      if rCantidad <= 0 then
+      begin
+        q.Close;
+        Continue;
+      end;
       Inc(iLineaAlbc, 10);
       sLineaAlbc := Format('%.4d', [iLineaAlbc]);
       // 3b. INSERT linea albaran.
@@ -866,7 +889,7 @@ begin
         q.FieldByName('DESCRIPCION_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('tipcant').AsString :=
         q.FieldByName('TIPO_CANTIDAD_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('cant').AsFloat := c.Cantidad;
+      qIns.ParamByName('cant').AsFloat := rCantidad;
       qIns.ParamByName('tiva').AsString :=
         q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('piva').AsFloat :=
@@ -890,7 +913,7 @@ begin
         ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
         '   AND NUMERO_PEDC_PEDCLIN = :n ' +
         '   AND LINEA_PEDCLIN       = :l';
-      qIns.ParamByName('qty').AsFloat := c.Cantidad;
+      qIns.ParamByName('qty').AsFloat := rCantidad;
       qIns.ParamByName('u').AsString  := AUsuario;
       qIns.ParamByName('s').AsString  := ASeriePedc;
       qIns.ParamByName('n').AsString  := ANumPedc;
@@ -900,11 +923,12 @@ begin
   finally
     FreeAndNil(q);
     FreeAndNil(qIns);
+    FreeAndNil(dPdteLinea);
   end;
   if iLineaAlbc = 0 then
   begin
     AMensaje := 'No se pudo crear ninguna linea del albaran (lineas origen ' +
-                'no encontradas).';
+                'no encontradas o sin pendiente de recibir).';
     // Borramos la cabecera huerfana.
     qIns := TUniQuery.Create(nil);
     try
@@ -1333,6 +1357,8 @@ var
   iLineaAlbc, iInsertadas: Integer;
   sLineaAlbc: string;
   rTotalCeldas: Double;
+  dPdteLinea: TDictionary<string,Double>;
+  rCantidad, rPdteLin: Double;
 begin
   Result   := False;
   AMensaje := '';
@@ -1364,6 +1390,7 @@ begin
   iInsertadas := 0;
   q    := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
+  dPdteLinea := TDictionary<string,Double>.Create;
   try
     q.Connection    := AConn;
     qIns.Connection := AConn;
@@ -1381,7 +1408,8 @@ begin
         '       L.TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
         '       L.TIPO_IVA_ARTICULO_PEDCLIN, L.PORCENTAJE_IVA_PEDCLIN, ' +
         '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
-        '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN ' +
+        '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
+        '       L.CANTIDAD_PEDCLIN, L.CANTIDAD_RECIBIDA_PEDCLIN ' +
         '  FROM fza_pedidos_compra_lineas L ' +
         ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
         '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
@@ -1391,6 +1419,25 @@ begin
       q.ParamByName('l').AsString := c.LineaPedido;
       q.Open;
       if q.Eof then Continue;
+      // Tope de seguridad: no recibir mas que el pendiente real de la
+      // linea (CANTIDAD - RECIBIDA). El dict reparte el pendiente entre
+      // varias celdas de la misma linea (una por talla en el pivote).
+      if not dPdteLinea.TryGetValue(c.LineaPedido, rPdteLin) then
+      begin
+        rPdteLin := q.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+                    q.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+        if rPdteLin < 0 then
+          rPdteLin := 0;
+      end;
+      rCantidad := c.Cantidad;
+      if rCantidad > rPdteLin then
+        rCantidad := rPdteLin;
+      dPdteLinea.AddOrSetValue(c.LineaPedido, rPdteLin - rCantidad);
+      if rCantidad <= 0 then
+      begin
+        q.Close;
+        Continue;
+      end;
       Inc(iLineaAlbc, 10);
       sLineaAlbc := Format('%.4d', [iLineaAlbc]);
       qIns.Close;
@@ -1433,7 +1480,7 @@ begin
         q.FieldByName('DESCRIPCION_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('tipcant').AsString :=
         q.FieldByName('TIPO_CANTIDAD_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('cant').AsFloat := c.Cantidad;
+      qIns.ParamByName('cant').AsFloat := rCantidad;
       qIns.ParamByName('tiva').AsString :=
         q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('piva').AsFloat :=
@@ -1458,7 +1505,7 @@ begin
         ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
         '   AND NUMERO_PEDC_PEDCLIN = :n ' +
         '   AND LINEA_PEDCLIN       = :l';
-      qIns.ParamByName('qty').AsFloat := c.Cantidad;
+      qIns.ParamByName('qty').AsFloat := rCantidad;
       qIns.ParamByName('u').AsString  := AUsuario;
       qIns.ParamByName('s').AsString  := ASeriePedc;
       qIns.ParamByName('n').AsString  := ANumPedc;
@@ -1468,11 +1515,12 @@ begin
   finally
     FreeAndNil(q);
     FreeAndNil(qIns);
+    FreeAndNil(dPdteLinea);
   end;
   if iInsertadas = 0 then
   begin
     AMensaje := 'No se pudo incorporar ninguna linea (lineas origen no ' +
-                'encontradas).';
+                'encontradas o sin pendiente de recibir).';
     Exit;
   end;
   RegenerarMovimientosYCerrarAlbaranCompra(AConn,

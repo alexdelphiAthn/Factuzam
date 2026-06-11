@@ -140,11 +140,14 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 2
                 Transparent = True
               end
-              object txtSERIE_PEDC: TcxDBTextEdit
+              object cbbSERIE_PEDC: TcxDBComboBox
                 Left = 116
                 Top = 32
                 DataBinding.DataField = 'SERIE_PEDC'
                 DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsEditList
+                Properties.MaxLength = 12
+                Properties.OnInitPopup = cbbSERIE_PEDCPropertiesInitPopup
                 TabOrder = 3
                 Width = 80
               end
