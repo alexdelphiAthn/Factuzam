@@ -64,6 +64,20 @@ inherited frmModalDistribuidor: TfrmModalDistribuidor
         TabOrder = 0
         Width = 80
       end
+      object btnKitTodos: TcxButton
+        Left = 560
+        Top = 8
+        Width = 300
+        Height = 32
+        Caption = 'Aplicar kit en todos los almacenes'
+        Colors.Default = 12579775
+        Colors.Normal = 12579775
+        LookAndFeel.Kind = lfFlat
+        LookAndFeel.NativeStyle = False
+        TabOrder = 3
+        Visible = False
+        OnClick = btnKitTodosClick
+      end
     end
     object pnlCuadrante: TPanel
       Left = 1
