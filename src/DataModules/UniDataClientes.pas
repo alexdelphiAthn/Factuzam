@@ -243,9 +243,9 @@ begin
   inherited;
   AplicarValoresPorDefecto(unqryTablaG, 'fza_clientes');
   unqryTablaG.FindField('CODIGO_FP_CLI').AsString :=
-                                                GetDefaultValue('fza_formapago',
-                                                             'CODIGO_FP_FP',
-                                                         'ESDEFAULT_FORMA_PAGO_FP');
+                                            GetDefaultValue('fza_formas_pago',
+                                                            'CODIGO_FP_FP',
+                                                     'ESDEFAULT_FORMA_PAGO_FP');
   unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString :=
     oAppParams.GetString('appTarifaDefecto', 'PVP');
 end;
