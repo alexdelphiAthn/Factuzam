@@ -1,33 +1,33 @@
 -- =============================================================================
 -- Proveedores: defectos para Sesiones de Compra (margen, tallas) + kits
 -- =============================================================================
--- El proveedor pasa a almacenar los valores que las Sesiones de Compra
+-- El proveedor pasa a almacenar el valor que las Sesiones de Compra
 -- (inMtoComprasSesiones) copian a la cabecera al seleccionarlo:
 --
 --   1. PORCENTAJE_MARGEN_PRV  -> PORCENTAJE_MARGEN_SES (margen comercial).
---   2. ID_AC_TALLAS_PRV       -> ID_AC_PIVOT_SES (sistema de tallas por
---      defecto; las lineas nuevas lo heredan y es el que se muestra en las
---      columnas de talla del grid de articulos).
 --
 -- Ademas se crea la biblioteca de KITS del proveedor: patrones de cantidades
--- por talla (CURVA-STD: 38=1, 39=2, 40=3...). Estando sobre una linea de la
--- sesion, "Aplicar kit" copia las cantidades del kit a las celdas de talla
--- de esa linea casando VALOR_DESTINO_PRVKITD contra los valores del sistema
--- de tallas de la linea. Es el equivalente persistente y por-proveedor de
--- los kits de sesion (fza_compras_sesiones_kits, sufijo SESKIT) descritos
--- en compras_sesiones.md §2.2.
+-- por talla (CURVA-STD: 38=1, 39=2, 40=3...). Cada kit lleva su propio
+-- sistema de tallas (ID_AC_TALLAS_PRVKIT); el boton "Anadir todas" del
+-- mantenimiento vuelca las tallas de ese sistema con cantidad 0 para que el
+-- usuario solo rellene cantidades. Estando sobre una linea de la sesion,
+-- "Aplicar kit" copia las cantidades a las celdas de talla de esa linea
+-- casando VALOR_DESTINO_PRVKITD contra los valores del sistema de tallas de
+-- la linea. Es el equivalente persistente y por-proveedor de los kits de
+-- sesion (fza_compras_sesiones_kits, sufijo SESKIT) descritos en
+-- compras_sesiones.md §2.2.
 --
 -- Sufijos nuevos (registrados en LIBRO_DE_ESTILO_BBDD.md §2):
 --   fza_proveedores_kits     -> PRVKIT
 --   fza_proveedores_kits_det -> PRVKITD
 --
--- Idempotente: columnas via INFORMATION_SCHEMA, tablas via IF NOT EXISTS.
+-- Idempotente: columna via INFORMATION_SCHEMA, tablas via IF NOT EXISTS.
 -- NO tocar factuzam_original.sql (regla del repo); este script se aplica
 -- por separado a las BBDD existentes.
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. Columnas nuevas en fza_proveedores
+-- 1. Columna nueva en fza_proveedores (margen comercial por defecto)
 -- ---------------------------------------------------------------------------
 SET @sExisteCol := (
   SELECT COUNT(*)
@@ -42,24 +42,6 @@ SET @sSql := IF(@sExisteCol = 0,
        COMMENT ''Margen comercial defecto: se copia a PORCENTAJE_MARGEN_SES''
      AFTER IBAN_PRV',
   'SELECT ''PORCENTAJE_MARGEN_PRV ya existe, se omite'' AS info'
-);
-PREPARE stmt FROM @sSql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sExisteCol := (
-  SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.COLUMNS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = 'fza_proveedores'
-     AND COLUMN_NAME  = 'ID_AC_TALLAS_PRV'
-);
-SET @sSql := IF(@sExisteCol = 0,
-  'ALTER TABLE fza_proveedores
-     ADD COLUMN ID_AC_TALLAS_PRV int(11) NULL DEFAULT NULL
-       COMMENT ''FK logica fza_atributos_conjuntos (ID_VA_AC=TAL): sistema de tallas defecto para sesiones''
-     AFTER PORCENTAJE_MARGEN_PRV',
-  'SELECT ''ID_AC_TALLAS_PRV ya existe, se omite'' AS info'
 );
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;

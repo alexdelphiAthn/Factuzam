@@ -516,11 +516,8 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object unqryPrvFicha: TUniQuery
     SQL.Strings = (
-      'SELECT P.*, AC.NOMBRE_AC AS NOMBRE_TALLAS_PRV'
-      '  FROM fza_proveedores P'
-      '  LEFT JOIN fza_atributos_conjuntos AC'
-      '    ON AC.ID_AC = P.ID_AC_TALLAS_PRV'
-      ' WHERE P.CODIGO_PRV_PRV = :prv')
+      'SELECT * FROM fza_proveedores'
+      ' WHERE CODIGO_PRV_PRV = :prv')
     ReadOnly = True
     Left = 392
     Top = 232
@@ -590,6 +587,15 @@ inherited dmComprasSesiones: TdmComprasSesiones
   object dsPrvKitsDet: TDataSource
     DataSet = unqryPrvKitsDet
     Left = 600
+    Top = 288
+  end
+  object unqryPrvKitsCombo: TUniQuery
+    Left = 704
+    Top = 232
+  end
+  object dsPrvKitsCombo: TDataSource
+    DataSet = unqryPrvKitsCombo
+    Left = 704
     Top = 288
   end
   object unqryProveedores: TUniQuery
