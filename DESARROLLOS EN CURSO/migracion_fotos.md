@@ -66,13 +66,21 @@ usan las fotos descargadas del servidor de fotos_nube.
 - **Imagen corrupta / formato sin codec**: error contabilizado y log
   `! ERROR`; la migración continúa con la siguiente foto.
 - **Fotos compartidas**: en el legacy es frecuente que varios colores de
-  un artículo apunten al mismo fichero. El SELECT ordena por
-  `ArchivoFoto` y el trío PNG se **copia** del color anterior en vez de
-  re-decodificar la imagen (cada color conserva su propio juego de
-  ficheros, como exige el esquema: un nombre por fila).
+  un artículo apunten al mismo fichero. Las claves se **agrupan por
+  fichero**: el primer éxito del grupo genera el trío PNG y el resto lo
+  copia en vez de re-decodificar la imagen (cada color conserva su
+  propio juego de ficheros, como exige el esquema: un nombre por fila).
 - **Formatos soportados**: png, jpg/jpeg, gif, bmp; cualquier otro se
   intenta vía WIC (tiff, webp... si el codec está instalado en Windows).
-- Wave 3 del migrador (tras artículos y SKUs).
+- **Hilo independiente + pool**: el dominio NO entra en las waves del
+  migrador; se lanza en un hilo propio al arrancar la corrida y avanza
+  en paralelo a toda la migración de datos (las FKs del destino son
+  lógicas, no hace falta que existan los artículos antes). Dentro, la
+  conversión (decodificar + 3 PNG) se reparte entre los hilos del pool
+  del campo **"Hilos fotos"** (2-5 recomendado, tope 8). Los hilos del
+  pool solo tocan ficheros y encolan las filas de INSERT; el hilo del
+  dominio las drena al `TBulkInsert` (la conexión UniDAC no admite uso
+  concurrente) y lleva la barra de progreso.
 - No se crean fotos a nivel artículo (`CODIGO_UNIDAD_FOT = ''`): el
   legacy solo tiene foto por color. Si un artículo tiene una única foto,
   el fallback nº 3 del resolutor ya la muestra también a nivel artículo.

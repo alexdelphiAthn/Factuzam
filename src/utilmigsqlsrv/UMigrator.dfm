@@ -338,6 +338,13 @@ object FormMigrator: TFormMigrator
       Height = 17
       Caption = 'Destino fotos (appDirFotos):'
     end
+    object lblFotosHilos: TLabel
+      Left = 600
+      Top = 14
+      Width = 88
+      Height = 17
+      Caption = 'Hilos fotos:'
+    end
     object edUsuario: TEdit
       Left = 160
       Top = 11
@@ -369,6 +376,14 @@ object FormMigrator: TFormMigrator
       Height = 25
       TabOrder = 3
       Text = '$(PUBLICO)\Factuzam\fotos'
+    end
+    object edFotosHilos: TEdit
+      Left = 700
+      Top = 11
+      Width = 40
+      Height = 25
+      TabOrder = 5
+      Text = '4'
     end
     object GroupListado: TGroupBox
       Left = 8
