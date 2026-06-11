@@ -27,7 +27,7 @@ uses
   Data.DB,
   // DevExpress
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
-  cxContainer, cxEdit, cxTextEdit, cxLabel, cxButtons,
+  cxContainer, cxEdit, cxTextEdit, cxCurrencyEdit, cxLabel, cxButtons,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   cxDBData, cxGridLevel, cxClasses, cxStyles, dxDateRanges,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
@@ -133,6 +133,8 @@ begin
   inherited;
   lblTitulo.Caption := Format('Histórico de Arqueos · Caja %s', [FCaja]);
   CargarArqueos;
+  // Ajustar el ancho de las columnas al contenido al presentar la pantalla.
+  dbtvArqueos.ApplyBestFit;
 end;
 
 procedure TfrmModalArqueosHistCaja.CargarArqueos;
