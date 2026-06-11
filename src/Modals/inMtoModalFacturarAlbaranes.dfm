@@ -6,6 +6,10 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
   ExplicitWidth = 720
   ExplicitHeight = 560
   TextHeight = 19
+  KeyPreview = True
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0

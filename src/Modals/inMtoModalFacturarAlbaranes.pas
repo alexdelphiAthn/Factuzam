@@ -60,6 +60,7 @@ type
     btnFacturar:     TcxButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnCargarClick(Sender: TObject);
     procedure btnEmpresaPropertiesButtonClick(Sender: TObject;
                                               AButtonIndex: Integer);
@@ -143,6 +144,26 @@ begin
   FreeAndNil(FFacSeries);
   FreeAndNil(FFacNumeros);
   inherited;
+end;
+
+procedure TfrmModalFacturarAlbaranes.FormKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  // Ctrl+Enter sobre empresa / proveedor abre su caja de busqueda: el
+  // TcxButtonEdit no dispara el boton elipsis por teclado por si solo.
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    if btnEmpresa.Focused then
+    begin
+      Key := 0;
+      btnEmpresaPropertiesButtonClick(btnEmpresa, 0);
+    end
+    else if btnProveedor.Focused then
+    begin
+      Key := 0;
+      btnProveedorPropertiesButtonClick(btnProveedor, 0);
+    end;
+  end;
 end;
 
 procedure TfrmModalFacturarAlbaranes.DefinirParamsSp;
