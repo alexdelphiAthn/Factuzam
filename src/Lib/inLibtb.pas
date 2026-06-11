@@ -92,7 +92,12 @@ type
                                     EventoUpdateTotal: TUpdateTotalEvent = nil
                                    );
 
-  function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string): string;
+  function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string;
+                               const AAlmacen: string = ''): string;
+  function ObtenerSeriePropiaAlmacen(const AEmpresa, ATipoDoc,
+                                     AAlmacen: string): string;
+  procedure CargarSeriesEmpresa(const AEmpresa, ATipoDoc: string;
+                                AItems: TStrings);
   function CheckOpenDatasets(AModule: TDataModule): Boolean;
   procedure CancelarDatasets(AModule: TDataModule);
   procedure GrabarDatasets(AModule: TDataModule);
@@ -389,30 +394,121 @@ begin
   end;
 end;
 
-function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string): string;
+// Serie ligada en exclusiva a un almacen (CODIGO_ALM_EMPSER = almacen)
+// para la empresa + tipo de documento, vigente por fechas. Devuelve ''
+// si el almacen no tiene serie propia. Es la pieza que usa el flujo
+// "un documento por almacen": cada documento toma la serie de SU almacen.
+function ObtenerSeriePropiaAlmacen(const AEmpresa, ATipoDoc,
+                                   AAlmacen: string): string;
 var
   q: TUniQuery;
 begin
   Result := '';
-  if (Trim(AEmpresa) = '') or (Trim(ATipoDoc) = '') then
-    Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := oConn;
-    q.SQL.Text :=
-      'SELECT EMPSER FROM fza_empresas_series ' +
-      ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-      '   AND TIPO_DOC_EMPSER   = :tip ' +
-      '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
-      '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
-      ' LIMIT 1';
-    q.ParamByName('emp').AsString := AEmpresa;
-    q.ParamByName('tip').AsString := ATipoDoc;
-    q.Open;
-    if not q.IsEmpty then
-      Result := q.FieldByName('EMPSER').AsString;
-  finally
-    FreeAndNil(q);
+  if (Trim(AEmpresa) <> '') and (Trim(ATipoDoc) <> '') and
+     (Trim(AAlmacen) <> '') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := oConn;
+      q.SQL.Text :=
+        'SELECT EMPSER FROM fza_empresas_series ' +
+        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
+        '   AND TIPO_DOC_EMPSER   = :tip ' +
+        '   AND CODIGO_ALM_EMPSER = :alm ' +
+        '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
+        '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+        ' LIMIT 1';
+      q.ParamByName('emp').AsString := AEmpresa;
+      q.ParamByName('tip').AsString := ATipoDoc;
+      q.ParamByName('alm').AsString := AAlmacen;
+      q.Open;
+      if not q.IsEmpty then
+        Result := q.FieldByName('EMPSER').AsString;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
+// Serie por defecto de la empresa para un tipo de documento. Si llega
+// AAlmacen, la prioridad es: 1) serie propia del almacen
+// (CODIGO_ALM_EMPSER = almacen), 2) serie generica (sin almacen). Sin
+// AAlmacen se mantiene el comportamiento historico: primera serie del
+// tipo, este o no ligada a un almacen.
+function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string;
+                             const AAlmacen: string = ''): string;
+var
+  q: TUniQuery;
+  sFiltroAlm: string;
+begin
+  Result := '';
+  if (Trim(AEmpresa) <> '') and (Trim(ATipoDoc) <> '') then
+  begin
+    if Trim(AAlmacen) <> '' then
+      Result := ObtenerSeriePropiaAlmacen(AEmpresa, ATipoDoc, AAlmacen);
+    if Result = '' then
+    begin
+      // Con almacen informado, la serie generica no puede ser una
+      // ligada a OTRO almacen: se exige CODIGO_ALM_EMPSER vacio.
+      sFiltroAlm := '';
+      if Trim(AAlmacen) <> '' then
+        sFiltroAlm := '   AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' ';
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := oConn;
+        q.SQL.Text :=
+          'SELECT EMPSER FROM fza_empresas_series ' +
+          ' WHERE CODIGO_EMP_EMPSER = :emp ' +
+          '   AND TIPO_DOC_EMPSER   = :tip ' +
+          '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
+          '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+          sFiltroAlm +
+          ' LIMIT 1';
+        q.ParamByName('emp').AsString := AEmpresa;
+        q.ParamByName('tip').AsString := ATipoDoc;
+        q.Open;
+        if not q.IsEmpty then
+          Result := q.FieldByName('EMPSER').AsString;
+      finally
+        FreeAndNil(q);
+      end;
+    end;
+  end;
+end;
+
+// Rellena AItems con las series vigentes de la empresa para el tipo de
+// documento (genericas y ligadas a almacen). Alimenta los combos de
+// serie de los modales: el usuario ve todas y puede cambiar la
+// propuesta que acompanya al almacen.
+procedure CargarSeriesEmpresa(const AEmpresa, ATipoDoc: string;
+                              AItems: TStrings);
+var
+  q: TUniQuery;
+begin
+  AItems.Clear;
+  if (Trim(AEmpresa) <> '') and (Trim(ATipoDoc) <> '') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := oConn;
+      q.SQL.Text :=
+        'SELECT DISTINCT EMPSER FROM fza_empresas_series ' +
+        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
+        '   AND TIPO_DOC_EMPSER   = :tip ' +
+        '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
+        '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+        ' ORDER BY EMPSER';
+      q.ParamByName('emp').AsString := AEmpresa;
+      q.ParamByName('tip').AsString := ATipoDoc;
+      q.Open;
+      while not q.Eof do
+      begin
+        AItems.Add(q.FieldByName('EMPSER').AsString);
+        q.Next;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 

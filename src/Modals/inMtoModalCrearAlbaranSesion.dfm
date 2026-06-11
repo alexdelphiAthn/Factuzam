@@ -40,10 +40,11 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
       Caption = 'Serie albar'#225'n'
       Transparent = True
     end
-    object txtSerieAlb: TcxTextEdit
+    object cbbSerieAlb: TcxComboBox
       Left = 430
       Top = 50
       Properties.CharCase = ecUpperCase
+      Properties.DropDownListStyle = lsEditList
       Properties.MaxLength = 12
       TabOrder = 1
       Width = 120
@@ -65,11 +66,12 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
       Caption = 'Serie pedido'
       Transparent = True
     end
-    object txtSeriePed: TcxTextEdit
+    object cbbSeriePed: TcxComboBox
       Left = 430
       Top = 90
       Enabled = False
       Properties.CharCase = ecUpperCase
+      Properties.DropDownListStyle = lsEditList
       Properties.MaxLength = 12
       TabOrder = 3
       Width = 120
@@ -96,6 +98,7 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
       Left = 160
       Top = 178
       Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+      Properties.OnEditValueChanged = cbbAlmacenPropertiesEditValueChanged
       Properties.ListColumns = <
         item
           Caption = 'C'#243'digo'
@@ -170,7 +173,7 @@ inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
           Caption = 'Agrupar todos los almacenes en un solo documento'
         end
         item
-          Caption = 'Generar un documento por almac'#233'n'
+          Caption = 'Generar un documento por almac'#233'n (con la serie de su almac'#233'n)'
         end>
       ItemIndex = 0
       TabOrder = 9
