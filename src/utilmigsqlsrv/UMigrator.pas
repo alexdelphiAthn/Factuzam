@@ -74,6 +74,10 @@ type
     edUsuario:         TEdit;
     lblHilos:          TLabel;
     edHilos:           TEdit;
+    lblFotosRaiz:      TLabel;
+    edFotosRaiz:       TEdit;
+    lblFotosDestino:   TLabel;
+    edFotosDestino:    TEdit;
     GroupListado:      TGroupBox;
     listMigs:          TCheckListBox;
     btnMarcarTodas:    TButton;
@@ -158,7 +162,9 @@ uses
   inLibMigArticulosPropiedades,
   inLibMigArticulosTarifas,
   inLibMigEntorno,
-  inLibMigCompras;
+  inLibMigCompras,
+  inLibMigFotos,
+  inLibPathTokens;
 
 // =========================================================================
 //  Lifecycle
@@ -394,6 +400,12 @@ begin
   FEngine.Registrar('albaranes_compra', 'Albaranes de compra (ocalbpro)',
     'dbo.ocalbpro → fza_albaranes_compra + lineas',
     MigrarAlbaranesCompra);
+  // Fotos legacy por color: ocartcol.ArchivoFoto guarda la ruta SIN la
+  // carpeta raiz; la raiz y el destino se configuran en los campos
+  // "Raiz fotos legacy" / "Destino fotos" de este formulario.
+  FEngine.Registrar('fotos', 'Fotos por color (ocartcol)',
+    'dbo.ocartcol.ArchivoFoto → PNG 300/600/real + fza_articulos_fotos',
+    MigrarFotos);
 end;
 
 procedure TFormMigrator.RecargarListado;
@@ -658,7 +670,7 @@ begin
   if MessageDlg(Format(
        'Se van a BORRAR del destino "%s" todas las filas que haya '#13#10 +
        'creado una migracion previa (USUARIO_ALTA = "%s") en las '#13#10 +
-       '41 tablas que toca el migrador: facturas, movimientos, compras '#13#10 +
+       '42 tablas que toca el migrador: facturas, movimientos, compras '#13#10 +
        '(pedidos y albaranes), caja, inventarios, skus, articulos, '#13#10 +
        'clientes, proveedores, almacenes, empresas, contadores,...).'#13#10#13#10 +
        'NO se tocan tablas de SISTEMA ni filas creadas por otros '#13#10 +
@@ -879,6 +891,10 @@ begin
   FEngine.Usuario := edUsuario.Text;
   if FEngine.Usuario = '' then
     FEngine.Usuario := 'MIGRADOR';
+  // Config del dominio de fotos: la raiz legacy tal cual y el destino
+  // con los tokens tipo $(PUBLICO) expandidos a ruta absoluta real.
+  FEngine.DirFotosOrigen  := Trim(edFotosRaiz.Text);
+  FEngine.DirFotosDestino := ExpandPathTokens(Trim(edFotosDestino.Text));
 
   try
     dmMig.conSrv.Open;
@@ -944,9 +960,11 @@ begin
      (sCodigo = 'skus')                     then Exit(2);
   // Compras (pedidos/albaranes) solo necesitan empresas, almacenes,
   // proveedores y SKUs (waves 0-2); no dependen de movimientos ni facturas.
+  // Fotos va tras articulos y SKUs (wave 2) para que las claves
+  // ART/COLOR ya existan al registrar la foto.
   if (sCodigo = 'inventarios')      or (sCodigo = 'movimientos')
   or (sCodigo = 'ventas')           or (sCodigo = 'pedidos_compra')
-  or (sCodigo = 'albaranes_compra') then Exit(3);
+  or (sCodigo = 'albaranes_compra') or (sCodigo = 'fotos') then Exit(3);
   // facturas va DESPUES de movimientos: al terminar enlaza cada movimiento
   // con su factura (REF_MOV) y necesita los movimientos ya migrados.
   if (sCodigo = 'facturas') then Exit(4);
@@ -1305,6 +1323,10 @@ begin
       oIni.ReadString ('General', 'Usuario', 'MIGRADOR');
     edHilos.Text      :=
       IntToStr(oIni.ReadInteger('General', 'MaxHilos', 4));
+    edFotosRaiz.Text    :=
+      oIni.ReadString('Fotos', 'RaizLegacy', 'C:\fotos');
+    edFotosDestino.Text :=
+      oIni.ReadString('Fotos', 'Destino', '$(PUBLICO)\Factuzam\fotos');
   finally
     oIni.Free;
   end;
@@ -1329,6 +1351,8 @@ begin
     oIni.WriteString ('General', 'Usuario',            edUsuario.Text);
     oIni.WriteInteger('General', 'MaxHilos',
                       StrToIntDef(edHilos.Text, 4));
+    oIni.WriteString ('Fotos',   'RaizLegacy',         edFotosRaiz.Text);
+    oIni.WriteString ('Fotos',   'Destino',            edFotosDestino.Text);
   finally
     oIni.Free;
   end;

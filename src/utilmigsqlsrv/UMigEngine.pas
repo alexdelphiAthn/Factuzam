@@ -60,6 +60,11 @@ type
     FOnLog:          TMigLogProc;
     FOnProgress:     TMigProgressProc;
     FUsuario:        string;
+    // Config del dominio de fotos (inLibMigFotos): carpeta raiz local
+    // de las fotos legacy y carpeta destino appDirFotos (ya expandida
+    // por la UI, sin tokens $(...)).
+    FDirFotosOrigen: string;
+    FDirFotosDestino: string;
     FItems:          TObjectList<TMigItem>;
     FItemsCompartidos: Boolean;  // True si FItems no nos pertenece
     FCurrentDominio:      string;
@@ -113,6 +118,10 @@ type
     property OnLog:     TMigLogProc      read FOnLog      write FOnLog;
     property OnProgress:TMigProgressProc read FOnProgress write FOnProgress;
     property Usuario:   string           read FUsuario    write FUsuario;
+    property DirFotosOrigen: string      read FDirFotosOrigen
+                                         write FDirFotosOrigen;
+    property DirFotosDestino: string     read FDirFotosDestino
+                                         write FDirFotosDestino;
 
     procedure Log(const sMensaje: string); overload;
     procedure Log(const sFormato: string;
@@ -239,6 +248,8 @@ begin
   FOnLog               := Master.FOnLog;
   FOnProgress          := Master.FOnProgress;
   FUsuario             := Master.FUsuario;
+  FDirFotosOrigen      := Master.FDirFotosOrigen;
+  FDirFotosDestino     := Master.FDirFotosDestino;
   // Apuntamos al master para que Cancelar/IsCancelado lean su
   // estado compartido.
   FMaster              := Master;
