@@ -107,6 +107,8 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_proveedores`                    | `PRV`     |
 | `fza_proveedores_familias`           | `PF`      |
 | `fza_proveedores_familias_conjuntos` | `PFC`     |
+| `fza_proveedores_kits`               | `PRVKIT`  |
+| `fza_proveedores_kits_det`           | `PRVKITD` |
 | `fza_recibos`                        | `REC`     |
 | `fza_remesas_compra`                 | `REMC`    |
 | `fza_tarifas`                        | `TAR`     |

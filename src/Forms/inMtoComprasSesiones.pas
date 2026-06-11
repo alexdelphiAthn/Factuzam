@@ -184,6 +184,67 @@ type
     glDocs: TcxGridLevel;
 
     // ------------------------------------------------------------------
+    // Pestaña Proveedor: ficha del proveedor de la sesion (solo lectura),
+    // sus defectos (margen, sistema de tallas) y su biblioteca de kits.
+    // ------------------------------------------------------------------
+    tsProveedor          : TcxTabSheet;
+    dsPrvFicha           : TDataSource;
+    pnlProvIzq           : TPanel;
+    gbProvFicha          : TcxGroupBox;
+    lblProvCodigo        : TcxLabel;
+    txtProvCodigo        : TcxDBTextEdit;
+    lblProvNif           : TcxLabel;
+    txtProvNif           : TcxDBTextEdit;
+    lblProvRazon         : TcxLabel;
+    txtProvRazon         : TcxDBTextEdit;
+    lblProvNombre        : TcxLabel;
+    txtProvNombre        : TcxDBTextEdit;
+    lblProvTelefono      : TcxLabel;
+    txtProvTelefono      : TcxDBTextEdit;
+    lblProvMovil         : TcxLabel;
+    txtProvMovil         : TcxDBTextEdit;
+    lblProvEmail         : TcxLabel;
+    txtProvEmail         : TcxDBTextEdit;
+    lblProvDireccion     : TcxLabel;
+    txtProvDireccion     : TcxDBTextEdit;
+    lblProvPoblacion     : TcxLabel;
+    txtProvPoblacion     : TcxDBTextEdit;
+    lblProvProvincia     : TcxLabel;
+    txtProvProvincia     : TcxDBTextEdit;
+    lblProvCPostal       : TcxLabel;
+    txtProvCPostal       : TcxDBTextEdit;
+    lblProvPais          : TcxLabel;
+    txtProvPais          : TcxDBTextEdit;
+    lblProvContacto      : TcxLabel;
+    txtProvContacto      : TcxDBTextEdit;
+    lblProvTelContacto   : TcxLabel;
+    txtProvTelContacto   : TcxDBTextEdit;
+    lblProvMargen        : TcxLabel;
+    txtProvMargen        : TcxDBTextEdit;
+    lblProvTallas        : TcxLabel;
+    txtProvTallas        : TcxDBTextEdit;
+    btnIrProveedor       : TcxButton;
+    gbProvKits           : TcxGroupBox;
+    pnlProvKitsTop       : TPanel;
+    btnAplicarKitProv    : TcxButton;
+    lblProvKitsHint      : TcxLabel;
+    cxgrdPrvKits         : TcxGrid;
+    tvPrvKits            : TcxGridDBTableView;
+    dbcPrvKitCodigo      : TcxGridDBColumn;
+    dbcPrvKitNombre      : TcxGridDBColumn;
+    dbcPrvKitSistema     : TcxGridDBColumn;
+    dbcPrvKitDescripcion : TcxGridDBColumn;
+    glPrvKits            : TcxGridLevel;
+    cxgrdPrvKitsDet      : TcxGrid;
+    tvPrvKitsDet         : TcxGridDBTableView;
+    dbcPrvKitDetValor    : TcxGridDBColumn;
+    dbcPrvKitDetCantidad : TcxGridDBColumn;
+    glPrvKitsDet         : TcxGridLevel;
+    // Boton "Aplicar kit" de la barra de Lineas (popup con los kits del
+    // proveedor; aplica sobre la linea con foco).
+    btnAplicarKit        : TcxButton;
+
+    // ------------------------------------------------------------------
     // Eventos
     // ------------------------------------------------------------------
     procedure FormCreate(Sender: TObject);
@@ -231,6 +292,10 @@ type
                                                  ALineaDestino: Integer);
     procedure btnProveedorPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure btnAplicarKitClick(Sender: TObject);
+    procedure btnAplicarKitProvClick(Sender: TObject);
+    procedure btnIrProveedorClick(Sender: TObject);
+    procedure tvPrvKitsDblClick(Sender: TObject);
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
@@ -276,10 +341,22 @@ type
     FModeloTimerResolve : TTimer;
     FModeloPrvCargado   : string;
     FModeloRefPend      : string;
+    // --- Pestaña Proveedor + kits ---
+    // FPrvFichaCargado evita reabrir la ficha/kits si el proveedor no ha
+    // cambiado al navegar. FMenuKits es el popup del boton "Aplicar kit"
+    // de la barra de Lineas; FMenuKitsCodigos guarda el CODIGO_PRVKIT de
+    // cada item (el Tag indexa este array).
+    FPrvFichaCargado    : string;
+    FMenuKits           : TPopupMenu;
+    FMenuKitsCodigos    : TArray<string>;
     procedure CargarBasicosColor;
     procedure CargarConjuntosTallas;
     procedure BuscarProveedor;
     procedure ActualizarLabelProveedor;
+    procedure RecargarProveedorSesion;
+    procedure CopiarDefectosProveedor;
+    procedure AplicarKitALineaActual(const ACodigoKit: string);
+    procedure MenuKitItemClick(Sender: TObject);
     function  DispararEditButtonLineaActiva: Boolean;
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
@@ -505,8 +582,13 @@ begin
     FGestorTallas.CargarCantidadesTodasLineas;
     FGestorTallas.ActualizarCaptionsLineaActiva;
   end;
+  // Pestaña Proveedor: ficha (solo lectura) + kits del proveedor.
+  dsPrvFicha.DataSet := Dmm.unqryPrvFicha;
+  tvPrvKits.DataController.DataSource    := Dmm.dsPrvKits;
+  tvPrvKitsDet.DataController.DataSource := Dmm.dsPrvKitsDet;
   // Pintar el rotulo del proveedor de la sesion enfocada al abrir el form.
   ActualizarLabelProveedor;
+  RecargarProveedorSesion;
 end;
 
 procedure TfrmMtoComprasSesiones.dsTablaGDataChangeHook(Sender: TObject;
@@ -519,6 +601,13 @@ begin
     ActualizarLabelProveedor;
     // Lista de modelos del desplegable "Modelo prov." acotada al proveedor.
     RecargarModelos;
+    // Pestaña Proveedor: ficha + kits del proveedor de la sesion.
+    RecargarProveedorSesion;
+    // Defectos del proveedor (margen %, sistema de tallas) solo cuando el
+    // usuario esta cambiando el proveedor en la cabecera, no al navegar.
+    if (Field <> nil) and (Dmm <> nil) and
+       (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+      CopiarDefectosProveedor;
   end;
   // FIX: El formato distribuido solo se puede cambiar al crear la sesión.
   // Si el estado no es dsInsert, ponemos el check como ReadOnly.
@@ -590,9 +679,31 @@ end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinAfterInsertHook(
   DataSet: TDataSet);
+var
+  iAc : Integer;
+  arr : TArrPosConjunto;
+  i   : Integer;
 begin
-  // Delegar al handler del DM (asigna FKs y numero de linea)
+  // Delegar al handler del DM (asigna FKs, numero de linea y el sistema
+  // de tallas por defecto de la cabecera, heredado del proveedor)
   Dmm.unqrySesionLinAfterInsert(DataSet);
+  // Si la linea nueva trae sistema heredado, pintar ya sus columnas de
+  // talla. OJO: aqui NO se puede usar RecalcularMaxColumnas (itera el
+  // dataset con First/Next y forzaria un Post implicito de la linea
+  // recien insertada); solo EXPANDIMOS columnas leyendo el conjunto.
+  iAc := DataSet.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+  if Assigned(FGestorTallas) and (iAc > 0) then
+  begin
+    arr := FGestorTallas.GetPosicionesConjunto(iAc);
+    for i := 0 to CANT_TALLAS_MAX - 1 do
+    begin
+      if (FTallaColumns[i] <> nil) and (i < Length(arr)) then
+      begin
+        FTallaColumns[i].Visible := True;
+        FTallaColumns[i].Caption := arr[i].Valor;
+      end;
+    end;
+  end;
   // Foco en codigo de articulo
   tvLineas.Controller.FocusedColumn := dbcLinCodArt;
   if tvLineas.Controller.EditingController <> nil then
@@ -971,6 +1082,176 @@ begin
   end
   else
     lblProveedorNombre.Caption := sCodigo + ' - (proveedor no encontrado)';
+end;
+
+// ===========================================================================
+//   Pestaña Proveedor — ficha, defectos y kits de cantidades por talla
+// ===========================================================================
+
+procedure TfrmMtoComprasSesiones.RecargarProveedorSesion;
+var
+  sPrv : string;
+begin
+  // Reabre la ficha y los kits solo si el proveedor cambia (o si la query
+  // quedo cerrada tras un ResetForm). Se invoca al navegar de sesion y al
+  // cambiar CODIGO_PRV_SES.
+  sPrv := '';
+  if (Dmm <> nil) and Assigned(Dmm.unqryTablaG) and Dmm.unqryTablaG.Active and
+     (not Dmm.unqryTablaG.IsEmpty) then
+    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if (Dmm <> nil) and
+     ((not SameText(sPrv, FPrvFichaCargado)) or
+      ((sPrv <> '') and (not Dmm.unqryPrvFicha.Active))) then
+  begin
+    FPrvFichaCargado := sPrv;
+    Dmm.RecargarProveedorSesion(sPrv);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.CopiarDefectosProveedor;
+begin
+  // Copia a la cabecera los defectos del proveedor recien elegido:
+  //   PORCENTAJE_MARGEN_PRV -> PORCENTAJE_MARGEN_SES
+  //   ID_AC_TALLAS_PRV      -> ID_AC_PIVOT_SES (las lineas nuevas lo
+  //                            heredan; es el sistema que se muestra en
+  //                            las columnas de talla del grid).
+  // Solo pisa cuando el proveedor tiene valor.
+  if (Dmm <> nil) and Dmm.unqryPrvFicha.Active and
+     (not Dmm.unqryPrvFicha.IsEmpty) then
+  begin
+    if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+      Dmm.unqryTablaG.Edit;
+    if Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat > 0 then
+      Dmm.unqryTablaG.FieldByName('PORCENTAJE_MARGEN_SES').AsFloat :=
+        Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat;
+    if Dmm.unqryPrvFicha.FieldByName('ID_AC_TALLAS_PRV').AsInteger > 0 then
+      Dmm.unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger :=
+        Dmm.unqryPrvFicha.FieldByName('ID_AC_TALLAS_PRV').AsInteger;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.AplicarKitALineaActual(
+  const ACodigoKit: string);
+var
+  sPrv     : string;
+  sResumen : string;
+  iLinea   : Integer;
+  idxRec   : Integer;
+begin
+  // Vuelca las cantidades del kit sobre la linea con foco y repinta la
+  // fila igual que tras teclear a mano (totales + celdas no-bound).
+  sPrv := '';
+  if not Dmm.unqryTablaG.IsEmpty then
+    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if AplicarKitProveedorALinea(Dmm, FGestorTallas, sPrv, ACodigoKit,
+                               sResumen) then
+  begin
+    iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+    if Assigned(FGestorTallas) then
+    begin
+      FGestorTallas.RefrescarTotalesLineaActual;
+      idxRec := tvLineas.Controller.FocusedRecordIndex;
+      if idxRec >= 0 then
+        FGestorTallas.CargarCantidadesUnaLinea(idxRec, iLinea);
+    end;
+    LogSes(Format('AplicarKit %s sobre linea %d', [ACodigoKit, iLinea]));
+    // Aviso solo si alguna talla del kit no caso con el sistema de la linea.
+    if sResumen <> '' then
+      MessageDlg(sResumen, mtInformation, [mbOk], 0);
+  end
+  else
+    MessageDlg(sResumen, mtWarning, [mbOk], 0);
+end;
+
+procedure TfrmMtoComprasSesiones.btnAplicarKitClick(Sender: TObject);
+var
+  oItem : TMenuItem;
+  pt    : TPoint;
+begin
+  inherited;
+  // Popup con los kits del proveedor de la sesion; el elegido se aplica
+  // sobre la linea con foco del grid de articulos.
+  if Dmm.unqrySesionLin.IsEmpty then
+    MessageDlg('Selecciona o crea una linea de articulo primero.',
+               mtInformation, [mbOk], 0)
+  else if (not Dmm.unqryPrvKits.Active) or Dmm.unqryPrvKits.IsEmpty then
+    MessageDlg('El proveedor de la sesion no tiene kits definidos. Se ' +
+               'crean en Proveedores, pestaña Compras.',
+               mtInformation, [mbOk], 0)
+  else
+  begin
+    if FMenuKits = nil then
+      FMenuKits := TPopupMenu.Create(Self);
+    FMenuKits.Items.Clear;
+    SetLength(FMenuKitsCodigos, 0);
+    Dmm.unqryPrvKits.DisableControls;
+    try
+      Dmm.unqryPrvKits.First;
+      while not Dmm.unqryPrvKits.Eof do
+      begin
+        oItem := TMenuItem.Create(FMenuKits);
+        oItem.Caption := StringReplace(
+          Dmm.unqryPrvKits.FieldByName('CODIGO_PRVKIT').AsString + ' - ' +
+          Dmm.unqryPrvKits.FieldByName('NOMBRE_PRVKIT').AsString,
+          '&', '&&', [rfReplaceAll]);
+        oItem.Tag     := Length(FMenuKitsCodigos);
+        oItem.OnClick := MenuKitItemClick;
+        FMenuKits.Items.Add(oItem);
+        SetLength(FMenuKitsCodigos, Length(FMenuKitsCodigos) + 1);
+        FMenuKitsCodigos[High(FMenuKitsCodigos)] :=
+          Dmm.unqryPrvKits.FieldByName('CODIGO_PRVKIT').AsString;
+        Dmm.unqryPrvKits.Next;
+      end;
+      Dmm.unqryPrvKits.First;
+    finally
+      Dmm.unqryPrvKits.EnableControls;
+    end;
+    pt := btnAplicarKit.ClientToScreen(Point(0, btnAplicarKit.Height));
+    FMenuKits.Popup(pt.X, pt.Y);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.MenuKitItemClick(Sender: TObject);
+begin
+  if Sender is TMenuItem then
+  begin
+    if (TMenuItem(Sender).Tag >= 0) and
+       (TMenuItem(Sender).Tag <= High(FMenuKitsCodigos)) then
+      AplicarKitALineaActual(FMenuKitsCodigos[TMenuItem(Sender).Tag]);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.btnAplicarKitProvClick(Sender: TObject);
+begin
+  inherited;
+  // Aplica el kit seleccionado en el grid de la pestaña Proveedor sobre
+  // la linea con foco del grid de articulos.
+  if (not Dmm.unqryPrvKits.Active) or Dmm.unqryPrvKits.IsEmpty then
+    MessageDlg('El proveedor de la sesion no tiene kits definidos. Se ' +
+               'crean en Proveedores, pestaña Compras.',
+               mtInformation, [mbOk], 0)
+  else
+    AplicarKitALineaActual(
+      Dmm.unqryPrvKits.FieldByName('CODIGO_PRVKIT').AsString);
+end;
+
+procedure TfrmMtoComprasSesiones.tvPrvKitsDblClick(Sender: TObject);
+begin
+  btnAplicarKitProvClick(Sender);
+end;
+
+procedure TfrmMtoComprasSesiones.btnIrProveedorClick(Sender: TObject);
+var
+  sPrv : string;
+begin
+  inherited;
+  sPrv := '';
+  if not Dmm.unqryTablaG.IsEmpty then
+    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
+  if sPrv = '' then
+    ShowMto(Self.Owner, 'Proveedores')
+  else
+    ShowMto(Self.Owner, 'Proveedores', sPrv);
 end;
 
 // ===========================================================================
