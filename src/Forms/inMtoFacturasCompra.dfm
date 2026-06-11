@@ -452,6 +452,15 @@ inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
                   TabOrder = 1
                   OnClick = btnRegistrarPagoClick
                 end
+                object btnVerPagos: TcxButton
+                  Left = 344
+                  Top = 5
+                  Width = 160
+                  Height = 26
+                  Caption = 'Ver pagos'
+                  TabOrder = 2
+                  OnClick = btnVerPagosClick
+                end
               end
               object cxgrdEfectos: TcxGrid
                 Left = 0
