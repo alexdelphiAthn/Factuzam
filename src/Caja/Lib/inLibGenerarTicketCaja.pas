@@ -24,10 +24,15 @@ procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string = 'DEBUG');
 
-// Apertura manual del cajon portamonedas sin venta asociada (tecla F9 en
-// caja). Comprueba el permiso 'caja.abrirCajon' y manda el pulso de apertura
-// por la impresora de tickets de parametros (vgerDefPrinter -> oNomImpresoraCaja).
+// Apertura manual del cajon portamonedas sin venta asociada (tecla F9
+// global en cualquier ventana del programa). Comprueba el permiso
+// 'caja.abrirCajon' y manda el pulso de apertura por la impresora de
+// tickets de parametros (vgerDefPrinter -> oNomImpresoraCaja).
 procedure AbrirCajonSinVenta;
+
+// True si hay impresora de tickets real asignada en parametros
+// (oNomImpresoraCaja con valor no vacio y distinto de 'DEBUG').
+function ImpresoraCajaAsignada: Boolean;
 
 implementation
 
@@ -140,22 +145,28 @@ begin
   end;
 end;
 
+function ImpresoraCajaAsignada: Boolean;
+var
+  sImpresora: string;
+begin
+  sImpresora := Trim(oNomImpresoraCaja);
+  Result := (sImpresora <> '') and (UpperCase(sImpresora) <> 'DEBUG');
+end;
+
 procedure AbrirCajonSinVenta;
 var
   Ticket: TTicketTermico;
-  sImpresora: string;
 begin
-  // Reservada a F9 en caja. Si no hay permiso o impresora valida, avisa y no
+  // Lanzada por F9 global. Si no hay permiso o impresora valida, avisa y no
   // hace nada; en otro caso manda solo el pulso de apertura del cajon.
-  sImpresora := oNomImpresoraCaja;
   if Assigned(oPermisos) and (not oPermisos.TienePermiso('caja.abrirCajon')) then
     ShowMessage('No tiene permiso para abrir el cajón.')
-  else if (Trim(sImpresora) = '') or (UpperCase(sImpresora) = 'DEBUG') then
+  else if not ImpresoraCajaAsignada then
     ShowMessage('No hay impresora de tickets configurada en parámetros ' +
                 '(vgerDefPrinter); no se puede abrir el cajón.')
   else
   begin
-    Ticket := TTicketTermico.Create(sImpresora);
+    Ticket := TTicketTermico.Create(oNomImpresoraCaja);
     try
       Ticket.AbrirCajon;
       Ticket.Imprimir;
