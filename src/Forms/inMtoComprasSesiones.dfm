@@ -106,13 +106,15 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 0
             Transparent = True
           end
-          object txtSerie: TcxDBTextEdit
+          object cbbSerie: TcxDBComboBox
             Left = 80
             Top = 20
             DataBinding.DataField = 'SERIE_SES'
             DataBinding.DataSource = dsTablaG
             Properties.CharCase = ecUpperCase
+            Properties.DropDownListStyle = lsEditList
             Properties.MaxLength = 12
+            Properties.OnInitPopup = cbbSeriePropertiesInitPopup
             TabOrder = 1
             Width = 70
           end
@@ -681,7 +683,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Top = 6
                   Width = 200
                   Height = 28
-                  Caption = 'Ir a documento (F12)'
+                  Caption = 'Ir a documento'
                   LookAndFeel.Kind = lfFlat
                   LookAndFeel.NativeStyle = False
                   TabOrder = 0
@@ -692,7 +694,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Top = 10
                   Caption = 
                     'Pedidos y albaranes generados al materializar la sesi'#243'n. Doble c' +
-                    'lick o F12 navega al documento.'
+                    'lick o el bot'#243'n lateral "Ir a Ped / Alb" navega al documento.'
                   TabOrder = 1
                   Transparent = True
                 end
@@ -1247,6 +1249,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       TabOrder = 3
       WordWrap = True
       OnClick = btnImprimirClick
+    end
+    object btnIrPedAlb: TcxButton
+      Left = 0
+      Top = 437
+      Width = 137
+      Height = 40
+      Caption = 'Ir a Ped / Alb'
+      LookAndFeel.Kind = lfFlat
+      LookAndFeel.NativeStyle = False
+      TabOrder = 5
+      WordWrap = True
+      OnClick = btnIrADocClick
     end
   end
   object dlgFoto: TOpenDialog

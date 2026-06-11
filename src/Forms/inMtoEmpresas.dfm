@@ -1170,6 +1170,16 @@
                   TabOrder = 0
                   OnClick = btnAddSerieClick
                 end
+                object btnCrearSeriesDoc: TcxButton
+                  Left = 6
+                  Top = 44
+                  Width = 108
+                  Height = 48
+                  Caption = 'Crear series doc / almac'#233'n'
+                  TabOrder = 1
+                  WordWrap = True
+                  OnClick = btnCrearSeriesDocClick
+                end
               end
               object pnlSeriesCli: TPanel
                 Left = 0

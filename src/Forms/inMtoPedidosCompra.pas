@@ -80,7 +80,9 @@ type
     lblNroPedido:    TcxLabel;
     txtNUMERO_PEDC:  TcxDBTextEdit;
     lblSeriePedido:  TcxLabel;
-    txtSERIE_PEDC:   TcxDBTextEdit;
+    // Serie en combo editable: lista las series 'PC' de la empresa
+    // (fza_empresas_series) y permite teclear una nueva.
+    cbbSERIE_PEDC:   TcxDBComboBox;
     lblFechaPedido:  TcxLabel;
     dteFECHA_PEDC:   TcxDBDateEdit;
     lblFechaPrevista:TcxLabel;
@@ -157,6 +159,7 @@ type
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure cbbSERIE_PEDCPropertiesInitPopup(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -203,6 +206,9 @@ type
     // Devuelve el almacen efectivo de la primera linea en modo vertical
     // cuyo "A recibir" sea > 0. Sin tecleos devuelve ''.
     function  PrimerAlmacenARecibirVertical: string;
+    // Clamp de la columna "A recibir" en modo vertical: el maximo es el
+    // pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA).
+    procedure ARecibirVerticalEditValueChanged(Sender: TObject);
     // ApplyBestFit + ensanche para la columna Color (el cuadradito de
     // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
     procedure BestFitConSwatch;
@@ -224,6 +230,7 @@ uses
   inLibFotos,
   inLibAtributosPaleta,
   inLibPedidosCompra,
+  inLibtb,
   inMtoModalSelAlmacenPedido, inLibShowMto;
 
 {$R *.dfm}
@@ -304,6 +311,13 @@ begin
   // "Verde botel..." o "MARRO chocolat...".
   dmmPedidosCompra.unqryPedidosCompraLineas.AfterOpen :=
                                              unqryLineasAfterOpenHook;
+  // Clamp de "A recibir" en modo vertical: la columna no-bound se crea
+  // en el dfm sin handler; lo enganchamos aqui para ajustar al maximo
+  // pendiente lo que teclee el usuario.
+  if Assigned(colLineaPedcARecibir) and
+     (colLineaPedcARecibir.Properties is TcxCurrencyEditProperties) then
+    TcxCurrencyEditProperties(colLineaPedcARecibir.Properties).
+      OnEditValueChanged := ARecibirVerticalEditValueChanged;
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
@@ -1038,6 +1052,79 @@ begin
     ds.FreeBookmark(bk);
     ds.EnableControls;
     FreeAndNil(res);
+  end;
+end;
+
+// Clamp del "A recibir" tecleado en modo vertical: si supera el
+// pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA) se ajusta
+// automaticamente al maximo y se avisa con un beep. La reasignacion
+// de EditValue re-dispara el handler una vez, ya con valor valido.
+procedure TfrmMtoPedidosCompra.ARecibirVerticalEditValueChanged(
+  Sender: TObject);
+var
+  ed     : TcxCustomEdit;
+  ds     : TUniQuery;
+  vEdit  : Variant;
+  rValor : Double;
+  rPdte  : Double;
+begin
+  // La columna solo se ve en modo vertical; en pivote el clamp lo hace
+  // la libreria sobre las celdas talla.
+  if (Sender is TcxCustomEdit) and (dmmPedidosCompra <> nil) and
+     (not (Assigned(FPivote) and FPivote.Activo)) then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
+    begin
+      ed    := TcxCustomEdit(Sender);
+      vEdit := ed.EditValue;
+      rValor := 0;
+      if not (VarIsNull(vEdit) or VarIsEmpty(vEdit)) then
+      begin
+        if VarIsNumeric(vEdit) then
+          rValor := vEdit
+        else
+          rValor := StrToFloatDef(VarToStr(vEdit), 0);
+      end;
+      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+      if rPdte < 0 then
+        rPdte := 0;
+      if rValor > rPdte then
+      begin
+        MessageBeep(MB_ICONWARNING);
+        if rPdte > 0 then
+          ed.EditValue := rPdte
+        else
+          ed.EditValue := Null;
+      end;
+    end;
+  end;
+end;
+
+// Combo de serie de la cabecera: al desplegar se recargan las series
+// 'PC' vigentes de la empresa del pedido. Si la empresa no tiene
+// ninguna, se avisa y se ofrece ir a Empresas -> Series a crearlas.
+procedure TfrmMtoPedidosCompra.cbbSERIE_PEDCPropertiesInitPopup(
+  Sender: TObject);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := '';
+  if (dmmPedidosCompra <> nil) and dmmPedidosCompra.unqryTablaG.Active then
+    sEmpresa := Trim(dmmPedidosCompra.unqryTablaG.
+                       FieldByName('CODIGO_EMP_PEDC').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+  CargarSeriesEmpresa(sEmpresa, 'PC', cbbSERIE_PEDC.Properties.Items);
+  if cbbSERIE_PEDC.Properties.Items.Count = 0 then
+  begin
+    if MessageDlg('No hay series de pedidos de compra (tipo PC) para la ' +
+                  'empresa "' + sEmpresa + '".' + sLineBreak +
+                  'Se dan de alta en Empresas -> Series. ' +
+                  '¿Abrir el mantenimiento de Empresas ahora?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      ShowMto(Self.Owner, 'Empresas');
   end;
 end;
 
