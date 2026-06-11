@@ -86,6 +86,26 @@ inherited frmMtoEfectosCompra: TfrmMtoEfectosCompra
       end
     end
   end
+  inherited pButtonRightBar: TPanel
+    object btnRegistrarPago: TcxButton
+      Left = 0
+      Top = 200
+      Width = 137
+      Height = 44
+      Caption = 'Registrar pago'
+      TabOrder = 2
+      OnClick = btnRegistrarPagoClick
+    end
+    object btnVerPagos: TcxButton
+      Left = 0
+      Top = 250
+      Width = 137
+      Height = 44
+      Caption = 'Ver pagos'
+      TabOrder = 3
+      OnClick = btnVerPagosClick
+    end
+  end
   inherited dsTablaG: TDataSource
     DataSet = dmEfectosCompra.unqryTablaG
   end
