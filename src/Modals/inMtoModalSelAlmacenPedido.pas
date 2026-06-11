@@ -16,7 +16,10 @@
 {       activos. El almacen escogido es definitivo — el albaran y los         }
 {       movimientos se generan contra el, independientemente del que          }
 {       figure en las lineas del pedido.                                       }
-{    2. Serie del albaran (texto, default = serie del pedido).                 }
+{    2. Serie del albaran (combo con las series tipo 'AB' de la empresa).     }
+{       La serie acompanya al almacen: al elegir almacen se propone la         }
+{       serie que este lleve (CODIGO_ALM_EMPSER); fallback = serie del         }
+{       pedido. El usuario puede cambiarla en el combo.                        }
 {    3. Ref. proveedor (texto, default = ref del pedido).                      }
 {    4. Temporada (lookup, de fza_propiedades_valores filtrado a               }
 {       ID_PROP_PV='TEMPORADA').                                               }
@@ -56,7 +59,7 @@ type
     unqryAlmacenes: TUniQuery;
     dsAlmacenes:    TDataSource;
     lblSerieAlb:    TcxLabel;
-    txtSerieAlb:    TcxTextEdit;
+    cbbSerieAlb:    TcxComboBox;
     lblRefPrv:      TcxLabel;
     txtRefPrv:      TcxTextEdit;
     lblTemporada:   TcxLabel;
@@ -74,12 +77,15 @@ type
     procedure btnAceptarClick(Sender: TObject);
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
+    procedure cbbAlmacenPropertiesEditValueChanged(Sender: TObject);
   private
     procedure CargarAlmacenes;
     procedure ConfigurarLookupTemporada;
+    procedure ProponerSerieAlmacen;
   public
     SeriePedc, NumPedc      : string;
-    SerieAlbDefecto         : string;  // default texto serie
+    CodigoEmpresa           : string;  // empresa del pedido (series 'AB')
+    SerieAlbDefecto         : string;  // fallback si el almacen no lleva serie
     RefProveedorDefecto     : string;
     IdPvTemporadaDefecto    : Integer;
     CodigoAlmacenDefecto    : string;  // default seleccion combo
@@ -95,7 +101,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibtb;
 
 {$R *.dfm}
 
@@ -104,6 +110,7 @@ begin
   inherited;
   Self.Position := poScreenCenter;
   Aceptado             := False;
+  CodigoEmpresa        := '';
   CodigoAlmacen        := '';
   CodigoAlmacenDefecto := '';
   SerieAlbaran         := '';
@@ -122,8 +129,9 @@ begin
     [SeriePedc, NumPedc]);
   CargarAlmacenes;
   ConfigurarLookupTemporada;
-  // Defaults.
-  txtSerieAlb.Text := SerieAlbDefecto;
+  // Defaults. El combo de serie ofrece las series 'AB' de la empresa.
+  CargarSeriesEmpresa(CodigoEmpresa, 'AB', cbbSerieAlb.Properties.Items);
+  cbbSerieAlb.Text := SerieAlbDefecto;
   txtRefPrv.Text   := RefProveedorDefecto;
   if IdPvTemporadaDefecto > 0 then
     cbbTemporada.EditValue := IdPvTemporadaDefecto
@@ -137,6 +145,9 @@ begin
     cbbAlmacen.EditValue := CodigoAlmacenDefecto
   else
     cbbAlmacen.EditValue := Null;
+  // Proponer la serie que lleve el almacen por defecto (idempotente si
+  // el evento del combo de almacen ya la propuso al asignar EditValue).
+  ProponerSerieAlmacen;
   if cbbAlmacen.CanFocus then
     cbbAlmacen.SetFocus;
 end;
@@ -168,6 +179,33 @@ begin
     unqryAlmacenes.Open;
   end;
   cbbAlmacen.Properties.ListSource := dsAlmacenes;
+end;
+
+procedure TfrmModalSelAlmacenPedido.ProponerSerieAlmacen;
+var
+  vAlm   : Variant;
+  sAlm   : string;
+  sSerie : string;
+begin
+  // La serie acompanya al almacen: si el almacen elegido lleva serie
+  // propia (fza_empresas_series.CODIGO_ALM_EMPSER) se propone esa; si
+  // no, se mantiene el default historico (SerieAlbDefecto = serie del
+  // pedido). El usuario puede cambiarla en el combo.
+  vAlm := cbbAlmacen.EditValue;
+  if VarIsNull(vAlm) or VarIsEmpty(vAlm) then
+    sAlm := ''
+  else
+    sAlm := Trim(VarToStr(vAlm));
+  sSerie := ObtenerSeriePropiaAlmacen(CodigoEmpresa, 'AB', sAlm);
+  if sSerie = '' then
+    sSerie := SerieAlbDefecto;
+  cbbSerieAlb.Text := sSerie;
+end;
+
+procedure TfrmModalSelAlmacenPedido.cbbAlmacenPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  ProponerSerieAlmacen;
 end;
 
 procedure TfrmModalSelAlmacenPedido.ConfigurarLookupTemporada;
@@ -213,15 +251,15 @@ begin
     if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
     Exit;
   end;
-  if Trim(txtSerieAlb.Text) = '' then
+  if Trim(cbbSerieAlb.Text) = '' then
   begin
     MessageDlg('Indica la serie del albaran.', mtInformation, [mbOk], 0);
-    if txtSerieAlb.CanFocus then txtSerieAlb.SetFocus;
+    if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
     Exit;
   end;
   // Captura resultado.
   CodigoAlmacen := VarToStr(vAlm);
-  SerieAlbaran  := Trim(txtSerieAlb.Text);
+  SerieAlbaran  := Trim(cbbSerieAlb.Text);
   RefProveedor  := Trim(txtRefPrv.Text);
   vTmp := cbbTemporada.EditValue;
   if VarIsNull(vTmp) or VarIsEmpty(vTmp) then

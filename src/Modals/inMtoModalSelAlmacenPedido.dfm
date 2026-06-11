@@ -69,6 +69,7 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
       Properties.DropDownListStyle = lsFixedList
       Properties.DropDownSizeable = True
       Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+      Properties.OnEditValueChanged = cbbAlmacenPropertiesEditValueChanged
       Properties.ListColumns = <
         item
           Caption = 'C'#243'digo'
@@ -89,9 +90,11 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
       Caption = 'Serie del albar'#225'n'
       Transparent = True
     end
-    object txtSerieAlb: TcxTextEdit
+    object cbbSerieAlb: TcxComboBox
       Left = 16
       Top = 304
+      Properties.DropDownListStyle = lsEditList
+      Properties.MaxLength = 12
       TabOrder = 1
       Width = 180
     end
