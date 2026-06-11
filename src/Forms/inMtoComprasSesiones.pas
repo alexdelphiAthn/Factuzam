@@ -1540,7 +1540,13 @@ begin
   try
     frmSet.ConfigurarLookups(Dmm.dsAlmacenes, Dmm.dsTarifas,
                               Dmm.dsTemporadas);
-    // Series por defecto: buscar en Empresas->Series por tipo de documento
+    // Combos de serie: todas las series de la empresa por tipo de
+    // documento. El modal propone la serie que lleve el almacen
+    // elegido (CODIGO_ALM_EMPSER) y re-propone al cambiar de almacen.
+    frmSet.CargarSeries(
+      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
+    // Series por defecto (fallback si el almacen no lleva serie propia
+    // ni la empresa una generica): buscar en Empresas->Series por tipo
     var sSerieAlbDef := ObtenerSerieDefecto(
           Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString, 'AB');
     if sSerieAlbDef = '' then
@@ -2510,6 +2516,9 @@ var
   bUnPorAlm  : Boolean;
   bPrimera   : Boolean;
   sAlm       : string;
+  sEmpresa   : string;
+  sSerieAlbAlm : string;
+  sSeriePedAlm : string;
   sSerPedTmp : string;
   sNumPedTmp : string;
   sSerAlbTmp : string;
@@ -2527,6 +2536,7 @@ begin
   bGenPed   := Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S';
   bGenAlb   := Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S';
   bUnPorAlm := AFrmSet.UnDocPorAlmacen;
+  sEmpresa  := Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
   oConn     := inLibGlobalVar.oConn;
   bTxOwned  := not oConn.InTransaction;
   if bTxOwned then oConn.StartTransaction;
@@ -2564,8 +2574,18 @@ begin
         while not oQry.Eof do
         begin
           sAlm := oQry.FieldByName('ALM').AsString;
+          // La serie acompanya al almacen: si el almacen lleva serie
+          // propia (fza_empresas_series.CODIGO_ALM_EMPSER) el documento
+          // de ese almacen sale con ella; si no, con la elegida en el
+          // modal (que el usuario pudo cambiar en el combo).
+          sSerieAlbAlm := ObtenerSeriePropiaAlmacen(sEmpresa, 'AB', sAlm);
+          if sSerieAlbAlm = '' then
+            sSerieAlbAlm := AFrmSet.SerieAlb;
+          sSeriePedAlm := ObtenerSeriePropiaAlmacen(sEmpresa, 'PC', sAlm);
+          if sSeriePedAlm = '' then
+            sSeriePedAlm := AFrmSet.SeriePed;
           if not MaterializarSesion(Dmm, bGenPed, bGenAlb, AUsuario,
-                                     AFrmSet.SerieAlb, AFrmSet.SeriePed,
+                                     sSerieAlbAlm, sSeriePedAlm,
                                      sSerPedTmp, sNumPedTmp,
                                      sSerAlbTmp, sNumAlbTmp, AErr,
                                      sAlm, not bPrimera) then

@@ -10,9 +10,12 @@
 {                                                                              }
 {  Descripcion:                                                                }
 {    Settings finales antes de materializar una sesion de compra:              }
-{      - Serie del albaran (texto libre).                                      }
+{      - Serie del albaran (combo de series de la empresa, tipo 'AB';          }
+{        por defecto se propone la serie que lleve el almacen elegido).        }
+{      - Serie del pedido (combo analogo, tipo 'PC').                          }
 {      - Fecha del albaran (default = hoy).                                    }
-{      - Almacen destino (lookup, default = cabecera).                         }
+{      - Almacen destino (lookup, default = cabecera). Al cambiarlo se         }
+{        re-propone la serie del nuevo almacen en los combos de serie.         }
 {      - Tarifa de venta (lookup, default = cabecera).                         }
 {      - Temporada (lookup, default = cabecera).                               }
 {      - Flags: generar pedido, generar albaran.                               }
@@ -43,10 +46,10 @@ type
     lblTitulo     : TcxLabel;
     chkGenAlbaran : TcxCheckBox;
     lblSerieAlb   : TcxLabel;
-    txtSerieAlb   : TcxTextEdit;
+    cbbSerieAlb   : TcxComboBox;
     chkGenPedido  : TcxCheckBox;
     lblSeriePed   : TcxLabel;
-    txtSeriePed   : TcxTextEdit;
+    cbbSeriePed   : TcxComboBox;
     lblFecha      : TcxLabel;
     dteFecha      : TcxDateEdit;
     lblAlmacen    : TcxLabel;
@@ -66,8 +69,12 @@ type
     procedure btnSalirClick(Sender: TObject);
     procedure chkGenAlbaranPropertiesEditValueChanged(Sender: TObject);
     procedure chkGenPedidoPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbAlmacenPropertiesEditValueChanged(Sender: TObject);
   private
-    FConfirmed: Boolean;
+    FConfirmed   : Boolean;
+    FEmpresa     : string;
+    FSerieAlbDef : string;
+    FSeriePedDef : string;
     function GetSerieAlb: string;
     function GetSeriePed: string;
     function GetFecha: TDateTime;
@@ -79,10 +86,15 @@ type
     function GetRefPrv: string;
     function GetUnDocPorAlmacen: Boolean;
     procedure ActualizarHabilitados;
+    procedure ProponerSeriesAlmacen;
   public
     /// Conecta los lookups con las queries del DM padre.
     procedure ConfigurarLookups(ADsAlmacenes, ADsTarifas,
                                  ADsTemporadas: TDataSource);
+    /// Carga los combos de serie (albaran 'AB' / pedido 'PC') con las
+    /// series de la empresa y la guarda para re-proponer la serie del
+    /// almacen al cambiarlo. Llamar ANTES de SetDefecto.
+    procedure CargarSeries(const AEmpresa: string);
     /// Rellena los valores iniciales (vienen de la cabecera).
     procedure SetDefecto(const ASerieAlb, ASeriePed: string;
                          AFecha: TDateTime;
@@ -112,13 +124,19 @@ type
 
 implementation
 
+uses
+  inLibtb;
+
 {$R *.dfm}
 
 procedure TfrmModalCrearAlbaranSesion.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  FConfirmed := False;
+  FConfirmed   := False;
+  FEmpresa     := '';
+  FSerieAlbDef := '';
+  FSeriePedDef := '';
 end;
 
 procedure TfrmModalCrearAlbaranSesion.FormClose(Sender: TObject;
@@ -136,6 +154,40 @@ begin
   cbbTemporada.Properties.ListSource := ADsTemporadas;
 end;
 
+procedure TfrmModalCrearAlbaranSesion.CargarSeries(const AEmpresa: string);
+begin
+  FEmpresa := Trim(AEmpresa);
+  CargarSeriesEmpresa(FEmpresa, 'AB', cbbSerieAlb.Properties.Items);
+  CargarSeriesEmpresa(FEmpresa, 'PC', cbbSeriePed.Properties.Items);
+end;
+
+procedure TfrmModalCrearAlbaranSesion.ProponerSeriesAlmacen;
+var
+  sSerie: string;
+begin
+  // La serie acompanya al almacen: si el almacen elegido lleva serie
+  // propia (fza_empresas_series.CODIGO_ALM_EMPSER) se propone esa; si
+  // no, el default que paso el llamador (generica de la empresa o
+  // serie de la sesion). El usuario siempre puede cambiarla en el combo.
+  if FEmpresa <> '' then
+  begin
+    sSerie := ObtenerSeriePropiaAlmacen(FEmpresa, 'AB', GetAlmacen);
+    if sSerie = '' then
+      sSerie := FSerieAlbDef;
+    cbbSerieAlb.Text := sSerie;
+    sSerie := ObtenerSeriePropiaAlmacen(FEmpresa, 'PC', GetAlmacen);
+    if sSerie = '' then
+      sSerie := FSeriePedDef;
+    cbbSeriePed.Text := sSerie;
+  end;
+end;
+
+procedure TfrmModalCrearAlbaranSesion.cbbAlmacenPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  ProponerSeriesAlmacen;
+end;
+
 procedure TfrmModalCrearAlbaranSesion.SetDefecto(
   const ASerieAlb, ASeriePed: string;
   AFecha: TDateTime;
@@ -144,8 +196,13 @@ procedure TfrmModalCrearAlbaranSesion.SetDefecto(
   AGenPedido, AGenAlbaran: Boolean;
   const ARefPrv: string);
 begin
-  txtSerieAlb.Text := ASerieAlb;
-  txtSeriePed.Text := ASeriePed;
+  // Los defaults de serie se guardan como fallback ANTES de tocar el
+  // combo de almacen: asignarle EditValue dispara el evento que
+  // re-propone series y necesita los fallbacks ya fijados.
+  FSerieAlbDef := ASerieAlb;
+  FSeriePedDef := ASeriePed;
+  cbbSerieAlb.Text := ASerieAlb;
+  cbbSeriePed.Text := ASeriePed;
   if AFecha = 0 then dteFecha.Date := Date else dteFecha.Date := AFecha;
   cbbAlmacen.EditValue   := ACodigoAlm;
   cbbTarifa.EditValue    := ACodigoTar;
@@ -154,6 +211,9 @@ begin
   chkGenPedido.Checked  := AGenPedido;
   chkGenAlbaran.Checked := AGenAlbaran;
   txtRefPrv.Text        := ARefPrv;
+  // Proponer la serie que lleve el almacen por defecto (idempotente si
+  // el evento del combo ya lo hizo al asignar EditValue).
+  ProponerSeriesAlmacen;
   ActualizarHabilitados;
 end;
 
@@ -178,9 +238,9 @@ end;
 
 procedure TfrmModalCrearAlbaranSesion.ActualizarHabilitados;
 begin
-  // Cada campo de serie se habilita solo si su checkbox esta marcado.
-  txtSerieAlb.Enabled := chkGenAlbaran.Checked;
-  txtSeriePed.Enabled := chkGenPedido.Checked;
+  // Cada combo de serie se habilita solo si su checkbox esta marcado.
+  cbbSerieAlb.Enabled := chkGenAlbaran.Checked;
+  cbbSeriePed.Enabled := chkGenPedido.Checked;
 end;
 
 // Pedido y albaran son mutuamente exclusivos: nunca tiene sentido
@@ -206,12 +266,12 @@ end;
 
 function TfrmModalCrearAlbaranSesion.GetSerieAlb: string;
 begin
-  Result := Trim(txtSerieAlb.Text);
+  Result := Trim(cbbSerieAlb.Text);
 end;
 
 function TfrmModalCrearAlbaranSesion.GetSeriePed: string;
 begin
-  Result := Trim(txtSeriePed.Text);
+  Result := Trim(cbbSeriePed.Text);
 end;
 
 function TfrmModalCrearAlbaranSesion.GetFecha: TDateTime;
@@ -262,16 +322,16 @@ begin
     ShowMessage('Marca al menos uno: Albaran y/o Pedido.');
     Exit;
   end;
-  if GetGenAlbaran and (Trim(txtSerieAlb.Text) = '') then
+  if GetGenAlbaran and (Trim(cbbSerieAlb.Text) = '') then
   begin
     ShowMessage('Indica la serie del albaran.');
-    if txtSerieAlb.CanFocus then txtSerieAlb.SetFocus;
+    if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
     Exit;
   end;
-  if GetGenPedido and (Trim(txtSeriePed.Text) = '') then
+  if GetGenPedido and (Trim(cbbSeriePed.Text) = '') then
   begin
     ShowMessage('Indica la serie del pedido.');
-    if txtSeriePed.CanFocus then txtSeriePed.SetFocus;
+    if cbbSeriePed.CanFocus then cbbSeriePed.SetFocus;
     Exit;
   end;
   if (GetGenAlbaran or GetGenPedido) and (GetAlmacen = '') then
