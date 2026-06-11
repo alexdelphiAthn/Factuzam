@@ -82,6 +82,10 @@ type
     // (PRC_EFEC_GENERAR_DESDE_FACTURA) y refresca la rejilla. Devuelve nº de
     // efectos generados, 0 si nada, -1 sin factura activa / error.
     function GenerarEfectos: Integer;
+    // Registra un pago sobre un efecto (PRC_EFEC_REGISTRAR_PAGO) y refresca
+    // la rejilla. Devuelve el nº de pago asignado (>0) o 0/-1 si no se pudo.
+    function RegistrarPagoEfecto(ANumEfecto: Integer; AFecha: TDateTime;
+      AImporte: Double; const ATipo, AReferencia: string): Integer;
     // Abre unqryCabFaccPrint y unqryLinFaccPrint con los parametros
     // del factura a imprimir. Mismo nombre/firma que en sesiones.
     procedure PrepararPrint(const ASerie, ANumero: string);
@@ -221,6 +225,56 @@ begin
       FreeAndNil(sp);
     end;
     // Refrescar la rejilla de efectos.
+    if Assigned(unqryEfectos) then
+    begin
+      unqryEfectos.Close;
+      unqryEfectos.Open;
+    end;
+  end;
+end;
+
+function TdmFacturasCompra.RegistrarPagoEfecto(ANumEfecto: Integer;
+  AFecha: TDateTime; AImporte: Double;
+  const ATipo, AReferencia: string): Integer;
+var
+  sp: TUniStoredProc;
+  sSerie, sNumero: string;
+begin
+  Result := -1;
+  if (unqryTablaG <> nil) and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+  begin
+    sSerie  := unqryTablaG.FieldByName('SERIE_FACC').AsString;
+    sNumero := unqryTablaG.FieldByName('NUMERO_FACC').AsString;
+    sp := TUniStoredProc.Create(nil);
+    try
+      sp.Connection     := inLibGlobalVar.oConn;
+      sp.StoredProcName := 'PRC_EFEC_REGISTRAR_PAGO';
+      sp.Params.Clear;
+      sp.Params.CreateParam(ftString,  'p_SERIE',      ptInput);
+      sp.Params.CreateParam(ftString,  'p_NUMERO',     ptInput);
+      sp.Params.CreateParam(ftInteger, 'p_NUM_EFEC',   ptInput);
+      sp.Params.CreateParam(ftDate,    'p_FECHA',      ptInput);
+      sp.Params.CreateParam(ftFloat,   'p_IMPORTE',    ptInput);
+      sp.Params.CreateParam(ftString,  'p_TIPO',       ptInput);
+      sp.Params.CreateParam(ftString,  'p_REFERENCIA', ptInput);
+      sp.Params.CreateParam(ftString,  'p_ENTIDAD',    ptInput);
+      sp.Params.CreateParam(ftString,  'p_USUARIO',    ptInput);
+      sp.Params.CreateParam(ftInteger, 'p_RESULTADO',  ptOutput);
+      sp.ParamByName('p_SERIE').AsString      := sSerie;
+      sp.ParamByName('p_NUMERO').AsString     := sNumero;
+      sp.ParamByName('p_NUM_EFEC').AsInteger  := ANumEfecto;
+      sp.ParamByName('p_FECHA').AsDateTime    := AFecha;
+      sp.ParamByName('p_IMPORTE').AsFloat     := AImporte;
+      sp.ParamByName('p_TIPO').AsString       := ATipo;
+      sp.ParamByName('p_REFERENCIA').AsString := AReferencia;
+      sp.ParamByName('p_ENTIDAD').AsString    := '';
+      sp.ParamByName('p_USUARIO').AsString    := oUser;
+      sp.ExecProc;
+      Result := sp.ParamByName('p_RESULTADO').AsInteger;
+    finally
+      FreeAndNil(sp);
+    end;
     if Assigned(unqryEfectos) then
     begin
       unqryEfectos.Close;

@@ -85,6 +85,8 @@ type
     tsEfectos: TcxTabSheet;
     pnlEfectosTop: TPanel;
     btnGenerarEfectos: TcxButton;
+    btnRegistrarPago: TcxButton;
+    btnVerPagos: TcxButton;
     cxgrdEfectos: TcxGrid;
     tvEfectos: TcxGridDBTableView;
     lvlEfectos: TcxGridLevel;
@@ -144,6 +146,8 @@ type
     procedure btnFORMA_PAGO_FACCPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure btnGenerarEfectosClick(Sender: TObject);
+    procedure btnRegistrarPagoClick(Sender: TObject);
+    procedure btnVerPagosClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -182,7 +186,8 @@ uses
   inLibGlobalVar,
   inLibFotos,
   UniDataArticulos,
-  inLibShowMto, inLibGenBusq;
+  inLibShowMto, inLibGenBusq, inMtoModalRegistrarPago,
+  inMtoModalVerPagosEfecto;
 
 {$R *.dfm}
 
@@ -729,6 +734,77 @@ begin
     else
       ShowMessage('No hay factura activa (o hubo un error al generar).');
   end;
+end;
+
+procedure TfrmMtoFacturasCompra.btnRegistrarPagoClick(Sender: TObject);
+var
+  frm: TfrmModalRegistrarPago;
+  q: TDataSet;
+  iEfe, iRes: Integer;
+  fPend: Double;
+begin
+  inherited;
+  if Assigned(dmmFacturasCompra) and
+     (dmmFacturasCompra.unqryEfectos <> nil) and
+     dmmFacturasCompra.unqryEfectos.Active and
+     (not dmmFacturasCompra.unqryEfectos.IsEmpty) then
+  begin
+    q     := dmmFacturasCompra.unqryEfectos;
+    iEfe  := q.FieldByName('NUMERO_EFEC').AsInteger;
+    fPend := q.FieldByName('IMPORTE_PENDIENTE_EFEC').AsFloat;
+    frm := TfrmModalRegistrarPago.Create(nil);
+    try
+      frm.SetDatos(
+        Format('Efecto %d - vto %s - pendiente %.2f',
+          [iEfe,
+           FormatDateTime('dd/mm/yyyy',
+             q.FieldByName('FECHA_VENCIMIENTO_EFEC').AsDateTime),
+           fPend]),
+        fPend);
+      if frm.ShowModal = mrOk then
+      begin
+        iRes := dmmFacturasCompra.RegistrarPagoEfecto(iEfe, frm.Fecha,
+                  frm.Importe, frm.Tipo, frm.Referencia);
+        if iRes > 0 then
+          ShowMessage('Pago registrado.')
+        else
+          ShowMessage('No se pudo registrar el pago.');
+      end;
+    finally
+      frm.Free;
+    end;
+  end
+  else
+    ShowMessage('Selecciona un efecto en la rejilla de la pestana Efectos.');
+end;
+
+procedure TfrmMtoFacturasCompra.btnVerPagosClick(Sender: TObject);
+var
+  frm: TfrmModalVerPagosEfecto;
+  q: TDataSet;
+  iEfe: Integer;
+begin
+  inherited;
+  if Assigned(dmmFacturasCompra) and
+     (dmmFacturasCompra.unqryEfectos <> nil) and
+     dmmFacturasCompra.unqryEfectos.Active and
+     (not dmmFacturasCompra.unqryEfectos.IsEmpty) then
+  begin
+    q := dmmFacturasCompra.unqryEfectos;
+    iEfe := q.FieldByName('NUMERO_EFEC').AsInteger;
+    frm := TfrmModalVerPagosEfecto.Create(nil);
+    try
+      frm.Cargar(
+        dmmFacturasCompra.unqryTablaG.FieldByName('SERIE_FACC').AsString,
+        dmmFacturasCompra.unqryTablaG.FieldByName('NUMERO_FACC').AsString,
+        iEfe, Format('Pagos del efecto %d', [iEfe]));
+      frm.ShowModal;
+    finally
+      frm.Free;
+    end;
+  end
+  else
+    ShowMessage('Selecciona un efecto en la rejilla de la pestana Efectos.');
 end;
 
 procedure TfrmMtoFacturasCompra.btnAnadirLineaClick(Sender: TObject);
