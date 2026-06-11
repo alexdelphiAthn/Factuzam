@@ -117,13 +117,16 @@ type
                             const ACaja    : string;
                             AFechaDesde    : TDate;
                             AFechaHasta    : TDate): TArqueoCaja;
-    // SQL del "Resumen neto por sección": agrupa las líneas vendidas por
-    // la ruta de familias raíz→hoja recortada a ANiveles niveles (1..9).
-    // Comparte la consulta el ticket (ORDER BY NETO DESC) y la pantalla
-    // (ORDER BY FAMILIA). Parámetros esperados: :pEMPRESA, :pALMACEN,
-    // :pCAJA, :pFDESDE y :pFHASTA.
-    class function SQLResumenSeccion(ANiveles: Integer;
-                                     const AOrden: string): string;
+    // SQL del "Resumen neto por sección": subtotales anidados por la
+    // jerarquía de familias. Cada nivel 1..ANiveles (1=sección raíz) sale
+    // como una fila con su subtotal; FAMILIA ya viene indentada por nivel.
+    // Parámetros esperados: :pEMPRESA, :pALMACEN, :pCAJA, :pFDESDE, :pFHASTA.
+    class function SQLResumenSeccion(ANiveles: Integer): string;
+    // SQL del "Resumen por propiedad": una fila por (propiedad, valor) de las
+    // propiedades marcadas ESARQUEO_PROP='S'. Resuelve el valor EFECTIVO por
+    // SKU (vi_articulos_propiedades_efectivas), de modo que la temporada de
+    // color sale en su valor de color. Mismos parámetros :pEMPRESA…:pFHASTA.
+    class function SQLResumenPropiedad: string;
   end;
 
 implementation
@@ -166,19 +169,15 @@ begin
   CalcularDerivados(Result);
 end;
 
-class function TArqueoCalculadora.SQLResumenSeccion(
-  ANiveles: Integer; const AOrden: string): string;
+class function TArqueoCalculadora.SQLResumenSeccion(ANiveles: Integer): string;
 var
-  sRuta, sJoins, sPadre: string;
+  sRuta, sJoins, sPadre, sNiveles: string;
   i: Integer;
 begin
-  // La jerarquía se resuelve con 8 LEFT JOIN estáticos (a1=padre,
-  // a2=abuelo, …) en vez de un CTE recursivo: las columnas del CTE
-  // heredan la colación de la conexión (utf8mb4_uca1400_ai_ci en
-  // MariaDB moderno) y al compararlas con las columnas spanish_ci de
-  // las tablas salta [1267] Illegal mix of collations. Con joins solo
-  // se comparan columnas reales entre sí. Profundidad máx.: 9 niveles.
-  // Ruta raíz→hoja 'NOMBRE|NOMBRE|…'; CONCAT_WS ignora ancestros NULL.
+  // Jerarquía con 8 LEFT JOIN estáticos (a1=padre…a8) en vez de un CTE
+  // recursivo: las columnas del CTE heredan la colación de la conexión y
+  // chocan (1267) con las spanish_ci de las tablas. Profundidad máx.: 9.
+  // CONCAT_WS ignora ancestros NULL -> RUTA raíz→hoja 'NOMBRE|NOMBRE|…'.
   sRuta := 'CONCAT_WS(''|''';
   for i := 8 downto 1 do
     sRuta := sRuta + Format(', COALESCE(a%d.NOMBRE_FAM_FAM,' +
@@ -194,38 +193,95 @@ begin
       [i, i, sPadre]);
     sPadre := Format('a%d', [i]);
   end;
-  // NULLIF: si la línea no tiene familia CONCAT_WS devuelve '' (no
-  // NULL) y sin él no caería a los fallback del COALESCE.
+  // Tabla de niveles 1..N: cada línea se expande a sus niveles 1..min(prof,N)
+  // y se agrupa por el prefijo de la ruta -> un subtotal por cada ancestro
+  // mostrado (nivel 1 = sección) más el propio nivel hoja. FAMILIA viene ya
+  // indentada por nivel; el % lo calcula el consumidor (NETO/total).
+  sNiveles := 'SELECT 1 AS NIVEL';
+  for i := 2 to ANiveles do
+    sNiveles := sNiveles + Format(' UNION ALL SELECT %d', [i]);
+  // NULLIF: si la línea no tiene familia CONCAT_WS devuelve '' y así cae a
+  // los fallback del COALESCE en vez de quedar como ruta vacía.
   Result :=
-    ' SELECT                                                        ' +
-    '   COALESCE(                                                   ' +
-    '     REPLACE(SUBSTRING_INDEX(NULLIF(' + sRuta + ', ''''),      ' +
-    '             ''|'', ' + IntToStr(ANiveles) + '), ''|'', ''-''),' +
-    '     l.NOMBRE_FAM_FACLIN, l.CODIGO_FAM_FACLIN,                 ' +
-    '     a.CODIGO_FAM_ART, ''(sin familia)'') AS FAMILIA,          ' +
-    '   COUNT(*)                         AS UDS,                    ' +
-    '   COALESCE(SUM(l.TOTAL_FACLIN), 0) AS NETO                    ' +
-    '   FROM fza_caja_operaciones o                                 ' +
-    '   JOIN fza_facturas_lineas  l                                 ' +
-    '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA       ' +
-    '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA       ' +
-    '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA      ' +
-    '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA ' +
-    '   LEFT JOIN fza_articulos a                                   ' +
-    '     ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN                 ' +
-    '   LEFT JOIN fza_articulos_familias f                          ' +
-    '     ON f.CODIGO_FAM_FAM = COALESCE(l.CODIGO_FAM_FACLIN,       ' +
-    '                                    a.CODIGO_FAM_ART)          ' +
+    ' SELECT CONCAT(REPEAT(''  '', x.NIVEL - 1),                   ' +
+    '               SUBSTRING_INDEX(x.CLAVE, ''|'', -1)) AS FAMILIA,' +
+    '        COUNT(*)                  AS UDS,                     ' +
+    '        COALESCE(SUM(x.TOTAL), 0) AS NETO                     ' +
+    '   FROM (                                                     ' +
+    '     SELECT n.NIVEL AS NIVEL,                                 ' +
+    '            SUBSTRING_INDEX(b.RUTA, ''|'', n.NIVEL) AS CLAVE, ' +
+    '            b.TOTAL AS TOTAL                                  ' +
+    '       FROM (                                                 ' +
+    '         SELECT b0.RUTA, b0.TOTAL,                            ' +
+    '                (CHAR_LENGTH(b0.RUTA) -                       ' +
+    '                 CHAR_LENGTH(REPLACE(b0.RUTA,''|'','''')))+1   ' +
+    '                  AS PROF                                     ' +
+    '           FROM (                                             ' +
+    '             SELECT                                           ' +
+    '               COALESCE(NULLIF(' + sRuta + ', ''''),          ' +
+    '                 l.NOMBRE_FAM_FACLIN, l.CODIGO_FAM_FACLIN,    ' +
+    '                 a.CODIGO_FAM_ART, ''(sin familia)'') AS RUTA,' +
+    '               l.TOTAL_FACLIN AS TOTAL                        ' +
+    '               FROM fza_caja_operaciones o                    ' +
+    '               JOIN fza_facturas_lineas l                     ' +
+    '                 ON l.CODIGO_EMP_FACLIN = o.CODIGO_EMP_OPCAJA ' +
+    '                AND l.CODIGO_ALM_FACLIN = o.CODIGO_ALM_OPCAJA ' +
+    '                AND l.CODIGO_CAJA_FACLIN= o.CODIGO_CAJA_OPCAJA' +
+    '                AND l.NUMERO_OPERACION_FACLIN =               ' +
+    '                    o.NUMERO_OPERACION_OPCAJA                 ' +
+    '               LEFT JOIN fza_articulos a                      ' +
+    '                 ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN    ' +
+    '               LEFT JOIN fza_articulos_familias f             ' +
+    '                 ON f.CODIGO_FAM_FAM =                        ' +
+    '                  COALESCE(l.CODIGO_FAM_FACLIN, a.CODIGO_FAM_ART)' +
     sJoins +
-    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                     ' +
-    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                  ' +
-    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                  ' +
-    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                     ' +
-    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                   ' +
-    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA,          ' +
-    '                                            INTERVAL 1 DAY)    ' +
-    '  GROUP BY FAMILIA                                             ' +
-    '  ORDER BY ' + AOrden;
+    '              WHERE o.TIPO_OPERACION_OPCAJA = ''VE''          ' +
+    '                AND o.CODIGO_EMP_OPCAJA  = :pEMPRESA          ' +
+    '                AND o.CODIGO_ALM_OPCAJA  = :pALMACEN          ' +
+    '                AND o.CODIGO_CAJA_OPCAJA = :pCAJA             ' +
+    '                AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE      ' +
+    '                AND o.FECHA_OPERACION_OPCAJA <                ' +
+    '                    DATE_ADD(:pFHASTA, INTERVAL 1 DAY)        ' +
+    '           ) b0                                               ' +
+    '       ) b                                                    ' +
+    '       JOIN (' + sNiveles + ') n ON n.NIVEL <= b.PROF         ' +
+    '   ) x                                                        ' +
+    '  GROUP BY x.NIVEL, x.CLAVE                                   ' +
+    '  ORDER BY x.CLAVE                                            ';
+end;
+
+class function TArqueoCalculadora.SQLResumenPropiedad: string;
+begin
+  // Valor EFECTIVO por SKU (vi_articulos_propiedades_efectivas): la
+  // temporada de color sale en su valor de color, cayendo a la de artículo
+  // si el color no la fija. Solo propiedades marcadas ESARQUEO_PROP='S'.
+  // Une por el SKU vendido (CODIGO_UNIDAD_FACLIN) -> sin duplicar líneas.
+  Result :=
+    ' SELECT v.CODIGO_PROP_ARTPROP                  AS PROP,       ' +
+    '        COALESCE(v.VALOR_PV, v.VALOR_LIBRE_ARTPROP, ''?'')    ' +
+    '                                               AS VALOR,      ' +
+    '        COUNT(*)                               AS UDS,        ' +
+    '        COALESCE(SUM(l.TOTAL_FACLIN), 0)       AS NETO        ' +
+    '   FROM fza_caja_operaciones o                                ' +
+    '   JOIN fza_facturas_lineas  l                                ' +
+    '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA      ' +
+    '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA      ' +
+    '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA     ' +
+    '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA' +
+    '   JOIN vi_articulos_propiedades_efectivas v                 ' +
+    '     ON v.CODIGO_UNIDAD_SKU = l.CODIGO_UNIDAD_FACLIN          ' +
+    '   JOIN fza_propiedades pr                                    ' +
+    '     ON pr.CODIGO_PROP_ARTPROP = v.CODIGO_PROP_ARTPROP        ' +
+    '    AND pr.ESARQUEO_PROP = ''S''                              ' +
+    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                    ' +
+    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                 ' +
+    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                 ' +
+    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                    ' +
+    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                  ' +
+    '    AND o.FECHA_OPERACION_OPCAJA <                            ' +
+    '        DATE_ADD(:pFHASTA, INTERVAL 1 DAY)                    ' +
+    '  GROUP BY v.CODIGO_PROP_ARTPROP, VALOR                       ' +
+    '  ORDER BY v.CODIGO_PROP_ARTPROP, VALOR                       ';
 end;
 
 // =============================================================================
