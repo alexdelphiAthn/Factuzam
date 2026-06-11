@@ -36,26 +36,40 @@ automáticamente al leer `oCajaParams.Params` (categoría `Arqueo`).
 
 ## Implementación
 
-La jerarquía se recorre con un CTE recursivo (`WITH RECURSIVE fam_ruta`)
-sobre `fza_articulos_familias`, construyendo la ruta raíz→hoja como
-`NOMBRE|NOMBRE|…`. `SUBSTRING_INDEX(ruta, '|', N)` recorta a los N primeros
-niveles y un `REPLACE` cambia el separador interno `|` por el visual `-`.
-
-**OJO con la colación (no quitar el `COLLATE`).** El ancla del CTE hace
-`CAST(... AS CHAR(2000)) COLLATE utf8mb4_spanish_ci`. El `CAST` produce la
-colación por defecto del servidor (en MariaDB moderno `utf8mb4_uca1400_ai_ci`),
-que choca con las columnas de la BBDD (`utf8mb4_spanish_ci`) dentro del
-`CONCAT`/recursión y lanza `[1267] Illegal mix of collations` al comparar.
-El `COLLATE` fuerza la ruta a la colación de las tablas. Si algún día se
-regenera la BBDD con otra colación, hay que ajustar este `COLLATE`.
-
-Tocado en dos sitios (ambos comparten la misma consulta):
+La consulta la construye `TArqueoCalculadora.SQLResumenSeccion(ANiveles,
+AOrden)` en `src/Caja/Lib/inLibArqueo.pas`, compartida por los dos
+consumidores (solo difieren en el `ORDER BY`):
 
 - `src/Caja/Lib/inLibArqueoTicket.pas` — `EscribirResumenSeccion` (ticket
-  impreso).
+  impreso, `NETO DESC`).
 - `src/Caja/Modals/inMtoModalArqueo.pas` — `ConfigurarResumenes`/`qryResFam`
-  (vista en pantalla, pestaña Resúmenes).
+  (pestaña Resúmenes, `FAMILIA`).
 
-El nivel saneado lo entrega `inLibCajaParam.NivelesFamiliaArqueo` y se inyecta
-como literal entero en el SQL (no como parámetro, porque `qryResFam` comparte
-el binder `AbrirQryConParams` con el resto de consultas del arqueo).
+La jerarquía se resuelve con **8 `LEFT JOIN` estáticos** sobre
+`fza_articulos_familias` (`a1` = padre, `a2` = abuelo, …, vía
+`CODIGO_SUBFAMILIA_FAM`), no con un CTE recursivo. `CONCAT_WS('|', a8…a1, f)`
+monta la ruta raíz→hoja (ignora los ancestros NULL),
+`SUBSTRING_INDEX(ruta, '|', N)` recorta a los N primeros niveles y un
+`REPLACE` cambia el separador `|` por el visual `-`. Profundidad máxima
+soportada: 9 niveles (de ahí el tope del parámetro).
+
+**Por qué NO un `WITH RECURSIVE` (no "modernizar" esto).** Se intentó y en
+producción lanzaba `[1267] Illegal mix of collations
+(utf8mb4_uca1400_ai_ci vs utf8mb4_spanish_ci) for operation '='`: las
+columnas de la tabla temporal de un CTE recursivo salen con la colación de
+la **conexión** (en MariaDB ≥11.5 el default de utf8mb4 es
+`uca1400_ai_ci`), no con la de las tablas (`utf8mb4_spanish_ci`), y el JOIN
+recursivo mezcla ambas. Ni siquiera un `COLLATE` en el `CAST` del ancla lo
+cura del todo. Con joins estáticos solo se comparan columnas reales entre
+sí y el problema desaparece por construcción (y además funciona en
+servidores sin soporte de CTE).
+
+Como defensa adicional, `UniDataConn.conUniAfterConnect` fija ahora la
+colación de la sesión a la de la BBDD (`SET NAMES utf8mb4 COLLATE
+utf8mb4_spanish_ci`) en cada conexión/reconexión, también en las
+conexiones clonadas que reutilizan el handler.
+
+El nivel saneado lo entrega `inLibCajaParam.NivelesFamiliaArqueo` y se
+inyecta como literal entero en el SQL (no como parámetro, porque
+`qryResFam` comparte el binder `AbrirQryConParams` con el resto de
+consultas del arqueo).
