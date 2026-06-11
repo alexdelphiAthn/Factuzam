@@ -43,15 +43,33 @@ la rejilla):</p>
 <th>Qué hace</th>
 </tr></thead>
 <tbody>
-<tr><td><code>[Alt]+[F12]</code></td><td><strong>Guardar layout</strong></td><td>Guarda la disposición actual de la rejilla en el perfil. Pide a qué <strong>permiso/grupo</strong> se aplica, de modo que todos los usuarios de ese grupo la verán igual.</td></tr>
-<tr><td><code>[Ctrl]+[F12]</code></td><td><strong>Resetear layout</strong></td><td>Borra la personalización guardada y vuelve a la disposición por defecto.</td></tr>
-<tr><td><code>[Ctrl]+[F10]</code></td><td><strong>Ajustar anchos</strong></td><td>Ajusta automáticamente el ancho de las columnas a su contenido (<em>best fit</em>).</td></tr>
+<tr><td><code>[Alt]+[F12]</code></td><td><strong>Guardar layout</strong></td><td>Guarda la disposición actual de la rejilla. Al pulsarlo aparece un diálogo donde eliges el <strong>alcance</strong> de la grabación (ver abajo).</td></tr>
+<tr><td><code>[Ctrl]+[F12]</code></td><td><strong>Resetear layout</strong></td><td>Borra la personalización guardada y vuelve a la disposición por defecto. También pregunta el <strong>alcance</strong> (a quién se le resetea).</td></tr>
+<tr><td><code>[Ctrl]+[F10]</code></td><td><strong>Ajustar anchos</strong></td><td>Ajusta automáticamente el ancho de las columnas a su contenido (<em>best fit</em>). Es local y no guarda nada hasta que pulses <code>[Alt]+[F12]</code>.</td></tr>
 </tbody>
 </table>
-<blockquote><p><strong>Guardar layout</strong> afecta a <strong>todo el grupo de permisos</strong> que indiques en
-el diálogo, no solo a tu usuario. Úsalo cuando quieras fijar una vista
-estándar para un grupo (p. ej. <em>Cajeros</em>). <code>[Ctrl]+[F10]</code> (ajustar
-anchos) es local y no guarda nada hasta que pulses <code>[Alt]+[F12]</code>.</p></blockquote>
+<p><strong>Alcance de la grabación (campo «Permiso» del diálogo).</strong> Tanto al guardar
+como al resetear, el diálogo te deja elegir <strong>a quién afecta</strong> el cambio:</p>
+<table>
+<thead><tr>
+<th>Opción</th>
+<th>Alcance</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Usuario</strong> <em>(por defecto)</em></td><td>Solo a <strong>ti</strong>. Tu vista personalizada; el resto de usuarios no la ven.</td></tr>
+<tr><td><strong>Grupo</strong></td><td>A <strong>todos los usuarios de tu grupo</strong> de permisos (p. ej. <em>Cajeros</em>). Útil para fijar una vista estándar del equipo.</td></tr>
+<tr><td><strong>Todos</strong></td><td>A <strong>todos los usuarios</strong> de la aplicación. Solo disponible si eres <strong>administrador</strong> (grupo root).</td></tr>
+</tbody>
+</table>
+<p><img src="img/01-guardar-layout.png" alt="Diálogo de Guardar layout con el selector de alcance" loading="lazy">
+<em>▢ Captura pendiente — Diálogo «Guardar Objeto Editado» con el campo Permiso (Usuario / Grupo / Todos).</em></p>
+<p><img src="img/01-resetear-layout.png" alt="Diálogo de Resetear layout" loading="lazy">
+<em>▢ Captura pendiente — Diálogo de reseteo de la rejilla con el selector de alcance.</em></p>
+<blockquote><p>Por defecto se guarda <strong>solo para tu usuario</strong>, así que puedes ajustar tu
+rejilla sin afectar a nadie. Elige <strong>Grupo</strong> o <strong>Todos</strong> únicamente cuando
+quieras imponer la misma vista a más gente; ten en cuenta que <strong>Todos</strong>
+sobrescribe la disposición de todos los usuarios y solo lo puede hacer un
+administrador.</p></blockquote>
 <h3 id="pestana-ficha">Pestaña <strong>Ficha</strong></h3>
 <p>Muestra el <strong>detalle de un único registro</strong> con todos sus campos
 organizados en sub-pestañas (Datos principales, Más datos, etc.). Es donde
