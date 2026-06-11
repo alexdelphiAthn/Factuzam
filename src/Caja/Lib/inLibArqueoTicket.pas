@@ -510,7 +510,11 @@ begin
     ATicket.Negrita(True);
     ATicket.EscribirLinea('RESUMEN VENTAS POR SERIE');
     ATicket.Negrita(False);
-    ATicket.EscribirLinea(Format('%-7s %9s %5s %9s %9s',
+    // El formato debe sumar exactamente N_CHAR_LIN (42) para que la columna
+    // TOTAL acabe en el margen derecho, igual que el resto del ticket. Sin
+    // espacio entre SERIE y BASE: la serie va a la izquierda y el importe a
+    // la derecha, así no se pegan. 7+9+1+5+1+9+1+9 = 42.
+    ATicket.EscribirLinea(Format('%-7s%9s %5s %9s %9s',
                                  ['SE', 'BASE IMP', '%IVA', 'CUOTA', 'TOTAL']));
     while not Q.Eof do
     begin
@@ -522,7 +526,7 @@ begin
       else
         dPorc := 0;
       ATicket.EscribirLinea(
-        Format('%-7s %9s %5s %9s %9s',
+        Format('%-7s%9s %5s %9s %9s',
                [Copy(Q.FieldByName('SERIE').AsString, 1, 7),
                 FmtImp(dBase),
                 FormatFloat('0.00', dPorc),
