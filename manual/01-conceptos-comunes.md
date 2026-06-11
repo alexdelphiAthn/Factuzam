@@ -102,13 +102,13 @@ esa letra):
 **Modificar un registro existente:**
 
 1. Localízalo en la **Lista** y ábrelo en la **Ficha** (doble clic).
-2. Pulsa **Editar registro**.
-3. Cambia lo necesario y pulsa **Grabar**.
+2. Opcionalmente, puede omitirse, pulsa **Editar registro** ó F2.
+3. Cambia lo necesario y pulsa **Grabar** ó F12.
 
 **Dar de baja un registro:**
 
 1. Sitúate sobre el registro.
-2. Pulsa **Eliminar registro** y confirma.
+2. Pulsa **Eliminar registro** y confirma o `[Ctrl]+[Supr]`.
 
 > Muchas tablas no se borran realmente, sino que se **desactivan** mediante
 > una marca **Activo (S/N)**. Así se conserva el histórico y la integridad

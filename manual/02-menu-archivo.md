@@ -44,7 +44,7 @@ Archivo
 
 Mantiene las **empresas emisoras** que facturan desde Factuzam (puede haber
 más de una). Cada empresa concentra sus datos fiscales y la configuración
-de facturación.
+de facturación. Todas ellas comparten artículos/familias/clientes...
 
 **Datos principales:** Código, Orden, Activo, Razón Social, NIF, dirección
 completa (dirección, población, provincia, código postal), Móvil, Email.

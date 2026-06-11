@@ -34,6 +34,9 @@ A continuación aparece la ventana **Login FactuZam**:
 | **Recordar Contraseña** | Guarda también la contraseña (úsalo solo en equipos de confianza). |
 | **Arranque sin login** | Si se marca, la aplicación entra directamente la próxima vez sin pedir credenciales. |
 
+Si hay un cambio de usuario dentro de la misma sesión, en la aplicación se puede invocar desde 
+Archivo->Invocar Login o desde la combinación de teclas Control + Mayúsculas + L
+
 **Botones:**
 
 - **Aceptar (F12)** — valida las credenciales y entra a la aplicación.
@@ -87,7 +90,8 @@ Tras validar el login se muestra la ventana principal de Factuzam, con:
   aplicación y la estructura que sigue este manual.
 - Un **área de trabajo con pestañas**: cada opción de menú que abres se
   carga como una pestaña dentro de la ventana principal, de modo que
-  puedes tener varias pantallas abiertas a la vez y cambiar entre ellas.
+  puedes tener varias pantallas abiertas a la vez y cambiar entre ellas con
+  la combinación de teclas Control + Tab.
 - Una **barra de estado** inferior con información de contexto (usuario,
   empresa activa, versión…).
 
