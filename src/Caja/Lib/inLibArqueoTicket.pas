@@ -334,8 +334,7 @@ begin
   try
     Q.Connection := AConn;
     // Niveles de familia a desglosar según Parámetros de Caja.
-    Q.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(
-      NivelesFamiliaArqueo, 'NETO DESC');
+    Q.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(NivelesFamiliaArqueo);
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;

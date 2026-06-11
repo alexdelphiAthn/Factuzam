@@ -511,7 +511,7 @@ begin
   // la construye TArqueoCalculadora.SQLResumenSeccion (compartida con el
   // ticket impreso).
   qryResFam.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(
-    NivelesFamiliaArqueo, 'FAMILIA');
+    NivelesFamiliaArqueo);
 
   // IVA (pestaña Más datos): 4 filas, una por tipo de IVA (Normal, Reducido,
   // Super Reducido, Exento). Se toma de fza_facturas SOLO las
