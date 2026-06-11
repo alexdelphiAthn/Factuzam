@@ -69,6 +69,12 @@ type
     cxgrdLineasPedido:   TcxGrid;
     tvLineasPedido:      TcxGridDBTableView;
     cxgrdlvlLineasPedido: TcxGridLevel;
+    // Pestania "Albaranes": lista (solo lectura) de los albaranes de
+    // compra ya creados desde este pedido.
+    tsAlbaranesPedc:       TcxTabSheet;
+    cxgrdAlbaranesPedc:    TcxGrid;
+    tvAlbaranesPedc:       TcxGridDBTableView;
+    cxgrdlvlAlbaranesPedc: TcxGridLevel;
 
     // Cabecera
     lblNroPedido:    TcxLabel;
@@ -323,6 +329,9 @@ begin
   tvLineasPedido.DataController.DataSource :=
     dmmPedidosCompra.dsPedidosCompraLineas;
   dmmPedidosCompra.unqryPedidosCompraLineas.MasterSource := dsTablaG;
+  tvAlbaranesPedc.DataController.DataSource :=
+    dmmPedidosCompra.dsAlbaranesPedc;
+  dmmPedidosCompra.unqryAlbaranesPedc.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
 end;
 
@@ -1096,18 +1105,36 @@ begin
     bTxOwned := not inLibGlobalVar.oConn.InTransaction;
     if bTxOwned then inLibGlobalVar.oConn.StartTransaction;
     try
-      if bUsarCeldas then
-        bOk := inLibPedidosCompra.CrearAlbaranDesdePedidoConCantidades(
-                inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-                form.SerieAlbaran, oUser,
-                form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
-                arrCeldas, sNumAlb, sMsg)
+      if form.Incorporar then
+      begin
+        // Incorporar las lineas a un albaran existente del pedido.
+        if bUsarCeldas then
+          bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedidoConCantidades(
+                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.AlbaranSerieDestino, form.AlbaranNumDestino, oUser,
+                  form.IdPvTemporada, arrCeldas, sMsg)
+        else
+          bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedido(
+                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.AlbaranSerieDestino, form.AlbaranNumDestino, oUser,
+                  form.IdPvTemporada, sMsg);
+      end
       else
-        bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
-                inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-                form.SerieAlbaran, oUser,
-                form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
-                sNumAlb, sMsg);
+      begin
+        // Crear un albaran nuevo (flujo clasico).
+        if bUsarCeldas then
+          bOk := inLibPedidosCompra.CrearAlbaranDesdePedidoConCantidades(
+                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.SerieAlbaran, oUser,
+                  form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
+                  arrCeldas, sNumAlb, sMsg)
+        else
+          bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
+                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.SerieAlbaran, oUser,
+                  form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
+                  sNumAlb, sMsg);
+      end;
       if bOk then
       begin
         if bTxOwned then inLibGlobalVar.oConn.Commit;
