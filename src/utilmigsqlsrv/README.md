@@ -70,8 +70,11 @@ src/utilmigsqlsrv/
      empresas antes que almacenes, etc.).
    - Pulsa "Ejecutar migraciones" y revisa el log al pie.
 
-El programa guarda los valores de las conexiones (sin contraseñas) en
-`%USERPROFILE%\Factuzam\migrator.ini`.
+El programa guarda los valores de las conexiones en
+`%USERPROFILE%\Factuzam\migrator.ini`. Las contraseñas se guardan
+cifradas con DPAPI (ligadas a la cuenta Windows del usuario), nunca en
+claro; si el `.ini` se copia a otro equipo o usuario, las contraseñas no
+se podrán descifrar y habrá que volver a teclearlas.
 
 ## Preparar la BBDD destino desde cero
 

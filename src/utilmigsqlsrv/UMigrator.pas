@@ -14,7 +14,8 @@
 {      - Ver el log y un resumen final                                         }
 {                                                                              }
 {    El formulario carga / guarda los parámetros en %APPDATA%\Factuzam\        }
-{    migrator.ini (sin contraseñas en claro: se piden cada vez).               }
+{    migrator.ini. Las contraseñas se guardan cifradas con DPAPI (ligadas      }
+{    al usuario Windows), nunca en claro.                                       }
 {******************************************************************************}
 unit UMigrator;
 
@@ -24,7 +25,7 @@ uses
   Winapi.Windows, Winapi.Messages, Winapi.ActiveX,
   System.SysUtils, System.Variants,
   System.Classes, System.IniFiles, System.IOUtils, System.Math,
-  System.SyncObjs,
+  System.SyncObjs, System.NetEncoding,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.CheckLst, Vcl.ComCtrls, Vcl.Mask,
   // OmniThreadLibrary para el hilo de trabajo de la migracion
@@ -71,8 +72,6 @@ type
     PanelCentro:       TPanel;
     lblUsuario:        TLabel;
     edUsuario:         TEdit;
-    lblNivelFam:       TLabel;
-    edNivelFam:        TEdit;
     lblHilos:          TLabel;
     edHilos:           TEdit;
     GroupListado:      TGroupBox;
@@ -421,10 +420,20 @@ end;
 // =========================================================================
 
 procedure TFormMigrator.btnMarcarTodasClick(Sender: TObject);
-var i: Integer;
+var
+  i:             Integer;
+  bEsInvInicial: Boolean;
 begin
   for i := 0 to listMigs.Items.Count - 1 do
-    listMigs.Checked[i] := True;
+  begin
+    // "Inventario inicial" (codigo 'inventarios') queda DESMARCADO al
+    // pulsar "Marcar todas": es ALTERNATIVO a "Movimientos" (no son
+    // compatibles, generarian stock duplicado) y se usa menos. Quien lo
+    // necesite, lo marca a mano.
+    bEsInvInicial := (i < FEngine.Items.Count)
+                 and (FEngine.Items[i].Codigo = 'inventarios');
+    listMigs.Checked[i] := not bEsInvInicial;
+  end;
 end;
 
 procedure TFormMigrator.btnDesmarcarTodasClick(Sender: TObject);
@@ -870,7 +879,6 @@ begin
   FEngine.Usuario := edUsuario.Text;
   if FEngine.Usuario = '' then
     FEngine.Usuario := 'MIGRADOR';
-  FEngine.NivelFamiliasHoja  := StrToIntDef(edNivelFam.Text, 4);
 
   try
     dmMig.conSrv.Open;
@@ -1187,6 +1195,92 @@ begin
   Result := TPath.Combine(sDir, 'migrator.ini');
 end;
 
+// ---------------------------------------------------------------------------
+//  Cifrado de contraseñas en el .ini  (Windows DPAPI, por usuario)
+// ---------------------------------------------------------------------------
+// Las contraseñas de las conexiones se guardan cifradas con DPAPI
+// (CryptProtectData), ligadas a la cuenta Windows del usuario: en el .ini
+// no queda la clave en claro y solo el mismo usuario en la misma maquina la
+// descifra. Asi no hay que teclearla en cada corrida. Si el descifrado falla
+// (ini de otro equipo/usuario, dato corrupto) se devuelve '' y se vuelve a
+// teclear — nunca se almacena en claro.
+type
+  TDataBlob = record
+    cbData: DWORD;
+    pbData: PByte;
+  end;
+const
+  CRYPTPROTECT_UI_FORBIDDEN = $1;
+function CryptProtectData(pDataIn: Pointer; szDataDescr: PWideChar;
+  pEntropy, pReserved, pPrompt: Pointer; dwFlags: DWORD;
+  pDataOut: Pointer): BOOL; stdcall;
+  external 'crypt32.dll' name 'CryptProtectData';
+function CryptUnprotectData(pDataIn, ppszDataDescr, pEntropy, pReserved,
+  pPrompt: Pointer; dwFlags: DWORD; pDataOut: Pointer): BOOL; stdcall;
+  external 'crypt32.dll' name 'CryptUnprotectData';
+function CifrarPwd(const sClaro: string): string;
+var
+  blobIn, blobOut: TDataBlob;
+  bIn, bOut:       TBytes;
+begin
+  Result := '';
+  if sClaro <> '' then
+  begin
+    bIn := TEncoding.UTF8.GetBytes(sClaro);
+    blobIn.cbData  := Length(bIn);
+    blobIn.pbData  := @bIn[0];
+    blobOut.cbData := 0;
+    blobOut.pbData := nil;
+    if CryptProtectData(@blobIn, nil, nil, nil, nil,
+                        CRYPTPROTECT_UI_FORBIDDEN, @blobOut) then
+    begin
+      try
+        SetLength(bOut, blobOut.cbData);
+        if blobOut.cbData > 0 then
+          Move(blobOut.pbData^, bOut[0], blobOut.cbData);
+        Result := TNetEncoding.Base64.EncodeBytesToString(bOut);
+      finally
+        LocalFree(HLOCAL(blobOut.pbData));
+      end;
+    end;
+  end;
+end;
+function DescifrarPwd(const sCifrado: string): string;
+var
+  blobIn, blobOut: TDataBlob;
+  bIn, bOut:       TBytes;
+begin
+  Result := '';
+  bIn    := nil;
+  if sCifrado <> '' then
+  begin
+    try
+      bIn := TNetEncoding.Base64.DecodeStringToBytes(sCifrado);
+    except
+      bIn := nil;
+    end;
+  end;
+  if Length(bIn) > 0 then
+  begin
+    blobIn.cbData  := Length(bIn);
+    blobIn.pbData  := @bIn[0];
+    blobOut.cbData := 0;
+    blobOut.pbData := nil;
+    if CryptUnprotectData(@blobIn, nil, nil, nil, nil,
+                          CRYPTPROTECT_UI_FORBIDDEN, @blobOut) then
+    begin
+      try
+        SetLength(bOut, blobOut.cbData);
+        if blobOut.cbData > 0 then
+          Move(blobOut.pbData^, bOut[0], blobOut.cbData);
+        Result := TEncoding.UTF8.GetString(bOut);
+      finally
+        LocalFree(HLOCAL(blobOut.pbData));
+      end;
+    end;
+  end;
+end;
+
 procedure TFormMigrator.CargarConfig;
 var oIni: TIniFile;
 begin
@@ -1197,16 +1291,18 @@ begin
     edSrcPort.Text         := oIni.ReadString('Origen',  'Port', '1433');
     edSrcBase.Text         := oIni.ReadString('Origen',  'Base', '');
     edSrcUser.Text         := oIni.ReadString('Origen',  'User', 'sa');
+    edSrcPwd.Text          := DescifrarPwd(
+                                oIni.ReadString('Origen', 'PwdEnc', ''));
     chkSrcWinAuth.Checked  := oIni.ReadBool  ('Origen',  'WinAuth', False);
     chkSrcWinAuthClick(nil);  // refresca enabled de user/pwd
     edDstHost.Text := oIni.ReadString('Destino', 'Host',   '127.0.0.1');
     edDstPort.Text := oIni.ReadString('Destino', 'Port',   '3306');
     edDstBase.Text := oIni.ReadString('Destino', 'Base',   'factuzam');
     edDstUser.Text := oIni.ReadString('Destino', 'User',   'root');
+    edDstPwd.Text  := DescifrarPwd(
+                        oIni.ReadString('Destino', 'PwdEnc', ''));
     edUsuario.Text    :=
       oIni.ReadString ('General', 'Usuario', 'MIGRADOR');
-    edNivelFam.Text   :=
-      IntToStr(oIni.ReadInteger('General', 'NivelFamHoja', 4));
     edHilos.Text      :=
       IntToStr(oIni.ReadInteger('General', 'MaxHilos', 4));
   finally
@@ -1223,14 +1319,14 @@ begin
     oIni.WriteString('Origen',  'Port',    edSrcPort.Text);
     oIni.WriteString('Origen',  'Base',    edSrcBase.Text);
     oIni.WriteString('Origen',  'User',    edSrcUser.Text);
+    oIni.WriteString('Origen',  'PwdEnc',  CifrarPwd(edSrcPwd.Text));
     oIni.WriteBool  ('Origen',  'WinAuth', chkSrcWinAuth.Checked);
     oIni.WriteString('Destino', 'Host', edDstHost.Text);
     oIni.WriteString('Destino', 'Port', edDstPort.Text);
     oIni.WriteString('Destino', 'Base', edDstBase.Text);
     oIni.WriteString('Destino', 'User', edDstUser.Text);
+    oIni.WriteString('Destino', 'PwdEnc', CifrarPwd(edDstPwd.Text));
     oIni.WriteString ('General', 'Usuario',            edUsuario.Text);
-    oIni.WriteInteger('General', 'NivelFamHoja',
-                      StrToIntDef(edNivelFam.Text,   4));
     oIni.WriteInteger('General', 'MaxHilos',
                       StrToIntDef(edHilos.Text, 4));
   finally
