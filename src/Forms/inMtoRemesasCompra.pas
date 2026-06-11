@@ -41,6 +41,8 @@ type
     dbcGrdDBTabPrinTOTAL_REMC: TcxGridDBColumn;
     dbcGrdDBTabPrinFECHA_CARGO_REMC: TcxGridDBColumn;
     dbcGrdDBTabPrinIBAN_REMC: TcxGridDBColumn;
+    btnVerEfectos: TcxButton;
+    procedure btnVerEfectosClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -55,7 +57,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inMtoModalVerEfectosRemesa;
 
 {$R *.dfm}
 
@@ -71,6 +73,32 @@ end;
 procedure TfrmMtoRemesasCompra.ResetForm;
 begin
   inherited;
+end;
+
+procedure TfrmMtoRemesasCompra.btnVerEfectosClick(Sender: TObject);
+var
+  frm: TfrmModalVerEfectosRemesa;
+  q: TDataSet;
+  sSerie, sNum: string;
+begin
+  inherited;
+  if Assigned(dmmRemesasCompra) and dmmRemesasCompra.unqryTablaG.Active and
+     (not dmmRemesasCompra.unqryTablaG.IsEmpty) then
+  begin
+    q      := dmmRemesasCompra.unqryTablaG;
+    sSerie := q.FieldByName('SERIE_REMC').AsString;
+    sNum   := q.FieldByName('NUMERO_REMC').AsString;
+    frm := TfrmModalVerEfectosRemesa.Create(nil);
+    try
+      frm.Cargar(sSerie, sNum,
+        Format('Efectos de la remesa %s / %s', [sSerie, sNum]));
+      frm.ShowModal;
+    finally
+      frm.Free;
+    end;
+  end
+  else
+    ShowMessage('Selecciona una remesa.');
 end;
 
 initialization

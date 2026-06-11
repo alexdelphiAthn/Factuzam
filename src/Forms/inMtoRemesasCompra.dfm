@@ -81,6 +81,17 @@ inherited frmMtoRemesasCompra: TfrmMtoRemesasCompra
       end
     end
   end
+  inherited pButtonRightBar: TPanel
+    object btnVerEfectos: TcxButton
+      Left = 0
+      Top = 200
+      Width = 137
+      Height = 44
+      Caption = 'Ver efectos'
+      TabOrder = 2
+      OnClick = btnVerEfectosClick
+    end
+  end
   inherited dsTablaG: TDataSource
     DataSet = dmRemesasCompra.unqryTablaG
   end

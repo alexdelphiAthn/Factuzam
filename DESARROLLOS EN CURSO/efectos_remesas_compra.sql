@@ -535,6 +535,8 @@ BEGIN
   DECLARE v_pend     decimal(18,6) DEFAULT 0;
   DECLARE v_npago    int DEFAULT 0;
   DECLARE v_estado   varchar(20);
+  DECLARE v_serie_rem  varchar(20);
+  DECLARE v_num_rem    varchar(20);
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
     ROLLBACK;
@@ -583,6 +585,17 @@ BEGIN
      WHERE SERIE_FACC_EFEC  = p_SERIE
        AND NUMERO_FACC_EFEC = p_NUMERO
        AND NUMERO_EFEC      = p_NUM_EFEC;
+    -- Si el efecto esta remesado, refrescar el total de la remesa para que
+    -- refleje lo que queda pendiente tras el pago.
+    SELECT SERIE_REMC_EFEC, NUMERO_REMC_EFEC
+      INTO v_serie_rem, v_num_rem
+      FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO
+       AND NUMERO_EFEC      = p_NUM_EFEC;
+    IF COALESCE(v_num_rem, '') <> '' THEN
+      CALL PRC_REMC_RECALCULAR(v_serie_rem, v_num_rem);
+    END IF;
     COMMIT;
     SET p_RESULTADO = v_npago;
   END IF;

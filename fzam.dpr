@@ -237,6 +237,7 @@ uses
   inMtoModalCargarEfectosRemesa in 'src\Modals\inMtoModalCargarEfectosRemesa.pas' {frmModalCargarEfectosRemesa},
   inMtoModalRegistrarPago in 'src\Modals\inMtoModalRegistrarPago.pas' {frmModalRegistrarPago},
   inMtoModalVerPagosEfecto in 'src\Modals\inMtoModalVerPagosEfecto.pas' {frmModalVerPagosEfecto},
+  inMtoModalVerEfectosRemesa in 'src\Modals\inMtoModalVerEfectosRemesa.pas' {frmModalVerEfectosRemesa},
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},
