@@ -86,20 +86,14 @@ type
     procedure btnAceptarClick(Sender: TObject);
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
-<<<<<<< HEAD
     procedure cbbAlmacenPropertiesEditValueChanged(Sender: TObject);
-  private
-    procedure CargarAlmacenes;
-    procedure ConfigurarLookupTemporada;
-    procedure ProponerSerieAlmacen;
-=======
     procedure chkIncorporarClick(Sender: TObject);
   private
     procedure CargarAlmacenes;
     procedure ConfigurarLookupTemporada;
+    procedure ProponerSerieAlmacen;
     procedure CargarAlbaranesExistentes;
     procedure ActualizarModoIncorporar;
->>>>>>> 447a6d024919cdf85a8860fe012108a433ea4d91
   public
     SeriePedc, NumPedc      : string;
     CodigoEmpresa           : string;  // empresa del pedido (series 'AB')
@@ -157,18 +151,13 @@ begin
     [SeriePedc, NumPedc]);
   CargarAlmacenes;
   ConfigurarLookupTemporada;
-<<<<<<< HEAD
   // Defaults. El combo de serie ofrece las series 'AB' de la empresa.
   CargarSeriesEmpresa(CodigoEmpresa, 'AB', cbbSerieAlb.Properties.Items);
   cbbSerieAlb.Text := SerieAlbDefecto;
-=======
   CargarAlbaranesExistentes;
   // Por defecto se crea un albaran nuevo; el usuario decide si incorpora.
   chkIncorporar.Checked := False;
   ActualizarModoIncorporar;
-  // Defaults.
-  txtSerieAlb.Text := SerieAlbDefecto;
->>>>>>> 447a6d024919cdf85a8860fe012108a433ea4d91
   txtRefPrv.Text   := RefProveedorDefecto;
   if IdPvTemporadaDefecto > 0 then
     cbbTemporada.EditValue := IdPvTemporadaDefecto
@@ -288,7 +277,7 @@ begin
   // En modo incorporar, la serie / ref / fecha del albaran nuevo no
   // aplican (el destino ya existe); se deshabilitan. La temporada si se
   // mantiene (aplica a las lineas que se anaden).
-  txtSerieAlb.Enabled := not chkIncorporar.Checked;
+  cbbSerieAlb.Enabled := not chkIncorporar.Checked;
   txtRefPrv.Enabled   := not chkIncorporar.Checked;
   dteFecha.Enabled    := not chkIncorporar.Checked;
 end;
@@ -328,20 +317,7 @@ begin
     if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
     Exit;
   end;
-<<<<<<< HEAD
-  if Trim(cbbSerieAlb.Text) = '' then
-  begin
-    MessageDlg('Indica la serie del albaran.', mtInformation, [mbOk], 0);
-    if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
-    Exit;
-  end;
-  // Captura resultado.
-  CodigoAlmacen := VarToStr(vAlm);
-  SerieAlbaran  := Trim(cbbSerieAlb.Text);
-  RefProveedor  := Trim(txtRefPrv.Text);
-=======
   // Temporada: aplica a las lineas tanto si se crea como si se incorpora.
->>>>>>> 447a6d024919cdf85a8860fe012108a433ea4d91
   vTmp := cbbTemporada.EditValue;
   if VarIsNull(vTmp) or VarIsEmpty(vTmp) then
     IdPvTemporada := 0
@@ -367,15 +343,15 @@ begin
   else
   begin
     // Modo clasico: crear albaran nuevo (requiere serie).
-    if Trim(txtSerieAlb.Text) = '' then
+    if Trim(cbbSerieAlb.Text) = '' then
     begin
       MessageDlg('Indica la serie del albaran.', mtInformation, [mbOk], 0);
-      if txtSerieAlb.CanFocus then txtSerieAlb.SetFocus;
+      if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
       Exit;
     end;
     Incorporar     := False;
     CodigoAlmacen  := VarToStr(vAlm);
-    SerieAlbaran   := Trim(txtSerieAlb.Text);
+    SerieAlbaran   := Trim(cbbSerieAlb.Text);
     RefProveedor   := Trim(txtRefPrv.Text);
     FechaRecepcion := dteFecha.Date;
     Aceptado       := True;
