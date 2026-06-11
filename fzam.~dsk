@@ -13,21 +13,25 @@ File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.p
 File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
 File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
 File_13=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,387,32,395,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
-Count=1
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenPedido.pas
+Module1=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Count=2
 EditWindowCount=1
+
+[C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenPedido.pas]
+ModuleType=TSourceModule
 
 [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 ModuleType=TBaseProject
 
 [EditWindow0]
-ViewCount=2
+ViewCount=3
 CurrentView=0
 View0=0
 View1=1
+View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -68,13 +72,24 @@ OTAEditViewType=WelcomePage.MainPage
 [View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
-CursorX=40
-CursorY=13
-TopLine=1
+CursorX=1
+CursorY=321
+TopLine=321
 LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+
+[View2]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenPedido.pas
+CursorX=1
+CursorY=90
+TopLine=78
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenPedido.pas
 
 [Watches]
 Count=0
