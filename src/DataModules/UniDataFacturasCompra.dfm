@@ -1,0 +1,259 @@
+inherited dmFacturasCompra: TdmFacturasCompra
+  Height = 480
+  Width = 626
+  PixelsPerInch = 120
+  inherited unqryTablaG: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_facturas_compra')
+    AfterInsert = unqryTablaGAfterInsert
+    BeforePost = unqryTablaGBeforePost
+    AfterPost = unqryTablaGAfterPost
+    Left = 48
+    Top = 24
+  end
+  object unqryFacturasCompraLineas: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_facturas_compra_lineas'
+      ' WHERE NUMERO_FACC_FACCLIN = :NUMERO_FACC'
+      '   AND SERIE_FACC_FACCLIN  = :SERIE_FACC'
+      ' ORDER BY LINEA_FACCLIN')
+    MasterFields = 'NUMERO_FACC;SERIE_FACC'
+    DetailFields = 'NUMERO_FACC_FACCLIN;SERIE_FACC_FACCLIN'
+    AfterInsert = unqryFacturasCompraLineasAfterInsert
+    BeforePost = unqryFacturasCompraLineasBeforePost
+    AfterPost = unqryFacturasCompraLineasAfterPost
+    Left = 520
+    Top = 8
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'NUMERO_FACC'
+        ParamType = ptInput
+        Value = nil
+      end
+      item
+        DataType = ftWideString
+        Name = 'SERIE_FACC'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsFacturasCompraLineas: TDataSource
+    DataSet = unqryFacturasCompraLineas
+    Left = 520
+    Top = 72
+  end
+  object unqryEmpDataFacc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_empresas')
+    Left = 48
+    Top = 192
+  end
+  object unqryPrvDataFacc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_proveedores')
+    Left = 48
+    Top = 248
+  end
+  object unqryArtDataLinFacc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_articulos')
+    Left = 48
+    Top = 304
+  end
+  object unqrySkusFacc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_UNIDAD_SKU, CODIGO_ART_SKU '
+      '  FROM fza_articulos_skus '
+      ' WHERE CODIGO_UNIDAD_SKU = :pSKU')
+    Left = 48
+    Top = 360
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'pSKU'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object unstrdprcGetContadorFacc: TUniStoredProc
+    StoredProcName = 'PRC_GET_CONTADOR_FACTURA'
+    Connection = dmConn.conUni
+    Left = 256
+    Top = 24
+  end
+  object unqryDefArticuloFacc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT DISTINCT NOMBRE_ATRIBUTO, ORDEN_VISUAL_ATRIBUTO '
+      '  FROM vi_atributos_nombres '
+      ' WHERE CODIGO_ART_PADRE_ARTVIN = :ARTICULO '
+      ' ORDER BY ORDEN_VISUAL_ATRIBUTO')
+    Left = 256
+    Top = 96
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'ARTICULO'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object unqryCabFaccPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_facturas_compra_cab_print'
+      'WHERE SERIE_FACC = :SERIE_FACC'
+      '  AND NUMERO_FACC = :NUMERO_FACC')
+    Left = 360
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_FACC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_FACC'
+        Value = nil
+      end>
+  end
+  object dsCabFaccPrint: TDataSource
+    DataSet = unqryCabFaccPrint
+    Left = 360
+    Top = 64
+  end
+  object fxdsCabFacc: TfrxDBDataset
+    UserName = 'Factura'
+    CloseDataSource = False
+    DataSource = dsCabFaccPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 360
+    Top = 104
+  end
+  object unqryLinFaccPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_facturas_compra_lin_print'
+      'WHERE SERIE_FACC = :SERIE_FACC'
+      '  AND NUMERO_FACC = :NUMERO_FACC'
+      'ORDER BY CODIGO_ART, COLOR_TEXTO, LINEA_FACC')
+    Left = 456
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_FACC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_FACC'
+        Value = nil
+      end>
+  end
+  object dsLinFaccPrint: TDataSource
+    DataSet = unqryLinFaccPrint
+    Left = 456
+    Top = 64
+  end
+  object fxdsLinFacc: TfrxDBDataset
+    UserName = 'LineasFactura'
+    CloseDataSource = False
+    DataSource = dsLinFaccPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 456
+    Top = 104
+  end
+  object unqryGuiasFaccPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT DISTINCT'
+      '  g.ID_AC, g.NOMBRE_CORTO_AC, g.NOMBRE_AC,'
+      '  g.T01, g.T02, g.T03, g.T04, g.T05,'
+      '  g.T06, g.T07, g.T08, g.T09, g.T10,'
+      '  g.T11, g.T12, g.T13, g.T14, g.T15,'
+      '  g.T16, g.T17, g.T18, g.T19, g.T20'
+      'FROM vi_facturas_compra_guias_print g'
+      'WHERE g.ID_AC IN ('
+      '  SELECT L.ID_AC_PIVOT_FACCLIN'
+      '    FROM fza_facturas_compra_lineas L'
+      '   WHERE L.SERIE_FACC_FACCLIN  = :SERIE_FACC'
+      '     AND L.NUMERO_FACC_FACCLIN = :NUMERO_FACC'
+      '     AND L.ID_AC_PIVOT_FACCLIN IS NOT NULL'
+      ')'
+      'ORDER BY g.NOMBRE_CORTO_AC, g.ID_AC')
+    Left = 552
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_FACC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_FACC'
+        Value = nil
+      end>
+  end
+  object dsGuiasFaccPrint: TDataSource
+    DataSet = unqryGuiasFaccPrint
+    Left = 552
+    Top = 64
+  end
+  object fxdsGuiasFacc: TfrxDBDataset
+    UserName = 'GuiasTallas'
+    CloseDataSource = False
+    DataSource = dsGuiasFaccPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 552
+    Top = 104
+  end
+  object unqryLinFaccSkuPrint: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT L.*'
+      '  FROM fza_facturas_compra_lineas L'
+      ' WHERE L.SERIE_FACC_FACCLIN = :SERIE_FACC'
+      '   AND L.NUMERO_FACC_FACCLIN = :NUMERO_FACC'
+      ' ORDER BY L.LINEA_FACCLIN')
+    Left = 648
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_FACC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_FACC'
+        Value = nil
+      end>
+  end
+  object dsLinFaccSkuPrint: TDataSource
+    DataSet = unqryLinFaccSkuPrint
+    Left = 648
+    Top = 64
+  end
+  object fxdsLinFaccSku: TfrxDBDataset
+    UserName = 'LineasFacturaSku'
+    CloseDataSource = False
+    DataSource = dsLinFaccSkuPrint
+    BCDToCurrency = False
+    DataSetOptions = []
+    Left = 648
+    Top = 104
+  end
+end

@@ -179,6 +179,9 @@ type
     procedure Sesiones1Click(Sender: TObject);
     procedure Albaranes1Click(Sender: TObject);
     procedure Devoluciones1Click(Sender: TObject);
+    procedure Facturas1Click(Sender: TObject);
+    procedure EfectosCompra1Click(Sender: TObject);
+    procedure RemesasCompra1Click(Sender: TObject);
     procedure Pedidos1Click(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
@@ -1671,6 +1674,27 @@ begin
   inherited;
   if Devoluciones1.Visible then
     ShowMto(Self, 'DevolucionesCompra');
+end;
+
+procedure TfrmMtoPrincipal.Facturas1Click(Sender: TObject);
+begin
+  inherited;
+  if Facturas1.Visible then
+    ShowMto(Self, 'FacturasCompra');
+end;
+
+procedure TfrmMtoPrincipal.EfectosCompra1Click(Sender: TObject);
+begin
+  inherited;
+  if EfectosCompra1.Visible then
+    ShowMto(Self, 'EfectosCompra');
+end;
+
+procedure TfrmMtoPrincipal.RemesasCompra1Click(Sender: TObject);
+begin
+  inherited;
+  if RemesasCompra1.Visible then
+    ShowMto(Self, 'RemesasCompra');
 end;
 
 procedure TfrmMtoPrincipal.Pedidos1Click(Sender: TObject);

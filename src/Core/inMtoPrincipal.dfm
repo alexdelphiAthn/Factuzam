@@ -1457,6 +1457,15 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       object Facturas1: TMenuItem
         Caption = 'Facturas'
         ShortCut = 57414
+        OnClick = Facturas1Click
+      end
+      object EfectosCompra1: TMenuItem
+        Caption = 'Efectos de pago'
+        OnClick = EfectosCompra1Click
+      end
+      object RemesasCompra1: TMenuItem
+        Caption = 'Remesas de pago'
+        OnClick = RemesasCompra1Click
       end
       object Formasdepago2: TMenuItem
         Caption = 'Formas de pago'
