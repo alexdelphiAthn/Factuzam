@@ -48,7 +48,10 @@ hacer el cierre Z; en este primer paso no se usa).
 Columnas relevantes (todas las monetarias `decimal(19,6)`):
 
 - Contexto: `CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ`,
-  `FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`, `CODIGO_EMPLEADO_ARQ` (opcional).
+  `FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`, `CODIGO_EMPLEADO_ARQ` (vendedor
+  que realiza el cierre: la pestaña Recuento exige su número de empleado
+  de caja —no basta el usuario logado—, lo valida contra `fza_empleados`
+  activos y lo imprime en el justificante como "Vendedor:").
 - Estado: `FASE_ARQ` (`'ABIERTO'` / `'CERRADO'`).
 - Contadores: `CANTIDAD_VENTAS_ARQ`, `CANTIDAD_OPERACIONES_ARQ`.
 - Líneas: `TOTAL_BRUTO_LINEAS_ARQ`, `TOTAL_DESCUENTOS_LINEAS_ARQ`.

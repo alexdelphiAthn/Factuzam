@@ -1091,6 +1091,32 @@ inherited frmModalArqueo: TfrmModalArqueo
             TabOrder = 13
             Width = 280
           end
+          object lblVendedorLbl: TcxLabel
+            Left = 300
+            Top = 160
+            Caption = 'Vendedor (n'#186' empl.):'
+            TabOrder = 14
+            Transparent = True
+          end
+          object txtVendedorCodigo: TcxTextEdit
+            Left = 420
+            Top = 158
+            Properties.MaxLength = 20
+            TabOrder = 15
+            OnExit = txtVendedorCodigoExit
+            Width = 80
+          end
+          object lblVendedorNombre: TcxLabel
+            Left = 506
+            Top = 160
+            AutoSize = False
+            Properties.Alignment.Horz = taLeftJustify
+            Style.TextColor = clGray
+            TabOrder = 16
+            Transparent = True
+            Height = 19
+            Width = 150
+          end
         end
         object btnGrabarArqueo: TcxButton
           Left = 340
