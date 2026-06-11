@@ -1255,7 +1255,7 @@ inherited dmFacturas: TdmFacturas
   end
   object unqryFormaPago: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO fza_formapago'
+      'INSERT INTO fza_formas_pago'
       
         '  (CODIGO_FP_FP, ESACTIVO_FORMA_PAGO_FP, ORDEN_FORMA_PAGO_FP, DE' +
         'SCRIPCION_FORMA_PAGO_FP, N_PLAZOS_FORMA_PAGO_FP, N_DIAS_ENTRE_PL' +
@@ -1270,11 +1270,11 @@ inherited dmFacturas: TdmFacturas
         'SDEFAULT_FORMA_PAGO_FP, :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARI' +
         'O_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM fza_formapago'
+      'DELETE FROM fza_formas_pago'
       'WHERE'
       '  CODIGO_FP_FP = :Old_CODIGO_FP_FP')
     SQLUpdate.Strings = (
-      'UPDATE fza_formapago'
+      'UPDATE fza_formas_pago'
       'SET'
       
         '  CODIGO_FP_FP = :CODIGO_FP_FP, ESACTIVO_FORMA_PAGO_FP = :ESACTI' +
@@ -1289,7 +1289,7 @@ inherited dmFacturas: TdmFacturas
       'WHERE'
       '  CODIGO_FP_FP = :Old_CODIGO_FP_FP')
     SQLLock.Strings = (
-      'SELECT * FROM fza_formapago'
+      'SELECT * FROM fza_formas_pago'
       'WHERE'
       '  CODIGO_FP_FP = :Old_CODIGO_FP_FP'
       'FOR UPDATE')
@@ -1299,11 +1299,11 @@ inherited dmFacturas: TdmFacturas
         ', DESCRIPCION_FORMA_PAGO_FP, N_PLAZOS_FORMA_PAGO_FP, N_DIAS_ENTR' +
         'E_PLAZOS_FORMA_PAGO_FP, PORCENTAJE_ANTICIPO_FORMA_PAGO_FP, ESDEF' +
         'AULT_FORMA_PAGO_FP, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA,' +
-        ' USUARIO_MODIF FROM fza_formapago'
+        ' USUARIO_MODIF FROM fza_formas_pago'
       'WHERE'
       '  CODIGO_FP_FP = :CODIGO_FP_FP')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM fza_formapago')
+      'SELECT COUNT(*) FROM fza_formas_pago')
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_formapago'
