@@ -1159,6 +1159,12 @@ begin
         end;
         dmmPedidosCompra.unqryTablaG.Refresh;
         dmmPedidosCompra.unqryPedidosCompraLineas.Refresh;
+        // Refrescar el grid de la pestania "Albaranes" para que aparezca
+        // el albaran recien creado / incorporado (es detail del pedido,
+        // no se refresca solo al hacer Refresh del master).
+        if dmmPedidosCompra.unqryAlbaranesPedc.Active then
+          dmmPedidosCompra.unqryAlbaranesPedc.Close;
+        dmmPedidosCompra.unqryAlbaranesPedc.Open;
       end
       else
       begin
