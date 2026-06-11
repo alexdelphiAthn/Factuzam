@@ -78,13 +78,23 @@ faltan: buscar <code>Captura pendiente</code> en los <code>.md</code>.</p>
 <p>El manual también está disponible como <strong>sitio web navegable</strong> en
 <code>manual/html/</code>. Para leerlo, abre <strong><code>manual/html/index.html</code></strong> en cualquier
 navegador (no necesita servidor ni conexión a internet).</p>
-<p>Para <strong>regenerar el HTML</strong> tras editar los <code>.md</code> (o tras añadir capturas),
-ejecuta desde la carpeta <code>manual/</code>:</p>
-<pre><code>python generar_html.py</code></pre>
-<p>El script <code>generar_html.py</code> no requiere instalar nada: usa solo la
-librería estándar de Python 3. Vuelca el resultado en <code>manual/html/</code>
-(una página por capítulo, el índice de navegación lateral, la hoja de
-estilo <code>estilo.css</code> y una copia de las imágenes de <code>img/</code>).</p>
+<h3 id="flujo-de-trabajo-editar-y-regenerar">Flujo de trabajo: editar y regenerar</h3>
+<p>El HTML <strong>no se edita a mano</strong>: se genera a partir de los <code>.md</code>. Para
+mantenerlo al día:</p>
+<ol><li>Edita el capítulo que quieras en su fichero <code>NN-*.md</code> (o el <code>README.md</code>).</li><li>Si añades una captura, guárdala en <code>manual/img/</code> con el nombre indicado.</li><li><strong>Regenera el HTML.</strong> Tienes dos formas:</li></ol>
+<ul><li><strong>En Windows:</strong> doble clic en <strong><code>generar_html.bat</code></strong> (busca Python e</li></ul>
+<p>     informa si no está instalado).</p>
+<ul><li><strong>Desde consola</strong> (cualquier sistema), en la carpeta <code>manual/</code>:</li></ul>
+<p>     ``<code>
+     python generar_html.py
+     </code>``</p>
+<p>El generador <code>generar_html.py</code> <strong>no requiere instalar nada</strong>: usa solo la
+librería estándar de Python 3. Vuelca el resultado en <code>manual/html/</code> (una
+página por capítulo, el índice de navegación lateral, la hoja de estilo
+<code>estilo.css</code> y una copia de las imágenes de <code>img/</code>), sobrescribiendo lo
+anterior.</p>
+<blockquote><p>Si añades un capítulo nuevo (<code>11-*.md</code>), regístralo en la lista <code>ORDEN</code>
+de la cabecera de <code>generar_html.py</code> para que aparezca en el menú lateral.</p></blockquote>
 </article>
 <footer>Manual de Factuzam · generado el 11/06/2026</footer>
 </main>
