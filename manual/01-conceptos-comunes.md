@@ -27,6 +27,24 @@ artículos, facturas…). Desde aquí puedes:
 - **Buscar** texto en la rejilla.
 - Hacer **doble clic** en una fila para abrir su **Ficha**.
 
+#### Guardar la disposición de la rejilla
+
+Puedes personalizar la rejilla a tu gusto (qué columnas se ven, su orden,
+ancho, ordenación y agrupación) y **dejarla guardada** para las próximas
+veces. Se gestiona con estos atajos (y con sus botones equivalentes sobre
+la rejilla):
+
+| Atajo | Acción | Qué hace |
+|-------|--------|----------|
+| `[Alt]+[F12]` | **Guardar layout** | Guarda la disposición actual de la rejilla en el perfil. Pide a qué **permiso/grupo** se aplica, de modo que todos los usuarios de ese grupo la verán igual. |
+| `[Ctrl]+[F12]` | **Resetear layout** | Borra la personalización guardada y vuelve a la disposición por defecto. |
+| `[Ctrl]+[F10]` | **Ajustar anchos** | Ajusta automáticamente el ancho de las columnas a su contenido (*best fit*). |
+
+> **Guardar layout** afecta a **todo el grupo de permisos** que indiques en
+> el diálogo, no solo a tu usuario. Úsalo cuando quieras fijar una vista
+> estándar para un grupo (p. ej. *Cajeros*). `[Ctrl]+[F10]` (ajustar
+> anchos) es local y no guarda nada hasta que pulses `[Alt]+[F12]`.
+
 ### Pestaña **Ficha**
 
 Muestra el **detalle de un único registro** con todos sus campos
