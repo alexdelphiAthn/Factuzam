@@ -233,6 +233,7 @@ uses
   UniDataEfectosCompra in 'src\DataModules\UniDataEfectosCompra.pas' {dmEfectosCompra: TdmEfectosCompra},
   inMtoRemesasCompra in 'src\Forms\inMtoRemesasCompra.pas' {frmMtoRemesasCompra},
   UniDataRemesasCompra in 'src\DataModules\UniDataRemesasCompra.pas' {dmRemesasCompra: TdmRemesasCompra},
+  inMtoModalFacturarAlbaranes in 'src\Modals\inMtoModalFacturarAlbaranes.pas' {frmModalFacturarAlbaranes},
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},
