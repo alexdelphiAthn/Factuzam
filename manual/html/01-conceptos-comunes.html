@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Conceptos comunes a todas las pantallas — Manual de Factuzam</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual de usuario</span></div>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li class="activo"><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="01-conceptos-comunes-a-todas-las-pantallas">01 · Conceptos comunes a todas las pantallas</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>Casi todas las opciones de menú abren una <strong>pantalla de mantenimiento</strong> con
+la misma estructura. Si entiendes cómo funciona una, las entiendes todas.
+Este capítulo explica esa estructura común; los capítulos siguientes solo
+añaden lo específico de cada pantalla.</p>
+<hr>
+<h2 id="1-estructura-de-una-pantalla-de-mantenimiento">1. Estructura de una pantalla de mantenimiento</h2>
+<p>Una pantalla de mantenimiento típica tiene <strong>dos pestañas principales</strong>:</p>
+<p><img src="img/01-lista.png" alt="Pestaña Lista de un mantenimiento" loading="lazy">
+<em>▢ Captura pendiente — Pestaña Lista (rejilla) de un mantenimiento cualquiera.</em></p>
+<h3 id="pestana-lista">Pestaña <strong>Lista</strong></h3>
+<p>Muestra una <strong>rejilla (grid)</strong> con todos los registros de la tabla (clientes,
+artículos, facturas…). Desde aquí puedes:</p>
+<ul><li><strong>Ordenar</strong> por cualquier columna pulsando en su cabecera.</li><li><strong>Agrupar, filtrar y reorganizar</strong> columnas (funciones del grid</li></ul>
+<p>  DevExpress).</p>
+<ul><li><strong>Buscar</strong> texto en la rejilla.</li><li>Hacer <strong>doble clic</strong> en una fila para abrir su <strong>Ficha</strong>.</li></ul>
+<h3 id="pestana-ficha">Pestaña <strong>Ficha</strong></h3>
+<p>Muestra el <strong>detalle de un único registro</strong> con todos sus campos
+organizados en sub-pestañas (Datos principales, Más datos, etc.). Es donde
+se <strong>da de alta, se consulta y se edita</strong> un registro concreto.</p>
+<p><img src="img/01-ficha.png" alt="Pestaña Ficha de un mantenimiento" loading="lazy">
+<em>▢ Captura pendiente — Pestaña Ficha con sus sub-pestañas.</em></p>
+<blockquote><p>Algunas pantallas tienen además una pestaña <strong>Perfil</strong> (visible solo para
+administradores) para configurar columnas, captions y comportamiento de
+la propia pantalla por usuario/perfil.</p></blockquote>
+<hr>
+<h2 id="2-el-navegador-de-registros">2. El navegador de registros</h2>
+<p>En la parte inferior (o lateral) de la pantalla hay una <strong>barra de
+navegación</strong> con los botones estándar. Sus acciones son siempre las mismas:</p>
+<p><img src="img/01-navegador.png" alt="Barra del navegador de registros" loading="lazy">
+<em>▢ Captura pendiente — Barra de navegación con sus botones.</em></p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Atajo</th>
+<th>Acción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Primer registro</strong></td><td><code>[Inicio]</code></td><td>Va al primer registro de la lista.</td></tr>
+<tr><td><strong>Registro anterior</strong></td><td><code>[RePág]</code></td><td>Retrocede un registro.</td></tr>
+<tr><td><strong>Registro siguiente</strong></td><td><code>[AvPág]</code></td><td>Avanza un registro.</td></tr>
+<tr><td><strong>Último registro</strong></td><td><code>[Fin]</code></td><td>Va al último registro.</td></tr>
+<tr><td><strong>Insertar registro</strong></td><td><code>[Insert]</code></td><td>Crea un registro nuevo en blanco para rellenar.</td></tr>
+<tr><td><strong>Editar registro</strong></td><td><code>[F2]</code></td><td>Pone en modo edición el registro actual.</td></tr>
+<tr><td><strong>Eliminar registro</strong></td><td><code>[Ctrl]+[Supr]</code></td><td>Borra el registro actual (pide confirmación).</td></tr>
+<tr><td><strong>Grabar registro</strong></td><td><code>[F12]</code></td><td>Confirma y guarda los cambios en la base de datos.</td></tr>
+<tr><td><strong>Retroceder bloque</strong></td><td><code>[Ctrl]+[RePág]</code></td><td>Retrocede un bloque de registros (paginación).</td></tr>
+<tr><td><strong>Avanzar bloque</strong></td><td><code>[Ctrl]+[AvPág]</code></td><td>Avanza un bloque de registros (paginación).</td></tr>
+</tbody>
+</table>
+<p>En artículos y documentos aparecen además botones específicos:</p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Atajo</th>
+<th>Acción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Foto artículo</strong></td><td><code>[Ctrl]+[F]</code></td><td>Muestra la foto del artículo.</td></tr>
+<tr><td><strong>Consulta stock</strong></td><td><code>[Ctrl]+[U]</code></td><td>Consulta el stock del artículo actual.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Los atajos del navegador funcionan cuando la pantalla de mantenimiento
+tiene el foco. <strong>Grabar</strong> dispone de dos atajos equivalentes: <code>[F12]</code>
+(botón <strong>Grabar registro</strong> del navegador) y <code>[Alt]+[G]</code> (botón
+<strong>Grabar</strong> de acción, ver abajo).</p></blockquote>
+<hr>
+<h2 id="3-botones-de-accion">3. Botones de acción</h2>
+<p>Independientemente del navegador, las pantallas suelen mostrar tres botones
+de acción principales. La letra subrayada es su <strong>mnemónico</strong> (<code>[Alt]</code> +
+esa letra):</p>
+<ul><li><strong>Grabar</strong> (<code>[Alt]+[G]</code>) — guarda los cambios del registro en edición.</li><li><strong>Cancelar</strong> (<code>[Alt]+[C]</code>) — descarta los cambios no guardados y vuelve</li></ul>
+<p>  al estado anterior.</p>
+<ul><li><strong>Salir</strong> (<code>[Alt]+[S]</code>) — cierra la pestaña de la pantalla.</li></ul>
+<hr>
+<h2 id="4-flujo-de-trabajo-alta-modificacion-y-baja">4. Flujo de trabajo: alta, modificación y baja</h2>
+<p><strong>Dar de alta un registro nuevo:</strong></p>
+<ol><li>Pulsa <strong>Insertar registro</strong> (o el botón de alta).</li><li>Rellena los campos en la <strong>Ficha</strong>. Los campos obligatorios suelen estar</li></ol>
+<p>   marcados o se validan al grabar.</p>
+<ol><li>Pulsa <strong>Grabar</strong>.</li></ol>
+<p><strong>Modificar un registro existente:</strong></p>
+<ol><li>Localízalo en la <strong>Lista</strong> y ábrelo en la <strong>Ficha</strong> (doble clic).</li><li>Pulsa <strong>Editar registro</strong>.</li><li>Cambia lo necesario y pulsa <strong>Grabar</strong>.</li></ol>
+<p><strong>Dar de baja un registro:</strong></p>
+<ol><li>Sitúate sobre el registro.</li><li>Pulsa <strong>Eliminar registro</strong> y confirma.</li></ol>
+<blockquote><p>Muchas tablas no se borran realmente, sino que se <strong>desactivan</strong> mediante
+una marca <strong>Activo (S/N)</strong>. Así se conserva el histórico y la integridad
+de documentos antiguos. Cuando exista esa marca, prefiérela al borrado.</p></blockquote>
+<hr>
+<h2 id="5-busquedas">5. Búsquedas</h2>
+<p>Las pantallas ofrecen dos formas de buscar:</p>
+<ul><li><strong>Buscar BBDD</strong> — busca en <strong>toda la base de datos</strong> según el texto</li></ul>
+<p>  introducido en <em>Texto a buscar</em>. Útil para encontrar un registro que no
+  está cargado en la página actual.</p>
+<ul><li><strong>Buscar Grid</strong> — busca <strong>solo dentro de los datos ya cargados</strong> en la</li></ul>
+<p>  rejilla.</p>
+<p>Atajo rápido: en muchas pantallas, <code>[Ctrl]+[A]</code> abre la instancia de
+búsqueda con el filtro «Todos» para localizar cualquier registro.</p>
+<hr>
+<h2 id="6-exportar-a-excel-e-imprimir">6. Exportar a Excel e imprimir</h2>
+<ul><li>La mayoría de listas permiten <strong>exportar a Excel</strong> el contenido de la</li></ul>
+<p>  rejilla (con los filtros y columnas visibles en ese momento).</p>
+<ul><li>Los documentos (facturas, albaranes, pedidos…) y los informes generan</li></ul>
+<p>  <strong>vistas previas imprimibles</strong> (FastReport) desde las que se imprime o se
+  exporta a PDF.</p>
+<hr>
+<h2 id="7-campos-de-auditoria">7. Campos de auditoría</h2>
+<p>Todos los registros guardan automáticamente <strong>quién y cuándo</strong> los creó y
+los modificó por última vez (instante de alta/modificación y usuario). No
+hay que rellenarlos: la aplicación los gestiona sola. Son útiles para
+trazabilidad y soporte.</p>
+<hr>
+<p><a href="00-acceso-y-primeros-pasos.html">◀ Acceso</a> · <a href="index.html">Índice</a> · <a href="02-menu-archivo.html">Siguiente ▶ Menú Archivo</a></p>
+</article>
+<footer>Manual de Factuzam · generado el 11/06/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+</script>
+</body>
+</html>
