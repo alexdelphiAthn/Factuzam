@@ -66,6 +66,17 @@ type
     unqryResumenAlmacen: TUniQuery;
     dsResumenAlmacen: TDataSource;
 
+    // Pestaña Proveedor: ficha completa del proveedor de la sesion (con el
+    // nombre de su sistema de tallas por defecto) y su biblioteca de kits
+    // de cantidades por talla (fza_proveedores_kits / _det). Se recargan
+    // al navegar de sesion o cambiar CODIGO_PRV_SES (RecargarProveedorSesion).
+    unqryPrvFicha: TUniQuery;
+    dsPrvFicha: TDataSource;
+    unqryPrvKits: TUniQuery;
+    dsPrvKits: TDataSource;
+    unqryPrvKitsDet: TUniQuery;
+    dsPrvKitsDet: TDataSource;
+
     // Auxiliares (lookups)
     unqryProveedores: TUniQuery;
     dsProveedores: TDataSource;
@@ -151,6 +162,9 @@ type
     procedure AplicarKitATodasFilas(const AIdKit: string;
                                     const ALineaID: Integer);
     procedure ReconstruirFilasLinea(const ALineaID: Integer);
+    // Reabre la ficha y los kits del proveedor indicado (pestaña Proveedor).
+    // Con cadena vacia deja las queries cerradas.
+    procedure RecargarProveedorSesion(const ACodigoPrv: string);
 
     // Abre las tres queries de impresion para una sesion concreta.
     // Usado por TfrmPrintSesion.preparar_consulta.
@@ -188,6 +202,9 @@ begin
   unqryPreviewSkus.Connection       := inLibGlobalVar.oConn;
   unqryResumenAlmacen.Connection    := inLibGlobalVar.oConn;
   unqryLineaSkusPrecios.Connection  := inLibGlobalVar.oConn;
+  unqryPrvFicha.Connection          := inLibGlobalVar.oConn;
+  unqryPrvKits.Connection           := inLibGlobalVar.oConn;
+  unqryPrvKitsDet.Connection        := inLibGlobalVar.oConn;
   unqryProveedores.Connection       := inLibGlobalVar.oConn;
   unqryFamilias.Connection          := inLibGlobalVar.oConn;
   unqryVariaciones.Connection       := inLibGlobalVar.oConn;
@@ -381,6 +398,13 @@ begin
     FieldByName('TIPO_ART_SESLIN').AsString   := 'ESTANDAR';
     FieldByName('TIPO_CANTIDAD_SESLIN').AsString := 'Uds';
     FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
+    // Sistema de tallas por defecto: el de la cabecera (copiado a su vez
+    // del proveedor, ID_AC_TALLAS_PRV). Las columnas de talla del grid
+    // muestran asi el sistema del proveedor sin elegirlo linea a linea.
+    if (not unqryTablaG.FieldByName('ID_AC_PIVOT_SES').IsNull) and
+       (unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger > 0) then
+      FieldByName('ID_AC_PIVOT_SESLIN').AsInteger :=
+        unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger;
     // NOT NULL con DEFAULT en BBDD: hay que darles valor en cliente o Post
     // falla con 'Field XXX must have a value' antes de llegar al DEFAULT.
     FieldByName('ESTRAZABLE_SESLIN').AsString    := 'N';
@@ -721,6 +745,24 @@ begin
   //   - Borra filas que ya no aplican.
   //   - Inserta filas para valores nuevos del conjunto.
   //   - Borra celdas huérfanas.
+end;
+
+procedure TdmComprasSesiones.RecargarProveedorSesion(const ACodigoPrv: string);
+begin
+  // Ficha + kits del proveedor para la pestaña Proveedor. El detalle de
+  // kits es master/detail de unqryPrvKits y sigue solo al master.
+  unqryPrvFicha.Close;
+  unqryPrvKitsDet.Close;
+  unqryPrvKits.Close;
+  if Trim(ACodigoPrv) <> '' then
+  begin
+    unqryPrvFicha.ParamByName('prv').AsString := ACodigoPrv;
+    unqryPrvKits.ParamByName('prv').AsString  := ACodigoPrv;
+    unqryPrvFicha.Open;
+    unqryPrvKits.Open;
+    if not unqryPrvKitsDet.Active then
+      unqryPrvKitsDet.Open;
+  end;
 end;
 
 procedure TdmComprasSesiones.PrepararPrint(const ASerie, ANumero: string);

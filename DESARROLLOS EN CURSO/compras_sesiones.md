@@ -81,6 +81,13 @@ combinación de atributos no-pivotados, p.ej. cada color) hay un botón
 **«Aplicar kit»** con selector. Al aplicarlo, las cantidades del kit se
 copian sobre la fila respetando la correspondencia talla → valor.
 
+> ✅ Implementado (variante grid inline): la **biblioteca de kits del
+> proveedor** vive en `fza_proveedores_kits` / `_det` (sufijos `PRVKIT` /
+> `PRVKITD`), se mantiene en la pestaña «Compras» de Proveedores y se
+> aplica sobre la línea con foco desde el botón «Aplicar kit» de Líneas o
+> desde la pestaña «Proveedor» de la sesión. Detalle en
+> `proveedores_compras_defectos.md`.
+
 ### 2.3 Matriz pivotada — regla simple
 
 > **El último atributo (mayor `ORDEN_VA` en `fza_variaciones_atributos`)

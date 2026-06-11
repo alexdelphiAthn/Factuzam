@@ -18,7 +18,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen,
+  System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, inMtoGen,
   dxSkinsCore, dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, cxEdit, cxNavigator, dxDateRanges, Data.DB, cxDBData,
@@ -32,7 +33,8 @@ uses
   inLibDevExp, inLibtb, cxBlobEdit, ClipBrd, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls,
   cxSplitter, cxSpinEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, cxGroupBox, cxLookupEdit, cxDBLookupEdit,
+  cxDBLookupComboBox;
 
 type
   TfrmMtoProveedores = class(TfrmMtoGen)
@@ -166,6 +168,34 @@ type
     actArticulos: TAction;
     actFacturas: TAction;
     actClientes: TAction;
+    // Pestaña Compras: defectos para sesiones de compra + kits por talla
+    tsCompras: TcxTabSheet;
+    gbDefectosCompras: TcxGroupBox;
+    lblMargenPrv: TcxLabel;
+    spnMargenPrv: TcxDBSpinEdit;
+    lblTallasPrv: TcxLabel;
+    cbbTallasPrv: TcxDBLookupComboBox;
+    lblDefectosInfo: TcxLabel;
+    gbKitsPrv: TcxGroupBox;
+    pnlKitsTop: TPanel;
+    btnAddKit: TcxButton;
+    btnDelKit: TcxButton;
+    btnGenerarTallasKit: TcxButton;
+    btnAddKitDet: TcxButton;
+    btnDelKitDet: TcxButton;
+    cxgrdKits: TcxGrid;
+    tvKits: TcxGridDBTableView;
+    dbcKitCodigo: TcxGridDBColumn;
+    dbcKitNombre: TcxGridDBColumn;
+    dbcKitSistema: TcxGridDBColumn;
+    dbcKitDescripcion: TcxGridDBColumn;
+    glKits: TcxGridLevel;
+    cxgrdKitsDet: TcxGrid;
+    tvKitsDet: TcxGridDBTableView;
+    dbcKitDetValor: TcxGridDBColumn;
+    dbcKitDetCantidad: TcxGridDBColumn;
+    dbcKitDetOrden: TcxGridDBColumn;
+    glKitsDet: TcxGridLevel;
     procedure btnGrabarClick(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
@@ -176,6 +206,11 @@ type
     procedure actClientesExecute(Sender: TObject);
     procedure btnExportarClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
+    procedure btnAddKitClick(Sender: TObject);
+    procedure btnDelKitClick(Sender: TObject);
+    procedure btnGenerarTallasKitClick(Sender: TObject);
+    procedure btnAddKitDetClick(Sender: TObject);
+    procedure btnDelKitDetClick(Sender: TObject);
   private
     { Private declarations }
     // Carga perezosa de sub-pestañas detail (Articulos, Ventas).
@@ -348,6 +383,13 @@ begin
   dmmProveedores := tdmDataModule as TdmProveedores;
   tvArticulos.DataController.DataSource := dmmProveedores.dsArticulos;
   tvLinFac.DataController.DataSource := dmmProveedores.dsLinFacturasArticulos;
+  // Pestaña Compras: kits de cantidades por talla + lookups de sistemas
+  // de tallas (conjuntos TAL). Mismo patron runtime que Articulos/Ventas.
+  tvKits.DataController.DataSource    := dmmProveedores.dsKits;
+  tvKitsDet.DataController.DataSource := dmmProveedores.dsKitsDet;
+  cbbTallasPrv.Properties.ListSource  := dmmProveedores.dsConjuntosTallas;
+  TcxLookupComboBoxProperties(dbcKitSistema.Properties).ListSource :=
+    dmmProveedores.dsConjuntosTallas;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   pkFieldName := 'CODIGO_PRV_PRV';
   // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,
@@ -362,7 +404,62 @@ begin
   if pcPestanas.ActivePage = tsArticulos then
     dmmProveedores.AsegurarArticulosAbierta
   else if pcPestanas.ActivePage = tsVentas then
-    dmmProveedores.AsegurarVentasAbierta;
+    dmmProveedores.AsegurarVentasAbierta
+  else if pcPestanas.ActivePage = tsCompras then
+    dmmProveedores.AsegurarComprasAbierta;
+end;
+
+// ===========================================================================
+//   Pestaña Compras — kits de cantidades por talla
+// ===========================================================================
+
+procedure TfrmMtoProveedores.btnAddKitClick(Sender: TObject);
+begin
+  inherited;
+  dmmProveedores.unqryKits.Insert;
+  cxgrdKits.SetFocus;
+  tvKits.Controller.FocusedColumn := dbcKitCodigo;
+  if tvKits.Controller.EditingController <> nil then
+    tvKits.Controller.EditingController.ShowEdit;
+end;
+
+procedure TfrmMtoProveedores.btnDelKitClick(Sender: TObject);
+begin
+  inherited;
+  if dmmProveedores.unqryKits.State = dsInsert then
+    dmmProveedores.unqryKits.Cancel
+  else if not dmmProveedores.unqryKits.IsEmpty then
+  begin
+    if MessageDlg('¿Borrar el kit seleccionado y todas sus tallas?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      dmmProveedores.unqryKits.Delete;
+  end;
+end;
+
+procedure TfrmMtoProveedores.btnGenerarTallasKitClick(Sender: TObject);
+begin
+  inherited;
+  // Una fila de detalle por cada talla del sistema del kit (cantidad 0).
+  dmmProveedores.GenerarTallasKitActual;
+end;
+
+procedure TfrmMtoProveedores.btnAddKitDetClick(Sender: TObject);
+begin
+  inherited;
+  dmmProveedores.unqryKitsDet.Insert;
+  cxgrdKitsDet.SetFocus;
+  tvKitsDet.Controller.FocusedColumn := dbcKitDetValor;
+  if tvKitsDet.Controller.EditingController <> nil then
+    tvKitsDet.Controller.EditingController.ShowEdit;
+end;
+
+procedure TfrmMtoProveedores.btnDelKitDetClick(Sender: TObject);
+begin
+  inherited;
+  if dmmProveedores.unqryKitsDet.State = dsInsert then
+    dmmProveedores.unqryKitsDet.Cancel
+  else if not dmmProveedores.unqryKitsDet.IsEmpty then
+    dmmProveedores.unqryKitsDet.Delete;
 end;
 
 procedure TfrmMtoProveedores.ResetForm;
