@@ -24,6 +24,16 @@
 {    3. fza_articulos_propiedades: una fila por articulo con la temporada    }
 {       que tenia en el legacy, enlazada por ID_PV_ARTPROP al valor.          }
 {                                                                              }
+{    Segunda pasada (temporada por COLOR): ocartcol tiene su propia columna   }
+{    Temporada a nivel (Articulo, Color). Para cada color cuya temporada     }
+{    DIFIERE de la del articulo se escribe una fila extra en                  }
+{    fza_articulos_propiedades con CODIGO_UNIDAD_ARTPROP = 'ART/COLOR' (el    }
+{    prefijo del SKU, identico a SUBSTRING_INDEX(sku,'/',2)). Asi la vista    }
+{    vi_articulos_propiedades_efectivas resuelve la temporada de color y cae  }
+{    a la de articulo donde el color no la fija. Si el color coincide con el  }
+{    articulo NO se escribe nada (la vista ya hereda). El catalogo de valores }
+{    (paso 1) se nutre de ambas fuentes (ocartp y ocartcol).                  }
+{                                                                              }
 {    Idempotente:                                                              }
 {      - fza_propiedades: comprueba CODIGO_PROP_ARTPROP, si existe se salta. }
 {      - fza_propiedades_valores: chequea (ID_PROP_PV, PV), idem.            }
@@ -43,7 +53,7 @@ procedure MigrarArticulosPropiedades(Eng: TMigEngine;
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Generics.Collections,
   Data.DB, Uni;
 
 // =========================================================================
@@ -148,6 +158,160 @@ begin
   end;
 end;
 
+// Carga el catalogo de valores de TEMPORADA (PV -> ID_PV_ARTPROP) en
+// memoria para resolver la temporada de cada color en O(1), sin un
+// SELECT por fila (ocartcol puede traer decenas de miles de filas).
+procedure CargarMapaPV(Eng: TMigEngine;
+                       Mapa: TDictionary<string, Integer>);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text   :=
+      'SELECT PV, ID_PV_ARTPROP FROM fza_propiedades_valores ' +
+      'WHERE ID_PROP_PV = ''TEMPORADA''';
+    q.Open;
+    while not q.Eof do
+    begin
+      Mapa.AddOrSetValue(
+        Trim(q.FieldByName('PV').AsString),
+        q.FieldByName('ID_PV_ARTPROP').AsInteger);
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+end;
+
+// =========================================================================
+//  Segunda pasada: temporada por COLOR (ocartcol -> nivel color)
+// =========================================================================
+// Solo baja a nivel color (CODIGO_UNIDAD_ARTPROP = 'ART/COLOR') las
+// temporadas de ocartcol que DIFIEREN de la del articulo (ocartp). Donde
+// coinciden no se escribe nada: la vista efectiva ya hereda la de
+// articulo. El segmento de color se calcula igual que el SKU para que
+// 'ART/COLOR' case con SUBSTRING_INDEX(CODIGO_UNIDAD_SKU, '/', 2).
+procedure AsignarTemporadasPorColor(Eng: TMigEngine;
+                                    var Stats: TMigStats);
+const
+  // ColorSlot identico a inLibMigArticulosSkus / MigrarArticulosColores:
+  // prefiere el Color del legacy, cae a la Descripcion del color basico
+  // (occolor) y, si nada, '0'.
+  cColorSlot =
+    'CASE ' +
+    '  WHEN ac.Color IS NOT NULL ' +
+    '    AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '    THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
+    '  WHEN c.Descripcion IS NOT NULL ' +
+    '    AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
+    '    THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '  ELSE ''0'' ' +
+    'END';
+  // Temporada legible del color y del articulo, para comparar overrides.
+  cPvColor = 'ISNULL(NULLIF(LTRIM(RTRIM(tc.Nombre)), ''''), ac.Temporada)';
+  cPvArt   = 'ISNULL(NULLIF(LTRIM(RTRIM(tp.Nombre)), ''''), p.Temporada)';
+  // FROM + WHERE comun a SELECT de datos y a COUNT(*). El filtro clave
+  // es que la temporada de color difiera de la de articulo (incluye el
+  // caso "articulo sin temporada, color con temporada").
+  cFrom =
+    'FROM dbo.ocartcol ac WITH (NOLOCK) ' +
+    'LEFT JOIN dbo.occolor c WITH (NOLOCK) ' +
+    '       ON c.ColorBasico = ac.ColorBasico ' +
+    'LEFT JOIN dbo.octem tc WITH (NOLOCK) ' +
+    '       ON tc.Temporada = ac.Temporada ' +
+    'LEFT JOIN dbo.ocartp p WITH (NOLOCK) ' +
+    '       ON p.Articulo = ac.Articulo ' +
+    'LEFT JOIN dbo.octem tp WITH (NOLOCK) ' +
+    '       ON tp.Temporada = p.Temporada ' +
+    'WHERE LTRIM(RTRIM(ac.Articulo)) <> '''' ' +
+    '  AND LTRIM(RTRIM(ISNULL(ac.Temporada, ''''))) <> '''' ' +
+    '  AND ' + cPvColor + ' <> ISNULL(' + cPvArt + ', '''')';
+  cSelectSrc =
+    'SELECT ac.Articulo, ' +
+    '       ac.Articulo + ''/'' + ' + cColorSlot + ' AS CodUnidad, ' +
+    '       ' + cPvColor + ' AS PV ' +
+    cFrom + ' ' +
+    'ORDER BY ac.Articulo, CodUnidad';
+  cContar = 'SELECT COUNT(*) ' + cFrom;
+  cColsAP =
+    'CODIGO_ART_ART, CODIGO_PROP_ARTPROP, CODIGO_UNIDAD_ARTPROP, ' +
+    'ID_PV_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA';
+var
+  qSrc:                  TUniQuery;
+  bulk:                  TBulkInsert;
+  oPvMap:                TDictionary<string, Integer>;
+  sArt, sCodUnidad, sPV: string;
+  sFila, sAhora, sUser:  string;
+  iIdPV:                 Integer;
+begin
+  Eng.Log('  2a pasada: temporada por color (ocartcol, solo overrides)...');
+  oPvMap := TDictionary<string, Integer>.Create;
+  qSrc   := nil;
+  bulk   := nil;
+  try
+    CargarMapaPV(Eng, oPvMap);
+    Eng.Log('  cache: %d valores de TEMPORADA', [oPvMap.Count]);
+    sAhora := DateTimeASQL(Now);
+    sUser  := ValorOrNull(Eng.Usuario);
+    qSrc   := NuevoQOrigen(Eng, cSelectSrc);
+    // UniDirectional: no cachea en memoria las filas de ocartcol.
+    qSrc.UniDirectional := True;
+    bulk   := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_propiedades',
+                                  cColsAP, 5000);
+    Eng.SetTotal(Eng.ContarOrigen(cContar));
+    qSrc.Open;
+    while not qSrc.Eof do
+    begin
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada en temporada-color, saliendo...');
+        Break;
+      end;
+      Inc(Stats.Leidas);
+      Eng.IncRow;
+      sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
+      sCodUnidad := Trim(qSrc.FieldByName('CodUnidad').AsString);
+      sPV        := Trim(qSrc.FieldByName('PV').AsString);
+      if (sArt = '') or (sCodUnidad = '')
+      or (not EsTemporadaValida(sPV)) then
+        Inc(Stats.Saltadas)
+      else if not oPvMap.TryGetValue(sPV, iIdPV) then
+      begin
+        Inc(Stats.Errores);
+        Eng.LogError('art_prop_color', sArt,
+          Format('valor TEMPORADA "%s" no encontrado', [sPV]),
+          Format('UNIDAD=%s', [sCodUnidad]),
+          'el paso de catalogo deberia haberlo creado');
+      end
+      else
+      begin
+        sFila := Format('%s, ''TEMPORADA'', %s, %d, %s, %s',
+          [ValorOrNull(sArt), ValorOrNull(sCodUnidad),
+           iIdPV, sAhora, sUser]);
+        try
+          bulk.Add(sFila);
+          Inc(Stats.Insertadas);
+        except
+          on E: Exception do
+          begin
+            Inc(Stats.Errores);
+            Eng.LogError('art_prop_color', sArt, E.Message,
+              Format('UNIDAD=%s TEMPORADA=%s', [sCodUnidad, sPV]), '');
+            raise;
+          end;
+        end;
+      end;
+      qSrc.Next;
+    end;
+    bulk.FlushPendiente;
+  finally
+    bulk.Free;
+    qSrc.Free;
+    oPvMap.Free;
+  end;
+end;
+
 // =========================================================================
 //  Migrador principal
 // =========================================================================
@@ -163,12 +327,25 @@ const
   // usamos el codigo raw como fallback (no perdemos asignaciones).
   cExprNombre =
     'ISNULL(NULLIF(LTRIM(RTRIM(te.Nombre)), ''''), p.Temporada)';
+  // Misma expresion pero para la temporada de color (ocartcol/tc).
+  cExprNombreCol =
+    'ISNULL(NULLIF(LTRIM(RTRIM(tc.Nombre)), ''''), ac.Temporada)';
+  // El catalogo de valores se nutre de AMBAS fuentes: temporada de
+  // articulo (ocartp) y temporada de color (ocartcol). UNION deduplica.
   cSelectValores =
-    'SELECT DISTINCT ' + cExprNombre + ' AS PV ' +
-    'FROM dbo.ocartp p WITH (NOLOCK) ' +
-    'LEFT JOIN dbo.octem te WITH (NOLOCK) ' +
-    '       ON te.Temporada = p.Temporada ' +
-    'WHERE LTRIM(RTRIM(ISNULL(p.Temporada, ''''))) <> '''' ' +
+    'SELECT PV FROM ( ' +
+    '  SELECT DISTINCT ' + cExprNombre + ' AS PV ' +
+    '  FROM dbo.ocartp p WITH (NOLOCK) ' +
+    '  LEFT JOIN dbo.octem te WITH (NOLOCK) ' +
+    '         ON te.Temporada = p.Temporada ' +
+    '  WHERE LTRIM(RTRIM(ISNULL(p.Temporada, ''''))) <> '''' ' +
+    '  UNION ' +
+    '  SELECT DISTINCT ' + cExprNombreCol + ' AS PV ' +
+    '  FROM dbo.ocartcol ac WITH (NOLOCK) ' +
+    '  LEFT JOIN dbo.octem tc WITH (NOLOCK) ' +
+    '         ON tc.Temporada = ac.Temporada ' +
+    '  WHERE LTRIM(RTRIM(ISNULL(ac.Temporada, ''''))) <> '''' ' +
+    ') U ' +
     'ORDER BY PV';
   cSelectAsign =
     'SELECT p.Articulo, ' + cExprNombre + ' AS PV ' +
@@ -263,6 +440,9 @@ begin
     bulk.Free;
     qSrc.Free;
   end;
+  // Segunda pasada: temporada por color (overrides sobre ocartcol).
+  // Comparte la transaccion del paso (la abre/cierra el motor).
+  AsignarTemporadasPorColor(Eng, Stats);
 end;
 
 end.
