@@ -179,6 +179,7 @@ type
     procedure Sesiones1Click(Sender: TObject);
     procedure Albaranes1Click(Sender: TObject);
     procedure Devoluciones1Click(Sender: TObject);
+    procedure FacturarAlbaranes1Click(Sender: TObject);
     procedure Facturas1Click(Sender: TObject);
     procedure EfectosCompra1Click(Sender: TObject);
     procedure RemesasCompra1Click(Sender: TObject);
@@ -317,6 +318,7 @@ uses inLibUser,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
   inMtoModalImpMovVentasArt,
+  inMtoModalFacturarAlbaranes,
   inLibCajaParam,
   inLibAppParam,
   inLibUnidadesMedida,
@@ -1674,6 +1676,23 @@ begin
   inherited;
   if Devoluciones1.Visible then
     ShowMto(Self, 'DevolucionesCompra');
+end;
+
+procedure TfrmMtoPrincipal.FacturarAlbaranes1Click(Sender: TObject);
+var
+  f: TfrmModalFacturarAlbaranes;
+begin
+  inherited;
+  if FacturarAlbaranes1.Visible then
+  begin
+    f := TfrmModalFacturarAlbaranes.Create(nil);
+    try
+      if f.ShowModal = mrOk then
+        ShowMto(Self, 'FacturasCompra');
+    finally
+      f.Free;
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.Facturas1Click(Sender: TObject);

@@ -1454,6 +1454,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Caption = 'Devoluciones a Proveedor'
         OnClick = Devoluciones1Click
       end
+      object FacturarAlbaranes1: TMenuItem
+        Caption = 'Facturar albaranes...'
+        OnClick = FacturarAlbaranes1Click
+      end
       object Facturas1: TMenuItem
         Caption = 'Facturas'
         ShortCut = 57414
