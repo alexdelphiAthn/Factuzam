@@ -244,6 +244,27 @@ inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
                 TabOrder = 15
                 Width = 120
               end
+              object lblFormaPago: TcxLabel
+                Left = 680
+                Top = 72
+                Caption = 'Forma de pago'
+                TabOrder = 16
+                Transparent = True
+              end
+              object btnFORMA_PAGO_FACC: TcxDBButtonEdit
+                Left = 680
+                Top = 92
+                DataBinding.DataField = 'FORMA_PAGO_FACC'
+                DataBinding.DataSource = dsTablaG
+                Properties.Buttons = <
+                  item
+                    Default = True
+                    Kind = bkEllipsis
+                  end>
+                Properties.OnButtonClick = btnFORMA_PAGO_FACCPropertiesButtonClick
+                TabOrder = 17
+                Width = 240
+              end
             end
           end
         end

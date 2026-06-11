@@ -80,6 +80,8 @@ type
     txtREF_PROVEEDOR_FACC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
     txtCODIGO_ALM_FACC: TcxDBTextEdit;
+    lblFormaPago: TcxLabel;
+    btnFORMA_PAGO_FACC: TcxDBButtonEdit;
 
     // Totales
     lblTotalBases:        TcxLabel;
@@ -133,6 +135,8 @@ type
     procedure cxgrdLineasFacturaEnter(Sender: TObject);
     procedure cxgrdLineasFacturaExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure btnFORMA_PAGO_FACCPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -171,7 +175,7 @@ uses
   inLibGlobalVar,
   inLibFotos,
   UniDataArticulos,
-  inLibShowMto;
+  inLibShowMto, inLibGenBusq;
 
 {$R *.dfm}
 
@@ -672,6 +676,31 @@ begin
     ShowMto(Self.Owner,
             'Articulos',
             FieldByName('CODIGO_ART_FACCLIN').AsString);
+end;
+
+procedure TfrmMtoFacturasCompra.btnFORMA_PAGO_FACCPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sVal: string;
+  ds: TDataSet;
+begin
+  inherited;
+  // Caja de busqueda de formas de pago: devuelve CODIGO_FP_FP y lo escribe
+  // en FORMA_PAGO_FACC (lo usa PRC_EFEC_GENERAR_DESDE_FACTURA para los plazos).
+  if Assigned(dmmFacturasCompra) then
+  begin
+    if TBusquedaUtils.EjecutarBusqueda('Buscar forma de pago',
+         'SELECT * FROM fza_formas_pago ' +
+         'WHERE ESACTIVO_FORMA_PAGO_FP = ''S'' ' +
+         'ORDER BY ORDEN_FORMA_PAGO_FP',
+         'CODIGO_FP_FP', sVal, 'srchFpFacc', Self) then
+    begin
+      ds := dmmFacturasCompra.unqryTablaG;
+      if not (ds.State in [dsEdit, dsInsert]) then
+        ds.Edit;
+      ds.FieldByName('FORMA_PAGO_FACC').AsString := sVal;
+    end;
+  end;
 end;
 
 procedure TfrmMtoFacturasCompra.btnAnadirLineaClick(Sender: TObject);
