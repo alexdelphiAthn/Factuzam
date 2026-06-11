@@ -799,16 +799,29 @@ begin
 
   inherited;
 
-  // Forzar orden visual: perfiles/layouts guardados pueden alterar
-  // los Index de las columnas talla y separarlas del bloque dbcLinTallas
-  // .. dbcLinTotalTallas. Reasignamos Index despues del inherited
-  // (que restaura layout) para garantizar que quedan contiguas.
+  // Forzar orden visual de las columnas de lineas (orden fijo pedido por
+  // el usuario). Se hace DESPUES del inherited porque el ancestro restaura
+  // el layout guardado y podria alterar los Index. El bloque de tallas
+  // queda contiguo tras "Sistema tallas"; totales y nro de linea al final.
+  dbcLinRefPrv.Index       := 0;  // Modelo prov.
+  dbcLinCodArt.Index       := 1;  // Codigo de articulo
+  dbcLinFamilia.Index      := 2;  // Familia
+  dbcLinDescripcion.Index  := 3;  // Descripcion
+  dbcLinColor.Index        := 4;  // Color
+  dbcLinColorBasico.Index  := 5;  // Color basico
+  dbcLinPrecioCompra.Index := 6;  // Precio de compra
+  dbcLinPrecioVenta.Index  := 7;  // Precio de venta
+  dbcLinTallas.Index       := 8;  // Sistema de tallas
   IdxBase := dbcLinTallas.Index;
   for i := 0 to CANT_TALLAS_MAX - 1 do
   begin
     if Assigned(FTallaColumns[i]) then
       FTallaColumns[i].Index := IdxBase + i + 1;
   end;
+  // Totales y nro de linea, tras el bloque de tallas pivotadas.
+  dbcLinTotalTallas.Index  := IdxBase + CANT_TALLAS_MAX + 1;  // Total tallas
+  dbcLinImporteTotal.Index := IdxBase + CANT_TALLAS_MAX + 2;  // Total importe
+  dbcLinNumero.Index       := IdxBase + CANT_TALLAS_MAX + 3;  // Nro de linea
 
   CargarBasicosColor;
 
