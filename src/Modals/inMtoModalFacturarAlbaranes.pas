@@ -24,7 +24,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, MemDS, DBAccess, Uni,
+  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, MemDS, DBAccess, Uni,
   inMtoFrmBase, JvComponentBase, JvEnterTab,
   cxClasses, cxLocalization, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
@@ -79,6 +79,8 @@ type
     procedure DefinirParamsSp;
     procedure CargarProveedorNombre(const APrv: string);
     procedure CargarFacturasAbiertas(const AEmp, APrv: string);
+    procedure RecogerAlbaranes(ASeries, ANumeros: TStringList);
+    function  ResolverFacturaExistente(out ASerie, ANumero: string): Boolean;
   public
     // Prefija empresa y proveedor (p.ej. desde la cabecera del Mto llamante).
     procedure SetContexto(const AEmpresa, AProveedor: string);
@@ -252,73 +254,121 @@ begin
   end;
 end;
 
+procedure TfrmModalFacturarAlbaranes.RecogerAlbaranes(ASeries,
+                                                      ANumeros: TStringList);
+var
+  i, ri: Integer;
+begin
+  ASeries.Clear;
+  ANumeros.Clear;
+  // Con seleccion en la rejilla (Ctrl/Mayus+clic): solo esos albaranes.
+  if tvAlb.Controller.SelectedRecordCount > 0 then
+  begin
+    for i := 0 to tvAlb.Controller.SelectedRecordCount - 1 do
+    begin
+      ri := tvAlb.Controller.SelectedRecords[i].RecordIndex;
+      ASeries.Add(VarToStr(tvAlb.DataController.Values[ri, colAlbSerie.Index]));
+      ANumeros.Add(VarToStr(tvAlb.DataController.Values[ri,
+                                                     colAlbNumero.Index]));
+    end;
+  end
+  // Sin seleccion: ofrecer facturar TODOS los albaranes listados.
+  else if FQryAlb.Active and (not FQryAlb.IsEmpty) then
+  begin
+    if MessageDlg('No has marcado albaranes (Ctrl/Mayus+clic para elegir).' +
+                  sLineBreak + 'Facturar TODOS los listados?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      FQryAlb.DisableControls;
+      try
+        FQryAlb.First;
+        while not FQryAlb.Eof do
+        begin
+          ASeries.Add(FQryAlb.FieldByName('SERIE_ALBC').AsString);
+          ANumeros.Add(FQryAlb.FieldByName('NUMERO_ALBC').AsString);
+          FQryAlb.Next;
+        end;
+      finally
+        FQryAlb.EnableControls;
+      end;
+    end;
+  end;
+end;
+
+function TfrmModalFacturarAlbaranes.ResolverFacturaExistente(out ASerie,
+                                                  ANumero: string): Boolean;
+begin
+  ASerie  := '';
+  ANumero := '';
+  Result := (cbbFacExistente.ItemIndex >= 0) and
+            (cbbFacExistente.ItemIndex < FFacSeries.Count);
+  if Result then
+  begin
+    ASerie  := FFacSeries[cbbFacExistente.ItemIndex];
+    ANumero := FFacNumeros[cbbFacExistente.ItemIndex];
+  end;
+end;
+
 procedure TfrmModalFacturarAlbaranes.btnFacturarClick(Sender: TObject);
 var
-  i, ri, nOk, nSkip, nSel, res: Integer;
-  sSerieAlb, sNumAlb, sSerieAcum, sNumAcum: string;
+  i, nOk, nSkip, res: Integer;
+  sSerieAcum, sNumAcum: string;
+  lSeries, lNumeros: TStringList;
   bSeguir: Boolean;
 begin
   inherited;
-  nSel := tvAlb.Controller.SelectedRecordCount;
-  bSeguir := True;
-  if nSel = 0 then
-  begin
-    ShowMessage('Marca al menos un albaran en la rejilla.');
-    bSeguir := False;
-  end;
-  sSerieAcum := '';
-  sNumAcum   := '';
-  if bSeguir and (rgModo.ItemIndex = 1) then
-  begin
-    if (cbbFacExistente.ItemIndex < 0) or
-       (cbbFacExistente.ItemIndex >= FFacSeries.Count) then
+  lSeries  := TStringList.Create;
+  lNumeros := TStringList.Create;
+  try
+    RecogerAlbaranes(lSeries, lNumeros);
+    bSeguir    := lSeries.Count > 0;
+    sSerieAcum := '';
+    sNumAcum   := '';
+    // En modo "incorporar" (ItemIndex=1) hay que tener factura destino valida.
+    if bSeguir and (rgModo.ItemIndex = 1) then
     begin
-      ShowMessage('Elige la factura existente a la que incorporar los ' +
-                  'albaranes.');
-      bSeguir := False;
-    end
-    else
-    begin
-      sSerieAcum := FFacSeries[cbbFacExistente.ItemIndex];
-      sNumAcum   := FFacNumeros[cbbFacExistente.ItemIndex];
+      bSeguir := ResolverFacturaExistente(sSerieAcum, sNumAcum);
+      if not bSeguir then
+        ShowMessage('Elige la factura existente a la que incorporar los ' +
+                    'albaranes.');
     end;
-  end;
-  if bSeguir then
-  begin
-    nOk   := 0;
-    nSkip := 0;
-    for i := 0 to nSel - 1 do
+    if bSeguir then
     begin
-      ri := tvAlb.Controller.SelectedRecords[i].RecordIndex;
-      sSerieAlb := VarToStr(tvAlb.DataController.Values[ri, colAlbSerie.Index]);
-      sNumAlb   := VarToStr(tvAlb.DataController.Values[ri, colAlbNumero.Index]);
-      FSp.ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-      FSp.ParamByName('p_NUMERO_ALB').AsString := sNumAlb;
-      FSp.ParamByName('p_SERIE_FAC').AsString  := sSerieAcum;
-      FSp.ParamByName('p_NUMERO_FAC').AsString := sNumAcum;
-      FSp.ParamByName('p_USUARIO').AsString    := oUser;
-      FSp.ExecProc;
-      res := FSp.ParamByName('p_RESULTADO').AsInteger;
-      if res = 1 then
+      nOk   := 0;
+      nSkip := 0;
+      for i := 0 to lSeries.Count - 1 do
       begin
-        // La 1a llamada deja la factura (nueva o la elegida); las
-        // siguientes acumulan en ella.
-        sSerieAcum := FSp.ParamByName('p_SERIE_FAC_OUT').AsString;
-        sNumAcum   := FSp.ParamByName('p_NUMERO_FAC_OUT').AsString;
-        Inc(nOk);
-      end
-      else
-        Inc(nSkip);
+        FSp.ParamByName('p_SERIE_ALB').AsString  := lSeries[i];
+        FSp.ParamByName('p_NUMERO_ALB').AsString := lNumeros[i];
+        FSp.ParamByName('p_SERIE_FAC').AsString  := sSerieAcum;
+        FSp.ParamByName('p_NUMERO_FAC').AsString := sNumAcum;
+        FSp.ParamByName('p_USUARIO').AsString    := oUser;
+        FSp.ExecProc;
+        res := FSp.ParamByName('p_RESULTADO').AsInteger;
+        if res = 1 then
+        begin
+          // La 1a llamada deja la factura (nueva o la elegida); las
+          // siguientes acumulan en ella.
+          sSerieAcum := FSp.ParamByName('p_SERIE_FAC_OUT').AsString;
+          sNumAcum   := FSp.ParamByName('p_NUMERO_FAC_OUT').AsString;
+          Inc(nOk);
+        end
+        else
+          Inc(nSkip);
+      end;
+      FFacSerie   := sSerieAcum;
+      FFacNumero  := sNumAcum;
+      FConfirmado := nOk > 0;
+      ShowMessage(Format(
+        'Facturados %d albaran(es) en la factura %s / %s.' + sLineBreak +
+        'Omitidos (ya facturados o incompatibles): %d.',
+        [nOk, sSerieAcum, sNumAcum, nSkip]));
+      if FConfirmado then
+        ModalResult := mrOk;
     end;
-    FFacSerie   := sSerieAcum;
-    FFacNumero  := sNumAcum;
-    FConfirmado := nOk > 0;
-    ShowMessage(Format(
-      'Facturados %d albaran(es) en la factura %s / %s.' + sLineBreak +
-      'Omitidos (ya facturados o incompatibles): %d.',
-      [nOk, sSerieAcum, sNumAcum, nSkip]));
-    if FConfirmado then
-      ModalResult := mrOk;
+  finally
+    lSeries.Free;
+    lNumeros.Free;
   end;
 end;
 
