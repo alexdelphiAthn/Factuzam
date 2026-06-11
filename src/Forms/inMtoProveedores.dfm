@@ -1169,6 +1169,215 @@
                 Width = 106
               end
             end
+            object tsCompras: TcxTabSheet
+              Caption = '&6_Compras'
+              ImageIndex = 5
+              object gbDefectosCompras: TcxGroupBox
+                Left = 0
+                Top = 0
+                Align = alTop
+                Caption = ' Defectos para sesiones de compra '
+                TabOrder = 0
+                Height = 92
+                Width = 698
+                object lblMargenPrv: TcxLabel
+                  Left = 16
+                  Top = 30
+                  Caption = 'Margen %'
+                  TabOrder = 0
+                  Transparent = True
+                end
+                object spnMargenPrv: TcxDBSpinEdit
+                  Left = 104
+                  Top = 26
+                  DataBinding.DataField = 'PORCENTAJE_MARGEN_PRV'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueType = vtFloat
+                  TabOrder = 1
+                  Width = 92
+                end
+                object lblTallasPrv: TcxLabel
+                  Left = 230
+                  Top = 30
+                  Caption = 'Sistema de tallas'
+                  TabOrder = 2
+                  Transparent = True
+                end
+                object cbbTallasPrv: TcxDBLookupComboBox
+                  Left = 366
+                  Top = 26
+                  DataBinding.DataField = 'ID_AC_TALLAS_PRV'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.KeyFieldNames = 'ID_AC'
+                  Properties.ListColumns = <
+                    item
+                      Caption = 'Sistema'
+                      FieldName = 'NOMBRE_AC'
+                    end>
+                  Properties.ListOptions.ShowHeader = False
+                  TabOrder = 3
+                  Width = 250
+                end
+                object lblDefectosInfo: TcxLabel
+                  Left = 16
+                  Top = 60
+                  Caption =
+                    'Se copian a la cabecera al elegir este proveedor en una sesi'#243'n ' +
+                    'de compra.'
+                  TabOrder = 4
+                  Transparent = True
+                end
+              end
+              object gbKitsPrv: TcxGroupBox
+                Left = 0
+                Top = 92
+                Align = alClient
+                Caption = ' Kits de cantidades por talla '
+                TabOrder = 1
+                Height = 180
+                Width = 698
+                object pnlKitsTop: TPanel
+                  Left = 2
+                  Top = 18
+                  Width = 694
+                  Height = 34
+                  Align = alTop
+                  BevelOuter = bvNone
+                  TabOrder = 0
+                  object btnAddKit: TcxButton
+                    Left = 8
+                    Top = 3
+                    Width = 90
+                    Height = 26
+                    Caption = '+ Kit'
+                    TabOrder = 0
+                    OnClick = btnAddKitClick
+                  end
+                  object btnDelKit: TcxButton
+                    Left = 102
+                    Top = 3
+                    Width = 90
+                    Height = 26
+                    Caption = '- Kit'
+                    TabOrder = 1
+                    OnClick = btnDelKitClick
+                  end
+                  object btnGenerarTallasKit: TcxButton
+                    Left = 196
+                    Top = 3
+                    Width = 150
+                    Height = 26
+                    Caption = 'Tallas del sistema'
+                    TabOrder = 2
+                    OnClick = btnGenerarTallasKitClick
+                  end
+                  object btnAddKitDet: TcxButton
+                    Left = 350
+                    Top = 3
+                    Width = 90
+                    Height = 26
+                    Caption = '+ Talla'
+                    TabOrder = 3
+                    OnClick = btnAddKitDetClick
+                  end
+                  object btnDelKitDet: TcxButton
+                    Left = 444
+                    Top = 3
+                    Width = 90
+                    Height = 26
+                    Caption = '- Talla'
+                    TabOrder = 4
+                    OnClick = btnDelKitDetClick
+                  end
+                end
+                object cxgrdKits: TcxGrid
+                  Left = 2
+                  Top = 52
+                  Width = 404
+                  Height = 126
+                  Align = alClient
+                  TabOrder = 1
+                  object tvKits: TcxGridDBTableView
+                    Navigator.Visible = False
+                    OptionsView.GroupByBox = False
+                    object dbcKitCodigo: TcxGridDBColumn
+                      Caption = 'C'#243'digo'
+                      DataBinding.FieldName = 'CODIGO_PRVKIT'
+                      PropertiesClassName = 'TcxTextEditProperties'
+                      Properties.CharCase = ecUpperCase
+                      Properties.MaxLength = 20
+                      Width = 100
+                    end
+                    object dbcKitNombre: TcxGridDBColumn
+                      Caption = 'Nombre'
+                      DataBinding.FieldName = 'NOMBRE_PRVKIT'
+                      PropertiesClassName = 'TcxTextEditProperties'
+                      Properties.MaxLength = 100
+                      Width = 130
+                    end
+                    object dbcKitSistema: TcxGridDBColumn
+                      Caption = 'Sistema tallas'
+                      DataBinding.FieldName = 'ID_AC_TALLAS_PRVKIT'
+                      PropertiesClassName = 'TcxLookupComboBoxProperties'
+                      Properties.KeyFieldNames = 'ID_AC'
+                      Properties.ListColumns = <
+                        item
+                          Caption = 'Sistema'
+                          FieldName = 'NOMBRE_AC'
+                        end>
+                      Properties.ListOptions.ShowHeader = False
+                      Width = 130
+                    end
+                    object dbcKitDescripcion: TcxGridDBColumn
+                      Caption = 'Descripci'#243'n'
+                      DataBinding.FieldName = 'DESCRIPCION_PRVKIT'
+                      PropertiesClassName = 'TcxTextEditProperties'
+                      Properties.MaxLength = 255
+                      Width = 160
+                    end
+                  end
+                  object glKits: TcxGridLevel
+                    GridView = tvKits
+                  end
+                end
+                object cxgrdKitsDet: TcxGrid
+                  Left = 406
+                  Top = 52
+                  Width = 290
+                  Height = 126
+                  Align = alRight
+                  TabOrder = 2
+                  object tvKitsDet: TcxGridDBTableView
+                    Navigator.Visible = False
+                    OptionsView.GroupByBox = False
+                    object dbcKitDetValor: TcxGridDBColumn
+                      Caption = 'Talla'
+                      DataBinding.FieldName = 'VALOR_DESTINO_PRVKITD'
+                      PropertiesClassName = 'TcxTextEditProperties'
+                      Properties.CharCase = ecUpperCase
+                      Properties.MaxLength = 50
+                      Width = 90
+                    end
+                    object dbcKitDetCantidad: TcxGridDBColumn
+                      Caption = 'Cantidad'
+                      DataBinding.FieldName = 'CANTIDAD_PRVKITD'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DisplayFormat = '#,##0.##'
+                      Width = 90
+                    end
+                    object dbcKitDetOrden: TcxGridDBColumn
+                      Caption = 'Orden'
+                      DataBinding.FieldName = 'ORDEN_PRVKITD'
+                      PropertiesClassName = 'TcxSpinEditProperties'
+                      Width = 70
+                    end
+                  end
+                  object glKitsDet: TcxGridLevel
+                    GridView = tvKitsDet
+                  end
+                end
+              end
+            end
           end
         end
         object cxspltr1: TcxSplitter

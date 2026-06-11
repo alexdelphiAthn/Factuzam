@@ -514,6 +514,84 @@ inherited dmComprasSesiones: TdmComprasSesiones
     Left = 1008
     Top = 176
   end
+  object unqryPrvFicha: TUniQuery
+    SQL.Strings = (
+      'SELECT P.*, AC.NOMBRE_AC AS NOMBRE_TALLAS_PRV'
+      '  FROM fza_proveedores P'
+      '  LEFT JOIN fza_atributos_conjuntos AC'
+      '    ON AC.ID_AC = P.ID_AC_TALLAS_PRV'
+      ' WHERE P.CODIGO_PRV_PRV = :prv')
+    ReadOnly = True
+    Left = 392
+    Top = 232
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'prv'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsPrvFicha: TDataSource
+    DataSet = unqryPrvFicha
+    Left = 392
+    Top = 288
+  end
+  object unqryPrvKits: TUniQuery
+    SQL.Strings = (
+      'SELECT K.*, AC.NOMBRE_AC AS NOMBRE_TALLAS_PRVKIT'
+      '  FROM fza_proveedores_kits K'
+      '  LEFT JOIN fza_atributos_conjuntos AC'
+      '    ON AC.ID_AC = K.ID_AC_TALLAS_PRVKIT'
+      ' WHERE K.CODIGO_PRV_PRVKIT = :prv'
+      ' ORDER BY K.ORDEN_PRVKIT, K.CODIGO_PRVKIT')
+    ReadOnly = True
+    Left = 496
+    Top = 232
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'prv'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsPrvKits: TDataSource
+    DataSet = unqryPrvKits
+    Left = 496
+    Top = 288
+  end
+  object unqryPrvKitsDet: TUniQuery
+    SQL.Strings = (
+      'SELECT * FROM fza_proveedores_kits_det'
+      'WHERE CODIGO_PRV_PRVKITD = :CODIGO_PRV_PRVKIT'
+      '  AND CODIGO_PRVKIT_PRVKITD = :CODIGO_PRVKIT'
+      'ORDER BY ORDEN_PRVKITD, VALOR_DESTINO_PRVKITD')
+    MasterSource = dsPrvKits
+    MasterFields = 'CODIGO_PRV_PRVKIT;CODIGO_PRVKIT'
+    DetailFields = 'CODIGO_PRV_PRVKITD;CODIGO_PRVKIT_PRVKITD'
+    ReadOnly = True
+    Left = 600
+    Top = 232
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_PRV_PRVKIT'
+        ParamType = ptInput
+        Value = nil
+      end
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_PRVKIT'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsPrvKitsDet: TDataSource
+    DataSet = unqryPrvKitsDet
+    Left = 600
+    Top = 288
+  end
   object unqryProveedores: TUniQuery
     SQL.Strings = (
       'SELECT CODIGO_PRV_PRV, NOMBRE_PRV, RAZON_SOCIAL_PRV'
