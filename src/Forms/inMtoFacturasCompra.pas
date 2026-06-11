@@ -82,6 +82,12 @@ type
     txtCODIGO_ALM_FACC: TcxDBTextEdit;
     lblFormaPago: TcxLabel;
     btnFORMA_PAGO_FACC: TcxDBButtonEdit;
+    tsEfectos: TcxTabSheet;
+    pnlEfectosTop: TPanel;
+    btnGenerarEfectos: TcxButton;
+    cxgrdEfectos: TcxGrid;
+    tvEfectos: TcxGridDBTableView;
+    lvlEfectos: TcxGridLevel;
 
     // Totales
     lblTotalBases:        TcxLabel;
@@ -137,6 +143,7 @@ type
     procedure actArticulosExecute(Sender: TObject);
     procedure btnFORMA_PAGO_FACCPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure btnGenerarEfectosClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -270,6 +277,8 @@ begin
   // MasterSource se enlaza en DataModuleCreate del DM, pero lo
   // re-aseguramos por idempotencia.
   dmmFacturasCompra.unqryFacturasCompraLineas.MasterSource := dsTablaG;
+  tvEfectos.DataController.DataSource := dmmFacturasCompra.dsEfectos;
+  dmmFacturasCompra.unqryEfectos.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_FACC;NUMERO_FACC';
 end;
 
@@ -700,6 +709,25 @@ begin
         ds.Edit;
       ds.FieldByName('FORMA_PAGO_FACC').AsString := sVal;
     end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.btnGenerarEfectosClick(Sender: TObject);
+var
+  iRes: Integer;
+begin
+  inherited;
+  if Assigned(dmmFacturasCompra) then
+  begin
+    iRes := dmmFacturasCompra.GenerarEfectos;
+    if iRes > 0 then
+      ShowMessage(Format('Generados %d efecto(s) de pago.', [iRes]))
+    else if iRes = 0 then
+      ShowMessage('No se generaron efectos. Revisa que la factura tenga ' +
+                  'forma de pago y total, y que no tenga ya efectos pagados ' +
+                  'o remesados.')
+    else
+      ShowMessage('No hay factura activa (o hubo un error al generar).');
   end;
 end;
 

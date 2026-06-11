@@ -45,6 +45,36 @@ inherited dmFacturasCompra: TdmFacturasCompra
     Left = 520
     Top = 72
   end
+  object unqryEfectos: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_efectos_compra'
+      ' WHERE NUMERO_FACC_EFEC = :NUMERO_FACC'
+      '   AND SERIE_FACC_EFEC  = :SERIE_FACC'
+      ' ORDER BY NUMERO_EFEC')
+    MasterFields = 'NUMERO_FACC;SERIE_FACC'
+    DetailFields = 'NUMERO_FACC_EFEC;SERIE_FACC_EFEC'
+    Left = 360
+    Top = 160
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'NUMERO_FACC'
+        ParamType = ptInput
+        Value = nil
+      end
+      item
+        DataType = ftWideString
+        Name = 'SERIE_FACC'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsEfectos: TDataSource
+    DataSet = unqryEfectos
+    Left = 360
+    Top = 216
+  end
   object unqryEmpDataFacc: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
