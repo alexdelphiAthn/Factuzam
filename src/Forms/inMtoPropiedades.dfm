@@ -27,6 +27,11 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               DataBinding.FieldName = 'TIPO_VALOR_PROP'
               Width = 130
             end
+            object cxgrdbclmnGrdDBTabPrinNIVEL: TcxGridDBColumn
+              Caption = 'Nivel'
+              DataBinding.FieldName = 'NIVEL_PROP'
+              Width = 100
+            end
             object cxgrdbclmnGrdDBTabPrinACTIVO: TcxGridDBColumn
               Caption = 'Activo'
               DataBinding.FieldName = 'ESACTIVO_PROP'
@@ -145,6 +150,26 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               Properties.ValueUnchecked = 'N'
               TabOrder = 6
               Transparent = True
+            end
+            object lblNivel: TcxLabel
+              Left = 560
+              Top = 78
+              Caption = 'Nivel de desglose'
+              TabOrder = 7
+              Transparent = True
+            end
+            object cbbNIVEL: TcxDBComboBox
+              Left = 730
+              Top = 77
+              DataBinding.DataField = 'NIVEL_PROP'
+              DataBinding.DataSource = dsTablaG
+              Properties.DropDownListStyle = lsFixedList
+              Properties.Items.Strings = (
+                'ARTICULO'
+                'COLOR'
+                'SKU')
+              TabOrder = 8
+              Width = 170
             end
           end
         end
