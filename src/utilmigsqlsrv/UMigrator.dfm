@@ -303,7 +303,7 @@ object FormMigrator: TFormMigrator
     Left = 0
     Top = 290
     Width = 1024
-    Height = 250
+    Height = 282
     Align = alTop
     BevelOuter = bvNone
     Padding.Left = 8
@@ -324,6 +324,20 @@ object FormMigrator: TFormMigrator
       Height = 17
       Caption = 'Hilos paralelos:'
     end
+    object lblFotosRaiz: TLabel
+      Left = 16
+      Top = 47
+      Width = 130
+      Height = 17
+      Caption = 'Ra'#237'z fotos legacy:'
+    end
+    object lblFotosDestino: TLabel
+      Left = 470
+      Top = 47
+      Width = 200
+      Height = 17
+      Caption = 'Destino fotos (appDirFotos):'
+    end
     object edUsuario: TEdit
       Left = 160
       Top = 11
@@ -340,9 +354,25 @@ object FormMigrator: TFormMigrator
       TabOrder = 1
       Text = '4'
     end
+    object edFotosRaiz: TEdit
+      Left = 160
+      Top = 44
+      Width = 290
+      Height = 25
+      TabOrder = 2
+      Text = 'C:\fotos'
+    end
+    object edFotosDestino: TEdit
+      Left = 680
+      Top = 44
+      Width = 336
+      Height = 25
+      TabOrder = 3
+      Text = '$(PUBLICO)\Factuzam\fotos'
+    end
     object GroupListado: TGroupBox
       Left = 8
-      Top = 42
+      Top = 74
       Width = 1008
       Height = 200
       Caption = ' Migraciones disponibles (orden de ejecuci'#243'n) '
