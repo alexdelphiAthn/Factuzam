@@ -365,11 +365,13 @@ type
     chkFiltroConStockArt: TcxCheckBox;
     lblFiltroTemporadaArt: TcxLabel;
     ccbFiltroTemporadaArt: TcxCheckComboBox;
+    btnGuardarPrecargaArt: TcxButton;
     actFamilias: TAction;
     procedure btnToggleFiltrosArtClick(Sender: TObject);
     procedure cbbFiltroEstadoArtPropertiesEditValueChanged(Sender: TObject);
     procedure chkFiltroConStockArtPropertiesEditValueChanged(Sender: TObject);
     procedure ccbFiltroTemporadaArtPropertiesCloseUp(Sender: TObject);
+    procedure btnGuardarPrecargaArtClick(Sender: TObject);
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
       Sender: TObject; AButtonIndex: Integer);
@@ -589,6 +591,7 @@ uses
   inMtoModalCalcularMargen,
   inMtoModalEtiqArt,
   inMtoModalFiltroArt,
+  inMtoModalGenImpSave, // dialogo de ambito para "Guardar precarga"
   inLibEAN13,
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
@@ -2399,6 +2402,53 @@ procedure TfrmMtoArticulos.ccbFiltroTemporadaArtPropertiesCloseUp(
 begin
   if FFiltrosArtCargando then Exit;
   AplicarFiltrosArticulos;
+end;
+
+procedure TfrmMtoArticulos.btnGuardarPrecargaArtClick(Sender: TObject);
+var
+  formulario: TfrmModalGenImpSave;
+  sPermisos: string;
+  oList: TPerfilList;
+begin
+  // Guarda SOLO los filtros de carga (estado/stock/temporadas) en el perfil.
+  // El cambio ya se aplica en caliente al marcar/desmarcar; este boton lo
+  // hace permanente sin pasar por "Grabar Grid" (que ademas reescribe anchos
+  // de columna y captions). Se pregunta el ambito como en Grabar Grid.
+  sPermisos := '';
+  formulario := TfrmModalGenImpSave.Create(Application);
+  try
+    formulario.edtDescripcion.Enabled := False;
+    formulario.edtNombreOrigen.Text   := Self.Name;
+    formulario.edtDescripcion.Text    := 'Guardar precarga';
+    formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+      sPermisos := formulario.cbbPermisos.Text;
+  finally
+    FreeAndNil(formulario);
+  end;
+  // Solo persistimos si el usuario confirmo el ambito en el dialogo.
+  if sPermisos <> '' then
+  begin
+    Screen.Cursor := crHourGlass;
+    oList := TPerfilList.Create;
+    try
+      // Mismo volcado de filtros que usa Grabar Grid; el upsert de
+      // GrabarPerfilesBatch sobrescribe los valores previos del ambito.
+      RecogerPerfilesParticulares(oList, sPermisos);
+      oConn.StartTransaction;
+      try
+        odmPerfiles.GrabarPerfilesBatch(oList);
+        oConn.Commit;
+      except
+        oConn.Rollback;
+        raise;
+      end;
+    finally
+      FreeAndNil(oList);
+      Screen.Cursor := crDefault;
+    end;
+    ShowMessage('Precarga guardada.');
+  end;
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
