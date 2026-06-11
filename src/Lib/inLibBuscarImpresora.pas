@@ -76,8 +76,13 @@ begin
             SesionCache := Trim(Partes[0]);
             ModoCache := Trim(Partes[1]);
             ImpresoraCache := Trim(Partes[2]);
+            // Una cache 'DEBUG' solo es valida si el patron actual sigue
+            // siendo DEBUG: si parametros (vgerDefPrinter) ya apunta a una
+            // impresora real, se ignora y se reevalua el patron. Evita que
+            // una cache antigua deje pegado el modo DEBUG.
             CacheValida := (ImpresoraCache <> '') and
-                           ((SameText(ImpresoraCache, 'DEBUG')) or
+                           ((SameText(ImpresoraCache, 'DEBUG') and
+                             SameText(PatronBusqueda, 'DEBUG')) or
                             (Printer.Printers.IndexOf(ImpresoraCache) >= 0));
             if CacheValida then
             begin
