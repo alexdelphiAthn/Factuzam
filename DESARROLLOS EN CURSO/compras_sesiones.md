@@ -834,6 +834,11 @@ ordena por almacén → línea → fila → pivot.
   actualmente visible. Si quieres replicar el kit a todos los almacenes habría
   que añadir un botón «Aplicar a todos los almacenes».
 
+> ✅ Resuelto en la variante grid inline para los **kits del proveedor**:
+> en sesiones de formato distribuido «Aplicar kit» abre el distribuidor en
+> modo kit, con botones Aplicar/Limpiar por almacén y «Aplicar kit en todos
+> los almacenes». Ver `proveedores_compras_defectos.md` §3.5.
+
 ---
 
 ## 11. Cálculo de precio venta + override por SKU
