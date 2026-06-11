@@ -60,6 +60,13 @@ type
     FOnLog:          TMigLogProc;
     FOnProgress:     TMigProgressProc;
     FUsuario:        string;
+    // Config del dominio de fotos (inLibMigFotos): carpeta raiz local
+    // de las fotos legacy, carpeta destino appDirFotos (ya expandida
+    // por la UI, sin tokens $(...)) y tamaño del pool de hilos de
+    // conversion de imagenes.
+    FDirFotosOrigen: string;
+    FDirFotosDestino: string;
+    FHilosFotos:     Integer;
     FItems:          TObjectList<TMigItem>;
     FItemsCompartidos: Boolean;  // True si FItems no nos pertenece
     FCurrentDominio:      string;
@@ -113,6 +120,12 @@ type
     property OnLog:     TMigLogProc      read FOnLog      write FOnLog;
     property OnProgress:TMigProgressProc read FOnProgress write FOnProgress;
     property Usuario:   string           read FUsuario    write FUsuario;
+    property DirFotosOrigen: string      read FDirFotosOrigen
+                                         write FDirFotosOrigen;
+    property DirFotosDestino: string     read FDirFotosDestino
+                                         write FDirFotosDestino;
+    property HilosFotos: Integer         read FHilosFotos
+                                         write FHilosFotos;
 
     procedure Log(const sMensaje: string); overload;
     procedure Log(const sFormato: string;
@@ -224,6 +237,7 @@ begin
   FItems               := TObjectList<TMigItem>.Create(True);
   FItemsCompartidos    := False;
   FUsuario             := 'MIGRADOR';
+  FHilosFotos          := 4;
 end;
 
 constructor TMigEngine.CreateClone(ConSrv, ConDst: TUniConnection;
@@ -239,6 +253,9 @@ begin
   FOnLog               := Master.FOnLog;
   FOnProgress          := Master.FOnProgress;
   FUsuario             := Master.FUsuario;
+  FDirFotosOrigen      := Master.FDirFotosOrigen;
+  FDirFotosDestino     := Master.FDirFotosDestino;
+  FHilosFotos          := Master.FHilosFotos;
   // Apuntamos al master para que Cancelar/IsCancelado lean su
   // estado compartido.
   FMaster              := Master;

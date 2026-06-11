@@ -50,6 +50,9 @@ src/utilmigsqlsrv/
 │                                                fza_empresas_series +
 │                                                fza_contadores +
 │                                                CONTADOR_ART_FAM (familias)
+├── inLibMigFotos.pas              dbo.ocartcol.ArchivoFoto →
+│                                                PNG 300/600/real en disco +
+│                                                fza_articulos_fotos
 └── resultados/                    CSVs de muestra exportados desde SSMS
 ```
 
@@ -144,6 +147,35 @@ de este branch ya las traen:
 |              | Si un almacén legacy tiene >9999 SKUs en stock no  |
 |              | cabe en 4 chars). |
 
+## Fotos legacy (dominio `fotos`)
+
+`dbo.ocartcol.ArchivoFoto` guarda la ruta de la foto de cada
+artículo+color **sin la carpeta raíz** (p.ej.
+`\temp.34\85san francisco\3834.jpg`). El formulario añade dos campos,
+persistidos en `migrator.ini`:
+
+- **Raíz fotos legacy** — carpeta donde empiezan esas rutas
+  (normalmente `C:\fotos`).
+- **Destino fotos (appDirFotos)** — carpeta del sistema de fotos del
+  Factuzam destino; admite tokens tipo `$(PUBLICO)\Factuzam\fotos`
+  (se expanden con `inLibPathTokens` al ejecutar).
+- **Hilos fotos** — tamaño del pool de conversión de imágenes dentro
+  del dominio (2-5 recomendado; tope 8).
+
+Para cada (Articulo, Color) con foto genera los tres PNG del esquema
+estándar (`300/`, `600/`, `real/`) en la carpeta destino y registra la
+fila en `fza_articulos_fotos` con `CODIGO_UNIDAD_FOT = ARTICULO/COLOR`
+(mismo slot de color que el mapper de SKUs, para que el resolutor del
+exe la encuentre por prefijo). Detalle completo en
+`DESARROLLOS EN CURSO/migracion_fotos.md`.
+
+El dominio corre en un **hilo independiente de las waves** (en paralelo
+a toda la migración de datos) y, por dentro, reparte la conversión
+(decodificar + 3 PNG por foto) entre los hilos del pool. Los hilos del
+pool solo tocan ficheros; las filas de INSERT las encolan y las vuelca
+a BBDD el hilo del dominio, porque la conexión UniDAC no admite uso
+concurrente.
+
 ## Ejecución asíncrona y paralelismo
 
 La migración corre en hilos de trabajo OmniThreadLibrary, no en el
@@ -171,6 +203,10 @@ workers de la actual han terminado.
 | 1 | almacenes · clientes · articulos · tallajes | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
 | 3 | inventarios · movimientos · ventas · facturas | Wave 2 |
+
+El dominio `fotos` **no entra en las waves**: se lanza en un hilo
+independiente al principio de la corrida y avanza en paralelo a toda la
+migración de datos (el coordinador lo espera tras la última wave).
 
 `Parallel.ForEach<string>(aDeWave).Execute(...)` levanta `N` workers
 (por defecto OmniThread elige según los núcleos disponibles) y los
