@@ -115,7 +115,8 @@ end;
 
 class function TArqueoTicket.FmtPorc(APorc: Currency): string;
 begin
-  Result := FormatFloat('0', APorc) + '%';
+  // Un decimal: el arqueo queda más legible que con porcentajes enteros.
+  Result := FormatFloat('0.0', APorc) + '%';
 end;
 
 // =============================================================================
