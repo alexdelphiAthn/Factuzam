@@ -132,6 +132,52 @@ Sub-pestañas de la ficha:
   referencias y precios de compra).
 - **Ventas** — histórico/relación comercial.
 - **Más datos** y **Otros** — información complementaria.
+- **Compras** — **parámetros por defecto para las sesiones de compra** de
+  este proveedor (ver abajo).
+
+### Pestaña Compras (parámetros de compra del proveedor)
+
+Concentra valores que se **proponen automáticamente** cuando creas una
+[sesión de compra](03-menu-compras.md) para este proveedor, para no
+repetirlos en cada entrada de género.
+
+![Pestaña Compras del proveedor: margen, sistema de tallas y kits](img/02-proveedores-compras.png)
+*▢ Captura pendiente — Pestaña Compras con los defectos y la biblioteca de kits.*
+
+**Defectos para sesiones de compra:**
+
+| Campo | Para qué sirve |
+|-------|----------------|
+| **Margen %** | Margen comercial habitual de este proveedor. Al elegirlo en una sesión de compra, se copia como margen de la sesión y sirve para **calcular el precio de venta** a partir del precio de compra. |
+| **Sistema de tallas** | El **tallaje** (colección de atributos de tallas) con el que suele venir el género de este proveedor. Al crear la sesión, se usa como sistema de tallas de las columnas del grid, y cada línea nueva lo hereda. |
+
+> Estos valores solo **se proponen**; siempre puedes cambiarlos dentro de
+> la sesión. Solo se copian si el proveedor los tiene rellenos.
+
+**Kits de cantidades por talla:**
+
+Un **kit** es una **plantilla de reparto de unidades por talla** que se
+repite a menudo con ese proveedor (por ejemplo, un surtido *1-2-2-1* en
+*S-M-L-XL*). Aquí se mantiene la **biblioteca de kits** del proveedor para
+luego aplicarlos de un clic en las sesiones de compra.
+
+La pestaña tiene dos rejillas: la de **kits** (cabecera) y la de **tallas
+del kit** (detalle).
+
+| Botón | Acción |
+|-------|--------|
+| **+ Kit / − Kit** | Crea o borra un kit. Cada kit tiene **Código**, **Nombre**, **Sistema de tallas** y **Descripción**. |
+| **Tallas del sistema** | Rellena el detalle del kit con **una fila por cada talla** del sistema de tallas elegido (todas con cantidad 0), listas para teclear las unidades. |
+| **+ Talla / − Talla** | Añade o quita filas de talla del kit a mano. |
+
+Cada línea de detalle es una **Talla** con su **Cantidad** y un **Orden**
+de presentación.
+
+> **Cómo se usan los kits:** dentro de una sesión de compra, sobre la línea
+> de un artículo, el botón **Aplicar kit** vuelca las cantidades del kit en
+> la matriz de tallas de esa línea. Así, en lugar de teclear talla a talla,
+> aplicas el surtido completo de golpe. Es ideal cuando el proveedor sirve
+> packs con un reparto de tallas estándar.
 
 ---
 
