@@ -583,34 +583,11 @@ begin
     ' WHERE BASE <> 0 OR CUOTA_IVA <> 0 OR CUOTA_RE <> 0                   ' +
     ' ORDER BY ORD                                                         ';
 
-  // Propiedad: 1 fila por (propiedad, valor). Suma sobre las líneas de venta
-  // los TOTAL_FACLIN agregados al CODIGO_ART. Si la propiedad es de tipo
-  // LISTA, el valor sale de fza_propiedades_valores.PV; si es libre, de
-  // VALOR_LIBRE_ARTPROP.
-  qryResProp.SQL.Text :=
-    ' SELECT                                                              ' +
-    '   ap.CODIGO_PROP_ARTPROP                                  AS PROP,  ' +
-    '   COALESCE(pv.PV, ap.VALOR_LIBRE_ARTPROP, ''?'')          AS VALOR, ' +
-    '   COUNT(*)                                                AS UDS,   ' +
-    '   COALESCE(SUM(l.TOTAL_FACLIN), 0)                        AS NETO   ' +
-    '   FROM fza_caja_operaciones        o                                ' +
-    '   JOIN fza_facturas_lineas         l                                ' +
-    '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA             ' +
-    '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA             ' +
-    '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA            ' +
-    '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA       ' +
-    '   JOIN fza_articulos_propiedades   ap                               ' +
-    '     ON ap.CODIGO_ART_ART = l.CODIGO_ART_FACLIN                      ' +
-    '   LEFT JOIN fza_propiedades_valores pv                              ' +
-    '     ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP                          ' +
-    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
-    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
-    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
-    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-    '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
-    '  GROUP BY ap.CODIGO_PROP_ARTPROP, VALOR                             ' +
-    '  ORDER BY ap.CODIGO_PROP_ARTPROP, VALOR                             ';
+  // Propiedad: 1 fila por (propiedad, valor) de las propiedades marcadas
+  // ESARQUEO_PROP='S' (check del Mto de Propiedades). Resuelve el valor
+  // EFECTIVO por SKU (vi_articulos_propiedades_efectivas), así la temporada
+  // de color sale en su valor de color. Consulta compartida con el ticket.
+  qryResProp.SQL.Text := TArqueoCalculadora.SQLResumenPropiedad;
 end;
 
 procedure TfrmModalArqueo.AbrirQryConParams(Q: TUniQuery);
@@ -631,7 +608,13 @@ begin
   AbrirQryConParams(qryResEmpleado);
   AbrirQryConParams(qryResFP);
   AbrirQryConParams(qryResFam);
-  AbrirQryConParams(qryResProp);
+  // El resumen por propiedad depende de ESARQUEO_PROP; si la migración no
+  // está aplicada (u otro fallo) no rompemos el resto del arqueo.
+  try
+    AbrirQryConParams(qryResProp);
+  except
+    qryResProp.Close;
+  end;
   AbrirQryConParams(qryResIVA);
 end;
 

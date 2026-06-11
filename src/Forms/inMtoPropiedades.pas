@@ -38,6 +38,7 @@ type
     cxgrdbclmnGrdDBTabPrinTIPO: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinNIVEL: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinACTIVO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinARQUEO: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinNUMARTUSOS: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;
@@ -53,6 +54,7 @@ type
     lblTipo: TcxLabel;
     cbbTIPO: TcxDBComboBox;
     chkACTIVO: TcxDBCheckBox;
+    chkARQUEO: TcxDBCheckBox;
     lblNivel: TcxLabel;
     cbbNIVEL: TcxDBComboBox;
     splFicha: TcxSplitter;

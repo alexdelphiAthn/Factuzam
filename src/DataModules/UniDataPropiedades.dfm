@@ -6,12 +6,13 @@ inherited dmPropiedades: TdmPropiedades
       
         '  (`CODIGO_PROP_ARTPROP`, `NOMBRE_PROP_PROP`, `TIPO_VALOR_PROP`,' +
         ' `NIVEL_PROP`,' +
-        ' `ESACTIVO_PROP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_AL' +
+        ' `ESACTIVO_PROP`, `ESARQUEO_PROP`, `INSTANTE_MODIF`, `INSTANTE_AL' +
+        'TA`, `USUARIO_AL' +
         'TA`, `USUARIO_MODIF`)'
       'VALUES'
       
         '  (:`CODIGO_PROP_ARTPROP`, :`NOMBRE_PROP_PROP`, :`TIPO_VALOR_PRO' +
-        'P`, IFNULL(:`NIVEL_PROP`, ''ARTICULO''), :`ESACTIVO_PROP`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USU' +
+        'P`, IFNULL(:`NIVEL_PROP`, ''ARTICULO''), :`ESACTIVO_PROP`, IFNULL(:`ESARQUEO_PROP`, ''N''), :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USU' +
         'ARIO_ALTA`, :`USUARIO_MODIF`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_propiedades`'
@@ -23,7 +24,7 @@ inherited dmPropiedades: TdmPropiedades
       
         '  `CODIGO_PROP_ARTPROP` = :`CODIGO_PROP_ARTPROP`, `NOMBRE_PROP_P' +
         'ROP` = :`NOMBRE_PROP_PROP`, `TIPO_VALOR_PROP` = :`TIPO_VALOR_PRO' +
-        'P`, `NIVEL_PROP` = IFNULL(:`NIVEL_PROP`, ''ARTICULO''), `ESACTIVO_PROP` = :`ESACTIVO_PROP`, `INSTANTE_MODIF` = :`INS' +
+        'P`, `NIVEL_PROP` = IFNULL(:`NIVEL_PROP`, ''ARTICULO''), `ESACTIVO_PROP` = :`ESACTIVO_PROP`, `ESARQUEO_PROP` = IFNULL(:`ESARQUEO_PROP`, ''N''), `INSTANTE_MODIF` = :`INS' +
         'TANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA`' +
         ' = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
       'WHERE'

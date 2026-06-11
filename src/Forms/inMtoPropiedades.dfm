@@ -40,6 +40,14 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               Properties.ValueUnchecked = 'N'
               Width = 70
             end
+            object cxgrdbclmnGrdDBTabPrinARQUEO: TcxGridDBColumn
+              Caption = 'En arqueo'
+              DataBinding.FieldName = 'ESARQUEO_PROP'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 80
+            end
             object cxgrdbclmnGrdDBTabPrinNUMARTUSOS: TcxGridDBColumn
               Caption = 'Art'#237'culos asignados'
               DataBinding.FieldName = 'NUM_ART_USOS'
@@ -149,6 +157,17 @@ inherited frmMtoPropiedades: TfrmMtoPropiedades
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
               TabOrder = 6
+              Transparent = True
+            end
+            object chkARQUEO: TcxDBCheckBox
+              Left = 335
+              Top = 78
+              Caption = 'En arqueo'
+              DataBinding.DataField = 'ESARQUEO_PROP'
+              DataBinding.DataSource = dsTablaG
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              TabOrder = 9
               Transparent = True
             end
             object lblNivel: TcxLabel

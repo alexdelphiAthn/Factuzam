@@ -52,6 +52,9 @@ type
     class procedure EscribirResumenSeccion(ATicket: TTicketTermico;
                                            AConn: TUniConnection;
                                            const AArqueo: TArqueoCaja);
+    class procedure EscribirResumenPropiedades(ATicket: TTicketTermico;
+                                               AConn: TUniConnection;
+                                               const AArqueo: TArqueoCaja);
     class procedure EscribirResumenEmpleado(ATicket: TTicketTermico;
                                             AConn: TUniConnection;
                                             const AArqueo: TArqueoCaja);
@@ -362,6 +365,56 @@ begin
   end;
 end;
 
+class procedure TArqueoTicket.EscribirResumenPropiedades(
+  ATicket: TTicketTermico; AConn: TUniConnection; const AArqueo: TArqueoCaja);
+var
+  Q: TUniQuery;
+  sProp, sPropActual: string;
+begin
+  Q := TUniQuery.Create(nil);
+  try
+    // Si ESARQUEO_PROP aún no está migrada (u otro problema) se omite el
+    // bloque sin abortar el resto del ticket.
+    try
+      Q.Connection := AConn;
+      Q.SQL.Text := TArqueoCalculadora.SQLResumenPropiedad;
+      Q.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
+      Q.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
+      Q.ParamByName('pCAJA').AsString     := AArqueo.Caja;
+      Q.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
+      Q.ParamByName('pFHASTA').AsDateTime := AArqueo.FechaHasta;
+      Q.Open;
+      if not Q.IsEmpty then
+      begin
+        ATicket.SaltarLineas(1);
+        ATicket.Negrita(True);
+        ATicket.EscribirLinea('RESUMEN POR PROPIEDAD');
+        ATicket.Negrita(False);
+        sPropActual := '';
+        while not Q.Eof do
+        begin
+          sProp := Q.FieldByName('PROP').AsString;
+          if not SameText(sProp, sPropActual) then
+          begin
+            sPropActual := sProp;
+            ATicket.Negrita(True);
+            ATicket.EscribirLinea(sProp);
+            ATicket.Negrita(False);
+          end;
+          ATicket.TextoColumnas(
+            '  ' + Q.FieldByName('VALOR').AsString,
+            FmtImp(Q.FieldByName('NETO').AsCurrency));
+          Q.Next;
+        end;
+      end;
+    except
+      // bloque opcional: no rompe el ticket si la propiedad no está lista
+    end;
+  finally
+    FreeAndNil(Q);
+  end;
+end;
+
 class procedure TArqueoTicket.EscribirResumenEmpleado(ATicket: TTicketTermico;
                                                      AConn: TUniConnection;
                                                      const AArqueo: TArqueoCaja);
@@ -594,6 +647,7 @@ begin
 
     // Resúmenes
     EscribirResumenSeccion(Ticket, AConn, Arqueo);
+    EscribirResumenPropiedades(Ticket, AConn, Arqueo);
     EscribirResumenEmpleado(Ticket, AConn, Arqueo);
     EscribirResumenFormaPago(Ticket, AConn, Arqueo);
     EscribirResumenSerie(Ticket, AConn, Arqueo);
