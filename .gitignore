@@ -6,6 +6,7 @@
 *.dcp
 *.so
 *.dsk
+*.dsv
 *.local
 fzam.res
 *.identcache
