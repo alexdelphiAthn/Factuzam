@@ -78,6 +78,7 @@ type
     Facturas1: TMenuItem;
     EfectosCompra1: TMenuItem;
     RemesasCompra1: TMenuItem;
+    CargarEfectos1: TMenuItem;
     Sesiones1: TMenuItem;
     mnuCrearArtculosyunpedidoounalbarn: TMenuItem;
     Formasdepago2: TMenuItem;
@@ -186,6 +187,7 @@ type
     procedure Facturas1Click(Sender: TObject);
     procedure EfectosCompra1Click(Sender: TObject);
     procedure RemesasCompra1Click(Sender: TObject);
+    procedure CargarEfectos1Click(Sender: TObject);
     procedure Pedidos1Click(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
@@ -322,6 +324,7 @@ uses inLibUser,
   inMtoModalImpBalanceSinTallas,
   inMtoModalImpMovVentasArt,
   inMtoModalFacturarAlbaranes,
+  inMtoModalCargarEfectosRemesa,
   inLibCajaParam,
   inLibAppParam,
   inLibUnidadesMedida,
@@ -1722,6 +1725,23 @@ begin
   inherited;
   if RemesasCompra1.Visible then
     ShowMto(Self, 'RemesasCompra');
+end;
+
+procedure TfrmMtoPrincipal.CargarEfectos1Click(Sender: TObject);
+var
+  f: TfrmModalCargarEfectosRemesa;
+begin
+  inherited;
+  if CargarEfectos1.Visible then
+  begin
+    f := TfrmModalCargarEfectosRemesa.Create(nil);
+    try
+      if f.ShowModal = mrOk then
+        ShowMto(Self, 'RemesasCompra');
+    finally
+      f.Free;
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.Pedidos1Click(Sender: TObject);

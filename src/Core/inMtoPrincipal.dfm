@@ -1471,6 +1471,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Caption = 'Remesas de pago'
         OnClick = RemesasCompra1Click
       end
+      object CargarEfectos1: TMenuItem
+        Caption = 'Cargar efectos en remesa...'
+        OnClick = CargarEfectos1Click
+      end
       object Formasdepago2: TMenuItem
         Caption = 'Formas de pago'
         ShortCut = 24647
