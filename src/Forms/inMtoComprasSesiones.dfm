@@ -97,7 +97,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Caption = ' Cabecera '
           TabOrder = 0
           ExplicitTop = 1
-          Height = 217
+          Height = 235
           Width = 1092
           object lblSerie: TcxLabel
             Left = 12
@@ -374,6 +374,38 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Style.IsFontAssigned = True
             TabOrder = 27
             Transparent = True
+          end
+          object lblKitProv: TcxLabel
+            Left = 12
+            Top = 192
+            Caption = 'Kit a aplicar'
+            TabOrder = 28
+            Transparent = True
+          end
+          object cbbKitProv: TcxLookupComboBox
+            Left = 110
+            Top = 188
+            Properties.KeyFieldNames = 'CODIGO_PRVKIT'
+            Properties.ListColumns = <
+              item
+                FieldName = 'ETIQUETA_KIT'
+              end>
+            Properties.ListOptions.ShowHeader = False
+            TabOrder = 29
+            Width = 320
+          end
+          object btnAplicarKitCab: TcxButton
+            Left = 440
+            Top = 187
+            Width = 160
+            Height = 27
+            Caption = 'Aplicar kit a la l'#237'nea'
+            Colors.Default = 12579775
+            Colors.Normal = 12579775
+            LookAndFeel.Kind = lfFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 30
+            OnClick = btnAplicarKitCabClick
           end
         end
         object pnlBottFich: TPanel
@@ -976,22 +1008,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     TabOrder = 29
                     Width = 90
                   end
-                  object lblProvTallas: TcxLabel
-                    Left = 292
-                    Top = 284
-                    Caption = 'Sistema tallas'
-                    TabOrder = 30
-                    Transparent = True
-                  end
-                  object txtProvTallas: TcxDBTextEdit
-                    Left = 392
-                    Top = 280
-                    DataBinding.DataField = 'NOMBRE_TALLAS_PRV'
-                    DataBinding.DataSource = dsPrvFicha
-                    Properties.ReadOnly = True
-                    TabOrder = 31
-                    Width = 152
-                  end
                   object btnIrProveedor: TcxButton
                     Left = 110
                     Top = 316
@@ -1070,12 +1086,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     object dbcPrvKitSistema: TcxGridDBColumn
                       Caption = 'Sistema tallas'
                       DataBinding.FieldName = 'NOMBRE_TALLAS_PRVKIT'
-                      Width = 120
-                    end
-                    object dbcPrvKitDescripcion: TcxGridDBColumn
-                      Caption = 'Descripci'#243'n'
-                      DataBinding.FieldName = 'DESCRIPCION_PRVKIT'
-                      Width = 140
+                      Width = 150
                     end
                   end
                   object glPrvKits: TcxGridLevel
