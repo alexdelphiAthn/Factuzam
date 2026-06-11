@@ -1,5 +1,5 @@
 inherited dmProveedores: TdmProveedores
-  Height = 142
+  Height = 260
   Width = 386
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
@@ -139,5 +139,83 @@ inherited dmProveedores: TdmProveedores
     DataSet = unqryLinFacturasArticulos
     Left = 297
     Top = 80
+  end
+  object unqryConjuntosTallas: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT ID_AC, NOMBRE_AC'
+      '  FROM fza_atributos_conjuntos'
+      ' WHERE ESACTIVO_AC = '#39'S'#39
+      '   AND ID_VA_AC = '#39'TAL'#39
+      ' ORDER BY NOMBRE_AC')
+    Left = 8
+    Top = 24
+  end
+  object dsConjuntosTallas: TDataSource
+    DataSet = unqryConjuntosTallas
+    Left = 8
+    Top = 52
+  end
+  object unqryKits: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_proveedores_kits'
+      'WHERE CODIGO_PRV_PRVKIT = :CODIGO_PRV_PRV'
+      'ORDER BY ORDEN_PRVKIT, CODIGO_PRVKIT')
+    MasterSource = frmMtoProveedores.dsTablaG
+    MasterFields = 'CODIGO_PRV_PRV'
+    DetailFields = 'CODIGO_PRV_PRVKIT'
+    BeforeInsert = unqryKitsBeforeInsert
+    AfterInsert = unqryKitsAfterInsert
+    BeforePost = unqryKitsBeforePost
+    BeforeDelete = unqryKitsBeforeDelete
+    Left = 96
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_PRV_PRV'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsKits: TDataSource
+    DataSet = unqryKits
+    Left = 96
+    Top = 80
+  end
+  object unqryKitsDet: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM fza_proveedores_kits_det'
+      'WHERE CODIGO_PRV_PRVKITD = :CODIGO_PRV_PRVKIT'
+      '  AND CODIGO_PRVKIT_PRVKITD = :CODIGO_PRVKIT'
+      'ORDER BY ORDEN_PRVKITD, VALOR_DESTINO_PRVKITD')
+    MasterSource = dsKits
+    MasterFields = 'CODIGO_PRV_PRVKIT;CODIGO_PRVKIT'
+    DetailFields = 'CODIGO_PRV_PRVKITD;CODIGO_PRVKIT_PRVKITD'
+    BeforeInsert = unqryKitsDetBeforeInsert
+    AfterInsert = unqryKitsDetAfterInsert
+    BeforePost = unqryKitsDetBeforePost
+    Left = 96
+    Top = 136
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_PRV_PRVKIT'
+        ParamType = ptInput
+        Value = nil
+      end
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_PRVKIT'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsKitsDet: TDataSource
+    DataSet = unqryKitsDet
+    Left = 96
+    Top = 192
   end
 end

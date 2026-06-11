@@ -42,7 +42,7 @@ uses
   cxControls, cxContainer, cxEdit, cxTextEdit, cxLabel,
   cxSpinEdit, cxCurrencyEdit, cxDropDownEdit, cxLookupEdit,
   DBAccess, Uni,
-  UniDataComprasSesiones, System.UITypes, Data.DB;
+  UniDataComprasSesiones, inLibGridTallasInline, System.UITypes, Data.DB;
 
 type
   TCeldaMatriz = record
@@ -121,6 +121,19 @@ procedure BorrarLineaConCascada(ADM: TdmComprasSesiones);
 procedure ClonarSesion(ADM: TdmComprasSesiones; const AUsuario: string);
 procedure ImportarKitsDeProveedor(ADM: TdmComprasSesiones;
                                   const AUsuario: string);
+
+// Aplica un kit del proveedor (fza_proveedores_kits_det) sobre la linea
+// con foco de la sesion: cada VALOR_DESTINO_PRVKITD se casa POR TEXTO
+// contra los valores del sistema de tallas de la linea y se persiste con
+// el mismo UPSERT que el tecleo manual en la celda (PersistirCantidad;
+// cantidad 0 borra la celda). NO repinta el grid: tras un True el form
+// debe RefrescarTotalesLineaActual + CargarCantidadesUnaLinea.
+// Devuelve False si no se aplico nada; AResumen lleva el motivo o, con
+// True, el detalle de tallas sin correspondencia (vacio si caso todo).
+function AplicarKitProveedorALinea(ADM: TdmComprasSesiones;
+                                    AGestor: TGestorGridTallas;
+                                    const ACodigoPrv, ACodigoKit: string;
+                                    out AResumen: string): Boolean;
 
 function  ValidarSesion(ADM: TdmComprasSesiones; out AError: string): Boolean;
 
@@ -933,6 +946,104 @@ begin
   // Lee kits con CODIGO_PRV_SESKIT del proveedor de la sesión, y los
   // duplica como kits propios de la sesión actual (vinculados al
   // SERIE/NUMERO local). Implementación pendiente.
+end;
+
+function AplicarKitProveedorALinea(ADM: TdmComprasSesiones;
+                                    AGestor: TGestorGridTallas;
+                                    const ACodigoPrv, ACodigoKit: string;
+                                    out AResumen: string): Boolean;
+var
+  q          : TUniQuery;
+  arr        : TArrPosConjunto;
+  iLinea     : Integer;
+  iAc        : Integer;
+  i          : Integer;
+  bCasada    : Boolean;
+  iAplicadas : Integer;
+  sValor     : string;
+  rCant      : Double;
+  sSinCasar  : string;
+begin
+  Result   := False;
+  AResumen := '';
+  if (ADM = nil) or (AGestor = nil) then
+    AResumen := 'Gestor de tallas no inicializado.'
+  else if ADM.unqryTablaG.IsEmpty then
+    AResumen := 'No hay sesion activa.'
+  else if ADM.unqrySesionLin.IsEmpty then
+    AResumen := 'Selecciona o crea una linea de articulo primero.'
+  else
+  begin
+    iLinea := ADM.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+    iAc    := ADM.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
+    if iLinea <= 0 then
+      AResumen := 'La linea aun no tiene numero. Graba la sesion primero.'
+    else if iAc <= 0 then
+      AResumen := 'La linea no tiene sistema de tallas. Asignale uno en la ' +
+                  'columna "Sistema tallas" antes de aplicar el kit.'
+    else
+    begin
+      arr        := AGestor.GetPosicionesConjunto(iAc);
+      iAplicadas := 0;
+      sSinCasar  := '';
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := inLibGlobalVar.oConn;
+        q.SQL.Text :=
+          'SELECT VALOR_DESTINO_PRVKITD, CANTIDAD_PRVKITD ' +
+          '  FROM fza_proveedores_kits_det ' +
+          ' WHERE CODIGO_PRV_PRVKITD = :prv ' +
+          '   AND CODIGO_PRVKIT_PRVKITD = :kit ' +
+          ' ORDER BY ORDEN_PRVKITD, VALOR_DESTINO_PRVKITD';
+        q.ParamByName('prv').AsString := ACodigoPrv;
+        q.ParamByName('kit').AsString := ACodigoKit;
+        q.Open;
+        if q.IsEmpty then
+          AResumen := Format('El kit %s no tiene tallas definidas. ' +
+            'Completalo en Proveedores, pestaña Compras.', [ACodigoKit])
+        else
+        begin
+          while not q.Eof do
+          begin
+            sValor  := Trim(q.FieldByName('VALOR_DESTINO_PRVKITD').AsString);
+            rCant   := q.FieldByName('CANTIDAD_PRVKITD').AsFloat;
+            bCasada := False;
+            // Casado por texto: un kit definido para un sistema sirve en
+            // cualquier otro que comparta tallas (38, M...).
+            for i := 0 to High(arr) do
+            begin
+              if SameText(Trim(arr[i].Valor), sValor) then
+              begin
+                AGestor.PersistirCantidad(iLinea, arr[i].IdAv, rCant);
+                bCasada := True;
+                Inc(iAplicadas);
+                Break;
+              end;
+            end;
+            if (not bCasada) and (rCant > 0) then
+            begin
+              if sSinCasar <> '' then
+                sSinCasar := sSinCasar + ', ';
+              sSinCasar := sSinCasar + Format('%s (%g)', [sValor, rCant]);
+            end;
+            q.Next;
+          end;
+        end;
+      finally
+        FreeAndNil(q);
+      end;
+      if iAplicadas > 0 then
+      begin
+        Result := True;
+        if sSinCasar <> '' then
+          AResumen := 'Tallas del kit sin correspondencia en el sistema de ' +
+                      'la linea (no aplicadas): ' + sSinCasar;
+      end
+      else if AResumen = '' then
+        AResumen := 'Ninguna talla del kit casa con el sistema de tallas ' +
+                    'de la linea.';
+    end;
+  end;
 end;
 
 function ValidarSesion(ADM: TdmComprasSesiones; out AError: string): Boolean;

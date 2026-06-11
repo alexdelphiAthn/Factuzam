@@ -551,25 +551,25 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 object btnAddLinea: TcxButton
                   Left = 12
                   Top = 4
-                  Width = 136
+                  Width = 112
                   Height = 28
                   Caption = '+ A'#241'adir l'#237'nea'
                   TabOrder = 0
                   OnClick = btnAddLineaClick
                 end
                 object btnDelLinea: TcxButton
-                  Left = 154
+                  Left = 130
                   Top = 5
-                  Width = 137
+                  Width = 112
                   Height = 28
                   Caption = '- Borrar l'#237'nea'
                   TabOrder = 1
                   OnClick = btnDelLineaClick
                 end
                 object btnNuevoColor: TcxButton
-                  Left = 296
+                  Left = 248
                   Top = 5
-                  Width = 170
+                  Width = 120
                   Height = 28
                   Caption = 'Otro color'
                   Colors.Default = 14346982
@@ -580,9 +580,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   OnClick = btnNuevoColorClick
                 end
                 object btnFoto: TcxButton
-                  Left = 472
+                  Left = 374
                   Top = 5
-                  Width = 120
+                  Width = 90
                   Height = 28
                   Caption = '+ Foto'
                   LookAndFeel.Kind = lfFlat
@@ -591,18 +591,18 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   OnClick = btnFotoClick
                 end
                 object btnArbolFamilias: TcxButton
-                  Left = 600
+                  Left = 470
                   Top = 5
-                  Width = 164
+                  Width = 150
                   Height = 28
                   Caption = #193'rbol familias (F3)'
                   TabOrder = 4
                   OnClick = btnArbolFamiliasClick
                 end
                 object btnDescargarFotos: TcxButton
-                  Left = 770
+                  Left = 626
                   Top = 5
-                  Width = 120
+                  Width = 100
                   Height = 28
                   Caption = 'Bajar fotos'
                   LookAndFeel.Kind = lfFlat
@@ -610,13 +610,24 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 5
                   OnClick = btnDescargarFotosClick
                 end
-                object lblHint: TcxLabel
-                  Left = 898
-                  Top = 7
-                  Caption = 
-                    'F3 sobre Familia o C'#243'd. art'#237'culo. PVP se propone al teclear el c' +
-                    'oste.'
+                object btnAplicarKit: TcxButton
+                  Left = 732
+                  Top = 5
+                  Width = 130
+                  Height = 28
+                  Caption = 'Aplicar kit'
+                  Colors.Default = 12579775
+                  Colors.Normal = 12579775
+                  LookAndFeel.Kind = lfFlat
+                  LookAndFeel.NativeStyle = False
                   TabOrder = 6
+                  OnClick = btnAplicarKitClick
+                end
+                object lblHint: TcxLabel
+                  Left = 870
+                  Top = 7
+                  Caption = 'F3 = familias. PVP se propone al teclear el coste.'
+                  TabOrder = 7
                   Transparent = True
                 end
               end
@@ -703,6 +714,404 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 end
                 object glDocs: TcxGridLevel
                   GridView = tvDocs
+                end
+              end
+            end
+            object tsProveedor: TcxTabSheet
+              Caption = '&3_Proveedor'
+              ImageIndex = 2
+              object pnlProvIzq: TPanel
+                Left = 0
+                Top = 0
+                Width = 560
+                Height = 389
+                Align = alLeft
+                BevelOuter = bvNone
+                TabOrder = 0
+                object gbProvFicha: TcxGroupBox
+                  Left = 0
+                  Top = 0
+                  Align = alClient
+                  Caption = ' Datos del proveedor '
+                  TabOrder = 0
+                  Height = 389
+                  Width = 560
+                  object lblProvCodigo: TcxLabel
+                    Left = 12
+                    Top = 28
+                    Caption = 'C'#243'digo'
+                    TabOrder = 0
+                    Transparent = True
+                  end
+                  object txtProvCodigo: TcxDBTextEdit
+                    Left = 110
+                    Top = 24
+                    DataBinding.DataField = 'CODIGO_PRV_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 1
+                    Width = 120
+                  end
+                  object lblProvNif: TcxLabel
+                    Left = 292
+                    Top = 28
+                    Caption = 'NIF'
+                    TabOrder = 2
+                    Transparent = True
+                  end
+                  object txtProvNif: TcxDBTextEdit
+                    Left = 392
+                    Top = 24
+                    DataBinding.DataField = 'NIF_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 3
+                    Width = 152
+                  end
+                  object lblProvRazon: TcxLabel
+                    Left = 12
+                    Top = 56
+                    Caption = 'Raz'#243'n social'
+                    TabOrder = 4
+                    Transparent = True
+                  end
+                  object txtProvRazon: TcxDBTextEdit
+                    Left = 110
+                    Top = 52
+                    DataBinding.DataField = 'RAZON_SOCIAL_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 5
+                    Width = 434
+                  end
+                  object lblProvNombre: TcxLabel
+                    Left = 12
+                    Top = 84
+                    Caption = 'Nombre com.'
+                    TabOrder = 6
+                    Transparent = True
+                  end
+                  object txtProvNombre: TcxDBTextEdit
+                    Left = 110
+                    Top = 80
+                    DataBinding.DataField = 'NOMBRE_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 7
+                    Width = 434
+                  end
+                  object lblProvTelefono: TcxLabel
+                    Left = 12
+                    Top = 112
+                    Caption = 'Tel'#233'fono'
+                    TabOrder = 8
+                    Transparent = True
+                  end
+                  object txtProvTelefono: TcxDBTextEdit
+                    Left = 110
+                    Top = 108
+                    DataBinding.DataField = 'TELEFONO_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 9
+                    Width = 168
+                  end
+                  object lblProvMovil: TcxLabel
+                    Left = 292
+                    Top = 112
+                    Caption = 'M'#243'vil'
+                    TabOrder = 10
+                    Transparent = True
+                  end
+                  object txtProvMovil: TcxDBTextEdit
+                    Left = 392
+                    Top = 108
+                    DataBinding.DataField = 'MOVIL_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 11
+                    Width = 152
+                  end
+                  object lblProvEmail: TcxLabel
+                    Left = 12
+                    Top = 140
+                    Caption = 'Email'
+                    TabOrder = 12
+                    Transparent = True
+                  end
+                  object txtProvEmail: TcxDBTextEdit
+                    Left = 110
+                    Top = 136
+                    DataBinding.DataField = 'EMAIL_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 13
+                    Width = 434
+                  end
+                  object lblProvDireccion: TcxLabel
+                    Left = 12
+                    Top = 168
+                    Caption = 'Direcci'#243'n'
+                    TabOrder = 14
+                    Transparent = True
+                  end
+                  object txtProvDireccion: TcxDBTextEdit
+                    Left = 110
+                    Top = 164
+                    DataBinding.DataField = 'DIRECCION1_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 15
+                    Width = 434
+                  end
+                  object lblProvPoblacion: TcxLabel
+                    Left = 12
+                    Top = 196
+                    Caption = 'Poblaci'#243'n'
+                    TabOrder = 16
+                    Transparent = True
+                  end
+                  object txtProvPoblacion: TcxDBTextEdit
+                    Left = 110
+                    Top = 192
+                    DataBinding.DataField = 'POBLACION_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 17
+                    Width = 168
+                  end
+                  object lblProvProvincia: TcxLabel
+                    Left = 292
+                    Top = 196
+                    Caption = 'Provincia'
+                    TabOrder = 18
+                    Transparent = True
+                  end
+                  object txtProvProvincia: TcxDBTextEdit
+                    Left = 392
+                    Top = 192
+                    DataBinding.DataField = 'PROVINCIA_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 19
+                    Width = 152
+                  end
+                  object lblProvCPostal: TcxLabel
+                    Left = 12
+                    Top = 224
+                    Caption = 'C. Postal'
+                    TabOrder = 20
+                    Transparent = True
+                  end
+                  object txtProvCPostal: TcxDBTextEdit
+                    Left = 110
+                    Top = 220
+                    DataBinding.DataField = 'CODIGO_POSTAL_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 21
+                    Width = 168
+                  end
+                  object lblProvPais: TcxLabel
+                    Left = 292
+                    Top = 224
+                    Caption = 'Pa'#237's'
+                    TabOrder = 22
+                    Transparent = True
+                  end
+                  object txtProvPais: TcxDBTextEdit
+                    Left = 392
+                    Top = 220
+                    DataBinding.DataField = 'PAIS_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 23
+                    Width = 152
+                  end
+                  object lblProvContacto: TcxLabel
+                    Left = 12
+                    Top = 252
+                    Caption = 'Contacto'
+                    TabOrder = 24
+                    Transparent = True
+                  end
+                  object txtProvContacto: TcxDBTextEdit
+                    Left = 110
+                    Top = 248
+                    DataBinding.DataField = 'CONTACTO_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 25
+                    Width = 168
+                  end
+                  object lblProvTelContacto: TcxLabel
+                    Left = 292
+                    Top = 252
+                    Caption = 'Tel. contacto'
+                    TabOrder = 26
+                    Transparent = True
+                  end
+                  object txtProvTelContacto: TcxDBTextEdit
+                    Left = 392
+                    Top = 248
+                    DataBinding.DataField = 'TELEFONO_CONTACTO_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 27
+                    Width = 152
+                  end
+                  object lblProvMargen: TcxLabel
+                    Left = 12
+                    Top = 284
+                    Caption = 'Margen %'
+                    TabOrder = 28
+                    Transparent = True
+                  end
+                  object txtProvMargen: TcxDBTextEdit
+                    Left = 110
+                    Top = 280
+                    DataBinding.DataField = 'PORCENTAJE_MARGEN_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 29
+                    Width = 90
+                  end
+                  object lblProvTallas: TcxLabel
+                    Left = 292
+                    Top = 284
+                    Caption = 'Sistema tallas'
+                    TabOrder = 30
+                    Transparent = True
+                  end
+                  object txtProvTallas: TcxDBTextEdit
+                    Left = 392
+                    Top = 280
+                    DataBinding.DataField = 'NOMBRE_TALLAS_PRV'
+                    DataBinding.DataSource = dsPrvFicha
+                    Properties.ReadOnly = True
+                    TabOrder = 31
+                    Width = 152
+                  end
+                  object btnIrProveedor: TcxButton
+                    Left = 110
+                    Top = 316
+                    Width = 200
+                    Height = 28
+                    Caption = 'Ir a proveedor (ficha)'
+                    LookAndFeel.Kind = lfFlat
+                    LookAndFeel.NativeStyle = False
+                    TabOrder = 32
+                    OnClick = btnIrProveedorClick
+                  end
+                end
+              end
+              object gbProvKits: TcxGroupBox
+                Left = 560
+                Top = 0
+                Align = alClient
+                Caption = ' Kits de cantidades por talla '
+                TabOrder = 1
+                Height = 389
+                Width = 522
+                object pnlProvKitsTop: TPanel
+                  Left = 2
+                  Top = 18
+                  Width = 518
+                  Height = 36
+                  Align = alTop
+                  BevelOuter = bvNone
+                  TabOrder = 0
+                  object btnAplicarKitProv: TcxButton
+                    Left = 8
+                    Top = 4
+                    Width = 230
+                    Height = 28
+                    Caption = 'Aplicar kit a la l'#237'nea actual'
+                    Colors.Default = 12579775
+                    Colors.Normal = 12579775
+                    LookAndFeel.Kind = lfFlat
+                    LookAndFeel.NativeStyle = False
+                    TabOrder = 0
+                    OnClick = btnAplicarKitProvClick
+                  end
+                  object lblProvKitsHint: TcxLabel
+                    Left = 246
+                    Top = 9
+                    Caption = 'Doble click tambi'#233'n aplica. Se definen en Proveedores.'
+                    TabOrder = 1
+                    Transparent = True
+                  end
+                end
+                object cxgrdPrvKits: TcxGrid
+                  Left = 2
+                  Top = 54
+                  Width = 308
+                  Height = 333
+                  Align = alClient
+                  TabOrder = 1
+                  object tvPrvKits: TcxGridDBTableView
+                    OnDblClick = tvPrvKitsDblClick
+                    Navigator.Visible = False
+                    OptionsData.Deleting = False
+                    OptionsData.DeletingConfirmation = False
+                    OptionsData.Editing = False
+                    OptionsData.Inserting = False
+                    OptionsView.GroupByBox = False
+                    object dbcPrvKitCodigo: TcxGridDBColumn
+                      Caption = 'Kit'
+                      DataBinding.FieldName = 'CODIGO_PRVKIT'
+                      Width = 90
+                    end
+                    object dbcPrvKitNombre: TcxGridDBColumn
+                      Caption = 'Nombre'
+                      DataBinding.FieldName = 'NOMBRE_PRVKIT'
+                      Width = 130
+                    end
+                    object dbcPrvKitSistema: TcxGridDBColumn
+                      Caption = 'Sistema tallas'
+                      DataBinding.FieldName = 'NOMBRE_TALLAS_PRVKIT'
+                      Width = 120
+                    end
+                    object dbcPrvKitDescripcion: TcxGridDBColumn
+                      Caption = 'Descripci'#243'n'
+                      DataBinding.FieldName = 'DESCRIPCION_PRVKIT'
+                      Width = 140
+                    end
+                  end
+                  object glPrvKits: TcxGridLevel
+                    GridView = tvPrvKits
+                  end
+                end
+                object cxgrdPrvKitsDet: TcxGrid
+                  Left = 310
+                  Top = 54
+                  Width = 210
+                  Height = 333
+                  Align = alRight
+                  TabOrder = 2
+                  object tvPrvKitsDet: TcxGridDBTableView
+                    Navigator.Visible = False
+                    OptionsData.Deleting = False
+                    OptionsData.DeletingConfirmation = False
+                    OptionsData.Editing = False
+                    OptionsData.Inserting = False
+                    OptionsView.GroupByBox = False
+                    object dbcPrvKitDetValor: TcxGridDBColumn
+                      Caption = 'Talla'
+                      DataBinding.FieldName = 'VALOR_DESTINO_PRVKITD'
+                      Width = 80
+                    end
+                    object dbcPrvKitDetCantidad: TcxGridDBColumn
+                      Caption = 'Cantidad'
+                      DataBinding.FieldName = 'CANTIDAD_PRVKITD'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DisplayFormat = '#,##0.##'
+                      Width = 80
+                    end
+                  end
+                  object glPrvKitsDet: TcxGridLevel
+                    GridView = tvPrvKitsDet
+                  end
                 end
               end
             end
@@ -855,5 +1264,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       ShortCut = 24656
       OnExecute = actIrPedidosCompraExecute
     end
+  end
+  object dsPrvFicha: TDataSource
+    Left = 1040
+    Top = 8
   end
 end
