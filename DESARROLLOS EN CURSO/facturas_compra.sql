@@ -279,6 +279,95 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
+-- 2bis. fza_facturas_compra_celdas (FACCCEL): cantidad por (linea, fila, talla)
+-- Espejo de fza_albaranes_compra_celdas. Soporta el modo "Tallas en
+-- horizontal" del Mto sobre el snapshot pivotado de las lineas del albaran.
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_facturas_compra_celdas'
+);
+SET @ddl := IF(@tab_exists = 0,
+  'CREATE TABLE `fza_facturas_compra_celdas` ('
+  '  `SERIE_FACC_FACCCEL`   varchar(20)   NOT NULL,'
+  '  `NUMERO_FACC_FACCCEL`  varchar(20)   NOT NULL,'
+  '  `LINEA_FACC_FACCCEL`   varchar(4)    NOT NULL,'
+  '  `ID_FILA_FACC_FACCCEL` int(11)       NOT NULL DEFAULT 1,'
+  '  `ID_AV_PIVOT_FACCCEL`  int(11)       NOT NULL'
+  '       COMMENT ''ID del valor de atributo (talla) que pivota'','
+  '  `CANTIDAD_FACCCEL`     decimal(19,6) NOT NULL DEFAULT 0,'
+  '  `CODIGO_ALM_FACCCEL`   varchar(10)   NULL DEFAULT NULL,'
+  '  `INSTANTE_MODIF` timestamp NOT NULL'
+  '       DEFAULT current_timestamp() ON UPDATE current_timestamp(),'
+  '  `INSTANTE_ALTA`  timestamp NOT NULL'
+  '       DEFAULT ''0000-00-00 00:00:00'','
+  '  `USUARIO_ALTA`   varchar(100) NOT NULL,'
+  '  `USUARIO_MODIF`  varchar(100) NOT NULL,'
+  '  PRIMARY KEY (`SERIE_FACC_FACCCEL`,`NUMERO_FACC_FACCCEL`,'
+  '               `LINEA_FACC_FACCCEL`,`ID_FILA_FACC_FACCCEL`,'
+  '               `ID_AV_PIVOT_FACCCEL`)'
+  ')',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_facturas_compra_celdas'
+     AND INDEX_NAME   = 'IDX_FACCCEL_LINEA'
+);
+SET @ddl := IF(@idx_exists = 0,
+  'ALTER TABLE `fza_facturas_compra_celdas` '
+  'ADD INDEX `IDX_FACCCEL_LINEA` '
+  '(`SERIE_FACC_FACCCEL`,`NUMERO_FACC_FACCCEL`,`LINEA_FACC_FACCCEL`)',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 2ter. Columnas que usa el Mto (espejo de devoluciones):
+--   REF_PROVEEDOR_FACC      : nro de albaran/ref del proveedor (cabecera).
+--   ESPIVOTE_HORIZONTAL_FACC : recordar la vista pivote de tallas al reabrir.
+-- ----------------------------------------------------------------------------
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = 'fza_facturas_compra'
+              AND COLUMN_NAME  = 'REF_PROVEEDOR_FACC');
+SET @s := IF(@c = 0,
+  'ALTER TABLE `fza_facturas_compra` '
+  'ADD COLUMN `REF_PROVEEDOR_FACC` varchar(50) NULL DEFAULT NULL '
+  'AFTER `DOC_EXTERNO_FACC`',
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = 'fza_facturas_compra'
+              AND COLUMN_NAME  = 'ESPIVOTE_HORIZONTAL_FACC');
+SET @s := IF(@c = 0,
+  'ALTER TABLE `fza_facturas_compra` '
+  'ADD COLUMN `ESPIVOTE_HORIZONTAL_FACC` varchar(1) NOT NULL DEFAULT ''S'' '
+  'AFTER `OBSERVACIONES_FACC`',
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- Re-crear la vista para exponer las columnas recien anyadidas (MariaDB
+-- congela la lista de columnas de `f.*` al crear la vista).
+CREATE OR REPLACE VIEW `vi_facturas_compra` AS
+SELECT  f.*,
+        prv.NOMBRE_PRV         AS NOMBRE_PRV_VIEW_FACC,
+        emp.RAZON_SOCIAL_EMP   AS RAZON_SOCIAL_EMPRESA_VIEW_FACC
+  FROM  fza_facturas_compra f
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = f.CODIGO_PRV_FACC
+  LEFT  JOIN fza_empresas    emp
+         ON emp.CODIGO_EMP_EMP = f.CODIGO_EMP_FACC;
+
+-- ----------------------------------------------------------------------------
 -- 3. Realinear fza_tipos_documentos: el codigo 'FP' (FACTURA DE COMPRAS)
 --    apunta a la tabla singular. El dump lo trae apuntando a
 --    'fza_facturas_compras' (plural) que no existe; mismo arreglo que
@@ -596,3 +685,22 @@ BEGIN
   END IF;
 END ;;
 DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------
+-- 7. Registrar el Mto de facturas de compra en fza_winforms (idempotente).
+--    Cablea el menu 'Compras -> Facturas' (objeto Facturas1) con la pantalla.
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT 'FacturasCompra',
+       'Facturas de Compra',
+       'Facturas1',
+       'inMtoFacturasCompra.TfrmMtoFacturasCompra',
+       'Ctrl+Alt+F',
+       'UniDataFacturasCompra.TdmFacturasCompra',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = 'FacturasCompra'
+ );
