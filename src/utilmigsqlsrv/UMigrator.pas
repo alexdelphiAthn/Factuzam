@@ -78,6 +78,8 @@ type
     edFotosRaiz:       TEdit;
     lblFotosDestino:   TLabel;
     edFotosDestino:    TEdit;
+    lblFotosHilos:     TLabel;
+    edFotosHilos:      TEdit;
     GroupListado:      TGroupBox;
     listMigs:          TCheckListBox;
     btnMarcarTodas:    TButton;
@@ -401,8 +403,10 @@ begin
     'dbo.ocalbpro → fza_albaranes_compra + lineas',
     MigrarAlbaranesCompra);
   // Fotos legacy por color: ocartcol.ArchivoFoto guarda la ruta SIN la
-  // carpeta raiz; la raiz y el destino se configuran en los campos
-  // "Raiz fotos legacy" / "Destino fotos" de este formulario.
+  // carpeta raiz; raiz, destino y pool se configuran en los campos
+  // "Raiz fotos legacy" / "Destino fotos" / "Hilos fotos". NO entra en
+  // las waves: corre en un hilo independiente, en paralelo a toda la
+  // migracion de datos (vease EjecutarMigracionesBackground).
   FEngine.Registrar('fotos', 'Fotos por color (ocartcol)',
     'dbo.ocartcol.ArchivoFoto → PNG 300/600/real + fza_articulos_fotos',
     MigrarFotos);
@@ -891,10 +895,12 @@ begin
   FEngine.Usuario := edUsuario.Text;
   if FEngine.Usuario = '' then
     FEngine.Usuario := 'MIGRADOR';
-  // Config del dominio de fotos: la raiz legacy tal cual y el destino
-  // con los tokens tipo $(PUBLICO) expandidos a ruta absoluta real.
+  // Config del dominio de fotos: la raiz legacy tal cual, el destino
+  // con los tokens tipo $(PUBLICO) expandidos a ruta absoluta real y
+  // el tamaño del pool de hilos de conversion (2-5 recomendado).
   FEngine.DirFotosOrigen  := Trim(edFotosRaiz.Text);
   FEngine.DirFotosDestino := ExpandPathTokens(Trim(edFotosDestino.Text));
+  FEngine.HilosFotos      := StrToIntDef(edFotosHilos.Text, 4);
 
   try
     dmMig.conSrv.Open;
@@ -960,11 +966,11 @@ begin
      (sCodigo = 'skus')                     then Exit(2);
   // Compras (pedidos/albaranes) solo necesitan empresas, almacenes,
   // proveedores y SKUs (waves 0-2); no dependen de movimientos ni facturas.
-  // Fotos va tras articulos y SKUs (wave 2) para que las claves
-  // ART/COLOR ya existan al registrar la foto.
+  // NOTA: 'fotos' no aparece aqui: corre en un hilo independiente de
+  // las waves (se lanza aparte en EjecutarMigracionesBackground).
   if (sCodigo = 'inventarios')      or (sCodigo = 'movimientos')
   or (sCodigo = 'ventas')           or (sCodigo = 'pedidos_compra')
-  or (sCodigo = 'albaranes_compra') or (sCodigo = 'fotos') then Exit(3);
+  or (sCodigo = 'albaranes_compra') then Exit(3);
   // facturas va DESPUES de movimientos: al terminar enlaza cada movimiento
   // con su factura (REF_MOV) y necesita los movimientos ya migrados.
   if (sCodigo = 'facturas') then Exit(4);
@@ -1010,19 +1016,89 @@ begin
       iTotL, iTotI, iTotS, iTotE:  Integer;
       sWaveCsv:                    string;
       semSlots:                    TSemaphore;
+      oTaskFotos:                  IOmniTaskControl;
     begin
       iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
       iMaxHilos := task.Param['MaxHilos'].AsInteger;
       if iMaxHilos < 1 then iMaxHilos := 1;
 
+      // El dominio 'fotos' NO entra en las waves: se lanza aqui en un
+      // hilo INDEPENDIENTE que corre en paralelo a toda la migracion
+      // de datos (solo depende de ocartcol y del sistema de ficheros;
+      // las FKs del esquema destino son logicas). Dentro del dominio,
+      // la conversion usa su propio pool (FEngine.HilosFotos). El
+      // coordinador lo espera tras la ultima wave.
+      oTaskFotos := nil;
+      for iLoc := 0 to High(aCodigos) do
+        if aCodigos[iLoc] = 'fotos' then
+        begin
+          FEngine.Log('=== Fotos: hilo independiente, en paralelo a ' +
+                      'las waves de datos ===');
+          oTaskFotos := CreateTask(
+            procedure(const t: IOmniTask)
+            var
+              LocalSrv:   TUniConnection;
+              LocalDst:   TUniConnection;
+              LocalEng:   TMigEngine;
+              LocalStats: TMigStats;
+              bComInit:   Boolean;
+            begin
+              if t.CancellationToken.IsSignalled then Exit;
+              bComInit := Succeeded(CoInitializeEx(nil,
+                                                    COINIT_MULTITHREADED));
+              LocalSrv := nil;
+              LocalDst := nil;
+              LocalEng := nil;
+              try
+                LocalSrv := dmMig.ClonarConexionOrigen;
+                LocalDst := dmMig.ClonarConexionDestino;
+                LocalSrv.Open;
+                LocalDst.Open;
+                LocalEng := TMigEngine.CreateClone(LocalSrv, LocalDst,
+                                                     FEngine);
+                try
+                  LocalEng.Ejecutar('fotos', LocalStats);
+                  TInterlocked.Add(iTotL, LocalStats.Leidas);
+                  TInterlocked.Add(iTotI, LocalStats.Insertadas);
+                  TInterlocked.Add(iTotS, LocalStats.Saltadas);
+                  TInterlocked.Add(iTotE, LocalStats.Errores);
+                except
+                  on E: Exception do
+                  begin
+                    TInterlocked.Increment(iTotE);
+                    FEngine.Log(Format('FALLO TOTAL en %s: %s',
+                                       ['fotos', E.Message]));
+                  end;
+                end;
+              finally
+                if Assigned(LocalEng) then LocalEng.Free;
+                if Assigned(LocalDst) then
+                begin
+                  if LocalDst.Connected then LocalDst.Close;
+                  LocalDst.Free;
+                end;
+                if Assigned(LocalSrv) then
+                begin
+                  if LocalSrv.Connected then LocalSrv.Close;
+                  LocalSrv.Free;
+                end;
+                if bComInit then CoUninitialize;
+              end;
+            end)
+            .CancelWith(task.CancellationToken)
+            .Unobserved
+            .Run;
+        end;
+
       for iWave := 0 to 4 do
       begin
         if task.CancellationToken.IsSignalled then Break;
 
-        // Filtrar codigos de esta wave
+        // Filtrar codigos de esta wave ('fotos' va por su hilo aparte)
         SetLength(aDeWave, 0);
         for iLoc := 0 to High(aCodigos) do
-          if WaveDeDominio(aCodigos[iLoc]) = iWave then
+          if (aCodigos[iLoc] <> 'fotos')
+          and (WaveDeDominio(aCodigos[iLoc]) = iWave) then
           begin
             SetLength(aDeWave, Length(aDeWave) + 1);
             aDeWave[High(aDeWave)] := aCodigos[iLoc];
@@ -1136,6 +1212,11 @@ begin
           semSlots.Free;
         end;
       end;
+
+      // Esperar al hilo independiente de fotos antes del resumen
+      // final (suele ser el ultimo en acabar si hay muchas imagenes).
+      if Assigned(oTaskFotos) then
+        oTaskFotos.WaitFor(INFINITE);
 
       FEngine.Log('');
       FEngine.Log(Format(
@@ -1327,6 +1408,8 @@ begin
       oIni.ReadString('Fotos', 'RaizLegacy', 'C:\fotos');
     edFotosDestino.Text :=
       oIni.ReadString('Fotos', 'Destino', '$(PUBLICO)\Factuzam\fotos');
+    edFotosHilos.Text   :=
+      IntToStr(oIni.ReadInteger('Fotos', 'Hilos', 4));
   finally
     oIni.Free;
   end;
@@ -1353,6 +1436,8 @@ begin
                       StrToIntDef(edHilos.Text, 4));
     oIni.WriteString ('Fotos',   'RaizLegacy',         edFotosRaiz.Text);
     oIni.WriteString ('Fotos',   'Destino',            edFotosDestino.Text);
+    oIni.WriteInteger('Fotos',   'Hilos',
+                      StrToIntDef(edFotosHilos.Text, 4));
   finally
     oIni.Free;
   end;

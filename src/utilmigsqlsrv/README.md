@@ -159,6 +159,8 @@ persistidos en `migrator.ini`:
 - **Destino fotos (appDirFotos)** — carpeta del sistema de fotos del
   Factuzam destino; admite tokens tipo `$(PUBLICO)\Factuzam\fotos`
   (se expanden con `inLibPathTokens` al ejecutar).
+- **Hilos fotos** — tamaño del pool de conversión de imágenes dentro
+  del dominio (2-5 recomendado; tope 8).
 
 Para cada (Articulo, Color) con foto genera los tres PNG del esquema
 estándar (`300/`, `600/`, `real/`) en la carpeta destino y registra la
@@ -166,6 +168,13 @@ fila en `fza_articulos_fotos` con `CODIGO_UNIDAD_FOT = ARTICULO/COLOR`
 (mismo slot de color que el mapper de SKUs, para que el resolutor del
 exe la encuentre por prefijo). Detalle completo en
 `DESARROLLOS EN CURSO/migracion_fotos.md`.
+
+El dominio corre en un **hilo independiente de las waves** (en paralelo
+a toda la migración de datos) y, por dentro, reparte la conversión
+(decodificar + 3 PNG por foto) entre los hilos del pool. Los hilos del
+pool solo tocan ficheros; las filas de INSERT las encolan y las vuelca
+a BBDD el hilo del dominio, porque la conexión UniDAC no admite uso
+concurrente.
 
 ## Ejecución asíncrona y paralelismo
 
@@ -193,7 +202,11 @@ workers de la actual han terminado.
 | 0 | formas_pago · ivas_grupos · ivas · empresas · proveedores · familias · colores_maestros · tallas_maestras | — |
 | 1 | almacenes · clientes · articulos · tallajes | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
-| 3 | inventarios · movimientos · ventas · facturas · fotos | Wave 2 |
+| 3 | inventarios · movimientos · ventas · facturas | Wave 2 |
+
+El dominio `fotos` **no entra en las waves**: se lanza en un hilo
+independiente al principio de la corrida y avanza en paralelo a toda la
+migración de datos (el coordinador lo espera tras la última wave).
 
 `Parallel.ForEach<string>(aDeWave).Execute(...)` levanta `N` workers
 (por defecto OmniThread elige según los núcleos disponibles) y los
