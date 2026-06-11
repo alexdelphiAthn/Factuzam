@@ -52,10 +52,10 @@ navegación** con los botones estándar. Sus acciones son siempre las mismas:
 
 | Botón | Atajo | Acción |
 |-------|-------|--------|
-| **Primer registro** | `[Inicio]` | Va al primer registro de la lista. |
+| **Primer registro** | `[Ctrl]+[Inicio]` | Va al primer registro de la lista (respeta la ordenación del grid). |
 | **Registro anterior** | `[RePág]` | Retrocede un registro. |
 | **Registro siguiente** | `[AvPág]` | Avanza un registro. |
-| **Último registro** | `[Fin]` | Va al último registro. |
+| **Último registro** | `[Ctrl]+[Fin]` | Va al último registro de la lista (respeta la ordenación del grid). |
 | **Insertar registro** | `[Insert]` | Crea un registro nuevo en blanco para rellenar. |
 | **Editar registro** | `[F2]` | Pone en modo edición el registro actual. |
 | **Eliminar registro** | `[Ctrl]+[Supr]` | Borra el registro actual (pide confirmación). |
