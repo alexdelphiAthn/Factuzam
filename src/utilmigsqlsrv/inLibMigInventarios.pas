@@ -548,9 +548,17 @@ var
 begin
   qSrc := NuevoQOrigen(Eng, cSel);
   try
+    // El total debe contar las MISMAS filas que devuelve cSel: el INNER JOIN
+    // a ocinv descarta lineas huerfanas (ocinvarp sin cabecera ocinv). Si
+    // contaramos solo ocinvarp, el total saldria mayor que las filas reales
+    // y la barra nunca llegaria al 100% (pareceria colgado al final).
     Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM dbo.ocinvarp ' +
-      'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
+      'SELECT COUNT(*) FROM dbo.ocinvarp arp ' +
+      'JOIN dbo.ocinv inv ON inv.Empresa = arp.Empresa ' +
+      '                  AND inv.Ejercicio = arp.Ejercicio ' +
+      '                  AND inv.Serie = arp.Serie ' +
+      '                  AND inv.NroInventario = arp.NroInventario ' +
+      'WHERE LTRIM(RTRIM(arp.Articulo)) <> '''''));
     qSrc.Open;
     sKeyAnt := '';
     iLinea  := 0;

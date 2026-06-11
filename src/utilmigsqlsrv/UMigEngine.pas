@@ -397,6 +397,16 @@ begin
       FConDst.StartTransaction;
       try
         oItem.Proc(Self, Stats);
+        // Empujar la barra al 100% al terminar OK. Algunos mappers cuentan
+        // (COUNT) mas filas de las que su SELECT real devuelve (p.ej. un JOIN
+        // que descarta filas huerfanas), y sin esto FCurrentRow nunca alcanza
+        // FCurrentTotal: la barra se queda < 100% y el dominio parece colgado
+        // aunque haya terminado bien.
+        if (FCurrentTotal > 0) and not IsCancelado then
+        begin
+          FCurrentRow := FCurrentTotal;
+          DoProgress;
+        end;
         FConDst.Commit;
         Log('%s: %d leidas, %d insertadas, %d saltadas, %d errores.',
             [oItem.Nombre, Stats.Leidas, Stats.Insertadas,
