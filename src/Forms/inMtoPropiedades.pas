@@ -36,6 +36,7 @@ type
     cxgrdbclmnGrdDBTabPrinCODIGO: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinNOMBRE: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinTIPO: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinNIVEL: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinACTIVO: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinNUMARTUSOS: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
@@ -52,6 +53,8 @@ type
     lblTipo: TcxLabel;
     cbbTIPO: TcxDBComboBox;
     chkACTIVO: TcxDBCheckBox;
+    lblNivel: TcxLabel;
+    cbbNIVEL: TcxDBComboBox;
     splFicha: TcxSplitter;
     pnlBottomFicha: TPanel;
     pcPestana: TcxPageControl;
@@ -157,7 +160,14 @@ procedure TfrmMtoPropiedades.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
   if dsTablaG.State = dsInsert then
-    txtCODIGO.Properties.ReadOnly := False
+  begin
+    txtCODIGO.Properties.ReadOnly := False;
+    // Nivel por defecto = ARTICULO (codigo de articulo) en altas nuevas.
+    if Assigned(dsTablaG.DataSet) and
+       (dsTablaG.DataSet.FindField('NIVEL_PROP') <> nil) and
+       dsTablaG.DataSet.FieldByName('NIVEL_PROP').IsNull then
+      dsTablaG.DataSet.FieldByName('NIVEL_PROP').AsString := 'ARTICULO';
+  end
   else
     txtCODIGO.Properties.ReadOnly := True;
 end;
