@@ -340,10 +340,10 @@ begin
   Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
   // Diagnóstico: con /teststack se encola una excepción de prueba
   // para verificar JCL stack trace + AppException + log + modal.
-  if FindCmdLineSwitch('teststack', True) then
-    TThread.ForceQueue(nil, procedure
-                            begin
-                              inLibDiag.ProbarStackTrace;
-                            end);
+//  if FindCmdLineSwitch('teststack', True) then
+//    TThread.ForceQueue(nil, procedure
+//                            begin
+//                              inLibDiag.ProbarStackTrace;
+//                            end);
   Application.Run;
 end.
