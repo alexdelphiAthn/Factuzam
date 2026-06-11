@@ -109,6 +109,12 @@ begin
   Result.Top    := ATop + 18;
   Result.Width  := AWidth;
   Result.Height := AHeight;
+  // Por defecto EditValueFormat es cvfInteger: empaqueta los estados como
+  // bits de un integer y revienta con >64 items ("The number of items cannot
+  // be greater than 64"). Un catalogo real tiene cientos de proveedores/
+  // familias, asi que usamos cvfIndices (serializa los indices marcados como
+  // string, sin tope). Leemos por Items[i].State, no por EditValue.
+  Result.EditValueFormat := cvfIndices;
 end;
 
 procedure TfrmModalFiltroArt.ConstruirUI;
