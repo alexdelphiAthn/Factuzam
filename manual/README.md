@@ -81,15 +81,29 @@ El manual también está disponible como **sitio web navegable** en
 `manual/html/`. Para leerlo, abre **`manual/html/index.html`** en cualquier
 navegador (no necesita servidor ni conexión a internet).
 
-Para **regenerar el HTML** tras editar los `.md` (o tras añadir capturas),
-ejecuta desde la carpeta `manual/`:
+### Flujo de trabajo: editar y regenerar
 
-```
-python generar_html.py
-```
+El HTML **no se edita a mano**: se genera a partir de los `.md`. Para
+mantenerlo al día:
 
-El script `generar_html.py` no requiere instalar nada: usa solo la
-librería estándar de Python 3. Vuelca el resultado en `manual/html/`
-(una página por capítulo, el índice de navegación lateral, la hoja de
-estilo `estilo.css` y una copia de las imágenes de `img/`).
+1. Edita el capítulo que quieras en su fichero `NN-*.md` (o el `README.md`).
+2. Si añades una captura, guárdala en `manual/img/` con el nombre indicado.
+3. **Regenera el HTML.** Tienes dos formas:
+   - **En Windows:** doble clic en **`generar_html.bat`** (busca Python e
+     informa si no está instalado).
+   - **Desde consola** (cualquier sistema), en la carpeta `manual/`:
+
+     ```
+     python generar_html.py
+     ```
+
+El generador `generar_html.py` **no requiere instalar nada**: usa solo la
+librería estándar de Python 3. Vuelca el resultado en `manual/html/` (una
+página por capítulo, el índice de navegación lateral, la hoja de estilo
+`estilo.css` y una copia de las imágenes de `img/`), sobrescribiendo lo
+anterior.
+
+> Si añades un capítulo nuevo (`11-*.md`), regístralo en la lista `ORDEN`
+> de la cabecera de `generar_html.py` para que aparezca en el menú lateral.
+
 
