@@ -136,6 +136,27 @@ Lógica en `inLibComprasSesiones.AplicarKitProveedorALinea`:
   conjunto, se informa con el detalle de las no casadas (las demás sí se
   aplican).
 
+### 3.5 Formato distribuido: kit por almacén
+
+Si la sesión es de **formato distribuido** (`ESFORMATO_DISTRIBUIDO_SES =
+'S'`, cantidades por almacén), «Aplicar kit» no vuelca inline: tras validar
+el tallaje (misma regla que §3.4) abre el **distribuidor en modo kit**
+(`AbrirDistribuidor(ACodigoKit)` → `TfrmModalDistribuidor.Preparar` con
+proveedor + kit):
+
+- La matriz almacenes × tallas de siempre, más una columna de acciones
+  «Kit CODIGO» con dos botones **siempre visibles** por almacén
+  (`Options.ShowEditButtons = isebAlways`):
+  - **Aplicar** — vuelca la curva del kit sobre ese almacén (solo las
+    tallas que el kit define; las demás se conservan).
+  - **Limpiar** — pone a 0 todas las tallas de ese almacén.
+- Botón de cabecera **«Aplicar kit en todos los almacenes»**
+  (`btnKitTodos`) que recorre el cuadrante aplicando la curva a cada fila.
+- Nada se persiste hasta **Aceptar**: el modal sigue comparando contra su
+  snapshot (`PersistirCambios`), así que Cancelar descarta también lo
+  aplicado por el kit, y el usuario puede retocar cantidades a mano antes
+  de confirmar.
+
 ## 4. Archivos tocados
 
 | Archivo                                           | Cambio                                  |
@@ -145,8 +166,9 @@ Lógica en `inLibComprasSesiones.AplicarKitProveedorALinea`:
 | `src/DataModules/UniDataProveedores.pas/.dfm`     | Queries kits + lookup tallas + handlers. |
 | `src/Forms/inMtoProveedores.pas/.dfm`             | Pestaña «6_Compras».                    |
 | `src/DataModules/UniDataComprasSesiones.pas/.dfm` | `unqryPrvFicha` / `unqryPrvKits[Det]` / `unqryPrvKitsCombo`. |
-| `src/Lib/inLibComprasSesiones.pas`                | `AplicarKitProveedorALinea`.            |
+| `src/Lib/inLibComprasSesiones.pas`                | `ValidarKitSobreLineaActual` + `AplicarKitProveedorALinea`. |
 | `src/Forms/inMtoComprasSesiones.pas/.dfm`         | Desplegable + botón en cabecera, pestaña «3_Proveedor», copia de margen. |
+| `src/Modals/inMtoModalDistribuidor.pas/.dfm`      | Modo kit: botones Aplicar/Limpiar por almacén + «en todos». |
 
 ## 5. Pendiente / fuera de alcance
 
