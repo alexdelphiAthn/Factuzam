@@ -46,7 +46,7 @@ uses
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinWXI, dxSkinXmas2008Blue,
   inLibFormManager, System.Actions,
-  Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit,
+  Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit, Vcl.AppEvnts,
   Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
   ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
   System.Threading,
@@ -235,6 +235,11 @@ type
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
     FReiniciando: Boolean;
+    // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
+    // TApplicationEvents: una asignacion directa Application.OnX queda
+    // anulada en cuanto cualquier form crea su propio TApplicationEvents
+    // (multicaster de la VCL), p.ej. el generador de procesos.
+    FAppEvents: TApplicationEvents;
     procedure AppException(Sender: TObject; E: Exception);
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
     procedure MostrarDetalleExcepcion(const ATexto: string);
@@ -484,10 +489,11 @@ var
   end;
 
 begin
-  Application.OnException := AppException;
+  FAppEvents := TApplicationEvents.Create(Self);
+  FAppEvents.OnException := AppException;
   FSavedNCMValid := False;
-  Application.OnIdle := ApplicationEvents1Idle;
-  Application.OnMessage := AppMessage;
+  FAppEvents.OnIdle := ApplicationEvents1Idle;
+  FAppEvents.OnMessage := AppMessage;
   sDis := '';
   oMemoSQL := cxMemo1;
   // Splash no-modal al arrancar. Lo mantenemos visible mientras corre el
@@ -531,6 +537,10 @@ begin
   // conversion. La usan ficha de articulo, lineas de documento e informes.
   oUnidades.Cargar;
   oNomImpresoraCaja := GetImpresoraCaja;
+  // Trazar la impresora resuelta: si queda '' o 'DEBUG', el F9 global de
+  // abrir cajon no se activa fuera de caja (ver ImpresoraCajaAsignada).
+  inLibLog.Log.LogInfo('Arranque: impresora de caja resuelta = "' +
+                       oNomImpresoraCaja + '"');
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
@@ -1203,8 +1213,11 @@ begin
   // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
   // y el destructor de TfrmMtoGen).
   inLibGlobalVar.oCerrandoApp := True;
-  Application.OnException := nil;
-  Application.OnMessage := nil;
+  if Assigned(FAppEvents) then
+  begin
+    FAppEvents.OnException := nil;
+    FAppEvents.OnMessage := nil;
+  end;
   inherited;
   try
     inLibLog.Log.LogInfo('Cerrando ventana principal');
@@ -1322,6 +1335,21 @@ var
   iPageActive: Integer;
   bFound: Boolean;
 begin
+  // F9 sola (sin Ctrl/Alt/Mayus ni autorrepeticion) -> abrir el cajon
+  // portamonedas, mismo criterio que AppMessage. Via redundante: cubre el
+  // foco en el principal y sus pestañas embebidas aunque Application.OnMessage
+  // quede desenganchado; si AppMessage ya trato la tecla, el mensaje no se
+  // despacha y este punto no llega a ejecutarse (no hay doble apertura).
+  if (Message.CharCode = VK_F9) and
+     (HiWord(Message.KeyData) and KF_REPEAT = 0) and
+     (ImpresoraCajaAsignada or Assigned(frmMtoMenuCaja)) and
+     (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
+     (GetKeyState(VK_SHIFT) >= 0) then
+  begin
+    AbrirCajonSinVenta;
+    Result := True;
+    Exit;
+  end;
   // Alt+F4 -> cerrar aplicacion
   if (Message.CharCode = VK_F4)
      and (HiWord(Message.KeyData) and KF_ALTDOWN <> 0) then
