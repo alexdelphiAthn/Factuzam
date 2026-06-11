@@ -165,15 +165,24 @@ inherited frmMtoArticulos: TfrmMtoArticulos
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroTemporadaArtPropertiesCloseUp
               TabOrder = 2
-              Width = 280
+              Width = 235
+            end
+            object btnCargarAhoraArt: TcxButton
+              Left = 848
+              Top = 4
+              Width = 95
+              Height = 25
+              Caption = 'Cargar ahora'
+              TabOrder = 5
+              OnClick = btnCargarAhoraArtClick
             end
             object btnGuardarPrecargaArt: TcxButton
-              Left = 905
+              Left = 948
               Top = 4
-              Width = 140
+              Width = 120
               Height = 25
               Caption = 'Guardar precarga'
-              TabOrder = 5
+              TabOrder = 6
               OnClick = btnGuardarPrecargaArtClick
             end
           end

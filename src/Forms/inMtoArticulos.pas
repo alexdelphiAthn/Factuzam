@@ -365,12 +365,14 @@ type
     chkFiltroConStockArt: TcxCheckBox;
     lblFiltroTemporadaArt: TcxLabel;
     ccbFiltroTemporadaArt: TcxCheckComboBox;
+    btnCargarAhoraArt: TcxButton;
     btnGuardarPrecargaArt: TcxButton;
     actFamilias: TAction;
     procedure btnToggleFiltrosArtClick(Sender: TObject);
     procedure cbbFiltroEstadoArtPropertiesEditValueChanged(Sender: TObject);
     procedure chkFiltroConStockArtPropertiesEditValueChanged(Sender: TObject);
     procedure ccbFiltroTemporadaArtPropertiesCloseUp(Sender: TObject);
+    procedure btnCargarAhoraArtClick(Sender: TObject);
     procedure btnGuardarPrecargaArtClick(Sender: TObject);
     procedure btnAddProveedorClick(Sender: TObject);
     procedure cxgrdbclmnProveedoresCODIGO_PROVEEDORPropertiesButtonClick(
@@ -2401,6 +2403,14 @@ procedure TfrmMtoArticulos.ccbFiltroTemporadaArtPropertiesCloseUp(
                                                               Sender: TObject);
 begin
   if FFiltrosArtCargando then Exit;
+  AplicarFiltrosArticulos;
+end;
+
+procedure TfrmMtoArticulos.btnCargarAhoraArtClick(Sender: TObject);
+begin
+  // Dispara la carga de la lista con los filtros actuales del panel
+  // (estado/stock/temporadas) de forma explicita, sin depender del
+  // auto-aplicado al cerrar el desplegable de temporadas.
   AplicarFiltrosArticulos;
 end;
 
