@@ -201,6 +201,11 @@ begin
     else
       FieldByName('CODIGO_EMP_ALBC').AsString := '0';
     FieldByName('CODIGO_PRV_ALBC').AsString := '0';
+    // Por defecto el albaran NO es deposito; se marca a mano en
+    // cabecera. FindField: tolera BBDD sin la migracion aplicada
+    // (albaran_compra_deposito.sql).
+    if FindField('ESDEPOSITO_ALBC') <> nil then
+      FieldByName('ESDEPOSITO_ALBC').AsString := 'N';
   end;
   FTransicionEstadoAlbc := '';
 end;
