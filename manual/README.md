@@ -74,3 +74,22 @@ con el nombre indicado (formato PNG); la imagen se mostrará automáticamente.
 Una vez colocada, puede borrarse la línea *«▢ Captura pendiente…»* o
 sustituirse por un pie de foto definitivo. Para localizar los huecos que
 faltan: buscar `Captura pendiente` en los `.md`.
+
+## Versión HTML del manual
+
+El manual también está disponible como **sitio web navegable** en
+`manual/html/`. Para leerlo, abre **`manual/html/index.html`** en cualquier
+navegador (no necesita servidor ni conexión a internet).
+
+Para **regenerar el HTML** tras editar los `.md` (o tras añadir capturas),
+ejecuta desde la carpeta `manual/`:
+
+```
+python generar_html.py
+```
+
+El script `generar_html.py` no requiere instalar nada: usa solo la
+librería estándar de Python 3. Vuelca el resultado en `manual/html/`
+(una página por capítulo, el índice de navegación lateral, la hoja de
+estilo `estilo.css` y una copia de las imágenes de `img/`).
+
