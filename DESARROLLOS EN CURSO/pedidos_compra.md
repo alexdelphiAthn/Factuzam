@@ -152,3 +152,22 @@ sin handler).
    Igual que en albaranes (TODO compartido entre ambos).
 6. **Facturacion de pedidos** (futuro): hoy se factura el albaran;
    facturar directamente el pedido queda fuera de scope.
+
+---
+
+## Tope automático del «A recibir» (junio 2026)
+
+No se puede recibir más cantidad de la pedida. En cuanto el usuario
+teclea un «A recibir» mayor que el pendiente (Pedido − Recibida), la
+celda se ajusta sola al máximo y suena un beep:
+
+- **Pivote expandido**: `TGridPivoteCompra.CapturarARecibirEditValueChanged`
+  (inLibGridPivoteCompra) clampa contra el pendiente de la talla.
+- **Modo vertical**: handler `ARecibirVerticalEditValueChanged`
+  (inMtoPedidosCompra) clampa contra el pendiente de la línea.
+- **Defensa en BBDD**: `CrearAlbaranDesdePedidoConCantidades` e
+  `IncorporarAlbaranDesdePedidoConCantidades` (inLibPedidosCompra)
+  recortan además cada celda al pendiente real de su línea leído de
+  `fza_pedidos_compra_lineas`, repartiéndolo entre las celdas de la
+  misma línea. Así nunca se crea un albarán con cantidad imposible
+  aunque la UI no hubiera filtrado.

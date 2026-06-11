@@ -205,6 +205,9 @@ type
     tsSeries: TcxTabSheet;
     pnlSeriesOpts: TPanel;
     btnAddSerie: TcxButton;
+    // Alta masiva: crea las series que falten para todos los tipos de
+    // documento de compras / inventario y por almacen activo (AB / PC).
+    btnCrearSeriesDoc: TcxButton;
     pnlSeriesCli: TPanel;
     cxGrdSeries: TcxGrid;
     tvSeries: TcxGridDBTableView;
@@ -283,6 +286,7 @@ type
     procedure actArticulosExecute(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
     procedure btnAddSerieClick(Sender: TObject);
+    procedure btnCrearSeriesDocClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure btnValidarClick(Sender: TObject);
     procedure txtCODIGO_PAIS_EMPRESAPropertiesChange(Sender: TObject);
@@ -313,6 +317,8 @@ uses
   inLibDevExp,
   inLibIBAN,
   inLibFotos,
+  inLibGlobalVar,
+  inLibtb,
   inMtoPrincipal,
   inMtoFacturasBase,
   inMtoArticulos,
@@ -437,6 +443,159 @@ begin
         (unqrySeries.State = dsEdit)) then
       unqrySeries.Post;
     unqrySeries.Insert;
+  end;
+end;
+
+// Crea de golpe las series VIGENTES que falten para la empresa activa:
+//   - una serie generica por cada tipo de documento de compras /
+//     inventario (SE, PC, AB, DC, FP, IN), con nombre <TIPO>1.
+//   - una serie propia por almacen activo de la empresa para los tipos
+//     que proponen serie por almacen (AB / PC), nombre <TIPO>-<ALM>.
+// Idempotente: lo ya existente y vigente no se toca. Los combos de
+// serie de Sesiones / Pedidos / Albaranes de compra ofrecen abrir este
+// Mto cuando no encuentran series para la empresa.
+procedure TfrmMtoEmpresas.btnCrearSeriesDocClick(Sender: TObject);
+const
+  TIPOS_DOC: array[0..5] of string = ('SE', 'PC', 'AB', 'DC', 'FP', 'IN');
+  TIPOS_ALM: array[0..1] of string = ('AB', 'PC');
+var
+  sEmpresa : string;
+  sAlm     : string;
+  iCreadas : Integer;
+  qAlm     : TUniQuery;
+  i        : Integer;
+
+  function ExisteSerieVigente(const ATipo, AAlmacen: string): Boolean;
+  var
+    q: TUniQuery;
+    sFiltroAlm: string;
+  begin
+    // Mismo criterio de vigencia que ObtenerSerieDefecto (inLibtb).
+    if AAlmacen = '' then
+      sFiltroAlm := '   AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' '
+    else
+      sFiltroAlm := '   AND CODIGO_ALM_EMPSER = :alm ';
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT 1 FROM fza_empresas_series ' +
+        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
+        '   AND TIPO_DOC_EMPSER   = :tip ' +
+        sFiltroAlm +
+        '   AND (FECHA_DESDE_EMPSER IS NULL ' +
+        '        OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
+        '   AND (FECHA_HASTA_EMPSER IS NULL ' +
+        '        OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+        ' LIMIT 1';
+      q.ParamByName('emp').AsString := sEmpresa;
+      q.ParamByName('tip').AsString := ATipo;
+      if AAlmacen <> '' then
+        q.ParamByName('alm').AsString := AAlmacen;
+      q.Open;
+      Result := not q.IsEmpty;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+
+  procedure InsertarSerie(const ATipo, AAlmacen, ANombre: string);
+  var
+    q: TUniQuery;
+    sCodigo: string;
+  begin
+    // PK del contador generico de series (mismo que el alta manual).
+    sCodigo := ObtenerSiguienteContador('ES');
+    if Trim(sCodigo) = '' then
+      raise Exception.Create('No se pudo obtener el siguiente codigo del ' +
+                             'contador "ES" para la nueva serie.');
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'INSERT INTO fza_empresas_series ' +
+        '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, ' +
+        '   CODIGO_CAJA_EMPSER, EMPSER, TIPO_DOC_EMPSER, SUBTIPO_EMPSER, ' +
+        '   FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, ' +
+        '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:cod, :emp, :alm, NULL, :ser, :tip, NULL, NULL, NULL, ' +
+        '        NOW(), NOW(), :u, :u)';
+      q.ParamByName('cod').AsString := sCodigo;
+      q.ParamByName('emp').AsString := sEmpresa;
+      if AAlmacen = '' then
+        q.ParamByName('alm').Clear
+      else
+        q.ParamByName('alm').AsString := AAlmacen;
+      // EMPSER es varchar(12); el recorte cubre almacenes largos.
+      q.ParamByName('ser').AsString := Copy(ANombre, 1, 12);
+      q.ParamByName('tip').AsString := ATipo;
+      q.ParamByName('u').AsString   := inLibGlobalVar.oUser;
+      q.ExecSQL;
+      Inc(iCreadas);
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+
+begin
+  inherited;
+  if ((dmmEmpresas.unqryTablaG.State = dsInsert) or
+      (dmmEmpresas.unqryTablaG.State = dsEdit)) then
+    dmmEmpresas.unqryTablaG.Post;
+  sEmpresa := Trim(dsTablaG.DataSet.FieldByName('CODIGO_EMP_EMP').AsString);
+  if sEmpresa = '' then
+    ShowMessage('Selecciona una empresa antes de crear sus series.')
+  else
+  begin
+    if MessageDlg('Se crearan las series que falten para la empresa "' +
+                  sEmpresa + '":' + sLineBreak +
+                  '- Una generica por tipo de documento (SE, PC, AB, DC, ' +
+                  'FP, IN).' + sLineBreak +
+                  '- Una por almacen activo para pedidos y albaranes de ' +
+                  'compra (PC / AB).' + sLineBreak +
+                  '¿Continuar?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      iCreadas := 0;
+      // 1. Genericas por tipo de documento.
+      for i := Low(TIPOS_DOC) to High(TIPOS_DOC) do
+      begin
+        if not ExisteSerieVigente(TIPOS_DOC[i], '') then
+          InsertarSerie(TIPOS_DOC[i], '', TIPOS_DOC[i] + '1');
+      end;
+      // 2. Propias por almacen activo, solo tipos que las proponen.
+      qAlm := TUniQuery.Create(nil);
+      try
+        qAlm.Connection := inLibGlobalVar.oConn;
+        qAlm.SQL.Text :=
+          'SELECT CODIGO_ALM_ALM FROM fza_almacenes ' +
+          ' WHERE CODIGO_EMP_ALM = :emp ' +
+          '   AND IFNULL(ESACTIVO_ALM, ''S'') = ''S'' ' +
+          ' ORDER BY CODIGO_ALM_ALM';
+        qAlm.ParamByName('emp').AsString := sEmpresa;
+        qAlm.Open;
+        while not qAlm.Eof do
+        begin
+          sAlm := qAlm.FieldByName('CODIGO_ALM_ALM').AsString;
+          for i := Low(TIPOS_ALM) to High(TIPOS_ALM) do
+          begin
+            if not ExisteSerieVigente(TIPOS_ALM[i], sAlm) then
+              InsertarSerie(TIPOS_ALM[i], sAlm, TIPOS_ALM[i] + '-' + sAlm);
+          end;
+          qAlm.Next;
+        end;
+      finally
+        FreeAndNil(qAlm);
+      end;
+      // Refrescar la pestania Series con las altas.
+      dmmEmpresas.AsegurarSeriesAbierta;
+      dmmEmpresas.unqrySeries.Refresh;
+      if iCreadas = 0 then
+        ShowMessage('La empresa ya tiene series vigentes para todos los ' +
+                    'tipos de documento y almacenes.')
+      else
+        ShowMessage(Format('Creadas %d series nuevas.', [iCreadas]));
+    end;
   end;
 end;
 

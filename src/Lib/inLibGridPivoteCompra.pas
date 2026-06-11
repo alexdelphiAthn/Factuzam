@@ -1452,6 +1452,9 @@ var
   iKey     : Int64;
   iTallaAv : Integer;
   rValor   : Double;
+  rPed     : Double;
+  rRec     : Double;
+  rPdte    : Double;
 begin
   if not (FActivo and FExpandido and PuedeExpandir) then Exit;
   if not (ASender is TcxCustomEdit) then Exit;
@@ -1483,6 +1486,36 @@ begin
     rValor := vEdit
   else
     rValor := StrToFloatDef(VarToStr(vEdit), 0);
+  // Tope automatico: no se puede recibir mas que el pendiente de la
+  // talla (Pedido - Recibida). Si el usuario teclea de mas, la celda
+  // se ajusta sola al maximo y se avisa con un beep. La reasignacion
+  // de EditValue re-dispara este handler una vez, pero ya con el
+  // valor ajustado (<= pendiente) no vuelve a entrar aqui.
+  rPed := 0;
+  rRec := 0;
+  FPivotCantidades.TryGetValue(iKey, rPed);
+  FPivotCantidadesRecibidas.TryGetValue(iKey, rRec);
+  rPdte := rPed - rRec;
+  if rPdte < 0 then
+    rPdte := 0;
+  if rValor > rPdte then
+  begin
+    rValor := rPdte;
+    MessageBeep(MB_ICONWARNING);
+    if rValor > 0 then
+      ed.EditValue := rValor
+    else
+      ed.EditValue := Null;
+    FCfg.Grid.DataController.BeginUpdate;
+    try
+      if rValor > 0 then
+        FCfg.Grid.DataController.Values[rec.RecordIndex, col.Index] := rValor
+      else
+        FCfg.Grid.DataController.Values[rec.RecordIndex, col.Index] := Null;
+    finally
+      FCfg.Grid.DataController.EndUpdate;
+    end;
+  end;
   if rValor <= 0 then
     FARecibirManual.Remove(iKey)
   else

@@ -67,7 +67,9 @@ type
     lblNroAlbaran:    TcxLabel;
     txtNUMERO_ALBC:   TcxDBTextEdit;
     lblSerieAlbaran:  TcxLabel;
-    txtSERIE_ALBC:    TcxDBTextEdit;
+    // Serie en combo editable: lista las series 'AB' de la empresa
+    // (fza_empresas_series) y permite teclear una nueva.
+    cbbSERIE_ALBC:    TcxDBComboBox;
     lblFechaAlbaran:  TcxLabel;
     dteFECHA_ALBC:    TcxDBDateEdit;
     lblEstadoAlbaran: TcxLabel;
@@ -133,6 +135,7 @@ type
     procedure cxgrdLineasAlbaranEnter(Sender: TObject);
     procedure cxgrdLineasAlbaranExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -170,6 +173,7 @@ uses
   System.StrUtils,
   inLibGlobalVar,
   inLibFotos,
+  inLibtb,
   UniDataArticulos,
   inMtoModalImpAlbCompra,
   inMtoModalImpAlbCompraV,
@@ -205,6 +209,32 @@ begin
     Result := [dsTablaG, dmmAlbaranesCompra.dsAlbaranesCompraLineas]
   else
     Result := [dsTablaG];
+end;
+
+// Combo de serie de la cabecera: al desplegar se recargan las series
+// 'AB' vigentes de la empresa del albaran. Si la empresa no tiene
+// ninguna, se avisa y se ofrece ir a Empresas -> Series a crearlas.
+procedure TfrmMtoAlbaranesCompra.cbbSERIE_ALBCPropertiesInitPopup(
+  Sender: TObject);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := '';
+  if (dmmAlbaranesCompra <> nil) and dmmAlbaranesCompra.unqryTablaG.Active then
+    sEmpresa := Trim(dmmAlbaranesCompra.unqryTablaG.
+                       FieldByName('CODIGO_EMP_ALBC').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+  CargarSeriesEmpresa(sEmpresa, 'AB', cbbSERIE_ALBC.Properties.Items);
+  if cbbSERIE_ALBC.Properties.Items.Count = 0 then
+  begin
+    if MessageDlg('No hay series de albaranes de compra (tipo AB) para la ' +
+                  'empresa "' + sEmpresa + '".' + sLineBreak +
+                  'Se dan de alta en Empresas -> Series. ' +
+                  '¿Abrir el mantenimiento de Empresas ahora?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      ShowMto(Self.Owner, 'Empresas');
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.FormCreate(Sender: TObject);

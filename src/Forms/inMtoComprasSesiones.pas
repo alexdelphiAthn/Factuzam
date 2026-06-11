@@ -100,7 +100,9 @@ type
     // ------------------------------------------------------------------
     gbCabecera               : TcxGroupBox;
     lblSerie                 : TcxLabel;
-    txtSerie                 : TcxDBTextEdit;
+    // Serie en combo editable: lista las series 'SE' de la empresa
+    // (fza_empresas_series) y permite teclear una nueva.
+    cbbSerie                 : TcxDBComboBox;
     lblNumero                : TcxLabel;
     txtNumero                : TcxDBTextEdit;
     lblFecha                 : TcxLabel;
@@ -177,6 +179,10 @@ type
     tsDocumentos: TcxTabSheet;
     pnlDocsTop: TPanel;
     btnIrADoc: TcxButton;
+    // Boton del lateral derecho: navega al pedido / albaran seleccionado
+    // en la pestania Documentos (sustituye al antiguo atajo F12, que
+    // chocaba con el F12 de grabar registro del Mto base).
+    btnIrPedAlb: TcxButton;
     lblDocsInfo: TcxLabel;
     cxgrdDocs: TcxGrid;
     tvDocs: TcxGridDBTableView;
@@ -263,6 +269,7 @@ type
     procedure btnLogCopyClick(Sender: TObject);
     procedure btnIrADocClick(Sender: TObject);
     procedure tvDocsDblClick(Sender: TObject);
+    procedure cbbSeriePropertiesInitPopup(Sender: TObject);
     procedure actIrArticulosExecute(Sender: TObject);
     procedure actIrAlbaranesCompraExecute(Sender: TObject);
     procedure actIrPedidosCompraExecute(Sender: TObject);
@@ -850,21 +857,50 @@ var
 begin
   // Navega al documento seleccionado en la pestania Documentos. La
   // query unqrySesDocs es master/detail con unqryTablaG (cabecera de
-  // sesion); siempre lista los docs de la sesion enfocada.
+  // sesion); siempre lista los docs de la sesion enfocada. Tambien lo
+  // dispara el boton lateral "Ir a Ped / Alb" desde cualquier pestania.
   if (Dmm.unqrySesDocs = nil) or Dmm.unqrySesDocs.IsEmpty then
-    Exit;
-  sTipo   := Dmm.unqrySesDocs.FieldByName('TIPO').AsString;
-  sSerie  := Dmm.unqrySesDocs.FieldByName('SERIE').AsString;
-  sNumero := Dmm.unqrySesDocs.FieldByName('NUMERO').AsString;
-  // ALBC = albaran de compra ('AlbaranesCompra' en fza_winforms). PEDC
-  // = pedido de compra, hoy sin Mto registrado; lo dejamos para el
-  // futuro y avisamos al usuario sin abortar.
-  if SameText(sTipo, 'ALBC') then
-    ShowMto(frmMtoPrincipal, 'AlbaranesCompra', sSerie + ',' + sNumero)
+    ShowMessage('La sesion no tiene documentos creados.')
   else
-    ShowMessage(Format(
-      'No hay mantenimiento disponible para el tipo de documento "%s".',
-      [sTipo]));
+  begin
+    sTipo   := Dmm.unqrySesDocs.FieldByName('TIPO').AsString;
+    sSerie  := Dmm.unqrySesDocs.FieldByName('SERIE').AsString;
+    sNumero := Dmm.unqrySesDocs.FieldByName('NUMERO').AsString;
+    // ALBC = albaran de compra, PEDC = pedido de compra (ambos con Mto
+    // registrado en fza_winforms; la busqueda es SERIE,NUMERO).
+    if SameText(sTipo, 'ALBC') then
+      ShowMto(frmMtoPrincipal, 'AlbaranesCompra', sSerie + ',' + sNumero)
+    else if SameText(sTipo, 'PEDC') then
+      ShowMto(frmMtoPrincipal, 'PedidosCompra', sSerie + ',' + sNumero)
+    else
+      ShowMessage(Format(
+        'No hay mantenimiento disponible para el tipo de documento "%s".',
+        [sTipo]));
+  end;
+end;
+
+// Combo de serie de la cabecera: al desplegar se recargan las series
+// 'SE' vigentes de la empresa de la sesion. Si la empresa no tiene
+// ninguna, se avisa y se ofrece ir a Empresas -> Series a crearlas.
+procedure TfrmMtoComprasSesiones.cbbSeriePropertiesInitPopup(Sender: TObject);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := '';
+  if (Dmm <> nil) and Dmm.unqryTablaG.Active then
+    sEmpresa := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+  CargarSeriesEmpresa(sEmpresa, 'SE', cbbSerie.Properties.Items);
+  if cbbSerie.Properties.Items.Count = 0 then
+  begin
+    if MessageDlg('No hay series de sesiones de compra (tipo SE) para la ' +
+                  'empresa "' + sEmpresa + '".' + sLineBreak +
+                  'Se dan de alta en Empresas -> Series. ' +
+                  '¿Abrir el mantenimiento de Empresas ahora?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      ShowMto(frmMtoPrincipal, 'Empresas');
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.tvDocsDblClick(Sender: TObject);
