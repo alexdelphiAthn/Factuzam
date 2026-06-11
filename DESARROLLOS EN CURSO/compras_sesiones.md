@@ -1063,3 +1063,15 @@ Por simplicidad, el MVP de materialización puede no crear el conjunto y
 limitarse a registrar los `fza_atributos_valores`. El usuario podrá
 construir el conjunto manualmente en el mantenimiento de atributos si lo
 desea.
+
+---
+
+## Navegación a documentos creados (junio 2026)
+
+El caption del botón «Ir a documento» de la pestaña Documentos prometía
+F12, pero ese atajo lo captura `actGrabarRegistro` (grabar dataset) del
+Mto base y nunca llegaba al botón. Se retira el F12 del caption y se
+añade un botón en el lateral derecho, **«Ir a Ped / Alb»**
+(`btnIrPedAlb`), que navega al documento seleccionado en la pestaña
+Documentos desde cualquier pestaña. `btnIrADocClick` ahora también
+resuelve `PEDC` → Mto de Pedidos de Compra (antes solo `ALBC`).

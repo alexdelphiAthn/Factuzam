@@ -143,11 +143,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 TabOrder = 2
                 Transparent = True
               end
-              object txtSERIE_ALBC: TcxDBTextEdit
+              object cbbSERIE_ALBC: TcxDBComboBox
                 Left = 116
                 Top = 32
                 DataBinding.DataField = 'SERIE_ALBC'
                 DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsEditList
+                Properties.MaxLength = 12
+                Properties.OnInitPopup = cbbSERIE_ALBCPropertiesInitPopup
                 TabOrder = 3
                 Width = 80
               end
