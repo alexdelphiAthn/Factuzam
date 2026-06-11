@@ -176,25 +176,59 @@ end;
 function ExtraerTablaDeSQL(const aSQL: string): string;
 var
   sUp: string;
-  iFrom, iEnd, i: Integer;
+  iNivel, i, iIni, iEnd: Integer;
+  bEncontrado: Boolean;
+  // True si en la posicion p arranca la palabra clave FROM con limites de
+  // palabra a ambos lados (asi no se confunde con sufijos tipo DATEFROM).
+  function HayFromEn(p: Integer): Boolean;
+  begin
+    Result := (p + 3 <= Length(sUp)) and (Copy(sUp, p, 4) = 'FROM');
+    if Result and (p > 1) and
+       not (sUp[p - 1] in [' ', #9, #10, #13, '(', ')', ',']) then
+      Result := False;
+    if Result and (p + 4 <= Length(sUp)) and
+       not (sUp[p + 4] in [' ', #9, #10, #13, '(']) then
+      Result := False;
+  end;
 begin
   Result := '';
-  sUp := UpperCase(Trim(aSQL));
-  iFrom := Pos('FROM ', sUp);
-  if iFrom = 0 then
-    iFrom := Pos('FROM'#9, sUp);
-  if iFrom = 0 then
-    Exit;
-  i := iFrom + 5;
-  while (i <= Length(sUp)) and (sUp[i] <= ' ') do
+  // Sin Trim: las posiciones se calculan sobre sUp y el Copy final lee de
+  // aSQL, por lo que ambas cadenas deben compartir los mismos indices.
+  sUp := UpperCase(aSQL);
+  // Buscamos el primer FROM a nivel 0 de parentesis. Asi se ignoran las
+  // subconsultas del SELECT (p.ej. un (SELECT COUNT(*) FROM otra_tabla ...)
+  // que calcula una columna): su FROM no es el de la tabla principal y
+  // devolvia una PK ajena, reventando el grid con "Key Field not found".
+  iNivel := 0;
+  i := 1;
+  iIni := 0;
+  bEncontrado := False;
+  while (i <= Length(sUp)) and not bEncontrado do
+  begin
+    if sUp[i] = '(' then
+      Inc(iNivel)
+    else if (sUp[i] = ')') and (iNivel > 0) then
+      Dec(iNivel)
+    else if (iNivel = 0) and HayFromEn(i) then
+    begin
+      iIni := i + 4;
+      bEncontrado := True;
+    end;
     Inc(i);
-  iEnd := i;
-  while (iEnd <= Length(sUp)) and
-        not (sUp[iEnd] in [' ', #13, #10, #9, '(', ',', ';']) do
-    Inc(iEnd);
-  Result := Trim(Copy(aSQL, i, iEnd - i));
-  if (Length(Result) >= 2) and (Result[1] = '`') then
-    Result := Copy(Result, 2, Length(Result) - 2);
+  end;
+  if bEncontrado then
+  begin
+    // Saltar el hueco entre FROM y el nombre de la tabla.
+    while (iIni <= Length(sUp)) and (sUp[iIni] <= ' ') do
+      Inc(iIni);
+    iEnd := iIni;
+    while (iEnd <= Length(sUp)) and
+          not (sUp[iEnd] in [' ', #13, #10, #9, '(', ',', ';']) do
+      Inc(iEnd);
+    Result := Trim(Copy(aSQL, iIni, iEnd - iIni));
+    if (Length(Result) >= 2) and (Result[1] = '`') then
+      Result := Copy(Result, 2, Length(Result) - 2);
+  end;
 end;
 
 function ObtenerClavePrimaria(ADataSet: TDataSet): string;
