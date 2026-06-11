@@ -76,6 +76,11 @@ type
     dsPrvKits: TDataSource;
     unqryPrvKitsDet: TUniQuery;
     dsPrvKitsDet: TDataSource;
+    // Etiqueta descriptiva por kit para el desplegable "Aplicar kit" de la
+    // cabecera de la sesion: "NOMBRE SISTEMA primera(cant)...ultima(cant)".
+    // SQL en DataModuleCreate (evita comillas anidadas en el dfm).
+    unqryPrvKitsCombo: TUniQuery;
+    dsPrvKitsCombo: TDataSource;
 
     // Auxiliares (lookups)
     unqryProveedores: TUniQuery;
@@ -205,6 +210,38 @@ begin
   unqryPrvFicha.Connection          := inLibGlobalVar.oConn;
   unqryPrvKits.Connection           := inLibGlobalVar.oConn;
   unqryPrvKitsDet.Connection        := inLibGlobalVar.oConn;
+  unqryPrvKitsCombo.Connection      := inLibGlobalVar.oConn;
+  // Etiqueta del desplegable de kits: nombre + sistema de tallas +
+  // primera y ultima talla CON cantidad>0, p.ej.
+  //   "OPC A  Calzado Hombre EU 39-44  39(1)...44(2)".
+  // El formato de cantidad recorta ceros/decimales sobrantes (1, 1.5).
+  unqryPrvKitsCombo.SQL.Text :=
+    'SELECT K.CODIGO_PRVKIT, ' +
+    '  TRIM(CONCAT(K.NOMBRE_PRVKIT, ' +
+    '    IFNULL(CONCAT('' '', AC.NOMBRE_AC), ''''), '' '', ' +
+    '    IFNULL((SELECT CONCAT(D.VALOR_DESTINO_PRVKITD, ''('', ' +
+    '              TRIM(TRAILING ''.'' FROM TRIM(TRAILING ''0'' FROM ' +
+    '                CAST(D.CANTIDAD_PRVKITD AS CHAR))), '')'') ' +
+    '         FROM fza_proveedores_kits_det D ' +
+    '        WHERE D.CODIGO_PRV_PRVKITD = K.CODIGO_PRV_PRVKIT ' +
+    '          AND D.CODIGO_PRVKIT_PRVKITD = K.CODIGO_PRVKIT ' +
+    '          AND D.CANTIDAD_PRVKITD > 0 ' +
+    '        ORDER BY D.ORDEN_PRVKITD, D.VALOR_DESTINO_PRVKITD LIMIT 1), ''''), ' +
+    '    ''...'', ' +
+    '    IFNULL((SELECT CONCAT(D.VALOR_DESTINO_PRVKITD, ''('', ' +
+    '              TRIM(TRAILING ''.'' FROM TRIM(TRAILING ''0'' FROM ' +
+    '                CAST(D.CANTIDAD_PRVKITD AS CHAR))), '')'') ' +
+    '         FROM fza_proveedores_kits_det D ' +
+    '        WHERE D.CODIGO_PRV_PRVKITD = K.CODIGO_PRV_PRVKIT ' +
+    '          AND D.CODIGO_PRVKIT_PRVKITD = K.CODIGO_PRVKIT ' +
+    '          AND D.CANTIDAD_PRVKITD > 0 ' +
+    '        ORDER BY D.ORDEN_PRVKITD DESC, ' +
+    '                 D.VALOR_DESTINO_PRVKITD DESC LIMIT 1), ''''))) ' +
+    '    AS ETIQUETA_KIT ' +
+    '  FROM fza_proveedores_kits K ' +
+    '  LEFT JOIN fza_atributos_conjuntos AC ON AC.ID_AC = K.ID_AC_TALLAS_PRVKIT ' +
+    ' WHERE K.CODIGO_PRV_PRVKIT = :prv ' +
+    ' ORDER BY K.ORDEN_PRVKIT, K.CODIGO_PRVKIT';
   unqryProveedores.Connection       := inLibGlobalVar.oConn;
   unqryFamilias.Connection          := inLibGlobalVar.oConn;
   unqryVariaciones.Connection       := inLibGlobalVar.oConn;
@@ -398,13 +435,6 @@ begin
     FieldByName('TIPO_ART_SESLIN').AsString   := 'ESTANDAR';
     FieldByName('TIPO_CANTIDAD_SESLIN').AsString := 'Uds';
     FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
-    // Sistema de tallas por defecto: el de la cabecera (copiado a su vez
-    // del proveedor, ID_AC_TALLAS_PRV). Las columnas de talla del grid
-    // muestran asi el sistema del proveedor sin elegirlo linea a linea.
-    if (not unqryTablaG.FieldByName('ID_AC_PIVOT_SES').IsNull) and
-       (unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger > 0) then
-      FieldByName('ID_AC_PIVOT_SESLIN').AsInteger :=
-        unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger;
     // NOT NULL con DEFAULT en BBDD: hay que darles valor en cliente o Post
     // falla con 'Field XXX must have a value' antes de llegar al DEFAULT.
     FieldByName('ESTRAZABLE_SESLIN').AsString    := 'N';
@@ -754,12 +784,15 @@ begin
   unqryPrvFicha.Close;
   unqryPrvKitsDet.Close;
   unqryPrvKits.Close;
+  unqryPrvKitsCombo.Close;
   if Trim(ACodigoPrv) <> '' then
   begin
-    unqryPrvFicha.ParamByName('prv').AsString := ACodigoPrv;
-    unqryPrvKits.ParamByName('prv').AsString  := ACodigoPrv;
+    unqryPrvFicha.ParamByName('prv').AsString     := ACodigoPrv;
+    unqryPrvKits.ParamByName('prv').AsString       := ACodigoPrv;
+    unqryPrvKitsCombo.ParamByName('prv').AsString  := ACodigoPrv;
     unqryPrvFicha.Open;
     unqryPrvKits.Open;
+    unqryPrvKitsCombo.Open;
     if not unqryPrvKitsDet.Active then
       unqryPrvKitsDet.Open;
   end;

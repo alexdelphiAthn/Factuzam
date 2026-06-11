@@ -127,6 +127,11 @@ type
     spnMultiploRedondeo      : TcxDBSpinEdit;
     lblAjusteFinal           : TcxLabel;
     spnAjusteFinal           : TcxDBSpinEdit;
+    // Desplegable de kits del proveedor + boton para aplicar el kit
+    // elegido sobre la linea con foco (en la cabecera de la sesion).
+    lblKitProv               : TcxLabel;
+    cbbKitProv               : TcxLookupComboBox;
+    btnAplicarKitCab         : TcxButton;
     dlgFoto                  : TOpenDialog;
     btnImprimir: TcxButton;
     btnCrear: TcxButton;
@@ -221,8 +226,6 @@ type
     txtProvTelContacto   : TcxDBTextEdit;
     lblProvMargen        : TcxLabel;
     txtProvMargen        : TcxDBTextEdit;
-    lblProvTallas        : TcxLabel;
-    txtProvTallas        : TcxDBTextEdit;
     btnIrProveedor       : TcxButton;
     gbProvKits           : TcxGroupBox;
     pnlProvKitsTop       : TPanel;
@@ -233,7 +236,6 @@ type
     dbcPrvKitCodigo      : TcxGridDBColumn;
     dbcPrvKitNombre      : TcxGridDBColumn;
     dbcPrvKitSistema     : TcxGridDBColumn;
-    dbcPrvKitDescripcion : TcxGridDBColumn;
     glPrvKits            : TcxGridLevel;
     cxgrdPrvKitsDet      : TcxGrid;
     tvPrvKitsDet         : TcxGridDBTableView;
@@ -293,6 +295,7 @@ type
     procedure btnProveedorPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure btnAplicarKitClick(Sender: TObject);
+    procedure btnAplicarKitCabClick(Sender: TObject);
     procedure btnAplicarKitProvClick(Sender: TObject);
     procedure btnIrProveedorClick(Sender: TObject);
     procedure tvPrvKitsDblClick(Sender: TObject);
@@ -586,6 +589,9 @@ begin
   dsPrvFicha.DataSet := Dmm.unqryPrvFicha;
   tvPrvKits.DataController.DataSource    := Dmm.dsPrvKits;
   tvPrvKitsDet.DataController.DataSource := Dmm.dsPrvKitsDet;
+  // Desplegable de kits de la cabecera: muestra una etiqueta descriptiva
+  // por kit (nombre + sistema + primera/ultima talla con cantidad).
+  cbbKitProv.Properties.ListSource := Dmm.dsPrvKitsCombo;
   // Pintar el rotulo del proveedor de la sesion enfocada al abrir el form.
   ActualizarLabelProveedor;
   RecargarProveedorSesion;
@@ -679,31 +685,9 @@ end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinAfterInsertHook(
   DataSet: TDataSet);
-var
-  iAc : Integer;
-  arr : TArrPosConjunto;
-  i   : Integer;
 begin
-  // Delegar al handler del DM (asigna FKs, numero de linea y el sistema
-  // de tallas por defecto de la cabecera, heredado del proveedor)
+  // Delegar al handler del DM (asigna FKs y numero de linea)
   Dmm.unqrySesionLinAfterInsert(DataSet);
-  // Si la linea nueva trae sistema heredado, pintar ya sus columnas de
-  // talla. OJO: aqui NO se puede usar RecalcularMaxColumnas (itera el
-  // dataset con First/Next y forzaria un Post implicito de la linea
-  // recien insertada); solo EXPANDIMOS columnas leyendo el conjunto.
-  iAc := DataSet.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  if Assigned(FGestorTallas) and (iAc > 0) then
-  begin
-    arr := FGestorTallas.GetPosicionesConjunto(iAc);
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-    begin
-      if (FTallaColumns[i] <> nil) and (i < Length(arr)) then
-      begin
-        FTallaColumns[i].Visible := True;
-        FTallaColumns[i].Caption := arr[i].Valor;
-      end;
-    end;
-  end;
   // Foco en codigo de articulo
   tvLineas.Controller.FocusedColumn := dbcLinCodArt;
   if tvLineas.Controller.EditingController <> nil then
@@ -1110,23 +1094,19 @@ end;
 
 procedure TfrmMtoComprasSesiones.CopiarDefectosProveedor;
 begin
-  // Copia a la cabecera los defectos del proveedor recien elegido:
-  //   PORCENTAJE_MARGEN_PRV -> PORCENTAJE_MARGEN_SES
-  //   ID_AC_TALLAS_PRV      -> ID_AC_PIVOT_SES (las lineas nuevas lo
-  //                            heredan; es el sistema que se muestra en
-  //                            las columnas de talla del grid).
-  // Solo pisa cuando el proveedor tiene valor.
+  // Copia a la cabecera el margen por defecto del proveedor recien
+  // elegido: PORCENTAJE_MARGEN_PRV -> PORCENTAJE_MARGEN_SES (alimenta el
+  // PVP propuesto). Solo pisa cuando el proveedor tiene valor.
   if (Dmm <> nil) and Dmm.unqryPrvFicha.Active and
      (not Dmm.unqryPrvFicha.IsEmpty) then
   begin
-    if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
-      Dmm.unqryTablaG.Edit;
     if Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat > 0 then
+    begin
+      if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+        Dmm.unqryTablaG.Edit;
       Dmm.unqryTablaG.FieldByName('PORCENTAJE_MARGEN_SES').AsFloat :=
         Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat;
-    if Dmm.unqryPrvFicha.FieldByName('ID_AC_TALLAS_PRV').AsInteger > 0 then
-      Dmm.unqryTablaG.FieldByName('ID_AC_PIVOT_SES').AsInteger :=
-        Dmm.unqryPrvFicha.FieldByName('ID_AC_TALLAS_PRV').AsInteger;
+    end;
   end;
 end;
 
@@ -1219,6 +1199,24 @@ begin
        (TMenuItem(Sender).Tag <= High(FMenuKitsCodigos)) then
       AplicarKitALineaActual(FMenuKitsCodigos[TMenuItem(Sender).Tag]);
   end;
+end;
+
+procedure TfrmMtoComprasSesiones.btnAplicarKitCabClick(Sender: TObject);
+var
+  sKit : string;
+begin
+  inherited;
+  // Aplica el kit elegido en el desplegable de la cabecera sobre la linea
+  // con foco. El EditValue del lookup es el CODIGO_PRVKIT.
+  if VarIsNull(cbbKitProv.EditValue) or VarIsClear(cbbKitProv.EditValue) then
+    sKit := ''
+  else
+    sKit := Trim(VarToStr(cbbKitProv.EditValue));
+  if sKit = '' then
+    MessageDlg('Elige un kit del proveedor en el desplegable.',
+               mtInformation, [mbOk], 0)
+  else
+    AplicarKitALineaActual(sKit);
 end;
 
 procedure TfrmMtoComprasSesiones.btnAplicarKitProvClick(Sender: TObject);

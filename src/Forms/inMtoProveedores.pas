@@ -173,8 +173,6 @@ type
     gbDefectosCompras: TcxGroupBox;
     lblMargenPrv: TcxLabel;
     spnMargenPrv: TcxDBSpinEdit;
-    lblTallasPrv: TcxLabel;
-    cbbTallasPrv: TcxDBLookupComboBox;
     lblDefectosInfo: TcxLabel;
     gbKitsPrv: TcxGroupBox;
     pnlKitsTop: TPanel;
@@ -188,7 +186,6 @@ type
     dbcKitCodigo: TcxGridDBColumn;
     dbcKitNombre: TcxGridDBColumn;
     dbcKitSistema: TcxGridDBColumn;
-    dbcKitDescripcion: TcxGridDBColumn;
     glKits: TcxGridLevel;
     cxgrdKitsDet: TcxGrid;
     tvKitsDet: TcxGridDBTableView;
@@ -383,11 +380,11 @@ begin
   dmmProveedores := tdmDataModule as TdmProveedores;
   tvArticulos.DataController.DataSource := dmmProveedores.dsArticulos;
   tvLinFac.DataController.DataSource := dmmProveedores.dsLinFacturasArticulos;
-  // Pestaña Compras: kits de cantidades por talla + lookups de sistemas
-  // de tallas (conjuntos TAL). Mismo patron runtime que Articulos/Ventas.
+  // Pestaña Compras: kits de cantidades por talla. Cada kit lleva su
+  // sistema de tallas (lookup sobre conjuntos TAL). Mismo patron runtime
+  // que Articulos/Ventas.
   tvKits.DataController.DataSource    := dmmProveedores.dsKits;
   tvKitsDet.DataController.DataSource := dmmProveedores.dsKitsDet;
-  cbbTallasPrv.Properties.ListSource  := dmmProveedores.dsConjuntosTallas;
   TcxLookupComboBoxProperties(dbcKitSistema.Properties).ListSource :=
     dmmProveedores.dsConjuntosTallas;
   pcPestanas.ActivePage := tsDomicilioFiscal;
