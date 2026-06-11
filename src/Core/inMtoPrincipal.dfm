@@ -1261,11 +1261,12 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         end
         object mnuPaises: TMenuItem
           Caption = 'Paises'
-          ShortCut = 16460
+          ShortCut = 49228
           OnClick = mnuPaisesClick
         end
         object mnuUnidadesMedida: TMenuItem
           Caption = 'Unidades de Medida'
+          ShortCut = 49237
           OnClick = mnuUnidadesMedidaClick
         end
         object mnuPropiedades: TMenuItem
@@ -1681,7 +1682,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object mnuCajaArqueosHist: TMenuItem
         Caption = 'Hist'#243'rico de Arqueos'
-        ShortCut = 24641
+        ShortCut = 24648
         OnClick = mnuCajaArqueosHistClick
       end
       object mnuFacturasSimplif: TMenuItem
@@ -2410,6 +2411,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         end
         object mnuEmpleados: TMenuItem
           Caption = 'Empleados'
+          ShortCut = 49221
           OnClick = mnuEmpleadosClick
         end
         object mnuGrupos: TMenuItem
