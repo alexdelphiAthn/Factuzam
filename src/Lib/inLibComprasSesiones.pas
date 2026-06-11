@@ -122,6 +122,16 @@ procedure ClonarSesion(ADM: TdmComprasSesiones; const AUsuario: string);
 procedure ImportarKitsDeProveedor(ADM: TdmComprasSesiones;
                                   const AUsuario: string);
 
+// Comprueba que el kit del proveedor se puede aplicar sobre la linea con
+// foco: sesion activa, linea con numero, sistema de tallas asignado, kit
+// existente y tallaje del kit IGUAL al de la linea (ID_AC_TALLAS_PRVKIT =
+// ID_AC_PIVOT_SESLIN). Con False, AResumen lleva la advertencia para el
+// usuario. Lo usan AplicarKitProveedorALinea y el form antes de abrir el
+// distribuidor en modo kit (formato distribuido).
+function ValidarKitSobreLineaActual(ADM: TdmComprasSesiones;
+                                     const ACodigoPrv, ACodigoKit: string;
+                                     out AResumen: string): Boolean;
+
 // Aplica un kit del proveedor (fza_proveedores_kits_det) sobre la linea
 // con foco de la sesion. REGLA: el tallaje del kit (ID_AC_TALLAS_PRVKIT)
 // debe COINCIDIR con el de la linea (ID_AC_PIVOT_SESLIN); si no coincide
@@ -952,31 +962,20 @@ begin
   // SERIE/NUMERO local). Implementación pendiente.
 end;
 
-function AplicarKitProveedorALinea(ADM: TdmComprasSesiones;
-                                    AGestor: TGestorGridTallas;
-                                    const ACodigoPrv, ACodigoKit: string;
-                                    out AResumen: string): Boolean;
+function ValidarKitSobreLineaActual(ADM: TdmComprasSesiones;
+                                     const ACodigoPrv, ACodigoKit: string;
+                                     out AResumen: string): Boolean;
 var
-  q          : TUniQuery;
-  arr        : TArrPosConjunto;
-  iLinea     : Integer;
-  iAc        : Integer;
-  iAcKit     : Integer;
-  sNomKit    : string;
-  sNomLin    : string;
-  bTallajeOk : Boolean;
-  i          : Integer;
-  bCasada    : Boolean;
-  iAplicadas : Integer;
-  sValor     : string;
-  rCant      : Double;
-  sSinCasar  : string;
+  q       : TUniQuery;
+  iLinea  : Integer;
+  iAc     : Integer;
+  iAcKit  : Integer;
+  sNomKit : string;
+  sNomLin : string;
 begin
   Result   := False;
   AResumen := '';
-  if (ADM = nil) or (AGestor = nil) then
-    AResumen := 'Gestor de tallas no inicializado.'
-  else if ADM.unqryTablaG.IsEmpty then
+  if (ADM = nil) or ADM.unqryTablaG.IsEmpty then
     AResumen := 'No hay sesion activa.'
   else if ADM.unqrySesionLin.IsEmpty then
     AResumen := 'Selecciona o crea una linea de articulo primero.'
@@ -994,7 +993,6 @@ begin
       // El tallaje del kit DEBE coincidir con el de la linea; si no, se
       // advierte y no se aplica nada (evita volcar curvas de un sistema
       // sobre otro aunque compartan algun valor de talla).
-      bTallajeOk := False;
       q := TUniQuery.Create(nil);
       try
         q.Connection := inLibGlobalVar.oConn;
@@ -1033,74 +1031,100 @@ begin
               'tallas de la linea o elige un kit de su mismo tallaje.',
               [sNomKit, sNomLin])
           else
-            bTallajeOk := True;
+            Result := True;
         end;
       finally
         FreeAndNil(q);
       end;
-      if bTallajeOk then
+    end;
+  end;
+end;
+
+function AplicarKitProveedorALinea(ADM: TdmComprasSesiones;
+                                    AGestor: TGestorGridTallas;
+                                    const ACodigoPrv, ACodigoKit: string;
+                                    out AResumen: string): Boolean;
+var
+  q          : TUniQuery;
+  arr        : TArrPosConjunto;
+  iLinea     : Integer;
+  iAc        : Integer;
+  i          : Integer;
+  bCasada    : Boolean;
+  iAplicadas : Integer;
+  sValor     : string;
+  rCant      : Double;
+  sSinCasar  : string;
+begin
+  Result   := False;
+  AResumen := '';
+  if AGestor = nil then
+    AResumen := 'Gestor de tallas no inicializado.'
+  else if ValidarKitSobreLineaActual(ADM, ACodigoPrv, ACodigoKit,
+                                     AResumen) then
+  begin
+    iLinea     := ADM.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+    iAc        := ADM.unqrySesionLin.FieldByName(
+                                            'ID_AC_PIVOT_SESLIN').AsInteger;
+    arr        := AGestor.GetPosicionesConjunto(iAc);
+    iAplicadas := 0;
+    sSinCasar  := '';
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT VALOR_DESTINO_PRVKITD, CANTIDAD_PRVKITD ' +
+        '  FROM fza_proveedores_kits_det ' +
+        ' WHERE CODIGO_PRV_PRVKITD = :prv ' +
+        '   AND CODIGO_PRVKIT_PRVKITD = :kit ' +
+        ' ORDER BY ORDEN_PRVKITD, VALOR_DESTINO_PRVKITD';
+      q.ParamByName('prv').AsString := ACodigoPrv;
+      q.ParamByName('kit').AsString := ACodigoKit;
+      q.Open;
+      if q.IsEmpty then
+        AResumen := Format('El kit %s no tiene tallas definidas. ' +
+          'Completalo en Proveedores, pestaña Compras.', [ACodigoKit])
+      else
       begin
-        arr        := AGestor.GetPosicionesConjunto(iAc);
-        iAplicadas := 0;
-        sSinCasar  := '';
-        q := TUniQuery.Create(nil);
-        try
-          q.Connection := inLibGlobalVar.oConn;
-          q.SQL.Text :=
-            'SELECT VALOR_DESTINO_PRVKITD, CANTIDAD_PRVKITD ' +
-            '  FROM fza_proveedores_kits_det ' +
-            ' WHERE CODIGO_PRV_PRVKITD = :prv ' +
-            '   AND CODIGO_PRVKIT_PRVKITD = :kit ' +
-            ' ORDER BY ORDEN_PRVKITD, VALOR_DESTINO_PRVKITD';
-          q.ParamByName('prv').AsString := ACodigoPrv;
-          q.ParamByName('kit').AsString := ACodigoKit;
-          q.Open;
-          if q.IsEmpty then
-            AResumen := Format('El kit %s no tiene tallas definidas. ' +
-              'Completalo en Proveedores, pestaña Compras.', [ACodigoKit])
-          else
+        while not q.Eof do
+        begin
+          sValor  := Trim(q.FieldByName('VALOR_DESTINO_PRVKITD').AsString);
+          rCant   := q.FieldByName('CANTIDAD_PRVKITD').AsFloat;
+          bCasada := False;
+          // El tallaje ya se ha validado; el casado por texto mapea
+          // cada talla del kit a su columna (ID_AV) en la linea.
+          for i := 0 to High(arr) do
           begin
-            while not q.Eof do
+            if SameText(Trim(arr[i].Valor), sValor) then
             begin
-              sValor  := Trim(q.FieldByName('VALOR_DESTINO_PRVKITD').AsString);
-              rCant   := q.FieldByName('CANTIDAD_PRVKITD').AsFloat;
-              bCasada := False;
-              // El tallaje ya se ha validado; el casado por texto mapea
-              // cada talla del kit a su columna (ID_AV) en la linea.
-              for i := 0 to High(arr) do
-              begin
-                if SameText(Trim(arr[i].Valor), sValor) then
-                begin
-                  AGestor.PersistirCantidad(iLinea, arr[i].IdAv, rCant);
-                  bCasada := True;
-                  Inc(iAplicadas);
-                  Break;
-                end;
-              end;
-              if (not bCasada) and (rCant > 0) then
-              begin
-                if sSinCasar <> '' then
-                  sSinCasar := sSinCasar + ', ';
-                sSinCasar := sSinCasar + Format('%s (%g)', [sValor, rCant]);
-              end;
-              q.Next;
+              AGestor.PersistirCantidad(iLinea, arr[i].IdAv, rCant);
+              bCasada := True;
+              Inc(iAplicadas);
+              Break;
             end;
           end;
-        finally
-          FreeAndNil(q);
+          if (not bCasada) and (rCant > 0) then
+          begin
+            if sSinCasar <> '' then
+              sSinCasar := sSinCasar + ', ';
+            sSinCasar := sSinCasar + Format('%s (%g)', [sValor, rCant]);
+          end;
+          q.Next;
         end;
-        if iAplicadas > 0 then
-        begin
-          Result := True;
-          if sSinCasar <> '' then
-            AResumen := 'Tallas del kit sin correspondencia en el sistema ' +
-                        'de la linea (no aplicadas): ' + sSinCasar;
-        end
-        else if AResumen = '' then
-          AResumen := 'Ninguna talla del kit casa con el sistema de tallas ' +
-                      'de la linea.';
       end;
+    finally
+      FreeAndNil(q);
     end;
+    if iAplicadas > 0 then
+    begin
+      Result := True;
+      if sSinCasar <> '' then
+        AResumen := 'Tallas del kit sin correspondencia en el sistema ' +
+                    'de la linea (no aplicadas): ' + sSinCasar;
+    end
+    else if AResumen = '' then
+      AResumen := 'Ninguna talla del kit casa con el sistema de tallas ' +
+                  'de la linea.';
   end;
 end;
 

@@ -289,7 +289,9 @@ type
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
                 var AAllow: Boolean);
-    procedure AbrirDistribuidor;
+    // ACodigoKit <> '' abre el distribuidor en modo kit (formato
+    // distribuido): botones aplicar/limpiar por almacen + aplicar a todos.
+    procedure AbrirDistribuidor(const ACodigoKit: string = '');
     procedure CopiarCeldasDistribuidasOtroColor(ALineaOrigen,
                                                  ALineaDestino: Integer);
     procedure btnProveedorPropertiesButtonClick(Sender: TObject;
@@ -1118,13 +1120,30 @@ var
   iLinea   : Integer;
   idxRec   : Integer;
 begin
-  // Vuelca las cantidades del kit sobre la linea con foco y repinta la
-  // fila igual que tras teclear a mano (totales + celdas no-bound).
   sPrv := '';
   if not Dmm.unqryTablaG.IsEmpty then
     sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if AplicarKitProveedorALinea(Dmm, FGestorTallas, sPrv, ACodigoKit,
-                               sResumen) then
+  // Formato distribuido: las cantidades viven por almacen, asi que el kit
+  // se aplica desde la matriz de almacenes (distribuidor en modo kit, con
+  // botones aplicar/limpiar por almacen y aplicar en todos). Validamos
+  // antes el tallaje con la misma regla que el modo simple.
+  if (not Dmm.unqryTablaG.IsEmpty) and
+     (Dmm.unqryTablaG.FieldByName(
+                            'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S') then
+  begin
+    if ValidarKitSobreLineaActual(Dmm, sPrv, ACodigoKit, sResumen) then
+    begin
+      LogSes(Format('AplicarKit %s -> distribuidor (formato distribuido)',
+                    [ACodigoKit]));
+      AbrirDistribuidor(ACodigoKit);
+    end
+    else
+      MessageDlg(sResumen, mtWarning, [mbOk], 0);
+  end
+  // Formato simple: vuelca las cantidades del kit sobre la linea con foco
+  // y repinta la fila igual que tras teclear a mano (totales + no-bound).
+  else if AplicarKitProveedorALinea(Dmm, FGestorTallas, sPrv, ACodigoKit,
+                                    sResumen) then
   begin
     iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
     if Assigned(FGestorTallas) then
@@ -2974,7 +2993,8 @@ begin
   end;
 end;
 
-procedure TfrmMtoComprasSesiones.AbrirDistribuidor;
+procedure TfrmMtoComprasSesiones.AbrirDistribuidor(
+  const ACodigoKit: string);
 var
   oForm  : TfrmModalDistribuidor;
   iLinea : Integer;
@@ -2996,7 +3016,10 @@ begin
     oForm.Preparar(inLibGlobalVar.oConn, oUser,
                     Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
                     Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
-                    iLinea, iAc);
+                    iLinea, iAc,
+                    Trim(Dmm.unqryTablaG.FieldByName(
+                                              'CODIGO_PRV_SES').AsString),
+                    ACodigoKit);
     oForm.ShowModal;
     if oForm.Confirmado then
     begin
