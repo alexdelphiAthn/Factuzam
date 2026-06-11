@@ -255,7 +255,9 @@ begin
   // Modo kit: columna de acciones (no-bound) con dos botones por
   // almacen — "Aplicar" vuelca la curva del kit sobre esa fila y
   // "Limpiar" pone a 0 todas sus tallas. isebAlways pinta los botones
-  // en todas las filas sin necesidad de enfocar la celda.
+  // en todas las filas sin necesidad de enfocar la celda y
+  // bvsButtonsAutoWidth los estira a toda la celda (sin area de texto,
+  // que truncaba el segundo boton).
   if FCodigoKit <> '' then
   begin
     with tvCuadr.CreateColumn do
@@ -265,15 +267,14 @@ begin
       with TcxButtonEditProperties(Properties) do
       begin
         ReadOnly := True;
+        ButtonsViewStyle := bvsButtonsAutoWidth;
         Buttons[0].Kind    := bkText;
         Buttons[0].Caption := 'Aplicar';
         Buttons[0].Default := False;
-        Buttons[0].Width   := 70;
         with Buttons.Add do
         begin
           Kind    := bkText;
           Caption := 'Limpiar';
-          Width   := 70;
         end;
         OnButtonClick := ColKitPropertiesButtonClick;
       end;
@@ -281,7 +282,7 @@ begin
       // Tag=-1: DoShow la salta al decidir el foco inicial (que debe
       // caer en la primera talla, no en los botones).
       Tag   := -1;
-      Width := 156;
+      Width := 170;
     end;
   end;
   for i := 0 to High(FPosiciones) do
