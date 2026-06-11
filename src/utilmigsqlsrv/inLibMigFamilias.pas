@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMigFamilias                                              }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.3.0                                                         }
+{ Versión:       1.4.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Migra `dbo.ocniv` (SQL Server: jerarquía completa de niveles de           }
@@ -20,6 +20,10 @@
 {            el padre por PREFIJO real: el padre de un código es el código     }
 {            EXISTENTE más largo que es prefijo estricto suyo. Ej: '101' es    }
 {            padre de '1012203'. Cliente-agnóstico (2/4, 3/7, 1/3/5…).         }
+{      v1.4  Tambien rellena CODIGO_SUBFAMILIA_FAM, la columna legacy          }
+{            que LEE la UI (grid y campo "Familia Padre" de inMtoFamilias).    }
+{            Sin ella la familia hijo mostraba el padre vacio aunque           }
+{            CODIGO_PADRE_FAM estuviera bien (la UI no lee esa columna).       }
 {                                                                              }
 {    Mapeo origen → destino:                                                   }
 {      Codigo      (varchar 15)  → CODIGO_FAM_FAM                              }
@@ -93,12 +97,14 @@ procedure MigrarFamilias(Eng: TMigEngine; var Stats: TMigStats);
 const
   cInsertDst =
     'INSERT INTO fza_articulos_familias (' +
-      'CODIGO_FAM_FAM, CODIGO_PADRE_FAM, ESACTIVO_FAM, ORDEN_FAM, ' +
+      'CODIGO_FAM_FAM, CODIGO_PADRE_FAM, CODIGO_SUBFAMILIA_FAM, ' +
+      'ESACTIVO_FAM, ORDEN_FAM, ' +
       'ESDEFAULT_FAM, NOMBRE_FAM_FAM, DESCRIPCION_FAM, PAD_ART_FAM, ' +
       'CONTADOR_ART_FAM, ESCONTADOR_ART_FAM, ' +
       'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES (' +
-      ':CODIGO_FAM_FAM, :CODIGO_PADRE_FAM, :ESACTIVO_FAM, :ORDEN_FAM, ' +
+      ':CODIGO_FAM_FAM, :CODIGO_PADRE_FAM, :CODIGO_SUBFAMILIA_FAM, ' +
+      ':ESACTIVO_FAM, :ORDEN_FAM, ' +
       ':ESDEFAULT_FAM, :NOMBRE_FAM_FAM, :DESCRIPCION_FAM, :PAD_ART_FAM, ' +
       ':CONTADOR_ART_FAM, :ESCONTADOR_ART_FAM, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
@@ -203,6 +209,14 @@ begin
           qIns.ParamByName('CODIGO_PADRE_FAM').AsString := fam.Padre
         else
           qIns.ParamByName('CODIGO_PADRE_FAM').Clear;
+        // CODIGO_SUBFAMILIA_FAM: columna legacy que LEE la UI (grid y campo
+        // "Familia Padre" de inMtoFamilias). Apunta al mismo padre que
+        // CODIGO_PADRE_FAM; sin rellenarla la familia hijo mostraba el padre
+        // vacio tras migrar aunque CODIGO_PADRE_FAM estuviera bien.
+        if fam.Padre <> '' then
+          qIns.ParamByName('CODIGO_SUBFAMILIA_FAM').AsString := fam.Padre
+        else
+          qIns.ParamByName('CODIGO_SUBFAMILIA_FAM').Clear;
         qIns.ParamByName('ESACTIVO_FAM').AsString :=
           DeducirActivoFam(fam.Estado);
         qIns.ParamByName('ORDEN_FAM').AsInteger := iOrden;
