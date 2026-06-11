@@ -196,7 +196,7 @@ junto a cada opción en los capítulos siguientes.
 | Artículos | `[Ctrl]+[A]` |
 | Tarifas | `[Ctrl]+[T]` |
 | Familias | `[Ctrl]+[N]` |
-| Propiedades | `[Ctrl]+[Y]` |
+| Propiedades | `[Ctrl]+[Alt]+[Y]` |
 | Tipos de Variaciones | `[Ctrl]+[Alt]+[T]` |
 | Colecciones de Atributos | `[Ctrl]+[Alt]+[S]` |
 | Atributos básicos | `[Ctrl]+[Alt]+[B]` |
@@ -263,7 +263,7 @@ junto a cada opción en los capítulos siguientes.
 > Algunos atajos coinciden entre módulos (por ejemplo `[Shift]+[Ctrl]+[A]`
 > en Albaranes de compra y en Histórico de Arqueos, o `[Ctrl]+[L]` en
 > Almacenes y Países); en esos casos actúa el de la opción visible/activa
-> según el contexto. Las opciones sin atajo (Países, Unidades de Medida,
+> según el contexto. Las opciones sin atajo (Unidades de Medida,
 > Empleados, Devoluciones a Proveedor, Permisos (tabla) y los informes de
 > Almacén) se abren desde el menú.
 

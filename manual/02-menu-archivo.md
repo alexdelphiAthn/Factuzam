@@ -259,7 +259,7 @@ Permite agrupar el catálogo para informes, filtros y precios.
 
 ### Paises
 
-*(Sin atajo de menú; se abre desde el menú.)*
+**Atajo de menú:** `[Ctrl]+[L]` *(compartido con Almacenes)*
 
 Catálogo de **países** usado en las direcciones de clientes, proveedores y
 empresas (y para la clasificación fiscal intracomunitaria/extracomunitaria).
@@ -273,7 +273,7 @@ par, caja, metro, kilo…).
 
 ### Propiedades
 
-**Atajo de menú:** `[Ctrl]+[Y]`
+**Atajo de menú:** `[Ctrl]+[Alt]+[Y]`
 
 Define **propiedades descriptivas** de artículos (p. ej. *Material*,
 *Temporada*) y sus **valores disponibles**.
