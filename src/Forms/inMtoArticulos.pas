@@ -1915,26 +1915,18 @@ begin
   // vacios en cada apertura del Mto.
   FFiltroProvCsv := '';
   FFiltroFamCsv  := '';
-  // Precarga con limite. Con los filtros por defecto (solo activos + solo
-  // stock) un catalogo grande puede dejar decenas de miles de filas:
-  // contamos primero y, si superan UMBRAL_PRECARGA, NO abrimos el set
-  // completo (congelaria la apertura del Mto). Abrimos la lista vacia
-  // (LIMIT 0, instantanea) y marcamos FPrecargaPendiente para que
-  // TrasPrecargaAsync -ya en main thread y solo en la apertura normal, no
-  // en la instancia de busqueda- muestre el dialogo de filtrado por
-  // temporada/proveedor/familia y reabra la lista acotada.
   FPrecargaPendiente := False;
-  if ContarArticulos(CsvTemporadasControl, FFiltroProvCsv, FFiltroFamCsv)
-       > UMBRAL_PRECARGA then
+  // Precarga: DE MOMENTO sin dialogo de acotado. Dejamos la lista CERRADA
+  // con el SQL filtrado (por defecto solo activos + solo stock) y que la
+  // carga la haga AbrirTablaPrincipalAsync en segundo plano, mostrando el
+  // overlay "Cargando datos..." con barra de progreso. Asi se cargan TODOS
+  // los articulos del filtro sin congelar la apertura ni interrumpir con un
+  // aviso. (El gate por umbral + dialogo queda en el codigo, desactivado.)
+  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG <> nil) then
   begin
-    FPrecargaPendiente := True;
-    AbrirListaArticulos(True);
-  end
-  else
-    AbrirListaArticulos(False);
-  // Ficha del articulo en foco. Con la lista vacia (precarga pendiente)
-  // queda en blanco hasta que TrasPrecargaAsync la reabra acotada.
-  CargarArticuloActual;
+    dmmArticulos.unqryTablaG.Close;
+    dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
+  end;
 end;
 
 procedure TfrmMtoArticulos.CargarTemporadasFiltro;
@@ -2272,48 +2264,49 @@ begin
   sTempIn := CsvTemporadasControl;
   sPrvIn  := FFiltroProvCsv;
   sFamIn  := FFiltroFamCsv;
-  if TfrmModalFiltroArt.Ejecutar(Self, cn, UMBRAL_PRECARGA,
-       sTempIn, sPrvIn, sFamIn,
-       function(const t, p, f: string): Integer
-       begin
-         Result := ContarArticulos(t, p, f);
-       end,
-       sTempOut, sPrvOut, sFamOut) then
-  begin
-    MarcarTemporadasControl(sTempOut);
-    FFiltroProvCsv := sPrvOut;
-    FFiltroFamCsv  := sFamOut;
+  // El dialogo se invoca tambien desde TrasPrecargaAsync (callback async),
+  // donde una excepcion se tragaria dejando la lista en blanco sin aviso.
+  // Lo blindamos: si el dialogo falla, se loguea y el llamador sigue con
+  // AbrirListaArticulos, asi nunca queda una lista vacia silenciosa.
+  try
+    if TfrmModalFiltroArt.Ejecutar(Self, cn, UMBRAL_PRECARGA,
+         sTempIn, sPrvIn, sFamIn,
+         function(const t, p, f: string): Integer
+         begin
+           Result := ContarArticulos(t, p, f);
+         end,
+         sTempOut, sPrvOut, sFamOut) then
+    begin
+      MarcarTemporadasControl(sTempOut);
+      FFiltroProvCsv := sPrvOut;
+      FFiltroFamCsv  := sFamOut;
+    end;
+  except
+    on E: Exception do
+      inLibLog.Log.LogError('[Articulos.MostrarDialogoRefinar] ' +
+        E.ClassName + ': ' + E.Message);
   end;
 end;
 
 procedure TfrmMtoArticulos.AplicarFiltrosArticulos;
 begin
-  // Cambio manual de filtros (estado/stock/temporada del panel). Si el
-  // nuevo filtro deja mas de UMBRAL_PRECARGA articulos, ofrecemos el
-  // dialogo para acotar antes de cargar; si no, abrimos directamente.
+  // Cambio manual de filtros (estado/stock/temporadas) o boton "Cargar
+  // ahora". DE MOMENTO sin dialogo: se recarga TODA la lista con el filtro
+  // elegido, en segundo plano y con el overlay "Cargando datos..." + barra
+  // de progreso (via la carga async).
   if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
-  if ContarArticulos(CsvTemporadasControl, FFiltroProvCsv,
-                     FFiltroFamCsv) > UMBRAL_PRECARGA then
-    MostrarDialogoRefinar;
-  AbrirListaArticulos(False);
-  CargarArticuloActual;
+  dmmArticulos.unqryTablaG.Close;
+  dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
+  AbrirTablaPrincipalAsync;
 end;
 
 procedure TfrmMtoArticulos.TrasPrecargaAsync;
 begin
   inherited;
-  // Solo actua si CrearTablaPrincipal dejo la precarga pendiente por
-  // superar el umbral (abrio la lista vacia). La instancia de busqueda
-  // (Ctrl+A) carga de forma sincrona y no pasa por este hook.
-  if not FPrecargaPendiente then Exit;
-  FPrecargaPendiente := False;
-  if EsInstanciaBusqueda then Exit;
-  MostrarDialogoRefinar;
-  AbrirListaArticulos(False);
-  // unqrySkus ya esta abierta (AbrirDetalles corrio antes en el callback),
-  // asi que el AfterScroll completo si puede cargar la ficha del primero.
-  // Si la reapertura ya disparo el AfterScroll, FArticuloCargado quedo
-  // fijado y no repetimos; si no, lo forzamos para el primer registro.
+  // Dialogo de precarga DESACTIVADO de momento: la lista se carga entera
+  // (overlay con barra de progreso). Aqui solo aseguramos que la ficha del
+  // primer articulo quede cargada tras la carga async (si el AfterScroll de
+  // RestaurarFocoGrid no la fijo ya).
   if dmmArticulos.unqryTablaG.Active
      and (not dmmArticulos.unqryTablaG.IsEmpty)
      and (FArticuloCargado = '') then

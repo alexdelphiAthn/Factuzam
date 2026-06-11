@@ -11,8 +11,8 @@
 {  Descripción:                                                                }
 {    Diálogo de acotado de la precarga de artículos. Se muestra cuando con     }
 {    los filtros por defecto (solo activos + solo stock) salen más artículos   }
-{    que el umbral admitido. Permite filtrar por temporada, proveedor y        }
-{    familia, mostrando en vivo cuántos artículos se cargarían.                }
+{    que el umbral admitido. Permite filtrar por temporada y proveedor,        }
+{    mostrando en vivo cuántos artículos se cargarían.                         }
 {    Se construye en código (CreateNew), sin .dfm.                            }
 {******************************************************************************}
 unit inMtoModalFiltroArt;
@@ -22,15 +22,16 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.UITypes, Vcl.Controls, Vcl.Forms, Vcl.Graphics, Vcl.ExtCtrls,
-  Vcl.Dialogs, Data.DB, MemDS, DBAccess, Uni, cxLookAndFeelPainters,
+  Vcl.Dialogs, Data.DB, MemDS, DBAccess, Uni,
   cxGraphics, cxControls, cxContainer, cxEdit, cxLabel, cxButtons,
   cxCheckBox, cxCheckListBox;
 
 type
-  // Callback que cuenta los articulos que saldrian con una combinacion de
+  // Callback que cuenta los artículos que saldrían con una combinación de
   // filtros (temporada/proveedor/familia en CSV ';'). Lo provee el Mto de
-  // Articulos para que el dialogo muestre el conteo en vivo con el MISMO
-  // WHERE que usara la carga real.
+  // Artículos para que el diálogo muestre el conteo en vivo con el MISMO
+  // WHERE que usará la carga real. (La familia ya no se filtra desde aquí,
+  // pero se mantiene en la firma para no tocar el llamador: pasa de largo.)
   TContarArticulosFunc = reference to function(const aTempCsv, aPrvCsv,
     aFamCsv: string): Integer;
 
@@ -39,15 +40,16 @@ type
     FConn: TUniConnection;
     FUmbral: Integer;
     FContar: TContarArticulosFunc;
+    // Familia heredada del llamador: no se filtra en este diálogo, solo se
+    // arrastra para el conteo y se devuelve sin cambios.
+    FFamCsv: string;
     FlblCabecera: TcxLabel;
     FlblResultado: TcxLabel;
     FclbTemporada: TcxCheckListBox;
     FclbProveedor: TcxCheckListBox;
-    FclbFamilia: TcxCheckListBox;
-    // Codigos alineados por indice con los Items de las listas de proveedor
-    // y familia (el Text muestra la descripcion; el filtro usa el codigo).
+    // Códigos alineados por índice con los Items de la lista de proveedor
+    // (el Text muestra la descripción; el filtro usa el código).
     FCodProv: TStringList;
-    FCodFam: TStringList;
     FbtnCalcular: TcxButton;
     FbtnAceptar: TcxButton;
     FbtnCancelar: TcxButton;
@@ -56,7 +58,6 @@ type
                             const ATitulo: string): TcxCheckListBox;
     procedure CargarTemporadas(const aPreCsv: string);
     procedure CargarProveedores(const aPreCsv: string);
-    procedure CargarFamilias(const aPreCsv: string);
     function  CsvMarcados(AClb: TcxCheckListBox;
                           ACodigos: TStringList): string;
     procedure ActualizarResultado;
@@ -65,8 +66,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    // Muestra el dialogo. Devuelve True si el usuario acepta (y deja en los
-    // parametros out el CSV de cada filtro); False si cancela (los out
+    // Muestra el diálogo. Devuelve True si el usuario acepta (y deja en los
+    // parámetros out el CSV de cada filtro); False si cancela (los out
     // conservan lo recibido, para que el llamador cargue el filtro base).
     class function Ejecutar(AOwner: TComponent; AConn: TUniConnection;
       AUmbral: Integer;
@@ -82,14 +83,12 @@ begin
   // CreateNew: sin .dfm, montamos la UI a mano en ConstruirUI.
   inherited CreateNew(AOwner);
   FCodProv := TStringList.Create;
-  FCodFam  := TStringList.Create;
   ConstruirUI;
 end;
 
 destructor TfrmModalFiltroArt.Destroy;
 begin
   FreeAndNil(FCodProv);
-  FreeAndNil(FCodFam);
   inherited;
 end;
 
@@ -111,9 +110,9 @@ begin
   Result.Height := AHeight;
   // Por defecto EditValueFormat es cvfInteger: empaqueta los estados como
   // bits de un integer y revienta con >64 items ("The number of items cannot
-  // be greater than 64"). Un catalogo real tiene cientos de proveedores/
-  // familias, asi que usamos cvfIndices (serializa los indices marcados como
-  // string, sin tope). Leemos por Items[i].State, no por EditValue.
+  // be greater than 64"). Un catálogo real tiene cientos de proveedores, así
+  // que usamos cvfIndices (serializa los índices marcados como string, sin
+  // tope). Leemos por Items[i].State, no por EditValue.
   Result.EditValueFormat := cvfIndices;
 end;
 
@@ -125,12 +124,12 @@ var
   anchoCol, topListas, altoLista, topBotones: Integer;
   pnlBot: TPanel;
 begin
-  Caption      := 'Demasiados art' + #237 + 'culos - acotar la carga';
+  Caption      := 'Demasiados artículos - acotar la carga';
   BorderStyle  := bsDialog;
   Position     := poScreenCenter;
   ClientWidth  := 680;
   ClientHeight := 488;
-  // Cabecera explicativa (multilinea)
+  // Cabecera explicativa (multilínea)
   FlblCabecera := TcxLabel.Create(Self);
   FlblCabecera.Parent := Self;
   FlblCabecera.Left   := MARGEN;
@@ -139,17 +138,15 @@ begin
   FlblCabecera.Width  := ClientWidth - 2 * MARGEN;
   FlblCabecera.Height := 52;
   FlblCabecera.Properties.WordWrap := True;
-  // Tres columnas de seleccion (temporada / proveedor / familia)
+  // Dos columnas de selección (temporada / proveedor)
   topListas := MARGEN + 60;
   altoLista := 300;
-  anchoCol  := (ClientWidth - 2 * MARGEN - 2 * GAP) div 3;
+  anchoCol  := (ClientWidth - 2 * MARGEN - GAP) div 2;
   FclbTemporada := CrearCheckList(MARGEN, topListas, anchoCol, altoLista,
                                   'Temporada');
   FclbProveedor := CrearCheckList(MARGEN + anchoCol + GAP, topListas,
                                   anchoCol, altoLista, 'Proveedor');
-  FclbFamilia   := CrearCheckList(MARGEN + 2 * (anchoCol + GAP), topListas,
-                                  anchoCol, altoLista, 'Familia');
-  // Linea de resultado + boton Calcular
+  // Línea de resultado + botón Calcular
   topBotones := topListas + 18 + altoLista + 10;
   FlblResultado := TcxLabel.Create(Self);
   FlblResultado.Parent  := Self;
@@ -161,7 +158,7 @@ begin
   FbtnCalcular.Left    := MARGEN + 220;
   FbtnCalcular.Top     := topBotones;
   FbtnCalcular.Width   := 150;
-  FbtnCalcular.Caption := 'Calcular n' + #186;
+  FbtnCalcular.Caption := 'Calcular nº';
   FbtnCalcular.OnClick := CalcularClick;
   // Panel inferior con Aceptar / Cancelar
   pnlBot := TPanel.Create(Self);
@@ -266,48 +263,6 @@ begin
   end;
 end;
 
-procedure TfrmModalFiltroArt.CargarFamilias(const aPreCsv: string);
-var
-  qry: TUniQuery;
-  pre: TStringList;
-  it: TcxCheckListBoxItem;
-  cod: string;
-begin
-  FCodFam.Clear;
-  pre := TStringList.Create;
-  qry := TUniQuery.Create(nil);
-  try
-    pre.Delimiter       := ';';
-    pre.StrictDelimiter := True;
-    pre.DelimitedText   := aPreCsv;
-    qry.Connection := FConn;
-    qry.SQL.Text :=
-      'SELECT CODIGO_FAM_FAM, ' +
-      '       COALESCE(NULLIF(DESCRIPCION_FAM, ''''), NOMBRE_FAM_FAM, ' +
-      '                CODIGO_FAM_FAM) AS NOM ' +
-      '  FROM fza_articulos_familias ' +
-      ' WHERE ESACTIVO_FAM = ''S'' ' +
-      ' ORDER BY NOM, CODIGO_FAM_FAM';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      cod := qry.FieldByName('CODIGO_FAM_FAM').AsString;
-      it := FclbFamilia.Items.Add;
-      it.Text := qry.FieldByName('NOM').AsString + ' (' + cod + ')';
-      if pre.IndexOf(cod) >= 0 then
-        it.State := cbsChecked
-      else
-        it.State := cbsUnchecked;
-      FCodFam.Add(cod);
-      qry.Next;
-    end;
-    qry.Close;
-  finally
-    FreeAndNil(qry);
-    FreeAndNil(pre);
-  end;
-end;
-
 function TfrmModalFiltroArt.CsvMarcados(AClb: TcxCheckListBox;
   ACodigos: TStringList): string;
 var
@@ -315,7 +270,7 @@ var
   val: string;
 begin
   // Para temporada (ACodigos=nil) el valor es el propio texto del item;
-  // para proveedor/familia es el codigo alineado por indice.
+  // para proveedor es el código alineado por índice.
   Result := '';
   for i := 0 to AClb.Items.Count - 1 do
     if AClb.Items[i].State = cbsChecked then
@@ -338,12 +293,11 @@ begin
   try
     n := FContar(CsvMarcados(FclbTemporada, nil),
                  CsvMarcados(FclbProveedor, FCodProv),
-                 CsvMarcados(FclbFamilia, FCodFam));
+                 FFamCsv);
   finally
     Screen.Cursor := crDefault;
   end;
-  FlblResultado.Caption := Format('Se cargar' + #225 + 'n %d art' + #237 +
-                                  'culos (l' + #237 + 'mite %d).',
+  FlblResultado.Caption := Format('Se cargarán %d artículos (límite %d).',
                                   [n, FUmbral]);
   if n > FUmbral then
     FlblResultado.Style.TextColor := clRed
@@ -368,16 +322,16 @@ begin
     try
       n := FContar(CsvMarcados(FclbTemporada, nil),
                    CsvMarcados(FclbProveedor, FCodProv),
-                   CsvMarcados(FclbFamilia, FCodFam));
+                   FFamCsv);
     finally
       Screen.Cursor := crDefault;
     end;
     if n > FUmbral then
       bSeguir := MessageDlg(
-        Format('A' + #250 + 'n se cargar' + #225 + 'n %d art' + #237 +
-               'culos, por encima del l' + #237 + 'mite recomendado de %d.' +
-               sLineBreak + 'La carga puede tardar. ' + #191 + 'Continuar ' +
-               'igualmente?', [n, FUmbral]),
+        Format('Aún se cargarán %d artículos, por encima del límite ' +
+               'recomendado de %d.' + sLineBreak +
+               'La carga puede tardar. ¿Continuar igualmente?',
+               [n, FUmbral]),
         mtWarning, [mbYes, mbNo], 0) = mrYes;
   end;
   if bSeguir then
@@ -402,21 +356,20 @@ begin
     frm.FConn   := AConn;
     frm.FUmbral := AUmbral;
     frm.FContar := AContar;
+    frm.FFamCsv := APreFamCsv;
     frm.FlblCabecera.Caption :=
-      'Hay demasiados art' + #237 + 'culos para cargarlos de golpe (m' + #225 +
-      's de ' + IntToStr(AUmbral) + '). Marque temporada, proveedor y/o ' +
-      'familia para acotar la carga; pulse "Calcular n' + #186 + '" para ver ' +
-      'cu' + #225 + 'ntos quedar' + #237 + 'an. "Aceptar" carga la selecci' +
-      #243 + 'n; "Cancelar" carga el filtro por defecto.';
+      'Hay demasiados artículos para cargarlos de golpe (más de ' +
+      IntToStr(AUmbral) + '). Marque temporada y/o proveedor para acotar la ' +
+      'carga; pulse "Calcular nº" para ver cuántos quedarían. "Aceptar" carga ' +
+      'la selección; "Cancelar" carga el filtro por defecto.';
     frm.CargarTemporadas(APreTempCsv);
     frm.CargarProveedores(APrePrvCsv);
-    frm.CargarFamilias(APreFamCsv);
     frm.ActualizarResultado;
     if frm.ShowModal = mrOk then
     begin
       aTempCsv := frm.CsvMarcados(frm.FclbTemporada, nil);
       aPrvCsv  := frm.CsvMarcados(frm.FclbProveedor, frm.FCodProv);
-      aFamCsv  := frm.CsvMarcados(frm.FclbFamilia, frm.FCodFam);
+      aFamCsv  := frm.FFamCsv;
       Result := True;
     end;
   finally
