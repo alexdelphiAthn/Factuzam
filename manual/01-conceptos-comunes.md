@@ -128,7 +128,7 @@ esa letra):
 
 **Dar de alta un registro nuevo:**
 
-1. Pulsa **Insertar registro** (o el botón de alta).
+1. Pulsa **Insertar registro**, `[Insert]`, (o el botón de alta +).
 2. Rellena los campos en la **Ficha**. Los campos obligatorios suelen estar
    marcados o se validan al grabar.
 3. Pulsa **Grabar**.
@@ -160,8 +160,7 @@ Las pantallas ofrecen dos formas de buscar:
 - **Buscar Grid** — busca **solo dentro de los datos ya cargados** en la
   rejilla.
 
-> **Aclaración sobre `[Ctrl]+[A]`:** no es un atajo genérico de búsqueda.
-> Es el **atajo de menú que abre la pantalla de Artículos** (igual que
+> **`[Ctrl]+[A]`:atajo de menú que abre la pantalla de Artículos** (igual que
 > `[Ctrl]+[P]` abre Proveedores o `[Ctrl]+[K]` abre Clientes). Cada
 > mantenimiento tiene su propio atajo de menú; los encontrarás indicados
 > en el capítulo de cada menú y resumidos en
@@ -259,13 +258,6 @@ junto a cada opción en los capítulos siguientes.
 | Hacer Copia de Seguridad | `[Ctrl]+[Y]` |
 | Recuperar Copia de Seguridad | `[Ctrl]+[Z]` |
 | Generador de Procesos | `[Ctrl]+[G]` |
-
-> Algunos atajos coinciden entre módulos (por ejemplo `[Shift]+[Ctrl]+[A]`
-> en Albaranes de compra y en Histórico de Arqueos, o `[Ctrl]+[L]` en
-> Almacenes y Países); en esos casos actúa el de la opción visible/activa
-> según el contexto. Las opciones sin atajo (Países, Unidades de Medida,
-> Empleados, Devoluciones a Proveedor, Permisos (tabla) y los informes de
-> Almacén) se abren desde el menú.
 
 ---
 

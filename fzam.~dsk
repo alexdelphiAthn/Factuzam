@@ -1,50 +1,28 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,121,38,142,0,0,,
-File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,351,8,363,0,0,,
-File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataConn.pas',0,1,22,43,34,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.pas',0,1,62,33,75,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,215,40,215,0,0,,
-File_7=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,387,32,395,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas',0,1,1,1,1,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTraspasoOpe.pas',0,1,1313,1,1315,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',0,1,470,33,478,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,1679,21,1690,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas',0,1,24,69,27,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,639,31,639,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas',0,1,255,31,274,0,0,,
+File_4=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,111,1,123,0,0,{{67,0},{100,11},{'internal'}}{{312,4},{1763,34},{'for internal use'}},
+File_5=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas',0,1,83,28,95,0,0,,
+File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpMovVentasArt.pas',0,1,1,39,1,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,121,38,142,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,351,8,363,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.pas',0,1,62,33,75,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
+File_12=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
+File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,387,32,395,0,0,,
+File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas',0,1,1,1,1,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas
-Module1=C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas
-Module2=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas
-Module3=C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas
-Module4=C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas
-Count=5
+Count=0
 EditWindowCount=1
 
-[C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas]
-ModuleType=TSourceModule
-
-[C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas]
-ModuleType=TSourceModule
-
-[C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas]
-ModuleType=TSourceModule
-
-[C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas]
-ModuleType=TSourceModule
-
-[C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas]
-ModuleType=TSourceModule
-
 [EditWindow0]
-ViewCount=6
-CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas
+ViewCount=1
+CurrentView=0
 View0=0
-View1=1
-View2=2
-View3=3
-View4=4
-View5=5
 PercentageSizes=1
 Create=1
 Visible=1
@@ -81,61 +59,6 @@ BottomMiddelPanelData=0000080001020200000009000000446F636B5369746530100000004772
 [View0]
 CustomEditViewType=TOTACustomEditView
 OTAEditViewType=WelcomePage.MainPage
-
-[View1]
-CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas
-CursorX=69
-CursorY=27
-TopLine=24
-LeftCol=1
-Elisions=
-Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas
-
-[View2]
-CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas
-CursorX=14
-CursorY=678
-TopLine=664
-LeftCol=1
-Elisions=
-Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas
-
-[View3]
-CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas
-CursorX=1
-CursorY=179
-TopLine=168
-LeftCol=1
-Elisions=
-Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas
-
-[View4]
-CustomEditViewType=TEditView
-Module=C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas
-CursorX=28
-CursorY=95
-TopLine=83
-LeftCol=1
-Elisions=
-Bookmarks=
-EditViewName=C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas
-
-[View5]
-CustomEditViewType=TEditView
-Module=C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas
-CursorX=1
-CursorY=123
-TopLine=111
-LeftCol=1
-Elisions={{67,0},{100,11},{'internal'}}{{312,4},{1763,34},{'for internal use'}}
-Bookmarks=
-EditViewName=C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas
 
 [Watches]
 Count=0
@@ -280,7 +203,7 @@ ClientWidth=1526
 ClientHeight=4105
 PixelsPerInch=120
 MonitorNum=0
-TBDockHeight=8561
+TBDockHeight=6851
 LRDockWidth=1526
 Dockable=1
 StayOnTop=0
@@ -630,7 +553,7 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=950
+Left=0
 Top=36
 Width=3823
 Height=1421
@@ -666,7 +589,7 @@ ClientWidth=1500
 ClientHeight=4526
 PixelsPerInch=120
 MonitorNum=0
-TBDockHeight=8561
+TBDockHeight=6851
 LRDockWidth=1500
 Dockable=1
 StayOnTop=0
@@ -692,7 +615,7 @@ ClientWidth=1526
 ClientHeight=2333
 PixelsPerInch=120
 MonitorNum=0
-TBDockHeight=8561
+TBDockHeight=6851
 LRDockWidth=1526
 Dockable=1
 StayOnTop=0
@@ -718,7 +641,7 @@ ClientWidth=1500
 ClientHeight=1912
 PixelsPerInch=120
 MonitorNum=0
-TBDockHeight=8561
+TBDockHeight=6851
 LRDockWidth=1500
 Dockable=1
 StayOnTop=0
