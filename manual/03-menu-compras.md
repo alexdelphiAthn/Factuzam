@@ -28,6 +28,8 @@ Compras
 
 ## Sesiones ▸ Crear artículos y un pedido o un albarán
 
+**Atajo de menú:** `[Ctrl]+[S]`
+
 Asistente de **alta rápida de compra**. Pensado para cuando llega género
 nuevo del proveedor: en una sola pantalla das de alta los artículos (con
 sus colores y tallas), fijas precios de compra y venta, y al terminar la
@@ -174,6 +176,8 @@ a un proveedor (todavía no ha llegado, no mueve stock).
 ![Pedidos de compra](img/03-pedidos-compra.png)
 *▢ Captura pendiente — Mantenimiento de Pedidos de Compra.*
 
+**Atajo de menú:** `[Shift]+[Ctrl]+[P]`
+
 Un pedido tiene una **cabecera** (proveedor, fecha, almacén de destino,
 forma de pago) y un **detalle de líneas** (artículo/SKU, cantidades por
 talla, precio). Desde el pedido se puede generar el **albarán de compra**
@@ -189,6 +193,8 @@ indicado.
 
 ![Albaranes de compra](img/03-albaranes-compra.png)
 *▢ Captura pendiente — Mantenimiento de Albaranes de Compra.*
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[A]`
 
 Puede crearse:
 
@@ -210,6 +216,8 @@ stock** del almacén y sirve de base para el **abono** del proveedor.
 ![Devoluciones a proveedor](img/03-devoluciones.png)
 *▢ Captura pendiente — Mantenimiento de Devoluciones a Proveedor.*
 
+*(Sin atajo de menú; se abre desde el menú.)*
+
 ---
 
 ## Facturas
@@ -220,6 +228,8 @@ albaranes recibidos.
 
 ![Facturas de compra](img/03-facturas-compra.png)
 *▢ Captura pendiente — Mantenimiento de Facturas de compra.*
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[Alt]+[F]`
 
 ---
 
@@ -234,6 +244,8 @@ Sub-pestañas: **Más Datos**, **Ventas** (uso en ventas) y **Otros**.
 
 ![Formas de pago](img/03-formas-pago.png)
 *▢ Captura pendiente — Catálogo de formas de pago.*
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[G]`
 
 ---
 

@@ -25,6 +25,8 @@ Caja
 
 ## Menú de Caja
 
+**Atajo de menú:** `[F5]`
+
 Es la **pantalla principal del TPV**, diseñada para trabajar con **teclado**
 y rapidez en el mostrador. Muestra la **Empresa**, la **caja activa**
 (empresa/almacén/caja) y la **Fecha de Caja** de la jornada, junto con el
@@ -252,6 +254,8 @@ cuadrar el datáfono.
 
 ## Parámetros de Caja
 
+**Atajo de menú:** `[Ctrl]+[F5]`
+
 Configuración del comportamiento del TPV: caja por defecto, impresora de
 tickets, formas de pago habilitadas, textos del ticket, redondeos, etc.
 Normalmente lo configura el responsable al instalar la tienda.
@@ -262,6 +266,8 @@ Normalmente lo configura el responsable al instalar la tienda.
 ---
 
 ## Formas de Pago Caja
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[Q]`
 
 Define las **formas de pago admitidas en el TPV** y cómo se comporta cada
 una en el cobro y en el arqueo.
@@ -289,6 +295,8 @@ Campos de cada forma de pago:
 
 ## Depósitos de Clientes
 
+**Atajo de menú:** `[Ctrl]+[D]`
+
 Gestiona los **depósitos/anticipos** de clientes: dinero entregado a cuenta
 (señales, reservas) que luego se aplica a una venta (tecla **F2 Cargar
 cta.** en el TPV). Lleva el saldo disponible por cliente.
@@ -299,6 +307,8 @@ cta.** en el TPV). Lleva el saldo disponible por cliente.
 ---
 
 ## Histórico de Pagos de Caja
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[J]`
 
 Consulta de todos los **cobros y pagos** registrados en la caja, con sus
 formas de pago e importes. Permite filtrar por fechas y revisar el detalle
@@ -311,6 +321,8 @@ del efectivo movido.
 
 ## Histórico de Vales
 
+**Atajo de menú:** `[Shift]+[Ctrl]+[V]`
+
 Consulta de los **vales** emitidos (por devoluciones de cliente sin
 reembolso en efectivo) y su estado (pendiente, canjeado, caducado).
 
@@ -320,6 +332,8 @@ reembolso en efectivo) y su estado (pendiente, canjeado, caducado).
 ---
 
 ## Histórico de Operaciones
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[O]`
 
 Consulta del **registro completo de operaciones** del TPV: ventas,
 devoluciones, entradas de cambio, gastos, traspasos… con su trazabilidad.
@@ -332,6 +346,8 @@ Es la vista de auditoría de la actividad de caja.
 
 ## Histórico de Arqueos
 
+**Atajo de menú:** `[Shift]+[Ctrl]+[A]`
+
 Consulta de los **arqueos** (cierres de caja) realizados: efectivo contado,
 descuadres, fecha, usuario. Permite revisar el cuadre de cada jornada.
 También accesible desde el propio arqueo con **F8**.
@@ -342,6 +358,8 @@ También accesible desde el propio arqueo con **F8**.
 ---
 
 ## Facturas Simplificadas
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[F]`
 
 Mantenimiento de las **Facturas Simplificadas (tickets)** generadas en
 caja. Permite consultarlas, reimprimirlas y, cuando proceda, **convertir un

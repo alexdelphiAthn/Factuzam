@@ -160,8 +160,12 @@ Las pantallas ofrecen dos formas de buscar:
 - **Buscar Grid** — busca **solo dentro de los datos ya cargados** en la
   rejilla.
 
-Atajo rápido: en muchas pantallas, `[Ctrl]+[A]` abre la instancia de
-búsqueda con el filtro «Todos» para localizar cualquier registro.
+> **Aclaración sobre `[Ctrl]+[A]`:** no es un atajo genérico de búsqueda.
+> Es el **atajo de menú que abre la pantalla de Artículos** (igual que
+> `[Ctrl]+[P]` abre Proveedores o `[Ctrl]+[K]` abre Clientes). Cada
+> mantenimiento tiene su propio atajo de menú; los encontrarás indicados
+> en el capítulo de cada menú y resumidos en
+> [Atajos de menú](#7-atajos-de-menu).
 
 ---
 
@@ -172,6 +176,96 @@ búsqueda con el filtro «Todos» para localizar cualquier registro.
 - Los documentos (facturas, albaranes, pedidos…) y los informes generan
   **vistas previas imprimibles** (FastReport) desde las que se imprime o se
   exporta a PDF.
+
+---
+
+## 7. Atajos de menú
+
+Cada opción de la barra de menú tiene un **atajo de teclado** que abre esa
+pantalla directamente, estés donde estés. Estos atajos se indican también
+junto a cada opción en los capítulos siguientes.
+
+### Archivo
+
+| Pantalla | Atajo |
+|----------|-------|
+| Empresas | `[Ctrl]+[E]` |
+| Almacenes | `[Ctrl]+[L]` |
+| Clientes | `[Ctrl]+[K]` |
+| Proveedores | `[Ctrl]+[P]` |
+| Artículos | `[Ctrl]+[A]` |
+| Tarifas | `[Ctrl]+[T]` |
+| Familias | `[Ctrl]+[N]` |
+| Propiedades | `[Ctrl]+[Y]` |
+| Tipos de Variaciones | `[Ctrl]+[Alt]+[T]` |
+| Colecciones de Atributos | `[Ctrl]+[Alt]+[S]` |
+| Atributos básicos | `[Ctrl]+[Alt]+[B]` |
+| Invocar login | `[Shift]+[Ctrl]+[L]` |
+| Salir | `[Alt]+[F4]` |
+
+### Compras
+
+| Pantalla | Atajo |
+|----------|-------|
+| Sesiones (crear artículos y documento) | `[Ctrl]+[S]` |
+| Pedidos | `[Shift]+[Ctrl]+[P]` |
+| Albaranes | `[Shift]+[Ctrl]+[A]` |
+| Facturas | `[Shift]+[Ctrl]+[Alt]+[F]` |
+| Formas de pago | `[Shift]+[Ctrl]+[G]` |
+
+### Ventas Mayor
+
+| Pantalla | Atajo |
+|----------|-------|
+| Facturas | `[Ctrl]+[Alt]+[F]` |
+| Formas de pago | `[Ctrl]+[Alt]+[G]` |
+| Pedidos | `[Ctrl]+[Alt]+[P]` |
+| Albaranes | `[Ctrl]+[Alt]+[A]` |
+| Listados de ventas | `[Ctrl]+[Alt]+[V]` |
+
+### Caja
+
+| Pantalla | Atajo |
+|----------|-------|
+| Menú de Caja | `[F5]` |
+| Parámetros de Caja | `[Ctrl]+[F5]` |
+| Formas de Pago Caja | `[Shift]+[Ctrl]+[Q]` |
+| Depósitos de Clientes | `[Ctrl]+[D]` |
+| Histórico de Pagos de Caja | `[Shift]+[Ctrl]+[J]` |
+| Histórico de Vales | `[Shift]+[Ctrl]+[V]` |
+| Histórico de Operaciones | `[Shift]+[Ctrl]+[O]` |
+| Histórico de Arqueos | `[Shift]+[Ctrl]+[A]` |
+| Facturas Simplificadas | `[Shift]+[Ctrl]+[F]` |
+
+### Almacén
+
+| Pantalla | Atajo |
+|----------|-------|
+| Movimientos de almacén | `[Ctrl]+[M]` |
+| Inventarios | `[Ctrl]+[Alt]+[I]` |
+
+### Otros
+
+| Pantalla | Atajo |
+|----------|-------|
+| Parámetros del entorno | `[Ctrl]+[F10]` |
+| Grupos de IVA | `[Ctrl]+[O]` |
+| Impuesto IVA | `[Ctrl]+[I]` |
+| Contadores | `[Ctrl]+[R]` |
+| Usuarios | `[Ctrl]+[H]` |
+| Grupos | `[Ctrl]+[J]` |
+| Perfiles | `[Ctrl]+[W]` |
+| Permisos | `[Ctrl]+[Q]` |
+| Hacer Copia de Seguridad | `[Ctrl]+[Y]` |
+| Recuperar Copia de Seguridad | `[Ctrl]+[Z]` |
+| Generador de Procesos | `[Ctrl]+[G]` |
+
+> Algunos atajos coinciden entre módulos (por ejemplo `[Shift]+[Ctrl]+[A]`
+> en Albaranes de compra y en Histórico de Arqueos, o `[Ctrl]+[L]` en
+> Almacenes y Países); en esos casos actúa el de la opción visible/activa
+> según el contexto. Las opciones sin atajo (Países, Unidades de Medida,
+> Empleados, Devoluciones a Proveedor, Permisos (tabla) y los informes de
+> Almacén) se abren desde el menú.
 
 ---
 
