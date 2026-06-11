@@ -24,7 +24,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, MemDS, DBAccess, Uni,
+  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, Data.DB, MemDS,
+  DBAccess, Uni,
   inMtoFrmBase, JvComponentBase, JvEnterTab,
   cxClasses, cxLocalization, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
@@ -40,6 +41,8 @@ type
     txtEmpresa:      TcxTextEdit;
     lblProveedor:    TcxLabel;
     txtProveedor:    TcxTextEdit;
+    btnBuscarEmpresa:   TBitBtn;
+    btnBuscarProveedor: TBitBtn;
     btnCargar:       TcxButton;
     lblNombrePrv:    TcxLabel;
     rgModo:          TcxRadioGroup;
@@ -60,6 +63,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnCargarClick(Sender: TObject);
+    procedure btnBuscarEmpresaClick(Sender: TObject);
+    procedure btnBuscarProveedorClick(Sender: TObject);
     procedure btnFacturarClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure rgModoPropertiesEditValueChanged(Sender: TObject);
@@ -92,7 +97,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibUser;
+  inLibGlobalVar, inLibUser, inLibGenBusq;
 
 {$R *.dfm}
 
@@ -251,6 +256,32 @@ begin
     if FQryAlb.IsEmpty then
       ShowMessage('No hay albaranes pendientes de facturar para ese ' +
                   'proveedor.');
+  end;
+end;
+
+procedure TfrmModalFacturarAlbaranes.btnBuscarEmpresaClick(Sender: TObject);
+var
+  sVal: string;
+begin
+  inherited;
+  // Caja de busqueda modal generica (TfrmMtoSearch via inLibGenBusq).
+  if TBusquedaUtils.EjecutarBusqueda('Buscar empresa',
+       'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
+       'CODIGO_EMP_EMP', sVal, 'srchEmpFacAlb', Self) then
+    txtEmpresa.Text := sVal;
+end;
+
+procedure TfrmModalFacturarAlbaranes.btnBuscarProveedorClick(Sender: TObject);
+var
+  sVal: string;
+begin
+  inherited;
+  if TBusquedaUtils.EjecutarBusqueda('Buscar proveedor',
+       'SELECT * FROM fza_proveedores ORDER BY NOMBRE_PRV',
+       'CODIGO_PRV_PRV', sVal, 'srchPrvFacAlb', Self) then
+  begin
+    txtProveedor.Text := sVal;
+    CargarProveedorNombre(sVal);
   end;
 end;
 
