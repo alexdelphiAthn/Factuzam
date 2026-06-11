@@ -424,6 +424,79 @@ inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
                 Width = 929
               end
             end
+            object tsEfectos: TcxTabSheet
+              Caption = 'Efectos'
+              object pnlEfectosTop: TPanel
+                Left = 0
+                Top = 0
+                Width = 929
+                Height = 36
+                Align = alTop
+                BevelOuter = bvNone
+                TabOrder = 0
+                object btnGenerarEfectos: TcxButton
+                  Left = 8
+                  Top = 5
+                  Width = 160
+                  Height = 26
+                  Caption = 'Generar efectos'
+                  TabOrder = 0
+                  OnClick = btnGenerarEfectosClick
+                end
+              end
+              object cxgrdEfectos: TcxGrid
+                Left = 0
+                Top = 36
+                Width = 929
+                Height = 311
+                Align = alClient
+                TabOrder = 1
+                object tvEfectos: TcxGridDBTableView
+                  OptionsData.Deleting = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.GroupByBox = False
+                  object colEfeNumero: TcxGridDBColumn
+                    Caption = 'Nro'
+                    DataBinding.FieldName = 'NUMERO_EFEC'
+                    Width = 50
+                  end
+                  object colEfeTipo: TcxGridDBColumn
+                    Caption = 'Tipo'
+                    DataBinding.FieldName = 'CODIGO_TEFE_EFEC'
+                    Width = 110
+                  end
+                  object colEfeVto: TcxGridDBColumn
+                    Caption = 'Vencimiento'
+                    DataBinding.FieldName = 'FECHA_VENCIMIENTO_EFEC'
+                    Width = 110
+                  end
+                  object colEfeImporte: TcxGridDBColumn
+                    Caption = 'Importe'
+                    DataBinding.FieldName = 'IMPORTE_EFEC'
+                    Width = 100
+                  end
+                  object colEfePagado: TcxGridDBColumn
+                    Caption = 'Pagado'
+                    DataBinding.FieldName = 'IMPORTE_PAGADO_EFEC'
+                    Width = 100
+                  end
+                  object colEfePendiente: TcxGridDBColumn
+                    Caption = 'Pendiente'
+                    DataBinding.FieldName = 'IMPORTE_PENDIENTE_EFEC'
+                    Width = 100
+                  end
+                  object colEfeEstado: TcxGridDBColumn
+                    Caption = 'Estado'
+                    DataBinding.FieldName = 'ESTADO_EFEC'
+                    Width = 100
+                  end
+                end
+                object lvlEfectos: TcxGridLevel
+                  GridView = tvEfectos
+                end
+              end
+            end
           end
         end
         object pnlBottomTotales: TPanel

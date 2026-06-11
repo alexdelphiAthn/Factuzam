@@ -32,6 +32,8 @@ type
   TdmFacturasCompra = class(TdmBase)
     unqryFacturasCompraLineas: TUniQuery;
     dsFacturasCompraLineas:    TDataSource;
+    unqryEfectos:              TUniQuery;
+    dsEfectos:                 TDataSource;
     unqryEmpDataFacc:           TUniQuery;
     unqryPrvDataFacc:           TUniQuery;
     unqryArtDataLinFacc:        TUniQuery;
@@ -76,6 +78,10 @@ type
   public
     procedure GetCodigoAutoFacturaCompra;
     procedure CalcularTotalesFacturaCompra;
+    // Genera los efectos de pago de la factura activa segun su forma de pago
+    // (PRC_EFEC_GENERAR_DESDE_FACTURA) y refresca la rejilla. Devuelve nº de
+    // efectos generados, 0 si nada, -1 sin factura activa / error.
+    function GenerarEfectos: Integer;
     // Abre unqryCabFaccPrint y unqryLinFaccPrint con los parametros
     // del factura a imprimir. Mismo nombre/firma que en sesiones.
     procedure PrepararPrint(const ASerie, ANumero: string);
@@ -126,6 +132,9 @@ begin
   // entera y filtrar en cliente.
   unqryFacturasCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoFacturasCompra>).dsTablaG;
+  unqryEfectos.Connection := inLibGlobalVar.oConn;
+  unqryEfectos.MasterSource :=
+    (GetOwnerForm<TfrmMtoFacturasCompra>).dsTablaG;
 end;
 
 procedure TdmFacturasCompra.DataModuleDestroy(Sender: TObject);
@@ -173,7 +182,51 @@ begin
   sw := TStopwatch.StartNew;
   AbrirConTiempo(unqryFacturasCompraLineas,
                  'unqryFacturasCompraLineas');
+  AbrirConTiempo(unqryEfectos, 'unqryEfectos');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+function TdmFacturasCompra.GenerarEfectos: Integer;
+var
+  sp: TUniStoredProc;
+  sSerie, sNumero: string;
+begin
+  Result := -1;
+  if (unqryTablaG <> nil) and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+  begin
+    // El SP lee de BBDD: aseguramos la cabecera grabada antes de generar.
+    if unqryTablaG.State in [dsEdit, dsInsert] then
+    begin
+      CalcularTotalesFacturaCompra;
+      unqryTablaG.Post;
+    end;
+    sSerie  := unqryTablaG.FieldByName('SERIE_FACC').AsString;
+    sNumero := unqryTablaG.FieldByName('NUMERO_FACC').AsString;
+    sp := TUniStoredProc.Create(nil);
+    try
+      sp.Connection     := inLibGlobalVar.oConn;
+      sp.StoredProcName := 'PRC_EFEC_GENERAR_DESDE_FACTURA';
+      sp.Params.Clear;
+      sp.Params.CreateParam(ftString,  'p_SERIE',     ptInput);
+      sp.Params.CreateParam(ftString,  'p_NUMERO',    ptInput);
+      sp.Params.CreateParam(ftString,  'p_USUARIO',   ptInput);
+      sp.Params.CreateParam(ftInteger, 'p_RESULTADO', ptOutput);
+      sp.ParamByName('p_SERIE').AsString   := sSerie;
+      sp.ParamByName('p_NUMERO').AsString  := sNumero;
+      sp.ParamByName('p_USUARIO').AsString := oUser;
+      sp.ExecProc;
+      Result := sp.ParamByName('p_RESULTADO').AsInteger;
+    finally
+      FreeAndNil(sp);
+    end;
+    // Refrescar la rejilla de efectos.
+    if Assigned(unqryEfectos) then
+    begin
+      unqryEfectos.Close;
+      unqryEfectos.Open;
+    end;
+  end;
 end;
 
 procedure TdmFacturasCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
