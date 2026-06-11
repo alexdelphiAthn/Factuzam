@@ -27,7 +27,9 @@ uses
   inLibMigArticulosPropiedades in 'inLibMigArticulosPropiedades.pas',
   inLibMigArticulosTarifas in 'inLibMigArticulosTarifas.pas',
   inLibMigEntorno in 'inLibMigEntorno.pas',
-  inLibMigCompras in 'inLibMigCompras.pas';
+  inLibMigCompras in 'inLibMigCompras.pas',
+  inLibMigFotos in 'inLibMigFotos.pas',
+  inLibPathTokens in '..\Lib\inLibPathTokens.pas';
 
 {$R *.res}
 
