@@ -116,4 +116,36 @@ inherited dmPedidosCompra: TdmPedidosCompra
     Left = 360
     Top = 160
   end
+  object unqryAlbaranesPedc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ESTADO_ALBC,'
+      '       REF_PROVEEDOR_ALBC, TOTAL_LIQUIDO_ALBC'
+      '  FROM fza_albaranes_compra'
+      ' WHERE NUMERO_PED_ALBC = :NUMERO_PEDC'
+      '   AND SERIE_PED_ALBC  = :SERIE_PEDC'
+      ' ORDER BY FECHA_ALBC DESC, NUMERO_ALBC DESC')
+    MasterFields = 'NUMERO_PEDC;SERIE_PEDC'
+    DetailFields = 'NUMERO_PED_ALBC;SERIE_PED_ALBC'
+    Left = 360
+    Top = 224
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'NUMERO_PEDC'
+        ParamType = ptInput
+        Value = nil
+      end
+      item
+        DataType = ftWideString
+        Name = 'SERIE_PEDC'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsAlbaranesPedc: TDataSource
+    DataSet = unqryAlbaranesPedc
+    Left = 360
+    Top = 288
+  end
 end
