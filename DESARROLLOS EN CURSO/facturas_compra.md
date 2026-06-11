@@ -114,3 +114,59 @@ recalcula bases, impuestos, total, retención y líquido.
 - Las stored procedures **no se han podido probar contra una BBDD viva** en
   esta entrega: revisar con datos reales antes de cablear el Mto.
 - **No** toca `factuzam_original.sql` (regla dura del repo).
+
+
+---
+
+## Estado de esta entrega (capa Delphi)
+
+Hecho y cableado (requiere **una pasada de compilacion en el IDE**, este
+entorno no compila VCL):
+
+- `inMtoFacturasCompra` + `UniDataFacturasCompra` — Mto de factura de compra
+  (cabecera + lineas, snapshot de albaran, tallas en horizontal). Espejo de
+  `inMtoDevolucionesCompra` **sin** movimientos de stock ni impresion.
+- `inMtoEfectosCompra` / `inMtoRemesasCompra` (+ datamodules) — rejillas de
+  consulta sobre `vi_efectos_compra` / `vi_remesas_compra`.
+- `fzam.dpr`, menu `Compras` (Facturas / Efectos de pago / Remesas de pago)
+  y `fza_winforms` cableados.
+
+### Pendiente: modal "Facturar albaranes" (spec lista para construir)
+
+Es la unica pieza de UI que falta. No se incluye un .dfm a ciegas porque
+una rejilla de seleccion DevExpress sin compilar es el artefacto de mayor
+riesgo; la logica de negocio YA esta hecha en `PRC_FACC_FACTURAR_ALBARAN`.
+
+Diseno recomendado (`inMtoModalFacturarAlbaranes`, descendiente de
+`TfrmBase`, patron de `inMtoModalCrearAlbaranSesion`):
+
+1. Lookup de **proveedor** + **empresa** y boton *Cargar*.
+2. `cxGrid` con los albaranes candidatos:
+   `SELECT NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, REF_PROVEEDOR_ALBC,
+           TOTAL_LIQUIDO_ALBC
+      FROM fza_albaranes_compra
+     WHERE CODIGO_PRV_ALBC = :prv AND CODIGO_EMP_ALBC = :emp
+       AND COALESCE(ESTADO_ALBC,'') NOT IN ('FACTURADO','CANCELADO')`
+   con columna de seleccion (multiselect / checkbox).
+3. Boton **Facturar seleccionados**: por cada albaran marcado llama al SP,
+   pasando la MISMA factura destino para agrupar (la 1a llamada la crea):
+
+   ```pascal
+   sp.StoredProcName := 'PRC_FACC_FACTURAR_ALBARAN';
+   // 1a iteracion: p_SERIE_FAC = '', p_NUMERO_FAC = '' (crea factura)
+   // siguientes:   p_SERIE_FAC/p_NUMERO_FAC = los OUT de la 1a llamada
+   sp.ParamByName('p_SERIE_ALB').AsString  := SerieAlb;
+   sp.ParamByName('p_NUMERO_ALB').AsString := NumAlb;
+   sp.ParamByName('p_SERIE_FAC').AsString  := SerieFacAcum;   // '' la 1a vez
+   sp.ParamByName('p_NUMERO_FAC').AsString := NumFacAcum;     // '' la 1a vez
+   sp.ParamByName('p_USUARIO').AsString    := oUser;
+   sp.ExecProc;
+   SerieFacAcum := sp.ParamByName('p_SERIE_FAC_OUT').AsString;
+   NumFacAcum   := sp.ParamByName('p_NUMERO_FAC_OUT').AsString;
+   ```
+4. Al terminar, abrir la factura resultante (`ShowMto(... 'FacturasCompra')`
+   posicionada en `SerieFacAcum/NumFacAcum`) y, si se quiere, generar los
+   efectos con `PRC_EFEC_GENERAR_DESDE_FACTURA`.
+
+Lanzarlo desde un boton nuevo en el panel de acciones de
+`inMtoFacturasCompra` o como item de menu `Compras -> Facturar albaranes`.

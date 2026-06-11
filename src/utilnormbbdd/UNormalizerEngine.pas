@@ -250,6 +250,7 @@ begin
   AddSuf('fza_empresas_series',                 'EMPSER');
   AddSuf('fza_facturas',                        'FAC');
   AddSuf('fza_facturas_compra',                 'FACC');
+  AddSuf('fza_facturas_compra_celdas',          'FACCCEL');
   AddSuf('fza_facturas_compra_lineas',          'FACCLIN');
   AddSuf('fza_facturas_consolidaciones',        'FACCON');
   AddSuf('fza_facturas_lineas',                 'FACLIN');
@@ -377,6 +378,7 @@ begin
   AddOwn('fza_config_campos',                  ['CAMPO']);
   AddOwn('fza_valores_defecto',                ['DEFECTO']);
   AddOwn('fza_facturas_compra',                ['FACTURA','COMPRA']);
+  AddOwn('fza_facturas_compra_celdas',         ['FACTURA','COMPRA','CELDA']);
   AddOwn('fza_facturas_compra_lineas',         ['FACTURA','COMPRA','LINEA']);
   AddOwn('fza_efectos_compra',                 ['EFECTO','COMPRA']);
   AddOwn('fza_efectos_compra_pagos',           ['EFECTO','COMPRA','PAGO']);
