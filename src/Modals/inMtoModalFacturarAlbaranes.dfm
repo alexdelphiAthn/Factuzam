@@ -109,7 +109,6 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
         OptionsData.Deleting = False
         OptionsData.Editing = False
         OptionsData.Inserting = False
-        OptionsSelection.CheckBoxVisible = True
         OptionsSelection.MultiSelect = True
         OptionsView.GroupByBox = False
         object colAlbNumero: TcxGridDBColumn
