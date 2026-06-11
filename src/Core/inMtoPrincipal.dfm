@@ -1466,6 +1466,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       end
       object EfectosCompra1: TMenuItem
         Caption = 'Efectos de pago'
+        ShortCut = 49219
         OnClick = EfectosCompra1Click
       end
       object RemesasCompra1: TMenuItem
