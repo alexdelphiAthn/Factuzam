@@ -61,6 +61,11 @@ SKUs, los códigos de barras y el **pedido y/o albarán de compra**.
 
 Puedes aceptar el precio propuesto o corregirlo línea a línea.
 
+> El **Margen %** y el **sistema de tallas** se **proponen
+> automáticamente** a partir de los
+> [parámetros de compra del proveedor](02-menu-archivo.md#pestana-compras-parametros-de-compra-del-proveedor)
+> cuando lo eliges en la cabecera. Puedes sobrescribirlos en la sesión.
+
 ### 2. Pestaña «Líneas de Artículos»
 
 Cada línea es un **artículo + color** con su escandallo de tallas:

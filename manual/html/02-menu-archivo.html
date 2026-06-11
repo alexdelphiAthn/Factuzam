@@ -112,7 +112,52 @@ Estructura análoga a Clientes, orientada a compras.</p>
 <p>Sub-pestañas de la ficha:</p>
 <ul><li><strong>Domicilio fiscal</strong> — datos fiscales y de dirección.</li><li><strong>Artículos</strong> — artículos que suministra el proveedor (con sus</li></ul>
 <p>  referencias y precios de compra).</p>
-<ul><li><strong>Ventas</strong> — histórico/relación comercial.</li><li><strong>Más datos</strong> y <strong>Otros</strong> — información complementaria.</li></ul>
+<ul><li><strong>Ventas</strong> — histórico/relación comercial.</li><li><strong>Más datos</strong> y <strong>Otros</strong> — información complementaria.</li><li><strong>Compras</strong> — <strong>parámetros por defecto para las sesiones de compra</strong> de</li></ul>
+<p>  este proveedor (ver abajo).</p>
+<h3 id="pestana-compras-parametros-de-compra-del-proveedor">Pestaña Compras (parámetros de compra del proveedor)</h3>
+<p>Concentra valores que se <strong>proponen automáticamente</strong> cuando creas una
+<a href="03-menu-compras.html">sesión de compra</a> para este proveedor, para no
+repetirlos en cada entrada de género.</p>
+<p><img src="img/02-proveedores-compras.png" alt="Pestaña Compras del proveedor: margen, sistema de tallas y kits" loading="lazy">
+<em>▢ Captura pendiente — Pestaña Compras con los defectos y la biblioteca de kits.</em></p>
+<p><strong>Defectos para sesiones de compra:</strong></p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Para qué sirve</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Margen %</strong></td><td>Margen comercial habitual de este proveedor. Al elegirlo en una sesión de compra, se copia como margen de la sesión y sirve para <strong>calcular el precio de venta</strong> a partir del precio de compra.</td></tr>
+<tr><td><strong>Sistema de tallas</strong></td><td>El <strong>tallaje</strong> (colección de atributos de tallas) con el que suele venir el género de este proveedor. Al crear la sesión, se usa como sistema de tallas de las columnas del grid, y cada línea nueva lo hereda.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Estos valores solo <strong>se proponen</strong>; siempre puedes cambiarlos dentro de
+la sesión. Solo se copian si el proveedor los tiene rellenos.</p></blockquote>
+<p><strong>Kits de cantidades por talla:</strong></p>
+<p>Un <strong>kit</strong> es una <strong>plantilla de reparto de unidades por talla</strong> que se
+repite a menudo con ese proveedor (por ejemplo, un surtido <em>1-2-2-1</em> en
+<em>S-M-L-XL</em>). Aquí se mantiene la <strong>biblioteca de kits</strong> del proveedor para
+luego aplicarlos de un clic en las sesiones de compra.</p>
+<p>La pestaña tiene dos rejillas: la de <strong>kits</strong> (cabecera) y la de <strong>tallas
+del kit</strong> (detalle).</p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Acción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>+ Kit / − Kit</strong></td><td>Crea o borra un kit. Cada kit tiene <strong>Código</strong>, <strong>Nombre</strong>, <strong>Sistema de tallas</strong> y <strong>Descripción</strong>.</td></tr>
+<tr><td><strong>Tallas del sistema</strong></td><td>Rellena el detalle del kit con <strong>una fila por cada talla</strong> del sistema de tallas elegido (todas con cantidad 0), listas para teclear las unidades.</td></tr>
+<tr><td><strong>+ Talla / − Talla</strong></td><td>Añade o quita filas de talla del kit a mano.</td></tr>
+</tbody>
+</table>
+<p>Cada línea de detalle es una <strong>Talla</strong> con su <strong>Cantidad</strong> y un <strong>Orden</strong>
+de presentación.</p>
+<blockquote><p><strong>Cómo se usan los kits:</strong> dentro de una sesión de compra, sobre la línea
+de un artículo, el botón <strong>Aplicar kit</strong> vuelca las cantidades del kit en
+la matriz de tallas de esa línea. Así, en lugar de teclear talla a talla,
+aplicas el surtido completo de golpe. Es ideal cuando el proveedor sirve
+packs con un reparto de tallas estándar.</p></blockquote>
 <hr>
 <h2 id="articulos">Artículos</h2>
 <p><img src="img/02-articulos.png" alt="Ficha de Artículos con la pestaña SKUs" loading="lazy">
