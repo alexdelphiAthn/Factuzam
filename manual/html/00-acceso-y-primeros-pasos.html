@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 · Acceso y primeros pasos — Manual de Factuzam</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual de usuario</span></div>
+<ul><li><a href="index.html">Inicio</a></li><li class="activo"><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="00-acceso-y-primeros-pasos">00 · Acceso y primeros pasos</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>Este capítulo describe lo que ocurre desde que arrancas Factuzam hasta que
+tienes la ventana principal lista para trabajar.</p>
+<hr>
+<h2 id="1-pantalla-de-presentacion-splash">1. Pantalla de presentación (Splash)</h2>
+<p>Al ejecutar la aplicación se muestra durante unos segundos la pantalla de
+presentación con el logotipo y el <strong>número de versión</strong>. Es informativa; no
+requiere ninguna acción. La misma pantalla puede consultarse en cualquier
+momento desde <em>Ayuda ▸ Acerca de</em>.</p>
+<p><img src="img/00-splash.png" alt="Pantalla de presentación" loading="lazy">
+<em>▢ Captura pendiente — Pantalla de presentación (Splash).</em></p>
+<hr>
+<h2 id="2-inicio-de-sesion-login">2. Inicio de sesión (Login)</h2>
+<p>A continuación aparece la ventana <strong>Login FactuZam</strong>:</p>
+<p><img src="img/00-login.png" alt="Ventana de login" loading="lazy">
+<em>▢ Captura pendiente — Ventana de login.</em></p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Usuario</strong></td><td>Nombre de usuario de la aplicación.</td></tr>
+<tr><td><strong>Contraseña</strong></td><td>Clave del usuario.</td></tr>
+<tr><td><strong>Recordar Usuario</strong></td><td>Guarda el usuario para el próximo arranque.</td></tr>
+<tr><td><strong>Recordar Contraseña</strong></td><td>Guarda también la contraseña (úsalo solo en equipos de confianza).</td></tr>
+<tr><td><strong>Arranque sin login</strong></td><td>Si se marca, la aplicación entra directamente la próxima vez sin pedir credenciales.</td></tr>
+</tbody>
+</table>
+<p><strong>Botones:</strong></p>
+<ul><li><strong>Aceptar (F12)</strong> — valida las credenciales y entra a la aplicación.</li><li><strong>Salir (Esc)</strong> — cierra la aplicación sin entrar.</li></ul>
+<blockquote><p>El usuario determina tu <strong>perfil de permisos</strong>, que decide qué menús y
+qué acciones tienes disponibles dentro de la aplicación.</p></blockquote>
+<hr>
+<h2 id="3-configuracion-de-la-base-de-datos">3. Configuración de la base de datos</h2>
+<p>Desde la propia ventana de login, el botón <strong>Configurar Base de Datos ▸</strong>
+despliega el panel <strong>Configuración BBDD</strong>. Aquí se indican los datos de
+conexión al servidor <strong>MariaDB/MySQL</strong> donde residen los datos:</p>
+<p><img src="img/00-config-bbdd.png" alt="Panel de configuración de BBDD" loading="lazy">
+<em>▢ Captura pendiente — Login con el panel Configuración BBDD desplegado.</em></p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Host</strong></td><td>Servidor donde está la base de datos (p. ej. <code>localhost</code> o una IP).</td></tr>
+<tr><td><strong>Puerto</strong></td><td>Puerto del servidor (MariaDB usa <code>3306</code> por defecto).</td></tr>
+<tr><td><strong>Nombre BD</strong></td><td>Nombre de la base de datos de Factuzam.</td></tr>
+<tr><td><strong>Usuario</strong></td><td>Usuario de la base de datos.</td></tr>
+<tr><td><strong>Contraseña</strong></td><td>Clave del usuario de la base de datos.</td></tr>
+</tbody>
+</table>
+<p><strong>Botones del panel:</strong></p>
+<ul><li><strong>Probar Conexión</strong> — comprueba que los datos son correctos y que el</li></ul>
+<p>  servidor responde, sin necesidad de entrar.</p>
+<ul><li><strong>Configurar/cambiar credenciales del servidor</strong> (<code>...</code>) — utilidades</li></ul>
+<p>  avanzadas de administración de la conexión.</p>
+<blockquote><p>Esta configuración normalmente la realiza <strong>una sola vez el instalador o
+administrador</strong>. Un usuario habitual no necesita tocarla. Si al arrancar
+aparece un error de conexión, avisa al administrador antes de cambiar
+nada aquí.</p></blockquote>
+<hr>
+<h2 id="4-la-ventana-principal">4. La ventana principal</h2>
+<p>Tras validar el login se muestra la ventana principal de Factuzam, con:</p>
+<p><img src="img/00-principal.png" alt="Ventana principal" loading="lazy">
+<em>▢ Captura pendiente — Ventana principal con varias pestañas abiertas.</em></p>
+<ul><li>La <strong>barra de menú</strong> en la parte superior (Archivo, Compras, Ventas</li></ul>
+<p>  Mayor, Caja, Almacén, Otros, Ayuda). Es el eje de navegación de toda la
+  aplicación y la estructura que sigue este manual.</p>
+<ul><li>Un <strong>área de trabajo con pestañas</strong>: cada opción de menú que abres se</li></ul>
+<p>  carga como una pestaña dentro de la ventana principal, de modo que
+  puedes tener varias pantallas abiertas a la vez y cambiar entre ellas.</p>
+<ul><li>Una <strong>barra de estado</strong> inferior con información de contexto (usuario,</li></ul>
+<p>  empresa activa, versión…).</p>
+<h3 id="como-se-abren-las-pantallas">Cómo se abren las pantallas</h3>
+<p>Cuando eliges una opción de menú, la aplicación abre la pantalla de
+mantenimiento correspondiente <strong>como una pestaña nueva</strong> (o reutiliza la
+que ya esté abierta). Algunas pantallas admiten <strong>varias instancias
+simultáneas</strong> (verás un número junto al título, p. ej. <em>Clientes 2</em>); una
+de esas instancias queda reservada para las <strong>búsquedas rápidas</strong> con
+<code>[Ctrl]+[A]</code>.</p>
+<blockquote><p>El funcionamiento interno de cada pantalla (lista, ficha, búsqueda,
+navegación, grabado…) es <strong>común a casi todos los mantenimientos</strong> y se
+explica una sola vez en el capítulo
+<a href="01-conceptos-comunes.html">01 · Conceptos comunes</a>. Conviene leerlo antes
+de los capítulos de cada menú.</p></blockquote>
+<hr>
+<p><a href="index.html">◀ Índice</a> · <a href="01-conceptos-comunes.html">Siguiente ▶ Conceptos comunes</a></p>
+</article>
+<footer>Manual de Factuzam · generado el 11/06/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+</script>
+</body>
+</html>

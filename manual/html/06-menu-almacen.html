@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Menú Almacén — Manual de Factuzam</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual de usuario</span></div>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li class="activo"><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="06-menu-almacen">06 · Menú Almacén</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Almacén</strong> controla las <strong>existencias (stock)</strong>: los movimientos
+que entran y salen, los recuentos físicos (inventarios) y los informes para
+analizar el stock.</p>
+<p>Estructura del menú:</p>
+<pre><code>Almacén
+├── Movimientos de almacén
+├── Inventarios
+└── Informes
+    ├── Balance de Almacén Horizontal
+    ├── Balance de Almacén sin tallas
+    └── Movimientos de ventas por artículos y fechas</code></pre>
+<blockquote><p>El stock se lleva <strong>por SKU y por almacén</strong>. Cada documento que mueve
+mercancía (albarán de compra/venta, devolución, inventario, traspaso)
+genera <strong>movimientos de almacén</strong>, que son el origen de verdad de las
+existencias.</p></blockquote>
+<hr>
+<h2 id="movimientos-de-almacen">Movimientos de almacén</h2>
+<p><img src="img/06-movimientos.png" alt="Movimientos de almacén" loading="lazy">
+<em>▢ Captura pendiente — Movimientos de almacén.</em></p>
+<p>Consulta y mantenimiento de los <strong>movimientos de stock</strong>: cada entrada o
+salida de un SKU en un almacén, con su fecha, cantidad, motivo y documento
+de origen.</p>
+<p>Sirve para:</p>
+<ul><li><strong>Auditar</strong> por qué el stock de un artículo es el que es (trazar</li></ul>
+<p>  entradas y salidas).</p>
+<ul><li>Registrar <strong>ajustes y traspasos</strong> manuales entre almacenes.</li></ul>
+<blockquote><p>Salvo ajustes puntuales, los movimientos no se crean a mano: los generan
+automáticamente los albaranes, devoluciones, ventas de caja e
+inventarios.</p></blockquote>
+<hr>
+<h2 id="inventarios">Inventarios</h2>
+<p><img src="img/06-inventarios.png" alt="Inventario con su detalle de recuento" loading="lazy">
+<em>▢ Captura pendiente — Inventario con su detalle de recuento.</em></p>
+<p>Mantenimiento de <strong>Inventarios</strong> (recuentos físicos). Permite contar el
+stock real y <strong>regularizar</strong> las diferencias frente a lo que dice el
+sistema.</p>
+<p>Sub-pestañas:</p>
+<ul><li><strong>Detalle del inventario</strong> — líneas con el recuento por artículo/SKU</li></ul>
+<p>  (cantidad contada frente a cantidad teórica).</p>
+<ul><li><strong>Movimientos regularizados</strong> — los movimientos de ajuste que el</li></ul>
+<p>  inventario genera al confirmarse para cuadrar el stock teórico con el
+  real.</p>
+<ul><li><strong>Otros</strong> — datos de cabecera (almacén, fecha, estado).</li></ul>
+<blockquote><p>Al <strong>confirmar</strong> un inventario, el sistema ajusta el stock automáticamente
+creando los movimientos de regularización necesarios. Revisa bien el
+recuento antes de confirmar.</p></blockquote>
+<hr>
+<h2 id="informes">Informes</h2>
+<h3 id="balance-de-almacen-horizontal">Balance de Almacén Horizontal</h3>
+<p><img src="img/06-balance-horizontal.png" alt="Filtros e informe del balance con tallas" loading="lazy">
+<em>▢ Captura pendiente — Filtros e informe del balance con tallas.</em></p>
+<p>Informe de existencias <strong>con desglose por tallas</strong> en columnas
+(horizontal). Muestra el stock de cada artículo repartido por sus
+variantes/tallas, ideal para artículos de moda. Se filtra (almacén,
+familia, fechas…), se previsualiza y se imprime/exporta.</p>
+<h3 id="balance-de-almacen-sin-tallas">Balance de Almacén sin tallas</h3>
+<p>Informe de existencias <strong>agregado por artículo</strong>, sin abrir el detalle de
+tallas. Vista resumida del stock cuando no interesa el desglose por
+variante.</p>
+<h3 id="movimientos-de-ventas-por-articulos-y-fechas">Movimientos de ventas por artículos y fechas</h3>
+<p>Informe de <strong>ventas por artículo</strong> en un rango de fechas: qué artículos se
+han vendido, en qué cantidad y periodo. Útil para análisis de rotación y
+reposición.</p>
+<hr>
+<p><a href="05-menu-caja.html">◀ Menú Caja</a> · <a href="index.html">Índice</a> · <a href="07-menu-otros.html">Siguiente ▶ Menú Otros</a></p>
+</article>
+<footer>Manual de Factuzam · generado el 11/06/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+</script>
+</body>
+</html>

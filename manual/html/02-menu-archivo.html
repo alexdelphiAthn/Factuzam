@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Menú Archivo — Manual de Factuzam</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual de usuario</span></div>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li class="activo"><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="02-menu-archivo">02 · Menú Archivo</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Archivo</strong> contiene los <strong>datos maestros</strong> del negocio: la
+información estable sobre la que se apoyan todos los documentos (empresas,
+almacenes, clientes, proveedores, artículos) y las <strong>tablas auxiliares</strong>
+que los clasifican. Es el primer menú que se configura al poner en marcha
+la aplicación.</p>
+<blockquote><p>Recuerda: todas estas pantallas comparten el funcionamiento descrito en
+<a href="01-conceptos-comunes.html">01 · Conceptos comunes</a> (lista, ficha,
+navegador, búsqueda, grabar/cancelar). Aquí se describe solo lo propio de
+cada una.</p></blockquote>
+<p>Estructura del menú:</p>
+<pre><code>Archivo
+├── Empresas
+├── Almacenes
+├── Clientes
+├── Proveedores
+├── Artículos
+├── Tablas Auxiliares
+│   ├── Tarifas
+│   ├── Familias
+│   ├── Paises
+│   ├── Unidades de Medida
+│   ├── Propiedades
+│   ├── Tipos de Variaciones
+│   ├── Colecciones de Atributos
+│   └── Atributos básicos
+├── Invocar login
+└── Salir</code></pre>
+<hr>
+<h2 id="empresas">Empresas</h2>
+<p><img src="img/02-empresas.png" alt="Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado)" loading="lazy">
+<em>▢ Captura pendiente — Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado).</em></p>
+<p>Mantiene las <strong>empresas emisoras</strong> que facturan desde Factuzam (puede haber
+más de una). Cada empresa concentra sus datos fiscales y la configuración
+de facturación.</p>
+<p><strong>Datos principales:</strong> Código, Orden, Activo, Razón Social, NIF, dirección
+completa (dirección, población, provincia, código postal), Móvil, Email.</p>
+<p><strong>Datos fiscales y de facturación</strong> (en sub-pestañas):</p>
+<ul><li><strong>Más datos</strong> — contacto y datos complementarios.</li><li><strong>Retenciones</strong> — código y <strong>% de retención</strong> aplicable; marca *Aplica</li></ul>
+<p>  Retenciones<em> y </em>Es REAGP* (Régimen Especial Agricultura, Ganadería y
+  Pesca).</p>
+<ul><li><strong>Series</strong> — <strong>series de numeración</strong> de los documentos de la empresa</li></ul>
+<p>  (puedes añadir varias series de facturación).</p>
+<ul><li><strong>Certificado / Verifactu</strong> — <em>Número de Serie</em> y <em>Tipo de Certificado</em></li></ul>
+<p>  para la firma y el envío de facturas al sistema <strong>Verifactu (AEAT)</strong>.</p>
+<ul><li><strong>Texto en Factura</strong> — texto legal que se imprimirá en los documentos.</li><li><strong>Zona de IVA principal</strong> — régimen de IVA por defecto de la empresa.</li></ul>
+<blockquote><p>La configuración correcta de <strong>NIF, series y certificado</strong> es
+imprescindible para emitir facturas válidas y para la integración con
+Verifactu. Si tienes dudas fiscales, consúltalas con tu asesoría antes de
+facturar.</p></blockquote>
+<hr>
+<h2 id="almacenes">Almacenes</h2>
+<p><img src="img/02-almacenes.png" alt="Ficha de Almacenes" loading="lazy">
+<em>▢ Captura pendiente — Ficha de Almacenes.</em></p>
+<p>Mantiene los <strong>almacenes</strong> físicos o lógicos donde se ubica el stock. Cada
+movimiento de stock, inventario o documento de mercancía referencia un
+almacén.</p>
+<p>Sub-pestañas de la ficha:</p>
+<ul><li><strong>Dirección física</strong> — ubicación del almacén.</li><li><strong>Cajas de Venta</strong> — cajas/TPV asociadas a este almacén (relación</li></ul>
+<p>  almacén ↔ caja para el módulo Caja).</p>
+<ul><li><strong>Usos Almacén</strong> — para qué se usa el almacén (venta, depósito, etc.).</li><li><strong>Otros</strong> — datos complementarios.</li></ul>
+<hr>
+<h2 id="clientes">Clientes</h2>
+<p><img src="img/02-clientes.png" alt="Ficha de Clientes con los indicadores fiscales" loading="lazy">
+<em>▢ Captura pendiente — Ficha de Clientes con los indicadores fiscales.</em></p>
+<p>Mantiene la <strong>ficha de clientes</strong> a quienes se vende y factura.</p>
+<p><strong>Datos generales:</strong> Código, Activo, Razón Social, NIF/CIF, teléfonos
+(móvil y fijo), Email, dirección completa, País, Observaciones, Referencia,
+Contacto y teléfono de contacto, Nº de cuenta.</p>
+<p><strong>Datos fiscales</strong> que determinan cómo se calcula cada factura del cliente:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Efecto</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Forma de pago por defecto</strong></td><td>Se propone automáticamente en sus documentos.</td></tr>
+<tr><td><strong>Aplicar RE</strong></td><td>Aplica <strong>Recargo de Equivalencia</strong>.</td></tr>
+<tr><td><strong>Aplicar Retenciones</strong></td><td>Aplica retención de IRPF.</td></tr>
+<tr><td><strong>Tiene IVA exento</strong></td><td>El cliente no soporta IVA.</td></tr>
+<tr><td><strong>Es Intracomunitario</strong></td><td>Operación intracomunitaria (IVA 0 con condiciones).</td></tr>
+<tr><td><strong>Es Agricultor</strong></td><td>Régimen especial agrario.</td></tr>
+<tr><td><strong>Razón Social Fiscal</strong></td><td>Nombre fiscal si difiere del comercial.</td></tr>
+<tr><td><strong>Texto Legal Factura</strong></td><td>Texto específico para las facturas de este cliente.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Estos indicadores afectan directamente al <strong>cálculo de impuestos</strong> en
+ventas. Configúralos con cuidado al dar de alta el cliente.</p></blockquote>
+<hr>
+<h2 id="proveedores">Proveedores</h2>
+<p><img src="img/02-proveedores.png" alt="Ficha de Proveedores" loading="lazy">
+<em>▢ Captura pendiente — Ficha de Proveedores.</em></p>
+<p>Mantiene la <strong>ficha de proveedores</strong> a quienes se compra mercancía.
+Estructura análoga a Clientes, orientada a compras.</p>
+<p>Sub-pestañas de la ficha:</p>
+<ul><li><strong>Domicilio fiscal</strong> — datos fiscales y de dirección.</li><li><strong>Artículos</strong> — artículos que suministra el proveedor (con sus</li></ul>
+<p>  referencias y precios de compra).</p>
+<ul><li><strong>Ventas</strong> — histórico/relación comercial.</li><li><strong>Más datos</strong> y <strong>Otros</strong> — información complementaria.</li></ul>
+<hr>
+<h2 id="articulos">Artículos</h2>
+<p><img src="img/02-articulos.png" alt="Ficha de Artículos con la pestaña SKUs" loading="lazy">
+<em>▢ Captura pendiente — Ficha de Artículos con la pestaña SKUs.</em></p>
+<p>Es la pantalla central del catálogo. Mantiene los <strong>artículos</strong> y sus
+variantes (las distintas tallas/colores se denominan <strong>SKU</strong>).</p>
+<p>Sub-pestañas de la ficha:</p>
+<ul><li><strong>General</strong> — datos básicos: descripción, familia, unidad de medida,</li></ul>
+<p>  IVA, etc.</p>
+<ul><li><strong>SKUs</strong> — las <strong>variantes</strong> del artículo (combinaciones de talla, color</li></ul>
+<p>  u otros atributos). Cada SKU es una referencia vendible con su propio
+  stock y código de barras. Existe un asistente para <strong>generar SKUs</strong> a
+  partir de las variaciones definidas.</p>
+<ul><li><strong>Propiedades</strong> — propiedades descriptivas asignadas al artículo.</li><li><strong>CB</strong> — <strong>códigos de barras</strong> del artículo y sus SKUs.</li><li><strong>Tarifas</strong> — precios del artículo en las distintas tarifas.</li><li><strong>Proveedores</strong> — proveedores que lo suministran y sus referencias.</li></ul>
+<p>Desde la lista/ficha puedes además consultar <strong>stock</strong> y la <strong>foto</strong> del
+artículo con los botones del navegador.</p>
+<blockquote><p>El concepto de <strong>SKU</strong> (variante de talla/color) es clave en Factuzam:
+el stock, los precios y los códigos de barras se llevan a nivel de SKU,
+no solo de artículo.</p></blockquote>
+<hr>
+<h2 id="tablas-auxiliares">Tablas Auxiliares</h2>
+<p>Submenú con los <strong>catálogos de apoyo</strong> que clasifican y describen a los
+artículos. Conviene definirlos <strong>antes</strong> de cargar el catálogo de
+artículos.</p>
+<h3 id="tarifas">Tarifas</h3>
+<p><img src="img/02-tarifas.png" alt="Mantenimiento de Tarifas con los precios por artículo" loading="lazy">
+<em>▢ Captura pendiente — Mantenimiento de Tarifas con los precios por artículo.</em></p>
+<p>Define las <strong>listas de precios</strong> (tarifa general, ofertas, mayoristas…).
+Cada tarifa contiene los precios de los artículos.</p>
+<ul><li><strong>Artículos</strong> — precios de cada artículo/SKU en esta tarifa. Incluye</li></ul>
+<p>  utilidades para <strong>añadir precios</strong> en bloque y <strong>calcular márgenes</strong>.</p>
+<ul><li><strong>Otros</strong> — parámetros de la tarifa (vigencia, redondeos, etc.).</li></ul>
+<h3 id="familias">Familias</h3>
+<p><img src="img/02-familias.png" alt="Mantenimiento de Familias" loading="lazy">
+<em>▢ Captura pendiente — Mantenimiento de Familias.</em></p>
+<p><strong>Clasificación jerárquica</strong> de los artículos (familias y subfamilias).
+Permite agrupar el catálogo para informes, filtros y precios.</p>
+<ul><li><strong>Más Datos</strong> — datos de la familia.</li><li><strong>Artículos</strong> — artículos pertenecientes a la familia.</li><li><strong>Propiedades Artículos</strong> — propiedades que heredan los artículos de la</li></ul>
+<p>  familia.</p>
+<ul><li><strong>Otros</strong>.</li></ul>
+<h3 id="paises">Paises</h3>
+<p>Catálogo de <strong>países</strong> usado en las direcciones de clientes, proveedores y
+empresas (y para la clasificación fiscal intracomunitaria/extracomunitaria).</p>
+<h3 id="unidades-de-medida">Unidades de Medida</h3>
+<p>Catálogo de <strong>unidades</strong> en que se compran/venden los artículos (unidad,
+par, caja, metro, kilo…).</p>
+<h3 id="propiedades">Propiedades</h3>
+<p>Define <strong>propiedades descriptivas</strong> de artículos (p. ej. <em>Material</em>,
+<em>Temporada</em>) y sus <strong>valores disponibles</strong>.</p>
+<ul><li><strong>Valores Disponibles</strong> — lista de valores posibles de la propiedad.</li><li><strong>Artículos</strong> — artículos que usan esta propiedad.</li></ul>
+<h3 id="tipos-de-variaciones">Tipos de Variaciones</h3>
+<p>Define los <strong>ejes de variación</strong> que generan SKUs (p. ej. <em>Talla</em>,
+<em>Color</em>) y sus atributos.</p>
+<ul><li><strong>Atributos</strong> — valores de la variación (S, M, L, XL… o la gama de</li></ul>
+<p>  colores).</p>
+<ul><li><strong>Artículos</strong> — artículos que usan este tipo de variación.</li><li><strong>Otros</strong>.</li></ul>
+<h3 id="colecciones-de-atributos">Colecciones de Atributos</h3>
+<p>Define <strong>conjuntos reutilizables de atributos</strong> (p. ej. una colección de
+tallas estándar) que luego se aplican a varios artículos para generar sus
+SKUs sin redefinirlos cada vez.</p>
+<ul><li><strong>Valores</strong> — atributos que componen la colección.</li><li><strong>Artículos</strong> — artículos que la utilizan.</li><li><strong>Otros</strong>.</li></ul>
+<h3 id="atributos-basicos">Atributos básicos</h3>
+<p>Catálogo de los <strong>atributos elementales</strong> (los valores individuales de
+talla, color, etc.) que componen las variaciones y colecciones.</p>
+<blockquote><p><strong>Orden recomendado de configuración del catálogo:</strong>
+Unidades de Medida y Países → Familias → Atributos básicos → Tipos de
+Variaciones / Colecciones de Atributos → Propiedades → Tarifas →
+finalmente, los <strong>Artículos</strong> y sus SKUs.</p></blockquote>
+<hr>
+<h2 id="invocar-login">Invocar login</h2>
+<p>Vuelve a mostrar la ventana de <strong>Login</strong> sin cerrar la aplicación. Sirve
+para <strong>cambiar de usuario</strong> (por ejemplo, que entre otra persona con su
+perfil) sin reiniciar el programa.</p>
+<hr>
+<h2 id="salir">Salir</h2>
+<p><strong>Cierra la aplicación.</strong> Si hay cambios sin guardar, la aplicación avisará
+antes de salir.</p>
+<hr>
+<p><a href="01-conceptos-comunes.html">◀ Conceptos comunes</a> · <a href="index.html">Índice</a> · <a href="03-menu-compras.html">Siguiente ▶ Menú Compras</a></p>
+</article>
+<footer>Manual de Factuzam · generado el 11/06/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+</script>
+</body>
+</html>
