@@ -431,7 +431,7 @@ CREATE PROCEDURE `PRC_FACC_RECALCULAR_TOTALES`(
     IN p_SERIE  varchar(20),
     IN p_NUMERO varchar(20))
 BEGIN
-  DECLARE v_baseN, v_baseR, v_baseS, v_baseE decimal(18,6) DEFAULT 0;
+  DECLARE v_baseN, v_baseR, v_baseSR, v_baseE decimal(18,6) DEFAULT 0;
   DECLARE v_cuoN, v_cuoR, v_cuoS             decimal(18,6) DEFAULT 0;
   DECLARE v_pN, v_pR, v_pS                   decimal(19,6) DEFAULT 0;
   DECLARE v_bases, v_impuestos, v_total      decimal(18,6) DEFAULT 0;
@@ -467,7 +467,7 @@ BEGIN
     COALESCE(MAX(CASE WHEN PORCENTAJE_IVA_FACCLIN > 0
                        AND PORCENTAJE_IVA_FACCLIN < 6
                       THEN PORCENTAJE_IVA_FACCLIN END), 0)
-    INTO v_baseN, v_baseR, v_baseS, v_baseE,
+    INTO v_baseN, v_baseR, v_baseSR, v_baseE,
          v_cuoN, v_cuoR, v_cuoS, v_pN, v_pR, v_pS
     FROM fza_facturas_compra_lineas
    WHERE SERIE_FACC_FACCLIN  = p_SERIE
@@ -482,7 +482,7 @@ BEGIN
     INTO v_pRet, v_dto, v_pp, v_rap, v_fin, v_por
     FROM fza_facturas_compra
    WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
-  SET v_bases     = v_baseN + v_baseR + v_baseS + v_baseE;
+  SET v_bases     = v_baseN + v_baseR + v_baseSR + v_baseE;
   SET v_impuestos = v_cuoN + v_cuoR + v_cuoS;
   SET v_total     = v_bases + v_impuestos;
   SET v_reten     = ROUND(v_bases * v_pRet / 100, 2);
@@ -495,7 +495,7 @@ BEGIN
          TOTAL_BASEI_IVAR_FACC = v_baseR,
          TOTAL_IVAR_FACC       = v_cuoR,
          PORCENTAJE_IVAS_FACC  = v_pS,
-         TOTAL_BASEI_IVAS_FACC = v_baseS,
+         TOTAL_BASEI_IVAS_FACC = v_baseSR,
          TOTAL_IVAS_FACC       = v_cuoS,
          PORCENTAJE_IVAE_FACC  = 0,
          TOTAL_BASEI_IVAE_FACC = v_baseE,

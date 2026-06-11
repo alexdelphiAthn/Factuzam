@@ -24,12 +24,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, Data.DB, MemDS,
+  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, MemDS,
   DBAccess, Uni,
   inMtoFrmBase, JvComponentBase, JvEnterTab,
   cxClasses, cxLocalization, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
-  cxTextEdit, cxMaskEdit, cxDropDownEdit, cxRadioGroup, cxStyles,
+  cxTextEdit, cxButtonEdit, cxMaskEdit, cxDropDownEdit, cxRadioGroup, cxStyles,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxDBData, cxGridLevel,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid;
@@ -38,11 +38,9 @@ type
   TfrmModalFacturarAlbaranes = class(TfrmBase)
     pnlTop:          TPanel;
     lblEmpresa:      TcxLabel;
-    txtEmpresa:      TcxTextEdit;
+    btnEmpresa:      TcxButtonEdit;
     lblProveedor:    TcxLabel;
-    txtProveedor:    TcxTextEdit;
-    btnBuscarEmpresa:   TBitBtn;
-    btnBuscarProveedor: TBitBtn;
+    btnProveedor:    TcxButtonEdit;
     btnCargar:       TcxButton;
     lblNombrePrv:    TcxLabel;
     rgModo:          TcxRadioGroup;
@@ -63,8 +61,10 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnCargarClick(Sender: TObject);
-    procedure btnBuscarEmpresaClick(Sender: TObject);
-    procedure btnBuscarProveedorClick(Sender: TObject);
+    procedure btnEmpresaPropertiesButtonClick(Sender: TObject;
+                                              AButtonIndex: Integer);
+    procedure btnProveedorPropertiesButtonClick(Sender: TObject;
+                                                AButtonIndex: Integer);
     procedure btnFacturarClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure rgModoPropertiesEditValueChanged(Sender: TObject);
@@ -163,8 +163,8 @@ end;
 procedure TfrmModalFacturarAlbaranes.SetContexto(const AEmpresa,
                                                  AProveedor: string);
 begin
-  txtEmpresa.Text   := AEmpresa;
-  txtProveedor.Text := AProveedor;
+  btnEmpresa.Text   := AEmpresa;
+  btnProveedor.Text := AProveedor;
 end;
 
 procedure TfrmModalFacturarAlbaranes.ActualizarModo;
@@ -241,8 +241,8 @@ var
   sEmp, sPrv: string;
 begin
   inherited;
-  sEmp := Trim(txtEmpresa.Text);
-  sPrv := Trim(txtProveedor.Text);
+  sEmp := Trim(btnEmpresa.Text);
+  sPrv := Trim(btnProveedor.Text);
   if (sEmp = '') or (sPrv = '') then
     ShowMessage('Indica empresa y proveedor.')
   else
@@ -259,7 +259,8 @@ begin
   end;
 end;
 
-procedure TfrmModalFacturarAlbaranes.btnBuscarEmpresaClick(Sender: TObject);
+procedure TfrmModalFacturarAlbaranes.btnEmpresaPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
 var
   sVal: string;
 begin
@@ -268,10 +269,11 @@ begin
   if TBusquedaUtils.EjecutarBusqueda('Buscar empresa',
        'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
        'CODIGO_EMP_EMP', sVal, 'srchEmpFacAlb', Self) then
-    txtEmpresa.Text := sVal;
+    btnEmpresa.Text := sVal;
 end;
 
-procedure TfrmModalFacturarAlbaranes.btnBuscarProveedorClick(Sender: TObject);
+procedure TfrmModalFacturarAlbaranes.btnProveedorPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
 var
   sVal: string;
 begin
@@ -280,7 +282,7 @@ begin
        'SELECT * FROM fza_proveedores ORDER BY NOMBRE_PRV',
        'CODIGO_PRV_PRV', sVal, 'srchPrvFacAlb', Self) then
   begin
-    txtProveedor.Text := sVal;
+    btnProveedor.Text := sVal;
     CargarProveedorNombre(sVal);
   end;
 end;
