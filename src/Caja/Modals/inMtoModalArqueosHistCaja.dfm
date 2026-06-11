@@ -99,24 +99,28 @@ object frmModalArqueosHistCaja: TfrmModalArqueosHistCaja
         object colTotalVentas: TcxGridDBColumn
           Caption = 'Total Ventas'
           DataBinding.FieldName = 'TOTAL_VENTAS_ARQ'
+          PropertiesClassName = 'TcxCurrencyEditProperties'
           Options.Editing = False
           Width = 110
         end
         object colEfectivo: TcxGridDBColumn
           Caption = 'Efectivo Caja'
           DataBinding.FieldName = 'TOTAL_EFECTIVO_CAJA_ARQ'
+          PropertiesClassName = 'TcxCurrencyEditProperties'
           Options.Editing = False
           Width = 110
         end
         object colRecuento: TcxGridDBColumn
           Caption = 'Recuento'
           DataBinding.FieldName = 'TOTAL_RECUENTO_ARQ'
+          PropertiesClassName = 'TcxCurrencyEditProperties'
           Options.Editing = False
           Width = 110
         end
         object colDiferencia: TcxGridDBColumn
           Caption = 'Diferencia'
           DataBinding.FieldName = 'DIFERENCIA_TOTAL_ARQ'
+          PropertiesClassName = 'TcxCurrencyEditProperties'
           Options.Editing = False
           Width = 100
         end
