@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasSimplif                                          }
 {    Tipo:       Formulario (Mto) descendiente                                 }
@@ -27,7 +27,15 @@ uses
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxButtons,
   cxCheckBox, cxCheckComboBox, MemDS, DBAccess, Uni,
-  UniDataPerfiles, UniDataFacturas, inMtoFacturasBase;
+  UniDataPerfiles, UniDataFacturas, inMtoFacturasBase, cxStyles, Data.DB,
+  cxDBData, cxCalendar, cxCurrencyEdit, cxTextEdit, cxSpinEdit, cxButtonEdit,
+  cxDropDownEdit, cxMemo, cxDBLookupComboBox, cxBlobEdit, Vcl.Menus, JvBaseDlg,
+  JvCalc, dxShellDialogs, System.Actions, Vcl.ActnList, JvComponentBase,
+  JvEnterTab, cxLocalization, cxRadioGroup, cxNavigator, cxDBNavigator,
+  cxSplitter, cxGroupBox, cxDBLabel, cxDBEdit, cxImage, Vcl.Buttons,
+  cxLookupEdit, cxDBLookupEdit, cxMaskEdit, cxGridBandedTableView,
+  cxGridDBBandedTableView, cxGridLevel, cxGridCustomTableView, cxGridTableView,
+  cxGridDBTableView, cxClasses, cxGridCustomView, cxGrid, cxPC;
 
 type
   TfrmMtoFacturasSimplif = class(TfrmMtoFacturasBase)
