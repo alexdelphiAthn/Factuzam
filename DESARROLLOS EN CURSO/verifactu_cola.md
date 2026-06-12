@@ -170,6 +170,20 @@ El botón **Subsanar** se ha retirado de la interfaz (el motor de la
 cola y el envío siguen soportando el tipo `SUBSANACION` por si hiciera
 falta reexponerlo, p. ej. ante «aceptado con errores»).
 
+### Botones de cobro F10 / F11
+
+- **F10 Sin precios**: imprime DOS tickets — primero el regalo (sin
+  precios, sin totales/pagos/IVA y sin QR; rotulado «TICKET REGALO») y
+  después el fiscal completo con precios y QR Verifactu. En modo DEBUG
+  el PDF del regalo lleva sufijo `_regalo`.
+- **F11 Sin ticket**: no imprime nada pero **abre la cajonera**
+  (`AbrirCajonSinVenta`, mismo helper del F9 global, con su permiso
+  `caja.abrirCajon` y aviso si no hay impresora configurada).
+
+En Facturas (Buscar/Modificar) los botones «Anular Verifactu» y
+«Convertir en normal» viven ahora en la columna derecha de botones,
+debajo de Consolidar (se eliminó el panel inferior).
+
 ### Anular y convertir desde Facturas (Buscar / Modificar)
 
 En la pestaña de lista de Facturas (normales y simplificadas) hay dos

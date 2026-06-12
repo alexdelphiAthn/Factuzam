@@ -428,6 +428,15 @@ ticket consolidado, con guardas) y «Convertir en normal» (flujo F3 del
 modal con cliente/serie/fecha). El botón Subsanar ya no existe en
 ninguna pantalla.
 
+**I12 — F10 y F11 en fase de cobro.** Cobrar una venta con F10 («Sin
+precios»).
+- Salen DOS tickets: el regalo («TICKET REGALO», artículos y unidades
+  sin importes, sin IVA y sin QR) y el fiscal completo con precios y
+  QR. En DEBUG, dos PDFs (el regalo con sufijo `_regalo`).
+- Cobrar otra venta con F11 («Sin ticket»): no se imprime nada y la
+  cajonera se abre (con impresora real configurada); la venta queda
+  grabada y encolada en Verifactu con normalidad.
+
 **I9 — QR en el A4.** Con Verifactu activo, imprimir una factura (F8 de
 caja o botón Imprimir de Facturas) con cada uno de los dos formatos
 (normal y simplificada).

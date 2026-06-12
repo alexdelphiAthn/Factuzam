@@ -664,32 +664,6 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
             end
           end
         end
-        object pnlVerifactuLista: TPanel
-          Left = 0
-          Top = 735
-          Width = 1083
-          Height = 40
-          Align = alBottom
-          TabOrder = 1
-          object btnVerifactuAnular: TcxButton
-            Left = 8
-            Top = 5
-            Width = 180
-            Height = 30
-            Caption = 'Anular (Verifactu)'
-            TabOrder = 0
-            OnClick = btnVerifactuAnularClick
-          end
-          object btnVerifactuFacturar: TcxButton
-            Left = 196
-            Top = 5
-            Width = 180
-            Height = 30
-            Caption = 'Convertir en normal'
-            TabOrder = 1
-            OnClick = btnVerifactuFacturarClick
-          end
-        end
       end
       inherited tsFicha: TcxTabSheet
         Margins.Left = 5
@@ -3716,6 +3690,24 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
       Height = 34
       Caption = 'Consolida&r'
       TabOrder = 5
+    end
+    object btnVerifactuAnular: TcxButton
+      Left = 1
+      Top = 397
+      Width = 140
+      Height = 34
+      Caption = 'Anular Verifactu'
+      TabOrder = 6
+      OnClick = btnVerifactuAnularClick
+    end
+    object btnVerifactuFacturar: TcxButton
+      Left = 1
+      Top = 439
+      Width = 140
+      Height = 34
+      Caption = 'Convertir en normal'
+      TabOrder = 7
+      OnClick = btnVerifactuFacturarClick
     end
   end
   inherited Localizer1: TcxLocalizer
