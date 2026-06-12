@@ -258,6 +258,19 @@ begin
         ' WHERE ESTADO_VFCOLA = ''PROCESANDO'' ' +
         '   AND INSTANTE_MODIF < DATE_SUB(NOW(), INTERVAL 10 MINUTE)';
       Qry.Execute;
+      // Reproceso: filas en ERROR con menos intentos que el máximo
+      // vigente vuelven a la cola (p.ej. tras corregir configuración,
+      // resetear intentos a mano o subir appVerifactuMaxIntentos)
+      Qry.SQL.Text :=
+        ' UPDATE fza_verifactu_cola ' +
+        ' SET ESTADO_VFCOLA = ''PENDIENTE'', ' +
+        '     INSTANTE_PROXIMO_INTENTO_VFCOLA = NULL, ' +
+        '     INSTANTE_MODIF = NOW() ' +
+        ' WHERE ESTADO_VFCOLA = ''ERROR'' ' +
+        '   AND CONTADOR_INTENTOS_VFCOLA < :MAXINTENTOS';
+      Qry.ParamByName('MAXINTENTOS').AsInteger :=
+        oAppParams.GetInt('appVerifactuMaxIntentos', 10);
+      Qry.Execute;
       Qry.SQL.Text :=
         ' SELECT ID_VFCOLA, SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, ' +
         '        TIPO_OPERACION_VFCOLA, CONTADOR_INTENTOS_VFCOLA ' +
@@ -325,10 +338,24 @@ begin
                                           ATipoOperacion);
       if oResultado.Ok then
       begin
-        GuardarEnvioOk(AIdCola, ASerie, ANumero, ATipoOperacion,
-                       oResultado);
-        FConn.Commit;
-        Result := oResultado.EsperaSegundos;
+        // El registro YA está aceptado por la AEAT: si fallara la
+        // persistencia local se anota la verdad y el reintento se
+        // resolverá por la vía del registro duplicado
+        try
+          GuardarEnvioOk(AIdCola, ASerie, ANumero, ATipoOperacion,
+                         oResultado);
+          FConn.Commit;
+          Result := oResultado.EsperaSegundos;
+        except
+          on E: Exception do
+          begin
+            if FConn.InTransaction then
+              FConn.Rollback;
+            GuardarEnvioError(AIdCola, ASerie, ANumero,
+              'Aceptado por la AEAT pero falló la persistencia ' +
+              'local: ' + E.Message, AIntentos);
+          end;
+        end;
       end
       else
       begin
@@ -365,6 +392,8 @@ begin
     sFase := 'ONLINE';
   if SameText(AResultado.EstadoRegistro, 'AceptadoConErrores') then
     sEstadoFaccon := 'ACEPTADO_ERR'
+  else if SameText(AResultado.EstadoRegistro, 'Duplicado') then
+    sEstadoFaccon := 'DUPLICADO'
   else
     sEstadoFaccon := 'PROCESADO';
   Qry := TUniQuery.Create(nil);

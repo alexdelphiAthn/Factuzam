@@ -138,6 +138,24 @@ formado. Causas por orden de probabilidad:
    (titular o apoderado); si no, la AEAT responde con errores de censo
    (no identificado / sin apoderamiento).
 
+### Reintentos, duplicados y reproceso manual
+
+- Si la AEAT **acepta** pero la persistencia local falla (caída de BBDD
+  justo después del envío), la fila vuelve a la cola con el mensaje
+  «Aceptado por la AEAT pero falló la persistencia local: …». En el
+  reintento la AEAT responderá *registro duplicado* (err. 3000) y el
+  cliente lo da por aceptado: consolida (estado `DUPLICADO`), genera el
+  QR y marca la factura como consolidada. El sistema se autocura.
+- **Reproceso automático**: en cada ciclo, las filas en `ERROR` con
+  `CONTADOR_INTENTOS < appVerifactuMaxIntentos` vuelven a `PENDIENTE`
+  (sirve para revivir colas tras corregir configuración o tras subir el
+  parámetro de máximo de intentos).
+- **Reproceso manual**: en el menú Verifactu → Cola de Envíos se pueden
+  editar las columnas *Estado* (combo PENDIENTE/PROCESANDO/ENVIADA/
+  ERROR), *Intentos* y *Próximo intento*; al grabar, el hilo la
+  retoma en el siguiente ciclo. El resto de columnas son de solo
+  lectura.
+
 ### Notas y decisiones a validar en el entorno PRE de la AEAT
 
 - Devoluciones de caja: hoy van como F2 con importes negativos (igual
