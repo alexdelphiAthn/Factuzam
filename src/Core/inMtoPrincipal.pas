@@ -335,6 +335,7 @@ uses inLibUser,
   inLibAppParam,
   inLibUnidadesMedida,
   inLibBuscarImpresora,
+  inLibVerifactuCola,
   inMtoGen,
   inMtoFotoArticulo,
   System.RegularExpressions,
@@ -541,6 +542,9 @@ begin
   // abrir cajon no se activa fuera de caja (ver ImpresoraCajaAsignada).
   inLibLog.Log.LogInfo('Arranque: impresora de caja resuelta = "' +
                        oNomImpresoraCaja + '"');
+  // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
+  // parámetro appVerifactuActivo, así puede activarse sin reiniciar
+  TVerifactuCola.IniciarHilo;
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
@@ -1213,6 +1217,8 @@ begin
   // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
   // y el destructor de TfrmMtoGen).
   inLibGlobalVar.oCerrandoApp := True;
+  // Parar el hilo de la cola Verifactu antes de liberar las conexiones
+  TVerifactuCola.DetenerHilo;
   if Assigned(FAppEvents) then
   begin
     FAppEvents.OnException := nil;

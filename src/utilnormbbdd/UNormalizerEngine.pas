@@ -291,6 +291,7 @@ begin
   AddSuf('fza_valores_defecto',                 'VD');
   AddSuf('fza_variaciones',                     'VAR');
   AddSuf('fza_variaciones_atributos',           'VA');
+  AddSuf('fza_verifactu_cola',                  'VFCOLA');
   AddSuf('fza_verifactu_eventos',               'LOG');
   AddSuf('fza_winforms',                        'WINF');
 

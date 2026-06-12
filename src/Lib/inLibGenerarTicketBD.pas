@@ -50,6 +50,9 @@ uses
                                  NombreImpresora:string='DEBUG');
 implementation
 
+uses
+  inLibVerifactu;
+
 // Función auxiliar para rellenar con ceros (LPAD)
 function LPAD(const AValue: string;
               ALength: Integer;
@@ -420,7 +423,7 @@ var
   Ticket: TTicketTermico;
   FormPreview: TFormVisualizador;
   ComandosESC, RutaFicheroPDF: string;
-  ModoQR, QRTexto: string;
+  QRTexto: string;
   SerieFac, NroFac: string;
 begin
   QryCab   := TUniQuery.Create(nil);
@@ -460,18 +463,33 @@ begin
     SerieFac := QryCab.FieldByName('SERIE_FAC').AsString;
     NroFac   := QryCab.FieldByName('NUMERO_FAC').AsString;
     // 2. INICIALIZAR IMPRESORA
-    ModoQR := 'NATIVO';
-    QRTexto := 'http://hacienda.com?nro=' + SerieFac + NroFac;
+    // QR tributario Verifactu en la reimpresión: misma URL de cotejo
+    // que en el ticket original (se genera en local desde la factura)
+    QRTexto := '';
+    if VerifactuActivo and (SerieFac <> '') and (NroFac <> '') then
+      QRTexto := ConstruirUrlQR(
+                   QryCab.FieldByName('NIF_EMPRESA_FAC').AsString,
+                   SerieFac,
+                   NroFac,
+                   QryCab.FieldByName('FECHA_FAC').AsDateTime,
+                   QryCab.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
     Ticket := TTicketTermico.Create(ANombreImpresora);
     try
       Ticket.Inicializar;
 
-      // === QR AL PRINCIPIO ===
-      Ticket.Alinear(alCentro);
-      Ticket.SaltarLineas(1);
-
-      if ModoQR = 'NATIVO' then
-        Ticket.ImprimirQRNativo(QRTexto, 6);
+      // === QR TRIBUTARIO AL PRINCIPIO (solo con Verifactu activo) ===
+      if QRTexto <> '' then
+      begin
+        Ticket.Alinear(alCentro);
+        Ticket.SaltarLineas(1);
+        Ticket.EscribirLinea('QR tributario:');
+        // Nivel de corrección M (49) exigido por la AEAT para el QR
+        Ticket.ImprimirQRNativo(QRTexto, 6, 49);
+        Ticket.Alinear(alCentro);
+        Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
+        Ticket.EscribirLinea('en la sede electrónica de la AEAT');
+        Ticket.Alinear(alIzquierda);
+      end;
 
       Ticket.SaltarLineas(1);
       Ticket.Negrita(True);

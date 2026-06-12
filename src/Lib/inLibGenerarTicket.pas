@@ -32,7 +32,7 @@ uses
 implementation
 
 uses
-  inLibDir, inLibUnidadesMedida;
+  inLibDir, inLibUnidadesMedida, inLibVerifactu;
 
 procedure ImprimirT(const ACodigoEmpresa,
                           ACodigoAlmacen,
@@ -44,7 +44,7 @@ var
   Ticket: TTicketTermico;
   Cab: TDatosCabeceraFactura;
   dLin: TDataSet;
-  ModoQR, QRTexto: string;
+  QRTexto: string;
   ComandosESC, RutaFicheroPDF: string;
   FormPreview: TFormVisualizador;
 
@@ -65,26 +65,34 @@ begin
   if not DatosCobro.FRequiereFactura then
     Exit;
 //  NombreImpresora := 'DEBUG';
-  ModoQR := 'NATIVO';
-  QRTexto := 'http://hacienda.com';
   Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);
   dLin := DatosCobro.TotalesFactura.Lineas;
+  // QR tributario Verifactu: URL de cotejo en la AEAT generada en local
+  QRTexto := '';
+  if VerifactuActivo then
+    QRTexto := ConstruirUrlQR(
+                 Cab.NifEmp,
+                 DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                                     'SERIE_FAC').AsString,
+                 DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                                     'NUMERO_FAC').AsString,
+                 Cab.Fecha,
+                 Cab.TotalLiquido);
   Ticket := TTicketTermico.Create(NombreImpresora);
   try
     Ticket.Inicializar;
-    // === QR AL PRINCIPIO ===
-    Ticket.Alinear(alCentro);
-    Ticket.SaltarLineas(1);
-    if ModoQR = 'IE' then
+    // === QR TRIBUTARIO AL PRINCIPIO (solo con Verifactu activo) ===
+    if QRTexto <> '' then
     begin
-      // Modo IMAGEN: Descomentar si usas la generación de Bitmap
-      // QRBitmap := GenerarQRCode(QRTexto, 4);
-      // if Assigned(QRBitmap) then ...
-    end
-    else
-    begin
-      // Modo NATIVO: Comando ESC/POS directo a la impresora
-      Ticket.ImprimirQRNativo(QRTexto, 6);
+      Ticket.Alinear(alCentro);
+      Ticket.SaltarLineas(1);
+      Ticket.EscribirLinea('QR tributario:');
+      // Nivel de corrección M (49) exigido por la AEAT para el QR
+      Ticket.ImprimirQRNativo(QRTexto, 6, 49);
+      Ticket.Alinear(alCentro);
+      Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
+      Ticket.EscribirLinea('en la sede electrónica de la AEAT');
+      Ticket.Alinear(alIzquierda);
     end;
     Ticket.SaltarLineas(1);
     Ticket.Negrita(True);
