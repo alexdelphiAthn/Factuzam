@@ -47,6 +47,10 @@ function FormatearImporteVerifactu(AImporte: Currency): string;
 function ConstruirUrlQR(const ANif, ASerie, ANumero: string;
                         AFecha: TDateTime;
                         AImporteTotal: Currency): string;
+// PNG del QR tributario (DelphiZXIngQRCode, corrección M) como bytes.
+// Sin canvas ni handles GDI compartidos: usable desde el hilo de envío.
+function GenerarQRPngVerifactu(const AUrl: string;
+                               AEscala: Integer = 4): TBytes;
 // Registra un evento en fza_verifactu_eventos manteniendo la cadena de
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
@@ -60,7 +64,7 @@ procedure RegistrarEventoVerifactu(AConn: TUniConnection;
 implementation
 
 uses
-  System.Classes, System.Hash,
+  System.Classes, System.Hash, Vcl.Imaging.pngimage, DelphiZXIngQRCode,
   inLibGlobalVar, inLibAppParam;
 
 function VerifactuActivo: Boolean;
@@ -142,6 +146,55 @@ begin
                      FormatDateTime('dd-mm-yyyy', AFecha)) +
     '&importe='  + CodificarParametroURL(
                      FormatearImporteVerifactu(AImporteTotal));
+end;
+
+function GenerarQRPngVerifactu(const AUrl: string;
+                               AEscala: Integer = 4): TBytes;
+var
+  oQR:     TDelphiZXIngQRCode;
+  oPng:    TPngImage;
+  oStream: TMemoryStream;
+  iX:      Integer;
+  iY:      Integer;
+  pLinea:  PByteArray;
+begin
+  SetLength(Result, 0);
+  if (Trim(AUrl) <> '') and (AEscala >= 1) then
+  begin
+    oQR     := TDelphiZXIngQRCode.Create;
+    oPng    := nil;
+    oStream := nil;
+    try
+      // DelphiZXIngQRCode genera con corrección de errores M, la que
+      // exige la AEAT para el QR tributario
+      oQR.Data      := AUrl;
+      oQR.Encoding  := qrUTF8NoBOM;
+      oQR.QuietZone := 4;
+      oPng := TPngImage.CreateBlank(COLOR_GRAYSCALE, 8,
+                                    oQR.Columns * AEscala,
+                                    oQR.Rows * AEscala);
+      for iY := 0 to oPng.Height - 1 do
+      begin
+        pLinea := oPng.Scanline[iY];
+        for iX := 0 to oPng.Width - 1 do
+        begin
+          if oQR.IsBlack[iY div AEscala, iX div AEscala] then
+            pLinea[iX] := 0
+          else
+            pLinea[iX] := 255;
+        end;
+      end;
+      oStream := TMemoryStream.Create;
+      oPng.SaveToStream(oStream);
+      SetLength(Result, oStream.Size);
+      if oStream.Size > 0 then
+        Move(oStream.Memory^, Result[0], oStream.Size);
+    finally
+      FreeAndNil(oStream);
+      FreeAndNil(oPng);
+      FreeAndNil(oQR);
+    end;
+  end;
 end;
 
 procedure RegistrarEventoVerifactu(AConn: TUniConnection;
