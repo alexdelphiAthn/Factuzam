@@ -68,7 +68,7 @@ CREATE TABLE `fza_caja_arqueos` (
   `USUARIO_ALTA`                     varchar(100)  NOT NULL,
   `USUARIO_MODIF`                    varchar(100)  NOT NULL,
   PRIMARY KEY (`CODIGO_ARQ`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 ALTER TABLE `fza_caja_arqueos`
   ADD INDEX `IDX_ARQ_CTX_FECHA`

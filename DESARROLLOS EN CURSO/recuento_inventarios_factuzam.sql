@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `fza_inventarios_recuentos` (
   KEY `IDX_INVREC_DOC` (`CODIGO_EMP_INVREC`,`CODIGO_ALM_INVREC`,
                         `SERIE_INV_INVREC`,`NUMERO_INV_INVREC`),
   KEY `IDX_INVREC_UNIDAD` (`CODIGO_UNIDAD_INVREC`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ----------------------------------------------------------------------------
 -- Marcadores de ciclo en fza_inventarios (ADD COLUMN IF NOT EXISTS, MariaDB).

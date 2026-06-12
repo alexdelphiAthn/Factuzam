@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `fza_empleados` (
   PRIMARY KEY (`CODIGO_EMPL`),
   KEY `IDX_EMPL_ACTIVO`     (`ESACTIVO_EMPL`),
   KEY `IDX_EMPL_DIMINUTIVO` (`DIMINUTIVO_TICKET_EMPL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- -----------------------------------------------------------------------------
 -- 2. Vista de lectura para el Mto (mismo patrón que vi_usuarios: la pantalla
