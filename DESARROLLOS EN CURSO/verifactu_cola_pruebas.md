@@ -332,3 +332,63 @@ aplicación.
 grupo de prueba y entrar con un usuario de ese grupo.
 - El item «Cola de Envíos» desaparece del menú; el resto sigue visible.
   Restaurar el permiso al terminar.
+
+---
+
+## I. Anular / Subsanar desde Facturas
+
+**I1 — Columna «Cola Verifactu».** Abrir Facturas (normales o
+simplificadas) tras encolar/enviar alguna factura.
+- La lista muestra la columna «Cola Verifactu» con el último estado de
+  la cola por factura (vacía en facturas nunca encoladas). Es de solo
+  lectura y funciona en las dos variantes.
+
+**I2 — Guardas.** Con una factura SIN consolidar seleccionada, pulsar
+«Anular (Verifactu)» o «Subsanar (Verifactu)».
+- Aviso «aún no está consolidada» y no se encola nada.
+
+**I3 — Anulación.** Seleccionar una factura consolidada → «Anular
+(Verifactu)» → confirmar. Esperar un ciclo del hilo.
+- Aparece fila `ANULACION` en la cola (PENDIENTE → ENVIADA); la factura
+  pasa a `FASE_FAC='CANCELADA'`; la consolidación queda en
+  `ESTADO='ANULADO'` con `QUEUE_ID_CANCEL_FACCON` relleno; evento tipo 3
+  en el log con la anulación; la columna «Cola Verifactu» refleja el
+  estado.
+
+**I4 — Subsanación.** Sobre una factura consolidada → «Subsanar
+(Verifactu)» → confirmar. Esperar un ciclo.
+- Fila `SUBSANACION` en la cola → ENVIADA; el XML enviado
+  (`PETICION_COMPLETA_FACCON`) contiene `<Subsanacion>S</Subsanacion>`;
+  la consolidación se reescribe con `ESTADO='SUBSANADO'` y nueva
+  petición/respuesta; la factura sigue `FASE_FAC='ONLINE'`.
+
+**I5 — Relanzar operación.** Repetir la subsanación de I4.
+- No se duplica la fila: la misma fila `SUBSANACION` vuelve a
+  `PENDIENTE` con intentos a 0 y se reenvía.
+
+**I6 — Rectificativa.** (Tras ejecutar `verifactu_rectificativas.sql`.)
+Seleccionar una factura simplificada consolidada → botón Rectificar →
+marcar «Abonar» → Generar. Esperar un ciclo del hilo.
+- Se crea el abono (líneas en negativo) con `TIPO_FAC='RECTIFICATIVA'`
+  y el comentario «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número».
+- La ORIGINAL pasa a `FASE_FAC='RECTIFICADA'` y sus columnas
+  `SERIE/NUMERO_FAC_ABONO_FAC` apuntan a la rectificativa.
+- En `PETICION_COMPLETA_FACCON` de la rectificativa: `TipoFactura=R5`
+  (R1 con destinatario si la original era completa),
+  `TipoRectificativa=I` y bloque `FacturasRectificadas` con la
+  original; `ImporteTotal` negativo.
+- La rectificativa queda consolidada (`FASE_FAC='ONLINE'`) con su QR.
+
+**I7 — Facturar ticket (F3).** Seleccionar un ticket (SIMPLIFICADA)
+consolidado → «Facturar ticket (F3)» → elegir cliente, serie (viene la
+del almacén del ticket o la FC por defecto) y fecha (viene la del
+ticket) → Generar. Esperar un ciclo.
+- Se crea una factura `NORMAL` con los mismos importes (en positivo),
+  los datos del cliente elegido y el comentario «...EN SUSTITUCIÓN DE
+  LA FACTURA SIMPLIFICADA serie\número»; el ticket guarda en sus
+  columnas ABONO la factura nueva y NO se anula.
+- El registro de la nueva sale como `TipoFactura=F3` con
+  `FacturasSustituidas` apuntando al ticket y destinatario relleno; la
+  nueva queda consolidada con su QR.
+- Con la factura nueva seleccionada, los botones Anular/Subsanar operan
+  sobre ella con normalidad.

@@ -656,6 +656,47 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               DataBinding.FieldName = 'INSTANTECONSO_FAC'
               PropertiesClassName = 'TcxDateEditProperties'
             end
+            object cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn
+              Caption = 'Cola Verifactu'
+              DataBinding.FieldName = 'ESTADO_VFCOLA'
+              Options.Editing = False
+              Width = 120
+            end
+          end
+        end
+        object pnlVerifactuLista: TPanel
+          Left = 0
+          Top = 735
+          Width = 1083
+          Height = 40
+          Align = alBottom
+          TabOrder = 1
+          object btnVerifactuAnular: TcxButton
+            Left = 8
+            Top = 5
+            Width = 180
+            Height = 30
+            Caption = 'Anular (Verifactu)'
+            TabOrder = 0
+            OnClick = btnVerifactuAnularClick
+          end
+          object btnVerifactuSubsanar: TcxButton
+            Left = 196
+            Top = 5
+            Width = 180
+            Height = 30
+            Caption = 'Subsanar (Verifactu)'
+            TabOrder = 1
+            OnClick = btnVerifactuSubsanarClick
+          end
+          object btnVerifactuFacturar: TcxButton
+            Left = 384
+            Top = 5
+            Width = 180
+            Height = 30
+            Caption = 'Facturar ticket (F3)'
+            TabOrder = 2
+            OnClick = btnVerifactuFacturarClick
           end
         end
       end

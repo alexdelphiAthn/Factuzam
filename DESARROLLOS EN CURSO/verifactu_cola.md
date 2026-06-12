@@ -138,6 +138,88 @@ formado. Causas por orden de probabilidad:
    (titular o apoderado); si no, la AEAT responde con errores de censo
    (no identificado / sin apoderamiento).
 
+### Anular y subsanar desde Facturas (Buscar / Modificar)
+
+En la pestaña de lista de Facturas (normales y simplificadas) hay dos
+botones que operan sobre la factura seleccionada (solo si ya está
+consolidada):
+
+- **Anular (Verifactu)**: encola un `RegistroAnulacion`. Al aceptarse,
+  la factura pasa a `FASE_FAC='CANCELADA'` y la consolidación a
+  `ESTADO='ANULADO'` (con `QUEUE_ID_CANCEL_FACCON`).
+- **Subsanar (Verifactu)**: encola una `SUBSANACION` (reenvío del
+  `RegistroAlta` con `<Subsanacion>S</Subsanacion>`, p. ej. tras un
+  «aceptado con errores» o tras corregir datos de la factura). Al
+  aceptarse, la consolidación se reescribe con la nueva
+  petición/respuesta y queda en `ESTADO='SUBSANADO'`.
+
+Re-encolar una operación ya existente la relanza (vuelve a PENDIENTE
+con los intentos a cero). La lista lleva además la columna **«Cola
+Verifactu»** con el último estado de la cola de cada factura
+(PENDIENTE/PROCESANDO/ENVIADA/ERROR; vacío si nunca se encoló): el
+SELECT del listado se recompone en `CrearTablaPrincipal` con un
+subselect a `fza_verifactu_cola`, así que no hay que tocar vistas ni
+perfiles.
+
+### Rectificativas (botón Rectificar → Abonar)
+
+El botón **Rectificar** de Facturas (modal Abonar/Duplicar, que ya
+existía) queda integrado con Verifactu. Al crear el abono con
+`PRC_CREAR_FACTURA_ABONO`, `TVerifactuCola.EncolarRectificativa`:
+
+- Marca la nueva como `TIPO_FAC='RECTIFICATIVA'` y añade a sus
+  comentarios «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número».
+- La **original** pasa a `FASE_FAC='RECTIFICADA'` y guarda en sus
+  columnas `SERIE/NUMERO_FAC_ABONO_FAC` la rectificativa (el antecesor
+  apunta a su sucesor).
+- Encola la rectificativa: el registro sale como **R5** si la original
+  era simplificada o **R1** si era completa (con destinatario),
+  `TipoRectificativa=I` (importes en negativo) y bloque
+  `FacturasRectificadas` apuntando a la original (lookup inverso por
+  `IDX_FAC_ABONO`).
+
+Requiere ejecutar `verifactu_rectificativas.sql` (ensancha las columnas
+de enlace a varchar(20) y crea el índice del lookup inverso).
+
+### Facturar ticket (factura completa F3 en sustitución)
+
+Botón **«Facturar ticket (F3)»** en Buscar/Modificar, solo para
+facturas SIMPLIFICADAS. Abre `inMtoModalFacturarTicket`: pide
+**cliente** (lookup de `fza_clientes`), **serie** de factura (por
+defecto la ligada al almacén del ticket vía
+`ObtenerSeriePropiaAlmacen`, si no la serie FC por defecto) y **fecha**
+(por defecto la del ticket). Crea la factura NORMAL copiando cabecera y
+líneas del ticket (importes en positivo), con la identidad del cliente
+denormalizada desde su ficha, comentario «EMITIDA EN SUSTITUCIÓN DE LA
+FACTURA SIMPLIFICADA serie\número», recalcula netos
+(`PRC_CALCULAR_FACTURA_NETOS`) y deja el ticket apuntando a la nueva en
+sus columnas ABONO. Se encola como alta y el registro sale como **F3**
+con el bloque `FacturasSustituidas`; el ticket NO se anula (la F3 lo
+sustituye declarativamente).
+
+Resumen de caminos: registro mal comunicado → **Subsanar**; precios o
+conceptos mal → **Rectificar** (o devolución en caja); cliente pide
+factura nominativa de su ticket → **Facturar ticket (F3)**; venta
+inexistente → **Anular**.
+
+### Reintentos, duplicados y reproceso manual
+
+- Si la AEAT **acepta** pero la persistencia local falla (caída de BBDD
+  justo después del envío), la fila vuelve a la cola con el mensaje
+  «Aceptado por la AEAT pero falló la persistencia local: …». En el
+  reintento la AEAT responderá *registro duplicado* (err. 3000) y el
+  cliente lo da por aceptado: consolida (estado `DUPLICADO`), genera el
+  QR y marca la factura como consolidada. El sistema se autocura.
+- **Reproceso automático**: en cada ciclo, las filas en `ERROR` con
+  `CONTADOR_INTENTOS < appVerifactuMaxIntentos` vuelven a `PENDIENTE`
+  (sirve para revivir colas tras corregir configuración o tras subir el
+  parámetro de máximo de intentos).
+- **Reproceso manual**: en el menú Verifactu → Cola de Envíos se pueden
+  editar las columnas *Estado* (combo PENDIENTE/PROCESANDO/ENVIADA/
+  ERROR), *Intentos* y *Próximo intento*; al grabar, el hilo la
+  retoma en el siguiente ciclo. El resto de columnas son de solo
+  lectura.
+
 ### Notas y decisiones a validar en el entorno PRE de la AEAT
 
 - Devoluciones de caja: hoy van como F2 con importes negativos (igual

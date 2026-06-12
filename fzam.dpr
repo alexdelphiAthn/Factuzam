@@ -202,6 +202,7 @@ uses
   inMtoVerifactuLog in 'src\verifactu\inMtoVerifactuLog.pas' {frmMtoVerifactuLog},
   UniDataVerifactuLog in 'src\verifactu\UniDataVerifactuLog.pas' {dmVerifactuLog: TDataModule},
   inMtoModalVerifactuDecl in 'src\Modals\inMtoModalVerifactuDecl.pas' {frmModalVerifactuDecl},
+  inMtoModalFacturarTicket in 'src\Modals\inMtoModalFacturarTicket.pas' {frmModalFacturarTicket},
   inLibData in 'src\Lib\inLibData.pas',
   inLibAppParam in 'src\Lib\inLibAppParam.pas',
   inLibUnidadesMedida in 'src\Lib\inLibUnidadesMedida.pas',

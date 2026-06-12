@@ -29,6 +29,13 @@ type
     class procedure EncolarFactura(AQryTrx: TUniQuery;
                                    const ASerie, ANumero: string;
                                    const ATipoOperacion: string = 'ALTA');
+    // Marca una factura recién abonada como RECTIFICATIVA, la enlaza con
+    // la original (columnas ABONO) y la encola en Verifactu si está
+    // activo. La llama el modal de Rectificar de Facturas.
+    class procedure EncolarRectificativa(AConn: TUniConnection;
+                                         const ASerieOriginal,
+                                         ANumeroOriginal,
+                                         ASerieRect, ANumeroRect: string);
     // Arranque tras el logon y parada al cerrar (ver inMtoPrincipal)
     class procedure IniciarHilo;
     class procedure DetenerHilo;
@@ -88,8 +95,8 @@ class procedure TVerifactuCola.EncolarFactura(AQryTrx: TUniQuery;
                                               const ASerie, ANumero: string;
                                               const ATipoOperacion: string);
 begin
-  // ON DUPLICATE: si la factura ya estaba encolada no se duplica la
-  // fila; solo se refresca la auditoría
+  // ON DUPLICATE: si la operación ya estaba encolada se relanza
+  // (vuelve a PENDIENTE con los intentos a cero)
   AQryTrx.SQL.Text :=
     ' INSERT INTO fza_verifactu_cola ' +
     ' (SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, TIPO_OPERACION_VFCOLA, ' +
@@ -98,6 +105,10 @@ begin
     ' VALUES ' +
     ' (:SERIE, :NUMERO, :TIPOOP, ''PENDIENTE'', 0, NOW(), :USUARIO) ' +
     ' ON DUPLICATE KEY UPDATE ' +
+    '  ESTADO_VFCOLA = ''PENDIENTE'', ' +
+    '  CONTADOR_INTENTOS_VFCOLA = 0, ' +
+    '  INSTANTE_PROXIMO_INTENTO_VFCOLA = NULL, ' +
+    '  MENSAJE_ERROR_VFCOLA = NULL, ' +
     '  INSTANTE_MODIF = NOW(), ' +
     '  USUARIO_MODIF  = :USUARIO';
   AQryTrx.ParamByName('SERIE').AsString   := ASerie;
@@ -105,6 +116,67 @@ begin
   AQryTrx.ParamByName('TIPOOP').AsString  := ATipoOperacion;
   AQryTrx.ParamByName('USUARIO').AsString := oUser;
   AQryTrx.Execute;
+end;
+
+class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;
+                                                    const ASerieOriginal,
+                                                    ANumeroOriginal,
+                                                    ASerieRect,
+                                                    ANumeroRect: string);
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    // Rectificativa: tipo y fase propios, sin enlace ABONO heredado de
+    // la copia del SP, y comentario con la factura que rectifica
+    Qry.SQL.Text :=
+      ' UPDATE fza_facturas ' +
+      ' SET TIPO_FAC = ''RECTIFICATIVA'', ' +
+      '     FASE_FAC = ''BORRADOR'', ' +
+      '     SERIE_FAC_ABONO_FAC  = NULL, ' +
+      '     NUMERO_FAC_ABONO_FAC = NULL, ' +
+      '     COMENTARIOS_FAC = TRIM(CONCAT(IFNULL(COMENTARIOS_FAC, ' +
+      '         ''''), :COMENTARIO)), ' +
+      '     INSTANTE_MODIF = NOW(), ' +
+      '     USUARIO_MODIF  = :USUARIO ' +
+      ' WHERE SERIE_FAC  = :SERIE ' +
+      '   AND NUMERO_FAC = :NUMERO';
+    Qry.ParamByName('COMENTARIO').AsString :=
+      ' ESTA FACTURA ANULA Y RECTIFICA A LA ' + ASerieOriginal + '\' +
+      ANumeroOriginal;
+    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('SERIE').AsString   := ASerieRect;
+    Qry.ParamByName('NUMERO').AsString  := ANumeroRect;
+    Qry.Execute;
+    // La factura ORIGINAL pasa a fase RECTIFICADA y guarda en sus
+    // columnas ABONO la rectificativa que la anula
+    Qry.SQL.Text :=
+      ' UPDATE fza_facturas ' +
+      ' SET FASE_FAC = ''RECTIFICADA'', ' +
+      '     SERIE_FAC_ABONO_FAC  = :SERIERECT, ' +
+      '     NUMERO_FAC_ABONO_FAC = :NUMERORECT, ' +
+      '     INSTANTE_MODIF = NOW(), ' +
+      '     USUARIO_MODIF  = :USUARIO ' +
+      ' WHERE SERIE_FAC  = :SERIE ' +
+      '   AND NUMERO_FAC = :NUMERO';
+    Qry.ParamByName('SERIERECT').AsString  := ASerieRect;
+    Qry.ParamByName('NUMERORECT').AsString := ANumeroRect;
+    Qry.ParamByName('USUARIO').AsString    := oUser;
+    Qry.ParamByName('SERIE').AsString      := ASerieOriginal;
+    Qry.ParamByName('NUMERO').AsString     := ANumeroOriginal;
+    Qry.Execute;
+    if VerifactuActivo then
+    begin
+      EncolarFactura(Qry, ASerieRect, ANumeroRect);
+      RegistrarEventoVerifactu(AConn, cEventoVerifactuEncolado,
+        'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
+        ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
 end;
 
 class procedure TVerifactuCola.IniciarHilo;
@@ -258,6 +330,19 @@ begin
         ' WHERE ESTADO_VFCOLA = ''PROCESANDO'' ' +
         '   AND INSTANTE_MODIF < DATE_SUB(NOW(), INTERVAL 10 MINUTE)';
       Qry.Execute;
+      // Reproceso: filas en ERROR con menos intentos que el máximo
+      // vigente vuelven a la cola (p.ej. tras corregir configuración,
+      // resetear intentos a mano o subir appVerifactuMaxIntentos)
+      Qry.SQL.Text :=
+        ' UPDATE fza_verifactu_cola ' +
+        ' SET ESTADO_VFCOLA = ''PENDIENTE'', ' +
+        '     INSTANTE_PROXIMO_INTENTO_VFCOLA = NULL, ' +
+        '     INSTANTE_MODIF = NOW() ' +
+        ' WHERE ESTADO_VFCOLA = ''ERROR'' ' +
+        '   AND CONTADOR_INTENTOS_VFCOLA < :MAXINTENTOS';
+      Qry.ParamByName('MAXINTENTOS').AsInteger :=
+        oAppParams.GetInt('appVerifactuMaxIntentos', 10);
+      Qry.Execute;
       Qry.SQL.Text :=
         ' SELECT ID_VFCOLA, SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, ' +
         '        TIPO_OPERACION_VFCOLA, CONTADOR_INTENTOS_VFCOLA ' +
@@ -325,10 +410,24 @@ begin
                                           ATipoOperacion);
       if oResultado.Ok then
       begin
-        GuardarEnvioOk(AIdCola, ASerie, ANumero, ATipoOperacion,
-                       oResultado);
-        FConn.Commit;
-        Result := oResultado.EsperaSegundos;
+        // El registro YA está aceptado por la AEAT: si fallara la
+        // persistencia local se anota la verdad y el reintento se
+        // resolverá por la vía del registro duplicado
+        try
+          GuardarEnvioOk(AIdCola, ASerie, ANumero, ATipoOperacion,
+                         oResultado);
+          FConn.Commit;
+          Result := oResultado.EsperaSegundos;
+        except
+          on E: Exception do
+          begin
+            if FConn.InTransaction then
+              FConn.Rollback;
+            GuardarEnvioError(AIdCola, ASerie, ANumero,
+              'Aceptado por la AEAT pero falló la persistencia ' +
+              'local: ' + E.Message, AIntentos);
+          end;
+        end;
       end
       else
       begin
@@ -357,6 +456,7 @@ var
   oPngStream:    TBytesStream;
   sFase:         string;
   sEstadoFaccon: string;
+  bInsertarAlta: Boolean;
 begin
   // Se ejecuta DENTRO de la transacción abierta por ProcesarFila
   if ATipoOperacion = 'ANULACION' then
@@ -365,6 +465,10 @@ begin
     sFase := 'ONLINE';
   if SameText(AResultado.EstadoRegistro, 'AceptadoConErrores') then
     sEstadoFaccon := 'ACEPTADO_ERR'
+  else if SameText(AResultado.EstadoRegistro, 'Duplicado') then
+    sEstadoFaccon := 'DUPLICADO'
+  else if ATipoOperacion = 'SUBSANACION' then
+    sEstadoFaccon := 'SUBSANADO'
   else
     sEstadoFaccon := 'PROCESADO';
   Qry := TUniQuery.Create(nil);
@@ -390,6 +494,7 @@ begin
     Qry.ParamByName('USUARIO').AsString  := oUser;
     Qry.ParamByName('NIF').AsString      := AResultado.IssuerIrsId;
     Qry.Execute;
+    bInsertarAlta := (ATipoOperacion <> 'ANULACION');
     if ATipoOperacion = 'ANULACION' then
     begin
       // La anulación actualiza la consolidación del alta (UK_FACTURA)
@@ -415,7 +520,37 @@ begin
       Qry.ParamByName('NUMERO').AsString := ANumero;
       Qry.Execute;
     end;
-    if (ATipoOperacion <> 'ANULACION') then
+    if ATipoOperacion = 'SUBSANACION' then
+    begin
+      // La subsanación reescribe la consolidación del alta; si no
+      // existiera (alta nunca consolidada) se inserta entera abajo
+      Qry.SQL.Text :=
+        ' UPDATE fza_facturas_consolidaciones ' +
+        ' SET REQUEST_ID_CONSOLIDACION_FACCON = ' +
+        '       IFNULL(NULLIF(:REQUESTID, ''''), ' +
+        '              REQUEST_ID_CONSOLIDACION_FACCON), ' +
+        '     CHAIN_NUMBER_FACCON = :CHAINNUM, ' +
+        '     CHAIN_HASH_FACCON   = :CHAINHASH, ' +
+        '     ESTADO_FACCON = :ESTADO, ' +
+        '     RESPUESTA_COMPLETA_FACCON = :RESPUESTA, ' +
+        '     PETICION_COMPLETA_FACCON  = :PETICION, ' +
+        '     FECHA_PROCESAMIENTO_FACCON = NOW() ' +
+        ' WHERE SERIE_FAC_FACCON  = :SERIE ' +
+        '   AND NUMERO_FAC_FACCON = :NUMERO';
+      Qry.ParamByName('REQUESTID').AsString := AResultado.RequestId;
+      Qry.ParamByName('CHAINNUM').AsString  := AResultado.ChainNumber;
+      Qry.ParamByName('CHAINHASH').AsString := AResultado.ChainHash;
+      Qry.ParamByName('ESTADO').AsString    := sEstadoFaccon;
+      Qry.ParamByName('RESPUESTA').AsString :=
+        AResultado.RespuestaCompleta;
+      Qry.ParamByName('PETICION').AsString :=
+        AResultado.PeticionCompleta;
+      Qry.ParamByName('SERIE').AsString  := ASerie;
+      Qry.ParamByName('NUMERO').AsString := ANumero;
+      Qry.Execute;
+      bInsertarAlta := (Qry.RowsAffected = 0);
+    end;
+    if bInsertarAlta then
     begin
       // Consolidación del alta: misma estructura que usa OdaVeriFactu
       Qry.SQL.Text :=
