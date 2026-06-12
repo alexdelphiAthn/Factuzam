@@ -60,9 +60,16 @@ function GenerarQRPngVerifactu(const AUrl: string;
 // TOTAL_LIQUIDO_FAC). Encadenar desde TfrxReport.OnBeforePrint.
 procedure SustituirQRVerifactuEnReport(Component: TfrxReportComponent);
 // FastReport: si el formato cargado no trae un TfrxPictureView llamado
-// 'qrverifactu', lo crea en la primera página (30 mm, arriba a la
-// derecha). Si el diseñador ya lo colocó, se respeta su posición.
+// 'qrverifactu', lo crea (30 mm, arriba a la derecha) dentro de la
+// cabecera de página; los objetos sueltos en la página no reciben
+// OnBeforePrint y el hueco quedaba sin rellenar. Si el diseñador ya lo
+// colocó, se respeta su posición.
 procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
+// FastReport: ajusta el memo de título de los formatos de factura
+// ('FACTURA') al tipo del registro activo: FACTURA SIMPLIFICADA /
+// FACTURA RECTIFICATIVA / FACTURA. Encadenar desde OnBeforePrint.
+// Requiere que el dataset de cabecera lleve TIPO_FAC.
+procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
 // Registra un evento en fza_verifactu_eventos manteniendo la cadena de
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
@@ -77,8 +84,51 @@ implementation
 
 uses
   System.Classes, System.Hash, Data.DB, Vcl.Imaging.pngimage,
-  DelphiZXIngQRCode,
+  DelphiZXIngQRCode, frxDBSet,
   inLibGlobalVar, inLibAppParam, inLibFotos;
+
+// True si el dataset tiene los campos de cabecera de factura que
+// necesitan el QR y el título (vi_facturas / vi_facturas_print)
+function TieneCamposFactura(ADataSet: TDataSet): Boolean;
+begin
+  Result := (ADataSet <> nil) and
+            (ADataSet.FindField('NIF_EMPRESA_FAC') <> nil) and
+            (ADataSet.FindField('SERIE_FAC') <> nil) and
+            (ADataSet.FindField('NUMERO_FAC') <> nil) and
+            (ADataSet.FindField('FECHA_FAC') <> nil) and
+            (ADataSet.FindField('TOTAL_LIQUIDO_FAC') <> nil);
+end;
+
+// Dataset de cabecera de factura para un objeto del report: primero la
+// banda padre; si el objeto cuelga de una banda sin datos (cabecera de
+// página) o de la propia página, se busca entre los datasets del
+// report el que tenga los campos de factura.
+function DataSetFacturaDeReport(AObj: TfrxComponent): TDataSet;
+var
+  oReport: TfrxReport;
+  oDs:     TDataSet;
+  i:       Integer;
+begin
+  Result := ObtenerDataSetDeBandaPadre(AObj);
+  if not TieneCamposFactura(Result) then
+  begin
+    Result := nil;
+    oReport := AObj.Report;
+    if oReport <> nil then
+    begin
+      for i := 0 to oReport.Datasets.Count - 1 do
+      begin
+        if (Result = nil) and
+           (oReport.Datasets[i].DataSet is TfrxDBDataset) then
+        begin
+          oDs := TfrxDBDataset(oReport.Datasets[i].DataSet).DataSet;
+          if TieneCamposFactura(oDs) then
+            Result := oDs;
+        end;
+      end;
+    end;
+  end;
+end;
 
 function VerifactuActivo: Boolean;
 begin
@@ -238,13 +288,8 @@ begin
   begin
     oPic := TfrxPictureView(Component);
     sUrl := '';
-    oDataSet := ObtenerDataSetDeBandaPadre(oPic);
-    if VerifactuActivo and (oDataSet <> nil) and
-       (oDataSet.FindField('NIF_EMPRESA_FAC') <> nil) and
-       (oDataSet.FindField('SERIE_FAC') <> nil) and
-       (oDataSet.FindField('NUMERO_FAC') <> nil) and
-       (oDataSet.FindField('FECHA_FAC') <> nil) and
-       (oDataSet.FindField('TOTAL_LIQUIDO_FAC') <> nil) and
+    oDataSet := DataSetFacturaDeReport(oPic);
+    if VerifactuActivo and TieneCamposFactura(oDataSet) and
        (Trim(oDataSet.FieldByName('NUMERO_FAC').AsString) <> '') then
       sUrl := ConstruirUrlQR(
                 oDataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
@@ -272,10 +317,12 @@ end;
 
 procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
 var
-  i:      Integer;
+  i, j:   Integer;
   oPage:  TfrxReportPage;
+  oBanda: TfrxBand;
   oPic:   TfrxPictureView;
   dLado:  Extended;
+  dBase:  Extended;
 begin
   if (AReport <> nil) and (AReport.FindObject('qrverifactu') = nil) then
   begin
@@ -288,16 +335,86 @@ begin
     end;
     if oPage <> nil then
     begin
+      // El QR tiene que vivir DENTRO de una banda: los objetos
+      // sueltos en la página no pasan por OnBeforePrint y el hueco
+      // se quedaba vacío. Preferimos la cabecera de página (sale en
+      // todas las hojas con el registro activo); si el formato no
+      // tiene, el título de informe.
+      oBanda := nil;
+      for j := 0 to oPage.Objects.Count - 1 do
+      begin
+        if (oBanda = nil) and
+           (TObject(oPage.Objects[j]) is TfrxPageHeader) then
+          oBanda := TfrxBand(oPage.Objects[j]);
+      end;
+      if oBanda = nil then
+      begin
+        for j := 0 to oPage.Objects.Count - 1 do
+        begin
+          if (oBanda = nil) and
+             (TObject(oPage.Objects[j]) is TfrxReportTitle) then
+            oBanda := TfrxBand(oPage.Objects[j]);
+        end;
+      end;
       // 30 mm (mínimo AEAT 30x30) pegado al margen superior derecho.
       // El usuario puede recolocarlo en el diseñador: al guardar el
       // formato con el objeto, esta inyección deja de actuar.
       // fr01cm = 1 mm en píxeles del informe.
       dLado := 30 * fr01cm;
-      oPic := TfrxPictureView.Create(oPage);
+      if oBanda <> nil then
+      begin
+        oPic := TfrxPictureView.Create(oBanda);
+        dBase := oBanda.Width;
+        if dBase <= 0 then
+          dBase := oPage.Width;
+        // La banda debe poder contener el QR sin pisar lo de debajo
+        if oBanda.Height < dLado then
+          oBanda.Height := dLado;
+      end
+      else
+      begin
+        oPic := TfrxPictureView.Create(oPage);
+        dBase := oPage.Width;
+      end;
       oPic.Name    := 'qrverifactu';
-      oPic.SetBounds(oPage.Width - dLado, 0, dLado, dLado);
+      oPic.SetBounds(dBase - dLado, 0, dLado, dLado);
       oPic.Center  := True;
       oPic.KeepAspectRatio := True;
+    end;
+  end;
+end;
+
+procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
+var
+  oMemo:    TfrxMemoView;
+  oDataSet: TDataSet;
+  sTexto:   string;
+  sTipo:    string;
+begin
+  if Component is TfrxMemoView then
+  begin
+    oMemo  := TfrxMemoView(Component);
+    sTexto := UpperCase(Trim(oMemo.Text));
+    // Solo el memo de título (texto exacto, en cualquiera de sus
+    // variantes: así un rango con tipos mezclados se reevalúa por
+    // factura y vuelve a 'FACTURA' en las normales)
+    if (sTexto = 'FACTURA') or
+       (sTexto = 'FACTURA SIMPLIFICADA') or
+       (sTexto = 'FACTURA RECTIFICATIVA') then
+    begin
+      oDataSet := DataSetFacturaDeReport(oMemo);
+      if (oDataSet <> nil) and
+         (oDataSet.FindField('TIPO_FAC') <> nil) then
+      begin
+        sTipo := UpperCase(Trim(
+                   oDataSet.FieldByName('TIPO_FAC').AsString));
+        if sTipo = 'SIMPLIFICADA' then
+          oMemo.Text := 'FACTURA SIMPLIFICADA'
+        else if sTipo = 'RECTIFICATIVA' then
+          oMemo.Text := 'FACTURA RECTIFICATIVA'
+        else
+          oMemo.Text := 'FACTURA';
+      end;
     end;
   end;
 end;

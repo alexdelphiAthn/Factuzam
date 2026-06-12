@@ -17,10 +17,11 @@ unit inLibFacturaExcel;
 interface
 
 uses
-   Uni, DB, System.SysUtils,
+   Uni, DB, System.SysUtils, System.Classes,
    dxSpreadSheet, dxSpreadSheetCore, cxGraphics, vcl.Graphics,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
-  dxSpreadSheetStyles, dxHashUtils, inLibDevExcel;
+  dxSpreadSheetStyles, dxSpreadSheetContainers, dxHashUtils,
+  dxGDIPlusClasses, dxSmartImage, inLibDevExcel, inLibVerifactu;
 
 procedure ExportarFacturaADevExpress(ASheetControl: TdxSpreadSheet;
                                               const QMaster, QLineas: TDataSet);
@@ -40,11 +41,56 @@ const
   // Columnas Técnicas (Ocultas)
   COL_BASEI  = 5; // F: Base Imponible real de cada línea
   COL_TIPO_L = 6; // G: Tipo de IVA Letra (N, R, S, E)
+const
+  COL_QR = 7; // H: QR tributario Verifactu (a la derecha de la cabecera)
 var
   Sheet: TdxSpreadSheetTableView;
   iRow: Integer;
   PorcenREN, PorcenRER, PorcenRESR, PorcenREE: Double;
   TieneRE : Boolean;
+  sTitulo : string;
+
+  // QR tributario Verifactu arriba a la derecha (mismas reglas que el
+  // ticket y el A4: URL de cotejo calculada en local). Si Verifactu
+  // está inactivo o falta algún dato, no pone nada.
+  procedure IncrustarQRVerifactu;
+  var
+    aPng:    TBytes;
+    oStream: TBytesStream;
+    img:     TdxSmartImage;
+    Pic:     TdxSpreadSheetPictureContainer;
+    sUrl:    string;
+  begin
+    if VerifactuActivo and
+       (QMaster.FindField('NIF_EMPRESA_FAC') <> nil) and
+       (Trim(QMaster.FieldByName('NUMERO_FAC').AsString) <> '') then
+    begin
+      sUrl := ConstruirUrlQR(
+                QMaster.FieldByName('NIF_EMPRESA_FAC').AsString,
+                QMaster.FieldByName('SERIE_FAC').AsString,
+                QMaster.FieldByName('NUMERO_FAC').AsString,
+                QMaster.FieldByName('FECHA_FAC').AsDateTime,
+                QMaster.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
+      aPng := GenerarQRPngVerifactu(sUrl);
+      img := TdxSmartImage.Create;
+      oStream := TBytesStream.Create(aPng);
+      try
+        img.LoadFromStream(oStream);
+        Pic := Sheet.Containers.Add(TdxSpreadSheetPictureContainer)
+                 as TdxSpreadSheetPictureContainer;
+        Pic.Picture.Image := img; // el contenedor copia la imagen
+        // Anclado a la columna H, a la altura de la cabecera. La
+        // columna se dimensiona para que el QR quede ~cuadrado.
+        Sheet.Columns[COL_QR].Size := 120;
+        Pic.AnchorType := catTwoCell;
+        Pic.AnchorPoint1.Cell := Sheet.CreateCell(1, COL_QR);
+        Pic.AnchorPoint2.Cell := Sheet.CreateCell(7, COL_QR + 1);
+      finally
+        FreeAndNil(oStream);
+        FreeAndNil(img);
+      end;
+    end;
+  end;
 
   procedure PintarImpuesto(TipoLetra: string; PctIVA, PctRE: Double;
                            RangoTL, RangoBR: String);
@@ -91,8 +137,20 @@ begin
                      + '_' + QMaster.FieldByName('NUMERO_FAC').AsString;
   var ImpuestosIncluidos :=
       (QMaster.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString = 'S');
-  W(Sheet, 1, COL_DESC, 'FACTURA', True);
+  // Título según el tipo de factura del registro
+  sTitulo := 'FACTURA';
+  if QMaster.FindField('TIPO_FAC') <> nil then
+  begin
+    if SameText(QMaster.FieldByName('TIPO_FAC').AsString,
+                'SIMPLIFICADA') then
+      sTitulo := 'FACTURA SIMPLIFICADA'
+    else if SameText(QMaster.FieldByName('TIPO_FAC').AsString,
+                     'RECTIFICATIVA') then
+      sTitulo := 'FACTURA RECTIFICATIVA';
+  end;
+  W(Sheet, 1, COL_DESC, sTitulo, True);
   Sheet.Cells[1, COL_DESC].Style.Font.Size := 18;
+  IncrustarQRVerifactu;
   W(Sheet, 1, COL_TOTAL, 'Fecha: ' +
                QMaster.FieldByName('FECHA_FAC').AsString, False, ssahRight);
   W(Sheet, 2, COL_TOTAL, 'Número: ' +
