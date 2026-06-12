@@ -2259,7 +2259,7 @@ inherited dmFacturas: TdmFacturas
       'ORDER BY ID_FACCON DESC')
     MasterSource = frmMtoFacturasBase.dsTablaG
     MasterFields = 'SERIE_FAC;NUMERO_FAC'
-    DetailFields = 'ID_FACCON;NUMERO_FAC_FACCON'
+    DetailFields = 'SERIE_FAC_FACCON;NUMERO_FAC_FACCON'
     ReadOnly = True
     Left = 1045
     Top = 131
@@ -2285,9 +2285,11 @@ inherited dmFacturas: TdmFacturas
   object unqryErrores: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'select *'
+      'SELECT *'
       'FROM fza_verifactu_eventos'
-      'order by id_log desc')
+      'WHERE NUMERO_FAC_LOG = :NUMERO_FAC'
+      '  AND SERIE_FAC_LOG  = :SERIE_FAC'
+      'ORDER BY ID_LOG DESC')
     MasterSource = frmMtoFacturasBase.dsTablaG
     MasterFields = 'NUMERO_FAC;SERIE_FAC'
     DetailFields = 'NUMERO_FAC_LOG;SERIE_FAC_LOG'
@@ -2319,9 +2321,9 @@ inherited dmFacturas: TdmFacturas
       '       TIPO_MOV, CANTIDAD_MOV, '
       '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
       '  FROM vi_movimientos '
-      ' WHERE TIPO_DOC_REF_MOV   = '#39'FC'#39' '
-      '   AND SERIE_DOC_REF_MOV  = :SERIE_FAC '
-      '   AND NUMERO_DOC_REF_MOV = :NUMERO_FAC '
+      ' WHERE TIPO_DOC_MOV IN ('#39'FC'#39', '#39'VE'#39') '
+      '   AND SERIE_DOC_MOV  = :SERIE_FAC '
+      '   AND NUMERO_DOC_MOV = :NUMERO_FAC '
       ' ORDER BY LINEA_MOV')
     MasterSource = frmMtoFacturasBase.dsTablaG
     MasterFields = 'NUMERO_FAC;SERIE_FAC'
