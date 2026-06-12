@@ -21,7 +21,9 @@
 --   §2 de LIBRO_DE_ESTILO_BBDD.md y en UNormalizerEngine.pas (InitDefaults).
 --
 -- Idempotente: CREATE TABLE IF NOT EXISTS + CREATE OR REPLACE VIEW +
---              INSERT IGNORE. Se puede lanzar varias veces sin efectos.
+--              INSERT IGNORE. Se puede lanzar varias veces sin efectos,
+--              también después de la FASE 2 (el volcado desde fza_usuarios
+--              va guardado por INFORMATION_SCHEMA).
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -68,19 +70,30 @@ SELECT `fza_empleados`.`CODIGO_EMPL`            AS `CODIGO_EMPL`,
 --    se convierte en un empleado, tomando su diminutivo de ticket. El NOMBRE
 --    se siembra con el nombre de usuario como valor provisional (luego se edita
 --    en la pantalla). INSERT IGNORE → idempotente y salta códigos duplicados.
+--    Guardado por INFORMATION_SCHEMA: tras la FASE 2
+--    (empleados_retirar_columnas_usuarios.sql) esas columnas ya no existen en
+--    fza_usuarios y el volcado se omite (ya se hizo en su día).
 -- -----------------------------------------------------------------------------
-INSERT IGNORE INTO `fza_empleados`
-  (`CODIGO_EMPL`, `NOMBRE_EMPL`, `DIMINUTIVO_TICKET_EMPL`, `ESACTIVO_EMPL`,
-   `INSTANTE_ALTA`, `USUARIO_ALTA`)
-SELECT u.`CODIGO_EMPLEADO_USU`,
-       u.`USUARIO_USU`,
-       u.`DIMINUTIVO_TICKET_USU`,
-       COALESCE(u.`ESACTIVO_USU`, 'S'),
-       NOW(),
-       'SISTEMA'
-  FROM `fza_usuarios` u
- WHERE u.`CODIGO_EMPLEADO_USU` IS NOT NULL
-   AND TRIM(u.`CODIGO_EMPLEADO_USU`) <> '';
+SET @nColOrigen := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_usuarios'
+     AND COLUMN_NAME  = 'CODIGO_EMPLEADO_USU'
+);
+SET @sSql := IF(@nColOrigen = 1,
+  'INSERT IGNORE INTO fza_empleados
+     (CODIGO_EMPL, NOMBRE_EMPL, DIMINUTIVO_TICKET_EMPL, ESACTIVO_EMPL,
+      INSTANTE_ALTA, USUARIO_ALTA)
+   SELECT u.CODIGO_EMPLEADO_USU, u.USUARIO_USU, u.DIMINUTIVO_TICKET_USU,
+          COALESCE(u.ESACTIVO_USU, ''S''), NOW(), ''SISTEMA''
+     FROM fza_usuarios u
+    WHERE u.CODIGO_EMPLEADO_USU IS NOT NULL
+      AND TRIM(u.CODIGO_EMPLEADO_USU) <> ''''',
+  'SELECT ''Volcado omitido (columnas ya retiradas en FASE 2)'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- -----------------------------------------------------------------------------
 -- 4. Alta de la pantalla en el menú (fza_winforms). NUM_VENTANAS_WINF = 5 como
