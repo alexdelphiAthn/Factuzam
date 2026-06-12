@@ -89,6 +89,14 @@ type
     procedure unqryLinFacAfterDelete(DataSet: TDataSet);
     procedure dsLinFacStateChange(Sender: TObject);
     procedure unqryLinFacBeforeEdit(DataSet: TDataSet);
+private
+    // Copia a los parámetros de la query los valores de los campos del
+    // maestro (MasterSource) que se llamen igual. UniDAC solo rellena
+    // los parámetros al hacer scroll del maestro con el detail ya
+    // abierto; en la apertura perezosa (pestañas lazy) la query se abre
+    // después de posicionar el maestro y se quedaba con parámetros NULL
+    // (pestañas Verifactu y Movimientos vacías).
+    procedure RellenarParamsDesdeMaestro(AQry: TUniQuery);
 public
     procedure GetCodigoAutoFactura;
     procedure GetCodigoAutoCliente;
@@ -131,7 +139,7 @@ public
     // factura cargada (sólo se llama automáticamente en facturas
     // simplificadas, pero se puede invocar manualmente). Idempotente: salta
     // líneas que ya tengan un movimiento registrado para el documento
-    // (TIPO_DOC_REF_MOV='FC').
+    // (TIPO_DOC_MOV='FC' + serie/número/línea).
     function GenerarMovimientosSalidaFactura: Integer;
   end;
 implementation
@@ -810,12 +818,35 @@ begin
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
+procedure TdmFacturas.RellenarParamsDesdeMaestro(AQry: TUniQuery);
+var
+  oMaestro: TDataSet;
+  oCampo:   TField;
+  i:        Integer;
+begin
+  if (AQry.MasterSource <> nil) and
+     (AQry.MasterSource.DataSet <> nil) then
+  begin
+    oMaestro := AQry.MasterSource.DataSet;
+    if oMaestro.Active and (not oMaestro.IsEmpty) then
+    begin
+      for i := 0 to AQry.Params.Count - 1 do
+      begin
+        oCampo := oMaestro.FindField(AQry.Params[i].Name);
+        if oCampo <> nil then
+          AQry.Params[i].Value := oCampo.Value;
+      end;
+    end;
+  end;
+end;
+
 procedure TdmFacturas.AsegurarRecibosAbierta;
 var swQ: TStopwatch;
 begin
   if unqryRecibos.Active then Exit;
   swQ := TStopwatch.StartNew;
   try
+    RellenarParamsDesdeMaestro(unqryRecibos);
     unqryRecibos.Open;
     inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryRecibos OK',
       swQ.ElapsedMilliseconds);
@@ -835,6 +866,7 @@ begin
   if unqryConsolidacion.Active then Exit;
   swQ := TStopwatch.StartNew;
   try
+    RellenarParamsDesdeMaestro(unqryConsolidacion);
     unqryConsolidacion.Open;
     inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryConsolidacion OK',
       swQ.ElapsedMilliseconds);
@@ -854,6 +886,7 @@ begin
   if unqryErrores.Active then Exit;
   swQ := TStopwatch.StartNew;
   try
+    RellenarParamsDesdeMaestro(unqryErrores);
     unqryErrores.Open;
     inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryErrores OK',
       swQ.ElapsedMilliseconds);
@@ -873,6 +906,7 @@ begin
   if unqryMovimientosFac.Active then Exit;
   swQ := TStopwatch.StartNew;
   try
+    RellenarParamsDesdeMaestro(unqryMovimientosFac);
     unqryMovimientosFac.Open;
     inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryMovimientosFac OK',
       swQ.ElapsedMilliseconds);
@@ -1101,8 +1135,8 @@ begin
   // Las facturas SIMPLIFICADAS (tickets directos sin albaran previo)
   // generan movimientos automaticos al consolidarse. Las NORMALES solo
   // si el usuario marco el check ESMUEVE_STOCK_FAC (caso venta directa
-  // al mayor sin albaran). El SP de insercion es idempotente: comprueba
-  // que no exista ya el movimiento por TIPO_DOC_REF_MOV/SERIE/NUMERO/LINEA.
+  // al mayor sin albaran). La generacion es idempotente: se comprueba
+  // que no exista ya el movimiento por TIPO_DOC_MOV/SERIE/NUMERO/LINEA.
   if (not unqryTablaG.Active) or
      (unqryTablaG.FindField('TIPO_FAC') = nil) or
      (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) = '') then
@@ -1186,6 +1220,18 @@ procedure TdmFacturas.unqryTablaGBeforeDelete(DataSet: TDataSet);
   qryBorrarLineas : TUniQuery;
   qryBorrarRecibos: TUniquery;
 begin
+  // Una factura lanzada a Verifactu (fuera de BORRADOR) ya está
+  // registrada en la AEAT: no se borra, se anula o rectifica
+  if (DataSet.FindField(ffasefac) <> nil) and
+     (DataSet.FieldByName(ffasefac).AsString <> '') and
+     (not SameText(DataSet.FieldByName(ffasefac).AsString, 'BORRADOR')) then
+  begin
+    ShowMessage('La factura está en fase ' +
+                DataSet.FieldByName(ffasefac).AsString +
+                ': ya se ha lanzado a Verifactu y no puede borrarse. ' +
+                'Use Anular Verifactu o emita una rectificativa.');
+    Abort;
+  end;
   qryBorrarLineas := TUniQuery.Create(Self);
   with qryBorrarLineas do
   begin
@@ -1254,6 +1300,9 @@ begin
     FieldByName('FECHA_FAC').AsDateTime := Trunc(Now);
     FieldByName('FORMA_PAGO_FAC').AsString := FormaPagoDefault;
     FieldByName('ESCONSOLIDADA_FAC').AsString := 'N';
+    // Toda factura nace en borrador: editable y sin imprimir hasta
+    // lanzarla a Verifactu (Consolidar)
+    FieldByName('FASE_FAC').AsString := 'BORRADOR';
     // Tipo de factura segun el formulario (NORMAL / SIMPLIFICADA)
     FieldByName('TIPO_FAC').AsString :=
       (GetOwnerForm<TfrmMtoFacturasBase>).TipoFacturaFiltro;
@@ -1472,13 +1521,15 @@ begin
     qLineas.Open;
 
     qExiste.Connection := inLibGlobalVar.oConn;
+    // El SP guarda el documento en las columnas DOC (las REF quedan
+    // NULL): el control de duplicados debe mirar TIPO/SERIE/NUMERO_DOC
     qExiste.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_REF_MOV   = ''FC'' ' +
-      '   AND SERIE_DOC_REF_MOV  = :pSER ' +
-      '   AND NUMERO_DOC_REF_MOV = :pNUM ' +
-      '   AND LINEA_REF_MOV      = :pLIN';
+      ' WHERE TIPO_DOC_MOV   = ''FC'' ' +
+      '   AND SERIE_DOC_MOV  = :pSER ' +
+      '   AND NUMERO_DOC_MOV = :pNUM ' +
+      '   AND LINEA_MOV      = :pLIN';
 
     qLineas.First;
     while not qLineas.Eof do

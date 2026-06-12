@@ -23,29 +23,17 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
     Caption = 'Cliente:'
     Transparent = True
   end
-  object cbbCliente: TcxLookupComboBox [3]
+  object btnCliente: TcxButtonEdit [3]
     Left = 160
     Top = 64
     Width = 376
-    Properties.DropDownListStyle = lsFixedList
-    Properties.KeyFieldNames = 'CODIGO_CLI_CLI'
-    Properties.ListColumns = <
+    Properties.Buttons = <
       item
-        Caption = 'Raz'#243'n Social'
-        Width = 220
-        FieldName = 'RAZON_SOCIAL_CLI'
-      end
-      item
-        Caption = 'NIF'
-        Width = 90
-        FieldName = 'NIF_CLI'
-      end
-      item
-        Caption = 'C'#243'digo'
-        Width = 70
-        FieldName = 'CODIGO_CLI_CLI'
+        Default = True
+        Kind = bkEllipsis
       end>
-    Properties.ListSource = dsClientes
+    Properties.ReadOnly = True
+    Properties.OnButtonClick = btnClientePropertiesButtonClick
     TabOrder = 1
   end
   object lblSerie: TcxLabel [4]
@@ -108,19 +96,6 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
       TabOrder = 1
       OnClick = btnGenerarClick
     end
-  end
-  object qryClientes: TUniQuery
-    SQL.Strings = (
-      'SELECT CODIGO_CLI_CLI, RAZON_SOCIAL_CLI, NIF_CLI'
-      'FROM fza_clientes'
-      'ORDER BY RAZON_SOCIAL_CLI')
-    Left = 456
-    Top = 144
-  end
-  object dsClientes: TDataSource
-    DataSet = qryClientes
-    Left = 456
-    Top = 192
   end
   object qrySeries: TUniQuery
     SQL.Strings = (

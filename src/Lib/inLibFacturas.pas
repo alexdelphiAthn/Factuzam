@@ -53,6 +53,7 @@ const
   fnrofac = 'NUMERO_FAC';
   fseriefac = 'SERIE_FAC';
   ftipofac = 'TIPO_FAC';
+  ffasefac = 'FASE_FAC';
   fcodemp = 'CODIGO_EMP_FAC';
   fcodcli = 'CODIGO_CLI_FAC';
   factfij = 'ESVENTA_ACTIVO_FIJO_FAC';

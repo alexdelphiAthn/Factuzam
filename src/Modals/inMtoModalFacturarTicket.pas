@@ -25,7 +25,7 @@ uses
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxTextEdit, cxMaskEdit, cxDropDownEdit,
   cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox, cxCalendar, cxLabel,
-  cxButtons, dxCore, cxDateUtils,
+  cxButtons, cxButtonEdit, dxCore, cxDateUtils,
   inMtoFrmBase;
 
 type
@@ -39,7 +39,7 @@ type
     lblTicket:   TcxLabel;
     edtTicket:   TcxTextEdit;
     lblCliente:  TcxLabel;
-    cbbCliente:  TcxLookupComboBox;
+    btnCliente:  TcxButtonEdit;
     lblSerie:    TcxLabel;
     cbbSerie:    TcxLookupComboBox;
     lblFecha:    TcxLabel;
@@ -47,17 +47,21 @@ type
     pnlButton:   TPanel;
     btnGenerar:  TcxButton;
     btnCancelar: TcxButton;
-    qryClientes: TUniQuery;
-    dsClientes:  TDataSource;
     qrySeries:   TUniQuery;
     dsSeries:    TDataSource;
     procedure btnGenerarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
+    procedure btnClientePropertiesButtonClick(Sender: TObject;
+                                              AButtonIndex: Integer);
   private
     FResultado:    TFacturarTicketResult;
     FSerieTicket:  string;
     FNumeroTicket: string;
     FEmpresa:      string;
+    FCliente:      string;
+    // Búsqueda de cliente con el buscador genérico heredado de
+    // inMtoGenSearch (mismo formulario que usa la caja), no un combo
+    procedure BuscarCliente;
     procedure CrearFacturaNormal(const ASerie: string;
                                  const ACliente: string;
                                  AFecha: TDateTime);
@@ -72,7 +76,8 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb, inLibVerifactu, inLibVerifactuCola;
+  inLibGlobalVar, inLibtb, inLibVerifactu, inLibVerifactuCola,
+  inMtoGenSearch;
 
 {$R *.dfm}
 
@@ -92,9 +97,7 @@ begin
     frm.FNumeroTicket := ANumeroTicket;
     frm.FEmpresa      := AEmpresa;
     frm.edtTicket.Text := ASerieTicket + '\' + ANumeroTicket;
-    frm.qryClientes.Connection := inLibGlobalVar.oConn;
-    frm.qrySeries.Connection   := inLibGlobalVar.oConn;
-    frm.qryClientes.Open;
+    frm.qrySeries.Connection := inLibGlobalVar.oConn;
     frm.qrySeries.Open;
     // Serie por defecto: la ligada al almacén del ticket; si no tiene,
     // la primera serie FC activa (DEFAULT_CON primero)
@@ -120,12 +123,59 @@ begin
   Close;
 end;
 
+procedure TfrmModalFacturarTicket.btnClientePropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  BuscarCliente;
+end;
+
+procedure TfrmModalFacturarTicket.BuscarCliente;
+var
+  formulario:    TfrmMtoSearch;
+  unqryClientes: TUniQuery;
+begin
+  // Mismo buscador genérico (y mismo nombre de form, para compartir
+  // perfiles de columnas) que la búsqueda de clientes de la caja
+  unqryClientes := TUniQuery.Create(nil);
+  try
+    unqryClientes.Connection := inLibGlobalVar.oConn;
+    unqryClientes.SQL.Text :=
+      'SELECT CODIGO_CLI_CLI as `Código`, ' +
+      '       RAZON_SOCIAL_CLI as `Razón Social`, ' +
+      '       NIF_CLI as `NIF Cliente`, ' +
+      '       MOVIL_CLI as `Teléfono Cliente`, ' +
+      '       POBLACION_CLI as `Población` ' +
+      '  FROM fza_clientes ' +
+      ' WHERE ESACTIVO_CLI = ' + QuotedStr('S') +
+      ' ORDER BY RAZON_SOCIAL_CLI';
+    formulario := TfrmMtoSearch.Create(nil);
+    try
+      formulario.Name := 'frmMtoCliSearch';
+      formulario.Caption := 'Búsqueda de Clientes';
+      formulario.dsTablaG.DataSet := unqryClientes;
+      unqryClientes.Open;
+      formulario.ProcesarPerfiles;
+      formulario.ShowModal;
+      if formulario.sFicha = 'S' then
+      begin
+        FCliente := unqryClientes.FieldByName('Código').AsString;
+        btnCliente.Text := FCliente + ' - ' +
+          unqryClientes.FieldByName('Razón Social').AsString;
+      end;
+    finally
+      FreeAndNil(formulario);
+    end;
+  finally
+    FreeAndNil(unqryClientes);
+  end;
+end;
+
 procedure TfrmModalFacturarTicket.btnGenerarClick(Sender: TObject);
 var
   sCliente: string;
   sSerie:   string;
 begin
-  sCliente := VarToStr(cbbCliente.EditValue);
+  sCliente := FCliente;
   sSerie   := VarToStr(cbbSerie.EditValue);
   if Trim(sCliente) = '' then
     ShowMessage('Seleccione el cliente de la factura.')

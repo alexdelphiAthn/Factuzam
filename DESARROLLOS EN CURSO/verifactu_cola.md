@@ -10,6 +10,22 @@ encolada para que un hilo en segundo plano la comunique a Verifactu.
    la transacción de la venta, si `appVerifactuActivo` está marcado, se
    inserta la factura en `fza_verifactu_cola` (PASO 4.6). Factura y cola
    se confirman o deshacen juntas.
+
+   **Fases de la factura** (`FASE_FAC`): toda factura nace en `BORRADOR`
+   (editable, sin imprimir). El *lanzamiento* (encolar el ALTA, sea
+   desde la venta de caja, el botón Consolidar de Facturas, F3/F8 o una
+   rectificativa) la pasa a `ONLINE` **en el acto**
+   (`TVerifactuCola.EncolarFactura`): el QR es calculable en local y la
+   petición al ws viaja asíncrona. Desde `ONLINE` ya puede imprimirse y
+   deja de ser editable o borrable (solo Anular o Rectificar). Si el
+   envío agota reintentos pasa a `ERROR` (relanzable desde la cola). El
+   bloqueo de edición/impresión/borrado por fase vive en
+   `TfrmMtoFacturasBase.ActualizarBloqueoEdicion`,
+   `sbImprimirClick` y `unqryTablaGBeforeDelete`; aplica igual a
+   normales y a simplificadas creadas a mano. El botón **Consolidar**
+   lanza manualmente una factura en borrador (con líneas y, si es
+   NORMAL, con NIF de cliente). «Convertir en normal» solo se muestra
+   en el Mto de simplificadas.
 2. **Ticket** (`inLibGenerarTicket.ImprimirT` y reimpresión en
    `inLibGenerarTicketBD.ImprimirTicketDesdeBD`): con Verifactu activo se
    imprime el QR tributario (URL de cotejo de la AEAT, nivel de
@@ -186,18 +202,24 @@ debajo de Consolidar (se eliminó el panel inferior).
 
 ### Anular y convertir desde Facturas (Buscar / Modificar)
 
-En la pestaña de lista de Facturas (normales y simplificadas) hay dos
-botones que operan sobre la factura seleccionada (solo si ya está
-consolidada):
+En la columna de botones de Facturas (normales y simplificadas)
+operan sobre la factura seleccionada:
 
-- **Anular (Verifactu)**: encola un `RegistroAnulacion`. Al aceptarse,
-  la factura pasa a `FASE_FAC='CANCELADA'` y la consolidación a
-  `ESTADO='ANULADO'` (con `QUEUE_ID_CANCEL_FACCON`).
-- **Subsanar (Verifactu)**: encola una `SUBSANACION` (reenvío del
-  `RegistroAlta` con `<Subsanacion>S</Subsanacion>`, p. ej. tras un
-  «aceptado con errores» o tras corregir datos de la factura). Al
-  aceptarse, la consolidación se reescribe con la nueva
-  petición/respuesta y queda en `ESTADO='SUBSANADO'`.
+- **Consolidar**: lanza manualmente a Verifactu una factura en
+  `BORRADOR` (pasa a `ONLINE` en el acto y encola el ALTA; ver
+  «Fases» en el Flujo). Exige líneas y, en NORMAL, NIF de cliente.
+- **Anular Verifactu** (solo consolidadas): encola un
+  `RegistroAnulacion`. Al aceptarse, la factura pasa a
+  `FASE_FAC='CANCELADA'` y la consolidación a `ESTADO='ANULADO'` (con
+  `QUEUE_ID_CANCEL_FACCON`).
+- **Convertir en normal** (solo en el Mto de simplificadas): crea la
+  factura F3 en sustitución del ticket (modal
+  `inMtoModalFacturarTicket`; el cliente se elige con el buscador
+  genérico `TfrmMtoSearch`, no con un combo).
+
+El motor de subsanación (`SUBSANACION`, reenvío del `RegistroAlta` con
+`<Subsanacion>S</Subsanacion>`) sigue disponible en la cola aunque ya
+no tiene botón propio: la rectificativa es el camino preferido.
 
 **Histórico de relaciones** (`fza_facturas_relaciones`, script
 `verifactu_relaciones.sql`): cada rectificativa (RECTIFICA) y cada F3
@@ -220,6 +242,25 @@ Verifactu»** con el último estado de la cola de cada factura
 SELECT del listado se recompone en `CrearTablaPrincipal` con un
 subselect a `fza_verifactu_cola`, así que no hay que tocar vistas ni
 perfiles.
+
+**Pestañas de la ficha** (5_Verifactu, 6_Registro, 7_Movimientos): las
+tres son detail con parámetros `:SERIE_FAC`/`:NUMERO_FAC` del maestro.
+UniDAC solo rellena los parámetros al hacer scroll del maestro con el
+detail abierto, así que la apertura perezosa los dejaba a NULL
+(pestañas vacías): `TdmFacturas.RellenarParamsDesdeMaestro` los copia
+a mano antes del `Open` en cada `AsegurarXxxAbierta`. Además:
+
+- **7_Movimientos** filtraba por `TIPO_DOC_REF_MOV='FC'`, columnas que
+  el SP nunca rellena: ahora filtra por `TIPO_DOC_MOV IN ('FC','VE')`
+  + `SERIE/NUMERO_DOC_MOV` (caja graba 'VE', el Mto 'FC'). El control
+  de duplicados de `GenerarMovimientosSalidaFactura` usaba las mismas
+  columnas REF vacías (habría duplicado movimientos al reconsolidar) y
+  se corrigió igual.
+- **6_Registro** listaba TODOS los eventos (SQL sin parámetros): ahora
+  filtra por la factura activa (`NUMERO/SERIE_FAC_LOG`).
+- **5_Verifactu**: el memo de URL apuntaba a `VERIFACTU_URL` (sin
+  sufijo `_FACCON`) y `txtREQUEST_ID` no se reataba por instancia en
+  `AsignarControles`.
 
 ### Rectificativas (botón Rectificar → Abonar)
 
