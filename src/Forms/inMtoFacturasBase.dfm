@@ -2238,7 +2238,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                 object cxdbmVERIFACTU_URL: TcxDBMemo
                   Left = 216
                   Top = 450
-                  DataBinding.DataField = 'VERIFACTU_URL'
+                  DataBinding.DataField = 'VERIFACTU_URL_FACCON'
                   Properties.ReadOnly = True
                   TabOrder = 3
                   Height = 44
@@ -3690,6 +3690,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
       Height = 34
       Caption = 'Consolida&r'
       TabOrder = 5
+      OnClick = btnConsolidarClick
     end
     object btnVerifactuAnular: TcxButton
       Left = 1

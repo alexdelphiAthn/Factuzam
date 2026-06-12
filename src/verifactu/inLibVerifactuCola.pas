@@ -122,6 +122,26 @@ begin
   AQryTrx.ParamByName('TIPOOP').AsString  := ATipoOperacion;
   AQryTrx.ParamByName('USUARIO').AsString := oUser;
   AQryTrx.Execute;
+  // El lanzamiento saca la factura de BORRADOR en el acto: el QR es
+  // calculable en local (ConstruirUrlQR) y la petición al ws viaja
+  // asíncrona en el hilo de la cola. Desde ONLINE ya puede imprimirse
+  // y deja de ser editable (solo anular o rectificar).
+  if SameText(ATipoOperacion, 'ALTA') then
+  begin
+    AQryTrx.SQL.Text :=
+      ' UPDATE fza_facturas ' +
+      '    SET FASE_FAC = ''ONLINE'', ' +
+      '        INSTANTE_MODIF = NOW(), ' +
+      '        USUARIO_MODIF  = :USUARIO ' +
+      '  WHERE SERIE_FAC  = :SERIE ' +
+      '    AND NUMERO_FAC = :NUMERO ' +
+      '    AND (FASE_FAC IS NULL OR ' +
+      '         FASE_FAC IN ('''', ''BORRADOR'', ''ERROR''))';
+    AQryTrx.ParamByName('SERIE').AsString   := ASerie;
+    AQryTrx.ParamByName('NUMERO').AsString  := ANumero;
+    AQryTrx.ParamByName('USUARIO').AsString := oUser;
+    AQryTrx.Execute;
+  end;
 end;
 
 class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;

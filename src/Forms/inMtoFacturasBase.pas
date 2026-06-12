@@ -470,6 +470,8 @@ type
     procedure btnCODIGO_CLIENTEPropertiesChange(Sender: TObject);
     procedure cbbCanalIVAPropertiesChange(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
+    procedure dsTablaGDataChange(Sender: TObject; Field: TField);
+    procedure btnConsolidarClick(Sender: TObject);
     procedure chkFechaEntregaPropertiesChange(Sender: TObject);
     procedure chkDescripcion_ampliadaPropertiesChange(Sender: TObject);
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
@@ -528,7 +530,11 @@ type
     function AbrirListadoAlCrear: Boolean; virtual;
     //procedure CalcularLinea;
   private
-    procedure CheckConsolidacion;
+    // Bloqueo por fase Verifactu: una factura solo es editable (cabecera,
+    // líneas y borrado) mientras FASE_FAC='BORRADOR'. Al lanzarla pasa a
+    // ONLINE y solo caben Anular o Rectificar. Imprimir exige haber
+    // salido de BORRADOR (el QR tributario nace con el lanzamiento).
+    procedure ActualizarBloqueoEdicion;
     procedure AsignarControles;
     // Encola en fza_verifactu_cola una ANULACION o SUBSANACION de la
     // factura seleccionada en la lista; el hilo Verifactu la envía
@@ -914,9 +920,20 @@ end;
 
 procedure TfrmMtoFacturasBase.sbImprimirClick(Sender: TObject);
 var
-  form: TfrmPrintFac;
+  form:  TfrmPrintFac;
+  sFase: string;
 begin
   inherited;
+  // El QR tributario nace al lanzar la factura a Verifactu: en
+  // BORRADOR no hay registro de facturación y no se puede imprimir
+  sFase := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
+  if ((sFase = '') or SameText(sFase, 'BORRADOR')) and
+     (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') then
+  begin
+    ShowMessage('La factura está en BORRADOR: lánzela a Verifactu con ' +
+                'el botón Consolidar antes de imprimirla.');
+    Abort;
+  end;
   form := TfrmPrintFac.Create(Application);  // Owner = Application
   try
     form.edtNroFac.Text := dsTablaG.DataSet.findField(fnrofac).AsString;
@@ -1185,45 +1202,42 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturasBase.CheckConsolidacion;
+procedure TfrmMtoFacturasBase.ActualizarBloqueoEdicion;
+var
+  oCampo:    TField;
+  sFase:     string;
+  bEditable: Boolean;
 begin
-(*  if Assigned(dmmFacturas) and
-     Assigned(dsTablaG.Dataset) and
-     Assigned(dmmFacturas.unqryTablaG) and
-     Assigned(self.tdmDataModule) then
-       if dsTablaG.Dataset.FieldByName(fescon).AsString ='S' then
-       begin
-         dmmFacturas.unqryTablaG.ReadOnly := True;
-         dmmFacturas.unqryLinFac.ReadOnly := True;
-         if Assigned(tvLineasFactura) then
-         begin
-           tvLineasFactura.optionsData.Editing := False;
-           tvLineasFactura.optionsData.Deleting := False;
-           tvLineasFactura.optionsData.Inserting := False;
-         end;
-         btnGenerarRecibos.Enabled := False;
-         btnConsolidar.Enabled := False;
-    //     tvRecibos.optionsData.Editing := False;
-    //     tvRecibos.optionsData.Deleting := False;
-    //     tvRecibos.optionsData.Inserting := False;
-       end
-        else
-        begin
-          dmmFacturas.unqryTablaG.ReadOnly := False;
-          dmmFacturas.unqryLinFac.ReadOnly := False;
-          if Assigned(tvLineasFactura) then
-          begin
-            tvLineasFactura.optionsData.Editing := True;
-            tvLineasFactura.optionsData.Deleting := True;
-            tvLineasFactura.optionsData.Inserting := True;
-          end;
-          btnGenerarRecibos.Enabled := True;
-          btnConsolidar.Enabled := True;
-    //      tvRecibos.optionsData.Editing := True;
-    //      tvRecibos.optionsData.Deleting := True;
-    //      tvRecibos.optionsData.Inserting := True;
-
-        end;  *)
+  if Assigned(dmmFacturas) and
+     (dsTablaG.DataSet <> nil) and
+     dsTablaG.DataSet.Active then
+  begin
+    oCampo := dsTablaG.DataSet.FindField(ffasefac);
+    if oCampo <> nil then
+    begin
+      sFase := oCampo.AsString;
+      // Sin fase (facturas antiguas) o BORRADOR: editable, salvo que
+      // ya esté consolidada (candado del flujo antiguo). Un alta
+      // nueva (dsInsert) tampoco tiene fase y debe poder grabarse.
+      bEditable := ((sFase = '') or SameText(sFase, 'BORRADOR')) and
+                   (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S');
+      if dsTablaG.DataSet.State = dsInsert then
+        bEditable := True;
+      dsTablaG.AutoEdit := bEditable;
+      dmmFacturas.unqryLinFac.ReadOnly := not bEditable;
+      tvLineasFactura.OptionsData.Editing   := bEditable;
+      tvLineasFactura.OptionsData.Inserting := bEditable;
+      tvLineasFactura.OptionsData.Deleting  := bEditable;
+      // Consolidar lanza el registro a Verifactu: solo tiene sentido
+      // en borrador. Imprimir, al revés: solo tras lanzarla.
+      if dsTablaG.DataSet.State = dsBrowse then
+      begin
+        btnConsolidar.Enabled := bEditable and
+                                 (not dsTablaG.DataSet.IsEmpty);
+        btnImprimir.Enabled := not bEditable;
+      end;
+    end;
+  end;
 end;
 
 // dsTablaG apunta a la cabecera de factura, que no tiene CODIGO_ART_*.
@@ -1318,9 +1332,15 @@ begin
   // se generan movimientos siempre. Lo ocultamos para que el descendiente
   // simplificado no muestre la opcion.
   chkMueveStock.Visible := SameText(TipoFacturaFiltro, 'NORMAL');
+  // Convertir en normal solo aplica a facturas simplificadas (F3 AEAT)
+  btnVerifactuFacturar.Visible :=
+                              SameText(TipoFacturaFiltro, 'SIMPLIFICADA');
   // Carga perezosa de sub-pestañas detail (Recibos, Consolidacion,
   // Errores, Movimientos). Solo se abren al activar su pestaña.
   pcDetail.OnChange := PcDetailChange;
+  // Bloqueo por fase al movernos de registro (la base solo engancha
+  // OnStateChange; OnDataChange queda libre para este form)
+  dsTablaG.OnDataChange := dsTablaGDataChange;
   // OpenTables ya no se llama aqui: TfrmMtoGen.AbrirTablaPrincipalAsync
   // (llamado desde inLibShowMto tras el EmbedForm) invoca
   // dmmFacturas.AbrirDetalles en el callback main thread con overlay
@@ -1360,7 +1380,7 @@ begin
       EnableControls;
     end;
   end;
-  CheckConsolidacion;
+  ActualizarBloqueoEdicion;
 end;
 
 function TfrmMtoFacturasBase.NombreVistaListado: string;
@@ -1402,6 +1422,62 @@ begin
                 'el próximo ciclo. Puede seguirla en la columna ' +
                 '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
     dsTablaG.DataSet.Refresh;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.btnConsolidarClick(Sender: TObject);
+var
+  Qry:     TUniQuery;
+  sSerie:  string;
+  sNumero: string;
+  sFase:   string;
+begin
+  // Lanzamiento manual a Verifactu de una factura en borrador (normal
+  // o simplificada creada a mano): pasa a ONLINE en el acto, el QR ya
+  // es imprimible y el hilo envía el registro a la AEAT en segundo
+  // plano (cola fza_verifactu_cola).
+  if (dsTablaG.DataSet = nil) or
+     (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty then
+  begin
+    ShowMessage('Seleccione una factura en la lista.');
+    Abort;
+  end;
+  sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
+  sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
+  sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
+  if (sFase <> '') and (not SameText(sFase, 'BORRADOR')) then
+    ShowMessage('La factura ' + sSerie + '\' + sNumero +
+                ' ya se lanzó a Verifactu (fase ' + sFase + ').')
+  else if ContarHijosActivos = 0 then
+    ShowMessage('La factura no tiene líneas: no se puede lanzar a ' +
+                'Verifactu.')
+  else if SameText(dsTablaG.DataSet.FieldByName(ftipofac).AsString,
+                   'NORMAL') and
+          (Trim(dsTablaG.DataSet.FieldByName(
+                  'NIF_CLIENTE_FAC').AsString) = '') then
+    ShowMessage('Una factura NORMAL necesita el NIF del cliente para ' +
+                'Verifactu. Complete los datos del cliente.')
+  else if MessageDlg('¿Lanzar a Verifactu la factura ' + sSerie + '\' +
+                     sNumero + '? Pasará a ONLINE y dejará de ser ' +
+                     'editable.', mtConfirmation, [mbYes, mbNo], 0) =
+          mrYes then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := inLibGlobalVar.oConn;
+      TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero);
+    finally
+      FreeAndNil(Qry);
+    end;
+    RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+      cEventoVerifactuEncolado,
+      'Lanzamiento manual (Consolidar) desde Facturas', '',
+      sSerie, sNumero);
+    dsTablaG.DataSet.Refresh;
+    ShowMessage('Factura ' + sSerie + '\' + sNumero + ' en ONLINE: el ' +
+                'QR ya puede imprimirse y el envío a la AEAT queda en ' +
+                'la cola Verifactu.');
   end;
 end;
 
@@ -1456,10 +1532,6 @@ end;
 procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
 begin
   inherited;
-//  if Assigned(dmmFacturas) then
-//    if (Assigned(dmmFacturas.unqryTablaG)) then
-//      if (Assigned(dsTablaG.DataSet)) then
-//        CheckConsolidacion;
 end;
 
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
@@ -1564,14 +1636,25 @@ begin
       btnNuevaFactura.Enabled := False;
       btnRectificar.Enabled := False;
       btnImprimir.Enabled := False;
+      btnConsolidar.Enabled := False;
     end
     else
     begin
       btnNuevaFactura.Enabled := True;
       btnRectificar.Enabled := True;
-      btnImprimir.Enabled := True;
+      // Imprimir y Consolidar dependen de la fase Verifactu del
+      // registro activo, no solo del estado del dataset
+      ActualizarBloqueoEdicion;
     end;
   end;
+end;
+
+procedure TfrmMtoFacturasBase.dsTablaGDataChange(Sender: TObject;
+                                                 Field: TField);
+begin
+  // Field = nil: cambio de registro (scroll) o refresco completo
+  if Field = nil then
+    ActualizarBloqueoEdicion;
 end;
 
 procedure TfrmMtoFacturasBase.dteFECHA_FACTURAKeyUp(Sender: TObject;
@@ -1986,6 +2069,7 @@ begin
     cxdbmVERIFACTU_URL.DataBinding.DataSource := dsConsolidacion;
     cxdbmQRCODE_BASE64.DataBinding.DataSource := dsConsolidacion;
     cxdbmPETICION_COMPLETA_FACCON.DataBinding.DataSource := dsConsolidacion;
+    txtREQUEST_ID.DataBinding.DataSource := dsConsolidacion;
   end;
 end;
 
