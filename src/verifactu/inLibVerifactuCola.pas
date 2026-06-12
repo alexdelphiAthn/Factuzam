@@ -88,8 +88,8 @@ class procedure TVerifactuCola.EncolarFactura(AQryTrx: TUniQuery;
                                               const ASerie, ANumero: string;
                                               const ATipoOperacion: string);
 begin
-  // ON DUPLICATE: si la factura ya estaba encolada no se duplica la
-  // fila; solo se refresca la auditoría
+  // ON DUPLICATE: si la operación ya estaba encolada se relanza
+  // (vuelve a PENDIENTE con los intentos a cero)
   AQryTrx.SQL.Text :=
     ' INSERT INTO fza_verifactu_cola ' +
     ' (SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, TIPO_OPERACION_VFCOLA, ' +
@@ -98,6 +98,10 @@ begin
     ' VALUES ' +
     ' (:SERIE, :NUMERO, :TIPOOP, ''PENDIENTE'', 0, NOW(), :USUARIO) ' +
     ' ON DUPLICATE KEY UPDATE ' +
+    '  ESTADO_VFCOLA = ''PENDIENTE'', ' +
+    '  CONTADOR_INTENTOS_VFCOLA = 0, ' +
+    '  INSTANTE_PROXIMO_INTENTO_VFCOLA = NULL, ' +
+    '  MENSAJE_ERROR_VFCOLA = NULL, ' +
     '  INSTANTE_MODIF = NOW(), ' +
     '  USUARIO_MODIF  = :USUARIO';
   AQryTrx.ParamByName('SERIE').AsString   := ASerie;
@@ -384,6 +388,7 @@ var
   oPngStream:    TBytesStream;
   sFase:         string;
   sEstadoFaccon: string;
+  bInsertarAlta: Boolean;
 begin
   // Se ejecuta DENTRO de la transacción abierta por ProcesarFila
   if ATipoOperacion = 'ANULACION' then
@@ -394,6 +399,8 @@ begin
     sEstadoFaccon := 'ACEPTADO_ERR'
   else if SameText(AResultado.EstadoRegistro, 'Duplicado') then
     sEstadoFaccon := 'DUPLICADO'
+  else if ATipoOperacion = 'SUBSANACION' then
+    sEstadoFaccon := 'SUBSANADO'
   else
     sEstadoFaccon := 'PROCESADO';
   Qry := TUniQuery.Create(nil);
@@ -419,6 +426,7 @@ begin
     Qry.ParamByName('USUARIO').AsString  := oUser;
     Qry.ParamByName('NIF').AsString      := AResultado.IssuerIrsId;
     Qry.Execute;
+    bInsertarAlta := (ATipoOperacion <> 'ANULACION');
     if ATipoOperacion = 'ANULACION' then
     begin
       // La anulación actualiza la consolidación del alta (UK_FACTURA)
@@ -444,7 +452,37 @@ begin
       Qry.ParamByName('NUMERO').AsString := ANumero;
       Qry.Execute;
     end;
-    if (ATipoOperacion <> 'ANULACION') then
+    if ATipoOperacion = 'SUBSANACION' then
+    begin
+      // La subsanación reescribe la consolidación del alta; si no
+      // existiera (alta nunca consolidada) se inserta entera abajo
+      Qry.SQL.Text :=
+        ' UPDATE fza_facturas_consolidaciones ' +
+        ' SET REQUEST_ID_CONSOLIDACION_FACCON = ' +
+        '       IFNULL(NULLIF(:REQUESTID, ''''), ' +
+        '              REQUEST_ID_CONSOLIDACION_FACCON), ' +
+        '     CHAIN_NUMBER_FACCON = :CHAINNUM, ' +
+        '     CHAIN_HASH_FACCON   = :CHAINHASH, ' +
+        '     ESTADO_FACCON = :ESTADO, ' +
+        '     RESPUESTA_COMPLETA_FACCON = :RESPUESTA, ' +
+        '     PETICION_COMPLETA_FACCON  = :PETICION, ' +
+        '     FECHA_PROCESAMIENTO_FACCON = NOW() ' +
+        ' WHERE SERIE_FAC_FACCON  = :SERIE ' +
+        '   AND NUMERO_FAC_FACCON = :NUMERO';
+      Qry.ParamByName('REQUESTID').AsString := AResultado.RequestId;
+      Qry.ParamByName('CHAINNUM').AsString  := AResultado.ChainNumber;
+      Qry.ParamByName('CHAINHASH').AsString := AResultado.ChainHash;
+      Qry.ParamByName('ESTADO').AsString    := sEstadoFaccon;
+      Qry.ParamByName('RESPUESTA').AsString :=
+        AResultado.RespuestaCompleta;
+      Qry.ParamByName('PETICION').AsString :=
+        AResultado.PeticionCompleta;
+      Qry.ParamByName('SERIE').AsString  := ASerie;
+      Qry.ParamByName('NUMERO').AsString := ANumero;
+      Qry.Execute;
+      bInsertarAlta := (Qry.RowsAffected = 0);
+    end;
+    if bInsertarAlta then
     begin
       // Consolidación del alta: misma estructura que usa OdaVeriFactu
       Qry.SQL.Text :=

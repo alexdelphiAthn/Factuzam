@@ -138,6 +138,29 @@ formado. Causas por orden de probabilidad:
    (titular o apoderado); si no, la AEAT responde con errores de censo
    (no identificado / sin apoderamiento).
 
+### Anular y subsanar desde Facturas (Buscar / Modificar)
+
+En la pestaña de lista de Facturas (normales y simplificadas) hay dos
+botones que operan sobre la factura seleccionada (solo si ya está
+consolidada):
+
+- **Anular (Verifactu)**: encola un `RegistroAnulacion`. Al aceptarse,
+  la factura pasa a `FASE_FAC='CANCELADA'` y la consolidación a
+  `ESTADO='ANULADO'` (con `QUEUE_ID_CANCEL_FACCON`).
+- **Subsanar (Verifactu)**: encola una `SUBSANACION` (reenvío del
+  `RegistroAlta` con `<Subsanacion>S</Subsanacion>`, p. ej. tras un
+  «aceptado con errores» o tras corregir datos de la factura). Al
+  aceptarse, la consolidación se reescribe con la nueva
+  petición/respuesta y queda en `ESTADO='SUBSANADO'`.
+
+Re-encolar una operación ya existente la relanza (vuelve a PENDIENTE
+con los intentos a cero). La lista lleva además la columna **«Cola
+Verifactu»** con el último estado de la cola de cada factura
+(PENDIENTE/PROCESANDO/ENVIADA/ERROR; vacío si nunca se encoló): el
+SELECT del listado se recompone en `CrearTablaPrincipal` con un
+subselect a `fza_verifactu_cola`, así que no hay que tocar vistas ni
+perfiles.
+
 ### Reintentos, duplicados y reproceso manual
 
 - Si la AEAT **acepta** pero la persistencia local falla (caída de BBDD
