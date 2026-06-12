@@ -1,6 +1,6 @@
 ﻿[Closed Files]
 File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenPedido.pas',0,1,78,1,90,0,0,,
-File_1=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,24,27,35,0,0,{{67,0},{100,11},{'internal'}}{{312,4},{1763,34},{'for internal use'}},
+File_1=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,24,27,35,0,0,{{67,0}
 File_2=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas',0,1,83,33,95,0,0,,
 File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas',0,1,8,35,20,0,0,,
 File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalDistribuidor.pas',0,1,258,9,270,0,0,,
@@ -16,18 +16,23 @@ File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSel
 File_14=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
-Count=1
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas
+Module1=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas
+Count=2
 EditWindowCount=1
 
-[C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-ModuleType=TBaseProject
+[C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas]
+ModuleType=TSourceModule
+
+[C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas]
+ModuleType=TSourceModule
 
 [EditWindow0]
-ViewCount=2
-CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+ViewCount=3
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas
 View0=0
 View1=1
+View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -67,14 +72,25 @@ OTAEditViewType=WelcomePage.MainPage
 
 [View1]
 CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
-CursorX=48
-CursorY=338
-TopLine=321
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas
+CursorX=29
+CursorY=324
+TopLine=310
 LeftCol=1
 Elisions=
 Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas
+
+[View2]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas
+CursorX=40
+CursorY=834
+TopLine=24
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas
 
 [Watches]
 Count=0
@@ -569,7 +585,7 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=950
+Left=838
 Top=36
 Width=3823
 Height=1421
