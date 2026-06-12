@@ -369,12 +369,26 @@ simplificadas) tras encolar/enviar alguna factura.
 **I6 — Rectificativa.** (Tras ejecutar `verifactu_rectificativas.sql`.)
 Seleccionar una factura simplificada consolidada → botón Rectificar →
 marcar «Abonar» → Generar. Esperar un ciclo del hilo.
-- Se crea la factura de abono (líneas en negativo) con
-  `TIPO_FAC='RECTIFICATIVA'` y sus columnas ABONO apuntando a la
-  original; aparece en la cola como `ALTA` y pasa a `ENVIADA`.
+- Se crea el abono (líneas en negativo) con `TIPO_FAC='RECTIFICATIVA'`
+  y el comentario «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número».
+- La ORIGINAL pasa a `FASE_FAC='RECTIFICADA'` y sus columnas
+  `SERIE/NUMERO_FAC_ABONO_FAC` apuntan a la rectificativa.
 - En `PETICION_COMPLETA_FACCON` de la rectificativa: `TipoFactura=R5`
   (R1 con destinatario si la original era completa),
   `TipoRectificativa=I` y bloque `FacturasRectificadas` con la
   original; `ImporteTotal` negativo.
-- La rectificativa queda consolidada (`FASE_FAC='ONLINE'`) con su QR;
-  la original no cambia.
+- La rectificativa queda consolidada (`FASE_FAC='ONLINE'`) con su QR.
+
+**I7 — Facturar ticket (F3).** Seleccionar un ticket (SIMPLIFICADA)
+consolidado → «Facturar ticket (F3)» → elegir cliente, serie (viene la
+del almacén del ticket o la FC por defecto) y fecha (viene la del
+ticket) → Generar. Esperar un ciclo.
+- Se crea una factura `NORMAL` con los mismos importes (en positivo),
+  los datos del cliente elegido y el comentario «...EN SUSTITUCIÓN DE
+  LA FACTURA SIMPLIFICADA serie\número»; el ticket guarda en sus
+  columnas ABONO la factura nueva y NO se anula.
+- El registro de la nueva sale como `TipoFactura=F3` con
+  `FacturasSustituidas` apuntando al ticket y destinatario relleno; la
+  nueva queda consolidada con su QR.
+- Con la factura nueva seleccionada, los botones Anular/Subsanar operan
+  sobre ella con normalidad.

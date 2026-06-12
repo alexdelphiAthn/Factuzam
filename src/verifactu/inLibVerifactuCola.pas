@@ -129,24 +129,43 @@ begin
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := AConn;
-    // La rectificativa guarda en las columnas ABONO la factura original
-    // que rectifica: de ahí sale el bloque FacturasRectificadas del
-    // registro R1/R5
+    // Rectificativa: tipo y fase propios, sin enlace ABONO heredado de
+    // la copia del SP, y comentario con la factura que rectifica
     Qry.SQL.Text :=
       ' UPDATE fza_facturas ' +
       ' SET TIPO_FAC = ''RECTIFICATIVA'', ' +
       '     FASE_FAC = ''BORRADOR'', ' +
-      '     SERIE_FAC_ABONO_FAC  = :SERIEORIG, ' +
-      '     NUMERO_FAC_ABONO_FAC = :NUMEROORIG, ' +
+      '     SERIE_FAC_ABONO_FAC  = NULL, ' +
+      '     NUMERO_FAC_ABONO_FAC = NULL, ' +
+      '     COMENTARIOS_FAC = TRIM(CONCAT(IFNULL(COMENTARIOS_FAC, ' +
+      '         ''''), :COMENTARIO)), ' +
       '     INSTANTE_MODIF = NOW(), ' +
       '     USUARIO_MODIF  = :USUARIO ' +
       ' WHERE SERIE_FAC  = :SERIE ' +
       '   AND NUMERO_FAC = :NUMERO';
-    Qry.ParamByName('SERIEORIG').AsString  := ASerieOriginal;
-    Qry.ParamByName('NUMEROORIG').AsString := ANumeroOriginal;
+    Qry.ParamByName('COMENTARIO').AsString :=
+      ' ESTA FACTURA ANULA Y RECTIFICA A LA ' + ASerieOriginal + '\' +
+      ANumeroOriginal;
+    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('SERIE').AsString   := ASerieRect;
+    Qry.ParamByName('NUMERO').AsString  := ANumeroRect;
+    Qry.Execute;
+    // La factura ORIGINAL pasa a fase RECTIFICADA y guarda en sus
+    // columnas ABONO la rectificativa que la anula
+    Qry.SQL.Text :=
+      ' UPDATE fza_facturas ' +
+      ' SET FASE_FAC = ''RECTIFICADA'', ' +
+      '     SERIE_FAC_ABONO_FAC  = :SERIERECT, ' +
+      '     NUMERO_FAC_ABONO_FAC = :NUMERORECT, ' +
+      '     INSTANTE_MODIF = NOW(), ' +
+      '     USUARIO_MODIF  = :USUARIO ' +
+      ' WHERE SERIE_FAC  = :SERIE ' +
+      '   AND NUMERO_FAC = :NUMERO';
+    Qry.ParamByName('SERIERECT').AsString  := ASerieRect;
+    Qry.ParamByName('NUMERORECT').AsString := ANumeroRect;
     Qry.ParamByName('USUARIO').AsString    := oUser;
-    Qry.ParamByName('SERIE').AsString      := ASerieRect;
-    Qry.ParamByName('NUMERO').AsString     := ANumeroRect;
+    Qry.ParamByName('SERIE').AsString      := ASerieOriginal;
+    Qry.ParamByName('NUMERO').AsString     := ANumeroOriginal;
     Qry.Execute;
     if VerifactuActivo then
     begin
