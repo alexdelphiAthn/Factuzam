@@ -59,6 +59,7 @@ type
     pnlVerifactu: TPanel;
     btnVerifactuAnular: TcxButton;
     btnVerifactuFacturar: TcxButton;
+    btnVolverBorrador: TcxButton;
     cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn;
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
@@ -472,6 +473,7 @@ type
     procedure dsTablaGStateChange(Sender: TObject);
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
     procedure btnConsolidarClick(Sender: TObject);
+    procedure btnVolverBorradorClick(Sender: TObject);
     procedure chkFechaEntregaPropertiesChange(Sender: TObject);
     procedure chkDescripcion_ampliadaPropertiesChange(Sender: TObject);
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
@@ -1478,6 +1480,131 @@ begin
     ShowMessage('Factura ' + sSerie + '\' + sNumero + ' en ONLINE: el ' +
                 'QR ya puede imprimirse y el envío a la AEAT queda en ' +
                 'la cola Verifactu.');
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.btnVolverBorradorClick(Sender: TObject);
+var
+  Qry:     TUniQuery;
+  sSerie:  string;
+  sNumero: string;
+  sFase:   string;
+  sEstado: string;
+begin
+  // Deshace un lanzamiento que la AEAT aún NO ha aceptado (p. ej. NIF
+  // erróneo detectado tras Consolidar): aparca la fila ALTA de la cola
+  // y devuelve la factura a BORRADOR para poder corregirla y relanzar.
+  // Si el alta ya fue aceptada (consolidada/ENVIADA) no hay vuelta
+  // atrás: el registro existe en la AEAT y solo cabe Anular o
+  // Rectificar.
+  if (dsTablaG.DataSet = nil) or
+     (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty then
+  begin
+    ShowMessage('Seleccione una factura en la lista.');
+    Abort;
+  end;
+  sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
+  sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
+  sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
+  if dsTablaG.DataSet.FieldByName(fescon).AsString = 'S' then
+    ShowMessage('La factura ' + sSerie + '\' + sNumero + ' ya está ' +
+                'consolidada en la AEAT: no puede volver a borrador. ' +
+                'Use Anular Verifactu o emita una rectificativa.')
+  else if (sFase = '') or SameText(sFase, 'BORRADOR') then
+    ShowMessage('La factura ya está en BORRADOR.')
+  else if MessageDlg('¿Devolver a BORRADOR la factura ' + sSerie +
+                     '\' + sNumero + ' y anular su envío pendiente a ' +
+                     'la AEAT?', mtConfirmation, [mbYes, mbNo], 0) =
+          mrYes then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      inLibGlobalVar.oConn.StartTransaction;
+      try
+        Qry.Connection := inLibGlobalVar.oConn;
+        // Bloquear la fila ALTA de la cola: si el hilo la está
+        // enviando (PROCESANDO) o ya la envió (ENVIADA) no se puede
+        // deshacer
+        Qry.SQL.Text :=
+          ' SELECT ESTADO_VFCOLA ' +
+          '   FROM fza_verifactu_cola ' +
+          '  WHERE SERIE_FAC_VFCOLA  = :SERIE ' +
+          '    AND NUMERO_FAC_VFCOLA = :NUMERO ' +
+          '    AND TIPO_OPERACION_VFCOLA = ''ALTA'' ' +
+          '  FOR UPDATE';
+        Qry.ParamByName('SERIE').AsString  := sSerie;
+        Qry.ParamByName('NUMERO').AsString := sNumero;
+        Qry.Open;
+        if Qry.IsEmpty then
+          sEstado := ''
+        else
+          sEstado := Qry.FieldByName('ESTADO_VFCOLA').AsString;
+        Qry.Close;
+        if SameText(sEstado, 'ENVIADA') then
+          raise Exception.Create('El alta ya fue aceptada por la ' +
+            'AEAT: no se puede volver a borrador. Use Anular ' +
+            'Verifactu o emita una rectificativa.');
+        if SameText(sEstado, 'PROCESANDO') then
+          raise Exception.Create('El hilo Verifactu está enviando ' +
+            'esta factura ahora mismo. Espere unos segundos y ' +
+            'vuelva a intentarlo.');
+        if sEstado <> '' then
+        begin
+          // Aparcar: ERROR con intentos al tope para que el hilo no
+          // la reprocese. Un Consolidar posterior la reactiva
+          // (ON DUPLICATE la devuelve a PENDIENTE con intentos a 0).
+          Qry.SQL.Text :=
+            ' UPDATE fza_verifactu_cola ' +
+            '    SET ESTADO_VFCOLA = ''ERROR'', ' +
+            '        CONTADOR_INTENTOS_VFCOLA = 999999, ' +
+            '        MENSAJE_ERROR_VFCOLA = ''Lanzamiento anulado ' +
+            'por el usuario: factura devuelta a BORRADOR'', ' +
+            '        INSTANTE_MODIF = NOW(), ' +
+            '        USUARIO_MODIF  = :USUARIO ' +
+            '  WHERE SERIE_FAC_VFCOLA  = :SERIE ' +
+            '    AND NUMERO_FAC_VFCOLA = :NUMERO ' +
+            '    AND TIPO_OPERACION_VFCOLA = ''ALTA''';
+          Qry.ParamByName('SERIE').AsString   := sSerie;
+          Qry.ParamByName('NUMERO').AsString  := sNumero;
+          Qry.ParamByName('USUARIO').AsString := oUser;
+          Qry.Execute;
+        end;
+        Qry.SQL.Text :=
+          ' UPDATE fza_facturas ' +
+          '    SET FASE_FAC = ''BORRADOR'', ' +
+          '        INSTANTE_MODIF = NOW(), ' +
+          '        USUARIO_MODIF  = :USUARIO ' +
+          '  WHERE SERIE_FAC  = :SERIE ' +
+          '    AND NUMERO_FAC = :NUMERO ' +
+          '    AND ESCONSOLIDADA_FAC <> ''S''';
+        Qry.ParamByName('SERIE').AsString   := sSerie;
+        Qry.ParamByName('NUMERO').AsString  := sNumero;
+        Qry.ParamByName('USUARIO').AsString := oUser;
+        Qry.Execute;
+        inLibGlobalVar.oConn.Commit;
+      except
+        on E: Exception do
+        begin
+          inLibGlobalVar.oConn.Rollback;
+          ShowMessage(E.Message);
+          Abort;
+        end;
+      end;
+    finally
+      FreeAndNil(Qry);
+    end;
+    RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+      cEventoVerifactuInfo,
+      'Lanzamiento anulado: factura devuelta a BORRADOR', '',
+      sSerie, sNumero);
+    dsTablaG.DataSet.Refresh;
+    ShowMessage('Factura ' + sSerie + '\' + sNumero + ' de nuevo en ' +
+                'BORRADOR. Corrija los datos (si el error es de la ' +
+                'empresa, arréglelo en Empresas y use "Dar de Alta o ' +
+                'Actualizar Empresa" en la pestaña Datos Empresa ' +
+                'Emisora para refrescar la copia de la factura) y ' +
+                'pulse Consolidar para relanzarla.');
   end;
 end;
 
