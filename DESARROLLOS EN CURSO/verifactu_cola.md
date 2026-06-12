@@ -164,21 +164,43 @@ perfiles.
 ### Rectificativas (botón Rectificar → Abonar)
 
 El botón **Rectificar** de Facturas (modal Abonar/Duplicar, que ya
-existía) queda integrado con Verifactu: al crear el abono con
-`PRC_CREAR_FACTURA_ABONO`, `TVerifactuCola.EncolarRectificativa` marca
-la factura nueva como `TIPO_FAC='RECTIFICATIVA'`, guarda en sus
-columnas `SERIE/NUMERO_FAC_ABONO_FAC` la factura **original** que
-rectifica y la encola como alta. El registro sale como **R5** si la
-original era simplificada o **R1** si era completa (con destinatario),
-`TipoRectificativa=I` (por diferencias, importes en negativo) y el
-bloque `FacturasRectificadas` apuntando a la original.
+existía) queda integrado con Verifactu. Al crear el abono con
+`PRC_CREAR_FACTURA_ABONO`, `TVerifactuCola.EncolarRectificativa`:
+
+- Marca la nueva como `TIPO_FAC='RECTIFICATIVA'` y añade a sus
+  comentarios «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número».
+- La **original** pasa a `FASE_FAC='RECTIFICADA'` y guarda en sus
+  columnas `SERIE/NUMERO_FAC_ABONO_FAC` la rectificativa (el antecesor
+  apunta a su sucesor).
+- Encola la rectificativa: el registro sale como **R5** si la original
+  era simplificada o **R1** si era completa (con destinatario),
+  `TipoRectificativa=I` (importes en negativo) y bloque
+  `FacturasRectificadas` apuntando a la original (lookup inverso por
+  `IDX_FAC_ABONO`).
 
 Requiere ejecutar `verifactu_rectificativas.sql` (ensancha las columnas
-de enlace de varchar(8) a varchar(20)).
+de enlace a varchar(20) y crea el índice del lookup inverso).
 
-Es el camino correcto cuando cambian precios o conceptos de una factura
-ya emitida: rectificativa (o devolución en caja); la subsanación queda
-para corregir el registro comunicado sin tocar la factura.
+### Facturar ticket (factura completa F3 en sustitución)
+
+Botón **«Facturar ticket (F3)»** en Buscar/Modificar, solo para
+facturas SIMPLIFICADAS. Abre `inMtoModalFacturarTicket`: pide
+**cliente** (lookup de `fza_clientes`), **serie** de factura (por
+defecto la ligada al almacén del ticket vía
+`ObtenerSeriePropiaAlmacen`, si no la serie FC por defecto) y **fecha**
+(por defecto la del ticket). Crea la factura NORMAL copiando cabecera y
+líneas del ticket (importes en positivo), con la identidad del cliente
+denormalizada desde su ficha, comentario «EMITIDA EN SUSTITUCIÓN DE LA
+FACTURA SIMPLIFICADA serie\número», recalcula netos
+(`PRC_CALCULAR_FACTURA_NETOS`) y deja el ticket apuntando a la nueva en
+sus columnas ABONO. Se encola como alta y el registro sale como **F3**
+con el bloque `FacturasSustituidas`; el ticket NO se anula (la F3 lo
+sustituye declarativamente).
+
+Resumen de caminos: registro mal comunicado → **Subsanar**; precios o
+conceptos mal → **Rectificar** (o devolución en caja); cliente pide
+factura nominativa de su ticket → **Facturar ticket (F3)**; venta
+inexistente → **Anular**.
 
 ### Reintentos, duplicados y reproceso manual
 

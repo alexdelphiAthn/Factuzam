@@ -60,6 +60,7 @@ type
     pnlVerifactuLista: TPanel;
     btnVerifactuAnular: TcxButton;
     btnVerifactuSubsanar: TcxButton;
+    btnVerifactuFacturar: TcxButton;
     cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn;
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
@@ -477,6 +478,7 @@ type
     procedure btnExportarLineasClick(Sender: TObject);
     procedure btnVerifactuAnularClick(Sender: TObject);
     procedure btnVerifactuSubsanarClick(Sender: TObject);
+    procedure btnVerifactuFacturarClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
     procedure actMovimientoExecute(Sender: TObject);
@@ -573,6 +575,7 @@ uses
   inLibUser,
   inLibVerifactu,
   inLibVerifactuCola,
+  inMtoModalFacturarTicket,
   inMtoArticulos,
   inMtoEmpresas,
   inMtoClientes,
@@ -1415,6 +1418,38 @@ procedure TfrmMtoFacturasBase.btnVerifactuSubsanarClick(Sender: TObject);
 begin
   //Subsanación Verifactu (RegistroAlta con Subsanacion=S) de la activa
   EncolarOperacionVerifactu('SUBSANACION', 'Subsanación');
+end;
+
+procedure TfrmMtoFacturasBase.btnVerifactuFacturarClick(Sender: TObject);
+var
+  oRes:    TFacturarTicketResult;
+  sSerie:  string;
+  sNumero: string;
+begin
+  //Factura completa (F3) en sustitución del ticket seleccionado
+  sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+  if Trim(sNumero) = '' then
+    ShowMessage('Seleccione una factura en la lista.')
+  else if not SameText(dsTablaG.DataSet.FieldByName(
+                         'TIPO_FAC').AsString, 'SIMPLIFICADA') then
+    ShowMessage('Solo se factura a cliente desde una factura ' +
+                'SIMPLIFICADA (ticket).')
+  else
+  begin
+    oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
+              dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString,
+              dsTablaG.DataSet.FieldByName('CODIGO_ALM_FAC').AsString,
+              dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
+    if oRes.Aceptado then
+    begin
+      ShowMessage('Creada la factura ' + oRes.SerieNueva + '\' +
+                  oRes.NumeroNueva + ' en sustitución del ticket ' +
+                  sSerie + '\' + sNumero + ' y encolada en Verifactu ' +
+                  '(F3).');
+      dsTablaG.DataSet.Refresh;
+    end;
+  end;
 end;
 
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
