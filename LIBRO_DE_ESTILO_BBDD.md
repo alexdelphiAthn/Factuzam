@@ -85,6 +85,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_facturas_compra_lineas`         | `FACCLIN` |
 | `fza_facturas_consolidaciones`       | `FACCON`  |
 | `fza_facturas_lineas`                | `FACLIN`  |
+| `fza_facturas_relaciones`            | `FACREL`  |
 | `fza_facturas_pagos`                 | `FACPAG`  |
 | `fza_familias_atributos`             | `FA`      |
 | `fza_familias_atributos_defecto`     | `FAD`     |
