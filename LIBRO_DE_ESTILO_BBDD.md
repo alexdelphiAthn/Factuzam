@@ -12,7 +12,7 @@ Manual práctico para añadir tablas, columnas, índices, vistas y procedimiento
 4. **Las claves foráneas lógicas** (no hay FOREIGN KEY declaradas, son convenciones) se nombran con el patrón `<TIPO_ID>_<SUFIJO_DESTINO>_<SUFIJO_TABLA>`.
 5. **Los booleanos** (columnas `varchar(1)` con valores `'S'`/`'N'`) llevan prefijo `ES` sin guion bajo.
 6. **Los índices** se llaman `IDX_<SUFIJO_TABLA>_<columnas>` o `UQ_<SUFIJO_TABLA>_<columnas>` para únicos.
-
+7. **Todas las tablas** tienen ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci.
 ---
 
 ## 2. Catálogo de sufijos por tabla
