@@ -2197,6 +2197,12 @@ begin
     cxdbmQRCODE_BASE64.DataBinding.DataSource := dsConsolidacion;
     cxdbmPETICION_COMPLETA_FACCON.DataBinding.DataSource := dsConsolidacion;
     txtREQUEST_ID.DataBinding.DataSource := dsConsolidacion;
+    // El dfm ata este grid a dmFacturas.dsErrores por NOMBRE GLOBAL:
+    // con dos ventanas de Facturas abiertas (normales + simplificadas)
+    // resolvía al datamodule de la primera y la pestaña 6_Registro
+    // mostraba los eventos de la factura activa en la OTRA ventana.
+    // Reatamos al datamodule de esta instancia, como el resto.
+    tvLogVerifactu.DataController.DataSource := dsErrores;
   end;
 end;
 
