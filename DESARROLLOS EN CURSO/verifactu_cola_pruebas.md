@@ -458,3 +458,33 @@ caja o botón Imprimir de Facturas) con cada uno de los dos formatos
 - Recolocar en el diseñador un PictureView llamado `qrverifactu` y
   guardar el formato → la impresión respeta la nueva posición.
 - Con Verifactu desactivado, el hueco sale vacío (sin QR de relleno).
+
+**J1 — Pestañas de la ficha de factura.** Abrir una factura
+consolidada (p. ej. una simplificada de caja ya ENVIADA) y recorrer
+las pestañas de la ficha:
+- **5_Verifactu** muestra la consolidación de ESA factura (CSV, hash,
+  URL, QR PNG, petición/respuesta).
+- **6_Registro Verifactu** muestra SOLO los eventos de esa factura
+  (encolado, error de intento, aceptado…), no los de otras.
+- **7_Movimientos** muestra los movimientos de almacén de la venta
+  (caja graba TIPO_DOC_MOV='VE'; el Mto, 'FC').
+- Cambiar de factura en la lista con las pestañas abiertas → los tres
+  detalles siguen al maestro.
+
+**J2 — Consolidar (lanzamiento manual).** Crear a mano una factura
+(normal o simplificada) en el Mto: nace en `FASE_FAC='BORRADOR'`.
+- En borrador: editable; Imprimir avisa y no imprime; Consolidar
+  activo. Sin líneas o (en NORMAL) sin NIF de cliente, Consolidar
+  avisa y no lanza.
+- Pulsar Consolidar → confirma → la factura pasa a `ONLINE` en el
+  acto, aparece PENDIENTE en la cola y el hilo la envía después
+  (consolidación + ENVIADA). Ya puede imprimirse con su QR sin
+  esperar a la AEAT.
+- En ONLINE: la cabecera y las líneas no se pueden editar ni borrar
+  (el borrado avisa de usar Anular/Rectificar); Consolidar desactivado.
+
+**J3 — Buscador de clientes en «Convertir en normal».** En el modal de
+facturar ticket, el campo Cliente se rellena con el botón «…», que
+abre el buscador genérico (`TfrmMtoSearch`, como en caja) con código,
+razón social, NIF, teléfono y población; doble clic o Aceptar
+selecciona y muestra «código - razón social».
