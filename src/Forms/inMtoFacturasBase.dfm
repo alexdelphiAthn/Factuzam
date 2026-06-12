@@ -3710,6 +3710,15 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
       TabOrder = 7
       OnClick = btnVerifactuFacturarClick
     end
+    object btnVolverBorrador: TcxButton
+      Left = 1
+      Top = 481
+      Width = 140
+      Height = 34
+      Caption = 'Volver a Borrador'
+      TabOrder = 8
+      OnClick = btnVolverBorradorClick
+    end
   end
   inherited Localizer1: TcxLocalizer
     Left = 1104
