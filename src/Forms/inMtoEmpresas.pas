@@ -465,7 +465,8 @@ var
   qAlm     : TUniQuery;
   i        : Integer;
 
-  function ExisteSerieVigente(const ATipo, AAlmacen: string): Boolean;
+  function ExisteSerieVigente(const ATipo, AAlmacen: string;
+                              const ASubtipo: string = ''): Boolean;
   var
     q: TUniQuery;
     sFiltroAlm: string;
@@ -482,6 +483,7 @@ var
         'SELECT 1 FROM fza_empresas_series ' +
         ' WHERE CODIGO_EMP_EMPSER = :emp ' +
         '   AND TIPO_DOC_EMPSER   = :tip ' +
+        '   AND IFNULL(SUBTIPO_EMPSER, '''') = :sub ' +
         sFiltroAlm +
         '   AND (FECHA_DESDE_EMPSER IS NULL ' +
         '        OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
@@ -490,6 +492,7 @@ var
         ' LIMIT 1';
       q.ParamByName('emp').AsString := sEmpresa;
       q.ParamByName('tip').AsString := ATipo;
+      q.ParamByName('sub').AsString := ASubtipo;
       if AAlmacen <> '' then
         q.ParamByName('alm').AsString := AAlmacen;
       q.Open;
@@ -499,7 +502,8 @@ var
     end;
   end;
 
-  procedure InsertarSerie(const ATipo, AAlmacen, ANombre: string);
+  procedure InsertarSerie(const ATipo, AAlmacen, ANombre: string;
+                          const ASubtipo: string = '');
   var
     q: TUniQuery;
     sCodigo: string;
@@ -512,13 +516,17 @@ var
     q := TUniQuery.Create(nil);
     try
       q.Connection := inLibGlobalVar.oConn;
+      // Las series con subtipo (SIMPLIFICADA / RECTIFICATIVA) llevan
+      // FECHA_DESDE: la consulta de series de la fase de cobro exige
+      // vigencia explicita.
       q.SQL.Text :=
         'INSERT INTO fza_empresas_series ' +
         '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, ' +
         '   CODIGO_CAJA_EMPSER, EMPSER, TIPO_DOC_EMPSER, SUBTIPO_EMPSER, ' +
         '   FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, ' +
         '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:cod, :emp, :alm, NULL, :ser, :tip, NULL, NULL, NULL, ' +
+        'VALUES (:cod, :emp, :alm, NULL, :ser, :tip, NULLIF(:sub, ''''), ' +
+        '        IF(:sub2 = '''', NULL, CURDATE()), NULL, ' +
         '        NOW(), NOW(), :u, :u)';
       q.ParamByName('cod').AsString := sCodigo;
       q.ParamByName('emp').AsString := sEmpresa;
@@ -527,9 +535,11 @@ var
       else
         q.ParamByName('alm').AsString := AAlmacen;
       // EMPSER es varchar(12); el recorte cubre almacenes largos.
-      q.ParamByName('ser').AsString := Copy(ANombre, 1, 12);
-      q.ParamByName('tip').AsString := ATipo;
-      q.ParamByName('u').AsString   := inLibGlobalVar.oUser;
+      q.ParamByName('ser').AsString  := Copy(ANombre, 1, 12);
+      q.ParamByName('tip').AsString  := ATipo;
+      q.ParamByName('sub').AsString  := ASubtipo;
+      q.ParamByName('sub2').AsString := ASubtipo;
+      q.ParamByName('u').AsString    := inLibGlobalVar.oUser;
       q.ExecSQL;
       Inc(iCreadas);
     finally
@@ -553,6 +563,8 @@ begin
                   'FP, IN).' + sLineBreak +
                   '- Una por almacen activo para pedidos y albaranes de ' +
                   'compra (PC / AB).' + sLineBreak +
+                  '- Una de facturas rectificativas (R1), generica de la ' +
+                  'empresa.' + sLineBreak +
                   '¿Continuar?',
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
@@ -563,6 +575,11 @@ begin
         if not ExisteSerieVigente(TIPOS_DOC[i], '') then
           InsertarSerie(TIPOS_DOC[i], '', TIPOS_DOC[i] + '1');
       end;
+      // 1b. Serie de facturas rectificativas: generica por empresa
+      // (vale para todas las cajas; tambien puede crearse a mano una
+      // por empresa/almacen/caja desde la pestania Series).
+      if not ExisteSerieVigente('FC', '', 'RECTIFICATIVA') then
+        InsertarSerie('FC', '', 'R1', 'RECTIFICATIVA');
       // 2. Propias por almacen activo, solo tipos que las proponen.
       qAlm := TUniQuery.Create(nil);
       try
