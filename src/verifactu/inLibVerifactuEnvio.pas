@@ -315,7 +315,8 @@ begin
     if Qry.IsEmpty then
       raise Exception.Create('Factura ' + ASerie + '\' + ANumero +
                              ' no encontrada para el envío Verifactu');
-    ADatos.NifEmisor    := Trim(Qry.FieldByName('NIF_EMPRESA_FAC').AsString);
+    ADatos.NifEmisor :=
+      NormalizarNifVerifactu(Qry.FieldByName('NIF_EMPRESA_FAC').AsString);
     ADatos.NombreEmisor :=
       Trim(Qry.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
     ADatos.FechaFac        := Qry.FieldByName('FECHA_FAC').AsDateTime;
@@ -324,7 +325,7 @@ begin
     ADatos.TipoFactura :=
       TipoFacturaVerifactu(Qry.FieldByName('TIPO_FAC').AsString);
     ADatos.NifCliente :=
-      Trim(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
+      NormalizarNifVerifactu(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
     ADatos.NombreCliente :=
       Trim(Qry.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
     ADatos.CuotaTotal   :=
@@ -450,7 +451,14 @@ var
 begin
   sNombre := oAppParams.GetString('appVerifactuSifNombreRazon',
                                   'Alejandro Laorden Hidalgo');
-  sNif := oAppParams.GetString('appVerifactuSifNif', '');
+  // La AEAT responde un 1100 genérico ('NIF') si el NIF del productor
+  // va vacío o mal formado: se valida aquí con un mensaje claro
+  sNif := NormalizarNifVerifactu(
+            oAppParams.GetString('appVerifactuSifNif', ''));
+  if Length(sNif) <> 9 then
+    raise Exception.Create('Parámetro appVerifactuSifNif (NIF del ' +
+      'productor del software) vacío o no válido: "' + sNif + '". ' +
+      'Rellenarlo en Parámetros de aplicación, categoría Verifactu.');
   sInstalacion := oAppParams.GetString('appVerifactuIdInstalacion', '1');
   // Varios obligados tributarios si hay más de una empresa activa
   sMultiOT := 'N';
@@ -580,6 +588,11 @@ begin
   else
     sRectificativa := '';
   // Las completas (F1) exigen identificar al destinatario
+  if (ADatos.TipoFactura = 'F1') and
+     (Length(ADatos.NifCliente) <> 9) then
+    raise Exception.Create('La factura completa (F1) ' + ASerie + '\' +
+      ANumero + ' requiere un NIF de cliente válido y tiene "' +
+      ADatos.NifCliente + '"');
   if ADatos.TipoFactura = 'F1' then
     sDestinatarios := '<sum1:Destinatarios><sum1:IDDestinatario>' +
       '<sum1:NombreRazon>' + EscaparXml(ADatos.NombreCliente) +
@@ -742,6 +755,10 @@ begin
   Result.IssuedTime     := 0;
   Result.EsperaSegundos := 0;
   CargarDatosFactura(AConn, ASerie, ANumero, oDatos);
+  if Length(oDatos.NifEmisor) <> 9 then
+    raise Exception.Create('NIF de la empresa emisora vacío o no ' +
+      'válido para Verifactu: "' + oDatos.NifEmisor + '". Revisar la ' +
+      'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
   // Bloquea la cadena del emisor hasta el commit/rollback del llamador
   ObtenerCadenaParaEnvio(AConn, oDatos.NifEmisor, oCadena);
   sFhGen := FechaHoraHusoGen(Now);

@@ -592,6 +592,23 @@
         <DCCReference Include="src\verifactu\inLibVerifactu.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuEnvio.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuCola.pas"/>
+        <DCCReference Include="src\verifactu\inMtoVerifactuCola.pas">
+            <Form>frmMtoVerifactuCola</Form>
+        </DCCReference>
+        <DCCReference Include="src\verifactu\UniDataVerifactuCola.pas">
+            <Form>dmVerifactuCola</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\verifactu\inMtoVerifactuLog.pas">
+            <Form>frmMtoVerifactuLog</Form>
+        </DCCReference>
+        <DCCReference Include="src\verifactu\UniDataVerifactuLog.pas">
+            <Form>dmVerifactuLog</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalVerifactuDecl.pas">
+            <Form>frmModalVerifactuDecl</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibData.pas"/>
         <DCCReference Include="src\Lib\inLibAppParam.pas"/>
         <DCCReference Include="src\Lib\inLibUnidadesMedida.pas"/>

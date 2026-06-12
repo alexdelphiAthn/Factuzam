@@ -3106,6 +3106,21 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         OnClick = mnuGeneradorProcesosClick
       end
     end
+    object mnuVerifactu: TMenuItem
+      Caption = '&Verifactu'
+      object mnuVerifactuDeclaracion: TMenuItem
+        Caption = 'Declaraci'#243'n Responsable'
+        OnClick = mnuVerifactuDeclaracionClick
+      end
+      object mnuVerifactuCola: TMenuItem
+        Caption = 'Cola de Env'#237'os'
+        OnClick = mnuVerifactuColaClick
+      end
+      object mnuVerifactuLog: TMenuItem
+        Caption = 'Verifactu Log'
+        OnClick = mnuVerifactuLogClick
+      end
+    end
     object Ayuda1: TMenuItem
       Caption = 'Ayuda'
       object Acercade1: TMenuItem

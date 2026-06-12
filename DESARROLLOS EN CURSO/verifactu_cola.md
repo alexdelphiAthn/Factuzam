@@ -50,6 +50,27 @@ encolada para que un hilo en segundo plano la comunique a Verifactu.
 El hilo lee los parámetros en caliente: se puede activar/desactivar sin
 reiniciar la aplicación.
 
+## Menú Verifactu (inMtoPrincipal)
+
+Menú principal nuevo «Verifactu» con tres opciones (alta de pantallas y
+permisos en `verifactu_menu.sql`):
+
+- **Declaración Responsable** (`inMtoModalVerifactuDecl`): modal con el
+  texto de la declaración responsable del SIF (art. 13 RD 1007/2023),
+  compuesto en tiempo real con el nombre del sistema, `IdSistemaInformatico`
+  FZ, la versión (`oVersion`) y el productor/instalación de los
+  parámetros Verifactu.
+- **Cola de Envíos** (`inMtoVerifactuCola` + `UniDataVerifactuCola`):
+  consulta de `fza_verifactu_cola` (estado, intentos, próximo intento,
+  mensaje de error). Solo lectura.
+- **Verifactu Log** (`inMtoVerifactuLog` + `UniDataVerifactuLog`):
+  consulta de `fza_verifactu_eventos` con la cadena de hashes. Solo
+  lectura.
+
+Permisos: `menu.VerifactuCola`, `menu.VerifactuLog` y
+`menu.mnuVerifactuDeclaracion` (visibles por defecto; ocultables por
+grupo desde el mantenimiento de permisos).
+
 ## BBDD
 
 - `fza_verifactu_cola` (sufijo `VFCOLA`): ver `verifactu_cola.sql`
@@ -100,6 +121,22 @@ HAC/1177/2024 y esquemas `SuministroLR.xsd` / `SuministroInformacion.xsd`):
 Parámetros añadidos: `appVerifactuUrlEnvioPre/Pro`,
 `appVerifactuSifNombreRazon`, `appVerifactuSifNif` (**obligatorio
 rellenarlo**), `appVerifactuIdInstalacion`, `appVerifactuDescripcionOpe`.
+
+### Diagnóstico rápido: «AEAT [1100] Valor o tipo incorrecto del campo: NIF»
+
+Ese 1100 lo devuelve la AEAT cuando algún NIF del XML va vacío o mal
+formado. Causas por orden de probabilidad:
+
+1. `appVerifactuSifNif` sin rellenar (bloque `SistemaInformatico`). El
+   cliente ahora lo valida antes de enviar y deja un mensaje claro en la
+   cola.
+2. NIF de la empresa con separadores o longitud distinta de 9. Los NIF
+   se normalizan (mayúsculas, sin guiones/espacios) tanto en el QR como
+   en el registro, y se validan antes del envío.
+3. En PRE, además, el NIF del obligado debe ser un NIF real censado en
+   el entorno de pruebas y guardar relación con el certificado usado
+   (titular o apoderado); si no, la AEAT responde con errores de censo
+   (no identificado / sin apoderamiento).
 
 ### Notas y decisiones a validar en el entorno PRE de la AEAT
 

@@ -43,6 +43,9 @@ function VerifactuEntorno: string;
 function ComponerNumSerieFactura(const ASerie, ANumero: string): string;
 // Importe con 2 decimales y punto como separador (formato QR y registro)
 function FormatearImporteVerifactu(AImporte: Currency): string;
+// NIF normalizado para Verifactu: solo letras y dígitos, en mayúsculas.
+// El MISMO valor debe viajar en el QR y en el registro de facturación.
+function NormalizarNifVerifactu(const AValor: string): string;
 // URL completa de cotejo para el QR tributario del ticket / factura
 function ConstruirUrlQR(const ANif, ASerie, ANumero: string;
                         AFecha: TDateTime;
@@ -98,6 +101,19 @@ begin
   Result := FormatFloat('0.00', AImporte, oFmt);
 end;
 
+function NormalizarNifVerifactu(const AValor: string): string;
+var
+  cActual: Char;
+begin
+  Result := '';
+  for cActual in UpperCase(Trim(AValor)) do
+  begin
+    if ((cActual >= 'A') and (cActual <= 'Z')) or
+       ((cActual >= '0') and (cActual <= '9')) then
+      Result := Result + cActual;
+  end;
+end;
+
 // Percent-encode de un valor de parámetro de URL (RFC 3986): solo quedan
 // sin codificar los caracteres no reservados.
 function CodificarParametroURL(const AValor: string): string;
@@ -139,7 +155,7 @@ begin
   // Formato fijado por la AEAT (documento técnico del QR tributario):
   // nif, numserie, fecha dd-mm-aaaa e importe total con punto decimal
   Result := sBase +
-    '?nif='      + CodificarParametroURL(Trim(ANif)) +
+    '?nif='      + CodificarParametroURL(NormalizarNifVerifactu(ANif)) +
     '&numserie=' + CodificarParametroURL(
                      ComponerNumSerieFactura(ASerie, ANumero)) +
     '&fecha='    + CodificarParametroURL(
