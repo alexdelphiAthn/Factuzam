@@ -405,6 +405,29 @@ a la operación, cobrar con el botón **Factura** (o F8) → elegir serie
 - Sin cliente (o sin NIF), F8 avisa y no deja continuar; el resto de
   botones de cobro siguen funcionando como siempre.
 
+**I10 — Rectificar desde Buscar operaciones.** (Antes: crear la serie
+rectificativa con el botón de series de Empresas, o a mano con subtipo
+`RECTIFICATIVA`.) En Buscar operaciones, seleccionar una venta con
+ticket → **Rectificar** → confirmar.
+- Se abre/reutiliza una ventana de ventas con las líneas del ticket en
+  negativo y el cliente del original; el título indica «RECTIFICA a
+  serie\número». Las líneas se pueden ajustar o borrar.
+- Al cobrar (F12), la fase de cobro muestra la referencia en el título
+  y el combo de series solo ofrece series de subtipo RECTIFICATIVA
+  (p. ej. R1); el F8 está bloqueado en este modo.
+- Tras grabar: el documento nuevo es `TIPO_FAC='RECTIFICATIVA'` con la
+  serie R1; la original pasa a `FASE_FAC='RECTIFICADA'` con sus
+  columnas ABONO apuntando a la rectificativa; la rectificativa lleva
+  el comentario «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número»; el
+  registro sale como R5/R1 con `FacturasRectificadas`, y el ticket
+  térmico se imprime con su QR.
+
+**I11 — Botonera de Buscar operaciones.** Comprobar los tres botones:
+Rectificar (I10), «Anular Factura Verifactu» (encola la anulación del
+ticket consolidado, con guardas) y «Convertir en normal» (flujo F3 del
+modal con cliente/serie/fecha). El botón Subsanar ya no existe en
+ninguna pantalla.
+
 **I9 — QR en el A4.** Con Verifactu activo, imprimir una factura (F8 de
 caja o botón Imprimir de Facturas) con cada uno de los dos formatos
 (normal y simplificada).

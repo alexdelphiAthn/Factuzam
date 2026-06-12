@@ -84,6 +84,8 @@ type
     tmrBusqueda:      TTimer;
     btnDevolverAbonar: TButton;
     btnAnularVerifactu: TButton;
+    btnFacturarTicket: TButton;
+    btnRectificar: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -97,11 +99,16 @@ type
       AState: TCustomDrawState; AFont: TFont; var ABackgroundColor: TColor);
     procedure dtpFechaPropertiesEditValueChanged(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure btnAnularVerifactuClick(Sender: TObject);
+    procedure btnFacturarTicketClick(Sender: TObject);
+    procedure btnRectificarClick(Sender: TObject);
   private
     FdmConsulta: TdmConsultaOpe;
     FEmpresa:    string;
     FAlmacen:    string;
     FCaja:       string;
+    // Factura de la operación seleccionada (pestaña Factura)
+    function FacturaSeleccionada(out ASerie, ANumero: string): Boolean;
     procedure RecargarMaestro;
     procedure GuardarLayout;
     procedure RestaurarLayout;
@@ -141,7 +148,9 @@ implementation
 
 uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo,
-     inLibTraspasoTicket, inLibShowMto, inMtoPrincipal;
+     inLibTraspasoTicket, inLibShowMto, inMtoPrincipal, Uni,
+     inLibVerifactu, inLibVerifactuCola, inMtoModalFacturarTicket,
+     inMtoCajaOpe;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -332,6 +341,185 @@ begin
   sSer := ds.FieldByName('SERIE_FAC').AsString;
   if (sNum <> '') and (sSer <> '') then
     ShowMto(frmMtoPrincipal, 'FacturasSimplif', sNum + ',' + sSer);
+end;
+
+function TfrmConsultaOpe.FacturaSeleccionada(out ASerie,
+                                             ANumero: string): Boolean;
+var
+  ds: TDataSet;
+begin
+  ASerie  := '';
+  ANumero := '';
+  if Assigned(FdmConsulta) then
+  begin
+    ds := FdmConsulta.dsFactura.DataSet;
+    if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
+    begin
+      ASerie  := ds.FieldByName('SERIE_FAC').AsString;
+      ANumero := ds.FieldByName('NUMERO_FAC').AsString;
+    end;
+  end;
+  Result := (Trim(ASerie) <> '') and (Trim(ANumero) <> '');
+end;
+
+procedure TfrmConsultaOpe.btnAnularVerifactuClick(Sender: TObject);
+var
+  Qry:     TUniQuery;
+  sSerie:  string;
+  sNumero: string;
+begin
+  //Anulación Verifactu (RegistroAnulacion) de la factura del ticket
+  if not FacturaSeleccionada(sSerie, sNumero) then
+    ShowMessage('La operación seleccionada no tiene factura.')
+  else
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.SQL.Text :=
+        ' SELECT ESCONSOLIDADA_FAC FROM fza_facturas ' +
+        ' WHERE SERIE_FAC  = :SERIE ' +
+        '   AND NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('SERIE').AsString  := sSerie;
+      Qry.ParamByName('NUMERO').AsString := sNumero;
+      Qry.Open;
+      if Qry.IsEmpty or (Qry.Fields[0].AsString <> 'S') then
+        ShowMessage('La factura ' + sSerie + '\' + sNumero + ' aún no ' +
+                    'está consolidada en Verifactu: no se puede anular.')
+      else if MessageDlg('¿Anular en Verifactu la factura ' + sSerie +
+                         '\' + sNumero + '?', mtConfirmation,
+                         [mbYes, mbNo], 0) = mrYes then
+      begin
+        Qry.Close;
+        TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, 'ANULACION');
+        RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+          cEventoVerifactuEncolado,
+          'Anulación encolada desde Buscar operaciones', '',
+          sSerie, sNumero);
+        ShowMessage('Anulación encolada: el hilo Verifactu la enviará ' +
+                    'en el próximo ciclo.');
+      end;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
+procedure TfrmConsultaOpe.btnFacturarTicketClick(Sender: TObject);
+var
+  Qry:     TUniQuery;
+  oRes:    TFacturarTicketResult;
+  sSerie:  string;
+  sNumero: string;
+  dtFecha: TDateTime;
+  bSigue:  Boolean;
+begin
+  //Factura completa (F3) en sustitución del ticket de la operación
+  dtFecha := 0;
+  bSigue  := False;
+  if not FacturaSeleccionada(sSerie, sNumero) then
+    ShowMessage('La operación seleccionada no tiene factura.')
+  else
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.SQL.Text :=
+        ' SELECT TIPO_FAC, FECHA_FAC FROM fza_facturas ' +
+        ' WHERE SERIE_FAC  = :SERIE ' +
+        '   AND NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('SERIE').AsString  := sSerie;
+      Qry.ParamByName('NUMERO').AsString := sNumero;
+      Qry.Open;
+      if Qry.IsEmpty or
+         (not SameText(Qry.FieldByName('TIPO_FAC').AsString,
+                       'SIMPLIFICADA')) then
+        ShowMessage('Solo se factura a cliente desde una factura ' +
+                    'SIMPLIFICADA (ticket).')
+      else
+      begin
+        dtFecha := Qry.FieldByName('FECHA_FAC').AsDateTime;
+        bSigue  := True;
+      end;
+    finally
+      FreeAndNil(Qry);
+    end;
+    if bSigue then
+    begin
+      oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
+                                               FEmpresa, FAlmacen,
+                                               dtFecha);
+      if oRes.Aceptado then
+        ShowMessage('Creada la factura ' + oRes.SerieNueva + '\' +
+                    oRes.NumeroNueva + ' en sustitución del ticket ' +
+                    sSerie + '\' + sNumero + ' y encolada en ' +
+                    'Verifactu (F3).');
+    end;
+  end;
+end;
+
+procedure TfrmConsultaOpe.btnRectificarClick(Sender: TObject);
+var
+  Qry:     TUniQuery;
+  oCaja:   TfrmMtoOpeCaja;
+  i:       Integer;
+  sSerie:  string;
+  sNumero: string;
+  bSigue:  Boolean;
+begin
+  //Rectificar: carga la venta en caja con las líneas en negativo; al
+  //cobrar saldrá con serie rectificativa y quedará enlazada
+  bSigue := False;
+  if not FacturaSeleccionada(sSerie, sNumero) then
+    ShowMessage('La operación seleccionada no tiene factura.')
+  else
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.SQL.Text :=
+        ' SELECT TIPO_FAC FROM fza_facturas ' +
+        ' WHERE SERIE_FAC  = :SERIE ' +
+        '   AND NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('SERIE').AsString  := sSerie;
+      Qry.ParamByName('NUMERO').AsString := sNumero;
+      Qry.Open;
+      if Qry.IsEmpty or
+         SameText(Qry.FieldByName('TIPO_FAC').AsString,
+                  'RECTIFICATIVA') then
+        ShowMessage('No se puede rectificar una rectificativa.')
+      else
+        bSigue := True;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+  if bSigue and
+     (MessageDlg('¿Rectificar la factura ' + sSerie + '\' + sNumero +
+                 '? Se cargará la venta en caja con las líneas en ' +
+                 'negativo para ajustarla y cobrarla.',
+                 mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+  begin
+    // Ventana de ventas libre, o una nueva si todas están ocupadas
+    oCaja := nil;
+    for i := 0 to Screen.FormCount - 1 do
+    begin
+      if (oCaja = nil) and (Screen.Forms[i] is TfrmMtoOpeCaja) and
+         TfrmMtoOpeCaja(Screen.Forms[i]).OperacionVacia then
+        oCaja := TfrmMtoOpeCaja(Screen.Forms[i]);
+    end;
+    if oCaja = nil then
+    begin
+      oCaja := TfrmMtoOpeCaja.Create(Application);
+      oCaja.Caption := Format('Operación - (Caja Real %s)', [FCaja]);
+      oCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
+    end;
+    oCaja.CargarRectificacion(sSerie, sNumero);
+    oCaja.Show;
+    oCaja.BringToFront;
+    if oCaja.WindowState = wsMinimized then
+      oCaja.WindowState := wsNormal;
+  end;
 end;
 
 // Recarga imgFotoConsulta con la foto a 300 px del articulo / SKU de
