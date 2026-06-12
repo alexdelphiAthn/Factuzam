@@ -199,6 +199,20 @@ consolidada):
   aceptarse, la consolidación se reescribe con la nueva
   petición/respuesta y queda en `ESTADO='SUBSANADO'`.
 
+**Histórico de relaciones** (`fza_facturas_relaciones`, script
+`verifactu_relaciones.sql`): cada rectificativa (RECTIFICA) y cada F3
+(SUSTITUYE) guarda su factura de origen en esta tabla, de modo que una
+factura puede rectificarse **varias veces** sin perder trazabilidad: el
+envío Verifactu resuelve la antecesora primero por aquí (y solo si no
+hay fila usa el enlace ABONO inverso, que muestra la última). Consulta
+N:1:
+
+```sql
+SELECT * FROM fza_facturas_relaciones
+ WHERE SERIE_FAC_ORIGEN_FACREL = :SERIE
+   AND NUMERO_FAC_ORIGEN_FACREL = :NUMERO;
+```
+
 Re-encolar una operación ya existente la relanza (vuelve a PENDIENTE
 con los intentos a cero). La lista lleva además la columna **«Cola
 Verifactu»** con el último estado de la cola de cada factura

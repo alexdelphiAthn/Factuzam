@@ -325,6 +325,10 @@ begin
       Qry.ParamByName('SERIE').AsString  := ASerie;
       Qry.ParamByName('NUMERO').AsString := sNumero;
       Qry.Execute;
+      // Histórico N:1 de relaciones (la F3 sustituye al ticket)
+      TVerifactuCola.RegistrarRelacionFactura(
+        inLibGlobalVar.oConn, ASerie, sNumero,
+        FSerieTicket, FNumeroTicket, 'SUSTITUYE');
       inLibGlobalVar.oConn.Commit;
     except
       on E: Exception do

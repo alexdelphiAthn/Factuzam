@@ -428,6 +428,17 @@ ticket consolidado, con guardas) y «Convertir en normal» (flujo F3 del
 modal con cliente/serie/fecha). El botón Subsanar ya no existe en
 ninguna pantalla.
 
+**I13 — Rectificaciones múltiples.** (Tras ejecutar
+`verifactu_relaciones.sql`.) Rectificar dos veces la misma factura
+(p. ej. una prenda hoy y otra después), dejando o no pasar el ciclo del
+hilo entre ambas.
+- `fza_facturas_relaciones` tiene DOS filas RECTIFICA apuntando a la
+  original; las columnas ABONO de la original muestran la última.
+- El registro de CADA rectificativa sale con su bloque
+  `FacturasRectificadas` apuntando a la original (aunque las dos se
+  envíen en el mismo ciclo).
+- La consulta N:1 del .md devuelve ambas rectificativas.
+
 **I12 — F10 y F11 en fase de cobro.** Cobrar una venta con F10 («Sin
 precios»).
 - Salen DOS tickets: el regalo («TICKET REGALO», artículos y unidades
