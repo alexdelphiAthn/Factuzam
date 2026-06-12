@@ -124,6 +124,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_valores_defecto`                | `VD`      |
 | `fza_variaciones`                    | `VAR`     |
 | `fza_variaciones_atributos`          | `VA`      |
+| `fza_verifactu_cola`                 | `VFCOLA`  |
 | `fza_verifactu_eventos`              | `LOG`     |
 | `fza_winforms`                       | `WINF`    |
 

@@ -252,6 +252,28 @@ begin
     'más lento; dejar en False salvo BBDD de muy alta latencia)',
     tpBoolean, 'False');
 
+  // --- Verifactu ---
+  // Subsistema Verifactu (AEAT). Los consumen el QR del ticket
+  // (inLibVerifactu) y el hilo de la cola (inLibVerifactuCola); se leen
+  // en caliente, así que puede activarse sin reiniciar la aplicación.
+  RegistrarParametro('Verifactu', 'appVerifactuActivo',
+    'Activar Verifactu (QR tributario en ticket y cola de envío)',
+    tpBoolean, 'False');
+  RegistrarParametro('Verifactu', 'appVerifactuEntorno',
+    'Entorno AEAT: PRE (pruebas) o PRO (producción)', tpString, 'PRE');
+  RegistrarParametro('Verifactu', 'appVerifactuUrlQRPre',
+    'URL de cotejo del QR en preproducción', tpString,
+    'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR');
+  RegistrarParametro('Verifactu', 'appVerifactuUrlQRPro',
+    'URL de cotejo del QR en producción', tpString,
+    'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR');
+  RegistrarParametro('Verifactu', 'appVerifactuSegundosCiclo',
+    'Segundos entre ciclos del hilo de la cola Verifactu',
+    tpInteger, '60');
+  RegistrarParametro('Verifactu', 'appVerifactuMaxIntentos',
+    'Reintentos de envío antes de marcar ERROR definitivo',
+    tpInteger, '10');
+
   // --- Log --- (los 4 switches de depuración y traza, agrupados)
   // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en
   // el popup de error de conUniError. Implica también el modo SQL.

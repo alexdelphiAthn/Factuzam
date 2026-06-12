@@ -384,6 +384,8 @@ uses inLibtb,
      inMtoCajaOpe,
      inLibDevExp,
      inLibFacturas,
+     inLibVerifactu,
+     inLibVerifactuCola,
      inLibGenerarTicketBD;
 
 {$R *.dfm}
@@ -1386,6 +1388,13 @@ begin
           -TotalDevolucionesNormales, UsuarioCaja, NumFactura, SerieGenerada,
           Cab.CodigoCliente, 'Devolución de Venta');
     end;
+    // =======================================================================
+    // PASO 4.6: ENCOLAR EN LA COLA VERIFACTU (si está activo)
+    // Dentro de la transacción: si la venta confirma, el alta queda
+    // encolada y el hilo de inLibVerifactuCola la envía a la AEAT.
+    // =======================================================================
+    if RequiereFactura and VerifactuActivo then
+      TVerifactuCola.EncolarFactura(QryTrx, SerieGenerada, NumFactura);
     // =======================================================================
     // PASO 5: FORMAS DE PAGO (Se ejecuta siempre que haya importe)
     // Las lineas con CODIGO_FP_CFP='VALE' se omiten aqui: las inserta PASO 6
