@@ -383,24 +383,43 @@ begin
     ADatos.Bandas[3].PorcentajeRe := 0;
     ADatos.Bandas[3].CuotaRe      := 0;
     ADatos.Bandas[3].EsExenta     := True;
-    // Antecesora: la factura cuyas columnas ABONO apuntan a esta (la
-    // original de una rectificativa, o el ticket sustituido por una
-    // factura completa). Decide R1/R5/F3 y aporta el bloque de
-    // FacturasRectificadas / FacturasSustituidas.
+    // Antecesora (la original de una rectificativa o el ticket
+    // sustituido por una F3): primero por el histórico de relaciones
+    // (fza_facturas_relaciones, soporta varias rectificaciones de la
+    // misma factura) y, si no hay fila, por el enlace ABONO inverso.
+    // Decide R1/R5/F3 y aporta FacturasRectificadas / Sustituidas.
     if SameText(sTipoFac, 'RECTIFICATIVA') or
        SameText(sTipoFac, 'NORMAL') then
     begin
       Qry.Close;
       Qry.SQL.Text :=
-        ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
-        '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
-        ' FROM fza_facturas ' +
-        ' WHERE SERIE_FAC_ABONO_FAC  = :SERIE ' +
-        '   AND NUMERO_FAC_ABONO_FAC = :NUMERO ' +
+        ' SELECT o.SERIE_FAC, o.NUMERO_FAC, o.TIPO_FAC, ' +
+        '        DATE_FORMAT(o.FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+        ' FROM fza_facturas_relaciones r ' +
+        ' JOIN fza_facturas o ' +
+        '   ON o.SERIE_FAC  = r.SERIE_FAC_ORIGEN_FACREL ' +
+        '  AND o.NUMERO_FAC = r.NUMERO_FAC_ORIGEN_FACREL ' +
+        ' WHERE r.SERIE_FAC_FACREL  = :SERIE ' +
+        '   AND r.NUMERO_FAC_FACREL = :NUMERO ' +
+        ' ORDER BY r.ID_FACREL DESC ' +
         ' LIMIT 1';
       Qry.ParamByName('SERIE').AsString  := ASerie;
       Qry.ParamByName('NUMERO').AsString := ANumero;
       Qry.Open;
+      if Qry.IsEmpty then
+      begin
+        Qry.Close;
+        Qry.SQL.Text :=
+          ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
+          '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+          ' FROM fza_facturas ' +
+          ' WHERE SERIE_FAC_ABONO_FAC  = :SERIE ' +
+          '   AND NUMERO_FAC_ABONO_FAC = :NUMERO ' +
+          ' LIMIT 1';
+        Qry.ParamByName('SERIE').AsString  := ASerie;
+        Qry.ParamByName('NUMERO').AsString := ANumero;
+        Qry.Open;
+      end;
       if not Qry.IsEmpty then
       begin
         if SameText(sTipoFac, 'RECTIFICATIVA') then

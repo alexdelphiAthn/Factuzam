@@ -36,6 +36,12 @@ type
                                          const ASerieOriginal,
                                          ANumeroOriginal,
                                          ASerieRect, ANumeroRect: string);
+    // Histórico N:1 de rectificaciones/sustituciones
+    // (fza_facturas_relaciones): cada hija guarda su factura de origen
+    class procedure RegistrarRelacionFactura(AConn: TUniConnection;
+                                             const ASerie, ANumero,
+                                             ASerieOrigen, ANumeroOrigen,
+                                             ATipoRelacion: string);
     // Arranque tras el logon y parada al cerrar (ver inMtoPrincipal)
     class procedure IniciarHilo;
     class procedure DetenerHilo;
@@ -167,6 +173,11 @@ begin
     Qry.ParamByName('SERIE').AsString      := ASerieOriginal;
     Qry.ParamByName('NUMERO').AsString     := ANumeroOriginal;
     Qry.Execute;
+    // Histórico N:1: cada rectificativa conserva su propio enlace
+    // aunque la original se rectifique varias veces
+    RegistrarRelacionFactura(AConn, ASerieRect, ANumeroRect,
+                             ASerieOriginal, ANumeroOriginal,
+                             'RECTIFICA');
     if VerifactuActivo then
     begin
       EncolarFactura(Qry, ASerieRect, ANumeroRect);
@@ -174,6 +185,41 @@ begin
         'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
         ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
     end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+class procedure TVerifactuCola.RegistrarRelacionFactura(
+                                  AConn: TUniConnection;
+                                  const ASerie, ANumero,
+                                  ASerieOrigen, ANumeroOrigen,
+                                  ATipoRelacion: string);
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' INSERT INTO fza_facturas_relaciones ' +
+      ' (SERIE_FAC_FACREL, NUMERO_FAC_FACREL, ' +
+      '  SERIE_FAC_ORIGEN_FACREL, NUMERO_FAC_ORIGEN_FACREL, ' +
+      '  TIPO_RELACION_FACREL, INSTANTE_ALTA, USUARIO_ALTA) ' +
+      ' VALUES (:SERIE, :NUMERO, :SERIEORIG, :NUMEROORIG, :TIPO, ' +
+      '         NOW(), :USUARIO) ' +
+      ' ON DUPLICATE KEY UPDATE ' +
+      '  SERIE_FAC_ORIGEN_FACREL  = :SERIEORIG, ' +
+      '  NUMERO_FAC_ORIGEN_FACREL = :NUMEROORIG, ' +
+      '  INSTANTE_MODIF = NOW(), ' +
+      '  USUARIO_MODIF  = :USUARIO';
+    Qry.ParamByName('SERIE').AsString      := ASerie;
+    Qry.ParamByName('NUMERO').AsString     := ANumero;
+    Qry.ParamByName('SERIEORIG').AsString  := ASerieOrigen;
+    Qry.ParamByName('NUMEROORIG').AsString := ANumeroOrigen;
+    Qry.ParamByName('TIPO').AsString       := ATipoRelacion;
+    Qry.ParamByName('USUARIO').AsString    := oUser;
+    Qry.Execute;
   finally
     FreeAndNil(Qry);
   end;
