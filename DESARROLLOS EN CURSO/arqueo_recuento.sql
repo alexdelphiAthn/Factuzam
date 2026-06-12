@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `fza_caja_arqueos_recuento` (
   `USUARIO_ALTA`             varchar(100)  NOT NULL,
   `USUARIO_MODIF`            varchar(100)  NOT NULL,
   PRIMARY KEY (`ID_ARQR`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- Índices de la tabla hija (idempotente)
 SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS

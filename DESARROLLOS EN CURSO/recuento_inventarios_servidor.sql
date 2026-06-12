@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS inv_recuentos (
     (carpeta_cliente, codigo_emp, codigo_alm, serie, numero),
   KEY idx_recuento_estado (carpeta_cliente, estado),
   KEY idx_recuento_alm (carpeta_cliente, codigo_alm)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ----------------------------------------------------------------------------
 -- inv_catalogo: líneas de la plantilla (recuentos DIRIGIDO). Un SKU puede
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS inv_catalogo (
   KEY idx_cat_sku (id_recuento, codigo_unidad),
   CONSTRAINT fk_cat_recuento FOREIGN KEY (id_recuento)
     REFERENCES inv_recuentos (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ----------------------------------------------------------------------------
 -- inv_eventos: una fila por escaneo (la "unidad de recuento" con su día/hora).
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS inv_eventos (
   KEY idx_evt_sku (id_recuento, codigo_unidad),
   CONSTRAINT fk_evt_recuento FOREIGN KEY (id_recuento)
     REFERENCES inv_recuentos (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ----------------------------------------------------------------------------
 -- inv_almacenes: lista de almacenes sincronizada por Factuzam, para el selector
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS inv_almacenes (
   PRIMARY KEY (id),
   UNIQUE KEY uq_alm (carpeta_cliente, codigo_emp, codigo_alm),
   KEY idx_alm_cliente (carpeta_cliente, esactivo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ----------------------------------------------------------------------------
 -- inv_dispositivos: terminales/operarios con su token de acceso.
@@ -139,4 +139,4 @@ CREATE TABLE IF NOT EXISTS inv_dispositivos (
   PRIMARY KEY (id),
   UNIQUE KEY uq_disp_token (token),
   KEY idx_disp_cliente (carpeta_cliente, esactivo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;

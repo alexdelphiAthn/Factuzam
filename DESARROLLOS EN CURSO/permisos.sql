@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `fza_permisos` (
   `USUARIO_ALTA`   varchar(100) NOT NULL,
   `USUARIO_MODIF`  varchar(100) DEFAULT NULL,
   PRIMARY KEY (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ---------------------------------------------------------------------
 -- 1. Migración de instalaciones existentes: renombrar GRUPO_PERM ->
