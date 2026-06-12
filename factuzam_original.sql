@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 12/06/2026 17:16:50
+-- Backup generado: 12/06/2026 17:26:39
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -3300,13 +3300,12 @@ CREATE TABLE `fza_caja_arqueos` (
   `TOTAL_DESCUENTOS_LINEAS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_BRUTO_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_DESCUENTOS_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_NETO_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_NETO_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'SUM IMPORTE_TOTAL_OPCAJA de VE en el rango (signed)',
   `TOTAL_PRESTAMOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'SUM TIPO=DE en el rango (compromiso bruto)',
-  `TOTAL_VENTAS_NORMALES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_VENTAS_PRESTAMOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_DEVOLUCIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_VENTAS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_VENTA_CREDITO_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
+  `TOTAL_VENTAS_NORMALES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'VE > 0 sin DE en la misma operación',
+  `TOTAL_VENTAS_PRESTAMOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT '= TOTAL_PRESTAMOS_ARQ − TOTAL_COBROS_CLIENTES_ARQ',
+  `TOTAL_DEVOLUCIONES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'ABS de VE < 0 (devoluciones a cliente)',
+  `TOTAL_VENTAS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT '= VentasNormales + VentasPrestamos − Devoluciones',
   `TOTAL_VALES_RECOGIDOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_VALES_EMITIDOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_COBROS_CLIENTES_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
@@ -3319,11 +3318,6 @@ CREATE TABLE `fza_caja_arqueos` (
   `TOTAL_EFECTIVO_CAJA_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
   `TOTAL_OTROS_INGRESOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Suma de formas de pago sin cajón (tarjeta, bono, divisa, cripto...)',
   `TOTAL_SALDO_RECONTAR_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Saldo teórico efectivo + otros (lo que debe estar en caja + ext.)',
-  `TOTAL_RECUENTO_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Suma de los importes recontados por el usuario',
-  `DIFERENCIA_TOTAL_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Recuento − Saldo teórico (positivo = sobrante)',
-  `EFECTIVO_DEJADO_CAJA_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Efectivo que se deja en caja como cambio para el día siguiente',
-  `TOTAL_DEPOSITOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
-  `TOTAL_ENCARGOS_ARQ` decimal(19,6) NOT NULL DEFAULT '0.000000',
   `OBSERVACIONES_ARQ` varchar(500) NULL DEFAULT NULL,
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -3334,15 +3328,6 @@ CREATE TABLE `fza_caja_arqueos` (
 ALTER TABLE `fza_caja_arqueos` ADD INDEX `IDX_ARQ_CTX_FECHA` (`CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ`, `FECHA_DESDE_ARQ`);
 ALTER TABLE `fza_caja_arqueos` ADD INDEX `IDX_ARQ_FASE` (`FASE_ARQ`);
 ALTER TABLE `fza_caja_arqueos` ADD INDEX `IDX_ARQ_FECHA` (`FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`);
-
--- Datos de fza_caja_arqueos
-INSERT INTO `fza_caja_arqueos` (`CODIGO_ARQ`, `CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ`, `FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`, `FASE_ARQ`, `CODIGO_EMPLEADO_ARQ`, `CANTIDAD_VENTAS_ARQ`, `CANTIDAD_OPERACIONES_ARQ`, `TOTAL_BRUTO_LINEAS_ARQ`, `TOTAL_DESCUENTOS_LINEAS_ARQ`, `TOTAL_BRUTO_OPERACIONES_ARQ`, `TOTAL_DESCUENTOS_OPERACIONES_ARQ`, `TOTAL_NETO_ARQ`, `TOTAL_PRESTAMOS_ARQ`, `TOTAL_VENTAS_NORMALES_ARQ`, `TOTAL_VENTAS_PRESTAMOS_ARQ`, `TOTAL_DEVOLUCIONES_ARQ`, `TOTAL_VENTAS_ARQ`, `TOTAL_VENTA_CREDITO_ARQ`, `TOTAL_VALES_RECOGIDOS_ARQ`, `TOTAL_VALES_EMITIDOS_ARQ`, `TOTAL_COBROS_CLIENTES_ARQ`, `TOTAL_PENDIENTE_COBRO_ARQ`, `TOTAL_INGRESOS_CAJA_ARQ`, `TOTAL_EFECTIVO_INGRESOS_ARQ`, `TOTAL_EFECTIVO_ENTRADAS_ARQ`, `TOTAL_EFECTIVO_SALIDAS_ARQ`, `TOTAL_EFECTIVO_ANTERIOR_ARQ`, `TOTAL_EFECTIVO_CAJA_ARQ`, `TOTAL_OTROS_INGRESOS_ARQ`, `TOTAL_SALDO_RECONTAR_ARQ`, `TOTAL_RECUENTO_ARQ`, `DIFERENCIA_TOTAL_ARQ`, `EFECTIVO_DEJADO_CAJA_ARQ`, `TOTAL_DEPOSITOS_ARQ`, `TOTAL_ENCARGOS_ARQ`, `OBSERVACIONES_ARQ`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('20260501-01', '012', 'GEN', '1', '2026-05-01 00:00:00', '2026-05-28 00:00:00', 'CERRADO', NULL, 15, 23, 1830.3549, 317.6429, 1512.712, 0, 1512.712, 28.95, 1512.712, 28.95, 0, 1541.662, 0, 89, 0, 10, 18.95, -2185.5, 7227.65, 1100, 13357, 0, -5029.35, 2843.85, -2185.5, 2843.85, 5029.35, 0, 0, 0, '', '2026-05-28 16:28:07', '2026-05-28 16:28:07', 'Administrador', 'Administrador'),
-  ('20260524-01', '012', 'GEN', '1', '2026-05-24 00:00:00', '2026-05-26 00:00:00', 'CERRADO', NULL, 10, 10, 1161.2854, 201.5234, 959.762, 0, 959.762, 0, 959.762, 0, 0, 959.762, 0, 0, 0, 0, 0, 994.85, 874.85, 0, 0, 0, 874.85, 120, 994.85, 1020, 25.15, 0, 0, 0, '', '2026-05-26 09:01:48', '2026-05-26 09:01:48', 'Administrador', 'Administrador'),
-  ('20260526-01', '012', 'GEN', '1', '2026-05-26 00:00:00', '2026-05-26 00:00:00', 'CERRADO', NULL, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 1100, 1000, 100, 0, 2000, 0, 2000, 1627.2, -372.8, 127.2, 0, 0, '', '2026-05-26 16:56:45', '2026-05-26 16:56:45', 'Administrador', 'Administrador'),
-  ('20260526-02', '012', 'GEN', '1', '2026-05-26 00:00:00', '2026-05-26 00:00:00', 'CERRADO', NULL, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 700, 1457, 1100, 1857, 0, 700, 0, 700, 4560, 3860, 60, 0, 0, '', '2026-05-26 17:44:55', '2026-05-26 17:44:55', 'Administrador', 'Administrador'),
-  ('20260528-01', '012', 'GEN', '1', '2026-05-28 00:00:00', '2026-05-28 00:00:00', 'CERRADO', NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10100.5, 7216.65, 0, 0, 60, 7276.65, 2823.85, 10100.5, 2823.85, -7276.65, 0, 0, 0, '', '2026-05-28 08:12:16', '2026-05-28 08:12:16', 'Administrador', 'Administrador');
--- 5 registros exportados
 
 
 -- Tabla: fza_caja_arqueos_recuento
@@ -5198,7 +5183,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 364, 3, 'S', 'S', '2026-06-12 13:40:51', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 376, 3, 'S', 'S', '2026-06-12 17:26:09', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 22, 2, 'S', 'S', '2026-05-26 08:44:59', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -6426,6 +6411,26 @@ INSERT INTO `fza_facturas_pagos` (`SERIE_FAC_FACPAG`, `NUMERO_FAC_FACPAG`, `LINE
   ('A1', '000032', 1, 'TARJETA', 133.705, NULL, 'Pago con tarjeta', 'SANTANDER', '2026-02-17 06:21:32', '2026-02-17 06:21:32', '2026-02-05 16:00:00', 'DEMO', 'DEMO'),
   ('A1', '000034', 1, 'EFECTIVO', 90, NULL, 'Pago en efectivo (vuelto 6,51€)', '', '2026-02-17 06:21:32', '2026-02-17 06:21:32', '2026-02-08 10:15:00', 'DEMO', 'DEMO');
 -- 6 registros exportados
+
+
+-- Tabla: fza_facturas_relaciones
+
+DROP TABLE IF EXISTS `fza_facturas_relaciones`;
+CREATE TABLE `fza_facturas_relaciones` (
+  `ID_FACREL` bigint(20) NOT NULL AUTO_INCREMENT,
+  `SERIE_FAC_FACREL` varchar(20) NOT NULL COMMENT 'Serie de la factura hija (rectificativa o F3)',
+  `NUMERO_FAC_FACREL` varchar(20) NOT NULL COMMENT 'Numero de la factura hija',
+  `SERIE_FAC_ORIGEN_FACREL` varchar(20) NOT NULL COMMENT 'Serie de la factura original',
+  `NUMERO_FAC_ORIGEN_FACREL` varchar(20) NOT NULL COMMENT 'Numero de la factura original',
+  `TIPO_RELACION_FACREL` varchar(20) NOT NULL DEFAULT 'RECTIFICA' COMMENT 'RECTIFICA o SUSTITUYE',
+  `INSTANTE_ALTA` datetime NOT NULL,
+  `USUARIO_ALTA` varchar(50) NULL DEFAULT NULL,
+  `INSTANTE_MODIF` datetime NULL DEFAULT NULL,
+  `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
+  PRIMARY KEY (`ID_FACREL`)
+);
+ALTER TABLE `fza_facturas_relaciones` ADD INDEX `IDX_FACREL_ORIGEN` (`SERIE_FAC_ORIGEN_FACREL`, `NUMERO_FAC_ORIGEN_FACREL`);
+ALTER TABLE `fza_facturas_relaciones` ADD UNIQUE INDEX `UQ_FACREL_FACTURA_TIPO` (`SERIE_FAC_FACREL`, `NUMERO_FAC_FACREL`, `TIPO_RELACION_FACREL`);
 
 
 -- Tabla: fza_familias_atributos
@@ -38228,15 +38233,1389 @@ SET @sSql := IF(@sExisteIdx = 0,
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-', '2026-06-12 13:40:51', '2026-06-12 13:40:51', 'Administrador', 'Administrador');
--- 159 registros exportados
+', '2026-06-12 13:40:51', '2026-06-12 13:40:51', 'Administrador', 'Administrador'),
+  ('364', 'verifactu_relaciones', '-- =============================================================================
+-- Relaciones entre facturas (fza_facturas_relaciones)
+-- =============================================================================
+-- Historico N:1 de rectificaciones y sustituciones: cada factura "hija"
+-- (rectificativa o factura completa F3) guarda su factura de origen.
+-- Las columnas ABONO de fza_facturas siguen mostrando el ULTIMO enlace
+-- (comodo en grids); esta tabla conserva TODOS, de modo que una factura
+-- puede rectificarse varias veces sin perder trazabilidad y el envio
+-- Verifactu de cada hija siempre localiza a su original (bloques
+-- FacturasRectificadas / FacturasSustituidas).
+--
+-- TIPO_RELACION_FACREL: RECTIFICA | SUSTITUYE.
+--
+-- Sufijo de tabla: FACREL (registrado en LIBRO_DE_ESTILO_BBDD.md §2 y
+-- en UNormalizerEngine.InitDefaults).
+--
+-- Idempotente: tabla e indices solo se crean si no existen.
+-- =============================================================================
+
+SET @sExisteTabla := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_relaciones''
+);
+
+SET @sSql := IF(@sExisteTabla = 0,
+  ''CREATE TABLE fza_facturas_relaciones (
+     ID_FACREL                 bigint(20)  NOT NULL AUTO_INCREMENT,
+     SERIE_FAC_FACREL          varchar(20) NOT NULL
+       COMMENT ''''Serie de la factura hija (rectificativa o F3)'''',
+     NUMERO_FAC_FACREL         varchar(20) NOT NULL
+       COMMENT ''''Numero de la factura hija'''',
+     SERIE_FAC_ORIGEN_FACREL   varchar(20) NOT NULL
+       COMMENT ''''Serie de la factura original'''',
+     NUMERO_FAC_ORIGEN_FACREL  varchar(20) NOT NULL
+       COMMENT ''''Numero de la factura original'''',
+     TIPO_RELACION_FACREL      varchar(20) NOT NULL DEFAULT ''''RECTIFICA''''
+       COMMENT ''''RECTIFICA o SUSTITUYE'''',
+     INSTANTE_ALTA             datetime    NOT NULL,
+     USUARIO_ALTA              varchar(50) NULL DEFAULT NULL,
+     INSTANTE_MODIF            datetime    NULL DEFAULT NULL,
+     USUARIO_MODIF             varchar(50) NULL DEFAULT NULL,
+     PRIMARY KEY (ID_FACREL)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci'',
+  ''SELECT ''''fza_facturas_relaciones ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Cada hija referencia a UNA original por tipo de relacion
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_relaciones''
+     AND INDEX_NAME   = ''UQ_FACREL_FACTURA_TIPO''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_facturas_relaciones
+     ADD UNIQUE INDEX UQ_FACREL_FACTURA_TIPO
+       (SERIE_FAC_FACREL, NUMERO_FAC_FACREL, TIPO_RELACION_FACREL)'',
+  ''SELECT ''''UQ_FACREL_FACTURA_TIPO ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Consulta N:1: todas las rectificativas/sustituciones de una original
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_relaciones''
+     AND INDEX_NAME   = ''IDX_FACREL_ORIGEN''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_facturas_relaciones
+     ADD INDEX IDX_FACREL_ORIGEN
+       (SERIE_FAC_ORIGEN_FACREL, NUMERO_FAC_ORIGEN_FACREL)'',
+  ''SELECT ''''IDX_FACREL_ORIGEN ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-06-12 17:19:11', '2026-06-12 17:19:11', 'Administrador', 'Administrador'),
+  ('365', 'verifactu_rectificativas', '-- =============================================================================
+-- Rectificativas Verifactu: ensanchar el enlace factura original-abono
+-- =============================================================================
+-- Las columnas NUMERO_FAC_ABONO_FAC / SERIE_FAC_ABONO_FAC de fza_facturas
+-- son varchar(8) y las series/numeros reales son varchar(20). El
+-- documento ANTECESOR guarda en ellas a su sucesor: la factura original
+-- rectificada apunta a su rectificativa (y pasa a FASE_FAC=''RECTIFICADA'')
+-- y el ticket sustituido apunta a la factura completa F3. El envio
+-- Verifactu resuelve la relacion con el lookup inverso (IDX_FAC_ABONO).
+--
+-- Idempotente: solo modifica si el ancho actual es menor que 20.
+-- =============================================================================
+
+SET @sAncho := (
+  SELECT CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas''
+     AND COLUMN_NAME  = ''NUMERO_FAC_ABONO_FAC''
+);
+
+SET @sSql := IF(@sAncho < 20,
+  ''ALTER TABLE fza_facturas
+     MODIFY COLUMN NUMERO_FAC_ABONO_FAC varchar(20) NULL DEFAULT NULL
+       COMMENT ''''Numero de la rectificativa o factura que sustituye a esta'''''',
+  ''SELECT ''''NUMERO_FAC_ABONO_FAC ya tiene ancho 20, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sAncho := (
+  SELECT CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas''
+     AND COLUMN_NAME  = ''SERIE_FAC_ABONO_FAC''
+);
+
+SET @sSql := IF(@sAncho < 20,
+  ''ALTER TABLE fza_facturas
+     MODIFY COLUMN SERIE_FAC_ABONO_FAC varchar(20) NULL DEFAULT NULL
+       COMMENT ''''Serie de la rectificativa o factura que sustituye a esta'''''',
+  ''SELECT ''''SERIE_FAC_ABONO_FAC ya tiene ancho 20, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Lookup inverso del envio Verifactu: dada una rectificativa o una F3,
+-- localizar a su antecesora (la fila cuyas columnas ABONO la apuntan)
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas''
+     AND INDEX_NAME   = ''IDX_FAC_ABONO''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_facturas
+     ADD INDEX IDX_FAC_ABONO
+       (SERIE_FAC_ABONO_FAC, NUMERO_FAC_ABONO_FAC)'',
+  ''SELECT ''''IDX_FAC_ABONO ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-06-12 17:21:40', '2026-06-12 17:21:40', 'Administrador', 'Administrador'),
+  ('366', 'recuento_inventarios_servidor', '-- ============================================================================
+-- Servidor puente de recuentos (MySQL en DreamHost) — esquema
+-- ============================================================================
+-- BBDD INDEPENDIENTE del Factuzam (p.ej. `factuzam_recuentos`). Es la base que
+-- usa el API PHP como buzón entre Factuzam y la app de mano. NO sigue el libro
+-- de estilo de Factuzam (sufijos `fza_`/`_TABLA`): ese gobierna la MariaDB de
+-- Factuzam, no este puente. Convención propia: prefijo `inv_` + snake_case.
+--
+-- Idempotente: CREATE TABLE IF NOT EXISTS. Re-ejecutable sin efectos.
+-- Motor InnoDB + utf8mb4 (igual que Factuzam). FKs con ON DELETE CASCADE de
+-- catálogo y eventos hacia su recuento.
+--
+-- Modelo:
+--   inv_recuentos     una sesión de recuento. origen=FACTUZAM (plantilla
+--                     enviada, modo DIRIGIDO) u origen=APP (recuento LIBRE de
+--                     un almacén, opciones 1/2 del menú).
+--   inv_catalogo      líneas de la plantilla (solo recuentos DIRIGIDO): SKU,
+--                     código de barras, descripción, teórica. Lo usa la app
+--                     para resolver escaneos y dar feedback.
+--   inv_eventos       el "evento por escaneo": una fila por lectura, con su
+--                     día/hora. Idempotente por uuid_evento.
+--   inv_almacenes     lista de almacenes que Factuzam sincroniza, para que la
+--                     app ofrezca el selector de almacén en recuento libre.
+--   inv_dispositivos  terminales/operarios dados de alta, con su token.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- inv_recuentos: cabecera de la sesión de recuento
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS inv_recuentos (
+  id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  carpeta_cliente   VARCHAR(80)  NOT NULL,                 -- tenant (igual fotos)
+  origen            ENUM(''FACTUZAM'',''APP'') NOT NULL,       -- quién lo creó
+  modo              ENUM(''DIRIGIDO'',''LIBRE'') NOT NULL DEFAULT ''DIRIGIDO'',
+  tipo              ENUM(''RECUENTO'',''TRASPASO'') NOT NULL DEFAULT ''RECUENTO'',
+  codigo_emp        VARCHAR(10)  NULL,                     -- clave fza_inventarios
+  codigo_alm        VARCHAR(10)  NOT NULL,                 -- almacén (origen)
+  codigo_alm_destino VARCHAR(10) NULL,                     -- destino (TRASPASO)
+  serie             VARCHAR(20)  NULL,                     -- solo DIRIGIDO
+  numero            VARCHAR(20)  NULL,                     -- solo DIRIGIDO
+  descripcion       VARCHAR(200) NULL,
+  estado            ENUM(''PENDIENTE'',''EN_RECUENTO'',''RECONTADO'',
+                         ''RECOGIDO'',''CANCELADO'') NOT NULL DEFAULT ''PENDIENTE'',
+  dispositivo_origen VARCHAR(100) NULL,                    -- terminal en LIBRE
+  usuario_envio     VARCHAR(100) NULL,                     -- usuario Factuzam
+  instante_envio    DATETIME NULL,                         -- alta DIRIGIDO
+  instante_recogida DATETIME NULL,                         -- cuando Factuzam recoge
+  instante_alta     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  instante_modif    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                            ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  -- Para DIRIGIDO: upsert por la clave del inventario. En LIBRE serie/numero
+  -- van NULL y MySQL admite varios NULL, así que no colisionan.
+  UNIQUE KEY uq_recuento_doc
+    (carpeta_cliente, codigo_emp, codigo_alm, serie, numero),
+  KEY idx_recuento_estado (carpeta_cliente, estado),
+  KEY idx_recuento_alm (carpeta_cliente, codigo_alm)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ----------------------------------------------------------------------------
+-- inv_catalogo: líneas de la plantilla (recuentos DIRIGIDO). Un SKU puede
+-- tener varias filas (varios códigos de barras).
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS inv_catalogo (
+  id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_recuento      BIGINT UNSIGNED NOT NULL,
+  codigo_articulo  VARCHAR(20)  NOT NULL,
+  codigo_unidad    VARCHAR(50)  NOT NULL,                  -- SKU
+  descripcion      VARCHAR(200) NULL,
+  codigo_barras    VARCHAR(50)  NULL,                      -- una fila por código
+  cantidad_teorica DECIMAL(19,6) NULL,                     -- NULL si recuento ciego
+  estrazable       CHAR(1) NOT NULL DEFAULT ''N'',           -- pedir lote/caducidad
+  PRIMARY KEY (id),
+  KEY idx_cat_recuento (id_recuento),
+  KEY idx_cat_barras (id_recuento, codigo_barras),
+  KEY idx_cat_sku (id_recuento, codigo_unidad),
+  CONSTRAINT fk_cat_recuento FOREIGN KEY (id_recuento)
+    REFERENCES inv_recuentos (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ----------------------------------------------------------------------------
+-- inv_eventos: una fila por escaneo (la "unidad de recuento" con su día/hora).
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS inv_eventos (
+  id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_recuento       BIGINT UNSIGNED NOT NULL,
+  uuid_evento       CHAR(36) NOT NULL,                     -- idempotencia (app)
+  codigo_barras     VARCHAR(50) NULL,                      -- código crudo leído
+  codigo_articulo   VARCHAR(20) NULL,                      -- resuelto por la app
+  codigo_unidad     VARCHAR(50) NULL,                      -- SKU resuelto
+  cantidad          DECIMAL(19,6) NOT NULL DEFAULT 1,
+  lote              VARCHAR(50) NULL,
+  fecha_caducidad   DATE NULL,
+  instante_recuento DATETIME NOT NULL,                     -- día/hora de la lectura
+  operario          VARCHAR(100) NULL,
+  dispositivo       VARCHAR(100) NULL,
+  zona              VARCHAR(100) NULL,                      -- pasillo/ubicación
+  anulado           CHAR(1) NOT NULL DEFAULT ''N'',
+  instante_recibido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_evento_uuid (uuid_evento),                 -- dedupe reenvíos
+  KEY idx_evt_recuento (id_recuento, id),                  -- cursor incremental
+  KEY idx_evt_sku (id_recuento, codigo_unidad),
+  CONSTRAINT fk_evt_recuento FOREIGN KEY (id_recuento)
+    REFERENCES inv_recuentos (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ----------------------------------------------------------------------------
+-- inv_almacenes: lista de almacenes sincronizada por Factuzam, para el selector
+-- de almacén de la app en recuento libre (opciones 1/2 del menú).
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS inv_almacenes (
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  carpeta_cliente VARCHAR(80)  NOT NULL,
+  codigo_emp      VARCHAR(10)  NOT NULL,
+  codigo_alm      VARCHAR(10)  NOT NULL,
+  nombre          VARCHAR(100) NULL,
+  esactivo        CHAR(1) NOT NULL DEFAULT ''S'',
+  instante_modif  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                          ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_alm (carpeta_cliente, codigo_emp, codigo_alm),
+  KEY idx_alm_cliente (carpeta_cliente, esactivo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ----------------------------------------------------------------------------
+-- inv_dispositivos: terminales/operarios con su token de acceso.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS inv_dispositivos (
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  carpeta_cliente VARCHAR(80)  NOT NULL,
+  nombre          VARCHAR(100) NOT NULL,
+  operario        VARCHAR(100) NULL,
+  token           CHAR(64) NOT NULL,
+  esactivo        CHAR(1) NOT NULL DEFAULT ''S'',
+  esadmin         CHAR(1) NOT NULL DEFAULT ''N'',           -- reservado: limitar
+                                                          -- ''finalizar'' a supervisores
+  instante_alta   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_disp_token (token),
+  KEY idx_disp_cliente (carpeta_cliente, esactivo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+', '2026-06-12 17:21:46', '2026-06-12 17:21:46', 'Administrador', 'Administrador'),
+  ('367', 'recuento_inventarios_factuzam', '-- ============================================================================
+-- Recuento de inventarios con app — cambios de esquema en Factuzam (MariaDB)
+-- ============================================================================
+-- NO se toca factuzam_original.sql. Este script es idempotente y re-ejecutable.
+--   * Tabla nueva fza_inventarios_recuentos (sufijo INVREC): una fila por
+--     escaneo recogido del servidor, para conservar el origen del recuento
+--     (qué leyó el móvil, cuándo, quién y con qué terminal).
+--   * Columnas de ciclo en fza_inventarios para seguir el envío/recogida.
+--
+-- PK de INVREC: contador propio ID_INVREC (clave estrecha) para no arrastrar
+-- la clave del inventario (empresa+almacén+serie+número) ni el UUID por los
+-- índices secundarios. UUID_INVREC va como UNIQUE: lo genera la app, identifica
+-- cada escaneo y da idempotencia al recoger dos veces. La clave del inventario
+-- va indexada (IDX_INVREC_DOC) para consultar y sumar por documento.
+--
+-- CANTIDAD_FISICA_INVLIN sigue siendo la suma por SKU (se ingiere igual que el
+-- import de Excel, vía CargarDesdeListaSkus); INVREC es el detalle por lectura.
+--
+-- PENDIENTE (cambio de código, no SQL): registrar el sufijo INVREC en
+-- UNormalizerEngine.pas (InitDefaults -> AddSuf(''fza_inventarios_recuentos'',
+-- ''INVREC'')) y en el catálogo del LIBRO_DE_ESTILO_BBDD.md §2.
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS `fza_inventarios_recuentos` (
+  `ID_INVREC`                bigint        NOT NULL AUTO_INCREMENT,
+  `UUID_INVREC`              varchar(36)   NOT NULL,
+  `CODIGO_EMP_INVREC`        varchar(10)   NOT NULL,
+  `CODIGO_ALM_INVREC`        varchar(10)   NOT NULL,
+  `SERIE_INV_INVREC`         varchar(20)   NOT NULL,
+  `NUMERO_INV_INVREC`        varchar(20)   NOT NULL,
+  `CODIGO_ART_INVREC`        varchar(20)   DEFAULT NULL,
+  `CODIGO_UNIDAD_INVREC`     varchar(50)   DEFAULT NULL,
+  `CODIGO_BARRAS_INVREC`     varchar(50)   DEFAULT NULL,
+  `CANTIDAD_INVREC`          decimal(19,6) NOT NULL DEFAULT 1.000000,
+  `LOTE_INVREC`              varchar(50)   DEFAULT '''',
+  `FECHA_CADUCIDAD_INVREC`   date          DEFAULT NULL,
+  `INSTANTE_RECUENTO_INVREC` datetime      NOT NULL,
+  `OPERARIO_INVREC`          varchar(100)  DEFAULT NULL,
+  `DISPOSITIVO_INVREC`       varchar(100)  DEFAULT NULL,
+  `ZONA_INVREC`              varchar(100)  DEFAULT NULL,
+  `ESANULADO_INVREC`         char(1)       NOT NULL DEFAULT ''N'',
+  `INSTANTE_ALTA`            datetime      NOT NULL,
+  `USUARIO_ALTA`             varchar(100)  NOT NULL,
+  `INSTANTE_MODIF`           datetime      DEFAULT NULL,
+  `USUARIO_MODIF`            varchar(100)  DEFAULT NULL,
+  PRIMARY KEY (`ID_INVREC`),
+  UNIQUE KEY `UQ_INVREC_UUID` (`UUID_INVREC`),
+  KEY `IDX_INVREC_DOC` (`CODIGO_EMP_INVREC`,`CODIGO_ALM_INVREC`,
+                        `SERIE_INV_INVREC`,`NUMERO_INV_INVREC`),
+  KEY `IDX_INVREC_UNIDAD` (`CODIGO_UNIDAD_INVREC`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ----------------------------------------------------------------------------
+-- Marcadores de ciclo en fza_inventarios (ADD COLUMN IF NOT EXISTS, MariaDB).
+-- ESTADO_INV se queda ABIERTO mientras está fuera contándose; al recoger se
+-- rellenan físicas y el usuario aplica como hoy (regularización sin cambios).
+-- ----------------------------------------------------------------------------
+ALTER TABLE `fza_inventarios`
+  ADD COLUMN IF NOT EXISTS `ESRECUENTO_REMOTO_INV`
+      char(1) NOT NULL DEFAULT ''N'',
+  ADD COLUMN IF NOT EXISTS `INSTANTE_ENVIO_RECUENTO_INV`
+      datetime DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `INSTANTE_RECOGIDA_RECUENTO_INV`
+      datetime DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `ID_RECUENTO_REMOTO_INV`
+      varchar(40) DEFAULT NULL;
+', '2026-06-12 17:21:53', '2026-06-12 17:21:53', 'Administrador', 'Administrador'),
+  ('368', 'permisos', '-- =====================================================================
+-- Script: permisos.sql
+-- Objetivo: tabla de permisos por usuario, grupo y ''Todos'' + pantalla.
+-- Idempotente: CREATE TABLE IF NOT EXISTS + rename guardado por
+--              INFORMATION_SCHEMA + INSERT IGNORE.
+--
+-- Diseño (paralelo a fza_usuarios_perfiles):
+--   USUARIO_GRUPO_PERM = usuario, grupo (de fza_usuarios_grupos) o ''Todos''
+--   CODIGO_PERM        = clave del permiso (ej. ''menu.Articulos'')
+--   VALOR_PERM         = ''S'' / ''N''
+--
+-- Convención de códigos:
+--   menu.<CALL_WINF>          -> acceso al item de menú
+--   accion.exportarExcel      -> acción global en cualquier Mto
+--   accion.modificarRegistro  -> acción global
+--   accion.borrarRegistro     -> acción global
+--   accion.imprimir           -> acción global
+--   arqueo.<permiso>          -> permisos específicos de arqueo
+--   caja.<permiso>            -> permisos específicos de caja
+--
+-- Resolución (inLibPermisos): administradores siempre S; despues usuario,
+-- luego grupo, luego ''Todos''.
+-- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- 0. Tabla. En instalaciones nuevas se crea ya con USUARIO_GRUPO_PERM.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_permisos` (
+  `USUARIO_GRUPO_PERM` varchar(200) NOT NULL COMMENT ''Usuario, grupo o Todos'',
+  `CODIGO_PERM`        varchar(60)  NOT NULL COMMENT ''Clave del permiso'',
+  `VALOR_PERM`         varchar(1)   NOT NULL DEFAULT ''S'' COMMENT ''S=permitido N=denegado'',
+  `DESCRIPCION_PERM`   varchar(200) NULL DEFAULT NULL COMMENT ''Descripción para el Mto'',
+  `INSTANTE_MODIF` datetime    DEFAULT NULL,
+  `INSTANTE_ALTA`  datetime    NOT NULL,
+  `USUARIO_ALTA`   varchar(100) NOT NULL,
+  `USUARIO_MODIF`  varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- ---------------------------------------------------------------------
+-- 1. Migración de instalaciones existentes: renombrar GRUPO_PERM ->
+--    USUARIO_GRUPO_PERM y ensancharla a varchar(200) (cabe cualquier
+--    usuario/grupo). CHANGE COLUMN reubica la columna en la PK sola.
+--    Sólo se ejecuta si existe la columna vieja y no la nueva.
+-- ---------------------------------------------------------------------
+SET @col_old := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME  = ''fza_permisos''
+                    AND COLUMN_NAME = ''GRUPO_PERM'');
+SET @col_new := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME  = ''fza_permisos''
+                    AND COLUMN_NAME = ''USUARIO_GRUPO_PERM'');
+SET @ddl := IF(@col_old = 1 AND @col_new = 0,
+  ''ALTER TABLE `fza_permisos` CHANGE COLUMN `GRUPO_PERM` `USUARIO_GRUPO_PERM` varchar(200) NOT NULL COMMENT ''''Usuario, grupo o Todos'''''',
+  ''DO 0'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- =====================================================================
+-- 2. Permisos de acceso a menú (uno por cada item de fza_winforms)
+--    Por defecto todos permitidos (''S''). Se deniegan por grupo/usuario.
+-- =====================================================================
+INSERT IGNORE INTO fza_permisos
+  (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM, INSTANTE_ALTA, USUARIO_ALTA)
+VALUES
+  (''Todos'', ''menu.Articulos'',           ''S'', ''Artículos'',                     NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.ArticulosPropiedades'',''S'', ''Propiedades de Artículos'',      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.AtributosBasicos'',    ''S'', ''Atributos básicos'',             NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.AtributosConjuntos'',  ''S'', ''Colecciones de Atributos'',      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Familias'',            ''S'', ''Familias'',                      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Variaciones'',         ''S'', ''Variaciones'',                   NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Propiedades'',         ''S'', ''Propiedades'',                   NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.PropiedadesValores'',  ''S'', ''Valores de Propiedades'',        NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Clientes'',            ''S'', ''Clientes'',                      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Proveedores'',         ''S'', ''Proveedores'',                   NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Empresas'',            ''S'', ''Empresas'',                      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Almacenes'',           ''S'', ''Almacenes'',                     NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Facturas'',            ''S'', ''Facturas'',                      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.FacturasSimplif'',     ''S'', ''Facturas Simplificadas'',        NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Albaranes'',           ''S'', ''Albaranes'',                     NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.AlbaranesCompra'',     ''S'', ''Albaranes de Compra'',           NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Pedidos'',             ''S'', ''Pedidos'',                       NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.ComprasSesiones'',     ''S'', ''Sesiones de Compra'',            NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.ComprasPlantillas'',   ''S'', ''Plantillas de Compra'',          NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Tarifas'',             ''S'', ''Tarifas'',                       NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.FormasdePago'',        ''S'', ''Formas de Pago'',                NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Ivas'',                ''S'', ''Impuestos IVA'',                 NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.IvasGrupos'',          ''S'', ''Grupos de IVA'',                 NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Contadores'',          ''S'', ''Contadores'',                    NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Paises'',              ''S'', ''Países'',                        NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Usuarios'',            ''S'', ''Usuarios'',                      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Grupos'',              ''S'', ''Grupos de Usuarios'',            NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.UsuariosPerfiles'',    ''S'', ''Perfiles de Usuarios'',          NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Permisos'',            ''S'', ''Permisos'',                      NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.Inventarios'',         ''S'', ''Inventarios'',                   NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.MovimientosAlmacen'',  ''S'', ''Movimientos de Almacén'',        NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.DepositosCliente'',    ''S'', ''Depósitos de Clientes'',         NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.GeneradorProcesos'',   ''S'', ''Generador de Procesos'',         NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.MenuCaja'',            ''S'', ''Menú de Caja'',                  NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.CajaFormasPago'',      ''S'', ''Formas de Pago Caja'',           NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.CajaOperacionesHist'', ''S'', ''Histórico Operaciones Caja'',    NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.CajaPagosHist'',       ''S'', ''Histórico Pagos Caja'',          NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.CajaValesHist'',       ''S'', ''Histórico Vales'',               NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.CajaArqueosHist'',     ''S'', ''Histórico Arqueos'',             NOW(), ''SISTEMA'');
+
+-- =====================================================================
+-- 3. Acciones globales en mantenimientos
+-- =====================================================================
+INSERT IGNORE INTO fza_permisos
+  (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM, INSTANTE_ALTA, USUARIO_ALTA)
+VALUES
+  (''Todos'', ''accion.exportarExcel'',      ''S'', ''Exportar grid a Excel'',                    NOW(), ''SISTEMA''),
+  (''Todos'', ''accion.modificarRegistro'',  ''S'', ''Modificar registros'',                      NOW(), ''SISTEMA''),
+  (''Todos'', ''accion.borrarRegistro'',     ''S'', ''Borrar registros'',                          NOW(), ''SISTEMA''),
+  (''Todos'', ''accion.insertarRegistro'',   ''S'', ''Insertar registros nuevos'',                 NOW(), ''SISTEMA''),
+  (''Todos'', ''accion.imprimir'',           ''S'', ''Imprimir informes'',                         NOW(), ''SISTEMA''),
+  (''Todos'', ''accion.grabarLayout'',       ''S'', ''Guardar layout (Alt+F12)'',                  NOW(), ''SISTEMA''),
+  (''Todos'', ''accion.resetLayout'',        ''S'', ''Resetear layout (Ctrl+F12)'',                NOW(), ''SISTEMA''),
+  (''Todos'', ''accion.crearGuias'',         ''S'', ''Crear guías de grid/informes'',              NOW(), ''SISTEMA'');
+
+-- =====================================================================
+-- 4. Permisos de arqueo
+-- =====================================================================
+INSERT IGNORE INTO fza_permisos
+  (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM, INSTANTE_ALTA, USUARIO_ALTA)
+VALUES
+  (''Todos'', ''arqueo.verResumen'',         ''N'', ''Ver resumen de cantidades en arqueo'',       NOW(), ''SISTEMA''),
+  (''Todos'', ''arqueo.verImportes'',        ''N'', ''Ver importes pre-rellenados en recuento'',   NOW(), ''SISTEMA''),
+  (''Todos'', ''arqueo.grabar'',             ''S'', ''Grabar cierre de arqueo'',                   NOW(), ''SISTEMA'');
+
+-- =====================================================================
+-- 5. Permisos de caja
+-- =====================================================================
+INSERT IGNORE INTO fza_permisos
+  (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM, INSTANTE_ALTA, USUARIO_ALTA)
+VALUES
+  (''Todos'', ''caja.cambiarFecha'',         ''N'', ''Cambiar fecha de operación en caja'',        NOW(), ''SISTEMA''),
+  (''Todos'', ''caja.anularOperacion'',      ''S'', ''Anular una operación de caja'',              NOW(), ''SISTEMA''),
+  (''Todos'', ''caja.devolverArticulo'',     ''S'', ''Realizar devolución de artículo'',           NOW(), ''SISTEMA''),
+  (''Todos'', ''caja.abrirCajon'',           ''S'', ''Abrir cajón sin venta (F9)'',                NOW(), ''SISTEMA''),
+  (''Todos'', ''caja.entradaCambio'',        ''S'', ''Realizar entrada de cambio'',                NOW(), ''SISTEMA''),
+  (''Todos'', ''caja.gastoCaja'',            ''S'', ''Registrar gasto de caja'',                   NOW(), ''SISTEMA''),
+  (''Todos'', ''caja.verCoste'',             ''S'', ''Ver coste/importe en traspasos y caja'',     NOW(), ''SISTEMA'');
+
+-- Refresca la descripcion de caja.abrirCajon para reflejar el atajo F9 en
+-- instalaciones que ya tuvieran la fila (INSERT IGNORE no actualiza filas).
+UPDATE fza_permisos
+   SET DESCRIPCION_PERM = ''Abrir cajón sin venta (F9)''
+ WHERE CODIGO_PERM      = ''caja.abrirCajon''
+   AND DESCRIPCION_PERM = ''Abrir cajón sin venta'';
+
+-- =====================================================================
+-- 6. Alta de la pantalla de Permisos en el menú (fza_winforms).
+--    Reutiliza el data module ya existente UniDataPermisosGrupo.
+-- =====================================================================
+INSERT IGNORE INTO fza_winforms
+  (CALL_WINF, CAPTION_WINF, MENUITEM_WINF, UNITF_WINF, SHORTCUT_WINF,
+   DATAMODULE_WINF, NUM_VENTANAS_WINF)
+VALUES
+  -- SHORTCUT_WINF vacío a propósito: el atajo Ctrl+Q de Permisos se define
+  -- en el menú principal (mnuPermisos.ShortCut). No se registra aquí para no
+  -- chocar con ''FormasdePago'' (Ctrl+Q) en el OnShortCut del TPV de Caja.
+  (''Permisos'', ''Permisos'', ''mnuPermisos'',
+   ''inMtoPermisos.TfrmMtoPermisos'', '''',
+   ''UniDataPermisosGrupo.TdmPermisosGrupo'', 1);
+', '2026-06-12 17:22:00', '2026-06-12 17:22:00', 'Administrador', 'Administrador'),
+  ('369', 'normalizar_colaciones_spanish', '-- =============================================================================
+-- Normalizar colaciones a utf8mb4_spanish_ci (fix error 1267 en Arqueos)
+-- =============================================================================
+-- MariaDB >= 11.2 asigna a utf8mb4 la colacion por defecto
+-- utf8mb4_uca1400_ai_ci (variable character_set_collations). Los CREATE
+-- TABLE con "DEFAULT CHARSET=utf8mb4" sin COLLATE explicito crearon estas
+-- tablas con esa colacion, mientras el resto de la BBDD es
+-- utf8mb4_spanish_ci:
+--
+--   fza_empleados, fza_caja_arqueos, fza_caja_arqueos_recuento,
+--   fza_permisos, fza_informes_guias, fza_inventarios_recuentos,
+--   fza_usuarios_empl_bak
+--
+-- Consecuencia: cualquier JOIN columna-contra-columna entre una tabla
+-- uca1400 y una spanish_ci lanza [1267] "Illegal mix of collations
+-- (utf8mb4_uca1400_ai_ci,IMPLICIT) and (utf8mb4_spanish_ci,IMPLICIT) for
+-- operation ''=''". Caso real: el resumen por empleado del Arqueo (F11) une
+-- fza_caja_operaciones.CODIGO_EMPLEADO_OPCAJA (spanish_ci) con
+-- fza_empleados.CODIGO_EMPL (uca1400). El "SET NAMES ... spanish_ci" de
+-- TdmConn no cubre esto: solo afecta a literales y parametros, no a la
+-- colacion fisica de las columnas.
+--
+-- Que hace:
+--   1. Fija el default de la propia BBDD a utf8mb4_spanish_ci (los CREATE
+--      TABLE futuros sin charset heredaran la colacion correcta).
+--   2. Recorre INFORMATION_SCHEMA.TABLES y convierte toda tabla base
+--      utf8mb4 cuya colacion no sea utf8mb4_spanish_ci. CONVERT TO
+--      actualiza tambien la colacion de todas las columnas de texto.
+--   3. Verificacion final: debe devolver 0 filas.
+--
+-- Idempotente: re-ejecutar no encuentra tablas que convertir.
+-- Duracion: segundos. Las tablas afectadas son pequenas y el resto de la
+-- BBDD ya esta en spanish_ci, asi que no se reconstruye.
+-- Los scripts que crearon estas tablas quedan corregidos con COLLATE
+-- explicito para instalaciones nuevas (ver normalizar_colaciones_spanish.md).
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Default de la propia base de datos
+-- -----------------------------------------------------------------------------
+SET @sSql := CONCAT(''ALTER DATABASE `'', DATABASE(),
+                    ''` CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci'');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- -----------------------------------------------------------------------------
+-- 2. Convertir las tablas desviadas
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_NORMALIZAR_COLACIONES`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_NORMALIZAR_COLACIONES`()
+BEGIN
+    /* Convierte a utf8mb4_spanish_ci toda tabla base utf8mb4 del esquema
+       actual que tenga otra colacion. Idempotente y seguro de re-ejecutar. */
+    DECLARE bFin   INT DEFAULT 0;
+    DECLARE sTabla VARCHAR(64);
+    DECLARE curTablas CURSOR FOR
+        SELECT TABLE_NAME
+          FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA     = DATABASE()
+           AND TABLE_TYPE       = ''BASE TABLE''
+           AND TABLE_COLLATION LIKE ''utf8mb4%''
+           AND TABLE_COLLATION <> ''utf8mb4_spanish_ci'';
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET bFin = 1;
+    OPEN curTablas;
+    bucle: LOOP
+        FETCH curTablas INTO sTabla;
+        IF bFin = 1 THEN
+            LEAVE bucle;
+        END IF;
+        SET @sDdl = CONCAT(''ALTER TABLE `'', sTabla,
+                           ''` CONVERT TO CHARACTER SET utf8mb4'',
+                           '' COLLATE utf8mb4_spanish_ci'');
+        PREPARE stmt FROM @sDdl;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END LOOP;
+    CLOSE curTablas;
+END ;;
+DELIMITER ;
+
+CALL PRC_NORMALIZAR_COLACIONES();
+DROP PROCEDURE IF EXISTS `PRC_NORMALIZAR_COLACIONES`;
+
+-- -----------------------------------------------------------------------------
+-- 3. Verificacion: debe devolver 0 filas
+-- -----------------------------------------------------------------------------
+SELECT TABLE_NAME, TABLE_COLLATION
+  FROM INFORMATION_SCHEMA.TABLES
+ WHERE TABLE_SCHEMA     = DATABASE()
+   AND TABLE_TYPE       = ''BASE TABLE''
+   AND TABLE_COLLATION LIKE ''utf8mb4%''
+   AND TABLE_COLLATION <> ''utf8mb4_spanish_ci'';
+', '2026-06-12 17:22:04', '2026-06-12 17:22:04', 'Administrador', 'Administrador'),
+  ('370', 'informes_guias', '-- =====================================================================
+-- Script: informes_guias.sql
+-- Objetivo: crear la tabla fza_informes_guias que permite enganchar a
+--           cualquier informe FastReport columnas o tablas adicionales
+--           (datasets auxiliares estilo MasterSource/MasterFields/
+--           DetailFields de UniDAC) sin recompilar el ejecutable.
+--
+-- Diseño detallado en
+--   DESARROLLOS EN CURSO/informes_guias_ampliacion_runtime.md
+-- =====================================================================
+
+DROP TABLE IF EXISTS `fza_informes_guias`;
+CREATE TABLE `fza_informes_guias` (
+  -- Identificador logico de la guia. Se usa como UserName del
+  -- TfrxDBDataset creado en runtime, asi que tiene que ser un
+  -- identificador valido en FastReport (letras, digitos, _; comienza
+  -- por letra). No es unico global: el mismo codigo puede reutilizarse
+  -- en distintos (INFORME_INFGUI, FORMATO_INFGUI).
+  `CODIGO_INFGUI`           varchar(40)  NOT NULL,
+
+  -- Self.Name del TfrmPrint para el que aplica esta guia. Ejemplo:
+  -- ''frmPrintFac'', ''frmPrintEtiqArt'', ''frmPrintSesion''. Equivale al
+  -- KEY_USUPER que usa fza_usuarios_perfiles para persistir layouts.
+  `INFORME_INFGUI`          varchar(100) NOT NULL,
+
+  -- Formato concreto del .frx editado al que se cuelga la guia.
+  -- Coincide con VALUE_USUPER de fza_usuarios_perfiles (el nombre que
+  -- el usuario eligio al guardar el formato). Cadena vacia '''' = guia
+  -- "global", aplica a todas las variantes del informe (incluyendo
+  -- ''Predeterminado''). Permite combinar:
+  --   * Guias transversales: FORMATO_INFGUI = ''''
+  --   * Guias atadas al .frx editado: FORMATO_INFGUI = ''Factura A4 VIP''
+  `FORMATO_INFGUI`          varchar(200) NOT NULL DEFAULT '''',
+
+  -- UserName del TfrxDBDataset master del informe sobre el que se cuelga
+  -- la guia. Ej. ''fxdsPrintFac'', ''EtiquetasArt'', ''Sesiones'', ''Recibos''.
+  `DATASET_MASTER_INFGUI`   varchar(100) NOT NULL,
+
+  -- Tipo de origen de datos del detalle:
+  --   ''TABLA'' -> usa TABLA_INFGUI tal cual, MasterSource/MasterFields
+  --              hacen el filtrado a nivel UniDAC.
+  --   ''SQL''   -> usa SQL_INFGUI como consulta libre, con parametros
+  --              que coinciden con DETAIL_FIELDS_INFGUI.
+  `TIPO_INFGUI`             varchar(10)  NOT NULL,
+
+  `TABLA_INFGUI`            varchar(60)  DEFAULT NULL,
+  `SQL_INFGUI`              text         DEFAULT NULL,
+
+  -- Pares de campos master/detail separados por '';''. Mismo formato y
+  -- semantica que TUniQuery.MasterFields / DetailFields.
+  -- Ejemplos:
+  --   MASTER_FIELDS_INFGUI = ''CODIGO_CLI_FAC''   DETAIL = ''CODIGO_CLI''
+  --   MASTER_FIELDS_INFGUI = ''NUMERO_FAC;SERIE_FAC''
+  --   DETAIL_FIELDS_INFGUI = ''NUMERO_FAC_REC;SERIE_FAC_REC''
+  `MASTER_FIELDS_INFGUI`    varchar(200) NOT NULL,
+  `DETAIL_FIELDS_INFGUI`    varchar(200) NOT NULL,
+
+  `ORDEN_INFGUI`            int(11)      NOT NULL DEFAULT 0,
+  `ESACTIVO_INFGUI`         varchar(1)   NOT NULL DEFAULT ''S'',
+
+  `INSTANTE_ALTA`           datetime     NOT NULL,
+  `USUARIO_ALTA`            varchar(50)  NOT NULL,
+  `INSTANTE_MODIF`          datetime     DEFAULT NULL,
+  `USUARIO_MODIF`           varchar(50)  DEFAULT NULL,
+
+  PRIMARY KEY (`INFORME_INFGUI`,`FORMATO_INFGUI`,`CODIGO_INFGUI`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+ALTER TABLE `fza_informes_guias`
+  ADD INDEX `IDX_INFGUI_INFORME` (`INFORME_INFGUI`,`FORMATO_INFGUI`);
+
+
+-- =====================================================================
+-- Datos de ejemplo (descomentar si se quieren cargar al desplegar).
+-- Util para smoke test del boton "Guias" en el modal generico.
+-- =====================================================================
+
+-- INSERT INTO `fza_informes_guias` (
+--   `CODIGO_INFGUI`, `INFORME_INFGUI`, `DATASET_MASTER_INFGUI`,
+--   `TIPO_INFGUI`, `TABLA_INFGUI`, `SQL_INFGUI`,
+--   `MASTER_FIELDS_INFGUI`, `DETAIL_FIELDS_INFGUI`,
+--   `ORDEN_INFGUI`, `ESACTIVO_INFGUI`,
+--   `INSTANTE_ALTA`, `USUARIO_ALTA`
+-- ) VALUES
+--   (''ClienteFac'', ''frmPrintFac'', ''Facturas'',
+--    ''TABLA'', ''fza_clientes'', NULL,
+--    ''CODIGO_CLI_FAC'', ''CODIGO_CLI'',
+--    1, ''S'',
+--    NOW(), ''Admin''),
+--   (''ProvArt'', ''frmPrintEtiqArt'', ''EtiquetasArt'',
+--    ''TABLA'', ''fza_proveedores'', NULL,
+--    ''CODIGO_PRV_PRV'', ''CODIGO_PRV_PRV'',
+--    1, ''S'',
+--    NOW(), ''Admin'');
+', '2026-06-12 17:22:11', '2026-06-12 17:22:11', 'Administrador', 'Administrador'),
+  ('371', 'empleados_retirar_columnas_usuarios', '-- =============================================================================
+-- Script: empleados_retirar_columnas_usuarios.sql
+-- Objetivo: FASE 2 de empleados. Completa la independencia empleado/usuario
+--           retirando de fza_usuarios las dos columnas que ya viven en
+--           fza_empleados (FASE 1, empleados.sql):
+--             - CODIGO_EMPLEADO_USU
+--             - DIMINUTIVO_TICKET_USU
+--           Caja, traspasos y arqueos leen ya de fza_empleados (lado app).
+--
+-- Prerrequisito: empleados.sql ejecutado -> fza_empleados existe y contiene el
+--   volcado. Por seguridad este script lo re-vuelca antes de borrar nada.
+--
+-- Rollback SIN PÉRDIDA: antes de borrar se guarda el mapeo
+--   (USUARIO_USU -> CODIGO_EMPLEADO_USU, DIMINUTIVO_TICKET_USU) en
+--   fza_usuarios_empl_bak. Para deshacer: empleados_retirar_columnas_usuarios_rollback.sql.
+--
+-- Idempotente: cada borrado va guardado por INFORMATION_SCHEMA; se puede lanzar
+--   varias veces aunque las columnas ya no existan.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Re-volcado de seguridad a fza_empleados (solo si origen y destino existen).
+-- -----------------------------------------------------------------------------
+SET @nColOrigen := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_usuarios''
+     AND COLUMN_NAME  = ''CODIGO_EMPLEADO_USU''
+);
+SET @nTablaDestino := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_empleados''
+);
+SET @sSql := IF(@nColOrigen = 1 AND @nTablaDestino = 1,
+  ''INSERT IGNORE INTO fza_empleados
+     (CODIGO_EMPL, NOMBRE_EMPL, DIMINUTIVO_TICKET_EMPL, ESACTIVO_EMPL,
+      INSTANTE_ALTA, USUARIO_ALTA)
+   SELECT u.CODIGO_EMPLEADO_USU, u.USUARIO_USU, u.DIMINUTIVO_TICKET_USU,
+          COALESCE(u.ESACTIVO_USU, ''''S''''), NOW(), ''''SISTEMA''''
+     FROM fza_usuarios u
+    WHERE u.CODIGO_EMPLEADO_USU IS NOT NULL
+      AND TRIM(u.CODIGO_EMPLEADO_USU) <> '''''''''',
+  ''SELECT ''''Volcado omitido (origen o destino no disponible)'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- -----------------------------------------------------------------------------
+-- 2. Backup del mapeo usuario->empleado para un rollback sin pérdida. Snapshot
+--    solo mientras las columnas existan (INSERT IGNORE -> re-ejecutable).
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_usuarios_empl_bak` (
+  `USUARIO_USU`           varchar(100) NOT NULL,
+  `CODIGO_EMPLEADO_USU`   varchar(10)  NULL DEFAULT NULL,
+  `DIMINUTIVO_TICKET_USU` varchar(10)  NULL DEFAULT NULL,
+  PRIMARY KEY (`USUARIO_USU`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+SET @nColBak := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_usuarios''
+     AND COLUMN_NAME  = ''CODIGO_EMPLEADO_USU''
+);
+SET @sSql := IF(@nColBak = 1,
+  ''INSERT IGNORE INTO fza_usuarios_empl_bak
+     (USUARIO_USU, CODIGO_EMPLEADO_USU, DIMINUTIVO_TICKET_USU)
+   SELECT USUARIO_USU, CODIGO_EMPLEADO_USU, DIMINUTIVO_TICKET_USU
+     FROM fza_usuarios'',
+  ''SELECT ''''Backup omitido (columnas ya retiradas)'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- -----------------------------------------------------------------------------
+-- 3. Recrear vi_usuarios SIN las dos columnas (la vista las referenciaba). Se
+--    hace antes de borrarlas para no dejar la vista inválida.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_usuarios` AS
+SELECT `fza_usuarios`.`USUARIO_USU`              AS `USUARIO_USU`,
+       `fza_usuarios`.`PASSWORD_USU`             AS `PASSWORD_USU`,
+       `fza_usuarios`.`GRUPO_USU`                AS `GRUPO_USU`,
+       `fza_usuarios`.`ESACTIVO_USU`             AS `ESACTIVO_USU`,
+       `fza_usuarios`.`EMPRESA_DEFECTO_USU`      AS `EMPRESA_DEFECTO_USU`,
+       `fza_usuarios`.`ULTIMO_LOGIN_USU`         AS `ULTIMO_LOGIN_USU`,
+       `fza_usuarios`.`INSTANTE_MODIF`           AS `INSTANTE_MODIF`,
+       `fza_usuarios`.`INSTANTE_ALTA`            AS `INSTANTE_ALTA`,
+       `fza_usuarios`.`USUARIO_ALTA`             AS `USUARIO_ALTA`,
+       `fza_usuarios`.`USUARIO_MODIF`            AS `USUARIO_MODIF`,
+       `fza_usuarios`.`ALMACEN_DEFECTO_USU`      AS `ALMACEN_DEFECTO_USU`,
+       `fza_usuarios`.`CAJA_DEFECTO_USU`         AS `CAJA_DEFECTO_USU`,
+       `vi_empresas`.`RAZON_SOCIAL_EMP`          AS `RAZON_SOCIAL_EMP`,
+       `fza_usuarios_grupos`.`GRUPO_USUGRP`      AS `GRUPO_USUGRP`,
+       `fza_usuarios_grupos`.`ESGRUPOADMINISTRADOR_USUGRP`
+                                                 AS `ESGRUPOADMINISTRADOR_USUGRP`
+  FROM ((`fza_usuarios`
+         JOIN `fza_usuarios_grupos`
+           ON(`fza_usuarios`.`GRUPO_USU` = `fza_usuarios_grupos`.`GRUPO_USUGRP`))
+        LEFT JOIN `vi_empresas`
+           ON(`fza_usuarios`.`EMPRESA_DEFECTO_USU` = `vi_empresas`.`CODIGO_EMP_EMP`));
+
+-- -----------------------------------------------------------------------------
+-- 4. Retirar CODIGO_EMPLEADO_USU de fza_usuarios (guardado -> idempotente).
+-- -----------------------------------------------------------------------------
+SET @nDrop1 := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_usuarios''
+     AND COLUMN_NAME  = ''CODIGO_EMPLEADO_USU''
+);
+SET @sSql := IF(@nDrop1 = 1,
+  ''ALTER TABLE fza_usuarios DROP COLUMN CODIGO_EMPLEADO_USU'',
+  ''SELECT ''''CODIGO_EMPLEADO_USU ya retirada, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- -----------------------------------------------------------------------------
+-- 5. Retirar DIMINUTIVO_TICKET_USU de fza_usuarios (guardado -> idempotente).
+-- -----------------------------------------------------------------------------
+SET @nDrop2 := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_usuarios''
+     AND COLUMN_NAME  = ''DIMINUTIVO_TICKET_USU''
+);
+SET @sSql := IF(@nDrop2 = 1,
+  ''ALTER TABLE fza_usuarios DROP COLUMN DIMINUTIVO_TICKET_USU'',
+  ''SELECT ''''DIMINUTIVO_TICKET_USU ya retirada, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- -----------------------------------------------------------------------------
+-- 6. Limpiar la config de columnas visibles de esas dos columnas (si existía).
+-- -----------------------------------------------------------------------------
+DELETE FROM `fza_config_campos`
+ WHERE `TABLA_OBJETIVO_CC` = ''fza_usuarios''
+   AND `OBJETIVO_CC` IN (''CODIGO_EMPLEADO_USU'', ''DIMINUTIVO_TICKET_USU'');
+', '2026-06-12 17:22:20', '2026-06-12 17:22:20', 'Administrador', 'Administrador'),
+  ('372', 'empleados', '-- =============================================================================
+-- Script: empleados.sql
+-- Objetivo: tabla maestra de empleados (operarios de caja, traspasos y
+--           arqueos) independiente de fza_usuarios + su pantalla en el menú.
+--
+-- Contexto:
+--   Hoy la identidad del operario (quién cobra/traspasa/arquea) vive dentro de
+--   fza_usuarios en dos columnas: CODIGO_EMPLEADO_USU (número de empleado en
+--   caja) y DIMINUTIVO_TICKET_USU (diminutivo de caja / abreviatura del
+--   ticket). Eso obliga a que todo operario tenga usuario de login. Las tablas
+--   operativas ya guardan el código de empleado suelto (CODIGO_EMPLEADO_OPCAJA,
+--   CODIGO_EMPLEADO_ARQ, CODIGO_EMPLEADO_TRSOL, CODIGO_CAJERO_FAC).
+--
+--   fza_empleados saca ese concepto a tabla propia, le añade datos básicos
+--   (nombre, dirección, teléfono) y lo independiza del usuario de login: el
+--   empleado y el usuario PUEDEN SER DISTINTOS. La auditoría (USUARIO_ALTA /
+--   USUARIO_MODIF) sigue siendo el usuario logado (la sella TdmConn.
+--   ActualizarUserTimeModif), no el empleado.
+--
+-- Sufijo de tabla: EMPL (EMP ya es de fza_empresas). Registrado en el catálogo
+--   §2 de LIBRO_DE_ESTILO_BBDD.md y en UNormalizerEngine.pas (InitDefaults).
+--
+-- Idempotente: CREATE TABLE IF NOT EXISTS + CREATE OR REPLACE VIEW +
+--              INSERT IGNORE. Se puede lanzar varias veces sin efectos.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Tabla maestra de empleados
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_empleados` (
+  `CODIGO_EMPL`             varchar(20)  NOT NULL
+                            COMMENT ''Número de empleado en caja'',
+  `NOMBRE_EMPL`             varchar(100) NULL DEFAULT NULL,
+  `DIRECCION_EMPL`          varchar(200) NULL DEFAULT NULL,
+  `TELEFONO_EMPL`           varchar(20)  NULL DEFAULT NULL,
+  `DIMINUTIVO_TICKET_EMPL`  varchar(10)  NULL DEFAULT NULL
+                            COMMENT ''Diminutivo de caja / abreviatura del ticket'',
+  `ESACTIVO_EMPL`           char(1)      NOT NULL DEFAULT ''S''
+                            COMMENT ''S/N. Caja/traspasos/arqueos listan solo S'',
+  `INSTANTE_MODIF`          datetime     DEFAULT NULL,
+  `INSTANTE_ALTA`           datetime     NOT NULL,
+  `USUARIO_ALTA`            varchar(100) NOT NULL,
+  `USUARIO_MODIF`           varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`CODIGO_EMPL`),
+  KEY `IDX_EMPL_ACTIVO`     (`ESACTIVO_EMPL`),
+  KEY `IDX_EMPL_DIMINUTIVO` (`DIMINUTIVO_TICKET_EMPL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- -----------------------------------------------------------------------------
+-- 2. Vista de lectura para el Mto (mismo patrón que vi_usuarios: la pantalla
+--    lee de la vista y escribe sobre la tabla). Passthrough, sin joins.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_empleados` AS
+SELECT `fza_empleados`.`CODIGO_EMPL`            AS `CODIGO_EMPL`,
+       `fza_empleados`.`NOMBRE_EMPL`            AS `NOMBRE_EMPL`,
+       `fza_empleados`.`DIRECCION_EMPL`         AS `DIRECCION_EMPL`,
+       `fza_empleados`.`TELEFONO_EMPL`          AS `TELEFONO_EMPL`,
+       `fza_empleados`.`DIMINUTIVO_TICKET_EMPL` AS `DIMINUTIVO_TICKET_EMPL`,
+       `fza_empleados`.`ESACTIVO_EMPL`          AS `ESACTIVO_EMPL`,
+       `fza_empleados`.`INSTANTE_MODIF`         AS `INSTANTE_MODIF`,
+       `fza_empleados`.`INSTANTE_ALTA`          AS `INSTANTE_ALTA`,
+       `fza_empleados`.`USUARIO_ALTA`           AS `USUARIO_ALTA`,
+       `fza_empleados`.`USUARIO_MODIF`          AS `USUARIO_MODIF`
+  FROM `fza_empleados`;
+
+-- -----------------------------------------------------------------------------
+-- 3. Volcado inicial desde fza_usuarios: cada usuario con CODIGO_EMPLEADO_USU
+--    se convierte en un empleado, tomando su diminutivo de ticket. El NOMBRE
+--    se siembra con el nombre de usuario como valor provisional (luego se edita
+--    en la pantalla). INSERT IGNORE → idempotente y salta códigos duplicados.
+-- -----------------------------------------------------------------------------
+INSERT IGNORE INTO `fza_empleados`
+  (`CODIGO_EMPL`, `NOMBRE_EMPL`, `DIMINUTIVO_TICKET_EMPL`, `ESACTIVO_EMPL`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`)
+SELECT u.`CODIGO_EMPLEADO_USU`,
+       u.`USUARIO_USU`,
+       u.`DIMINUTIVO_TICKET_USU`,
+       COALESCE(u.`ESACTIVO_USU`, ''S''),
+       NOW(),
+       ''SISTEMA''
+  FROM `fza_usuarios` u
+ WHERE u.`CODIGO_EMPLEADO_USU` IS NOT NULL
+   AND TRIM(u.`CODIGO_EMPLEADO_USU`) <> '''';
+
+-- -----------------------------------------------------------------------------
+-- 4. Alta de la pantalla en el menú (fza_winforms). NUM_VENTANAS_WINF = 5 como
+--    el resto de mantenimientos maestros (Usuarios, Grupos, Perfiles).
+-- -----------------------------------------------------------------------------
+INSERT IGNORE INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`, `SHORTCUT_WINF`,
+   `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''Empleados'', ''Empleados'', ''mnuEmpleados'',
+   ''inMtoEmpleados.TfrmMtoEmpleados'', '''',
+   ''UniDataEmpleados.TdmEmpleados'', 5);
+
+-- -----------------------------------------------------------------------------
+-- 5. Permiso de acceso al menú (por defecto permitido para ''Todos'').
+-- -----------------------------------------------------------------------------
+INSERT IGNORE INTO `fza_permisos`
+  (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`)
+VALUES
+  (''Todos'', ''menu.Empleados'', ''S'', ''Empleados'', NOW(), ''SISTEMA'');
+', '2026-06-12 17:22:28', '2026-06-12 17:22:28', 'Administrador', 'Administrador'),
+  ('373', 'arqueo_recuento', '-- ============================================================================
+-- Arqueo de Caja: migración idempotente de columnas
+-- ============================================================================
+-- La tabla fza_caja_arqueos fue creada originalmente desde
+-- factuzam_original.sql con un esquema base. Este script añade las
+-- columnas que faltan para el módulo de recuento (cierre Z) sin
+-- destruir datos existentes.
+--
+-- Idempotente: comprueba cada columna antes de crearla.
+-- Re-ejecutable en cualquier momento.
+-- ============================================================================
+
+SET @sTabla = ''fza_caja_arqueos'';
+
+-- ---------------------------------------------------------------------------
+-- Columnas de desglose de ventas (pueden faltar si la tabla viene del
+-- esquema original que solo tenía TOTAL_VENTA_CREDITO_ARQ)
+-- ---------------------------------------------------------------------------
+
+SET @c = ''TOTAL_PRESTAMOS_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''COMMENT ''''SUM TIPO=DE en el rango (compromiso bruto)'''' '',
+         ''AFTER `TOTAL_NETO_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = ''TOTAL_VENTAS_NORMALES_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''AFTER `TOTAL_PRESTAMOS_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = ''TOTAL_VENTAS_PRESTAMOS_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''AFTER `TOTAL_VENTAS_NORMALES_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = ''TOTAL_DEVOLUCIONES_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''AFTER `TOTAL_VENTAS_PRESTAMOS_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = ''TOTAL_VENTAS_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''AFTER `TOTAL_DEVOLUCIONES_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
+-- Columnas de recuento y diferencia
+-- ---------------------------------------------------------------------------
+
+SET @c = ''TOTAL_RECUENTO_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''COMMENT ''''Suma de los importes recontados por el usuario'''' '',
+         ''AFTER `TOTAL_SALDO_RECONTAR_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = ''DIFERENCIA_TOTAL_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''COMMENT ''''Recuento - Saldo teórico (positivo = sobrante)'''' '',
+         ''AFTER `TOTAL_RECUENTO_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
+-- Efectivo dejado en caja (cambio para el día siguiente)
+-- Este valor se usa como EfectivoAnterior en el siguiente arqueo.
+-- ---------------------------------------------------------------------------
+
+SET @c = ''EFECTIVO_DEJADO_CAJA_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''COMMENT ''''Efectivo que se deja en caja como cambio para el día siguiente'''' '',
+         ''AFTER `DIFERENCIA_TOTAL_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
+-- Desglose de billetes y monedas del recuento
+-- ---------------------------------------------------------------------------
+
+SET @c = ''DESGLOSE_BILLETES_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` text NULL DEFAULT NULL '',
+         ''COMMENT ''''Desglose billetes/monedas formato denom:uds;...'''' '',
+         ''AFTER `EFECTIVO_DEJADO_CAJA_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
+-- Importe y concepto de la retirada al cerrar
+-- ---------------------------------------------------------------------------
+
+SET @c = ''IMPORTE_RETIRADA_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` decimal(19,6) NOT NULL DEFAULT ''''0.000000'''' '',
+         ''AFTER `DESGLOSE_BILLETES_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = ''CONCEPTO_RETIRADA_ARQ'';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT(''ALTER TABLE `'',@sTabla,''` ADD COLUMN `'',@c,
+         ''` varchar(100) NULL DEFAULT NULL '',
+         ''AFTER `IMPORTE_RETIRADA_ARQ`''),
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
+-- Tabla hija: detalle del recuento por forma de pago (sufijo _ARQR)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `fza_caja_arqueos_recuento` (
+  `ID_ARQR`                  int(11)       NOT NULL AUTO_INCREMENT,
+  `CODIGO_ARQ_ARQR`          varchar(30)   NOT NULL,
+  `CODIGO_FP_CFP_ARQR`       varchar(20)   NOT NULL,
+  `DESCRIPCION_FP_ARQR`      varchar(100)  NOT NULL DEFAULT '''',
+  `ESCAJON_ARQR`             varchar(1)    NOT NULL DEFAULT ''N'',
+  `IMPORTE_SISTEMA_ARQR`     decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `IMPORTE_RECUENTO_ARQR`    decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `DIFERENCIA_ARQR`          decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `INSTANTE_MODIF`           timestamp     NOT NULL
+      DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA`            timestamp     NOT NULL
+      DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA`             varchar(100)  NOT NULL,
+  `USUARIO_MODIF`            varchar(100)  NOT NULL,
+  PRIMARY KEY (`ID_ARQR`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- Índices de la tabla hija (idempotente)
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+          WHERE TABLE_SCHEMA=DATABASE()
+            AND TABLE_NAME=''fza_caja_arqueos_recuento''
+            AND INDEX_NAME=''IDX_ARQR_ARQUEO'');
+SET @s = IF(@e=0,
+  ''ALTER TABLE `fza_caja_arqueos_recuento` ADD INDEX `IDX_ARQR_ARQUEO` (`CODIGO_ARQ_ARQR`)'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+          WHERE TABLE_SCHEMA=DATABASE()
+            AND TABLE_NAME=''fza_caja_arqueos_recuento''
+            AND INDEX_NAME=''UQ_ARQR_ARQ_FP'');
+SET @s = IF(@e=0,
+  ''ALTER TABLE `fza_caja_arqueos_recuento` ADD UNIQUE INDEX `UQ_ARQR_ARQ_FP` (`CODIGO_ARQ_ARQR`, `CODIGO_FP_CFP_ARQR`)'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+', '2026-06-12 17:23:50', '2026-06-12 17:23:50', 'Administrador', 'Administrador'),
+  ('374', 'arqueo_caja', '-- ============================================================================
+-- Arqueo de Caja
+-- Diseño DDL siguiendo LIBRO_DE_ESTILO_BBDD.md
+--
+-- Soporta el modal `TfrmModalArqueo` (src/Modals/inMtoModalArqueo.pas)
+-- lanzado desde el menú de caja (F11). En este primer paso la pantalla es de
+-- solo lectura y no inserta filas; la tabla queda lista para el futuro F5
+-- Recuento (cierre Z), que persistirá una fila por arqueo y marcará
+-- `CODIGO_ARQUEO_OPCAJA` en `fza_caja_operaciones` (FK lógica ya existente).
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- IDEMPOTENCIA
+-- ---------------------------------------------------------------------------
+-- Re-ejecutable: DROP TABLE IF EXISTS + CREATE TABLE. Sin datos asociados.
+-- ---------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS `fza_caja_arqueos`;
+CREATE TABLE `fza_caja_arqueos` (
+  `CODIGO_ARQ`                       varchar(30)   NOT NULL
+      COMMENT ''ID único del arqueo / cierre Z'',
+  `CODIGO_EMP_ARQ`                   varchar(10)   NOT NULL,
+  `CODIGO_ALM_ARQ`                   varchar(10)   NOT NULL,
+  `CODIGO_CAJA_ARQ`                  varchar(10)   NOT NULL
+      COMMENT ''Terminal físico (TPV1, TPV2...)'',
+  `FECHA_DESDE_ARQ`                  date          NOT NULL,
+  `FECHA_HASTA_ARQ`                  date          NOT NULL,
+  `FASE_ARQ`                         varchar(15)   NOT NULL DEFAULT ''ABIERTO''
+      COMMENT ''ABIERTO, CERRADO'',
+  `CODIGO_EMPLEADO_ARQ`              varchar(20)   NULL DEFAULT NULL,
+  `CANTIDAD_VENTAS_ARQ`              int(11)       NOT NULL DEFAULT 0,
+  `CANTIDAD_OPERACIONES_ARQ`         int(11)       NOT NULL DEFAULT 0,
+  `TOTAL_BRUTO_LINEAS_ARQ`           decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_DESCUENTOS_LINEAS_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_BRUTO_OPERACIONES_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_DESCUENTOS_OPERACIONES_ARQ` decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_NETO_ARQ`                   decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''SUM IMPORTE_TOTAL_OPCAJA de VE en el rango (signed)'',
+  `TOTAL_PRESTAMOS_ARQ`              decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''SUM TIPO=DE en el rango (compromiso bruto)'',
+  `TOTAL_VENTAS_NORMALES_ARQ`        decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''VE > 0 sin DE en la misma operación'',
+  `TOTAL_VENTAS_PRESTAMOS_ARQ`       decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''= TOTAL_PRESTAMOS_ARQ − TOTAL_COBROS_CLIENTES_ARQ'',
+  `TOTAL_DEVOLUCIONES_ARQ`           decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''ABS de VE < 0 (devoluciones a cliente)'',
+  `TOTAL_VENTAS_ARQ`                 decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''= VentasNormales + VentasPrestamos − Devoluciones'',
+  `TOTAL_VALES_RECOGIDOS_ARQ`        decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_VALES_EMITIDOS_ARQ`         decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_COBROS_CLIENTES_ARQ`        decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_PENDIENTE_COBRO_ARQ`        decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_INGRESOS_CAJA_ARQ`          decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_INGRESOS_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_ENTRADAS_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_SALIDAS_ARQ`       decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_ANTERIOR_ARQ`      decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_EFECTIVO_CAJA_ARQ`          decimal(19,6) NOT NULL DEFAULT ''0.000000'',
+  `TOTAL_OTROS_INGRESOS_ARQ`         decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''Suma de formas de pago sin cajón (tarjeta, bono, divisa, cripto...)'',
+  `TOTAL_SALDO_RECONTAR_ARQ`         decimal(19,6) NOT NULL DEFAULT ''0.000000''
+      COMMENT ''Saldo teórico efectivo + otros (lo que debe estar en caja + ext.)'',
+  `OBSERVACIONES_ARQ`                varchar(500)  NULL DEFAULT NULL,
+  `INSTANTE_MODIF`                   timestamp     NOT NULL
+      DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA`                    timestamp     NOT NULL
+      DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA`                     varchar(100)  NOT NULL,
+  `USUARIO_MODIF`                    varchar(100)  NOT NULL,
+  PRIMARY KEY (`CODIGO_ARQ`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+ALTER TABLE `fza_caja_arqueos`
+  ADD INDEX `IDX_ARQ_CTX_FECHA`
+      (`CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ`,
+       `FECHA_DESDE_ARQ`);
+ALTER TABLE `fza_caja_arqueos`
+  ADD INDEX `IDX_ARQ_FECHA`
+      (`FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`);
+ALTER TABLE `fza_caja_arqueos`
+  ADD INDEX `IDX_ARQ_FASE`
+      (`FASE_ARQ`);
+', '2026-06-12 17:23:56', '2026-06-12 17:23:56', 'Administrador', 'Administrador'),
+  ('375', 'empleados', '-- =============================================================================
+-- Script: empleados.sql
+-- Objetivo: tabla maestra de empleados (operarios de caja, traspasos y
+--           arqueos) independiente de fza_usuarios + su pantalla en el menú.
+--
+-- Contexto:
+--   Hoy la identidad del operario (quién cobra/traspasa/arquea) vive dentro de
+--   fza_usuarios en dos columnas: CODIGO_EMPLEADO_USU (número de empleado en
+--   caja) y DIMINUTIVO_TICKET_USU (diminutivo de caja / abreviatura del
+--   ticket). Eso obliga a que todo operario tenga usuario de login. Las tablas
+--   operativas ya guardan el código de empleado suelto (CODIGO_EMPLEADO_OPCAJA,
+--   CODIGO_EMPLEADO_ARQ, CODIGO_EMPLEADO_TRSOL, CODIGO_CAJERO_FAC).
+--
+--   fza_empleados saca ese concepto a tabla propia, le añade datos básicos
+--   (nombre, dirección, teléfono) y lo independiza del usuario de login: el
+--   empleado y el usuario PUEDEN SER DISTINTOS. La auditoría (USUARIO_ALTA /
+--   USUARIO_MODIF) sigue siendo el usuario logado (la sella TdmConn.
+--   ActualizarUserTimeModif), no el empleado.
+--
+-- Sufijo de tabla: EMPL (EMP ya es de fza_empresas). Registrado en el catálogo
+--   §2 de LIBRO_DE_ESTILO_BBDD.md y en UNormalizerEngine.pas (InitDefaults).
+--
+-- Idempotente: CREATE TABLE IF NOT EXISTS + CREATE OR REPLACE VIEW +
+--              INSERT IGNORE. Se puede lanzar varias veces sin efectos,
+--              también después de la FASE 2 (el volcado desde fza_usuarios
+--              va guardado por INFORMATION_SCHEMA).
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Tabla maestra de empleados
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `fza_empleados` (
+  `CODIGO_EMPL`             varchar(20)  NOT NULL
+                            COMMENT ''Número de empleado en caja'',
+  `NOMBRE_EMPL`             varchar(100) NULL DEFAULT NULL,
+  `DIRECCION_EMPL`          varchar(200) NULL DEFAULT NULL,
+  `TELEFONO_EMPL`           varchar(20)  NULL DEFAULT NULL,
+  `DIMINUTIVO_TICKET_EMPL`  varchar(10)  NULL DEFAULT NULL
+                            COMMENT ''Diminutivo de caja / abreviatura del ticket'',
+  `ESACTIVO_EMPL`           char(1)      NOT NULL DEFAULT ''S''
+                            COMMENT ''S/N. Caja/traspasos/arqueos listan solo S'',
+  `INSTANTE_MODIF`          datetime     DEFAULT NULL,
+  `INSTANTE_ALTA`           datetime     NOT NULL,
+  `USUARIO_ALTA`            varchar(100) NOT NULL,
+  `USUARIO_MODIF`           varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`CODIGO_EMPL`),
+  KEY `IDX_EMPL_ACTIVO`     (`ESACTIVO_EMPL`),
+  KEY `IDX_EMPL_DIMINUTIVO` (`DIMINUTIVO_TICKET_EMPL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+
+-- -----------------------------------------------------------------------------
+-- 2. Vista de lectura para el Mto (mismo patrón que vi_usuarios: la pantalla
+--    lee de la vista y escribe sobre la tabla). Passthrough, sin joins.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_empleados` AS
+SELECT `fza_empleados`.`CODIGO_EMPL`            AS `CODIGO_EMPL`,
+       `fza_empleados`.`NOMBRE_EMPL`            AS `NOMBRE_EMPL`,
+       `fza_empleados`.`DIRECCION_EMPL`         AS `DIRECCION_EMPL`,
+       `fza_empleados`.`TELEFONO_EMPL`          AS `TELEFONO_EMPL`,
+       `fza_empleados`.`DIMINUTIVO_TICKET_EMPL` AS `DIMINUTIVO_TICKET_EMPL`,
+       `fza_empleados`.`ESACTIVO_EMPL`          AS `ESACTIVO_EMPL`,
+       `fza_empleados`.`INSTANTE_MODIF`         AS `INSTANTE_MODIF`,
+       `fza_empleados`.`INSTANTE_ALTA`          AS `INSTANTE_ALTA`,
+       `fza_empleados`.`USUARIO_ALTA`           AS `USUARIO_ALTA`,
+       `fza_empleados`.`USUARIO_MODIF`          AS `USUARIO_MODIF`
+  FROM `fza_empleados`;
+
+-- -----------------------------------------------------------------------------
+-- 3. Volcado inicial desde fza_usuarios: cada usuario con CODIGO_EMPLEADO_USU
+--    se convierte en un empleado, tomando su diminutivo de ticket. El NOMBRE
+--    se siembra con el nombre de usuario como valor provisional (luego se edita
+--    en la pantalla). INSERT IGNORE → idempotente y salta códigos duplicados.
+--    Guardado por INFORMATION_SCHEMA: tras la FASE 2
+--    (empleados_retirar_columnas_usuarios.sql) esas columnas ya no existen en
+--    fza_usuarios y el volcado se omite (ya se hizo en su día).
+-- -----------------------------------------------------------------------------
+SET @nColOrigen := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_usuarios''
+     AND COLUMN_NAME  = ''CODIGO_EMPLEADO_USU''
+);
+SET @sSql := IF(@nColOrigen = 1,
+  ''INSERT IGNORE INTO fza_empleados
+     (CODIGO_EMPL, NOMBRE_EMPL, DIMINUTIVO_TICKET_EMPL, ESACTIVO_EMPL,
+      INSTANTE_ALTA, USUARIO_ALTA)
+   SELECT u.CODIGO_EMPLEADO_USU, u.USUARIO_USU, u.DIMINUTIVO_TICKET_USU,
+          COALESCE(u.ESACTIVO_USU, ''''S''''), NOW(), ''''SISTEMA''''
+     FROM fza_usuarios u
+    WHERE u.CODIGO_EMPLEADO_USU IS NOT NULL
+      AND TRIM(u.CODIGO_EMPLEADO_USU) <> '''''''''',
+  ''SELECT ''''Volcado omitido (columnas ya retiradas en FASE 2)'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- -----------------------------------------------------------------------------
+-- 4. Alta de la pantalla en el menú (fza_winforms). NUM_VENTANAS_WINF = 5 como
+--    el resto de mantenimientos maestros (Usuarios, Grupos, Perfiles).
+-- -----------------------------------------------------------------------------
+INSERT IGNORE INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`, `SHORTCUT_WINF`,
+   `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+VALUES
+  (''Empleados'', ''Empleados'', ''mnuEmpleados'',
+   ''inMtoEmpleados.TfrmMtoEmpleados'', '''',
+   ''UniDataEmpleados.TdmEmpleados'', 5);
+
+-- -----------------------------------------------------------------------------
+-- 5. Permiso de acceso al menú (por defecto permitido para ''Todos'').
+-- -----------------------------------------------------------------------------
+INSERT IGNORE INTO `fza_permisos`
+  (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`)
+VALUES
+  (''Todos'', ''menu.Empleados'', ''S'', ''Empleados'', NOW(), ''SISTEMA'');
+', '2026-06-12 17:26:09', '2026-06-12 17:26:09', 'Administrador', 'Administrador');
+-- 171 registros exportados
 
 
 -- Tabla: fza_informes_guias
 
 DROP TABLE IF EXISTS `fza_informes_guias`;
 CREATE TABLE `fza_informes_guias` (
-  `CODIGO_INFGUI` varchar(120) NOT NULL,
+  `CODIGO_INFGUI` varchar(40) NOT NULL,
   `INFORME_INFGUI` varchar(100) NOT NULL,
   `FORMATO_INFGUI` varchar(200) NOT NULL DEFAULT '',
   `DATASET_MASTER_INFGUI` varchar(100) NOT NULL,
@@ -38247,22 +39626,13 @@ CREATE TABLE `fza_informes_guias` (
   `DETAIL_FIELDS_INFGUI` varchar(200) NOT NULL,
   `ORDEN_INFGUI` int(11) NOT NULL DEFAULT '0',
   `ESACTIVO_INFGUI` varchar(1) NOT NULL DEFAULT 'S',
-  `COLUMNAS_VISIBLES_INFGUI` text NULL DEFAULT NULL,
   `INSTANTE_ALTA` datetime NOT NULL,
   `USUARIO_ALTA` varchar(50) NOT NULL,
   `INSTANTE_MODIF` datetime NULL DEFAULT NULL,
   `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
   PRIMARY KEY (`CODIGO_INFGUI`,`INFORME_INFGUI`,`FORMATO_INFGUI`)
 );
-
--- Datos de fza_informes_guias
-INSERT INTO `fza_informes_guias` (`CODIGO_INFGUI`, `INFORME_INFGUI`, `FORMATO_INFGUI`, `DATASET_MASTER_INFGUI`, `TIPO_INFGUI`, `TABLA_INFGUI`, `SQL_INFGUI`, `MASTER_FIELDS_INFGUI`, `DETAIL_FIELDS_INFGUI`, `ORDEN_INFGUI`, `ESACTIVO_INFGUI`, `COLUMNAS_VISIBLES_INFGUI`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
-  ('CODIGO_ART_ART.FZA_ARTICULOS_FOTOS.CODIGO_ART_FOT', 'GRID:frmMtoArticulos_1', '', 'TablaG', 'TABLA', 'fza_articulos_fotos', NULL, 'CODIGO_ART_ART', 'CODIGO_ART_FOT', 0, 'S', 'NOMBRE_FOT_FOT;EXTENSION_ORIGEN_FOT', '2026-05-28 18:24:13', 'Administrador', '2026-05-28 18:24:13', 'Administrador'),
-  ('CODIGO_ART_ART.VI_ARTICULOS.CODIGO_ART_ART', 'GRID:frmMtoArtFacSearch', '', 'TablaG', 'TABLA', 'vi_articulos', NULL, 'CODIGO_ART_ART', 'CODIGO_ART_ART', 0, 'S', 'NOMBRE_PRV;TEMPORADA_ART', '2026-05-27 21:16:15', 'Administrador', '2026-05-27 21:16:15', 'Administrador'),
-  ('EtiquetasArt_fza_proveedores', 'frmPrintEtiqArt', 'Luis', 'EtiquetasArt', 'TABLA', 'fza_proveedores', NULL, 'CODIGO_PRV_PRV', 'CODIGO_PRV_PRV', 0, 'S', NULL, '2026-05-22 20:44:00', 'Administrador', '2026-05-22 20:44:00', 'Administrador'),
-  ('Lineas_Facturas_fza_articulos', 'frmPrintFac', 'tuprimoenbragas', 'Lineas Facturas', 'TABLA', 'fza_articulos', NULL, 'CODIGO_ART_FACLIN', 'CODIGO_ART_ART', 0, 'S', NULL, '2026-05-19 16:33:31', 'Administrador', '2026-05-19 16:33:31', 'Administrador'),
-  ('LineasAlbaran_fza_almacenes', 'frmPrintAlbCompra', 'DatosAlmacen', 'LineasAlbaran', 'TABLA', 'fza_almacenes', NULL, 'CODIGO_ALM_ALBCLIN;CODIGO_EMP_ALM_ALBCLIN', 'CODIGO_ALM_ALM;CODIGO_EMP_ALM', 0, 'S', NULL, '2026-05-24 20:09:33', 'Administrador', '2026-05-24 20:09:33', 'Administrador');
--- 5 registros exportados
+ALTER TABLE `fza_informes_guias` ADD INDEX `IDX_INFGUI_INFORME` (`INFORME_INFGUI`, `FORMATO_INFGUI`);
 
 
 -- Tabla: fza_inventarios
@@ -40996,7 +42366,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-12 17:16:15', '2026-06-12 17:16:15', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-12 17:21:11', '2026-06-12 17:21:11', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-09 09:48:50', '2026-06-09 09:48:50', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -51202,7 +52572,7 @@ INSERT INTO `fza_verifactu_cola` (`ID_VFCOLA`, `SERIE_FAC_VFCOLA`, `NUMERO_FAC_V
   (4, '2026.A1', '000149', 'ALTA', 'ENVIADA', 3, '2026-06-12 07:27:03', '2026-06-12 07:31:32', NULL, '2026-06-12 07:19:06', 'Administrador', '2026-06-12 07:31:32', 'Administrador'),
   (5, '2026.A1', '000150', 'ALTA', 'ENVIADA', 1, '2026-06-12 07:27:17', '2026-06-12 07:32:42', NULL, '2026-06-12 07:24:29', 'Administrador', '2026-06-12 07:32:42', 'Administrador'),
   (6, '2026.A1', '000151', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-12 07:34:56', NULL, '2026-06-12 07:31:45', 'Administrador', '2026-06-12 07:34:56', 'Administrador'),
-  (7, 'A1', '000001', 'ALTA', 'PENDIENTE', 3, '2026-06-12 17:12:19', NULL, 'AEAT [] EstadoEnvio:', '2026-06-12 14:03:19', 'Administrador', '2026-06-12 17:08:19', 'Administrador');
+  (7, 'A1', '000001', 'ALTA', 'PENDIENTE', 4, '2026-06-12 17:26:57', NULL, '#42S02Table ''factuzam.fza_facturas_relaciones'' doesn''t exist', '2026-06-12 14:03:19', 'Administrador', '2026-06-12 17:18:57', 'Administrador');
 /*!40000 ALTER TABLE `fza_verifactu_cola` ENABLE KEYS */;
 -- 7 registros exportados
 
@@ -51261,9 +52631,10 @@ INSERT INTO `fza_verifactu_eventos` (`ID_LOG`, `TIMESTAMP_LOG`, `TIPO_EVENTO_LOG
   (25, '2026-06-12 14:03:19', 2, 'Administrador', '1.0.15.202606120100.alpha', 'Factura en sustitución del ticket 2026.A1\\000145 encolada', NULL, 'ca0337ffa013ac75c576effecfe24019e925ff1cc5dadfdb03f5282120598f25', '767758a4260a84503018c66d2985cee33ecc799d0bda76095e9e3b70b3dea3b6', 'bc5ff70990556a59cac0817cea041f8afd81a7945cbf7eebce31494b14082d8b', '2026-06-12 14:03:19', '000001', 'A1'),
   (26, '2026-06-12 14:45:09', 4, 'Administrador', '1.0.15.202606120110.alpha', 'Error de envío Verifactu (intento 1): AEAT [] EstadoEnvio:', NULL, '767758a4260a84503018c66d2985cee33ecc799d0bda76095e9e3b70b3dea3b6', '8e77d0cb9b737f9dca06d354304c77c9c6317c26a3b4d31e60e3539b44a9b625', 'd0fa2c86d6e353b029a8e911c6b4ffe598b18507b4ecac25f9dd78a50eb645e0', '2026-06-12 14:45:09', '000001', 'A1'),
   (27, '2026-06-12 14:46:16', 4, 'Administrador', '1.0.15.202606120110.alpha', 'Error de envío Verifactu (intento 2): AEAT [] EstadoEnvio:', NULL, '8e77d0cb9b737f9dca06d354304c77c9c6317c26a3b4d31e60e3539b44a9b625', 'fa1559a0b341ebf1bd7750c6e57107a5048688a86780cba23a388c31e2444c0d', '616822f08f36a3d16934c4adf89c734cec5f6b8b3f78b354a8ada6b3f130ccb4', '2026-06-12 14:46:16', '000001', 'A1'),
-  (28, '2026-06-12 17:08:19', 4, 'Administrador', '1.0.15.202606120120.alpha', 'Error de envío Verifactu (intento 3): AEAT [] EstadoEnvio:', NULL, 'fa1559a0b341ebf1bd7750c6e57107a5048688a86780cba23a388c31e2444c0d', '963e9f0bd7aee5bda1ca0416e197ed64ffb04db855963eaad5efd4e01a429259', '9ed2cb78338bee9e14071794615341a97919617f8880c972f94b24b9c1de3cf1', '2026-06-12 17:08:19', '000001', 'A1');
+  (28, '2026-06-12 17:08:19', 4, 'Administrador', '1.0.15.202606120120.alpha', 'Error de envío Verifactu (intento 3): AEAT [] EstadoEnvio:', NULL, 'fa1559a0b341ebf1bd7750c6e57107a5048688a86780cba23a388c31e2444c0d', '963e9f0bd7aee5bda1ca0416e197ed64ffb04db855963eaad5efd4e01a429259', '9ed2cb78338bee9e14071794615341a97919617f8880c972f94b24b9c1de3cf1', '2026-06-12 17:08:19', '000001', 'A1'),
+  (29, '2026-06-12 17:18:57', 4, 'Administrador', '1.0.15.202606120130.alpha', 'Error de envío Verifactu (intento 4): #42S02Table ''factuzam.fza_facturas_relaciones'' doesn''t exist', NULL, '963e9f0bd7aee5bda1ca0416e197ed64ffb04db855963eaad5efd4e01a429259', 'f50274f397439978e1b28c0a7f6f773a6b478e79626ec2a0776f919cd47bff9f', '3058a249e625f084b5eeafa5609304d2bef0af38e9ee5aac4aebc7f8c35d0510', '2026-06-12 17:18:57', '000001', 'A1');
 /*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
--- 28 registros exportados
+-- 29 registros exportados
 
 
 -- Tabla: fza_winforms
@@ -51332,6 +52703,115 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('VerifactuCola', 'Verifactu - Cola de Envíos', 'mnuVerifactuCola', 'inMtoVerifactuCola.TfrmMtoVerifactuCola', '', 'UniDataVerifactuCola.TdmVerifactuCola', 5),
   ('VerifactuLog', 'Verifactu - Log', 'mnuVerifactuLog', 'inMtoVerifactuLog.TfrmMtoVerifactuLog', '', 'UniDataVerifactuLog.TdmVerifactuLog', 5);
 -- 49 registros exportados
+
+
+-- Tabla: inv_almacenes
+
+DROP TABLE IF EXISTS `inv_almacenes`;
+CREATE TABLE `inv_almacenes` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `carpeta_cliente` varchar(80) NOT NULL,
+  `codigo_emp` varchar(10) NOT NULL,
+  `codigo_alm` varchar(10) NOT NULL,
+  `nombre` varchar(100) NULL DEFAULT NULL,
+  `esactivo` char(1) NOT NULL DEFAULT 'S',
+  `instante_modif` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+);
+ALTER TABLE `inv_almacenes` ADD INDEX `idx_alm_cliente` (`carpeta_cliente`, `esactivo`);
+ALTER TABLE `inv_almacenes` ADD UNIQUE INDEX `uq_alm` (`carpeta_cliente`, `codigo_emp`, `codigo_alm`);
+
+
+-- Tabla: inv_catalogo
+
+DROP TABLE IF EXISTS `inv_catalogo`;
+CREATE TABLE `inv_catalogo` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id_recuento` bigint(20) unsigned NOT NULL,
+  `codigo_articulo` varchar(20) NOT NULL,
+  `codigo_unidad` varchar(50) NOT NULL,
+  `descripcion` varchar(200) NULL DEFAULT NULL,
+  `codigo_barras` varchar(50) NULL DEFAULT NULL,
+  `cantidad_teorica` decimal(19,6) NULL DEFAULT NULL,
+  `estrazable` char(1) NOT NULL DEFAULT 'N',
+  PRIMARY KEY (`id`)
+);
+ALTER TABLE `inv_catalogo` ADD INDEX `idx_cat_barras` (`id_recuento`, `codigo_barras`);
+ALTER TABLE `inv_catalogo` ADD INDEX `idx_cat_recuento` (`id_recuento`);
+ALTER TABLE `inv_catalogo` ADD INDEX `idx_cat_sku` (`id_recuento`, `codigo_unidad`);
+
+
+-- Tabla: inv_dispositivos
+
+DROP TABLE IF EXISTS `inv_dispositivos`;
+CREATE TABLE `inv_dispositivos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `carpeta_cliente` varchar(80) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `operario` varchar(100) NULL DEFAULT NULL,
+  `token` char(64) NOT NULL,
+  `esactivo` char(1) NOT NULL DEFAULT 'S',
+  `esadmin` char(1) NOT NULL DEFAULT 'N',
+  `instante_alta` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+);
+ALTER TABLE `inv_dispositivos` ADD INDEX `idx_disp_cliente` (`carpeta_cliente`, `esactivo`);
+ALTER TABLE `inv_dispositivos` ADD UNIQUE INDEX `uq_disp_token` (`token`);
+
+
+-- Tabla: inv_eventos
+
+DROP TABLE IF EXISTS `inv_eventos`;
+CREATE TABLE `inv_eventos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id_recuento` bigint(20) unsigned NOT NULL,
+  `uuid_evento` char(36) NOT NULL,
+  `codigo_barras` varchar(50) NULL DEFAULT NULL,
+  `codigo_articulo` varchar(20) NULL DEFAULT NULL,
+  `codigo_unidad` varchar(50) NULL DEFAULT NULL,
+  `cantidad` decimal(19,6) NOT NULL DEFAULT '1.000000',
+  `lote` varchar(50) NULL DEFAULT NULL,
+  `fecha_caducidad` date NULL DEFAULT NULL,
+  `instante_recuento` datetime NOT NULL,
+  `operario` varchar(100) NULL DEFAULT NULL,
+  `dispositivo` varchar(100) NULL DEFAULT NULL,
+  `zona` varchar(100) NULL DEFAULT NULL,
+  `anulado` char(1) NOT NULL DEFAULT 'N',
+  `instante_recibido` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+);
+ALTER TABLE `inv_eventos` ADD INDEX `idx_evt_recuento` (`id_recuento`, `id`);
+ALTER TABLE `inv_eventos` ADD INDEX `idx_evt_sku` (`id_recuento`, `codigo_unidad`);
+ALTER TABLE `inv_eventos` ADD UNIQUE INDEX `uq_evento_uuid` (`uuid_evento`);
+
+
+-- Tabla: inv_recuentos
+
+DROP TABLE IF EXISTS `inv_recuentos`;
+CREATE TABLE `inv_recuentos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `carpeta_cliente` varchar(80) NOT NULL,
+  `origen` enum('FACTUZAM','APP') NOT NULL,
+  `modo` enum('DIRIGIDO','LIBRE') NOT NULL DEFAULT 'DIRIGIDO',
+  `tipo` enum('RECUENTO','TRASPASO') NOT NULL DEFAULT 'RECUENTO',
+  `codigo_emp` varchar(10) NULL DEFAULT NULL,
+  `codigo_alm` varchar(10) NOT NULL,
+  `codigo_alm_destino` varchar(10) NULL DEFAULT NULL,
+  `serie` varchar(20) NULL DEFAULT NULL,
+  `numero` varchar(20) NULL DEFAULT NULL,
+  `descripcion` varchar(200) NULL DEFAULT NULL,
+  `estado` enum('PENDIENTE','EN_RECUENTO','RECONTADO','RECOGIDO','CANCELADO') NOT NULL DEFAULT 'PENDIENTE',
+  `dispositivo_origen` varchar(100) NULL DEFAULT NULL,
+  `usuario_envio` varchar(100) NULL DEFAULT NULL,
+  `instante_envio` datetime NULL DEFAULT NULL,
+  `instante_recogida` datetime NULL DEFAULT NULL,
+  `instante_alta` datetime NOT NULL DEFAULT current_timestamp(),
+  `instante_modif` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+);
+ALTER TABLE `inv_recuentos` ADD INDEX `idx_recuento_alm` (`carpeta_cliente`, `codigo_alm`);
+ALTER TABLE `inv_recuentos` ADD INDEX `idx_recuento_estado` (`carpeta_cliente`, `estado`);
+ALTER TABLE `inv_recuentos` ADD UNIQUE INDEX `uq_recuento_doc` (`carpeta_cliente`, `codigo_emp`, `codigo_alm`, `serie`, `numero`);
 
 
 -- ========================================
@@ -58412,4 +59892,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 12/06/2026 17:16:52
+-- Backup completado: 12/06/2026 17:26:40
