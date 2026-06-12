@@ -165,4 +165,4 @@ Antes de dar la migración por buena:
 
 ---
 
-[◀ Instalación en Windows](09-instalacion-windows.md) · [Índice](README.md)
+[◀ Instalación en Windows](09-instalacion-windows.md) · [Índice](README.md) · [Siguiente ▶ Verifactu (AEAT)](11-verifactu.md)
