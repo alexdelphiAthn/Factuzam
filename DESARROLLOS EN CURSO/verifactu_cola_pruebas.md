@@ -1,0 +1,288 @@
+# Batería de pruebas: Verifactu en caja (QR + cola + hilo)
+
+Pruebas de verificación del desarrollo descrito en `verifactu_cola.md`.
+Estado del código probado: commit `4d1b9ed` (rama `claude/practical-ride-uq8ue3`).
+
+Convención: cada caso tiene ID, pasos y resultado esperado. Los marcados
+**[POST-ODA]** solo son ejecutables cuando se integren las librerías de
+envío de OdaVeriFactu en `inLibVerifactuEnvio.pas`; el resto se puede
+pasar ya con el stub actual.
+
+---
+
+## 0. Preparación
+
+1. Compilar `fzam.dproj` (las 3 units nuevas están en `fzam.dpr`; no debe
+   haber errores ni warnings nuevos).
+2. Ejecutar `DESARROLLOS EN CURSO/verifactu_cola.sql` en la BBDD de
+   pruebas.
+3. Datos mínimos: empresa con NIF real de pruebas (p. ej. `B12345678`),
+   serie de facturación de caja (tipo `FC`), un artículo con tarifa y
+   stock, cliente contado.
+4. Impresora de caja en `DEBUG` (parámetro `vgerDefPrinter` vacío o
+   DEBUG) para ver el ticket en el visualizador y en PDF sin gastar
+   papel.
+5. Para consultar el log de la aplicación: activar `appLogAvanzado` o
+   revisar el fichero de log de `inLibLog`.
+
+---
+
+## A. Script SQL idempotente
+
+**A1 — Creación limpia.** Ejecutar `verifactu_cola.sql` en una BBDD sin
+la tabla.
+- `SHOW CREATE TABLE fza_verifactu_cola;` → existe, InnoDB,
+  `utf8mb4_spanish_ci`, PK `ID_VFCOLA` AUTO_INCREMENT.
+- `SHOW INDEX FROM fza_verifactu_cola;` → `UQ_VFCOLA_SERIE_NUMERO_TIPO`
+  (único, 3 columnas) e `IDX_VFCOLA_ESTADO_PROXIMO`.
+
+**A2 — Re-ejecución.** Ejecutarlo una segunda vez completo.
+- No da error; devuelve los `SELECT '... ya existe, se omite'`.
+
+**A3 — Unicidad.** Insertar dos veces a mano la misma
+(serie, número, 'ALTA') con INSERT simple (sin ON DUPLICATE).
+- La segunda falla con error 1062 (duplicado). Limpiar después.
+
+---
+
+## B. Parámetros
+
+**B1 — Alta de categoría.** Abrir Parámetros de aplicación
+(`inMtoAppParam`).
+- Aparece la categoría **Verifactu** con 6 parámetros y estos defectos:
+  `appVerifactuActivo=False`, `appVerifactuEntorno=PRE`,
+  `appVerifactuUrlQRPre=https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR`,
+  `appVerifactuUrlQRPro=https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR`,
+  `appVerifactuSegundosCiclo=60`, `appVerifactuMaxIntentos=10`.
+
+**B2 — Persistencia.** Poner `appVerifactuActivo=True`, guardar, cerrar
+sesión y volver a entrar.
+- El valor persiste (se guarda vía perfiles bajo `frmMtoAppParam`).
+
+---
+
+## C. QR tributario en el ticket de venta
+
+Para C1-C5: `appVerifactuActivo=True`, `appVerifactuEntorno=PRE`.
+
+**C1 — Venta simple.** Vender 1 artículo de 10,00 € y cobrar con ticket.
+- El ticket (preview/PDF) muestra arriba: línea «QR tributario:», el QR,
+  y debajo «VERI*FACTU - Factura verificable» / «en la sede electrónica
+  de la AEAT».
+- Escanear el QR con el móvil. URL exacta esperada:
+  `https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR?nif=B12345678&numserie=<SERIE><NUMERO>&fecha=<dd-mm-aaaa>&importe=10.00`
+  con el NIF de la empresa, serie+número concatenados de la factura
+  grabada, la fecha de la factura y punto decimal en el importe.
+- Cuadrar contra BBDD:
+  ```sql
+  SELECT SERIE_FAC, NUMERO_FAC, FECHA_FAC, TOTAL_LIQUIDO_FAC,
+         NIF_EMPRESA_FAC
+    FROM fza_facturas ORDER BY INSTANTE_ALTA DESC LIMIT 1;
+  ```
+
+**C2 — Caracteres reservados en la serie.** Usar una serie con `/`
+(p. ej. `ANA/2026`).
+- En la URL, el `/` va codificado como `%2F` y el QR escanea sin
+  romperse.
+
+**C3 — Formato de importe.** Venta de 1.234,56 €.
+- En la URL: `importe=1234.56` (punto decimal, sin separador de miles).
+
+**C4 — Devolución.** Operación con total negativo (p. ej. -5,00 €).
+- `importe=-5.00`; el resto de la URL con el mismo formato.
+
+**C5 — Cobro parcial.** Entregar menos del total para que la factura se
+recuadre (`TransformarLineasParaCobroParcial`).
+- El `importe` del QR coincide con el `TOTAL_LIQUIDO_FAC` realmente
+  grabado en `fza_facturas` (no con el total original).
+
+**C6 — Verifactu desactivado.** `appVerifactuActivo=False` y vender.
+- El ticket NO lleva QR ni leyenda (y ya no aparece el antiguo QR de
+  relleno `hacienda.com`). El resto del ticket es idéntico.
+
+**C7 — Entorno producción.** `appVerifactuEntorno=PRO` y vender.
+- La URL del QR empieza por
+  `https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR`.
+  Volver a PRE al terminar.
+
+**C8 — PDF.** Comprobar el PDF que se genera en la carpeta de tickets.
+- El QR se ve también en el PDF (el visualizador parsea el comando
+  ESC/POS con nivel de corrección 49 = M).
+
+**C9 — Cotejo AEAT (opcional, con red).** Abrir la URL del QR en un
+navegador.
+- El endpoint de la AEAT responde (página de cotejo). En PRE puede pedir
+  certificado; basta verificar que no es un 404.
+
+---
+
+## D. Encolado al grabar la venta
+
+**D1 — Alta en cola.** Con Verifactu activo, una venta con ticket.
+- ```sql
+  SELECT * FROM fza_verifactu_cola ORDER BY ID_VFCOLA DESC LIMIT 1;
+  ```
+  → fila con la serie/número de la factura, `TIPO_OPERACION='ALTA'`,
+  `ESTADO='PENDIENTE'`, `CONTADOR_INTENTOS=0`, `INSTANTE_ALTA` y
+  `USUARIO_ALTA` rellenos, `INSTANTE_ENVIO` NULL.
+
+**D2 — ON DUPLICATE.** Repetir a mano el INSERT de la misma factura con
+el SQL de `EncolarFactura` (con ON DUPLICATE KEY UPDATE).
+- No se crea fila nueva: solo cambia `INSTANTE_MODIF`/`USUARIO_MODIF`.
+  `CONTADOR_INTENTOS` y `ESTADO` no se resetean.
+
+**D3 — Operación sin factura.** Hacer una operación que no requiere
+factura (p. ej. solo cancelar un depósito sin importe).
+- No se inserta nada en la cola (tampoco hay factura).
+
+**D4 — Verifactu OFF.** `appVerifactuActivo=False` y vender.
+- La venta se graba normal y NO hay fila nueva en la cola.
+
+**D5 — Transaccionalidad (avanzado).** Forzar un fallo dentro de la
+transacción DESPUÉS del encolado: desde otra sesión MySQL, `LOCK TABLES
+fza_caja_pagos WRITE;` y lanzar el cobro (el PASO 5 quedará bloqueado
+hasta timeout → rollback). Soltar el lock con `UNLOCK TABLES;`.
+- El cobro da el error «No se ha registrado la operación» y NO queda ni
+  factura ni fila en `fza_verifactu_cola` (se encolan/deshacen juntas).
+
+**D6 — Conteo.** Hacer 3 ventas seguidas.
+- `SELECT COUNT(*) FROM fza_verifactu_cola WHERE ESTADO_VFCOLA =
+  'PENDIENTE';` crece exactamente en 3.
+
+---
+
+## E. Hilo de la cola (comportamiento con el stub actual)
+
+**E1 — Arranque y parada.** Abrir la aplicación, esperar al principal, y
+cerrarla.
+- En el log: «Cola Verifactu: hilo iniciado» al arrancar y «Cola
+  Verifactu: hilo detenido» al cerrar. Sin AVs ni cuelgues al salir.
+
+**E2 — Cierre inmediato.** Abrir la app y cerrarla a los pocos segundos
+(durante la espera del primer ciclo).
+- Cierra casi al instante (la espera está troceada en pasos de 100 ms).
+
+**E3 — Aviso de cliente no integrado.** Con `appVerifactuActivo=True` y
+al menos una fila PENDIENTE, dejar la app abierta > `SegundosCiclo`.
+- ```sql
+  SELECT * FROM fza_verifactu_eventos ORDER BY ID_LOG DESC LIMIT 5;
+  ```
+  → UN evento `TIPO_EVENTO_LOG=1` «Cola Verifactu activa sin cliente de
+  envío AEAT integrado…». Las filas de la cola SIGUEN en `PENDIENTE`
+  (el stub no reclama nada).
+
+**E4 — Aviso único por sesión.** Dejarla abierta varios ciclos más.
+- El evento NO se repite.
+
+**E5 — OFF en caliente.** Con la app abierta, poner
+`appVerifactuActivo=False` (guardar parámetros) y esperar 2 ciclos.
+- No aparecen eventos nuevos ni actividad del hilo (verificable con el
+  monitor SQL / `appLogSQL`: ninguna consulta a `fza_verifactu_cola`).
+
+**E6 — ON en caliente.** Volver a `True` sin reiniciar.
+- Al ciclo siguiente vuelve la actividad (nuevo aviso E3 solo si la
+  sesión es nueva; la marca de aviso es por sesión de aplicación).
+
+**E7 — Caída de BBDD.** Con la app abierta y Verifactu ON, parar el
+servicio MariaDB ~30 s y arrancarlo de nuevo.
+- En el log aparece «Cola Verifactu: <error>»; la app no se cae y en
+  ciclos posteriores el hilo se recupera (recrea su conexión propia).
+
+**E8 — Cadena de hashes del log de eventos.**
+```sql
+SELECT a.ID_LOG,
+       IF(a.HASH_ANTERIOR_LOG = IFNULL(
+            (SELECT b.HASH_PROPIO_LOG FROM fza_verifactu_eventos b
+              WHERE b.ID_LOG < a.ID_LOG
+              ORDER BY b.ID_LOG DESC LIMIT 1),
+            REPEAT('0', 64)),
+          'OK', 'ROTA') AS CADENA
+  FROM fza_verifactu_eventos a
+ ORDER BY a.ID_LOG;
+```
+- Todas las filas `OK` (la primera encadena con 64 ceros). `HASH_PROPIO`
+  y `FIRMA_DIGITAL` tienen 64 caracteres hex.
+
+---
+
+## F. Envío real **[POST-ODA]**
+
+Tras integrar las librerías en `inLibVerifactuEnvio.pas`
+(`EnvioVerifactuDisponible=True`), con entorno PRE de la AEAT:
+
+**F1 — Envío OK.** Vender con ticket y esperar un ciclo.
+- Cola: la fila pasa `PENDIENTE → PROCESANDO → ENVIADA`, con
+  `INSTANTE_ENVIO_VFCOLA` relleno y `MENSAJE_ERROR` NULL.
+- `fza_facturas_consolidaciones`: fila nueva con `ID_FACCON` correlativo,
+  `ESTADO='PROCESADO'`, URL/QR/hash/peticion/respuesta rellenos.
+- `fza_facturas`: `ESCONSOLIDADA_FAC='S'`, `INSTANTECONSO_FAC` relleno,
+  `FASE_FAC='ONLINE'`.
+- `fza_verifactu_eventos`: evento tipo 3 con la serie/número.
+- La pestaña Verifactu de la ficha de factura muestra el QR y el estado.
+
+**F2 — Coherencia QR/registro.** Comparar el `numserie` del QR del
+ticket con el `NumSerieFactura` del XML guardado en
+`PETICION_COMPLETA_FACCON`.
+- Idénticos (ambos salen de `ComponerNumSerieFactura`). Si OdaVeriFactu
+  compone distinto, ajustar SOLO esa función y repetir C1.
+
+**F3 — Error transitorio y backoff.** Cortar la red (o apuntar el
+endpoint a una URL inválida) y vender.
+- Por cada ciclo fallido: `CONTADOR_INTENTOS+1`, `MENSAJE_ERROR`
+  relleno, `INSTANTE_PROXIMO_INTENTO` con backoff creciente
+  (60 s, 120 s, 240 s… techo 32 min), `ESTADO` vuelve a `PENDIENTE`, y
+  un evento tipo 4 por intento.
+
+**F4 — Reintentos agotados.** Bajar `appVerifactuMaxIntentos=2` y
+repetir F3.
+- Al segundo fallo la fila pasa a `ESTADO='ERROR'` (ya no se reintenta)
+  y la factura a `FASE_FAC='ERROR'`. Restaurar el parámetro.
+
+**F5 — Anulación.** Encolar un `TIPO_OPERACION='ANULACION'` de una
+factura enviada.
+- Al confirmarse, `FASE_FAC='CANCELADA'`.
+
+**F6 — Multi-puesto.** Dos equipos con la misma BBDD, ambos con
+Verifactu ON, y una tanda de ventas en cada uno.
+- Cada fila la procesa exactamente un puesto (reclamo optimista por
+  `UPDATE … WHERE ESTADO='PENDIENTE'`). Sin filas duplicadas en
+  consolidaciones (lo garantiza también `UK_FACTURA`).
+
+**F7 — Rescate de huérfanas.** Matar el proceso (administrador de
+tareas) con una fila en `PROCESANDO`, o simularla:
+```sql
+UPDATE fza_verifactu_cola
+   SET ESTADO_VFCOLA = 'PROCESANDO',
+       INSTANTE_MODIF = DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+ WHERE ID_VFCOLA = <id>;
+```
+- Al siguiente ciclo (con >10 min de antigüedad) vuelve a `PENDIENTE` y
+  se reenvía.
+
+---
+
+## G. Regresión
+
+**G1 — Ticket sin Verifactu.** Con `appVerifactuActivo=False`, comparar
+un ticket con uno anterior al cambio.
+- Única diferencia: desaparece el QR de relleno. Artículos, totales,
+  IVAs, pagos, cambio, vales y pie intactos.
+
+**G2 — Resto de tickets.** Resguardo de depósito, recordatorio, ticket
+de arqueo y de traspaso.
+- Imprimen igual que antes (no se han tocado).
+
+**G3 — Venta fluida.** Tanda de ventas rápidas con Verifactu ON.
+- Sin demora apreciable en el cobro (el encolado es un único INSERT
+  dentro de la transacción ya existente).
+
+**G4 — Ficha de facturas.** Abrir Facturas y la pestaña Verifactu de
+una factura cualquiera.
+- Sigue cargando en perezoso sin errores (consolidación vacía hasta que
+  haya envíos reales).
+
+**G5 — Arranque/cierre repetido.** Abrir y cerrar la aplicación 5 veces
+seguidas.
+- Sin bloqueos al salir (el hilo para en `FormClose` antes de liberar
+  conexiones) y sin conexiones zombi en MariaDB
+  (`SHOW PROCESSLIST;` vuelve al estado base tras cerrar).
