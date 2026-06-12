@@ -138,7 +138,39 @@ formado. Causas por orden de probabilidad:
    (titular o apoderado); si no, la AEAT responde con errores de censo
    (no identificado / sin apoderamiento).
 
-### Anular y subsanar desde Facturas (Buscar / Modificar)
+### Buscar operaciones (caja): Rectificar, Anular y Convertir en normal
+
+La consulta de operaciones de caja (`inMtoConsultaOpe`) lleva tres
+botones que operan sobre la factura del ticket seleccionado:
+
+- **Rectificar**: confirma y carga la venta en una ventana de caja
+  libre (o nueva) con las **líneas del ticket en negativo**, editables
+  (`TfrmMtoOpeCaja.CargarRectificacion`). La fase de cobro muestra en el
+  título «RECTIFICA a la factura serie\número», el combo de series
+  carga las de **subtipo RECTIFICATIVA** y el documento se graba como
+  `TIPO_FAC='RECTIFICATIVA'`; al terminar se enlaza
+  (original → `FASE_FAC='RECTIFICADA'` + columnas ABONO apuntando a la
+  rectificativa, comentario «ESTA FACTURA ANULA Y RECTIFICA…») y se
+  encola (registro R5/R1). En modo rectificación el F8 (factura
+  completa) queda bloqueado.
+- **Anular Factura Verifactu**: encola el `RegistroAnulacion` del
+  ticket (exige que esté consolidado).
+- **Convertir en normal**: la conversión del ticket en factura completa
+  (modal de cliente/serie/fecha, registro **F3** con
+  `FacturasSustituidas`).
+
+Series rectificativas: el botón de crear series de Empresas → Series
+genera, además de las habituales, una serie **R1** de subtipo
+`RECTIFICATIVA` genérica por empresa (puede crearse a mano una por
+empresa/almacén/caja). La consulta de series de fase de cobro acepta
+ahora las series genéricas de empresa (almacén/caja vacíos) además de
+las propias del puesto.
+
+El botón **Subsanar** se ha retirado de la interfaz (el motor de la
+cola y el envío siguen soportando el tipo `SUBSANACION` por si hiciera
+falta reexponerlo, p. ej. ante «aceptado con errores»).
+
+### Anular y convertir desde Facturas (Buscar / Modificar)
 
 En la pestaña de lista de Facturas (normales y simplificadas) hay dos
 botones que operan sobre la factura seleccionada (solo si ya está

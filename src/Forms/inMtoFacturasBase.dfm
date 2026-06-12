@@ -680,22 +680,13 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
             TabOrder = 0
             OnClick = btnVerifactuAnularClick
           end
-          object btnVerifactuSubsanar: TcxButton
+          object btnVerifactuFacturar: TcxButton
             Left = 196
             Top = 5
             Width = 180
             Height = 30
-            Caption = 'Subsanar (Verifactu)'
+            Caption = 'Convertir en normal'
             TabOrder = 1
-            OnClick = btnVerifactuSubsanarClick
-          end
-          object btnVerifactuFacturar: TcxButton
-            Left = 384
-            Top = 5
-            Width = 180
-            Height = 30
-            Caption = 'Facturar ticket (F3)'
-            TabOrder = 2
             OnClick = btnVerifactuFacturarClick
           end
         end

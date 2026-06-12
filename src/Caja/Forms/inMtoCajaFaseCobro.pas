@@ -173,6 +173,9 @@ type
     FNifCliente: String;
     FSerieFactura: String;
     FFechaFactura: TDateTime;
+    // 'serie\numero' del ticket rectificado: activa el modo
+    // rectificación (series de subtipo RECTIFICATIVA y aviso en caption)
+    FRectificaA: String;
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
     FHayLineasDeposito: Boolean;
@@ -191,17 +194,28 @@ uses inMtoCajaSeleccionVale, inLibCajaParam, inMtoModalSerieFechaFactura;
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
   qry: TUniQuery;
+  sSubtipo: string;
 begin
+  // En modo rectificación el documento sale con serie rectificativa
+  // (subtipo RECTIFICATIVA de fza_empresas_series)
+  if FRectificaA <> '' then
+    sSubtipo := 'RECTIFICATIVA'
+  else
+    sSubtipo := 'SIMPLIFICADA';
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := oConn;
+    // Series propias del almacen/caja y tambien las genericas de la
+    // empresa (almacen/caja a NULL), p.ej. la rectificativa R1
     qry.SQL.Text := 'SELECT EMPSER AS SERIE_CON              ' +
                     '  FROM vi_empresas_series                         ' +
                     ' WHERE CODIGO_EMP_EMPSER = :EMPRESA            ' +
-                    '   AND CODIGO_ALM_EMPSER = :ALMACEN            ' +
-                    '   AND CODIGO_CAJA_EMPSER = :CAJA                  ' +
+                    '   AND (CODIGO_ALM_EMPSER = :ALMACEN            ' +
+                    '        OR IFNULL(CODIGO_ALM_EMPSER, '''') = '''') ' +
+                    '   AND (CODIGO_CAJA_EMPSER = :CAJA                 ' +
+                    '        OR IFNULL(CODIGO_CAJA_EMPSER, '''') = '''') ' +
                     '   AND TIPO_DOC_EMPSER     = ' + QuotedStr('FC')      +
-                    '   AND SUBTIPO_EMPSER = ' + QuotedStr('SIMPLIFICADA') +
+                    '   AND SUBTIPO_EMPSER = ' + QuotedStr(sSubtipo) +
                     '   AND (FECHA_DESDE_EMPSER <= :FECHA               ' +
                     '        AND (FECHA_HASTA_EMPSER >= :FECHA          ' +
                     '             OR FECHA_HASTA_EMPSER IS NULL ))      ';
@@ -253,7 +267,10 @@ var
   oDatos: TSerieFechaFacturaResult;
 begin
   //F8 -> grabar la venta como factura completa (A4), no como ticket
-  if (Trim(FCodigoCliente) = '') or (Trim(FCodigoCliente) = '0') then
+  if FRectificaA <> '' then
+    ShowMessage('Una rectificación se cierra como ticket rectificativo,' +
+                ' no como factura completa.')
+  else if (Trim(FCodigoCliente) = '') or (Trim(FCodigoCliente) = '0') then
     ShowMessage('Asigne un cliente a la operación para emitir factura.')
   else if Trim(FNifCliente) = '' then
     ShowMessage('El cliente no tiene NIF: complételo en su ficha para ' +
@@ -904,6 +921,9 @@ var
   NomCliente: string;
 begin
   inherited;
+  // Modo rectificación: número de la factura rectificada a la vista
+  if FRectificaA <> '' then
+    Caption := Caption + '  —  RECTIFICA a la factura ' + FRectificaA;
   if Trim(FCodigoCliente) <> '' then
   begin
     qryCli := TUniQuery.Create(nil);

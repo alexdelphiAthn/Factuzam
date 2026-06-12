@@ -994,13 +994,32 @@
       Caption = 'Devolver Abonar Operaci'#243'n'
       TabOrder = 2
     end
-    object btnAnularVerifactu: TButton
+    object btnRectificar: TButton
       Left = 476
       Top = 6
-      Width = 213
+      Width = 110
+      Height = 28
+      Caption = 'Rectificar'
+      TabOrder = 3
+      OnClick = btnRectificarClick
+    end
+    object btnAnularVerifactu: TButton
+      Left = 594
+      Top = 6
+      Width = 200
       Height = 28
       Caption = 'Anular Factura Verifactu'
-      TabOrder = 3
+      TabOrder = 4
+      OnClick = btnAnularVerifactuClick
+    end
+    object btnFacturarTicket: TButton
+      Left = 802
+      Top = 6
+      Width = 180
+      Height = 28
+      Caption = 'Convertir en normal'
+      TabOrder = 5
+      OnClick = btnFacturarTicketClick
     end
   end
   object tmrBusqueda: TTimer
