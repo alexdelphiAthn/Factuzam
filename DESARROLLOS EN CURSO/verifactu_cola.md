@@ -216,6 +216,15 @@ operan sobre la factura seleccionada:
   factura F3 en sustitución del ticket (modal
   `inMtoModalFacturarTicket`; el cliente se elige con el buscador
   genérico `TfrmMtoSearch`, no con un combo).
+- **Volver a Borrador**: deshace un lanzamiento que la AEAT aún NO ha
+  aceptado (p. ej. NIF erróneo detectado tras Consolidar). Aparca la
+  fila ALTA de la cola (`ERROR` con intentos al tope y mensaje) y
+  devuelve la factura a `BORRADOR` para corregir y relanzar. Guardas:
+  bloquea si ya está consolidada o la fila está `ENVIADA` (el registro
+  existe en la AEAT → Anular/Rectificar) y si el hilo la está enviando
+  en ese momento (`PROCESANDO`, bloqueo `FOR UPDATE` contra la cola).
+  Un Consolidar posterior reactiva la fila (ON DUPLICATE → PENDIENTE
+  con intentos a 0).
 
 El motor de subsanación (`SUBSANACION`, reenvío del `RegistroAlta` con
 `<Subsanacion>S</Subsanacion>`) sigue disponible en la cola aunque ya

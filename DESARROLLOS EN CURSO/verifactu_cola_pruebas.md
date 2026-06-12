@@ -488,3 +488,23 @@ facturar ticket, el campo Cliente se rellena con el botón «…», que
 abre el buscador genérico (`TfrmMtoSearch`, como en caja) con código,
 razón social, NIF, teléfono y población; doble clic o Aceptar
 selecciona y muestra «código - razón social».
+
+**J4 — Volver a Borrador (lanzamiento con error detectado a tiempo).**
+Crear una factura con un dato erróneo (p. ej. NIF de empresa mal),
+Consolidar y dejar que falle al menos un intento de envío.
+- Pulsar «Volver a Borrador» → confirma → la fila ALTA de la cola
+  queda en ERROR «Lanzamiento anulado por el usuario…» (intentos al
+  tope, el hilo ya no la toca) y la factura vuelve a `BORRADOR`
+  (editable de nuevo; Imprimir bloqueado).
+- Corregir el NIF en Empresas, refrescar la copia con «Dar de Alta o
+  Actualizar Empresa» en la pestaña Datos Empresa Emisora, y
+  Consolidar otra vez → la misma fila vuelve a PENDIENTE con intentos
+  a 0 y el envío sale bien.
+- Con la factura ya consolidada (o la fila ENVIADA), «Volver a
+  Borrador» se niega y remite a Anular/Rectificar. Si el hilo está
+  enviando en ese instante (PROCESANDO), pide esperar unos segundos.
+
+**J5 — Batería de scripts pendientes.** Ejecutar
+`comprobar_scripts_aplicados.sql` conectado a la BBDD de trabajo: las
+filas «>>> FALTA <<<» salen arriba con el objeto que se comprueba; el
+script correspondiente se lanza tal cual (todos son idempotentes).
