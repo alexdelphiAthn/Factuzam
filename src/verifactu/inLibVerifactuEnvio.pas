@@ -98,9 +98,13 @@ type
     NombreEmisor:    string;
     FechaFac:        TDateTime;
     FechaExpedicion: string;  // dd-mm-yyyy
-    TipoFactura:     string;  // F1 / F2 / R5
+    TipoFactura:     string;  // F1 / F2 / R1 / R5
     NifCliente:      string;
     NombreCliente:   string;
+    // Factura original rectificada (solo en R1/R5)
+    RectSerie:       string;
+    RectNumero:      string;
+    RectFecha:       string;  // dd-mm-yyyy
     CuotaTotal:      Currency;
     ImporteTotal:    Currency;
     SerialCert:      string;
@@ -285,7 +289,8 @@ procedure CargarDatosFactura(AConn: TUniConnection;
                              const ASerie, ANumero: string;
                              out ADatos: TDatosFacturaRegistro);
 var
-  Qry: TUniQuery;
+  Qry:      TUniQuery;
+  sTipoFac: string;
 begin
   Qry := TUniQuery.Create(nil);
   try
@@ -322,8 +327,11 @@ begin
     ADatos.FechaFac        := Qry.FieldByName('FECHA_FAC').AsDateTime;
     ADatos.FechaExpedicion :=
       FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
-    ADatos.TipoFactura :=
-      TipoFacturaVerifactu(Qry.FieldByName('TIPO_FAC').AsString);
+    sTipoFac := Qry.FieldByName('TIPO_FAC').AsString;
+    ADatos.TipoFactura := TipoFacturaVerifactu(sTipoFac);
+    ADatos.RectSerie   := '';
+    ADatos.RectNumero  := '';
+    ADatos.RectFecha   := '';
     ADatos.NifCliente :=
       NormalizarNifVerifactu(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
     ADatos.NombreCliente :=
@@ -375,6 +383,48 @@ begin
     ADatos.Bandas[3].PorcentajeRe := 0;
     ADatos.Bandas[3].CuotaRe      := 0;
     ADatos.Bandas[3].EsExenta     := True;
+    // Antecesora: la factura cuyas columnas ABONO apuntan a esta (la
+    // original de una rectificativa, o el ticket sustituido por una
+    // factura completa). Decide R1/R5/F3 y aporta el bloque de
+    // FacturasRectificadas / FacturasSustituidas.
+    if SameText(sTipoFac, 'RECTIFICATIVA') or
+       SameText(sTipoFac, 'NORMAL') then
+    begin
+      Qry.Close;
+      Qry.SQL.Text :=
+        ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
+        '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+        ' FROM fza_facturas ' +
+        ' WHERE SERIE_FAC_ABONO_FAC  = :SERIE ' +
+        '   AND NUMERO_FAC_ABONO_FAC = :NUMERO ' +
+        ' LIMIT 1';
+      Qry.ParamByName('SERIE').AsString  := ASerie;
+      Qry.ParamByName('NUMERO').AsString := ANumero;
+      Qry.Open;
+      if not Qry.IsEmpty then
+      begin
+        if SameText(sTipoFac, 'RECTIFICATIVA') then
+        begin
+          if SameText(Qry.FieldByName('TIPO_FAC').AsString,
+                      'SIMPLIFICADA') then
+            ADatos.TipoFactura := 'R5'
+          else
+            ADatos.TipoFactura := 'R1';
+          ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
+          ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
+          ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
+        end
+        else if SameText(Qry.FieldByName('TIPO_FAC').AsString,
+                         'SIMPLIFICADA') then
+        begin
+          // Factura completa emitida en sustitución de un ticket
+          ADatos.TipoFactura := 'F3';
+          ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
+          ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
+          ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
+        end;
+      end;
+    end;
   finally
     FreeAndNil(Qry);
   end;
@@ -557,12 +607,16 @@ function ConstruirRegistroAlta(const ADatos: TDatosFacturaRegistro;
                                const ASerie, ANumero: string;
                                const ACadena: TCadenaAnterior;
                                const ASif, AFhGen: string;
+                               ASubsanacion: Boolean;
                                out AHuella: string): string;
 var
   sNumSerie:      string;
   sCuota:         string;
   sImporte:       string;
+  sSubsanacion:   string;
   sRectificativa: string;
+  sRectificadas:  string;
+  sSustituidas:   string;
   sDestinatarios: string;
   sDescripcion:   string;
 begin
@@ -582,18 +636,55 @@ begin
     '&ImporteTotal=' + sImporte +
     '&Huella=' + ACadena.Huella +
     '&FechaHoraHusoGenRegistro=' + AFhGen));
-  if ADatos.TipoFactura = 'R5' then
+  // Subsanación: reenvío de un registro ya remitido para corregirlo
+  if ASubsanacion then
+    sSubsanacion := '<sum1:Subsanacion>S</sum1:Subsanacion>'
+  else
+    sSubsanacion := '';
+  if Copy(ADatos.TipoFactura, 1, 1) = 'R' then
     sRectificativa :=
       '<sum1:TipoRectificativa>I</sum1:TipoRectificativa>'
   else
     sRectificativa := '';
-  // Las completas (F1) exigen identificar al destinatario
-  if (ADatos.TipoFactura = 'F1') and
+  // Referencia a la factura original rectificada (si se conoce)
+  if (Copy(ADatos.TipoFactura, 1, 1) = 'R') and
+     (ADatos.RectNumero <> '') then
+    sRectificadas := '<sum1:FacturasRectificadas>' +
+      '<sum1:IDFacturaRectificada>' +
+      '<sum1:IDEmisorFactura>' + EscaparXml(ADatos.NifEmisor) +
+      '</sum1:IDEmisorFactura>' +
+      '<sum1:NumSerieFactura>' +
+      EscaparXml(ComponerNumSerieFactura(ADatos.RectSerie,
+                                         ADatos.RectNumero)) +
+      '</sum1:NumSerieFactura>' +
+      '<sum1:FechaExpedicionFactura>' + ADatos.RectFecha +
+      '</sum1:FechaExpedicionFactura>' +
+      '</sum1:IDFacturaRectificada></sum1:FacturasRectificadas>'
+  else
+    sRectificadas := '';
+  // Referencia al ticket sustituido (factura F3)
+  if (ADatos.TipoFactura = 'F3') and (ADatos.RectNumero <> '') then
+    sSustituidas := '<sum1:FacturasSustituidas>' +
+      '<sum1:IDFacturaSustituida>' +
+      '<sum1:IDEmisorFactura>' + EscaparXml(ADatos.NifEmisor) +
+      '</sum1:IDEmisorFactura>' +
+      '<sum1:NumSerieFactura>' +
+      EscaparXml(ComponerNumSerieFactura(ADatos.RectSerie,
+                                         ADatos.RectNumero)) +
+      '</sum1:NumSerieFactura>' +
+      '<sum1:FechaExpedicionFactura>' + ADatos.RectFecha +
+      '</sum1:FechaExpedicionFactura>' +
+      '</sum1:IDFacturaSustituida></sum1:FacturasSustituidas>'
+  else
+    sSustituidas := '';
+  // Las completas (F1, F3) y las rectificativas de completas (R1)
+  // exigen identificar al destinatario
+  if MatchText(ADatos.TipoFactura, ['F1', 'R1', 'F3']) and
      (Length(ADatos.NifCliente) <> 9) then
-    raise Exception.Create('La factura completa (F1) ' + ASerie + '\' +
-      ANumero + ' requiere un NIF de cliente válido y tiene "' +
-      ADatos.NifCliente + '"');
-  if ADatos.TipoFactura = 'F1' then
+    raise Exception.Create('La factura ' + ADatos.TipoFactura + ' ' +
+      ASerie + '\' + ANumero + ' requiere un NIF de cliente válido y ' +
+      'tiene "' + ADatos.NifCliente + '"');
+  if MatchText(ADatos.TipoFactura, ['F1', 'R1', 'F3']) then
     sDestinatarios := '<sum1:Destinatarios><sum1:IDDestinatario>' +
       '<sum1:NombreRazon>' + EscaparXml(ADatos.NombreCliente) +
       '</sum1:NombreRazon>' +
@@ -614,8 +705,11 @@ begin
     '</sum1:IDFactura>' +
     '<sum1:NombreRazonEmisor>' + EscaparXml(ADatos.NombreEmisor) +
     '</sum1:NombreRazonEmisor>' +
+    sSubsanacion +
     '<sum1:TipoFactura>' + ADatos.TipoFactura + '</sum1:TipoFactura>' +
     sRectificativa +
+    sRectificadas +
+    sSustituidas +
     '<sum1:DescripcionOperacion>' + EscaparXml(sDescripcion) +
     '</sum1:DescripcionOperacion>' +
     sDestinatarios +
@@ -749,6 +843,8 @@ var
   sEstadoRegistro: string;
   sCodigoErr:      string;
   sDescErr:        string;
+  bDuplicado:      Boolean;
+  bAceptado:       Boolean;
 begin
   Result.Ok             := False;
   Result.QueueId        := 0;
@@ -768,7 +864,9 @@ begin
                                             oCadena, sSif, sFhGen, sHuella)
   else
     sRegistro := ConstruirRegistroAlta(oDatos, ASerie, ANumero,
-                                       oCadena, sSif, sFhGen, sHuella);
+                                       oCadena, sSif, sFhGen,
+                                       ATipoOperacion = 'SUBSANACION',
+                                       sHuella);
   Result.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
   EnviarHttp(UrlEnvio, Result.PeticionCompleta,
              oDatos.SerialCert, oDatos.TitularCert, iStatus, sCuerpo);
@@ -785,13 +883,29 @@ begin
   begin
     sEstadoEnvio    := ExtraerEtiqueta(sCuerpo, 'EstadoEnvio');
     sEstadoRegistro := ExtraerEtiqueta(sCuerpo, 'EstadoRegistro');
+    sCodigoErr      := ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro');
+    sDescErr        := ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro');
     Result.EsperaSegundos :=
       StrToIntDef(ExtraerEtiqueta(sCuerpo, 'TiempoEsperaEnvio'), 0);
-    if SameText(sEstadoRegistro, 'Correcto') or
-       SameText(sEstadoRegistro, 'AceptadoConErrores') then
+    // Si no viene línea de respuesta, manda el estado global del envío
+    if sEstadoRegistro = '' then
+      sEstadoRegistro := sEstadoEnvio;
+    // Registro duplicado: la AEAT ya lo tiene registrado (p.ej. un
+    // reintento tras aceptar y fallar la persistencia local). Se da
+    // por aceptado para consolidar y cerrar la fila de la cola.
+    bDuplicado := (sCodigoErr = '3000') or
+                  ContainsText(sDescErr, 'duplicado');
+    bAceptado := SameText(sEstadoEnvio, 'Correcto') or
+                 SameText(sEstadoRegistro, 'Correcto') or
+                 SameText(sEstadoRegistro, 'AceptadoConErrores') or
+                 bDuplicado;
+    if bAceptado then
     begin
-      Result.Ok              := True;
-      Result.EstadoRegistro  := sEstadoRegistro;
+      Result.Ok := True;
+      if bDuplicado then
+        Result.EstadoRegistro := 'Duplicado'
+      else
+        Result.EstadoRegistro := sEstadoRegistro;
       Result.RequestId       := ExtraerEtiqueta(sCuerpo, 'CSV');
       Result.IssuerIrsId     := oDatos.NifEmisor;
       Result.IssuedTime      := Now;
@@ -803,28 +917,33 @@ begin
         Result.VerifactuUrl := ConstruirUrlQR(oDatos.NifEmisor, ASerie,
                                               ANumero, oDatos.FechaFac,
                                               oDatos.ImporteTotal);
-        // QR de la consolidación: PNG binario y su base64 sin saltos
-        Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
-        if Length(Result.QRCodePng) > 0 then
-        begin
-          oB64 := TBase64Encoding.Create(0);
-          try
-            Result.QRCodeBase64 :=
-              oB64.EncodeBytesToString(Result.QRCodePng);
-          finally
-            FreeAndNil(oB64);
+        // QR de la consolidación (PNG y base64). Si fallara, no tumba
+        // el envío: queda constancia en el mensaje informativo.
+        try
+          Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
+          if Length(Result.QRCodePng) > 0 then
+          begin
+            oB64 := TBase64Encoding.Create(0);
+            try
+              Result.QRCodeBase64 :=
+                oB64.EncodeBytesToString(Result.QRCodePng);
+            finally
+              FreeAndNil(oB64);
+            end;
           end;
+        except
+          on E: Exception do
+            Result.MensajeError := '(QR PNG no generado: ' +
+                                   E.Message + ') ';
         end;
       end;
-      if SameText(sEstadoRegistro, 'AceptadoConErrores') then
-        Result.MensajeError := Trim('AEAT [' +
-          ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro') + '] ' +
-          ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro'));
+      if bDuplicado or
+         SameText(sEstadoRegistro, 'AceptadoConErrores') then
+        Result.MensajeError := Trim(Result.MensajeError + 'AEAT [' +
+                                    sCodigoErr + '] ' + sDescErr);
     end
     else
     begin
-      sCodigoErr := ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro');
-      sDescErr   := ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro');
       if (sCodigoErr = '') and (sDescErr = '') then
         sDescErr := 'EstadoEnvio: ' + sEstadoEnvio;
       Result.MensajeError := Trim('AEAT [' + sCodigoErr + '] ' + sDescErr);
