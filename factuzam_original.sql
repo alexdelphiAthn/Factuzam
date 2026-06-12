@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 12/06/2026 18:06:11
+-- Backup generado: 12/06/2026 18:38:26
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -2082,7 +2082,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'CAMI-BASICA/ROJO/L', '', NULL, 19, '2026-06-12 18:05:30', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0),
   ('GEN', 'CAMI-POLO/AZUL/L', '', NULL, 12, '2026-06-12 18:05:30', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 24, 0, 0),
   ('GEN', 'CAMI-POLO/AZUL/M', '', NULL, 17, '2026-06-12 18:05:30', 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 18, 0, 0),
-  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 5, '2026-06-12 18:05:30', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 20, 0, 0),
+  ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 7, '2026-06-12 18:29:28', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 20, 0, 0),
   ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-06-12 18:05:30', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0),
   ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-06-12 18:05:30', 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 2, 12, 0, 0),
   ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-06-12 18:05:30', 0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 9, 18, 0, 0),
@@ -5161,7 +5161,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
-  ('CL', '-', '-', 330, 3, 'S', 'S', '2026-06-12 07:02:47', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
+  ('CL', '-', '-', 332, 3, 'S', 'S', '2026-06-12 18:18:20', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
   ('CO', '-', '-', 7, 3, 'S', 'S', '2026-06-11 06:24:41', '2023-05-15 12:54:31', 'Administrador', 'Administrador'),
   ('EM', '-', '-', 13, 3, 'S', 'S', '2024-02-12 09:38:07', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
   ('EO', '-', '-', 6, 3, 'S', 'S', '2023-12-06 12:59:23', '2023-05-19 15:02:02', 'Administrador', 'Administrador'),
@@ -5183,11 +5183,11 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 377, 3, 'S', 'S', '2026-06-12 18:02:11', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 378, 3, 'S', 'S', '2026-06-12 18:27:12', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 22, 2, 'S', 'S', '2026-05-26 08:44:59', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 790, 10, 'S', 'S', '2026-06-12 07:31:45', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('MV', '-', '-', 791, 10, 'S', 'S', '2026-06-12 18:17:50', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
   ('OV', '012', 'OV', 177, 8, 'S', 'S', '2026-06-12 07:31:45', '2026-04-02 20:05:59', '1', '1'),
   ('PC', '-', '-', 4, 6, 'S', 'S', '2026-05-29 08:33:39', '2026-05-28 19:21:38', 'SISTEMA', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -5847,9 +5847,9 @@ INSERT INTO `fza_facturas` (`NUMERO_FAC`, `SERIE_FAC`, `FECHA_FAC`, `ESCONSOLIDA
   ('000142', '2026.A1', '2026-06-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 6.08, 5.2, 0, 28.93, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 28.93, 6.08, NULL, 0, 0, 35.01, NULL, NULL, '', '', NULL, NULL, '010', NULL, 'S', NULL, NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', '1', 'GEN', '1', '00000168'),
   ('000143', '2026.A1', '2026-06-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 13.87, 5.2, 0, 66.03, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 66.03, 13.87, NULL, 0, 0, 79.9, NULL, NULL, '', '', NULL, NULL, '010', NULL, 'S', NULL, NULL, '2026-06-06 06:00:19', '2026-06-06 06:00:19', '1', '1', '1', 'GEN', '1', '00000169'),
   ('000144', '2026.A1', '2026-06-12 00:00:00', 'N', NULL, 'NORMAL', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 16.17, 5.2, 0, 77, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 77, 16.17, '60DIAS', 15, 11.55, 81.62, NULL, NULL, NULL, '', NULL, NULL, '040', 'N', 'N', 'N', NULL, '2026-06-12 05:34:30', '2026-06-12 05:34:30', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000145', '2026.A1', '2026-06-12 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.86, 5.2, 0, 23.14, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.14, 4.86, NULL, 0, 0, 28, '000001', 'A1', '', '', NULL, NULL, '040', 'N', 'N', 'N', NULL, '2026-06-12 14:03:19', '2026-06-12 06:20:21', '1', 'Administrador', '1', 'GEN', '1', '00000170'),
+  ('000145', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 18:19:50', 'SIMPLIFICADA', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '330', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.86, 5.2, 0, 23.14, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.14, 4.86, NULL, 0, 0, 28, '000001', 'A1', '', '', NULL, NULL, '040', 'N', 'N', 'N', NULL, '2026-06-12 18:19:50', '2026-06-12 06:20:21', '1', 'Administrador', '1', 'GEN', '1', '00000170'),
   ('000146', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:37:10', 'SIMPLIFICADA', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '329', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 4.86, 5.2, 0, 23.14, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.14, 4.86, NULL, 0, 0, 28, NULL, NULL, '', '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-06-12 07:37:10', '2026-06-12 06:22:03', '1', 'Administrador', '1', 'GEN', '1', '00000171'),
-  ('000147', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:38:17', 'SIMPLIFICADA', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-12 07:38:17', '2026-06-12 07:00:11', '1', 'Administrador', '1', 'GEN', '1', '00000172'),
+  ('000147', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:38:17', 'SIMPLIFICADA', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '331', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-12 07:38:17', '2026-06-12 07:00:11', '1', 'Administrador', '1', 'GEN', '1', '00000172'),
   ('000148', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:39:24', 'SIMPLIFICADA', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 19.44, 5.2, 0, 92.56, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 92.56, 19.44, NULL, 0, 0, 112, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-12 07:39:24', '2026-06-12 07:07:52', '1', 'Administrador', '1', 'GEN', '1', '00000173'),
   ('000149', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:31:32', 'SIMPLIFICADA', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 5.2, 5.2, 0, 24.75, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 24.75, 5.2, NULL, 0, 0, 29.95, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-12 07:31:32', '2026-06-12 07:19:06', '1', 'Administrador', '1', 'GEN', '1', '00000174'),
   ('000150', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:32:42', 'SIMPLIFICADA', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', 'N', 'S', 'N', 'IVA', 'N', 21, 22.56, 5.2, 0, 107.44, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 107.44, 22.56, NULL, 0, 0, 130, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-12 07:32:42', '2026-06-12 07:24:29', '1', 'Administrador', '1', 'GEN', '1', '00000175'),
@@ -6125,8 +6125,13 @@ INSERT INTO `fza_facturas_consolidaciones` (`ID_FACCON`, `SERIE_FAC_FACCON`, `NU
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
 <env:Header></env:Header>
 <env:Body Id="Body"><tikR:RespuestaRegFactuSistemaFacturacion xmlns:tikR="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RespuestaSuministro.xsd" xmlns:tik="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><tikR:CSV>A-UMVH9VVKD5WS5W</tikR:CSV><tikR:DatosPresentacion><tik:NIFPresentador>45684134Q</tik:NIFPresentador><tik:TimestampPresentacion>2026-06-12T07:39:24+02:00</tik:TimestampPresentacion></tikR:DatosPresentacion><tikR:Cabecera><tik:ObligadoEmision><tik:NombreRazon>ALEJANDRO LAORDEN HIDALGO</tik:NombreRazon><tik:NIF>45684134Q</tik:NIF></tik:ObligadoEmision></tikR:Cabecera><tikR:TiempoEsperaEnvio>60</tikR:TiempoEsperaEnvio><tikR:EstadoEnvio>Correcto</tikR:EstadoEnvio><tikR:RespuestaLinea><tikR:IDFactura><tik:IDEmisorFactura>45684134Q</tik:IDEmisorFactura><tik:NumSerieFactura>2026.A1000148</tik:NumSerieFactura><tik:FechaExpedicionFactura>12-06-2026</tik:FechaExpedicionFactura></tikR:IDFactura><tikR:Operacion><tik:TipoOperacion>Alta</tik:TipoOperacion></tikR:Operacion><tikR:EstadoRegistro>Correcto</tikR:EstadoRegistro></tikR:RespuestaLinea></tikR:RespuestaRegFactuSistemaFacturacion>
-</env:Body></env:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sum="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd" xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000148</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>12-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>92.56</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>19.44</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>19.44</sum1:CuotaTotal><sum1:ImporteTotal>112.00</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000147</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>12-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>289774F58169DE17896DECA496437888F87B76A82961FDA6B4E1B17A2834E0AB</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606120040.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>S</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-12T07:39:23+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>26FB7C1AA2AD81915A1905438033AE7920343EE3E715D189303C239B71DD7E7F</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>');
--- 6 registros exportados
+</env:Body></env:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sum="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd" xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000148</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>12-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>92.56</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>19.44</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>19.44</sum1:CuotaTotal><sum1:ImporteTotal>112.00</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000147</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>12-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>289774F58169DE17896DECA496437888F87B76A82961FDA6B4E1B17A2834E0AB</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606120040.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>S</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-12T07:39:23+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>26FB7C1AA2AD81915A1905438033AE7920343EE3E715D189303C239B71DD7E7F</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>'),
+  (7, '2026.A1', '000145', 'A-U8DJZLY7GYA53N', 8, NULL, '45684134Q', '2026-06-12 18:19:50', '7', '7F2E988B3DF48D99E9ECC1187A74A7CFB860CBBE06F47F6CCEDB6736084916F9', 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR?nif=45684134Q&numserie=2026.A1000145&fecha=12-06-2026&importe=28.00', 'iVBORw0KGgoAAAANSUhEUgAAAMQAAADECAAAAADlzdG3AAADAFBMVEUAAAABAQECAgIDAwMEBAQFBQUGBgYHBwcICAgJCQkKCgoLCwsMDAwNDQ0ODg4PDw8QEBARERESEhITExMUFBQVFRUWFhYXFxcYGBgZGRkaGhobGxscHBwdHR0eHh4fHx8gICAhISEiIiIjIyMkJCQlJSUmJiYnJycoKCgpKSkqKiorKyssLCwtLS0uLi4vLy8wMDAxMTEyMjIzMzM0NDQ1NTU2NjY3Nzc4ODg5OTk6Ojo7Ozs8PDw9PT0+Pj4/Pz9AQEBBQUFCQkJDQ0NERERFRUVGRkZHR0dISEhJSUlKSkpLS0tMTExNTU1OTk5PT09QUFBRUVFSUlJTU1NUVFRVVVVWVlZXV1dYWFhZWVlaWlpbW1tcXFxdXV1eXl5fX19gYGBhYWFiYmJjY2NkZGRlZWVmZmZnZ2doaGhpaWlqampra2tsbGxtbW1ubm5vb29wcHBxcXFycnJzc3N0dHR1dXV2dnZ3d3d4eHh5eXl6enp7e3t8fHx9fX1+fn5/f3+AgICBgYGCgoKDg4OEhISFhYWGhoaHh4eIiIiJiYmKioqLi4uMjIyNjY2Ojo6Pj4+QkJCRkZGSkpKTk5OUlJSVlZWWlpaXl5eYmJiZmZmampqbm5ucnJydnZ2enp6fn5+goKChoaGioqKjo6OkpKSlpaWmpqanp6eoqKipqamqqqqrq6usrKytra2urq6vr6+wsLCxsbGysrKzs7O0tLS1tbW2tra3t7e4uLi5ubm6urq7u7u8vLy9vb2+vr6/v7/AwMDBwcHCwsLDw8PExMTFxcXGxsbHx8fIyMjJycnKysrLy8vMzMzNzc3Ozs7Pz8/Q0NDR0dHS0tLT09PU1NTV1dXW1tbX19fY2NjZ2dna2trb29vc3Nzd3d3e3t7f39/g4ODh4eHi4uLj4+Pk5OTl5eXm5ubn5+fo6Ojp6enq6urr6+vs7Ozt7e3u7u7v7+/w8PDx8fHy8vLz8/P09PT19fX29vb39/f4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7////isF19AAADPklEQVR42u3YQXLsIAxFUfX+F+1MO8p7ktwVMEldTf6PW4AOVRjw64q/Hy8QhwSIUwLEKQHilABxSoA4JUCcEv8T8SqSL5Fzvf39/vsl8mQBRR9dHSBA7EKoAdVgbqAr5V+m35fIn9YBAsRuhFq8eRBVsMqvfld5d+oAAeJpRDVoDrfAQ4zR5YMAcSriPS/Es6v5PRedx3zs7QQCRIMI8/zuQbBrr3IndYAAsRPhorrsrPi3qgMEiF2IO6E2QLXZ5Q0rTM6ntYAAsRJRXW7UM7cBqj7dge69zavpX26AIEBsQEwvN+6jQYXKOe5A6Ta98Y4NAsQvIFRMOlKF5ecqz03Q5IUBAsQORHcoqwoN0dYd/hxITZZ6aYAAsQvhCp0sWrdxuWcOX+WNDoAgQCxA5CgvJSI3QoNdIZMJUX2CALEaMd3EuqLcJd+1nxwS7YcIECAWIlRMCuomYbpIK4RrAwLESsRko6suPJMD4aTvqiYQIHYi8uDVJSYX5gZ3xbtCq5fIxx8KQID4EOEWbdVpjqvoxxWdx78TIEDsQKgO3WHMbWrV5enOptbBQIBYiVAdTjad6UKf4CNmkwMCxC5Ed/hyi/8OrCvUFQ0CxAmIiO+FuM5dkV3Rbvz8LEwbECBWIrpiO6ja0CJmL4IwOdG0AQFiNcItyEjP8iAuR03SpMjq0AgCxE6EK6Aq6O4GNZm06mAIAsRuRB58dDmJfoF2yMkB8Uc/IEAsRqjLjgNMPipE6MKqjdK1AQHiCYRq5C4q1WKOps2nFysQIJ5AhGhYbWBqYeY+VN/uBeAgcoJBgFiMUB25QWWnxbNqU3ObY54IECCeQuQBYvD/yYJXeWHaVOODAPEkwoUr3F2sJpN0Gw0CxEJEF+7DQQWuoNVFSj0bLWwQIH4RMVnE7u+c2xWbgdXHhHJiQYBYjFCNugObKyZCF6fa5glQbfPvIEDsQlSLb7p5qf66A+PdwyYIECcgIr4PehVtXTEVspoYECBORLiO3YalBle51SRUh0AQIHYgwjy/s+BzjuozQhdevThAgNiNcOEWb3c4jNB49f9o2qkAAWIl4i8GiFMCxCkB4pQAcUqAOCVAnBIgTol/gfgCiAb0avc3f2kAAAAASUVORK5CYII=', 0x89504E470D0A1A0A0000000D49484452000000C4000000C40800000000E5CDD1B700000300504C54450000000101010202020303030404040505050606060707070808080909090A0A0A0B0B0B0C0C0C0D0D0D0E0E0E0F0F0F1010101111111212121313131414141515151616161717171818181919191A1A1A1B1B1B1C1C1C1D1D1D1E1E1E1F1F1F2020202121212222222323232424242525252626262727272828282929292A2A2A2B2B2B2C2C2C2D2D2D2E2E2E2F2F2F3030303131313232323333333434343535353636363737373838383939393A3A3A3B3B3B3C3C3C3D3D3D3E3E3E3F3F3F4040404141414242424343434444444545454646464747474848484949494A4A4A4B4B4B4C4C4C4D4D4D4E4E4E4F4F4F5050505151515252525353535454545555555656565757575858585959595A5A5A5B5B5B5C5C5C5D5D5D5E5E5E5F5F5F6060606161616262626363636464646565656666666767676868686969696A6A6A6B6B6B6C6C6C6D6D6D6E6E6E6F6F6F7070707171717272727373737474747575757676767777777878787979797A7A7A7B7B7B7C7C7C7D7D7D7E7E7E7F7F7F8080808181818282828383838484848585858686868787878888888989898A8A8A8B8B8B8C8C8C8D8D8D8E8E8E8F8F8F9090909191919292929393939494949595959696969797979898989999999A9A9A9B9B9B9C9C9C9D9D9D9E9E9E9F9F9FA0A0A0A1A1A1A2A2A2A3A3A3A4A4A4A5A5A5A6A6A6A7A7A7A8A8A8A9A9A9AAAAAAABABABACACACADADADAEAEAEAFAFAFB0B0B0B1B1B1B2B2B2B3B3B3B4B4B4B5B5B5B6B6B6B7B7B7B8B8B8B9B9B9BABABABBBBBBBCBCBCBDBDBDBEBEBEBFBFBFC0C0C0C1C1C1C2C2C2C3C3C3C4C4C4C5C5C5C6C6C6C7C7C7C8C8C8C9C9C9CACACACBCBCBCCCCCCCDCDCDCECECECFCFCFD0D0D0D1D1D1D2D2D2D3D3D3D4D4D4D5D5D5D6D6D6D7D7D7D8D8D8D9D9D9DADADADBDBDBDCDCDCDDDDDDDEDEDEDFDFDFE0E0E0E1E1E1E2E2E2E3E3E3E4E4E4E5E5E5E6E6E6E7E7E7E8E8E8E9E9E9EAEAEAEBEBEBECECECEDEDEDEEEEEEEFEFEFF0F0F0F1F1F1F2F2F2F3F3F3F4F4F4F5F5F5F6F6F6F7F7F7F8F8F8F9F9F9FAFAFAFBFBFBFCFCFCFDFDFDFEFEFEFFFFFFE2B05D7D0000033E4944415478DAEDD84172EC200C4551F5FE17ED4C3BCA7B92DC1530495D4DFE8F5B800E5518F0EB8ABF1F2F108704885302C42901E29400714A803825409C12FF13F12A922F9173BDFDFDFEFB25F26401451F5D1D2040EC42A801D5606EA02BE55FA6DF97C89FD60102C46E845ABC791055B0CAAF7E577977EA0001E2694435680EB7C0438CD1E58300712AE23D2FC4B3ABF93D179DC77CECED0402448308F3FCEE41B06BAF7227758000B113E1A2BAECACF8B7AA0304885D883BA13640B5D9E50D2B4CCEA7B58000B112515D6ED433B701AA3EDD81EEBDCDABE95F6E8020406C404C2F37EEA34185CA39EE40E936BDF18E0D02C42F20544C3A5285E5E72ACF4DD0E4850102C40E447728AB0A0DD1D61DFE1C484D967A698000B10BE10A9D2C5AB771B9670E5FE58D0E8020402C40E4282F25223742835D219309517D8200B11A31DDC4BAA2DC25DFB59F1C12ED870810201622544C0AEA2661BA482B846B0302C44AC464A3AB2E3C9303E1A4EFAA2610207622F2E0D5252617E60677C5BB42AB97C8C71F0A4080F810E1166DD5698EABE8C7159DC7BF132040EC40A80EDD61CC6D6AD5E5E9CEA6D6C140805889501D4E369DE9429FE02366930302C42E4477F8728BFF0EAC2BD4150D02C4098888EF85B8CE5D915DD16EFCFC2C4C1B10205622BA623BA8DAD022662F823039D1B401016235C22DC848CFF2202E474DD2A4C8EAD00802C44E842BA02AE8EE063599B4EA600802C46E441E7C7439897E8176C8C901F1473F20402C46A8CB8E034C3E2A44E8C2AA8DD2B50101E209846AE42E2AD5628EA6CDA7172B10209E408468586D606A61E63E54DFEE05E02072824180588C501DB94165A7C5B36A53739B639E0810209E42E40162F0FFC982577961DA54E38300F124C2852BDC5DAC2693741B0D02C4424417EEC34105AEA0D5454A3D1B2D6C10207E113159C4EEEF9CDB159B81D5C78472624180588C508DBA039B2B264217A7DAE609506DF3EF2040EC42548B6FBA79A9FEBA03E3DDC3260810272022BE0F7A156D5D3115B29A1810204E44B88EDD86A50657B9D52454874010207620C23CBFB3E0738EEA3342175EBD384080D88D70E1166F77388CD078F5FF68DAA900016225E22F06885302C42901E29400714A803825409C12204E897F81F8028806F46AF7377F690000000049454E44AE426082, '2026-06-12 18:19:50', 'PROCESADO', '<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><tikR:RespuestaRegFactuSistemaFacturacion xmlns:tikR="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RespuestaSuministro.xsd" xmlns:tik="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><tikR:CSV>A-U8DJZLY7GYA53N</tikR:CSV><tikR:DatosPresentacion><tik:NIFPresentador>45684134Q</tik:NIFPresentador><tik:TimestampPresentacion>2026-06-12T18:19:50+02:00</tik:TimestampPresentacion></tikR:DatosPresentacion><tikR:Cabecera><tik:ObligadoEmision><tik:NombreRazon>ALEJANDRO LAORDEN HIDALGO</tik:NombreRazon><tik:NIF>45684134Q</tik:NIF></tik:ObligadoEmision></tikR:Cabecera><tikR:TiempoEsperaEnvio>60</tikR:TiempoEsperaEnvio><tikR:EstadoEnvio>Correcto</tikR:EstadoEnvio><tikR:RespuestaLinea><tikR:IDFactura><tik:IDEmisorFactura>45684134Q</tik:IDEmisorFactura><tik:NumSerieFactura>2026.A1000145</tik:NumSerieFactura><tik:FechaExpedicionFactura>12-06-2026</tik:FechaExpedicionFactura></tikR:IDFactura><tikR:Operacion><tik:TipoOperacion>Alta</tik:TipoOperacion></tikR:Operacion><tikR:EstadoRegistro>Correcto</tikR:EstadoRegistro></tikR:RespuestaLinea></tikR:RespuestaRegFactuSistemaFacturacion>
+</env:Body></env:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sum="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd" xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000145</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>12-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>23.14</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>4.86</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>4.86</sum1:CuotaTotal><sum1:ImporteTotal>28.00</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000148</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>12-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>26FB7C1AA2AD81915A1905438033AE7920343EE3E715D189303C239B71DD7E7F</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606120150.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>S</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-12T18:19:48+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>7F2E988B3DF48D99E9ECC1187A74A7CFB860CBBE06F47F6CCEDB6736084916F9</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>');
+-- 7 registros exportados
 
 
 -- Tabla: fza_facturas_lineas
@@ -6370,7 +6375,7 @@ INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `COD
   ('000144', '2026.A1', NULL, '010', 'MOCHILA-SPORT', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'VENTAMAYOR', 'N', 25, 0, 0, 25, 'N', 21, 30.25, 30.25, 25, NULL, '2026-06-12 05:34:49', '2026-06-12 05:34:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000144', '2026.A1', NULL, '020', 'BOTIN-ANIT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '15', 'Leka Trading', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Botín Ante Mujer', NULL, 'VENTAMAYOR', 'N', 52, 0, 0, 52, 'N', 21, 62.92, 62.92, 52, NULL, '2026-06-12 05:35:22', '2026-06-12 05:35:22', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000144', '2026.A1', NULL, '030', 'VEST-FLOR', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '14', 'Karkki Oy', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Vestido Estampado Verano', NULL, 'VENTAMAYOR', 'N', 12, 0, 0, 12, 'N', 21, 14.52, 14.52, 12, NULL, '2026-06-12 05:35:42', '2026-06-12 05:35:42', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000145', '2026.A1', '012', '0040', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-06-12 06:20:21', '2026-06-12 06:20:21', '1', '1', 'GEN', '1', '00000170', '0000000774'),
+  ('000145', '2026.A1', '012', '0040', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-06-12 06:20:21', '2026-06-12 06:20:21', '1', 'Administrador', 'GEN', '1', '00000170', '0000000774'),
   ('000146', '2026.A1', '012', '0020', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-06-12 06:22:03', '2026-06-12 06:22:03', '1', 'Administrador', 'GEN', '1', '00000171', '0000000776'),
   ('000147', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-06-12 07:00:11', '2026-06-12 07:00:11', '1', '1', 'GEN', '1', '00000172', '0000000778'),
   ('000148', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 112, 0, 0, 92.562, 'N', 21, 112, 112, 92.562, '1', '2026-06-12 07:07:52', '2026-06-12 07:07:52', '1', '1', 'GEN', '1', '00000173', '0000000782'),
@@ -39725,8 +39730,105 @@ INSERT IGNORE INTO `fza_permisos`
    `INSTANTE_ALTA`, `USUARIO_ALTA`)
 VALUES
   (''Todos'', ''menu.Empleados'', ''S'', ''Empleados'', NOW(), ''SISTEMA'');
-', '2026-06-12 18:02:11', '2026-06-12 18:02:11', 'Administrador', 'Administrador');
--- 172 registros exportados
+', '2026-06-12 18:02:11', '2026-06-12 18:02:11', 'Administrador', 'Administrador'),
+  ('377', 'limpiar_movimientos_fac_duplicados', '-- Limpieza de movimientos de salida duplicados de facturas.
+--
+-- Causa: hasta la versión 1.0.15.202606120150, el control de
+-- duplicados de GenerarMovimientosSalidaFactura miraba las columnas
+-- *_REF_* (siempre NULL) o solo TIPO_DOC_MOV=''FC''. Una factura
+-- simplificada nacida en caja ya tiene su salida con
+-- TIPO_DOC_MOV=''VE'', así que un Post posterior de la cabecera en el
+-- Mto generaba OTRA salida ''FC'' para la misma línea: stock descontado
+-- dos veces.
+--
+-- Este script borra, con reversión de stock (vía
+-- PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE, que ajusta los acumulados):
+--   a) salidas ''FC'' que duplican una salida ''VE'' de la misma
+--      factura/línea/SKU, y
+--   b) salidas ''FC'' repetidas entre sí (se conserva la de menor
+--      NUMERO_MOV).
+-- Idempotente: en una segunda pasada no encuentra nada.
+--
+-- 1) Informe previo: qué se va a borrar
+SELECT m.NUMERO_MOV, m.SERIE_DOC_MOV, m.NUMERO_DOC_MOV, m.LINEA_MOV,
+       m.CODIGO_UNIDAD_MOV, m.CANTIDAD_MOV, m.FECHA_MOV
+  FROM fza_movimientos_almacen m
+ WHERE m.TIPO_DOC_MOV = ''FC''
+   AND m.TIPO_MOV = ''S''
+   AND (EXISTS (SELECT 1 FROM fza_movimientos_almacen v
+                 WHERE v.TIPO_DOC_MOV = ''VE''
+                   AND v.TIPO_MOV = ''S''
+                   AND v.SERIE_DOC_MOV     = m.SERIE_DOC_MOV
+                   AND v.NUMERO_DOC_MOV    = m.NUMERO_DOC_MOV
+                   AND v.LINEA_MOV         = m.LINEA_MOV
+                   AND v.CODIGO_UNIDAD_MOV = m.CODIGO_UNIDAD_MOV)
+        OR m.NUMERO_MOV >
+           (SELECT MIN(f.NUMERO_MOV)
+              FROM fza_movimientos_almacen f
+             WHERE f.TIPO_DOC_MOV = ''FC''
+               AND f.TIPO_MOV = ''S''
+               AND f.SERIE_DOC_MOV     = m.SERIE_DOC_MOV
+               AND f.NUMERO_DOC_MOV    = m.NUMERO_DOC_MOV
+               AND f.LINEA_MOV         = m.LINEA_MOV
+               AND f.CODIGO_UNIDAD_MOV = m.CODIGO_UNIDAD_MOV));
+-- 2) Borrado con reversión de stock
+DROP PROCEDURE IF EXISTS PRC_TMP_LIMPIAR_MOV_FAC_DUP;
+DELIMITER ;;
+CREATE PROCEDURE PRC_TMP_LIMPIAR_MOV_FAC_DUP()
+BEGIN
+    DECLARE v_done INT DEFAULT 0;
+    DECLARE v_num VARCHAR(20);
+    DECLARE cur CURSOR FOR
+        SELECT m.NUMERO_MOV
+          FROM fza_movimientos_almacen m
+         WHERE m.TIPO_DOC_MOV = ''FC''
+           AND m.TIPO_MOV = ''S''
+           AND (EXISTS (SELECT 1 FROM fza_movimientos_almacen v
+                         WHERE v.TIPO_DOC_MOV = ''VE''
+                           AND v.TIPO_MOV = ''S''
+                           AND v.SERIE_DOC_MOV     = m.SERIE_DOC_MOV
+                           AND v.NUMERO_DOC_MOV    = m.NUMERO_DOC_MOV
+                           AND v.LINEA_MOV         = m.LINEA_MOV
+                           AND v.CODIGO_UNIDAD_MOV =
+                               m.CODIGO_UNIDAD_MOV)
+                OR m.NUMERO_MOV >
+                   (SELECT MIN(f.NUMERO_MOV)
+                      FROM fza_movimientos_almacen f
+                     WHERE f.TIPO_DOC_MOV = ''FC''
+                       AND f.TIPO_MOV = ''S''
+                       AND f.SERIE_DOC_MOV     = m.SERIE_DOC_MOV
+                       AND f.NUMERO_DOC_MOV    = m.NUMERO_DOC_MOV
+                       AND f.LINEA_MOV         = m.LINEA_MOV
+                       AND f.CODIGO_UNIDAD_MOV =
+                           m.CODIGO_UNIDAD_MOV));
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
+    OPEN cur;
+    bucle: LOOP
+        FETCH cur INTO v_num;
+        IF v_done THEN
+            LEAVE bucle;
+        END IF;
+        CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE(v_num);
+    END LOOP;
+    CLOSE cur;
+END;;
+DELIMITER ;
+CALL PRC_TMP_LIMPIAR_MOV_FAC_DUP();
+DROP PROCEDURE PRC_TMP_LIMPIAR_MOV_FAC_DUP;
+-- 3) Comprobación: debe devolver 0 filas
+SELECT m.NUMERO_MOV
+  FROM fza_movimientos_almacen m
+ WHERE m.TIPO_DOC_MOV = ''FC''
+   AND m.TIPO_MOV = ''S''
+   AND EXISTS (SELECT 1 FROM fza_movimientos_almacen v
+                WHERE v.TIPO_DOC_MOV = ''VE''
+                  AND v.TIPO_MOV = ''S''
+                  AND v.SERIE_DOC_MOV     = m.SERIE_DOC_MOV
+                  AND v.NUMERO_DOC_MOV    = m.NUMERO_DOC_MOV
+                  AND v.LINEA_MOV         = m.LINEA_MOV
+                  AND v.CODIGO_UNIDAD_MOV = m.CODIGO_UNIDAD_MOV);
+', '2026-06-12 18:27:12', '2026-06-12 18:27:12', 'Administrador', 'Administrador');
+-- 173 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -40916,8 +41018,6 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000000775', 'VE', '2026.A1', '000145', '0040', '012', 'GEN', '2026-06-12 06:20:21', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-12 06:20:21', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000170', '1'),
   ('0000000777', 'VE', '2026.A1', '000146', '0020', '012', 'GEN', '2026-06-12 06:22:03', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-12 06:22:03', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000171', '1'),
   ('0000000779', 'VE', '2026.A1', '000147', '0010', '012', 'GEN', '2026-06-12 07:00:11', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-12 07:00:11', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000172', '1'),
-  ('0000000780', 'FC', '2026.A1', '000146', '0020', '012', 'GEN', '2026-06-12 07:02:47', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, 'S', 1, 0, 0, 0, NULL, '329', NULL, 'S', '2026-06-12 07:02:47', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000171', '1'),
-  ('0000000781', 'FC', '2026.A1', '000146', '0020', '012', 'GEN', '2026-06-12 07:02:54', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, 'S', 1, 0, 0, 0, NULL, '329', NULL, 'S', '2026-06-12 07:02:54', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000171', '1'),
   ('0000000783', 'VE', '2026.A1', '000148', '0010', '012', 'GEN', '2026-06-12 07:07:52', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-12 07:07:52', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000173', '1'),
   ('0000000785', 'VE', '2026.A1', '000149', '0010', '012', 'GEN', '2026-06-12 07:19:06', 'FALD-PLIS', 'FALD-PLIS/VERDE/S', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-12 07:19:06', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000174', '1'),
   ('0000000787', 'VE', '2026.A1', '000150', '0010', '012', 'GEN', '2026-06-12 07:24:29', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, 'S', 1, 0, 0, 0, NULL, '0', NULL, 'S', '2026-06-12 07:24:29', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000175', '1'),
@@ -41049,7 +41149,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-3-0003S', 'IN', 'A1', '3', '0003', '012', 'GEN', '2026-05-05 23:59:58', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, 'S', 7, 0, 90, 15, NULL, NULL, NULL, 'S', '2026-05-06 08:15:17', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001E', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:25', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 5, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001S', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:24', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 0, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL);
--- 651 registros exportados
+-- 649 registros exportados
 
 
 -- Tabla: fza_paises
@@ -42491,7 +42591,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-12 18:02:41', '2026-06-12 18:02:41', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-12 18:38:12', '2026-06-12 18:38:12', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-09 09:48:50', '2026-06-09 09:48:50', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -52662,7 +52762,7 @@ CREATE TABLE `fza_verifactu_cadena` (
 
 -- Datos de fza_verifactu_cadena
 INSERT INTO `fza_verifactu_cadena` (`NIF_VFCAD`, `CONTADOR_VFCAD`, `SERIE_FAC_VFCAD`, `NUMERO_FAC_VFCAD`, `FECHA_FAC_VFCAD`, `HUELLA_VFCAD`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
-  ('45684134Q', 6, '2026.A1', '000148', '2026-06-12 00:00:00', '26FB7C1AA2AD81915A1905438033AE7920343EE3E715D189303C239B71DD7E7F', '2026-06-12 07:31:31', 'Administrador', '2026-06-12 07:39:24', 'Administrador');
+  ('45684134Q', 7, '2026.A1', '000145', '2026-06-12 00:00:00', '7F2E988B3DF48D99E9ECC1187A74A7CFB860CBBE06F47F6CCEDB6736084916F9', '2026-06-12 07:31:31', 'Administrador', '2026-06-12 18:19:50', 'Administrador');
 -- 1 registros exportados
 
 
@@ -52697,9 +52797,10 @@ INSERT INTO `fza_verifactu_cola` (`ID_VFCOLA`, `SERIE_FAC_VFCOLA`, `NUMERO_FAC_V
   (4, '2026.A1', '000149', 'ALTA', 'ENVIADA', 3, '2026-06-12 07:27:03', '2026-06-12 07:31:32', NULL, '2026-06-12 07:19:06', 'Administrador', '2026-06-12 07:31:32', 'Administrador'),
   (5, '2026.A1', '000150', 'ALTA', 'ENVIADA', 1, '2026-06-12 07:27:17', '2026-06-12 07:32:42', NULL, '2026-06-12 07:24:29', 'Administrador', '2026-06-12 07:32:42', 'Administrador'),
   (6, '2026.A1', '000151', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-12 07:34:56', NULL, '2026-06-12 07:31:45', 'Administrador', '2026-06-12 07:34:56', 'Administrador'),
-  (7, 'A1', '000001', 'ALTA', 'PENDIENTE', 6, '2026-06-12 18:16:30', NULL, 'AEAT [] EstadoEnvio:', '2026-06-12 14:03:19', 'Administrador', '2026-06-12 17:44:30', 'Administrador');
+  (7, 'A1', '000001', 'ALTA', 'PENDIENTE', 7, '2026-06-12 18:50:37', NULL, 'AEAT [] EstadoEnvio:', '2026-06-12 14:03:19', 'Administrador', '2026-06-12 18:18:37', 'Administrador'),
+  (8, '2026.A1', '000145', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-12 18:19:50', NULL, '2026-06-12 18:08:03', 'Administrador', '2026-06-12 18:19:50', 'Administrador');
 /*!40000 ALTER TABLE `fza_verifactu_cola` ENABLE KEYS */;
--- 7 registros exportados
+-- 8 registros exportados
 
 
 -- Tabla: fza_verifactu_eventos
@@ -52759,9 +52860,18 @@ INSERT INTO `fza_verifactu_eventos` (`ID_LOG`, `TIMESTAMP_LOG`, `TIPO_EVENTO_LOG
   (28, '2026-06-12 17:08:19', 4, 'Administrador', '1.0.15.202606120120.alpha', 'Error de envío Verifactu (intento 3): AEAT [] EstadoEnvio:', NULL, 'fa1559a0b341ebf1bd7750c6e57107a5048688a86780cba23a388c31e2444c0d', '963e9f0bd7aee5bda1ca0416e197ed64ffb04db855963eaad5efd4e01a429259', '9ed2cb78338bee9e14071794615341a97919617f8880c972f94b24b9c1de3cf1', '2026-06-12 17:08:19', '000001', 'A1'),
   (29, '2026-06-12 17:18:57', 4, 'Administrador', '1.0.15.202606120130.alpha', 'Error de envío Verifactu (intento 4): #42S02Table ''factuzam.fza_facturas_relaciones'' doesn''t exist', NULL, '963e9f0bd7aee5bda1ca0416e197ed64ffb04db855963eaad5efd4e01a429259', 'f50274f397439978e1b28c0a7f6f773a6b478e79626ec2a0776f919cd47bff9f', '3058a249e625f084b5eeafa5609304d2bef0af38e9ee5aac4aebc7f8c35d0510', '2026-06-12 17:18:57', '000001', 'A1'),
   (30, '2026-06-12 17:27:59', 4, 'Administrador', '1.0.15.202606120130.alpha', 'Error de envío Verifactu (intento 5): AEAT [] EstadoEnvio:', NULL, 'f50274f397439978e1b28c0a7f6f773a6b478e79626ec2a0776f919cd47bff9f', '98b95f32bb43995226329fe3e5818e773340bd2b25c996e04e5c414cf86d3626', '8ccd71cb061ece850822c8d5450d7d92f990c12074a5c8bcc26223fa158d0857', '2026-06-12 17:27:59', '000001', 'A1'),
-  (31, '2026-06-12 17:44:30', 4, 'Administrador', '1.0.15.202606120130.alpha', 'Error de envío Verifactu (intento 6): AEAT [] EstadoEnvio:', NULL, '98b95f32bb43995226329fe3e5818e773340bd2b25c996e04e5c414cf86d3626', 'b21c2dbc0be87647b4a120c68a48beabcec66754aa630f874ac0ab23ebf6d3da', '79920790973d0f1aaf287d402e6978428d63732cf545124fce8257d1cef7df2a', '2026-06-12 17:44:30', '000001', 'A1');
+  (31, '2026-06-12 17:44:30', 4, 'Administrador', '1.0.15.202606120130.alpha', 'Error de envío Verifactu (intento 6): AEAT [] EstadoEnvio:', NULL, '98b95f32bb43995226329fe3e5818e773340bd2b25c996e04e5c414cf86d3626', 'b21c2dbc0be87647b4a120c68a48beabcec66754aa630f874ac0ab23ebf6d3da', '79920790973d0f1aaf287d402e6978428d63732cf545124fce8257d1cef7df2a', '2026-06-12 17:44:30', '000001', 'A1'),
+  (32, '2026-06-12 18:08:03', 2, 'Administrador', '1.0.15.202606120140.alpha', 'Lanzamiento manual (Consolidar) desde Facturas', NULL, 'b21c2dbc0be87647b4a120c68a48beabcec66754aa630f874ac0ab23ebf6d3da', 'b9f4e6939c972db7f8c870ad4b18052acaccb3f0eff9a26614f19f601a49c9e4', '8b157f4ac89ef7808cb2ab41382ed6ed7f11cabe636300ec8097575b88e5fd1d', '2026-06-12 18:08:03', '000145', '2026.A1'),
+  (33, '2026-06-12 18:08:27', 4, 'Administrador', '1.0.15.202606120140.alpha', 'Error de envío Verifactu (intento 1): AEAT [] EstadoEnvio:', NULL, 'b9f4e6939c972db7f8c870ad4b18052acaccb3f0eff9a26614f19f601a49c9e4', '1ba62a87c502ec1bd5fa0b7836b7b7766831345277a9f907dc0f7c2aeaccc229', '429ed833c154cfde9c432c4441d42b48483fcc7ec09775394848f35c856d5d26', '2026-06-12 18:08:27', '000145', '2026.A1'),
+  (34, '2026-06-12 18:09:34', 4, 'Administrador', '1.0.15.202606120140.alpha', 'Error de envío Verifactu (intento 2): AEAT [] EstadoEnvio:', NULL, '1ba62a87c502ec1bd5fa0b7836b7b7766831345277a9f907dc0f7c2aeaccc229', '86a957b61cf2f9acc3ecb0465600a2707ec5b401178041bd570ce13e96939f7e', 'a0d8710f04bdced88c050525cc85c2c010cf4b08d6595355e71f774689911b61', '2026-06-12 18:09:34', '000145', '2026.A1'),
+  (35, '2026-06-12 18:11:48', 4, 'Administrador', '1.0.15.202606120140.alpha', 'Error de envío Verifactu (intento 3): AEAT [] EstadoEnvio:', NULL, '86a957b61cf2f9acc3ecb0465600a2707ec5b401178041bd570ce13e96939f7e', '18e60f9525787b21a456c7fc855edae7247ea25143fc8e9cea7481868f105b0a', 'e4641691a5ac2f70fb4fe1bfd104c5cadcd9293bd67d1efb72338e3f4e200380', '2026-06-12 18:11:48', '000145', '2026.A1'),
+  (36, '2026-06-12 18:16:15', 4, 'Administrador', '1.0.15.202606120140.alpha', 'Error de envío Verifactu (intento 4): AEAT [] EstadoEnvio:', NULL, '18e60f9525787b21a456c7fc855edae7247ea25143fc8e9cea7481868f105b0a', 'cb2a148079d43e2c6ff5c31aff08ac0c8e889b07bea23ca530f7ba7cddf02b5d', '88d63b8e901285af0771bbf9050dc8f4a2b7ee1a02d9af2f3c44088981961ce7', '2026-06-12 18:16:15', '000145', '2026.A1'),
+  (37, '2026-06-12 18:17:34', 1, 'Administrador', '1.0.15.202606120150.alpha', 'Lanzamiento anulado: factura devuelta a BORRADOR', NULL, 'cb2a148079d43e2c6ff5c31aff08ac0c8e889b07bea23ca530f7ba7cddf02b5d', '6514889b82ca4d92716a4597407bd54a1631b11db4ae857059f642218ea9297c', 'de1a675d490e3597b596fca4641f9733c2f9fde96e2f68e3f5ac45ec5bae7978', '2026-06-12 18:17:34', '000145', '2026.A1'),
+  (38, '2026-06-12 18:18:37', 4, 'Administrador', '1.0.15.202606120150.alpha', 'Error de envío Verifactu (intento 7): AEAT [] EstadoEnvio:', NULL, '6514889b82ca4d92716a4597407bd54a1631b11db4ae857059f642218ea9297c', '1e0264ef1521d8f593b89ef37996ac1a990c0b5cc9751f52093e69848e8c3bd8', '7c64e0c02e479dae3b7e313f901e8eb43ba7debaa55a192c110aca1d4f62d83d', '2026-06-12 18:18:37', '000001', 'A1'),
+  (39, '2026-06-12 18:18:56', 2, 'Administrador', '1.0.15.202606120150.alpha', 'Lanzamiento manual (Consolidar) desde Facturas', NULL, '1e0264ef1521d8f593b89ef37996ac1a990c0b5cc9751f52093e69848e8c3bd8', '803a5572219d2acc1e00d7c19997765395a0dab7d42caae42e62e17de4f9af40', 'ca7e038738d6f6c5e6056aea2b226114cc04e8de8dc8cb475f0c13e841c8b8fa', '2026-06-12 18:18:56', '000145', '2026.A1'),
+  (40, '2026-06-12 18:19:50', 3, 'Administrador', '1.0.15.202606120150.alpha', 'Registro de facturación (ALTA) aceptado por la AEAT (Correcto)', 'CSV: A-U8DJZLY7GYA53N', '803a5572219d2acc1e00d7c19997765395a0dab7d42caae42e62e17de4f9af40', '892fbfa137600d81d8d16196198150367f2fb8459a3d6010c763b7b67a40c871', 'ee92631bea502c67bce3999676a087188a7c17286eedd3f595e748ee971ae8a2', '2026-06-12 18:19:50', '000145', '2026.A1');
 /*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
--- 31 registros exportados
+-- 40 registros exportados
 
 
 -- Tabla: fza_winforms
@@ -59764,6 +59874,49 @@ BEGIN
 END ;;
 DELIMITER ;
 
+-- Procedimiento: PRC_TMP_LIMPIAR_MOV_FAC_DUP
+DROP PROCEDURE IF EXISTS `PRC_TMP_LIMPIAR_MOV_FAC_DUP`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_TMP_LIMPIAR_MOV_FAC_DUP`()
+BEGIN
+    DECLARE v_done INT DEFAULT 0;
+    DECLARE v_num VARCHAR(20);
+    DECLARE cur CURSOR FOR
+        SELECT m.NUMERO_MOV
+          FROM fza_movimientos_almacen m
+         WHERE m.TIPO_DOC_MOV = 'FC'
+           AND m.TIPO_MOV = 'S'
+           AND (EXISTS (SELECT 1 FROM fza_movimientos_almacen v
+                         WHERE v.TIPO_DOC_MOV = 'VE'
+                           AND v.TIPO_MOV = 'S'
+                           AND v.SERIE_DOC_MOV     = m.SERIE_DOC_MOV
+                           AND v.NUMERO_DOC_MOV    = m.NUMERO_DOC_MOV
+                           AND v.LINEA_MOV         = m.LINEA_MOV
+                           AND v.CODIGO_UNIDAD_MOV =
+                               m.CODIGO_UNIDAD_MOV)
+                OR m.NUMERO_MOV >
+                   (SELECT MIN(f.NUMERO_MOV)
+                      FROM fza_movimientos_almacen f
+                     WHERE f.TIPO_DOC_MOV = 'FC'
+                       AND f.TIPO_MOV = 'S'
+                       AND f.SERIE_DOC_MOV     = m.SERIE_DOC_MOV
+                       AND f.NUMERO_DOC_MOV    = m.NUMERO_DOC_MOV
+                       AND f.LINEA_MOV         = m.LINEA_MOV
+                       AND f.CODIGO_UNIDAD_MOV =
+                           m.CODIGO_UNIDAD_MOV));
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
+    OPEN cur;
+    bucle: LOOP
+        FETCH cur INTO v_num;
+        IF v_done THEN
+            LEAVE bucle;
+        END IF;
+        CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE(v_num);
+    END LOOP;
+    CLOSE cur;
+END ;;
+DELIMITER ;
+
 -- Procedimiento: SP_RECALCULAR_PMP_LOTE_ALMACEN
 DROP PROCEDURE IF EXISTS `SP_RECALCULAR_PMP_LOTE_ALMACEN`;
 DELIMITER ;;
@@ -60019,4 +60172,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 12/06/2026 18:06:12
+-- Backup completado: 12/06/2026 18:38:28
