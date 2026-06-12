@@ -56,7 +56,7 @@ ON DUPLICATE KEY UPDATE
 -- devuelve True si la fila no existe, las filas dejan el permiso
 -- gobernable desde el mantenimiento de permisos)
 INSERT IGNORE INTO fza_permisos
-  (GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM,
+  (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM,
    INSTANTE_ALTA, USUARIO_ALTA)
 VALUES
   ('Todos', 'menu.mnuVerifactuDeclaracion', 'S',

@@ -96,6 +96,8 @@ type
                               Strings: TStrings);
     procedure GetTemporadasList(Sender: TJvCustomInspectorItem;
                                 Strings: TStrings);
+    procedure GetNifsEmpresasList(Sender: TJvCustomInspectorItem;
+                                  Strings: TStrings);
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
@@ -252,6 +254,15 @@ begin
                                  [iifValueList, iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetTemporadasList;
             end
+            else if SameText(Param.Nombre, 'appVerifactuSifNif') then
+            begin
+              // Combo editable: el editor plano del inspector rechaza
+              // letras en este campo; con AllowNonListValues se puede
+              // teclear cualquier NIF y se sugieren los de las empresas
+              ItemCombo.Flags := ItemCombo.Flags +
+                                 [iifValueList, iifAllowNonListValues];
+              ItemCombo.OnGetValueList := GetNifsEmpresasList;
+            end
             else if StartsText('appDir', Param.Nombre) then
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifEditButton];
@@ -393,6 +404,31 @@ begin
     while not qry.Eof do
     begin
       Strings.Add(qry.FieldByName('PV').AsString);
+      qry.Next;
+    end;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TfrmMtoAppParam.GetNifsEmpresasList(
+  Sender: TJvCustomInspectorItem; Strings: TStrings);
+var
+  qry: TUniQuery;
+begin
+  Strings.Clear;
+  Strings.Add('');
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT DISTINCT NIF_EMP FROM fza_empresas' +
+      ' WHERE IFNULL(NIF_EMP, '''') <> ''''' +
+      ' ORDER BY NIF_EMP';
+    qry.Open;
+    while not qry.Eof do
+    begin
+      Strings.Add(qry.FieldByName('NIF_EMP').AsString);
       qry.Next;
     end;
   finally
