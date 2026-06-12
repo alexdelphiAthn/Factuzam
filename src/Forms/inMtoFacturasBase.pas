@@ -57,7 +57,6 @@ uses
 type
   TfrmMtoFacturasBase = class(TfrmMtoGen)
     pnlVerifactu: TPanel;
-    pnlVerifactuLista: TPanel;
     btnVerifactuAnular: TcxButton;
     btnVerifactuFacturar: TcxButton;
     cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn;
