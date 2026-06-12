@@ -18,7 +18,7 @@ unit inLibVerifactu;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils, Uni, frxClass;
 
 const
   // URLs oficiales del servicio de cotejo del QR tributario. Se pueden
@@ -54,6 +54,15 @@ function ConstruirUrlQR(const ANif, ASerie, ANumero: string;
 // Sin canvas ni handles GDI compartidos: usable desde el hilo de envío.
 function GenerarQRPngVerifactu(const AUrl: string;
                                AEscala: Integer = 4): TBytes;
+// FastReport: rellena el TfrxPictureView llamado 'qrverifactu' con el
+// QR tributario de la factura del registro activo de su banda (campos
+// NIF_EMPRESA_FAC, SERIE_FAC, NUMERO_FAC, FECHA_FAC,
+// TOTAL_LIQUIDO_FAC). Encadenar desde TfrxReport.OnBeforePrint.
+procedure SustituirQRVerifactuEnReport(Component: TfrxReportComponent);
+// FastReport: si el formato cargado no trae un TfrxPictureView llamado
+// 'qrverifactu', lo crea en la primera página (30 mm, arriba a la
+// derecha). Si el diseñador ya lo colocó, se respeta su posición.
+procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
 // Registra un evento en fza_verifactu_eventos manteniendo la cadena de
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
@@ -67,8 +76,9 @@ procedure RegistrarEventoVerifactu(AConn: TUniConnection;
 implementation
 
 uses
-  System.Classes, System.Hash, Vcl.Imaging.pngimage, DelphiZXIngQRCode,
-  inLibGlobalVar, inLibAppParam;
+  System.Classes, System.Hash, Data.DB, Vcl.Imaging.pngimage,
+  DelphiZXIngQRCode,
+  inLibGlobalVar, inLibAppParam, inLibFotos;
 
 function VerifactuActivo: Boolean;
 begin
@@ -210,6 +220,84 @@ begin
       FreeAndNil(oStream);
       FreeAndNil(oPng);
       FreeAndNil(oQR);
+    end;
+  end;
+end;
+
+procedure SustituirQRVerifactuEnReport(Component: TfrxReportComponent);
+var
+  oPic:     TfrxPictureView;
+  oDataSet: TDataSet;
+  aPng:     TBytes;
+  oPng:     TPngImage;
+  oStream:  TBytesStream;
+  sUrl:     string;
+begin
+  if (Component is TfrxPictureView) and
+     SameText(Component.Name, 'qrverifactu') then
+  begin
+    oPic := TfrxPictureView(Component);
+    sUrl := '';
+    oDataSet := ObtenerDataSetDeBandaPadre(oPic);
+    if VerifactuActivo and (oDataSet <> nil) and
+       (oDataSet.FindField('NIF_EMPRESA_FAC') <> nil) and
+       (oDataSet.FindField('SERIE_FAC') <> nil) and
+       (oDataSet.FindField('NUMERO_FAC') <> nil) and
+       (oDataSet.FindField('FECHA_FAC') <> nil) and
+       (oDataSet.FindField('TOTAL_LIQUIDO_FAC') <> nil) and
+       (Trim(oDataSet.FieldByName('NUMERO_FAC').AsString) <> '') then
+      sUrl := ConstruirUrlQR(
+                oDataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
+                oDataSet.FieldByName('SERIE_FAC').AsString,
+                oDataSet.FieldByName('NUMERO_FAC').AsString,
+                oDataSet.FieldByName('FECHA_FAC').AsDateTime,
+                oDataSet.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
+    if sUrl = '' then
+      oPic.Picture.Assign(nil)
+    else
+    begin
+      aPng := GenerarQRPngVerifactu(sUrl);
+      oPng := TPngImage.Create;
+      oStream := TBytesStream.Create(aPng);
+      try
+        oPng.LoadFromStream(oStream);
+        oPic.Picture.Assign(oPng);
+      finally
+        FreeAndNil(oStream);
+        FreeAndNil(oPng);
+      end;
+    end;
+  end;
+end;
+
+procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
+var
+  i:      Integer;
+  oPage:  TfrxReportPage;
+  oPic:   TfrxPictureView;
+  dLado:  Extended;
+begin
+  if (AReport <> nil) and (AReport.FindObject('qrverifactu') = nil) then
+  begin
+    // Primera página de informe (Pages[0] suele ser la de datos)
+    oPage := nil;
+    for i := 0 to AReport.PagesCount - 1 do
+    begin
+      if (oPage = nil) and (AReport.Pages[i] is TfrxReportPage) then
+        oPage := TfrxReportPage(AReport.Pages[i]);
+    end;
+    if oPage <> nil then
+    begin
+      // 30 mm (mínimo AEAT 30x30) pegado al margen superior derecho.
+      // El usuario puede recolocarlo en el diseñador: al guardar el
+      // formato con el objeto, esta inyección deja de actuar.
+      // fr01cm = 1 mm en píxeles del informe.
+      dLado := 30 * fr01cm;
+      oPic := TfrxPictureView.Create(oPage);
+      oPic.Name    := 'qrverifactu';
+      oPic.SetBounds(oPage.Width - dLado, 0, dLado, dLado);
+      oPic.Center  := True;
+      oPic.KeepAspectRatio := True;
     end;
   end;
 end;

@@ -231,6 +231,12 @@ type
 /// imagen se limpia (queda en blanco).
 procedure EngancharFotosEnReport(Report: TfrxReport);
 
+/// Localiza la banda padre de un componente del informe y devuelve su
+/// TDataSet (con fallback al primer dataset del report). Tambien la usa
+/// inLibVerifactu para resolver la factura del registro activo al
+/// sustituir el QR tributario ('qrverifactu').
+function ObtenerDataSetDeBandaPadre(AObj: TfrxComponent): TDataSet;
+
 /// Genera la lista de claves candidatas para `CODIGO_UNIDAD_FOT` a partir
 /// de un `CODIGO_UNIDAD_SKU`, en orden de mas a menos especifica:
 ///   ['BLUS-SEDA/BLANCO/L', 'BLUS-SEDA/BLANCO']

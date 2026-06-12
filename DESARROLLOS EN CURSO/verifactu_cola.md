@@ -214,10 +214,22 @@ directamente como factura **NORMAL** en lugar de simplificada:
 - **No imprime ticket térmico**: abre el visor FastReport de facturas
   (`inMtoModalImpFac`) en A4 para imprimir o exportar a PDF.
 
-Pendiente de formato: añadir el QR tributario a la plantilla A4 de
-FastReport (la URL de cotejo está en
-`fza_facturas_consolidaciones.VERIFACTU_URL_FACCON` y el PNG en
-`QRCODE_PNG_FACCON` una vez enviada).
+### QR tributario en los formatos FastReport ('qrverifactu')
+
+Cualquier formato impreso por el framework (`inMtoModalGenImp`) rellena
+automáticamente el `TfrxPictureView` llamado **`qrverifactu`** con el QR
+de la factura del registro activo de su banda (se genera en local con
+`ConstruirUrlQR` + `GenerarQRPngVerifactu`; con Verifactu inactivo o sin
+datos, la imagen queda vacía). El enganche encadena la sustitución de
+fotos existente con la del QR en `TfrmPrint.ReportBeforePrintConQR`.
+
+En los **dos formatos de factura** (normal y simplificada, impresos por
+`inMtoFacturasBase`/caja F8 vía `TfrmPrintFac`) el hueco se **inyecta
+solo** al cargar el formato si no existe: 30×30 mm pegado al margen
+superior derecho de la primera página. Para recolocarlo, basta abrir el
+formato en el diseñador, mover/crear un PictureView llamado
+`qrverifactu` y guardar: la inyección detecta que ya existe y respeta
+la posición del diseñador.
 
 Resumen de caminos: registro mal comunicado → **Subsanar**; precios o
 conceptos mal → **Rectificar** (o devolución en caja); cliente pide
