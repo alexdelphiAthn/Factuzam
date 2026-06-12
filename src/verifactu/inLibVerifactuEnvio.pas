@@ -98,9 +98,13 @@ type
     NombreEmisor:    string;
     FechaFac:        TDateTime;
     FechaExpedicion: string;  // dd-mm-yyyy
-    TipoFactura:     string;  // F1 / F2 / R5
+    TipoFactura:     string;  // F1 / F2 / R1 / R5
     NifCliente:      string;
     NombreCliente:   string;
+    // Factura original rectificada (solo en R1/R5)
+    RectSerie:       string;
+    RectNumero:      string;
+    RectFecha:       string;  // dd-mm-yyyy
     CuotaTotal:      Currency;
     ImporteTotal:    Currency;
     SerialCert:      string;
@@ -285,7 +289,10 @@ procedure CargarDatosFactura(AConn: TUniConnection;
                              const ASerie, ANumero: string;
                              out ADatos: TDatosFacturaRegistro);
 var
-  Qry: TUniQuery;
+  Qry:         TUniQuery;
+  sTipoFac:    string;
+  sSerieOrig:  string;
+  sNumeroOrig: string;
 begin
   Qry := TUniQuery.Create(nil);
   try
@@ -303,6 +310,7 @@ begin
       '        f.TOTAL_IVAS_FAC, f.PORCENTAJE_RES_FAC, f.TOTAL_RES_FAC, ' +
       '        f.PORCENTAJE_IVAE_FAC, f.TOTAL_BASEI_IVAE_FAC, ' +
       '        f.TOTAL_IVAE_FAC, ' +
+      '        f.SERIE_FAC_ABONO_FAC, f.NUMERO_FAC_ABONO_FAC, ' +
       '        e.CODIGO_CERTIFICADO_EMP, e.TITULAR_CERTIFICADO_EMP ' +
       ' FROM fza_facturas f ' +
       ' LEFT JOIN fza_empresas e ' +
@@ -322,8 +330,15 @@ begin
     ADatos.FechaFac        := Qry.FieldByName('FECHA_FAC').AsDateTime;
     ADatos.FechaExpedicion :=
       FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
-    ADatos.TipoFactura :=
-      TipoFacturaVerifactu(Qry.FieldByName('TIPO_FAC').AsString);
+    sTipoFac    := Qry.FieldByName('TIPO_FAC').AsString;
+    sSerieOrig  :=
+      Trim(Qry.FieldByName('SERIE_FAC_ABONO_FAC').AsString);
+    sNumeroOrig :=
+      Trim(Qry.FieldByName('NUMERO_FAC_ABONO_FAC').AsString);
+    ADatos.TipoFactura := TipoFacturaVerifactu(sTipoFac);
+    ADatos.RectSerie   := '';
+    ADatos.RectNumero  := '';
+    ADatos.RectFecha   := '';
     ADatos.NifCliente :=
       NormalizarNifVerifactu(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
     ADatos.NombreCliente :=
@@ -375,6 +390,33 @@ begin
     ADatos.Bandas[3].PorcentajeRe := 0;
     ADatos.Bandas[3].CuotaRe      := 0;
     ADatos.Bandas[3].EsExenta     := True;
+    // Rectificativas: la factura original (enlazada en las columnas
+    // ABONO) decide R1 (completa) o R5 (simplificada) y aporta el
+    // bloque FacturasRectificadas del registro
+    if SameText(sTipoFac, 'RECTIFICATIVA') and (sNumeroOrig <> '') then
+    begin
+      Qry.Close;
+      Qry.SQL.Text :=
+        ' SELECT TIPO_FAC, ' +
+        '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+        ' FROM fza_facturas ' +
+        ' WHERE SERIE_FAC  = :SERIE ' +
+        '   AND NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('SERIE').AsString  := sSerieOrig;
+      Qry.ParamByName('NUMERO').AsString := sNumeroOrig;
+      Qry.Open;
+      if not Qry.IsEmpty then
+      begin
+        if SameText(Qry.FieldByName('TIPO_FAC').AsString,
+                    'SIMPLIFICADA') then
+          ADatos.TipoFactura := 'R5'
+        else
+          ADatos.TipoFactura := 'R1';
+        ADatos.RectSerie  := sSerieOrig;
+        ADatos.RectNumero := sNumeroOrig;
+        ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
+      end;
+    end;
   finally
     FreeAndNil(Qry);
   end;
@@ -565,6 +607,7 @@ var
   sImporte:       string;
   sSubsanacion:   string;
   sRectificativa: string;
+  sRectificadas:  string;
   sDestinatarios: string;
   sDescripcion:   string;
 begin
@@ -589,18 +632,35 @@ begin
     sSubsanacion := '<sum1:Subsanacion>S</sum1:Subsanacion>'
   else
     sSubsanacion := '';
-  if ADatos.TipoFactura = 'R5' then
+  if Copy(ADatos.TipoFactura, 1, 1) = 'R' then
     sRectificativa :=
       '<sum1:TipoRectificativa>I</sum1:TipoRectificativa>'
   else
     sRectificativa := '';
-  // Las completas (F1) exigen identificar al destinatario
-  if (ADatos.TipoFactura = 'F1') and
+  // Referencia a la factura original rectificada (si se conoce)
+  if (Copy(ADatos.TipoFactura, 1, 1) = 'R') and
+     (ADatos.RectNumero <> '') then
+    sRectificadas := '<sum1:FacturasRectificadas>' +
+      '<sum1:IDFacturaRectificada>' +
+      '<sum1:IDEmisorFactura>' + EscaparXml(ADatos.NifEmisor) +
+      '</sum1:IDEmisorFactura>' +
+      '<sum1:NumSerieFactura>' +
+      EscaparXml(ComponerNumSerieFactura(ADatos.RectSerie,
+                                         ADatos.RectNumero)) +
+      '</sum1:NumSerieFactura>' +
+      '<sum1:FechaExpedicionFactura>' + ADatos.RectFecha +
+      '</sum1:FechaExpedicionFactura>' +
+      '</sum1:IDFacturaRectificada></sum1:FacturasRectificadas>'
+  else
+    sRectificadas := '';
+  // Las completas (F1) y sus rectificativas (R1) exigen identificar
+  // al destinatario
+  if MatchText(ADatos.TipoFactura, ['F1', 'R1']) and
      (Length(ADatos.NifCliente) <> 9) then
-    raise Exception.Create('La factura completa (F1) ' + ASerie + '\' +
-      ANumero + ' requiere un NIF de cliente válido y tiene "' +
-      ADatos.NifCliente + '"');
-  if ADatos.TipoFactura = 'F1' then
+    raise Exception.Create('La factura ' + ADatos.TipoFactura + ' ' +
+      ASerie + '\' + ANumero + ' requiere un NIF de cliente válido y ' +
+      'tiene "' + ADatos.NifCliente + '"');
+  if MatchText(ADatos.TipoFactura, ['F1', 'R1']) then
     sDestinatarios := '<sum1:Destinatarios><sum1:IDDestinatario>' +
       '<sum1:NombreRazon>' + EscaparXml(ADatos.NombreCliente) +
       '</sum1:NombreRazon>' +
@@ -624,6 +684,7 @@ begin
     sSubsanacion +
     '<sum1:TipoFactura>' + ADatos.TipoFactura + '</sum1:TipoFactura>' +
     sRectificativa +
+    sRectificadas +
     '<sum1:DescripcionOperacion>' + EscaparXml(sDescripcion) +
     '</sum1:DescripcionOperacion>' +
     sDestinatarios +

@@ -161,6 +161,25 @@ SELECT del listado se recompone en `CrearTablaPrincipal` con un
 subselect a `fza_verifactu_cola`, así que no hay que tocar vistas ni
 perfiles.
 
+### Rectificativas (botón Rectificar → Abonar)
+
+El botón **Rectificar** de Facturas (modal Abonar/Duplicar, que ya
+existía) queda integrado con Verifactu: al crear el abono con
+`PRC_CREAR_FACTURA_ABONO`, `TVerifactuCola.EncolarRectificativa` marca
+la factura nueva como `TIPO_FAC='RECTIFICATIVA'`, guarda en sus
+columnas `SERIE/NUMERO_FAC_ABONO_FAC` la factura **original** que
+rectifica y la encola como alta. El registro sale como **R5** si la
+original era simplificada o **R1** si era completa (con destinatario),
+`TipoRectificativa=I` (por diferencias, importes en negativo) y el
+bloque `FacturasRectificadas` apuntando a la original.
+
+Requiere ejecutar `verifactu_rectificativas.sql` (ensancha las columnas
+de enlace de varchar(8) a varchar(20)).
+
+Es el camino correcto cuando cambian precios o conceptos de una factura
+ya emitida: rectificativa (o devolución en caja); la subsanación queda
+para corregir el registro comunicado sin tocar la factura.
+
 ### Reintentos, duplicados y reproceso manual
 
 - Si la AEAT **acepta** pero la persistencia local falla (caída de BBDD

@@ -78,6 +78,7 @@ uses
 
   inLibUser,
   inLibtb,
+  inLibVerifactuCola,
   inLibGlobalVar;
 
 {$R *.dfm}
@@ -122,6 +123,12 @@ begin
              edtSerieFacAbono.Text :=
                                    ParamByName('pidseriefacturaabono').AsString;
              edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
+             // Rectificativa Verifactu: marcar tipo, enlazar con la
+             // original y encolar el registro R1/R5
+             TVerifactuCola.EncolarRectificativa(
+               inLibGlobalVar.oConn,
+               edtSerieOrigen.Text, edtNumFacOrigen.Text,
+               edtSerieFacAbono.Text, edtNumFacAbono.Text);
              unqryTablaG.Refresh;
           end;
         end;

@@ -29,6 +29,13 @@ type
     class procedure EncolarFactura(AQryTrx: TUniQuery;
                                    const ASerie, ANumero: string;
                                    const ATipoOperacion: string = 'ALTA');
+    // Marca una factura recién abonada como RECTIFICATIVA, la enlaza con
+    // la original (columnas ABONO) y la encola en Verifactu si está
+    // activo. La llama el modal de Rectificar de Facturas.
+    class procedure EncolarRectificativa(AConn: TUniConnection;
+                                         const ASerieOriginal,
+                                         ANumeroOriginal,
+                                         ASerieRect, ANumeroRect: string);
     // Arranque tras el logon y parada al cerrar (ver inMtoPrincipal)
     class procedure IniciarHilo;
     class procedure DetenerHilo;
@@ -109,6 +116,48 @@ begin
   AQryTrx.ParamByName('TIPOOP').AsString  := ATipoOperacion;
   AQryTrx.ParamByName('USUARIO').AsString := oUser;
   AQryTrx.Execute;
+end;
+
+class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;
+                                                    const ASerieOriginal,
+                                                    ANumeroOriginal,
+                                                    ASerieRect,
+                                                    ANumeroRect: string);
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    // La rectificativa guarda en las columnas ABONO la factura original
+    // que rectifica: de ahí sale el bloque FacturasRectificadas del
+    // registro R1/R5
+    Qry.SQL.Text :=
+      ' UPDATE fza_facturas ' +
+      ' SET TIPO_FAC = ''RECTIFICATIVA'', ' +
+      '     FASE_FAC = ''BORRADOR'', ' +
+      '     SERIE_FAC_ABONO_FAC  = :SERIEORIG, ' +
+      '     NUMERO_FAC_ABONO_FAC = :NUMEROORIG, ' +
+      '     INSTANTE_MODIF = NOW(), ' +
+      '     USUARIO_MODIF  = :USUARIO ' +
+      ' WHERE SERIE_FAC  = :SERIE ' +
+      '   AND NUMERO_FAC = :NUMERO';
+    Qry.ParamByName('SERIEORIG').AsString  := ASerieOriginal;
+    Qry.ParamByName('NUMEROORIG').AsString := ANumeroOriginal;
+    Qry.ParamByName('USUARIO').AsString    := oUser;
+    Qry.ParamByName('SERIE').AsString      := ASerieRect;
+    Qry.ParamByName('NUMERO').AsString     := ANumeroRect;
+    Qry.Execute;
+    if VerifactuActivo then
+    begin
+      EncolarFactura(Qry, ASerieRect, ANumeroRect);
+      RegistrarEventoVerifactu(AConn, cEventoVerifactuEncolado,
+        'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
+        ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
 end;
 
 class procedure TVerifactuCola.IniciarHilo;

@@ -365,3 +365,16 @@ simplificadas) tras encolar/enviar alguna factura.
 **I5 — Relanzar operación.** Repetir la subsanación de I4.
 - No se duplica la fila: la misma fila `SUBSANACION` vuelve a
   `PENDIENTE` con intentos a 0 y se reenvía.
+
+**I6 — Rectificativa.** (Tras ejecutar `verifactu_rectificativas.sql`.)
+Seleccionar una factura simplificada consolidada → botón Rectificar →
+marcar «Abonar» → Generar. Esperar un ciclo del hilo.
+- Se crea la factura de abono (líneas en negativo) con
+  `TIPO_FAC='RECTIFICATIVA'` y sus columnas ABONO apuntando a la
+  original; aparece en la cola como `ALTA` y pasa a `ENVIADA`.
+- En `PETICION_COMPLETA_FACCON` de la rectificativa: `TipoFactura=R5`
+  (R1 con destinatario si la original era completa),
+  `TipoRectificativa=I` y bloque `FacturasRectificadas` con la
+  original; `ImporteTotal` negativo.
+- La rectificativa queda consolidada (`FASE_FAC='ONLINE'`) con su QR;
+  la original no cambia.
