@@ -181,8 +181,9 @@ begin
     oPng    := nil;
     oStream := nil;
     try
-      // DelphiZXIngQRCode genera con corrección de errores M, la que
-      // exige la AEAT para el QR tributario
+      // DelphiZXIngQRCode genera en nivel L (fijo en la librería). El
+      // QR del ticket impreso sí va en nivel M: lo genera la propia
+      // impresora con el comando nativo ESC/POS (ImprimirQRNativo, 49).
       oQR.Data      := AUrl;
       oQR.Encoding  := qrUTF8NoBOM;
       oQR.QuietZone := 4;
