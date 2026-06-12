@@ -230,6 +230,8 @@ type
     procedure BuscarClientes;
     function HayLineasConDeposito: Boolean;
     procedure RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
+    // Vista previa A4 (FastReport) de la factura completa creada con F8
+    procedure ImprimirFacturaA4(const ASerie, ANumero: string);
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
     procedure DsLineasDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoStock;
@@ -320,6 +322,7 @@ uses
   inLibUser,
   inLibLog,
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
+  UniDataFacturas, inMtoModalImpFac,
   inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
@@ -2931,6 +2934,8 @@ begin
     frmFaseCobro.FFecha := FFecha;
     frmFaseCobro.FCodigoCliente :=
            DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
+    frmFaseCobro.FNifCliente :=
+           DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString;
     if frmFaseCobro.ShowModal = mrOk then
     begin
        if frmFaseCobro.DatosCobro.ImporteDescuentoGlobal > 0 then
@@ -2940,14 +2945,27 @@ begin
                                 frmFaseCobro.DatosCobro.ImporteDescuentoGlobal);
          ObjTotales.ProcesarFacturaCompleta;
        end;
+       // Factura completa (F8): serie y fecha del modal; la venta se
+       // graba como NORMAL en lugar de SIMPLIFICADA
+       var sSerieDoc := frmFaseCobro.cbbSERIE_FAC.Text;
+       var sTipoFactura := 'SIMPLIFICADA';
+       var dtFechaFactura: TDateTime := 0;
+       if frmFaseCobro.TipoImpresion = tiFactura then
+       begin
+         sSerieDoc      := frmFaseCobro.FSerieFactura;
+         sTipoFactura   := 'NORMAL';
+         dtFechaFactura := frmFaseCobro.FFechaFactura;
+       end;
        if DatosCaja.GrabarFacturaSimplificada(FCodigoEmpresa,
                                               FCodigoAlmacen,
                                               FCodigoCaja,
-                                              frmFaseCobro.cbbSERIE_FAC.Text,
+                                              sSerieDoc,
                                               frmFaseCobro.DatosCobro,
-                                              frmFaseCobro.cbbSERIE_FAC.Text,
+                                              sSerieDoc,
                                               NumeroGenerado,
-                                              CodigoValeGenerado) then
+                                              CodigoValeGenerado,
+                                              sTipoFactura,
+                                              dtFechaFactura) then
        begin
          case frmFaseCobro.TipoImpresion of
            tiConTicket: ImprimirT(FCodigoEmpresa,
@@ -2956,6 +2974,12 @@ begin
                                   NumeroGenerado,
                                   frmFaseCobro.DatosCobro,
                                   oNomImpresoraCaja);
+           tiFactura:
+             // Sin ticket térmico: vista previa A4 en FastReport para
+             // imprimir/exportar
+             ImprimirFacturaA4(
+               DatosCaja.cdsCabecera.FieldByName('SERIE_FAC').AsString,
+               DatosCaja.cdsCabecera.FieldByName('NUMERO_FAC').AsString);
            tiTicketRegalo:
              ;
            tiSinTicket:
@@ -2976,6 +3000,27 @@ begin
     if Assigned(frmFaseCobro) then
       FreeAndNil(frmFaseCobro);
     FreeAndNil(ObjTotales);
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.ImprimirFacturaA4(const ASerie, ANumero: string);
+var
+  dm:   TdmFacturas;
+  form: TfrmPrintFac;
+begin
+  // Mismo visor de formatos FastReport que usa el Mto de Facturas; el
+  // data module se crea al vuelo solo para las queries de impresión
+  dm   := TdmFacturas.Create(Self);
+  form := nil;
+  try
+    form := TfrmPrintFac.Create(Application);
+    form.edtSerie.Text  := ASerie;
+    form.edtNroFac.Text := ANumero;
+    form.dmFac := dm;
+    form.ShowModal;
+  finally
+    FreeAndNil(form);
+    FreeAndNil(dm);
   end;
 end;
 

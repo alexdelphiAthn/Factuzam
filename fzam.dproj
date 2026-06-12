@@ -612,6 +612,9 @@
         <DCCReference Include="src\Modals\inMtoModalFacturarTicket.pas">
             <Form>frmModalFacturarTicket</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalSerieFechaFactura.pas">
+            <Form>frmModalSerieFechaFactura</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibData.pas"/>
         <DCCReference Include="src\Lib\inLibAppParam.pas"/>
         <DCCReference Include="src\Lib\inLibUnidadesMedida.pas"/>

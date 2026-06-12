@@ -392,3 +392,26 @@ ticket) → Generar. Esperar un ciclo.
   nueva queda consolidada con su QR.
 - Con la factura nueva seleccionada, los botones Anular/Subsanar operan
   sobre ella con normalidad.
+
+**I8 — Factura desde caja (F8).** En caja, con cliente CON NIF asignado
+a la operación, cobrar con el botón **Factura** (o F8) → elegir serie
+(viene la del almacén) y fecha (hoy) → Aceptar.
+- No se imprime ticket: se abre el visor FastReport A4 de facturas para
+  imprimir/exportar.
+- La venta queda grabada como `TIPO_FAC='NORMAL'` con la serie y fecha
+  elegidas; stock, operación de caja y pagos como en una venta normal.
+- Se encola y el registro sale como `F1` con destinatario; queda
+  consolidada con su QR.
+- Sin cliente (o sin NIF), F8 avisa y no deja continuar; el resto de
+  botones de cobro siguen funcionando como siempre.
+
+**I9 — QR en el A4.** Con Verifactu activo, imprimir una factura (F8 de
+caja o botón Imprimir de Facturas) con cada uno de los dos formatos
+(normal y simplificada).
+- La vista previa muestra el QR tributario (30×30 mm) arriba a la
+  derecha aunque el formato no lo tuviera diseñado; escaneado coincide
+  con la URL de cotejo de la factura del registro.
+- En una impresión por rango, cada factura sale con SU QR.
+- Recolocar en el diseñador un PictureView llamado `qrverifactu` y
+  guardar el formato → la impresión respeta la nueva posición.
+- Con Verifactu desactivado, el hueco sale vacío (sin QR de relleno).
