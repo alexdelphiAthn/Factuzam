@@ -26,7 +26,8 @@ este cubre el código Pascal / Delphi que lo consume.
    un panel): los prefijos de control (`btn`, `lbl`, `txt`...) indican el
    tipo VCL, no el tipo lógico. Para variables locales sí se usa prefijo
    corto de tipo (`s`, `i`, `b`, `o`).
-
+7. **Todos los dfm se guardan como utf8 con BOM**, y también los pas y dpr.
+8. **Acentos son nativos áéñ y no como ansi**.
 ---
 
 ## 2. Estructura de directorios
