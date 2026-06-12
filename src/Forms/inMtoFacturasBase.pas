@@ -57,9 +57,6 @@ uses
 type
   TfrmMtoFacturasBase = class(TfrmMtoGen)
     pnlVerifactu: TPanel;
-    btnVerifactuAnular: TcxButton;
-    btnVerifactuFacturar: TcxButton;
-    btnVolverBorrador: TcxButton;
     cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn;
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
@@ -383,10 +380,6 @@ type
     lbl: TLabel;
     lblFECHA_PROCESAMIENTO: TLabel;
     lblESTADO: TLabel;
-    btnReconsolidar: TSpeedButton;
-    btnConsultarEstado: TSpeedButton;
-    btnCancelarFactura: TSpeedButton;
-    btnSubsanacion: TSpeedButton;
     spQUEUE_ID: TcxDBSpinEdit;
     cxdbmRESPUESTA_COMPLETA: TcxDBMemo;
     cxdbmQRCODE_BASE64: TcxDBMemo;
@@ -418,6 +411,10 @@ type
     chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox;
     chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
     btnGenerarRecibos2: TcxButton;
+    cxButton1: TcxButton;
+    btnVerifactuAnular: TcxButton;
+    btnVerifactuFacturar: TcxButton;
+    btnVolverBorrador: TcxButton;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
@@ -504,7 +501,6 @@ type
     procedure ctbCODIGO_PROVEEDOR_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
     procedure btnCalculatorClick(Sender: TObject);
-    procedure chkConsolidadaPropertiesChange(Sender: TObject);
     procedure cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(Sender: TObject);
     procedure ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
@@ -1654,11 +1650,6 @@ end;
 function TfrmMtoFacturasBase.AbrirListadoAlCrear: Boolean;
 begin
   Result := True;
-end;
-
-procedure TfrmMtoFacturasBase.chkConsolidadaPropertiesChange(Sender: TObject);
-begin
-  inherited;
 end;
 
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);

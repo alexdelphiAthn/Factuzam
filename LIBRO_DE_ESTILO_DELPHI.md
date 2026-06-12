@@ -27,7 +27,7 @@ este cubre el código Pascal / Delphi que lo consume.
    tipo VCL, no el tipo lógico. Para variables locales sí se usa prefijo
    corto de tipo (`s`, `i`, `b`, `o`).
 7. **Todos los dfm se guardan como utf8 con BOM**, y también los pas y dpr.
-8. **Acentos son nativos áéñ y no como ansi**.
+8. **Acentos dentro de dfm y pas se ponen nativos áéñ y no como ansi (old legacy)**.
 ---
 
 ## 2. Estructura de directorios
