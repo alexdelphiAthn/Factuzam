@@ -335,6 +335,7 @@ uses
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
   UniDataFacturas, inMtoModalImpFac, inLibVerifactuCola,
   inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
+  inLibGenerarTicketCaja,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
@@ -2999,9 +3000,26 @@ begin
                DatosCaja.cdsCabecera.FieldByName('SERIE_FAC').AsString,
                DatosCaja.cdsCabecera.FieldByName('NUMERO_FAC').AsString);
            tiTicketRegalo:
-             ;
+             begin
+               // F10: ticket regalo (sin precios ni QR) y, además, el
+               // ticket fiscal completo con precios y QR Verifactu
+               ImprimirT(FCodigoEmpresa,
+                         FCodigoAlmacen,
+                         FCodigoCaja,
+                         NumeroGenerado,
+                         frmFaseCobro.DatosCobro,
+                         oNomImpresoraCaja,
+                         True);
+               ImprimirT(FCodigoEmpresa,
+                         FCodigoAlmacen,
+                         FCodigoCaja,
+                         NumeroGenerado,
+                         frmFaseCobro.DatosCobro,
+                         oNomImpresoraCaja);
+             end;
            tiSinTicket:
-             ;
+             // F11: no imprime ticket pero abre la cajonera
+             AbrirCajonSinVenta;
          end;
          // Rectificación: enlazar original→rectificativa (fase
          // RECTIFICADA + columnas ABONO), comentario y encolado; y

@@ -27,7 +27,8 @@ uses
                             ACodigoCaja,
                             ANumeroGenerado: string;
                             DatosCobro: TDatosFaseCobro;
-                            NombreImpresora:string = 'DEBUG');
+                            NombreImpresora:string = 'DEBUG';
+                            ASinPrecios: Boolean = False);
 
 implementation
 
@@ -39,7 +40,8 @@ procedure ImprimirT(const ACodigoEmpresa,
                           ACodigoCaja,
                           ANumeroGenerado: string;
                           DatosCobro: TDatosFaseCobro;
-                          NombreImpresora:string = 'DEBUG');
+                          NombreImpresora:string = 'DEBUG';
+                          ASinPrecios: Boolean = False);
 var
   Ticket: TTicketTermico;
   Cab: TDatosCabeceraFactura;
@@ -67,9 +69,10 @@ begin
 //  NombreImpresora := 'DEBUG';
   Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);
   dLin := DatosCobro.TotalesFactura.Lineas;
-  // QR tributario Verifactu: URL de cotejo en la AEAT generada en local
+  // QR tributario Verifactu: URL de cotejo en la AEAT generada en local.
+  // El ticket regalo (sin precios) no lleva QR ni datos fiscales.
   QRTexto := '';
-  if VerifactuActivo then
+  if VerifactuActivo and (not ASinPrecios) then
     QRTexto := ConstruirUrlQR(
                  Cab.NifEmp,
                  DatosCobro.TotalesFactura.Cabecera.FieldByName(
@@ -96,10 +99,20 @@ begin
     end;
     Ticket.SaltarLineas(1);
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' +
-      DatosCobro.TotalesFactura.Cabecera.FieldByName('SERIE_FAC').AsString +
-      '\' +
-      DatosCobro.TotalesFactura.Cabecera.FieldByName('NUMERO_FAC').AsString);
+    if ASinPrecios then
+      Ticket.EscribirLinea('TICKET REGALO Nro. ' +
+        DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                                 'SERIE_FAC').AsString +
+        '\' +
+        DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                                 'NUMERO_FAC').AsString)
+    else
+      Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' +
+        DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                                 'SERIE_FAC').AsString +
+        '\' +
+        DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                                 'NUMERO_FAC').AsString);
     Ticket.Negrita(False);
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
@@ -137,9 +150,14 @@ begin
                 dLin.FieldByName('CANTIDAD_FACLIN').AsFloat, sUni)]);
         var Des := Format('%-38s', [Copy(dLin.FieldByName(
                             'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 38)]);
-        var sPre := FormatFloat('#,##0.00',
-                    dLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
-        Ticket.TextoColumnas(sArt + sUds, sPre);
+        if ASinPrecios then
+          Ticket.EscribirLinea(sArt + sUds)
+        else
+        begin
+          var sPre := FormatFloat('#,##0.00',
+                      dLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
+          Ticket.TextoColumnas(sArt + sUds, sPre);
+        end;
         Ticket.EscribirLinea(Copy(dLin.FieldByName(
                         'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 42));
 //        CantidadTotal := CantidadTotal +
@@ -151,7 +169,9 @@ begin
     end;
     Ticket.LineaSeparadora('-');
     Ticket.SaltarLineas(1);
-    // === TOTALES ===
+    // === TOTALES === (el ticket regalo no lleva importes ni pagos)
+    if not ASinPrecios then
+    begin
     Ticket.Alinear(alIzquierda);
     Ticket.Negrita(True);
     if DatosCobro.ImporteDescuentoGlobal > 0 then
@@ -212,6 +232,7 @@ begin
       Ticket.TextoColumnas(Format('TOTAL IVA(%.0f%%)', [Cab.PorcIvaR]),
                                         Format('%.2f', [Cab.TotalIvaR]) + ' €');
     end;
+    end;
     // === PIE DE TICKET ===
     Ticket.SaltarLineas(2);
     Ticket.Alinear(alCentro);
@@ -220,7 +241,8 @@ begin
     Ticket.EscribirLinea('LE ATENDIÓ: ' +
                                  DatosCobro.TotalesFactura.Cabecera.FieldByName(
                                              'CODIGO_CAJERO_FAC').AsString);
-    Ticket.EscribirLinea('IVA INCLUIDO');
+    if not ASinPrecios then
+      Ticket.EscribirLinea('IVA INCLUIDO');
     Ticket.EscribirLinea('GRACIAS POR SU VISITA');
     // Puedes cargar las líneas personalizadas aquí de tu configuración
     // Ticket.EscribirLinea(sCustomLine1);
@@ -230,8 +252,14 @@ begin
     Ticket.CortarPapel;
     Ticket.AbrirCajon;
     ComandosESC := Ticket.ObtenerComandos;
+    // Sufijo para que el regalo no pise el PDF del fiscal del mismo
+    // segundo
+    var sSufijoPDF := '';
+    if ASinPrecios then
+      sSufijoPDF := '_regalo';
     RutaFicheroPDF := GetUserFolderTickets + 'Ticket_' +
-                        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+                        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) +
+                        sSufijoPDF + '.pdf';
     FormPreview := TFormVisualizador.Create(nil);
     FormPreview.Hide;
     try
