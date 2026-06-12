@@ -59,7 +59,6 @@ type
     pnlVerifactu: TPanel;
     pnlVerifactuLista: TPanel;
     btnVerifactuAnular: TcxButton;
-    btnVerifactuSubsanar: TcxButton;
     btnVerifactuFacturar: TcxButton;
     cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn;
     pcDetail: TcxPageControl;
@@ -477,7 +476,6 @@ type
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
     procedure btnExportarLineasClick(Sender: TObject);
     procedure btnVerifactuAnularClick(Sender: TObject);
-    procedure btnVerifactuSubsanarClick(Sender: TObject);
     procedure btnVerifactuFacturarClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
@@ -1412,12 +1410,6 @@ procedure TfrmMtoFacturasBase.btnVerifactuAnularClick(Sender: TObject);
 begin
   //Anulación Verifactu (RegistroAnulacion AEAT) de la factura activa
   EncolarOperacionVerifactu('ANULACION', 'Anulación');
-end;
-
-procedure TfrmMtoFacturasBase.btnVerifactuSubsanarClick(Sender: TObject);
-begin
-  //Subsanación Verifactu (RegistroAlta con Subsanacion=S) de la activa
-  EncolarOperacionVerifactu('SUBSANACION', 'Subsanación');
 end;
 
 procedure TfrmMtoFacturasBase.btnVerifactuFacturarClick(Sender: TObject);

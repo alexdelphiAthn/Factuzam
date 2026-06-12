@@ -207,6 +207,11 @@ type
       var ADone: Boolean);
     procedure FormDestroy(Sender: TObject);
   private
+    // Modo rectificación: ticket original que se rectifica (lo carga
+    // CargarRectificacion desde Buscar operaciones)
+    FSerieRectifica:  string;
+    FNumeroRectifica: string;
+    FCaptionPrevio:   string;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure CargarDepositosF2;
@@ -304,6 +309,12 @@ type
     procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                               AFecha: TDateTime);
     function IntentarCerrar:Boolean;
+    // True si no hay venta a medias (sin líneas pendientes)
+    function OperacionVacia: Boolean;
+    // Carga la operación como rectificación del ticket indicado: líneas
+    // del original en negativo (editables), cliente del original y, al
+    // cobrar, serie rectificativa y TIPO_FAC='RECTIFICATIVA'
+    procedure CargarRectificacion(const ASerie, ANumero: string);
     property NumeroCajaActual: Integer read FNumeroCajaActual
                                        write FNumeroCajaActual;
   end;
@@ -322,7 +333,7 @@ uses
   inLibUser,
   inLibLog,
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
-  UniDataFacturas, inMtoModalImpFac,
+  UniDataFacturas, inMtoModalImpFac, inLibVerifactuCola,
   inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
@@ -2936,6 +2947,8 @@ begin
            DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
     frmFaseCobro.FNifCliente :=
            DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString;
+    if FNumeroRectifica <> '' then
+      frmFaseCobro.FRectificaA := FSerieRectifica + '\' + FNumeroRectifica;
     if frmFaseCobro.ShowModal = mrOk then
     begin
        if frmFaseCobro.DatosCobro.ImporteDescuentoGlobal > 0 then
@@ -2956,6 +2969,11 @@ begin
          sTipoFactura   := 'NORMAL';
          dtFechaFactura := frmFaseCobro.FFechaFactura;
        end;
+       // Modo rectificación: el documento sale como RECTIFICATIVA con
+       // la serie rectificativa elegida en fase de cobro
+       if (frmFaseCobro.TipoImpresion <> tiFactura) and
+          (FNumeroRectifica <> '') then
+         sTipoFactura := 'RECTIFICATIVA';
        if DatosCaja.GrabarFacturaSimplificada(FCodigoEmpresa,
                                               FCodigoAlmacen,
                                               FCodigoCaja,
@@ -2985,6 +3003,21 @@ begin
            tiSinTicket:
              ;
          end;
+         // Rectificación: enlazar original→rectificativa (fase
+         // RECTIFICADA + columnas ABONO), comentario y encolado; y
+         // salir del modo
+         if FNumeroRectifica <> '' then
+         begin
+           TVerifactuCola.EncolarRectificativa(
+             inLibGlobalVar.oConn,
+             FSerieRectifica, FNumeroRectifica,
+             DatosCaja.cdsCabecera.FieldByName('SERIE_FAC').AsString,
+             DatosCaja.cdsCabecera.FieldByName('NUMERO_FAC').AsString);
+           FSerieRectifica  := '';
+           FNumeroRectifica := '';
+           if FCaptionPrevio <> '' then
+             Caption := FCaptionPrevio;
+         end;
          if CodigoValeGenerado <> '' then
          begin
            // ImprimirTicketVale(CodigoValeGenerado,
@@ -3001,6 +3034,104 @@ begin
       FreeAndNil(frmFaseCobro);
     FreeAndNil(ObjTotales);
   end;
+end;
+
+function TfrmMtoOpeCaja.OperacionVacia: Boolean;
+begin
+  Result := True;
+  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
+  begin
+    if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+      DatosCaja.cdsLineas.Cancel;
+    Result := DatosCaja.cdsLineas.IsEmpty;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.CargarRectificacion(const ASerie, ANumero: string);
+var
+  Qry:     TUniQuery;
+  i:       Integer;
+  oCampo:  TField;
+  oDestino: TField;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := inLibGlobalVar.oConn;
+    // Cliente del ticket original a la cabecera de la operación
+    Qry.SQL.Text :=
+      ' SELECT * FROM fza_facturas ' +
+      ' WHERE SERIE_FAC  = :SERIE ' +
+      '   AND NUMERO_FAC = :NUMERO';
+    Qry.ParamByName('SERIE').AsString  := ASerie;
+    Qry.ParamByName('NUMERO').AsString := ANumero;
+    Qry.Open;
+    if Qry.IsEmpty then
+      raise Exception.Create('No se encontró la factura ' + ASerie +
+                             '\' + ANumero + ' a rectificar.');
+    if not (DatosCaja.cdsCabecera.State in [dsEdit, dsInsert]) then
+      DatosCaja.cdsCabecera.Edit;
+    for i := 0 to Qry.FieldCount - 1 do
+    begin
+      oCampo   := Qry.Fields[i];
+      oDestino := DatosCaja.cdsCabecera.FindField(oCampo.FieldName);
+      if (oDestino <> nil) and
+         (Pos('CLIENTE', oCampo.FieldName) > 0) then
+        oDestino.Value := oCampo.Value;
+    end;
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString :=
+      Qry.FieldByName('CODIGO_CLI_FAC').AsString;
+    DatosCaja.cdsCabecera.Post;
+    // Líneas del original en negativo (el cajero puede quitar o ajustar
+    // las que no se rectifican)
+    Qry.Close;
+    Qry.SQL.Text :=
+      ' SELECT * FROM fza_facturas_lineas ' +
+      ' WHERE SERIE_FAC_FACLIN  = :SERIE ' +
+      '   AND NUMERO_FAC_FACLIN = :NUMERO ' +
+      ' ORDER BY LINEA_FACLIN';
+    Qry.ParamByName('SERIE').AsString  := ASerie;
+    Qry.ParamByName('NUMERO').AsString := ANumero;
+    Qry.Open;
+    DatosCaja.cdsLineas.DisableControls;
+    try
+      while not Qry.Eof do
+      begin
+        DatosCaja.cdsLineas.Append;
+        for i := 0 to Qry.FieldCount - 1 do
+        begin
+          oCampo   := Qry.Fields[i];
+          oDestino := DatosCaja.cdsLineas.FindField(oCampo.FieldName);
+          if (oDestino <> nil) and (not oCampo.IsNull) then
+            oDestino.Value := oCampo.Value;
+        end;
+        // Importes y cantidades en negativo
+        if DatosCaja.cdsLineas.FindField('CANTIDAD_FACLIN') <> nil then
+          DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat :=
+            -Qry.FieldByName('CANTIDAD_FACLIN').AsFloat;
+        if (DatosCaja.cdsLineas.FindField('TOTAL_FACLIN') <> nil) and
+           (Qry.FindField('TOTAL_FACLIN') <> nil) then
+          DatosCaja.cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency :=
+            -Qry.FieldByName('TOTAL_FACLIN').AsCurrency;
+        if (DatosCaja.cdsLineas.FindField(
+              'TOTAL_FAC_SIVA_FACLIN') <> nil) and
+           (Qry.FindField('TOTAL_FAC_SIVA_FACLIN') <> nil) then
+          DatosCaja.cdsLineas.FieldByName(
+            'TOTAL_FAC_SIVA_FACLIN').AsCurrency :=
+            -Qry.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency;
+        DatosCaja.cdsLineas.Post;
+        Qry.Next;
+      end;
+    finally
+      DatosCaja.cdsLineas.EnableControls;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+  FSerieRectifica  := ASerie;
+  FNumeroRectifica := ANumero;
+  if FCaptionPrevio = '' then
+    FCaptionPrevio := Caption;
+  Caption := FCaptionPrevio + '  —  RECTIFICA a ' + ASerie + '\' + ANumero;
 end;
 
 procedure TfrmMtoOpeCaja.ImprimirFacturaA4(const ASerie, ANumero: string);
