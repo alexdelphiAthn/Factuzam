@@ -203,6 +203,7 @@ uses
   UniDataVerifactuLog in 'src\verifactu\UniDataVerifactuLog.pas' {dmVerifactuLog: TDataModule},
   inMtoModalVerifactuDecl in 'src\Modals\inMtoModalVerifactuDecl.pas' {frmModalVerifactuDecl},
   inMtoModalFacturarTicket in 'src\Modals\inMtoModalFacturarTicket.pas' {frmModalFacturarTicket},
+  inMtoModalSerieFechaFactura in 'src\Modals\inMtoModalSerieFechaFactura.pas' {frmModalSerieFechaFactura},
   inLibData in 'src\Lib\inLibData.pas',
   inLibAppParam in 'src\Lib\inLibAppParam.pas',
   inLibUnidadesMedida in 'src\Lib\inLibUnidadesMedida.pas',

@@ -648,9 +648,9 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Colors.Default = clBtnFace
           Colors.Normal = clBtnFace
           Colors.Hot = clBtnFace
-          Enabled = False
           LookAndFeel.Kind = lfUltraFlat
           LookAndFeel.NativeStyle = False
+          OnClick = btnFacturaClick
           TabOrder = 8
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
@@ -668,9 +668,9 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Colors.Default = clBtnFace
           Colors.Normal = clBtnFace
           Colors.Hot = clSilver
-          Enabled = False
           LookAndFeel.Kind = lfUltraFlat
           LookAndFeel.NativeStyle = False
+          OnClick = btnFacturaClick
           OptionsImage.Margin = 10
           TabOrder = 9
           Font.Charset = DEFAULT_CHARSET
@@ -1219,6 +1219,11 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       Caption = 'DepositoCliente'
       ShortCut = 118
       OnExecute = actDepositoClienteExecute
+    end
+    object actFactura: TAction
+      Caption = 'Factura'
+      ShortCut = 119
+      OnExecute = actFacturaExecute
     end
   end
   object styRepoCobro: TcxStyleRepository

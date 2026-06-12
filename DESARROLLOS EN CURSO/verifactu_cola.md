@@ -197,10 +197,33 @@ sus columnas ABONO. Se encola como alta y el registro sale como **F3**
 con el bloque `FacturasSustituidas`; el ticket NO se anula (la F3 lo
 sustituye declarativamente).
 
+### Factura completa desde caja (botón Factura / F8 en fase de cobro)
+
+En la fase de cobro, el botón **Factura (F8)** graba la venta
+directamente como factura **NORMAL** en lugar de simplificada:
+
+- Exige cliente asignado a la operación **con NIF** (si no, avisa y no
+  sigue).
+- Pide **serie** de factura completa (por defecto la ligada al almacén
+  vía `ObtenerSeriePropiaAlmacen`, si no la serie FC por defecto) y
+  **fecha** (por defecto hoy) en `inMtoModalSerieFechaFactura`.
+- La venta se graba igual que siempre (stock, operación de caja,
+  pagos, vales) pero con `TIPO_FAC='NORMAL'` y la serie/fecha
+  elegidas; se encola en Verifactu y el registro sale como **F1** con
+  destinatario.
+- **No imprime ticket térmico**: abre el visor FastReport de facturas
+  (`inMtoModalImpFac`) en A4 para imprimir o exportar a PDF.
+
+Pendiente de formato: añadir el QR tributario a la plantilla A4 de
+FastReport (la URL de cotejo está en
+`fza_facturas_consolidaciones.VERIFACTU_URL_FACCON` y el PNG en
+`QRCODE_PNG_FACCON` una vez enviada).
+
 Resumen de caminos: registro mal comunicado → **Subsanar**; precios o
 conceptos mal → **Rectificar** (o devolución en caja); cliente pide
-factura nominativa de su ticket → **Facturar ticket (F3)**; venta
-inexistente → **Anular**.
+factura nominativa de su ticket ya emitido → **Facturar ticket (F3)**;
+cliente identificado en el momento de la venta → **Factura (F8)** en
+fase de cobro; venta inexistente → **Anular**.
 
 ### Reintentos, duplicados y reproceso manual
 
