@@ -508,3 +508,16 @@ Consolidar y dejar que falle al menos un intento de envío.
 `comprobar_scripts_aplicados.sql` conectado a la BBDD de trabajo: las
 filas «>>> FALTA <<<» salen arriba con el objeto que se comprueba; el
 script correspondiente se lanza tal cual (todos son idempotentes).
+
+**J6 — Sin duplicar movimientos al regrabar una simplificada de caja.**
+Sobre una factura simplificada vendida en caja (su salida de stock es
+TIPO_DOC_MOV='VE'): Volver a Borrador, tocar algo y Grabar, y
+Consolidar de nuevo.
+- La pestaña 7_Movimientos sigue mostrando UNA salida por línea (no
+  aparece una segunda 'FC' del Mto) y el stock no baja dos veces.
+- Añadir una línea nueva en borrador y Grabar → esa línea SÍ genera su
+  movimiento 'FC' (una sola vez aunque se regrabe varias veces).
+- Si quedaron duplicados de antes del arreglo, ejecutar
+  `limpiar_movimientos_fac_duplicados.sql`: el informe previo los
+  lista, el borrado revierte el stock (acumulados incluidos) y la
+  comprobación final devuelve 0 filas.

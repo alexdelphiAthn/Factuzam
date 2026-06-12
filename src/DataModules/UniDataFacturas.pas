@@ -1522,11 +1522,13 @@ begin
 
     qExiste.Connection := inLibGlobalVar.oConn;
     // El SP guarda el documento en las columnas DOC (las REF quedan
-    // NULL): el control de duplicados debe mirar TIPO/SERIE/NUMERO_DOC
+    // NULL). Las ventas de caja ya registran su salida con
+    // TIPO_DOC_MOV='VE': si no se cuentan, un Post posterior de la
+    // simplificada duplicaría el movimiento (y el descuento de stock).
     qExiste.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = ''FC'' ' +
+      ' WHERE TIPO_DOC_MOV IN (''FC'', ''VE'') ' +
       '   AND SERIE_DOC_MOV  = :pSER ' +
       '   AND NUMERO_DOC_MOV = :pNUM ' +
       '   AND LINEA_MOV      = :pLIN';

@@ -263,8 +263,11 @@ a mano antes del `Open` en cada `AsegurarXxxAbierta`. Además:
   el SP nunca rellena: ahora filtra por `TIPO_DOC_MOV IN ('FC','VE')`
   + `SERIE/NUMERO_DOC_MOV` (caja graba 'VE', el Mto 'FC'). El control
   de duplicados de `GenerarMovimientosSalidaFactura` usaba las mismas
-  columnas REF vacías (habría duplicado movimientos al reconsolidar) y
-  se corrigió igual.
+  columnas REF vacías y, una vez corregido, seguía sin contar las
+  salidas 'VE' de caja: un Post de la cabecera de una simplificada
+  nacida en caja duplicaba la salida de stock. Ahora cuenta
+  `IN ('FC','VE')`; los duplicados ya creados se limpian (con
+  reversión de stock) con `limpiar_movimientos_fac_duplicados.sql`.
 - **6_Registro** listaba TODOS los eventos (SQL sin parámetros): ahora
   filtra por la factura activa (`NUMERO/SERIE_FAC_LOG`).
 - **5_Verifactu**: el memo de URL apuntaba a `VERIFACTU_URL` (sin
