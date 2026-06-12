@@ -273,6 +273,28 @@ begin
   RegistrarParametro('Verifactu', 'appVerifactuMaxIntentos',
     'Reintentos de envío antes de marcar ERROR definitivo',
     tpInteger, '10');
+  // Endpoints SOAP del envío de registros. Con certificado de sello
+  // electrónico usar www10/prewww10 en lugar de www1/prewww1.
+  RegistrarParametro('Verifactu', 'appVerifactuUrlEnvioPre',
+    'URL del servicio SOAP de envío en preproducción', tpString,
+    'https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/' +
+    'VerifactuSOAP');
+  RegistrarParametro('Verifactu', 'appVerifactuUrlEnvioPro',
+    'URL del servicio SOAP de envío en producción', tpString,
+    'https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/' +
+    'SistemaFacturacion/VerifactuSOAP');
+  // Bloque SistemaInformatico del registro (datos del productor del SIF)
+  RegistrarParametro('Verifactu', 'appVerifactuSifNombreRazon',
+    'Productor del software (SistemaInformatico.NombreRazon)', tpString,
+    'Alejandro Laorden Hidalgo');
+  RegistrarParametro('Verifactu', 'appVerifactuSifNif',
+    'NIF del productor del software (SistemaInformatico.NIF)', tpString,
+    '');
+  RegistrarParametro('Verifactu', 'appVerifactuIdInstalacion',
+    'Número de instalación del SIF (NumeroInstalacion)', tpString, '1');
+  RegistrarParametro('Verifactu', 'appVerifactuDescripcionOpe',
+    'Texto de DescripcionOperacion del registro de alta', tpString,
+    'Venta');
 
   // --- Log --- (los 4 switches de depuración y traza, agrupados)
   // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en

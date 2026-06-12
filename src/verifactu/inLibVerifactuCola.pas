@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibVerifactuCola                                            }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {   Fecha:       12/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -11,7 +11,7 @@
 {  Descripción:                                                                }
 {    Cola de envío Verifactu (fza_verifactu_cola): encolado de la factura      }
 {    al grabar la venta e hilo en segundo plano que procesa la cola, envía     }
-{    los registros a la AEAT y persiste la consolidación.                      }
+{    los registros a la AEAT y persiste consolidación, cadena y eventos.       }
 {******************************************************************************}
 unit inLibVerifactuCola;
 
@@ -58,9 +58,11 @@ type
     FAvisoNoDisponible: Boolean;
     function CrearConexionPropia: TUniConnection;
     procedure ProcesarPendientes;
-    procedure ProcesarFila(AIdCola: Int64;
-                           const ASerie, ANumero, ATipoOperacion: string;
-                           AIntentos: Integer);
+    // Devuelve los segundos de espera que pide la AEAT tras el envío
+    // (control de flujo TiempoEsperaEnvio); 0 si no procede esperar
+    function ProcesarFila(AIdCola: Int64;
+                          const ASerie, ANumero, ATipoOperacion: string;
+                          AIntentos: Integer): Integer;
     procedure GuardarEnvioOk(AIdCola: Int64;
                              const ASerie, ANumero, ATipoOperacion: string;
                              const AResultado: TResultadoEnvioVerifactu);
@@ -68,6 +70,7 @@ type
                                 const ASerie, ANumero, AMensaje: string;
                                 AIntentos: Integer);
     procedure EsperarCiclo;
+    procedure EsperarSegundos(ASegundos: Integer);
   protected
     procedure Execute; override;
   public
@@ -165,14 +168,24 @@ end;
 
 procedure THiloVerifactuCola.EsperarCiclo;
 var
+  iSegundos: Integer;
+begin
+  iSegundos := oAppParams.GetInt('appVerifactuSegundosCiclo', 60);
+  if iSegundos < 5 then
+    iSegundos := 5;
+  EsperarSegundos(iSegundos);
+end;
+
+procedure THiloVerifactuCola.EsperarSegundos(ASegundos: Integer);
+var
   iPasos: Integer;
   iPaso:  Integer;
 begin
-  iPasos := oAppParams.GetInt('appVerifactuSegundosCiclo', 60);
-  if iPasos < 5 then
-    iPasos := 5;
-  // Espera troceada en pasos de 100 ms para reaccionar rápido a la parada
-  iPasos := iPasos * 10;
+  // Tope de cordura y espera troceada en pasos de 100 ms para
+  // reaccionar rápido a la parada del hilo
+  if ASegundos > 300 then
+    ASegundos := 300;
+  iPasos := ASegundos * 10;
   iPaso  := 0;
   while (iPaso < iPasos) and (not Terminated) and (not oCerrandoApp) do
   begin
@@ -215,18 +228,19 @@ end;
 
 procedure THiloVerifactuCola.ProcesarPendientes;
 var
-  Qry: TUniQuery;
+  Qry:     TUniQuery;
+  iEspera: Integer;
 begin
   if FConn = nil then
     FConn := CrearConexionPropia;
   if not EnvioVerifactuDisponible then
   begin
-    // Sin cliente de envío integrado la cola se acumula en PENDIENTE.
+    // Cliente de envío desactivado: la cola se acumula en PENDIENTE.
     // Se deja constancia una sola vez por sesión.
     if not FAvisoNoDisponible then
     begin
       RegistrarEventoVerifactu(FConn, cEventoVerifactuInfo,
-        'Cola Verifactu activa sin cliente de envío AEAT integrado: ' +
+        'Cola Verifactu activa sin cliente de envío AEAT disponible: ' +
         'las facturas quedan en estado PENDIENTE');
       FAvisoNoDisponible := True;
     end;
@@ -256,11 +270,14 @@ begin
       Qry.Open;
       while (not Qry.Eof) and (not Terminated) and (not oCerrandoApp) do
       begin
-        ProcesarFila(Qry.FieldByName(fidvfcola).AsLargeInt,
-                     Qry.FieldByName(fserievfcola).AsString,
-                     Qry.FieldByName(fnumerovfcola).AsString,
-                     Qry.FieldByName(ftipoopvfcola).AsString,
-                     Qry.FieldByName(fintentosvfcola).AsInteger);
+        iEspera := ProcesarFila(Qry.FieldByName(fidvfcola).AsLargeInt,
+                                Qry.FieldByName(fserievfcola).AsString,
+                                Qry.FieldByName(fnumerovfcola).AsString,
+                                Qry.FieldByName(ftipoopvfcola).AsString,
+                                Qry.FieldByName(fintentosvfcola).AsInteger);
+        // Control de flujo de la AEAT entre envíos consecutivos
+        if iEspera > 0 then
+          EsperarSegundos(iEspera);
         Qry.Next;
       end;
     finally
@@ -269,15 +286,16 @@ begin
   end;
 end;
 
-procedure THiloVerifactuCola.ProcesarFila(AIdCola: Int64;
-                                          const ASerie, ANumero,
-                                          ATipoOperacion: string;
-                                          AIntentos: Integer);
+function THiloVerifactuCola.ProcesarFila(AIdCola: Int64;
+                                         const ASerie, ANumero,
+                                         ATipoOperacion: string;
+                                         AIntentos: Integer): Integer;
 var
   Qry:        TUniQuery;
   bReclamada: Boolean;
   oResultado: TResultadoEnvioVerifactu;
 begin
+  Result := 0;
   Qry := TUniQuery.Create(nil);
   try
     // Reclamo optimista: si otro puesto se adelantó, aquí no se procesa
@@ -298,13 +316,34 @@ begin
   end;
   if bReclamada then
   begin
-    oResultado := EnviarRegistroFactura(FConn, ASerie, ANumero,
-                                        ATipoOperacion);
-    if oResultado.Ok then
-      GuardarEnvioOk(AIdCola, ASerie, ANumero, ATipoOperacion, oResultado)
-    else
-      GuardarEnvioError(AIdCola, ASerie, ANumero,
-                        oResultado.MensajeError, AIntentos);
+    // Transacción del envío: el FOR UPDATE de fza_verifactu_cadena que
+    // toma EnviarRegistroFactura serializa el encadenamiento entre
+    // puestos hasta el commit/rollback
+    FConn.StartTransaction;
+    try
+      oResultado := EnviarRegistroFactura(FConn, ASerie, ANumero,
+                                          ATipoOperacion);
+      if oResultado.Ok then
+      begin
+        GuardarEnvioOk(AIdCola, ASerie, ANumero, ATipoOperacion,
+                       oResultado);
+        FConn.Commit;
+        Result := oResultado.EsperaSegundos;
+      end
+      else
+      begin
+        FConn.Rollback;
+        GuardarEnvioError(AIdCola, ASerie, ANumero,
+                          oResultado.MensajeError, AIntentos);
+      end;
+    except
+      on E: Exception do
+      begin
+        if FConn.InTransaction then
+          FConn.Rollback;
+        GuardarEnvioError(AIdCola, ASerie, ANumero, E.Message, AIntentos);
+      end;
+    end;
   end;
 end;
 
@@ -314,19 +353,71 @@ procedure THiloVerifactuCola.GuardarEnvioOk(AIdCola: Int64;
                                             const AResultado:
                                                   TResultadoEnvioVerifactu);
 var
-  Qry:   TUniQuery;
-  sFase: string;
+  Qry:           TUniQuery;
+  oPngStream:    TBytesStream;
+  sFase:         string;
+  sEstadoFaccon: string;
 begin
+  // Se ejecuta DENTRO de la transacción abierta por ProcesarFila
   if ATipoOperacion = 'ANULACION' then
     sFase := 'CANCELADA'
   else
     sFase := 'ONLINE';
-  FConn.StartTransaction;
+  if SameText(AResultado.EstadoRegistro, 'AceptadoConErrores') then
+    sEstadoFaccon := 'ACEPTADO_ERR'
+  else
+    sEstadoFaccon := 'PROCESADO';
   Qry := TUniQuery.Create(nil);
   try
-    try
-      Qry.Connection := FConn;
-      // Consolidación: misma estructura que rellena OdaVeriFactu
+    Qry.Connection := FConn;
+    // Avanzar la cadena de huellas del emisor (fila bloqueada con
+    // FOR UPDATE desde EnviarRegistroFactura)
+    Qry.SQL.Text :=
+      ' UPDATE fza_verifactu_cadena ' +
+      ' SET CONTADOR_VFCAD = :CONTADOR, ' +
+      '     SERIE_FAC_VFCAD  = :SERIE, ' +
+      '     NUMERO_FAC_VFCAD = :NUMERO, ' +
+      '     FECHA_FAC_VFCAD  = STR_TO_DATE(:FECHA, ''%d-%m-%Y''), ' +
+      '     HUELLA_VFCAD = :HUELLA, ' +
+      '     INSTANTE_MODIF = NOW(), ' +
+      '     USUARIO_MODIF  = :USUARIO ' +
+      ' WHERE NIF_VFCAD = :NIF';
+    Qry.ParamByName('CONTADOR').AsString := AResultado.ChainNumber;
+    Qry.ParamByName('SERIE').AsString    := ASerie;
+    Qry.ParamByName('NUMERO').AsString   := ANumero;
+    Qry.ParamByName('FECHA').AsString    := AResultado.FechaExpedicion;
+    Qry.ParamByName('HUELLA').AsString   := AResultado.ChainHash;
+    Qry.ParamByName('USUARIO').AsString  := oUser;
+    Qry.ParamByName('NIF').AsString      := AResultado.IssuerIrsId;
+    Qry.Execute;
+    if ATipoOperacion = 'ANULACION' then
+    begin
+      // La anulación actualiza la consolidación del alta (UK_FACTURA)
+      Qry.SQL.Text :=
+        ' UPDATE fza_facturas_consolidaciones ' +
+        ' SET QUEUE_ID_CANCEL_FACCON = :IDCOLA, ' +
+        '     ESTADO_FACCON = ''ANULADO'', ' +
+        '     CHAIN_NUMBER_FACCON = :CHAINNUM, ' +
+        '     CHAIN_HASH_FACCON   = :CHAINHASH, ' +
+        '     RESPUESTA_COMPLETA_FACCON = :RESPUESTA, ' +
+        '     PETICION_COMPLETA_FACCON  = :PETICION, ' +
+        '     FECHA_PROCESAMIENTO_FACCON = NOW() ' +
+        ' WHERE SERIE_FAC_FACCON  = :SERIE ' +
+        '   AND NUMERO_FAC_FACCON = :NUMERO';
+      Qry.ParamByName('IDCOLA').AsLargeInt  := AIdCola;
+      Qry.ParamByName('CHAINNUM').AsString  := AResultado.ChainNumber;
+      Qry.ParamByName('CHAINHASH').AsString := AResultado.ChainHash;
+      Qry.ParamByName('RESPUESTA').AsString :=
+        AResultado.RespuestaCompleta;
+      Qry.ParamByName('PETICION').AsString :=
+        AResultado.PeticionCompleta;
+      Qry.ParamByName('SERIE').AsString  := ASerie;
+      Qry.ParamByName('NUMERO').AsString := ANumero;
+      Qry.Execute;
+    end;
+    if (ATipoOperacion <> 'ANULACION') then
+    begin
+      // Consolidación del alta: misma estructura que usa OdaVeriFactu
       Qry.SQL.Text :=
         ' INSERT INTO fza_facturas_consolidaciones ' +
         ' (ID_FACCON, SERIE_FAC_FACCON, NUMERO_FAC_FACCON, ' +
@@ -335,20 +426,22 @@ begin
         '  ISSUER_IRS_ID_CONSOLIDACION_FACCON, ISSUED_TIME_FACCON, ' +
         '  CHAIN_NUMBER_FACCON, CHAIN_HASH_FACCON, ' +
         '  VERIFACTU_URL_FACCON, QRCODE_BASE64_FACCON, ' +
+        '  QRCODE_PNG_FACCON, ' +
         '  FECHA_PROCESAMIENTO_FACCON, ESTADO_FACCON, ' +
         '  RESPUESTA_COMPLETA_FACCON, PETICION_COMPLETA_FACCON) ' +
         ' SELECT IFNULL(MAX(ID_FACCON), 0) + 1, :SERIE, :NUMERO, ' +
-        '        NULLIF(:REQUESTID, ''''), NULLIF(:QUEUEID, 0), ' +
+        '        NULLIF(:REQUESTID, ''''), :IDCOLA, ' +
         '        NULLIF(:ISSUERID, ''''), :ISSUEDTIME, ' +
         '        NULLIF(:CHAINNUM, ''''), NULLIF(:CHAINHASH, ''''), ' +
-        '        NULLIF(:URL, ''''), NULLIF(:QRBASE64, ''''), NOW(), ' +
-        '        ''PROCESADO'', NULLIF(:RESPUESTA, ''''), ' +
+        '        NULLIF(:URL, ''''), NULLIF(:QRBASE64, ''''), ' +
+        '        :QRPNG, NOW(), ' +
+        '        :ESTADO, NULLIF(:RESPUESTA, ''''), ' +
         '        NULLIF(:PETICION, '''') ' +
         ' FROM fza_facturas_consolidaciones';
       Qry.ParamByName('SERIE').AsString     := ASerie;
       Qry.ParamByName('NUMERO').AsString    := ANumero;
       Qry.ParamByName('REQUESTID').AsString := AResultado.RequestId;
-      Qry.ParamByName('QUEUEID').AsInteger  := AResultado.QueueId;
+      Qry.ParamByName('IDCOLA').AsLargeInt  := AIdCola;
       Qry.ParamByName('ISSUERID').AsString  := AResultado.IssuerIrsId;
       Qry.ParamByName('ISSUEDTIME').DataType := ftDateTime;
       if AResultado.IssuedTime > 0 then
@@ -359,50 +452,61 @@ begin
       Qry.ParamByName('CHAINHASH').AsString := AResultado.ChainHash;
       Qry.ParamByName('URL').AsString       := AResultado.VerifactuUrl;
       Qry.ParamByName('QRBASE64').AsString  := AResultado.QRCodeBase64;
-      Qry.ParamByName('RESPUESTA').AsString := AResultado.RespuestaCompleta;
-      Qry.ParamByName('PETICION').AsString  := AResultado.PeticionCompleta;
-      Qry.Execute;
-      // Estado fiscal de la factura
-      Qry.SQL.Text :=
-        ' UPDATE fza_facturas ' +
-        ' SET ESCONSOLIDADA_FAC = ''S'', ' +
-        '     INSTANTECONSO_FAC = NOW(), ' +
-        '     FASE_FAC = :FASE, ' +
-        '     INSTANTE_MODIF = NOW(), ' +
-        '     USUARIO_MODIF  = :USUARIO ' +
-        ' WHERE SERIE_FAC  = :SERIE ' +
-        '   AND NUMERO_FAC = :NUMERO';
-      Qry.ParamByName('FASE').AsString    := sFase;
-      Qry.ParamByName('USUARIO').AsString := oUser;
-      Qry.ParamByName('SERIE').AsString   := ASerie;
-      Qry.ParamByName('NUMERO').AsString  := ANumero;
-      Qry.Execute;
-      // Cola: fila enviada
-      Qry.SQL.Text :=
-        ' UPDATE fza_verifactu_cola ' +
-        ' SET ESTADO_VFCOLA = ''ENVIADA'', ' +
-        '     INSTANTE_ENVIO_VFCOLA = NOW(), ' +
-        '     MENSAJE_ERROR_VFCOLA = NULL, ' +
-        '     INSTANTE_MODIF = NOW(), ' +
-        '     USUARIO_MODIF  = :USUARIO ' +
-        ' WHERE ID_VFCOLA = :ID';
-      Qry.ParamByName('USUARIO').AsString := oUser;
-      Qry.ParamByName('ID').AsLargeInt    := AIdCola;
-      Qry.Execute;
-      FConn.Commit;
-    except
-      on E: Exception do
+      Qry.ParamByName('QRPNG').DataType     := ftBlob;
+      if Length(AResultado.QRCodePng) > 0 then
       begin
-        FConn.Rollback;
-        raise;
-      end;
+        oPngStream := TBytesStream.Create(AResultado.QRCodePng);
+        try
+          Qry.ParamByName('QRPNG').LoadFromStream(oPngStream, ftBlob);
+        finally
+          FreeAndNil(oPngStream);
+        end;
+      end
+      else
+        Qry.ParamByName('QRPNG').Clear;
+      Qry.ParamByName('ESTADO').AsString    := sEstadoFaccon;
+      Qry.ParamByName('RESPUESTA').AsString :=
+        AResultado.RespuestaCompleta;
+      Qry.ParamByName('PETICION').AsString :=
+        AResultado.PeticionCompleta;
+      Qry.Execute;
     end;
+    // Estado fiscal de la factura
+    Qry.SQL.Text :=
+      ' UPDATE fza_facturas ' +
+      ' SET ESCONSOLIDADA_FAC = ''S'', ' +
+      '     INSTANTECONSO_FAC = NOW(), ' +
+      '     FASE_FAC = :FASE, ' +
+      '     INSTANTE_MODIF = NOW(), ' +
+      '     USUARIO_MODIF  = :USUARIO ' +
+      ' WHERE SERIE_FAC  = :SERIE ' +
+      '   AND NUMERO_FAC = :NUMERO';
+    Qry.ParamByName('FASE').AsString    := sFase;
+    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('SERIE').AsString   := ASerie;
+    Qry.ParamByName('NUMERO').AsString  := ANumero;
+    Qry.Execute;
+    // Cola: fila enviada. El mensaje informativo se conserva cuando la
+    // AEAT acepta con errores.
+    Qry.SQL.Text :=
+      ' UPDATE fza_verifactu_cola ' +
+      ' SET ESTADO_VFCOLA = ''ENVIADA'', ' +
+      '     INSTANTE_ENVIO_VFCOLA = NOW(), ' +
+      '     MENSAJE_ERROR_VFCOLA = NULLIF(:MENSAJE, ''''), ' +
+      '     INSTANTE_MODIF = NOW(), ' +
+      '     USUARIO_MODIF  = :USUARIO ' +
+      ' WHERE ID_VFCOLA = :ID';
+    Qry.ParamByName('MENSAJE').AsString := AResultado.MensajeError;
+    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('ID').AsLargeInt    := AIdCola;
+    Qry.Execute;
   finally
     FreeAndNil(Qry);
   end;
   RegistrarEventoVerifactu(FConn, cEventoVerifactuEnvioOk,
-    'Registro de facturación (' + ATipoOperacion + ') enviado a la AEAT',
-    '', ASerie, ANumero);
+    'Registro de facturación (' + ATipoOperacion + ') aceptado por la ' +
+    'AEAT (' + AResultado.EstadoRegistro + ')',
+    'CSV: ' + AResultado.RequestId, ASerie, ANumero);
 end;
 
 procedure THiloVerifactuCola.GuardarEnvioError(AIdCola: Int64;

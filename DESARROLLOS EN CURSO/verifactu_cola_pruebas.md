@@ -1,12 +1,11 @@
 # Batería de pruebas: Verifactu en caja (QR + cola + hilo)
 
-Pruebas de verificación del desarrollo descrito en `verifactu_cola.md`.
-Estado del código probado: commit `4d1b9ed` (rama `claude/practical-ride-uq8ue3`).
+Pruebas de verificación del desarrollo descrito en `verifactu_cola.md`,
+incluido el cliente de envío real a la AEAT (`inLibVerifactuEnvio`).
 
-Convención: cada caso tiene ID, pasos y resultado esperado. Los marcados
-**[POST-ODA]** solo son ejecutables cuando se integren las librerías de
-envío de OdaVeriFactu en `inLibVerifactuEnvio.pas`; el resto se puede
-pasar ya con el stub actual.
+Convención: cada caso tiene ID, pasos y resultado esperado. El bloque F
+(envío real) requiere certificado instalado y el entorno PRE de la AEAT;
+el resto se puede pasar sin salir a internet.
 
 ---
 
@@ -14,8 +13,8 @@ pasar ya con el stub actual.
 
 1. Compilar `fzam.dproj` (las 3 units nuevas están en `fzam.dpr`; no debe
    haber errores ni warnings nuevos).
-2. Ejecutar `DESARROLLOS EN CURSO/verifactu_cola.sql` en la BBDD de
-   pruebas.
+2. Ejecutar `DESARROLLOS EN CURSO/verifactu_cola.sql` y
+   `DESARROLLOS EN CURSO/verifactu_cadena.sql` en la BBDD de pruebas.
 3. Datos mínimos: empresa con NIF real de pruebas (p. ej. `B12345678`),
    serie de facturación de caja (tipo `FC`), un artículo con tarifa y
    stock, cliente contado.
@@ -24,6 +23,11 @@ pasar ya con el stub actual.
    papel.
 5. Para consultar el log de la aplicación: activar `appLogAvanzado` o
    revisar el fichero de log de `inLibLog`.
+6. Para el bloque F (envío real): certificado FNMT (nominal o de
+   representación) instalado en el almacén personal de Windows y
+   **seleccionado en la ficha de la empresa** (botón de certificados de
+   `inMtoEmpresas` → rellena `CODIGO_CERTIFICADO_EMP`), y el parámetro
+   `appVerifactuSifNif` relleno con el NIF del productor del software.
 
 ---
 
@@ -162,17 +166,18 @@ cerrarla.
 (durante la espera del primer ciclo).
 - Cierra casi al instante (la espera está troceada en pasos de 100 ms).
 
-**E3 — Aviso de cliente no integrado.** Con `appVerifactuActivo=True` y
-al menos una fila PENDIENTE, dejar la app abierta > `SegundosCiclo`.
-- ```sql
-  SELECT * FROM fza_verifactu_eventos ORDER BY ID_LOG DESC LIMIT 5;
-  ```
-  → UN evento `TIPO_EVENTO_LOG=1` «Cola Verifactu activa sin cliente de
-  envío AEAT integrado…». Las filas de la cola SIGUEN en `PENDIENTE`
-  (el stub no reclama nada).
+**E3 — Error controlado sin configuración.** Con `appVerifactuActivo=True`,
+una fila PENDIENTE y SIN certificado en la empresa ni red hacia la AEAT,
+dejar pasar un ciclo.
+- La fila pasa por `PROCESANDO` y vuelve a `PENDIENTE` con
+  `CONTADOR_INTENTOS=1`, `MENSAJE_ERROR` relleno (fallo TLS/HTTP) e
+  `INSTANTE_PROXIMO_INTENTO` a +60 s. En `fza_verifactu_eventos` hay un
+  evento tipo 4 con el detalle. La app no se cuelga durante el intento.
 
-**E4 — Aviso único por sesión.** Dejarla abierta varios ciclos más.
-- El evento NO se repite.
+**E4 — La venta no se bloquea.** Mientras el hilo está reintentando,
+seguir vendiendo en caja.
+- El cobro y el ticket no se ven afectados (el envío va en el hilo, con
+  conexión propia).
 
 **E5 — OFF en caliente.** Con la app abierta, poner
 `appVerifactuActivo=False` (guardar parámetros) y esperar 2 ciclos.
@@ -205,26 +210,35 @@ SELECT a.ID_LOG,
 
 ---
 
-## F. Envío real **[POST-ODA]**
+## F. Envío real a la AEAT (entorno PRE, con certificado)
 
-Tras integrar las librerías en `inLibVerifactuEnvio.pas`
-(`EnvioVerifactuDisponible=True`), con entorno PRE de la AEAT:
+Con la preparación del punto 0.6 hecha y `appVerifactuEntorno=PRE`:
 
 **F1 — Envío OK.** Vender con ticket y esperar un ciclo.
 - Cola: la fila pasa `PENDIENTE → PROCESANDO → ENVIADA`, con
   `INSTANTE_ENVIO_VFCOLA` relleno y `MENSAJE_ERROR` NULL.
-- `fza_facturas_consolidaciones`: fila nueva con `ID_FACCON` correlativo,
-  `ESTADO='PROCESADO'`, URL/QR/hash/peticion/respuesta rellenos.
+- `fza_facturas_consolidaciones`: fila nueva con `ID_FACCON`
+  correlativo, `ESTADO='PROCESADO'`, CSV de la AEAT en
+  `REQUEST_ID_CONSOLIDACION_FACCON`, el ID de la cola en
+  `QUEUE_ID_CONSOLIDACION_FACCON`, `CHAIN_NUMBER`/`CHAIN_HASH`, la URL
+  de cotejo, el QR en PNG y base64 (`QRCODE_PNG_FACCON` /
+  `QRCODE_BASE64_FACCON`) y los XML completos de petición y respuesta.
+- `fza_verifactu_cadena`: la fila del NIF avanza (`CONTADOR_VFCAD`+1,
+  `HUELLA_VFCAD` = `CHAIN_HASH_FACCON` de la consolidación nueva).
 - `fza_facturas`: `ESCONSOLIDADA_FAC='S'`, `INSTANTECONSO_FAC` relleno,
   `FASE_FAC='ONLINE'`.
-- `fza_verifactu_eventos`: evento tipo 3 con la serie/número.
-- La pestaña Verifactu de la ficha de factura muestra el QR y el estado.
+- `fza_verifactu_eventos`: evento tipo 3 con la serie/número y el CSV.
+- La pestaña Verifactu de la ficha de factura muestra el QR (imagen) y
+  el estado.
+- Cotejo final: escanear el QR del ticket → la sede de la AEAT (PRE)
+  encuentra la factura remitida.
 
 **F2 — Coherencia QR/registro.** Comparar el `numserie` del QR del
 ticket con el `NumSerieFactura` del XML guardado en
-`PETICION_COMPLETA_FACCON`.
-- Idénticos (ambos salen de `ComponerNumSerieFactura`). Si OdaVeriFactu
-  compone distinto, ajustar SOLO esa función y repetir C1.
+`PETICION_COMPLETA_FACCON`, y el `importe` del QR con `ImporteTotal`.
+- Idénticos (ambos salen de `ComponerNumSerieFactura` /
+  `TOTAL_LIQUIDO_FAC`). La huella del XML (`Huella`) coincide con
+  `CHAIN_HASH_FACCON`.
 
 **F3 — Error transitorio y backoff.** Cortar la red (o apuntar el
 endpoint a una URL inválida) y vender.
