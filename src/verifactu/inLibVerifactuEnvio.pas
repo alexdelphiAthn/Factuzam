@@ -749,6 +749,8 @@ var
   sEstadoRegistro: string;
   sCodigoErr:      string;
   sDescErr:        string;
+  bDuplicado:      Boolean;
+  bAceptado:       Boolean;
 begin
   Result.Ok             := False;
   Result.QueueId        := 0;
@@ -785,13 +787,29 @@ begin
   begin
     sEstadoEnvio    := ExtraerEtiqueta(sCuerpo, 'EstadoEnvio');
     sEstadoRegistro := ExtraerEtiqueta(sCuerpo, 'EstadoRegistro');
+    sCodigoErr      := ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro');
+    sDescErr        := ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro');
     Result.EsperaSegundos :=
       StrToIntDef(ExtraerEtiqueta(sCuerpo, 'TiempoEsperaEnvio'), 0);
-    if SameText(sEstadoRegistro, 'Correcto') or
-       SameText(sEstadoRegistro, 'AceptadoConErrores') then
+    // Si no viene línea de respuesta, manda el estado global del envío
+    if sEstadoRegistro = '' then
+      sEstadoRegistro := sEstadoEnvio;
+    // Registro duplicado: la AEAT ya lo tiene registrado (p.ej. un
+    // reintento tras aceptar y fallar la persistencia local). Se da
+    // por aceptado para consolidar y cerrar la fila de la cola.
+    bDuplicado := (sCodigoErr = '3000') or
+                  ContainsText(sDescErr, 'duplicado');
+    bAceptado := SameText(sEstadoEnvio, 'Correcto') or
+                 SameText(sEstadoRegistro, 'Correcto') or
+                 SameText(sEstadoRegistro, 'AceptadoConErrores') or
+                 bDuplicado;
+    if bAceptado then
     begin
-      Result.Ok              := True;
-      Result.EstadoRegistro  := sEstadoRegistro;
+      Result.Ok := True;
+      if bDuplicado then
+        Result.EstadoRegistro := 'Duplicado'
+      else
+        Result.EstadoRegistro := sEstadoRegistro;
       Result.RequestId       := ExtraerEtiqueta(sCuerpo, 'CSV');
       Result.IssuerIrsId     := oDatos.NifEmisor;
       Result.IssuedTime      := Now;
@@ -803,28 +821,33 @@ begin
         Result.VerifactuUrl := ConstruirUrlQR(oDatos.NifEmisor, ASerie,
                                               ANumero, oDatos.FechaFac,
                                               oDatos.ImporteTotal);
-        // QR de la consolidación: PNG binario y su base64 sin saltos
-        Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
-        if Length(Result.QRCodePng) > 0 then
-        begin
-          oB64 := TBase64Encoding.Create(0);
-          try
-            Result.QRCodeBase64 :=
-              oB64.EncodeBytesToString(Result.QRCodePng);
-          finally
-            FreeAndNil(oB64);
+        // QR de la consolidación (PNG y base64). Si fallara, no tumba
+        // el envío: queda constancia en el mensaje informativo.
+        try
+          Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
+          if Length(Result.QRCodePng) > 0 then
+          begin
+            oB64 := TBase64Encoding.Create(0);
+            try
+              Result.QRCodeBase64 :=
+                oB64.EncodeBytesToString(Result.QRCodePng);
+            finally
+              FreeAndNil(oB64);
+            end;
           end;
+        except
+          on E: Exception do
+            Result.MensajeError := '(QR PNG no generado: ' +
+                                   E.Message + ') ';
         end;
       end;
-      if SameText(sEstadoRegistro, 'AceptadoConErrores') then
-        Result.MensajeError := Trim('AEAT [' +
-          ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro') + '] ' +
-          ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro'));
+      if bDuplicado or
+         SameText(sEstadoRegistro, 'AceptadoConErrores') then
+        Result.MensajeError := Trim(Result.MensajeError + 'AEAT [' +
+                                    sCodigoErr + '] ' + sDescErr);
     end
     else
     begin
-      sCodigoErr := ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro');
-      sDescErr   := ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro');
       if (sCodigoErr = '') and (sDescErr = '') then
         sDescErr := 'EstadoEnvio: ' + sEstadoEnvio;
       Result.MensajeError := Trim('AEAT [' + sCodigoErr + '] ' + sDescErr);
