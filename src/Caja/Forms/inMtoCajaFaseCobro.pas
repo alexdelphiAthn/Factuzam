@@ -34,7 +34,8 @@ uses
   inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage;
 
 type
-  TTipoImpresionTicket = (tiConTicket, tiSinTicket, tiTicketRegalo);
+  TTipoImpresionTicket = (tiConTicket, tiSinTicket, tiTicketRegalo,
+                          tiFactura);
   TfrmMtoCajaFaseCobro = class(TfrmBase)
     pnlPrincipal: TPanel;
     pnlIzquierdo: TPanel;
@@ -111,6 +112,7 @@ type
     actConTicket: TAction;
     actSinPrecios: TAction;
     actDepositoCliente: TAction;
+    actFactura: TAction;
     cxImage1: TcxImage;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -142,6 +144,8 @@ type
     procedure actSinPreciosExecute(Sender: TObject);
     procedure actDepositoClienteExecute(Sender: TObject);
     procedure btnDepositoClick(Sender: TObject);
+    procedure btnFacturaClick(Sender: TObject);
+    procedure actFacturaExecute(Sender: TObject);
   private
 
     FTipoImpresion: TTipoImpresionTicket;
@@ -166,6 +170,9 @@ type
   public
     FCodigoEmpresa:String;
     FCodigoCliente: String;
+    FNifCliente: String;
+    FSerieFactura: String;
+    FFechaFactura: TDateTime;
     FCodigoAlmacen, FCodigoCaja:String;
     FFecha:TDate;
     FHayLineasDeposito: Boolean;
@@ -179,7 +186,7 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoCajaSeleccionVale, inLibCajaParam;
+uses inMtoCajaSeleccionVale, inLibCajaParam, inMtoModalSerieFechaFactura;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
@@ -239,6 +246,37 @@ procedure TfrmMtoCajaFaseCobro.btnDepositoClick(Sender: TObject);
 begin
   inherited;
   btnF7Click(Sender);
+end;
+
+procedure TfrmMtoCajaFaseCobro.btnFacturaClick(Sender: TObject);
+var
+  oDatos: TSerieFechaFacturaResult;
+begin
+  //F8 -> grabar la venta como factura completa (A4), no como ticket
+  if (Trim(FCodigoCliente) = '') or (Trim(FCodigoCliente) = '0') then
+    ShowMessage('Asigne un cliente a la operación para emitir factura.')
+  else if Trim(FNifCliente) = '' then
+    ShowMessage('El cliente no tiene NIF: complételo en su ficha para ' +
+                'poder emitir factura completa.')
+  else if ValidarYConfirmar then
+  begin
+    // Serie de factura completa (por defecto la del almacén) y fecha
+    oDatos := TfrmModalSerieFechaFactura.Ejecutar(Self, FCodigoEmpresa,
+                                                  FCodigoAlmacen);
+    if oDatos.Aceptado then
+    begin
+      FSerieFactura  := oDatos.Serie;
+      FFechaFactura  := oDatos.Fecha;
+      FTipoImpresion := tiFactura;
+      ModalResult    := mrOk;
+    end;
+  end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.actFacturaExecute(Sender: TObject);
+begin
+  //F8 -> Factura completa
+  btnFacturaClick(Sender);
 end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject);

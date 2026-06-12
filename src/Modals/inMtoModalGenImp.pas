@@ -113,6 +113,10 @@ type
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
     procedure preparar_consulta; virtual; abstract;
     procedure AfterReportLoaded; virtual;
+    // OnBeforePrint del report: encadena la sustitución de fotos
+    // (foto300/foto600/fotoReal) con la del QR tributario Verifactu
+    // ('qrverifactu') en cada iteración del informe
+    procedure ReportBeforePrintConQR(Component: TfrxReportComponent);
     procedure Consultar_Formularios(bForzarSeleccion: Boolean = False);
     // Crea en runtime un dataset auxiliar por cada guia configurada en
     // fza_informes_guias para Self.Name, enlazandolo MasterSource-style
@@ -146,7 +150,7 @@ implementation
 
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam,
-  System.Generics.Collections, System.Rtti, inLibFotos,
+  System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog,
   inLibInformesGuiasCache;
 
@@ -220,8 +224,15 @@ begin
   // Aqui ademas enganchamos el OnBeforePrint del Report para que en
   // cada iteracion FastReport refresque los TfrxPictureView llamados
   // foto300 / foto600 / fotoReal con la foto del registro activo de la
-  // banda padre (necesario en etiquetas y otros informes iterativos).
-  EngancharFotosEnReport(frxrprt1);
+  // banda padre (necesario en etiquetas y otros informes iterativos) y
+  // el llamado 'qrverifactu' con el QR tributario de la factura.
+  frxrprt1.OnBeforePrint := ReportBeforePrintConQR;
+end;
+
+procedure TfrmPrint.ReportBeforePrintConQR(Component: TfrxReportComponent);
+begin
+  oFotos.HandlerReportBeforePrint(Component);
+  SustituirQRVerifactuEnReport(Component);
 end;
 
 procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);

@@ -197,10 +197,45 @@ sus columnas ABONO. Se encola como alta y el registro sale como **F3**
 con el bloque `FacturasSustituidas`; el ticket NO se anula (la F3 lo
 sustituye declarativamente).
 
+### Factura completa desde caja (botón Factura / F8 en fase de cobro)
+
+En la fase de cobro, el botón **Factura (F8)** graba la venta
+directamente como factura **NORMAL** en lugar de simplificada:
+
+- Exige cliente asignado a la operación **con NIF** (si no, avisa y no
+  sigue).
+- Pide **serie** de factura completa (por defecto la ligada al almacén
+  vía `ObtenerSeriePropiaAlmacen`, si no la serie FC por defecto) y
+  **fecha** (por defecto hoy) en `inMtoModalSerieFechaFactura`.
+- La venta se graba igual que siempre (stock, operación de caja,
+  pagos, vales) pero con `TIPO_FAC='NORMAL'` y la serie/fecha
+  elegidas; se encola en Verifactu y el registro sale como **F1** con
+  destinatario.
+- **No imprime ticket térmico**: abre el visor FastReport de facturas
+  (`inMtoModalImpFac`) en A4 para imprimir o exportar a PDF.
+
+### QR tributario en los formatos FastReport ('qrverifactu')
+
+Cualquier formato impreso por el framework (`inMtoModalGenImp`) rellena
+automáticamente el `TfrxPictureView` llamado **`qrverifactu`** con el QR
+de la factura del registro activo de su banda (se genera en local con
+`ConstruirUrlQR` + `GenerarQRPngVerifactu`; con Verifactu inactivo o sin
+datos, la imagen queda vacía). El enganche encadena la sustitución de
+fotos existente con la del QR en `TfrmPrint.ReportBeforePrintConQR`.
+
+En los **dos formatos de factura** (normal y simplificada, impresos por
+`inMtoFacturasBase`/caja F8 vía `TfrmPrintFac`) el hueco se **inyecta
+solo** al cargar el formato si no existe: 30×30 mm pegado al margen
+superior derecho de la primera página. Para recolocarlo, basta abrir el
+formato en el diseñador, mover/crear un PictureView llamado
+`qrverifactu` y guardar: la inyección detecta que ya existe y respeta
+la posición del diseñador.
+
 Resumen de caminos: registro mal comunicado → **Subsanar**; precios o
 conceptos mal → **Rectificar** (o devolución en caja); cliente pide
-factura nominativa de su ticket → **Facturar ticket (F3)**; venta
-inexistente → **Anular**.
+factura nominativa de su ticket ya emitido → **Facturar ticket (F3)**;
+cliente identificado en el momento de la venta → **Factura (F8)** en
+fase de cobro; venta inexistente → **Anular**.
 
 ### Reintentos, duplicados y reproceso manual
 
