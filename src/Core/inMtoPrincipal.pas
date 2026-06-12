@@ -92,6 +92,10 @@ type
     mnuAtributosBasicos: TMenuItem;
     mnuCajaPagosHist: TMenuItem;
     mnuCajaValesHist: TMenuItem;
+    mnuVerifactu: TMenuItem;
+    mnuVerifactuDeclaracion: TMenuItem;
+    mnuVerifactuCola: TMenuItem;
+    mnuVerifactuLog: TMenuItem;
     mnuCajaOperacionesHist: TMenuItem;
     mnuDepositosCliente: TMenuItem;
     mnuFacturasSimplif: TMenuItem;
@@ -119,6 +123,9 @@ type
     procedure mnuCajaArqueosHistClick(Sender: TObject);
     procedure FormasdePagoCaja1Click(Sender: TObject);
     procedure mnuFacturasSimplifClick(Sender: TObject);
+    procedure mnuVerifactuDeclaracionClick(Sender: TObject);
+    procedure mnuVerifactuColaClick(Sender: TObject);
+    procedure mnuVerifactuLogClick(Sender: TObject);
     procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuBalanceAlmacenHorizontalClick(Sender: TObject);
     procedure mnuBalanceAlmacenSinTallasClick(Sender: TObject);
@@ -322,6 +329,7 @@ uses inLibUser,
   inMtoAppParam,
   inMtoCajaMenu,
   inMtoCajaParam,
+  inMtoModalVerifactuDecl,
   inLibGenerarTicketCaja,
   inMtoStockConsulta,
   inMtoModalGenFilter,
@@ -1959,6 +1967,24 @@ procedure TfrmMtoPrincipal.mnuCajaOperacionesHistClick(Sender: TObject);
 begin
   if (mnuCajaOperacionesHist.Visible) then
     ShowMto(Self, 'CajaOperacionesHist');
+end;
+
+procedure TfrmMtoPrincipal.mnuVerifactuDeclaracionClick(Sender: TObject);
+begin
+  if (mnuVerifactuDeclaracion.Visible) then
+    TfrmModalVerifactuDecl.Ejecutar(Self);
+end;
+
+procedure TfrmMtoPrincipal.mnuVerifactuColaClick(Sender: TObject);
+begin
+  if (mnuVerifactuCola.Visible) then
+    ShowMto(Self, 'VerifactuCola');
+end;
+
+procedure TfrmMtoPrincipal.mnuVerifactuLogClick(Sender: TObject);
+begin
+  if (mnuVerifactuLog.Visible) then
+    ShowMto(Self, 'VerifactuLog');
 end;
 
 procedure TfrmMtoPrincipal.mnuCajaArqueosHistClick(Sender: TObject);

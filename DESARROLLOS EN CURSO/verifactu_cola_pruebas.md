@@ -13,8 +13,9 @@ el resto se puede pasar sin salir a internet.
 
 1. Compilar `fzam.dproj` (las 3 units nuevas están en `fzam.dpr`; no debe
    haber errores ni warnings nuevos).
-2. Ejecutar `DESARROLLOS EN CURSO/verifactu_cola.sql` y
-   `DESARROLLOS EN CURSO/verifactu_cadena.sql` en la BBDD de pruebas.
+2. Ejecutar `DESARROLLOS EN CURSO/verifactu_cola.sql`,
+   `DESARROLLOS EN CURSO/verifactu_cadena.sql` y
+   `DESARROLLOS EN CURSO/verifactu_menu.sql` en la BBDD de pruebas.
 3. Datos mínimos: empresa con NIF real de pruebas (p. ej. `B12345678`),
    serie de facturación de caja (tipo `FC`), un artículo con tarifa y
    stock, cliente contado.
@@ -300,3 +301,34 @@ seguidas.
 - Sin bloqueos al salir (el hilo para en `FormClose` antes de liberar
   conexiones) y sin conexiones zombi en MariaDB
   (`SHOW PROCESSLIST;` vuelve al estado base tras cerrar).
+
+---
+
+## H. Menú Verifactu
+
+**H1 — Menú visible.** Tras ejecutar `verifactu_menu.sql` y entrar en la
+aplicación.
+- Aparece el menú principal **Verifactu** (antes de Ayuda) con tres
+  items: «Declaración Responsable», «Cola de Envíos» y «Verifactu Log».
+
+**H2 — Declaración Responsable.** Abrirla.
+- Modal de solo lectura con el texto de la declaración: nombre del
+  sistema (Factuzam), Id FZ, la versión actual (`oVersion`), el
+  productor y NIF de los parámetros, número de instalación, la
+  referencia al RD 1007/2023 y Orden HAC/1177/2024 y la fecha de
+  consulta. Aceptar/ESC la cierran.
+
+**H3 — Cola de Envíos.** Abrirla con filas en la cola.
+- Grid de solo lectura sobre `fza_verifactu_cola` ordenado por Id
+  descendente: serie/número, operación, estado, intentos, próximo
+  intento, instante de envío y mensaje de error. No deja editar celdas.
+
+**H4 — Verifactu Log.** Abrirla con eventos registrados.
+- Grid de solo lectura sobre `fza_verifactu_eventos`: fecha-hora, tipo,
+  evento, datos adicionales, serie/número, usuario, versión y los tres
+  hashes de la cadena.
+
+**H5 — Permisos.** Poner a 'N' el permiso `menu.VerifactuCola` para un
+grupo de prueba y entrar con un usuario de ese grupo.
+- El item «Cola de Envíos» desaparece del menú; el resto sigue visible.
+  Restaurar el permiso al terminar.
