@@ -57,6 +57,10 @@ uses
 type
   TfrmMtoFacturasBase = class(TfrmMtoGen)
     pnlVerifactu: TPanel;
+    pnlVerifactuLista: TPanel;
+    btnVerifactuAnular: TcxButton;
+    btnVerifactuSubsanar: TcxButton;
+    cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn;
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
     tsTotales: TcxTabSheet;
@@ -471,6 +475,8 @@ type
     procedure chkDescripcion_ampliadaPropertiesChange(Sender: TObject);
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
     procedure btnExportarLineasClick(Sender: TObject);
+    procedure btnVerifactuAnularClick(Sender: TObject);
+    procedure btnVerifactuSubsanarClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
     procedure actMovimientoExecute(Sender: TObject);
@@ -525,6 +531,10 @@ type
   private
     procedure CheckConsolidacion;
     procedure AsignarControles;
+    // Encola en fza_verifactu_cola una ANULACION o SUBSANACION de la
+    // factura seleccionada en la lista; el hilo Verifactu la envía
+    procedure EncolarOperacionVerifactu(const ATipoOperacion,
+                                        AAccion: string);
     // Carga perezosa de sub-pestañas detail. Cada pestaña se asegura de
     // que su query este abierta solo cuando el usuario la activa, evitando
     // refresh master/detail innecesario al cambiar de factura cuando la
@@ -561,6 +571,8 @@ uses
   inMtoModalImpFac,
   inMtoPrincipal,
   inLibUser,
+  inLibVerifactu,
+  inLibVerifactuCola,
   inMtoArticulos,
   inMtoEmpresas,
   inMtoClientes,
@@ -1318,22 +1330,34 @@ begin
   // una vista distinta a vi_facturas, recargamos unqryTablaG con la nueva
   // SQL.
   sVista := NombreVistaListado;
-  if not SameText(sVista, 'vi_facturas') then
+  with dmmFacturas.unqryTablaG do
   begin
-    with dmmFacturas.unqryTablaG do
-    begin
-      DisableControls;
-      try
-        Close;
-        SQL.Text := 'SELECT * FROM ' + sVista;
-        // Los descendientes que precargan con filtros propios devuelven
-        // False y abren ellos la lista (filtrada, con progreso) en
-        // ResetForm; asi evitamos el SELECT completo de la vista.
-        if AbrirListadoAlCrear then
-          Open;
-      finally
-        EnableControls;
-      end;
+    DisableControls;
+    try
+      Close;
+      // Columna Cola Verifactu: último estado en fza_verifactu_cola de
+      // cada factura (PENDIENTE/PROCESANDO/ENVIADA/ERROR; NULL si no
+      // se ha encolado nunca). Se recompone siempre el SELECT para que
+      // las tres variantes (vi_facturas/normales/simplificadas) la
+      // lleven, pisando el SQL guardado en perfiles.
+      SQL.Text :=
+        'SELECT v.*, ' +
+        '       (SELECT c.ESTADO_VFCOLA ' +
+        '          FROM fza_verifactu_cola c ' +
+        '         WHERE c.SERIE_FAC_VFCOLA  = v.SERIE_FAC ' +
+        '           AND c.NUMERO_FAC_VFCOLA = v.NUMERO_FAC ' +
+        '         ORDER BY c.ID_VFCOLA DESC ' +
+        '         LIMIT 1) AS ESTADO_VFCOLA ' +
+        ' FROM ' + sVista + ' v';
+      // Los descendientes que precargan con filtros propios devuelven
+      // False y abren ellos la lista (filtrada, con progreso) en
+      // ResetForm; asi evitamos el SELECT completo de la vista. La
+      // base (vi_facturas) tampoco abre aqui: lo hace el open asíncrono
+      // de TfrmMtoGen con overlay.
+      if AbrirListadoAlCrear and (not SameText(sVista, 'vi_facturas')) then
+        Open;
+    finally
+      EnableControls;
     end;
   end;
   CheckConsolidacion;
@@ -1342,6 +1366,55 @@ end;
 function TfrmMtoFacturasBase.NombreVistaListado: string;
 begin
   Result := 'vi_facturas';
+end;
+
+procedure TfrmMtoFacturasBase.EncolarOperacionVerifactu(
+  const ATipoOperacion, AAccion: string);
+var
+  Qry:     TUniQuery;
+  sSerie:  string;
+  sNumero: string;
+begin
+  sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+  if Trim(sNumero) = '' then
+    ShowMessage('Seleccione una factura en la lista.')
+  else if dsTablaG.DataSet.FieldByName(
+            'ESCONSOLIDADA_FAC').AsString <> 'S' then
+    ShowMessage('La factura ' + sSerie + '\' + sNumero + ' aún no está ' +
+                'consolidada en Verifactu: no se puede ' +
+                LowerCase(AAccion) + '.')
+  else if MessageDlg('¿' + AAccion + ' en Verifactu la factura ' +
+                     sSerie + '\' + sNumero + '?', mtConfirmation,
+                     [mbYes, mbNo], 0) = mrYes then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := inLibGlobalVar.oConn;
+      TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, ATipoOperacion);
+    finally
+      FreeAndNil(Qry);
+    end;
+    RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+      cEventoVerifactuEncolado,
+      AAccion + ' encolada desde Facturas', '', sSerie, sNumero);
+    ShowMessage(AAccion + ' encolada: el hilo Verifactu la enviará en ' +
+                'el próximo ciclo. Puede seguirla en la columna ' +
+                '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
+    dsTablaG.DataSet.Refresh;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.btnVerifactuAnularClick(Sender: TObject);
+begin
+  //Anulación Verifactu (RegistroAnulacion AEAT) de la factura activa
+  EncolarOperacionVerifactu('ANULACION', 'Anulación');
+end;
+
+procedure TfrmMtoFacturasBase.btnVerifactuSubsanarClick(Sender: TObject);
+begin
+  //Subsanación Verifactu (RegistroAlta con Subsanacion=S) de la activa
+  EncolarOperacionVerifactu('SUBSANACION', 'Subsanación');
 end;
 
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;

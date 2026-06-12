@@ -557,11 +557,13 @@ function ConstruirRegistroAlta(const ADatos: TDatosFacturaRegistro;
                                const ASerie, ANumero: string;
                                const ACadena: TCadenaAnterior;
                                const ASif, AFhGen: string;
+                               ASubsanacion: Boolean;
                                out AHuella: string): string;
 var
   sNumSerie:      string;
   sCuota:         string;
   sImporte:       string;
+  sSubsanacion:   string;
   sRectificativa: string;
   sDestinatarios: string;
   sDescripcion:   string;
@@ -582,6 +584,11 @@ begin
     '&ImporteTotal=' + sImporte +
     '&Huella=' + ACadena.Huella +
     '&FechaHoraHusoGenRegistro=' + AFhGen));
+  // Subsanación: reenvío de un registro ya remitido para corregirlo
+  if ASubsanacion then
+    sSubsanacion := '<sum1:Subsanacion>S</sum1:Subsanacion>'
+  else
+    sSubsanacion := '';
   if ADatos.TipoFactura = 'R5' then
     sRectificativa :=
       '<sum1:TipoRectificativa>I</sum1:TipoRectificativa>'
@@ -614,6 +621,7 @@ begin
     '</sum1:IDFactura>' +
     '<sum1:NombreRazonEmisor>' + EscaparXml(ADatos.NombreEmisor) +
     '</sum1:NombreRazonEmisor>' +
+    sSubsanacion +
     '<sum1:TipoFactura>' + ADatos.TipoFactura + '</sum1:TipoFactura>' +
     sRectificativa +
     '<sum1:DescripcionOperacion>' + EscaparXml(sDescripcion) +
@@ -770,7 +778,9 @@ begin
                                             oCadena, sSif, sFhGen, sHuella)
   else
     sRegistro := ConstruirRegistroAlta(oDatos, ASerie, ANumero,
-                                       oCadena, sSif, sFhGen, sHuella);
+                                       oCadena, sSif, sFhGen,
+                                       ATipoOperacion = 'SUBSANACION',
+                                       sHuella);
   Result.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
   EnviarHttp(UrlEnvio, Result.PeticionCompleta,
              oDatos.SerialCert, oDatos.TitularCert, iStatus, sCuerpo);
