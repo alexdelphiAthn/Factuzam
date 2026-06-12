@@ -338,11 +338,26 @@ fotos existente con la del QR en `TfrmPrint.ReportBeforePrintConQR`.
 
 En los **dos formatos de factura** (normal y simplificada, impresos por
 `inMtoFacturasBase`/caja F8 vía `TfrmPrintFac`) el hueco se **inyecta
-solo** al cargar el formato si no existe: 30×30 mm pegado al margen
-superior derecho de la primera página. Para recolocarlo, basta abrir el
-formato en el diseñador, mover/crear un PictureView llamado
-`qrverifactu` y guardar: la inyección detecta que ya existe y respeta
-la posición del diseñador.
+solo** al cargar el formato si no existe: 30×30 mm arriba a la derecha
+**dentro de la cabecera de página** (o del título de informe). No se
+inyecta suelto en la página porque esos objetos no pasan por
+`OnBeforePrint` y el QR se quedaba sin rellenar. Para recolocarlo,
+basta abrir el formato en el diseñador, mover/crear un PictureView
+llamado `qrverifactu` y guardar: la inyección detecta que ya existe y
+respeta la posición del diseñador.
+
+**Título por tipo**: el memo de título de los formatos (texto exacto
+`FACTURA`) se reescribe por registro a `FACTURA SIMPLIFICADA` /
+`FACTURA RECTIFICATIVA` según `TIPO_FAC`
+(`SustituirTituloFacturaEnReport`, encadenado en el mismo
+`OnBeforePrint`). Como `vi_facturas_print` no trae `TIPO_FAC`, la
+consulta de `TfrmPrintFac.preparar_consulta` lo añade con un JOIN a
+`fza_facturas` (sin tocar la vista).
+
+**Excel** (botón Excel de `TfrmPrintFac`, `inLibFacturaExcel`): la hoja
+lleva el mismo QR tributario incrustado arriba a la derecha (columna H,
+anclado a la cabecera) y el título también sale según el tipo
+(`FACTURA` / `FACTURA SIMPLIFICADA` / `FACTURA RECTIFICATIVA`).
 
 Resumen de caminos: registro mal comunicado → **Subsanar**; precios o
 conceptos mal → **Rectificar** (o devolución en caja); cliente pide
