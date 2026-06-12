@@ -404,3 +404,14 @@ a la operación, cobrar con el botón **Factura** (o F8) → elegir serie
   consolidada con su QR.
 - Sin cliente (o sin NIF), F8 avisa y no deja continuar; el resto de
   botones de cobro siguen funcionando como siempre.
+
+**I9 — QR en el A4.** Con Verifactu activo, imprimir una factura (F8 de
+caja o botón Imprimir de Facturas) con cada uno de los dos formatos
+(normal y simplificada).
+- La vista previa muestra el QR tributario (30×30 mm) arriba a la
+  derecha aunque el formato no lo tuviera diseñado; escaneado coincide
+  con la URL de cotejo de la factura del registro.
+- En una impresión por rango, cada factura sale con SU QR.
+- Recolocar en el diseñador un PictureView llamado `qrverifactu` y
+  guardar el formato → la impresión respeta la nueva posición.
+- Con Verifactu desactivado, el hueco sale vacío (sin QR de relleno).

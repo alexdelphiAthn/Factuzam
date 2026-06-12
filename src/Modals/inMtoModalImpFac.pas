@@ -79,7 +79,7 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam;
+uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam, inLibVerifactu;
 
 { TfrmPrintFac }
 
@@ -116,6 +116,10 @@ begin
   inherited;
   if dmFac <> nil then
     RebindReportDataSetsByDataModule(frxrprt1, dmFac);
+  // Hueco del QR tributario: si el formato (normal o simplificada) no
+  // trae el TfrxPictureView 'qrverifactu', se inyecta arriba a la
+  // derecha; el OnBeforePrint de la base lo rellena por factura
+  AsegurarQRVerifactuEnReport(frxrprt1);
 end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;
