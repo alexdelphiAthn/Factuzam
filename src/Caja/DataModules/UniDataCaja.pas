@@ -309,6 +309,8 @@ type
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
+    // ATipoFactura: 'SIMPLIFICADA' (ticket) o 'NORMAL' (factura A4 del
+    // botón F8). AFechaFactura > 0 sustituye la fecha del documento.
     function GrabarFacturaSimplificada(const AEmpresa,
                                        AAlmacen,
                                        ACaja,
@@ -316,7 +318,10 @@ type
                                      DatosCobro: TDatosFaseCobro;
                                      SerieGenerada: string;
                                      out NumeroGenerado: String;
-                                     out ValeGenerado:String): Boolean;
+                                     out ValeGenerado:String;
+                                     const ATipoFactura: string =
+                                                          'SIMPLIFICADA';
+                                     AFechaFactura: TDateTime = 0): Boolean;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
     property OnRellenarArticulo:  TRellenarArticuloEvent
@@ -1024,7 +1029,9 @@ function TdmCajaOpe.GrabarFacturaSimplificada(
                           DatosCobro:          TDatosFaseCobro;
                           SerieGenerada:   string;
                           out NumeroGenerado:  string;
-                          out ValeGenerado:    string): Boolean;
+                          out ValeGenerado:    string;
+                          const ATipoFactura: string = 'SIMPLIFICADA';
+                          AFechaFactura: TDateTime = 0): Boolean;
 var
   QryTrx:              TUniQuery;
   uspQryTrx:           TUniStoredProc;
@@ -1086,6 +1093,9 @@ begin
       raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
   end;
   Cab          := LeerCabecera(cdsCabecera);
+  // Factura completa desde F8: fecha elegida en el modal de fase cobro
+  if AFechaFactura > 0 then
+    Cab.Fecha := AFechaFactura;
   TotalFactura := DatosCobro.ImporteEntregado;
   // =======================================================================
   // 0. FILTRO DE NOVEDAD (Cero novedad = cero operaciones en BD)
@@ -1193,7 +1203,7 @@ begin
         FreeAndNil(uspQryTrx);
       end;
       InsertarCabeceraFactura(
-        QryTrx, SerieGenerada, NumFactura, Cab.Fecha, 'SIMPLIFICADA',
+        QryTrx, SerieGenerada, NumFactura, Cab.Fecha, ATipoFactura,
         'BORRADOR', AEmpresa, Cab.RazonSocialEmp, Cab.NifEmp, Cab.MovilEmp,
         Cab.EmailEmp,Cab.Direccion1Emp, Cab.Direccion2Emp, Cab.PoblacionEmp,
         Cab.ProvinciaEmp, Cab.CPostalEmp, Cab.CodigoPaisEmp, Cab.NombrePaisEmp,
