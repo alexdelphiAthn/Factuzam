@@ -3488,10 +3488,10 @@ var
   Y: Integer;
 begin
   Level := TErrorCorrectionLevel.Create;
-  // Bits ZXing del nivel de corrección: L=1, M=0, Q=3, H=2. Se genera
-  // en nivel M, el que exige la AEAT para el QR tributario (Verifactu)
-  // y el mismo con el que se imprime el QR nativo ESC/POS del ticket.
-  Level.FBits := 0;
+  // OJO: no cambiar. El port codifica los datos con las tablas del
+  // nivel L; tocar solo FBits (bits de formato: L=1, M=0, Q=3, H=2)
+  // produce QRs con cabecera y contenido incoherentes -> ilegibles.
+  Level.FBits := 1;
   Encoder := TEncoder.Create;
   QRCode := TQRCode.Create;
   try
