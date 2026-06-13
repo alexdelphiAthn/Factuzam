@@ -424,6 +424,25 @@ end;
 // ============================================================================
 
 procedure TfrmModalAddBlockBase.CargarFamilias;
+
+  // Habilita la casilla de verificacion en ANode y, recursivamente, en toda
+  // su descendencia. OptionsView.CheckGroups solo activa el mecanismo: es el
+  // CheckGroupType de cada nodo (ncgCheckGroup) el que hace que se pinte la
+  // casilla de sus hijos. Con el valor por defecto (ncgNone) no se muestra
+  // ninguna casilla y CheckState devuelve siempre cbsUnchecked, por lo que
+  // el filtro de familias nunca recogia nada. Es idempotente, asi que da
+  // igual si Count/Items recorre raices o nodos absolutos.
+  procedure HabilitarCasillas(ANode: TcxTreeListNode);
+  var
+    j: Integer;
+  begin
+    ANode.CheckGroupType := ncgCheckGroup;
+    for j := 0 to ANode.Count - 1 do
+      HabilitarCasillas(ANode.Items[j]);
+  end;
+
+var
+  i: Integer;
 begin
   FQryFamilias.Connection := FConn;
   FQryFamilias.SQL.Text :=
@@ -445,6 +464,10 @@ begin
     tlFamilias.EndUpdate;
   end;
   tlFamilias.FullExpand;
+  // Pintar la casilla en los nodos raiz (lo gobierna el Root) y en el resto.
+  tlFamilias.Root.CheckGroupType := ncgCheckGroup;
+  for i := 0 to tlFamilias.Count - 1 do
+    HabilitarCasillas(tlFamilias.Items[i]);
 end;
 
 procedure TfrmModalAddBlockBase.CargarProveedores;
