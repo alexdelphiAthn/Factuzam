@@ -129,8 +129,18 @@ destructiva y la aplicación sigue funcionando sin tocar nada tras la Fase 1.
       tocar los colores. Sin cambios.
     - Filtros de temporada de informes (`inMtoModalImpMultiFiltro`): listan los
       valores maestros de `fza_propiedades_valores`; sin duplicación. Sin cambios.
+  - **Aviso de temporada por color en `inMtoStockConsulta`** *(hecho)*: la
+    consulta de stock (Ctrl+U) lleva un **letrero** rojo bajo la cabecera que
+    "canta" cuando alguno de los colores marcados tiene temporada propia (nivel
+    COLOR) distinta a la del artículo: `«¡Ojo! Temporada distinta a la del
+    artículo (Primavera-Verano 2026): NEGRO → Otoño-Invierno 2026»`. Se calcula
+    al cargar el artículo (`CargarTemporadasColores`, comparando la temporada de
+    color `SUBSTRING_INDEX(sku,'/',2)` con la de nivel artículo) y se recompone
+    al marcar/desmarcar colores (`ActualizarLetreroTemporada`). Solo lectura, sin
+    cambios de esquema.
   - **Pendiente opcional:** columna de temporada efectiva por color en la grilla
-    de `inMtoStockConsulta` (hoy la cabecera muestra la de artículo).
+    de `inMtoStockConsulta` (hoy la cabecera muestra la de artículo; el letrero
+    ya avisa de las diferencias).
 
 ## Rollback
 

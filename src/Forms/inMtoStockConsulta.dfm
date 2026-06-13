@@ -74,6 +74,21 @@ object frmStockConsulta: TfrmStockConsulta
       ExplicitWidth = 730
       Width = 732
     end
+    object lblLetreroTemp: TcxLabel
+      Left = 0
+      Top = 222
+      Align = alBottom
+      AutoSize = False
+      Caption = ' '
+      Properties.Alignment.Horz = taCenter
+      Properties.Alignment.Vert = taVCenter
+      Properties.WordWrap = True
+      TabOrder = 4
+      Transparent = False
+      Visible = False
+      Height = 34
+      Width = 898
+    end
   end
   object pnlFiltros: TPanel
     Left = 0

@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.5.0                                                         }
+{ Version:       0.6.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -28,6 +28,10 @@
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
 {          checklist opuesto.                                                  }
 {                                                                              }
+{    v0.6: "letrero" de temporada — si un color marcado tiene temporada propia }
+{    (nivel COLOR) distinta a la del articulo, se canta en un panel rojo bajo  }
+{    la cabecera. Se recalcula al cargar el articulo y al marcar/desmarcar     }
+{    colores. Ver propiedades_por_unidad.md.                                   }
 {    v0.5: estado "Todo a la vez" en el combo + colores por estado. Cada      }
 {    estado pinta las celdas de datos con un color distintivo (azul para      }
 {    existencias, rojo para ventas, naranja para pte. recibir, etc.) y el     }
@@ -103,6 +107,7 @@ type
       btnArt        : TcxButtonEdit;
       lblDescr      : TcxLabel;
       lblInfo       : TcxLabel;
+      lblLetreroTemp: TcxLabel;
       imgFoto       : TImage;
     pnlFiltros    : TPanel;
       lblEstado     : TcxLabel;
@@ -150,6 +155,10 @@ type
     FDs         : TDataSource;
     FCodArt     : string;
     FCodSku     : string;
+    FTempArticulo : string;  // temporada a nivel articulo
+    // Colores cuya temporada propia (nivel COLOR) difiere de la del articulo.
+    // Clave = nombre del color (AV.AV), valor = su temporada de color.
+    FTempPorColor : TDictionary<string, string>;
     FColumnas   : TArray<TInfoColumna>;  // Tallas (columnas dinamicas)
     FColsDin    : TList<TcxGridDBColumn>;
     FColGrupo   : TcxGridDBColumn;       // nombre de la fila (color o alm)
@@ -176,6 +185,8 @@ type
     procedure   rbModoClick(Sender: TObject);
     procedure CargarAlmacenes;
     procedure CargarColores;
+    procedure CargarTemporadasColores;
+    procedure ActualizarLetreroTemporada;
     procedure CargarFoto;
     procedure CargarInfoCabecera;
     procedure CrearLeyenda;
@@ -323,6 +334,16 @@ begin
   FDs.DataSet := FQry;
   tvStock.DataController.DataSource := FDs;
   FColsDin := TList<TcxGridDBColumn>.Create;
+  FTempPorColor := TDictionary<string, string>.Create;
+  // Letrero de aviso de temporada distinta: oculto por defecto, rojo y en
+  // negrita para que "cante" cuando un color es de otra temporada que el
+  // articulo. El texto lo rellena ActualizarLetreroTemporada.
+  lblLetreroTemp.Transparent      := False;
+  lblLetreroTemp.Style.Color      := $003C3CD8;  // rojo (BGR)
+  lblLetreroTemp.Style.TextColor  := clWhite;
+  lblLetreroTemp.Style.Font.Style := [fsBold];
+  lblLetreroTemp.Style.Font.Color := clWhite;
+  lblLetreroTemp.Visible          := False;
   // Custom-draw para pintar el cuadradito del color basico en la celda
   // del color, via la libreria inLibAtributosPaleta (que se encarga del
   // lookup contra fza_atributos_basicos por texto/codigo y la cache).
@@ -495,6 +516,7 @@ begin
   FreeAndNil(FDs);
   FreeAndNil(FColsDin);
   FreeAndNil(FEstadosCombo);
+  FreeAndNil(FTempPorColor);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -675,6 +697,116 @@ begin
   end;
 end;
 
+// ---------------------------------------------------------------------------
+//  Temporada por color (aviso de "otra temporada")
+// ---------------------------------------------------------------------------
+// La propiedad TEMPORADA admite nivel COLOR (propiedades_por_unidad.md): una
+// misma prenda recomprada en otra temporada conserva la temporada de articulo
+// y los colores nuevos llevan la suya propia (CODIGO_UNIDAD_ARTPROP = 'ART/COLOR',
+// = SUBSTRING_INDEX(sku,'/',2)). Aqui resolvemos, por color del articulo, su
+// temporada de color y la de articulo; guardamos solo los colores cuya
+// temporada propia DIFIERE de la del articulo para "cantarlos" en el letrero.
+procedure TfrmStockConsulta.CargarTemporadasColores;
+var
+  q          : TUniQuery;
+  sColor     : string;
+  sTempColor : string;
+begin
+  FTempArticulo := '';
+  FTempPorColor.Clear;
+  if Trim(FCodArt) = '' then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    // MAX(...) para cumplir ONLY_FULL_GROUP_BY: tanto la temporada de color
+    // como la de articulo son constantes dentro de cada color (todos los SKUs
+    // de un color comparten prefijo ART/COLOR). El valor puede venir de la
+    // lista de valores (PV) o del texto libre (VALOR_LIBRE_ARTPROP).
+    q.SQL.Text :=
+      'SELECT AV.AV AS COLOR, ' +
+      '       MAX(COALESCE(PVC.PV, ' +
+      '           NULLIF(TRIM(APC.VALOR_LIBRE_ARTPROP), ''''))) AS TEMP_COLOR, ' +
+      '       MAX(COALESCE(PVA.PV, ' +
+      '           NULLIF(TRIM(APA.VALOR_LIBRE_ARTPROP), ''''))) AS TEMP_ART ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_atributos_sku SA ' +
+      '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AV ' +
+      '    ON AV.ID_AV = SA.ID_AV_SA AND AV.ID_VA_AV = ''CO'' ' +
+      '  LEFT JOIN fza_articulos_propiedades APC ' +
+      '    ON APC.CODIGO_ART_ART        = SKU.CODIGO_ART_SKU ' +
+      '   AND APC.CODIGO_PROP_ARTPROP   = ''TEMPORADA'' ' +
+      '   AND APC.CODIGO_UNIDAD_ARTPROP = SUBSTRING_INDEX(SKU.CODIGO_UNIDAD_SKU, ''/'', 2) ' +
+      '  LEFT JOIN fza_propiedades_valores PVC ON PVC.ID_PV_ARTPROP = APC.ID_PV_ARTPROP ' +
+      '  LEFT JOIN fza_articulos_propiedades APA ' +
+      '    ON APA.CODIGO_ART_ART        = SKU.CODIGO_ART_SKU ' +
+      '   AND APA.CODIGO_PROP_ARTPROP   = ''TEMPORADA'' ' +
+      '   AND APA.CODIGO_UNIDAD_ARTPROP = '''' ' +
+      '  LEFT JOIN fza_propiedades_valores PVA ON PVA.ID_PV_ARTPROP = APA.ID_PV_ARTPROP ' +
+      ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+      ' GROUP BY AV.AV';
+    q.ParamByName('art').AsString := FCodArt;
+    q.Open;
+    while not q.Eof do
+    begin
+      if Trim(q.FieldByName('TEMP_ART').AsString) <> '' then
+        FTempArticulo := q.FieldByName('TEMP_ART').AsString;
+      sColor     := q.FieldByName('COLOR').AsString;
+      sTempColor := Trim(q.FieldByName('TEMP_COLOR').AsString);
+      // Solo "canta" el color que tiene temporada propia informada y distinta
+      // de la del articulo.
+      if (sTempColor <> '') and
+         (not SameText(sTempColor, Trim(q.FieldByName('TEMP_ART').AsString))) then
+        FTempPorColor.AddOrSetValue(sColor, sTempColor);
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Recompone el letrero a partir de los colores actualmente marcados en el
+// checklist: si alguno tiene temporada propia distinta a la del articulo, lo
+// muestra; si no, oculta el letrero. Asi, al cambiar de color (marcar/desmarcar)
+// el aviso aparece o desaparece segun lo que el usuario tenga a la vista.
+procedure TfrmStockConsulta.ActualizarLetreroTemporada;
+var
+  i      : Integer;
+  sColor : string;
+  sTemp  : string;
+  sLista : string;
+begin
+  if (FTempPorColor = nil) or (lblLetreroTemp = nil) then Exit;
+  sLista := '';
+  for i := 0 to clbColores.Items.Count - 1 do
+    if clbColores.Items[i].State = cbsChecked then
+    begin
+      sColor := clbColores.Items[i].Text;
+      if FTempPorColor.TryGetValue(sColor, sTemp) then
+      begin
+        if sLista <> '' then
+          sLista := sLista + '     ';
+        sLista := sLista + sColor + ' → ' + sTemp;
+      end;
+    end;
+  if sLista = '' then
+  begin
+    lblLetreroTemp.Caption := '';
+    lblLetreroTemp.Visible := False;
+  end
+  else
+  begin
+    if Trim(FTempArticulo) <> '' then
+      lblLetreroTemp.Caption :=
+        Format('  ¡Ojo! Temporada distinta a la del artículo (%s):     %s',
+               [FTempArticulo, sLista])
+    else
+      lblLetreroTemp.Caption :=
+        Format('  ¡Ojo! Colores con temporada propia:     %s', [sLista]);
+    lblLetreroTemp.Visible := True;
+  end;
+end;
+
 function TfrmStockConsulta.ColoresSeleccionadosLista: TArray<string>;
 var
   i: Integer;
@@ -741,10 +873,12 @@ begin
     CargarFoto;
     CargarInfoCabecera;
     CargarColores;
+    CargarTemporadasColores;
   except
     on E: Exception do
       MostrarError(E.Message);
   end;
+  ActualizarLetreroTemporada;
   RecargarConsulta;
 end;
 
@@ -1625,6 +1759,7 @@ end;
 procedure TfrmStockConsulta.clbColoresClickCheck(Sender: TObject;
   AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
 begin
+  ActualizarLetreroTemporada;
   RecargarConsulta;
 end;
 
