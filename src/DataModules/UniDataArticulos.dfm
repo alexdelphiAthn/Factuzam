@@ -721,7 +721,8 @@ inherited dmArticulos: TdmArticulos
       '    HEX_ATB,'
       '    VALOR_NUM_ATB,'
       '    UNIDAD_ATB,'
-      '    ETIQUETA_BASICO'
+      '    ETIQUETA_BASICO,'
+      '    DESCRIPCION_AAB'
       '  FROM vi_atributos_sku_basico'
       ' ORDER BY ORDEN_ATRIBUTO, ID_VA_AV')
     MasterFields = 'CODIGO_UNIDAD_SKU'

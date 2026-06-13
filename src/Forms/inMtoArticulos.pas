@@ -194,6 +194,7 @@ type
     tvSkuAtributosBasicosNOMBRE_ATRIBUTO: TcxGridDBColumn;
     tvSkuAtributosBasicosVALOR_AV: TcxGridDBColumn;
     tvSkuAtributosBasicosID_ATB_AV: TcxGridDBColumn;
+    tvSkuAtributosBasicosDESCRIPCION_AAB: TcxGridDBColumn;
     tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn;
     tvSkuAtributosBasicosHEX_ATB: TcxGridDBColumn;
     tvSkuAtributosBasicosVALOR_NUM_ATB: TcxGridDBColumn;
@@ -281,6 +282,10 @@ type
     tvTarifasESVARIACION_ARTICULO: TcxGridDBColumn;
     tvTarifasNUM_ATRIBUTOS_REQ: TcxGridDBColumn;
     btnAddSKU: TcxButton;
+    btnColorSkus: TcxButton;
+    pmColorSkus: TPopupMenu;
+    miActivarColor: TMenuItem;
+    miDesactivarColor: TMenuItem;
     tvLinFacNOMBRE_TIPO_IVA_IVATIP: TcxGridDBColumn;
     tvLinFacCODIGO_TAR_FACLIN: TcxGridDBColumn;
     tvLinFacPRECIO_SALIDA_FACLIN: TcxGridDBColumn;
@@ -449,6 +454,11 @@ type
       Sender: TObject);
     procedure tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
       Sender: TObject);
+    procedure tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged(
+      Sender: TObject);
+    procedure btnColorSkusClick(Sender: TObject);
+    procedure miActivarColorClick(Sender: TObject);
+    procedure miDesactivarColorClick(Sender: TObject);
     procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
       ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
       var ADone: Boolean);
@@ -541,6 +551,12 @@ type
                             AValorAv: string): Integer;
     function PreguntarAmbitoBasico(const ACodArt,
                                    AValorAv: string): TAmbitoBasico;
+    // Resuelve el color (atributo 'CO') del SKU seleccionado leyendo el
+    // detalle de atributos del SKU en foco. Devuelve False si no hay color.
+    function ObtenerColorSkuActual(out aCodArt, aColor: string): Boolean;
+    // Activa ('S') o desactiva ('N') en bloque todos los SKU del articulo
+    // que comparten el color del SKU seleccionado.
+    procedure CambiarActivoColorSkus(const aActivo: string);
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
@@ -3254,6 +3270,168 @@ begin
   ds.Refresh;
   if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
     dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+end;
+
+procedure TfrmMtoArticulos.tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged(
+  Sender: TObject);
+// Descripcion del color POR ARTICULO: vive en
+// fza_articulos_atributos_basicos.DESCRIPCION_AAB (PK CODIGO_ART_AAB+ID_AV_AAB),
+// distinta para cada articulo. Si la fila override aun no existe la creamos
+// sembrando ID_ATB_AAB con el basico ya resuelto (ID_ATB_AV de la vista) para
+// NO alterar el color mostrado: una fila con ID_ATB_AAB NULL significa
+// "bloqueo / sin basico". El ON DUPLICATE KEY UPDATE toca solo la descripcion,
+// asi que descripcion y basico se editan de forma independiente.
+var
+  qry   : TUniQuery;
+  ds    : TDataSet;
+  IdAv  : Integer;
+  CodArt: string;
+  vNew  : Variant;
+  fldAtb: TField;
+begin
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+  CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
+  // Fila virtual del UNION: materializamos AV+SA para tener un ID_AV real.
+  if ds.FieldByName('ID_AV').IsNull then
+    IdAv := AsegurarFilaSA(ds.FieldByName('CODIGO_UNIDAD_SKU').AsString,
+                           ds.FieldByName('ID_VA_AV').AsString,
+                           ds.FieldByName('VALOR_AV').AsString)
+  else
+    IdAv := ds.FieldByName('ID_AV').AsInteger;
+  if (CodArt = '') or (IdAv = 0) then Exit;
+  vNew := (Sender as TcxCustomEdit).EditingValue;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'INSERT INTO fza_articulos_atributos_basicos '          +
+      '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '           +
+      '    DESCRIPCION_AAB, '                                 +
+      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '      +
+      'VALUES (:ART, :AV, :ATB, :DESC, NOW(), :USR, :USR) '   +
+      'ON DUPLICATE KEY UPDATE '                              +
+      '   DESCRIPCION_AAB = VALUES(DESCRIPCION_AAB), '        +
+      '   USUARIO_MODIF   = VALUES(USUARIO_MODIF)';
+    qry.ParamByName('ART').AsString := CodArt;
+    qry.ParamByName('AV').AsInteger := IdAv;
+    // Semilla del basico al crear la fila: el resuelto actual, para que la
+    // descripcion no cambie el color mostrado.
+    fldAtb := ds.FindField('ID_ATB_AV');
+    if (fldAtb <> nil) and (not fldAtb.IsNull) then
+      qry.ParamByName('ATB').AsInteger := fldAtb.AsInteger
+    else
+      qry.ParamByName('ATB').Clear;
+    if VarIsNull(vNew) or (VarToStr(vNew) = '') then
+      qry.ParamByName('DESC').Clear
+    else
+      qry.ParamByName('DESC').AsString := VarToStr(vNew);
+    qry.ParamByName('USR').AsString := oUser;
+    qry.Execute;
+  finally
+    FreeAndNil(qry);
+  end;
+  // Cancel + Refresh: la rejilla cuelga de una vista de solo lectura; tras
+  // grabar a mano, recargamos para que la descripcion persistida se vea.
+  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
+  ds.Refresh;
+end;
+
+function TfrmMtoArticulos.ObtenerColorSkuActual(out aCodArt,
+  aColor: string): Boolean;
+// Busca en el detalle de atributos del SKU seleccionado la fila del atributo
+// de color ('CO') y devuelve el codigo de articulo y el texto del color. El
+// detalle ya esta master-detalleado al SKU en foco, asi que recorrerlo da los
+// atributos de ese SKU (una fila CO, una TAL, ...).
+var
+  ds : TDataSet;
+  bm : TBookmark;
+begin
+  Result  := False;
+  aCodArt := '';
+  aColor  := '';
+  if (not Assigned(dmmArticulos)) or
+     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
+     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
+  ds := dmmArticulos.unqryDetallesAtributos;
+  if ds.IsEmpty then Exit;
+  ds.DisableControls;
+  bm := ds.GetBookmark;
+  try
+    ds.First;
+    while (not ds.Eof) and (not Result) do
+    begin
+      if SameText(ds.FieldByName('ID_VA_AV').AsString, 'CO') and
+         (ds.FieldByName('VALOR_AV').AsString <> '') then
+      begin
+        aCodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
+        aColor  := ds.FieldByName('VALOR_AV').AsString;
+        Result  := True;
+      end;
+      if not Result then
+        ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bm) then ds.GotoBookmark(bm);
+    ds.FreeBookmark(bm);
+    ds.EnableControls;
+  end;
+end;
+
+procedure TfrmMtoArticulos.CambiarActivoColorSkus(const aActivo: string);
+// Activa/desactiva en bloque todos los SKU del articulo que comparten el color
+// del SKU seleccionado. Lo invocan tanto el menu de boton derecho como el
+// boton lateral.
+var
+  CodArt, Color, sInf, sPP: string;
+  nAfectados: Integer;
+begin
+  if not ObtenerColorSkuActual(CodArt, Color) then
+  begin
+    MessageDlg('Seleccione un SKU con color para activar o desactivar ' +
+               'todos los SKU de ese color.', mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  if aActivo = 'S' then
+    sInf := 'activar'
+  else
+    sInf := 'desactivar';
+  if MessageDlg(Format('Va a %s TODOS los SKU del color "%s" de este ' +
+                       'articulo. Continuar?', [sInf, Color]),
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+  nAfectados := dmmArticulos.ActualizarSkusColorActivo(CodArt, Color, aActivo);
+  // Refrescamos el grid de SKU para reflejar el nuevo estado de ESACTIVO_SKU.
+  if Assigned(dmmArticulos.unqrySkus) and dmmArticulos.unqrySkus.Active then
+    dmmArticulos.unqrySkus.Refresh;
+  if aActivo = 'S' then
+    sPP := 'activado'
+  else
+    sPP := 'desactivado';
+  MessageDlg(Format('%d SKU del color "%s" se han %s.',
+                    [nAfectados, Color, sPP]), mtInformation, [mbOK], 0);
+end;
+
+procedure TfrmMtoArticulos.btnColorSkusClick(Sender: TObject);
+// Despliega el mismo menu (activar/desactivar color) que el clic derecho sobre
+// el panel de atributos, anclado bajo el boton lateral.
+var
+  pt: TPoint;
+begin
+  pt := btnColorSkus.ClientToScreen(Point(0, btnColorSkus.Height));
+  pmColorSkus.Popup(pt.X, pt.Y);
+end;
+
+procedure TfrmMtoArticulos.miActivarColorClick(Sender: TObject);
+begin
+  CambiarActivoColorSkus('S');
+end;
+
+procedure TfrmMtoArticulos.miDesactivarColorClick(Sender: TObject);
+begin
+  CambiarActivoColorSkus('N');
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(

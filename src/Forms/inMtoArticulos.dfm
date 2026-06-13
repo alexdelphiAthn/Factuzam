@@ -465,6 +465,15 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     TabOrder = 0
                     OnClick = addSkuAllClick
                   end
+                  object btnColorSkus: TcxButton
+                    Left = 0
+                    Top = 61
+                    Width = 116
+                    Height = 34
+                    Caption = 'Activar/Desact. color'
+                    TabOrder = 1
+                    OnClick = btnColorSkusClick
+                  end
                 end
                 object cxgrdSkuMto: TcxGrid
                   Left = 0
@@ -487,18 +496,20 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     OptionsBehavior.GoToNextCellOnEnter = True
                     OptionsBehavior.IncSearch = True
                     OptionsCustomize.ColumnHiding = True
-                    OptionsData.Editing = False
+                    OptionsData.Editing = True
                     OptionsData.Inserting = False
                     OptionsView.GroupByBox = False
                     OptionsView.Indicator = True
                     object tvSkuMtoCODIGO_UNIDAD_SKU: TcxGridDBColumn
                       Caption = 'C'#243'digo SKU'
                       DataBinding.FieldName = 'CODIGO_UNIDAD_SKU'
+                      Options.Editing = False
                       Width = 350
                     end
                     object tvSkuMtoCODIGO_VAR_SKU: TcxGridDBColumn
                       Caption = 'Variaci'#243'n'
                       DataBinding.FieldName = 'CODIGO_VAR_SKU'
+                      Options.Editing = False
                       Width = 80
                     end
                     object tvSkuMtoESACTIVO_SKU: TcxGridDBColumn
@@ -513,12 +524,14 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Caption = 'Precio '#218'lt Compra'
                       DataBinding.FieldName = 'PRECIO_ULT_COMPRA_SKUC'
                       PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Options.Editing = False
                       Width = 165
                     end
                     object tvSkuMtoFECHA_ULT_COMPRA_SKUC: TcxGridDBColumn
                       Caption = 'Fecha '#218'lt Compra'
                       DataBinding.FieldName = 'FECHA_ULT_COMPRA_SKUC'
                       PropertiesClassName = 'TcxDateEditProperties'
+                      Options.Editing = False
                       Width = 145
                     end
                     object tvSkuMtoCODIGO_ART_SKU: TcxGridDBColumn
@@ -553,6 +566,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   Width = 1061
                   Height = 126
                   Align = alClient
+                  PopupMenu = pmColorSkus
                   TabOrder = 0
                   object tvSkuAtributosBasicos: TcxGridDBTableView
                     OnDblClick = tvSkuAtributosBasicosDblClick
@@ -596,13 +610,13 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Width = 169
                     end
                     object tvSkuAtributosBasicosVALOR_AV: TcxGridDBColumn
-                      Caption = 'Valor'
+                      Caption = 'Color proveedor'
                       DataBinding.FieldName = 'VALOR_AV'
                       Options.Editing = False
-                      Width = 100
+                      Width = 140
                     end
                     object tvSkuAtributosBasicosID_ATB_AV: TcxGridDBColumn
-                      Caption = 'B'#225'sico'
+                      Caption = 'Color b'#225'sico'
                       DataBinding.FieldName = 'ID_ATB_AV'
                       PropertiesClassName = 'TcxLookupComboBoxProperties'
                       Properties.DropDownListStyle = lsEditList
@@ -639,6 +653,13 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                       Properties.OnInitPopup = tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup
                       Properties.OnValidate = tvSkuAtributosBasicosID_ATB_AVPropertiesValidate
                       Width = 190
+                    end
+                    object tvSkuAtributosBasicosDESCRIPCION_AAB: TcxGridDBColumn
+                      Caption = 'Descripci'#243'n del color'
+                      DataBinding.FieldName = 'DESCRIPCION_AAB'
+                      PropertiesClassName = 'TcxTextEditProperties'
+                      Properties.OnEditValueChanged = tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged
+                      Width = 220
                     end
                     object tvSkuAtributosBasicosNOMBRE_ATB: TcxGridDBColumn
                       Caption = 'Nombre b'#225'sico'
@@ -2471,6 +2492,18 @@ inherited frmMtoArticulos: TfrmMtoArticulos
   inherited Localizer1: TcxLocalizer
     Left = 680
     Top = 424
+  end
+  object pmColorSkus: TPopupMenu
+    Left = 600
+    Top = 424
+    object miActivarColor: TMenuItem
+      Caption = 'Activar todos los SKU de este color'
+      OnClick = miActivarColorClick
+    end
+    object miDesactivarColor: TMenuItem
+      Caption = 'Desactivar todos los SKU de este color'
+      OnClick = miDesactivarColorClick
+    end
   end
   object ActionListArticulos: TActionList [4]
     Left = 528

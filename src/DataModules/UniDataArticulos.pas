@@ -88,6 +88,11 @@ type
   public
     procedure PoblarCdsEtiquetasArtDesdeUniQuery;
     procedure ExpandirEtiquetasPorStock(const aFldStock: string);
+    // Activa ('S') o desactiva ('N') en bloque todos los SKU del articulo que
+    // comparten un mismo color (atributo 'CO'). La llama la ficha SKU desde el
+    // menu/boton de color. Devuelve cuantos SKU forman el grupo de color.
+    function ActualizarSkusColorActivo(const aCodArt, aColor,
+                                       aActivo: string): Integer;
     // Override: abre las queries detalle y lookups del Mto de Articulos
     // (tarifas, proveedores, lineas-factura, variaciones, skus, stock,
     // movimientos, atributos basicos, ivas, familias). Lo invoca
@@ -179,6 +184,54 @@ begin
     qry.ExecSQL;
   finally
     FreeAndNil(qry);
+  end;
+end;
+
+function TdmArticulos.ActualizarSkusColorActivo(const aCodArt, aColor,
+  aActivo: string): Integer;
+// Activa ('S') o desactiva ('N') en bloque todos los SKU del articulo cuyo
+// color (atributo 'CO' resuelto por vi_atributos_sku_basico) coincide con
+// aColor. Se hace en DOS pasos -- SELECT de los codigos de SKU + UPDATE por
+// codigo -- y no en una sola sentencia con subconsulta, porque la vista lee de
+// fza_articulos_skus y no se puede leer+actualizar la misma tabla a la vez
+// (error 1093 de MariaDB; el truco de la tabla derivada no es fiable con
+// derived_merge). Devuelve cuantos SKU forman el grupo de color.
+var
+  qrySel, qryUpd: TUniQuery;
+begin
+  Result := 0;
+  qrySel := TUniQuery.Create(nil);
+  qryUpd := TUniQuery.Create(nil);
+  try
+    qrySel.Connection := oConn;
+    qrySel.SQL.Text :=
+      'SELECT DISTINCT CODIGO_UNIDAD_SKU '                                  +
+      '  FROM vi_atributos_sku_basico '                                     +
+      ' WHERE CODIGO_ART_SKU = :ART '                                       +
+      '   AND ID_VA_AV       = ''CO'' '                                     +
+      '   AND VALOR_AV       = :COLOR';
+    qrySel.ParamByName('ART').AsString   := aCodArt;
+    qrySel.ParamByName('COLOR').AsString := aColor;
+    qrySel.Open;
+    qryUpd.Connection := oConn;
+    qryUpd.SQL.Text :=
+      'UPDATE fza_articulos_skus '   +
+      '   SET ESACTIVO_SKU  = :ACT, '+
+      '       USUARIO_MODIF = :USR ' +
+      ' WHERE CODIGO_UNIDAD_SKU = :SKU';
+    while not qrySel.Eof do
+    begin
+      qryUpd.ParamByName('ACT').AsString := aActivo;
+      qryUpd.ParamByName('USR').AsString := oUser;
+      qryUpd.ParamByName('SKU').AsString :=
+        qrySel.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+      qryUpd.ExecSQL;
+      Inc(Result);
+      qrySel.Next;
+    end;
+  finally
+    FreeAndNil(qryUpd);
+    FreeAndNil(qrySel);
   end;
 end;
 
