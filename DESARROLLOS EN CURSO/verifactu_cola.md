@@ -346,16 +346,26 @@ página) no lo dibuja FastReport en esta versión —solo en **bandas de
 datos**, como las fotos de tickets/etiquetas—.
 
 **Cómo añadir el QR al A4** (una vez, en el diseñador de FastReport):
-1. Facturas → Imprimir → botón **Editar** (o el diseñador del formato).
-2. Crear un **Picture** (`TfrxPictureView`) y renombrarlo EXACTAMENTE
-   `qrverifactu` (en minúsculas).
-3. Colocarlo dentro de una **banda de datos** (p. ej. la `MasterData`
-   de Facturas o la banda de líneas) para que se dibuje; en la cabecera
-   de página no se pintará. Tamaño mínimo AEAT 30×30 mm.
-4. Propiedades recomendadas: `Stretched = True`, `KeepAspectRatio`
-   opcional. Sin `Picture` de diseño (lo rellena el código).
-5. Guardar el formato. A partir de ahí, cada impresión/preview rellena
-   ese `qrverifactu` con el QR de la factura.
+
+Hay dos formas; la **recomendada (A)** no necesita código de relleno.
+
+**(A) Picture ligado a dato (recomendada).** Tras ejecutar
+`vi_facturas_print_consolidaciones.sql`, la vista `vi_facturas_print`
+trae por LEFT JOIN el QR ya generado en `QRCODE_PNG_FACCON` (y TIPO_FAC,
+FASE_FAC, VERIFACTU_URL_FACCON…). En el diseñador:
+1. Crear un **Picture** (`TfrxPictureView`).
+2. Enlazarlo a datos: `DataSet = Facturas`,
+   `DataField = QRCODE_PNG_FACCON`.
+3. Colocarlo donde se quiera (incluida la cabecera: al ser imagen
+   ligada a dato, FastReport la pinta por el motor de datos, igual que
+   los memos `[Facturas."..."]`). Tamaño mínimo 30×30 mm.
+4. Guardar. No hace falta nada más: el blob de la vista es el PNG.
+
+**(B) Picture llamado `qrverifactu` (relleno por código).** Crear un
+Picture y renombrarlo exactamente `qrverifactu`, colocándolo en una
+**banda de datos** (no en cabecera de página: ahí un picture rellenado
+por código no se dibuja). El framework lo rellena en
+`TfrmPrintFac.AfterReportLoaded` / `OnBeforePrint`.
 
 **Título por tipo**: el memo de título (texto exacto `FACTURA`) se
 reescribe por registro a `FACTURA SIMPLIFICADA` / `FACTURA RECTIFICATIVA`
