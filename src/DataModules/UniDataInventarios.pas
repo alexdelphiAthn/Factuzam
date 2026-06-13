@@ -457,6 +457,13 @@ end;
 
 procedure TdmInventarios.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
+  // ESRECUENTO_REMOTO_INV es char(1) NOT NULL en BBDD (default 'N'). Al
+  // anadirse al SELECT de la cabecera es un campo Required del dataset, asi
+  // que una cabecera nueva (que no se ha enviado a recuento) llegaria al Post
+  // con el valor sin asignar y reventaria con "Field 'ESRECUENTO_REMOTO_INV'
+  // must have a value". Garantizamos el valor por defecto antes del Post.
+  if Trim(DataSet.FieldByName('ESRECUENTO_REMOTO_INV').AsString) = '' then
+    DataSet.FieldByName('ESRECUENTO_REMOTO_INV').AsString := 'N';
   // Validacion explicita: la serie es parte de la PK de las lineas y
   // varchar(20) NOT NULL en BBDD. Si llega vacia (porque la empresa no
   // tiene una serie por defecto en fza_empresas_series para tipo IN),
