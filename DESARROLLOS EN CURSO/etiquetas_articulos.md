@@ -57,13 +57,29 @@ desincronizado lo que se ve en el diseñador con lo que se imprime.
 La maqueta por defecto muestra, además de marca, P.V.P, color, talla,
 código de barras, descripción y código de artículo:
 
-- **Nombre del proveedor** (`RAZON_SOCIAL_PRV`) — pie de etiqueta, derecha.
-- **Temporada** (`PROP_TEMPORADA`) — pie de etiqueta, izquierda.
+- **Nombre del proveedor** (`NOMBRE_PRV`, nombre comercial del proveedor
+  principal) — pie de etiqueta, derecha.
+- **Código de temporada** (`COD_TEMPORADA`, p.ej. "PV26") — pie de
+  etiqueta, izquierda.
 
-Ambos campos ya los expone `vi_articulos_skus_etiquetas` y los arrastra el
-`SELECT eti.*` de `CrearDataSetEtiquetasArt`, así que no hubo que tocar la
-vista ni la consulta runtime: solo colocar las dos `TfrxMemoView` en la
-banda `MasterData`.
+`COD_TEMPORADA` no es `PROP_TEMPORADA`: el primero es el código corto
+guardado en `DESCRIPCION_PV` del valor de la propiedad TEMPORADA y el
+segundo es el texto largo ("Primavera/Verano 2026"). Ambas columnas, junto
+con `NOMBRE_PRV`, se añadieron a `vi_articulos_skus_etiquetas`
+(`etiquetas_articulos.sql`); el `SELECT eti.*` de
+`CrearDataSetEtiquetasArt` las arrastra solo, así que en Delphi únicamente
+se colocaron las dos `TfrxMemoView` en la banda `MasterData`. Hay que
+reaplicar `etiquetas_articulos.sql` contra la BBDD para que aparezcan las
+columnas nuevas.
+
+**Temporada por color.** TEMPORADA es una propiedad de nivel COLOR
+(`NIVEL_PROP='COLOR'`), así que un artículo puede tener una temporada
+distinta por color. La vista la resuelve **por SKU** en el CTE `sku_temp`
+con especificidad SKU → COLOR → ARTÍCULO (mismo patrón que
+`vi_articulos_propiedades_efectivas`): el "color" es el prefijo
+`ART/COLOR` del `CODIGO_UNIDAD_SKU`. Por eso `PROP_TEMPORADA` y
+`COD_TEMPORADA` salen de `sku_temp` (no del pivote a nivel artículo de
+`art_prop`), y la etiqueta de cada SKU muestra la temporada de SU color.
 
 ### Consulta runtime
 

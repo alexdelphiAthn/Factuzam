@@ -6,15 +6,15 @@ inherited frmPrintFac: TfrmPrintFac
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 428
   ExplicitHeight = 288
-  TextHeight = 19
+  TextHeight = 17
   inherited pnl1: TPanel
     Left = 258
     Width = 154
     Height = 249
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 258
+    ExplicitLeft = 256
     ExplicitWidth = 154
-    ExplicitHeight = 249
+    ExplicitHeight = 241
     inherited btnPDF: TcxButton
       Left = 11
       ExplicitLeft = 11
@@ -28,9 +28,9 @@ inherited frmPrintFac: TfrmPrintFac
       ExplicitLeft = 11
     end
     inherited btnSalir: TcxButton
-      Top = 231
+      Top = 223
       Width = 152
-      ExplicitTop = 223
+      ExplicitTop = 215
       ExplicitWidth = 152
     end
     inherited btnEditar: TcxButton
@@ -545,7 +545,6 @@ inherited frmPrintFac: TfrmPrintFac
     Top = 200
   end
   inherited frxdsgnr1: TfrxDesigner
-    Restrictions = []
     Left = 8
     Top = 128
   end
@@ -554,7 +553,7 @@ inherited frmPrintFac: TfrmPrintFac
     PreviewOptions.AllowEdit = False
     PreviewOptions.AllowPreviewEdit = False
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbNavigator, pbExportQuick]
-    ReportOptions.LastChange = 46132.247226782400000000
+    ReportOptions.LastChange = 46186.689456250000000000
     ScriptText.Strings = (
       'procedure RetencionTotalOnBeforePrint(Sender: TfrxComponent);'
       'begin'
@@ -999,7 +998,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 525.354670000000000000
+        Top = 521.575140000000000000
         Width = 737.008350000000000000
         OnBeforePrint = 'DetailData1OnBeforePrint'
         DataSet = dmFacturas.fxdstPrintLinFac
@@ -1045,9 +1044,9 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-
-              '[FormatFloat('#39'0.######'#39', <Lineas Facturas."CANTIDAD_FACLIN' +
-              '">)] [Lineas Facturas."TIPO_CANTIDAD_ARTICULO_FACLIN"]')
+            
+              '[FormatFloat('#39'0.######'#39', <Lineas Facturas."CANTIDAD_FACLIN">)] [' +
+              'Lineas Facturas."TIPO_CANTIDAD_ARTICULO_FACLIN"]')
           ParentFont = False
           Formats = <
             item
@@ -1770,6 +1769,20 @@ inherited frmPrintFac: TfrmPrintFac
             '[Facturas."EMAIL_EMPRESA_FAC"]')
           ParentFont = False
         end
+        object qr: TfrxPictureView
+          AllowVectorExport = True
+          Left = 578.268106310000000000
+          Top = 56.692953260000000000
+          Width = 109.606323240000000000
+          Height = 109.606369020000000000
+          DataField = 'QRCODE_PNG_FACCON'
+          DataSet = dmFacturas.fxdsPrintFac
+          DataSetName = 'Facturas'
+          Frame.Typ = []
+          HightQuality = False
+          Transparent = False
+          TransparentColor = clWhite
+        end
       end
       object MasterData1: TfrxMasterData
         FillType = ftBrush
@@ -1778,7 +1791,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Bottom = 0
         FillGap.Right = 0
         Frame.Typ = []
-        Height = 22.677180000000000000
+        Height = 18.897650000000000000
         Top = 480.000310000000000000
         Visible = False
         Width = 737.008350000000000000
@@ -1791,6 +1804,8 @@ inherited frmPrintFac: TfrmPrintFac
           Left = 64.252010000000000000
           Width = 94.488250000000000000
           Height = 18.897650000000000000
+          ContentScaleOptions.Constraints.MaxIterationValue = 0
+          ContentScaleOptions.Constraints.MinIterationValue = 0
           DataField = 'NUMERO_FAC'
           DataSet = dmFacturas.fxdsPrintFac
           DataSetName = 'Facturas'
@@ -1813,7 +1828,7 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Right = 0
         Frame.Typ = []
         Height = 249.448980000000000000
-        Top = 612.283860000000000000
+        Top = 608.504330000000000000
         Width = 737.008350000000000000
         OnBeforePrint = 'PageFooter1OnBeforePrint'
         object CajaIVA: TfrxMemoView
