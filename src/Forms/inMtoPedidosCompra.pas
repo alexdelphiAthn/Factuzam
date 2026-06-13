@@ -231,7 +231,7 @@ uses
   inLibAtributosPaleta,
   inLibPedidosCompra,
   inLibtb,
-  inMtoModalSelAlmacenPedido, inLibShowMto;
+  inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inLibShowMto;
 
 {$R *.dfm}
 
@@ -1137,6 +1137,8 @@ var
   arrCeldas: TArray<TCeldaARecibir>;
   bUsarCeldas: Boolean;
   recIdx: Integer;
+  frmDocs: TfrmModalDocsCreados;
+  sSerieDoc, sNumeroDoc: string;
 begin
   inherited;
   if dmmPedidosCompra = nil then Exit;
@@ -1225,7 +1227,6 @@ begin
       if bOk then
       begin
         if bTxOwned then inLibGlobalVar.oConn.Commit;
-        ShowMessage(sMsg);
         // Limpiar las celdas "A recibir" tecleadas para el almacen
         // procesado, para que el usuario pueda seguir con otro almacen
         // sin tener que borrar manualmente.
@@ -1252,6 +1253,36 @@ begin
         if dmmPedidosCompra.unqryAlbaranesPedc.Active then
           dmmPedidosCompra.unqryAlbaranesPedc.Close;
         dmmPedidosCompra.unqryAlbaranesPedc.Open;
+        // Mostrar el albaran recien creado / incorporado en un modal
+        // estilo Sesiones, con boton "Ir a documento" para abrir su
+        // ficha. En modo incorporar el destino es el albaran existente
+        // (Albaran...Destino); si no, el nuevo (SerieAlbaran / sNumAlb).
+        if form.Incorporar then
+        begin
+          sSerieDoc  := form.AlbaranSerieDestino;
+          sNumeroDoc := form.AlbaranNumDestino;
+        end
+        else
+        begin
+          sSerieDoc  := form.SerieAlbaran;
+          sNumeroDoc := sNumAlb;
+        end;
+        frmDocs := TfrmModalDocsCreados.Create(Self);
+        // Bloqueamos el caFree del ancestro (FormClose lo pone) para
+        // poder leer Confirmado tras ShowModal y liberarlo nosotros.
+        frmDocs.OnClose := nil;
+        try
+          frmDocs.lblTitulo.Caption :=
+            Format('Albaran creado desde el pedido %s/%s', [sSerie, sNumero]);
+          frmDocs.Agregar('Albaran', sSerieDoc, sNumeroDoc,
+                          form.CodigoAlmacen);
+          frmDocs.ShowModal;
+          if frmDocs.Confirmado then
+            ShowMto(Self.Owner, 'AlbaranesCompra',
+                    sSerieDoc + ',' + sNumeroDoc);
+        finally
+          FreeAndNil(frmDocs);
+        end;
       end
       else
       begin
