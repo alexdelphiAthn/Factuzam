@@ -206,6 +206,12 @@ type
     // tallas ya totalmente recibidas o sin Pedido no escribe nada.
     // Devuelve numero de celdas modificadas (0 si no aplica).
     function RecibirFilaEntera: Integer;
+    // Como RecibirFilaEntera pero sobre TODAS las filas representantes
+    // del grid (todo el pedido). Vuelca en 'A recibir' el pendiente
+    // (Pedido - Recibida) de cada celda talla del conjunto. Lo usa el
+    // boton "Recibir Todo". Devuelve el numero de celdas modificadas
+    // (0 si no aplica o no queda nada pendiente).
+    function RecibirTodo: Integer;
     // Captura el valor del editor inplace de una celda talla y lo
     // guarda en FARecibirManual. Se llama desde OnEditValueChanged
     // de las columnas talla. cxGrid borra DataController.Values[]
@@ -1431,6 +1437,75 @@ begin
       FCfg.Grid.DataController.Values[recIdx, colTalla.Index] := rPdte;
       FARecibirManual.AddOrSetValue(iKey, rPdte);
       Inc(Result);
+    end;
+  finally
+    FCfg.Grid.DataController.EndUpdate;
+  end;
+end;
+
+// Recorre todas las filas del grid (lineas representantes filtradas del
+// pivote) y, para cada celda talla del conjunto con pendiente positivo,
+// vuelca dicho pendiente en 'A recibir' (Values[] del grid para el
+// repintado + FARecibirManual para la persistencia y el posterior
+// IterarARecibirPorAlmacen). Misma logica que RecibirFilaEntera pero
+// resolviendo la linea desde Values[] en vez del record focused.
+function TGridPivoteCompra.RecibirTodo: Integer;
+var
+  colLinea : TcxGridColumn;
+  vLin     : Variant;
+  iLinea   : Integer;
+  iAc      : Integer;
+  arr      : TArrPosConjunto;
+  i        : Integer;
+  iKey     : Int64;
+  rPed     : Double;
+  rRec     : Double;
+  rPdte    : Double;
+  recIdx   : Integer;
+  colTalla : TcxGridDBColumn;
+begin
+  Result := 0;
+  if not (FActivo and FExpandido and PuedeExpandir) then
+    Exit;
+  if FCfg.Grid = nil then
+    Exit;
+  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+  if colLinea = nil then
+    Exit;
+  FCfg.Grid.DataController.BeginUpdate;
+  try
+    for recIdx := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+    begin
+      vLin   := FCfg.Grid.DataController.Values[recIdx, colLinea.Index];
+      iLinea := 0;
+      if not (VarIsNull(vLin) or VarIsEmpty(vLin)) then
+        iLinea := StrToIntDef(VarToStr(vLin), 0);
+      iAc := 0;
+      if iLinea > 0 then
+        FPivotIdAc.TryGetValue(iLinea, iAc);
+      if iAc > 0 then
+      begin
+        arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+        for i := 0 to High(arr) do
+          if (i < FCfg.MaxColumnasTallas) and
+             (i < Length(FCfg.ColumnasTallas)) and
+             (FCfg.ColumnasTallas[i] <> nil) then
+          begin
+            colTalla := FCfg.ColumnasTallas[i];
+            iKey := Int64(iLinea) * 100000 + arr[i].IdAv;
+            rPed := 0;
+            rRec := 0;
+            FPivotCantidades.TryGetValue(iKey, rPed);
+            FPivotCantidadesRecibidas.TryGetValue(iKey, rRec);
+            rPdte := rPed - rRec;
+            if rPdte > 0 then
+            begin
+              FCfg.Grid.DataController.Values[recIdx, colTalla.Index] := rPdte;
+              FARecibirManual.AddOrSetValue(iKey, rPdte);
+              Inc(Result);
+            end;
+          end;
+      end;
     end;
   finally
     FCfg.Grid.DataController.EndUpdate;

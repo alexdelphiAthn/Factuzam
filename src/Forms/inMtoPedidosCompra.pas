@@ -207,6 +207,10 @@ type
     // Devuelve el almacen efectivo de la primera linea en modo vertical
     // cuyo "A recibir" sea > 0. Sin tecleos devuelve ''.
     function  PrimerAlmacenARecibirVertical: string;
+    // Rellena la columna no-bound "A recibir" (modo vertical) de TODAS
+    // las lineas del pedido con su pendiente (Pedida - Recibida). Las
+    // lineas sin pendiente quedan a Null. Devuelve cuantas se rellenaron.
+    function  RellenarARecibirVerticalTodo: Integer;
     // Clamp de la columna "A recibir" en modo vertical: el maximo es el
     // pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA).
     procedure ARecibirVerticalEditValueChanged(Sender: TObject);
@@ -663,10 +667,34 @@ begin
                mtInformation, [mbOk], 0);
 end;
 
+// Rellena de una sola pasada TODO el pedido con las cantidades
+// pendientes de recibir (Pedida - Recibida). En modo vertical vuelca la
+// columna "A recibir" de cada linea; en pivote rellena las celdas talla
+// (si el pivote esta plano lo expandimos antes para que el usuario vea
+// el resultado). Tras esto basta con pulsar "Crear albaran".
 procedure TfrmMtoPedidosCompra.btnRecibirTodoClick(Sender: TObject);
+var
+  iRellenadas: Integer;
 begin
   inherited;
-  //
+  if (dmmPedidosCompra = nil) or (FPivote = nil) then
+    Exit;
+  iRellenadas := 0;
+  if FPivote.Activo then
+  begin
+    // En pivote la entrada de "A recibir" vive en las celdas talla, que
+    // solo se pintan y editan en modo expandido. Si esta plano, expandimos.
+    if not FPivote.Expandido then
+      FPivote.Expandir;
+    iRellenadas := FPivote.RecibirTodo;
+    BestFitConSwatch;
+  end
+  else
+    // Modo vertical: una fila por SKU, columna "A recibir" editable.
+    iRellenadas := RellenarARecibirVerticalTodo;
+  if iRellenadas = 0 then
+    MessageDlg('No hay nada pendiente de recibir en el pedido.',
+               mtInformation, [mbOk], 0);
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
@@ -1059,6 +1087,55 @@ begin
     ds.FreeBookmark(bk);
     ds.EnableControls;
     FreeAndNil(res);
+  end;
+end;
+
+// Recorre todas las lineas del pedido en modo vertical y vuelca en la
+// columna no-bound "A recibir" el pendiente de cada una (Pedida -
+// Recibida). Las lineas ya recibidas del todo quedan a Null. Devuelve
+// el numero de lineas con pendiente. Misma tecnica de iteracion que
+// RecogerCeldasARecibirVertical: dataset + recIdx paralelo del grid.
+function TfrmMtoPedidosCompra.RellenarARecibirVerticalTodo: Integer;
+var
+  ds     : TUniQuery;
+  bk     : TBookmark;
+  recIdx : Integer;
+  idxCol : Integer;
+  rPdte  : Double;
+begin
+  Result := 0;
+  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+    Exit;
+  idxCol := colLineaPedcARecibir.Index;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  tvLineasPedido.DataController.BeginUpdate;
+  try
+    recIdx := 0;
+    ds.First;
+    while not ds.Eof do
+    begin
+      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+      if rPdte > 0 then
+      begin
+        tvLineasPedido.DataController.Values[recIdx, idxCol] := rPdte;
+        Inc(Result);
+      end
+      else
+        tvLineasPedido.DataController.Values[recIdx, idxCol] := Null;
+      Inc(recIdx);
+      ds.Next;
+    end;
+  finally
+    tvLineasPedido.DataController.EndUpdate;
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
   end;
 end;
 
