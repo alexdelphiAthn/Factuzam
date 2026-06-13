@@ -7,7 +7,10 @@ inherited frmMtoVerifactuCola: TfrmMtoVerifactuCola
       inherited tsLista: TcxTabSheet
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
+            OptionsData.Appending = False
+            OptionsData.Deleting = False
             OptionsData.Editing = True
+            OptionsData.Inserting = False
             object cxGrdDBTabPrinID_VFCOLA: TcxGridDBColumn
               Caption = 'Id'
               DataBinding.FieldName = 'ID_VFCOLA'
@@ -93,6 +96,20 @@ inherited frmMtoVerifactuCola: TfrmMtoVerifactuCola
           end
         end
       end
+      inherited tsFicha: TcxTabSheet
+        TabVisible = False
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    object btnIrADocumento: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 34
+      Caption = 'Ir a &Documento'
+      TabOrder = 2
+      OnClick = btnIrADocumentoClick
     end
   end
 end
