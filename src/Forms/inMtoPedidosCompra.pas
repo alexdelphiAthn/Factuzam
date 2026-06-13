@@ -111,7 +111,6 @@ type
     // Observaciones
     memObservaciones: TcxDBMemo;
     btnTallasHorizontal:  TcxButton;
-    btnAtributosColumna:  TcxButton;
     btnExpandirRecibidos: TcxButton;
     // Atajo: rellena 'A recibir' con el pendiente de TODAS las
     // tallas de la fila focused. Activo solo en pivote expandido.
@@ -124,6 +123,10 @@ type
     lblContextoTalla: TcxLabel;
     ActionList1: TActionList;
     actArticulos: TAction;
+    btnRecibirTodo: TcxButton;
+    // Atajo Ctrl+May+A en la pestania Albaranes: abre el albaran de
+    // compra seleccionado en la rejilla.
+    actIrDocumento: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -159,7 +162,9 @@ type
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure actIrDocumentoExecute(Sender: TObject);
     procedure cbbSERIE_PEDCPropertiesInitPopup(Sender: TObject);
+    procedure btnRecibirTodoClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -206,6 +211,10 @@ type
     // Devuelve el almacen efectivo de la primera linea en modo vertical
     // cuyo "A recibir" sea > 0. Sin tecleos devuelve ''.
     function  PrimerAlmacenARecibirVertical: string;
+    // Rellena la columna no-bound "A recibir" (modo vertical) de TODAS
+    // las lineas del pedido con su pendiente (Pedida - Recibida). Las
+    // lineas sin pendiente quedan a Null. Devuelve cuantas se rellenaron.
+    function  RellenarARecibirVerticalTodo: Integer;
     // Clamp de la columna "A recibir" en modo vertical: el maximo es el
     // pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA).
     procedure ARecibirVerticalEditValueChanged(Sender: TObject);
@@ -231,7 +240,7 @@ uses
   inLibAtributosPaleta,
   inLibPedidosCompra,
   inLibtb,
-  inMtoModalSelAlmacenPedido, inLibShowMto;
+  inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inLibShowMto;
 
 {$R *.dfm}
 
@@ -662,6 +671,36 @@ begin
                mtInformation, [mbOk], 0);
 end;
 
+// Rellena de una sola pasada TODO el pedido con las cantidades
+// pendientes de recibir (Pedida - Recibida). En modo vertical vuelca la
+// columna "A recibir" de cada linea; en pivote rellena las celdas talla
+// (si el pivote esta plano lo expandimos antes para que el usuario vea
+// el resultado). Tras esto basta con pulsar "Crear albaran".
+procedure TfrmMtoPedidosCompra.btnRecibirTodoClick(Sender: TObject);
+var
+  iRellenadas: Integer;
+begin
+  inherited;
+  if (dmmPedidosCompra = nil) or (FPivote = nil) then
+    Exit;
+  iRellenadas := 0;
+  if FPivote.Activo then
+  begin
+    // En pivote la entrada de "A recibir" vive en las celdas talla, que
+    // solo se pintan y editan en modo expandido. Si esta plano, expandimos.
+    if not FPivote.Expandido then
+      FPivote.Expandir;
+    iRellenadas := FPivote.RecibirTodo;
+    BestFitConSwatch;
+  end
+  else
+    // Modo vertical: una fila por SKU, columna "A recibir" editable.
+    iRellenadas := RellenarARecibirVerticalTodo;
+  if iRellenadas = 0 then
+    MessageDlg('No hay nada pendiente de recibir en el pedido.',
+               mtInformation, [mbOk], 0);
+end;
+
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
 begin
   inherited;
@@ -794,6 +833,28 @@ begin
       ShowMto(Self.Owner,
               'Articulos',
               FieldByName('CODIGO_ART_PEDCLIN').AsString);
+end;
+
+// "Ir a documento" (Ctrl+May+A) desde la pestania Albaranes del pedido:
+// abre la ficha del albaran de compra seleccionado en la rejilla. Solo
+// actua si esa pestania esta activa y hay un albaran en la fila actual.
+procedure TfrmMtoPedidosCompra.actIrDocumentoExecute(Sender: TObject);
+var
+  sSerie, sNumero: string;
+begin
+  inherited;
+  if (pcPedido.ActivePage = tsAlbaranesPedc) and
+     (dmmPedidosCompra <> nil) and
+     dmmPedidosCompra.unqryAlbaranesPedc.Active and
+     (not dmmPedidosCompra.unqryAlbaranesPedc.IsEmpty) then
+  begin
+    sSerie  := Trim(dmmPedidosCompra.unqryAlbaranesPedc.
+                      FieldByName('SERIE_ALBC').AsString);
+    sNumero := Trim(dmmPedidosCompra.unqryAlbaranesPedc.
+                      FieldByName('NUMERO_ALBC').AsString);
+    if (sSerie <> '') and (sNumero <> '') then
+      ShowMto(Self.Owner, 'AlbaranesCompra', sSerie + ',' + sNumero);
+  end;
 end;
 
 function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(
@@ -1055,6 +1116,55 @@ begin
   end;
 end;
 
+// Recorre todas las lineas del pedido en modo vertical y vuelca en la
+// columna no-bound "A recibir" el pendiente de cada una (Pedida -
+// Recibida). Las lineas ya recibidas del todo quedan a Null. Devuelve
+// el numero de lineas con pendiente. Misma tecnica de iteracion que
+// RecogerCeldasARecibirVertical: dataset + recIdx paralelo del grid.
+function TfrmMtoPedidosCompra.RellenarARecibirVerticalTodo: Integer;
+var
+  ds     : TUniQuery;
+  bk     : TBookmark;
+  recIdx : Integer;
+  idxCol : Integer;
+  rPdte  : Double;
+begin
+  Result := 0;
+  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+    Exit;
+  idxCol := colLineaPedcARecibir.Index;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  tvLineasPedido.DataController.BeginUpdate;
+  try
+    recIdx := 0;
+    ds.First;
+    while not ds.Eof do
+    begin
+      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+      if rPdte > 0 then
+      begin
+        tvLineasPedido.DataController.Values[recIdx, idxCol] := rPdte;
+        Inc(Result);
+      end
+      else
+        tvLineasPedido.DataController.Values[recIdx, idxCol] := Null;
+      Inc(recIdx);
+      ds.Next;
+    end;
+  finally
+    tvLineasPedido.DataController.EndUpdate;
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+  end;
+end;
+
 // Clamp del "A recibir" tecleado en modo vertical: si supera el
 // pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA) se ajusta
 // automaticamente al maximo y se avisa con un beep. La reasignacion
@@ -1137,6 +1247,8 @@ var
   arrCeldas: TArray<TCeldaARecibir>;
   bUsarCeldas: Boolean;
   recIdx: Integer;
+  frmDocs: TfrmModalDocsCreados;
+  sSerieDoc, sNumeroDoc: string;
 begin
   inherited;
   if dmmPedidosCompra = nil then Exit;
@@ -1225,7 +1337,6 @@ begin
       if bOk then
       begin
         if bTxOwned then inLibGlobalVar.oConn.Commit;
-        ShowMessage(sMsg);
         // Limpiar las celdas "A recibir" tecleadas para el almacen
         // procesado, para que el usuario pueda seguir con otro almacen
         // sin tener que borrar manualmente.
@@ -1252,6 +1363,36 @@ begin
         if dmmPedidosCompra.unqryAlbaranesPedc.Active then
           dmmPedidosCompra.unqryAlbaranesPedc.Close;
         dmmPedidosCompra.unqryAlbaranesPedc.Open;
+        // Mostrar el albaran recien creado / incorporado en un modal
+        // estilo Sesiones, con boton "Ir a documento" para abrir su
+        // ficha. En modo incorporar el destino es el albaran existente
+        // (Albaran...Destino); si no, el nuevo (SerieAlbaran / sNumAlb).
+        if form.Incorporar then
+        begin
+          sSerieDoc  := form.AlbaranSerieDestino;
+          sNumeroDoc := form.AlbaranNumDestino;
+        end
+        else
+        begin
+          sSerieDoc  := form.SerieAlbaran;
+          sNumeroDoc := sNumAlb;
+        end;
+        frmDocs := TfrmModalDocsCreados.Create(Self);
+        // Bloqueamos el caFree del ancestro (FormClose lo pone) para
+        // poder leer Confirmado tras ShowModal y liberarlo nosotros.
+        frmDocs.OnClose := nil;
+        try
+          frmDocs.lblTitulo.Caption :=
+            Format('Albaran creado desde el pedido %s/%s', [sSerie, sNumero]);
+          frmDocs.Agregar('Albaran', sSerieDoc, sNumeroDoc,
+                          form.CodigoAlmacen);
+          frmDocs.ShowModal;
+          if frmDocs.Confirmado then
+            ShowMto(Self.Owner, 'AlbaranesCompra',
+                    sSerieDoc + ',' + sNumeroDoc);
+        finally
+          FreeAndNil(frmDocs);
+        end;
       end
       else
       begin

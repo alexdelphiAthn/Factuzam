@@ -7,7 +7,10 @@ inherited frmMtoVerifactuLog: TfrmMtoVerifactuLog
       inherited tsLista: TcxTabSheet
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
+            OptionsData.Appending = False
+            OptionsData.Deleting = False
             OptionsData.Editing = False
+            OptionsData.Inserting = False
             object cxGrdDBTabPrinID_LOG: TcxGridDBColumn
               Caption = 'Id'
               DataBinding.FieldName = 'ID_LOG'
@@ -71,6 +74,20 @@ inherited frmMtoVerifactuLog: TfrmMtoVerifactuLog
           end
         end
       end
+      inherited tsFicha: TcxTabSheet
+        TabVisible = False
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    object btnIrADocumento: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 34
+      Caption = 'Ir a &Documento'
+      TabOrder = 2
+      OnClick = btnIrADocumentoClick
     end
   end
 end
