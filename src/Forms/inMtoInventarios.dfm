@@ -401,7 +401,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                       Kind = skSum
                       FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
                     end>
-                  OptionsBehavior.AlwaysShowEditor = True
+                  OptionsBehavior.AlwaysShowEditor = False
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.FocusCellOnCycle = True
