@@ -123,7 +123,13 @@ type
     lblContextoTalla: TcxLabel;
     ActionList1: TActionList;
     actArticulos: TAction;
+<<<<<<< HEAD
     btnRecibirTodo: TcxButton;
+=======
+    // Atajo Ctrl+May+A en la pestania Albaranes: abre el albaran de
+    // compra seleccionado en la rejilla.
+    actIrDocumento: TAction;
+>>>>>>> 62762378165f778ee2fb32cd5db700bbf059e2f7
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -159,6 +165,7 @@ type
     procedure cxgrdLineasPedidoEnter(Sender: TObject);
     procedure cxgrdLineasPedidoExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure actIrDocumentoExecute(Sender: TObject);
     procedure cbbSERIE_PEDCPropertiesInitPopup(Sender: TObject);
     procedure btnRecibirTodoClick(Sender: TObject);
   private
@@ -829,6 +836,28 @@ begin
       ShowMto(Self.Owner,
               'Articulos',
               FieldByName('CODIGO_ART_PEDCLIN').AsString);
+end;
+
+// "Ir a documento" (Ctrl+May+A) desde la pestania Albaranes del pedido:
+// abre la ficha del albaran de compra seleccionado en la rejilla. Solo
+// actua si esa pestania esta activa y hay un albaran en la fila actual.
+procedure TfrmMtoPedidosCompra.actIrDocumentoExecute(Sender: TObject);
+var
+  sSerie, sNumero: string;
+begin
+  inherited;
+  if (pcPedido.ActivePage = tsAlbaranesPedc) and
+     (dmmPedidosCompra <> nil) and
+     dmmPedidosCompra.unqryAlbaranesPedc.Active and
+     (not dmmPedidosCompra.unqryAlbaranesPedc.IsEmpty) then
+  begin
+    sSerie  := Trim(dmmPedidosCompra.unqryAlbaranesPedc.
+                      FieldByName('SERIE_ALBC').AsString);
+    sNumero := Trim(dmmPedidosCompra.unqryAlbaranesPedc.
+                      FieldByName('NUMERO_ALBC').AsString);
+    if (sSerie <> '') and (sNumero <> '') then
+      ShowMto(Self.Owner, 'AlbaranesCompra', sSerie + ',' + sNumero);
+  end;
 end;
 
 function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(
