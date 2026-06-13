@@ -313,6 +313,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             TabOrder = 3
             OnClick = btnAtributosColumnaClick
           end
+          object btnIrDocumento: TcxButton
+            Left = 620
+            Top = 6
+            Width = 200
+            Height = 26
+            Action = actIrDocumento
+            TabOrder = 4
+          end
         end
         object pnlBodyFicha: TPanel
           Left = 0
@@ -582,6 +590,11 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
       Caption = 'actArticulos'
       ShortCut = 16449
       OnExecute = actArticulosExecute
+    end
+    object actIrDocumento: TAction
+      Caption = 'Ir a documento (Ctrl+May+A)'
+      ShortCut = 24641
+      OnExecute = actIrDocumentoExecute
     end
   end
 end
