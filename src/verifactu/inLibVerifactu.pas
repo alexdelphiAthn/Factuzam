@@ -355,18 +355,60 @@ begin
                       DataSetFacturaDeReport(Component));
 end;
 
+// Memo de título 'FACTURA' en cualquier nivel del árbol (recursivo)
+function BuscarMemoTitulo(AComp: TfrxComponent): TfrxMemoView;
+var
+  i: Integer;
+  s: string;
+begin
+  Result := nil;
+  if AComp <> nil then
+  begin
+    if AComp is TfrxMemoView then
+    begin
+      s := UpperCase(Trim(TfrxMemoView(AComp).Text));
+      if (s = 'FACTURA') or
+         (s = 'FACTURA SIMPLIFICADA') or
+         (s = 'FACTURA RECTIFICATIVA') then
+        Result := TfrxMemoView(AComp);
+    end;
+    if Result = nil then
+    begin
+      for i := 0 to AComp.Objects.Count - 1 do
+      begin
+        if Result = nil then
+          Result := BuscarMemoTitulo(TfrxComponent(AComp.Objects[i]));
+      end;
+    end;
+  end;
+end;
+
+// Primera banda de un tipo concreto entre los hijos directos de la página
+function PrimeraBanda(APage: TfrxReportPage; AClase: TClass): TfrxBand;
+var
+  j: Integer;
+begin
+  Result := nil;
+  for j := 0 to APage.Objects.Count - 1 do
+  begin
+    if (Result = nil) and (TObject(APage.Objects[j]).InheritsFrom(AClase)) then
+      Result := TfrxBand(APage.Objects[j]);
+  end;
+end;
+
 procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
 var
-  i, j:   Integer;
+  i:      Integer;
   oPage:  TfrxReportPage;
   oBanda: TfrxBand;
+  oMemo:  TfrxMemoView;
+  oParent: TfrxComponent;
   oPic:   TfrxPictureView;
   dLado:  Extended;
   dBase:  Extended;
 begin
   if (AReport <> nil) and (AReport.FindObject('qrverifactu') = nil) then
   begin
-    // Primera página de informe (Pages[0] suele ser la de datos)
     oPage := nil;
     for i := 0 to AReport.PagesCount - 1 do
     begin
@@ -375,56 +417,43 @@ begin
     end;
     if oPage <> nil then
     begin
-      // El QR tiene que vivir DENTRO de una banda: los objetos
-      // sueltos en la página no pasan por OnBeforePrint y el hueco
-      // se quedaba vacío. Preferimos la cabecera de página (sale en
-      // todas las hojas con el registro activo); si el formato no
-      // tiene, el título de informe.
+      // El QR debe alojarse DENTRO de una banda imprimible. La más
+      // segura es la del memo de título 'FACTURA' (existe y se imprime);
+      // si no, cabecera de página / título de informe / banda de datos.
       oBanda := nil;
-      for j := 0 to oPage.Objects.Count - 1 do
+      oMemo  := BuscarMemoTitulo(oPage);
+      if oMemo <> nil then
       begin
-        if (oBanda = nil) and
-           (TObject(oPage.Objects[j]) is TfrxPageHeader) then
-          oBanda := TfrxBand(oPage.Objects[j]);
+        oParent := oMemo.Parent;
+        while (oParent <> nil) and (not (oParent is TfrxBand)) do
+          oParent := oParent.Parent;
+        if oParent is TfrxBand then
+          oBanda := TfrxBand(oParent);
       end;
       if oBanda = nil then
-      begin
-        for j := 0 to oPage.Objects.Count - 1 do
-        begin
-          if (oBanda = nil) and
-             (TObject(oPage.Objects[j]) is TfrxReportTitle) then
-            oBanda := TfrxBand(oPage.Objects[j]);
-        end;
-      end;
-      // Último recurso: una banda de datos (siempre dispara
-      // OnBeforePrint). Nunca dejamos el QR suelto en la página.
+        oBanda := PrimeraBanda(oPage, TfrxPageHeader);
       if oBanda = nil then
-      begin
-        for j := 0 to oPage.Objects.Count - 1 do
-        begin
-          if (oBanda = nil) and
-             (TObject(oPage.Objects[j]) is TfrxDataBand) then
-            oBanda := TfrxBand(oPage.Objects[j]);
-        end;
-      end;
-      // 30 mm (mínimo AEAT 30x30) pegado al margen superior derecho.
-      // El usuario puede recolocarlo en el diseñador: al guardar el
-      // formato con el objeto, esta inyección deja de actuar.
-      // fr01cm = 1 mm en píxeles del informe.
+        oBanda := PrimeraBanda(oPage, TfrxReportTitle);
+      if oBanda = nil then
+        oBanda := PrimeraBanda(oPage, TfrxDataBand);
+      // 30 mm (mínimo AEAT 30x30). fr01cm = 1 mm en unidades del informe.
       dLado := 30 * fr01cm;
       if oBanda <> nil then
       begin
         oPic := TfrxPictureView.Create(oBanda);
+        // CLAVE: sin Parent, FastReport NO dibuja el objeto aunque
+        // exista (el memo de título sí se dibuja porque ya lo trae)
+        oPic.Parent := oBanda;
         dBase := oBanda.Width;
         if dBase <= 0 then
           dBase := oPage.Width;
-        // La banda debe poder contener el QR sin pisar lo de debajo
         if oBanda.Height < dLado then
           oBanda.Height := dLado;
       end
       else
       begin
         oPic := TfrxPictureView.Create(oPage);
+        oPic.Parent := oPage;
         dBase := oPage.Width;
       end;
       oPic.Name    := 'qrverifactu';
