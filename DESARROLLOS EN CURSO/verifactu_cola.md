@@ -329,45 +329,44 @@ directamente como factura **NORMAL** en lugar de simplificada:
 
 ### QR tributario en los formatos FastReport ('qrverifactu')
 
-Cualquier formato impreso por el framework (`inMtoModalGenImp`) rellena
-automáticamente el `TfrxPictureView` llamado **`qrverifactu`** con el QR
-de la factura del registro activo de su banda (se genera en local con
-`ConstruirUrlQR` + `GenerarQRPngVerifactu`; con Verifactu inactivo o sin
-datos, la imagen queda vacía). El enganche encadena la sustitución de
-fotos existente con la del QR en `TfrmPrint.ReportBeforePrintConQR`.
+El QR del **ticket térmico** (ESC/POS nativo) y el del **Excel**
+(`inLibFacturaExcel`, imagen incrustada en la columna H) funcionan y se
+generan en local con `ConstruirUrlQR` + `GenerarQRPngVerifactu` (PNG
+**RGB**). El QR de la **consolidación** (`fza_facturas_consolidaciones`,
+visible en la pestaña 5 de la ficha) también.
 
-En los **dos formatos de factura** (normal y simplificada, impresos por
-`inMtoFacturasBase`/caja F8 vía `TfrmPrintFac`) el hueco se **inyecta
-solo** al cargar el formato si no existe: 30×30 mm arriba a la derecha
-**dentro de la cabecera de página** (o del título de informe). No se
-inyecta suelto en la página porque esos objetos no pasan por
-`OnBeforePrint` y el QR se quedaba sin rellenar. Para recolocarlo,
-basta abrir el formato en el diseñador, mover/crear un PictureView
-llamado `qrverifactu` y guardar: la inyección detecta que ya existe y
-respeta la posición del diseñador.
+En el **A4 (FastReport)** el QR NO se inyecta ni se mueve por código: el
+framework solo **rellena** el `TfrxPictureView` llamado **`qrverifactu`**
+si el formato lo trae (vía `FindObject` en `TfrmPrintFac.AfterReportLoaded`
+y el `OnBeforePrint` encadenado en `TfrmPrint.ReportBeforePrintConQR`).
+Decisión de diseño (el usuario coloca el hueco): los intentos de
+inyectar/mover el QR por código rompían el layout y, además, un
+`TfrxPictureView` rellenado en una **banda estática** (cabecera/pie de
+página) no lo dibuja FastReport en esta versión —solo en **bandas de
+datos**, como las fotos de tickets/etiquetas—.
 
-**Título por tipo**: el memo de título de los formatos (texto exacto
-`FACTURA`) se reescribe por registro a `FACTURA SIMPLIFICADA` /
-`FACTURA RECTIFICATIVA` según `TIPO_FAC`. Como `vi_facturas_print` no
-trae `TIPO_FAC`, la consulta de `TfrmPrintFac.preparar_consulta` lo
-añade con un JOIN a `fza_facturas` (sin tocar la vista).
+**Cómo añadir el QR al A4** (una vez, en el diseñador de FastReport):
+1. Facturas → Imprimir → botón **Editar** (o el diseñador del formato).
+2. Crear un **Picture** (`TfrxPictureView`) y renombrarlo EXACTAMENTE
+   `qrverifactu` (en minúsculas).
+3. Colocarlo dentro de una **banda de datos** (p. ej. la `MasterData`
+   de Facturas o la banda de líneas) para que se dibuje; en la cabecera
+   de página no se pintará. Tamaño mínimo AEAT 30×30 mm.
+4. Propiedades recomendadas: `Stretched = True`, `KeepAspectRatio`
+   opcional. Sin `Picture` de diseño (lo rellena el código).
+5. Guardar el formato. A partir de ahí, cada impresión/preview rellena
+   ese `qrverifactu` con el QR de la factura.
 
-**Importante — el `OnBeforePrint` no llega a los objetos sueltos de la
-cabecera de página** en esta versión de FastReport (sí a las bandas y a
-los objetos de bandas de datos; por eso las fotos de tickets/etiquetas
-funcionan). El QR y el título viven en la cabecera de página, así que
-el QR no se rellenaba y el título no cambiaba. La vía fiable es
-`AplicarVerifactuEnBanda`: al dispararse la **banda** (la cabecera de
-página sí recibe el evento de banda), se recorren sus hijos y se
-rellena el QR y el título con la factura activa. Se encadena en
-`TfrmPrint.ReportBeforePrintConQR` junto a las dos sustituciones por
-objeto (que siguen valiendo si el QR/título se mueven a una banda de
-datos en el diseñador).
+**Título por tipo**: el memo de título (texto exacto `FACTURA`) se
+reescribe por registro a `FACTURA SIMPLIFICADA` / `FACTURA RECTIFICATIVA`
+según `TIPO_FAC` (la consulta de `TfrmPrintFac.preparar_consulta` añade
+`TIPO_FAC` con un JOIN a `fza_facturas`). Esto sí funciona en la
+cabecera porque es texto, no imagen.
 
 **Excel** (botón Excel de `TfrmPrintFac`, `inLibFacturaExcel`): la hoja
-lleva el mismo QR tributario incrustado arriba a la derecha (columna H,
-anclado a la cabecera) y el título también sale según el tipo
-(`FACTURA` / `FACTURA SIMPLIFICADA` / `FACTURA RECTIFICATIVA`).
+lleva el QR tributario incrustado a la derecha (columna H) y el título
+según el tipo. La incrustación va envuelta en `try/except`: si fallara,
+la factura sale a Excel sin QR en vez de reventar.
 
 Resumen de caminos: registro mal comunicado → **Subsanar**; precios o
 conceptos mal → **Rectificar** (o devolución en caja); cliente pide
