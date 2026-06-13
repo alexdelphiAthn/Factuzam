@@ -300,6 +300,7 @@ begin
       '        f.FECHA_FAC, f.TIPO_FAC, f.NIF_CLIENTE_FAC, ' +
       '        f.RAZON_SOCIAL_CLIENTE_FAC, ' +
       '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_LIQUIDO_FAC, ' +
+      '        f.TOTAL_RETENCION_FAC, ' +
       '        f.PORCENTAJE_IVAN_FAC, f.TOTAL_BASEI_IVAN_FAC, ' +
       '        f.TOTAL_IVAN_FAC, f.PORCENTAJE_REN_FAC, f.TOTAL_REN_FAC, ' +
       '        f.PORCENTAJE_IVAR_FAC, f.TOTAL_BASEI_IVAR_FAC, ' +
@@ -342,8 +343,15 @@ begin
         Trim(Qry.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
       ADatos.CuotaTotal   :=
         Qry.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
+      // ImporteTotal Verifactu = importe BRUTO (base + IVA + recargo), sin
+      // descontar el IRPF. Verifactu solo informa a efectos de IVA: la
+      // retencion no se comunica ni resta del total (a diferencia del
+      // liquido a pagar). Reconstruimos el bruto sumando la retencion al
+      // liquido (TOTAL_LIQUIDO_FAC = bases + impuestos - retencion). Asi el
+      // total cuadra con la suma del desglose que valida la AEAT.
       ADatos.ImporteTotal :=
-        Qry.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
+        Qry.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency +
+        Qry.FieldByName('TOTAL_RETENCION_FAC').AsCurrency;
       ADatos.SerialCert :=
         Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
       ADatos.TitularCert :=
