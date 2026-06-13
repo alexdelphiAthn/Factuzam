@@ -158,6 +158,7 @@
         OptionsSelection.CellSelect = False
         OptionsSelection.MultiSelect = True
         OptionsView.CheckGroups = True
+        OptionsView.ColumnAutoWidth = True
         OptionsView.Headers = False
         RootValue = ''
         ScrollbarAnnotations.CustomAnnotations = <>
