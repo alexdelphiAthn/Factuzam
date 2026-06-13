@@ -116,17 +116,15 @@ begin
   inherited;
   if dmFac <> nil then
     RebindReportDataSetsByDataModule(frxrprt1, dmFac);
-  // Hueco del QR tributario: si el formato (normal o simplificada) no
-  // trae el TfrxPictureView 'qrverifactu', se inyecta arriba a la
-  // derecha de la cabecera.
-  AsegurarQRVerifactuEnReport(frxrprt1);
-  // Relleno directo del QR y el título con la factura ya cargada en
-  // unqryFacPrint: garantiza que el QR salga POR DEFECTO sin depender
-  // de que el OnBeforePrint llegue al objeto. El OnBeforePrint por
-  // banda (base) sigue actuando para rangos de varias facturas.
+  // Fuerza el QR a la banda de datos MasterData (donde un picture sí se
+  // dibuja) y lo rellena con la factura, sea cual sea el formato
+  // cargado (base del .dfm o copia guardada). En una banda estática
+  // (cabecera de página) el picture no se pinta aunque se rellene.
   if (dmFac <> nil) and dmFac.unqryFacPrint.Active and
      (not dmFac.unqryFacPrint.IsEmpty) then
-    AplicarVerifactuEnReportDirecto(frxrprt1, dmFac.unqryFacPrint);
+    PrepararImpresionFacturaVerifactu(frxrprt1, dmFac.unqryFacPrint)
+  else
+    AsegurarQRVerifactuEnReport(frxrprt1);
 end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;
