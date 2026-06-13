@@ -236,6 +236,14 @@ type
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
     procedure RellenarAtributosDesdeSku(const Sku: string);
     function ObtenerColumnaSkuPorTag(NumColumn: Integer): TcxGridDBColumn;
+    // Modo "atributos en columna": con el toggle activo, la columna unificada
+    // SKU/Articulo cede el sitio a la columna Articulo (que pasa a ser la
+    // entrada inteligente) seguida de las columnas de atributos; con el toggle
+    // inactivo se ve la unificada y Articulo/atributos quedan ocultas.
+    procedure AplicarModoColumnasEntrada(AModoAtributos: Boolean);
+    // Columna de entrada activa segun el modo: Articulo si atributos en
+    // columna esta activo, si no la unificada SKU/Articulo.
+    function ColumnaEntradaActiva: TcxGridDBColumn;
     // Asegura que cdsLineas tiene los ATTR1..ATTR5_VALOR rellenados
     // (idempotente: no hace nada si ya estan, ver dmm.LineasDesempaquetadas).
     // Si hay mas de FUmbralProgresoDesempaquetado lineas, muestra el overlay
@@ -391,15 +399,11 @@ end;
 procedure TfrmMtoInventarios.AplicarEtiquetas;
 begin
   inherited;
-  // Solo queremos UNA columna de input para el articulo (la unificada
-  // tvLineasUNIDAD, que admite codigo de articulo, SKU o codigo de barras).
-  // Forzamos a que la antigua columna de articulo no se vea aunque algun
-  // perfil de usuario la haya marcado como visible.
-  if Assigned(tvLineasARTICULO) then
-  begin
-    tvLineasARTICULO.Visible := False;
-    tvLineasARTICULO.VisibleForCustomization := False;
-  end;
+  // La columna de entrada del articulo depende del modo "atributos en columna":
+  // con el toggle activo es la columna Articulo (codigo), si no la unificada
+  // SKU/Articulo. Dejamos que el modo gobierne la visibilidad en vez de forzar
+  // Articulo siempre oculta.
+  AplicarModoColumnasEntrada(FMostrarColumnasAtributos);
 end;
 
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
@@ -592,6 +596,12 @@ begin
     ActualizarColumnasDinamicas(dmmInventarios.cdsLineas.FieldByName(
                                                  'CODIGO_ART_INVLIN').AsString);
   end;
+  // En modo DisconnectedMode + Pooling el cxGrid no siempre resincroniza su
+  // DataController solo con el Open de cdsLineas, y las lineas recien cargadas
+  // (carga masiva, Excel, familia/proveedor) no se ven hasta salir y volver a
+  // entrar. Forzamos el refresco del grid para que aparezcan al momento.
+  if Assigned(tvLineas) then
+    tvLineas.DataController.Refresh;
 end;
 
 procedure TfrmMtoInventarios.cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(
@@ -631,6 +641,41 @@ begin
     5: Result := tvLineasSKU5;
   else
     Result := nil;
+  end;
+end;
+
+function TfrmMtoInventarios.ColumnaEntradaActiva: TcxGridDBColumn;
+begin
+  if FMostrarColumnasAtributos then
+    Result := tvLineasARTICULO
+  else
+    Result := tvLineasUNIDAD;
+end;
+
+procedure TfrmMtoInventarios.AplicarModoColumnasEntrada(AModoAtributos: Boolean);
+begin
+  if Assigned(tvLineasARTICULO) and Assigned(tvLineasUNIDAD) then
+  begin
+    tvLineas.BeginUpdate;
+    try
+      if AModoAtributos then
+      begin
+        // Atributos en columna: la entrada es la columna Articulo (codigo) y
+        // la unificada SKU/Articulo se oculta. Color/Talla/... van en
+        // tvLineasSKU1..5 y la Descripcion queda detras (orden de la DFM).
+        tvLineasARTICULO.Visible         := True;
+        tvLineasARTICULO.Options.Editing := True;
+        tvLineasUNIDAD.Visible           := False;
+      end
+      else
+      begin
+        // Modo normal: una unica columna de entrada, la unificada SKU/Articulo.
+        tvLineasUNIDAD.Visible   := True;
+        tvLineasARTICULO.Visible := False;
+      end;
+    finally
+      tvLineas.EndUpdate;
+    end;
   end;
 end;
 
@@ -678,6 +723,8 @@ var
           C.Caption := '-';
         end;
       end;
+      // En modo normal la entrada es la columna unificada SKU/Articulo.
+      AplicarModoColumnasEntrada(False);
     finally
       tvLineas.EndUpdate;
     end;
@@ -789,6 +836,10 @@ begin
           end;
         end;
       end;
+      // Si el toggle esta activo conmutamos a la columna Articulo como entrada;
+      // si llegamos aqui por edicion puntual con el toggle off, seguimos con la
+      // unificada SKU/Articulo.
+      AplicarModoColumnasEntrada(FMostrarColumnasAtributos);
     finally
       tvLineas.EndUpdate;
     end;
@@ -844,6 +895,10 @@ begin
   // lineas). Si se desactiva, ocultamos sin tocar la BBDD.
   if csLoading in ComponentState then Exit;
   FMostrarColumnasAtributos := chkVerColumnasAtributos.Checked;
+  // Conmuta ya la columna de entrada (Articulo <-> SKU/Articulo) aunque el
+  // inventario este vacio: ActualizarColumnasDinamicas puede cortocircuitar
+  // por memoizacion cuando no hay articulo padre.
+  AplicarModoColumnasEntrada(FMostrarColumnasAtributos);
 
   if FMostrarColumnasAtributos then
     AsegurarDesempaquetadoAtributos;
@@ -1210,7 +1265,16 @@ begin
   Resolved := Input;
   RellenarLineaDesdeBusqueda(Input, Resolved, Error, ErrorText);
   if not Error then
-    DisplayValue := Resolved;
+  begin
+    // En la columna Articulo mostramos el codigo del articulo; en la unificada,
+    // el SKU resuelto. RellenarLineaDesdeBusqueda ya fijo CODIGO_ART_INVLIN.
+    if (tvLineas.Controller.FocusedColumn = tvLineasARTICULO) and
+       Assigned(dmmInventarios) then
+      DisplayValue := dmmInventarios.cdsLineas.FieldByName(
+                        'CODIGO_ART_INVLIN').AsString
+    else
+      DisplayValue := Resolved;
+  end;
 end;
 
 procedure TfrmMtoInventarios.CargarAvsValidos(const ACodArt: string;
@@ -1412,7 +1476,14 @@ begin
   if Sender is TcxCustomEdit then
   begin
     Edit := TcxCustomEdit(Sender);
-    Edit.EditValue := Resolved;
+    // Igual que en el Validate: la celda Articulo muestra el codigo de
+    // articulo; la unificada, el SKU resuelto.
+    if (tvLineas.Controller.FocusedColumn = tvLineasARTICULO) and
+       Assigned(dmmInventarios) then
+      Edit.EditValue := dmmInventarios.cdsLineas.FieldByName(
+                          'CODIGO_ART_INVLIN').AsString
+    else
+      Edit.EditValue := Resolved;
   end;
   msReflect := swReflect.ElapsedMilliseconds;
   // Si el articulo tiene variaciones (NUM_ATRIBUTOS > 0), movemos el foco
@@ -1826,8 +1897,8 @@ end;
 
 procedure TfrmMtoInventarios.cdsLineasAfterInsertHook(DataSet: TDataSet);
 begin
-  // Poner foco en la columna unificada SKU/Articulo tras insertar
-  tvLineas.Controller.FocusedColumn := tvLineasUNIDAD;
+  // Foco en la columna de entrada activa (Articulo o SKU/Articulo) tras insertar
+  tvLineas.Controller.FocusedColumn := ColumnaEntradaActiva;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
 end;
@@ -1881,8 +1952,8 @@ begin
   // 3. Anadir la nueva linea
   dmmInventarios.cdsLineas.Append;
 
-  // 4. Foco en la columna unificada (SKU/Articulo)
-  tvLineas.Controller.FocusedColumn := tvLineasUNIDAD;
+  // 4. Foco en la columna de entrada activa (Articulo o SKU/Articulo)
+  tvLineas.Controller.FocusedColumn := ColumnaEntradaActiva;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
 end;
@@ -2438,6 +2509,10 @@ begin
         '   AND SERIE_INV = :S AND NUMERO_INV = :N',
         [sEmp, sAlm, sSerie, sNumero]);
       dmmInventarios.CargarLineasInventario;
+      // Igual que en la carga masiva: forzamos el refresco del grid para que
+      // las lecturas recogidas se vean sin salir y volver a entrar.
+      if Assigned(tvLineas) then
+        tvLineas.DataController.Refresh;
       dmmInventarios.unqryTablaG.Refresh;
       ShowMessage(Format('Recuento recogido: %d lecturas, %d SKUs. ' +
         'Revisa las físicas y APLICA cuando quieras.',
