@@ -5,7 +5,8 @@ inherited dmAlbaranes: TdmAlbaranes
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM vi_albaranes')
+      'SELECT * FROM vi_albaranes'
+      ' ORDER BY INSTANTE_ALTA DESC, NUMERO_ALB DESC')
     AfterInsert = unqryTablaGAfterInsert
     AfterPost = unqryTablaGAfterPost
     Left = 48
