@@ -418,6 +418,14 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   object tvLineasARTICULO: TcxGridDBColumn
                     Caption = 'Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_INVLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = tvLineasUnidadPropertiesButtonClick
+                    Properties.OnValidate = tvLineasUnidadPropertiesValidate
                     Visible = False
                     Width = 130
                   end
@@ -433,12 +441,6 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Properties.OnButtonClick = tvLineasUnidadPropertiesButtonClick
                     Properties.OnValidate = tvLineasUnidadPropertiesValidate
                     Width = 180
-                  end
-                  object tvLineasDESCRIPCION: TcxGridDBColumn
-                    Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_INVLIN'
-                    Options.Editing = False
-                    Width = 220
                   end
                   object tvLineasSKU1: TcxGridDBColumn
                     Tag = 1
@@ -509,6 +511,12 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                     Properties.OnButtonClick = tvLineasSkuPropertiesButtonClick
                     Visible = False
                     Width = 80
+                  end
+                  object tvLineasDESCRIPCION: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_INVLIN'
+                    Options.Editing = False
+                    Width = 220
                   end
                   object tvLineasLOTE: TcxGridDBColumn
                     Caption = 'Lote'
