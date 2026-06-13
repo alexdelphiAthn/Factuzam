@@ -285,9 +285,9 @@ end;
 //   Carga de datos: factura, certificado de la empresa y cadena
 // ===========================================================================
 
-procedure CargarDatosFactura(AConn: TUniConnection;
-                             const ASerie, ANumero: string;
-                             out ADatos: TDatosFacturaRegistro);
+function CargarDatosFactura(AConn: TUniConnection;
+                            const ASerie, ANumero: string;
+                            out ADatos: TDatosFacturaRegistro): Boolean;
 var
   Qry:      TUniQuery;
   sTipoFac: string;
@@ -317,130 +317,135 @@ begin
     Qry.ParamByName('SERIE').AsString  := ASerie;
     Qry.ParamByName('NUMERO').AsString := ANumero;
     Qry.Open;
-    if Qry.IsEmpty then
-      raise Exception.Create('Factura ' + ASerie + '\' + ANumero +
-                             ' no encontrada para el envío Verifactu');
-    ADatos.NifEmisor :=
-      NormalizarNifVerifactu(Qry.FieldByName('NIF_EMPRESA_FAC').AsString);
-    ADatos.NombreEmisor :=
-      Trim(Qry.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
-    ADatos.FechaFac        := Qry.FieldByName('FECHA_FAC').AsDateTime;
-    ADatos.FechaExpedicion :=
-      FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
-    sTipoFac := Qry.FieldByName('TIPO_FAC').AsString;
-    ADatos.TipoFactura := TipoFacturaVerifactu(sTipoFac);
-    ADatos.RectSerie   := '';
-    ADatos.RectNumero  := '';
-    ADatos.RectFecha   := '';
-    ADatos.NifCliente :=
-      NormalizarNifVerifactu(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
-    ADatos.NombreCliente :=
-      Trim(Qry.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
-    ADatos.CuotaTotal   :=
-      Qry.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
-    ADatos.ImporteTotal :=
-      Qry.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
-    ADatos.SerialCert :=
-      Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
-    ADatos.TitularCert :=
-      Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
-    // Banda N (normal)
-    ADatos.Bandas[0].Porcentaje :=
-      Qry.FieldByName('PORCENTAJE_IVAN_FAC').AsCurrency;
-    ADatos.Bandas[0].Base :=
-      Qry.FieldByName('TOTAL_BASEI_IVAN_FAC').AsCurrency;
-    ADatos.Bandas[0].Cuota := Qry.FieldByName('TOTAL_IVAN_FAC').AsCurrency;
-    ADatos.Bandas[0].PorcentajeRe :=
-      Qry.FieldByName('PORCENTAJE_REN_FAC').AsCurrency;
-    ADatos.Bandas[0].CuotaRe := Qry.FieldByName('TOTAL_REN_FAC').AsCurrency;
-    ADatos.Bandas[0].EsExenta := False;
-    // Banda R (reducido)
-    ADatos.Bandas[1].Porcentaje :=
-      Qry.FieldByName('PORCENTAJE_IVAR_FAC').AsCurrency;
-    ADatos.Bandas[1].Base :=
-      Qry.FieldByName('TOTAL_BASEI_IVAR_FAC').AsCurrency;
-    ADatos.Bandas[1].Cuota := Qry.FieldByName('TOTAL_IVAR_FAC').AsCurrency;
-    ADatos.Bandas[1].PorcentajeRe :=
-      Qry.FieldByName('PORCENTAJE_RER_FAC').AsCurrency;
-    ADatos.Bandas[1].CuotaRe := Qry.FieldByName('TOTAL_RER_FAC').AsCurrency;
-    ADatos.Bandas[1].EsExenta := False;
-    // Banda S (superreducido)
-    ADatos.Bandas[2].Porcentaje :=
-      Qry.FieldByName('PORCENTAJE_IVAS_FAC').AsCurrency;
-    ADatos.Bandas[2].Base :=
-      Qry.FieldByName('TOTAL_BASEI_IVAS_FAC').AsCurrency;
-    ADatos.Bandas[2].Cuota := Qry.FieldByName('TOTAL_IVAS_FAC').AsCurrency;
-    ADatos.Bandas[2].PorcentajeRe :=
-      Qry.FieldByName('PORCENTAJE_RES_FAC').AsCurrency;
-    ADatos.Bandas[2].CuotaRe := Qry.FieldByName('TOTAL_RES_FAC').AsCurrency;
-    ADatos.Bandas[2].EsExenta := False;
-    // Banda E (exento)
-    ADatos.Bandas[3].Porcentaje :=
-      Qry.FieldByName('PORCENTAJE_IVAE_FAC').AsCurrency;
-    ADatos.Bandas[3].Base :=
-      Qry.FieldByName('TOTAL_BASEI_IVAE_FAC').AsCurrency;
-    ADatos.Bandas[3].Cuota := Qry.FieldByName('TOTAL_IVAE_FAC').AsCurrency;
-    ADatos.Bandas[3].PorcentajeRe := 0;
-    ADatos.Bandas[3].CuotaRe      := 0;
-    ADatos.Bandas[3].EsExenta     := True;
-    // Antecesora (la original de una rectificativa o el ticket
-    // sustituido por una F3): primero por el histórico de relaciones
-    // (fza_facturas_relaciones, soporta varias rectificaciones de la
-    // misma factura) y, si no hay fila, por el enlace ABONO inverso.
-    // Decide R1/R5/F3 y aporta FacturasRectificadas / Sustituidas.
-    if SameText(sTipoFac, 'RECTIFICATIVA') or
-       SameText(sTipoFac, 'NORMAL') then
+    // Si la fila de la cola no apunta a una factura real (huérfana,
+    // p.ej. 0\0) se devuelve False sin lanzar excepción: el llamador
+    // lo deja solo en el log de Verifactu como error de envío y no
+    // salta el diálogo de excepción por pantalla.
+    Result := not Qry.IsEmpty;
+    if Result then
     begin
-      Qry.Close;
-      Qry.SQL.Text :=
-        ' SELECT o.SERIE_FAC, o.NUMERO_FAC, o.TIPO_FAC, ' +
-        '        DATE_FORMAT(o.FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
-        ' FROM fza_facturas_relaciones r ' +
-        ' JOIN fza_facturas o ' +
-        '   ON o.SERIE_FAC  = r.SERIE_FAC_ORIGEN_FACREL ' +
-        '  AND o.NUMERO_FAC = r.NUMERO_FAC_ORIGEN_FACREL ' +
-        ' WHERE r.SERIE_FAC_FACREL  = :SERIE ' +
-        '   AND r.NUMERO_FAC_FACREL = :NUMERO ' +
-        ' ORDER BY r.ID_FACREL DESC ' +
-        ' LIMIT 1';
-      Qry.ParamByName('SERIE').AsString  := ASerie;
-      Qry.ParamByName('NUMERO').AsString := ANumero;
-      Qry.Open;
-      if Qry.IsEmpty then
+      ADatos.NifEmisor :=
+        NormalizarNifVerifactu(Qry.FieldByName('NIF_EMPRESA_FAC').AsString);
+      ADatos.NombreEmisor :=
+        Trim(Qry.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
+      ADatos.FechaFac        := Qry.FieldByName('FECHA_FAC').AsDateTime;
+      ADatos.FechaExpedicion :=
+        FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
+      sTipoFac := Qry.FieldByName('TIPO_FAC').AsString;
+      ADatos.TipoFactura := TipoFacturaVerifactu(sTipoFac);
+      ADatos.RectSerie   := '';
+      ADatos.RectNumero  := '';
+      ADatos.RectFecha   := '';
+      ADatos.NifCliente :=
+        NormalizarNifVerifactu(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
+      ADatos.NombreCliente :=
+        Trim(Qry.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
+      ADatos.CuotaTotal   :=
+        Qry.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
+      ADatos.ImporteTotal :=
+        Qry.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
+      ADatos.SerialCert :=
+        Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
+      ADatos.TitularCert :=
+        Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
+      // Banda N (normal)
+      ADatos.Bandas[0].Porcentaje :=
+        Qry.FieldByName('PORCENTAJE_IVAN_FAC').AsCurrency;
+      ADatos.Bandas[0].Base :=
+        Qry.FieldByName('TOTAL_BASEI_IVAN_FAC').AsCurrency;
+      ADatos.Bandas[0].Cuota := Qry.FieldByName('TOTAL_IVAN_FAC').AsCurrency;
+      ADatos.Bandas[0].PorcentajeRe :=
+        Qry.FieldByName('PORCENTAJE_REN_FAC').AsCurrency;
+      ADatos.Bandas[0].CuotaRe := Qry.FieldByName('TOTAL_REN_FAC').AsCurrency;
+      ADatos.Bandas[0].EsExenta := False;
+      // Banda R (reducido)
+      ADatos.Bandas[1].Porcentaje :=
+        Qry.FieldByName('PORCENTAJE_IVAR_FAC').AsCurrency;
+      ADatos.Bandas[1].Base :=
+        Qry.FieldByName('TOTAL_BASEI_IVAR_FAC').AsCurrency;
+      ADatos.Bandas[1].Cuota := Qry.FieldByName('TOTAL_IVAR_FAC').AsCurrency;
+      ADatos.Bandas[1].PorcentajeRe :=
+        Qry.FieldByName('PORCENTAJE_RER_FAC').AsCurrency;
+      ADatos.Bandas[1].CuotaRe := Qry.FieldByName('TOTAL_RER_FAC').AsCurrency;
+      ADatos.Bandas[1].EsExenta := False;
+      // Banda S (superreducido)
+      ADatos.Bandas[2].Porcentaje :=
+        Qry.FieldByName('PORCENTAJE_IVAS_FAC').AsCurrency;
+      ADatos.Bandas[2].Base :=
+        Qry.FieldByName('TOTAL_BASEI_IVAS_FAC').AsCurrency;
+      ADatos.Bandas[2].Cuota := Qry.FieldByName('TOTAL_IVAS_FAC').AsCurrency;
+      ADatos.Bandas[2].PorcentajeRe :=
+        Qry.FieldByName('PORCENTAJE_RES_FAC').AsCurrency;
+      ADatos.Bandas[2].CuotaRe := Qry.FieldByName('TOTAL_RES_FAC').AsCurrency;
+      ADatos.Bandas[2].EsExenta := False;
+      // Banda E (exento)
+      ADatos.Bandas[3].Porcentaje :=
+        Qry.FieldByName('PORCENTAJE_IVAE_FAC').AsCurrency;
+      ADatos.Bandas[3].Base :=
+        Qry.FieldByName('TOTAL_BASEI_IVAE_FAC').AsCurrency;
+      ADatos.Bandas[3].Cuota := Qry.FieldByName('TOTAL_IVAE_FAC').AsCurrency;
+      ADatos.Bandas[3].PorcentajeRe := 0;
+      ADatos.Bandas[3].CuotaRe      := 0;
+      ADatos.Bandas[3].EsExenta     := True;
+      // Antecesora (la original de una rectificativa o el ticket
+      // sustituido por una F3): primero por el histórico de relaciones
+      // (fza_facturas_relaciones, soporta varias rectificaciones de la
+      // misma factura) y, si no hay fila, por el enlace ABONO inverso.
+      // Decide R1/R5/F3 y aporta FacturasRectificadas / Sustituidas.
+      if SameText(sTipoFac, 'RECTIFICATIVA') or
+         SameText(sTipoFac, 'NORMAL') then
       begin
         Qry.Close;
         Qry.SQL.Text :=
-          ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
-          '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
-          ' FROM fza_facturas ' +
-          ' WHERE SERIE_FAC_ABONO_FAC  = :SERIE ' +
-          '   AND NUMERO_FAC_ABONO_FAC = :NUMERO ' +
+          ' SELECT o.SERIE_FAC, o.NUMERO_FAC, o.TIPO_FAC, ' +
+          '        DATE_FORMAT(o.FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+          ' FROM fza_facturas_relaciones r ' +
+          ' JOIN fza_facturas o ' +
+          '   ON o.SERIE_FAC  = r.SERIE_FAC_ORIGEN_FACREL ' +
+          '  AND o.NUMERO_FAC = r.NUMERO_FAC_ORIGEN_FACREL ' +
+          ' WHERE r.SERIE_FAC_FACREL  = :SERIE ' +
+          '   AND r.NUMERO_FAC_FACREL = :NUMERO ' +
+          ' ORDER BY r.ID_FACREL DESC ' +
           ' LIMIT 1';
         Qry.ParamByName('SERIE').AsString  := ASerie;
         Qry.ParamByName('NUMERO').AsString := ANumero;
         Qry.Open;
-      end;
-      if not Qry.IsEmpty then
-      begin
-        if SameText(sTipoFac, 'RECTIFICATIVA') then
+        if Qry.IsEmpty then
         begin
-          if SameText(Qry.FieldByName('TIPO_FAC').AsString,
-                      'SIMPLIFICADA') then
-            ADatos.TipoFactura := 'R5'
-          else
-            ADatos.TipoFactura := 'R1';
-          ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
-          ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
-          ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
-        end
-        else if SameText(Qry.FieldByName('TIPO_FAC').AsString,
-                         'SIMPLIFICADA') then
+          Qry.Close;
+          Qry.SQL.Text :=
+            ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
+            '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+            ' FROM fza_facturas ' +
+            ' WHERE SERIE_FAC_ABONO_FAC  = :SERIE ' +
+            '   AND NUMERO_FAC_ABONO_FAC = :NUMERO ' +
+            ' LIMIT 1';
+          Qry.ParamByName('SERIE').AsString  := ASerie;
+          Qry.ParamByName('NUMERO').AsString := ANumero;
+          Qry.Open;
+        end;
+        if not Qry.IsEmpty then
         begin
-          // Factura completa emitida en sustitución de un ticket
-          ADatos.TipoFactura := 'F3';
-          ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
-          ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
-          ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
+          if SameText(sTipoFac, 'RECTIFICATIVA') then
+          begin
+            if SameText(Qry.FieldByName('TIPO_FAC').AsString,
+                        'SIMPLIFICADA') then
+              ADatos.TipoFactura := 'R5'
+            else
+              ADatos.TipoFactura := 'R1';
+            ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
+            ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
+            ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
+          end
+          else if SameText(Qry.FieldByName('TIPO_FAC').AsString,
+                           'SIMPLIFICADA') then
+          begin
+            // Factura completa emitida en sustitución de un ticket
+            ADatos.TipoFactura := 'F3';
+            ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
+            ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
+            ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
+          end;
         end;
       end;
     end;
@@ -869,103 +874,111 @@ begin
   Result.QueueId        := 0;
   Result.IssuedTime     := 0;
   Result.EsperaSegundos := 0;
-  CargarDatosFactura(AConn, ASerie, ANumero, oDatos);
-  if Length(oDatos.NifEmisor) <> 9 then
-    raise Exception.Create('NIF de la empresa emisora vacío o no ' +
-      'válido para Verifactu: "' + oDatos.NifEmisor + '". Revisar la ' +
-      'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
-  // Bloquea la cadena del emisor hasta el commit/rollback del llamador
-  ObtenerCadenaParaEnvio(AConn, oDatos.NifEmisor, oCadena);
-  sFhGen := FechaHoraHusoGen(Now);
-  sSif   := ConstruirSistemaInformatico(AConn);
-  if ATipoOperacion = 'ANULACION' then
-    sRegistro := ConstruirRegistroAnulacion(oDatos, ASerie, ANumero,
-                                            oCadena, sSif, sFhGen, sHuella)
-  else
-    sRegistro := ConstruirRegistroAlta(oDatos, ASerie, ANumero,
-                                       oCadena, sSif, sFhGen,
-                                       ATipoOperacion = 'SUBSANACION',
-                                       sHuella);
-  Result.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
-  EnviarHttp(UrlEnvio, Result.PeticionCompleta,
-             oDatos.SerialCert, oDatos.TitularCert, iStatus, sCuerpo);
-  Result.RespuestaCompleta := sCuerpo;
-  if iStatus <> 200 then
-  begin
-    sDescErr := ExtraerEtiqueta(sCuerpo, 'faultstring');
-    if sDescErr = '' then
-      sDescErr := 'Respuesta inesperada del servicio';
-    Result.MensajeError := 'AEAT HTTP ' + IntToStr(iStatus) + ': ' +
-                           sDescErr;
-  end
+  if not CargarDatosFactura(AConn, ASerie, ANumero, oDatos) then
+    // Fila de la cola sin factura real (huérfana, p.ej. 0\0): no se
+    // lanza excepción; se devuelve el error para que la cola lo deje
+    // únicamente en el log de Verifactu (RegistrarEventoVerifactu).
+    Result.MensajeError := 'Factura ' + ASerie + '\' + ANumero +
+                           ' no encontrada para el envío Verifactu'
   else
   begin
-    sEstadoEnvio    := ExtraerEtiqueta(sCuerpo, 'EstadoEnvio');
-    sEstadoRegistro := ExtraerEtiqueta(sCuerpo, 'EstadoRegistro');
-    sCodigoErr      := ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro');
-    sDescErr        := ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro');
-    Result.EsperaSegundos :=
-      StrToIntDef(ExtraerEtiqueta(sCuerpo, 'TiempoEsperaEnvio'), 0);
-    // Si no viene línea de respuesta, manda el estado global del envío
-    if sEstadoRegistro = '' then
-      sEstadoRegistro := sEstadoEnvio;
-    // Registro duplicado: la AEAT ya lo tiene registrado (p.ej. un
-    // reintento tras aceptar y fallar la persistencia local). Se da
-    // por aceptado para consolidar y cerrar la fila de la cola.
-    bDuplicado := (sCodigoErr = '3000') or
-                  ContainsText(sDescErr, 'duplicado');
-    bAceptado := SameText(sEstadoEnvio, 'Correcto') or
-                 SameText(sEstadoRegistro, 'Correcto') or
-                 SameText(sEstadoRegistro, 'AceptadoConErrores') or
-                 bDuplicado;
-    if bAceptado then
+    if Length(oDatos.NifEmisor) <> 9 then
+      raise Exception.Create('NIF de la empresa emisora vacío o no ' +
+        'válido para Verifactu: "' + oDatos.NifEmisor + '". Revisar la ' +
+        'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
+    // Bloquea la cadena del emisor hasta el commit/rollback del llamador
+    ObtenerCadenaParaEnvio(AConn, oDatos.NifEmisor, oCadena);
+    sFhGen := FechaHoraHusoGen(Now);
+    sSif   := ConstruirSistemaInformatico(AConn);
+    if ATipoOperacion = 'ANULACION' then
+      sRegistro := ConstruirRegistroAnulacion(oDatos, ASerie, ANumero,
+                                              oCadena, sSif, sFhGen, sHuella)
+    else
+      sRegistro := ConstruirRegistroAlta(oDatos, ASerie, ANumero,
+                                         oCadena, sSif, sFhGen,
+                                         ATipoOperacion = 'SUBSANACION',
+                                         sHuella);
+    Result.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
+    EnviarHttp(UrlEnvio, Result.PeticionCompleta,
+               oDatos.SerialCert, oDatos.TitularCert, iStatus, sCuerpo);
+    Result.RespuestaCompleta := sCuerpo;
+    if iStatus <> 200 then
     begin
-      Result.Ok := True;
-      if bDuplicado then
-        Result.EstadoRegistro := 'Duplicado'
-      else
-        Result.EstadoRegistro := sEstadoRegistro;
-      Result.RequestId       := ExtraerEtiqueta(sCuerpo, 'CSV');
-      Result.IssuerIrsId     := oDatos.NifEmisor;
-      Result.IssuedTime      := Now;
-      Result.FechaExpedicion := oDatos.FechaExpedicion;
-      Result.ChainNumber     := IntToStr(oCadena.Contador + 1);
-      Result.ChainHash       := sHuella;
-      if ATipoOperacion <> 'ANULACION' then
-      begin
-        Result.VerifactuUrl := ConstruirUrlQR(oDatos.NifEmisor, ASerie,
-                                              ANumero, oDatos.FechaFac,
-                                              oDatos.ImporteTotal);
-        // QR de la consolidación (PNG y base64). Si fallara, no tumba
-        // el envío: queda constancia en el mensaje informativo.
-        try
-          Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
-          if Length(Result.QRCodePng) > 0 then
-          begin
-            oB64 := TBase64Encoding.Create(0);
-            try
-              Result.QRCodeBase64 :=
-                oB64.EncodeBytesToString(Result.QRCodePng);
-            finally
-              FreeAndNil(oB64);
-            end;
-          end;
-        except
-          on E: Exception do
-            Result.MensajeError := '(QR PNG no generado: ' +
-                                   E.Message + ') ';
-        end;
-      end;
-      if bDuplicado or
-         SameText(sEstadoRegistro, 'AceptadoConErrores') then
-        Result.MensajeError := Trim(Result.MensajeError + 'AEAT [' +
-                                    sCodigoErr + '] ' + sDescErr);
+      sDescErr := ExtraerEtiqueta(sCuerpo, 'faultstring');
+      if sDescErr = '' then
+        sDescErr := 'Respuesta inesperada del servicio';
+      Result.MensajeError := 'AEAT HTTP ' + IntToStr(iStatus) + ': ' +
+                             sDescErr;
     end
     else
     begin
-      if (sCodigoErr = '') and (sDescErr = '') then
-        sDescErr := 'EstadoEnvio: ' + sEstadoEnvio;
-      Result.MensajeError := Trim('AEAT [' + sCodigoErr + '] ' + sDescErr);
+      sEstadoEnvio    := ExtraerEtiqueta(sCuerpo, 'EstadoEnvio');
+      sEstadoRegistro := ExtraerEtiqueta(sCuerpo, 'EstadoRegistro');
+      sCodigoErr      := ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro');
+      sDescErr        := ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro');
+      Result.EsperaSegundos :=
+        StrToIntDef(ExtraerEtiqueta(sCuerpo, 'TiempoEsperaEnvio'), 0);
+      // Si no viene línea de respuesta, manda el estado global del envío
+      if sEstadoRegistro = '' then
+        sEstadoRegistro := sEstadoEnvio;
+      // Registro duplicado: la AEAT ya lo tiene registrado (p.ej. un
+      // reintento tras aceptar y fallar la persistencia local). Se da
+      // por aceptado para consolidar y cerrar la fila de la cola.
+      bDuplicado := (sCodigoErr = '3000') or
+                    ContainsText(sDescErr, 'duplicado');
+      bAceptado := SameText(sEstadoEnvio, 'Correcto') or
+                   SameText(sEstadoRegistro, 'Correcto') or
+                   SameText(sEstadoRegistro, 'AceptadoConErrores') or
+                   bDuplicado;
+      if bAceptado then
+      begin
+        Result.Ok := True;
+        if bDuplicado then
+          Result.EstadoRegistro := 'Duplicado'
+        else
+          Result.EstadoRegistro := sEstadoRegistro;
+        Result.RequestId       := ExtraerEtiqueta(sCuerpo, 'CSV');
+        Result.IssuerIrsId     := oDatos.NifEmisor;
+        Result.IssuedTime      := Now;
+        Result.FechaExpedicion := oDatos.FechaExpedicion;
+        Result.ChainNumber     := IntToStr(oCadena.Contador + 1);
+        Result.ChainHash       := sHuella;
+        if ATipoOperacion <> 'ANULACION' then
+        begin
+          Result.VerifactuUrl := ConstruirUrlQR(oDatos.NifEmisor, ASerie,
+                                                ANumero, oDatos.FechaFac,
+                                                oDatos.ImporteTotal);
+          // QR de la consolidación (PNG y base64). Si fallara, no tumba
+          // el envío: queda constancia en el mensaje informativo.
+          try
+            Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
+            if Length(Result.QRCodePng) > 0 then
+            begin
+              oB64 := TBase64Encoding.Create(0);
+              try
+                Result.QRCodeBase64 :=
+                  oB64.EncodeBytesToString(Result.QRCodePng);
+              finally
+                FreeAndNil(oB64);
+              end;
+            end;
+          except
+            on E: Exception do
+              Result.MensajeError := '(QR PNG no generado: ' +
+                                     E.Message + ') ';
+          end;
+        end;
+        if bDuplicado or
+           SameText(sEstadoRegistro, 'AceptadoConErrores') then
+          Result.MensajeError := Trim(Result.MensajeError + 'AEAT [' +
+                                      sCodigoErr + '] ' + sDescErr);
+      end
+      else
+      begin
+        if (sCodigoErr = '') and (sDescErr = '') then
+          sDescErr := 'EstadoEnvio: ' + sEstadoEnvio;
+        Result.MensajeError := Trim('AEAT [' + sCodigoErr + '] ' + sDescErr);
+      end;
     end;
   end;
 end;
