@@ -873,10 +873,10 @@ end;
 
 procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);
 var
-  vParser: ISQLParserSelect;
   unqry: TUniQuery;
   aCampos, aValores: TArray<string>;
   i: Integer;
+  sBase, sWhere: string;
 begin
   if (ABusq = '') or (pkFieldName = '') then
     Exit;
@@ -892,29 +892,35 @@ begin
     FSqlBaseBusquedaExterna := unqry.SQL.Text
   else
     unqry.SQL.Text := FSqlBaseBusquedaExterna;
-  // El parser de SQLBuilder4D no traga algunas SELECT del modelo (p.ej. la
-  // de Facturas: subconsulta en la lista de campos + ORDER BY con
-  // expresiones). Si revienta al prefiltrar, se deja la SQL base intacta y
-  // el registro lo posiciona igualmente BuscarTabla.Locate tras la carga;
-  // asi "Ir a Documento" no cae aunque la factura sea normal.
-  try
-    vParser := TGaSQLParserFactory.Select(unqry.SQL.Text);
-    // PK compuesta: pkFieldName usa ';' (convencion Locate de Delphi),
-    // ABusq usa ',' como separador de valores.
-    aCampos  := pkFieldName.Split([';']);
-    aValores := ABusq.Split([',']);
-    for i := 0 to High(aCampos) do
+  // PK compuesta: pkFieldName usa ';' (convencion Locate de Delphi),
+  // ABusq usa ',' como separador de valores.
+  aCampos  := pkFieldName.Split([';']);
+  aValores := ABusq.Split([',']);
+  sWhere := '';
+  for i := 0 to High(aCampos) do
+  begin
+    if (i <= High(aValores)) and (Trim(aCampos[i]) <> '') then
     begin
-      if i <= High(aValores) then
-        vParser.AddWhere(
-          Trim(aCampos[i]) + ' = ' + QuotedStr(Trim(aValores[i])), pcAnd);
+      if sWhere <> '' then
+        sWhere := sWhere + ' AND ';
+      sWhere := sWhere + Trim(aCampos[i]) + ' = ' +
+        QuotedStr(Trim(aValores[i]));
     end;
-    unqry.SQL.Text := vParser.ToString;
-  except
-    on E: Exception do
-      inLibLog.Log.LogWarning('PrepararBusquedaExterna: el parser SQL no ' +
-        'pudo prefiltrar (' + E.Message + '); se usa la SQL base y se ' +
-        'posiciona con Locate.');
+  end;
+  if sWhere <> '' then
+  begin
+    // Se envuelve la SELECT base como subconsulta y se filtra fuera, en vez
+    // de parsearla con SQLBuilder4D para inyectarle el WHERE: ese parser no
+    // traga algunas SELECT del modelo (p.ej. Facturas: subconsulta en la
+    // lista de campos + ORDER BY) y lanzaba EgaSQLInvalidParseState — que,
+    // aun capturada, hacia saltar el aviso del depurador. Asi vale para
+    // cualquier SELECT, no se levanta ninguna excepcion y filtra a la fila
+    // buscada. Se quita el ';' final de la SQL base por si lo trae.
+    sBase := TrimRight(FSqlBaseBusquedaExterna);
+    while (sBase <> '') and (sBase[Length(sBase)] = ';') do
+      sBase := TrimRight(Copy(sBase, 1, Length(sBase) - 1));
+    unqry.SQL.Text := 'SELECT * FROM (' + sLineBreak +
+      sBase + sLineBreak + ') sub_busqueda WHERE ' + sWhere;
   end;
 end;
 
