@@ -49,6 +49,8 @@ type
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
   private
     dmmVerifactuCola: TdmVerifactuCola;
+    FBtnIrDoc: TcxButton;
+    procedure btnIrDocumentoClick(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -60,7 +62,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin, inMtoPrincipal, inLibShowMto, Vcl.ActnList;
 
 {$R *.dfm}
 
@@ -69,10 +71,40 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 { TfrmMtoVerifactuCola }
 
 procedure TfrmMtoVerifactuCola.CrearTablaPrincipal;
+var
+  oAct: TAction;
 begin
   inherited;
   dmmVerifactuCola := tdmDataModule as TdmVerifactuCola;
   pkFieldName := 'ID_VFCOLA';
+  // "Ir a Documento": boton + atajos Ctrl+Shift+F / Ctrl+Alt+F que abren
+  // la factura de la fila de cola activa (via accion en alMtoGen)
+  if not Assigned(FBtnIrDoc) then
+  begin
+    oAct := TAction.Create(Self);
+    oAct.ActionList := alMtoGen;
+    oAct.Caption    := 'Ir a Documento';
+    oAct.ShortCut   := TextToShortCut('Ctrl+Shift+F');
+    oAct.SecondaryShortCuts.Add('Ctrl+Alt+F');
+    oAct.OnExecute  := btnIrDocumentoClick;
+    FBtnIrDoc := TcxButton.Create(Self);
+    FBtnIrDoc.Parent := pButtonGen;
+    FBtnIrDoc.Left   := -1;
+    FBtnIrDoc.Top    := 8;
+    FBtnIrDoc.Width  := 138;
+    FBtnIrDoc.Height := 34;
+    FBtnIrDoc.Action := oAct;
+  end;
+end;
+
+procedure TfrmMtoVerifactuCola.btnIrDocumentoClick(Sender: TObject);
+var
+  ds: TDataSet;
+begin
+  ds := dsTablaG.DataSet;
+  if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
+    IrADocumentoFactura(ds.FieldByName('NUMERO_FAC_VFCOLA').AsString,
+                        ds.FieldByName('SERIE_FAC_VFCOLA').AsString);
 end;
 
 procedure TfrmMtoVerifactuCola.ResetForm;

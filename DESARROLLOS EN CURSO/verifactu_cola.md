@@ -294,6 +294,30 @@ existía) queda integrado con Verifactu. Al crear el abono con
 Requiere ejecutar `verifactu_rectificativas.sql` (ensancha las columnas
 de enlace a varchar(20) y crea el índice del lookup inverso).
 
+**Rectificativa desde caja (Buscar operaciones → Rectificar).** La
+rectificativa nacida en caja se grababa en Verifactu con serie/número
+`0\0`: `inMtoCajaOpe` pasaba a `EncolarRectificativa` la serie/número de
+`cdsCabecera`, cuya `SERIE_FAC` se fija a `'0'` en `cdsCabeceraAfterInsert`
+y nunca recibe el número real (que vive en la variable interna
+`NumFactura` del grabador). El registro de eventos quedaba con `Serie=0 /
+Número=0`, se encolaba un registro fantasma `0\0` que la AEAT rechazaba y
+el enlace ABONO de la original se rompía. Solución:
+
+- `TdmCajaOpe.GrabarFacturaSimplificada` expone la serie/número reales de
+  la última factura grabada en `UltSerieFacturaGrabada` /
+  `UltNumeroFacturaGrabada`, e `inMtoCajaOpe` los usa al encolar la
+  rectificativa en vez de `cdsCabecera`.
+- `EncolarRectificativa` no encola si la serie o el número llegan vacíos o
+  a `'0'`: deja un evento de error en el log en lugar del registro
+  fantasma.
+
+**Log Verifactu (registro de eventos).** El Mto del log
+(`inMtoVerifactuLog`) es de solo consulta: se bloquean alta, edición y
+borrado. Tanto el log como la cola tienen un botón **«Ir a Documento»**
+(atajos `Ctrl+Mayús+F` y `Ctrl+Alt+F`) que abre la factura de la línea
+activa (Mto normal o simplificada según `TIPO_FAC`) cuando hay serie y
+número.
+
 ### Facturar ticket (factura completa F3 en sustitución)
 
 Botón **«Facturar ticket (F3)»** en Buscar/Modificar, solo para

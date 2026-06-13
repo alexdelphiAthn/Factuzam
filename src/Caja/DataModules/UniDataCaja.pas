@@ -148,6 +148,11 @@ type
     FOnRellenarArticulo:  TRellenarArticuloEvent;
     FOnRellenarAtributos: TRellenarAtributosEvent;
     FOnUpdateTotal: TOnUpdateTotalEvent;
+    // Serie/numero reales de la ultima factura grabada por
+    // GrabarFacturaSimplificada. La cola y la rectificativa Verifactu los
+    // necesitan fiables: cdsCabecera puede quedar con SERIE_FAC='0'.
+    FUltSerieFacGrabada:  string;
+    FUltNumeroFacGrabada: string;
     procedure InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
                           ATipoDoc:   string;
@@ -330,6 +335,8 @@ type
     property OnRellenarAtributos: TRellenarAtributosEvent
                                   read FOnRellenarAtributos
                                   write FOnRellenarAtributos;
+    property UltSerieFacturaGrabada:  string read FUltSerieFacGrabada;
+    property UltNumeroFacturaGrabada: string read FUltNumeroFacGrabada;
     function SiguienteOpCaja(AEmpresa,
                              AAlmacen,
                              ACaja,
@@ -1077,6 +1084,8 @@ procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
 begin
   SerieGenerada  := ASerieElegida;
   NumFactura  := '0';
+  FUltSerieFacGrabada  := '';
+  FUltNumeroFacGrabada := '';
   ValeGenerado   := '';
   UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
   // Generamos el número global de caja que agrupará toda la operación
@@ -1220,6 +1229,10 @@ begin
         Cab.TotalBases, Cab.TotalImpuestos, Cab.TotalRetencion,
         Cab.PorcRetencion, Cab.TotalLiquido, Cab.FormaPago, Cab.Comentarios,
         '', '', AAlmacen, ACaja, UsuarioCaja, NumOperacionVE, UsuarioCaja);
+      // Serie/numero reales de la factura recien creada, para que la cola
+      // y la rectificativa Verifactu no dependan de cdsCabecera (queda '0')
+      FUltSerieFacGrabada  := SerieGenerada;
+      FUltNumeroFacGrabada := NumFactura;
     end
     else
     begin
