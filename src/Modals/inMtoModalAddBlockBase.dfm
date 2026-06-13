@@ -249,14 +249,17 @@
           OptionsSelection.MultiSelectMode = msmPersistent
           OptionsView.GroupByBox = False
           object colProvCodigo: TcxGridDBColumn
+            Caption = 'C'#243'digo'
             DataBinding.FieldName = 'CODIGO_PRV_PRV'
             Width = 120
           end
           object colProvRazonSocial: TcxGridDBColumn
+            Caption = 'Raz'#243'n social'
             DataBinding.FieldName = 'RAZON_SOCIAL_PRV'
             Width = 400
           end
           object colProvNif: TcxGridDBColumn
+            Caption = 'NIF'
             DataBinding.FieldName = 'NIF_PRV'
             Width = 150
           end
@@ -581,18 +584,22 @@
         OptionsData.Inserting = False
         OptionsView.GroupByBox = False
         object colPrevCodigo: TcxGridDBColumn
+          Caption = 'Art'#237'culo'
           DataBinding.FieldName = 'CODIGO_ART_ART'
           Width = 130
         end
         object colPrevDescripcion: TcxGridDBColumn
+          Caption = 'Descripci'#243'n'
           DataBinding.FieldName = 'DESCRIPCION_ART'
           Width = 280
         end
         object colPrevFamilia: TcxGridDBColumn
+          Caption = 'Familia'
           DataBinding.FieldName = 'NOMBRE_FAM_FAM'
           Width = 150
         end
         object colPrevProveedor: TcxGridDBColumn
+          Caption = 'Proveedores'
           DataBinding.FieldName = 'PROVEEDORES'
           Width = 120
         end
