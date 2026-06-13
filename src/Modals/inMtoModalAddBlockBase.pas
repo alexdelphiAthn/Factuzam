@@ -560,13 +560,20 @@ end;
 
 function TfrmModalAddBlockBase.EsNodoChecked(ANode: TcxTreeListNode): Boolean;
 begin
-  Result := ANode.Selected;
+  // El arbol usa OptionsView.CheckGroups (casillas por nodo). El estado de
+  // marcado vive en CheckState, NO en Selected (que es solo el resaltado de
+  // fila). Leer Selected hacia que RecogerCodigosFamiliaSeleccionados saliera
+  // vacio y el filtro de familias nunca se aplicara en la SQL del preview.
+  Result := ANode.CheckState = cbsChecked;
 end;
 
 procedure TfrmModalAddBlockBase.SetNodoChecked(ANode: TcxTreeListNode;
   AValue: Boolean);
 begin
-  ANode.Selected := AValue;
+  if AValue then
+    ANode.CheckState := cbsChecked
+  else
+    ANode.CheckState := cbsUnchecked;
 end;
 
 procedure TfrmModalAddBlockBase.tlFamiliasEditValueChanged(Sender: TObject;
