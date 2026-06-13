@@ -1,38 +1,33 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenPedido.pas',0,1,78,1,90,0,0,,
-File_1=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,24,27,35,0,0,{{67,0}
-File_2=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas',0,1,83,33,95,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas',0,1,8,35,20,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalDistribuidor.pas',0,1,258,9,270,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,1679,21,1690,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,639,31,639,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas',0,1,255,31,274,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpMovVentasArt.pas',0,1,1,39,1,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,121,38,142,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,351,8,363,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGlobalVar.pas',0,1,62,33,75,0,0,,
-File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,368,40,379,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenAlbaran.pas',0,1,8,33,25,0,0,,
-File_14=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckComboBox.pas',0,1,363,46,385,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas',0,1,1613,1,1619,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,1,1,1,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas',0,1,310,29,324,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas',0,1,24,40,834,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSelAlmacenPedido.pas',0,1,78,1,90,0,0,,
+File_5=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressLibrary\Sources\cxLookAndFeelPainters.pas',0,1,24,27,35,0,0,{{67,0}
+File_6=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressEditors Library\Sources\cxCheckListBox.pas',0,1,83,33,95,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFiltroArt.pas',0,1,8,35,20,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalDistribuidor.pas',0,1,258,9,270,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,1679,21,1690,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,639,31,639,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibLectorScanner.pas',0,1,255,31,274,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpMovVentasArt.pas',0,1,1,39,1,0,0,,
+File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,121,38,142,0,0,,
+File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,351,8,363,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas
-Module1=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas
-Count=2
+Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Count=1
 EditWindowCount=1
 
-[C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas]
-ModuleType=TSourceModule
-
-[C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas]
-ModuleType=TSourceModule
+[C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+ModuleType=TBaseProject
 
 [EditWindow0]
-ViewCount=3
-CurrentView=2
+ViewCount=2
+CurrentView=1
 View0=0
 View1=1
-View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -68,27 +63,16 @@ BottomMiddelPanelData=0000080001020200000009000000446F636B5369746530100000004772
 
 [View0]
 CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas
-CursorX=29
-CursorY=324
-TopLine=310
+Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+CursorX=1
+CursorY=1
+TopLine=1
 LeftCol=1
 Elisions=
 Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 
 [View1]
-CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas
-CursorX=40
-CursorY=834
-TopLine=24
-LeftCol=1
-Elisions=
-Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas
-
-[View2]
 CustomEditViewType=TOTACustomEditView
 OTAEditViewType=WelcomePage.MainPage
 
