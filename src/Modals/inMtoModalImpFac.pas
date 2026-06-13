@@ -116,15 +116,13 @@ begin
   inherited;
   if dmFac <> nil then
     RebindReportDataSetsByDataModule(frxrprt1, dmFac);
-  // Fuerza el QR a la banda de datos MasterData (donde un picture sí se
-  // dibuja) y lo rellena con la factura, sea cual sea el formato
-  // cargado (base del .dfm o copia guardada). En una banda estática
-  // (cabecera de página) el picture no se pinta aunque se rellene.
+  // Solo ajusta el título por tipo (FACTURA / FACTURA SIMPLIFICADA /
+  // FACTURA RECTIFICATIVA). NO se inyecta ni se mueve ninguna banda:
+  // el A4 conserva su layout original. El QR del A4 se replanteará en
+  // limpio; el QR del Excel (que sí funciona) no se toca.
   if (dmFac <> nil) and dmFac.unqryFacPrint.Active and
      (not dmFac.unqryFacPrint.IsEmpty) then
-    PrepararImpresionFacturaVerifactu(frxrprt1, dmFac.unqryFacPrint)
-  else
-    AsegurarQRVerifactuEnReport(frxrprt1);
+    AplicarVerifactuEnReportDirecto(frxrprt1, dmFac.unqryFacPrint);
 end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;
