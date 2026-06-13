@@ -152,8 +152,9 @@ type
     procedure btnCancelarClick(Sender: TObject);
     procedure btnLimpiarFiltrosClick(Sender: TObject);
 
-    procedure tlFamiliasEditValueChanged(Sender: TObject;
-                                         AColumn: TcxTreeListColumn);
+    procedure tlFamiliasNodeCheckChanged(Sender: TcxCustomTreeList;
+                                         ANode: TcxTreeListNode;
+                                         AState: TcxCheckBoxState);
     procedure btnExpandirFamiliasClick(Sender: TObject);
     procedure btnContraerFamiliasClick(Sender: TObject);
     procedure btnQuitarSelFamiliasClick(Sender: TObject);
@@ -576,23 +577,27 @@ begin
     ANode.CheckState := cbsUnchecked;
 end;
 
-procedure TfrmModalAddBlockBase.tlFamiliasEditValueChanged(Sender: TObject;
-  AColumn: TcxTreeListColumn);
-var
-  node: TcxTreeListNode;
+procedure TfrmModalAddBlockBase.tlFamiliasNodeCheckChanged(
+  Sender: TcxCustomTreeList; ANode: TcxTreeListNode;
+  AState: TcxCheckBoxState);
 begin
-  if FPropagandoCheck then Exit;
-  if not chkPropagarHijos.Checked then Exit;
-  node := tlFamilias.FocusedNode;
-  if node = nil then Exit;
-
-  FPropagandoCheck := True;
-  try
-    PropagarCheckHijos(node, EsNodoChecked(node));
-  finally
-    FPropagandoCheck := False;
+  // Al marcar/desmarcar una familia propagamos el mismo estado a todas sus
+  // subfamilias (cuando el usuario tiene activado "Propagar seleccion a
+  // subfamilias"). FPropagandoCheck evita la reentrada: al fijar el CheckState
+  // de cada hijo se vuelve a disparar este mismo evento. El estado intermedio
+  // cbsGrayed (familia con hijos parcialmente marcados) se ignora para no
+  // desmarcar en cascada lo que el usuario acaba de marcar.
+  if (not FPropagandoCheck) and chkPropagarHijos.Checked and
+     (ANode <> nil) and (AState <> cbsGrayed) then
+  begin
+    FPropagandoCheck := True;
+    try
+      PropagarCheckHijos(ANode, AState = cbsChecked);
+    finally
+      FPropagandoCheck := False;
+    end;
+    ActualizarContadores;
   end;
-  ActualizarContadores;
 end;
 
 procedure TfrmModalAddBlockBase.PropagarCheckHijos(ANode: TcxTreeListNode;
