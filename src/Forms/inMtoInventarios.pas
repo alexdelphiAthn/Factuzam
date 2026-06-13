@@ -592,6 +592,12 @@ begin
     ActualizarColumnasDinamicas(dmmInventarios.cdsLineas.FieldByName(
                                                  'CODIGO_ART_INVLIN').AsString);
   end;
+  // En modo DisconnectedMode + Pooling el cxGrid no siempre resincroniza su
+  // DataController solo con el Open de cdsLineas, y las lineas recien cargadas
+  // (carga masiva, Excel, familia/proveedor) no se ven hasta salir y volver a
+  // entrar. Forzamos el refresco del grid para que aparezcan al momento.
+  if Assigned(tvLineas) then
+    tvLineas.DataController.Refresh;
 end;
 
 procedure TfrmMtoInventarios.cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(
@@ -2438,6 +2444,10 @@ begin
         '   AND SERIE_INV = :S AND NUMERO_INV = :N',
         [sEmp, sAlm, sSerie, sNumero]);
       dmmInventarios.CargarLineasInventario;
+      // Igual que en la carga masiva: forzamos el refresco del grid para que
+      // las lecturas recogidas se vean sin salir y volver a entrar.
+      if Assigned(tvLineas) then
+        tvLineas.DataController.Refresh;
       dmmInventarios.unqryTablaG.Refresh;
       ShowMessage(Format('Recuento recogido: %d lecturas, %d SKUs. ' +
         'Revisa las físicas y APLICA cuando quieras.',
