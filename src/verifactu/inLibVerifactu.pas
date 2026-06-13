@@ -18,7 +18,7 @@ unit inLibVerifactu;
 interface
 
 uses
-  System.SysUtils, Uni, frxClass;
+  System.SysUtils, Uni, frxClass,  Data.DB;
 
 const
   // URLs oficiales del servicio de cotejo del QR tributario. Se pueden
@@ -97,7 +97,7 @@ procedure RegistrarEventoVerifactu(AConn: TUniConnection;
 implementation
 
 uses
-  System.Classes, System.Hash, Data.DB, Vcl.Imaging.pngimage,
+  System.Classes, System.Hash, Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
   inLibGlobalVar, inLibAppParam, inLibFotos;
 
