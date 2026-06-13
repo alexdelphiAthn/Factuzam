@@ -892,18 +892,30 @@ begin
     FSqlBaseBusquedaExterna := unqry.SQL.Text
   else
     unqry.SQL.Text := FSqlBaseBusquedaExterna;
-  vParser := TGaSQLParserFactory.Select(unqry.SQL.Text);
-  // PK compuesta: pkFieldName usa ';' (convencion Locate de Delphi),
-  // ABusq usa ',' como separador de valores.
-  aCampos  := pkFieldName.Split([';']);
-  aValores := ABusq.Split([',']);
-  for i := 0 to High(aCampos) do
-  begin
-    if i <= High(aValores) then
-      vParser.AddWhere(
-        Trim(aCampos[i]) + ' = ' + QuotedStr(Trim(aValores[i])), pcAnd);
+  // El parser de SQLBuilder4D no traga algunas SELECT del modelo (p.ej. la
+  // de Facturas: subconsulta en la lista de campos + ORDER BY con
+  // expresiones). Si revienta al prefiltrar, se deja la SQL base intacta y
+  // el registro lo posiciona igualmente BuscarTabla.Locate tras la carga;
+  // asi "Ir a Documento" no cae aunque la factura sea normal.
+  try
+    vParser := TGaSQLParserFactory.Select(unqry.SQL.Text);
+    // PK compuesta: pkFieldName usa ';' (convencion Locate de Delphi),
+    // ABusq usa ',' como separador de valores.
+    aCampos  := pkFieldName.Split([';']);
+    aValores := ABusq.Split([',']);
+    for i := 0 to High(aCampos) do
+    begin
+      if i <= High(aValores) then
+        vParser.AddWhere(
+          Trim(aCampos[i]) + ' = ' + QuotedStr(Trim(aValores[i])), pcAnd);
+    end;
+    unqry.SQL.Text := vParser.ToString;
+  except
+    on E: Exception do
+      inLibLog.Log.LogWarning('PrepararBusquedaExterna: el parser SQL no ' +
+        'pudo prefiltrar (' + E.Message + '); se usa la SQL base y se ' +
+        'posiciona con Locate.');
   end;
-  unqry.SQL.Text := vParser.ToString;
 end;
 
 procedure TfrmMtoGen.AplicarLayoutInstanciaBusqueda;
