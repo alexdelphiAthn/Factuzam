@@ -1778,8 +1778,9 @@ inherited frmPrintFac: TfrmPrintFac
         FillGap.Bottom = 0
         FillGap.Right = 0
         Frame.Typ = []
-        Height = 132.000000000000000000
+        Height = 22.677180000000000000
         Top = 480.000310000000000000
+        Visible = False
         Width = 737.008350000000000000
         DataSet = dmFacturas.fxdsPrintFac
         DataSetName = 'Facturas'
@@ -1790,7 +1791,6 @@ inherited frmPrintFac: TfrmPrintFac
           Left = 64.252010000000000000
           Width = 94.488250000000000000
           Height = 18.897650000000000000
-          Visible = False
           DataField = 'NUMERO_FAC'
           DataSet = dmFacturas.fxdsPrintFac
           DataSetName = 'Facturas'
@@ -1803,18 +1803,6 @@ inherited frmPrintFac: TfrmPrintFac
           Memo.UTF8W = (
             '[Facturas."NUMERO_FAC"]')
           ParentFont = False
-        end
-        object qrverifactu: TfrxPictureView
-          AllowVectorExport = True
-          Left = 600.000000000000000000
-          Top = 6.000000000000000000
-          Width = 120.000000000000000000
-          Height = 120.000000000000000000
-          Frame.Typ = []
-          Stretched = True
-          HightQuality = False
-          Transparent = False
-          TransparentColor = clWhite
         end
       end
       object PageFooter1: TfrxPageFooter
