@@ -31,7 +31,8 @@ uses
   JvComponentBase, JvEnterTab, cxLocalization, Vcl.StdCtrls, cxRadioGroup,
   cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo, cxCheckBox, cxGroupBox,
   cxDBLabel, cxButtonEdit, System.Generics.Collections,
-  cxGridBandedTableView, cxGridDBBandedTableView;
+  cxGridBandedTableView, cxGridDBBandedTableView,
+  System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoPedidos = class(TfrmMtoGen)
@@ -139,6 +140,10 @@ type
 
     // Observaciones
     memObservaciones: TcxDBMemo;
+    // Atajo Ctrl+May+A en la pestania Albaranes: abre el albaran de venta
+    // seleccionado en la rejilla.
+    ActionList1: TActionList;
+    actIrDocumento: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
@@ -149,6 +154,7 @@ type
     procedure btnCrearAlbaranClick(Sender: TObject);
     procedure btnImportarPSClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
+    procedure actIrDocumentoExecute(Sender: TObject);
   private
     procedure RellenarLineasAlEntregarTodo;
   public
@@ -452,6 +458,26 @@ procedure TfrmMtoPedidos.btnImprimirClick(Sender: TObject);
 begin
   inherited;
   // Hook FastReport
+end;
+
+// "Ir a documento" (Ctrl+May+A) desde la pestania Albaranes del pedido:
+// abre la ficha del albaran de venta seleccionado en la rejilla. Solo
+// actua si esa pestania esta activa y hay un albaran en la fila actual.
+procedure TfrmMtoPedidos.actIrDocumentoExecute(Sender: TObject);
+var
+  sSerie, sNumero: string;
+begin
+  inherited;
+  if (pcPedido.ActivePage = tsAlbaranes) and
+     (dmmPedidos <> nil) and
+     dmmPedidos.unqryAlbaranes.Active and
+     (not dmmPedidos.unqryAlbaranes.IsEmpty) then
+  begin
+    sSerie  := Trim(dmmPedidos.unqryAlbaranes.FieldByName('SERIE_ALB').AsString);
+    sNumero := Trim(dmmPedidos.unqryAlbaranes.FieldByName('NUMERO_ALB').AsString);
+    if (sSerie <> '') and (sNumero <> '') then
+      ShowMto(Self.Owner, 'Albaranes', sSerie + ',' + sNumero);
+  end;
 end;
 
 initialization
