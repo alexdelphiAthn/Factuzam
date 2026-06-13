@@ -348,11 +348,21 @@ respeta la posición del diseñador.
 
 **Título por tipo**: el memo de título de los formatos (texto exacto
 `FACTURA`) se reescribe por registro a `FACTURA SIMPLIFICADA` /
-`FACTURA RECTIFICATIVA` según `TIPO_FAC`
-(`SustituirTituloFacturaEnReport`, encadenado en el mismo
-`OnBeforePrint`). Como `vi_facturas_print` no trae `TIPO_FAC`, la
-consulta de `TfrmPrintFac.preparar_consulta` lo añade con un JOIN a
-`fza_facturas` (sin tocar la vista).
+`FACTURA RECTIFICATIVA` según `TIPO_FAC`. Como `vi_facturas_print` no
+trae `TIPO_FAC`, la consulta de `TfrmPrintFac.preparar_consulta` lo
+añade con un JOIN a `fza_facturas` (sin tocar la vista).
+
+**Importante — el `OnBeforePrint` no llega a los objetos sueltos de la
+cabecera de página** en esta versión de FastReport (sí a las bandas y a
+los objetos de bandas de datos; por eso las fotos de tickets/etiquetas
+funcionan). El QR y el título viven en la cabecera de página, así que
+el QR no se rellenaba y el título no cambiaba. La vía fiable es
+`AplicarVerifactuEnBanda`: al dispararse la **banda** (la cabecera de
+página sí recibe el evento de banda), se recorren sus hijos y se
+rellena el QR y el título con la factura activa. Se encadena en
+`TfrmPrint.ReportBeforePrintConQR` junto a las dos sustituciones por
+objeto (que siguen valiendo si el QR/título se mueven a una banda de
+datos en el diseñador).
 
 **Excel** (botón Excel de `TfrmPrintFac`, `inLibFacturaExcel`): la hoja
 lleva el mismo QR tributario incrustado arriba a la derecha (columna H,
