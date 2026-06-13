@@ -44,6 +44,27 @@ que regenerar la vista.
   panel derecho de la pestaña Stock.
 - `fzam.dpr` — alta del nuevo unit.
 
+### Maqueta por defecto
+
+El `.dfm` lleva embebidos dos `TfrxReport`: `frxrprt1` (el activo, que se
+diseña en el IDE) y `frxReportOrigen` (la plantilla de fábrica). Al imprimir
+con formato **Predeterminado** la clase base hace
+`frxrprt1.AssignAll(frxReportOrigen)`, de modo que la maqueta que ve el
+usuario por defecto es la de `frxReportOrigen`. Cualquier cambio en la
+etiqueta por defecto se replica en **ambos** reports para no dejar
+desincronizado lo que se ve en el diseñador con lo que se imprime.
+
+La maqueta por defecto muestra, además de marca, P.V.P, color, talla,
+código de barras, descripción y código de artículo:
+
+- **Nombre del proveedor** (`RAZON_SOCIAL_PRV`) — pie de etiqueta, derecha.
+- **Temporada** (`PROP_TEMPORADA`) — pie de etiqueta, izquierda.
+
+Ambos campos ya los expone `vi_articulos_skus_etiquetas` y los arrastra el
+`SELECT eti.*` de `CrearDataSetEtiquetasArt`, así que no hubo que tocar la
+vista ni la consulta runtime: solo colocar las dos `TfrxMemoView` en la
+banda `MasterData`.
+
 ### Consulta runtime
 
 `TdmArticulos.CrearDataSetEtiquetasArt` monta:
