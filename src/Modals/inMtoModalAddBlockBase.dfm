@@ -161,6 +161,7 @@
         OptionsView.Headers = False
         RootValue = ''
         ScrollbarAnnotations.CustomAnnotations = <>
+        OnNodeCheckChanged = tlFamiliasNodeCheckChanged
         TabOrder = 1
         ExplicitWidth = 1171
         ExplicitHeight = 267
