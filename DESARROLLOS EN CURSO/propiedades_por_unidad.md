@@ -129,15 +129,17 @@ destructiva y la aplicación sigue funcionando sin tocar nada tras la Fase 1.
       tocar los colores. Sin cambios.
     - Filtros de temporada de informes (`inMtoModalImpMultiFiltro`): listan los
       valores maestros de `fza_propiedades_valores`; sin duplicación. Sin cambios.
-  - **Aviso de temporada por color en `inMtoStockConsulta`** *(hecho)*: la
+  - **Aviso de propiedades por color/SKU en `inMtoStockConsulta`** *(hecho)*: la
     consulta de stock (Ctrl+U) lleva un **letrero** rojo bajo la cabecera que
-    "canta" al **pinchar un color** cuyo nivel COLOR tiene temporada propia
-    distinta a la del artículo: `«¡Ojo! NEGRO es de temporada Otoño-Invierno
-    2026 (el artículo es Primavera-Verano 2026)»`. Las temporadas se calculan al
-    cargar el artículo (`CargarTemporadasColores`, comparando la temporada de
-    color `SUBSTRING_INDEX(sku,'/',2)` con la de nivel artículo) y el letrero se
-    recompone sobre el color con foco al pinchar o marcar/desmarcar
-    (`ActualizarLetreroTemporada`). Solo lectura, sin cambios de esquema.
+    "canta" al **pinchar un color** todas las propiedades fijadas a nivel COLOR
+    o SKU de ese color cuyo valor difiere del nivel artículo (no solo temporada:
+    material, composición…): `«NEGRO → Temporada: Otoño-Invierno 2026 (color)
+    · Material: Lana (SKU)»`. Se calcula al cargar el artículo
+    (`CargarPropsPorColor`: mapea el prefijo `SUBSTRING_INDEX(sku,'/',2)` al
+    color vía SKUs, formatea el valor según `TIPO_VALOR_PROP` y descarta lo igual
+    al nivel artículo) y el letrero se recompone sobre el color con foco al
+    pinchar o marcar/desmarcar (`ActualizarLetreroColor`). Solo lectura, sin
+    cambios de esquema.
   - **Pendiente opcional:** columna de temporada efectiva por color en la grilla
     de `inMtoStockConsulta` (hoy la cabecera muestra la de artículo; el letrero
     ya avisa de las diferencias).
