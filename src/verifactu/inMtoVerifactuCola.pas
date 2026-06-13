@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inMtoVerifactuCola                                            }
 {    Tipo:       Formulario (Mto)                                              }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       12/06/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       13/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -11,7 +11,12 @@
 {  Descripción:                                                                }
 {    Cola de envíos Verifactu.                                                 }
 {    Consulta del estado de fza_verifactu_cola (pendientes, enviadas y         }
-{    errores del envío de registros de facturación a la AEAT).                 }
+{    errores del envío de registros de facturación a la AEAT). La cola la      }
+{    alimenta el sistema (inLibVerifactuCola): aquí solo se edita el estado    }
+{    (e intentos / próximo intento) en el grid, sin insertar ni borrar filas   }
+{    y sin ficha de detalle. Ctrl+Alt+F / Ctrl+Mayús+F y el botón lateral      }
+{    "Ir a Documento" saltan a la factura, normal o simplificada, resuelta     }
+{    automáticamente según su TIPO_FAC.                                        }
 {******************************************************************************}
 unit inMtoVerifactuCola;
 
@@ -30,7 +35,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataVerifactuCola,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoVerifactuCola = class(TfrmMtoGen)
@@ -47,10 +52,14 @@ type
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
+    btnIrADocumento: TcxButton;
+    // Salta a la factura de la fila activa (lo dispara el botón lateral y los
+    // atajos Ctrl+Alt+F / Ctrl+Mayús+F). ResolverCallFactura mira el TIPO_FAC
+    // en fza_facturas y abre Facturas o FacturasSimplif según corresponda, así
+    // se llega a la correcta sin saber el tipo de antemano.
+    procedure btnIrADocumentoClick(Sender: TObject);
   private
     dmmVerifactuCola: TdmVerifactuCola;
-    FBtnIrDoc: TcxButton;
-    procedure btnIrDocumentoClick(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -62,7 +71,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibShowMto, Vcl.ActnList;
+  inLibWin, inMtoPrincipal, inLibShowMto;
 
 {$R *.dfm}
 
@@ -72,39 +81,49 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoVerifactuCola.CrearTablaPrincipal;
 var
-  oAct: TAction;
+  actDoc: TAction;
 begin
   inherited;
   dmmVerifactuCola := tdmDataModule as TdmVerifactuCola;
   pkFieldName := 'ID_VFCOLA';
-  // "Ir a Documento": boton + atajos Ctrl+Shift+F / Ctrl+Alt+F que abren
-  // la factura de la fila de cola activa (via accion en alMtoGen)
-  if not Assigned(FBtnIrDoc) then
-  begin
-    oAct := TAction.Create(Self);
-    oAct.ActionList := alMtoGen;
-    oAct.Caption    := 'Ir a Documento';
-    oAct.ShortCut   := TextToShortCut('Ctrl+Shift+F');
-    oAct.SecondaryShortCuts.Add('Ctrl+Alt+F');
-    oAct.OnExecute  := btnIrDocumentoClick;
-    FBtnIrDoc := TcxButton.Create(Self);
-    FBtnIrDoc.Parent := pButtonGen;
-    FBtnIrDoc.Left   := -1;
-    FBtnIrDoc.Top    := 8;
-    FBtnIrDoc.Width  := 138;
-    FBtnIrDoc.Height := 34;
-    FBtnIrDoc.Action := oAct;
-  end;
+  // La cola la alimenta el sistema (inLibVerifactuCola.EncolarFactura) y el
+  // data module solo define SQLUpdate (estado / intentos / próximo intento):
+  // no se permite insertar ni borrar filas a mano, solo editar el estado.
+  nvNavegador.Buttons.Insert.Visible := False;
+  nvNavegador.Buttons.Append.Visible := False;
+  nvNavegador.Buttons.Delete.Visible := False;
+  // Anular también los atajos heredados Ins (insertar) y Ctrl+Supr (borrar).
+  actInsertarRegistro.ShortCut  := 0;
+  actInsertarRegistro.OnExecute := nil;
+  actEliminarRegistro.ShortCut  := 0;
+  actEliminarRegistro.OnExecute := nil;
+  // Atajos "Ir a Documento" creados en código y colgados de alMtoGen (lo
+  // recorre inMtoPrincipal.IsShortCut). Dos acciones para los dos atajos:
+  // Ctrl+Alt+F y Ctrl+Mayús+F. Ambas reusan el handler del botón lateral.
+  actDoc := TAction.Create(Self);
+  actDoc.ActionList := alMtoGen;
+  actDoc.ShortCut   := ShortCut(Ord('F'), [ssCtrl, ssAlt]);
+  actDoc.OnExecute  := btnIrADocumentoClick;
+  actDoc := TAction.Create(Self);
+  actDoc.ActionList := alMtoGen;
+  actDoc.ShortCut   := ShortCut(Ord('F'), [ssCtrl, ssShift]);
+  actDoc.OnExecute  := btnIrADocumentoClick;
 end;
 
-procedure TfrmMtoVerifactuCola.btnIrDocumentoClick(Sender: TObject);
+procedure TfrmMtoVerifactuCola.btnIrADocumentoClick(Sender: TObject);
 var
+  sSerie, sNumero, sCall: string;
   ds: TDataSet;
 begin
+  inherited;
   ds := dsTablaG.DataSet;
   if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
-    IrADocumentoFactura(ds.FieldByName('NUMERO_FAC_VFCOLA').AsString,
-                        ds.FieldByName('SERIE_FAC_VFCOLA').AsString);
+  begin
+    sSerie  := ds.FieldByName('SERIE_FAC_VFCOLA').AsString;
+    sNumero := ds.FieldByName('NUMERO_FAC_VFCOLA').AsString;
+    sCall   := ResolverCallFactura(sNumero, sSerie);
+    ShowMto(Self.Owner, sCall, sNumero + ',' + sSerie);
+  end;
 end;
 
 procedure TfrmMtoVerifactuCola.ResetForm;

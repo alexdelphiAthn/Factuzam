@@ -33,9 +33,6 @@ type
                     ACall:String;
                     ABusq:string = '');
   function ResolverCallFactura(const ANumero, ASerie: string): string;
-  // Abre el Mto de la factura (normal o simplificada segun su tipo)
-  // posicionado en serie+numero. Avisa si la linea no tiene factura.
-  procedure IrADocumentoFactura(const ANumero, ASerie: string);
   function CrearDataModule(ADataUnit:String;var AOwnerForm:TfrmMtoGen):TObject;
 
 implementation
@@ -280,18 +277,6 @@ begin
   finally
     FreeAndNil(qry);
   end;
-end;
-
-procedure IrADocumentoFactura(const ANumero, ASerie: string);
-begin
-  if (Trim(ANumero) = '') or (Trim(ASerie) = '') then
-    ShowMessage('La línea seleccionada no tiene número de factura ' +
-                'asociado.')
-  else
-    // El Mto de Facturas tiene pkFieldName 'NUMERO_FAC; SERIE_FAC':
-    // el orden de los valores de busqueda debe ser numero,serie
-    ShowMto(frmMtoPrincipal, ResolverCallFactura(ANumero, ASerie),
-            Trim(ANumero) + ',' + Trim(ASerie));
 end;
 
 function BuscarTabla(AQuery: TUniQuery;

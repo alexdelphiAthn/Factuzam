@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inMtoVerifactuLog                                             }
 {    Tipo:       Formulario (Mto)                                              }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       12/06/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       13/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -30,7 +30,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataVerifactuLog,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoVerifactuLog = class(TfrmMtoGen)
@@ -46,10 +46,14 @@ type
     cxGrdDBTabPrinHASH_ANTERIOR_LOG: TcxGridDBColumn;
     cxGrdDBTabPrinHASH_PROPIO_LOG: TcxGridDBColumn;
     cxGrdDBTabPrinFIRMA_DIGITAL_LOG: TcxGridDBColumn;
+    btnIrADocumento: TcxButton;
+    // Salta a la factura de la fila activa (lo dispara el botón lateral y los
+    // atajos Ctrl+Alt+F / Ctrl+Mayús+F). ResolverCallFactura mira el TIPO_FAC
+    // en fza_facturas y abre Facturas o FacturasSimplif según corresponda, así
+    // se llega a la correcta sin saber el tipo de antemano.
+    procedure btnIrADocumentoClick(Sender: TObject);
   private
     dmmVerifactuLog: TdmVerifactuLog;
-    FBtnIrDoc: TcxButton;
-    procedure btnIrDocumentoClick(Sender: TObject);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -61,7 +65,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibShowMto, Vcl.ActnList;
+  inLibWin, inMtoPrincipal, inLibShowMto;
 
 {$R *.dfm}
 
@@ -71,60 +75,57 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoVerifactuLog.CrearTablaPrincipal;
 var
-  oAct: TAction;
+  actDoc: TAction;
 begin
   inherited;
   dmmVerifactuLog := tdmDataModule as TdmVerifactuLog;
   pkFieldName := 'ID_LOG';
-  // El registro Verifactu es inalterable: sin alta, edicion ni borrado.
-  // Se anula tambien el OnUpdate de las acciones; si no, lo reactivarian
-  // en cada ciclo de la ActionList y volverian a quedar habilitadas.
-  actInsertarRegistro.OnUpdate := nil;
-  actInsertarRegistro.Enabled  := False;
-  actEditarRegistro.OnUpdate   := nil;
-  actEditarRegistro.Enabled    := False;
-  actGrabarRegistro.OnUpdate   := nil;
-  actGrabarRegistro.Enabled    := False;
-  actEliminarRegistro.OnUpdate := nil;
-  actEliminarRegistro.Enabled  := False;
+  // El log es un registro inalterable (solo consulta): ni alta, ni edición,
+  // ni borrado. Se ocultan los botones del navegador y se anulan los atajos
+  // heredados Ins (insertar), F2 (editar) y Ctrl+Supr (borrar).
   nvNavegador.Buttons.Insert.Visible := False;
   nvNavegador.Buttons.Append.Visible := False;
   nvNavegador.Buttons.Edit.Visible   := False;
   nvNavegador.Buttons.Post.Visible   := False;
   nvNavegador.Buttons.Delete.Visible := False;
-  nvNavegador.Buttons.Cancel.Visible := False;
-  cxGrdDBTabPrin.OptionsData.Editing   := False;
-  cxGrdDBTabPrin.OptionsData.Inserting := False;
-  cxGrdDBTabPrin.OptionsData.Deleting  := False;
-  cxGrdDBTabPrin.OptionsData.Appending := False;
-  // "Ir a Documento": boton + atajos Ctrl+Shift+F / Ctrl+Alt+F que abren
-  // la factura de la linea de registro activa (via accion en alMtoGen)
-  if not Assigned(FBtnIrDoc) then
-  begin
-    oAct := TAction.Create(Self);
-    oAct.ActionList := alMtoGen;
-    oAct.Caption    := 'Ir a Documento';
-    oAct.ShortCut   := TextToShortCut('Ctrl+Shift+F');
-    oAct.SecondaryShortCuts.Add('Ctrl+Alt+F');
-    oAct.OnExecute  := btnIrDocumentoClick;
-    FBtnIrDoc := TcxButton.Create(Self);
-    FBtnIrDoc.Parent := pButtonGen;
-    FBtnIrDoc.Left   := -1;
-    FBtnIrDoc.Top    := 8;
-    FBtnIrDoc.Width  := 138;
-    FBtnIrDoc.Height := 34;
-    FBtnIrDoc.Action := oAct;
-  end;
+  actInsertarRegistro.ShortCut  := 0;
+  actInsertarRegistro.OnExecute := nil;
+  actEditarRegistro.ShortCut    := 0;
+  actEditarRegistro.OnExecute   := nil;
+  actEliminarRegistro.ShortCut  := 0;
+  actEliminarRegistro.OnExecute := nil;
+  // Atajos "Ir a Documento" creados en código y colgados de alMtoGen (lo
+  // recorre inMtoPrincipal.IsShortCut). Dos acciones para los dos atajos:
+  // Ctrl+Alt+F y Ctrl+Mayús+F. Ambas reusan el handler del botón lateral.
+  actDoc := TAction.Create(Self);
+  actDoc.ActionList := alMtoGen;
+  actDoc.ShortCut   := ShortCut(Ord('F'), [ssCtrl, ssAlt]);
+  actDoc.OnExecute  := btnIrADocumentoClick;
+  actDoc := TAction.Create(Self);
+  actDoc.ActionList := alMtoGen;
+  actDoc.ShortCut   := ShortCut(Ord('F'), [ssCtrl, ssShift]);
+  actDoc.OnExecute  := btnIrADocumentoClick;
 end;
 
-procedure TfrmMtoVerifactuLog.btnIrDocumentoClick(Sender: TObject);
+procedure TfrmMtoVerifactuLog.btnIrADocumentoClick(Sender: TObject);
 var
+  sSerie, sNumero, sCall: string;
   ds: TDataSet;
 begin
+  inherited;
   ds := dsTablaG.DataSet;
   if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
-    IrADocumentoFactura(ds.FieldByName('NUMERO_FAC_LOG').AsString,
-                        ds.FieldByName('SERIE_FAC_LOG').AsString);
+  begin
+    sSerie  := ds.FieldByName('SERIE_FAC_LOG').AsString;
+    sNumero := ds.FieldByName('NUMERO_FAC_LOG').AsString;
+    // Muchos eventos (info, errores de cola) no llevan factura: solo se
+    // navega cuando la línea tiene serie y número.
+    if (Trim(sSerie) <> '') and (Trim(sNumero) <> '') then
+    begin
+      sCall := ResolverCallFactura(sNumero, sSerie);
+      ShowMto(Self.Owner, sCall, sNumero + ',' + sSerie);
+    end;
+  end;
 end;
 
 procedure TfrmMtoVerifactuLog.ResetForm;
