@@ -1,4 +1,4 @@
-﻿inherited frmPrintFac: TfrmPrintFac
+inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Factura'
   ClientHeight = 249
   ClientWidth = 412
@@ -1270,6 +1270,16 @@
           Memo.UTF8W = (
             'FACTURA')
           ParentFont = False
+        end
+        object qrverifactu: TfrxPictureView
+          AllowVectorExport = True
+          Left = 600.000000000000000000
+          Top = 7.559060000000000000
+          Width = 120.000000000000000000
+          Height = 120.000000000000000000
+          Frame.Typ = []
+          Center = True
+          KeepAspectRatio = True
         end
         object Memo2: TfrxMemoView
           AllowVectorExport = True
