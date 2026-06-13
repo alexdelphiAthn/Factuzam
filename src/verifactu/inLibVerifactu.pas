@@ -84,6 +84,14 @@ procedure AplicarVerifactuEnBanda(Component: TfrxReportComponent);
 // el QR sale por defecto aunque el hueco quede suelto en la página.
 procedure AplicarVerifactuEnReportDirecto(AReport: TfrxReport;
                                           ADataSet: TDataSet);
+// FastReport (impresión de factura): fuerza, sea cual sea el formato
+// cargado (base del .dfm o copia guardada en el diseñador), que el QR
+// 'qrverifactu' viva en la banda de datos MasterData (visible) y lo
+// rellena ahí. Un TfrxPictureView en una banda estática (cabecera de
+// página) no se dibuja aunque se rellene; en banda de datos sí (igual
+// que las fotos). Ajusta también el título por tipo.
+procedure PrepararImpresionFacturaVerifactu(AReport: TfrxReport;
+                                            ADataSet: TDataSet);
 // Registra un evento en fza_verifactu_eventos manteniendo la cadena de
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
@@ -529,6 +537,61 @@ begin
     if oObj is TfrxPictureView then
       RellenarQRPicture(TfrxPictureView(oObj), ADataSet);
     // El título recorriendo los memos de cada página
+    for i := 0 to AReport.PagesCount - 1 do
+    begin
+      if AReport.Pages[i] is TfrxReportPage then
+        AplicarVerifactuARama(TfrxReportPage(AReport.Pages[i]), ADataSet);
+    end;
+  end;
+end;
+
+procedure PrepararImpresionFacturaVerifactu(AReport: TfrxReport;
+                                            ADataSet: TDataSet);
+var
+  oPage:  TfrxReportPage;
+  oBanda: TfrxBand;
+  oComp:  TfrxComponent;
+  oQr:    TfrxPictureView;
+  i:      Integer;
+  dLado:  Extended;
+begin
+  if (AReport <> nil) and TieneCamposFactura(ADataSet) then
+  begin
+    oPage := nil;
+    for i := 0 to AReport.PagesCount - 1 do
+    begin
+      if (oPage = nil) and (AReport.Pages[i] is TfrxReportPage) then
+        oPage := TfrxReportPage(AReport.Pages[i]);
+    end;
+    if oPage <> nil then
+    begin
+      // Banda de DATOS donde el picture sí se dibuja (MasterData =
+      // una sola salida por factura). La hacemos visible por si el
+      // formato la trae oculta (caso del .dfm original).
+      oBanda := PrimeraBanda(oPage, TfrxMasterData);
+      dLado  := 30 * fr01cm;
+      if oBanda <> nil then
+      begin
+        oBanda.Visible := True;
+        if oBanda.Height < dLado then
+          oBanda.Height := dLado;
+        // El QR puede venir en otra banda (cabecera) si se cargó una
+        // copia guardada: lo reubicamos a la banda de datos.
+        oComp := AReport.FindObject('qrverifactu');
+        if oComp is TfrxPictureView then
+          oQr := TfrxPictureView(oComp)
+        else
+        begin
+          oQr := TfrxPictureView.Create(oBanda);
+          oQr.Name := 'qrverifactu';
+        end;
+        oQr.Parent := oBanda;
+        oQr.SetBounds(oBanda.Width - dLado, 0, dLado, dLado);
+        oQr.Stretched := True;
+        RellenarQRPicture(oQr, ADataSet);
+      end;
+    end;
+    // Título por tipo (recorre los memos de todas las páginas)
     for i := 0 to AReport.PagesCount - 1 do
     begin
       if AReport.Pages[i] is TfrxReportPage then
