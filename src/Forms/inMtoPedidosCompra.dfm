@@ -666,5 +666,10 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
       ShortCut = 16449
       OnExecute = actArticulosExecute
     end
+    object actIrDocumento: TAction
+      Caption = 'Ir a documento (Ctrl+May+A)'
+      ShortCut = 24641
+      OnExecute = actIrDocumentoExecute
+    end
   end
 end
