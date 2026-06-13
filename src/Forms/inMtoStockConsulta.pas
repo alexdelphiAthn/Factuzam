@@ -28,9 +28,10 @@
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
 {          checklist opuesto.                                                  }
 {                                                                              }
-{    v0.6: "letrero" de temporada — al PINCHAR un color, si ese color tiene    }
-{    temporada propia (nivel COLOR) distinta a la del articulo, se canta en un }
-{    panel rojo bajo la cabecera. Ver propiedades_por_unidad.md.               }
+{    v0.6: "letrero" de propiedades por color — al PINCHAR un color, si ese    }
+{    color tiene propiedades fijadas a nivel COLOR o SKU distintas a las del   }
+{    articulo (temporada, material…), se cantan en un panel rojo bajo la       }
+{    cabecera. Ver propiedades_por_unidad.md.                                  }
 {    v0.5: estado "Todo a la vez" en el combo + colores por estado. Cada      }
 {    estado pinta las celdas de datos con un color distintivo (azul para      }
 {    existencias, rojo para ventas, naranja para pte. recibir, etc.) y el     }
@@ -155,10 +156,10 @@ type
     FDs         : TDataSource;
     FCodArt     : string;
     FCodSku     : string;
-    FTempArticulo : string;  // temporada a nivel articulo
-    // Colores cuya temporada propia (nivel COLOR) difiere de la del articulo.
-    // Clave = nombre del color (AV.AV), valor = su temporada de color.
-    FTempPorColor : TDictionary<string, string>;
+    // Propiedades fijadas a nivel COLOR o SKU (no solo temporada) que difieren
+    // del nivel articulo, ya formateadas por color. Clave = nombre del color
+    // (AV.AV), valor = texto "Prop: valor (color/SKU) · ...".
+    FPropsPorColor : TDictionary<string, string>;
     FColumnas   : TArray<TInfoColumna>;  // Tallas (columnas dinamicas)
     FColsDin    : TList<TcxGridDBColumn>;
     FColGrupo   : TcxGridDBColumn;       // nombre de la fila (color o alm)
@@ -185,8 +186,8 @@ type
     procedure   rbModoClick(Sender: TObject);
     procedure CargarAlmacenes;
     procedure CargarColores;
-    procedure CargarTemporadasColores;
-    procedure ActualizarLetreroTemporada;
+    procedure CargarPropsPorColor;
+    procedure ActualizarLetreroColor;
     procedure CargarFoto;
     procedure CargarInfoCabecera;
     procedure CrearLeyenda;
@@ -334,10 +335,10 @@ begin
   FDs.DataSet := FQry;
   tvStock.DataController.DataSource := FDs;
   FColsDin := TList<TcxGridDBColumn>.Create;
-  FTempPorColor := TDictionary<string, string>.Create;
-  // Letrero de aviso de temporada distinta: oculto por defecto, rojo y en
-  // negrita para que "cante" cuando un color es de otra temporada que el
-  // articulo. El texto lo rellena ActualizarLetreroTemporada.
+  FPropsPorColor := TDictionary<string, string>.Create;
+  // Letrero de aviso: oculto por defecto, rojo y en negrita para que "cante"
+  // las propiedades propias del color (color/SKU) al pincharlo. El texto lo
+  // rellena ActualizarLetreroColor.
   lblLetreroTemp.Transparent      := False;
   lblLetreroTemp.Style.Color      := $003C3CD8;  // rojo (BGR)
   lblLetreroTemp.Style.TextColor  := clWhite;
@@ -516,7 +517,7 @@ begin
   FreeAndNil(FDs);
   FreeAndNil(FColsDin);
   FreeAndNil(FEstadosCombo);
-  FreeAndNil(FTempPorColor);
+  FreeAndNil(FPropsPorColor);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -698,66 +699,110 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Temporada por color (aviso de "otra temporada")
+//  Propiedades propias por color (nivel COLOR / SKU)
 // ---------------------------------------------------------------------------
-// La propiedad TEMPORADA admite nivel COLOR (propiedades_por_unidad.md): una
-// misma prenda recomprada en otra temporada conserva la temporada de articulo
-// y los colores nuevos llevan la suya propia (CODIGO_UNIDAD_ARTPROP = 'ART/COLOR',
-// = SUBSTRING_INDEX(sku,'/',2)). Aqui resolvemos, por color del articulo, su
-// temporada de color y la de articulo; guardamos solo los colores cuya
-// temporada propia DIFIERE de la del articulo para "cantarlos" en el letrero.
-procedure TfrmStockConsulta.CargarTemporadasColores;
+// Las propiedades admiten nivel COLOR y SKU (propiedades_por_unidad.md): el
+// color es el prefijo del SKU (CODIGO_UNIDAD_ARTPROP = 'ART/COLOR' =
+// SUBSTRING_INDEX(sku,'/',2)) y el SKU el codigo completo ('ART/COLOR/TALLA').
+// Recogemos, por color del articulo, TODAS las propiedades fijadas a nivel
+// color o SKU cuyo valor DIFIERE del nivel articulo, ya formateadas, para
+// "cantarlas" en el letrero al pinchar el color. El nivel SKU se marca y se
+// deduplican entradas repetidas por varias tallas.
+procedure TfrmStockConsulta.CargarPropsPorColor;
+  // Valor mostrable segun tipo, igual que CargarInfoCabecera.
+  function ValorProp(const ATipo, APv, ALibre: string): string;
+  begin
+    if SameText(ATipo, 'LISTA') then
+      Result := Trim(APv)
+    else if SameText(ATipo, 'BOOLEANO') then
+    begin
+      if Trim(ALibre) = '' then
+        Result := ''
+      else if SameText(Trim(ALibre), 'S') then
+        Result := 'Sí'
+      else
+        Result := 'No';
+    end
+    else
+      Result := Trim(ALibre);
+  end;
 var
-  q          : TUniQuery;
-  sColor     : string;
-  sTempColor : string;
+  q         : TUniQuery;
+  sColor    : string;
+  sValor    : string;
+  sValorArt : string;
+  sEntrada  : string;
+  sAcum     : string;
 begin
-  FTempArticulo := '';
-  FTempPorColor.Clear;
+  FPropsPorColor.Clear;
   if Trim(FCodArt) = '' then Exit;
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
-    // MAX(...) para cumplir ONLY_FULL_GROUP_BY: tanto la temporada de color
-    // como la de articulo son constantes dentro de cada color (todos los SKUs
-    // de un color comparten prefijo ART/COLOR). El valor puede venir de la
-    // lista de valores (PV) o del texto libre (VALOR_LIBRE_ARTPROP).
+    // FCodArt va inline (QuotedStr) como en EstadoBaseSelectFor: aparece dos
+    // veces y asi evitamos lios de parametros duplicados con UniDAC. La
+    // derivada COLORS mapea el prefijo ART/COLOR al nombre del color (AV) via
+    // los SKUs reales del articulo; el LEFT JOIN APA trae el valor de nivel
+    // articulo para descartar lo que no aporta diferencia.
     q.SQL.Text :=
-      'SELECT AV.AV AS COLOR, ' +
-      '       MAX(COALESCE(PVC.PV, ' +
-      '           NULLIF(TRIM(APC.VALOR_LIBRE_ARTPROP), ''''))) AS TEMP_COLOR, ' +
-      '       MAX(COALESCE(PVA.PV, ' +
-      '           NULLIF(TRIM(APA.VALOR_LIBRE_ARTPROP), ''''))) AS TEMP_ART ' +
-      '  FROM fza_articulos_skus SKU ' +
-      '  JOIN fza_atributos_sku SA ' +
-      '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-      '  JOIN fza_atributos_valores AV ' +
-      '    ON AV.ID_AV = SA.ID_AV_SA AND AV.ID_VA_AV = ''CO'' ' +
-      '  LEFT JOIN fza_articulos_propiedades APC ' +
-      '    ON APC.CODIGO_ART_ART        = SKU.CODIGO_ART_SKU ' +
-      '   AND APC.CODIGO_PROP_ARTPROP   = ''TEMPORADA'' ' +
-      '   AND APC.CODIGO_UNIDAD_ARTPROP = SUBSTRING_INDEX(SKU.CODIGO_UNIDAD_SKU, ''/'', 2) ' +
-      '  LEFT JOIN fza_propiedades_valores PVC ON PVC.ID_PV_ARTPROP = APC.ID_PV_ARTPROP ' +
+      'SELECT COLORS.COLOR_AV          AS COLOR, ' +
+      '       P.NOMBRE_PROP_PROP       AS NOMBRE, ' +
+      '       P.TIPO_VALOR_PROP        AS TIPO, ' +
+      '       PV.PV                    AS PVTXT, ' +
+      '       AP.VALOR_LIBRE_ARTPROP   AS VLIBRE, ' +
+      '       CASE WHEN AP.CODIGO_UNIDAD_ARTPROP LIKE ''%/%/%'' ' +
+      '            THEN ''SKU'' ELSE ''COLOR'' END AS NIVEL, ' +
+      '       PVA.PV                   AS PVA, ' +
+      '       APA.VALOR_LIBRE_ARTPROP  AS VLIBRE_ART ' +
+      '  FROM fza_articulos_propiedades AP ' +
+      '  JOIN fza_propiedades P ' +
+      '    ON P.CODIGO_PROP_ARTPROP = AP.CODIGO_PROP_ARTPROP ' +
+      '  LEFT JOIN fza_propiedades_valores PV ON PV.ID_PV_ARTPROP = AP.ID_PV_ARTPROP ' +
+      '  JOIN (SELECT DISTINCT ' +
+      '               SUBSTRING_INDEX(SKU.CODIGO_UNIDAD_SKU, ''/'', 2) AS PREFIJO, ' +
+      '               AV.AV AS COLOR_AV ' +
+      '          FROM fza_articulos_skus SKU ' +
+      '          JOIN fza_atributos_sku SA ' +
+      '            ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '          JOIN fza_atributos_valores AV ' +
+      '            ON AV.ID_AV = SA.ID_AV_SA AND AV.ID_VA_AV = ''CO'' ' +
+      '         WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) + ') COLORS ' +
+      '    ON COLORS.PREFIJO = SUBSTRING_INDEX(AP.CODIGO_UNIDAD_ARTPROP, ''/'', 2) ' +
       '  LEFT JOIN fza_articulos_propiedades APA ' +
-      '    ON APA.CODIGO_ART_ART        = SKU.CODIGO_ART_SKU ' +
-      '   AND APA.CODIGO_PROP_ARTPROP   = ''TEMPORADA'' ' +
+      '    ON APA.CODIGO_ART_ART        = AP.CODIGO_ART_ART ' +
+      '   AND APA.CODIGO_PROP_ARTPROP   = AP.CODIGO_PROP_ARTPROP ' +
       '   AND APA.CODIGO_UNIDAD_ARTPROP = '''' ' +
       '  LEFT JOIN fza_propiedades_valores PVA ON PVA.ID_PV_ARTPROP = APA.ID_PV_ARTPROP ' +
-      ' WHERE SKU.CODIGO_ART_SKU = :art ' +
-      ' GROUP BY AV.AV';
-    q.ParamByName('art').AsString := FCodArt;
+      ' WHERE AP.CODIGO_ART_ART = ' + QuotedStr(FCodArt) +
+      '   AND AP.CODIGO_UNIDAD_ARTPROP <> '''' ' +
+      '   AND IFNULL(P.ESACTIVO_PROP, ''S'') = ''S'' ' +
+      ' ORDER BY COLORS.COLOR_AV, P.NOMBRE_PROP_PROP';
     q.Open;
     while not q.Eof do
     begin
-      if Trim(q.FieldByName('TEMP_ART').AsString) <> '' then
-        FTempArticulo := q.FieldByName('TEMP_ART').AsString;
-      sColor     := q.FieldByName('COLOR').AsString;
-      sTempColor := Trim(q.FieldByName('TEMP_COLOR').AsString);
-      // Solo "canta" el color que tiene temporada propia informada y distinta
-      // de la del articulo.
-      if (sTempColor <> '') and
-         (not SameText(sTempColor, Trim(q.FieldByName('TEMP_ART').AsString))) then
-        FTempPorColor.AddOrSetValue(sColor, sTempColor);
+      sColor    := q.FieldByName('COLOR').AsString;
+      sValor    := ValorProp(q.FieldByName('TIPO').AsString,
+                             q.FieldByName('PVTXT').AsString,
+                             q.FieldByName('VLIBRE').AsString);
+      sValorArt := ValorProp(q.FieldByName('TIPO').AsString,
+                             q.FieldByName('PVA').AsString,
+                             q.FieldByName('VLIBRE_ART').AsString);
+      // Solo lo que aporta valor y difiere del nivel articulo.
+      if (sValor <> '') and (not SameText(sValor, sValorArt)) then
+      begin
+        sEntrada := Format('%s: %s (%s)',
+          [q.FieldByName('NOMBRE').AsString, sValor,
+           IfThen(SameText(q.FieldByName('NIVEL').AsString, 'SKU'),
+                  'SKU', 'color')]);
+        if FPropsPorColor.TryGetValue(sColor, sAcum) then
+        begin
+          // Deduplicar: el mismo prop/valor puede repetirse por varias tallas.
+          if Pos(sEntrada, sAcum) = 0 then
+            FPropsPorColor[sColor] := sAcum + '   ·   ' + sEntrada;
+        end
+        else
+          FPropsPorColor.Add(sColor, sEntrada);
+      end;
       q.Next;
     end;
   finally
@@ -765,29 +810,24 @@ begin
   end;
 end;
 
-// Recompone el letrero para el color sobre el que se acaba de pinchar (el
-// item con foco en el checklist): si ese color tiene temporada propia distinta
-// a la del articulo, la "canta"; si no, oculta el letrero. Se llama al pinchar
-// un color (OnClick) y al marcar/desmarcar (OnClickCheck, que ademas enfoca).
-procedure TfrmStockConsulta.ActualizarLetreroTemporada;
+// Recompone el letrero para el color sobre el que se acaba de pinchar (item
+// con foco en el checklist): si ese color tiene propiedades propias (nivel
+// color/SKU) distintas a las del articulo, las "canta"; si no, oculta el
+// letrero. Se llama al pinchar un color (OnClick) y al marcar/desmarcar
+// (OnClickCheck, que ademas enfoca el item).
+procedure TfrmStockConsulta.ActualizarLetreroColor;
 var
   iSel   : Integer;
   sColor : string;
-  sTemp  : string;
+  sProps : string;
 begin
-  if (FTempPorColor = nil) or (lblLetreroTemp = nil) then Exit;
+  if (FPropsPorColor = nil) or (lblLetreroTemp = nil) then Exit;
   iSel := clbColores.ItemIndex;
   if (iSel >= 0) and (iSel < clbColores.Items.Count) and
-     FTempPorColor.TryGetValue(clbColores.Items[iSel].Text, sTemp) then
+     FPropsPorColor.TryGetValue(clbColores.Items[iSel].Text, sProps) then
   begin
     sColor := clbColores.Items[iSel].Text;
-    if Trim(FTempArticulo) <> '' then
-      lblLetreroTemp.Caption :=
-        Format('  ¡Ojo! %s es de temporada %s  (el artículo es %s)',
-               [sColor, sTemp, FTempArticulo])
-    else
-      lblLetreroTemp.Caption :=
-        Format('  ¡Ojo! %s tiene temporada propia: %s', [sColor, sTemp]);
+    lblLetreroTemp.Caption := Format('  %s →   %s', [sColor, sProps]);
     lblLetreroTemp.Visible := True;
   end
   else
@@ -863,7 +903,7 @@ begin
     CargarFoto;
     CargarInfoCabecera;
     CargarColores;
-    CargarTemporadasColores;
+    CargarPropsPorColor;
   except
     on E: Exception do
       MostrarError(E.Message);
@@ -1751,15 +1791,15 @@ end;
 procedure TfrmStockConsulta.clbColoresClickCheck(Sender: TObject;
   AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
 begin
-  ActualizarLetreroTemporada;
+  ActualizarLetreroColor;
   RecargarConsulta;
 end;
 
-// Al pinchar un color (sin tocar el check) se "canta" su temporada si difiere
-// de la del articulo.
+// Al pinchar un color (sin tocar el check) se "cantan" sus propiedades propias
+// (nivel color/SKU) si difieren de las del articulo.
 procedure TfrmStockConsulta.clbColoresClick(Sender: TObject);
 begin
-  ActualizarLetreroTemporada;
+  ActualizarLetreroColor;
 end;
 
 procedure TfrmStockConsulta.pcVistasChange(Sender: TObject);
