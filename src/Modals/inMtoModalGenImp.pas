@@ -233,6 +233,9 @@ procedure TfrmPrint.ReportBeforePrintConQR(Component: TfrxReportComponent);
 begin
   oFotos.HandlerReportBeforePrint(Component);
   SustituirQRVerifactuEnReport(Component);
+  // Título de los formatos de factura según el tipo del registro
+  // activo (FACTURA / FACTURA SIMPLIFICADA / FACTURA RECTIFICATIVA)
+  SustituirTituloFacturaEnReport(Component);
 end;
 
 procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);

@@ -164,10 +164,16 @@ begin
     begin
       Close;
       Params.Clear;
-      SQL.Text := 'SELECT *  ' +
+      // La vista print no trae TIPO_FAC: se añade con un JOIN para
+      // que el título (FACTURA SIMPLIFICADA / RECTIFICATIVA) y el QR
+      // tengan el tipo del registro activo
+      SQL.Text := 'SELECT f.*, fac.TIPO_FAC, fac.FASE_FAC ' +
                   '  FROM vi_FACTURAS_print f' +
-                  ' WHERE NUMERO_FAC = :numfac' +
-                  '   AND SERIE_FAC = :serie';
+                  '  JOIN fza_facturas fac ' +
+                  '    ON fac.NUMERO_FAC = f.NUMERO_FAC ' +
+                  '   AND fac.SERIE_FAC  = f.SERIE_FAC ' +
+                  ' WHERE f.NUMERO_FAC = :numfac' +
+                  '   AND f.SERIE_FAC = :serie';
       Params.ParamByName('numfac').Value := edtNroFac.text;
       Params.ParamByName('serie').Value := edtSerie.text;
     end;
@@ -196,11 +202,14 @@ begin
     begin
       Close;
       Params.Clear;
-      SQL.Text := '  SELECT *  ' +
-                  '    FROM VI_FACTURAS_PRINT' +
-                  '   WHERE FECHA_FAC >= :fecha_ini ' +
-                  '     AND  FECHA_FAC <= :fecha_fin ' +
-                  'ORDER BY NUMERO_FAC';
+      SQL.Text := '  SELECT f.*, fac.TIPO_FAC, fac.FASE_FAC ' +
+                  '    FROM VI_FACTURAS_PRINT f' +
+                  '    JOIN fza_facturas fac ' +
+                  '      ON fac.NUMERO_FAC = f.NUMERO_FAC ' +
+                  '     AND fac.SERIE_FAC  = f.SERIE_FAC ' +
+                  '   WHERE f.FECHA_FAC >= :fecha_ini ' +
+                  '     AND f.FECHA_FAC <= :fecha_fin ' +
+                  'ORDER BY f.NUMERO_FAC';
       Params.ParamByName('fecha_ini').Value := dedDesde.Date;
       Params.ParamByName('fecha_fin').Value := dedHasta.Date;
     end;

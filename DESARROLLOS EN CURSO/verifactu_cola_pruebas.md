@@ -521,3 +521,18 @@ Consolidar de nuevo.
   `limpiar_movimientos_fac_duplicados.sql`: el informe previo los
   lista, el borrado revierte el stock (acumulados incluidos) y la
   comprobación final devuelve 0 filas.
+
+**J7 — QR y título en el A4 y en el Excel de facturas.** Con Verifactu
+activo, imprimir/previsualizar una factura simplificada, una normal y
+una rectificativa con el formato A4 (botón Imprimir o F8):
+- El QR tributario sale relleno arriba a la derecha de la cabecera en
+  TODAS las hojas (antes el hueco inyectado quedaba vacío por estar
+  suelto en la página); escaneado, abre la URL de cotejo de ESA
+  factura. En un rango con varias facturas, cada una lleva su QR.
+- El título del formato cambia por registro: FACTURA /
+  FACTURA SIMPLIFICADA / FACTURA RECTIFICATIVA.
+- Botón Excel: la hoja muestra el mismo título según tipo y el QR
+  incrustado a la derecha de la cabecera (columna H); al guardar el
+  .xlsx la imagen viaja con el fichero.
+- Con Verifactu desactivado: ni QR en A4 ni en Excel, y el título
+  sigue cambiando por tipo (no depende de Verifactu).
