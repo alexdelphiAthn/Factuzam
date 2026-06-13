@@ -111,7 +111,6 @@ type
     // Observaciones
     memObservaciones: TcxDBMemo;
     btnTallasHorizontal:  TcxButton;
-    btnAtributosColumna:  TcxButton;
     btnExpandirRecibidos: TcxButton;
     // Atajo: rellena 'A recibir' con el pendiente de TODAS las
     // tallas de la fila focused. Activo solo en pivote expandido.
@@ -124,6 +123,7 @@ type
     lblContextoTalla: TcxLabel;
     ActionList1: TActionList;
     actArticulos: TAction;
+    btnRecibirTodo: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -160,6 +160,7 @@ type
     procedure cxgrdLineasPedidoExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure cbbSERIE_PEDCPropertiesInitPopup(Sender: TObject);
+    procedure btnRecibirTodoClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -660,6 +661,12 @@ begin
   if iCeldas = 0 then
     MessageDlg('No hay tallas pendientes de recibir en la fila activa.',
                mtInformation, [mbOk], 0);
+end;
+
+procedure TfrmMtoPedidosCompra.btnRecibirTodoClick(Sender: TObject);
+begin
+  inherited;
+  //
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
