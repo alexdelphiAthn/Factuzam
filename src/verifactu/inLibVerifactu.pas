@@ -504,15 +504,19 @@ end;
 procedure AplicarVerifactuEnReportDirecto(AReport: TfrxReport;
                                           ADataSet: TDataSet);
 var
-  i: Integer;
+  i:    Integer;
+  oObj: TfrxComponent;
 begin
-  // Relleno directo, sin esperar a OnBeforePrint: recorre TODO el árbol
-  // de cada página y rellena el QR y el título con ADataSet. Para una
-  // sola factura (vista previa / impresión / PDF de un documento) el QR
-  // sale por defecto aunque el hueco quede suelto en la página y su
-  // objeto no reciba el evento.
+  // Relleno directo, sin esperar a OnBeforePrint. Para una sola factura
+  // (vista previa / impresión / PDF) el QR y el título salen por defecto.
   if (AReport <> nil) and TieneCamposFactura(ADataSet) then
   begin
+    // El QR por nombre (FindObject recorre todo el informe; más fiable
+    // que la jerarquía Objects para un objeto recién cargado)
+    oObj := AReport.FindObject('qrverifactu');
+    if oObj is TfrxPictureView then
+      RellenarQRPicture(TfrxPictureView(oObj), ADataSet);
+    // El título recorriendo los memos de cada página
     for i := 0 to AReport.PagesCount - 1 do
     begin
       if AReport.Pages[i] is TfrxReportPage then
