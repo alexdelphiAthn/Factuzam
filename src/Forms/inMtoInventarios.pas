@@ -223,6 +223,10 @@ type
     // SKU->ATTR1..ATTR5 (que requiere un Edit/Post por linea). El usuario
     // lo activa con chkVerColumnasAtributos cuando quiere editar.
     FMostrarColumnasAtributos: Boolean;
+    // En modo "atributos en columna" las columnas (Talla, Color...) se calculan
+    // a nivel de inventario (no por la fila enfocada) una sola vez por
+    // inventario; este flag marca si ya estan aplicadas.
+    FAtributosVistaAplicados: Boolean;
     // Umbral a partir del cual el desempaquetado merece un progressbar.
     // Por debajo, el cdsLineas con DisableControls va lo bastante rapido
     // como para no necesitar feedback visual.
@@ -244,6 +248,12 @@ type
     // Columna de entrada activa segun el modo: Articulo si atributos en
     // columna esta activo, si no la unificada SKU/Articulo.
     function ColumnaEntradaActiva: TcxGridDBColumn;
+    // Calcula y pinta las columnas de atributo (Talla, Color...) a nivel de
+    // inventario: numero maximo de atributos de todas las lineas y nombres
+    // (en su ORDEN_VISUAL) del articulo que mas atributos tiene. Asi las
+    // columnas son estables al navegar y aparecen aunque la fila enfocada sea
+    // un articulo sin variaciones.
+    procedure AplicarColumnasAtributosVista;
     // Asegura que cdsLineas tiene los ATTR1..ATTR5_VALOR rellenados
     // (idempotente: no hace nada si ya estan, ver dmm.LineasDesempaquetadas).
     // Si hay mas de FUmbralProgresoDesempaquetado lineas, muestra el overlay
@@ -581,6 +591,9 @@ begin
     ds.FieldByName('NUMERO_INV').AsString
   );
   dmmInventarios.CargarLineasInventario;
+  // Inventario recargado: las columnas de atributo (vista) se recalculan para
+  // las lineas nuevas.
+  FAtributosVistaAplicados := False;
   if dmmInventarios.cdsLineas.Active and
      not dmmInventarios.cdsLineas.IsEmpty then
   begin
@@ -679,6 +692,98 @@ begin
   end;
 end;
 
+procedure TfrmMtoInventarios.AplicarColumnasAtributosVista;
+var
+  cds        : TDataSet;
+  Bm         : TBookmark;
+  MaxAtr, n, i: Integer;
+  ArtRepr    : string;
+  Nombres    : TStringList;
+  Col        : TcxGridDBColumn;
+begin
+  if dmmInventarios = nil then Exit;
+  cds := dmmInventarios.cdsLineas;
+  if not cds.Active then Exit;
+  // 1. Recorremos las lineas: numero maximo de atributos del inventario y el
+  //    articulo que lo alcanza (de el sacamos los nombres en su orden).
+  MaxAtr  := 0;
+  ArtRepr := '';
+  if not cds.IsEmpty then
+  begin
+    Bm := cds.GetBookmark;
+    cds.DisableControls;
+    try
+      cds.First;
+      while not cds.Eof do
+      begin
+        n := cds.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
+        if n > MaxAtr then
+        begin
+          MaxAtr  := n;
+          ArtRepr := cds.FieldByName('CODIGO_ART_INVLIN').AsString;
+        end;
+        cds.Next;
+      end;
+    finally
+      if cds.BookmarkValid(Bm) then
+        cds.GotoBookmark(Bm);
+      cds.FreeBookmark(Bm);
+      cds.EnableControls;
+    end;
+  end;
+  if MaxAtr > 5 then
+    MaxAtr := 5;
+  FNumAtributosActual := MaxAtr;
+  // 2. Nombres de los atributos (Talla, Color...) en su ORDEN_VISUAL, tomados
+  //    del articulo representativo.
+  Nombres := TStringList.Create;
+  try
+    if (MaxAtr > 0) and (ArtRepr <> '') then
+    begin
+      dmmInventarios.unqryDefinicionArticulo.Close;
+      dmmInventarios.unqryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
+        ArtRepr;
+      dmmInventarios.unqryDefinicionArticulo.Open;
+      while not dmmInventarios.unqryDefinicionArticulo.Eof do
+      begin
+        Nombres.Add(dmmInventarios.unqryDefinicionArticulo.FieldByName(
+          'NOMBRE_ATRIBUTO').AsString);
+        dmmInventarios.unqryDefinicionArticulo.Next;
+      end;
+    end;
+    // 3. SKU1..MaxAtr visibles con su nombre; el resto, ocultas.
+    tvLineas.BeginUpdate;
+    try
+      for i := 1 to 5 do
+      begin
+        Col := ObtenerColumnaSkuPorTag(i);
+        if Col <> nil then
+        begin
+          if i <= MaxAtr then
+          begin
+            if i <= Nombres.Count then
+              Col.Caption := Nombres[i - 1]
+            else
+              Col.Caption := 'Atributo ' + IntToStr(i);
+            Col.Visible := True;
+            Col.Options.Editing := True;
+          end
+          else
+          begin
+            Col.Visible := False;
+            Col.Options.Editing := False;
+            Col.Caption := '-';
+          end;
+        end;
+      end;
+    finally
+      tvLineas.EndUpdate;
+    end;
+  finally
+    FreeAndNil(Nombres);
+  end;
+end;
+
 procedure TfrmMtoInventarios.actIraArticuloExecute(Sender: TObject);
 begin
   inherited;
@@ -750,6 +855,22 @@ begin
   if dmmInventarios = nil then
   begin
     OcultarTodasLasColumnasSku;
+    Exit;
+  end;
+
+  // Modo "atributos en columna" (toggle ON): las columnas de atributo se
+  // calculan a nivel de inventario y son estables al navegar, en lugar de
+  // depender del articulo de la fila enfocada (que podria no tener
+  // variaciones). Se computan una sola vez por inventario; en la navegacion
+  // posterior solo reaplicamos el modo de columna de entrada (barato).
+  if FMostrarColumnasAtributos then
+  begin
+    if not FAtributosVistaAplicados then
+    begin
+      AplicarColumnasAtributosVista;
+      FAtributosVistaAplicados := True;
+    end;
+    AplicarModoColumnasEntrada(True);
     Exit;
   end;
 
@@ -903,8 +1024,10 @@ begin
   if FMostrarColumnasAtributos then
     AsegurarDesempaquetadoAtributos;
 
-  // Forzar el rebuild ignorando la memoizacion FUltimoArticuloPadre.
+  // Forzar el rebuild ignorando la memoizacion FUltimoArticuloPadre. Al
+  // cambiar el toggle recalculamos tambien las columnas de atributo de vista.
   FUltimoArticuloPadre := '';
+  FAtributosVistaAplicados := False;
 
   CodArt := '';
   if (dmmInventarios <> nil) and
