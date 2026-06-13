@@ -408,7 +408,7 @@
           Top = 163.500000000000000000
           Width = 230.000000000000000000
           Height = 15.000000000000000000
-          DataField = 'RAZON_SOCIAL_PRV'
+          DataField = 'NOMBRE_PRV'
           DataSet = dmArticulos.fxdsEtiquetasArt
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
@@ -419,7 +419,7 @@
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[EtiquetasArt."RAZON_SOCIAL_PRV"]')
+            '[EtiquetasArt."NOMBRE_PRV"]')
           ParentFont = False
         end
         object EtiqTemporada: TfrxMemoView
@@ -428,7 +428,7 @@
           Top = 163.500000000000000000
           Width = 150.000000000000000000
           Height = 15.000000000000000000
-          DataField = 'PROP_TEMPORADA'
+          DataField = 'COD_TEMPORADA'
           DataSet = dmArticulos.fxdsEtiquetasArt
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
@@ -438,7 +438,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[EtiquetasArt."PROP_TEMPORADA"]')
+            '[EtiquetasArt."COD_TEMPORADA"]')
           ParentFont = False
         end
       end
@@ -760,7 +760,7 @@
           Top = 163.500000000000000000
           Width = 230.000000000000000000
           Height = 15.000000000000000000
-          DataField = 'RAZON_SOCIAL_PRV'
+          DataField = 'NOMBRE_PRV'
           DataSet = dmArticulos.fxdsEtiquetasArt
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
@@ -771,7 +771,7 @@
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            '[EtiquetasArt."RAZON_SOCIAL_PRV"]')
+            '[EtiquetasArt."NOMBRE_PRV"]')
           ParentFont = False
         end
         object EtiqTemporada: TfrxMemoView
@@ -780,7 +780,7 @@
           Top = 163.500000000000000000
           Width = 150.000000000000000000
           Height = 15.000000000000000000
-          DataField = 'PROP_TEMPORADA'
+          DataField = 'COD_TEMPORADA'
           DataSet = dmArticulos.fxdsEtiquetasArt
           DataSetName = 'EtiquetasArt'
           Font.Charset = DEFAULT_CHARSET
@@ -790,7 +790,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[EtiquetasArt."PROP_TEMPORADA"]')
+            '[EtiquetasArt."COD_TEMPORADA"]')
           ParentFont = False
         end
       end

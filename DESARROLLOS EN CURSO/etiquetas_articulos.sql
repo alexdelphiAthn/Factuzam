@@ -26,7 +26,12 @@
 --     valor libre cae a VALOR_LIBRE_ARTPROP. Además expone PROPIEDADES_TXT
 --     con TODAS las propiedades del artículo en un único campo
 --     "Nombre: Valor | Nombre: Valor".
---   - Proveedor principal (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV, REF_PROVEEDOR).
+--   - COD_TEMPORADA: código corto de la temporada (p.ej. "PV26"), guardado
+--     en DESCRIPCION_PV del valor de la propiedad TEMPORADA. PROP_TEMPORADA
+--     sigue siendo el texto largo ("Primavera/Verano 2026").
+--   - Proveedor principal (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV, NOMBRE_PRV,
+--     REF_PROVEEDOR). NOMBRE_PRV es el nombre comercial; la etiqueta por
+--     defecto lo usa como "nombre de proveedor".
 --   - Código de barras marcado como principal del SKU.
 --
 -- Nota sobre extensibilidad: el conjunto fijo de columnas PROP_* y ATR_*
@@ -67,6 +72,11 @@ WITH
                THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_MATERIAL`,
       MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
                THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_TEMPORADA`,
+      -- Codigo corto de la temporada (p.ej. 'PV26'). Se guarda en
+      -- DESCRIPCION_PV del valor de la propiedad TEMPORADA; PROP_TEMPORADA
+      -- (arriba) es el texto largo 'Primavera/Verano 2026'.
+      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
+               THEN `pv`.`DESCRIPCION_PV` END)                           AS `COD_TEMPORADA`,
       MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'GENERO'
                THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_GENERO`,
       MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'ESTILO'
@@ -115,6 +125,7 @@ SELECT
   `apr`.`PROP_MARCA`                                                AS `PROP_MARCA`,
   `apr`.`PROP_MATERIAL`                                             AS `PROP_MATERIAL`,
   `apr`.`PROP_TEMPORADA`                                            AS `PROP_TEMPORADA`,
+  `apr`.`COD_TEMPORADA`                                             AS `COD_TEMPORADA`,
   `apr`.`PROP_GENERO`                                               AS `PROP_GENERO`,
   `apr`.`PROP_ESTILO`                                               AS `PROP_ESTILO`,
   `apr`.`PROP_ORIGEN`                                               AS `PROP_ORIGEN`,
@@ -122,6 +133,7 @@ SELECT
   `apr`.`PROPIEDADES_TXT`                                           AS `PROPIEDADES_TXT`,
   `ap`.`CODIGO_PRV_AP`                                              AS `CODIGO_PRV_PRV`,
   `prv`.`RAZON_SOCIAL_PRV`                                          AS `RAZON_SOCIAL_PRV`,
+  `prv`.`NOMBRE_PRV`                                                AS `NOMBRE_PRV`,
   `ap`.`REF_PROVEEDOR_AP`                                           AS `REF_PROVEEDOR`,
   `cb`.`CODIGO_BARRAS_CB`                                           AS `CODIGO_BARRAS_CB`
 FROM `fza_articulos_skus` `sku`

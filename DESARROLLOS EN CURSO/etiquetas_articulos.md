@@ -57,13 +57,20 @@ desincronizado lo que se ve en el diseñador con lo que se imprime.
 La maqueta por defecto muestra, además de marca, P.V.P, color, talla,
 código de barras, descripción y código de artículo:
 
-- **Nombre del proveedor** (`RAZON_SOCIAL_PRV`) — pie de etiqueta, derecha.
-- **Temporada** (`PROP_TEMPORADA`) — pie de etiqueta, izquierda.
+- **Nombre del proveedor** (`NOMBRE_PRV`, nombre comercial del proveedor
+  principal) — pie de etiqueta, derecha.
+- **Código de temporada** (`COD_TEMPORADA`, p.ej. "PV26") — pie de
+  etiqueta, izquierda.
 
-Ambos campos ya los expone `vi_articulos_skus_etiquetas` y los arrastra el
-`SELECT eti.*` de `CrearDataSetEtiquetasArt`, así que no hubo que tocar la
-vista ni la consulta runtime: solo colocar las dos `TfrxMemoView` en la
-banda `MasterData`.
+`COD_TEMPORADA` no es `PROP_TEMPORADA`: el primero es el código corto
+guardado en `DESCRIPCION_PV` del valor de la propiedad TEMPORADA y el
+segundo es el texto largo ("Primavera/Verano 2026"). Ambas columnas, junto
+con `NOMBRE_PRV`, se añadieron a `vi_articulos_skus_etiquetas`
+(`etiquetas_articulos.sql`); el `SELECT eti.*` de
+`CrearDataSetEtiquetasArt` las arrastra solo, así que en Delphi únicamente
+se colocaron las dos `TfrxMemoView` en la banda `MasterData`. Hay que
+reaplicar `etiquetas_articulos.sql` contra la BBDD para que aparezcan las
+columnas nuevas.
 
 ### Consulta runtime
 
