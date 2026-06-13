@@ -72,12 +72,9 @@ type
     pnlDetalleTop: TPanel;
     btnAnadirLinea: TcxButton;
     btnAnadirSkusArt: TcxButton;
-    btnEliminarLinea: TcxButton;
     btnRecalcularDetalle: TcxButton;
     btnCargarExcel: TcxButton;
     btnExportarInv: TcxButton;
-    btnEnviarRecuento: TcxButton;
-    btnRecogerRecuento: TcxButton;
     cxgrdLineas: TcxGrid;
     tvLineas: TcxGridDBTableView;
     tvLineasLINEA: TcxGridDBColumn;
@@ -143,6 +140,8 @@ type
     ActionList1: TActionList;
     actIraArticulo: TAction;
     chkVerColumnasAtributos: TcxCheckBox;
+    btnEnviarRecuento: TcxButton;
+    btnRecogerRecuento: TcxButton;
 
     // === EVENTOS ===
     procedure FormCreate(Sender: TObject);

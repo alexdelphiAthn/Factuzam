@@ -17,18 +17,18 @@ inherited frmMtoInventarios: TfrmMtoInventarios
       Height = 680
       ExplicitWidth = 1140
       ExplicitHeight = 680
-      ClientRectBottom = 678
-      ClientRectRight = 1138
+      ClientRectBottom = 676
+      ClientRectRight = 1136
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
-        ExplicitWidth = 1136
-        ExplicitHeight = 649
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1132
+        ExplicitHeight = 648
         inherited cxGrdPrincipal: TcxGrid
-          Width = 1136
-          Height = 649
-          ExplicitWidth = 1136
-          ExplicitHeight = 649
+          Width = 1132
+          Height = 648
+          ExplicitWidth = 1132
+          ExplicitHeight = 648
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object colCODIGO_EMP_INV: TcxGridDBColumn
               Caption = 'Empresa'
@@ -88,14 +88,14 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
-        ExplicitWidth = 1136
-        ExplicitHeight = 649
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1132
+        ExplicitHeight = 648
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 1136
+          Width = 1132
           Height = 174
           Align = alTop
           BevelOuter = bvNone
@@ -103,7 +103,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
           object pnlBodyFicha: TPanel
             Left = 0
             Top = 0
-            Width = 1136
+            Width = 1132
             Height = 174
             Align = alClient
             BevelOuter = bvNone
@@ -241,42 +241,54 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               TabOrder = 13
               Width = 457
             end
+            object btnEnviarRecuento: TcxButton
+              Left = 703
+              Top = 73
+              Width = 226
+              Height = 30
+              Caption = 'Enviar a recuento m'#243'vil'
+              TabOrder = 14
+              OnClick = btnEnviarRecuentoClick
+            end
+            object btnRecogerRecuento: TcxButton
+              Left = 703
+              Top = 109
+              Width = 226
+              Height = 30
+              Caption = 'Recoger recuento m'#243'vil'
+              TabOrder = 15
+              OnClick = btnRecogerRecuentoClick
+            end
           end
         end
         object pnlButtonFicha: TPanel
           Left = 0
-          Top = 184
-          Width = 1136
-          Height = 467
+          Top = 182
+          Width = 1132
+          Height = 466
           Align = alClient
           TabOrder = 1
-          ExplicitHeight = 465
           object pcDetail: TcxPageControl
             Left = 1
             Top = 1
-            Width = 1134
-            Height = 465
+            Width = 1130
+            Height = 464
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsDetalle
             Properties.CustomButtons.Buttons = <>
             OnChange = pcDetailChange
-            ExplicitHeight = 463
-            ClientRectBottom = 463
-            ClientRectLeft = 2
-            ClientRectRight = 1132
-            ClientRectTop = 27
+            ClientRectBottom = 460
+            ClientRectLeft = 4
+            ClientRectRight = 1126
+            ClientRectTop = 28
             object tsDetalle: TcxTabSheet
               Caption = '&1. Detalle del inventario'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlDetalleTop: TPanel
                 Left = 0
                 Top = 0
-                Width = 1130
+                Width = 1122
                 Height = 80
                 Align = alTop
                 BevelOuter = bvNone
@@ -305,23 +317,13 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   TabOrder = 1
                   OnClick = btnAnadirSkusArtClick
                 end
-                object btnEliminarLinea: TcxButton
-                  Left = 319
-                  Top = 11
-                  Width = 154
-                  Height = 30
-                  Caption = '- Eliminar l'#237'nea'
-                  TabOrder = 2
-                  Visible = False
-                  OnClick = btnEliminarLineaClick
-                end
                 object btnRecalcularDetalle: TcxButton
                   Left = 183
                   Top = 11
                   Width = 200
                   Height = 30
                   Caption = 'Recalcular te'#243'rico/PMP'
-                  TabOrder = 3
+                  TabOrder = 2
                   OnClick = btnRecalcularDetalleClick
                 end
                 object btnCargarExcel: TcxButton
@@ -330,7 +332,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Width = 130
                   Height = 30
                   Caption = 'Cargar Excel'
-                  TabOrder = 4
+                  TabOrder = 3
                   OnClick = btnCargarExcelClick
                 end
                 object btnExportarInv: TcxButton
@@ -339,26 +341,8 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Width = 140
                   Height = 30
                   Caption = 'Exportar a Excel'
-                  TabOrder = 5
+                  TabOrder = 4
                   OnClick = btnExportarInvClick
-                end
-                object btnEnviarRecuento: TcxButton
-                  Left = 7
-                  Top = 45
-                  Width = 160
-                  Height = 30
-                  Caption = 'Enviar a recuento'
-                  TabOrder = 8
-                  OnClick = btnEnviarRecuentoClick
-                end
-                object btnRecogerRecuento: TcxButton
-                  Left = 173
-                  Top = 45
-                  Width = 160
-                  Height = 30
-                  Caption = 'Recoger recuento'
-                  TabOrder = 9
-                  OnClick = btnRecogerRecuentoClick
                 end
                 object btnIraArticulo: TcxButton
                   Left = 671
@@ -366,12 +350,12 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   Width = 130
                   Height = 30
                   Caption = 'Ir a Art'#237'culo'
-                  TabOrder = 6
+                  TabOrder = 5
                   OnClick = btnIraArticuloClick
                 end
                 object chkVerColumnasAtributos: TcxCheckBox
-                  Left = 7
-                  Top = 50
+                  Left = 24
+                  Top = 47
                   Hint = 
                     'Activa la construcci'#243'n de las columnas SKU1..SKU5 con los nombre' +
                     's de atributo del art'#237'culo. Implica recorrer todas las l'#237'neas pa' +
@@ -381,13 +365,13 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                   ParentShowHint = False
                   Properties.OnChange = chkVerColumnasAtributosPropertiesChange
                   ShowHint = True
-                  TabOrder = 7
+                  TabOrder = 6
                 end
               end
               object cxgrdLineas: TcxGrid
                 Left = 0
                 Top = 80
-                Width = 1130
+                Width = 1122
                 Height = 352
                 Align = alClient
                 TabOrder = 1
@@ -607,12 +591,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsMovsRegul: TcxTabSheet
               Caption = '&2. Movimientos regularizados'
               ImageIndex = 2
-              ExplicitTop = 29
-              ExplicitHeight = 432
               object pnlMovsTop: TPanel
                 Left = 0
                 Top = 0
-                Width = 1130
+                Width = 1122
                 Height = 50
                 Align = alTop
                 BevelOuter = bvNone
@@ -637,12 +619,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
               object cxgrdMovs: TcxGrid
                 Left = 0
                 Top = 50
-                Width = 1009
-                Height = 386
+                Width = 1001
+                Height = 382
                 Align = alClient
                 TabOrder = 1
-                ExplicitWidth = 1130
-                ExplicitHeight = 382
                 object tvMovs: TcxGridDBTableView
                   OptionsData.Deleting = False
                   OptionsData.Editing = False
@@ -702,15 +682,12 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 end
               end
               object pnlBotonesAccion: TPanel
-                Left = 1009
+                Left = 1001
                 Top = 50
                 Width = 121
-                Height = 386
+                Height = 382
                 Align = alRight
                 TabOrder = 2
-                ExplicitLeft = 948
-                ExplicitTop = 0
-                ExplicitHeight = 425
                 object btnExportarExcel: TcxButton
                   Left = 3
                   Top = 11
@@ -733,14 +710,10 @@ inherited frmMtoInventarios: TfrmMtoInventarios
             object tsCabecera: TcxTabSheet
               Caption = '&3.Otros'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlCabecera: TPanel
                 Left = 0
                 Top = 0
-                Width = 1130
+                Width = 1122
                 Height = 480
                 Align = alTop
                 BevelOuter = bvNone
@@ -879,37 +852,37 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         object splSplitterFicha: TcxSplitter
           Left = 0
           Top = 174
-          Width = 1136
-          Height = 10
+          Width = 1132
+          Height = 8
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlButtonFicha
-          ExplicitWidth = 10
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitTop = 27
-        ExplicitWidth = 1136
-        ExplicitHeight = 651
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 1132
+        ExplicitHeight = 648
         inherited pnlPerfilTop: TPanel
-          Width = 1136
+          Width = 1132
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1136
+          ExplicitWidth = 1132
           inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
+            ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 1136
-          Height = 594
+          Width = 1132
+          Height = 591
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 1136
-          ExplicitHeight = 592
+          ExplicitWidth = 1132
+          ExplicitHeight = 591
           inherited cxgrdPerfil: TcxGrid
-            Width = 1136
-            Height = 592
-            ExplicitWidth = 1136
-            ExplicitHeight = 592
+            Width = 1132
+            Height = 591
+            ExplicitWidth = 1132
+            ExplicitHeight = 591
           end
         end
       end
@@ -923,7 +896,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1140
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
       end
     end
