@@ -1413,6 +1413,7 @@ end;
 procedure TdmFacturas.unqryFacBeforePost(DataSet: TDataSet);
 var
   ISError:Boolean;
+  bValidarSerie:Boolean;
   frmFac:TfrmMtoFacturasBase;
 begin
   inherited;
@@ -1420,9 +1421,19 @@ begin
   frmFac := (GetOwnerForm<TfrmMtoFacturasBase>);
   with unqryTablaG do
   begin
-    if ((ExisteSerieEmpresa(FieldByName(fseriefac).AsString,
-                          FieldByName(fcodemp).AsString,
-                          'FC')) and
+    // La serie ajena solo se valida al CREAR la factura o al CAMBIAR la
+    // serie de una existente. Al regrabar o anadir lineas a una factura ya
+    // guardada la cabecera entra en dsEdit por el contador de lineas (no por
+    // accion del usuario sobre la serie): revalidar daba el falso positivo
+    // "esta serie es usada por otra empresa" en facturas con serie correcta.
+    bValidarSerie := (State = dsInsert) or
+                     ((State = dsEdit) and
+                      (not SameText(FieldByName(fseriefac).AsString,
+                                    VarToStr(FieldByName(fseriefac).OldValue))));
+    if (bValidarSerie and
+        ExisteSerieEmpresa(FieldByName(fseriefac).AsString,
+                           FieldByName(fcodemp).AsString,
+                           'FC') and
         (IsError = False)) then
     begin
       ShowMessage('Esta serie es usada por otra empresa.' +
