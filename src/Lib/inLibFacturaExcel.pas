@@ -61,34 +61,53 @@ var
     Pic:     TdxSpreadSheetPictureContainer;
     sUrl:    string;
   begin
-    if VerifactuActivo and
-       (QMaster.FindField('NIF_EMPRESA_FAC') <> nil) and
-       (Trim(QMaster.FieldByName('NUMERO_FAC').AsString) <> '') then
-    begin
-      sUrl := ConstruirUrlQR(
-                QMaster.FieldByName('NIF_EMPRESA_FAC').AsString,
-                QMaster.FieldByName('SERIE_FAC').AsString,
-                QMaster.FieldByName('NUMERO_FAC').AsString,
-                QMaster.FieldByName('FECHA_FAC').AsDateTime,
-                QMaster.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
-      aPng := GenerarQRPngVerifactu(sUrl);
-      img := TdxSmartImage.Create;
-      oStream := TBytesStream.Create(aPng);
+    // El QR es opcional: cualquier fallo aquí NO debe tumbar la
+    // exportación de la factura a Excel.
+    if (not VerifactuActivo) or
+       (QMaster.FindField('NIF_EMPRESA_FAC') = nil) or
+       (QMaster.FindField('SERIE_FAC') = nil) or
+       (QMaster.FindField('NUMERO_FAC') = nil) or
+       (QMaster.FindField('FECHA_FAC') = nil) or
+       (QMaster.FindField('TOTAL_LIQUIDO_FAC') = nil) or
+       (Trim(QMaster.FieldByName('NUMERO_FAC').AsString) = '') then
+      Exit;
+    sUrl := ConstruirUrlQR(
+              QMaster.FieldByName('NIF_EMPRESA_FAC').AsString,
+              QMaster.FieldByName('SERIE_FAC').AsString,
+              QMaster.FieldByName('NUMERO_FAC').AsString,
+              QMaster.FieldByName('FECHA_FAC').AsDateTime,
+              QMaster.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
+    aPng := GenerarQRPngVerifactu(sUrl);
+    if Length(aPng) = 0 then
+      Exit;
+    img     := nil;
+    oStream := nil;
+    try
       try
+        img     := TdxSmartImage.Create;
+        oStream := TBytesStream.Create(aPng);
+        oStream.Position := 0;
         img.LoadFromStream(oStream);
-        Pic := Sheet.Containers.Add(TdxSpreadSheetPictureContainer)
-                 as TdxSpreadSheetPictureContainer;
-        Pic.Picture.Image := img; // el contenedor copia la imagen
-        // Anclado a la columna H, a la altura de la cabecera. La
-        // columna se dimensiona para que el QR quede ~cuadrado.
-        Sheet.Columns[COL_QR].Size := 120;
-        Pic.AnchorType := catTwoCell;
-        Pic.AnchorPoint1.Cell := Sheet.CreateCell(1, COL_QR);
-        Pic.AnchorPoint2.Cell := Sheet.CreateCell(7, COL_QR + 1);
-      finally
-        FreeAndNil(oStream);
-        FreeAndNil(img);
+        if (img.Width > 0) and (img.Height > 0) then
+        begin
+          Pic := Sheet.Containers.Add(TdxSpreadSheetPictureContainer)
+                   as TdxSpreadSheetPictureContainer;
+          if Pic <> nil then
+          begin
+            Pic.Picture.Image := img; // el contenedor copia la imagen
+            Pic.AnchorType := catTwoCell;
+            Pic.AnchorPoint1.Cell := Sheet.CreateCell(1, COL_QR);
+            Pic.AnchorPoint2.Cell := Sheet.CreateCell(7, COL_QR + 1);
+            // Columna H ancha para que el QR quede ~cuadrado
+            Sheet.Columns[COL_QR].Size := 120;
+          end;
+        end;
+      except
+        // QR opcional: si falla la incrustación, la factura sale sin QR
       end;
+    finally
+      FreeAndNil(oStream);
+      FreeAndNil(img);
     end;
   end;
 
