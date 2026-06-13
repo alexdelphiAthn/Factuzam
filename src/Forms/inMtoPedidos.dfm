@@ -939,4 +939,13 @@
       end
     end
   end
+  object ActionList1: TActionList
+    Left = 880
+    Top = 8
+    object actIrDocumento: TAction
+      Caption = 'Ir a documento (Ctrl+May+A)'
+      ShortCut = 24641
+      OnExecute = actIrDocumentoExecute
+    end
+  end
 end
