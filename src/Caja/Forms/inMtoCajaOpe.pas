@@ -3026,11 +3026,14 @@ begin
          // salir del modo
          if FNumeroRectifica <> '' then
          begin
+           // Serie/numero FIABLES de la rectificativa recien grabada. Antes
+           // se leian de cdsCabecera, que queda con SERIE_FAC='0', y se
+           // encolaba un registro fantasma 0\0 en Verifactu
            TVerifactuCola.EncolarRectificativa(
              inLibGlobalVar.oConn,
              FSerieRectifica, FNumeroRectifica,
-             DatosCaja.cdsCabecera.FieldByName('SERIE_FAC').AsString,
-             DatosCaja.cdsCabecera.FieldByName('NUMERO_FAC').AsString);
+             DatosCaja.UltSerieFacturaGrabada,
+             DatosCaja.UltNumeroFacturaGrabada);
            FSerieRectifica  := '';
            FNumeroRectifica := '';
            if FCaptionPrevio <> '' then

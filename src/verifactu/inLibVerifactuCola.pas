@@ -152,61 +152,75 @@ class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;
 var
   Qry: TUniQuery;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    // Rectificativa: tipo y fase propios, sin enlace ABONO heredado de
-    // la copia del SP, y comentario con la factura que rectifica
-    Qry.SQL.Text :=
-      ' UPDATE fza_facturas ' +
-      ' SET TIPO_FAC = ''RECTIFICATIVA'', ' +
-      '     FASE_FAC = ''BORRADOR'', ' +
-      '     SERIE_FAC_ABONO_FAC  = NULL, ' +
-      '     NUMERO_FAC_ABONO_FAC = NULL, ' +
-      '     COMENTARIOS_FAC = TRIM(CONCAT(IFNULL(COMENTARIOS_FAC, ' +
-      '         ''''), :COMENTARIO)), ' +
-      '     INSTANTE_MODIF = NOW(), ' +
-      '     USUARIO_MODIF  = :USUARIO ' +
-      ' WHERE SERIE_FAC  = :SERIE ' +
-      '   AND NUMERO_FAC = :NUMERO';
-    Qry.ParamByName('COMENTARIO').AsString :=
-      ' ESTA FACTURA ANULA Y RECTIFICA A LA ' + ASerieOriginal + '\' +
-      ANumeroOriginal;
-    Qry.ParamByName('USUARIO').AsString := oUser;
-    Qry.ParamByName('SERIE').AsString   := ASerieRect;
-    Qry.ParamByName('NUMERO').AsString  := ANumeroRect;
-    Qry.Execute;
-    // La factura ORIGINAL pasa a fase RECTIFICADA y guarda en sus
-    // columnas ABONO la rectificativa que la anula
-    Qry.SQL.Text :=
-      ' UPDATE fza_facturas ' +
-      ' SET FASE_FAC = ''RECTIFICADA'', ' +
-      '     SERIE_FAC_ABONO_FAC  = :SERIERECT, ' +
-      '     NUMERO_FAC_ABONO_FAC = :NUMERORECT, ' +
-      '     INSTANTE_MODIF = NOW(), ' +
-      '     USUARIO_MODIF  = :USUARIO ' +
-      ' WHERE SERIE_FAC  = :SERIE ' +
-      '   AND NUMERO_FAC = :NUMERO';
-    Qry.ParamByName('SERIERECT').AsString  := ASerieRect;
-    Qry.ParamByName('NUMERORECT').AsString := ANumeroRect;
-    Qry.ParamByName('USUARIO').AsString    := oUser;
-    Qry.ParamByName('SERIE').AsString      := ASerieOriginal;
-    Qry.ParamByName('NUMERO').AsString     := ANumeroOriginal;
-    Qry.Execute;
-    // Histórico N:1: cada rectificativa conserva su propio enlace
-    // aunque la original se rectifique varias veces
-    RegistrarRelacionFactura(AConn, ASerieRect, ANumeroRect,
-                             ASerieOriginal, ANumeroOriginal,
-                             'RECTIFICA');
-    if VerifactuActivo then
-    begin
-      EncolarFactura(Qry, ASerieRect, ANumeroRect);
-      RegistrarEventoVerifactu(AConn, cEventoVerifactuEncolado,
-        'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
-        ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
+  // Guarda: una rectificativa sin serie/numero validos (p.ej. '0'/'0' por
+  // una cabecera de caja que no se vuelca) encolaria un registro fantasma
+  // que la AEAT rechaza y rompe el enlace ABONO de la original. Se deja
+  // constancia en el log y no se toca nada mas.
+  if (Trim(ASerieRect) = '') or (Trim(ASerieRect) = '0') or
+     (Trim(ANumeroRect) = '') or (Trim(ANumeroRect) = '0') then
+    RegistrarEventoVerifactu(AConn, cEventoVerifactuEnvioError,
+      'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
+      ' NO encolada: la factura rectificativa carece de serie/numero ' +
+      'validos (recibido ' + ASerieRect + '\' + ANumeroRect + ')', '',
+      ASerieOriginal, ANumeroOriginal)
+  else
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := AConn;
+      // Rectificativa: tipo y fase propios, sin enlace ABONO heredado de
+      // la copia del SP, y comentario con la factura que rectifica
+      Qry.SQL.Text :=
+        ' UPDATE fza_facturas ' +
+        ' SET TIPO_FAC = ''RECTIFICATIVA'', ' +
+        '     FASE_FAC = ''BORRADOR'', ' +
+        '     SERIE_FAC_ABONO_FAC  = NULL, ' +
+        '     NUMERO_FAC_ABONO_FAC = NULL, ' +
+        '     COMENTARIOS_FAC = TRIM(CONCAT(IFNULL(COMENTARIOS_FAC, ' +
+        '         ''''), :COMENTARIO)), ' +
+        '     INSTANTE_MODIF = NOW(), ' +
+        '     USUARIO_MODIF  = :USUARIO ' +
+        ' WHERE SERIE_FAC  = :SERIE ' +
+        '   AND NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('COMENTARIO').AsString :=
+        ' ESTA FACTURA ANULA Y RECTIFICA A LA ' + ASerieOriginal + '\' +
+        ANumeroOriginal;
+      Qry.ParamByName('USUARIO').AsString := oUser;
+      Qry.ParamByName('SERIE').AsString   := ASerieRect;
+      Qry.ParamByName('NUMERO').AsString  := ANumeroRect;
+      Qry.Execute;
+      // La factura ORIGINAL pasa a fase RECTIFICADA y guarda en sus
+      // columnas ABONO la rectificativa que la anula
+      Qry.SQL.Text :=
+        ' UPDATE fza_facturas ' +
+        ' SET FASE_FAC = ''RECTIFICADA'', ' +
+        '     SERIE_FAC_ABONO_FAC  = :SERIERECT, ' +
+        '     NUMERO_FAC_ABONO_FAC = :NUMERORECT, ' +
+        '     INSTANTE_MODIF = NOW(), ' +
+        '     USUARIO_MODIF  = :USUARIO ' +
+        ' WHERE SERIE_FAC  = :SERIE ' +
+        '   AND NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('SERIERECT').AsString  := ASerieRect;
+      Qry.ParamByName('NUMERORECT').AsString := ANumeroRect;
+      Qry.ParamByName('USUARIO').AsString    := oUser;
+      Qry.ParamByName('SERIE').AsString      := ASerieOriginal;
+      Qry.ParamByName('NUMERO').AsString     := ANumeroOriginal;
+      Qry.Execute;
+      // Histórico N:1: cada rectificativa conserva su propio enlace
+      // aunque la original se rectifique varias veces
+      RegistrarRelacionFactura(AConn, ASerieRect, ANumeroRect,
+                               ASerieOriginal, ANumeroOriginal,
+                               'RECTIFICA');
+      if VerifactuActivo then
+      begin
+        EncolarFactura(Qry, ASerieRect, ANumeroRect);
+        RegistrarEventoVerifactu(AConn, cEventoVerifactuEncolado,
+          'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
+          ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
+      end;
+    finally
+      FreeAndNil(Qry);
     end;
-  finally
-    FreeAndNil(Qry);
   end;
 end;
 
