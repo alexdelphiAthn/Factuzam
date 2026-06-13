@@ -104,8 +104,12 @@ type
     btnImprimirH: TcxButton;
     btnImprimirV: TcxButton;
     btnPegatinas: TcxButton;
+    // Boton para saltar al pedido de compra de origen del albaran
+    // (atajo Ctrl+May+A via actIrDocumento).
+    btnIrDocumento: TcxButton;
     ActionList1: TActionList;
     actArticulos: TAction;
+    actIrDocumento: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -137,6 +141,7 @@ type
     procedure cxgrdLineasAlbaranEnter(Sender: TObject);
     procedure cxgrdLineasAlbaranExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure actIrDocumentoExecute(Sender: TObject);
     procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
@@ -792,6 +797,29 @@ begin
     ShowMto(Self.Owner,
             'Articulos',
             FieldByName('CODIGO_ART_ALBCLIN').AsString);
+end;
+
+// "Ir a documento" (Ctrl+May+A): salta al pedido de compra del que nace
+// el albaran (SERIE_PED_ALBC / NUMERO_PED_ALBC). Si el albaran se creo a
+// mano y no procede de ningun pedido, avisamos en lugar de abrir un Mto
+// vacio.
+procedure TfrmMtoAlbaranesCompra.actIrDocumentoExecute(Sender: TObject);
+var
+  sSeriePed, sNumeroPed: string;
+begin
+  inherited;
+  if (dmmAlbaranesCompra <> nil) and
+     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
+  begin
+    sSeriePed  := Trim(dmmAlbaranesCompra.unqryTablaG.
+                         FieldByName('SERIE_PED_ALBC').AsString);
+    sNumeroPed := Trim(dmmAlbaranesCompra.unqryTablaG.
+                         FieldByName('NUMERO_PED_ALBC').AsString);
+    if (sSeriePed <> '') and (sNumeroPed <> '') then
+      ShowMto(Self.Owner, 'PedidosCompra', sSeriePed + ',' + sNumeroPed)
+    else
+      ShowMessage('Este albaran no procede de ningun pedido de compra.');
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnAnadirLineaClick(Sender: TObject);
