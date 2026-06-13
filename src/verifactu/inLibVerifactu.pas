@@ -261,7 +261,11 @@ begin
       oQR.Data      := AUrl;
       oQR.Encoding  := qrUTF8NoBOM;
       oQR.QuietZone := 4;
-      oPng := TPngImage.CreateBlank(COLOR_GRAYSCALE, 8,
+      // RGB (24 bits), no escala de grises: el TfrxPictureView de
+      // FastReport y la hoja dxSpreadSheet pintan PNG RGB con fiabilidad
+      // (las fotos, que sí se ven, son RGB); el gris se mostraba bien
+      // solo en el visor VCL (TcxDBImage de la ficha) pero no en el A4.
+      oPng := TPngImage.CreateBlank(COLOR_RGB, 8,
                                     oQR.Columns * AEscala,
                                     oQR.Rows * AEscala);
       for iY := 0 to oPng.Height - 1 do
@@ -270,9 +274,17 @@ begin
         for iX := 0 to oPng.Width - 1 do
         begin
           if oQR.IsBlack[iY div AEscala, iX div AEscala] then
-            pLinea[iX] := 0
+          begin
+            pLinea[iX * 3]     := 0;
+            pLinea[iX * 3 + 1] := 0;
+            pLinea[iX * 3 + 2] := 0;
+          end
           else
-            pLinea[iX] := 255;
+          begin
+            pLinea[iX * 3]     := 255;
+            pLinea[iX * 3 + 1] := 255;
+            pLinea[iX * 3 + 2] := 255;
+          end;
         end;
       end;
       oStream := TMemoryStream.Create;
