@@ -131,13 +131,13 @@ destructiva y la aplicación sigue funcionando sin tocar nada tras la Fase 1.
       valores maestros de `fza_propiedades_valores`; sin duplicación. Sin cambios.
   - **Aviso de temporada por color en `inMtoStockConsulta`** *(hecho)*: la
     consulta de stock (Ctrl+U) lleva un **letrero** rojo bajo la cabecera que
-    "canta" cuando alguno de los colores marcados tiene temporada propia (nivel
-    COLOR) distinta a la del artículo: `«¡Ojo! Temporada distinta a la del
-    artículo (Primavera-Verano 2026): NEGRO → Otoño-Invierno 2026»`. Se calcula
-    al cargar el artículo (`CargarTemporadasColores`, comparando la temporada de
-    color `SUBSTRING_INDEX(sku,'/',2)` con la de nivel artículo) y se recompone
-    al marcar/desmarcar colores (`ActualizarLetreroTemporada`). Solo lectura, sin
-    cambios de esquema.
+    "canta" al **pinchar un color** cuyo nivel COLOR tiene temporada propia
+    distinta a la del artículo: `«¡Ojo! NEGRO es de temporada Otoño-Invierno
+    2026 (el artículo es Primavera-Verano 2026)»`. Las temporadas se calculan al
+    cargar el artículo (`CargarTemporadasColores`, comparando la temporada de
+    color `SUBSTRING_INDEX(sku,'/',2)` con la de nivel artículo) y el letrero se
+    recompone sobre el color con foco al pinchar o marcar/desmarcar
+    (`ActualizarLetreroTemporada`). Solo lectura, sin cambios de esquema.
   - **Pendiente opcional:** columna de temporada efectiva por color en la grilla
     de `inMtoStockConsulta` (hoy la cabecera muestra la de artículo; el letrero
     ya avisa de las diferencias).
