@@ -70,6 +70,14 @@ procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
 // FACTURA RECTIFICATIVA / FACTURA. Encadenar desde OnBeforePrint.
 // Requiere que el dataset de cabecera lleve TIPO_FAC.
 procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
+// FastReport: vía fiable. En esta versión el OnBeforePrint NO llega a
+// los objetos sueltos de las bandas estáticas (cabecera/pie/título de
+// página), solo a las bandas y a los objetos de bandas de datos. El QR
+// y el título 'FACTURA' viven en la cabecera de página, así que cuando
+// se dispara una banda recorremos sus hijos y rellenamos el QR y el
+// título con el registro de factura activo. Encadenar desde
+// OnBeforePrint además de las dos anteriores.
+procedure AplicarVerifactuEnBanda(Component: TfrxReportComponent);
 // Registra un evento en fza_verifactu_eventos manteniendo la cadena de
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
@@ -274,45 +282,71 @@ begin
   end;
 end;
 
-procedure SustituirQRVerifactuEnReport(Component: TfrxReportComponent);
+// Rellena un TfrxPictureView con el QR tributario de la factura del
+// dataset dado (vacío si Verifactu inactivo o sin datos)
+procedure RellenarQRPicture(APic: TfrxPictureView; ADataSet: TDataSet);
 var
-  oPic:     TfrxPictureView;
-  oDataSet: TDataSet;
-  aPng:     TBytes;
-  oPng:     TPngImage;
-  oStream:  TBytesStream;
-  sUrl:     string;
+  aPng:    TBytes;
+  oPng:    TPngImage;
+  oStream: TBytesStream;
+  sUrl:    string;
+begin
+  sUrl := '';
+  if VerifactuActivo and TieneCamposFactura(ADataSet) and
+     (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') then
+    sUrl := ConstruirUrlQR(
+              ADataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
+              ADataSet.FieldByName('SERIE_FAC').AsString,
+              ADataSet.FieldByName('NUMERO_FAC').AsString,
+              ADataSet.FieldByName('FECHA_FAC').AsDateTime,
+              ADataSet.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
+  if sUrl = '' then
+    APic.Picture.Assign(nil)
+  else
+  begin
+    aPng := GenerarQRPngVerifactu(sUrl);
+    oPng := TPngImage.Create;
+    oStream := TBytesStream.Create(aPng);
+    try
+      oPng.LoadFromStream(oStream);
+      APic.Picture.Assign(oPng);
+    finally
+      FreeAndNil(oStream);
+      FreeAndNil(oPng);
+    end;
+  end;
+end;
+
+// Ajusta el memo de título 'FACTURA' al tipo del dataset (SIMPLIFICADA
+// / RECTIFICATIVA / normal). Solo actúa sobre el memo de título.
+procedure AjustarTituloMemo(AMemo: TfrxMemoView; ADataSet: TDataSet);
+var
+  sTexto: string;
+  sTipo:  string;
+begin
+  sTexto := UpperCase(Trim(AMemo.Text));
+  if ((sTexto = 'FACTURA') or
+      (sTexto = 'FACTURA SIMPLIFICADA') or
+      (sTexto = 'FACTURA RECTIFICATIVA')) and
+     (ADataSet <> nil) and
+     (ADataSet.FindField('TIPO_FAC') <> nil) then
+  begin
+    sTipo := UpperCase(Trim(ADataSet.FieldByName('TIPO_FAC').AsString));
+    if sTipo = 'SIMPLIFICADA' then
+      AMemo.Text := 'FACTURA SIMPLIFICADA'
+    else if sTipo = 'RECTIFICATIVA' then
+      AMemo.Text := 'FACTURA RECTIFICATIVA'
+    else
+      AMemo.Text := 'FACTURA';
+  end;
+end;
+
+procedure SustituirQRVerifactuEnReport(Component: TfrxReportComponent);
 begin
   if (Component is TfrxPictureView) and
      SameText(Component.Name, 'qrverifactu') then
-  begin
-    oPic := TfrxPictureView(Component);
-    sUrl := '';
-    oDataSet := DataSetFacturaDeReport(oPic);
-    if VerifactuActivo and TieneCamposFactura(oDataSet) and
-       (Trim(oDataSet.FieldByName('NUMERO_FAC').AsString) <> '') then
-      sUrl := ConstruirUrlQR(
-                oDataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
-                oDataSet.FieldByName('SERIE_FAC').AsString,
-                oDataSet.FieldByName('NUMERO_FAC').AsString,
-                oDataSet.FieldByName('FECHA_FAC').AsDateTime,
-                oDataSet.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
-    if sUrl = '' then
-      oPic.Picture.Assign(nil)
-    else
-    begin
-      aPng := GenerarQRPngVerifactu(sUrl);
-      oPng := TPngImage.Create;
-      oStream := TBytesStream.Create(aPng);
-      try
-        oPng.LoadFromStream(oStream);
-        oPic.Picture.Assign(oPng);
-      finally
-        FreeAndNil(oStream);
-        FreeAndNil(oPng);
-      end;
-    end;
-  end;
+    RellenarQRPicture(TfrxPictureView(Component),
+                      DataSetFacturaDeReport(Component));
 end;
 
 procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
@@ -356,6 +390,17 @@ begin
             oBanda := TfrxBand(oPage.Objects[j]);
         end;
       end;
+      // Último recurso: una banda de datos (siempre dispara
+      // OnBeforePrint). Nunca dejamos el QR suelto en la página.
+      if oBanda = nil then
+      begin
+        for j := 0 to oPage.Objects.Count - 1 do
+        begin
+          if (oBanda = nil) and
+             (TObject(oPage.Objects[j]) is TfrxDataBand) then
+            oBanda := TfrxBand(oPage.Objects[j]);
+        end;
+      end;
       // 30 mm (mínimo AEAT 30x30) pegado al margen superior derecho.
       // El usuario puede recolocarlo en el diseñador: al guardar el
       // formato con el objeto, esta inyección deja de actuar.
@@ -385,37 +430,39 @@ begin
 end;
 
 procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
-var
-  oMemo:    TfrxMemoView;
-  oDataSet: TDataSet;
-  sTexto:   string;
-  sTipo:    string;
 begin
   if Component is TfrxMemoView then
+    AjustarTituloMemo(TfrxMemoView(Component),
+                      DataSetFacturaDeReport(Component));
+end;
+
+// Recorre recursivamente los hijos de una banda aplicando el QR y el
+// título a los que correspondan, con el registro de factura activo
+procedure AplicarVerifactuARama(AComp: TfrxComponent; ADataSet: TDataSet);
+var
+  i: Integer;
+begin
+  if AComp <> nil then
   begin
-    oMemo  := TfrxMemoView(Component);
-    sTexto := UpperCase(Trim(oMemo.Text));
-    // Solo el memo de título (texto exacto, en cualquiera de sus
-    // variantes: así un rango con tipos mezclados se reevalúa por
-    // factura y vuelve a 'FACTURA' en las normales)
-    if (sTexto = 'FACTURA') or
-       (sTexto = 'FACTURA SIMPLIFICADA') or
-       (sTexto = 'FACTURA RECTIFICATIVA') then
-    begin
-      oDataSet := DataSetFacturaDeReport(oMemo);
-      if (oDataSet <> nil) and
-         (oDataSet.FindField('TIPO_FAC') <> nil) then
-      begin
-        sTipo := UpperCase(Trim(
-                   oDataSet.FieldByName('TIPO_FAC').AsString));
-        if sTipo = 'SIMPLIFICADA' then
-          oMemo.Text := 'FACTURA SIMPLIFICADA'
-        else if sTipo = 'RECTIFICATIVA' then
-          oMemo.Text := 'FACTURA RECTIFICATIVA'
-        else
-          oMemo.Text := 'FACTURA';
-      end;
-    end;
+    if (AComp is TfrxPictureView) and
+       SameText(AComp.Name, 'qrverifactu') then
+      RellenarQRPicture(TfrxPictureView(AComp), ADataSet);
+    if AComp is TfrxMemoView then
+      AjustarTituloMemo(TfrxMemoView(AComp), ADataSet);
+    for i := 0 to AComp.Objects.Count - 1 do
+      AplicarVerifactuARama(TfrxComponent(AComp.Objects[i]), ADataSet);
+  end;
+end;
+
+procedure AplicarVerifactuEnBanda(Component: TfrxReportComponent);
+var
+  oDataSet: TDataSet;
+begin
+  if Component is TfrxBand then
+  begin
+    oDataSet := DataSetFacturaDeReport(Component);
+    if TieneCamposFactura(oDataSet) then
+      AplicarVerifactuARama(Component, oDataSet);
   end;
 end;
 

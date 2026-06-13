@@ -232,10 +232,13 @@ end;
 procedure TfrmPrint.ReportBeforePrintConQR(Component: TfrxReportComponent);
 begin
   oFotos.HandlerReportBeforePrint(Component);
+  // Objetos que SÍ reciben el evento (QR/título en una banda de datos)
   SustituirQRVerifactuEnReport(Component);
-  // Título de los formatos de factura según el tipo del registro
-  // activo (FACTURA / FACTURA SIMPLIFICADA / FACTURA RECTIFICATIVA)
   SustituirTituloFacturaEnReport(Component);
+  // Vía fiable: al disparar la banda (la cabecera de página recibe el
+  // evento aunque sus objetos sueltos no), rellenamos QR y título de
+  // sus hijos con la factura activa
+  AplicarVerifactuEnBanda(Component);
 end;
 
 procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
