@@ -31,7 +31,8 @@ uses
   JvComponentBase, JvEnterTab, cxLocalization, Vcl.StdCtrls, cxRadioGroup,
   cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo, cxCheckBox, cxGroupBox,
   cxDBLabel, cxButtonEdit, System.Generics.Collections,
-  cxGridBandedTableView, cxGridDBBandedTableView, UniDataAlbaranes;
+  cxGridBandedTableView, cxGridDBBandedTableView, UniDataAlbaranes,
+  System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoAlbaranes = class(TfrmMtoGen)
@@ -138,6 +139,11 @@ type
     btnFacturarTodo: TcxButton;
     btnFacturarPorFechas: TcxButton;
     btnImprimir: TcxButton;
+    // Boton + accion para saltar al pedido de venta de origen del
+    // albaran (atajo Ctrl+May+A via actIrDocumento).
+    btnIrDocumento: TcxButton;
+    ActionList1: TActionList;
+    actIrDocumento: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
@@ -148,6 +154,7 @@ type
     procedure btnFacturarTodoClick(Sender: TObject);
     procedure btnFacturarPorFechasClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
+    procedure actIrDocumentoExecute(Sender: TObject);
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -160,7 +167,8 @@ var
 implementation
 
 uses
-  inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad;
+  inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
+  inLibShowMto;
 
 {$R *.dfm}
 
@@ -208,6 +216,9 @@ begin
     tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
+  // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde el
+  // pedido de venta o navegacion hacia su pedido de origen).
+  pkFieldName := 'SERIE_ALB;NUMERO_ALB';
   // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
   // (callback main thread) via dmmAlbaranes.AbrirDetalles. Se quita aqui
   // para no abrir las queries sincronamente durante el FormCreate.
@@ -358,6 +369,29 @@ procedure TfrmMtoAlbaranes.btnImprimirClick(Sender: TObject);
 begin
   inherited;
   // Hook FastReport: cargar fxdsPrintAlb / fxdstPrintLinAlb y mostrar.
+end;
+
+// "Ir a documento" (Ctrl+May+A): salta al pedido de venta del que nace
+// el albaran (SERIE_PED_ALB / NUMERO_PED_ALB). Si el albaran se creo a
+// mano y no procede de ningun pedido, avisamos en lugar de abrir un Mto
+// vacio.
+procedure TfrmMtoAlbaranes.actIrDocumentoExecute(Sender: TObject);
+var
+  sSeriePed, sNumeroPed: string;
+begin
+  inherited;
+  if (dmmAlbaranes <> nil) and
+     (not dmmAlbaranes.unqryTablaG.IsEmpty) then
+  begin
+    sSeriePed  := Trim(dmmAlbaranes.unqryTablaG.
+                         FieldByName('SERIE_PED_ALB').AsString);
+    sNumeroPed := Trim(dmmAlbaranes.unqryTablaG.
+                         FieldByName('NUMERO_PED_ALB').AsString);
+    if (sSeriePed <> '') and (sNumeroPed <> '') then
+      ShowMto(Self.Owner, 'Pedidos', sSeriePed + ',' + sNumeroPed)
+    else
+      ShowMessage('Este albaran no procede de ningun pedido de venta.');
+  end;
 end;
 
 initialization
