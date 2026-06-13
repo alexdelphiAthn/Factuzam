@@ -199,6 +199,13 @@ SELECT t.script,
                        WHERE TABLE_SCHEMA = DATABASE()
                          AND TABLE_NAME = 'fza_usuarios'
                          AND COLUMN_NAME = 'CODIGO_EMPLEADO_USU')
+    UNION ALL
+    SELECT 280, 'sku_descripcion_color.sql',
+           'fza_articulos_atributos_basicos.DESCRIPCION_AAB + vista',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_articulos_atributos_basicos'
+                     AND COLUMN_NAME = 'DESCRIPCION_AAB')
   ) t
  ORDER BY t.aplicado, t.orden;
 -- Scripts solo-datos, no detectables por esquema. Son idempotentes:
