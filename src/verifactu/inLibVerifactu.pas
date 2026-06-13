@@ -78,6 +78,12 @@ procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
 // título con el registro de factura activo. Encadenar desde
 // OnBeforePrint además de las dos anteriores.
 procedure AplicarVerifactuEnBanda(Component: TfrxReportComponent);
+// FastReport: rellena directamente (sin esperar a OnBeforePrint) el QR
+// y el título de TODO el informe con el registro de ADataSet. Para una
+// sola factura, llamar tras cargar el formato y antes de PrepareReport:
+// el QR sale por defecto aunque el hueco quede suelto en la página.
+procedure AplicarVerifactuEnReportDirecto(AReport: TfrxReport;
+                                          ADataSet: TDataSet);
 // Registra un evento en fza_verifactu_eventos manteniendo la cadena de
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
@@ -463,6 +469,26 @@ begin
     oDataSet := DataSetFacturaDeReport(Component);
     if TieneCamposFactura(oDataSet) then
       AplicarVerifactuARama(Component, oDataSet);
+  end;
+end;
+
+procedure AplicarVerifactuEnReportDirecto(AReport: TfrxReport;
+                                          ADataSet: TDataSet);
+var
+  i: Integer;
+begin
+  // Relleno directo, sin esperar a OnBeforePrint: recorre TODO el árbol
+  // de cada página y rellena el QR y el título con ADataSet. Para una
+  // sola factura (vista previa / impresión / PDF de un documento) el QR
+  // sale por defecto aunque el hueco quede suelto en la página y su
+  // objeto no reciba el evento.
+  if (AReport <> nil) and TieneCamposFactura(ADataSet) then
+  begin
+    for i := 0 to AReport.PagesCount - 1 do
+    begin
+      if AReport.Pages[i] is TfrxReportPage then
+        AplicarVerifactuARama(TfrxReportPage(AReport.Pages[i]), ADataSet);
+    end;
   end;
 end;
 
