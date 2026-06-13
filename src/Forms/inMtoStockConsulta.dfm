@@ -176,6 +176,7 @@ object frmStockConsulta: TfrmStockConsulta
             Anchors = [akLeft, akTop, akRight, akBottom]
             Items = <>
             TabOrder = 0
+            OnClick = clbColoresClick
             OnClickCheck = clbColoresClickCheck
             ExplicitHeight = 261
           end

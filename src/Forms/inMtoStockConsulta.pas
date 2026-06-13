@@ -28,10 +28,9 @@
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
 {          checklist opuesto.                                                  }
 {                                                                              }
-{    v0.6: "letrero" de temporada — si un color marcado tiene temporada propia }
-{    (nivel COLOR) distinta a la del articulo, se canta en un panel rojo bajo  }
-{    la cabecera. Se recalcula al cargar el articulo y al marcar/desmarcar     }
-{    colores. Ver propiedades_por_unidad.md.                                   }
+{    v0.6: "letrero" de temporada — al PINCHAR un color, si ese color tiene    }
+{    temporada propia (nivel COLOR) distinta a la del articulo, se canta en un }
+{    panel rojo bajo la cabecera. Ver propiedades_por_unidad.md.               }
 {    v0.5: estado "Todo a la vez" en el combo + colores por estado. Cada      }
 {    estado pinta las celdas de datos con un color distintivo (azul para      }
 {    existencias, rojo para ventas, naranja para pte. recibir, etc.) y el     }
@@ -141,6 +140,7 @@ type
               APrevState, ANewState: TcxCheckBoxState);
     procedure clbColoresClickCheck(Sender: TObject; AIndex: Integer;
               APrevState, ANewState: TcxCheckBoxState);
+    procedure clbColoresClick(Sender: TObject);
     procedure pcVistasChange(Sender: TObject);
     procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
               ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
@@ -765,45 +765,35 @@ begin
   end;
 end;
 
-// Recompone el letrero a partir de los colores actualmente marcados en el
-// checklist: si alguno tiene temporada propia distinta a la del articulo, lo
-// muestra; si no, oculta el letrero. Asi, al cambiar de color (marcar/desmarcar)
-// el aviso aparece o desaparece segun lo que el usuario tenga a la vista.
+// Recompone el letrero para el color sobre el que se acaba de pinchar (el
+// item con foco en el checklist): si ese color tiene temporada propia distinta
+// a la del articulo, la "canta"; si no, oculta el letrero. Se llama al pinchar
+// un color (OnClick) y al marcar/desmarcar (OnClickCheck, que ademas enfoca).
 procedure TfrmStockConsulta.ActualizarLetreroTemporada;
 var
-  i      : Integer;
+  iSel   : Integer;
   sColor : string;
   sTemp  : string;
-  sLista : string;
 begin
   if (FTempPorColor = nil) or (lblLetreroTemp = nil) then Exit;
-  sLista := '';
-  for i := 0 to clbColores.Items.Count - 1 do
-    if clbColores.Items[i].State = cbsChecked then
-    begin
-      sColor := clbColores.Items[i].Text;
-      if FTempPorColor.TryGetValue(sColor, sTemp) then
-      begin
-        if sLista <> '' then
-          sLista := sLista + '     ';
-        sLista := sLista + sColor + ' → ' + sTemp;
-      end;
-    end;
-  if sLista = '' then
+  iSel := clbColores.ItemIndex;
+  if (iSel >= 0) and (iSel < clbColores.Items.Count) and
+     FTempPorColor.TryGetValue(clbColores.Items[iSel].Text, sTemp) then
   begin
-    lblLetreroTemp.Caption := '';
-    lblLetreroTemp.Visible := False;
+    sColor := clbColores.Items[iSel].Text;
+    if Trim(FTempArticulo) <> '' then
+      lblLetreroTemp.Caption :=
+        Format('  ¡Ojo! %s es de temporada %s  (el artículo es %s)',
+               [sColor, sTemp, FTempArticulo])
+    else
+      lblLetreroTemp.Caption :=
+        Format('  ¡Ojo! %s tiene temporada propia: %s', [sColor, sTemp]);
+    lblLetreroTemp.Visible := True;
   end
   else
   begin
-    if Trim(FTempArticulo) <> '' then
-      lblLetreroTemp.Caption :=
-        Format('  ¡Ojo! Temporada distinta a la del artículo (%s):     %s',
-               [FTempArticulo, sLista])
-    else
-      lblLetreroTemp.Caption :=
-        Format('  ¡Ojo! Colores con temporada propia:     %s', [sLista]);
-    lblLetreroTemp.Visible := True;
+    lblLetreroTemp.Caption := '';
+    lblLetreroTemp.Visible := False;
   end;
 end;
 
@@ -878,7 +868,9 @@ begin
     on E: Exception do
       MostrarError(E.Message);
   end;
-  ActualizarLetreroTemporada;
+  // El letrero arranca oculto: solo "canta" cuando el usuario pincha un color.
+  lblLetreroTemp.Caption := '';
+  lblLetreroTemp.Visible := False;
   RecargarConsulta;
 end;
 
@@ -1761,6 +1753,13 @@ procedure TfrmStockConsulta.clbColoresClickCheck(Sender: TObject;
 begin
   ActualizarLetreroTemporada;
   RecargarConsulta;
+end;
+
+// Al pinchar un color (sin tocar el check) se "canta" su temporada si difiere
+// de la del articulo.
+procedure TfrmStockConsulta.clbColoresClick(Sender: TObject);
+begin
+  ActualizarLetreroTemporada;
 end;
 
 procedure TfrmStockConsulta.pcVistasChange(Sender: TObject);
