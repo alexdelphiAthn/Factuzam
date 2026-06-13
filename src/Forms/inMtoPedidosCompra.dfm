@@ -145,7 +145,6 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 Top = 32
                 DataBinding.DataField = 'SERIE_PEDC'
                 DataBinding.DataSource = dsTablaG
-                Properties.DropDownListStyle = lsEditList
                 Properties.MaxLength = 12
                 Properties.OnInitPopup = cbbSERIE_PEDCPropertiesInitPopup
                 TabOrder = 3
@@ -301,12 +300,12 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
           BevelOuter = bvNone
           TabOrder = 1
           object btnRecibirFilaEntera: TcxButton
-            Left = 582
-            Top = 6
-            Width = 180
+            Left = 248
+            Top = 8
+            Width = 162
             Height = 26
             Caption = 'Recibir fila entera'
-            TabOrder = 3
+            TabOrder = 2
             OnClick = btnRecibirFilaEnteraClick
           end
           object btnTallasHorizontal: TcxButton
@@ -318,23 +317,23 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             TabOrder = 0
             OnClick = btnTallasHorizontalClick
           end
-          object btnAtributosColumna: TcxButton
-            Left = 200
-            Top = 8
-            Width = 170
-            Height = 26
-            Caption = 'Atributo por columna'
-            TabOrder = 1
-            OnClick = btnAtributosColumnaClick
-          end
           object btnExpandirRecibidos: TcxButton
-            Left = 768
-            Top = 6
+            Left = 552
+            Top = 8
             Width = 160
             Height = 26
             Caption = 'Expandir recibidos'
-            TabOrder = 2
+            TabOrder = 1
             OnClick = btnExpandirRecibidosClick
+          end
+          object btnRecibirTodo: TcxButton
+            Left = 416
+            Top = 8
+            Width = 130
+            Height = 26
+            Caption = 'Recibir Todo'
+            TabOrder = 3
+            OnClick = btnRecibirTodoClick
           end
         end
         object pnlBodyFicha: TPanel
@@ -345,8 +344,6 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitTop = 202
-          ExplicitHeight = 415
           object pcPedido: TcxPageControl
             Left = 0
             Top = 0
@@ -356,14 +353,12 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             TabOrder = 0
             Properties.ActivePage = tsLineasPedido
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 415
             ClientRectBottom = 412
             ClientRectLeft = 4
             ClientRectRight = 933
             ClientRectTop = 28
             object tsLineasPedido: TcxTabSheet
               Caption = 'L'#237'neas'
-              ExplicitHeight = 383
               object cxgrdLineasPedido: TcxGrid
                 Left = 0
                 Top = 0
@@ -373,7 +368,6 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 0
                 OnEnter = cxgrdLineasPedidoEnter
                 OnExit = cxgrdLineasPedidoExit
-                ExplicitHeight = 383
                 object tvLineasPedido: TcxGridDBTableView
                   OnCustomDrawCell = tvLineasPedidoCustomDrawCell
                   OnEditing = tvLineasPedidoEditing
@@ -455,7 +449,6 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             end
             object tsObservaciones: TcxTabSheet
               Caption = 'Observaciones'
-              ExplicitHeight = 383
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
@@ -463,14 +456,12 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 DataBinding.DataField = 'OBSERVACIONES_PEDC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                ExplicitHeight = 383
                 Height = 384
                 Width = 929
               end
             end
             object tsAlbaranesPedc: TcxTabSheet
               Caption = 'Albaranes'
-              ExplicitHeight = 383
               object cxgrdAlbaranesPedc: TcxGrid
                 Left = 0
                 Top = 0
