@@ -78,7 +78,10 @@ permisos en `verifactu_menu.sql`):
   parámetros Verifactu.
 - **Cola de Envíos** (`inMtoVerifactuCola` + `UniDataVerifactuCola`):
   consulta de `fza_verifactu_cola` (estado, intentos, próximo intento,
-  mensaje de error). Solo lectura.
+  mensaje de error). Solo lista (sin ficha de detalle): se editan en el
+  grid las columnas *Estado*, *Intentos* y *Próximo intento*; no se
+  insertan ni se borran filas (la cola la alimenta el sistema). Ver
+  «Reproceso manual».
 - **Verifactu Log** (`inMtoVerifactuLog` + `UniDataVerifactuLog`):
   consulta de `fza_verifactu_eventos` con la cadena de hashes. Solo
   lectura.
@@ -396,11 +399,20 @@ fase de cobro; venta inexistente → **Anular**.
   `CONTADOR_INTENTOS < appVerifactuMaxIntentos` vuelven a `PENDIENTE`
   (sirve para revivir colas tras corregir configuración o tras subir el
   parámetro de máximo de intentos).
-- **Reproceso manual**: en el menú Verifactu → Cola de Envíos se pueden
-  editar las columnas *Estado* (combo PENDIENTE/PROCESANDO/ENVIADA/
-  ERROR), *Intentos* y *Próximo intento*; al grabar, el hilo la
-  retoma en el siguiente ciclo. El resto de columnas son de solo
-  lectura.
+- **Reproceso manual**: en el menú Verifactu → Cola de Envíos (pantalla
+  solo-lista, sin ficha de detalle) se pueden editar las columnas
+  *Estado* (combo PENDIENTE/PROCESANDO/ENVIADA/ERROR), *Intentos* y
+  *Próximo intento*; al grabar, el hilo la retoma en el siguiente ciclo.
+  El resto de columnas son de solo lectura. No se pueden **borrar** ni
+  **insertar** filas (la cola la alimenta el sistema; el data module solo
+  define `SQLUpdate`): el navegador no muestra esos botones y los atajos
+  Ins / Ctrl+Supr quedan anulados.
+- **Ir a la factura**: con **Ctrl+Alt+F** o **Ctrl+Mayús+F**, o con el
+  botón lateral **«Ir a Documento»**, se salta a la factura de la fila
+  activa. `inLibShowMto.ResolverCallFactura` mira `TIPO_FAC` en
+  `fza_facturas` y abre la pantalla correcta —Facturas o
+  FacturasSimplif— posicionada en serie\número, así se llega a la
+  factura aunque no se sepa si es simplificada o normal.
 
 ### Notas y decisiones a validar en el entorno PRE de la AEAT
 
