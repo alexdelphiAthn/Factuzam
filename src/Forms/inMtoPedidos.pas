@@ -164,7 +164,7 @@ implementation
 
 uses
   inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad,
-  inMtoModalSelAlmacenAlbaran;
+  inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibShowMto;
 
 {$R *.dfm}
 
@@ -212,6 +212,9 @@ begin
     tvPedidosLineas.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDLIN'));
   tvAlbaranes.DataController.DataSource     := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource      := dmmPedidos.dsMensajes;
+  // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde la
+  // ficha del albaran de venta hacia su pedido de origen).
+  pkFieldName := 'SERIE_PED;NUMERO_PED';
   // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
   // (callback main thread) via dmmPedidos.AbrirDetalles. Se quita aqui
   // para no abrir las queries sincronamente durante el FormCreate.
@@ -312,6 +315,8 @@ var
   sSerie, sNumero, sAlm, sAlmComun, sAlmDefecto: string;
   EsAlmacenUnico, bAlmInit: Boolean;
   res: TSelAlmacenAlbaranResult;
+  frmDocs: TfrmModalDocsCreados;
+  bOk: Boolean;
 begin
   inherited;
   // Antes de crear, asegurar que el pedido esté guardado
@@ -383,24 +388,43 @@ begin
         // Segun lo elegido en el modal: crear albaran nuevo o anadir las
         // lineas a un albaran ya existente del propio pedido.
         if res.EsExistente then
-        begin
-          if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst,
-                                                res.CodigoAlmacen,
-                                                res.NumeroAlb,
-                                                res.SerieAlb) then
-            ShowMessageFmt('Líneas añadidas al albarán %s / %s',
-                           [sSerieAlb, sNumeroAlb])
-          else
-            ShowMessage('No se pudo añadir al albarán.');
-        end
+          bOk := dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb,
+                                                    lst, res.CodigoAlmacen,
+                                                    res.NumeroAlb,
+                                                    res.SerieAlb)
         else
+          bOk := dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb,
+                                                    lst, res.CodigoAlmacen);
+        if bOk then
         begin
-          if dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb, lst,
-                                                res.CodigoAlmacen) then
-            ShowMessageFmt('Albarán creado: %s / %s', [sSerieAlb, sNumeroAlb])
-          else
-            ShowMessage('No se pudo crear el albarán.');
-        end;
+          // Mostrar el albaran creado / ampliado en un modal estilo
+          // Sesiones, con boton "Ir a documento" para abrir su ficha.
+          frmDocs := TfrmModalDocsCreados.Create(Self);
+          // Bloqueamos el caFree del ancestro (FormClose lo pone) para
+          // poder leer Confirmado tras ShowModal y liberarlo nosotros.
+          frmDocs.OnClose := nil;
+          try
+            if res.EsExistente then
+              frmDocs.lblTitulo.Caption :=
+                Format('Lineas anadidas al albaran desde el pedido %s/%s',
+                       [sSerie, sNumero])
+            else
+              frmDocs.lblTitulo.Caption :=
+                Format('Albaran creado desde el pedido %s/%s',
+                       [sSerie, sNumero]);
+            frmDocs.Agregar('Albaran', sSerieAlb, sNumeroAlb,
+                            res.CodigoAlmacen);
+            frmDocs.ShowModal;
+            if frmDocs.Confirmado then
+              ShowMto(Self.Owner, 'Albaranes', sSerieAlb + ',' + sNumeroAlb);
+          finally
+            FreeAndNil(frmDocs);
+          end;
+        end
+        else if res.EsExistente then
+          ShowMessage('No se pudo anadir al albaran.')
+        else
+          ShowMessage('No se pudo crear el albaran.');
       end;
     end;
   finally

@@ -214,6 +214,14 @@
                 TabOrder = 5
                 Width = 80
               end
+              object btnIrDocumento: TcxButton
+                Left = 440
+                Top = 56
+                Width = 190
+                Height = 23
+                Action = actIrDocumento
+                TabOrder = 16
+              end
               object lblFacturaDestino: TcxLabel
                 Left = 640
                 Top = 12
@@ -1019,6 +1027,15 @@
       inherited pnlDataSetName: TPanel
         StyleElements = [seFont, seClient, seBorder]
       end
+    end
+  end
+  object ActionList1: TActionList
+    Left = 880
+    Top = 8
+    object actIrDocumento: TAction
+      Caption = 'Ir a documento (Ctrl+May+A)'
+      ShortCut = 24641
+      OnExecute = actIrDocumentoExecute
     end
   end
 end
