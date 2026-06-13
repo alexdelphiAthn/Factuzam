@@ -244,6 +244,7 @@
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
+          OptionsSelection.CheckBoxVisibility = [cbvColumnHeader, cbvDataRow]
           OptionsSelection.MultiSelect = True
           OptionsSelection.MultiSelectMode = msmPersistent
           OptionsView.GroupByBox = False
@@ -328,6 +329,7 @@
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
+          OptionsSelection.CheckBoxVisibility = [cbvColumnHeader, cbvDataRow]
           OptionsSelection.MultiSelect = True
           OptionsSelection.MultiSelectMode = msmPersistent
           object colPropIdValor: TcxGridDBColumn
