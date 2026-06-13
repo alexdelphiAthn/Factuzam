@@ -402,6 +402,45 @@
           Frame.Typ = []
           ParentFont = False
         end
+        object EtiqProveedor: TfrxMemoView
+          AllowVectorExport = True
+          Left = 160.000000000000000000
+          Top = 163.500000000000000000
+          Width = 230.000000000000000000
+          Height = 15.000000000000000000
+          DataField = 'RAZON_SOCIAL_PRV'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[EtiquetasArt."RAZON_SOCIAL_PRV"]')
+          ParentFont = False
+        end
+        object EtiqTemporada: TfrxMemoView
+          AllowVectorExport = True
+          Left = 8.000000000000000000
+          Top = 163.500000000000000000
+          Width = 150.000000000000000000
+          Height = 15.000000000000000000
+          DataField = 'PROP_TEMPORADA'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[EtiquetasArt."PROP_TEMPORADA"]')
+          ParentFont = False
+        end
       end
     end
   end
@@ -714,6 +753,45 @@
           HightQuality = False
           Transparent = False
           TransparentColor = clWhite
+        end
+        object EtiqProveedor: TfrxMemoView
+          AllowVectorExport = True
+          Left = 160.000000000000000000
+          Top = 163.500000000000000000
+          Width = 230.000000000000000000
+          Height = 15.000000000000000000
+          DataField = 'RAZON_SOCIAL_PRV'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[EtiquetasArt."RAZON_SOCIAL_PRV"]')
+          ParentFont = False
+        end
+        object EtiqTemporada: TfrxMemoView
+          AllowVectorExport = True
+          Left = 8.000000000000000000
+          Top = 163.500000000000000000
+          Width = 150.000000000000000000
+          Height = 15.000000000000000000
+          DataField = 'PROP_TEMPORADA'
+          DataSet = dmArticulos.fxdsEtiquetasArt
+          DataSetName = 'EtiquetasArt'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[EtiquetasArt."PROP_TEMPORADA"]')
+          ParentFont = False
         end
       end
     end
