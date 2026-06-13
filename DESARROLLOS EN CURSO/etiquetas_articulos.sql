@@ -20,15 +20,19 @@
 -- Una fila por SKU. Trae:
 --   - Atributos pivotados (ATR_CO, ATR_TAL) más texto agregado ATRIBUTOS_TXT
 --     y DESCRIPCION_SKU (los valores concatenados con " / ", orden ORDEN_VA).
---   - Propiedades pivotadas (PROP_MARCA, PROP_MATERIAL, PROP_TEMPORADA,
+--   - Propiedades pivotadas a NIVEL ARTÍCULO (PROP_MARCA, PROP_MATERIAL,
 --     PROP_GENERO, PROP_ESTILO, PROP_ORIGEN, PROP_COMPOSICION). Resuelve
 --     ID_PV_ARTPROP contra `fza_propiedades_valores`; si la propiedad es de
 --     valor libre cae a VALOR_LIBRE_ARTPROP. Además expone PROPIEDADES_TXT
 --     con TODAS las propiedades del artículo en un único campo
 --     "Nombre: Valor | Nombre: Valor".
---   - COD_TEMPORADA: código corto de la temporada (p.ej. "PV26"), guardado
---     en DESCRIPCION_PV del valor de la propiedad TEMPORADA. PROP_TEMPORADA
---     sigue siendo el texto largo ("Primavera/Verano 2026").
+--   - TEMPORADA resuelta POR SKU (es propiedad de nivel COLOR), en el CTE
+--     sku_temp por especificidad SKU -> COLOR -> ARTÍCULO, igual que
+--     vi_articulos_propiedades_efectivas. Así la etiqueta de cada SKU muestra
+--     la temporada de SU color:
+--       * PROP_TEMPORADA: texto largo ("Primavera/Verano 2026").
+--       * COD_TEMPORADA : código corto ("PV26"), guardado en DESCRIPCION_PV
+--         del valor de la propiedad TEMPORADA.
 --   - Proveedor principal (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV, NOMBRE_PRV,
 --     REF_PROVEEDOR). NOMBRE_PRV es el nombre comercial; la etiqueta por
 --     defecto lo usa como "nombre de proveedor".
@@ -70,13 +74,9 @@ WITH
                THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_MARCA`,
       MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'MATERIAL'
                THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_MATERIAL`,
-      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
-               THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_TEMPORADA`,
-      -- Codigo corto de la temporada (p.ej. 'PV26'). Se guarda en
-      -- DESCRIPCION_PV del valor de la propiedad TEMPORADA; PROP_TEMPORADA
-      -- (arriba) es el texto largo 'Primavera/Verano 2026'.
-      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
-               THEN `pv`.`DESCRIPCION_PV` END)                           AS `COD_TEMPORADA`,
+      -- TEMPORADA no se pivota aqui (nivel articulo): es propiedad de nivel
+      -- COLOR y se resuelve POR SKU en el CTE sku_temp (PROP_TEMPORADA y
+      -- COD_TEMPORADA), para que la etiqueta muestre la temporada del color.
       MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'GENERO'
                THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_GENERO`,
       MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = 'ESTILO'
@@ -98,6 +98,41 @@ WITH
     LEFT JOIN `fza_propiedades_valores` `pv`
            ON `pv`.`ID_PV_ARTPROP` = `ap`.`ID_PV_ARTPROP`
     GROUP BY `ap`.`CODIGO_ART_ART`
+  ),
+  sku_temp AS (
+    -- Temporada resuelta POR SKU con especificidad SKU -> COLOR -> ARTICULO
+    -- (mismo patron que vi_articulos_propiedades_efectivas). TEMPORADA es de
+    -- nivel COLOR: cada etiqueta muestra la temporada de SU color, no un
+    -- agregado del articulo. El "color" es el prefijo ART/COLOR del
+    -- CODIGO_UNIDAD_SKU (SUBSTRING_INDEX hasta antes de la talla).
+    SELECT
+      `sku`.`CODIGO_UNIDAD_SKU`                                   AS `CODIGO_UNIDAD_SKU`,
+      COALESCE(`tpv`.`PV`,
+               `tps`.`VALOR_LIBRE_ARTPROP`,
+               `tpc`.`VALOR_LIBRE_ARTPROP`,
+               `tpa`.`VALOR_LIBRE_ARTPROP`)                       AS `PROP_TEMPORADA`,
+      `tpv`.`DESCRIPCION_PV`                                      AS `COD_TEMPORADA`
+    FROM `fza_articulos_skus` `sku`
+    LEFT JOIN `fza_articulos_propiedades` `tps`
+           ON `tps`.`CODIGO_ART_ART`        = `sku`.`CODIGO_ART_SKU`
+          AND `tps`.`CODIGO_PROP_ARTPROP`   = 'TEMPORADA'
+          AND `tps`.`CODIGO_UNIDAD_ARTPROP` = `sku`.`CODIGO_UNIDAD_SKU`
+    LEFT JOIN `fza_articulos_propiedades` `tpc`
+           ON `tpc`.`CODIGO_ART_ART`        = `sku`.`CODIGO_ART_SKU`
+          AND `tpc`.`CODIGO_PROP_ARTPROP`   = 'TEMPORADA'
+          AND `tpc`.`CODIGO_UNIDAD_ARTPROP` = CASE
+                WHEN CHAR_LENGTH(`sku`.`CODIGO_UNIDAD_SKU`)
+                   - CHAR_LENGTH(REPLACE(`sku`.`CODIGO_UNIDAD_SKU`, '/', '')) >= 2
+                THEN SUBSTRING_INDEX(`sku`.`CODIGO_UNIDAD_SKU`, '/', 2)
+                ELSE NULL END
+    LEFT JOIN `fza_articulos_propiedades` `tpa`
+           ON `tpa`.`CODIGO_ART_ART`        = `sku`.`CODIGO_ART_SKU`
+          AND `tpa`.`CODIGO_PROP_ARTPROP`   = 'TEMPORADA'
+          AND `tpa`.`CODIGO_UNIDAD_ARTPROP` = ''
+    LEFT JOIN `fza_propiedades_valores` `tpv`
+           ON `tpv`.`ID_PV_ARTPROP` = COALESCE(`tps`.`ID_PV_ARTPROP`,
+                                               `tpc`.`ID_PV_ARTPROP`,
+                                               `tpa`.`ID_PV_ARTPROP`)
   ),
   cb_prin AS (
     SELECT `CODIGO_UNIDAD_CB`,
@@ -124,8 +159,8 @@ SELECT
   `sa`.`DESCRIPCION_SKU`                                            AS `DESCRIPCION_SKU`,
   `apr`.`PROP_MARCA`                                                AS `PROP_MARCA`,
   `apr`.`PROP_MATERIAL`                                             AS `PROP_MATERIAL`,
-  `apr`.`PROP_TEMPORADA`                                            AS `PROP_TEMPORADA`,
-  `apr`.`COD_TEMPORADA`                                             AS `COD_TEMPORADA`,
+  `st`.`PROP_TEMPORADA`                                             AS `PROP_TEMPORADA`,
+  `st`.`COD_TEMPORADA`                                              AS `COD_TEMPORADA`,
   `apr`.`PROP_GENERO`                                               AS `PROP_GENERO`,
   `apr`.`PROP_ESTILO`                                               AS `PROP_ESTILO`,
   `apr`.`PROP_ORIGEN`                                               AS `PROP_ORIGEN`,
@@ -145,6 +180,8 @@ LEFT  JOIN `sku_atrib`                `sa`
         ON `sa`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`
 LEFT  JOIN `art_prop`                 `apr`
         ON `apr`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU`
+LEFT  JOIN `sku_temp`                 `st`
+        ON `st`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`
 LEFT  JOIN `fza_articulos_proveedores` `ap`
         ON `ap`.`CODIGO_ART_AP` = `sku`.`CODIGO_ART_SKU`
        AND `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S'

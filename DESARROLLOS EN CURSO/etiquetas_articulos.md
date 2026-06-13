@@ -72,6 +72,15 @@ se colocaron las dos `TfrxMemoView` en la banda `MasterData`. Hay que
 reaplicar `etiquetas_articulos.sql` contra la BBDD para que aparezcan las
 columnas nuevas.
 
+**Temporada por color.** TEMPORADA es una propiedad de nivel COLOR
+(`NIVEL_PROP='COLOR'`), así que un artículo puede tener una temporada
+distinta por color. La vista la resuelve **por SKU** en el CTE `sku_temp`
+con especificidad SKU → COLOR → ARTÍCULO (mismo patrón que
+`vi_articulos_propiedades_efectivas`): el "color" es el prefijo
+`ART/COLOR` del `CODIGO_UNIDAD_SKU`. Por eso `PROP_TEMPORADA` y
+`COD_TEMPORADA` salen de `sku_temp` (no del pivote a nivel artículo de
+`art_prop`), y la etiqueta de cada SKU muestra la temporada de SU color.
+
 ### Consulta runtime
 
 `TdmArticulos.CrearDataSetEtiquetasArt` monta:
