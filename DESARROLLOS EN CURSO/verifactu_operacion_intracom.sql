@@ -78,8 +78,8 @@ VALUES
    'Entrega de bienes exportados fuera de la UE, exenta art. 21 LIVA. Se asigna sola si el cliente no es de la UE.',
    '01', NULL, 'E2', 'N', 'EXTRA_UE', 50, 'S', NOW(), 'SEED'),
   ('BIENES_USADOS', 'Bienes usados (REBU)',
-   'Regimen especial de bienes usados: IVA sobre el margen. Requiere calculo de margen aparte.',
-   '03', 'S1', NULL, 'S', 'CUALQUIERA', 60, 'S', NOW(), 'SEED');
+   'Regimen especial de bienes usados: IVA sobre el margen. INACTIVO: pendiente de implementar el calculo de margen (ver verifactu_rebu.md).',
+   '03', 'S1', NULL, 'S', 'CUALQUIERA', 60, 'N', NOW(), 'SEED');
 -- 2b) Backfill del ambito en filas semilla anteriores sin ambito ---------------
 UPDATE fza_verifactu_operaciones SET AMBITO_VFO = 'NACIONAL'
  WHERE CODIGO_VFO = 'INTERIOR' AND AMBITO_VFO IS NULL;
@@ -89,6 +89,10 @@ UPDATE fza_verifactu_operaciones SET AMBITO_VFO = 'CUALQUIERA'
  WHERE CODIGO_VFO IN ('ISP', 'BIENES_USADOS') AND AMBITO_VFO IS NULL;
 UPDATE fza_verifactu_operaciones SET AMBITO_VFO = 'EXTRA_UE'
  WHERE CODIGO_VFO = 'EXPORT' AND AMBITO_VFO IS NULL;
+-- REBU pendiente: se deja inactivo para que no aparezca en el selector. Si se
+-- usara tal cual emitiria el IVA sobre la base total, no sobre el margen.
+UPDATE fza_verifactu_operaciones SET ESACTIVO_VFO = 'N'
+ WHERE CODIGO_VFO = 'BIENES_USADOS' AND USUARIO_ALTA = 'SEED';
 -- 3) Columna en fza_facturas (FK logica al catalogo) --------------------------
 SET @sExisteCol := (
   SELECT COUNT(*)
