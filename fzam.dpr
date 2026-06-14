@@ -293,6 +293,7 @@ uses
   inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas',
   inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
   inLibFotos in 'src\Lib\inLibFotos.pas',
+  inLibImagen in 'src\Lib\inLibImagen.pas',
   inLibFotosNube in 'src\Lib\inLibFotosNube.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
   inMtoStockConsulta in 'src\Forms\inMtoStockConsulta.pas' {frmStockConsulta},

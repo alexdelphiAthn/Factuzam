@@ -851,6 +851,7 @@
             <Form>frmModalSelFamilia</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFotos.pas"/>
+        <DCCReference Include="src\Lib\inLibImagen.pas"/>
         <DCCReference Include="src\Lib\inLibFotosNube.pas"/>
         <DCCReference Include="src\Forms\inMtoFotoArticulo.pas">
             <Form>frmFotoArticulo</Form>
