@@ -97,6 +97,15 @@ private
     // después de posicionar el maestro y se quedaba con parámetros NULL
     // (pestañas Verifactu y Movimientos vacías).
     procedure RellenarParamsDesdeMaestro(AQry: TUniQuery);
+    // Helpers de validacion de coherencia en el BeforePost de la cabecera.
+    function EsPaisUE(const ACodPais: string): Boolean;
+    function ObtenerOperVfactu(const ACodigo: string; out AAmbito: string;
+                               out ARepercute: Boolean): Boolean;
+    function UltimaFechaSerie(const ASerie, AEmpresa,
+                              ANumero: string): TDateTime;
+    function HayHuecoNumeracion(const ASerie, AEmpresa,
+                                ANumero: string): Boolean;
+    procedure ValidarOperacionVfactu(var AIsError: Boolean);
 public
     procedure GetCodigoAutoFactura;
     procedure GetCodigoAutoCliente;
@@ -188,6 +197,178 @@ begin
       Result := False;
     Close;
     FreeAndNil(unqrySol);
+  end;
+end;
+// Devuelve True si el pais (codigo numerico, p.ej. 724) es miembro de la UE
+function TdmFacturas.EsPaisUE(const ACodPais: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  if Trim(ACodPais) <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := oConn;
+      q.SQL.Text := 'SELECT ESMIEMBRO_UE_PAI FROM fza_paises ' +
+                    ' WHERE CODIGO_PAI_PAI = :pais';
+      q.ParamByName('pais').AsString := Trim(ACodPais);
+      q.Open;
+      Result := (not q.IsEmpty) and
+                SameText(Trim(q.FieldByName('ESMIEMBRO_UE_PAI').AsString), 'S');
+      q.Close;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+// Lee del catalogo el ambito exigido y si la operacion repercute IVA.
+// Devuelve True si el codigo existe en el catalogo.
+function TdmFacturas.ObtenerOperVfactu(const ACodigo: string;
+  out AAmbito: string; out ARepercute: Boolean): Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  AAmbito := '';
+  ARepercute := True;
+  if Trim(ACodigo) <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := oConn;
+      q.SQL.Text := 'SELECT AMBITO_VFO, ESREPERCUTE_IVA_VFO ' +
+                    ' FROM fza_verifactu_operaciones WHERE CODIGO_VFO = :cod';
+      q.ParamByName('cod').AsString := Trim(ACodigo);
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        AAmbito    := Trim(q.FieldByName('AMBITO_VFO').AsString);
+        ARepercute := not SameText(
+          Trim(q.FieldByName('ESREPERCUTE_IVA_VFO').AsString), 'N');
+        Result := True;
+      end;
+      q.Close;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+// Fecha de la ultima factura ya emitida (no borrador) de la misma serie y
+// empresa, excluyendo la actual. 0 si no hay ninguna.
+function TdmFacturas.UltimaFechaSerie(const ASerie, AEmpresa,
+  ANumero: string): TDateTime;
+var
+  q: TUniQuery;
+begin
+  Result := 0;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    q.SQL.Text := 'SELECT MAX(FECHA_FAC) AS ULTIMA FROM fza_facturas ' +
+                  ' WHERE SERIE_FAC = :serie AND CODIGO_EMP_FAC = :emp ' +
+                  '   AND NUMERO_FAC <> :num AND FECHA_FAC IS NOT NULL ' +
+                  '   AND FASE_FAC <> ''BORRADOR''';
+    q.ParamByName('serie').AsString := ASerie;
+    q.ParamByName('emp').AsString   := AEmpresa;
+    q.ParamByName('num').AsString   := ANumero;
+    q.Open;
+    if (not q.IsEmpty) and (not q.FieldByName('ULTIMA').IsNull) then
+      Result := q.FieldByName('ULTIMA').AsDateTime;
+    q.Close;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+// True si entre la ultima factura de la serie y la actual queda un hueco de
+// numeracion (la ley exige numeracion correlativa, ese numero debe cubrirse).
+function TdmFacturas.HayHuecoNumeracion(const ASerie, AEmpresa,
+  ANumero: string): Boolean;
+var
+  q:         TUniQuery;
+  iAsignado: Int64;
+  iMax:      Int64;
+begin
+  Result := False;
+  iAsignado := StrToInt64Def(Trim(ANumero), 0);
+  if iAsignado > 1 then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := oConn;
+      q.SQL.Text := 'SELECT MAX(CAST(NUMERO_FAC AS UNSIGNED)) AS MAXNUM ' +
+                    ' FROM fza_facturas WHERE SERIE_FAC = :serie ' +
+                    '   AND CODIGO_EMP_FAC = :emp ' +
+                    '   AND CAST(NUMERO_FAC AS UNSIGNED) < :asig';
+      q.ParamByName('serie').AsString  := ASerie;
+      q.ParamByName('emp').AsString    := AEmpresa;
+      q.ParamByName('asig').AsLargeInt := iAsignado;
+      q.Open;
+      if (not q.IsEmpty) and (not q.FieldByName('MAXNUM').IsNull) then
+      begin
+        iMax   := q.FieldByName('MAXNUM').AsLargeInt;
+        Result := (iAsignado - iMax) > 1;
+      end;
+      q.Close;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+// Detecta incoherencias flagrantes entre el tipo de operacion Verifactu, el
+// pais del cliente y el IVA de la factura. Si las hay, avisa y marca error.
+procedure TdmFacturas.ValidarOperacionVfactu(var AIsError: Boolean);
+var
+  sTipo, sAmbito, sPais, sNif: string;
+  bRepercute, bUE, bExtr:      Boolean;
+  dCuota:                      Currency;
+begin
+  with unqryTablaG do
+  begin
+    sTipo  := Trim(FieldByName('TIPO_OPER_VFACTU_FAC').AsString);
+    sPais  := Trim(FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString);
+    sNif   := Trim(FieldByName('NIF_CLIENTE_FAC').AsString);
+    dCuota := FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
+    bUE    := EsPaisUE(sPais);
+    bExtr  := (sPais <> '') and (sPais <> '724') and
+              (not SameText(sPais, 'ES'));
+    sAmbito    := '';
+    bRepercute := True;
+    if sTipo <> '' then
+      ObtenerOperVfactu(sTipo, sAmbito, bRepercute);
+    // Sin tipo y cliente fuera de la UE: el envio lo trata como exportacion
+    // (sin IVA repercutido) de forma automatica.
+    if (sTipo = '') and bExtr and (not bUE) then
+      bRepercute := False;
+    if (not AIsError) and SameText(sAmbito, 'UE') and (not bUE) then
+    begin
+      ShowMessage('La operacion "' + sTipo + '" es intracomunitaria, pero el ' +
+        'cliente no es de la UE (pais ' + sPais + '). Corrija el tipo de ' +
+        'operacion o el pais del cliente.');
+      AIsError := True;
+    end;
+    if (not AIsError) and SameText(sAmbito, 'EXTRA_UE') and
+       (bUE or (not bExtr)) then
+    begin
+      ShowMessage('La operacion "' + sTipo + '" es exportacion fuera de la ' +
+        'UE, pero el cliente es comunitario o nacional. Corrija el tipo o el ' +
+        'pais del cliente.');
+      AIsError := True;
+    end;
+    if (not AIsError) and (not bRepercute) and (Abs(dCuota) > 0.01) then
+    begin
+      ShowMessage('La operacion no repercute IVA (intracomunitaria, ISP o ' +
+        'exportacion), pero la factura tiene IVA (' +
+        FormatFloat('#,##0.00', dCuota) + '). Revise el IVA o el tipo de ' +
+        'operacion.');
+      AIsError := True;
+    end;
+    if (not AIsError) and bExtr and (sNif = '') then
+    begin
+      ShowMessage('El cliente es extranjero (pais ' + sPais + ') y Verifactu ' +
+        'exige su NIF-IVA. Indique el NIF del cliente.');
+      AIsError := True;
+    end;
   end;
 end;
 
@@ -1414,6 +1595,8 @@ procedure TdmFacturas.unqryFacBeforePost(DataSet: TDataSet);
 var
   ISError:Boolean;
   frmFac:TfrmMtoFacturasBase;
+  bValidar: Boolean;
+  dtUltima: TDateTime;
 begin
   inherited;
   IsError := False;
@@ -1464,6 +1647,49 @@ begin
       IsError := True;
       ShowMessage('Debe seleccionar un pais para cliente y empresa.');
     end;
+    // Las validaciones de coherencia solo corren mientras la factura es un
+    // borrador editable (no en los posts programaticos de consolidacion /
+    // lanzamiento a Verifactu, que ya cambian la fase).
+    bValidar := (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') and
+                (SameText(FieldByName('FASE_FAC').AsString, 'BORRADOR') or
+                 (Trim(FieldByName('FASE_FAC').AsString) = ''));
+    // Fecha de factura obligatoria (bloqueo)
+    if (not IsError) and bValidar and
+       (FieldByName('FECHA_FAC').AsString = '') then
+    begin
+      ShowMessage('Debe indicar la fecha de la factura.');
+      frmFac.pcCab.ActivePage := frmFac.tsCabecera;
+      IsError := True;
+    end;
+    // Coherencia del tipo de operacion Verifactu (bloqueo si es flagrante)
+    if (not IsError) and bValidar then
+      ValidarOperacionVfactu(IsError);
+    // La fecha no puede ser anterior a la ultima factura emitida de la serie
+    // (bloqueo): la numeracion debe seguir orden cronologico.
+    if (not IsError) and bValidar and
+       (FieldByName('FECHA_FAC').AsString <> '') then
+    begin
+      dtUltima := UltimaFechaSerie(FieldByName('SERIE_FAC').AsString,
+                                   FieldByName('CODIGO_EMP_FAC').AsString,
+                                   FieldByName('NUMERO_FAC').AsString);
+      if (dtUltima > 0) and
+         (FieldByName('FECHA_FAC').AsDateTime < dtUltima) then
+      begin
+        ShowMessage('La fecha ' +
+          FormatDateTime('dd/mm/yyyy',
+                         FieldByName('FECHA_FAC').AsDateTime) +
+          ' es anterior a la ultima factura de la serie (' +
+          FormatDateTime('dd/mm/yyyy', dtUltima) +
+          '). La numeracion debe seguir orden cronologico.');
+        frmFac.pcCab.ActivePage := frmFac.tsCabecera;
+        IsError := True;
+      end;
+    end;
+    // Fecha posterior a hoy (solo aviso, no bloquea)
+    if (not IsError) and bValidar and
+       (FieldByName('FECHA_FAC').AsString <> '') and
+       (FieldByName('FECHA_FAC').AsDateTime > Date) then
+      ShowMessage('Aviso: la fecha de la factura es posterior a hoy.');
     if IsError then
     begin
       raise Exception.Create('No se ha grabado la cabecera de la factura');
@@ -1477,6 +1703,22 @@ begin
           GetCodigoAutoCliente;
         if (FieldByName('CODIGO_EMP_FAC').AsString = '0') then
           GetCodigoAutoEmpresa;
+        // El numero no puede quedar en blanco tras la asignacion (bloqueo)
+        if bValidar and
+           ((Trim(FieldByName('NUMERO_FAC').AsString) = '') or
+            (FieldByName('NUMERO_FAC').AsString = '0')) then
+          raise Exception.Create('No se ha podido asignar numero a la ' +
+            'factura (serie ' + FieldByName('SERIE_FAC').AsString +
+            '). Revise el contador de la serie.');
+        // Aviso (no bloquea): salto en la numeracion. La ley exige numeracion
+        // correlativa, asi que el numero o numeros que falten deben cubrirse.
+        if bValidar and (State = dsInsert) and
+           HayHuecoNumeracion(FieldByName('SERIE_FAC').AsString,
+                              FieldByName('CODIGO_EMP_FAC').AsString,
+                              FieldByName('NUMERO_FAC').AsString) then
+          ShowMessage('Aviso: hay un salto en la numeracion de la serie ' +
+            FieldByName('SERIE_FAC').AsString + '. La ley exige numeracion ' +
+            'correlativa: el numero o numeros que falten deben cubrirse.');
         odmConn.ActualizarUserTimeModif(DataSet);
       end;
   end;

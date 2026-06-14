@@ -82,6 +82,32 @@ en la lista del combo.
 > el desplegable. Requiere cablear un datasource del catalogo en el
 > datamodule; se hace en el IDE (no se pudo verificar aqui).
 
+### Guardado de la columna — `src/DataModules/UniDataFacturas.dfm`
+
+El dataset de facturas tiene `SQLInsert`/`SQLUpdate` escritos a mano con la
+lista de columnas fija. Una columna nueva se LEE (la consulta es `SELECT *`)
+pero **no se graba** si no se anade tambien a esas sentencias. Se ha anadido
+`TIPO_OPER_VFACTU_FAC` al INSERT (columnas + valores) y al UPDATE (SET).
+Recordatorio para futuras columnas de `fza_facturas`: tocar tambien aqui.
+
+### Validaciones BeforePost — `src/DataModules/UniDataFacturas.pas`
+
+`unqryFacBeforePost` valida coherencia antes de grabar la cabecera (solo
+mientras la factura es BORRADOR, para no interferir con el lanzamiento a
+Verifactu). Bloquea (ShowMessage + raise) o avisa segun el caso:
+
+- **Bloqueo**: tipo intracomunitario con cliente no UE; exportacion con
+  cliente UE/nacional; operacion sin IVA repercutido pero la factura lleva
+  IVA; cliente extranjero sin NIF-IVA; fecha de factura vacia; fecha
+  anterior a la ultima factura emitida de la serie (orden cronologico).
+- **Aviso** (deja grabar): fecha posterior a hoy; salto en la numeracion de
+  la serie (la ley exige numeracion correlativa: el hueco debe cubrirse).
+
+Helpers anadidos: `EsPaisUE`, `ObtenerOperVfactu` (lee ambito/repercute del
+catalogo), `UltimaFechaSerie`, `HayHuecoNumeracion`, `ValidarOperacionVfactu`.
+La coherencia usa la columna `AMBITO_VFO` del catalogo (NACIONAL / UE /
+EXTRA_UE / CUALQUIERA).
+
 ## Limitaciones / avisos
 
 - **Bienes usados (REBU)**: el catalogo ya emite `ClaveRegimen=03`, pero el

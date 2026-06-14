@@ -39,7 +39,7 @@ inherited dmFacturas: TdmFacturas
         'RIPCIONES_AMP_FAC`, `ESFECHADEENTREGA_FAC`, `XML_FAC`, `INSTANTE' +
         '_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `CODI' +
         'GO_CAJERO_FAC`, `CODIGO_ALM_FAC`, `CODIGO_CAJA_FAC`, `NUMERO_OPE' +
-        'RACION_FAC`)'
+        'RACION_FAC`, `TIPO_OPER_VFACTU_FAC`)'
       'VALUES'
       
         '  (:`NUMERO_FAC`, :`SERIE_FAC`, :`FECHA_FAC`, :`ESCONSOLIDADA_FA' +
@@ -76,7 +76,7 @@ inherited dmFacturas: TdmFacturas
         'LOS_FAC`, :`ESDESCRIPCIONES_AMP_FAC`, :`ESFECHADEENTREGA_FAC`, :' +
         '`XML_FAC`, :`INSTANTE_MODIF`, :`INSTANTE_ALTA`, :`USUARIO_ALTA`,' +
         ' :`USUARIO_MODIF`, :`CODIGO_CAJERO_FAC`, :`CODIGO_ALM_FAC`, :`CO' +
-        'DIGO_CAJA_FAC`, :`NUMERO_OPERACION_FAC`)')
+        'DIGO_CAJA_FAC`, :`NUMERO_OPERACION_FAC`, :`TIPO_OPER_VFACTU_FAC`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_facturas`'
       'WHERE'
@@ -156,7 +156,7 @@ inherited dmFacturas: TdmFacturas
         'SUARIO_MODIF` = :`USUARIO_MODIF`, `CODIGO_CAJERO_FAC` = :`CODIGO' +
         '_CAJERO_FAC`, `CODIGO_ALM_FAC` = :`CODIGO_ALM_FAC`, `CODIGO_CAJA' +
         '_FAC` = :`CODIGO_CAJA_FAC`, `NUMERO_OPERACION_FAC` = :`NUMERO_OP' +
-        'ERACION_FAC`'
+        'ERACION_FAC`, `TIPO_OPER_VFACTU_FAC` = :`TIPO_OPER_VFACTU_FAC`'
       'WHERE'
       
         '  `NUMERO_FAC` = :`Old_NUMERO_FAC` AND `SERIE_FAC` = :`Old_SERIE' +
