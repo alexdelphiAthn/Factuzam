@@ -1,0 +1,103 @@
+# Verifactu: calificacion de operacion (intracomunitarias, ISP, export, REBU)
+
+Soporte para facturas que no son ventas interiores en regimen general:
+intracomunitarias (servicios no sujetos / entregas de bienes exentas),
+inversion del sujeto pasivo, exportaciones y regimenes especiales como
+bienes usados. El tipo se elige en la pestana "Otros" del mantenimiento de
+facturas y el envio a la AEAT construye la calificacion correcta.
+
+## Problema que resuelve
+
+El subsistema solo sabia emitir operaciones interiores en regimen general
+con cliente de NIF espanol:
+
+- Identificaba al destinatario siempre por `<NIF>` y exigia 9 caracteres,
+  asi que un NIF-IVA europeo (FR/DE...) reventaba el envio.
+- El desglose fijaba siempre `ClaveRegimen=01`, `CalificacionOperacion=S1`
+  (o `OperacionExenta=E1` en la banda exenta). No contemplaba N2, S2, E5,
+  E2 ni claves de regimen especiales.
+
+## Diseno: catalogo abierto
+
+En vez de cablear los tipos en el codigo, se usa una tabla catalogo
+**`fza_verifactu_operaciones`** que el usuario puede ampliar sin recompilar.
+Cada fila define el mapeo a Verifactu:
+
+| Columna | Uso |
+|---|---|
+| `CODIGO_VFO` (PK) | Identificador (INTERIOR, SERVICIO_INTRA, ISP, ...) |
+| `DESCRIPCION_VFO` / `AYUDA_VFO` | Texto y ayuda para el usuario |
+| `CLAVE_REGIMEN_VFO` | ClaveRegimen (01 general, 03 bienes usados...) |
+| `CALIFICACION_VFO` | CalificacionOperacion (S1/S2/N1/N2) o vacio |
+| `OPERACION_EXENTA_VFO` | OperacionExenta (E1..E6) o vacio |
+| `ESREPERCUTE_IVA_VFO` | S = desglose por bandas; N = base sin cuota |
+| `ORDEN_VFO`, `ESACTIVO_VFO` + 4 auditoria | estandar del repo |
+
+Semilla inicial: INTERIOR, SERVICIO_INTRA (N2), ENTREGA_INTRA (E5), ISP
+(S2), EXPORT (E2), BIENES_USADOS (clave 03).
+
+La factura guarda el codigo elegido en la columna nueva
+**`TIPO_OPER_VFACTU_FAC`** de `fza_facturas` (FK logica al catalogo).
+
+## Cambios
+
+### Esquema — `verifactu_operacion_intracom.sql` (idempotente)
+
+1. Crea `fza_verifactu_operaciones` y la siembra (INSERT IGNORE).
+2. Anade `TIPO_OPER_VFACTU_FAC` a `fza_facturas`.
+3. Recrea `vi_facturas` / `vi_facturas_normales` /
+   `vi_facturas_simplificadas` (usan `SELECT fza_facturas.*`, que MariaDB
+   expande al crear: hay que recrearlas para exponer la columna nueva al
+   formulario). **Aplicar este script antes de desplegar el binario nuevo**
+   (el envio hace JOIN al catalogo).
+
+### Envio — `src/verifactu/inLibVerifactuEnvio.pas`
+
+- La consulta hace `LEFT JOIN fza_paises` (ISO-2 y miembro UE del cliente)
+  y `LEFT JOIN fza_verifactu_operaciones` (mapeo del tipo elegido).
+- **Destinatario**: si el cliente es extranjero (pais distinto de ES/724)
+  se identifica por `<IDOtro>` (CodigoPais + IDType + ID) en vez de
+  `<NIF>`; IDType 02 = NIF-IVA (UE), 04 = documento del pais (resto). Se
+  exige NIF-IVA no vacio, pero ya no los 9 caracteres del NIF espanol.
+- **Desglose** (`ConstruirDesglose`), dirigido por el catalogo:
+  - `ESREPERCUTE_IVA = N` -> un unico `DetalleDesglose` con la base total,
+    sin tipo ni cuota, y `OperacionExenta` o `CalificacionOperacion` segun
+    el catalogo.
+  - `ESREPERCUTE_IVA = S` -> desglose por bandas (como antes) usando la
+    `ClaveRegimen` y la `CalificacionOperacion` del catalogo (la banda
+    exenta mantiene E1).
+  - Sin tipo asignado: comportamiento interior de siempre; **salvo** que el
+    cliente no sea de la UE, en cuyo caso se aplica exportacion (E2) de
+    forma automatica.
+
+### Formulario — `src/Forms/inMtoFacturasBase.pas` + `.dfm`
+
+`TcxDBComboBox` editable (`cbbTipoOperVerifactu`) en la pestana "Otros",
+ligado a `TIPO_OPER_VFACTU_FAC`, con los codigos semilla y una etiqueta de
+ayuda. Es **abierto**: admite cualquier codigo del catalogo aunque no este
+en la lista del combo.
+
+> Mejora futura: convertirlo en un `TcxLookupComboBox` contra el catalogo
+> para que muestre las descripciones y los tipos nuevos aparezcan solos en
+> el desplegable. Requiere cablear un datasource del catalogo en el
+> datamodule; se hace en el IDE (no se pudo verificar aqui).
+
+## Limitaciones / avisos
+
+- **Bienes usados (REBU)**: el catalogo ya emite `ClaveRegimen=03`, pero el
+  IVA del REBU se calcula sobre el **margen**, no sobre la base total. El
+  motor de totales (`inLibFacturas.pas`) todavia no calcula margen: hasta
+  que se aborde, REBU solo es correcto si las bases ya reflejan el margen.
+- **Cliente no-UE = exportacion automatica**: una venta presencial a un
+  turista no comunitario es realmente interior con IVA. Si se da el caso,
+  marcar la factura como `INTERIOR` en el selector para anular el E2 auto.
+- **IDType para no-UE**: se usa 04 (documento del pais). Revisar caso a caso
+  si la AEAT espera otro tipo para alguna operacion concreta.
+
+## Verificacion pendiente
+
+1. Compilar (`fzam.dproj`) tras anadir los controles al form.
+2. Aplicar el script en una BBDD de pruebas.
+3. En preproduccion (`src/verifactu/entornopre`): enviar una factura de
+   servicio intracomunitario a un profesional UE (con NIF-IVA) y confirmar
+   que la AEAT acepta el IDOtro y la calificacion N2.
