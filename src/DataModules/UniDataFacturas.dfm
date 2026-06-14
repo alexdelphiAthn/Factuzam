@@ -1253,6 +1253,21 @@ inherited dmFacturas: TdmFacturas
     Left = 365
     Top = 64
   end
+  object unqryVerifactuOpe: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_VFO, DESCRIPCION_VFO'
+      'FROM fza_verifactu_operaciones'
+      'WHERE ESACTIVO_VFO = '#39'S'#39
+      'ORDER BY ORDEN_VFO')
+    Left = 365
+    Top = 118
+  end
+  object dsVerifactuOpe: TDataSource
+    DataSet = unqryVerifactuOpe
+    Left = 365
+    Top = 172
+  end
   object unqryFormaPago: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO fza_formas_pago'

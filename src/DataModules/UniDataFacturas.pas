@@ -44,6 +44,8 @@ type
     unstrdprcGetDataCliente: TUniStoredProc;
     dsFormasPago: TDataSource;
     unqryFormaPago: TUniQuery;
+    dsVerifactuOpe: TDataSource;
+    unqryVerifactuOpe: TUniQuery;
     dsRecibos: TDataSource;
     unqryRecibos: TUniQuery;
     dsRecibosPrint: TDataSource;
@@ -993,6 +995,7 @@ begin
   AbrirConTiempo(unqrySeries,         'unqrySeries');
   AbrirConTiempo(unqryIvas,           'unqryIvas');
   AbrirConTiempo(unqryFormaPago,      'unqryFormaPago');
+  AbrirConTiempo(unqryVerifactuOpe,   'unqryVerifactuOpe');
   AbrirConTiempo(unqryTarifas,        'unqryTarifas');
   AbrirConTiempo(unqryPaisesCli,      'unqryPaisesCli');
   AbrirConTiempo(unqryPaisesEmp,      'unqryPaisesEmp');
