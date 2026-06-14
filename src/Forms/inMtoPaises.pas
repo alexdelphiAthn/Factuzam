@@ -37,6 +37,8 @@ type
     dbcGrdDBTabPrinNOMBRE_ENG_PAIS: TcxGridDBColumn;
     dbcGrdDBTabPrinORDEN_PAIS: TcxGridDBColumn;
     dbcGrdDBTabPrinCOD_PAIS_ALPHA3: TcxGridDBColumn;
+    dbcGrdDBTabPrinCOD_PAIS_ALPHA2: TcxGridDBColumn;
+    dbcGrdDBTabPrinESMIEMBRO_UE_PAIS: TcxGridDBColumn;
   private
     { Private declarations }
   public

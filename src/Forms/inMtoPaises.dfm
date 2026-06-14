@@ -17,6 +17,11 @@
               DataBinding.FieldName = 'CODIGO_PAI_PAI'
               Width = 109
             end
+            object dbcGrdDBTabPrinCOD_PAIS_ALPHA2: TcxGridDBColumn
+              Caption = 'C'#243'digo Alpha2'
+              DataBinding.FieldName = 'COD_ALPHA2_PAI'
+              Width = 120
+            end
             object dbcGrdDBTabPrinCOD_PAIS_ALPHA3: TcxGridDBColumn
               Caption = 'C'#243'digo Alpha3'
               DataBinding.FieldName = 'COD_ALPHA3_PAI'
@@ -31,6 +36,14 @@
               Caption = 'Nombre Ingl'#233's Pais'
               DataBinding.FieldName = 'NOMBRE_ENG_PAI'
               Width = 294
+            end
+            object dbcGrdDBTabPrinESMIEMBRO_UE_PAIS: TcxGridDBColumn
+              Caption = 'Miembro UE'
+              DataBinding.FieldName = 'ESMIEMBRO_UE_PAI'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 90
             end
             object dbcGrdDBTabPrinORDEN_PAIS: TcxGridDBColumn
               Caption = 'Orden en Listados'
