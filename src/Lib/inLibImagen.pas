@@ -28,7 +28,7 @@ uses
 // pinte 1:1, sin el pixelado del StretchBlt. La propiedad del TBitmap pasa
 // al llamante, que debe liberarlo. Devuelve nil si no se pudo escalar.
 function EscalarSuavizado(const AOrigen: TGraphic;
-  AAnchoCaja, AAltoCaja: Integer): TBitmap;
+  AAnchoCaja, AAltoCaja: Integer): Vcl.Graphics.TBitmap;
 
 implementation
 
@@ -37,7 +37,7 @@ uses
   Winapi.GDIPAPI, Winapi.GDIPOBJ;
 
 function EscalarSuavizado(const AOrigen: TGraphic;
-  AAnchoCaja, AAltoCaja: Integer): TBitmap;
+  AAnchoCaja, AAltoCaja: Integer): Vcl.Graphics.TBitmap;
 var
   oMem      : TMemoryStream;
   oStream   : IStream;
@@ -67,8 +67,8 @@ begin
       oStream := TStreamAdapter.Create(oMem, soReference);
       gpOrigen := TGPBitmap.Create(oStream);
       try
-        iAnchoOrg := gpOrigen.GetWidth;
-        iAltoOrg  := gpOrigen.GetHeight;
+        iAnchoOrg := Integer(gpOrigen.GetWidth);
+        iAltoOrg  := Integer(gpOrigen.GetHeight);
         if (iAnchoOrg >= 1) and (iAltoOrg >= 1) then
         begin
           // Encaje proporcional dentro de la caja (manda el lado que
@@ -104,7 +104,7 @@ begin
             // (AlphaBlend) sobre el panel.
             if gpDestino.GetHBITMAP(MakeColor(0, 0, 0, 0), hBmp) = Ok then
             begin
-              Result := TBitmap.Create;
+              Result := Vcl.Graphics.TBitmap.Create;
               Result.Handle := hBmp;
               Result.AlphaFormat := afPremultiplied;
             end;
