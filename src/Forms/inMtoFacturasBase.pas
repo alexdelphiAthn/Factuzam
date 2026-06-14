@@ -84,6 +84,9 @@ type
     cxgrdbclmnGrdDBTabPrinTOTAL_LIQUIDO_FACTURA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinFORMA_PAGO_FACTURA: TcxGridDBColumn;
     mmodbComentarios: TcxDBMemo;
+    lblTipoOperVerifactu: TcxLabel;
+    cbbTipoOperVerifactu: TcxDBComboBox;
+    lblTipoOperVerifactuAyuda: TcxLabel;
     tsRecibos: TcxTabSheet;
     pnlTopFicha: TPanel;
     pnlBodyFicha: TPanel;
