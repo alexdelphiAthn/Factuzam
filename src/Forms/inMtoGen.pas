@@ -1424,6 +1424,13 @@ begin
     Result.PoolingOptions.Validate := True;
     Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
     Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
+    // El charset va como SpecificOption del clon, no solo en el SET NAMES
+    // manual del AfterConnect: asi UniDAC reaplica "SET NAMES utf8mb4" en
+    // cada reconexion fisica del LocalFailover. Sin esto, al reavivar una
+    // conexion muerta el texto volvia ilegible (mojibake) hasta reiniciar.
+    Result.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
+    Result.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
+    Result.SpecificOptions.Values['MySQL.Protocol'] := 'mpDefault';
     Result.Options.LocalFailover    := True;
     Result.Options.DisconnectedMode := True;
     // Reusamos el handler de errores y el AfterConnect (timeout extendido)
