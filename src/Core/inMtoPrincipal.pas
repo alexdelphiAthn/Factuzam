@@ -656,10 +656,10 @@ begin
   // FormResize recoloca todo respecto al area cliente real.
   cw := pcPrincipal.ClientWidth;
   ch := pcPrincipal.ClientHeight;
-  // Logo: 50% del ancho, max 600, min 240, manteniendo aspect 520x130.
-  w := cw div 2;
-  if w > 600 then w := 600;
-  if w < 240 then w := 240;
+  // Logo: ~33% del ancho, max 380, min 180, manteniendo aspect 520x130.
+  w := cw div 3;
+  if w > 380 then w := 380;
+  if w < 180 then w := 180;
   h := Round(w * 130 / 520);
   cx := (cw - w) div 2;
   cy := (ch - h - 80) div 2;
