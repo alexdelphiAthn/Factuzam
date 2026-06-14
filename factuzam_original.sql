@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 14/06/2026 6:51:52
+-- Backup generado: 14/06/2026 7:27:25
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -5378,7 +5378,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 389, 3, 'S', 'S', '2026-06-14 06:51:32', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 390, 3, 'S', 'S', '2026-06-14 07:27:06', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 24, 2, 'S', 'S', '2026-06-13 09:58:34', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -6043,7 +6043,7 @@ INSERT INTO `fza_facturas` (`NUMERO_FAC`, `SERIE_FAC`, `FECHA_FAC`, `ESCONSOLIDA
   ('000141', '2026.A1', '2026-05-27 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'N', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '327', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'N', 'PVP', 'S', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'CONTADO', 15, 0, 0, NULL, NULL, NULL, '', NULL, NULL, '0', 'N', 'N', 'N', NULL, '2026-05-27 21:00:08', '2026-05-27 21:00:08', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000142', '2026.A1', '2026-06-04 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'N', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 6.08, 5.2, 0, 28.93, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 28.93, 6.08, NULL, 0, 0, 35.01, NULL, NULL, '', '', NULL, NULL, '010', NULL, 'S', NULL, NULL, '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', '1', 'GEN', '1', '00000168'),
   ('000143', '2026.A1', '2026-06-06 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'N', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 13.87, 5.2, 0, 66.03, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 66.03, 13.87, NULL, 0, 0, 79.9, NULL, NULL, '', '', NULL, NULL, '010', NULL, 'S', NULL, NULL, '2026-06-06 06:00:19', '2026-06-06 06:00:19', '1', '1', '1', 'GEN', '1', '00000169'),
-  ('000144', '2026.A1', '2026-06-12 00:00:00', 'N', NULL, 'NORMAL', 'N', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 16.17, 5.2, 0, 77, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 77, 16.17, '60DIAS', 15, 11.55, 81.62, NULL, NULL, NULL, '', NULL, NULL, '040', 'N', 'N', 'N', NULL, '2026-06-12 05:34:30', '2026-06-12 05:34:30', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
+  ('000144', '2026.A1', '2026-06-12 00:00:00', 'N', NULL, 'NORMAL', 'N', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'B55443322', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 18.69, 5.2, 0, 89, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 89, 18.69, '60DIAS', 15, 13.35, 94.34, NULL, NULL, NULL, '', NULL, NULL, '040', 'N', 'N', 'N', NULL, '2026-06-12 05:34:30', '2026-06-12 05:34:30', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000145', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 18:19:50', 'SIMPLIFICADA', 'N', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '330', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 4.86, 5.2, 0, 23.14, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.14, 4.86, NULL, 0, 0, 28, '000001', 'A1', '', '', NULL, NULL, '040', 'N', 'N', 'N', NULL, '2026-06-12 18:19:50', '2026-06-12 06:20:21', '1', 'Administrador', '1', 'GEN', '1', '00000170'),
   ('000146', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:37:10', 'SIMPLIFICADA', 'N', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '329', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 4.86, 5.2, 0, 23.14, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 23.14, 4.86, NULL, 0, 0, 28, NULL, NULL, '', '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-06-12 07:37:10', '2026-06-12 06:22:03', '1', 'Administrador', '1', 'GEN', '1', '00000171'),
   ('000147', '2026.A1', '2026-06-12 00:00:00', 'S', '2026-06-12 07:38:17', 'SIMPLIFICADA', 'N', 'ONLINE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '331', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 20.83, 5.2, 0, 99.17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 99.17, 20.83, NULL, 0, 0, 120, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-12 07:38:17', '2026-06-12 07:00:11', '1', 'Administrador', '1', 'GEN', '1', '00000172'),
@@ -6784,6 +6784,139 @@ CREATE TABLE `fza_generadorprocesos` (
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`CODIGO_GENERADOR_PROCESO_GP`)
 );
+
+-- Datos de fza_generadorprocesos
+INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADOR_PROCESO_GP`, `NOMBRE_GENERADOR_PROCESO_GP`, `PROCESO_GENERADOR_PROCESO_GP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('389', 'verifactu_operacion_intracom', '-- =============================================================================
+-- Catalogo de calificaciones de operacion para Verifactu + columna en facturas
+-- =============================================================================
+-- Permite calificar una factura de cara a Verifactu cuando NO es una venta
+-- interior en regimen general (intracomunitarias, ISP, exportacion, bienes
+-- usados...). El catalogo es ABIERTO: el usuario puede anadir nuevos tipos sin
+-- recompilar; el envio lee de aqui el mapeo al XML de la AEAT.
+--
+-- Mapeo por fila:
+--   CLAVE_REGIMEN_VFO     ClaveRegimen (01 general, 03 bienes usados/REBU...).
+--   CALIFICACION_VFO      CalificacionOperacion (S1/S2/N1/N2) o vacio.
+--   OPERACION_EXENTA_VFO  OperacionExenta (E1..E6) o vacio.
+--   ESREPERCUTE_IVA_VFO   ''S'' -> desglose por bandas con tipo y cuota.
+--                         ''N'' -> un unico detalle con la base, sin cuota.
+--   AMBITO_VFO            Residencia exigida al cliente, para detectar
+--                         incoherencias: NACIONAL, UE, EXTRA_UE o CUALQUIERA.
+--
+-- CALIFICACION y OPERACION_EXENTA son excluyentes: una operacion exenta lleva
+-- OperacionExenta; una sujeta (con o sin ISP) lleva CalificacionOperacion.
+--
+-- Idempotente: tabla con CREATE TABLE IF NOT EXISTS, columnas con chequeo en
+-- INFORMATION_SCHEMA, semilla con INSERT IGNORE (no pisa personalizaciones) y
+-- backfill del ambito solo en las filas semilla.
+-- =============================================================================
+-- 1) Tabla catalogo -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS fza_verifactu_operaciones (
+  CODIGO_VFO            varchar(20)  NOT NULL,
+  DESCRIPCION_VFO       varchar(100) NULL DEFAULT NULL,
+  AYUDA_VFO             varchar(255) NULL DEFAULT NULL,
+  CLAVE_REGIMEN_VFO     varchar(2)   NULL DEFAULT ''01'',
+  CALIFICACION_VFO      varchar(2)   NULL DEFAULT NULL,
+  OPERACION_EXENTA_VFO  varchar(2)   NULL DEFAULT NULL,
+  ESREPERCUTE_IVA_VFO   varchar(1)   NULL DEFAULT ''S'',
+  AMBITO_VFO            varchar(10)  NULL DEFAULT NULL,
+  ORDEN_VFO             int(11)      NULL DEFAULT NULL,
+  ESACTIVO_VFO          varchar(1)   NULL DEFAULT ''S'',
+  INSTANTE_ALTA         datetime     NULL DEFAULT NULL,
+  INSTANTE_MODIF        datetime     NULL DEFAULT NULL,
+  USUARIO_ALTA          varchar(50)  NULL DEFAULT NULL,
+  USUARIO_MODIF         varchar(50)  NULL DEFAULT NULL,
+  PRIMARY KEY (CODIGO_VFO)
+);
+-- 1b) Columna AMBITO_VFO si la tabla ya existia sin ella -----------------------
+SET @sExisteAmbito := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_verifactu_operaciones''
+     AND COLUMN_NAME  = ''AMBITO_VFO''
+);
+SET @sSql := IF(@sExisteAmbito = 0,
+  ''ALTER TABLE fza_verifactu_operaciones
+     ADD COLUMN AMBITO_VFO varchar(10) NULL DEFAULT NULL AFTER ESREPERCUTE_IVA_VFO'',
+  ''SELECT ''''AMBITO_VFO ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+-- 2) Semilla de tipos habituales (INSERT IGNORE: no pisa lo ya existente) ------
+INSERT IGNORE INTO fza_verifactu_operaciones
+  (CODIGO_VFO, DESCRIPCION_VFO, AYUDA_VFO, CLAVE_REGIMEN_VFO,
+   CALIFICACION_VFO, OPERACION_EXENTA_VFO, ESREPERCUTE_IVA_VFO, AMBITO_VFO,
+   ORDEN_VFO, ESACTIVO_VFO, INSTANTE_ALTA, USUARIO_ALTA)
+VALUES
+  (''INTERIOR'', ''Interior - regimen general'',
+   ''Venta nacional con IVA. Es el comportamiento por defecto.'',
+   ''01'', ''S1'', NULL, ''S'', ''NACIONAL'', 10, ''S'', NOW(), ''SEED''),
+  (''SERVICIO_INTRA'', ''Servicio intracomunitario (no sujeto)'',
+   ''Servicio a profesional UE: no sujeto en Espana por localizacion (art. 69), el cliente autoliquida el IVA.'',
+   ''01'', ''N2'', NULL, ''N'', ''UE'', 20, ''S'', NOW(), ''SEED''),
+  (''ENTREGA_INTRA'', ''Entrega intracomunitaria de bienes (exenta)'',
+   ''Entrega de bienes a empresa UE, exenta art. 25 LIVA.'',
+   ''01'', NULL, ''E5'', ''N'', ''UE'', 30, ''S'', NOW(), ''SEED''),
+  (''ISP'', ''Inversion del sujeto pasivo'',
+   ''El IVA lo autoliquida el destinatario (art. 84). No se repercute cuota.'',
+   ''01'', ''S2'', NULL, ''N'', ''CUALQUIERA'', 40, ''S'', NOW(), ''SEED''),
+  (''EXPORT'', ''Exportacion fuera de la UE (exenta)'',
+   ''Entrega de bienes exportados fuera de la UE, exenta art. 21 LIVA. Se asigna sola si el cliente no es de la UE.'',
+   ''01'', NULL, ''E2'', ''N'', ''EXTRA_UE'', 50, ''S'', NOW(), ''SEED''),
+  (''BIENES_USADOS'', ''Bienes usados (REBU)'',
+   ''Regimen especial de bienes usados: IVA sobre el margen. INACTIVO: pendiente de implementar el calculo de margen (ver verifactu_rebu.md).'',
+   ''03'', ''S1'', NULL, ''S'', ''CUALQUIERA'', 60, ''N'', NOW(), ''SEED'');
+-- 2b) Backfill del ambito en filas semilla anteriores sin ambito ---------------
+UPDATE fza_verifactu_operaciones SET AMBITO_VFO = ''NACIONAL''
+ WHERE CODIGO_VFO = ''INTERIOR'' AND AMBITO_VFO IS NULL;
+UPDATE fza_verifactu_operaciones SET AMBITO_VFO = ''UE''
+ WHERE CODIGO_VFO IN (''SERVICIO_INTRA'', ''ENTREGA_INTRA'') AND AMBITO_VFO IS NULL;
+UPDATE fza_verifactu_operaciones SET AMBITO_VFO = ''CUALQUIERA''
+ WHERE CODIGO_VFO IN (''ISP'', ''BIENES_USADOS'') AND AMBITO_VFO IS NULL;
+UPDATE fza_verifactu_operaciones SET AMBITO_VFO = ''EXTRA_UE''
+ WHERE CODIGO_VFO = ''EXPORT'' AND AMBITO_VFO IS NULL;
+-- REBU pendiente: se deja inactivo para que no aparezca en el selector. Si se
+-- usara tal cual emitiria el IVA sobre la base total, no sobre el margen.
+UPDATE fza_verifactu_operaciones SET ESACTIVO_VFO = ''N''
+ WHERE CODIGO_VFO = ''BIENES_USADOS'' AND USUARIO_ALTA = ''SEED'';
+-- 3) Columna en fza_facturas (FK logica al catalogo) --------------------------
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas''
+     AND COLUMN_NAME  = ''TIPO_OPER_VFACTU_FAC''
+);
+SET @sSql := IF(@sExisteCol = 0,
+  ''ALTER TABLE fza_facturas
+     ADD COLUMN TIPO_OPER_VFACTU_FAC varchar(20) NULL DEFAULT NULL
+       COMMENT ''''Calificacion Verifactu: CODIGO_VFO de fza_verifactu_operaciones (NULL=auto)''''
+     AFTER ESINTRACOMUNITARIO_CLIENTE_FAC'',
+  ''SELECT ''''TIPO_OPER_VFACTU_FAC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+-- 4) Recrear las vistas de facturas -------------------------------------------
+-- vi_facturas usa SELECT fza_facturas.*, que MariaDB expande a columnas fijas
+-- al crear la vista. Hay que recrearla para que TIPO_OPER_VFACTU_FAC quede
+-- expuesta al formulario (que enlaza el combo a ese campo). Idempotente.
+CREATE OR REPLACE VIEW vi_facturas AS
+  SELECT fza_facturas.*,
+         fza_formas_pago.DESCRIPCION_FORMA_PAGO_FP AS DESCRIPCION_FORMA_PAGO_FP
+    FROM fza_facturas
+    LEFT JOIN fza_formas_pago
+         ON fza_facturas.FORMA_PAGO_FAC = fza_formas_pago.CODIGO_FP_FP
+   ORDER BY fza_facturas.FECHA_FAC DESC;
+CREATE OR REPLACE VIEW vi_facturas_normales AS
+  SELECT * FROM vi_facturas WHERE TIPO_FAC = ''NORMAL'';
+CREATE OR REPLACE VIEW vi_facturas_simplificadas AS
+  SELECT * FROM vi_facturas WHERE TIPO_FAC = ''SIMPLIFICADA'';
+', '2026-06-14 07:27:06', '2026-06-14 07:27:06', 'Administrador', 'Administrador');
+-- 1 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -9999,7 +10132,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-14 06:49:01', '2026-06-14 06:49:01', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-14 07:26:49', '2026-06-14 07:26:49', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-09 09:48:50', '2026-06-09 09:48:50', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -20268,6 +20401,7 @@ CREATE TABLE `fza_verifactu_operaciones` (
   `CALIFICACION_VFO` varchar(2) NULL DEFAULT NULL,
   `OPERACION_EXENTA_VFO` varchar(2) NULL DEFAULT NULL,
   `ESREPERCUTE_IVA_VFO` varchar(1) NULL DEFAULT 'S',
+  `AMBITO_VFO` varchar(10) NULL DEFAULT NULL,
   `ORDEN_VFO` int(11) NULL DEFAULT NULL,
   `ESACTIVO_VFO` varchar(1) NULL DEFAULT 'S',
   `INSTANTE_ALTA` datetime NULL DEFAULT NULL,
@@ -20278,13 +20412,13 @@ CREATE TABLE `fza_verifactu_operaciones` (
 );
 
 -- Datos de fza_verifactu_operaciones
-INSERT INTO `fza_verifactu_operaciones` (`CODIGO_VFO`, `DESCRIPCION_VFO`, `AYUDA_VFO`, `CLAVE_REGIMEN_VFO`, `CALIFICACION_VFO`, `OPERACION_EXENTA_VFO`, `ESREPERCUTE_IVA_VFO`, `ORDEN_VFO`, `ESACTIVO_VFO`, `INSTANTE_ALTA`, `INSTANTE_MODIF`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('BIENES_USADOS', 'Bienes usados (REBU)', 'Regimen especial de bienes usados: IVA sobre el margen. Requiere calculo de margen aparte.', '03', 'S1', NULL, 'S', 60, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
-  ('ENTREGA_INTRA', 'Entrega intracomunitaria de bienes (exenta)', 'Entrega de bienes a empresa UE, exenta art. 25 LIVA.', '01', NULL, 'E5', 'N', 30, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
-  ('EXPORT', 'Exportacion fuera de la UE (exenta)', 'Entrega de bienes exportados fuera de la UE, exenta art. 21 LIVA. Se asigna sola si el cliente no es de la UE.', '01', NULL, 'E2', 'N', 50, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
-  ('INTERIOR', 'Interior - regimen general', 'Venta nacional con IVA. Es el comportamiento por defecto.', '01', 'S1', NULL, 'S', 10, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
-  ('ISP', 'Inversion del sujeto pasivo', 'El IVA lo autoliquida el destinatario (art. 84). No se repercute cuota.', '01', 'S2', NULL, 'N', 40, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
-  ('SERVICIO_INTRA', 'Servicio intracomunitario (no sujeto)', 'Servicio a profesional UE: no sujeto en Espana por localizacion (art. 69), el cliente autoliquida el IVA.', '01', 'N2', NULL, 'N', 20, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL);
+INSERT INTO `fza_verifactu_operaciones` (`CODIGO_VFO`, `DESCRIPCION_VFO`, `AYUDA_VFO`, `CLAVE_REGIMEN_VFO`, `CALIFICACION_VFO`, `OPERACION_EXENTA_VFO`, `ESREPERCUTE_IVA_VFO`, `AMBITO_VFO`, `ORDEN_VFO`, `ESACTIVO_VFO`, `INSTANTE_ALTA`, `INSTANTE_MODIF`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('BIENES_USADOS', 'Bienes usados (REBU)', 'Regimen especial de bienes usados: IVA sobre el margen. Requiere calculo de margen aparte.', '03', 'S1', NULL, 'S', 'CUALQUIERA', 60, 'N', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
+  ('ENTREGA_INTRA', 'Entrega intracomunitaria de bienes (exenta)', 'Entrega de bienes a empresa UE, exenta art. 25 LIVA.', '01', NULL, 'E5', 'N', 'UE', 30, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
+  ('EXPORT', 'Exportacion fuera de la UE (exenta)', 'Entrega de bienes exportados fuera de la UE, exenta art. 21 LIVA. Se asigna sola si el cliente no es de la UE.', '01', NULL, 'E2', 'N', 'EXTRA_UE', 50, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
+  ('INTERIOR', 'Interior - regimen general', 'Venta nacional con IVA. Es el comportamiento por defecto.', '01', 'S1', NULL, 'S', 'NACIONAL', 10, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
+  ('ISP', 'Inversion del sujeto pasivo', 'El IVA lo autoliquida el destinatario (art. 84). No se repercute cuota.', '01', 'S2', NULL, 'N', 'CUALQUIERA', 40, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL),
+  ('SERVICIO_INTRA', 'Servicio intracomunitario (no sujeto)', 'Servicio a profesional UE: no sujeto en Espana por localizacion (art. 69), el cliente autoliquida el IVA.', '01', 'N2', NULL, 'N', 'UE', 20, 'S', '2026-06-14 06:49:13', NULL, 'SEED', NULL);
 -- 6 registros exportados
 
 
@@ -27586,4 +27720,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 14/06/2026 6:51:53
+-- Backup completado: 14/06/2026 7:27:26
