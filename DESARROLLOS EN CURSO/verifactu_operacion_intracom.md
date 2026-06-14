@@ -72,15 +72,13 @@ La factura guarda el codigo elegido en la columna nueva
 
 ### Formulario — `src/Forms/inMtoFacturasBase.pas` + `.dfm`
 
-`TcxDBComboBox` editable (`cbbTipoOperVerifactu`) en la pestana "Otros",
-ligado a `TIPO_OPER_VFACTU_FAC`, con los codigos semilla y una etiqueta de
-ayuda. Es **abierto**: admite cualquier codigo del catalogo aunque no este
-en la lista del combo.
-
-> Mejora futura: convertirlo en un `TcxLookupComboBox` contra el catalogo
-> para que muestre las descripciones y los tipos nuevos aparezcan solos en
-> el desplegable. Requiere cablear un datasource del catalogo en el
-> datamodule; se hace en el IDE (no se pudo verificar aqui).
+`TcxDBLookupComboBox` (`cbbTipoOperVerifactu`) en la pestana "Otros", ligado a
+`TIPO_OPER_VFACTU_FAC`, que **muestra `DESCRIPCION_VFO` y guarda `CODIGO_VFO`**
+(mismo patron que Forma de Pago / Paises). La lista sale del catalogo via un
+`TUniQuery`/`TDataSource` nuevos en el datamodule (`unqryVerifactuOpe` /
+`dsVerifactuOpe`, abiertos en `AbrirDetalles`, `ListSource` asignado en
+`CrearTablaPrincipal`). Solo lista los tipos activos (`ESACTIVO_VFO = 'S'`),
+asi que los tipos nuevos del catalogo aparecen solos sin recompilar.
 
 ### Guardado de la columna — `src/DataModules/UniDataFacturas.dfm`
 
@@ -110,10 +108,10 @@ EXTRA_UE / CUALQUIERA).
 
 ## Limitaciones / avisos
 
-- **Bienes usados (REBU)**: el catalogo ya emite `ClaveRegimen=03`, pero el
-  IVA del REBU se calcula sobre el **margen**, no sobre la base total. El
-  motor de totales (`inLibFacturas.pas`) todavia no calcula margen: hasta
-  que se aborde, REBU solo es correcto si las bases ya reflejan el margen.
+- **Bienes usados (REBU)**: el IVA va sobre el **margen**, no sobre la base
+  total, y eso rompe el invariante base+IVA=total del motor. Queda **inactivo**
+  en el catalogo (`ESACTIVO_VFO = 'N'`, no aparece en el selector) hasta
+  implementarlo. Diseno y base legal en `verifactu_rebu.md`.
 - **Cliente no-UE = exportacion automatica**: una venta presencial a un
   turista no comunitario es realmente interior con IVA. Si se da el caso,
   marcar la factura como `INTERIOR` en el selector para anular el E2 auto.
