@@ -303,9 +303,6 @@ type
     FLogoBgImage:   TObject;
     FLogoBgNombre:  TObject;
     FLogoBgVersion: TObject;
-    // PNG original del logo de fondo, conservado para re-escalarlo con GDI+
-    // a cada FormResize sin volver a decodificarlo desde el recurso.
-    FFondoOriginal: TPngImage;
     procedure CerrarSplashInicio(aMinimoMs: Integer);
     procedure CrearLogoFondoBg;
     procedure CentrarLogoFondoBg;
@@ -328,7 +325,6 @@ uses inLibUser,
   inLibPermisos,
   inLibLog,
   inLibDir,
-  inLibImagen,
   inMtoSplash,
   inMtoAppParam,
   inMtoCajaMenu,
@@ -620,11 +616,8 @@ begin
   // si las hay (z-order natural, sin tener que togglear Visible).
   imgFondoLogo.Parent  := pcPrincipal;
   imgFondoLogo.Anchors := [akTop, akRight];
-  // Sin Stretch del TImage: CentrarLogoFondoBg pinta un bitmap ya escalado
-  // con GDI+ (bicubica) al tamano exacto, asi se evita el pixelado del
-  // StretchBlt nativo al agrandar el PNG.
-  imgFondoLogo.Proportional := False;
-  imgFondoLogo.Stretch      := False;
+  imgFondoLogo.Proportional := True;
+  imgFondoLogo.Stretch      := True;
   imgFondoLogo.Center       := True;
   FLogoBgImage := imgFondoLogo;
   // Labels nombre+version tambien dentro de pcPrincipal para que
@@ -655,7 +648,6 @@ end;
 procedure TfrmMtoPrincipal.CentrarLogoFondoBg;
 var
   cw, ch, w, h, cx, cy: Integer;
-  oEscalado: TBitmap;
 begin
   if imgFondoLogo = nil then
     Exit;
@@ -674,26 +666,6 @@ begin
   if cy < 20 then cy := 20;
   imgFondoLogo.Anchors := [];
   imgFondoLogo.SetBounds(cx, cy, w, h);
-  // Re-escalado suavizado (GDI+) al tamano actual: pintamos un bitmap ya a
-  // w x h y dejamos el TImage en Stretch:=False, evitando el pixelado del
-  // StretchBlt nativo al estirar el PNG. Si GDI+ no escala, fallback al PNG
-  // estirado por el TImage (visible aunque menos nitido).
-  if (FFondoOriginal <> nil) and (not FFondoOriginal.Empty) then
-  begin
-    oEscalado := inLibImagen.EscalarSuavizado(FFondoOriginal, w, h);
-    if oEscalado <> nil then
-    try
-      imgFondoLogo.Stretch := False;
-      imgFondoLogo.Picture.Assign(oEscalado);
-    finally
-      oEscalado.Free;
-    end
-    else
-    begin
-      imgFondoLogo.Stretch := True;
-      imgFondoLogo.Picture.Assign(FFondoOriginal);
-    end;
-  end;
   if FLogoBgNombre <> nil then
     TcxLabel(FLogoBgNombre).SetBounds(0, cy + h + 8, cw, 26);
   if FLogoBgVersion <> nil then
@@ -742,11 +714,8 @@ var
   sBase, sRuta: string;
   i: Integer;
   oRes: TResourceStream;
+  oPng: TPngImage;
 begin
-  // Cargamos el PNG en FFondoOriginal; CentrarLogoFondoBg lo re-escala con
-  // GDI+ al tamano actual a cada resize.
-  if FFondoOriginal = nil then
-    FFondoOriginal := TPngImage.Create;
   // 1) Recurso RCDATA 'FONDO' embebido en el .exe via {$R fondo.res} en
   //    fzam.dpr. Es el camino preferente porque no depende de tener el
   //    fichero al lado del .exe. Si el recurso no esta presente (porque
@@ -754,10 +723,16 @@ begin
   try
     oRes := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
     try
-      FFondoOriginal.LoadFromStream(oRes);
-      inLibLog.Log.LogInfo('CargarFondoLogo: OK desde recurso FONDO ' +
-                           '(' + IntToStr(oRes.Size) + ' bytes)');
-      Exit;
+      oPng := TPngImage.Create;
+      try
+        oPng.LoadFromStream(oRes);
+        imgFondoLogo.Picture.Assign(oPng);
+        inLibLog.Log.LogInfo('CargarFondoLogo: OK desde recurso FONDO ' +
+                             '(' + IntToStr(oRes.Size) + ' bytes)');
+        Exit;
+      finally
+        oPng.Free;
+      end;
     finally
       oRes.Free;
     end;
@@ -776,7 +751,7 @@ begin
     if FileExists(sRuta) then
     begin
       try
-        FFondoOriginal.LoadFromFile(sRuta);
+        imgFondoLogo.Picture.LoadFromFile(sRuta);
         inLibLog.Log.LogInfo('CargarFondoLogo: OK desde "' + sRuta + '"');
         Exit;
       except
@@ -798,7 +773,7 @@ begin
   // activa los tapa por z-order automaticamente cuando hay pestanas
   // abiertas — pero togglear Visible es mas barato que dejarlos pintando
   // detras, asi que mantenemos la condicion PageCount=0 explicita.
-  bTieneImg  := (FFondoOriginal <> nil) and (not FFondoOriginal.Empty);
+  bTieneImg  := imgFondoLogo.Picture.Graphic <> nil;
   bDebeVerse := (pcPrincipal.PageCount = 0) and bTieneImg;
   if imgFondoLogo.Visible <> bDebeVerse then
     imgFondoLogo.Visible := bDebeVerse;
@@ -1269,7 +1244,6 @@ begin
                                                                      E.Message);
     end;
     FreeAndNil(oFzaWinf);
-    FreeAndNil(FFondoOriginal);
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
     FreeAndNil(FDmConn);
