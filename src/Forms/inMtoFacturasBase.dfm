@@ -1947,20 +1947,21 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                 TabOrder = 3
                 Transparent = True
               end
-              object cbbTipoOperVerifactu: TcxDBComboBox
+              object cbbTipoOperVerifactu: TcxDBLookupComboBox
                 Left = 200
                 Top = 247
                 DataBinding.DataField = 'TIPO_OPER_VFACTU_FAC'
                 DataBinding.DataSource = dsTablaG
-                Properties.Items.Strings = (
-                  'INTERIOR'
-                  'SERVICIO_INTRA'
-                  'ENTREGA_INTRA'
-                  'ISP'
-                  'EXPORT'
-                  'BIENES_USADOS')
+                Properties.KeyFieldNames = 'CODIGO_VFO'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Operaci'#243'n'
+                    FieldName = 'DESCRIPCION_VFO'
+                  end>
+                Properties.ListOptions.CaseInsensitive = True
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 4
-                Width = 240
+                Width = 300
               end
               object lblTipoOperVerifactuAyuda: TcxLabel
                 Left = 32

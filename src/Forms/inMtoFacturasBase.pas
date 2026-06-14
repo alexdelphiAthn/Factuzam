@@ -85,7 +85,7 @@ type
     cxgrdbclmnGrdDBTabPrinFORMA_PAGO_FACTURA: TcxGridDBColumn;
     mmodbComentarios: TcxDBMemo;
     lblTipoOperVerifactu: TcxLabel;
-    cbbTipoOperVerifactu: TcxDBComboBox;
+    cbbTipoOperVerifactu: TcxDBLookupComboBox;
     lblTipoOperVerifactuAyuda: TcxLabel;
     tsRecibos: TcxTabSheet;
     pnlTopFicha: TPanel;
@@ -1321,6 +1321,7 @@ begin
   tvMovimientosFac.DataController.DataSource := dmmFacturas.dsMovimientosFac;
   cbbPaisesEmp.Properties.ListSource := dmmFacturas.dsPaisesEmp;
   cbbPaisesCli.Properties.ListSource := dmmFacturas.dsPaisesCli;
+  cbbTipoOperVerifactu.Properties.ListSource := dmmFacturas.dsVerifactuOpe;
   //tvIVA.DataController.DataSource := dsTablaG;
   (ctbTIPOIVA_ARTICULO_FACTURA_LINEA.Properties as
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
