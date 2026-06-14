@@ -50,7 +50,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibDir, inLibLog;
+  inLibGlobalVar, inLibDir, inLibLog, inLibImagen;
 
 {$R *.dfm}
 
@@ -87,69 +87,80 @@ var
   bCargado: Boolean;
   oRes: TResourceStream;
   oPng: TPngImage;
+  oEscalado: TBitmap;
 begin
   // El email del .dfm se sobreescribe en runtime para no quedar atado al
   // valor cableado (que ademas en versiones antiguas era una direccion
   // de batch antigua).
   hlEmail.Text := CEmail;
-  // Sustituimos el GIF heredado del .dfm por el logo (fondo.png) cargado
-  // en runtime. Primero intentamos el recurso RCDATA 'FONDO' embebido en
-  // el .exe (via {$R fondo.res} en fzam.dpr); si no, caemos a fichero
-  // suelto con las mismas rutas que TfrmMtoPrincipal.CargarFondoLogo. Si
-  // no se encuentra de ningun modo, dejamos el GIF heredado para no
-  // quedarnos con un area en blanco.
+  // Cargamos fondo.png (recurso RCDATA 'FONDO' embebido via {$R fondo.res}
+  // en fzam.dpr, o fichero suelto con las mismas rutas que
+  // TfrmMtoPrincipal.CargarFondoLogo) en un PNG original y lo escalamos al
+  // area de imagen con GDI+ (bicubica, alfa preservado) en vez de dejar que
+  // el TImage lo estire con StretchBlt, que es lo que lo dejaba pixelado.
   bCargado := False;
   FimgLogo := TImage.Create(Self);
   FimgLogo.Parent := Panel1;
   FimgLogo.SetBounds(Panel2.Left+10, Panel2.Top,
                      Panel2.Width, Panel2.Height);
-  FimgLogo.Proportional := True;
-  FimgLogo.Stretch      := True;
+  FimgLogo.Proportional := False;
+  FimgLogo.Stretch      := False;
   FimgLogo.Center       := True;
+  oPng := TPngImage.Create;
   try
-    oRes := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
     try
-      oPng := TPngImage.Create;
+      oRes := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
       try
         oPng.LoadFromStream(oRes);
-        FimgLogo.Picture.Assign(oPng);
         bCargado := True;
       finally
-        oPng.Free;
+        oRes.Free;
       end;
-    finally
-      oRes.Free;
+    except
+      // Recurso no presente (build sin fondo.res); seguimos a disco.
     end;
-  except
-    // Recurso no presente (build sin fondo.res); seguimos a disco.
-  end;
-  if not bCargado then
-  begin
-    sBase := inLibDir.DirApp;
-    for i := 0 to High(CRutas) do
+    if not bCargado then
     begin
-      sRuta := sBase + CRutas[i];
-      if FileExists(sRuta) then
-      try
-        FimgLogo.Picture.LoadFromFile(sRuta);
-        bCargado := True;
-        Break;
-      except
-        on E: Exception do
-          inLibLog.Log.LogWarning('Splash: no se pudo cargar ' + sRuta +
-                                  ': ' + E.Message);
+      sBase := inLibDir.DirApp;
+      for i := 0 to High(CRutas) do
+      begin
+        sRuta := sBase + CRutas[i];
+        if FileExists(sRuta) then
+        try
+          oPng.LoadFromFile(sRuta);
+          bCargado := True;
+          Break;
+        except
+          on E: Exception do
+            inLibLog.Log.LogWarning('Splash: no se pudo cargar ' + sRuta +
+                                    ': ' + E.Message);
+        end;
       end;
     end;
+    if bCargado then
+    begin
+      // Escalado suavizado al area de imagen del splash, alfa preservado.
+      oEscalado := inLibImagen.EscalarSuavizado(oPng, Panel2.Width,
+                                                Panel2.Height);
+      if oEscalado <> nil then
+      try
+        FimgLogo.Picture.Assign(oEscalado);
+      finally
+        oEscalado.Free;
+      end
+      else
+      begin
+        // Fallback si GDI+ no pudo escalar: PNG tal cual estirado por el
+        // TImage (menos nitido pero visible).
+        FimgLogo.Proportional := True;
+        FimgLogo.Stretch      := True;
+        FimgLogo.Picture.Assign(oPng);
+      end;
+    end;
+  finally
+    oPng.Free;
   end;
-//  if bCargado then
-//    JvGIFAnimator1.Visible := False
-//  else
-//  begin
-//    FreeAndNil(FimgLogo);
-//    inLibLog.Log.LogWarning(
-//      'Splash: no se encontro fondo (recurso ni fichero); GIF heredado.');
-//  end;
-  // Nombre del autor superpuesto al GIF (banda inferior del area de
+  // Nombre del autor superpuesto a la imagen (banda inferior del area de
   // imagen, justo encima del panel de creditos).
   FlblNombre := TcxLabel.Create(Self);
   FlblNombre.Parent  := Panel1;
