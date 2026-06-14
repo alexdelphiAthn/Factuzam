@@ -1940,6 +1940,44 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                 Height = 149
                 Width = 733
               end
+              object lblTipoOperVerifactu: TcxLabel
+                Left = 32
+                Top = 250
+                Caption = 'Operaci'#243'n (Verifactu)'
+                TabOrder = 3
+                Transparent = True
+              end
+              object cbbTipoOperVerifactu: TcxDBComboBox
+                Left = 200
+                Top = 247
+                DataBinding.DataField = 'TIPO_OPER_VFACTU_FAC'
+                DataBinding.DataSource = dsTablaG
+                Properties.Items.Strings = (
+                  'INTERIOR'
+                  'SERVICIO_INTRA'
+                  'ENTREGA_INTRA'
+                  'ISP'
+                  'EXPORT'
+                  'BIENES_USADOS')
+                TabOrder = 4
+                Width = 240
+              end
+              object lblTipoOperVerifactuAyuda: TcxLabel
+                Left = 32
+                Top = 276
+                AutoSize = False
+                Caption =
+                  'Calificaci'#243'n de la operaci'#243'n para Verifactu. D'#233'jelo vac'#237'o para v' +
+                  'entas interiores normales (la exportaci'#243'n se asigna sola si el c' +
+                  'liente no es de la UE). Para clientes de la UE elija servicio, en' +
+                  'trega de bienes o ISP. Los tipos se gestionan en la tabla fza_ver' +
+                  'ifactu_operaciones.'
+                Properties.WordWrap = True
+                TabOrder = 5
+                Transparent = True
+                Height = 36
+                Width = 733
+              end
               object pnlUserInstantBottom: TPanel
                 Left = 0
                 Top = 316
