@@ -736,7 +736,10 @@ begin
     SpecificOptions.Values['MySQL.Interactive'] := 'True';
     SpecificOptions.Values['ConnectionTimeout'] := '5';
     Options.LocalFailover := True;
-    Options.DisconnectedMode := False;
+    // Modo desconectado en la conexión principal, igual que las clonadas:
+    // libera la conexión física entre operaciones y la reabre al vuelo, así
+    // una conexión muerta del pool no propaga errores (antes iba en False).
+    Options.DisconnectedMode := True;
     // SpecificOptions.Values['MySQL.Compress'] := 'True';
   end;
 end;
