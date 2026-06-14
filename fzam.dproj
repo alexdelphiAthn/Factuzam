@@ -497,6 +497,9 @@
         <DCCReference Include="src\Forms\inMtoAlmacenes.pas">
             <Form>frmMtoAlmacenes</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoComparativaMovimientos.pas">
+            <Form>frmMtoComparativaMovimientos</Form>
+        </DCCReference>
         <DCCReference Include="src\DataModules\UniDataAlmacenes.pas">
             <Form>dmAlmacenes</Form>
             <DesignClass>TDataModule</DesignClass>

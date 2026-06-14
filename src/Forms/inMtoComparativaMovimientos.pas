@@ -1,0 +1,346 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoComparativaMovimientos                                   }
+{    Tipo:       Formulario (Cuadro de mando / BI)                             }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       14/06/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Comparativa de dos periodos interanuales sobre un mismo rango de fechas.  }
+{    El usuario elige un rango (p.ej. 01/01 a 31/01) y la pantalla dibuja dos  }
+{    series solapadas: el periodo elegido de este año y el mismo rango del año }
+{    anterior. La magnitud puede ser Ventas facturadas (€) — sobre            }
+{    fza_facturas — o métricas de fza_movimientos_almacen (coste, unidades o   }
+{    número de movimientos). El eje X se agrupa por día, semana o mes.         }
+{    Sólo lectura: usa la conexión global oConn con consultas bajo demanda.    }
+{******************************************************************************}
+unit inMtoComparativaMovimientos;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, System.DateUtils, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, Vcl.ExtCtrls,
+  Data.DB, MemDS, DBAccess, Uni,
+  cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxStyles,
+  cxClasses, cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxMaskEdit,
+  cxDropDownEdit, cxCalendar, cxDateUtils, dxCore,
+  JvComponentBase, JvEnterTab, cxLocalization,
+  VCLTee.TeEngine, VCLTee.Series, VCLTee.TeeProcs, VCLTee.Chart,
+  inMtoFrmBase, inLibGlobalVar;
+
+type
+  TfrmMtoComparativaMovimientos = class(TfrmBase)
+    pnlTop: TPanel;
+    lblDesde: TcxLabel;
+    dteFechaDesde: TcxDateEdit;
+    lblHasta: TcxLabel;
+    dteFechaHasta: TcxDateEdit;
+    lblMagnitud: TcxLabel;
+    cboMagnitud: TcxComboBox;
+    lblAgrupacion: TcxLabel;
+    cboAgrupacion: TcxComboBox;
+    btnComparar: TcxButton;
+    pnlResumen: TPanel;
+    lblTotActualTit: TcxLabel;
+    lblTotActual: TcxLabel;
+    lblTotAnteriorTit: TcxLabel;
+    lblTotAnterior: TcxLabel;
+    lblVariacionTit: TcxLabel;
+    lblVariacion: TcxLabel;
+    pnlChart: TPanel;
+    procedure FormCreate(Sender: TObject);
+    procedure btnCompararClick(Sender: TObject);
+    procedure dteFechaDesdePropertiesChange(Sender: TObject);
+  private
+    FChart: TChart;
+    FSerieActual: TLineSeries;
+    FSerieAnterior: TLineSeries;
+    procedure CrearGrafico;
+    procedure Comparar;
+    function NumeroBuckets(AD1, AD2: TDate): Integer;
+    function SQLConsulta: string;
+    function CargarDatos(AD1, AD2: TDate; ACount: Integer;
+                         out ATotal: Double): TArray<Double>;
+    function EtiquetaBucket(AD1: TDate; AIndice: Integer): string;
+    function FormataValor(AValor: Double): string;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+procedure ForceReferenceToClass(C: TClass); begin end;
+
+// =============================================================================
+//   Ciclo de vida
+// =============================================================================
+
+procedure TfrmMtoComparativaMovimientos.FormCreate(Sender: TObject);
+begin
+  inherited;
+  // Magnitudes: orden por utilidad de negocio (ventas primero)
+  cboMagnitud.Properties.DropDownListStyle := lsFixedList;
+  cboMagnitud.Properties.Items.Clear;
+  cboMagnitud.Properties.Items.Add('Ventas facturadas (€)');
+  cboMagnitud.Properties.Items.Add('Coste movido (€)');
+  cboMagnitud.Properties.Items.Add('Unidades movidas');
+  cboMagnitud.Properties.Items.Add('Nº de movimientos');
+  cboMagnitud.ItemIndex := 0;
+  // Agrupación del eje X
+  cboAgrupacion.Properties.DropDownListStyle := lsFixedList;
+  cboAgrupacion.Properties.Items.Clear;
+  cboAgrupacion.Properties.Items.Add('Día');
+  cboAgrupacion.Properties.Items.Add('Semana');
+  cboAgrupacion.Properties.Items.Add('Mes');
+  cboAgrupacion.ItemIndex := 0;
+  // Por defecto: mes en curso del año actual
+  dteFechaDesde.Date := StartOfTheMonth(Date);
+  dteFechaHasta.Date := Date;
+  CrearGrafico;
+end;
+
+procedure TfrmMtoComparativaMovimientos.CrearGrafico;
+begin
+  // El TChart se crea en código para evitar serializar series en el .dfm
+  FChart := TChart.Create(Self);
+  FChart.Parent := pnlChart;
+  FChart.Align := alClient;
+  FChart.BevelOuter := bvNone;
+  FChart.View3D := False;
+  FChart.Title.Text.Text := 'Comparativa de periodos';
+  FChart.Legend.Visible := True;
+  FSerieActual := TLineSeries.Create(FChart);
+  FSerieActual.SeriesColor := clBlue;
+  FSerieActual.LinePen.Width := 2;
+  FSerieActual.Pointer.Visible := True;
+  FChart.AddSeries(FSerieActual);
+  FSerieAnterior := TLineSeries.Create(FChart);
+  FSerieAnterior.SeriesColor := clRed;
+  FSerieAnterior.LinePen.Width := 2;
+  FSerieAnterior.Pointer.Visible := True;
+  FChart.AddSeries(FSerieAnterior);
+end;
+
+// =============================================================================
+//   Eventos
+// =============================================================================
+
+procedure TfrmMtoComparativaMovimientos.btnCompararClick(Sender: TObject);
+begin
+  inherited;
+  Comparar;
+end;
+
+procedure TfrmMtoComparativaMovimientos.dteFechaDesdePropertiesChange(
+  Sender: TObject);
+begin
+  inherited;
+  // "Hasta" nunca puede quedar antes que "Desde"
+  if dteFechaHasta.Date < dteFechaDesde.Date then
+    dteFechaHasta.Date := dteFechaDesde.Date;
+end;
+
+// =============================================================================
+//   Lógica de comparación
+// =============================================================================
+
+procedure TfrmMtoComparativaMovimientos.Comparar;
+var
+  dD1Act, dD2Act, dD1Ant, dD2Ant: TDate;
+  iN, i: Integer;
+  arrAct, arrAnt: TArray<Double>;
+  dTotAct, dTotAnt, dVar: Double;
+begin
+  if (oConn = nil) or (not oConn.Connected) then
+    Application.MessageBox('No hay conexión con la base de datos.',
+                           'Comparativa', MB_OK or MB_ICONWARNING)
+  else
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      dD1Act := DateOf(dteFechaDesde.Date);
+      dD2Act := DateOf(dteFechaHasta.Date);
+      if dD2Act < dD1Act then
+        dD2Act := dD1Act;
+      // Mismo rango exacto del año anterior
+      dD1Ant := IncYear(dD1Act, -1);
+      dD2Ant := IncYear(dD2Act, -1);
+      iN := NumeroBuckets(dD1Act, dD2Act);
+      arrAct := CargarDatos(dD1Act, dD2Act, iN, dTotAct);
+      arrAnt := CargarDatos(dD1Ant, dD2Ant, iN, dTotAnt);
+      FSerieActual.Clear;
+      FSerieAnterior.Clear;
+      FSerieActual.Title := 'Periodo ' + IntToStr(YearOf(dD1Act));
+      FSerieAnterior.Title := 'Periodo ' + IntToStr(YearOf(dD1Ant));
+      // Las etiquetas del eje se toman del periodo actual; la serie anterior
+      // se solapa por índice de bucket (mismo desplazamiento desde su inicio)
+      for i := 0 to iN - 1 do
+      begin
+        FSerieActual.Add(arrAct[i], EtiquetaBucket(dD1Act, i));
+        FSerieAnterior.Add(arrAnt[i], '');
+      end;
+      FChart.Title.Text.Text := cboMagnitud.Text;
+      lblTotActual.Caption := FormataValor(dTotAct);
+      lblTotAnterior.Caption := FormataValor(dTotAnt);
+      // Variación interanual del total del rango
+      if dTotAnt <> 0 then
+      begin
+        dVar := (dTotAct - dTotAnt) / dTotAnt * 100;
+        lblVariacion.Caption := FormatFloat('+0.0;-0.0', dVar) + ' %';
+        if dVar >= 0 then
+          lblVariacion.Style.TextColor := clGreen
+        else
+          lblVariacion.Style.TextColor := clRed;
+      end
+      else
+      begin
+        lblVariacion.Caption := 'n/d';
+        lblVariacion.Style.TextColor := clWindowText;
+      end;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  end;
+end;
+
+// Número de buckets del eje X según la agrupación, derivado del rango actual.
+// El mismo valor se reutiliza para el periodo anterior, garantizando series
+// alineadas punto a punto.
+function TfrmMtoComparativaMovimientos.NumeroBuckets(AD1, AD2: TDate): Integer;
+var
+  iDias, iMeses: Integer;
+begin
+  iDias := Trunc(AD2) - Trunc(AD1);
+  if iDias < 0 then
+    iDias := 0;
+  case cboAgrupacion.ItemIndex of
+    1: Result := (iDias div 7) + 1;
+    2:
+      begin
+        iMeses := (YearOf(AD2) * 12 + MonthOf(AD2)) -
+                  (YearOf(AD1) * 12 + MonthOf(AD1));
+        Result := iMeses + 1;
+      end;
+  else
+    Result := iDias + 1;
+  end;
+end;
+
+// Construye el SELECT agrupado según magnitud y agrupación. Devuelve dos
+// columnas: BUCKET (desplazamiento entero desde :pD1) y VALOR (agregado).
+function TfrmMtoComparativaMovimientos.SQLConsulta: string;
+var
+  sCampoFecha, sTabla, sAgg, sBucket: string;
+begin
+  case cboMagnitud.ItemIndex of
+    0:
+      begin
+        sTabla := 'fza_facturas';
+        sCampoFecha := 'FECHA_FAC';
+        sAgg := 'COALESCE(SUM(TOTAL_LIQUIDO_FAC), 0)';
+      end;
+    1:
+      begin
+        sTabla := 'fza_movimientos_almacen';
+        sCampoFecha := 'FECHA_MOV';
+        sAgg := 'COALESCE(SUM(TOTAL_COSTE_MOV), 0)';
+      end;
+    2:
+      begin
+        sTabla := 'fza_movimientos_almacen';
+        sCampoFecha := 'FECHA_MOV';
+        sAgg := 'COALESCE(SUM(CANTIDAD_MOV), 0)';
+      end;
+  else
+    begin
+      sTabla := 'fza_movimientos_almacen';
+      sCampoFecha := 'FECHA_MOV';
+      sAgg := 'COUNT(*)';
+    end;
+  end;
+  case cboAgrupacion.ItemIndex of
+    1: sBucket := 'FLOOR(DATEDIFF(' + sCampoFecha + ', :pD1) / 7)';
+    2: sBucket := 'PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM ' + sCampoFecha +
+                  '), EXTRACT(YEAR_MONTH FROM :pD1))';
+  else
+    sBucket := 'DATEDIFF(' + sCampoFecha + ', :pD1)';
+  end;
+  Result :=
+    'SELECT ' + sBucket + ' AS BUCKET, ' + sAgg + ' AS VALOR' +
+    '  FROM ' + sTabla +
+    ' WHERE ' + sCampoFecha + ' >= :pD1' +
+    '   AND ' + sCampoFecha + ' < DATE_ADD(:pD2, INTERVAL 1 DAY)';
+  // Sobre movimientos: sólo los activos
+  if cboMagnitud.ItemIndex >= 1 then
+    Result := Result + '   AND ESACTIVO_MOV = ''S''';
+  Result := Result + ' GROUP BY BUCKET ORDER BY BUCKET';
+end;
+
+// Ejecuta la consulta para un periodo y vuelca el agregado en un array
+// indexado por bucket (0..ACount-1). Rellena ATotal con la suma del rango.
+function TfrmMtoComparativaMovimientos.CargarDatos(AD1, AD2: TDate;
+  ACount: Integer; out ATotal: Double): TArray<Double>;
+var
+  qry: TUniQuery;
+  iIdx: Integer;
+  dVal: Double;
+begin
+  SetLength(Result, ACount);
+  for iIdx := 0 to ACount - 1 do
+    Result[iIdx] := 0;
+  ATotal := 0;
+  if (oConn <> nil) and oConn.Connected then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text := SQLConsulta;
+      qry.ParamByName('pD1').AsDate := AD1;
+      qry.ParamByName('pD2').AsDate := AD2;
+      qry.Open;
+      while not qry.Eof do
+      begin
+        iIdx := qry.FieldByName('BUCKET').AsInteger;
+        dVal := qry.FieldByName('VALOR').AsFloat;
+        if (iIdx >= 0) and (iIdx < ACount) then
+          Result[iIdx] := dVal;
+        ATotal := ATotal + dVal;
+        qry.Next;
+      end;
+      qry.Close;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
+function TfrmMtoComparativaMovimientos.EtiquetaBucket(AD1: TDate;
+  AIndice: Integer): string;
+begin
+  case cboAgrupacion.ItemIndex of
+    1: Result := 'Sem ' + IntToStr(AIndice + 1);
+    2: Result := FormatDateTime('mmm/yy', IncMonth(AD1, AIndice));
+  else
+    Result := FormatDateTime('dd/mm', AD1 + AIndice);
+  end;
+end;
+
+// Formato del total según magnitud: euros, unidades o conteo
+function TfrmMtoComparativaMovimientos.FormataValor(AValor: Double): string;
+begin
+  case cboMagnitud.ItemIndex of
+    0, 1: Result := FormatFloat('#,##0.00 €', AValor);
+    2: Result := FormatFloat('#,##0.###', AValor);
+  else
+    Result := FormatFloat('#,##0', AValor);
+  end;
+end;
+
+initialization
+  ForceReferenceToClass(TfrmMtoComparativaMovimientos);
+end.

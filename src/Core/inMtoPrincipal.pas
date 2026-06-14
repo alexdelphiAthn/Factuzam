@@ -126,6 +126,7 @@ type
     procedure mnuVerifactuDeclaracionClick(Sender: TObject);
     procedure mnuVerifactuColaClick(Sender: TObject);
     procedure mnuVerifactuLogClick(Sender: TObject);
+    procedure mnuComparativaMovimientosClick(Sender: TObject);
     procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuBalanceAlmacenHorizontalClick(Sender: TObject);
     procedure mnuBalanceAlmacenSinTallasClick(Sender: TObject);
@@ -1985,6 +1986,12 @@ procedure TfrmMtoPrincipal.mnuVerifactuLogClick(Sender: TObject);
 begin
   if (mnuVerifactuLog.Visible) then
     ShowMto(Self, 'VerifactuLog');
+end;
+
+procedure TfrmMtoPrincipal.mnuComparativaMovimientosClick(Sender: TObject);
+begin
+  if (mnuComparativaMovimientos.Visible) then
+    ShowMto(Self, 'ComparativaMovimientos');
 end;
 
 procedure TfrmMtoPrincipal.mnuCajaArqueosHistClick(Sender: TObject);
