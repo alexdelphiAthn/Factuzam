@@ -135,6 +135,7 @@ uses
   inLibDefaultValues in 'src\Lib\inLibDefaultValues.pas',
   inLibGenBusq in 'src\Lib\inLibGenBusq.pas',
   inMtoAlmacenes in 'src\Forms\inMtoAlmacenes.pas' {frmMtoAlmacenes},
+  inMtoComparativaMovimientos in 'src\Forms\inMtoComparativaMovimientos.pas' {frmMtoComparativaMovimientos},
   UniDataAlmacenes in 'src\DataModules\UniDataAlmacenes.pas' {dmAlmacenes: TDataModule},
   inMtoModalCajDef in 'src\Modals\inMtoModalCajDef.pas' {frmMtoModalCajDef},
   inLibFormManager in 'src\Lib\inLibFormManager.pas',
