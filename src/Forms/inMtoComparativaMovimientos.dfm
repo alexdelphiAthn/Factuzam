@@ -3,12 +3,13 @@ inherited frmMtoComparativaMovimientos: TfrmMtoComparativaMovimientos
   ClientHeight = 600
   ClientWidth = 900
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 17
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
     Width = 900
-    Height = 96
+    Height = 140
     Align = alTop
     BevelOuter = bvNone
     ParentBackground = False
@@ -81,10 +82,52 @@ inherited frmMtoComparativaMovimientos: TfrmMtoComparativaMovimientos
       TabOrder = 4
       OnClick = btnCompararClick
     end
+    object lblAlmacen: TcxLabel
+      Left = 16
+      Top = 78
+      Caption = 'Almac'#233'n'
+      Style.TextColor = clNavy
+      Transparent = True
+    end
+    object cboAlmacen: TcxComboBox
+      Left = 16
+      Top = 100
+      Properties.DropDownListStyle = lsFixedList
+      TabOrder = 5
+      Width = 200
+    end
+    object lblFamilia: TcxLabel
+      Left = 228
+      Top = 78
+      Caption = 'Familia'
+      Style.TextColor = clNavy
+      Transparent = True
+    end
+    object cboFamilia: TcxComboBox
+      Left = 228
+      Top = 100
+      Properties.DropDownListStyle = lsFixedList
+      TabOrder = 6
+      Width = 240
+    end
+    object lblTemporada: TcxLabel
+      Left = 480
+      Top = 78
+      Caption = 'Temporada'
+      Style.TextColor = clNavy
+      Transparent = True
+    end
+    object cboTemporada: TcxComboBox
+      Left = 480
+      Top = 100
+      Properties.DropDownListStyle = lsFixedList
+      TabOrder = 7
+      Width = 160
+    end
   end
   object pnlResumen: TPanel [1]
     Left = 0
-    Top = 96
+    Top = 140
     Width = 900
     Height = 56
     Align = alTop
@@ -142,9 +185,9 @@ inherited frmMtoComparativaMovimientos: TfrmMtoComparativaMovimientos
   end
   object pnlChart: TPanel [2]
     Left = 0
-    Top = 152
+    Top = 196
     Width = 900
-    Height = 448
+    Height = 404
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False

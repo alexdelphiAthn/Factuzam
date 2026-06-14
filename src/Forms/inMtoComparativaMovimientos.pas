@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inMtoComparativaMovimientos                                   }
 {    Tipo:       Formulario (Cuadro de mando / BI)                             }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {   Fecha:       14/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -13,8 +13,9 @@
 {    El usuario elige un rango (p.ej. 01/01 a 31/01) y la pantalla dibuja dos  }
 {    series solapadas: el periodo elegido de este año y el mismo rango del año }
 {    anterior. La magnitud puede ser Ventas facturadas (€) — sobre            }
-{    fza_facturas — o métricas de fza_movimientos_almacen (coste, unidades o   }
-{    número de movimientos). El eje X se agrupa por día, semana o mes.         }
+{    fza_facturas_lineas — o métricas de fza_movimientos_almacen (coste,       }
+{    unidades o número de movimientos). El eje X se agrupa por día, semana o   }
+{    mes y se puede filtrar por almacén, familia y temporada.                  }
 {    Sólo lectura: usa la conexión global oConn con consultas bajo demanda.    }
 {******************************************************************************}
 unit inMtoComparativaMovimientos;
@@ -45,6 +46,12 @@ type
     lblAgrupacion: TcxLabel;
     cboAgrupacion: TcxComboBox;
     btnComparar: TcxButton;
+    lblAlmacen: TcxLabel;
+    cboAlmacen: TcxComboBox;
+    lblFamilia: TcxLabel;
+    cboFamilia: TcxComboBox;
+    lblTemporada: TcxLabel;
+    cboTemporada: TcxComboBox;
     pnlResumen: TPanel;
     lblTotActualTit: TcxLabel;
     lblTotActual: TcxLabel;
@@ -54,13 +61,21 @@ type
     lblVariacion: TcxLabel;
     pnlChart: TPanel;
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure btnCompararClick(Sender: TObject);
     procedure dteFechaDesdePropertiesChange(Sender: TObject);
   private
     FChart: TChart;
     FSerieActual: TLineSeries;
     FSerieAnterior: TLineSeries;
+    FCodAlmacenes: TStringList;
+    FCodFamilias: TStringList;
+    FCodTemporadas: TStringList;
     procedure CrearGrafico;
+    procedure CargarCombos;
+    procedure CargarCombo(ACombo: TcxComboBox; ALista: TStringList;
+                          const ASQL: string);
+    function CodigoFiltro(ACombo: TcxComboBox; ALista: TStringList): string;
     procedure Comparar;
     function NumeroBuckets(AD1, AD2: TDate): Integer;
     function SQLConsulta: string;
@@ -83,6 +98,9 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoComparativaMovimientos.FormCreate(Sender: TObject);
 begin
   inherited;
+  FCodAlmacenes := TStringList.Create;
+  FCodFamilias := TStringList.Create;
+  FCodTemporadas := TStringList.Create;
   // Magnitudes: orden por utilidad de negocio (ventas primero)
   cboMagnitud.Properties.DropDownListStyle := lsFixedList;
   cboMagnitud.Properties.Items.Clear;
@@ -98,10 +116,23 @@ begin
   cboAgrupacion.Properties.Items.Add('Semana');
   cboAgrupacion.Properties.Items.Add('Mes');
   cboAgrupacion.ItemIndex := 0;
+  // Filtros: se rellenan desde la BBDD (primer elemento siempre "(Todos)")
+  cboAlmacen.Properties.DropDownListStyle := lsFixedList;
+  cboFamilia.Properties.DropDownListStyle := lsFixedList;
+  cboTemporada.Properties.DropDownListStyle := lsFixedList;
+  CargarCombos;
   // Por defecto: mes en curso del año actual
   dteFechaDesde.Date := StartOfTheMonth(Date);
   dteFechaHasta.Date := Date;
   CrearGrafico;
+end;
+
+procedure TfrmMtoComparativaMovimientos.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FCodAlmacenes);
+  FreeAndNil(FCodFamilias);
+  FreeAndNil(FCodTemporadas);
+  inherited;
 end;
 
 procedure TfrmMtoComparativaMovimientos.CrearGrafico;
@@ -127,7 +158,72 @@ begin
 end;
 
 // =============================================================================
-//   Eventos
+//   Combos de filtro
+// =============================================================================
+
+procedure TfrmMtoComparativaMovimientos.CargarCombos;
+begin
+  CargarCombo(cboAlmacen, FCodAlmacenes,
+    'SELECT CODIGO_ALM_ALM AS COD,' +
+    '       COALESCE(NULLIF(NOMBRE_ALM_ALM, ''''), CODIGO_ALM_ALM) AS NOMBRE' +
+    '  FROM fza_almacenes ORDER BY NOMBRE');
+  CargarCombo(cboFamilia, FCodFamilias,
+    'SELECT CODIGO_FAM_FAM AS COD,' +
+    '       COALESCE(NULLIF(NOMBRE_FAM_FAM, ''''), CODIGO_FAM_FAM) AS NOMBRE' +
+    '  FROM fza_articulos_familias WHERE ESACTIVO_FAM = ''S''' +
+    ' ORDER BY NOMBRE');
+  CargarCombo(cboTemporada, FCodTemporadas,
+    'SELECT DISTINCT TEMPORADA_ART AS COD, TEMPORADA_ART AS NOMBRE' +
+    '  FROM fza_articulos' +
+    ' WHERE TEMPORADA_ART IS NOT NULL AND TEMPORADA_ART <> ''''' +
+    ' ORDER BY TEMPORADA_ART');
+end;
+
+// Rellena un combo con un primer elemento "(Todos)" (código vacío) y, a
+// continuación, las filas de ASQL (columnas COD y NOMBRE). La lista paralela
+// guarda los códigos alineados por índice con los items del combo.
+procedure TfrmMtoComparativaMovimientos.CargarCombo(ACombo: TcxComboBox;
+  ALista: TStringList; const ASQL: string);
+var
+  qry: TUniQuery;
+begin
+  ACombo.Properties.Items.Clear;
+  ALista.Clear;
+  ACombo.Properties.Items.Add('(Todos)');
+  ALista.Add('');
+  if (oConn <> nil) and oConn.Connected then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text := ASQL;
+      qry.Open;
+      while not qry.Eof do
+      begin
+        ACombo.Properties.Items.Add(qry.FieldByName('NOMBRE').AsString);
+        ALista.Add(qry.FieldByName('COD').AsString);
+        qry.Next;
+      end;
+      qry.Close;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+  ACombo.ItemIndex := 0;
+end;
+
+// Código seleccionado en un combo de filtro ('' = "(Todos)", sin filtro)
+function TfrmMtoComparativaMovimientos.CodigoFiltro(ACombo: TcxComboBox;
+  ALista: TStringList): string;
+begin
+  if (ACombo.ItemIndex > 0) and (ACombo.ItemIndex < ALista.Count) then
+    Result := ALista[ACombo.ItemIndex]
+  else
+    Result := '';
+end;
+
+// =============================================================================
+//   Lógica de comparación
 // =============================================================================
 
 procedure TfrmMtoComparativaMovimientos.btnCompararClick(Sender: TObject);
@@ -144,10 +240,6 @@ begin
   if dteFechaHasta.Date < dteFechaDesde.Date then
     dteFechaHasta.Date := dteFechaDesde.Date;
 end;
-
-// =============================================================================
-//   Lógica de comparación
-// =============================================================================
 
 procedure TfrmMtoComparativaMovimientos.Comparar;
 var
@@ -231,62 +323,81 @@ begin
   end;
 end;
 
-// Construye el SELECT agrupado según magnitud y agrupación. Devuelve dos
-// columnas: BUCKET (desplazamiento entero desde :pD1) y VALOR (agregado).
+// Construye el SELECT agrupado según magnitud, agrupación y filtros. Devuelve
+// dos columnas: BUCKET (desplazamiento entero desde :pD1) y VALOR (agregado).
+// Las ventas se calculan a nivel de línea (fza_facturas_lineas) para poder
+// segmentar por familia/temporada; el resto sale de fza_movimientos_almacen.
 function TfrmMtoComparativaMovimientos.SQLConsulta: string;
 var
-  sCampoFecha, sTabla, sAgg, sBucket: string;
+  bVentas, bArtJoin: Boolean;
+  sFecha, sAgg, sFrom, sBucket, sWhere: string;
 begin
-  case cboMagnitud.ItemIndex of
-    0:
-      begin
-        sTabla := 'fza_facturas';
-        sCampoFecha := 'FECHA_FAC';
-        sAgg := 'COALESCE(SUM(TOTAL_LIQUIDO_FAC), 0)';
-      end;
-    1:
-      begin
-        sTabla := 'fza_movimientos_almacen';
-        sCampoFecha := 'FECHA_MOV';
-        sAgg := 'COALESCE(SUM(TOTAL_COSTE_MOV), 0)';
-      end;
-    2:
-      begin
-        sTabla := 'fza_movimientos_almacen';
-        sCampoFecha := 'FECHA_MOV';
-        sAgg := 'COALESCE(SUM(CANTIDAD_MOV), 0)';
-      end;
+  bVentas := (cboMagnitud.ItemIndex = 0);
+  bArtJoin := (CodigoFiltro(cboFamilia, FCodFamilias) <> '') or
+              (CodigoFiltro(cboTemporada, FCodTemporadas) <> '');
+  if bVentas then
+  begin
+    sFecha := 'f.FECHA_FAC';
+    sAgg := 'COALESCE(SUM(l.TOTAL_FACLIN), 0)';
+    sFrom := ' FROM fza_facturas_lineas l' +
+             ' JOIN fza_facturas f' +
+             '   ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN' +
+             '  AND f.SERIE_FAC = l.SERIE_FAC_FACLIN';
+    if bArtJoin then
+      sFrom := sFrom +
+             ' LEFT JOIN fza_articulos a' +
+             '   ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN';
+    sWhere := ' WHERE ' + sFecha + ' >= :pD1' +
+              '   AND ' + sFecha + ' < DATE_ADD(:pD2, INTERVAL 1 DAY)';
+    if CodigoFiltro(cboAlmacen, FCodAlmacenes) <> '' then
+      sWhere := sWhere + '   AND l.CODIGO_ALM_FACLIN = :pALM';
+  end
   else
-    begin
-      sTabla := 'fza_movimientos_almacen';
-      sCampoFecha := 'FECHA_MOV';
+  begin
+    sFecha := 'm.FECHA_MOV';
+    case cboMagnitud.ItemIndex of
+      1: sAgg := 'COALESCE(SUM(m.TOTAL_COSTE_MOV), 0)';
+      2: sAgg := 'COALESCE(SUM(m.CANTIDAD_MOV), 0)';
+    else
       sAgg := 'COUNT(*)';
     end;
+    sFrom := ' FROM fza_movimientos_almacen m';
+    if bArtJoin then
+      sFrom := sFrom +
+             ' LEFT JOIN fza_articulos_skus s' +
+             '   ON s.CODIGO_UNIDAD_SKU = m.CODIGO_UNIDAD_MOV' +
+             ' LEFT JOIN fza_articulos a' +
+             '   ON a.CODIGO_ART_ART =' +
+             '      COALESCE(m.CODIGO_ARTICULO_MOV, s.CODIGO_ART_SKU)';
+    sWhere := ' WHERE m.ESACTIVO_MOV = ''S''' +
+              '   AND ' + sFecha + ' >= :pD1' +
+              '   AND ' + sFecha + ' < DATE_ADD(:pD2, INTERVAL 1 DAY)';
+    if CodigoFiltro(cboAlmacen, FCodAlmacenes) <> '' then
+      sWhere := sWhere + '   AND m.CODIGO_ALMACEN_MOV = :pALM';
   end;
+  if CodigoFiltro(cboFamilia, FCodFamilias) <> '' then
+    sWhere := sWhere + '   AND a.CODIGO_FAM_ART = :pFAM';
+  if CodigoFiltro(cboTemporada, FCodTemporadas) <> '' then
+    sWhere := sWhere + '   AND a.TEMPORADA_ART = :pTEMP';
   case cboAgrupacion.ItemIndex of
-    1: sBucket := 'FLOOR(DATEDIFF(' + sCampoFecha + ', :pD1) / 7)';
-    2: sBucket := 'PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM ' + sCampoFecha +
+    1: sBucket := 'FLOOR(DATEDIFF(' + sFecha + ', :pD1) / 7)';
+    2: sBucket := 'PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM ' + sFecha +
                   '), EXTRACT(YEAR_MONTH FROM :pD1))';
   else
-    sBucket := 'DATEDIFF(' + sCampoFecha + ', :pD1)';
+    sBucket := 'DATEDIFF(' + sFecha + ', :pD1)';
   end;
-  Result :=
-    'SELECT ' + sBucket + ' AS BUCKET, ' + sAgg + ' AS VALOR' +
-    '  FROM ' + sTabla +
-    ' WHERE ' + sCampoFecha + ' >= :pD1' +
-    '   AND ' + sCampoFecha + ' < DATE_ADD(:pD2, INTERVAL 1 DAY)';
-  // Sobre movimientos: sólo los activos
-  if cboMagnitud.ItemIndex >= 1 then
-    Result := Result + '   AND ESACTIVO_MOV = ''S''';
-  Result := Result + ' GROUP BY BUCKET ORDER BY BUCKET';
+  Result := 'SELECT ' + sBucket + ' AS BUCKET, ' + sAgg + ' AS VALOR' +
+            sFrom + sWhere + ' GROUP BY BUCKET ORDER BY BUCKET';
 end;
 
 // Ejecuta la consulta para un periodo y vuelca el agregado en un array
 // indexado por bucket (0..ACount-1). Rellena ATotal con la suma del rango.
+// Los parámetros de filtro sólo se enlazan si aparecen en la consulta.
 function TfrmMtoComparativaMovimientos.CargarDatos(AD1, AD2: TDate;
   ACount: Integer; out ATotal: Double): TArray<Double>;
 var
   qry: TUniQuery;
+  prm: TDAParam;
   iIdx: Integer;
   dVal: Double;
 begin
@@ -302,6 +413,15 @@ begin
       qry.SQL.Text := SQLConsulta;
       qry.ParamByName('pD1').AsDate := AD1;
       qry.ParamByName('pD2').AsDate := AD2;
+      prm := qry.FindParam('pALM');
+      if Assigned(prm) then
+        prm.AsString := CodigoFiltro(cboAlmacen, FCodAlmacenes);
+      prm := qry.FindParam('pFAM');
+      if Assigned(prm) then
+        prm.AsString := CodigoFiltro(cboFamilia, FCodFamilias);
+      prm := qry.FindParam('pTEMP');
+      if Assigned(prm) then
+        prm.AsString := CodigoFiltro(cboTemporada, FCodTemporadas);
       qry.Open;
       while not qry.Eof do
       begin
