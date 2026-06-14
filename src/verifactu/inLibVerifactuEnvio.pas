@@ -109,6 +109,15 @@ type
     ImporteTotal:    Currency;
     SerialCert:      string;
     TitularCert:     string;
+    // Calificacion de la operacion (catalogo fza_verifactu_operaciones)
+    OpDefinida:      Boolean;  // hay tipo de operacion asignado en el catalogo
+    OpClaveRegimen:  string;   // ClaveRegimen Verifactu (01, 03...)
+    OpCalificacion:  string;   // CalificacionOperacion (S1/S2/N1/N2) o ''
+    OpOperExenta:    string;   // OperacionExenta (E1..E6) o ''
+    OpRepercuteIva:  Boolean;  // True desglose por bandas; False base sin cuota
+    PaisClienteISO2: string;   // COD_ALPHA2 del pais del cliente (ES, FR...)
+    EsClienteUE:     Boolean;  // el pais del cliente es miembro de la UE
+    EsClienteExtr:   Boolean;  // el cliente reside fuera de Espana
     Bandas:          array[0..3] of TBandaIva;
   end;
 
@@ -309,10 +318,18 @@ begin
       '        f.TOTAL_IVAS_FAC, f.PORCENTAJE_RES_FAC, f.TOTAL_RES_FAC, ' +
       '        f.PORCENTAJE_IVAE_FAC, f.TOTAL_BASEI_IVAE_FAC, ' +
       '        f.TOTAL_IVAE_FAC, ' +
+      '        f.TIPO_OPER_VFACTU_FAC, f.CODIGO_PAI_CLIENTE_FAC, ' +
+      '        pc.COD_ALPHA2_PAI, pc.ESMIEMBRO_UE_PAI, ' +
+      '        vo.CLAVE_REGIMEN_VFO, vo.CALIFICACION_VFO, ' +
+      '        vo.OPERACION_EXENTA_VFO, vo.ESREPERCUTE_IVA_VFO, ' +
       '        e.CODIGO_CERTIFICADO_EMP, e.TITULAR_CERTIFICADO_EMP ' +
       ' FROM fza_facturas f ' +
       ' LEFT JOIN fza_empresas e ' +
       '        ON e.CODIGO_EMP_EMP = f.CODIGO_EMP_FAC ' +
+      ' LEFT JOIN fza_paises pc ' +
+      '        ON pc.CODIGO_PAI_PAI = f.CODIGO_PAI_CLIENTE_FAC ' +
+      ' LEFT JOIN fza_verifactu_operaciones vo ' +
+      '        ON vo.CODIGO_VFO = f.TIPO_OPER_VFACTU_FAC ' +
       ' WHERE f.SERIE_FAC  = :SERIE ' +
       '   AND f.NUMERO_FAC = :NUMERO';
     Qry.ParamByName('SERIE').AsString  := ASerie;
@@ -356,6 +373,30 @@ begin
         Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
       ADatos.TitularCert :=
         Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
+      // Calificacion de la operacion (catalogo) y residencia fiscal del
+      // cliente. El cliente es extranjero si su pais no es Espana (724 / ES);
+      // en ese caso se identifica por IDOtro (pais + NIF-IVA), no por NIF.
+      // OpDefinida = hay tipo asignado y existe en el catalogo (clave regimen
+      // no nula tras el LEFT JOIN).
+      ADatos.OpDefinida :=
+        (Trim(Qry.FieldByName('TIPO_OPER_VFACTU_FAC').AsString) <> '') and
+        (not Qry.FieldByName('CLAVE_REGIMEN_VFO').IsNull);
+      ADatos.OpClaveRegimen :=
+        Trim(Qry.FieldByName('CLAVE_REGIMEN_VFO').AsString);
+      ADatos.OpCalificacion :=
+        Trim(Qry.FieldByName('CALIFICACION_VFO').AsString);
+      ADatos.OpOperExenta :=
+        Trim(Qry.FieldByName('OPERACION_EXENTA_VFO').AsString);
+      ADatos.OpRepercuteIva :=
+        not SameText(Trim(Qry.FieldByName('ESREPERCUTE_IVA_VFO').AsString), 'N');
+      ADatos.PaisClienteISO2 :=
+        Trim(Qry.FieldByName('COD_ALPHA2_PAI').AsString);
+      ADatos.EsClienteUE :=
+        SameText(Trim(Qry.FieldByName('ESMIEMBRO_UE_PAI').AsString), 'S');
+      ADatos.EsClienteExtr :=
+        (ADatos.PaisClienteISO2 <> '') and
+        (not SameText(ADatos.PaisClienteISO2, 'ES')) and
+        (Trim(Qry.FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString) <> '724');
       // Banda N (normal)
       ADatos.Bandas[0].Porcentaje :=
         Qry.FieldByName('PORCENTAJE_IVAN_FAC').AsCurrency;
@@ -576,53 +617,117 @@ end;
 
 function ConstruirDesglose(const ADatos: TDatosFacturaRegistro): string;
 var
-  i:    Integer;
-  sDet: string;
+  i:          Integer;
+  sDet:       string;
+  sClaveReg:  string;
+  sCalif:     string;
+  sExenta:    string;
+  sCalifBnd:  string;
+  bRepercute: Boolean;
+  dBaseTot:   Currency;
 begin
   Result := '';
-  for i := Low(ADatos.Bandas) to High(ADatos.Bandas) do
+  // Parametros de la operacion segun el catalogo (fza_verifactu_operaciones).
+  // Por defecto: regimen general 01, sujeta S1, con IVA repercutido. Si el
+  // usuario asigno un tipo, se toma su mapeo. Si no asigno tipo pero el cliente
+  // esta fuera de la UE, se aplica exportacion (E2) de forma automatica.
+  sClaveReg  := '01';
+  sCalif     := '';
+  sExenta    := '';
+  bRepercute := True;
+  if ADatos.OpDefinida then
   begin
-    if (Abs(ADatos.Bandas[i].Base) > 0.001) or
-       (Abs(ADatos.Bandas[i].Cuota) > 0.001) then
+    if ADatos.OpClaveRegimen <> '' then
+      sClaveReg := ADatos.OpClaveRegimen;
+    sCalif     := ADatos.OpCalificacion;
+    sExenta    := ADatos.OpOperExenta;
+    bRepercute := ADatos.OpRepercuteIva;
+  end
+  else if ADatos.EsClienteExtr and (not ADatos.EsClienteUE) then
+  begin
+    sExenta    := 'E2';
+    bRepercute := False;
+  end;
+  if not bRepercute then
+  begin
+    // Un unico DetalleDesglose con la base total, sin tipo ni cuota: el IVA lo
+    // autoliquida el destinatario (calificacion N1/N2/S2) o la operacion esta
+    // exenta (OperacionExenta E2..E6). Si no hay codigo, exenta E1 por defecto.
+    dBaseTot := 0;
+    for i := Low(ADatos.Bandas) to High(ADatos.Bandas) do
+      dBaseTot := dBaseTot + ADatos.Bandas[i].Base;
+    if sExenta <> '' then
+      sDet := '<sum1:OperacionExenta>' + sExenta + '</sum1:OperacionExenta>'
+    else if sCalif <> '' then
+      sDet := '<sum1:CalificacionOperacion>' + sCalif +
+              '</sum1:CalificacionOperacion>'
+    else
+      sDet := '<sum1:OperacionExenta>E1</sum1:OperacionExenta>';
+    Result :=
+      '<sum1:DetalleDesglose>' +
+      '<sum1:Impuesto>01</sum1:Impuesto>' +
+      '<sum1:ClaveRegimen>' + sClaveReg + '</sum1:ClaveRegimen>' +
+      sDet +
+      '<sum1:BaseImponibleOimporteNoSujeto>' +
+      FormatearImporteVerifactu(dBaseTot) +
+      '</sum1:BaseImponibleOimporteNoSujeto>' +
+      '</sum1:DetalleDesglose>';
+  end
+  else
+  begin
+    // Operacion con IVA repercutido: desglose por bandas. La calificacion de
+    // las bandas sujetas sale del catalogo (S1 por defecto); la banda exenta
+    // mantiene su exencion nacional E1. La clave de regimen tambien es la del
+    // catalogo (p.ej. 03 para bienes usados).
+    if sCalif <> '' then
+      sCalifBnd := sCalif
+    else
+      sCalifBnd := 'S1';
+    for i := Low(ADatos.Bandas) to High(ADatos.Bandas) do
     begin
-      sDet := '<sum1:Impuesto>01</sum1:Impuesto>' +
-              '<sum1:ClaveRegimen>01</sum1:ClaveRegimen>';
-      if ADatos.Bandas[i].EsExenta then
+      if (Abs(ADatos.Bandas[i].Base) > 0.001) or
+         (Abs(ADatos.Bandas[i].Cuota) > 0.001) then
       begin
-        // Exenta: motivo E1 por defecto (art. 20 LIVA)
-        sDet := sDet +
-          '<sum1:OperacionExenta>E1</sum1:OperacionExenta>' +
-          '<sum1:BaseImponibleOimporteNoSujeto>' +
-          FormatearImporteVerifactu(ADatos.Bandas[i].Base) +
-          '</sum1:BaseImponibleOimporteNoSujeto>';
-      end
-      else
-      begin
-        sDet := sDet +
-          '<sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion>' +
-          '<sum1:TipoImpositivo>' +
-          FormatearImporteVerifactu(ADatos.Bandas[i].Porcentaje) +
-          '</sum1:TipoImpositivo>' +
-          '<sum1:BaseImponibleOimporteNoSujeto>' +
-          FormatearImporteVerifactu(ADatos.Bandas[i].Base) +
-          '</sum1:BaseImponibleOimporteNoSujeto>' +
-          '<sum1:CuotaRepercutida>' +
-          FormatearImporteVerifactu(ADatos.Bandas[i].Cuota) +
-          '</sum1:CuotaRepercutida>';
-        if Abs(ADatos.Bandas[i].CuotaRe) > 0.001 then
+        sDet := '<sum1:Impuesto>01</sum1:Impuesto>' +
+                '<sum1:ClaveRegimen>' + sClaveReg + '</sum1:ClaveRegimen>';
+        if ADatos.Bandas[i].EsExenta then
+        begin
+          // Exenta: motivo E1 por defecto (art. 20 LIVA)
           sDet := sDet +
-            '<sum1:TipoRecargoEquivalencia>' +
-            FormatearImporteVerifactu(ADatos.Bandas[i].PorcentajeRe) +
-            '</sum1:TipoRecargoEquivalencia>' +
-            '<sum1:CuotaRecargoEquivalencia>' +
-            FormatearImporteVerifactu(ADatos.Bandas[i].CuotaRe) +
-            '</sum1:CuotaRecargoEquivalencia>';
+            '<sum1:OperacionExenta>E1</sum1:OperacionExenta>' +
+            '<sum1:BaseImponibleOimporteNoSujeto>' +
+            FormatearImporteVerifactu(ADatos.Bandas[i].Base) +
+            '</sum1:BaseImponibleOimporteNoSujeto>';
+        end
+        else
+        begin
+          sDet := sDet +
+            '<sum1:CalificacionOperacion>' + sCalifBnd +
+            '</sum1:CalificacionOperacion>' +
+            '<sum1:TipoImpositivo>' +
+            FormatearImporteVerifactu(ADatos.Bandas[i].Porcentaje) +
+            '</sum1:TipoImpositivo>' +
+            '<sum1:BaseImponibleOimporteNoSujeto>' +
+            FormatearImporteVerifactu(ADatos.Bandas[i].Base) +
+            '</sum1:BaseImponibleOimporteNoSujeto>' +
+            '<sum1:CuotaRepercutida>' +
+            FormatearImporteVerifactu(ADatos.Bandas[i].Cuota) +
+            '</sum1:CuotaRepercutida>';
+          if Abs(ADatos.Bandas[i].CuotaRe) > 0.001 then
+            sDet := sDet +
+              '<sum1:TipoRecargoEquivalencia>' +
+              FormatearImporteVerifactu(ADatos.Bandas[i].PorcentajeRe) +
+              '</sum1:TipoRecargoEquivalencia>' +
+              '<sum1:CuotaRecargoEquivalencia>' +
+              FormatearImporteVerifactu(ADatos.Bandas[i].CuotaRe) +
+              '</sum1:CuotaRecargoEquivalencia>';
+        end;
+        Result := Result + '<sum1:DetalleDesglose>' + sDet +
+                  '</sum1:DetalleDesglose>';
       end;
-      Result := Result + '<sum1:DetalleDesglose>' + sDet +
-                '</sum1:DetalleDesglose>';
     end;
   end;
-  // Ticket a total cero: desglose mínimo para cumplir el esquema
+  // Ticket a total cero: desglose minimo para cumplir el esquema
   if Result = '' then
     Result := '<sum1:DetalleDesglose>' +
       '<sum1:Impuesto>01</sum1:Impuesto>' +
@@ -651,6 +756,7 @@ var
   sSustituidas:   string;
   sDestinatarios: string;
   sDescripcion:   string;
+  sIdType:        string;
 begin
   sNumSerie := ComponerNumSerieFactura(ASerie, ANumero);
   sCuota    := FormatearImporteVerifactu(ADatos.CuotaTotal);
@@ -711,17 +817,46 @@ begin
     sSustituidas := '';
   // Las completas (F1, F3) y las rectificativas de completas (R1)
   // exigen identificar al destinatario
-  if MatchText(ADatos.TipoFactura, ['F1', 'R1', 'F3']) and
-     (Length(ADatos.NifCliente) <> 9) then
-    raise Exception.Create('La factura ' + ADatos.TipoFactura + ' ' +
-      ASerie + '\' + ANumero + ' requiere un NIF de cliente válido y ' +
-      'tiene "' + ADatos.NifCliente + '"');
   if MatchText(ADatos.TipoFactura, ['F1', 'R1', 'F3']) then
-    sDestinatarios := '<sum1:Destinatarios><sum1:IDDestinatario>' +
-      '<sum1:NombreRazon>' + EscaparXml(ADatos.NombreCliente) +
-      '</sum1:NombreRazon>' +
-      '<sum1:NIF>' + EscaparXml(ADatos.NifCliente) + '</sum1:NIF>' +
-      '</sum1:IDDestinatario></sum1:Destinatarios>'
+  begin
+    if ADatos.EsClienteExtr then
+    begin
+      // Destinatario extranjero: se identifica por IDOtro (pais + NIF-IVA),
+      // no por NIF espanol. IDType 02 = NIF-IVA (operador UE); 04 = documento
+      // oficial expedido por el pais de residencia (resto del mundo). No se
+      // exige el NIF de 9 caracteres, pero si que haya identificacion.
+      if Trim(ADatos.NifCliente) = '' then
+        raise Exception.Create('La factura ' + ADatos.TipoFactura + ' ' +
+          ASerie + '\' + ANumero + ' a cliente extranjero requiere el ' +
+          'NIF-IVA del destinatario.');
+      if ADatos.EsClienteUE then
+        sIdType := '02'
+      else
+        sIdType := '04';
+      sDestinatarios := '<sum1:Destinatarios><sum1:IDDestinatario>' +
+        '<sum1:NombreRazon>' + EscaparXml(ADatos.NombreCliente) +
+        '</sum1:NombreRazon>' +
+        '<sum1:IDOtro>' +
+        '<sum1:CodigoPais>' + EscaparXml(ADatos.PaisClienteISO2) +
+        '</sum1:CodigoPais>' +
+        '<sum1:IDType>' + sIdType + '</sum1:IDType>' +
+        '<sum1:ID>' + EscaparXml(ADatos.NifCliente) + '</sum1:ID>' +
+        '</sum1:IDOtro>' +
+        '</sum1:IDDestinatario></sum1:Destinatarios>';
+    end
+    else
+    begin
+      if Length(ADatos.NifCliente) <> 9 then
+        raise Exception.Create('La factura ' + ADatos.TipoFactura + ' ' +
+          ASerie + '\' + ANumero + ' requiere un NIF de cliente válido y ' +
+          'tiene "' + ADatos.NifCliente + '"');
+      sDestinatarios := '<sum1:Destinatarios><sum1:IDDestinatario>' +
+        '<sum1:NombreRazon>' + EscaparXml(ADatos.NombreCliente) +
+        '</sum1:NombreRazon>' +
+        '<sum1:NIF>' + EscaparXml(ADatos.NifCliente) + '</sum1:NIF>' +
+        '</sum1:IDDestinatario></sum1:Destinatarios>';
+    end;
+  end
   else
     sDestinatarios := '';
   Result :=
