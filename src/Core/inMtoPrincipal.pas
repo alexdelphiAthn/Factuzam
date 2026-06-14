@@ -664,9 +664,10 @@ begin
   // FormResize recoloca todo respecto al area cliente real.
   cw := pcPrincipal.ClientWidth;
   ch := pcPrincipal.ClientHeight;
-  // Logo: 50% del ancho, max 600, min 240, manteniendo aspect 520x130.
+  // Logo: 50% del ancho, min 240, max 520 (ancho nativo del PNG, asi GDI+
+  // solo reduce o pinta 1:1 -> nitido como el splash, nunca amplia/blando).
   w := cw div 2;
-  if w > 600 then w := 600;
+  if w > 520 then w := 520;
   if w < 240 then w := 240;
   h := Round(w * 130 / 520);
   cx := (cw - w) div 2;
