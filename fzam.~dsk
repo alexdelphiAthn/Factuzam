@@ -1,27 +1,26 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibXades.pas',0,1,14,1,26,0,0,,
-File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibVerifactuNoVerifactuExport.pas',0,1,426,1,1,0,0,,
-File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactu.pas',0,1,605,26,612,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas',0,1,613,43,613,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inMtoVerifactuCola.pas',0,1,12,27,33,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGenerarTicketBD.pas',0,1,473,11,490,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturas.pas',0,1,1089,45,1104,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibImagen.pas',0,1,28,43,40,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataInventarios.pas',0,1,1,1,1,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalGenImp.pas',0,1,1,1,1,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpFac.pas',0,1,1,1,1,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidosCompra.pas',0,1,644,16,654,0,0,,
-File_12=TSourceModule,'c:\program files (x86)\embarcadero\studio\37.0\source\data\Data.DB.pas',0,1,2562,1,2574,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGridTallasInline.pas',0,1,118,28,130,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoInventarios.pas',0,1,1,1,1,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,1,1,1,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasCompra.pas',0,1,1,1,1,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibXades.pas',0,1,14,1,26,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibVerifactuNoVerifactuExport.pas',0,1,426,1,1,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactu.pas',0,1,605,26,612,0,0,,
+File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas',0,1,613,43,613,0,0,,
+File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inMtoVerifactuCola.pas',0,1,12,27,33,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGenerarTicketBD.pas',0,1,473,11,490,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturas.pas',0,1,1089,45,1104,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibImagen.pas',0,1,28,43,40,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataInventarios.pas',0,1,1,1,1,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalGenImp.pas',0,1,1,1,1,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpFac.pas',0,1,1,1,1,0,0,,
+File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidosCompra.pas',0,1,644,16,654,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
 Count=1
 EditWindowCount=1
 
-[C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-ModuleType=TBaseProject
+[C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas]
+ModuleType=TSourceModule
 
 [EditWindow0]
 ViewCount=2
@@ -63,14 +62,14 @@ BottomMiddelPanelData=0000080001020200000009000000446F636B5369746530100000004772
 
 [View0]
 CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
 CursorX=1
 CursorY=1
 TopLine=1
 LeftCol=1
 Elisions=
 Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
 
 [View1]
 CustomEditViewType=TOTACustomEditView
