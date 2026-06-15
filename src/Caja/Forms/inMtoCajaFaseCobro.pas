@@ -153,6 +153,8 @@ type
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;
     function ValidaryConfirmar:boolean;
+    function SerieAdmiteFecha(const ASerie: string;
+      AFecha: TDateTime): Boolean;
     procedure CargarFormasPago;
     procedure CargarComboSeries;
     procedure AjustarFormatoEditorActivo;
@@ -189,7 +191,8 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoCajaSeleccionVale, inLibCajaParam, inMtoModalSerieFechaFactura;
+uses inMtoCajaSeleccionVale, inLibCajaParam, inMtoModalSerieFechaFactura,
+     UniDataCaja;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
@@ -249,7 +252,7 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
 begin
-  if ValidarYConfirmar then
+  if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
   begin
     FTipoImpresion := tiConTicket;
     ModalResult := mrOk;
@@ -282,10 +285,13 @@ begin
                                                   FCodigoAlmacen);
     if oDatos.Aceptado then
     begin
-      FSerieFactura  := oDatos.Serie;
-      FFechaFactura  := oDatos.Fecha;
-      FTipoImpresion := tiFactura;
-      ModalResult    := mrOk;
+      if SerieAdmiteFecha(oDatos.Serie, oDatos.Fecha) then
+      begin
+        FSerieFactura  := oDatos.Serie;
+        FFechaFactura  := oDatos.Fecha;
+        FTipoImpresion := tiFactura;
+        ModalResult    := mrOk;
+      end;
     end;
   end;
 end;
@@ -298,7 +304,7 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject);
 begin
-  if ValidarYConfirmar then
+  if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
   begin
     FTipoImpresion := tiSinTicket;
     ModalResult := mrOk;
@@ -307,7 +313,7 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinPreciosClick(Sender: TObject);
 begin
-  if ValidarYConfirmar then
+  if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
   begin
     FTipoImpresion := tiTicketRegalo;
     ModalResult := mrOk;
@@ -338,6 +344,31 @@ begin
   end
   else
     Result := True;
+end;
+
+function TfrmMtoCajaFaseCobro.SerieAdmiteFecha(const ASerie: string;
+  AFecha: TDateTime): Boolean;
+var
+  dUltima: TDateTime;
+begin
+  // El ticket no puede llevar una fecha anterior a la del ultimo documento
+  // ya emitido en la misma serie. Si lo es, se avisa y NO se cierra la fase
+  // de cobro, para elegir otra serie sin perder las formas de pago.
+  Result := True;
+  dUltima := TdmCajaOpe.FechaUltimoTicketSerie(FCodigoEmpresa, ASerie);
+  if (dUltima > 0) and (Trunc(AFecha) < Trunc(dUltima)) then
+  begin
+    Result := False;
+    MessageDlg(
+      Format('No se puede emitir en la serie "%s".' + sLineBreak +
+             'El último ticket de esa serie tiene fecha %s, posterior ' +
+             'a la fecha %s.' + sLineBreak +
+             'Elija otra serie para emitir con esta fecha.',
+             [ASerie,
+              FormatDateTime('dd/mm/yyyy', dUltima),
+              FormatDateTime('dd/mm/yyyy', AFecha)]),
+      mtWarning, [mbOK], 0);
+  end;
 end;
 
 function TfrmMtoCajaFaseCobro.AlRequerirReferencia(AInfo: TFormaPagoInfo;
