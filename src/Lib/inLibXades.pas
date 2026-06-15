@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibXades                                                    }
 {    Tipo:       Libreria                                                      }
@@ -926,6 +926,8 @@ var
   iFinDecl: Integer;
 begin
   Result := Trim(AXml);
+  Result := StringReplace(Result, #13#10, #10, [rfReplaceAll]);
+  Result := StringReplace(Result, #13, #10, [rfReplaceAll]);
   if (Result <> '') and (Result[1] = #$FEFF) then
     Delete(Result, 1, 1);
   if StartsText('<?xml', Result) then
