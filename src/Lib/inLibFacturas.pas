@@ -1096,8 +1096,11 @@ begin
       IfThen(_configuracion.AplicaRetencionesCliente, 'S', 'N');
     FieldByName('ESRETENCIONES_EMPRESA_FAC').AsString :=
       IfThen(_configuracion.AplicaRetencionesEmpresa, 'S', 'N');
-    FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString :=
-      IfThen(_configuracion.AplicaRecargo, 'S', 'N');
+    if FindField('ESAPLICA_RE_ZONA_IVA_FAC') <> nil then
+      _configuracion.AplicaRecargo :=
+                 SameText(FieldByName('ESAPLICA_RE_ZONA_IVA_FAC').AsString, 'S')
+    else
+      _configuracion.AplicaRecargo := False;
     // Actualizar porcentajes aplicados
     FieldByName('PORCENTAJE_IVAN_FAC').AsFloat := _porcentajes.IVANormal;
     FieldByName('PORCENTAJE_IVAR_FAC').AsFloat := _porcentajes.IVAReducido;
