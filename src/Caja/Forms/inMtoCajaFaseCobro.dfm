@@ -879,7 +879,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Properties.Alignment.Horz = taCenter
           Properties.CharCase = ecUpperCase
           Properties.MaxLength = 8
-          Properties.ReadOnly = True
+          Properties.ReadOnly = False
           Style.BorderStyle = ebsOffice11
           Style.Color = clCream
           Style.Font.Charset = ANSI_CHARSET

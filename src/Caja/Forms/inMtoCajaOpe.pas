@@ -2984,7 +2984,8 @@ begin
                                               NumeroGenerado,
                                               CodigoValeGenerado,
                                               sTipoFactura,
-                                              dtFechaFactura) then
+                                              dtFechaFactura,
+                                              frmFaseCobro.FNumeroManual) then
        begin
          case frmFaseCobro.TipoImpresion of
            tiConTicket: ImprimirT(FCodigoEmpresa,

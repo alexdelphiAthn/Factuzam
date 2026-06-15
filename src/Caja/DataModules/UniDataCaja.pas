@@ -326,7 +326,8 @@ type
                                      out ValeGenerado:String;
                                      const ATipoFactura: string =
                                                           'SIMPLIFICADA';
-                                     AFechaFactura: TDateTime = 0): Boolean;
+                                     AFechaFactura: TDateTime = 0;
+                                     const ANumeroManual: string = ''): Boolean;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
     property OnRellenarArticulo:  TRellenarArticuloEvent
@@ -1071,7 +1072,8 @@ function TdmCajaOpe.GrabarFacturaSimplificada(
                           out NumeroGenerado:  string;
                           out ValeGenerado:    string;
                           const ATipoFactura: string = 'SIMPLIFICADA';
-                          AFechaFactura: TDateTime = 0): Boolean;
+                          AFechaFactura: TDateTime = 0;
+                          const ANumeroManual: string = ''): Boolean;
 var
   QryTrx:              TUniQuery;
   uspQryTrx:           TUniStoredProc;
@@ -1213,7 +1215,7 @@ begin
   // venta antes de abrir transaccion (sin consumir numeracion) y se avisa
   // sugiriendo cambiar de serie. No aplica a operaciones sin factura.
   // =======================================================================
-  if RequiereFactura then
+  if RequiereFactura and (ANumeroManual = '') then
   begin
     var dUltimaFechaSerie := FechaUltimoTicketSerie(AEmpresa, ASerieElegida);
     if (dUltimaFechaSerie > 0) and
@@ -1242,29 +1244,33 @@ begin
     // =======================================================================
     if RequiereFactura then
     begin
-      uspQryTrx := TUniStoredProc.Create(nil);
-      try
-        uspQryTrx.Connection := inLibGlobalVar.oConn;
-        uspQryTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
-        uspQryTrx.Prepare;
-        uspQryTrx.ParamByName('pserie').AsString   := SerieGenerada;
-        uspQryTrx.ParamByName('pTipoDoc').AsString := 'FC';
-        uspQryTrx.ParamByName('pEMPRESA_CONTADOR').AsString := AEmpresa;
-        uspQryTrx.ParamByName('pUSUARIOMODIF').AsString := UsuarioCaja;
-        uspQryTrx.Execute;
-        NumFactura := uspQryTrx.ParamByName('pcont').AsString;
-        DatosCobro.TotalesFactura.Cabecera.Edit;
-        DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                      'SERIE_FAC').AsString:= ASerieElegida;
-        DatosCobro.TotalesFactura.Cabecera.FieldByName('NUMERO_FAC').AsString:=
-                                                                 NumFactura;
-        DatosCobro.TotalesFactura.Cabecera.Post;
-        // =======================================================================
-        // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
-        // =======================================================================
-      finally
-        FreeAndNil(uspQryTrx);
+      if ANumeroManual <> '' then
+        // Relleno de hueco: el usuario indica el numero. No se llama al
+        // contador (PRC_GET_NEXT_CONT_FACT_SERIE) ni se avanza la serie.
+        NumFactura := ANumeroManual
+      else
+      begin
+        uspQryTrx := TUniStoredProc.Create(nil);
+        try
+          uspQryTrx.Connection := inLibGlobalVar.oConn;
+          uspQryTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+          uspQryTrx.Prepare;
+          uspQryTrx.ParamByName('pserie').AsString   := SerieGenerada;
+          uspQryTrx.ParamByName('pTipoDoc').AsString := 'FC';
+          uspQryTrx.ParamByName('pEMPRESA_CONTADOR').AsString := AEmpresa;
+          uspQryTrx.ParamByName('pUSUARIOMODIF').AsString := UsuarioCaja;
+          uspQryTrx.Execute;
+          NumFactura := uspQryTrx.ParamByName('pcont').AsString;
+        finally
+          FreeAndNil(uspQryTrx);
+        end;
       end;
+      DatosCobro.TotalesFactura.Cabecera.Edit;
+      DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                    'SERIE_FAC').AsString := ASerieElegida;
+      DatosCobro.TotalesFactura.Cabecera.FieldByName(
+                                    'NUMERO_FAC').AsString := NumFactura;
+      DatosCobro.TotalesFactura.Cabecera.Post;
       InsertarCabeceraFactura(
         QryTrx, SerieGenerada, NumFactura, Cab.Fecha, ATipoFactura,
         'BORRADOR', AEmpresa, Cab.RazonSocialEmp, Cab.NifEmp, Cab.MovilEmp,
