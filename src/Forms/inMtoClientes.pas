@@ -544,7 +544,7 @@ end;
 
 procedure TfrmMtoClientes.btnExportarClick(Sender: TObject);
 begin
-  ExportarExcel(cxgrdClientesFacturas, 'Historico_Facturas_Cliente_' +
+  ExportarExcel(cxgrdClientesFacturas, 'Historico_Borradores_Cliente_' +
                        dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
 end;
 
@@ -753,7 +753,7 @@ end;
 
 function TfrmMtoClientes.DescripcionHijos: string;
 begin
-  Result := 'facturas y albaranes del cliente';
+  Result := 'borradores y albaranes del cliente';
 end;
 
 procedure TfrmMtoClientes.txtNOMBRE_PAIS_CLIENTEPropertiesChange(

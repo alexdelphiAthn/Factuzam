@@ -62,7 +62,7 @@
       Top = 55
       Width = 258
       Height = 36
-      Caption = 'Imprimir todos los recibos de esta factura'
+      Caption = 'Imprimir todos los recibos de este borrador'
       TabOrder = 1
       WordWrap = True
       OnClick = rbRangoFechasClick

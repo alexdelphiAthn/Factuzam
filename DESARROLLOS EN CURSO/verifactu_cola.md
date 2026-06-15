@@ -1,31 +1,31 @@
 # Verifactu en caja: QR en el ticket + cola de envío
 
 Aplicación a Factuzam del esquema de OdaVeriFactu: el ticket de venta sale
-con el QR tributario de la AEAT y, tras grabar la venta, la factura queda
-encolada para que un hilo en segundo plano la comunique a Verifactu.
+con el QR tributario de la AEAT solo en modo `VERIFACTU` y, tras grabar la
+venta, el borrador queda encolado para que un hilo en segundo plano comunique
+el registro a Verifactu.
 
 ## Flujo
 
 1. **Venta en caja** (`UniDataCaja.GrabarFacturaSimplificada`): dentro de
-   la transacción de la venta, si `appVerifactuActivo` está marcado, se
-   inserta la factura en `fza_verifactu_cola` (PASO 4.6). Factura y cola
-   se confirman o deshacen juntas.
+   la transacción de la venta se decide por `appVerifactuModo`:
+   - `SIN`: marca `FASE_FAC='SIN_VERIFACTU'`, sin cola ni registro local.
+   - `VERIFACTU`: inserta en `fza_verifactu_cola` y marca
+     `FASE_FAC='VERIFACTU_PENDIENTE'`.
+   - `NO_VERIFACTU`: crea registro local encadenado y marca
+     `FASE_FAC='NOVERIFACTU_OK'`.
 
-   **Fases de la factura** (`FASE_FAC`): toda factura nace en `BORRADOR`
-   (editable, sin imprimir). El *lanzamiento* (encolar el ALTA, sea
-   desde la venta de caja, el botón Consolidar de Facturas, F3/F8 o una
-   rectificativa) la pasa a `ONLINE` **en el acto**
-   (`TVerifactuCola.EncolarFactura`): el QR es calculable en local y la
-   petición al ws viaja asíncrona. Desde `ONLINE` ya puede imprimirse y
-   deja de ser editable o borrable (solo Anular o Rectificar). Si el
-   envío agota reintentos pasa a `ERROR` (relanzable desde la cola). El
-   bloqueo de edición/impresión/borrado por fase vive en
+   **Fases del borrador** (`FASE_FAC`): todo documento nace en `BORRADOR`
+   (editable, sin imprimir). El *lanzamiento* fiscal lo saca de borrador con
+   una fase distinta por modo, documentada en
+   `verifactu_modos_estados_borradores.md`. El bloqueo de
+   edición/impresión/borrado por fase vive en
    `TfrmMtoFacturasBase.ActualizarBloqueoEdicion`,
    `sbImprimirClick` y `unqryTablaGBeforeDelete`; aplica igual a
    normales y a simplificadas creadas a mano. El botón **Consolidar**
-   lanza manualmente una factura en borrador (con líneas y, si es
-   NORMAL, con NIF de cliente). «Convertir en normal» solo se muestra
-   en el Mto de simplificadas.
+   lanza manualmente un borrador (con líneas y, si es NORMAL, con NIF de
+   cliente). «Convertir en normal» solo se muestra en el Mto de
+   simplificadas.
 2. **Ticket** (`inLibGenerarTicket.ImprimirT` y reimpresión en
    `inLibGenerarTicketBD.ImprimirTicketDesdeBD`): con Verifactu activo se
    imprime el QR tributario (URL de cotejo de la AEAT, nivel de
@@ -42,11 +42,12 @@ encolada para que un hilo en segundo plano la comunique a Verifactu.
    `inLibVerifactuEnvio.EnviarRegistroFactura` y persiste el resultado:
    - Éxito → inserta en `fza_facturas_consolidaciones` (QR, hash de
      cadena, respuesta completa…), marca `fza_facturas`
-     (`ESCONSOLIDADA_FAC='S'`, `INSTANTECONSO_FAC`, `FASE_FAC='ONLINE'` o
-     `'CANCELADA'` si era anulación) y deja la fila en `ENVIADA`.
+     (`ESCONSOLIDADA_FAC='S'`, `INSTANTECONSO_FAC`,
+     `FASE_FAC='VERIFACTU_OK'` o `VERIFACTU_ANULADA` si era anulación) y
+     deja la fila en `ENVIADA`.
    - Error → reintento con backoff exponencial (60s · 2^intentos, techo
      32 min). Al agotar `appVerifactuMaxIntentos` pasa a `ERROR` y la
-     factura a `FASE_FAC='ERROR'`.
+     borrador a `FASE_FAC='VERIFACTU_ERROR'`.
    - Todo queda trazado en `fza_verifactu_eventos` (cadena de hashes
      SHA-256), visible en la pestaña Verifactu de Facturas.
    El hilo usa **conexión propia** clonada de `oConn` (patrón de
@@ -56,7 +57,8 @@ encolada para que un hilo en segundo plano la comunique a Verifactu.
 
 | Parámetro                   | Defecto | Uso                            |
 |-----------------------------|---------|--------------------------------|
-| `appVerifactuActivo`        | False   | Interruptor general            |
+| `appVerifactuModo`          | SIN     | `SIN`, `VERIFACTU` o `NO_VERIFACTU` |
+| `appVerifactuActivo`        | False   | Compatibilidad antigua; usar `appVerifactuModo` |
 | `appVerifactuFirmaCertificado` | False | Firma XAdES local de eventos y registros con certificado de empresa |
 | `appVerifactuEntorno`       | PRE     | PRE (pruebas) / PRO            |
 | `appVerifactuUrlQRPre`      | URL AEAT prewww2 | Cotejo QR en pruebas  |
@@ -201,24 +203,25 @@ falta reexponerlo, p. ej. ante «aceptado con errores»).
   (`AbrirCajonSinVenta`, mismo helper del F9 global, con su permiso
   `caja.abrirCajon` y aviso si no hay impresora configurada).
 
-En Facturas (Buscar/Modificar) los botones «Anular Verifactu» y
+En Borradores (Buscar/Modificar) los botones «Anular registro fiscal» y
 «Convertir en normal» viven ahora en la columna derecha de botones,
 debajo de Consolidar (se eliminó el panel inferior).
 
-### Anular y convertir desde Facturas (Buscar / Modificar)
+### Anular y convertir desde Borradores (Buscar / Modificar)
 
-En la columna de botones de Facturas (normales y simplificadas)
-operan sobre la factura seleccionada:
+En la columna de botones de Borradores (normales y simplificados)
+operan sobre el borrador seleccionado:
 
-- **Consolidar**: lanza manualmente a Verifactu una factura en
-  `BORRADOR` (pasa a `ONLINE` en el acto y encola el ALTA; ver
-  «Fases» en el Flujo). Exige líneas y, en NORMAL, NIF de cliente.
-- **Anular Verifactu** (solo consolidadas): encola un
-  `RegistroAnulacion`. Al aceptarse, la factura pasa a
-  `FASE_FAC='CANCELADA'` y la consolidación a `ESTADO='ANULADO'` (con
-  `QUEUE_ID_CANCEL_FACCON`).
+- **Consolidar**: lanza manualmente un borrador en `BORRADOR`. En modo
+  `VERIFACTU` pasa a `VERIFACTU_PENDIENTE` y encola el ALTA; en
+  `NO_VERIFACTU` crea el registro local; en `SIN` solo marca la fase
+  transitoria. Exige líneas y, en NORMAL, NIF de cliente.
+- **Anular registro fiscal** (solo cerrados): registra la anulación según
+  modo. En `VERIFACTU`, al aceptarse, el borrador pasa a
+  `FASE_FAC='VERIFACTU_ANULADA'` y la consolidación a
+  `ESTADO_FACCON='VERIFACTU_ANULADO'` (con `QUEUE_ID_CANCEL_FACCON`).
 - **Convertir en normal** (solo en el Mto de simplificadas): crea la
-  factura F3 en sustitución del ticket (modal
+  F3 en sustitución del ticket (modal
   `inMtoModalFacturarTicket`; el cliente se elige con el buscador
   genérico `TfrmMtoSearch`, no con un combo).
 - **Volver a Borrador**: deshace un lanzamiento que la AEAT aún NO ha

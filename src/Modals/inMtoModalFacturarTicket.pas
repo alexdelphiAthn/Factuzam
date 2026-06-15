@@ -178,11 +178,11 @@ begin
   sCliente := FCliente;
   sSerie   := VarToStr(cbbSerie.EditValue);
   if Trim(sCliente) = '' then
-    ShowMessage('Seleccione el cliente de la factura.')
+    ShowMessage('Seleccione el cliente del borrador.')
   else if Trim(sSerie) = '' then
-    ShowMessage('Seleccione la serie de la factura.')
+    ShowMessage('Seleccione la serie del borrador.')
   else if dtFecha.Date <= 0 then
-    ShowMessage('Indique la fecha de la factura.')
+    ShowMessage('Indique la fecha del borrador.')
   else
   begin
     CrearFacturaNormal(sSerie, sCliente, dtFecha.Date);
@@ -324,7 +324,7 @@ begin
         'SIMPLIFICADA ' + FSerieTicket + '\' + FNumeroTicket;
       Qry.Execute;
       if Qry.RowsAffected = 0 then
-        raise Exception.Create('No se pudo crear la factura: ticket o ' +
+        raise Exception.Create('No se pudo crear el borrador: ticket o ' +
                                'cliente no encontrados.');
       // Líneas: copia tal cual del ticket (importes en positivo)
       Qry.SQL.Text :=
@@ -389,16 +389,20 @@ begin
     end;
     // Encolar el alta en Verifactu (saldrá como F3 con el bloque
     // FacturasSustituidas apuntando al ticket)
-    if VerifactuActivo then
-    begin
-      TVerifactuCola.EncolarFactura(Qry, ASerie, sNumero);
-      RegistrarEventoVerifactu(inLibGlobalVar.oConn,
-        cEventoVerifactuEncolado,
-        'Factura en sustitución del ticket ' + FSerieTicket + '\' +
-        FNumeroTicket + ' encolada', '', ASerie, sNumero);
-    end
+    case ModoVerifactu of
+      mvVerifactu:
+        begin
+          TVerifactuCola.EncolarFactura(Qry, ASerie, sNumero);
+          RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+            cEventoVerifactuEncolado,
+            'Borrador en sustitución del ticket ' + FSerieTicket + '\' +
+            FNumeroTicket + ' encolada', '', ASerie, sNumero);
+        end;
+      mvNoVerifactu:
+        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, ASerie, sNumero);
     else
-      TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, ASerie, sNumero);
+      TVerifactuCola.MarcarFacturaSinVerifactu(Qry, ASerie, sNumero);
+    end;
   finally
     FreeAndNil(Qry);
     FreeAndNil(Usp);

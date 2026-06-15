@@ -3,7 +3,7 @@ inherited frmGenFacRec: TfrmGenFacRec
   Top = 286
   HorzScrollBar.Visible = False
   BorderStyle = bsSingle
-  Caption = 'Duplicar/Abonar Factura'
+  Caption = 'Duplicar/Abonar Borrador'
   ClientHeight = 351
   ClientWidth = 419
   FormStyle = fsStayOnTop
@@ -15,7 +15,7 @@ inherited frmGenFacRec: TfrmGenFacRec
   object cxlbl1: TcxLabel [0]
     Left = 9
     Top = 4
-    Caption = 'Factura Origen N'#250'mero'
+    Caption = 'Borrador Origen N'#250'mero'
     TabOrder = 1
     Transparent = True
   end
@@ -55,14 +55,14 @@ inherited frmGenFacRec: TfrmGenFacRec
   object chkAbonar: TcxCheckBox [3]
     Left = 16
     Top = 58
-    Caption = 'Generar Factura de  Abono'
+    Caption = 'Generar Borrador de Abono'
     TabOrder = 4
     OnClick = chkAbonarClick
   end
   object cxgrpbx1: TcxGroupBox [4]
     Left = -2
     Top = 232
-    Caption = 'Factura Generada'
+    Caption = 'Borrador Generado'
     TabOrder = 10
     Height = 67
     Width = 287
@@ -91,7 +91,7 @@ inherited frmGenFacRec: TfrmGenFacRec
   object chkDuplicar: TcxCheckBox [6]
     Left = 16
     Top = 82
-    Caption = 'Duplicar Factura'
+    Caption = 'Duplicar Borrador'
     TabOrder = 5
     OnClick = chkDuplicarClick
   end
@@ -102,7 +102,7 @@ inherited frmGenFacRec: TfrmGenFacRec
     Margins.Top = 4
     Margins.Right = 4
     Margins.Bottom = 4
-    Caption = 'Serie Factura Destino'
+    Caption = 'Serie Borrador Destino'
     TabOrder = 8
     Transparent = True
   end
@@ -126,7 +126,7 @@ inherited frmGenFacRec: TfrmGenFacRec
     Margins.Top = 4
     Margins.Right = 4
     Margins.Bottom = 4
-    Caption = 'Fecha Factura Destino'
+    Caption = 'Fecha Borrador Destino'
     TabOrder = 9
     Transparent = True
   end

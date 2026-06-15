@@ -1,5 +1,5 @@
 inherited frmPrintFac: TfrmPrintFac
-  Caption = 'Imprimir Factura'
+  Caption = 'Imprimir Borrador'
   ClientHeight = 249
   ClientWidth = 412
   Position = poMainFormCenter
@@ -52,7 +52,7 @@ inherited frmPrintFac: TfrmPrintFac
   object lblcxlbl1: TcxLabel [2]
     Left = 8
     Top = 4
-    Caption = 'Factura N'#250'mero'
+    Caption = 'Borrador N'#250'mero'
     TabOrder = 2
     Transparent = True
   end
@@ -76,7 +76,7 @@ inherited frmPrintFac: TfrmPrintFac
       Top = 24
       Width = 223
       Height = 17
-      Caption = 'Imprimir Factura actual'
+      Caption = 'Imprimir Borrador actual'
       Checked = True
       TabOrder = 0
       TabStop = True
@@ -88,7 +88,7 @@ inherited frmPrintFac: TfrmPrintFac
       Top = 48
       Width = 258
       Height = 17
-      Caption = 'Imprimir Rango de Facturas'
+      Caption = 'Imprimir Rango de Borradores'
       Enabled = False
       TabOrder = 1
       OnClick = rbRangoFechasClick

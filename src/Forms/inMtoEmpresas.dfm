@@ -122,7 +122,7 @@
               Width = 170
             end
             object cxgrdbclmnGrdDBTabPrinTEXTO_LEGAL_FACTURA_EMPRESA: TcxGridDBColumn
-              Caption = 'Texto en Factura'
+              Caption = 'Texto en Borrador'
               DataBinding.FieldName = 'TEXTO_LEGAL_FACTURA_EMP'
               Width = 366
             end
@@ -526,7 +526,7 @@
               end
             end
             object tsHistoriaFacturacion: TcxTabSheet
-              Caption = '&3_Hist'#243'rico Facturas'
+              Caption = '&3_Hist'#243'rico Borradores'
               ImageIndex = 3
               ExplicitLeft = 0
               ExplicitTop = 0
@@ -1116,7 +1116,7 @@
                     Top = 16
                     Width = 106
                     Height = 34
-                    Caption = '&Ir a Factura'
+                    Caption = '&Ir a Borrador'
                     TabOrder = 0
                     OnClick = btnIraFacturaClick
                   end
@@ -1396,7 +1396,7 @@
               object lblTextoLegal: TcxLabel
                 Left = 29
                 Top = 167
-                Caption = 'Texto legal en Facturas'
+                Caption = 'Texto legal en Borradores'
                 TabOrder = 2
                 Transparent = True
               end
@@ -1427,7 +1427,7 @@
               object lblTextoLegal1: TcxLabel
                 Left = 31
                 Top = 18
-                Caption = 'Firma electr'#243'nica en Facturas'
+                Caption = 'Firma electr'#243'nica en Borradores'
                 TabOrder = 5
                 Transparent = True
               end
@@ -1734,7 +1734,7 @@
       OnExecute = actArticulosExecute
     end
     object actFacturas: TAction
-      Caption = 'actFacturas'
+      Caption = 'actBorradores'
       ShortCut = 49222
       OnExecute = actFacturasExecute
     end

@@ -16,10 +16,22 @@ Categoría: **Verifactu** (`inLibAppParam`).
 
 | Parámetro | Defecto | Uso |
 |-----------|---------|-----|
+| `appVerifactuModo` | `SIN` | Modo fiscal activo: `SIN`, `VERIFACTU` o `NO_VERIFACTU`. |
 | `appVerifactuFirmaCertificado` | `False` | Si está activo, los eventos y registros locales se firman con XAdES usando el certificado configurado en la empresa. Si está apagado, se mantiene la firma técnica SHA-256 en el registro. |
 
 El valor por defecto es `False` para no bloquear instalaciones que todavía no
 tengan certificado seleccionado en la ficha de empresa.
+
+Los parámetros `appVerifactu*` son de mantenimiento fiscal. No los puede
+modificar un usuario normal desde **Parámetros de aplicación** aunque pueda
+editar sus parámetros personales o los de su grupo. Solo un usuario del grupo
+administrador (`orootGroup = 'S'`) puede cambiarlos.
+
+La convención completa de modos, fases y textos de pantalla queda en:
+
+```text
+DESARROLLOS EN CURSO/verifactu_modos_estados_borradores.md
+```
 
 ## Modo con certificado
 
@@ -32,6 +44,14 @@ Cuando `appVerifactuFirmaCertificado=True`:
    `inLibXades.pas`.
 4. No se invocan scripts `.ps1` ni procesos externos.
 5. No se usa CryptoLib4Pascal para esta firma.
+
+Si el certificado no existe, esta caducado, todavia no es valido, no tiene
+clave privada utilizable o el usuario cancela la operacion de firma, el
+registro no debe quedar emitido como firmado. La aplicacion debe mostrar el
+error y conservar la operacion sin cierre fiscal, apoyandose en la
+transaccion que estaba creando la factura. No se cambia automaticamente a
+SHA-256 porque eso contradiria la configuracion activa; para trabajar en modo
+SHA-256 hay que desactivar expresamente `appVerifactuFirmaCertificado`.
 
 Datos persistidos:
 
@@ -74,21 +94,22 @@ por certificado o antes de querer descargar el registro completo.
 
 ## Flujo de facturación NO VERI*FACTU
 
-Cuando Verifactu está desactivado y se crea o lanza una factura:
+Cuando `appVerifactuModo=NO_VERIFACTU` y se crea o lanza un borrador:
 
 1. Se construye el registro fiscal de alta/anulación en local.
 2. Se calcula la huella SHA-256 y se encadena en `fza_verifactu_cadena`.
 3. Si `appVerifactuFirmaCertificado=True`, se firma el XML con XAdES.
 4. Se guarda el registro en `fza_facturas_consolidaciones`.
 5. Se registra un evento en `fza_verifactu_eventos`.
-6. La factura pasa a fase fiscal `ONLINE` o `CANCELADA`.
+6. El borrador pasa a fase fiscal `NOVERIFACTU_OK` o
+   `NOVERIFACTU_ANULADA`.
 
 Puntos enlazados:
 
 - Caja: `UniDataCaja.GrabarFacturaSimplificada`.
-- Facturas: botón Consolidar y Anular Verifactu.
+- Borradores: botón Consolidar y Anular registro fiscal.
 - Consulta de operaciones: anulación.
-- Conversión F3 de ticket a factura completa.
+- Conversión F3 de ticket a borrador normal.
 
 ## Eventos del sistema
 

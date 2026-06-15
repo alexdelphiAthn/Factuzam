@@ -138,7 +138,7 @@ inherited frmMtoClientes: TfrmMtoClientes
               Width = 109
             end
             object cxgrdbclmnGrdDBTabPrinTEXTO_LEGAL_FACTURA_CLIENTE: TcxGridDBColumn
-              Caption = 'Texto Legal Factura'
+              Caption = 'Texto Legal Borrador'
               DataBinding.FieldName = 'TEXTO_LEGAL_FACTURA_CLI'
               Visible = False
               Width = 100
@@ -642,7 +642,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                 object chkRECARGO_EQUIV: TcxDBCheckBox
                   Left = 411
                   Top = 24
-                  Caption = 'Factura con Recargo de Equivalencia'
+                  Caption = 'Borrador con Recargo de Equivalencia'
                   DataBinding.DataField = 'ESIVA_RECARGO_CLI'
                   DataBinding.DataSource = dsTablaG
                   Properties.DisplayUnchecked = 'True'
@@ -939,7 +939,7 @@ inherited frmMtoClientes: TfrmMtoClientes
               end
             end
             object tsHistoriaFacturacion: TcxTabSheet
-              Caption = '&3_Historia Facturaci'#243'n'
+              Caption = '&3_Historia Borradores'
               ImageIndex = 3
               object pnlFacturaCli: TPanel
                 Left = 0
@@ -1514,7 +1514,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                     Top = 16
                     Width = 107
                     Height = 34
-                    Caption = '&Ir a Factura'
+                    Caption = '&Ir a Borrador'
                     TabOrder = 0
                     OnClick = btnIraFacturaClick
                   end
@@ -2522,7 +2522,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                Caption = 'Texto legal en Factura de Cliente'
+                Caption = 'Texto legal en Borrador de Cliente'
                 TabOrder = 3
                 Transparent = True
               end
@@ -2685,7 +2685,7 @@ inherited frmMtoClientes: TfrmMtoClientes
       OnExecute = actEmpresasExecute
     end
     object actFacturas: TAction
-      Caption = 'Facturas'
+      Caption = 'Borradores'
       ShortCut = 49222
       OnExecute = actFacturasExecute
     end

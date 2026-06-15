@@ -60,12 +60,12 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
               Width = 130
             end
             object cxGrdDBTabPrinSERIE_FACTURA_OPCAJA: TcxGridDBColumn
-              Caption = 'Serie Factura'
+              Caption = 'Serie Borrador'
               DataBinding.FieldName = 'SERIE_FAC_OPCAJA'
               Width = 110
             end
             object cxGrdDBTabPrinNRO_FACTURA_OPCAJA: TcxGridDBColumn
-              Caption = 'Nro Factura'
+              Caption = 'Nro Borrador'
               DataBinding.FieldName = 'NUMERO_FAC_OPCAJA'
               Width = 110
             end
@@ -263,7 +263,7 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
     Left = 640
     Top = 16
     object actIrFacturaSimplif: TAction
-      Caption = 'Ir a Factura Simplificada'
+      Caption = 'Ir a Borrador Simplificado'
       ShortCut = 24646
       OnExecute = actIrFacturaSimplifExecute
     end

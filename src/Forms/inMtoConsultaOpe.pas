@@ -370,7 +370,7 @@ var
 begin
   //Anulación Verifactu (RegistroAnulacion) de la factura del ticket
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage('La operación seleccionada no tiene factura.')
+    ShowMessage('La operación seleccionada no tiene borrador.')
   else
   begin
     Qry := TUniQuery.Create(nil);
@@ -384,28 +384,38 @@ begin
       Qry.ParamByName('NUMERO').AsString := sNumero;
       Qry.Open;
       if Qry.IsEmpty or (Qry.Fields[0].AsString <> 'S') then
-        ShowMessage('La factura ' + sSerie + '\' + sNumero + ' aún no ' +
-                    'está consolidada en Verifactu: no se puede anular.')
-      else if MessageDlg('¿Anular en Verifactu la factura ' + sSerie +
+        ShowMessage('El borrador ' + sSerie + '\' + sNumero + ' aún no ' +
+                    'está cerrado fiscalmente: no se puede anular.')
+      else if MessageDlg('¿Anular fiscalmente el borrador ' + sSerie +
                          '\' + sNumero + '?', mtConfirmation,
                          [mbYes, mbNo], 0) = mrYes then
       begin
         Qry.Close;
-        if VerifactuActivo then
-        begin
-          TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, 'ANULACION');
-          RegistrarEventoVerifactu(inLibGlobalVar.oConn,
-            cEventoVerifactuEncolado,
-            'Anulación encolada desde Buscar operaciones', '',
-            sSerie, sNumero);
-          ShowMessage('Anulación encolada: el hilo Verifactu la enviará ' +
-                      'en el próximo ciclo.');
-        end
+        case ModoVerifactu of
+          mvVerifactu:
+            begin
+              TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero,
+                                            'ANULACION');
+              RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+                cEventoVerifactuEncolado,
+                'Anulación encolada desde Buscar operaciones', '',
+                sSerie, sNumero);
+              ShowMessage('Anulación encolada: el hilo Verifactu la ' +
+                          'enviará en el próximo ciclo.');
+            end;
+          mvNoVerifactu:
+            begin
+              TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie,
+                                                         sNumero,
+                                                         'ANULACION');
+              ShowMessage('Anulación registrada y firmada en NO VERI*FACTU.');
+            end;
         else
-        begin
-          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero,
+          begin
+            TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero,
                                                      'ANULACION');
-          ShowMessage('Anulación registrada y firmada en NO VERI*FACTU.');
+            ShowMessage('Anulación registrada en modo SIN VERIFACTU.');
+          end;
         end;
       end;
     finally
@@ -427,7 +437,7 @@ begin
   dtFecha := 0;
   bSigue  := False;
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage('La operación seleccionada no tiene factura.')
+    ShowMessage('La operación seleccionada no tiene borrador.')
   else
   begin
     Qry := TUniQuery.Create(nil);
@@ -443,8 +453,8 @@ begin
       if Qry.IsEmpty or
          (not SameText(Qry.FieldByName('TIPO_FAC').AsString,
                        'SIMPLIFICADA')) then
-        ShowMessage('Solo se factura a cliente desde una factura ' +
-                    'SIMPLIFICADA (ticket).')
+        ShowMessage('Solo se crea un borrador normal desde un borrador ' +
+                    'SIMPLIFICADO (ticket).')
       else
       begin
         dtFecha := Qry.FieldByName('FECHA_FAC').AsDateTime;
@@ -459,10 +469,10 @@ begin
                                                FEmpresa, FAlmacen,
                                                dtFecha);
       if oRes.Aceptado then
-        ShowMessage('Creada la factura ' + oRes.SerieNueva + '\' +
+        ShowMessage('Creado el borrador ' + oRes.SerieNueva + '\' +
                     oRes.NumeroNueva + ' en sustitución del ticket ' +
-                    sSerie + '\' + sNumero + ' y encolada en ' +
-                    'Verifactu (F3).');
+                    sSerie + '\' + sNumero + ' en modo fiscal ' +
+                    ModoVerifactuTexto + ' (F3).');
     end;
   end;
 end;
@@ -480,7 +490,7 @@ begin
   //cobrar saldrá con serie rectificativa y quedará enlazada
   bSigue := False;
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage('La operación seleccionada no tiene factura.')
+    ShowMessage('La operación seleccionada no tiene borrador.')
   else
   begin
     Qry := TUniQuery.Create(nil);
@@ -504,7 +514,7 @@ begin
     end;
   end;
   if bSigue and
-     (MessageDlg('¿Rectificar la factura ' + sSerie + '\' + sNumero +
+     (MessageDlg('¿Rectificar el borrador ' + sSerie + '\' + sNumero +
                  '? Se cargará la venta en caja con las líneas en ' +
                  'negativo para ajustarla y cobrarla.',
                  mtConfirmation, [mbYes, mbNo], 0) = mrYes) then

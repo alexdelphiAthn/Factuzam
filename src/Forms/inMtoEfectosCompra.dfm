@@ -12,7 +12,7 @@ inherited frmMtoEfectosCompra: TfrmMtoEfectosCompra
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcGrdDBTabPrinNUMERO_FACC_EFEC: TcxGridDBColumn
-              Caption = 'Factura'
+              Caption = 'Borrador'
               DataBinding.FieldName = 'NUMERO_FACC_EFEC'
               Width = 80
             end

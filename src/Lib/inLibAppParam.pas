@@ -256,8 +256,11 @@ begin
   // Subsistema Verifactu (AEAT). Los consumen el QR del ticket
   // (inLibVerifactu) y el hilo de la cola (inLibVerifactuCola); se leen
   // en caliente, así que puede activarse sin reiniciar la aplicación.
+  RegistrarParametro('Verifactu', 'appVerifactuModo',
+    'Modo fiscal: SIN, VERIFACTU o NO_VERIFACTU',
+    tpString, 'SIN');
   RegistrarParametro('Verifactu', 'appVerifactuActivo',
-    'Activar Verifactu (QR tributario en ticket y cola de envío)',
+    'Compatibilidad: activar Verifactu (usar appVerifactuModo)',
     tpBoolean, 'False');
   RegistrarParametro('Verifactu', 'appVerifactuFirmaCertificado',
     'Firmar registros y eventos con certificado de empresa',

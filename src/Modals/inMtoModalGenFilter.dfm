@@ -245,7 +245,7 @@
         ImageIndex = 3
       end
       object tsVentas: TcxTabSheet
-        Caption = '&5_Facturas -'
+        Caption = '&5_Borradores -'
         ImageIndex = 4
       end
     end

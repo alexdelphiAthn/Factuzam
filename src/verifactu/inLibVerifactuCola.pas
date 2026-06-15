@@ -36,6 +36,13 @@ type
                                                ANumero: string;
                                                const ATipoOperacion: string =
                                                'ALTA');
+    // Modo transitorio sin Verifactu: emite la factura con fase propia,
+    // sin cola AEAT y sin registro NO VERI*FACTU.
+    class procedure MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
+                                             const ASerie,
+                                             ANumero: string;
+                                             const ATipoOperacion: string =
+                                             'ALTA');
     // Marca una factura recién abonada como RECTIFICATIVA, la enlaza con
     // la original (columnas ABONO) y la encola en Verifactu si está
     // activo. La llama el modal de Rectificar de Facturas.
@@ -154,11 +161,11 @@ begin
   AQry.ParamByName('NIF').AsString      := AResultado.IssuerIrsId;
   AQry.Execute;
   if ATipoOperacion = 'ANULACION' then
-    sEstado := 'ANULADO_NO_VERIFACTU'
+    sEstado := 'NOVERIF_ANULADO'
   else if ATipoOperacion = 'SUBSANACION' then
-    sEstado := 'SUBSANADO_NO_VERIFACTU'
+    sEstado := 'NOVERIF_SUBSANADO'
   else
-    sEstado := 'REGISTRADO_NO_VERIFACTU';
+    sEstado := 'NOVERIF_REGISTRADO';
   if ATipoOperacion = 'ANULACION' then
   begin
     AQry.SQL.Text :=
@@ -230,9 +237,9 @@ begin
     ' WHERE SERIE_FAC  = :SERIE ' +
     '   AND NUMERO_FAC = :NUMERO';
   if ATipoOperacion = 'ANULACION' then
-    AQry.ParamByName('FASE').AsString := 'CANCELADA'
+    AQry.ParamByName('FASE').AsString := cFaseFacturaNoVerifactuAnulada
   else
-    AQry.ParamByName('FASE').AsString := 'ONLINE';
+    AQry.ParamByName('FASE').AsString := cFaseFacturaNoVerifactuOk;
   AQry.ParamByName('USUARIO').AsString := oUser;
   AQry.ParamByName('SERIE').AsString := ASerie;
   AQry.ParamByName('NUMERO').AsString := ANumero;
@@ -270,21 +277,23 @@ begin
   AQryTrx.Execute;
   // El lanzamiento saca la factura de BORRADOR en el acto: el QR es
   // calculable en local (ConstruirUrlQR) y la petición al ws viaja
-  // asíncrona en el hilo de la cola. Desde ONLINE ya puede imprimirse
-  // y deja de ser editable (solo anular o rectificar).
+  // asíncrona en el hilo de la cola.
   if SameText(ATipoOperacion, 'ALTA') then
   begin
     AQryTrx.SQL.Text :=
       ' UPDATE fza_facturas ' +
-      '    SET FASE_FAC = ''ONLINE'', ' +
+      '    SET FASE_FAC = :FASE, ' +
       '        INSTANTE_MODIF = NOW(), ' +
       '        USUARIO_MODIF  = :USUARIO ' +
       '  WHERE SERIE_FAC  = :SERIE ' +
       '    AND NUMERO_FAC = :NUMERO ' +
       '    AND (FASE_FAC IS NULL OR ' +
-      '         FASE_FAC IN ('''', ''BORRADOR'', ''ERROR''))';
+      '         FASE_FAC IN ('''', ''BORRADOR'', ''ERROR'', ' +
+      '                       ''VERIFACTU_ERROR''))';
     AQryTrx.ParamByName('SERIE').AsString   := ASerie;
     AQryTrx.ParamByName('NUMERO').AsString  := ANumero;
+    AQryTrx.ParamByName('FASE').AsString    :=
+      cFaseFacturaVerifactuPendiente;
     AQryTrx.ParamByName('USUARIO').AsString := oUser;
     AQryTrx.Execute;
   end;
@@ -305,8 +314,38 @@ begin
   GuardarRegistroNoVerifactu(AQryTrx, ASerie, ANumero, ATipoOperacion,
                              oResultado);
   RegistrarEventoVerifactu(AQryTrx.Connection, cEventoVerifactuInfo,
-    'Registro de facturación NO VERI*FACTU firmado', ATipoOperacion,
+    'Registro de facturación NO VERI*FACTU registrado', ATipoOperacion,
     ASerie, ANumero);
+end;
+
+class procedure TVerifactuCola.MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
+                                                         const ASerie,
+                                                         ANumero: string;
+                                                         const ATipoOperacion:
+                                                         string);
+var
+  sFase: string;
+begin
+  if ATipoOperacion = 'ANULACION' then
+    sFase := cFaseFacturaSinVerifactuAnulada
+  else
+    sFase := cFaseFacturaSinVerifactu;
+  AQryTrx.SQL.Text :=
+    ' UPDATE fza_facturas ' +
+    ' SET ESCONSOLIDADA_FAC = ''S'', ' +
+    '     INSTANTECONSO_FAC = NOW(), ' +
+    '     FASE_FAC = :FASE, ' +
+    '     INSTANTE_MODIF = NOW(), ' +
+    '     USUARIO_MODIF  = :USUARIO ' +
+    ' WHERE SERIE_FAC  = :SERIE ' +
+    '   AND NUMERO_FAC = :NUMERO';
+  AQryTrx.ParamByName('FASE').AsString := sFase;
+  AQryTrx.ParamByName('USUARIO').AsString := oUser;
+  AQryTrx.ParamByName('SERIE').AsString := ASerie;
+  AQryTrx.ParamByName('NUMERO').AsString := ANumero;
+  AQryTrx.Execute;
+  Log.LogInfo('Factura ' + ASerie + '\' + ANumero +
+    ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
 end;
 
 class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;
@@ -376,15 +415,19 @@ begin
       RegistrarRelacionFactura(AConn, ASerieRect, ANumeroRect,
                                ASerieOriginal, ANumeroOriginal,
                                'RECTIFICA');
-      if VerifactuActivo then
-      begin
-        EncolarFactura(Qry, ASerieRect, ANumeroRect);
-        RegistrarEventoVerifactu(AConn, cEventoVerifactuEncolado,
-          'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
-          ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
+      case ModoVerifactu of
+        mvVerifactu:
+          begin
+            EncolarFactura(Qry, ASerieRect, ANumeroRect);
+            RegistrarEventoVerifactu(AConn, cEventoVerifactuEncolado,
+              'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
+              ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
+          end;
+        mvNoVerifactu:
+          RegistrarFacturaNoVerifactu(Qry, ASerieRect, ANumeroRect);
+      else
+        MarcarFacturaSinVerifactu(Qry, ASerieRect, ANumeroRect);
       end;
-      if not VerifactuActivo then
-        RegistrarFacturaNoVerifactu(Qry, ASerieRect, ANumeroRect);
     finally
       FreeAndNil(Qry);
     end;
@@ -468,7 +511,7 @@ begin
     // permite cerrar sin procesar nada a medias
     EsperarCiclo;
     if (not Terminated) and (not oCerrandoApp) and
-       oAppParams.GetBool('appVerifactuActivo', False) then
+       (ModoVerifactu = mvVerifactu) then
     begin
       try
         ProcesarPendientes;
@@ -707,17 +750,17 @@ var
 begin
   // Se ejecuta DENTRO de la transacción abierta por ProcesarFila
   if ATipoOperacion = 'ANULACION' then
-    sFase := 'CANCELADA'
+    sFase := cFaseFacturaVerifactuAnulada
   else
-    sFase := 'ONLINE';
+    sFase := cFaseFacturaVerifactuOk;
   if SameText(AResultado.EstadoRegistro, 'AceptadoConErrores') then
-    sEstadoFaccon := 'ACEPTADO_ERR'
+    sEstadoFaccon := 'VERIFACTU_ACEPT_ERR'
   else if SameText(AResultado.EstadoRegistro, 'Duplicado') then
-    sEstadoFaccon := 'DUPLICADO'
+    sEstadoFaccon := 'VERIFACTU_DUPLICADO'
   else if ATipoOperacion = 'SUBSANACION' then
-    sEstadoFaccon := 'SUBSANADO'
+    sEstadoFaccon := 'VERIFACTU_SUBSANADO'
   else
-    sEstadoFaccon := 'PROCESADO';
+    sEstadoFaccon := 'VERIFACTU_PROCESADO';
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := FConn;
@@ -748,7 +791,7 @@ begin
       Qry.SQL.Text :=
         ' UPDATE fza_facturas_consolidaciones ' +
         ' SET QUEUE_ID_CANCEL_FACCON = :IDCOLA, ' +
-        '     ESTADO_FACCON = ''ANULADO'', ' +
+        '     ESTADO_FACCON = ''VERIFACTU_ANULADO'', ' +
         '     CHAIN_NUMBER_FACCON = :CHAINNUM, ' +
         '     CHAIN_HASH_FACCON   = :CHAINHASH, ' +
         '     RESPUESTA_COMPLETA_FACCON = :RESPUESTA, ' +
@@ -973,11 +1016,12 @@ begin
       // Reintentos agotados: se refleja en la fase fiscal de la factura
       Qry.SQL.Text :=
         ' UPDATE fza_facturas ' +
-        ' SET FASE_FAC = ''ERROR'', ' +
+        ' SET FASE_FAC = :FASE, ' +
         '     INSTANTE_MODIF = NOW(), ' +
         '     USUARIO_MODIF  = :USUARIO ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
         '   AND NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('FASE').AsString := cFaseFacturaVerifactuError;
       Qry.ParamByName('USUARIO').AsString := oUser;
       Qry.ParamByName('SERIE').AsString   := ASerie;
       Qry.ParamByName('NUMERO').AsString  := ANumero;

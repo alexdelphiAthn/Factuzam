@@ -284,7 +284,7 @@ begin
   end;
   if tvLineasAlbaran.Controller.SelectedRowCount = 0 then
   begin
-    ShowMessage('Seleccione las líneas a facturar en la rejilla ' +
+    ShowMessage('Seleccione las líneas para crear borrador en la rejilla ' +
                 '(Ctrl+click para selección múltiple).');
     Exit;
   end;
@@ -313,16 +313,16 @@ begin
 
     if lst.Count = 0 then
     begin
-      ShowMessage('Las líneas seleccionadas ya están facturadas.');
+      ShowMessage('Las líneas seleccionadas ya tienen borrador.');
       Exit;
     end;
-    if MessageDlg(Format('¿Generar factura con %d línea(s) del albarán?',
+    if MessageDlg(Format('¿Generar borrador con %d línea(s) del albarán?',
                          [lst.Count]),
                   mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
     if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, lst) then
-      ShowMessageFmt('Factura creada: %s / %s', [sSerFac, sNumFac])
+      ShowMessageFmt('Borrador creado: %s / %s', [sSerFac, sNumFac])
     else
-      ShowMessage('No se pudo crear la factura.');
+      ShowMessage('No se pudo crear el borrador.');
   finally
     FreeAndNil(lst);
   end;
@@ -341,12 +341,12 @@ begin
     ShowMessage('El albarán no tiene líneas.');
     Exit;
   end;
-  if MessageDlg('¿Facturar todas las líneas pendientes del albarán?',
+  if MessageDlg('¿Crear borrador con todas las líneas pendientes del albarán?',
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, nil) then
-    ShowMessageFmt('Factura creada: %s / %s', [sSerFac, sNumFac])
+    ShowMessageFmt('Borrador creado: %s / %s', [sSerFac, sNumFac])
   else
-    ShowMessage('No se pudo crear la factura.');
+    ShowMessage('No se pudo crear el borrador.');
 end;
 
 procedure TfrmMtoAlbaranes.btnFacturarPorFechasClick(Sender: TObject);

@@ -20,7 +20,22 @@ interface
 uses
   System.SysUtils, Uni, frxClass,  Data.DB;
 
+type
+  TModoVerifactu = (mvSinVerifactu, mvVerifactu, mvNoVerifactu);
+
 const
+  cModoVerifactuSin = 'SIN';
+  cModoVerifactuVerifactu = 'VERIFACTU';
+  cModoVerifactuNoVerifactu = 'NO_VERIFACTU';
+  cFaseFacturaBorrador = 'BORRADOR';
+  cFaseFacturaSinVerifactu = 'SIN_VERIFACTU';
+  cFaseFacturaSinVerifactuAnulada = 'SIN_VERIF_ANULADA';
+  cFaseFacturaVerifactuPendiente = 'VERIFACTU_PENDIENTE';
+  cFaseFacturaVerifactuOk = 'VERIFACTU_OK';
+  cFaseFacturaVerifactuError = 'VERIFACTU_ERROR';
+  cFaseFacturaVerifactuAnulada = 'VERIFACTU_ANULADA';
+  cFaseFacturaNoVerifactuOk = 'NOVERIFACTU_OK';
+  cFaseFacturaNoVerifactuAnulada = 'NOVERIFACTU_ANULADA';
   // URLs oficiales del servicio de cotejo del QR tributario. Se pueden
   // sobreescribir con appVerifactuUrlQRPre / appVerifactuUrlQRPro.
   cVerifactuUrlQRPre =
@@ -39,8 +54,15 @@ const
   cEventoNoVerifactuExportFact   = 108;
   cEventoNoVerifactuExportEventos = 109;
 
-// True si el parámetro appVerifactuActivo está marcado
+// Modo fiscal activo: SIN, VERIFACTU o NO_VERIFACTU.
+function ModoVerifactu: TModoVerifactu;
+function ModoVerifactuTexto: string;
+// True si el modo fiscal activo es VERIFACTU
 function VerifactuActivo: Boolean;
+// True si el modo fiscal activo es NO_VERIFACTU
+function NoVerifactuActivo: Boolean;
+// True si el modo fiscal activo es SIN
+function SinVerifactuActivo: Boolean;
 // True si se firman registros y eventos con certificado de empresa
 function VerifactuFirmaCertificado: Boolean;
 // 'PRE' (pruebas) o 'PRO' (producción) según appVerifactuEntorno
@@ -185,6 +207,8 @@ begin
       Result := '01';
     cEventoNoVerifactuFin:
       Result := '02';
+    cEventoNoVerifactuCambioConfig:
+      Result := '03';
     cEventoNoVerifactuExportFact:
       Result := '08';
     cEventoNoVerifactuExportEventos:
@@ -465,9 +489,47 @@ begin
   end;
 end;
 
+function ModoVerifactuTexto: string;
+begin
+  Result := UpperCase(Trim(oAppParams.GetString('appVerifactuModo', '')));
+  if Result = '' then
+  begin
+    if oAppParams.GetBool('appVerifactuActivo', False) then
+      Result := cModoVerifactuVerifactu
+    else
+      Result := cModoVerifactuSin;
+  end;
+  if (Result <> cModoVerifactuVerifactu) and
+     (Result <> cModoVerifactuNoVerifactu) then
+    Result := cModoVerifactuSin;
+end;
+
+function ModoVerifactu: TModoVerifactu;
+var
+  sModo: string;
+begin
+  sModo := ModoVerifactuTexto;
+  if sModo = cModoVerifactuVerifactu then
+    Result := mvVerifactu
+  else if sModo = cModoVerifactuNoVerifactu then
+    Result := mvNoVerifactu
+  else
+    Result := mvSinVerifactu;
+end;
+
 function VerifactuActivo: Boolean;
 begin
-  Result := oAppParams.GetBool('appVerifactuActivo', False);
+  Result := ModoVerifactu = mvVerifactu;
+end;
+
+function NoVerifactuActivo: Boolean;
+begin
+  Result := ModoVerifactu = mvNoVerifactu;
+end;
+
+function SinVerifactuActivo: Boolean;
+begin
+  Result := ModoVerifactu = mvSinVerifactu;
 end;
 
 function VerifactuFirmaCertificado: Boolean;

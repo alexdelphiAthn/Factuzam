@@ -547,19 +547,19 @@ end;
 procedure TfrmMtoFacturasCompra.btnImprimirHClick(Sender: TObject);
 begin
   inherited;
-  ShowMessage('Impresion de factura de compra: pendiente (hito de informes).');
+  ShowMessage('Impresion de borrador de compra: pendiente (hito de informes).');
 end;
 
 procedure TfrmMtoFacturasCompra.btnImprimirVClick(Sender: TObject);
 begin
   inherited;
-  ShowMessage('Impresion de factura de compra: pendiente (hito de informes).');
+  ShowMessage('Impresion de borrador de compra: pendiente (hito de informes).');
 end;
 
 procedure TfrmMtoFacturasCompra.btnPegatinasClick(Sender: TObject);
 begin
   inherited;
-  ShowMessage('Etiquetas de factura de compra: pendiente (hito de informes).');
+  ShowMessage('Etiquetas de borrador de compra: pendiente (hito de informes).');
 end;
 
 procedure TfrmMtoFacturasCompra.btnAtributosColumnaClick(Sender: TObject);
@@ -728,11 +728,11 @@ begin
     if iRes > 0 then
       ShowMessage(Format('Generados %d efecto(s) de pago.', [iRes]))
     else if iRes = 0 then
-      ShowMessage('No se generaron efectos. Revisa que la factura tenga ' +
+      ShowMessage('No se generaron efectos. Revisa que el borrador tenga ' +
                   'forma de pago y total, y que no tenga ya efectos pagados ' +
                   'o remesados.')
     else
-      ShowMessage('No hay factura activa (o hubo un error al generar).');
+      ShowMessage('No hay borrador activo (o hubo un error al generar).');
   end;
 end;
 

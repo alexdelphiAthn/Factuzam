@@ -2,7 +2,7 @@
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Facturar albaranes por fechas / serie'
+  Caption = 'Crear borradores por fechas / serie'
   ClientHeight = 540
   ClientWidth = 980
   Color = clBtnFace
@@ -65,7 +65,7 @@
     object chkAgruparPorCliente: TcxCheckBox
       Left = 392
       Top = 28
-      Caption = 'Una factura por cliente (consolidar)'
+      Caption = 'Un borrador por cliente (consolidar)'
       TabOrder = 3
     end
     object btnBuscar: TcxButton
@@ -165,7 +165,7 @@
       Top = 12
       Width = 170
       Height = 28
-      Caption = 'Generar facturas'
+      Caption = 'Generar borradores'
       TabOrder = 1
       OnClick = btnFacturarClick
     end

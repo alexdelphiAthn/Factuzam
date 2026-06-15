@@ -389,7 +389,7 @@ end;
 
 procedure TfrmMtoEmpresas.btnExportarExcelClick(Sender: TObject);
 begin
-  ExportarExcel(cxgrdEmpresasFacturas, 'Historico_Facturas_Empresa_' +
+  ExportarExcel(cxgrdEmpresasFacturas, 'Historico_Borradores_Empresa_' +
                        dsTablaG.Dataset.FieldByName('CODIGO_EMP_EMP').AsString);
 end;
 
@@ -563,7 +563,7 @@ begin
                   'FP, IN).' + sLineBreak +
                   '- Una por almacen activo para pedidos y albaranes de ' +
                   'compra (PC / AB).' + sLineBreak +
-                  '- Una de facturas rectificativas (R1), generica de la ' +
+                  '- Una de borradores rectificativos (R1), generica de la ' +
                   'empresa.' + sLineBreak +
                   '¿Continuar?',
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then

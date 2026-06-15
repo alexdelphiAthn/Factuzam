@@ -1,5 +1,5 @@
 inherited frmModalSerieFechaFactura: TfrmModalSerieFechaFactura
-  Caption = 'Factura completa: serie y fecha'
+  Caption = 'Borrador normal: serie y fecha'
   ClientHeight = 200
   ClientWidth = 440
   Position = poScreenCenter
@@ -7,7 +7,7 @@ inherited frmModalSerieFechaFactura: TfrmModalSerieFechaFactura
   object lblSerie: TcxLabel [0]
     Left = 24
     Top = 35
-    Caption = 'Serie factura:'
+    Caption = 'Serie borrador:'
     Transparent = True
   end
   object cbbSerie: TcxLookupComboBox [1]
@@ -28,7 +28,7 @@ inherited frmModalSerieFechaFactura: TfrmModalSerieFechaFactura
   object lblFecha: TcxLabel [2]
     Left = 24
     Top = 79
-    Caption = 'Fecha factura:'
+    Caption = 'Fecha borrador:'
     Transparent = True
   end
   object dtFecha: TcxDateEdit [3]

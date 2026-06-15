@@ -880,7 +880,7 @@
                   Top = 13
                   Width = 110
                   Height = 25
-                  Caption = 'Ir a Factura'
+                  Caption = 'Ir a Borrador'
                   TabOrder = 0
                   OnClick = btnIraFacturaClick
                 end
@@ -1475,7 +1475,7 @@
       OnExecute = actArticulosExecute
     end
     object actFacturas: TAction
-      Caption = 'Facturas'
+      Caption = 'Borradores'
       ShortCut = 49222
       OnExecute = actFacturasExecute
     end

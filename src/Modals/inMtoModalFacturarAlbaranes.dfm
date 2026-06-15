@@ -1,5 +1,5 @@
 inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
-  Caption = 'Facturar albaranes de compra'
+  Caption = 'Crear borradores de compra'
   ClientHeight = 560
   ClientWidth = 720
   StyleElements = [seFont, seClient, seBorder]
@@ -81,10 +81,10 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
       Caption = ' Modo '
       Properties.Items = <
         item
-          Caption = 'Crear factura nueva'
+          Caption = 'Crear borrador nuevo'
         end
         item
-          Caption = 'Incorporar a una factura existente'
+          Caption = 'Incorporar a un borrador existente'
         end>
       Properties.OnEditValueChanged = rgModoPropertiesEditValueChanged
       ItemIndex = 0
@@ -95,7 +95,7 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
     object lblFacExistente: TcxLabel
       Left = 16
       Top = 150
-      Caption = 'Factura existente'
+      Caption = 'Borrador existente'
       Transparent = True
     end
     object cbbFacExistente: TcxComboBox
@@ -182,7 +182,7 @@ inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
       Top = 12
       Width = 210
       Height = 38
-      Caption = '&Facturar seleccionados'
+      Caption = '&Crear borradores'
       Default = True
       TabOrder = 1
       OnClick = btnFacturarClick

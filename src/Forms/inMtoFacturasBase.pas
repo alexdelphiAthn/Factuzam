@@ -531,10 +531,9 @@ type
     function AbrirListadoAlCrear: Boolean; virtual;
     //procedure CalcularLinea;
   private
-    // Bloqueo por fase Verifactu: una factura solo es editable (cabecera,
-    // líneas y borrado) mientras FASE_FAC='BORRADOR'. Al lanzarla pasa a
-    // ONLINE y solo caben Anular o Rectificar. Imprimir exige haber
-    // salido de BORRADOR (el QR tributario nace con el lanzamiento).
+    // Bloqueo por fase fiscal: una factura solo es editable (cabecera,
+    // líneas y borrado) mientras FASE_FAC='BORRADOR'. Al lanzarla pasa
+    // a una fase fiscal cerrada y solo caben Anular o Rectificar.
     procedure ActualizarBloqueoEdicion;
     procedure AsignarControles;
     // Encola en fza_verifactu_cola una ANULACION o SUBSANACION de la
@@ -788,7 +787,7 @@ end;
 procedure TfrmMtoFacturasBase.btnExportarLineasClick(Sender: TObject);
 begin
   inherited;
-  ExportarExcel(cxGrdLineasFactura, 'Lineas_Factura_' +
+  ExportarExcel(cxGrdLineasFactura, 'Lineas_Borrador_' +
                 dsTablaG.Dataset.FieldByName(fseriefac).AsString +
                 '_' +
                 dsTablaG.Dataset.FieldByName(fnrofac).AsString);
@@ -818,7 +817,7 @@ procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesButtonClick(
 begin
   if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Clientes en Facturas',
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Clientes en Borradores',
                                        dmmFacturas.unqryCliDataFac,
                                        'frmMtoCliFacSearch') then
      begin
@@ -859,7 +858,7 @@ procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesButtonClick(
 begin
   if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Empresas en Facturas',
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Empresas en Borradores',
                                        dmmFacturas.unqryEmpDataFac,
                                        'frmMtoEmpFacSearch') then
       dmmFacturas.CopiarEmpresaaFactura(dmmFacturas.unqryEmpDataFac);
@@ -876,7 +875,7 @@ end;
 procedure TfrmMtoFacturasBase.btnExportarRecibosClick(Sender: TObject);
 begin
   inherited;
-  ExportarExcel(cxGrdLineasFactura, 'Recibos_Factura_' +
+  ExportarExcel(cxGrdLineasFactura, 'Recibos_Borrador_' +
                       dsTablaG.Dataset.FieldByName(fseriefac).AsString +
                       '_' +
                       dsTablaG.Dataset.FieldByName(fnrofac).AsString);
@@ -931,8 +930,8 @@ begin
   if ((sFase = '') or SameText(sFase, 'BORRADOR')) and
      (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') then
   begin
-    ShowMessage('La factura está en BORRADOR: lánzela a Verifactu con ' +
-                'el botón Consolidar antes de imprimirla.');
+    ShowMessage('El borrador está pendiente: láncelo a Verifactu con ' +
+                'el botón Consolidar antes de imprimirlo.');
     Abort;
   end;
   form := TfrmPrintFac.Create(Application);  // Owner = Application
@@ -1301,7 +1300,7 @@ end;
 
 function TfrmMtoFacturasBase.DescripcionHijos: string;
 begin
-  Result := 'líneas de factura';
+  Result := 'líneas de borrador';
 end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
@@ -1400,24 +1399,30 @@ begin
   sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
   if Trim(sNumero) = '' then
-    ShowMessage('Seleccione una factura en la lista.')
+    ShowMessage('Seleccione un borrador en la lista.')
   else if dsTablaG.DataSet.FieldByName(
             'ESCONSOLIDADA_FAC').AsString <> 'S' then
-    ShowMessage('La factura ' + sSerie + '\' + sNumero + ' aún no está ' +
-                'consolidada en Verifactu: no se puede ' +
+    ShowMessage('El borrador ' + sSerie + '\' + sNumero + ' aún no está ' +
+                'cerrado fiscalmente: no se puede ' +
                 LowerCase(AAccion) + '.')
-  else if MessageDlg('¿' + AAccion + ' en Verifactu la factura ' +
+  else if MessageDlg('¿' + AAccion + ' fiscalmente el borrador ' +
                      sSerie + '\' + sNumero + '?', mtConfirmation,
                      [mbYes, mbNo], 0) = mrYes then
   begin
       Qry := TUniQuery.Create(nil);
       try
         Qry.Connection := inLibGlobalVar.oConn;
-      if VerifactuActivo then
-        TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, ATipoOperacion)
+      case ModoVerifactu of
+        mvVerifactu:
+          TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero,
+                                        ATipoOperacion);
+        mvNoVerifactu:
+          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero,
+                                                     ATipoOperacion);
       else
-        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero,
-                                                   ATipoOperacion);
+        TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero,
+                                                 ATipoOperacion);
+      end;
     finally
       FreeAndNil(Qry);
     end;
@@ -1425,13 +1430,17 @@ begin
     begin
       RegistrarEventoVerifactu(inLibGlobalVar.oConn,
         cEventoVerifactuEncolado,
-        AAccion + ' encolada desde Facturas', '', sSerie, sNumero);
+        AAccion + ' encolada desde Borradores', '', sSerie, sNumero);
       ShowMessage(AAccion + ' encolada: el hilo Verifactu la enviará en ' +
                   'el próximo ciclo. Puede seguirla en la columna ' +
                   '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
     end
-    else
+    else if NoVerifactuActivo then
+    begin
       ShowMessage(AAccion + ' registrada y firmada en NO VERI*FACTU.');
+    end
+    else
+      ShowMessage(AAccion + ' registrada en modo SIN VERIFACTU.');
     dsTablaG.DataSet.Refresh;
   end;
 end;
@@ -1443,60 +1452,64 @@ var
   sNumero: string;
   sFase:   string;
 begin
-  // Lanzamiento manual a Verifactu de una factura en borrador (normal
-  // o simplificada creada a mano): pasa a ONLINE en el acto, el QR ya
-  // es imprimible y el hilo envía el registro a la AEAT en segundo
-  // plano (cola fza_verifactu_cola).
+  // Lanzamiento manual de una factura en borrador. La fase final depende
+  // del modo fiscal: SIN, VERIFACTU o NO_VERIFACTU.
   if (dsTablaG.DataSet = nil) or
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage('Seleccione una factura en la lista.');
+    ShowMessage('Seleccione un borrador en la lista.');
     Abort;
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
   sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
   sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
   if (sFase <> '') and (not SameText(sFase, 'BORRADOR')) then
-    ShowMessage('La factura ' + sSerie + '\' + sNumero +
-                ' ya se lanzó a Verifactu (fase ' + sFase + ').')
+    ShowMessage('El borrador ' + sSerie + '\' + sNumero +
+                ' ya se lanzó fiscalmente (fase ' + sFase + ').')
   else if ContarHijosActivos = 0 then
-    ShowMessage('La factura no tiene líneas: no se puede lanzar a ' +
-                'Verifactu.')
+    ShowMessage('El borrador no tiene líneas: no se puede lanzar.')
   else if SameText(dsTablaG.DataSet.FieldByName(ftipofac).AsString,
                    'NORMAL') and
           (Trim(dsTablaG.DataSet.FieldByName(
                   'NIF_CLIENTE_FAC').AsString) = '') then
-    ShowMessage('Una factura NORMAL necesita el NIF del cliente para ' +
-                'Verifactu. Complete los datos del cliente.')
-  else if MessageDlg('¿Lanzar a Verifactu la factura ' + sSerie + '\' +
-                     sNumero + '? Pasará a ONLINE y dejará de ser ' +
+    ShowMessage('Un borrador NORMAL necesita el NIF del cliente para ' +
+                'el registro fiscal. Complete los datos del cliente.')
+  else if MessageDlg('¿Lanzar fiscalmente el borrador ' + sSerie + '\' +
+                     sNumero + '? Dejará de estar en borrador y de ser ' +
                      'editable.', mtConfirmation, [mbYes, mbNo], 0) =
           mrYes then
   begin
       Qry := TUniQuery.Create(nil);
       try
         Qry.Connection := inLibGlobalVar.oConn;
-      if VerifactuActivo then
-        TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero)
+      case ModoVerifactu of
+        mvVerifactu:
+          TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero);
+        mvNoVerifactu:
+          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero);
       else
-        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero);
+        TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero);
+      end;
     finally
       FreeAndNil(Qry);
     end;
     if VerifactuActivo then
       RegistrarEventoVerifactu(inLibGlobalVar.oConn,
         cEventoVerifactuEncolado,
-        'Lanzamiento manual (Consolidar) desde Facturas', '',
+        'Lanzamiento manual (Consolidar) desde Borradores', '',
         sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
     if VerifactuActivo then
-      ShowMessage('Factura ' + sSerie + '\' + sNumero + ' en ONLINE: el ' +
-                  'QR ya puede imprimirse y el envío a la AEAT queda en ' +
-                  'la cola Verifactu.')
+      ShowMessage('Borrador ' + sSerie + '\' + sNumero +
+                  ' en VERIFACTU_PENDIENTE: el QR ya puede imprimirse ' +
+                  'y el envío a la AEAT queda en la cola Verifactu.')
+    else if NoVerifactuActivo then
+      ShowMessage('Borrador ' + sSerie + '\' + sNumero +
+                  ' registrado y firmado en NO VERI*FACTU.')
     else
-      ShowMessage('Factura ' + sSerie + '\' + sNumero +
-                  ' registrada y firmada en NO VERI*FACTU.');
+      ShowMessage('Borrador ' + sSerie + '\' + sNumero +
+                  ' emitido en modo SIN VERIFACTU.');
   end;
 end;
 
@@ -1518,19 +1531,19 @@ begin
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage('Seleccione una factura en la lista.');
+    ShowMessage('Seleccione un borrador en la lista.');
     Abort;
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
   sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
   sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
   if dsTablaG.DataSet.FieldByName(fescon).AsString = 'S' then
-    ShowMessage('La factura ' + sSerie + '\' + sNumero + ' ya está ' +
-                'consolidada en la AEAT: no puede volver a borrador. ' +
-                'Use Anular Verifactu o emita una rectificativa.')
+    ShowMessage('El borrador ' + sSerie + '\' + sNumero + ' ya está ' +
+                'consolidado en la AEAT: no puede volver a borrador. ' +
+                'Use Anular fiscal o emita una rectificativa.')
   else if (sFase = '') or SameText(sFase, 'BORRADOR') then
-    ShowMessage('La factura ya está en BORRADOR.')
-  else if MessageDlg('¿Devolver a BORRADOR la factura ' + sSerie +
+    ShowMessage('El borrador ya está en BORRADOR.')
+  else if MessageDlg('¿Devolver a BORRADOR el documento ' + sSerie +
                      '\' + sNumero + ' y anular su envío pendiente a ' +
                      'la AEAT?', mtConfirmation, [mbYes, mbNo], 0) =
           mrYes then
@@ -1561,10 +1574,10 @@ begin
         if SameText(sEstado, 'ENVIADA') then
           raise Exception.Create('El alta ya fue aceptada por la ' +
             'AEAT: no se puede volver a borrador. Use Anular ' +
-            'Verifactu o emita una rectificativa.');
+            'fiscal o emita una rectificativa.');
         if SameText(sEstado, 'PROCESANDO') then
           raise Exception.Create('El hilo Verifactu está enviando ' +
-            'esta factura ahora mismo. Espere unos segundos y ' +
+            'este borrador ahora mismo. Espere unos segundos y ' +
             'vuelva a intentarlo.');
         if sEstado <> '' then
         begin
@@ -1576,7 +1589,7 @@ begin
             '    SET ESTADO_VFCOLA = ''ERROR'', ' +
             '        CONTADOR_INTENTOS_VFCOLA = 999999, ' +
             '        MENSAJE_ERROR_VFCOLA = ''Lanzamiento anulado ' +
-            'por el usuario: factura devuelta a BORRADOR'', ' +
+            'por el usuario: borrador devuelto a BORRADOR'', ' +
             '        INSTANTE_MODIF = NOW(), ' +
             '        USUARIO_MODIF  = :USUARIO ' +
             '  WHERE SERIE_FAC_VFCOLA  = :SERIE ' +
@@ -1613,21 +1626,21 @@ begin
     end;
     RegistrarEventoVerifactu(inLibGlobalVar.oConn,
       cEventoVerifactuInfo,
-      'Lanzamiento anulado: factura devuelta a BORRADOR', '',
+      'Lanzamiento anulado: borrador devuelto a BORRADOR', '',
       sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
-    ShowMessage('Factura ' + sSerie + '\' + sNumero + ' de nuevo en ' +
+    ShowMessage('Borrador ' + sSerie + '\' + sNumero + ' de nuevo en ' +
                 'BORRADOR. Corrija los datos (si el error es de la ' +
                 'empresa, arréglelo en Empresas y use "Dar de Alta o ' +
                 'Actualizar Empresa" en la pestaña Datos Empresa ' +
-                'Emisora para refrescar la copia de la factura) y ' +
+                'Emisora para refrescar la copia del borrador) y ' +
                 'pulse Consolidar para relanzarla.');
   end;
 end;
 
 procedure TfrmMtoFacturasBase.btnVerifactuAnularClick(Sender: TObject);
 begin
-  //Anulación Verifactu (RegistroAnulacion AEAT) de la factura activa
+  // Anulación fiscal de la factura activa según modo Verifactu.
   EncolarOperacionVerifactu('ANULACION', 'Anulación');
 end;
 
@@ -1641,11 +1654,11 @@ begin
   sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
   if Trim(sNumero) = '' then
-    ShowMessage('Seleccione una factura en la lista.')
+    ShowMessage('Seleccione un borrador en la lista.')
   else if not SameText(dsTablaG.DataSet.FieldByName(
                          'TIPO_FAC').AsString, 'SIMPLIFICADA') then
-    ShowMessage('Solo se factura a cliente desde una factura ' +
-                'SIMPLIFICADA (ticket).')
+    ShowMessage('Solo se crea un borrador normal desde un borrador ' +
+                'SIMPLIFICADO (ticket).')
   else
   begin
     oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
@@ -1654,10 +1667,10 @@ begin
               dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
     if oRes.Aceptado then
     begin
-      ShowMessage('Creada la factura ' + oRes.SerieNueva + '\' +
+      ShowMessage('Creado el borrador ' + oRes.SerieNueva + '\' +
                   oRes.NumeroNueva + ' en sustitución del ticket ' +
-                  sSerie + '\' + sNumero + ' y encolada en Verifactu ' +
-                  '(F3).');
+                  sSerie + '\' + sNumero + ' en modo fiscal ' +
+                  ModoVerifactuTexto + ' (F3).');
       dsTablaG.DataSet.Refresh;
     end;
   end;
@@ -1862,7 +1875,7 @@ begin
                   dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
     //      TLibDefaults.Configurar(formulario, esArticulo, True);
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Lineas de ' +
-                                                                     'Facturas',
+                                                                   'Borradores',
                                        dmmFacturas.unqryArtDataLinFac,
                                        'frmMtoArtFacSearch') then
       dmmFacturas.CopiarArticuloaLinea(dmmFacturas.unqryArtDataLinFac);
@@ -2072,7 +2085,7 @@ begin
         except
           on E: Exception do
           begin
-            ShowMessage('Debe completar los datos de la factura: ' + E.Message);
+            ShowMessage('Debe completar los datos del borrador: ' + E.Message);
             Exit;
           end;
         end;

@@ -278,12 +278,12 @@ begin
   //F8 -> grabar la venta como factura completa (A4), no como ticket
   if FRectificaA <> '' then
     ShowMessage('Una rectificación se cierra como ticket rectificativo,' +
-                ' no como factura completa.')
+                ' no como borrador normal.')
   else if (Trim(FCodigoCliente) = '') or (Trim(FCodigoCliente) = '0') then
-    ShowMessage('Asigne un cliente a la operación para emitir factura.')
+    ShowMessage('Asigne un cliente a la operación para emitir borrador.')
   else if Trim(FNifCliente) = '' then
     ShowMessage('El cliente no tiene NIF: complételo en su ficha para ' +
-                'poder emitir factura completa.')
+                'poder emitir borrador normal.')
   else if ValidarYConfirmar then
   begin
     // Serie de factura completa (por defecto la del almacén) y fecha
@@ -446,7 +446,7 @@ begin
   ANumeroFmt := '';
   iNum := StrToInt64Def(Trim(ANumero), 0);
   if iNum <= 0 then
-    MessageDlg('El número de factura indicado no es válido.',
+    MessageDlg('El número de borrador indicado no es válido.',
       mtError, [mbOK], 0)
   else
   begin
@@ -1099,7 +1099,7 @@ begin
   inherited;
   // Modo rectificación: número de la factura rectificada a la vista
   if FRectificaA <> '' then
-    Caption := Caption + '  —  RECTIFICA a la factura ' + FRectificaA;
+    Caption := Caption + '  -  RECTIFICA al borrador ' + FRectificaA;
   if Trim(FCodigoCliente) <> '' then
   begin
     qryCli := TUniQuery.Create(nil);

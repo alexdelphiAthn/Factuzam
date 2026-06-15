@@ -111,7 +111,7 @@
           Width = 78
         end
         object colNroFactura: TcxGridDBColumn
-          Caption = 'N'#186' Factura'
+          Caption = 'N'#186' Borrador'
           DataBinding.FieldName = 'NUMERO_FAC'
           Width = 97
         end
@@ -753,7 +753,7 @@
       end
     end
     object tsFactura: TcxTabSheet
-      Caption = 'Factura '
+      Caption = 'Borrador '
       ImageIndex = 4
       ExplicitLeft = 0
       ExplicitTop = 0
@@ -1008,7 +1008,7 @@
       Top = 6
       Width = 200
       Height = 28
-      Caption = 'Anular Factura Verifactu'
+      Caption = 'Anular registro fiscal'
       TabOrder = 4
       OnClick = btnAnularVerifactuClick
     end
