@@ -159,6 +159,145 @@ begin
       'para firmar la exportacion NO VERI*FACTU.');
 end;
 
+function ColumnasFirmaEventosDisponibles(AConn: TUniConnection): Boolean;
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' SELECT COUNT(*) AS N ' +
+      ' FROM INFORMATION_SCHEMA.COLUMNS ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      '   AND TABLE_NAME = ''fza_verifactu_eventos'' ' +
+      '   AND COLUMN_NAME IN (''REGISTRO_XML_LOG'', ' +
+      '       ''FIRMA_XADES_LOG'', ''SERIE_CERTIFICADO_LOG'', ' +
+      '       ''TITULAR_CERTIFICADO_LOG'', ''HUELLA_CERTIFICADO_LOG'')';
+    Qry.Open;
+    Result := Qry.FieldByName('N').AsInteger = 5;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+function ColumnasFirmaFacturacionDisponibles(AConn: TUniConnection): Boolean;
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' SELECT COUNT(*) AS N ' +
+      ' FROM INFORMATION_SCHEMA.COLUMNS ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      '   AND TABLE_NAME = ''fza_facturas_consolidaciones'' ' +
+      '   AND COLUMN_NAME IN (''REGISTRO_XML_FACCON'', ' +
+      '       ''FIRMA_DIGITAL_FACCON'', ''SERIE_CERTIFICADO_FACCON'', ' +
+      '       ''TITULAR_CERTIFICADO_FACCON'', ' +
+      '       ''HUELLA_CERTIFICADO_FACCON'')';
+    Qry.Open;
+    Result := Qry.FieldByName('N').AsInteger = 5;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+function ContarEventosSinFirma(AConn: TUniConnection): Integer;
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' SELECT COUNT(*) AS N ' +
+      ' FROM fza_verifactu_eventos ' +
+      ' WHERE IFNULL(REGISTRO_XML_LOG, '''') = '''' ' +
+      '    OR IFNULL(FIRMA_DIGITAL_LOG, '''') = '''' ' +
+      '    OR IFNULL(FIRMA_XADES_LOG, '''') = '''' ' +
+      '    OR IFNULL(SERIE_CERTIFICADO_LOG, '''') = '''' ' +
+      '    OR IFNULL(TITULAR_CERTIFICADO_LOG, '''') = '''' ' +
+      '    OR IFNULL(HUELLA_CERTIFICADO_LOG, '''') = '''' ';
+    Qry.Open;
+    Result := Qry.FieldByName('N').AsInteger;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+function ContarFacturasSinFirma(AConn: TUniConnection): Integer;
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' SELECT COUNT(*) AS N ' +
+      ' FROM fza_facturas_consolidaciones ' +
+      ' WHERE IFNULL(REGISTRO_XML_FACCON, '''') = '''' ' +
+      '    OR IFNULL(FIRMA_DIGITAL_FACCON, '''') = '''' ' +
+      '    OR IFNULL(SERIE_CERTIFICADO_FACCON, '''') = '''' ' +
+      '    OR IFNULL(TITULAR_CERTIFICADO_FACCON, '''') = '''' ' +
+      '    OR IFNULL(HUELLA_CERTIFICADO_FACCON, '''') = '''' ';
+    Qry.Open;
+    Result := Qry.FieldByName('N').AsInteger;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure RegistrarIncidenciaExportacionSeguro(AConn: TUniConnection;
+                                               const AMensaje: string);
+begin
+  try
+    RegistrarEventoVerifactu(AConn, cEventoNoVerifactuIncidenciaCert,
+      'Exportación NO VERI*FACTU bloqueada', AMensaje);
+  except
+    on E: Exception do
+    begin
+      // La incidencia principal ya queda en el error que se muestra.
+    end;
+  end;
+end;
+
+procedure ValidarExportacionLegalNoVerifactu(AConn: TUniConnection);
+var
+  iEventos:  Integer;
+  iFacturas: Integer;
+  sError:    string;
+begin
+  if NoVerifactuActivo then
+  begin
+    sError := '';
+    if not VerifactuFirmaCertificado then
+      sError := 'No se puede exportar NO VERI*FACTU legal: el modo ' +
+        'NO VERI*FACTU exige firma electrónica con certificado oficial.'
+    else if not ColumnasFirmaEventosDisponibles(AConn) then
+      sError := 'No se puede exportar NO VERI*FACTU legal: faltan ' +
+        'columnas de firma en fza_verifactu_eventos.'
+    else if not ColumnasFirmaFacturacionDisponibles(AConn) then
+      sError := 'No se puede exportar NO VERI*FACTU legal: faltan ' +
+        'columnas de firma en fza_facturas_consolidaciones.'
+    else
+    begin
+      iEventos := ContarEventosSinFirma(AConn);
+      iFacturas := ContarFacturasSinFirma(AConn);
+      if (iEventos > 0) or (iFacturas > 0) then
+        sError := Format('No se puede exportar NO VERI*FACTU legal: ' +
+          '%d evento(s) y %d registro(s) de facturación no tienen firma ' +
+          'XAdES y datos de certificado.', [iEventos, iFacturas]);
+    end;
+    if sError <> '' then
+    begin
+      RegistrarIncidenciaExportacionSeguro(AConn, sError);
+      raise Exception.Create(sError);
+    end;
+  end;
+end;
+
 function ConstruirXmlEventos(AConn: TUniConnection; out ATotal: Integer):
   string;
 var
@@ -400,13 +539,25 @@ begin
     raise Exception.Create('No hay conexion para exportar NO VERI*FACTU.');
   if Trim(AArchivoBase) = '' then
     raise Exception.Create('No se ha indicado archivo base de exportacion.');
+  ValidarExportacionLegalNoVerifactu(AConn);
   sSerial := '';
   sTitular := '';
   bFirmarCertificado := VerifactuFirmaCertificado;
   Result.TitularCertificado := '';
   Result.SerieCertificado := '';
   if bFirmarCertificado then
-    CargarCertificadoFirma(AConn, sSerial, sTitular);
+  begin
+    try
+      CargarCertificadoFirma(AConn, sSerial, sTitular);
+    except
+      on E: Exception do
+      begin
+        if NoVerifactuActivo then
+          RegistrarIncidenciaExportacionSeguro(AConn, E.Message);
+        raise;
+      end;
+    end;
+  end;
   sSello := FechaHoraExportacion;
   Result.ArchivoEventos := NombreArchivoConSufijo(AArchivoBase, '_eventos');
   Result.ArchivoFacturacion := NombreArchivoConSufijo(AArchivoBase,
@@ -421,14 +572,23 @@ begin
   sXmlFacturacion := ConstruirXmlFacturacion(AConn, Result.RegistrosFactura);
   if bFirmarCertificado then
   begin
-    sXmlEventos := FirmarExportacion(sXmlEventos,
-                                     'FZ-NOVERIFACTU-EVENTOS-' + sSello,
-                                     sSerial, sTitular, oDatosCert);
-    Result.TitularCertificado := oDatosCert.Titular;
-    Result.SerieCertificado := oDatosCert.NumeroSerie;
-    sXmlFacturacion := FirmarExportacion(sXmlFacturacion,
-                                      'FZ-NOVERIFACTU-FACTURAS-' + sSello,
-                                      sSerial, sTitular, oDatosCert);
+    try
+      sXmlEventos := FirmarExportacion(sXmlEventos,
+                                       'FZ-NOVERIFACTU-EVENTOS-' + sSello,
+                                       sSerial, sTitular, oDatosCert);
+      Result.TitularCertificado := oDatosCert.Titular;
+      Result.SerieCertificado := oDatosCert.NumeroSerie;
+      sXmlFacturacion := FirmarExportacion(sXmlFacturacion,
+                                        'FZ-NOVERIFACTU-FACTURAS-' + sSello,
+                                        sSerial, sTitular, oDatosCert);
+    except
+      on E: Exception do
+      begin
+        if NoVerifactuActivo then
+          RegistrarIncidenciaExportacionSeguro(AConn, E.Message);
+        raise;
+      end;
+    end;
   end;
   GuardarTextoUtf8(Result.ArchivoEventos, sXmlEventos);
   GuardarTextoUtf8(Result.ArchivoFacturacion, sXmlFacturacion);

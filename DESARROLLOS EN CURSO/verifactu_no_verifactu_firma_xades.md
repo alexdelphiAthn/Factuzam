@@ -1,4 +1,4 @@
-# NO VERI*FACTU: registro firmado, exportación y modo SHA-256
+# NO VERI*FACTU: registro firmado y exportación
 
 Desarrollo para que Factuzam conserve localmente los registros exigibles en
 modo NO VERI*FACTU y pueda exportar dos ficheros XML:
@@ -17,10 +17,15 @@ Categoría: **Verifactu** (`inLibAppParam`).
 | Parámetro | Defecto | Uso |
 |-----------|---------|-----|
 | `appVerifactuModo` | `SIN` | Modo fiscal activo: `SIN`, `VERIFACTU` o `NO_VERIFACTU`. |
-| `appVerifactuFirmaCertificado` | `False` | Si está activo, los eventos y registros locales se firman con XAdES usando el certificado configurado en la empresa. Si está apagado, se mantiene la firma técnica SHA-256 en el registro. |
+| `appVerifactuFirmaCertificado` | `False` | Si está activo, los eventos y registros locales se firman con XAdES usando el certificado configurado en la empresa. En modo `NO_VERIFACTU` legal debe estar activo. Si está apagado, solo se mantiene la huella SHA-256 como rastro técnico/demo fuera del modo legal no verificable. |
+| `appVerifactuNtpServidores` | `time.google.com,time.windows.com,pool.ntp.org` | Servidores NTP usados para validar el reloj del sistema antes de fechar registros NO VERI*FACTU. |
+| `appVerifactuNtpTimeoutMs` | `1500` | Tiempo máximo de espera por servidor NTP. |
+| `appVerifactuNtpMargenSegundos` | `60` | Margen máximo admitido entre reloj del sistema y reloj NTP. La aplicación no permite subirlo por encima de 60 segundos. |
 
 El valor por defecto es `False` para no bloquear instalaciones que todavía no
-tengan certificado seleccionado en la ficha de empresa.
+tengan certificado seleccionado en la ficha de empresa. Al activar
+`appVerifactuModo=NO_VERIFACTU`, la aplicación bloquea consolidación y
+exportación legal si la firma con certificado no está disponible.
 
 Los parámetros `appVerifactu*` son de mantenimiento fiscal. No los puede
 modificar un usuario normal desde **Parámetros de aplicación** aunque pueda
@@ -33,9 +38,19 @@ La convención completa de modos, fases y textos de pantalla queda en:
 DESARROLLOS EN CURSO/verifactu_modos_estados_borradores.md
 ```
 
-## Modo con certificado
+## Firma obligatoria en NO VERI*FACTU
 
-Cuando `appVerifactuFirmaCertificado=True`:
+Según el criterio aplicado para cumplir la normativa SIF, los sistemas de
+emisión de facturas no verificables deben firmar electrónicamente los
+registros de facturación y los registros de evento. Por tanto, cuando
+`appVerifactuModo=NO_VERIFACTU`:
+
+1. `appVerifactuFirmaCertificado` debe estar activo.
+2. Cada registro de facturación se firma al consolidar la factura.
+3. Cada evento se firma al registrarse.
+4. La exportación solo empaqueta registros ya firmados.
+
+Cuando se firma:
 
 1. El certificado se toma de `fza_empresas.CODIGO_CERTIFICADO_EMP` y
    `TITULAR_CERTIFICADO_EMP`.
@@ -50,8 +65,13 @@ clave privada utilizable o el usuario cancela la operacion de firma, el
 registro no debe quedar emitido como firmado. La aplicacion debe mostrar el
 error y conservar la operacion sin cierre fiscal, apoyandose en la
 transaccion que estaba creando la factura. No se cambia automaticamente a
-SHA-256 porque eso contradiria la configuracion activa; para trabajar en modo
-SHA-256 hay que desactivar expresamente `appVerifactuFirmaCertificado`.
+SHA-256 porque eso dejaria un registro no verificable sin la firma exigible.
+
+Si la incidencia ocurre al registrar un evento, se guarda una línea en
+`fza_verifactu_eventos` con el XML base, la huella SHA-256 y
+`INCIDENCIA_CERTIFICADO=...` en `DATOS_ADICIONALES_LOG`. Esa línea explica
+por qué no hay XAdES y hace que la exportación legal quede bloqueada hasta que
+se resuelva el problema.
 
 Datos persistidos:
 
@@ -65,7 +85,7 @@ Datos persistidos:
 `FIRMA_DIGITAL_LOG` conserva un SHA-256 de la firma XAdES para mantener la
 columna histórica de 64 caracteres.
 
-## Modo SHA-256
+## SHA-256 técnico / demo
 
 Cuando `appVerifactuFirmaCertificado=False`:
 
@@ -76,7 +96,31 @@ Cuando `appVerifactuFirmaCertificado=False`:
    `FIRMA_DIGITAL_FACCON` contiene la huella SHA-256 del registro.
 
 Este modo mantiene compatibilidad con el comportamiento previo, pero no
-equivale a firma electrónica avanzada.
+equivale a firma electrónica avanzada. En modo `SIN` puede usarse para
+generar ficheros de demostración. En modo `NO_VERIFACTU` no permite consolidar
+ni exportar legalmente.
+
+## Control de hora
+
+La Orden HAC/1177/2024 exige que la fecha y hora usadas para fechar registros
+de facturación sean exactas con margen máximo de un minuto e incluyan huso
+horario. Para cumplirlo de forma verificable, Factuzam comprueba el reloj del
+sistema contra NTP antes de generar registros NO VERI*FACTU.
+
+Regla aplicada:
+
+- Si el reloj se valida y la diferencia es igual o inferior a 60 segundos, se
+  permite generar el registro.
+- Si ningún servidor NTP responde, o la diferencia supera el margen, se bloquea
+  la consolidación/anulación legal.
+- La incidencia se guarda en el libro de eventos como
+  `cEventoNoVerifactuIncidenciaReloj`, con `INCIDENCIA_RELOJ=...` en
+  `DATOS_ADICIONALES_LOG`.
+- En modo `SIN`, no se bloquea porque la descarga es solo demo.
+
+El control se hace en `src/Lib/inLibRelojFiscal.pas`, reutilizando Indy
+`TIdSNTP`. No corrige el reloj de Windows ni invoca comandos externos; solo
+comprueba y bloquea si no se puede garantizar la exactitud legal.
 
 ## Cambios de BBDD
 
@@ -98,11 +142,14 @@ Cuando `appVerifactuModo=NO_VERIFACTU` y se crea o lanza un borrador:
 
 1. Se construye el registro fiscal de alta/anulación en local.
 2. Se calcula la huella SHA-256 y se encadena en `fza_verifactu_cadena`.
-3. Si `appVerifactuFirmaCertificado=True`, se firma el XML con XAdES.
+3. Se firma el XML con XAdES usando el certificado de empresa.
 4. Se guarda el registro en `fza_facturas_consolidaciones`.
 5. Se registra un evento en `fza_verifactu_eventos`.
 6. El borrador pasa a fase fiscal `NOVERIFACTU_OK` o
    `NOVERIFACTU_ANULADA`.
+
+Si el certificado no permite firmar, no se guarda el cierre fiscal de la
+factura y se registra una incidencia en el libro de eventos.
 
 Puntos enlazados:
 
@@ -122,6 +169,8 @@ Catálogo interno añadido:
 | `cEventoNoVerifactuCambioConfig` | `03` | Cambio de configuración. |
 | `cEventoNoVerifactuExportFact` | `08` | Exportación del registro de facturación. |
 | `cEventoNoVerifactuExportEventos` | `09` | Exportación del registro de eventos. |
+| `cEventoNoVerifactuIncidenciaCert` | `90` | Incidencia de certificado o bloqueo de exportación. |
+| `cEventoNoVerifactuIncidenciaReloj` | `90` | Incidencia de reloj/NTP. |
 
 Los eventos técnicos antiguos de Factuzam se registran como evento voluntario
 `90`, para no mezclar envíos internos con códigos oficiales de arranque o
@@ -151,9 +200,14 @@ Genera dos ficheros:
 - `<nombre>_eventos.xml`
 - `<nombre>_facturacion.xml`
 
-Antes de construir los XML se registran dos eventos de exportación. Si el
-parámetro de firma está activo, ambos ficheros también se firman XAdES como
-contenedor de descarga.
+Antes de construir los XML se valida el modo:
+
+- En `NO_VERIFACTU`, se bloquea la exportación si hay eventos o registros de
+  facturación sin `REGISTRO_XML`, firma XAdES y datos de certificado.
+- En `SIN`, se permite la descarga como demo aunque no haya firmas legales.
+
+Después se registran dos eventos de exportación. Si el parámetro de firma está
+activo, ambos ficheros también se firman XAdES como contenedor de descarga.
 
 ## Unidades nuevas
 
