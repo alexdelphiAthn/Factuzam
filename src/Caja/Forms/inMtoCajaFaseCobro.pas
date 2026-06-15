@@ -178,6 +178,8 @@ type
     FCodigoEmpresa:String;
     FCodigoCliente: String;
     FNifCliente: String;
+    FCodigoPaisCliente: String;
+    FNombrePaisCliente: String;
     FSerieFactura: String;
     FFechaFactura: TDateTime;
     FNumeroManual: String;
@@ -198,7 +200,7 @@ implementation
 {$R *.dfm}
 
 uses inMtoCajaSeleccionVale, inLibCajaParam, inMtoModalSerieFechaFactura,
-     UniDataCaja;
+     UniDataCaja, inLibDocumentoFiscal;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
@@ -284,6 +286,10 @@ begin
   else if Trim(FNifCliente) = '' then
     ShowMessage('El cliente no tiene NIF: complételo en su ficha para ' +
                 'poder emitir borrador normal.')
+  else if PaisEsEspana(FCodigoPaisCliente, FNombrePaisCliente) and
+          (not DocumentoFiscalValido(FNifCliente)) then
+    ShowMessage('El NIF/CIF/NIE del cliente no es valido: ' +
+                MensajeDocumentoFiscalInvalido(FNifCliente))
   else if ValidarYConfirmar then
   begin
     // Serie de factura completa (por defecto la del almacén) y fecha

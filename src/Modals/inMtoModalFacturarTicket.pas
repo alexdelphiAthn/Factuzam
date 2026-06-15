@@ -62,6 +62,7 @@ type
     // Búsqueda de cliente con el buscador genérico heredado de
     // inMtoGenSearch (mismo formulario que usa la caja), no un combo
     procedure BuscarCliente;
+    procedure ValidarClienteFacturaNormal(const ACliente: string);
     procedure CrearFacturaNormal(const ASerie: string;
                                  const ACliente: string;
                                  AFecha: TDateTime);
@@ -77,7 +78,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibtb, inLibVerifactu, inLibVerifactuCola,
-  inMtoGenSearch;
+  inMtoGenSearch, inLibDocumentoFiscal;
 
 {$R *.dfm}
 
@@ -185,9 +186,38 @@ begin
     ShowMessage('Indique la fecha del borrador.')
   else
   begin
+    ValidarClienteFacturaNormal(sCliente);
     CrearFacturaNormal(sSerie, sCliente, dtFecha.Date);
     FResultado.Aceptado := True;
     Close;
+  end;
+end;
+
+procedure TfrmModalFacturarTicket.ValidarClienteFacturaNormal(
+  const ACliente: string);
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.SQL.Text :=
+      ' SELECT RAZON_SOCIAL_CLI, NIF_CLI, CODIGO_PAI_CLI, NOMBRE_PAI_CLI ' +
+      ' FROM fza_clientes ' +
+      ' WHERE CODIGO_CLI_CLI = :CLIENTE ';
+    Qry.ParamByName('CLIENTE').AsString := ACliente;
+    Qry.Open;
+    if Qry.IsEmpty then
+      raise Exception.Create('El cliente seleccionado no existe.');
+    if Trim(Qry.FieldByName('RAZON_SOCIAL_CLI').AsString) = '' then
+      raise Exception.Create('La F3 necesita la razon social del cliente.');
+    if PaisEsEspana(Qry.FieldByName('CODIGO_PAI_CLI').AsString,
+                    Qry.FieldByName('NOMBRE_PAI_CLI').AsString) and
+       (not DocumentoFiscalValido(Qry.FieldByName('NIF_CLI').AsString)) then
+      raise Exception.Create('El NIF/CIF/NIE del cliente no es valido: ' +
+        MensajeDocumentoFiscalInvalido(Qry.FieldByName('NIF_CLI').AsString));
+  finally
+    FreeAndNil(Qry);
   end;
 end;
 
@@ -233,7 +263,8 @@ begin
         '  DIRECCION1_CLIENTE_FAC, DIRECCION2_CLIENTE_FAC, ' +
         '  POBLACION_CLIENTE_FAC, PROVINCIA_CLIENTE_FAC, ' +
         '  CODIGO_POSTAL_CLIENTE_FAC, NOMBRE_PAI_CLIENTE_FAC, ' +
-        '  CODIGO_PAI_CLIENTE_FAC, ' +
+        '  CODIGO_PAI_CLIENTE_FAC, CODIGO_OFICINA_CONTABLE_FAC, ' +
+        '  CODIGO_ORGANO_GESTOR_FAC, CODIGO_UNIDAD_TRAMITADORA_FAC, ' +
         '  ESIVA_RECARGO_CLIENTE_FAC, ESIVA_EXENTO_CLIENTE_FAC, ' +
         '  ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC, ' +
         '  ESRETENCIONES_CLIENTE_FAC, TARIFA_ARTICULO_CLIENTE_FAC, ' +
@@ -272,7 +303,9 @@ begin
         '        c.DIRECCION1_CLI, c.DIRECCION2_CLI, ' +
         '        c.POBLACION_CLI, c.PROVINCIA_CLI, ' +
         '        c.CODIGO_POSTAL_CLI, c.NOMBRE_PAI_CLI, ' +
-        '        c.CODIGO_PAI_CLI, ' +
+        '        c.CODIGO_PAI_CLI, c.CODIGO_OFICINA_CONTABLE_CLI, ' +
+        '        c.CODIGO_ORGANO_GESTOR_CLI, ' +
+        '        c.CODIGO_UNIDAD_TRAMITADORA_CLI, ' +
         '        t.ESIVA_RECARGO_CLIENTE_FAC, t.ESIVA_EXENTO_CLIENTE_FAC, ' +
         '        t.ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC, ' +
         '        t.ESRETENCIONES_CLIENTE_FAC, ' +

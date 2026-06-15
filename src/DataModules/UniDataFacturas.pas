@@ -108,6 +108,7 @@ private
     function HayHuecoNumeracion(const ASerie, AEmpresa,
                                 ANumero: string): Boolean;
     procedure ValidarOperacionVfactu(var AIsError: Boolean);
+    procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
 public
     procedure GetCodigoAutoFactura;
     procedure GetCodigoAutoCliente;
@@ -162,7 +163,8 @@ uses
   inLibtb,
   inLibLog,
   System.Diagnostics,
-  inLibFacturas;
+  inLibFacturas,
+  inLibDocumentoFiscal;
 
 {$R *.dfm}
 
@@ -734,6 +736,18 @@ begin
                               DataSet.FindField('NOMBRE_PAI_CLI').AsString;
     FindField('CODIGO_PAI_CLIENTE_FAC').AsString :=
                               DataSet.FindField('CODIGO_PAI_CLI').AsString;
+    if (FindField('CODIGO_OFICINA_CONTABLE_FAC') <> nil) and
+       (DataSet.FindField('CODIGO_OFICINA_CONTABLE_CLI') <> nil) then
+      FindField('CODIGO_OFICINA_CONTABLE_FAC').AsString :=
+        DataSet.FindField('CODIGO_OFICINA_CONTABLE_CLI').AsString;
+    if (FindField('CODIGO_ORGANO_GESTOR_FAC') <> nil) and
+       (DataSet.FindField('CODIGO_ORGANO_GESTOR_CLI') <> nil) then
+      FindField('CODIGO_ORGANO_GESTOR_FAC').AsString :=
+        DataSet.FindField('CODIGO_ORGANO_GESTOR_CLI').AsString;
+    if (FindField('CODIGO_UNIDAD_TRAMITADORA_FAC') <> nil) and
+       (DataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI') <> nil) then
+      FindField('CODIGO_UNIDAD_TRAMITADORA_FAC').AsString :=
+        DataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
 
     FindField('ESIVA_RECARGO_CLIENTE_FAC').AsString :=
                             DataSet.FindField('ESIVA_RECARGO_CLI').AsString;
@@ -1290,6 +1304,46 @@ begin
   Result := oAppParams.GetString('appTarifaDefecto', 'PVP');
 end;
 
+procedure TdmFacturas.GuardarParametrosEDocFactura(ADataSet: TDataSet);
+var
+  Qry: TUniQuery;
+  bCamposDisponibles: Boolean;
+begin
+  bCamposDisponibles :=
+    (ADataSet.FindField('CODIGO_OFICINA_CONTABLE_FAC') <> nil) and
+    (ADataSet.FindField('CODIGO_ORGANO_GESTOR_FAC') <> nil) and
+    (ADataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_FAC') <> nil);
+  if bCamposDisponibles and
+     (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') and
+     (Trim(ADataSet.FieldByName('SERIE_FAC').AsString) <> '') then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := oConn;
+      Qry.SQL.Text :=
+        ' UPDATE fza_facturas ' +
+        ' SET CODIGO_OFICINA_CONTABLE_FAC = :OFICINA, ' +
+        '     CODIGO_ORGANO_GESTOR_FAC = :ORGANO, ' +
+        '     CODIGO_UNIDAD_TRAMITADORA_FAC = :UNIDAD ' +
+        ' WHERE NUMERO_FAC = :NUMERO ' +
+        '   AND SERIE_FAC = :SERIE ';
+      Qry.ParamByName('OFICINA').AsString :=
+        ADataSet.FieldByName('CODIGO_OFICINA_CONTABLE_FAC').AsString;
+      Qry.ParamByName('ORGANO').AsString :=
+        ADataSet.FieldByName('CODIGO_ORGANO_GESTOR_FAC').AsString;
+      Qry.ParamByName('UNIDAD').AsString :=
+        ADataSet.FieldByName('CODIGO_UNIDAD_TRAMITADORA_FAC').AsString;
+      Qry.ParamByName('NUMERO').AsString :=
+        ADataSet.FieldByName('NUMERO_FAC').AsString;
+      Qry.ParamByName('SERIE').AsString :=
+        ADataSet.FieldByName('SERIE_FAC').AsString;
+      Qry.ExecSQL;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
 procedure TdmFacturas.GetCodigoAutoEmpresa;
 begin
   if unqryTablaG.FindField('CODIGO_EMP_FAC').AsString = '0' then
@@ -1316,6 +1370,7 @@ var
 begin
   inherited;
   CalcularFactura;
+  GuardarParametrosEDocFactura(DataSet);
   // Las facturas SIMPLIFICADAS (tickets directos sin albaran previo)
   // generan movimientos automaticos al consolidarse. Las NORMALES solo
   // si el usuario marco el check ESMUEVE_STOCK_FAC (caso venta directa
@@ -1666,6 +1721,32 @@ begin
     // Coherencia del tipo de operacion Verifactu (bloqueo si es flagrante)
     if (not IsError) and bValidar then
       ValidarOperacionVfactu(IsError);
+    if (not IsError) and bValidar and
+       PaisEsEspana(FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString,
+                    FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString) and
+       (not DocumentoFiscalValido(
+          FieldByName('NIF_CLIENTE_FAC').AsString)) then
+    begin
+      ShowMessage('El NIF/CIF/NIE del cliente no es valido: ' +
+        MensajeDocumentoFiscalInvalido(
+          FieldByName('NIF_CLIENTE_FAC').AsString));
+      frmFac.pcCab.ActivePage := frmFac.tsDatosCliente;
+      frmFac.txtNIF_CLIENTE_FACTURA.SetFocus;
+      IsError := True;
+    end;
+    if (not IsError) and bValidar and
+       PaisEsEspana(FieldByName('CODIGO_PAI_EMPRESA_FAC').AsString,
+                    FieldByName('NOMBRE_PAI_EMPRESA_FAC').AsString) and
+       (not DocumentoFiscalValido(
+          FieldByName('NIF_EMPRESA_FAC').AsString)) then
+    begin
+      ShowMessage('El NIF/CIF/NIE de la empresa no es valido: ' +
+        MensajeDocumentoFiscalInvalido(
+          FieldByName('NIF_EMPRESA_FAC').AsString));
+      frmFac.pcCab.ActivePage := frmFac.tsEmpresa;
+      frmFac.txtNIF_EMPRESA_FACTURA.SetFocus;
+      IsError := True;
+    end;
     // La fecha no puede ser anterior a la ultima factura emitida de la serie
     // (bloqueo): la numeracion debe seguir orden cronologico.
     if (not IsError) and bValidar and

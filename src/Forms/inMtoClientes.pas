@@ -73,6 +73,7 @@ type
     pcPestanas: TcxPageControl;
     tsDomicilioFiscal: TcxTabSheet;
     tsMasDatos: TcxTabSheet;
+    tsParametrosEDoc: TcxTabSheet;
     tsHistoriaFacturacion: TcxTabSheet;
     tsPresupuestos: TcxTabSheet;
     cxgrdPresupuestos: TcxGrid;
@@ -292,6 +293,13 @@ type
     chkESPERMITE_DEUDA_CLI: TcxDBCheckBox;
     curTOTAL_DEUDA_CLI: TcxDBCurrencyEdit;
     lblExtra2: TcxLabel;
+    cxgrpbxParametrosEDoc: TcxGroupBox;
+    lblCodigoOficinaContable: TcxLabel;
+    txtCODIGO_OFICINA_CONTABLE_CLIENTE: TcxDBTextEdit;
+    lblCodigoOrganoGestor: TcxLabel;
+    txtCODIGO_ORGANO_GESTOR_CLIENTE: TcxDBTextEdit;
+    lblCodigoUnidadTramitadora: TcxLabel;
+    txtCODIGO_UNIDAD_TRAMITADORA_CLIENTE: TcxDBTextEdit;
     tsPrestamos: TcxTabSheet;
     pnlPrestamosBody: TPanel;
     cxgrdPrestamosCliente: TcxGrid;
