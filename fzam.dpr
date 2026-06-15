@@ -196,6 +196,7 @@ uses
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibXades in 'src\Lib\inLibXades.pas',
   inLibVerifactuNoVerifactuExport in 'src\Lib\inLibVerifactuNoVerifactuExport.pas',
+  inLibVerifactuNoVerifactuVerify in 'src\Lib\inLibVerifactuNoVerifactuVerify.pas',
   inLibVerifactu in 'src\verifactu\inLibVerifactu.pas',
   inLibVerifactuEnvio in 'src\verifactu\inLibVerifactuEnvio.pas',
   inLibVerifactuCola in 'src\verifactu\inLibVerifactuCola.pas',

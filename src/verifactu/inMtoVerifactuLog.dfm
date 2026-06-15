@@ -98,5 +98,14 @@ inherited frmMtoVerifactuLog: TfrmMtoVerifactuLog
       TabOrder = 3
       OnClick = btnExportarNoVerifactuClick
     end
+    object btnVerificarNoVerifactu: TcxButton
+      Left = 1
+      Top = 200
+      Width = 138
+      Height = 34
+      Caption = 'Verificar NO*VF'
+      TabOrder = 4
+      OnClick = btnVerificarNoVerifactuClick
+    end
   end
 end
