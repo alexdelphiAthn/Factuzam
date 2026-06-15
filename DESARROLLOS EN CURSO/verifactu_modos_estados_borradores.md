@@ -67,6 +67,16 @@ Todos caben en `fza_facturas_consolidaciones.ESTADO_FACCON`
 
 En modo `SIN` no se crea fila en `fza_facturas_consolidaciones`.
 
+## Impresion segun modo
+
+En modo `SIN`, durante el periodo transitorio/demo, se permite imprimir un
+borrador aunque no este consolidado. La aplicacion no fuerza el cierre fiscal
+porque este modo no crea registro SIF ni cola AEAT.
+
+En modo `VERIFACTU` y `NO_VERIFACTU`, la impresion se bloquea si el documento
+sigue en `BORRADOR` y `ESCONSOLIDADA_FAC <> 'S'`. Primero debe usarse
+**Consolidar** para crear el registro fiscal correspondiente.
+
 ## Firma y bloqueo por certificado
 
 En modo `NO_VERIFACTU`, los registros locales y eventos deben firmarse con
