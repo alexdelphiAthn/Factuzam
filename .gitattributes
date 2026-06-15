@@ -1,4 +1,38 @@
 * text=auto
+.gitattributes text eol=crlf
+
+# Codigo Delphi / RAD Studio: trabajar en Windows con CRLF.
 *.pas text eol=crlf
 *.dfm text eol=crlf
 *.dpr text eol=crlf
+*.dproj text eol=crlf
+*.groupproj text eol=crlf
+*.dpk text eol=crlf
+*.inc text eol=crlf
+*.rc text eol=crlf
+
+# Scripts y documentacion del proyecto.
+*.sql text eol=crlf
+*.md text eol=crlf
+*.txt text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.xml text eol=crlf
+*.json text eol=crlf
+*.csv text eol=crlf
+
+# Binarios.
+*.res binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.bmp binary
+*.pdf binary
+*.fr3 binary
+*.exe binary
+*.dll binary
+*.bpl binary
+*.dcu binary

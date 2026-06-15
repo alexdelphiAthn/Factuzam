@@ -96,11 +96,13 @@ const
   CRYPT_ACQUIRE_COMPARE_KEY_FLAG = $00000004;
   CRYPT_ACQUIRE_SILENT_FLAG = $00000040;
   CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG = $00010000;
+  CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG = $00020000;
   CRYPT_VERIFYCONTEXT = $F0000000;
   PROV_RSA_AES = 24;
   HP_HASHVAL = $0002;
   CALG_SHA1 = $00008004;
   CALG_SHA_256 = $0000800C;
+  NTE_BAD_ALGID = $80090008;
   NCRYPT_PAD_PKCS1_FLAG = $00000002;
   ERROR_SUCCESS = 0;
 
@@ -417,6 +419,47 @@ begin
     Result := nil;
 end;
 
+function CodigoErrorHex(ACodigo: DWORD): string;
+begin
+  Result := '0x' + IntToHex(ACodigo, 8);
+end;
+
+function MensajeErrorCripto(const AOperacion: string; ACodigo: DWORD):
+  string;
+begin
+  Result := AOperacion + '. Codigo: ' + CodigoErrorHex(ACodigo) + '. ' +
+    SysErrorMessage(ACodigo);
+end;
+
+procedure LanzarErrorCripto(const AOperacion: string);
+var
+  dwError: DWORD;
+begin
+  dwError := GetLastError;
+  raise EXadesError.Create(MensajeErrorCripto(AOperacion, dwError));
+end;
+
+procedure LanzarErrorFirmaCapiSha256(const AOperacion: string);
+var
+  dwError: DWORD;
+  sMensaje: string;
+begin
+  dwError := GetLastError;
+  if dwError = NTE_BAD_ALGID then
+  begin
+    sMensaje :=
+      'El proveedor criptografico del certificado no admite SHA-256 para ' +
+      'firma RSA. No se puede generar XAdES rsa-sha256 con ese certificado ' +
+      'tal como esta instalado. Reinstala o importa el certificado con un ' +
+      'proveedor compatible con SHA-256, como Microsoft Enhanced RSA and ' +
+      'AES Cryptographic Provider o Microsoft Software Key Storage ' +
+      'Provider. ' + MensajeErrorCripto(AOperacion, dwError);
+    raise EXadesError.Create(sMensaje);
+  end
+  else
+    raise EXadesError.Create(MensajeErrorCripto(AOperacion, dwError));
+end;
+
 procedure InvertirBytes(var ABytes: TBytes);
 var
   iIzq: Integer;
@@ -677,19 +720,22 @@ var
 begin
   hHash := 0;
   if not CryptCreateHash(hProv, CALG_SHA_256, 0, 0, hHash) then
-    RaiseLastOSError;
+    LanzarErrorFirmaCapiSha256(
+      'No se pudo crear el hash SHA-256 para firmar');
   try
     if not CryptHashData(hHash, PunteroBytes(ADatos),
                          DWORD(Length(ADatos)), 0) then
-      RaiseLastOSError;
+      LanzarErrorFirmaCapiSha256(
+        'No se pudieron cargar los datos a firmar');
     iTam := 0;
     if not CryptSignHashW(hHash, dwKeySpec, nil, 0, nil, iTam) then
-      RaiseLastOSError;
+      LanzarErrorFirmaCapiSha256(
+        'No se pudo calcular el tamano de la firma SHA-256');
     SetLength(Result, iTam);
     if iTam > 0 then
     begin
       if not CryptSignHashW(hHash, dwKeySpec, nil, 0, @Result[0], iTam) then
-        RaiseLastOSError;
+        LanzarErrorFirmaCapiSha256('No se pudo firmar con SHA-256');
       InvertirBytes(Result);
     end;
   finally
@@ -739,12 +785,14 @@ begin
   dwKeySpec := 0;
   bLiberar := False;
   dwFlags := CRYPT_ACQUIRE_ALLOW_NCRYPT_KEY_FLAG or
+             CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG or
              CRYPT_ACQUIRE_COMPARE_KEY_FLAG;
   if AFirmaSilenciosa then
     dwFlags := dwFlags or CRYPT_ACQUIRE_SILENT_FLAG;
   if not CryptAcquireCertificatePrivateKey(ACert, dwFlags, nil, hKey,
-                                           dwKeySpec, bLiberar) then
-    RaiseLastOSError;
+                                            dwKeySpec, bLiberar) then
+    LanzarErrorCripto(
+      'No se pudo abrir la clave privada del certificado');
   try
     if dwKeySpec = CERT_NCRYPT_KEY_SPEC then
       Result := FirmarCngSha256(hKey, ADatos)
