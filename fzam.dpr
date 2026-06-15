@@ -194,6 +194,8 @@ uses
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
   inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
+  inLibXades in 'src\Lib\inLibXades.pas',
+  inLibVerifactuNoVerifactuExport in 'src\Lib\inLibVerifactuNoVerifactuExport.pas',
   inLibVerifactu in 'src\verifactu\inLibVerifactu.pas',
   inLibVerifactuEnvio in 'src\verifactu\inLibVerifactuEnvio.pas',
   inLibVerifactuCola in 'src\verifactu\inLibVerifactuCola.pas',

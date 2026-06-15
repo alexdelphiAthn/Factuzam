@@ -259,6 +259,9 @@ begin
   RegistrarParametro('Verifactu', 'appVerifactuActivo',
     'Activar Verifactu (QR tributario en ticket y cola de envío)',
     tpBoolean, 'False');
+  RegistrarParametro('Verifactu', 'appVerifactuFirmaCertificado',
+    'Firmar registros y eventos con certificado de empresa',
+    tpBoolean, 'False');
   RegistrarParametro('Verifactu', 'appVerifactuEntorno',
     'Entorno AEAT: PRE (pruebas) o PRO (producción)', tpString, 'PRE');
   RegistrarParametro('Verifactu', 'appVerifactuUrlQRPre',

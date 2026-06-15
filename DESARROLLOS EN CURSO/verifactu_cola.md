@@ -57,6 +57,7 @@ encolada para que un hilo en segundo plano la comunique a Verifactu.
 | Parámetro                   | Defecto | Uso                            |
 |-----------------------------|---------|--------------------------------|
 | `appVerifactuActivo`        | False   | Interruptor general            |
+| `appVerifactuFirmaCertificado` | False | Firma XAdES local de eventos y registros con certificado de empresa |
 | `appVerifactuEntorno`       | PRE     | PRE (pruebas) / PRO            |
 | `appVerifactuUrlQRPre`      | URL AEAT prewww2 | Cotejo QR en pruebas  |
 | `appVerifactuUrlQRPro`      | URL AEAT www2    | Cotejo QR producción  |
@@ -137,9 +138,10 @@ HAC/1177/2024 y esquemas `SuministroLR.xsd` / `SuministroInformacion.xsd`):
   `appVerifactuIdInstalacion`), IndicadorMultiplesOT según el nº de
   empresas activas.
 
-Parámetros añadidos: `appVerifactuUrlEnvioPre/Pro`,
-`appVerifactuSifNombreRazon`, `appVerifactuSifNif` (**obligatorio
-rellenarlo**), `appVerifactuIdInstalacion`, `appVerifactuDescripcionOpe`.
+Parámetros añadidos: `appVerifactuFirmaCertificado`,
+`appVerifactuUrlEnvioPre/Pro`, `appVerifactuSifNombreRazon`,
+`appVerifactuSifNif` (**obligatorio rellenarlo**),
+`appVerifactuIdInstalacion`, `appVerifactuDescripcionOpe`.
 
 ### Diagnóstico rápido: «AEAT [1100] Valor o tipo incorrecto del campo: NIF»
 

@@ -391,13 +391,22 @@ begin
                          [mbYes, mbNo], 0) = mrYes then
       begin
         Qry.Close;
-        TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, 'ANULACION');
-        RegistrarEventoVerifactu(inLibGlobalVar.oConn,
-          cEventoVerifactuEncolado,
-          'Anulación encolada desde Buscar operaciones', '',
-          sSerie, sNumero);
-        ShowMessage('Anulación encolada: el hilo Verifactu la enviará ' +
-                    'en el próximo ciclo.');
+        if VerifactuActivo then
+        begin
+          TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, 'ANULACION');
+          RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+            cEventoVerifactuEncolado,
+            'Anulación encolada desde Buscar operaciones', '',
+            sSerie, sNumero);
+          ShowMessage('Anulación encolada: el hilo Verifactu la enviará ' +
+                      'en el próximo ciclo.');
+        end
+        else
+        begin
+          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero,
+                                                     'ANULACION');
+          ShowMessage('Anulación registrada y firmada en NO VERI*FACTU.');
+        end;
       end;
     finally
       FreeAndNil(Qry);

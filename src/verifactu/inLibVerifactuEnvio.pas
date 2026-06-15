@@ -40,6 +40,11 @@ type
     VerifactuUrl:      string;    // URL de cotejo del QR
     QRCodeBase64:      string;    // QRCODE_BASE64_FACCON (PNG en base64)
     QRCodePng:         TBytes;    // QRCODE_PNG_FACCON (PNG binario)
+    RegistroXmlFirmado:string;    // XML fiscal: firmado XAdES o XML base
+    FirmaDigital:      string;    // SignatureValue XAdES o SHA-256
+    SerieCertificado:  string;    // Serie del certificado firmante
+    TitularCertificado:string;    // Titular del certificado firmante
+    HuellaCertificado: string;    // SHA1 del certificado firmante
     PeticionCompleta:  string;    // XML SOAP enviado
     RespuestaCompleta: string;    // XML SOAP recibido
   end;
@@ -56,13 +61,21 @@ function EnviarRegistroFactura(AConn: TUniConnection;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
 
+// Genera el registro oficial de facturación en local y lo firma XAdES,
+// sin llamar al servicio AEAT. El llamador persiste el resultado y avanza
+// la cadena si procede (NO VERI*FACTU).
+function GenerarRegistroFacturaLocal(AConn: TUniConnection;
+                                     const ASerie, ANumero,
+                                     ATipoOperacion: string):
+                                     TResultadoEnvioVerifactu;
+
 implementation
 
 uses
   System.Classes, System.StrUtils, System.Hash, System.DateUtils,
   System.TimeSpan, System.NetEncoding, System.Net.HttpClient,
-  System.Net.URLClient,
-  inLibGlobalVar, inLibAppParam, inLibVerifactu;
+  System.Net.URLClient, Data.DB,
+  inLibGlobalVar, inLibAppParam, inLibVerifactu, inLibXades;
 
 const
   // Endpoints oficiales del servicio SOAP de Verifactu. Con certificado
@@ -81,6 +94,7 @@ const
   cNsInf =
     'https://www2.agenciatributaria.gob.es/static_files/common/internet/' +
     'dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd';
+  cNsDsig = 'http://www.w3.org/2000/09/xmldsig#';
 
 type
   TBandaIva = record
@@ -947,6 +961,71 @@ begin
     '</soapenv:Body></soapenv:Envelope>';
 end;
 
+function ExtraerEtiquetaXmlLocal(const AXml, AEtiqueta: string): string;
+var
+  iIni: Integer;
+  iFin: Integer;
+  sApertura: string;
+  sCierre: string;
+begin
+  Result := '';
+  sApertura := '<' + AEtiqueta + '>';
+  sCierre := '</' + AEtiqueta + '>';
+  iIni := Pos(sApertura, AXml);
+  if iIni > 0 then
+  begin
+    iIni := iIni + Length(sApertura);
+    iFin := PosEx(sCierre, AXml, iIni);
+    if iFin > iIni then
+      Result := Copy(AXml, iIni, iFin - iIni);
+  end;
+end;
+
+function RegistroConNamespaces(const ARegistro, ARaiz: string): string;
+var
+  sApertura: string;
+  sNuevaApertura: string;
+begin
+  sApertura := '<sum1:' + ARaiz + '>';
+  sNuevaApertura := '<sum1:' + ARaiz + ' xmlns:sum1="' + cNsInf +
+                    '" xmlns:ds="' + cNsDsig + '">';
+  Result := StringReplace(ARegistro, sApertura, sNuevaApertura, []);
+  Result := '<?xml version="1.0" encoding="UTF-8"?>' + Result;
+end;
+
+function RaizRegistroFacturacion(const ATipoOperacion: string): string;
+begin
+  if ATipoOperacion = 'ANULACION' then
+    Result := 'RegistroAnulacion'
+  else
+    Result := 'RegistroAlta';
+end;
+
+function XmlRegistroFacturacionLocal(const ARegistro,
+                                     ATipoOperacion: string): string;
+begin
+  Result := RegistroConNamespaces(ARegistro,
+                                  RaizRegistroFacturacion(ATipoOperacion));
+end;
+
+function FirmarRegistroFacturacion(const ARegistro, ATipoOperacion,
+                                   AHuella, ASerial, ATitular: string;
+                                   out ADatosCert: TXadesDatosCertificado;
+                                   out AFirmaDigital: string): string;
+var
+  oOpciones: TXadesOpciones;
+  sXml: string;
+begin
+  sXml := XmlRegistroFacturacionLocal(ARegistro, ATipoOperacion);
+  oOpciones := OpcionesXadesBase('FZ-FACTURA-' + AHuella);
+  oOpciones.UriDocumentoVacia := True;
+  oOpciones.IdNodoFirmado := '';
+  oOpciones.FirmaSilenciosa := False;
+  Result := FirmarXmlXadesEnveloped(sXml, ASerial, ATitular, oOpciones,
+                                    ADatosCert);
+  AFirmaDigital := ExtraerEtiquetaXmlLocal(Result, 'ds:SignatureValue');
+end;
+
 // ===========================================================================
 //   Transporte HTTP con certificado de cliente
 // ===========================================================================
@@ -993,16 +1072,116 @@ end;
 //   API pública
 // ===========================================================================
 
+procedure InicializarResultadoEnvio(var AResultado: TResultadoEnvioVerifactu);
+begin
+  AResultado.Ok             := False;
+  AResultado.QueueId        := 0;
+  AResultado.IssuedTime     := 0;
+  AResultado.EsperaSegundos := 0;
+  AResultado.MensajeError   := '';
+  AResultado.EstadoRegistro := '';
+  AResultado.RequestId      := '';
+  AResultado.IssuerIrsId    := '';
+  AResultado.FechaExpedicion := '';
+  AResultado.ChainNumber    := '';
+  AResultado.ChainHash      := '';
+  AResultado.VerifactuUrl   := '';
+  AResultado.QRCodeBase64   := '';
+  SetLength(AResultado.QRCodePng, 0);
+  AResultado.RegistroXmlFirmado := '';
+  AResultado.FirmaDigital := '';
+  AResultado.SerieCertificado := '';
+  AResultado.TitularCertificado := '';
+  AResultado.HuellaCertificado := '';
+  AResultado.PeticionCompleta := '';
+  AResultado.RespuestaCompleta := '';
+end;
+
+function ConstruirRegistroFactura(AConn: TUniConnection;
+                                  const ASerie, ANumero,
+                                  ATipoOperacion: string;
+                                  out ADatos: TDatosFacturaRegistro;
+                                  out ACadena: TCadenaAnterior;
+                                  out ARegistro, AHuella: string):
+                                  Boolean;
+var
+  sFhGen: string;
+  sSif:   string;
+begin
+  Result := CargarDatosFactura(AConn, ASerie, ANumero, ADatos);
+  if Result then
+  begin
+    if Length(ADatos.NifEmisor) <> 9 then
+      raise Exception.Create('NIF de la empresa emisora vacío o no ' +
+        'válido para Verifactu: "' + ADatos.NifEmisor + '". Revisar la ' +
+        'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
+    ObtenerCadenaParaEnvio(AConn, ADatos.NifEmisor, ACadena);
+    sFhGen := FechaHoraHusoGen(Now);
+    sSif   := ConstruirSistemaInformatico(AConn);
+    if ATipoOperacion = 'ANULACION' then
+      ARegistro := ConstruirRegistroAnulacion(ADatos, ASerie, ANumero,
+                                              ACadena, sSif, sFhGen,
+                                              AHuella)
+    else
+      ARegistro := ConstruirRegistroAlta(ADatos, ASerie, ANumero,
+                                         ACadena, sSif, sFhGen,
+                                         ATipoOperacion = 'SUBSANACION',
+                                         AHuella);
+  end;
+end;
+
+function GenerarRegistroFacturaLocal(AConn: TUniConnection;
+                                     const ASerie, ANumero,
+                                     ATipoOperacion: string):
+                                     TResultadoEnvioVerifactu;
+var
+  oDatos:     TDatosFacturaRegistro;
+  oCadena:    TCadenaAnterior;
+  oDatosCert: TXadesDatosCertificado;
+  sRegistro:  string;
+  sHuella:    string;
+begin
+  InicializarResultadoEnvio(Result);
+  if not ConstruirRegistroFactura(AConn, ASerie, ANumero, ATipoOperacion,
+                                  oDatos, oCadena, sRegistro, sHuella) then
+    Result.MensajeError := 'Factura ' + ASerie + '\' + ANumero +
+                           ' no encontrada para el registro fiscal'
+  else
+  begin
+    Result.Ok := True;
+    Result.EstadoRegistro := 'REGISTRADO';
+    Result.IssuerIrsId := oDatos.NifEmisor;
+    Result.IssuedTime := Now;
+    Result.FechaExpedicion := oDatos.FechaExpedicion;
+    Result.ChainNumber := IntToStr(oCadena.Contador + 1);
+    Result.ChainHash := sHuella;
+    if VerifactuFirmaCertificado then
+    begin
+      Result.RegistroXmlFirmado := FirmarRegistroFacturacion(
+        sRegistro, ATipoOperacion, sHuella, oDatos.SerialCert,
+        oDatos.TitularCert, oDatosCert, Result.FirmaDigital);
+      Result.SerieCertificado := oDatosCert.NumeroSerie;
+      Result.TitularCertificado := oDatosCert.Titular;
+      Result.HuellaCertificado := oDatosCert.HuellaSha1;
+    end
+    else
+    begin
+      Result.RegistroXmlFirmado := XmlRegistroFacturacionLocal(
+        sRegistro, ATipoOperacion);
+      Result.FirmaDigital := sHuella;
+    end;
+  end;
+end;
+
 function EnviarRegistroFactura(AConn: TUniConnection;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
 var
   oDatos:          TDatosFacturaRegistro;
   oCadena:         TCadenaAnterior;
+  oDatosCert:      TXadesDatosCertificado;
   oB64:            TBase64Encoding;
-  sFhGen:          string;
   sHuella:         string;
-  sSif:            string;
   sRegistro:       string;
   iStatus:         Integer;
   sCuerpo:         string;
@@ -1013,11 +1192,9 @@ var
   bDuplicado:      Boolean;
   bAceptado:       Boolean;
 begin
-  Result.Ok             := False;
-  Result.QueueId        := 0;
-  Result.IssuedTime     := 0;
-  Result.EsperaSegundos := 0;
-  if not CargarDatosFactura(AConn, ASerie, ANumero, oDatos) then
+  InicializarResultadoEnvio(Result);
+  if not ConstruirRegistroFactura(AConn, ASerie, ANumero, ATipoOperacion,
+                                  oDatos, oCadena, sRegistro, sHuella) then
     // Fila de la cola sin factura real (huérfana, p.ej. 0\0): no se
     // lanza excepción; se devuelve el error para que la cola lo deje
     // únicamente en el log de Verifactu (RegistrarEventoVerifactu).
@@ -1025,22 +1202,21 @@ begin
                            ' no encontrada para el envío Verifactu'
   else
   begin
-    if Length(oDatos.NifEmisor) <> 9 then
-      raise Exception.Create('NIF de la empresa emisora vacío o no ' +
-        'válido para Verifactu: "' + oDatos.NifEmisor + '". Revisar la ' +
-        'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
-    // Bloquea la cadena del emisor hasta el commit/rollback del llamador
-    ObtenerCadenaParaEnvio(AConn, oDatos.NifEmisor, oCadena);
-    sFhGen := FechaHoraHusoGen(Now);
-    sSif   := ConstruirSistemaInformatico(AConn);
-    if ATipoOperacion = 'ANULACION' then
-      sRegistro := ConstruirRegistroAnulacion(oDatos, ASerie, ANumero,
-                                              oCadena, sSif, sFhGen, sHuella)
+    if VerifactuFirmaCertificado then
+    begin
+      Result.RegistroXmlFirmado := FirmarRegistroFacturacion(
+        sRegistro, ATipoOperacion, sHuella, oDatos.SerialCert,
+        oDatos.TitularCert, oDatosCert, Result.FirmaDigital);
+      Result.SerieCertificado := oDatosCert.NumeroSerie;
+      Result.TitularCertificado := oDatosCert.Titular;
+      Result.HuellaCertificado := oDatosCert.HuellaSha1;
+    end
     else
-      sRegistro := ConstruirRegistroAlta(oDatos, ASerie, ANumero,
-                                         oCadena, sSif, sFhGen,
-                                         ATipoOperacion = 'SUBSANACION',
-                                         sHuella);
+    begin
+      Result.RegistroXmlFirmado := XmlRegistroFacturacionLocal(
+        sRegistro, ATipoOperacion);
+      Result.FirmaDigital := sHuella;
+    end;
     Result.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
     EnviarHttp(UrlEnvio, Result.PeticionCompleta,
                oDatos.SerialCert, oDatos.TitularCert, iStatus, sCuerpo);
