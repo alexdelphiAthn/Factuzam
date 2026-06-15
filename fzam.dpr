@@ -1,4 +1,4 @@
-﻿program Fzam;
+program Fzam;
 
 uses
 //  {$IFDEF DEBUG}
@@ -196,6 +196,7 @@ uses
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibXades in 'src\Lib\inLibXades.pas',
   inLibRelojFiscal in 'src\Lib\inLibRelojFiscal.pas',
+  inLibFacturae in 'src\Lib\inLibFacturae.pas',
   inLibVerifactuNoVerifactuExport in 'src\Lib\inLibVerifactuNoVerifactuExport.pas',
   inLibVerifactuNoVerifactuVerify in 'src\Lib\inLibVerifactuNoVerifactuVerify.pas',
   inLibVerifactu in 'src\verifactu\inLibVerifactu.pas',

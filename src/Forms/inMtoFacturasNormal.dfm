@@ -177,5 +177,14 @@ inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
         StyleElements = [seFont, seClient, seBorder]
       end
     end
+    object btnEmitirEDoc: TcxButton
+      Left = 1
+      Top = 397
+      Width = 140
+      Height = 34
+      Caption = 'Emitir eDoc'
+      TabOrder = 6
+      OnClick = btnEmitirEDocClick
+    end
   end
 end

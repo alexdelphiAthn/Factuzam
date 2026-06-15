@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasNormal                                           }
 {    Tipo:       Formulario (Mto) descendiente                                 }
@@ -35,6 +35,8 @@ uses
 
 type
   TfrmMtoFacturasNormal = class(TfrmMtoFacturasBase)
+    btnEmitirEDoc: TcxButton;
+    procedure btnEmitirEDocClick(Sender: TObject);
   public
     function NombreVistaListado: string; override;
     function TipoFacturaFiltro: string; override;
@@ -42,9 +44,54 @@ type
 
 implementation
 
+uses
+  inLibFacturae,
+  inLibGlobalVar;
+
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoFacturasNormal.btnEmitirEDocClick(Sender: TObject);
+var
+  oDialogo: TSaveDialog;
+  oResultado: TFacturaeResultado;
+  sSerie: string;
+  sNumero: string;
+begin
+  if (dsTablaG.DataSet = nil) or
+     (not dsTablaG.DataSet.Active) or
+     dsTablaG.DataSet.IsEmpty then
+  begin
+    ShowMessage('Seleccione un borrador de venta mayor.');
+    Abort;
+  end;
+  if (dsTablaG.DataSet.State = dsInsert) or
+     (dsTablaG.DataSet.State = dsEdit) then
+  begin
+    ShowMessage('Guarde los cambios antes de emitir el eDoc.');
+    Abort;
+  end;
+  sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+  oDialogo := TSaveDialog.Create(Self);
+  try
+    oDialogo.Title := 'Emitir eDoc';
+    oDialogo.Filter := 'Facturae firmado (*.xsig)|*.xsig|XML (*.xml)|*.xml';
+    oDialogo.DefaultExt := 'xsig';
+    oDialogo.FileName := NombreArchivoFacturae(sSerie, sNumero);
+    if oDialogo.Execute then
+    begin
+      oResultado := EmitirFacturae(inLibGlobalVar.oConn, sSerie, sNumero,
+        oDialogo.FileName);
+      dsTablaG.DataSet.Refresh;
+      ShowMessage('eDoc emitido correctamente:' + sLineBreak +
+        oResultado.Archivo);
+    end;
+  finally
+    FreeAndNil(oDialogo);
+  end;
+end;
 
 function TfrmMtoFacturasNormal.NombreVistaListado: string;
 begin

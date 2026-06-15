@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasBase                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -928,10 +928,11 @@ begin
   // BORRADOR no hay registro de facturación y no se puede imprimir
   sFase := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
   if ((sFase = '') or SameText(sFase, 'BORRADOR')) and
-     (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') then
+     (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') and
+     (ModoVerifactu <> mvSinVerifactu) then
   begin
-    ShowMessage('El borrador está pendiente: láncelo a Verifactu con ' +
-                'el botón Consolidar antes de imprimirlo.');
+    ShowMessage('El borrador está pendiente: use el botón Consolidar ' +
+                'antes de imprimirlo en este modo fiscal.');
     Abort;
   end;
   form := TfrmPrintFac.Create(Application);  // Owner = Application
