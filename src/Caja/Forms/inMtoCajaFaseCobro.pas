@@ -153,9 +153,13 @@ type
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;
     function ValidaryConfirmar:boolean;
+    function PuedeEmitir(const ASerie: string; AFecha: TDateTime): Boolean;
     function SerieAdmiteFecha(const ASerie: string;
       AFecha: TDateTime): Boolean;
     procedure AvisarSiNumeracionConHuecos(const ASerie: string);
+    function NumeroManualIntroducido: string;
+    function ValidarHuecoManual(const ASerie, ANumero: string;
+      out ANumeroFmt: string): Boolean;
     procedure CargarFormasPago;
     procedure CargarComboSeries;
     procedure AjustarFormatoEditorActivo;
@@ -176,6 +180,7 @@ type
     FNifCliente: String;
     FSerieFactura: String;
     FFechaFactura: TDateTime;
+    FNumeroManual: String;
     // 'serie\numero' del ticket rectificado: activa el modo
     // rectificación (series de subtipo RECTIFICATIVA y aviso en caption)
     FRectificaA: String;
@@ -253,9 +258,8 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
 begin
-  if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
+  if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
-    AvisarSiNumeracionConHuecos(cbbSERIE_FAC.Text);
     FTipoImpresion := tiConTicket;
     ModalResult := mrOk;
   end;
@@ -290,6 +294,7 @@ begin
       if SerieAdmiteFecha(oDatos.Serie, oDatos.Fecha) then
       begin
         AvisarSiNumeracionConHuecos(oDatos.Serie);
+        FNumeroManual  := '';
         FSerieFactura  := oDatos.Serie;
         FFechaFactura  := oDatos.Fecha;
         FTipoImpresion := tiFactura;
@@ -307,9 +312,8 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject);
 begin
-  if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
+  if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
-    AvisarSiNumeracionConHuecos(cbbSERIE_FAC.Text);
     FTipoImpresion := tiSinTicket;
     ModalResult := mrOk;
   end;
@@ -317,9 +321,8 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinPreciosClick(Sender: TObject);
 begin
-  if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
+  if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
-    AvisarSiNumeracionConHuecos(cbbSERIE_FAC.Text);
     FTipoImpresion := tiTicketRegalo;
     ModalResult := mrOk;
   end;
@@ -414,6 +417,102 @@ begin
     finally
       FreeAndNil(Qry);
     end;
+  end;
+end;
+
+function TfrmMtoCajaFaseCobro.NumeroManualIntroducido: string;
+var
+  s: string;
+begin
+  // Vacio o todo ceros (placeholder '00000000') => numeracion automatica.
+  s := Trim(edtNumeroDoc.Text);
+  if StrToInt64Def(s, 0) = 0 then
+    Result := ''
+  else
+    Result := s;
+end;
+
+function TfrmMtoCajaFaseCobro.ValidarHuecoManual(const ASerie, ANumero: string;
+  out ANumeroFmt: string): Boolean;
+var
+  Qry: TUniQuery;
+  iNum, iMin, iMax, iExiste: Int64;
+  iLen: Integer;
+begin
+  // Solo se admite un numero que rellene un hueco real de la serie: que no
+  // exista ya y que este entre el minimo y el maximo. Devuelve el numero
+  // formateado con los digitos de la serie.
+  Result := False;
+  ANumeroFmt := '';
+  iNum := StrToInt64Def(Trim(ANumero), 0);
+  if iNum <= 0 then
+    MessageDlg('El número de factura indicado no es válido.',
+      mtError, [mbOK], 0)
+  else
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := oConn;
+      Qry.SQL.Text :=
+        'SELECT MIN(CAST(NUMERO_FAC AS UNSIGNED)) AS NMIN, ' +
+        '       MAX(CAST(NUMERO_FAC AS UNSIGNED)) AS NMAX, ' +
+        '       MAX(LENGTH(NUMERO_FAC))           AS NLEN, ' +
+        '       SUM(CASE WHEN CAST(NUMERO_FAC AS UNSIGNED) = :NUM ' +
+        '                THEN 1 ELSE 0 END)        AS NEXISTE ' +
+        '  FROM fza_facturas ' +
+        ' WHERE CODIGO_EMP_FAC = :EMP ' +
+        '   AND SERIE_FAC      = :SERIE';
+      Qry.ParamByName('NUM').AsLargeInt := iNum;
+      Qry.ParamByName('EMP').AsString   := FCodigoEmpresa;
+      Qry.ParamByName('SERIE').AsString := ASerie;
+      Qry.Open;
+      iMin    := Qry.FieldByName('NMIN').AsLargeInt;
+      iMax    := Qry.FieldByName('NMAX').AsLargeInt;
+      iLen    := Qry.FieldByName('NLEN').AsInteger;
+      iExiste := Qry.FieldByName('NEXISTE').AsLargeInt;
+      if iExiste > 0 then
+        MessageDlg(Format('El número %d ya existe en la serie "%s".',
+          [iNum, ASerie]), mtError, [mbOK], 0)
+      else if (iMax <= iMin) or (iNum <= iMin) or (iNum >= iMax) then
+        MessageDlg(Format('El número %d no es un hueco de la serie "%s": ' +
+          'los huecos están entre el %d y el %d.',
+          [iNum, ASerie, iMin, iMax]), mtError, [mbOK], 0)
+      else
+      begin
+        ANumeroFmt := IntToStr(iNum);
+        while Length(ANumeroFmt) < iLen do
+          ANumeroFmt := '0' + ANumeroFmt;
+        Result := True;
+      end;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
+function TfrmMtoCajaFaseCobro.PuedeEmitir(const ASerie: string;
+  AFecha: TDateTime): Boolean;
+var
+  sManual, sNumeroFmt: string;
+begin
+  // Decide entre relleno de hueco (numero manual escrito en 'Nº doc. venta')
+  // y emision normal con numeracion automatica.
+  sManual := NumeroManualIntroducido;
+  if sManual <> '' then
+  begin
+    // Relleno de hueco: validar el numero; no aplica el control de fecha,
+    // el documento del hueco lleva su propia fecha (normalmente anterior).
+    Result := ValidarHuecoManual(ASerie, sManual, sNumeroFmt);
+    if Result then
+      FNumeroManual := sNumeroFmt;
+  end
+  else
+  begin
+    // Emision normal: control de fecha y aviso (no bloqueante) de huecos.
+    FNumeroManual := '';
+    Result := SerieAdmiteFecha(ASerie, AFecha);
+    if Result then
+      AvisarSiNumeracionConHuecos(ASerie);
   end;
 end;
 
