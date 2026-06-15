@@ -48,12 +48,14 @@ type
     cxGrdDBTabPrinFIRMA_DIGITAL_LOG: TcxGridDBColumn;
     btnIrADocumento: TcxButton;
     btnExportarNoVerifactu: TcxButton;
+    btnVerificarNoVerifactu: TcxButton;
     // Salta a la factura de la fila activa (lo dispara el botón lateral y los
     // atajos Ctrl+Alt+F / Ctrl+Mayús+F). ResolverCallFactura mira el TIPO_FAC
     // en fza_facturas y abre Facturas o FacturasSimplif según corresponda, así
     // se llega a la correcta sin saber el tipo de antemano.
     procedure btnIrADocumentoClick(Sender: TObject);
     procedure btnExportarNoVerifactuClick(Sender: TObject);
+    procedure btnVerificarNoVerifactuClick(Sender: TObject);
   private
     dmmVerifactuLog: TdmVerifactuLog;
   public
@@ -68,7 +70,7 @@ implementation
 
 uses
   inLibWin, inMtoPrincipal, inLibShowMto, inLibGlobalVar,
-  inLibVerifactuNoVerifactuExport;
+  inLibVerifactuNoVerifactuExport, inLibVerifactuNoVerifactuVerify;
 
 {$R *.dfm}
 
@@ -156,6 +158,43 @@ begin
         IntToStr(oResultado.RegistrosFactura) + sLineBreak +
         'Certificado: ' + oResultado.TitularCertificado,
         mtInformation, [mbOK], 0);
+    end;
+  finally
+    FreeAndNil(oDialogo);
+  end;
+end;
+
+procedure TfrmMtoVerifactuLog.btnVerificarNoVerifactuClick(Sender: TObject);
+var
+  oDialogo: TOpenDialog;
+  oResultado: TResultadoVerificacionNoVerifactu;
+  sEventos: string;
+  sFacturacion: string;
+  sInforme: string;
+  sResumen: string;
+begin
+  inherited;
+  oDialogo := TOpenDialog.Create(Self);
+  try
+    oDialogo.Title := 'Verificar ficheros NO VERI*FACTU';
+    oDialogo.InitialDir := TPath.GetDocumentsPath;
+    oDialogo.Filter := 'Archivos XML|*.xml|Todos los archivos|*.*';
+    if oDialogo.Execute then
+    begin
+      InferirFicherosNoVerifactu(oDialogo.FileName, sEventos, sFacturacion);
+      oResultado := VerificarFicherosNoVerifactu(sEventos, sFacturacion);
+      sResumen := ResumenVerificacionNoVerifactu(oResultado);
+      sInforme := NombreInformeErroresNoVerifactu(oDialogo.FileName);
+      TFile.WriteAllText(sInforme, sResumen + sLineBreak + sLineBreak +
+        oResultado.Detalle, TEncoding.UTF8);
+      if oResultado.Errores = 0 then
+        MessageDlg('Verificacion NO VERI*FACTU correcta.' + sLineBreak +
+          sResumen + sLineBreak + sLineBreak + 'Informe:' + sLineBreak +
+          sInforme, mtInformation, [mbOK], 0)
+      else
+        MessageDlg('Verificacion NO VERI*FACTU con errores.' + sLineBreak +
+          sResumen + sLineBreak + sLineBreak + 'Informe:' + sLineBreak +
+          sInforme, mtError, [mbOK], 0);
     end;
   finally
     FreeAndNil(oDialogo);
