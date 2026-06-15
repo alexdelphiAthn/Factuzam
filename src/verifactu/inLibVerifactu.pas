@@ -53,6 +53,8 @@ const
   cEventoNoVerifactuCambioConfig = 103;
   cEventoNoVerifactuExportFact   = 108;
   cEventoNoVerifactuExportEventos = 109;
+  cEventoNoVerifactuIncidenciaCert = 110;
+  cEventoNoVerifactuIncidenciaReloj = 111;
 
 // Modo fiscal activo: SIN, VERIFACTU o NO_VERIFACTU.
 function ModoVerifactu: TModoVerifactu;
@@ -138,7 +140,8 @@ uses
   System.TimeSpan,
   Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
-  inLibGlobalVar, inLibAppParam, inLibFotos, inLibXades;
+  inLibGlobalVar, inLibAppParam, inLibFotos, inLibXades,
+  inLibRelojFiscal;
 
 const
   cNsEventosSif =
@@ -183,6 +186,30 @@ begin
     Result := StringReplace(Result, '  ', ' ', [rfReplaceAll]);
   if Length(Result) > 100 then
     Result := Copy(Result, 1, 100);
+end;
+
+function AnadirIncidenciaCertificado(const ADatos, AMensaje: string): string;
+begin
+  Result := Trim(ADatos);
+  if Result <> '' then
+    Result := Result + ' | ';
+  Result := Result + 'INCIDENCIA_CERTIFICADO=' + Trim(AMensaje);
+end;
+
+function AnadirIncidenciaReloj(const ADatos, AMensaje: string): string;
+begin
+  Result := Trim(ADatos);
+  if Result <> '' then
+    Result := Result + ' | ';
+  Result := Result + 'INCIDENCIA_RELOJ=' + Trim(AMensaje);
+end;
+
+procedure VaciarDatosCertificado(var ADatos: TXadesDatosCertificado);
+begin
+  ADatos.NumeroSerie := '';
+  ADatos.Titular := '';
+  ADatos.HuellaSha1 := '';
+  ADatos.CertificadoBase64 := '';
 end;
 
 function FechaHoraHusoSif(ADt: TDateTime): string;
@@ -999,6 +1026,9 @@ var
   sFechaHuso:    string;
   sXml:          string;
   sXmlFirmado:   string;
+  sDatosLog:     string;
+  sErrorFirma:   string;
+  sErrorReloj:   string;
   bColumnasFirma: Boolean;
   bFirmarCertificado: Boolean;
 begin
@@ -1007,10 +1037,34 @@ begin
     Qry.Connection := AConn;
     bColumnasFirma := ColumnasFirmaEventosDisponibles(AConn);
     bFirmarCertificado := VerifactuFirmaCertificado;
+    sDatosLog := ADatosAdicionales;
+    sErrorFirma := '';
+    sErrorReloj := '';
+    if NoVerifactuActivo and
+       (ATipoEvento <> cEventoNoVerifactuIncidenciaReloj) then
+    begin
+      try
+        ExigirRelojFiscal('Evento NO VERI*FACTU');
+      except
+        on E: Exception do
+        begin
+          sErrorReloj := E.Message;
+          sDatosLog := AnadirIncidenciaReloj(sDatosLog, sErrorReloj);
+        end;
+      end;
+    end;
+    if NoVerifactuActivo and (not bFirmarCertificado) then
+      sErrorFirma := 'El modo NO VERI*FACTU exige firma electrónica ' +
+        'con certificado oficial. Active appVerifactuFirmaCertificado.';
     if bFirmarCertificado and (not bColumnasFirma) then
-      raise Exception.Create('Faltan columnas de firma en ' +
-        'fza_verifactu_eventos. Aplique el script ' +
-        'DESARROLLOS EN CURSO\verifactu_registros_firmados.sql.');
+    begin
+      sErrorFirma := 'Faltan columnas de firma en fza_verifactu_eventos. ' +
+        'Aplique el script DESARROLLOS EN CURSO\' +
+        'verifactu_registros_firmados.sql.';
+      bFirmarCertificado := False;
+    end;
+    if sErrorFirma <> '' then
+      sDatosLog := AnadirIncidenciaCertificado(sDatosLog, sErrorFirma);
     CargarEventoAnterior(AConn, oAnterior);
     if oAnterior.EsPrimero then
       sHashAnterior := StringOfChar('0', 64)
@@ -1021,28 +1075,38 @@ begin
     CargarEmpresaEvento(AConn, oEmpresa);
     sXml := ConstruirXmlEventoSif(oEmpresa, oAnterior, ATipoEvento,
                                   sFechaHuso, ADescripcion,
-                                  ADatosAdicionales, sHashPropio);
+                                  sDatosLog, sHashPropio);
+    sXmlFirmado := sXml;
+    sFirmaXades := '';
+    sFirma := sHashPropio;
+    VaciarDatosCertificado(oDatosCert);
     if bFirmarCertificado then
     begin
-      if (Trim(oEmpresa.SerialCert) = '') or
-         (Trim(oEmpresa.TitularCert) = '') then
-        raise Exception.Create('No hay certificado configurado en Empresas ' +
-          'para firmar eventos NO VERI*FACTU.');
-      sXmlFirmado := FirmarXmlEventoSif(sXml, sHashPropio,
-                                        oEmpresa.SerialCert,
-                                        oEmpresa.TitularCert, oDatosCert,
-                                        sFirmaXades);
-      sFirma := UpperCase(THashSHA2.GetHashString(sFirmaXades));
-    end
-    else
-    begin
-      sXmlFirmado := sXml;
-      sFirmaXades := '';
-      sFirma := sHashPropio;
-      oDatosCert.NumeroSerie := '';
-      oDatosCert.Titular := '';
-      oDatosCert.HuellaSha1 := '';
-      oDatosCert.CertificadoBase64 := '';
+      try
+        if (Trim(oEmpresa.SerialCert) = '') or
+           (Trim(oEmpresa.TitularCert) = '') then
+          raise Exception.Create('No hay certificado configurado en ' +
+            'Empresas para firmar eventos NO VERI*FACTU.');
+        sXmlFirmado := FirmarXmlEventoSif(sXml, sHashPropio,
+                                          oEmpresa.SerialCert,
+                                          oEmpresa.TitularCert, oDatosCert,
+                                          sFirmaXades);
+        sFirma := UpperCase(THashSHA2.GetHashString(sFirmaXades));
+      except
+        on E: Exception do
+        begin
+          sErrorFirma := E.Message;
+          sDatosLog := AnadirIncidenciaCertificado(ADatosAdicionales,
+                                                   sErrorFirma);
+          sXml := ConstruirXmlEventoSif(oEmpresa, oAnterior, ATipoEvento,
+                                        sFechaHuso, ADescripcion,
+                                        sDatosLog, sHashPropio);
+          sXmlFirmado := sXml;
+          sFirmaXades := '';
+          sFirma := sHashPropio;
+          VaciarDatosCertificado(oDatosCert);
+        end;
+      end;
     end;
     if bColumnasFirma then
       Qry.SQL.Text :=
@@ -1075,7 +1139,7 @@ begin
     Qry.ParamByName('USUARIO').AsString     := oUser;
     Qry.ParamByName('VERSION').AsString     := oVersion;
     Qry.ParamByName('DESCRIPCION').AsString := ADescripcion;
-    Qry.ParamByName('DATOS').AsString       := ADatosAdicionales;
+    Qry.ParamByName('DATOS').AsString       := sDatosLog;
     Qry.ParamByName('HASHANT').AsString     := sHashAnterior;
     Qry.ParamByName('HASHPROPIO').AsString  := sHashPropio;
     Qry.ParamByName('FIRMA').AsString       := sFirma;
@@ -1090,6 +1154,12 @@ begin
       Qry.ParamByName('HUELLACERT').AsString := oDatosCert.HuellaSha1;
     end;
     Qry.Execute;
+    if NoVerifactuActivo and (sErrorFirma <> '') then
+      raise Exception.Create('No se pudo firmar el evento NO VERI*FACTU: ' +
+                             sErrorFirma);
+    if NoVerifactuActivo and (sErrorReloj <> '') then
+      raise Exception.Create('No se pudo validar el reloj del evento ' +
+                             'NO VERI*FACTU: ' + sErrorReloj);
   finally
     FreeAndNil(Qry);
   end;

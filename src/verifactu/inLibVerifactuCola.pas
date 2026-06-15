@@ -66,7 +66,7 @@ implementation
 uses
   Winapi.Windows, Data.DB,
   inLibGlobalVar, inLibAppParam, inLibLog,
-  inLibVerifactu, inLibVerifactuEnvio;
+  inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal;
 
 const
   fidvfcola       = 'ID_VFCOLA';
@@ -127,6 +127,24 @@ begin
     Result := Qry.FieldByName('N').AsInteger = 5;
   finally
     FreeAndNil(Qry);
+  end;
+end;
+
+procedure RegistrarIncidenciaNoVerifactuSeguro(AConn: TUniConnection;
+                                               ATipoEvento: Integer;
+                                               const ADescripcion,
+                                               AMensaje, ASerie,
+                                               ANumero: string);
+begin
+  try
+    RegistrarEventoVerifactu(AConn, ATipoEvento, ADescripcion, AMensaje,
+                             ASerie, ANumero);
+  except
+    on E: Exception do
+    begin
+      Log.LogError('No se pudo registrar la incidencia NO VERI*FACTU: ' +
+                   E.Message);
+    end;
   end;
 end;
 
@@ -307,15 +325,35 @@ class procedure TVerifactuCola.RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
 var
   oResultado: TResultadoEnvioVerifactu;
 begin
-  oResultado := GenerarRegistroFacturaLocal(AQryTrx.Connection, ASerie,
-                                            ANumero, ATipoOperacion);
-  if not oResultado.Ok then
-    raise Exception.Create(oResultado.MensajeError);
-  GuardarRegistroNoVerifactu(AQryTrx, ASerie, ANumero, ATipoOperacion,
-                             oResultado);
-  RegistrarEventoVerifactu(AQryTrx.Connection, cEventoVerifactuInfo,
-    'Registro de facturación NO VERI*FACTU registrado', ATipoOperacion,
-    ASerie, ANumero);
+  try
+    ExigirRelojFiscal('Registro de facturación NO VERI*FACTU');
+    if not VerifactuFirmaCertificado then
+      raise Exception.Create('El modo NO VERI*FACTU exige firmar el ' +
+        'registro de facturación con certificado oficial.');
+    oResultado := GenerarRegistroFacturaLocal(AQryTrx.Connection, ASerie,
+                                              ANumero, ATipoOperacion);
+    if not oResultado.Ok then
+      raise Exception.Create(oResultado.MensajeError);
+    GuardarRegistroNoVerifactu(AQryTrx, ASerie, ANumero, ATipoOperacion,
+                               oResultado);
+    RegistrarEventoVerifactu(AQryTrx.Connection, cEventoVerifactuInfo,
+      'Registro de facturación NO VERI*FACTU registrado', ATipoOperacion,
+      ASerie, ANumero);
+  except
+    on E: Exception do
+    begin
+      if Pos('reloj', LowerCase(E.Message)) > 0 then
+        RegistrarIncidenciaNoVerifactuSeguro(AQryTrx.Connection,
+          cEventoNoVerifactuIncidenciaReloj,
+          'Incidencia de reloj NO VERI*FACTU', E.Message, ASerie, ANumero)
+      else
+        RegistrarIncidenciaNoVerifactuSeguro(AQryTrx.Connection,
+          cEventoNoVerifactuIncidenciaCert,
+          'Incidencia de certificado NO VERI*FACTU', E.Message,
+          ASerie, ANumero);
+      raise;
+    end;
+  end;
 end;
 
 class procedure TVerifactuCola.MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;

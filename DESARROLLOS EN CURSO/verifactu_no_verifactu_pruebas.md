@@ -15,7 +15,9 @@ Pruebas del desarrollo descrito en
 3. Abrir parámetros de aplicación y localizar la categoría **Verifactu**.
 4. Confirmar que existen `appVerifactuModo` y
    `appVerifactuFirmaCertificado`.
-5. Para las pruebas XAdES: seleccionar un certificado FNMT válido en la ficha
+5. Confirmar que existen `appVerifactuNtpServidores`,
+   `appVerifactuNtpTimeoutMs` y `appVerifactuNtpMargenSegundos`.
+6. Para las pruebas XAdES: seleccionar un certificado FNMT válido en la ficha
    de empresa (`CODIGO_CERTIFICADO_EMP` y `TITULAR_CERTIFICADO_EMP`).
 
 ## A. Script SQL
@@ -69,7 +71,7 @@ Resultado esperado:
 - El mensaje indica que solo un administrador puede cambiar parámetros
   Verifactu.
 
-## C. Registro NO VERI*FACTU sin certificado
+## C. Modo NO VERI*FACTU sin firma activada
 
 Configuración:
 
@@ -81,25 +83,23 @@ Crear un borrador desde caja o lanzar un borrador desde Borradores.
 Resultado esperado:
 
 - No se crea fila en `fza_verifactu_cola`.
-- Sí se crea o actualiza fila en `fza_facturas_consolidaciones`.
-- `FASE_FAC='NOVERIFACTU_OK'`.
-- `ESTADO_FACCON='NOVERIF_REGISTRADO'`.
-- `CHAIN_HASH_FACCON` tiene SHA-256 en mayúsculas.
-- `FIRMA_DIGITAL_FACCON` contiene la misma huella SHA-256 del registro.
-- Las columnas de certificado quedan vacías.
-- En `fza_verifactu_eventos`, `FIRMA_DIGITAL_LOG` contiene SHA-256.
+- No se crea un cierre fiscal válido en `fza_facturas_consolidaciones`.
+- El borrador no pasa a `NOVERIFACTU_OK`.
+- Se muestra error indicando que el modo NO VERI*FACTU exige firma con
+  certificado oficial.
+- En `fza_verifactu_eventos` queda una incidencia con
+  `INCIDENCIA_CERTIFICADO=...`, XML base y huella SHA-256.
 
 Consulta rápida:
 
 ```sql
-SELECT SERIE_FAC_FACCON,
-       NUMERO_FAC_FACCON,
-       ESTADO_FACCON,
-       CHAIN_HASH_FACCON,
-       FIRMA_DIGITAL_FACCON,
-       SERIE_CERTIFICADO_FACCON
-  FROM fza_facturas_consolidaciones
- ORDER BY ID_FACCON DESC
+SELECT ID_LOG,
+       DESCRIPCION_LOG,
+       DATOS_ADICIONALES_LOG,
+       HASH_PROPIO_LOG,
+       FIRMA_XADES_LOG
+  FROM fza_verifactu_eventos
+ ORDER BY ID_LOG DESC
  LIMIT 5;
 ```
 
@@ -153,6 +153,7 @@ Resultado esperado:
 - La operación no debe quedar registrada como firmada.
 - Se muestra error claro indicando que falta certificado de empresa.
 - No se avanza la cadena fiscal si la transacción se revierte.
+- En el libro de eventos queda registrada la incidencia de certificado.
 
 **E2 - Certificado caducado o no vigente.**
 
@@ -173,20 +174,23 @@ Resultado esperado:
 - No se hace fallback automatico a SHA-256.
 - El borrador no debe quedar cerrado fiscalmente ni debe avanzar la cadena si
   la transaccion se revierte.
+- En el libro de eventos queda registrada la incidencia de certificado.
 
 ## F. Anulación NO VERI*FACTU
 
 Con un borrador ya registrado localmente:
 
 1. Ejecutar Anular registro fiscal desde Borradores o Buscar operaciones.
-2. Repetir en modo SHA-256 y en modo XAdES.
+2. Repetir con certificado válido y con certificado inválido.
 
 Resultado esperado:
 
-- Se genera registro de anulación.
+- Con certificado válido, se genera registro de anulación firmado.
 - El borrador pasa a `FASE_FAC='NOVERIFACTU_ANULADA'`.
 - `ESTADO_FACCON` queda `NOVERIF_ANULADO`.
 - La cadena `fza_verifactu_cadena` avanza.
+- Con certificado inválido, se muestra error, no se hace fallback a SHA-256 y
+  queda una incidencia en el libro de eventos.
 
 ## G. Exportación
 
@@ -198,11 +202,54 @@ Resultado esperado:
   - `_eventos.xml`
   - `_facturacion.xml`
 - Se registran eventos de exportación antes de generar el XML.
-- En modo firmado, ambos ficheros contienen `<ds:Signature`.
-- En modo SHA-256, los ficheros no contienen `<ds:Signature` como firma de
-  contenedor, pero sí incluyen las huellas y registros guardados.
+- En modo `NO_VERIFACTU`, la exportación se bloquea si hay eventos o registros
+  de facturación sin XAdES y datos de certificado.
+- Con todos los registros firmados, ambos ficheros contienen `<ds:Signature`.
+- En modo `SIN`, la descarga puede generarse como demo aunque no haya firmas
+  legales.
 
-## H. Cadena de eventos
+## H. Control de reloj fiscal
+
+Configuración:
+
+- `appVerifactuModo=NO_VERIFACTU`.
+- `appVerifactuFirmaCertificado=True`.
+- `appVerifactuNtpServidores=time.google.com,time.windows.com,pool.ntp.org`.
+- `appVerifactuNtpMargenSegundos=60`.
+
+Crear un borrador con el reloj de Windows correcto.
+
+Resultado esperado:
+
+- La comprobación NTP permite continuar.
+- El registro se firma y queda en `NOVERIFACTU_OK`.
+
+Forzar una prueba de fallo configurando temporalmente:
+
+```text
+appVerifactuNtpServidores=127.0.0.1
+appVerifactuNtpTimeoutMs=500
+```
+
+Crear otro borrador.
+
+Resultado esperado:
+
+- Se muestra error indicando que no se pudo comprobar el reloj fiscal contra
+  NTP.
+- No se genera cierre fiscal válido.
+- Se registra evento `cEventoNoVerifactuIncidenciaReloj` con
+  `INCIDENCIA_RELOJ=...`.
+
+Prueba de desviación: cambiar manualmente el reloj de Windows más de un minuto
+en una máquina de pruebas y repetir.
+
+Resultado esperado:
+
+- Se bloquea la operación.
+- El mensaje indica la diferencia en segundos y el margen de 60 segundos.
+
+## I. Cadena de eventos
 
 Ejecutar:
 

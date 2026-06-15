@@ -265,6 +265,15 @@ begin
   RegistrarParametro('Verifactu', 'appVerifactuFirmaCertificado',
     'Firmar registros y eventos con certificado de empresa',
     tpBoolean, 'False');
+  RegistrarParametro('Verifactu', 'appVerifactuNtpServidores',
+    'Servidores NTP para validar el reloj fiscal NO VERI*FACTU',
+    tpString, 'time.google.com,time.windows.com,pool.ntp.org');
+  RegistrarParametro('Verifactu', 'appVerifactuNtpTimeoutMs',
+    'Timeout por servidor NTP para control del reloj fiscal',
+    tpInteger, '1500');
+  RegistrarParametro('Verifactu', 'appVerifactuNtpMargenSegundos',
+    'Margen máximo admitido del reloj fiscal en segundos',
+    tpInteger, '60');
   RegistrarParametro('Verifactu', 'appVerifactuEntorno',
     'Entorno AEAT: PRE (pruebas) o PRO (producción)', tpString, 'PRE');
   RegistrarParametro('Verifactu', 'appVerifactuUrlQRPre',

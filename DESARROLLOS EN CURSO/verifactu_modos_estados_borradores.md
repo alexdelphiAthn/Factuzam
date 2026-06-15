@@ -24,7 +24,7 @@ al guardar.
 |------|-----|----------|-----------|-------------|
 | `SIN` | Transitorio hasta la obligatoriedad legal. | No crea registro fiscal SIF. | No. | No. |
 | `VERIFACTU` | Remision a AEAT. | Encola alta/anulacion y guarda respuesta. | Si. | AEAT. |
-| `NO_VERIFACTU` | SIF no verificable. | Guarda registro local encadenado y firmable. | No. | XML local de eventos y facturacion. |
+| `NO_VERIFACTU` | SIF no verificable. | Guarda registro local encadenado y firmado con certificado. | No. | XML local de eventos y facturacion. |
 
 `appVerifactuActivo` queda como compatibilidad antigua. La decision nueva
 debe leerse siempre con `ModoVerifactu`.
@@ -69,15 +69,36 @@ En modo `SIN` no se crea fila en `fza_facturas_consolidaciones`.
 
 ## Firma y bloqueo por certificado
 
-Si `appVerifactuFirmaCertificado=True`, los registros locales NO VERIFACTU y
-eventos se firman con XAdES usando el certificado seleccionado en la empresa.
-La firma se hace con la API criptografica de Windows desde `inLibXades.pas`;
-no se invocan `.ps1` ni procesos externos para generar ficheros.
+En modo `NO_VERIFACTU`, los registros locales y eventos deben firmarse con
+XAdES usando el certificado seleccionado en la empresa. La firma se hace con
+la API criptografica de Windows desde `inLibXades.pas`; no se invocan `.ps1`
+ni procesos externos para generar ficheros.
 
 Si el certificado falta, esta caducado, todavia no es valido o no permite usar
 la clave privada, no se hace fallback automatico a SHA-256. La operacion debe
-fallar antes de dejar el registro fiscal cerrado. Para usar SHA-256 hay que
-desactivar expresamente `appVerifactuFirmaCertificado`.
+fallar antes de dejar el registro fiscal cerrado. Los eventos de incidencia se
+guardan con XML base y huella SHA-256 para que el libro explique el problema,
+pero bloquean la exportacion legal hasta que el registro tenga firma XAdES.
+
+El SHA-256 sin certificado queda solo para `SIN` como rastro tecnico o demo.
+
+## Control de reloj fiscal
+
+En modo `NO_VERIFACTU`, antes de generar un registro de facturacion o un
+evento ordinario se comprueba el reloj del sistema contra NTP. La diferencia
+maxima admitida es de 60 segundos, conforme al margen legal de un minuto.
+
+Parametros de mantenimiento:
+
+| Parametro | Defecto | Uso |
+|-----------|---------|-----|
+| `appVerifactuNtpServidores` | `time.google.com,time.windows.com,pool.ntp.org` | Lista de servidores NTP separados por coma o punto y coma. |
+| `appVerifactuNtpTimeoutMs` | `1500` | Timeout por servidor. |
+| `appVerifactuNtpMargenSegundos` | `60` | Margen maximo admitido; aunque se configure mas alto, se limita a 60. |
+
+Si no se puede comprobar la hora o la desviacion supera el margen, la
+operacion fiscal se bloquea y se registra una incidencia de reloj en
+`fza_verifactu_eventos`. No se ajusta la hora de Windows desde Factuzam.
 
 ## Convencion de pantalla
 
