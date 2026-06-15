@@ -86,7 +86,7 @@ const
   cFacturaePoliticaDescripcion =
     'Politica de firma electronica para facturacion electronica con ' +
     'formato Facturae';
-  cFacturaePoliticaHashSha1 = 'xmfh8D/Ec/hHeE1IB4zPd61zHIY=';
+  cFacturaePoliticaHashSha1 = 'Ohixl6upD6av8N7pEvDABhEL6hM=';
   cCertStorePersonal = 'MY';
   X509_ASN_ENCODING = $00000001;
   PKCS_7_ASN_ENCODING = $00010000;
@@ -400,6 +400,19 @@ end;
 function DigestSha256Base64(const AXmlCanonico: string): string;
 begin
   Result := Base64Bytes(Sha256Bytes(BytesUtf8(AXmlCanonico)));
+end;
+
+function AtributoXmlNsDs: string;
+begin
+  Result := 'xmlns:ds="' + cXmlDsigNs + '"';
+end;
+
+function NodoDsVacioCanonico(const ANombre, AAtributos: string): string;
+begin
+  Result := '<ds:' + ANombre;
+  if AAtributos <> '' then
+    Result := Result + ' ' + AAtributos;
+  Result := Result + '></ds:' + ANombre + '>';
 end;
 
 function BytesToHexMayus(const ABytes: TBytes): string;
@@ -824,6 +837,82 @@ begin
                                  Abs(oDesfase.Minutes)]);
 end;
 
+function BuscarFinEtiqueta(const AXml: string; APosIni: Integer): Integer;
+  forward;
+
+function NormalizarSaltosCanonicalXml(const AXml: string): string;
+begin
+  Result := StringReplace(AXml, #13#10, #10, [rfReplaceAll]);
+  Result := StringReplace(Result, #13, #10, [rfReplaceAll]);
+end;
+
+function NombreEtiquetaApertura(const AEtiqueta: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  i := 2;
+  while (i <= Length(AEtiqueta)) and
+        (not CharInSet(AEtiqueta[i], [' ', #9, #10, #13, '/', '>'])) do
+  begin
+    Result := Result + AEtiqueta[i];
+    Inc(i);
+  end;
+end;
+
+function EtiquetaEsVacia(const AEtiqueta: string;
+                         out AMarcaCierre: Integer): Boolean;
+begin
+  Result := False;
+  AMarcaCierre := Length(AEtiqueta) - 1;
+  while (AMarcaCierre > 1) and (AEtiqueta[AMarcaCierre] <= ' ') do
+    Dec(AMarcaCierre);
+  if (AMarcaCierre > 1) and (AEtiqueta[AMarcaCierre] = '/') and
+     (Length(AEtiqueta) > 2) and (AEtiqueta[2] <> '/') and
+     (AEtiqueta[2] <> '?') and (not StartsText('<!--', AEtiqueta)) then
+    Result := True;
+end;
+
+function ExpandirEtiquetasVaciasCanonicalXml(const AXml: string): string;
+var
+  i: Integer;
+  iFin: Integer;
+  iMarcaCierre: Integer;
+  sEtiqueta: string;
+  sApertura: string;
+  sNombre: string;
+begin
+  Result := '';
+  i := 1;
+  while i <= Length(AXml) do
+  begin
+    if AXml[i] = '<' then
+    begin
+      iFin := BuscarFinEtiqueta(AXml, i);
+      if iFin = 0 then
+        raise EXadesError.Create('XML mal formado al canonicalizar.');
+      sEtiqueta := Copy(AXml, i, iFin - i + 1);
+      if EtiquetaEsVacia(sEtiqueta, iMarcaCierre) then
+      begin
+        sNombre := NombreEtiquetaApertura(sEtiqueta);
+        sApertura := Copy(sEtiqueta, 1, iMarcaCierre - 1);
+        while (sApertura <> '') and
+              (sApertura[Length(sApertura)] <= ' ') do
+          Delete(sApertura, Length(sApertura), 1);
+        Result := Result + sApertura + '></' + sNombre + '>';
+      end
+      else
+        Result := Result + sEtiqueta;
+      i := iFin + 1;
+    end
+    else
+    begin
+      Result := Result + AXml[i];
+      Inc(i);
+    end;
+  end;
+end;
+
 function CanonicalizarXmlLimitado(const AXml: string): string;
 var
   iFinDecl: Integer;
@@ -837,9 +926,8 @@ begin
     if iFinDecl > 0 then
       Result := Trim(Copy(Result, iFinDecl + 2, MaxInt));
   end;
-  // Canonicalizacion limitada: suficiente para XML emitido por Factuzam
-  // con orden estable de atributos. Validar con AEAT/Facturae antes de
-  // activar esta firma en produccion.
+  Result := NormalizarSaltosCanonicalXml(Result);
+  Result := ExpandirEtiquetasVaciasCanonicalXml(Result);
 end;
 
 function BuscarFinEtiqueta(const AXml: string; APosIni: Integer): Integer;
@@ -995,8 +1083,8 @@ function ConstruirKeyInfo(const AOpciones: TXadesOpciones;
                           const ADatosCert: TXadesDatosCertificado): string;
 begin
   Result :=
-    '<ds:KeyInfo Id="' + EscaparXml(AOpciones.IdKeyInfo) +
-    '" xmlns:ds="' + cXmlDsigNs + '">' +
+    '<ds:KeyInfo ' + AtributoXmlNsDs + ' Id="' +
+    EscaparXml(AOpciones.IdKeyInfo) + '">' +
     '<ds:X509Data><ds:X509Certificate>' +
     ADatosCert.CertificadoBase64 +
     '</ds:X509Certificate></ds:X509Data></ds:KeyInfo>';
@@ -1023,9 +1111,10 @@ begin
     Result := Result +
       '</xades:SigPolicyId>' +
       '<xades:SigPolicyHash>' +
-      '<ds:DigestMethod Algorithm="' +
-      EscaparXml(AOpciones.PoliticaDigestMethod) + '"/>' +
-      '<ds:DigestValue>' + AOpciones.PoliticaHashBase64 +
+      NodoDsVacioCanonico('DigestMethod', AtributoXmlNsDs +
+      ' Algorithm="' + EscaparXml(AOpciones.PoliticaDigestMethod) + '"') +
+      '<ds:DigestValue ' + AtributoXmlNsDs + '>' +
+      AOpciones.PoliticaHashBase64 +
       '</ds:DigestValue>' +
       '</xades:SigPolicyHash>' +
       '</xades:SignaturePolicyId>' +
@@ -1058,23 +1147,24 @@ begin
   sIssuer := NombreX500(ACert^.pCertInfo^.Issuer);
   sSerieDecimal := SerieCertificadoDecimal(ACert);
   Result :=
-    '<xades:SignedProperties Id="' +
-    EscaparXml(AOpciones.IdSignedProperties) + '" xmlns:xades="' +
-    EscaparXml(AOpciones.EspacioNombresXades) + '" xmlns:ds="' +
-    cXmlDsigNs + '">' +
+    '<xades:SignedProperties xmlns:xades="' +
+    EscaparXml(AOpciones.EspacioNombresXades) + '" Id="' +
+    EscaparXml(AOpciones.IdSignedProperties) + '">' +
     '<xades:SignedSignatureProperties>' +
     '<xades:SigningTime>' + FechaHoraXades(Now) +
     '</xades:SigningTime>' +
     '<xades:SigningCertificate>' +
     '<xades:Cert>' +
     '<xades:CertDigest>' +
-    '<ds:DigestMethod Algorithm="' + cAlgSha1 + '"/>' +
-    '<ds:DigestValue>' + sDigestCert + '</ds:DigestValue>' +
+    NodoDsVacioCanonico('DigestMethod', AtributoXmlNsDs +
+    ' Algorithm="' + cAlgSha1 + '"') +
+    '<ds:DigestValue ' + AtributoXmlNsDs + '>' + sDigestCert +
+    '</ds:DigestValue>' +
     '</xades:CertDigest>' +
     '<xades:IssuerSerial>' +
-    '<ds:X509IssuerName>' + EscaparXml(sIssuer) +
+    '<ds:X509IssuerName ' + AtributoXmlNsDs + '>' + EscaparXml(sIssuer) +
     '</ds:X509IssuerName>' +
-    '<ds:X509SerialNumber>' + sSerieDecimal +
+    '<ds:X509SerialNumber ' + AtributoXmlNsDs + '>' + sSerieDecimal +
     '</ds:X509SerialNumber>' +
     '</xades:IssuerSerial>' +
     '</xades:Cert>' +
@@ -1098,10 +1188,10 @@ begin
   Result :=
     '<ds:Reference URI="' + EscaparXml(sUri) + '">' +
     '<ds:Transforms>' +
-    '<ds:Transform Algorithm="' + cAlgEnveloped + '"/>' +
-    '<ds:Transform Algorithm="' + cAlgExcC14n + '"/>' +
+    NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgEnveloped + '"') +
+    NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgExcC14n + '"') +
     '</ds:Transforms>' +
-    '<ds:DigestMethod Algorithm="' + cAlgSha256 + '"/>' +
+    NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
     '<ds:DigestValue>' + ADigestDocumento + '</ds:DigestValue>' +
     '</ds:Reference>';
 end;
@@ -1112,19 +1202,21 @@ function ConstruirSignedInfo(const AOpciones: TXadesOpciones;
                              ADigestKeyInfo: string): string;
 begin
   Result :=
-    '<ds:SignedInfo xmlns:ds="' + cXmlDsigNs + '">' +
-    '<ds:CanonicalizationMethod Algorithm="' + cAlgExcC14n + '"/>' +
-    '<ds:SignatureMethod Algorithm="' + cAlgRsaSha256 + '"/>' +
+    '<ds:SignedInfo ' + AtributoXmlNsDs + '>' +
+    NodoDsVacioCanonico('CanonicalizationMethod',
+      'Algorithm="' + cAlgExcC14n + '"') +
+    NodoDsVacioCanonico('SignatureMethod',
+      'Algorithm="' + cAlgRsaSha256 + '"') +
     ConstruirReferenciaDocumento(AOpciones, ADigestDocumento) +
-    '<ds:Reference URI="#' + EscaparXml(AOpciones.IdSignedProperties) +
-    '" Type="' + EscaparXml(AOpciones.TipoSignedProperties) + '">' +
-    '<ds:DigestMethod Algorithm="' + cAlgSha256 + '"/>' +
+    '<ds:Reference Type="' + EscaparXml(AOpciones.TipoSignedProperties) +
+    '" URI="#' + EscaparXml(AOpciones.IdSignedProperties) + '">' +
+    NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
     '<ds:DigestValue>' + ADigestSignedProperties + '</ds:DigestValue>' +
     '</ds:Reference>';
   if AOpciones.IncluirReferenciaKeyInfo then
     Result := Result +
       '<ds:Reference URI="#' + EscaparXml(AOpciones.IdKeyInfo) + '">' +
-      '<ds:DigestMethod Algorithm="' + cAlgSha256 + '"/>' +
+      NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
       '<ds:DigestValue>' + ADigestKeyInfo + '</ds:DigestValue>' +
       '</ds:Reference>';
   Result := Result + '</ds:SignedInfo>';
@@ -1135,8 +1227,8 @@ function ConstruirSignature(const AOpciones: TXadesOpciones;
                             AKeyInfo, ASignedProperties: string): string;
 begin
   Result :=
-    '<ds:Signature Id="' + EscaparXml(AOpciones.IdFirma) +
-    '" xmlns:ds="' + cXmlDsigNs + '">' +
+    '<ds:Signature ' + AtributoXmlNsDs + ' Id="' +
+    EscaparXml(AOpciones.IdFirma) + '">' +
     ASignedInfo +
     '<ds:SignatureValue>' + ASignatureValue + '</ds:SignatureValue>' +
     AKeyInfo +

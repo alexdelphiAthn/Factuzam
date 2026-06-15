@@ -7,7 +7,11 @@
 *.dpr text eol=crlf
 *.dproj text eol=crlf
 *.groupproj text eol=crlf
+*.deployproj text eol=crlf
 *.dpk text eol=crlf
+*.fmx text eol=crlf
+*.dsv text eol=crlf
+*.~dsk text eol=crlf
 *.inc text eol=crlf
 *.rc text eol=crlf
 
@@ -21,6 +25,27 @@
 *.xml text eol=crlf
 *.json text eol=crlf
 *.csv text eol=crlf
+*.dxsettings text eol=crlf
+
+# Codigo web, instaladores y recursos externos: mantener LF.
+*.php text eol=lf
+*.py text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.svg text eol=lf
+*.nsi text eol=lf
+*.bpk text eol=lf
+*.cpp text eol=lf
+*.dof text eol=lf
+*.conf text eol=lf
+*.kof text eol=lf
+*.skincfg text eol=lf
+.gitignore text eol=lf
+.gitconfig text eol=lf
+LICENSE text eol=lf
+README text eol=lf
+touch text eol=lf
+entornopre text eol=lf
 
 # Binarios.
 *.res binary
