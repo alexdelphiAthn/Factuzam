@@ -29,13 +29,13 @@ Tres combos (primer elemento `(Todos)` = sin filtro):
 
 | Filtro     | Origen del combo                              | Cómo se filtra |
 |------------|-----------------------------------------------|----------------|
-| Almacén    | `fza_almacenes` (NOMBRE_ALM_ALM)              | mov `CODIGO_ALMACEN_MOV` / línea `CODIGO_ALM_FACLIN` |
+| Almacén    | `fza_almacenes` (NOMBRE_ALM_ALM)              | mov `CODIGO_ALM_MOV` / línea `CODIGO_ALM_FACLIN` |
 | Familia    | `fza_articulos_familias` (NOMBRE_FAM_FAM)     | `fza_articulos.CODIGO_FAM_ART` (nivel artículo) |
 | Temporada  | propiedad `'TEMPORADA'` (`fza_articulos_propiedades` + `fza_propiedades_valores`) | resolución por **color** con *fallback* a artículo |
 
 - **Familia** es atributo de **artículo** (`CODIGO_FAM_ART`). En movimientos
   se llega al artículo vía `fza_articulos_skus` (`CODIGO_UNIDAD_MOV` →
-  `CODIGO_ART_SKU`, *fallback* a `CODIGO_ARTICULO_MOV`); en ventas, vía
+  `CODIGO_ART_SKU`, *fallback* a `CODIGO_ART_MOV`); en ventas, vía
   `l.CODIGO_ART_FACLIN`.
 - **Temporada** NO es columna de `fza_articulos`: es la propiedad
   `'TEMPORADA'` (`fza_propiedades`, `NIVEL_PROP = 'COLOR'` → **2º nivel**),

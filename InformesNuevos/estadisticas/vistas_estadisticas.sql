@@ -32,7 +32,7 @@ WHERE p.CODIGO_PROP_ARTPROP = 'TEMPORADA';
 CREATE OR REPLACE VIEW viest_movimientos_dia AS
 SELECT
   DATE(m.FECHA_MOV)                              AS FECHA,
-  m.CODIGO_ALMACEN_MOV                           AS CODIGO_ALMACEN,
+  m.CODIGO_ALM_MOV                           AS CODIGO_ALMACEN,
   COALESCE(a.CODIGO_FAM_ART, '')               AS CODIGO_FAMILIA,
   COALESCE(tcol.TEMPORADA, tart.TEMPORADA, '') AS TEMPORADA,
   COUNT(*)                                       AS NUM_MOVIMIENTOS,
@@ -42,7 +42,7 @@ FROM fza_movimientos_almacen m
 LEFT JOIN fza_articulos_skus s
   ON s.CODIGO_UNIDAD_SKU = m.CODIGO_UNIDAD_MOV
 LEFT JOIN fza_articulos a
-  ON a.CODIGO_ART_ART = COALESCE(m.CODIGO_ARTICULO_MOV, s.CODIGO_ART_SKU)
+  ON a.CODIGO_ART_ART = COALESCE(m.CODIGO_ART_MOV, s.CODIGO_ART_SKU)
 LEFT JOIN viest_temporada tcol
   ON tcol.CODIGO_ART  = SUBSTRING_INDEX(m.CODIGO_UNIDAD_MOV, '/', 1)
  AND tcol.CLAVE_NIVEL = SUBSTRING_INDEX(m.CODIGO_UNIDAD_MOV, '/', 2)
@@ -50,7 +50,7 @@ LEFT JOIN viest_temporada tart
   ON tart.CODIGO_ART  = SUBSTRING_INDEX(m.CODIGO_UNIDAD_MOV, '/', 1)
  AND tart.CLAVE_NIVEL = ''
 WHERE m.ESACTIVO_MOV = 'S'
-GROUP BY DATE(m.FECHA_MOV), m.CODIGO_ALMACEN_MOV,
+GROUP BY DATE(m.FECHA_MOV), m.CODIGO_ALM_MOV,
          COALESCE(a.CODIGO_FAM_ART, ''),
          COALESCE(tcol.TEMPORADA, tart.TEMPORADA, '');
 -- 2) Ventas (líneas de factura) agregadas por día
