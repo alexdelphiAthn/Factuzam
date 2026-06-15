@@ -341,6 +341,9 @@ type
                              AAlmacen,
                              ACaja,
                              AEmpleado: string): string;
+    // Mayor FECHA_FAC ya emitida en la serie (0 si aun no tiene tickets).
+    // Soporta el control de fecha por serie al grabar una venta.
+    function FechaUltimoTicketSerie(const AEmpresa, ASerie: string): TDateTime;
     procedure InsertarOperacionCaja(
                         QryTrx:          TUniQuery;
                         const AEmpresa:  string;
@@ -1028,6 +1031,35 @@ begin
   end;
 end;
 
+function TdmCajaOpe.FechaUltimoTicketSerie(
+                          const AEmpresa, ASerie: string): TDateTime;
+var
+  Qry: TUniQuery;
+begin
+  // Devuelve la mayor fecha de documento ya grabada en la serie indicada.
+  // Si la serie todavia no tiene tickets devuelve 0 (no hay restriccion).
+  Result := 0;
+  if Trim(ASerie) <> '' then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := oConn;
+      Qry.SQL.Text :=
+        'SELECT MAX(FECHA_FAC) AS ULTIMA_FECHA ' +
+        '  FROM fza_facturas ' +
+        ' WHERE CODIGO_EMP_FAC = :EMP ' +
+        '   AND SERIE_FAC      = :SERIE';
+      Qry.ParamByName('EMP').AsString   := AEmpresa;
+      Qry.ParamByName('SERIE').AsString := ASerie;
+      Qry.Open;
+      if not Qry.Fields[0].IsNull then
+        Result := Qry.Fields[0].AsDateTime;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
 function TdmCajaOpe.GrabarFacturaSimplificada(
                           const AEmpresa,
                                 AAlmacen,
@@ -1173,6 +1205,27 @@ begin
     cdsLineas.EnableControls;
   end;
   DatosCobro.FRequiereFactura := RequiereFactura;
+  // =======================================================================
+  // CONTROL DE FECHA POR SERIE (correlatividad temporal)
+  // El ticket no puede llevar una fecha anterior a la del ultimo ticket ya
+  // emitido en la misma serie. Si la fecha de caja es menor se aborta la
+  // venta antes de abrir transaccion (sin consumir numeracion) y se avisa
+  // sugiriendo cambiar de serie. No aplica a operaciones sin factura.
+  // =======================================================================
+  if RequiereFactura then
+  begin
+    var dUltimaFechaSerie := FechaUltimoTicketSerie(AEmpresa, ASerieElegida);
+    if (dUltimaFechaSerie > 0) and
+       (Trunc(Cab.Fecha) < Trunc(dUltimaFechaSerie)) then
+      raise Exception.CreateFmt(
+        'No se puede grabar el ticket en la serie "%s".' + sLineBreak +
+        'El último ticket de esa serie tiene fecha %s, posterior a la ' +
+        'fecha de caja %s.' + sLineBreak +
+        'Cambie la serie para emitir un ticket con esta fecha.',
+        [ASerieElegida,
+         FormatDateTime('dd/mm/yyyy', dUltimaFechaSerie),
+         FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
+  end;
   // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
   // =======================================================================
