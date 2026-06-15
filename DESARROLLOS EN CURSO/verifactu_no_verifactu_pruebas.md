@@ -205,8 +205,26 @@ Resultado esperado:
 - En modo `NO_VERIFACTU`, la exportación se bloquea si hay eventos o registros
   de facturación sin XAdES y datos de certificado.
 - Con todos los registros firmados, ambos ficheros contienen `<ds:Signature`.
+- La firma debe estar dentro de cada `RegistroAlta`, `RegistroAnulacion` o
+  `RegistroEvento/Evento`, no como firma del contenedor raíz de descarga.
 - En modo `SIN`, la descarga puede generarse como demo aunque no haya firmas
   legales.
+
+**G2 - Verificación local.**
+
+Después de exportar, pulsar `Verificar NO*VF` seleccionando cualquiera de los
+dos XML generados.
+
+Resultado esperado:
+
+- Se localizan automáticamente los ficheros `_eventos.xml` y
+  `_facturacion.xml`.
+- Se crea el informe `errores_<nombre>.xml.txt` en la misma carpeta.
+- No se avisa por falta de firma del contenedor raíz.
+- Se da error si falta firma XAdES en algún registro interno.
+- Se da error si la firma interna no usa política AGE
+  `urn:oid:2.16.724.1.3.1.1.2.1.9`, RSA-SHA256, SHA-256 para el registro y
+  SHA-1 únicamente para el hash de la política.
 
 ## H. Control de reloj fiscal
 

@@ -463,9 +463,7 @@ function FirmarXmlEventoSif(const AXml, AHuella, ASerial,
 var
   oOpciones: TXadesOpciones;
 begin
-  oOpciones := OpcionesXadesBase('FZ-EVENTO-' + AHuella);
-  oOpciones.UriDocumentoVacia := True;
-  oOpciones.IdNodoFirmado := '';
+  oOpciones := OpcionesXadesNoVerifactu('FZ-EVENTO-' + AHuella);
   oOpciones.NombreNodoInsercionFirma := 'sf:Evento';
   oOpciones.FirmaSilenciosa := False;
   Result := FirmarXmlXadesEnveloped(AXml, ASerial, ATitular, oOpciones,

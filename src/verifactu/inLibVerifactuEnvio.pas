@@ -1017,9 +1017,7 @@ var
   sXml: string;
 begin
   sXml := XmlRegistroFacturacionLocal(ARegistro, ATipoOperacion);
-  oOpciones := OpcionesXadesBase('FZ-FACTURA-' + AHuella);
-  oOpciones.UriDocumentoVacia := True;
-  oOpciones.IdNodoFirmado := '';
+  oOpciones := OpcionesXadesNoVerifactu('FZ-FACTURA-' + AHuella);
   oOpciones.FirmaSilenciosa := False;
   Result := FirmarXmlXadesEnveloped(sXml, ASerial, ATitular, oOpciones,
                                     ADatosCert);

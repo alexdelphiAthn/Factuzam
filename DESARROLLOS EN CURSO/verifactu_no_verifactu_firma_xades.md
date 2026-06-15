@@ -60,6 +60,22 @@ Cuando se firma:
 4. No se invocan scripts `.ps1` ni procesos externos.
 5. No se usa CryptoLib4Pascal para esta firma.
 
+Formato técnico aplicado según `EspecTecGenerFirmaElectRfact.pdf`
+AEAT v0.1.5:
+
+- Firma `XAdES Enveloped` clase EPES.
+- El nodo firmado es `RegistroAlta`, `RegistroAnulacion` o
+  `RegistroEvento/Evento`, nunca los nodos superiores de transporte.
+- `SignatureMethod`: RSA-SHA256.
+- Digest de registro y `SignedProperties`: SHA-256.
+- Política AGE:
+  `urn:oid:2.16.724.1.3.1.1.2.1.9`.
+- Hash de política: SHA-1 con
+  `DigestValue=G7roucf600+f03r/o0bAOQ6WAs0=`.
+- URL de política:
+  `https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf`.
+- No se exige sello de tiempo TSA.
+
 Si el certificado no existe, esta caducado, todavia no es valido, no tiene
 clave privada utilizable o el usuario cancela la operacion de firma, el
 registro no debe quedar emitido como firmado. La aplicacion debe mostrar el
@@ -207,7 +223,17 @@ Antes de construir los XML se valida el modo:
 - En `SIN`, se permite la descarga como demo aunque no haya firmas legales.
 
 Después se registran dos eventos de exportación. Si el parámetro de firma está
-activo, ambos ficheros también se firman XAdES como contenedor de descarga.
+activo, esos eventos de exportación quedan firmados en el libro de eventos
+igual que el resto de eventos legales.
+
+Los ficheros raíz de descarga no se firman como contenedor adicional. El XML
+de exportación incluye registros ya firmados dentro de CDATA para conservar
+exactamente el XML oficial generado en el momento de emisión. La firma legal
+exigible está en cada `RegistroAlta`, `RegistroAnulacion` y `RegistroEvento`,
+no en `RegistroEventosNoVerifactu` ni en
+`RegistroFacturacionNoVerifactu`. Firmar el contenedor duplicaría una garantía
+que la especificación AEAT no exige y obliga a canonicalizar XML embebido en
+CDATA, lo que no aporta valor legal.
 
 ## Unidades nuevas
 

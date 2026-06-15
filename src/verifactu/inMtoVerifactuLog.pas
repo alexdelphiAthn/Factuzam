@@ -156,7 +156,7 @@ begin
         'Eventos: ' + IntToStr(oResultado.Eventos) + sLineBreak +
         'Registros de facturacion: ' +
         IntToStr(oResultado.RegistrosFactura) + sLineBreak +
-        'Certificado: ' + oResultado.TitularCertificado,
+        'Firmas: registros internos XAdES',
         mtInformation, [mbOK], 0);
     end;
   finally
