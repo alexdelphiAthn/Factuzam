@@ -184,6 +184,9 @@ type
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
     chkESVERBANCOEMPRESA_FORMA_PAGO_FP: TcxDBCheckBox;
+    cxGrdDBTabPrinCODIGO_FACTURAE_FP: TcxGridDBColumn;
+    lblCodigoFacturae: TcxLabel;
+    txtCODIGO_FACTURAE_FP: TcxDBTextEdit;
     procedure btnGrabarClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure btnIraFacturaClick(Sender: TObject);

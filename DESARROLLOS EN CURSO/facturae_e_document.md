@@ -20,7 +20,7 @@ La emision eDoc hace:
   fiscal.
 - Valida datos minimos de emisor, cliente, fecha, lineas y totales.
 - Genera XML Facturae 3.2.2 con `FileHeader`, `Parties`, `Invoices`,
-  impuestos, retenciones si existen y lineas.
+  impuestos, retenciones si existen, lineas y `PaymentDetails`.
 - Genera `AdministrativeCentres` con oficina contable, organo gestor y unidad
   tramitadora. Primero toma la foto guardada en la factura, si esta vacia toma
   los codigos del cliente y, solo para validacion tecnica inicial, aplica el
@@ -76,6 +76,20 @@ completa desde caja con F8. Las facturas simplificadas siguen permitiendo venta
 contado sin cliente identificado.
 
 ## Datos DIR3
+
+El script idempotente
+`DESARROLLOS EN CURSO/facturae_formas_pago_codigo.sql` anade a
+`fza_formas_pago`:
+
+```sql
+CODIGO_FACTURAE_FP
+```
+
+Ese campo guarda el `PaymentMeans` oficial de Facturae (`01` a `19`). El valor
+por defecto es `01` al contado. La emision eDoc toma este valor desde la forma
+de pago de la factura; si una instalacion todavia no tiene la columna aplicada,
+usa `01` para no romper la generacion tecnica. El vencimiento se emite de
+momento con `FECHA_FAC`, hasta completar el uso real de recibos.
 
 El script idempotente
 `DESARROLLOS EN CURSO/facturae_dir3_clientes.sql` anade a `fza_clientes`:

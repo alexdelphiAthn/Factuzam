@@ -89,6 +89,11 @@
               Properties.ValueUnchecked = 'N'
               Width = 233
             end
+            object cxGrdDBTabPrinCODIGO_FACTURAE_FP: TcxGridDBColumn
+              Caption = 'Código Facturae'
+              DataBinding.FieldName = 'CODIGO_FACTURAE_FP'
+              Width = 129
+            end
             object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
               DataBinding.FieldName = 'INSTANTE_MODIF'
               Visible = False
@@ -279,6 +284,22 @@
                 Style.TransparentBorder = False
                 TabOrder = 6
                 Transparent = True
+              end
+              object lblCodigoFacturae: TcxLabel
+                Left = 56
+                Top = 248
+                Caption = 'Código Facturae'
+                TabOrder = 7
+                Transparent = True
+              end
+              object txtCODIGO_FACTURAE_FP: TcxDBTextEdit
+                Left = 191
+                Top = 247
+                DataBinding.DataField = 'CODIGO_FACTURAE_FP'
+                DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 2
+                TabOrder = 8
+                Width = 106
               end
             end
             object tsVentas: TcxTabSheet

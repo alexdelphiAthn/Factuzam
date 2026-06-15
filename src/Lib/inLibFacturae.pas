@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibFacturae                                                 }
 {    Tipo:       Libreria                                                      }
@@ -115,6 +115,30 @@ begin
   oCampo := ADataSet.FindField(ACampo);
   if (oCampo <> nil) and (not oCampo.IsNull) then
     Result := oCampo.AsDateTime;
+end;
+
+function CodigoPagoFacturaeValido(const AValor: string): Boolean;
+var
+  iCodigo: Integer;
+begin
+  Result := TryStrToInt(AValor, iCodigo) and
+            (Length(AValor) = 2) and
+            (iCodigo >= 1) and
+            (iCodigo <= 19);
+end;
+
+function NormalizarCodigoPagoFacturae(const AValor: string): string;
+begin
+  Result := Trim(AValor);
+  if Result = '' then
+    Result := '01'
+  else
+  begin
+    if Length(Result) = 1 then
+      Result := '0' + Result;
+    if not CodigoPagoFacturaeValido(Result) then
+      Result := '';
+  end;
 end;
 
 procedure Linea(ASb: TStringBuilder; ANivel: Integer; const ATexto: string);
@@ -468,6 +492,14 @@ begin
       cDir3RespaldoUnidad));
 end;
 
+procedure ValidarFormaPagoFacturae(AErrores: TStrings; ACabecera: TDataSet);
+begin
+  if NormalizarCodigoPagoFacturae(
+     CampoStr(ACabecera, 'CODIGO_FACTURAE_FP')) = '' then
+    AErrores.Add('- El codigo Facturae de la forma de pago debe estar ' +
+      'entre 01 y 19.');
+end;
+
 procedure ValidarFactura(ACabecera, ALineas: TDataSet);
 var
   oErrores: TStringList;
@@ -504,6 +536,7 @@ begin
       CodigoPaisFacturae(CampoStr(ACabecera, 'CODIGO_PAI_CLIENTE_FAC'),
                          CampoStr(ACabecera, 'NOMBRE_PAI_CLIENTE_FAC')));
     ValidarDir3Facturae(oErrores, ACabecera);
+    ValidarFormaPagoFacturae(oErrores, ACabecera);
     iLineas := 0;
     dBaseLineas := 0;
     ALineas.First;
@@ -568,6 +601,9 @@ begin
     raise Exception.Create('La empresa de la factura no tiene certificado ' +
       'configurado para firmar eDoc Facturae.');
 end;
+
+procedure AnadirPaymentDetails(ASb: TStringBuilder; ACabecera: TDataSet);
+  forward;
 
 function ConstruirXmlFacturae(ACabecera, ALineas: TDataSet): string;
 var
@@ -734,6 +770,7 @@ begin
       ALineas.Next;
     end;
     Linea(SB, 3, '</fe:Items>');
+    AnadirPaymentDetails(SB, ACabecera);
     Linea(SB, 2, '</fe:Invoice>');
     Linea(SB, 1, '</fe:Invoices>');
     Linea(SB, 0, '</fe:Facturae>');
@@ -741,6 +778,27 @@ begin
   finally
     FreeAndNil(SB);
   end;
+end;
+
+procedure AnadirPaymentDetails(ASb: TStringBuilder; ACabecera: TDataSet);
+var
+  dFechaVencimiento: TDateTime;
+  sCodigoPago: string;
+begin
+  dFechaVencimiento := CampoFecha(ACabecera, 'FECHA_FAC');
+  sCodigoPago := NormalizarCodigoPagoFacturae(
+    CampoStr(ACabecera, 'CODIGO_FACTURAE_FP'));
+  if sCodigoPago = '' then
+    sCodigoPago := '01';
+  Linea(ASb, 3, '<fe:PaymentDetails>');
+  Linea(ASb, 4, '<fe:Installment>');
+  Nodo(ASb, 5, 'fe:InstallmentDueDate',
+    FormatDateTime('yyyy-mm-dd', dFechaVencimiento));
+  Nodo(ASb, 5, 'fe:InstallmentAmount',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
+  Nodo(ASb, 5, 'fe:PaymentMeans', sCodigoPago);
+  Linea(ASb, 4, '</fe:Installment>');
+  Linea(ASb, 3, '</fe:PaymentDetails>');
 end;
 
 procedure GuardarXmlFactura(AConn: TUniConnection; const ASerie, ANumero,
@@ -809,10 +867,18 @@ function SqlCabeceraFacturae(AConn: TUniConnection): string;
 var
   bDir3Factura: Boolean;
   bDir3Cliente: Boolean;
+  bCodigoPagoFacturae: Boolean;
 begin
   bDir3Factura := ColumnasDir3Disponibles(AConn, 'fza_facturas', 'FAC');
   bDir3Cliente := ColumnasDir3Disponibles(AConn, 'fza_clientes', 'CLI');
+  bCodigoPagoFacturae := ColumnaExiste(AConn, 'fza_formas_pago',
+    'CODIGO_FACTURAE_FP');
   Result := ' SELECT f.* ';
+  if bCodigoPagoFacturae then
+    Result := Result +
+      ', fp.CODIGO_FACTURAE_FP AS CODIGO_FACTURAE_FP '
+  else
+    Result := Result + ', ''01'' AS CODIGO_FACTURAE_FP ';
   if bDir3Cliente then
   begin
     Result := Result +
@@ -835,6 +901,12 @@ begin
       ', '''' AS CODIGO_UNIDAD_TRAMITADORA_FAC ';
   end;
   Result := Result + ' FROM fza_facturas f ';
+  if bCodigoPagoFacturae then
+  begin
+    Result := Result +
+      ' LEFT JOIN fza_formas_pago fp ' +
+      ' ON fp.CODIGO_FP_FP = f.FORMA_PAGO_FAC ';
+  end;
   if bDir3Cliente then
   begin
     Result := Result +

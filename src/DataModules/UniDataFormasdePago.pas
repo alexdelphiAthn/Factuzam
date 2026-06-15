@@ -51,11 +51,16 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmFormasdePago.unqryTablaGAfterInsert(DataSet: TDataSet);
+var
+  oCampo: TField;
 begin
   inherited;
   unqryTablaG.FindField('CODIGO_FP_FP').AsString := '0';
   unqryTablaG.FindField('ORDEN_FORMA_PAGO_FP').AsString := '0';
   unqryTablaG.FindField('PORCENTAJE_ANTICIPO_FORMA_PAGO_FP').AsString := '0';
+  oCampo := unqryTablaG.FindField('CODIGO_FACTURAE_FP');
+  if oCampo <> nil then
+    oCampo.AsString := '01';
 end;
 
 procedure TdmFormasdePago.DataModuleCreate(Sender: TObject);
@@ -135,6 +140,37 @@ begin
   end;
 end;
 
+function CodigoFacturaeFormaPagoValido(const AValor: string): Boolean;
+var
+  iCodigo: Integer;
+begin
+  Result := TryStrToInt(AValor, iCodigo) and
+            (Length(AValor) = 2) and
+            (iCodigo >= 1) and
+            (iCodigo <= 19);
+end;
+
+procedure NormalizarCodigoFacturaeFormaPago(ADataSet: TDataSet);
+var
+  oCampo: TField;
+  sCodigo: string;
+begin
+  oCampo := ADataSet.FindField('CODIGO_FACTURAE_FP');
+  if oCampo <> nil then
+  begin
+    sCodigo := Trim(oCampo.AsString);
+    if sCodigo = '' then
+      sCodigo := '01';
+    if Length(sCodigo) = 1 then
+      sCodigo := '0' + sCodigo;
+    if not CodigoFacturaeFormaPagoValido(sCodigo) then
+      raise ERangeError.CreateFmt('%s no es un codigo Facturae valido ' +
+        'para el campo Codigo Facturae de Formas de Pago. Use 01..19.',
+        [oCampo.AsString]);
+    oCampo.AsString := sCodigo;
+  end;
+end;
+
 procedure TdmFormasdePago.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
@@ -148,6 +184,7 @@ begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                   'para el campo Descripción de Formas de Pago',
                [FindField('DESCRIPCION_FORMA_PAGO_FP').AsString]);
+    NormalizarCodigoFacturaeFormaPago(DataSet);
     GetCodigoAutoFormasdePago;
   end;
 end;
