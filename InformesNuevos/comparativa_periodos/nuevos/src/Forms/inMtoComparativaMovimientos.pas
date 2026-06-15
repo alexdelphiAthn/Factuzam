@@ -172,11 +172,18 @@ begin
     '       COALESCE(NULLIF(NOMBRE_FAM_FAM, ''''), CODIGO_FAM_FAM) AS NOMBRE' +
     '  FROM fza_articulos_familias WHERE ESACTIVO_FAM = ''S''' +
     ' ORDER BY NOMBRE');
+  // Temporada = propiedad 'TEMPORADA' (valor de lista PV o texto libre)
   CargarCombo(cboTemporada, FCodTemporadas,
-    'SELECT DISTINCT TEMPORADA_ART AS COD, TEMPORADA_ART AS NOMBRE' +
-    '  FROM fza_articulos' +
-    ' WHERE TEMPORADA_ART IS NOT NULL AND TEMPORADA_ART <> ''''' +
-    ' ORDER BY TEMPORADA_ART');
+    'SELECT DISTINCT' +
+    '   COALESCE(pv.PV, p.VALOR_LIBRE_ARTPROP) AS COD,' +
+    '   COALESCE(pv.PV, p.VALOR_LIBRE_ARTPROP) AS NOMBRE' +
+    '  FROM fza_articulos_propiedades p' +
+    '  LEFT JOIN fza_propiedades_valores pv' +
+    '    ON pv.ID_PV_ARTPROP = p.ID_PV_ARTPROP' +
+    ' WHERE p.CODIGO_PROP_ARTPROP = ''TEMPORADA''' +
+    '   AND COALESCE(pv.PV, p.VALOR_LIBRE_ARTPROP) IS NOT NULL' +
+    '   AND COALESCE(pv.PV, p.VALOR_LIBRE_ARTPROP) <> ''''' +
+    ' ORDER BY NOMBRE');
 end;
 
 // Rellena un combo con un primer elemento "(Todos)" (código vacío) y, a
@@ -327,26 +334,28 @@ end;
 // dos columnas: BUCKET (desplazamiento entero desde :pD1) y VALOR (agregado).
 // Las ventas se calculan a nivel de línea (fza_facturas_lineas) para poder
 // segmentar por familia/temporada; el resto sale de fza_movimientos_almacen.
+// Familia = columna de artículo (CODIGO_FAM_ART). Temporada = propiedad de 2º
+// nivel (COLOR): se resuelve por la clave de color ART/COLOR derivada del SKU
+// con SUBSTRING_INDEX, con fallback a nivel artículo (clave vacía). NO se usa
+// vi_articulos porque colapsa temporada a un único valor por artículo.
 function TfrmMtoComparativaMovimientos.SQLConsulta: string;
 var
-  bVentas, bArtJoin: Boolean;
-  sFecha, sAgg, sFrom, sBucket, sWhere: string;
+  bVentas, bFam, bTemp: Boolean;
+  sFecha, sAgg, sFrom, sBucket, sWhere, sSku, sArt: string;
 begin
   bVentas := (cboMagnitud.ItemIndex = 0);
-  bArtJoin := (CodigoFiltro(cboFamilia, FCodFamilias) <> '') or
-              (CodigoFiltro(cboTemporada, FCodTemporadas) <> '');
+  bFam := (CodigoFiltro(cboFamilia, FCodFamilias) <> '');
+  bTemp := (CodigoFiltro(cboTemporada, FCodTemporadas) <> '');
   if bVentas then
   begin
     sFecha := 'f.FECHA_FAC';
     sAgg := 'COALESCE(SUM(l.TOTAL_FACLIN), 0)';
+    sSku := 'l.CODIGO_UNIDAD_FACLIN';
+    sArt := 'l.CODIGO_ART_FACLIN';
     sFrom := ' FROM fza_facturas_lineas l' +
              ' JOIN fza_facturas f' +
              '   ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN' +
              '  AND f.SERIE_FAC = l.SERIE_FAC_FACLIN';
-    if bArtJoin then
-      sFrom := sFrom +
-             ' LEFT JOIN fza_articulos a' +
-             '   ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN';
     sWhere := ' WHERE ' + sFecha + ' >= :pD1' +
               '   AND ' + sFecha + ' < DATE_ADD(:pD2, INTERVAL 1 DAY)';
     if CodigoFiltro(cboAlmacen, FCodAlmacenes) <> '' then
@@ -361,24 +370,49 @@ begin
     else
       sAgg := 'COUNT(*)';
     end;
+    sSku := 'm.CODIGO_UNIDAD_MOV';
+    sArt := 'COALESCE(m.CODIGO_ARTICULO_MOV, s.CODIGO_ART_SKU)';
     sFrom := ' FROM fza_movimientos_almacen m';
-    if bArtJoin then
+    // El artículo (para familia) sale del SKU del movimiento
+    if bFam then
       sFrom := sFrom +
              ' LEFT JOIN fza_articulos_skus s' +
-             '   ON s.CODIGO_UNIDAD_SKU = m.CODIGO_UNIDAD_MOV' +
-             ' LEFT JOIN fza_articulos a' +
-             '   ON a.CODIGO_ART_ART =' +
-             '      COALESCE(m.CODIGO_ARTICULO_MOV, s.CODIGO_ART_SKU)';
+             '   ON s.CODIGO_UNIDAD_SKU = m.CODIGO_UNIDAD_MOV';
     sWhere := ' WHERE m.ESACTIVO_MOV = ''S''' +
               '   AND ' + sFecha + ' >= :pD1' +
               '   AND ' + sFecha + ' < DATE_ADD(:pD2, INTERVAL 1 DAY)';
     if CodigoFiltro(cboAlmacen, FCodAlmacenes) <> '' then
       sWhere := sWhere + '   AND m.CODIGO_ALMACEN_MOV = :pALM';
   end;
-  if CodigoFiltro(cboFamilia, FCodFamilias) <> '' then
+  // Familia: columna de artículo
+  if bFam then
+  begin
+    sFrom := sFrom +
+             ' LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = ' + sArt;
     sWhere := sWhere + '   AND a.CODIGO_FAM_ART = :pFAM';
-  if CodigoFiltro(cboTemporada, FCodTemporadas) <> '' then
-    sWhere := sWhere + '   AND a.TEMPORADA_ART = :pTEMP';
+  end;
+  // Temporada: propiedad de 2º nivel (COLOR) con fallback a artículo. Clave de
+  // color ART/COLOR = SUBSTRING_INDEX(sku, '/', 2); clave de artículo = ''.
+  if bTemp then
+  begin
+    sFrom := sFrom +
+      ' LEFT JOIN fza_articulos_propiedades ptc' +
+      '   ON ptc.CODIGO_PROP_ARTPROP = ''TEMPORADA''' +
+      '  AND ptc.CODIGO_ART_ART = SUBSTRING_INDEX(' + sSku + ', ''/'', 1)' +
+      '  AND ptc.CODIGO_UNIDAD_ARTPROP =' +
+      '      SUBSTRING_INDEX(' + sSku + ', ''/'', 2)' +
+      ' LEFT JOIN fza_propiedades_valores pvc' +
+      '   ON pvc.ID_PV_ARTPROP = ptc.ID_PV_ARTPROP' +
+      ' LEFT JOIN fza_articulos_propiedades pta' +
+      '   ON pta.CODIGO_PROP_ARTPROP = ''TEMPORADA''' +
+      '  AND pta.CODIGO_ART_ART = SUBSTRING_INDEX(' + sSku + ', ''/'', 1)' +
+      '  AND pta.CODIGO_UNIDAD_ARTPROP = ''''' +
+      ' LEFT JOIN fza_propiedades_valores pva' +
+      '   ON pva.ID_PV_ARTPROP = pta.ID_PV_ARTPROP';
+    sWhere := sWhere +
+      '   AND COALESCE(pvc.PV, ptc.VALOR_LIBRE_ARTPROP,' +
+      '                pva.PV, pta.VALOR_LIBRE_ARTPROP) = :pTEMP';
+  end;
   case cboAgrupacion.ItemIndex of
     1: sBucket := 'FLOOR(DATEDIFF(' + sFecha + ', :pD1) / 7)';
     2: sBucket := 'PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM ' + sFecha +

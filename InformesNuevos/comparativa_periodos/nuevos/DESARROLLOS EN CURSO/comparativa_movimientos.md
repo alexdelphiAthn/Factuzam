@@ -27,26 +27,32 @@ Selector **Agrupación** del eje X: Día / Semana / Mes.
 
 Tres combos (primer elemento `(Todos)` = sin filtro):
 
-| Filtro     | Origen del combo                              | Columna filtrada |
-|------------|-----------------------------------------------|------------------|
+| Filtro     | Origen del combo                              | Cómo se filtra |
+|------------|-----------------------------------------------|----------------|
 | Almacén    | `fza_almacenes` (NOMBRE_ALM_ALM)              | mov `CODIGO_ALMACEN_MOV` / línea `CODIGO_ALM_FACLIN` |
-| Familia    | `fza_articulos_familias` (NOMBRE_FAM_FAM)     | `fza_articulos.CODIGO_FAM_ART` |
-| Temporada  | `DISTINCT fza_articulos.TEMPORADA_ART`        | `fza_articulos.TEMPORADA_ART` |
+| Familia    | `fza_articulos_familias` (NOMBRE_FAM_FAM)     | `fza_articulos.CODIGO_FAM_ART` (nivel artículo) |
+| Temporada  | propiedad `'TEMPORADA'` (`fza_articulos_propiedades` + `fza_propiedades_valores`) | resolución por **color** con *fallback* a artículo |
 
-Familia y temporada son atributos del **artículo**, así que requieren unir
-hasta `fza_articulos`:
-- En movimientos: `fza_movimientos_almacen` → `fza_articulos_skus`
-  (`CODIGO_UNIDAD_MOV`) → `fza_articulos` (con *fallback* a
-  `CODIGO_ARTICULO_MOV`).
-- En ventas: la consulta pasa a **nivel de línea** (`fza_facturas_lineas`,
-  `SUM(TOTAL_FACLIN)`) uniendo la cabecera para la fecha/almacén y el
-  artículo para familia/temporada. Esto cambia el importe respecto a sumar
-  el total de cabecera (`TOTAL_LIQUIDO_FAC`), pero es la granularidad
-  correcta para segmentar por familia o temporada.
+- **Familia** es atributo de **artículo** (`CODIGO_FAM_ART`). En movimientos
+  se llega al artículo vía `fza_articulos_skus` (`CODIGO_UNIDAD_MOV` →
+  `CODIGO_ART_SKU`, *fallback* a `CODIGO_ARTICULO_MOV`); en ventas, vía
+  `l.CODIGO_ART_FACLIN`.
+- **Temporada** NO es columna de `fza_articulos`: es la propiedad
+  `'TEMPORADA'` (`fza_propiedades`, `NIVEL_PROP = 'COLOR'` → **2º nivel**),
+  cuyos valores están en `fza_articulos_propiedades` según
+  `CODIGO_UNIDAD_ARTPROP` (`''`=artículo, `ART/COLOR`=color,
+  `ART/COLOR/TALLA`=sku). **La temporada puede variar por color**, así que se
+  resuelve por la clave de color del SKU (`SUBSTRING_INDEX(sku,'/',2)`) con
+  *fallback* a nivel artículo. **No** se usa `vi_articulos` (colapsa la
+  temporada a un valor por artículo).
+- **Ventas** se calculan a **nivel de línea** (`fza_facturas_lineas`,
+  `SUM(TOTAL_FACLIN)`) — única forma de segmentar por familia/temporada.
+  Cambia el importe respecto al total de cabecera (`TOTAL_LIQUIDO_FAC`), pero
+  es la granularidad correcta.
 
-Los `JOIN` al artículo sólo se añaden cuando hay filtro de familia o
-temporada activo; el filtro de almacén no necesita `JOIN`. Los parámetros
-de filtro sólo se enlazan si aparecen en la consulta (`FindParam`).
+Los `JOIN` (artículo para familia; propiedad de temporada por color) solo se
+añaden cuando ese filtro está activo; almacén no necesita `JOIN`. Los
+parámetros de filtro solo se enlazan si aparecen en la consulta (`FindParam`).
 
 ## Cómo se alinean los dos periodos
 

@@ -3106,6 +3106,13 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         OnClick = mnuGeneradorProcesosClick
       end
     end
+    object mnuInformes: TMenuItem
+      Caption = '&Informes'
+      object mnuComparativaMovimientos: TMenuItem
+        Caption = 'Comparativa de periodos'
+        OnClick = mnuComparativaMovimientosClick
+      end
+    end
     object mnuVerifactu: TMenuItem
       Caption = '&Verifactu'
       object mnuVerifactuDeclaracion: TMenuItem
