@@ -589,9 +589,11 @@
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
+        <DCCReference Include="src\Lib\inLibXades.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactu.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuEnvio.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuCola.pas"/>
+        <DCCReference Include="src\Lib\inLibVerifactuNoVerifactuExport.pas"/>
         <DCCReference Include="src\verifactu\inMtoVerifactuCola.pas">
             <Form>frmMtoVerifactuCola</Form>
         </DCCReference>

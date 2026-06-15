@@ -89,5 +89,14 @@ inherited frmMtoVerifactuLog: TfrmMtoVerifactuLog
       TabOrder = 2
       OnClick = btnIrADocumentoClick
     end
+    object btnExportarNoVerifactu: TcxButton
+      Left = 1
+      Top = 160
+      Width = 138
+      Height = 34
+      Caption = 'Exportar NO*VF'
+      TabOrder = 3
+      OnClick = btnExportarNoVerifactuClick
+    end
   end
 end

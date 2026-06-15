@@ -343,6 +343,7 @@ uses inLibUser,
   inLibAppParam,
   inLibUnidadesMedida,
   inLibBuscarImpresora,
+  inLibVerifactu,
   inLibVerifactuCola,
   inMtoGen,
   inMtoFotoArticulo,
@@ -352,6 +353,19 @@ uses inLibUser,
   Vcl.Clipbrd;
 
 {$R *.dfm}
+
+procedure RegistrarEventoFiscalSeguro(ATipoEvento: Integer;
+                                      const ADescripcion: string);
+begin
+  try
+    if oConn <> nil then
+      RegistrarEventoVerifactu(oConn, ATipoEvento, ADescripcion);
+  except
+    on E: Exception do
+      inLibLog.Log.LogError('No se pudo registrar evento fiscal "' +
+        ADescripcion + '": ' + E.Message);
+  end;
+end;
 
 procedure TfrmMtoPrincipal.LogFormClose(Sender: TObject;
                                         var Action: TCloseAction);
@@ -592,6 +606,8 @@ begin
   Self.OnResize := FormResize;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
+  RegistrarEventoFiscalSeguro(cEventoNoVerifactuInicio,
+    'Inicio del sistema');
   // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
   // de 1000 ms, esperamos a llegar a ese minimo para que el usuario
   // pueda leer la marca; si tardo mas, lo cerramos sin demora.
@@ -1225,6 +1241,8 @@ begin
   // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
   // y el destructor de TfrmMtoGen).
   inLibGlobalVar.oCerrandoApp := True;
+  RegistrarEventoFiscalSeguro(cEventoNoVerifactuFin,
+    'Cierre del sistema');
   // Parar el hilo de la cola Verifactu antes de liberar las conexiones
   TVerifactuCola.DetenerHilo;
   if Assigned(FAppEvents) then

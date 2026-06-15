@@ -30,7 +30,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataVerifactuLog,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, System.Actions, Vcl.ActnList;
+  dxShellDialogs, System.Actions, Vcl.ActnList, System.IOUtils;
 
 type
   TfrmMtoVerifactuLog = class(TfrmMtoGen)
@@ -47,11 +47,13 @@ type
     cxGrdDBTabPrinHASH_PROPIO_LOG: TcxGridDBColumn;
     cxGrdDBTabPrinFIRMA_DIGITAL_LOG: TcxGridDBColumn;
     btnIrADocumento: TcxButton;
+    btnExportarNoVerifactu: TcxButton;
     // Salta a la factura de la fila activa (lo dispara el botón lateral y los
     // atajos Ctrl+Alt+F / Ctrl+Mayús+F). ResolverCallFactura mira el TIPO_FAC
     // en fza_facturas y abre Facturas o FacturasSimplif según corresponda, así
     // se llega a la correcta sin saber el tipo de antemano.
     procedure btnIrADocumentoClick(Sender: TObject);
+    procedure btnExportarNoVerifactuClick(Sender: TObject);
   private
     dmmVerifactuLog: TdmVerifactuLog;
   public
@@ -65,7 +67,8 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibShowMto;
+  inLibWin, inMtoPrincipal, inLibShowMto, inLibGlobalVar,
+  inLibVerifactuNoVerifactuExport;
 
 {$R *.dfm}
 
@@ -125,6 +128,37 @@ begin
       sCall := ResolverCallFactura(sNumero, sSerie);
       ShowMto(Self.Owner, sCall, sNumero + ',' + sSerie);
     end;
+  end;
+end;
+
+procedure TfrmMtoVerifactuLog.btnExportarNoVerifactuClick(Sender: TObject);
+var
+  oDialogo: TSaveDialog;
+  oResultado: TResultadoExportacionNoVerifactu;
+begin
+  inherited;
+  oDialogo := TSaveDialog.Create(Self);
+  try
+    oDialogo.Title := 'Guardar exportacion NO VERI*FACTU';
+    oDialogo.InitialDir := TPath.GetDocumentsPath;
+    oDialogo.Filter := 'Archivo XML|*.xml';
+    oDialogo.DefaultExt := 'xml';
+    oDialogo.FileName := 'NoVerifactu_' +
+                         FormatDateTime('yyyymmdd_hhnnss', Now) + '.xml';
+    if oDialogo.Execute then
+    begin
+      oResultado := ExportarRegistrosNoVerifactu(oConn, oDialogo.FileName);
+      MessageDlg('Exportacion NO VERI*FACTU generada:' + sLineBreak +
+        oResultado.ArchivoEventos + sLineBreak +
+        oResultado.ArchivoFacturacion + sLineBreak + sLineBreak +
+        'Eventos: ' + IntToStr(oResultado.Eventos) + sLineBreak +
+        'Registros de facturacion: ' +
+        IntToStr(oResultado.RegistrosFactura) + sLineBreak +
+        'Certificado: ' + oResultado.TitularCertificado,
+        mtInformation, [mbOK], 0);
+    end;
+  finally
+    FreeAndNil(oDialogo);
   end;
 end;
 

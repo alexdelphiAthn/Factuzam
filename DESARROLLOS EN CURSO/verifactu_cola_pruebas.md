@@ -54,8 +54,9 @@ la tabla.
 
 **B1 — Alta de categoría.** Abrir Parámetros de aplicación
 (`inMtoAppParam`).
-- Aparece la categoría **Verifactu** con 6 parámetros y estos defectos:
-  `appVerifactuActivo=False`, `appVerifactuEntorno=PRE`,
+- Aparece la categoría **Verifactu** con sus parámetros y estos defectos:
+  `appVerifactuActivo=False`, `appVerifactuFirmaCertificado=False`,
+  `appVerifactuEntorno=PRE`,
   `appVerifactuUrlQRPre=https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR`,
   `appVerifactuUrlQRPro=https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR`,
   `appVerifactuSegundosCiclo=60`, `appVerifactuMaxIntentos=10`.

@@ -1410,19 +1410,28 @@ begin
                      sSerie + '\' + sNumero + '?', mtConfirmation,
                      [mbYes, mbNo], 0) = mrYes then
   begin
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := inLibGlobalVar.oConn;
-      TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, ATipoOperacion);
+      Qry := TUniQuery.Create(nil);
+      try
+        Qry.Connection := inLibGlobalVar.oConn;
+      if VerifactuActivo then
+        TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero, ATipoOperacion)
+      else
+        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero,
+                                                   ATipoOperacion);
     finally
       FreeAndNil(Qry);
     end;
-    RegistrarEventoVerifactu(inLibGlobalVar.oConn,
-      cEventoVerifactuEncolado,
-      AAccion + ' encolada desde Facturas', '', sSerie, sNumero);
-    ShowMessage(AAccion + ' encolada: el hilo Verifactu la enviará en ' +
-                'el próximo ciclo. Puede seguirla en la columna ' +
-                '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
+    if VerifactuActivo then
+    begin
+      RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+        cEventoVerifactuEncolado,
+        AAccion + ' encolada desde Facturas', '', sSerie, sNumero);
+      ShowMessage(AAccion + ' encolada: el hilo Verifactu la enviará en ' +
+                  'el próximo ciclo. Puede seguirla en la columna ' +
+                  '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
+    end
+    else
+      ShowMessage(AAccion + ' registrada y firmada en NO VERI*FACTU.');
     dsTablaG.DataSet.Refresh;
   end;
 end;
@@ -1465,21 +1474,29 @@ begin
                      'editable.', mtConfirmation, [mbYes, mbNo], 0) =
           mrYes then
   begin
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := inLibGlobalVar.oConn;
-      TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero);
+      Qry := TUniQuery.Create(nil);
+      try
+        Qry.Connection := inLibGlobalVar.oConn;
+      if VerifactuActivo then
+        TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero)
+      else
+        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero);
     finally
       FreeAndNil(Qry);
     end;
-    RegistrarEventoVerifactu(inLibGlobalVar.oConn,
-      cEventoVerifactuEncolado,
-      'Lanzamiento manual (Consolidar) desde Facturas', '',
-      sSerie, sNumero);
+    if VerifactuActivo then
+      RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+        cEventoVerifactuEncolado,
+        'Lanzamiento manual (Consolidar) desde Facturas', '',
+        sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
-    ShowMessage('Factura ' + sSerie + '\' + sNumero + ' en ONLINE: el ' +
-                'QR ya puede imprimirse y el envío a la AEAT queda en ' +
-                'la cola Verifactu.');
+    if VerifactuActivo then
+      ShowMessage('Factura ' + sSerie + '\' + sNumero + ' en ONLINE: el ' +
+                  'QR ya puede imprimirse y el envío a la AEAT queda en ' +
+                  'la cola Verifactu.')
+    else
+      ShowMessage('Factura ' + sSerie + '\' + sNumero +
+                  ' registrada y firmada en NO VERI*FACTU.');
   end;
 end;
 

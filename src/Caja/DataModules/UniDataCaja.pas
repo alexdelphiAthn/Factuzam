@@ -1472,12 +1472,19 @@ begin
           Cab.CodigoCliente, 'Devolución de Venta');
     end;
     // =======================================================================
-    // PASO 4.6: ENCOLAR EN LA COLA VERIFACTU (si está activo)
-    // Dentro de la transacción: si la venta confirma, el alta queda
-    // encolada y el hilo de inLibVerifactuCola la envía a la AEAT.
+    // PASO 4.6: REGISTRO FISCAL VERI*FACTU / NO VERI*FACTU
+    // Dentro de la transacción: la factura nace con su registro fiscal.
+    // Si Verifactu está activo se encola para AEAT; si no, queda firmada
+    // localmente como NO VERI*FACTU.
     // =======================================================================
-    if RequiereFactura and VerifactuActivo then
-      TVerifactuCola.EncolarFactura(QryTrx, SerieGenerada, NumFactura);
+    if RequiereFactura then
+    begin
+      if VerifactuActivo then
+        TVerifactuCola.EncolarFactura(QryTrx, SerieGenerada, NumFactura)
+      else
+        TVerifactuCola.RegistrarFacturaNoVerifactu(QryTrx, SerieGenerada,
+                                                   NumFactura);
+    end;
     // =======================================================================
     // PASO 5: FORMAS DE PAGO (Se ejecuta siempre que haya importe)
     // Las lineas con CODIGO_FP_CFP='VALE' se omiten aqui: las inserta PASO 6

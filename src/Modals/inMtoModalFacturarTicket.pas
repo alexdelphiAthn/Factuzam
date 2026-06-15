@@ -396,7 +396,9 @@ begin
         cEventoVerifactuEncolado,
         'Factura en sustitución del ticket ' + FSerieTicket + '\' +
         FNumeroTicket + ' encolada', '', ASerie, sNumero);
-    end;
+    end
+    else
+      TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, ASerie, sNumero);
   finally
     FreeAndNil(Qry);
     FreeAndNil(Usp);

@@ -29,6 +29,13 @@ type
     class procedure EncolarFactura(AQryTrx: TUniQuery;
                                    const ASerie, ANumero: string;
                                    const ATipoOperacion: string = 'ALTA');
+    // Genera y guarda el registro de facturación firmado sin enviarlo a AEAT.
+    // Es el camino NO VERI*FACTU y debe ejecutarse al crear la factura.
+    class procedure RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
+                                               const ASerie,
+                                               ANumero: string;
+                                               const ATipoOperacion: string =
+                                               'ALTA');
     // Marca una factura recién abonada como RECTIFICATIVA, la enlaza con
     // la original (columnas ABONO) y la encola en Verifactu si está
     // activo. La llama el modal de Rectificar de Facturas.
@@ -93,6 +100,145 @@ type
 var
   oHiloCola: THiloVerifactuCola = nil;
 
+function ColumnasFirmaFacturacionDisponibles(AConn: TUniConnection): Boolean;
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' SELECT COUNT(*) AS N ' +
+      ' FROM INFORMATION_SCHEMA.COLUMNS ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      '   AND TABLE_NAME = ''fza_facturas_consolidaciones'' ' +
+      '   AND COLUMN_NAME IN (''REGISTRO_XML_FACCON'', ' +
+      '       ''FIRMA_DIGITAL_FACCON'', ''SERIE_CERTIFICADO_FACCON'', ' +
+      '       ''TITULAR_CERTIFICADO_FACCON'', ' +
+      '       ''HUELLA_CERTIFICADO_FACCON'')';
+    Qry.Open;
+    Result := Qry.FieldByName('N').AsInteger = 5;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure GuardarRegistroNoVerifactu(AQry: TUniQuery;
+                                     const ASerie, ANumero,
+                                     ATipoOperacion: string;
+                                     const AResultado:
+                                     TResultadoEnvioVerifactu);
+var
+  sEstado: string;
+begin
+  if not ColumnasFirmaFacturacionDisponibles(AQry.Connection) then
+    raise Exception.Create('Faltan columnas de firma en ' +
+      'fza_facturas_consolidaciones. Aplique el script ' +
+      'DESARROLLOS EN CURSO\verifactu_registros_firmados.sql.');
+  AQry.SQL.Text :=
+    ' UPDATE fza_verifactu_cadena ' +
+    ' SET CONTADOR_VFCAD = :CONTADOR, ' +
+    '     SERIE_FAC_VFCAD  = :SERIE, ' +
+    '     NUMERO_FAC_VFCAD = :NUMERO, ' +
+    '     FECHA_FAC_VFCAD  = STR_TO_DATE(:FECHA, ''%d-%m-%Y''), ' +
+    '     HUELLA_VFCAD = :HUELLA, ' +
+    '     INSTANTE_MODIF = NOW(), ' +
+    '     USUARIO_MODIF  = :USUARIO ' +
+    ' WHERE NIF_VFCAD = :NIF';
+  AQry.ParamByName('CONTADOR').AsString := AResultado.ChainNumber;
+  AQry.ParamByName('SERIE').AsString    := ASerie;
+  AQry.ParamByName('NUMERO').AsString   := ANumero;
+  AQry.ParamByName('FECHA').AsString    := AResultado.FechaExpedicion;
+  AQry.ParamByName('HUELLA').AsString   := AResultado.ChainHash;
+  AQry.ParamByName('USUARIO').AsString  := oUser;
+  AQry.ParamByName('NIF').AsString      := AResultado.IssuerIrsId;
+  AQry.Execute;
+  if ATipoOperacion = 'ANULACION' then
+    sEstado := 'ANULADO_NO_VERIFACTU'
+  else if ATipoOperacion = 'SUBSANACION' then
+    sEstado := 'SUBSANADO_NO_VERIFACTU'
+  else
+    sEstado := 'REGISTRADO_NO_VERIFACTU';
+  if ATipoOperacion = 'ANULACION' then
+  begin
+    AQry.SQL.Text :=
+      ' UPDATE fza_facturas_consolidaciones ' +
+      ' SET CHAIN_NUMBER_FACCON = :CHAINNUM, ' +
+      '     CHAIN_HASH_FACCON = :CHAINHASH, ' +
+      '     ISSUER_IRS_ID_CONSOLIDACION_FACCON = :ISSUERID, ' +
+      '     ISSUED_TIME_FACCON = :ISSUEDTIME, ' +
+      '     FECHA_PROCESAMIENTO_FACCON = NOW(), ' +
+      '     ESTADO_FACCON = :ESTADO, ' +
+      '     REGISTRO_XML_FACCON = :REGISTROXML, ' +
+      '     FIRMA_DIGITAL_FACCON = :FIRMA, ' +
+      '     SERIE_CERTIFICADO_FACCON = :SERIECERT, ' +
+      '     TITULAR_CERTIFICADO_FACCON = :TITULARCERT, ' +
+      '     HUELLA_CERTIFICADO_FACCON = :HUELLACERT ' +
+      ' WHERE SERIE_FAC_FACCON = :SERIE ' +
+      '   AND NUMERO_FAC_FACCON = :NUMERO';
+  end
+  else
+  begin
+    AQry.SQL.Text :=
+      ' INSERT INTO fza_facturas_consolidaciones ' +
+      ' (ID_FACCON, SERIE_FAC_FACCON, NUMERO_FAC_FACCON, ' +
+      '  ISSUER_IRS_ID_CONSOLIDACION_FACCON, ISSUED_TIME_FACCON, ' +
+      '  CHAIN_NUMBER_FACCON, CHAIN_HASH_FACCON, ' +
+      '  FECHA_PROCESAMIENTO_FACCON, ESTADO_FACCON, ' +
+      '  REGISTRO_XML_FACCON, FIRMA_DIGITAL_FACCON, ' +
+      '  SERIE_CERTIFICADO_FACCON, TITULAR_CERTIFICADO_FACCON, ' +
+      '  HUELLA_CERTIFICADO_FACCON) ' +
+      ' SELECT IFNULL(MAX(ID_FACCON), 0) + 1, :SERIE, :NUMERO, ' +
+      '        :ISSUERID, :ISSUEDTIME, :CHAINNUM, :CHAINHASH, ' +
+      '        NOW(), :ESTADO, :REGISTROXML, :FIRMA, :SERIECERT, ' +
+      '        :TITULARCERT, :HUELLACERT ' +
+      ' FROM fza_facturas_consolidaciones ' +
+      ' ON DUPLICATE KEY UPDATE ' +
+      '  ESTADO_FACCON = VALUES(ESTADO_FACCON), ' +
+      '  CHAIN_NUMBER_FACCON = VALUES(CHAIN_NUMBER_FACCON), ' +
+      '  CHAIN_HASH_FACCON = VALUES(CHAIN_HASH_FACCON), ' +
+      '  REGISTRO_XML_FACCON = VALUES(REGISTRO_XML_FACCON), ' +
+      '  FIRMA_DIGITAL_FACCON = VALUES(FIRMA_DIGITAL_FACCON), ' +
+      '  SERIE_CERTIFICADO_FACCON = VALUES(SERIE_CERTIFICADO_FACCON), ' +
+      '  TITULAR_CERTIFICADO_FACCON = VALUES(TITULAR_CERTIFICADO_FACCON), ' +
+      '  HUELLA_CERTIFICADO_FACCON = VALUES(HUELLA_CERTIFICADO_FACCON)';
+  end;
+  AQry.ParamByName('SERIE').AsString := ASerie;
+  AQry.ParamByName('NUMERO').AsString := ANumero;
+  AQry.ParamByName('ISSUERID').AsString := AResultado.IssuerIrsId;
+  AQry.ParamByName('ISSUEDTIME').DataType := ftDateTime;
+  AQry.ParamByName('ISSUEDTIME').AsDateTime := AResultado.IssuedTime;
+  AQry.ParamByName('CHAINNUM').AsString := AResultado.ChainNumber;
+  AQry.ParamByName('CHAINHASH').AsString := AResultado.ChainHash;
+  AQry.ParamByName('ESTADO').AsString := sEstado;
+  AQry.ParamByName('REGISTROXML').AsString :=
+    AResultado.RegistroXmlFirmado;
+  AQry.ParamByName('FIRMA').AsString := AResultado.FirmaDigital;
+  AQry.ParamByName('SERIECERT').AsString := AResultado.SerieCertificado;
+  AQry.ParamByName('TITULARCERT').AsString :=
+    AResultado.TitularCertificado;
+  AQry.ParamByName('HUELLACERT').AsString :=
+    AResultado.HuellaCertificado;
+  AQry.Execute;
+  AQry.SQL.Text :=
+    ' UPDATE fza_facturas ' +
+    ' SET ESCONSOLIDADA_FAC = ''S'', ' +
+    '     INSTANTECONSO_FAC = NOW(), ' +
+    '     FASE_FAC = :FASE, ' +
+    '     INSTANTE_MODIF = NOW(), ' +
+    '     USUARIO_MODIF  = :USUARIO ' +
+    ' WHERE SERIE_FAC  = :SERIE ' +
+    '   AND NUMERO_FAC = :NUMERO';
+  if ATipoOperacion = 'ANULACION' then
+    AQry.ParamByName('FASE').AsString := 'CANCELADA'
+  else
+    AQry.ParamByName('FASE').AsString := 'ONLINE';
+  AQry.ParamByName('USUARIO').AsString := oUser;
+  AQry.ParamByName('SERIE').AsString := ASerie;
+  AQry.ParamByName('NUMERO').AsString := ANumero;
+  AQry.Execute;
+end;
+
 // ===========================================================================
 //   TVerifactuCola — API pública
 // ===========================================================================
@@ -142,6 +288,25 @@ begin
     AQryTrx.ParamByName('USUARIO').AsString := oUser;
     AQryTrx.Execute;
   end;
+end;
+
+class procedure TVerifactuCola.RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
+                                                           const ASerie,
+                                                           ANumero: string;
+                                                           const ATipoOperacion:
+                                                           string);
+var
+  oResultado: TResultadoEnvioVerifactu;
+begin
+  oResultado := GenerarRegistroFacturaLocal(AQryTrx.Connection, ASerie,
+                                            ANumero, ATipoOperacion);
+  if not oResultado.Ok then
+    raise Exception.Create(oResultado.MensajeError);
+  GuardarRegistroNoVerifactu(AQryTrx, ASerie, ANumero, ATipoOperacion,
+                             oResultado);
+  RegistrarEventoVerifactu(AQryTrx.Connection, cEventoVerifactuInfo,
+    'Registro de facturación NO VERI*FACTU firmado', ATipoOperacion,
+    ASerie, ANumero);
 end;
 
 class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;
@@ -218,6 +383,8 @@ begin
           'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
           ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
       end;
+      if not VerifactuActivo then
+        RegistrarFacturaNoVerifactu(Qry, ASerieRect, ANumeroRect);
     finally
       FreeAndNil(Qry);
     end;
@@ -586,6 +753,11 @@ begin
         '     CHAIN_HASH_FACCON   = :CHAINHASH, ' +
         '     RESPUESTA_COMPLETA_FACCON = :RESPUESTA, ' +
         '     PETICION_COMPLETA_FACCON  = :PETICION, ' +
+        '     REGISTRO_XML_FACCON = :REGISTROXML, ' +
+        '     FIRMA_DIGITAL_FACCON = :FIRMA, ' +
+        '     SERIE_CERTIFICADO_FACCON = :SERIECERT, ' +
+        '     TITULAR_CERTIFICADO_FACCON = :TITULARCERT, ' +
+        '     HUELLA_CERTIFICADO_FACCON = :HUELLACERT, ' +
         '     FECHA_PROCESAMIENTO_FACCON = NOW() ' +
         ' WHERE SERIE_FAC_FACCON  = :SERIE ' +
         '   AND NUMERO_FAC_FACCON = :NUMERO';
@@ -596,6 +768,14 @@ begin
         AResultado.RespuestaCompleta;
       Qry.ParamByName('PETICION').AsString :=
         AResultado.PeticionCompleta;
+      Qry.ParamByName('REGISTROXML').AsString :=
+        AResultado.RegistroXmlFirmado;
+      Qry.ParamByName('FIRMA').AsString := AResultado.FirmaDigital;
+      Qry.ParamByName('SERIECERT').AsString := AResultado.SerieCertificado;
+      Qry.ParamByName('TITULARCERT').AsString :=
+        AResultado.TitularCertificado;
+      Qry.ParamByName('HUELLACERT').AsString :=
+        AResultado.HuellaCertificado;
       Qry.ParamByName('SERIE').AsString  := ASerie;
       Qry.ParamByName('NUMERO').AsString := ANumero;
       Qry.Execute;
@@ -614,6 +794,11 @@ begin
         '     ESTADO_FACCON = :ESTADO, ' +
         '     RESPUESTA_COMPLETA_FACCON = :RESPUESTA, ' +
         '     PETICION_COMPLETA_FACCON  = :PETICION, ' +
+        '     REGISTRO_XML_FACCON = :REGISTROXML, ' +
+        '     FIRMA_DIGITAL_FACCON = :FIRMA, ' +
+        '     SERIE_CERTIFICADO_FACCON = :SERIECERT, ' +
+        '     TITULAR_CERTIFICADO_FACCON = :TITULARCERT, ' +
+        '     HUELLA_CERTIFICADO_FACCON = :HUELLACERT, ' +
         '     FECHA_PROCESAMIENTO_FACCON = NOW() ' +
         ' WHERE SERIE_FAC_FACCON  = :SERIE ' +
         '   AND NUMERO_FAC_FACCON = :NUMERO';
@@ -625,6 +810,14 @@ begin
         AResultado.RespuestaCompleta;
       Qry.ParamByName('PETICION').AsString :=
         AResultado.PeticionCompleta;
+      Qry.ParamByName('REGISTROXML').AsString :=
+        AResultado.RegistroXmlFirmado;
+      Qry.ParamByName('FIRMA').AsString := AResultado.FirmaDigital;
+      Qry.ParamByName('SERIECERT').AsString := AResultado.SerieCertificado;
+      Qry.ParamByName('TITULARCERT').AsString :=
+        AResultado.TitularCertificado;
+      Qry.ParamByName('HUELLACERT').AsString :=
+        AResultado.HuellaCertificado;
       Qry.ParamByName('SERIE').AsString  := ASerie;
       Qry.ParamByName('NUMERO').AsString := ANumero;
       Qry.Execute;
@@ -643,7 +836,10 @@ begin
         '  VERIFACTU_URL_FACCON, QRCODE_BASE64_FACCON, ' +
         '  QRCODE_PNG_FACCON, ' +
         '  FECHA_PROCESAMIENTO_FACCON, ESTADO_FACCON, ' +
-        '  RESPUESTA_COMPLETA_FACCON, PETICION_COMPLETA_FACCON) ' +
+        '  RESPUESTA_COMPLETA_FACCON, PETICION_COMPLETA_FACCON, ' +
+        '  REGISTRO_XML_FACCON, FIRMA_DIGITAL_FACCON, ' +
+        '  SERIE_CERTIFICADO_FACCON, TITULAR_CERTIFICADO_FACCON, ' +
+        '  HUELLA_CERTIFICADO_FACCON) ' +
         ' SELECT IFNULL(MAX(ID_FACCON), 0) + 1, :SERIE, :NUMERO, ' +
         '        NULLIF(:REQUESTID, ''''), :IDCOLA, ' +
         '        NULLIF(:ISSUERID, ''''), :ISSUEDTIME, ' +
@@ -651,7 +847,8 @@ begin
         '        NULLIF(:URL, ''''), NULLIF(:QRBASE64, ''''), ' +
         '        :QRPNG, NOW(), ' +
         '        :ESTADO, NULLIF(:RESPUESTA, ''''), ' +
-        '        NULLIF(:PETICION, '''') ' +
+        '        NULLIF(:PETICION, ''''), :REGISTROXML, :FIRMA, ' +
+        '        :SERIECERT, :TITULARCERT, :HUELLACERT ' +
         ' FROM fza_facturas_consolidaciones';
       Qry.ParamByName('SERIE').AsString     := ASerie;
       Qry.ParamByName('NUMERO').AsString    := ANumero;
@@ -684,6 +881,14 @@ begin
         AResultado.RespuestaCompleta;
       Qry.ParamByName('PETICION').AsString :=
         AResultado.PeticionCompleta;
+      Qry.ParamByName('REGISTROXML').AsString :=
+        AResultado.RegistroXmlFirmado;
+      Qry.ParamByName('FIRMA').AsString := AResultado.FirmaDigital;
+      Qry.ParamByName('SERIECERT').AsString := AResultado.SerieCertificado;
+      Qry.ParamByName('TITULARCERT').AsString :=
+        AResultado.TitularCertificado;
+      Qry.ParamByName('HUELLACERT').AsString :=
+        AResultado.HuellaCertificado;
       Qry.Execute;
     end;
     // Estado fiscal de la factura

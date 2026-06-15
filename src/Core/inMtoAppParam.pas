@@ -115,7 +115,21 @@ uses
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
-  inLibLayoutForm;
+  inLibLayoutForm, inLibVerifactu;
+
+procedure RegistrarCambioConfiguracionVerifactuSeguro(
+  const ADetalle: string);
+begin
+  try
+    if oConn <> nil then
+      RegistrarEventoVerifactu(oConn, cEventoNoVerifactuCambioConfig,
+        'Cambio de configuración Verifactu', ADetalle);
+  except
+    on E: Exception do
+      Log.LogError('No se pudo registrar el cambio de configuración ' +
+        'Verifactu: ' + E.Message);
+  end;
+end;
 
 // -----------------------------------------------------------------------
 // CICLO DE VIDA
@@ -563,6 +577,7 @@ var
   ValorAGuardar : string;
   GuardadosCount: Integer;
   TemaAnterior  : string;
+  CambioVerifactu: Boolean;
 begin
   JvInspector1.SaveValues;
   if cmbGrupoUsuario.ItemIndex = -1 then Exit;
@@ -570,6 +585,7 @@ begin
 
   GuardadosCount := 0;
   TemaAnterior   := oAppParams.GetString('appTema');
+  CambioVerifactu := False;
 
   qry := TUniQuery.Create(nil);
   try
@@ -615,6 +631,8 @@ begin
         qry.ParamByName('p_value').AsString         := ValorAGuardar;
         qry.Execute;
         Inc(GuardadosCount);
+        if StartsText('appVerifactu', ParamItem.Name) then
+          CambioVerifactu := True;
         FValoresOriginales.AddOrSetValue(ParamItem.Name, ValorAGuardar);
       end;
     end;
@@ -645,6 +663,10 @@ begin
 //                      '" se aplicará completamente al reiniciar.');
         end;
       end;
+      if CambioVerifactu then
+        RegistrarCambioConfiguracionVerifactuSeguro(
+          'Parámetros guardados para ' + sUsuarioGrupo + ': ' +
+          IntToStr(GuardadosCount));
     end
     else
       ShowMessage('No se detectaron cambios para guardar.');
