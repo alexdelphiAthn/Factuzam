@@ -160,6 +160,7 @@ type
     function NumeroManualIntroducido: string;
     function ValidarHuecoManual(const ASerie, ANumero: string;
       out ANumeroFmt: string): Boolean;
+    function DigitosSerie(const ASerie: string; ADefecto: Integer): Integer;
     procedure CargarFormasPago;
     procedure CargarComboSeries;
     procedure AjustarFormatoEditorActivo;
@@ -432,6 +433,33 @@ begin
     Result := s;
 end;
 
+function TfrmMtoCajaFaseCobro.DigitosSerie(const ASerie: string;
+  ADefecto: Integer): Integer;
+var
+  Qry: TUniQuery;
+begin
+  // Digitos de relleno configurados para la serie en el contador
+  // (NUM_DIGITOS_CON, TIPO_DOC_CON='FC'). Si no hay contador, ADefecto.
+  Result := ADefecto;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := oConn;
+    Qry.SQL.Text :=
+      'SELECT NUM_DIGITOS_CON AS NDIG ' +
+      '  FROM fza_contadores ' +
+      ' WHERE TIPO_DOC_CON = ''FC'' ' +
+      '   AND EMPRESA_CON  = :EMP ' +
+      '   AND SERIE_CON    = :SERIE';
+    Qry.ParamByName('EMP').AsString   := FCodigoEmpresa;
+    Qry.ParamByName('SERIE').AsString := ASerie;
+    Qry.Open;
+    if (not Qry.IsEmpty) and (Qry.FieldByName('NDIG').AsInteger > 0) then
+      Result := Qry.FieldByName('NDIG').AsInteger;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
 function TfrmMtoCajaFaseCobro.ValidarHuecoManual(const ASerie, ANumero: string;
   out ANumeroFmt: string): Boolean;
 var
@@ -479,6 +507,10 @@ begin
           [iNum, ASerie, iMin, iMax]), mtError, [mbOK], 0)
       else
       begin
+        // Padding segun los digitos configurados del contador de la serie
+        // (NUM_DIGITOS_CON); si no hay contador, el ancho de los numeros
+        // que ya existen en la serie.
+        iLen := DigitosSerie(ASerie, iLen);
         ANumeroFmt := IntToStr(iNum);
         while Length(ANumeroFmt) < iLen do
           ANumeroFmt := '0' + ANumeroFmt;
