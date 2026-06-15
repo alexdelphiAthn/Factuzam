@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibVerifactuNoVerifactuExport                               }
 {    Tipo:       Libreria                                                      }
@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripcion:                                                                }
 {    Exportacion local de registros NO VERI*FACTU: eventos y facturacion.      }
-{    Exporta XML firmados con XAdES usando el certificado de la empresa.       }
+{    Empaqueta los XML oficiales firmados al crear cada registro.              }
 {******************************************************************************}
 unit inLibVerifactuNoVerifactuExport;
 
@@ -37,7 +37,7 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Hash, System.NetEncoding, Data.DB,
-  DBAccess, inLibGlobalVar, inLibXades, inLibVerifactu;
+  DBAccess, inLibGlobalVar, inLibVerifactu;
 
 const
   cNsFactuzamNoVerifactu = 'urn:factuzam:no-verifactu:v1';
@@ -126,37 +126,6 @@ end;
 function FechaHoraIsoAhora: string;
 begin
   Result := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz', Now);
-end;
-
-procedure CargarCertificadoFirma(AConn: TUniConnection;
-                                 out ASerial, ATitular: string);
-var
-  Qry: TUniQuery;
-begin
-  ASerial := '';
-  ATitular := '';
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT CODIGO_CERTIFICADO_EMP, TITULAR_CERTIFICADO_EMP ' +
-      ' FROM fza_empresas ' +
-      ' WHERE IFNULL(CODIGO_CERTIFICADO_EMP, '''') <> '''' ' +
-      '   AND IFNULL(TITULAR_CERTIFICADO_EMP, '''') <> '''' ' +
-      ' ORDER BY IF(ESACTIVO_EMP = ''S'', 0, 1), ORDEN_EMP, CODIGO_EMP_EMP ' +
-      ' LIMIT 1';
-    Qry.Open;
-    if not Qry.IsEmpty then
-    begin
-      ASerial := Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
-      ATitular := Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
-  if (ASerial = '') and (ATitular = '') then
-    raise Exception.Create('No hay certificado configurado en fza_empresas ' +
-      'para firmar la exportacion NO VERI*FACTU.');
 end;
 
 function ColumnasFirmaEventosDisponibles(AConn: TUniConnection): Boolean;
@@ -511,54 +480,20 @@ begin
   TFile.WriteAllText(AArchivo, ATexto, TEncoding.UTF8);
 end;
 
-function FirmarExportacion(const AXml, APrefijoId, ASerial,
-                           ATitular: string;
-                           out ADatosCert: TXadesDatosCertificado): string;
-var
-  oOpciones: TXadesOpciones;
-begin
-  oOpciones := OpcionesXadesBase(APrefijoId);
-  oOpciones.FirmaSilenciosa := False;
-  Result := FirmarXmlXadesEnveloped(AXml, ASerial, ATitular, oOpciones,
-                                    ADatosCert);
-end;
-
 function ExportarRegistrosNoVerifactu(AConn: TUniConnection;
                                       const AArchivoBase: string):
                                       TResultadoExportacionNoVerifactu;
 var
-  sSerial: string;
-  sTitular: string;
   sXmlEventos: string;
   sXmlFacturacion: string;
-  sSello: string;
-  oDatosCert: TXadesDatosCertificado;
-  bFirmarCertificado: Boolean;
 begin
   if AConn = nil then
     raise Exception.Create('No hay conexion para exportar NO VERI*FACTU.');
   if Trim(AArchivoBase) = '' then
     raise Exception.Create('No se ha indicado archivo base de exportacion.');
   ValidarExportacionLegalNoVerifactu(AConn);
-  sSerial := '';
-  sTitular := '';
-  bFirmarCertificado := VerifactuFirmaCertificado;
   Result.TitularCertificado := '';
   Result.SerieCertificado := '';
-  if bFirmarCertificado then
-  begin
-    try
-      CargarCertificadoFirma(AConn, sSerial, sTitular);
-    except
-      on E: Exception do
-      begin
-        if NoVerifactuActivo then
-          RegistrarIncidenciaExportacionSeguro(AConn, E.Message);
-        raise;
-      end;
-    end;
-  end;
-  sSello := FechaHoraExportacion;
   Result.ArchivoEventos := NombreArchivoConSufijo(AArchivoBase, '_eventos');
   Result.ArchivoFacturacion := NombreArchivoConSufijo(AArchivoBase,
                                                        '_facturacion');
@@ -570,26 +505,6 @@ begin
     Result.ArchivoEventos);
   sXmlEventos := ConstruirXmlEventos(AConn, Result.Eventos);
   sXmlFacturacion := ConstruirXmlFacturacion(AConn, Result.RegistrosFactura);
-  if bFirmarCertificado then
-  begin
-    try
-      sXmlEventos := FirmarExportacion(sXmlEventos,
-                                       'FZ-NOVERIFACTU-EVENTOS-' + sSello,
-                                       sSerial, sTitular, oDatosCert);
-      Result.TitularCertificado := oDatosCert.Titular;
-      Result.SerieCertificado := oDatosCert.NumeroSerie;
-      sXmlFacturacion := FirmarExportacion(sXmlFacturacion,
-                                        'FZ-NOVERIFACTU-FACTURAS-' + sSello,
-                                        sSerial, sTitular, oDatosCert);
-    except
-      on E: Exception do
-      begin
-        if NoVerifactuActivo then
-          RegistrarIncidenciaExportacionSeguro(AConn, E.Message);
-        raise;
-      end;
-    end;
-  end;
   GuardarTextoUtf8(Result.ArchivoEventos, sXmlEventos);
   GuardarTextoUtf8(Result.ArchivoFacturacion, sXmlFacturacion);
 end;

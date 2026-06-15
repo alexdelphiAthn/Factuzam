@@ -47,14 +47,21 @@ type
     Politica:                 TXadesTipoPolitica;
     PoliticaIdentificador:    string;
     PoliticaDescripcion:      string;
+    PoliticaUrl:              string;
     PoliticaHashBase64:       string;
     PoliticaDigestMethod:     string;
+    AlgoritmoCanonicalizacion: string;
+    IncluirTransformCanonicoDocumento: Boolean;
     RolFirmante:              string;
     NombreNodoInsercionFirma: string;
+    ObjetoDescripcion:        string;
+    ObjetoIdentificador:      string;
+    ObjetoEncoding:           string;
   end;
 
 function OpcionesXadesBase(const APrefijoId: string): TXadesOpciones;
 function OpcionesXadesFacturae(const APrefijoId: string): TXadesOpciones;
+function OpcionesXadesNoVerifactu(const APrefijoId: string): TXadesOpciones;
 function FirmarXmlXadesEnveloped(const AXml: string;
                                   const ASerialCert, ATitularCert: string;
                                   const AOpciones: TXadesOpciones;
@@ -79,6 +86,7 @@ const
     'http://uri.etsi.org/01903/v1.2.2#SignedProperties';
   cXadesSignedPropertiesFacturae =
     'http://uri.etsi.org/01903#SignedProperties';
+  cAlgC14n = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
   cAlgExcC14n = 'http://www.w3.org/2001/10/xml-exc-c14n#';
   cAlgEnveloped = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature';
   cAlgRsaSha256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
@@ -91,6 +99,11 @@ const
     'Politica de firma electronica para facturacion electronica con ' +
     'formato Facturae';
   cFacturaePoliticaHashSha1 = 'Ohixl6upD6av8N7pEvDABhEL6hM=';
+  cAeatPoliticaId = 'urn:oid:2.16.724.1.3.1.1.2.1.9';
+  cAeatPoliticaUrl =
+    'https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf';
+  cAeatPoliticaHashSha1 = 'G7roucf600+f03r/o0bAOQ6WAs0=';
+  cObjetoXmlOid = 'urn:oid:1.2.840.10003.5.109.10';
   cCertStorePersonal = 'MY';
   X509_ASN_ENCODING = $00000001;
   PKCS_7_ASN_ENCODING = $00010000;
@@ -301,10 +314,16 @@ begin
   Result.Politica := xtpNinguna;
   Result.PoliticaIdentificador := '';
   Result.PoliticaDescripcion := '';
+  Result.PoliticaUrl := '';
   Result.PoliticaHashBase64 := '';
   Result.PoliticaDigestMethod := cAlgSha256;
+  Result.AlgoritmoCanonicalizacion := cAlgExcC14n;
+  Result.IncluirTransformCanonicoDocumento := True;
   Result.RolFirmante := '';
   Result.NombreNodoInsercionFirma := '';
+  Result.ObjetoDescripcion := 'Factura electronica';
+  Result.ObjetoIdentificador := '';
+  Result.ObjetoEncoding := '';
 end;
 
 function OpcionesXadesFacturae(const APrefijoId: string): TXadesOpciones;
@@ -320,6 +339,27 @@ begin
   Result.PoliticaHashBase64 := cFacturaePoliticaHashSha1;
   Result.PoliticaDigestMethod := cAlgSha1;
   Result.RolFirmante := 'emisor';
+end;
+
+function OpcionesXadesNoVerifactu(const APrefijoId: string): TXadesOpciones;
+begin
+  Result := OpcionesXadesBase(APrefijoId);
+  Result.UriDocumentoVacia := True;
+  Result.IdNodoFirmado := '';
+  Result.IncluirReferenciaKeyInfo := False;
+  Result.EspacioNombresXades := cXadesNs132;
+  Result.TipoSignedProperties := cXadesSignedPropertiesFacturae;
+  Result.Politica := xtpExplicita;
+  Result.PoliticaIdentificador := cAeatPoliticaId;
+  Result.PoliticaDescripcion := '';
+  Result.PoliticaUrl := cAeatPoliticaUrl;
+  Result.PoliticaHashBase64 := cAeatPoliticaHashSha1;
+  Result.PoliticaDigestMethod := cAlgSha1;
+  Result.AlgoritmoCanonicalizacion := cAlgC14n;
+  Result.IncluirTransformCanonicoDocumento := False;
+  Result.ObjetoDescripcion := '';
+  Result.ObjetoIdentificador := cObjetoXmlOid;
+  Result.ObjetoEncoding := 'UTF-8';
 end;
 
 function AsegurarOpciones(const AOpciones: TXadesOpciones):
@@ -347,6 +387,12 @@ begin
     Result.TipoSignedProperties := cXadesSignedProperties122;
   if Result.PoliticaDigestMethod = '' then
     Result.PoliticaDigestMethod := cAlgSha256;
+  if Result.AlgoritmoCanonicalizacion = '' then
+    Result.AlgoritmoCanonicalizacion := cAlgExcC14n;
+  if (Result.ObjetoDescripcion = '') and
+     (Result.ObjetoIdentificador = '') and
+     (Result.ObjetoEncoding = '') then
+    Result.ObjetoDescripcion := 'Factura electronica';
 end;
 
 function BytesUtf8(const AValor: string): TBytes;
@@ -1126,7 +1172,16 @@ begin
       '<ds:DigestValue ' + AtributoXmlNsDs + '>' +
       AOpciones.PoliticaHashBase64 +
       '</ds:DigestValue>' +
-      '</xades:SigPolicyHash>' +
+      '</xades:SigPolicyHash>';
+    if AOpciones.PoliticaUrl <> '' then
+      Result := Result +
+        '<xades:SigPolicyQualifiers>' +
+        '<xades:SigPolicyQualifier>' +
+        '<xades:SPURI>' + EscaparXml(AOpciones.PoliticaUrl) +
+        '</xades:SPURI>' +
+        '</xades:SigPolicyQualifier>' +
+        '</xades:SigPolicyQualifiers>';
+    Result := Result +
       '</xades:SignaturePolicyId>' +
       '</xades:SignaturePolicyIdentifier>';
   end;
@@ -1150,13 +1205,27 @@ function ConstruirDataObjectProperties(const AOpciones: TXadesOpciones):
 begin
   Result := '';
   if Trim(AOpciones.IdReferenciaDocumento) <> '' then
+  begin
     Result := '<xades:SignedDataObjectProperties>' +
       '<xades:DataObjectFormat ObjectReference="#' +
-      EscaparXml(AOpciones.IdReferenciaDocumento) + '">' +
-      '<xades:Description>Factura electronica</xades:Description>' +
-      '<xades:MimeType>text/xml</xades:MimeType>' +
+      EscaparXml(AOpciones.IdReferenciaDocumento) + '">';
+    if AOpciones.ObjetoDescripcion <> '' then
+      Result := Result + '<xades:Description>' +
+        EscaparXml(AOpciones.ObjetoDescripcion) + '</xades:Description>';
+    if AOpciones.ObjetoIdentificador <> '' then
+      Result := Result +
+        '<xades:ObjectIdentifier><xades:Identifier>' +
+        EscaparXml(AOpciones.ObjetoIdentificador) +
+        '</xades:Identifier><xades:Description/></xades:ObjectIdentifier>';
+    Result := Result +
+      '<xades:MimeType>text/xml</xades:MimeType>';
+    if AOpciones.ObjetoEncoding <> '' then
+      Result := Result + '<xades:Encoding>' +
+        EscaparXml(AOpciones.ObjetoEncoding) + '</xades:Encoding>';
+    Result := Result +
       '</xades:DataObjectFormat>' +
       '</xades:SignedDataObjectProperties>';
+  end;
 end;
 
 function ConstruirSignedProperties(const AOpciones: TXadesOpciones;
@@ -1214,8 +1283,11 @@ begin
     '<ds:Reference Id="' + EscaparXml(AOpciones.IdReferenciaDocumento) +
     '" URI="' + EscaparXml(sUri) + '">' +
     '<ds:Transforms>' +
-    NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgEnveloped + '"') +
-    NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgExcC14n + '"') +
+    NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgEnveloped + '"');
+  if AOpciones.IncluirTransformCanonicoDocumento then
+    Result := Result + NodoDsVacioCanonico('Transform',
+      'Algorithm="' + AOpciones.AlgoritmoCanonicalizacion + '"');
+  Result := Result +
     '</ds:Transforms>' +
     NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
     '<ds:DigestValue>' + ADigestDocumento + '</ds:DigestValue>' +
@@ -1230,14 +1302,15 @@ begin
   Result :=
     '<ds:SignedInfo ' + AtributoXmlNsDs + '>' +
     NodoDsVacioCanonico('CanonicalizationMethod',
-      'Algorithm="' + cAlgExcC14n + '"') +
+      'Algorithm="' + AOpciones.AlgoritmoCanonicalizacion + '"') +
     NodoDsVacioCanonico('SignatureMethod',
       'Algorithm="' + cAlgRsaSha256 + '"') +
     ConstruirReferenciaDocumento(AOpciones, ADigestDocumento) +
     '<ds:Reference Type="' + EscaparXml(AOpciones.TipoSignedProperties) +
     '" URI="#' + EscaparXml(AOpciones.IdSignedProperties) + '">' +
     '<ds:Transforms>' +
-    NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgExcC14n + '"') +
+    NodoDsVacioCanonico('Transform',
+      'Algorithm="' + AOpciones.AlgoritmoCanonicalizacion + '"') +
     '</ds:Transforms>' +
     NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
     '<ds:DigestValue>' + ADigestSignedProperties + '</ds:DigestValue>' +
@@ -1246,7 +1319,8 @@ begin
     Result := Result +
       '<ds:Reference URI="#' + EscaparXml(AOpciones.IdKeyInfo) + '">' +
       '<ds:Transforms>' +
-      NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgExcC14n + '"') +
+      NodoDsVacioCanonico('Transform',
+        'Algorithm="' + AOpciones.AlgoritmoCanonicalizacion + '"') +
       '</ds:Transforms>' +
       NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
       '<ds:DigestValue>' + ADigestKeyInfo + '</ds:DigestValue>' +
