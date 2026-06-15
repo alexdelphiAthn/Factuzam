@@ -342,8 +342,9 @@ type
                              ACaja,
                              AEmpleado: string): string;
     // Mayor FECHA_FAC ya emitida en la serie (0 si aun no tiene tickets).
-    // Soporta el control de fecha por serie al grabar una venta.
-    function FechaUltimoTicketSerie(const AEmpresa, ASerie: string): TDateTime;
+    // Soporta el control de fecha por serie (grabacion y fase de cobro).
+    class function FechaUltimoTicketSerie(
+                            const AEmpresa, ASerie: string): TDateTime;
     procedure InsertarOperacionCaja(
                         QryTrx:          TUniQuery;
                         const AEmpresa:  string;
@@ -1031,7 +1032,7 @@ begin
   end;
 end;
 
-function TdmCajaOpe.FechaUltimoTicketSerie(
+class function TdmCajaOpe.FechaUltimoTicketSerie(
                           const AEmpresa, ASerie: string): TDateTime;
 var
   Qry: TUniQuery;
