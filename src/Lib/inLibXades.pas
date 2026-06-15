@@ -1236,12 +1236,18 @@ begin
     ConstruirReferenciaDocumento(AOpciones, ADigestDocumento) +
     '<ds:Reference Type="' + EscaparXml(AOpciones.TipoSignedProperties) +
     '" URI="#' + EscaparXml(AOpciones.IdSignedProperties) + '">' +
+    '<ds:Transforms>' +
+    NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgExcC14n + '"') +
+    '</ds:Transforms>' +
     NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
     '<ds:DigestValue>' + ADigestSignedProperties + '</ds:DigestValue>' +
     '</ds:Reference>';
   if AOpciones.IncluirReferenciaKeyInfo then
     Result := Result +
       '<ds:Reference URI="#' + EscaparXml(AOpciones.IdKeyInfo) + '">' +
+      '<ds:Transforms>' +
+      NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgExcC14n + '"') +
+      '</ds:Transforms>' +
       NodoDsVacioCanonico('DigestMethod', 'Algorithm="' + cAlgSha256 + '"') +
       '<ds:DigestValue>' + ADigestKeyInfo + '</ds:DigestValue>' +
       '</ds:Reference>';
