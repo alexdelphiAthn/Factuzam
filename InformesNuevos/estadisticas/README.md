@@ -1,16 +1,25 @@
 # Estadísticas / aceleración de informes — módulo aislado
 
 Lab tratado **como un programa distinto**: namespace propio en BBDD
-(`vi_estadisticas_*` para vistas, `fzaest_*` para tablas de prueba), su propia
+(`viest_*` para vistas, `fzaest_*` para tablas de prueba), su propia
 carpeta, y solo se injerta en Factuzam cuando se acepte.
 
 ## Reglas acordadas
 
 - Sobre el esquema real `fza_*`: **solo vistas nuevas, NINGÚN cambio**
   (ni tablas, ni columnas, ni índices).
-- Para **probar** pre-agregados sí se pueden crear tablas, pero con **prefijo
-  propio `fzaest_`** para no mezclarlas con `fza_`. Son desechables (un DROP
-  deja la BBDD igual).
+- Para **probar** pre-agregados sí se pueden crear tablas, pero con prefijo
+  propio para no mezclarlas con `fza_`. Son desechables (un DROP deja igual).
+
+### Prefijos del módulo (namespace propio)
+
+| Tipo           | Prefijo   | Ejemplos                                          |
+|----------------|-----------|---------------------------------------------------|
+| Vistas         | `viest_`  | `viest_dia`, `viest_movimientos_dia`              |
+| Tablas         | `fzaest_` | `fzaest_estadisticas_dia`, `fzaest_benchmark_log` |
+| Procedimientos | `fzaest_` | `fzaest_recalcular_rango`, `fzaest_benchmark`     |
+
+Nada usa el prefijo estándar `vi_`/`fza_` del esquema real.
 
 ## Modelo de dimensiones (importante)
 
@@ -34,19 +43,31 @@ carpeta, y solo se injerta en Factuzam cuando se acepte.
 
 | Vista                              | Para qué                          |
 |------------------------------------|-----------------------------------|
-| `vi_propiedad_temporada`           | Resolver temporada (artículo/color)|
-| `vi_estadisticas_movimientos_dia`  | Agregado diario de movimientos    |
-| `vi_estadisticas_ventas_dia`       | Agregado diario de ventas (líneas)|
-| `vi_estadisticas_dia`              | Unión de ambas (1 fila por grano) |
-| `vi_estadisticas_temporadas`       | Lista de temporadas para el combo |
+| `viest_temporada`           | Resolver temporada (artículo/color)|
+| `viest_movimientos_dia`  | Agregado diario de movimientos    |
+| `viest_ventas_dia`       | Agregado diario de ventas (líneas)|
+| `viest_dia`              | Unión de ambas (1 fila por grano) |
+| `viest_temporadas`       | Lista de temporadas para el combo |
 
 ### `fzaest_experimental.sql` (tablas de prueba `fzaest_`)
 
 - `fzaest_estadisticas_dia`: tabla de acumulado diario (mismo grano/medidas
-  que `vi_estadisticas_dia`).
+  que `viest_dia`).
 - `fzaest_recalcular_rango(pD1, pD2)`: recálculo incremental por rango
-  (`DELETE` + `INSERT ... SELECT FROM vi_estadisticas_dia`), tolera
+  (`DELETE` + `INSERT ... SELECT FROM viest_dia`), tolera
   correcciones retroactivas y reclasificaciones.
+
+### `benchmark_rendimiento.sql` (control de rendimiento vista/tabla)
+
+- `fzaest_benchmark_log`: tabla donde se guardan los tiempos.
+- `fzaest_benchmark(pD1, pD2, pVueltas)`: ejecuta la MISMA consulta del panel
+  N veces con 3 estrategias y registra los ms medios:
+  1. **VISTA** (`viest_dia`, con `GROUP BY` → TEMPTABLE),
+  2. **BASE** en vivo (joins sobre tablas base filtrando por fecha, lo que hace
+     hoy el `.pas`),
+  3. **TABLA** pre-agregada (`fzaest_estadisticas_dia`).
+  Devuelve los factores VISTA/TABLA y BASE/TABLA para decidir con números si
+  compensa el pre-agregado. Ver "Cómo decidir si compensa" abajo.
 
 ## Qué aporta (y qué NO) una vista
 
