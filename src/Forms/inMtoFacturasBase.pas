@@ -414,7 +414,6 @@ type
     chkESIRPF_IMP_INCL_ZONA_IVA_FACTURA: TcxDBCheckBox;
     chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
     btnGenerarRecibos2: TcxButton;
-    cxButton1: TcxButton;
     btnVerifactuAnular: TcxButton;
     btnVerifactuFacturar: TcxButton;
     btnVolverBorrador: TcxButton;
@@ -545,6 +544,7 @@ type
     // refresh master/detail innecesario al cambiar de factura cuando la
     // pestaña no esta visible.
     procedure PcDetailChange(Sender: TObject);
+    function PuedeConsultarEstadoColaVerifactu: Boolean;
     // Envuelve GridRecalc con try/except EInvalidOperation. El editor
     // inplace del cxGrid puede llegar sin Parent durante transiciones
     // de celda; mismo patron defensivo que en inMtoCajaOpe.
@@ -583,6 +583,7 @@ uses
   inMtoEmpresas,
   inMtoClientes,
   inLibGlobalVar,
+  inLibLog,
   inLibtb;
 
 {$R *.dfm}
@@ -1304,8 +1305,45 @@ begin
   Result := 'líneas de borrador';
 end;
 
+function TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu: Boolean;
+var
+  Qry: TUniQuery;
+begin
+  Result := False;
+  Qry := TUniQuery.Create(nil);
+  try
+    try
+      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.SQL.Text :=
+        ' SELECT COUNT(*) AS N ' +
+        '   FROM INFORMATION_SCHEMA.COLUMNS ' +
+        '  WHERE TABLE_SCHEMA = DATABASE() ' +
+        '    AND TABLE_NAME = ''fza_verifactu_cola'' ' +
+        '    AND COLUMN_NAME IN (''ID_VFCOLA'', ' +
+        '                        ''SERIE_FAC_VFCOLA'', ' +
+        '                        ''NUMERO_FAC_VFCOLA'', ' +
+        '                        ''ESTADO_VFCOLA'')';
+      Qry.Open;
+      Result := Qry.FieldByName('N').AsInteger = 4;
+      if not Result then
+        inLibLog.Log.LogWarning('Facturas: esquema de cola Verifactu ' +
+          'incompleto; se abre listado sin estado de cola.');
+    except
+      on E: Exception do
+      begin
+        Result := False;
+        inLibLog.Log.LogWarning('Facturas: no se pudo comprobar cola ' +
+          'Verifactu; se abre listado sin estado de cola. ' + E.Message);
+      end;
+    end;
+  finally
+    Qry.Free;
+  end;
+end;
+
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
 var
+  Componente: TComponent;
   sVista: string;
 begin
   inherited;
@@ -1334,6 +1372,10 @@ begin
   // se generan movimientos siempre. Lo ocultamos para que el descendiente
   // simplificado no muestre la opcion.
   chkMueveStock.Visible := SameText(TipoFacturaFiltro, 'NORMAL');
+  Componente := FindComponent('tsParametrosEDoc');
+  if Componente is TcxTabSheet then
+    TcxTabSheet(Componente).TabVisible := SameText(TipoFacturaFiltro,
+                                                   'NORMAL');
   // Convertir en normal solo aplica a facturas simplificadas (F3 AEAT)
   btnVerifactuFacturar.Visible :=
                               SameText(TipoFacturaFiltro, 'SIMPLIFICADA');
@@ -1362,15 +1404,20 @@ begin
       // se ha encolado nunca). Se recompone siempre el SELECT para que
       // las tres variantes (vi_facturas/normales/simplificadas) la
       // lleven, pisando el SQL guardado en perfiles.
-      SQL.Text :=
-        'SELECT v.*, ' +
-        '       (SELECT c.ESTADO_VFCOLA ' +
-        '          FROM fza_verifactu_cola c ' +
-        '         WHERE c.SERIE_FAC_VFCOLA  = v.SERIE_FAC ' +
-        '           AND c.NUMERO_FAC_VFCOLA = v.NUMERO_FAC ' +
-        '         ORDER BY c.ID_VFCOLA DESC ' +
-        '         LIMIT 1) AS ESTADO_VFCOLA ' +
-        ' FROM ' + sVista + ' v';
+      if PuedeConsultarEstadoColaVerifactu then
+        SQL.Text :=
+          'SELECT v.*, ' +
+          '       (SELECT c.ESTADO_VFCOLA ' +
+          '          FROM fza_verifactu_cola c ' +
+          '         WHERE c.SERIE_FAC_VFCOLA  = v.SERIE_FAC ' +
+          '           AND c.NUMERO_FAC_VFCOLA = v.NUMERO_FAC ' +
+          '         ORDER BY c.ID_VFCOLA DESC ' +
+          '         LIMIT 1) AS ESTADO_VFCOLA ' +
+          ' FROM ' + sVista + ' v'
+      else
+        SQL.Text :=
+          'SELECT v.*, '''' AS ESTADO_VFCOLA ' +
+          ' FROM ' + sVista + ' v';
       // Los descendientes que precargan con filtros propios devuelven
       // False y abren ellos la lista (filtrada, con progreso) en
       // ResetForm; asi evitamos el SELECT completo de la vista. La

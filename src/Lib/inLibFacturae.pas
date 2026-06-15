@@ -37,12 +37,15 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Math, System.StrUtils, Data.DB,
-  DBAccess, inLibGlobalVar, inLibXades;
+  DBAccess, inLibDocumentoFiscal, inLibGlobalVar, inLibXades;
 
 const
   cNsFacturae =
     'http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml';
   cVersionFacturae = '3.2.2';
+  cDir3RespaldoOficina = 'L01070184';
+  cDir3RespaldoOrgano = 'L01070184';
+  cDir3RespaldoUnidad = 'L01070184';
 
 function Xml(const AValor: string): string;
 begin
@@ -75,6 +78,23 @@ begin
   oCampo := ADataSet.FindField(ACampo);
   if (oCampo <> nil) and (not oCampo.IsNull) then
     Result := Trim(oCampo.AsString);
+end;
+
+function CampoDir3Facturae(ADataSet: TDataSet; const ACampo,
+                           ADefecto: string): string;
+begin
+  Result := CampoStr(ADataSet, ACampo);
+  if (Result = '') and
+     SameText(ACampo, 'CODIGO_OFICINA_CONTABLE_FAC') then
+    Result := CampoStr(ADataSet, 'CODIGO_OFICINA_CONTABLE_CLI');
+  if (Result = '') and
+     SameText(ACampo, 'CODIGO_ORGANO_GESTOR_FAC') then
+    Result := CampoStr(ADataSet, 'CODIGO_ORGANO_GESTOR_CLI');
+  if (Result = '') and
+     SameText(ACampo, 'CODIGO_UNIDAD_TRAMITADORA_FAC') then
+    Result := CampoStr(ADataSet, 'CODIGO_UNIDAD_TRAMITADORA_CLI');
+  if Result = '' then
+    Result := ADefecto;
 end;
 
 function CampoFloat(ADataSet: TDataSet; const ACampo: string): Double;
@@ -282,9 +302,40 @@ begin
   end;
 end;
 
+procedure AnadirCentroAdministrativo(ASb: TStringBuilder; const ACodigo,
+                                     ARol, ANombre, APais, ADireccion, ACp,
+                                     APoblacion, AProvincia: string);
+begin
+  Linea(ASb, 4, '<fe:AdministrativeCentre>');
+  Nodo(ASb, 5, 'fe:CentreCode', ACodigo);
+  Nodo(ASb, 5, 'fe:RoleTypeCode', ARol);
+  Nodo(ASb, 5, 'fe:Name', ANombre);
+  AnadirDireccion(ASb, 5, APais, ADireccion, ACp, APoblacion, AProvincia);
+  Linea(ASb, 4, '</fe:AdministrativeCentre>');
+end;
+
+procedure AnadirCentrosAdministrativos(ASb: TStringBuilder;
+                                       const AOficina, AOrgano, AUnidad,
+                                       APais, ADireccion, ACp, APoblacion,
+                                       AProvincia: string);
+begin
+  if (Trim(AOficina) <> '') and (Trim(AOrgano) <> '') and
+     (Trim(AUnidad) <> '') then
+  begin
+    Linea(ASb, 3, '<fe:AdministrativeCentres>');
+    AnadirCentroAdministrativo(ASb, AOficina, '01', 'Oficina contable',
+      APais, ADireccion, ACp, APoblacion, AProvincia);
+    AnadirCentroAdministrativo(ASb, AOrgano, '02', 'Organo gestor',
+      APais, ADireccion, ACp, APoblacion, AProvincia);
+    AnadirCentroAdministrativo(ASb, AUnidad, '03', 'Unidad tramitadora',
+      APais, ADireccion, ACp, APoblacion, AProvincia);
+    Linea(ASb, 3, '</fe:AdministrativeCentres>');
+  end;
+end;
+
 procedure AnadirParte(ASb: TStringBuilder; const ANodo, ANif, ARazonSocial,
                       ADireccion, ACp, APoblacion, AProvincia,
-                      APais: string);
+                      APais, AOficina, AOrgano, AUnidad: string);
 var
   sNombre: string;
   sApellidos: string;
@@ -300,6 +351,8 @@ begin
   Nodo(ASb, 4, 'fe:ResidenceTypeCode', 'R');
   Nodo(ASb, 4, 'fe:TaxIdentificationNumber', NormalizarNif(ANif));
   Linea(ASb, 3, '</fe:TaxIdentification>');
+  AnadirCentrosAdministrativos(ASb, AOficina, AOrgano, AUnidad, APais,
+    ADireccion, ACp, APoblacion, AProvincia);
   if bJuridica then
   begin
     Linea(ASb, 3, '<fe:LegalEntity>');
@@ -386,8 +439,33 @@ begin
   ValidarObligatorio(AErrores, 'codigo postal de ' + ATexto, ACp);
   ValidarObligatorio(AErrores, 'poblacion de ' + ATexto, APoblacion);
   ValidarObligatorio(AErrores, 'provincia de ' + ATexto, AProvincia);
-  if (APais = 'ESP') and (Length(NormalizarNif(ANif)) <> 9) then
-    AErrores.Add('- El NIF de ' + ATexto + ' no tiene 9 caracteres.');
+  if (APais = 'ESP') and (Trim(ANif) <> '') and
+     (not DocumentoFiscalValido(ANif)) then
+    AErrores.Add('- ' + MensajeDocumentoFiscalInvalido(ANif) + ' (' +
+      ATexto + ').');
+end;
+
+procedure ValidarCodigoDir3(AErrores: TStrings; const ATexto,
+                            ACodigo: string);
+begin
+  if Trim(ACodigo) = '' then
+    AErrores.Add('- Falta el codigo DIR3 de ' + ATexto + '.')
+  else if Length(Trim(ACodigo)) > 10 then
+    AErrores.Add('- El codigo DIR3 de ' + ATexto +
+      ' supera 10 caracteres.');
+end;
+
+procedure ValidarDir3Facturae(AErrores: TStrings; ACabecera: TDataSet);
+begin
+  ValidarCodigoDir3(AErrores, 'la oficina contable',
+    CampoDir3Facturae(ACabecera, 'CODIGO_OFICINA_CONTABLE_FAC',
+      cDir3RespaldoOficina));
+  ValidarCodigoDir3(AErrores, 'el organo gestor',
+    CampoDir3Facturae(ACabecera, 'CODIGO_ORGANO_GESTOR_FAC',
+      cDir3RespaldoOrgano));
+  ValidarCodigoDir3(AErrores, 'la unidad tramitadora',
+    CampoDir3Facturae(ACabecera, 'CODIGO_UNIDAD_TRAMITADORA_FAC',
+      cDir3RespaldoUnidad));
 end;
 
 procedure ValidarFactura(ACabecera, ALineas: TDataSet);
@@ -425,6 +503,7 @@ begin
       CampoStr(ACabecera, 'PROVINCIA_CLIENTE_FAC'),
       CodigoPaisFacturae(CampoStr(ACabecera, 'CODIGO_PAI_CLIENTE_FAC'),
                          CampoStr(ACabecera, 'NOMBRE_PAI_CLIENTE_FAC')));
+    ValidarDir3Facturae(oErrores, ACabecera);
     iLineas := 0;
     dBaseLineas := 0;
     ALineas.First;
@@ -544,14 +623,20 @@ begin
       CampoStr(ACabecera, 'DIRECCION1_EMPRESA_FAC'),
       CampoStr(ACabecera, 'CODIGO_POSTAL_EMPRESA_FAC'),
       CampoStr(ACabecera, 'POBLACION_EMPRESA_FAC'),
-      CampoStr(ACabecera, 'PROVINCIA_EMPRESA_FAC'), sPaisEmp);
+      CampoStr(ACabecera, 'PROVINCIA_EMPRESA_FAC'), sPaisEmp, '', '', '');
     AnadirParte(SB, 'BuyerParty',
       CampoStr(ACabecera, 'NIF_CLIENTE_FAC'),
       CampoStr(ACabecera, 'RAZON_SOCIAL_CLIENTE_FAC'),
       CampoStr(ACabecera, 'DIRECCION1_CLIENTE_FAC'),
       CampoStr(ACabecera, 'CODIGO_POSTAL_CLIENTE_FAC'),
       CampoStr(ACabecera, 'POBLACION_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'PROVINCIA_CLIENTE_FAC'), sPaisCli);
+      CampoStr(ACabecera, 'PROVINCIA_CLIENTE_FAC'), sPaisCli,
+      CampoDir3Facturae(ACabecera, 'CODIGO_OFICINA_CONTABLE_FAC',
+        cDir3RespaldoOficina),
+      CampoDir3Facturae(ACabecera, 'CODIGO_ORGANO_GESTOR_FAC',
+        cDir3RespaldoOrgano),
+      CampoDir3Facturae(ACabecera, 'CODIGO_UNIDAD_TRAMITADORA_FAC',
+        cDir3RespaldoUnidad));
     Linea(SB, 1, '</fe:Parties>');
     Linea(SB, 1, '<fe:Invoices>');
     Linea(SB, 2, '<fe:Invoice>');
@@ -682,6 +767,85 @@ begin
   end;
 end;
 
+function ColumnaExiste(AConn: TUniConnection; const ATabla,
+                       ACampo: string): Boolean;
+var
+  Qry: TUniQuery;
+begin
+  Result := False;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' SELECT COUNT(*) AS TOTAL ' +
+      ' FROM INFORMATION_SCHEMA.COLUMNS ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      ' AND TABLE_NAME = :TABLA ' +
+      ' AND COLUMN_NAME = :CAMPO ';
+    Qry.ParamByName('TABLA').AsString := ATabla;
+    Qry.ParamByName('CAMPO').AsString := ACampo;
+    Qry.Open;
+    if not Qry.IsEmpty then
+      Result := Qry.FieldByName('TOTAL').AsInteger > 0;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+function ColumnasDir3Disponibles(AConn: TUniConnection;
+                                 const ATabla, ASufijo: string): Boolean;
+begin
+  Result := ColumnaExiste(AConn, ATabla,
+    'CODIGO_OFICINA_CONTABLE_' + ASufijo);
+  if Result then
+    Result := ColumnaExiste(AConn, ATabla,
+      'CODIGO_ORGANO_GESTOR_' + ASufijo);
+  if Result then
+    Result := ColumnaExiste(AConn, ATabla,
+      'CODIGO_UNIDAD_TRAMITADORA_' + ASufijo);
+end;
+
+function SqlCabeceraFacturae(AConn: TUniConnection): string;
+var
+  bDir3Factura: Boolean;
+  bDir3Cliente: Boolean;
+begin
+  bDir3Factura := ColumnasDir3Disponibles(AConn, 'fza_facturas', 'FAC');
+  bDir3Cliente := ColumnasDir3Disponibles(AConn, 'fza_clientes', 'CLI');
+  Result := ' SELECT f.* ';
+  if bDir3Cliente then
+  begin
+    Result := Result +
+      ', cli.CODIGO_OFICINA_CONTABLE_CLI AS CODIGO_OFICINA_CONTABLE_CLI ' +
+      ', cli.CODIGO_ORGANO_GESTOR_CLI AS CODIGO_ORGANO_GESTOR_CLI ' +
+      ', cli.CODIGO_UNIDAD_TRAMITADORA_CLI AS CODIGO_UNIDAD_TRAMITADORA_CLI ';
+  end;
+  if (not bDir3Factura) and bDir3Cliente then
+  begin
+    Result := Result +
+      ', cli.CODIGO_OFICINA_CONTABLE_CLI AS CODIGO_OFICINA_CONTABLE_FAC ' +
+      ', cli.CODIGO_ORGANO_GESTOR_CLI AS CODIGO_ORGANO_GESTOR_FAC ' +
+      ', cli.CODIGO_UNIDAD_TRAMITADORA_CLI AS CODIGO_UNIDAD_TRAMITADORA_FAC ';
+  end
+  else if not bDir3Factura then
+  begin
+    Result := Result +
+      ', '''' AS CODIGO_OFICINA_CONTABLE_FAC ' +
+      ', '''' AS CODIGO_ORGANO_GESTOR_FAC ' +
+      ', '''' AS CODIGO_UNIDAD_TRAMITADORA_FAC ';
+  end;
+  Result := Result + ' FROM fza_facturas f ';
+  if bDir3Cliente then
+  begin
+    Result := Result +
+      ' LEFT JOIN fza_clientes cli ' +
+      ' ON cli.CODIGO_CLI_CLI = f.CODIGO_CLI_FAC ';
+  end;
+  Result := Result +
+    ' WHERE f.SERIE_FAC = :SERIE ' +
+    ' AND f.NUMERO_FAC = :NUMERO ';
+end;
+
 function EmitirFacturae(AConn: TUniConnection;
                         const ASerie, ANumero, AArchivo: string):
                         TFacturaeResultado;
@@ -704,11 +868,7 @@ begin
   QryLin := TUniQuery.Create(nil);
   try
     QryCab.Connection := AConn;
-    QryCab.SQL.Text :=
-      ' SELECT * ' +
-      ' FROM fza_facturas ' +
-      ' WHERE SERIE_FAC = :SERIE ' +
-      '   AND NUMERO_FAC = :NUMERO';
+    QryCab.SQL.Text := SqlCabeceraFacturae(AConn);
     QryCab.ParamByName('SERIE').AsString := ASerie;
     QryCab.ParamByName('NUMERO').AsString := ANumero;
     QryCab.Open;

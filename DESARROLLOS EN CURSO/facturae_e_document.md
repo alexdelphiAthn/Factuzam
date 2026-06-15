@@ -21,6 +21,10 @@ La emision eDoc hace:
 - Valida datos minimos de emisor, cliente, fecha, lineas y totales.
 - Genera XML Facturae 3.2.2 con `FileHeader`, `Parties`, `Invoices`,
   impuestos, retenciones si existen y lineas.
+- Genera `AdministrativeCentres` con oficina contable, organo gestor y unidad
+  tramitadora. Primero toma la foto guardada en la factura, si esta vacia toma
+  los codigos del cliente y, solo para validacion tecnica inicial, aplica el
+  respaldo DIR3 documentado abajo.
 - Firma el XML con `inLibXades.OpcionesXadesFacturae`, politica Facturae y rol
   `emisor`.
 - Guarda el XML firmado en el fichero elegido por el usuario (`.xsig` por
@@ -53,7 +57,10 @@ La validacion interna bloquea:
 - Fecha oficial vacia.
 - NIF, razon social, direccion, codigo postal, poblacion o provincia vacios en
   emisor o cliente.
-- NIF nacional con longitud distinta de 9 caracteres tras normalizar.
+- NIF, NIE o CIF espanol invalido usando el validador local
+  `inLibDocumentoFiscal`, adaptado del proyecto Subocasoft.
+- Falta de oficina contable, organo gestor o unidad tramitadora cuando se
+  emite Facturae para receptor publico.
 - Factura sin lineas.
 - Linea sin descripcion.
 - Linea con cantidad cero.
@@ -62,6 +69,44 @@ La validacion interna bloquea:
 
 La tolerancia de cuadre es 0,05 euros para evitar falsos errores por redondeos
 historicos.
+
+La misma validacion de NIF/NIE/CIF se aplica antes de guardar cabeceras
+`NORMAL`, antes de crear una F3 desde ticket y antes de emitir una factura
+completa desde caja con F8. Las facturas simplificadas siguen permitiendo venta
+contado sin cliente identificado.
+
+## Datos DIR3
+
+El script idempotente
+`DESARROLLOS EN CURSO/facturae_dir3_clientes.sql` anade a `fza_clientes`:
+
+```sql
+CODIGO_OFICINA_CONTABLE_CLI
+CODIGO_ORGANO_GESTOR_CLI
+CODIGO_UNIDAD_TRAMITADORA_CLI
+```
+
+Y anade la foto equivalente a `fza_facturas`:
+
+```sql
+CODIGO_OFICINA_CONTABLE_FAC
+CODIGO_ORGANO_GESTOR_FAC
+CODIGO_UNIDAD_TRAMITADORA_FAC
+```
+
+El mismo script recrea `vi_clientes`, `vi_cli_busquedas`, `vi_facturas`,
+`vi_facturas_normales` y `vi_facturas_simplificadas`, porque MariaDB fija las
+columnas de una vista en el momento de crearla. Tambien rellena facturas
+existentes desde el cliente cuando los nuevos campos de factura estan vacios.
+
+La ficha de clientes tiene una pestana **Parametros eDoc** para guardar los
+DIR3 habituales del cliente publico. La pantalla de `Borradores (Venta Mayor)`
+tiene otra pestana **Parametros eDoc** con la foto de esa factura concreta.
+
+Estos codigos deben ser los DIR3 reales del cliente publico. Mientras se corrige
+la validacion externa inicial, el generador usa como ultimo recurso tecnico
+`L01070184` en los tres centros; no debe considerarse un valor legal para
+facturas reales de otras administraciones.
 
 ## Normativa y formato
 

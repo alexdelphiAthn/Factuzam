@@ -2557,6 +2557,29 @@ begin
     lblNombreCliente.Caption := 'VENTA CONTADO';
     DatosCaja.cdsCabecera.Edit;
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'RAZON_SOCIAL_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName('MOVIL_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'DIRECCION1_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'DIRECCION2_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName('POBLACION_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName('PROVINCIA_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'CODIGO_POSTAL_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'CODIGO_PAI_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'NOMBRE_PAI_CLIENTE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'CODIGO_OFICINA_CONTABLE_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'CODIGO_ORGANO_GESTOR_FAC').AsString := '';
+    DatosCaja.cdsCabecera.FieldByName(
+      'CODIGO_UNIDAD_TRAMITADORA_FAC').AsString := '';
     DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
       DatosCaja.GetTarifaDefault;
     DatosCaja.cdsCabecera.FieldByName(
@@ -2571,6 +2594,18 @@ begin
     try
       unqry.Connection := oConn;
       unqry.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, ' +
+                        '       NIF_CLI, MOVIL_CLI, EMAIL_CLI, ' +
+                        '       DIRECCION1_CLI, DIRECCION2_CLI, ' +
+                        '       POBLACION_CLI, PROVINCIA_CLI, ' +
+                        '       CODIGO_POSTAL_CLI, CODIGO_PAI_CLI, ' +
+                        '       NOMBRE_PAI_CLI, ESIVA_RECARGO_CLI, ' +
+                        '       CODIGO_OFICINA_CONTABLE_CLI, ' +
+                        '       CODIGO_ORGANO_GESTOR_CLI, ' +
+                        '       CODIGO_UNIDAD_TRAMITADORA_CLI, ' +
+                        '       ESIVA_EXENTO_CLI, ' +
+                        '       ESREGIMENESPECIALAGRICOLA_CLI, ' +
+                        '       ESRETENCIONES_CLI, ' +
+                        '       ESINTRACOMUNITARIO_CLI, CODIGO_FP_CLI, ' +
                         '       TARIFA_ARTICULO_CLI, ' +
                         '       ESPERMITE_DEUDA_CLI ' +
                         '  FROM fza_clientes ' +
@@ -2582,6 +2617,60 @@ begin
         DatosCaja.cdsCabecera.Edit;
         DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString := sCodigo;
         sNomCliente := unqry.FieldByName('RAZON_SOCIAL_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'RAZON_SOCIAL_CLIENTE_FAC').AsString := sNomCliente;
+        DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('NIF_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName('MOVIL_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('MOVIL_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('EMAIL_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'DIRECCION1_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('DIRECCION1_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'DIRECCION2_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('DIRECCION2_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName('POBLACION_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('POBLACION_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName('PROVINCIA_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('PROVINCIA_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'CODIGO_POSTAL_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('CODIGO_POSTAL_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'CODIGO_PAI_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('CODIGO_PAI_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'NOMBRE_PAI_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('NOMBRE_PAI_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'CODIGO_OFICINA_CONTABLE_FAC').AsString :=
+          unqry.FieldByName('CODIGO_OFICINA_CONTABLE_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'CODIGO_ORGANO_GESTOR_FAC').AsString :=
+          unqry.FieldByName('CODIGO_ORGANO_GESTOR_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'CODIGO_UNIDAD_TRAMITADORA_FAC').AsString :=
+          unqry.FieldByName('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'ESIVA_RECARGO_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('ESIVA_RECARGO_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'ESIVA_EXENTO_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('ESIVA_EXENTO_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('ESREGIMENESPECIALAGRICOLA_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'ESRETENCIONES_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('ESRETENCIONES_CLI').AsString;
+        DatosCaja.cdsCabecera.FieldByName(
+          'ESINTRACOMUNITARIO_CLIENTE_FAC').AsString :=
+          unqry.FieldByName('ESINTRACOMUNITARIO_CLI').AsString;
+        if Trim(unqry.FieldByName('CODIGO_FP_CLI').AsString) <> '' then
+          DatosCaja.cdsCabecera.FieldByName('FORMA_PAGO_FAC').AsString :=
+            unqry.FieldByName('CODIGO_FP_CLI').AsString;
         DatosCaja.cdsCabecera.FieldByName(
           'TARIFA_ARTICULO_CLIENTE_FAC').AsString := unqry.FieldByName(
             'TARIFA_ARTICULO_CLI').AsString;
@@ -2948,6 +3037,12 @@ begin
            DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
     frmFaseCobro.FNifCliente :=
            DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString;
+    frmFaseCobro.FCodigoPaisCliente :=
+           DatosCaja.cdsCabecera.FieldByName(
+             'CODIGO_PAI_CLIENTE_FAC').AsString;
+    frmFaseCobro.FNombrePaisCliente :=
+           DatosCaja.cdsCabecera.FieldByName(
+             'NOMBRE_PAI_CLIENTE_FAC').AsString;
     if FNumeroRectifica <> '' then
       frmFaseCobro.FRectificaA := FSerieRectifica + '\' + FNumeroRectifica;
     if frmFaseCobro.ShowModal = mrOk then

@@ -195,6 +195,7 @@ uses
   inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibXades in 'src\Lib\inLibXades.pas',
+  inLibDocumentoFiscal in 'src\Lib\inLibDocumentoFiscal.pas',
   inLibRelojFiscal in 'src\Lib\inLibRelojFiscal.pas',
   inLibFacturae in 'src\Lib\inLibFacturae.pas',
   inLibVerifactuNoVerifactuExport in 'src\Lib\inLibVerifactuNoVerifactuExport.pas',

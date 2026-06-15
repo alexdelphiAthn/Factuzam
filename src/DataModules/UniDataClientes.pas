@@ -46,8 +46,9 @@ type
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
   private
-    { Private declarations }
+    procedure GuardarParametrosEDocCliente(ADataSet: TDataSet);
   public
     procedure GetCodigoAutoCliente;
     procedure CrearDataSetEtiquetas(iNroEspaciosBlanco: Integer;
@@ -248,6 +249,48 @@ begin
                                                      'ESDEFAULT_FORMA_PAGO_FP');
   unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString :=
     oAppParams.GetString('appTarifaDefecto', 'PVP');
+end;
+
+procedure TdmClientes.GuardarParametrosEDocCliente(ADataSet: TDataSet);
+var
+  Qry: TUniQuery;
+  bCamposDisponibles: Boolean;
+begin
+  bCamposDisponibles :=
+    (ADataSet.FindField('CODIGO_OFICINA_CONTABLE_CLI') <> nil) and
+    (ADataSet.FindField('CODIGO_ORGANO_GESTOR_CLI') <> nil) and
+    (ADataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI') <> nil);
+  if bCamposDisponibles and
+     (Trim(ADataSet.FieldByName('CODIGO_CLI_CLI').AsString) <> '') then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := oConn;
+      Qry.SQL.Text :=
+        ' UPDATE fza_clientes ' +
+        ' SET CODIGO_OFICINA_CONTABLE_CLI = :OFICINA, ' +
+        '     CODIGO_ORGANO_GESTOR_CLI = :ORGANO, ' +
+        '     CODIGO_UNIDAD_TRAMITADORA_CLI = :UNIDAD ' +
+        ' WHERE CODIGO_CLI_CLI = :CLIENTE ';
+      Qry.ParamByName('OFICINA').AsString :=
+        ADataSet.FieldByName('CODIGO_OFICINA_CONTABLE_CLI').AsString;
+      Qry.ParamByName('ORGANO').AsString :=
+        ADataSet.FieldByName('CODIGO_ORGANO_GESTOR_CLI').AsString;
+      Qry.ParamByName('UNIDAD').AsString :=
+        ADataSet.FieldByName('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
+      Qry.ParamByName('CLIENTE').AsString :=
+        ADataSet.FieldByName('CODIGO_CLI_CLI').AsString;
+      Qry.ExecSQL;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
+procedure TdmClientes.unqryTablaGAfterPost(DataSet: TDataSet);
+begin
+  inherited;
+  GuardarParametrosEDocCliente(DataSet);
 end;
 
 procedure TdmClientes.unqryTablaGBeforeDelete(DataSet: TDataSet);

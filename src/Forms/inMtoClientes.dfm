@@ -938,9 +938,74 @@ inherited frmMtoClientes: TfrmMtoClientes
                 end
               end
             end
+            object tsParametrosEDoc: TcxTabSheet
+              Caption = '&3_Par'#225'metros eDoc'
+              ImageIndex = 2
+              object cxgrpbxParametrosEDoc: TcxGroupBox
+                AlignWithMargins = True
+                Left = 21
+                Top = 0
+                TabStop = True
+                Caption = 'Centros administrativos DIR3'
+                TabOrder = 0
+                Height = 174
+                Width = 890
+                object lblCodigoOficinaContable: TcxLabel
+                  Left = 30
+                  Top = 32
+                  Caption = 'Oficina contable'
+                  Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 0
+                  Transparent = True
+                  AnchorX = 163
+                end
+                object txtCODIGO_OFICINA_CONTABLE_CLIENTE: TcxDBTextEdit
+                  Left = 170
+                  Top = 28
+                  DataBinding.DataField = 'CODIGO_OFICINA_CONTABLE_CLI'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 1
+                  Width = 160
+                end
+                object lblCodigoOrganoGestor: TcxLabel
+                  Left = 57
+                  Top = 72
+                  Caption = 'Organo gestor'
+                  Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 2
+                  Transparent = True
+                  AnchorX = 163
+                end
+                object txtCODIGO_ORGANO_GESTOR_CLIENTE: TcxDBTextEdit
+                  Left = 170
+                  Top = 68
+                  DataBinding.DataField = 'CODIGO_ORGANO_GESTOR_CLI'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 3
+                  Width = 160
+                end
+                object lblCodigoUnidadTramitadora: TcxLabel
+                  Left = 23
+                  Top = 112
+                  Caption = 'Unidad tramitadora'
+                  Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 4
+                  Transparent = True
+                  AnchorX = 163
+                end
+                object txtCODIGO_UNIDAD_TRAMITADORA_CLIENTE: TcxDBTextEdit
+                  Left = 170
+                  Top = 108
+                  DataBinding.DataField = 'CODIGO_UNIDAD_TRAMITADORA_CLI'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 5
+                  Width = 160
+                end
+              end
+            end
             object tsHistoriaFacturacion: TcxTabSheet
-              Caption = '&3_Historia Borradores'
-              ImageIndex = 3
+              Caption = '&4_Historia Borradores'
+              ImageIndex = 4
               object pnlFacturaCli: TPanel
                 Left = 0
                 Top = 0

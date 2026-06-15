@@ -52,6 +52,9 @@ type
     CPostalCli:          string;
     CodigoPaisCli:       string;
     NombrePaisCli:       string;
+    CodigoOficinaContable: string;
+    CodigoOrganoGestor:  string;
+    CodigoUnidadTramitadora: string;
     CodigoIva:           string;
     Tarifa:              string;
     EsIvaRecargo:        string;
@@ -271,6 +274,9 @@ type
                   ACPostalCli,
                   ACodigoPaisCli,
                   ANombrePaisCli: string;
+            const ACodigoOficinaContable,
+                  ACodigoOrganoGestor,
+                  ACodigoUnidadTramitadora: string;
             const ACodigoIva,
                   ATarifa:       string;
             AEsIvaRecargo,
@@ -403,7 +409,8 @@ uses inLibtb,
      inLibFacturas,
      inLibVerifactu,
      inLibVerifactuCola,
-     inLibGenerarTicketBD;
+     inLibGenerarTicketBD,
+     inLibDocumentoFiscal;
 
 {$R *.dfm}
 
@@ -438,6 +445,15 @@ begin
     Result.CPostalCli      := FieldByName('CODIGO_POSTAL_CLIENTE_FAC').AsString;
     Result.CodigoPaisCli   := FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString;
     Result.NombrePaisCli   := FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString;
+    if FindField('CODIGO_OFICINA_CONTABLE_FAC') <> nil then
+      Result.CodigoOficinaContable :=
+        FieldByName('CODIGO_OFICINA_CONTABLE_FAC').AsString;
+    if FindField('CODIGO_ORGANO_GESTOR_FAC') <> nil then
+      Result.CodigoOrganoGestor :=
+        FieldByName('CODIGO_ORGANO_GESTOR_FAC').AsString;
+    if FindField('CODIGO_UNIDAD_TRAMITADORA_FAC') <> nil then
+      Result.CodigoUnidadTramitadora :=
+        FieldByName('CODIGO_UNIDAD_TRAMITADORA_FAC').AsString;
     Result.CodigoIva       := FieldByName('CODIGO_IVA_FAC').AsString;
     Result.Tarifa := FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     Result.EsIvaRecargo    := FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString;
@@ -1208,6 +1224,20 @@ begin
     cdsLineas.EnableControls;
   end;
   DatosCobro.FRequiereFactura := RequiereFactura;
+  if RequiereFactura and SameText(ATipoFactura, 'NORMAL') then
+  begin
+    if Trim(Cab.RazonSocialCli) = '' then
+      raise Exception.Create('La factura normal necesita la razon social ' +
+        'del cliente.');
+    if PaisEsEspana(Cab.CodigoPaisCli, Cab.NombrePaisCli) and
+       (not DocumentoFiscalValido(Cab.NifCli)) then
+      raise Exception.Create('El NIF/CIF/NIE del cliente no es valido: ' +
+        MensajeDocumentoFiscalInvalido(Cab.NifCli));
+    if PaisEsEspana(Cab.CodigoPaisEmp, Cab.NombrePaisEmp) and
+       (not DocumentoFiscalValido(Cab.NifEmp)) then
+      raise Exception.Create('El NIF/CIF/NIE de la empresa no es valido: ' +
+        MensajeDocumentoFiscalInvalido(Cab.NifEmp));
+  end;
   // =======================================================================
   // CONTROL DE FECHA POR SERIE (correlatividad temporal)
   // El ticket no puede llevar una fecha anterior a la del ultimo ticket ya
@@ -1280,8 +1310,9 @@ begin
         Cab.RazonSocialCli, Cab.NifCli, Cab.MovilCli, Cab.EmailCli,
         Cab.Direccion1Cli, Cab.Direccion2Cli,
         Cab.PoblacionCli, Cab.ProvinciaCli, Cab.CPostalCli, Cab.CodigoPaisCli,
-        Cab.NombrePaisCli, Cab.CodigoIva, Cab.Tarifa, Cab.EsIvaRecargo,
-        Cab.EsIvaExento, Cab.EsImpInclTarifa,
+        Cab.NombrePaisCli, Cab.CodigoOficinaContable, Cab.CodigoOrganoGestor,
+        Cab.CodigoUnidadTramitadora, Cab.CodigoIva, Cab.Tarifa,
+        Cab.EsIvaRecargo, Cab.EsIvaExento, Cab.EsImpInclTarifa,
         Cab.PorcIvaN, Cab.TotalIvaN, Cab.PorcReN, Cab.TotalReN, Cab.BaseIN,
         Cab.PorcIvaR, Cab.TotalIvaR, Cab.PorcReR, Cab.TotalReR, Cab.BaseIR,
         Cab.PorcIvaS, Cab.TotalIvaS, Cab.PorcReS, Cab.TotalReS, Cab.BaseIS,
@@ -2059,6 +2090,9 @@ begin
     Add('CODIGO_POSTAL_CLIENTE_FAC', ftString, 15);
     Add('CODIGO_PAI_CLIENTE_FAC', ftString, 3);
     Add('NOMBRE_PAI_CLIENTE_FAC', ftString, 150);
+    Add('CODIGO_OFICINA_CONTABLE_FAC', ftString, 10);
+    Add('CODIGO_ORGANO_GESTOR_FAC', ftString, 10);
+    Add('CODIGO_UNIDAD_TRAMITADORA_FAC', ftString, 10);
     Add('CODIGO_CAJERO_FAC', ftString, 20);
     Add('CODIGO_IVA_FAC', ftString, 20);
     Add('ESIVA_RECARGO_CLIENTE_FAC', ftString, 1);
@@ -2289,6 +2323,9 @@ procedure TdmCajaOpe.InsertarCabeceraFactura(
                   ACPostalCli,
                   ACodigoPaisCli,
                   ANombrePaisCli: string;
+            const ACodigoOficinaContable,
+                  ACodigoOrganoGestor,
+                  ACodigoUnidadTramitadora: string;
             const ACodigoIva,
                   ATarifa:       string;
             AEsIvaRecargo,
@@ -2333,6 +2370,8 @@ begin
     '  POBLACION_CLIENTE_FAC, PROVINCIA_CLIENTE_FAC,' +
     '  CODIGO_POSTAL_CLIENTE_FAC, CODIGO_PAI_CLIENTE_FAC, ' +
     'NOMBRE_PAI_CLIENTE_FAC,' +
+    '  CODIGO_OFICINA_CONTABLE_FAC, CODIGO_ORGANO_GESTOR_FAC, ' +
+    'CODIGO_UNIDAD_TRAMITADORA_FAC,' +
     '  CODIGO_IVA_FAC, TARIFA_ARTICULO_CLIENTE_FAC,' +
     '  ESIVA_RECARGO_CLIENTE_FAC, ESIVA_EXENTO_CLIENTE_FAC,' +
     '  ESIMP_INCL_TARIFA_CLIENTE_FAC,' +
@@ -2369,6 +2408,8 @@ begin
     '  NULLIF(:DIR1CLI,   ''''), NULLIF(:DIR2CLI,  ''''),' +
     '  NULLIF(:POBLCLI,   ''''), NULLIF(:PROVCLI,  ''''),' +
     '  NULLIF(:CPCLI,     ''''), :PAISCLI, NULLIF(:NPAISCLI, ''''),' +
+    '  NULLIF(:DIR3OFICINA, ''''), NULLIF(:DIR3ORGANO, ''''), ' +
+    'NULLIF(:DIR3UNIDAD, ''''),' +
     '  NULLIF(:CODIGOIVA, ''''), NULLIF(:TARIFA,   ''''),' +
     '  :ESRECARGO, :ESEXENTO,' +
     '  :ESIMPINCL,' +
@@ -2421,6 +2462,9 @@ begin
   QryTrx.ParamByName('CPCLI').AsString    := ACPostalCli;
   QryTrx.ParamByName('PAISCLI').AsString  := ACodigoPaisCli;
   QryTrx.ParamByName('NPAISCLI').AsString := ANombrePaisCli;
+  QryTrx.ParamByName('DIR3OFICINA').AsString := ACodigoOficinaContable;
+  QryTrx.ParamByName('DIR3ORGANO').AsString := ACodigoOrganoGestor;
+  QryTrx.ParamByName('DIR3UNIDAD').AsString := ACodigoUnidadTramitadora;
   QryTrx.ParamByName('CODIGOIVA').AsString:= ACodigoIva;
   QryTrx.ParamByName('TARIFA').AsString   := ATarifa;
   QryTrx.ParamByName('ESRECARGO').AsString:= AEsIvaRecargo;

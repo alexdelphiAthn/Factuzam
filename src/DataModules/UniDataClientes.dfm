@@ -584,6 +584,7 @@ inherited dmClientes: TdmClientes
       'select * from vi_clientes')
     BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
+    AfterPost = unqryTablaGAfterPost
     BeforePost = unqryTablaGBeforePost
     BeforeDelete = unqryTablaGBeforeDelete
     Left = 712

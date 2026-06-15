@@ -590,6 +590,7 @@
         <DCCReference Include="src\Lib\inLibGenerarTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
         <DCCReference Include="src\Lib\inLibXades.pas"/>
+        <DCCReference Include="src\Lib\inLibDocumentoFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibRelojFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibFacturae.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactu.pas"/>
