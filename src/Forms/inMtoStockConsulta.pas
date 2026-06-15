@@ -681,6 +681,7 @@ begin
       '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
       '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
       ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+      '   AND SKU.ESACTIVO_SKU = ''S'' ' +
       '   AND AV.ID_VA_AV = ''CO'' ' +
       ' GROUP BY AV.AV ' +
       ' ORDER BY MIN(AV.ORDEN_AV), AV.AV';
@@ -766,7 +767,8 @@ begin
       '            ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
       '          JOIN fza_atributos_valores AV ' +
       '            ON AV.ID_AV = SA.ID_AV_SA AND AV.ID_VA_AV = ''CO'' ' +
-      '         WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) + ') COLORS ' +
+      '         WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+      '           AND SKU.ESACTIVO_SKU = ''S'') COLORS ' +
       '    ON COLORS.PREFIJO = SUBSTRING_INDEX(AP.CODIGO_UNIDAD_ARTPROP, ''/'', 2) ' +
       '  LEFT JOIN fza_articulos_propiedades APA ' +
       '    ON APA.CODIGO_ART_ART        = AP.CODIGO_ART_ART ' +
@@ -1164,6 +1166,7 @@ begin
     '       ON SA2.CODIGO_UNIDAD_SKU_SA = SKU2.CODIGO_UNIDAD_SKU ' +
     '     LEFT JOIN fza_atributos_valores AV2 ON AV2.ID_AV = SA2.ID_AV_SA ' +
     '    WHERE SKU2.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+    '      AND SKU2.ESACTIVO_SKU = ''S'' ' +
     '    GROUP BY SKU2.CODIGO_UNIDAD_SKU) ATR ' +
     '    ON ATR.CODIGO_UNIDAD_SKU = SKU.CODIGO_UNIDAD_SKU ';
   if AEstado = esPdteRecibir then
@@ -1177,6 +1180,7 @@ begin
       '    ON PDR.CODIGO_UNIDAD_PDR = SKU.CODIGO_UNIDAD_SKU ' +
       sAtrJoin +
       ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+      '   AND SKU.ESACTIVO_SKU = ''S'' ' +
       '   AND PDR.CODIGO_ALM_PDR IN (' + sAlms + ') ' +
       ' GROUP BY SKU.CODIGO_UNIDAD_SKU, PDR.CODIGO_ALM_PDR'
   else if (AEstado = esPrestadas) or (AEstado = esTodoAlaVez) then
@@ -1202,6 +1206,7 @@ begin
       '    ON STK.CODIGO_UNIDAD_STK = SKU.CODIGO_UNIDAD_SKU ' +
       sAtrJoin +
       ' WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+      '   AND SKU.ESACTIVO_SKU = ''S'' ' +
       '   AND STK.CODIGO_ALM_STK IN (' + sAlms + ') ' +
       ' GROUP BY SKU.CODIGO_UNIDAD_SKU, STK.CODIGO_ALM_STK';
   end;
@@ -1323,6 +1328,7 @@ begin
       '     ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
       '   JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
       '  WHERE SKU.CODIGO_ART_SKU = ' + QuotedStr(FCodArt) +
+      '    AND SKU.ESACTIVO_SKU = ''S'' ' +
       '    AND AV.ID_VA_AV = ''CO''' +
       '    AND AV.AV IN (' + sFiltroColores + ') ' +
       '  GROUP BY AV.AV) C';
@@ -1427,6 +1433,7 @@ begin
         '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
         '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
         ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+        '   AND SKU.ESACTIVO_SKU = ''S'' ' +
         '   AND AV.ID_VA_AV <> ''CO'' ' +
         ' ORDER BY AV.ORDEN_AV, AV.AV';
       q.ParamByName('art').AsString := FCodArt;

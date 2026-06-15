@@ -52,7 +52,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue;
+  dxSkinWhiteprint, dxSkinXmas2008Blue, inLibArticulosResolver;
 
 type
   TfrmMtoFacturasBase = class(TfrmMtoGen)
@@ -550,6 +550,8 @@ type
     // inplace del cxGrid puede llegar sin Parent durante transiciones
     // de celda; mismo patron defensivo que en inMtoCajaOpe.
     procedure RecalcLineaFacturaSegura(Sender: TObject);
+    function ValidarArticuloParaVenta(const ADatos: TArticuloDatos): Boolean;
+    procedure LimpiarSkuLineaNoVendible(ALinea: TDataSet);
   public
     dmmFacturas : TdmFacturas;
   end;
@@ -570,7 +572,6 @@ uses
   inLibFotos,
   inLibDefaultValues,
   inLibArticulosValidador,
-  inLibArticulosResolver,
   inMtoGenSearch,
   inMtoModalFacRec,
   inMtoModalImpRecFac,
@@ -589,6 +590,56 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function TfrmMtoFacturasBase.ValidarArticuloParaVenta(
+  const ADatos: TArticuloDatos): Boolean;
+begin
+  Result := True;
+  if (ADatos.CodigoSku <> '') and (not ADatos.EsActivoSku) then
+  begin
+    ShowMessage('El SKU "' + ADatos.CodigoSku + '" no está activo. ' +
+                'No se puede vender.');
+    Result := False;
+  end
+  else if not ADatos.TieneSku then
+  begin
+    if ADatos.EsVariacion then
+      ShowMessage('El artículo "' + ADatos.CodigoArticulo + '" no tiene ' +
+                  'tallas/colores (SKU) activos para vender.')
+    else
+      ShowMessage('El artículo "' + ADatos.CodigoArticulo + '" no tiene ' +
+                  'ninguna unidad (SKU) activa para vender.');
+    Result := False;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.LimpiarSkuLineaNoVendible(ALinea: TDataSet);
+var
+  Campo: TField;
+begin
+  if ALinea <> nil then
+    if ALinea.State in [dsInsert, dsEdit] then
+    begin
+      Campo := ALinea.FindField('CODIGO_UNIDAD_FACLIN');
+      if Assigned(Campo) then
+        Campo.AsString := '';
+      Campo := ALinea.FindField('DESCRIPCION_VARIACION_FACLIN');
+      if Assigned(Campo) then
+        Campo.AsString := '';
+      Campo := ALinea.FindField('PRECIO_SALIDA_FACLIN');
+      if Assigned(Campo) then
+        Campo.AsFloat := 0;
+      Campo := ALinea.FindField('PRECIO_DTO_FACLIN');
+      if Assigned(Campo) then
+        Campo.AsFloat := 0;
+      Campo := ALinea.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN');
+      if Assigned(Campo) then
+        Campo.AsFloat := 0;
+      Campo := ALinea.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN');
+      if Assigned(Campo) then
+        Campo.AsFloat := 0;
+    end;
+end;
 
 procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
   Sender: TObject);
@@ -1034,6 +1085,11 @@ begin
     // Si el SKU tecleado a mano no pertenece al artículo, ResolverDatos lo
     // ignora y deja CodigoSku vacío. En ese caso no tocamos el precio.
     if Datos.CodigoSku = '' then Exit;
+    if not ValidarArticuloParaVenta(Datos) then
+    begin
+      LimpiarSkuLineaNoVendible(Lin);
+      Exit;
+    end;
 
     if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
       Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := Datos.CodigoSku;
@@ -1893,6 +1949,11 @@ begin
                                     Resolucion.CodigoSku,
                                     CodTarifa, FechaFac);
     if not Datos.Encontrado then Exit;
+    if not ValidarArticuloParaVenta(Datos) then
+    begin
+      LimpiarSkuLineaNoVendible(Lin);
+      Exit;
+    end;
 
     // Si el padre tiene varios SKUs y aún no hay SKU, ResolverDatos no calcula
     // precio. Pedimos el del padre para arrastrar IVA y % DTO (mismo patrón
