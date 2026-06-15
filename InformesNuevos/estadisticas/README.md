@@ -23,7 +23,7 @@ Nada usa el prefijo estándar `vi_`/`fza_` del esquema real.
 
 ## Modelo de dimensiones (importante)
 
-- **Almacén**: `CODIGO_ALMACEN_MOV` (mov) / `CODIGO_ALM_FACLIN` (línea venta).
+- **Almacén**: `CODIGO_ALM_MOV` (mov) / `CODIGO_ALM_FACLIN` (línea venta).
 - **Familia**: `fza_articulos.CODIGO_FAM_ART` (nivel artículo).
 - **Temporada**: NO es columna de `fza_articulos`. Es la **propiedad
   'TEMPORADA'** (`fza_propiedades`, `NIVEL_PROP = 'COLOR'` → **2º nivel**),

@@ -371,7 +371,7 @@ begin
       sAgg := 'COUNT(*)';
     end;
     sSku := 'm.CODIGO_UNIDAD_MOV';
-    sArt := 'COALESCE(m.CODIGO_ARTICULO_MOV, s.CODIGO_ART_SKU)';
+    sArt := 'COALESCE(m.CODIGO_ART_MOV, s.CODIGO_ART_SKU)';
     sFrom := ' FROM fza_movimientos_almacen m';
     // El artículo (para familia) sale del SKU del movimiento
     if bFam then
@@ -382,7 +382,7 @@ begin
               '   AND ' + sFecha + ' >= :pD1' +
               '   AND ' + sFecha + ' < DATE_ADD(:pD2, INTERVAL 1 DAY)';
     if CodigoFiltro(cboAlmacen, FCodAlmacenes) <> '' then
-      sWhere := sWhere + '   AND m.CODIGO_ALMACEN_MOV = :pALM';
+      sWhere := sWhere + '   AND m.CODIGO_ALM_MOV = :pALM';
   end;
   // Familia: columna de artículo
   if bFam then
