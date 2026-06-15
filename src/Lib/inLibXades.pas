@@ -559,6 +559,43 @@ begin
             (CompareFileTime(oAhora, ACert^.pCertInfo^.NotAfter) <= 0);
 end;
 
+function FechaCertificadoTexto(const AFecha: TFileTime): string;
+var
+  oLocal: TFileTime;
+  oSistema: TSystemTime;
+  dFecha: TDateTime;
+begin
+  Result := '';
+  if FileTimeToLocalFileTime(AFecha, oLocal) then
+  begin
+    if FileTimeToSystemTime(oLocal, oSistema) then
+    begin
+      dFecha := SystemTimeToDateTime(oSistema);
+      Result := FormatDateTime('dd/mm/yyyy hh:nn:ss', dFecha);
+    end;
+  end;
+end;
+
+function MensajeCertificadoNoVigente(ACert: PXadesCertContext): string;
+var
+  oAhora: TFileTime;
+  sEstado: string;
+  sDesde: string;
+  sHasta: string;
+begin
+  GetSystemTimeAsFileTime(oAhora);
+  if CompareFileTime(oAhora, ACert^.pCertInfo^.NotBefore) < 0 then
+    sEstado := 'todavia no es valido'
+  else
+    sEstado := 'esta caducado';
+  sDesde := FechaCertificadoTexto(ACert^.pCertInfo^.NotBefore);
+  sHasta := FechaCertificadoTexto(ACert^.pCertInfo^.NotAfter);
+  Result := 'El certificado configurado ' + sEstado + '. Vigencia: ' +
+            sDesde + ' - ' + sHasta + '. Seleccione un certificado vigente ' +
+            'en la ficha de empresa o desactive la firma con certificado ' +
+            'para seguir usando SHA-256.';
+end;
+
 function CertificadoCoincide(ACert: PXadesCertContext;
                              const ASerial, ATitular: string): Boolean;
 var
@@ -586,9 +623,12 @@ var
   hStore: THandle;
   pActual: PXadesCertContext;
   sAlmacen: string;
+  sErrorNoVigente: string;
   bSeguir: Boolean;
+  bCoincide: Boolean;
 begin
   Result := nil;
+  sErrorNoVigente := '';
   sAlmacen := cCertStorePersonal;
   hStore := CertOpenSystemStoreW(0, PWideChar(sAlmacen));
   if hStore = 0 then
@@ -601,11 +641,16 @@ begin
       pActual := CertEnumCertificatesInStore(hStore, pActual);
       if pActual = nil then
         bSeguir := False
-      else if CertificadoVigente(pActual) and
-              CertificadoCoincide(pActual, ASerial, ATitular) then
+      else
       begin
-        Result := CertDuplicateCertificateContext(pActual);
-        bSeguir := False;
+        bCoincide := CertificadoCoincide(pActual, ASerial, ATitular);
+        if bCoincide and CertificadoVigente(pActual) then
+        begin
+          Result := CertDuplicateCertificateContext(pActual);
+          bSeguir := False;
+        end
+        else if bCoincide and (sErrorNoVigente = '') then
+          sErrorNoVigente := MensajeCertificadoNoVigente(pActual);
       end;
     end;
     if pActual <> nil then
@@ -614,9 +659,14 @@ begin
     CertCloseStore(hStore, 0);
   end;
   if Result = nil then
-    raise EXadesError.Create('No se encontro en el almacen personal de ' +
-      'Windows un certificado vigente que coincida con el numero de serie ' +
-      'o titular configurado.');
+  begin
+    if sErrorNoVigente <> '' then
+      raise EXadesError.Create(sErrorNoVigente)
+    else
+      raise EXadesError.Create('No se encontro en el almacen personal de ' +
+        'Windows un certificado vigente que coincida con el numero de serie ' +
+        'o titular configurado.');
+  end;
 end;
 
 function FirmarCapiSha256(hProv: ULONG_PTR; dwKeySpec: DWORD;

@@ -1,5 +1,5 @@
 inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
-  Caption = 'Facturas (Venta Mayor)'
+  Caption = 'Borradores (Venta Mayor)'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 17
   inherited pButtonPage: TPanel

@@ -83,12 +83,12 @@
               Width = 90
             end
             object dbcGrdAlbNUMERO_FAC_ALB: TcxGridDBColumn
-              Caption = 'Factura'
+              Caption = 'Borrador'
               DataBinding.FieldName = 'NUMERO_FAC_ALB'
               Width = 90
             end
             object dbcGrdAlbSERIE_FAC_ALB: TcxGridDBColumn
-              Caption = 'Serie Factura'
+              Caption = 'Serie Borrador'
               DataBinding.FieldName = 'SERIE_FAC_ALB'
               Width = 90
             end
@@ -225,7 +225,7 @@
               object lblFacturaDestino: TcxLabel
                 Left = 640
                 Top = 12
-                Caption = 'Factura (N'#250'mero / Serie)'
+                Caption = 'Borrador (N'#250'mero / Serie)'
                 TabOrder = 14
                 Transparent = True
               end
@@ -606,7 +606,7 @@
             Top = 6
             Width = 170
             Height = 28
-            Caption = 'Facturar l'#237'neas selec.'
+            Caption = 'Crear borrador l'#237'neas selec.'
             TabOrder = 2
             OnClick = btnFacturarSeleccionadasClick
           end
@@ -615,7 +615,7 @@
             Top = 6
             Width = 150
             Height = 28
-            Caption = 'Facturar este albar'#225'n'
+            Caption = 'Crear borrador albar'#225'n'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -15
@@ -630,7 +630,7 @@
             Top = 6
             Width = 200
             Height = 28
-            Caption = 'Facturar por fechas / serie'
+            Caption = 'Crear borrador por fechas / serie'
             TabOrder = 4
             OnClick = btnFacturarPorFechasClick
           end
@@ -744,13 +744,13 @@
                     Width = 100
                   end
                   object cxgrdcEsFactAlb: TcxGridDBColumn
-                    Caption = 'Facturada?'
+                    Caption = 'Con borrador?'
                     DataBinding.FieldName = 'ESFACTURADA_ALBLIN'
                     Options.Editing = False
                     Width = 90
                   end
                   object cxgrdcNumFacAlb: TcxGridDBColumn
-                    Caption = 'Factura'
+                    Caption = 'Borrador'
                     DataBinding.FieldName = 'NUMERO_FAC_ALBLIN'
                     Options.Editing = False
                     Width = 90
@@ -773,7 +773,7 @@
               end
             end
             object tsFacturas: TcxTabSheet
-              Caption = 'Facturas'
+              Caption = 'Borradores'
               object cxGrdFacturas: TcxGrid
                 Left = 0
                 Top = 0

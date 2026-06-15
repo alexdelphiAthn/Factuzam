@@ -79,6 +79,7 @@ type
     function  BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem;
                 const Nombre: string): TJvCustomInspectorItem;
     procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
+    procedure AplicarBloqueoParametros;
     procedure CargarParametros(Grid: TJvInspector;
                                const pUsuario, pGrupo: string);
     procedure ConstruirInspector;
@@ -98,6 +99,8 @@ type
                                 Strings: TStrings);
     procedure GetNifsEmpresasList(Sender: TJvCustomInspectorItem;
                                   Strings: TStrings);
+    procedure GetModosVerifactuList(Sender: TJvCustomInspectorItem;
+                                    Strings: TStrings);
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
@@ -129,6 +132,13 @@ begin
       Log.LogError('No se pudo registrar el cambio de configuración ' +
         'Verifactu: ' + E.Message);
   end;
+end;
+
+function UsuarioPuedeEditarParametro(const ANombre: string): Boolean;
+begin
+  Result := True;
+  if StartsText('appVerifactu', ANombre) then
+    Result := SameText(oRootGroup, 'S');
 end;
 
 // -----------------------------------------------------------------------
@@ -268,6 +278,11 @@ begin
                                  [iifValueList, iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetTemporadasList;
             end
+            else if SameText(Param.Nombre, 'appVerifactuModo') then
+            begin
+              ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
+              ItemCombo.OnGetValueList := GetModosVerifactuList;
+            end
             else if SameText(Param.Nombre, 'appVerifactuSifNif') then
             begin
               // Combo editable: el editor plano del inspector rechaza
@@ -286,8 +301,30 @@ begin
           end;
       end;
     end;
+    AplicarBloqueoParametros;
   finally
     JvInspector1.EndUpdate;
+  end;
+end;
+
+procedure TfrmMtoAppParam.AplicarBloqueoParametros;
+var
+  i: Integer;
+  j: Integer;
+  NodoPrincipal: TJvCustomInspectorItem;
+  ParamItem: TJvCustomInspectorItem;
+begin
+  for i := 0 to JvInspector1.Root.Count - 1 do
+  begin
+    NodoPrincipal := JvInspector1.Root.Items[i];
+    if NodoPrincipal is TJvInspectorCustomCategoryItem then
+    begin
+      for j := 0 to NodoPrincipal.Count - 1 do
+      begin
+        ParamItem := NodoPrincipal.Items[j];
+        ParamItem.ReadOnly := not UsuarioPuedeEditarParametro(ParamItem.Name);
+      end;
+    end;
   end;
 end;
 
@@ -397,6 +434,15 @@ begin
   finally
     FreeAndNil(qry);
   end;
+end;
+
+procedure TfrmMtoAppParam.GetModosVerifactuList(
+  Sender: TJvCustomInspectorItem; Strings: TStrings);
+begin
+  Strings.Clear;
+  Strings.Add(cModoVerifactuSin);
+  Strings.Add(cModoVerifactuVerifactu);
+  Strings.Add(cModoVerifactuNoVerifactu);
 end;
 
 procedure TfrmMtoAppParam.GetTemporadasList(
@@ -576,14 +622,18 @@ var
   ParamItem     : TJvCustomInspectorItem;
   ValorAGuardar : string;
   GuardadosCount: Integer;
+  IgnoradosCount: Integer;
   TemaAnterior  : string;
   CambioVerifactu: Boolean;
+  CambioReal: Boolean;
+  PuedeEditar: Boolean;
 begin
   JvInspector1.SaveValues;
   if cmbGrupoUsuario.ItemIndex = -1 then Exit;
   sUsuarioGrupo := cmbGrupoUsuario.Text;
 
   GuardadosCount := 0;
+  IgnoradosCount := 0;
   TemaAnterior   := oAppParams.GetString('appTema');
   CambioVerifactu := False;
 
@@ -621,19 +671,25 @@ begin
           ValorAGuardar := '';
 
         // Solo guardamos si hubo cambio real
+        CambioReal := True;
         if FValoresOriginales.ContainsKey(ParamItem.Name) then
-          if SameText(FValoresOriginales[ParamItem.Name], ValorAGuardar) then
-            Continue;
-
-        qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
-        qry.ParamByName('p_formulario').AsString    := 'frmMtoAppParam';
-        qry.ParamByName('p_subkey').AsString        := ParamItem.Name;
-        qry.ParamByName('p_value').AsString         := ValorAGuardar;
-        qry.Execute;
-        Inc(GuardadosCount);
-        if StartsText('appVerifactu', ParamItem.Name) then
-          CambioVerifactu := True;
-        FValoresOriginales.AddOrSetValue(ParamItem.Name, ValorAGuardar);
+          CambioReal := not SameText(FValoresOriginales[ParamItem.Name],
+                                     ValorAGuardar);
+        PuedeEditar := UsuarioPuedeEditarParametro(ParamItem.Name);
+        if CambioReal and PuedeEditar then
+        begin
+          qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
+          qry.ParamByName('p_formulario').AsString    := 'frmMtoAppParam';
+          qry.ParamByName('p_subkey').AsString        := ParamItem.Name;
+          qry.ParamByName('p_value').AsString         := ValorAGuardar;
+          qry.Execute;
+          Inc(GuardadosCount);
+          if StartsText('appVerifactu', ParamItem.Name) then
+            CambioVerifactu := True;
+          FValoresOriginales.AddOrSetValue(ParamItem.Name, ValorAGuardar);
+        end
+        else if CambioReal and (not PuedeEditar) then
+          Inc(IgnoradosCount);
       end;
     end;
 
@@ -667,7 +723,15 @@ begin
         RegistrarCambioConfiguracionVerifactuSeguro(
           'Parámetros guardados para ' + sUsuarioGrupo + ': ' +
           IntToStr(GuardadosCount));
+      if IgnoradosCount > 0 then
+        ShowMessage(Format('Se ignoraron %d parámetros Verifactu. ' +
+                           'Solo un usuario administrador puede cambiarlos.',
+                           [IgnoradosCount]));
     end
+    else if IgnoradosCount > 0 then
+      ShowMessage(Format('No se guardaron %d parámetros Verifactu. ' +
+                         'Solo un usuario administrador puede cambiarlos.',
+                         [IgnoradosCount]))
     else
       ShowMessage('No se detectaron cambios para guardar.');
   finally
@@ -792,6 +856,7 @@ begin
                     (not SameText(cmbGrupoUsuario.Text, oUser)) and
                     (not SameText(cmbGrupoUsuario.Text, oGroup));
     JvInspector1.ReadOnly := bSoloLectura;
+    AplicarBloqueoParametros;
     btnGuardar.Enabled    := not bSoloLectura;
     actGuardar.Enabled    := not bSoloLectura;
   end;
@@ -853,12 +918,13 @@ begin
         end
       else
         ValorActual := '';
-      if FValoresOriginales.ContainsKey(ParamItem.Name) then
+      if UsuarioPuedeEditarParametro(ParamItem.Name) and
+         FValoresOriginales.ContainsKey(ParamItem.Name) then
       begin
         if not SameText(FValoresOriginales[ParamItem.Name], ValorActual) then
           Exit(True);
       end
-      else
+      else if UsuarioPuedeEditarParametro(ParamItem.Name) then
       begin
         // Item nuevo no capturado: lo consideramos cambio si no está vacío
         if ValorActual <> '' then

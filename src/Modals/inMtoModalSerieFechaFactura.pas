@@ -96,9 +96,9 @@ end;
 procedure TfrmModalSerieFechaFactura.btnAceptarClick(Sender: TObject);
 begin
   if Trim(VarToStr(cbbSerie.EditValue)) = '' then
-    ShowMessage('Seleccione la serie de la factura.')
+    ShowMessage('Seleccione la serie del borrador.')
   else if dtFecha.Date <= 0 then
-    ShowMessage('Indique la fecha de la factura.')
+    ShowMessage('Indique la fecha del borrador.')
   else
   begin
     FResultado.Aceptado := True;

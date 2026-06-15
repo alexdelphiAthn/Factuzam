@@ -1,5 +1,5 @@
 inherited frmModalFacturarTicket: TfrmModalFacturarTicket
-  Caption = 'Facturar ticket (factura en sustituci'#243'n)'
+  Caption = 'Crear borrador normal del ticket'
   ClientHeight = 300
   ClientWidth = 560
   Position = poScreenCenter
@@ -39,7 +39,7 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
   object lblSerie: TcxLabel [4]
     Left = 24
     Top = 107
-    Caption = 'Serie factura:'
+    Caption = 'Serie borrador:'
     Transparent = True
   end
   object cbbSerie: TcxLookupComboBox [5]
@@ -60,7 +60,7 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
   object lblFecha: TcxLabel [6]
     Left = 24
     Top = 147
-    Caption = 'Fecha factura:'
+    Caption = 'Fecha borrador:'
     Transparent = True
   end
   object dtFecha: TcxDateEdit [7]
@@ -91,7 +91,7 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
       Top = 9
       Width = 177
       Height = 40
-      Caption = '&Generar factura'
+      Caption = '&Generar borrador'
       Default = True
       TabOrder = 1
       OnClick = btnGenerarClick

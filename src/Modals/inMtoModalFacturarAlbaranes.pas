@@ -275,7 +275,7 @@ begin
     FQryAlb.Open;
     CargarFacturasAbiertas(sEmp, sPrv);
     if FQryAlb.IsEmpty then
-      ShowMessage('No hay albaranes pendientes de facturar para ese ' +
+      ShowMessage('No hay albaranes pendientes de crear borrador para ese ' +
                   'proveedor.');
   end;
 end;
@@ -330,7 +330,7 @@ begin
   else if FQryAlb.Active and (not FQryAlb.IsEmpty) then
   begin
     if MessageDlg('No has marcado albaranes (Ctrl/Mayus+clic para elegir).' +
-                  sLineBreak + 'Facturar TODOS los listados?',
+                  sLineBreak + 'Crear borrador con TODOS los listados?',
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       FQryAlb.DisableControls;
@@ -383,7 +383,7 @@ begin
     begin
       bSeguir := ResolverFacturaExistente(sSerieAcum, sNumAcum);
       if not bSeguir then
-        ShowMessage('Elige la factura existente a la que incorporar los ' +
+        ShowMessage('Elige el borrador existente al que incorporar los ' +
                     'albaranes.');
     end;
     if bSeguir then
@@ -414,8 +414,8 @@ begin
       FFacNumero  := sNumAcum;
       FConfirmado := nOk > 0;
       ShowMessage(Format(
-        'Facturados %d albaran(es) en la factura %s / %s.' + sLineBreak +
-        'Omitidos (ya facturados o incompatibles): %d.',
+        'Generados %d albaran(es) en el borrador %s / %s.' + sLineBreak +
+        'Omitidos (ya asociados o incompatibles): %d.',
         [nOk, sSerieAcum, sNumAcum, nSkip]));
       if FConfirmado then
         ModalResult := mrOk;

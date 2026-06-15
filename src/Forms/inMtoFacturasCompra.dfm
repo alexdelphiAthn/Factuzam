@@ -1,5 +1,5 @@
 inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
-  Caption = 'Mantenimiento de Facturas de Compra'
+  Caption = 'Mantenimiento de Borradores de Compra'
   ClientHeight = 765
   ClientWidth = 1085
   StyleElements = [seFont, seClient, seBorder]

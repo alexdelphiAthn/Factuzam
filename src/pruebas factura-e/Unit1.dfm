@@ -1,7 +1,7 @@
 ﻿object FormMain: TFormMain
   Left = 0
   Top = 0
-  Caption = 'Convertir Factura en Factura-e'
+  Caption = 'Convertir Borrador en XML electr'#243'nico'
   ClientHeight = 488
   ClientWidth = 1091
   Color = clBtnFace

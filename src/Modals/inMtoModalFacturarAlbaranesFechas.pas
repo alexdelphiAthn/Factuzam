@@ -193,12 +193,13 @@ begin
     end;
     Screen.Cursor := crHourGlass;
     try
-      lblEstado.Caption := Format('Facturando %d albaranes...', [lst.Count]);
+      lblEstado.Caption := Format('Creando borradores de %d albaranes...',
+                                  [lst.Count]);
       Application.ProcessMessages;
       generadas := dmmAlbaranes.FacturarAlbaranesLista(lst,
                                                        chkAgruparPorCliente.Checked);
-      lblEstado.Caption := Format('Generadas %d facturas', [generadas]);
-      ShowMessageFmt('Proceso finalizado. Facturas generadas: %d.',
+      lblEstado.Caption := Format('Generados %d borradores', [generadas]);
+      ShowMessageFmt('Proceso finalizado. Borradores generados: %d.',
                      [generadas]);
       btnBuscarClick(nil);
     finally

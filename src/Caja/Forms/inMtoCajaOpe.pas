@@ -3088,7 +3088,7 @@ begin
     Qry.ParamByName('NUMERO').AsString := ANumero;
     Qry.Open;
     if Qry.IsEmpty then
-      raise Exception.Create('No se encontró la factura ' + ASerie +
+      raise Exception.Create('No se encontró el borrador ' + ASerie +
                              '\' + ANumero + ' a rectificar.');
     if not (DatosCaja.cdsCabecera.State in [dsEdit, dsInsert]) then
       DatosCaja.cdsCabecera.Edit;

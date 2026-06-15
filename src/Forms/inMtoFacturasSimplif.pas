@@ -468,7 +468,7 @@ begin
   else
     FbarProgreso.Max := 1;
   FbarProgreso.Position := 0;
-  FlblProgreso.Caption := 'Cargando facturas...';
+  FlblProgreso.Caption := 'Cargando borradores...';
   FPnlProgreso.Left := (Self.ClientWidth - FPnlProgreso.Width) div 2;
   FPnlProgreso.Top := (Self.ClientHeight - FPnlProgreso.Height) div 2;
   FPnlProgreso.BringToFront;
@@ -485,7 +485,7 @@ begin
       FbarProgreso.Position := APos
     else
       FbarProgreso.Position := FbarProgreso.Max;
-    FlblProgreso.Caption := 'Cargando facturas: ' +
+    FlblProgreso.Caption := 'Cargando borradores: ' +
                             FormatFloat('#,##0', APos) + ' / ' +
                             FormatFloat('#,##0', AMax);
     Application.ProcessMessages;

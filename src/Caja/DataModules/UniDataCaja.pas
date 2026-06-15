@@ -242,7 +242,7 @@ type
             AFecha:          TDateTime;
             // 'SIMPLIFICADA', 'NORMAL', 'RECTIFICATIVA'
             const ATipo:     string;
-            const AFase:     string;   // 'BORRADOR', 'ONLINE', etc.
+            const AFase:     string;   // 'BORRADOR', 'VERIFACTU_OK', etc.
             // — empresa emisora —
             const AEmpresa,
                   ARazonSocialEmp,
@@ -1472,18 +1472,23 @@ begin
           Cab.CodigoCliente, 'Devolución de Venta');
     end;
     // =======================================================================
-    // PASO 4.6: REGISTRO FISCAL VERI*FACTU / NO VERI*FACTU
+    // PASO 4.6: REGISTRO FISCAL
     // Dentro de la transacción: la factura nace con su registro fiscal.
-    // Si Verifactu está activo se encola para AEAT; si no, queda firmada
-    // localmente como NO VERI*FACTU.
+    // El modo fiscal decide si se encola en AEAT, se registra localmente
+    // como NO VERI*FACTU o se marca como SIN VERIFACTU.
     // =======================================================================
     if RequiereFactura then
     begin
-      if VerifactuActivo then
-        TVerifactuCola.EncolarFactura(QryTrx, SerieGenerada, NumFactura)
+      case ModoVerifactu of
+        mvVerifactu:
+          TVerifactuCola.EncolarFactura(QryTrx, SerieGenerada, NumFactura);
+        mvNoVerifactu:
+          TVerifactuCola.RegistrarFacturaNoVerifactu(QryTrx, SerieGenerada,
+                                                     NumFactura);
       else
-        TVerifactuCola.RegistrarFacturaNoVerifactu(QryTrx, SerieGenerada,
-                                                   NumFactura);
+        TVerifactuCola.MarcarFacturaSinVerifactu(QryTrx, SerieGenerada,
+                                                 NumFactura);
+      end;
     end;
     // =======================================================================
     // PASO 5: FORMAS DE PAGO (Se ejecuta siempre que haya importe)
@@ -2026,7 +2031,7 @@ begin
     Add('ESCONSOLIDADA_FAC', ftString, 1);
     Add('INSTANTECONSO_FAC', ftDateTime, 0);
     Add('TIPO_FAC', ftString, 20); // NORMAL, SIMPLIFICADA...
-    Add('FASE_FAC', ftString, 20); // BORRADOR, ONLINE...
+    Add('FASE_FAC', ftString, 20); // BORRADOR, VERIFACTU_OK...
     Add('CODIGO_EMP_FAC', ftString, 8);
     Add('RAZON_SOCIAL_EMPRESA_FAC', ftString, 200);
     Add('NIF_EMPRESA_FAC', ftString, 50);

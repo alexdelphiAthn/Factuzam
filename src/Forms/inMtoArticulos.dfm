@@ -2509,7 +2509,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
     Left = 528
     Top = 352
     object actFacturas: TAction
-      Caption = 'actFacturas'
+      Caption = 'actBorradores'
       ShortCut = 49222
       OnExecute = actFacturasExecute
     end

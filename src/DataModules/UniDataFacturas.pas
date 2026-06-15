@@ -581,14 +581,14 @@ begin
           // Si hay error, mostrar mensaje
           if facTotales.MensajeError <> '' then
             ShowMessage(
-              'Error al calcular factura: ' + facTotales.MensajeError);
+              'Error al calcular borrador: ' + facTotales.MensajeError);
         end;
       finally
         FreeAndNil(facTotales);
       end;
     except
       on E: Exception do
-        ShowMessage('Error en cálculo de factura: ' + E.Message);
+        ShowMessage('Error en cálculo de borrador: ' + E.Message);
     end;
   end;
 end;
@@ -1410,10 +1410,10 @@ begin
      (DataSet.FieldByName(ffasefac).AsString <> '') and
      (not SameText(DataSet.FieldByName(ffasefac).AsString, 'BORRADOR')) then
   begin
-    ShowMessage('La factura está en fase ' +
+    ShowMessage('El borrador está en fase ' +
                 DataSet.FieldByName(ffasefac).AsString +
                 ': ya se ha lanzado a Verifactu y no puede borrarse. ' +
-                'Use Anular Verifactu o emita una rectificativa.');
+                'Use Anular registro fiscal o emita una rectificativa.');
     Abort;
   end;
   qryBorrarLineas := TUniQuery.Create(Self);
@@ -1526,13 +1526,13 @@ begin
      (unqryTablaG.FieldByName('NUMERO_FAC').AsString = '0') or
      (unqryTablaG.FieldByName('SERIE_FAC').AsString = '') then
   begin
-    ShowMessage('Debe grabar primero la factura antes de añadir líneas');
+    ShowMessage('Debe grabar primero el borrador antes de añadir líneas');
     Abort;
   end;
   // Verificar estado de consolidación
 //  if (unqryTablaG.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S') then
 //  begin
-//    ShowMessage('No se pueden añadir líneas a una factura consolidada');
+//    ShowMessage('No se pueden añadir líneas a un borrador cerrado');
 //    Abort;
 //  end;
 end;
@@ -1621,7 +1621,7 @@ begin
        (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') and
        (IsError = False) then
     begin
-      ShowMessage('Debe escribir la razón social del cliente a facturar ');
+      ShowMessage('Debe escribir la razón social del cliente del borrador');
       frmFac.pcCab.ActivePage := frmFac.tsDatosCliente;
       frmFac.txtRAZONSOCIAL_CLIENTE_FACTURA.SetFocus;
       IsError := True;
@@ -1629,8 +1629,7 @@ begin
     if (FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsSTring = '') and
        (IsError = False) then
     begin
-      ShowMessage('Debe escribir la razón social de ' +
-                  ' la empresa a facturar ');
+      ShowMessage('Debe escribir la razón social de la empresa del borrador');
       frmFac.pcCab.ActivePage := frmFac.tsEmpresa;
       frmFac.txtRAZONSOCIAL_EMPRESA_FACTURA.SetFocus;
       IsError := True;
@@ -1638,7 +1637,7 @@ begin
     if (FieldByName('SERIE_FAC').AsString = '') and
        (IsError = False) then
     begin
-      ShowMessage('Debe seleccionar una serie para facturar ');
+      ShowMessage('Debe seleccionar una serie del borrador');
       frmFac.pcCab.ActivePage := frmFac.tsCabecera;
       frmFac.cbbSerieFactura.SetFocus;
       IsError := True;
@@ -1660,7 +1659,7 @@ begin
     if (not IsError) and bValidar and
        (FieldByName('FECHA_FAC').AsString = '') then
     begin
-      ShowMessage('Debe indicar la fecha de la factura.');
+      ShowMessage('Debe indicar la fecha del borrador.');
       frmFac.pcCab.ActivePage := frmFac.tsCabecera;
       IsError := True;
     end;
@@ -1681,7 +1680,7 @@ begin
         ShowMessage('La fecha ' +
           FormatDateTime('dd/mm/yyyy',
                          FieldByName('FECHA_FAC').AsDateTime) +
-          ' es anterior a la ultima factura de la serie (' +
+          ' es anterior al ultimo borrador de la serie (' +
           FormatDateTime('dd/mm/yyyy', dtUltima) +
           '). La numeracion debe seguir orden cronologico.');
         frmFac.pcCab.ActivePage := frmFac.tsCabecera;
@@ -1692,10 +1691,10 @@ begin
     if (not IsError) and bValidar and
        (FieldByName('FECHA_FAC').AsString <> '') and
        (FieldByName('FECHA_FAC').AsDateTime > Date) then
-      ShowMessage('Aviso: la fecha de la factura es posterior a hoy.');
+      ShowMessage('Aviso: la fecha del borrador es posterior a hoy.');
     if IsError then
     begin
-      raise Exception.Create('No se ha grabado la cabecera de la factura');
+      raise Exception.Create('No se ha grabado la cabecera del borrador');
     end
     else
       if ((State = dsEdit) or (State = dsInsert)) then

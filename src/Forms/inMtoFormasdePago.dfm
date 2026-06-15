@@ -82,7 +82,7 @@
               Width = 92
             end
             object cxGrdDBTabPrinESVERBANCOEMPRESA_FORMAPAGO: TcxGridDBColumn
-              Caption = 'Ver Banco Empresa Factura'
+              Caption = 'Ver Banco Empresa Borrador'
               DataBinding.FieldName = 'ESVERBANCOEMPRESA_FORMA_PAGO_FP'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
@@ -271,7 +271,7 @@
               object chkESVERBANCOEMPRESA_FORMA_PAGO_FP: TcxDBCheckBox
                 Left = 76
                 Top = 198
-                Caption = 'Ver Banco Empresa en Factura'
+                Caption = 'Ver Banco Empresa en Borrador'
                 DataBinding.DataField = 'ESVERBANCOEMPRESA_FORMA_PAGO_FP'
                 DataBinding.DataSource = dsTablaG
                 Properties.ValueChecked = 'S'
@@ -883,7 +883,7 @@
                     Top = 16
                     Width = 109
                     Height = 34
-                    Caption = '&Ir a Factura'
+                    Caption = '&Ir a Borrador'
                     TabOrder = 0
                     OnClick = btnIraFacturaClick
                   end
@@ -1127,7 +1127,7 @@
       OnExecute = actArticulosExecute
     end
     object actFacturas: TAction
-      Caption = 'actFacturas'
+      Caption = 'actBorradores'
       ShortCut = 49222
       OnExecute = actFacturasExecute
     end

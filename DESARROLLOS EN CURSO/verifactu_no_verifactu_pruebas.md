@@ -13,7 +13,8 @@ Pruebas del desarrollo descrito en
    ```
 
 3. Abrir parámetros de aplicación y localizar la categoría **Verifactu**.
-4. Confirmar que existe `appVerifactuFirmaCertificado`.
+4. Confirmar que existen `appVerifactuModo` y
+   `appVerifactuFirmaCertificado`.
 5. Para las pruebas XAdES: seleccionar un certificado FNMT válido en la ficha
    de empresa (`CODIGO_CERTIFICADO_EMP` y `TITULAR_CERTIFICADO_EMP`).
 
@@ -46,6 +47,7 @@ Abrir parámetros de aplicación.
 
 Resultado esperado:
 
+- `appVerifactuModo=SIN`.
 - `appVerifactuFirmaCertificado=False`.
 
 **B2 - Persistencia.**
@@ -56,19 +58,32 @@ Resultado esperado:
 
 - El valor persiste igual que el resto de parámetros de `frmMtoAppParam`.
 
+**B3 - Bloqueo para usuario no administrador.**
+
+Entrar con un usuario cuyo grupo no sea administrador.
+
+Resultado esperado:
+
+- Los parámetros `appVerifactu*` aparecen en solo lectura.
+- Si se fuerza un cambio desde el inspector, no se guarda.
+- El mensaje indica que solo un administrador puede cambiar parámetros
+  Verifactu.
+
 ## C. Registro NO VERI*FACTU sin certificado
 
 Configuración:
 
-- `appVerifactuActivo=False`.
+- `appVerifactuModo=NO_VERIFACTU`.
 - `appVerifactuFirmaCertificado=False`.
 
-Crear una factura desde caja o lanzar una factura en borrador desde Facturas.
+Crear un borrador desde caja o lanzar un borrador desde Borradores.
 
 Resultado esperado:
 
 - No se crea fila en `fza_verifactu_cola`.
 - Sí se crea o actualiza fila en `fza_facturas_consolidaciones`.
+- `FASE_FAC='NOVERIFACTU_OK'`.
+- `ESTADO_FACCON='NOVERIF_REGISTRADO'`.
 - `CHAIN_HASH_FACCON` tiene SHA-256 en mayúsculas.
 - `FIRMA_DIGITAL_FACCON` contiene la misma huella SHA-256 del registro.
 - Las columnas de certificado quedan vacías.
@@ -92,11 +107,11 @@ SELECT SERIE_FAC_FACCON,
 
 Configuración:
 
-- `appVerifactuActivo=False`.
+- `appVerifactuModo=NO_VERIFACTU`.
 - `appVerifactuFirmaCertificado=True`.
 - Empresa con certificado FNMT instalado y seleccionado.
 
-Crear una factura desde caja o lanzar una factura en borrador.
+Crear un borrador desde caja o lanzar un borrador.
 
 Resultado esperado:
 
@@ -127,11 +142,11 @@ SELECT SERIE_FAC_FACCON,
 
 Configuración:
 
-- `appVerifactuActivo=False`.
+- `appVerifactuModo=NO_VERIFACTU`.
 - `appVerifactuFirmaCertificado=True`.
 - Empresa sin certificado seleccionado.
 
-Crear una factura.
+Crear un borrador.
 
 Resultado esperado:
 
@@ -139,18 +154,38 @@ Resultado esperado:
 - Se muestra error claro indicando que falta certificado de empresa.
 - No se avanza la cadena fiscal si la transacción se revierte.
 
+**E2 - Certificado caducado o no vigente.**
+
+Configuración:
+
+- `appVerifactuModo=NO_VERIFACTU`.
+- `appVerifactuFirmaCertificado=True`.
+- Empresa con un certificado seleccionado que exista en Windows pero no este
+  vigente.
+
+Crear un borrador.
+
+Resultado esperado:
+
+- La firma XAdES no se genera.
+- Se muestra un error indicando que el certificado esta caducado o todavia no
+  es valido, incluyendo su rango de vigencia.
+- No se hace fallback automatico a SHA-256.
+- El borrador no debe quedar cerrado fiscalmente ni debe avanzar la cadena si
+  la transaccion se revierte.
+
 ## F. Anulación NO VERI*FACTU
 
-Con una factura ya registrada localmente:
+Con un borrador ya registrado localmente:
 
-1. Ejecutar Anular Verifactu desde Facturas o Buscar operaciones.
+1. Ejecutar Anular registro fiscal desde Borradores o Buscar operaciones.
 2. Repetir en modo SHA-256 y en modo XAdES.
 
 Resultado esperado:
 
 - Se genera registro de anulación.
-- La factura pasa a `FASE_FAC='CANCELADA'`.
-- `ESTADO_FACCON` queda `ANULADO_NO_VERIFACTU`.
+- El borrador pasa a `FASE_FAC='NOVERIFACTU_ANULADA'`.
+- `ESTADO_FACCON` queda `NOVERIF_ANULADO`.
 - La cadena `fza_verifactu_cadena` avanza.
 
 ## G. Exportación

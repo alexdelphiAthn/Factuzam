@@ -664,7 +664,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Top = 198
           Width = 155
           Height = 51
-          Caption = '&Factura'
+          Caption = '&Borrador'
           Colors.Default = clBtnFace
           Colors.Normal = clBtnFace
           Colors.Hot = clSilver
@@ -1221,7 +1221,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
       OnExecute = actDepositoClienteExecute
     end
     object actFactura: TAction
-      Caption = 'Factura'
+      Caption = 'Borrador'
       ShortCut = 119
       OnExecute = actFacturaExecute
     end

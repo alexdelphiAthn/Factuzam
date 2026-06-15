@@ -1456,11 +1456,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         OnClick = Devoluciones1Click
       end
       object FacturarAlbaranes1: TMenuItem
-        Caption = 'Facturar albaranes...'
+        Caption = 'Crear borradores de albaranes...'
         OnClick = FacturarAlbaranes1Click
       end
       object Facturas1: TMenuItem
-        Caption = 'Facturas'
+        Caption = 'Borradores'
         ShortCut = 57414
         OnClick = Facturas1Click
       end
@@ -1616,7 +1616,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000}
-        Caption = 'Facturas'
+        Caption = 'Borradores'
         ShortCut = 49222
         OnClick = mnuFacturasClick
       end
@@ -1687,7 +1687,7 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         OnClick = mnuCajaArqueosHistClick
       end
       object mnuFacturasSimplif: TMenuItem
-        Caption = 'Facturas Simplificadas'
+        Caption = 'Borradores Simplificados'
         ShortCut = 24646
         OnClick = mnuFacturasSimplifClick
       end

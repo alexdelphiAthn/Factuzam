@@ -68,7 +68,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Width = 171
             end
             object cxgrdbclmnGrdDBTabPrinNRO_FACTURA: TcxGridDBColumn
-              Caption = 'Nro Factura'
+              Caption = 'Nro Borrador'
               DataBinding.FieldName = 'NUMERO_FAC'
               Width = 113
             end
@@ -415,13 +415,13 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Width = 147
             end
             object cxgrdbclmnGrdDBTabPrinNRO_FACTURA_ABONO_FACTURA: TcxGridDBColumn
-              Caption = 'Nro Factura Abono'
+              Caption = 'Nro Borrador Abono'
               DataBinding.FieldName = 'NUMERO_FAC_ABONO_FAC'
               Visible = False
               Width = 170
             end
             object cxgrdbclmnGrdDBTabPrinSERIE_FACTURA_ABONO_FACTURA: TcxGridDBColumn
-              Caption = 'Serie Factura Abono'
+              Caption = 'Serie Borrador Abono'
               DataBinding.FieldName = 'SERIE_FAC_ABONO_FAC'
               Visible = False
               Width = 194
@@ -431,7 +431,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Visible = False
             end
             object cxgrdbclmnGrdDBTabPrinCOMENTARIOS_FACTURA: TcxGridDBColumn
-              Caption = 'Comentarios Factura'
+              Caption = 'Comentarios Borrador'
               DataBinding.FieldName = 'COMENTARIOS_FAC'
               Visible = False
               Width = 213
@@ -443,7 +443,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Width = 685
             end
             object cxgrdbclmnGrdDBTabPrinTEXTO_LEGAL_FACTURA_CLIENTE_FACTURA: TcxGridDBColumn
-              Caption = 'Texto legal Cliente en Factura'
+              Caption = 'Texto legal Cliente en Borrador'
               DataBinding.FieldName = 'TEXTO_LEGAL_CLIENTE_FAC'
               Visible = False
               Width = 376
@@ -470,7 +470,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Visible = False
             end
             object cxGrdDBTabPrinESIVA_EXENTO_CLIENTE_FACTURA: TcxGridDBColumn
-              Caption = 'Factura Exenta IVA'
+              Caption = 'Borrador Exento IVA'
               DataBinding.FieldName = 'ESIVA_EXENTO_CLIENTE_FAC'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
@@ -505,7 +505,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Width = 106
             end
             object cxGrdDBTabPrinCODIGO_IVA_FACTURA: TcxGridDBColumn
-              Caption = 'C'#243'digo IVA Factura'
+              Caption = 'C'#243'digo IVA Borrador'
               DataBinding.FieldName = 'CODIGO_IVA_FAC'
               Visible = False
               Width = 186
@@ -532,7 +532,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Width = 146
             end
             object cxGrdDBTabPrinCONTADOR_LINEAS_FACTURA: TcxGridDBColumn
-              Caption = 'Ult Nro Linea Factura'
+              Caption = 'Ult Nro Linea Borrador'
               DataBinding.FieldName = 'CONTADOR_LINEAS_FAC'
               Visible = False
               Width = 183
@@ -710,7 +710,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              Caption = '&1_Lineas de Factura - '
+              Caption = '&1_Lineas de Borrador - '
               ImageIndex = 1
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
@@ -1174,7 +1174,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                Caption = 'Total Retenci'#243'n Factura'
+                Caption = 'Total Retenci'#243'n Borrador'
                 TabOrder = 7
                 Transparent = True
               end
@@ -1185,7 +1185,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                Caption = '% Retenci'#243'n Factura'
+                Caption = '% Retenci'#243'n Borrador'
                 TabOrder = 8
                 Transparent = True
               end
@@ -1808,13 +1808,13 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                     OptionsView.GroupByBox = False
                     OptionsView.Indicator = True
                     object cxgrdbclmnRecibosNRO_FACTURA_RECIBO: TcxGridDBColumn
-                      Caption = 'Nro Factura Recibo'
+                      Caption = 'Nro Borrador Recibo'
                       DataBinding.FieldName = 'NUMERO_FAC_REC'
                       Visible = False
                       VisibleForCustomization = False
                     end
                     object cxgrdbclmnRecibosSERIE_FACTURA_RECIBO: TcxGridDBColumn
-                      Caption = 'Serie Factura Recibo'
+                      Caption = 'Serie Borrador Recibo'
                       DataBinding.FieldName = 'SERIE_FAC_REC'
                       Visible = False
                       VisibleForCustomization = False
@@ -2353,7 +2353,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Top = 53
                   Width = 140
                   Height = 34
-                  Caption = 'Anular Verifactu'
+                  Caption = 'Anular fiscal'
                   TabOrder = 14
                   OnClick = btnVerifactuAnularClick
                 end
@@ -2596,7 +2596,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                Caption = '&Cabecera Factura '
+                Caption = '&Cabecera Borrador '
                 ImageIndex = 0
                 object lblNroFactura: TcxLabel
                   Left = 45
@@ -2605,7 +2605,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  Caption = 'Nro Factura'
+                  Caption = 'Nro Borrador'
                   TabOrder = 1
                   Transparent = True
                 end
@@ -2642,7 +2642,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  Caption = 'Serie Factura'
+                  Caption = 'Serie Borrador'
                   TabOrder = 6
                   Transparent = True
                 end
@@ -2770,7 +2770,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                 object chkConsolidada: TcxDBCheckBox
                   Left = 36
                   Top = 250
-                  Caption = 'La factura est'#225' consolidadada'
+                  Caption = 'El borrador est'#225' cerrado'
                   DataBinding.DataField = 'ESCONSOLIDADA_FAC'
                   DataBinding.DataSource = dsTablaG
                   Enabled = False
@@ -2812,7 +2812,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  Caption = 'Tipo Factura'
+                  Caption = 'Tipo Borrador'
                   TabOrder = 14
                   Transparent = True
                 end
@@ -2833,7 +2833,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  Caption = 'Vendedor Factura'
+                  Caption = 'Vendedor Borrador'
                   TabOrder = 16
                   Transparent = True
                 end
@@ -2864,7 +2864,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  Caption = 'Fase Factura'
+                  Caption = 'Fase Borrador'
                   TabOrder = 19
                   Transparent = True
                 end
@@ -3087,7 +3087,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   object chkRETENCION_EMPRESA_FACTURA: TcxDBCheckBox
                     Left = 372
                     Top = 138
-                    Caption = 'Empresa practica retenci'#243'n en Factura'
+                    Caption = 'Empresa practica retenci'#243'n en Borrador'
                     DataBinding.DataField = 'ESRETENCIONES_EMPRESA_FAC'
                     DataBinding.DataSource = dsTablaG
                     Properties.ValueChecked = 'S'
@@ -3700,7 +3700,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
       Top = 229
       Width = 140
       Height = 34
-      Caption = '&Nueva Factura'
+      Caption = '&Nuevo Borrador'
       TabOrder = 2
       OnClick = sbNuevaFacturaClick
     end
