@@ -840,10 +840,9 @@ end;
 function BuscarFinEtiqueta(const AXml: string; APosIni: Integer): Integer;
   forward;
 
-function NormalizarSaltosCanonicalXml(const AXml: string): string;
+function EscaparRetornosCarroCanonicalXml(const AXml: string): string;
 begin
-  Result := StringReplace(AXml, #13#10, #10, [rfReplaceAll]);
-  Result := StringReplace(Result, #13, #10, [rfReplaceAll]);
+  Result := StringReplace(AXml, #13, '&#xD;', [rfReplaceAll]);
 end;
 
 function NombreEtiquetaApertura(const AEtiqueta: string): string;
@@ -926,8 +925,8 @@ begin
     if iFinDecl > 0 then
       Result := Trim(Copy(Result, iFinDecl + 2, MaxInt));
   end;
-  Result := NormalizarSaltosCanonicalXml(Result);
   Result := ExpandirEtiquetasVaciasCanonicalXml(Result);
+  Result := EscaparRetornosCarroCanonicalXml(Result);
 end;
 
 function BuscarFinEtiqueta(const AXml: string; APosIni: Integer): Integer;
