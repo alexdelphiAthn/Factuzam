@@ -6,7 +6,7 @@ código global de Factuzam** hasta que cada desarrollo se acepte. Se trata
 en *staging*) y usa **namespace propio en BBDD** para no mezclarse con el
 esquema real:
 
-- Vistas nuevas: prefijo `vi_estadisticas_*` (solo lectura sobre `fza_*`).
+- Vistas nuevas: prefijo `viest_*` (solo lectura sobre `fza_*`).
 - Tablas de prueba: prefijo `fzaest_*` (desechables; nunca `fza_*`).
 - Sobre el esquema real `fza_*`: solo vistas, **ningún cambio**.
 

@@ -4,12 +4,12 @@
 -- Para PROBAR si una tabla de acumulados acelera frente a la vista en vivo,
 -- sin tocar el esquema real. Todo lo de aquí usa el prefijo 'fzaest_' (tablas)
 -- para diferenciarlo de 'fza_'. Es desechable: un DROP de las fzaest_* deja la
--- BBDD como estaba. Depende de vistas_estadisticas.sql (lee vi_estadisticas_dia).
+-- BBDD como estaba. Depende de vistas_estadisticas.sql (lee viest_dia).
 --
 -- Al ser un sandbox aislado, NO se siguen las convenciones de columnas de
 -- 'fza_' (sufijo por tabla, etc.): nombres planos para legibilidad.
 -- =============================================================================
--- Tabla de acumulado diario (mismo grano y medidas que vi_estadisticas_dia)
+-- Tabla de acumulado diario (mismo grano y medidas que viest_dia)
 CREATE TABLE IF NOT EXISTS fzaest_estadisticas_dia (
   FECHA            date          NOT NULL,
   CODIGO_ALMACEN   varchar(10)   NOT NULL,
@@ -42,7 +42,7 @@ BEGIN
   SELECT FECHA, CODIGO_ALMACEN, CODIGO_FAMILIA, TEMPORADA,
          NUM_MOVIMIENTOS, UNIDADES_MOV, COSTE_MOV,
          NUM_LINEAS_VENTA, UNIDADES_VENTA, IMPORTE_VENTA
-    FROM vi_estadisticas_dia
+    FROM viest_dia
    WHERE FECHA BETWEEN pD1 AND pD2;
 END //
 DELIMITER ;
@@ -50,7 +50,7 @@ DELIMITER ;
 -- Uso / benchmark:
 --   CALL fzaest_recalcular_rango('2020-01-01', CURDATE());   -- carga inicial
 --   -- Comparar tiempos del MISMO rango largo:
---   --   en vivo:        SELECT ... FROM vi_estadisticas_dia      WHERE ...
+--   --   en vivo:        SELECT ... FROM viest_dia      WHERE ...
 --   --   pre-agregado:   SELECT ... FROM fzaest_estadisticas_dia  WHERE ...
 -- Limpieza total del experimento:
 --   DROP PROCEDURE IF EXISTS fzaest_recalcular_rango;

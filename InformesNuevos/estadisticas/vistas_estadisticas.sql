@@ -19,7 +19,7 @@
 --   Familia SÍ es de artículo (fza_articulos.CODIGO_FAM_ART).
 -- =============================================================================
 -- 0) Resolver de temporada: una fila por (artículo, clave de nivel)
-CREATE OR REPLACE VIEW vi_propiedad_temporada AS
+CREATE OR REPLACE VIEW viest_temporada AS
 SELECT
   p.CODIGO_ART_ART                          AS CODIGO_ART,
   p.CODIGO_UNIDAD_ARTPROP                    AS CLAVE_NIVEL,
@@ -29,7 +29,7 @@ LEFT JOIN fza_propiedades_valores pv
   ON pv.ID_PV_ARTPROP = p.ID_PV_ARTPROP
 WHERE p.CODIGO_PROP_ARTPROP = 'TEMPORADA';
 -- 1) Movimientos de almacén agregados por día
-CREATE OR REPLACE VIEW vi_estadisticas_movimientos_dia AS
+CREATE OR REPLACE VIEW viest_movimientos_dia AS
 SELECT
   DATE(m.FECHA_MOV)                              AS FECHA,
   m.CODIGO_ALMACEN_MOV                           AS CODIGO_ALMACEN,
@@ -43,10 +43,10 @@ LEFT JOIN fza_articulos_skus s
   ON s.CODIGO_UNIDAD_SKU = m.CODIGO_UNIDAD_MOV
 LEFT JOIN fza_articulos a
   ON a.CODIGO_ART_ART = COALESCE(m.CODIGO_ARTICULO_MOV, s.CODIGO_ART_SKU)
-LEFT JOIN vi_propiedad_temporada tcol
+LEFT JOIN viest_temporada tcol
   ON tcol.CODIGO_ART  = SUBSTRING_INDEX(m.CODIGO_UNIDAD_MOV, '/', 1)
  AND tcol.CLAVE_NIVEL = SUBSTRING_INDEX(m.CODIGO_UNIDAD_MOV, '/', 2)
-LEFT JOIN vi_propiedad_temporada tart
+LEFT JOIN viest_temporada tart
   ON tart.CODIGO_ART  = SUBSTRING_INDEX(m.CODIGO_UNIDAD_MOV, '/', 1)
  AND tart.CLAVE_NIVEL = ''
 WHERE m.ESACTIVO_MOV = 'S'
@@ -54,7 +54,7 @@ GROUP BY DATE(m.FECHA_MOV), m.CODIGO_ALMACEN_MOV,
          COALESCE(a.CODIGO_FAM_ART, ''),
          COALESCE(tcol.TEMPORADA, tart.TEMPORADA, '');
 -- 2) Ventas (líneas de factura) agregadas por día
-CREATE OR REPLACE VIEW vi_estadisticas_ventas_dia AS
+CREATE OR REPLACE VIEW viest_ventas_dia AS
 SELECT
   f.FECHA_FAC                                    AS FECHA,
   l.CODIGO_ALM_FACLIN                            AS CODIGO_ALMACEN,
@@ -69,10 +69,10 @@ JOIN fza_facturas f
  AND f.SERIE_FAC  = l.SERIE_FAC_FACLIN
 LEFT JOIN fza_articulos a
   ON a.CODIGO_ART_ART = l.CODIGO_ART_FACLIN
-LEFT JOIN vi_propiedad_temporada tcol
+LEFT JOIN viest_temporada tcol
   ON tcol.CODIGO_ART  = SUBSTRING_INDEX(l.CODIGO_UNIDAD_FACLIN, '/', 1)
  AND tcol.CLAVE_NIVEL = SUBSTRING_INDEX(l.CODIGO_UNIDAD_FACLIN, '/', 2)
-LEFT JOIN vi_propiedad_temporada tart
+LEFT JOIN viest_temporada tart
   ON tart.CODIGO_ART  = SUBSTRING_INDEX(l.CODIGO_UNIDAD_FACLIN, '/', 1)
  AND tart.CLAVE_NIVEL = ''
 GROUP BY f.FECHA_FAC, l.CODIGO_ALM_FACLIN,
@@ -80,7 +80,7 @@ GROUP BY f.FECHA_FAC, l.CODIGO_ALM_FACLIN,
          COALESCE(tcol.TEMPORADA, tart.TEMPORADA, '');
 -- 3) Vista unificada: una fila por (día, almacén, familia, temporada) con
 --    todas las medidas. Es la que consultaría el panel/lab.
-CREATE OR REPLACE VIEW vi_estadisticas_dia AS
+CREATE OR REPLACE VIEW viest_dia AS
 SELECT
   FECHA, CODIGO_ALMACEN, CODIGO_FAMILIA, TEMPORADA,
   SUM(NUM_MOVIMIENTOS)  AS NUM_MOVIMIENTOS,
@@ -93,23 +93,23 @@ FROM (
   SELECT FECHA, CODIGO_ALMACEN, CODIGO_FAMILIA, TEMPORADA,
          NUM_MOVIMIENTOS, UNIDADES_MOV, COSTE_MOV,
          0 AS NUM_LINEAS_VENTA, 0 AS UNIDADES_VENTA, 0 AS IMPORTE_VENTA
-    FROM vi_estadisticas_movimientos_dia
+    FROM viest_movimientos_dia
   UNION ALL
   SELECT FECHA, CODIGO_ALMACEN, CODIGO_FAMILIA, TEMPORADA,
          0, 0, 0,
          NUM_LINEAS_VENTA, UNIDADES_VENTA, IMPORTE_VENTA
-    FROM vi_estadisticas_ventas_dia
+    FROM viest_ventas_dia
 ) u
 GROUP BY FECHA, CODIGO_ALMACEN, CODIGO_FAMILIA, TEMPORADA;
 -- 4) Lista de temporadas (para el combo de filtro del panel)
-CREATE OR REPLACE VIEW vi_estadisticas_temporadas AS
+CREATE OR REPLACE VIEW viest_temporadas AS
 SELECT DISTINCT TEMPORADA
-FROM vi_propiedad_temporada
+FROM viest_temporada
 WHERE TEMPORADA IS NOT NULL AND TEMPORADA <> '';
 -- -----------------------------------------------------------------------------
 -- Ejemplo de consulta del panel (comparativa diaria de un rango):
 --   SELECT DATEDIFF(FECHA, :pD1) AS BUCKET, SUM(IMPORTE_VENTA) AS VALOR
---     FROM vi_estadisticas_dia
+--     FROM viest_dia
 --    WHERE FECHA >= :pD1 AND FECHA <= :pD2
 --      AND (:pALM  = '' OR CODIGO_ALMACEN = :pALM)
 --      AND (:pFAM  = '' OR CODIGO_FAMILIA = :pFAM)
