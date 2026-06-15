@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasBase                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1343,7 +1343,6 @@ end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
 var
-  Componente: TComponent;
   sVista: string;
 begin
   inherited;
@@ -1372,10 +1371,6 @@ begin
   // se generan movimientos siempre. Lo ocultamos para que el descendiente
   // simplificado no muestre la opcion.
   chkMueveStock.Visible := SameText(TipoFacturaFiltro, 'NORMAL');
-  Componente := FindComponent('tsParametrosEDoc');
-  if Componente is TcxTabSheet then
-    TcxTabSheet(Componente).TabVisible := SameText(TipoFacturaFiltro,
-                                                   'NORMAL');
   // Convertir en normal solo aplica a facturas simplificadas (F3 AEAT)
   btnVerifactuFacturar.Visible :=
                               SameText(TipoFacturaFiltro, 'SIMPLIFICADA');

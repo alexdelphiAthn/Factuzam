@@ -1,4 +1,4 @@
-inherited frmMtoFacturasBase: TfrmMtoFacturasBase
+﻿inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
@@ -3554,69 +3554,6 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   Caption = 'I&r a Cliente'
                   TabOrder = 2
                   OnClick = btnIrAClienteClick
-                end
-              end
-            end
-            object tsParametrosEDoc: TcxTabSheet
-              Caption = 'Par'#225'metros eDoc'
-              ImageIndex = 3
-              object grpParametrosEDoc: TcxGroupBox
-                Left = 22
-                Top = 13
-                Caption = 'Centros administrativos DIR3'
-                TabOrder = 0
-                Height = 174
-                Width = 620
-                object lblOficinaContableEDoc: TcxLabel
-                  Left = 30
-                  Top = 32
-                  Caption = 'Oficina contable'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 0
-                  Transparent = True
-                  AnchorX = 163
-                end
-                object txtCODIGO_OFICINA_CONTABLE_FACTURA: TcxDBTextEdit
-                  Left = 170
-                  Top = 28
-                  DataBinding.DataField = 'CODIGO_OFICINA_CONTABLE_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 1
-                  Width = 160
-                end
-                object lblOrganoGestorEDoc: TcxLabel
-                  Left = 57
-                  Top = 72
-                  Caption = 'Organo gestor'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 2
-                  Transparent = True
-                  AnchorX = 163
-                end
-                object txtCODIGO_ORGANO_GESTOR_FACTURA: TcxDBTextEdit
-                  Left = 170
-                  Top = 68
-                  DataBinding.DataField = 'CODIGO_ORGANO_GESTOR_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 3
-                  Width = 160
-                end
-                object lblUnidadTramitadoraEDoc: TcxLabel
-                  Left = 23
-                  Top = 112
-                  Caption = 'Unidad tramitadora'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 4
-                  Transparent = True
-                  AnchorX = 163
-                end
-                object txtCODIGO_UNIDAD_TRAMITADORA_FACTURA: TcxDBTextEdit
-                  Left = 170
-                  Top = 108
-                  DataBinding.DataField = 'CODIGO_UNIDAD_TRAMITADORA_FAC'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 5
-                  Width = 160
                 end
               end
             end

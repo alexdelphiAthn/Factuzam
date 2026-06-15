@@ -37,6 +37,7 @@ type
     IdObjeto:                 string;
     IdKeyInfo:                string;
     IdSignedProperties:       string;
+    IdReferenciaDocumento:    string;
     IdNodoFirmado:            string;
     UriDocumentoVacia:        Boolean;
     IncluirReferenciaKeyInfo: Boolean;
@@ -73,8 +74,11 @@ const
   cNCrypt = 'ncrypt.dll';
   cXmlDsigNs = 'http://www.w3.org/2000/09/xmldsig#';
   cXadesNs122 = 'http://uri.etsi.org/01903/v1.2.2#';
+  cXadesNs132 = 'http://uri.etsi.org/01903/v1.3.2#';
   cXadesSignedProperties122 =
     'http://uri.etsi.org/01903/v1.2.2#SignedProperties';
+  cXadesSignedPropertiesFacturae =
+    'http://uri.etsi.org/01903#SignedProperties';
   cAlgExcC14n = 'http://www.w3.org/2001/10/xml-exc-c14n#';
   cAlgEnveloped = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature';
   cAlgRsaSha256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
@@ -287,6 +291,7 @@ begin
   Result.IdObjeto := sPrefijo + '-Object';
   Result.IdKeyInfo := sPrefijo + '-KeyInfo';
   Result.IdSignedProperties := sPrefijo + '-SignedProperties';
+  Result.IdReferenciaDocumento := sPrefijo + '-Reference-Documento';
   Result.IdNodoFirmado := sPrefijo + '-Documento';
   Result.UriDocumentoVacia := False;
   Result.IncluirReferenciaKeyInfo := True;
@@ -307,6 +312,8 @@ begin
   Result := OpcionesXadesBase(APrefijoId);
   Result.UriDocumentoVacia := True;
   Result.IdNodoFirmado := '';
+  Result.EspacioNombresXades := cXadesNs132;
+  Result.TipoSignedProperties := cXadesSignedPropertiesFacturae;
   Result.Politica := xtpFacturae;
   Result.PoliticaIdentificador := cFacturaePoliticaId;
   Result.PoliticaDescripcion := cFacturaePoliticaDescripcion;
@@ -330,6 +337,8 @@ begin
     Result.IdKeyInfo := sPrefijo + '-KeyInfo';
   if Result.IdSignedProperties = '' then
     Result.IdSignedProperties := sPrefijo + '-SignedProperties';
+  if Result.IdReferenciaDocumento = '' then
+    Result.IdReferenciaDocumento := sPrefijo + '-Reference-Documento';
   if (not Result.UriDocumentoVacia) and (Result.IdNodoFirmado = '') then
     Result.IdNodoFirmado := sPrefijo + '-Documento';
   if Result.EspacioNombresXades = '' then
@@ -1134,6 +1143,20 @@ begin
       '</xades:ClaimedRole></xades:ClaimedRoles></xades:SignerRole>';
 end;
 
+function ConstruirDataObjectProperties(const AOpciones: TXadesOpciones):
+  string;
+begin
+  Result := '';
+  if Trim(AOpciones.IdReferenciaDocumento) <> '' then
+    Result := '<xades:SignedDataObjectProperties>' +
+      '<xades:DataObjectFormat ObjectReference="#' +
+      EscaparXml(AOpciones.IdReferenciaDocumento) + '">' +
+      '<xades:Description>Factura electronica</xades:Description>' +
+      '<xades:MimeType>text/xml</xades:MimeType>' +
+      '</xades:DataObjectFormat>' +
+      '</xades:SignedDataObjectProperties>';
+end;
+
 function ConstruirSignedProperties(const AOpciones: TXadesOpciones;
                                    ACert: PXadesCertContext;
                                    const ACertDer: TBytes): string;
@@ -1171,6 +1194,7 @@ begin
     ConstruirPolitica(AOpciones) +
     ConstruirRolFirmante(AOpciones) +
     '</xades:SignedSignatureProperties>' +
+    ConstruirDataObjectProperties(AOpciones) +
     '</xades:SignedProperties>';
 end;
 
@@ -1185,7 +1209,8 @@ begin
   else
     sUri := '#' + AOpciones.IdNodoFirmado;
   Result :=
-    '<ds:Reference URI="' + EscaparXml(sUri) + '">' +
+    '<ds:Reference Id="' + EscaparXml(AOpciones.IdReferenciaDocumento) +
+    '" URI="' + EscaparXml(sUri) + '">' +
     '<ds:Transforms>' +
     NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgEnveloped + '"') +
     NodoDsVacioCanonico('Transform', 'Algorithm="' + cAlgExcC14n + '"') +
@@ -1226,14 +1251,15 @@ function ConstruirSignature(const AOpciones: TXadesOpciones;
                             AKeyInfo, ASignedProperties: string): string;
 begin
   Result :=
-    '<ds:Signature ' + AtributoXmlNsDs + ' Id="' +
+    '<ds:Signature ' + AtributoXmlNsDs + ' xmlns:xades="' +
+    EscaparXml(AOpciones.EspacioNombresXades) + '" Id="' +
     EscaparXml(AOpciones.IdFirma) + '">' +
     ASignedInfo +
     '<ds:SignatureValue>' + ASignatureValue + '</ds:SignatureValue>' +
     AKeyInfo +
     '<ds:Object Id="' + EscaparXml(AOpciones.IdObjeto) + '">' +
-    '<xades:QualifyingProperties xmlns:xades="' +
-    EscaparXml(AOpciones.EspacioNombresXades) + '" Target="#' +
+    '<xades:QualifyingProperties Id="' +
+    EscaparXml(AOpciones.IdObjeto) + '-QualifyingProperties" Target="#' +
     EscaparXml(AOpciones.IdFirma) + '">' +
     ASignedProperties +
     '<xades:UnsignedProperties/>' +
