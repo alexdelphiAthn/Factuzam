@@ -155,6 +155,7 @@ type
     function ValidaryConfirmar:boolean;
     function SerieAdmiteFecha(const ASerie: string;
       AFecha: TDateTime): Boolean;
+    procedure AvisarSiNumeracionConHuecos(const ASerie: string);
     procedure CargarFormasPago;
     procedure CargarComboSeries;
     procedure AjustarFormatoEditorActivo;
@@ -254,6 +255,7 @@ procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
 begin
   if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
   begin
+    AvisarSiNumeracionConHuecos(cbbSERIE_FAC.Text);
     FTipoImpresion := tiConTicket;
     ModalResult := mrOk;
   end;
@@ -287,6 +289,7 @@ begin
     begin
       if SerieAdmiteFecha(oDatos.Serie, oDatos.Fecha) then
       begin
+        AvisarSiNumeracionConHuecos(oDatos.Serie);
         FSerieFactura  := oDatos.Serie;
         FFechaFactura  := oDatos.Fecha;
         FTipoImpresion := tiFactura;
@@ -306,6 +309,7 @@ procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject);
 begin
   if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
   begin
+    AvisarSiNumeracionConHuecos(cbbSERIE_FAC.Text);
     FTipoImpresion := tiSinTicket;
     ModalResult := mrOk;
   end;
@@ -315,6 +319,7 @@ procedure TfrmMtoCajaFaseCobro.btnSinPreciosClick(Sender: TObject);
 begin
   if ValidarYConfirmar and SerieAdmiteFecha(cbbSERIE_FAC.Text, FFecha) then
   begin
+    AvisarSiNumeracionConHuecos(cbbSERIE_FAC.Text);
     FTipoImpresion := tiTicketRegalo;
     ModalResult := mrOk;
   end;
@@ -368,6 +373,47 @@ begin
               FormatDateTime('dd/mm/yyyy', dUltima),
               FormatDateTime('dd/mm/yyyy', AFecha)]),
       mtWarning, [mbOK], 0);
+  end;
+end;
+
+procedure TfrmMtoCajaFaseCobro.AvisarSiNumeracionConHuecos(
+  const ASerie: string);
+var
+  Qry: TUniQuery;
+  iFilas, iMin, iMax: Int64;
+begin
+  // Aviso (no bloqueante): comprueba que la numeracion de la serie no tenga
+  // huecos (que cada numero tenga su anterior). Si faltan numeros no se
+  // cumple la correlatividad legal; aqui solo se recuerda al usuario.
+  if Trim(ASerie) <> '' then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := oConn;
+      Qry.SQL.Text :=
+        'SELECT COUNT(*) AS NFILAS, ' +
+        '       MIN(CAST(NUMERO_FAC AS UNSIGNED)) AS NMIN, ' +
+        '       MAX(CAST(NUMERO_FAC AS UNSIGNED)) AS NMAX ' +
+        '  FROM fza_facturas ' +
+        ' WHERE CODIGO_EMP_FAC = :EMP ' +
+        '   AND SERIE_FAC      = :SERIE';
+      Qry.ParamByName('EMP').AsString   := FCodigoEmpresa;
+      Qry.ParamByName('SERIE').AsString := ASerie;
+      Qry.Open;
+      iFilas := Qry.FieldByName('NFILAS').AsLargeInt;
+      iMin   := Qry.FieldByName('NMIN').AsLargeInt;
+      iMax   := Qry.FieldByName('NMAX').AsLargeInt;
+      if (iFilas > 0) and (iFilas <> iMax - iMin + 1) then
+        MessageDlg(
+          Format('La serie "%s" tiene huecos en la numeración: faltan %d ' +
+                 'números entre el %d y el %d.' + sLineBreak +
+                 'Recuerde que la numeración debe ser correlativa según la ' +
+                 'ley.',
+                 [ASerie, (iMax - iMin + 1) - iFilas, iMin, iMax]),
+          mtWarning, [mbOK], 0);
+    finally
+      FreeAndNil(Qry);
+    end;
   end;
 end;
 
