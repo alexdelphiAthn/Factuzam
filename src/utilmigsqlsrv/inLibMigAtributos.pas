@@ -151,7 +151,8 @@ end;
 // (ID_VA_ATB, CODIGO_ATB).
 procedure InsertarAtributoBasico(Eng: TMigEngine;
                                   const sIdVa, sCodigo, sNombre,
-                                  sDescripcion, sHex: string; iOrden: Integer);
+                                  sDescripcion, sHex: string; iOrden: Integer;
+                                  const sActivo: string = 'S');
 var qChk, qIns: TUniQuery;
 begin
   qChk := TUniQuery.Create(nil);
@@ -173,7 +174,7 @@ begin
         'ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, DESCRIPCION_ATB, HEX_ATB, ' +
         'ORDEN_ATB, ESACTIVO_ATB, ' +
         'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:v, :c, :n, :d, :h, :o, ''S'', ' +
+      'VALUES (:v, :c, :n, :d, :h, :o, :ea, ' +
               ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
               ':USUARIO_MODIF)';
     qIns.ParamByName('v').AsString := sIdVa;
@@ -185,6 +186,7 @@ begin
     else
       qIns.ParamByName('h').Clear;
     qIns.ParamByName('o').AsInteger := iOrden;
+    qIns.ParamByName('ea').AsString := sActivo;
     RellenarAuditoria(qIns, Eng.Usuario);
     qIns.ExecSQL;
   finally
@@ -231,6 +233,7 @@ var
   oColExist:                  TDictionary<string, Boolean>;
   sCodOrigen, sCodAtb, sDesc: string;
   sHex, sAhora, sUser:        string;
+  sActivo:                    string;
   iColorRGB, iOrden:          Integer;
   bInsertoValor:              Boolean;
 begin
@@ -252,6 +255,11 @@ begin
       else
         iColorRGB := qSrc.FieldByName('ColorPaleta').AsInteger;
       sHex       := ColorIntAHex(iColorRGB);
+      // En origen Estado='B' es baja; el resto (incl. 'A') es activo.
+      if UpperCase(Trim(qSrc.FieldByName('Estado').AsString)) = 'B' then
+        sActivo := 'N'
+      else
+        sActivo := 'S';
 
       if (sCodOrigen = '') and (sDesc = '') then
       begin
@@ -277,7 +285,7 @@ begin
                                               iOrden);
       InsertarAtributoBasico(Eng, 'CO', sCodAtb, sDesc,
                               'Color ' + sDesc + ' (legacy ' +
-                              sCodOrigen + ')', sHex, iOrden);
+                              sCodOrigen + ')', sHex, iOrden, sActivo);
       if bInsertoValor then
       begin
         Inc(Stats.Insertadas);
