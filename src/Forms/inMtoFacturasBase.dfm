@@ -1,4 +1,4 @@
-﻿inherited frmMtoFacturasBase: TfrmMtoFacturasBase
+inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
@@ -7,8 +7,6 @@
   Caption = #186
   ClientHeight = 844
   ClientWidth = 1231
-  StyleElements = [seFont, seClient, seBorder]
-  ExplicitTop = -117
   ExplicitWidth = 1231
   ExplicitHeight = 844
   TextHeight = 17
@@ -28,7 +26,6 @@
     Margins.Bottom = 5
     ParentColor = True
     TabOrder = 0
-    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 1087
     ExplicitHeight = 844
     inherited pcPantalla: TcxPageControl
@@ -712,6 +709,10 @@
               Margins.Bottom = 4
               Caption = '&1_Lineas de Borrador - '
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLineasFactura: TcxGrid
                 Left = 0
                 Top = 0
@@ -781,65 +782,65 @@
                   object ctbCODIGO_UNIDAD_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'SKU'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxComboBoxProperties'
                     Properties.OnEditValueChanged = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged
                     Properties.OnInitPopup = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup
+                    Visible = False
                     Width = 180
                   end
                   object ctbDESCRIPCION_VARIACION_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Variaci'#243'n'
                     DataBinding.FieldName = 'DESCRIPCION_VARIACION_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
+                    Visible = False
                     Width = 140
                   end
                   object ctbCODIGO_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Familia'
                     DataBinding.FieldName = 'CODIGO_FAM_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxButtonEditProperties'
                     Properties.Buttons = <
                       item
                         Default = True
                         Kind = bkEllipsis
                       end>
+                    Visible = False
                     Width = 153
                   end
                   object ctbNOMBRE_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Nombre Familia'
                     DataBinding.FieldName = 'NOMBRE_FAM_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
+                    Visible = False
                     Width = 245
                   end
                   object ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Proveedor Principal'
                     DataBinding.FieldName = 'ESPROVEEDORPRINCIPAL_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxCheckBoxProperties'
+                    Visible = False
                     Width = 172
                   end
                   object ctbCODIGO_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Proveedor'
                     DataBinding.FieldName = 'CODIGO_PRV_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.OnEditValueChanged = ctbCODIGO_PROVEEDOR_FACTURA_LINEAPropertiesEditValueChanged
+                    Visible = False
                     Width = 163
                   end
                   object ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Raz'#243'n Social Proveedor'
                     DataBinding.FieldName = 'RAZON_SOCIAL_PROVEEDOR_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
+                    Visible = False
                     Width = 200
                   end
                   object ctbPRECIO_ULT_COMPRA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Precio Coste'
                     DataBinding.FieldName = 'PRECIO_ULT_COMPRA_FACLIN'
-                    Visible = False
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Visible = False
                   end
                   object ctbDESCRIPCION_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'
@@ -1685,6 +1686,10 @@
             object tsRecibos: TcxTabSheet
               Caption = '&3_Recibos'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlRightRecibos: TPanel
                 Left = 918
                 Top = 0
@@ -1927,6 +1932,10 @@
               Margins.Bottom = 4
               Caption = '&4_Otros'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object lblComentarios: TcxLabel
                 Left = 32
                 Top = 65
@@ -1975,12 +1984,12 @@
                 Left = 32
                 Top = 276
                 AutoSize = False
-                Caption =
+                Caption = 
                   'Calificaci'#243'n de la operaci'#243'n para Verifactu. D'#233'jelo vac'#237'o para v' +
                   'entas interiores normales (la exportaci'#243'n se asigna sola si el c' +
-                  'liente no es de la UE). Para clientes de la UE elija servicio, en' +
-                  'trega de bienes o ISP. Los tipos se gestionan en la tabla fza_ver' +
-                  'ifactu_operaciones.'
+                  'liente no es de la UE). Para clientes de la UE elija servicio, e' +
+                  'ntrega de bienes o ISP. Los tipos se gestionan en la tabla fza_v' +
+                  'erifactu_operaciones.'
                 Properties.WordWrap = True
                 TabOrder = 5
                 Transparent = True
@@ -2096,6 +2105,10 @@
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object scrlbxVerifactu: TScrollBox
                 Left = 0
                 Top = 0
@@ -2388,6 +2401,10 @@
             object tsRegistro: TcxTabSheet
               Caption = '&6_Registro Verifactu'
               ImageIndex = 5
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdLogVerifactu: TcxGrid
                 Left = 0
                 Top = 0
@@ -2480,6 +2497,10 @@
             object tsMovimientosFac: TcxTabSheet
               Caption = '&7_Movimientos'
               ImageIndex = 5
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrdMovimientosFac: TcxGrid
                 Left = 0
                 Top = 0
@@ -2882,6 +2903,10 @@
                 Color = clBtnFace
                 ImageIndex = 2
                 ParentColor = False
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object grpEmpresa: TcxGroupBox
                   Left = 22
                   Top = 13
@@ -3581,6 +3606,7 @@
           HotZone.SizePercent = 50
           AlignSplitter = salTop
           Control = pnlVerifactu
+          ExplicitWidth = 8
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -3590,7 +3616,6 @@
         ExplicitHeight = 772
         inherited pnlPerfilTop: TPanel
           Width = 1079
-          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1079
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
@@ -3599,7 +3624,6 @@
         inherited pnlPerfilDetail: TPanel
           Width = 1079
           Height = 715
-          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1079
           ExplicitHeight = 715
           inherited cxgrdPerfil: TcxGrid
@@ -3614,11 +3638,9 @@
     inherited pnlTopPage: TPanel
       Width = 1087
       TabOrder = 0
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 1087
       inherited pnlTopGrid: TPanel
         Width = 1087
-        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1087
         inherited sbExportExcel: TSpeedButton
           ParentFont = True
@@ -3646,7 +3668,6 @@
     Margins.Right = 5
     Margins.Bottom = 5
     TabOrder = 1
-    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 1087
     ExplicitWidth = 144
     ExplicitHeight = 844
@@ -3659,7 +3680,6 @@
       Margins.Bottom = 5
       Constraints.MinHeight = 100
       Constraints.MinWidth = 124
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 646
       ExplicitWidth = 144
       inherited btnGrabar: TcxButton
@@ -3680,7 +3700,6 @@
       Margins.Bottom = 5
       Constraints.MinHeight = 46
       Constraints.MinWidth = 124
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 144
       inherited pnStateDataSet: TPanel
         Width = 144
@@ -3688,7 +3707,6 @@
         Margins.Top = 5
         Margins.Right = 5
         Margins.Bottom = 5
-        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 144
         inherited lblEditMode: TcxLabel
           Margins.Left = 5
@@ -3699,7 +3717,6 @@
       end
       inherited pnlDataSetName: TPanel
         Width = 144
-        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 144
       end
     end
