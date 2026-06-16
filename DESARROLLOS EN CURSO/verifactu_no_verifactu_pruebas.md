@@ -202,6 +202,8 @@ Resultado esperado:
   - `_eventos.xml`
   - `_facturacion.xml`
 - Se registran eventos de exportación antes de generar el XML.
+- Los dos XML llevan atributo raíz `ModoVerifactu` con el modo usado al
+  exportar.
 - En modo `NO_VERIFACTU`, la exportación se bloquea si hay eventos o registros
   de facturación sin XAdES y datos de certificado.
 - Con todos los registros firmados, ambos ficheros contienen `<ds:Signature`.
@@ -220,11 +222,34 @@ Resultado esperado:
 - Se localizan automáticamente los ficheros `_eventos.xml` y
   `_facturacion.xml`.
 - Se crea el informe `errores_<nombre>.xml.txt` en la misma carpeta.
+- El resumen indica el modo del fichero. Si el XML no lo declara por ser una
+  exportación antigua, se usa el modo actual de la aplicación como fallback.
 - No se avisa por falta de firma del contenedor raíz.
-- Se da error si falta firma XAdES en algún registro interno.
+- En modo `NO_VERIFACTU`, se da error si falta firma XAdES en algún registro
+  interno.
+- En modo `SIN`, la falta de firma XAdES se informa como aviso porque el
+  fichero es demo y no una exportación legal no verificable.
 - Se da error si la firma interna no usa política AGE
   `urn:oid:2.16.724.1.3.1.1.2.1.9`, RSA-SHA256, SHA-256 para el registro y
   SHA-1 únicamente para el hash de la política.
+
+**G3 - Contraste con ejemplo AEAT.**
+
+Abrir:
+
+```text
+DESARROLLOS EN CURSO/ejnoverifactu/ejemploRegistro-firmado-epes-xades4j.xml
+```
+
+Resultado esperado:
+
+- Se confirma que el ejemplo es un `RegistroAlta` individual firmado.
+- La firma está dentro del registro, no en un contenedor de exportación.
+- El perfil coincide con la validación interna: `XAdES Enveloped` EPES,
+  RSA-SHA256, dos referencias en `SignedInfo`, política AGE y
+  `DataObjectFormat` `text/xml`.
+- Para validar en VALIDe se debe usar un XML individual firmado, no el
+  fichero `_eventos.xml` o `_facturacion.xml` completo de Factuzam.
 
 ## H. Control de reloj fiscal
 
