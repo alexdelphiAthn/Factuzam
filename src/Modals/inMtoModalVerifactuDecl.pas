@@ -177,7 +177,8 @@ begin
     'I - Número de identificación fiscal (NIF): ' +
     ValorDeclaracion(ANif, 'Pendiente de configurar') + sLineBreak +
     'J - Dirección postal completa de contacto: ' +
-    ValorDeclaracion(ADireccion, 'Pendiente de configurar') + sLineBreak +
+    ValorDeclaracion(ADireccion,
+      'Calle Cascajal, 7 1ºB 49159 Villaralbo (Zamora)') + sLineBreak +
     'K - Declaración de cumplimiento normativo: ' +
     ValorDeclaracion(AProductor, 'El productor') +
     ' deja constancia de que el sistema informático Factuzam, en la ' +
