@@ -305,6 +305,12 @@ begin
   RegistrarParametro('Verifactu', 'appVerifactuSifNif',
     'NIF del productor del software (SistemaInformatico.NIF)', tpString,
     '');
+  RegistrarParametro('Verifactu', 'appVerifactuSifDireccion',
+    'Dirección postal del productor del software', tpString, '');
+  RegistrarParametro('Verifactu', 'appVerifactuDeclaracionLugar',
+    'Lugar de suscripción de la declaración responsable', tpString, '');
+  RegistrarParametro('Verifactu', 'appVerifactuDeclaracionFecha',
+    'Fecha de suscripción de la declaración responsable', tpString, '');
   RegistrarParametro('Verifactu', 'appVerifactuIdInstalacion',
     'Número de instalación del SIF (NumeroInstalacion)', tpString, '1');
   RegistrarParametro('Verifactu', 'appVerifactuDescripcionOpe',
