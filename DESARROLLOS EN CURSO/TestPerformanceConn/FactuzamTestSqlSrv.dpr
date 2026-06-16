@@ -9,7 +9,7 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.Title := 'Factuzam Test SQL Server (prDirect / prMSOLEDB)';
+  Application.Title := 'Factuzam Test SQL Server (selector de Provider)';
   Application.CreateForm(TfrmTestSqlSrv, frmTestSqlSrv);
   Application.Run;
 end.
