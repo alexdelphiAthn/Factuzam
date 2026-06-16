@@ -12,9 +12,9 @@
 {    Banco de pruebas independiente para comparar los modos de acceso del      }
 {    provider SQL Server de UniDAC:                                            }
 {                                                                              }
-{      - prDirect       : protocolo TDS por sockets. NO usa COM / OLE DB.      }
-{      - prNativeClient : cliente nativo OLE DB. EXIGE CoInitialize /          }
-{                         CoUninitialize en el hilo que abre la conexión.      }
+{      - prDirect : protocolo TDS por sockets. NO usa COM / OLE DB.            }
+{      - Nativo   : OLE DB nativo (prMSOLEDB). EXIGE CoInitialize /            }
+{                   CoUninitialize en el hilo que abre la conexión.            }
 {                                                                              }
 {    Cada operación (conectar / lanzar SQL / desconectar) se cronometra con    }
 {    TStopwatch y se muestra en milisegundos, para medir y comparar el coste   }
@@ -33,42 +33,43 @@ uses
   Data.DB, Uni, DBAccess, SQLServerUniProvider;
 
 const
-  // Valores del SpecificOption "Provider" del provider SQL Server de
-  // UniDAC. prDirect habla TDS por sockets (sin COM); prNativeClient usa
-  // el OLE DB nativo y necesita COM inicializado en el hilo.
-  cProviderDirect       = 'prDirect';
-  cProviderNativeClient = 'prNativeClient';
+  // SpecificOption "Provider" del provider SQL Server de UniDAC. prDirect
+  // habla TDS por sockets (sin COM); el nativo usa OLE DB y necesita COM
+  // en el hilo. Valor nativo según driver instalado: prMSOLEDB (MSOLEDBSQL,
+  // el del migrador), prNativeClient (SNAC), prSQL (SQLOLEDB), prAuto...
+  cProviderDirect = 'prDirect';
+  cProviderNativo = 'prMSOLEDB';
 
 type
   TfrmTestSqlSrv = class(TForm)
-    gbConexion:              TGroupBox;
-    lblServidor:             TLabel;
-    edtServidor:             TEdit;
-    lblPuerto:               TLabel;
-    edtPuerto:               TEdit;
-    lblBase:                 TLabel;
-    edtBase:                 TEdit;
-    lblUsuario:              TLabel;
-    edtUsuario:              TEdit;
-    lblClave:                TLabel;
-    edtClave:                TEdit;
-    chkAutWindows:           TCheckBox;
-    pnlBotones:              TPanel;
-    btnConectarDirect:       TButton;
-    btnConectarNativeClient: TButton;
-    btnLanzarSQL:            TButton;
-    btnDesconectar:          TButton;
-    pnlTiempo:               TPanel;
-    lblTiempo:               TLabel;
-    lblEstado:               TLabel;
-    gbSQL:                   TGroupBox;
-    memoSQL:                 TMemo;
-    gbLog:                   TGroupBox;
-    memoLog:                 TMemo;
+    gbConexion:        TGroupBox;
+    lblServidor:       TLabel;
+    edtServidor:       TEdit;
+    lblPuerto:         TLabel;
+    edtPuerto:         TEdit;
+    lblBase:           TLabel;
+    edtBase:           TEdit;
+    lblUsuario:        TLabel;
+    edtUsuario:        TEdit;
+    lblClave:          TLabel;
+    edtClave:          TEdit;
+    chkAutWindows:     TCheckBox;
+    pnlBotones:        TPanel;
+    btnConectarDirect: TButton;
+    btnConectarNativo: TButton;
+    btnLanzarSQL:      TButton;
+    btnDesconectar:    TButton;
+    pnlTiempo:         TPanel;
+    lblTiempo:         TLabel;
+    lblEstado:         TLabel;
+    gbSQL:             TGroupBox;
+    memoSQL:           TMemo;
+    gbLog:             TGroupBox;
+    memoLog:           TMemo;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnConectarDirectClick(Sender: TObject);
-    procedure btnConectarNativeClientClick(Sender: TObject);
+    procedure btnConectarNativoClick(Sender: TObject);
     procedure btnLanzarSQLClick(Sender: TObject);
     procedure btnDesconectarClick(Sender: TObject);
   private
@@ -98,8 +99,8 @@ implementation
 
 procedure TfrmTestSqlSrv.FormCreate(Sender: TObject);
 begin
-  // Conexión única; el provider concreto (prDirect / prNativeClient) se
-  // fija en cada conexión vía SpecificOptions.
+  // Conexión única; el provider concreto (prDirect / prMSOLEDB) se fija
+  // en cada conexión vía SpecificOptions.
   FConn := TUniConnection.Create(Self);
   FConn.ProviderName := 'SQL Server';
   FConn.LoginPrompt  := False;
@@ -111,7 +112,7 @@ end;
 
 procedure TfrmTestSqlSrv.FormDestroy(Sender: TObject);
 begin
-  // Cierra y equilibra COM si quedó conectado en modo native.
+  // Cierra y equilibra COM si quedó conectado en modo nativo.
   Desconectar;
 end;
 
@@ -143,10 +144,10 @@ begin
     FConn.Username := Trim(edtUsuario.Text);
     FConn.Password := edtClave.Text;
   end;
-  // Modo de acceso del provider (prDirect / prNativeClient).
+  // Modo de acceso del provider (prDirect / prMSOLEDB).
   FConn.SpecificOptions.Values['Provider'] := AProvider;
-  // prNativeClient = OLE DB nativo: COM debe estar inicializado en este
-  // hilo o UniDAC lanza "CoInitialize has not been called".
+  // El modo nativo (prMSOLEDB) usa OLE DB: COM debe estar inicializado en
+  // este hilo o UniDAC lanza "CoInitialize has not been called".
   if AUsaCom then
   begin
     CoInitialize(nil);
@@ -201,7 +202,7 @@ begin
     Log('Desconectado (modo ' + FModoActual + ').');
     MostrarTiempo('Desconexión', oReloj.Elapsed.TotalMilliseconds);
   end;
-  // Equilibra el CoInitialize del modo native.
+  // Equilibra el CoInitialize del modo nativo.
   if FComIniciado then
   begin
     CoUninitialize;
@@ -284,10 +285,10 @@ begin
   Conectar(cProviderDirect, cProviderDirect, False);
 end;
 
-procedure TfrmTestSqlSrv.btnConectarNativeClientClick(Sender: TObject);
+procedure TfrmTestSqlSrv.btnConectarNativoClick(Sender: TObject);
 begin
-  // prNativeClient: OLE DB nativo, con CoInitialize / CoUninitialize.
-  Conectar(cProviderNativeClient, cProviderNativeClient, True);
+  // Nativo (prMSOLEDB): OLE DB, con CoInitialize / CoUninitialize.
+  Conectar(cProviderNativo, cProviderNativo, True);
 end;
 
 procedure TfrmTestSqlSrv.btnDesconectarClick(Sender: TObject);
@@ -316,10 +317,10 @@ var
   EsConectado: Boolean;
 begin
   EsConectado := Assigned(FConn) and FConn.Connected;
-  btnConectarDirect.Enabled       := not EsConectado;
-  btnConectarNativeClient.Enabled := not EsConectado;
-  btnLanzarSQL.Enabled            := EsConectado;
-  btnDesconectar.Enabled          := EsConectado;
+  btnConectarDirect.Enabled := not EsConectado;
+  btnConectarNativo.Enabled := not EsConectado;
+  btnLanzarSQL.Enabled      := EsConectado;
+  btnDesconectar.Enabled    := EsConectado;
   if EsConectado then
     lblEstado.Caption := 'Estado: CONECTADO (' + FModoActual + ')'
   else
