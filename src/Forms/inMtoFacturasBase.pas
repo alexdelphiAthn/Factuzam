@@ -927,6 +927,12 @@ var
   sFase: string;
 begin
   inherited;
+  // En modo SIN el borrador se imprime directamente, sin consolidar. Si
+  // se estaba editando, se graban antes los cambios para que la copia
+  // impresa refleje el estado actual del borrador.
+  if SinVerifactuActivo and (tdmDataModule <> nil) and
+     CheckOpenDatasets(tdmDataModule as TDataModule) then
+    btnGrabarClick(Sender);
   // El QR tributario nace al lanzar la factura a Verifactu: en
   // BORRADOR no hay registro de facturación y no se puede imprimir
   sFase := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
@@ -1849,8 +1855,11 @@ begin
     begin
       btnNuevaFactura.Enabled := False;
       btnRectificar.Enabled := False;
-      btnImprimir.Enabled := False;
       btnConsolidar.Enabled := False;
+      // En modo SIN el borrador se puede imprimir aunque se esté
+      // editando o dando de alta: al pulsar Imprimir se graban antes los
+      // cambios. En el resto de modos, durante la edición no se imprime.
+      btnImprimir.Enabled := SinVerifactuActivo;
     end
     else
     begin
