@@ -1054,15 +1054,24 @@ begin
   sqlConsulta.Open;
 end;
 
+function ParametroIniAplicacion: string;
+begin
+  Result := Trim(ParamStr(1));
+  if (Result <> '') and CharInSet(Result[1], ['/', '-']) then
+    Result := '';
+end;
+
 procedure esCadINI (clave, cadena, valor : string);
 var
-   sIniFile:string;
+   sIniFile,
+   sParametroIni:string;
 begin
-  if (SameText(ParamStr(1), '')) then
+  sParametroIni := ParametroIniAplicacion;
+  if (SameText(sParametroIni, '')) then
     sIniFile := ExtractFilePath(ParamStr(0))
       + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(1);
+    sIniFile := ExtractFilePath(ParamStr(0)) + sParametroIni;
   with tinifile.create (sIniFile) do
   try
     writeString (clave, cadena, valor);
@@ -1073,12 +1082,14 @@ end;
 
 procedure esCadINIDir (clave, cadena, valor, sDir : string);
 var
-   sIniFile:string;
+   sIniFile,
+   sParametroIni:string;
 begin
-  if SameText(ParamStr(1), '') then
+  sParametroIni := ParametroIniAplicacion;
+  if SameText(sParametroIni, '') then
     sIniFile := sDir + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := sDir + ParamStr(1);
+    sIniFile := sDir + sParametroIni;
   with tinifile.create (sIniFile) do
   try
     writeString (clave, cadena, valor);
@@ -1095,13 +1106,15 @@ end;
 
 function leCadINI (clave, cadena : string; defecto : string) : string;
 var
-  sIniFile:string;
+  sIniFile,
+  sParametroIni:string;
 begin
-  if ParamStr(1) = '' then
+  sParametroIni := ParametroIniAplicacion;
+  if sParametroIni = '' then
     sIniFile := ExtractFilePath(ParamStr(0)) +
                          FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := ExtractFilePath(ParamStr(0)) + ParamStr(1);
+    sIniFile := ExtractFilePath(ParamStr(0)) + sParametroIni;
   with tinifile.create (sIniFile) do
   try
     result := readString (clave, cadena, defecto);
@@ -1116,12 +1129,14 @@ function leCadINIDir (clave, cadena : string;
                       defecto : string;
                       sDir:string) : string;
 var
-  sIniFile:string;
+  sIniFile,
+  sParametroIni:string;
 begin
-  if ParamStr(1) = '' then
+  sParametroIni := ParametroIniAplicacion;
+  if sParametroIni = '' then
     sIniFile := sDir + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
   else
-    sIniFile := sDir + ParamStr(1);
+    sIniFile := sDir + sParametroIni;
   with tinifile.create (sIniFile) do
   try
     result := readString (clave, cadena, defecto);

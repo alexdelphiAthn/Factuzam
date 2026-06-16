@@ -106,6 +106,7 @@ type
     FProgressLabel: TcxLabel;
     FLogBuffer: TStringList;
     FStopwatch: TStopwatch;
+    FCerrarAplicacion: Boolean;
     procedure CambiarPass(f:TUniConnection);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -135,9 +136,11 @@ type
                            f: TUniConnection): Boolean;
     function GetGrupo(sUser: string; conn: TUniConnection;
       var EsGrupoAdmin: string): string;
+    function ProcesarLicenciaAplicacion: Boolean;
   public
     sSuccess:String;
     function IsInitializeAuto:Boolean;
+    function DebeCerrarAplicacion:Boolean;
   end;
 var
   frmLogon          : TfrmLogon;
@@ -160,6 +163,7 @@ uses  inLibWin,
       Core_Helpers,
       inLibDBStructure,
       inMtoModalScriptLog,
+      inLibLicenciaAplicacion,
       inLibBackupWorker;
 
 {$R *.dfm}
@@ -275,6 +279,7 @@ begin
     inliblog.Log.LogInfo('Arrancando en modo Debug');
   {$ENDIF}
   sUserPassOK := 'false';
+  FCerrarAplicacion := False;
   Self.Position := poScreenCenter;
   edtUser.Text := '';
 
@@ -369,6 +374,9 @@ begin
     end;
   end;
 
+  if not ProcesarLicenciaAplicacion then
+    Exit;
+
   // --- /relogin: reinicio desde 'Invocar login'. Vacia la contrasena
   // recordada para forzar que se introduzca de nuevo (el auto-login ya
   // queda neutralizado en IsInitializeAuto). ---
@@ -394,6 +402,98 @@ begin
         sUserPassOK := 'false';
         sSuccess := 'N';
         ModalResult := mrNone;
+      end;
+    end;
+  end;
+end;
+
+function TfrmLogon.ProcesarLicenciaAplicacion: Boolean;
+var
+  Estado: TEstadoLicenciaAplicacion;
+  sMensaje,
+  sCodigoEsperado,
+  sCodigoGuardado,
+  sCodigo,
+  sDetalleNifs,
+  sRutaIni: string;
+  iNumeroNifs: Integer;
+begin
+  Result := True;
+  if HayConmutadorRegistroLicencia then
+  begin
+    Result := False;
+    FCerrarAplicacion := True;
+    sSuccess := 'N';
+    try
+      if RegistrarLicenciaAplicacion(ucConexion,
+                                     sCodigo,
+                                     iNumeroNifs,
+                                     sDetalleNifs,
+                                     sRutaIni) then
+      begin
+        inliblog.Log.LogInfo('Licencia establecida. Código: ' + sCodigo);
+        ShowMessage('Licencia establecida.' + sLineBreak + sLineBreak +
+                    'Código: ' + sCodigo + sLineBreak +
+                    'NIF de empresa: ' + IntToStr(iNumeroNifs) + sLineBreak +
+                    'INI: ' + sRutaIni + sLineBreak + sLineBreak +
+                    Trim(sDetalleNifs));
+      end
+      else
+      begin
+        inliblog.Log.LogInfo(
+          'No se establece licencia porque no hay NIF de empresa.');
+        ShowMessage('No se ha establecido licencia.' + sLineBreak +
+                    sLineBreak +
+                    'No hay NIF de empresa configurado.' + sLineBreak +
+                    'Mientras no haya NIF de empresa, no se exigirá ' +
+                    'licencia.');
+      end;
+    except
+      on E: Exception do
+      begin
+        inliblog.Log.LogError('Error estableciendo licencia: ' + E.Message);
+        ShowMessage('No se pudo establecer la licencia.' + sLineBreak +
+                    sLineBreak + E.Message);
+      end;
+    end;
+  end
+  else
+  begin
+    try
+      if ComprobarLicenciaAplicacion(ucConexion,
+                                     Estado,
+                                     sMensaje,
+                                     sCodigoEsperado,
+                                     sCodigoGuardado) then
+      begin
+        if Estado = elaSinNifEmpresa then
+          inliblog.Log.LogInfo(sMensaje)
+        else
+          inliblog.Log.LogInfo('Licencia de aplicación válida.');
+      end
+      else
+      begin
+        Result := False;
+        FCerrarAplicacion := True;
+        sSuccess := 'N';
+        inliblog.Log.LogError('Aplicación no registrada. ' + sMensaje);
+        inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
+                              ' Código esperado: ' + sCodigoEsperado);
+        ShowMessage('Aplicación no registrada.' + sLineBreak + sLineBreak +
+                    sMensaje + sLineBreak + sLineBreak +
+                    'Ejecute la aplicación con el conmutador de registro ' +
+                    'para registrar esta instalación.');
+      end;
+    except
+      on E: Exception do
+      begin
+        Result := False;
+        FCerrarAplicacion := True;
+        sSuccess := 'N';
+        inliblog.Log.LogError('Error validando licencia: ' + E.Message);
+        ShowMessage('Aplicación no registrada.' + sLineBreak + sLineBreak +
+                    'No se pudo validar la licencia de la aplicación.' +
+                    sLineBreak + E.Message);
       end;
     end;
   end;
@@ -981,6 +1081,11 @@ begin
   {$IFDEF DEBUG}
     //Result := False;
   {$ENDIF }
+end;
+
+function TfrmLogon.DebeCerrarAplicacion: Boolean;
+begin
+  Result := FCerrarAplicacion;
 end;
 
 procedure TfrmLogon.FormClose(Sender: TObject; var Action: TCloseAction);
