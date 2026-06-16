@@ -537,15 +537,22 @@ type
     // (y desde el resolver al teclear el articulo) y se vacia al recrear
     // la tabla principal.
     FArtMostrarSku: TDictionary<string, Boolean>;
+    // Modo creacion de articulos de la cabecera (ESCREARARTICULOS_FAC='S').
+    function  ModoCreacionActivo: Boolean;
     // Visibilidad de las columnas de creacion de articulos del detalle.
-    // Solo se ven cuando la cabecera esta en modo "Crear/Act Articulo"
-    // (ESCREARARTICULOS_FAC='S'); ocultas en caso contrario.
+    // Solo se ven cuando la cabecera esta en modo "Crear/Act Articulo";
+    // ocultas en caso contrario.
     procedure AplicarVisibilidadColumnasCreacion(bCrear: Boolean);
     procedure SincronizarColumnasCreacion;
     // Regla de negocio del SKU en lineas: solo se muestra/edita cuando el
     // articulo tiene variacion (tallas/colores) o es nuevo (aun no existe
     // en la BBDD). Para articulos normales el SKU se autoresuelve y estorba.
     function  MostrarSkuArticulo(const ACodArt: string): Boolean;
+    // La columna SKU completa se oculta si ninguna linea la necesita y no
+    // hay modo creacion; dentro de una columna visible, las celdas que no
+    // proceden se vacian (OnGetDataText) y se bloquean (OnEditing).
+    procedure SincronizarColumnaSku;
+    procedure dsLinFacDataChange(Sender: TObject; Field: TField);
     procedure ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText(
       Sender: TcxCustomGridTableItem; ARecordIndex: Integer; var AText: string);
     procedure tvLineasFacturaEditing(Sender: TcxCustomGridTableView;
@@ -1493,8 +1500,11 @@ begin
   ctbCODIGO_UNIDAD_FACTURA_LINEA.OnGetDataText :=
                                   ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText;
   tvLineasFactura.OnEditing := tvLineasFacturaEditing;
-  // Columnas de creacion de articulos: ocultas salvo modo creacion en la cab.
+  // La columna SKU se recalcula cuando cambian/recargan las lineas.
+  dmmFacturas.dsLinFac.OnDataChange := dsLinFacDataChange;
+  // Columnas de creacion (y SKU): ocultas salvo que la cab/lineas lo pidan.
   SincronizarColumnasCreacion;
+  SincronizarColumnaSku;
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   // El check de mover stock solo aplica a facturas NORMAL: en SIMPLIFICADA
@@ -1870,24 +1880,64 @@ begin
   ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.Visible     := bCrear;
 end;
 
-procedure TfrmMtoFacturasBase.SincronizarColumnasCreacion;
-var
-  bCrear: Boolean;
+function TfrmMtoFacturasBase.ModoCreacionActivo: Boolean;
 begin
-  // El modo creacion vive en la cabecera (ESCREARARTICULOS_FAC). Lo leemos
-  // del dataset activo para que al navegar entre facturas las columnas se
-  // muestren/oculten segun cada documento, no segun el ultimo check tocado.
-  bCrear := False;
-  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
-     (dsTablaG.DataSet.FindField(fcreart) <> nil) then
-    bCrear := dsTablaG.DataSet.FieldByName(fcreart).AsString = 'S';
-  AplicarVisibilidadColumnasCreacion(bCrear);
+  // El modo creacion vive en la cabecera (ESCREARARTICULOS_FAC). Se lee del
+  // dataset activo para que cada factura tenga el suyo, no el ultimo check.
+  Result := (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+            (dsTablaG.DataSet.FindField(fcreart) <> nil) and
+            (dsTablaG.DataSet.FieldByName(fcreart).AsString = 'S');
+end;
+
+procedure TfrmMtoFacturasBase.SincronizarColumnasCreacion;
+begin
+  AplicarVisibilidadColumnasCreacion(ModoCreacionActivo);
+end;
+
+procedure TfrmMtoFacturasBase.SincronizarColumnaSku;
+var
+  i        : Integer;
+  dc       : TcxCustomDataController;
+  bMostrar : Boolean;
+begin
+  // La columna SKU solo aparece si alguna linea la necesita (articulo con
+  // variacion / varios SKUs / nuevo) o si la cabecera esta en modo creacion.
+  bMostrar := ModoCreacionActivo;
+  if not bMostrar then
+  begin
+    dc := tvLineasFactura.DataController;
+    i  := 0;
+    while (not bMostrar) and (i < dc.RecordCount) do
+    begin
+      bMostrar := MostrarSkuArticulo(VarToStr(dc.GetValue(
+                    i, ctbCODIGO_ARTICULO_FACTURA_LINEA.Index)));
+      Inc(i);
+    end;
+  end;
+  if ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible <> bMostrar then
+    ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := bMostrar;
+end;
+
+procedure TfrmMtoFacturasBase.dsLinFacDataChange(Sender: TObject;
+  Field: TField);
+begin
+  // Field = nil: cambio de registro de linea, recarga del detalle (al navegar
+  // de factura) o alta/baja de linea. Re-evaluamos si procede la columna SKU.
+  if Field = nil then
+    SincronizarColumnaSku;
 end;
 
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
 begin
   inherited;
   AplicarVisibilidadColumnasCreacion(chkCrearArticulos.Checked);
+  // En modo creacion el SKU hace falta para los articulos nuevos: lo
+  // mostramos ya. Al desactivarlo, recalculamos por si alguna linea con
+  // variacion lo sigue necesitando.
+  if chkCrearArticulos.Checked then
+    ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := True
+  else
+    SincronizarColumnaSku;
 end;
 
 procedure TfrmMtoFacturasBase.chkDescripcion_ampliadaPropertiesChange(
@@ -1994,6 +2044,7 @@ begin
     ActualizarBloqueoEdicion;
     // Cada factura lleva su propio modo creacion: re-evaluamos al navegar.
     SincronizarColumnasCreacion;
+    SincronizarColumnaSku;
   end;
 end;
 
@@ -2115,8 +2166,14 @@ begin
     // Pre-cargamos la regla del SKU de este articulo (ya existe): se mostrara
     // si es de variacion o tiene varios SKUs. Evita reconsultar en el pintado.
     if Assigned(FArtMostrarSku) then
+    begin
       FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
                                    Datos.EsVariacion or Datos.RequiereSku);
+      // Si el articulo recien tecleado necesita SKU, mostramos ya la columna
+      // (el rescan al postear/navegar la ocultara de nuevo si procede).
+      if Datos.EsVariacion or Datos.RequiereSku then
+        ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := True;
+    end;
 
     // Si el padre tiene varios SKUs y aún no hay SKU, ResolverDatos no calcula
     // precio. Pedimos el del padre para arrastrar IVA y % DTO (mismo patrón
