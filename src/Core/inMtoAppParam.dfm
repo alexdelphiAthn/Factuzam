@@ -36,8 +36,6 @@ object frmMtoAppParam: TfrmMtoAppParam
     Painter = JvInspectorDotNETPainter1
     TabStop = True
     TabOrder = 0
-    OnEnter = JvInspector1Enter
-    OnExit = JvInspector1Exit
   end
   object Panel1: TPanel
     Left = 0

@@ -59,8 +59,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure JvInspector1Enter(Sender: TObject);
-    procedure JvInspector1Exit(Sender: TObject);
 //    procedure InspectorEditButtonClick(Sender: TObject;
 //                                       Item: TJvCustomInspectorItem);
   private
@@ -68,6 +66,7 @@ type
     FInts             : TList<PInteger>;
     FStrs             : TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
+    procedure PonerEnterComoTab(AActivo: Boolean);
     procedure InspectorItemEdit(Sender: TJvCustomInspector;
                                 Item: TJvCustomInspectorItem;
                                 var DisplayStr: string);
@@ -171,6 +170,8 @@ end;
 procedure TfrmMtoAppParam.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
+  // Restauramos Enter-como-Tab para el resto de la aplicacion al cerrar.
+  PonerEnterComoTab(True);
   Action := caFree;
 end;
 
@@ -790,6 +791,9 @@ var
   qry: TUniQuery;
   s: string;
 begin
+  // El inspector se navega con cursores y Enter debe confirmar el
+  // desplegable: apagamos Enter-como-Tab mientras el form esta abierto.
+  PonerEnterComoTab(False);
   ConstruirInspector;
   cmbGrupoUsuario.Properties.Items.Clear;
   // Todo usuario gestiona sus propios parametros (oUser) y los de su
@@ -831,21 +835,28 @@ begin
     edtBusqueda.SetFocus;
 end;
 
-procedure TfrmMtoAppParam.JvInspector1Enter(Sender: TObject);
+procedure TfrmMtoAppParam.PonerEnterComoTab(AActivo: Boolean);
+  procedure CambiarEn(AOwner: TComponent);
+  var
+    i: Integer;
+  begin
+    if Assigned(AOwner) then
+      for i := 0 to AOwner.ComponentCount - 1 do
+        if AOwner.Components[i] is TJvEnterAsTab then
+          TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := AActivo;
+  end;
 begin
-  // El TJvEnterAsTab heredado de TfrmBase convierte VK_RETURN en VK_TAB a
-  // nivel de mensaje. Dentro del inspector eso le roba el Enter al
-  // desplegable: la seleccion hecha con teclado (Ctrl+Abajo, cursor, Enter)
-  // no se confirma porque el Enter mueve el foco al siguiente control y el
-  // popup se cierra sin aceptar. Con raton si funciona porque el click va por
-  // otra via. Apagamos Enter-como-Tab mientras el inspector tiene el foco.
-  jvntrstb1.EnterAsTab := False;
-end;
-
-procedure TfrmMtoAppParam.JvInspector1Exit(Sender: TObject);
-begin
-  // Al salir del inspector hacia el panel superior reactivamos Enter-como-Tab.
-  jvntrstb1.EnterAsTab := True;
+  // El TJvEnterAsTab heredado de TfrmBase convierte Enter en Tab a nivel de
+  // mensaje y le roba el Enter al desplegable del inspector (con teclado la
+  // seleccion no se confirma; con raton si, va por otra via). Probado en un
+  // form limpio: el TJvInspector confirma con Enter sin problema, asi que la
+  // culpa es de EnterAsTab. Lo apagamos en todas las instancias (form, Owner
+  // y MainForm, porque el hook puede actuar a nivel de aplicacion) mientras
+  // el form esta abierto, y lo restauramos al cerrar. Apagarlo solo en
+  // OnEnter/OnExit del inspector no bastaba: al abrir el popup se reactivaba.
+  CambiarEn(Self);
+  CambiarEn(Owner);
+  CambiarEn(Application.MainForm);
 end;
 
 procedure TfrmMtoAppParam.cmbGrupoUsuarioPropertiesChange(Sender: TObject);
