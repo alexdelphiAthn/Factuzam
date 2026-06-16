@@ -22,6 +22,7 @@ uses
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinBlue,  System.StrUtils,
   dxSkinscxPCPainter, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxEdit, cxNavigator, DB, cxDBData, cxContainer, System.UITypes,
+  System.Generics.Collections,
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
@@ -508,6 +509,7 @@ type
       Sender: TObject);
 //    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
+    destructor Destroy; override;
     procedure ActualizarComboSeries;
     procedure CambiarEstadoRecibo(sEstado:String);
     procedure CrearTablaPrincipal; override;
@@ -530,6 +532,24 @@ type
     function AbrirListadoAlCrear: Boolean; virtual;
     //procedure CalcularLinea;
   private
+    // Cache CODIGO_ART_ART -> mostrar SKU en la linea. Evita reconsultar
+    // fza_articulos en cada repintado del grid. Se rellena perezosamente
+    // (y desde el resolver al teclear el articulo) y se vacia al recrear
+    // la tabla principal.
+    FArtMostrarSku: TDictionary<string, Boolean>;
+    // Visibilidad de las columnas de creacion de articulos del detalle.
+    // Solo se ven cuando la cabecera esta en modo "Crear/Act Articulo"
+    // (ESCREARARTICULOS_FAC='S'); ocultas en caso contrario.
+    procedure AplicarVisibilidadColumnasCreacion(bCrear: Boolean);
+    procedure SincronizarColumnasCreacion;
+    // Regla de negocio del SKU en lineas: solo se muestra/edita cuando el
+    // articulo tiene variacion (tallas/colores) o es nuevo (aun no existe
+    // en la BBDD). Para articulos normales el SKU se autoresuelve y estorba.
+    function  MostrarSkuArticulo(const ACodArt: string): Boolean;
+    procedure ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText(
+      Sender: TcxCustomGridTableItem; ARecordIndex: Integer; var AText: string);
+    procedure tvLineasFacturaEditing(Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem; var AAllow: Boolean);
     // Bloqueo por fase fiscal: una factura solo es editable (cabecera,
     // líneas y borrado) mientras FASE_FAC='BORRADOR'. Al lanzarla pasa
     // a una fase fiscal cerrada y solo caben Anular o Rectificar.
@@ -636,6 +656,12 @@ begin
     pcCab.ActivePage := tsCabecera;
     pcDetail.ActivePage := tsLineasFactura;
   end;
+end;
+
+destructor TfrmMtoFacturasBase.Destroy;
+begin
+  FreeAndNil(FArtMostrarSku);
+  inherited;
 end;
 
 procedure TfrmMtoFacturasBase.btnUpdateClienteClick(Sender: TObject);
@@ -971,6 +997,73 @@ procedure TfrmMtoFacturasBase.btnReciboPagadoClick(Sender: TObject);
 begin
   inherited;
   CambiarEstadoRecibo('Pagado');
+end;
+
+function TfrmMtoFacturasBase.MostrarSkuArticulo(const ACodArt: string): Boolean;
+var
+  q        : TUniQuery;
+  bMostrar : Boolean;
+begin
+  // Por defecto mostramos (no bloquear): linea sin articulo o fallo de BD.
+  bMostrar := True;
+  if (ACodArt <> '') and Assigned(FArtMostrarSku) then
+  begin
+    if not FArtMostrarSku.TryGetValue(ACodArt, bMostrar) then
+    begin
+      try
+        q := TUniQuery.Create(nil);
+        try
+          q.Connection := inLibGlobalVar.oConn;
+          q.SQL.Text :=
+            'SELECT a.ESVARIACION_ART, ' +
+            '       (SELECT COUNT(*) FROM fza_articulos_skus s ' +
+            '         WHERE s.CODIGO_ART_SKU = a.CODIGO_ART_ART ' +
+            '           AND s.ESACTIVO_SKU  = ''S'') AS NSKU ' +
+            '  FROM fza_articulos a ' +
+            ' WHERE a.CODIGO_ART_ART = :art LIMIT 1';
+          q.ParamByName('art').AsString := ACodArt;
+          q.Open;
+          // Sin fila: el articulo aun no existe (nuevo) -> mostrar SKU.
+          // Con fila: solo si es de variacion (tallas/colores) o tiene
+          // varios SKUs activos a elegir.
+          bMostrar := q.IsEmpty or
+                      (q.FieldByName('ESVARIACION_ART').AsString = 'S') or
+                      (q.FieldByName('NSKU').AsInteger > 1);
+        finally
+          FreeAndNil(q);
+        end;
+        FArtMostrarSku.AddOrSetValue(ACodArt, bMostrar);
+      except
+        // Ante cualquier fallo de BD mostramos el SKU y no cacheamos, para
+        // reintentar en el siguiente repintado.
+        bMostrar := True;
+      end;
+    end;
+  end;
+  Result := bMostrar;
+end;
+
+procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText(
+  Sender: TcxCustomGridTableItem; ARecordIndex: Integer; var AText: string);
+var
+  sArt: string;
+begin
+  // Vaciamos el texto del SKU en las lineas cuyo articulo no es de variacion
+  // ni es nuevo. El valor sigue en el dataset; solo se oculta visualmente.
+  sArt := VarToStr(tvLineasFactura.DataController.GetValue(
+                     ARecordIndex, ctbCODIGO_ARTICULO_FACTURA_LINEA.Index));
+  if not MostrarSkuArticulo(sArt) then
+    AText := '';
+end;
+
+procedure TfrmMtoFacturasBase.tvLineasFacturaEditing(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+begin
+  // El SKU solo es editable cuando procede mostrarlo (variacion o nuevo).
+  if (AItem = ctbCODIGO_UNIDAD_FACTURA_LINEA) and Assigned(dmmFacturas) then
+    AAllow := MostrarSkuArticulo(
+      dmmFacturas.unqryLinFac.FieldByName('CODIGO_ART_FACLIN').AsString);
 end;
 
 procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
@@ -1390,6 +1483,18 @@ begin
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
   VincularCantidadGrid(ctbCANTIDAD_FACTURA_LINEA,
                        ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA);
+  // Regla del SKU por linea: no se puede ocultar una columna por fila, asi
+  // que se vacia su texto (OnGetDataText) y se bloquea su edicion (OnEditing)
+  // segun el articulo de cada linea. El cache evita reconsultar fza_articulos
+  // en cada repintado.
+  if not Assigned(FArtMostrarSku) then
+    FArtMostrarSku := TDictionary<string, Boolean>.Create;
+  FArtMostrarSku.Clear;
+  ctbCODIGO_UNIDAD_FACTURA_LINEA.OnGetDataText :=
+                                  ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText;
+  tvLineasFactura.OnEditing := tvLineasFacturaEditing;
+  // Columnas de creacion de articulos: ocultas salvo modo creacion en la cab.
+  SincronizarColumnasCreacion;
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   // El check de mover stock solo aplica a facturas NORMAL: en SIMPLIFICADA
@@ -1754,27 +1859,35 @@ begin
   Result := True;
 end;
 
+procedure TfrmMtoFacturasBase.AplicarVisibilidadColumnasCreacion(
+  bCrear: Boolean);
+begin
+  ctbCODIGO_FAMILIA_FACTURA_LINEA.Visible        := bCrear;
+  ctbNOMBRE_FAMILIA_FACTURA_LINEA.Visible        := bCrear;
+  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA.Visible  := bCrear;
+  ctbCODIGO_PROVEEDOR_FACTURA_LINEA.Visible      := bCrear;
+  ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA.Visible := bCrear;
+  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.Visible     := bCrear;
+end;
+
+procedure TfrmMtoFacturasBase.SincronizarColumnasCreacion;
+var
+  bCrear: Boolean;
+begin
+  // El modo creacion vive en la cabecera (ESCREARARTICULOS_FAC). Lo leemos
+  // del dataset activo para que al navegar entre facturas las columnas se
+  // muestren/oculten segun cada documento, no segun el ultimo check tocado.
+  bCrear := False;
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.FindField(fcreart) <> nil) then
+    bCrear := dsTablaG.DataSet.FieldByName(fcreart).AsString = 'S';
+  AplicarVisibilidadColumnasCreacion(bCrear);
+end;
+
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
 begin
   inherited;
-  if (chkCrearArticulos.Checked = True) then
-  begin
-    ctbCODIGO_FAMILIA_FACTURA_LINEA.Visible := True;
-    ctbNOMBRE_FAMILIA_FACTURA_LINEA.Visible := True;
-    ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA.Visible := True;
-    ctbCODIGO_PROVEEDOR_FACTURA_LINEA.Visible := True;
-    ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA.Visible := True;
-    ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.Visible := True;
-  end
-  else
-  begin
-    ctbCODIGO_FAMILIA_FACTURA_LINEA.Visible := False;
-    ctbNOMBRE_FAMILIA_FACTURA_LINEA.Visible := False;
-    ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA.Visible := False;
-    ctbCODIGO_PROVEEDOR_FACTURA_LINEA.Visible := False;
-    ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA.Visible := False;
-    ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.Visible := False;
-  end;
+  AplicarVisibilidadColumnasCreacion(chkCrearArticulos.Checked);
 end;
 
 procedure TfrmMtoFacturasBase.chkDescripcion_ampliadaPropertiesChange(
@@ -1877,7 +1990,11 @@ procedure TfrmMtoFacturasBase.dsTablaGDataChange(Sender: TObject;
 begin
   // Field = nil: cambio de registro (scroll) o refresco completo
   if Field = nil then
+  begin
     ActualizarBloqueoEdicion;
+    // Cada factura lleva su propio modo creacion: re-evaluamos al navegar.
+    SincronizarColumnasCreacion;
+  end;
 end;
 
 procedure TfrmMtoFacturasBase.dteFECHA_FACTURAKeyUp(Sender: TObject;
@@ -1995,6 +2112,11 @@ begin
                                     Resolucion.CodigoSku,
                                     CodTarifa, FechaFac);
     if not Datos.Encontrado then Exit;
+    // Pre-cargamos la regla del SKU de este articulo (ya existe): se mostrara
+    // si es de variacion o tiene varios SKUs. Evita reconsultar en el pintado.
+    if Assigned(FArtMostrarSku) then
+      FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
+                                   Datos.EsVariacion or Datos.RequiereSku);
 
     // Si el padre tiene varios SKUs y aún no hay SKU, ResolverDatos no calcula
     // precio. Pedimos el del padre para arrastrar IVA y % DTO (mismo patrón
