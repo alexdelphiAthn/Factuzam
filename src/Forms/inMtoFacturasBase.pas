@@ -510,6 +510,7 @@ type
 //    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     destructor Destroy; override;
+    procedure AplicarEtiquetas; override;
     procedure ActualizarComboSeries;
     procedure CambiarEstadoRecibo(sEstado:String);
     procedure CrearTablaPrincipal; override;
@@ -552,6 +553,11 @@ type
     // hay modo creacion; dentro de una columna visible, las celdas que no
     // proceden se vacian (OnGetDataText) y se bloquean (OnEditing).
     procedure SincronizarColumnaSku;
+    // Reimpone TODA la visibilidad de columnas del detalle que controlamos
+    // por logica de negocio. Necesario porque AplicarEtiquetas ->
+    // PonerAnchosTitulos (inLibDevExp) repone la visibilidad desde el perfil
+    // (por defecto visible) y pisa lo que fijamos en CrearTablaPrincipal.
+    procedure ReaplicarVisibilidadDetalle;
     procedure dsLinFacDataChange(Sender: TObject; Field: TField);
     procedure ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText(
       Sender: TcxCustomGridTableItem; ARecordIndex: Integer; var AText: string);
@@ -1500,11 +1506,10 @@ begin
   ctbCODIGO_UNIDAD_FACTURA_LINEA.OnGetDataText :=
                                   ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText;
   tvLineasFactura.OnEditing := tvLineasFacturaEditing;
-  // La columna SKU se recalcula cuando cambian/recargan las lineas.
+  // La visibilidad del detalle se recalcula cuando cambian/recargan lineas.
   dmmFacturas.dsLinFac.OnDataChange := dsLinFacDataChange;
-  // Columnas de creacion (y SKU): ocultas salvo que la cab/lineas lo pidan.
-  SincronizarColumnasCreacion;
-  SincronizarColumnaSku;
+  // Estado inicial: Variacion oculta, creacion/SKU segun cab/lineas.
+  ReaplicarVisibilidadDetalle;
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   // El check de mover stock solo aplica a facturas NORMAL: en SIMPLIFICADA
@@ -1918,13 +1923,34 @@ begin
     ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := bMostrar;
 end;
 
+procedure TfrmMtoFacturasBase.ReaplicarVisibilidadDetalle;
+begin
+  // - Variacion: nunca visible.
+  // - Columnas de creacion: solo en modo creacion de la cabecera.
+  // - SKU: solo si alguna linea lo necesita (variacion / varios SKUs /
+  //   nuevo) o hay modo creacion.
+  // Estas reglas mandan sobre el perfil de usuario (PonerAnchosTitulos).
+  if ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible then
+    ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible := False;
+  SincronizarColumnasCreacion;
+  SincronizarColumnaSku;
+end;
+
+procedure TfrmMtoFacturasBase.AplicarEtiquetas;
+begin
+  inherited;
+  // inherited -> PonerAnchosTitulos repuso la visibilidad de las columnas
+  // desde el perfil (por defecto visibles). Reimponemos nuestras reglas.
+  ReaplicarVisibilidadDetalle;
+end;
+
 procedure TfrmMtoFacturasBase.dsLinFacDataChange(Sender: TObject;
   Field: TField);
 begin
   // Field = nil: cambio de registro de linea, recarga del detalle (al navegar
-  // de factura) o alta/baja de linea. Re-evaluamos si procede la columna SKU.
+  // de factura) o alta/baja de linea. Re-evaluamos la visibilidad del detalle.
   if Field = nil then
-    SincronizarColumnaSku;
+    ReaplicarVisibilidadDetalle;
 end;
 
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
@@ -2043,8 +2069,7 @@ begin
   begin
     ActualizarBloqueoEdicion;
     // Cada factura lleva su propio modo creacion: re-evaluamos al navegar.
-    SincronizarColumnasCreacion;
-    SincronizarColumnaSku;
+    ReaplicarVisibilidadDetalle;
   end;
 end;
 
