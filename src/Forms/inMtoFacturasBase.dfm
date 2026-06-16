@@ -781,6 +781,7 @@
                   object ctbCODIGO_UNIDAD_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'SKU'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxComboBoxProperties'
                     Properties.OnEditValueChanged = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged
                     Properties.OnInitPopup = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup
@@ -789,12 +790,14 @@
                   object ctbDESCRIPCION_VARIACION_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Variaci'#243'n'
                     DataBinding.FieldName = 'DESCRIPCION_VARIACION_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
                     Width = 140
                   end
                   object ctbCODIGO_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Familia'
                     DataBinding.FieldName = 'CODIGO_FAM_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxButtonEditProperties'
                     Properties.Buttons = <
                       item
@@ -806,18 +809,21 @@
                   object ctbNOMBRE_FAMILIA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Nombre Familia'
                     DataBinding.FieldName = 'NOMBRE_FAM_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
                     Width = 245
                   end
                   object ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Proveedor Principal'
                     DataBinding.FieldName = 'ESPROVEEDORPRINCIPAL_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxCheckBoxProperties'
                     Width = 172
                   end
                   object ctbCODIGO_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'C'#243'digo Proveedor'
                     DataBinding.FieldName = 'CODIGO_PRV_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.OnEditValueChanged = ctbCODIGO_PROVEEDOR_FACTURA_LINEAPropertiesEditValueChanged
                     Width = 163
@@ -825,12 +831,14 @@
                   object ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Raz'#243'n Social Proveedor'
                     DataBinding.FieldName = 'RAZON_SOCIAL_PROVEEDOR_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxTextEditProperties'
                     Width = 200
                   end
                   object ctbPRECIO_ULT_COMPRA_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Precio Coste'
                     DataBinding.FieldName = 'PRECIO_ULT_COMPRA_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                   end
                   object ctbDESCRIPCION_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
