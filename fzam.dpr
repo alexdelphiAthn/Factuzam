@@ -38,6 +38,7 @@ uses
   inLibConfigCampos in 'src\Lib\inLibConfigCampos.pas',
   inLibPermisos in 'src\Lib\inLibPermisos.pas',
   inLibPermisosAdmin in 'src\Lib\inLibPermisosAdmin.pas',
+  inLibLicenciaAplicacion in 'src\Lib\inLibLicenciaAplicacion.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
@@ -333,6 +334,8 @@ begin
   Application.Title := 'Fzam';
   frmLogon := TfrmLogon.Create(Application);
   try
+    if frmLogon.DebeCerrarAplicacion then
+      Exit;
     AutoLoginSuccessful := False;
     if (frmLogon.IsInitializeAuto) then
     begin

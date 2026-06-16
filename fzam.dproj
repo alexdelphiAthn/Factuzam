@@ -191,6 +191,7 @@
         <DCCReference Include="src\Lib\inLibConfigCampos.pas"/>
         <DCCReference Include="src\Lib\inLibPermisos.pas"/>
         <DCCReference Include="src\Lib\inLibPermisosAdmin.pas"/>
+        <DCCReference Include="src\Lib\inLibLicenciaAplicacion.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
         </DCCReference>
