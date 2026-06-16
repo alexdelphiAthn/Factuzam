@@ -92,6 +92,11 @@ type
     procedure dsLinFacStateChange(Sender: TObject);
     procedure unqryLinFacBeforeEdit(DataSet: TDataSet);
 private
+    // Guarda de re-entrancia del BeforePost de la cabecera (ver
+    // unqryFacBeforePost). Los ShowMessage/SetFocus de la validacion
+    // bombean el bucle de mensajes y el grid maestro puede relanzar el
+    // Post (CheckBrowseMode) mientras la validacion sigue en curso.
+    FValidandoPost: Boolean;
     // Copia a los parámetros de la query los valores de los campos del
     // maestro (MasterSource) que se llamen igual. UniDAC solo rellena
     // los parámetros al hacer scroll del maestro con el detail ya
@@ -108,6 +113,9 @@ private
     function HayHuecoNumeracion(const ASerie, AEmpresa,
                                 ANumero: string): Boolean;
     procedure ValidarOperacionVfactu(var AIsError: Boolean);
+    // Cuerpo real del BeforePost de la cabecera. Lo invoca el wrapper
+    // unqryFacBeforePost dentro de la guarda de re-entrancia.
+    procedure ValidarCabeceraBeforePost(DataSet: TDataSet);
     procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
 public
     procedure GetCodigoAutoFactura;
@@ -1650,13 +1658,31 @@ begin
 end;
 
 procedure TdmFacturas.unqryFacBeforePost(DataSet: TDataSet);
+begin
+  inherited;
+  // Los ShowMessage/SetFocus de la validacion bombean el bucle de
+  // mensajes. Si el Post lo disparo el grid maestro (CheckBrowseMode al
+  // pulsar otra fila) y durante ese bombeo el grid relanza otro Post,
+  // re-entrar aqui dejaria los buffers internos de UniDAC a medio
+  // postear y reventaria mas tarde con "DisposeBuf failed" /
+  // "AddRefStr failed". El Post anidado se veta de forma limpia.
+  if FValidandoPost then
+    Abort;
+  FValidandoPost := True;
+  try
+    ValidarCabeceraBeforePost(DataSet);
+  finally
+    FValidandoPost := False;
+  end;
+end;
+
+procedure TdmFacturas.ValidarCabeceraBeforePost(DataSet: TDataSet);
 var
   ISError:Boolean;
   frmFac:TfrmMtoFacturasBase;
   bValidar: Boolean;
   dtUltima: TDateTime;
 begin
-  inherited;
   IsError := False;
   frmFac := (GetOwnerForm<TfrmMtoFacturasBase>);
   with unqryTablaG do
@@ -1669,7 +1695,8 @@ begin
       ShowMessage('Esta serie es usada por otra empresa.' +
                   ' Debe cambiar la serie ');
       frmFac.pcCab.ActivePage := frmFac.tsCabecera;
-      frmFac.cbbSerieFactura.SetFocus;
+      if frmFac.cbbSerieFactura.CanFocus then
+        frmFac.cbbSerieFactura.SetFocus;
       IsError := True;
     end;
     if (FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString = '') and
@@ -1678,7 +1705,8 @@ begin
     begin
       ShowMessage('Debe escribir la razón social del cliente del borrador');
       frmFac.pcCab.ActivePage := frmFac.tsDatosCliente;
-      frmFac.txtRAZONSOCIAL_CLIENTE_FACTURA.SetFocus;
+      if frmFac.txtRAZONSOCIAL_CLIENTE_FACTURA.CanFocus then
+        frmFac.txtRAZONSOCIAL_CLIENTE_FACTURA.SetFocus;
       IsError := True;
     end;
     if (FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsSTring = '') and
@@ -1686,7 +1714,8 @@ begin
     begin
       ShowMessage('Debe escribir la razón social de la empresa del borrador');
       frmFac.pcCab.ActivePage := frmFac.tsEmpresa;
-      frmFac.txtRAZONSOCIAL_EMPRESA_FACTURA.SetFocus;
+      if frmFac.txtRAZONSOCIAL_EMPRESA_FACTURA.CanFocus then
+        frmFac.txtRAZONSOCIAL_EMPRESA_FACTURA.SetFocus;
       IsError := True;
     end;
     if (FieldByName('SERIE_FAC').AsString = '') and
@@ -1694,7 +1723,8 @@ begin
     begin
       ShowMessage('Debe seleccionar una serie del borrador');
       frmFac.pcCab.ActivePage := frmFac.tsCabecera;
-      frmFac.cbbSerieFactura.SetFocus;
+      if frmFac.cbbSerieFactura.CanFocus then
+        frmFac.cbbSerieFactura.SetFocus;
       IsError := True;
     end;
     if ((FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString = '') or
@@ -1731,7 +1761,8 @@ begin
         MensajeDocumentoFiscalInvalido(
           FieldByName('NIF_CLIENTE_FAC').AsString));
       frmFac.pcCab.ActivePage := frmFac.tsDatosCliente;
-      frmFac.txtNIF_CLIENTE_FACTURA.SetFocus;
+      if frmFac.txtNIF_CLIENTE_FACTURA.CanFocus then
+        frmFac.txtNIF_CLIENTE_FACTURA.SetFocus;
       IsError := True;
     end;
     if (not IsError) and bValidar and
@@ -1744,7 +1775,8 @@ begin
         MensajeDocumentoFiscalInvalido(
           FieldByName('NIF_EMPRESA_FAC').AsString));
       frmFac.pcCab.ActivePage := frmFac.tsEmpresa;
-      frmFac.txtNIF_EMPRESA_FACTURA.SetFocus;
+      if frmFac.txtNIF_EMPRESA_FACTURA.CanFocus then
+        frmFac.txtNIF_EMPRESA_FACTURA.SetFocus;
       IsError := True;
     end;
     // La fecha no puede ser anterior a la ultima factura emitida de la serie
