@@ -44,6 +44,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Painter = JvInspectorDotNETPainter1
       TabStop = True
       TabOrder = 0
+      OnEnter = JvInspector1Enter
+      OnExit = JvInspector1Exit
     end
   end
   object Panel1: TPanel

@@ -24,7 +24,8 @@ uses
   cxCheckBox, cxInplaceContainer, cxTextEdit, cxContainer,
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
   Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
-  cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
+  cxButtons, JvComponentBase, JvEnterTab, JvInspector, JvExControls,
+  System.Actions,
   Vcl.ActnList, Vcl.Printers, System.UITypes;
 
 type
@@ -62,12 +63,15 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure JvInspector1Enter(Sender: TObject);
+    procedure JvInspector1Exit(Sender: TObject);
   private
     // Listas para gestionar la memoria dinámica de los parámetros
     FBools: TList<PBoolean>;
     FInts:  TList<PInteger>;
     FStrs:  TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
+    procedure PonerEnterComoTab(AActivo: Boolean);
     procedure CapturarValoresOriginales;
     function  HayCambiosPendientes: Boolean;
     procedure LimpiarMemoria;
@@ -160,7 +164,41 @@ end;
 procedure TfrmMtoCajaParam.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
+  // Seguridad: si el form se cierra con el inspector enfocado, restauramos
+  // Enter-como-Tab para el resto de la aplicacion.
+  PonerEnterComoTab(True);
   Action := caFree;
+end;
+
+procedure TfrmMtoCajaParam.PonerEnterComoTab(AActivo: Boolean);
+  procedure CambiarEn(AOwner: TComponent);
+  var
+    i: Integer;
+  begin
+    if Assigned(AOwner) then
+      for i := 0 to AOwner.ComponentCount - 1 do
+        if AOwner.Components[i] is TJvEnterAsTab then
+          TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := AActivo;
+  end;
+begin
+  // Apaga/enciende TJvEnterAsTab en todas las instancias (form, Owner y
+  // MainForm, porque el hook puede actuar a nivel de aplicacion).
+  CambiarEn(Self);
+  CambiarEn(Owner);
+  CambiarEn(Application.MainForm);
+end;
+
+procedure TfrmMtoCajaParam.JvInspector1Enter(Sender: TObject);
+begin
+  // Dentro del inspector Enter debe confirmar el desplegable, no saltar de
+  // campo: apagamos Enter-como-Tab mientras tiene el foco.
+  PonerEnterComoTab(False);
+end;
+
+procedure TfrmMtoCajaParam.JvInspector1Exit(Sender: TObject);
+begin
+  // Fuera del inspector Enter vuelve a saltar de campo (resto de controles).
+  PonerEnterComoTab(True);
 end;
 
 procedure TfrmMtoCajaParam.LimpiarMemoria;
