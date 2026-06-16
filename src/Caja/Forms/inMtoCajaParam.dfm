@@ -44,8 +44,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Painter = JvInspectorDotNETPainter1
       TabStop = True
       TabOrder = 0
-      OnEnter = JvInspector1Enter
-      OnExit = JvInspector1Exit
+      OnEnter = ApagarEnterTab
+      OnExit = EncenderEnterTab
     end
   end
   object Panel1: TPanel
@@ -104,6 +104,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
       Caption = '&Guardar (F12)'
       TabOrder = 2
       OnClick = btnGuardarClick
+      OnEnter = ApagarEnterTab
+      OnExit = EncenderEnterTab
     end
     object btnChangeId: TcxButton
       Left = 689
@@ -131,6 +133,8 @@ object frmMtoCajaParam: TfrmMtoCajaParam
         2F746578743E0D0A3C2F7376673E0D0A}
       TabOrder = 3
       OnClick = btnChangeIdClick
+      OnEnter = ApagarEnterTab
+      OnExit = EncenderEnterTab
     end
   end
   object JvInspectorDotNETPainter1: TJvInspectorDotNETPainter

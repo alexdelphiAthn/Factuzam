@@ -59,6 +59,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure ApagarEnterTab(Sender: TObject);
+    procedure EncenderEnterTab(Sender: TObject);
 //    procedure InspectorEditButtonClick(Sender: TObject;
 //                                       Item: TJvCustomInspectorItem);
   private
@@ -791,9 +793,6 @@ var
   qry: TUniQuery;
   s: string;
 begin
-  // El inspector se navega con cursores y Enter debe confirmar el
-  // desplegable: apagamos Enter-como-Tab mientras el form esta abierto.
-  PonerEnterComoTab(False);
   ConstruirInspector;
   cmbGrupoUsuario.Properties.Items.Clear;
   // Todo usuario gestiona sus propios parametros (oUser) y los de su
@@ -847,16 +846,25 @@ procedure TfrmMtoAppParam.PonerEnterComoTab(AActivo: Boolean);
   end;
 begin
   // El TJvEnterAsTab heredado de TfrmBase convierte Enter en Tab a nivel de
-  // mensaje y le roba el Enter al desplegable del inspector (con teclado la
-  // seleccion no se confirma; con raton si, va por otra via). Probado en un
-  // form limpio: el TJvInspector confirma con Enter sin problema, asi que la
-  // culpa es de EnterAsTab. Lo apagamos en todas las instancias (form, Owner
-  // y MainForm, porque el hook puede actuar a nivel de aplicacion) mientras
-  // el form esta abierto, y lo restauramos al cerrar. Apagarlo solo en
-  // OnEnter/OnExit del inspector no bastaba: al abrir el popup se reactivaba.
+  // mensaje y le roba el Enter al desplegable del inspector. Apaga/enciende
+  // todas las instancias (form, Owner y MainForm, porque el hook puede
+  // actuar a nivel de aplicacion).
   CambiarEn(Self);
   CambiarEn(Owner);
   CambiarEn(Application.MainForm);
+end;
+
+procedure TfrmMtoAppParam.ApagarEnterTab(Sender: TObject);
+begin
+  // Inspector (Enter confirma el desplegable) y botones (Enter hace click):
+  // en estos controles Enter NO debe saltar de campo, lo apagamos al entrar.
+  PonerEnterComoTab(False);
+end;
+
+procedure TfrmMtoAppParam.EncenderEnterTab(Sender: TObject);
+begin
+  // Al salir, Enter vuelve a saltar de campo en el resto de controles.
+  PonerEnterComoTab(True);
 end;
 
 procedure TfrmMtoAppParam.cmbGrupoUsuarioPropertiesChange(Sender: TObject);

@@ -63,8 +63,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure JvInspector1Enter(Sender: TObject);
-    procedure JvInspector1Exit(Sender: TObject);
+    procedure ApagarEnterTab(Sender: TObject);
+    procedure EncenderEnterTab(Sender: TObject);
   private
     // Listas para gestionar la memoria dinámica de los parámetros
     FBools: TList<PBoolean>;
@@ -188,16 +188,17 @@ begin
   CambiarEn(Application.MainForm);
 end;
 
-procedure TfrmMtoCajaParam.JvInspector1Enter(Sender: TObject);
+procedure TfrmMtoCajaParam.ApagarEnterTab(Sender: TObject);
 begin
-  // Dentro del inspector Enter debe confirmar el desplegable, no saltar de
-  // campo: apagamos Enter-como-Tab mientras tiene el foco.
+  // Controles donde Enter NO debe saltar de campo: el inspector (Enter
+  // confirma el desplegable) y los botones (Enter hace click). Al entrar en
+  // ellos apagamos Enter-como-Tab.
   PonerEnterComoTab(False);
 end;
 
-procedure TfrmMtoCajaParam.JvInspector1Exit(Sender: TObject);
+procedure TfrmMtoCajaParam.EncenderEnterTab(Sender: TObject);
 begin
-  // Fuera del inspector Enter vuelve a saltar de campo (resto de controles).
+  // Al salir de esos controles, Enter vuelve a saltar de campo en el resto.
   PonerEnterComoTab(True);
 end;
 
