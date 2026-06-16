@@ -216,6 +216,11 @@ Genera dos ficheros:
 - `<nombre>_eventos.xml`
 - `<nombre>_facturacion.xml`
 
+Los dos ficheros incluyen el atributo `ModoVerifactu` en el nodo raíz. Ese
+valor congela el contexto de la descarga (`SIN`, `VERIFACTU` o
+`NO_VERIFACTU`) para que una verificación posterior no dependa de cómo esté
+configurada la aplicación en ese momento.
+
 Antes de construir los XML se valida el modo:
 
 - En `NO_VERIFACTU`, se bloquea la exportación si hay eventos o registros de
@@ -234,6 +239,31 @@ no en `RegistroEventosNoVerifactu` ni en
 `RegistroFacturacionNoVerifactu`. Firmar el contenedor duplicaría una garantía
 que la especificación AEAT no exige y obliga a canonicalizar XML embebido en
 CDATA, lo que no aporta valor legal.
+
+## Ejemplo AEAT y validación externa
+
+El ejemplo local de firma EPES/XAdES está en:
+
+```text
+DESARROLLOS EN CURSO/ejnoverifactu/ejemploRegistro-firmado-epes-xades4j.xml
+```
+
+Ese fichero es un registro fiscal individual firmado (`RegistroAlta`). No es
+un libro completo de eventos/facturación ni un contenedor de descarga. Por eso
+un validador público de firma debe recibir un XML individual firmado, no el
+XML de exportación de Factuzam con los registros embebidos en CDATA.
+
+Comparación aplicada:
+
+- El ejemplo AEAT firma el nodo `RegistroAlta`.
+- Factuzam firma `RegistroAlta` o `RegistroAnulacion` en facturación.
+- Factuzam firma `RegistroEvento/Evento` en eventos.
+- En todos los casos se usa `XAdES Enveloped` EPES, RSA-SHA256, SHA-256 para
+  las referencias y la política AGE indicada arriba.
+
+Para validación externa de firma puede usarse VALIDe con un registro
+individual firmado extraído de `RegistroXmlFirmado`. FACe/AOC no son
+validadores de ficheros NO VERI*FACTU; son validadores de Facturae.
 
 ## Unidades nuevas
 

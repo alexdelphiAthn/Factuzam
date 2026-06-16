@@ -24,6 +24,7 @@ type
   TResultadoVerificacionNoVerifactu = record
     ArchivoEventos:       string;
     ArchivoFacturacion:   string;
+    ModoExportacion:      string;
     Eventos:              Integer;
     RegistrosFacturacion: Integer;
     Errores:              Integer;
@@ -46,7 +47,7 @@ implementation
 
 uses
   System.Classes, System.Hash, System.IOUtils, System.NetEncoding,
-  System.StrUtils, Xml.XMLDoc, Xml.XMLIntf;
+  System.StrUtils, Xml.XMLDoc, Xml.XMLIntf, inLibVerifactu;
 
 const
   cAlgC14n = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
@@ -129,6 +130,27 @@ begin
     oAtributo := ANode.AttributeNodes.FindNode(ANombre);
     if oAtributo <> nil then
       Result := Trim(oAtributo.Text);
+  end;
+end;
+
+procedure AgregarDetalle(var AResultado: TResultadoVerificacionNoVerifactu;
+                         const ATipo, AMensaje: string); forward;
+
+procedure CapturarModoExportacion(var AResultado:
+                                  TResultadoVerificacionNoVerifactu;
+                                  const ARaiz: IXMLNode;
+                                  const AEtiqueta: string);
+var
+  sModo: string;
+begin
+  sModo := UpperCase(Trim(AtributoNodo(ARaiz, 'ModoVerifactu')));
+  if sModo <> '' then
+  begin
+    if AResultado.ModoExportacion = '' then
+      AResultado.ModoExportacion := sModo
+    else if AResultado.ModoExportacion <> sModo then
+      AgregarDetalle(AResultado, 'ERROR',
+        AEtiqueta + ': ModoVerifactu no coincide con el otro fichero.');
   end;
 end;
 
@@ -266,6 +288,48 @@ begin
   end;
 end;
 
+function TextoHuellaEventoPropia(const AXml: string): string;
+var
+  oDoc: IXMLDocument;
+  oRaiz: IXMLNode;
+  oEvento: IXMLNode;
+  oHuella: IXMLNode;
+begin
+  Result := '';
+  if CargarXmlTexto(AXml, oDoc) then
+  begin
+    oRaiz := oDoc.DocumentElement;
+    if EsNodo(oRaiz, 'RegistroEvento') then
+      oEvento := BuscarHijo(oRaiz, 'Evento')
+    else if EsNodo(oRaiz, 'Evento') then
+      oEvento := oRaiz
+    else
+      oEvento := nil;
+    oHuella := BuscarHijo(oEvento, 'HuellaEvento');
+    if oHuella <> nil then
+      Result := Trim(oHuella.Text);
+  end;
+end;
+
+function VerificacionLegalNoVerifactu(const AResultado:
+                                      TResultadoVerificacionNoVerifactu):
+                                      Boolean;
+begin
+  if AResultado.ModoExportacion <> '' then
+    Result := AResultado.ModoExportacion = cModoVerifactuNoVerifactu
+  else
+    Result := NoVerifactuActivo;
+end;
+
+function TipoIncidenciaFirmaLegal(const AResultado:
+                                  TResultadoVerificacionNoVerifactu): string;
+begin
+  if VerificacionLegalNoVerifactu(AResultado) then
+    Result := 'ERROR'
+  else
+    Result := 'AVISO';
+end;
+
 function Sha256HexMayus(const AValor: string): string;
 begin
   Result := UpperCase(THashSHA2.GetHashString(AValor));
@@ -338,10 +402,12 @@ var
   oPropiedades: IXMLNode;
   oPolitica: IXMLNode;
   sRaiz: string;
+  sTipoFirma: string;
 begin
+  sTipoFirma := TipoIncidenciaFirmaLegal(AResultado);
   if not CargarXmlTexto(AXml, oDoc) then
   begin
-    AgregarDetalle(AResultado, 'ERROR',
+    AgregarDetalle(AResultado, sTipoFirma,
       AEtiqueta + ': el XML firmado no se puede leer.');
   end
   else
@@ -352,116 +418,116 @@ begin
     if AEsEvento then
     begin
       if not SameText(sRaiz, 'RegistroEvento') then
-        AgregarDetalle(AResultado, 'ERROR',
+        AgregarDetalle(AResultado, sTipoFirma,
           AEtiqueta + ': la firma de evento debe envolver RegistroEvento.');
       oNodoFirmado := BuscarHijo(oRaiz, 'Evento');
       if oNodoFirmado = nil then
-        AgregarDetalle(AResultado, 'ERROR',
+        AgregarDetalle(AResultado, sTipoFirma,
           AEtiqueta + ': falta el nodo Evento firmado.');
     end
     else if (not SameText(sRaiz, 'RegistroAlta')) and
             (not SameText(sRaiz, 'RegistroAnulacion')) then
-      AgregarDetalle(AResultado, 'ERROR',
+      AgregarDetalle(AResultado, sTipoFirma,
         AEtiqueta + ': la firma debe envolver RegistroAlta o ' +
         'RegistroAnulacion.');
     oFirma := BuscarHijo(oNodoFirmado, 'Signature');
     if oFirma = nil then
-      AgregarDetalle(AResultado, 'ERROR',
+      AgregarDetalle(AResultado, sTipoFirma,
         AEtiqueta + ': la firma XAdES no esta en el nodo exigido por AEAT.')
     else
     begin
       if BuscarDescendiente(oFirma, 'X509Certificate') = nil then
-        AgregarDetalle(AResultado, 'ERROR',
+        AgregarDetalle(AResultado, sTipoFirma,
           AEtiqueta + ': falta certificado X509 en KeyInfo.');
       oSignedInfo := BuscarHijo(oFirma, 'SignedInfo');
       if oSignedInfo = nil then
-        AgregarDetalle(AResultado, 'ERROR',
+        AgregarDetalle(AResultado, sTipoFirma,
           AEtiqueta + ': falta SignedInfo.')
       else
       begin
         oMetodo := BuscarHijo(oSignedInfo, 'CanonicalizationMethod');
         if AtributoNodo(oMetodo, 'Algorithm') <> cAlgC14n then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': CanonicalizationMethod no coincide con AEAT.');
         oMetodo := BuscarHijo(oSignedInfo, 'SignatureMethod');
         if AtributoNodo(oMetodo, 'Algorithm') <> cAlgRsaSha256 then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': SignatureMethod debe ser RSA-SHA256.');
         if ContarHijos(oSignedInfo, 'Reference') <> 2 then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': SignedInfo debe tener referencia al documento y ' +
             'a SignedProperties.');
         oReferenciaDocumento := BuscarHijoConAtributo(oSignedInfo,
           'Reference', 'URI', '');
         if oReferenciaDocumento = nil then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': falta Reference URI vacio al registro firmado.')
         else
         begin
           if BuscarDescendienteConAtributo(oReferenciaDocumento, 'Transform',
              'Algorithm', cAlgEnveloped) = nil then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': falta transform enveloped-signature.');
           oDigestMethod := BuscarDescendiente(oReferenciaDocumento,
             'DigestMethod');
           if AtributoNodo(oDigestMethod, 'Algorithm') <> cAlgSha256 then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': digest del registro debe ser SHA-256.');
         end;
         oReferenciaPropiedades := BuscarHijoConAtributo(oSignedInfo,
           'Reference', 'Type', cTipoSignedProperties);
         if oReferenciaPropiedades = nil then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': falta Reference a SignedProperties.')
         else
         begin
           if BuscarDescendienteConAtributo(oReferenciaPropiedades,
              'Transform', 'Algorithm', cAlgC14n) = nil then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': SignedProperties no usa canonicalizacion AEAT.');
           oDigestMethod := BuscarDescendiente(oReferenciaPropiedades,
             'DigestMethod');
           if AtributoNodo(oDigestMethod, 'Algorithm') <> cAlgSha256 then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': digest de SignedProperties debe ser SHA-256.');
         end;
       end;
       oPropiedades := BuscarDescendiente(oFirma, 'QualifyingProperties');
       if oPropiedades = nil then
-        AgregarDetalle(AResultado, 'ERROR',
+        AgregarDetalle(AResultado, sTipoFirma,
           AEtiqueta + ': falta QualifyingProperties XAdES.')
       else
       begin
         if BuscarDescendiente(oPropiedades, 'SignedProperties') = nil then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': falta SignedProperties XAdES.');
         if BuscarDescendiente(oPropiedades, 'SigningCertificate') = nil then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': falta SigningCertificate.');
         oPolitica := BuscarRuta(oPropiedades,
           ['SignedProperties', 'SignedSignatureProperties',
            'SignaturePolicyIdentifier', 'SignaturePolicyId']);
         if oPolitica = nil then
-          AgregarDetalle(AResultado, 'ERROR',
+          AgregarDetalle(AResultado, sTipoFirma,
             AEtiqueta + ': falta politica de firma AGE.')
         else
         begin
           if TextoRuta(oPolitica, ['SigPolicyId', 'Identifier']) <>
              cPoliticaAeatId then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': identificador de politica AGE incorrecto.');
           oDigestMethod := BuscarRuta(oPolitica,
             ['SigPolicyHash', 'DigestMethod']);
           if AtributoNodo(oDigestMethod, 'Algorithm') <> cAlgSha1 then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': digest de politica AGE debe ser SHA-1.');
           if TextoRuta(oPolitica, ['SigPolicyHash', 'DigestValue']) <>
              cPoliticaAeatHashSha1 then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': DigestValue de politica AGE incorrecto.');
           if TextoRuta(oPolitica, ['SigPolicyQualifiers',
              'SigPolicyQualifier', 'SPURI']) <> cPoliticaAeatUrl then
-            AgregarDetalle(AResultado, 'ERROR',
+            AgregarDetalle(AResultado, sTipoFirma,
               AEtiqueta + ': URL de politica AGE incorrecta.');
         end;
       end;
@@ -482,7 +548,9 @@ var
   sFirmaXades: string;
   sHuellaXml: string;
   sSignatureValue: string;
+  sTipoFirma: string;
 begin
+  sTipoFirma := TipoIncidenciaFirmaLegal(AResultado);
   sId := TextoHijo(AEvento, 'Id');
   sHashAnterior := UpperCase(TextoHijo(AEvento, 'HashAnterior'));
   sHashPropio := UpperCase(TextoHijo(AEvento, 'HashPropio'));
@@ -503,19 +571,19 @@ begin
     AgregarDetalle(AResultado, 'ERROR',
       'Evento ' + sId + ': HashAnterior no coincide con el evento anterior.');
   if Trim(sRegistroXml) = '' then
-    AgregarDetalle(AResultado, 'ERROR',
+    AgregarDetalle(AResultado, sTipoFirma,
       'Evento ' + sId + ': falta RegistroXmlFirmado.')
   else
   begin
-    sHuellaXml := UpperCase(TextoEtiquetaXml(sRegistroXml, 'HuellaEvento'));
+    sHuellaXml := UpperCase(TextoHuellaEventoPropia(sRegistroXml));
     if (sHuellaXml <> '') and (sHuellaXml <> sHashPropio) then
       AgregarDetalle(AResultado, 'ERROR',
         'Evento ' + sId + ': HuellaEvento no coincide con HashPropio.');
     if (sFirmaXades <> '') and (not HayFirmaXml(sRegistroXml)) then
-      AgregarDetalle(AResultado, 'ERROR',
+      AgregarDetalle(AResultado, sTipoFirma,
         'Evento ' + sId + ': hay FirmaXades pero el XML no contiene firma.');
     if sFirmaXades = '' then
-      AgregarDetalle(AResultado, 'ERROR',
+      AgregarDetalle(AResultado, sTipoFirma,
         'Evento ' + sId + ': falta FirmaXades legal.')
     else
     begin
@@ -547,7 +615,9 @@ var
   sHashRegistro: string;
   sFirma: string;
   sSignatureValue: string;
+  sTipoFirma: string;
 begin
+  sTipoFirma := TipoIncidenciaFirmaLegal(AResultado);
   sSerie := TextoHijo(ARegistro, 'Serie');
   sNumero := TextoHijo(ARegistro, 'Numero');
   sEtiqueta := sSerie + '/' + sNumero;
@@ -565,16 +635,16 @@ begin
     AgregarDetalle(AResultado, 'ERROR',
       'Factura ' + sEtiqueta + ': HashPeticionBase64 no coincide.');
   if sRegistroXml = '' then
-    AgregarDetalle(AResultado, 'ERROR',
+    AgregarDetalle(AResultado, sTipoFirma,
       'Factura ' + sEtiqueta + ': falta RegistroXmlFirmado.')
   else if sHashRegistro <> Sha256Base64(sRegistroXml) then
     AgregarDetalle(AResultado, 'ERROR',
       'Factura ' + sEtiqueta + ': HashRegistroXmlBase64 no coincide.');
   if (sFirma <> '') and (not HayFirmaXml(sRegistroXml)) then
-    AgregarDetalle(AResultado, 'ERROR',
+    AgregarDetalle(AResultado, sTipoFirma,
       'Factura ' + sEtiqueta + ': hay firma guardada pero el XML no firma.');
   if sFirma = '' then
-    AgregarDetalle(AResultado, 'ERROR',
+    AgregarDetalle(AResultado, sTipoFirma,
       'Factura ' + sEtiqueta + ': falta FirmaDigitalXades legal.')
   else
   begin
@@ -603,6 +673,7 @@ begin
   begin
     oDoc := CargarXmlArchivo(AResultado.ArchivoEventos);
     oRaiz := oDoc.DocumentElement;
+    CapturarModoExportacion(AResultado, oRaiz, 'Eventos');
     if not EsNodo(oRaiz, 'RegistroEventosNoVerifactu') then
       AgregarDetalle(AResultado, 'ERROR',
         'El fichero de eventos no tiene la raiz esperada.');
@@ -639,6 +710,7 @@ begin
   begin
     oDoc := CargarXmlArchivo(AResultado.ArchivoFacturacion);
     oRaiz := oDoc.DocumentElement;
+    CapturarModoExportacion(AResultado, oRaiz, 'Facturacion');
     if not EsNodo(oRaiz, 'RegistroFacturacionNoVerifactu') then
       AgregarDetalle(AResultado, 'ERROR',
         'El fichero de facturacion no tiene la raiz esperada.');
@@ -695,6 +767,7 @@ function VerificarFicherosNoVerifactu(const AArchivoEventos,
 begin
   Result.ArchivoEventos := AArchivoEventos;
   Result.ArchivoFacturacion := AArchivoFacturacion;
+  Result.ModoExportacion := '';
   Result.Eventos := 0;
   Result.RegistrosFacturacion := 0;
   Result.Errores := 0;
@@ -720,8 +793,14 @@ end;
 
 function ResumenVerificacionNoVerifactu(
   const AResultado: TResultadoVerificacionNoVerifactu): string;
+var
+  sModo: string;
 begin
+  sModo := AResultado.ModoExportacion;
+  if sModo = '' then
+    sModo := ModoVerifactuTexto + ' (modo actual)';
   Result :=
+    'Modo: ' + sModo + sLineBreak +
     'Eventos: ' + IntToStr(AResultado.Eventos) + sLineBreak +
     'Registros de facturacion: ' +
     IntToStr(AResultado.RegistrosFacturacion) + sLineBreak +

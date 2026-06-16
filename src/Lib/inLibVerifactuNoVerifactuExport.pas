@@ -297,6 +297,8 @@ begin
     Sb.Append(EscaparXml(oVersion));
     Sb.Append('" UsuarioExportacion="');
     Sb.Append(EscaparXml(oUser));
+    Sb.Append('" ModoVerifactu="');
+    Sb.Append(EscaparXml(ModoVerifactuTexto));
     Sb.Append('">');
     while not Qry.Eof do
     begin
@@ -388,6 +390,8 @@ begin
     Sb.Append(EscaparXml(oVersion));
     Sb.Append('" UsuarioExportacion="');
     Sb.Append(EscaparXml(oUser));
+    Sb.Append('" ModoVerifactu="');
+    Sb.Append(EscaparXml(ModoVerifactuTexto));
     Sb.Append('">');
     while not Qry.Eof do
     begin
