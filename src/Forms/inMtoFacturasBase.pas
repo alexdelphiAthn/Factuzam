@@ -1499,8 +1499,9 @@ begin
       RegistrarEventoVerifactu(inLibGlobalVar.oConn,
         cEventoVerifactuEncolado,
         AAccion + ' encolada desde Borradores', '', sSerie, sNumero);
+      TVerifactuCola.Despertar;
       ShowMessage(AAccion + ' encolada: el hilo Verifactu la enviará en ' +
-                  'el próximo ciclo. Puede seguirla en la columna ' +
+                  'cuanto pueda. Puede seguirla en la columna ' +
                   '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
     end
     else if NoVerifactuActivo then
@@ -1567,6 +1568,8 @@ begin
         cEventoVerifactuEncolado,
         'Lanzamiento manual (Consolidar) desde Borradores', '',
         sSerie, sNumero);
+    if VerifactuActivo then
+      TVerifactuCola.Despertar;
     dsTablaG.DataSet.Refresh;
     if VerifactuActivo then
       ShowMessage('Borrador ' + sSerie + '\' + sNumero +

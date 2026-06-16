@@ -59,12 +59,16 @@ type
     // Arranque tras el logon y parada al cerrar (ver inMtoPrincipal)
     class procedure IniciarHilo;
     class procedure DetenerHilo;
+    // Corta la espera del ciclo para que el envío al ws salga en el acto
+    // nada más confirmarse la venta. La llaman los puntos de grabación
+    // justo DESPUÉS del commit (la fila ya es visible para el hilo).
+    class procedure Despertar;
   end;
 
 implementation
 
 uses
-  Winapi.Windows, Data.DB,
+  Winapi.Windows, Data.DB, System.SyncObjs,
   inLibGlobalVar, inLibAppParam, inLibLog,
   inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal;
 
@@ -106,6 +110,9 @@ type
 
 var
   oHiloCola: THiloVerifactuCola = nil;
+  // Señal auto-reset: la activa Despertar al encolar y la consume la
+  // espera del hilo, que entonces procesa la cola sin aguardar al ciclo.
+  oEventoDespertar: TEvent = nil;
 
 function ColumnasFirmaFacturacionDisponibles(AConn: TUniConnection): Boolean;
 var
@@ -460,6 +467,7 @@ begin
             RegistrarEventoVerifactu(AConn, cEventoVerifactuEncolado,
               'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
               ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
+            Despertar;
           end;
         mvNoVerifactu:
           RegistrarFacturaNoVerifactu(Qry, ASerieRect, ANumeroRect);
@@ -511,6 +519,10 @@ class procedure TVerifactuCola.IniciarHilo;
 begin
   if oHiloCola = nil then
   begin
+    // La señal de despertar existe antes de arrancar el hilo: así el
+    // primer encolado nunca se pierde por una carrera de inicialización.
+    if oEventoDespertar = nil then
+      oEventoDespertar := TEvent.Create(nil, False, False, '');
     oHiloCola := THiloVerifactuCola.Create(True);
     oHiloCola.FreeOnTerminate := False;
     oHiloCola.Start;
@@ -523,10 +535,23 @@ begin
   if oHiloCola <> nil then
   begin
     oHiloCola.Terminate;
+    // Saca al hilo de la espera del ciclo para que pare sin demora
+    if oEventoDespertar <> nil then
+      oEventoDespertar.SetEvent;
     oHiloCola.WaitFor;
     FreeAndNil(oHiloCola);
+    FreeAndNil(oEventoDespertar);
     inLibLog.Log.LogInfo('Cola Verifactu: hilo detenido');
   end;
+end;
+
+class procedure TVerifactuCola.Despertar;
+begin
+  // Aviso desde el hilo de UI tras confirmar la venta: corta la espera
+  // del ciclo y el envío al ws sale en el acto. Si el hilo no está
+  // activo no hace nada (la cola se procesará al arrancarlo).
+  if oEventoDespertar <> nil then
+    oEventoDespertar.SetEvent;
 end;
 
 // ===========================================================================
@@ -568,12 +593,32 @@ end;
 
 procedure THiloVerifactuCola.EsperarCiclo;
 var
-  iSegundos: Integer;
+  iSegundos:   Integer;
+  iRestanteMs: Integer;
+  iPasoMs:     Integer;
+  bSenal:      Boolean;
 begin
   iSegundos := oAppParams.GetInt('appVerifactuSegundosCiclo', 60);
   if iSegundos < 5 then
     iSegundos := 5;
-  EsperarSegundos(iSegundos);
+  // Espera de hasta un ciclo completo, pero un encolado nuevo
+  // (TVerifactuCola.Despertar) o la parada del hilo la cortan en el
+  // acto. Se trocea en pasos de 1 s para vigilar oCerrandoApp aunque
+  // no llegue la señal.
+  iRestanteMs := iSegundos * 1000;
+  bSenal      := False;
+  while (iRestanteMs > 0) and (not bSenal) and
+        (not Terminated) and (not oCerrandoApp) do
+  begin
+    iPasoMs := iRestanteMs;
+    if iPasoMs > 1000 then
+      iPasoMs := 1000;
+    if oEventoDespertar = nil then
+      Sleep(iPasoMs)
+    else
+      bSenal := (oEventoDespertar.WaitFor(iPasoMs) = wrSignaled);
+    Dec(iRestanteMs, iPasoMs);
+  end;
 end;
 
 procedure THiloVerifactuCola.EsperarSegundos(ASegundos: Integer);

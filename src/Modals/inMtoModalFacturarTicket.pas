@@ -430,6 +430,7 @@ begin
             cEventoVerifactuEncolado,
             'Borrador en sustitución del ticket ' + FSerieTicket + '\' +
             FNumeroTicket + ' encolada', '', ASerie, sNumero);
+          TVerifactuCola.Despertar;
         end;
       mvNoVerifactu:
         TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, ASerie, sNumero);

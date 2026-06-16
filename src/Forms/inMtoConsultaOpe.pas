@@ -400,8 +400,9 @@ begin
                 cEventoVerifactuEncolado,
                 'Anulación encolada desde Buscar operaciones', '',
                 sSerie, sNumero);
+              TVerifactuCola.Despertar;
               ShowMessage('Anulación encolada: el hilo Verifactu la ' +
-                          'enviará en el próximo ciclo.');
+                          'enviará en cuanto pueda.');
             end;
           mvNoVerifactu:
             begin

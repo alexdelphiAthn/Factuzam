@@ -1610,6 +1610,11 @@ begin
     // CONFIRMAR
     // =======================================================================
     inLibGlobalVar.oConn.Commit;
+    // Con la venta ya confirmada, la fila de la cola es visible: se avisa
+    // al hilo Verifactu para que el envío al ws salga en el acto en vez
+    // de aguardar al próximo ciclo.
+    if RequiereFactura and (ModoVerifactu = mvVerifactu) then
+      TVerifactuCola.Despertar;
     if TieneDepositosPendientes and (sOpeCaja <> '') then
     begin
       ImprimirResguardoDeposito(AEmpresa,
