@@ -1,4 +1,4 @@
-program Fzam;
+﻿program Fzam;
 
 uses
 //  {$IFDEF DEBUG}
