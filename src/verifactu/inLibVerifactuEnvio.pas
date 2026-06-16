@@ -621,7 +621,7 @@ begin
     '<sum1:Version>' + EscaparXml(oVersion) + '</sum1:Version>' +
     '<sum1:NumeroInstalacion>' + EscaparXml(sInstalacion) +
     '</sum1:NumeroInstalacion>' +
-    '<sum1:TipoUsoPosibleSoloVerifactu>S' +
+    '<sum1:TipoUsoPosibleSoloVerifactu>N' +
     '</sum1:TipoUsoPosibleSoloVerifactu>' +
     '<sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT>' +
     '<sum1:IndicadorMultiplesOT>' + sMultiOT +

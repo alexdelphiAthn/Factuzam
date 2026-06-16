@@ -127,6 +127,10 @@ type
   function IsEFacturaCertificate(ACertContext: PCCERT_CONTEXT): Boolean;
   function GetCertificateType(const AIssuer: string): string;
   function ExtractCertificateName(const ADescription: string): string;
+  function ObtenerCaducidadCertificado(const ANumeroSerie,
+                                       ATitular: string;
+                                       out AFechaHasta: TDateTime;
+                                       out ATitularReal: string): Boolean;
   procedure AddCertificate(ALvCertificates: TcxListView;
                            const ASubject, AIssuer, ASerialNumber: string;
                            AValidFrom, AValidTo: TDateTime);
@@ -153,6 +157,76 @@ type
                          csz: DWORD): DWORD;
                          stdcall; external 'crypt32.dll';
 implementation
+function NormalizarNumeroSerieCertificado(const AValor: string): string;
+begin
+  Result := UpperCase(Trim(AValor));
+  Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
+  Result := StringReplace(Result, ':', '', [rfReplaceAll]);
+  Result := StringReplace(Result, '-', '', [rfReplaceAll]);
+end;
+
+function InvertirBytesHex(const AHex: string): string;
+var
+  iPos: Integer;
+begin
+  Result := '';
+  iPos := Length(AHex) - 1;
+  while iPos >= 1 do
+  begin
+    Result := Result + Copy(AHex, iPos, 2);
+    Dec(iPos, 2);
+  end;
+end;
+
+function NumeroSerieCertificado(ACertContext: PCCERT_CONTEXT): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to ACertContext^.pCertInfo^.SerialNumber.cbData - 1 do
+    Result := Result +
+      IntToHex(PByte(ACertContext^.pCertInfo^.SerialNumber.pbData)[I], 2);
+end;
+
+function CertificadoCoincide(ACertContext: PCCERT_CONTEXT;
+                             const ANumeroSerie,
+                             ATitular: string): Boolean;
+var
+  sBuscada: string;
+  sSerie:   string;
+  sSubject: string;
+  sTitular: string;
+begin
+  Result := False;
+  sBuscada := NormalizarNumeroSerieCertificado(ANumeroSerie);
+  sSerie := NormalizarNumeroSerieCertificado(
+    NumeroSerieCertificado(ACertContext));
+  if sBuscada <> '' then
+    Result := (sSerie = sBuscada) or
+              (InvertirBytesHex(sSerie) = sBuscada) or
+              (sSerie = InvertirBytesHex(sBuscada));
+  if (not Result) and (Trim(ATitular) <> '') then
+  begin
+    sSubject := GetCertificateName(@ACertContext^.pCertInfo^.Subject);
+    sTitular := ExtractCertificateName(sSubject);
+    Result := ContainsText(sTitular, Trim(ATitular)) or
+              ContainsText(sSubject, Trim(ATitular));
+  end;
+end;
+
+function FileTimeToLocalDateTime(const AFileTime: TFileTime): TDateTime;
+var
+  LocalFileTime: TFileTime;
+  SystemTime:    TSystemTime;
+begin
+  Result := 0;
+  if FileTimeToLocalFileTime(AFileTime, LocalFileTime) then
+  begin
+    if FileTimeToSystemTime(LocalFileTime, SystemTime) then
+      Result := SystemTimeToDateTime(SystemTime);
+  end;
+end;
+
 function ExtractCertificateName(const ADescription: string): string;
 var
   Parts: TArray<string>;
@@ -312,6 +386,47 @@ begin
     until CertContext = nil;
   finally
     CertCloseStore(Store, 0);
+  end;
+end;
+function ObtenerCaducidadCertificado(const ANumeroSerie,
+                                     ATitular: string;
+                                     out AFechaHasta: TDateTime;
+                                     out ATitularReal: string): Boolean;
+var
+  Store: HCERTSTORE;
+  CertContext: PCCERT_CONTEXT;
+  Subject: string;
+begin
+  Result := False;
+  AFechaHasta := 0;
+  ATitularReal := '';
+  Store := CertOpenSystemStoreA(0, PAnsiChar('MY'));
+  {$IF CompilerVersion < 34.0}
+  if Store <> 0 then
+  {$ELSE}
+  if Store <> nil then
+  {$IFEND}
+  begin
+    try
+      CertContext := nil;
+      repeat
+        CertContext := CertEnumCertificatesInStore(Store, CertContext);
+        if (CertContext <> nil) and
+           (not Result) and
+           CertificadoCoincide(CertContext, ANumeroSerie, ATitular) then
+        begin
+          AFechaHasta := FileTimeToLocalDateTime(
+            CertContext^.pCertInfo^.NotAfter);
+          Subject := GetCertificateName(@CertContext^.pCertInfo^.Subject);
+          ATitularReal := ExtractCertificateName(Subject);
+          if ATitularReal = '' then
+            ATitularReal := Subject;
+          Result := AFechaHasta > 0;
+        end;
+      until CertContext = nil;
+    finally
+      CertCloseStore(Store, 0);
+    end;
   end;
 end;
 procedure AddCertificate(ALvCertificates: TcxListView;

@@ -286,6 +286,7 @@ type
     procedure ScriptBeforeExecute(Sender: TObject;
                                   var SQL: string;
                                   var Omit: Boolean);
+    procedure MostrarAvisoCaducidadCertificado;
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
@@ -345,8 +346,10 @@ uses inLibUser,
   inLibBuscarImpresora,
   inLibVerifactu,
   inLibVerifactuCola,
+  inLibCertificates,
   inMtoGen,
   inMtoFotoArticulo,
+  System.DateUtils,
   System.RegularExpressions,
   Vcl.StdCtrls,
   inLibBackupWorker,
@@ -364,6 +367,118 @@ begin
     on E: Exception do
       inLibLog.Log.LogError('No se pudo registrar evento fiscal "' +
         ADescripcion + '": ' + E.Message);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.MostrarAvisoCaducidadCertificado;
+const
+  DIAS_AVISO_CERTIFICADO = 5;
+var
+  Qry: TUniQuery;
+  Avisos: TStringList;
+  sEmpresa: string;
+  sSerie: string;
+  sTitular: string;
+  sTitularReal: string;
+  sPrefijo: string;
+  dCaducidad: TDateTime;
+  iDias: Integer;
+  bHayCaducidad: Boolean;
+
+  function TextoDias(ADias: Integer): string;
+  begin
+    if ADias <= 0 then
+      Result := 'queda menos de 1 día'
+    else if ADias = 1 then
+      Result := 'queda 1 día'
+    else
+      Result := 'quedan ' + IntToStr(ADias) + ' días';
+  end;
+
+  procedure AgregarAviso(const ATexto: string);
+  begin
+    sPrefijo := '- ' + sEmpresa + ': ';
+    if Trim(sTitularReal) <> '' then
+      sPrefijo := sPrefijo + Trim(sTitularReal) + ', ';
+    Avisos.Add(sPrefijo + ATexto);
+  end;
+
+begin
+  if oConn <> nil then
+  begin
+    Avisos := TStringList.Create;
+    try
+      Qry := TUniQuery.Create(nil);
+      try
+        try
+          Qry.Connection := oConn;
+          Qry.SQL.Text :=
+            'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP, ' +
+            '       CODIGO_CERTIFICADO_EMP, TITULAR_CERTIFICADO_EMP, ' +
+            '       FECHA_HASTA_CERTIFICADO_EMP ' +
+            '  FROM fza_empresas ' +
+            ' WHERE IFNULL(ESACTIVO_EMP, ''S'') = ''S'' ' +
+            '   AND IFNULL(CODIGO_CERTIFICADO_EMP, '''') <> '''' ' +
+            ' ORDER BY ORDEN_EMP, CODIGO_EMP_EMP';
+          Qry.Open;
+          while not Qry.Eof do
+          begin
+            sEmpresa := Trim(Qry.FieldByName('RAZON_SOCIAL_EMP').AsString);
+            if sEmpresa = '' then
+              sEmpresa := Trim(Qry.FieldByName('CODIGO_EMP_EMP').AsString);
+            sSerie := Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
+            sTitular :=
+              Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
+            sTitularReal := sTitular;
+            bHayCaducidad := ObtenerCaducidadCertificado(sSerie, sTitular,
+                                                         dCaducidad,
+                                                         sTitularReal);
+            if (not bHayCaducidad) and
+               (not Qry.FieldByName(
+                 'FECHA_HASTA_CERTIFICADO_EMP').IsNull) then
+            begin
+              dCaducidad := Qry.FieldByName(
+                'FECHA_HASTA_CERTIFICADO_EMP').AsDateTime;
+              bHayCaducidad := dCaducidad > 0;
+            end;
+            if sTitularReal = '' then
+              sTitularReal := sTitular;
+            if bHayCaducidad then
+            begin
+              if dCaducidad < Now then
+              begin
+                AgregarAviso('certificado electrónico caducado el ' +
+                  FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad) + '.');
+              end
+              else if dCaducidad < IncDay(Now, DIAS_AVISO_CERTIFICADO) then
+              begin
+                iDias := Trunc(dCaducidad - Now);
+                AgregarAviso('certificado electrónico caduca el ' +
+                  FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad) +
+                  ' (' + TextoDias(iDias) + ').');
+              end;
+            end;
+            Qry.Next;
+          end;
+          if Avisos.Count > 0 then
+          begin
+            MessageDlg('Atención: hay certificados electrónicos próximos a ' +
+                       'caducar o ya caducados.' + sLineBreak + sLineBreak +
+                       Avisos.Text + sLineBreak +
+                       'Revise la ficha de empresa y renueve el certificado.',
+                       mtWarning, [mbOK], 0);
+          end;
+        except
+          on E: Exception do
+            inLibLog.Log.LogWarning('No se pudo comprobar la caducidad de ' +
+              'certificados al arrancar: ' + E.Message);
+        end;
+      finally
+        FreeAndNil(Qry);
+      end;
+    finally
+      FreeAndNil(Avisos);
+    end;
   end;
 end;
 
@@ -612,6 +727,7 @@ begin
   // de 1000 ms, esperamos a llegar a ese minimo para que el usuario
   // pueda leer la marca; si tardo mas, lo cerramos sin demora.
   CerrarSplashInicio(1000);
+  MostrarAvisoCaducidadCertificado;
 end;
 
 procedure TfrmMtoPrincipal.CrearLogoFondoBg;
