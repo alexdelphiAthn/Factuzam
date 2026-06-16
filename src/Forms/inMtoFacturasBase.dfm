@@ -781,6 +781,7 @@
                   object ctbCODIGO_UNIDAD_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'SKU'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_FACLIN'
+                    Visible = False
                     PropertiesClassName = 'TcxComboBoxProperties'
                     Properties.OnEditValueChanged = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged
                     Properties.OnInitPopup = ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup
