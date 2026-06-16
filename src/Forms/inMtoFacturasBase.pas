@@ -1930,8 +1930,8 @@ begin
   // - SKU: solo si alguna linea lo necesita (variacion / varios SKUs /
   //   nuevo) o hay modo creacion.
   // Estas reglas mandan sobre el perfil de usuario (PonerAnchosTitulos).
-  if ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible then
-    ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible := False;
+//  if ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible then
+//    ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible := False;
   SincronizarColumnasCreacion;
   SincronizarColumnaSku;
 end;
