@@ -1,7 +1,7 @@
 object frmTestSqlSrv: TfrmTestSqlSrv
   Left = 0
   Top = 0
-  Caption = 'Factuzam - Test UniDAC SQL Server (prDirect / prMSOLEDB)'
+  Caption = 'Factuzam - Test UniDAC SQL Server (selector de Provider)'
   ClientHeight = 561
   ClientWidth = 684
   Color = clBtnFace
@@ -114,23 +114,36 @@ object frmTestSqlSrv: TfrmTestSqlSrv
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    object btnConectarDirect: TButton
-      Left = 8
-      Top = 9
-      Width = 150
-      Height = 30
-      Caption = 'Conectar prDirect'
-      TabOrder = 0
-      OnClick = btnConectarDirectClick
+    object lblProvider: TLabel
+      Left = 10
+      Top = 17
+      Width = 48
+      Height = 15
+      Caption = 'Provider:'
     end
-    object btnConectarNativo: TButton
-      Left = 166
+    object cbbProvider: TComboBox
+      Left = 64
+      Top = 13
+      Width = 150
+      Height = 23
+      Style = csDropDown
+      TabOrder = 0
+      Text = 'prDirect'
+      Items.Strings = (
+        'prDirect'
+        'prMSOLEDB'
+        'prNativeClient'
+        'prSQL'
+        'prAuto')
+    end
+    object btnConectar: TButton
+      Left = 228
       Top = 9
-      Width = 180
+      Width = 120
       Height = 30
-      Caption = 'Conectar prMSOLEDB'
+      Caption = 'Conectar'
       TabOrder = 1
-      OnClick = btnConectarNativoClick
+      OnClick = btnConectarClick
     end
     object btnLanzarSQL: TButton
       Left = 400

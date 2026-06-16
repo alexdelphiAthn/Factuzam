@@ -9,17 +9,17 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Banco de pruebas independiente para comparar los modos de acceso del      }
-{    provider SQL Server de UniDAC:                                            }
+{    Banco de pruebas independiente para medir y comparar el coste de los      }
+{    modos de acceso del provider SQL Server de UniDAC. El modo se elige en    }
+{    el combo "Provider" (prDirect, prMSOLEDB, prNativeClient, prSQL...):      }
 {                                                                              }
 {      - prDirect : protocolo TDS por sockets. NO usa COM / OLE DB.            }
-{      - Nativo   : OLE DB nativo (prMSOLEDB). EXIGE CoInitialize /            }
-{                   CoUninitialize en el hilo que abre la conexión.            }
+{      - resto    : OLE DB nativo. EXIGE CoInitialize / CoUninitialize en      }
+{                   el hilo que abre la conexión.                             }
 {                                                                              }
 {    Cada operación (conectar / lanzar SQL / desconectar) se cronometra con    }
-{    TStopwatch y se muestra en milisegundos, para medir y comparar el coste   }
-{    de cada modo. Proyecto suelto: sin relación con la migración ni con la    }
-{    aplicación principal.                                                     }
+{    TStopwatch y se muestra en milisegundos. Proyecto suelto: sin relación    }
+{    con la migración ni con la aplicación principal.                          }
 {******************************************************************************}
 unit UTestSqlSrv;
 
@@ -33,48 +33,46 @@ uses
   Data.DB, Uni, DBAccess, SQLServerUniProvider;
 
 const
-  // SpecificOption "Provider" del provider SQL Server de UniDAC. prDirect
-  // habla TDS por sockets (sin COM); el nativo usa OLE DB y necesita COM
-  // en el hilo. Valor nativo según driver instalado: prMSOLEDB (MSOLEDBSQL,
-  // el del migrador), prNativeClient (SNAC), prSQL (SQLOLEDB), prAuto...
+  // SpecificOption "Provider" del provider SQL Server de UniDAC. Solo
+  // prDirect (TDS por sockets) NO usa COM; los demás (prMSOLEDB,
+  // prNativeClient, prSQL...) son OLE DB y exigen CoInitialize en el hilo.
   cProviderDirect = 'prDirect';
-  cProviderNativo = 'prMSOLEDB';
 
 type
   TfrmTestSqlSrv = class(TForm)
-    gbConexion:        TGroupBox;
-    lblServidor:       TLabel;
-    edtServidor:       TEdit;
-    lblPuerto:         TLabel;
-    edtPuerto:         TEdit;
-    lblBase:           TLabel;
-    edtBase:           TEdit;
-    lblUsuario:        TLabel;
-    edtUsuario:        TEdit;
-    lblClave:          TLabel;
-    edtClave:          TEdit;
-    chkAutWindows:     TCheckBox;
-    pnlBotones:        TPanel;
-    btnConectarDirect: TButton;
-    btnConectarNativo: TButton;
-    btnLanzarSQL:      TButton;
-    btnDesconectar:    TButton;
-    pnlTiempo:         TPanel;
-    lblTiempo:         TLabel;
-    lblEstado:         TLabel;
-    gbSQL:             TGroupBox;
-    memoSQL:           TMemo;
-    gbLog:             TGroupBox;
-    memoLog:           TMemo;
+    gbConexion:     TGroupBox;
+    lblServidor:    TLabel;
+    edtServidor:    TEdit;
+    lblPuerto:      TLabel;
+    edtPuerto:      TEdit;
+    lblBase:        TLabel;
+    edtBase:        TEdit;
+    lblUsuario:     TLabel;
+    edtUsuario:     TEdit;
+    lblClave:       TLabel;
+    edtClave:       TEdit;
+    chkAutWindows:  TCheckBox;
+    pnlBotones:     TPanel;
+    lblProvider:    TLabel;
+    cbbProvider:    TComboBox;
+    btnConectar:    TButton;
+    btnLanzarSQL:   TButton;
+    btnDesconectar: TButton;
+    pnlTiempo:      TPanel;
+    lblTiempo:      TLabel;
+    lblEstado:      TLabel;
+    gbSQL:          TGroupBox;
+    memoSQL:        TMemo;
+    gbLog:          TGroupBox;
+    memoLog:        TMemo;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure btnConectarDirectClick(Sender: TObject);
-    procedure btnConectarNativoClick(Sender: TObject);
+    procedure btnConectarClick(Sender: TObject);
     procedure btnLanzarSQLClick(Sender: TObject);
     procedure btnDesconectarClick(Sender: TObject);
   private
-    // Campos primero (E2169): conexión única reutilizada en ambos modos,
-    // flag de COM inicializado y descripción del modo activo.
+    // Campos primero (E2169): conexión única reutilizada en todos los
+    // modos, flag de COM inicializado y descripción del modo activo.
     FConn:        TUniConnection;
     FComIniciado: Boolean;
     FModoActual:  string;
@@ -99,20 +97,20 @@ implementation
 
 procedure TfrmTestSqlSrv.FormCreate(Sender: TObject);
 begin
-  // Conexión única; el provider concreto (prDirect / prMSOLEDB) se fija
-  // en cada conexión vía SpecificOptions.
+  // Conexión única; el provider concreto (el del combo) se fija en cada
+  // conexión vía SpecificOptions.
   FConn := TUniConnection.Create(Self);
   FConn.ProviderName := 'SQL Server';
   FConn.LoginPrompt  := False;
   FComIniciado := False;
   FModoActual  := '';
   ActualizarBotones;
-  Log('Listo. Rellena la conexión y pulsa un modo.');
+  Log('Listo. Rellena la conexión, elige Provider y pulsa Conectar.');
 end;
 
 procedure TfrmTestSqlSrv.FormDestroy(Sender: TObject);
 begin
-  // Cierra y equilibra COM si quedó conectado en modo nativo.
+  // Cierra y equilibra COM si quedó conectado en un modo OLE DB.
   Desconectar;
 end;
 
@@ -144,10 +142,10 @@ begin
     FConn.Username := Trim(edtUsuario.Text);
     FConn.Password := edtClave.Text;
   end;
-  // Modo de acceso del provider (prDirect / prMSOLEDB).
+  // Modo de acceso del provider (el elegido en el combo).
   FConn.SpecificOptions.Values['Provider'] := AProvider;
-  // El modo nativo (prMSOLEDB) usa OLE DB: COM debe estar inicializado en
-  // este hilo o UniDAC lanza "CoInitialize has not been called".
+  // Los modos OLE DB exigen COM: debe estar inicializado en este hilo o
+  // UniDAC lanza "CoInitialize has not been called".
   if AUsaCom then
   begin
     CoInitialize(nil);
@@ -202,7 +200,7 @@ begin
     Log('Desconectado (modo ' + FModoActual + ').');
     MostrarTiempo('Desconexión', oReloj.Elapsed.TotalMilliseconds);
   end;
-  // Equilibra el CoInitialize del modo nativo.
+  // Equilibra el CoInitialize de los modos OLE DB.
   if FComIniciado then
   begin
     CoUninitialize;
@@ -279,16 +277,17 @@ end;
 //   Handlers de botones
 // ===========================================================================
 
-procedure TfrmTestSqlSrv.btnConectarDirectClick(Sender: TObject);
+procedure TfrmTestSqlSrv.btnConectarClick(Sender: TObject);
+var
+  sProv: string;
 begin
-  // prDirect: protocolo TDS por sockets, sin COM.
-  Conectar(cProviderDirect, cProviderDirect, False);
-end;
-
-procedure TfrmTestSqlSrv.btnConectarNativoClick(Sender: TObject);
-begin
-  // Nativo (prMSOLEDB): OLE DB, con CoInitialize / CoUninitialize.
-  Conectar(cProviderNativo, cProviderNativo, True);
+  sProv := Trim(cbbProvider.Text);
+  if sProv = '' then
+    MessageDlg('Elige o escribe un valor de Provider.',
+               mtWarning, [mbOK], 0)
+  else
+    // prDirect = sockets (sin COM); el resto = OLE DB (con COM).
+    Conectar(sProv, sProv, not SameText(sProv, cProviderDirect));
 end;
 
 procedure TfrmTestSqlSrv.btnDesconectarClick(Sender: TObject);
@@ -317,10 +316,10 @@ var
   EsConectado: Boolean;
 begin
   EsConectado := Assigned(FConn) and FConn.Connected;
-  btnConectarDirect.Enabled := not EsConectado;
-  btnConectarNativo.Enabled := not EsConectado;
-  btnLanzarSQL.Enabled      := EsConectado;
-  btnDesconectar.Enabled    := EsConectado;
+  cbbProvider.Enabled    := not EsConectado;
+  btnConectar.Enabled    := not EsConectado;
+  btnLanzarSQL.Enabled   := EsConectado;
+  btnDesconectar.Enabled := EsConectado;
   if EsConectado then
     lblEstado.Caption := 'Estado: CONECTADO (' + FModoActual + ')'
   else
