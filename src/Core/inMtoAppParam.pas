@@ -25,7 +25,7 @@ uses
   cxTextEdit, cxContainer, inLibGlobalVar, dxCoreGraphics, cxMaskEdit,
   cxButtonEdit, cxSpinEdit, Vcl.ExtCtrls, inMtoFrmBase, Uni,
   cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons,
-  JvComponentBase, JvInspector, JvExControls, System.Actions,
+  JvComponentBase, JvEnterTab, JvInspector, JvExControls, System.Actions,
   Vcl.ActnList, dxSkinsCore, System.UITypes;   // dxSkinsCore para TdxSkinController
 
 type
@@ -59,6 +59,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure JvInspector1Enter(Sender: TObject);
+    procedure JvInspector1Exit(Sender: TObject);
 //    procedure InspectorEditButtonClick(Sender: TObject;
 //                                       Item: TJvCustomInspectorItem);
   private
@@ -827,6 +829,23 @@ begin
   RestaurarLayout;
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;
+end;
+
+procedure TfrmMtoAppParam.JvInspector1Enter(Sender: TObject);
+begin
+  // El TJvEnterAsTab heredado de TfrmBase convierte VK_RETURN en VK_TAB a
+  // nivel de mensaje. Dentro del inspector eso le roba el Enter al
+  // desplegable: la seleccion hecha con teclado (Ctrl+Abajo, cursor, Enter)
+  // no se confirma porque el Enter mueve el foco al siguiente control y el
+  // popup se cierra sin aceptar. Con raton si funciona porque el click va por
+  // otra via. Apagamos Enter-como-Tab mientras el inspector tiene el foco.
+  jvntrstb1.EnterAsTab := False;
+end;
+
+procedure TfrmMtoAppParam.JvInspector1Exit(Sender: TObject);
+begin
+  // Al salir del inspector hacia el panel superior reactivamos Enter-como-Tab.
+  jvntrstb1.EnterAsTab := True;
 end;
 
 procedure TfrmMtoAppParam.cmbGrupoUsuarioPropertiesChange(Sender: TObject);
