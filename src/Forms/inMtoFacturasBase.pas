@@ -816,7 +816,8 @@ procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesButtonClick(
                                                          Sender: TObject;
                                                          AButtonIndex: Integer);
 begin
-  if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
+  if SinVerifactuActivo or
+     (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Clientes en Borradores',
                                        dmmFacturas.unqryCliDataFac,
@@ -857,7 +858,8 @@ end;
 procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
-  if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
+  if SinVerifactuActivo or
+     (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Empresas en Borradores',
                                        dmmFacturas.unqryEmpDataFac,
@@ -1209,6 +1211,7 @@ var
   oCampo:    TField;
   sFase:     string;
   bEditable: Boolean;
+  bBorrador: Boolean;
 begin
   if Assigned(dmmFacturas) and
      (dsTablaG.DataSet <> nil) and
@@ -1218,11 +1221,21 @@ begin
     if oCampo <> nil then
     begin
       sFase := oCampo.AsString;
-      // Sin fase (facturas antiguas) o BORRADOR: editable, salvo que
-      // ya esté consolidada (candado del flujo antiguo). Un alta
-      // nueva (dsInsert) tampoco tiene fase y debe poder grabarse.
-      bEditable := ((sFase = '') or SameText(sFase, 'BORRADOR')) and
+      // Borrador sin cerrar: sin fase (facturas antiguas) o BORRADOR y
+      // todavía sin consolidar (candado del flujo antiguo). Solo un
+      // borrador así admite el botón Consolidar.
+      bBorrador := ((sFase = '') or SameText(sFase, 'BORRADOR')) and
                    (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S');
+      // Editable = borrador. En modo SIN la consolidación no cierra
+      // fiscalmente: el documento emitido sin Verifactu (SIN_VERIFACTU)
+      // y la marca de consolidación no bloquean la edición; solo los
+      // estados terminales (anulada/rectificada) quedan bloqueados. Un
+      // alta nueva (dsInsert) tampoco tiene fase y debe poder grabarse.
+      bEditable := bBorrador;
+      if SinVerifactuActivo and
+         ((sFase = '') or SameText(sFase, 'BORRADOR') or
+          SameText(sFase, cFaseFacturaSinVerifactu)) then
+        bEditable := True;
       if dsTablaG.DataSet.State = dsInsert then
         bEditable := True;
       dsTablaG.AutoEdit := bEditable;
@@ -1231,12 +1244,18 @@ begin
       tvLineasFactura.OptionsData.Inserting := bEditable;
       tvLineasFactura.OptionsData.Deleting  := bEditable;
       // Consolidar lanza el registro a Verifactu: solo tiene sentido
-      // en borrador. Imprimir, al revés: solo tras lanzarla.
+      // en borrador. Imprimir, al revés: solo tras lanzarla. En modo
+      // SIN no hay cierre fiscal (ni registro SIF ni cola AEAT): la
+      // consolidación no aplica, así que se permite imprimir el
+      // borrador directamente sin obligar a consolidarlo antes.
       if dsTablaG.DataSet.State = dsBrowse then
       begin
-        btnConsolidar.Enabled := bEditable and
+        btnConsolidar.Enabled := bBorrador and
                                  (not dsTablaG.DataSet.IsEmpty);
-        btnImprimir.Enabled := not bEditable;
+        if SinVerifactuActivo then
+          btnImprimir.Enabled := not dsTablaG.DataSet.IsEmpty
+        else
+          btnImprimir.Enabled := not bEditable;
       end;
     end;
   end;
@@ -1909,7 +1928,8 @@ procedure TfrmMtoFacturasBase.
   Sender: TObject; AButtonIndex: Integer);
 begin
   inherited;
-  if (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
+  if SinVerifactuActivo or
+     (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
     dmmFacturas.unqryArtDataLinFac.ParamByName('TARIFA').AsString :=
                                               dmmFacturas.unqryTablaG.FindField(
