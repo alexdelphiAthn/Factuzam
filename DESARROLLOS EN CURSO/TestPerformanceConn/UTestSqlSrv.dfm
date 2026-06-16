@@ -1,7 +1,7 @@
 object frmTestSqlSrv: TfrmTestSqlSrv
   Left = 0
   Top = 0
-  Caption = 'Factuzam - Test UniDAC SQL Server (prDirect / prNativeDirect)'
+  Caption = 'Factuzam - Test UniDAC SQL Server (prDirect / prNativeClient)'
   ClientHeight = 561
   ClientWidth = 684
   Color = clBtnFace
@@ -123,14 +123,14 @@ object frmTestSqlSrv: TfrmTestSqlSrv
       TabOrder = 0
       OnClick = btnConectarDirectClick
     end
-    object btnConectarNativeDirect: TButton
+    object btnConectarNativeClient: TButton
       Left = 166
       Top = 9
       Width = 180
       Height = 30
-      Caption = 'Conectar prNativeDirect'
+      Caption = 'Conectar prNativeClient'
       TabOrder = 1
-      OnClick = btnConectarNativeDirectClick
+      OnClick = btnConectarNativeClientClick
     end
     object btnLanzarSQL: TButton
       Left = 400
