@@ -13,7 +13,7 @@
 {    provider SQL Server de UniDAC:                                            }
 {                                                                              }
 {      - prDirect       : protocolo TDS por sockets. NO usa COM / OLE DB.      }
-{      - prNativeDirect : cliente nativo OLE DB. EXIGE CoInitialize /          }
+{      - prNativeClient : cliente nativo OLE DB. EXIGE CoInitialize /          }
 {                         CoUninitialize en el hilo que abre la conexión.      }
 {                                                                              }
 {    Cada operación (conectar / lanzar SQL / desconectar) se cronometra con    }
@@ -34,10 +34,10 @@ uses
 
 const
   // Valores del SpecificOption "Provider" del provider SQL Server de
-  // UniDAC. prDirect habla TDS por sockets (sin COM); prNativeDirect usa
+  // UniDAC. prDirect habla TDS por sockets (sin COM); prNativeClient usa
   // el OLE DB nativo y necesita COM inicializado en el hilo.
   cProviderDirect       = 'prDirect';
-  cProviderNativeDirect = 'prNativeDirect';
+  cProviderNativeClient = 'prNativeClient';
 
 type
   TfrmTestSqlSrv = class(TForm)
@@ -55,7 +55,7 @@ type
     chkAutWindows:           TCheckBox;
     pnlBotones:              TPanel;
     btnConectarDirect:       TButton;
-    btnConectarNativeDirect: TButton;
+    btnConectarNativeClient: TButton;
     btnLanzarSQL:            TButton;
     btnDesconectar:          TButton;
     pnlTiempo:               TPanel;
@@ -68,7 +68,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnConectarDirectClick(Sender: TObject);
-    procedure btnConectarNativeDirectClick(Sender: TObject);
+    procedure btnConectarNativeClientClick(Sender: TObject);
     procedure btnLanzarSQLClick(Sender: TObject);
     procedure btnDesconectarClick(Sender: TObject);
   private
@@ -98,7 +98,7 @@ implementation
 
 procedure TfrmTestSqlSrv.FormCreate(Sender: TObject);
 begin
-  // Conexión única; el provider concreto (prDirect / prNativeDirect) se
+  // Conexión única; el provider concreto (prDirect / prNativeClient) se
   // fija en cada conexión vía SpecificOptions.
   FConn := TUniConnection.Create(Self);
   FConn.ProviderName := 'SQL Server';
@@ -143,9 +143,9 @@ begin
     FConn.Username := Trim(edtUsuario.Text);
     FConn.Password := edtClave.Text;
   end;
-  // Modo de acceso del provider (prDirect / prNativeDirect).
+  // Modo de acceso del provider (prDirect / prNativeClient).
   FConn.SpecificOptions.Values['Provider'] := AProvider;
-  // prNativeDirect = OLE DB nativo: COM debe estar inicializado en este
+  // prNativeClient = OLE DB nativo: COM debe estar inicializado en este
   // hilo o UniDAC lanza "CoInitialize has not been called".
   if AUsaCom then
   begin
@@ -284,10 +284,10 @@ begin
   Conectar(cProviderDirect, cProviderDirect, False);
 end;
 
-procedure TfrmTestSqlSrv.btnConectarNativeDirectClick(Sender: TObject);
+procedure TfrmTestSqlSrv.btnConectarNativeClientClick(Sender: TObject);
 begin
-  // prNativeDirect: OLE DB nativo, con CoInitialize / CoUninitialize.
-  Conectar(cProviderNativeDirect, cProviderNativeDirect, True);
+  // prNativeClient: OLE DB nativo, con CoInitialize / CoUninitialize.
+  Conectar(cProviderNativeClient, cProviderNativeClient, True);
 end;
 
 procedure TfrmTestSqlSrv.btnDesconectarClick(Sender: TObject);
@@ -317,7 +317,7 @@ var
 begin
   EsConectado := Assigned(FConn) and FConn.Connected;
   btnConectarDirect.Enabled       := not EsConectado;
-  btnConectarNativeDirect.Enabled := not EsConectado;
+  btnConectarNativeClient.Enabled := not EsConectado;
   btnLanzarSQL.Enabled            := EsConectado;
   btnDesconectar.Enabled          := EsConectado;
   if EsConectado then
