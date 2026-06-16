@@ -15,7 +15,7 @@
 {                                                                              }
 {      - prDirect : protocolo TDS por sockets. NO usa COM / OLE DB.            }
 {      - resto    : OLE DB nativo. EXIGE CoInitialize / CoUninitialize en      }
-{                   el hilo que abre la conexión.                             }
+{                   el hilo que abre la conexión.                              }
 {                                                                              }
 {    Cada operación (conectar / lanzar SQL / desconectar) se cronometra con    }
 {    TStopwatch y se muestra en milisegundos. Proyecto suelto: sin relación    }
