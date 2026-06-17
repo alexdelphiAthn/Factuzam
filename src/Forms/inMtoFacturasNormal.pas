@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasNormal                                           }
 {    Tipo:       Formulario (Mto) descendiente                                 }
@@ -36,6 +36,14 @@ uses
 type
   TfrmMtoFacturasNormal = class(TfrmMtoFacturasBase)
     btnEmitirEDoc: TcxButton;
+    tsParametrosEDoc: TcxTabSheet;
+    cxgrpbxParametrosEDoc: TcxGroupBox;
+    lblCodigoOficinaContable: TcxLabel;
+    txtCODIGO_OFICINA_CONTABLE_FACTURA: TcxDBTextEdit;
+    lblCodigoOrganoGestor: TcxLabel;
+    txtCODIGO_ORGANO_GESTOR_FACTURA: TcxDBTextEdit;
+    lblCodigoUnidadTramitadora: TcxLabel;
+    txtCODIGO_UNIDAD_TRAMITADORA_FACTURA: TcxDBTextEdit;
     procedure btnEmitirEDocClick(Sender: TObject);
   public
     function NombreVistaListado: string; override;
