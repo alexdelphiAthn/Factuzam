@@ -122,6 +122,22 @@ la validacion externa inicial, el generador usa como ultimo recurso tecnico
 `L01070184` en los tres centros; no debe considerarse un valor legal para
 facturas reales de otras administraciones.
 
+## Personas fisicas
+
+El script idempotente
+`DESARROLLOS EN CURSO/facturae_persona_fisica.sql` anade a `fza_facturas`:
+
+```sql
+NOMBRE_PERSONA_CLIENTE_FAC
+APELLIDOS_PERSONA_CLIENTE_FAC
+```
+
+Estos campos se editan en la pestana **Parametros eDoc** de
+`Borradores (Venta Mayor)`. Si el cliente tiene NIF/NIE de persona fisica, la
+emision eDoc exige que ambos esten rellenos y no intenta partir
+`RAZON_SOCIAL_CLIENTE_FAC`, porque nombres compuestos como
+`JOSE CARLOS RODRIGUEZ LOPEZ` no se pueden separar de forma segura.
+
 ## Normativa y formato
 
 Referencias oficiales revisadas:
@@ -151,9 +167,6 @@ acuse/aceptacion/rechazo y trazabilidad segun el circuito que se implante.
 - No se registran estados B2B de entrega/aceptacion/rechazo. Eso deberia ir en
   una tabla propia o en un subsistema de intercambio cuando se decida la
   plataforma.
-- Las personas fisicas se separan de forma simple a partir de la razon social:
-  primer token como nombre y resto como primer apellido. Si se necesita Facturae
-  mas estricto para autonomos, conviene guardar nombre/apellidos desglosados.
 
 ## Prueba funcional
 

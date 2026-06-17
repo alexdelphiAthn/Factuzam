@@ -157,71 +157,135 @@ inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
               ExplicitWidth = 1071
               ExplicitHeight = 395
               inherited scrlbxVerifactu: TScrollBox
+                VertScrollBar.Position = 0
                 inherited lblPETICION_COMPLETA: TLabel
+                  Top = 612
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblRESPUESTA_COMPLETA: TLabel
+                  Top = 60
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblQRCODE_BASE64: TLabel
+                  Top = 543
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblVERIFACTU_URL: TLabel
+                  Top = 476
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblCHAIN_HASH: TLabel
+                  Top = 410
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblCHAIN_NUMBER: TLabel
+                  Top = 361
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblISSUED_TIME: TLabel
+                  Top = 313
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblISSUER_IRS_ID: TLabel
+                  Top = 264
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblQUEUE_ID: TLabel
+                  Top = 216
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblREQUEST_ID: TLabel
+                  Top = 167
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lbl: TLabel
+                  Top = 20
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblFECHA_PROCESAMIENTO: TLabel
+                  Top = 224
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited lblESTADO: TLabel
+                  Top = 20
                   StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited spQUEUE_ID: TcxDBSpinEdit
+                  Top = 208
+                  ExplicitTop = 208
                   ExplicitHeight = 25
                 end
+                inherited cxdbmRESPUESTA_COMPLETA: TcxDBMemo
+                  Top = 56
+                  ExplicitTop = 56
+                end
+                inherited cxdbmQRCODE_BASE64: TcxDBMemo
+                  Top = 517
+                  ExplicitTop = 517
+                end
+                inherited cxdbmVERIFACTU_URL: TcxDBMemo
+                  Top = 450
+                  ExplicitTop = 450
+                end
                 inherited txtCHAIN_HASH: TcxDBTextEdit
+                  Top = 402
+                  ExplicitTop = 402
                   ExplicitHeight = 25
                 end
                 inherited txtCHAIN_NUMBER: TcxDBTextEdit
+                  Top = 353
+                  ExplicitTop = 353
                   ExplicitHeight = 25
                 end
                 inherited dteISSUED_TIME: TcxDBDateEdit
+                  Top = 305
+                  ExplicitTop = 305
                   ExplicitHeight = 25
                 end
                 inherited txtISSUER_IRS_ID: TcxDBTextEdit
+                  Top = 256
+                  ExplicitTop = 256
                   ExplicitHeight = 25
                 end
+                inherited imgQRCODE_PNG: TcxDBImage
+                  Top = 17
+                  ExplicitTop = 17
+                end
                 inherited txtREQUEST_ID: TcxDBTextEdit
+                  Top = 159
+                  ExplicitTop = 159
                   ExplicitHeight = 25
                 end
                 inherited spID_CONSOLIDACION: TcxDBSpinEdit
+                  Top = 14
+                  ExplicitTop = 14
                   ExplicitHeight = 25
                 end
+                inherited cxdbmPETICION_COMPLETA_FACCON: TcxDBMemo
+                  Top = 587
+                  ExplicitTop = 587
+                end
                 inherited dteFECHA_PROCESAMIENTO: TcxDBDateEdit
+                  Top = 216
+                  ExplicitTop = 216
                   ExplicitHeight = 25
                 end
                 inherited txtESTADO: TcxDBTextEdit
+                  Top = 14
+                  ExplicitTop = 14
                   ExplicitHeight = 25
+                end
+                inherited btnVerifactuAnular: TcxButton
+                  Top = 79
+                  ExplicitTop = 79
+                end
+                inherited btnVerifactuFacturar: TcxButton
+                  Top = 119
+                  ExplicitTop = 119
+                end
+                inherited btnVolverBorrador: TcxButton
+                  Top = 38
+                  ExplicitTop = 38
                 end
               end
             end
@@ -458,6 +522,40 @@ inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
                     DataBinding.DataSource = dsTablaG
                     TabOrder = 5
                     Width = 160
+                  end
+                  object lblNombrePersonaCliente: TcxLabel
+                    Left = 350
+                    Top = 32
+                    Caption = 'Nombre persona f'#237'sica'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 6
+                    Transparent = True
+                    AnchorX = 543
+                  end
+                  object txtNOMBRE_PERSONA_CLIENTE_FACTURA: TcxDBTextEdit
+                    Left = 550
+                    Top = 28
+                    DataBinding.DataField = 'NOMBRE_PERSONA_CLIENTE_FAC'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 7
+                    Width = 250
+                  end
+                  object lblApellidosPersonaCliente: TcxLabel
+                    Left = 341
+                    Top = 72
+                    Caption = 'Apellidos persona f'#237'sica'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 8
+                    Transparent = True
+                    AnchorX = 543
+                  end
+                  object txtAPELLIDOS_PERSONA_CLIENTE_FACTURA: TcxDBTextEdit
+                    Left = 550
+                    Top = 68
+                    DataBinding.DataField = 'APELLIDOS_PERSONA_CLIENTE_FAC'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 9
+                    Width = 250
                   end
                 end
               end

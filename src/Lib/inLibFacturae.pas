@@ -205,24 +205,13 @@ begin
        'P', 'Q', 'R', 'S', 'U', 'V', 'W']);
 end;
 
-procedure SepararNombrePersona(const ARazonSocial: string;
-                               out ANombre, AApellidos: string);
+function EsPersonaFisica(const ANif: string): Boolean;
 var
-  iPos: Integer;
-  sTexto: string;
+  sNif: string;
 begin
-  sTexto := Trim(ARazonSocial);
-  iPos := Pos(' ', sTexto);
-  if iPos > 0 then
-  begin
-    ANombre := Copy(sTexto, 1, iPos - 1);
-    AApellidos := Trim(Copy(sTexto, iPos + 1, MaxInt));
-  end
-  else
-  begin
-    ANombre := sTexto;
-    AApellidos := '.';
-  end;
+  sNif := NormalizarNif(ANif);
+  Result := (sNif <> '') and
+            CharInSet(sNif[1], ['0'..'9', 'X', 'Y', 'Z']);
 end;
 
 function NombreArchivoFacturae(const ASerie, ANumero: string): string;
@@ -358,8 +347,9 @@ begin
 end;
 
 procedure AnadirParte(ASb: TStringBuilder; const ANodo, ANif, ARazonSocial,
-                      ADireccion, ACp, APoblacion, AProvincia,
-                      APais, AOficina, AOrgano, AUnidad: string);
+                      ANombrePersona, AApellidosPersona, ADireccion, ACp,
+                      APoblacion, AProvincia, APais, AOficina, AOrgano,
+                      AUnidad: string);
 var
   sNombre: string;
   sApellidos: string;
@@ -386,7 +376,12 @@ begin
   end
   else
   begin
-    SepararNombrePersona(ARazonSocial, sNombre, sApellidos);
+    sNombre := Trim(ANombrePersona);
+    sApellidos := Trim(AApellidosPersona);
+    if sNombre = '' then
+      sNombre := ARazonSocial;
+    if sApellidos = '' then
+      sApellidos := '.';
     Linea(ASb, 3, '<fe:Individual>');
     Nodo(ASb, 4, 'fe:Name', sNombre);
     Nodo(ASb, 4, 'fe:FirstSurname', sApellidos);
@@ -492,6 +487,20 @@ begin
       cDir3RespaldoUnidad));
 end;
 
+procedure ValidarPersonaFisicaFacturae(AErrores: TStrings;
+                                       ACabecera: TDataSet);
+begin
+  if EsPersonaFisica(CampoStr(ACabecera, 'NIF_CLIENTE_FAC')) then
+  begin
+    if CampoStr(ACabecera, 'NOMBRE_PERSONA_CLIENTE_FAC') = '' then
+      AErrores.Add('- El cliente tiene NIF/NIE de persona física. Rellene ' +
+        'el nombre en Parámetros eDoc.');
+    if CampoStr(ACabecera, 'APELLIDOS_PERSONA_CLIENTE_FAC') = '' then
+      AErrores.Add('- El cliente tiene NIF/NIE de persona física. Rellene ' +
+        'los apellidos en Parámetros eDoc.');
+  end;
+end;
+
 procedure ValidarFormaPagoFacturae(AErrores: TStrings; ACabecera: TDataSet);
 begin
   if NormalizarCodigoPagoFacturae(
@@ -536,6 +545,7 @@ begin
       CodigoPaisFacturae(CampoStr(ACabecera, 'CODIGO_PAI_CLIENTE_FAC'),
                          CampoStr(ACabecera, 'NOMBRE_PAI_CLIENTE_FAC')));
     ValidarDir3Facturae(oErrores, ACabecera);
+    ValidarPersonaFisicaFacturae(oErrores, ACabecera);
     ValidarFormaPagoFacturae(oErrores, ACabecera);
     iLineas := 0;
     dBaseLineas := 0;
@@ -656,6 +666,7 @@ begin
     AnadirParte(SB, 'SellerParty',
       CampoStr(ACabecera, 'NIF_EMPRESA_FAC'),
       CampoStr(ACabecera, 'RAZON_SOCIAL_EMPRESA_FAC'),
+      '', '',
       CampoStr(ACabecera, 'DIRECCION1_EMPRESA_FAC'),
       CampoStr(ACabecera, 'CODIGO_POSTAL_EMPRESA_FAC'),
       CampoStr(ACabecera, 'POBLACION_EMPRESA_FAC'),
@@ -663,6 +674,8 @@ begin
     AnadirParte(SB, 'BuyerParty',
       CampoStr(ACabecera, 'NIF_CLIENTE_FAC'),
       CampoStr(ACabecera, 'RAZON_SOCIAL_CLIENTE_FAC'),
+      CampoStr(ACabecera, 'NOMBRE_PERSONA_CLIENTE_FAC'),
+      CampoStr(ACabecera, 'APELLIDOS_PERSONA_CLIENTE_FAC'),
       CampoStr(ACabecera, 'DIRECCION1_CLIENTE_FAC'),
       CampoStr(ACabecera, 'CODIGO_POSTAL_CLIENTE_FAC'),
       CampoStr(ACabecera, 'POBLACION_CLIENTE_FAC'),
@@ -868,11 +881,17 @@ var
   bDir3Factura: Boolean;
   bDir3Cliente: Boolean;
   bCodigoPagoFacturae: Boolean;
+  bPersonaFacturae: Boolean;
 begin
   bDir3Factura := ColumnasDir3Disponibles(AConn, 'fza_facturas', 'FAC');
   bDir3Cliente := ColumnasDir3Disponibles(AConn, 'fza_clientes', 'CLI');
   bCodigoPagoFacturae := ColumnaExiste(AConn, 'fza_formas_pago',
     'CODIGO_FACTURAE_FP');
+  bPersonaFacturae := ColumnaExiste(AConn, 'fza_facturas',
+    'NOMBRE_PERSONA_CLIENTE_FAC');
+  if bPersonaFacturae then
+    bPersonaFacturae := ColumnaExiste(AConn, 'fza_facturas',
+      'APELLIDOS_PERSONA_CLIENTE_FAC');
   Result := ' SELECT f.* ';
   if bCodigoPagoFacturae then
     Result := Result +
@@ -899,6 +918,12 @@ begin
       ', '''' AS CODIGO_OFICINA_CONTABLE_FAC ' +
       ', '''' AS CODIGO_ORGANO_GESTOR_FAC ' +
       ', '''' AS CODIGO_UNIDAD_TRAMITADORA_FAC ';
+  end;
+  if not bPersonaFacturae then
+  begin
+    Result := Result +
+      ', '''' AS NOMBRE_PERSONA_CLIENTE_FAC ' +
+      ', '''' AS APELLIDOS_PERSONA_CLIENTE_FAC ';
   end;
   Result := Result + ' FROM fza_facturas f ';
   if bCodigoPagoFacturae then

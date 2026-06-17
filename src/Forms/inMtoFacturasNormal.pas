@@ -44,6 +44,10 @@ type
     txtCODIGO_ORGANO_GESTOR_FACTURA: TcxDBTextEdit;
     lblCodigoUnidadTramitadora: TcxLabel;
     txtCODIGO_UNIDAD_TRAMITADORA_FACTURA: TcxDBTextEdit;
+    lblNombrePersonaCliente: TcxLabel;
+    txtNOMBRE_PERSONA_CLIENTE_FACTURA: TcxDBTextEdit;
+    lblApellidosPersonaCliente: TcxLabel;
+    txtAPELLIDOS_PERSONA_CLIENTE_FACTURA: TcxDBTextEdit;
     procedure btnEmitirEDocClick(Sender: TObject);
   public
     function NombreVistaListado: string; override;
@@ -59,6 +63,47 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function CampoFacturaStr(ADataSet: TDataSet; const ACampo: string): string;
+var
+  oCampo: TField;
+begin
+  Result := '';
+  if ADataSet <> nil then
+  begin
+    oCampo := ADataSet.FindField(ACampo);
+    if oCampo <> nil then
+      Result := Trim(oCampo.AsString);
+  end;
+end;
+
+function NifPersonaFisicaFacturae(const ANif: string): Boolean;
+var
+  i: Integer;
+  sNif: string;
+  c: Char;
+begin
+  sNif := '';
+  for i := 1 to Length(ANif) do
+  begin
+    c := UpCase(ANif[i]);
+    if CharInSet(c, ['A'..'Z', '0'..'9']) then
+      sNif := sNif + c;
+  end;
+  Result := (sNif <> '') and
+            CharInSet(sNif[1], ['0'..'9', 'X', 'Y', 'Z']);
+end;
+
+function FaltanDatosPersonaFisicaFacturae(ADataSet: TDataSet): Boolean;
+begin
+  Result := NifPersonaFisicaFacturae(
+    CampoFacturaStr(ADataSet, 'NIF_CLIENTE_FAC'));
+  if Result then
+    Result := (CampoFacturaStr(ADataSet,
+                 'NOMBRE_PERSONA_CLIENTE_FAC') = '') or
+              (CampoFacturaStr(ADataSet,
+                 'APELLIDOS_PERSONA_CLIENTE_FAC') = '');
+end;
 
 procedure TfrmMtoFacturasNormal.btnEmitirEDocClick(Sender: TObject);
 var
@@ -78,6 +123,16 @@ begin
      (dsTablaG.DataSet.State = dsEdit) then
   begin
     ShowMessage('Guarde los cambios antes de emitir el eDoc.');
+    Abort;
+  end;
+  if FaltanDatosPersonaFisicaFacturae(dsTablaG.DataSet) then
+  begin
+    pcPantalla.ActivePage := tsFicha;
+    pcCab.ActivePage := tsParametrosEDoc;
+    ShowMessage('El cliente tiene NIF/NIE de persona física.' + sLineBreak +
+      'Rellene nombre y apellidos en Parámetros eDoc antes de emitir.');
+    if txtNOMBRE_PERSONA_CLIENTE_FACTURA.CanFocus then
+      txtNOMBRE_PERSONA_CLIENTE_FACTURA.SetFocus;
     Abort;
   end;
   sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
