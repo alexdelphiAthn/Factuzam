@@ -62,6 +62,9 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject;
+                          var Key: Word;
+                          Shift: TShiftState);
   private
     // Listas para gestionar la memoria dinámica de los parámetros
     FBools: TList<PBoolean>;
@@ -108,10 +111,41 @@ uses
 procedure TfrmMtoCajaParam.FormCreate(Sender: TObject);
 begin
   inherited;
+  if jvntrstb1 <> nil then
+    jvntrstb1.EnterAsTab := False;
   FBools := TList<PBoolean>.Create;
   FInts  := TList<PInteger>.Create;
   FStrs  := TList<PString>.Create;
   FValoresOriginales := TDictionary<string, string>.Create;
+end;
+
+procedure TfrmMtoCajaParam.FormKeyDown(Sender: TObject;
+                                       var Key: Word;
+                                       Shift: TShiftState);
+var
+  ControlActivo: TWinControl;
+  EsBoton      : Boolean;
+  EsInspector  : Boolean;
+begin
+  if (Key = VK_RETURN) and
+     (not (ssCtrl in Shift)) and
+     (not (ssAlt in Shift)) then
+  begin
+    ControlActivo := Screen.ActiveControl;
+    EsBoton       := (ControlActivo <> nil) and
+                     (ControlActivo is TcxButton);
+    EsInspector   := (ControlActivo <> nil) and
+                     ((ControlActivo = JvInspector1) or
+                      JvInspector1.ContainsControl(ControlActivo));
+    if (not EsBoton) and (not EsInspector) then
+    begin
+      Key := 0;
+      if ActiveControl <> nil then
+        SelectNext(ActiveControl, not (ssShift in Shift), True)
+      else
+        SelectNext(Self, True, True);
+    end;
+  end;
 end;
 
 procedure TfrmMtoCajaParam.FormDestroy(Sender: TObject);
