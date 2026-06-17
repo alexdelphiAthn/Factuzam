@@ -50,8 +50,7 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark, inLibCertificates,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint, inMtoModalEmpCer,
-  dxSkinXmas2008Blue, JvComponentBase, JvEnterTab, dxShellDialogs, cxDBLabel,
-  cxListView;
+  dxSkinXmas2008Blue, JvComponentBase, JvEnterTab, dxShellDialogs, cxDBLabel;
 
 type
   TfrmMtoEmpresas = class(TfrmMtoGen)
@@ -299,7 +298,8 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   private
     procedure IncorporarCertificados;
-    procedure IterateCheckedList(lst: TcxListView);
+    procedure IncorporarCertificadoSeleccionado(
+      ATvCertificados: TcxGridTableView);
     // Carga perezosa de sub-pestañas detail (Retenciones, Historia).
     procedure PcPestanaChange(Sender: TObject);
   end;
@@ -799,28 +799,33 @@ begin
     //dmmArticulos.FillTarifas(formulario.lstTarifas);
     formulario.ShowModal;
     if formulario.sFicha = 'S' then
-      IterateCheckedList(formulario.lstCertificates);
+      IncorporarCertificadoSeleccionado(formulario.tvCertificados);
   finally
     FreeAndNil(formulario);
   end;
 end;
 
-procedure TfrmMtoEmpresas.IterateCheckedList(lst: TcxListView);
+procedure TfrmMtoEmpresas.IncorporarCertificadoSeleccionado(
+  ATvCertificados: TcxGridTableView);
 var
-  item: TListItem;
+  oRegistro: TcxCustomGridRecord;
 begin
-  with dmmEmpresas.unqryTablaG do
+  oRegistro := ATvCertificados.Controller.FocusedRecord;
+  if Assigned(oRegistro) then
   begin
-    item := lst.Items[lst.Selected.Index];
-    Edit;
-    FieldByName('CODIGO_CERTIFICADO_EMP').AsString :=
-                                            item.SubItems[COLUMNA_CER_NROSERIE];
-    FieldByName('TITULAR_CERTIFICADO_EMP').AsString :=
-                                             item.SubItems[COLUMNA_CER_TITULAR];
-    FieldByName('TIPO_CERTIFICADO_EMP').AsString := item.Caption;
-    FieldByName('FECHA_HASTA_CERTIFICADO_EMP').AsString :=
-                                          item.SubItems[COLUMNA_CER_FECHAHASTA];
-    Post;
+    with dmmEmpresas.unqryTablaG do
+    begin
+      Edit;
+      FieldByName('CODIGO_CERTIFICADO_EMP').AsString :=
+        VarToStr(oRegistro.Values[COLUMNA_CER_NROSERIE]);
+      FieldByName('TITULAR_CERTIFICADO_EMP').AsString :=
+        VarToStr(oRegistro.Values[COLUMNA_CER_TITULAR]);
+      FieldByName('TIPO_CERTIFICADO_EMP').AsString :=
+        VarToStr(oRegistro.Values[COLUMNA_CER_TIPO]);
+      FieldByName('FECHA_HASTA_CERTIFICADO_EMP').AsString :=
+        VarToStr(oRegistro.Values[COLUMNA_CER_FECHAHASTA]);
+      Post;
+    end;
   end;
 end;
 

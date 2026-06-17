@@ -23,15 +23,25 @@ uses
   cxClasses, cxContainer, cxEdit, cxLookAndFeels, cxLocalization, cxGraphics,
   cxControls, cxLookAndFeelPainters, cxCustomListBox, cxCheckListBox,
   cxDBCheckListBox, UniDataArticulos, Vcl.Menus, Vcl.StdCtrls, cxButtons,
-  Vcl.ExtCtrls, Vcl.ComCtrls, cxListView, cxStyles, Data.DB, JvComponentBase,
-  JvEnterTab, inLibCertificates;
+  Vcl.ExtCtrls, cxStyles, Data.DB, JvComponentBase, JvEnterTab,
+  cxCustomData, cxFilter, cxData, cxDataStorage, cxGridLevel,
+  cxGridCustomView, cxGridCustomTableView, cxGridTableView, cxGrid,
+  inLibCertificates;
 
 type
   TfrmMtoModalEmpCer = class(TfrmBase)
     pnl1: TPanel;
     btnCancelar1: TcxButton;
     btnAceptar: TcxButton;
-    lstCertificates: TcxListView;
+    cxgrdCertificados: TcxGrid;
+    tvCertificados: TcxGridTableView;
+    colTipoCertificado: TcxGridColumn;
+    colTitularCertificado: TcxGridColumn;
+    colNombreCertificado: TcxGridColumn;
+    colEmisorCertificado: TcxGridColumn;
+    colFechaHastaCertificado: TcxGridColumn;
+    colNumeroSerieCertificado: TcxGridColumn;
+    lvCertificados: TcxGridLevel;
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -54,8 +64,15 @@ implementation
 procedure TfrmMtoModalEmpCer.btnAceptarClick(Sender: TObject);
 begin
   inherited;
-  sFicha:= 'S';
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+  if tvCertificados.Controller.FocusedRecord = nil then
+  begin
+    ShowMessage('Seleccione un certificado.');
+  end
+  else
+  begin
+    sFicha := 'S';
+    PostMessage(Handle, WM_CLOSE, 0, 0);
+  end;
 end;
 
 procedure TfrmMtoModalEmpCer.btnCancelarClick(Sender: TObject);
@@ -73,13 +90,12 @@ begin
 end;
 
 procedure TfrmMtoModalEmpCer.FormCreate(Sender: TObject);
-var i:Integer;
 begin
   inherited;
   Self.Position := poScreenCenter;
-  LoadCerts(lstCertificates);
-  for i := 0 to lstCertificates.Columns.Count - 1 do
-    lstCertificates.Columns[i].AutoSize := True;
+  sFicha := 'N';
+  CargarCertificados(tvCertificados);
+  tvCertificados.ApplyBestFit;
 end;
 
 end.

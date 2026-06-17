@@ -35,43 +35,47 @@ inherited frmMtoModalEmpCer: TfrmMtoModalEmpCer
       OnClick = btnAceptarClick
     end
   end
-  object lstCertificates: TcxListView [1]
+  object cxgrdCertificados: TcxGrid [1]
     Left = 0
     Top = 0
     Width = 1071
     Height = 142
     Align = alClient
-    Columns = <
-      item
+    TabOrder = 0
+    ExplicitWidth = 461
+    ExplicitHeight = 141
+    object tvCertificados: TcxGridTableView
+      OptionsData.Editing = False
+      OptionsSelection.CellSelect = False
+      OptionsView.GroupByBox = False
+      object colTipoCertificado: TcxGridColumn
         Caption = 'Tipo'
         Width = 100
       end
-      item
+      object colTitularCertificado: TcxGridColumn
         Caption = 'Titular/Empresa'
         Width = 250
       end
-      item
+      object colNombreCertificado: TcxGridColumn
         Caption = 'Nombre'
         Width = 250
       end
-      item
+      object colEmisorCertificado: TcxGridColumn
         Caption = 'Emisor'
         Width = 200
       end
-      item
+      object colFechaHastaCertificado: TcxGridColumn
         Caption = 'V'#225'lido hasta'
         Width = 120
       end
-      item
+      object colNumeroSerieCertificado: TcxGridColumn
         Caption = 'N'#250'mero de serie'
         Width = 150
-      end>
-    ReadOnly = True
-    SortType = stText
-    TabOrder = 0
-    ViewStyle = vsReport
-    ExplicitWidth = 461
-    ExplicitHeight = 141
+      end
+    end
+    object lvCertificados: TcxGridLevel
+      GridView = tvCertificados
+    end
   end
   inherited Localizer1: TcxLocalizer
     Left = 232
