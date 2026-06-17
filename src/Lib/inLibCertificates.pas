@@ -18,13 +18,14 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, System.Types,
-  Winapi.Windows, system.StrUtils, Winapi.Messages, cxListView;
+  Winapi.Windows, system.StrUtils, Winapi.Messages, cxGridTableView;
 const
-  COLUMNA_CER_NROSERIE = 4;
-  COLUMNA_CER_FECHAHASTA = 3;
-  COLUMNA_CER_EMISOR = 2;
-  COLUMNA_CER_NOMBRE = 1;
-  COLUMNA_CER_TITULAR = 0;
+  COLUMNA_CER_TIPO = 0;
+  COLUMNA_CER_TITULAR = 1;
+  COLUMNA_CER_NOMBRE = 2;
+  COLUMNA_CER_EMISOR = 3;
+  COLUMNA_CER_FECHAHASTA = 4;
+  COLUMNA_CER_NROSERIE = 5;
   CRYPT32 = 'crypt32.dll';
   X509_ASN_ENCODING = $00000001;
   PKCS_7_ASN_ENCODING = $00010000;
@@ -119,7 +120,7 @@ type
                           psz: LPSTR;
                           csz: DWORD): DWORD;
                           stdcall; external CRYPT32;
-  procedure LoadCerts(ALvCertificates: TcxListView);
+  procedure CargarCertificados(ATvCertificados: TcxGridTableView);
   function GetCertName(pName: PCERT_NAME_BLOB): string;
   function FileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
   function GetCertificateName(pName: PCERT_NAME_BLOB): string;
@@ -131,9 +132,10 @@ type
                                        ATitular: string;
                                        out AFechaHasta: TDateTime;
                                        out ATitularReal: string): Boolean;
-  procedure AddCertificate(ALvCertificates: TcxListView;
-                           const ASubject, AIssuer, ASerialNumber: string;
-                           AValidFrom, AValidTo: TDateTime);
+  procedure AgregarCertificado(ATvCertificados: TcxGridTableView;
+                               const ASubject, AIssuer,
+                               ASerialNumber: string;
+                               AValidFrom, AValidTo: TDateTime);
   function CertGetEnhancedKeyUsage(
                                     pCertContext: PCCERT_CONTEXT;
                                     dwFlags: DWORD;
@@ -348,7 +350,7 @@ begin
   Result := (ContainsText(Issuer, 'AC Representación') or
             (ContainsText(Issuer, 'AC FNMT Usuarios')));
 end;
-procedure LoadCerts(ALvCertificates: TcxListView);
+procedure CargarCertificados(ATvCertificados: TcxGridTableView);
 var
   Store: HCERTSTORE;
   CertContext: PCCERT_CONTEXT;
@@ -357,7 +359,7 @@ var
   SerialNumber: string;
   I: Integer;
 begin
-  ALvCertificates.Items.Clear;
+  ATvCertificados.DataController.RecordCount := 0;
   Store := CertOpenSystemStoreA(0, PAnsiChar('MY'));
   {$IF CompilerVersion < 34.0}
   if Store <> 0 then  // Delphi 10.3
@@ -380,13 +382,15 @@ begin
         for I := 0 to CertContext^.pCertInfo^.SerialNumber.cbData - 1 do
           SerialNumber := SerialNumber +
             IntToHex(PByte(CertContext^.pCertInfo^.SerialNumber.pbData)[I], 2);
-        AddCertificate(ALvCertificates, Subject, Issuer, SerialNumber,
-                       ValidFrom, ValidTo);
+        AgregarCertificado(ATvCertificados, Subject, Issuer, SerialNumber,
+                           ValidFrom, ValidTo);
       end;
     until CertContext = nil;
   finally
     CertCloseStore(Store, 0);
   end;
+  if ATvCertificados.DataController.RecordCount > 0 then
+    ATvCertificados.Controller.FocusedRecordIndex := 0;
 end;
 function ObtenerCaducidadCertificado(const ANumeroSerie,
                                      ATitular: string;
@@ -429,22 +433,29 @@ begin
     end;
   end;
 end;
-procedure AddCertificate(ALvCertificates: TcxListView;
+procedure AgregarCertificado(ATvCertificados: TcxGridTableView;
   const ASubject, AIssuer, ASerialNumber: string;
   AValidFrom, AValidTo: TDateTime);
 var
-  Item: TListItem;
-  CertType: string;
-  NameCer: string;
+  iFila: Integer;
+  sTipoCertificado: string;
+  sNombreCertificado: string;
 begin
-  Item := ALvCertificates.Items.Add;
-  CertType := GetCertificateType(AIssuer);
-  Item.Caption := CertType;
-  NameCer := ExtractCertificateName(ASubject);
-  Item.SubItems.Add(NameCer);
-  Item.SubItems.Add(ASubject);
-  Item.SubItems.Add(AIssuer);
-  Item.SubItems.Add(DateTimeToStr(AValidTo));
-  Item.SubItems.Add(ASerialNumber);
+  iFila := ATvCertificados.DataController.RecordCount;
+  ATvCertificados.DataController.RecordCount := iFila + 1;
+  sTipoCertificado := GetCertificateType(AIssuer);
+  sNombreCertificado := ExtractCertificateName(ASubject);
+  ATvCertificados.DataController.Values[iFila, COLUMNA_CER_TIPO] :=
+    sTipoCertificado;
+  ATvCertificados.DataController.Values[iFila, COLUMNA_CER_TITULAR] :=
+    sNombreCertificado;
+  ATvCertificados.DataController.Values[iFila, COLUMNA_CER_NOMBRE] :=
+    ASubject;
+  ATvCertificados.DataController.Values[iFila, COLUMNA_CER_EMISOR] :=
+    AIssuer;
+  ATvCertificados.DataController.Values[iFila, COLUMNA_CER_FECHAHASTA] :=
+    DateTimeToStr(AValidTo);
+  ATvCertificados.DataController.Values[iFila, COLUMNA_CER_NROSERIE] :=
+    ASerialNumber;
 end;
 end.
