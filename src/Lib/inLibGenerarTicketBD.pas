@@ -51,7 +51,7 @@ uses
 implementation
 
 uses
-  inLibVerifactu;
+  inLibVerifactu, inLibFormatoDocumento;
 
 // Función auxiliar para rellenar con ceros (LPAD)
 function LPAD(const AValue: string;
@@ -424,7 +424,7 @@ var
   FormPreview: TFormVisualizador;
   ComandosESC, RutaFicheroPDF: string;
   QRTexto: string;
-  SerieFac, NroFac: string;
+  DocumentoFac, SerieFac, NroFac: string;
 begin
   QryCab   := TUniQuery.Create(nil);
   QryLin   := TUniQuery.Create(nil);
@@ -462,6 +462,8 @@ begin
                              'especificada.');
     SerieFac := QryCab.FieldByName('SERIE_FAC').AsString;
     NroFac   := QryCab.FieldByName('NUMERO_FAC').AsString;
+    DocumentoFac := FormatearDocumentoEmpresa(ACodigoEmpresa,
+      SerieFac, NroFac);
     // 2. INICIALIZAR IMPRESORA
     // QR tributario fiscal en la reimpresión: misma URL de cotejo/remisión
     // que en el ticket original (se genera en local desde la factura)
@@ -498,8 +500,7 @@ begin
       Ticket.Negrita(True);
 
       if (SerieFac <> '') and (NroFac <> '') then
-        Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' + SerieFac + '\' +
-                             NroFac)
+        Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' + DocumentoFac)
       else
         Ticket.EscribirLinea('TICKET DE OPERACIÓN Nro. ' + ANumeroOperacion);
 

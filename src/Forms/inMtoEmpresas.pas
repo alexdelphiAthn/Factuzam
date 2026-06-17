@@ -263,6 +263,9 @@ type
     btnSeleccionarCer: TcxButton;
     lblFechaCaducidad: TcxLabel;
     txtFECHACADUCIDAD: TcxDBTextEdit;
+    lblFormatoDocumento: TcxLabel;
+    txtFORMATO_DOCUMENTO_EMP: TcxDBTextEdit;
+    lblFormatoDocumentoAyuda: TcxLabel;
     dbmSeriesCODIGO_ALMACEN_SERIE: TcxGridDBColumn;
     dbmSeriesCODIGO_CAJA_SERIE: TcxGridDBColumn;
     dbmSeriesSERIE_SERIE: TcxGridDBColumn;

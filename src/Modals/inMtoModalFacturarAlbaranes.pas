@@ -98,7 +98,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibUser, inLibGenBusq;
+  inLibGlobalVar, inLibUser, inLibGenBusq, inLibFormatoDocumento;
 
 {$R *.dfm}
 
@@ -248,8 +248,9 @@ begin
     FFacSeries.Add(FQryFac.FieldByName('SERIE_FACC').AsString);
     FFacNumeros.Add(FQryFac.FieldByName('NUMERO_FACC').AsString);
     cbbFacExistente.Properties.Items.Add(
-      FQryFac.FieldByName('SERIE_FACC').AsString + ' / ' +
-      FQryFac.FieldByName('NUMERO_FACC').AsString + '   (' +
+      FormatearDocumentoEmpresa(AEmp,
+        FQryFac.FieldByName('SERIE_FACC').AsString,
+        FQryFac.FieldByName('NUMERO_FACC').AsString) + '   (' +
       FormatDateTime('dd/mm/yyyy',
         FQryFac.FieldByName('FECHA_FACC').AsDateTime) + ')');
     FQryFac.Next;

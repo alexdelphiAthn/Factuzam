@@ -186,6 +186,7 @@
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
+        <DCCReference Include="src\Lib\inLibFormatoDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
         <DCCReference Include="src\Lib\inLibGridColumnChooser.pas"/>
         <DCCReference Include="src\Lib\inLibConfigCampos.pas"/>

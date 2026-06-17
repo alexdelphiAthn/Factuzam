@@ -77,6 +77,9 @@ procedure ExportarDocCompraVertical(
 
 implementation
 
+uses
+  inLibFormatoDocumento;
+
 // ===== Helpers internos =====================================================
 
 procedure PintarCabeceraDoc(Sheet: TdxSpreadSheetTableView;
@@ -84,6 +87,7 @@ procedure PintarCabeceraDoc(Sheet: TdxSpreadSheetTableView;
   AColMax: Integer; out AFilaSiguiente: Integer);
 var
   iRow: Integer;
+  sDocumento: string;
 begin
   iRow := 1;
   // Titulo
@@ -149,11 +153,12 @@ begin
   var cDoc := AColMax - 3;
   if cDoc < 10 then
     cDoc := 10;
+  sDocumento := FormatearDocumentoDataSet(QMaster, ACfg.FieldSerie,
+    ACfg.FieldNumero);
   iRow := 3;
   W(Sheet, iRow, cDoc, 'DOCUMENTO', True);
   Inc(iRow);
-  W(Sheet, iRow, cDoc, QMaster.FieldByName(ACfg.FieldSerie).AsString + ' / ' +
-    QMaster.FieldByName(ACfg.FieldNumero).AsString, True);
+  W(Sheet, iRow, cDoc, sDocumento, True);
   Merge(Sheet, iRow, cDoc, 4, 1);
   Inc(iRow);
   W(Sheet, iRow, cDoc, 'Fecha: ' +

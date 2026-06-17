@@ -1,5 +1,5 @@
 inherited frmPrintSesion: TfrmPrintSesion
-  Caption = 'Imprimir Sesi'#243'n de Compra'
+  Caption = 'Imprimir Sesión de Compra'
   ClientHeight = 249
   ClientWidth = 460
   StyleElements = [seFont, seClient, seBorder]
@@ -34,7 +34,7 @@ inherited frmPrintSesion: TfrmPrintSesion
   object lblNumero: TcxLabel [3]
     Left = 152
     Top = 16
-    Caption = 'N'#250'mero'
+    Caption = 'Número'
     TabOrder = 3
     Transparent = True
   end
@@ -98,7 +98,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            'SESI'#211'N DE COMPRA')
+            'SESIÓN DE COMPRA')
           ParentFont = False
         end
         object MemoEmpLbl: TfrxMemoView
@@ -330,7 +330,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            '[Sesiones."SERIE_SES"] / [Sesiones."NUMERO_SES"]')
+            '[Sesiones."DOCUMENTO_FORMATO"]')
           ParentFont = False
         end
         object MemoSesFechaLbl: TfrxMemoView
@@ -463,7 +463,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'GU'#205'AS DE TALLAS')
+            'GUÍAS DE TALLAS')
           ParentFont = False
         end
       end
@@ -920,7 +920,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'C'#243'd. Art.')
+            'Cód. Art.')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -958,7 +958,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'Descripci'#243'n')
+            'Descripción')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1012,7 +1012,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'Cantidades por talla (T01..T20 '#226#128#148' ver gu'#237'as arriba)')
+            'Cantidades por talla (T01..T20 - ver guías arriba)')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1690,7 +1690,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'P'#225'g. [Page#] / [TotalPages#]   '#183'   [Date]')
+            'Pág. [Page#] / [TotalPages#] - [Date]')
           ParentFont = False
         end
       end

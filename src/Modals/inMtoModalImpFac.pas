@@ -79,7 +79,8 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam, inLibVerifactu;
+uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam, inLibVerifactu,
+     inLibFormatoDocumento;
 
 { TfrmPrintFac }
 
@@ -133,10 +134,9 @@ end;
 function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;
 var
   RazonSocialCorta: string;
+  sDocumento: string;
   sFecha: string;
   TotalFormateado: string;
-  SerieFormateada: string;
-  sNro: string;
 begin
   RazonSocialCorta := Copy(ADataSet.FieldByName(
                                 'RAZON_SOCIAL_CLIENTE_FAC').AsString, 1, 12);
@@ -150,11 +150,17 @@ begin
                                               'TOTAL_LIQUIDO_FAC').AsFloat);
   TotalFormateado := StringReplace(TotalFormateado, ',', '_', [rfReplaceAll]);
   TotalFormateado := StringReplace(TotalFormateado, '.', '_', [rfReplaceAll]);
-  SerieFormateada := StringReplace(ADataSet.FieldByName(
-                           'SERIE_FAC').AsString, '.', '_', [rfReplaceAll]);
-  sNro := ADataSet.FieldByName('NUMERO_FAC').AsString;
-  Result := sFecha + '_' + SerieFormateada + '_' + sNro + '_' +
-                          RazonSocialCorta + '_' + TotalFormateado;
+  sDocumento := FormatearDocumentoDataSet(ADataSet, 'SERIE_FAC', 'NUMERO_FAC');
+  sDocumento := StringReplace(sDocumento, '\', '_', [rfReplaceAll]);
+  sDocumento := StringReplace(sDocumento, '/', '_', [rfReplaceAll]);
+  sDocumento := StringReplace(sDocumento, '.', '_', [rfReplaceAll]);
+  sDocumento := StringReplace(sDocumento, ':', '_', [rfReplaceAll]);
+  sDocumento := StringReplace(sDocumento, '*', '_', [rfReplaceAll]);
+  sDocumento := StringReplace(sDocumento, '?', '_', [rfReplaceAll]);
+  sDocumento := StringReplace(sDocumento, '[', '_', [rfReplaceAll]);
+  sDocumento := StringReplace(sDocumento, ']', '_', [rfReplaceAll]);
+  Result := sFecha + '_' + sDocumento + '_' + RazonSocialCorta + '_' +
+                          TotalFormateado;
 end;
 
 procedure TfrmPrintFac.preparar_consulta;

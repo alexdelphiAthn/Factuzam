@@ -33,6 +33,7 @@ uses
   inLibScriptDB in 'src\Lib\inLibScriptDB.pas',
   inLibIBAN in 'src\Lib\inLibIBAN.pas',
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
+  inLibFormatoDocumento in 'src\Lib\inLibFormatoDocumento.pas',
   inLibInformesGuiasCache in 'src\Lib\inLibInformesGuiasCache.pas',
   inLibGridColumnChooser in 'src\Lib\inLibGridColumnChooser.pas',
   inLibConfigCampos in 'src\Lib\inLibConfigCampos.pas',

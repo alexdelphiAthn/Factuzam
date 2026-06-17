@@ -59,7 +59,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibFormatoDocumento;
 
 class procedure TTraspasoTicket.ImprimirLineaSku(ATicket: TTicketTermico;
                                    const ASku, ADescripcion,
@@ -408,7 +408,7 @@ begin
     if bExiste then
     begin
       if Trim(sSerie + sNumDoc) <> '' then
-        sDocRef := sSerie + '/' + sNumDoc
+        sDocRef := FormatearDocumentoEmpresa(AEmpresa, sSerie, sNumDoc)
       else
         sDocRef := ANumOperacion;
       Ticket := TTicketTermico.Create(sImpresora);
