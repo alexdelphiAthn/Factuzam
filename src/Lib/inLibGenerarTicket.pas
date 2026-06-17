@@ -69,10 +69,10 @@ begin
 //  NombreImpresora := 'DEBUG';
   Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);
   dLin := DatosCobro.TotalesFactura.Lineas;
-  // QR tributario Verifactu: URL de cotejo en la AEAT generada en local.
+  // QR tributario fiscal: URL de cotejo/remisión AEAT generada en local.
   // El ticket regalo (sin precios) no lleva QR ni datos fiscales.
   QRTexto := '';
-  if VerifactuActivo and (not ASinPrecios) then
+  if (not SinVerifactuActivo) and (not ASinPrecios) then
     QRTexto := ConstruirUrlQR(
                  Cab.NifEmp,
                  DatosCobro.TotalesFactura.Cabecera.FieldByName(
@@ -84,7 +84,7 @@ begin
   Ticket := TTicketTermico.Create(NombreImpresora);
   try
     Ticket.Inicializar;
-    // === QR TRIBUTARIO AL PRINCIPIO (solo con Verifactu activo) ===
+    // === QR TRIBUTARIO AL PRINCIPIO (modo fiscal activo) ===
     if QRTexto <> '' then
     begin
       Ticket.Alinear(alCentro);
@@ -92,9 +92,12 @@ begin
       Ticket.EscribirLinea('QR tributario:');
       // Nivel de corrección M (49) exigido por la AEAT para el QR
       Ticket.ImprimirQRNativo(QRTexto, 6, 49);
-      Ticket.Alinear(alCentro);
-      Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
-      Ticket.EscribirLinea('en la sede electrónica de la AEAT');
+      if VerifactuActivo then
+      begin
+        Ticket.Alinear(alCentro);
+        Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
+        Ticket.EscribirLinea('en la sede electrónica de la AEAT');
+      end;
       Ticket.Alinear(alIzquierda);
     end;
     Ticket.SaltarLineas(1);

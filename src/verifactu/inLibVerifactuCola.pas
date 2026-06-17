@@ -154,6 +154,7 @@ procedure GuardarRegistroNoVerifactu(AQry: TUniQuery;
                                      const AResultado:
                                      TResultadoEnvioVerifactu);
 var
+  oPngStream: TBytesStream;
   sEstado: string;
 begin
   if not ColumnasFirmaFacturacionDisponibles(AQry.Connection) then
@@ -209,12 +210,15 @@ begin
       ' (ID_FACCON, SERIE_FAC_FACCON, NUMERO_FAC_FACCON, ' +
       '  ISSUER_IRS_ID_CONSOLIDACION_FACCON, ISSUED_TIME_FACCON, ' +
       '  CHAIN_NUMBER_FACCON, CHAIN_HASH_FACCON, ' +
+      '  VERIFACTU_URL_FACCON, QRCODE_BASE64_FACCON, ' +
+      '  QRCODE_PNG_FACCON, ' +
       '  FECHA_PROCESAMIENTO_FACCON, ESTADO_FACCON, ' +
       '  REGISTRO_XML_FACCON, FIRMA_DIGITAL_FACCON, ' +
       '  SERIE_CERTIFICADO_FACCON, TITULAR_CERTIFICADO_FACCON, ' +
       '  HUELLA_CERTIFICADO_FACCON) ' +
       ' SELECT IFNULL(MAX(ID_FACCON), 0) + 1, :SERIE, :NUMERO, ' +
       '        :ISSUERID, :ISSUEDTIME, :CHAINNUM, :CHAINHASH, ' +
+      '        NULLIF(:URL, ''''), NULLIF(:QRBASE64, ''''), :QRPNG, ' +
       '        NOW(), :ESTADO, :REGISTROXML, :FIRMA, :SERIECERT, ' +
       '        :TITULARCERT, :HUELLACERT ' +
       ' FROM fza_facturas_consolidaciones ' +
@@ -222,6 +226,9 @@ begin
       '  ESTADO_FACCON = VALUES(ESTADO_FACCON), ' +
       '  CHAIN_NUMBER_FACCON = VALUES(CHAIN_NUMBER_FACCON), ' +
       '  CHAIN_HASH_FACCON = VALUES(CHAIN_HASH_FACCON), ' +
+      '  VERIFACTU_URL_FACCON = VALUES(VERIFACTU_URL_FACCON), ' +
+      '  QRCODE_BASE64_FACCON = VALUES(QRCODE_BASE64_FACCON), ' +
+      '  QRCODE_PNG_FACCON = VALUES(QRCODE_PNG_FACCON), ' +
       '  REGISTRO_XML_FACCON = VALUES(REGISTRO_XML_FACCON), ' +
       '  FIRMA_DIGITAL_FACCON = VALUES(FIRMA_DIGITAL_FACCON), ' +
       '  SERIE_CERTIFICADO_FACCON = VALUES(SERIE_CERTIFICADO_FACCON), ' +
@@ -236,6 +243,23 @@ begin
   AQry.ParamByName('CHAINNUM').AsString := AResultado.ChainNumber;
   AQry.ParamByName('CHAINHASH').AsString := AResultado.ChainHash;
   AQry.ParamByName('ESTADO').AsString := sEstado;
+  if ATipoOperacion <> 'ANULACION' then
+  begin
+    AQry.ParamByName('URL').AsString      := AResultado.VerifactuUrl;
+    AQry.ParamByName('QRBASE64').AsString := AResultado.QRCodeBase64;
+    AQry.ParamByName('QRPNG').DataType    := ftBlob;
+    if Length(AResultado.QRCodePng) > 0 then
+    begin
+      oPngStream := TBytesStream.Create(AResultado.QRCodePng);
+      try
+        AQry.ParamByName('QRPNG').LoadFromStream(oPngStream, ftBlob);
+      finally
+        FreeAndNil(oPngStream);
+      end;
+    end
+    else
+      AQry.ParamByName('QRPNG').Clear;
+  end;
   AQry.ParamByName('REGISTROXML').AsString :=
     AResultado.RegistroXmlFirmado;
   AQry.ParamByName('FIRMA').AsString := AResultado.FirmaDigital;

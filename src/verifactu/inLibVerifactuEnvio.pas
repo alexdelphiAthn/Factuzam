@@ -1136,6 +1136,7 @@ var
   oDatos:     TDatosFacturaRegistro;
   oCadena:    TCadenaAnterior;
   oDatosCert: TXadesDatosCertificado;
+  oB64:       TBase64Encoding;
   sRegistro:  string;
   sHuella:    string;
 begin
@@ -1167,6 +1168,28 @@ begin
       Result.RegistroXmlFirmado := XmlRegistroFacturacionLocal(
         sRegistro, ATipoOperacion);
       Result.FirmaDigital := sHuella;
+    end;
+    if ATipoOperacion <> 'ANULACION' then
+    begin
+      Result.VerifactuUrl := ConstruirUrlQR(oDatos.NifEmisor, ASerie,
+                                            ANumero, oDatos.FechaFac,
+                                            oDatos.ImporteTotal);
+      try
+        Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
+        if Length(Result.QRCodePng) > 0 then
+        begin
+          oB64 := TBase64Encoding.Create(0);
+          try
+            Result.QRCodeBase64 := oB64.EncodeBytesToString(
+                                      Result.QRCodePng);
+          finally
+            FreeAndNil(oB64);
+          end;
+        end;
+      except
+        on E: Exception do
+          Result.MensajeError := '(QR PNG no generado: ' + E.Message + ') ';
+      end;
     end;
   end;
 end;

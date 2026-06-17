@@ -463,10 +463,10 @@ begin
     SerieFac := QryCab.FieldByName('SERIE_FAC').AsString;
     NroFac   := QryCab.FieldByName('NUMERO_FAC').AsString;
     // 2. INICIALIZAR IMPRESORA
-    // QR tributario Verifactu en la reimpresión: misma URL de cotejo
+    // QR tributario fiscal en la reimpresión: misma URL de cotejo/remisión
     // que en el ticket original (se genera en local desde la factura)
     QRTexto := '';
-    if VerifactuActivo and (SerieFac <> '') and (NroFac <> '') then
+    if (not SinVerifactuActivo) and (SerieFac <> '') and (NroFac <> '') then
       QRTexto := ConstruirUrlQR(
                    QryCab.FieldByName('NIF_EMPRESA_FAC').AsString,
                    SerieFac,
@@ -477,7 +477,7 @@ begin
     try
       Ticket.Inicializar;
 
-      // === QR TRIBUTARIO AL PRINCIPIO (solo con Verifactu activo) ===
+      // === QR TRIBUTARIO AL PRINCIPIO (modo fiscal activo) ===
       if QRTexto <> '' then
       begin
         Ticket.Alinear(alCentro);
@@ -485,9 +485,12 @@ begin
         Ticket.EscribirLinea('QR tributario:');
         // Nivel de corrección M (49) exigido por la AEAT para el QR
         Ticket.ImprimirQRNativo(QRTexto, 6, 49);
-        Ticket.Alinear(alCentro);
-        Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
-        Ticket.EscribirLinea('en la sede electrónica de la AEAT');
+        if VerifactuActivo then
+        begin
+          Ticket.Alinear(alCentro);
+          Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
+          Ticket.EscribirLinea('en la sede electrónica de la AEAT');
+        end;
         Ticket.Alinear(alIzquierda);
       end;
 
