@@ -186,53 +186,63 @@ var
   StartX: Integer;
   QRWidth, QRHeight: Integer;
 begin
-  if FQRTexto = '' then Exit;
-  QRCode := TDelphiZXIngQRCode.Create;
-  QRBitmap := TBitmap.Create;
-  try
-    // Configurar QR
-    QRCode.Data := FQRTexto;
-    QRCode.Encoding := TQRCodeEncoding(qrUTF8NoBOM);
-    QRCode.QuietZone := 1;
-    // Escala basada en el tamaño del módulo (ajustado para visualización)
-    Scale := FQRTamanoModulo div 2;
-    if Scale < 2 then Scale := 2;
-    // Crear bitmap del QR
-    QRBitmap.Width := QRCode.Columns * Scale;
-    QRBitmap.Height := QRCode.Rows * Scale;
-    QRBitmap.PixelFormat := pf24bit;
-    // Fondo blanco
-    QRBitmap.Canvas.Brush.Color := clWhite;
-    QRBitmap.Canvas.FillRect(Rect(0, 0, QRBitmap.Width, QRBitmap.Height));
-    QRBitmap.Canvas.Brush.Color := clBlack;
-    // Dibujar módulos del QR
-    for Row := 0 to QRCode.Rows - 1 do
-    begin
-      for Column := 0 to QRCode.Columns - 1 do
+  if FQRTexto <> '' then
+  begin
+    QRCode := TDelphiZXIngQRCode.Create;
+    QRBitmap := TBitmap.Create;
+    try
+      // Nivel ESC/POS: 48=L, 49=M, 50=Q, 51=H.
+      case FQRNivelError of
+        49:
+          QRCode.ErrorCorrectionLevel := qreM;
+        50:
+          QRCode.ErrorCorrectionLevel := qreQ;
+        51:
+          QRCode.ErrorCorrectionLevel := qreH;
+      else
+        QRCode.ErrorCorrectionLevel := qreL;
+      end;
+      QRCode.Encoding := TQRCodeEncoding(qrUTF8NoBOM);
+      QRCode.QuietZone := 1;
+      QRCode.Data := FQRTexto;
+      // Escala basada en el tamaño del módulo.
+      Scale := FQRTamanoModulo div 2;
+      if Scale < 2 then
+        Scale := 2;
+      QRBitmap.Width := QRCode.Columns * Scale;
+      QRBitmap.Height := QRCode.Rows * Scale;
+      QRBitmap.PixelFormat := pf24bit;
+      QRBitmap.Canvas.Brush.Color := clWhite;
+      QRBitmap.Canvas.FillRect(Rect(0, 0, QRBitmap.Width, QRBitmap.Height));
+      QRBitmap.Canvas.Brush.Color := clBlack;
+      for Row := 0 to QRCode.Rows - 1 do
       begin
-        if QRCode.IsBlack[Row, Column] then
+        for Column := 0 to QRCode.Columns - 1 do
         begin
-          x := Column * Scale;
-          y := Row * Scale;
-          QRBitmap.Canvas.FillRect(Rect(x, y, x + Scale, y + Scale));
+          if QRCode.IsBlack[Row, Column] then
+          begin
+            x := Column * Scale;
+            y := Row * Scale;
+            QRBitmap.Canvas.FillRect(Rect(x, y, x + Scale, y + Scale));
+          end;
         end;
       end;
+      QRWidth := QRBitmap.Width;
+      QRHeight := QRBitmap.Height;
+      case FAlineacion of
+        1:
+          StartX := (ANCHO_PAPEL_PIXELS - QRWidth) div 2;
+        2:
+          StartX := ANCHO_PAPEL_PIXELS - QRWidth - MARGEN_PIXELS;
+      else
+        StartX := MARGEN_PIXELS;
+      end;
+      FCanvas.Draw(StartX, FCurrentY, QRBitmap);
+      FCurrentY := FCurrentY + QRHeight;
+    finally
+      FreeAndNil(QRBitmap);
+      FreeAndNil(QRCode);
     end;
-    // Calcular posición según alineación
-    QRWidth := QRBitmap.Width;
-    QRHeight := QRBitmap.Height;
-    case FAlineacion of
-      1: StartX := (ANCHO_PAPEL_PIXELS - QRWidth) div 2; // Centro
-      2: StartX := ANCHO_PAPEL_PIXELS - QRWidth - MARGEN_PIXELS; // Derecha
-    else
-      StartX := MARGEN_PIXELS; // Izquierda
-    end;
-    // Dibujar en el canvas principal
-    FCanvas.Draw(StartX, FCurrentY, QRBitmap);
-    FCurrentY := FCurrentY + QRHeight;
-  finally
-    FreeAndNil(QRBitmap);
-    FreeAndNil(QRCode);
   end;
 end;
 

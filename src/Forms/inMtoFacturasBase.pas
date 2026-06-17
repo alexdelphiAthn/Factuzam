@@ -972,8 +972,8 @@ begin
   if SinVerifactuActivo and (tdmDataModule <> nil) and
      CheckOpenDatasets(tdmDataModule as TDataModule) then
     btnGrabarClick(Sender);
-  // El QR tributario nace al lanzar la factura a Verifactu: en
-  // BORRADOR no hay registro de facturación y no se puede imprimir
+  // El QR tributario nace al consolidar el registro fiscal: en BORRADOR
+  // no hay registro de facturación y no se puede imprimir.
   sFase := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
   if ((sFase = '') or SameText(sFase, 'BORRADOR')) and
      (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') and

@@ -37,11 +37,16 @@ const
   cFaseFacturaNoVerifactuOk = 'NOVERIFACTU_OK';
   cFaseFacturaNoVerifactuAnulada = 'NOVERIFACTU_ANULADA';
   // URLs oficiales del servicio de cotejo del QR tributario. Se pueden
-  // sobreescribir con appVerifactuUrlQRPre / appVerifactuUrlQRPro.
+  // sobreescribir con los parámetros app*UrlQRPre / app*UrlQRPro.
   cVerifactuUrlQRPre =
     'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR';
   cVerifactuUrlQRPro =
     'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR';
+  cNoVerifactuUrlQRPre =
+    'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQRNoVerifactu';
+  cNoVerifactuUrlQRPro =
+    'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/' +
+    'ValidarQRNoVerifactu';
   // Tipos de evento para TIPO_EVENTO_LOG de fza_verifactu_eventos.
   // Pendiente de unificar con el catálogo de tipos de OdaVeriFactu.
   cEventoVerifactuInfo       = 1;
@@ -81,7 +86,7 @@ function NormalizarNifVerifactu(const AValor: string): string;
 function ConstruirUrlQR(const ANif, ASerie, ANumero: string;
                         AFecha: TDateTime;
                         AImporteTotal: Currency): string;
-// PNG del QR tributario (DelphiZXIngQRCode, corrección M) como bytes.
+// PNG del QR tributario (ISO/IEC 18004:2015, corrección M) como bytes.
 // Sin canvas ni handles GDI compartidos: usable desde el hilo de envío.
 function GenerarQRPngVerifactu(const AUrl: string;
                                AEscala: Integer = 4): TBytes;
@@ -636,9 +641,23 @@ var
   sBase: string;
 begin
   if VerifactuEntorno = 'PRO' then
-    sBase := oAppParams.GetString('appVerifactuUrlQRPro', cVerifactuUrlQRPro)
+  begin
+    if NoVerifactuActivo then
+      sBase := oAppParams.GetString('appNoVerifactuUrlQRPro',
+                                    cNoVerifactuUrlQRPro)
+    else
+      sBase := oAppParams.GetString('appVerifactuUrlQRPro',
+                                    cVerifactuUrlQRPro);
+  end
   else
-    sBase := oAppParams.GetString('appVerifactuUrlQRPre', cVerifactuUrlQRPre);
+  begin
+    if NoVerifactuActivo then
+      sBase := oAppParams.GetString('appNoVerifactuUrlQRPre',
+                                    cNoVerifactuUrlQRPre)
+    else
+      sBase := oAppParams.GetString('appVerifactuUrlQRPre',
+                                    cVerifactuUrlQRPre);
+  end;
   // Formato fijado por la AEAT (documento técnico del QR tributario):
   // nif, numserie, fecha dd-mm-aaaa e importe total con punto decimal
   Result := sBase +
@@ -668,12 +687,10 @@ begin
     oPng    := nil;
     oStream := nil;
     try
-      // DelphiZXIngQRCode genera en nivel L (fijo en la librería). El
-      // QR del ticket impreso sí va en nivel M: lo genera la propia
-      // impresora con el comando nativo ESC/POS (ImprimirQRNativo, 49).
-      oQR.Data      := AUrl;
-      oQR.Encoding  := qrUTF8NoBOM;
-      oQR.QuietZone := 4;
+      oQR.ErrorCorrectionLevel := qreM;
+      oQR.Encoding             := qrUTF8NoBOM;
+      oQR.QuietZone            := 4;
+      oQR.Data                 := AUrl;
       // RGB (24 bits), no escala de grises: el TfrxPictureView de
       // FastReport y la hoja dxSpreadSheet pintan PNG RGB con fiabilidad
       // (las fotos, que sí se ven, son RGB); el gris se mostraba bien
@@ -714,7 +731,7 @@ begin
 end;
 
 // Rellena un TfrxPictureView con el QR tributario de la factura del
-// dataset dado (vacío si Verifactu inactivo o sin datos)
+// dataset dado (vacío en modo SIN o si faltan datos)
 procedure RellenarQRPicture(APic: TfrxPictureView; ADataSet: TDataSet);
 var
   aPng:    TBytes;
@@ -723,7 +740,7 @@ var
   sUrl:    string;
 begin
   sUrl := '';
-  if VerifactuActivo and TieneCamposFactura(ADataSet) and
+  if (not SinVerifactuActivo) and TieneCamposFactura(ADataSet) and
      (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') then
     sUrl := ConstruirUrlQR(
               ADataSet.FieldByName('NIF_EMPRESA_FAC').AsString,

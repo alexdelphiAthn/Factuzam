@@ -50,9 +50,9 @@ var
   TieneRE : Boolean;
   sTitulo : string;
 
-  // QR tributario Verifactu arriba a la derecha (mismas reglas que el
-  // ticket y el A4: URL de cotejo calculada en local). Si Verifactu
-  // está inactivo o falta algún dato, no pone nada.
+  // QR tributario fiscal arriba a la derecha (mismas reglas que el
+  // ticket y el A4: URL de cotejo/remisión calculada en local). En modo
+  // SIN o si falta algún dato, no pone nada.
   procedure IncrustarQRVerifactu;
   var
     aPng:    TBytes;
@@ -63,7 +63,7 @@ var
   begin
     // El QR es opcional: cualquier fallo aquí NO debe tumbar la
     // exportación de la factura a Excel.
-    if (not VerifactuActivo) or
+    if SinVerifactuActivo or
        (QMaster.FindField('NIF_EMPRESA_FAC') = nil) or
        (QMaster.FindField('SERIE_FAC') = nil) or
        (QMaster.FindField('NUMERO_FAC') = nil) or

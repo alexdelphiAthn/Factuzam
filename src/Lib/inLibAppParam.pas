@@ -282,6 +282,13 @@ begin
   RegistrarParametro('Verifactu', 'appVerifactuUrlQRPro',
     'URL de cotejo del QR en producción', tpString,
     'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR');
+  RegistrarParametro('Verifactu', 'appNoVerifactuUrlQRPre',
+    'URL de remisión del QR NO VERI*FACTU en preproducción', tpString,
+    'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQRNoVerifactu');
+  RegistrarParametro('Verifactu', 'appNoVerifactuUrlQRPro',
+    'URL de remisión del QR NO VERI*FACTU en producción', tpString,
+    'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/' +
+    'ValidarQRNoVerifactu');
   RegistrarParametro('Verifactu', 'appVerifactuSegundosCiclo',
     'Segundos entre ciclos del hilo de la cola Verifactu',
     tpInteger, '60');
