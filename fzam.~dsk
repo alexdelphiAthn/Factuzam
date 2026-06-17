@@ -1,33 +1,36 @@
 ﻿[Closed Files]
 File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoLogon.pas',0,1,152,29,164,0,0,,
 File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,2440,88,1,0,0,,
-File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoGen.pas',0,1,1,1,1,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas',0,1,1,27,6,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturae.pas',0,1,1,1,1,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas',0,1,1,1,1,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,1,1,1,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasCompra.pas',0,1,1,1,1,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibXades.pas',0,1,14,1,26,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibVerifactuNoVerifactuExport.pas',0,1,426,1,1,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactu.pas',0,1,605,26,612,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas',0,1,613,43,613,0,0,,
-File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inMtoVerifactuCola.pas',0,1,12,27,33,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGenerarTicketBD.pas',0,1,473,11,490,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturas.pas',0,1,1089,45,1104,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturae.pas',0,1,1,1,1,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas',0,1,1,1,1,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,1,1,1,0,0,,
+File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasCompra.pas',0,1,1,1,1,0,0,,
+File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibXades.pas',0,1,14,1,26,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibVerifactuNoVerifactuExport.pas',0,1,426,1,1,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactu.pas',0,1,605,26,612,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas',0,1,613,43,613,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inMtoVerifactuCola.pas',0,1,12,27,33,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGenerarTicketBD.pas',0,1,473,11,490,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturas.pas',0,1,1089,45,1104,0,0,,
 
 [Modules]
 Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
-Count=1
+Module1=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas
+Count=2
 EditWindowCount=1
 
 [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 ModuleType=TBaseProject
 
+[C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas]
+ModuleType=TSourceModule
+
 [EditWindow0]
-ViewCount=2
+ViewCount=3
 CurrentView=1
 View0=0
 View1=1
+View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -64,8 +67,8 @@ BottomMiddelPanelData=0000080001020200000009000000446F636B5369746530100000004772
 [View0]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
-CursorX=1
-CursorY=1
+CursorX=38
+CursorY=6
 TopLine=1
 LeftCol=1
 Elisions=
@@ -75,6 +78,17 @@ EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 [View1]
 CustomEditViewType=TOTACustomEditView
 OTAEditViewType=WelcomePage.MainPage
+
+[View2]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas
+CursorX=62
+CursorY=1939
+TopLine=1929
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas
 
 [Watches]
 Count=0
@@ -510,6 +524,25 @@ ClientWidth=1526
 ClientHeight=2333
 TBDockHeight=3675
 LRDockWidth=1896
+Dockable=1
+StayOnTop=0
+
+[DsmToolWindow]
+PercentageSizes=1
+Create=1
+Visible=0
+Docked=0
+State=0
+Left=0
+Top=0
+Width=1349
+Height=1465
+MaxLeft=-5
+MaxTop=-9
+ClientWidth=1255
+ClientHeight=904
+TBDockHeight=1465
+LRDockWidth=1349
 Dockable=1
 StayOnTop=0
 

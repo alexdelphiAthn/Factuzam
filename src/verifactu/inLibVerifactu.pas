@@ -239,8 +239,6 @@ begin
       Result := '01';
     cEventoNoVerifactuFin:
       Result := '02';
-    cEventoNoVerifactuCambioConfig:
-      Result := '03';
     cEventoNoVerifactuExportFact:
       Result := '08';
     cEventoNoVerifactuExportEventos:
