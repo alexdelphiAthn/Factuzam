@@ -182,15 +182,18 @@ Catálogo interno añadido:
 |-----------|----------------------|-----|
 | `cEventoNoVerifactuInicio` | `01` | Inicio del sistema. |
 | `cEventoNoVerifactuFin` | `02` | Cierre del sistema. |
-| `cEventoNoVerifactuCambioConfig` | `03` | Cambio de configuración. |
+| `cEventoNoVerifactuCambioConfig` | `90` | Cambio de configuración propio de Factuzam. |
 | `cEventoNoVerifactuExportFact` | `08` | Exportación del registro de facturación. |
 | `cEventoNoVerifactuExportEventos` | `09` | Exportación del registro de eventos. |
 | `cEventoNoVerifactuIncidenciaCert` | `90` | Incidencia de certificado o bloqueo de exportación. |
 | `cEventoNoVerifactuIncidenciaReloj` | `90` | Incidencia de reloj/NTP. |
 
-Los eventos técnicos antiguos de Factuzam se registran como evento voluntario
-`90`, para no mezclar envíos internos con códigos oficiales de arranque o
-cierre.
+Los eventos técnicos propios de Factuzam, incluido el cambio de configuración,
+se registran como evento voluntario `90`, para no mezclar operaciones internas
+con códigos oficiales de arranque, cierre, detección de anomalías o exportación.
+En el XSD oficial `EventosSIF.xsd`, el código `03` corresponde al lanzamiento
+del proceso de detección de anomalías en registros de facturación, no a cambios
+de parámetros de la aplicación.
 
 Puntos de disparo:
 
