@@ -1320,7 +1320,9 @@ begin
   bCamposDisponibles :=
     (ADataSet.FindField('CODIGO_OFICINA_CONTABLE_FAC') <> nil) and
     (ADataSet.FindField('CODIGO_ORGANO_GESTOR_FAC') <> nil) and
-    (ADataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_FAC') <> nil);
+    (ADataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_FAC') <> nil) and
+    (ADataSet.FindField('NOMBRE_PERSONA_CLIENTE_FAC') <> nil) and
+    (ADataSet.FindField('APELLIDOS_PERSONA_CLIENTE_FAC') <> nil);
   if bCamposDisponibles and
      (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') and
      (Trim(ADataSet.FieldByName('SERIE_FAC').AsString) <> '') then
@@ -1332,7 +1334,9 @@ begin
         ' UPDATE fza_facturas ' +
         ' SET CODIGO_OFICINA_CONTABLE_FAC = :OFICINA, ' +
         '     CODIGO_ORGANO_GESTOR_FAC = :ORGANO, ' +
-        '     CODIGO_UNIDAD_TRAMITADORA_FAC = :UNIDAD ' +
+        '     CODIGO_UNIDAD_TRAMITADORA_FAC = :UNIDAD, ' +
+        '     NOMBRE_PERSONA_CLIENTE_FAC = :NOMBRE_PERSONA, ' +
+        '     APELLIDOS_PERSONA_CLIENTE_FAC = :APELLIDOS_PERSONA ' +
         ' WHERE NUMERO_FAC = :NUMERO ' +
         '   AND SERIE_FAC = :SERIE ';
       Qry.ParamByName('OFICINA').AsString :=
@@ -1341,6 +1345,10 @@ begin
         ADataSet.FieldByName('CODIGO_ORGANO_GESTOR_FAC').AsString;
       Qry.ParamByName('UNIDAD').AsString :=
         ADataSet.FieldByName('CODIGO_UNIDAD_TRAMITADORA_FAC').AsString;
+      Qry.ParamByName('NOMBRE_PERSONA').AsString :=
+        ADataSet.FieldByName('NOMBRE_PERSONA_CLIENTE_FAC').AsString;
+      Qry.ParamByName('APELLIDOS_PERSONA').AsString :=
+        ADataSet.FieldByName('APELLIDOS_PERSONA_CLIENTE_FAC').AsString;
       Qry.ParamByName('NUMERO').AsString :=
         ADataSet.FieldByName('NUMERO_FAC').AsString;
       Qry.ParamByName('SERIE').AsString :=
