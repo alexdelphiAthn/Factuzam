@@ -14,6 +14,7 @@ object frmMtoCajaParam: TfrmMtoCajaParam
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 18
   object Panel2: TPanel

@@ -15,6 +15,7 @@ object frmMtoAppParam: TfrmMtoAppParam
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 17
   object JvInspector1: TJvInspector
