@@ -26,7 +26,8 @@ uses
   cxContainer, cxEdit, cxTextEdit, cxMaskEdit, cxDropDownEdit,
   cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox, cxCalendar, cxLabel,
   cxButtons, cxButtonEdit, dxCore, cxDateUtils,
-  inMtoFrmBase;
+  inMtoFrmBase, dxCoreGraphics, Vcl.ComCtrls, Vcl.Menus, Vcl.StdCtrls,
+  JvComponentBase, JvEnterTab, cxClasses, cxLocalization;
 
 type
   TFacturarTicketResult = record

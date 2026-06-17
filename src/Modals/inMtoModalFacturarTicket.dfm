@@ -3,30 +3,33 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
   ClientHeight = 300
   ClientWidth = 560
   Position = poScreenCenter
-  TextHeight = 19
+  ExplicitWidth = 578
+  ExplicitHeight = 347
+  TextHeight = 17
   object lblTicket: TcxLabel [0]
     Left = 24
     Top = 27
     Caption = 'Ticket:'
+    TabOrder = 5
     Transparent = True
   end
   object edtTicket: TcxTextEdit [1]
     Left = 160
     Top = 24
-    Width = 240
     Properties.ReadOnly = True
     TabOrder = 0
+    Width = 240
   end
   object lblCliente: TcxLabel [2]
     Left = 24
     Top = 67
     Caption = 'Cliente:'
+    TabOrder = 6
     Transparent = True
   end
   object btnCliente: TcxButtonEdit [3]
     Left = 160
     Top = 64
-    Width = 376
     Properties.Buttons = <
       item
         Default = True
@@ -35,17 +38,18 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
     Properties.ReadOnly = True
     Properties.OnButtonClick = btnClientePropertiesButtonClick
     TabOrder = 1
+    Width = 376
   end
   object lblSerie: TcxLabel [4]
     Left = 24
     Top = 107
     Caption = 'Serie borrador:'
+    TabOrder = 7
     Transparent = True
   end
   object cbbSerie: TcxLookupComboBox [5]
     Left = 160
     Top = 104
-    Width = 180
     Properties.DropDownListStyle = lsFixedList
     Properties.KeyFieldNames = 'SERIE_CON'
     Properties.ListColumns = <
@@ -56,18 +60,20 @@ inherited frmModalFacturarTicket: TfrmModalFacturarTicket
       end>
     Properties.ListSource = dsSeries
     TabOrder = 2
+    Width = 180
   end
   object lblFecha: TcxLabel [6]
     Left = 24
     Top = 147
     Caption = 'Fecha borrador:'
+    TabOrder = 8
     Transparent = True
   end
   object dtFecha: TcxDateEdit [7]
     Left = 160
     Top = 144
-    Width = 140
     TabOrder = 3
+    Width = 140
   end
   object pnlButton: TPanel [8]
     Left = 0
