@@ -82,6 +82,7 @@ type
     procedure actAceptarExecute(Sender: TObject);
     procedure chkAnadirExistenteClick(Sender: TObject);
   private
+    FCodigoEmpresa  : string;
     FSeriePed       : string;
     FNumPed         : string;
     FAlmacenDefecto : string;
@@ -96,6 +97,7 @@ type
   public
     class function Ejecutar(AOwner: TComponent;
                             const ASeriePed, ANumPed,
+                                  ACodigoEmpresa,
                                   ACodigoAlmacenDefecto: string
                            ): TSelAlmacenAlbaranResult;
   end;
@@ -106,12 +108,13 @@ var
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibFormatoDocumento;
 
 {$R *.dfm}
 
 class function TfrmModalSelAlmacenAlbaran.Ejecutar(AOwner: TComponent;
                             const ASeriePed, ANumPed,
+                                  ACodigoEmpresa,
                                   ACodigoAlmacenDefecto: string
                            ): TSelAlmacenAlbaranResult;
 var
@@ -124,6 +127,7 @@ begin
   Result.SerieAlb      := '';
   frm := TfrmModalSelAlmacenAlbaran.Create(AOwner);
   try
+    frm.FCodigoEmpresa  := ACodigoEmpresa;
     frm.FSeriePed       := ASeriePed;
     frm.FNumPed         := ANumPed;
     frm.FAlmacenDefecto := ACodigoAlmacenDefecto;
@@ -142,6 +146,7 @@ procedure TfrmModalSelAlmacenAlbaran.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position  := poScreenCenter;
+  FCodigoEmpresa := '';
   FAceptado      := False;
   FCodigoAlmacen := '';
   FEsExistente   := False;
@@ -154,8 +159,8 @@ end;
 procedure TfrmModalSelAlmacenAlbaran.FormShow(Sender: TObject);
 begin
   inherited;
-  lblPedido.Caption := Format('Crear albaran desde pedido %s/%s',
-                              [FSeriePed, FNumPed]);
+  lblPedido.Caption := 'Crear albarán desde pedido ' +
+    FormatearDocumentoEmpresa(FCodigoEmpresa, FSeriePed, FNumPed);
   CargarAlmacenes;
   CargarAlbaranesPedido;
   // Defecto: almacen comun de las lineas a entregar. Si viene vacio

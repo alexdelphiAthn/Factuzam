@@ -37,6 +37,7 @@ type
     dsPaises: TDataSource;
     unqryPaises: TUniQuery;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryRetencionesAfterInsert(DataSet: TDataSet);
@@ -67,7 +68,8 @@ type
 implementation
 
 uses
-  inLibtb, inLibGlobalVar, inMtoEmpresas, inLibLog, System.Diagnostics;
+  inLibtb, inLibGlobalVar, inMtoEmpresas, inLibLog, System.Diagnostics,
+  inLibFormatoDocumento;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -241,6 +243,39 @@ begin
   AplicarValoresPorDefecto(unqryTablaG, 'fza_empresas');
   unqryTablaG.FindField('GRUPO_ZONA_IVA_EMP').AsString :=
        GetDefaultValue('vi_ivas_grupos', 'IVA_IVAGRP','ESDEFAULT_IVA_IVAGRP');
+  if unqryTablaG.FindField('FORMATO_DOCUMENTO_EMP') <> nil then
+    unqryTablaG.FindField('FORMATO_DOCUMENTO_EMP').AsString :=
+      FORMATO_DOCUMENTO_DEFECTO;
+end;
+
+procedure TdmEmpresas.unqryTablaGAfterPost(DataSet: TDataSet);
+var
+  oCampoFormato: TField;
+  sCodigo: string;
+  sFormato: string;
+  unqryFormato: TUniQuery;
+begin
+  oCampoFormato := DataSet.FindField('FORMATO_DOCUMENTO_EMP');
+  if oCampoFormato <> nil then
+  begin
+    sCodigo := DataSet.FieldByName('CODIGO_EMP_EMP').AsString;
+    sFormato := Trim(oCampoFormato.AsString);
+    if sFormato = '' then
+      sFormato := FORMATO_DOCUMENTO_DEFECTO;
+    unqryFormato := TUniQuery.Create(nil);
+    try
+      unqryFormato.Connection := oConn;
+      unqryFormato.SQL.Text :=
+        'UPDATE fza_empresas ' +
+        '   SET FORMATO_DOCUMENTO_EMP = :FORMATO ' +
+        ' WHERE CODIGO_EMP_EMP = :CODIGO_EMP';
+      unqryFormato.ParamByName('FORMATO').AsString := sFormato;
+      unqryFormato.ParamByName('CODIGO_EMP').AsString := sCodigo;
+      unqryFormato.Execute;
+    finally
+      FreeAndNil(unqryFormato);
+    end;
+  end;
 end;
 
 procedure TdmEmpresas.DataModuleCreate(Sender: TObject);
@@ -255,6 +290,7 @@ begin
   unqryFacturasEmpresas.Connection       := oConn;
   unqryFacturasLineasEmpresas.Connection := oConn;
   unqryPaises.Connection                 := oConn;
+  unqryTablaG.AfterPost                  := unqryTablaGAfterPost;
   unqryFacturasEmpresas.MasterSource :=
                                        (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqryFacturasLineasEmpresas.MasterSource :=
@@ -405,6 +441,12 @@ begin
          unqryRetenciones.Post;
   with unqryTablaG do
   begin
+    if FindField('FORMATO_DOCUMENTO_EMP') <> nil then
+    begin
+      if Trim(FindField('FORMATO_DOCUMENTO_EMP').AsString) = '' then
+        FindField('FORMATO_DOCUMENTO_EMP').AsString :=
+          FORMATO_DOCUMENTO_DEFECTO;
+    end;
     sCodigoEmpresa := Trim(FindField('CODIGO_EMP_EMP').AsString);
     sRazonSocial := Trim(FindField('RAZON_SOCIAL_EMP').AsString);
     if ((sRazonSocial = '') or (SimbolosProhibidos(sRazonSocial))) then

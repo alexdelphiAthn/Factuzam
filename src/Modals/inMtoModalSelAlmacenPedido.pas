@@ -119,7 +119,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb;
+  inLibGlobalVar, inLibtb, inLibFormatoDocumento;
 
 {$R *.dfm}
 
@@ -146,9 +146,8 @@ end;
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);
 begin
   inherited;
-  lblPedido.Caption := Format(
-    'Crear albaran desde pedido %s/%s',
-    [SeriePedc, NumPedc]);
+  lblPedido.Caption := 'Crear albarán desde pedido ' +
+    FormatearDocumentoEmpresa(CodigoEmpresa, SeriePedc, NumPedc);
   CargarAlmacenes;
   ConfigurarLookupTemporada;
   // Defaults. El combo de serie ofrece las series 'AB' de la empresa.

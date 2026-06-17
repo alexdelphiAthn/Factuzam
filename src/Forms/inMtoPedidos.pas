@@ -318,7 +318,7 @@ var
   par: TPair<string, Currency>;
   fEntrPend: Double;
   sNumeroAlb, sSerieAlb: string;
-  sSerie, sNumero, sAlm, sAlmComun, sAlmDefecto: string;
+  sEmpresa, sSerie, sNumero, sAlm, sAlmComun, sAlmDefecto: string;
   EsAlmacenUnico, bAlmInit: Boolean;
   res: TSelAlmacenAlbaranResult;
   frmDocs: TfrmModalDocsCreados;
@@ -380,6 +380,7 @@ begin
     begin
       sSerie  := dmmPedidos.unqryTablaG.FieldByName('SERIE_PED').AsString;
       sNumero := dmmPedidos.unqryTablaG.FieldByName('NUMERO_PED').AsString;
+      sEmpresa := dmmPedidos.unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString;
       // Si todas las líneas a entregar son del mismo almacén, ese sale
       // preseleccionado en el modal; si no, el combo va vacío y obliga
       // a elegir el almacén del albarán.
@@ -388,7 +389,7 @@ begin
       else
         sAlmDefecto := '';
       res := TfrmModalSelAlmacenAlbaran.Ejecutar(Self, sSerie, sNumero,
-                                                 sAlmDefecto);
+                                                 sEmpresa, sAlmDefecto);
       if res.Aceptado then
       begin
         // Segun lo elegido en el modal: crear albaran nuevo o anadir las

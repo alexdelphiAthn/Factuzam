@@ -1,5 +1,5 @@
 inherited frmPrintAlbCompra: TfrmPrintAlbCompra
-  Caption = 'Imprimir Albar'#225'n de Compra'
+  Caption = 'Imprimir Albarán de Compra'
   ClientHeight = 220
   ClientWidth = 460
   StyleElements = [seFont, seClient, seBorder]
@@ -37,7 +37,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
   object lblNumero: TcxLabel [3]
     Left = 152
     Top = 16
-    Caption = 'N'#250'mero'
+    Caption = 'Número'
     TabOrder = 3
     Transparent = True
   end
@@ -100,7 +100,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            'ALBAR'#193'N DE COMPRA')
+            'ALBARÁN DE COMPRA')
           ParentFont = False
         end
         object MemoEmpLbl: TfrxMemoView
@@ -115,7 +115,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'ALMAC'#201'N DESTINO')
+            'ALMACÉN DESTINO')
           ParentFont = False
         end
         object MemoEmpRazon: TfrxMemoView
@@ -293,7 +293,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'ALBAR'#193'N')
+            'ALBARÁN')
           ParentFont = False
         end
         object MemoSesNumero: TfrxMemoView
@@ -312,7 +312,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            '[Albaran."SERIE_ALBC"] / [Albaran."NUMERO_ALBC"]')
+            '[Albaran."DOCUMENTO_FORMATO"]')
           ParentFont = False
         end
         object MemoSesFechaLbl: TfrxMemoView
@@ -433,7 +433,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'GU'#205'AS DE TALLAS')
+            'GUÍAS DE TALLAS')
           ParentFont = False
         end
       end
@@ -890,7 +890,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'C'#243'd. Art.')
+            'Cód. Art.')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -926,7 +926,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'Descripci'#243'n')
+            'Descripción')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -980,7 +980,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Fill.BackColor = 6710886
           HAlign = haCenter
           Memo.UTF8W = (
-            'Cantidades por talla (T01..T20 '#226#128#148' ver gu'#237'as arriba)')
+            'Cantidades por talla (T01..T20 - ver guías arriba)')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1655,7 +1655,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'P'#225'g. [Page#] / [TotalPages#]   '#183'   [Date]')
+            'Pág. [Page#] / [TotalPages#] - [Date]')
           ParentFont = False
         end
       end

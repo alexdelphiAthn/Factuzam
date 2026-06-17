@@ -1,5 +1,5 @@
 inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
-  Caption = 'Crear albar'#225'n desde pedido'
+  Caption = 'Crear albarán desde pedido'
   ClientHeight = 280
   ClientWidth = 560
   StyleElements = [seFont, seClient, seBorder]
@@ -60,14 +60,14 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
     object chkAnadirExistente: TcxCheckBox
       Left = 16
       Top = 44
-      Caption = 'A'#241'adir a un albar'#225'n ya existente de este pedido'
+      Caption = 'Añadir a un albarán ya existente de este pedido'
       TabOrder = 0
       OnClick = chkAnadirExistenteClick
     end
     object lblAlbaran: TcxLabel
       Left = 16
       Top = 78
-      Caption = 'Albar'#225'n destino:'
+      Caption = 'Albarán destino:'
       Transparent = True
     end
     object cbbAlbaran: TcxLookupComboBox
@@ -79,7 +79,7 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
       Properties.KeyFieldNames = 'NUMERO_ALB'
       Properties.ListColumns = <
         item
-          Caption = 'N'#250'mero'
+          Caption = 'Número'
           Width = 90
           FieldName = 'NUMERO_ALB'
         end
@@ -109,7 +109,7 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
     object lblAlmacen: TcxLabel
       Left = 16
       Top = 148
-      Caption = 'Almac'#233'n del albar'#225'n:'
+      Caption = 'Almacén del albarán:'
       Transparent = True
     end
     object cbbAlmacen: TcxLookupComboBox
@@ -121,12 +121,12 @@ inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
       Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
       Properties.ListColumns = <
         item
-          Caption = 'C'#243'digo'
+          Caption = 'Código'
           Width = 100
           FieldName = 'CODIGO_ALM_ALM'
         end
         item
-          Caption = 'Almac'#233'n'
+          Caption = 'Almacén'
           Width = 320
           FieldName = 'NOMBRE_ALM_ALM'
         end>

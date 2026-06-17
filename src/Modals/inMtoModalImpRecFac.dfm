@@ -20,7 +20,7 @@
   object lblcxlbl1: TcxLabel [1]
     Left = 8
     Top = 4
-    Caption = 'Recibo N'#250'mero'
+    Caption = 'Recibo Número'
     TabOrder = 1
     Transparent = True
   end
@@ -149,8 +149,8 @@
           HAlign = haCenter
           Memo.UTF8W = (
             
-              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToS' +
-              'tr(<Recibos."NUMERO_PLAZO_REC">)]')
+              '[Recibos."DOCUMENTO_FACTURA_FORMATO"]\[IntToStr(<Recibos."NUMERO' +
+              '_PLAZO_REC">)]')
           ParentFont = False
           Formats = <
             item
@@ -219,7 +219,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'LOCALIDAD DE EXPEDICI'#211'N')
+            'LOCALIDAD DE EXPEDICIÓN')
           ParentFont = False
         end
         object Memo7: TfrxMemoView
@@ -267,7 +267,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'FECHA DE EXPEDICI'#211'N')
+            'FECHA DE EXPEDICIÓN')
           ParentFont = False
         end
         object Memo11: TfrxMemoView
@@ -682,8 +682,8 @@
           HAlign = haCenter
           Memo.UTF8W = (
             
-              '[<Recibos."SERIE_FAC_REC">]\[<Recibos."NUMERO_FAC_REC">]\[IntToS' +
-              'tr(<Recibos."NUMERO_PLAZO_REC">)]')
+              '[Recibos."DOCUMENTO_FACTURA_FORMATO"]\[IntToStr(<Recibos."NUMERO' +
+              '_PLAZO_REC">)]')
           ParentFont = False
           Formats = <
             item
@@ -752,7 +752,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'LOCALIDAD DE EXPEDICI'#211'N')
+            'LOCALIDAD DE EXPEDICIÓN')
           ParentFont = False
         end
         object Memo7: TfrxMemoView
@@ -800,7 +800,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'FECHA DE EXPEDICI'#211'N')
+            'FECHA DE EXPEDICIÓN')
           ParentFont = False
         end
         object Memo11: TfrxMemoView

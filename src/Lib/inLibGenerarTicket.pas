@@ -33,7 +33,7 @@ uses
 implementation
 
 uses
-  inLibDir, inLibUnidadesMedida, inLibVerifactu;
+  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento;
 
 procedure ImprimirT(const ACodigoEmpresa,
                           ACodigoAlmacen,
@@ -49,6 +49,7 @@ var
   QRTexto: string;
   ComandosESC, RutaFicheroPDF: string;
   FormPreview: TFormVisualizador;
+  sDocumento: string;
 
   function LPAD(const AValue: string;
                 ALength: Integer;
@@ -69,6 +70,8 @@ begin
 //  NombreImpresora := 'DEBUG';
   Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);
   dLin := DatosCobro.TotalesFactura.Lineas;
+  sDocumento := FormatearDocumentoDataSet(DatosCobro.TotalesFactura.Cabecera,
+    'SERIE_FAC', 'NUMERO_FAC');
   // QR tributario fiscal: URL de cotejo/remisión AEAT generada en local.
   // El ticket regalo (sin precios) no lleva QR ni datos fiscales.
   QRTexto := '';
@@ -103,19 +106,9 @@ begin
     Ticket.SaltarLineas(1);
     Ticket.Negrita(True);
     if ASinPrecios then
-      Ticket.EscribirLinea('TICKET REGALO Nro. ' +
-        DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                                 'SERIE_FAC').AsString +
-        '\' +
-        DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                                 'NUMERO_FAC').AsString)
+      Ticket.EscribirLinea('TICKET REGALO Nro. ' + sDocumento)
     else
-      Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' +
-        DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                                 'SERIE_FAC').AsString +
-        '\' +
-        DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                                 'NUMERO_FAC').AsString);
+      Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' + sDocumento);
     Ticket.Negrita(False);
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);

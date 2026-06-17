@@ -29,6 +29,9 @@ procedure ExportarFacturaADevExpress(ASheetControl: TdxSpreadSheet;
 
 implementation
 
+uses
+  inLibFormatoDocumento;
+
 procedure ExportarFacturaADevExpress(ASheetControl: TdxSpreadSheet;
                                               const QMaster, QLineas: TDataSet);
 const
@@ -48,6 +51,7 @@ var
   iRow: Integer;
   PorcenREN, PorcenRER, PorcenRESR, PorcenREE: Double;
   TieneRE : Boolean;
+  sDocumento, sDocumentoHoja: string;
   sTitulo : string;
 
   // QR tributario fiscal arriba a la derecha (mismas reglas que el
@@ -151,9 +155,18 @@ begin
                             TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   Sheet.BeginUpdate;
   try
-  if not QMaster.FieldByName('NUMERO_FAC').IsNull then
-    Sheet.Caption := 'Factura ' + QMaster.FieldByName('SERIE_FAC').AsString
-                     + '_' + QMaster.FieldByName('NUMERO_FAC').AsString;
+  sDocumento := FormatearDocumentoDataSet(QMaster, 'SERIE_FAC', 'NUMERO_FAC');
+  if sDocumento <> '' then
+  begin
+    sDocumentoHoja := StringReplace(sDocumento, '\', '_', [rfReplaceAll]);
+    sDocumentoHoja := StringReplace(sDocumentoHoja, '/', '_', [rfReplaceAll]);
+    sDocumentoHoja := StringReplace(sDocumentoHoja, ':', '_', [rfReplaceAll]);
+    sDocumentoHoja := StringReplace(sDocumentoHoja, '*', '_', [rfReplaceAll]);
+    sDocumentoHoja := StringReplace(sDocumentoHoja, '?', '_', [rfReplaceAll]);
+    sDocumentoHoja := StringReplace(sDocumentoHoja, '[', '_', [rfReplaceAll]);
+    sDocumentoHoja := StringReplace(sDocumentoHoja, ']', '_', [rfReplaceAll]);
+    Sheet.Caption := Copy('Factura ' + sDocumentoHoja, 1, 31);
+  end;
   var ImpuestosIncluidos :=
       (QMaster.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString = 'S');
   // Título según el tipo de factura del registro
@@ -172,9 +185,7 @@ begin
   IncrustarQRVerifactu;
   W(Sheet, 1, COL_TOTAL, 'Fecha: ' +
                QMaster.FieldByName('FECHA_FAC').AsString, False, ssahRight);
-  W(Sheet, 2, COL_TOTAL, 'Número: ' +
-                           QMaster.FieldByName('SERIE_FAC').AsString + '.' +
-                  QMaster.FieldByName('NUMERO_FAC').AsString, True, ssahRight);
+  W(Sheet, 2, COL_TOTAL, 'Número: ' + sDocumento, True, ssahRight);
   W(Sheet, 4, COL_DESC, 'EMISOR', True); // Negrita
   W(Sheet, 5, COL_DESC, QMaster.FieldByName(
                                        'RAZON_SOCIAL_EMPRESA_FAC').AsString);

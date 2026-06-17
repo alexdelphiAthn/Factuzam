@@ -1,5 +1,5 @@
 ﻿inherited frmPrintDevCompraV: TfrmPrintDevCompraV
-  Caption = 'Imprimir Albar'#225'n de Compra (Vertical)'
+  Caption = 'Imprimir Albarán de Compra (Vertical)'
   ClientHeight = 220
   ClientWidth = 460
   StyleElements = [seFont, seClient, seBorder]
@@ -37,7 +37,7 @@
   object lblNumero: TcxLabel [3]
     Left = 152
     Top = 16
-    Caption = 'N'#250'mero'
+    Caption = 'Número'
     TabOrder = 3
     Transparent = True
   end
@@ -101,7 +101,7 @@
           Frame.Typ = [ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            'ALBAR'#193'N DE COMPRA')
+            'ALBARÁN DE COMPRA')
           ParentFont = False
         end
         object MemoEmpRazonV: TfrxMemoView
@@ -262,7 +262,7 @@
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            'Albar'#225'n: [Devolucion."SERIE_DEVC"] / [Devolucion."NUMERO_DEVC"]')
+            'Albarán: [Devolucion."DOCUMENTO_FORMATO"]')
           ParentFont = False
         end
         object MemoFechaV: TfrxMemoView
@@ -349,7 +349,7 @@
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           VAlign = vaCenter
-          Memo.UTF8W = ('Art'#237'culo')
+          Memo.UTF8W = ('Artículo')
           ParentFont = False
         end
         object HdrSkuV: TfrxMemoView
@@ -403,7 +403,7 @@
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           VAlign = vaCenter
-          Memo.UTF8W = ('Descripci'#243'n')
+          Memo.UTF8W = ('Descripción')
           ParentFont = False
         end
         object HdrCantV: TfrxMemoView

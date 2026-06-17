@@ -75,8 +75,17 @@ begin
     with unqryRecibosPrint do
     begin
       Params.Clear;
-      SQL.Text := '     SELECT *  ' +
-                  '       FROM vi_recibos' +
+      SQL.Text := '     SELECT r.*, ' +
+                  '            FN_FORMATO_DOCUMENTO(' +
+                  'emp.FORMATO_DOCUMENTO_EMP, ' +
+                  '              r.SERIE_FAC_REC, r.NUMERO_FAC_REC) ' +
+                  '              AS DOCUMENTO_FACTURA_FORMATO ' +
+                  '       FROM vi_recibos r ' +
+                  '  LEFT JOIN fza_facturas fac ' +
+                  '         ON fac.SERIE_FAC = r.SERIE_FAC_REC ' +
+                  '        AND fac.NUMERO_FAC = r.NUMERO_FAC_REC ' +
+                  '  LEFT JOIN fza_empresas emp ' +
+                  '         ON emp.CODIGO_EMP_EMP = fac.CODIGO_EMP_FAC ' +
                   '      WHERE NUMERO_FAC_REC = :numfac ' +
                   '        AND SERIE_FAC_REC = :serie ' +
                   '        AND NUMERO_PLAZO_REC = :recibo ';
@@ -92,8 +101,17 @@ begin
     with unqryRecibosPrint do
     begin
       Params.Clear;
-      SQL.Text := '     SELECT *  ' +
-                  '       FROM vi_recibos ' +
+      SQL.Text := '     SELECT r.*, ' +
+                  '            FN_FORMATO_DOCUMENTO(' +
+                  'emp.FORMATO_DOCUMENTO_EMP, ' +
+                  '              r.SERIE_FAC_REC, r.NUMERO_FAC_REC) ' +
+                  '              AS DOCUMENTO_FACTURA_FORMATO ' +
+                  '       FROM vi_recibos r ' +
+                  '  LEFT JOIN fza_facturas fac ' +
+                  '         ON fac.SERIE_FAC = r.SERIE_FAC_REC ' +
+                  '        AND fac.NUMERO_FAC = r.NUMERO_FAC_REC ' +
+                  '  LEFT JOIN fza_empresas emp ' +
+                  '         ON emp.CODIGO_EMP_EMP = fac.CODIGO_EMP_FAC ' +
                   '      WHERE NUMERO_FAC_REC = :numfac ' +
                   '        AND SERIE_FAC_REC = :serie ' ;
       Params.ParamByName('numfac').AsString := edtNroFac.text;

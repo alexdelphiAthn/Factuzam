@@ -1512,6 +1512,32 @@
                 TabOrder = 14
                 Width = 192
               end
+              object lblFormatoDocumento: TcxLabel
+                Left = 640
+                Top = 167
+                Caption = 'Formato documentos'
+                TabOrder = 15
+                Transparent = True
+              end
+              object txtFORMATO_DOCUMENTO_EMP: TcxDBTextEdit
+                Left = 640
+                Top = 196
+                DataBinding.DataField = 'FORMATO_DOCUMENTO_EMP'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 16
+                Width = 250
+              end
+              object lblFormatoDocumentoAyuda: TcxLabel
+                Left = 640
+                Top = 229
+                Caption =
+                  'Tokens: Serie y NroDocumento. Ej.: Serie.NroDocumento o ' +
+                  'NroDocumento.Serie'
+                Properties.WordWrap = True
+                TabOrder = 17
+                Transparent = True
+                Width = 250
+              end
             end
           end
         end

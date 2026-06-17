@@ -52,7 +52,7 @@ inherited frmPrintFac: TfrmPrintFac
   object lblcxlbl1: TcxLabel [2]
     Left = 8
     Top = 4
-    Caption = 'Borrador N'#250'mero'
+    Caption = 'Borrador Número'
     TabOrder = 2
     Transparent = True
   end
@@ -1566,9 +1566,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
-              'N'#250'mero de Factura: [Facturas."SERIE_FAC"].[Facturas."NUMERO_FAC"' +
-              ']')
+            'Número de Factura: [Facturas."DOCUMENTO_FORMATO"]')
           ParentFont = False
           Formats = <
             item
@@ -1589,7 +1587,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            'Descripci'#243'n')
+            'Descripción')
           ParentFont = False
         end
         object Memo9: TfrxMemoView
@@ -1806,7 +1804,7 @@ inherited frmPrintFac: TfrmPrintFac
           Height = 18.897650000000000000
           ContentScaleOptions.Constraints.MaxIterationValue = 0
           ContentScaleOptions.Constraints.MinIterationValue = 0
-          DataField = 'NUMERO_FAC'
+          DataField = 'DOCUMENTO_FORMATO'
           DataSet = dmFacturas.fxdsPrintFac
           DataSetName = 'Facturas'
           Font.Charset = DEFAULT_CHARSET
@@ -1816,7 +1814,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Facturas."NUMERO_FAC"]')
+            '[Facturas."DOCUMENTO_FORMATO"]')
           ParentFont = False
         end
       end
@@ -2403,7 +2401,7 @@ inherited frmPrintFac: TfrmPrintFac
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Retenci'#243'n IRPF [Facturas."PORCENTAJE_RETENCION_FAC"]%')
+            'Retención IRPF [Facturas."PORCENTAJE_RETENCION_FAC"]%')
           ParentFont = False
         end
         object txtRetencionTotal: TfrxMemoView
@@ -2564,7 +2562,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            'P'#225'gina [<Page>] de [<TotalPages#>]')
+            'Página [<Page>] de [<TotalPages#>]')
           ParentFont = False
           Formats = <
             item
@@ -2585,7 +2583,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            'Contin'#250'a en la siguiente p'#225'gina ...')
+            'Continúa en la siguiente página ...')
           ParentFont = False
         end
         object mTotalFacturaCtd: TfrxMemoView

@@ -1,5 +1,5 @@
 inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
-  Caption = 'Crear albar'#225'n desde pedido'
+  Caption = 'Crear albarán desde pedido'
   ClientHeight = 600
   ClientWidth = 660
   StyleElements = [seFont, seClient, seBorder]
@@ -59,7 +59,7 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
     object lblAlmacen: TcxLabel
       Left = 16
       Top = 40
-      Caption = 'Almac'#233'n destino (s'#243'lo se reciben las l'#237'neas de este almac'#233'n):'
+      Caption = 'Almacén destino (sólo se reciben las líneas de este almacén):'
       Transparent = True
     end
     object cbbAlmacen: TcxLookupComboBox
@@ -72,12 +72,12 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
       Properties.OnEditValueChanged = cbbAlmacenPropertiesEditValueChanged
       Properties.ListColumns = <
         item
-          Caption = 'C'#243'digo'
+          Caption = 'Código'
           Width = 100
           FieldName = 'CODIGO_ALM_ALM'
         end
         item
-          Caption = 'Almac'#233'n'
+          Caption = 'Almacén'
           Width = 320
           FieldName = 'NOMBRE_ALM_ALM'
         end>
@@ -87,7 +87,7 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
     object chkIncorporar: TcxCheckBox
       Left = 16
       Top = 96
-      Caption = 'Incorporar a un albar'#225'n ya existente de este pedido'
+      Caption = 'Incorporar a un albarán ya existente de este pedido'
       TabOrder = 5
       OnClick = chkIncorporarClick
     end
@@ -103,7 +103,7 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
         OptionsData.Inserting = False
         OptionsView.GroupByBox = False
         object colAlbExistNUMERO: TcxGridDBColumn
-          Caption = 'N'#250'mero'
+          Caption = 'Número'
           DataBinding.FieldName = 'NUMERO_ALBC'
           Width = 90
         end
@@ -135,7 +135,7 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
     object lblSerieAlb: TcxLabel
       Left = 16
       Top = 280
-      Caption = 'Serie del albar'#225'n'
+      Caption = 'Serie del albarán'
       Transparent = True
     end
     object cbbSerieAlb: TcxComboBox
@@ -161,7 +161,7 @@ inherited frmModalSelAlmacenPedido: TfrmModalSelAlmacenPedido
     object lblFecha: TcxLabel
       Left = 496
       Top = 280
-      Caption = 'Fecha recepci'#243'n'
+      Caption = 'Fecha recepción'
       Transparent = True
     end
     object dteFecha: TcxDateEdit
