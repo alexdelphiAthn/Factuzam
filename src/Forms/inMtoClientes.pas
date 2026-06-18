@@ -302,6 +302,10 @@ type
     txtCODIGO_ORGANO_GESTOR_CLIENTE: TcxDBTextEdit;
     lblCodigoUnidadTramitadora: TcxLabel;
     txtCODIGO_UNIDAD_TRAMITADORA_CLIENTE: TcxDBTextEdit;
+    lblNombrePersonaCliente: TcxLabel;
+    txtNOMBRE_PERSONA_CLIENTE: TcxDBTextEdit;
+    lblApellidosPersonaCliente: TcxLabel;
+    txtAPELLIDOS_PERSONA_CLIENTE: TcxDBTextEdit;
     tsPrestamos: TcxTabSheet;
     pnlPrestamosBody: TPanel;
     cxgrdPrestamosCliente: TcxGrid;

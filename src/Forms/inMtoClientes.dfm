@@ -966,7 +966,7 @@
                 Left = 21
                 Top = 0
                 TabStop = True
-                Caption = 'Centros administrativos DIR3'
+                Caption = 'Par'#225'metros eDoc'
                 TabOrder = 0
                 Height = 174
                 Width = 890
@@ -1020,6 +1020,40 @@
                   DataBinding.DataSource = dsTablaG
                   TabOrder = 5
                   Width = 160
+                end
+                object lblNombrePersonaCliente: TcxLabel
+                  Left = 350
+                  Top = 32
+                  Caption = 'Nombre persona f'#237'sica'
+                  Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 6
+                  Transparent = True
+                  AnchorX = 543
+                end
+                object txtNOMBRE_PERSONA_CLIENTE: TcxDBTextEdit
+                  Left = 550
+                  Top = 28
+                  DataBinding.DataField = 'NOMBRE_PERSONA_CLIENTE_CLI'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 7
+                  Width = 250
+                end
+                object lblApellidosPersonaCliente: TcxLabel
+                  Left = 341
+                  Top = 72
+                  Caption = 'Apellidos persona f'#237'sica'
+                  Properties.Alignment.Horz = taRightJustify
+                  TabOrder = 8
+                  Transparent = True
+                  AnchorX = 543
+                end
+                object txtAPELLIDOS_PERSONA_CLIENTE: TcxDBTextEdit
+                  Left = 550
+                  Top = 68
+                  DataBinding.DataField = 'APELLIDOS_PERSONA_CLIENTE_CLI'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 9
+                  Width = 250
                 end
               end
             end

@@ -756,7 +756,14 @@ begin
        (DataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI') <> nil) then
       FindField('CODIGO_UNIDAD_TRAMITADORA_FAC').AsString :=
         DataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
-
+    if (FindField('NOMBRE_PERSONA_CLIENTE_FAC') <> nil) and
+       (DataSet.FindField('NOMBRE_PERSONA_CLIENTE_CLI') <> nil) then
+      FindField('NOMBRE_PERSONA_CLIENTE_FAC').AsString :=
+        DataSet.FindField('NOMBRE_PERSONA_CLIENTE_CLI').AsString;
+    if (FindField('APELLIDOS_PERSONA_CLIENTE_FAC') <> nil) and
+       (DataSet.FindField('APELLIDOS_PERSONA_CLIENTE_CLI') <> nil) then
+      FindField('APELLIDOS_PERSONA_CLIENTE_FAC').AsString :=
+        DataSet.FindField('APELLIDOS_PERSONA_CLIENTE_CLI').AsString;
     FindField('ESIVA_RECARGO_CLIENTE_FAC').AsString :=
                             DataSet.FindField('ESIVA_RECARGO_CLI').AsString;
     FindField('ESIVA_EXENTO_CLIENTE_FAC').AsString :=

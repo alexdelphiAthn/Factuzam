@@ -97,6 +97,18 @@ begin
     Result := ADefecto;
 end;
 
+function CampoPersonaFisicaFacturae(ADataSet: TDataSet;
+                                    const ACampo: string): string;
+begin
+  Result := CampoStr(ADataSet, ACampo);
+  if (Result = '') and
+     SameText(ACampo, 'NOMBRE_PERSONA_CLIENTE_FAC') then
+    Result := CampoStr(ADataSet, 'NOMBRE_PERSONA_CLIENTE_CLI');
+  if (Result = '') and
+     SameText(ACampo, 'APELLIDOS_PERSONA_CLIENTE_FAC') then
+    Result := CampoStr(ADataSet, 'APELLIDOS_PERSONA_CLIENTE_CLI');
+end;
+
 function CampoFloat(ADataSet: TDataSet; const ACampo: string): Double;
 var
   oCampo: TField;
@@ -492,10 +504,12 @@ procedure ValidarPersonaFisicaFacturae(AErrores: TStrings;
 begin
   if EsPersonaFisica(CampoStr(ACabecera, 'NIF_CLIENTE_FAC')) then
   begin
-    if CampoStr(ACabecera, 'NOMBRE_PERSONA_CLIENTE_FAC') = '' then
+    if CampoPersonaFisicaFacturae(ACabecera,
+       'NOMBRE_PERSONA_CLIENTE_FAC') = '' then
       AErrores.Add('- El cliente tiene NIF/NIE de persona física. Rellene ' +
         'el nombre en Parámetros eDoc.');
-    if CampoStr(ACabecera, 'APELLIDOS_PERSONA_CLIENTE_FAC') = '' then
+    if CampoPersonaFisicaFacturae(ACabecera,
+       'APELLIDOS_PERSONA_CLIENTE_FAC') = '' then
       AErrores.Add('- El cliente tiene NIF/NIE de persona física. Rellene ' +
         'los apellidos en Parámetros eDoc.');
   end;
@@ -674,8 +688,8 @@ begin
     AnadirParte(SB, 'BuyerParty',
       CampoStr(ACabecera, 'NIF_CLIENTE_FAC'),
       CampoStr(ACabecera, 'RAZON_SOCIAL_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'NOMBRE_PERSONA_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'APELLIDOS_PERSONA_CLIENTE_FAC'),
+      CampoPersonaFisicaFacturae(ACabecera, 'NOMBRE_PERSONA_CLIENTE_FAC'),
+      CampoPersonaFisicaFacturae(ACabecera, 'APELLIDOS_PERSONA_CLIENTE_FAC'),
       CampoStr(ACabecera, 'DIRECCION1_CLIENTE_FAC'),
       CampoStr(ACabecera, 'CODIGO_POSTAL_CLIENTE_FAC'),
       CampoStr(ACabecera, 'POBLACION_CLIENTE_FAC'),
@@ -876,22 +890,33 @@ begin
       'CODIGO_UNIDAD_TRAMITADORA_' + ASufijo);
 end;
 
+function ColumnasPersonaFisicaDisponibles(AConn: TUniConnection;
+                                          const ATabla, ASufijo: string):
+                                          Boolean;
+begin
+  Result := ColumnaExiste(AConn, ATabla,
+    'NOMBRE_PERSONA_CLIENTE_' + ASufijo);
+  if Result then
+    Result := ColumnaExiste(AConn, ATabla,
+      'APELLIDOS_PERSONA_CLIENTE_' + ASufijo);
+end;
+
 function SqlCabeceraFacturae(AConn: TUniConnection): string;
 var
   bDir3Factura: Boolean;
   bDir3Cliente: Boolean;
   bCodigoPagoFacturae: Boolean;
   bPersonaFacturae: Boolean;
+  bPersonaCliente: Boolean;
 begin
   bDir3Factura := ColumnasDir3Disponibles(AConn, 'fza_facturas', 'FAC');
   bDir3Cliente := ColumnasDir3Disponibles(AConn, 'fza_clientes', 'CLI');
   bCodigoPagoFacturae := ColumnaExiste(AConn, 'fza_formas_pago',
     'CODIGO_FACTURAE_FP');
-  bPersonaFacturae := ColumnaExiste(AConn, 'fza_facturas',
-    'NOMBRE_PERSONA_CLIENTE_FAC');
-  if bPersonaFacturae then
-    bPersonaFacturae := ColumnaExiste(AConn, 'fza_facturas',
-      'APELLIDOS_PERSONA_CLIENTE_FAC');
+  bPersonaFacturae := ColumnasPersonaFisicaDisponibles(AConn,
+    'fza_facturas', 'FAC');
+  bPersonaCliente := ColumnasPersonaFisicaDisponibles(AConn,
+    'fza_clientes', 'CLI');
   Result := ' SELECT f.* ';
   if bCodigoPagoFacturae then
     Result := Result +
@@ -904,6 +929,12 @@ begin
       ', cli.CODIGO_OFICINA_CONTABLE_CLI AS CODIGO_OFICINA_CONTABLE_CLI ' +
       ', cli.CODIGO_ORGANO_GESTOR_CLI AS CODIGO_ORGANO_GESTOR_CLI ' +
       ', cli.CODIGO_UNIDAD_TRAMITADORA_CLI AS CODIGO_UNIDAD_TRAMITADORA_CLI ';
+  end;
+  if bPersonaCliente then
+  begin
+    Result := Result +
+      ', cli.NOMBRE_PERSONA_CLIENTE_CLI AS NOMBRE_PERSONA_CLIENTE_CLI ' +
+      ', cli.APELLIDOS_PERSONA_CLIENTE_CLI AS APELLIDOS_PERSONA_CLIENTE_CLI ';
   end;
   if (not bDir3Factura) and bDir3Cliente then
   begin
@@ -919,7 +950,13 @@ begin
       ', '''' AS CODIGO_ORGANO_GESTOR_FAC ' +
       ', '''' AS CODIGO_UNIDAD_TRAMITADORA_FAC ';
   end;
-  if not bPersonaFacturae then
+  if (not bPersonaFacturae) and bPersonaCliente then
+  begin
+    Result := Result +
+      ', cli.NOMBRE_PERSONA_CLIENTE_CLI AS NOMBRE_PERSONA_CLIENTE_FAC ' +
+      ', cli.APELLIDOS_PERSONA_CLIENTE_CLI AS APELLIDOS_PERSONA_CLIENTE_FAC ';
+  end
+  else if not bPersonaFacturae then
   begin
     Result := Result +
       ', '''' AS NOMBRE_PERSONA_CLIENTE_FAC ' +
@@ -932,7 +969,7 @@ begin
       ' LEFT JOIN fza_formas_pago fp ' +
       ' ON fp.CODIGO_FP_FP = f.FORMA_PAGO_FAC ';
   end;
-  if bDir3Cliente then
+  if bDir3Cliente or bPersonaCliente then
   begin
     Result := Result +
       ' LEFT JOIN fza_clientes cli ' +

@@ -125,18 +125,28 @@ facturas reales de otras administraciones.
 ## Personas fisicas
 
 El script idempotente
-`DESARROLLOS EN CURSO/facturae_persona_fisica.sql` anade a `fza_facturas`:
+`DESARROLLOS EN CURSO/facturae_persona_fisica.sql` anade a `fza_clientes`:
+
+```sql
+NOMBRE_PERSONA_CLIENTE_CLI
+APELLIDOS_PERSONA_CLIENTE_CLI
+```
+
+Y anade la foto equivalente a `fza_facturas`:
 
 ```sql
 NOMBRE_PERSONA_CLIENTE_FAC
 APELLIDOS_PERSONA_CLIENTE_FAC
 ```
 
-Estos campos se editan en la pestana **Parametros eDoc** de
-`Borradores (Venta Mayor)`. Si el cliente tiene NIF/NIE de persona fisica, la
-emision eDoc exige que ambos esten rellenos y no intenta partir
-`RAZON_SOCIAL_CLIENTE_FAC`, porque nombres compuestos como
-`JOSE CARLOS RODRIGUEZ LOPEZ` no se pueden separar de forma segura.
+Estos campos se editan en la pestana **Parametros eDoc** del cliente. Al
+seleccionar el cliente en una factura mayor se copian a la factura como foto
+de emision, igual que los DIR3. La pestana **Parametros eDoc** de
+`Borradores (Venta Mayor)` permite revisar o corregir la foto de esa factura
+concreta. Si el cliente tiene NIF/NIE de persona fisica, la emision eDoc exige
+que ambos esten rellenos y no intenta partir `RAZON_SOCIAL_CLIENTE_FAC`,
+porque nombres compuestos como `JOSE CARLOS RODRIGUEZ LOPEZ` no se pueden
+separar de forma segura.
 
 ## Normativa y formato
 
@@ -181,5 +191,5 @@ Compilacion verificada:
 
 ```text
 Delphi 13 / Win64 / Release
-0 errores, 0 advertencias
+0 errores; advertencias previas del proyecto y librerias de terceros
 ```

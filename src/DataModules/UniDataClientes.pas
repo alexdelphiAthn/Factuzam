@@ -254,33 +254,55 @@ end;
 procedure TdmClientes.GuardarParametrosEDocCliente(ADataSet: TDataSet);
 var
   Qry: TUniQuery;
-  bCamposDisponibles: Boolean;
+  bCamposDir3Disponibles: Boolean;
+  bCamposPersonaDisponibles: Boolean;
+  sCliente: string;
 begin
-  bCamposDisponibles :=
+  sCliente := Trim(ADataSet.FieldByName('CODIGO_CLI_CLI').AsString);
+  bCamposDir3Disponibles :=
     (ADataSet.FindField('CODIGO_OFICINA_CONTABLE_CLI') <> nil) and
     (ADataSet.FindField('CODIGO_ORGANO_GESTOR_CLI') <> nil) and
     (ADataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI') <> nil);
-  if bCamposDisponibles and
-     (Trim(ADataSet.FieldByName('CODIGO_CLI_CLI').AsString) <> '') then
+  bCamposPersonaDisponibles :=
+    (ADataSet.FindField('NOMBRE_PERSONA_CLIENTE_CLI') <> nil) and
+    (ADataSet.FindField('APELLIDOS_PERSONA_CLIENTE_CLI') <> nil);
+  if (bCamposDir3Disponibles or bCamposPersonaDisponibles) and
+     (sCliente <> '') then
   begin
     Qry := TUniQuery.Create(nil);
     try
       Qry.Connection := oConn;
-      Qry.SQL.Text :=
-        ' UPDATE fza_clientes ' +
-        ' SET CODIGO_OFICINA_CONTABLE_CLI = :OFICINA, ' +
-        '     CODIGO_ORGANO_GESTOR_CLI = :ORGANO, ' +
-        '     CODIGO_UNIDAD_TRAMITADORA_CLI = :UNIDAD ' +
-        ' WHERE CODIGO_CLI_CLI = :CLIENTE ';
-      Qry.ParamByName('OFICINA').AsString :=
-        ADataSet.FieldByName('CODIGO_OFICINA_CONTABLE_CLI').AsString;
-      Qry.ParamByName('ORGANO').AsString :=
-        ADataSet.FieldByName('CODIGO_ORGANO_GESTOR_CLI').AsString;
-      Qry.ParamByName('UNIDAD').AsString :=
-        ADataSet.FieldByName('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
-      Qry.ParamByName('CLIENTE').AsString :=
-        ADataSet.FieldByName('CODIGO_CLI_CLI').AsString;
-      Qry.ExecSQL;
+      if bCamposDir3Disponibles then
+      begin
+        Qry.SQL.Text :=
+          ' UPDATE fza_clientes ' +
+          ' SET CODIGO_OFICINA_CONTABLE_CLI = :OFICINA, ' +
+          '     CODIGO_ORGANO_GESTOR_CLI = :ORGANO, ' +
+          '     CODIGO_UNIDAD_TRAMITADORA_CLI = :UNIDAD ' +
+          ' WHERE CODIGO_CLI_CLI = :CLIENTE ';
+        Qry.ParamByName('OFICINA').AsString :=
+          ADataSet.FieldByName('CODIGO_OFICINA_CONTABLE_CLI').AsString;
+        Qry.ParamByName('ORGANO').AsString :=
+          ADataSet.FieldByName('CODIGO_ORGANO_GESTOR_CLI').AsString;
+        Qry.ParamByName('UNIDAD').AsString :=
+          ADataSet.FieldByName('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
+        Qry.ParamByName('CLIENTE').AsString := sCliente;
+        Qry.ExecSQL;
+      end;
+      if bCamposPersonaDisponibles then
+      begin
+        Qry.SQL.Text :=
+          ' UPDATE fza_clientes ' +
+          ' SET NOMBRE_PERSONA_CLIENTE_CLI = :NOMBRE_PERSONA, ' +
+          '     APELLIDOS_PERSONA_CLIENTE_CLI = :APELLIDOS_PERSONA ' +
+          ' WHERE CODIGO_CLI_CLI = :CLIENTE ';
+        Qry.ParamByName('NOMBRE_PERSONA').AsString :=
+          ADataSet.FieldByName('NOMBRE_PERSONA_CLIENTE_CLI').AsString;
+        Qry.ParamByName('APELLIDOS_PERSONA').AsString :=
+          ADataSet.FieldByName('APELLIDOS_PERSONA_CLIENTE_CLI').AsString;
+        Qry.ParamByName('CLIENTE').AsString := sCliente;
+        Qry.ExecSQL;
+      end;
     finally
       FreeAndNil(Qry);
     end;
