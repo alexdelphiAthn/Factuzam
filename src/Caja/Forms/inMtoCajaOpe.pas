@@ -225,6 +225,8 @@ type
     procedure ConstruirColumnasDinamicas;
     procedure RellenarAtributosDesdeSku(Sku: string);
     procedure ActualizarColumnasDinamicas(ArticuloPadre: string);
+    procedure PoblarAtributosLineasDeposito;
+    procedure MostrarColumnasCuentaCliente(AActivar: Boolean);
     function ObtenerColumnaPorTag(NumColumn:Integer):TcxGridDBColumn;
     function RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
     procedure RecalcularPrecioDesdeSku(sSKU:string);
@@ -411,9 +413,11 @@ begin
       end;
     end;
     tvLineasOpe.DataController.Refresh;
-    // Nueva operacion: ocultamos la columna de fecha de deposito hasta que
-    // se vuelva a cargar la cuenta del cliente con F2.
+    // Nueva operacion: ocultamos la fecha de deposito y volvemos a la vista
+    // normal de columnas (% y Menos visibles, atributos ocultos) hasta que se
+    // vuelva a cargar la cuenta del cliente con F2.
     tvFechaOperacion.Visible := False;
+    MostrarColumnasCuentaCliente(False);
     // 3. Vaciar la cabecera anterior y crear un registro nuevo
     if DatosCaja.cdsCabecera.Active then
     begin
@@ -1728,6 +1732,145 @@ begin
         OnButtonClick := tvLineasOpeAvButtonClick;
       end;
       Col.Index := IndiceBase + i;
+    end;
+  finally
+    tvLineasOpe.EndUpdate;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.PoblarAtributosLineasDeposito;
+var
+  QryNom: TUniQuery;
+  Nombres: TStringList;
+  art, sku: string;
+  i: Integer;
+begin
+  // Rellena Color/Talla (ATTR*_NOMBRE/_VALOR) de cada prenda apartada que se
+  // ha cargado con F2, igual que haria un escaneo normal, para que se vean
+  // sin entrar linea por linea. La carga de depositos no los puebla (esta
+  // optimizada para no lanzar queries por fila).
+  QryNom := TUniQuery.Create(nil);
+  Nombres := TStringList.Create;
+  DatosCaja.cdsLineas.DisableControls;
+  FActualizandoDepositos := True;
+  try
+    QryNom.Connection := oConn;
+    QryNom.SQL.Text :=
+      'SELECT vat.NOMBRE_VA AS NOMBRE_ATRIBUTO ' +
+      '  FROM fza_articulos a ' +
+      '  JOIN fza_variaciones_atributos vat ' +
+      '    ON vat.ID_VAR_VA = a.TIPO_VARIACION_ART ' +
+      ' WHERE a.CODIGO_ART_ART = :ART ' +
+      ' ORDER BY vat.ORDEN_VA LIMIT 5';
+    DatosCaja.cdsLineas.First;
+    while not DatosCaja.cdsLineas.Eof do
+    begin
+      // Solo las prendas ('S'); el abono ('A') no tiene Color/Talla.
+      if DatosCaja.cdsLineas.FieldByName(
+                                     'VIENE_DE_DEPOSITO').AsString = 'S' then
+      begin
+        art := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
+        sku := DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString;
+        Nombres.Clear;
+        QryNom.Close;
+        QryNom.ParamByName('ART').AsString := art;
+        QryNom.Open;
+        while not QryNom.Eof do
+        begin
+          Nombres.Add(QryNom.FieldByName('NOMBRE_ATRIBUTO').AsString);
+          QryNom.Next;
+        end;
+        DatosCaja.cdsLineas.Edit;
+        DatosCaja.cdsLineas.FieldByName(
+          'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := Nombres.Count;
+        for i := 1 to 5 do
+        begin
+          if i <= Nombres.Count then
+            DatosCaja.cdsLineas.FieldByName(
+              'ATTR' + IntToStr(i) + '_NOMBRE').AsString := Nombres[i - 1]
+          else
+            DatosCaja.cdsLineas.FieldByName(
+              'ATTR' + IntToStr(i) + '_NOMBRE').AsString := '';
+        end;
+        RellenarAtributosDesdeSku(sku);
+        DatosCaja.cdsLineas.Post;
+      end;
+      DatosCaja.cdsLineas.Next;
+    end;
+  finally
+    FActualizandoDepositos := False;
+    DatosCaja.cdsLineas.EnableControls;
+    FreeAndNil(Nombres);
+    FreeAndNil(QryNom);
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.MostrarColumnasCuentaCliente(AActivar: Boolean);
+var
+  Clon: TClientDataSet;
+  Col: TcxGridDBColumn;
+  Nombre: string;
+  i: Integer;
+begin
+  // Vista de cuenta de cliente (F2): sobran las columnas % y Menos y faltan
+  // Color/Talla. AActivar=True monta esa vista; False vuelve a la normal (el
+  // escaneo reactiva los atributos por linea).
+  tvLineasOpe.BeginUpdate;
+  try
+    tvDescuento.Visible := not AActivar;
+    tvDescuentoMenos.Visible := not AActivar;
+    if AActivar then
+    begin
+      Clon := TClientDataSet.Create(nil);
+      try
+        Clon.CloneCursor(DatosCaja.cdsLineas, True);
+        for i := 1 to 5 do
+        begin
+          Col := ObtenerColumnaPorTag(i);
+          if Col <> nil then
+          begin
+            // Caption = nombre del atributo de la primera prenda que lo tenga.
+            Nombre := '';
+            Clon.First;
+            while (Nombre = '') and not Clon.Eof do
+            begin
+              if Clon.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
+                Nombre := Clon.FieldByName(
+                  'ATTR' + IntToStr(i) + '_NOMBRE').AsString;
+              Clon.Next;
+            end;
+            Col.Options.Editing := False;
+            if Nombre <> '' then
+            begin
+              Col.Caption := Nombre;
+              Col.Visible := True;
+            end
+            else
+            begin
+              Col.Caption := '-';
+              Col.Visible := False;
+            end;
+          end;
+        end;
+      finally
+        FreeAndNil(Clon);
+      end;
+    end
+    else
+    begin
+      // Reseteamos los atributos e invalidamos la cache para que el proximo
+      // escaneo los vuelva a pintar segun el articulo.
+      for i := 1 to 5 do
+      begin
+        Col := ObtenerColumnaPorTag(i);
+        if Col <> nil then
+        begin
+          Col.Visible := False;
+          Col.Caption := '-';
+          Col.Options.Editing := False;
+        end;
+      end;
+      FUltimoArticuloPadre := '';
     end;
   finally
     tvLineasOpe.EndUpdate;
@@ -3322,12 +3465,15 @@ begin
     FActualizandoDepositos := False;
   end;
   tvLineasOpe.DataController.UpdateItems(False);
+  // Modo cuenta de cliente (F2): rellenamos Color/Talla de cada prenda y
+  // ajustamos las columnas (fecha de la operacion visible; % y Menos ocultas)
+  // antes de añadir la linea en blanco de escaneo.
+  PoblarAtributosLineasDeposito;
+  tvFechaOperacion.Visible := True;
+  MostrarColumnasCuentaCliente(True);
   // 5. Preparamos la línea en blanco para seguir escaneando (ahora ya no rompe
   // la caché)
   AsegurarLineaNueva;
-  // Modo cuenta de cliente (F2): mostramos la columna con la fecha de la
-  // operacion en que se creo cada deposito cargado.
-  tvFechaOperacion.Visible := True;
   // 6. Calculamos el total SIEMPRE AL FINAL, forzando la lectura de memoria
   // interna
   Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
