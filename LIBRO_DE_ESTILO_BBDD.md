@@ -45,6 +45,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_atributos_sku`                  | `SA`      |
 | `fza_atributos_valores`              | `AV`      |
 | `fza_atributos_valores_info`         | `AVI`     |
+| `fza_bancos`                         | `BAN`     |
 | `fza_caja_arqueos`                   | `ARQ`     |
 | `fza_caja_formas_pago`               | `CFP`     |
 | `fza_caja_operaciones`               | `OPCAJA`  |
@@ -77,6 +78,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_efectos_compra_pagos`           | `EFECPAG` |
 | `fza_empleados`                      | `EMPL`    |
 | `fza_empresas`                       | `EMP`     |
+| `fza_empresas_bancos`                | `EMPBAN`  |
 | `fza_empresas_retenciones`           | `EMPRET`  |
 | `fza_empresas_series`                | `EMPSER`  |
 | `fza_facturas`                       | `FAC`     |

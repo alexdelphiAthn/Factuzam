@@ -189,7 +189,7 @@ uses
   inLibFotos,
   UniDataArticulos,
   inLibShowMto, inLibGenBusq, inMtoModalRegistrarPago,
-  inMtoModalVerPagosEfecto;
+  inMtoModalVerPagosEfecto, inMtoModalSeleccionarBanco;
 
 {$R *.dfm}
 
@@ -722,19 +722,31 @@ end;
 procedure TfrmMtoFacturasCompra.btnGenerarEfectosClick(Sender: TObject);
 var
   iRes: Integer;
+  sEmp: string;
+  selBanco: TSeleccionBancoResult;
 begin
   inherited;
   if Assigned(dmmFacturasCompra) then
   begin
-    iRes := dmmFacturasCompra.GenerarEfectos;
-    if iRes > 0 then
-      ShowMessage(Format('Generados %d efecto(s) de pago.', [iRes]))
-    else if iRes = 0 then
-      ShowMessage('No se generaron efectos. Revisa que el borrador tenga ' +
-                  'forma de pago y total, y que no tenga ya efectos pagados ' +
-                  'o remesados.')
+    // Cuenta de la empresa (cargo) para el pago: eleccion manual.
+    sEmp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FACC').AsString;
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, inLibGlobalVar.oConn,
+                                                   sEmp, ubePago);
+    if not selBanco.Aceptado then
+      ShowMessage('Generación de efectos cancelada.')
     else
-      ShowMessage('No hay borrador activo (o hubo un error al generar).');
+    begin
+      iRes := dmmFacturasCompra.GenerarEfectos(selBanco.CodigoEmpban,
+                                               selBanco.Iban);
+      if iRes > 0 then
+        ShowMessage(Format('Generados %d efecto(s) de pago.', [iRes]))
+      else if iRes = 0 then
+        ShowMessage('No se generaron efectos. Revisa que el borrador tenga ' +
+                    'forma de pago y total, y que no tenga ya efectos pagados ' +
+                    'o remesados.')
+      else
+        ShowMessage('No hay borrador activo (o hubo un error al generar).');
+    end;
   end;
 end;
 

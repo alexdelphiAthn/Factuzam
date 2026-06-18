@@ -34,6 +34,8 @@ type
     unqryFacturasLineasEmpresas: TUniQuery;
     unqrySeries: TUniQuery;
     dsSeries: TDataSource;
+    unqryBancos: TUniQuery;
+    dsBancos: TDataSource;
     dsPaises: TDataSource;
     unqryPaises: TUniQuery;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -45,6 +47,8 @@ type
     procedure unqryRetencionesBeforeInsert(DataSet: TDataSet);
     procedure unqrySeriesBeforePost(DataSet: TDataSet);
     procedure unqrySeriesAfterInsert(DataSet: TDataSet);
+    procedure unqryBancosBeforePost(DataSet: TDataSet);
+    procedure unqryBancosAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGAfterDelete(DataSet: TDataSet);
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
@@ -54,6 +58,7 @@ type
     procedure GetCodigoAutoEmpresa;
     procedure GetCodigoAutoRetencion;
     procedure GetCodigoAutoSerie;
+    procedure GetCodigoAutoBanco;
 //    function GetLastCodeEmpresa:Integer;
 //    function GetZonaDefault:String;
     // Override: abre los lookups (Paises, Ivas). Las queries de detail
@@ -62,6 +67,7 @@ type
     procedure AbrirDetalles; override;
     procedure AsegurarRetencionesAbierta;
     procedure AsegurarSeriesAbierta;
+    procedure AsegurarBancosAbierta;
     procedure AsegurarHistoriaFacturacionAbierta;
   end;
 
@@ -69,7 +75,7 @@ implementation
 
 uses
   inLibtb, inLibGlobalVar, inMtoEmpresas, inLibLog, System.Diagnostics,
-  inLibFormatoDocumento;
+  inLibFormatoDocumento, inLibIBAN;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -213,6 +219,57 @@ begin
 
 end;
 
+procedure TdmEmpresas.unqryBancosAfterInsert(DataSet: TDataSet);
+begin
+  inherited;
+  // Codigo a 0 -> lo asigna el contador 'EB' en el BeforePost.
+  DataSet.FindField('CODIGO_EMPBAN').AsString          := '0';
+  DataSet.FindField('ESACTIVO_EMPBAN').AsString        := 'S';
+  DataSet.FindField('ESDEFECTO_COBRO_EMPBAN').AsString := 'N';
+  DataSet.FindField('ESDEFECTO_PAGO_EMPBAN').AsString  := 'N';
+end;
+
+procedure TdmEmpresas.unqryBancosBeforePost(DataSet: TDataSet);
+var
+  sIban, sCCC, sBanco, sDC, sCuenta: string;
+  stErr: TStringList;
+begin
+  inherited;
+  if ( (unqryTablaG.State = dsInsert) or
+       (unqryTablaG.State = dsEdit) ) then
+    unqryTablaG.Post;
+  with unqryBancos do
+  begin
+    sIban := Trim(FindField('IBAN_EMPBAN').AsString);
+    // El IBAN es opcional, pero si viene se valida y se descompone.
+    if (sIban <> '') then
+    begin
+      stErr := TStringList.Create;
+      try
+        if (not TIBAN.ValidarIBAN(sIban, stErr)) then
+          raise ERangeError.CreateFmt('IBAN no válido para el banco de ' +
+                                      'la empresa: %s', [stErr.Text]);
+      finally
+        FreeAndNil(stErr);
+      end;
+      sIban := TIBAN.FormatearElectronico(sIban);
+      FindField('IBAN_EMPBAN').AsString := sIban;
+      // Descomposicion del CCC espanol: entidad(4) + oficina(4) + DC + cuenta.
+      sCCC := TIBAN.ExtraerCCC(sIban);
+      if (TIBAN.DescomponerCCC(sCCC, sBanco, sDC, sCuenta)) then
+      begin
+        FindField('ENTIDAD_EMPBAN').AsString        := Copy(sBanco, 1, 4);
+        FindField('OFICINA_EMPBAN').AsString        := Copy(sBanco, 5, 4);
+        FindField('DIGITO_CONTROL_EMPBAN').AsString := sDC;
+        FindField('CUENTA_EMPBAN').AsString         := sCuenta;
+        FindField('CODIGO_BAN_EMPBAN').AsString     := Copy(sBanco, 1, 4);
+      end;
+    end;
+  end;
+  oDmConn.ActualizarUserTimeModif(DataSet);
+  GetCodigoAutoBanco;
+end;
+
 procedure TdmEmpresas.unqryTablaGAfterDelete(DataSet: TDataSet);
 var
   qryBorrarLineas : TUniQuery;
@@ -230,6 +287,12 @@ begin
     SQL.Text := 'DELETE ' +
                 '  FROM fza_empresas_series ' +
                 ' WHERE CODIGO_EMP_EMPSER = :Empresa ;';
+    Params.ParamByName('Empresa').AsString :=
+                             unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
+    ExecSQL;
+    SQL.Text := 'DELETE ' +
+                '  FROM fza_empresas_bancos ' +
+                ' WHERE CODIGO_EMP_EMPBAN = :Empresa ;';
     Params.ParamByName('Empresa').AsString :=
                              unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
     ExecSQL;
@@ -332,6 +395,7 @@ begin
   // para no congelar la UI durante la creacion del data module.
   unqryRetenciones.Connection            := oConn;
   unqrySeries.Connection                 := oConn;
+  unqryBancos.Connection                 := oConn;
   unqryIvas.Connection                   := oConn;
   unqryFacturasEmpresas.Connection       := oConn;
   unqryFacturasLineasEmpresas.Connection := oConn;
@@ -343,6 +407,7 @@ begin
                                        (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqryRetenciones.MasterSource    :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqrySeries.MasterSource         :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
+  unqryBancos.MasterSource         :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
 end;
 
 procedure TdmEmpresas.AbrirDetalles;
@@ -415,6 +480,25 @@ begin
     begin
       inLibLog.Log.LogPerf('Empresas.Lazy',
         'unqrySeries ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+      raise;
+    end;
+  end;
+end;
+
+procedure TdmEmpresas.AsegurarBancosAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryBancos.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    unqryBancos.Open;
+    inLibLog.Log.LogPerf('Empresas.Lazy', 'unqryBancos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('Empresas.Lazy',
+        'unqryBancos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
   end;
@@ -541,6 +625,15 @@ begin
   begin
       unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString :=
                                                 ObtenerSiguienteContador('ES');
+  end;
+end;
+
+procedure TdmEmpresas.GetCodigoAutoBanco;
+begin
+  if unqryBancos.FindField('CODIGO_EMPBAN').AsString = '0' then
+  begin
+      unqryBancos.FindField('CODIGO_EMPBAN').AsString :=
+                                                ObtenerSiguienteContador('EB');
   end;
 end;
 

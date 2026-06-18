@@ -233,6 +233,7 @@ begin
   AddSuf('fza_atributos_sku',                   'SA');
   AddSuf('fza_atributos_valores',               'AV');
   AddSuf('fza_atributos_valores_info',          'AVI');
+  AddSuf('fza_bancos',                          'BAN');
   AddSuf('fza_caja_formas_pago',                'CFP');
   AddSuf('fza_caja_operaciones',                'OPCAJA');
   AddSuf('fza_caja_pagos',                      'PAGO');
@@ -246,6 +247,7 @@ begin
   AddSuf('fza_efectos_compra_pagos',            'EFECPAG');
   AddSuf('fza_empleados',                       'EMPL');
   AddSuf('fza_empresas',                        'EMP');
+  AddSuf('fza_empresas_bancos',                 'EMPBAN');
   AddSuf('fza_empresas_retenciones',            'EMPRET');
   AddSuf('fza_empresas_series',                 'EMPSER');
   AddSuf('fza_facturas',                        'FAC');
@@ -377,6 +379,8 @@ begin
   AddOwn('fza_propiedades_valores',            ['VALOR']);
   AddOwn('fza_empresas_retenciones',           ['RETENCION']);
   AddOwn('fza_empresas_series',                ['SERIE']);
+  AddOwn('fza_empresas_bancos',                ['BANCO']);
+  AddOwn('fza_bancos',                         ['BANCO']);
   AddOwn('fza_facturas_consolidaciones',       ['CONSOLIDACION']);
   AddOwn('fza_ivas_grupos',                    ['GRUPO','ZONA']);
   AddOwn('fza_ivas_tipos',                     ['TIPO']);

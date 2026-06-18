@@ -614,6 +614,70 @@ inherited dmEmpresas: TdmEmpresas
     Left = 272
     Top = 80
   end
+  object unqryBancos: TUniQuery
+    SQLInsert.Strings = (
+      'INSERT INTO fza_empresas_bancos'
+      '  (CODIGO_EMPBAN, CODIGO_EMP_EMPBAN, NOMBRE_EMPBAN,'
+      '   CODIGO_BAN_EMPBAN, IBAN_EMPBAN, ENTIDAD_EMPBAN, OFICINA_EMPBAN,'
+      '   DIGITO_CONTROL_EMPBAN, CUENTA_EMPBAN, BIC_EMPBAN,'
+      '   ESDEFECTO_COBRO_EMPBAN, ESDEFECTO_PAGO_EMPBAN, ESACTIVO_EMPBAN,'
+      '   ORDEN_EMPBAN, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA,'
+      '   USUARIO_MODIF)'
+      'VALUES'
+      '  (:CODIGO_EMPBAN, :CODIGO_EMP_EMPBAN, :NOMBRE_EMPBAN,'
+      '   :CODIGO_BAN_EMPBAN, :IBAN_EMPBAN, :ENTIDAD_EMPBAN, :OFICINA_EMPBAN,'
+      '   :DIGITO_CONTROL_EMPBAN, :CUENTA_EMPBAN, :BIC_EMPBAN,'
+      '   :ESDEFECTO_COBRO_EMPBAN, :ESDEFECTO_PAGO_EMPBAN, :ESACTIVO_EMPBAN,'
+      '   :ORDEN_EMPBAN, :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA,'
+      '   :USUARIO_MODIF)')
+    SQLDelete.Strings = (
+      'DELETE FROM fza_empresas_bancos'
+      'WHERE'
+      '  CODIGO_EMPBAN = :Old_CODIGO_EMPBAN')
+    SQLUpdate.Strings = (
+      'UPDATE fza_empresas_bancos'
+      'SET'
+      '  NOMBRE_EMPBAN = :NOMBRE_EMPBAN,'
+      '  CODIGO_BAN_EMPBAN = :CODIGO_BAN_EMPBAN, IBAN_EMPBAN = :IBAN_EMPBAN,'
+      '  ENTIDAD_EMPBAN = :ENTIDAD_EMPBAN, OFICINA_EMPBAN = :OFICINA_EMPBAN,'
+      '  DIGITO_CONTROL_EMPBAN = :DIGITO_CONTROL_EMPBAN,'
+      '  CUENTA_EMPBAN = :CUENTA_EMPBAN, BIC_EMPBAN = :BIC_EMPBAN,'
+      '  ESDEFECTO_COBRO_EMPBAN = :ESDEFECTO_COBRO_EMPBAN,'
+      '  ESDEFECTO_PAGO_EMPBAN = :ESDEFECTO_PAGO_EMPBAN,'
+      '  ESACTIVO_EMPBAN = :ESACTIVO_EMPBAN, ORDEN_EMPBAN = :ORDEN_EMPBAN,'
+      '  INSTANTE_MODIF = :INSTANTE_MODIF, USUARIO_MODIF = :USUARIO_MODIF'
+      'WHERE'
+      '  CODIGO_EMPBAN = :Old_CODIGO_EMPBAN')
+    SQLRefresh.Strings = (
+      'SELECT * FROM vi_empresas_bancos'
+      'WHERE'
+      '  CODIGO_EMPBAN = :CODIGO_EMPBAN')
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * '
+      'FROM vi_empresas_bancos'
+      'WHERE CODIGO_EMP_EMPBAN = :CODIGO_EMP_EMP')
+    MasterFields = 'CODIGO_EMP_EMP'
+    DetailFields = 'CODIGO_EMP_EMPBAN'
+    RefreshOptions = [roAfterUpdate]
+    BeforeInsert = unqryRetencionesBeforeInsert
+    AfterInsert = unqryBancosAfterInsert
+    BeforePost = unqryBancosBeforePost
+    Left = 360
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftWideString
+        Name = 'CODIGO_EMP_EMP'
+        ParamType = ptInput
+        Value = '007'
+      end>
+  end
+  object dsBancos: TDataSource
+    DataSet = unqryBancos
+    Left = 360
+    Top = 80
+  end
   object dsPaises: TDataSource
     DataSet = unqryPaises
     Left = 760

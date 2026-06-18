@@ -212,6 +212,19 @@ type
     cxGrdSeries: TcxGrid;
     tvSeries: TcxGridDBTableView;
     lvSeries: TcxGridLevel;
+    tsBancos: TcxTabSheet;
+    pnlBancosOpts: TPanel;
+    btnAddBanco: TcxButton;
+    pnlBancosCli: TPanel;
+    cxGrdBancos: TcxGrid;
+    tvBancos: TcxGridDBTableView;
+    lvBancos: TcxGridLevel;
+    tvBancosNOMBRE_EMPBAN: TcxGridDBColumn;
+    tvBancosIBAN_EMPBAN: TcxGridDBColumn;
+    tvBancosNOMBRE_BAN: TcxGridDBColumn;
+    tvBancosESDEFECTO_COBRO_EMPBAN: TcxGridDBColumn;
+    tvBancosESDEFECTO_PAGO_EMPBAN: TcxGridDBColumn;
+    tvBancosESACTIVO_EMPBAN: TcxGridDBColumn;
     dbcLineasFacturacionNOMBRE_TIPO_IVA: TcxGridDBColumn;
     cxgrpbxIdentificacion: TcxGroupBox;
     lblMovil: TcxLabel;
@@ -298,6 +311,7 @@ type
     procedure actArticulosExecute(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
     procedure btnAddSerieClick(Sender: TObject);
+    procedure btnAddBancoClick(Sender: TObject);
     procedure btnCrearSeriesDocClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure btnValidarClick(Sender: TObject);
@@ -456,6 +470,22 @@ begin
         (unqrySeries.State = dsEdit)) then
       unqrySeries.Post;
     unqrySeries.Insert;
+  end;
+end;
+
+procedure TfrmMtoEmpresas.btnAddBancoClick(Sender: TObject);
+begin
+  inherited;
+  with dmmEmpresas do
+  begin
+    AsegurarBancosAbierta;
+    if ((unqryTablaG.State = dsInsert) or
+        (unqryTablaG.State = dsEdit)) then
+      unqryTablaG.Post;
+    if ((unqryBancos.State = dsInsert) or
+        (unqryBancos.State = dsEdit)) then
+      unqryBancos.Post;
+    unqryBancos.Insert;
   end;
 end;
 
@@ -731,6 +761,7 @@ begin
   tvRetenciones.DataController.DataSource := dmmEmpresas.dsRetenciones;
   pcPestana.ActivePage := tsMasDatos;
   tvSeries.DataController.DataSource := dmmEmpresas.dsSeries;
+  tvBancos.DataController.DataSource := dmmEmpresas.dsBancos;
   cbbZonaIVA.Properties.ListSource := dmmEmpresas.dsIvas;
   tvFacturacion.DataController.DataSource := dmmEmpresas.dsFacturasEmpresas;
   tvLineasFacturacion.DataController.DataSource :=
@@ -750,6 +781,8 @@ begin
     dmmEmpresas.AsegurarRetencionesAbierta
   else if pcPestana.ActivePage = tsSeries then
     dmmEmpresas.AsegurarSeriesAbierta
+  else if pcPestana.ActivePage = tsBancos then
+    dmmEmpresas.AsegurarBancosAbierta
   else if pcPestana.ActivePage = tsHistoriaFacturacion then
     dmmEmpresas.AsegurarHistoriaFacturacionAbierta;
 end;
