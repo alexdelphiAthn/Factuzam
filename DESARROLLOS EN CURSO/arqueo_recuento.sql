@@ -13,8 +13,8 @@
 SET @sTabla = 'fza_caja_arqueos';
 
 -- ---------------------------------------------------------------------------
--- Columnas de desglose de ventas (pueden faltar si la tabla viene del
--- esquema original que solo tenía TOTAL_VENTA_CREDITO_ARQ)
+-- Columnas de desglose de ventas (pueden faltar si la tabla viene de un
+-- esquema anterior al desglose normales/préstamos/devoluciones)
 -- ---------------------------------------------------------------------------
 
 SET @c = 'TOTAL_PRESTAMOS_ARQ';
@@ -65,6 +65,19 @@ SET @s = IF(@e=0,
   CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
          '` decimal(19,6) NOT NULL DEFAULT ''0.000000'' ',
          'AFTER `TOTAL_DEVOLUCIONES_ARQ`'),
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- Ventas a crédito / albarán a cuenta (legacy ImpAlbaranCdo). El migrador
+-- la escribe; sin esta columna la migración de arqueos aborta con 42S22.
+SET @c = 'TOTAL_VENTA_CREDITO_ARQ';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
+         '` decimal(19,6) NOT NULL DEFAULT ''0.000000'' ',
+         'COMMENT ''Ventas a crédito / albarán (legacy ImpAlbaranCdo)'' ',
+         'AFTER `TOTAL_VENTAS_ARQ`'),
   'SELECT 1');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
@@ -146,6 +159,33 @@ SET @s = IF(@e=0,
   CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
          '` varchar(100) NULL DEFAULT NULL ',
          'AFTER `IMPORTE_RETIRADA_ARQ`'),
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- ---------------------------------------------------------------------------
+-- Depósitos y encargos (importes del legacy que el arqueo conserva aparte)
+-- El migrador los escribe; sin estas columnas la migración aborta con 42S22.
+-- ---------------------------------------------------------------------------
+
+SET @c = 'TOTAL_DEPOSITOS_ARQ';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
+         '` decimal(19,6) NOT NULL DEFAULT ''0.000000'' ',
+         'COMMENT ''Depósitos (legacy ImpDeposito)'' ',
+         'AFTER `TOTAL_OTROS_INGRESOS_ARQ`'),
+  'SELECT 1');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c = 'TOTAL_ENCARGOS_ARQ';
+SET @e = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=@sTabla AND COLUMN_NAME=@c);
+SET @s = IF(@e=0,
+  CONCAT('ALTER TABLE `',@sTabla,'` ADD COLUMN `',@c,
+         '` decimal(19,6) NOT NULL DEFAULT ''0.000000'' ',
+         'COMMENT ''Encargos (legacy ImpEncargo)'' ',
+         'AFTER `TOTAL_DEPOSITOS_ARQ`'),
   'SELECT 1');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
