@@ -1,7 +1,7 @@
 inherited frmPrintPagos: TfrmPrintPagos
   Caption = 'Imprimir Hist'#243'rico de Pagos'
   ClientHeight = 320
-  ClientWidth = 520
+  ClientWidth = 640
   TextHeight = 19
   object lblFechas: TcxLabel
     Left = 12
@@ -107,7 +107,7 @@ inherited frmPrintPagos: TfrmPrintPagos
   object clbFormasPago: TcxCheckListBox
     Left = 200
     Top = 34
-    Width = 165
+    Width = 270
     Height = 272
     Items = <>
     TabOrder = 13
