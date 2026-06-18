@@ -29,7 +29,7 @@ inherited dmCajaPagosHist: TdmCajaPagosHist
       'PAGO` AND `NUMERO_OPERACION_PAGO` = :`Old_NUMERO_OPERACION_PAGO` AND `NUMERO_LINEA_PAGO` = :`Old_NUMERO_LINEA_PAGO`'
       'FOR UPDATE')
     SQLRefresh.Strings = (
-      'SELECT * FROM `fza_caja_pagos`'
+      'SELECT * FROM `vi_caja_pagos`'
       'WHERE'
       '  `CODIGO_EMP_PAGO` = :`CODIGO_EMP_PAGO` AND `CODIGO_ALM_PAGO` = :`CODIGO_ALM_PAGO` AND `CODIGO_CAJA_PAGO` = :`CODIGO_CAJA_PAGO` AND `SERIE_OPERACION_PAGO` = :`SERIE_OPERACION_PAGO` AND `NUMERO_OPERAC' +
       'ION_PAGO` = :`NUMERO_OPERACION_PAGO` AND `NUMERO_LINEA_PAGO` = :`NUMERO_LINEA_PAGO`')
@@ -38,8 +38,8 @@ inherited dmCajaPagosHist: TdmCajaPagosHist
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT *'
-      'FROM fza_caja_pagos'
-      'ORDER BY INSTANTE_ALTA DESC'
+      'FROM vi_caja_pagos'
+      'ORDER BY FECHA_PAGO DESC'
       '')
     Active = True
     Left = 24

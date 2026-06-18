@@ -42,6 +42,12 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
               DataBinding.FieldName = 'NUMERO_LINEA_PAGO'
               Width = 70
             end
+            object cxGrdDBTabPrinFECHA_PAGO: TcxGridDBColumn
+              Caption = 'Fecha Pago'
+              DataBinding.FieldName = 'FECHA_PAGO'
+              Options.Editing = False
+              Width = 160
+            end
             object cxGrdDBTabPrinCODIGO_FORMAP: TcxGridDBColumn
               Caption = 'Forma de Pago'
               DataBinding.FieldName = 'CODIGO_FP_CFP'
