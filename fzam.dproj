@@ -872,6 +872,16 @@
         <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
             <Form>frmMtoComprasSesiones</Form>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataTarifasCambios.pas">
+            <Form>dmTarifasCambios</Form>
+            <DesignClass>TdmTarifasCambios</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalCargarSesionTarifa.pas">
+            <Form>frmModalCargarSesionTarifa</Form>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoTarifasCambios.pas">
+            <Form>frmMtoTarifasCambios</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

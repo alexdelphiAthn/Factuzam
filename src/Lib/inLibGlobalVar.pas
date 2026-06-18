@@ -20,7 +20,8 @@ uses Uni,
      UniDataPerfiles,
      UniDataConn,cxMemo, inMtoPrincipal,
      inLibInformesGuiasCache,
-     inLibConfigCampos;
+     inLibConfigCampos,
+     inLibLicenciaAplicacion;
 //type
 // TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of
 // object;
@@ -51,6 +52,10 @@ var
   oVersion   :String;
   oAll       :string;
   oLogSesion :TLogSesionProc;
+  oLicenciaAplicacionComprobada :Boolean;
+  oLicenciaAplicacionBBDD       :String;
+  oLicenciaAplicacionEstado     :TEstadoLicenciaAplicacion;
+  oLicenciaAplicacionMensaje    :String;
   // Se pone a True cuando la ventana principal empieza a cerrarse. Las
   // tareas en segundo plano (TTask de los mantenimientos) lo consultan para
   // no arrancar trabajo nuevo ni tocar formularios que se estan destruyendo
@@ -71,7 +76,7 @@ end;
 
 initialization
   oAppName         := 'Fzam';
-  oVersion         := '1.0.15.202606170050.alpha';
+  oVersion         := '1.0.15.202606180000.alpha';
   oUser            := 'No definido';
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
@@ -82,5 +87,9 @@ initialization
   oConn            := nil;
   oAll             := 'Todos';
   oLogSesion       := nil;
+  oLicenciaAplicacionComprobada := False;
+  oLicenciaAplicacionBBDD := '';
+  oLicenciaAplicacionEstado := elaInvalida;
+  oLicenciaAplicacionMensaje := '';
   oCerrandoApp     := False;
 end.

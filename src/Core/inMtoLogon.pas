@@ -136,6 +136,8 @@ type
                            f: TUniConnection): Boolean;
     function GetGrupo(sUser: string; conn: TUniConnection;
       var EsGrupoAdmin: string): string;
+    function ConexionAplicacionPreparada: Boolean;
+    function LicenciaAplicacionPreparada: Boolean;
     function ProcesarLicenciaAplicacion: Boolean;
   public
     sSuccess:String;
@@ -280,6 +282,10 @@ begin
   {$ENDIF}
   sUserPassOK := 'false';
   FCerrarAplicacion := False;
+  oLicenciaAplicacionComprobada := False;
+  oLicenciaAplicacionBBDD := '';
+  oLicenciaAplicacionEstado := elaInvalida;
+  oLicenciaAplicacionMensaje := '';
   Self.Position := poScreenCenter;
   edtUser.Text := '';
 
@@ -407,6 +413,107 @@ begin
   end;
 end;
 
+function TfrmLogon.ConexionAplicacionPreparada: Boolean;
+var
+  CheckResult: TDBStructureCheckResult;
+  bServidorConectado: Boolean;
+  sPasswordConexion: string;
+begin
+  Result := False;
+  sPasswordConexion := sPass;
+  if edtPassBD.Text <> '' then
+    sPasswordConexion := edtPassBD.Text;
+  if ucConexion.Connected and SameText(ucConexion.Database, edtNomBD.Text) then
+    Result := True
+  else
+  begin
+    if ucConexion.Connected then
+      ucConexion.Disconnect;
+    bServidorConectado := False;
+    try
+      ConstruirConexionConnect(ucConexion,
+                               edtUserBD.Text,
+                               sPasswordConexion,
+                               edtHostName.Text,
+                               edtPortBD.Text,
+                               'information_schema');
+      bServidorConectado := True;
+    except
+      on E: Exception do
+      begin
+        inliblog.Log.LogError('Fallo al conectar al servidor MySQL: ' +
+                              E.ClassName + ': ' + E.Message);
+        ShowMessage('No se pudo conectar al servidor MySQL/MariaDB:' +
+                    sLineBreak + E.Message + sLineBreak + sLineBreak +
+                    'Revise la configuración pulsando "Configurar BBDD".');
+        chkAuto.Checked := False;
+        esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+        if not pnlBBDD.Visible then
+          btnConfClick(Self);
+      end;
+    end;
+    if bServidorConectado then
+    begin
+      CheckResult := TDBStructureChecker.Check(ucConexion, edtNomBD.Text);
+      if not CheckResult.IsOK then
+      begin
+        inliblog.Log.LogError('Estructura BBDD no válida: ' +
+                              CheckResult.FormattedMessage);
+        ShowMessage(CheckResult.FormattedMessage + sLineBreak + sLineBreak +
+                    'Puede usar "Subir script" para crear/actualizar la ' +
+                    'base de datos, o "Recuperar copia" para restaurar un ' +
+                    'backup.');
+        chkAuto.Checked := False;
+        esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+        if not pnlBBDD.Visible then
+          btnConfClick(Self);
+        if ucConexion.Connected then
+          ucConexion.Disconnect;
+      end
+      else
+      begin
+        if ucConexion.Connected then
+          ucConexion.Disconnect;
+        try
+          ConstruirConexionConnect(ucConexion,
+                                   edtUserBD.Text,
+                                   sPasswordConexion,
+                                   edtHostName.Text,
+                                   edtPortBD.Text,
+                                   edtNomBD.Text);
+          sPass := sPasswordConexion;
+          Result := True;
+        except
+          on E: Exception do
+          begin
+            inliblog.Log.LogError('Fallo al conectar a ' + edtNomBD.Text +
+                                  ': ' + E.ClassName + ': ' + E.Message);
+            ShowMessage('No se pudo conectar a la base de datos "' +
+                        edtNomBD.Text + '":' + sLineBreak + E.Message);
+            chkAuto.Checked := False;
+            esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+            if not pnlBBDD.Visible then
+              btnConfClick(Self);
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function TfrmLogon.LicenciaAplicacionPreparada: Boolean;
+begin
+  Result := False;
+  if ConexionAplicacionPreparada then
+  begin
+    if oLicenciaAplicacionComprobada and
+       SameText(oLicenciaAplicacionBBDD, ucConexion.Database) then
+      Result := True
+    else
+      Result := ProcesarLicenciaAplicacion;
+  end;
+end;
+
 function TfrmLogon.ProcesarLicenciaAplicacion: Boolean;
 var
   Estado: TEstadoLicenciaAplicacion;
@@ -419,6 +526,10 @@ var
   iNumeroNifs: Integer;
 begin
   Result := True;
+  oLicenciaAplicacionComprobada := False;
+  oLicenciaAplicacionBBDD := ucConexion.Database;
+  oLicenciaAplicacionEstado := elaInvalida;
+  oLicenciaAplicacionMensaje := '';
   if HayConmutadorRegistroLicencia then
   begin
     Result := False;
@@ -431,6 +542,9 @@ begin
                                      sDetalleNifs,
                                      sRutaIni) then
       begin
+        oLicenciaAplicacionComprobada := True;
+        oLicenciaAplicacionEstado := elaValida;
+        oLicenciaAplicacionMensaje := 'Licencia establecida.';
         inliblog.Log.LogInfo('Licencia establecida. Código: ' + sCodigo);
         ShowMessage('Licencia establecida.' + sLineBreak + sLineBreak +
                     'Código: ' + sCodigo + sLineBreak +
@@ -440,6 +554,9 @@ begin
       end
       else
       begin
+        oLicenciaAplicacionComprobada := True;
+        oLicenciaAplicacionEstado := elaSinNifEmpresa;
+        oLicenciaAplicacionMensaje := 'No hay NIF de empresa configurado.';
         inliblog.Log.LogInfo(
           'No se establece licencia porque no hay NIF de empresa.');
         ShowMessage('No se ha establecido licencia.' + sLineBreak +
@@ -451,6 +568,7 @@ begin
     except
       on E: Exception do
       begin
+        oLicenciaAplicacionMensaje := E.Message;
         inliblog.Log.LogError('Error estableciendo licencia: ' + E.Message);
         ShowMessage('No se pudo establecer la licencia.' + sLineBreak +
                     sLineBreak + E.Message);
@@ -466,6 +584,9 @@ begin
                                      sCodigoEsperado,
                                      sCodigoGuardado) then
       begin
+        oLicenciaAplicacionComprobada := True;
+        oLicenciaAplicacionEstado := Estado;
+        oLicenciaAplicacionMensaje := sMensaje;
         if Estado = elaSinNifEmpresa then
           inliblog.Log.LogInfo(sMensaje)
         else
@@ -476,6 +597,8 @@ begin
         Result := False;
         FCerrarAplicacion := True;
         sSuccess := 'N';
+        oLicenciaAplicacionEstado := Estado;
+        oLicenciaAplicacionMensaje := sMensaje;
         inliblog.Log.LogError('Aplicación no registrada. ' + sMensaje);
         inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
@@ -490,6 +613,8 @@ begin
         Result := False;
         FCerrarAplicacion := True;
         sSuccess := 'N';
+        oLicenciaAplicacionEstado := elaInvalida;
+        oLicenciaAplicacionMensaje := E.Message;
         inliblog.Log.LogError('Error validando licencia: ' + E.Message);
         ShowMessage('Aplicación no registrada.' + sLineBreak + sLineBreak +
                     'No se pudo validar la licencia de la aplicación.' +
@@ -881,7 +1006,18 @@ var
   sGrupoAdmin: string;
 begin
   try
-    if not ExisteUser(edtUser.Text, ucConexion) then
+    if not LicenciaAplicacionPreparada then
+    begin
+      sSuccess := 'N';
+      if FCerrarAplicacion then
+      begin
+        ModalResult := mrCancel;
+        Close;
+      end
+      else
+        ModalResult := mrNone;
+    end
+    else if not ExisteUser(edtUser.Text, ucConexion) then
     begin
       Log.LogError('El nombre de usuario no existe');
       raise EInvalidUser.Create('El nombre de usuario no existe');
