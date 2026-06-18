@@ -51,7 +51,7 @@ uses
 implementation
 
 uses
-  inLibVerifactu, inLibFormatoDocumento;
+  inLibVerifactu, inLibFormatoDocumento, inLibGenerarTicket;
 
 // Función auxiliar para rellenar con ceros (LPAD)
 function LPAD(const AValue: string;
@@ -637,8 +637,10 @@ begin
       // === PIE DE TICKET ===
       Ticket.SaltarLineas(2);
       Ticket.Alinear(alCentro);
-      Ticket.EscribirLinea('LE ATENDIÓ: ' +
-                         QryCab.FieldByName('CODIGO_EMPLEADO_OPCAJA').AsString);
+      // Mostramos el diminutivo de ticket del vendedor (fza_empleados) en
+      // lugar de su codigo, igual que en la impresion de la venta.
+      Ticket.EscribirLinea('LE ATENDIÓ: ' + ObtenerDiminutivoVendedor(
+                  QryCab.FieldByName('CODIGO_EMPLEADO_OPCAJA').AsString));
       Ticket.EscribirLinea('IVA INCLUIDO');
       Ticket.EscribirLinea('GRACIAS POR SU VISITA');
       // Textos legales (si están rellenos en la DB)
