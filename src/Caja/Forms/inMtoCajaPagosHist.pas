@@ -39,6 +39,7 @@ type
     cxGrdDBTabPrinSERIE_OPERACION_PAGO: TcxGridDBColumn;
     cxGrdDBTabPrinNUMERO_OPERACION_PAGO: TcxGridDBColumn;
     cxGrdDBTabPrinNUMERO_LINEA_PAGO: TcxGridDBColumn;
+    cxGrdDBTabPrinFECHA_PAGO: TcxGridDBColumn;
     cxGrdDBTabPrinCODIGO_FORMAP: TcxGridDBColumn;
     cxGrdDBTabPrinCODIGO_DIVISA_PAGO: TcxGridDBColumn;
     cxGrdDBTabPrinRED_BLOCKCHAIN: TcxGridDBColumn;
