@@ -566,6 +566,15 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             HeaderAlignmentHorz = taRightJustify
             Width = 137
           end
+          object tvFechaOperacion: TcxGridDBColumn
+            Caption = 'Fecha op.'
+            DataBinding.FieldName = 'FECHA_DEPOSITO_DEP'
+            PropertiesClassName = 'TcxTextEditProperties'
+            Properties.ReadOnly = True
+            Options.Editing = False
+            Visible = False
+            Width = 120
+          end
         end
         object cxgrdlvlLineasOpe: TcxGridLevel
           GridView = tvLineasOpe
