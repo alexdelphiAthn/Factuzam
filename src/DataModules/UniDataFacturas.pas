@@ -154,6 +154,10 @@ public
     procedure AsegurarConsolidacionAbierta;
     procedure AsegurarErroresAbierta;
     procedure AsegurarMovimientosFacAbierta;
+    // Estampa la cuenta de la empresa (ingreso) elegida en los recibos de
+    // la factura (serie/numero) despues de generarlos.
+    procedure EstamparBancoRecibos(const ASerie, ANumero,
+                                   ACodEmpban, AIban: string);
 
     // Genera movimientos de salida de stock para todas las líneas de la
     // factura cargada (sólo se llama automáticamente en facturas
@@ -1070,6 +1074,30 @@ begin
         'unqryRecibos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
+  end;
+end;
+
+procedure TdmFacturas.EstamparBancoRecibos(const ASerie, ANumero,
+                                           ACodEmpban, AIban: string);
+var
+  qStamp: TUniQuery;
+begin
+  qStamp := TUniQuery.Create(nil);
+  try
+    qStamp.Connection := inLibGlobalVar.oConn;
+    qStamp.SQL.Text :=
+      'UPDATE fza_recibos ' +
+      '   SET CODIGO_EMPBAN_REC = :banco, ' +
+      '       IBAN_EMP_REC      = :iban ' +
+      ' WHERE SERIE_FAC_REC  = :serie ' +
+      '   AND NUMERO_FAC_REC = :numero';
+    qStamp.ParamByName('banco').AsString  := ACodEmpban;
+    qStamp.ParamByName('iban').AsString   := AIban;
+    qStamp.ParamByName('serie').AsString  := ASerie;
+    qStamp.ParamByName('numero').AsString := ANumero;
+    qStamp.ExecSQL;
+  finally
+    FreeAndNil(qStamp);
   end;
 end;
 

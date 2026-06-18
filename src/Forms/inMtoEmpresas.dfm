@@ -1282,6 +1282,114 @@
                 end
               end
             end
+            object tsBancos: TcxTabSheet
+              Caption = '&7_Bancos'
+              object pnlBancosOpts: TPanel
+                Left = 811
+                Top = 0
+                Width = 118
+                Height = 421
+                Align = alRight
+                BevelOuter = bvNone
+                TabOrder = 1
+                object btnAddBanco: TcxButton
+                  Left = 6
+                  Top = 13
+                  Width = 108
+                  Height = 25
+                  Caption = 'A'#241'adir Banco'
+                  TabOrder = 0
+                  OnClick = btnAddBancoClick
+                end
+              end
+              object pnlBancosCli: TPanel
+                Left = 0
+                Top = 0
+                Width = 811
+                Height = 421
+                Align = alClient
+                BevelOuter = bvNone
+                TabOrder = 0
+                object cxGrdBancos: TcxGrid
+                  Left = 0
+                  Top = 0
+                  Width = 811
+                  Height = 421
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  Align = alClient
+                  TabOrder = 0
+                  object tvBancos: TcxGridDBTableView
+                    Navigator.Buttons.ConfirmDelete = True
+                    Navigator.Buttons.First.Visible = False
+                    Navigator.Buttons.PriorPage.Visible = False
+                    Navigator.Buttons.Prior.Visible = False
+                    Navigator.Buttons.Next.Visible = False
+                    Navigator.Buttons.NextPage.Visible = False
+                    Navigator.Buttons.Last.Visible = False
+                    Navigator.Buttons.Insert.Hint = 'Inserta un nuevo Registro'
+                    Navigator.Buttons.Insert.Visible = True
+                    Navigator.Buttons.Delete.Hint = 'Borra el registro Activo'
+                    Navigator.Buttons.Delete.Visible = True
+                    Navigator.Buttons.Edit.Enabled = False
+                    Navigator.Buttons.Edit.Visible = False
+                    Navigator.Buttons.Post.Hint = 'Guarda Datos introducidos'
+                    Navigator.Buttons.Post.Visible = True
+                    Navigator.Buttons.Cancel.Visible = True
+                    Navigator.Buttons.SaveBookmark.Enabled = False
+                    Navigator.Buttons.SaveBookmark.Visible = False
+                    Navigator.Buttons.GotoBookmark.Enabled = False
+                    Navigator.Buttons.GotoBookmark.Visible = False
+                    Navigator.Visible = True
+                    DataController.DataSource = dmEmpresas.dsBancos
+                    DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
+                    OptionsBehavior.AlwaysShowEditor = True
+                    OptionsBehavior.GoToNextCellOnEnter = True
+                    OptionsBehavior.IncSearch = True
+                    OptionsCustomize.ColumnHiding = True
+                    OptionsData.Appending = True
+                    OptionsView.GroupByBox = False
+                    OptionsView.Indicator = True
+                    object tvBancosNOMBRE_EMPBAN: TcxGridDBColumn
+                      Caption = 'Nombre cuenta'
+                      DataBinding.FieldName = 'NOMBRE_EMPBAN'
+                      Width = 160
+                    end
+                    object tvBancosIBAN_EMPBAN: TcxGridDBColumn
+                      Caption = 'IBAN'
+                      DataBinding.FieldName = 'IBAN_EMPBAN'
+                      Width = 210
+                    end
+                    object tvBancosNOMBRE_BAN: TcxGridDBColumn
+                      Caption = 'Banco'
+                      DataBinding.FieldName = 'NOMBRE_BAN_VIEW_EMPBAN'
+                      Options.Editing = False
+                      Width = 170
+                    end
+                    object tvBancosESDEFECTO_COBRO_EMPBAN: TcxGridDBColumn
+                      Caption = 'Def. Cobro'
+                      DataBinding.FieldName = 'ESDEFECTO_COBRO_EMPBAN'
+                      Width = 70
+                    end
+                    object tvBancosESDEFECTO_PAGO_EMPBAN: TcxGridDBColumn
+                      Caption = 'Def. Pago'
+                      DataBinding.FieldName = 'ESDEFECTO_PAGO_EMPBAN'
+                      Width = 70
+                    end
+                    object tvBancosESACTIVO_EMPBAN: TcxGridDBColumn
+                      Caption = 'Activo'
+                      DataBinding.FieldName = 'ESACTIVO_EMPBAN'
+                      Width = 55
+                    end
+                  end
+                  object lvBancos: TcxGridLevel
+                    GridView = tvBancos
+                  end
+                end
+              end
+            end
             object tsPieTicketCaja: TcxTabSheet
               Caption = '&5_Pie Ticket Caja'
               ImageIndex = 5

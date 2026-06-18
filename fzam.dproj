@@ -746,6 +746,9 @@
         <DCCReference Include="src\Modals\inMtoModalCargarEfectosRemesa.pas">
             <Form>frmModalCargarEfectosRemesa</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalSeleccionarBanco.pas">
+            <Form>frmModalSeleccionarBanco</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalRegistrarPago.pas">
             <Form>frmModalRegistrarPago</Form>
         </DCCReference>

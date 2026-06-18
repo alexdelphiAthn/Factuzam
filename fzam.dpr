@@ -254,6 +254,7 @@ uses
   UniDataRemesasCompra in 'src\DataModules\UniDataRemesasCompra.pas' {dmRemesasCompra: TdmRemesasCompra},
   inMtoModalFacturarAlbaranes in 'src\Modals\inMtoModalFacturarAlbaranes.pas' {frmModalFacturarAlbaranes},
   inMtoModalCargarEfectosRemesa in 'src\Modals\inMtoModalCargarEfectosRemesa.pas' {frmModalCargarEfectosRemesa},
+  inMtoModalSeleccionarBanco in 'src\Modals\inMtoModalSeleccionarBanco.pas' {frmModalSeleccionarBanco},
   inMtoModalRegistrarPago in 'src\Modals\inMtoModalRegistrarPago.pas' {frmModalRegistrarPago},
   inMtoModalVerPagosEfecto in 'src\Modals\inMtoModalVerPagosEfecto.pas' {frmModalVerPagosEfecto},
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},

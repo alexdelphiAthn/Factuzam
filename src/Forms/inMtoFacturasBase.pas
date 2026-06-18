@@ -608,6 +608,7 @@ uses
   inMtoModalFacRec,
   inMtoModalImpRecFac,
   inMtoModalImpFac,
+  inMtoModalSeleccionarBanco,
   inMtoPrincipal,
   inLibUser,
   inLibVerifactu,
@@ -927,6 +928,8 @@ end;
 procedure TfrmMtoFacturasBase.btnGenerarRecibosClick(Sender: TObject);
 var
   bReemplazar:Boolean;
+  sEmp: string;
+  selBanco: TSeleccionBancoResult;
 begin
   inherited;
   bReemplazar := True;
@@ -946,17 +949,31 @@ begin
   end;
   if bReemplazar = True then
   begin
-    with dmmFacturas.unstrdprcGetRecibos do
+    // Cuenta de la empresa (ingreso) para el cobro: eleccion manual.
+    sEmp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString;
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, inLibGlobalVar.oConn,
+                                                   sEmp, ubeCobro);
+    if not selBanco.Aceptado then
+      ShowMessage('Generación de recibos cancelada.')
+    else
     begin
-      ParamByName('pNRO_FACTURA').AsString :=
-                           dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-      ParamByName('pSERIE_FACTURA').AsString :=
-                         dsTablaG.DataSet.FieldByName(fseriefac).AsString;
-      //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
-      ParamByName('pUSUARIO').AsString := oUser;
-      ExecProc;
-      dmmFacturas.unqryRecibos.Close;
-      dmmFacturas.unqryRecibos.Open;
+      with dmmFacturas.unstrdprcGetRecibos do
+      begin
+        ParamByName('pNRO_FACTURA').AsString :=
+                             dsTablaG.DataSet.FieldByName(fnrofac).AsString;
+        ParamByName('pSERIE_FACTURA').AsString :=
+                           dsTablaG.DataSet.FieldByName(fseriefac).AsString;
+        ParamByName('pUSUARIO').AsString := oUser;
+        ExecProc;
+        dmmFacturas.unqryRecibos.Close;
+        dmmFacturas.unqryRecibos.Open;
+      end;
+      // Estampar la cuenta de la empresa (ingreso) en los recibos.
+      if selBanco.CodigoEmpban <> '' then
+        dmmFacturas.EstamparBancoRecibos(
+          dsTablaG.DataSet.FieldByName(fseriefac).AsString,
+          dsTablaG.DataSet.FieldByName(fnrofac).AsString,
+          selBanco.CodigoEmpban, selBanco.Iban);
     end;
   end;
 end;

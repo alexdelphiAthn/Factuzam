@@ -80,8 +80,10 @@ type
     procedure CalcularTotalesFacturaCompra;
     // Genera los efectos de pago de la factura activa segun su forma de pago
     // (PRC_EFEC_GENERAR_DESDE_FACTURA) y refresca la rejilla. Devuelve nº de
-    // efectos generados, 0 si nada, -1 sin factura activa / error.
-    function GenerarEfectos: Integer;
+    // efectos generados, 0 si nada, -1 sin factura activa / error. Si se pasa
+    // ACodEmpban estampa la cuenta de la empresa (cargo) en los efectos.
+    function GenerarEfectos(const ACodEmpban: string = '';
+                            const AIbanEmp: string = ''): Integer;
     // Registra un pago sobre un efecto (PRC_EFEC_REGISTRAR_PAGO) y refresca
     // la rejilla. Devuelve el nº de pago asignado (>0) o 0/-1 si no se pudo.
     function RegistrarPagoEfecto(ANumEfecto: Integer; AFecha: TDateTime;
@@ -191,9 +193,11 @@ begin
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
-function TdmFacturasCompra.GenerarEfectos: Integer;
+function TdmFacturasCompra.GenerarEfectos(const ACodEmpban: string = '';
+                                          const AIbanEmp: string = ''): Integer;
 var
   sp: TUniStoredProc;
+  qStamp: TUniQuery;
   sSerie, sNumero: string;
 begin
   Result := -1;
@@ -224,6 +228,27 @@ begin
       Result := sp.ParamByName('p_RESULTADO').AsInteger;
     finally
       FreeAndNil(sp);
+    end;
+    // Estampar la cuenta de la empresa (cargo) elegida en los efectos.
+    if (Result > 0) and (ACodEmpban <> '') then
+    begin
+      qStamp := TUniQuery.Create(nil);
+      try
+        qStamp.Connection := inLibGlobalVar.oConn;
+        qStamp.SQL.Text :=
+          'UPDATE fza_efectos_compra ' +
+          '   SET CODIGO_EMPBAN_EFEC = :banco, ' +
+          '       IBAN_EMP_EFEC      = :iban ' +
+          ' WHERE SERIE_FACC_EFEC  = :serie ' +
+          '   AND NUMERO_FACC_EFEC = :numero';
+        qStamp.ParamByName('banco').AsString  := ACodEmpban;
+        qStamp.ParamByName('iban').AsString   := AIbanEmp;
+        qStamp.ParamByName('serie').AsString  := sSerie;
+        qStamp.ParamByName('numero').AsString := sNumero;
+        qStamp.ExecSQL;
+      finally
+        FreeAndNil(qStamp);
+      end;
     end;
     // Refrescar la rejilla de efectos.
     if Assigned(unqryEfectos) then
