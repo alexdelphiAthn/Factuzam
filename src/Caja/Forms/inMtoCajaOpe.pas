@@ -84,6 +84,7 @@ type
     tvDescuento: TcxGridDBColumn;
     tvDescuentoMenos: TcxGridDBColumn;
     tvTotal: TcxGridDBColumn;
+    tvFechaOperacion: TcxGridDBColumn;
     lblTotal: TcxLabel;
     btnF8: TcxButton;
     lblEliminar: TcxLabel;
@@ -410,6 +411,9 @@ begin
       end;
     end;
     tvLineasOpe.DataController.Refresh;
+    // Nueva operacion: ocultamos la columna de fecha de deposito hasta que
+    // se vuelva a cargar la cuenta del cliente con F2.
+    tvFechaOperacion.Visible := False;
     // 3. Vaciar la cabecera anterior y crear un registro nuevo
     if DatosCaja.cdsCabecera.Active then
     begin
@@ -3321,6 +3325,9 @@ begin
   // 5. Preparamos la línea en blanco para seguir escaneando (ahora ya no rompe
   // la caché)
   AsegurarLineaNueva;
+  // Modo cuenta de cliente (F2): mostramos la columna con la fecha de la
+  // operacion en que se creo cada deposito cargado.
+  tvFechaOperacion.Visible := True;
   // 6. Calculamos el total SIEMPRE AL FINAL, forzando la lectura de memoria
   // interna
   Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
