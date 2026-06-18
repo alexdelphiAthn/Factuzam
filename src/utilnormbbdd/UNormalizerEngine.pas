@@ -280,6 +280,8 @@ begin
   AddSuf('fza_recibos',                         'REC');
   AddSuf('fza_remesas_compra',                  'REMC');
   AddSuf('fza_tarifas',                         'TAR');
+  AddSuf('fza_tarifas_cambios',                 'TARC');
+  AddSuf('fza_tarifas_cambios_lineas',          'TARCLIN');
   AddSuf('fza_tipos_documentos',                'TD');
   AddSuf('fza_tipos_efecto',                    'TEFE');
   AddSuf('fza_traspasos_solicitudes',           'TRSOL');
@@ -348,6 +350,9 @@ begin
 
   // Tablas con sufijo COMPUESTO (varias palabras):
   AddOwn('fza_articulos_tarifas',              ['TARIFA']);
+  AddOwn('fza_tarifas_cambios',                ['TARIFA','CAMBIO']);
+  AddOwn('fza_tarifas_cambios_lineas',
+         ['TARIFA','CAMBIO','LINEA']);
   AddOwn('fza_articulos_proveedores',          ['PROVEEDOR']);
   AddOwn('fza_articulos_skus_costes',          ['COSTE']);
   AddOwn('fza_articulos_vinculos',             ['VINCULO']);

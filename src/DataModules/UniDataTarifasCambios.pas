@@ -330,6 +330,8 @@ var
   qryBusca   : TUniQuery;
   qryExec    : TUniQuery;
   qryMarca   : TUniQuery;
+  qryUnico   : TUniQuery;
+  oConnLocal : TUniConnection;
   iUnico     : Integer;
   sArt       : string;
   sSku       : string;
@@ -338,6 +340,7 @@ var
   dFinal     : Double;
   dDto       : Double;
   dPorcDto   : Double;
+  EsInsertar : Boolean;
 begin
   Result := 0;
   AMensaje := '';
@@ -353,10 +356,13 @@ begin
     qryBusca := TUniQuery.Create(nil);
     qryExec := TUniQuery.Create(nil);
     qryMarca := TUniQuery.Create(nil);
+    qryUnico := TUniQuery.Create(nil);
     try
+      oConnLocal := unqryTablaG.Connection as TUniConnection;
       qryBusca.Connection := unqryTablaG.Connection;
       qryExec.Connection := unqryTablaG.Connection;
       qryMarca.Connection := unqryTablaG.Connection;
+      qryUnico.Connection := unqryTablaG.Connection;
       qryBusca.SQL.Text :=
         'SELECT CODIGO_UNICO_ARTTAR ' +
         '  FROM fza_articulos_tarifas ' +
@@ -375,7 +381,9 @@ begin
         '  USUARIO_MODIF = :USUARIO, ' +
         '  INSTANTE_MODIF = NOW() ' +
         'WHERE ID_TARCLIN = :ID';
-      unqryTablaG.Connection.StartTransaction;
+      qryUnico.SQL.Text :=
+        'SELECT LAST_INSERT_ID() AS CODIGO_UNICO_ARTTAR';
+      oConnLocal.StartTransaction;
       try
         unqryLineas.DisableControls;
         try
@@ -399,6 +407,7 @@ begin
               qryBusca.ParamByName('SKU').AsString := sSku;
               qryBusca.ParamByName('TAR').AsString := sTar;
               qryBusca.Open;
+              EsInsertar := False;
               if not qryBusca.IsEmpty then
               begin
                 iUnico := qryBusca.FieldByName('CODIGO_UNICO_ARTTAR')
@@ -419,6 +428,7 @@ begin
               else
               begin
                 iUnico := 0;
+                EsInsertar := True;
                 qryExec.SQL.Text :=
                   'INSERT INTO fza_articulos_tarifas ' +
                   ' (CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, ' +
@@ -450,6 +460,13 @@ begin
                   CampoCabecera('FECHA_HASTA_TARC').AsDateTime;
               qryExec.ParamByName('USUARIO').AsString := oUser;
               qryExec.Execute;
+              if EsInsertar then
+              begin
+                qryUnico.Close;
+                qryUnico.Open;
+                iUnico := qryUnico.FieldByName('CODIGO_UNICO_ARTTAR')
+                                   .AsInteger;
+              end;
               qryMarca.ParamByName('MENSAJE').AsString := 'Aplicada';
               qryMarca.ParamByName('UNICO').AsInteger := iUnico;
               qryMarca.ParamByName('USUARIO').AsString := oUser;
@@ -475,11 +492,11 @@ begin
         qryExec.ParamByName('CODIGO').AsInteger :=
           unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
         qryExec.Execute;
-        unqryTablaG.Connection.Commit;
+        oConnLocal.Commit;
       except
         on E: Exception do
         begin
-          unqryTablaG.Connection.Rollback;
+          oConnLocal.Rollback;
           AMensaje := E.Message;
           Result := 0;
         end;
@@ -487,6 +504,7 @@ begin
       unqryTablaG.Refresh;
       unqryLineas.Refresh;
     finally
+      FreeAndNil(qryUnico);
       FreeAndNil(qryMarca);
       FreeAndNil(qryExec);
       FreeAndNil(qryBusca);

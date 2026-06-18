@@ -114,6 +114,8 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_recibos`                        | `REC`     |
 | `fza_remesas_compra`                 | `REMC`    |
 | `fza_tarifas`                        | `TAR`     |
+| `fza_tarifas_cambios`                | `TARC`    |
+| `fza_tarifas_cambios_lineas`         | `TARCLIN` |
 | `fza_tipos_documentos`               | `TD`      |
 | `fza_tipos_efecto`                   | `TEFE`    |
 | `fza_traspasos_solicitudes`          | `TRSOL`   |

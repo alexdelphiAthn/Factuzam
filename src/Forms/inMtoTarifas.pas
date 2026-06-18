@@ -137,6 +137,10 @@ type
     procedure actProveedoresExecute(Sender: TObject);
     procedure btnAddBlockClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
+  private
+    FBtnSesionesCambios: TcxButton;
+    procedure CrearBotonSesionesCambios;
+    procedure btnSesionesCambiosClick(Sender: TObject);
   public
     dmmTarifas: TdmTarifas;
     procedure CrearTablaPrincipal; override;
@@ -262,6 +266,27 @@ begin
   dmmTarifas := tdmDataModule as TdmTarifas;
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
   pkFieldName := 'CODIGO_TAR_ARTTAR';
+  CrearBotonSesionesCambios;
+end;
+
+procedure TfrmMtoTarifas.CrearBotonSesionesCambios;
+begin
+  if not Assigned(FBtnSesionesCambios) then
+  begin
+    FBtnSesionesCambios := TcxButton.Create(Self);
+    FBtnSesionesCambios.Parent := pnlBotonera;
+    FBtnSesionesCambios.Top := btnAddBlock.Top;
+    FBtnSesionesCambios.Left := btnAddBlock.Left + btnAddBlock.Width + 8;
+    FBtnSesionesCambios.Width := 132;
+    FBtnSesionesCambios.Height := btnAddBlock.Height;
+    FBtnSesionesCambios.Caption := 'Sesiones cambios';
+    FBtnSesionesCambios.OnClick := btnSesionesCambiosClick;
+  end;
+end;
+
+procedure TfrmMtoTarifas.btnSesionesCambiosClick(Sender: TObject);
+begin
+  ShowMto(Self.Owner, 'TarifasCambios');
 end;
 
 // dsTablaG apunta a la cabecera de tarifa. El articulo activo vive en

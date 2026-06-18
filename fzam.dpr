@@ -307,7 +307,10 @@ uses
   inMtoStockConsulta in 'src\Forms\inMtoStockConsulta.pas' {frmStockConsulta},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
   inMtoModalFiltroArt in 'src\Modals\inMtoModalFiltroArt.pas',
-  inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones};
+  inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},
+  UniDataTarifasCambios in 'src\DataModules\UniDataTarifasCambios.pas' {dmTarifasCambios: TdmTarifasCambios},
+  inMtoModalCargarSesionTarifa in 'src\Modals\inMtoModalCargarSesionTarifa.pas' {frmModalCargarSesionTarifa},
+  inMtoTarifasCambios in 'src\Forms\inMtoTarifasCambios.pas' {frmMtoTarifasCambios};
 
 {$R *.res}
 {$R fondo.res}
