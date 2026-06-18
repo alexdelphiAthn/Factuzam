@@ -30,6 +30,10 @@ uses
                             NombreImpresora:string = 'DEBUG';
                             ASinPrecios: Boolean = False);
 
+  // Diminutivo de ticket del empleado (fza_empleados) a partir de su
+  // codigo. Si no se resuelve, devuelve el propio codigo recibido.
+  function ObtenerDiminutivoVendedor(const ACodigo: string): string;
+
 implementation
 
 uses
