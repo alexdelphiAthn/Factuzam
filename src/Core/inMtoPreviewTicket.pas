@@ -52,6 +52,12 @@ type
     FQRTexto: string;
     FQRTamanoModulo: Integer;
     FQRNivelError: Integer;
+    FRenderMetafile: Boolean;
+    procedure ReiniciarEstadoTicket;
+    procedure InicializarPapel(AAlto: Integer);
+    procedure AsegurarAltoPapel(AAltoNecesario: Integer);
+    procedure RecortarPapel(AAltoFinal: Integer);
+    procedure AjustarVentanaAContenido;
     procedure ProcesarComandosESCPOS(const Comandos: string);
     procedure ImprimirTexto(const Texto: string);
     procedure ImprimirImagenRaster(const Datos: string; Ancho, Alto: Integer);
@@ -94,6 +100,113 @@ const
   FUENTE_B_ALTO = 17;
   FUENTE_C_ANCHO = 7;
   FUENTE_C_ALTO = 14;
+  ALTO_PAPEL_INICIAL = 2000;
+  MARGEN_PAPEL_FINAL = 50;
+  MARGEN_CRECIMIENTO_PAPEL = 500;
+  ALTO_MINIMO_PREVIEW = 320;
+
+procedure TFormVisualizador.ReiniciarEstadoTicket;
+begin
+  FCurrentY := MARGEN_PIXELS;
+  FFuenteActual := 0;
+  FNegrita := False;
+  FSubrayado := False;
+  FAlineacion := 0;
+  FTamanoAncho := 1;
+  FTamanoAlto := 1;
+  FInverso := False;
+  FQRTexto := '';
+  FQRTamanoModulo := 8;
+  FQRNivelError := 48;
+end;
+
+procedure TFormVisualizador.InicializarPapel(AAlto: Integer);
+begin
+  if AAlto < ALTO_MINIMO_PREVIEW then
+    AAlto := ALTO_MINIMO_PREVIEW;
+  Image1.Picture.Bitmap.PixelFormat := pf24bit;
+  Image1.Picture.Bitmap.Width := ANCHO_PAPEL_PIXELS;
+  Image1.Picture.Bitmap.Height := AAlto;
+  Image1.Width := ANCHO_PAPEL_PIXELS;
+  Image1.Height := AAlto;
+  FCanvas := Image1.Picture.Bitmap.Canvas;
+  FCanvas.Brush.Style := bsSolid;
+  FCanvas.Brush.Color := clWhite;
+  FCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS, AAlto));
+  FCanvas.Brush.Style := bsClear;
+end;
+
+procedure TFormVisualizador.AsegurarAltoPapel(AAltoNecesario: Integer);
+var
+  iNuevoAlto: Integer;
+  oBitmapActual: TBitmap;
+begin
+  if (not FRenderMetafile) and
+     (AAltoNecesario > Image1.Picture.Bitmap.Height) then
+  begin
+    iNuevoAlto := Max(AAltoNecesario + MARGEN_CRECIMIENTO_PAPEL,
+                      Image1.Picture.Bitmap.Height * 2);
+    oBitmapActual := TBitmap.Create;
+    try
+      oBitmapActual.Assign(Image1.Picture.Bitmap);
+      Image1.Picture.Bitmap.PixelFormat := pf24bit;
+      Image1.Picture.Bitmap.Width := ANCHO_PAPEL_PIXELS;
+      Image1.Picture.Bitmap.Height := iNuevoAlto;
+      FCanvas := Image1.Picture.Bitmap.Canvas;
+      FCanvas.Brush.Style := bsSolid;
+      FCanvas.Brush.Color := clWhite;
+      FCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS, iNuevoAlto));
+      FCanvas.Draw(0, 0, oBitmapActual);
+      FCanvas.Brush.Style := bsClear;
+      Image1.Height := iNuevoAlto;
+    finally
+      FreeAndNil(oBitmapActual);
+    end;
+  end;
+end;
+
+procedure TFormVisualizador.RecortarPapel(AAltoFinal: Integer);
+var
+  oBitmapFinal: TBitmap;
+begin
+  if AAltoFinal < ALTO_MINIMO_PREVIEW then
+    AAltoFinal := ALTO_MINIMO_PREVIEW;
+  AsegurarAltoPapel(AAltoFinal);
+  oBitmapFinal := TBitmap.Create;
+  try
+    oBitmapFinal.PixelFormat := pf24bit;
+    oBitmapFinal.Width := ANCHO_PAPEL_PIXELS;
+    oBitmapFinal.Height := AAltoFinal;
+    oBitmapFinal.Canvas.Brush.Style := bsSolid;
+    oBitmapFinal.Canvas.Brush.Color := clWhite;
+    oBitmapFinal.Canvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS,
+                                      AAltoFinal));
+    oBitmapFinal.Canvas.Draw(0, 0, Image1.Picture.Bitmap);
+    Image1.Picture.Bitmap.Assign(oBitmapFinal);
+  finally
+    FreeAndNil(oBitmapFinal);
+  end;
+  FCanvas := Image1.Picture.Bitmap.Canvas;
+  Image1.Width := ANCHO_PAPEL_PIXELS;
+  Image1.Height := AAltoFinal;
+end;
+
+procedure TFormVisualizador.AjustarVentanaAContenido;
+var
+  iAltoDisponible: Integer;
+  iAltoDeseado: Integer;
+begin
+  iAltoDisponible := Screen.WorkAreaHeight - 120;
+  iAltoDeseado := Image1.Height + Panel1.Height + 16;
+  if iAltoDeseado > iAltoDisponible then
+    iAltoDeseado := iAltoDisponible;
+  if iAltoDeseado < ALTO_MINIMO_PREVIEW + Panel1.Height then
+    iAltoDeseado := ALTO_MINIMO_PREVIEW + Panel1.Height;
+  ClientHeight := iAltoDeseado;
+  ClientWidth := ANCHO_PAPEL_PIXELS + 30;
+  Left := Screen.WorkAreaLeft + (Screen.WorkAreaWidth - Width) div 2;
+  Top := Screen.WorkAreaTop + (Screen.WorkAreaHeight - Height) div 2;
+end;
 
 procedure TFormVisualizador.ExportarAPDF(const Comandos: string;
                                          const RutaArchivo: string);
@@ -123,20 +236,14 @@ begin
     MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
     CanvasBackup := FCanvas;
     FCanvas := MetaCanvas;
+    FRenderMetafile := True;
     try
-      FCurrentY     := MARGEN_PIXELS;
-      FFuenteActual := 0;
-      FNegrita      := False;
-      FSubrayado    := False;
-      FAlineacion   := 0;
-      FTamanoAncho  := 1;
-      FTamanoAlto   := 1;
-      FInverso      := False;
-      FQRTexto      := '';
+      ReiniciarEstadoTicket;
       MetaCanvas.Brush.Color := clWhite;
       MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS_PDF, AlturaReal));
       ProcesarComandosESCPOS(Comandos);
     finally
+      FRenderMetafile := False;
       FreeAndNil(MetaCanvas);
       FCanvas := CanvasBackup;
     end;
@@ -237,6 +344,7 @@ begin
       else
         StartX := MARGEN_PIXELS;
       end;
+      AsegurarAltoPapel(FCurrentY + QRHeight + MARGEN_PAPEL_FINAL);
       FCanvas.Draw(StartX, FCurrentY, QRBitmap);
       FCurrentY := FCurrentY + QRHeight;
     finally
@@ -253,74 +361,53 @@ var
   ByteIndex, BitIndex: Integer;
   StartX: Integer;
 begin
-  // Verificar que tenemos suficientes datos
+  AsegurarAltoPapel(FCurrentY + Alto + MARGEN_PAPEL_FINAL);
   if Length(Datos) = 0 then
   begin
     FCurrentY := FCurrentY + Alto;
-    Exit;
   end;
-  // Calcular posición X según alineación
-  case FAlineacion of
-    1: StartX := (ANCHO_PAPEL_PIXELS - Ancho) div 2; // Centro
-    2: StartX := ANCHO_PAPEL_PIXELS - Ancho - MARGEN_PIXELS; // Derecha
   else
-    StartX := MARGEN_PIXELS; // Izquierda
-  end;
-  // Asegurarnos de no salirnos de los límites
-  if StartX < 0 then StartX := 0;
-  if StartX + Ancho > ANCHO_PAPEL_PIXELS then
-    Ancho := ANCHO_PAPEL_PIXELS - StartX;
-  for Y := 0 to Alto - 1 do
   begin
-    for X := 0 to Ancho - 1 do
+    // Calcular posición X según alineación
+    case FAlineacion of
+      1: StartX := (ANCHO_PAPEL_PIXELS - Ancho) div 2; // Centro
+      2: StartX := ANCHO_PAPEL_PIXELS - Ancho - MARGEN_PIXELS; // Derecha
+    else
+      StartX := MARGEN_PIXELS; // Izquierda
+    end;
+    // Asegurarnos de no salirnos de los límites
+    if StartX < 0 then
+      StartX := 0;
+    if StartX + Ancho > ANCHO_PAPEL_PIXELS then
+      Ancho := ANCHO_PAPEL_PIXELS - StartX;
+    for Y := 0 to Alto - 1 do
     begin
-      ByteIndex := (X div 8) + 1;
-      BitIndex := 7 - (X mod 8);
-      if (ByteIndex <= Length(Datos)) and (ByteIndex > 0) then
+      for X := 0 to Ancho - 1 do
       begin
-        if ((Ord(Datos[ByteIndex]) and (1 shl BitIndex)) <> 0) then
+        ByteIndex := (X div 8) + 1;
+        BitIndex := 7 - (X mod 8);
+        if (ByteIndex <= Length(Datos)) and (ByteIndex > 0) then
         begin
-          if (StartX + X < ANCHO_PAPEL_PIXELS) and
-             (FCurrentY + Y < Image1.Picture.Bitmap.Height) then
-            FCanvas.Pixels[StartX + X, FCurrentY + Y] := clBlack;
+          if ((Ord(Datos[ByteIndex]) and (1 shl BitIndex)) <> 0) then
+          begin
+            if (StartX + X < ANCHO_PAPEL_PIXELS) and
+               (FCurrentY + Y < Image1.Picture.Bitmap.Height) then
+              FCanvas.Pixels[StartX + X, FCurrentY + Y] := clBlack;
+          end;
         end;
       end;
     end;
+    FCurrentY := FCurrentY + Alto;
   end;
-  FCurrentY := FCurrentY + Alto;
 end;
 
 procedure TFormVisualizador.FormCreate(Sender: TObject);
 begin
   KeyPreview := True;
   Self.ClientWidth := ANCHO_PAPEL_PIXELS + 30;
-  Image1.Picture.Bitmap.Width := ANCHO_PAPEL_PIXELS;
-  Image1.Picture.Bitmap.Height := 2000; // Altura inicial
-  Image1.Width := ANCHO_PAPEL_PIXELS;
-  Image1.Height := 2000;
-  FCanvas := Image1.Picture.Bitmap.Canvas;
-  // Fondo blanco (papel)
-  FCanvas.Brush.Color := clWhite;
-  FCanvas.FillRect(Rect(0,
-                        0,
-                        Image1.Picture.Bitmap.Width,
-                        Image1.Picture.Bitmap.Height));
-  // DIBUJAR BORDE DEL PAPEL PARA DEBUG
-  FCanvas.Pen.Color := clRed;
-  FCanvas.Pen.Width := 1;
-  FCanvas.Rectangle(0, 0, ANCHO_PAPEL_PIXELS, Image1.Picture.Bitmap.Height);
-  // Estado inicial
-  FCurrentY := MARGEN_PIXELS;
-  FFuenteActual := 0;
-  FNegrita := False;
-  FSubrayado := False;
-  FAlineacion := 0; // Izquierda
-  FTamanoAncho := 1;
-  FTamanoAlto := 1;
-  FInverso := False;
-  FQRTexto := '';
-  FQRTamanoModulo := 8;
-  FQRNivelError := 48;
+  FRenderMetafile := False;
+  InicializarPapel(ALTO_PAPEL_INICIAL);
+  ReiniciarEstadoTicket;
 end;
 
 procedure TFormVisualizador.FormDestroy(Sender: TObject);
@@ -330,11 +417,12 @@ end;
 
 procedure TFormVisualizador.CargarYMostrar(const Comandos: string);
 begin
-  ProcesarComandosESCPOS(Comandos);
   FComandos := Comandos;
-  // Ajustar altura de la imagen al contenido
-  Image1.Picture.Bitmap.Height := FCurrentY + 50;
-  Image1.Height := FCurrentY + 50;
+  InicializarPapel(ALTO_PAPEL_INICIAL);
+  ReiniciarEstadoTicket;
+  ProcesarComandosESCPOS(Comandos);
+  RecortarPapel(FCurrentY + MARGEN_PAPEL_FINAL);
+  AjustarVentanaAContenido;
 end;
 
 procedure TFormVisualizador.ProcesarComandosESCPOS(const Comandos: string);
@@ -426,6 +514,7 @@ begin
             'i': // Cortar papel
               begin
                 // Visual: dibujar línea de corte
+                AsegurarAltoPapel(FCurrentY + 20 + MARGEN_PAPEL_FINAL);
                 FCanvas.Pen.Color := clGray;
                 FCanvas.Pen.Style := psDash;
                 FCanvas.MoveTo(0, FCurrentY + 10);
@@ -553,6 +642,8 @@ begin
                   else
                     StartX := MARGEN_PIXELS; // Izquierda
                   end;
+                  AsegurarAltoPapel(FCurrentY + Alto +
+                                     MARGEN_PAPEL_FINAL);
                   for Y := 0 to Alto - 1 do
                   begin
                     for X := 0 to AnchoPixels - 1 do
@@ -664,30 +755,34 @@ var
   X: Integer;
   TextoWidth: Integer;
 begin
-  if Texto = '' then Exit;
-  AjustarFuente;
-  // Windows nos dice el ancho real exacto de la frase
-  TextoWidth := FCanvas.TextWidth(Texto);
-  case FAlineacion of
-    0: X := MARGEN_PIXELS;
-    1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2;
-    2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS;
-  else
-    X := MARGEN_PIXELS;
-  end;
-  if FInverso then
+  if Texto <> '' then
   begin
-    FCanvas.Brush.Style := bsSolid;
-    FCanvas.Brush.Color := clBlack;
-    FCanvas.Font.Color := clWhite;
-  end
-  else
-  begin
+    AsegurarAltoPapel(FCurrentY + ObtenerAltoLinea +
+                      MARGEN_PAPEL_FINAL);
+    AjustarFuente;
+    // Windows nos dice el ancho real exacto de la frase
+    TextoWidth := FCanvas.TextWidth(Texto);
+    case FAlineacion of
+      0: X := MARGEN_PIXELS;
+      1: X := (ANCHO_PAPEL_PIXELS - TextoWidth) div 2;
+      2: X := ANCHO_PAPEL_PIXELS - TextoWidth - MARGEN_PIXELS;
+    else
+      X := MARGEN_PIXELS;
+    end;
+    if FInverso then
+    begin
+      FCanvas.Brush.Style := bsSolid;
+      FCanvas.Brush.Color := clBlack;
+      FCanvas.Font.Color := clWhite;
+    end
+    else
+    begin
+      FCanvas.Brush.Style := bsClear;
+      FCanvas.Font.Color := clBlack;
+    end;
+    FCanvas.TextOut(X, FCurrentY, Texto);
     FCanvas.Brush.Style := bsClear;
-    FCanvas.Font.Color := clBlack;
   end;
-  FCanvas.TextOut(X, FCurrentY, Texto);
-  FCanvas.Brush.Style := bsClear;
 end;
 
 procedure TFormVisualizador.NuevaLinea;
