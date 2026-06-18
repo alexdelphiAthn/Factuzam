@@ -365,7 +365,7 @@ begin
   if Length(Datos) = 0 then
   begin
     FCurrentY := FCurrentY + Alto;
-  end;
+  end
   else
   begin
     // Calcular posición X según alineación
@@ -917,20 +917,56 @@ end;
 procedure TFormVisualizador.btnPDFClick(Sender: TObject);
 var
   sSrc: string;
+  sDestino: string;
+  sNombrePDF: string;
+  bOrigenDisponible: Boolean;
+  bPDFGuardado: Boolean;
 begin
   sSrc := FRutaPDFReal;
-  if (sSrc = '') or (not FileExists(sSrc)) then
-  begin
-    ShowMessage('No se encuentra el PDF original para copiar.');
-    Exit;
-  end;
+  bOrigenDisponible := (sSrc <> '') and FileExists(sSrc);
   SaveDialog1.Filter := 'PDF|*.pdf';
   SaveDialog1.DefaultExt := 'pdf';
-  SaveDialog1.FileName := ExtractFileName(sSrc);
+  if sSrc <> '' then
+    sNombrePDF := ExtractFileName(sSrc)
+  else
+    sNombrePDF := 'Ticket_' + FormatDateTime('yyyy_mm_dd_hh_nn_ss',
+                                             Now) + '.pdf';
+  SaveDialog1.FileName := sNombrePDF;
   if SaveDialog1.Execute then
   begin
-    TFile.Copy(sSrc, SaveDialog1.FileName, True);
-    ShowMessage('PDF guardado en: ' + SaveDialog1.FileName);
+    sDestino := SaveDialog1.FileName;
+    bPDFGuardado := False;
+    if bOrigenDisponible then
+    begin
+      if not SameText(ExpandFileName(sSrc), ExpandFileName(sDestino)) then
+        TFile.Copy(sSrc, sDestino, True);
+      bPDFGuardado := True;
+    end
+    else if FComandos <> '' then
+    begin
+      if sSrc <> '' then
+      begin
+        if ExtractFilePath(sSrc) <> '' then
+          ForceDirectories(ExtractFilePath(sSrc));
+        ExportarAPDF(FComandos, sSrc);
+        bOrigenDisponible := FileExists(sSrc);
+      end;
+      if bOrigenDisponible then
+      begin
+        if not SameText(ExpandFileName(sSrc), ExpandFileName(sDestino)) then
+          TFile.Copy(sSrc, sDestino, True);
+      end
+      else
+      begin
+        ExportarAPDF(FComandos, sDestino);
+        FRutaPDFReal := sDestino;
+      end;
+      bPDFGuardado := True;
+    end
+    else
+      ShowMessage('No hay comandos ESC/POS para generar el PDF.');
+    if bPDFGuardado then
+      ShowMessage('PDF guardado en: ' + sDestino);
   end;
 end;
 

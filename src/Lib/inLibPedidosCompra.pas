@@ -258,13 +258,23 @@ begin
       '       IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
       '              P.CODIGO_ALM_PEDC) AS ALM_EFE, ' +
       '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) AS PENDIENTE, ' +
-      '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN AS PRECIO, ' +
+      '       CASE WHEN IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' ' +
+      '            THEN L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN * ' +
+      '              (1 + (IFNULL(L.PORCENTAJE_IVA_PEDCLIN, 0) + ' +
+      '                CASE IFNULL(L.TIPO_IVA_ARTICULO_PEDCLIN, ''N'') ' +
+      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+      '                  WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                  ELSE 0 END) / 100) ' +
+      '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN END AS PRECIO, ' +
       '       P.CODIGO_PRV_PEDC, P.CODIGO_EMP_PEDC, ' +
       '       P.FECHA_PEDC, P.FECHA_PREVISTA_PEDC ' +
       '  FROM fza_pedidos_compra_lineas L ' +
       '  JOIN fza_pedidos_compra P ' +
       '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
       '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+      '  LEFT JOIN fza_ivas V ON V.CODIGO_IVA = P.CODIGO_IVA_PEDC ' +
       ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
       '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
       '   AND L.CODIGO_UNIDAD_PEDCLIN IS NOT NULL ' +
@@ -336,6 +346,76 @@ begin
   finally
     FreeAndNil(q);
     FreeAndNil(qIns);
+  end;
+end;
+
+procedure RecalcularTotalesAlbaranCompra(AConn: TUniConnection;
+                                  const ASerieAlbc, ANumAlbc,
+                                        AUsuario: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'UPDATE fza_albaranes_compra C ' +
+      '  JOIN ( ' +
+      '       SELECT L.NUMERO_ALBC_ALBCLIN, L.SERIE_ALBC_ALBCLIN, ' +
+      '              IFNULL(SUM(L.TOTAL_ALBCLIN), 0) AS BASE, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_N, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_R, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_S, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_E, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_N, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_R, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_S, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_E, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_N, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_R, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_S, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_E, ' +
+      '              COUNT(*) AS NLIN ' +
+      '         FROM fza_albaranes_compra_lineas L ' +
+      '         JOIN fza_albaranes_compra H ' +
+      '           ON H.NUMERO_ALBC = L.NUMERO_ALBC_ALBCLIN ' +
+      '          AND H.SERIE_ALBC = L.SERIE_ALBC_ALBCLIN ' +
+      '         LEFT JOIN fza_ivas V ON V.CODIGO_IVA = H.CODIGO_IVA_ALBC ' +
+      '        WHERE L.NUMERO_ALBC_ALBCLIN = :n ' +
+      '          AND L.SERIE_ALBC_ALBCLIN = :s ' +
+      '        GROUP BY L.NUMERO_ALBC_ALBCLIN, L.SERIE_ALBC_ALBCLIN) T ' +
+      '    ON T.NUMERO_ALBC_ALBCLIN = C.NUMERO_ALBC ' +
+      '   AND T.SERIE_ALBC_ALBCLIN = C.SERIE_ALBC ' +
+      '   SET C.TOTAL_BASEI_IVAN_ALBC = T.BASE_N, ' +
+      '       C.TOTAL_BASEI_IVAR_ALBC = T.BASE_R, ' +
+      '       C.TOTAL_BASEI_IVAS_ALBC = T.BASE_S, ' +
+      '       C.TOTAL_BASEI_IVAE_ALBC = T.BASE_E, ' +
+      '       C.TOTAL_IVAN_ALBC = T.IVA_N, ' +
+      '       C.TOTAL_IVAR_ALBC = T.IVA_R, ' +
+      '       C.TOTAL_IVAS_ALBC = T.IVA_S, ' +
+      '       C.TOTAL_IVAE_ALBC = T.IVA_E, ' +
+      '       C.TOTAL_REN_ALBC = T.RE_N, ' +
+      '       C.TOTAL_RER_ALBC = T.RE_R, ' +
+      '       C.TOTAL_RES_ALBC = T.RE_S, ' +
+      '       C.TOTAL_REE_ALBC = T.RE_E, ' +
+      '       C.TOTAL_BASES_ALBC = T.BASE, ' +
+      '       C.TOTAL_RETENCION_ALBC = ' +
+      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100, ' +
+      '       C.TOTAL_IMPUESTOS_ALBC = ' +
+      '         T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E, ' +
+      '       C.TOTAL_LIQUIDO_ALBC = ' +
+      '         T.BASE + T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E - ' +
+      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100, ' +
+      '       C.CONTADOR_LINEAS_ALBC = LPAD(T.NLIN * 10, 8, ''0''), ' +
+      '       C.USUARIO_MODIF = :u, ' +
+      '       C.INSTANTE_MODIF = NOW() ' +
+      ' WHERE C.SERIE_ALBC = :s AND C.NUMERO_ALBC = :n';
+    q.ParamByName('s').AsString := ASerieAlbc;
+    q.ParamByName('n').AsString := ANumAlbc;
+    q.ParamByName('u').AsString := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
   end;
 end;
 
@@ -419,6 +499,12 @@ begin
       '   POBLACION_EMPRESA_ALBC, PROVINCIA_EMPRESA_ALBC, ' +
       '   CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
       '   CODIGO_POSTAL_EMPRESA_ALBC, ' +
+      '   CODIGO_IVA_ALBC, ESIVA_RECARGO_COMPRAS_ALBC, ' +
+      '   PORCENTAJE_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
+      '   PORCENTAJE_IVAS_ALBC, PORCENTAJE_IVAE_ALBC, ' +
+      '   PORCENTAJE_REN_ALBC, PORCENTAJE_RER_ALBC, ' +
+      '   PORCENTAJE_RES_ALBC, PORCENTAJE_REE_ALBC, ' +
+      '   PORCENTAJE_RETENCION_ALBC, ' +
       '   CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, NIF_PRV_ALBC, ' +
       '   MOVIL_PRV_ALBC, EMAIL_PRV_ALBC, ' +
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
@@ -441,6 +527,12 @@ begin
       '       P.POBLACION_EMPRESA_PEDC, P.PROVINCIA_EMPRESA_PEDC, ' +
       '       P.CODIGO_PAI_EMPRESA_PEDC, P.NOMBRE_PAI_EMPRESA_PEDC, ' +
       '       P.CODIGO_POSTAL_EMPRESA_PEDC, ' +
+      '       P.CODIGO_IVA_PEDC, IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N''), ' +
+      '       P.PORCENTAJE_IVAN_PEDC, P.PORCENTAJE_IVAR_PEDC, ' +
+      '       P.PORCENTAJE_IVAS_PEDC, P.PORCENTAJE_IVAE_PEDC, ' +
+      '       P.PORCENTAJE_REN_PEDC, P.PORCENTAJE_RER_PEDC, ' +
+      '       P.PORCENTAJE_RES_PEDC, P.PORCENTAJE_REE_PEDC, ' +
+      '       P.PORCENTAJE_RETENCION_PEDC, ' +
       '       P.CODIGO_PRV_PEDC, P.RAZON_SOCIAL_PRV_PEDC, P.NIF_PRV_PEDC, ' +
       '       P.MOVIL_PRV_PEDC, P.EMAIL_PRV_PEDC, ' +
       '       P.DIRECCION1_PRV_PEDC, P.DIRECCION2_PRV_PEDC, ' +
@@ -588,32 +680,7 @@ begin
   //    pasar a CERRADO para disparar los movimientos. El stored proc
   //    PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT entra el stock fisico en el
   //    almacen elegido.
-  qIns := TUniQuery.Create(nil);
-  try
-    qIns.Connection := AConn;
-    qIns.SQL.Text :=
-      'UPDATE fza_albaranes_compra A ' +
-      '  JOIN ( ' +
-      '    SELECT SERIE_ALBC_ALBCLIN AS S, NUMERO_ALBC_ALBCLIN AS N, ' +
-      '           IFNULL(SUM(TOTAL_ALBCLIN),0) AS BASES, ' +
-      '           IFNULL(SUM(TOTAL_ALBCLIN * PORCENTAJE_IVA_ALBCLIN / 100),0) AS IMPS ' +
-      '      FROM fza_albaranes_compra_lineas ' +
-      '     WHERE SERIE_ALBC_ALBCLIN = :s AND NUMERO_ALBC_ALBCLIN = :n ' +
-      '     GROUP BY SERIE_ALBC_ALBCLIN, NUMERO_ALBC_ALBCLIN ' +
-      '  ) T ON T.S = A.SERIE_ALBC AND T.N = A.NUMERO_ALBC ' +
-      '   SET A.TOTAL_BASES_ALBC     = T.BASES, ' +
-      '       A.TOTAL_IMPUESTOS_ALBC = T.IMPS, ' +
-      '       A.TOTAL_LIQUIDO_ALBC   = T.BASES + T.IMPS, ' +
-      '       A.INSTANTE_MODIF       = NOW(), ' +
-      '       A.USUARIO_MODIF        = :u ' +
-      ' WHERE A.SERIE_ALBC = :s AND A.NUMERO_ALBC = :n';
-    qIns.ParamByName('s').AsString := ASerieAlbc;
-    qIns.ParamByName('n').AsString := ANumAlbc;
-    qIns.ParamByName('u').AsString := AUsuario;
-    qIns.ExecSQL;
-  finally
-    FreeAndNil(qIns);
-  end;
+  RecalcularTotalesAlbaranCompra(AConn, ASerieAlbc, ANumAlbc, AUsuario);
 
   // 6. Disparar movimientos de almacen. Reutilizamos la libreria del
   //    albaran de compra: genera los movs y deja el albaran listo como
@@ -742,6 +809,12 @@ begin
       '   POBLACION_EMPRESA_ALBC, PROVINCIA_EMPRESA_ALBC, ' +
       '   CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
       '   CODIGO_POSTAL_EMPRESA_ALBC, ' +
+      '   CODIGO_IVA_ALBC, ESIVA_RECARGO_COMPRAS_ALBC, ' +
+      '   PORCENTAJE_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
+      '   PORCENTAJE_IVAS_ALBC, PORCENTAJE_IVAE_ALBC, ' +
+      '   PORCENTAJE_REN_ALBC, PORCENTAJE_RER_ALBC, ' +
+      '   PORCENTAJE_RES_ALBC, PORCENTAJE_REE_ALBC, ' +
+      '   PORCENTAJE_RETENCION_ALBC, ' +
       '   CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, NIF_PRV_ALBC, ' +
       '   MOVIL_PRV_ALBC, EMAIL_PRV_ALBC, ' +
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
@@ -762,6 +835,12 @@ begin
       '       P.POBLACION_EMPRESA_PEDC, P.PROVINCIA_EMPRESA_PEDC, ' +
       '       P.CODIGO_PAI_EMPRESA_PEDC, P.NOMBRE_PAI_EMPRESA_PEDC, ' +
       '       P.CODIGO_POSTAL_EMPRESA_PEDC, ' +
+      '       P.CODIGO_IVA_PEDC, IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N''), ' +
+      '       P.PORCENTAJE_IVAN_PEDC, P.PORCENTAJE_IVAR_PEDC, ' +
+      '       P.PORCENTAJE_IVAS_PEDC, P.PORCENTAJE_IVAE_PEDC, ' +
+      '       P.PORCENTAJE_REN_PEDC, P.PORCENTAJE_RER_PEDC, ' +
+      '       P.PORCENTAJE_RES_PEDC, P.PORCENTAJE_REE_PEDC, ' +
+      '       P.PORCENTAJE_RETENCION_PEDC, ' +
       '       P.CODIGO_PRV_PEDC, P.RAZON_SOCIAL_PRV_PEDC, P.NIF_PRV_PEDC, ' +
       '       P.MOVIL_PRV_PEDC, P.EMAIL_PRV_PEDC, ' +
       '       P.DIRECCION1_PRV_PEDC, P.DIRECCION2_PRV_PEDC, ' +
@@ -945,32 +1024,7 @@ begin
     Exit;
   end;
   // 4. Recalcular totales del albaran.
-  qIns := TUniQuery.Create(nil);
-  try
-    qIns.Connection := AConn;
-    qIns.SQL.Text :=
-      'UPDATE fza_albaranes_compra A ' +
-      '  JOIN ( ' +
-      '    SELECT SERIE_ALBC_ALBCLIN AS S, NUMERO_ALBC_ALBCLIN AS N, ' +
-      '           IFNULL(SUM(TOTAL_ALBCLIN),0) AS BASES, ' +
-      '           IFNULL(SUM(TOTAL_ALBCLIN * PORCENTAJE_IVA_ALBCLIN / 100),0) AS IMPS ' +
-      '      FROM fza_albaranes_compra_lineas ' +
-      '     WHERE SERIE_ALBC_ALBCLIN = :s AND NUMERO_ALBC_ALBCLIN = :n ' +
-      '     GROUP BY SERIE_ALBC_ALBCLIN, NUMERO_ALBC_ALBCLIN ' +
-      '  ) T ON T.S = A.SERIE_ALBC AND T.N = A.NUMERO_ALBC ' +
-      '   SET A.TOTAL_BASES_ALBC     = T.BASES, ' +
-      '       A.TOTAL_IMPUESTOS_ALBC = T.IMPS, ' +
-      '       A.TOTAL_LIQUIDO_ALBC   = T.BASES + T.IMPS, ' +
-      '       A.INSTANTE_MODIF       = NOW(), ' +
-      '       A.USUARIO_MODIF        = :u ' +
-      ' WHERE A.SERIE_ALBC = :s AND A.NUMERO_ALBC = :n';
-    qIns.ParamByName('s').AsString := ASerieAlbc;
-    qIns.ParamByName('n').AsString := ANumAlbc;
-    qIns.ParamByName('u').AsString := AUsuario;
-    qIns.ExecSQL;
-  finally
-    FreeAndNil(qIns);
-  end;
+  RecalcularTotalesAlbaranCompra(AConn, ASerieAlbc, ANumAlbc, AUsuario);
   // 5. Movimientos de almacen + 6. Marcar CERRADO.
   inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
     AConn, ASerieAlbc, ANumAlbc, AUsuario);
@@ -1091,32 +1145,7 @@ var
   qIns: TUniQuery;
 begin
   // 1. Recalcular totales del albaran sobre TODAS sus lineas.
-  qIns := TUniQuery.Create(nil);
-  try
-    qIns.Connection := AConn;
-    qIns.SQL.Text :=
-      'UPDATE fza_albaranes_compra A ' +
-      '  JOIN ( ' +
-      '    SELECT SERIE_ALBC_ALBCLIN AS S, NUMERO_ALBC_ALBCLIN AS N, ' +
-      '           IFNULL(SUM(TOTAL_ALBCLIN),0) AS BASES, ' +
-      '           IFNULL(SUM(TOTAL_ALBCLIN * PORCENTAJE_IVA_ALBCLIN / 100),0) AS IMPS ' +
-      '      FROM fza_albaranes_compra_lineas ' +
-      '     WHERE SERIE_ALBC_ALBCLIN = :s AND NUMERO_ALBC_ALBCLIN = :n ' +
-      '     GROUP BY SERIE_ALBC_ALBCLIN, NUMERO_ALBC_ALBCLIN ' +
-      '  ) T ON T.S = A.SERIE_ALBC AND T.N = A.NUMERO_ALBC ' +
-      '   SET A.TOTAL_BASES_ALBC     = T.BASES, ' +
-      '       A.TOTAL_IMPUESTOS_ALBC = T.IMPS, ' +
-      '       A.TOTAL_LIQUIDO_ALBC   = T.BASES + T.IMPS, ' +
-      '       A.INSTANTE_MODIF       = NOW(), ' +
-      '       A.USUARIO_MODIF        = :u ' +
-      ' WHERE A.SERIE_ALBC = :s AND A.NUMERO_ALBC = :n';
-    qIns.ParamByName('s').AsString := ASerieAlbc;
-    qIns.ParamByName('n').AsString := ANumAlbc;
-    qIns.ParamByName('u').AsString := AUsuario;
-    qIns.ExecSQL;
-  finally
-    FreeAndNil(qIns);
-  end;
+  RecalcularTotalesAlbaranCompra(AConn, ASerieAlbc, ANumAlbc, AUsuario);
   // 2. Revertir movimientos previos (no-op si no hay) y regenerarlos
   //    para TODAS las lineas (viejas + nuevas).
   inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(

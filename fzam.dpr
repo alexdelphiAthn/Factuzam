@@ -164,6 +164,7 @@ uses
   inMtoModalGastoCaja in 'src\Caja\Modals\inMtoModalGastoCaja.pas' {frmModalGastoCaja},
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
   inLibDocCompraExcel in 'src\Lib\inLibDocCompraExcel.pas',
+  inLibComprasImpuestos in 'src\Lib\inLibComprasImpuestos.pas',
   inLibInventarioExcel in 'src\Lib\inLibInventarioExcel.pas',
   inLibBalanceTallasExcel in 'src\Lib\inLibBalanceTallasExcel.pas',
   inLibBalanceSinTallasExcel in 'src\Lib\inLibBalanceSinTallasExcel.pas',

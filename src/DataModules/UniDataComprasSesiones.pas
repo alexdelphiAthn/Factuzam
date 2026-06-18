@@ -186,7 +186,8 @@ uses
   inLibtb,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
-  inLibContadorLineas;
+  inLibContadorLineas,
+  inLibComprasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -309,6 +310,8 @@ begin
       FieldByName('CODIGO_EMP_SES').AsString := oEmpresa;
     if Trim(oAlmacen) <> '' then
       FieldByName('CODIGO_ALM_SES').AsString := oAlmacen;
+    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+      'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
     // Si solo hay una variacion definida, preseleccionarla. Es el caso
     // mayoritario (la mayoria de instalaciones solo tienen 'TC').
     if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then

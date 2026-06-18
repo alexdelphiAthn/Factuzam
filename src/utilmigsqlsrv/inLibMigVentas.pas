@@ -24,6 +24,9 @@
 {    importe (waterfall) entre los depósitos PENDIENTES del cliente —en orden  }
 {    de creación, rellenando cada uno hasta su precio— acumulando en           }
 {    IMPORTE_ANTICIPO_DEP y dejándolos CERRADO al alcanzar el precio.          }
+{    El valor de los depósitos se prorratea contra el neto real del AL para    }
+{    respetar descuentos del legacy; al final se reconcilia la deuda abierta   }
+{    contra DE-CB para no dejar saldos inflados por devoluciones históricas.   }
 {    Un CB SIN cliente hereda el del DOCUMENTO ADYACENTE (último documento     }
 {    con cliente en la misma caja), que es como el legacy enlaza el cobro con  }
 {    su albarán/cuenta. Si aún así no hay cliente, el CB queda suelto.         }
@@ -278,6 +281,8 @@ end;
 // Crea un depósito por CADA línea de artículo del albarán (AL): una prenda
 // por línea (soporte multilínea). PENDIENTE con anticipo 0; los cobros lo van
 // acumulando. Usa la misma resolución del slot de color que SKUs/Movimientos.
+// Si el neto de la operación no coincide con el total de líneas, prorratea el
+// neto para que la deuda de depósitos cuadre con el DE migrado.
 // Devuelve el ID del PRIMER depósito (para enlazarlo a la operación DE), o
 // '' si la operación no tiene líneas de artículo aprovechables. El INSERT se
 // hace sobre qDep (preparado por el llamante con cInsDep).
@@ -285,6 +290,7 @@ function CrearDepositosAlbaran(Eng: TMigEngine;
                                const iEmp, iAlm, iCaja, iOpe: Integer;
                                const sEmp, sAlm, sCli, sCaja, sNum: string;
                                const dtCrea: TDateTime;
+                               const fNetoOperacion: Double;
                                qDep: TUniQuery): string;
 const
   cLineas =
@@ -308,11 +314,31 @@ const
     '  AND l.Caja = :c AND l.Operacion = :o ' +
     '  AND LTRIM(RTRIM(l.Articulo)) <> '''' AND l.Articulo <> ''0'' ' +
     'ORDER BY l.NroLinea';
+type
+  TLineaDeposito = record
+    NroLinea:     Integer;
+    Articulo:     string;
+    CodigoUnidad: string;
+    PrecioBruto:  Double;
+    Cantidad:     Double;
+    ImporteBruto: Double;
+    ImporteNeto:  Double;
+  end;
 var
-  qLin:      TUniQuery;
+  qLin: TUniQuery;
+  aLineas: TArray<TLineaDeposito>;
+  i, iUltima: Integer;
+  n: Integer;
   sArt, sId: string;
+  fFactor: Double;
+  fPrecio: Double;
+  fTotalAjustado: Double;
+  fTotalBruto: Double;
+  bMismoSigno: Boolean;
 begin
   Result := '';
+  fTotalBruto := 0;
+  iUltima := -1;
   qLin := TUniQuery.Create(nil);
   try
     qLin.Connection := Eng.ConSrv;
@@ -324,14 +350,63 @@ begin
     qLin.Open;
     while not qLin.Eof do
     begin
+      n := Length(aLineas);
+      SetLength(aLineas, n + 1);
       sArt := Trim(qLin.FieldByName('Articulo').AsString);
-      // El ALMACEN va en el ID: occaj.Operacion se numera por (Empresa,
-      // Almacen, Caja), asi que el mismo nº de operacion existe en varios
-      // almacenes. Sin el almacen, DM<emp>-<caja>-<op>-<linea> colisiona
-      // entre tiendas (Duplicate entry para la PK del deposito).
-      sId  := Format('DM%d-%d-%d-%d-%d',
-                [iEmp, iAlm, iCaja, iOpe,
-                 qLin.FieldByName('NroLinea').AsInteger]);
+      aLineas[n].NroLinea := qLin.FieldByName('NroLinea').AsInteger;
+      aLineas[n].Articulo := sArt;
+      aLineas[n].CodigoUnidad := ConstruirCodigoUnidad(sArt,
+        Trim(qLin.FieldByName('DescColor').AsString),
+        Trim(qLin.FieldByName('Talla').AsString));
+      aLineas[n].PrecioBruto := qLin.FieldByName('PrecioCIva').AsFloat;
+      aLineas[n].Cantidad := qLin.FieldByName('Cantidad').AsFloat;
+      aLineas[n].ImporteBruto := aLineas[n].PrecioBruto *
+        aLineas[n].Cantidad;
+      aLineas[n].ImporteNeto := aLineas[n].ImporteBruto;
+      fTotalBruto := fTotalBruto + aLineas[n].ImporteBruto;
+      if Abs(aLineas[n].Cantidad) > 0.000001 then
+        iUltima := n;
+      qLin.Next;
+    end;
+  finally
+    qLin.Free;
+  end;
+  bMismoSigno := ((fTotalBruto > 0) and (fNetoOperacion >= 0)) or
+    ((fTotalBruto < 0) and (fNetoOperacion <= 0));
+  if (Length(aLineas) > 0)
+  and (iUltima >= 0)
+  and (Abs(fTotalBruto) > 0.005)
+  and (Abs(fNetoOperacion - fTotalBruto) > 0.005)
+  and bMismoSigno then
+  begin
+    fFactor := fNetoOperacion / fTotalBruto;
+    fTotalAjustado := 0;
+    for i := 0 to High(aLineas) do
+    begin
+      if i = iUltima then
+        aLineas[i].ImporteNeto := fNetoOperacion - fTotalAjustado
+      else
+      begin
+        aLineas[i].ImporteNeto := aLineas[i].ImporteBruto * fFactor;
+        fTotalAjustado := fTotalAjustado + aLineas[i].ImporteNeto;
+      end;
+    end;
+  end;
+  for i := 0 to High(aLineas) do
+  begin
+    sArt := aLineas[i].Articulo;
+    if Abs(aLineas[i].Cantidad) > 0.000001 then
+      fPrecio := aLineas[i].ImporteNeto / aLineas[i].Cantidad
+    else
+      fPrecio := aLineas[i].PrecioBruto;
+    if Abs(fPrecio) < 0.000001 then
+      fPrecio := 0;
+    // El ALMACEN va en el ID: occaj.Operacion se numera por (Empresa,
+    // Almacen, Caja), asi que el mismo nº de operacion existe en varios
+    // almacenes. Sin el almacen, DM<emp>-<caja>-<op>-<linea> colisiona
+    // entre tiendas (Duplicate entry para la PK del deposito).
+    sId  := Format('DM%d-%d-%d-%d-%d',
+              [iEmp, iAlm, iCaja, iOpe, aLineas[i].NroLinea]);
       qDep.ParamByName('id').AsString    := sId;
       qDep.ParamByName('emp').AsString   := sEmp;
       if sCli <> '' then
@@ -339,12 +414,10 @@ begin
       else
         qDep.ParamByName('cli').AsString := '0';
       qDep.ParamByName('art').AsString   := sArt;
-      qDep.ParamByName('uni').AsString   := ConstruirCodigoUnidad(sArt,
-        Trim(qLin.FieldByName('DescColor').AsString),
-        Trim(qLin.FieldByName('Talla').AsString));
+      qDep.ParamByName('uni').AsString   := aLineas[i].CodigoUnidad;
       qDep.ParamByName('alm').AsString   := sAlm;
-      qDep.ParamByName('precio').AsFloat := qLin.FieldByName('PrecioCIva').AsFloat;
-      qDep.ParamByName('cant').AsFloat   := qLin.FieldByName('Cantidad').AsFloat;
+      qDep.ParamByName('precio').AsFloat := fPrecio;
+      qDep.ParamByName('cant').AsFloat   := aLineas[i].Cantidad;
       qDep.ParamByName('fcrea').AsDateTime := dtCrea;
       qDep.ParamByName('caja').AsString  := sCaja;
       qDep.ParamByName('num').AsString   := sNum;
@@ -352,10 +425,6 @@ begin
       qDep.ExecSQL;
       if Result = '' then
         Result := sId;
-      qLin.Next;
-    end;
-  finally
-    qLin.Free;
   end;
 end;
 
@@ -368,8 +437,10 @@ const
   cUpd =
     'UPDATE fza_depositos_cliente ' +
     '   SET IMPORTE_ANTICIPO_DEP = IMPORTE_ANTICIPO_DEP + :amt, ' +
-    '       ESTADO_DEP = IF(PRECIO_VENTA_DEP > 0 ' +
-    '                       AND IMPORTE_ANTICIPO_DEP >= PRECIO_VENTA_DEP, ' +
+    '       ESTADO_DEP = IF(COALESCE(CANTIDAD_PENDIENTE_DEP, 1) > 0 ' +
+    '                       AND IMPORTE_ANTICIPO_DEP >= ' +
+    '                         (PRECIO_VENTA_DEP ' +
+    '                          * COALESCE(CANTIDAD_PENDIENTE_DEP, 1)), ' +
     '                       ''CERRADO'', ESTADO_DEP), ' +
     '       INSTANTE_MODIF = NOW() ' +
     ' WHERE ID_DEPOSITO_DEP = :id';
@@ -389,7 +460,7 @@ begin
 end;
 
 // Reparte un cobro a cuenta entre los depósitos PENDIENTES del cliente
-// (waterfall: rellena cada uno hasta su precio, en orden de creación, y los
+// (waterfall: rellena cada uno hasta su importe, en orden de creación, y los
 // cierra al llegar). Cubre el caso de AL multilínea (varios depósitos por
 // operación). Devuelve el ID del PRIMER depósito tocado (para enlazar el CB).
 // Primero leemos los depósitos a memoria y luego actualizamos, para no tener
@@ -399,10 +470,11 @@ function AplicarCobroADepositos(Eng: TMigEngine; const sCli: string;
 const
   cSel =
     'SELECT ID_DEPOSITO_DEP, ' +
-    '       (PRECIO_VENTA_DEP - IMPORTE_ANTICIPO_DEP) AS HUECO ' +
+    '       ((PRECIO_VENTA_DEP * COALESCE(CANTIDAD_PENDIENTE_DEP, 1)) ' +
+    '        - IMPORTE_ANTICIPO_DEP) AS HUECO ' +
     'FROM fza_depositos_cliente ' +
     'WHERE CODIGO_CLI_DEP = :c AND ESTADO_DEP = ''PENDIENTE'' ' +
-    '  AND CANTIDAD_PENDIENTE_DEP > 0 ' +
+    '  AND COALESCE(CANTIDAD_PENDIENTE_DEP, 1) > 0 ' +
     '  AND USUARIO_ALTA = :u ' +
     'ORDER BY FECHA_CREACION_DEP, ID_DEPOSITO_DEP';
 var
@@ -438,7 +510,7 @@ begin
   while (i < n) and (fRest > 0.005) do
   begin
     fHueco := aHueco[i];
-    // Solo acreditamos hasta el HUECO real del deposito (precio - anticipo).
+    // Solo acreditamos hasta el HUECO real del deposito (importe - anticipo).
     // Si no tiene hueco (precio 0 o ya cubierto) lo saltamos: nunca dejamos
     // anticipo > precio. Y el SOBRANTE (cobro mayor que la deuda de los
     // depositos del cliente) se DESCARTA — antes se volcaba en el primer
@@ -455,6 +527,88 @@ begin
     end;
     Inc(i);
   end;
+end;
+
+// Ajuste final de deuda abierta contra el saldo contable migrado:
+// saldo operaciones = DE - CB. No crea cobros ficticios; reparte el exceso
+// de deuda como anticipo tecnico sobre los prestamos pendientes FIFO. Cubre
+// descuentos migrados y devoluciones que reducen deuda pero no son efectivo.
+procedure RegularizarDeudaDepositosAOperaciones(Eng: TMigEngine);
+const
+  cSel =
+    'SELECT dep.CODIGO_CLI_DEP, dep.deuda_dep, ' +
+    '       GREATEST(COALESCE(ops.saldo_ops, 0), 0) AS deuda_ops, ' +
+    '       dep.deuda_dep - GREATEST(COALESCE(ops.saldo_ops, 0), 0) ' +
+    '         AS exceso ' +
+    'FROM ( ' +
+    '  SELECT CODIGO_CLI_DEP, ' +
+    '         SUM((PRECIO_VENTA_DEP ' +
+    '              * COALESCE(CANTIDAD_PENDIENTE_DEP, 1)) ' +
+    '             - IMPORTE_ANTICIPO_DEP) AS deuda_dep ' +
+    '  FROM fza_depositos_cliente ' +
+    '  WHERE ESTADO_DEP = ''PENDIENTE'' ' +
+    '    AND COALESCE(CANTIDAD_PENDIENTE_DEP, 1) > 0 ' +
+    '    AND CODIGO_CLI_DEP IS NOT NULL ' +
+    '    AND CODIGO_CLI_DEP <> '''' ' +
+    '    AND CODIGO_CLI_DEP <> ''0'' ' +
+    '    AND USUARIO_ALTA = :u_dep ' +
+    '  GROUP BY CODIGO_CLI_DEP ' +
+    ') dep ' +
+    'LEFT JOIN ( ' +
+    '  SELECT CODIGO_CLI_OPCAJA, ' +
+    '         SUM(CASE ' +
+    '               WHEN TIPO_OPERACION_OPCAJA = ''DE'' ' +
+    '               THEN IMPORTE_TOTAL_OPCAJA ' +
+    '               WHEN TIPO_OPERACION_OPCAJA = ''CB'' ' +
+    '               THEN -IMPORTE_TOTAL_OPCAJA ' +
+    '               ELSE 0 ' +
+    '             END) AS saldo_ops ' +
+    '  FROM fza_caja_operaciones ' +
+    '  WHERE TIPO_OPERACION_OPCAJA IN (''DE'', ''CB'') ' +
+    '    AND CODIGO_CLI_OPCAJA IS NOT NULL ' +
+    '    AND CODIGO_CLI_OPCAJA <> '''' ' +
+    '    AND CODIGO_CLI_OPCAJA <> ''0'' ' +
+    '    AND USUARIO_ALTA = :u_ops ' +
+    '  GROUP BY CODIGO_CLI_OPCAJA ' +
+    ') ops ON ops.CODIGO_CLI_OPCAJA = dep.CODIGO_CLI_DEP ' +
+    'WHERE dep.deuda_dep > GREATEST(COALESCE(ops.saldo_ops, 0), 0) + 0.005 ' +
+    'ORDER BY dep.CODIGO_CLI_DEP';
+var
+  q: TUniQuery;
+  iAjustes: Integer;
+  fExceso: Double;
+  fTotal: Double;
+  sCli: string;
+begin
+  iAjustes := 0;
+  fTotal := 0;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text := cSel;
+    q.ParamByName('u_dep').AsString := Eng.Usuario;
+    q.ParamByName('u_ops').AsString := Eng.Usuario;
+    q.Open;
+    while not q.Eof do
+    begin
+      sCli := q.FieldByName('CODIGO_CLI_DEP').AsString;
+      fExceso := q.FieldByName('exceso').AsFloat;
+      if fExceso > 0.005 then
+      begin
+        AplicarCobroADepositos(Eng, sCli, fExceso);
+        Inc(iAjustes);
+        fTotal := fTotal + fExceso;
+      end;
+      q.Next;
+    end;
+  finally
+    q.Free;
+  end;
+  if iAjustes > 0 then
+    Eng.Log('  depositos: %d clientes regularizados contra DE-CB (%.2f).',
+      [iAjustes, fTotal])
+  else
+    Eng.Log('  depositos: deuda abierta ya cuadra contra DE-CB.');
 end;
 
 // Netea las devoluciones de deposito (-1) con su prestamo (+1) del mismo
@@ -503,11 +657,10 @@ begin
   Eng.Log('  depositos: devoluciones (-1) neteadas con su prestamo (FIFO).');
 end;
 
-// Calcula la deuda actual de cada cliente = suma de (precio - anticipo) de sus
-// prestamos PENDIENTE (positivos) y la guarda en fza_clientes.TOTAL_DEUDA_CLI.
-// Va DESPUES de NetearDevolucionesDeposito (asi los PENDIENTE son solo
-// prestamos reales abiertos). Requiere que el dominio 'clientes' ya este
-// migrado; si no, no actualiza nada (join vacio).
+// Calcula la deuda actual de cada cliente = suma de (importe - anticipo) de
+// sus prestamos PENDIENTE (positivos) y la guarda en TOTAL_DEUDA_CLI.
+// Va DESPUES del neteo y la regularizacion DE-CB. Requiere que el dominio
+// 'clientes' ya este migrado; si no, no actualiza nada (join vacio).
 procedure ActualizarDeudaClientes(Eng: TMigEngine);
 var
   sU: string;
@@ -517,9 +670,12 @@ begin
     'UPDATE fza_clientes c ' +
     'LEFT JOIN ( ' +
     '  SELECT CODIGO_CLI_DEP, ' +
-    '         SUM(PRECIO_VENTA_DEP - IMPORTE_ANTICIPO_DEP) AS deuda ' +
+    '         SUM((PRECIO_VENTA_DEP ' +
+    '              * COALESCE(CANTIDAD_PENDIENTE_DEP, 1)) ' +
+    '             - IMPORTE_ANTICIPO_DEP) AS deuda ' +
     '  FROM fza_depositos_cliente ' +
-    '  WHERE ESTADO_DEP = ''PENDIENTE'' AND CANTIDAD_PENDIENTE_DEP > 0 ' +
+    '  WHERE ESTADO_DEP = ''PENDIENTE'' ' +
+    '    AND COALESCE(CANTIDAD_PENDIENTE_DEP, 1) > 0 ' +
     '    AND USUARIO_ALTA = ' + sU + ' ' +
     '  GROUP BY CODIGO_CLI_DEP ' +
     ') d ON d.CODIGO_CLI_DEP = c.CODIGO_CLI_CLI ' +
@@ -691,7 +847,8 @@ begin
       if sTipoOp = 'DE' then
       begin
         sIdDep := CrearDepositosAlbaran(Eng, iEmp, iAlm, iCaja, iOpe,
-                    sEmp, sAlm, sCli, sCaja, sNum, dtInstante, qDep);
+                    sEmp, sAlm, sCli, sCaja, sNum, dtInstante, fNeto,
+                    qDep);
       end
       else if sTipoOp = 'CB' then
       begin
@@ -788,10 +945,11 @@ begin
         sUltimoCli := sCli;
       qSrc.Next;
     end;
-    // Cuadrar depositos: netear las devoluciones (-1) con su prestamo (+1)
-    // del mismo cliente y SKU, dejando ambos CERRADO; luego volcar la deuda
-    // (prestamos abiertos) a la ficha del cliente (TOTAL_DEUDA_CLI).
+    // Cuadrar depositos: netear las devoluciones (-1) con su prestamo (+1),
+    // reconciliar la deuda abierta con el saldo DE-CB y volcar la deuda a la
+    // ficha del cliente (TOTAL_DEUDA_CLI).
     NetearDevolucionesDeposito(Eng);
+    RegularizarDeudaDepositosAOperaciones(Eng);
     ActualizarDeudaClientes(Eng);
   finally
     qDep.Free;

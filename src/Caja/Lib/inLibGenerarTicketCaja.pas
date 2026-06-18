@@ -38,7 +38,8 @@ implementation
 
 uses
   Data.DB, Uni, DBAccess, Vcl.Dialogs,
-  inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir, inLibPermisos;
+  inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir, inLibPermisos,
+  inLibGenerarTicket;
 
 procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
@@ -119,6 +120,7 @@ begin
     Ticket.EscribirLinea('Firma:');
     Ticket.SaltarLineas(2);
     Ticket.LineaSeparadora('.');
+    EscribirPieTicketCaja(Ticket, AEmpresa);
     Ticket.SaltarLineas(1);
     Ticket.CortarPapel;
     { Imprimir o previsualizar }

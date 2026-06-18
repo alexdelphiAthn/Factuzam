@@ -519,7 +519,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     Width = 110
                   end
                   object dbcLinPrecioCompra: TcxGridDBColumn
-                    Caption = 'Pr. compra'
+                    Caption = 'Pr. compra s/IVA'
                     DataBinding.FieldName = 'PRECIO_COMPRA_SESLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = dbcLinPrecioCompraPropertiesEditValueChanged

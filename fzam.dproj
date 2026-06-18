@@ -555,6 +555,7 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
         <DCCReference Include="src\Lib\inLibDocCompraExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibComprasImpuestos.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceSinTallasExcel.pas"/>

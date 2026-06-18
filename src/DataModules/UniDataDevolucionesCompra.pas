@@ -105,7 +105,8 @@ uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics,
   inMtoDevolucionesCompra,
-  inLibDevolucionesCompraMovimientos;
+  inLibDevolucionesCompraMovimientos,
+  inLibComprasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -202,6 +203,8 @@ begin
     else
       FieldByName('CODIGO_EMP_DEVC').AsString := '0';
     FieldByName('CODIGO_PRV_DEVC').AsString := '0';
+    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+      'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
   end;
   FTransicionEstadoDevc := '';
 end;
@@ -447,39 +450,10 @@ begin
 end;
 
 procedure TdmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-var
-  fBase, fIva, fTotal, fPorIva: Double;
-  bk: TBookmark;
 begin
-  if not unqryDevolucionesCompraLineas.Active then Exit;
-  fBase  := 0;
-  fIva   := 0;
-  fTotal := 0;
-  bk := unqryDevolucionesCompraLineas.GetBookmark;
-  try
-    unqryDevolucionesCompraLineas.DisableControls;
-    unqryDevolucionesCompraLineas.First;
-    while not unqryDevolucionesCompraLineas.Eof do
-    begin
-      fPorIva := unqryDevolucionesCompraLineas.
-                   FieldByName('PORCENTAJE_IVA_DEVCLIN').AsFloat;
-      fTotal  := unqryDevolucionesCompraLineas.
-                   FieldByName('TOTAL_DEVCLIN').AsFloat;
-      fBase   := fBase + fTotal;
-      fIva    := fIva  + (fTotal * fPorIva / 100);
-      unqryDevolucionesCompraLineas.Next;
-    end;
-  finally
-    if unqryDevolucionesCompraLineas.BookmarkValid(bk) then
-      unqryDevolucionesCompraLineas.GotoBookmark(bk);
-    unqryDevolucionesCompraLineas.FreeBookmark(bk);
-    unqryDevolucionesCompraLineas.EnableControls;
-  end;
-  if not (unqryTablaG.State in dsEditModes) then
-    unqryTablaG.Edit;
-  unqryTablaG.FieldByName('TOTAL_BASES_DEVC').AsFloat     := fBase;
-  unqryTablaG.FieldByName('TOTAL_IMPUESTOS_DEVC').AsFloat := fIva;
-  unqryTablaG.FieldByName('TOTAL_LIQUIDO_DEVC').AsFloat   := fBase + fIva;
+  CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+    unqryDevolucionesCompraLineas, 'DEVC', 'TOTAL_DEVCLIN',
+    'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
 end;
 
 procedure TdmDevolucionesCompra.PrepararPrint(const ASerie, ANumero: string);

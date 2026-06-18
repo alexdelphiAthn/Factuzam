@@ -58,6 +58,8 @@ type
     pcAlbaran:           TcxPageControl;
     tsLineasAlbaran:     TcxTabSheet;
     tsObservaciones:     TcxTabSheet;
+    tsTotales:           TcxTabSheet;
+    scrTotales:          TScrollBox;
     pnlBottomTotales:    TPanel;
     cxgrdLineasAlbaran:  TcxGrid;
     tvLineasAlbaran:     TcxGridDBTableView;

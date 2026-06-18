@@ -15,6 +15,7 @@
   KeyPreview = True
   Position = poScreenCenter
   OnClose = FormClose
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   TextHeight = 21

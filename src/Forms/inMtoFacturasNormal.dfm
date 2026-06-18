@@ -1,4 +1,4 @@
-inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
+﻿inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
   Caption = 'Borradores (Venta Mayor)'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 17
@@ -28,6 +28,7 @@ inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
               end
             end
             inherited tsTotales: TcxTabSheet
+              inherited scrTotales: TScrollBox
               inherited curTotalAPagar: TcxDBCurrencyEdit
                 ExplicitHeight = 25
               end
@@ -113,6 +114,7 @@ inherited frmMtoFacturasNormal: TfrmMtoFacturasNormal
                 inherited chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox
                   ExplicitWidth = 436
                 end
+              end
               end
             end
             inherited tsRecibos: TcxTabSheet

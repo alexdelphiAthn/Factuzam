@@ -10,8 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Mantenimiento de empleados (operarios de caja, traspasos y arqueos).      }
-{    Datos básicos (nombre, dirección, teléfono) + número de empleado en caja  }
-{    y diminutivo de ticket. Independiente de los usuarios de login.           }
+{    Datos de identificación/contacto + número de empleado en caja y           }
+{    diminutivo de ticket. Independiente de los usuarios de login.             }
 {******************************************************************************}
 unit inMtoEmpleados;
 
@@ -52,8 +52,20 @@ type
   TfrmMtoEmpleados = class(TfrmMtoGen)
     cxGrdDBTabPrinCODIGO_EMPL: TcxGridDBColumn;
     cxGrdDBTabPrinNOMBRE_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinRAZON_SOCIAL_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinNIF_EMPL: TcxGridDBColumn;
     cxGrdDBTabPrinDIRECCION_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinDIRECCION2_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinCODIGO_POSTAL_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinPOBLACION_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinPROVINCIA_EMPL: TcxGridDBColumn;
     cxGrdDBTabPrinTELEFONO_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinTELEFONO2_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinFAX_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinEMAIL_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinWEB_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinIBAN_EMPL: TcxGridDBColumn;
+    cxGrdDBTabPrinBIC_EMPL: TcxGridDBColumn;
     cxGrdDBTabPrinDIMINUTIVO_TICKET_EMPL: TcxGridDBColumn;
     cxGrdDBTabPrinESACTIVO_EMPL: TcxGridDBColumn;
     procedure dsTablaGStateChange(Sender: TObject);

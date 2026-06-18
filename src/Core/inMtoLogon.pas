@@ -90,6 +90,7 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnConfClick(Sender: TObject);
     procedure btnTestClick(Sender: TObject);
     procedure btnSubirScriptClick(Sender: TObject);
@@ -102,11 +103,15 @@ type
     procedure leerini;
     procedure GetIniValues;
   private
+    FProgressPanel: TPanel;
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
     FLogBuffer: TStringList;
     FStopwatch: TStopwatch;
+    FWorkerOperacion: TThread;
     FCerrarAplicacion: Boolean;
+    FEnOperacionLarga: Boolean;
+    FCancelaOperacionSolicitada: Boolean;
     procedure CambiarPass(f:TUniConnection);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -116,8 +121,16 @@ type
                               APaso, ATotal: Integer;
                               AFilaGlobal,
                               AFilasGlobalTotal: Integer);
-    procedure MostrarBarraProgreso;
+    procedure BloquearPantallaOperacion;
+    procedure DesbloquearPantallaOperacion;
+    procedure RecolocarBarraProgreso;
+    procedure MostrarBarraProgreso(const ATextoInicial: string = 'Preparando...');
     procedure OcultarBarraProgreso;
+    function PorcentajeProgreso(AValor, ATotal: Integer): Integer;
+    function TextoProgreso(const AEtapa: string;
+                           AValor, ATotal: Integer): string;
+    function EsErrorCancelacion(const AError: string): Boolean;
+    procedure SolicitarCancelarOperacionEnCurso;
     procedure WorkerProgreso(const AEtapa: string;
                               APaso, ATotal: Integer;
                               AFilaGlobal,
@@ -282,6 +295,9 @@ begin
   {$ENDIF}
   sUserPassOK := 'false';
   FCerrarAplicacion := False;
+  FEnOperacionLarga := False;
+  FCancelaOperacionSolicitada := False;
+  FWorkerOperacion := nil;
   oLicenciaAplicacionComprobada := False;
   oLicenciaAplicacionBBDD := '';
   oLicenciaAplicacionEstado := elaInvalida;
@@ -642,32 +658,127 @@ procedure TfrmLogon.BackupProgress(const AEtapa: string;
                                    APaso, ATotal: Integer;
                                    AFilaGlobal,
                                    AFilasGlobalTotal: Integer);
+var
+  iValor: Integer;
+  iTotal: Integer;
 begin
+  iValor := APaso;
+  iTotal := ATotal;
   if AFilasGlobalTotal > 0 then
   begin
-    FProgressBar.Max := AFilasGlobalTotal;
-    FProgressBar.Position := AFilaGlobal;
+    iValor := AFilaGlobal;
+    iTotal := AFilasGlobalTotal;
   end;
-  if ATotal > 0 then
-    FProgressLabel.Caption :=
-      Format('Copia: %s  %d / %d', [AEtapa, APaso, ATotal])
-  else
-    FProgressLabel.Caption :=
-      Format('Copia: %s', [AEtapa]);
+  FProgressBar.Max := 100;
+  FProgressBar.Position := PorcentajeProgreso(iValor, iTotal);
+  FProgressLabel.Caption := TextoProgreso('Copia de seguridad',
+                                          iValor, iTotal);
+  FProgressLabel.Hint := FProgressLabel.Caption;
   FProgressBar.Update;
   FProgressLabel.Update;
 end;
 
-procedure TfrmLogon.MostrarBarraProgreso;
+procedure TfrmLogon.BloquearPantallaOperacion;
 begin
+  FEnOperacionLarga := True;
+  Screen.Cursor := crHourGlass;
+  btnAceptar.Enabled := False;
+  btnSalir.Enabled := False;
+  btnConf.Enabled := False;
+  btnTest.Enabled := False;
+  btnSubirScript.Enabled := False;
+  btnCopiaSeguridad.Enabled := False;
+  btnRecover.Enabled := False;
+  btnChangePassRoot.Enabled := False;
+  edtUser.Enabled := False;
+  edtPass.Enabled := False;
+  chkRememberUser.Enabled := False;
+  chkRememberPassword.Enabled := False;
+  chkAuto.Enabled := False;
+  edtHostName.Enabled := False;
+  edtPortBD.Enabled := False;
+  edtNomBD.Enabled := False;
+  edtUserBD.Enabled := False;
+  edtPassBD.Enabled := False;
+end;
+
+procedure TfrmLogon.DesbloquearPantallaOperacion;
+begin
+  FEnOperacionLarga := False;
+  Screen.Cursor := crDefault;
+  btnAceptar.Enabled := True;
+  btnSalir.Enabled := True;
+  btnConf.Enabled := True;
+  btnTest.Enabled := True;
+  btnSubirScript.Enabled := True;
+  btnCopiaSeguridad.Enabled := True;
+  btnRecover.Enabled := True;
+  btnChangePassRoot.Enabled := True;
+  edtUser.Enabled := True;
+  edtPass.Enabled := True;
+  chkRememberUser.Enabled := True;
+  chkRememberPassword.Enabled := True;
+  chkAuto.Enabled := True;
+  edtHostName.Enabled := True;
+  edtPortBD.Enabled := True;
+  edtNomBD.Enabled := True;
+  edtUserBD.Enabled := True;
+  edtPassBD.Enabled := True;
+end;
+
+procedure TfrmLogon.RecolocarBarraProgreso;
+var
+  iTopBotones: Integer;
+  iAncho: Integer;
+begin
+  if FProgressPanel <> nil then
+  begin
+    iTopBotones := btnRecover.Top + btnRecover.Height;
+    if btnCopiaSeguridad.Top + btnCopiaSeguridad.Height > iTopBotones then
+      iTopBotones := btnCopiaSeguridad.Top + btnCopiaSeguridad.Height;
+    iAncho := (btnRecover.Left + btnRecover.Width) - btnCopiaSeguridad.Left;
+    FProgressPanel.Left := btnCopiaSeguridad.Left;
+    FProgressPanel.Top := iTopBotones + 12;
+    FProgressPanel.Width := iAncho;
+    FProgressPanel.Height := 48;
+    if FProgressPanel.Top + FProgressPanel.Height >
+       pnlBBDD.ClientHeight - 8 then
+    begin
+      FProgressPanel.Top := pnlBBDD.ClientHeight -
+                            FProgressPanel.Height - 8;
+    end;
+    if FProgressLabel <> nil then
+    begin
+      FProgressLabel.Left := 0;
+      FProgressLabel.Top := 0;
+      FProgressLabel.Width := FProgressPanel.Width;
+      FProgressLabel.Height := 22;
+    end;
+    if FProgressBar <> nil then
+    begin
+      FProgressBar.Left := 0;
+      FProgressBar.Top := 25;
+      FProgressBar.Width := FProgressPanel.Width;
+      FProgressBar.Height := 18;
+    end;
+  end;
+end;
+
+procedure TfrmLogon.MostrarBarraProgreso(const ATextoInicial: string);
+begin
+  BloquearPantallaOperacion;
+  if FProgressPanel = nil then
+  begin
+    FProgressPanel := TPanel.Create(Self);
+    FProgressPanel.Parent := pnlBBDD;
+    FProgressPanel.BevelOuter := bvNone;
+    FProgressPanel.ParentBackground := False;
+    FProgressPanel.Color := pnlBBDD.Color;
+  end;
   if FProgressBar = nil then
   begin
     FProgressBar := TProgressBar.Create(Self);
-    FProgressBar.Parent := pnlBBDD;
-    FProgressBar.Left := 24;
-    FProgressBar.Top := 340;
-    FProgressBar.Width := 312;
-    FProgressBar.Height := 18;
+    FProgressBar.Parent := FProgressPanel;
     FProgressBar.Min := 0;
     FProgressBar.Max := 100;
     FProgressBar.Position := 0;
@@ -676,19 +787,21 @@ begin
   if FProgressLabel = nil then
   begin
     FProgressLabel := TcxLabel.Create(Self);
-    FProgressLabel.Parent := pnlBBDD;
-    FProgressLabel.Left := 24;
-    FProgressLabel.Top := 328;
+    FProgressLabel.Parent := FProgressPanel;
     FProgressLabel.AutoSize := False;
-    FProgressLabel.Width := 312;
-    FProgressLabel.Height := 16;
     FProgressLabel.Caption := '';
-    FProgressLabel.Transparent := True;
+    FProgressLabel.Transparent := False;
+    FProgressLabel.Style.Color := pnlBBDD.Color;
+    FProgressLabel.ShowHint := True;
   end;
+  RecolocarBarraProgreso;
+  FProgressPanel.Visible := True;
   FProgressLabel.Visible := True;
   FProgressBar.Visible := True;
   FProgressBar.Position := 0;
-  FProgressLabel.Caption := 'Preparando...';
+  FProgressLabel.Caption := ATextoInicial;
+  FProgressLabel.Hint := FProgressLabel.Caption;
+  FProgressPanel.BringToFront;
   FProgressBar.Update;
   FProgressLabel.Update;
 end;
@@ -699,34 +812,109 @@ begin
     FProgressBar.Visible := False;
   if FProgressLabel <> nil then
     FProgressLabel.Visible := False;
+  if FProgressPanel <> nil then
+    FProgressPanel.Visible := False;
+  DesbloquearPantallaOperacion;
+end;
+
+function TfrmLogon.PorcentajeProgreso(AValor, ATotal: Integer): Integer;
+begin
+  Result := 0;
+  if ATotal > 0 then
+  begin
+    Result := Trunc((AValor * 100.0) / ATotal);
+    if Result < 0 then
+      Result := 0;
+    if Result > 100 then
+      Result := 100;
+  end;
+end;
+
+function TfrmLogon.TextoProgreso(const AEtapa: string;
+                                 AValor, ATotal: Integer): string;
+var
+  sEtapa: string;
+begin
+  sEtapa := Trim(AEtapa);
+  sEtapa := StringReplace(sEtapa, ' (KB)', '', [rfReplaceAll, rfIgnoreCase]);
+  if sEtapa = '' then
+    sEtapa := 'Procesando';
+  if Length(sEtapa) > 34 then
+    sEtapa := Copy(sEtapa, 1, 31) + '...';
+  if ATotal > 0 then
+    Result := Format('%s: %d%%', [sEtapa,
+                                  PorcentajeProgreso(AValor, ATotal)])
+  else
+    Result := sEtapa;
+end;
+
+function TfrmLogon.EsErrorCancelacion(const AError: string): Boolean;
+begin
+  Result := Pos('cancelada', LowerCase(AError)) > 0;
+end;
+
+procedure TfrmLogon.SolicitarCancelarOperacionEnCurso;
+begin
+  if FEnOperacionLarga then
+  begin
+    if FCancelaOperacionSolicitada then
+      ShowMessage('La cancelación ya está solicitada. Espere a que termine ' +
+                  'la sentencia actual.')
+    else if MessageDlg('Hay una operación en curso moviendo datos.' +
+                       sLineBreak + sLineBreak +
+                       '¿Desea abandonar la operación en curso?',
+                       mtWarning, [mbYes, mbNo], 0) = mrYes then
+    begin
+      FCancelaOperacionSolicitada := True;
+      if Assigned(FWorkerOperacion) then
+        FWorkerOperacion.Terminate;
+      if FProgressLabel <> nil then
+      begin
+        FProgressLabel.Caption := 'Cancelando operación...';
+        FProgressLabel.Hint := FProgressLabel.Caption;
+        FProgressLabel.Update;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmLogon.WorkerProgreso(const AEtapa: string;
                                    APaso, ATotal: Integer;
                                    AFilaGlobal,
                                    AFilasGlobalTotal: Integer);
+var
+  iValor: Integer;
+  iTotal: Integer;
 begin
   if (FProgressBar = nil) or (not FProgressBar.Visible) then
     Exit;
+  iValor := APaso;
+  iTotal := ATotal;
   if AFilasGlobalTotal > 0 then
   begin
-    FProgressBar.Max := AFilasGlobalTotal;
-    FProgressBar.Position := AFilaGlobal;
+    iValor := AFilaGlobal;
+    iTotal := AFilasGlobalTotal;
   end;
-  if ATotal > 0 then
-    FProgressLabel.Caption :=
-      Format('%s  %d / %d', [AEtapa, APaso, ATotal])
-  else
-    FProgressLabel.Caption := AEtapa;
+  FProgressBar.Max := 100;
+  FProgressBar.Position := PorcentajeProgreso(iValor, iTotal);
+  FProgressLabel.Caption := TextoProgreso(AEtapa, iValor, iTotal);
+  FProgressLabel.Hint := FProgressLabel.Caption;
   FProgressBar.Update;
   FProgressLabel.Update;
 end;
 
 procedure TfrmLogon.BackupFinalizar(AExito: Boolean;
   const AError: string; ALogBuffer: TStringList);
+var
+  bCancelada: Boolean;
 begin
+  bCancelada := (not AExito) and EsErrorCancelacion(AError);
+  FWorkerOperacion := nil;
+  FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
-  if AExito then
+  if bCancelada then
+    ShowMessage('Operación cancelada.')
+  else if AExito then
   begin
     Log.LogInfo(edtUser.Text + ' Guardó copia exitosamente');
     ShowMessage('La copia se guardó exitosamente');
@@ -743,25 +931,39 @@ procedure TfrmLogon.RestoreFinalizar(AExito: Boolean;
   const AError: string; ALogBuffer: TStringList);
 var
   LogForm: TfrmMtoModalScriptLog;
+  bCancelada: Boolean;
 begin
+  bCancelada := (not AExito) and EsErrorCancelacion(AError);
+  FWorkerOperacion := nil;
+  FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
-  LogForm := TfrmMtoModalScriptLog.Create(Self);
-  LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
-  LogForm.LogMemo.Lines.Add(
-    '-------------------------------------------------');
-  if ALogBuffer <> nil then
+  if bCancelada then
   begin
-    LogForm.AppendLines(ALogBuffer);
-    FreeAndNil(ALogBuffer);
-  end;
-  LogForm.Show;
-  if AExito then
-    ShowMessage(SScriptSuccess)
+    if ALogBuffer <> nil then
+      FreeAndNil(ALogBuffer);
+    ShowMessage('Operación cancelada. La base de datos puede haber quedado ' +
+                'parcialmente restaurada.');
+  end
   else
   begin
-    Log.LogError('Error en restauración: ' + AError);
-    ShowMessage('Hubo problemas al restaurar la copia.' +
-                sLineBreak + AError);
+    LogForm := TfrmMtoModalScriptLog.Create(Self);
+    LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
+    LogForm.LogMemo.Lines.Add(
+      '-------------------------------------------------');
+    if ALogBuffer <> nil then
+    begin
+      LogForm.AppendLines(ALogBuffer);
+      FreeAndNil(ALogBuffer);
+    end;
+    LogForm.Show;
+    if AExito then
+      ShowMessage(SScriptSuccess)
+    else
+    begin
+      Log.LogError('Error en restauración: ' + AError);
+      ShowMessage('Hubo problemas al restaurar la copia.' +
+                  sLineBreak + AError);
+    end;
   end;
 end;
 
@@ -826,7 +1028,7 @@ begin
     end;
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
-      MostrarBarraProgreso;
+      MostrarBarraProgreso('Preparando copia de seguridad...');
       Worker := TBackupWorker.Create(
         edtHostName.Text,
         StrToIntDef(edtPortBD.Text, 3306),
@@ -838,6 +1040,8 @@ begin
         AnsiString(sPass));
       Worker.OnProgreso := WorkerProgreso;
       Worker.OnFinalizar := BackupFinalizar;
+      FCancelaOperacionSolicitada := False;
+      FWorkerOperacion := Worker;
       Worker.Start;
     end;
   end
@@ -852,7 +1056,11 @@ procedure TfrmLogon.btnRecoverClick(Sender: TObject);
 var
   unqryTestBD       : TUniQuery;
   Worker            : TRestoreWorker;
+  bDesencriptar     : Boolean;
+  sPassDesencriptar : AnsiString;
 begin
+  bDesencriptar := False;
+  sPassDesencriptar := '';
   sPass := InputBox(SGetPassBBDD, '', '');
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
     sPass,
@@ -871,12 +1079,28 @@ begin
     unqryTestBD.Close;
     FreeAndNil(unqryTestBD);
   end;
-  opendialog.Title := 'Cargar copia encriptada';
-  opendialog.DefaultExtension := 'crypt';
+  opendialog.Title := 'Cargar copia de seguridad';
+  opendialog.FileTypes.Clear;
+  with opendialog.FileTypes.Add do
+  begin
+    DisplayName := 'Copias SQL o encriptadas';
+    FileMask := '*.sql;*.crypt';
+  end;
+  with opendialog.FileTypes.Add do
+  begin
+    DisplayName := 'Todos los archivos';
+    FileMask := '*.*';
+  end;
+  opendialog.DefaultExtension := 'sql';
   openDialog.DefaultFolder := GetUserDeskFolder;
   if openDialog.Execute then
   begin
-    MostrarBarraProgreso;
+    if SameText(ExtractFileExt(openDialog.FileName), '.crypt') then
+    begin
+      bDesencriptar := True;
+      sPassDesencriptar := AnsiString(sPass);
+    end;
+    MostrarBarraProgreso('Preparando restauración...');
     Worker := TRestoreWorker.Create(
       edtHostName.Text,
       StrToIntDef(edtPortBD.Text, 3306),
@@ -884,9 +1108,12 @@ begin
       edtUserBD.Text,
       sPass,
       openDialog.FileName,
-      AnsiString(edtPassBD.Text));
+      sPassDesencriptar,
+      bDesencriptar);
     Worker.OnProgreso := WorkerProgreso;
     Worker.OnFinalizar := RestoreFinalizar;
+    FCancelaOperacionSolicitada := False;
+    FWorkerOperacion := Worker;
     Worker.Start;
   end
   else
@@ -941,8 +1168,15 @@ end;
 
 procedure TfrmLogon.btnSalirClick(Sender: TObject);
 begin
-  ModalResult := mrCancel;
-  Close;
+  if FEnOperacionLarga then
+  begin
+    SolicitarCancelarOperacionEnCurso;
+  end
+  else
+  begin
+    ModalResult := mrCancel;
+    Close;
+  end;
 end;
 
 function TfrmLogon.GetGrupo(sUser: string; conn: TUniConnection;
@@ -1127,7 +1361,13 @@ end;
 procedure TfrmLogon.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if Key = VK_F12 then
+  if FEnOperacionLarga then
+  begin
+    if Key = VK_ESCAPE then
+      SolicitarCancelarOperacionEnCurso;
+    Key := 0;
+  end
+  else if Key = VK_F12 then
   begin
     btnAceptarClick(nil);
     Key := 0;
@@ -1230,6 +1470,17 @@ begin
   if (ucConexion.Connected = true) then
     ucConexion.Disconnect;
   ucConexion.Pooling := false;
+end;
+
+procedure TfrmLogon.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  if FEnOperacionLarga then
+  begin
+    CanClose := False;
+    SolicitarCancelarOperacionEnCurso;
+  end
+  else
+    CanClose := True;
 end;
 
 end.

@@ -69,12 +69,14 @@ type
     ccbFiltroAnyo: TcxCheckComboBox;
     lblFiltroAlmacen: TcxLabel;
     ccbFiltroAlmacen: TcxCheckComboBox;
+    btnGuardarPrecargaCaja: TcxButton;
     alOperaciones: TActionList;
     actIrFacturaSimplif: TAction;
     procedure btnImprimirInformeClick(Sender: TObject);
     procedure btnToggleFiltrosCajaClick(Sender: TObject);
     procedure ccbFiltroAnyoPropertiesCloseUp(Sender: TObject);
     procedure ccbFiltroAlmacenPropertiesCloseUp(Sender: TObject);
+    procedure btnGuardarPrecargaCajaClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure actIrFacturaSimplifExecute(Sender: TObject);
   private
@@ -119,7 +121,8 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibShowMto, inMtoPrincipal, inMtoModalImpOperaciones;
+  inLibWin, inLibUser, inLibGlobalVar, inLibShowMto, inMtoPrincipal,
+  inMtoModalGenImpSave, inMtoModalImpOperaciones;
 
 {$R *.dfm}
 
@@ -610,6 +613,47 @@ procedure TfrmMtoCajaOperacionesHist.ccbFiltroAlmacenPropertiesCloseUp(
 begin
   if not FFiltrosCargando then
     AplicarFiltrosOperaciones;
+end;
+
+procedure TfrmMtoCajaOperacionesHist.btnGuardarPrecargaCajaClick(
+                                                            Sender: TObject);
+var
+  formulario: TfrmModalGenImpSave;
+  sPermisos: string;
+  oList: TPerfilList;
+begin
+  sPermisos := '';
+  formulario := TfrmModalGenImpSave.Create(Application);
+  try
+    formulario.edtDescripcion.Enabled := False;
+    formulario.edtNombreOrigen.Text := Self.Name;
+    formulario.edtDescripcion.Text := 'Guardar precarga';
+    formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+      sPermisos := formulario.cbbPermisos.Text;
+  finally
+    FreeAndNil(formulario);
+  end;
+  if sPermisos <> '' then
+  begin
+    Screen.Cursor := crHourGlass;
+    oList := TPerfilList.Create;
+    try
+      RecogerPerfilesParticulares(oList, sPermisos);
+      oConn.StartTransaction;
+      try
+        odmPerfiles.GrabarPerfilesBatch(oList);
+        oConn.Commit;
+      except
+        oConn.Rollback;
+        raise;
+      end;
+    finally
+      FreeAndNil(oList);
+      Screen.Cursor := crDefault;
+    end;
+    ShowMessage('Precarga guardada.');
+  end;
 end;
 
 procedure TfrmMtoCajaOperacionesHist.PrepararBusquedaExterna(

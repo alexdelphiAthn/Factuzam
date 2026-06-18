@@ -73,6 +73,8 @@ type
     pcPestanas: TcxPageControl;
     tsDomicilioFiscal: TcxTabSheet;
     tsMasDatos: TcxTabSheet;
+    scrDomicilioFiscal: TScrollBox;
+    scrMasDatos: TScrollBox;
     tsParametrosEDoc: TcxTabSheet;
     tsHistoriaFacturacion: TcxTabSheet;
     tsPresupuestos: TcxTabSheet;

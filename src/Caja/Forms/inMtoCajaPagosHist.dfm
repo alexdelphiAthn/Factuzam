@@ -116,6 +116,72 @@ inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
             end
           end
         end
+        object pnlFiltrosCaja: TPanel
+          Left = 0
+          Top = 0
+          Width = 943
+          Height = 60
+          Align = alTop
+          BevelOuter = bvNone
+          ParentBackground = False
+          TabOrder = 1
+          object btnToggleFiltrosCaja: TcxButton
+            Left = 0
+            Top = 0
+            Width = 943
+            Height = 22
+            Align = alTop
+            Caption = #9654'  Filtros de carga'
+            LookAndFeel.Kind = lfUltraFlat
+            LookAndFeel.NativeStyle = False
+            TabOrder = 0
+            OnClick = btnToggleFiltrosCajaClick
+          end
+          object pnlContFiltrosCaja: TPanel
+            Left = 0
+            Top = 22
+            Width = 943
+            Height = 38
+            Align = alClient
+            BevelOuter = bvNone
+            ParentBackground = False
+            TabOrder = 1
+            object lblFiltroAnyo: TcxLabel
+              Left = 16
+              Top = 8
+              Caption = 'A'#241'os:'
+              TabOrder = 3
+              Transparent = True
+            end
+            object ccbFiltroAnyo: TcxCheckComboBox
+              Left = 80
+              Top = 5
+              Properties.EmptySelectionText = 'Todos'
+              Properties.Items = <>
+              Properties.OnCloseUp = ccbFiltroAnyoPropertiesCloseUp
+              TabOrder = 0
+              Width = 210
+            end
+            object btnCargarPagos: TcxButton
+              Left = 312
+              Top = 4
+              Width = 95
+              Height = 25
+              Caption = 'Cargar'
+              TabOrder = 1
+              OnClick = btnCargarPagosClick
+            end
+            object btnGuardarPrecargaCaja: TcxButton
+              Left = 416
+              Top = 4
+              Width = 130
+              Height = 25
+              Caption = 'Guardar precarga'
+              TabOrder = 2
+              OnClick = btnGuardarPrecargaCajaClick
+            end
+          end
+        end
       end
       inherited tsFicha: TcxTabSheet
         TabVisible = False

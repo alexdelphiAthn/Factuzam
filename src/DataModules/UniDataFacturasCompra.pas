@@ -114,7 +114,8 @@ implementation
 uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics,
-  inMtoFacturasCompra;
+  inMtoFacturasCompra,
+  inLibComprasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -308,6 +309,8 @@ begin
     else
       FieldByName('CODIGO_EMP_FACC').AsString := '0';
     FieldByName('CODIGO_PRV_FACC').AsString := '0';
+    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+      'CODIGO_EMP_FACC', 'ESIVA_RECARGO_COMPRAS_FACC');
   end;
   FTransicionEstadoFacc := '';
 end;
@@ -540,39 +543,10 @@ begin
 end;
 
 procedure TdmFacturasCompra.CalcularTotalesFacturaCompra;
-var
-  fBase, fIva, fTotal, fPorIva: Double;
-  bk: TBookmark;
 begin
-  if not unqryFacturasCompraLineas.Active then Exit;
-  fBase  := 0;
-  fIva   := 0;
-  fTotal := 0;
-  bk := unqryFacturasCompraLineas.GetBookmark;
-  try
-    unqryFacturasCompraLineas.DisableControls;
-    unqryFacturasCompraLineas.First;
-    while not unqryFacturasCompraLineas.Eof do
-    begin
-      fPorIva := unqryFacturasCompraLineas.
-                   FieldByName('PORCENTAJE_IVA_FACCLIN').AsFloat;
-      fTotal  := unqryFacturasCompraLineas.
-                   FieldByName('TOTAL_FACCLIN').AsFloat;
-      fBase   := fBase + fTotal;
-      fIva    := fIva  + (fTotal * fPorIva / 100);
-      unqryFacturasCompraLineas.Next;
-    end;
-  finally
-    if unqryFacturasCompraLineas.BookmarkValid(bk) then
-      unqryFacturasCompraLineas.GotoBookmark(bk);
-    unqryFacturasCompraLineas.FreeBookmark(bk);
-    unqryFacturasCompraLineas.EnableControls;
-  end;
-  if not (unqryTablaG.State in dsEditModes) then
-    unqryTablaG.Edit;
-  unqryTablaG.FieldByName('TOTAL_BASES_FACC').AsFloat     := fBase;
-  unqryTablaG.FieldByName('TOTAL_IMPUESTOS_FACC').AsFloat := fIva;
-  unqryTablaG.FieldByName('TOTAL_LIQUIDO_FACC').AsFloat   := fBase + fIva;
+  CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+    unqryFacturasCompraLineas, 'FACC', 'TOTAL_FACCLIN',
+    'TIPO_IVA_ARTICULO_FACCLIN', 'PORCENTAJE_IVA_FACCLIN');
 end;
 
 procedure TdmFacturasCompra.PrepararPrint(const ASerie, ANumero: string);

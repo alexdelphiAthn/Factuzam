@@ -200,6 +200,13 @@ SELECT t.script,
                          AND TABLE_NAME = 'fza_usuarios'
                          AND COLUMN_NAME = 'CODIGO_EMPLEADO_USU')
     UNION ALL
+    SELECT 275, 'empleados_ampliar_ocemp.sql',
+           'fza_empleados con datos legacy de ocemp',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empleados'
+                     AND COLUMN_NAME = 'BIC_EMPL')
+    UNION ALL
     SELECT 280, 'sku_descripcion_color.sql',
            'fza_articulos_atributos_basicos.DESCRIPCION_AAB + vista',
            EXISTS(SELECT 1 FROM information_schema.COLUMNS

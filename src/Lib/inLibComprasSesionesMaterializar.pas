@@ -946,6 +946,7 @@ begin
       '   POBLACION_EMPRESA_ALBC, PROVINCIA_EMPRESA_ALBC, ' +
       '   CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
       '   CODIGO_POSTAL_EMPRESA_ALBC, ' +
+      '   ESIVA_RECARGO_COMPRAS_ALBC, ' +
       '   CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, NIF_PRV_ALBC, ' +
       '   MOVIL_PRV_ALBC, EMAIL_PRV_ALBC, ' +
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
@@ -962,6 +963,8 @@ begin
       '       E.POBLACION_EMP, E.PROVINCIA_EMP, ' +
       '       E.CODIGO_PAI_EMP, E.NOMBRE_PAI_EMP, ' +
       '       E.CODIGO_POSTAL_EMP, ' +
+      '       IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
+      '              IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')), ' +
       '       P.CODIGO_PRV_PRV, P.RAZON_SOCIAL_PRV, P.NIF_PRV, ' +
       '       P.MOVIL_PRV, P.EMAIL_PRV, ' +
       '       P.DIRECCION1_PRV, P.DIRECCION2_PRV, ' +
@@ -1082,7 +1085,11 @@ begin
       '       C.PORCENTAJE_IVAN_ALBC = V.PORCENTAJE_NORMAL_IVA, ' +
       '       C.PORCENTAJE_IVAR_ALBC = V.PORCENTAJE_REDUCIDO_IVA, ' +
       '       C.PORCENTAJE_IVAS_ALBC = V.PORCENTAJE_SUPERREDUCIDO_IVA, ' +
-      '       C.PORCENTAJE_IVAE_ALBC = V.PORCENTAJE_EXENTO_IVA ' +
+      '       C.PORCENTAJE_IVAE_ALBC = V.PORCENTAJE_EXENTO_IVA, ' +
+      '       C.PORCENTAJE_REN_ALBC  = V.PORCENTAJE_NORMAL_RE_IVA, ' +
+      '       C.PORCENTAJE_RER_ALBC  = V.PORCENTAJE_REDUCIDO_RE_IVA, ' +
+      '       C.PORCENTAJE_RES_ALBC  = V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, ' +
+      '       C.PORCENTAJE_REE_ALBC  = V.PORCENTAJE_EXENTO_RE_IVA ' +
       ' WHERE C.NUMERO_ALBC = :n AND C.SERIE_ALBC = :s';
     q.ParamByName('n').AsString := ANumAlbc;
     q.ParamByName('s').AsString := ASerieAlbc;
@@ -1151,18 +1158,50 @@ begin
       'UPDATE fza_albaranes_compra C ' +
       '  JOIN ( ' +
       '       SELECT NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, ' +
-      '              IFNULL(SUM(TOTAL_ALBCLIN), 0) AS BASE, ' +
-      '              IFNULL(SUM(TOTAL_ALBCLIN * PORCENTAJE_IVA_ALBCLIN / 100), 0) AS IVA, ' +
+      '              IFNULL(SUM(L.TOTAL_ALBCLIN), 0) AS BASE, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_N, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_R, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_S, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN ELSE 0 END), 0) AS BASE_E, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_N, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_R, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_S, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_E, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_N, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_R, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_S, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_E, ' +
       '              COUNT(*) AS NLIN ' +
-      '         FROM fza_albaranes_compra_lineas ' +
-      '        WHERE NUMERO_ALBC_ALBCLIN = :n ' +
-      '          AND SERIE_ALBC_ALBCLIN  = :s ' +
+      '         FROM fza_albaranes_compra_lineas L ' +
+      '         JOIN fza_albaranes_compra H ' +
+      '           ON H.NUMERO_ALBC = L.NUMERO_ALBC_ALBCLIN ' +
+      '          AND H.SERIE_ALBC = L.SERIE_ALBC_ALBCLIN ' +
+      '         LEFT JOIN fza_ivas V ON V.CODIGO_IVA = H.CODIGO_IVA_ALBC ' +
+      '        WHERE L.NUMERO_ALBC_ALBCLIN = :n ' +
+      '          AND L.SERIE_ALBC_ALBCLIN  = :s ' +
       '        GROUP BY NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN) AS T ' +
       '    ON T.NUMERO_ALBC_ALBCLIN = C.NUMERO_ALBC ' +
       '   AND T.SERIE_ALBC_ALBCLIN  = C.SERIE_ALBC ' +
-      '   SET C.TOTAL_BASES_ALBC     = T.BASE, ' +
-      '       C.TOTAL_IMPUESTOS_ALBC = T.IVA, ' +
-      '       C.TOTAL_LIQUIDO_ALBC   = T.BASE + T.IVA, ' +
+      '   SET C.TOTAL_BASEI_IVAN_ALBC = T.BASE_N, ' +
+      '       C.TOTAL_BASEI_IVAR_ALBC = T.BASE_R, ' +
+      '       C.TOTAL_BASEI_IVAS_ALBC = T.BASE_S, ' +
+      '       C.TOTAL_BASEI_IVAE_ALBC = T.BASE_E, ' +
+      '       C.TOTAL_IVAN_ALBC = T.IVA_N, ' +
+      '       C.TOTAL_IVAR_ALBC = T.IVA_R, ' +
+      '       C.TOTAL_IVAS_ALBC = T.IVA_S, ' +
+      '       C.TOTAL_IVAE_ALBC = T.IVA_E, ' +
+      '       C.TOTAL_REN_ALBC = T.RE_N, ' +
+      '       C.TOTAL_RER_ALBC = T.RE_R, ' +
+      '       C.TOTAL_RES_ALBC = T.RE_S, ' +
+      '       C.TOTAL_REE_ALBC = T.RE_E, ' +
+      '       C.TOTAL_BASES_ALBC = T.BASE, ' +
+      '       C.TOTAL_RETENCION_ALBC = ' +
+      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100, ' +
+      '       C.TOTAL_IMPUESTOS_ALBC = ' +
+      '         T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E, ' +
+      '       C.TOTAL_LIQUIDO_ALBC = ' +
+      '         T.BASE + T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E - ' +
+      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100, ' +
       '       C.CONTADOR_LINEAS_ALBC = LPAD(T.NLIN * 10, 8, ''0'') ' +
       ' WHERE C.NUMERO_ALBC = :n AND C.SERIE_ALBC = :s';
     q.ParamByName('n').AsString := ANumAlbc;
@@ -1333,6 +1372,7 @@ begin
       '   POBLACION_EMPRESA_PEDC, PROVINCIA_EMPRESA_PEDC, ' +
       '   CODIGO_PAI_EMPRESA_PEDC, NOMBRE_PAI_EMPRESA_PEDC, ' +
       '   CODIGO_POSTAL_EMPRESA_PEDC, ' +
+      '   ESIVA_RECARGO_COMPRAS_PEDC, ' +
       '   CODIGO_PRV_PEDC, RAZON_SOCIAL_PRV_PEDC, NIF_PRV_PEDC, ' +
       '   MOVIL_PRV_PEDC, EMAIL_PRV_PEDC, ' +
       '   DIRECCION1_PRV_PEDC, DIRECCION2_PRV_PEDC, ' +
@@ -1350,6 +1390,8 @@ begin
       '       E.POBLACION_EMP, E.PROVINCIA_EMP, ' +
       '       E.CODIGO_PAI_EMP, E.NOMBRE_PAI_EMP, ' +
       '       E.CODIGO_POSTAL_EMP, ' +
+      '       IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
+      '              IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')), ' +
       '       P.CODIGO_PRV_PRV, P.RAZON_SOCIAL_PRV, P.NIF_PRV, ' +
       '       P.MOVIL_PRV, P.EMAIL_PRV, ' +
       '       P.DIRECCION1_PRV, P.DIRECCION2_PRV, ' +
@@ -1566,7 +1608,11 @@ begin
       '       C.PORCENTAJE_IVAN_PEDC = V.PORCENTAJE_NORMAL_IVA, ' +
       '       C.PORCENTAJE_IVAR_PEDC = V.PORCENTAJE_REDUCIDO_IVA, ' +
       '       C.PORCENTAJE_IVAS_PEDC = V.PORCENTAJE_SUPERREDUCIDO_IVA, ' +
-      '       C.PORCENTAJE_IVAE_PEDC = V.PORCENTAJE_EXENTO_IVA ' +
+      '       C.PORCENTAJE_IVAE_PEDC = V.PORCENTAJE_EXENTO_IVA, ' +
+      '       C.PORCENTAJE_REN_PEDC  = V.PORCENTAJE_NORMAL_RE_IVA, ' +
+      '       C.PORCENTAJE_RER_PEDC  = V.PORCENTAJE_REDUCIDO_RE_IVA, ' +
+      '       C.PORCENTAJE_RES_PEDC  = V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, ' +
+      '       C.PORCENTAJE_REE_PEDC  = V.PORCENTAJE_EXENTO_RE_IVA ' +
       ' WHERE C.NUMERO_PEDC = :n AND C.SERIE_PEDC = :s';
     q.ParamByName('n').AsString := ANumPedc;
     q.ParamByName('s').AsString := ASeriePedc;
@@ -1624,18 +1670,50 @@ begin
       'UPDATE fza_pedidos_compra C ' +
       '  JOIN ( ' +
       '       SELECT NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN, ' +
-      '              IFNULL(SUM(TOTAL_PEDCLIN), 0) AS BASE, ' +
-      '              IFNULL(SUM(TOTAL_PEDCLIN * PORCENTAJE_IVA_PEDCLIN / 100), 0) AS IVA, ' +
+      '              IFNULL(SUM(L.TOTAL_PEDCLIN), 0) AS BASE, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''N'' THEN L.TOTAL_PEDCLIN ELSE 0 END), 0) AS BASE_N, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''R'' THEN L.TOTAL_PEDCLIN ELSE 0 END), 0) AS BASE_R, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''S'' THEN L.TOTAL_PEDCLIN ELSE 0 END), 0) AS BASE_S, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''E'' THEN L.TOTAL_PEDCLIN ELSE 0 END), 0) AS BASE_E, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''N'' THEN L.TOTAL_PEDCLIN * L.PORCENTAJE_IVA_PEDCLIN / 100 ELSE 0 END), 0) AS IVA_N, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''R'' THEN L.TOTAL_PEDCLIN * L.PORCENTAJE_IVA_PEDCLIN / 100 ELSE 0 END), 0) AS IVA_R, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''S'' THEN L.TOTAL_PEDCLIN * L.PORCENTAJE_IVA_PEDCLIN / 100 ELSE 0 END), 0) AS IVA_S, ' +
+      '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_PEDCLIN = ''E'' THEN L.TOTAL_PEDCLIN * L.PORCENTAJE_IVA_PEDCLIN / 100 ELSE 0 END), 0) AS IVA_E, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_PEDCLIN = ''N'' THEN L.TOTAL_PEDCLIN * IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_N, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_PEDCLIN = ''R'' THEN L.TOTAL_PEDCLIN * IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_R, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_PEDCLIN = ''S'' THEN L.TOTAL_PEDCLIN * IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_S, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_PEDCLIN = ''E'' THEN L.TOTAL_PEDCLIN * IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_E, ' +
       '              COUNT(*) AS NLIN ' +
-      '         FROM fza_pedidos_compra_lineas ' +
-      '        WHERE NUMERO_PEDC_PEDCLIN = :n ' +
-      '          AND SERIE_PEDC_PEDCLIN  = :s ' +
+      '         FROM fza_pedidos_compra_lineas L ' +
+      '         JOIN fza_pedidos_compra H ' +
+      '           ON H.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+      '          AND H.SERIE_PEDC = L.SERIE_PEDC_PEDCLIN ' +
+      '         LEFT JOIN fza_ivas V ON V.CODIGO_IVA = H.CODIGO_IVA_PEDC ' +
+      '        WHERE L.NUMERO_PEDC_PEDCLIN = :n ' +
+      '          AND L.SERIE_PEDC_PEDCLIN  = :s ' +
       '        GROUP BY NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN) AS T ' +
       '    ON T.NUMERO_PEDC_PEDCLIN = C.NUMERO_PEDC ' +
       '   AND T.SERIE_PEDC_PEDCLIN  = C.SERIE_PEDC ' +
-      '   SET C.TOTAL_BASES_PEDC     = T.BASE, ' +
-      '       C.TOTAL_IMPUESTOS_PEDC = T.IVA, ' +
-      '       C.TOTAL_LIQUIDO_PEDC   = T.BASE + T.IVA, ' +
+      '   SET C.TOTAL_BASEI_IVAN_PEDC = T.BASE_N, ' +
+      '       C.TOTAL_BASEI_IVAR_PEDC = T.BASE_R, ' +
+      '       C.TOTAL_BASEI_IVAS_PEDC = T.BASE_S, ' +
+      '       C.TOTAL_BASEI_IVAE_PEDC = T.BASE_E, ' +
+      '       C.TOTAL_IVAN_PEDC = T.IVA_N, ' +
+      '       C.TOTAL_IVAR_PEDC = T.IVA_R, ' +
+      '       C.TOTAL_IVAS_PEDC = T.IVA_S, ' +
+      '       C.TOTAL_IVAE_PEDC = T.IVA_E, ' +
+      '       C.TOTAL_REN_PEDC = T.RE_N, ' +
+      '       C.TOTAL_RER_PEDC = T.RE_R, ' +
+      '       C.TOTAL_RES_PEDC = T.RE_S, ' +
+      '       C.TOTAL_REE_PEDC = T.RE_E, ' +
+      '       C.TOTAL_BASES_PEDC = T.BASE, ' +
+      '       C.TOTAL_RETENCION_PEDC = ' +
+      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_PEDC, 0) / 100, ' +
+      '       C.TOTAL_IMPUESTOS_PEDC = ' +
+      '         T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E, ' +
+      '       C.TOTAL_LIQUIDO_PEDC = ' +
+      '         T.BASE + T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E - ' +
+      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_PEDC, 0) / 100, ' +
       '       C.CONTADOR_LINEAS_PEDC = LPAD(T.NLIN * 10, 8, ''0'') ' +
       ' WHERE C.NUMERO_PEDC = :n AND C.SERIE_PEDC = :s';
     q.ParamByName('n').AsString := ANumPedc;
@@ -1693,13 +1771,36 @@ begin
       '       IFNULL(NULLIF(C.CODIGO_ALM_SESCEL,''''), :alm_cab) AS ALM_EFE, ' +
       '       L.CODIGO_ART_TENTATIVO_SESLIN, L.CODIGO_ART_REUSAR_SESLIN, ' +
       '       L.ACCION_DUPLICADO_SESLIN, ' +
-      '       L.PRECIO_COMPRA_SESLIN, L.TIPO_LINEA_SESLIN, ' +
+      '       CASE WHEN IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
+      '                         IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
+      '            THEN L.PRECIO_COMPRA_SESLIN * ' +
+      '              (1 + (CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+      '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
+      '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
+      '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
+      '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
+      '                       ELSE 0 END + ' +
+      '                     CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+      '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+      '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                       ELSE 0 END) / 100) ' +
+      '            ELSE L.PRECIO_COMPRA_SESLIN END AS PRECIO_COMPRA_SESLIN, ' +
+      '       L.TIPO_LINEA_SESLIN, ' +
       '       L.ID_VA_FILA_SESLIN ' +
       '  FROM fza_compras_sesiones_celdas C ' +
       '  JOIN fza_compras_sesiones_lineas L ' +
       '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
       '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
       '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
+      '  JOIN fza_compras_sesiones S ' +
+      '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+      '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+      '  LEFT JOIN fza_empresas E ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+      '  LEFT JOIN vi_ivas_empresa V ' +
+      '    ON V.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+      '   AND V.ESDEFAULT_IVA_IVAGRP = ''S'' ' +
       ' WHERE C.SERIE_SES_SESCEL  = :s ' +
       '   AND C.NUMERO_SES_SESCEL = :n ' +
       '   AND C.CANTIDAD_SESCEL   > 0 ' +
@@ -1855,7 +1956,31 @@ begin
       try
         qLin.Connection := conn;
         qLin.SQL.Text :=
-          'SELECT L.* FROM fza_compras_sesiones_lineas L ' +
+          'SELECT L.*, ' +
+          '       CASE WHEN IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
+          '                         IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
+          '            THEN L.PRECIO_COMPRA_SESLIN * ' +
+          '              (1 + (CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+          '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
+          '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
+          '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
+          '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
+          '                       ELSE 0 END + ' +
+          '                     CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+          '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+          '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+          '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+          '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+          '                       ELSE 0 END) / 100) ' +
+          '            ELSE L.PRECIO_COMPRA_SESLIN END AS PRECIO_COSTE_PROVEEDOR ' +
+          '  FROM fza_compras_sesiones_lineas L ' +
+          '  JOIN fza_compras_sesiones S ' +
+          '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+          '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+          '  LEFT JOIN fza_empresas E ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+          '  LEFT JOIN vi_ivas_empresa V ' +
+          '    ON V.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+          '   AND V.ESDEFAULT_IVA_IVAGRP = ''S'' ' +
           ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
           ' ORDER BY L.LINEA_SESLIN';
         qLin.ParamByName('s').AsString := sSerieSes;
@@ -1864,7 +1989,7 @@ begin
         while not qLin.Eof do
         begin
           iLin   := qLin.FieldByName('LINEA_SESLIN').AsInteger;
-          rPrecio := qLin.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
+          rPrecio := qLin.FieldByName('PRECIO_COSTE_PROVEEDOR').AsFloat;
           if qLin.FieldByName('ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
             sCodigoArt := qLin.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
           else

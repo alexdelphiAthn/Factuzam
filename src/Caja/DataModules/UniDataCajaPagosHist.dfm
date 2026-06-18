@@ -41,7 +41,7 @@ inherited dmCajaPagosHist: TdmCajaPagosHist
       'FROM vi_caja_pagos'
       'ORDER BY FECHA_PAGO DESC'
       '')
-    Active = True
+    Active = False
     Left = 24
   end
 end
