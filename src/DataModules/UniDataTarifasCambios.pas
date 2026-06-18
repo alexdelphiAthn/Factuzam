@@ -341,6 +341,8 @@ var
   dDto       : Double;
   dPorcDto   : Double;
   EsInsertar : Boolean;
+  fDesdeDto  : TField;
+  fHastaDto  : TField;
 begin
   Result := 0;
   AMensaje := '';
@@ -479,6 +481,36 @@ begin
           end;
         finally
           unqryLineas.EnableControls;
+        end;
+        // Ventana de aplicacion del descuento (cabecera de tarifa): si la
+        // sesion informa alguna de las dos fechas, se fija en la tarifa
+        // destino. Defensivo: si la BBDD aun no tiene las columnas de ventana
+        // (script no aplicado) no hace nada. Si ambas quedan vacias, no se
+        // toca la ventana actual de la tarifa.
+        fDesdeDto := unqryTablaG.FindField('FECHA_DESDE_DTO_TARC');
+        fHastaDto := unqryTablaG.FindField('FECHA_HASTA_DTO_TARC');
+        if (fDesdeDto <> nil) and (fHastaDto <> nil) and
+           ((not fDesdeDto.IsNull) or (not fHastaDto.IsNull)) then
+        begin
+          qryExec.SQL.Text :=
+            'UPDATE fza_tarifas SET ' +
+            '  FECHA_DESDE_DTO_TAR = :DESDE_DTO, ' +
+            '  FECHA_HASTA_DTO_TAR = :HASTA_DTO, ' +
+            '  USUARIO_MODIF = :USUARIO, ' +
+            '  INSTANTE_MODIF = NOW() ' +
+            'WHERE CODIGO_TAR_ARTTAR = :TAR';
+          if fDesdeDto.IsNull then
+            qryExec.ParamByName('DESDE_DTO').Clear
+          else
+            qryExec.ParamByName('DESDE_DTO').AsDateTime := fDesdeDto.AsDateTime;
+          if fHastaDto.IsNull then
+            qryExec.ParamByName('HASTA_DTO').Clear
+          else
+            qryExec.ParamByName('HASTA_DTO').AsDateTime := fHastaDto.AsDateTime;
+          qryExec.ParamByName('USUARIO').AsString := oUser;
+          qryExec.ParamByName('TAR').AsString :=
+            unqryTablaG.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString;
+          qryExec.Execute;
         end;
         qryExec.SQL.Text :=
           'UPDATE fza_tarifas_cambios SET ' +
