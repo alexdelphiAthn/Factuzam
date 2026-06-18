@@ -25,7 +25,7 @@ ModuleType=TBaseProject
 
 [EditWindow0]
 ViewCount=2
-CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
+CurrentView=1
 View0=0
 View1=1
 PercentageSizes=1
@@ -62,10 +62,6 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
 
 [View0]
-CustomEditViewType=TOTACustomEditView
-OTAEditViewType=WelcomePage.MainPage
-
-[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
 CursorX=26
@@ -75,6 +71,10 @@ LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
+
+[View1]
+CustomEditViewType=TOTACustomEditView
+OTAEditViewType=WelcomePage.MainPage
 
 [Watches]
 Count=0
