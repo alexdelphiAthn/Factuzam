@@ -57,6 +57,8 @@ type
     chkRedondear      : TcxDBCheckBox;
     dteDesde          : TcxDBDateEdit;
     dteHasta          : TcxDBDateEdit;
+    dteDtoDesde       : TcxDBDateEdit;
+    dteDtoHasta       : TcxDBDateEdit;
     btnCargar         : TcxButton;
     btnCalcular       : TcxButton;
     btnAplicar        : TcxButton;
@@ -123,7 +125,7 @@ begin
   pnlCabecera := TPanel.Create(Self);
   pnlCabecera.Parent := tsFicha;
   pnlCabecera.Align := alTop;
-  pnlCabecera.Height := 92;
+  pnlCabecera.Height := 128;
   pnlCabecera.BevelOuter := bvNone;
   pnlCabecera.ParentBackground := False;
   pnlCabecera.Color := clWhite;
@@ -169,6 +171,19 @@ begin
   dteHasta.Left := 928;
   dteHasta.Top := 46;
   dteHasta.Width := 110;
+  // Ventana de aplicacion del descuento que se fijara en la tarifa destino.
+  CrearEtiqueta(pnlCabecera, 'Dto. desde', 12, 90);
+  dteDtoDesde := TcxDBDateEdit.Create(Self);
+  dteDtoDesde.Parent := pnlCabecera;
+  dteDtoDesde.Left := 110;
+  dteDtoDesde.Top := 86;
+  dteDtoDesde.Width := 120;
+  CrearEtiqueta(pnlCabecera, 'Dto. hasta', 250, 90);
+  dteDtoHasta := TcxDBDateEdit.Create(Self);
+  dteDtoHasta.Parent := pnlCabecera;
+  dteDtoHasta.Left := 340;
+  dteDtoHasta.Top := 86;
+  dteDtoHasta.Width := 120;
 end;
 
 procedure TfrmMtoTarifasCambios.CrearParametros;
@@ -334,6 +349,10 @@ begin
   dteDesde.DataBinding.DataField := 'FECHA_DESDE_TARC';
   dteHasta.DataBinding.DataSource := dsTablaG;
   dteHasta.DataBinding.DataField := 'FECHA_HASTA_TARC';
+  dteDtoDesde.DataBinding.DataSource := dsTablaG;
+  dteDtoDesde.DataBinding.DataField := 'FECHA_DESDE_DTO_TARC';
+  dteDtoHasta.DataBinding.DataSource := dsTablaG;
+  dteDtoHasta.DataBinding.DataField := 'FECHA_HASTA_DTO_TARC';
 end;
 
 procedure TfrmMtoTarifasCambios.CrearTablaPrincipal;
