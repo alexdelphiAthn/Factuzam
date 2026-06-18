@@ -7,6 +7,7 @@
 *.so
 *.dsk
 *.~dsk
+*._sql
 *.dsv
 *.local
 fzam.res

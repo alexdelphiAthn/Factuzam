@@ -25,6 +25,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 0
+    ExplicitWidth = 1022
     object PanelOrigen: TGroupBox
       Left = 8
       Top = 8
@@ -229,6 +230,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 4
     TabOrder = 1
+    ExplicitWidth = 1022
     object GroupSetup: TGroupBox
       Left = 8
       Top = 4
@@ -237,6 +239,7 @@ object FormMigrator: TFormMigrator
       Align = alClient
       Caption = ' Preparar BBDD destino '
       TabOrder = 0
+      ExplicitWidth = 1006
       object btnDumpEsqueleto: TButton
         Left = 16
         Top = 18
@@ -310,6 +313,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 2
+    ExplicitWidth = 1022
     object lblUsuario: TLabel
       Left = 16
       Top = 14
@@ -327,21 +331,21 @@ object FormMigrator: TFormMigrator
     object lblFotosRaiz: TLabel
       Left = 16
       Top = 47
-      Width = 130
+      Width = 132
       Height = 17
       Caption = 'Ra'#237'z fotos legacy:'
     end
     object lblFotosDestino: TLabel
       Left = 470
       Top = 47
-      Width = 200
+      Width = 204
       Height = 17
       Caption = 'Destino fotos (appDirFotos):'
     end
     object lblFotosHilos: TLabel
       Left = 600
       Top = 14
-      Width = 88
+      Width = 85
       Height = 17
       Caption = 'Hilos fotos:'
     end
@@ -437,12 +441,14 @@ object FormMigrator: TFormMigrator
   end
   object PageInferior: TPageControl
     Left = 0
-    Top = 540
+    Top = 572
     Width = 1024
-    Height = 371
+    Height = 339
     ActivePage = TabProgreso
     Align = alClient
     TabOrder = 3
+    ExplicitWidth = 1022
+    ExplicitHeight = 331
     object TabProgreso: TTabSheet
       Caption = 'Progreso (dominios activos)'
       object MemoProgreso: TMemo
@@ -450,7 +456,7 @@ object FormMigrator: TFormMigrator
         Left = 3
         Top = 3
         Width = 1010
-        Height = 333
+        Height = 301
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -461,6 +467,8 @@ object FormMigrator: TFormMigrator
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
+        ExplicitWidth = 1008
+        ExplicitHeight = 293
       end
     end
     object TabLog: TTabSheet
@@ -471,7 +479,7 @@ object FormMigrator: TFormMigrator
         Left = 3
         Top = 3
         Width = 1010
-        Height = 333
+        Height = 301
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -492,9 +500,9 @@ object FormMigrator: TFormMigrator
         Left = 3
         Top = 3
         Width = 1010
-        Height = 333
+        Height = 301
         Align = alClient
-        Color = clGhostWhite
+        Color = clGhostwhite
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clMaroon
         Font.Height = -12
@@ -516,5 +524,7 @@ object FormMigrator: TFormMigrator
       item
         Width = 800
       end>
+    ExplicitTop = 903
+    ExplicitWidth = 1022
   end
 end
