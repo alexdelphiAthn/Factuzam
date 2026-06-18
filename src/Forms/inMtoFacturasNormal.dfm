@@ -470,7 +470,7 @@
                   Left = 21
                   Top = 0
                   TabStop = True
-                  Caption = 'Centros administrativos DIR3'
+                  Caption = 'Par'#225'metros eDoc'
                   TabOrder = 0
                   Height = 174
                   Width = 890
