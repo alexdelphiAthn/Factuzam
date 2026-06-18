@@ -33,7 +33,36 @@ uses
 implementation
 
 uses
-  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento;
+  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento,
+  inLibGlobalVar, Uni;
+
+// Cruza el codigo de empleado (CODIGO_CAJERO_FAC) con su diminutivo de
+// ticket en fza_empleados. Si no hay conexion o no se encuentra, devuelve
+// el codigo recibido para no dejar el dato en blanco.
+function ObtenerDiminutivoVendedor(const ACodigo: string): string;
+var
+  qry: TUniQuery;
+begin
+  Result := ACodigo;
+  if (Trim(ACodigo) <> '') and (oConn <> nil) and oConn.Connected then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT DIMINUTIVO_TICKET_EMPL' +
+        '  FROM fza_empleados' +
+        ' WHERE CODIGO_EMPL = :COD';
+      qry.ParamByName('COD').AsString := ACodigo;
+      qry.Open;
+      if (not qry.IsEmpty) and
+         (Trim(qry.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString) <> '') then
+        Result := Trim(qry.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString);
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
 
 procedure ImprimirT(const ACodigoEmpresa,
                           ACodigoAlmacen,
@@ -232,11 +261,12 @@ begin
     // === PIE DE TICKET ===
     Ticket.SaltarLineas(2);
     Ticket.Alinear(alCentro);
-    // Si tienes el nombre del cajero puedes cruzarlo,
-    //por ahora imprimimos el código
-    Ticket.EscribirLinea('LE ATENDIÓ: ' +
-                                 DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                             'CODIGO_CAJERO_FAC').AsString);
+    // Mostramos el diminutivo de ticket del vendedor (fza_empleados) en
+    // lugar de su codigo de empleado.
+    var sVendedor := ObtenerDiminutivoVendedor(
+          DatosCobro.TotalesFactura.Cabecera.FieldByName(
+            'CODIGO_CAJERO_FAC').AsString);
+    Ticket.EscribirLinea('LE ATENDIÓ: ' + sVendedor);
     if not ASinPrecios then
       Ticket.EscribirLinea('IVA INCLUIDO');
     Ticket.EscribirLinea('GRACIAS POR SU VISITA');
