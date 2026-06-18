@@ -218,6 +218,7 @@
             <Form>FormMigrator</Form>
         </DCCReference>
         <DCCReference Include="inLibMigEmpresas.pas"/>
+        <DCCReference Include="inLibMigEmpleados.pas"/>
         <DCCReference Include="inLibMigAlmacenes.pas"/>
         <DCCReference Include="inLibMigClientes.pas"/>
         <DCCReference Include="inLibMigProveedores.pas"/>

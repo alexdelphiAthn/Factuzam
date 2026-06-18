@@ -33,12 +33,99 @@ uses
   // Diminutivo de ticket del empleado (fza_empleados) a partir de su
   // codigo. Si no se resuelve, devuelve el propio codigo recibido.
   function ObtenerDiminutivoVendedor(const ACodigo: string): string;
+  // Escribe las cuatro lineas configurables del pie de caja de la empresa.
+  // Cada linea se limita al ancho real del ticket termico (42 caracteres).
+  procedure EscribirPieTicketCaja(ATicket: TTicketTermico;
+                                  const ACodigoEmpresa: string);
 
 implementation
 
 uses
   inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento,
   inLibGlobalVar, Uni;
+
+const
+  CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
+    'TEXTO_PIE_TICKET_CAJA_1_EMP',
+    'TEXTO_PIE_TICKET_CAJA_2_EMP',
+    'TEXTO_PIE_TICKET_CAJA_3_EMP',
+    'TEXTO_PIE_TICKET_CAJA_4_EMP');
+
+function CamposPieTicketCajaDisponibles: Boolean;
+var
+  qry: TUniQuery;
+begin
+  Result := False;
+  if (oConn <> nil) and oConn.Connected then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM INFORMATION_SCHEMA.COLUMNS ' +
+        ' WHERE TABLE_SCHEMA = DATABASE() ' +
+        '   AND TABLE_NAME = ''fza_empresas'' ' +
+        '   AND COLUMN_NAME IN (''TEXTO_PIE_TICKET_CAJA_1_EMP'', ' +
+        '                       ''TEXTO_PIE_TICKET_CAJA_2_EMP'', ' +
+        '                       ''TEXTO_PIE_TICKET_CAJA_3_EMP'', ' +
+        '                       ''TEXTO_PIE_TICKET_CAJA_4_EMP'')';
+      qry.Open;
+      Result := qry.FieldByName('N').AsInteger = 4;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
+procedure EscribirPieTicketCaja(ATicket: TTicketTermico;
+                                const ACodigoEmpresa: string);
+var
+  qry: TUniQuery;
+  i: Integer;
+  sLinea: string;
+  EsHaEscrito: Boolean;
+begin
+  EsHaEscrito := False;
+  if (ATicket <> nil) and (Trim(ACodigoEmpresa) <> '') and
+     CamposPieTicketCajaDisponibles then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT TEXTO_PIE_TICKET_CAJA_1_EMP, ' +
+        '       TEXTO_PIE_TICKET_CAJA_2_EMP, ' +
+        '       TEXTO_PIE_TICKET_CAJA_3_EMP, ' +
+        '       TEXTO_PIE_TICKET_CAJA_4_EMP ' +
+        '  FROM fza_empresas ' +
+        ' WHERE CODIGO_EMP_EMP = :EMP';
+      qry.ParamByName('EMP').AsString := ACodigoEmpresa;
+      qry.Open;
+      if not qry.IsEmpty then
+      begin
+        for i := Low(CAMPOS_PIE_TICKET_CAJA) to
+                 High(CAMPOS_PIE_TICKET_CAJA) do
+        begin
+          sLinea := Copy(Trim(qry.FieldByName(
+            CAMPOS_PIE_TICKET_CAJA[i]).AsString), 1, N_CHAR_LIN);
+          if sLinea <> '' then
+          begin
+            if not EsHaEscrito then
+            begin
+              ATicket.SaltarLineas(1);
+              ATicket.Alinear(alCentro);
+              EsHaEscrito := True;
+            end;
+            ATicket.EscribirLinea(sLinea);
+          end;
+        end;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
 
 // Cruza el codigo de empleado (CODIGO_CAJERO_FAC) con su diminutivo de
 // ticket en fza_empleados. Si no hay conexion o no se encuentra, devuelve
@@ -274,8 +361,7 @@ begin
     if not ASinPrecios then
       Ticket.EscribirLinea('IVA INCLUIDO');
     Ticket.EscribirLinea('GRACIAS POR SU VISITA');
-    // Puedes cargar las líneas personalizadas aquí de tu configuración
-    // Ticket.EscribirLinea(sCustomLine1);
+    EscribirPieTicketCaja(Ticket, ACodigoEmpresa);
     Ticket.SaltarLineas(1);
     Ticket.EscribirLinea('');
     Ticket.SaltarLineas(3);
@@ -293,6 +379,7 @@ begin
     FormPreview := TFormVisualizador.Create(nil);
     FormPreview.Hide;
     try
+      FormPreview.FRutaPDFReal := RutaFicheroPDF;
       FormPreview.CargarYMostrar(ComandosESC);
       FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
       if UpperCase(NombreImpresora) = 'DEBUG' then

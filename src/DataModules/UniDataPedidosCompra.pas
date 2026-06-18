@@ -65,7 +65,8 @@ uses
   inLibGlobalVar, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics,
   inMtoPedidosCompra,
-  inLibPedidosCompra;
+  inLibPedidosCompra,
+  inLibComprasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -174,6 +175,8 @@ begin
     else
       FieldByName('CODIGO_EMP_PEDC').AsString := '0';
     FieldByName('CODIGO_PRV_PEDC').AsString := '0';
+    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+      'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
   end;
 end;
 
@@ -409,38 +412,10 @@ begin
 end;
 
 procedure TdmPedidosCompra.CalcularTotalesPedidoCompra;
-var
-  fBase, fIva, fTotal, fPorIva: Double;
-  bk: TBookmark;
 begin
-  if not unqryPedidosCompraLineas.Active then Exit;
-  fBase  := 0;
-  fIva   := 0;
-  bk := unqryPedidosCompraLineas.GetBookmark;
-  try
-    unqryPedidosCompraLineas.DisableControls;
-    unqryPedidosCompraLineas.First;
-    while not unqryPedidosCompraLineas.Eof do
-    begin
-      fPorIva := unqryPedidosCompraLineas.
-                   FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
-      fTotal  := unqryPedidosCompraLineas.
-                   FieldByName('TOTAL_PEDCLIN').AsFloat;
-      fBase   := fBase + fTotal;
-      fIva    := fIva  + (fTotal * fPorIva / 100);
-      unqryPedidosCompraLineas.Next;
-    end;
-  finally
-    if unqryPedidosCompraLineas.BookmarkValid(bk) then
-      unqryPedidosCompraLineas.GotoBookmark(bk);
-    unqryPedidosCompraLineas.FreeBookmark(bk);
-    unqryPedidosCompraLineas.EnableControls;
-  end;
-  if not (unqryTablaG.State in dsEditModes) then
-    unqryTablaG.Edit;
-  unqryTablaG.FieldByName('TOTAL_BASES_PEDC').AsFloat     := fBase;
-  unqryTablaG.FieldByName('TOTAL_IMPUESTOS_PEDC').AsFloat := fIva;
-  unqryTablaG.FieldByName('TOTAL_LIQUIDO_PEDC').AsFloat   := fBase + fIva;
+  CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+    unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
+    'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
 end;
 
 end.

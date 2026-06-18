@@ -7,6 +7,7 @@ uses
   inLibMigDumpEsqueleto in 'inLibMigDumpEsqueleto.pas',
   UMigrator in 'UMigrator.pas' {FormMigrator},
   inLibMigEmpresas in 'inLibMigEmpresas.pas',
+  inLibMigEmpleados in 'inLibMigEmpleados.pas',
   inLibMigAlmacenes in 'inLibMigAlmacenes.pas',
   inLibMigClientes in 'inLibMigClientes.pas',
   inLibMigProveedores in 'inLibMigProveedores.pas',

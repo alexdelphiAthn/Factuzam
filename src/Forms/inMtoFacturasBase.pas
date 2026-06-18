@@ -62,6 +62,7 @@ type
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
     tsTotales: TcxTabSheet;
+    scrTotales: TScrollBox;
     lblTotalaPagar: TcxLabel;
     cxgrdLineasFactura: TcxGrid;
     tvLineasFactura: TcxGridDBTableView;

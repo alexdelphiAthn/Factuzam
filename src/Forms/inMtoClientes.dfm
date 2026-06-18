@@ -1,4 +1,4 @@
-inherited frmMtoClientes: TfrmMtoClientes
+﻿inherited frmMtoClientes: TfrmMtoClientes
   Caption = 'Clientes'
   ClientHeight = 703
   ClientWidth = 1141
@@ -392,15 +392,24 @@ inherited frmMtoClientes: TfrmMtoClientes
               Margins.Bottom = 4
               Caption = '&1_Domicilio fiscal'
               ImageIndex = 0
-              DesignSize = (
-                993
-                416)
+              object scrDomicilioFiscal: TScrollBox
+                Left = 0
+                Top = 0
+                Width = 993
+                Height = 416
+                Align = alClient
+                BorderStyle = bsNone
+                ParentColor = True
+                TabOrder = 0
+                DesignSize = (
+                  993
+                  416)
               object cxgrpbxIdentificacion: TcxGroupBox
                 AlignWithMargins = True
                 Left = 18
                 Top = 0
                 TabStop = True
-                Anchors = [akLeft, akTop, akRight, akBottom]
+                Anchors = [akLeft, akTop, akRight]
                 TabOrder = 0
                 Height = 265
                 Width = 646
@@ -668,19 +677,29 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Transparent = True
                 end
               end
+              end
             end
             object tsMasDatos: TcxTabSheet
               Caption = '&2_M'#225's datos'
               ImageIndex = 1
-              DesignSize = (
-                993
-                416)
+              object scrMasDatos: TScrollBox
+                Left = 0
+                Top = 0
+                Width = 993
+                Height = 416
+                Align = alClient
+                BorderStyle = bsNone
+                ParentColor = True
+                TabOrder = 0
+                DesignSize = (
+                  993
+                  416)
               object cxgrpbxDomicilio: TcxGroupBox
                 AlignWithMargins = True
                 Left = 21
                 Top = 0
                 TabStop = True
-                Anchors = [akLeft, akTop, akRight, akBottom]
+                Anchors = [akLeft, akTop, akRight]
                 TabOrder = 0
                 Height = 412
                 Width = 890
@@ -936,6 +955,7 @@ inherited frmMtoClientes: TfrmMtoClientes
                   Transparent = True
                   AnchorX = 516
                 end
+              end
               end
             end
             object tsParametrosEDoc: TcxTabSheet

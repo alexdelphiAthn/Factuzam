@@ -144,6 +144,7 @@ uses
   UMigConn,
   inLibMigDumpEsqueleto,
   inLibMigEmpresas,
+  inLibMigEmpleados,
   inLibMigAlmacenes,
   inLibMigClientes,
   inLibMigProveedores,
@@ -300,6 +301,9 @@ begin
   FEngine.Registrar('empresas', 'Empresas',
     'dbo.ocemp → fza_empresas',
     MigrarEmpresas);
+  FEngine.Registrar('empleados', 'Empleados / vendedores',
+    'dbo.ocemp → fza_empleados (requiere empleados_ampliar_ocemp.sql)',
+    MigrarEmpleados);
   FEngine.Registrar('almacenes', 'Almacenes',
     'dbo.ocalm → fza_almacenes (requiere empresas)',
     MigrarAlmacenes);
@@ -945,17 +949,20 @@ end;
 function WaveDeDominio(const sCodigo: string): Integer;
 begin
   if (sCodigo = 'empresas')         or
+     (sCodigo = 'empleados')        or
      (sCodigo = 'proveedores')      or
      (sCodigo = 'familias')         or
      (sCodigo = 'colores_maestros') or
-     (sCodigo = 'tallas_maestras') then Exit(0);
-  if (sCodigo = 'almacenes')   or
+     (sCodigo = 'tallas_maestras') then
+    Result := 0
+  else if (sCodigo = 'almacenes')   or
      (sCodigo = 'clientes')    or
      (sCodigo = 'articulos')   or
      (sCodigo = 'tallajes')    or
      (sCodigo = 'entorno_contadores')         or
-     (sCodigo = 'entorno_contadores_familia') then Exit(1);
-  if (sCodigo = 'articulos_colores')        or
+     (sCodigo = 'entorno_contadores_familia') then
+    Result := 1
+  else if (sCodigo = 'articulos_colores')        or
      (sCodigo = 'articulos_tallas')         or
      (sCodigo = 'articulos_tallajes_asign') or
      (sCodigo = 'articulos_proveedores')    or
@@ -963,19 +970,25 @@ begin
      (sCodigo = 'articulos_tarifas')        or
      (sCodigo = 'entorno_cajas')            or
      (sCodigo = 'entorno_series')           or
-     (sCodigo = 'skus')                     then Exit(2);
+     (sCodigo = 'skus')                     then
+    Result := 2
   // Compras (pedidos/albaranes) solo necesitan empresas, almacenes,
   // proveedores y SKUs (waves 0-2); no dependen de movimientos ni facturas.
   // NOTA: 'fotos' no aparece aqui: corre en un hilo independiente de
   // las waves (se lanza aparte en EjecutarMigracionesBackground).
-  if (sCodigo = 'inventarios')      or (sCodigo = 'movimientos')
-  or (sCodigo = 'ventas')           or (sCodigo = 'pedidos_compra')
-  or (sCodigo = 'albaranes_compra') then Exit(3);
+  else if (sCodigo = 'inventarios') or
+     (sCodigo = 'movimientos')      or
+     (sCodigo = 'ventas')           or
+     (sCodigo = 'pedidos_compra')   or
+     (sCodigo = 'albaranes_compra') then
+    Result := 3
   // facturas va DESPUES de movimientos: al terminar enlaza cada movimiento
   // con su factura (REF_MOV) y necesita los movimientos ya migrados.
-  if (sCodigo = 'facturas') then Exit(4);
+  else if (sCodigo = 'facturas') then
+    Result := 4
   // Default: wave 0 (conservador, sin deps conocidas)
-  Result := 0;
+  else
+    Result := 0;
 end;
 
 procedure TFormMigrator.EjecutarMigracionesBackground;

@@ -246,15 +246,27 @@ begin
   if unqryTablaG.FindField('FORMATO_DOCUMENTO_EMP') <> nil then
     unqryTablaG.FindField('FORMATO_DOCUMENTO_EMP').AsString :=
       FORMATO_DOCUMENTO_DEFECTO;
+  if unqryTablaG.FindField('ESIVA_RECARGO_COMPRAS_EMP') <> nil then
+    unqryTablaG.FindField('ESIVA_RECARGO_COMPRAS_EMP').AsString := 'N';
 end;
 
 procedure TdmEmpresas.unqryTablaGAfterPost(DataSet: TDataSet);
 var
   oCampoFormato: TField;
+  oCampoPie1: TField;
+  oCampoPie2: TField;
+  oCampoPie3: TField;
+  oCampoPie4: TField;
   sCodigo: string;
   sFormato: string;
+  oConexion: TUniConnection;
+  unqryPie: TUniQuery;
   unqryFormato: TUniQuery;
 begin
+  // Usar la conexion del Post evita bloquear la misma fila con oConn.
+  oConexion := oConn;
+  if DataSet is TUniQuery then
+    oConexion := TUniQuery(DataSet).Connection;
   oCampoFormato := DataSet.FindField('FORMATO_DOCUMENTO_EMP');
   if oCampoFormato <> nil then
   begin
@@ -264,7 +276,7 @@ begin
       sFormato := FORMATO_DOCUMENTO_DEFECTO;
     unqryFormato := TUniQuery.Create(nil);
     try
-      unqryFormato.Connection := oConn;
+      unqryFormato.Connection := oConexion;
       unqryFormato.SQL.Text :=
         'UPDATE fza_empresas ' +
         '   SET FORMATO_DOCUMENTO_EMP = :FORMATO ' +
@@ -274,6 +286,40 @@ begin
       unqryFormato.Execute;
     finally
       FreeAndNil(unqryFormato);
+    end;
+  end;
+  oCampoPie1 := DataSet.FindField('TEXTO_PIE_TICKET_CAJA_1_EMP');
+  oCampoPie2 := DataSet.FindField('TEXTO_PIE_TICKET_CAJA_2_EMP');
+  oCampoPie3 := DataSet.FindField('TEXTO_PIE_TICKET_CAJA_3_EMP');
+  oCampoPie4 := DataSet.FindField('TEXTO_PIE_TICKET_CAJA_4_EMP');
+  if (oCampoPie1 <> nil) and
+     (oCampoPie2 <> nil) and
+     (oCampoPie3 <> nil) and
+     (oCampoPie4 <> nil) then
+  begin
+    sCodigo := DataSet.FieldByName('CODIGO_EMP_EMP').AsString;
+    unqryPie := TUniQuery.Create(nil);
+    try
+      unqryPie.Connection := oConexion;
+      unqryPie.SQL.Text :=
+        'UPDATE fza_empresas ' +
+        '   SET TEXTO_PIE_TICKET_CAJA_1_EMP = :PIE1, ' +
+        '       TEXTO_PIE_TICKET_CAJA_2_EMP = :PIE2, ' +
+        '       TEXTO_PIE_TICKET_CAJA_3_EMP = :PIE3, ' +
+        '       TEXTO_PIE_TICKET_CAJA_4_EMP = :PIE4 ' +
+        ' WHERE CODIGO_EMP_EMP = :CODIGO_EMP';
+      unqryPie.ParamByName('PIE1').AsString :=
+        Copy(Trim(oCampoPie1.AsString), 1, 42);
+      unqryPie.ParamByName('PIE2').AsString :=
+        Copy(Trim(oCampoPie2.AsString), 1, 42);
+      unqryPie.ParamByName('PIE3').AsString :=
+        Copy(Trim(oCampoPie3.AsString), 1, 42);
+      unqryPie.ParamByName('PIE4').AsString :=
+        Copy(Trim(oCampoPie4.AsString), 1, 42);
+      unqryPie.ParamByName('CODIGO_EMP').AsString := sCodigo;
+      unqryPie.Execute;
+    finally
+      FreeAndNil(unqryPie);
     end;
   end;
 end;
@@ -447,6 +493,18 @@ begin
         FindField('FORMATO_DOCUMENTO_EMP').AsString :=
           FORMATO_DOCUMENTO_DEFECTO;
     end;
+    if FindField('TEXTO_PIE_TICKET_CAJA_1_EMP') <> nil then
+      FindField('TEXTO_PIE_TICKET_CAJA_1_EMP').AsString :=
+        Copy(Trim(FindField('TEXTO_PIE_TICKET_CAJA_1_EMP').AsString), 1, 42);
+    if FindField('TEXTO_PIE_TICKET_CAJA_2_EMP') <> nil then
+      FindField('TEXTO_PIE_TICKET_CAJA_2_EMP').AsString :=
+        Copy(Trim(FindField('TEXTO_PIE_TICKET_CAJA_2_EMP').AsString), 1, 42);
+    if FindField('TEXTO_PIE_TICKET_CAJA_3_EMP') <> nil then
+      FindField('TEXTO_PIE_TICKET_CAJA_3_EMP').AsString :=
+        Copy(Trim(FindField('TEXTO_PIE_TICKET_CAJA_3_EMP').AsString), 1, 42);
+    if FindField('TEXTO_PIE_TICKET_CAJA_4_EMP') <> nil then
+      FindField('TEXTO_PIE_TICKET_CAJA_4_EMP').AsString :=
+        Copy(Trim(FindField('TEXTO_PIE_TICKET_CAJA_4_EMP').AsString), 1, 42);
     sCodigoEmpresa := Trim(FindField('CODIGO_EMP_EMP').AsString);
     sRazonSocial := Trim(FindField('RAZON_SOCIAL_EMP').AsString);
     if ((sRazonSocial = '') or (SimbolosProhibidos(sRazonSocial))) then

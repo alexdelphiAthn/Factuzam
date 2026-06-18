@@ -104,7 +104,8 @@ uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics,
   inMtoAlbaranesCompra,
-  inLibAlbaranesCompraMovimientos;
+  inLibAlbaranesCompraMovimientos,
+  inLibComprasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -206,6 +207,8 @@ begin
     // (albaran_compra_deposito.sql).
     if FindField('ESDEPOSITO_ALBC') <> nil then
       FieldByName('ESDEPOSITO_ALBC').AsString := 'N';
+    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+      'CODIGO_EMP_ALBC', 'ESIVA_RECARGO_COMPRAS_ALBC');
   end;
   FTransicionEstadoAlbc := '';
 end;
@@ -451,39 +454,10 @@ begin
 end;
 
 procedure TdmAlbaranesCompra.CalcularTotalesAlbaranCompra;
-var
-  fBase, fIva, fTotal, fPorIva: Double;
-  bk: TBookmark;
 begin
-  if not unqryAlbaranesCompraLineas.Active then Exit;
-  fBase  := 0;
-  fIva   := 0;
-  fTotal := 0;
-  bk := unqryAlbaranesCompraLineas.GetBookmark;
-  try
-    unqryAlbaranesCompraLineas.DisableControls;
-    unqryAlbaranesCompraLineas.First;
-    while not unqryAlbaranesCompraLineas.Eof do
-    begin
-      fPorIva := unqryAlbaranesCompraLineas.
-                   FieldByName('PORCENTAJE_IVA_ALBCLIN').AsFloat;
-      fTotal  := unqryAlbaranesCompraLineas.
-                   FieldByName('TOTAL_ALBCLIN').AsFloat;
-      fBase   := fBase + fTotal;
-      fIva    := fIva  + (fTotal * fPorIva / 100);
-      unqryAlbaranesCompraLineas.Next;
-    end;
-  finally
-    if unqryAlbaranesCompraLineas.BookmarkValid(bk) then
-      unqryAlbaranesCompraLineas.GotoBookmark(bk);
-    unqryAlbaranesCompraLineas.FreeBookmark(bk);
-    unqryAlbaranesCompraLineas.EnableControls;
-  end;
-  if not (unqryTablaG.State in dsEditModes) then
-    unqryTablaG.Edit;
-  unqryTablaG.FieldByName('TOTAL_BASES_ALBC').AsFloat     := fBase;
-  unqryTablaG.FieldByName('TOTAL_IMPUESTOS_ALBC').AsFloat := fIva;
-  unqryTablaG.FieldByName('TOTAL_LIQUIDO_ALBC').AsFloat   := fBase + fIva;
+  CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+    unqryAlbaranesCompraLineas, 'ALBC', 'TOTAL_ALBCLIN',
+    'TIPO_IVA_ARTICULO_ALBCLIN', 'PORCENTAJE_IVA_ALBCLIN');
 end;
 
 procedure TdmAlbaranesCompra.PrepararPrint(const ASerie, ANumero: string);

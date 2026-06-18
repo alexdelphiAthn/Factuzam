@@ -58,6 +58,8 @@ type
     pcDevolucion:           TcxPageControl;
     tsLineasDevolucion:     TcxTabSheet;
     tsObservaciones:     TcxTabSheet;
+    tsTotales:           TcxTabSheet;
+    scrTotales:          TScrollBox;
     pnlBottomTotales:    TPanel;
     cxgrdLineasDevolucion:  TcxGrid;
     tvLineasDevolucion:     TcxGridDBTableView;

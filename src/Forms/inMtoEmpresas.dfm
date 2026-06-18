@@ -1282,8 +1282,83 @@
                 end
               end
             end
+            object tsPieTicketCaja: TcxTabSheet
+              Caption = '&5_Pie Ticket Caja'
+              ImageIndex = 5
+              DesignSize = (
+                929
+                421)
+              object lblPieTicketCaja1: TcxLabel
+                Left = 31
+                Top = 31
+                Caption = 'L'#237'nea 1'
+                TabOrder = 0
+                Transparent = True
+              end
+              object txtTEXTO_PIE_TICKET_CAJA_1_EMP: TcxDBTextEdit
+                Left = 120
+                Top = 27
+                Anchors = [akLeft, akTop, akRight]
+                DataBinding.DataField = 'TEXTO_PIE_TICKET_CAJA_1_EMP'
+                DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 42
+                TabOrder = 1
+                Width = 560
+              end
+              object lblPieTicketCaja2: TcxLabel
+                Left = 31
+                Top = 69
+                Caption = 'L'#237'nea 2'
+                TabOrder = 2
+                Transparent = True
+              end
+              object txtTEXTO_PIE_TICKET_CAJA_2_EMP: TcxDBTextEdit
+                Left = 120
+                Top = 65
+                Anchors = [akLeft, akTop, akRight]
+                DataBinding.DataField = 'TEXTO_PIE_TICKET_CAJA_2_EMP'
+                DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 42
+                TabOrder = 3
+                Width = 560
+              end
+              object lblPieTicketCaja3: TcxLabel
+                Left = 31
+                Top = 107
+                Caption = 'L'#237'nea 3'
+                TabOrder = 4
+                Transparent = True
+              end
+              object txtTEXTO_PIE_TICKET_CAJA_3_EMP: TcxDBTextEdit
+                Left = 120
+                Top = 103
+                Anchors = [akLeft, akTop, akRight]
+                DataBinding.DataField = 'TEXTO_PIE_TICKET_CAJA_3_EMP'
+                DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 42
+                TabOrder = 5
+                Width = 560
+              end
+              object lblPieTicketCaja4: TcxLabel
+                Left = 31
+                Top = 145
+                Caption = 'L'#237'nea 4'
+                TabOrder = 6
+                Transparent = True
+              end
+              object txtTEXTO_PIE_TICKET_CAJA_4_EMP: TcxDBTextEdit
+                Left = 120
+                Top = 141
+                Anchors = [akLeft, akTop, akRight]
+                DataBinding.DataField = 'TEXTO_PIE_TICKET_CAJA_4_EMP'
+                DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 42
+                TabOrder = 7
+                Width = 560
+              end
+            end
             object tsOtros: TcxTabSheet
-              Caption = '&5_Otros'
+              Caption = '&6_Otros'
               ImageIndex = 3
               ExplicitLeft = 0
               ExplicitTop = 0
@@ -1640,6 +1715,18 @@
               Properties.OnChange = chkAplicaRetencionesPropertiesChange
               Style.TransparentBorder = False
               TabOrder = 7
+              Transparent = True
+            end
+            object chkRecargoEquivalenciaCompras: TcxDBCheckBox
+              Left = 552
+              Top = 122
+              Caption = 'Recargo equivalencia compras'
+              DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_EMP'
+              DataBinding.DataSource = dsTablaG
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.TransparentBorder = False
+              TabOrder = 10
               Transparent = True
             end
             object lblCanalIVA: TcxLabel

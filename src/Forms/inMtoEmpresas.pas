@@ -202,6 +202,7 @@ type
     spltFicha: TcxSplitter;
     btnIraArticulo: TcxButton;
     tsSeries: TcxTabSheet;
+    tsPieTicketCaja: TcxTabSheet;
     pnlSeriesOpts: TPanel;
     btnAddSerie: TcxButton;
     // Alta masiva: crea las series que falten para todos los tipos de
@@ -234,6 +235,7 @@ type
     txtRAZONSOCIAL_EMPRESA: TcxDBTextEdit;
     chkActivo: TcxDBCheckBox;
     chkAplicaRetenciones: TcxDBCheckBox;
+    chkRecargoEquivalenciaCompras: TcxDBCheckBox;
     lblCanalIVA: TcxLabel;
     cbbZonaIVA: TcxDBLookupComboBox;
     ActionListEmpresas: TActionList;
@@ -266,6 +268,14 @@ type
     lblFormatoDocumento: TcxLabel;
     txtFORMATO_DOCUMENTO_EMP: TcxDBTextEdit;
     lblFormatoDocumentoAyuda: TcxLabel;
+    lblPieTicketCaja1: TcxLabel;
+    lblPieTicketCaja2: TcxLabel;
+    lblPieTicketCaja3: TcxLabel;
+    lblPieTicketCaja4: TcxLabel;
+    txtTEXTO_PIE_TICKET_CAJA_1_EMP: TcxDBTextEdit;
+    txtTEXTO_PIE_TICKET_CAJA_2_EMP: TcxDBTextEdit;
+    txtTEXTO_PIE_TICKET_CAJA_3_EMP: TcxDBTextEdit;
+    txtTEXTO_PIE_TICKET_CAJA_4_EMP: TcxDBTextEdit;
     dbmSeriesCODIGO_ALMACEN_SERIE: TcxGridDBColumn;
     dbmSeriesCODIGO_CAJA_SERIE: TcxGridDBColumn;
     dbmSeriesSERIE_SERIE: TcxGridDBColumn;

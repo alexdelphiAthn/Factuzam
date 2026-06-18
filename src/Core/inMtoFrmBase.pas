@@ -53,6 +53,7 @@ type
     // ltAvanzado esta activo en TLog (parametro appLogAvanzado).
     procedure DoShow; override;
     procedure DoClose(var Action: TCloseAction); override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     { Public declarations }
     // Articulo/sku del registro/linea en foco, para la consulta de stock
@@ -76,6 +77,7 @@ procedure TfrmBase.FormCreate(Sender: TObject);
 var
   i: Integer;
 begin
+  KeyPreview := True;
   Localizer1.Locale := 1034;
   Localizer1.Active := True;
   // Etiquetas TcxLabel transparentes (sin fondo solido) en toda la jerarquia
@@ -98,6 +100,18 @@ begin
   if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, Self.ClassName, 'Close', Self.Name);
   inherited;
+end;
+
+procedure TfrmBase.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_ESCAPE) and (fsModal in FormState) then
+  begin
+    Key := 0;
+    if CloseQuery then
+      ModalResult := mrCancel;
+  end
+  else
+    inherited KeyDown(Key, Shift);
 end;
 
 procedure TfrmBase.ResolverArtSkuStock(out ACodArt, ACodSku: string);

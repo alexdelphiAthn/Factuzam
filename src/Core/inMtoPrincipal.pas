@@ -21,13 +21,12 @@ uses
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI, System.SysUtils,
   System.Variants,
   System.Classes, Vcl.Graphics, System.Generics.Collections, Vcl.ActnList,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, SynEditHighlighter,
-  SynHighlighterSQL,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
   cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, cxLabel,
   Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
   UniDataPerfiles, cxLocalization, Vcl.Buttons, inLibUnitForm, JvMenus,
-  System.UITypes, DAScript, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
+  System.UITypes, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
   JvComponentBase, JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
   dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
   dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,
@@ -46,9 +45,8 @@ uses
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinWXI, dxSkinXmas2008Blue,
   inLibFormManager, System.Actions,
-  Vcl.ComCtrls, JvExComCtrls, JvStatusBar, SynEdit, Vcl.AppEvnts,
-  Backup.Engine, Backup.Types, Providers_MySQL, Providers_MySQL_Helpers,
-  ScriptWriters, Core_Interfaces, Core_Helpers, UniScript, System.Diagnostics,
+  Vcl.ComCtrls, JvExComCtrls, JvStatusBar, Vcl.AppEvnts,
+  System.Diagnostics,
   System.Threading,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage;
 
@@ -229,19 +227,16 @@ type
     procedure mnuLisVentasClick(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure WMFreeControl(var Msg: TMessage); message WM_USER + 1;
-    procedure LogFormClose(Sender: TObject; var Action: TCloseAction);
   private
     FException: Boolean;
-    FStopwatch: TStopwatch;
-    FLogForm: TForm;
-    FLogMemo: TSynEdit;
-    FLogBuffer: TStringList;
     FSavedNCMValid: Boolean;
     FExceptionDialogMemo: TcxMemo;
     FEnOperacionLarga: Boolean;
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
+    FWorkerOperacion: TThread;
     FReiniciando: Boolean;
+    FCancelaOperacionSolicitada: Boolean;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -268,6 +263,8 @@ type
                                ALogBuffer: TStringList);
     procedure RestoreFinalizar(AExito: Boolean; const AError: string;
                                 ALogBuffer: TStringList);
+    function EsErrorCancelacion(const AError: string): Boolean;
+    procedure SolicitarCancelarOperacionEnCurso;
     procedure MostrarBarraProgreso;
     procedure OcultarBarraProgreso;
     function ContieneDDL(const ASQL: string): Boolean;
@@ -279,13 +276,6 @@ type
     // cualquier ventana si hay impresora de tickets asignada y Ctrl+U abre
     // la consulta de stock en cualquier pantalla.
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
-    procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
-                              var Action: TErrorAction);
-    procedure ScriptAfterExecute(Sender: TObject;
-                                 SQL: string);
-    procedure ScriptBeforeExecute(Sender: TObject;
-                                  var SQL: string;
-                                  var Omit: Boolean);
     procedure MostrarAvisoCaducidadCertificado;
   public
     { Public declarations }
@@ -482,88 +472,12 @@ begin
   end;
 end;
 
-procedure TfrmMtoPrincipal.LogFormClose(Sender: TObject;
-                                        var Action: TCloseAction);
-begin
-  Action := caFree;
-  FLogForm := nil;
-  FLogMemo := nil;
-end;
-
-procedure TfrmMtoPrincipal.ScriptBeforeExecute(Sender: TObject;
-                                               var SQL: string;
-                                               var Omit: Boolean);
-begin
-  if FLogBuffer = nil then
-    FLogBuffer := TStringList.Create;
-  FLogBuffer.Add(' -- Ejecutando (' +
-                  FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
-  FLogBuffer.Add(SQL);
-  FStopwatch := TStopwatch.StartNew;
-end;
-
-procedure TfrmMtoPrincipal.ScriptAfterExecute(Sender: TObject; SQL: string);
-begin
-  FStopwatch.Stop;
-  if FLogBuffer <> nil then
-  begin
-    FLogBuffer.Add(Format(' -- [OK] Filas afectadas: %d | Tiempo: %d ms',
-                           [(Sender as TUniScript).RowsAffected,
-                           FStopwatch.ElapsedMilliseconds]));
-    FLogBuffer.Add('--------------------------------------------------');
-  end;
-  // Actualizar barra de progreso (cada 20 sentencias)
-  if (FProgressBar <> nil) and FProgressBar.Visible then
-  begin
-    FProgressBar.Position := FProgressBar.Position + 1;
-    if (FProgressBar.Position mod 20) = 0 then
-    begin
-      FProgressLabel.Caption :=
-        Format('Sentencia %d / %d...',
-               [FProgressBar.Position, FProgressBar.Max]);
-      FProgressBar.Update;
-      FProgressLabel.Update;
-    end;
-  end;
-end;
-
 function TfrmMtoPrincipal.ContieneDDL(const ASQL: string): Boolean;
 var
   Patron: string;
 begin
   Patron := '\b(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b';
   Result := TRegEx.IsMatch(ASQL, Patron, [roIgnoreCase]);
-end;
-
-procedure TfrmMtoPrincipal.UniScript1Error(Sender: TObject;
-                                           E: Exception;
-                                           SQL: string;
-                                           var Action: TErrorAction);
-var
-  Respuesta: Integer;
-begin
-  if Assigned(FLogMemo) then
-  begin
-    FStopwatch.Stop;
-    FLogMemo.Lines.Add('  [ERROR] ' + E.Message + Format(' Tiempo: %d ms',
-                                   [FStopwatch.ElapsedMilliseconds]));
-    FLogMemo.Lines.Add('--------------------------------------------------');
-    FLogMemo.SelStart := Length(FLogMemo.Text);
-    SendMessage(FLogMemo.Handle, EM_SCROLLCARET, 0, 0);
-    Application.ProcessMessages;
-  end;
-  var MsgCorta := E.Message;
-  if Length(MsgCorta) > 200 then
-    MsgCorta := Copy(MsgCorta, 1, 200) + '...';
-  Respuesta := MessageDlg(
-    'Ocurrió un error ejecutando el script.' +  sLineBreak +
-    'Detalle del error: ' + MsgCorta + sLineBreak + sLineBreak +
-    '¿Desea ignorar el error y continuar con el script?',
-    mtError, [mbYes, mbNo], 0);
-  if Respuesta = mrYes then
-    Action := eaContinue
-  else
-    Action := eaFail;
 end;
 
 procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject;
@@ -632,6 +546,9 @@ begin
   FSavedNCMValid := False;
   FAppEvents.OnIdle := ApplicationEvents1Idle;
   FAppEvents.OnMessage := AppMessage;
+  FWorkerOperacion := nil;
+  FCancelaOperacionSolicitada := False;
+  FEnOperacionLarga := False;
   sDis := '';
   oMemoSQL := cxMemo1;
   // Splash no-modal al arrancar. Lo mantenemos visible mientras corre el
@@ -956,6 +873,8 @@ begin
       False, '');
     Worker.OnProgreso := WorkerProgreso;
     Worker.OnFinalizar := BackupFinalizar;
+    FCancelaOperacionSolicitada := False;
+    FWorkerOperacion := Worker;
     Worker.Start;
   end;
 end;
@@ -1180,9 +1099,16 @@ end;
 
 procedure TfrmMtoPrincipal.BackupFinalizar(AExito: Boolean;
   const AError: string; ALogBuffer: TStringList);
+var
+  bCancelada: Boolean;
 begin
+  bCancelada := (not AExito) and EsErrorCancelacion(AError);
+  FWorkerOperacion := nil;
+  FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
-  if AExito then
+  if bCancelada then
+    ShowMessage('Operación cancelada.')
+  else if AExito then
   begin
     inLibLog.Log.LogInfo('Copia de seguridad creada exitosamente');
     ShowMessage('La copia se guardó exitosamente.');
@@ -1199,26 +1125,69 @@ procedure TfrmMtoPrincipal.RestoreFinalizar(AExito: Boolean;
   const AError: string; ALogBuffer: TStringList);
 var
   LogForm: TfrmMtoModalScriptLog;
+  bCancelada: Boolean;
 begin
+  bCancelada := (not AExito) and EsErrorCancelacion(AError);
+  FWorkerOperacion := nil;
+  FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
-  // Mostrar log de ejecución
-  LogForm := TfrmMtoModalScriptLog.Create(Self);
-  LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
-  LogForm.LogMemo.Lines.Add(
-    '-------------------------------------------------');
-  if ALogBuffer <> nil then
+  if bCancelada then
   begin
-    LogForm.AppendLines(ALogBuffer);
-    FreeAndNil(ALogBuffer);
-  end;
-  LogForm.Show;
-  if AExito then
-    ShowMessage('El script se ejecutó exitosamente')
+    if ALogBuffer <> nil then
+      FreeAndNil(ALogBuffer);
+    ShowMessage('Operación cancelada. La base de datos puede haber quedado ' +
+                'parcialmente modificada.');
+  end
   else
   begin
-    inLibLog.Log.LogError('Error en restauración: ' + AError);
-    ShowMessage('Hubo problemas al ejecutar el script.' +
-                sLineBreak + AError);
+    // Mostrar log de ejecución
+    LogForm := TfrmMtoModalScriptLog.Create(Self);
+    LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
+    LogForm.LogMemo.Lines.Add(
+      '-------------------------------------------------');
+    if ALogBuffer <> nil then
+    begin
+      LogForm.AppendLines(ALogBuffer);
+      FreeAndNil(ALogBuffer);
+    end;
+    LogForm.Show;
+    if AExito then
+      ShowMessage('El script se ejecutó exitosamente')
+    else
+    begin
+      inLibLog.Log.LogError('Error en restauración: ' + AError);
+      ShowMessage('Hubo problemas al ejecutar el script.' +
+                  sLineBreak + AError);
+    end;
+  end;
+end;
+
+function TfrmMtoPrincipal.EsErrorCancelacion(const AError: string): Boolean;
+begin
+  Result := Pos('cancelada', LowerCase(AError)) > 0;
+end;
+
+procedure TfrmMtoPrincipal.SolicitarCancelarOperacionEnCurso;
+begin
+  if FEnOperacionLarga then
+  begin
+    if FCancelaOperacionSolicitada then
+      ShowMessage('La cancelación ya está solicitada. Espere a que termine ' +
+                  'la sentencia actual.')
+    else if MessageDlg('Hay una operación en curso moviendo datos.' +
+                       sLineBreak + sLineBreak +
+                       '¿Desea abandonar la operación en curso?',
+                       mtWarning, [mbYes, mbNo], 0) = mrYes then
+    begin
+      FCancelaOperacionSolicitada := True;
+      if Assigned(FWorkerOperacion) then
+        FWorkerOperacion.Terminate;
+      if FProgressLabel <> nil then
+      begin
+        FProgressLabel.Caption := 'Cancelando operación...';
+        FProgressLabel.Update;
+      end;
+    end;
   end;
 end;
 
@@ -1267,12 +1236,7 @@ end;
 
 function TfrmMtoPrincipal.CopiaSeguridad: Boolean;
 var
-  Options: TBackupOptions;
-  Provider: IDBMetadataProvider;
-  Helpers: IDBHelpers;
-  Writer: IScriptWriter;
-  Engine: TDBBackupEngine;
-  IncludeTables, ExcludeTables: TStringList;
+  sError: string;
 begin
   Result := False;
   saveDialog.Title := 'Guardar copia de seguridad';
@@ -1290,54 +1254,37 @@ begin
     FileMask := '*.*';
   end;
   saveDialog.FileName := 'copiaseguridad' +
-                           FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
+                            FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
   if saveDialog.Execute then
   begin
-    Options.WithData := True;
-    Options.WithTriggers := True;
-    Options.WithProcedures := True;
-    Options.WithFunctions := True;
-    Options.WithViews := True;
-    Options.DropTablesFirst := True;
-    Options.UseTransactions := True;
-    Options.ExtendedInsert := True;
-    Options.ExtendedInsertRows := 500;
-    IncludeTables := TStringList.Create;
-    ExcludeTables := TStringList.Create;
-    Provider := TMySQLMetadataProvider.Create(FDmConn.conUni,
-                                              FDmConn.conUni.Database);
-    Helpers := TMySQLHelpers.Create;
-    Writer := TScriptWriter.Create(saveDialog.FileName);
     MostrarBarraProgreso;
     try
-      try
-        Engine := TDBBackupEngine.Create(Provider, Writer, Helpers,
-                                         Options,
-                                         IncludeTables, ExcludeTables);
-        try
-          Engine.OnProgress := WorkerProgreso;
-          Engine.GenerateBackup;
-          inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
-                                                           saveDialog.FileName);
-          ShowMessage('La copia se guardó exitosamente.');
-          Result := True;
-        finally
-          FreeAndNil(Engine);
-        end;
-      except
-        on E: Exception do
-        begin
-          inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' +
-                                                                     E.Message);
-          ShowMessage('No se pudo crear la copia de seguridad.' + sLineBreak +
-                                                                     E.Message);
-          Result := False;
-        end;
+      Result := CrearCopiaSeguridadBD(
+        FDmConn.conUni.Server,
+        FDmConn.conUni.Port,
+        FDmConn.conUni.Database,
+        FDmConn.conUni.Username,
+        FDmConn.conUni.Password,
+        saveDialog.FileName,
+        False,
+        '',
+        WorkerProgreso,
+        sError);
+      if Result then
+      begin
+        inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
+                             saveDialog.FileName);
+        ShowMessage('La copia se guardó exitosamente.');
+      end
+      else
+      begin
+        inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' +
+                              sError);
+        ShowMessage('No se pudo crear la copia de seguridad.' + sLineBreak +
+                    sError);
       end;
     finally
       OcultarBarraProgreso;
-      FreeAndNil(IncludeTables);
-      FreeAndNil(ExcludeTables);
     end;
   end;
 end;
@@ -1391,8 +1338,13 @@ procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
   inherited;
+  if FEnOperacionLarga then
+  begin
+    CanClose := False;
+    SolicitarCancelarOperacionEnCurso;
+  end
   // Cierre por reinicio de sesion ('Invocar login'): no preguntar.
-  if (FReiniciando) then
+  else if (FReiniciando) then
     CanClose := True
   else if (pcPrincipal.PageCount = 0) then
   begin
@@ -1443,7 +1395,20 @@ begin
     // tickets asignada. Sin impresora solo responde con la sesion de caja
     // abierta (frmMtoMenuCaja vivo), para avisar de la falta de
     // configuracion. F9 sola, sin Ctrl/Alt/Mayus.
-    if (Msg.wParam = WPARAM(VK_F9)) and
+    if (Msg.wParam = WPARAM(VK_ESCAPE)) and FEnOperacionLarga then
+    begin
+      SolicitarCancelarOperacionEnCurso;
+      Handled := True;
+    end
+    else if (Msg.wParam = WPARAM(VK_ESCAPE)) and
+            (Application.ModalLevel > 0) and
+            Assigned(Screen.ActiveForm) and
+            (Screen.ActiveForm <> Self) then
+    begin
+      Screen.ActiveForm.Close;
+      Handled := True;
+    end
+    else if (Msg.wParam = WPARAM(VK_F9)) and
        (ImpresoraCajaAsignada or Assigned(frmMtoMenuCaja)) and
        (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
        (GetKeyState(VK_SHIFT) >= 0) then
@@ -1681,6 +1646,8 @@ begin
       '');
     Worker.OnProgreso := WorkerProgreso;
     Worker.OnFinalizar := RestoreFinalizar;
+    FCancelaOperacionSolicitada := False;
+    FWorkerOperacion := Worker;
     Worker.Start;
   end;
 end;

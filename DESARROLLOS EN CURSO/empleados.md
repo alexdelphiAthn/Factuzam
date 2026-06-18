@@ -38,9 +38,21 @@ logado**. La auditoría es siempre del usuario; el empleado es otra cosa.
 | Columna                  | Tipo         | Notas                          |
 |--------------------------|--------------|--------------------------------|
 | `CODIGO_EMPL` (PK)       | varchar(20)  | Número de empleado en caja     |
-| `NOMBRE_EMPL`            | varchar(100) | Dato básico                    |
-| `DIRECCION_EMPL`         | varchar(200) | Dato básico                    |
-| `TELEFONO_EMPL`          | varchar(20)  | Dato básico                    |
+| `NOMBRE_EMPL`            | varchar(100) | Nombre visible                 |
+| `RAZON_SOCIAL_EMPL`      | varchar(100) | Legacy `ocemp.RazonSocial`    |
+| `NIF_EMPL`               | varchar(20)  | Legacy `ocemp.NIF`            |
+| `DIRECCION_EMPL`         | varchar(200) | Dirección 1                    |
+| `DIRECCION2_EMPL`        | varchar(200) | Dirección 2                    |
+| `CODIGO_POSTAL_EMPL`     | varchar(10)  | Código postal                  |
+| `POBLACION_EMPL`         | varchar(100) | Población                      |
+| `PROVINCIA_EMPL`         | varchar(100) | Provincia                      |
+| `TELEFONO_EMPL`          | varchar(20)  | Teléfono 1                     |
+| `TELEFONO2_EMPL`         | varchar(20)  | Teléfono 2                     |
+| `FAX_EMPL`               | varchar(20)  | Fax                            |
+| `EMAIL_EMPL`             | varchar(100) | Email                          |
+| `WEB_EMPL`               | varchar(200) | Web                            |
+| `IBAN_EMPL`              | varchar(35)  | IBAN                           |
+| `BIC_EMPL`               | varchar(11)  | BIC                            |
 | `DIMINUTIVO_TICKET_EMPL` | varchar(10)  | Diminutivo de caja (ticket)    |
 | `ESACTIVO_EMPL`          | char(1)      | S/N, def. 'S'                  |
 | auditoría (4 columnas)   |              | = usuario logado               |
@@ -55,6 +67,11 @@ El script vuelca desde `fza_usuarios` cada fila con `CODIGO_EMPLEADO_USU`:
 DIMINUTIVO_TICKET_USU`, `ESACTIVO_EMPL := ESACTIVO_USU`. `NOMBRE_EMPL` se
 siembra provisionalmente con `USUARIO_USU` para que la fila no quede sin nombre;
 se edita después en la pantalla. `INSERT IGNORE` → idempotente.
+
+La migración legacy SQL Server → MariaDB rellena vendedores desde `dbo.ocemp`
+directamente en `fza_empleados` mediante el dominio `empleados` del migrador.
+Antes hay que ejecutar `empleados_ampliar_ocemp.sql`, que añade los campos de
+contacto/identificación necesarios. Esta ruta no escribe en `fza_usuarios`.
 
 ## Fase 1 — tabla y pantalla (este script)
 
@@ -94,3 +111,4 @@ y editarlas.
 
 1. `empleados.sql` (fase 1, si no se aplicó aún).
 2. `empleados_retirar_columnas_usuarios.sql` (fase 2).
+3. `empleados_ampliar_ocemp.sql` (campos legacy para migración de vendedores).

@@ -384,6 +384,7 @@ begin
       Ticket.EscribirLinea('Conforme, el cliente');
       Ticket.SaltarLineas(4);
       Ticket.LineaSeparadora('_');
+      EscribirPieTicketCaja(Ticket, ACodigoEmpresa);
       Ticket.CortarPapel;
       // =======================================================================
       // IMPRESIÓN / VISUALIZACIÓN
@@ -651,6 +652,7 @@ begin
         Ticket.EscribirLinea(QryCab.FieldByName(
                                'TEXTO_LEGAL_EMPRESA_FAC').AsString);
       end;
+      EscribirPieTicketCaja(Ticket, ACodigoEmpresa);
       var CodigoCliente := qryCab.FieldByName('CODIGO_CLI_FAC').AsString;
 //      ImprimirRecordatorio(CodigoCliente);
       Ticket.CortarPapel;
@@ -662,6 +664,7 @@ begin
       FormPreview := TFormVisualizador.Create(nil);
       try
         FormPreview.Hide;
+        FormPreview.FRutaPDFReal := RutaFicheroPDF;
         FormPreview.CargarYMostrar(ComandosESC);
         FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
         if UpperCase(ANombreImpresora) = 'DEBUG' then
@@ -882,6 +885,7 @@ begin
     FormPreview := TFormVisualizador.Create(nil);
     try
       FormPreview.Hide;
+      FormPreview.FRutaPDFReal := RutaFicheroPDF;
       FormPreview.CargarYMostrar(ComandosESC);
       FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
       if UpperCase(NombreImpresora) = 'DEBUG' then

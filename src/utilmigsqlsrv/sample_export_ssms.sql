@@ -21,7 +21,7 @@
 USE Herreras;
 GO
 
-PRINT '== Empresas (ocemp) ==';
+PRINT '== Empresas / vendedores (ocemp) ==';
 SELECT TOP 20 *
 FROM dbo.ocemp
 ORDER BY Empresa;

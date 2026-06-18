@@ -1,4 +1,4 @@
-inherited frmMtoFacturasBase: TfrmMtoFacturasBase
+﻿inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
@@ -1138,6 +1138,15 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
               Margins.Bottom = 4
               Caption = '&2_Totales'
               ImageIndex = 2
+              object scrTotales: TScrollBox
+                Left = 0
+                Top = 0
+                Width = 1071
+                Height = 395
+                Align = alClient
+                BorderStyle = bsNone
+                ParentBackground = True
+                TabOrder = 0
               object lblTotalaPagar: TcxLabel
                 Left = 105
                 Top = 199
@@ -1681,6 +1690,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   TabOrder = 30
                   Transparent = True
                 end
+              end
               end
             end
             object tsRecibos: TcxTabSheet

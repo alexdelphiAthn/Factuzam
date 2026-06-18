@@ -217,6 +217,15 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
               TabOrder = 1
               Width = 340
             end
+            object btnGuardarPrecargaCaja: TcxButton
+              Left = 768
+              Top = 4
+              Width = 130
+              Height = 25
+              Caption = 'Guardar precarga'
+              TabOrder = 4
+              OnClick = btnGuardarPrecargaCajaClick
+            end
           end
         end
       end

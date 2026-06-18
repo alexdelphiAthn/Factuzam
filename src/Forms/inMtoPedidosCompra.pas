@@ -65,6 +65,8 @@ type
     pcPedido:            TcxPageControl;
     tsLineasPedido:      TcxTabSheet;
     tsObservaciones:     TcxTabSheet;
+    tsTotales:           TcxTabSheet;
+    scrTotales:          TScrollBox;
     pnlBottomTotales:    TPanel;
     cxgrdLineasPedido:   TcxGrid;
     tvLineasPedido:      TcxGridDBTableView;

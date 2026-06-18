@@ -19,6 +19,7 @@ src/utilmigsqlsrv/
 ├── UMigEngine.pas                 Motor: registro, log, transacciones
 ├── UMigrator.pas / .dfm           Formulario principal (UI)
 ├── inLibMigEmpresas.pas           dbo.ocemp      → fza_empresas
+├── inLibMigEmpleados.pas          dbo.ocemp      → fza_empleados
 ├── inLibMigAlmacenes.pas          dbo.ocalm      → fza_almacenes
 ├── inLibMigClientes.pas           dbo.occli      → fza_clientes
 ├── inLibMigProveedores.pas        dbo.ocpro      → fza_proveedores
@@ -146,6 +147,9 @@ de este branch ya las traen:
 |              | (amplía `LINEA_INVLIN` de varchar(4) → varchar(8). |
 |              | Si un almacén legacy tiene >9999 SKUs en stock no  |
 |              | cabe en 4 chars). |
+| Empleados    | `DESARROLLOS EN CURSO/empleados_ampliar_ocemp.sql` |
+|              | (añade datos de contacto/identificación de         |
+|              | `dbo.ocemp` a `fza_empleados`, sin tocar usuarios).|
 
 ## Fotos legacy (dominio `fotos`)
 
@@ -199,7 +203,7 @@ workers de la actual han terminado.
 
 | Wave | Dominios | Depende de |
 |------|----------|------------|
-| 0 | formas_pago · ivas_grupos · ivas · empresas · proveedores · familias · colores_maestros · tallas_maestras | — |
+| 0 | formas_pago · ivas_grupos · ivas · empresas · empleados · proveedores · familias · colores_maestros · tallas_maestras | — |
 | 1 | almacenes · clientes · articulos · tallajes | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
 | 3 | inventarios · movimientos · ventas · facturas | Wave 2 |

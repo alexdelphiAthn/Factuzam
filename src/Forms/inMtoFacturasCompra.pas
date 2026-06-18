@@ -58,6 +58,8 @@ type
     pcFactura:           TcxPageControl;
     tsLineasFactura:     TcxTabSheet;
     tsObservaciones:     TcxTabSheet;
+    tsTotales:           TcxTabSheet;
+    scrTotales:          TScrollBox;
     pnlBottomTotales:    TPanel;
     cxgrdLineasFactura:  TcxGrid;
     tvLineasFactura:     TcxGridDBTableView;
