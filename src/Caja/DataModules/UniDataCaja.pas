@@ -538,6 +538,7 @@ var
   CantidadPendiente: Double;
   TipoIVA, EsImpIncl, Descripcion: string;
   PorcIVA: Currency;
+  FechaCreacion: TDateTime;
 begin
   QryDep := TUniQuery.Create(nil);
   try
@@ -552,6 +553,7 @@ begin
         '       d.TIPO_IVA_DEP, '              +
         '       d.PORCENTAJE_IVA_DEP, '            +
         '       d.ESIMP_INCL_DEP, '            +
+        '       d.FECHA_CREACION_DEP, '        +
         '       a.DESCRIPCION_ART '       +  // <-- join directo
         '  FROM fza_depositos_cliente d '      +
         '  LEFT JOIN fza_articulos a '         +
@@ -576,6 +578,7 @@ begin
         PorcIVA := QryDep.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
         EsImpIncl         := QryDep.FieldByName('ESIMP_INCL_DEP').AsString;
         Descripcion       := QryDep.FieldByName('DESCRIPCION_ART').AsString;
+        FechaCreacion     := QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime;
         // ── LÍNEA 1: LA PRENDA ───────────────────────────────────────────
         // *** SIN FOnRellenarArticulo ni FOnRellenarAtributos ***
         // Todo viene del SELECT, cero queries adicionales por fila
@@ -587,6 +590,8 @@ begin
           Descripcion;
         cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := CantidadPendiente;
         cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'S';
+        cdsLineas.FieldByName('FECHA_DEPOSITO_DEP').AsString :=
+          FormatDateTime('dd/mm/yyyy hh:nn', FechaCreacion);
         cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'COBRAR';
         cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString := TipoIVA;
         cdsLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency := PorcIVA;
@@ -627,6 +632,8 @@ begin
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString       :=
             'Abono a cuenta ' + Sku;
           cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'A';
+          cdsLineas.FieldByName('FECHA_DEPOSITO_DEP').AsString :=
+            FormatDateTime('dd/mm/yyyy hh:nn', FechaCreacion);
           cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := -1;
           cdsLineas.FieldByName('TIPO_ARTICULO_FACLIN').AsString := 'SERVICIO';
           cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString := TipoIVA;
@@ -2170,6 +2177,9 @@ begin
     Add('PRECIO_ORIGINAL_DEP', ftCurrency);
     Add('ACCION_DEPOSITO', ftString, 15); // Valores: 'COBRAR' o 'CANCELAR'
     Add('ANTICIPO_PREVIO', ftCurrency);   // Memoria del dinero adelantado
+    // Fecha y hora de la operacion del deposito (F2 cuenta cliente), ya
+    // formateada para mostrarse tal cual en el grid.
+    Add('FECHA_DEPOSITO_DEP', ftString, 20);
     // -- CLAVES DE ENLACE CON CABECERA (Foreign Keys) --
     Add('SERIE_FAC_FACLIN', ftString, 20, True);
     Add('NUMERO_FAC_FACLIN', ftString, 20, True);
