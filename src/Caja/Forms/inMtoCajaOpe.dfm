@@ -569,9 +569,11 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           object tvFechaOperacion: TcxGridDBColumn
             Caption = 'Fecha op.'
             DataBinding.FieldName = 'FECHA_DEPOSITO_DEP'
+            PropertiesClassName = 'TcxTextEditProperties'
+            Properties.ReadOnly = True
             Options.Editing = False
             Visible = False
-            Width = 90
+            Width = 120
           end
         end
         object cxgrdlvlLineasOpe: TcxGridLevel
