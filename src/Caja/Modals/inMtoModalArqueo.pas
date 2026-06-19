@@ -272,6 +272,9 @@ type
     FAlmacen      : string;
     FCaja         : string;
     FArqueoActual : TArqueoCaja;
+    function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
+    function  FechaDesdeSeleccionada: TDateTime;
+    function  FechaHastaSeleccionada: TDateTime;
     procedure RellenarPantalla(const AArqueo: TArqueoCaja);
     procedure Recalcular;
     procedure ConfigurarResumenes;
@@ -328,8 +331,9 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     // Defaults: desde = 00:00:00, hasta = 23:59:59 del mismo día/rango.
-    frm.dteFechaDesde.Date := DateOf(AFechaDesde);
-    frm.dteFechaHasta.Date := DateOf(AFechaHasta) + EncodeTime(23, 59, 59, 0);
+    frm.dteFechaDesde.EditValue := DateOf(AFechaDesde);
+    frm.dteFechaHasta.EditValue :=
+      DateOf(AFechaHasta) + EncodeTime(23, 59, 59, 0);
     // Permisos
     if Assigned(oPermisos) then
     begin
@@ -370,6 +374,27 @@ begin
   Action := caHide;
 end;
 
+function TfrmModalArqueo.FechaEditada(AEdit: TcxDateEdit): TDateTime;
+var
+  vFecha: Variant;
+begin
+  vFecha := AEdit.EditValue;
+  if VarIsNull(vFecha) or VarIsEmpty(vFecha) then
+    Result := AEdit.Date
+  else
+    Result := VarToDateTime(vFecha);
+end;
+
+function TfrmModalArqueo.FechaDesdeSeleccionada: TDateTime;
+begin
+  Result := FechaEditada(dteFechaDesde);
+end;
+
+function TfrmModalArqueo.FechaHastaSeleccionada: TDateTime;
+begin
+  Result := FechaEditada(dteFechaHasta);
+end;
+
 procedure TfrmModalArqueo.btnAtrasClick(Sender: TObject);
 begin
   inherited;
@@ -395,7 +420,8 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
-                           dteFechaDesde.Date, dteFechaHasta.Date,
+                           FechaDesdeSeleccionada,
+                           FechaHastaSeleccionada,
                            oNomImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
@@ -435,8 +461,8 @@ begin
     Exit;
   // Series facturadas en el rango; si no hay ninguna, no hay tira que sacar.
   Series := TTiraCajaTicket.ObtenerSeries(FConn, FEmpresa, FAlmacen, FCaja,
-                                          dteFechaDesde.Date,
-                                          dteFechaHasta.Date);
+                                          FechaDesdeSeleccionada,
+                                          FechaHastaSeleccionada);
   if Length(Series) = 0 then
   begin
     Application.MessageBox(
@@ -460,7 +486,8 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
-                             dteFechaDesde.Date, dteFechaHasta.Date,
+                             FechaDesdeSeleccionada,
+                             FechaHastaSeleccionada,
                              sSerie, bQR, oNomImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
@@ -483,15 +510,15 @@ procedure TfrmModalArqueo.dteFechaDesdePropertiesChange(Sender: TObject);
 begin
   inherited;
   // Fuerza que "hasta" no quede antes que "desde"
-  if dteFechaHasta.Date < dteFechaDesde.Date then
-    dteFechaHasta.Date := dteFechaDesde.Date;
+  if FechaHastaSeleccionada < FechaDesdeSeleccionada then
+    dteFechaHasta.EditValue := FechaDesdeSeleccionada;
 end;
 
 procedure TfrmModalArqueo.dteFechaHastaPropertiesChange(Sender: TObject);
 begin
   inherited;
-  if dteFechaHasta.Date < dteFechaDesde.Date then
-    dteFechaHasta.Date := dteFechaDesde.Date;
+  if FechaHastaSeleccionada < FechaDesdeSeleccionada then
+    dteFechaHasta.EditValue := FechaDesdeSeleccionada;
 end;
 
 // =============================================================================
@@ -503,11 +530,11 @@ begin
   Screen.Cursor := crHourGlass;
   try
     FArqueoActual := TArqueoCalculadora.Calcular(FConn,
-                                                  FEmpresa,
-                                                  FAlmacen,
-                                                  FCaja,
-                                                  dteFechaDesde.Date,
-                                                  dteFechaHasta.Date);
+                                                   FEmpresa,
+                                                   FAlmacen,
+                                                   FCaja,
+                                                   FechaDesdeSeleccionada,
+                                                   FechaHastaSeleccionada);
     RellenarPantalla(FArqueoActual);
     CargarRecuento(FArqueoActual);
     RefrescarResumenes;
@@ -678,8 +705,8 @@ begin
   Q.ParamByName('pEMPRESA').AsString := FEmpresa;
   Q.ParamByName('pALMACEN').AsString := FAlmacen;
   Q.ParamByName('pCAJA').AsString    := FCaja;
-  Q.ParamByName('pFDESDE').AsDateTime    := dteFechaDesde.Date;
-  Q.ParamByName('pFHASTA').AsDateTime    := dteFechaHasta.Date;
+  Q.ParamByName('pFDESDE').AsDateTime    := FechaDesdeSeleccionada;
+  Q.ParamByName('pFHASTA').AsDateTime    := FechaHastaSeleccionada;
   Q.Open;
 end;
 
@@ -1173,17 +1200,20 @@ begin
       ' WHERE CODIGO_EMP_ARQ  = :E ' +
       '   AND CODIGO_ALM_ARQ  = :A ' +
       '   AND CODIGO_CAJA_ARQ = :C ' +
-      '   AND FECHA_DESDE_ARQ = :FD ' +
-      '   AND FASE_ARQ = ''CERRADO''';
+      '   AND FASE_ARQ = ''CERRADO''' +
+      '   AND FECHA_DESDE_ARQ <= :FH ' +
+      '   AND FECHA_HASTA_ARQ >= :FD ';
     qryChk.ParamByName('E').AsString  := FEmpresa;
     qryChk.ParamByName('A').AsString  := FAlmacen;
     qryChk.ParamByName('C').AsString  := FCaja;
-    qryChk.ParamByName('FD').AsDate   := DateOf(dteFechaDesde.Date);
+    qryChk.ParamByName('FD').AsDateTime := FechaDesdeSeleccionada;
+    qryChk.ParamByName('FH').AsDateTime := FechaHastaSeleccionada;
     qryChk.Open;
     if qryChk.FieldByName('N').AsInteger > 0 then
     begin
       Application.MessageBox(
-        'Ya existe un cierre para esta fecha y caja. No se permite doble cierre.',
+        'Ya existe un cierre que solapa este rango y caja. ' +
+        'No se permite doble cierre.',
         'Arqueo duplicado', MB_OK or MB_ICONWARNING);
       Exit;
     end;

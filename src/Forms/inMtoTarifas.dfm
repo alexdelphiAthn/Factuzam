@@ -177,36 +177,6 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               TabOrder = 5
               Transparent = True
             end
-            object lblDtoDesde: TcxLabel
-              Left = 440
-              Top = 49
-              Caption = 'Dto. desde'
-              TabOrder = 6
-              Transparent = True
-            end
-            object dteFechaDtoDesde: TcxDBDateEdit
-              Left = 440
-              Top = 76
-              DataBinding.DataField = 'FECHA_DESDE_DTO_TAR'
-              DataBinding.DataSource = dsTablaG
-              TabOrder = 7
-              Width = 169
-            end
-            object lblDtoHasta: TcxLabel
-              Left = 648
-              Top = 49
-              Caption = 'Dto. hasta'
-              TabOrder = 8
-              Transparent = True
-            end
-            object dteFechaDtoHasta: TcxDBDateEdit
-              Left = 648
-              Top = 76
-              DataBinding.DataField = 'FECHA_HASTA_DTO_TAR'
-              DataBinding.DataSource = dsTablaG
-              TabOrder = 9
-              Width = 153
-            end
           end
         end
         object pnlBodyFicha: TPanel
@@ -223,7 +193,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
             Height = 419
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsArticulos
+            Properties.ActivePage = tsOtros
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 415
             ClientRectLeft = 4
@@ -679,6 +649,36 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   TabOrder = 6
                   Transparent = True
                 end
+              end
+              object dteFechaDtoDesde: TcxDBDateEdit
+                Left = 18
+                Top = 44
+                DataBinding.DataField = 'FECHA_DESDE_DTO_TAR'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 1
+                Width = 169
+              end
+              object dteFechaDtoHasta: TcxDBDateEdit
+                Left = 226
+                Top = 44
+                DataBinding.DataField = 'FECHA_HASTA_DTO_TAR'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 2
+                Width = 153
+              end
+              object lblDtoDesde: TcxLabel
+                Left = 18
+                Top = 17
+                Caption = 'Dto. desde'
+                TabOrder = 3
+                Transparent = True
+              end
+              object lblDtoHasta: TcxLabel
+                Left = 226
+                Top = 17
+                Caption = 'Dto. hasta'
+                TabOrder = 4
+                Transparent = True
               end
             end
           end
