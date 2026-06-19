@@ -314,7 +314,7 @@ inherited frmPrintArqueos: TfrmPrintArqueos
           Height = 18.000000000000000000
           DataSet = fxdsArqueos
           DataSetName = 'Arqueos'
-          DisplayFormat.FormatStr = 'dd/mm/yyyy'
+          DisplayFormat.FormatStr = 'dd/mm/yyyy hh:nn'
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -333,7 +333,7 @@ inherited frmPrintArqueos: TfrmPrintArqueos
           Height = 18.000000000000000000
           DataSet = fxdsArqueos
           DataSetName = 'Arqueos'
-          DisplayFormat.FormatStr = 'dd/mm/yyyy'
+          DisplayFormat.FormatStr = 'dd/mm/yyyy hh:nn'
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack

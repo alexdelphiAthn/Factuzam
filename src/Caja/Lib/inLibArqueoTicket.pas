@@ -576,9 +576,11 @@ begin
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
     Ticket.EscribirLinea(Format('ARQUEO CAJA %s', [ACaja]));
-    Ticket.EscribirLinea(Format('DÍAS %s   %s',
-      [FormatDateTime('dd/mm/yy', AFechaDesde),
-       FormatDateTime('dd/mm/yy', AFechaHasta)]));
+    Ticket.EscribirLinea('PERIODO SELECCIONADO');
+    Ticket.EscribirLinea(Format('DESDE %s',
+      [FormatDateTime('dd/mm/yy hh:nn:ss', AFechaDesde)]));
+    Ticket.EscribirLinea(Format('HASTA %s',
+      [FormatDateTime('dd/mm/yy hh:nn:ss', AFechaHasta)]));
     Ticket.Negrita(False);
     // Marca de reimpresión: el arqueo original ya se emitió en su día
     if ADuplicado then
@@ -856,11 +858,16 @@ begin
   finally
     FreeAndNil(Q);
   end;
-  // El arqueo cubre el día entero: hasta = 23:59:59 del FECHA_HASTA grabado.
+  // Los cierres antiguos guardaban fechas sin hora. Se mantienen como dia
+  // completo; los nuevos cierres por horas conservan su datetime exacto.
   if bOk then
+  begin
+    if (Frac(dDesde) = 0) and (Frac(dHasta) = 0) then
+      dHasta := dHasta + EncodeTime(23, 59, 59, 0);
     Imprimir(AConn, sEmp, sAlm, sCaja,
-             dDesde, dHasta + EncodeTime(23, 59, 59, 0),
+             dDesde, dHasta,
              ANombreImpresora, True);
+  end;
 end;
 
 class procedure TArqueoTicket.ImprimirCierreDesdeHistorico(

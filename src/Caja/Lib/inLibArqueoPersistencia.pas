@@ -237,8 +237,8 @@ begin
       Query.ParamByName('pEMP').AsString         := AArqueo.Empresa;
       Query.ParamByName('pALM').AsString         := AArqueo.Almacen;
       Query.ParamByName('pCAJA').AsString        := AArqueo.Caja;
-      Query.ParamByName('pFDESDE').AsDate        := AArqueo.FechaDesde;
-      Query.ParamByName('pFHASTA').AsDate        := AArqueo.FechaHasta;
+      Query.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
+      Query.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
       Query.ParamByName('pEMPLEADO').AsString    := ACodigoEmpleado;
       Query.ParamByName('pCNT_VENTAS').AsInteger := AArqueo.CantidadVentas;
       Query.ParamByName('pCNT_OPE').AsInteger    := AArqueo.CantidadOperaciones;

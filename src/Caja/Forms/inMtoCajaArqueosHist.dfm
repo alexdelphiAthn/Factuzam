@@ -35,12 +35,16 @@ inherited frmMtoCajaArqueosHist: TfrmMtoCajaArqueosHist
             object cxGrdDBTabPrinFECHA_DESDE_ARQ: TcxGridDBColumn
               Caption = 'Fecha Desde'
               DataBinding.FieldName = 'FECHA_DESDE_ARQ'
-              Width = 110
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
+              Width = 140
             end
             object cxGrdDBTabPrinFECHA_HASTA_ARQ: TcxGridDBColumn
               Caption = 'Fecha Hasta'
               DataBinding.FieldName = 'FECHA_HASTA_ARQ'
-              Width = 110
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
+              Width = 140
             end
             object cxGrdDBTabPrinFASE_ARQ: TcxGridDBColumn
               Caption = 'Fase'

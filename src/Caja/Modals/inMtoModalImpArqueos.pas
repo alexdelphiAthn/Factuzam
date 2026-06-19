@@ -157,9 +157,9 @@ end;
 procedure TfrmPrintArqueos.preparar_consulta;
 begin
   inherited;
-  // Filtro por empresa / almacen / caja (los tres exactos) y por la fecha
-  // de inicio del arqueo (FECHA_DESDE_ARQ, la columna que muestra la
-  // rejilla). Al ser DATE el BETWEEN incluye ambos extremos del rango.
+  // Filtro por empresa / almacen / caja y por el dia de inicio del arqueo.
+  // FECHA_DESDE_ARQ es datetime, asi que el limite superior va abierto al
+  // dia siguiente para que el filtro de fecha simple incluya todo el dia.
   with unqryArqueosPrint do
   begin
     Close;
@@ -170,7 +170,8 @@ begin
       '  WHERE CODIGO_EMP_ARQ  = :pEMP                                    ' +
       '    AND CODIGO_ALM_ARQ  = :pALM                                    ' +
       '    AND CODIGO_CAJA_ARQ = :pCAJA                                   ' +
-      '    AND FECHA_DESDE_ARQ BETWEEN :pDESDE AND :pHASTA                ' +
+      '    AND FECHA_DESDE_ARQ >= :pDESDE                                 ' +
+      '    AND FECHA_DESDE_ARQ < DATE_ADD(:pHASTA, INTERVAL 1 DAY)        ' +
       '  ORDER BY FECHA_DESDE_ARQ DESC, CODIGO_ARQ DESC                   ';
     ParamByName('pEMP').AsString     := edtEmpresa.Text;
     ParamByName('pALM').AsString     := bedAlmacen.Text;

@@ -76,13 +76,17 @@ object frmModalArqueosHistCaja: TfrmModalArqueosHistCaja
           Caption = 'Desde'
           DataBinding.FieldName = 'FECHA_DESDE_ARQ'
           Options.Editing = False
-          Width = 90
+          PropertiesClassName = 'TcxDateEditProperties'
+          Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
+          Width = 125
         end
         object colHasta: TcxGridDBColumn
           Caption = 'Hasta'
           DataBinding.FieldName = 'FECHA_HASTA_ARQ'
           Options.Editing = False
-          Width = 90
+          PropertiesClassName = 'TcxDateEditProperties'
+          Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
+          Width = 125
         end
         object colFase: TcxGridDBColumn
           Caption = 'Fase'

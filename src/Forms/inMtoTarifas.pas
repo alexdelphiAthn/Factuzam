@@ -61,10 +61,6 @@ type
     chkActivo: TcxDBCheckBox;
     txtNOMBRE_TARIFA: TcxDBTextEdit;
     txtCODIGO_TARIFA: TcxDBTextEdit;
-    lblDtoDesde: TcxLabel;
-    dteFechaDtoDesde: TcxDBDateEdit;
-    lblDtoHasta: TcxLabel;
-    dteFechaDtoHasta: TcxDBDateEdit;
     cxgrdbclmnGrdDBTabPrinCODIGO_TARIFA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinNOMBRE_TARIFA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinACTIVO_TARIFA: TcxGridDBColumn;
@@ -136,6 +132,10 @@ type
     tvArticulosESACTIVO_SKU: TcxGridDBColumn;
     tvArticulosDESCRIPCION_SKU: TcxGridDBColumn;
     tvArticulosNUM_ATRIBUTOS_REQ: TcxGridDBColumn;
+    dteFechaDtoDesde: TcxDBDateEdit;
+    dteFechaDtoHasta: TcxDBDateEdit;
+    lblDtoDesde: TcxLabel;
+    lblDtoHasta: TcxLabel;
     procedure btnIraArticuloClick(Sender: TObject);
     procedure actFamiliasExecute(Sender: TObject);
     procedure actProveedoresExecute(Sender: TObject);
