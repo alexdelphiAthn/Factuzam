@@ -928,7 +928,7 @@ end;
 procedure TfrmMtoFacturasBase.btnGenerarRecibosClick(Sender: TObject);
 var
   bReemplazar:Boolean;
-  sEmp: string;
+  sEmp, sCli, sPref: string;
   selBanco: TSeleccionBancoResult;
 begin
   inherited;
@@ -949,10 +949,13 @@ begin
   end;
   if bReemplazar = True then
   begin
-    // Cuenta de la empresa (ingreso) para el cobro: eleccion manual.
-    sEmp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString;
+    // Cuenta de la empresa (ingreso) para el cobro: eleccion manual, con el
+    // banco por defecto del cliente pre-seleccionado si lo tiene.
+    sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString;
+    sCli  := dsTablaG.DataSet.FieldByName('CODIGO_CLI_FAC').AsString;
+    sPref := dmmFacturas.GetBancoDefectoCliente(sCli);
     selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, inLibGlobalVar.oConn,
-                                                   sEmp, ubeCobro);
+                                                   sEmp, ubeCobro, sPref);
     if not selBanco.Aceptado then
       ShowMessage('Generación de recibos cancelada.')
     else
