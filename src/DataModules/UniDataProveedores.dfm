@@ -218,4 +218,32 @@ inherited dmProveedores: TdmProveedores
     Left = 96
     Top = 192
   end
+  object unqryFormaPago: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select * from vi_formapago')
+    ReadOnly = True
+    Left = 280
+    Top = 136
+  end
+  object dsFormasPago: TDataSource
+    DataSet = unqryFormaPago
+    Left = 280
+    Top = 192
+  end
+  object unqryEmpresasBancos: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_empresas_bancos'
+      ' WHERE ESACTIVO_EMPBAN = '#39'S'#39
+      ' ORDER BY CODIGO_EMP_EMPBAN, NOMBRE_EMPBAN')
+    ReadOnly = True
+    Left = 184
+    Top = 136
+  end
+  object dsEmpresasBancos: TDataSource
+    DataSet = unqryEmpresasBancos
+    Left = 184
+    Top = 192
+  end
 end
