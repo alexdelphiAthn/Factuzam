@@ -1141,6 +1141,15 @@ inherited frmModalArqueo: TfrmModalArqueo
     TabOrder = 2
     ExplicitTop = 562
     ExplicitWidth = 978
+    object btnTiraCaja: TcxButton
+      Left = 16
+      Top = 8
+      Width = 200
+      Height = 35
+      Caption = 'Tira de Caja (F7)'
+      TabOrder = 2
+      OnClick = btnTiraCajaClick
+    end
     object lblESC: TcxLabel
       Left = 600
       Top = 14
@@ -1167,6 +1176,11 @@ inherited frmModalArqueo: TfrmModalArqueo
       Caption = 'Escape'
       ShortCut = 27
       OnExecute = actEscapeExecute
+    end
+    object actTiraCaja: TAction
+      Caption = 'Tira de Caja'
+      ShortCut = 118
+      OnExecute = actTiraCajaExecute
     end
     object actRecalcular: TAction
       Caption = 'Recalcular'
