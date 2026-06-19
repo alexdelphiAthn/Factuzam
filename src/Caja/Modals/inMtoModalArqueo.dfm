@@ -5,8 +5,6 @@ inherited frmModalArqueo: TfrmModalArqueo
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
-  ExplicitLeft = 3
-  ExplicitTop = 3
   ExplicitWidth = 1022
   ExplicitHeight = 678
   TextHeight = 17
@@ -19,7 +17,7 @@ inherited frmModalArqueo: TfrmModalArqueo
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 978
+    ExplicitWidth = 1004
     object lblTituloDesde: TcxLabel
       Left = 16
       Top = 6
@@ -75,11 +73,11 @@ inherited frmModalArqueo: TfrmModalArqueo
       AnchorX = 570
     end
     object btnRecalcular: TcxButton
-      Left = 580
-      Top = 22
-      Width = 140
+      Left = 390
+      Top = 18
+      Width = 75
       Height = 35
-      Caption = 'Recalcular (F5)'
+      Caption = 'Calc (F5)'
       TabOrder = 2
       OnClick = btnRecalcularClick
     end
@@ -88,7 +86,7 @@ inherited frmModalArqueo: TfrmModalArqueo
       Top = 22
       Width = 144
       Height = 35
-      Caption = 'Imprimir (F11)'
+      Caption = 'Resumen (F11)'
       TabOrder = 3
       OnClick = btnImprimirClick
     end
@@ -101,6 +99,15 @@ inherited frmModalArqueo: TfrmModalArqueo
       TabOrder = 8
       OnClick = btnHistoricoClick
     end
+    object btnTiraCaja: TcxButton
+      Left = 576
+      Top = 22
+      Width = 146
+      Height = 35
+      Caption = 'Tira de Caja (F7)'
+      TabOrder = 9
+      OnClick = btnTiraCajaClick
+    end
   end
   object pnlBody: TPanel [1]
     Left = 0
@@ -111,8 +118,8 @@ inherited frmModalArqueo: TfrmModalArqueo
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 1
-    ExplicitWidth = 978
-    ExplicitHeight = 492
+    ExplicitWidth = 1004
+    ExplicitHeight = 511
     object pcArqueo: TcxPageControl
       Left = 0
       Top = 0
@@ -122,16 +129,16 @@ inherited frmModalArqueo: TfrmModalArqueo
       TabOrder = 0
       Properties.ActivePage = tsArqueo
       Properties.CustomButtons.Buttons = <>
-      ExplicitWidth = 978
-      ExplicitHeight = 492
+      ExplicitWidth = 1004
+      ExplicitHeight = 511
       ClientRectBottom = 515
       ClientRectLeft = 4
       ClientRectRight = 1002
       ClientRectTop = 28
       object tsArqueo: TcxTabSheet
         Caption = 'Arqueo'
-        ExplicitWidth = 970
-        ExplicitHeight = 460
+        ExplicitWidth = 996
+        ExplicitHeight = 479
         object pnlLineas: TPanel
           Left = 8
           Top = 8
@@ -532,8 +539,6 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsResumenes: TcxTabSheet
         Caption = 'Res'#250'menes'
-        ExplicitWidth = 972
-        ExplicitHeight = 468
         object pnlResEmpleado: TPanel
           Left = 8
           Top = 8
@@ -738,8 +743,6 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsMasDatos: TcxTabSheet
         Caption = 'M'#225's datos'
-        ExplicitWidth = 972
-        ExplicitHeight = 468
         object pnlResIVA: TPanel
           Left = 8
           Top = 8
@@ -809,8 +812,6 @@ inherited frmModalArqueo: TfrmModalArqueo
       end
       object tsRecuento: TcxTabSheet
         Caption = 'Recuento'
-        ExplicitWidth = 972
-        ExplicitHeight = 468
         object pnlAnterior: TPanel
           Left = 8
           Top = 4
@@ -1110,8 +1111,8 @@ inherited frmModalArqueo: TfrmModalArqueo
             Left = 506
             Top = 160
             AutoSize = False
-            Properties.Alignment.Horz = taLeftJustify
             Style.TextColor = clGray
+            Properties.Alignment.Horz = taLeftJustify
             TabOrder = 16
             Transparent = True
             Height = 19
@@ -1139,17 +1140,8 @@ inherited frmModalArqueo: TfrmModalArqueo
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 2
-    ExplicitTop = 562
-    ExplicitWidth = 978
-    object btnTiraCaja: TcxButton
-      Left = 16
-      Top = 8
-      Width = 200
-      Height = 35
-      Caption = 'Tira de Caja (F7)'
-      TabOrder = 2
-      OnClick = btnTiraCajaClick
-    end
+    ExplicitTop = 581
+    ExplicitWidth = 1004
     object lblESC: TcxLabel
       Left = 600
       Top = 14

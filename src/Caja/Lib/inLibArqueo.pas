@@ -240,8 +240,7 @@ begin
     '                AND o.CODIGO_ALM_OPCAJA  = :pALMACEN          ' +
     '                AND o.CODIGO_CAJA_OPCAJA = :pCAJA             ' +
     '                AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE      ' +
-    '                AND o.FECHA_OPERACION_OPCAJA <                ' +
-    '                    DATE_ADD(:pFHASTA, INTERVAL 1 DAY)        ' +
+    '                AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA      ' +
     '           ) b0                                               ' +
     '       ) b                                                    ' +
     '       JOIN (' + sNiveles + ') n ON n.NIVEL <= b.PROF         ' +
@@ -278,8 +277,7 @@ begin
     '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                 ' +
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                    ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                  ' +
-    '    AND o.FECHA_OPERACION_OPCAJA <                            ' +
-    '        DATE_ADD(:pFHASTA, INTERVAL 1 DAY)                    ' +
+    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                  ' +
     '  GROUP BY v.CODIGO_PROP_ARTPROP, VALOR                       ' +
     '  ORDER BY v.CODIGO_PROP_ARTPROP, VALOR                       ';
 end;
@@ -307,8 +305,8 @@ begin
       '  WHERE CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
       '    AND CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
       '    AND CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
-      '    AND FECHA_OPERACION_OPCAJA   >= :pFDESDE                            ' +
-      '    AND FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)';
+      '    AND FECHA_OPERACION_OPCAJA >= :pFDESDE                              ' +
+      '    AND FECHA_OPERACION_OPCAJA <= :pFHASTA';
     Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
@@ -355,8 +353,8 @@ begin
       '    AND o.CODIGO_EMP_OPCAJA        = :pEMPRESA                       ' +
       '    AND o.CODIGO_ALM_OPCAJA        = :pALMACEN                       ' +
       '    AND o.CODIGO_CAJA_OPCAJA       = :pCAJA                          ' +
-      '    AND o.FECHA_OPERACION_OPCAJA     >= :pFDESDE                        ' +
-      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)';
+      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA';
     Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
@@ -438,7 +436,7 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
       '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                           ' +
-      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)';
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA';
     Query.ParamByName('pTIPO_VE').AsString      := TipoOpVenta;
     Query.ParamByName('pTIPO_DV').AsString      := TipoOpDevolucion;
     Query.ParamByName('pTIPO_EC').AsString      := TipoOpEntradaCambio;
@@ -508,7 +506,7 @@ begin
       '    AND d.CODIGO_ALM_DEP        = :pALMACEN                          ' +
       '    AND d.CODIGO_CAJA_DEP       = :pCAJA                             ' +
       '    AND d.FECHA_CREACION_DEP   >= :pFDESDE                           ' +
-      '    AND d.FECHA_CREACION_DEP < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)';
+      '    AND d.FECHA_CREACION_DEP   <= :pFHASTA';
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
@@ -534,7 +532,7 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA      = :pALMACEN                         ' +
       '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                            ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                         ' +
-      '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                         ' +
       '    AND o.TIPO_OPERACION_OPCAJA IN (:pTIPO_CB, :pTIPO_DE)             ' +
       '    AND o.IMPORTE_TOTAL_OPCAJA  > 0                                  ' +
       '    AND o.ID_DEPOSITO_OPCAJA   IS NOT NULL                           ' +
@@ -570,7 +568,7 @@ begin
       '    AND CODIGO_ALM_EMI_VL      = :pALMACEN                           ' +
       '    AND CODIGO_CAJA_EMI_VL     = :pCAJA                              ' +
       '    AND FECHA_EMISION_VL       >= :pFDESDE                           ' +
-      '    AND FECHA_EMISION_VL       <  DATE_ADD(:pFHASTA, INTERVAL 1 DAY) ';
+      '    AND FECHA_EMISION_VL       <= :pFHASTA                           ';
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
@@ -594,7 +592,7 @@ begin
       '    AND CODIGO_ALM_RED_VL        = :pALMACEN                         ' +
       '    AND CODIGO_CAJA_RED_VL       = :pCAJA                            ' +
       '    AND FECHA_REDENCION_VL       >= :pFDESDE                         ' +
-      '    AND FECHA_REDENCION_VL       <  DATE_ADD(:pFHASTA, INTERVAL 1 DAY) ';
+      '    AND FECHA_REDENCION_VL       <= :pFHASTA                         ';
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
@@ -659,7 +657,7 @@ begin
         '    AND o.CODIGO_CAJA_OPCAJA      = p.CODIGO_CAJA_PAGO               ' +
         '    AND o.NUMERO_OPERACION_OPCAJA = p.NUMERO_OPERACION_PAGO          ' +
         '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                         ' +
-        '  AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
+        '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                         ' +
         '  WHERE fp.ESACTIVO_FORMA_PAGO_CFP = ''S''                            ' +
         '  GROUP BY fp.CODIGO_FP_CFP,                                         ' +
         '           fp.DESCRIPCION_FORMA_PAGO_CFP,                            ' +
