@@ -147,6 +147,7 @@ type
     procedure actArticulosExecute(Sender: TObject);
     procedure btnFORMA_PAGO_FACCPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure btnCODIGO_PRV_FACCPropertiesEditValueChanged(Sender: TObject);
     procedure btnGenerarEfectosClick(Sender: TObject);
     procedure btnRegistrarPagoClick(Sender: TObject);
     procedure btnVerPagosClick(Sender: TObject);
@@ -716,6 +717,24 @@ begin
         ds.Edit;
       ds.FieldByName('FORMA_PAGO_FACC').AsString := sVal;
     end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.btnCODIGO_PRV_FACCPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sCodigo: string;
+begin
+  inherited;
+  // Al cargar/cambiar el proveedor, precarga su forma de pago en la cabecera.
+  if (Assigned(dmmFacturasCompra) and Assigned(dsTablaG.DataSet) and
+      ((dsTablaG.DataSet.State = dsInsert) or
+       (dsTablaG.DataSet.State = dsEdit))) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sCodigo := VarToStr(e.EditingValue);
+    dmmFacturasCompra.CargarFormaPagoProveedor(sCodigo);
   end;
 end;
 
