@@ -88,8 +88,10 @@ type
     // para pre-seleccionarla en el modal de seleccion de banco. '' si no tiene.
     function GetBancoDefectoProveedor(const ACodigoPrv: string): string;
     // Forma de pago por defecto del proveedor (CODIGO_FP_PRV). '' si no tiene.
-    // La cabecera la hereda sola en BeforePost si aun no tiene forma de pago.
     function GetFormaPagoDefectoProveedor(const ACodigoPrv: string): string;
+    // Carga en la cabecera (FORMA_PAGO_FACC) la forma de pago del proveedor.
+    // Se llama al cargar/cambiar el proveedor en la factura.
+    procedure CargarFormaPagoProveedor(const ACodigoPrv: string);
     // Registra un pago sobre un efecto (PRC_EFEC_REGISTRAR_PAGO) y refresca
     // la rejilla. Devuelve el nº de pago asignado (>0) o 0/-1 si no se pudo.
     function RegistrarPagoEfecto(ANumEfecto: Integer; AFecha: TDateTime;
@@ -311,6 +313,19 @@ begin
   end;
 end;
 
+procedure TdmFacturasCompra.CargarFormaPagoProveedor(const ACodigoPrv: string);
+var
+  sFp: string;
+begin
+  if ((ACodigoPrv <> '') and (ACodigoPrv <> '0') and
+      (unqryTablaG.State in [dsEdit, dsInsert])) then
+  begin
+    sFp := GetFormaPagoDefectoProveedor(ACodigoPrv);
+    if sFp <> '' then
+      unqryTablaG.FieldByName('FORMA_PAGO_FACC').AsString := sFp;
+  end;
+end;
+
 function TdmFacturasCompra.RegistrarPagoEfecto(ANumEfecto: Integer;
   AFecha: TDateTime; AImporte: Double;
   const ATipo, AReferencia: string): Integer;
@@ -397,18 +412,8 @@ var
   fEstado: TField;
   sEstadoNuevo, sEstadoAnterior: string;
   qChk: TUniQuery;
-  sPrvBP, sFpBP: string;
 begin
   inherited;
-  // Herencia de la forma de pago del proveedor: si la factura aun no tiene
-  // forma de pago, se rellena sola con la del proveedor (respeta la manual).
-  if (Trim(unqryTablaG.FieldByName('FORMA_PAGO_FACC').AsString) = '') then
-  begin
-    sPrvBP := unqryTablaG.FieldByName('CODIGO_PRV_FACC').AsString;
-    sFpBP  := GetFormaPagoDefectoProveedor(sPrvBP);
-    if sFpBP <> '' then
-      unqryTablaG.FieldByName('FORMA_PAGO_FACC').AsString := sFpBP;
-  end;
   if (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '') then
     GetCodigoAutoFacturaCompra;

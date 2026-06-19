@@ -96,7 +96,8 @@ class function TfrmModalSeleccionarBanco.Ejecutar(
   AOwner               : TComponent;
   AConn                : TUniConnection;
   const ACodigoEmpresa : string;
-  AUso                 : TUsoBancoEmpresa): TSeleccionBancoResult;
+  AUso                 : TUsoBancoEmpresa;
+  const APreferEmpban  : string): TSeleccionBancoResult;
 var
   frm: TfrmModalSeleccionarBanco;
 begin
