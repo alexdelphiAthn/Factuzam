@@ -167,6 +167,20 @@ inherited dmClientes: TdmClientes
     Left = 224
     Top = 96
   end
+  object dsEmpresasBancos: TDataSource
+    DataSet = unqryEmpresasBancos
+    Left = 128
+    Top = 152
+  end
+  object unqryEmpresasBancos: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select * from vi_empresas_bancos'
+      'where ESACTIVO_EMPBAN = '#39'S'#39)
+    ReadOnly = True
+    Left = 128
+    Top = 200
+  end
   object dsTarifas: TDataSource
     DataSet = unqryTarifas
     Left = 320

@@ -828,6 +828,39 @@
                   TabOrder = 9
                   Width = 263
                 end
+                object lblBancoCobroCli: TcxLabel
+                  Left = 450
+                  Top = 187
+                  Caption = 'Banco cobro'
+                  TabOrder = 10
+                  Transparent = True
+                end
+                object cbbBancoCobroCli: TcxDBLookupComboBox
+                  Left = 527
+                  Top = 183
+                  DataBinding.DataField = 'CODIGO_EMPBAN_CLI'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.KeyFieldNames = 'CODIGO_EMPBAN'
+                  Properties.ListColumns = <
+                    item
+                      Caption = 'Cuenta'
+                      FieldName = 'NOMBRE_EMPBAN'
+                    end
+                    item
+                      Caption = 'IBAN'
+                      FieldName = 'IBAN_EMPBAN'
+                    end
+                    item
+                      Caption = 'Banco'
+                      FieldName = 'NOMBRE_BAN_VIEW_EMPBAN'
+                    end
+                    item
+                      Caption = 'Empresa'
+                      FieldName = 'CODIGO_EMP_EMPBAN'
+                    end>
+                  TabOrder = 11
+                  Width = 180
+                end
                 object lblNroCuenta: TcxLabel
                   Left = 53
                   Top = 228
