@@ -7,7 +7,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1036
   ExplicitHeight = 614
-  TextHeight = 19
+  TextHeight = 17
   inherited pButtonPage: TPanel
     Width = 896
     Height = 614
@@ -19,21 +19,20 @@ inherited frmMtoTarifas: TfrmMtoTarifas
       Width = 896
       Height = 574
       TabOrder = 1
-      Properties.ActivePage = tsLista
       ExplicitWidth = 896
       ExplicitHeight = 574
-      ClientRectBottom = 572
-      ClientRectRight = 894
+      ClientRectBottom = 570
+      ClientRectRight = 892
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
-        ExplicitWidth = 892
-        ExplicitHeight = 543
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 888
+        ExplicitHeight = 542
         inherited cxGrdPrincipal: TcxGrid
-          Width = 892
-          Height = 543
-          ExplicitWidth = 892
-          ExplicitHeight = 543
+          Width = 888
+          Height = 542
+          ExplicitWidth = 888
+          ExplicitHeight = 542
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_TARIFA: TcxGridDBColumn
               Caption = 'C'#243'digo Tarifa'
@@ -81,14 +80,14 @@ inherited frmMtoTarifas: TfrmMtoTarifas
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 29
-        ExplicitWidth = 711
-        ExplicitHeight = 543
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 888
+        ExplicitHeight = 542
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 892
+          Width = 888
           Height = 113
           Align = alTop
           TabOrder = 0
@@ -120,7 +119,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
           object pnlInnerHeader: TPanel
             Left = 1
             Top = 1
-            Width = 890
+            Width = 886
             Height = 111
             Align = alClient
             TabOrder = 0
@@ -186,12 +185,12 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               Transparent = True
             end
             object dteFechaDtoDesde: TcxDBDateEdit
-              Left = 516
-              Top = 45
+              Left = 440
+              Top = 76
               DataBinding.DataField = 'FECHA_DESDE_DTO_TAR'
               DataBinding.DataSource = dsTablaG
               TabOrder = 7
-              Width = 110
+              Width = 169
             end
             object lblDtoHasta: TcxLabel
               Left = 648
@@ -201,52 +200,45 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               Transparent = True
             end
             object dteFechaDtoHasta: TcxDBDateEdit
-              Left = 722
-              Top = 45
+              Left = 648
+              Top = 76
               DataBinding.DataField = 'FECHA_HASTA_DTO_TAR'
               DataBinding.DataSource = dsTablaG
               TabOrder = 9
-              Width = 110
+              Width = 153
             end
           end
         end
         object pnlBodyFicha: TPanel
           Left = 0
-          Top = 123
-          Width = 892
-          Height = 420
+          Top = 121
+          Width = 888
+          Height = 421
           Align = alClient
           TabOrder = 1
-          ExplicitWidth = 711
           object pcPestana: TcxPageControl
             Left = 1
             Top = 1
-            Width = 890
-            Height = 418
+            Width = 886
+            Height = 419
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsArticulos
             Properties.CustomButtons.Buttons = <>
-            ExplicitWidth = 709
-            ClientRectBottom = 416
-            ClientRectLeft = 2
-            ClientRectRight = 888
-            ClientRectTop = 29
+            ClientRectBottom = 415
+            ClientRectLeft = 4
+            ClientRectRight = 882
+            ClientRectTop = 28
             object tsArticulos: TcxTabSheet
               Caption = '&1_Art'#237'culos'
               ImageIndex = 0
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 705
-              ExplicitHeight = 0
               object pnlBotonera: TPanel
-                Left = 759
+                Left = 751
                 Top = 0
                 Width = 127
                 Height = 387
                 Align = alRight
                 TabOrder = 0
-                ExplicitLeft = 578
                 object btnIraArticulo: TcxButton
                   Left = 3
                   Top = 13
@@ -267,26 +259,24 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                 end
               end
               object splHorizontal: TcxSplitter
-                Left = 749
+                Left = 743
                 Top = 0
-                Width = 10
+                Width = 8
                 Height = 387
                 HotZoneClassName = 'TcxMediaPlayer9Style'
                 Control = pnlBotonera
-                ExplicitLeft = 568
               end
               object pnlArticulos: TPanel
                 Left = 0
                 Top = 0
-                Width = 749
+                Width = 743
                 Height = 387
                 Align = alClient
                 TabOrder = 2
-                ExplicitWidth = 568
                 object cxgrdArticulosTarifas: TcxGrid
                   Left = 11
                   Top = 1
-                  Width = 737
+                  Width = 731
                   Height = 385
                   Margins.Left = 4
                   Margins.Top = 4
@@ -294,7 +284,6 @@ inherited frmMtoTarifas: TfrmMtoTarifas
                   Margins.Bottom = 4
                   Align = alClient
                   TabOrder = 0
-                  ExplicitWidth = 556
                   object tvArticulos: TcxGridDBTableView
                     Navigator.Buttons.ConfirmDelete = True
                     Navigator.Visible = True
@@ -590,7 +579,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               object pnlOtrosDatos: TPanel
                 Left = 0
                 Top = 308
-                Width = 886
+                Width = 878
                 Height = 79
                 Align = alBottom
                 TabOrder = 0
@@ -697,36 +686,37 @@ inherited frmMtoTarifas: TfrmMtoTarifas
         object splGeneral: TcxSplitter
           Left = 0
           Top = 113
-          Width = 892
-          Height = 10
+          Width = 888
+          Height = 8
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlBodyFicha
-          ExplicitWidth = 711
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 892
-        ExplicitHeight = 543
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 888
+        ExplicitHeight = 542
         inherited pnlPerfilTop: TPanel
-          Width = 892
+          Width = 888
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 892
+          ExplicitWidth = 888
           inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
+            ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 892
-          Height = 486
+          Width = 888
+          Height = 485
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 711
-          ExplicitHeight = 486
+          ExplicitWidth = 888
+          ExplicitHeight = 485
           inherited cxgrdPerfil: TcxGrid
-            Width = 711
-            Height = 486
-            ExplicitWidth = 711
-            ExplicitHeight = 486
+            Width = 888
+            Height = 485
+            ExplicitWidth = 888
+            ExplicitHeight = 485
           end
         end
       end
@@ -741,7 +731,7 @@ inherited frmMtoTarifas: TfrmMtoTarifas
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 896
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
       end
     end

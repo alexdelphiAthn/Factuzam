@@ -156,7 +156,7 @@ class procedure TTiraCajaTicket.EscribirLineasArticulos(
   const AEmpresa, AAlmacen, ACaja, AOperacion: string);
 var
   Q: TUniQuery;
-  sDesc, sIzq, sTot: string;
+  sSku, sDesc, sIzq, sTot: string;
   dCant: Double;
   iMax: Integer;
 begin
@@ -179,22 +179,23 @@ begin
     Q.Open;
     while not Q.Eof do
     begin
+      sSku  := Trim(Q.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
       sDesc := Trim(Q.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString);
-      if sDesc = '' then
-        sDesc := Trim(Q.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
       dCant := Q.FieldByName('CANTIDAD_FACLIN').AsFloat;
       sTot  := FmtImp(Q.FieldByName('TOTAL_FACLIN').AsCurrency);
-      // Cantidad como prefijo solo si no es la unidad (artículos pesados o
-      // varias unidades), para no recargar el ticket en la venta normal.
+      // Línea 1: SKU (con cantidad si no es 1 unidad) y el importe a la
+      // derecha, igual que la primera línea de cada artículo en el ticket.
       if dCant <> 1 then
-        sIzq := FormatFloat('0.##', dCant) + 'x ' + sDesc
+        sIzq := FormatFloat('0.##', dCant) + 'x ' + sSku
       else
-        sIzq := sDesc;
-      // Recortar la descripción para que el importe quepa a la derecha.
+        sIzq := sSku;
       iMax := N_CHAR_LIN - Length(sTot) - 1;
       if Length(sIzq) > iMax then
         sIzq := Copy(sIzq, 1, iMax);
       ATicket.TextoColumnas(sIzq, sTot);
+      // Línea 2: descripción del artículo (como en el ticket de venta).
+      if sDesc <> '' then
+        ATicket.EscribirLinea(Copy(sDesc, 1, N_CHAR_LIN));
       Q.Next;
     end;
   finally
