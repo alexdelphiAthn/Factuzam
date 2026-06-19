@@ -307,7 +307,7 @@ BEGIN
   DECLARE v_reN, v_reR, v_reS, v_reE decimal(18,6) DEFAULT 0;
   DECLARE v_pN, v_pR, v_pS decimal(19,6) DEFAULT 0;
   DECLARE v_prN, v_prR, v_prS, v_prE decimal(19,6) DEFAULT 0;
-  DECLARE v_bases, v_impuestos, v_total decimal(18,6) DEFAULT 0;
+  DECLARE v_suma_bases, v_impuestos, v_total decimal(18,6) DEFAULT 0;
   DECLARE v_reten, v_liquido, v_pRet decimal(18,6) DEFAULT 0;
   DECLARE v_dto, v_pp, v_rap, v_fin, v_por decimal(18,6) DEFAULT 0;
   DECLARE v_codIva varchar(20) DEFAULT '';
@@ -373,10 +373,10 @@ BEGIN
     SET v_reS = v_baseS * v_prS / 100;
     SET v_reE = v_baseE * v_prE / 100;
   END IF;
-  SET v_bases = v_baseN + v_baseR + v_baseS + v_baseE;
+  SET v_suma_bases = v_baseN + v_baseR + v_baseS + v_baseE;
   SET v_impuestos = v_ivaN + v_ivaR + v_ivaS + v_reN + v_reR + v_reS + v_reE;
-  SET v_total = v_bases + v_impuestos;
-  SET v_reten = ROUND(v_bases * v_pRet / 100, 2);
+  SET v_total = v_suma_bases + v_impuestos;
+  SET v_reten = ROUND(v_suma_bases * v_pRet / 100, 2);
   SET v_liquido = v_total - v_reten - v_dto - v_pp - v_rap + v_fin + v_por;
   UPDATE fza_facturas_compra
      SET PORCENTAJE_IVAN_FACC = v_pN,
@@ -399,8 +399,8 @@ BEGIN
          TOTAL_IVAE_FACC = 0,
          PORCENTAJE_REE_FACC = v_prE,
          TOTAL_REE_FACC = v_reE,
-         TOTAL_BRUTO_FACC = v_bases,
-         TOTAL_BASES_FACC = v_bases,
+         TOTAL_BRUTO_FACC = v_suma_bases,
+         TOTAL_BASES_FACC = v_suma_bases,
          TOTAL_IMPUESTOS_FACC = v_impuestos,
          TOTAL_FACC = v_total,
          TOTAL_RETENCION_FACC = v_reten,

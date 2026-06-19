@@ -31,7 +31,7 @@ ModuleType=TSourceModule
 
 [EditWindow0]
 ViewCount=4
-CurrentView=3
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
 View0=0
 View1=1
 View2=2
@@ -70,6 +70,10 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
 
 [View0]
+CustomEditViewType=TOTACustomEditView
+OTAEditViewType=WelcomePage.MainPage
+
+[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 CursorX=38
@@ -80,7 +84,7 @@ Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 
-[View1]
+[View2]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFacturarTicket.pas
 CursorX=36
@@ -91,20 +95,16 @@ Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFacturarTicket.pas
 
-[View2]
+[View3]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
-CursorX=1
-CursorY=1
+CursorX=42
+CursorY=14
 TopLine=1
 LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
-
-[View3]
-CustomEditViewType=TOTACustomEditView
-OTAEditViewType=WelcomePage.MainPage
 
 [Watches]
 Count=0
@@ -255,6 +255,11 @@ Dockable=1
 StayOnTop=0
 SplitPos=135
 
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=Action,
+ExpandedItems=DefaultTransaction=0,"LiveBindings Designer=0",Options=0,Anchors=0,BorderIcons=0
+
 [frmDesignPreview]
 PercentageSizes=1
 Create=1
@@ -264,11 +269,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=6193
+Height=6123
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=6193
+ClientHeight=6123
 TBDockHeight=5956
 LRDockWidth=2510
 Dockable=1
@@ -280,8 +285,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=0
-Top=0
+Left=-1622
+Top=251
 Width=276
 Height=360
 MaxLeft=-1
@@ -404,11 +409,11 @@ State=0
 Left=0
 Top=0
 Width=2339
-Height=1149
+Height=921
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
-ClientHeight=1149
+ClientHeight=921
 TBDockHeight=2316
 LRDockWidth=2823
 Dockable=1
@@ -469,11 +474,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=6193
+Height=6123
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=6193
+ClientHeight=6123
 TBDockHeight=4886
 LRDockWidth=7151
 Dockable=1
@@ -485,8 +490,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=0
-Top=0
+Left=384
+Top=889
 Width=2854
 Height=3211
 MaxLeft=-1
@@ -618,8 +623,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=8
-Top=8
+Left=950
+Top=36
 Width=3823
 Height=1421
 MaxLeft=-1

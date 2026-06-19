@@ -88,6 +88,9 @@ type
     FechaHasta         : TDateTime;     // 0 si abierta
     Vigente            : Boolean;       // hay fila vigente en la fecha
     TieneRegistro      : Boolean;       // hay fila (vigente o no)
+    DescuentoAplicable : Boolean;       // el descuento de la tarifa cae dentro
+                                        //  de su ventana de aplicacion en la
+                                        //  fecha pedida (ver ventana de dto)
 
     procedure Clear;
   end;
@@ -197,6 +200,19 @@ type
                         AIncluirInactivos: Boolean = False): TArray<TArticuloSkuItem>;
   end;
 
+// Predicado puro: indica si una fecha cae dentro de la ventana de aplicacion
+// del descuento de una tarifa. ADesde/AHasta = 0 -> cota abierta por ese lado.
+// Ambas 0 -> sin ventana: el descuento se aplica siempre (compatibilidad).
+function DescuentoEnVentana(const AFecha, ADesde, AHasta: TDateTime): Boolean;
+
+// Resuelve la ventana de descuento de una tarifa (cabecera fza_tarifas) y
+// evalua si en AFecha el descuento es aplicable. Si la BBDD no tiene aun las
+// columnas de ventana (script no aplicado) devuelve True (comportamiento
+// clasico: el descuento se aplica siempre).
+function DescuentoTarifaVigente(AConexion: TUniConnection;
+                                const ACodigoTarifa: string;
+                                const AFecha: TDateTime): Boolean;
+
 implementation
 
 uses
@@ -222,6 +238,7 @@ begin
   FechaHasta          := 0;
   Vigente             := False;
   TieneRegistro       := False;
+  DescuentoAplicable  := True;
 end;
 
 procedure TArticuloCoste.Clear;
@@ -270,6 +287,69 @@ begin
   PrecioTarifaDefault.Clear;
   UltimoCoste.Clear;
   PMP.Clear;
+end;
+
+{ Ventana de aplicacion del descuento ──────────────────────────────────────── }
+
+function DescuentoEnVentana(const AFecha, ADesde, AHasta: TDateTime): Boolean;
+var
+  dDia: TDateTime;
+begin
+  if (ADesde = 0) and (AHasta = 0) then
+    Result := True
+  else
+  begin
+    if AFecha = 0 then
+      dDia := Trunc(Now)
+    else
+      dDia := Trunc(AFecha);
+    Result := True;
+    if (ADesde > 0) and (dDia < Trunc(ADesde)) then
+      Result := False;
+    if (AHasta > 0) and (dDia > Trunc(AHasta)) then
+      Result := False;
+  end;
+end;
+
+function DescuentoTarifaVigente(AConexion: TUniConnection;
+  const ACodigoTarifa: string; const AFecha: TDateTime): Boolean;
+var
+  q      : TUniQuery;
+  dDesde : TDateTime;
+  dHasta : TDateTime;
+begin
+  Result := True;
+  if (AConexion <> nil) and (ACodigoTarifa <> '') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := AConexion;
+      q.SQL.Text :=
+        'SELECT FECHA_DESDE_DTO_TAR, FECHA_HASTA_DTO_TAR ' +
+        '  FROM fza_tarifas ' +
+        ' WHERE CODIGO_TAR_ARTTAR = :tar LIMIT 1';
+      q.ParamByName('tar').AsString := ACodigoTarifa;
+      try
+        q.Open;
+        if not q.IsEmpty then
+        begin
+          dDesde := 0;
+          dHasta := 0;
+          if not q.FieldByName('FECHA_DESDE_DTO_TAR').IsNull then
+            dDesde := q.FieldByName('FECHA_DESDE_DTO_TAR').AsDateTime;
+          if not q.FieldByName('FECHA_HASTA_DTO_TAR').IsNull then
+            dHasta := q.FieldByName('FECHA_HASTA_DTO_TAR').AsDateTime;
+          Result := DescuentoEnVentana(AFecha, dDesde, dHasta);
+        end;
+      except
+        // BBDD sin columnas de ventana (script no aplicado): comportamiento
+        // clasico, el descuento se aplica siempre.
+        Result := True;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
 end;
 
 { TArticulosResolver ──────────────────────────────────────────────────────── }
@@ -406,6 +486,20 @@ begin
       RellenarPrecioDesdeQry(q, Result, AFecha);
   finally
     FreeAndNil(q);
+  end;
+  // Ventana de aplicacion del descuento (cabecera de tarifa). Si la linea
+  // trae descuento pero la fecha pedida cae fuera de la ventana, se cobra el
+  // precio de salida y se anula el descuento. Sin ventana -> aplica siempre.
+  if Result.TieneRegistro and
+     ((Result.PorcentajeDto <> 0) or (Result.PrecioDto <> 0)) then
+  begin
+    if not DescuentoTarifaVigente(FConexion, Result.CodigoTarifa, dFecha) then
+    begin
+      Result.PrecioFinal        := Result.PrecioSalida;
+      Result.PrecioDto          := 0;
+      Result.PorcentajeDto      := 0;
+      Result.DescuentoAplicable := False;
+    end;
   end;
 end;
 

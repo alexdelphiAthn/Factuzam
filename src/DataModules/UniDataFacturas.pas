@@ -21,7 +21,7 @@ uses
   SysUtils, Classes,  DB,
    inMtoPrincipal, DBClient, Provider, frxClass, frxDBSet, inLibUser,
    System.StrUtils, Windows, Dialogs, System.Variants, MemDS, DBAccess, Uni,
-   UniDataGen, frCoreClasses;
+   UniDataGen, frCoreClasses, inLibArticulosResolver;
 
 type
   TdmFacturas = class(TdmBase)
@@ -645,6 +645,8 @@ var
   iPorcen:Integer;
   oLinFac:TLinFac;
   facTotales : TFacturaTotales;
+  bDtoVig    : Boolean;
+  dFinalEf   : Double;
 begin
   with dsLinFac.Dataset do
   begin
@@ -688,28 +690,40 @@ begin
      FindField('PRECIO_SALIDA_FACLIN').AsString :=
                               DataSet.FindField(
                                 'PRECIO_SALIDA_ARTTAR').AsString;
-     FindField('PORCENTAJE_DTO_FACLIN').AsString :=
-                                DataSet.FindField(
-                                  'PORCENTAJE_DTO_ARTTAR').AsString;
-     FindField('PRECIO_DTO_FACLIN').AsString :=
-                                DataSet.FindField('PRECIO_DTO_ARTTAR').AsString;
-     if  DataSet.FindField('ESIMP_INCL_TAR').AsString = 'S' then
+     // Ventana de aplicacion del descuento (cabecera de tarifa): si la fecha
+     // de la factura cae fuera de la ventana, se cobra precio de salida y se
+     // anula el descuento de la linea. Sin ventana -> el descuento se aplica.
+     bDtoVig := DescuentoTarifaVigente(
+                  unqryTablaG.Connection as TUniConnection,
+                  unqryTablaG.FindField('TARIFA_ARTICULO_CLIENTE_FAC').AsString,
+                  unqryTablaG.FindField('FECHA_FAC').AsDateTime);
+     if bDtoVig then
      begin
-       FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsString :=
-                               DataSet.FindField(
-                                 'PRECIO_FINAL_ARTTAR').AsString;
-       FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-             (DataSet.FindField(
-               'PRECIO_FINAL_ARTTAR').AsFloat / (1+ (fPorcen)));
+       FindField('PORCENTAJE_DTO_FACLIN').AsString :=
+                                  DataSet.FindField(
+                                    'PORCENTAJE_DTO_ARTTAR').AsString;
+       FindField('PRECIO_DTO_FACLIN').AsString :=
+                                  DataSet.FindField(
+                                    'PRECIO_DTO_ARTTAR').AsString;
+       dFinalEf := DataSet.FindField('PRECIO_FINAL_ARTTAR').AsFloat;
      end
      else
      begin
-       FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsString :=
-                               DataSet.FindField(
-                                 'PRECIO_FINAL_ARTTAR').AsString;
+       FindField('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
+       FindField('PRECIO_DTO_FACLIN').AsCurrency := 0;
+       dFinalEf := DataSet.FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
+     end;
+     if  DataSet.FindField('ESIMP_INCL_TAR').AsString = 'S' then
+     begin
+       FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := dFinalEf;
+       FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+             (dFinalEf / (1 + (fPorcen)));
+     end
+     else
+     begin
+       FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := dFinalEf;
        FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-              (DataSet.FindField(
-                'PRECIO_FINAL_ARTTAR').AsFloat * (1 + fPorcen));
+              (dFinalEf * (1 + fPorcen));
      end;
      // Cantidad por defecto = 1
      if FindField('CANTIDAD_FACLIN') <> nil then
