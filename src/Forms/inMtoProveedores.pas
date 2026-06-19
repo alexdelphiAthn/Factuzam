@@ -68,6 +68,11 @@ type
     cxdbtxtdtMOVIL_CLIENTE: TcxDBTextEdit;
     pnlDetailFicha: TPanel;
     pcPestanas: TcxPageControl;
+    tsPagos: TcxTabSheet;
+    lblFormaPagoPrv: TcxLabel;
+    cbbFormaPagoPrv: TcxDBLookupComboBox;
+    lblEmpBanPrv: TcxLabel;
+    cbbEmpBanPrv: TcxDBLookupComboBox;
     tsDomicilioFiscal: TcxTabSheet;
     cxdbtxtdt7: TcxDBTextEdit;
     lblDireccion1: TcxLabel;
@@ -387,6 +392,11 @@ begin
   tvKitsDet.DataController.DataSource := dmmProveedores.dsKitsDet;
   TcxLookupComboBoxProperties(dbcKitSistema.Properties).ListSource :=
     dmmProveedores.dsConjuntosTallas;
+  // Pestaña Pagos: combos de forma de pago y banco de empresa por defecto.
+  TcxLookupComboBoxProperties(cbbFormaPagoPrv.Properties).ListSource :=
+    dmmProveedores.dsFormasPago;
+  TcxLookupComboBoxProperties(cbbEmpBanPrv.Properties).ListSource :=
+    dmmProveedores.dsEmpresasBancos;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   pkFieldName := 'CODIGO_PRV_PRV';
   // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,
@@ -403,7 +413,9 @@ begin
   else if pcPestanas.ActivePage = tsVentas then
     dmmProveedores.AsegurarVentasAbierta
   else if pcPestanas.ActivePage = tsCompras then
-    dmmProveedores.AsegurarComprasAbierta;
+    dmmProveedores.AsegurarComprasAbierta
+  else if pcPestanas.ActivePage = tsPagos then
+    dmmProveedores.AsegurarPagosAbierta;
 end;
 
 // ===========================================================================

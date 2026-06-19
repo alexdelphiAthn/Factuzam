@@ -722,16 +722,19 @@ end;
 procedure TfrmMtoFacturasCompra.btnGenerarEfectosClick(Sender: TObject);
 var
   iRes: Integer;
-  sEmp: string;
+  sEmp, sPrv, sPref: string;
   selBanco: TSeleccionBancoResult;
 begin
   inherited;
   if Assigned(dmmFacturasCompra) then
   begin
-    // Cuenta de la empresa (cargo) para el pago: eleccion manual.
-    sEmp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FACC').AsString;
+    // Cuenta de la empresa (cargo) para el pago: eleccion manual, con el
+    // banco por defecto del proveedor pre-seleccionado si lo tiene.
+    sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FACC').AsString;
+    sPrv  := dsTablaG.DataSet.FieldByName('CODIGO_PRV_FACC').AsString;
+    sPref := dmmFacturasCompra.GetBancoDefectoProveedor(sPrv);
     selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, inLibGlobalVar.oConn,
-                                                   sEmp, ubePago);
+                                                   sEmp, ubePago, sPref);
     if not selBanco.Aceptado then
       ShowMessage('Generación de efectos cancelada.')
     else

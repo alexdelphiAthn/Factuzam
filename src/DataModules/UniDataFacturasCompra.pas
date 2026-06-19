@@ -84,6 +84,9 @@ type
     // ACodEmpban estampa la cuenta de la empresa (cargo) en los efectos.
     function GenerarEfectos(const ACodEmpban: string = '';
                             const AIbanEmp: string = ''): Integer;
+    // Cuenta de la empresa (cargo) por defecto del proveedor (CODIGO_EMPBAN_PRV)
+    // para pre-seleccionarla en el modal de seleccion de banco. '' si no tiene.
+    function GetBancoDefectoProveedor(const ACodigoPrv: string): string;
     // Registra un pago sobre un efecto (PRC_EFEC_REGISTRAR_PAGO) y refresca
     // la rejilla. Devuelve el nº de pago asignado (>0) o 0/-1 si no se pudo.
     function RegistrarPagoEfecto(ANumEfecto: Integer; AFecha: TDateTime;
@@ -256,6 +259,29 @@ begin
       unqryEfectos.Close;
       unqryEfectos.Open;
     end;
+  end;
+end;
+
+function TdmFacturasCompra.GetBancoDefectoProveedor(
+  const ACodigoPrv: string): string;
+var
+  q: TUniQuery;
+begin
+  Result := '';
+  if ACodigoPrv = '' then
+    Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text := 'SELECT CODIGO_EMPBAN_PRV ' +
+                  '  FROM fza_proveedores ' +
+                  ' WHERE CODIGO_PRV_PRV = :prv';
+    q.ParamByName('prv').AsString := ACodigoPrv;
+    q.Open;
+    if not q.IsEmpty then
+      Result := q.FieldByName('CODIGO_EMPBAN_PRV').AsString;
+  finally
+    FreeAndNil(q);
   end;
 end;
 

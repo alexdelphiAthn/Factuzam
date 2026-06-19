@@ -1349,6 +1349,63 @@
                 end
               end
             end
+            object tsPagos: TcxTabSheet
+              Caption = '&7_Pagos'
+              object lblFormaPagoPrv: TcxLabel
+                Left = 34
+                Top = 25
+                Caption = 'Forma de pago'
+                TabOrder = 0
+                Transparent = True
+              end
+              object cbbFormaPagoPrv: TcxDBLookupComboBox
+                Left = 200
+                Top = 21
+                DataBinding.DataField = 'CODIGO_FP_PRV'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'CODIGO_FP_FP'
+                Properties.ListColumns = <
+                  item
+                    FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
+                  end>
+                Properties.ListOptions.ShowHeader = False
+                TabOrder = 1
+                Width = 320
+              end
+              object lblEmpBanPrv: TcxLabel
+                Left = 34
+                Top = 65
+                Caption = 'Banco para pagos (empresa)'
+                TabOrder = 2
+                Transparent = True
+              end
+              object cbbEmpBanPrv: TcxDBLookupComboBox
+                Left = 200
+                Top = 61
+                DataBinding.DataField = 'CODIGO_EMPBAN_PRV'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'CODIGO_EMPBAN'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Cuenta'
+                    FieldName = 'NOMBRE_EMPBAN'
+                  end
+                  item
+                    Caption = 'IBAN'
+                    FieldName = 'IBAN_EMPBAN'
+                  end
+                  item
+                    Caption = 'Banco'
+                    FieldName = 'NOMBRE_BAN_VIEW_EMPBAN'
+                  end
+                  item
+                    Caption = 'Empresa'
+                    FieldName = 'CODIGO_EMP_EMPBAN'
+                  end>
+                TabOrder = 3
+                Width = 470
+              end
+            end
           end
         end
         object cxspltr1: TcxSplitter
