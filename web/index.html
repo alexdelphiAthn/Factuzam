@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alejandro Laorden | Programador Delphi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --accent-primary: #00d4aa;
+            --accent-secondary: #0ea5e9;
+            --accent-warm: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2d3a4f;
+            --gradient-accent: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo span {
+            color: var(--text-muted);
+            -webkit-text-fill-color: var(--text-muted);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 8rem 4rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60%;
+            height: 100%;
+            background: radial-gradient(ellipse at 70% 30%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 90% 80%, rgba(14, 165, 233, 0.06) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(45, 58, 79, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(45, 58, 79, 0.3) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+            background: rgba(0, 212, 170, 0.1);
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-tag::before {
+            content: '>';
+            font-weight: 700;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+
+        .hero h1 .highlight {
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient-accent);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 170, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 212, 170, 0.05);
+        }
+
+        /* Sections */
+        section {
+            padding: 6rem 4rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+        }
+
+        /* Services */
+        #servicios {
+            background: var(--bg-secondary);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-accent);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 212, 170, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 212, 170, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .service-card p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* VeriFactu Highlight */
+        #verifactu {
+            position: relative;
+        }
+
+        .verifactu-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .verifactu-content h3 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .verifactu-content p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .verifactu-features {
+            list-style: none;
+        }
+
+        .verifactu-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .verifactu-features li:last-child {
+            border-bottom: none;
+        }
+
+        .verifactu-features .check {
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        .verifactu-visual {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .code-window {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            gap: 6px;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27c93f; }
+
+        .code-content {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .code-line {
+            display: flex;
+        }
+
+        .code-line-number {
+            color: var(--text-muted);
+            width: 30px;
+            user-select: none;
+        }
+
+        .code-keyword { color: #c792ea; }
+        .code-function { color: #82aaff; }
+        .code-string { color: #c3e88d; }
+        .code-comment { color: #546e7a; }
+        .code-type { color: #ffcb6b; }
+
+        /* Tech Stack */
+        #tecnologias {
+            background: var(--bg-secondary);
+        }
+
+        .tech-grid {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .tech-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            min-width: 140px;
+            transition: all 0.3s ease;
+        }
+
+        .tech-item:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+        }
+
+        .tech-icon {
+            font-size: 2.5rem;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Contact */
+        #contacto {
+            text-align: center;
+        }
+
+        .contact-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .contact-email {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            color: var(--accent-primary);
+            text-decoration: none;
+            display: inline-block;
+            padding: 1rem 2rem;
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            margin-top: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .contact-email:hover {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 4rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            nav {
+                padding: 1rem 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            section, .hero {
+                padding: 4rem 2rem;
+            }
+
+            .verifactu-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .verifactu-visual {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">AL<span>_dev</span></div>
+        <ul class="nav-links">
+            <li><a href="#servicios">Servicios</a></li>
+            <li><a href="#verifactu">VeriFactu</a></li>
+            <li><a href="#tecnologias">Tecnologías</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-grid"></div>
+        <div class="hero-content">
+            <div class="hero-tag">Desarrollo a medida</div>
+            <h1>Programador <span class="highlight">Delphi</span><br>especializado en gestión empresarial</h1>
+            <p class="hero-description">
+                Desarrollo de aplicaciones de facturación, gestión comercial e integración con sistemas tributarios. 
+                Soluciones robustas y eficientes para tu negocio.
+            </p>
+            <div class="hero-cta">
+                <a href="#contacto" class="btn btn-primary">
+                    <span>Contactar</span>
+                    <span>→</span>
+                </a>
+                <a href="#servicios" class="btn btn-secondary">Ver servicios</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="servicios">
+        <div class="section-header">
+            <div class="section-tag">// Lo que hago</div>
+            <h2 class="section-title">Servicios</h2>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">📊</div>
+                <h3>Software de Gestión</h3>
+                <p>Desarrollo de aplicaciones de gestión comercial, control de stock, TPV y procesos empresariales adaptados a las necesidades específicas de cada cliente.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🧾</div>
+                <h3>Facturación Electrónica</h3>
+                <p>Sistemas de facturación completos, integración con VeriFactu y cumplimiento normativo. Generación de tickets térmicos con códigos QR.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">📈</div>
+                <h3>Informes y Reporting</h3>
+                <p>Diseño e implementación de informes personalizados con FastReport, Excel y otras herramientas. Exportación a múltiples formatos y automatización de procesos.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔄</div>
+                <h3>Migración de Datos</h3>
+                <p>Procesos de migración entre sistemas, conversión de bases de datos y traspaso de información histórica garantizando la integridad de los datos.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🗄️</div>
+                <h3>Bases de Datos</h3>
+                <p>Diseño y optimización de bases de datos MySQL/MariaDB. Consultas eficientes, procedimientos almacenados y mantenimiento de sistemas existentes.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔌</div>
+                <h3>Integraciones</h3>
+                <p>Desarrollo de módulos de integración con sistemas externos, APIs, servicios web y conectores para ampliar las capacidades de software existente.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="verifactu">
+        <div class="section-header">
+            <div class="section-tag">// Caso destacado</div>
+            <h2 class="section-title">Integración VeriFactu</h2>
+        </div>
+        <div class="verifactu-container">
+            <div class="verifactu-content">
+                <h3>Cumplimiento normativo para software de terceros. Ejemplo OdaCashPlusº</h3>
+                <p>
+                    He desarrollado OdaVeriFactu, un software VeriFactu para este programa externo sin intervenir en su programación. Así <strong>OdaCashPlus</strong> cumple con los 
+                    requisitos de la Agencia Tributaria sin necesidad de modificar el programa original.
+                </p>
+                <ul class="verifactu-features">
+                    <li><span class="check">✓</span> Generación de códigos QR para tickets</li>
+                    <li><span class="check">✓</span> Adaptable a cualquier software de facturación</li>
+                </ul>
+            </div>
+            <div class="verifactu-visual">
+                <div class="code-window">
+                    <div class="code-header">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                    </div>
+                    <div class="code-content">
+                        <div class="code-line">
+                            <span class="code-line-number">1</span>
+                            <span><span class="code-keyword">procedure</span> <span class="code-function">GenerarRegistroVeriFactu</span>;</span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">2</span>
+                            <span><span class="code-keyword">var</span></span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">3</span>
+                            <span>  Hash: <span class="code-type">string</span>;</span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">4</span>
+                            <span><span class="code-keyword">begin</span></span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">5</span>
+                            <span>  <span class="code-comment">// Calcular hash encadenado</span></span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">6</span>
+                            <span>  Hash := <span class="code-function">CalcularSHA256</span>(Datos);</span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">7</span>
+                            <span>  <span class="code-function">FirmarRegistro</span>(Hash);</span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">8</span>
+                            <span>  <span class="code-function">EnviarAEAT</span>(Registro);</span>
+                        </div>
+                        <div class="code-line">
+                            <span class="code-line-number">9</span>
+                            <span><span class="code-keyword">end</span>;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tecnologias">
+        <div class="section-header">
+            <div class="section-tag">// Stack técnico</div>
+            <h2 class="section-title">Tecnologías</h2>
+        </div>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-icon">🔷</div>
+                <div class="tech-name">Delphi</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🐬</div>
+                <div class="tech-name">MySQL</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🦭</div>
+                <div class="tech-name">MariaDB</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">📋</div>
+                <div class="tech-name">FastReport</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🖨️</div>
+                <div class="tech-name">ESC/POS</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contacto">
+        <div class="section-header">
+            <div class="section-tag">// Hablemos</div>
+            <h2 class="section-title">Contacto</h2>
+        </div>
+        <div class="contact-content">
+            <p style="color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 1rem;">
+                ¿Tienes un proyecto en mente? ¿Necesitas adaptar tu software a VeriFactu o desarrollar una solución a medida?
+            </p>
+            <p style="color: var(--text-secondary);">
+                Cuéntame tu idea y buscaremos la mejor solución técnica.
+            </p>
+            <a href="mailto:alejandro.laorden@proton.me" class="contact-email">
+                alejandro.laorden@proton.me
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2025 Alejandro Laorden · Programador Delphi · España</p>
+        <p style="margin-top: 0.5rem;">
+            <a href="https://alejandrolaorden.wordpress.com" target="_blank">Blog técnico</a>
+        </p>
+    </footer>
+</body>
+</html>

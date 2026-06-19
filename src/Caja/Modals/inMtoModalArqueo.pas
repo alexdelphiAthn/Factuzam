@@ -602,71 +602,83 @@ begin
   // Super Reducido, Exento). Se toma de fza_facturas SOLO las
   // SIMPLIFICADAS — incluye también las facturas asociadas a operaciones
   // de depósito (apertura "Depósito: Abono") que llevan su propio IVA.
-  // Filtro por f.CODIGO_EMP/ALM/CAJA_FAC directamente y por f.FECHA_FAC,
-  // sin pasar por fza_caja_operaciones (evita multiplicar totales cuando
-  // una operación tiene varias filas — DE+VE+CB en un cierre).
+  // Filtro por la fecha-hora de la operación. El DISTINCT evita multiplicar
+  // totales cuando una operación tiene varias filas (DE+VE+CB).
   qryResIVA.SQL.Text :=
-    ' SELECT ORD, TIPO, PORC_IVA, BASE, CUOTA_IVA, PORC_RE, CUOTA_RE,      ' +
-    '        (BASE + CUOTA_IVA + CUOTA_RE) AS BASE_IVAS                    ' +
-    ' FROM (                                                               ' +
-    '   SELECT 1 AS ORD, ''N'' AS TIPO,                                    ' +
-    '          MAX(f.PORCENTAJE_IVAN_FAC)                AS PORC_IVA,      ' +
-    '          COALESCE(SUM(f.TOTAL_BASEI_IVAN_FAC), 0)  AS BASE,          ' +
-    '          COALESCE(SUM(f.TOTAL_IVAN_FAC), 0)        AS CUOTA_IVA,     ' +
-    '          MAX(f.PORCENTAJE_REN_FAC)                 AS PORC_RE,       ' +
-    '          COALESCE(SUM(f.TOTAL_REN_FAC), 0)         AS CUOTA_RE       ' +
-    '     FROM fza_facturas f                                              ' +
-    '    WHERE f.TIPO_FAC        = ''SIMPLIFICADA''                        ' +
-    '      AND f.CODIGO_EMP_FAC  = :pEMPRESA                               ' +
-    '      AND f.CODIGO_ALM_FAC  = :pALMACEN                               ' +
-    '      AND f.CODIGO_CAJA_FAC = :pCAJA                                  ' +
-    '      AND f.FECHA_FAC      >= :pFDESDE                                ' +
-    '      AND f.FECHA_FAC      <= :pFHASTA                                ' +
-    '   UNION ALL                                                          ' +
-    '   SELECT 2, ''R'',                                                   ' +
-    '          MAX(f.PORCENTAJE_IVAR_FAC),                                 ' +
-    '          COALESCE(SUM(f.TOTAL_BASEI_IVAR_FAC), 0),                   ' +
-    '          COALESCE(SUM(f.TOTAL_IVAR_FAC), 0),                         ' +
-    '          MAX(f.PORCENTAJE_RER_FAC),                                  ' +
-    '          COALESCE(SUM(f.TOTAL_RER_FAC), 0)                           ' +
-    '     FROM fza_facturas f                                              ' +
-    '    WHERE f.TIPO_FAC        = ''SIMPLIFICADA''                        ' +
-    '      AND f.CODIGO_EMP_FAC  = :pEMPRESA                               ' +
-    '      AND f.CODIGO_ALM_FAC  = :pALMACEN                               ' +
-    '      AND f.CODIGO_CAJA_FAC = :pCAJA                                  ' +
-    '      AND f.FECHA_FAC      >= :pFDESDE                                ' +
-    '      AND f.FECHA_FAC      <= :pFHASTA                                ' +
-    '   UNION ALL                                                          ' +
-    '   SELECT 3, ''S'',                                                   ' +
-    '          MAX(f.PORCENTAJE_IVAS_FAC),                                 ' +
-    '          COALESCE(SUM(f.TOTAL_BASEI_IVAS_FAC), 0),                   ' +
-    '          COALESCE(SUM(f.TOTAL_IVAS_FAC), 0),                         ' +
-    '          MAX(f.PORCENTAJE_RES_FAC),                                  ' +
-    '          COALESCE(SUM(f.TOTAL_RES_FAC), 0)                           ' +
-    '     FROM fza_facturas f                                              ' +
-    '    WHERE f.TIPO_FAC        = ''SIMPLIFICADA''                        ' +
-    '      AND f.CODIGO_EMP_FAC  = :pEMPRESA                               ' +
-    '      AND f.CODIGO_ALM_FAC  = :pALMACEN                               ' +
-    '      AND f.CODIGO_CAJA_FAC = :pCAJA                                  ' +
-    '      AND f.FECHA_FAC      >= :pFDESDE                                ' +
-    '      AND f.FECHA_FAC      <= :pFHASTA                                ' +
-    '   UNION ALL                                                          ' +
-    '   SELECT 4, ''E'',                                                   ' +
-    '          MAX(f.PORCENTAJE_IVAE_FAC),                                 ' +
-    '          COALESCE(SUM(f.TOTAL_BASEI_IVAE_FAC), 0),                   ' +
-    '          COALESCE(SUM(f.TOTAL_IVAE_FAC), 0),                         ' +
-    '          MAX(f.PORCENTAJE_REE_FAC),                                  ' +
-    '          COALESCE(SUM(f.TOTAL_REE_FAC), 0)                           ' +
-    '     FROM fza_facturas f                                              ' +
-    '    WHERE f.TIPO_FAC        = ''SIMPLIFICADA''                        ' +
-    '      AND f.CODIGO_EMP_FAC  = :pEMPRESA                               ' +
-    '      AND f.CODIGO_ALM_FAC  = :pALMACEN                               ' +
-    '      AND f.CODIGO_CAJA_FAC = :pCAJA                                  ' +
-    '      AND f.FECHA_FAC      >= :pFDESDE                                ' +
-    '      AND f.FECHA_FAC      <= :pFHASTA                                ' +
-    ' ) ivas                                                               ' +
-    ' WHERE BASE <> 0 OR CUOTA_IVA <> 0 OR CUOTA_RE <> 0                   ' +
-    ' ORDER BY ORD                                                         ';
+    ' SELECT t.ORD, t.TIPO,                                                ' +
+    '        MAX(CASE t.ORD                                                ' +
+    '              WHEN 1 THEN f.PORCENTAJE_IVAN_FAC                       ' +
+    '              WHEN 2 THEN f.PORCENTAJE_IVAR_FAC                       ' +
+    '              WHEN 3 THEN f.PORCENTAJE_IVAS_FAC                       ' +
+    '              ELSE f.PORCENTAJE_IVAE_FAC END) AS PORC_IVA,            ' +
+    '        COALESCE(SUM(CASE t.ORD                                       ' +
+    '              WHEN 1 THEN f.TOTAL_BASEI_IVAN_FAC                      ' +
+    '              WHEN 2 THEN f.TOTAL_BASEI_IVAR_FAC                      ' +
+    '              WHEN 3 THEN f.TOTAL_BASEI_IVAS_FAC                      ' +
+    '              ELSE f.TOTAL_BASEI_IVAE_FAC END), 0) AS BASE,           ' +
+    '        COALESCE(SUM(CASE t.ORD                                       ' +
+    '              WHEN 1 THEN f.TOTAL_IVAN_FAC                            ' +
+    '              WHEN 2 THEN f.TOTAL_IVAR_FAC                            ' +
+    '              WHEN 3 THEN f.TOTAL_IVAS_FAC                            ' +
+    '              ELSE f.TOTAL_IVAE_FAC END), 0) AS CUOTA_IVA,            ' +
+    '        MAX(CASE t.ORD                                                ' +
+    '              WHEN 1 THEN f.PORCENTAJE_REN_FAC                        ' +
+    '              WHEN 2 THEN f.PORCENTAJE_RER_FAC                        ' +
+    '              WHEN 3 THEN f.PORCENTAJE_RES_FAC                        ' +
+    '              ELSE f.PORCENTAJE_REE_FAC END) AS PORC_RE,              ' +
+    '        COALESCE(SUM(CASE t.ORD                                       ' +
+    '              WHEN 1 THEN f.TOTAL_REN_FAC                             ' +
+    '              WHEN 2 THEN f.TOTAL_RER_FAC                             ' +
+    '              WHEN 3 THEN f.TOTAL_RES_FAC                             ' +
+    '              ELSE f.TOTAL_REE_FAC END), 0) AS CUOTA_RE,              ' +
+    '        COALESCE(SUM(CASE t.ORD                                       ' +
+    '              WHEN 1 THEN COALESCE(f.TOTAL_BASEI_IVAN_FAC, 0) +       ' +
+    '                          COALESCE(f.TOTAL_IVAN_FAC, 0) +             ' +
+    '                          COALESCE(f.TOTAL_REN_FAC, 0)                ' +
+    '              WHEN 2 THEN COALESCE(f.TOTAL_BASEI_IVAR_FAC, 0) +       ' +
+    '                          COALESCE(f.TOTAL_IVAR_FAC, 0) +             ' +
+    '                          COALESCE(f.TOTAL_RER_FAC, 0)                ' +
+    '              WHEN 3 THEN COALESCE(f.TOTAL_BASEI_IVAS_FAC, 0) +       ' +
+    '                          COALESCE(f.TOTAL_IVAS_FAC, 0) +             ' +
+    '                          COALESCE(f.TOTAL_RES_FAC, 0)                ' +
+    '              ELSE COALESCE(f.TOTAL_BASEI_IVAE_FAC, 0) +              ' +
+    '                   COALESCE(f.TOTAL_IVAE_FAC, 0) +                    ' +
+    '                   COALESCE(f.TOTAL_REE_FAC, 0) END), 0)              ' +
+    '          AS BASE_IVAS                                                ' +
+    '   FROM (                                                             ' +
+    '     SELECT DISTINCT                                                  ' +
+    '            f.SERIE_FAC, f.NUMERO_FAC,                                ' +
+    '            f.PORCENTAJE_IVAN_FAC, f.TOTAL_BASEI_IVAN_FAC,            ' +
+    '            f.TOTAL_IVAN_FAC, f.PORCENTAJE_REN_FAC, f.TOTAL_REN_FAC,  ' +
+    '            f.PORCENTAJE_IVAR_FAC, f.TOTAL_BASEI_IVAR_FAC,            ' +
+    '            f.TOTAL_IVAR_FAC, f.PORCENTAJE_RER_FAC, f.TOTAL_RER_FAC,  ' +
+    '            f.PORCENTAJE_IVAS_FAC, f.TOTAL_BASEI_IVAS_FAC,            ' +
+    '            f.TOTAL_IVAS_FAC, f.PORCENTAJE_RES_FAC, f.TOTAL_RES_FAC,  ' +
+    '            f.PORCENTAJE_IVAE_FAC, f.TOTAL_BASEI_IVAE_FAC,            ' +
+    '            f.TOTAL_IVAE_FAC, f.PORCENTAJE_REE_FAC, f.TOTAL_REE_FAC   ' +
+    '       FROM fza_caja_operaciones o                                    ' +
+    '       JOIN fza_facturas f                                            ' +
+    '         ON f.CODIGO_EMP_FAC  = o.CODIGO_EMP_OPCAJA                   ' +
+    '        AND f.CODIGO_ALM_FAC  = o.CODIGO_ALM_OPCAJA                   ' +
+    '        AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA                  ' +
+    '        AND f.SERIE_FAC       = o.SERIE_FAC_OPCAJA                    ' +
+    '        AND f.NUMERO_FAC      = o.NUMERO_FAC_OPCAJA                   ' +
+    '      WHERE o.CODIGO_EMP_OPCAJA       = :pEMPRESA                     ' +
+    '        AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                     ' +
+    '        AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                        ' +
+    '        AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
+    '        AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
+    '        AND f.TIPO_FAC             = ''SIMPLIFICADA''                 ' +
+    '   ) f                                                                ' +
+    '   CROSS JOIN (                                                       ' +
+    '     SELECT 1 AS ORD, ''N'' AS TIPO                                   ' +
+    '      UNION ALL SELECT 2, ''R''                                       ' +
+    '      UNION ALL SELECT 3, ''S''                                       ' +
+    '      UNION ALL SELECT 4, ''E''                                       ' +
+    '   ) t                                                                ' +
+    '  GROUP BY t.ORD, t.TIPO                                              ' +
+    '  HAVING BASE <> 0 OR CUOTA_IVA <> 0 OR CUOTA_RE <> 0                 ' +
+    '  ORDER BY t.ORD                                                      ';
 
   // Propiedad: 1 fila por (propiedad, valor). Suma sobre las líneas de venta
   // los TOTAL_FACLIN agregados al CODIGO_ART. Si la propiedad es de tipo
@@ -1230,6 +1242,7 @@ begin
     Exit;
   end;
   if Application.MessageBox(
+       PChar(
        'Se va a grabar el arqueo con los importes recontados.' +
        #13#10 +
        'Periodo: ' +
@@ -1241,7 +1254,7 @@ begin
        #13#10 +
        'Las operaciones del rango quedarán marcadas.' +
        #13#10#13#10 +
-       '¿Desea continuar?',
+       '¿Desea continuar?'),
        'Confirmar Arqueo',
        MB_YESNO or MB_ICONQUESTION) <> IDYES then
     Exit;
