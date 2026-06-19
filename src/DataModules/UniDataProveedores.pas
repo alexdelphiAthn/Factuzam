@@ -37,6 +37,12 @@ type
     dsKits: TDataSource;
     unqryKitsDet: TUniQuery;
     dsKitsDet: TDataSource;
+    // Pestaña Pagos: lookups de forma de pago y de cuentas bancarias de
+    // empresa (defectos de pago por proveedor).
+    unqryFormaPago: TUniQuery;
+    dsFormasPago: TDataSource;
+    unqryEmpresasBancos: TUniQuery;
+    dsEmpresasBancos: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
@@ -57,6 +63,8 @@ type
     procedure AsegurarArticulosAbierta;
     procedure AsegurarVentasAbierta;
     procedure AsegurarComprasAbierta;
+    // Abre los lookups de la pestaña Pagos (forma de pago y bancos de empresa).
+    procedure AsegurarPagosAbierta;
     // Genera una fila de detalle (cantidad 0) por cada talla del sistema
     // del kit seleccionado. INSERT IGNORE: no pisa cantidades ya tecleadas.
     procedure GenerarTallasKitActual;
@@ -86,6 +94,10 @@ begin
   unqryConjuntosTallas.Connection := oConn;
   unqryKits.Connection := oConn;
   unqryKitsDet.Connection := oConn;
+  // Lookups de la pestaña Pagos: solo Connection; se abren al activar la
+  // pestaña (AsegurarPagosAbierta), igual que el resto de detalles lazy.
+  unqryFormaPago.Connection := oConn;
+  unqryEmpresasBancos.Connection := oConn;
 end;
 
 procedure TdmProveedores.AbrirDetalles;
@@ -174,6 +186,28 @@ begin
     begin
       inLibLog.Log.LogPerf('Proveedores.Lazy',
         'unqryKits ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+      raise;
+    end;
+  end;
+end;
+
+procedure TdmProveedores.AsegurarPagosAbierta;
+var swQ: TStopwatch;
+begin
+  if unqryFormaPago.Active and unqryEmpresasBancos.Active then Exit;
+  swQ := TStopwatch.StartNew;
+  try
+    if not unqryFormaPago.Active then
+      unqryFormaPago.Open;
+    if not unqryEmpresasBancos.Active then
+      unqryEmpresasBancos.Open;
+    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryPagos OK',
+      swQ.ElapsedMilliseconds);
+  except
+    on E: Exception do
+    begin
+      inLibLog.Log.LogPerf('Proveedores.Lazy',
+        'unqryPagos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
   end;

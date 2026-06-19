@@ -659,7 +659,7 @@ inherited dmEmpresas: TdmEmpresas
       'WHERE CODIGO_EMP_EMPBAN = :CODIGO_EMP_EMP')
     MasterFields = 'CODIGO_EMP_EMP'
     DetailFields = 'CODIGO_EMP_EMPBAN'
-    RefreshOptions = [roAfterUpdate]
+    RefreshOptions = [roAfterInsert, roAfterUpdate]
     BeforeInsert = unqryRetencionesBeforeInsert
     AfterInsert = unqryBancosAfterInsert
     BeforePost = unqryBancosBeforePost
