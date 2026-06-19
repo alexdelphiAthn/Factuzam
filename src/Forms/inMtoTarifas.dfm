@@ -178,6 +178,36 @@ inherited frmMtoTarifas: TfrmMtoTarifas
               TabOrder = 5
               Transparent = True
             end
+            object lblDtoDesde: TcxLabel
+              Left = 440
+              Top = 49
+              Caption = 'Dto. desde'
+              TabOrder = 6
+              Transparent = True
+            end
+            object dteFechaDtoDesde: TcxDBDateEdit
+              Left = 516
+              Top = 45
+              DataBinding.DataField = 'FECHA_DESDE_DTO_TAR'
+              DataBinding.DataSource = dsTablaG
+              TabOrder = 7
+              Width = 110
+            end
+            object lblDtoHasta: TcxLabel
+              Left = 648
+              Top = 49
+              Caption = 'Dto. hasta'
+              TabOrder = 8
+              Transparent = True
+            end
+            object dteFechaDtoHasta: TcxDBDateEdit
+              Left = 722
+              Top = 45
+              DataBinding.DataField = 'FECHA_HASTA_DTO_TAR'
+              DataBinding.DataSource = dsTablaG
+              TabOrder = 9
+              Width = 110
+            end
           end
         end
         object pnlBodyFicha: TPanel

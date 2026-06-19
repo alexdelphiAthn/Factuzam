@@ -61,6 +61,10 @@ type
     chkActivo: TcxDBCheckBox;
     txtNOMBRE_TARIFA: TcxDBTextEdit;
     txtCODIGO_TARIFA: TcxDBTextEdit;
+    lblDtoDesde: TcxLabel;
+    dteFechaDtoDesde: TcxDBDateEdit;
+    lblDtoHasta: TcxLabel;
+    dteFechaDtoHasta: TcxDBDateEdit;
     cxgrdbclmnGrdDBTabPrinCODIGO_TARIFA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinNOMBRE_TARIFA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinACTIVO_TARIFA: TcxGridDBColumn;
