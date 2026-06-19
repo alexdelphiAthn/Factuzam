@@ -79,7 +79,8 @@ type
       AOwner               : TComponent;
       AConn                : TUniConnection;
       const ACodigoEmpresa : string;
-      AUso                 : TUsoBancoEmpresa): TSeleccionBancoResult;
+      AUso                 : TUsoBancoEmpresa;
+      const APreferEmpban  : string = ''): TSeleccionBancoResult;
   end;
 
 implementation
@@ -113,7 +114,13 @@ begin
       frm.FResultado.Aceptado := True;
     end
     else
+    begin
+      // Pre-selecciona el banco por defecto del proveedor/cliente si se pasa
+      // y pertenece a la empresa; si no, queda el ESDEFECTO segun el uso.
+      if (APreferEmpban <> '') then
+        frm.FQry.Locate('CODIGO_EMPBAN', APreferEmpban, []);
       frm.ShowModal;
+    end;
     Result := frm.FResultado;
   finally
     FreeAndNil(frm);
