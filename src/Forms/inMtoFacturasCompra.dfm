@@ -211,6 +211,7 @@ inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnEditValueChanged = btnCODIGO_PRV_FACCPropertiesEditValueChanged
                 TabOrder = 11
                 Width = 150
               end
