@@ -120,7 +120,6 @@ type
     btnRecalcular: TcxButton;
     btnImprimir: TcxButton;
     btnHistorico: TcxButton;
-    btnTiraCaja: TcxButton;
 
     // Sección Líneas artículos
     pnlLineas: TPanel;
@@ -235,6 +234,7 @@ type
     actDesplegarHasta: TAction;
     actHistorico: TAction;
     actTiraCaja: TAction;
+    btnTiraCaja: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -537,8 +537,8 @@ begin
     '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
     '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-    '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
+    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
+    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
     '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
     '  ORDER BY o.CODIGO_EMPLEADO_OPCAJA                                  ';
 
@@ -558,8 +558,8 @@ begin
     '  WHERE p.CODIGO_EMP_PAGO      = :pEMPRESA                           ' +
     '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
     '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
-    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
-    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
+    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
+    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
     '  GROUP BY p.CODIGO_FP_CFP                                           ' +
     '  ORDER BY p.CODIGO_FP_CFP                                           ';
 
@@ -665,8 +665,8 @@ begin
     '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
     '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-    '    AND o.FECHA_OPERACION_OPCAJA    >= :pFDESDE                         ' +
-    '    AND o.FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
+    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
+    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
     '  GROUP BY ap.CODIGO_PROP_ARTPROP, VALOR                             ' +
     '  ORDER BY ap.CODIGO_PROP_ARTPROP, VALOR                             ';
 end;

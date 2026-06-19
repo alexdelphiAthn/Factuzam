@@ -331,8 +331,7 @@ begin
       '    AND o.SERIE_FAC_OPCAJA   IS NOT NULL                          ' +
       '    AND o.SERIE_FAC_OPCAJA  <> ''''                               ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <                                ' +
-      '        DATE_ADD(:pFHASTA, INTERVAL 1 DAY)                        ' +
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
       '  ORDER BY o.SERIE_FAC_OPCAJA                                     ';
     Q.ParamByName('pEMP').AsString      := AEmpresa;
     Q.ParamByName('pALM').AsString      := AAlmacen;
@@ -375,17 +374,16 @@ begin
   try
     Ticket.Inicializar;
     EscribirCabeceraEmpresa(Ticket, AConn, AEmpresa);
-    // Título: una sola caja, con la fecha y hora de impresión (igual que el
-    // ejemplo). Si el rango abarca varios días, se detalla debajo.
+    // Título: una sola caja y el rango exacto seleccionado por el usuario.
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
-    Ticket.EscribirLinea(Format('-ARQUEO CAJA %s DIA %s HORA %s-',
-      [ACaja, FormatDateTime('dd/mm/yy', Now), FormatDateTime('hh:nn', Now)]));
-    if Trunc(AFechaDesde) <> Trunc(AFechaHasta) then
-      Ticket.EscribirLinea(Format('DEL %s AL %s',
-        [FormatDateTime('dd/mm/yy', AFechaDesde),
-         FormatDateTime('dd/mm/yy', AFechaHasta)]));
+    Ticket.EscribirLinea(Format('-ARQUEO CAJA %s HORA %s-',
+      [ACaja, FormatDateTime('hh:nn', Now)]));
+    Ticket.EscribirLinea(Format('DEL %s',
+      [FormatDateTime('dd/mm/yy hh:nn', AFechaDesde)]));
+    Ticket.EscribirLinea(Format('AL  %s',
+      [FormatDateTime('dd/mm/yy hh:nn', AFechaHasta)]));
     if Trim(ASerie) <> '' then
       Ticket.EscribirLinea('SERIE: ' + ASerie)
     else
@@ -415,8 +413,7 @@ begin
         '    AND o.SERIE_FAC_OPCAJA   IS NOT NULL                          ' +
         '    AND o.SERIE_FAC_OPCAJA  <> ''''                               ' +
         '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
-        '    AND o.FECHA_OPERACION_OPCAJA <                                ' +
-        '        DATE_ADD(:pFHASTA, INTERVAL 1 DAY)                        ';
+        '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ';
       if Trim(ASerie) <> '' then
         sSQL := sSQL + ' AND o.SERIE_FAC_OPCAJA = :pSERIE ';
       sSQL := sSQL +

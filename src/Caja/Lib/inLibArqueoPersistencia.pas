@@ -413,7 +413,7 @@ begin
         '   AND CODIGO_ALM_OPCAJA    = :pALM' +
         '   AND CODIGO_CAJA_OPCAJA   = :pCAJA' +
         '   AND FECHA_OPERACION_OPCAJA >= :pFDESDE' +
-        '   AND FECHA_OPERACION_OPCAJA < DATE_ADD(:pFHASTA, INTERVAL 1 DAY)' +
+        '   AND FECHA_OPERACION_OPCAJA <= :pFHASTA' +
         '   AND (CODIGO_ARQUEO_OPCAJA IS NULL' +
         '        OR CODIGO_ARQUEO_OPCAJA = '''')';
       Query.ParamByName('pARQ').AsString      := sCodigo;
