@@ -260,6 +260,8 @@ type
     cxdbmOBSERVACIONES_CLIENTE: TcxDBMemo;
     lblFormadePago: TcxLabel;
     cbbFORMAPAGO: TcxDBLookupComboBox;
+    lblBancoCobroCli: TcxLabel;
+    cbbBancoCobroCli: TcxDBLookupComboBox;
     lblNroCuenta: TcxLabel;
     lblTextoLegalAlt: TcxLabel;
     cbbTARIFA: TcxDBLookupComboBox;
@@ -681,6 +683,7 @@ begin
                                            dmmClientes.dsFacturasLineasClientes;
   tvDepositosCliente.DataController.DataSource := dmmClientes.dsDepositos;
   cbbFORMAPAGO.Properties.ListSource := dmmClientes.dsFormasPago;
+  cbbBancoCobroCli.Properties.ListSource := dmmClientes.dsEmpresasBancos;
   cbbTARIFA.Properties.ListSource := dmmClientes.dsTarifas;
   cbbPaises.Properties.ListSource := dmmClientes.dsPaises;
   pcPestanas.ActivePage := tsDomicilioFiscal;

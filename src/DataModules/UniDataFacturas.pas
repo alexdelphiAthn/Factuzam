@@ -158,6 +158,10 @@ public
     // la factura (serie/numero) despues de generarlos.
     procedure EstamparBancoRecibos(const ASerie, ANumero,
                                    ACodEmpban, AIban: string);
+    // Cuenta de la empresa (ingreso) por defecto del cliente
+    // (CODIGO_EMPBAN_CLI) para pre-seleccionarla en el modal de banco al
+    // generar recibos. '' si no tiene.
+    function GetBancoDefectoCliente(const ACodigoCli: string): string;
 
     // Genera movimientos de salida de stock para todas las líneas de la
     // factura cargada (sólo se llama automáticamente en facturas
@@ -1112,6 +1116,29 @@ begin
     qStamp.ExecSQL;
   finally
     FreeAndNil(qStamp);
+  end;
+end;
+
+function TdmFacturas.GetBancoDefectoCliente(
+  const ACodigoCli: string): string;
+var
+  q: TUniQuery;
+begin
+  Result := '';
+  if (ACodigoCli = '') or (ACodigoCli = '0') then
+    Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text := 'SELECT CODIGO_EMPBAN_CLI ' +
+                  '  FROM fza_clientes ' +
+                  ' WHERE CODIGO_CLI_CLI = :cli';
+    q.ParamByName('cli').AsString := ACodigoCli;
+    q.Open;
+    if not q.IsEmpty then
+      Result := q.FieldByName('CODIGO_EMPBAN_CLI').AsString;
+  finally
+    FreeAndNil(q);
   end;
 end;
 

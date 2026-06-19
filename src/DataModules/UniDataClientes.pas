@@ -26,6 +26,8 @@ type
   TdmClientes = class(TdmBase)
     dsFormasPago: TDataSource;
     unqryFormaPago: TUniQuery;
+    dsEmpresasBancos: TDataSource;
+    unqryEmpresasBancos: TUniQuery;
     dsTarifas: TDataSource;
     unqryTarifas: TUniQuery;
     dsFacturasClientes: TDataSource;
@@ -121,6 +123,7 @@ begin
   // movido a AbrirDetalles (callback main thread con overlay visible)
   // para no congelar la UI durante la creacion del data module.
   unqryFormaPago.Connection := oConn;
+  unqryEmpresasBancos.Connection := oConn;
   unqryPerfiles.Connection := oConn;
   unqryTarifas.Connection := oConn;
   unqryFacturasClientes.Connection := oConn;
@@ -165,6 +168,7 @@ begin
   // lazy: se abren al activar la pestaña Historia/Prestamos.
   AbrirConTiempo(unqryPaises,    'unqryPaises');
   AbrirConTiempo(unqryFormaPago, 'unqryFormaPago');
+  AbrirConTiempo(unqryEmpresasBancos, 'unqryEmpresasBancos');
   AbrirConTiempo(unqryTarifas,   'unqryTarifas');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
