@@ -1232,6 +1232,13 @@ begin
   if Application.MessageBox(
        'Se va a grabar el arqueo con los importes recontados.' +
        #13#10 +
+       'Periodo: ' +
+       FormatDateTime('dd/mm/yyyy hh:nn:ss',
+                      FechaDesdeSeleccionada) +
+       ' - ' +
+       FormatDateTime('dd/mm/yyyy hh:nn:ss',
+                      FechaHastaSeleccionada) +
+       #13#10 +
        'Las operaciones del rango quedarán marcadas.' +
        #13#10#13#10 +
        '¿Desea continuar?',
