@@ -683,10 +683,11 @@ begin
     end;
     { Datos del cierre }
     Ticket.Alinear(alIzquierda);
+    Ticket.EscribirLinea('PERIODO CERRADO');
     Ticket.TextoColumnas('Inicio:',
-      FormatDateTime('dd/mm/yyyy hh:nn', AArqueo.FechaDesde));
+      FormatDateTime('dd/mm/yyyy hh:nn:ss', AArqueo.FechaDesde));
     Ticket.TextoColumnas('Fin:',
-      FormatDateTime('dd/mm/yyyy hh:nn', AArqueo.FechaHasta));
+      FormatDateTime('dd/mm/yyyy hh:nn:ss', AArqueo.FechaHasta));
     Ticket.TextoColumnas('Ventas:',
       IntToStr(AArqueo.CantidadVentas));
     Ticket.TextoColumnas('Cierre por:',
@@ -944,6 +945,10 @@ begin
         dEfectivoDejado := Q.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
       if Q.FindField('DESGLOSE_BILLETES_ARQ') <> nil then
         sDesglose := Q.FieldByName('DESGLOSE_BILLETES_ARQ').AsString;
+      if (Frac(Arqueo.FechaDesde) = 0) and
+         (Frac(Arqueo.FechaHasta) = 0) then
+        Arqueo.FechaHasta :=
+          Arqueo.FechaHasta + EncodeTime(23, 59, 59, 0);
       bOk := True;
     end;
   finally

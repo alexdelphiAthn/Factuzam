@@ -163,8 +163,8 @@ begin
     Result := 'TARJ';
 end;
 // Asegura las formas de pago de caja que usa la migracion: 'EFE' (Efectivo) y
-// una 'TARJ<n>' / 'TARJETA <n>' por cada TipoTarjeta distinto del legacy
-// (occaj.TipoTarjeta). Idempotente via INSERT IGNORE.
+// una 'TARJ<n>' por cada TipoTarjeta distinto del legacy. La descripcion se
+// toma de octarcre.Nombre, que guarda nombres como Visa, MasterCard o banco.
 procedure AsegurarFormasPagoCaja(Eng: TMigEngine);
 const
   cInsFP =
@@ -178,13 +178,30 @@ const
     'VALUES (:cod, :desc, ''N'', ''N'', ''N'', :cambio, :cajon, ''S'', ' +
     '        :orden, NOW(), NOW(), :ua, :um)';
   cSelTar =
-    'SELECT DISTINCT TipoTarjeta FROM dbo.occaj ' +
-    'WHERE TipoTarjeta IS NOT NULL AND TipoTarjeta <> 0 ' +
-    'ORDER BY TipoTarjeta';
+    'SELECT t.TipoTarjeta, ' +
+    '       COALESCE(NULLIF(LTRIM(RTRIM(tc.Nombre)), ''''), ' +
+    '                NULLIF(LTRIM(RTRIM(tc.Abreviatura)), ''''), ' +
+    '                ''TARJETA '' + CAST(t.TipoTarjeta AS varchar(10))) ' +
+    '         AS NombreTarjeta ' +
+    'FROM ( ' +
+    '  SELECT DISTINCT TipoTarjeta FROM dbo.occaj ' +
+    '  WHERE TipoTarjeta IS NOT NULL AND TipoTarjeta <> 0 ' +
+    ') t ' +
+    'LEFT JOIN dbo.octarcre tc ON tc.Tarjeta = t.TipoTarjeta ' +
+    'ORDER BY t.TipoTarjeta';
+  cUpdDescGenerica =
+    'UPDATE fza_caja_formas_pago ' +
+    'SET DESCRIPCION_FORMA_PAGO_CFP = :desc, ' +
+    '    INSTANTE_MODIF = NOW(), USUARIO_MODIF = :um ' +
+    'WHERE CODIGO_FP_CFP = :cod ' +
+    '  AND UPPER(TRIM(DESCRIPCION_FORMA_PAGO_CFP)) = UPPER(:generica)';
 var
   qDst: TUniQuery;
+  qUpd: TUniQuery;
   qTar: TUniQuery;
   iTipo: Integer;
+  sDesc: string;
+  sDescGenerica: string;
   procedure InsertarFP(const sCod, sDesc, sCambio, sCajon: string;
     iOrden: Integer);
   begin
@@ -197,32 +214,52 @@ var
     qDst.ParamByName('um').AsString     := Eng.Usuario;
     qDst.ExecSQL;
   end;
+  procedure ActualizarDescripcionGenerica(const sCod, sDesc,
+    sGenerica: string);
+  begin
+    if Trim(sDesc) <> '' then
+    begin
+      qUpd.ParamByName('cod').AsString      := sCod;
+      qUpd.ParamByName('desc').AsString     := sDesc;
+      qUpd.ParamByName('um').AsString       := Eng.Usuario;
+      qUpd.ParamByName('generica').AsString := sGenerica;
+      qUpd.ExecSQL;
+    end;
+  end;
 begin
   qDst := TUniQuery.Create(nil);
+  qUpd := TUniQuery.Create(nil);
   try
     qDst.Connection := Eng.ConDst;
     qDst.SQL.Text   := cInsFP;
+    qUpd.Connection := Eng.ConDst;
+    qUpd.SQL.Text   := cUpdDescGenerica;
     // Efectivo: da cambio y abre cajon. Orden 1 (primer boton en F12).
     InsertarFP('EFE', 'Efectivo', 'S', 'S', 1);
     // Tarjeta generica: respaldo para pagos con tarjeta sin tipo (TipoTarjeta
     // 0) o con un tipo anomalo demasiado largo (ver CodigoTarjeta).
     InsertarFP('TARJ', 'TARJETA', 'N', 'N', 9);
-    // Una forma de pago por cada TipoTarjeta del legacy: TARJETA 1, 2, ...
-    // (las tarjetas no dan cambio ni abren cajon).
+    // Una forma de pago por cada TipoTarjeta del legacy. Si ya existia de una
+    // migracion anterior como TARJETA n, se renombra con el maestro origen.
     qTar := NuevoQOrigen(Eng, cSelTar);
     try
       qTar.Open;
       while not qTar.Eof do
       begin
         iTipo := qTar.FieldByName('TipoTarjeta').AsInteger;
-        InsertarFP(CodigoTarjeta(iTipo), 'TARJETA ' + IntToStr(iTipo),
+        sDesc := Trim(qTar.FieldByName('NombreTarjeta').AsString);
+        sDescGenerica := 'TARJETA ' + IntToStr(iTipo);
+        InsertarFP(CodigoTarjeta(iTipo), Copy(sDesc, 1, 100),
           'N', 'N', 10 + iTipo);
+        ActualizarDescripcionGenerica(CodigoTarjeta(iTipo),
+          Copy(sDesc, 1, 100), sDescGenerica);
         qTar.Next;
       end;
     finally
       qTar.Free;
     end;
   finally
+    qUpd.Free;
     qDst.Free;
   end;
 end;
