@@ -120,6 +120,7 @@ type
     btnRecalcular: TcxButton;
     btnImprimir: TcxButton;
     btnHistorico: TcxButton;
+    btnTiraCaja: TcxButton;
 
     // Sección Líneas artículos
     pnlLineas: TPanel;
@@ -233,6 +234,7 @@ type
     actDesplegarDesde: TAction;
     actDesplegarHasta: TAction;
     actHistorico: TAction;
+    actTiraCaja: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -240,11 +242,13 @@ type
     procedure btnRecalcularClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
     procedure btnHistoricoClick(Sender: TObject);
+    procedure btnTiraCajaClick(Sender: TObject);
     procedure btnGrabarArqueoClick(Sender: TObject);
     procedure actEscapeExecute(Sender: TObject);
     procedure actRecalcularExecute(Sender: TObject);
     procedure actImprimirExecute(Sender: TObject);
     procedure actHistoricoExecute(Sender: TObject);
+    procedure actTiraCajaExecute(Sender: TObject);
     procedure actGrabarExecute(Sender: TObject);
     procedure actDesplegarDesdeExecute(Sender: TObject);
     procedure actDesplegarHastaExecute(Sender: TObject);
@@ -299,7 +303,7 @@ implementation
 {$R *.dfm}
 
 uses inLibGlobalVar, inLibPermisos, inLibLog, inMtoModalArqueosHistCaja,
-     inLibCajaParam;
+     inLibCajaParam, inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -412,6 +416,55 @@ begin
   if (FConn = nil) or (not FConn.Connected) then
     Exit;
   TfrmModalArqueosHistCaja.Ejecutar(Self, FConn, FEmpresa, FAlmacen, FCaja);
+end;
+
+procedure TfrmModalArqueo.btnTiraCajaClick(Sender: TObject);
+begin
+  inherited;
+  actTiraCajaExecute(Sender);
+end;
+
+procedure TfrmModalArqueo.actTiraCajaExecute(Sender: TObject);
+var
+  Series: TArray<string>;
+  sSerie: string;
+  bQR, bVerifactu, bMostrar: Boolean;
+begin
+  inherited;
+  if (FConn = nil) or (not FConn.Connected) then
+    Exit;
+  // Series facturadas en el rango; si no hay ninguna, no hay tira que sacar.
+  Series := TTiraCajaTicket.ObtenerSeries(FConn, FEmpresa, FAlmacen, FCaja,
+                                          dteFechaDesde.Date,
+                                          dteFechaHasta.Date);
+  if Length(Series) = 0 then
+  begin
+    Application.MessageBox(
+      'No hay operaciones facturadas en el rango seleccionado.',
+      'Tira de Caja', MB_OK or MB_ICONINFORMATION);
+    Exit;
+  end;
+  // El QR solo aplica con Verifactu activo (envío PRE o PRO).
+  bVerifactu := VerifactuActivo;
+  sSerie     := '';
+  bQR        := False;
+  // Se pregunta la serie cuando hay más de una; también se abre el diálogo si
+  // hay opción de QR. Con una sola serie y sin Verifactu, se imprime directo.
+  bMostrar := (Length(Series) > 1) or bVerifactu;
+  if bMostrar then
+  begin
+    if not TfrmModalTiraCaja.Ejecutar(Self, FCaja, Series, bVerifactu,
+                                      sSerie, bQR) then
+      Exit;
+  end;
+  Screen.Cursor := crHourGlass;
+  try
+    TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
+                             dteFechaDesde.Date, dteFechaHasta.Date,
+                             sSerie, bQR, oNomImpresoraCaja);
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TfrmModalArqueo.actEscapeExecute(Sender: TObject);
