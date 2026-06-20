@@ -101,6 +101,11 @@ type
     spnTotalesPORCENTAJE_REE_DEVC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_DEVC: TcxDBCheckBox;
     grpDesgloseImpuestos: TGroupBox;
+    shpSeparador1: TShape;
+    shpSeparador2: TShape;
+    shpSeparador3: TShape;
+    shpSeparador4: TShape;
+    shpSeparador5: TShape;
 
     // Observaciones
     memObservaciones: TcxDBMemo;
