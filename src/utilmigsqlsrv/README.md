@@ -41,6 +41,9 @@ src/utilmigsqlsrv/
 │                                                   fza_depositos_cliente
 ├── inLibMigFacturas.pas           dbo.occaj/occajarp → fza_facturas +
 │                                                   fza_facturas_lineas
+├── inLibMigVentasMayor.pas        dbo.ocpedcli/ocalbcli/ocfaccli →
+│                                                   pedidos, albaranes y
+│                                                   facturas de venta mayor
 ├── inLibMigTallajes.pas           dbo.ocgrptal + ocgrptalnor →
 │                                                  fza_atributos_conjuntos
 │                                                  + _det
@@ -209,7 +212,9 @@ workers de la actual han terminado.
 | 0 | formas_pago · ivas_grupos · ivas · empresas · empleados · proveedores · familias · colores_maestros · tallas_maestras | — |
 | 1 | almacenes · clientes · articulos · tallajes | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
-| 3 | inventarios · movimientos · ventas · facturas | Wave 2 |
+| 3 | inventarios · movimientos · ventas · pedidos_venta · albaranes_venta · pedidos_compra · albaranes_compra | Wave 2 |
+| 4 | facturas | Wave 3 |
+| 5 | facturas_venta_mayor | Wave 4 |
 
 El dominio `fotos` **no entra en las waves**: se lanza en un hilo
 independiente al principio de la corrida y avanza en paralelo a toda la

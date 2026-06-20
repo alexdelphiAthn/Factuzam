@@ -157,6 +157,7 @@ uses
   inLibMigMovimientos,
   inLibMigVentas,
   inLibMigFacturas,
+  inLibMigVentasMayor,
   inLibMigVales,
   inLibMigArqueos,
   inLibMigTallajes,
@@ -362,9 +363,19 @@ begin
     'dbo.occaj → fza_caja_operaciones + fza_caja_pagos + ' +
     'fza_depositos_cliente (AL→depósito, cobro→adelanto)',
     MigrarVentas);
+  FEngine.Registrar('pedidos_venta', 'Pedidos venta mayor (ocpedcli)',
+    'dbo.ocpedcli/ocpedcliart → fza_pedidos + fza_pedidos_lineas',
+    MigrarPedidosVentaMayor);
+  FEngine.Registrar('albaranes_venta', 'Albaranes venta mayor (ocalbcli)',
+    'dbo.ocalbcli/ocalbcliart → fza_albaranes + fza_albaranes_lineas',
+    MigrarAlbaranesVentaMayor);
   FEngine.Registrar('facturas', 'Facturas de venta (occajarp)',
     'dbo.occaj/occajarp → fza_facturas + fza_facturas_lineas',
     MigrarFacturas);
+  FEngine.Registrar('facturas_venta_mayor',
+    'Facturas venta mayor (ocfaccli)',
+    'dbo.ocfaccli/ocfaccliart → fza_facturas + fza_facturas_lineas',
+    MigrarFacturasVentaMayor);
   FEngine.Registrar('vales', 'Vales de tienda (occajvale)',
     'dbo.occajvale → fza_caja_vales',
     MigrarVales);
@@ -679,8 +690,8 @@ begin
   if MessageDlg(Format(
        'Se van a BORRAR del destino "%s" todas las filas que haya '#13#10 +
        'creado una migracion previa (USUARIO_ALTA = "%s") en las '#13#10 +
-       '42 tablas que toca el migrador: facturas, movimientos, compras '#13#10 +
-       '(pedidos y albaranes), caja, inventarios, skus, articulos, '#13#10 +
+       '46 tablas que toca el migrador: facturas, pedidos, albaranes, '#13#10 +
+       'movimientos, compras, caja, inventarios, skus, articulos, '#13#10 +
        'clientes, proveedores, almacenes, empresas, contadores,...).'#13#10#13#10 +
        'NO se tocan tablas de SISTEMA ni filas creadas por otros '#13#10 +
        'usuarios (demo, Administrador, etc.).'#13#10#13#10 +
@@ -980,6 +991,8 @@ begin
   else if (sCodigo = 'inventarios') or
      (sCodigo = 'movimientos')      or
      (sCodigo = 'ventas')           or
+     (sCodigo = 'pedidos_venta')    or
+     (sCodigo = 'albaranes_venta')  or
      (sCodigo = 'pedidos_compra')   or
      (sCodigo = 'albaranes_compra') then
     Result := 3
@@ -987,6 +1000,8 @@ begin
   // con su factura (REF_MOV) y necesita los movimientos ya migrados.
   else if (sCodigo = 'facturas') then
     Result := 4
+  else if (sCodigo = 'facturas_venta_mayor') then
+    Result := 5
   // Default: wave 0 (conservador, sin deps conocidas)
   else
     Result := 0;
@@ -1104,7 +1119,7 @@ begin
             .Run;
         end;
 
-      for iWave := 0 to 4 do
+      for iWave := 0 to 5 do
       begin
         if task.CancellationToken.IsSignalled then Break;
 

@@ -20,6 +20,7 @@ uses
   inLibMigMovimientos in 'inLibMigMovimientos.pas',
   inLibMigVentas in 'inLibMigVentas.pas',
   inLibMigFacturas in 'inLibMigFacturas.pas',
+  inLibMigVentasMayor in 'inLibMigVentasMayor.pas',
   inLibMigVales in 'inLibMigVales.pas',
   inLibMigArqueos in 'inLibMigArqueos.pas',
   inLibMigTallajes in 'inLibMigTallajes.pas',
