@@ -28,6 +28,7 @@
 {      Pais                   → PAIS_PRV                                       }
 {      PersonaContacto        → CONTACTO_PRV                                   }
 {      IBAN                   → IBAN_PRV                                       }
+{      TipoEfecto             → CODIGO_FP_PRV (si la columna existe)          }
 {      Observacion (text)     → OBSERVACIONES_PRV                              }
 {      Estado='B'             → ESACTIVO_PRV='N', resto 'S'                    }
 {      Abreviatura            → REFERENCIA_PRV                                 }
@@ -49,17 +50,54 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
+function ColumnaDestinoExiste(Eng: TMigEngine; const sTabla,
+  sColumna: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM INFORMATION_SCHEMA.COLUMNS ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      '   AND TABLE_NAME = :tabla ' +
+      '   AND COLUMN_NAME = :columna';
+    q.ParamByName('tabla').AsString := sTabla;
+    q.ParamByName('columna').AsString := sColumna;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger > 0;
+  finally
+    q.Free;
+  end;
+end;
+
+function CodigoFormaPagoProveedor(q: TUniQuery): string;
+var
+  iTipo: Integer;
+begin
+  Result := '';
+  if q.FindField('TipoEfecto') <> nil then
+  begin
+    iTipo := q.FieldByName('TipoEfecto').AsInteger;
+    if iTipo > 0 then
+      Result := IntToStr(iTipo);
+  end;
+end;
+
 procedure MigrarProveedores(Eng: TMigEngine; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT Proveedor, Nombre, RazonSocial, NIF, ' +
     '       Direccion1, Direccion2, CodPostal, Poblacion, Provincia, ' +
     '       Pais, Telefono1, TelefonoMovil, Email, ' +
-    '       PersonaContacto, Abreviatura, IBAN, Estado, ' +
+    '       PersonaContacto, Abreviatura, IBAN, ' +
+    '       ISNULL(TipoEfecto, 0) AS TipoEfecto, Estado, ' +
     '       CAST(Observacion AS varchar(4000)) AS Observacion ' +
     'FROM dbo.ocpro ' +
     'ORDER BY Proveedor';
-  cInsertDst =
+  cInsertDstBase =
     'INSERT INTO fza_proveedores (' +
       'CODIGO_PRV_PRV, ESACTIVO_PRV, RAZON_SOCIAL_PRV, NOMBRE_PRV, ' +
       'NIF_PRV, MOVIL_PRV, TELEFONO_PRV, EMAIL_PRV, ' +
@@ -73,6 +111,23 @@ const
       ':DIRECCION1_PRV, :DIRECCION2_PRV, :POBLACION_PRV, :PROVINCIA_PRV, ' +
       ':CODIGO_POSTAL_PRV, :PAIS_PRV, ' +
       ':OBSERVACIONES_PRV, :REFERENCIA_PRV, :CONTACTO_PRV, :IBAN_PRV, ' +
+      ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
+  cInsertDstConFp =
+    'INSERT INTO fza_proveedores (' +
+      'CODIGO_PRV_PRV, ESACTIVO_PRV, RAZON_SOCIAL_PRV, NOMBRE_PRV, ' +
+      'NIF_PRV, MOVIL_PRV, TELEFONO_PRV, EMAIL_PRV, ' +
+      'DIRECCION1_PRV, DIRECCION2_PRV, POBLACION_PRV, PROVINCIA_PRV, ' +
+      'CODIGO_POSTAL_PRV, PAIS_PRV, ' +
+      'OBSERVACIONES_PRV, REFERENCIA_PRV, CONTACTO_PRV, IBAN_PRV, ' +
+      'CODIGO_FP_PRV, ' +
+      'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'VALUES (' +
+      ':CODIGO_PRV_PRV, :ESACTIVO_PRV, :RAZON_SOCIAL_PRV, :NOMBRE_PRV, ' +
+      ':NIF_PRV, :MOVIL_PRV, :TELEFONO_PRV, :EMAIL_PRV, ' +
+      ':DIRECCION1_PRV, :DIRECCION2_PRV, :POBLACION_PRV, :PROVINCIA_PRV, ' +
+      ':CODIGO_POSTAL_PRV, :PAIS_PRV, ' +
+      ':OBSERVACIONES_PRV, :REFERENCIA_PRV, :CONTACTO_PRV, :IBAN_PRV, ' +
+      ':CODIGO_FP_PRV, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 
   function DeducirActivo(const sEstado: string): string;
@@ -89,13 +144,24 @@ var
   qSrc, qIns, qChk:                  TUniQuery;
   sCod, sNombre, sRazon, sObs:       string;
   sRazonDst:                         string;
+  sCodigoFp:                         string;
+  bTieneCodigoFp:                    Boolean;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   qIns := TUniQuery.Create(nil);
   qChk := TUniQuery.Create(nil);
   try
     qIns.Connection := Eng.ConDst;
-    qIns.SQL.Text   := cInsertDst;
+    bTieneCodigoFp := ColumnaDestinoExiste(Eng, 'fza_proveedores',
+                                           'CODIGO_FP_PRV');
+    if bTieneCodigoFp then
+      qIns.SQL.Text := cInsertDstConFp
+    else
+    begin
+      qIns.SQL.Text := cInsertDstBase;
+      Eng.Log('  proveedores: CODIGO_FP_PRV no existe; se omite la forma ' +
+              'de pago por defecto. Ejecuta proveedores_pagos_defecto.sql.');
+    end;
     qChk.Connection := Eng.ConDst;
     qChk.SQL.Text   :=
       'SELECT RAZON_SOCIAL_PRV FROM fza_proveedores ' +
@@ -168,6 +234,14 @@ begin
         Trim(qSrc.FieldByName('PersonaContacto').AsString);
       qIns.ParamByName('IBAN_PRV').AsString         :=
         Trim(qSrc.FieldByName('IBAN').AsString);
+      if bTieneCodigoFp then
+      begin
+        sCodigoFp := CodigoFormaPagoProveedor(qSrc);
+        if sCodigoFp <> '' then
+          qIns.ParamByName('CODIGO_FP_PRV').AsString := sCodigoFp
+        else
+          qIns.ParamByName('CODIGO_FP_PRV').Clear;
+      end;
       RellenarAuditoria(qIns, Eng.Usuario);
 
       try

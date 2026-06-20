@@ -3,764 +3,963 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alejandro Laorden | Programador Delphi</title>
+    <title>Factuzam | Desarrollo Delphi, VeriFactu y migraciones</title>
+    <meta name="description" content="Factuzam: programa de facturación conforme a VeriFactu y servicios de adaptación, migración y mantenimiento para aplicaciones Delphi, Visual Basic y .NET.">
+    <link rel="icon" href="assets/logo/icon-512.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #1a2332;
-            --accent-primary: #00d4aa;
-            --accent-secondary: #0ea5e9;
-            --accent-warm: #f59e0b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border: #2d3a4f;
-            --gradient-accent: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            --fondo: #f7f8fb;
+            --panel: #ffffff;
+            --panel-suave: #eef2f7;
+            --marca: #0f1a2e;
+            --tinta: #142033;
+            --texto: #536176;
+            --linea: #d8deea;
+            --lila: #9e89d6;
+            --lila-oscuro: #7560ad;
+            --verde: #00a98f;
+            --ambar: #d88c20;
+            --rojo: #bd4b55;
+            --sombra: 0 18px 44px rgba(15, 26, 46, 0.11);
         }
-
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
-
         html {
             scroll-behavior: smooth;
         }
-
         body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.7;
+            margin: 0;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--fondo);
+            color: var(--tinta);
+            line-height: 1.6;
             overflow-x: hidden;
         }
-
-        /* Noise texture overlay */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-            opacity: 0.03;
-            pointer-events: none;
-            z-index: 1000;
+        img {
+            display: block;
+            max-width: 100%;
         }
-
-        /* Navigation */
-        nav {
+        a {
+            color: inherit;
+        }
+        .nav {
             position: fixed;
+            z-index: 20;
             top: 0;
             left: 0;
             right: 0;
-            padding: 1.5rem 4rem;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            background: rgba(10, 14, 23, 0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            z-index: 100;
+            min-height: 74px;
+            padding: 0 40px;
+            background: rgba(247, 248, 251, 0.94);
+            border-bottom: 1px solid var(--linea);
+            backdrop-filter: blur(16px);
         }
-
-        .logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.3rem;
-            font-weight: 700;
-            background: var(--gradient-accent);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .logo span {
-            color: var(--text-muted);
-            -webkit-text-fill-color: var(--text-muted);
-        }
-
-        .nav-links {
+        .nav__marca {
             display: flex;
-            gap: 2.5rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
+            align-items: center;
+            gap: 12px;
             text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: color 0.3s ease;
-            position: relative;
         }
-
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--gradient-accent);
-            transition: width 0.3s ease;
+        .nav__marca img {
+            width: 170px;
+            height: auto;
         }
-
-        .nav-links a:hover {
-            color: var(--text-primary);
-        }
-
-        .nav-links a:hover::after {
-            width: 100%;
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
+        .nav__enlaces {
             display: flex;
             align-items: center;
-            padding: 8rem 4rem 4rem;
-            position: relative;
-            overflow: hidden;
+            gap: 24px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 0.95rem;
+            font-weight: 600;
         }
-
-        .hero-bg {
+        .nav__enlaces a {
+            color: var(--texto);
+            text-decoration: none;
+        }
+        .nav__enlaces a:hover {
+            color: var(--marca);
+        }
+        .boton {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 20px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .boton:hover {
+            transform: translateY(-2px);
+        }
+        .boton--principal {
+            background: var(--lila);
+            color: #ffffff;
+            box-shadow: 0 12px 28px rgba(117, 96, 173, 0.26);
+        }
+        .boton--principal:hover {
+            background: var(--lila-oscuro);
+        }
+        .boton--secundario {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.48);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .boton--claro {
+            color: var(--marca);
+            border-color: var(--linea);
+            background: #ffffff;
+        }
+        .hero {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 92vh;
+            padding: 130px 40px 92px;
+            overflow: hidden;
+            color: var(--tinta);
+            background: #f7f8fb;
+        }
+        .hero::after {
+            content: "";
             position: absolute;
-            top: 0;
-            right: 0;
-            width: 60%;
-            height: 100%;
-            background: radial-gradient(ellipse at 70% 30%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
-                        radial-gradient(ellipse at 90% 80%, rgba(14, 165, 233, 0.06) 0%, transparent 40%);
+            right: -18px;
+            bottom: 34px;
+            width: min(42vw, 580px);
+            height: min(42vw, 580px);
+            background-image: url("assets/img/hero-factuzam.png");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
             pointer-events: none;
         }
-
-        .hero-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                linear-gradient(rgba(45, 58, 79, 0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(45, 58, 79, 0.3) 1px, transparent 1px);
-            background-size: 60px 60px;
-            mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-        }
-
-        .hero-content {
-            max-width: 800px;
+        .hero__contenido {
+            width: min(760px, 100%);
             position: relative;
             z-index: 1;
         }
-
-        .hero-tag {
+        .hero__logo {
+            width: 250px;
+            height: auto;
+            margin-bottom: 34px;
+        }
+        .etiqueta {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--accent-primary);
-            background: rgba(0, 212, 170, 0.1);
-            border: 1px solid rgba(0, 212, 170, 0.3);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.8s ease;
+            min-height: 34px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            color: var(--lila-oscuro);
+            background: rgba(158, 137, 214, 0.16);
+            border: 1px solid rgba(117, 96, 173, 0.24);
+            font-size: 0.88rem;
+            font-weight: 800;
         }
-
-        .hero-tag::before {
-            content: '>';
-            font-weight: 700;
-        }
-
         .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            animation: fadeInUp 0.8s ease 0.1s both;
+            max-width: 760px;
+            margin: 22px 0 22px;
+            font-size: 4rem;
+            line-height: 1.05;
+            font-weight: 800;
         }
-
-        .hero h1 .highlight {
-            background: var(--gradient-accent);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .hero p {
+            max-width: 660px;
+            margin: 0;
+            color: var(--texto);
+            font-size: 1.22rem;
         }
-
-        .hero-description {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin-bottom: 2.5rem;
-            animation: fadeInUp 0.8s ease 0.2s both;
-        }
-
-        .hero-cta {
+        .hero__acciones {
             display: flex;
-            gap: 1rem;
             flex-wrap: wrap;
-            animation: fadeInUp 0.8s ease 0.3s both;
+            gap: 14px;
+            margin-top: 34px;
         }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-primary {
-            background: var(--gradient-accent);
-            color: var(--bg-primary);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 212, 170, 0.3);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--accent-primary);
-            background: rgba(0, 212, 170, 0.05);
-        }
-
-        /* Sections */
-        section {
-            padding: 6rem 4rem;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .section-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            color: var(--accent-primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 1rem;
-        }
-
-        .section-title {
-            font-size: clamp(2rem, 4vw, 3rem);
-            font-weight: 700;
-        }
-
-        /* Services */
-        #servicios {
-            background: var(--bg-secondary);
-        }
-
-        .services-grid {
+        .hero__datos {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .service-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2.5rem;
-            transition: all 0.4s ease;
-            position: relative;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1px;
+            width: min(720px, 100%);
+            margin-top: 48px;
             overflow: hidden;
-        }
-
-        .service-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--gradient-accent);
-            transform: scaleX(0);
-            transition: transform 0.4s ease;
-        }
-
-        .service-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(0, 212, 170, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .service-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .service-icon {
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 212, 170, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .service-card h3 {
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .service-card p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-
-        /* VeriFactu Highlight */
-        #verifactu {
-            position: relative;
-        }
-
-        .verifactu-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-        }
-
-        .verifactu-content h3 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .verifactu-content p {
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
-        }
-
-        .verifactu-features {
-            list-style: none;
-        }
-
-        .verifactu-features li {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 0;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .verifactu-features li:last-child {
-            border-bottom: none;
-        }
-
-        .verifactu-features .check {
-            color: var(--accent-primary);
-            font-weight: bold;
-        }
-
-        .verifactu-visual {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
-            position: relative;
-        }
-
-        .code-window {
-            background: var(--bg-primary);
+            border: 1px solid var(--linea);
             border-radius: 8px;
-            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 14px 34px rgba(15, 26, 46, 0.08);
         }
-
-        .code-header {
-            display: flex;
-            gap: 6px;
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.3);
+        .hero__dato {
+            padding: 16px;
+            background: #ffffff;
         }
-
-        .code-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
+        .hero__dato strong {
+            display: block;
+            font-size: 1.05rem;
         }
-
-        .code-dot.red { background: #ff5f56; }
-        .code-dot.yellow { background: #ffbd2e; }
-        .code-dot.green { background: #27c93f; }
-
-        .code-content {
-            padding: 1.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            line-height: 1.8;
-        }
-
-        .code-line {
-            display: flex;
-        }
-
-        .code-line-number {
-            color: var(--text-muted);
-            width: 30px;
-            user-select: none;
-        }
-
-        .code-keyword { color: #c792ea; }
-        .code-function { color: #82aaff; }
-        .code-string { color: #c3e88d; }
-        .code-comment { color: #546e7a; }
-        .code-type { color: #ffcb6b; }
-
-        /* Tech Stack */
-        #tecnologias {
-            background: var(--bg-secondary);
-        }
-
-        .tech-grid {
-            display: flex;
-            justify-content: center;
-            gap: 3rem;
-            flex-wrap: wrap;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .tech-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            padding: 2rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            min-width: 140px;
-            transition: all 0.3s ease;
-        }
-
-        .tech-item:hover {
-            border-color: var(--accent-primary);
-            transform: translateY(-4px);
-        }
-
-        .tech-icon {
-            font-size: 2.5rem;
-        }
-
-        .tech-name {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        /* Contact */
-        #contacto {
-            text-align: center;
-        }
-
-        .contact-content {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .contact-email {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.3rem;
-            color: var(--accent-primary);
-            text-decoration: none;
-            display: inline-block;
-            padding: 1rem 2rem;
-            border: 2px solid var(--accent-primary);
-            border-radius: 8px;
-            margin-top: 2rem;
-            transition: all 0.3s ease;
-        }
-
-        .contact-email:hover {
-            background: var(--accent-primary);
-            color: var(--bg-primary);
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 2rem 4rem;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
+        .hero__dato span {
+            color: var(--texto);
             font-size: 0.9rem;
         }
-
-        footer a {
-            color: var(--accent-primary);
+        .hero .boton--secundario {
+            color: var(--marca);
+            border-color: var(--linea);
+            background: #ffffff;
+        }
+        .hero .boton--secundario:hover {
+            border-color: var(--lila);
+            box-shadow: 0 10px 24px rgba(15, 26, 46, 0.08);
+        }
+        main {
+            background: var(--fondo);
+        }
+        section {
+            padding: 86px 40px;
+        }
+        .contenedor {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+        }
+        .cabecera {
+            max-width: 780px;
+            margin-bottom: 34px;
+        }
+        .cabecera--centrada {
+            margin-right: auto;
+            margin-left: auto;
+            text-align: center;
+        }
+        .cabecera__marca {
+            margin-bottom: 10px;
+            color: var(--lila-oscuro);
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0;
+        }
+        h2 {
+            margin: 0;
+            color: var(--marca);
+            font-size: 2.45rem;
+            line-height: 1.16;
+        }
+        h3 {
+            margin: 0 0 12px;
+            color: var(--marca);
+            font-size: 1.25rem;
+            line-height: 1.25;
+        }
+        .cabecera p,
+        .texto-ancho {
+            margin: 16px 0 0;
+            color: var(--texto);
+            font-size: 1.06rem;
+        }
+        .servicios {
+            background: #ffffff;
+        }
+        .rejilla-servicios {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+        .tarjeta {
+            min-height: 100%;
+            padding: 24px;
+            border: 1px solid var(--linea);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: 0 12px 30px rgba(15, 26, 46, 0.06);
+        }
+        .tarjeta p {
+            margin: 0;
+            color: var(--texto);
+        }
+        .tarjeta__indicador {
+            width: 42px;
+            height: 6px;
+            margin-bottom: 18px;
+            border-radius: 8px;
+            background: var(--lila);
+        }
+        .tarjeta:nth-child(2) .tarjeta__indicador,
+        .tarjeta:nth-child(5) .tarjeta__indicador {
+            background: var(--verde);
+        }
+        .tarjeta:nth-child(3) .tarjeta__indicador,
+        .tarjeta:nth-child(6) .tarjeta__indicador {
+            background: var(--ambar);
+        }
+        .franja {
+            background: var(--marca);
+            color: #ffffff;
+        }
+        .franja .cabecera__marca,
+        .franja h2 {
+            color: #ffffff;
+        }
+        .franja .cabecera p,
+        .franja .texto-ancho {
+            color: rgba(255, 255, 255, 0.78);
+        }
+        .verifactu {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+            gap: 42px;
+            align-items: start;
+        }
+        .lista-check {
+            display: grid;
+            gap: 12px;
+            margin: 28px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .lista-check li {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.84);
+        }
+        .lista-check li::before {
+            content: "";
+            width: 12px;
+            height: 12px;
+            margin-top: 7px;
+            border-radius: 50%;
+            background: var(--verde);
+        }
+        .panel-github {
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .panel-github h3 {
+            color: #ffffff;
+            font-size: 1.55rem;
+        }
+        .panel-github p {
+            margin: 0 0 22px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .codigo-enlace {
+            display: block;
+            overflow-wrap: anywhere;
+            margin: 18px 0 22px;
+            padding: 14px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.22);
+            color: #ffffff;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.92rem;
             text-decoration: none;
         }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .producto {
+            background: var(--panel-suave);
         }
-
-        /* Responsive */
-        @media (max-width: 900px) {
-            nav {
-                padding: 1rem 2rem;
+        .producto__grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+            gap: 34px;
+            align-items: center;
+        }
+        .producto__logo {
+            width: min(410px, 100%);
+            margin-bottom: 22px;
+        }
+        .producto__imagen {
+            overflow: hidden;
+            border: 1px solid var(--linea);
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: var(--sombra);
+        }
+        .producto__imagen img {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            object-fit: cover;
+            object-position: top center;
+        }
+        .pildoras {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+        .pildora {
+            padding: 7px 11px;
+            border-radius: 8px;
+            color: var(--marca);
+            background: #ffffff;
+            border: 1px solid var(--linea);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .capturas {
+            background: #ffffff;
+        }
+        .galeria {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+        figure {
+            margin: 0;
+            overflow: hidden;
+            border: 1px solid var(--linea);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: 0 12px 30px rgba(15, 26, 46, 0.07);
+        }
+        figure img {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            object-fit: contain;
+            background: #eef1f7;
+        }
+        figcaption {
+            padding: 16px 18px 18px;
+        }
+        figcaption strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--marca);
+        }
+        figcaption span {
+            display: block;
+            color: var(--texto);
+            font-size: 0.94rem;
+        }
+        .trabajo {
+            background: var(--fondo);
+        }
+        .trabajo__grid {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: 24px;
+        }
+        .pasos {
+            display: grid;
+            gap: 14px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            counter-reset: pasos;
+        }
+        .pasos li {
+            position: relative;
+            min-height: 74px;
+            padding: 16px 18px 16px 68px;
+            border: 1px solid var(--linea);
+            border-radius: 8px;
+            background: #ffffff;
+            color: var(--texto);
+        }
+        .pasos li::before {
+            counter-increment: pasos;
+            content: counter(pasos);
+            position: absolute;
+            top: 16px;
+            left: 18px;
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--marca);
+            color: #ffffff;
+            font-weight: 800;
+        }
+        .pasos strong {
+            display: block;
+            color: var(--marca);
+        }
+        .tecnologias {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 28px;
+        }
+        .tecnologia {
+            display: grid;
+            place-items: center;
+            min-height: 72px;
+            padding: 12px;
+            border: 1px solid var(--linea);
+            border-radius: 8px;
+            background: #ffffff;
+            color: var(--marca);
+            font-weight: 800;
+            text-align: center;
+        }
+        .contacto {
+            background: var(--marca);
+            color: #ffffff;
+        }
+        .contacto__grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+            gap: 36px;
+            align-items: center;
+        }
+        .contacto h2,
+        .contacto .cabecera__marca {
+            color: #ffffff;
+        }
+        .contacto p {
+            color: rgba(255, 255, 255, 0.78);
+        }
+        .contacto__panel {
+            padding: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .contacto__panel a {
+            display: block;
+            overflow-wrap: anywhere;
+            margin-top: 12px;
+            color: #ffffff;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .contacto__acciones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        footer {
+            padding: 24px 40px;
+            background: #0b1220;
+            color: rgba(255, 255, 255, 0.66);
+            text-align: center;
+            font-size: 0.92rem;
+        }
+        footer a {
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        @media (max-width: 1040px) {
+            .nav {
+                padding: 0 22px;
             }
-
-            .nav-links {
+            .nav__enlaces {
+                gap: 14px;
+                font-size: 0.9rem;
+            }
+            .hero h1 {
+                font-size: 3.15rem;
+            }
+            .hero::after {
                 display: none;
             }
-
-            section, .hero {
-                padding: 4rem 2rem;
+            .rejilla-servicios {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-
-            .verifactu-container {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-
-            .verifactu-visual {
-                order: -1;
+            .tecnologias {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
-
-        @media (max-width: 600px) {
+        @media (max-width: 820px) {
+            .nav {
+                min-height: 66px;
+            }
+            .nav__marca img {
+                width: 138px;
+            }
+            .nav__enlaces {
+                display: none;
+            }
+            .hero {
+                min-height: 88vh;
+                padding: 110px 22px 64px;
+            }
+            .hero::after {
+                display: none;
+            }
+            .hero__logo {
+                width: 210px;
+            }
             .hero h1 {
+                font-size: 2.05rem;
+            }
+            .hero p {
+                max-width: 100%;
+                font-size: 0.95rem;
+            }
+            .hero__contenido {
+                width: 100%;
+            }
+            .hero__datos {
+                display: none;
+            }
+            section {
+                padding: 64px 22px;
+            }
+            h2 {
                 font-size: 2rem;
             }
-
-            .hero-description {
-                font-size: 1rem;
-            }
-
-            .services-grid {
+            .verifactu,
+            .producto__grid,
+            .trabajo__grid,
+            .contacto__grid {
                 grid-template-columns: 1fr;
+            }
+            .galeria,
+            .rejilla-servicios {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 520px) {
+            .boton {
+                width: 100%;
+            }
+            .hero h1 {
+                font-size: 1.72rem;
+            }
+            .hero p {
+                max-width: 320px;
+                font-size: 0.9rem;
+            }
+            .tecnologias {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="logo">AL<span>_dev</span></div>
-        <ul class="nav-links">
+    <header class="nav">
+        <a class="nav__marca" href="#inicio" aria-label="Ir al inicio">
+            <img src="assets/logo/logo.svg" alt="Factuzam">
+        </a>
+        <ul class="nav__enlaces">
             <li><a href="#servicios">Servicios</a></li>
             <li><a href="#verifactu">VeriFactu</a></li>
-            <li><a href="#tecnologias">Tecnologías</a></li>
+            <li><a href="#factuzam">Factuzam</a></li>
+            <li><a href="#capturas">Pantallas</a></li>
             <li><a href="#contacto">Contacto</a></li>
         </ul>
-    </nav>
-
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-grid"></div>
-        <div class="hero-content">
-            <div class="hero-tag">Desarrollo a medida</div>
-            <h1>Programador <span class="highlight">Delphi</span><br>especializado en gestión empresarial</h1>
-            <p class="hero-description">
-                Desarrollo de aplicaciones de facturación, gestión comercial e integración con sistemas tributarios. 
-                Soluciones robustas y eficientes para tu negocio.
+    </header>
+    <section id="inicio" class="hero">
+        <div class="hero__contenido">
+            <img class="hero__logo" src="assets/logo/logo.svg" alt="Factuzam">
+            <span class="etiqueta">Facturación, VeriFactu y software de gestión</span>
+            <h1>Factuzam y adaptaciones VeriFactu para programas reales.</h1>
+            <p>
+                Desarrollo y mantengo software empresarial en Delphi, Visual Basic y .NET.
+                Adapto programas ya existentes a VeriFactu, hago migraciones de datos y
+                trabajo por día bajo presupuesto previo.
             </p>
-            <div class="hero-cta">
-                <a href="#contacto" class="btn btn-primary">
-                    <span>Contactar</span>
-                    <span>→</span>
-                </a>
-                <a href="#servicios" class="btn btn-secondary">Ver servicios</a>
+            <div class="hero__acciones">
+                <a class="boton boton--principal" href="#contacto">Pedir presupuesto</a>
+                <a class="boton boton--secundario" href="manual/index.html">Ver manual</a>
+                <a class="boton boton--secundario" href="https://github.com/alexdelphiAthn/delphiverifactu/" target="_blank" rel="noopener noreferrer">GitHub DelphiVeriFactu</a>
             </div>
-        </div>
-    </section>
-
-    <section id="servicios">
-        <div class="section-header">
-            <div class="section-tag">// Lo que hago</div>
-            <h2 class="section-title">Servicios</h2>
-        </div>
-        <div class="services-grid">
-            <div class="service-card">
-                <div class="service-icon">📊</div>
-                <h3>Software de Gestión</h3>
-                <p>Desarrollo de aplicaciones de gestión comercial, control de stock, TPV y procesos empresariales adaptados a las necesidades específicas de cada cliente.</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🧾</div>
-                <h3>Facturación Electrónica</h3>
-                <p>Sistemas de facturación completos, integración con VeriFactu y cumplimiento normativo. Generación de tickets térmicos con códigos QR.</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">📈</div>
-                <h3>Informes y Reporting</h3>
-                <p>Diseño e implementación de informes personalizados con FastReport, Excel y otras herramientas. Exportación a múltiples formatos y automatización de procesos.</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🔄</div>
-                <h3>Migración de Datos</h3>
-                <p>Procesos de migración entre sistemas, conversión de bases de datos y traspaso de información histórica garantizando la integridad de los datos.</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🗄️</div>
-                <h3>Bases de Datos</h3>
-                <p>Diseño y optimización de bases de datos MySQL/MariaDB. Consultas eficientes, procedimientos almacenados y mantenimiento de sistemas existentes.</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🔌</div>
-                <h3>Integraciones</h3>
-                <p>Desarrollo de módulos de integración con sistemas externos, APIs, servicios web y conectores para ampliar las capacidades de software existente.</p>
-            </div>
-        </div>
-    </section>
-
-    <section id="verifactu">
-        <div class="section-header">
-            <div class="section-tag">// Caso destacado</div>
-            <h2 class="section-title">Integración VeriFactu</h2>
-        </div>
-        <div class="verifactu-container">
-            <div class="verifactu-content">
-                <h3>Cumplimiento normativo para software de terceros. Ejemplo OdaCashPlusº</h3>
-                <p>
-                    He desarrollado OdaVeriFactu, un software VeriFactu para este programa externo sin intervenir en su programación. Así <strong>OdaCashPlus</strong> cumple con los 
-                    requisitos de la Agencia Tributaria sin necesidad de modificar el programa original.
-                </p>
-                <ul class="verifactu-features">
-                    <li><span class="check">✓</span> Generación de códigos QR para tickets</li>
-                    <li><span class="check">✓</span> Adaptable a cualquier software de facturación</li>
-                </ul>
-            </div>
-            <div class="verifactu-visual">
-                <div class="code-window">
-                    <div class="code-header">
-                        <div class="code-dot red"></div>
-                        <div class="code-dot yellow"></div>
-                        <div class="code-dot green"></div>
-                    </div>
-                    <div class="code-content">
-                        <div class="code-line">
-                            <span class="code-line-number">1</span>
-                            <span><span class="code-keyword">procedure</span> <span class="code-function">GenerarRegistroVeriFactu</span>;</span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">2</span>
-                            <span><span class="code-keyword">var</span></span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">3</span>
-                            <span>  Hash: <span class="code-type">string</span>;</span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">4</span>
-                            <span><span class="code-keyword">begin</span></span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">5</span>
-                            <span>  <span class="code-comment">// Calcular hash encadenado</span></span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">6</span>
-                            <span>  Hash := <span class="code-function">CalcularSHA256</span>(Datos);</span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">7</span>
-                            <span>  <span class="code-function">FirmarRegistro</span>(Hash);</span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">8</span>
-                            <span>  <span class="code-function">EnviarAEAT</span>(Registro);</span>
-                        </div>
-                        <div class="code-line">
-                            <span class="code-line-number">9</span>
-                            <span><span class="code-keyword">end</span>;</span>
-                        </div>
-                    </div>
+            <div class="hero__datos" aria-label="Resumen de servicios">
+                <div class="hero__dato">
+                    <strong>VeriFactu</strong>
+                    <span>Adaptacion y correccion de software existente.</span>
+                </div>
+                <div class="hero__dato">
+                    <strong>Factuzam</strong>
+                    <span>Facturación, tallas, colores, VeriFactu y No*VeriFactu.</span>
+                </div>
+                <div class="hero__dato">
+                    <strong>Migraciones</strong>
+                    <span>Datos, procesos, APIs y aplicaciones legacy.</span>
                 </div>
             </div>
         </div>
     </section>
-
-    <section id="tecnologias">
-        <div class="section-header">
-            <div class="section-tag">// Stack técnico</div>
-            <h2 class="section-title">Tecnologías</h2>
-        </div>
-        <div class="tech-grid">
-            <div class="tech-item">
-                <div class="tech-icon">🔷</div>
-                <div class="tech-name">Delphi</div>
+    <main>
+        <section id="servicios" class="servicios">
+            <div class="contenedor">
+                <div class="cabecera">
+                    <div class="cabecera__marca">Servicios profesionales</div>
+                    <h2>Trabajo sobre aplicaciones de gestión que ya están en producción.</h2>
+                    <p>
+                        Puedo intervenir en programas existentes, preparar importaciones,
+                        migraciones o implantar Factuzam cuando conviene partir de una
+                        solución completa. También adapto procesos a la legalidad vigente.
+                    </p>
+                </div>
+                <div class="rejilla-servicios">
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>Adaptación a VeriFactu</h3>
+                        <p>
+                            Corrijo o amplío programas ya escritos para generar registros,
+                            QR tributario, trazabilidad, anulaciones y rectificativas.
+                        </p>
+                    </article>
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>Migraciones e importaciones</h3>
+                        <p>
+                            Traspaso o importo datos desde sistemas antiguos, hojas de
+                            cálculo, ficheros o bases SQL, con verificaciones de cuadre.
+                        </p>
+                    </article>
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>Modificaciones Delphi</h3>
+                        <p>
+                            Mantenimiento, nuevas pantallas, corrección de errores,
+                            informes, impresiones, integraciones y optimización.
+                        </p>
+                    </article>
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>Visual Basic y .NET</h3>
+                        <p>
+                            Evolucion de aplicaciones heredadas cuando el negocio depende
+                            de ellas y no interesa reescribirlo todo desde cero.
+                        </p>
+                    </article>
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>APIs, WebService WSDL y REST</h3>
+                        <p>
+                            Desarrollo llamadas a APIs, integraciones REST, WebServices
+                            WSDL y conexión con el API de PrestaShop.
+                        </p>
+                    </article>
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>Informes y BI</h3>
+                        <p>
+                            Trabajo con informes, listados, cuadros de mando y cubos de
+                            decisión BI para explotar los datos de gestión.
+                        </p>
+                    </article>
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>Facturacion completa</h3>
+                        <p>
+                            Factuzam cubre clientes, proveedores, almacenes, ventas,
+                            caja, informes, tallas, colores, VeriFactu y No*VeriFactu.
+                        </p>
+                    </article>
+                    <article class="tarjeta">
+                        <div class="tarjeta__indicador"></div>
+                        <h3>Presupuesto y compromiso</h3>
+                        <p>
+                            Cobro por día trabajado, siempre bajo presupuesto previo:
+                            alcance, jornadas estimadas, entregables y compromiso de trabajo quedan definidos.
+                        </p>
+                    </article>
+                </div>
             </div>
-            <div class="tech-item">
-                <div class="tech-icon">🐬</div>
-                <div class="tech-name">MySQL</div>
+        </section>
+        <section id="verifactu" class="franja">
+            <div class="contenedor verifactu">
+                <div>
+                    <div class="cabecera">
+                        <div class="cabecera__marca">VeriFactu AEAT</div>
+                        <h2>Adapto facturación existente sin romper el programa original.</h2>
+                        <p>
+                            La prioridad es que el negocio siga trabajando. Reviso la base
+                            de datos, el circuito de ventas, la impresión y los procesos
+                            fiscales para incorporar VeriFactu con el menor riesgo posible.
+                        </p>
+                    </div>
+                    <ul class="lista-check">
+                        <li>Análisis del programa actual y del flujo real de facturas o tickets.</li>
+                        <li>Generación de QR tributario, huella SHA-256 y registros encadenados.</li>
+                        <li>Cola de envío, reintentos, diagnóstico de errores y trazabilidad.</li>
+                        <li>Rectificativas, anulaciones, subsanaciones y facturar ticket cuando aplica.</li>
+                        <li>Adaptación a la legalidad con cambios trazables y documentados.</li>
+                    </ul>
+                </div>
+                <aside class="panel-github">
+                    <h3>DelphiVeriFactu en GitHub</h3>
+                    <p>
+                        Para desarrolladores Delphi, enlazo mi repositorio público
+                        delphiverifactu como referencia técnica y punto de contacto.
+                    </p>
+                    <a class="codigo-enlace" href="https://github.com/alexdelphiAthn/delphiverifactu/" target="_blank" rel="noopener noreferrer">
+                        github.com/alexdelphiAthn/delphiverifactu
+                    </a>
+                    <a class="boton boton--principal" href="https://github.com/alexdelphiAthn/delphiverifactu/" target="_blank" rel="noopener noreferrer">Abrir GitHub</a>
+                </aside>
             </div>
-            <div class="tech-item">
-                <div class="tech-icon">🦭</div>
-                <div class="tech-name">MariaDB</div>
+        </section>
+        <section id="factuzam" class="producto">
+            <div class="contenedor producto__grid">
+                <div>
+                    <img class="producto__logo" src="assets/logo/logo.svg" alt="Factuzam">
+                    <div class="cabecera">
+                        <div class="cabecera__marca">Programa propio</div>
+                        <h2>Mi propio programa de facturación cumple las normas de facturación aplicables.</h2>
+                        <p>
+                            Factuzam está preparado para trabajar con VeriFactu,
+                            No*VeriFactu, QR tributario, declaración responsable, cola de
+                            envíos y reglas de inalterabilidad. Gestiona tallas y colores
+                            con múltiples dimensiones de producto, hasta 5 dimensiones, y
+                            conecta con el API de PrestaShop.
+                        </p>
+                    </div>
+                    <div class="pildoras">
+                        <span class="pildora">Facturas y tickets</span>
+                        <span class="pildora">TPV y caja</span>
+                        <span class="pildora">Almacenes</span>
+                        <span class="pildora">Clientes</span>
+                        <span class="pildora">MariaDB</span>
+                        <span class="pildora">FastReport</span>
+                        <span class="pildora">APIs REST</span>
+                        <span class="pildora">PrestaShop</span>
+                        <span class="pildora">No*VeriFactu</span>
+                        <span class="pildora">Hasta 5 dimensiones</span>
+                        <span class="pildora">BI</span>
+                    </div>
+                </div>
+                <div class="producto__imagen">
+                    <img src="assets/img/listado.png" alt="Listado de Factuzam">
+                </div>
             </div>
-            <div class="tech-item">
-                <div class="tech-icon">📋</div>
-                <div class="tech-name">FastReport</div>
+        </section>
+        <section id="capturas" class="capturas">
+            <div class="contenedor">
+                <div class="cabecera cabecera--centrada">
+                    <div class="cabecera__marca">Pantallazos del programa</div>
+                    <h2>Interfaz de escritorio para trabajar rápido, no para decorar.</h2>
+                    <p>
+                        Estas capturas salen del manual del programa y muestran pantallas
+                        reales de trabajo: acceso, listados, fichas y gestión de empresas.
+                    </p>
+                </div>
+                <div class="galeria">
+                    <figure>
+                        <img src="assets/img/pantalla-principal.png" alt="Pantalla principal de Factuzam">
+                        <figcaption>
+                            <strong>Pantalla principal</strong>
+                            <span>Acceso directo a menús de archivo, compras, ventas, caja, almacén, informes y VeriFactu.</span>
+                        </figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/img/listado.png" alt="Listado general de Factuzam">
+                        <figcaption>
+                            <strong>Listados de mantenimiento</strong>
+                            <span>Filtros, búsqueda, ordenación y acciones habituales para gestionar datos del negocio.</span>
+                        </figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/img/ficha.png" alt="Ficha de mantenimiento de Factuzam">
+                        <figcaption>
+                            <strong>Fichas de datos</strong>
+                            <span>Edición estructurada de registros con controles de validación y botones de trabajo diario.</span>
+                        </figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/img/clientes.png" alt="Pantalla de clientes de Factuzam">
+                        <figcaption>
+                            <strong>Clientes</strong>
+                            <span>Gestión de clientes, datos fiscales, condiciones comerciales y preparación para facturación.</span>
+                        </figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/img/empresas.png" alt="Pantalla de empresas de Factuzam">
+                        <figcaption>
+                            <strong>Empresas emisoras</strong>
+                            <span>Configuración de empresas, certificados y parámetros necesarios para el circuito fiscal.</span>
+                        </figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/img/login.png" alt="Acceso a Factuzam">
+                        <figcaption>
+                            <strong>Acceso al sistema</strong>
+                            <span>Entrada por usuario y conexión a la base de datos de la instalación correspondiente.</span>
+                        </figcaption>
+                    </figure>
+                </div>
             </div>
-            <div class="tech-item">
-                <div class="tech-icon">🖨️</div>
-                <div class="tech-name">ESC/POS</div>
+        </section>
+        <section id="forma-trabajo" class="trabajo">
+            <div class="contenedor trabajo__grid">
+                <div class="cabecera">
+                    <div class="cabecera__marca">Forma de trabajo</div>
+                    <h2>Presupuesto claro por día trabajado.</h2>
+                    <p>
+                        Antes de empezar reviso el alcance, separo lo imprescindible de lo
+                        deseable y preparo una estimación por jornadas. Así sabes que se va
+                        a tocar, que queda fuera, qué entregables vas a recibir y a qué me
+                        comprometo.
+                    </p>
+                    <div class="tecnologias" aria-label="Tecnologías">
+                        <div class="tecnologia">Delphi</div>
+                        <div class="tecnologia">Visual Basic</div>
+                        <div class="tecnologia">.NET</div>
+                        <div class="tecnologia">MariaDB</div>
+                        <div class="tecnologia">MySQL</div>
+                        <div class="tecnologia">SQL Server</div>
+                        <div class="tecnologia">REST</div>
+                        <div class="tecnologia">WSDL</div>
+                        <div class="tecnologia">BI</div>
+                    </div>
+                </div>
+                <ol class="pasos">
+                    <li>
+                        <strong>Revisión inicial</strong>
+                        Analizo programa, base de datos, importaciones, APIs, informes y puntos de riesgo.
+                    </li>
+                    <li>
+                        <strong>Presupuesto</strong>
+                        Propongo jornadas estimadas, prioridades, adaptación legal y condiciones de entrega.
+                    </li>
+                    <li>
+                        <strong>Desarrollo</strong>
+                        Trabajo por bloques verificables para que puedas probar avances reales.
+                    </li>
+                    <li>
+                        <strong>Puesta en marcha</strong>
+                        Acompaño la migración, la instalación o la adaptación final en entorno real.
+                    </li>
+                </ol>
             </div>
-        </div>
-    </section>
-
-    <section id="contacto">
-        <div class="section-header">
-            <div class="section-tag">// Hablemos</div>
-            <h2 class="section-title">Contacto</h2>
-        </div>
-        <div class="contact-content">
-            <p style="color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 1rem;">
-                ¿Tienes un proyecto en mente? ¿Necesitas adaptar tu software a VeriFactu o desarrollar una solución a medida?
-            </p>
-            <p style="color: var(--text-secondary);">
-                Cuéntame tu idea y buscaremos la mejor solución técnica.
-            </p>
-            <a href="mailto:alejandro.laorden@proton.me" class="contact-email">
-                alejandro.laorden@proton.me
-            </a>
-        </div>
-    </section>
-
+        </section>
+        <section id="contacto" class="contacto">
+            <div class="contenedor contacto__grid">
+                <div>
+                    <div class="cabecera">
+                        <div class="cabecera__marca">Contacto</div>
+                        <h2>Cuéntame qué programa tienes y qué necesitas adaptar.</h2>
+                        <p>
+                            Si tu aplicación de facturación está hecha en Delphi, Visual
+                            Basic o .NET, puedo revisar si conviene corregirla, migrarla o
+                            implantar Factuzam.
+                        </p>
+                    </div>
+                    <div class="contacto__acciones">
+                        <a class="boton boton--principal" href="mailto:alejandro.laorden@proton.me">Enviar correo</a>
+                        <a class="boton boton--secundario" href="manual/index.html">Abrir manual</a>
+                    </div>
+                </div>
+                <aside class="contacto__panel">
+                    <strong>Email</strong>
+                    <a href="mailto:alejandro.laorden@proton.me">alejandro.laorden@proton.me</a>
+                    <br>
+                    <strong>Blog técnico</strong>
+                    <a href="https://alejandrolaorden.wordpress.com" target="_blank" rel="noopener noreferrer">alejandrolaorden.wordpress.com</a>
+                    <br>
+                    <strong>GitHub DelphiVeriFactu</strong>
+                    <a href="https://github.com/alexdelphiAthn/delphiverifactu/" target="_blank" rel="noopener noreferrer">alexdelphiAthn/delphiverifactu</a>
+                </aside>
+            </div>
+        </section>
+    </main>
     <footer>
-        <p>© 2025 Alejandro Laorden · Programador Delphi · España</p>
-        <p style="margin-top: 0.5rem;">
-            <a href="https://alejandrolaorden.wordpress.com" target="_blank">Blog técnico</a>
-        </p>
+        <p>© 2026 Alejandro Laorden · Factuzam · Desarrollo Delphi, VeriFactu y migraciones</p>
     </footer>
 </body>
 </html>

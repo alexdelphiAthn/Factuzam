@@ -32,7 +32,12 @@
 {                                                                              }
 {    IVA: 4 bandas legacy (ImpBaseImp/PorIVA/CuotaIVA 1-4) clasificadas en     }
 {    N/R/S/E por su %. Totales (bases/impuestos/líquido) del propio legacy.    }
+{    Las lineas tambien clasifican TIPO_IVA_ARTICULO por su PorIVA, para que   }
+{    facturas generadas desde albaran hereden la banda correcta.               }
 {    El recargo de equivalencia (RE) no aplica a la cabecera de compra.        }
+{                                                                              }
+{    Forma de pago: se guarda el codigo legacy TipoEfecto si viene informado;  }
+{    si no, se conserva el texto FormaPago como fallback historico.            }
 {                                                                              }
 {    Idempotente: borra al arrancar lo migrado por el usuario y reinserta      }
 {    (INSERT IGNORE por lotes para las líneas/cabeceras).                      }
@@ -110,6 +115,40 @@ begin
     Result := 1
   else
     Result := 0;
+end;
+
+function TipoIvaArticuloCompra(const rate: Double): string;
+begin
+  case BandaIva(rate) of
+    1:
+      Result := 'R';
+    2:
+      Result := 'S';
+    3:
+      Result := 'E';
+  else
+    Result := 'N';
+  end;
+end;
+
+function CodigoFormaPagoCompra(q: TUniQuery): string;
+var
+  iTipo: Integer;
+  oCampoForma: TField;
+begin
+  Result := '';
+  if q.FindField('TipoEfecto') <> nil then
+  begin
+    iTipo := q.FieldByName('TipoEfecto').AsInteger;
+    if iTipo > 0 then
+      Result := IntToStr(iTipo);
+  end;
+  if Result = '' then
+  begin
+    oCampoForma := q.FindField('FormaPago');
+    if oCampoForma <> nil then
+      Result := Copy(Trim(oCampoForma.AsString), 1, 200);
+  end;
 end;
 
 type
@@ -311,6 +350,7 @@ const
     '       ISNULL(p.Provincia, '''') AS Provincia, ' +
     '       ISNULL(p.CodPostal, '''') AS CodPostal, ' +
     '       ISNULL(p.DocExterno, '''') AS DocExterno, ' +
+    '       ISNULL(p.TipoEfecto, 0) AS TipoEfecto, ' +
     '       ISNULL(p.FormaPago, '''') AS FormaPago, ' +
     '       ISNULL(p.CantidadPed, 0) AS CantidadPed, ' +
     '       ISNULL(p.CantidadRcbda, 0) AS CantidadRcbda, ' +
@@ -448,7 +488,7 @@ begin
            F(qCab.FieldByName('ImpBaseImp').AsFloat),
            F(qCab.FieldByName('TotalIVA').AsFloat),
            F(qCab.FieldByName('ImpPedido').AsFloat),
-           ValorOrNull(Copy(Trim(qCab.FieldByName('FormaPago').AsString), 1, 200)) +
+           ValorOrNull(CodigoFormaPagoCompra(qCab)) +
              ', ' + TempPvToken(oMapTemp,
                                 qCab.FieldByName('TemporadaNombre').AsString),
            sAhora, sAhora, sUser, sUser]));
@@ -505,7 +545,7 @@ begin
         sAlm := IntToStr(qLin.FieldByName('AlmLin').AsInteger);
       try
         bLin.Add(Format(
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, ' +
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
           '%s, %s, %s, %s',
           [ValorOrNull(sNum), ValorOrNull(sSerie),
            ValorOrNull(Format('%.4d', [qLin.FieldByName('Orden').AsInteger])),
@@ -515,6 +555,7 @@ begin
            ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
            F(qLin.FieldByName('CantidadPedida').AsFloat),
            F(qLin.FieldByName('CantidadRecibida').AsFloat),
+           ValorOrNull(TipoIvaArticuloCompra(qLin.FieldByName('PorIva').AsFloat)),
            F(qLin.FieldByName('PorIva').AsFloat),
            F(qLin.FieldByName('PrecioSIva').AsFloat),
            F(qLin.FieldByName('PrecioCIva').AsFloat),
@@ -566,6 +607,8 @@ const
     '       ISNULL(a.Provincia, '''') AS Provincia, ' +
     '       ISNULL(a.CodPostal, '''') AS CodPostal, ' +
     '       ISNULL(a.DocExterno, '''') AS DocExterno, ' +
+    '       ISNULL(a.TipoEfecto, 0) AS TipoEfecto, ' +
+    '       ISNULL(a.FormaPago, '''') AS FormaPago, ' +
     '       a.EjercicioPedido, ISNULL(a.SeriePedido, '''') AS SeriePedido, ' +
     '       ISNULL(a.NroPedido, 0) AS NroPedido, ' +
     '       ISNULL(a.ImpBaseImp1, 0) AS ImpBaseImp1, ' +
@@ -625,7 +668,7 @@ const
     'CODIGO_ALM_ALBC, PORCENTAJE_IVAN_ALBC, TOTAL_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
     'TOTAL_IVAR_ALBC, PORCENTAJE_IVAS_ALBC, TOTAL_IVAS_ALBC, PORCENTAJE_IVAE_ALBC, ' +
     'TOTAL_IVAE_ALBC, TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
-    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+    'FORMA_PAGO_ALBC, INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
   cColsLin =
     'NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, NUMERO_PEDC_ALBCLIN, ' +
     'SERIE_PEDC_ALBCLIN, CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
@@ -713,6 +756,7 @@ begin
            F(qCab.FieldByName('ImpBaseImp').AsFloat),
            F(qCab.FieldByName('TotalIVA').AsFloat),
            F(qCab.FieldByName('ImpAlbaran').AsFloat),
+           ValorOrNull(CodigoFormaPagoCompra(qCab)),
            sAhora, sAhora, sUser, sUser]));
         Inc(Stats.Insertadas);
       except
@@ -779,7 +823,7 @@ begin
       end;
       try
         bLin.Add(Format(
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, ' +
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
           '%s, %s, %s, %s',
           [ValorOrNull(sNum), ValorOrNull(sSerie),
            ValorOrNull(Format('%.4d', [qLin.FieldByName('Orden').AsInteger])),
@@ -788,6 +832,7 @@ begin
            AcPivotToken(oMapTal, sArt),
            ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
            F(qLin.FieldByName('Cantidad').AsFloat),
+           ValorOrNull(TipoIvaArticuloCompra(qLin.FieldByName('PorIVA').AsFloat)),
            F(qLin.FieldByName('PorIVA').AsFloat),
            F(qLin.FieldByName('PrecioSIva').AsFloat),
            F(qLin.FieldByName('PrecioCIva').AsFloat),
