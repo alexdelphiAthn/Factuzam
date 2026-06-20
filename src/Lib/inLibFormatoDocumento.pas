@@ -9,6 +9,8 @@ const
   FORMATO_DOCUMENTO_DEFECTO = 'Serie.NroDocumento';
 
 function FormatearDocumento(const AFormato, ASerie, ANumero: string): string;
+function ExpresionSqlFormatoDocumento(const AFormato, ASerie,
+  ANumero: string): string;
 function FormatearDocumentoDataSet(ADataSet: TDataSet;
   const ACampoSerie, ACampoNumero: string;
   const ACampoFormato: string = 'FORMATO_DOCUMENTO_EMP'): string;
@@ -20,6 +22,46 @@ implementation
 
 uses
   System.SysUtils, Uni, inLibGlobalVar;
+
+const
+  TOKENS_NUMERO_SQL: array[0..20] of string = (
+    'NroDocumento',
+    'nrodocumento',
+    'NRODOCUMENTO',
+    'NumeroDocumento',
+    'numerodocumento',
+    'NUMERODOCUMENTO',
+    'NúmeroDocumento',
+    'númerodocumento',
+    'NÚMERODOCUMENTO',
+    'NroFactura',
+    'nrofactura',
+    'NROFACTURA',
+    'NroDoc',
+    'nrodoc',
+    'NRODOC',
+    'Numero',
+    'numero',
+    'NUMERO',
+    'Número',
+    'número',
+    'NÚMERO'
+  );
+  TOKENS_SERIE_SQL: array[0..2] of string = (
+    'Serie',
+    'serie',
+    'SERIE'
+  );
+  TOKENS_FORMATO_SQL: array[0..7] of string = (
+    'serie',
+    'nrodocumento',
+    'numerodocumento',
+    'númerodocumento',
+    'nrofactura',
+    'nrodoc',
+    'numero',
+    'número'
+  );
 
 function CampoTexto(ADataSet: TDataSet; const ACampo: string): string;
 var
@@ -118,6 +160,77 @@ begin
       Result := ReemplazarTokens(sFormato, sSerie, sNumero);
     end;
   end;
+end;
+
+function SqlTextoLimpio(const AExpresion: string): string;
+begin
+  Result := 'TRIM(COALESCE(' + AExpresion + ', ' + QuotedStr('') + '))';
+end;
+
+function SqlFormatoDefecto(const AFormato: string): string;
+begin
+  Result := 'COALESCE(NULLIF(' + SqlTextoLimpio(AFormato) + ', ' +
+    QuotedStr('') + '), ' + QuotedStr(FORMATO_DOCUMENTO_DEFECTO) + ')';
+end;
+
+function SqlReemplazarToken(const AExpresion, AToken,
+  AValor: string): string;
+begin
+  Result := 'REPLACE(' + AExpresion + ', ' + QuotedStr(AToken) + ', ' +
+    AValor + ')';
+end;
+
+function SqlCondicionTokensFormato(const AFormato: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  i := Low(TOKENS_FORMATO_SQL);
+  while i <= High(TOKENS_FORMATO_SQL) do
+  begin
+    if Result <> '' then
+      Result := Result + ' OR ';
+    Result := Result + 'INSTR(LOWER(' + AFormato + '), ' +
+      QuotedStr(TOKENS_FORMATO_SQL[i]) + ') > 0';
+    Inc(i);
+  end;
+end;
+
+function ExpresionSqlFormatoDocumento(const AFormato, ASerie,
+  ANumero: string): string;
+var
+  i: Integer;
+  sCondicionTokens: string;
+  sFormato: string;
+  sNumero: string;
+  sResultado: string;
+  sSerie: string;
+begin
+  // Las consultas SELECT no pueden invocar procedimientos como funciones.
+  sSerie := SqlTextoLimpio(ASerie);
+  sNumero := SqlTextoLimpio(ANumero);
+  sFormato := SqlFormatoDefecto(AFormato);
+  sCondicionTokens := SqlCondicionTokensFormato(sFormato);
+  sResultado := sFormato;
+  i := Low(TOKENS_NUMERO_SQL);
+  while i <= High(TOKENS_NUMERO_SQL) do
+  begin
+    sResultado := SqlReemplazarToken(sResultado, TOKENS_NUMERO_SQL[i],
+      sNumero);
+    Inc(i);
+  end;
+  i := Low(TOKENS_SERIE_SQL);
+  while i <= High(TOKENS_SERIE_SQL) do
+  begin
+    sResultado := SqlReemplazarToken(sResultado, TOKENS_SERIE_SQL[i],
+      sSerie);
+    Inc(i);
+  end;
+  Result := 'CASE WHEN ' + sSerie + ' = ' + QuotedStr('') + ' THEN ' +
+    sNumero + ' WHEN ' + sNumero + ' = ' + QuotedStr('') + ' THEN ' +
+    sSerie + ' WHEN NOT (' + sCondicionTokens + ') THEN CONCAT(' +
+    sSerie + ', ' + QuotedStr('.') + ', ' + sNumero + ') ELSE ' +
+    sResultado + ' END';
 end;
 
 function FormatearDocumentoDataSet(ADataSet: TDataSet;

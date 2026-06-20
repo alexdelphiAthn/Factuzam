@@ -356,6 +356,9 @@
         <DCCReference Include="src\Modals\inMtoModalImpMovVentasArt.pas">
             <Form>frmPrintMovVentasArt</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpDocsProveedor.pas">
+            <Form>frmPrintDocsProveedor</Form>
+        </DCCReference>
         <DCCReference Include="src\Core\inMtoSplash.pas">
             <Form>frmSplash</Form>
         </DCCReference>

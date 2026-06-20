@@ -80,6 +80,8 @@ type
     Sesiones1: TMenuItem;
     mnuCrearArtculosyunpedidoounalbarn: TMenuItem;
     Formasdepago2: TMenuItem;
+    mnuComprasListados: TMenuItem;
+    mnuListadoDocsProveedor: TMenuItem;
     dxSkinController1: TdxSkinController;
     mnuAlmacen: TMenuItem;
     Movimientosdealmacn1: TMenuItem;
@@ -128,6 +130,7 @@ type
     procedure mnuBalanceAlmacenHorizontalClick(Sender: TObject);
     procedure mnuBalanceAlmacenSinTallasClick(Sender: TObject);
     procedure mnuMovVentasArtClick(Sender: TObject);
+    procedure mnuListadoDocsProveedorClick(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
     procedure pcPrincipalChange(Sender: TObject);
   public
@@ -193,6 +196,7 @@ type
     procedure EfectosCompra1Click(Sender: TObject);
     procedure RemesasCompra1Click(Sender: TObject);
     procedure CargarEfectos1Click(Sender: TObject);
+    procedure Formasdepago2Click(Sender: TObject);
     procedure Pedidos1Click(Sender: TObject);
     procedure mnuEmpresasClick(Sender: TObject);
     procedure mnuClientesClick(Sender: TObject);
@@ -328,6 +332,7 @@ uses inLibUser,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
   inMtoModalImpMovVentasArt,
+  inMtoModalImpDocsProveedor,
   inMtoModalFacturarAlbaranes,
   inMtoModalCargarEfectosRemesa,
   inLibCajaParam,
@@ -1705,6 +1710,19 @@ begin
   end;
 end;
 
+procedure TfrmMtoPrincipal.mnuListadoDocsProveedorClick(Sender: TObject);
+var
+  frmListadoDocsProveedor: TfrmPrintDocsProveedor;
+begin
+  inherited;
+  try
+    frmListadoDocsProveedor := TfrmPrintDocsProveedor.Create(Self);
+    frmListadoDocsProveedor.ShowModal;
+  finally
+    FreeAndNil(frmListadoDocsProveedor);
+  end;
+end;
+
 procedure TfrmMtoPrincipal.mnuMenuCajaClick(Sender: TObject);
 begin
   inherited;
@@ -1890,6 +1908,13 @@ begin
       f.Free;
     end;
   end;
+end;
+
+procedure TfrmMtoPrincipal.Formasdepago2Click(Sender: TObject);
+begin
+  inherited;
+  if Formasdepago2.Visible then
+    ShowMto(Self, 'FormasdePago');
 end;
 
 procedure TfrmMtoPrincipal.Pedidos1Click(Sender: TObject);

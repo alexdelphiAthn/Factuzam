@@ -94,7 +94,8 @@ obsoleto en cuanto el esquema cambia):
    genera un `.sql` con:
    - `CREATE TABLE` de TODAS las tablas `fza_*` (vía `SHOW CREATE TABLE`
      → refleja el estado real, incluidos índices, defaults, comentarios).
-   - `CREATE VIEW` de las vistas `vi_*`.
+   - `CREATE VIEW` de las vistas `vi_*`, ordenadas por dependencias
+     internas entre vistas.
    - `CREATE PROCEDURE` / `FUNCTION` de las rutinas almacenadas.
    - **Datos de tablas SISTEMA solamente**: `fza_paises`, `fza_ivas_tipos`,
      `fza_ivas_zonas`, `fza_winforms`, `fza_metadatos`,

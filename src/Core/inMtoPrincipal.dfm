@@ -1480,6 +1480,14 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       object Formasdepago2: TMenuItem
         Caption = 'Formas de pago'
         ShortCut = 24647
+        OnClick = Formasdepago2Click
+      end
+      object mnuComprasListados: TMenuItem
+        Caption = 'Listados'
+        object mnuListadoDocsProveedor: TMenuItem
+          Caption = 'Listado de documentos proveedor'
+          OnClick = mnuListadoDocsProveedorClick
+        end
       end
     end
     object Ventas1: TMenuItem

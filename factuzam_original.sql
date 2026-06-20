@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 20/06/2026 5:39:48
+-- Backup generado: 20/06/2026 6:21:10
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -5683,7 +5683,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 427, 3, 'S', 'S', '2026-06-20 05:39:38', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 431, 3, 'S', 'S', '2026-06-20 06:21:02', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 24, 2, 'S', 'S', '2026-06-13 09:58:34', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -15861,8 +15861,2671 @@ LEFT JOIN (
 -- Verificacion (opcional): la deuda de un cliente concreto (debe dar 498).
 -- SELECT CODIGO_CLI_CLI, RAZON_SOCIAL_CLI, TOTAL_DEUDA_CLI
 --   FROM fza_clientes WHERE CODIGO_CLI_CLI = ''0008'';
-', '2026-06-20 05:39:38', '2026-06-20 05:39:38', 'Administrador', 'Administrador');
--- 38 registros exportados
+', '2026-06-20 05:39:38', '2026-06-20 05:39:38', 'Administrador', 'Administrador'),
+  ('427', 'movimientos_ventas_articulos', '-- =====================================================================
+-- Movimientos de ventas por artículos y fechas (ranking de ventas).
+--
+-- Procedimiento PRC_GET_MOV_VENTAS_ART: devuelve UNA fila por artículo
+-- (o por artículo+almacén si se agrupa por almacén) con las magnitudes
+-- de compra (entradas) y venta del periodo y los dos márgenes pedidos.
+-- Es la capa de datos del informe "Movimientos de ventas por artículos
+-- y fechas", con el mismo estilo de filtrado que el balance de almacén
+-- (almacenes / familias / proveedores / temporadas / artículos) más una
+-- fecha extra: "Inicio compras".
+--
+-- Periodos / fechas:
+--   - p_DESDE / p_HASTA  : periodo de VENTAS (fecha de factura). Las
+--     columnas Uds Venta / Imp Venta se calculan en esta ventana.
+--   - p_INICIO_COMPRAS   : filtra QUÉ artículos salen. Solo aparecen los
+--     artículos cuya PRIMERA compra (movimiento de compra AC, entrada) es
+--     igual o posterior a esta fecha (p. ej. "artículos comprados a partir
+--     de la temporada"). Vacío / NULL = sin restricción. Como el filtro es
+--     sobre la primera compra, TODAS las compras del artículo caen dentro
+--     de la ventana, así que las entradas totales no necesitan recorte.
+--
+-- Origen de datos:
+--   - Entradas: fza_movimientos_almacen con TIPO_MOV=''E'' y TIPO_DOC_MOV IN
+--     (''AC'',''AE'') = adquisición real de género (compra y albarán de entrada).
+--     Se EXCLUYEN: los traspasos (TR/AT/TA), movimientos internos entre
+--     almacenes (no es género nuevo); los depósitos (DP), que no son gasto
+--     hasta venderse; y el inventario/regularización (''IN''), que es un ajuste,
+--     no una compra. Unidades = SUM(CANTIDAD_MOV); importe (coste) =
+--     SUM(TOTAL_COSTE_MOV). El filtro "Inicio compras" usa los mismos tipos
+--     (AC/AE). (Nota: el dump factuzam_original usa ''IN'' para el stock inicial
+--     y no tiene ''AE''; en producción las entradas son AC/AE.)
+--   - Ventas: fza_facturas_lineas (líneas de factura/ticket) por fecha de
+--     factura. Uds = SUM(CANTIDAD_FACLIN); importe = SUM(TOTAL_FACLIN)
+--     (venta real, con descuento y con IVA).
+--   - Coste de lo vendido: Uds Venta * coste medio ponderado (PMP) del
+--     stock actual del artículo (respaldo: último precio de compra del
+--     proveedor principal). Misma valoración que el balance de almacén.
+--
+-- Columnas y márgenes (una fila por artículo):
+--   UNI_ENT_TOT = unidades compradas         IMP_ENT_TOT = coste comprado
+--   UDS_VENTA   = unidades vendidas           IMP_VENTA   = venta real
+--   IMP_COSTE   = coste de lo vendido         BENEFICIO   = IMP_VENTA-IMP_COSTE
+--   PCT_BNFCO   = BENEFICIO / IMP_COSTE * 100   (beneficio sobre coste)
+--   VENTA_ENT   = IMP_VENTA - IMP_ENT_TOT       (venta menos lo comprado)
+--   VENT_ENT    = VENTA_ENT / IMP_ENT_TOT * 100 (sobre lo comprado)
+--   MARGEN1     = BENEFICIO / IMP_VENTA * 100   (margen de LO VENDIDO)
+--   MARGEN2     = VENTA_ENT / IMP_VENTA * 100   (margen contando TODO lo
+--                 comprado como gasto: el stock no vendido cuenta como gasto)
+--   PCT_VDTO    = UDS_VENTA / UNI_ENT_TOT * 100 (% unidades vendidas)
+--   PCT_VLAST   = IMP_VENTA / IMP_ENT_TOT * 100 (% venta sobre compra)
+--
+--   NOTA: MARGEN2 cuenta TODO lo comprado en el periodo como gasto. Como el
+--   stock no vendido = comprado - vendido, restar el coste de TODO lo
+--   comprado equivale a contar el stock actual (lo no vendido) como gasto,
+--   que es lo pedido ("el segundo margen cuenta el stock actual como gasto").
+--
+-- Las columnas auxiliares VENT_ENT, PCT_VDTO y PCT_VLAST se han definido con
+-- el criterio anterior (simétrico a BENEFICIO/%Bnfco/Margen1); si el cliente
+-- las quiere con otra fórmula, se ajusta SOLO el SELECT final (un sitio).
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto sin configuración.
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_MOV_VENTAS_ART`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_MOV_VENTAS_ART`(
+    IN `p_DESDE`          DATE,         -- inicio periodo de VENTAS (inclusive)
+    IN `p_HASTA`          DATE,         -- fin periodo de VENTAS (inclusive)
+    IN `p_INICIO_COMPRAS` DATE,         -- 1a compra del artículo >= esta fecha
+    IN `p_ALMACENES`      TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`       TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`    TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`     TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_ARTICULOS`      TEXT,         -- CSV de códigos de artículo; '''' = todos
+    IN `p_NIVEL1`         VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`         VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`         VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`      INT,          -- nivel del árbol de familias al agrupar
+                                        -- por FAM (1 = raíz; <1 = familia hoja)
+    IN `p_SOLO_VENTAS`    VARCHAR(1)    -- ''S'' = solo artículos con ventas en el
+)                                       -- periodo; ''N''/'''' = todos (con actividad)
+BEGIN
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_ini_cmp   DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_filtra_cmp BOOLEAN DEFAULT FALSE; -- TRUE si hay filtro inicio compras
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_ARTICULOS   = IFNULL(p_ARTICULOS, '''');
+    SET p_SOLO_VENTAS = IFNULL(NULLIF(p_SOLO_VENTAS, ''''), ''N'');
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_desde       = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta       = IFNULL(p_HASTA, CURRENT_DATE);
+    SET v_ini_cmp     = p_INICIO_COMPRAS;
+    SET v_filtra_cmp  = (v_ini_cmp IS NOT NULL);
+
+    -- Almacenes efectivos en tabla temporal indexada (filtrar por IN, no por
+    -- FIND_IN_SET sobre tablas grandes). Sin selección = todos los activos.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_alm`;
+    CREATE TEMPORARY TABLE `tmp_mva_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_mva_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '''') = '''',
+              `ESACTIVO_ALM` = ''S'',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
+
+    -- Familias elegidas expandidas a TODA su descendencia (CTE recursivo).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_fam`;
+    CREATE TEMPORARY TABLE `tmp_mva_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_mva_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+
+    -- Mapa de cada familia a su ancestro al nivel pedido (para agrupar por FAM
+    -- "por nivel": raíz, intermedio o familia hoja).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_mva_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_mva_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    UPDATE `tmp_mva_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+
+    -- Universo de artículos por los filtros que NO dependen de movimientos
+    -- (familia, proveedor, temporada, lista). Se materializa ANTES de los
+    -- escaneos de compras/ventas/coste para restringirlos al conjunto pedido
+    -- en vez de agregar todo el catálogo y descartar al final. El filtro
+    -- "Inicio compras" se aplica después sobre este universo (tmp_mva_arts).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts0`;
+    CREATE TEMPORARY TABLE `tmp_mva_arts0` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_mva_arts0` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_ARTICULOS = ''''
+            OR FIND_IN_SET(a.`CODIGO_ART_ART`, p_ARTICULOS))
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_mva_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- Entradas de stock por artículo y, si procede, almacén: totales de
+    -- unidades y coste. Se cuentan las entradas que representan adquisición
+    -- REAL de género: compra (AC) y albarán de entrada (AE). Se EXCLUYEN los
+    -- traspasos (TR/AT/TA), movimientos internos entre almacenes (doble
+    -- conteo); los depósitos (DP), que no son gasto hasta venderse; y el
+    -- inventario/regularización (IN), que es un ajuste, no una compra. El
+    -- artículo del movimiento se resuelve por su SKU (CODIGO_UNIDAD_MOV) para
+    -- no depender de CODIGO_ART_MOV, que puede venir nulo.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
+    CREATE TEMPORARY TABLE `tmp_mva_ent` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '''',
+        `UNI_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `IMP_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
+    );
+    INSERT INTO `tmp_mva_ent`
+    SELECT sk.`CODIGO_ART_SKU`,
+           IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+           SUM(m.`CANTIDAD_MOV`),
+           SUM(m.`TOTAL_COSTE_MOV`)
+      FROM `fza_movimientos_almacen` m
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
+     WHERE m.`ESACTIVO_MOV` = ''S''
+       AND m.`TIPO_MOV` = ''E''
+       AND m.`TIPO_DOC_MOV` IN (''AC'', ''AE'')
+       AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       -- Solo los artículos del informe: no agregar las compras de todo el
+       -- catálogo para descartarlas al unir con tmp_mva_base.
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '''');
+
+    -- Primera ENTRADA por artículo, para el filtro Inicio compras: el artículo
+    -- entra solo si su primera entrada de género (global a los almacenes
+    -- filtrados) es >= v_ini_cmp. Usa los MISMOS tipos que las entradas
+    -- (AC compra, AE albarán de entrada): si mirara solo ''AC'', los artículos
+    -- que entran por albarán de entrada se caerían del informe aunque tengan
+    -- entradas y ventas.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
+    CREATE TEMPORARY TABLE `tmp_mva_primera` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY,
+        `PRIMERA`    DATE        NULL
+    );
+    INSERT INTO `tmp_mva_primera`
+    SELECT sk.`CODIGO_ART_SKU`, MIN(DATE(m.`FECHA_MOV`))
+      FROM `fza_movimientos_almacen` m
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
+     WHERE m.`ESACTIVO_MOV` = ''S''
+       AND m.`TIPO_MOV` = ''E''
+       AND m.`TIPO_DOC_MOV` IN (''AC'', ''AE'')
+       AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       -- Solo los artículos del informe (mismo universo que las entradas).
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`;
+
+    -- Ventas del periodo por artículo y, si procede, almacén (líneas de
+    -- factura/ticket por fecha de factura). El artículo se resuelve por SKU.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ven`;
+    CREATE TEMPORARY TABLE `tmp_mva_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '''',
+        `UDS_VEN`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `IMP_VEN`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
+    );
+    -- El almacén de la venta puede venir vacío en la línea
+    -- (CODIGO_ALM_FACLIN nulo); se cae a la cabecera de la factura
+    -- (CODIGO_ALM_FAC). Sin esto las líneas sin almacén de línea quedan fuera
+    -- del filtro de almacenes y la venta no cuenta.
+    INSERT INTO `tmp_mva_ven`
+    SELECT sk.`CODIGO_ART_SKU`,
+           IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), ''''),
+           SUM(fl.`CANTIDAD_FACLIN`),
+           SUM(fl.`TOTAL_FACLIN`)
+      FROM `fza_facturas_lineas` fl
+      JOIN `fza_facturas` f
+        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = fl.`CODIGO_UNIDAD_FACLIN`
+     WHERE COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`)
+           IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       AND DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta
+       -- Solo los artículos del informe: no agregar las ventas de todo el
+       -- catálogo para descartarlas al unir con tmp_mva_base.
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`,
+              IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), '''');
+
+    -- Universo final = tmp_mva_arts0 (familia/proveedor/temporada/lista) más
+    -- el filtro Inicio compras (primera compra AC/AE >= v_ini_cmp).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
+    CREATE TEMPORARY TABLE `tmp_mva_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_mva_arts` (`CODIGO_ART`)
+    SELECT a0.`CODIGO_ART`
+      FROM `tmp_mva_arts0` a0
+     WHERE NOT v_filtra_cmp
+        OR EXISTS (SELECT 1 FROM `tmp_mva_primera` pc
+                    WHERE pc.`CODIGO_ART` = a0.`CODIGO_ART`
+                      AND pc.`PRIMERA` >= v_ini_cmp);
+
+    -- Coste medio ponderado (PMP) por artículo desde el stock actual de los
+    -- almacenes filtrados (respaldo: último precio de compra del proveedor).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_coste`;
+    CREATE TEMPORARY TABLE `tmp_mva_coste` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL PRIMARY KEY,
+        `COSTE`      DECIMAL(19,6) NOT NULL DEFAULT 0
+    );
+    INSERT INTO `tmp_mva_coste`
+    SELECT sk.`CODIGO_ART_SKU`,
+           IF(SUM(st.`CANTIDAD_STK`) <> 0,
+              SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0)
+      FROM `fza_articulos_stockactual` st
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+     WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       -- Solo los artículos del informe (se une por artículo ya filtrado).
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`;
+
+    -- Universo de filas del informe: (artículo, almacén) presentes en compras
+    -- o ventas, restringido a los artículos filtrados. Una fila por artículo
+    -- (o por artículo+almacén si se agrupa por ALM).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_base`;
+    CREATE TEMPORARY TABLE `tmp_mva_base` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL,
+        `CODIGO_ALM` VARCHAR(20) NOT NULL DEFAULT '''',
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
+    );
+    INSERT IGNORE INTO `tmp_mva_base`
+    SELECT e.`CODIGO_ART`, e.`CODIGO_ALM`
+      FROM `tmp_mva_ent` e
+     WHERE e.`CODIGO_ART` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts`);
+    INSERT IGNORE INTO `tmp_mva_base`
+    SELECT v.`CODIGO_ART`, v.`CODIGO_ALM`
+      FROM `tmp_mva_ven` v
+     WHERE v.`CODIGO_ART` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts`);
+
+    -- -----------------------------------------------------------------
+    -- Resultado final: una fila por artículo (o artículo+almacén), con las
+    -- magnitudes de compra y venta y los dos márgenes. Los porcentajes se
+    -- calculan aquí; en los totales por grupo el cliente los recalcula a
+    -- partir de las sumas de las bases (no se pueden sumar porcentajes).
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        b.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        b.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        -- Magnitudes base (sumables en los totales).
+        ROUND(COALESCE(e.`UNI_ENT`, 0), 2)            AS `UNI_ENT_TOT`,
+        ROUND(COALESCE(e.`IMP_ENT`, 0), 2)            AS `IMP_ENT_TOT`,
+        ROUND(COALESCE(v.`UDS_VEN`, 0), 2)            AS `UDS_VENTA`,
+        ROUND(COALESCE(v.`IMP_VEN`, 0), 2)            AS `IMP_VENTA`,
+        ROUND(COALESCE(v.`UDS_VEN`, 0)
+              * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2)
+                                                      AS `IMP_COSTE`,
+        ROUND(COALESCE(v.`IMP_VEN`, 0)
+              - COALESCE(v.`UDS_VEN`, 0)
+                * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2)
+                                                      AS `BENEFICIO`,
+        ROUND(COALESCE(v.`IMP_VEN`, 0) - COALESCE(e.`IMP_ENT`, 0), 2)
+                                                      AS `VENTA_ENT`,
+        -- Porcentajes / márgenes (no sumables; se recalculan en los totales).
+        ROUND(IF(COALESCE(v.`UDS_VEN`, 0)
+                 * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0) <> 0,
+                 (COALESCE(v.`IMP_VEN`, 0)
+                  - COALESCE(v.`UDS_VEN`, 0)
+                    * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0))
+                 / (COALESCE(v.`UDS_VEN`, 0)
+                    * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0))
+                 * 100, 0), 2)                        AS `PCT_BNFCO`,
+        ROUND(IF(COALESCE(e.`IMP_ENT`, 0) <> 0,
+                 (COALESCE(v.`IMP_VEN`, 0) - COALESCE(e.`IMP_ENT`, 0))
+                 / COALESCE(e.`IMP_ENT`, 0) * 100, 0), 2) AS `VENT_ENT`,
+        ROUND(IF(COALESCE(v.`IMP_VEN`, 0) <> 0,
+                 (COALESCE(v.`IMP_VEN`, 0)
+                  - COALESCE(v.`UDS_VEN`, 0)
+                    * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0))
+                 / COALESCE(v.`IMP_VEN`, 0) * 100, 0), 2) AS `MARGEN1`,
+        ROUND(IF(COALESCE(v.`IMP_VEN`, 0) <> 0,
+                 (COALESCE(v.`IMP_VEN`, 0) - COALESCE(e.`IMP_ENT`, 0))
+                 / COALESCE(v.`IMP_VEN`, 0) * 100, 0), 2) AS `MARGEN2`,
+        ROUND(IF(COALESCE(e.`UNI_ENT`, 0) <> 0,
+                 COALESCE(v.`UDS_VEN`, 0) / COALESCE(e.`UNI_ENT`, 0) * 100, 0), 2)
+                                                      AS `PCT_VDTO`,
+        ROUND(IF(COALESCE(e.`IMP_ENT`, 0) <> 0,
+                 COALESCE(v.`IMP_VEN`, 0) / COALESCE(e.`IMP_ENT`, 0) * 100, 0), 2)
+                                                      AS `PCT_VLAST`,
+        -- Niveles de agrupación configurables (mismo criterio que el balance).
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN b.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`, art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), b.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN b.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`, art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), b.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN b.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`, art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), b.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM `tmp_mva_base` b
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = b.`CODIGO_ART`
+      LEFT JOIN `tmp_mva_ent` e
+        ON e.`CODIGO_ART` = b.`CODIGO_ART` AND e.`CODIGO_ALM` = b.`CODIGO_ALM`
+      LEFT JOIN `tmp_mva_ven` v
+        ON v.`CODIGO_ART` = b.`CODIGO_ART` AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+      LEFT JOIN `tmp_mva_coste` cst ON cst.`CODIGO_ART` = b.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_mva_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = b.`CODIGO_ALM`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               -- Solo los artículos del informe (se une por artículo).
+               AND t.`CODIGO_ART_ARTTAR` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = b.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)     AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)        AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)     AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+               -- Solo los artículos del informe (se une por artículo).
+               AND ap.`CODIGO_ART_AP` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = b.`CODIGO_ART`
+      -- Temporada a nivel ARTICULO (Fase 3): este informe es por articulo,
+      -- sin desglose de color, asi que usa la temporada del articulo. El
+      -- filtro CODIGO_UNIDAD_ARTPROP = '''' evita mezclar/duplicar con las
+      -- temporadas de color (el color se ve en el balance de tallas).
+      LEFT JOIN (
+            SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `fza_articulos_propiedades` tp
+              LEFT JOIN `fza_propiedades_valores` tpv
+                ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+             WHERE tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+               AND tp.`CODIGO_UNIDAD_ARTPROP` = ''''
+               -- Solo los artículos del informe (se une por artículo).
+               AND tp.`CODIGO_ART_ART` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+             GROUP BY tp.`CODIGO_ART_ART`
+           ) tmp ON tmp.`CODIGO_ART` = b.`CODIGO_ART`
+     -- "Solo artículos con ventas": descarta las filas sin ventas en el
+     -- periodo (las que solo tienen entradas). Sin marcar = todos los que
+     -- tengan actividad (entradas o ventas).
+     WHERE (p_SOLO_VENTAS <> ''S'' OR COALESCE(v.`UDS_VEN`, 0) <> 0)
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              b.`CODIGO_ART`, b.`CODIGO_ALM`;
+
+    -- Limpieza de temporales.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_coste`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts0`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ven`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_alm`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: (p_DESDE, p_HASTA, p_INICIO_COMPRAS, p_ALMACENES, p_FAMILIAS,
+--              p_PROVEEDORES, p_TEMPORADAS, p_ARTICULOS, p_NIVEL1, p_NIVEL2,
+--              p_NIVEL3, p_NIVEL_FAM, p_SOLO_VENTAS).
+-- p_DESDE/p_HASTA = periodo de ventas (fecha de factura). p_INICIO_COMPRAS
+-- filtra los artículos por su primera entrada AC/AE (NULL = sin filtro). El
+-- resto de filtros multi-valor son CSV; '''' = todos. p_NIVEL1/2/3 = jerarquía
+-- de agrupación (PRV/FAM/TMP/ALM/''''); el orden importa. p_NIVEL_FAM = nivel
+-- del árbol de familias al agrupar por FAM. p_SOLO_VENTAS=''S'' deja solo los
+-- artículos con ventas en el periodo (oculta los que solo tienen entradas).
+-- Ejemplos:
+--   -- Ventas de 2026 de todos los artículos, sin agrupación
+--   CALL PRC_GET_MOV_VENTAS_ART(''2026-01-01'',''2026-12-31'',NULL,'''','''','''','''','''','''','''','''',0,''N'');
+--   -- Artículos comprados desde 01/01/2026, ventas de mayo, almacén 01,
+--   -- agrupando por proveedor y, dentro, por familia raíz, solo con ventas
+--   CALL PRC_GET_MOV_VENTAS_ART(''2026-05-01'',''2026-05-31'',''2026-01-01'',''01'','''','''','''','''',''PRV'',''FAM'','''',1,''S'');
+-- ---------------------------------------------------------------------
+', '2026-06-20 05:48:21', '2026-06-20 05:48:21', 'Administrador', 'Administrador'),
+  ('428', 'balance_almacen_sin_tallas', '-- =====================================================================
+-- Balance de almacén SIN tallas (informe vertical con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_SIN_TALLAS: variante del balance
+-- por tallas (PRC_GET_BALANCE_ALMACEN_TALLAS) que NO pivota por talla. Es
+-- el informe "normal" (vertical): una fila por (artículo, color, banda)
+-- con Cantidad / Precio / Importe, sin las columnas T01..T14. Por eso
+-- incluye TODOS los artículos, también los que no son "tallables" (sin
+-- conjunto pivote ni tallas en sus SKUs), que el informe horizontal deja
+-- fuera. Mismos filtros, modos, bandas, agrupaciones y valoración.
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas (existencias iniciales, entradas, ventas, existencias
+--         finales; desglosado abre los subtipos Ctrl+U). Sin banda Salidas:
+--         los traspasos se netean en Entradas y los depósitos quedan fuera.
+--   ''A'' = por acumulados (entradas, ventas, existencias finales).
+--   Balance: Ex.ini + Entradas - Ventas = Ex.final.
+--
+-- Origen de datos y valoración: idénticos al balance por tallas (ver
+-- balance_almacen_tallas.sql §). La única diferencia es el grano: aquí se
+-- agrupa por (artículo, color) en vez de por (artículo, color, talla), y
+-- no hay tabla de posiciones/etiquetas de talla.
+--
+-- Ventas: la banda de ventas (VEN) toma CANTIDAD e IMPORTE REALES (con
+-- descuentos, con IVA = TOTAL_FACLIN) de fza_facturas_lineas, no del acumulado
+-- de stock ni de la tarifa. La cantidad se sobrescribe (tmp_bst_ven) antes del
+-- descarte, porque el acumulado CANTIDAD_SAL_VENTA_STK puede no estar al día.
+-- Columna VENTAS (importe real solo en VEN, 0 en el resto) para acumular las
+-- ventas por artículo/grupo/total. Existencias ini/fin y entradas, a PMP.
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Filas todo-a-cero: se descartan los (artículo, color) sin existencias ni
+-- movimientos en el periodo (si no, al cubrir todo el catálogo saldría
+-- ruido de artículos inactivos).
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_SIN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_ARTICULOS`    TEXT,         -- CSV de códigos de artículo; '''' = todos
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_ARTICULOS   = IFNULL(p_ARTICULOS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar
+    -- por IN en vez de FIND_IN_SET sobre las tablas grandes (no es sargable y
+    -- obliga a escanear; fza_articulos_stockactual tiene CODIGO_ALM_STK como
+    -- 1ª columna del PK). Sin selección = todos los almacenes activos.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
+    CREATE TEMPORARY TABLE `tmp_bst_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '''') = '''',
+              `ESACTIVO_ALM` = ''S'',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo (familias con descendencia, proveedores,
+    -- temporadas) + mapa de familia por nivel del árbol. Igual que el
+    -- balance por tallas.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa familia -> ancestro al nivel pedido (para agrupar por FAM "por
+    -- nivel"). Ver balance_almacen_tallas.sql para el detalle.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bst_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bst_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    UPDATE `tmp_bst_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    CREATE TEMPORARY TABLE `tmp_bst_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bst_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_ARTICULOS = ''''
+            OR FIND_IN_SET(a.`CODIGO_ART_ART`, p_ARTICULOS))
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bst_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- SKUs en juego: unidad -> (artículo, color). SIN posición de talla:
+    -- entra cualquier SKU de los artículos filtrados (con o sin tallas),
+    -- por eso el informe cubre todo el catálogo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    CREATE TEMPORARY TABLE `tmp_bst_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        KEY `IDX_BST_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bst_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0)
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+       AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+      -- Color del SKU: SOLO su fila de atributo de color. El discriminante
+      -- ID_VA_AV=''CO'' DEBE ir también en el ON de `sac`; si solo se filtra en
+      -- `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera
+      -- dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar
+      -- y el SKU podía quedar SIN color (banda "sin color" fantasma).
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = ''CO'')
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- Base de medidas por (artículo, almacén, color). Igual lógica que el
+    -- balance por tallas pero agrupando por color (no por talla).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    CREATE TEMPORARY TABLE `tmp_bst_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bst_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`COLOR`;
+    ELSE
+        -- Entre fechas: stock actual + movimientos firmados unificados por
+        -- (unidad, almacén). Si no se agrupa por almacén, ALM = '''' y colapsa.
+        INSERT INTO `tmp_bst_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`), MIN(s.`ORDEN_COLOR`),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bst_sku` s
+          LEFT JOIN (
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+                           -- Solo los SKUs del informe (IDX_STK_UNIDAD): no
+                           -- recorrer todo el stock para descartarlo al unir.
+                           AND st2.`CODIGO_UNIDAD_STK` IN
+                               (SELECT `CODIGO_UNIDAD` FROM `tmp_bst_sku`)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+                           -- Solo los SKUs del informe (igual que el LEFT JOIN
+                           -- de abajo): no agrega TODA la tabla de movimientos
+                           -- para descartarla. Indexado por CODIGO_UNIDAD_MOV.
+                           AND m.`CODIGO_UNIDAD_MOV` IN
+                               (SELECT `CODIGO_UNIDAD` FROM `tmp_bst_sku`)
+                           -- Movs. anteriores a ''desde'' aportan 0 a las 16
+                           -- medidas (todas exigen fecha >= desde): se podan.
+                           AND m.`FECHA_MOV` >= v_desde
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''), s.`COLOR`;
+    END IF;
+
+    -- Ventas REALES por (artículo, almacén, color) desde las líneas de
+    -- factura: fuente de verdad de las ventas (cantidad e importe). Los
+    -- acumulados de stock (CANTIDAD_SAL_VENTA_STK) pueden no estar mantenidos
+    -- y dar 0 aunque haya venta. Se sobrescribe VEN ANTES del descarte para
+    -- que (a) la banda de ventas muestre la cantidad real y (b) no se borre un
+    -- color que solo tiene ventas (existencias netas 0). Mismo filtro de
+    -- almacén/periodo y mismos SKUs (tmp_bst_sku) que la valoración vt.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_ven`;
+    CREATE TEMPORARY TABLE `tmp_bst_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '''',
+        `COLOR`      VARCHAR(100)  NOT NULL DEFAULT '''',
+        `VEN_QTY`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`)
+    );
+    INSERT INTO `tmp_bst_ven`
+    SELECT s.`CODIGO_ART`,
+           IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''),
+           s.`COLOR`,
+           SUM(fl.`CANTIDAD_FACLIN`)
+      FROM `fza_facturas_lineas` fl
+      JOIN `fza_facturas` f
+        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+      JOIN `tmp_bst_sku` s
+        ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+     WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+       AND (p_MODO = ''A''
+            OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+     GROUP BY s.`CODIGO_ART`,
+              IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`;
+    -- Sobrescribir la cantidad de ventas del stock con la real de facturas.
+    UPDATE `tmp_bst_base` b
+      JOIN `tmp_bst_ven` v
+        ON v.`CODIGO_ART` = b.`CODIGO_ART`
+       AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+       AND v.`COLOR` = b.`COLOR`
+       SET b.`VEN` = v.`VEN_QTY`;
+
+    -- Descartar (artículo, color) sin existencias ni movimientos: cubrir todo
+    -- el catálogo si no llenaría el informe de artículos inactivos a cero.
+    DELETE FROM `tmp_bst_base`
+     WHERE `EXI_INI` = 0 AND `ENT` = 0 AND `SAL` = 0 AND `VEN` = 0
+       AND `EXI_FIN` = 0 AND `ENT_COMPRA` = 0 AND `ENT_ALBENTRADA` = 0
+       AND `ENT_TRASPASO` = 0 AND `ENT_DEPOSITO` = 0 AND `ENT_REGULAR` = 0
+       AND `SAL_TRASPASO` = 0 AND `SAL_DEPOSITO` = 0 AND `SAL_ALBVENTA` = 0
+       AND `SAL_VENTA` = 0;
+
+    -- -----------------------------------------------------------------
+    -- Desdoblar en bandas (forma larga), igual que el balance por tallas
+    -- pero sin posición de talla.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bst_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BST_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb.
+    -- entrada) + recuentos + traspasos NETOS (entrada - salida). SIN depósitos
+    -- y SIN banda Salidas: las ventas van en su banda. Balance: Ex.ini +
+    -- Entradas - Ventas = Ex.final (los depósitos quedan fuera).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENT'', 20, ''Entradas'', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Entradas desglosadas: solo modo entre fechas desglosado. Traspasos y
+    -- depósitos netos (entrada - salida), sin bandas de salida salvo alb.
+    -- venta. Mismos subtipos que la consulta de stock (Ctrl+U).
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTTRA'', 23, ''Traspasos (neto)'', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTDEP'', 24, ''Depósitos (neto)'', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
+          FROM `tmp_bst_base`;
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bst_base`;
+        -- Sal. traspaso / Sal. depósito ya no salen: neteadas en sus bandas de
+        -- entrada. Albarán de venta sí se mantiene (es una venta).
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bst_base`;
+        -- Cantidad de ventas = VEN (ya sobrescrito con la cantidad real de
+        -- facturas), igual que en simplificado/acumulados.
+        INSERT INTO `tmp_bst_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               ''VEN'', 50, ''Ventas'', 0, `VEN`
+          FROM `tmp_bst_base`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bst_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bst_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bst_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- Salida final: una fila por (artículo, color, banda), enriquecida con
+    -- familia, foto, valoración y columnas de agrupación.
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto, para que el total por grupo/general
+        -- muestre SOLO el stock final.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bst_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bst_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               -- Solo los artículos del informe (se une por artículo filtrado).
+               AND t.`CODIGO_ART_ARTTAR` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+               -- Solo los SKUs del informe (se une por artículo ya filtrado).
+               AND st.`CODIGO_UNIDAD_STK` IN
+                   (SELECT `CODIGO_UNIDAD` FROM `tmp_bst_sku`)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+               -- Solo los artículos del informe (se une por artículo filtrado).
+               AND ap.`CODIGO_ART_AP` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bst_arts`)
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      -- Temporada EFECTIVA por color (Fase 4): la vista de propiedades
+      -- efectivas resuelve color -> articulo; tmp_bst_sku da el color del
+      -- SKU. Los SKU de un mismo color comparten temporada (el MAX colapsa
+      -- sin ambiguedad). Sin datos de color resuelve al valor de articulo.
+      LEFT JOIN (
+            SELECT s.`CODIGO_ART` AS `CODIGO_ART`, s.`COLOR` AS `COLOR`,
+                   MAX(COALESCE(e.`VALOR_PV`,
+                                e.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `tmp_bst_sku` s
+              JOIN `vi_articulos_propiedades_efectivas` e
+                ON e.`CODIGO_UNIDAD_SKU` = s.`CODIGO_UNIDAD`
+               AND e.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY s.`CODIGO_ART`, s.`COLOR`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+                AND tmp.`COLOR` = p.`COLOR`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados).
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bst_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bst_alm`)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_ven`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bst_alm`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: idénticos a PRC_GET_BALANCE_ALMACEN_TALLAS (p_MODO, p_DESDE,
+-- p_HASTA, p_ALMACENES, p_FAMILIAS, p_PROVEEDORES, p_TEMPORADAS, p_ARTICULOS,
+-- p_COD_TARIFA, p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
+-- p_NIVEL_FAM). p_ARTICULOS restringe a una lista de códigos de artículo
+-- (CSV; '''' = todos). La salida NO trae columnas de talla (T01..T14 / ETIQ_T*):
+-- una fila por (artículo, color, banda) con CANTIDAD / PRECIO / IMPORTE.
+-- Ejemplos:
+--   -- Entre fechas, simplificado, sin agrupación
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Acumulados agrupado por proveedor y, dentro, por familia raíz
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''A'',NULL,NULL,'''','''','''','''','''',''PVP'',''N'','''',''PRV'',''FAM'','''',1);
+--   -- Entre fechas restringido a un artículo concreto
+--   CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''',''ART001'',''PVP'',''N'','''','''','''','''',0);
+-- ---------------------------------------------------------------------
+', '2026-06-20 05:48:26', '2026-06-20 05:48:26', 'Administrador', 'Administrador'),
+  ('429', 'balance_almacen_tallas', '-- =====================================================================
+-- Balance de almacén por tallas (informe horizontal con foto).
+--
+-- Procedimiento PRC_GET_BALANCE_ALMACEN_TALLAS: devuelve las filas del
+-- informe ya pivotadas por talla (columnas fijas T01..T14, igual que
+-- vi_compras_sesiones_lin_print) y desdobladas en bandas. Una fila por
+-- (artículo, color, banda). El informe FastReport agrupa por familia y
+-- artículo y dibuja cada banda como una sub-línea (ent. / sal. / ex.).
+--
+-- Modos (parámetro p_MODO):
+--   ''F'' = entre fechas. Bandas (simplificado): Existencias iniciales,
+--         Entradas, Ventas, Existencias finales. NO hay banda Salidas: los
+--         traspasos se netean (entrada - salida) dentro de Entradas y los
+--         depósitos quedan fuera de la ecuación. En desglosado las entradas
+--         se abren en los subtipos de la consulta Ctrl+U (compra, alb.
+--         entrada, traspasos neto, depósitos neto, regulariz., alb. venta).
+--   ''A'' = por acumulados. Bandas: Entradas, Ventas, Existencias finales
+--         (sin existencias iniciales: el acumulado es "desde siempre"). El
+--         desglosado no aplica.
+--   Balance en todos los modos: Ex.ini + Entradas - Ventas = Ex.final.
+--
+-- Origen de datos:
+--   - Modo ''F'': se reconstruye desde fza_movimientos_almacen. Las
+--     existencias a una fecha se calculan partiendo del stock actual
+--     (fza_articulos_stockactual.CANTIDAD_STK) y restando los
+--     movimientos firmados posteriores a esa fecha.
+--   - Modo ''A'': se leen los acumulados denormalizados de
+--     fza_articulos_stockactual (CANTIDAD_ENT_*_STK / CANTIDAD_SAL_*_STK,
+--     ver stocks_acumulados.sql) y CANTIDAD_STK.
+--
+-- Valoración (columnas Precio / Importe del informe):
+--   - Entradas y existencias (ini/fin) -> coste = precio medio ponderado
+--     (PMP) del stock actual del artículo; si es 0 se usa el último precio
+--     de compra del proveedor principal.
+--   - Alb. venta     -> PVP (tarifa por defecto vigente hoy), valoración
+--     nocional de la salida por albarán de venta (solo en desglosado).
+--   - Ventas (VEN)   -> CANTIDAD e IMPORTE REALES de venta (con descuentos,
+--     con IVA) de fza_facturas_lineas; NO el acumulado de stock ni la tarifa.
+--     La cantidad por talla sale de las líneas de factura (tmp_bat_ven),
+--     porque el acumulado CANTIDAD_SAL_VENTA_STK puede no estar mantenido.
+--   VENTAS: columna con el importe real de venta SOLO en la banda VEN (0 en
+--   el resto), para acumular las ventas por artículo/grupo/total (en los
+--   totales se muestran las ventas, no el margen).
+--   IMPORTE = CANTIDAD * PRECIO de la banda (salvo VEN, importe real).
+--
+-- Foto: la columna del artículo se expone como CODIGO_ART_ART para que
+-- EngancharFotosEnReport (inLibFotos) resuelva la foto del TfrxPictureView
+-- "foto300" sin configuración extra.
+--
+-- Script idempotente: DROP + CREATE del procedimiento. No toca esquema.
+-- =====================================================================
+
+DROP PROCEDURE IF EXISTS `PRC_GET_BALANCE_ALMACEN_TALLAS`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_GET_BALANCE_ALMACEN_TALLAS`(
+    IN `p_MODO`         VARCHAR(1),   -- ''F'' entre fechas, ''A'' por acumulados
+    IN `p_DESDE`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_HASTA`        DATE,         -- inclusive (solo modo ''F'')
+    IN `p_ALMACENES`    TEXT,         -- CSV "01,50" o '''' = todos los activos
+    IN `p_FAMILIAS`     TEXT,         -- CSV; '''' = todas. Una padre incluye sus hijas
+    IN `p_PROVEEDORES`  TEXT,         -- CSV de códigos de proveedor; '''' = todos
+    IN `p_TEMPORADAS`   TEXT,         -- CSV de valores de temporada; '''' = todas
+    IN `p_ARTICULOS`    TEXT,         -- CSV de códigos de artículo; '''' = todos
+    IN `p_COD_TARIFA`   VARCHAR(20),  -- tarifa para valorar ventas/salidas
+    IN `p_DESGLOSADO`   VARCHAR(1),   -- ''S''/''N'' (solo aplica a modo ''F'')
+    IN `p_BANDAS`       TEXT,         -- CSV de códigos de banda; '''' = todas
+    IN `p_NIVEL1`       VARCHAR(3),   -- 1er nivel de agrupación: PRV/FAM/TMP/ALM/''''
+    IN `p_NIVEL2`       VARCHAR(3),   -- 2o nivel de agrupación
+    IN `p_NIVEL3`       VARCHAR(3),   -- 3er nivel de agrupación
+    IN `p_NIVEL_FAM`    INT           -- nivel del árbol de familias al agrupar
+)                                     -- por FAM (1 = raíz; <1 = familia hoja)
+BEGIN
+    DECLARE v_alms      TEXT;
+    DECLARE v_tarifa    VARCHAR(20);
+    DECLARE v_desde     DATE;
+    DECLARE v_hasta     DATE;
+    DECLARE v_por_alm   BOOLEAN DEFAULT FALSE;  -- TRUE si se agrupa por almacén
+    DECLARE v_nivel_fam INT;                    -- nivel efectivo del árbol fam.
+    -- Normalización de parámetros.
+    SET p_MODO       = IFNULL(NULLIF(p_MODO, ''''), ''A'');
+    SET p_DESGLOSADO  = IFNULL(NULLIF(p_DESGLOSADO, ''''), ''N'');
+    SET p_FAMILIAS    = IFNULL(p_FAMILIAS, '''');
+    SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '''');
+    SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '''');
+    SET p_ARTICULOS   = IFNULL(p_ARTICULOS, '''');
+    SET p_BANDAS      = IFNULL(p_BANDAS, '''');
+    -- Niveles de agrupación: normalizados a mayúsculas. Se admiten PRV
+    -- (proveedor), FAM (familia), TMP (temporada) y ALM (almacén); cualquier
+    -- otro valor (o vacío) deshabilita ese nivel.
+    SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''''));
+    SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''''));
+    SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''''));
+    -- Si algún nivel es ALM hay que conservar el almacén en el grano de los
+    -- cálculos (si no, se agregan todos los almacenes filtrados en uno).
+    SET v_por_alm     = (p_NIVEL1 = ''ALM'' OR p_NIVEL2 = ''ALM'' OR p_NIVEL3 = ''ALM'');
+    -- Nivel del árbol de familias para agrupar por FAM. <1 (o NULL) = familia
+    -- hoja del artículo (comportamiento clásico); 1 = familia raíz, etc.
+    SET v_nivel_fam   = IF(IFNULL(p_NIVEL_FAM, 0) < 1, 9999, p_NIVEL_FAM);
+    SET v_tarifa      = IFNULL(NULLIF(p_COD_TARIFA, ''''), ''PVP'');
+    SET v_desde      = IFNULL(p_DESDE, ''1900-01-01'');
+    SET v_hasta      = IFNULL(p_HASTA, CURRENT_DATE);
+    -- Almacenes efectivos en una tabla temporal INDEXADA (PK), para filtrar
+    -- por IN en vez de FIND_IN_SET sobre las tablas grandes: FIND_IN_SET no es
+    -- sargable y obliga a escanear (p. ej. fza_articulos_stockactual, cuyo PK
+    -- empieza por CODIGO_ALM_STK). Con el IN, MariaDB puede usar el índice.
+    -- Sin selección = todos los almacenes activos ("nada marcado = todos").
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+    CREATE TEMPORARY TABLE `tmp_bat_alm` (
+        `CODIGO_ALM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_alm` (`CODIGO_ALM`)
+    SELECT `CODIGO_ALM_ALM` FROM `fza_almacenes`
+     WHERE IF(IFNULL(p_ALMACENES, '''') = '''',
+              `ESACTIVO_ALM` = ''S'',
+              FIND_IN_SET(`CODIGO_ALM_ALM`, p_ALMACENES));
+
+    -- -----------------------------------------------------------------
+    -- Filtros de artículo: familias (con su descendencia), proveedores y
+    -- temporadas. Se materializa en tmp_bat_arts el conjunto de artículos
+    -- que pasan los tres filtros; el resto del SP se restringe a él.
+    -- -----------------------------------------------------------------
+    -- Familias elegidas expandidas a TODA su descendencia: si se filtra una
+    -- familia padre, entran también sus hijas (CTE recursivo por
+    -- CODIGO_PADRE_FAM). Con p_FAMILIAS vacío sale vacía y no se aplica.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam` (
+        `CODIGO_FAM` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_fam` (`CODIGO_FAM`)
+    WITH RECURSIVE `fam_tree` AS (
+        SELECT `CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias`
+         WHERE FIND_IN_SET(`CODIGO_FAM_FAM`, p_FAMILIAS)
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`
+          FROM `fza_articulos_familias` f
+          JOIN `fam_tree` t ON f.`CODIGO_PADRE_FAM` = t.`CODIGO_FAM_FAM`
+    )
+    SELECT DISTINCT `CODIGO_FAM_FAM` FROM `fam_tree`;
+    -- Mapa de cada familia a su ancestro al nivel pedido (v_nivel_fam), para
+    -- agrupar por FAM "por nivel": si el árbol tiene padres-hijos se puede
+    -- agrupar por la familia raíz (nivel 1), la de 2º nivel, etc. Se construye
+    -- el camino raíz->familia y se toma el código del nivel solicitado (o la
+    -- propia familia si es menos profunda que el nivel pedido).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    CREATE TEMPORARY TABLE `tmp_bat_fam_grp` (
+        `CODIGO_FAM` VARCHAR(20)  NOT NULL PRIMARY KEY,
+        `COD_GRP`    VARCHAR(20)  NOT NULL,
+        `DESC_GRP`   VARCHAR(200) NULL
+    );
+    INSERT IGNORE INTO `tmp_bat_fam_grp` (`CODIGO_FAM`, `COD_GRP`, `DESC_GRP`)
+    WITH RECURSIVE `fam_path` AS (
+        SELECT `CODIGO_FAM_FAM` AS `COD`,
+               CAST(`CODIGO_FAM_FAM` AS CHAR(1000)) AS `RUTA`
+          FROM `fza_articulos_familias`
+         WHERE `CODIGO_PADRE_FAM` IS NULL OR `CODIGO_PADRE_FAM` = ''''
+        UNION ALL
+        SELECT f.`CODIGO_FAM_FAM`,
+               CONCAT(pa.`RUTA`, ''>'', f.`CODIGO_FAM_FAM`)
+          FROM `fza_articulos_familias` f
+          JOIN `fam_path` pa ON f.`CODIGO_PADRE_FAM` = pa.`COD`
+    )
+    SELECT pa.`COD`,
+           SUBSTRING_INDEX(SUBSTRING_INDEX(pa.`RUTA`, ''>'', v_nivel_fam), ''>'', -1),
+           NULL
+      FROM `fam_path` pa;
+    -- Descripción del grupo (familia ancestro elegida).
+    UPDATE `tmp_bat_fam_grp` g
+      JOIN `fza_articulos_familias` f ON f.`CODIGO_FAM_FAM` = g.`COD_GRP`
+       SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
+                                   g.`COD_GRP`);
+    -- Conjunto de artículos activos que pasan familia, proveedor y temporada.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_arts` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = ''S''
+       AND (p_ARTICULOS = ''''
+            OR FIND_IN_SET(a.`CODIGO_ART_ART`, p_ARTICULOS))
+       AND (p_FAMILIAS = ''''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_bat_fam`))
+       AND (p_PROVEEDORES = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
+    -- -----------------------------------------------------------------
+    -- 1) Posiciones de talla por artículo (T01..T14).
+    --    Mismo criterio que TfrmStockConsulta.TallasArticulo: el conjunto
+    --    pivote del artículo (atributo no-color asignado) define el orden
+    --    de las columnas; si el artículo no tiene asignación, se usan las
+    --    tallas presentes en sus SKUs como respaldo.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos` (
+        `CODIGO_ART` VARCHAR(20)  NOT NULL,
+        `ID_AV`      INT          NOT NULL,
+        `ETIQ`       VARCHAR(100) NULL,
+        `POSICION`   INT          NOT NULL,
+        PRIMARY KEY (`CODIGO_ART`, `ID_AV`)
+    );
+    -- 1a) Artículos con conjunto pivote asignado.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT asg.`CODIGO_ART`, acd.`ID_AV_ACD`, av.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY asg.`CODIGO_ART`
+                              ORDER BY acd.`ORDEN_ACD`, acd.`ID_AV_ACD`)
+      FROM (SELECT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   MIN(asa.`ID_AC_ACA`) AS `ID_AC`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_conjuntos_asign` asa
+                ON asa.`CODIGO_ART_ACA` = a.`CODIGO_ART_ART`
+               AND asa.`ID_VA_ACA` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+             GROUP BY a.`CODIGO_ART_ART`) asg
+      JOIN `fza_atributos_conjuntos_det` acd ON acd.`ID_AC_ACD` = asg.`ID_AC`
+      JOIN `fza_atributos_valores` av ON av.`ID_AV` = acd.`ID_AV_ACD`;
+    -- Artículos ya resueltos (para excluirlos del respaldo sin
+    -- autorreferenciar tmp_bat_pos en el mismo statement).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    CREATE TEMPORARY TABLE `tmp_bat_pos_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_bat_pos_arts`
+    SELECT DISTINCT `CODIGO_ART` FROM `tmp_bat_pos`;
+    -- 1b) Respaldo: artículos sin asignación -> tallas de sus SKUs.
+    INSERT IGNORE INTO `tmp_bat_pos` (`CODIGO_ART`, `ID_AV`, `ETIQ`, `POSICION`)
+    SELECT x.`CODIGO_ART`, x.`ID_AV`, x.`AV`,
+           ROW_NUMBER() OVER (PARTITION BY x.`CODIGO_ART`
+                              ORDER BY x.`ORDEN_AV`, x.`AV`)
+      FROM (SELECT DISTINCT a.`CODIGO_ART_ART` AS `CODIGO_ART`,
+                   av.`ID_AV`, av.`AV`, COALESCE(av.`ORDEN_AV`, 0) AS `ORDEN_AV`
+              FROM `fza_articulos` a
+              JOIN `fza_articulos_skus` sku
+                ON sku.`CODIGO_ART_SKU` = a.`CODIGO_ART_ART`
+              JOIN `fza_atributos_sku` sa
+                ON sa.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+              JOIN `fza_atributos_valores` av
+                ON av.`ID_AV` = sa.`ID_AV_SA` AND av.`ID_VA_AV` <> ''CO''
+             WHERE a.`ESACTIVO_ART` = ''S''
+               AND a.`CODIGO_ART_ART` IN (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+               AND a.`CODIGO_ART_ART` NOT IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_pos_arts`)) x;
+
+    -- Etiquetas de cabecera por artículo (ETIQ_T01..ETIQ_T14).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    CREATE TEMPORARY TABLE `tmp_bat_etiq` AS
+    SELECT `CODIGO_ART`,
+           MAX(CASE WHEN `POSICION` =  1 THEN `ETIQ` END) AS `ETIQ_T01`,
+           MAX(CASE WHEN `POSICION` =  2 THEN `ETIQ` END) AS `ETIQ_T02`,
+           MAX(CASE WHEN `POSICION` =  3 THEN `ETIQ` END) AS `ETIQ_T03`,
+           MAX(CASE WHEN `POSICION` =  4 THEN `ETIQ` END) AS `ETIQ_T04`,
+           MAX(CASE WHEN `POSICION` =  5 THEN `ETIQ` END) AS `ETIQ_T05`,
+           MAX(CASE WHEN `POSICION` =  6 THEN `ETIQ` END) AS `ETIQ_T06`,
+           MAX(CASE WHEN `POSICION` =  7 THEN `ETIQ` END) AS `ETIQ_T07`,
+           MAX(CASE WHEN `POSICION` =  8 THEN `ETIQ` END) AS `ETIQ_T08`,
+           MAX(CASE WHEN `POSICION` =  9 THEN `ETIQ` END) AS `ETIQ_T09`,
+           MAX(CASE WHEN `POSICION` = 10 THEN `ETIQ` END) AS `ETIQ_T10`,
+           MAX(CASE WHEN `POSICION` = 11 THEN `ETIQ` END) AS `ETIQ_T11`,
+           MAX(CASE WHEN `POSICION` = 12 THEN `ETIQ` END) AS `ETIQ_T12`,
+           MAX(CASE WHEN `POSICION` = 13 THEN `ETIQ` END) AS `ETIQ_T13`,
+           MAX(CASE WHEN `POSICION` = 14 THEN `ETIQ` END) AS `ETIQ_T14`
+      FROM `tmp_bat_pos`
+     GROUP BY `CODIGO_ART`;
+    ALTER TABLE `tmp_bat_etiq` ADD PRIMARY KEY (`CODIGO_ART`);
+
+    -- -----------------------------------------------------------------
+    -- 2) SKUs en juego: artículo + color + posición de talla. Solo las
+    --    tallas que están en el conjunto pivote (POSICION 1..14).
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    CREATE TEMPORARY TABLE `tmp_bat_sku` (
+        `CODIGO_UNIDAD` VARCHAR(50)  NOT NULL PRIMARY KEY,
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        KEY `IDX_BAT_SKU_ART` (`CODIGO_ART`)
+    );
+    INSERT IGNORE INTO `tmp_bat_sku`
+    SELECT sku.`CODIGO_UNIDAD_SKU`, sku.`CODIGO_ART_SKU`,
+           COALESCE(co.`AV`, ''''), COALESCE(atb.`HEX_ATB`, ''''),
+           COALESCE(co.`ORDEN_AV`, 0), p.`POSICION`
+      FROM `fza_articulos_skus` sku
+      JOIN `fza_articulos` a
+        ON a.`CODIGO_ART_ART` = sku.`CODIGO_ART_SKU`
+       AND a.`ESACTIVO_ART` = ''S''
+      JOIN `fza_atributos_sku` sat
+        ON sat.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+      JOIN `fza_atributos_valores` ta
+        ON ta.`ID_AV` = sat.`ID_AV_SA` AND ta.`ID_VA_AV` <> ''CO''
+      JOIN `tmp_bat_pos` p
+        ON p.`CODIGO_ART` = sku.`CODIGO_ART_SKU` AND p.`ID_AV` = ta.`ID_AV`
+      -- Color del SKU: SOLO su fila de atributo de color. El discriminante
+      -- ID_VA_AV=''CO'' DEBE ir también en el ON de `sac`; si solo se filtra en
+      -- `co`, `sac` casa además la fila de talla (color NULL) y el SKU genera
+      -- dos filas. Con INSERT IGNORE sobre la PK del SKU sobrevive una al azar
+      -- y el SKU podía quedar SIN color (banda "sin color" fantasma).
+      LEFT JOIN `fza_atributos_sku` sac
+        ON sac.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU`
+       AND sac.`ID_AV_SA` IN (SELECT `ID_AV` FROM `fza_atributos_valores`
+                               WHERE `ID_VA_AV` = ''CO'')
+      LEFT JOIN `fza_atributos_valores` co
+        ON co.`ID_AV` = sac.`ID_AV_SA` AND co.`ID_VA_AV` = ''CO''
+      LEFT JOIN `fza_atributos_basicos` atb ON atb.`ID_ATB` = co.`ID_ATB_AV`;
+
+    -- -----------------------------------------------------------------
+    -- 3) Base de medidas por (artículo, color, posición). Se rellena con
+    --    ramas distintas según el modo para no calcular ventanas de
+    --    movimientos cuando se pide acumulados.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    CREATE TEMPORARY TABLE `tmp_bat_base` (
+        `CODIGO_ART`    VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`    VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`         VARCHAR(100) NOT NULL DEFAULT '''',
+        `COLOR_HEX`     VARCHAR(7)   NULL,
+        `ORDEN_COLOR`   INT          NOT NULL DEFAULT 0,
+        `POSICION`      INT          NOT NULL,
+        `EXI_INI`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `VEN`           DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `EXI_FIN`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_COMPRA`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_ALBENTRADA` DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `ENT_REGULAR`   DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_TRASPASO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_DEPOSITO`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_ALBVENTA`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `SAL_VENTA`     DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `POSICION`, `COLOR`)
+    );
+
+    IF p_MODO = ''A'' THEN
+        -- Acumulados denormalizados del stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               0,
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK` + st.`CANTIDAD_ENT_TRASPASO_STK`
+                 + st.`CANTIDAD_ENT_DEPOSITO_STK` + st.`CANTIDAD_ENT_REGULAR_STK`
+                 + st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_SAL_TRASPASO_STK` + st.`CANTIDAD_SAL_DEPOSITO_STK`
+                 + st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK` + st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_STK`),
+               SUM(st.`CANTIDAD_ENT_COMPRA_STK`), SUM(st.`CANTIDAD_ENT_ALBENTRADA_STK`),
+               SUM(st.`CANTIDAD_ENT_TRASPASO_STK`), SUM(st.`CANTIDAD_ENT_DEPOSITO_STK`),
+               SUM(st.`CANTIDAD_ENT_REGULAR_STK`), SUM(st.`CANTIDAD_SAL_TRASPASO_STK`),
+               SUM(st.`CANTIDAD_SAL_DEPOSITO_STK`), SUM(st.`CANTIDAD_SAL_ALBVENTA_STK`),
+               SUM(st.`CANTIDAD_SAL_VENTA_STK`)
+          FROM `tmp_bat_sku` s
+          JOIN `fza_articulos_stockactual` st
+            ON st.`CODIGO_UNIDAD_STK` = s.`CODIGO_UNIDAD`
+           AND st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+         GROUP BY s.`CODIGO_ART`, IF(v_por_alm, st.`CODIGO_ALM_STK`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    ELSE
+        -- Entre fechas: movimientos del periodo + existencias
+        -- reconstruidas desde el stock actual.
+        INSERT INTO `tmp_bat_base`
+            (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+             `POSICION`,
+             `EXI_INI`, `ENT`, `SAL`, `VEN`, `EXI_FIN`,
+             `ENT_COMPRA`, `ENT_ALBENTRADA`, `ENT_TRASPASO`, `ENT_DEPOSITO`,
+             `ENT_REGULAR`, `SAL_TRASPASO`, `SAL_DEPOSITO`, `SAL_ALBVENTA`,
+             `SAL_VENTA`)
+        SELECT s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+               s.`COLOR`, MIN(s.`COLOR_HEX`),
+               MIN(s.`ORDEN_COLOR`), s.`POSICION`,
+               -- Existencias iniciales: stock actual menos movimientos
+               -- firmados desde p_DESDE (inclusive).
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_DESDE`, 0)),
+               SUM(COALESCE(mv.`ENT`, 0)),
+               SUM(COALESCE(mv.`SAL`, 0)),
+               SUM(COALESCE(mv.`VEN`, 0)),
+               -- Existencias finales: stock actual menos movimientos
+               -- firmados posteriores a p_HASTA.
+               SUM(COALESCE(mv.`STOCK_NOW`, 0) - COALESCE(mv.`DELTA_HASTA`, 0)),
+               SUM(COALESCE(mv.`ENT_COMPRA`, 0)), SUM(COALESCE(mv.`ENT_ALBENTRADA`, 0)),
+               SUM(COALESCE(mv.`ENT_TRASPASO`, 0)), SUM(COALESCE(mv.`ENT_DEPOSITO`, 0)),
+               SUM(COALESCE(mv.`ENT_REGULAR`, 0)), SUM(COALESCE(mv.`SAL_TRASPASO`, 0)),
+               SUM(COALESCE(mv.`SAL_DEPOSITO`, 0)), SUM(COALESCE(mv.`SAL_ALBVENTA`, 0)),
+               SUM(COALESCE(mv.`SAL_VENTA`, 0))
+          FROM `tmp_bat_sku` s
+          LEFT JOIN (
+                -- Stock actual y movimientos firmados unificados por unidad y
+                -- almacén (UNION ALL para sumarlos en el mismo grano). Si no se
+                -- agrupa por almacén, ALM = '''' y todo colapsa en un único
+                -- bucket (resultado idéntico al cálculo agregado anterior).
+                SELECT u.`CODIGO_UNIDAD`, u.`ALM`,
+                       SUM(u.`STOCK_NOW`)      AS `STOCK_NOW`,
+                       SUM(u.`ENT`)            AS `ENT`,
+                       SUM(u.`SAL`)            AS `SAL`,
+                       SUM(u.`VEN`)            AS `VEN`,
+                       SUM(u.`ENT_COMPRA`)     AS `ENT_COMPRA`,
+                       SUM(u.`ENT_ALBENTRADA`) AS `ENT_ALBENTRADA`,
+                       SUM(u.`ENT_TRASPASO`)   AS `ENT_TRASPASO`,
+                       SUM(u.`ENT_DEPOSITO`)   AS `ENT_DEPOSITO`,
+                       SUM(u.`ENT_REGULAR`)    AS `ENT_REGULAR`,
+                       SUM(u.`SAL_TRASPASO`)   AS `SAL_TRASPASO`,
+                       SUM(u.`SAL_DEPOSITO`)   AS `SAL_DEPOSITO`,
+                       SUM(u.`SAL_ALBVENTA`)   AS `SAL_ALBVENTA`,
+                       SUM(u.`SAL_VENTA`)      AS `SAL_VENTA`,
+                       SUM(u.`DELTA_DESDE`)    AS `DELTA_DESDE`,
+                       SUM(u.`DELTA_HASTA`)    AS `DELTA_HASTA`
+                  FROM (
+                        SELECT st2.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD`,
+                               IF(v_por_alm, st2.`CODIGO_ALM_STK`, '''') AS `ALM`,
+                               st2.`CANTIDAD_STK` AS `STOCK_NOW`,
+                               0 AS `ENT`, 0 AS `SAL`, 0 AS `VEN`,
+                               0 AS `ENT_COMPRA`, 0 AS `ENT_ALBENTRADA`,
+                               0 AS `ENT_TRASPASO`, 0 AS `ENT_DEPOSITO`,
+                               0 AS `ENT_REGULAR`, 0 AS `SAL_TRASPASO`,
+                               0 AS `SAL_DEPOSITO`, 0 AS `SAL_ALBVENTA`,
+                               0 AS `SAL_VENTA`, 0 AS `DELTA_DESDE`,
+                               0 AS `DELTA_HASTA`
+                          FROM `fza_articulos_stockactual` st2
+                         WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                           -- Solo los SKUs del informe (IDX_STK_UNIDAD): no
+                           -- recorrer todo el stock para descartarlo al unir.
+                           AND st2.`CODIGO_UNIDAD_STK` IN
+                               (SELECT `CODIGO_UNIDAD` FROM `tmp_bat_sku`)
+                        UNION ALL
+                        SELECT m.`CODIGO_UNIDAD_MOV`,
+                               IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''''),
+                               0,
+                               IF(m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_MOV` = ''S''
+                                  AND m.`TIPO_DOC_MOV` IN (''VE'', ''FC'', ''AV'')
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AC'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AE'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''IN'' AND m.`TIPO_MOV` = ''E''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''TR'', ''AT'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''DP'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` = ''AV'' AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(m.`TIPO_DOC_MOV` IN (''VE'', ''FC'') AND m.`TIPO_MOV` = ''S''
+                                  AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
+                                  m.`CANTIDAD_MOV`, 0),
+                               IF(DATE(m.`FECHA_MOV`) >= v_desde,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0),
+                               IF(DATE(m.`FECHA_MOV`) > v_hasta,
+                                  IF(m.`TIPO_MOV` = ''E'', m.`CANTIDAD_MOV`,
+                                     -m.`CANTIDAD_MOV`), 0)
+                          FROM `fza_movimientos_almacen` m
+                         WHERE m.`ESACTIVO_MOV` = ''S''
+                           AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                           -- Solo los SKUs del informe (igual que el LEFT JOIN
+                           -- de abajo): no agrega TODA la tabla de movimientos
+                           -- para descartarla. Indexado por CODIGO_UNIDAD_MOV.
+                           AND m.`CODIGO_UNIDAD_MOV` IN
+                               (SELECT `CODIGO_UNIDAD` FROM `tmp_bat_sku`)
+                           -- Movs. anteriores a ''desde'' aportan 0 a las 16
+                           -- medidas (todas exigen fecha >= desde): se podan.
+                           AND m.`FECHA_MOV` >= v_desde
+                       ) u
+                 GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
+               ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
+         GROUP BY s.`CODIGO_ART`, COALESCE(mv.`ALM`, ''''),
+                  s.`POSICION`, s.`COLOR`;
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 3b) Ventas REALES por (artículo, almacén, color, posición) desde las
+    --     líneas de factura. Es la fuente de verdad de las ventas (cantidad
+    --     E importe): los acumulados de stock (CANTIDAD_SAL_VENTA_STK) pueden
+    --     no estar mantenidos y dar cantidad 0 aunque haya venta. La banda VEN
+    --     toma de aquí su CANTIDAD por talla (antes salía del acumulado y no
+    --     cuadraba con el importe, que ya venía de facturas). Mismo filtro de
+    --     almacén/periodo y mismo conjunto de SKUs (tmp_bat_sku) que la
+    --     valoración de ventas (vt) del SELECT final, para que cantidad e
+    --     importe sean coherentes.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_ven`;
+    CREATE TEMPORARY TABLE `tmp_bat_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '''',
+        `COLOR`      VARCHAR(100)  NOT NULL DEFAULT '''',
+        `POSICION`   INT           NOT NULL,
+        `VEN_QTY`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `POSICION`)
+    );
+    INSERT INTO `tmp_bat_ven`
+    SELECT s.`CODIGO_ART`,
+           IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''),
+           s.`COLOR`, s.`POSICION`,
+           SUM(fl.`CANTIDAD_FACLIN`)
+      FROM `fza_facturas_lineas` fl
+      JOIN `fza_facturas` f
+        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+      JOIN `tmp_bat_sku` s
+        ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+     WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+       AND (p_MODO = ''A''
+            OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+     GROUP BY s.`CODIGO_ART`,
+              IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''),
+              s.`COLOR`, s.`POSICION`;
+
+    -- -----------------------------------------------------------------
+    -- 4) Desdoblar en bandas (forma larga). Cada banda es un INSERT
+    --    independiente (referencia tmp_bat_base una sola vez) y se filtra
+    --    por modo/desglosado. ES_COSTE marca cómo se valora la banda.
+    --    ORDEN_BANDA fija el orden vertical del informe.
+    -- -----------------------------------------------------------------
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    CREATE TEMPORARY TABLE `tmp_bat_medidas` (
+        `CODIGO_ART`     VARCHAR(20)  NOT NULL,
+        `CODIGO_ALM`     VARCHAR(20)  NOT NULL DEFAULT '''',
+        `COLOR`          VARCHAR(100) NULL,
+        `COLOR_HEX`      VARCHAR(7)   NULL,
+        `ORDEN_COLOR`    INT          NOT NULL DEFAULT 0,
+        `POSICION`       INT          NOT NULL,
+        `BANDA`          VARCHAR(20)  NOT NULL,
+        `ORDEN_BANDA`    INT          NOT NULL,
+        `ETIQUETA_BANDA` VARCHAR(40)  NOT NULL,
+        `ES_COSTE`       TINYINT      NOT NULL DEFAULT 0,
+        `CANTIDAD`       DECIMAL(19,6) NOT NULL DEFAULT 0,
+        KEY `IDX_BAT_MED` (`CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `ORDEN_BANDA`)
+    );
+
+    -- Existencias iniciales: solo entre fechas.
+    IF p_MODO = ''F'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''EXIINI'', 10, ''Existencias iniciales'', 1, `EXI_INI`
+          FROM `tmp_bat_base`;
+    END IF;
+    -- Simplificado (F) o acumulados (A). Entradas = albaranes (compra + alb.
+    -- entrada) + recuentos (regularizaciones) + traspasos NETOS (entrada -
+    -- salida). SIN depósitos y SIN banda Salidas: las ventas van en su banda.
+    -- Balance: Ex.ini + Entradas - Ventas = Ex.final (los depósitos quedan
+    -- fuera de la ecuación, según lo pedido).
+    IF (p_MODO = ''F'' AND p_DESGLOSADO = ''N'') OR p_MODO = ''A'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENT'', 20, ''Entradas'', 1,
+               `ENT_COMPRA` + `ENT_ALBENTRADA` + `ENT_REGULAR`
+                 + `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bat_base`;
+        -- Cantidad de la banda de ventas: de facturas (tmp_bat_ven) por talla,
+        -- no del acumulado de stock. LEFT JOIN sobre la base para conservar la
+        -- fila de ventas de cada color (0 si no hubo venta).
+        INSERT INTO `tmp_bat_medidas`
+        SELECT b.`CODIGO_ART`, b.`CODIGO_ALM`, b.`COLOR`, b.`COLOR_HEX`,
+               b.`ORDEN_COLOR`, b.`POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, COALESCE(v.`VEN_QTY`, 0)
+          FROM `tmp_bat_base` b
+          LEFT JOIN `tmp_bat_ven` v
+            ON v.`CODIGO_ART` = b.`CODIGO_ART`
+           AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+           AND v.`COLOR` = b.`COLOR`
+           AND v.`POSICION` = b.`POSICION`;
+    END IF;
+    -- Entradas desglosadas: solo modo entre fechas desglosado. Mismos
+    -- subtipos que la consulta de stock (Ctrl+U), con traspasos y depósitos
+    -- netos (entrada - salida) y sin bandas de salida salvo alb. venta.
+    IF p_MODO = ''F'' AND p_DESGLOSADO = ''S'' THEN
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTCMP'', 21, ''Ent. compra'', 1, `ENT_COMPRA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTALB'', 22, ''Alb. entrada'', 1, `ENT_ALBENTRADA`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTTRA'', 23, ''Traspasos (neto)'', 1,
+               `ENT_TRASPASO` - `SAL_TRASPASO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTDEP'', 24, ''Depósitos (neto)'', 1,
+               `ENT_DEPOSITO` - `SAL_DEPOSITO`
+          FROM `tmp_bat_base`;
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''ENTREG'', 25, ''Regulariz.'', 1, `ENT_REGULAR`
+          FROM `tmp_bat_base`;
+        -- Sal. traspaso / Sal. depósito ya no salen: se han neteado en sus
+        -- bandas de entrada (Traspasos/Depósitos neto). Albarán de venta sí se
+        -- mantiene (es una venta).
+        INSERT INTO `tmp_bat_medidas`
+        SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+               `POSICION`,
+               ''SALALB'', 43, ''Alb. venta'', 0, `SAL_ALBVENTA`
+          FROM `tmp_bat_base`;
+        -- Cantidad de ventas: de facturas (tmp_bat_ven) por talla, igual que
+        -- en simplificado/acumulados (no del acumulado SAL_VENTA del stock).
+        INSERT INTO `tmp_bat_medidas`
+        SELECT b.`CODIGO_ART`, b.`CODIGO_ALM`, b.`COLOR`, b.`COLOR_HEX`,
+               b.`ORDEN_COLOR`, b.`POSICION`,
+               ''VEN'', 50, ''Ventas'', 0, COALESCE(v.`VEN_QTY`, 0)
+          FROM `tmp_bat_base` b
+          LEFT JOIN `tmp_bat_ven` v
+            ON v.`CODIGO_ART` = b.`CODIGO_ART`
+           AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+           AND v.`COLOR` = b.`COLOR`
+           AND v.`POSICION` = b.`POSICION`;
+    END IF;
+    -- Existencias finales: siempre.
+    INSERT INTO `tmp_bat_medidas`
+    SELECT `CODIGO_ART`, `CODIGO_ALM`, `COLOR`, `COLOR_HEX`, `ORDEN_COLOR`,
+           `POSICION`,
+           ''EXIFIN'', 90, ''Existencias finales'', 1, `EXI_FIN`
+      FROM `tmp_bat_base`;
+    -- Selección de bandas: sin selección = todas las de la configuración
+    -- (modo/detalle). FIND_IN_SET sobre el código de banda.
+    IF p_BANDAS <> '''' THEN
+        DELETE FROM `tmp_bat_medidas` WHERE NOT FIND_IN_SET(`BANDA`, p_BANDAS);
+    END IF;
+
+    -- -----------------------------------------------------------------
+    -- 5) Pivote final por (artículo, color, banda) y enriquecido con
+    --    familia, etiquetas de cabecera, foto y valoración. El pivote
+    --    va en una subconsulta para no mezclar agregados con columnas
+    --    de adorno (ONLY_FULL_GROUP_BY-safe).
+    -- -----------------------------------------------------------------
+    SELECT
+        COALESCE(fam.`ORDEN_FAM`, 999999)             AS `ORDEN_FAM`,
+        art.`CODIGO_FAM_ART`                          AS `CODIGO_FAM`,
+        COALESCE(fam.`DESCRIPCION_FAM`,
+                 fam.`NOMBRE_FAM_FAM`, art.`CODIGO_FAM_ART`) AS `DESCRIPCION_FAM`,
+        p.`CODIGO_ART`                                AS `CODIGO_ART_ART`,
+        art.`DESCRIPCION_ART`                         AS `DESCRIPCION_ART`,
+        p.`CODIGO_ALM`                                AS `CODIGO_ALM`,
+        COALESCE(alm.`NOMBRE_ALM_ALM`, '''')            AS `NOMBRE_ALM`,
+        prov.`REF_PROVEEDOR_AP`                       AS `REF_PRV`,
+        ROUND(COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2) AS `COSTE_ART`,
+        ROUND(COALESCE(pvp.`PVP`, 0), 2)              AS `PVP_ART`,
+        p.`ORDEN_COLOR`, p.`COLOR`, p.`COLOR_HEX`,
+        p.`ORDEN_BANDA`, p.`BANDA`, p.`ETIQUETA_BANDA`, p.`ES_COSTE`,
+        et.`ETIQ_T01`, et.`ETIQ_T02`, et.`ETIQ_T03`, et.`ETIQ_T04`,
+        et.`ETIQ_T05`, et.`ETIQ_T06`, et.`ETIQ_T07`, et.`ETIQ_T08`,
+        et.`ETIQ_T09`, et.`ETIQ_T10`, et.`ETIQ_T11`, et.`ETIQ_T12`,
+        et.`ETIQ_T13`, et.`ETIQ_T14`,
+        p.`T01`, p.`T02`, p.`T03`, p.`T04`, p.`T05`, p.`T06`, p.`T07`,
+        p.`T08`, p.`T09`, p.`T10`, p.`T11`, p.`T12`, p.`T13`, p.`T14`,
+        p.`CANTIDAD`,
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 IF(p.`CANTIDAD` <> 0,
+                    COALESCE(vt.`VEN_IMPORTE`, 0) / p.`CANTIDAD`, 0),
+                 IF(p.`ES_COSTE` = 1,
+                    COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                    COALESCE(pvp.`PVP`, 0))), 2)        AS `PRECIO`,
+        -- Importe de la banda. La banda de ventas (VEN) se valora al PRECIO
+        -- REAL de venta (con descuentos, con IVA) tomado de fza_facturas_lineas;
+        -- el resto a coste/PMP o a tarifa según ES_COSTE.
+        ROUND(IF(p.`BANDA` = ''VEN'',
+                 COALESCE(vt.`VEN_IMPORTE`, 0),
+                 p.`CANTIDAD` * IF(p.`ES_COSTE` = 1,
+                   COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0),
+                   COALESCE(pvp.`PVP`, 0))), 2)          AS `IMPORTE`,
+        -- Ventas reales (con descuento, con IVA) solo en la banda de ventas
+        -- (VEN); 0 en el resto. Al sumarla por artículo/grupo/total da el
+        -- acumulado de ventas (las existencias se leen banda a banda; las
+        -- ventas hay que irlas sumando).
+        ROUND(IF(p.`BANDA` = ''VEN'', COALESCE(vt.`VEN_IMPORTE`, 0), 0), 2)
+                                                      AS `VENTAS`,
+        -- Existencias finales aisladas (cantidad y valor a PMP) solo en la
+        -- banda EXIFIN, 0 en el resto. Permite que el total por grupo/general
+        -- muestre SOLO el stock final, sin mezclar entradas/salidas/ventas.
+        IF(p.`BANDA` = ''EXIFIN'', p.`CANTIDAD`, 0)     AS `EXIFIN_CANT`,
+        ROUND(IF(p.`BANDA` = ''EXIFIN'',
+                 p.`CANTIDAD` * COALESCE(NULLIF(cst.`COSTE`, 0),
+                                         prov.`COSTE_PRV`, 0),
+                 0), 2)                               AS `EXIFIN_IMP`,
+        -- Niveles de agrupación configurables. GRUPOn_COD identifica el grupo
+        -- (para el corte y el orden); GRUPOn_ETIQ es la etiqueta a mostrar en
+        -- la cabecera/resumen. Si el nivel no está activo (''''), salen vacíos y
+        -- el cliente no dibuja banda de grupo a ese nivel.
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO1_COD`,
+        CASE p_NIVEL1
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO1_ETIQ`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO2_COD`,
+        CASE p_NIVEL2
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO2_ETIQ`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN COALESCE(prov.`CODIGO_PRV`, '''')
+            WHEN ''FAM'' THEN COALESCE(fg.`COD_GRP`, art.`CODIGO_FAM_ART`)
+            WHEN ''TMP'' THEN COALESCE(tmp.`TEMPORADA`, '''')
+            WHEN ''ALM'' THEN p.`CODIGO_ALM`
+            ELSE ''''
+        END                                           AS `GRUPO3_COD`,
+        CASE p_NIVEL3
+            WHEN ''PRV'' THEN CONCAT(''Proveedor: '',
+                 COALESCE(NULLIF(prov.`RAZON`, ''''), prov.`CODIGO_PRV`,
+                          ''(sin proveedor)''))
+            WHEN ''FAM'' THEN CONCAT(''Familia: '',
+                 COALESCE(fg.`DESC_GRP`, fg.`COD_GRP`,
+                          art.`CODIGO_FAM_ART`))
+            WHEN ''TMP'' THEN CONCAT(''Temporada: '',
+                 COALESCE(NULLIF(tmp.`TEMPORADA`, ''''), ''(sin temporada)''))
+            WHEN ''ALM'' THEN CONCAT(''Almacén: '',
+                 COALESCE(NULLIF(alm.`NOMBRE_ALM_ALM`, ''''), p.`CODIGO_ALM`,
+                          ''(sin almacén)''))
+            ELSE ''''
+        END                                           AS `GRUPO3_ETIQ`
+      FROM (
+            SELECT m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`,
+                   MIN(m.`COLOR_HEX`) AS `COLOR_HEX`,
+                   MIN(m.`ORDEN_COLOR`) AS `ORDEN_COLOR`,
+                   m.`BANDA`, m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`,
+                   SUM(IF(m.`POSICION` =  1, m.`CANTIDAD`, 0)) AS `T01`,
+                   SUM(IF(m.`POSICION` =  2, m.`CANTIDAD`, 0)) AS `T02`,
+                   SUM(IF(m.`POSICION` =  3, m.`CANTIDAD`, 0)) AS `T03`,
+                   SUM(IF(m.`POSICION` =  4, m.`CANTIDAD`, 0)) AS `T04`,
+                   SUM(IF(m.`POSICION` =  5, m.`CANTIDAD`, 0)) AS `T05`,
+                   SUM(IF(m.`POSICION` =  6, m.`CANTIDAD`, 0)) AS `T06`,
+                   SUM(IF(m.`POSICION` =  7, m.`CANTIDAD`, 0)) AS `T07`,
+                   SUM(IF(m.`POSICION` =  8, m.`CANTIDAD`, 0)) AS `T08`,
+                   SUM(IF(m.`POSICION` =  9, m.`CANTIDAD`, 0)) AS `T09`,
+                   SUM(IF(m.`POSICION` = 10, m.`CANTIDAD`, 0)) AS `T10`,
+                   SUM(IF(m.`POSICION` = 11, m.`CANTIDAD`, 0)) AS `T11`,
+                   SUM(IF(m.`POSICION` = 12, m.`CANTIDAD`, 0)) AS `T12`,
+                   SUM(IF(m.`POSICION` = 13, m.`CANTIDAD`, 0)) AS `T13`,
+                   SUM(IF(m.`POSICION` = 14, m.`CANTIDAD`, 0)) AS `T14`,
+                   SUM(m.`CANTIDAD`) AS `CANTIDAD`
+              FROM `tmp_bat_medidas` m
+             GROUP BY m.`CODIGO_ART`, m.`CODIGO_ALM`, m.`COLOR`, m.`BANDA`,
+                      m.`ORDEN_BANDA`, m.`ETIQUETA_BANDA`, m.`ES_COSTE`
+           ) p
+      JOIN `fza_articulos` art ON art.`CODIGO_ART_ART` = p.`CODIGO_ART`
+      LEFT JOIN `fza_articulos_familias` fam
+        ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `tmp_bat_fam_grp` fg ON fg.`CODIGO_FAM` = art.`CODIGO_FAM_ART`
+      LEFT JOIN `fza_almacenes` alm ON alm.`CODIGO_ALM_ALM` = p.`CODIGO_ALM`
+      LEFT JOIN `tmp_bat_etiq` et ON et.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT t.`CODIGO_ART_ARTTAR` AS `CODIGO_ART`,
+                   MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
+              FROM `fza_articulos_tarifas` t
+             WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               -- Solo los artículos del informe (se une por artículo filtrado).
+               AND t.`CODIGO_ART_ARTTAR` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+               AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '''') = ''''
+               AND t.`ESACTIVO_ARTTAR` = ''S''
+               AND (t.`FECHA_DESDE_ARTTAR` IS NULL
+                    OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
+               AND (t.`FECHA_HASTA_ARTTAR` IS NULL
+                    OR t.`FECHA_HASTA_ARTTAR` >= CURRENT_DATE)
+             GROUP BY t.`CODIGO_ART_ARTTAR`
+           ) pvp ON pvp.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT sk.`CODIGO_ART_SKU` AS `CODIGO_ART`,
+                   SUM(st.`VALOR_TOTAL_STK`) AS `VAL`,
+                   SUM(st.`CANTIDAD_STK`)    AS `CAN`,
+                   IF(SUM(st.`CANTIDAD_STK`) <> 0,
+                      SUM(st.`VALOR_TOTAL_STK`) / SUM(st.`CANTIDAD_STK`), 0) AS `COSTE`
+              FROM `fza_articulos_stockactual` st
+              JOIN `fza_articulos_skus` sk
+                ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
+             WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+               -- Solo los SKUs del informe (se une por artículo ya filtrado).
+               AND st.`CODIGO_UNIDAD_STK` IN
+                   (SELECT `CODIGO_UNIDAD` FROM `tmp_bat_sku`)
+             GROUP BY sk.`CODIGO_ART_SKU`
+           ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
+      LEFT JOIN (
+            SELECT ap.`CODIGO_ART_AP` AS `CODIGO_ART`,
+                   MAX(ap.`REF_PROVEEDOR_AP`)   AS `REF_PROVEEDOR_AP`,
+                   MAX(ap.`PRECIO_ULT_COMPRA_AP`) AS `COSTE_PRV`,
+                   MAX(ap.`CODIGO_PRV_AP`)      AS `CODIGO_PRV`,
+                   MAX(pr.`RAZON_SOCIAL_PRV`)   AS `RAZON`
+              FROM `fza_articulos_proveedores` ap
+              LEFT JOIN `fza_proveedores` pr
+                ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
+             WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+               -- Solo los artículos del informe (se une por artículo filtrado).
+               AND ap.`CODIGO_ART_AP` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
+             GROUP BY ap.`CODIGO_ART_AP`
+           ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
+      -- Temporada EFECTIVA por color (Fase 3): la vista de propiedades
+      -- efectivas resuelve color -> articulo; tmp_bat_sku da el color del
+      -- SKU. Los SKU de un mismo color comparten temporada (el MAX colapsa
+      -- sin ambiguedad). Sin datos de color resuelve al valor de articulo.
+      LEFT JOIN (
+            SELECT s.`CODIGO_ART` AS `CODIGO_ART`, s.`COLOR` AS `COLOR`,
+                   MAX(COALESCE(e.`VALOR_PV`,
+                                e.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
+              FROM `tmp_bat_sku` s
+              JOIN `vi_articulos_propiedades_efectivas` e
+                ON e.`CODIGO_UNIDAD_SKU` = s.`CODIGO_UNIDAD`
+               AND e.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''
+             GROUP BY s.`CODIGO_ART`, s.`COLOR`
+           ) tmp ON tmp.`CODIGO_ART` = p.`CODIGO_ART`
+                AND tmp.`COLOR` = p.`COLOR`
+      LEFT JOIN (
+            -- Ventas REALES (con descuento, con IVA) por (artículo, almacén,
+            -- color), de las líneas de factura/ticket. Periodo por fecha de
+            -- factura (entre fechas) o histórico (acumulados). Se enlaza el SKU
+            -- de la línea a tmp_bat_sku para resolver artículo/color y restringir
+            -- a los artículos filtrados.
+            SELECT s.`CODIGO_ART`,
+                   IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '''') AS `CODIGO_ALM`,
+                   s.`COLOR`,
+                   SUM(fl.`CANTIDAD_FACLIN`) AS `VEN_QTY`,
+                   SUM(fl.`TOTAL_FACLIN`)    AS `VEN_IMPORTE`
+              FROM `fza_facturas_lineas` fl
+              JOIN `fza_facturas` f
+                ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+               AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+              JOIN `tmp_bat_sku` s
+                ON s.`CODIGO_UNIDAD` = fl.`CODIGO_UNIDAD_FACLIN`
+             WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+               AND (p_MODO = ''A''
+                    OR DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta)
+             GROUP BY s.`CODIGO_ART`,
+                      IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''''), s.`COLOR`
+           ) vt ON vt.`CODIGO_ART` = p.`CODIGO_ART`
+               AND vt.`CODIGO_ALM` = p.`CODIGO_ALM`
+               AND vt.`COLOR` = p.`COLOR`
+     ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
+              COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
+              p.`CODIGO_ART`, p.`ORDEN_COLOR`, p.`COLOR`, p.`ORDEN_BANDA`;
+
+    -- Limpieza de temporales para no arrastrarlas en la sesión.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_medidas`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_ven`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_base`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_sku`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_etiq`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_pos`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam_grp`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_fam`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_bat_alm`;
+END ;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------
+-- Parámetros: (p_MODO, p_DESDE, p_HASTA, p_ALMACENES, p_FAMILIAS,
+--              p_PROVEEDORES, p_TEMPORADAS, p_ARTICULOS, p_COD_TARIFA,
+--              p_DESGLOSADO, p_BANDAS, p_NIVEL1, p_NIVEL2, p_NIVEL3,
+--              p_NIVEL_FAM).
+-- Todos los filtros multi-valor son CSV; '''' = sin filtro (todos). p_ARTICULOS
+-- restringe el informe a una lista de códigos de artículo (FIND_IN_SET sobre
+-- CODIGO_ART_ART). p_BANDAS limita qué bandas salen (códigos
+-- EXIINI/ENT/SAL/VEN/EXIFIN y, en desglosado,
+-- ENTCMP/ENTALB/ENTTRA/ENTDEP/ENTREG/SALTRA/SALDEP/SALALB).
+-- p_NIVEL1/2/3 definen la jerarquía de agrupación con resumen por grupo:
+-- PRV (proveedor), FAM (familia), TMP (temporada), ALM (almacén) o ''''
+-- (nivel inactivo). El orden importa: NIVEL1 es el grupo más externo. La
+-- salida añade GRUPO1_COD/GRUPO1_ETIQ..GRUPO3_COD/GRUPO3_ETIQ y ordena por
+-- ellas; el cliente (FastReport / Excel) dibuja las cabeceras y la línea
+-- de resumen (cantidad + importe) en cada corte de grupo. Si algún nivel es
+-- ALM, los cálculos se desglosan por almacén (si no, se agregan todos los
+-- almacenes filtrados). p_NIVEL_FAM elige el nivel del árbol de familias al
+-- agrupar por FAM (1 = familia raíz; <1 o NULL = familia hoja del artículo).
+-- Ejemplos de uso (desde el modal de impresión preparar_consulta):
+--   -- Entre fechas, simplificado, todos los almacenes, todas las bandas,
+--   -- sin agrupación adicional
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'','''','''','''','''','''',''PVP'',''N'','''','''','''','''',0);
+--   -- Entre fechas, desglosado, almacenes 01 y 50, familias 0103 y 0104
+--   -- (cada familia incluye su descendencia), proveedor PRV001, temporada V26,
+--   -- solo las bandas de existencias y ventas, agrupando por proveedor y
+--   -- dentro de cada proveedor por la familia raíz (nivel 1 del árbol)
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''F'',''2026-05-01'',''2026-05-21'',''01,50'',''0103,0104'',''PRV001'',''V26'','''',''PVP'',''S'',''EXIINI,VEN,EXIFIN'',''PRV'',''FAM'','''',1);
+--   -- Por acumulados, todas las bandas, agrupado por almacén y temporada
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''A'',NULL,NULL,'''','''','''','''','''',''PVP'',''N'','''',''ALM'',''TMP'','''',0);
+--   -- Acumulados restringido a dos artículos concretos (resto de filtros
+--   -- vacíos = todos)
+--   CALL PRC_GET_BALANCE_ALMACEN_TALLAS(''A'',NULL,NULL,'''','''','''','''',''ART001,ART002'',''PVP'',''N'','''','''','''','''',0);
+-- ---------------------------------------------------------------------
+', '2026-06-20 05:48:31', '2026-06-20 05:48:31', 'Administrador', 'Administrador'),
+  ('430', 'formato_documentos_empresa', '-- =============================================================================
+-- Formato visible de documentos por empresa.
+--
+-- Anade FORMATO_DOCUMENTO_EMP a fza_empresas y expone DOCUMENTO_FORMATO en
+-- las vistas de impresion. No altera factuzam_original.sql.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Parametro de empresa
+-- ---------------------------------------------------------------------------
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_empresas''
+     AND COLUMN_NAME = ''FORMATO_DOCUMENTO_EMP''
+);
+
+SET @sSql := IF(
+  @sExisteCol = 0,
+  ''ALTER TABLE fza_empresas
+     ADD COLUMN FORMATO_DOCUMENTO_EMP varchar(80) NOT NULL
+       DEFAULT ''''Serie.NroDocumento''''
+       COMMENT ''''Formato visible de documentos. Tokens: Serie y NroDocumento''''
+       AFTER TEXTO_LEGAL_FACTURA_EMP'',
+  ''SELECT ''''FORMATO_DOCUMENTO_EMP ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE fza_empresas
+   SET FORMATO_DOCUMENTO_EMP = ''Serie.NroDocumento''
+ WHERE FORMATO_DOCUMENTO_EMP IS NULL
+    OR FORMATO_DOCUMENTO_EMP = '''';
+
+-- ---------------------------------------------------------------------------
+-- 2. Procedimiento comun de formato
+-- ---------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS FN_FORMATO_DOCUMENTO;
+DROP PROCEDURE IF EXISTS PRC_FORMATO_DOCUMENTO;
+
+DELIMITER ;;
+CREATE PROCEDURE PRC_FORMATO_DOCUMENTO(
+  IN p_FORMATO varchar(80),
+  IN p_SERIE varchar(50),
+  IN p_NUMERO varchar(50),
+  OUT p_DOCUMENTO_FORMATO varchar(200)
+)
+BEGIN
+  DECLARE v_formato varchar(80);
+  DECLARE v_original varchar(200);
+  DECLARE v_resultado varchar(200);
+  DECLARE v_serie varchar(50);
+  DECLARE v_numero varchar(50);
+
+  SET v_serie = TRIM(COALESCE(p_SERIE, ''''));
+  SET v_numero = TRIM(COALESCE(p_NUMERO, ''''));
+
+  IF v_serie = '''' THEN
+    SET p_DOCUMENTO_FORMATO = v_numero;
+  ELSEIF v_numero = '''' THEN
+    SET p_DOCUMENTO_FORMATO = v_serie;
+  ELSE
+    SET v_formato = NULLIF(TRIM(COALESCE(p_FORMATO, '''')), '''');
+
+    IF v_formato IS NULL THEN
+      SET v_formato = ''Serie.NroDocumento'';
+    END IF;
+
+    SET v_resultado = v_formato;
+    SET v_original = v_resultado;
+
+    SET v_resultado = REPLACE(v_resultado, ''NroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NRODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NumeroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''numerodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NUMERODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NúmeroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''númerodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NÚMERODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NroFactura'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrofactura'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NROFACTURA'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NroDoc'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrodoc'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NRODOC'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Numero'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''numero'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NUMERO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Número'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''número'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NÚMERO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Serie'', v_serie);
+    SET v_resultado = REPLACE(v_resultado, ''serie'', v_serie);
+    SET v_resultado = REPLACE(v_resultado, ''SERIE'', v_serie);
+
+    IF v_resultado = v_original THEN
+      SET p_DOCUMENTO_FORMATO = CONCAT(v_serie, ''.'', v_numero);
+    ELSE
+      SET p_DOCUMENTO_FORMATO = v_resultado;
+    END IF;
+  END IF;
+END;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------
+-- 3. Empresas
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_empresas` AS
+SELECT `fza_empresas`.`CODIGO_EMP_EMP`                AS `CODIGO_EMP_EMP`,
+       `fza_empresas`.`ORDEN_EMP`                     AS `ORDEN_EMP`,
+       `fza_empresas`.`ESACTIVO_EMP`                  AS `ESACTIVO_EMP`,
+       `fza_empresas`.`RAZON_SOCIAL_EMP`              AS `RAZON_SOCIAL_EMP`,
+       `fza_empresas`.`NIF_EMP`                       AS `NIF_EMP`,
+       `fza_empresas`.`MOVIL_EMP`                     AS `MOVIL_EMP`,
+       `fza_empresas`.`EMAIL_EMP`                     AS `EMAIL_EMP`,
+       `fza_empresas`.`DIRECCION1_EMP`                AS `DIRECCION1_EMP`,
+       `fza_empresas`.`DIRECCION2_EMP`                AS `DIRECCION2_EMP`,
+       `fza_empresas`.`CODIGO_POSTAL_EMP`             AS `CODIGO_POSTAL_EMP`,
+       `fza_empresas`.`POBLACION_EMP`                 AS `POBLACION_EMP`,
+       `fza_empresas`.`PROVINCIA_EMP`                 AS `PROVINCIA_EMP`,
+       `fza_empresas`.`NOMBRE_PAI_EMP`                AS `NOMBRE_PAI_EMP`,
+       `fza_empresas`.`CODIGO_PAI_EMP`                AS `CODIGO_PAI_EMP`,
+       `fza_empresas`.`IBAN_EMP`                      AS `IBAN_EMP`,
+       `fza_empresas`.`GRUPO_ZONA_IVA_EMP`            AS `GRUPO_ZONA_IVA_EMP`,
+       `fza_ivas_grupos`.`DESCRIPCION_IVA_IVAGRP`     AS `DESCRIPCION_IVA_IVAGRP`,
+       `fza_empresas`.`ESRETENCIONES_EMP`             AS `ESRETENCIONES_EMP`,
+       `fza_empresas`.`ESREGIMENESPECIALAGRICOLA_EMP` AS `ESREGIMENESPECIALAGRICOLA_EMP`,
+       `fza_empresas`.`TEXTO_LEGAL_FACTURA_EMP`       AS `TEXTO_LEGAL_FACTURA_EMP`,
+       `fza_empresas`.`FORMATO_DOCUMENTO_EMP`         AS `FORMATO_DOCUMENTO_EMP`,
+       `fza_empresas`.`CODIGO_CERTIFICADO_EMP`        AS `CODIGO_CERTIFICADO_EMP`,
+       `fza_empresas`.`TITULAR_CERTIFICADO_EMP`       AS `TITULAR_CERTIFICADO_EMP`,
+       `fza_empresas`.`TIPO_CERTIFICADO_EMP`          AS `TIPO_CERTIFICADO_EMP`,
+       `fza_empresas`.`FECHA_DESDE_CERTIFICADO_EMP`   AS `FECHA_DESDE_CERTIFICADO_EMP`,
+       `fza_empresas`.`FECHA_HASTA_CERTIFICADO_EMP`   AS `FECHA_HASTA_CERTIFICADO_EMP`,
+       `fza_empresas`.`INSTANTE_MODIF`                AS `INSTANTE_MODIF`,
+       `fza_empresas`.`INSTANTE_ALTA`                 AS `INSTANTE_ALTA`,
+       `fza_empresas`.`USUARIO_ALTA`                  AS `USUARIO_ALTA`,
+       `fza_empresas`.`USUARIO_MODIF`                 AS `USUARIO_MODIF`
+  FROM (`fza_empresas`
+        LEFT JOIN `fza_ivas_grupos`
+          ON (`fza_empresas`.`GRUPO_ZONA_IVA_EMP` =
+              `fza_ivas_grupos`.`IVA_IVAGRP`))
+ ORDER BY `fza_empresas`.`ORDEN_EMP`;
+
+-- ---------------------------------------------------------------------------
+-- 4. Facturas emitidas
+-- ---------------------------------------------------------------------------
+-- Las vistas no pueden llamar al procedimiento; DOCUMENTO_FORMATO va en linea.
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_facturas_print` AS
+SELECT `fza_facturas`.*,
+       `fza_formas_pago`.`DESCRIPCION_FORMA_PAGO_FP`
+              AS `DESCRIPCION_FORMA_PAGO_FP`,
+       `fza_formas_pago`.`ESCONTADO_FORMA_PAGO_FP`
+              AS `ESCONTADO_FORMA_PAGO_FP`,
+       (select group_concat('' '',
+                 date_format(`fza_recibos`.`FECHA_VENCIMIENTO_RECIBO_REC`,
+                             ''%d/%m/%Y''),
+                 ''=> '',
+                 format(`fza_recibos`.`EUROS_RECIBO_REC`, 2),
+                 ''€'' separator '','')
+          from `fza_recibos`
+         where `fza_recibos`.`NUMERO_FAC_REC` = `fza_facturas`.`NUMERO_FAC`
+           and `fza_recibos`.`SERIE_FAC_REC`  = `fza_facturas`.`SERIE_FAC`)
+              AS `VENCIMIENTOS_RECIBOS`,
+       `fza_empresas`.`IBAN_EMP` AS `IBAN_EMP`,
+       `fza_empresas`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,
+       CASE WHEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')) = '''' THEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '''')) WHEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '''')) = '''' THEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')), ''.'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''numerodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''númerodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NroFactura'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrofactura'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NroDoc'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrodoc'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NRODOC'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Numero'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''numero'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NUMERO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Número'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''número'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NÚMERO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Serie'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))), ''serie'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))), ''SERIE'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))) END
+              AS `DOCUMENTO_FORMATO`,
+       `fza_clientes`.`IBAN_CLI` AS `IBAN_CLI`,
+       `fza_formas_pago`.`ESVERBANCOEMPRESA_FORMA_PAGO_FP`
+              AS `ESVERBANCOEMPRESA_FORMA_PAGO_FP`,
+       `c`.`ID_FACCON`                          AS `ID_FACCON`,
+       `c`.`REQUEST_ID_CONSOLIDACION_FACCON`    AS `REQUEST_ID_CONSOLIDACION_FACCON`,
+       `c`.`ISSUER_IRS_ID_CONSOLIDACION_FACCON` AS `ISSUER_IRS_ID_CONSOLIDACION_FACCON`,
+       `c`.`ISSUED_TIME_FACCON`                 AS `ISSUED_TIME_FACCON`,
+       `c`.`CHAIN_NUMBER_FACCON`                AS `CHAIN_NUMBER_FACCON`,
+       `c`.`CHAIN_HASH_FACCON`                  AS `CHAIN_HASH_FACCON`,
+       `c`.`VERIFACTU_URL_FACCON`               AS `VERIFACTU_URL_FACCON`,
+       `c`.`QRCODE_BASE64_FACCON`               AS `QRCODE_BASE64_FACCON`,
+       `c`.`QRCODE_PNG_FACCON`                  AS `QRCODE_PNG_FACCON`,
+       `c`.`FECHA_PROCESAMIENTO_FACCON`         AS `FECHA_PROCESAMIENTO_FACCON`,
+       `c`.`ESTADO_FACCON`                      AS `ESTADO_FACCON`
+  from ((((`fza_facturas`
+       left join `fza_formas_pago`
+              on(`fza_facturas`.`FORMA_PAGO_FAC` =
+                 `fza_formas_pago`.`CODIGO_FP_FP`))
+       left join `fza_empresas`
+              on(`fza_facturas`.`CODIGO_EMP_FAC` =
+                 `fza_empresas`.`CODIGO_EMP_EMP`))
+       left join `fza_clientes`
+              on(`fza_facturas`.`CODIGO_CLI_FAC` =
+                 `fza_clientes`.`CODIGO_CLI_CLI`))
+       left join `fza_facturas_consolidaciones` `c`
+              on(`c`.`SERIE_FAC_FACCON`  = `fza_facturas`.`SERIE_FAC`
+             and `c`.`NUMERO_FAC_FACCON` = `fza_facturas`.`NUMERO_FAC`))
+ order by `fza_facturas`.`FECHA_FAC` desc;
+
+-- ---------------------------------------------------------------------------
+-- 5. Compras: sesiones, albaranes y devoluciones
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_compras_sesiones_cab_print` AS
+SELECT
+  ses.`SERIE_SES`,
+  ses.`NUMERO_SES`,
+  ses.`FECHA_SES`,
+  ses.`ESTADO_SES`,
+  ses.`REF_PRV_SES`,
+  ses.`COMENTARIOS_SES`,
+  ses.`PORCENTAJE_MARGEN_SES`,
+  ses.`MULTIPLO_REDONDEO_SES`,
+  ses.`AJUSTE_FINAL_SES`,
+  ses.`MONEDA_SES`,
+  ses.`TIPO_IVA_SES`,
+  ses.`ESFORMATO_DISTRIBUIDO_SES`,
+  ses.`CODIGO_EMP_SES`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(ses.`SERIE_SES`, '''')) = '''' THEN TRIM(COALESCE(ses.`NUMERO_SES`, '''')) WHEN TRIM(COALESCE(ses.`NUMERO_SES`, '''')) = '''' THEN TRIM(COALESCE(ses.`SERIE_SES`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(ses.`SERIE_SES`, '''')), ''.'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''numerodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''númerodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NroFactura'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrofactura'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NROFACTURA'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NroDoc'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrodoc'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NRODOC'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Numero'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''numero'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NUMERO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Número'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''número'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NÚMERO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Serie'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))), ''serie'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))), ''SERIE'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  ses.`CODIGO_PRV_SES`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  ses.`CODIGO_TAR_SES`,
+  ses.`CODIGO_FAM_SES`,
+  ses.`CODIGO_ALM_SES`,
+  ses.`INSTANTE_ALTA`,
+  ses.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`TOTAL_UNIDADES_SESLIN`), 0)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_LINEA_SESLIN`), 0)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `NUM_LINEAS_SES`
+FROM `fza_compras_sesiones` ses
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = ses.`CODIGO_EMP_SES`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = ses.`CODIGO_PRV_SES`;
+
+CREATE OR REPLACE VIEW `vi_albaranes_compra_cab_print` AS
+SELECT
+  alb.`SERIE_ALBC`,
+  alb.`NUMERO_ALBC`,
+  alb.`FECHA_ALBC`,
+  alb.`ESTADO_ALBC`,
+  alb.`REF_PROVEEDOR_ALBC`,
+  alb.`COMENTARIOS_ALBC`,
+  alb.`OBSERVACIONES_ALBC`,
+  alb.`CODIGO_EMP_ALBC`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_ALBC`, '''')) = '''' THEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '''')) WHEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '''')) = '''' THEN TRIM(COALESCE(alb.`SERIE_ALBC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_ALBC`, '''')), ''.'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''numerodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''númerodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NroFactura'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrofactura'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NroDoc'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrodoc'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NRODOC'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Numero'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''numero'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NUMERO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Número'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''número'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NÚMERO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Serie'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))), ''serie'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))), ''SERIE'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  alb.`CODIGO_PRV_ALBC`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  alb.`CODIGO_ALM_ALBC`,
+  alm.`NOMBRE_ALM_ALM`  AS `NOMBRE_ALM_ALBC`,
+  alm.`DIRECCION_ALM`   AS `DIRECCION_ALM_ALBC`,
+  alm.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_ALBC`,
+  alm.`POBLACION_ALM`   AS `POBLACION_ALM_ALBC`,
+  alm.`PROVINCIA_ALM`   AS `PROVINCIA_ALM_ALBC`,
+  alm.`TELEFONO_ALM`    AS `TELEFONO_ALM_ALBC`,
+  alm.`EMAIL_ALM`       AS `EMAIL_ALM_ALBC`,
+  alb.`CODIGO_IVA_ALBC`,
+  alb.`PORCENTAJE_IVAN_ALBC`,
+  alb.`PORCENTAJE_IVAR_ALBC`,
+  alb.`PORCENTAJE_IVAS_ALBC`,
+  alb.`PORCENTAJE_IVAE_ALBC`,
+  alb.`TOTAL_BASES_ALBC`,
+  alb.`TOTAL_IMPUESTOS_ALBC`,
+  alb.`TOTAL_LIQUIDO_ALBC`,
+  alb.`INSTANTE_ALTA`,
+  alb.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`CANTIDAD_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `NUM_LINEAS_SES`
+FROM `fza_albaranes_compra` alb
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_ALBC`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_ALBC`
+LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_ALBC`;
+
+CREATE OR REPLACE VIEW `vi_devoluciones_compra_cab_print` AS
+SELECT
+  alb.`SERIE_DEVC`,
+  alb.`NUMERO_DEVC`,
+  alb.`FECHA_DEVC`,
+  alb.`ESTADO_DEVC`,
+  alb.`REF_PROVEEDOR_DEVC`,
+  alb.`COMENTARIOS_DEVC`,
+  alb.`OBSERVACIONES_DEVC`,
+  alb.`CODIGO_EMP_DEVC`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_DEVC`, '''')) = '''' THEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '''')) WHEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '''')) = '''' THEN TRIM(COALESCE(alb.`SERIE_DEVC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_DEVC`, '''')), ''.'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''numerodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''númerodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NroFactura'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrofactura'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NroDoc'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrodoc'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NRODOC'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Numero'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''numero'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NUMERO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Número'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''número'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NÚMERO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Serie'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))), ''serie'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))), ''SERIE'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  alb.`CODIGO_PRV_DEVC`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  alb.`CODIGO_ALM_DEVC`,
+  alm.`NOMBRE_ALM_ALM`  AS `NOMBRE_ALM_DEVC`,
+  alm.`DIRECCION_ALM`   AS `DIRECCION_ALM_DEVC`,
+  alm.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_DEVC`,
+  alm.`POBLACION_ALM`   AS `POBLACION_ALM_DEVC`,
+  alm.`PROVINCIA_ALM`   AS `PROVINCIA_ALM_DEVC`,
+  alm.`TELEFONO_ALM`    AS `TELEFONO_ALM_DEVC`,
+  alm.`EMAIL_ALM`       AS `EMAIL_ALM_DEVC`,
+  alb.`CODIGO_IVA_DEVC`,
+  alb.`PORCENTAJE_IVAN_DEVC`,
+  alb.`PORCENTAJE_IVAR_DEVC`,
+  alb.`PORCENTAJE_IVAS_DEVC`,
+  alb.`PORCENTAJE_IVAE_DEVC`,
+  alb.`TOTAL_BASES_DEVC`,
+  alb.`TOTAL_IMPUESTOS_DEVC`,
+  alb.`TOTAL_LIQUIDO_DEVC`,
+  alb.`INSTANTE_ALTA`,
+  alb.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`CANTIDAD_DEVCLIN`), 0)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_DEVCLIN`), 0)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `NUM_LINEAS_SES`
+FROM `fza_devoluciones_compra` alb
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_DEVC`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_DEVC`
+LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_DEVC`;
+', '2026-06-20 06:21:02', '2026-06-20 06:21:02', 'Administrador', 'Administrador');
+-- 42 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -19175,7 +21838,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-20 05:38:06', '2026-06-20 05:38:06', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-20 06:20:26', '2026-06-20 06:20:26', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-09 09:48:50', '2026-06-09 09:48:50', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -28881,9 +31544,13 @@ INSERT INTO `fza_verifactu_eventos` (`ID_LOG`, `TIMESTAMP_LOG`, `TIPO_EVENTO_LOG
   (196, '2026-06-19 14:13:31', 102, 'Administrador', '1.0.15.202606180040.alpha', 'Cierre del sistema', NULL, '49D40C819A23454944B8D34B8F68EE489D65167842301C8F1E55AADFDFA2CDE4', '23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C', 'EA567A7849487F5A6F335B064B3AB97BFE501BE98F1EF58C6BE327BA6CFFBD9B', '2026-06-19 14:13:31', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606180040.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-19T14:13:31+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-19T14:09:52+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>49D40C819A23454944B8D34B8F68EE489D65167842301C8F1E55AADFDFA2CDE4</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>q/WlVhNs9vL2eXuSDUdnxLHmBXdYOThmKH1LfFpIbhU=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>70Uyj35Abzn/Uce8vfV+u6wf3kkFbjwqAMFRZ7Dr1Vc=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>d+lEjDJ/2tPIPBEjtxS4KHgO91gEYGl3yxQp3vJ8+hJy7eF2W5eqCUZ6ksyhWlV8dkr7uzYPz32LNfkE9+X+1chNgFbHtSkK4a7vTwL2rrOTxmPdxiwVyQN08mLZXEllGlsKYAGzCKoh+b+uGpQxjmLwB+QO9fTToK6PVvCLBpt6BjYxuzpQ+ezEFuobLdbXjFxqYK1yhQ0WGPKxsFvPg/prxpxVhmvHLilk1Xkpnv8vc+Wdtzs3CBayWNozDle4Ts7rMEnumEYYeZY6sIwIsr9P0xNDcxuEYHi42xuhYZ5f8CMTZfCcLpbX9i7vUSflT8xIjMVD8ne6tlbgvjzIwQ==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-Object"><xades:QualifyingProperties Id="FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-Object-QualifyingProperties" Target="#FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-19T14:13:31+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'd+lEjDJ/2tPIPBEjtxS4KHgO91gEYGl3yxQp3vJ8+hJy7eF2W5eqCUZ6ksyhWlV8dkr7uzYPz32LNfkE9+X+1chNgFbHtSkK4a7vTwL2rrOTxmPdxiwVyQN08mLZXEllGlsKYAGzCKoh+b+uGpQxjmLwB+QO9fTToK6PVvCLBpt6BjYxuzpQ+ezEFuobLdbXjFxqYK1yhQ0WGPKxsFvPg/prxpxVhmvHLilk1Xkpnv8vc+Wdtzs3CBayWNozDle4Ts7rMEnumEYYeZY6sIwIsr9P0xNDcxuEYHi42xuhYZ5f8CMTZfCcLpbX9i7vUSflT8xIjMVD8ne6tlbgvjzIwQ==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
   (197, '2026-06-19 14:18:09', 101, 'Administrador', '1.0.15.202606190000.alpha', 'Inicio del sistema', NULL, '23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C', '4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE', '8C714985CEB8CB6D4504E40D52F9F6BE7BA982F198335B69B30C407FA8EF05D6', '2026-06-19 14:18:09', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190000.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-19T14:18:09+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-19T14:13:31+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>23F0E324849D5F321AA43BC75CE33E1036D173DF483C8580567B7A260C4F6B1C</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>UYpx/roSsWlA+i9TXcUP4Qf+jGNd20ECMeCXQA2zyDc=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>uC0XWTF7OMw7DUeebP4TcxyBliQ6mgvTIXIKzRD3OTM=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>XdpGbCNMSQiqVcBOQwWBCl4Zh3v5ajiVSNyIttY+Cnw0XMxMPBxHFLCLWpWWNJty5G/wEmxpK9W3UjZxrZhcSq96q9eMJHudG1Yboio7KJ5CCklxk4mnPmtCBsw00Y4zs60eZbb79tzb3jbrxVesoi770O31KNDrWgHHsMj+xvwb3NG2UQTjsN357fh6HRWQEdQZHP6ZaWspDRvIno4bN9OuzwN/Up77ja0+rQdLsDoIR63hl9jXmJqwdQuM8w/3oqcQDTF5VJklwovHnCAFXZFdjEEwLc3bszZmr0THZIJqC1Fc7GXrvK0RmVPzcmdASzV0A3+6JjB7SMOar4x+Iw==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-Object"><xades:QualifyingProperties Id="FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-Object-QualifyingProperties" Target="#FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-19T14:18:09+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'XdpGbCNMSQiqVcBOQwWBCl4Zh3v5ajiVSNyIttY+Cnw0XMxMPBxHFLCLWpWWNJty5G/wEmxpK9W3UjZxrZhcSq96q9eMJHudG1Yboio7KJ5CCklxk4mnPmtCBsw00Y4zs60eZbb79tzb3jbrxVesoi770O31KNDrWgHHsMj+xvwb3NG2UQTjsN357fh6HRWQEdQZHP6ZaWspDRvIno4bN9OuzwN/Up77ja0+rQdLsDoIR63hl9jXmJqwdQuM8w/3oqcQDTF5VJklwovHnCAFXZFdjEEwLc3bszZmr0THZIJqC1Fc7GXrvK0RmVPzcmdASzV0A3+6JjB7SMOar4x+Iw==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
   (198, '2026-06-19 14:18:15', 102, 'Administrador', '1.0.15.202606190000.alpha', 'Cierre del sistema', NULL, '4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE', '378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24', '91EC8208BF959DFDF2D2AB096567E2A45C5E4CBC2FAD9E3B635A3CF933A9C1B6', '2026-06-19 14:18:15', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190000.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-19T14:18:15+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-19T14:18:09+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>4F666D13B89C996B0A7F9683FFE1F138142BBC7988A3601C50DD83026FC3CECE</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>CHGb4q28d9NJSVEBQ2uJheg0qsZX58i4BArcWozyZgk=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>bLUh1rBfPr0jyGUn8MdW9psTDy3UZZzTqHL51CnNIkU=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>Syes2HEwq6z8hknUBiEX75KuyxthWbfH64hl6VrgWw3kxEpo7oPbDb9yPLJ5gqNaUZW5keIPVbxytbRbCbX1r2VfOK7p1lpnS+DeylayI+6tLoyueHtNfnUiQYlfuEL4IYi0nNRqeNWnjVsW5I/8Ozf8qNvftlXpE/Iza/sIH8k5nSBtrfrKffgwAtUAn/1iGk71gFNgV/7hN00XssyirUiXL+zPN0Nme6jvVMLRx7IhyaPaZQbgzQR2HKDkYxmBmZ/GwNLaGmve3Betpy+bXD+U865rlbjcq2zrY+iapFUE+zdYJMDCBWNma2gaZ31hSDynGefYVkn31t4dj3yRAw==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-Object"><xades:QualifyingProperties Id="FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-Object-QualifyingProperties" Target="#FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-19T14:18:15+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'Syes2HEwq6z8hknUBiEX75KuyxthWbfH64hl6VrgWw3kxEpo7oPbDb9yPLJ5gqNaUZW5keIPVbxytbRbCbX1r2VfOK7p1lpnS+DeylayI+6tLoyueHtNfnUiQYlfuEL4IYi0nNRqeNWnjVsW5I/8Ozf8qNvftlXpE/Iza/sIH8k5nSBtrfrKffgwAtUAn/1iGk71gFNgV/7hN00XssyirUiXL+zPN0Nme6jvVMLRx7IhyaPaZQbgzQR2HKDkYxmBmZ/GwNLaGmve3Betpy+bXD+U865rlbjcq2zrY+iapFUE+zdYJMDCBWNma2gaZ31hSDynGefYVkn31t4dj3yRAw==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
-  (199, '2026-06-20 05:38:06', 101, 'Administrador', '1.0.15.202606190020.alpha', 'Inicio del sistema', NULL, '378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24', 'F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C', 'B1C3AC70A51DE98A429E8CAAB932FCD9B24C653185A2A4D2593D56F5DD8A3978', '2026-06-20 05:38:06', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:38:06+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-19T14:18:15+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>c7hiqLEwV9G6W8N3oBI0hJae/9IfC6eNZC0v+s/0uFw=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>PW2gseyY2WYFm4N7A7COIoCS1upkUTimZk6yhZ8K0W4=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>eXlHgWqWUul3Tumn+8LziPIh9WWD85JQibphkZ11I1JFzQDwEPHZBgmWbq1O00azCnBCjkLNVzbhm4xCSYAXbm/+NJrRP3LoxtlTrN7MaMzl5vifkuEE20dCOxAqN4U2oT1C50GTnDHSA2PKOvdKKKmbyXp1p+L4WHWBQulcliyDzJ7ZQMdp+YJJA5YMmgQM9QesdYABqcG2yfgMDaeCBfCESVFmX2HzfvCBFHMmExJcmDLg8XeVBASIcSDKQiV0yXTzCIECU9Vb7T3qgz0fNx/VNvXquNzWuRmB2Y+mQX62+dJ37CY1pxmgPTuvNF8PW7jRd2oV5ncZbLyFep+PDg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Object"><xades:QualifyingProperties Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Object-QualifyingProperties" Target="#FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:38:06+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'eXlHgWqWUul3Tumn+8LziPIh9WWD85JQibphkZ11I1JFzQDwEPHZBgmWbq1O00azCnBCjkLNVzbhm4xCSYAXbm/+NJrRP3LoxtlTrN7MaMzl5vifkuEE20dCOxAqN4U2oT1C50GTnDHSA2PKOvdKKKmbyXp1p+L4WHWBQulcliyDzJ7ZQMdp+YJJA5YMmgQM9QesdYABqcG2yfgMDaeCBfCESVFmX2HzfvCBFHMmExJcmDLg8XeVBASIcSDKQiV0yXTzCIECU9Vb7T3qgz0fNx/VNvXquNzWuRmB2Y+mQX62+dJ37CY1pxmgPTuvNF8PW7jRd2oV5ncZbLyFep+PDg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6');
+  (199, '2026-06-20 05:38:06', 101, 'Administrador', '1.0.15.202606190020.alpha', 'Inicio del sistema', NULL, '378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24', 'F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C', 'B1C3AC70A51DE98A429E8CAAB932FCD9B24C653185A2A4D2593D56F5DD8A3978', '2026-06-20 05:38:06', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:38:06+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-19T14:18:15+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>378D3198B014C2BCD61A099402EE3CD78D6618F70F82A7DE1D9B7351935ADB24</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>c7hiqLEwV9G6W8N3oBI0hJae/9IfC6eNZC0v+s/0uFw=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>PW2gseyY2WYFm4N7A7COIoCS1upkUTimZk6yhZ8K0W4=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>eXlHgWqWUul3Tumn+8LziPIh9WWD85JQibphkZ11I1JFzQDwEPHZBgmWbq1O00azCnBCjkLNVzbhm4xCSYAXbm/+NJrRP3LoxtlTrN7MaMzl5vifkuEE20dCOxAqN4U2oT1C50GTnDHSA2PKOvdKKKmbyXp1p+L4WHWBQulcliyDzJ7ZQMdp+YJJA5YMmgQM9QesdYABqcG2yfgMDaeCBfCESVFmX2HzfvCBFHMmExJcmDLg8XeVBASIcSDKQiV0yXTzCIECU9Vb7T3qgz0fNx/VNvXquNzWuRmB2Y+mQX62+dJ37CY1pxmgPTuvNF8PW7jRd2oV5ncZbLyFep+PDg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Object"><xades:QualifyingProperties Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Object-QualifyingProperties" Target="#FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:38:06+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'eXlHgWqWUul3Tumn+8LziPIh9WWD85JQibphkZ11I1JFzQDwEPHZBgmWbq1O00azCnBCjkLNVzbhm4xCSYAXbm/+NJrRP3LoxtlTrN7MaMzl5vifkuEE20dCOxAqN4U2oT1C50GTnDHSA2PKOvdKKKmbyXp1p+L4WHWBQulcliyDzJ7ZQMdp+YJJA5YMmgQM9QesdYABqcG2yfgMDaeCBfCESVFmX2HzfvCBFHMmExJcmDLg8XeVBASIcSDKQiV0yXTzCIECU9Vb7T3qgz0fNx/VNvXquNzWuRmB2Y+mQX62+dJ37CY1pxmgPTuvNF8PW7jRd2oV5ncZbLyFep+PDg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (200, '2026-06-20 05:40:00', 102, 'Administrador', '1.0.15.202606190020.alpha', 'Cierre del sistema', NULL, 'F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C', '54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F', '1520AE6AF9BD23887DC340995954046311BD5648315484C679648D570841BF06', '2026-06-20 05:40:00', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:40:00+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:38:06+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>hpUAqr3S/hCm56l0uXN9yBCZAdelCpvpHtT4lYaCWB4=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>kwvgWUGLbY0JFPS13BWRdRpn0GqyqeX1GyRFXBmClzM=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>n57vYOTuAOnEy3IhDZJPH4dhR5IetahLWXqxNhP/X7VncyAUplYndDLHCEVizcRQOoS/xFT14oPIbbSKbotU5n2ENbmKPUDdk8DpXJWHyeYMcOHYQGCuTSTlEotefrDKwCBKBYUn+XhX2D6So2cRhWlGNb2yq1NxvOlCutHc/Or8fGZsCMH1UzV0gOUBP5Ji3OwerFYhEQK/hn9cpJPLRJWJoin4pECHBkZ/rvOxIVvxo1BjLoYwoLf1W4s8gtuucp3oFozdMhuBrOz1NjcPBSx2/PjcqI2dv0Fzz9hvAFuCWQf7Tq19qy+ztgkZjKKHkwO52gC/EADYBOqOR4a06g==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Object"><xades:QualifyingProperties Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Object-QualifyingProperties" Target="#FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:40:00+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'n57vYOTuAOnEy3IhDZJPH4dhR5IetahLWXqxNhP/X7VncyAUplYndDLHCEVizcRQOoS/xFT14oPIbbSKbotU5n2ENbmKPUDdk8DpXJWHyeYMcOHYQGCuTSTlEotefrDKwCBKBYUn+XhX2D6So2cRhWlGNb2yq1NxvOlCutHc/Or8fGZsCMH1UzV0gOUBP5Ji3OwerFYhEQK/hn9cpJPLRJWJoin4pECHBkZ/rvOxIVvxo1BjLoYwoLf1W4s8gtuucp3oFozdMhuBrOz1NjcPBSx2/PjcqI2dv0Fzz9hvAFuCWQf7Tq19qy+ztgkZjKKHkwO52gC/EADYBOqOR4a06g==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (201, '2026-06-20 05:48:00', 101, 'Administrador', '1.0.15.202606190020.alpha', 'Inicio del sistema', NULL, '54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F', '5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0', '8BB92CA83C6B44CF06016DDF63A790978E3AE9150DEE03C9EDDE96AAD5487233', '2026-06-20 05:48:00', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:00+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:40:00+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>sXLRTwFknp1Tfz+2oCoGTi2jWFyCyaMtrlmLMQX9AkY=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>SJ0wmVY+h0NLQsujHWuBlBMz4jocDUITKkxYJma1PKI=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>ULdB85xJZLyXoRE8ISJt2uxZILe/po/vSSeWd8exZT7fvvMxwX463xo/8SDKZoXlOVsVUQvBcKhZTcI4EYebNitM2DQ20QfgPwsNCTNzBxpzAeIYOkOA6vB3MPL6o/S6LvUET2sQUXuXd6+Sf0IkZiua3a2tOleYwQ1repP6dnnSYj6aqeMID7P9dMjnhdTV5zbv6khmHWtLA3Jtqb6SdB2RuokgWaWJJyD2eUHrE+rh5h42ECDDlx7asxfYnD04Y5gx7wv2ZKlOxauUUPw12pjuJhwHCrTTvuHEm4wYT0XhNWtFK5HooX58c2cB8VIvaTvanFJXTGKnuXTDnf+wpw==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Object"><xades:QualifyingProperties Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Object-QualifyingProperties" Target="#FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:48:00+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'ULdB85xJZLyXoRE8ISJt2uxZILe/po/vSSeWd8exZT7fvvMxwX463xo/8SDKZoXlOVsVUQvBcKhZTcI4EYebNitM2DQ20QfgPwsNCTNzBxpzAeIYOkOA6vB3MPL6o/S6LvUET2sQUXuXd6+Sf0IkZiua3a2tOleYwQ1repP6dnnSYj6aqeMID7P9dMjnhdTV5zbv6khmHWtLA3Jtqb6SdB2RuokgWaWJJyD2eUHrE+rh5h42ECDDlx7asxfYnD04Y5gx7wv2ZKlOxauUUPw12pjuJhwHCrTTvuHEm4wYT0XhNWtFK5HooX58c2cB8VIvaTvanFJXTGKnuXTDnf+wpw==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (202, '2026-06-20 05:48:33', 102, 'Administrador', '1.0.15.202606190020.alpha', 'Cierre del sistema', NULL, '5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0', '5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC', '6AB9493DDAEAA9BF1A806C72C9CD8F46FC12B6800647D3336278B162852CCBE5', '2026-06-20 05:48:33', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:33+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:00+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>6W7dWEhcfjIrHhzOkDQeFgLHoIY1u+shGSeFDli0aD8=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>vWLHazIm+nwRxDQAp8+Gz7H5adCCCU4liwErhrGDUgU=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>i5wddbp5ZzpQvv+V01y8CcLW1y1EQPXXs+n06+pKaoRPPv+8n/74M+qPS1Uy4Yr/0CfFypvAmDQ8LXrLg4i4sZ8cE188rESbhmJK0CZeaALd2Cq4w+gDWcsFUj1MJHhiFNC3FWuoVtHohaap5KByEjcWVnsxHUiziIs+Iy0EzX4M5raDpTLUT++JQhapkwsyLwBB/adv2nkVN4b6FJ5MP90j06LCssMI5rNwvKE8JFVu6XNwU5g3iJUNo6IxWGkJhH6lBHPtxy42m92B2H++RESIw8glzB1KeYBpdP1kniZHcSj9CII/1TdqAejq555G1o0ttKJy+6MGEIXG0uv4OA==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Object"><xades:QualifyingProperties Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Object-QualifyingProperties" Target="#FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:48:33+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'i5wddbp5ZzpQvv+V01y8CcLW1y1EQPXXs+n06+pKaoRPPv+8n/74M+qPS1Uy4Yr/0CfFypvAmDQ8LXrLg4i4sZ8cE188rESbhmJK0CZeaALd2Cq4w+gDWcsFUj1MJHhiFNC3FWuoVtHohaap5KByEjcWVnsxHUiziIs+Iy0EzX4M5raDpTLUT++JQhapkwsyLwBB/adv2nkVN4b6FJ5MP90j06LCssMI5rNwvKE8JFVu6XNwU5g3iJUNo6IxWGkJhH6lBHPtxy42m92B2H++RESIw8glzB1KeYBpdP1kniZHcSj9CII/1TdqAejq555G1o0ttKJy+6MGEIXG0uv4OA==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (203, '2026-06-20 06:20:27', 101, 'Administrador', '1.0.15.202606200040.alpha', 'Inicio del sistema', NULL, '5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC', '78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708', 'CD4F0CC1185E079A68672A48DCAB07BD7CCD18DD58A52271937FB789BA43629F', '2026-06-20 06:20:27', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200040.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T06:20:27+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:33+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>zHPweMoLHFcveoIvbanKAjGluS/Rzj4nQN7+cTXyKco=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>agDITgIkfAuuqCAbAv1flScN5nIPqHRjCsm5KK0DZ+g=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>gqBx6MbiLjw7UZOBKDTe+ymreboRxc0cV8CzGna9MgiWwGr348En744aU8bxjcOigLXhr+pYhhjCycWrM6A9yoeT/TQI78ieY5dje/ovrDmvU8sp0WVr1yiMrynZLs4ZK9SN/ib1PVkB+dDKPYWMTtW3dkCRegXyNCSnkfXaPy68hx+yF/o0sHPDZ7VN3VU14hkrVukIbZ89SiLPkkROUI/WGGQt4UFXV2bQnzLr8JEMB08+fF9x8l7cBKsmTpB/SDvWmx+6iaW7o1NT41iz8im2btJLr1GaCHdYSKfTDLlz/QxDeiLZNG/o5F7Ifn2HIyN1hpk/ThLwB+TqM6I5zg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Object"><xades:QualifyingProperties Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Object-QualifyingProperties" Target="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T06:20:27+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'gqBx6MbiLjw7UZOBKDTe+ymreboRxc0cV8CzGna9MgiWwGr348En744aU8bxjcOigLXhr+pYhhjCycWrM6A9yoeT/TQI78ieY5dje/ovrDmvU8sp0WVr1yiMrynZLs4ZK9SN/ib1PVkB+dDKPYWMTtW3dkCRegXyNCSnkfXaPy68hx+yF/o0sHPDZ7VN3VU14hkrVukIbZ89SiLPkkROUI/WGGQt4UFXV2bQnzLr8JEMB08+fF9x8l7cBKsmTpB/SDvWmx+6iaW7o1NT41iz8im2btJLr1GaCHdYSKfTDLlz/QxDeiLZNG/o5F7Ifn2HIyN1hpk/ThLwB+TqM6I5zg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6');
 /*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
--- 199 registros exportados
+-- 203 registros exportados
 
 
 -- Tabla: fza_verifactu_operaciones
@@ -29134,7 +31801,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra` AS select `a`.`NUMERO_ALB
 
 -- Vista: vi_albaranes_compra_cab_print
 DROP VIEW IF EXISTS `vi_albaranes_compra_cab_print`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra_cab_print` AS select `alb`.`SERIE_ALBC` AS `SERIE_ALBC`,`alb`.`NUMERO_ALBC` AS `NUMERO_ALBC`,`alb`.`FECHA_ALBC` AS `FECHA_ALBC`,`alb`.`ESTADO_ALBC` AS `ESTADO_ALBC`,`alb`.`REF_PROVEEDOR_ALBC` AS `REF_PROVEEDOR_ALBC`,`alb`.`COMENTARIOS_ALBC` AS `COMENTARIOS_ALBC`,`alb`.`OBSERVACIONES_ALBC` AS `OBSERVACIONES_ALBC`,`alb`.`CODIGO_EMP_ALBC` AS `CODIGO_EMP_ALBC`,`emp`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,`FN_FORMATO_DOCUMENTO`(`emp`.`FORMATO_DOCUMENTO_EMP`,`alb`.`SERIE_ALBC`,`alb`.`NUMERO_ALBC`) AS `DOCUMENTO_FORMATO`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`emp`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`emp`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`emp`.`POBLACION_EMP` AS `POBLACION_EMP`,`emp`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`emp`.`NIF_EMP` AS `CIF_EMP`,`emp`.`MOVIL_EMP` AS `TELEFONO1_EMP`,`alb`.`CODIGO_PRV_ALBC` AS `CODIGO_PRV_ALBC`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`prv`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`prv`.`POBLACION_PRV` AS `POBLACION_PRV`,`prv`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`prv`.`NIF_PRV` AS `CIF_PRV`,coalesce(`prv`.`TELEFONO_PRV`,`prv`.`MOVIL_PRV`) AS `TELEFONO1_PRV`,`alb`.`CODIGO_ALM_ALBC` AS `CODIGO_ALM_ALBC`,`alm`.`NOMBRE_ALM_ALM` AS `NOMBRE_ALM_ALBC`,`alm`.`DIRECCION_ALM` AS `DIRECCION_ALM_ALBC`,`alm`.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_ALBC`,`alm`.`POBLACION_ALM` AS `POBLACION_ALM_ALBC`,`alm`.`PROVINCIA_ALM` AS `PROVINCIA_ALM_ALBC`,`alm`.`TELEFONO_ALM` AS `TELEFONO_ALM_ALBC`,`alm`.`EMAIL_ALM` AS `EMAIL_ALM_ALBC`,`alb`.`CODIGO_IVA_ALBC` AS `CODIGO_IVA_ALBC`,`alb`.`PORCENTAJE_IVAN_ALBC` AS `PORCENTAJE_IVAN_ALBC`,`alb`.`PORCENTAJE_IVAR_ALBC` AS `PORCENTAJE_IVAR_ALBC`,`alb`.`PORCENTAJE_IVAS_ALBC` AS `PORCENTAJE_IVAS_ALBC`,`alb`.`PORCENTAJE_IVAE_ALBC` AS `PORCENTAJE_IVAE_ALBC`,`alb`.`TOTAL_BASES_ALBC` AS `TOTAL_BASES_ALBC`,`alb`.`TOTAL_IMPUESTOS_ALBC` AS `TOTAL_IMPUESTOS_ALBC`,`alb`.`TOTAL_LIQUIDO_ALBC` AS `TOTAL_LIQUIDO_ALBC`,`alb`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`alb`.`USUARIO_ALTA` AS `USUARIO_ALTA`,(select coalesce(sum(`lin`.`CANTIDAD_ALBCLIN`),0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `TOTAL_UNIDADES_SES`,(select coalesce(sum(`lin`.`TOTAL_ALBCLIN`),0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `TOTAL_LINEAS_SES`,(select count(0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `NUM_LINEAS_SES` from (((`fza_albaranes_compra` `alb` left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `alb`.`CODIGO_EMP_ALBC`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `alb`.`CODIGO_PRV_ALBC`)) left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `alb`.`CODIGO_ALM_ALBC`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra_cab_print` AS select `alb`.`SERIE_ALBC` AS `SERIE_ALBC`,`alb`.`NUMERO_ALBC` AS `NUMERO_ALBC`,`alb`.`FECHA_ALBC` AS `FECHA_ALBC`,`alb`.`ESTADO_ALBC` AS `ESTADO_ALBC`,`alb`.`REF_PROVEEDOR_ALBC` AS `REF_PROVEEDOR_ALBC`,`alb`.`COMENTARIOS_ALBC` AS `COMENTARIOS_ALBC`,`alb`.`OBSERVACIONES_ALBC` AS `OBSERVACIONES_ALBC`,`alb`.`CODIGO_EMP_ALBC` AS `CODIGO_EMP_ALBC`,`emp`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,case when trim(coalesce(`alb`.`SERIE_ALBC`,'')) = '' then trim(coalesce(`alb`.`NUMERO_ALBC`,'')) when trim(coalesce(`alb`.`NUMERO_ALBC`,'')) = '' then trim(coalesce(`alb`.`SERIE_ALBC`,'')) when locate('serie',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('númerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrofactura',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodoc',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numero',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('número',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 then concat(trim(coalesce(`alb`.`SERIE_ALBC`,'')),'.',trim(coalesce(`alb`.`NUMERO_ALBC`,''))) else replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'),'NroDocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'nrodocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NRODOCUMENTO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NumeroDocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'numerodocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NUMERODOCUMENTO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NúmeroDocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'númerodocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NÚMERODOCUMENTO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NroFactura',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'nrofactura',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NROFACTURA',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NroDoc',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'nrodoc',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NRODOC',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'Numero',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'numero',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NUMERO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'Número',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'número',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NÚMERO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'Serie',trim(coalesce(`alb`.`SERIE_ALBC`,''))),'serie',trim(coalesce(`alb`.`SERIE_ALBC`,''))),'SERIE',trim(coalesce(`alb`.`SERIE_ALBC`,''))) end AS `DOCUMENTO_FORMATO`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`emp`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`emp`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`emp`.`POBLACION_EMP` AS `POBLACION_EMP`,`emp`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`emp`.`NIF_EMP` AS `CIF_EMP`,`emp`.`MOVIL_EMP` AS `TELEFONO1_EMP`,`alb`.`CODIGO_PRV_ALBC` AS `CODIGO_PRV_ALBC`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`prv`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`prv`.`POBLACION_PRV` AS `POBLACION_PRV`,`prv`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`prv`.`NIF_PRV` AS `CIF_PRV`,coalesce(`prv`.`TELEFONO_PRV`,`prv`.`MOVIL_PRV`) AS `TELEFONO1_PRV`,`alb`.`CODIGO_ALM_ALBC` AS `CODIGO_ALM_ALBC`,`alm`.`NOMBRE_ALM_ALM` AS `NOMBRE_ALM_ALBC`,`alm`.`DIRECCION_ALM` AS `DIRECCION_ALM_ALBC`,`alm`.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_ALBC`,`alm`.`POBLACION_ALM` AS `POBLACION_ALM_ALBC`,`alm`.`PROVINCIA_ALM` AS `PROVINCIA_ALM_ALBC`,`alm`.`TELEFONO_ALM` AS `TELEFONO_ALM_ALBC`,`alm`.`EMAIL_ALM` AS `EMAIL_ALM_ALBC`,`alb`.`CODIGO_IVA_ALBC` AS `CODIGO_IVA_ALBC`,`alb`.`PORCENTAJE_IVAN_ALBC` AS `PORCENTAJE_IVAN_ALBC`,`alb`.`PORCENTAJE_IVAR_ALBC` AS `PORCENTAJE_IVAR_ALBC`,`alb`.`PORCENTAJE_IVAS_ALBC` AS `PORCENTAJE_IVAS_ALBC`,`alb`.`PORCENTAJE_IVAE_ALBC` AS `PORCENTAJE_IVAE_ALBC`,`alb`.`TOTAL_BASES_ALBC` AS `TOTAL_BASES_ALBC`,`alb`.`TOTAL_IMPUESTOS_ALBC` AS `TOTAL_IMPUESTOS_ALBC`,`alb`.`TOTAL_LIQUIDO_ALBC` AS `TOTAL_LIQUIDO_ALBC`,`alb`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`alb`.`USUARIO_ALTA` AS `USUARIO_ALTA`,(select coalesce(sum(`lin`.`CANTIDAD_ALBCLIN`),0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `TOTAL_UNIDADES_SES`,(select coalesce(sum(`lin`.`TOTAL_ALBCLIN`),0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `TOTAL_LINEAS_SES`,(select count(0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `NUM_LINEAS_SES` from (((`fza_albaranes_compra` `alb` left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `alb`.`CODIGO_EMP_ALBC`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `alb`.`CODIGO_PRV_ALBC`)) left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `alb`.`CODIGO_ALM_ALBC`));
 
 -- Vista: vi_albaranes_compra_guias_print
 DROP VIEW IF EXISTS `vi_albaranes_compra_guias_print`;
@@ -29262,7 +31929,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_compras_sesiones` AS select `s`.`SERIE_SES`
 
 -- Vista: vi_compras_sesiones_cab_print
 DROP VIEW IF EXISTS `vi_compras_sesiones_cab_print`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_compras_sesiones_cab_print` AS select `ses`.`SERIE_SES` AS `SERIE_SES`,`ses`.`NUMERO_SES` AS `NUMERO_SES`,`ses`.`FECHA_SES` AS `FECHA_SES`,`ses`.`ESTADO_SES` AS `ESTADO_SES`,`ses`.`REF_PRV_SES` AS `REF_PRV_SES`,`ses`.`COMENTARIOS_SES` AS `COMENTARIOS_SES`,`ses`.`PORCENTAJE_MARGEN_SES` AS `PORCENTAJE_MARGEN_SES`,`ses`.`MULTIPLO_REDONDEO_SES` AS `MULTIPLO_REDONDEO_SES`,`ses`.`AJUSTE_FINAL_SES` AS `AJUSTE_FINAL_SES`,`ses`.`MONEDA_SES` AS `MONEDA_SES`,`ses`.`TIPO_IVA_SES` AS `TIPO_IVA_SES`,`ses`.`ESFORMATO_DISTRIBUIDO_SES` AS `ESFORMATO_DISTRIBUIDO_SES`,`ses`.`CODIGO_EMP_SES` AS `CODIGO_EMP_SES`,`emp`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,`FN_FORMATO_DOCUMENTO`(`emp`.`FORMATO_DOCUMENTO_EMP`,`ses`.`SERIE_SES`,`ses`.`NUMERO_SES`) AS `DOCUMENTO_FORMATO`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`emp`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`emp`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`emp`.`POBLACION_EMP` AS `POBLACION_EMP`,`emp`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`emp`.`NIF_EMP` AS `CIF_EMP`,`emp`.`MOVIL_EMP` AS `TELEFONO1_EMP`,`ses`.`CODIGO_PRV_SES` AS `CODIGO_PRV_SES`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`prv`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`prv`.`POBLACION_PRV` AS `POBLACION_PRV`,`prv`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`prv`.`NIF_PRV` AS `CIF_PRV`,coalesce(`prv`.`TELEFONO_PRV`,`prv`.`MOVIL_PRV`) AS `TELEFONO1_PRV`,`ses`.`CODIGO_TAR_SES` AS `CODIGO_TAR_SES`,`ses`.`CODIGO_FAM_SES` AS `CODIGO_FAM_SES`,`ses`.`CODIGO_ALM_SES` AS `CODIGO_ALM_SES`,`ses`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`ses`.`USUARIO_ALTA` AS `USUARIO_ALTA`,(select coalesce(sum(`lin`.`TOTAL_UNIDADES_SESLIN`),0) from `fza_compras_sesiones_lineas` `lin` where `lin`.`SERIE_SES_SESLIN` = `ses`.`SERIE_SES` and `lin`.`NUMERO_SES_SESLIN` = `ses`.`NUMERO_SES`) AS `TOTAL_UNIDADES_SES`,(select coalesce(sum(`lin`.`TOTAL_LINEA_SESLIN`),0) from `fza_compras_sesiones_lineas` `lin` where `lin`.`SERIE_SES_SESLIN` = `ses`.`SERIE_SES` and `lin`.`NUMERO_SES_SESLIN` = `ses`.`NUMERO_SES`) AS `TOTAL_LINEAS_SES`,(select count(0) from `fza_compras_sesiones_lineas` `lin` where `lin`.`SERIE_SES_SESLIN` = `ses`.`SERIE_SES` and `lin`.`NUMERO_SES_SESLIN` = `ses`.`NUMERO_SES`) AS `NUM_LINEAS_SES` from ((`fza_compras_sesiones` `ses` left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `ses`.`CODIGO_EMP_SES`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `ses`.`CODIGO_PRV_SES`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_compras_sesiones_cab_print` AS select `ses`.`SERIE_SES` AS `SERIE_SES`,`ses`.`NUMERO_SES` AS `NUMERO_SES`,`ses`.`FECHA_SES` AS `FECHA_SES`,`ses`.`ESTADO_SES` AS `ESTADO_SES`,`ses`.`REF_PRV_SES` AS `REF_PRV_SES`,`ses`.`COMENTARIOS_SES` AS `COMENTARIOS_SES`,`ses`.`PORCENTAJE_MARGEN_SES` AS `PORCENTAJE_MARGEN_SES`,`ses`.`MULTIPLO_REDONDEO_SES` AS `MULTIPLO_REDONDEO_SES`,`ses`.`AJUSTE_FINAL_SES` AS `AJUSTE_FINAL_SES`,`ses`.`MONEDA_SES` AS `MONEDA_SES`,`ses`.`TIPO_IVA_SES` AS `TIPO_IVA_SES`,`ses`.`ESFORMATO_DISTRIBUIDO_SES` AS `ESFORMATO_DISTRIBUIDO_SES`,`ses`.`CODIGO_EMP_SES` AS `CODIGO_EMP_SES`,`emp`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,case when trim(coalesce(`ses`.`SERIE_SES`,'')) = '' then trim(coalesce(`ses`.`NUMERO_SES`,'')) when trim(coalesce(`ses`.`NUMERO_SES`,'')) = '' then trim(coalesce(`ses`.`SERIE_SES`,'')) when locate('serie',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('númerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrofactura',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodoc',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numero',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('número',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 then concat(trim(coalesce(`ses`.`SERIE_SES`,'')),'.',trim(coalesce(`ses`.`NUMERO_SES`,''))) else replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'),'NroDocumento',trim(coalesce(`ses`.`NUMERO_SES`,''))),'nrodocumento',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NRODOCUMENTO',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NumeroDocumento',trim(coalesce(`ses`.`NUMERO_SES`,''))),'numerodocumento',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NUMERODOCUMENTO',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NúmeroDocumento',trim(coalesce(`ses`.`NUMERO_SES`,''))),'númerodocumento',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NÚMERODOCUMENTO',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NroFactura',trim(coalesce(`ses`.`NUMERO_SES`,''))),'nrofactura',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NROFACTURA',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NroDoc',trim(coalesce(`ses`.`NUMERO_SES`,''))),'nrodoc',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NRODOC',trim(coalesce(`ses`.`NUMERO_SES`,''))),'Numero',trim(coalesce(`ses`.`NUMERO_SES`,''))),'numero',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NUMERO',trim(coalesce(`ses`.`NUMERO_SES`,''))),'Número',trim(coalesce(`ses`.`NUMERO_SES`,''))),'número',trim(coalesce(`ses`.`NUMERO_SES`,''))),'NÚMERO',trim(coalesce(`ses`.`NUMERO_SES`,''))),'Serie',trim(coalesce(`ses`.`SERIE_SES`,''))),'serie',trim(coalesce(`ses`.`SERIE_SES`,''))),'SERIE',trim(coalesce(`ses`.`SERIE_SES`,''))) end AS `DOCUMENTO_FORMATO`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`emp`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`emp`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`emp`.`POBLACION_EMP` AS `POBLACION_EMP`,`emp`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`emp`.`NIF_EMP` AS `CIF_EMP`,`emp`.`MOVIL_EMP` AS `TELEFONO1_EMP`,`ses`.`CODIGO_PRV_SES` AS `CODIGO_PRV_SES`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`prv`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`prv`.`POBLACION_PRV` AS `POBLACION_PRV`,`prv`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`prv`.`NIF_PRV` AS `CIF_PRV`,coalesce(`prv`.`TELEFONO_PRV`,`prv`.`MOVIL_PRV`) AS `TELEFONO1_PRV`,`ses`.`CODIGO_TAR_SES` AS `CODIGO_TAR_SES`,`ses`.`CODIGO_FAM_SES` AS `CODIGO_FAM_SES`,`ses`.`CODIGO_ALM_SES` AS `CODIGO_ALM_SES`,`ses`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`ses`.`USUARIO_ALTA` AS `USUARIO_ALTA`,(select coalesce(sum(`lin`.`TOTAL_UNIDADES_SESLIN`),0) from `fza_compras_sesiones_lineas` `lin` where `lin`.`SERIE_SES_SESLIN` = `ses`.`SERIE_SES` and `lin`.`NUMERO_SES_SESLIN` = `ses`.`NUMERO_SES`) AS `TOTAL_UNIDADES_SES`,(select coalesce(sum(`lin`.`TOTAL_LINEA_SESLIN`),0) from `fza_compras_sesiones_lineas` `lin` where `lin`.`SERIE_SES_SESLIN` = `ses`.`SERIE_SES` and `lin`.`NUMERO_SES_SESLIN` = `ses`.`NUMERO_SES`) AS `TOTAL_LINEAS_SES`,(select count(0) from `fza_compras_sesiones_lineas` `lin` where `lin`.`SERIE_SES_SESLIN` = `ses`.`SERIE_SES` and `lin`.`NUMERO_SES_SESLIN` = `ses`.`NUMERO_SES`) AS `NUM_LINEAS_SES` from ((`fza_compras_sesiones` `ses` left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `ses`.`CODIGO_EMP_SES`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `ses`.`CODIGO_PRV_SES`));
 
 -- Vista: vi_compras_sesiones_guias_print
 DROP VIEW IF EXISTS `vi_compras_sesiones_guias_print`;
@@ -29286,7 +31953,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_devoluciones_compra` AS select `d`.`NUMERO_
 
 -- Vista: vi_devoluciones_compra_cab_print
 DROP VIEW IF EXISTS `vi_devoluciones_compra_cab_print`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_devoluciones_compra_cab_print` AS select `alb`.`SERIE_DEVC` AS `SERIE_DEVC`,`alb`.`NUMERO_DEVC` AS `NUMERO_DEVC`,`alb`.`FECHA_DEVC` AS `FECHA_DEVC`,`alb`.`ESTADO_DEVC` AS `ESTADO_DEVC`,`alb`.`REF_PROVEEDOR_DEVC` AS `REF_PROVEEDOR_DEVC`,`alb`.`COMENTARIOS_DEVC` AS `COMENTARIOS_DEVC`,`alb`.`OBSERVACIONES_DEVC` AS `OBSERVACIONES_DEVC`,`alb`.`CODIGO_EMP_DEVC` AS `CODIGO_EMP_DEVC`,`emp`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,`FN_FORMATO_DOCUMENTO`(`emp`.`FORMATO_DOCUMENTO_EMP`,`alb`.`SERIE_DEVC`,`alb`.`NUMERO_DEVC`) AS `DOCUMENTO_FORMATO`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`emp`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`emp`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`emp`.`POBLACION_EMP` AS `POBLACION_EMP`,`emp`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`emp`.`NIF_EMP` AS `CIF_EMP`,`emp`.`MOVIL_EMP` AS `TELEFONO1_EMP`,`alb`.`CODIGO_PRV_DEVC` AS `CODIGO_PRV_DEVC`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`prv`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`prv`.`POBLACION_PRV` AS `POBLACION_PRV`,`prv`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`prv`.`NIF_PRV` AS `CIF_PRV`,coalesce(`prv`.`TELEFONO_PRV`,`prv`.`MOVIL_PRV`) AS `TELEFONO1_PRV`,`alb`.`CODIGO_ALM_DEVC` AS `CODIGO_ALM_DEVC`,`alm`.`NOMBRE_ALM_ALM` AS `NOMBRE_ALM_DEVC`,`alm`.`DIRECCION_ALM` AS `DIRECCION_ALM_DEVC`,`alm`.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_DEVC`,`alm`.`POBLACION_ALM` AS `POBLACION_ALM_DEVC`,`alm`.`PROVINCIA_ALM` AS `PROVINCIA_ALM_DEVC`,`alm`.`TELEFONO_ALM` AS `TELEFONO_ALM_DEVC`,`alm`.`EMAIL_ALM` AS `EMAIL_ALM_DEVC`,`alb`.`CODIGO_IVA_DEVC` AS `CODIGO_IVA_DEVC`,`alb`.`PORCENTAJE_IVAN_DEVC` AS `PORCENTAJE_IVAN_DEVC`,`alb`.`PORCENTAJE_IVAR_DEVC` AS `PORCENTAJE_IVAR_DEVC`,`alb`.`PORCENTAJE_IVAS_DEVC` AS `PORCENTAJE_IVAS_DEVC`,`alb`.`PORCENTAJE_IVAE_DEVC` AS `PORCENTAJE_IVAE_DEVC`,`alb`.`TOTAL_BASES_DEVC` AS `TOTAL_BASES_DEVC`,`alb`.`TOTAL_IMPUESTOS_DEVC` AS `TOTAL_IMPUESTOS_DEVC`,`alb`.`TOTAL_LIQUIDO_DEVC` AS `TOTAL_LIQUIDO_DEVC`,`alb`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`alb`.`USUARIO_ALTA` AS `USUARIO_ALTA`,(select coalesce(sum(`lin`.`CANTIDAD_DEVCLIN`),0) from `fza_devoluciones_compra_lineas` `lin` where `lin`.`SERIE_DEVC_DEVCLIN` = `alb`.`SERIE_DEVC` and `lin`.`NUMERO_DEVC_DEVCLIN` = `alb`.`NUMERO_DEVC`) AS `TOTAL_UNIDADES_SES`,(select coalesce(sum(`lin`.`TOTAL_DEVCLIN`),0) from `fza_devoluciones_compra_lineas` `lin` where `lin`.`SERIE_DEVC_DEVCLIN` = `alb`.`SERIE_DEVC` and `lin`.`NUMERO_DEVC_DEVCLIN` = `alb`.`NUMERO_DEVC`) AS `TOTAL_LINEAS_SES`,(select count(0) from `fza_devoluciones_compra_lineas` `lin` where `lin`.`SERIE_DEVC_DEVCLIN` = `alb`.`SERIE_DEVC` and `lin`.`NUMERO_DEVC_DEVCLIN` = `alb`.`NUMERO_DEVC`) AS `NUM_LINEAS_SES` from (((`fza_devoluciones_compra` `alb` left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `alb`.`CODIGO_EMP_DEVC`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `alb`.`CODIGO_PRV_DEVC`)) left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `alb`.`CODIGO_ALM_DEVC`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_devoluciones_compra_cab_print` AS select `alb`.`SERIE_DEVC` AS `SERIE_DEVC`,`alb`.`NUMERO_DEVC` AS `NUMERO_DEVC`,`alb`.`FECHA_DEVC` AS `FECHA_DEVC`,`alb`.`ESTADO_DEVC` AS `ESTADO_DEVC`,`alb`.`REF_PROVEEDOR_DEVC` AS `REF_PROVEEDOR_DEVC`,`alb`.`COMENTARIOS_DEVC` AS `COMENTARIOS_DEVC`,`alb`.`OBSERVACIONES_DEVC` AS `OBSERVACIONES_DEVC`,`alb`.`CODIGO_EMP_DEVC` AS `CODIGO_EMP_DEVC`,`emp`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,case when trim(coalesce(`alb`.`SERIE_DEVC`,'')) = '' then trim(coalesce(`alb`.`NUMERO_DEVC`,'')) when trim(coalesce(`alb`.`NUMERO_DEVC`,'')) = '' then trim(coalesce(`alb`.`SERIE_DEVC`,'')) when locate('serie',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('númerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrofactura',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodoc',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numero',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('número',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 then concat(trim(coalesce(`alb`.`SERIE_DEVC`,'')),'.',trim(coalesce(`alb`.`NUMERO_DEVC`,''))) else replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'),'NroDocumento',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'nrodocumento',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NRODOCUMENTO',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NumeroDocumento',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'numerodocumento',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NUMERODOCUMENTO',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NúmeroDocumento',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'númerodocumento',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NÚMERODOCUMENTO',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NroFactura',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'nrofactura',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NROFACTURA',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NroDoc',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'nrodoc',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NRODOC',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'Numero',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'numero',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NUMERO',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'Número',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'número',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'NÚMERO',trim(coalesce(`alb`.`NUMERO_DEVC`,''))),'Serie',trim(coalesce(`alb`.`SERIE_DEVC`,''))),'serie',trim(coalesce(`alb`.`SERIE_DEVC`,''))),'SERIE',trim(coalesce(`alb`.`SERIE_DEVC`,''))) end AS `DOCUMENTO_FORMATO`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`emp`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`emp`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`emp`.`POBLACION_EMP` AS `POBLACION_EMP`,`emp`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`emp`.`NIF_EMP` AS `CIF_EMP`,`emp`.`MOVIL_EMP` AS `TELEFONO1_EMP`,`alb`.`CODIGO_PRV_DEVC` AS `CODIGO_PRV_DEVC`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`prv`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`prv`.`POBLACION_PRV` AS `POBLACION_PRV`,`prv`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`prv`.`NIF_PRV` AS `CIF_PRV`,coalesce(`prv`.`TELEFONO_PRV`,`prv`.`MOVIL_PRV`) AS `TELEFONO1_PRV`,`alb`.`CODIGO_ALM_DEVC` AS `CODIGO_ALM_DEVC`,`alm`.`NOMBRE_ALM_ALM` AS `NOMBRE_ALM_DEVC`,`alm`.`DIRECCION_ALM` AS `DIRECCION_ALM_DEVC`,`alm`.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_DEVC`,`alm`.`POBLACION_ALM` AS `POBLACION_ALM_DEVC`,`alm`.`PROVINCIA_ALM` AS `PROVINCIA_ALM_DEVC`,`alm`.`TELEFONO_ALM` AS `TELEFONO_ALM_DEVC`,`alm`.`EMAIL_ALM` AS `EMAIL_ALM_DEVC`,`alb`.`CODIGO_IVA_DEVC` AS `CODIGO_IVA_DEVC`,`alb`.`PORCENTAJE_IVAN_DEVC` AS `PORCENTAJE_IVAN_DEVC`,`alb`.`PORCENTAJE_IVAR_DEVC` AS `PORCENTAJE_IVAR_DEVC`,`alb`.`PORCENTAJE_IVAS_DEVC` AS `PORCENTAJE_IVAS_DEVC`,`alb`.`PORCENTAJE_IVAE_DEVC` AS `PORCENTAJE_IVAE_DEVC`,`alb`.`TOTAL_BASES_DEVC` AS `TOTAL_BASES_DEVC`,`alb`.`TOTAL_IMPUESTOS_DEVC` AS `TOTAL_IMPUESTOS_DEVC`,`alb`.`TOTAL_LIQUIDO_DEVC` AS `TOTAL_LIQUIDO_DEVC`,`alb`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`alb`.`USUARIO_ALTA` AS `USUARIO_ALTA`,(select coalesce(sum(`lin`.`CANTIDAD_DEVCLIN`),0) from `fza_devoluciones_compra_lineas` `lin` where `lin`.`SERIE_DEVC_DEVCLIN` = `alb`.`SERIE_DEVC` and `lin`.`NUMERO_DEVC_DEVCLIN` = `alb`.`NUMERO_DEVC`) AS `TOTAL_UNIDADES_SES`,(select coalesce(sum(`lin`.`TOTAL_DEVCLIN`),0) from `fza_devoluciones_compra_lineas` `lin` where `lin`.`SERIE_DEVC_DEVCLIN` = `alb`.`SERIE_DEVC` and `lin`.`NUMERO_DEVC_DEVCLIN` = `alb`.`NUMERO_DEVC`) AS `TOTAL_LINEAS_SES`,(select count(0) from `fza_devoluciones_compra_lineas` `lin` where `lin`.`SERIE_DEVC_DEVCLIN` = `alb`.`SERIE_DEVC` and `lin`.`NUMERO_DEVC_DEVCLIN` = `alb`.`NUMERO_DEVC`) AS `NUM_LINEAS_SES` from (((`fza_devoluciones_compra` `alb` left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `alb`.`CODIGO_EMP_DEVC`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `alb`.`CODIGO_PRV_DEVC`)) left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `alb`.`CODIGO_ALM_DEVC`));
 
 -- Vista: vi_devoluciones_compra_guias_print
 DROP VIEW IF EXISTS `vi_devoluciones_compra_guias_print`;
@@ -29310,7 +31977,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_empleados` AS select `fza_empleados`.`CODIG
 
 -- Vista: vi_empresas
 DROP VIEW IF EXISTS `vi_empresas`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_empresas` AS select `e`.`CODIGO_EMP_EMP` AS `CODIGO_EMP_EMP`,`e`.`ORDEN_EMP` AS `ORDEN_EMP`,`e`.`ESACTIVO_EMP` AS `ESACTIVO_EMP`,`e`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`e`.`NIF_EMP` AS `NIF_EMP`,`e`.`MOVIL_EMP` AS `MOVIL_EMP`,`e`.`EMAIL_EMP` AS `EMAIL_EMP`,`e`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`e`.`DIRECCION2_EMP` AS `DIRECCION2_EMP`,`e`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`e`.`POBLACION_EMP` AS `POBLACION_EMP`,`e`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`e`.`CODIGO_PAI_EMP` AS `CODIGO_PAI_EMP`,`e`.`NOMBRE_PAI_EMP` AS `NOMBRE_PAI_EMP`,`e`.`SERIE_CON_EMP` AS `SERIE_CON_EMP`,`e`.`IBAN_EMP` AS `IBAN_EMP`,`e`.`GRUPO_ZONA_IVA_EMP` AS `GRUPO_ZONA_IVA_EMP`,`e`.`ESRETENCIONES_EMP` AS `ESRETENCIONES_EMP`,`e`.`ESIVA_RECARGO_COMPRAS_EMP` AS `ESIVA_RECARGO_COMPRAS_EMP`,`e`.`ESREGIMENESPECIALAGRICOLA_EMP` AS `ESREGIMENESPECIALAGRICOLA_EMP`,`e`.`CODIGO_CERTIFICADO_EMP` AS `CODIGO_CERTIFICADO_EMP`,`e`.`TITULAR_CERTIFICADO_EMP` AS `TITULAR_CERTIFICADO_EMP`,`e`.`TIPO_CERTIFICADO_EMP` AS `TIPO_CERTIFICADO_EMP`,`e`.`FECHA_DESDE_CERTIFICADO_EMP` AS `FECHA_DESDE_CERTIFICADO_EMP`,`e`.`FECHA_HASTA_CERTIFICADO_EMP` AS `FECHA_HASTA_CERTIFICADO_EMP`,`e`.`TEXTO_LEGAL_FACTURA_EMP` AS `TEXTO_LEGAL_FACTURA_EMP`,`e`.`TEXTO_PIE_TICKET_CAJA_1_EMP` AS `TEXTO_PIE_TICKET_CAJA_1_EMP`,`e`.`TEXTO_PIE_TICKET_CAJA_2_EMP` AS `TEXTO_PIE_TICKET_CAJA_2_EMP`,`e`.`TEXTO_PIE_TICKET_CAJA_3_EMP` AS `TEXTO_PIE_TICKET_CAJA_3_EMP`,`e`.`TEXTO_PIE_TICKET_CAJA_4_EMP` AS `TEXTO_PIE_TICKET_CAJA_4_EMP`,`e`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,`e`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`e`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`e`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`e`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`g`.`DESCRIPCION_IVA_IVAGRP` AS `DESCRIPCION_IVA_IVAGRP` from (`fza_empresas` `e` left join `fza_ivas_grupos` `g` on(`e`.`GRUPO_ZONA_IVA_EMP` = `g`.`IVA_IVAGRP`)) order by `e`.`ORDEN_EMP`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_empresas` AS select `fza_empresas`.`CODIGO_EMP_EMP` AS `CODIGO_EMP_EMP`,`fza_empresas`.`ORDEN_EMP` AS `ORDEN_EMP`,`fza_empresas`.`ESACTIVO_EMP` AS `ESACTIVO_EMP`,`fza_empresas`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`fza_empresas`.`NIF_EMP` AS `NIF_EMP`,`fza_empresas`.`MOVIL_EMP` AS `MOVIL_EMP`,`fza_empresas`.`EMAIL_EMP` AS `EMAIL_EMP`,`fza_empresas`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`fza_empresas`.`DIRECCION2_EMP` AS `DIRECCION2_EMP`,`fza_empresas`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`fza_empresas`.`POBLACION_EMP` AS `POBLACION_EMP`,`fza_empresas`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`fza_empresas`.`NOMBRE_PAI_EMP` AS `NOMBRE_PAI_EMP`,`fza_empresas`.`CODIGO_PAI_EMP` AS `CODIGO_PAI_EMP`,`fza_empresas`.`IBAN_EMP` AS `IBAN_EMP`,`fza_empresas`.`GRUPO_ZONA_IVA_EMP` AS `GRUPO_ZONA_IVA_EMP`,`fza_ivas_grupos`.`DESCRIPCION_IVA_IVAGRP` AS `DESCRIPCION_IVA_IVAGRP`,`fza_empresas`.`ESRETENCIONES_EMP` AS `ESRETENCIONES_EMP`,`fza_empresas`.`ESREGIMENESPECIALAGRICOLA_EMP` AS `ESREGIMENESPECIALAGRICOLA_EMP`,`fza_empresas`.`TEXTO_LEGAL_FACTURA_EMP` AS `TEXTO_LEGAL_FACTURA_EMP`,`fza_empresas`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,`fza_empresas`.`CODIGO_CERTIFICADO_EMP` AS `CODIGO_CERTIFICADO_EMP`,`fza_empresas`.`TITULAR_CERTIFICADO_EMP` AS `TITULAR_CERTIFICADO_EMP`,`fza_empresas`.`TIPO_CERTIFICADO_EMP` AS `TIPO_CERTIFICADO_EMP`,`fza_empresas`.`FECHA_DESDE_CERTIFICADO_EMP` AS `FECHA_DESDE_CERTIFICADO_EMP`,`fza_empresas`.`FECHA_HASTA_CERTIFICADO_EMP` AS `FECHA_HASTA_CERTIFICADO_EMP`,`fza_empresas`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_empresas`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_empresas`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_empresas`.`USUARIO_MODIF` AS `USUARIO_MODIF` from (`fza_empresas` left join `fza_ivas_grupos` on(`fza_empresas`.`GRUPO_ZONA_IVA_EMP` = `fza_ivas_grupos`.`IVA_IVAGRP`)) order by `fza_empresas`.`ORDEN_EMP`;
 
 -- Vista: vi_empresas_bancos
 DROP VIEW IF EXISTS `vi_empresas_bancos`;
@@ -29350,7 +32017,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_normales` AS select `vi_facturas`.
 
 -- Vista: vi_facturas_print
 DROP VIEW IF EXISTS `vi_facturas_print`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_print` AS select `fza_facturas`.`NUMERO_FAC` AS `NUMERO_FAC`,`fza_facturas`.`SERIE_FAC` AS `SERIE_FAC`,`fza_facturas`.`FECHA_FAC` AS `FECHA_FAC`,`fza_facturas`.`ESCONSOLIDADA_FAC` AS `ESCONSOLIDADA_FAC`,`fza_facturas`.`INSTANTECONSO_FAC` AS `INSTANTECONSO_FAC`,`fza_facturas`.`TIPO_FAC` AS `TIPO_FAC`,`fza_facturas`.`ESMUEVE_STOCK_FAC` AS `ESMUEVE_STOCK_FAC`,`fza_facturas`.`FASE_FAC` AS `FASE_FAC`,`fza_facturas`.`CODIGO_EMP_FAC` AS `CODIGO_EMP_FAC`,`fza_facturas`.`RAZON_SOCIAL_EMPRESA_FAC` AS `RAZON_SOCIAL_EMPRESA_FAC`,`fza_facturas`.`NIF_EMPRESA_FAC` AS `NIF_EMPRESA_FAC`,`fza_facturas`.`MOVIL_EMPRESA_FAC` AS `MOVIL_EMPRESA_FAC`,`fza_facturas`.`EMAIL_EMPRESA_FAC` AS `EMAIL_EMPRESA_FAC`,`fza_facturas`.`DIRECCION1_EMPRESA_FAC` AS `DIRECCION1_EMPRESA_FAC`,`fza_facturas`.`DIRECCION2_EMPRESA_FAC` AS `DIRECCION2_EMPRESA_FAC`,`fza_facturas`.`POBLACION_EMPRESA_FAC` AS `POBLACION_EMPRESA_FAC`,`fza_facturas`.`PROVINCIA_EMPRESA_FAC` AS `PROVINCIA_EMPRESA_FAC`,`fza_facturas`.`CODIGO_PAI_EMPRESA_FAC` AS `CODIGO_PAI_EMPRESA_FAC`,`fza_facturas`.`NOMBRE_PAI_EMPRESA_FAC` AS `NOMBRE_PAI_EMPRESA_FAC`,`fza_facturas`.`CODIGO_POSTAL_EMPRESA_FAC` AS `CODIGO_POSTAL_EMPRESA_FAC`,`fza_facturas`.`ESRETENCIONES_EMPRESA_FAC` AS `ESRETENCIONES_EMPRESA_FAC`,`fza_facturas`.`GRUPO_ZONA_IVA_EMPRESA_FAC` AS `GRUPO_ZONA_IVA_EMPRESA_FAC`,`fza_facturas`.`ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC` AS `ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC`,`fza_facturas`.`CODIGO_CLI_FAC` AS `CODIGO_CLI_FAC`,`fza_facturas`.`RAZON_SOCIAL_CLIENTE_FAC` AS `RAZON_SOCIAL_CLIENTE_FAC`,`fza_facturas`.`NIF_CLIENTE_FAC` AS `NIF_CLIENTE_FAC`,`fza_facturas`.`MOVIL_CLIENTE_FAC` AS `MOVIL_CLIENTE_FAC`,`fza_facturas`.`EMAIL_CLIENTE_FAC` AS `EMAIL_CLIENTE_FAC`,`fza_facturas`.`DIRECCION1_CLIENTE_FAC` AS `DIRECCION1_CLIENTE_FAC`,`fza_facturas`.`DIRECCION2_CLIENTE_FAC` AS `DIRECCION2_CLIENTE_FAC`,`fza_facturas`.`POBLACION_CLIENTE_FAC` AS `POBLACION_CLIENTE_FAC`,`fza_facturas`.`PROVINCIA_CLIENTE_FAC` AS `PROVINCIA_CLIENTE_FAC`,`fza_facturas`.`CODIGO_POSTAL_CLIENTE_FAC` AS `CODIGO_POSTAL_CLIENTE_FAC`,`fza_facturas`.`CODIGO_PAI_CLIENTE_FAC` AS `CODIGO_PAI_CLIENTE_FAC`,`fza_facturas`.`NOMBRE_PAI_CLIENTE_FAC` AS `NOMBRE_PAI_CLIENTE_FAC`,`fza_facturas`.`CODIGO_OFICINA_CONTABLE_FAC` AS `CODIGO_OFICINA_CONTABLE_FAC`,`fza_facturas`.`CODIGO_ORGANO_GESTOR_FAC` AS `CODIGO_ORGANO_GESTOR_FAC`,`fza_facturas`.`CODIGO_UNIDAD_TRAMITADORA_FAC` AS `CODIGO_UNIDAD_TRAMITADORA_FAC`,`fza_facturas`.`CODIGO_IVA_FAC` AS `CODIGO_IVA_FAC`,`fza_facturas`.`ESIVA_RECARGO_CLIENTE_FAC` AS `ESIVA_RECARGO_CLIENTE_FAC`,`fza_facturas`.`ESIVA_EXENTO_CLIENTE_FAC` AS `ESIVA_EXENTO_CLIENTE_FAC`,`fza_facturas`.`ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC` AS `ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC`,`fza_facturas`.`ESRETENCIONES_CLIENTE_FAC` AS `ESRETENCIONES_CLIENTE_FAC`,`fza_facturas`.`TARIFA_ARTICULO_CLIENTE_FAC` AS `TARIFA_ARTICULO_CLIENTE_FAC`,`fza_facturas`.`ESIMP_INCL_TARIFA_CLIENTE_FAC` AS `ESIMP_INCL_TARIFA_CLIENTE_FAC`,`fza_facturas`.`ESINTRACOMUNITARIO_CLIENTE_FAC` AS `ESINTRACOMUNITARIO_CLIENTE_FAC`,`fza_facturas`.`TIPO_OPER_VFACTU_FAC` AS `TIPO_OPER_VFACTU_FAC`,`fza_facturas`.`ESIRPF_IMP_INCL_ZONA_IVA_FAC` AS `ESIRPF_IMP_INCL_ZONA_IVA_FAC`,`fza_facturas`.`ESAPLICA_RE_ZONA_IVA_FAC` AS `ESAPLICA_RE_ZONA_IVA_FAC`,`fza_facturas`.`ESIVAAGRICOLA_ZONA_IVA_FAC` AS `ESIVAAGRICOLA_ZONA_IVA_FAC`,`fza_facturas`.`PALABRA_REPORTS_ZONA_IVA_FAC` AS `PALABRA_REPORTS_ZONA_IVA_FAC`,`fza_facturas`.`ESVENTA_ACTIVO_FIJO_FAC` AS `ESVENTA_ACTIVO_FIJO_FAC`,`fza_facturas`.`PORCENTAJE_IVAN_FAC` AS `PORCENTAJE_IVAN_FAC`,`fza_facturas`.`TOTAL_IVAN_FAC` AS `TOTAL_IVAN_FAC`,`fza_facturas`.`PORCENTAJE_REN_FAC` AS `PORCENTAJE_REN_FAC`,`fza_facturas`.`TOTAL_REN_FAC` AS `TOTAL_REN_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAN_FAC` AS `TOTAL_BASEI_IVAN_FAC`,`fza_facturas`.`PORCENTAJE_IVAR_FAC` AS `PORCENTAJE_IVAR_FAC`,`fza_facturas`.`TOTAL_IVAR_FAC` AS `TOTAL_IVAR_FAC`,`fza_facturas`.`PORCENTAJE_RER_FAC` AS `PORCENTAJE_RER_FAC`,`fza_facturas`.`TOTAL_RER_FAC` AS `TOTAL_RER_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAR_FAC` AS `TOTAL_BASEI_IVAR_FAC`,`fza_facturas`.`PORCENTAJE_IVAS_FAC` AS `PORCENTAJE_IVAS_FAC`,`fza_facturas`.`TOTAL_IVAS_FAC` AS `TOTAL_IVAS_FAC`,`fza_facturas`.`PORCENTAJE_RES_FAC` AS `PORCENTAJE_RES_FAC`,`fza_facturas`.`TOTAL_RES_FAC` AS `TOTAL_RES_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAS_FAC` AS `TOTAL_BASEI_IVAS_FAC`,`fza_facturas`.`PORCENTAJE_IVAE_FAC` AS `PORCENTAJE_IVAE_FAC`,`fza_facturas`.`TOTAL_IVAE_FAC` AS `TOTAL_IVAE_FAC`,`fza_facturas`.`PORCENTAJE_REE_FAC` AS `PORCENTAJE_REE_FAC`,`fza_facturas`.`TOTAL_REE_FAC` AS `TOTAL_REE_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAE_FAC` AS `TOTAL_BASEI_IVAE_FAC`,`fza_facturas`.`TOTAL_BASES_FAC` AS `TOTAL_BASES_FAC`,`fza_facturas`.`TOTAL_IMPUESTOS_FAC` AS `TOTAL_IMPUESTOS_FAC`,`fza_facturas`.`FORMA_PAGO_FAC` AS `FORMA_PAGO_FAC`,`fza_facturas`.`PORCENTAJE_RETENCION_FAC` AS `PORCENTAJE_RETENCION_FAC`,`fza_facturas`.`TOTAL_RETENCION_FAC` AS `TOTAL_RETENCION_FAC`,`fza_facturas`.`TOTAL_LIQUIDO_FAC` AS `TOTAL_LIQUIDO_FAC`,`fza_facturas`.`NUMERO_FAC_ABONO_FAC` AS `NUMERO_FAC_ABONO_FAC`,`fza_facturas`.`SERIE_FAC_ABONO_FAC` AS `SERIE_FAC_ABONO_FAC`,`fza_facturas`.`TEXTO_LEGAL_CLIENTE_FAC` AS `TEXTO_LEGAL_CLIENTE_FAC`,`fza_facturas`.`TEXTO_LEGAL_EMPRESA_FAC` AS `TEXTO_LEGAL_EMPRESA_FAC`,`fza_facturas`.`DOCUMENTO_FAC` AS `DOCUMENTO_FAC`,`fza_facturas`.`COMENTARIOS_FAC` AS `COMENTARIOS_FAC`,`fza_facturas`.`CONTADOR_LINEAS_FAC` AS `CONTADOR_LINEAS_FAC`,`fza_facturas`.`ESCREARARTICULOS_FAC` AS `ESCREARARTICULOS_FAC`,`fza_facturas`.`ESDESCRIPCIONES_AMP_FAC` AS `ESDESCRIPCIONES_AMP_FAC`,`fza_facturas`.`ESFECHADEENTREGA_FAC` AS `ESFECHADEENTREGA_FAC`,`fza_facturas`.`XML_FAC` AS `XML_FAC`,`fza_facturas`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_facturas`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_facturas`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_facturas`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`fza_facturas`.`CODIGO_CAJERO_FAC` AS `CODIGO_CAJERO_FAC`,`fza_facturas`.`CODIGO_ALM_FAC` AS `CODIGO_ALM_FAC`,`fza_facturas`.`CODIGO_CAJA_FAC` AS `CODIGO_CAJA_FAC`,`fza_facturas`.`NUMERO_OPERACION_FAC` AS `NUMERO_OPERACION_FAC`,`fza_formas_pago`.`DESCRIPCION_FORMA_PAGO_FP` AS `DESCRIPCION_FORMA_PAGO_FP`,`fza_formas_pago`.`ESCONTADO_FORMA_PAGO_FP` AS `ESCONTADO_FORMA_PAGO_FP`,(select group_concat(' ',date_format(`fza_recibos`.`FECHA_VENCIMIENTO_RECIBO_REC`,'%d/%m/%Y'),'=> ',format(`fza_recibos`.`EUROS_RECIBO_REC`,2),'€' separator ',') from `fza_recibos` where `fza_recibos`.`NUMERO_FAC_REC` = `fza_facturas`.`NUMERO_FAC` and `fza_recibos`.`SERIE_FAC_REC` = `fza_facturas`.`SERIE_FAC`) AS `VENCIMIENTOS_RECIBOS`,`fza_empresas`.`IBAN_EMP` AS `IBAN_EMP`,`fza_empresas`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,`FN_FORMATO_DOCUMENTO`(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,`fza_facturas`.`SERIE_FAC`,`fza_facturas`.`NUMERO_FAC`) AS `DOCUMENTO_FORMATO`,`fza_clientes`.`IBAN_CLI` AS `IBAN_CLI`,`fza_formas_pago`.`ESVERBANCOEMPRESA_FORMA_PAGO_FP` AS `ESVERBANCOEMPRESA_FORMA_PAGO_FP`,`c`.`ID_FACCON` AS `ID_FACCON`,`c`.`REQUEST_ID_CONSOLIDACION_FACCON` AS `REQUEST_ID_CONSOLIDACION_FACCON`,`c`.`ISSUER_IRS_ID_CONSOLIDACION_FACCON` AS `ISSUER_IRS_ID_CONSOLIDACION_FACCON`,`c`.`ISSUED_TIME_FACCON` AS `ISSUED_TIME_FACCON`,`c`.`CHAIN_NUMBER_FACCON` AS `CHAIN_NUMBER_FACCON`,`c`.`CHAIN_HASH_FACCON` AS `CHAIN_HASH_FACCON`,`c`.`VERIFACTU_URL_FACCON` AS `VERIFACTU_URL_FACCON`,`c`.`QRCODE_BASE64_FACCON` AS `QRCODE_BASE64_FACCON`,`c`.`QRCODE_PNG_FACCON` AS `QRCODE_PNG_FACCON`,`c`.`FECHA_PROCESAMIENTO_FACCON` AS `FECHA_PROCESAMIENTO_FACCON`,`c`.`ESTADO_FACCON` AS `ESTADO_FACCON` from ((((`fza_facturas` left join `fza_formas_pago` on(`fza_facturas`.`FORMA_PAGO_FAC` = `fza_formas_pago`.`CODIGO_FP_FP`)) left join `fza_empresas` on(`fza_facturas`.`CODIGO_EMP_FAC` = `fza_empresas`.`CODIGO_EMP_EMP`)) left join `fza_clientes` on(`fza_facturas`.`CODIGO_CLI_FAC` = `fza_clientes`.`CODIGO_CLI_CLI`)) left join `fza_facturas_consolidaciones` `c` on(`c`.`SERIE_FAC_FACCON` = `fza_facturas`.`SERIE_FAC` and `c`.`NUMERO_FAC_FACCON` = `fza_facturas`.`NUMERO_FAC`)) order by `fza_facturas`.`FECHA_FAC` desc;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_print` AS select `fza_facturas`.`NUMERO_FAC` AS `NUMERO_FAC`,`fza_facturas`.`SERIE_FAC` AS `SERIE_FAC`,`fza_facturas`.`FECHA_FAC` AS `FECHA_FAC`,`fza_facturas`.`ESCONSOLIDADA_FAC` AS `ESCONSOLIDADA_FAC`,`fza_facturas`.`INSTANTECONSO_FAC` AS `INSTANTECONSO_FAC`,`fza_facturas`.`TIPO_FAC` AS `TIPO_FAC`,`fza_facturas`.`ESMUEVE_STOCK_FAC` AS `ESMUEVE_STOCK_FAC`,`fza_facturas`.`FASE_FAC` AS `FASE_FAC`,`fza_facturas`.`CODIGO_EMP_FAC` AS `CODIGO_EMP_FAC`,`fza_facturas`.`RAZON_SOCIAL_EMPRESA_FAC` AS `RAZON_SOCIAL_EMPRESA_FAC`,`fza_facturas`.`NIF_EMPRESA_FAC` AS `NIF_EMPRESA_FAC`,`fza_facturas`.`MOVIL_EMPRESA_FAC` AS `MOVIL_EMPRESA_FAC`,`fza_facturas`.`EMAIL_EMPRESA_FAC` AS `EMAIL_EMPRESA_FAC`,`fza_facturas`.`DIRECCION1_EMPRESA_FAC` AS `DIRECCION1_EMPRESA_FAC`,`fza_facturas`.`DIRECCION2_EMPRESA_FAC` AS `DIRECCION2_EMPRESA_FAC`,`fza_facturas`.`POBLACION_EMPRESA_FAC` AS `POBLACION_EMPRESA_FAC`,`fza_facturas`.`PROVINCIA_EMPRESA_FAC` AS `PROVINCIA_EMPRESA_FAC`,`fza_facturas`.`CODIGO_PAI_EMPRESA_FAC` AS `CODIGO_PAI_EMPRESA_FAC`,`fza_facturas`.`NOMBRE_PAI_EMPRESA_FAC` AS `NOMBRE_PAI_EMPRESA_FAC`,`fza_facturas`.`CODIGO_POSTAL_EMPRESA_FAC` AS `CODIGO_POSTAL_EMPRESA_FAC`,`fza_facturas`.`ESRETENCIONES_EMPRESA_FAC` AS `ESRETENCIONES_EMPRESA_FAC`,`fza_facturas`.`GRUPO_ZONA_IVA_EMPRESA_FAC` AS `GRUPO_ZONA_IVA_EMPRESA_FAC`,`fza_facturas`.`ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC` AS `ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC`,`fza_facturas`.`CODIGO_CLI_FAC` AS `CODIGO_CLI_FAC`,`fza_facturas`.`RAZON_SOCIAL_CLIENTE_FAC` AS `RAZON_SOCIAL_CLIENTE_FAC`,`fza_facturas`.`NIF_CLIENTE_FAC` AS `NIF_CLIENTE_FAC`,`fza_facturas`.`MOVIL_CLIENTE_FAC` AS `MOVIL_CLIENTE_FAC`,`fza_facturas`.`EMAIL_CLIENTE_FAC` AS `EMAIL_CLIENTE_FAC`,`fza_facturas`.`DIRECCION1_CLIENTE_FAC` AS `DIRECCION1_CLIENTE_FAC`,`fza_facturas`.`DIRECCION2_CLIENTE_FAC` AS `DIRECCION2_CLIENTE_FAC`,`fza_facturas`.`POBLACION_CLIENTE_FAC` AS `POBLACION_CLIENTE_FAC`,`fza_facturas`.`PROVINCIA_CLIENTE_FAC` AS `PROVINCIA_CLIENTE_FAC`,`fza_facturas`.`CODIGO_POSTAL_CLIENTE_FAC` AS `CODIGO_POSTAL_CLIENTE_FAC`,`fza_facturas`.`CODIGO_PAI_CLIENTE_FAC` AS `CODIGO_PAI_CLIENTE_FAC`,`fza_facturas`.`NOMBRE_PAI_CLIENTE_FAC` AS `NOMBRE_PAI_CLIENTE_FAC`,`fza_facturas`.`NOMBRE_PERSONA_CLIENTE_FAC` AS `NOMBRE_PERSONA_CLIENTE_FAC`,`fza_facturas`.`APELLIDOS_PERSONA_CLIENTE_FAC` AS `APELLIDOS_PERSONA_CLIENTE_FAC`,`fza_facturas`.`CODIGO_OFICINA_CONTABLE_FAC` AS `CODIGO_OFICINA_CONTABLE_FAC`,`fza_facturas`.`CODIGO_ORGANO_GESTOR_FAC` AS `CODIGO_ORGANO_GESTOR_FAC`,`fza_facturas`.`CODIGO_UNIDAD_TRAMITADORA_FAC` AS `CODIGO_UNIDAD_TRAMITADORA_FAC`,`fza_facturas`.`CODIGO_IVA_FAC` AS `CODIGO_IVA_FAC`,`fza_facturas`.`ESIVA_RECARGO_CLIENTE_FAC` AS `ESIVA_RECARGO_CLIENTE_FAC`,`fza_facturas`.`ESIVA_EXENTO_CLIENTE_FAC` AS `ESIVA_EXENTO_CLIENTE_FAC`,`fza_facturas`.`ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC` AS `ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC`,`fza_facturas`.`ESRETENCIONES_CLIENTE_FAC` AS `ESRETENCIONES_CLIENTE_FAC`,`fza_facturas`.`TARIFA_ARTICULO_CLIENTE_FAC` AS `TARIFA_ARTICULO_CLIENTE_FAC`,`fza_facturas`.`ESIMP_INCL_TARIFA_CLIENTE_FAC` AS `ESIMP_INCL_TARIFA_CLIENTE_FAC`,`fza_facturas`.`ESINTRACOMUNITARIO_CLIENTE_FAC` AS `ESINTRACOMUNITARIO_CLIENTE_FAC`,`fza_facturas`.`TIPO_OPER_VFACTU_FAC` AS `TIPO_OPER_VFACTU_FAC`,`fza_facturas`.`ESIRPF_IMP_INCL_ZONA_IVA_FAC` AS `ESIRPF_IMP_INCL_ZONA_IVA_FAC`,`fza_facturas`.`ESAPLICA_RE_ZONA_IVA_FAC` AS `ESAPLICA_RE_ZONA_IVA_FAC`,`fza_facturas`.`ESIVAAGRICOLA_ZONA_IVA_FAC` AS `ESIVAAGRICOLA_ZONA_IVA_FAC`,`fza_facturas`.`PALABRA_REPORTS_ZONA_IVA_FAC` AS `PALABRA_REPORTS_ZONA_IVA_FAC`,`fza_facturas`.`ESVENTA_ACTIVO_FIJO_FAC` AS `ESVENTA_ACTIVO_FIJO_FAC`,`fza_facturas`.`PORCENTAJE_IVAN_FAC` AS `PORCENTAJE_IVAN_FAC`,`fza_facturas`.`TOTAL_IVAN_FAC` AS `TOTAL_IVAN_FAC`,`fza_facturas`.`PORCENTAJE_REN_FAC` AS `PORCENTAJE_REN_FAC`,`fza_facturas`.`TOTAL_REN_FAC` AS `TOTAL_REN_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAN_FAC` AS `TOTAL_BASEI_IVAN_FAC`,`fza_facturas`.`PORCENTAJE_IVAR_FAC` AS `PORCENTAJE_IVAR_FAC`,`fza_facturas`.`TOTAL_IVAR_FAC` AS `TOTAL_IVAR_FAC`,`fza_facturas`.`PORCENTAJE_RER_FAC` AS `PORCENTAJE_RER_FAC`,`fza_facturas`.`TOTAL_RER_FAC` AS `TOTAL_RER_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAR_FAC` AS `TOTAL_BASEI_IVAR_FAC`,`fza_facturas`.`PORCENTAJE_IVAS_FAC` AS `PORCENTAJE_IVAS_FAC`,`fza_facturas`.`TOTAL_IVAS_FAC` AS `TOTAL_IVAS_FAC`,`fza_facturas`.`PORCENTAJE_RES_FAC` AS `PORCENTAJE_RES_FAC`,`fza_facturas`.`TOTAL_RES_FAC` AS `TOTAL_RES_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAS_FAC` AS `TOTAL_BASEI_IVAS_FAC`,`fza_facturas`.`PORCENTAJE_IVAE_FAC` AS `PORCENTAJE_IVAE_FAC`,`fza_facturas`.`TOTAL_IVAE_FAC` AS `TOTAL_IVAE_FAC`,`fza_facturas`.`PORCENTAJE_REE_FAC` AS `PORCENTAJE_REE_FAC`,`fza_facturas`.`TOTAL_REE_FAC` AS `TOTAL_REE_FAC`,`fza_facturas`.`TOTAL_BASEI_IVAE_FAC` AS `TOTAL_BASEI_IVAE_FAC`,`fza_facturas`.`TOTAL_BASES_FAC` AS `TOTAL_BASES_FAC`,`fza_facturas`.`TOTAL_IMPUESTOS_FAC` AS `TOTAL_IMPUESTOS_FAC`,`fza_facturas`.`FORMA_PAGO_FAC` AS `FORMA_PAGO_FAC`,`fza_facturas`.`PORCENTAJE_RETENCION_FAC` AS `PORCENTAJE_RETENCION_FAC`,`fza_facturas`.`TOTAL_RETENCION_FAC` AS `TOTAL_RETENCION_FAC`,`fza_facturas`.`TOTAL_LIQUIDO_FAC` AS `TOTAL_LIQUIDO_FAC`,`fza_facturas`.`NUMERO_FAC_ABONO_FAC` AS `NUMERO_FAC_ABONO_FAC`,`fza_facturas`.`SERIE_FAC_ABONO_FAC` AS `SERIE_FAC_ABONO_FAC`,`fza_facturas`.`TEXTO_LEGAL_CLIENTE_FAC` AS `TEXTO_LEGAL_CLIENTE_FAC`,`fza_facturas`.`TEXTO_LEGAL_EMPRESA_FAC` AS `TEXTO_LEGAL_EMPRESA_FAC`,`fza_facturas`.`DOCUMENTO_FAC` AS `DOCUMENTO_FAC`,`fza_facturas`.`COMENTARIOS_FAC` AS `COMENTARIOS_FAC`,`fza_facturas`.`CONTADOR_LINEAS_FAC` AS `CONTADOR_LINEAS_FAC`,`fza_facturas`.`ESCREARARTICULOS_FAC` AS `ESCREARARTICULOS_FAC`,`fza_facturas`.`ESDESCRIPCIONES_AMP_FAC` AS `ESDESCRIPCIONES_AMP_FAC`,`fza_facturas`.`ESFECHADEENTREGA_FAC` AS `ESFECHADEENTREGA_FAC`,`fza_facturas`.`XML_FAC` AS `XML_FAC`,`fza_facturas`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_facturas`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_facturas`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_facturas`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`fza_facturas`.`CODIGO_CAJERO_FAC` AS `CODIGO_CAJERO_FAC`,`fza_facturas`.`CODIGO_ALM_FAC` AS `CODIGO_ALM_FAC`,`fza_facturas`.`CODIGO_CAJA_FAC` AS `CODIGO_CAJA_FAC`,`fza_facturas`.`NUMERO_OPERACION_FAC` AS `NUMERO_OPERACION_FAC`,`fza_formas_pago`.`DESCRIPCION_FORMA_PAGO_FP` AS `DESCRIPCION_FORMA_PAGO_FP`,`fza_formas_pago`.`ESCONTADO_FORMA_PAGO_FP` AS `ESCONTADO_FORMA_PAGO_FP`,(select group_concat(' ',date_format(`fza_recibos`.`FECHA_VENCIMIENTO_RECIBO_REC`,'%d/%m/%Y'),'=> ',format(`fza_recibos`.`EUROS_RECIBO_REC`,2),'€' separator ',') from `fza_recibos` where `fza_recibos`.`NUMERO_FAC_REC` = `fza_facturas`.`NUMERO_FAC` and `fza_recibos`.`SERIE_FAC_REC` = `fza_facturas`.`SERIE_FAC`) AS `VENCIMIENTOS_RECIBOS`,`fza_empresas`.`IBAN_EMP` AS `IBAN_EMP`,`fza_empresas`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,case when trim(coalesce(`fza_facturas`.`SERIE_FAC`,'')) = '' then trim(coalesce(`fza_facturas`.`NUMERO_FAC`,'')) when trim(coalesce(`fza_facturas`.`NUMERO_FAC`,'')) = '' then trim(coalesce(`fza_facturas`.`SERIE_FAC`,'')) when locate('serie',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodocumento',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numerodocumento',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('númerodocumento',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrofactura',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodoc',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numero',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('número',lcase(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 then concat(trim(coalesce(`fza_facturas`.`SERIE_FAC`,'')),'.',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))) else replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(coalesce(nullif(trim(coalesce(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'),'NroDocumento',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'nrodocumento',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NRODOCUMENTO',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NumeroDocumento',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'numerodocumento',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NUMERODOCUMENTO',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NúmeroDocumento',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'númerodocumento',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NÚMERODOCUMENTO',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NroFactura',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'nrofactura',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NROFACTURA',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NroDoc',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'nrodoc',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NRODOC',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'Numero',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'numero',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NUMERO',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'Número',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'número',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'NÚMERO',trim(coalesce(`fza_facturas`.`NUMERO_FAC`,''))),'Serie',trim(coalesce(`fza_facturas`.`SERIE_FAC`,''))),'serie',trim(coalesce(`fza_facturas`.`SERIE_FAC`,''))),'SERIE',trim(coalesce(`fza_facturas`.`SERIE_FAC`,''))) end AS `DOCUMENTO_FORMATO`,`fza_clientes`.`IBAN_CLI` AS `IBAN_CLI`,`fza_formas_pago`.`ESVERBANCOEMPRESA_FORMA_PAGO_FP` AS `ESVERBANCOEMPRESA_FORMA_PAGO_FP`,`c`.`ID_FACCON` AS `ID_FACCON`,`c`.`REQUEST_ID_CONSOLIDACION_FACCON` AS `REQUEST_ID_CONSOLIDACION_FACCON`,`c`.`ISSUER_IRS_ID_CONSOLIDACION_FACCON` AS `ISSUER_IRS_ID_CONSOLIDACION_FACCON`,`c`.`ISSUED_TIME_FACCON` AS `ISSUED_TIME_FACCON`,`c`.`CHAIN_NUMBER_FACCON` AS `CHAIN_NUMBER_FACCON`,`c`.`CHAIN_HASH_FACCON` AS `CHAIN_HASH_FACCON`,`c`.`VERIFACTU_URL_FACCON` AS `VERIFACTU_URL_FACCON`,`c`.`QRCODE_BASE64_FACCON` AS `QRCODE_BASE64_FACCON`,`c`.`QRCODE_PNG_FACCON` AS `QRCODE_PNG_FACCON`,`c`.`FECHA_PROCESAMIENTO_FACCON` AS `FECHA_PROCESAMIENTO_FACCON`,`c`.`ESTADO_FACCON` AS `ESTADO_FACCON` from ((((`fza_facturas` left join `fza_formas_pago` on(`fza_facturas`.`FORMA_PAGO_FAC` = `fza_formas_pago`.`CODIGO_FP_FP`)) left join `fza_empresas` on(`fza_facturas`.`CODIGO_EMP_FAC` = `fza_empresas`.`CODIGO_EMP_EMP`)) left join `fza_clientes` on(`fza_facturas`.`CODIGO_CLI_FAC` = `fza_clientes`.`CODIGO_CLI_CLI`)) left join `fza_facturas_consolidaciones` `c` on(`c`.`SERIE_FAC_FACCON` = `fza_facturas`.`SERIE_FAC` and `c`.`NUMERO_FAC_FACCON` = `fza_facturas`.`NUMERO_FAC`)) order by `fza_facturas`.`FECHA_FAC` desc;
 
 -- Vista: vi_facturas_simplificadas
 DROP VIEW IF EXISTS `vi_facturas_simplificadas`;
@@ -31679,6 +34346,73 @@ IF (pserie IS NULL) THEN
 ELSE
    SET presul = pserie;
 END IF;
+END ;;
+DELIMITER ;
+
+-- Procedimiento: PRC_FORMATO_DOCUMENTO
+DROP PROCEDURE IF EXISTS `PRC_FORMATO_DOCUMENTO`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_FORMATO_DOCUMENTO`(
+  IN p_FORMATO varchar(80),
+  IN p_SERIE varchar(50),
+  IN p_NUMERO varchar(50),
+  OUT p_DOCUMENTO_FORMATO varchar(200)
+)
+BEGIN
+  DECLARE v_formato varchar(80);
+  DECLARE v_original varchar(200);
+  DECLARE v_resultado varchar(200);
+  DECLARE v_serie varchar(50);
+  DECLARE v_numero varchar(50);
+
+  SET v_serie = TRIM(COALESCE(p_SERIE, ''));
+  SET v_numero = TRIM(COALESCE(p_NUMERO, ''));
+
+  IF v_serie = '' THEN
+    SET p_DOCUMENTO_FORMATO = v_numero;
+  ELSEIF v_numero = '' THEN
+    SET p_DOCUMENTO_FORMATO = v_serie;
+  ELSE
+    SET v_formato = NULLIF(TRIM(COALESCE(p_FORMATO, '')), '');
+
+    IF v_formato IS NULL THEN
+      SET v_formato = 'Serie.NroDocumento';
+    END IF;
+
+    SET v_resultado = v_formato;
+    SET v_original = v_resultado;
+
+    SET v_resultado = REPLACE(v_resultado, 'NroDocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'nrodocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NRODOCUMENTO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NumeroDocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'numerodocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NUMERODOCUMENTO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NúmeroDocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'númerodocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NÚMERODOCUMENTO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NroFactura', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'nrofactura', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NROFACTURA', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NroDoc', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'nrodoc', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NRODOC', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'Numero', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'numero', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NUMERO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'Número', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'número', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NÚMERO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'Serie', v_serie);
+    SET v_resultado = REPLACE(v_resultado, 'serie', v_serie);
+    SET v_resultado = REPLACE(v_resultado, 'SERIE', v_serie);
+
+    IF v_resultado = v_original THEN
+      SET p_DOCUMENTO_FORMATO = CONCAT(v_serie, '.', v_numero);
+    ELSE
+      SET p_DOCUMENTO_FORMATO = v_resultado;
+    END IF;
+  END IF;
 END ;;
 DELIMITER ;
 
@@ -34770,7 +37504,9 @@ CREATE  PROCEDURE `PRC_GET_MOV_VENTAS_ART`(
     IN `p_NIVEL1`         VARCHAR(3),   /* 1er nivel de agrupación: PRV/FAM/TMP/ALM/'' */
     IN `p_NIVEL2`         VARCHAR(3),   /* 2o nivel de agrupación */
     IN `p_NIVEL3`         VARCHAR(3),   /* 3er nivel de agrupación */
-    IN `p_NIVEL_FAM`      INT           /* nivel del árbol de familias al agrupar */
+    IN `p_NIVEL_FAM`      INT,          /* nivel del árbol de familias al agrupar */
+                                        /* por FAM (1 = raíz; <1 = familia hoja) */
+    IN `p_SOLO_VENTAS`    VARCHAR(1)    /* 'S' = solo artículos con ventas en el */
 )
 BEGIN
     DECLARE v_desde     DATE;
@@ -34784,6 +37520,7 @@ BEGIN
     SET p_PROVEEDORES = IFNULL(p_PROVEEDORES, '');
     SET p_TEMPORADAS  = IFNULL(p_TEMPORADAS, '');
     SET p_ARTICULOS   = IFNULL(p_ARTICULOS, '');
+    SET p_SOLO_VENTAS = IFNULL(NULLIF(p_SOLO_VENTAS, ''), 'N');
     SET p_NIVEL1      = UPPER(IFNULL(p_NIVEL1, ''));
     SET p_NIVEL2      = UPPER(IFNULL(p_NIVEL2, ''));
     SET p_NIVEL3      = UPPER(IFNULL(p_NIVEL3, ''));
@@ -34852,79 +37589,16 @@ BEGIN
        SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
                                    g.`COD_GRP`);
 
-    /* Compras (entradas AC) por artículo y, si procede, almacén: primera */
-    /* compra (para el filtro Inicio compras) y totales de unidades/coste. */
-    /* El artículo del movimiento se resuelve por su SKU (CODIGO_UNIDAD_MOV) */
-    /* para no depender de CODIGO_ART_MOV, que puede venir nulo. */
-    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
-    CREATE TEMPORARY TABLE `tmp_mva_ent` (
-        `CODIGO_ART` VARCHAR(20)   NOT NULL,
-        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
-        `UNI_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
-        `IMP_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
-        `PRIMERA`    DATE          NULL,
-        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
-    );
-    INSERT INTO `tmp_mva_ent`
-    SELECT sk.`CODIGO_ART_SKU`,
-           IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
-           SUM(m.`CANTIDAD_MOV`),
-           SUM(m.`TOTAL_COSTE_MOV`),
-           MIN(DATE(m.`FECHA_MOV`))
-      FROM `fza_movimientos_almacen` m
-      JOIN `fza_articulos_skus` sk
-        ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
-     WHERE m.`ESACTIVO_MOV` = 'S'
-       AND m.`TIPO_MOV` = 'E'
-       AND m.`TIPO_DOC_MOV` = 'AC'
-       AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
-     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '');
-
-    /* Primera compra por artículo (sin desglose de almacén), para el filtro */
-    /* Inicio compras: el artículo entra solo si su primera compra (global a */
-    /* los almacenes filtrados) es >= v_ini_cmp. */
-    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
-    CREATE TEMPORARY TABLE `tmp_mva_primera` (
-        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY,
-        `PRIMERA`    DATE        NULL
-    );
-    INSERT INTO `tmp_mva_primera`
-    SELECT `CODIGO_ART`, MIN(`PRIMERA`)
-      FROM `tmp_mva_ent`
-     GROUP BY `CODIGO_ART`;
-
-    /* Ventas del periodo por artículo y, si procede, almacén (líneas de */
-    /* factura/ticket por fecha de factura). El artículo se resuelve por SKU. */
-    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ven`;
-    CREATE TEMPORARY TABLE `tmp_mva_ven` (
-        `CODIGO_ART` VARCHAR(20)   NOT NULL,
-        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
-        `UDS_VEN`    DECIMAL(19,6) NOT NULL DEFAULT 0,
-        `IMP_VEN`    DECIMAL(19,6) NOT NULL DEFAULT 0,
-        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
-    );
-    INSERT INTO `tmp_mva_ven`
-    SELECT sk.`CODIGO_ART_SKU`,
-           IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, ''),
-           SUM(fl.`CANTIDAD_FACLIN`),
-           SUM(fl.`TOTAL_FACLIN`)
-      FROM `fza_facturas_lineas` fl
-      JOIN `fza_facturas` f
-        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
-       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
-      JOIN `fza_articulos_skus` sk
-        ON sk.`CODIGO_UNIDAD_SKU` = fl.`CODIGO_UNIDAD_FACLIN`
-     WHERE fl.`CODIGO_ALM_FACLIN` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
-       AND DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta
-     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, fl.`CODIGO_ALM_FACLIN`, '');
-
-    /* Conjunto de artículos activos que pasan familia, proveedor, temporada, */
-    /* lista de artículos e Inicio compras (primera compra >= v_ini_cmp). */
-    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
-    CREATE TEMPORARY TABLE `tmp_mva_arts` (
+    /* Universo de artículos por los filtros que NO dependen de movimientos */
+    /* (familia, proveedor, temporada, lista). Se materializa ANTES de los */
+    /* escaneos de compras/ventas/coste para restringirlos al conjunto pedido */
+    /* en vez de agregar todo el catálogo y descartar al final. El filtro */
+    /* "Inicio compras" se aplica después sobre este universo (tmp_mva_arts). */
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts0`;
+    CREATE TEMPORARY TABLE `tmp_mva_arts0` (
         `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
     );
-    INSERT IGNORE INTO `tmp_mva_arts` (`CODIGO_ART`)
+    INSERT IGNORE INTO `tmp_mva_arts0` (`CODIGO_ART`)
     SELECT a.`CODIGO_ART_ART`
       FROM `fza_articulos` a
      WHERE a.`ESACTIVO_ART` = 'S'
@@ -34944,11 +37618,112 @@ BEGIN
                           AND tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
                           AND FIND_IN_SET(
                                 COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
-                                p_TEMPORADAS)))
-       AND (NOT v_filtra_cmp
-            OR EXISTS (SELECT 1 FROM `tmp_mva_primera` pc
-                        WHERE pc.`CODIGO_ART` = a.`CODIGO_ART_ART`
-                          AND pc.`PRIMERA` >= v_ini_cmp));
+                                p_TEMPORADAS)));
+
+    /* Entradas de stock por artículo y, si procede, almacén: totales de */
+    /* unidades y coste. Se cuentan las entradas que representan adquisición */
+    /* REAL de género: compra (AC) y albarán de entrada (AE). Se EXCLUYEN los */
+    /* traspasos (TR/AT/TA), movimientos internos entre almacenes (doble */
+    /* conteo); los depósitos (DP), que no son gasto hasta venderse; y el */
+    /* inventario/regularización (IN), que es un ajuste, no una compra. El */
+    /* artículo del movimiento se resuelve por su SKU (CODIGO_UNIDAD_MOV) para */
+    /* no depender de CODIGO_ART_MOV, que puede venir nulo. */
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
+    CREATE TEMPORARY TABLE `tmp_mva_ent` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
+        `UNI_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `IMP_ENT`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
+    );
+    INSERT INTO `tmp_mva_ent`
+    SELECT sk.`CODIGO_ART_SKU`,
+           IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
+           SUM(m.`CANTIDAD_MOV`),
+           SUM(m.`TOTAL_COSTE_MOV`)
+      FROM `fza_movimientos_almacen` m
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
+     WHERE m.`ESACTIVO_MOV` = 'S'
+       AND m.`TIPO_MOV` = 'E'
+       AND m.`TIPO_DOC_MOV` IN ('AC', 'AE')
+       AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       /* Solo los artículos del informe: no agregar las compras de todo el */
+       /* catálogo para descartarlas al unir con tmp_mva_base. */
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '');
+
+    /* Primera ENTRADA por artículo, para el filtro Inicio compras: el artículo */
+    /* entra solo si su primera entrada de género (global a los almacenes */
+    /* filtrados) es >= v_ini_cmp. Usa los MISMOS tipos que las entradas */
+    /* (AC compra, AE albarán de entrada): si mirara solo 'AC', los artículos */
+    /* que entran por albarán de entrada se caerían del informe aunque tengan */
+    /* entradas y ventas. */
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
+    CREATE TEMPORARY TABLE `tmp_mva_primera` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY,
+        `PRIMERA`    DATE        NULL
+    );
+    INSERT INTO `tmp_mva_primera`
+    SELECT sk.`CODIGO_ART_SKU`, MIN(DATE(m.`FECHA_MOV`))
+      FROM `fza_movimientos_almacen` m
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
+     WHERE m.`ESACTIVO_MOV` = 'S'
+       AND m.`TIPO_MOV` = 'E'
+       AND m.`TIPO_DOC_MOV` IN ('AC', 'AE')
+       AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       /* Solo los artículos del informe (mismo universo que las entradas). */
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`;
+
+    /* Ventas del periodo por artículo y, si procede, almacén (líneas de */
+    /* factura/ticket por fecha de factura). El artículo se resuelve por SKU. */
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ven`;
+    CREATE TEMPORARY TABLE `tmp_mva_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
+        `UDS_VEN`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        `IMP_VEN`    DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
+    );
+    /* El almacén de la venta puede venir vacío en la línea */
+    /* (CODIGO_ALM_FACLIN nulo); se cae a la cabecera de la factura */
+    /* (CODIGO_ALM_FAC). Sin esto las líneas sin almacén de línea quedan fuera */
+    /* del filtro de almacenes y la venta no cuenta. */
+    INSERT INTO `tmp_mva_ven`
+    SELECT sk.`CODIGO_ART_SKU`,
+           IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), ''),
+           SUM(fl.`CANTIDAD_FACLIN`),
+           SUM(fl.`TOTAL_FACLIN`)
+      FROM `fza_facturas_lineas` fl
+      JOIN `fza_facturas` f
+        ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`
+       AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = fl.`CODIGO_UNIDAD_FACLIN`
+     WHERE COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`)
+           IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       AND DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta
+       /* Solo los artículos del informe: no agregar las ventas de todo el */
+       /* catálogo para descartarlas al unir con tmp_mva_base. */
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`,
+              IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), '');
+
+    /* Universo final = tmp_mva_arts0 (familia/proveedor/temporada/lista) más */
+    /* el filtro Inicio compras (primera compra AC/AE >= v_ini_cmp). */
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
+    CREATE TEMPORARY TABLE `tmp_mva_arts` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_mva_arts` (`CODIGO_ART`)
+    SELECT a0.`CODIGO_ART`
+      FROM `tmp_mva_arts0` a0
+     WHERE NOT v_filtra_cmp
+        OR EXISTS (SELECT 1 FROM `tmp_mva_primera` pc
+                    WHERE pc.`CODIGO_ART` = a0.`CODIGO_ART`
+                      AND pc.`PRIMERA` >= v_ini_cmp);
 
     /* Coste medio ponderado (PMP) por artículo desde el stock actual de los */
     /* almacenes filtrados (respaldo: último precio de compra del proveedor). */
@@ -34965,6 +37740,8 @@ BEGIN
       JOIN `fza_articulos_skus` sk
         ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
      WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       /* Solo los artículos del informe (se une por artículo ya filtrado). */
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
      GROUP BY sk.`CODIGO_ART_SKU`;
 
     /* Universo de filas del informe: (artículo, almacén) presentes en compras */
@@ -35120,6 +37897,9 @@ BEGIN
                    MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
               FROM `fza_articulos_tarifas` t
              WHERE IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '') = ''
+               /* Solo los artículos del informe (se une por artículo). */
+               AND t.`CODIGO_ART_ARTTAR` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
                AND t.`ESACTIVO_ARTTAR` = 'S'
                AND (t.`FECHA_DESDE_ARTTAR` IS NULL
                     OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
@@ -35137,8 +37917,15 @@ BEGIN
               LEFT JOIN `fza_proveedores` pr
                 ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
              WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = 'S'
+               /* Solo los artículos del informe (se une por artículo). */
+               AND ap.`CODIGO_ART_AP` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
              GROUP BY ap.`CODIGO_ART_AP`
            ) prov ON prov.`CODIGO_ART` = b.`CODIGO_ART`
+      /* Temporada a nivel ARTICULO (Fase 3): este informe es por articulo, */
+      /* sin desglose de color, asi que usa la temporada del articulo. El */
+      /* filtro CODIGO_UNIDAD_ARTPROP = '' evita mezclar/duplicar con las */
+      /* temporadas de color (el color se ve en el balance de tallas). */
       LEFT JOIN (
             SELECT tp.`CODIGO_ART_ART` AS `CODIGO_ART`,
                    MAX(COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`)) AS `TEMPORADA`
@@ -35146,8 +37933,16 @@ BEGIN
               LEFT JOIN `fza_propiedades_valores` tpv
                 ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
              WHERE tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
+               AND tp.`CODIGO_UNIDAD_ARTPROP` = ''
+               /* Solo los artículos del informe (se une por artículo). */
+               AND tp.`CODIGO_ART_ART` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
              GROUP BY tp.`CODIGO_ART_ART`
            ) tmp ON tmp.`CODIGO_ART` = b.`CODIGO_ART`
+     /* "Solo artículos con ventas": descarta las filas sin ventas en el */
+     /* periodo (las que solo tienen entradas). Sin marcar = todos los que */
+     /* tengan actividad (entradas o ventas). */
+     WHERE (p_SOLO_VENTAS <> 'S' OR COALESCE(v.`UDS_VEN`, 0) <> 0)
      ORDER BY `GRUPO1_COD`, `GRUPO2_COD`, `GRUPO3_COD`,
               COALESCE(fam.`ORDEN_FAM`, 999999), art.`CODIGO_FAM_ART`,
               b.`CODIGO_ART`, b.`CODIGO_ALM`;
@@ -35156,6 +37951,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_base`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_coste`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts0`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ven`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
@@ -36353,80 +39149,7 @@ END ;;
 DELIMITER ;
 
 
--- ========================================
--- FUNCIONES
--- ========================================
-
--- Función: FN_FORMATO_DOCUMENTO
-DROP FUNCTION IF EXISTS `FN_FORMATO_DOCUMENTO`;
-DELIMITER ;;
-CREATE  FUNCTION `FN_FORMATO_DOCUMENTO`(p_FORMATO varchar(80),
-  p_SERIE varchar(50),
-  p_NUMERO varchar(50)
-) RETURNS varchar(200) CHARSET utf8mb4 COLLATE utf8mb4_spanish_ci
-    DETERMINISTIC
-BEGIN
-  DECLARE v_formato varchar(80);
-  DECLARE v_original varchar(200);
-  DECLARE v_resultado varchar(200);
-  DECLARE v_serie varchar(50);
-  DECLARE v_numero varchar(50);
-
-  SET v_serie = TRIM(COALESCE(p_SERIE, ''));
-  SET v_numero = TRIM(COALESCE(p_NUMERO, ''));
-
-  IF v_serie = '' THEN
-    RETURN v_numero;
-  END IF;
-
-  IF v_numero = '' THEN
-    RETURN v_serie;
-  END IF;
-
-  SET v_formato = NULLIF(TRIM(COALESCE(p_FORMATO, '')), '');
-
-  IF v_formato IS NULL THEN
-    SET v_formato = 'Serie.NroDocumento';
-  END IF;
-
-  SET v_resultado = v_formato;
-  SET v_original = v_resultado;
-
-  SET v_resultado = REPLACE(v_resultado, 'NroDocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'nrodocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NRODOCUMENTO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NumeroDocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'numerodocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NUMERODOCUMENTO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NúmeroDocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'númerodocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NÚMERODOCUMENTO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NroFactura', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'nrofactura', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NROFACTURA', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NroDoc', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'nrodoc', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NRODOC', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'Numero', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'numero', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NUMERO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'Número', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'número', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NÚMERO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'Serie', v_serie);
-  SET v_resultado = REPLACE(v_resultado, 'serie', v_serie);
-  SET v_resultado = REPLACE(v_resultado, 'SERIE', v_serie);
-
-  IF v_resultado = v_original THEN
-    RETURN CONCAT(v_serie, '.', v_numero);
-  END IF;
-
-  RETURN v_resultado;
-END ;;
-DELIMITER ;
-
-
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 20/06/2026 5:39:51
+-- Backup completado: 20/06/2026 6:21:13

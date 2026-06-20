@@ -29,7 +29,7 @@ uses
 type
   TMigLogProc = reference to procedure(const sMensaje: string);
 
-  // (sDominio, iRow, iTotal). iTotal=0 cuando aun no se sabe (al
+  // (sDominio, iRow, iTotal). iTotal=-1 cuando aun no se sabe (al
   // arrancar la migracion); luego se actualiza con el COUNT(*).
   TMigProgressProc = reference to procedure(const sDominio: string;
                                             iRow, iTotal: Integer);
@@ -105,8 +105,8 @@ type
 
     // Llamadas por los mappers al arrancar para fijar el total y luego
     // por cada fila procesada para que la UI vea avanzar la barra.
-    // SetTotal puede llamarse con 0 si todavia no se conoce; en ese
-    // caso la UI muestra una barra indeterminada.
+    // SetTotal recibe el total real del dominio. Puede ser 0 si el
+    // origen no trae filas; -1 queda reservado para total desconocido.
     procedure SetTotal(iTotal: Integer);
     procedure IncRow(iCount: Integer = 1);
 
@@ -407,7 +407,7 @@ begin
     begin
       oItem := FItems[i];
       FCurrentDominio := oItem.Nombre;
-      FCurrentTotal   := 0;
+      FCurrentTotal   := -1;
       FCurrentRow     := 0;
       DoProgress;  // notifica a la UI "arranca dominio X"
       Log('--- %s ---', [oItem.Nombre]);
@@ -419,9 +419,15 @@ begin
         // que descarta filas huerfanas), y sin esto FCurrentRow nunca alcanza
         // FCurrentTotal: la barra se queda < 100% y el dominio parece colgado
         // aunque haya terminado bien.
-        if (FCurrentTotal > 0) and not IsCancelado then
+        if not IsCancelado then
         begin
-          FCurrentRow := FCurrentTotal;
+          if FCurrentTotal > 0 then
+            FCurrentRow := FCurrentTotal
+          else
+          begin
+            FCurrentTotal := 0;
+            FCurrentRow := 0;
+          end;
           DoProgress;
         end;
         FConDst.Commit;
