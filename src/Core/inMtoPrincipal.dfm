@@ -1483,6 +1483,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
           Caption = 'Listado de documentos proveedor'
           OnClick = mnuListadoDocsProveedorClick
         end
+        object mnuListadoEfectosPago: TMenuItem
+          Caption = 'Listado de efectos de pago'
+          OnClick = mnuListadoEfectosPagoClick
+        end
       end
     end
     object Ventas1: TMenuItem

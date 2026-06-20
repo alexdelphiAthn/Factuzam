@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li class="activo"><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li class="activo"><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
 </nav>
 <main>
 <article>
@@ -19,13 +19,25 @@
 <p><strong>Verifactu</strong> es el sistema de la Agencia Tributaria (AEAT) para los
 sistemas de facturación verificables (SIF) del <strong>RD 1007/2023</strong>. Con
 Verifactu activo, cada factura o ticket que emite Factuzam:</p>
-<ul><li>se imprime con un <strong>código QR tributario</strong> y la leyenda <em>«VERI</em>FACTU -</li></ul>
-<p>  Factura verificable en la sede electrónica de la AEAT»*;</p>
+<ul><li>se imprime con un <strong>código QR tributario</strong> y la leyenda `VERI*FACTU -</li></ul>
+<p>  Factura verificable en la sede electrónica de la AEAT`;</p>
 <ul><li>se <strong>comunica automáticamente a la AEAT</strong> en segundo plano, encadenada</li></ul>
 <p>  con las anteriores mediante una <strong>huella SHA-256</strong> que garantiza que no
   se pueden alterar ni borrar facturas.</p>
 <p>Este capítulo explica cómo se configura, cómo trabaja de forma automática y
 qué acciones fiscales (anular, rectificar, subsanar…) tienes disponibles.</p>
+<p>Factuzam trabaja con tres <strong>modos fiscales</strong>:</p>
+<table>
+<thead><tr>
+<th>Modo</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>SIN</strong></td><td>Periodo transitorio o demo: no crea registro SIF ni cola AEAT.</td></tr>
+<tr><td><strong>VERIFACTU</strong></td><td>Envía los registros a la AEAT mediante la cola.</td></tr>
+<tr><td><strong>NO_VERIFACTU</strong></td><td>Registra localmente la cadena y permite exportar XML de eventos y facturación; debe firmarse con certificado.</td></tr>
+</tbody>
+</table>
 <blockquote><p>Verifactu es un subsistema <strong>transversal</strong>: afecta a las
 <a href="04-menu-ventas-mayor.html">Facturas de venta</a>, a las
 <a href="05-menu-caja.html">Facturas Simplificadas y al TPV de Caja</a>. Aquí se
@@ -67,7 +79,7 @@ AEAT. Sin certificado válido, los envíos fallan.</p>
 <th>Significado</th>
 </tr></thead>
 <tbody>
-<tr><td><strong>Activo</strong></td><td>Interruptor general de Verifactu. Se puede activar/desactivar <strong>en caliente</strong>, sin reiniciar.</td></tr>
+<tr><td><strong>Modo fiscal</strong></td><td><code>SIN</code>, <code>VERIFACTU</code> o <code>NO_VERIFACTU</code>. Solo debe cambiarlo un administrador.</td></tr>
 <tr><td><strong>Entorno</strong></td><td><code>PRE</code> (pruebas de la AEAT) o <code>PRO</code> (producción real).</td></tr>
 <tr><td><strong>NIF del SIF</strong></td><td>NIF del sistema informático de facturación. <strong>Obligatorio</strong>: si está vacío, la AEAT rechaza con el error «[1100] NIF» (ver <a href="#6-diagnostico-de-problemas-frecuentes">diagnóstico</a>).</td></tr>
 <tr><td><strong>Razón social del SIF</strong></td><td>Nombre/razón del productor del sistema.</td></tr>
@@ -75,6 +87,8 @@ AEAT. Sin certificado válido, los envíos fallan.</p>
 <tr><td><strong>Segundos de ciclo</strong></td><td>Cada cuánto el proceso de envío revisa la cola (por defecto 60 s).</td></tr>
 <tr><td><strong>Máx. intentos</strong></td><td>Reintentos antes de marcar una factura como <code>ERROR</code> (por defecto 10).</td></tr>
 <tr><td><strong>URLs de QR y de envío</strong> (PRE/PRO)</td><td>Direcciones de la AEAT para el cotejo del QR y para el envío; vienen rellenas por defecto.</td></tr>
+<tr><td><strong>Firma con certificado</strong></td><td>En modo <code>NO_VERIFACTU</code>, firma los registros locales con XAdES usando el certificado de la empresa.</td></tr>
+<tr><td><strong>Servidores NTP / margen reloj</strong></td><td>Control de hora fiscal para bloquear registros si el reloj del equipo no es fiable.</td></tr>
 </tbody>
 </table>
 <blockquote><p>Cambia primero a <strong><code>PRE</code></strong> para probar contra el entorno de pruebas de la
@@ -82,8 +96,13 @@ AEAT. En PRE, el NIF del obligado debe estar dado de alta en el censo de
 pruebas y guardar relación con el certificado. Pasa a <strong><code>PRO</code></strong> solo
 cuando todo funcione.</p></blockquote>
 <h3 id="23-activacion">2.3 Activación</h3>
-<p>Marca <strong>Activo</strong> en los parámetros. A partir de ese momento, las nuevas
-ventas y facturas se imprimen con QR y se encolan automáticamente.</p>
+<p>Selecciona el <strong>modo fiscal</strong>:</p>
+<ul><li>En <strong>VERIFACTU</strong>, las nuevas ventas y facturas se imprimen con QR y se</li></ul>
+<p>  encolan automáticamente.</p>
+<ul><li>En <strong>NO_VERIFACTU</strong>, se registra y firma localmente la cadena. No hay</li></ul>
+<p>  cola AEAT, pero se pueden exportar los XML exigidos.</p>
+<ul><li>En <strong>SIN</strong>, el sistema permite trabajar sin cierre SIF durante el</li></ul>
+<p>  periodo transitorio o para pruebas.</p>
 <hr>
 <h2 id="3-el-menu-verifactu">3. El menú Verifactu</h2>
 <p>Con el subsistema instalado aparece el menú principal <strong>Verifactu</strong> con tres
@@ -131,9 +150,14 @@ la traza completa de altas, anulaciones y respuestas de la AEAT con su
 Solo lectura.</p>
 <p><img src="img/11-log.png" alt="Verifactu Log" loading="lazy">
 <em>▢ Captura pendiente — Log de eventos con la cadena de hashes.</em></p>
+<p>En modo <strong>NO_VERIFACTU</strong>, el botón <code>Exportar NO*VF</code> genera dos ficheros
+XML: registro de eventos y registro de facturación. La exportación solo
+empaqueta registros ya generados; no crea la trazabilidad en ese momento.</p>
+<p><img src="img/11-exportar-noverifactu.png" alt="Exportación NO VERIFACTU" loading="lazy">
+<em>▢ Captura pendiente — Botón de exportación NO VERIFACTU y diálogo de guardado de XML.</em></p>
 <hr>
 <h2 id="4-verifactu-en-la-ficha-de-la-factura">4. Verifactu en la ficha de la factura</h2>
-<p>Al abrir una factura (normal o simplificada) dispones de dos pestañas y un
+<p>Al abrir un borrador normal o simplificado dispones de dos pestañas y un
 botón específicos:</p>
 <ul><li><strong>Pestaña Verifactu</strong> — muestra el resultado de la comunicación: el <strong>QR</strong></li></ul>
 <p>  generado, la <strong>URL de cotejo</strong> de la AEAT, la <strong>huella de cadena</strong>
@@ -144,18 +168,25 @@ botón específicos:</p>
 <p>  concreta.</p>
 <ul><li>Botón <strong>Consolidar</strong> — fuerza el registro/comunicación de la factura a</li></ul>
 <p>  Verifactu (normalmente no hace falta: la cola lo hace sola).</p>
+<p>En la pestaña <strong>Otros</strong> se puede indicar el <strong>tipo de operación
+Verifactu</strong> cuando no es una venta interior general: servicio
+intracomunitario, entrega intracomunitaria, inversión del sujeto pasivo o
+exportación. Para clientes extranjeros, la aplicación usa los datos de país
+y NIF-IVA/documento para construir el destinatario correcto.</p>
+<p><img src="img/11-tipo-operacion.png" alt="Tipo de operación Verifactu en borradores" loading="lazy">
+<em>▢ Captura pendiente — Pestaña Otros de un borrador con el selector de tipo de operación Verifactu.</em></p>
 <p><img src="img/11-factura-verifactu.png" alt="Pestaña Verifactu de una factura" loading="lazy">
 <em>▢ Captura pendiente — Pestaña Verifactu de la factura (QR, URL, hash, estado).</em></p>
-<blockquote><p>Una factura <strong>consolidada</strong> (<code>ESCONSOLIDADA = S</code>) ya está registrada en la
-AEAT y <strong>no se puede modificar ni borrar</strong>: cualquier corrección se hace
-con una <strong>rectificativa</strong> o una <strong>anulación</strong> (ver abajo). Es el principio
-de inalterabilidad de Verifactu.</p></blockquote>
+<blockquote><p>Un borrador <strong>consolidado</strong> (<code>ESCONSOLIDADA = S</code>) ya tiene cierre fiscal
+y <strong>no se puede modificar ni borrar</strong>: cualquier corrección se hace con
+una <strong>rectificativa</strong> o una <strong>anulación</strong> (ver abajo). Es el principio de
+inalterabilidad del SIF.</p></blockquote>
 <hr>
 <h2 id="5-acciones-fiscales-sobre-una-factura-emitida">5. Acciones fiscales sobre una factura emitida</h2>
 <p>Como una factura registrada no se puede tocar, Verifactu ofrece distintos
-caminos según lo que necesites. Están disponibles en la lista de <strong>Facturas
-(Buscar/Modificar)</strong> y en <strong>Buscar operaciones</strong> del TPV de Caja, siempre
-sobre una factura <strong>ya consolidada</strong>:</p>
+caminos según lo que necesites. Están disponibles en la lista de
+<strong>Borradores</strong> y en <strong>Buscar operaciones</strong> del TPV de Caja, siempre
+sobre un documento <strong>ya consolidado</strong>:</p>
 <table>
 <thead><tr>
 <th>Necesitas…</th>
@@ -173,9 +204,10 @@ sobre una factura <strong>ya consolidada</strong>:</p>
 <p><img src="img/11-acciones.png" alt="Botones de acciones fiscales en Facturas" loading="lazy">
 <em>▢ Captura pendiente — Botones Consolidar / Anular / Subsanar / Rectificar / Facturar ticket.</em></p>
 <p>Cada una de estas operaciones <strong>se vuelve a encolar</strong> y se comunica a la
-AEAT igual que un alta normal, conservando la <strong>trazabilidad</strong> (qué factura
-rectifica o sustituye a cuál). La lista de facturas muestra además una
-columna <strong>«Cola Verifactu»</strong> con el último estado de cada factura.</p>
+AEAT en modo <code>VERIFACTU</code>, o se registra localmente en modo <code>NO_VERIFACTU</code>,
+conservando la <strong>trazabilidad</strong> (qué documento rectifica o sustituye a
+cuál). La lista muestra además una columna <strong>«Cola Verifactu»</strong> con el
+último estado cuando aplica.</p>
 <blockquote><p><strong>Anular</strong> ≠ <strong>Rectificar</strong>: anular elimina fiscalmente la factura;
 rectificar la corrige emitiendo otra que la referencia. Para un cambio de
 importes lo correcto suele ser <strong>rectificar</strong>.</p></blockquote>
@@ -191,7 +223,7 @@ Envíos</em> y lee el <strong>mensaje de error</strong> de la fila. Causas habit
 <ul><li><strong>En PRE</strong> — el NIF no está censado en el entorno de pruebas o no guarda</li></ul>
 <p>  relación con el certificado.</p>
 <p>Tras corregir la causa, <strong>relanza</strong> el envío editando la fila en la cola
-(estado → <code>PENDIENTE</code>, intentos → 0) o súbe el parámetro de máximo de
+(estado → <code>PENDIENTE</code>, intentos → 0) o sube el parámetro de máximo de
 intentos: el proceso revive solo las filas en <code>ERROR</code> que aún tengan
 intentos disponibles.</p>
 <p><strong>El sistema se autocura ante duplicados:</strong> si la AEAT acepta pero falla el

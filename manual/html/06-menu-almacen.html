@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li class="activo"><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li class="activo"><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
 </nav>
 <main>
 <article>
@@ -64,6 +64,24 @@ sistema.</p>
 <blockquote><p>Al <strong>confirmar</strong> un inventario, el sistema ajusta el stock automáticamente
 creando los movimientos de regularización necesarios. Revisa bien el
 recuento antes de confirmar.</p></blockquote>
+<h3 id="recuento-movil">Recuento móvil</h3>
+<p>Además de cargar el recuento desde Excel, el inventario puede enviarse a
+una app móvil de recuento mediante un servidor puente:</p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Enviar a recuento móvil</strong></td><td>Publica el inventario como plantilla para los terminales de almacén.</td></tr>
+<tr><td><strong>Recoger recuento móvil</strong></td><td>Trae las lecturas escaneadas, rellena las cantidades físicas y deja el inventario listo para revisar.</td></tr>
+</tbody>
+</table>
+<p><img src="img/06-inventarios-recuento-movil.png" alt="Inventario enviado a recuento móvil" loading="lazy">
+<em>▢ Captura pendiente — Inventarios con botones Enviar a recuento móvil y Recoger recuento móvil.</em></p>
+<p>El recuento móvil no regulariza stock por sí solo. Primero se recogen las
+lecturas, se revisan las diferencias en Factuzam y después se aplica el
+inventario con el flujo normal.</p>
 <hr>
 <h2 id="informes">Informes</h2>
 <h3 id="balance-de-almacen-horizontal">Balance de Almacén Horizontal</h3>
@@ -73,14 +91,56 @@ recuento antes de confirmar.</p></blockquote>
 (horizontal). Muestra el stock de cada artículo repartido por sus
 variantes/tallas, ideal para artículos de moda. Se filtra (almacén,
 familia, fechas…), se previsualiza y se imprime/exporta.</p>
+<p>El filtro permite trabajar por:</p>
+<ul><li><strong>Modo</strong>: entre fechas o por acumulados.</li><li><strong>Bandas</strong>: existencias iniciales, entradas, ventas, existencias finales</li></ul>
+<p>  y, en modo desglosado, subtipos de movimiento.</p>
+<ul><li><strong>Almacenes, familias, proveedores, temporadas y artículos</strong>.</li><li><strong>Agrupaciones</strong> reordenables por almacén, proveedor, familia o temporada.</li></ul>
+<p>La pestaña <strong>Familias</strong> se muestra como árbol. Marcar una familia incluye
+también sus subfamilias.</p>
 <h3 id="balance-de-almacen-sin-tallas">Balance de Almacén sin tallas</h3>
 <p>Informe de existencias <strong>agregado por artículo</strong>, sin abrir el detalle de
 tallas. Vista resumida del stock cuando no interesa el desglose por
 variante.</p>
+<p><img src="img/06-balance-sin-tallas.png" alt="Balance de almacén sin tallas" loading="lazy">
+<em>▢ Captura pendiente — Filtros e informe del balance sin tallas con foto del artículo.</em></p>
+<p>Incluye artículos con o sin tallaje y usa el mismo sistema de filtros,
+bandas, agrupaciones y exportación a Excel que el balance horizontal.</p>
 <h3 id="movimientos-de-ventas-por-articulos-y-fechas">Movimientos de ventas por artículos y fechas</h3>
 <p>Informe de <strong>ventas por artículo</strong> en un rango de fechas: qué artículos se
 han vendido, en qué cantidad y periodo. Útil para análisis de rotación y
 reposición.</p>
+<p><img src="img/06-movimientos-ventas-articulos.png" alt="Movimientos de ventas por artículos" loading="lazy">
+<em>▢ Captura pendiente — Informe de movimientos de ventas por artículos con filtros y márgenes.</em></p>
+<p>Además del periodo de ventas, puede filtrar por <strong>Inicio compras</strong> para
+analizar solo artículos cuya primera compra sea posterior a una fecha. El
+informe calcula ventas, coste, beneficio y dos márgenes: margen sobre lo
+vendido y margen considerando toda la compra como gasto.</p>
+<p>Columnas del informe:</p>
+<table>
+<thead><tr>
+<th>Columna</th>
+<th>Qué indica</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Artículo</strong></td><td>Código y descripción del artículo. Si se agrupa por almacén, un mismo artículo puede aparecer en varios bloques de almacén.</td></tr>
+<tr><td><strong>Uni.Ent.</strong></td><td>Unidades compradas o entradas del artículo. Se toman de los movimientos de entrada de compra/albarán de entrada.</td></tr>
+<tr><td><strong>Imp.Ent.</strong></td><td>Importe de coste de esas entradas. Es el valor comprado, no el precio de venta.</td></tr>
+<tr><td><strong>Uds Vta</strong></td><td>Unidades vendidas dentro del periodo <strong>Desde / Hasta</strong> indicado en el filtro.</td></tr>
+<tr><td><strong>Imp Venta</strong></td><td>Importe real vendido en el periodo, con los descuentos ya aplicados y según las líneas de factura.</td></tr>
+<tr><td><strong>Imp Coste</strong></td><td>Coste estimado de las unidades vendidas. Se calcula multiplicando las unidades vendidas por el coste del artículo.</td></tr>
+<tr><td><strong>Beneficio</strong></td><td>Diferencia entre venta y coste de lo vendido: <strong>Imp Venta - Imp Coste</strong>.</td></tr>
+<tr><td><strong>% Bnf</strong></td><td>Beneficio sobre coste: <strong>Beneficio / Imp Coste x 100</strong>. Mide cuánto se gana respecto a lo que costó lo vendido.</td></tr>
+<tr><td><strong>Venta-Ent</strong></td><td>Diferencia entre lo vendido y todo lo comprado: <strong>Imp Venta - Imp.Ent.</strong>. Sirve para ver si la venta del periodo cubre la compra completa.</td></tr>
+<tr><td><strong>VentEnt%</strong></td><td>Porcentaje de <strong>Venta-Ent</strong> sobre el importe comprado: <strong>Venta-Ent / Imp.Ent. x 100</strong>.</td></tr>
+<tr><td><strong>Margen 1</strong></td><td>Margen de lo vendido: <strong>Beneficio / Imp Venta x 100</strong>. Es el margen comercial normal sobre la venta realizada.</td></tr>
+<tr><td><strong>Margen 2</strong></td><td>Margen contando toda la compra como gasto: <strong>Venta-Ent / Imp Venta x 100</strong>. Penaliza el stock que queda sin vender.</td></tr>
+<tr><td><strong>% V.dto</strong></td><td>Porcentaje de unidades vendidas respecto a las unidades entradas: <strong>Uds Vta / Uni.Ent. x 100</strong>.</td></tr>
+<tr><td><strong>% Vlast</strong></td><td>Relación entre importe vendido e importe comprado: <strong>Imp Venta / Imp.Ent. x 100</strong>.</td></tr>
+</tbody>
+</table>
+<p>En los totales por grupo y en el total general, las unidades e importes se
+suman. Los porcentajes y márgenes se recalculan a partir de esas sumas; no
+se suman ni se promedian los porcentajes de cada artículo.</p>
 <hr>
 <p><a href="05-menu-caja.html">◀ Menú Caja</a> · <a href="index.html">Índice</a> · <a href="07-menu-otros.html">Siguiente ▶ Menú Otros</a></p>
 </article>

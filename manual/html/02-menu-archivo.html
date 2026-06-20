@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li class="activo"><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li class="activo"><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
 </nav>
 <main>
 <article>
@@ -59,9 +59,14 @@ completa (dirección, población, provincia, código postal), Móvil, Email.</p>
   Pesca).</p>
 <ul><li><strong>Series</strong> — <strong>series de numeración</strong> de los documentos de la empresa</li></ul>
 <p>  (puedes añadir varias series de facturación).</p>
+<ul><li><strong>Bancos</strong> — cuentas bancarias propias de la empresa. Se usan para</li></ul>
+<p>  preseleccionar la cuenta de <strong>cobro</strong> en recibos de cliente y la cuenta de
+  <strong>pago</strong> en efectos/remesas de proveedor.</p>
 <ul><li><strong>Certificado / Verifactu</strong> — <em>Número de Serie</em> y <em>Tipo de Certificado</em></li></ul>
 <p>  para la firma y el envío de facturas al sistema <strong>Verifactu (AEAT)</strong>.</p>
 <ul><li><strong>Texto en Factura</strong> — texto legal que se imprimirá en los documentos.</li><li><strong>Zona de IVA principal</strong> — régimen de IVA por defecto de la empresa.</li></ul>
+<p><img src="img/02-empresas-bancos.png" alt="Pestaña Bancos de Empresas" loading="lazy">
+<em>▢ Captura pendiente — Pestaña Bancos con IBAN, banco y marcas de cobro/pago por defecto.</em></p>
 <blockquote><p>La configuración correcta de <strong>NIF, series y certificado</strong> es
 imprescindible para emitir facturas válidas y para la integración con
 Verifactu. Si tienes dudas fiscales, consúltalas con tu asesoría antes de
@@ -95,6 +100,7 @@ Contacto y teléfono de contacto, Nº de cuenta.</p>
 </tr></thead>
 <tbody>
 <tr><td><strong>Forma de pago por defecto</strong></td><td>Se propone automáticamente en sus documentos.</td></tr>
+<tr><td><strong>Banco cobro</strong></td><td>Cuenta de la empresa que se propone al generar recibos de cobro para este cliente.</td></tr>
 <tr><td><strong>Aplicar RE</strong></td><td>Aplica <strong>Recargo de Equivalencia</strong>.</td></tr>
 <tr><td><strong>Aplicar Retenciones</strong></td><td>Aplica retención de IRPF.</td></tr>
 <tr><td><strong>Tiene IVA exento</strong></td><td>El cliente no soporta IVA.</td></tr>
@@ -118,6 +124,8 @@ Estructura análoga a Clientes, orientada a compras.</p>
 <p>  referencias y precios de compra).</p>
 <ul><li><strong>Ventas</strong> — histórico/relación comercial.</li><li><strong>Más datos</strong> y <strong>Otros</strong> — información complementaria.</li><li><strong>Compras</strong> — <strong>parámetros por defecto para las sesiones de compra</strong> de</li></ul>
 <p>  este proveedor (ver abajo).</p>
+<ul><li><strong>Pagos</strong> — forma de pago habitual y banco de la empresa desde el que se</li></ul>
+<p>  pagarán sus efectos o remesas.</p>
 <h3 id="pestana-compras-parametros-de-compra-del-proveedor">Pestaña Compras (parámetros de compra del proveedor)</h3>
 <p>Concentra valores que se <strong>proponen automáticamente</strong> cuando creas una
 <a href="03-menu-compras.html">sesión de compra</a> para este proveedor, para no
@@ -132,7 +140,6 @@ repetirlos en cada entrada de género.</p>
 </tr></thead>
 <tbody>
 <tr><td><strong>Margen %</strong></td><td>Margen comercial habitual de este proveedor. Al elegirlo en una sesión de compra, se copia como margen de la sesión y sirve para <strong>calcular el precio de venta</strong> a partir del precio de compra.</td></tr>
-<tr><td><strong>Sistema de tallas</strong></td><td>El <strong>tallaje</strong> (colección de atributos de tallas) con el que suele venir el género de este proveedor. Al crear la sesión, se usa como sistema de tallas de las columnas del grid, y cada línea nueva lo hereda.</td></tr>
 </tbody>
 </table>
 <blockquote><p>Estos valores solo <strong>se proponen</strong>; siempre puedes cambiarlos dentro de
@@ -162,6 +169,21 @@ de un artículo, el botón <strong>Aplicar kit</strong> vuelca las cantidades de
 la matriz de tallas de esa línea. Así, en lugar de teclear talla a talla,
 aplicas el surtido completo de golpe. Es ideal cuando el proveedor sirve
 packs con un reparto de tallas estándar.</p></blockquote>
+<h3 id="pestana-pagos">Pestaña Pagos</h3>
+<p>Permite indicar los valores que se propondrán al registrar facturas de
+compra de este proveedor:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Para qué sirve</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Forma de pago</strong></td><td>Se copia a la factura de compra y define los vencimientos al generar efectos.</td></tr>
+<tr><td><strong>Banco para pagos (empresa)</strong></td><td>Cuenta propia de la empresa que se preselecciona al generar efectos o incluirlos en remesas.</td></tr>
+</tbody>
+</table>
+<p><img src="img/02-proveedores-pagos.png" alt="Pestaña Pagos del proveedor" loading="lazy">
+<em>▢ Captura pendiente — Pestaña Pagos con forma de pago y banco de empresa por defecto.</em></p>
 <hr>
 <h2 id="articulos">Artículos</h2>
 <p><img src="img/02-articulos.png" alt="Ficha de Artículos con la pestaña SKUs" loading="lazy">
@@ -176,9 +198,16 @@ variantes (las distintas tallas/colores se denominan <strong>SKU</strong>).</p>
 <p>  u otros atributos). Cada SKU es una referencia vendible con su propio
   stock y código de barras. Existe un asistente para <strong>generar SKUs</strong> a
   partir de las variaciones definidas.</p>
-<ul><li><strong>Propiedades</strong> — propiedades descriptivas asignadas al artículo.</li><li><strong>CB</strong> — <strong>códigos de barras</strong> del artículo y sus SKUs.</li><li><strong>Tarifas</strong> — precios del artículo en las distintas tarifas.</li><li><strong>Proveedores</strong> — proveedores que lo suministran y sus referencias.</li></ul>
+<ul><li><strong>Propiedades</strong> — propiedades descriptivas asignadas al artículo.</li></ul>
+<p>  Algunas propiedades pueden informarse por <strong>artículo</strong>, por <strong>color</strong> o
+  por <strong>SKU</strong>; si un color tiene una temporada distinta, el informe de
+  stock y las búsquedas usan la temporada efectiva de ese color.</p>
+<ul><li><strong>CB</strong> — <strong>códigos de barras</strong> del artículo y sus SKUs.</li><li><strong>Tarifas</strong> — precios del artículo en las distintas tarifas.</li><li><strong>Proveedores</strong> — proveedores que lo suministran y sus referencias.</li></ul>
 <p>Desde la lista/ficha puedes además consultar <strong>stock</strong> y la <strong>foto</strong> del
 artículo con los botones del navegador.</p>
+<p>La gestión de fotos trabaja a nivel artículo o SKU/color. Si un SKU no
+tiene foto propia, hereda la del nivel más cercano disponible. Las fotos
+se pueden usar también en tickets, listados y balances.</p>
 <blockquote><p>El concepto de <strong>SKU</strong> (variante de talla/color) es clave en Factuzam:
 el stock, los precios y los códigos de barras se llevan a nivel de SKU,
 no solo de artículo.</p></blockquote>
@@ -195,7 +224,14 @@ artículos.</p>
 Cada tarifa contiene los precios de los artículos.</p>
 <ul><li><strong>Artículos</strong> — precios de cada artículo/SKU en esta tarifa. Incluye</li></ul>
 <p>  utilidades para <strong>añadir precios</strong> en bloque y <strong>calcular márgenes</strong>.</p>
-<ul><li><strong>Otros</strong> — parámetros de la tarifa (vigencia, redondeos, etc.).</li></ul>
+<ul><li><strong>Otros</strong> — parámetros de la tarifa (vigencia, redondeos, etc.).</li><li><strong>Dto. desde / Dto. hasta</strong> — ventana de fechas en la que se aplican los</li></ul>
+<p>  descuentos de la tarifa. Fuera de esa ventana, se cobra el precio de
+  salida sin descuento aunque la línea de tarifa tenga descuento informado.</p>
+<p>El botón <strong>Sesiones cambios</strong> abre una pantalla para preparar cambios
+masivos de precios, revisar las líneas calculadas y aplicarlas a la tarifa
+destino cuando estén validadas.</p>
+<p><img src="img/02-tarifas-cambios.png" alt="Sesión de cambios de tarifa" loading="lazy">
+<em>▢ Captura pendiente — Sesión de cambios de tarifa con cabecera, líneas calculadas y botón Aplicar tarifa.</em></p>
 <h3 id="familias">Familias</h3>
 <p><img src="img/02-familias.png" alt="Mantenimiento de Familias" loading="lazy">
 <em>▢ Captura pendiente — Mantenimiento de Familias.</em></p>
@@ -206,13 +242,16 @@ Permite agrupar el catálogo para informes, filtros y precios.</p>
 <p>  familia.</p>
 <ul><li><strong>Otros</strong>.</li></ul>
 <h3 id="paises">Paises</h3>
-<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[L]</code> <em>(compartido con Almacenes)</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[L]</code></p>
 <p>Catálogo de <strong>países</strong> usado en las direcciones de clientes, proveedores y
 empresas (y para la clasificación fiscal intracomunitaria/extracomunitaria).</p>
 <h3 id="unidades-de-medida">Unidades de Medida</h3>
-<p><em>(Sin atajo de menú; se abre desde el menú.)</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[U]</code></p>
 <p>Catálogo de <strong>unidades</strong> en que se compran/venden los artículos (unidad,
 par, caja, metro, kilo…).</p>
+<p>Cada unidad define los <strong>decimales</strong> que se muestran y se admiten al
+vender o mover stock. Por ejemplo, una unidad <code>Uds</code> puede trabajar sin
+decimales y una unidad <code>m</code> puede trabajar con dos decimales para telas.</p>
 <h3 id="propiedades">Propiedades</h3>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[Y]</code></p>
 <p>Define <strong>propiedades descriptivas</strong> de artículos (p. ej. <em>Material</em>,
@@ -235,6 +274,11 @@ SKUs sin redefinirlos cada vez.</p>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[B]</code></p>
 <p>Catálogo de los <strong>atributos elementales</strong> (los valores individuales de
 talla, color, etc.) que componen las variaciones y colecciones.</p>
+<p>Además del valor visible, cada atributo puede enlazarse con un
+<strong>atributo básico</strong> o equivalente estándar: color normalizado, medida en
+centímetros, paleta HEX, etc. Factuzam lo resuelve por prioridad:
+artículo, conjunto y valor global. Esto permite que el mismo texto de
+proveedor tenga equivalencias distintas según el artículo.</p>
 <blockquote><p><strong>Orden recomendado de configuración del catálogo:</strong>
 Unidades de Medida y Países → Familias → Atributos básicos → Tipos de
 Variaciones / Colecciones de Atributos → Propiedades → Tarifas →

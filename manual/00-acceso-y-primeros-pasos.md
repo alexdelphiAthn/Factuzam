@@ -86,8 +86,8 @@ Tras validar el login se muestra la ventana principal de Factuzam, con:
 *▢ Captura pendiente — Ventana principal con varias pestañas abiertas.*
 
 - La **barra de menú** en la parte superior (Archivo, Compras, Ventas
-  Mayor, Caja, Almacén, Otros, Ayuda). Es el eje de navegación de toda la
-  aplicación y la estructura que sigue este manual.
+  Mayor, Caja, Almacén, Otros, Verifactu, Ayuda). Es el eje de navegación
+  de toda la aplicación y la estructura que sigue este manual.
 - Un **área de trabajo con pestañas**: cada opción de menú que abres se
   carga como una pestaña dentro de la ventana principal, de modo que
   puedes tener varias pantallas abiertas a la vez y cambiar entre ellas con

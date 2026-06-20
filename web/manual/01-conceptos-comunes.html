@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li class="activo"><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li class="activo"><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
 </nav>
 <main>
 <article>
@@ -120,6 +120,18 @@ navegación</strong> con los botones estándar. Sus acciones son siempre las mis
 tiene el foco. <strong>Grabar</strong> dispone de dos atajos equivalentes: <code>[F12]</code>
 (botón <strong>Grabar registro</strong> del navegador) y <code>[Alt]+[G]</code> (botón
 <strong>Grabar</strong> de acción, ver abajo).</p></blockquote>
+<h3 id="foto-flotante-del-articulo-sku">Foto flotante del artículo / SKU</h3>
+<p><code>[Ctrl]+[F]</code> abre una ventana flotante con la foto del artículo o SKU que
+esté activo en la pantalla. Si cambias de pestaña, de documento o de línea,
+la ventana sigue al registro seleccionado.</p>
+<p><img src="img/01-foto-articulo.png" alt="Foto flotante del artículo o SKU" loading="lazy">
+<em>▢ Captura pendiente — Ventana flotante de foto con selector de resolución y botones de cambio.</em></p>
+<p>Desde esa ventana puedes:</p>
+<ul><li>Ver la foto en resolución <strong>300</strong>, <strong>600</strong> o <strong>real</strong>.</li><li>Cambiar la foto del artículo o del SKU/nivel de color seleccionado.</li><li>Quitar o rotar la foto.</li><li>Bajar fotos del servidor si la instalación tiene configurada la descarga</li></ul>
+<p>  en la categoría <strong>Fotos</strong> de parámetros.</p>
+<blockquote><p>Las fotos se guardan en la carpeta configurada en <code>appDirFotos</code>. En
+instalaciones con varios puestos conviene que sea una ruta compartida en
+red para que todos vean las mismas imágenes.</p></blockquote>
 <hr>
 <h2 id="3-botones-de-accion">3. Botones de acción</h2>
 <p>Independientemente del navegador, las pantallas suelen mostrar tres botones
@@ -180,6 +192,8 @@ junto a cada opción en los capítulos siguientes.</p>
 <tr><td>Artículos</td><td><code>[Ctrl]+[A]</code></td></tr>
 <tr><td>Tarifas</td><td><code>[Ctrl]+[T]</code></td></tr>
 <tr><td>Familias</td><td><code>[Ctrl]+[N]</code></td></tr>
+<tr><td>Paises</td><td><code>[Ctrl]+[Alt]+[L]</code></td></tr>
+<tr><td>Unidades de Medida</td><td><code>[Ctrl]+[Alt]+[U]</code></td></tr>
 <tr><td>Propiedades</td><td><code>[Ctrl]+[Alt]+[Y]</code></td></tr>
 <tr><td>Tipos de Variaciones</td><td><code>[Ctrl]+[Alt]+[T]</code></td></tr>
 <tr><td>Colecciones de Atributos</td><td><code>[Ctrl]+[Alt]+[S]</code></td></tr>
@@ -198,7 +212,8 @@ junto a cada opción en los capítulos siguientes.</p>
 <tr><td>Sesiones (crear artículos y documento)</td><td><code>[Ctrl]+[S]</code></td></tr>
 <tr><td>Pedidos</td><td><code>[Shift]+[Ctrl]+[P]</code></td></tr>
 <tr><td>Albaranes</td><td><code>[Shift]+[Ctrl]+[A]</code></td></tr>
-<tr><td>Facturas</td><td><code>[Shift]+[Ctrl]+[Alt]+[F]</code></td></tr>
+<tr><td>Borradores de compra</td><td><code>[Shift]+[Ctrl]+[Alt]+[F]</code></td></tr>
+<tr><td>Efectos de pago</td><td><code>[Ctrl]+[Alt]+[C]</code></td></tr>
 </tbody>
 </table>
 <h3 id="ventas-mayor">Ventas Mayor</h3>
@@ -208,7 +223,7 @@ junto a cada opción en los capítulos siguientes.</p>
 <th>Atajo</th>
 </tr></thead>
 <tbody>
-<tr><td>Facturas</td><td><code>[Ctrl]+[Alt]+[F]</code></td></tr>
+<tr><td>Borradores</td><td><code>[Ctrl]+[Alt]+[F]</code></td></tr>
 <tr><td>Pedidos</td><td><code>[Ctrl]+[Alt]+[P]</code></td></tr>
 <tr><td>Albaranes</td><td><code>[Ctrl]+[Alt]+[A]</code></td></tr>
 <tr><td>Listados de ventas</td><td><code>[Ctrl]+[Alt]+[V]</code></td></tr>
@@ -228,8 +243,8 @@ junto a cada opción en los capítulos siguientes.</p>
 <tr><td>Histórico de Pagos de Caja</td><td><code>[Shift]+[Ctrl]+[J]</code></td></tr>
 <tr><td>Histórico de Vales</td><td><code>[Shift]+[Ctrl]+[V]</code></td></tr>
 <tr><td>Histórico de Operaciones</td><td><code>[Shift]+[Ctrl]+[O]</code></td></tr>
-<tr><td>Histórico de Arqueos</td><td><code>[Shift]+[Ctrl]+[A]</code></td></tr>
-<tr><td>Facturas Simplificadas</td><td><code>[Shift]+[Ctrl]+[F]</code></td></tr>
+<tr><td>Histórico de Arqueos</td><td><code>[Shift]+[Ctrl]+[H]</code></td></tr>
+<tr><td>Borradores Simplificados</td><td><code>[Shift]+[Ctrl]+[F]</code></td></tr>
 </tbody>
 </table>
 <h3 id="almacen">Almacén</h3>
@@ -256,6 +271,7 @@ junto a cada opción en los capítulos siguientes.</p>
 <tr><td>Contadores</td><td><code>[Ctrl]+[R]</code></td></tr>
 <tr><td>Formas de pago documentos</td><td><code>[Shift]+[Ctrl]+[G]</code></td></tr>
 <tr><td>Usuarios</td><td><code>[Ctrl]+[H]</code></td></tr>
+<tr><td>Empleados</td><td><code>[Ctrl]+[Alt]+[E]</code></td></tr>
 <tr><td>Grupos</td><td><code>[Ctrl]+[J]</code></td></tr>
 <tr><td>Perfiles</td><td><code>[Ctrl]+[W]</code></td></tr>
 <tr><td>Permisos</td><td><code>[Ctrl]+[Q]</code></td></tr>
@@ -264,7 +280,7 @@ junto a cada opción en los capítulos siguientes.</p>
 <tr><td>Generador de Procesos</td><td><code>[Ctrl]+[G]</code></td></tr>
 </tbody>
 </table>
-<h2 id="7-campos-de-auditoria">7. Campos de auditoría</h2>
+<h2 id="8-campos-de-auditoria">8. Campos de auditoría</h2>
 <p>Todos los registros guardan automáticamente <strong>quién y cuándo</strong> los creó y
 los modificó por última vez (instante de alta/modificación y usuario). No
 hay que rellenarlos: la aplicación los gestiona sola. Son útiles para

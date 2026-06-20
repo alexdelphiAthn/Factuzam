@@ -27,22 +27,24 @@ más relevantes.
 | [09 · Instalación en Windows](09-instalacion-windows.md) | MariaDB, base de datos inicial, instalación por puesto y puesta en marcha. |
 | [10 · Migración desde software legacy](10-migracion-legacy.md) | Traslado de datos del ERP anterior (SQL Server) con el Factuzam Migrator. |
 | [11 · Verifactu (AEAT)](11-verifactu.md) | Sistema de facturación verificable: configuración, cola de envío, QR, y acciones fiscales (anular, rectificar, subsanar). |
+| [12 · Cambios y novedades](12-cambios-y-novedades.md) | Resumen de las novedades recientes y dónde se documentan dentro del manual. |
 
 ---
 
 ## La barra de menú de un vistazo
 
 ```
-Archivo        Compras        Ventas Mayor   Caja           Almacén        Otros          Ayuda
-─────────      ─────────      ────────────   ─────          ────────       ─────          ─────
-Empresas       Sesiones       Facturas       Menú de Caja   Movimientos    Parám. entorno Acerca de
-Almacenes      Pedidos        Pedidos        Parám. de Caja Inventarios    Grupos de IVA
-Clientes       Albaranes      Albaranes      Formas de Pago Informes       Impuesto IVA
+Archivo        Compras        Ventas Mayor   Caja           Almacén        Otros          Verifactu      Ayuda
+─────────      ─────────      ────────────   ─────          ────────       ─────          ─────────     ─────
+Empresas       Sesiones       Borradores     Menú de Caja   Movimientos    Parám. entorno Declaración   Acerca de
+Almacenes      Pedidos        Pedidos        Parám. de Caja Inventarios    Grupos de IVA  Cola envíos
+Clientes       Albaranes      Albaranes      Formas Pago    Informes       Impuesto IVA   Log
 Proveedores    Devoluciones   Listados       Depósitos                     Contadores
-Artículos      Facturas                      Históricos                    Formas pago docs
-Tablas Aux.                                  Fac. Simplif.                 Usuarios y Perfiles
-Invocar login                                                              Copias de Seguridad
-Salir                                                                      Generador de Procesos
+Artículos      Crear borrad.                 Históricos                    Formas pago docs
+Tablas Aux.    Borradores                    Borrad. Simplif.              Usuarios y Perfiles
+Invocar login  Efectos pago                                                Copias de Seguridad
+Salir          Remesas pago                                                Generador de Procesos
+               Listados
 ```
 
 > **Nota:** las opciones visibles dependen de tu **perfil de usuario y de

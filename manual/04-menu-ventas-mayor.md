@@ -11,7 +11,7 @@ Estructura del menú:
 
 ```
 Ventas Mayor
-├── Facturas
+├── Borradores
 ├── Pedidos
 ├── Albaranes
 └── Listados
@@ -20,20 +20,24 @@ Ventas Mayor
 
 > Flujo habitual de venta a mayor:
 > **Pedido** del cliente → **Albarán** de salida (sale el stock) →
-> **Factura** (documento fiscal). Se puede facturar albarán a albarán o
-> agrupar varios albaranes en una sola factura.
+> **Borrador** de factura → **Consolidar** (registro fiscal). Se puede
+> facturar albarán a albarán o agrupar varios albaranes en un solo
+> borrador antes de emitirlo.
 
 ---
 
-## Facturas
+## Borradores
 
-![Factura de venta: cabecera, líneas y totales](img/04-facturas.png)
-*▢ Captura pendiente — Factura de venta: cabecera, líneas y totales.*
+![Borrador de venta: cabecera, líneas y totales](img/04-borradores.png)
+*▢ Captura pendiente — Borrador de venta: cabecera, líneas, totales y botones fiscales.*
 
 **Atajo de menú:** `[Ctrl]+[Alt]+[F]`
 
-Mantenimiento de **Facturas de Venta (Venta Mayor)**. Es el documento
-fiscal de venta. Cada factura lleva:
+Mantenimiento de **Borradores de Venta Mayor**. Mientras el documento está
+en fase **BORRADOR** se puede editar; al pulsar **Consolidar** se emite el
+registro fiscal según el modo configurado en Verifactu.
+
+Cada borrador lleva:
 
 - **Cabecera**: cliente, fecha, **serie** y número (según los contadores de
   la empresa), forma de pago, vencimientos.
@@ -43,13 +47,18 @@ fiscal de venta. Cada factura lleva:
   retenciones según la configuración fiscal del **cliente** y la
   **empresa**.
 
-Las facturas se firman y comunican a **Verifactu (AEAT)** según la
+Los borradores se firman o comunican a **Verifactu (AEAT)** según la
 configuración de certificado de la empresa (ver
 [Empresas](02-menu-archivo.md#empresas)).
 
-> Una factura puede crearse manualmente o **a partir de albaranes**
-> pendientes de facturar (incluso agrupando varios albaranes de un cliente
-> en un rango de fechas).
+> Un borrador puede crearse manualmente o **a partir de albaranes**
+> pendientes de facturar, incluso agrupando varios albaranes de un cliente
+> en un rango de fechas.
+
+Al consolidar, el documento deja de ser editable. Las correcciones
+posteriores se hacen con **Anular**, **Rectificar** o **Subsanar**, según
+el caso fiscal. La pestaña Verifactu muestra QR, URL de cotejo, estado y
+registro asociado.
 
 ## Pedidos
 
@@ -74,6 +83,13 @@ el **albarán** de salida cuando se sirve el pedido.
 Mantenimiento de **Albaranes de Venta**. Registra la **salida real** de
 mercancía hacia el cliente: al confirmarlo **resta stock** del almacén. Es
 el documento que después se **factura**.
+
+Desde los albaranes se pueden crear borradores por rango de fechas. El
+selector permite marcar varios albaranes pendientes y generar un borrador
+agrupado para el mismo cliente.
+
+![Crear borradores desde albaranes de venta](img/04-albaranes-crear-borradores.png)
+*▢ Captura pendiente — Modal de selección de albaranes de venta por fecha para generar borradores.*
 
 ---
 

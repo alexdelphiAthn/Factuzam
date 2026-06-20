@@ -43,6 +43,15 @@ configuración global de Factuzam: comportamiento por defecto, rutas,
 opciones de impresión y de documentos, valores predeterminados de la
 empresa de trabajo, etc.
 
+Categorías habituales:
+
+| Categoría | Uso |
+|-----------|-----|
+| **Directorios / Fotos** | Carpeta local o compartida de fotos (`appDirFotos`) y credenciales de descarga desde el servidor. |
+| **Recuentos** | URL, clave y carpeta de cliente del servidor de recuento móvil. |
+| **Verifactu** | Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj. |
+| **Caja** | Valores por defecto del TPV y comportamiento de arqueo. |
+
 > Son ajustes que afectan a **toda la instalación**. Cámbialos con
 > conocimiento de causa; ante la duda, consulta con quien implantó la
 > aplicación.
@@ -159,6 +168,17 @@ desactiva, por grupo/usuario, el acceso a cada **menú y acción** de la
 aplicación. Es la forma recomendada de configurar la seguridad de forma
 visual.
 
+El árbol replica el menú real de la aplicación y permite trabajar por:
+
+- **Todos**, grupo o usuario.
+- Permitir, denegar o heredar una rama completa.
+- Copiar permisos de un sujeto a otro, combinando o reemplazando.
+- Gestionar permisos de menú y permisos de pantalla: consultar, insertar,
+  modificar, borrar, exportar a Excel e imprimir.
+
+> Los cambios de permisos se aplican en el próximo login del usuario
+> afectado.
+
 ### Permisos (tabla)
 
 *(Sin atajo de menú; se abre desde el menú.)*
@@ -238,8 +258,7 @@ fichero). El menú contextual del editor ofrece además *Seleccionar Todo*,
      estructura del objeto al editor.
    - **Bonito** reformatea el SQL para hacerlo legible.
 3. Pulsa **Ejecutar (F5)**:
-   - Si hay **texto seleccionado** en el editor, se ejecuta **solo la
-     selección**; si no, se ejecuta todo el contenido.
+   - Si hay **texto seleccionado** en el editor, se ejecuta **solo la selección**; si no, se ejecuta todo el contenido.
    - El resultado se abre en **3_VistaDatos**, con el número de registros
      y el tiempo de ejecución en el panel de resultados.
 4. Trabaja el resultado en la rejilla (ordenar, agrupar, filtrar) y

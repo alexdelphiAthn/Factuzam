@@ -31,8 +31,7 @@ final solo necesita el capítulo
    - Define la **contraseña de `root`** y guárdala en lugar seguro.
    - Deja el servicio configurado para **arrancar con Windows**.
    - Puerto por defecto: **3306**.
-3. Si otros puestos van a conectarse, abre el puerto 3306 en el **firewall
-   de Windows** del servidor (solo para la red local).
+3. Si otros puestos van a conectarse, abre el puerto 3306 en el **firewall de Windows** del servidor (solo para la red local).
 
 > Factuzam usa el juego de caracteres **`utf8mb4`** con cotejamiento
 > **`utf8mb4_spanish_ci`**; la base de datos se creará así en el paso

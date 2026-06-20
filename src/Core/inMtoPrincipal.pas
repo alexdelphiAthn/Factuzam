@@ -81,6 +81,7 @@ type
     Formasdepago2: TMenuItem;
     mnuComprasListados: TMenuItem;
     mnuListadoDocsProveedor: TMenuItem;
+    mnuListadoEfectosPago: TMenuItem;
     dxSkinController1: TdxSkinController;
     mnuAlmacen: TMenuItem;
     Movimientosdealmacn1: TMenuItem;
@@ -129,6 +130,7 @@ type
     procedure mnuBalanceAlmacenSinTallasClick(Sender: TObject);
     procedure mnuMovVentasArtClick(Sender: TObject);
     procedure mnuListadoDocsProveedorClick(Sender: TObject);
+    procedure mnuListadoEfectosPagoClick(Sender: TObject);
     procedure mnuDepositosClienteClick(Sender: TObject);
     procedure pcPrincipalChange(Sender: TObject);
   public
@@ -331,6 +333,7 @@ uses inLibUser,
   inMtoModalImpBalanceSinTallas,
   inMtoModalImpMovVentasArt,
   inMtoModalImpDocsProveedor,
+  inMtoModalImpEfectosPago,
   inMtoModalFacturarAlbaranes,
   inMtoModalCargarEfectosRemesa,
   inLibCajaParam,
@@ -1718,6 +1721,19 @@ begin
     frmListadoDocsProveedor.ShowModal;
   finally
     FreeAndNil(frmListadoDocsProveedor);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuListadoEfectosPagoClick(Sender: TObject);
+var
+  frmListadoEfectosPago: TfrmPrintEfectosPago;
+begin
+  inherited;
+  try
+    frmListadoEfectosPago := TfrmPrintEfectosPago.Create(Self);
+    frmListadoEfectosPago.ShowModal;
+  finally
+    FreeAndNil(frmListadoEfectosPago);
   end;
 end;
 

@@ -50,6 +50,9 @@ Una vez colocada, puede borrarse la línea *«▢ Captura pendiente…»* o
 sustituirse por un pie de foto definitivo. Para localizar los huecos que
 faltan: buscar `Captura pendiente` en los `.md`.
 
+Las capturas nuevas añadidas en la última revisión están resumidas en
+`CAPTURAS_PENDIENTES.md`.
+
 ## Publicar en la web
 
 Sube **todo el contenido de `manual/html/`** (los `.html`, `estilo.css` y
