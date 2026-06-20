@@ -1,17 +1,16 @@
 {******************************************************************************}
 {                                                                              }
-{  Modulo:       inMtoModalRegistrarPago                                       }
+{  Módulo:       inMtoModalRegistrarPago                                       }
 {    Tipo:       Formulario (Modal)                                            }
-{ Version:       1.0.0                                                         }
+{ Versión:       1.0.0                                                         }
 {   Fecha:       11/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
-{  Descripcion:                                                                }
-{    Pide los datos de un pago sobre un efecto: fecha, importe (la cantidad    }
-{    que se paga, precargada al pendiente), tipo y referencia. Devuelve los    }
-{    valores; el llamante invoca PRC_EFEC_REGISTRAR_PAGO con ellos.            }
+{  Descripción:                                                                }
+{    Pide los datos para conciliar un efecto: fecha, importe, tipo y           }
+{    referencia. Si el importe es parcial, la BBDD divide el efecto.           }
 {******************************************************************************}
 unit inMtoModalRegistrarPago;
 
@@ -45,6 +44,7 @@ type
     procedure btnCancelarClick(Sender: TObject);
   private
     FConfirmado: Boolean;
+    FImporteMax: Double;
     function GetFecha: TDateTime;
     function GetImporte: Double;
     function GetTipo: string;
@@ -71,6 +71,9 @@ begin
   lblInfo.Caption  := AInfo;
   dteFecha.Date    := Date;
   curImporte.Value := AImportePendiente;
+  FImporteMax := AImportePendiente;
+  if FImporteMax < 0 then
+    FImporteMax := 0;
   if cbbTipo.Properties.Items.Count > 0 then
     cbbTipo.ItemIndex := 0;
 end;
@@ -79,7 +82,9 @@ procedure TfrmModalRegistrarPago.btnAceptarClick(Sender: TObject);
 begin
   inherited;
   if GetImporte <= 0 then
-    ShowMessage('El importe a pagar debe ser mayor que 0.')
+    ShowMessage('El importe conciliado debe ser mayor que 0.')
+  else if (FImporteMax > 0) and (GetImporte > FImporteMax + 0.0001) then
+    ShowMessage('El importe no puede superar el pendiente.')
   else
   begin
     FConfirmado := True;

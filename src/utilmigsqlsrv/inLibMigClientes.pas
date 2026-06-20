@@ -103,6 +103,22 @@ const
       Result := 'S';
   end;
 
+  function CodigoFormaPagoCliente(q: TUniQuery): string;
+  var
+    iTipo: Integer;
+  begin
+    Result := Copy(Trim(q.FieldByName('FormaPago').AsString), 1, 20);
+    if Result = '' then
+    begin
+      if not q.FieldByName('TipoEfecto').IsNull then
+      begin
+        iTipo := q.FieldByName('TipoEfecto').AsInteger;
+        if iTipo > 0 then
+          Result := IntToStr(iTipo);
+      end;
+    end;
+  end;
+
 var
   qSrc, qIns, qChk: TUniQuery;
   sCod, sRazon, sObs, sFP, sRazonDst: string;
@@ -168,13 +184,9 @@ begin
       end;
       qChk.Close;
 
-      // Forma de pago: en origen viene como TipoEfecto (int) + un FormaPago
-      // descriptivo. El destino usa codigo de forma_pago. Tomamos el
-      // TipoEfecto como CODIGO_FP_CLI cuando hay valor; si no, NULL.
-      if qSrc.FieldByName('TipoEfecto').IsNull then
-        sFP := ''
-      else
-        sFP := IntToStr(qSrc.FieldByName('TipoEfecto').AsInteger);
+      // Forma de pago: mismo criterio que documentos. Primero FormaPago
+      // recortado al codigo destino y, si no existe, TipoEfecto (>0).
+      sFP := CodigoFormaPagoCliente(qSrc);
       // Tarifa del legacy se ignora — pondremos 'PVP' fija para todos.
       sObs := Trim(qSrc.FieldByName('Observacion').AsString);
 

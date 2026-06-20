@@ -136,15 +136,16 @@ function CodigoFormaPagoVentaMayor(q: TUniQuery): string;
 var
   iTipo: Integer;
 begin
-  Result := '';
+  Result := TextoCampo(q, 'FormaPago', 20);
   if q.FindField('TipoEfecto') <> nil then
   begin
-    iTipo := q.FieldByName('TipoEfecto').AsInteger;
-    if iTipo > 0 then
-      Result := IntToStr(iTipo);
+    if Result = '' then
+    begin
+      iTipo := q.FieldByName('TipoEfecto').AsInteger;
+      if iTipo > 0 then
+        Result := IntToStr(iTipo);
+    end;
   end;
-  if Result = '' then
-    Result := TextoCampo(q, 'FormaPago', 200);
 end;
 
 function CodigoTarifaVentaMayor(q: TUniQuery): string;

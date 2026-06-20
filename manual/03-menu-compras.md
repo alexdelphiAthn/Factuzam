@@ -15,8 +15,7 @@ Compras
 ├── Pedidos
 ├── Albaranes
 ├── Devoluciones a Proveedor
-├── Facturas
-└── Formas de pago
+└── Facturas
 ```
 
 > Flujo habitual de compra:
@@ -230,22 +229,6 @@ albaranes recibidos.
 *▢ Captura pendiente — Mantenimiento de Facturas de compra.*
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[Alt]+[F]`
-
----
-
-## Formas de pago
-
-Catálogo de **formas de pago** aplicables a las compras (contado,
-transferencia, giro a X días, etc.). Define el vencimiento y el
-comportamiento de cobro/pago. El mismo catálogo de formas de pago se
-utiliza también en ventas.
-
-Sub-pestañas: **Más Datos**, **Ventas** (uso en ventas) y **Otros**.
-
-![Formas de pago](img/03-formas-pago.png)
-*▢ Captura pendiente — Catálogo de formas de pago.*
-
-**Atajo de menú:** `[Shift]+[Ctrl]+[G]`
 
 ---
 

@@ -177,6 +177,8 @@ begin
     FieldByName('CODIGO_PRV_PEDC').AsString := '0';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
+    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+      'PEDC');
   end;
 end;
 
@@ -186,6 +188,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
     GetCodigoAutoPedidoCompra;
+  AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+    'PEDC');
   CalcularTotalesPedidoCompra;
 end;
 
@@ -354,6 +358,8 @@ begin
         unqrySkusPedc.Close;
       end;
     end;
+    PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
+      unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
   end;
 end;
 

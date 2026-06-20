@@ -17,7 +17,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,
+  System.Classes, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -27,7 +27,8 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataEfectosCompra,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
+  cxRadioGroup, cxCurrencyEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  dxShellDialogs;
 
 type
   TfrmMtoEfectosCompra = class(TfrmMtoGen)
@@ -40,12 +41,13 @@ type
     dbcGrdDBTabPrinIMPORTE_EFEC: TcxGridDBColumn;
     dbcGrdDBTabPrinIMPORTE_PENDIENTE_EFEC: TcxGridDBColumn;
     dbcGrdDBTabPrinESTADO_EFEC: TcxGridDBColumn;
+    dbcGrdDBTabPrinREFERENCIA_DOCUMENTO_EFEC: TcxGridDBColumn;
     dbcGrdDBTabPrinFECHA_PAGO_EFEC: TcxGridDBColumn;
     dbcGrdDBTabPrinNUMERO_REMC_EFEC: TcxGridDBColumn;
     btnRegistrarPago: TcxButton;
-    btnVerPagos: TcxButton;
+    btnFusionarEfectos: TcxButton;
     procedure btnRegistrarPagoClick(Sender: TObject);
-    procedure btnVerPagosClick(Sender: TObject);
+    procedure btnFusionarEfectosClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -60,7 +62,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago, inMtoModalVerPagosEfecto;
+  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago;
 
 {$R *.dfm}
 
@@ -102,9 +104,9 @@ begin
           q.FieldByName('NUMERO_FACC_EFEC').AsString,
           iEfe, frm.Fecha, frm.Importe, frm.Tipo, frm.Referencia);
         if iRes > 0 then
-          ShowMessage('Pago registrado.')
+          ShowMessage('Efecto conciliado.')
         else
-          ShowMessage('No se pudo registrar el pago.');
+          ShowMessage('No se pudo conciliar el efecto.');
       end;
     finally
       frm.Free;
@@ -114,30 +116,40 @@ begin
     ShowMessage('Selecciona un efecto en la rejilla.');
 end;
 
-procedure TfrmMtoEfectosCompra.btnVerPagosClick(Sender: TObject);
+procedure TfrmMtoEfectosCompra.btnFusionarEfectosClick(Sender: TObject);
 var
-  frm: TfrmModalVerPagosEfecto;
-  q: TDataSet;
-  iEfe: Integer;
+  aClaves: TClavesEfectoCompra;
+  i: Integer;
+  iRec: Integer;
+  iRes: Integer;
+  sReferencia: string;
 begin
   inherited;
-  if Assigned(dmmEfectosCompra) and dmmEfectosCompra.unqryTablaG.Active and
-     (not dmmEfectosCompra.unqryTablaG.IsEmpty) then
+  if not Assigned(dmmEfectosCompra) then
+    ShowMessage('No hay cartera de efectos abierta.')
+  else if cxGrdDBTabPrin.Controller.SelectedRecordCount < 2 then
+    ShowMessage('Selecciona dos o más efectos impagados.')
+  else if MessageDlg('¿Fusionar los efectos seleccionados en un único ' +
+          'efecto pendiente?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
-    q    := dmmEfectosCompra.unqryTablaG;
-    iEfe := q.FieldByName('NUMERO_EFEC').AsInteger;
-    frm := TfrmModalVerPagosEfecto.Create(nil);
-    try
-      frm.Cargar(q.FieldByName('SERIE_FACC_EFEC').AsString,
-                 q.FieldByName('NUMERO_FACC_EFEC').AsString, iEfe,
-                 Format('Pagos del efecto %d', [iEfe]));
-      frm.ShowModal;
-    finally
-      frm.Free;
+    SetLength(aClaves, cxGrdDBTabPrin.Controller.SelectedRecordCount);
+    for i := 0 to cxGrdDBTabPrin.Controller.SelectedRecordCount - 1 do
+    begin
+      iRec := cxGrdDBTabPrin.Controller.SelectedRecords[i].RecordIndex;
+      aClaves[i].SerieFac := VarToStr(cxGrdDBTabPrin.DataController.Values[
+        iRec, dbcGrdDBTabPrinSERIE_FACC_EFEC.Index]);
+      aClaves[i].NumeroFac := VarToStr(cxGrdDBTabPrin.DataController.Values[
+        iRec, dbcGrdDBTabPrinNUMERO_FACC_EFEC.Index]);
+      aClaves[i].NumeroEfec := StrToIntDef(VarToStr(
+        cxGrdDBTabPrin.DataController.Values[
+          iRec, dbcGrdDBTabPrinNUMERO_EFEC.Index]), 0);
     end;
-  end
-  else
-    ShowMessage('Selecciona un efecto en la rejilla.');
+    iRes := dmmEfectosCompra.FusionarEfectosPendientes(aClaves, sReferencia);
+    if iRes > 0 then
+      ShowMessage(Format('Efectos conciliados en %s.', [sReferencia]))
+    else
+      ShowMessage('No se pudieron fusionar los efectos.');
+  end;
 end;
 
 initialization

@@ -68,7 +68,6 @@ type
     N2: TMenuItem;
     Compras1: TMenuItem;
     FormasdePagoCaja1: TMenuItem;
-    mnuFormaPagoVenta: TMenuItem;
     Pedidos1: TMenuItem;
     Albaranes1: TMenuItem;
     Devoluciones1: TMenuItem;
@@ -109,7 +108,6 @@ type
     procedure mnuInvocarLoginClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
-    procedure mnuFormaPagoVentaClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
     procedure mnuInventariosClick(Sender: TObject);
     procedure mnuPropiedadesClick(Sender: TObject);
@@ -1811,13 +1809,6 @@ procedure TfrmMtoPrincipal.mnuFamiliasClick(Sender: TObject);
 begin
   if (mnuFamilias.Visible) then
     ShowMto(Self, 'Familias');
-end;
-
-procedure TfrmMtoPrincipal.mnuFormaPagoVentaClick(Sender: TObject);
-begin
-  inherited;
-  if mnuFormaPagoVenta.Visible then
-    ShowMto(Self, 'FormasdePago');
 end;
 
 procedure TfrmMtoPrincipal.mnuPedidosVentaClick(Sender: TObject);

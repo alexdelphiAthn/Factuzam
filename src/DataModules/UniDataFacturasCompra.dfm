@@ -4,11 +4,17 @@ inherited dmFacturasCompra: TdmFacturasCompra
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
+    SQLDelete.Strings = (
+      'DELETE FROM fza_facturas_compra'
+      'WHERE'
+      '  NUMERO_FACC = :Old_NUMERO_FACC'
+      '  AND SERIE_FACC = :Old_SERIE_FACC')
     SQL.Strings = (
       'SELECT * FROM vi_facturas_compra')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
     Left = 48
     Top = 24
   end

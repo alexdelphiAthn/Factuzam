@@ -1,9 +1,9 @@
-# Migración de compras (pedidos y albaranes de entrada)
+# Migración de compras (pedidos, albaranes y facturas)
 
 Importa la cadena de **compras** del legacy a Factuzam. Nuevo dominio del
-migrador (`src/utilmigsqlsrv/inLibMigCompras.pas`). No requiere cambios de
-esquema: las tablas destino ya existen (ver `pedidos_compra.sql` y
-`albaranes_compra.sql`).
+migrador (`src/utilmigsqlsrv/inLibMigCompras.pas`). Requiere que el destino
+tenga las tablas de compras y la ampliación de temporada de factura:
+`DESARROLLOS EN CURSO/facturas_compra_temporada.sql`.
 
 | Origen (SQL Server) | Destino (MariaDB) |
 |---|---|
@@ -11,6 +11,17 @@ esquema: las tablas destino ya existen (ver `pedidos_compra.sql` y
 | `dbo.ocpedarp`                  | `fza_pedidos_compra_lineas` |
 | `dbo.ocalbpro` (TipoDoc `'AE'`) | `fza_albaranes_compra` (cabecera) |
 | `dbo.ocalbproarp`               | `fza_albaranes_compra_lineas` |
+| `dbo.ocfacpro`                  | `fza_facturas_compra` (cabecera) |
+| `dbo.ocfacproart` / `ocalbproarp` facturado | `fza_facturas_compra_lineas` |
+
+## Temporada de cabecera
+
+Pedidos y facturas conservan la temporada de cabecera del legacy. En pedidos
+sale de `ocped.Temporada` y en facturas de `ocfacpro.Temporada`; ambos códigos
+se traducen por `octem.Nombre` y se enlazan con `fza_propiedades_valores`
+(`ID_PROP_PV='TEMPORADA'`). En facturas el valor queda en
+`ID_PV_TEMPORADA_FACC`, añadido por
+`DESARROLLOS EN CURSO/facturas_compra_temporada.sql`.
 
 ## Modelo: una línea por SKU + `ID_AC_PIVOT` (como el nativo)
 
@@ -94,8 +105,8 @@ repartir vencimientos.
   mercancía YA recibida con su stock ya migrado por el dominio de
   **Movimientos** (`ocmovarp`). El Mto de compras maneja la transición
   `ABIERTO↔CERRADO` (CERRADO = stock generado), así que se deja `CERRADO`.
-  **No** se usa `FACTURADO`: no migramos facturas de compra en esta pasada y
-  dejaría una referencia de factura colgando.
+  Si el legacy trae `NroFactura`, queda como `FACTURADO` y enlazado a la
+  factura importada.
 
 ## Enlace albarán → pedido
 
@@ -117,8 +128,26 @@ primera fila). Un fallo de lote se registra y la migración continúa.
 
 Dominios **"Pedidos de compra (ocped)"** y **"Albaranes de compra
 (ocalbpro)"**, **wave 3**. Solo necesitan Empresas, Almacenes, Proveedores y
-SKUs (waves 0-2); **no** dependen de Movimientos ni de Facturas, así que
-corren en paralelo con ellos.
+SKUs (waves 0-2).
+
+Dominio **"Facturas de compra (ocfacpro)"**, **wave 5**. Entra después de
+albaranes para poder enlazar `NUMERO_FAC_ALBC` / `SERIE_FAC_ALBC` y marcar
+líneas facturadas cuando `ocfacproart` trae referencia de albarán.
+Si una factura no tiene detalle en `ocfacproart`, sus líneas se reconstruyen
+desde `ocalbproarp` usando `NroFactura` / `SerieFactura` / `EjercicioFactura`.
+
+Después de facturas entran los dominios de cartera de pagos:
+- **"Bancos de cargo por empresa (ocbanrem)"**: crea `fza_empresas_bancos`
+  desde las cuentas usadas en facturas, efectos y remesas de compra.
+- **"Tipos de efecto de compra (octipefe)"**: conserva los códigos legacy de
+  tipo de efecto en `fza_tipos_efecto`.
+- **"Efectos de compra (ocefepro/occobpro)"**, **wave 6**: importa
+  vencimientos y concilia los pagos legacy sobre los propios efectos. Si un
+  efecto viene parcialmente pagado, lo divide en pagado y pendiente. La
+  referencia documental del efecto queda en `REFERENCIA_DOCUMENTO_EFEC` para
+  que las conciliaciones posteriores puedan apuntar al efecto resumen.
+- **"Remesas de pago (ocrempro)"**, **wave 7**: importa remesas y recalcula
+  contador/total desde los efectos enlazados.
 
 ## Pendiente / a revisar
 
@@ -126,8 +155,6 @@ corren en paralelo con ellos.
   materialización nativa tampoco las crea (almacena una línea por SKU con su
   `ID_AC_PIVOT`). El Mto las construye al editar en modo pivote. No es una
   carencia de la migración.
-- **Facturas de compra**: no se migran en esta pasada; por eso los albaranes
-  quedan `CERRADO` y no `FACTURADO`, y no se rellena `NUMERO_FAC_ALBC`.
 - **Enlace movimiento ↔ albarán (`REF_MOV`)**: la línea de albarán legacy no
   guarda el `NUMERO_MOV` del movimiento que generó, así que no se enlaza la
   entrada de stock con su albarán (el stock entra igualmente por Movimientos).

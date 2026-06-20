@@ -30,6 +30,7 @@ uses
   inLibMigArticulosTarifas in 'inLibMigArticulosTarifas.pas',
   inLibMigEntorno in 'inLibMigEntorno.pas',
   inLibMigCompras in 'inLibMigCompras.pas',
+  inLibMigEfectosCompra in 'inLibMigEfectosCompra.pas',
   inLibMigFotos in 'inLibMigFotos.pas',
   inLibPathTokens in '..\Lib\inLibPathTokens.pas';
 

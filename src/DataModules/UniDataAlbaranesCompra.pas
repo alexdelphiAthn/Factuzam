@@ -209,6 +209,8 @@ begin
       FieldByName('ESDEPOSITO_ALBC').AsString := 'N';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_ALBC', 'ESIVA_RECARGO_COMPRAS_ALBC');
+    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+      'ALBC');
   end;
   FTransicionEstadoAlbc := '';
 end;
@@ -223,6 +225,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '') then
     GetCodigoAutoAlbaranCompra;
+  AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+    'ALBC');
   CalcularTotalesAlbaranCompra;
   // Deteccion de transicion de ESTADO_ALBC. Solo aplica en modo Edit
   // (en Insert el albaran nace ABIERTO y los movimientos los genera
@@ -421,6 +425,8 @@ begin
         unqrySkusAlbc.Close;
       end;
     end;
+    PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
+      unqryAlbaranesCompraLineas, 'ALBC', 'ALBCLIN', 'TOTAL_ALBCLIN');
   end;
 end;
 

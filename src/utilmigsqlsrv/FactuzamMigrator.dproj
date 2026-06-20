@@ -239,6 +239,7 @@
         <DCCReference Include="inLibMigArticulosTarifas.pas"/>
         <DCCReference Include="inLibMigEntorno.pas"/>
         <DCCReference Include="inLibMigCompras.pas"/>
+        <DCCReference Include="inLibMigEfectosCompra.pas"/>
         <DCCReference Include="inLibMigFotos.pas"/>
         <DCCReference Include="..\Lib\inLibPathTokens.pas"/>
         <BuildConfiguration Include="Base">

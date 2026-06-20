@@ -88,7 +88,6 @@ type
     pnlEfectosTop: TPanel;
     btnGenerarEfectos: TcxButton;
     btnRegistrarPago: TcxButton;
-    btnVerPagos: TcxButton;
     cxgrdEfectos: TcxGrid;
     tvEfectos: TcxGridDBTableView;
     lvlEfectos: TcxGridLevel;
@@ -166,7 +165,6 @@ type
     procedure btnCODIGO_PRV_FACCPropertiesEditValueChanged(Sender: TObject);
     procedure btnGenerarEfectosClick(Sender: TObject);
     procedure btnRegistrarPagoClick(Sender: TObject);
-    procedure btnVerPagosClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -206,7 +204,7 @@ uses
   inLibFotos,
   UniDataArticulos,
   inLibShowMto, inLibGenBusq, inMtoModalRegistrarPago,
-  inMtoModalVerPagosEfecto, inMtoModalSeleccionarBanco;
+  inMtoModalSeleccionarBanco;
 
 {$R *.dfm}
 
@@ -818,39 +816,10 @@ begin
         iRes := dmmFacturasCompra.RegistrarPagoEfecto(iEfe, frm.Fecha,
                   frm.Importe, frm.Tipo, frm.Referencia);
         if iRes > 0 then
-          ShowMessage('Pago registrado.')
+          ShowMessage('Efecto conciliado.')
         else
-          ShowMessage('No se pudo registrar el pago.');
+          ShowMessage('No se pudo conciliar el efecto.');
       end;
-    finally
-      frm.Free;
-    end;
-  end
-  else
-    ShowMessage('Selecciona un efecto en la rejilla de la pestana Efectos.');
-end;
-
-procedure TfrmMtoFacturasCompra.btnVerPagosClick(Sender: TObject);
-var
-  frm: TfrmModalVerPagosEfecto;
-  q: TDataSet;
-  iEfe: Integer;
-begin
-  inherited;
-  if Assigned(dmmFacturasCompra) and
-     (dmmFacturasCompra.unqryEfectos <> nil) and
-     dmmFacturasCompra.unqryEfectos.Active and
-     (not dmmFacturasCompra.unqryEfectos.IsEmpty) then
-  begin
-    q := dmmFacturasCompra.unqryEfectos;
-    iEfe := q.FieldByName('NUMERO_EFEC').AsInteger;
-    frm := TfrmModalVerPagosEfecto.Create(nil);
-    try
-      frm.Cargar(
-        dmmFacturasCompra.unqryTablaG.FieldByName('SERIE_FACC').AsString,
-        dmmFacturasCompra.unqryTablaG.FieldByName('NUMERO_FACC').AsString,
-        iEfe, Format('Pagos del efecto %d', [iEfe]));
-      frm.ShowModal;
     finally
       frm.Free;
     end;
