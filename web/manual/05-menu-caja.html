@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · Menú Caja — Manual de Factuzam</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual de usuario</span></div>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li class="activo"><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="05-menu-caja">05 · Menú Caja</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Caja</strong> es el <strong>punto de venta (TPV)</strong> para la venta al detalle en
+tienda: cobrar a clientes de mostrador, emitir tickets/facturas
+simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).</p>
+<p>Estructura del menú:</p>
+<pre><code>Caja
+├── Menú de Caja
+├── Parámetros de Caja
+├── Formas de Pago Caja
+├── Depósitos de Clientes
+├── Histórico de Pagos de Caja
+├── Histórico de Vales
+├── Histórico de Operaciones
+├── Histórico de Arqueos
+└── Facturas Simplificadas</code></pre>
+<hr>
+<h2 id="menu-de-caja">Menú de Caja</h2>
+<p><strong>Atajo de menú:</strong> <code>[F5]</code></p>
+<p>Es la <strong>pantalla principal del TPV</strong>, diseñada para trabajar con <strong>teclado</strong>
+y rapidez en el mostrador. Muestra la <strong>Empresa</strong>, la <strong>caja activa</strong>
+(empresa/almacén/caja) y la <strong>Fecha de Caja</strong> de la jornada, junto con el
+reloj.</p>
+<p><img src="img/05-menu-caja.png" alt="Menú de Caja" loading="lazy">
+<em>▢ Captura pendiente — Menú de Caja con las opciones y sus teclas rápidas.</em></p>
+<p>Funciones y sus teclas rápidas:</p>
+<table>
+<thead><tr>
+<th>Tecla</th>
+<th>Función</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>F3</strong></td><td><strong>Traspasos</strong></td><td>Traspaso de <strong>mercancía</strong> entre almacenes/tiendas (ver detalle más abajo).</td></tr>
+<tr><td><strong>F5</strong></td><td><strong>Ventas</strong></td><td>Pantalla de venta/cobro (ver detalle más abajo).</td></tr>
+<tr><td><strong>F6</strong></td><td><strong>Entrada de Cambio</strong></td><td>Registra el efectivo inicial (cambio) que se mete en el cajón.</td></tr>
+<tr><td><strong>F7</strong></td><td><strong>Gastos por caja</strong></td><td>Registra pagos/gastos en efectivo realizados desde la caja.</td></tr>
+<tr><td><strong>F10</strong></td><td><strong>Buscar / Modificar</strong></td><td>Localiza operaciones de la caja para consultarlas o modificarlas (ver detalle más abajo).</td></tr>
+<tr><td><strong>F11</strong></td><td><strong>Arqueo</strong></td><td>Cierre y cuadre de caja (ver detalle más abajo).</td></tr>
+<tr><td>—</td><td><strong>Fecha de Caja</strong></td><td>Fija/cambia la fecha de trabajo de la jornada.</td></tr>
+<tr><td><strong>Esc</strong></td><td><strong>Salir</strong></td><td>Cierra el TPV y vuelve a la ventana principal.</td></tr>
+</tbody>
+</table>
+<blockquote><p>El TPV está pensado para que un dependiente pueda vender, cobrar y cerrar
+caja sin usar el resto de menús. Antes de operar debe haber una <strong>caja
+seleccionada</strong> (empresa + almacén + caja).</p></blockquote>
+<hr>
+<h3 id="ventas-f5-la-pantalla-de-venta">Ventas (F5) — la pantalla de venta</h3>
+<p>Es la pantalla donde se hace el ticket. Arriba se indica el <strong>Empleado</strong>
+(vendedor) y, opcionalmente, el <strong>Cliente</strong>; debajo, la rejilla de
+<strong>líneas de venta</strong> y el <strong>Total</strong> en grande.</p>
+<p><img src="img/05-caja-ventas.png" alt="Pantalla de Ventas del TPV" loading="lazy">
+<em>▢ Captura pendiente — Operación de venta con líneas y total.</em></p>
+<p><strong>Cómo se añaden líneas:</strong></p>
+<ul><li>Pasando el <strong>lector de código de barras</strong> por el artículo (la pantalla</li></ul>
+<p>  está optimizada para ráfagas de lector).</p>
+<ul><li>Buscando el artículo manualmente con <strong>Buscar (F3)</strong>.</li></ul>
+<p>Cada línea muestra: <strong>Vend.</strong> (vendedor de la línea), <strong>Artículo</strong>,
+<strong>Descripción</strong>, <strong>Uds.</strong>, <strong>Precio</strong>, <strong>%</strong> (descuento), <strong>Menos</strong>
+(importe descontado) y <strong>Total</strong>.</p>
+<p><strong>Teclas rápidas de la pantalla de Ventas:</strong></p>
+<table>
+<thead><tr>
+<th>Tecla</th>
+<th>Función</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>F12</strong></td><td><strong>Cobro</strong></td><td>Pasa a la <strong>fase de cobro</strong> del ticket (ver abajo).</td></tr>
+<tr><td><strong>F3</strong></td><td><strong>Buscar</strong></td><td>Busca artículos para añadirlos sin lector.</td></tr>
+<tr><td><strong>F4</strong></td><td><strong>Búsq Tick</strong></td><td>Busca un ticket anterior (p. ej. para una devolución).</td></tr>
+<tr><td><strong>F5</strong></td><td><strong>Otro</strong></td><td>Cambia a <strong>otra operación en paralelo</strong>: se pueden mantener hasta <strong>5 tickets abiertos a la vez</strong> (clientes simultáneos).</td></tr>
+<tr><td><strong>F6</strong></td><td><strong>Tarifa</strong></td><td>Cambia la tarifa de precios aplicada.</td></tr>
+<tr><td><strong>F7</strong></td><td><strong>Ind. IVA</strong></td><td>Cambia el indicador de IVA de la operación.</td></tr>
+<tr><td><strong>F8</strong></td><td><strong>Eliminar</strong></td><td>Elimina la línea seleccionada.</td></tr>
+<tr><td><strong>F2</strong></td><td><strong>Cargar cta.</strong></td><td>Carga los <strong>depósitos/a cuenta</strong> del cliente para aplicarlos.</td></tr>
+<tr><td><strong>Ctrl+U</strong></td><td><strong>Consulta stock</strong></td><td>Consulta el stock del artículo de la línea en foco.</td></tr>
+<tr><td><strong>Ctrl+A</strong></td><td><strong>Artículos</strong></td><td>Abre la consulta de artículos.</td></tr>
+<tr><td><strong>Esc</strong></td><td><strong>Salir</strong></td><td>Abandona la operación.</td></tr>
+</tbody>
+</table>
+<hr>
+<h3 id="fase-de-cobro-f12-desde-ventas">Fase de cobro (F12 desde Ventas)</h3>
+<p>Tras pulsar <strong>Cobro (F12)</strong> se entra en la <strong>Fase de cobro</strong>, donde se
+liquida el ticket:</p>
+<p><img src="img/05-caja-cobro.png" alt="Fase de cobro" loading="lazy">
+<em>▢ Captura pendiente — Fase de cobro con formas de pago y cambio.</em></p>
+<p><strong>Zona de importes:</strong></p>
+<ul><li><strong>Imp. TOTAL a pagar</strong>, con posibilidad de aplicar un <strong>% Descuento</strong> o</li></ul>
+<p>  un <strong>descuento lineal</strong> al total.</p>
+<ul><li><strong>Pendiente de cobro</strong> — lo que falta por cubrir con formas de pago.</li><li><strong>Importe a dejar A CUENTA</strong> — parte que queda como depósito del cliente.</li><li><strong>Vale Emitido / Vale Recogido</strong> — vales generados (devoluciones) o</li></ul>
+<p>  canjeados en esta operación.</p>
+<ul><li><strong>Devolución de cambio</strong> — cambio a devolver al cliente.</li></ul>
+<p><strong>Rejilla de pagos:</strong> se reparte el total entre una o varias <strong>formas de
+pago</strong> (efectivo, tarjeta, vale…), indicando el <strong>Importe Entregado</strong> de
+cada una. La aplicación calcula el cambio.</p>
+<p><strong>Botones / teclas de la fase de cobro:</strong></p>
+<table>
+<thead><tr>
+<th>Tecla</th>
+<th>Función</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>F12</strong></td><td><strong>Con ticket</strong></td><td>Cierra la venta <strong>imprimiendo el ticket</strong>.</td></tr>
+<tr><td><strong>F11</strong></td><td><strong>Sin ticket</strong></td><td>Cierra la venta sin imprimir.</td></tr>
+<tr><td><strong>F10</strong></td><td><strong>Sin precios</strong></td><td>Imprime el ticket <strong>sin precios</strong> (ticket regalo).</td></tr>
+<tr><td><strong>F8</strong></td><td><strong>Factura</strong></td><td>Emite <strong>factura nominativa</strong> en lugar de ticket (pide los datos del cliente).</td></tr>
+<tr><td><strong>F7</strong></td><td><strong>Préstamo</strong></td><td>Registra la salida como <strong>préstamo/depósito</strong> al cliente (si tiene crédito permitido).</td></tr>
+<tr><td><strong>F6</strong></td><td><strong>Buscar Vale</strong></td><td>Localiza un <strong>vale</strong> emitido para canjearlo como pago.</td></tr>
+<tr><td><strong>F3</strong></td><td><strong>Rellenar</strong></td><td>Rellena automáticamente el importe pendiente en la forma de pago seleccionada.</td></tr>
+<tr><td><strong>F2</strong></td><td><strong>Más datos</strong></td><td>Datos adicionales de la operación.</td></tr>
+<tr><td><strong>Esc</strong></td><td><strong>Atrás</strong></td><td>Vuelve a la pantalla de venta sin cerrar el cobro.</td></tr>
+</tbody>
+</table>
+<blockquote><p>El <strong>Nº de documento de venta</strong> generado se muestra al cerrar. Las ventas
+de caja generan <strong>facturas simplificadas</strong> (consultables en
+<a href="#facturas-simplificadas">Facturas Simplificadas</a>).</p></blockquote>
+<hr>
+<h3 id="traspasos-f3">Traspasos (F3)</h3>
+<p>Gestiona los <strong>traspasos de mercancía entre almacenes</strong> (entre tiendas, o
+tienda ↔ almacén central). El stock sale del almacén origen y entra en el
+destino.</p>
+<p><img src="img/05-caja-traspasos.png" alt="Traspasos entre almacenes" loading="lazy">
+<em>▢ Captura pendiente — Pantalla de Traspasos con origen, destino y líneas.</em></p>
+<table>
+<thead><tr>
+<th>Elemento</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Almacén origen / Almacén destino</strong></td><td>De dónde sale y a dónde va la mercancía.</td></tr>
+<tr><td><strong>Empleado (responsable)</strong></td><td>Quién realiza el traspaso.</td></tr>
+<tr><td><strong>Líneas de artículos</strong></td><td>Se añaden con el lector o búsqueda, igual que en Ventas.</td></tr>
+<tr><td><strong>Importe traspaso</strong></td><td>Valoración de la mercancía traspasada.</td></tr>
+</tbody>
+</table>
+<p><strong>Modos de trabajo:</strong></p>
+<ul><li><strong>F6 — Solicitar a otro almacén:</strong> crea una <strong>solicitud</strong> de género a</li></ul>
+<p>  otra tienda/almacén (pendiente de que la atiendan).</p>
+<ul><li><strong>F8 — Atender solicitudes:</strong> muestra las solicitudes recibidas para</li></ul>
+<p>  <strong>prepararlas y enviarlas</strong>.</p>
+<p><strong>Cierre:</strong> <strong>F12 Con ticket</strong> (imprime justificante del traspaso) o
+<strong>F11 Sin ticket</strong>.</p>
+<hr>
+<h3 id="entrada-de-cambio-f6">Entrada de Cambio (F6)</h3>
+<p>Registra el <strong>efectivo de cambio</strong> que se introduce en el cajón al empezar
+la jornada (o un refuerzo de cambio a mitad de día). Este importe se tiene
+en cuenta en el arqueo como entrada de efectivo.</p>
+<p><img src="img/05-caja-entrada-cambio.png" alt="Entrada de cambio" loading="lazy">
+<em>▢ Captura pendiente — Modal de Entrada de Cambio.</em></p>
+<hr>
+<h3 id="gastos-por-caja-f7">Gastos por caja (F7)</h3>
+<p>Registra <strong>pagos en efectivo</strong> hechos desde el cajón (mensajería, compras
+menores…). Restan efectivo en el arqueo y quedan en el histórico de pagos.</p>
+<p><img src="img/05-caja-gastos.png" alt="Gastos por caja" loading="lazy">
+<em>▢ Captura pendiente — Modal de Gastos por caja.</em></p>
+<hr>
+<h3 id="buscar-modificar-f10">Buscar / Modificar (F10)</h3>
+<p>Abre la pantalla <strong>«Buscar operaciones»</strong> para localizar cualquier
+operación de la caja y revisarla o corregirla.</p>
+<p><img src="img/05-caja-buscar.png" alt="Buscar operaciones" loading="lazy">
+<em>▢ Captura pendiente — Buscar operaciones con el detalle de pagos.</em></p>
+<p><strong>Filtros:</strong> <strong>Fecha</strong> de caja y campo <strong>Buscar</strong> (texto libre: cliente,
+importe, nº de documento…).</p>
+<p><strong>Rejilla de resultados:</strong> Fecha/Hora, <strong>Nº Operación</strong>, <strong>Tipos</strong> (venta,
+devolución, gasto, traspaso…), <strong>Serie</strong> y <strong>Nº Factura</strong>, <strong>Cliente</strong> y
+Razón social, <strong>Importe</strong>, <strong>Empleado</strong> y <strong>Conceptos</strong>.</p>
+<p><strong>Detalle de la operación seleccionada</strong>, en dos pestañas:</p>
+<ul><li><strong>Operación</strong> — tipo, importe, concepto, id de depósito, documento de</li></ul>
+<p>  referencia (serie/nº), y en devoluciones el <strong>motivo</strong> y su estado.</p>
+<ul><li><strong>Pagos</strong> — desglose por forma de pago: línea, código, forma de pago,</li></ul>
+<p>  <strong>Entregado</strong>, <strong>Cambio</strong> y <strong>Neto</strong>.</p>
+<blockquote><p>Requiere tener una <strong>caja seleccionada</strong> (empresa/almacén/caja); si no,
+la aplicación pide seleccionarla antes de buscar.</p></blockquote>
+<hr>
+<h3 id="arqueo-f11">Arqueo (F11)</h3>
+<p>El <strong>arqueo</strong> es el cierre y cuadre de la caja: calcula lo que <strong>debería
+haber</strong> en el cajón y lo compara con lo que se cuenta físicamente.</p>
+<p><img src="img/05-caja-arqueo.png" alt="Arqueo de caja" loading="lazy">
+<em>▢ Captura pendiente — Arqueo de caja con el desglose en cascada.</em></p>
+<p><strong>Periodo:</strong> se arquea entre <strong>Fecha desde (F10)</strong> y <strong>Fecha hasta (F6)</strong>
+(normalmente la jornada en curso).</p>
+<p><strong>El desglose en cascada</strong> muestra cómo se llega al saldo:</p>
+<pre><code>Líneas artículos      + Bruto − Descuento                = Bruto
+Operaciones           Ventas Normales + Ventas Préstamos
+                      − Devoluciones                     = Total Ventas
+Cobros                − Vales recogidos + Vales emitidos
+                      + Cobros clientes − Pendiente cobro = Ingresos caja
+Efectivo              + Efectivo entradas − Efectivo salidas
+                      + Efectivo anterior                = Efectivo en caja
+                      + Otros (tarjetas, bonos, divisa, cripto)
+                                                         = Saldo a recontar</code></pre>
+<p><strong>Pestaña «Resúmenes»:</strong> neto de ventas <strong>por empleado</strong> (unidades y neto)
+y <strong>por forma de pago</strong> (unidades e importe) — útil para comisiones y para
+cuadrar el datáfono.</p>
+<p><strong>Botones:</strong></p>
+<table>
+<thead><tr>
+<th>Tecla</th>
+<th>Función</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>F5</strong></td><td><strong>Recalcular</strong> el arqueo tras cambiar fechas.</td></tr>
+<tr><td><strong>F11</strong></td><td><strong>Imprimir</strong> el arqueo.</td></tr>
+<tr><td><strong>F8</strong></td><td><strong>Histórico</strong> de arqueos anteriores.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Haz el arqueo <strong>al cierre de cada jornada</strong>. El «Efectivo anterior» enlaza
+con el arqueo previo, de modo que los descuadres no se arrastran sin ser
+detectados.</p></blockquote>
+<hr>
+<h2 id="parametros-de-caja">Parámetros de Caja</h2>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[F5]</code></p>
+<p>Configuración del comportamiento del TPV: caja por defecto, impresora de
+tickets, formas de pago habilitadas, textos del ticket, redondeos, etc.
+Normalmente lo configura el responsable al instalar la tienda.</p>
+<p><img src="img/05-caja-parametros.png" alt="Parámetros de Caja" loading="lazy">
+<em>▢ Captura pendiente — Parámetros de Caja.</em></p>
+<hr>
+<h2 id="formas-de-pago-caja">Formas de Pago Caja</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[Q]</code></p>
+<p>Define las <strong>formas de pago admitidas en el TPV</strong> y cómo se comporta cada
+una en el cobro y en el arqueo.</p>
+<p><img src="img/05-caja-formas-pago.png" alt="Formas de Pago Caja" loading="lazy">
+<em>▢ Captura pendiente — Mantenimiento de Formas de Pago Caja.</em></p>
+<p>Campos de cada forma de pago:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Código / Descripción / Activo</strong></td><td>Identificación de la forma de pago.</td></tr>
+<tr><td><strong>Orden F12</strong></td><td>Posición en la pantalla de cobro (la primera es la que se propone al pulsar F12).</td></tr>
+<tr><td><strong>Pide Referencia</strong></td><td>Al cobrar exige una referencia (nº de bono, autorización de tarjeta…).</td></tr>
+<tr><td><strong>Devuelve Cambio</strong></td><td>Permite dar cambio (típico del efectivo; una tarjeta no lo permite).</td></tr>
+<tr><td><strong>Abre Cajón</strong></td><td>Abre el cajón portamonedas al cobrar.</td></tr>
+<tr><td><strong>% Comisión / Comisión Incl.</strong></td><td>Comisión de la forma de pago (p. ej. TPV bancario) y si está incluida.</td></tr>
+<tr><td><strong>Divisa</strong></td><td>Es una moneda extranjera (USD, GBP…).</td></tr>
+<tr><td><strong>Cripto / Red y Hash Blockchain</strong></td><td>Es una criptomoneda; registra la red y el hash de la transacción.</td></tr>
+</tbody>
+</table>
+<blockquote><p>En el arqueo, las formas que no son efectivo se agrupan en
+<strong>«Otros (tarjetas, bonos, divisa, cripto)»</strong> para el recuento.</p></blockquote>
+<hr>
+<h2 id="depositos-de-clientes">Depósitos de Clientes</h2>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[D]</code></p>
+<p>Gestiona los <strong>depósitos/anticipos</strong> de clientes: dinero entregado a cuenta
+(señales, reservas) que luego se aplica a una venta (tecla <strong>F2 Cargar
+cta.</strong> en el TPV). Lleva el saldo disponible por cliente.</p>
+<p><img src="img/05-caja-depositos.png" alt="Depósitos de clientes" loading="lazy">
+<em>▢ Captura pendiente — Depósitos de Clientes.</em></p>
+<hr>
+<h2 id="historico-de-pagos-de-caja">Histórico de Pagos de Caja</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[J]</code></p>
+<p>Consulta de todos los <strong>cobros y pagos</strong> registrados en la caja, con sus
+formas de pago e importes. Permite filtrar por fechas y revisar el detalle
+del efectivo movido.</p>
+<p><img src="img/05-caja-hist-pagos.png" alt="Histórico de pagos" loading="lazy">
+<em>▢ Captura pendiente — Histórico de Pagos de Caja.</em></p>
+<hr>
+<h2 id="historico-de-vales">Histórico de Vales</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[V]</code></p>
+<p>Consulta de los <strong>vales</strong> emitidos (por devoluciones de cliente sin
+reembolso en efectivo) y su estado (pendiente, canjeado, caducado).</p>
+<p><img src="img/05-caja-hist-vales.png" alt="Histórico de vales" loading="lazy">
+<em>▢ Captura pendiente — Histórico de Vales.</em></p>
+<hr>
+<h2 id="historico-de-operaciones">Histórico de Operaciones</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[O]</code></p>
+<p>Consulta del <strong>registro completo de operaciones</strong> del TPV: ventas,
+devoluciones, entradas de cambio, gastos, traspasos… con su trazabilidad.
+Es la vista de auditoría de la actividad de caja.</p>
+<p><img src="img/05-caja-hist-operaciones.png" alt="Histórico de operaciones" loading="lazy">
+<em>▢ Captura pendiente — Histórico de Operaciones.</em></p>
+<hr>
+<h2 id="historico-de-arqueos">Histórico de Arqueos</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[A]</code></p>
+<p>Consulta de los <strong>arqueos</strong> (cierres de caja) realizados: efectivo contado,
+descuadres, fecha, usuario. Permite revisar el cuadre de cada jornada.
+También accesible desde el propio arqueo con <strong>F8</strong>.</p>
+<p><img src="img/05-caja-hist-arqueos.png" alt="Histórico de arqueos" loading="lazy">
+<em>▢ Captura pendiente — Histórico de Arqueos.</em></p>
+<hr>
+<h2 id="facturas-simplificadas">Facturas Simplificadas</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[F]</code></p>
+<p>Mantenimiento de las <strong>Facturas Simplificadas (tickets)</strong> generadas en
+caja. Permite consultarlas, reimprimirlas y, cuando proceda, <strong>convertir un
+ticket en factura ordinaria</strong> a nombre del cliente. Como el resto de
+documentos de venta, se comunican a <strong>Verifactu</strong>.</p>
+<p><img src="img/05-caja-fac-simplificadas.png" alt="Facturas simplificadas" loading="lazy">
+<em>▢ Captura pendiente — Mantenimiento de Facturas Simplificadas.</em></p>
+<hr>
+<p><a href="04-menu-ventas-mayor.html">◀ Menú Ventas Mayor</a> · <a href="index.html">Índice</a> · <a href="06-menu-almacen.html">Siguiente ▶ Menú Almacén</a></p>
+</article>
+<footer>Manual de Factuzam · generado el 12/06/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+</script>
+</body>
+</html>

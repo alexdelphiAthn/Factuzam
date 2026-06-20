@@ -78,7 +78,7 @@ CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 CursorX=38
 CursorY=6
-TopLine=1
+TopLine=8
 LeftCol=1
 Elisions=
 Bookmarks=
@@ -98,8 +98,8 @@ EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFacturarTicke
 [View3]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
-CursorX=42
-CursorY=14
+CursorX=46
+CursorY=8
 TopLine=1
 LeftCol=1
 Elisions=
@@ -258,7 +258,7 @@ SplitPos=135
 [PropInspDesignerSelection]
 ArrangeBy=Name
 SelectedItem=Action,
-ExpandedItems=DefaultTransaction=0,"LiveBindings Designer=0",Options=0,Anchors=0,BorderIcons=0
+ExpandedItems=Anchors=0,BorderIcons=0
 
 [frmDesignPreview]
 PercentageSizes=1

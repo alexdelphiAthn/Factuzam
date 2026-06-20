@@ -295,9 +295,10 @@ begin
   // El ORDEN importa: el listado se ejecuta de arriba a abajo y las
   // dependencias (articulos necesita familias, skus necesitan
   // articulos, etc.) deben respetarse.
-  // NOTA: formas_pago, grupos de IVA y tipos de IVA NO se migran;
-  // los IVAs ya estan correctamente definidos en la BBDD demo y
-  // las formas de pago no son necesarias en este momento.
+  // NOTA: formas_pago, grupos de IVA y tipos de IVA NO se migran.
+  // Los IVAs ya estan definidos en el destino; los mappers conservan
+  // el codigo legacy TipoEfecto en clientes/proveedores/documentos
+  // para enlazar con las formas de pago ya cargadas.
   FEngine.Registrar('empresas', 'Empresas',
     'dbo.ocemp → fza_empresas',
     MigrarEmpresas);
@@ -311,7 +312,7 @@ begin
     'dbo.occli → fza_clientes',
     MigrarClientes);
   FEngine.Registrar('proveedores', 'Proveedores',
-    'dbo.ocpro → fza_proveedores (requiere columna NOMBRE_PRV)',
+    'dbo.ocpro → fza_proveedores (NOMBRE_PRV; CODIGO_FP_PRV si existe)',
     MigrarProveedores);
   FEngine.Registrar('familias', 'Familias de artículo',
     'dbo.ocniv (Nivel 2+4) → fza_articulos_familias',

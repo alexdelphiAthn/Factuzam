@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Menú Ventas Mayor — Manual de Factuzam</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual de usuario</span></div>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li class="activo"><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="04-menu-ventas-mayor">04 · Menú Ventas Mayor</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Ventas Mayor</strong> gestiona la <strong>venta al por mayor</strong> (B2B): ventas a
+otros comercios o clientes con factura nominativa, a diferencia de la venta
+al detalle en tienda, que se hace desde el módulo
+<a href="05-menu-caja.html">Caja</a>.</p>
+<p>Estructura del menú:</p>
+<pre><code>Ventas Mayor
+├── Facturas
+├── Formas de pago
+├── Pedidos
+├── Albaranes
+└── Listados
+    └── Ventas</code></pre>
+<blockquote><p>Flujo habitual de venta a mayor:
+<strong>Pedido</strong> del cliente → <strong>Albarán</strong> de salida (sale el stock) →
+<strong>Factura</strong> (documento fiscal). Se puede facturar albarán a albarán o
+agrupar varios albaranes en una sola factura.</p></blockquote>
+<hr>
+<h2 id="facturas">Facturas</h2>
+<p><img src="img/04-facturas.png" alt="Factura de venta: cabecera, líneas y totales" loading="lazy">
+<em>▢ Captura pendiente — Factura de venta: cabecera, líneas y totales.</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[F]</code></p>
+<p>Mantenimiento de <strong>Facturas de Venta (Venta Mayor)</strong>. Es el documento
+fiscal de venta. Cada factura lleva:</p>
+<ul><li><strong>Cabecera</strong>: cliente, fecha, <strong>serie</strong> y número (según los contadores de</li></ul>
+<p>  la empresa), forma de pago, vencimientos.</p>
+<ul><li><strong>Líneas</strong>: artículos/SKU, cantidades, precio (tomado de la <strong>tarifa</strong></li></ul>
+<p>  del cliente), descuentos.</p>
+<ul><li><strong>Totales e impuestos</strong>: base, IVA por tipo, recargo de equivalencia y</li></ul>
+<p>  retenciones según la configuración fiscal del <strong>cliente</strong> y la
+  <strong>empresa</strong>.</p>
+<p>Las facturas se firman y comunican a <strong>Verifactu (AEAT)</strong> según la
+configuración de certificado de la empresa (ver
+<a href="02-menu-archivo.html#empresas">Empresas</a>).</p>
+<blockquote><p>Una factura puede crearse manualmente o <strong>a partir de albaranes</strong>
+pendientes de facturar (incluso agrupando varios albaranes de un cliente
+en un rango de fechas).</p></blockquote>
+<hr>
+<h2 id="formas-de-pago">Formas de pago</h2>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[G]</code></p>
+<p>Acceso al catálogo de <strong>formas de pago</strong> (el mismo descrito en
+<a href="03-menu-compras.html#formas-de-pago">Compras ▸ Formas de pago</a>), aquí
+enfocado a su uso en ventas: condiciones de cobro, vencimientos y forma de
+pago por defecto que se propone a los clientes.</p>
+<hr>
+<h2 id="pedidos">Pedidos</h2>
+<p><img src="img/04-pedidos.png" alt="Pedidos de venta" loading="lazy">
+<em>▢ Captura pendiente — Pedidos de venta.</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[P]</code></p>
+<p>Mantenimiento de <strong>Pedidos de Venta</strong>. Registra lo que un cliente
+<strong>encarga</strong> (reserva de género). No mueve stock; sirve de base para generar
+el <strong>albarán</strong> de salida cuando se sirve el pedido.</p>
+<hr>
+<h2 id="albaranes">Albaranes</h2>
+<p><img src="img/04-albaranes.png" alt="Albaranes de venta" loading="lazy">
+<em>▢ Captura pendiente — Albaranes de venta.</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[A]</code></p>
+<p>Mantenimiento de <strong>Albaranes de Venta</strong>. Registra la <strong>salida real</strong> de
+mercancía hacia el cliente: al confirmarlo <strong>resta stock</strong> del almacén. Es
+el documento que después se <strong>factura</strong>.</p>
+<hr>
+<h2 id="listados-ventas">Listados ▸ Ventas</h2>
+<p><img src="img/04-listado-ventas.png" alt="Filtros del listado de ventas" loading="lazy">
+<em>▢ Captura pendiente — Filtros del listado de ventas.</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[V]</code></p>
+<p>Abre el <strong>generador de listados de ventas</strong>. Mediante un cuadro de
+<strong>filtros</strong> (rango de fechas, cliente, artículo, familia, serie…) genera un
+informe de las ventas realizadas, que se puede <strong>previsualizar, imprimir o
+exportar</strong>.</p>
+<p>Útil para análisis comercial: qué se ha vendido, a quién y en qué periodo.</p>
+<hr>
+<p><a href="03-menu-compras.html">◀ Menú Compras</a> · <a href="index.html">Índice</a> · <a href="05-menu-caja.html">Siguiente ▶ Menú Caja</a></p>
+</article>
+<footer>Manual de Factuzam · generado el 12/06/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+</script>
+</body>
+</html>

@@ -73,7 +73,17 @@ si el legacy la trae a 0). Los totales (`TOTAL_BASES`, `TOTAL_IMPUESTOS`,
 `TOTAL_LIQUIDO`) salen de los importes del propio documento legacy
 (`ImpBaseImp`, `TotalIVA`, `ImpPedido`/`ImpAlbaran`). En compra **no** hay
 recargo de equivalencia en la cabecera. Cada línea lleva su `PORCENTAJE_IVA` y
-`TIPO_IVA_ARTICULO='N'` (literal, igual que artículos y facturas).
+su `TIPO_IVA_ARTICULO` clasificado desde ese porcentaje (`0`=Exento, `<6`=
+Super, `<13`=Reducido, resto=Normal). Esto es importante porque las facturas
+de compra generadas desde albarán copian ese campo de la línea del albarán.
+
+## Forma de pago
+
+Pedidos y albaranes guardan `FORMA_PAGO_*` con el código legacy `TipoEfecto`
+cuando viene informado. Si no hay `TipoEfecto`, se conserva el texto histórico
+`FormaPago` como fallback. Las facturas de compra generadas desde albarán
+copian `FORMA_PAGO_ALBC` a `FORMA_PAGO_FACC`, y los efectos usan ese valor para
+repartir vencimientos.
 
 ## Estado
 

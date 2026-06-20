@@ -135,6 +135,9 @@ de este branch ya las traen:
 |--------------|----------------------------------------------------|
 | Proveedores  | `DESARROLLOS EN CURSO/proveedores_nombre.sql`      |
 |              | (añade `fza_proveedores.NOMBRE_PRV varchar(200)`)  |
+| Proveedores  | `DESARROLLOS EN CURSO/proveedores_pagos_defecto.sql` |
+|              | (añade `CODIGO_FP_PRV` y `CODIGO_EMPBAN_PRV`; el   |
+|              | migrador rellena `CODIGO_FP_PRV` desde `ocpro.TipoEfecto`) |
 | Clientes     | `DESARROLLOS EN CURSO/widen_codigo_cli.sql`        |
 |              | (amplía `CODIGO_CLI_*` de varchar(10) a varchar(20)|
 |              | en clientes, facturas, albaranes y pedidos —       |
