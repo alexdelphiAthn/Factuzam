@@ -94,6 +94,7 @@ uses
   inMtoModalImpBalanceSinTallas in 'src\Modals\inMtoModalImpBalanceSinTallas.pas' {frmPrintBalanceSinTallas},
   inMtoModalImpMovVentasArt in 'src\Modals\inMtoModalImpMovVentasArt.pas' {frmPrintMovVentasArt},
   inMtoModalImpDocsProveedor in 'src\Modals\inMtoModalImpDocsProveedor.pas' {frmPrintDocsProveedor},
+  inMtoModalImpEfectosPago in 'src\Modals\inMtoModalImpEfectosPago.pas' {frmPrintEfectosPago},
   inMtoSplash in 'src\Core\inMtoSplash.pas' {frmSplash},
   UniDataConn in 'src\DataModules\UniDataConn.pas' {dmConn: TDataModule},
   UniDataGen in 'src\DataModules\UniDataGen.pas' {dmBase: TDataModule},

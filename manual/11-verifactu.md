@@ -6,14 +6,22 @@
 sistemas de facturación verificables (SIF) del **RD 1007/2023**. Con
 Verifactu activo, cada factura o ticket que emite Factuzam:
 
-- se imprime con un **código QR tributario** y la leyenda *«VERI*FACTU -
-  Factura verificable en la sede electrónica de la AEAT»*;
+- se imprime con un **código QR tributario** y la leyenda `VERI*FACTU -
+  Factura verificable en la sede electrónica de la AEAT`;
 - se **comunica automáticamente a la AEAT** en segundo plano, encadenada
   con las anteriores mediante una **huella SHA-256** que garantiza que no
   se pueden alterar ni borrar facturas.
 
 Este capítulo explica cómo se configura, cómo trabaja de forma automática y
 qué acciones fiscales (anular, rectificar, subsanar…) tienes disponibles.
+
+Factuzam trabaja con tres **modos fiscales**:
+
+| Modo | Uso |
+|------|-----|
+| **SIN** | Periodo transitorio o demo: no crea registro SIF ni cola AEAT. |
+| **VERIFACTU** | Envía los registros a la AEAT mediante la cola. |
+| **NO_VERIFACTU** | Registra localmente la cadena y permite exportar XML de eventos y facturación; debe firmarse con certificado. |
 
 > Verifactu es un subsistema **transversal**: afecta a las
 > [Facturas de venta](04-menu-ventas-mayor.md), a las
@@ -67,7 +75,7 @@ En *Otros ▸ Parámetros del entorno*, categoría **Verifactu**:
 
 | Parámetro | Significado |
 |-----------|-------------|
-| **Activo** | Interruptor general de Verifactu. Se puede activar/desactivar **en caliente**, sin reiniciar. |
+| **Modo fiscal** | `SIN`, `VERIFACTU` o `NO_VERIFACTU`. Solo debe cambiarlo un administrador. |
 | **Entorno** | `PRE` (pruebas de la AEAT) o `PRO` (producción real). |
 | **NIF del SIF** | NIF del sistema informático de facturación. **Obligatorio**: si está vacío, la AEAT rechaza con el error «[1100] NIF» (ver [diagnóstico](#6-diagnostico-de-problemas-frecuentes)). |
 | **Razón social del SIF** | Nombre/razón del productor del sistema. |
@@ -75,6 +83,8 @@ En *Otros ▸ Parámetros del entorno*, categoría **Verifactu**:
 | **Segundos de ciclo** | Cada cuánto el proceso de envío revisa la cola (por defecto 60 s). |
 | **Máx. intentos** | Reintentos antes de marcar una factura como `ERROR` (por defecto 10). |
 | **URLs de QR y de envío** (PRE/PRO) | Direcciones de la AEAT para el cotejo del QR y para el envío; vienen rellenas por defecto. |
+| **Firma con certificado** | En modo `NO_VERIFACTU`, firma los registros locales con XAdES usando el certificado de la empresa. |
+| **Servidores NTP / margen reloj** | Control de hora fiscal para bloquear registros si el reloj del equipo no es fiable. |
 
 > Cambia primero a **`PRE`** para probar contra el entorno de pruebas de la
 > AEAT. En PRE, el NIF del obligado debe estar dado de alta en el censo de
@@ -83,8 +93,14 @@ En *Otros ▸ Parámetros del entorno*, categoría **Verifactu**:
 
 ### 2.3 Activación
 
-Marca **Activo** en los parámetros. A partir de ese momento, las nuevas
-ventas y facturas se imprimen con QR y se encolan automáticamente.
+Selecciona el **modo fiscal**:
+
+- En **VERIFACTU**, las nuevas ventas y facturas se imprimen con QR y se
+  encolan automáticamente.
+- En **NO_VERIFACTU**, se registra y firma localmente la cadena. No hay
+  cola AEAT, pero se pueden exportar los XML exigidos.
+- En **SIN**, el sistema permite trabajar sin cierre SIF durante el
+  periodo transitorio o para pruebas.
 
 ---
 
@@ -144,11 +160,18 @@ Solo lectura.
 ![Verifactu Log](img/11-log.png)
 *▢ Captura pendiente — Log de eventos con la cadena de hashes.*
 
+En modo **NO_VERIFACTU**, el botón `Exportar NO*VF` genera dos ficheros
+XML: registro de eventos y registro de facturación. La exportación solo
+empaqueta registros ya generados; no crea la trazabilidad en ese momento.
+
+![Exportación NO VERIFACTU](img/11-exportar-noverifactu.png)
+*▢ Captura pendiente — Botón de exportación NO VERIFACTU y diálogo de guardado de XML.*
+
 ---
 
 ## 4. Verifactu en la ficha de la factura
 
-Al abrir una factura (normal o simplificada) dispones de dos pestañas y un
+Al abrir un borrador normal o simplificado dispones de dos pestañas y un
 botón específicos:
 
 - **Pestaña Verifactu** — muestra el resultado de la comunicación: el **QR**
@@ -161,22 +184,31 @@ botón específicos:
 - Botón **Consolidar** — fuerza el registro/comunicación de la factura a
   Verifactu (normalmente no hace falta: la cola lo hace sola).
 
+En la pestaña **Otros** se puede indicar el **tipo de operación
+Verifactu** cuando no es una venta interior general: servicio
+intracomunitario, entrega intracomunitaria, inversión del sujeto pasivo o
+exportación. Para clientes extranjeros, la aplicación usa los datos de país
+y NIF-IVA/documento para construir el destinatario correcto.
+
+![Tipo de operación Verifactu en borradores](img/11-tipo-operacion.png)
+*▢ Captura pendiente — Pestaña Otros de un borrador con el selector de tipo de operación Verifactu.*
+
 ![Pestaña Verifactu de una factura](img/11-factura-verifactu.png)
 *▢ Captura pendiente — Pestaña Verifactu de la factura (QR, URL, hash, estado).*
 
-> Una factura **consolidada** (`ESCONSOLIDADA = S`) ya está registrada en la
-> AEAT y **no se puede modificar ni borrar**: cualquier corrección se hace
-> con una **rectificativa** o una **anulación** (ver abajo). Es el principio
-> de inalterabilidad de Verifactu.
+> Un borrador **consolidado** (`ESCONSOLIDADA = S`) ya tiene cierre fiscal
+> y **no se puede modificar ni borrar**: cualquier corrección se hace con
+> una **rectificativa** o una **anulación** (ver abajo). Es el principio de
+> inalterabilidad del SIF.
 
 ---
 
 ## 5. Acciones fiscales sobre una factura emitida
 
 Como una factura registrada no se puede tocar, Verifactu ofrece distintos
-caminos según lo que necesites. Están disponibles en la lista de **Facturas
-(Buscar/Modificar)** y en **Buscar operaciones** del TPV de Caja, siempre
-sobre una factura **ya consolidada**:
+caminos según lo que necesites. Están disponibles en la lista de
+**Borradores** y en **Buscar operaciones** del TPV de Caja, siempre
+sobre un documento **ya consolidado**:
 
 | Necesitas… | Acción | Qué hace |
 |------------|--------|----------|
@@ -190,9 +222,10 @@ sobre una factura **ya consolidada**:
 *▢ Captura pendiente — Botones Consolidar / Anular / Subsanar / Rectificar / Facturar ticket.*
 
 Cada una de estas operaciones **se vuelve a encolar** y se comunica a la
-AEAT igual que un alta normal, conservando la **trazabilidad** (qué factura
-rectifica o sustituye a cuál). La lista de facturas muestra además una
-columna **«Cola Verifactu»** con el último estado de cada factura.
+AEAT en modo `VERIFACTU`, o se registra localmente en modo `NO_VERIFACTU`,
+conservando la **trazabilidad** (qué documento rectifica o sustituye a
+cuál). La lista muestra además una columna **«Cola Verifactu»** con el
+último estado cuando aplica.
 
 > **Anular** ≠ **Rectificar**: anular elimina fiscalmente la factura;
 > rectificar la corrige emitiendo otra que la referencia. Para un cambio de
@@ -214,7 +247,7 @@ Envíos* y lee el **mensaje de error** de la fila. Causas habituales:
   relación con el certificado.
 
 Tras corregir la causa, **relanza** el envío editando la fila en la cola
-(estado → `PENDIENTE`, intentos → 0) o súbe el parámetro de máximo de
+(estado → `PENDIENTE`, intentos → 0) o sube el parámetro de máximo de
 intentos: el proceso revive solo las filas en `ERROR` que aún tengan
 intentos disponibles.
 

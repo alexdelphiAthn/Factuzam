@@ -109,6 +109,27 @@ En artículos y documentos aparecen además botones específicos:
 > (botón **Grabar registro** del navegador) y `[Alt]+[G]` (botón
 > **Grabar** de acción, ver abajo).
 
+### Foto flotante del artículo / SKU
+
+`[Ctrl]+[F]` abre una ventana flotante con la foto del artículo o SKU que
+esté activo en la pantalla. Si cambias de pestaña, de documento o de línea,
+la ventana sigue al registro seleccionado.
+
+![Foto flotante del artículo o SKU](img/01-foto-articulo.png)
+*▢ Captura pendiente — Ventana flotante de foto con selector de resolución y botones de cambio.*
+
+Desde esa ventana puedes:
+
+- Ver la foto en resolución **300**, **600** o **real**.
+- Cambiar la foto del artículo o del SKU/nivel de color seleccionado.
+- Quitar o rotar la foto.
+- Bajar fotos del servidor si la instalación tiene configurada la descarga
+  en la categoría **Fotos** de parámetros.
+
+> Las fotos se guardan en la carpeta configurada en `appDirFotos`. En
+> instalaciones con varios puestos conviene que sea una ruta compartida en
+> red para que todos vean las mismas imágenes.
+
 ---
 
 ## 3. Botones de acción
@@ -195,6 +216,8 @@ junto a cada opción en los capítulos siguientes.
 | Artículos | `[Ctrl]+[A]` |
 | Tarifas | `[Ctrl]+[T]` |
 | Familias | `[Ctrl]+[N]` |
+| Paises | `[Ctrl]+[Alt]+[L]` |
+| Unidades de Medida | `[Ctrl]+[Alt]+[U]` |
 | Propiedades | `[Ctrl]+[Alt]+[Y]` |
 | Tipos de Variaciones | `[Ctrl]+[Alt]+[T]` |
 | Colecciones de Atributos | `[Ctrl]+[Alt]+[S]` |
@@ -209,13 +232,14 @@ junto a cada opción en los capítulos siguientes.
 | Sesiones (crear artículos y documento) | `[Ctrl]+[S]` |
 | Pedidos | `[Shift]+[Ctrl]+[P]` |
 | Albaranes | `[Shift]+[Ctrl]+[A]` |
-| Facturas | `[Shift]+[Ctrl]+[Alt]+[F]` |
+| Borradores de compra | `[Shift]+[Ctrl]+[Alt]+[F]` |
+| Efectos de pago | `[Ctrl]+[Alt]+[C]` |
 
 ### Ventas Mayor
 
 | Pantalla | Atajo |
 |----------|-------|
-| Facturas | `[Ctrl]+[Alt]+[F]` |
+| Borradores | `[Ctrl]+[Alt]+[F]` |
 | Pedidos | `[Ctrl]+[Alt]+[P]` |
 | Albaranes | `[Ctrl]+[Alt]+[A]` |
 | Listados de ventas | `[Ctrl]+[Alt]+[V]` |
@@ -231,8 +255,8 @@ junto a cada opción en los capítulos siguientes.
 | Histórico de Pagos de Caja | `[Shift]+[Ctrl]+[J]` |
 | Histórico de Vales | `[Shift]+[Ctrl]+[V]` |
 | Histórico de Operaciones | `[Shift]+[Ctrl]+[O]` |
-| Histórico de Arqueos | `[Shift]+[Ctrl]+[A]` |
-| Facturas Simplificadas | `[Shift]+[Ctrl]+[F]` |
+| Histórico de Arqueos | `[Shift]+[Ctrl]+[H]` |
+| Borradores Simplificados | `[Shift]+[Ctrl]+[F]` |
 
 ### Almacén
 
@@ -251,6 +275,7 @@ junto a cada opción en los capítulos siguientes.
 | Contadores | `[Ctrl]+[R]` |
 | Formas de pago documentos | `[Shift]+[Ctrl]+[G]` |
 | Usuarios | `[Ctrl]+[H]` |
+| Empleados | `[Ctrl]+[Alt]+[E]` |
 | Grupos | `[Ctrl]+[J]` |
 | Perfiles | `[Ctrl]+[W]` |
 | Permisos | `[Ctrl]+[Q]` |
@@ -258,7 +283,7 @@ junto a cada opción en los capítulos siguientes.
 | Recuperar Copia de Seguridad | `[Ctrl]+[Z]` |
 | Generador de Procesos | `[Ctrl]+[G]` |
 
-## 7. Campos de auditoría
+## 8. Campos de auditoría
 
 Todos los registros guardan automáticamente **quién y cuándo** los creó y
 los modificó por última vez (instante de alta/modificación y usuario). No

@@ -18,7 +18,7 @@ Caja
 ├── Histórico de Vales
 ├── Histórico de Operaciones
 ├── Histórico de Arqueos
-└── Facturas Simplificadas
+└── Borradores Simplificados
 ```
 
 ---
@@ -70,8 +70,9 @@ Es la pantalla donde se hace el ticket. Arriba se indica el **Empleado**
 - Buscando el artículo manualmente con **Buscar (F3)**.
 
 Cada línea muestra: **Vend.** (vendedor de la línea), **Artículo**,
-**Descripción**, **Uds.**, **Precio**, **%** (descuento), **Menos**
-(importe descontado) y **Total**.
+**Descripción**, **Color/Talla** cuando procede, **Uds.**, **Precio**,
+**%** (descuento), **Menos** (importe descontado) y **Total**. Si el
+artículo tiene foto, se muestra en el panel lateral de stock/foto.
 
 **Teclas rápidas de la pantalla de Ventas:**
 
@@ -128,8 +129,9 @@ cada una. La aplicación calcula el cambio.
 | **Esc** | **Atrás** | Vuelve a la pantalla de venta sin cerrar el cobro. |
 
 > El **Nº de documento de venta** generado se muestra al cerrar. Las ventas
-> de caja generan **facturas simplificadas** (consultables en
-> [Facturas Simplificadas](#facturas-simplificadas)).
+> de caja generan **borradores simplificados** que se consolidan según el
+> modo fiscal configurado (consultables en
+> [Borradores Simplificados](#borradores-simplificados)).
 
 ---
 
@@ -250,6 +252,12 @@ cuadrar el datáfono.
 > con el arqueo previo, de modo que los descuadres no se arrastran sin ser
 > detectados.
 
+Desde **Histórico (F8)** puedes reimprimir duplicados del ticket de arqueo
+o del justificante de cierre ya grabado.
+
+![Histórico de arqueos desde el TPV](img/05-caja-arqueo-historico-tpv.png)
+*▢ Captura pendiente — Histórico de arqueos dentro del TPV con Duplicado ticket y Duplicado cierre.*
+
 ---
 
 ## Parámetros de Caja
@@ -355,19 +363,26 @@ También accesible desde el propio arqueo con **F8**.
 ![Histórico de arqueos](img/05-caja-hist-arqueos.png)
 *▢ Captura pendiente — Histórico de Arqueos.*
 
+Incluye el botón **Imprimir Informe A4**, que genera un informe horizontal
+por empresa, almacén, caja y rango de fechas. El formato se puede editar y
+guardar desde el diseñador de informes.
+
+![Informe A4 de histórico de arqueos](img/05-caja-hist-arqueos-informe.png)
+*▢ Captura pendiente — Filtro del informe A4 de arqueos con rango de fechas.*
+
 ---
 
-## Facturas Simplificadas
+## Borradores Simplificados
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[F]`
 
-Mantenimiento de las **Facturas Simplificadas (tickets)** generadas en
-caja. Permite consultarlas, reimprimirlas y, cuando proceda, **convertir un
-ticket en factura ordinaria** a nombre del cliente. Como el resto de
-documentos de venta, se comunican a **Verifactu**.
+Mantenimiento de los **Borradores Simplificados (tickets)** generados en
+caja. Permite consultarlos, reimprimirlos y, cuando proceda, **convertir un
+ticket en borrador normal** a nombre del cliente. Como el resto de
+documentos de venta, se consolidan según el modo fiscal configurado.
 
-![Facturas simplificadas](img/05-caja-fac-simplificadas.png)
-*▢ Captura pendiente — Mantenimiento de Facturas Simplificadas.*
+![Borradores simplificados](img/05-caja-borradores-simplificados.png)
+*▢ Captura pendiente — Mantenimiento de Borradores Simplificados.*
 
 ---
 

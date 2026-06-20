@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li class="activo"><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li class="activo"><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
 </nav>
 <main>
 <article>
@@ -29,7 +29,7 @@ simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).</p>
 ├── Histórico de Vales
 ├── Histórico de Operaciones
 ├── Histórico de Arqueos
-└── Facturas Simplificadas</code></pre>
+└── Borradores Simplificados</code></pre>
 <hr>
 <h2 id="menu-de-caja">Menú de Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[F5]</code></p>
@@ -72,8 +72,9 @@ seleccionada</strong> (empresa + almacén + caja).</p></blockquote>
 <p>  está optimizada para ráfagas de lector).</p>
 <ul><li>Buscando el artículo manualmente con <strong>Buscar (F3)</strong>.</li></ul>
 <p>Cada línea muestra: <strong>Vend.</strong> (vendedor de la línea), <strong>Artículo</strong>,
-<strong>Descripción</strong>, <strong>Uds.</strong>, <strong>Precio</strong>, <strong>%</strong> (descuento), <strong>Menos</strong>
-(importe descontado) y <strong>Total</strong>.</p>
+<strong>Descripción</strong>, <strong>Color/Talla</strong> cuando procede, <strong>Uds.</strong>, <strong>Precio</strong>,
+<strong>%</strong> (descuento), <strong>Menos</strong> (importe descontado) y <strong>Total</strong>. Si el
+artículo tiene foto, se muestra en el panel lateral de stock/foto.</p>
 <p><strong>Teclas rápidas de la pantalla de Ventas:</strong></p>
 <table>
 <thead><tr>
@@ -130,8 +131,9 @@ cada una. La aplicación calcula el cambio.</p>
 </tbody>
 </table>
 <blockquote><p>El <strong>Nº de documento de venta</strong> generado se muestra al cerrar. Las ventas
-de caja generan <strong>facturas simplificadas</strong> (consultables en
-<a href="#facturas-simplificadas">Facturas Simplificadas</a>).</p></blockquote>
+de caja generan <strong>borradores simplificados</strong> que se consolidan según el
+modo fiscal configurado (consultables en
+<a href="#borradores-simplificados">Borradores Simplificados</a>).</p></blockquote>
 <hr>
 <h3 id="traspasos-f3">Traspasos (F3)</h3>
 <p>Gestiona los <strong>traspasos de mercancía entre almacenes</strong> (entre tiendas, o
@@ -225,6 +227,10 @@ cuadrar el datáfono.</p>
 <blockquote><p>Haz el arqueo <strong>al cierre de cada jornada</strong>. El «Efectivo anterior» enlaza
 con el arqueo previo, de modo que los descuadres no se arrastran sin ser
 detectados.</p></blockquote>
+<p>Desde <strong>Histórico (F8)</strong> puedes reimprimir duplicados del ticket de arqueo
+o del justificante de cierre ya grabado.</p>
+<p><img src="img/05-caja-arqueo-historico-tpv.png" alt="Histórico de arqueos desde el TPV" loading="lazy">
+<em>▢ Captura pendiente — Histórico de arqueos dentro del TPV con Duplicado ticket y Duplicado cierre.</em></p>
 <hr>
 <h2 id="parametros-de-caja">Parámetros de Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[F5]</code></p>
@@ -298,15 +304,20 @@ descuadres, fecha, usuario. Permite revisar el cuadre de cada jornada.
 También accesible desde el propio arqueo con <strong>F8</strong>.</p>
 <p><img src="img/05-caja-hist-arqueos.png" alt="Histórico de arqueos" loading="lazy">
 <em>▢ Captura pendiente — Histórico de Arqueos.</em></p>
+<p>Incluye el botón <strong>Imprimir Informe A4</strong>, que genera un informe horizontal
+por empresa, almacén, caja y rango de fechas. El formato se puede editar y
+guardar desde el diseñador de informes.</p>
+<p><img src="img/05-caja-hist-arqueos-informe.png" alt="Informe A4 de histórico de arqueos" loading="lazy">
+<em>▢ Captura pendiente — Filtro del informe A4 de arqueos con rango de fechas.</em></p>
 <hr>
-<h2 id="facturas-simplificadas">Facturas Simplificadas</h2>
+<h2 id="borradores-simplificados">Borradores Simplificados</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[F]</code></p>
-<p>Mantenimiento de las <strong>Facturas Simplificadas (tickets)</strong> generadas en
-caja. Permite consultarlas, reimprimirlas y, cuando proceda, <strong>convertir un
-ticket en factura ordinaria</strong> a nombre del cliente. Como el resto de
-documentos de venta, se comunican a <strong>Verifactu</strong>.</p>
-<p><img src="img/05-caja-fac-simplificadas.png" alt="Facturas simplificadas" loading="lazy">
-<em>▢ Captura pendiente — Mantenimiento de Facturas Simplificadas.</em></p>
+<p>Mantenimiento de los <strong>Borradores Simplificados (tickets)</strong> generados en
+caja. Permite consultarlos, reimprimirlos y, cuando proceda, <strong>convertir un
+ticket en borrador normal</strong> a nombre del cliente. Como el resto de
+documentos de venta, se consolidan según el modo fiscal configurado.</p>
+<p><img src="img/05-caja-borradores-simplificados.png" alt="Borradores simplificados" loading="lazy">
+<em>▢ Captura pendiente — Mantenimiento de Borradores Simplificados.</em></p>
 <hr>
 <p><a href="04-menu-ventas-mayor.html">◀ Menú Ventas Mayor</a> · <a href="index.html">Índice</a> · <a href="06-menu-almacen.html">Siguiente ▶ Menú Almacén</a></p>
 </article>

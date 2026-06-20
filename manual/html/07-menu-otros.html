@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li class="activo"><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li class="activo"><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
 </nav>
 <main>
 <article>
@@ -47,6 +47,19 @@ avanzadas. Son opciones que usa principalmente el <strong>administrador</strong>
 configuración global de Factuzam: comportamiento por defecto, rutas,
 opciones de impresión y de documentos, valores predeterminados de la
 empresa de trabajo, etc.</p>
+<p>Categorías habituales:</p>
+<table>
+<thead><tr>
+<th>Categoría</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Directorios / Fotos</strong></td><td>Carpeta local o compartida de fotos (<code>appDirFotos</code>) y credenciales de descarga desde el servidor.</td></tr>
+<tr><td><strong>Recuentos</strong></td><td>URL, clave y carpeta de cliente del servidor de recuento móvil.</td></tr>
+<tr><td><strong>Verifactu</strong></td><td>Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj.</td></tr>
+<tr><td><strong>Caja</strong></td><td>Valores por defecto del TPV y comportamiento de arqueo.</td></tr>
+</tbody>
+</table>
 <blockquote><p>Son ajustes que afectan a <strong>toda la instalación</strong>. Cámbialos con
 conocimiento de causa; ante la duda, consulta con quien implantó la
 aplicación.</p></blockquote>
@@ -120,6 +133,11 @@ para un usuario o grupo.</p>
 desactiva, por grupo/usuario, el acceso a cada <strong>menú y acción</strong> de la
 aplicación. Es la forma recomendada de configurar la seguridad de forma
 visual.</p>
+<p>El árbol replica el menú real de la aplicación y permite trabajar por:</p>
+<ul><li><strong>Todos</strong>, grupo o usuario.</li><li>Permitir, denegar o heredar una rama completa.</li><li>Copiar permisos de un sujeto a otro, combinando o reemplazando.</li><li>Gestionar permisos de menú y permisos de pantalla: consultar, insertar,</li></ul>
+<p>  modificar, borrar, exportar a Excel e imprimir.</p>
+<blockquote><p>Los cambios de permisos se aplican en el próximo login del usuario
+afectado.</p></blockquote>
 <h3 id="permisos-tabla">Permisos (tabla)</h3>
 <p><em>(Sin atajo de menú; se abre desde el menú.)</em></p>
 <p>La misma información de permisos presentada en <strong>formato tabla</strong> (rejilla),
@@ -181,9 +199,7 @@ fichero). El menú contextual del editor ofrece además <em>Seleccionar Todo</em
      estructura del objeto al editor.</p>
 <ul><li><strong>Bonito</strong> reformatea el SQL para hacerlo legible.</li></ul>
 <ol><li>Pulsa <strong>Ejecutar (F5)</strong>:</li></ol>
-<ul><li>Si hay <strong>texto seleccionado</strong> en el editor, se ejecuta **solo la</li></ul>
-<p>     selección**; si no, se ejecuta todo el contenido.</p>
-<ul><li>El resultado se abre en <strong>3_VistaDatos</strong>, con el número de registros</li></ul>
+<ul><li>Si hay <strong>texto seleccionado</strong> en el editor, se ejecuta <strong>solo la selección</strong>; si no, se ejecuta todo el contenido.</li><li>El resultado se abre en <strong>3_VistaDatos</strong>, con el número de registros</li></ul>
 <p>     y el tiempo de ejecución en el panel de resultados.</p>
 <ol><li>Trabaja el resultado en la rejilla (ordenar, agrupar, filtrar) y</li></ol>
 <p>   sácalo con <strong>Exp. Excel</strong> (exporta a Excel) o <strong>Copiar Datos</strong>

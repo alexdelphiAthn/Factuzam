@@ -59,10 +59,16 @@ completa (dirección, población, provincia, código postal), Móvil, Email.
   Pesca).
 - **Series** — **series de numeración** de los documentos de la empresa
   (puedes añadir varias series de facturación).
+- **Bancos** — cuentas bancarias propias de la empresa. Se usan para
+  preseleccionar la cuenta de **cobro** en recibos de cliente y la cuenta de
+  **pago** en efectos/remesas de proveedor.
 - **Certificado / Verifactu** — *Número de Serie* y *Tipo de Certificado*
   para la firma y el envío de facturas al sistema **Verifactu (AEAT)**.
 - **Texto en Factura** — texto legal que se imprimirá en los documentos.
 - **Zona de IVA principal** — régimen de IVA por defecto de la empresa.
+
+![Pestaña Bancos de Empresas](img/02-empresas-bancos.png)
+*▢ Captura pendiente — Pestaña Bancos con IBAN, banco y marcas de cobro/pago por defecto.*
 
 > La configuración correcta de **NIF, series y certificado** es
 > imprescindible para emitir facturas válidas y para la integración con
@@ -110,6 +116,7 @@ Contacto y teléfono de contacto, Nº de cuenta.
 | Campo | Efecto |
 |-------|--------|
 | **Forma de pago por defecto** | Se propone automáticamente en sus documentos. |
+| **Banco cobro** | Cuenta de la empresa que se propone al generar recibos de cobro para este cliente. |
 | **Aplicar RE** | Aplica **Recargo de Equivalencia**. |
 | **Aplicar Retenciones** | Aplica retención de IRPF. |
 | **Tiene IVA exento** | El cliente no soporta IVA. |
@@ -142,6 +149,8 @@ Sub-pestañas de la ficha:
 - **Más datos** y **Otros** — información complementaria.
 - **Compras** — **parámetros por defecto para las sesiones de compra** de
   este proveedor (ver abajo).
+- **Pagos** — forma de pago habitual y banco de la empresa desde el que se
+  pagarán sus efectos o remesas.
 
 ### Pestaña Compras (parámetros de compra del proveedor)
 
@@ -157,7 +166,6 @@ repetirlos en cada entrada de género.
 | Campo | Para qué sirve |
 |-------|----------------|
 | **Margen %** | Margen comercial habitual de este proveedor. Al elegirlo en una sesión de compra, se copia como margen de la sesión y sirve para **calcular el precio de venta** a partir del precio de compra. |
-| **Sistema de tallas** | El **tallaje** (colección de atributos de tallas) con el que suele venir el género de este proveedor. Al crear la sesión, se usa como sistema de tallas de las columnas del grid, y cada línea nueva lo hereda. |
 
 > Estos valores solo **se proponen**; siempre puedes cambiarlos dentro de
 > la sesión. Solo se copian si el proveedor los tiene rellenos.
@@ -187,6 +195,19 @@ de presentación.
 > aplicas el surtido completo de golpe. Es ideal cuando el proveedor sirve
 > packs con un reparto de tallas estándar.
 
+### Pestaña Pagos
+
+Permite indicar los valores que se propondrán al registrar facturas de
+compra de este proveedor:
+
+| Campo | Para qué sirve |
+|-------|----------------|
+| **Forma de pago** | Se copia a la factura de compra y define los vencimientos al generar efectos. |
+| **Banco para pagos (empresa)** | Cuenta propia de la empresa que se preselecciona al generar efectos o incluirlos en remesas. |
+
+![Pestaña Pagos del proveedor](img/02-proveedores-pagos.png)
+*▢ Captura pendiente — Pestaña Pagos con forma de pago y banco de empresa por defecto.*
+
 ---
 
 ## Artículos
@@ -208,12 +229,19 @@ Sub-pestañas de la ficha:
   stock y código de barras. Existe un asistente para **generar SKUs** a
   partir de las variaciones definidas.
 - **Propiedades** — propiedades descriptivas asignadas al artículo.
+  Algunas propiedades pueden informarse por **artículo**, por **color** o
+  por **SKU**; si un color tiene una temporada distinta, el informe de
+  stock y las búsquedas usan la temporada efectiva de ese color.
 - **CB** — **códigos de barras** del artículo y sus SKUs.
 - **Tarifas** — precios del artículo en las distintas tarifas.
 - **Proveedores** — proveedores que lo suministran y sus referencias.
 
 Desde la lista/ficha puedes además consultar **stock** y la **foto** del
 artículo con los botones del navegador.
+
+La gestión de fotos trabaja a nivel artículo o SKU/color. Si un SKU no
+tiene foto propia, hereda la del nivel más cercano disponible. Las fotos
+se pueden usar también en tickets, listados y balances.
 
 > El concepto de **SKU** (variante de talla/color) es clave en Factuzam:
 > el stock, los precios y los códigos de barras se llevan a nivel de SKU,
@@ -240,6 +268,16 @@ Cada tarifa contiene los precios de los artículos.
 - **Artículos** — precios de cada artículo/SKU en esta tarifa. Incluye
   utilidades para **añadir precios** en bloque y **calcular márgenes**.
 - **Otros** — parámetros de la tarifa (vigencia, redondeos, etc.).
+- **Dto. desde / Dto. hasta** — ventana de fechas en la que se aplican los
+  descuentos de la tarifa. Fuera de esa ventana, se cobra el precio de
+  salida sin descuento aunque la línea de tarifa tenga descuento informado.
+
+El botón **Sesiones cambios** abre una pantalla para preparar cambios
+masivos de precios, revisar las líneas calculadas y aplicarlas a la tarifa
+destino cuando estén validadas.
+
+![Sesión de cambios de tarifa](img/02-tarifas-cambios.png)
+*▢ Captura pendiente — Sesión de cambios de tarifa con cabecera, líneas calculadas y botón Aplicar tarifa.*
 
 ### Familias
 
@@ -259,17 +297,21 @@ Permite agrupar el catálogo para informes, filtros y precios.
 
 ### Paises
 
-**Atajo de menú:** `[Ctrl]+[L]` *(compartido con Almacenes)*
+**Atajo de menú:** `[Ctrl]+[Alt]+[L]`
 
 Catálogo de **países** usado en las direcciones de clientes, proveedores y
 empresas (y para la clasificación fiscal intracomunitaria/extracomunitaria).
 
 ### Unidades de Medida
 
-*(Sin atajo de menú; se abre desde el menú.)*
+**Atajo de menú:** `[Ctrl]+[Alt]+[U]`
 
 Catálogo de **unidades** en que se compran/venden los artículos (unidad,
 par, caja, metro, kilo…).
+
+Cada unidad define los **decimales** que se muestran y se admiten al
+vender o mover stock. Por ejemplo, una unidad `Uds` puede trabajar sin
+decimales y una unidad `m` puede trabajar con dos decimales para telas.
 
 ### Propiedades
 
@@ -311,6 +353,12 @@ SKUs sin redefinirlos cada vez.
 
 Catálogo de los **atributos elementales** (los valores individuales de
 talla, color, etc.) que componen las variaciones y colecciones.
+
+Además del valor visible, cada atributo puede enlazarse con un
+**atributo básico** o equivalente estándar: color normalizado, medida en
+centímetros, paleta HEX, etc. Factuzam lo resuelve por prioridad:
+artículo, conjunto y valor global. Esto permite que el mismo texto de
+proveedor tenga equivalencias distintas según el artículo.
 
 > **Orden recomendado de configuración del catálogo:**
 > Unidades de Medida y Países → Familias → Atributos básicos → Tipos de

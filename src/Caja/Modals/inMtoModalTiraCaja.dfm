@@ -3,7 +3,7 @@ object frmModalTiraCaja: TfrmModalTiraCaja
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Tira de Caja'
-  ClientHeight = 220
+  ClientHeight = 352
   ClientWidth = 470
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -47,24 +47,56 @@ object frmModalTiraCaja: TfrmModalTiraCaja
     Transparent = True
     Width = 330
   end
+  object chkTraspasos: TcxCheckBox
+    Left = 110
+    Top = 144
+    Caption = 'Incluir traspasos salientes (origen)'
+    TabOrder = 2
+    Transparent = True
+    Width = 330
+  end
+  object chkIngresos: TcxCheckBox
+    Left = 110
+    Top = 176
+    Caption = 'Incluir ingresos por caja'
+    TabOrder = 3
+    Transparent = True
+    Width = 330
+  end
+  object chkGastos: TcxCheckBox
+    Left = 110
+    Top = 208
+    Caption = 'Incluir gastos por caja'
+    TabOrder = 4
+    Transparent = True
+    Width = 330
+  end
+  object chkCredito: TcxCheckBox
+    Left = 110
+    Top = 240
+    Caption = 'Incluir ventas a crédito (depósitos)'
+    TabOrder = 5
+    Transparent = True
+    Width = 330
+  end
   object btnImprimir: TcxButton
     Left = 110
-    Top = 160
+    Top = 292
     Width = 150
     Height = 40
     Caption = 'Imprimir'
     Default = True
     ModalResult = 1
-    TabOrder = 2
+    TabOrder = 6
   end
   object btnCancelar: TcxButton
     Left = 290
-    Top = 160
+    Top = 292
     Width = 150
     Height = 40
     Cancel = True
     Caption = 'Cancelar (ESC)'
     ModalResult = 2
-    TabOrder = 3
+    TabOrder = 7
   end
 end

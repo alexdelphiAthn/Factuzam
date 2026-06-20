@@ -15,7 +15,13 @@ Compras
 ├── Pedidos
 ├── Albaranes
 ├── Devoluciones a Proveedor
-└── Facturas
+├── Crear borradores de albaranes...
+├── Borradores
+├── Efectos de pago
+├── Remesas de pago
+├── Cargar efectos en remesa...
+└── Listados
+    └── Listado de documentos proveedor
 ```
 
 > Flujo habitual de compra:
@@ -62,10 +68,10 @@ SKUs, los códigos de barras y el **pedido y/o albarán de compra**.
 
 Puedes aceptar el precio propuesto o corregirlo línea a línea.
 
-> El **Margen %** y el **sistema de tallas** se **proponen
-> automáticamente** a partir de los
+> El **Margen %** se **propone automáticamente** a partir de los
 > [parámetros de compra del proveedor](02-menu-archivo.md#pestana-compras-parametros-de-compra-del-proveedor)
-> cuando lo eliges en la cabecera. Puedes sobrescribirlos en la sesión.
+> cuando lo eliges en la cabecera. El sistema de tallas se decide en cada
+> línea o al aplicar un kit de proveedor.
 
 ### 2. Pestaña «Líneas de Artículos»
 
@@ -86,12 +92,17 @@ Cada línea es un **artículo + color** con su escandallo de tallas:
 **Botones de la pestaña:**
 
 - **+ Añadir línea / − Borrar línea** — gestiona las líneas de la sesión.
-- **Otro color** — duplica la línea actual para meter el **mismo modelo en
-  otro color** sin reescribir los datos.
+- **Otro color** — duplica la línea actual para meter el **mismo modelo en otro color** sin reescribir los datos.
+- **Aplicar kit** — vuelca una curva de tallas definida en el proveedor
+  sobre la línea actual. En formato distribuido abre el distribuidor para
+  aplicarlo por almacén.
 - **+ Foto / Bajar fotos** — asocia fotografías al artículo o las descarga.
 
 ![Líneas de artículos con matriz de tallas](img/03-sesiones-lineas.png)
 *▢ Captura pendiente — Pestaña Líneas de Artículos con la matriz de tallas.*
+
+![Pestaña Proveedor de una sesión de compra](img/03-sesiones-proveedor.png)
+*▢ Captura pendiente — Pestaña Proveedor con ficha, kits disponibles y botón Aplicar kit.*
 
 > **Código duplicado.** Si tecleas un código de artículo que **ya existe**
 > en el catálogo, la aplicación lo detecta y pregunta qué hacer:
@@ -165,6 +176,13 @@ El botón **«Imprimir horizontal»** saca un listado de la sesión con las
 **tallas en columnas** (formato apaisado), útil para repasar la entrada de
 género contra el albarán del proveedor.
 
+### 7. Fotos de la sesión
+
+Las fotos asignadas en una sesión todavía no materializada se guardan de
+forma temporal. Al materializar, se migran automáticamente al artículo o
+SKU creado. El botón **Bajar fotos** usa los parámetros de la categoría
+**Fotos** para descargar imágenes del servidor y asociarlas a la línea.
+
 ---
 
 ## Pedidos
@@ -181,6 +199,21 @@ Un pedido tiene una **cabecera** (proveedor, fecha, almacén de destino,
 forma de pago) y un **detalle de líneas** (artículo/SKU, cantidades por
 talla, precio). Desde el pedido se puede generar el **albarán de compra**
 cuando llega la mercancía.
+
+En la recepción, la columna **A recibir** no permite superar lo pendiente:
+si tecleas más unidades de las pedidas, la aplicación ajusta el valor al
+máximo disponible. Esto se aplica tanto en el modo vertical como en el
+pivote de tallas.
+
+El botón **Crear albarán** permite dos flujos:
+
+- Crear un **albarán nuevo** con las cantidades pendientes o con las
+  cantidades introducidas en **A recibir**.
+- **Incorporar** esas líneas a un albarán ya existente del mismo pedido,
+  si se está recibiendo mercancía en varias tandas.
+
+![Crear albarán desde pedido de compra](img/03-pedidos-crear-albaran.png)
+*▢ Captura pendiente — Modal de almacén con la opción de incorporar a un albarán existente.*
 
 ---
 
@@ -204,6 +237,10 @@ Puede crearse:
 El albarán es el documento que **mueve existencias**; la factura es solo el
 documento contable/fiscal asociado.
 
+En cabecera existe la marca **Depósito**. Es informativa: permite indicar
+que la mercancía está en depósito, pero no cambia el movimiento de stock ni
+la facturación.
+
 ---
 
 ## Devoluciones a Proveedor
@@ -219,16 +256,95 @@ stock** del almacén y sirve de base para el **abono** del proveedor.
 
 ---
 
-## Facturas
+## Crear borradores de albaranes...
 
-**Facturas de compra**: el documento contable que el proveedor emite y que
-se registra para control de gasto e IVA soportado. Se asocian a los
-albaranes recibidos.
+Utilidad para convertir uno o varios **albaranes de compra** en un
+**borrador de compra**. Filtra por empresa y proveedor, muestra los
+albaranes pendientes y permite agrupar varios en el mismo borrador.
 
-![Facturas de compra](img/03-facturas-compra.png)
-*▢ Captura pendiente — Mantenimiento de Facturas de compra.*
+![Crear borradores desde albaranes de compra](img/03-compras-crear-borradores.png)
+*▢ Captura pendiente — Modal de selección de albaranes de compra pendientes de facturar.*
+
+---
+
+## Borradores
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[Alt]+[F]`
+
+Mantenimiento de **Borradores de Compra**. Es el documento de proveedor
+que se registra para control de gasto, IVA soportado y vencimientos de
+pago. Se crea manualmente o a partir de albaranes de compra.
+
+![Facturas de compra](img/03-facturas-compra.png)
+*▢ Captura pendiente — Mantenimiento de Borradores de Compra con pestaña Efectos.*
+
+La ficha incluye:
+
+- **Cabecera** — proveedor, empresa, fecha, referencia/documento externo,
+  forma de pago y datos fiscales.
+- **Líneas** — artículos procedentes de los albaranes o introducidos a
+  mano.
+- **Efectos** — vencimientos generados desde la forma de pago.
+
+El botón **Generar efectos** reparte el total líquido en vencimientos y
+pregunta qué **banco de la empresa** se usará como cuenta de cargo. Si el
+proveedor tiene banco para pagos por defecto, aparece preseleccionado.
+
+---
+
+## Efectos de pago
+
+**Atajo de menú:** `[Ctrl]+[Alt]+[C]`
+
+Cartera de vencimientos de proveedor. Cada efecto representa una fecha de
+pago pendiente, pagada, remesada o conciliada. Desde aquí puedes revisar
+vencimientos, registrar pagos y fusionar impagados en un efecto resumen.
+
+![Efectos de pago a proveedor](img/03-efectos-pago.png)
+*▢ Captura pendiente — Efectos de pago con estado, vencimiento, pendiente y botones de pago/fusión.*
+
+Estados habituales:
+
+| Estado | Significado |
+|--------|-------------|
+| **PENDIENTE** | Vencimiento vivo, todavía no pagado. |
+| **PAGADO** | Pagado total o parcialmente. |
+| **REMESADO** | Incluido en una remesa de pago. |
+| **CONCILIADO** | Fusionado o regularizado con otro efecto. |
+
+---
+
+## Remesas de pago
+
+Agrupa efectos de pago para preparar una orden de pago bancaria. La remesa
+recoge su banco de cargo, fecha de cargo, número de efectos e importe total.
+
+![Remesas de pago](img/03-remesas-pago.png)
+*▢ Captura pendiente — Remesa de pago con banco, total y efectos asignados.*
+
+Acciones principales:
+
+- **Añadir efecto** — abre la selección de efectos pendientes.
+- **Quitar efecto** — retira el efecto seleccionado de la remesa.
+- **Pagar efecto** — registra el pago de un efecto concreto.
+- **Pagar remesa** — marca como pagados los efectos de la remesa.
+- **Asignar banco** — fija o cambia el banco de cargo de la empresa.
+
+---
+
+## Cargar efectos en remesa...
+
+Acceso directo al selector de efectos pendientes para incorporarlos a una
+remesa de pago. Se usa cuando ya existe una remesa abierta y quieres
+alimentarla con vencimientos filtrados por proveedor, vencimiento o estado.
+
+---
+
+## Listados ▸ Listado de documentos proveedor
+
+Listado de documentos de proveedor para revisar pedidos, albaranes,
+devoluciones, borradores y vencimientos dentro de un rango de fechas o por
+proveedor.
 
 ---
 

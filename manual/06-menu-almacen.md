@@ -72,6 +72,23 @@ Sub-pestañas:
 > creando los movimientos de regularización necesarios. Revisa bien el
 > recuento antes de confirmar.
 
+### Recuento móvil
+
+Además de cargar el recuento desde Excel, el inventario puede enviarse a
+una app móvil de recuento mediante un servidor puente:
+
+| Botón | Uso |
+|-------|-----|
+| **Enviar a recuento móvil** | Publica el inventario como plantilla para los terminales de almacén. |
+| **Recoger recuento móvil** | Trae las lecturas escaneadas, rellena las cantidades físicas y deja el inventario listo para revisar. |
+
+![Inventario enviado a recuento móvil](img/06-inventarios-recuento-movil.png)
+*▢ Captura pendiente — Inventarios con botones Enviar a recuento móvil y Recoger recuento móvil.*
+
+El recuento móvil no regulariza stock por sí solo. Primero se recogen las
+lecturas, se revisan las diferencias en Factuzam y después se aplica el
+inventario con el flujo normal.
+
 ---
 
 ## Informes
@@ -86,17 +103,65 @@ Informe de existencias **con desglose por tallas** en columnas
 variantes/tallas, ideal para artículos de moda. Se filtra (almacén,
 familia, fechas…), se previsualiza y se imprime/exporta.
 
+El filtro permite trabajar por:
+
+- **Modo**: entre fechas o por acumulados.
+- **Bandas**: existencias iniciales, entradas, ventas, existencias finales
+  y, en modo desglosado, subtipos de movimiento.
+- **Almacenes, familias, proveedores, temporadas y artículos**.
+- **Agrupaciones** reordenables por almacén, proveedor, familia o temporada.
+
+La pestaña **Familias** se muestra como árbol. Marcar una familia incluye
+también sus subfamilias.
+
 ### Balance de Almacén sin tallas
 
 Informe de existencias **agregado por artículo**, sin abrir el detalle de
 tallas. Vista resumida del stock cuando no interesa el desglose por
 variante.
 
+![Balance de almacén sin tallas](img/06-balance-sin-tallas.png)
+*▢ Captura pendiente — Filtros e informe del balance sin tallas con foto del artículo.*
+
+Incluye artículos con o sin tallaje y usa el mismo sistema de filtros,
+bandas, agrupaciones y exportación a Excel que el balance horizontal.
+
 ### Movimientos de ventas por artículos y fechas
 
 Informe de **ventas por artículo** en un rango de fechas: qué artículos se
 han vendido, en qué cantidad y periodo. Útil para análisis de rotación y
 reposición.
+
+![Movimientos de ventas por artículos](img/06-movimientos-ventas-articulos.png)
+*▢ Captura pendiente — Informe de movimientos de ventas por artículos con filtros y márgenes.*
+
+Además del periodo de ventas, puede filtrar por **Inicio compras** para
+analizar solo artículos cuya primera compra sea posterior a una fecha. El
+informe calcula ventas, coste, beneficio y dos márgenes: margen sobre lo
+vendido y margen considerando toda la compra como gasto.
+
+Columnas del informe:
+
+| Columna | Qué indica |
+|---------|------------|
+| **Artículo** | Código y descripción del artículo. Si se agrupa por almacén, un mismo artículo puede aparecer en varios bloques de almacén. |
+| **Uni.Ent.** | Unidades compradas o entradas del artículo. Se toman de los movimientos de entrada de compra/albarán de entrada. |
+| **Imp.Ent.** | Importe de coste de esas entradas. Es el valor comprado, no el precio de venta. |
+| **Uds Vta** | Unidades vendidas dentro del periodo **Desde / Hasta** indicado en el filtro. |
+| **Imp Venta** | Importe real vendido en el periodo, con los descuentos ya aplicados y según las líneas de factura. |
+| **Imp Coste** | Coste estimado de las unidades vendidas. Se calcula multiplicando las unidades vendidas por el coste del artículo. |
+| **Beneficio** | Diferencia entre venta y coste de lo vendido: **Imp Venta - Imp Coste**. |
+| **% Bnf** | Beneficio sobre coste: **Beneficio / Imp Coste x 100**. Mide cuánto se gana respecto a lo que costó lo vendido. |
+| **Venta-Ent** | Diferencia entre lo vendido y todo lo comprado: **Imp Venta - Imp.Ent.**. Sirve para ver si la venta del periodo cubre la compra completa. |
+| **VentEnt%** | Porcentaje de **Venta-Ent** sobre el importe comprado: **Venta-Ent / Imp.Ent. x 100**. |
+| **Margen 1** | Margen de lo vendido: **Beneficio / Imp Venta x 100**. Es el margen comercial normal sobre la venta realizada. |
+| **Margen 2** | Margen contando toda la compra como gasto: **Venta-Ent / Imp Venta x 100**. Penaliza el stock que queda sin vender. |
+| **% V.dto** | Porcentaje de unidades vendidas respecto a las unidades entradas: **Uds Vta / Uni.Ent. x 100**. |
+| **% Vlast** | Relación entre importe vendido e importe comprado: **Imp Venta / Imp.Ent. x 100**. |
+
+En los totales por grupo y en el total general, las unidades e importes se
+suman. Los porcentajes y márgenes se recalculan a partir de esas sumas; no
+se suman ni se promedian los porcentajes de cada artículo.
 
 ---
 

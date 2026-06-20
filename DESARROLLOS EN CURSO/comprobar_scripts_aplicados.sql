@@ -4,12 +4,14 @@
 -- no modifica nada.
 --
 -- Salida: una fila por script, con '>>> FALTA <<<' arriba. Cada script
--- de la lista es idempotente: el que falte se lanza tal cual.
+-- de la lista es idempotente: el que falte se lanza tal cual, en el orden
+-- mostrado por orden_aplicacion.
 --
 -- Cubre los scripts de esquema detectables de las últimas tandas
 -- (jun-2026). Los scripts solo-datos no se pueden detectar por
 -- esquema; ver la lista al final del fichero.
-SELECT t.script,
+SELECT t.orden AS orden_aplicacion,
+       t.script,
        IF(t.aplicado = 1, 'OK', '>>> FALTA <<<') AS estado,
        t.objeto
   FROM (
@@ -68,14 +70,88 @@ SELECT t.script,
                    WHERE TABLE_SCHEMA = DATABASE()
                      AND TABLE_NAME = 'fza_facturas_compra')
     UNION ALL
+    SELECT 85, 'facturas_compra_temporada.sql',
+           'fza_facturas_compra.ID_PV_TEMPORADA_FACC',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_facturas_compra'
+                     AND COLUMN_NAME = 'ID_PV_TEMPORADA_FACC')
+    UNION ALL
     SELECT 90, 'efectos_remesas_compra.sql',
-           'tablas fza_efectos_compra / fza_tipos_efecto',
+           'fza_efectos_compra + remesas + vistas actualizadas',
            EXISTS(SELECT 1 FROM information_schema.TABLES
                    WHERE TABLE_SCHEMA = DATABASE()
                      AND TABLE_NAME = 'fza_efectos_compra')
            AND EXISTS(SELECT 1 FROM information_schema.TABLES
                        WHERE TABLE_SCHEMA = DATABASE()
                          AND TABLE_NAME = 'fza_tipos_efecto')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_remesas_compra')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_efectos_compra'
+                         AND COLUMN_NAME = 'REFERENCIA_DOCUMENTO_EFEC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_efectos_compra'
+                         AND COLUMN_NAME = 'CODIGO_EMPBAN_EFEC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_efectos_compra'
+                         AND COLUMN_NAME = 'DESCRIPCION_TEFE_VIEW_EFEC')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = 'PRC_EFEC_GENERAR_DESDE_FACTURA')
+    UNION ALL
+    SELECT 92, 'bancos_catalogo.sql',
+           'tabla fza_bancos',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_bancos')
+    UNION ALL
+    SELECT 94, 'bancos_empresa.sql',
+           'fza_empresas_bancos + vi_empresas_bancos + columnas de banco',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empresas_bancos')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_empresas_bancos')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_efectos_compra'
+                         AND COLUMN_NAME = 'CODIGO_EMPBAN_EFEC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_efectos_compra'
+                         AND COLUMN_NAME = 'IBAN_EMP_EFEC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_recibos'
+                         AND COLUMN_NAME = 'CODIGO_EMPBAN_REC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_recibos'
+                         AND COLUMN_NAME = 'IBAN_EMP_REC')
+    UNION ALL
+    SELECT 96, 'clientes_banco_cobro_defecto.sql',
+           'fza_clientes.CODIGO_EMPBAN_CLI',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_clientes'
+                     AND COLUMN_NAME = 'CODIGO_EMPBAN_CLI')
+    UNION ALL
+    SELECT 98, 'proveedores_pagos_defecto.sql',
+           'fza_proveedores.CODIGO_FP_PRV / CODIGO_EMPBAN_PRV',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_proveedores'
+                     AND COLUMN_NAME = 'CODIGO_FP_PRV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_proveedores'
+                         AND COLUMN_NAME = 'CODIGO_EMPBAN_PRV')
     UNION ALL
     SELECT 100, 'albaran_compra_deposito.sql',
            'fza_albaranes_compra.ESDEPOSITO_ALBC',

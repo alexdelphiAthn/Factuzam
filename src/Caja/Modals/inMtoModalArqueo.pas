@@ -455,6 +455,10 @@ var
   Series: TArray<string>;
   sSerie: string;
   bQR, bVerifactu, bMostrar: Boolean;
+  bIncluirTraspasos: Boolean;
+  bIncluirIngresos: Boolean;
+  bIncluirGastos: Boolean;
+  bIncluirCredito: Boolean;
 begin
   inherited;
   if (FConn = nil) or (not FConn.Connected) then
@@ -474,13 +478,20 @@ begin
   bVerifactu := VerifactuActivo;
   sSerie     := '';
   bQR        := False;
-  // Se pregunta la serie cuando hay más de una; también se abre el diálogo si
-  // hay opción de QR. Con una sola serie y sin Verifactu, se imprime directo.
-  bMostrar := (Length(Series) > 1) or bVerifactu;
+  bIncluirTraspasos := False;
+  bIncluirIngresos  := False;
+  bIncluirGastos    := False;
+  bIncluirCredito   := False;
+  // El diálogo se muestra siempre: además de la serie y el QR, ofrece los
+  // bloques opcionales (traspasos, ingresos, gastos, ventas a crédito), que
+  // tienen sentido aunque haya una sola serie y sin Verifactu.
+  bMostrar := True;
   if bMostrar then
   begin
     if not TfrmModalTiraCaja.Ejecutar(Self, FCaja, Series, bVerifactu,
-                                      sSerie, bQR) then
+                                      sSerie, bQR, bIncluirTraspasos,
+                                      bIncluirIngresos, bIncluirGastos,
+                                      bIncluirCredito) then
       Exit;
   end;
   Screen.Cursor := crHourGlass;
@@ -488,7 +499,9 @@ begin
     TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
                              FechaDesdeSeleccionada,
                              FechaHastaSeleccionada,
-                             sSerie, bQR, oNomImpresoraCaja);
+                             sSerie, bQR, oNomImpresoraCaja,
+                             bIncluirTraspasos, bIncluirIngresos,
+                             bIncluirGastos, bIncluirCredito);
   finally
     Screen.Cursor := crDefault;
   end;

@@ -38,6 +38,7 @@ ORDEN = [
     ('09-instalacion-windows.md', '09-instalacion-windows.html', '09 · Instalación en Windows'),
     ('10-migracion-legacy.md', '10-migracion-legacy.html', '10 · Migración desde legacy'),
     ('11-verifactu.md', '11-verifactu.html', '11 · Verifactu (AEAT)'),
+    ('12-cambios-y-novedades.md', '12-cambios-y-novedades.html', '12 · Cambios y novedades'),
 ]
 MD2HTML = {md: dst for md, dst, _ in ORDEN}
 

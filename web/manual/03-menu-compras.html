@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li class="activo"><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li class="activo"><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
 </nav>
 <main>
 <article>
@@ -26,7 +26,13 @@ las facturas de compra. Es el flujo que <strong>da entrada de stock</strong> al 
 ├── Pedidos
 ├── Albaranes
 ├── Devoluciones a Proveedor
-└── Facturas</code></pre>
+├── Crear borradores de albaranes...
+├── Borradores
+├── Efectos de pago
+├── Remesas de pago
+├── Cargar efectos en remesa...
+└── Listados
+    └── Listado de documentos proveedor</code></pre>
 <blockquote><p>Flujo habitual de compra:
 <strong>Pedido de compra</strong> → recepción como <strong>Albarán de compra</strong> (entra el
 stock) → <strong>Factura de compra</strong>. Las <strong>Devoluciones</strong> restan stock y
@@ -72,10 +78,10 @@ SKUs, los códigos de barras y el <strong>pedido y/o albarán de compra</strong>
 </tbody>
 </table>
 <p>Puedes aceptar el precio propuesto o corregirlo línea a línea.</p>
-<blockquote><p>El <strong>Margen %</strong> y el <strong>sistema de tallas</strong> se <strong>proponen
-automáticamente</strong> a partir de los
+<blockquote><p>El <strong>Margen %</strong> se <strong>propone automáticamente</strong> a partir de los
 <a href="02-menu-archivo.html#pestana-compras-parametros-de-compra-del-proveedor">parámetros de compra del proveedor</a>
-cuando lo eliges en la cabecera. Puedes sobrescribirlos en la sesión.</p></blockquote>
+cuando lo eliges en la cabecera. El sistema de tallas se decide en cada
+línea o al aplicar un kit de proveedor.</p></blockquote>
 <h3 id="2-pestana-lineas-de-articulos">2. Pestaña «Líneas de Artículos»</h3>
 <p>Cada línea es un <strong>artículo + color</strong> con su escandallo de tallas:</p>
 <table>
@@ -96,11 +102,14 @@ cuando lo eliges en la cabecera. Puedes sobrescribirlos en la sesión.</p></bloc
 </tbody>
 </table>
 <p><strong>Botones de la pestaña:</strong></p>
-<ul><li><strong>+ Añadir línea / − Borrar línea</strong> — gestiona las líneas de la sesión.</li><li><strong>Otro color</strong> — duplica la línea actual para meter el **mismo modelo en</li></ul>
-<p>  otro color** sin reescribir los datos.</p>
+<ul><li><strong>+ Añadir línea / − Borrar línea</strong> — gestiona las líneas de la sesión.</li><li><strong>Otro color</strong> — duplica la línea actual para meter el <strong>mismo modelo en otro color</strong> sin reescribir los datos.</li><li><strong>Aplicar kit</strong> — vuelca una curva de tallas definida en el proveedor</li></ul>
+<p>  sobre la línea actual. En formato distribuido abre el distribuidor para
+  aplicarlo por almacén.</p>
 <ul><li><strong>+ Foto / Bajar fotos</strong> — asocia fotografías al artículo o las descarga.</li></ul>
 <p><img src="img/03-sesiones-lineas.png" alt="Líneas de artículos con matriz de tallas" loading="lazy">
 <em>▢ Captura pendiente — Pestaña Líneas de Artículos con la matriz de tallas.</em></p>
+<p><img src="img/03-sesiones-proveedor.png" alt="Pestaña Proveedor de una sesión de compra" loading="lazy">
+<em>▢ Captura pendiente — Pestaña Proveedor con ficha, kits disponibles y botón Aplicar kit.</em></p>
 <blockquote><p><strong>Código duplicado.</strong> Si tecleas un código de artículo que <strong>ya existe</strong>
 en el catálogo, la aplicación lo detecta y pregunta qué hacer:
 <strong>Reusar el artículo existente</strong> (no se crea uno nuevo, se le añade la
@@ -155,6 +164,11 @@ stock y ha habido ventas posteriores, revisa el stock tras revertir.</p></blockq
 <p>El botón <strong>«Imprimir horizontal»</strong> saca un listado de la sesión con las
 <strong>tallas en columnas</strong> (formato apaisado), útil para repasar la entrada de
 género contra el albarán del proveedor.</p>
+<h3 id="7-fotos-de-la-sesion">7. Fotos de la sesión</h3>
+<p>Las fotos asignadas en una sesión todavía no materializada se guardan de
+forma temporal. Al materializar, se migran automáticamente al artículo o
+SKU creado. El botón <strong>Bajar fotos</strong> usa los parámetros de la categoría
+<strong>Fotos</strong> para descargar imágenes del servidor y asociarlas a la línea.</p>
 <hr>
 <h2 id="pedidos">Pedidos</h2>
 <p>Mantenimiento de <strong>Pedidos de Compra</strong>. Registra lo que se ha <strong>encargado</strong>
@@ -166,6 +180,17 @@ a un proveedor (todavía no ha llegado, no mueve stock).</p>
 forma de pago) y un <strong>detalle de líneas</strong> (artículo/SKU, cantidades por
 talla, precio). Desde el pedido se puede generar el <strong>albarán de compra</strong>
 cuando llega la mercancía.</p>
+<p>En la recepción, la columna <strong>A recibir</strong> no permite superar lo pendiente:
+si tecleas más unidades de las pedidas, la aplicación ajusta el valor al
+máximo disponible. Esto se aplica tanto en el modo vertical como en el
+pivote de tallas.</p>
+<p>El botón <strong>Crear albarán</strong> permite dos flujos:</p>
+<ul><li>Crear un <strong>albarán nuevo</strong> con las cantidades pendientes o con las</li></ul>
+<p>  cantidades introducidas en <strong>A recibir</strong>.</p>
+<ul><li><strong>Incorporar</strong> esas líneas a un albarán ya existente del mismo pedido,</li></ul>
+<p>  si se está recibiendo mercancía en varias tandas.</p>
+<p><img src="img/03-pedidos-crear-albaran.png" alt="Crear albarán desde pedido de compra" loading="lazy">
+<em>▢ Captura pendiente — Modal de almacén con la opción de incorporar a un albarán existente.</em></p>
 <hr>
 <h2 id="albaranes">Albaranes</h2>
 <p>Mantenimiento de <strong>Albaranes de Compra</strong>. Registra la <strong>recepción real</strong> de
@@ -178,6 +203,9 @@ indicado.</p>
 <ul><li>A partir de un <strong>pedido</strong> previo (recepción de lo pedido).</li><li>Directamente (compra sin pedido previo).</li><li>Automáticamente desde una <strong>sesión de compra</strong> materializada.</li></ul>
 <p>El albarán es el documento que <strong>mueve existencias</strong>; la factura es solo el
 documento contable/fiscal asociado.</p>
+<p>En cabecera existe la marca <strong>Depósito</strong>. Es informativa: permite indicar
+que la mercancía está en depósito, pero no cambia el movimiento de stock ni
+la facturación.</p>
 <hr>
 <h2 id="devoluciones-a-proveedor">Devoluciones a Proveedor</h2>
 <p>Mantenimiento de <strong>Devoluciones a Proveedor</strong>. Registra la mercancía que se
@@ -187,13 +215,68 @@ stock</strong> del almacén y sirve de base para el <strong>abono</strong> del p
 <em>▢ Captura pendiente — Mantenimiento de Devoluciones a Proveedor.</em></p>
 <p><em>(Sin atajo de menú; se abre desde el menú.)</em></p>
 <hr>
-<h2 id="facturas">Facturas</h2>
-<p><strong>Facturas de compra</strong>: el documento contable que el proveedor emite y que
-se registra para control de gasto e IVA soportado. Se asocian a los
-albaranes recibidos.</p>
-<p><img src="img/03-facturas-compra.png" alt="Facturas de compra" loading="lazy">
-<em>▢ Captura pendiente — Mantenimiento de Facturas de compra.</em></p>
+<h2 id="crear-borradores-de-albaranes">Crear borradores de albaranes...</h2>
+<p>Utilidad para convertir uno o varios <strong>albaranes de compra</strong> en un
+<strong>borrador de compra</strong>. Filtra por empresa y proveedor, muestra los
+albaranes pendientes y permite agrupar varios en el mismo borrador.</p>
+<p><img src="img/03-compras-crear-borradores.png" alt="Crear borradores desde albaranes de compra" loading="lazy">
+<em>▢ Captura pendiente — Modal de selección de albaranes de compra pendientes de facturar.</em></p>
+<hr>
+<h2 id="borradores">Borradores</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[Alt]+[F]</code></p>
+<p>Mantenimiento de <strong>Borradores de Compra</strong>. Es el documento de proveedor
+que se registra para control de gasto, IVA soportado y vencimientos de
+pago. Se crea manualmente o a partir de albaranes de compra.</p>
+<p><img src="img/03-facturas-compra.png" alt="Facturas de compra" loading="lazy">
+<em>▢ Captura pendiente — Mantenimiento de Borradores de Compra con pestaña Efectos.</em></p>
+<p>La ficha incluye:</p>
+<ul><li><strong>Cabecera</strong> — proveedor, empresa, fecha, referencia/documento externo,</li></ul>
+<p>  forma de pago y datos fiscales.</p>
+<ul><li><strong>Líneas</strong> — artículos procedentes de los albaranes o introducidos a</li></ul>
+<p>  mano.</p>
+<ul><li><strong>Efectos</strong> — vencimientos generados desde la forma de pago.</li></ul>
+<p>El botón <strong>Generar efectos</strong> reparte el total líquido en vencimientos y
+pregunta qué <strong>banco de la empresa</strong> se usará como cuenta de cargo. Si el
+proveedor tiene banco para pagos por defecto, aparece preseleccionado.</p>
+<hr>
+<h2 id="efectos-de-pago">Efectos de pago</h2>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[C]</code></p>
+<p>Cartera de vencimientos de proveedor. Cada efecto representa una fecha de
+pago pendiente, pagada, remesada o conciliada. Desde aquí puedes revisar
+vencimientos, registrar pagos y fusionar impagados en un efecto resumen.</p>
+<p><img src="img/03-efectos-pago.png" alt="Efectos de pago a proveedor" loading="lazy">
+<em>▢ Captura pendiente — Efectos de pago con estado, vencimiento, pendiente y botones de pago/fusión.</em></p>
+<p>Estados habituales:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>PENDIENTE</strong></td><td>Vencimiento vivo, todavía no pagado.</td></tr>
+<tr><td><strong>PAGADO</strong></td><td>Pagado total o parcialmente.</td></tr>
+<tr><td><strong>REMESADO</strong></td><td>Incluido en una remesa de pago.</td></tr>
+<tr><td><strong>CONCILIADO</strong></td><td>Fusionado o regularizado con otro efecto.</td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="remesas-de-pago">Remesas de pago</h2>
+<p>Agrupa efectos de pago para preparar una orden de pago bancaria. La remesa
+recoge su banco de cargo, fecha de cargo, número de efectos e importe total.</p>
+<p><img src="img/03-remesas-pago.png" alt="Remesas de pago" loading="lazy">
+<em>▢ Captura pendiente — Remesa de pago con banco, total y efectos asignados.</em></p>
+<p>Acciones principales:</p>
+<ul><li><strong>Añadir efecto</strong> — abre la selección de efectos pendientes.</li><li><strong>Quitar efecto</strong> — retira el efecto seleccionado de la remesa.</li><li><strong>Pagar efecto</strong> — registra el pago de un efecto concreto.</li><li><strong>Pagar remesa</strong> — marca como pagados los efectos de la remesa.</li><li><strong>Asignar banco</strong> — fija o cambia el banco de cargo de la empresa.</li></ul>
+<hr>
+<h2 id="cargar-efectos-en-remesa">Cargar efectos en remesa...</h2>
+<p>Acceso directo al selector de efectos pendientes para incorporarlos a una
+remesa de pago. Se usa cuando ya existe una remesa abierta y quieres
+alimentarla con vencimientos filtrados por proveedor, vencimiento o estado.</p>
+<hr>
+<h2 id="listados-listado-de-documentos-proveedor">Listados ▸ Listado de documentos proveedor</h2>
+<p>Listado de documentos de proveedor para revisar pedidos, albaranes,
+devoluciones, borradores y vencimientos dentro de un rango de fechas o por
+proveedor.</p>
 <hr>
 <p><a href="02-menu-archivo.html">◀ Menú Archivo</a> · <a href="index.html">Índice</a> · <a href="04-menu-ventas-mayor.html">Siguiente ▶ Menú Ventas Mayor</a></p>
 </article>

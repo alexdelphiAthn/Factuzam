@@ -12,7 +12,10 @@
 {    Pregunta las opciones de la "tira de caja" antes de imprimirla: la serie  }
 {    (cuando hay más de una; por defecto todas) y si se imprime el QR          }
 {    tributario por operación (solo cuando Verifactu está activo con envío     }
-{    PRE o PRO). Devuelve la elección a través de Ejecutar.                     }
+{    PRE o PRO). Además ofrece incluir, de forma opcional, bloques aparte de   }
+{    las ventas facturadas: traspasos salientes (origen), ingresos por caja,   }
+{    gastos por caja y ventas a crédito (depósitos). Devuelve la elección a    }
+{    través de Ejecutar.                                                        }
 {******************************************************************************}
 unit inMtoModalTiraCaja;
 
@@ -33,6 +36,10 @@ type
     lblSerie: TcxLabel;
     cbSerie: TcxComboBox;
     chkQR: TcxCheckBox;
+    chkTraspasos: TcxCheckBox;
+    chkIngresos: TcxCheckBox;
+    chkGastos: TcxCheckBox;
+    chkCredito: TcxCheckBox;
     btnImprimir: TcxButton;
     btnCancelar: TcxButton;
     procedure FormCreate(Sender: TObject);
@@ -41,12 +48,18 @@ type
   public
     // Devuelve True si el usuario pulsa Imprimir. ASerie = '' significa todas
     // las series. AImprimirQR solo puede salir True si AVerifactu lo era.
+    // Los cuatro últimos out indican qué bloques opcionales adjuntar tras las
+    // ventas: traspasos salientes, ingresos, gastos y ventas a crédito.
     class function Ejecutar(AOwner: TComponent;
                             const ACaja: string;
                             const ASeries: TArray<string>;
                             AVerifactu: Boolean;
                             out ASerie: string;
-                            out AImprimirQR: Boolean): Boolean;
+                            out AImprimirQR: Boolean;
+                            out AIncluirTraspasos: Boolean;
+                            out AIncluirIngresos: Boolean;
+                            out AIncluirGastos: Boolean;
+                            out AIncluirCredito: Boolean): Boolean;
   end;
 
 implementation
@@ -62,14 +75,22 @@ class function TfrmModalTiraCaja.Ejecutar(AOwner: TComponent;
                                           const ASeries: TArray<string>;
                                           AVerifactu: Boolean;
                                           out ASerie: string;
-                                          out AImprimirQR: Boolean): Boolean;
+                                          out AImprimirQR: Boolean;
+                                          out AIncluirTraspasos: Boolean;
+                                          out AIncluirIngresos: Boolean;
+                                          out AIncluirGastos: Boolean;
+                                          out AIncluirCredito: Boolean): Boolean;
 var
   Frm: TfrmModalTiraCaja;
   i: Integer;
 begin
-  Result      := False;
-  ASerie      := '';
-  AImprimirQR := False;
+  Result            := False;
+  ASerie            := '';
+  AImprimirQR       := False;
+  AIncluirTraspasos := False;
+  AIncluirIngresos  := False;
+  AIncluirGastos    := False;
+  AIncluirCredito   := False;
   Frm := TfrmModalTiraCaja.Create(AOwner);
   try
     Frm.FVerifactu := AVerifactu;
@@ -85,13 +106,22 @@ begin
     Frm.chkQR.Checked := AVerifactu;
     if not AVerifactu then
       Frm.chkQR.Caption := 'Imprimir QR Verifactu (no disponible)';
+    // Bloques opcionales: desmarcados por defecto, son ampliaciones de la tira.
+    Frm.chkTraspasos.Checked := False;
+    Frm.chkIngresos.Checked  := False;
+    Frm.chkGastos.Checked    := False;
+    Frm.chkCredito.Checked   := False;
     if Frm.ShowModal = mrOk then
     begin
       if Frm.cbSerie.ItemIndex <= 0 then
         ASerie := ''
       else
         ASerie := ASeries[Frm.cbSerie.ItemIndex - 1];
-      AImprimirQR := Frm.chkQR.Checked and AVerifactu;
+      AImprimirQR       := Frm.chkQR.Checked and AVerifactu;
+      AIncluirTraspasos := Frm.chkTraspasos.Checked;
+      AIncluirIngresos  := Frm.chkIngresos.Checked;
+      AIncluirGastos    := Frm.chkGastos.Checked;
+      AIncluirCredito   := Frm.chkCredito.Checked;
       Result := True;
     end;
   finally
