@@ -253,12 +253,14 @@ begin
   // "Log acumulado"), asi la linea activa no se entierra bajo decenas de
   // dominios ya migrados y siempre se ve lo que corre ahora mismo.
   sPrefijo := Format('[%-22s]', [sDominio]);
-  bCompletado := (iTotal > 0) and (iRow >= iTotal);
+  bCompletado := (iTotal >= 0) and (iRow >= iTotal);
   if iTotal > 0 then
     sLinea := Format('%s  %7d / %7d  (%5.1f%%)',
       [sPrefijo, iRow, iTotal, iRow * 100.0 / iTotal])
+  else if iTotal = 0 then
+    sLinea := Format('%s        0 /       0  (100.0%%)', [sPrefijo])
   else
-    sLinea := Format('%s  %7d / ?        (contando...)',
+    sLinea := Format('%s  %7d / ?        (preparando...)',
       [sPrefijo, iRow]);
 
   iIdx := -1;
@@ -455,6 +457,7 @@ procedure TFormMigrator.btnMarcarTodasClick(Sender: TObject);
 var
   i:             Integer;
   bEsInvInicial: Boolean;
+  bEsFotos:      Boolean;
 begin
   for i := 0 to listMigs.Items.Count - 1 do
   begin
@@ -464,7 +467,12 @@ begin
     // necesite, lo marca a mano.
     bEsInvInicial := (i < FEngine.Items.Count)
                  and (FEngine.Items[i].Codigo = 'inventarios');
-    listMigs.Checked[i] := not bEsInvInicial;
+    // "Fotos" tambien queda DESMARCADO: es un proceso independiente,
+    // con raiz/destino propios y suele tardar bastante. Si se quiere
+    // importar fotos, se marca expresamente.
+    bEsFotos := (i < FEngine.Items.Count)
+            and (FEngine.Items[i].Codigo = 'fotos');
+    listMigs.Checked[i] := not (bEsInvInicial or bEsFotos);
   end;
 end;
 

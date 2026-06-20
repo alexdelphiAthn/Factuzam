@@ -133,6 +133,9 @@ type
   protected
     // Los descendientes redefinen esto para elegir qué pestañas mostrar.
     function FiltrosUsados: TFiltrosReport; virtual;
+    // SQL de proveedores. Los informes de documentos pueden usar otra fuente
+    // sin alterar el filtro de proveedor de balances y movimientos.
+    function SQLFiltroProveedores: string; virtual;
     procedure DoShow; override;
     // Helpers para checklists "planos" SIN buscador (p. ej. la pestaña de
     // bandas del balance, pequeña): se crea uno y se lee su selección.
@@ -205,6 +208,17 @@ end;
 function TfrmPrintMultiFiltro.FiltrosUsados: TFiltrosReport;
 begin
   Result := [frFechas, frAlmacenes, frFamilias, frProveedores, frTemporadas];
+end;
+
+function TfrmPrintMultiFiltro.SQLFiltroProveedores: string;
+begin
+  // Solo proveedores con al menos un articulo: la lista es relevante y corta.
+  Result :=
+    'SELECT p.CODIGO_PRV_PRV AS COD, p.RAZON_SOCIAL_PRV AS NOM ' +
+    '  FROM fza_proveedores p ' +
+    ' WHERE EXISTS (SELECT 1 FROM fza_articulos_proveedores ap ' +
+    '                WHERE ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV) ' +
+    ' ORDER BY p.RAZON_SOCIAL_PRV, p.CODIGO_PRV_PRV';
 end;
 
 procedure TfrmPrintMultiFiltro.DoShow;
@@ -421,13 +435,7 @@ begin
     ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM', 'COD', 'NOM');
   // Familias va como árbol (jerarquía padre→subfamilias), no como checklist.
   CargarFamiliasArbol;
-  // Solo proveedores con al menos un artículo: la lista es relevante y corta.
-  CargarFiltro(FfcProveedores,
-    'SELECT p.CODIGO_PRV_PRV AS COD, p.RAZON_SOCIAL_PRV AS NOM ' +
-    '  FROM fza_proveedores p ' +
-    ' WHERE EXISTS (SELECT 1 FROM fza_articulos_proveedores ap ' +
-    '                WHERE ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV) ' +
-    ' ORDER BY p.RAZON_SOCIAL_PRV, p.CODIGO_PRV_PRV', 'COD', 'NOM');
+  CargarFiltro(FfcProveedores, SQLFiltroProveedores, 'COD', 'NOM');
   // Temporada = valor de la propiedad de artículo 'TEMPORADA' (código=nombre).
   CargarFiltro(FfcTemporadas,
     'SELECT PV AS COD ' +

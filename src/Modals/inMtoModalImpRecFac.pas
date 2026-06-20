@@ -24,7 +24,8 @@ uses
   DBAccess, Uni, frxExportXLSX, frxClass, frxExportBaseDialog, frxExportPDF,
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
   Vcl.ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar,
-  cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas, inMtoFacturasBase,
+  cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas,
+  inMtoFacturasBase,
   cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab,
   System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization, frLanguageSpanish,
   frxExportBaseImageSettingsDialog, frCoreClasses;
@@ -54,6 +55,9 @@ var
 
 implementation
 
+uses
+  inLibFormatoDocumento;
+
 {$R *.dfm}
 
 { TfrmPrintRecFac }
@@ -76,10 +80,11 @@ begin
     begin
       Params.Clear;
       SQL.Text := '     SELECT r.*, ' +
-                  '            FN_FORMATO_DOCUMENTO(' +
-                  'emp.FORMATO_DOCUMENTO_EMP, ' +
-                  '              r.SERIE_FAC_REC, r.NUMERO_FAC_REC) ' +
-                  '              AS DOCUMENTO_FACTURA_FORMATO ' +
+                  ExpresionSqlFormatoDocumento(
+                    'emp.FORMATO_DOCUMENTO_EMP',
+                    'r.SERIE_FAC_REC',
+                    'r.NUMERO_FAC_REC') +
+                  ' AS DOCUMENTO_FACTURA_FORMATO ' +
                   '       FROM vi_recibos r ' +
                   '  LEFT JOIN fza_facturas fac ' +
                   '         ON fac.SERIE_FAC = r.SERIE_FAC_REC ' +
@@ -102,10 +107,11 @@ begin
     begin
       Params.Clear;
       SQL.Text := '     SELECT r.*, ' +
-                  '            FN_FORMATO_DOCUMENTO(' +
-                  'emp.FORMATO_DOCUMENTO_EMP, ' +
-                  '              r.SERIE_FAC_REC, r.NUMERO_FAC_REC) ' +
-                  '              AS DOCUMENTO_FACTURA_FORMATO ' +
+                  ExpresionSqlFormatoDocumento(
+                    'emp.FORMATO_DOCUMENTO_EMP',
+                    'r.SERIE_FAC_REC',
+                    'r.NUMERO_FAC_REC') +
+                  ' AS DOCUMENTO_FACTURA_FORMATO ' +
                   '       FROM vi_recibos r ' +
                   '  LEFT JOIN fza_facturas fac ' +
                   '         ON fac.SERIE_FAC = r.SERIE_FAC_REC ' +

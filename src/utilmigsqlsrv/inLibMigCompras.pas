@@ -736,7 +736,8 @@ begin
       try
         bCab.Add(Format(
           '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s',
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
+          '%s',
           [ValorOrNull(sNum), ValorOrNull(sSerie),
            DateTimeASQL(qCab.FieldByName('Fecha').AsDateTime),
            ValorOrNull(sEstado), sNumPed, sSeriePed,

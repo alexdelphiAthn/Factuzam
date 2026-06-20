@@ -117,6 +117,114 @@ begin
   Strs.Add(s);
 end;
 
+function EsCaracterIdentificadorSQL(c: Char): Boolean;
+begin
+  Result := ((c >= 'a') and (c <= 'z')) or
+            ((c >= 'A') and (c <= 'Z')) or
+            ((c >= '0') and (c <= '9')) or
+            (c = '_');
+end;
+
+function ContieneIdentificadorSQL(const sTexto, sIdentificador: string):
+  Boolean;
+var
+  sTextoNorm: string;
+  sIdNorm:    string;
+  iPos:       Integer;
+  iLen:       Integer;
+  bInicio:    Boolean;
+  bFin:       Boolean;
+begin
+  Result := False;
+  sTextoNorm := LowerCase(sTexto);
+  sIdNorm := LowerCase(sIdentificador);
+  iLen := Length(sIdNorm);
+  iPos := PosEx(sIdNorm, sTextoNorm, 1);
+  while iPos > 0 do
+  begin
+    bInicio := (iPos = 1) or
+      (not EsCaracterIdentificadorSQL(sTextoNorm[iPos - 1]));
+    bFin := (iPos + iLen > Length(sTextoNorm)) or
+      (not EsCaracterIdentificadorSQL(sTextoNorm[iPos + iLen]));
+    if bInicio and bFin then
+    begin
+      Result := True;
+    end;
+    if not Result then
+    begin
+      iPos := PosEx(sIdNorm, sTextoNorm, iPos + iLen);
+    end
+    else
+      iPos := 0;
+  end;
+end;
+
+function DDLReferenciaVista(const sDDL, sVista: string): Boolean;
+begin
+  Result := ContainsText(sDDL, '`' + sVista + '`') or
+            ContainsText(sDDL, '"' + sVista + '"') or
+            ContieneIdentificadorSQL(sDDL, sVista);
+end;
+
+procedure OrdenarVistasPorDependencias(const oNombres: TStringList;
+                                       const oDDL:
+                                         TDictionary<string, string>;
+                                       oOrden: TStringList);
+var
+  oPendientes: TStringList;
+  i, j:        Integer;
+  bAgregado:   Boolean;
+  bDepende:    Boolean;
+  sNombre:     string;
+  sDep:        string;
+  sDDL:        string;
+begin
+  oPendientes := TStringList.Create;
+  try
+    oPendientes.Assign(oNombres);
+    oPendientes.Sort;
+    while oPendientes.Count > 0 do
+    begin
+      bAgregado := False;
+      i := 0;
+      while i < oPendientes.Count do
+      begin
+        sNombre := oPendientes[i];
+        bDepende := False;
+        if oDDL.TryGetValue(sNombre, sDDL) then
+        begin
+          for j := 0 to oPendientes.Count - 1 do
+          begin
+            sDep := oPendientes[j];
+            if not SameText(sDep, sNombre) then
+            begin
+              if DDLReferenciaVista(sDDL, sDep) then
+              begin
+                bDepende := True;
+              end;
+            end;
+          end;
+        end;
+        if not bDepende then
+        begin
+          oOrden.Add(sNombre);
+          oPendientes.Delete(i);
+          bAgregado := True;
+        end
+        else
+          Inc(i);
+      end;
+      if not bAgregado then
+      begin
+        oOrden.Add(oPendientes[0]);
+        oPendientes.Delete(0);
+      end;
+    end;
+  finally
+    oPendientes.Free;
+  end;
+end;
+
 // Vuelca CREATE TABLE usando SHOW CREATE TABLE de MySQL (fiel al
 // estado real de la tabla, incluidos indices, FK, comentarios...).
 procedure VolcarCreateTable(Con: TUniConnection; const sTabla: string;
@@ -192,11 +300,20 @@ end;
 // Vuelca las vistas vi_*
 procedure VolcarVistas(Con: TUniConnection; oOut: TStringList;
                        OnLog: TLogEsqueleto; var iCount: Integer);
-var qList, qShow: TUniQuery;
-    sNombre, sDDL: string;
+var
+  qList, qShow: TUniQuery;
+  oNombres:     TStringList;
+  oOrden:       TStringList;
+  oDDL:         TDictionary<string, string>;
+  sNombre:      string;
+  sDDL:         string;
+  i:            Integer;
 begin
   qList := TUniQuery.Create(nil);
   qShow := TUniQuery.Create(nil);
+  oNombres := TStringList.Create;
+  oOrden := TStringList.Create;
+  oDDL := TDictionary<string, string>.Create;
   try
     qList.Connection := Con;
     qList.SQL.Text   :=
@@ -214,18 +331,40 @@ begin
       if not qShow.IsEmpty then
       begin
         sDDL := qShow.Fields[1].AsString;
-        AddLine(oOut, '');
-        AddLine(oOut, '-- ---------------------------------------------');
-        AddLine(oOut, Format('-- Vista: %s', [sNombre]));
-        AddLine(oOut, '-- ---------------------------------------------');
-        AddLine(oOut, Format('DROP VIEW IF EXISTS `%s`;', [sNombre]));
-        AddLine(oOut, sDDL + ';');
-        Inc(iCount);
-        if Assigned(OnLog) then OnLog('  vista: ' + sNombre);
+        oNombres.Add(sNombre);
+        oDDL.Add(sNombre, sDDL);
       end;
       qList.Next;
     end;
+    OrdenarVistasPorDependencias(oNombres, oDDL, oOrden);
+    if oOrden.Count > 0 then
+    begin
+      AddLine(oOut, '');
+      AddLine(oOut, '-- ---------------------------------------------');
+      AddLine(oOut, '-- Limpieza de vistas');
+      AddLine(oOut, '-- ---------------------------------------------');
+      for i := oOrden.Count - 1 downto 0 do
+        AddLine(oOut, Format('DROP VIEW IF EXISTS `%s`;', [oOrden[i]]));
+      for i := 0 to oOrden.Count - 1 do
+      begin
+        sNombre := oOrden[i];
+        if oDDL.TryGetValue(sNombre, sDDL) then
+        begin
+          AddLine(oOut, '');
+          AddLine(oOut, '-- ---------------------------------------------');
+          AddLine(oOut, Format('-- Vista: %s', [sNombre]));
+          AddLine(oOut, '-- ---------------------------------------------');
+          AddLine(oOut, sDDL + ';');
+          Inc(iCount);
+          if Assigned(OnLog) then
+            OnLog('  vista: ' + sNombre);
+        end;
+      end;
+    end;
   finally
+    oDDL.Free;
+    oOrden.Free;
+    oNombres.Free;
     qShow.Free;
     qList.Free;
   end;

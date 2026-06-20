@@ -90,6 +90,17 @@ type
     curTOTAL_IMPUESTOS_DEVC: TcxDBCurrencyEdit;
     lblTotalLiquido:      TcxLabel;
     curTOTAL_LIQUIDO_DEVC: TcxDBCurrencyEdit;
+    spnTotalesPORCENTAJE_RETENCION_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAN_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_REN_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAR_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_RER_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAS_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_RES_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAE_DEVC: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_REE_DEVC: TcxDBSpinEdit;
+    chkTotalesESIVA_RECARGO_COMPRAS_DEVC: TcxDBCheckBox;
+    grpDesgloseImpuestos: TGroupBox;
 
     // Observaciones
     memObservaciones: TcxDBMemo;

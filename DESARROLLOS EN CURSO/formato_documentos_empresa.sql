@@ -36,17 +36,18 @@ UPDATE fza_empresas
     OR FORMATO_DOCUMENTO_EMP = '';
 
 -- ---------------------------------------------------------------------------
--- 2. Funcion comun de formato
+-- 2. Procedimiento comun de formato
 -- ---------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS FN_FORMATO_DOCUMENTO;
+DROP PROCEDURE IF EXISTS PRC_FORMATO_DOCUMENTO;
 
 DELIMITER ;;
-CREATE FUNCTION FN_FORMATO_DOCUMENTO(
-  p_FORMATO varchar(80),
-  p_SERIE varchar(50),
-  p_NUMERO varchar(50)
-) RETURNS varchar(200)
-DETERMINISTIC
+CREATE PROCEDURE PRC_FORMATO_DOCUMENTO(
+  IN p_FORMATO varchar(80),
+  IN p_SERIE varchar(50),
+  IN p_NUMERO varchar(50),
+  OUT p_DOCUMENTO_FORMATO varchar(200)
+)
 BEGIN
   DECLARE v_formato varchar(80);
   DECLARE v_original varchar(200);
@@ -58,52 +59,50 @@ BEGIN
   SET v_numero = TRIM(COALESCE(p_NUMERO, ''));
 
   IF v_serie = '' THEN
-    RETURN v_numero;
+    SET p_DOCUMENTO_FORMATO = v_numero;
+  ELSEIF v_numero = '' THEN
+    SET p_DOCUMENTO_FORMATO = v_serie;
+  ELSE
+    SET v_formato = NULLIF(TRIM(COALESCE(p_FORMATO, '')), '');
+
+    IF v_formato IS NULL THEN
+      SET v_formato = 'Serie.NroDocumento';
+    END IF;
+
+    SET v_resultado = v_formato;
+    SET v_original = v_resultado;
+
+    SET v_resultado = REPLACE(v_resultado, 'NroDocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'nrodocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NRODOCUMENTO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NumeroDocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'numerodocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NUMERODOCUMENTO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NúmeroDocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'númerodocumento', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NÚMERODOCUMENTO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NroFactura', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'nrofactura', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NROFACTURA', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NroDoc', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'nrodoc', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NRODOC', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'Numero', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'numero', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NUMERO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'Número', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'número', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'NÚMERO', v_numero);
+    SET v_resultado = REPLACE(v_resultado, 'Serie', v_serie);
+    SET v_resultado = REPLACE(v_resultado, 'serie', v_serie);
+    SET v_resultado = REPLACE(v_resultado, 'SERIE', v_serie);
+
+    IF v_resultado = v_original THEN
+      SET p_DOCUMENTO_FORMATO = CONCAT(v_serie, '.', v_numero);
+    ELSE
+      SET p_DOCUMENTO_FORMATO = v_resultado;
+    END IF;
   END IF;
-
-  IF v_numero = '' THEN
-    RETURN v_serie;
-  END IF;
-
-  SET v_formato = NULLIF(TRIM(COALESCE(p_FORMATO, '')), '');
-
-  IF v_formato IS NULL THEN
-    SET v_formato = 'Serie.NroDocumento';
-  END IF;
-
-  SET v_resultado = v_formato;
-  SET v_original = v_resultado;
-
-  SET v_resultado = REPLACE(v_resultado, 'NroDocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'nrodocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NRODOCUMENTO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NumeroDocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'numerodocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NUMERODOCUMENTO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NúmeroDocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'númerodocumento', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NÚMERODOCUMENTO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NroFactura', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'nrofactura', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NROFACTURA', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NroDoc', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'nrodoc', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NRODOC', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'Numero', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'numero', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NUMERO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'Número', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'número', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'NÚMERO', v_numero);
-  SET v_resultado = REPLACE(v_resultado, 'Serie', v_serie);
-  SET v_resultado = REPLACE(v_resultado, 'serie', v_serie);
-  SET v_resultado = REPLACE(v_resultado, 'SERIE', v_serie);
-
-  IF v_resultado = v_original THEN
-    RETURN CONCAT(v_serie, '.', v_numero);
-  END IF;
-
-  RETURN v_resultado;
 END;;
 DELIMITER ;
 
@@ -150,6 +149,7 @@ SELECT `fza_empresas`.`CODIGO_EMP_EMP`                AS `CODIGO_EMP_EMP`,
 -- ---------------------------------------------------------------------------
 -- 4. Facturas emitidas
 -- ---------------------------------------------------------------------------
+-- Las vistas no pueden llamar al procedimiento; DOCUMENTO_FORMATO va en linea.
 CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_facturas_print` AS
 SELECT `fza_facturas`.*,
        `fza_formas_pago`.`DESCRIPCION_FORMA_PAGO_FP`
@@ -168,9 +168,7 @@ SELECT `fza_facturas`.*,
               AS `VENCIMIENTOS_RECIBOS`,
        `fza_empresas`.`IBAN_EMP` AS `IBAN_EMP`,
        `fza_empresas`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,
-       FN_FORMATO_DOCUMENTO(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`,
-                            `fza_facturas`.`SERIE_FAC`,
-                            `fza_facturas`.`NUMERO_FAC`)
+       CASE WHEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '')) = '' THEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '')) WHEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '')) = '' THEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'serie') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'númerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrofactura') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodoc') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numero') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'número') > 0) THEN CONCAT(TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '')), '.', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento'), 'NroDocumento', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'nrodocumento', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NRODOCUMENTO', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NumeroDocumento', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'numerodocumento', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NUMERODOCUMENTO', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NúmeroDocumento', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'númerodocumento', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NÚMERODOCUMENTO', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NroFactura', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'nrofactura', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NROFACTURA', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NroDoc', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'nrodoc', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NRODOC', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'Numero', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'numero', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NUMERO', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'Número', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'número', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'NÚMERO', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''))), 'Serie', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''))), 'serie', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''))), 'SERIE', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''))) END
               AS `DOCUMENTO_FORMATO`,
        `fza_clientes`.`IBAN_CLI` AS `IBAN_CLI`,
        `fza_formas_pago`.`ESVERBANCOEMPRESA_FORMA_PAGO_FP`
@@ -220,9 +218,7 @@ SELECT
   ses.`ESFORMATO_DISTRIBUIDO_SES`,
   ses.`CODIGO_EMP_SES`,
   emp.`FORMATO_DOCUMENTO_EMP`,
-  FN_FORMATO_DOCUMENTO(emp.`FORMATO_DOCUMENTO_EMP`,
-                       ses.`SERIE_SES`,
-                       ses.`NUMERO_SES`) AS `DOCUMENTO_FORMATO`,
+  CASE WHEN TRIM(COALESCE(ses.`SERIE_SES`, '')) = '' THEN TRIM(COALESCE(ses.`NUMERO_SES`, '')) WHEN TRIM(COALESCE(ses.`NUMERO_SES`, '')) = '' THEN TRIM(COALESCE(ses.`SERIE_SES`, '')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'serie') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'númerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrofactura') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodoc') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numero') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'número') > 0) THEN CONCAT(TRIM(COALESCE(ses.`SERIE_SES`, '')), '.', TRIM(COALESCE(ses.`NUMERO_SES`, ''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento'), 'NroDocumento', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'nrodocumento', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NRODOCUMENTO', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NumeroDocumento', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'numerodocumento', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NUMERODOCUMENTO', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NúmeroDocumento', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'númerodocumento', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NÚMERODOCUMENTO', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NroFactura', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'nrofactura', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NROFACTURA', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NroDoc', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'nrodoc', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NRODOC', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'Numero', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'numero', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NUMERO', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'Número', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'número', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'NÚMERO', TRIM(COALESCE(ses.`NUMERO_SES`, ''))), 'Serie', TRIM(COALESCE(ses.`SERIE_SES`, ''))), 'serie', TRIM(COALESCE(ses.`SERIE_SES`, ''))), 'SERIE', TRIM(COALESCE(ses.`SERIE_SES`, ''))) END AS `DOCUMENTO_FORMATO`,
   emp.`RAZON_SOCIAL_EMP`,
   emp.`DIRECCION1_EMP`,
   emp.`CODIGO_POSTAL_EMP`,
@@ -270,9 +266,7 @@ SELECT
   alb.`OBSERVACIONES_ALBC`,
   alb.`CODIGO_EMP_ALBC`,
   emp.`FORMATO_DOCUMENTO_EMP`,
-  FN_FORMATO_DOCUMENTO(emp.`FORMATO_DOCUMENTO_EMP`,
-                       alb.`SERIE_ALBC`,
-                       alb.`NUMERO_ALBC`) AS `DOCUMENTO_FORMATO`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_ALBC`, '')) = '' THEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '')) WHEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '')) = '' THEN TRIM(COALESCE(alb.`SERIE_ALBC`, '')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'serie') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'númerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrofactura') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodoc') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numero') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'número') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_ALBC`, '')), '.', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento'), 'NroDocumento', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'nrodocumento', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NRODOCUMENTO', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NumeroDocumento', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'numerodocumento', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NUMERODOCUMENTO', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NúmeroDocumento', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'númerodocumento', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NÚMERODOCUMENTO', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NroFactura', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'nrofactura', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NROFACTURA', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NroDoc', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'nrodoc', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NRODOC', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'Numero', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'numero', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NUMERO', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'Número', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'número', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'NÚMERO', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''))), 'Serie', TRIM(COALESCE(alb.`SERIE_ALBC`, ''))), 'serie', TRIM(COALESCE(alb.`SERIE_ALBC`, ''))), 'SERIE', TRIM(COALESCE(alb.`SERIE_ALBC`, ''))) END AS `DOCUMENTO_FORMATO`,
   emp.`RAZON_SOCIAL_EMP`,
   emp.`DIRECCION1_EMP`,
   emp.`CODIGO_POSTAL_EMP`,
@@ -334,9 +328,7 @@ SELECT
   alb.`OBSERVACIONES_DEVC`,
   alb.`CODIGO_EMP_DEVC`,
   emp.`FORMATO_DOCUMENTO_EMP`,
-  FN_FORMATO_DOCUMENTO(emp.`FORMATO_DOCUMENTO_EMP`,
-                       alb.`SERIE_DEVC`,
-                       alb.`NUMERO_DEVC`) AS `DOCUMENTO_FORMATO`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_DEVC`, '')) = '' THEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '')) WHEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '')) = '' THEN TRIM(COALESCE(alb.`SERIE_DEVC`, '')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'serie') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'númerodocumento') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrofactura') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'nrodoc') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'numero') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento')), 'número') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_DEVC`, '')), '.', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '')), ''), 'Serie.NroDocumento'), 'NroDocumento', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'nrodocumento', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NRODOCUMENTO', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NumeroDocumento', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'numerodocumento', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NUMERODOCUMENTO', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NúmeroDocumento', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'númerodocumento', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NÚMERODOCUMENTO', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NroFactura', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'nrofactura', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NROFACTURA', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NroDoc', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'nrodoc', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NRODOC', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'Numero', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'numero', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NUMERO', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'Número', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'número', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'NÚMERO', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''))), 'Serie', TRIM(COALESCE(alb.`SERIE_DEVC`, ''))), 'serie', TRIM(COALESCE(alb.`SERIE_DEVC`, ''))), 'SERIE', TRIM(COALESCE(alb.`SERIE_DEVC`, ''))) END AS `DOCUMENTO_FORMATO`,
   emp.`RAZON_SOCIAL_EMP`,
   emp.`DIRECCION1_EMP`,
   emp.`CODIGO_POSTAL_EMP`,
